@@ -11,7 +11,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::Version = '$Revision: 1.81 $ ';
+$::Version = '$Revision: 1.82 $ ';
 
 sub PrintUsage {
     die <<END_USAGE
@@ -318,10 +318,13 @@ sub run_tests {
     my ($binary, $build_dir) = @_;
     my $binary_basename = basename($binary);
     my $binary_dir = dirname($binary);
+    my $test_result = 'success';
 
     # Mozilla alive test
-    print_log "Running AliveTest ...\n";
-    my $test_result = AliveTest($build_dir, $binary, 45);
+    if ($Settings::AliveTest and $test_result eq 'success') {
+	    print_log "Running AliveTest ...\n";
+        $test_result = AliveTest($build_dir, $binary, 45);
+    }
 
     # Viewer alive test
     if ($Settings::ViewerTest and $test_result eq 'success') {
@@ -344,9 +347,20 @@ sub run_tests {
         print_log "Running MailNewsTest ...\n";
         my $cmd = "$binary_basename "
                   ."http://www.mozilla.org/quality/mailnews/APITest.html";
+
+		# Stuff prefs in here.
+		my $pref_file = $build_dir . "/.mozilla/mozProfile/prefs.js";
+		if (system("grep -s signed.applets.codebase_principal_support $pref_file > /dev/null")) {
+		  open PREFS, ">>$pref_file" or die "can't open $?\n";
+		  print PREFS "user_pref(\"signed.applets.codebase_principal_support\", true);\n";
+		  print PREFS "user_pref(\"security.principal.X0\", \"[Codebase http://www.mozilla.org/quality/mailnews/APITest.html] UniversalBrowserRead=1 UniversalXPConnect=1\");";
+		  close PREFS;
+		}
+
         $test_result = FileBasedTest("MailNewsTest", $build_dir, $binary_dir, 
 									 $cmd,  90, 
-									 "MAILNEWS TEST: Passed", 1);
+									 "MAILNEWS TEST: Passed", 1, 
+									 1);  # Timeout is Ok.
     }
     
     # Editor test
@@ -356,7 +370,8 @@ sub run_tests {
         $test_result =
           FileBasedTest("DomToTextConversionTest", $build_dir, $binary_dir,
                         "TestOutSinks", 45,
-						"FAILED", 0);
+						"FAILED", 0,
+						0);  # Timeout means failure.
     }
     return $test_result;
 }
@@ -616,12 +631,14 @@ sub AliveTest {
 #     failure string.  If this is set to 1, then invert logic to look for
 #     success string.
 #
+# timeout_is_ok = Don't report test failure if test times out.
+#
 # Note: I tried to merge this function with AliveTest(),
 #       the process flow control got too confusing :(  -mcafee
 #
 sub FileBasedTest {
     my ($test_name, $build_dir, $binary_dir, $test_command, $timeout_secs, 
-        $status_token, $status_token_means_pass) = @_;
+        $status_token, $status_token_means_pass, $timeout_is_ok) = @_;
     local $_;
 
     # Assume the app is the first argument in the execString.
@@ -633,7 +650,7 @@ sub FileBasedTest {
 
     print_logfile($binary_log, $test_name);
     
-    if ($result->{timed_out}) {
+    if (($result->{timed_out}) and (!$timeout_is_ok)) {
         print_log "Error: $test_name timed out after $timeout_secs seconds.\n";
         return 'testfailed';
     } elsif ($result->{exit_value} != 0) {
@@ -720,13 +737,12 @@ $UseTimeStamp      = 1;      # Use the CVS 'pull-by-timestamp' option, or not
 $BuildOnce         = 0;      # Build once, don't send results to server
 $RunTest           = 1;      # Run the smoke tests on successful build, or not
 $TestOnly          = 0;      # Only run tests, don't pull/build
-# Extra tests
-$BloatTest = 0;
-$BloatStats = 0;
-$DomToTextConversionTest = 0;
-$EditorTest = 0;
-$MailNewsTest = 0;
+# Tests
+$AliveTest = 1;
 $ViewerTest = 0;
+$BloatTest = 0;
+$DomToTextConversionTest = 0;
+$MailNewsTest = 0;
 $MozConfigFileName = 'mozconfig';
 
 #- Set these to what makes sense for your system
