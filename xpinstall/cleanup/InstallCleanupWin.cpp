@@ -93,7 +93,6 @@ int WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR args, int)
             char* lastSlash = strrchr(regFilePath, '\\');
             lastSlash++; 
             *lastSlash = 0;//strip of the executable name
-            strcat(regFilePath, "res\\");
             strcat(regFilePath, CLEANUP_REGISTRY); //append reg file name
     
             if ( GetFileAttributes(regFilePath) == 0xFFFFFFFF ) // file doesn't exist
