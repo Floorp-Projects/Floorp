@@ -24,7 +24,8 @@ VPATH		= @srcdir@
 
 EXPORTS =                           \
         nsIHttpEventSink.h          \
-        nsIHttpProtocolConnection.h \
+        nsIHTTPConnection.h \
+        nsIHTTPHandler.h \
         $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
