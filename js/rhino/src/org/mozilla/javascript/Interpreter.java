@@ -42,29 +42,44 @@ import java.io.*;
 
 import org.mozilla.javascript.debug.*;
 
-public class Interpreter {
+public class Interpreter
+{
 
 // Additional interpreter-specific codes
     private static final int
-    // See comments in Interpreter.interpret in CATCH_ICODE case
-        CATCH_ICODE                     = Token.LAST_TOKEN + 1,
 
-    // To indicating a line number change in icodes.
-        LINE_ICODE                      = Token.LAST_TOKEN + 2,
+        Icode_DUP                       = Token.LAST_BYTECODE_TOKEN + 1,
 
-    // To store shorts and ints inline
-        SHORTNUMBER_ICODE               = Token.LAST_TOKEN + 3,
-        INTNUMBER_ICODE                 = Token.LAST_TOKEN + 4,
+    // GETVAR helper
+        Icode_SCOPE                     = Token.LAST_BYTECODE_TOKEN + 2,
+
+    // Access to parent scope and prototype
+        Icode_GETPROTO                  = Token.LAST_BYTECODE_TOKEN + 3,
+        Icode_GETPARENT                 = Token.LAST_BYTECODE_TOKEN + 4,
+        Icode_GETSCOPEPARENT            = Token.LAST_BYTECODE_TOKEN + 5,
+        Icode_SETPROTO                  = Token.LAST_BYTECODE_TOKEN + 6,
+        Icode_SETPARENT                 = Token.LAST_BYTECODE_TOKEN + 7,
+
+    // Special calls
+        Icode_CALLSPECIAL               = Token.LAST_BYTECODE_TOKEN + 8,
 
     // To return undefined value
-        RETURN_UNDEF_ICODE              = Token.LAST_TOKEN + 5,
+        Icode_RETUNDEF                  = Token.LAST_BYTECODE_TOKEN + 9,
 
     // Exception handling implementation
-        GOSUB                           = Token.LAST_TOKEN + 6,
-        RETSUB                          = Token.LAST_TOKEN + 7,
+        Icode_CATCH                     = Token.LAST_BYTECODE_TOKEN + 10,
+        Icode_GOSUB                     = Token.LAST_BYTECODE_TOKEN + 11,
+        Icode_RETSUB                    = Token.LAST_BYTECODE_TOKEN + 12,
+
+    // To indicating a line number change in icodes.
+        Icode_LINE                      = Token.LAST_BYTECODE_TOKEN + 13,
+
+    // To store shorts and ints inline
+        Icode_SHORTNUMBER               = Token.LAST_BYTECODE_TOKEN + 14,
+        Icode_INTNUMBER                 = Token.LAST_BYTECODE_TOKEN + 15,
 
     // Last icode
-        END_ICODE                       = Token.LAST_TOKEN + 8;
+        Icode_END                       = Token.LAST_BYTECODE_TOKEN + 16;
 
 
     public IRFactory createIRFactory(Context cx, TokenStream ts)
@@ -189,13 +204,13 @@ public class Interpreter {
         int theICodeTop = 0;
         theICodeTop = generateICode(tree, theICodeTop);
         itsLabels.fixLabelGotos(itsData.itsICode);
-        // add END_ICODE only to scripts as function always ends with RETURN
+        // add Icode_END only to scripts as function always ends with RETURN
         if (itsData.itsFunctionType == 0) {
-            theICodeTop = addByte(END_ICODE, theICodeTop);
+            theICodeTop = addByte(Icode_END, theICodeTop);
         }
         // Add special CATCH to simplify Interpreter.interpret logic
         // and workaround lack of goto in Java
-        theICodeTop = addByte(CATCH_ICODE, theICodeTop);
+        theICodeTop = addByte(Icode_CATCH, theICodeTop);
 
         itsData.itsICodeTop = theICodeTop;
 
@@ -250,7 +265,7 @@ public class Interpreter {
         int lineno = node.getLineno();
         if (lineno != itsLineNumber && lineno >= 0) {
             itsLineNumber = lineno;
-            iCodeTop = addByte(LINE_ICODE, iCodeTop);
+            iCodeTop = addByte(Icode_LINE, iCodeTop);
             iCodeTop = addShort(lineno, iCodeTop);
         }
         return iCodeTop;
@@ -429,7 +444,7 @@ public class Interpreter {
                                                Node.NON_SPECIALCALL);
                 if (callType != Node.NON_SPECIALCALL) {
                     // embed line number and source filename
-                    iCodeTop = addByte(Token.CALLSPECIAL, iCodeTop);
+                    iCodeTop = addByte(Icode_CALLSPECIAL, iCodeTop);
                     iCodeTop = addByte(callType, iCodeTop);
                     iCodeTop = addByte(type == Token.NEW ? 1 : 0,
                                        iCodeTop);
@@ -462,7 +477,7 @@ public class Interpreter {
 
             case Token.USELOCAL : {
                 if (node.getProp(Node.TARGET_PROP) != null) {
-                    iCodeTop = addByte(RETSUB, iCodeTop);
+                    iCodeTop = addByte(Icode_RETSUB, iCodeTop);
                 } else {
                     iCodeTop = addByte(Token.USETEMP, iCodeTop);
                     itsStackDepth++;
@@ -497,13 +512,13 @@ public class Interpreter {
 
             case Token.JSR : {
                 Node target = (Node)(node.getProp(Node.TARGET_PROP));
-                iCodeTop = addGoto(target, GOSUB, iCodeTop);
+                iCodeTop = addGoto(target, Icode_GOSUB, iCodeTop);
                 break;
             }
 
             case Token.AND : {
                 iCodeTop = generateICode(child, iCodeTop);
-                iCodeTop = addByte(Token.DUP, iCodeTop);
+                iCodeTop = addByte(Icode_DUP, iCodeTop);
                 itsStackDepth++;
                 if (itsStackDepth > itsData.itsMaxStack)
                     itsData.itsMaxStack = itsStackDepth;
@@ -519,7 +534,7 @@ public class Interpreter {
 
             case Token.OR : {
                 iCodeTop = generateICode(child, iCodeTop);
-                iCodeTop = addByte(Token.DUP, iCodeTop);
+                iCodeTop = addByte(Icode_DUP, iCodeTop);
                 itsStackDepth++;
                 if (itsStackDepth > itsData.itsMaxStack)
                     itsData.itsMaxStack = itsStackDepth;
@@ -538,10 +553,9 @@ public class Interpreter {
                 String s = (String) node.getProp(Node.SPECIAL_PROP_PROP);
                 if (s != null) {
                     if (s.equals("__proto__")) {
-                        iCodeTop = addByte(Token.GETPROTO, iCodeTop);
+                        iCodeTop = addByte(Icode_GETPROTO, iCodeTop);
                     } else if (s.equals("__parent__")) {
-                        iCodeTop = addByte(Token.GETSCOPEPARENT,
-                                           iCodeTop);
+                        iCodeTop = addByte(Icode_GETSCOPEPARENT, iCodeTop);
                     } else {
                         badTree(node);
                     }
@@ -630,9 +644,9 @@ public class Interpreter {
                 String s = (String) node.getProp(Node.SPECIAL_PROP_PROP);
                 if (s != null) {
                     if (s.equals("__proto__")) {
-                        iCodeTop = addByte(Token.SETPROTO, iCodeTop);
+                        iCodeTop = addByte(Icode_SETPROTO, iCodeTop);
                     } else if (s.equals("__parent__")) {
-                        iCodeTop = addByte(Token.SETPARENT, iCodeTop);
+                        iCodeTop = addByte(Icode_SETPARENT, iCodeTop);
                     } else {
                         badTree(node);
                     }
@@ -687,7 +701,7 @@ public class Interpreter {
 
             case Token.PARENT :
                 iCodeTop = generateICode(child, iCodeTop);
-                iCodeTop = addByte(Token.GETPARENT, iCodeTop);
+                iCodeTop = addByte(Icode_GETPARENT, iCodeTop);
                 break;
 
             case Token.GETBASE :
@@ -708,7 +722,7 @@ public class Interpreter {
                     case Token.GETVAR : {
                         String name = child.getString();
                         if (itsData.itsNeedsActivation) {
-                            iCodeTop = addByte(Token.SCOPE, iCodeTop);
+                            iCodeTop = addByte(Icode_SCOPE, iCodeTop);
                             iCodeTop = addByte(Token.STRING, iCodeTop);
                             iCodeTop = addString(name, iCodeTop);
                             itsStackDepth += 2;
@@ -776,10 +790,10 @@ public class Interpreter {
                     } else if (inum == 1) {
                         iCodeTop = addByte(Token.ONE, iCodeTop);
                     } else if ((short)inum == inum) {
-                        iCodeTop = addByte(SHORTNUMBER_ICODE, iCodeTop);
+                        iCodeTop = addByte(Icode_SHORTNUMBER, iCodeTop);
                         iCodeTop = addShort(inum, iCodeTop);
                     } else {
-                        iCodeTop = addByte(INTNUMBER_ICODE, iCodeTop);
+                        iCodeTop = addByte(Icode_INTNUMBER, iCodeTop);
                         iCodeTop = addInt(inum, iCodeTop);
                     }
                 } else {
@@ -902,7 +916,7 @@ public class Interpreter {
                     iCodeTop = addByte(Token.RETURN, iCodeTop);
                     itsStackDepth--;
                 } else {
-                    iCodeTop = addByte(RETURN_UNDEF_ICODE, iCodeTop);
+                    iCodeTop = addByte(Icode_RETUNDEF, iCodeTop);
                 }
                 break;
 
@@ -913,7 +927,7 @@ public class Interpreter {
                     // we can't do that to a GETVAR without manufacturing
                     // bogus children. Instead we use a special op to
                     // push the current scope.
-                    iCodeTop = addByte(Token.SCOPE, iCodeTop);
+                    iCodeTop = addByte(Icode_SCOPE, iCodeTop);
                     iCodeTop = addByte(Token.STRING, iCodeTop);
                     iCodeTop = addString(name, iCodeTop);
                     itsStackDepth += 2;
@@ -1219,18 +1233,26 @@ public class Interpreter {
 
     private static String icodeToName(int icode) {
         if (Token.printICode) {
-            if (icode <= Token.LAST_TOKEN) {
+            if (icode <= Token.LAST_BYTECODE_TOKEN) {
                 return Token.name(icode);
             } else {
                 switch (icode) {
-                    case CATCH_ICODE:        return "catch";
-                    case END_ICODE:          return "end";
-                    case GOSUB:              return "gosub";
-                    case INTNUMBER_ICODE:    return "intnumber";
-                    case LINE_ICODE:         return "line";
-                    case RETSUB:             return "retsub";
-                    case RETURN_UNDEF_ICODE: return "return_undef";
-                    case SHORTNUMBER_ICODE:  return "shortnumber";
+                    case Icode_DUP:              return "dup";
+                    case Icode_SCOPE:            return "scope";
+                    case Icode_GETPROTO:         return "getproto";
+                    case Icode_GETPARENT:        return "getparent";
+                    case Icode_GETSCOPEPARENT:   return "getscopeparent";
+                    case Icode_SETPROTO:         return "setproto";
+                    case Icode_SETPARENT:        return "setparent";
+                    case Icode_CALLSPECIAL:      return "callspecial";
+                    case Icode_RETUNDEF:         return "retundef";
+                    case Icode_CATCH:            return "catch";
+                    case Icode_GOSUB:            return "gosub";
+                    case Icode_RETSUB:           return "retsub";
+                    case Icode_LINE:             return "line";
+                    case Icode_SHORTNUMBER:      return "shortnumber";
+                    case Icode_INTNUMBER:        return "intnumber";
+                    case Icode_END:              return "end";
                 }
             }
             return "<UNKNOWN ICODE: "+icode+">";
@@ -1264,7 +1286,7 @@ public class Interpreter {
                             out.println(tname);
                             break;
 
-                        case GOSUB :
+                        case Icode_GOSUB :
                         case Token.GOTO :
                         case Token.IFEQ :
                         case Token.IFNE : {
@@ -1273,7 +1295,7 @@ public class Interpreter {
                             pc += 2;
                             break;
                         }
-                        case RETSUB :
+                        case Icode_RETSUB :
                         case Token.ENUMINIT :
                         case Token.ENUMNEXT :
                         case Token.VARINC :
@@ -1287,7 +1309,7 @@ public class Interpreter {
                             pc++;
                             break;
                         }
-                        case Token.CALLSPECIAL : {
+                        case Icode_CALLSPECIAL : {
                             int callType = iCode[pc] & 0xFF;
                             boolean isNew =  (iCode[pc + 1] != 0);
                             int line = getShort(iCode, pc+2);
@@ -1320,13 +1342,13 @@ public class Interpreter {
                             pc += 4;
                             break;
                         }
-                        case SHORTNUMBER_ICODE : {
+                        case Icode_SHORTNUMBER : {
                             int value = getShort(iCode, pc);
                             out.println(tname + " " + value);
                             pc += 2;
                             break;
                         }
-                        case INTNUMBER_ICODE : {
+                        case Icode_INTNUMBER : {
                             int value = getInt(iCode, pc);
                             out.println(tname + " " + value);
                             pc += 4;
@@ -1352,7 +1374,7 @@ public class Interpreter {
                             pc += 2;
                             break;
                         }
-                        case LINE_ICODE : {
+                        case Icode_LINE : {
                             int line = getShort(iCode, pc);
                             out.println(tname + " : " + line);
                             pc += 2;
@@ -1389,12 +1411,12 @@ public class Interpreter {
 
     private static int icodeTokenLength(int icodeToken) {
         switch (icodeToken) {
-            case Token.SCOPE :
-            case Token.GETPROTO :
-            case Token.GETPARENT :
-            case Token.GETSCOPEPARENT :
-            case Token.SETPROTO :
-            case Token.SETPARENT :
+            case Icode_SCOPE :
+            case Icode_GETPROTO :
+            case Icode_GETPARENT :
+            case Icode_GETSCOPEPARENT :
+            case Icode_SETPROTO :
+            case Icode_SETPARENT :
             case Token.DELPROP :
             case Token.TYPEOF :
             case Token.NEWSCOPE :
@@ -1427,7 +1449,7 @@ public class Interpreter {
             case Token.ADD :
             case Token.POPV :
             case Token.POP :
-            case Token.DUP :
+            case Icode_DUP :
             case Token.LT :
             case Token.GT :
             case Token.LE :
@@ -1446,19 +1468,19 @@ public class Interpreter {
             case Token.FALSE :
             case Token.TRUE :
             case Token.UNDEFINED :
-            case CATCH_ICODE:
-            case RETURN_UNDEF_ICODE:
-            case END_ICODE:
+            case Icode_CATCH:
+            case Icode_RETUNDEF:
+            case Icode_END:
                 return 1;
 
-            case GOSUB :
+            case Icode_GOSUB :
             case Token.GOTO :
             case Token.IFEQ :
             case Token.IFNE :
                 // target pc offset
                 return 1 + 2;
 
-            case RETSUB :
+            case Icode_RETSUB :
             case Token.ENUMINIT :
             case Token.ENUMNEXT :
             case Token.VARINC :
@@ -1470,7 +1492,7 @@ public class Interpreter {
                 // slot index
                 return 1 + 1;
 
-            case Token.CALLSPECIAL :
+            case Icode_CALLSPECIAL :
                 // call type
                 // is new
                 // line number
@@ -1491,11 +1513,11 @@ public class Interpreter {
                 // arg count
                 return 1 + 2 + 2;
 
-            case SHORTNUMBER_ICODE :
+            case Icode_SHORTNUMBER :
                 // short number
                 return 1 + 2;
 
-            case INTNUMBER_ICODE :
+            case Icode_INTNUMBER :
                 // int number
                 return 1 + 4;
 
@@ -1514,7 +1536,7 @@ public class Interpreter {
                 // string index
                 return 1 + 2;
 
-            case LINE_ICODE :
+            case Icode_LINE :
                 // line number
                 return 1 + 2;
 
@@ -1532,7 +1554,7 @@ public class Interpreter {
         for (int pc = 0; pc != iCodeLength;) {
             int icodeToken = iCode[pc] & 0xff;
             int icodeLength = icodeTokenLength(icodeToken);
-            if (icodeToken == LINE_ICODE) {
+            if (icodeToken == Icode_LINE) {
                 if (icodeLength != 3) Context.codeBug();
                 int line = getShort(iCode, pc + 1);
                 presentLines.put(line, 0);
@@ -1715,7 +1737,7 @@ public class Interpreter {
                 switch (iCode[pc] & 0xff) {
     // Back indent to ease imlementation reading
 
-    case CATCH_ICODE: {
+    case Icode_CATCH: {
         // The following code should be executed inside try/catch inside main
         // loop, not in the loop catch block itself to deal withnexceptions
         // from observeInstructionCount. A special bytecode is used only to
@@ -1991,7 +2013,7 @@ public class Interpreter {
         }
         pcPrevBranch = pc = getTarget(iCode, pc + 1);
         continue Loop;
-    case GOSUB :
+    case Icode_GOSUB :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = pc + 3;
@@ -2003,7 +2025,7 @@ public class Interpreter {
             }
         }
         pcPrevBranch = pc = getTarget(iCode, pc + 1);                                    continue Loop;
-    case RETSUB : {
+    case Icode_RETSUB : {
         int slot = (iCode[pc + 1] & 0xFF);
         if (instructionThreshold != 0) {
             instructionCount += pc + 2 - pcPrevBranch;
@@ -2030,7 +2052,7 @@ public class Interpreter {
         stack[stackTop] = null;
         stackTop--;
         break;
-    case Token.DUP :
+    case Icode_DUP :
         stack[stackTop + 1] = stack[stackTop];
         sDbl[stackTop + 1] = sDbl[stackTop];
         stackTop++;
@@ -2046,10 +2068,10 @@ public class Interpreter {
         if (result == DBL_MRK) result = doubleWrap(sDbl[stackTop]);
         --stackTop;
         break Loop;
-    case RETURN_UNDEF_ICODE :
+    case Icode_RETUNDEF :
         result = undefined;
         break Loop;
-    case END_ICODE:
+    case Icode_END:
         break Loop;
     case Token.BITNOT : {
         int rIntValue = stack_int32(stack, sDbl, stackTop);
@@ -2265,7 +2287,7 @@ public class Interpreter {
         sDbl[stackTop] = sDbl[LOCAL_SHFT + slot];
         break;
     }
-    case Token.CALLSPECIAL : {
+    case Icode_CALLSPECIAL : {
         if (instructionThreshold != 0) {
             instructionCount += INVOCATION_COST;
             cx.instructionCount = instructionCount;
@@ -2410,13 +2432,13 @@ public class Interpreter {
         stack[++stackTop] = strings[getIndex(iCode, pc + 1)];
         pc += 2;
         break;
-    case SHORTNUMBER_ICODE :
+    case Icode_SHORTNUMBER :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = getShort(iCode, pc + 1);
         pc += 2;
         break;
-    case INTNUMBER_ICODE :
+    case Icode_INTNUMBER :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = getInt(iCode, pc + 1);
@@ -2559,25 +2581,25 @@ public class Interpreter {
         stack[stackTop] = ScriptRuntime.nextEnum(val);
         break;
     }
-    case Token.GETPROTO : {
+    case Icode_GETPROTO : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.getProto(lhs, scope);
         break;
     }
-    case Token.GETPARENT : {
+    case Icode_GETPARENT : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.getParent(lhs);
         break;
     }
-    case Token.GETSCOPEPARENT : {
+    case Icode_GETSCOPEPARENT : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.getParent(lhs, scope);
         break;
     }
-    case Token.SETPROTO : {
+    case Icode_SETPROTO : {
         Object rhs = stack[stackTop];
         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
@@ -2586,7 +2608,7 @@ public class Interpreter {
         stack[stackTop] = ScriptRuntime.setProto(lhs, rhs, scope);
         break;
     }
-    case Token.SETPARENT : {
+    case Icode_SETPARENT : {
         Object rhs = stack[stackTop];
         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
@@ -2595,7 +2617,7 @@ public class Interpreter {
         stack[stackTop] = ScriptRuntime.setParent(lhs, rhs, scope);
         break;
     }
-    case Token.SCOPE :
+    case Icode_SCOPE :
         stack[++stackTop] = scope;
         break;
     case Token.CLOSURE : {
@@ -2612,7 +2634,7 @@ public class Interpreter {
         pc += 2;
         break;
     }
-    case LINE_ICODE : {
+    case Icode_LINE : {
         int line = getShort(iCode, pc + 1);
         cx.interpreterLine = line;
         if (debuggerFrame != null) {
@@ -2975,7 +2997,7 @@ public class Interpreter {
     private static int getJavaCatchPC(byte[] iCode)
     {
         int pc = iCode.length - 1;
-        if ((iCode[pc] & 0xFF) != CATCH_ICODE) Context.codeBug();
+        if ((iCode[pc] & 0xFF) != Icode_CATCH) Context.codeBug();
         return pc;
     }
 

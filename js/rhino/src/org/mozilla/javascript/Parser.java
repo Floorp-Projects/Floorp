@@ -1641,7 +1641,7 @@ class Parser {
                 // Note that tokenToName will fail unless Context.printTrees
                 // is true.
                 String tokenname = null;
-                if (Token.printTokenNames) {
+                if (Token.printNames) {
                     tokenname = Token.name(source.charAt(i));
                 }
                 if (tokenname == null) {
