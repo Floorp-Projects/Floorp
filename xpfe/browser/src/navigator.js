@@ -1,3 +1,21 @@
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
   var appCore = null;
   var prefwindow = null;
   var appCoreName = "";
@@ -373,18 +391,9 @@
 
   function BrowserAddBookmark(url,title)
   {
-    // get RDF Core service
-    var rdfCore = XPAppCoresManager.Find("RDFCore");
-    if (!rdfCore) {
-      rdfCore = new RDFCore();
-      if (!rdfCore) {
-        return(false);
-      }
-      rdfCore.Init("RDFCore");
-      XPAppCoresManager.Add(rdfCore);
-    }
-    // Add it
-    rdfCore.addBookmark(url,title);
+    var svc = Components.classes["component://netscape/browser/bookmarks-service"].getService();
+    svc = svc.QueryInterface(Components.interfaces.nsIBookmarksService);
+    svc.AddBookmark(url, title);
   }
 
   function BrowserEditBookmarks()
@@ -397,7 +406,7 @@
       }
     }
     if (toolkitCore) {
-      toolkitCore.ShowWindow("resource://res/rdf/bookmarks.xul",window);
+      toolkitCore.ShowWindow("resource://res/samples/bookmarks.xul",window);
     }
   }
 
