@@ -2455,7 +2455,7 @@ out:
 
 /* Routines to print out values during debugging. */
 
-void printJschar(jschar *cp) {
+void printChar(jschar *cp) {
     fprintf(stderr, "jschar* (0x%x) \"", cp);
     while (*cp)
         fputc(*cp++, stderr);
@@ -2474,12 +2474,24 @@ void printString(JSString *str) {
 
 void printVal(jsval val) {
     fprintf(stderr, "val %d (0x%x) = ", val, val);
-    if (JSVAL_IS_INT(val)) {
+    if (JSVAL_IS_NULL(val)) {
+        fprintf(stderr, "null\n");
+    } else if (JSVAL_IS_VOID(val)) {
+        fprintf(stderr, "undefined\n");
+    } else if (JSVAL_IS_OBJECT(val)) {
+        /* XXX can do more here */
+        fprintf(stderr, "object\n");
+    } else if (JSVAL_IS_INT(val)) {
         fprintf(stderr, "(int) %d\n", JSVAL_TO_INT(val));
     } else if (JSVAL_IS_STRING(val)) {
         printString(JSVAL_TO_STRING(val));
+    } else if (JSVAL_IS_DOUBLE(val)) {
+        fprintf(stderr, "(double) %g\n", *JSVAL_TO_DOUBLE(val));
+    } else {
+        PR_ASSERT(JSVAL_IS_BOOLEAN(val));
+        fprintf(stderr, "(boolean) %s\n", 
+                JSVAL_TO_BOOLEAN(val) ? "true" : "false");
     }
-    /* XXX more cases */
     fflush(stderr);
 }
 
