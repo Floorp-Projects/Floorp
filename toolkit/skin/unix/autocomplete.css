@@ -38,6 +38,11 @@ textbox {
   border: none !important;
 }
 
+/* Used by autocomplete widgets that don't have an icon. Gross. -dwh */
+textbox.padded {
+  padding: 1px 0px 1px 2px;
+}
+
 .autocomplete-textbox-container {
   -moz-appearance: menulist-textfield;
   border: 2px solid;
