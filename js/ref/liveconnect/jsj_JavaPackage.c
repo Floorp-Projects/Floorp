@@ -81,11 +81,12 @@ JavaPackage_setProperty(JSContext *cx, JSObject *obj, jsval slot, jsval *vp)
 {
     JavaPackage_Private *package = JS_GetPrivate(cx, obj);
     if (!package) {
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage,
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
                                                 JSJMSG_BAD_ADD_TO_PACKAGE);
         return JS_FALSE;
     }
-    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_DONT_ADD_TO_PACKAGE);
+    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                                JSJMSG_DONT_ADD_TO_PACKAGE);
     return JS_FALSE;
 }
 
@@ -201,7 +202,7 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
                     for (cp = msg; *cp != '\0'; cp++)
                         if (*cp == '/')
                             *cp = '.';
-		    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, 
+		    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
                                                 JSJMSG_MISSING_PACKAGE, msg);
                     free((char*)msg);
                 }
@@ -384,7 +385,7 @@ pre_define_java_packages(JSContext *cx, JSObject *global_obj,
             jsval v;
 
             if (!simple_name) {
-                JS_ReportErrorNumber(cx, jsj_GetErrorMessage,
+                JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
                                         JSJMSG_DOUBLE_SHIPPING, package_name);
                 goto error;
             }
@@ -401,7 +402,7 @@ pre_define_java_packages(JSContext *cx, JSObject *global_obj,
                 /* New package objects should only be created at the terminal
                    sub-package in a fully-qualified package-name */
                 if (strtok(NULL, ".")) {
-                    JS_ReportErrorNumber(cx, jsj_GetErrorMessage,
+                    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
                                     JSJMSG_BAD_PACKAGE_PREDEF,
                                    package_def->name);
                     goto error;

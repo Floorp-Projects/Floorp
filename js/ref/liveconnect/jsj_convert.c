@@ -41,7 +41,8 @@ convert_js_obj_to_JSObject_wrapper(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj
 {
     if (!njJSObject) {
         if (java_value)
-            JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_CANT_LOAD_JSOBJECT);
+            JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                                JSJMSG_CANT_LOAD_JSOBJECT);
         return JS_FALSE;
     }
 
@@ -502,8 +503,8 @@ conversion_error:
         if (!jsval_string)
             jsval_string = "";
         
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_CANT_CONVERT_JS,
-                       jsval_string, signature->name);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                    JSJMSG_CANT_CONVERT_JS, jsval_string, signature->name);
         return JS_FALSE;
     }
     return success;

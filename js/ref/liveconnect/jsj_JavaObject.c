@@ -243,7 +243,8 @@ JavaObject_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
             return JS_TRUE;
         }
         
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_BAD_OP_JOBJECT);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                                JSJMSG_BAD_OP_JOBJECT);
         return JS_FALSE;
     }
 
@@ -256,7 +257,8 @@ JavaObject_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
         return JS_TRUE;
 
     case JSTYPE_FUNCTION:
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_CONVERT_TO_FUNC);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                                JSJMSG_CONVERT_TO_FUNC);
         return JS_FALSE;
 
     case JSTYPE_VOID:
@@ -301,7 +303,8 @@ lookup_member_by_id(JSContext *cx, JNIEnv *jEnv, JSObject *obj,
                 return JS_TRUE;
             }
         }
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_BAD_OP_JOBJECT);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                                JSJMSG_BAD_OP_JOBJECT);
         return JS_FALSE;
     }
 
@@ -313,14 +316,14 @@ lookup_member_by_id(JSContext *cx, JNIEnv *jEnv, JSObject *obj,
     if (!member_descriptor) {
         JS_IdToValue(cx, id, &idval);
         if (!JSVAL_IS_STRING(idval)) {
-            JS_ReportErrorNumber(cx, jsj_GetErrorMessage,
+            JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
                                             JSJMSG_BAD_JOBJECT_EXPR);
             return JS_FALSE;
         }
 
         member_name = JS_GetStringBytes(JSVAL_TO_STRING(idval));
 
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage,
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
                     JSJMSG_NO_INSTANCE_NAME,
                     class_descriptor->name, member_name);
         return JS_FALSE;
@@ -452,7 +455,8 @@ no_such_field:
         JS_IdToValue(cx, id, &idval);
         member_name = JS_GetStringBytes(JSVAL_TO_STRING(idval));
         class_descriptor = java_wrapper->class_descriptor;
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_NO_NAME_IN_CLASS,
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                       JSJMSG_NO_NAME_IN_CLASS,
                        member_name, class_descriptor->name);
         return JS_FALSE;
 }
@@ -493,7 +497,8 @@ JavaObject_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                          JSPropertyOp getter, JSPropertyOp setter,
                          uintN attrs, JSProperty **propp)
 {
-    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_JOBJECT_PROP_DEFINE);
+    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                    JSJMSG_JOBJECT_PROP_DEFINE);
     return JS_FALSE;
 }
 
@@ -528,7 +533,7 @@ JavaObject_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     *vp = JSVAL_FALSE;
 
     if (!JSVERSION_IS_ECMA(version)) {
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage,
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
                                         JSJMSG_JOBJECT_PROP_DELETE);
         return JS_FALSE;
     } else {
@@ -605,12 +610,12 @@ JavaObject_checkAccess(JSContext *cx, JSObject *obj, jsid id,
 {
     switch (mode) {
     case JSACC_WATCH:
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, 
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
                                                 JSJMSG_JOBJECT_PROP_WATCH);
         return JS_FALSE;
 
     case JSACC_IMPORT:
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage,
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
                                                 JSJMSG_JOBJECT_PROP_EXPORT);
         return JS_FALSE;
 

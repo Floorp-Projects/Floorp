@@ -90,8 +90,8 @@ lookup_static_member_by_id(JSContext *cx, JNIEnv *jEnv, JSObject *obj,
     if (!member_descriptor) {
         JS_IdToValue(cx, id, &idval);
         if (!JSVAL_IS_STRING(idval)) {
-            JS_ReportErrorNumber(cx, 
-                                jsj_GetErrorMessage, JSJMSG_BAD_JCLASS_EXPR);
+            JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                            JSJMSG_BAD_JCLASS_EXPR);
 	    return JS_FALSE;
         }
 
@@ -103,7 +103,8 @@ lookup_static_member_by_id(JSContext *cx, JNIEnv *jEnv, JSObject *obj,
             return JS_TRUE;
         }
 
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_MISSING_NAME,
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                        JSJMSG_MISSING_NAME,
                        class_descriptor->name, member_name);
         return JS_FALSE;
     }
@@ -195,7 +196,8 @@ JavaClass_setPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 no_such_field:
     JS_IdToValue(cx, id, &idval);
     member_name = JS_GetStringBytes(JSVAL_TO_STRING(idval));
-    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_MISSING_STATIC,
+    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                   JSJMSG_MISSING_STATIC,
                    member_name, class_descriptor->name);
     return JS_FALSE;
 }
@@ -258,7 +260,8 @@ JavaClass_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                          JSPropertyOp getter, JSPropertyOp setter,
                          uintN attrs, JSProperty **propp)
 {
-    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_JCLASS_PROP_DEFINE);
+    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                    JSJMSG_JCLASS_PROP_DEFINE);
     return JS_FALSE;
 }
 
@@ -293,7 +296,7 @@ JavaClass_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     *vp = JSVAL_FALSE;
 
     if (!JSVERSION_IS_ECMA(version)) {
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage,
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
                                             JSJMSG_JCLASS_PROP_DELETE);
         return JS_FALSE;
     } else {
@@ -365,12 +368,12 @@ JavaClass_checkAccess(JSContext *cx, JSObject *obj, jsid id,
 {
     switch (mode) {
     case JSACC_WATCH:
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage,
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
                                             JSJMSG_JCLASS_PROP_WATCH);
         return JS_FALSE;
 
     case JSACC_IMPORT:
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage,
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
                                             JSJMSG_JCLASS_PROP_EXPORT);
         return JS_FALSE;
 
@@ -399,7 +402,8 @@ JavaClass_hasInstance(JSContext *cx, JSObject *obj, jsval candidate_jsval,
     has_instance = JS_FALSE;
     class_descriptor = JS_GetPrivate(cx, obj);
     if (!class_descriptor) {
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_BAD_OP_JCLASS);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                                    JSJMSG_BAD_OP_JCLASS);
         return JS_FALSE;
     }
 
@@ -417,7 +421,8 @@ JavaClass_hasInstance(JSContext *cx, JSObject *obj, jsval candidate_jsval,
     java_class = class_descriptor->java_class;
     java_wrapper = JS_GetPrivate(cx, candidate_obj);
     if (!java_wrapper) {
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_BAD_OP_PROTO);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                                JSJMSG_BAD_OP_PROTO);
         return JS_FALSE;
     }
     java_obj = java_wrapper->java_obj;
@@ -535,13 +540,15 @@ getClass(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     !(obj_arg = JSVAL_TO_OBJECT(argv[0])) ||
     (!JS_InstanceOf(cx, obj_arg, &JavaObject_class, 0) &&
          !JS_InstanceOf(cx, obj_arg, &JavaArray_class, 0))) {
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_NEED_JOBJECT_ARG);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                                JSJMSG_NEED_JOBJECT_ARG);
 	return JS_FALSE;
     }
 
     java_wrapper = JS_GetPrivate(cx, obj_arg);
     if (!java_wrapper) {
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_PROTO_GETCLASS);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                                JSJMSG_PROTO_GETCLASS);
         return JS_FALSE;
     }
 

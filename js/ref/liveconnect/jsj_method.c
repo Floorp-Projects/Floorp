@@ -733,7 +733,7 @@ convert_JS_method_args_to_java_argv(JSContext *cx, JNIEnv *jEnv, jsval *argv,
         ok = jsj_ConvertJSValueToJavaValue(cx, jEnv, argv[i], arg_signatures[i],
                                            &dummy_cost, &jargv[i], &localv[i]);
         if (!ok) {
-            JS_ReportErrorNumber(cx, jsj_GetErrorMessage,
+            JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
                                             JSJMSG_CONVERT_JS_VALUE);
             JS_free(cx, jargv);
             JS_free(cx, localv);
@@ -785,7 +785,8 @@ invoke_java_method(JSContext *cx, JSJavaThreadState *jsj_env,
 
 #ifdef DEBUG
     if (old_cx && (old_cx != cx)) {
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_MULTIPLE_JTHREADS);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                        JSJMSG_MULTIPLE_JTHREADS);
     }
 #endif
 
@@ -1036,7 +1037,8 @@ invoke_java_constructor(JSContext *cx,
 
 #ifdef DEBUG
     if (old_cx && (old_cx != cx)) {
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_MULTIPLE_JTHREADS);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
+                                        JSJMSG_MULTIPLE_JTHREADS);
     }
 #endif
 
@@ -1122,24 +1124,24 @@ jsj_JavaConstructorWrapper(JSContext *cx, JSObject *obj,
     /* Get class/interface flags and check them */
     modifiers = class_descriptor->modifiers;
     if (modifiers & ACC_ABSTRACT) {
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, 
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
                             JSJMSG_ABSTRACT_JCLASS, class_descriptor->name);
         return JS_FALSE;
     }
     if (modifiers & ACC_INTERFACE) {
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, 
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
                             JSJMSG_IS_INTERFACE, class_descriptor->name);
         return JS_FALSE;
     }
     if ( !(modifiers & ACC_PUBLIC) ) {
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, 
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
                             JSJMSG_NOT_PUBLIC, class_descriptor->name);
         return JS_FALSE;
     }
     
     member_descriptor = jsj_LookupJavaClassConstructors(cx, jEnv, class_descriptor);
     if (!member_descriptor) {
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, 
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
                             JSJMSG_NO_CONSTRUCTORS, class_descriptor->name);
         return JS_FALSE;
     }

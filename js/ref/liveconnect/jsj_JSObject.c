@@ -728,7 +728,8 @@ Java_netscape_javascript_JSObject_getMember(JNIEnv *jEnv,
 
     property_name_ucs2 = NULL;
     if (!property_name_jstr) {
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_NULL_MEMBER_NAME);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
+                                                JSJMSG_NULL_MEMBER_NAME);
         member = NULL;
         goto done;
     }
@@ -819,7 +820,8 @@ Java_netscape_javascript_JSObject_setMember(JNIEnv *jEnv,
     
     property_name_ucs2 = NULL;
     if (!property_name_jstr) {
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_NULL_MEMBER_NAME);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
+                                            JSJMSG_NULL_MEMBER_NAME);
         goto done;
     }
 
@@ -895,7 +897,8 @@ Java_netscape_javascript_JSObject_removeMember(JNIEnv *jEnv,
         return;
     
     if (!property_name_jstr) {
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_NULL_MEMBER_NAME);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
+                                            JSJMSG_NULL_MEMBER_NAME);
         goto done;
     }
     /* Get the Unicode string for the JS property name */
@@ -945,8 +948,8 @@ Java_netscape_javascript_JSObject_call(JNIEnv *jEnv, jobject java_wrapper_obj,
     function_name_ucs2 = NULL;
     result = NULL;
     if (!function_name_jstr) {
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, 
-                                                JSJMSG_NULL_FUNCTION_NAME);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
+                                                    JSJMSG_NULL_FUNCTION_NAME);
         goto done;
     }
 
@@ -1034,7 +1037,8 @@ Java_netscape_javascript_JSObject_eval(JNIEnv *jEnv,
     result = NULL;
     eval_ucs2 = NULL;
     if (!eval_jstr) {
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_NULL_EVAL_ARG);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                                JSJMSG_NULL_EVAL_ARG);
         goto done;
     }
 

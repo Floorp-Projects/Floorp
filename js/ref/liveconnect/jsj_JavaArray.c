@@ -80,7 +80,8 @@ access_java_array_element(JSContext *cx,
                 return JS_TRUE;
             }
         }
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_BAD_OP_JARRAY);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                                JSJMSG_BAD_OP_JARRAY);
         return JS_FALSE;
     }
     class_descriptor = java_wrapper->class_descriptor;
@@ -109,7 +110,7 @@ access_java_array_element(JSContext *cx,
 
                 if (!JSVERSION_IS_ECMA(version)) {
  
-                    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, 
+                    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
                                         JSJMSG_CANT_WRITE_JARRAY, member_name);
                     return JS_FALSE;
                 } else {
@@ -131,7 +132,8 @@ access_java_array_element(JSContext *cx,
             }
         }
 
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_BAD_INDEX_EXPR);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                            JSJMSG_BAD_INDEX_EXPR);
         return JS_FALSE;
     }
     
@@ -146,7 +148,7 @@ access_java_array_element(JSContext *cx,
     if (index < 0 || index >= array_length) {
 	char numBuf[12];
 	sprintf(numBuf, "%d", index);
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage,
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
                                             JSJMSG_BAD_JARRAY_INDEX, numBuf);
         return JS_FALSE;
     }
@@ -207,7 +209,8 @@ JavaArray_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                          JSPropertyOp getter, JSPropertyOp setter,
                          uintN attrs, JSProperty **propp)
 {
-    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_JARRAY_PROP_DEFINE);
+    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
+                                        JSJMSG_JARRAY_PROP_DEFINE);
     return JS_FALSE;
 }
 
@@ -242,7 +245,8 @@ JavaArray_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     *vp = JSVAL_FALSE;
     
     if (!JSVERSION_IS_ECMA(version)) {
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_JARRAY_PROP_DELETE);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                            JSJMSG_JARRAY_PROP_DELETE);
         return JS_FALSE;
     } else {
         /* Attempts to delete permanent properties are silently ignored
@@ -319,11 +323,13 @@ JavaArray_checkAccess(JSContext *cx, JSObject *obj, jsid id,
 {
     switch (mode) {
     case JSACC_WATCH:
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_JARRAY_PROP_WATCH);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                            JSJMSG_JARRAY_PROP_WATCH);
         return JS_FALSE;
 
     case JSACC_IMPORT:
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_JARRAY_PROP_EXPORT);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                            JSJMSG_JARRAY_PROP_EXPORT);
         return JS_FALSE;
 
     default:

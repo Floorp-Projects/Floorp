@@ -473,7 +473,7 @@ extern void
 jsj_LogError(const char *error_msg);
 
 extern const JSErrorFormatString * 
-jsj_GetErrorMessage(const uintN errorNumber);
+jsj_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber);
 
 PR_CALLBACK JSJHashNumber
 jsj_HashJavaObject(const void *key, void* env);

@@ -302,14 +302,19 @@ jsj_LogError(const char *error_msg)
 	to convert an error number into an error format string.
 */
 JSErrorFormatString jsj_ErrorFormatString[JSJ_Err_Limit] = {
+#if JS_HAS_DFLT_MSG_STRINGS
 #define MSG_DEF(name, number, count, format) \
     { format, count } ,
+#else
+#define MSG_DEF(name, number, count, format) \
+    { NULL, count } ,
+#endif
 #include "jsj_msg.def"
 #undef MSG_DEF
 };
 
 const JSErrorFormatString *
-jsj_GetErrorMessage(const uintN errorNumber)
+jsj_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
 {
     if ((errorNumber > 0) && (errorNumber < JSJ_Err_Limit))
 	    return &jsj_ErrorFormatString[errorNumber];
