@@ -1227,6 +1227,13 @@ sourcetext { /* XXX should not be in HTML namespace */
   padding: 0px;
   float: inherit;
   position: inherit;
+  top: inherit;
+  right: inherit;
+  bottom: inherit;
+  left: inherit;
+  z-index: inherit;
+  clip: inherit;
+  opacity: inherit;
   width:  0px; /* hack for boxes */
   height: 0px; /* hack for boxes */
 }
