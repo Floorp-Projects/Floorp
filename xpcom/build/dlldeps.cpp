@@ -42,6 +42,7 @@
 #include "nsEnumeratorUtils.h"
 #include "nsQuickSort.h"
 #include "nsString.h"
+#include "nsPrintfCString.h"
 #include "nsSupportsArray.h"
 #include "nsProxyEventPrivate.h"
 #include "xpt_xdr.h"
@@ -148,6 +149,7 @@ void XXXNeverCalled()
     nsStorageStream();
     NS_NewBinaryInputStream(0, 0);
     nsString foo;
+    nsPrintfCString bar("");
     nsLinebreakConverter::ConvertStringLineBreaks(foo, 
     nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakContent);
     NS_NewLocalFile(NULL, PR_FALSE, NULL);
