@@ -1011,7 +1011,8 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState aReflowS
     for (colX = 0; colX < numCols; colX++) { 
       nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
       if (!colFrame) continue;
-      nscoord colBasis = -1;
+      nscoord maxColBasis = -1;
+      float   maxPercent  = 0.0f;
       // Scan the cells in the col 
       for (rowX = 0; rowX < numRows; rowX++) {
         PRBool originates;
@@ -1025,7 +1026,6 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState aReflowS
         cellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
         if (eStyleUnit_Percent == cellPosition->mWidth.GetUnit()) {
           float percent = cellPosition->mWidth.GetPercentValue();
-          colBasis = 0;
           if (percent > 0.0f) {
             // calculate the preferred width of the cell based on fixWidth and desWidth
             nscoord cellDesWidth  = 0;
@@ -1035,27 +1035,31 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState aReflowS
               cellDesWidth += spanFrame->GetDesWidth();
             }
             // figure the basis using the cell's desired width and percent
-            colBasis = nsTableFrame::RoundToPixel(NSToCoordRound((float)cellDesWidth / percent), aPixelToTwips);
-            perTotal += percent;
+            nscoord colBasis = nsTableFrame::RoundToPixel(NSToCoordRound((float)cellDesWidth / percent), aPixelToTwips);
+            maxColBasis = PR_MAX(maxColBasis, colBasis);
+            maxPercent  = PR_MAX(maxPercent, percent);
           }
         }
       }
-      if (-1 == colBasis) {
+      if (maxColBasis >= 0) {
+        perTotal += maxPercent;
+      }
+      else {
         // see if the col has a style percent width specified
         nsStyleCoord colStyleWidth = colFrame->GetStyleWidth();
         if (eStyleUnit_Percent == colStyleWidth.GetUnit()) {
           float percent = colStyleWidth.GetPercentValue();
-          colBasis = 0;
+          maxColBasis = 0;
           if (percent > 0.0f) {
             nscoord desWidth = colFrame->GetDesWidth();
-            colBasis = nsTableFrame::RoundToPixel(NSToCoordRound((float)desWidth / percent), aPixelToTwips);
+            maxColBasis = nsTableFrame::RoundToPixel(NSToCoordRound((float)desWidth / percent), aPixelToTwips);
           }
         }
       }
-      basis = PR_MAX(basis, colBasis);
+      basis = PR_MAX(basis, maxColBasis);
       nscoord fixWidth = colFrame->GetFixWidth();
       fixWidthTotal += fixWidth;
-      if (colBasis >= 0) {
+      if (maxColBasis >= 0) {
         numPerCols++;
       }
       else {
@@ -1410,7 +1414,8 @@ void BasicTableLayoutStrategy::CalculateTotals(PRInt32& aCellSpacing,
       aTotalAvailWidths[MIN_PRO] = aTotalWidths[MIN_PRO];
       aTotalCounts[DES_CON]++;
       aTotalWidths[DES_CON] += NSToCoordRound(((float)minProp) * mMinToDesProportionRatio);
-      aTotalAvailWidths[DES_CON] = aTotalWidths[DES_CON];
+      aTotalAvailWidths[DES_CON] = aTotalWidths[DES_CON]+PR_MAX(0,colFrame->GetWidth(DES_ADJ) - 
+                 NSToCoordRound(((float)minProp) * mMinToDesProportionRatio));
       aMinWidths[MIN_PRO] += minCol;
       aMinWidths[DES_CON] += minProp;
       continue;
