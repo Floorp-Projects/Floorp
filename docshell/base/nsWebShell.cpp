@@ -943,17 +943,11 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   // Since this call must be made on the UI thread, we know the Event Queue
   // will be associated with the current thread...
   //
-  nsIEventQueueService* eventService;
-  rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                    kIEventQueueServiceIID,
-                                    (nsISupports **)&eventService);
-  if (NS_SUCCEEDED(rv)) {
-    // XXX: What if this fails?
-    rv = eventService->GetThreadEventQueue(PR_GetCurrentThread(),
-                                           &mThreadEventQueue);
-    nsServiceManager::ReleaseService(kEventQueueServiceCID, eventService);
-  }
+  NS_WITH_SERVICE(nsIEventQueueService, eventService, kEventQueueServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
+  rv = eventService->GetThreadEventQueue(PR_GetCurrentThread(), &mThreadEventQueue);
+  if (NS_FAILED(rv)) return rv;
 
   //XXX make sure plugins have started up. this really needs to
   //be associated with the nsIContentViewerContainer interfaces,
@@ -988,19 +982,11 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
       NS_RELEASE(parentLoader);
     }
   } else {
-    nsIDocumentLoader* docLoaderService;
+    NS_WITH_SERVICE(nsIDocumentLoader, docLoaderService, kDocLoaderServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-    // Get the global document loader service...
-    rv = nsServiceManager::GetService(kDocLoaderServiceCID,
-                                      kIDocumentLoaderIID,
-                                      (nsISupports **)&docLoaderService);
-    if (NS_SUCCEEDED(rv)) {
-      rv = docLoaderService->CreateDocumentLoader(&mDocLoader);
-      nsServiceManager::ReleaseService(kDocLoaderServiceCID, docLoaderService);
-    }
-  }
-  if (NS_FAILED(rv)) {
-    goto done;
+    rv = docLoaderService->CreateDocumentLoader(&mDocLoader);
+    if (NS_FAILED(rv)) return rv;
   }
 
   // Set the webshell as the default IContentViewerContainer for the loader...
@@ -1030,9 +1016,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
 
   // Create a Native window for the shell container...
   rv = nsComponentManager::CreateInstance(kChildCID, nsnull, kIWidgetIID, (void**)&mWindow);
-  if (NS_FAILED(rv)) {
-    goto done;
-  }
+  if (NS_FAILED(rv)) return rv;
 
   widgetInit.clipChildren = PR_FALSE;
   widgetInit.mWindowType = eWindowType_child;
@@ -1044,11 +1028,9 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   // Create device context
   if (nsnull != aNativeParent) {
     rv = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull,
-                                      kIDeviceContextIID,
-                                      (void **)&mDeviceContext);
-    if (NS_FAILED(rv)) {
-      goto done;
-    }
+                                            kIDeviceContextIID,
+                                            (void **)&mDeviceContext);
+    if (NS_FAILED(rv)) return rv;
     mDeviceContext->Init(aNativeParent);
     float dev2twip;
     mDeviceContext->GetDevUnitsToTwips(dev2twip);
@@ -1056,14 +1038,12 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
     float twip2dev;
     mDeviceContext->GetTwipsToDevUnits(twip2dev);
     mDeviceContext->SetAppUnitsToDevUnits(twip2dev);
-  //  mDeviceContext->SetGamma(1.7f);
+    //  mDeviceContext->SetGamma(1.7f);
     mDeviceContext->SetGamma(1.0f);
 
     // Create a Native window for the shell container...
     rv = nsComponentManager::CreateInstance(kChildCID, nsnull, kIWidgetIID, (void**)&mWindow);
-    if (NS_FAILED(rv)) {
-      goto done;
-    }
+    if (NS_FAILED(rv)) return rv;
 
     widgetInit.clipChildren = PR_FALSE;
     widgetInit.mWindowType = eWindowType_child;
@@ -1074,9 +1054,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
     // we need a deviceContext
 
     rv = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull,kIDeviceContextIID,(void **)&mDeviceContext);
-    if (NS_FAILED(rv)) {
-      goto done;
-    }
+    if (NS_FAILED(rv)) return rv;
     mDeviceContext->Init(aNativeParent);
     float dev2twip;
     mDeviceContext->GetDevUnitsToTwips(dev2twip);
@@ -1091,27 +1069,18 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   }
 
   // Set the language portion of the user agent. :)
-  nsILocaleService *localeServ;
-  rv = nsServiceManager::GetService(kLocaleServiceCID, NS_GET_IID(nsILocaleService),
-      (nsISupports**)&localeServ);
-  if (NS_FAILED(rv)) goto done;
+  NS_WITH_SERVICE(nsILocaleService, localeServ, kLocaleServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
   PRUnichar *UALang;
   rv = localeServ->GetLocaleComponentForUserAgent(&UALang);
-  NS_RELEASE(localeServ);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) return rv;
 
-  nsIIOService *ioServ;
-  rv = nsServiceManager::GetService(kIOServiceCID, NS_GET_IID(nsIIOService), (nsISupports**)&ioServ);
-  if (NS_FAILED(rv)) goto done;
+  NS_WITH_SERVICE(nsIIOService, ioServ, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
   rv = ioServ->SetLanguage(UALang);
   nsAllocator::Free(UALang);
-  NS_RELEASE(ioServ);
-  if (NS_FAILED(rv)) goto done;
-
-
-done:
   return rv;
 }
 
@@ -1378,6 +1347,10 @@ nsWebShell::Repaint(PRBool aForce)
   --dwc0001
   NS_PRECONDITION(nsnull != mWindow, "null window");
   */
+
+  if (nsnull != mWindow) {
+    mWindow->Invalidate(aForce);
+  }
 
 #if 0
 	if (nsnull != mWindow) {
