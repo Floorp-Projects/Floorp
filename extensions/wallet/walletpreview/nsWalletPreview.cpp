@@ -42,8 +42,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIWalletPreview interface
-  NS_IMETHOD GetPrefillValue(char * *aValue);
-  NS_IMETHOD SetValue(const char *aValue, nsIDOMWindow *win);
+  NS_DECL_NSIWALLETPREVIEW
 };
 
 ////////////////////////////////////////////////////////////////////////

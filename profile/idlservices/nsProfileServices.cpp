@@ -45,16 +45,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIProfile interface
-	NS_IMETHOD CreateNewProfile(const char* aValue);
-	NS_IMETHOD RenameProfile(const char *oldName, const char *newName);
-	NS_IMETHOD DeleteProfile(const char *profileName, const char *canDeleteFiles);
-	NS_IMETHOD GetProfileList(char **_retval);
-	NS_IMETHOD StartCommunicator(const char *profileName);
-	NS_IMETHOD GetCurrentProfile(char **_retval);
-	NS_IMETHOD MigrateProfile(const char *profileName);
-	NS_IMETHOD ProcessPREGInfo(const char *data);
-	NS_IMETHOD CloneProfile(const char *aProfileName);
-
+    NS_DECL_NSIPROFILESERVICES
 
 private:
 	nsIProfile *mProfile;

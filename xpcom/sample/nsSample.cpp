@@ -52,6 +52,18 @@ public:
     NS_DECL_ISUPPORTS
 
     /**
+     * This macro is defined in the nsISample.h file, and is generated
+     * automatically by the xpidl compiler.  It expands to
+     * declarations of all of the methods required to implement the
+     * interface.  xpidl will generate a NS_DECL_[INTERFACENAME] macro
+     * for each interface that it processes.
+     *
+     * The methods of nsISample are discussed individually below, but
+     * commented out (because this macro already defines them.)
+     */
+    NS_DECL_NSISAMPLE
+
+    /**
      * NS_IMETHOD expands to the standard XPCOM return type.  XPCOM methods
      * should never return any other type.  The return value is used
      * behind the scenes by the XPConnect runtime to figure out if the call
@@ -62,15 +74,15 @@ public:
      * as "sample.Value='foo';" and "var val = sample.Value"
      */
     // nsISample interface
-    NS_IMETHOD GetValue(char * *aValue);
-    NS_IMETHOD SetValue(char * aValue);
+    /* NS_IMETHOD GetValue(char * *aValue); */
+    /* NS_IMETHOD SetValue(char * aValue); */
 
     /**
      * The const came from the "in" specifier in nsISample.idl.  "in"
      * specifies that the value of this parameter is used only for input,
      * this method is not allowed to modify the contents of the buffer.
      */
-    NS_IMETHOD WriteValue(const char *aPrefix);
+    /* NS_IMETHOD WriteValue(const char *aPrefix); */
 
     /**
      * nsISample.idl specifies all of it's string types as string, instead
@@ -79,7 +91,7 @@ public:
      * If this type had been specified as wstring, it would appear as
      * PRUnichar * in C++, which is the NSPR type for unicode characters.
      */
-    NS_IMETHOD Poke(const char* aValue);
+    /* NS_IMETHOD Poke(const char* aValue); */
 
 private:
     char* mValue;

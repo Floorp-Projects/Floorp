@@ -45,13 +45,7 @@ class nsTopProgressNotifier : public nsIXPINotifier
         NS_DECL_ISUPPORTS
 
         // implements nsIXPINotifier
-        NS_IMETHOD BeforeJavascriptEvaluation(const PRUnichar *URL);
-        NS_IMETHOD AfterJavascriptEvaluation(const PRUnichar *URL);
-        NS_IMETHOD InstallStarted(const PRUnichar* URL, const PRUnichar* UIPackageName);
-        NS_IMETHOD ItemScheduled(const  PRUnichar* message );
-        NS_IMETHOD FinalizeProgress(const PRUnichar* message, PRInt32 itemNum, PRInt32 totNum );
-        NS_IMETHOD FinalStatus(const PRUnichar* URL, PRInt32 status);
-        NS_IMETHOD LogComment(const PRUnichar* comment);
+        NS_DECL_NSIXPINOTIFIER
    
    private:
         nsVector        *mNotifiers;

@@ -46,12 +46,14 @@ class nsPrefMigrationProgressDialog : public nsIPrefMigrationProgress, public ns
         virtual ~nsPrefMigrationProgressDialog();
         
         NS_DECL_ISUPPORTS
+        NS_DECL_NSIPREFMIGRATIONPROGRESS
 
-        
         NS_IMETHOD CreateProfileProgressDialog();
-        NS_IMETHOD KillProfileProgressDialog();
         NS_IMETHOD MigrationStarted(const char *UIPackageName);
         NS_IMETHOD IncrementProgressBar();
+
+        NS_IMETHOD KillProfileProgressDialog();
+
         //NS_IMETHOD InstallFinalization(const char *message, PRInt32 itemNum, PRInt32 totNum);
         //NS_IMETHOD InstallAborted();
 

@@ -42,8 +42,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIWalletEditor interface
-  NS_IMETHOD GetValue(char * *aValue);
-  NS_IMETHOD SetValue(const char *aValue, nsIDOMWindow *win);
+  NS_DECL_NSIWALLETEDITOR
 };
 
 ////////////////////////////////////////////////////////////////////////

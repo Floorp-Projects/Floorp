@@ -42,11 +42,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsISignonViewer interface
-  NS_IMETHOD GetSignonValue(char * *aValue);
-  NS_IMETHOD GetRejectValue(char * *aValue);
-  NS_IMETHOD GetNopreviewValue(char * *aValue);
-  NS_IMETHOD GetNocaptureValue(char * *aValue);
-  NS_IMETHOD SetValue(const char *aValue, nsIDOMWindow *win);
+  NS_DECL_NSISIGNONVIEWER
 };
 
 ////////////////////////////////////////////////////////////////////////

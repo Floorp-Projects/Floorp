@@ -51,9 +51,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsICookieViewer interface
-  NS_IMETHOD GetCookieValue(char * *aValue);
-  NS_IMETHOD GetPermissionValue(char * *aValue);
-  NS_IMETHOD SetValue(const char *aValue, nsIDOMWindow *win);
+  NS_DECL_NSICOOKIEVIEWER
 };
 
 ////////////////////////////////////////////////////////////////////////

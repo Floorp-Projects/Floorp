@@ -30,12 +30,7 @@ class nsSound : public nsISound {
   virtual ~nsSound();
 
   NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Init(void);
-
-  NS_IMETHOD Play(nsIFileSpec *filespec);
-
-  NS_IMETHOD Beep(void);
+  NS_DECL_NSISOUND
 
   BSimpleGameSound *mSound;
 

@@ -51,10 +51,8 @@ class nsJAR : public nsIJAR
     NS_DEFINE_STATIC_CID_ACCESSOR( NS_JAR_CID );
   
     NS_DECL_ISUPPORTS
-    
-    NS_IMETHOD Open(const char *aZipFileName, PRInt32 *_retval);
-    NS_IMETHOD Extract(const char *aFilename, const char *aOutname, PRInt32 *_retval);
-    NS_IMETHOD Find(const char *aPattern, nsISimpleEnumerator **_retval);
+
+    NS_DECL_NSIZIP
   
   private:
 
@@ -77,12 +75,7 @@ public:
 
     //NS_DEFINE_STATIC_CID_ACCESSOR( NS_JARITEM_CID );
 
-    // nsIJARItem methods
-    NS_IMETHOD GetName(char * *aName);
-    NS_IMETHOD GetCompression(PRUint16 *aCompression);
-    NS_IMETHOD GetSize(PRUint32 *aSize);
-    NS_IMETHOD GetRealsize(PRUint32 *aRealsize);
-    NS_IMETHOD GetCrc32(PRUint32 *aCrc32);
+    NS_DECL_NSIJARITEM
 
     nsJARItem(nsZipItem* aOther);
     nsJARItem();

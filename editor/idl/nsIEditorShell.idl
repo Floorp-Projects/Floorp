@@ -59,14 +59,14 @@ interface nsIEditorShell : nsISupports
   void SetWebShellWindow(in nsIDOMWindow win);
   void LoadUrl(in wstring url);
   
-  /* Register a doc state listener. This gets added to a list of listeners
+  /** Register a doc state listener. This gets added to a list of listeners
      which are registered with the editor when that gets instantiated.
      If the LoadUrl fails, this listener will not receive any notifcations.
      If you call this after the editor has been instantiated, it calls through
      to editor::AddDocumentStateListener().
   */
   void RegisterDocumentStateListener(in nsIDocumentStateListener docListener);
-  /* Unregister a listener.
+  /** Unregister a listener.
      If you call this after the editor has been instantiated, it calls through
      to editor::RemoveDocumentStateListener().
   */
@@ -114,9 +114,9 @@ interface nsIEditorShell : nsISupports
   void Indent(in wstring indent);
   void Align(in wstring align);
   
-  /* Element insert and property editing */
+  /** Element insert and property editing */
   nsIDOMElement GetSelectedElement(in wstring tagName);
-  /* returns the element conversion of supplied node or a parent of required type */
+  /** returns the element conversion of supplied node or a parent of required type */
   nsIDOMElement GetElementOrParentByTagName(in wstring tagName, in nsIDOMNode node);
   nsIDOMElement CreateElementWithDefaults(in wstring tagName);
   void InsertElement(in nsIDOMElement element, in boolean deleteSelection);
@@ -125,9 +125,9 @@ interface nsIEditorShell : nsISupports
   void SelectElement(in nsIDOMElement element);
   void SetSelectionAfterElement(in nsIDOMElement element);
 
-  /***** Table editing *****/
-  /* These are done relative to selected cell
-     or cell contain the selection anchor */
+  /** Table insert and delete methods.  Done relative to selected cell or
+   * cell containing the selection anchor.
+   */
   void InsertTableCell(in PRInt32 number, in PRBool after);
   void InsertTableRow(in PRInt32 number, in PRBool after);
   void InsertTableColumn(in PRInt32 number, in PRBool after);
@@ -146,7 +146,7 @@ interface nsIEditorShell : nsISupports
     */
   void NormalizeTable(in nsIDOMElement tableElement);
 
-  /* Get the indexes from layout's cellmap */
+  /** Get the indexes from layout's cellmap */
   PRInt32 GetRowIndex(in nsIDOMElement cellElement);
   PRInt32 GetColumnIndex(in nsIDOMElement cellElement);
 
@@ -162,6 +162,7 @@ interface nsIEditorShell : nsISupports
 
   /* Get cell at a location in the layout's cellmap
      returns null when past last cell in a row or column */
+  /* Get a cell and associated data from the layout frame  based on cell map coordinates (0 index) */
   nsIDOMElement GetCellAt(in nsIDOMElement tableElement, in PRInt32 rowIndex, in PRInt32 colIndex);
   /* Get cell at a location in the layout's cellmap with associated data 
      returns null when past last cell in a row or column */
@@ -187,8 +188,10 @@ interface nsIEditorShell : nsISupports
    * format is mime type, e.g. text/html;
    * See nsIEditor.h for legal flag values.
    */
+  /* Get the contents, for output or other uses */
   wstring GetContentsAs(in wstring format, in PRUint32 flags);
-  /* For debugging, dump the content tree: */
+
+  /* Debugging: dump content tree to stdout */
   void DumpContentTree();
 
   /* Utility */

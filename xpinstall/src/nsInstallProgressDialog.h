@@ -51,23 +51,11 @@ class nsInstallProgressDialog : public nsIXPINotifier,
         
         NS_DECL_ISUPPORTS
 
-        // implement nsIXPINotifier  
-        NS_IMETHOD BeforeJavascriptEvaluation(const PRUnichar *URL);
-        NS_IMETHOD AfterJavascriptEvaluation(const PRUnichar *URL);
-        NS_IMETHOD InstallStarted(const PRUnichar *URL, const PRUnichar* UIPackageName);
-        NS_IMETHOD ItemScheduled(const PRUnichar *message);
-        NS_IMETHOD FinalizeProgress(const PRUnichar *message, PRInt32 itemNum, PRInt32 totNum);
-        NS_IMETHOD FinalStatus(const PRUnichar* URL, PRInt32 status);
-        NS_IMETHOD LogComment(const PRUnichar* comment);
+        // implement nsIXPINotifier
+        NS_DECL_NSIXPINOTIFIER
 
         // implement nsIXPIProgressDlg
-        NS_IMETHOD Open();
-        NS_IMETHOD Close();
-        NS_IMETHOD SetTitle(const PRUnichar * aTitle);
-        NS_IMETHOD SetHeading(const PRUnichar * aHeading);
-        NS_IMETHOD SetActionText(const PRUnichar * aActionText);
-        NS_IMETHOD SetProgress(PRInt32 aValue, PRInt32 aMax);
-        NS_IMETHOD GetCancelStatus(PRBool *_retval);
+        NS_DECL_NSIXPIPROGRESSDLG
 
         // Declare implementations of nsIXULWindowCallbacks interface functions.
         NS_IMETHOD ConstructBeforeJavaScript(nsIWebShell *aWebShell);

@@ -34,7 +34,9 @@ public:
 	virtual ~nsLocale(void);
 	
 	NS_IMETHOD GetCategory(const nsString* category, nsString* result);
-	NS_IMETHOD GetCategory(const PRUnichar *category, PRUnichar **result);
+
+  /* Declare methods from nsILocale */
+  NS_DECL_NSILOCALE
 
 protected:
 	

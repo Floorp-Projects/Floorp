@@ -765,27 +765,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // we manually delagate these to nsJSID
-
-    /* readonly attribute string name; */
-    NS_IMETHOD GetName(char * *aName);
-
-    /* readonly attribute string number; */
-    NS_IMETHOD GetNumber(char * *aNumber);
-
-    /* readonly attribute nsID id; */
-    NS_IMETHOD GetId(nsID* *aId);
-
-    /* readonly attribute boolean valid; */
-    NS_IMETHOD GetValid(PRBool *aValid);
-
-    /* boolean equals (in nsIJSID other); */
-    NS_IMETHOD equals(nsIJSID *other, PRBool *_retval);
-
-    /* void initialize (in string idString); */
-    NS_IMETHOD initialize(const char *idString);
-
-    /* string toString (); */
-    NS_IMETHOD toString(char **_retval);
+    NS_DECL_NSIJSID
 
     // we implement the rest...
 
@@ -809,35 +789,10 @@ public:
     NS_DECL_ISUPPORTS
 
     // we manually delagate these to nsJSID
-
-    /* readonly attribute string name; */
-    NS_IMETHOD GetName(char * *aName);
-
-    /* readonly attribute string number; */
-    NS_IMETHOD GetNumber(char * *aNumber);
-
-    /* readonly attribute nsID id; */
-    NS_IMETHOD GetId(nsID* *aId);
-
-    /* readonly attribute boolean valid; */
-    NS_IMETHOD GetValid(PRBool *aValid);
-
-    /* boolean equals (in nsIJSID other); */
-    NS_IMETHOD equals(nsIJSID *other, PRBool *_retval);
-
-    /* void initialize (in string idString); */
-    NS_IMETHOD initialize(const char *idString);
-
-    /* string toString (); */
-    NS_IMETHOD toString(char **_retval);
+    NS_DECL_NSIJSID
 
     // we implement the rest...
-
-    /* readonly attribute nsISupports createInstance; */
-    NS_IMETHOD GetCreateInstance(nsISupports * *aCreateInstance);
-
-    /* readonly attribute nsISupports getService; */
-    NS_IMETHOD GetGetService(nsISupports * *aGetService);
+    NS_DECL_NSIJSCID
 
     static nsJSCID* NewID(const char* str);
 
@@ -869,18 +824,7 @@ class nsXPCComponents : public nsIXPCComponents, public nsIXPCScriptable
 {
 public:
     NS_DECL_ISUPPORTS
-
-    /* readonly attribute nsIXPCInterfaces interfaces; */
-    NS_IMETHOD GetInterfaces(nsIXPCInterfaces * *aInterfaces);
-
-    /* readonly attribute nsIXPCClasses classes; */
-    NS_IMETHOD GetClasses(nsIXPCClasses * *aClasses);
-
-    /* readonly attribute nsIXPCClassesByID classes; */
-    NS_IMETHOD GetClassesByID(nsIXPCClassesByID * *aClassesByID);
-
-    /* readonly attribute nsIJSStackFrameLocation stack; */
-    NS_IMETHOD GetStack(nsIJSStackFrameLocation * *aStack);
+    NS_DECL_NSIXPCCOMPONENTS
 
     XPC_DECLARE_IXPCSCRIPTABLE
 
@@ -914,18 +858,7 @@ class nsXPCThreadJSContextStackImpl : public nsIJSContextStack
 {
 public:
     NS_DECL_ISUPPORTS
-
-    /* readonly attribute PRInt32 Count; */
-    NS_IMETHOD GetCount(PRInt32 *aCount);
-
-    /* JSContext Peek (); */
-    NS_IMETHOD Peek(JSContext * *_retval);
-
-    /* JSContext Pop (); */
-    NS_IMETHOD Pop(JSContext * *_retval);
-
-    /* void Push (in JSContext cx); */
-    NS_IMETHOD Push(JSContext * cx);
+    NS_DECL_NSIJSCONTEXTSTACK
 
 public:
     static nsXPCThreadJSContextStackImpl* GetSingleton();

@@ -45,10 +45,7 @@ public:
   // nsIDOMSelectionListener interface
   NS_IMETHOD    NotifySelectionChanged();
   
-  // nsIDocumentStateListener interface
-  NS_IMETHOD  	NotifyDocumentCreated();
-  NS_IMETHOD  	NotifyDocumentWillBeDestroyed();
-  NS_IMETHOD    NotifyDocumentStateChanged(PRBool aNowDirty);
+  NS_DECL_NSIDOCUMENTSTATELISTENER
   
 protected:
 
