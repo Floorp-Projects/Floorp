@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: lfinger.pl,v 1.8 1998/07/29 08:59:05 leif Exp $
+# $Id: lfinger.pl,v 1.9 1998/08/03 04:26:32 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -113,6 +113,8 @@ else
 }
 
 $entry = $conn->search($ld{root}, "subtree", $search, 0, @ATTRIBUTES);
+$conn->printError() if $conn->getErrorCode();
+
 while($entry)
 {
   printIt($entry);

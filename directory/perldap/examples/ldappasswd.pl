@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: ldappasswd.pl,v 1.4 1998/07/30 09:52:19 leif Exp $
+# $Id: ldappasswd.pl,v 1.5 1998/08/03 04:23:22 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -90,7 +90,7 @@ foreach $search ($#ARGV >= $[ ? @ARGV : $ld{bind})
       if (!$opt_n)
 	{
 	  $conn->update($entry);
-	  $conn->printError() if $conn->getError();
+	  $conn->printError() if $conn->getErrorCode();
 	}
 
       $entry = $conn->nextEntry();

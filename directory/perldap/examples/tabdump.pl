@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: tabdump.pl,v 1.1 1998/07/30 10:13:23 leif Exp $
+# $Id: tabdump.pl,v 1.2 1998/08/03 04:24:17 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -62,6 +62,8 @@ die "Could't connect to LDAP server $ld{host}" unless $conn;
 
 @attr = split(/,/, $attributes);
 $entry = $conn->search($ld{root}, $ld{scope}, $search, 0, @attr);
+$conn->printError() if $conn->getErrorCode();
+
 while ($entry)
 {
   foreach (@attr)

@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: rmentry.pl,v 1.1 1998/07/30 10:08:31 leif Exp $
+# $Id: rmentry.pl,v 1.2 1998/08/03 04:26:00 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -63,6 +63,8 @@ $key = "Y" if $opt_I;
 foreach $search (@ARGV)
 {
   $entry = $conn->search($ld{root}, $ld{scope}, $search, 0, @ATTRIBUTES);
+  $conn->printError() if $conn->getErrorCode();
+
   while ($entry)
     {
       if (! $opt_I)
@@ -73,7 +75,11 @@ foreach $search (@ARGV)
 
       if ($key eq "Y")
 	{
-	  $conn->delete($entry->{dn}) unless $opt_n;
+	  if (! $opt_n)
+	    {
+	      $conn->delete($entry->{dn});
+	      $conn->printError() if $conn->getErrorCode();
+	    }
 	  print "Deleted $entry->{dn}\n" if $opt_v;
 	}
 
