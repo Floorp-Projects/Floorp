@@ -33,8 +33,8 @@ DEFINES=-D_IMPL_NS_DOM
 EXPORTS=nsIScriptContext.h 		\
 	nsIJSScriptObject.h 		\
 	nsIJSNativeInitializer.h	\
+	nsIScriptObjectOwner.h	\
         nsIScriptGlobalObject.h 	\
-	nsIScriptContextOwner.h 	\
 	nsIScriptEventListener.h 	\
 	nsIDOMScriptObjectFactory.h 	\
 	nsIDOMNativeObjectRegistry.h 	\
