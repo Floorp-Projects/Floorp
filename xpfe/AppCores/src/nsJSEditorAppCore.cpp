@@ -159,6 +159,42 @@ ResolveEditorAppCore(JSContext *cx, JSObject *obj, jsval id)
 
 
 //
+// Native method SetEditorType
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreSetEditorType(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (NS_OK != nativeThis->SetEditorType(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function setEditorType requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method SetAttribute
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -723,6 +759,7 @@ static JSPropertySpec EditorAppCoreProperties[] =
 //
 static JSFunctionSpec EditorAppCoreMethods[] = 
 {
+  {"setEditorType",          EditorAppCoreSetEditorType,     1},
   {"setAttribute",          EditorAppCoreSetAttribute,     2},
   {"undo",          EditorAppCoreUndo,     0},
   {"redo",          EditorAppCoreRedo,     0},

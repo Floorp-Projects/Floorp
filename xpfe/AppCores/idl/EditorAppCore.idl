@@ -8,6 +8,7 @@ interface EditorAppCore : BaseAppCore
 
 	void EditorAppCore();
 	
+	void setEditorType(in wstring editorType);
 	void setAttribute(in wstring attr, in wstring value);
 	void undo();
 	void redo();
