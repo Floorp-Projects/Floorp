@@ -1021,7 +1021,8 @@ PRIVATE nsresult EncryptString (const char * text, char *& crypt) {
     return NS_ERROR_FAILURE;
   }
   crypt = (char *)PR_Malloc(PL_strlen(PREFIX) + PL_strlen(crypt0) + 1);
-  for (PRUint32 i=0; i<PL_strlen(PREFIX); i++) {
+  PRUint32 i;
+  for (i=0; i<PL_strlen(PREFIX); i++) {
     crypt[i] = PREFIX[i];
   }
   for (i=0; i<PL_strlen(crypt0); i++) {
