@@ -1638,7 +1638,6 @@ wallet_GetLine(nsInputFileStream strm, nsAutoString& line, PRBool obscure) {
  * Write a line to a file
  */
 void
-//@@@@@ why do we need the const and & for "line" on the next line
 wallet_PutLine(nsOutputFileStream strm, const nsAutoString& line, PRBool obscure)
 {
   for (int i=0; i<line.Length(); i++) {
@@ -1688,7 +1687,7 @@ wallet_WriteToFile(char* filename, nsVoidArray* list, PRBool obscure) {
       PRInt32 count2 = LIST_COUNT(ptr->itemList);
       for (PRInt32 j=0; j<count2; j++) {
         ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(j));
-        wallet_PutLine(strm, (*ptr).item1, obscure);
+        wallet_PutLine(strm, (*ptr1).item, obscure);
       }
     }
     wallet_PutLine(strm, "", obscure);
