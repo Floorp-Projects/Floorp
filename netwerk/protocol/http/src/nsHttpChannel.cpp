@@ -1631,8 +1631,13 @@ nsHttpChannel::PromptForUserPass(const char *host,
     // construct the domain string
     nsCAutoString domain;
     domain.Assign(host);
-    domain.Append(':');
-    domain.AppendInt(port);
+    // Add port only if it was originally specified in the URI
+    PRInt32 uriPort = -1;
+    mURI->GetPort(&uriPort);
+    if (uriPort != -1) {
+        domain.Append(':');
+        domain.AppendInt(port);
+    }
 
     NS_ConvertASCIItoUCS2 hostU(domain);
 
