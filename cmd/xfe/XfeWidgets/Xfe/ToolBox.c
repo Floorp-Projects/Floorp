@@ -1145,9 +1145,6 @@ DeleteChild(Widget child)
 	/* Update the item and tab lists */
 	UpdateItems(w);
 
-	/* Decrease the item count */
-	tp->item_count++;
-
 	return XtIsManaged(child);
 }
 /*----------------------------------------------------------------------*/
@@ -2379,7 +2376,7 @@ XfeToolBoxItemSetPosition(Widget w,Widget item,int pos)
 	
 	assert( _XfeIsAlive(w) );
 	assert( XfeIsToolBox(w) );
-	assert( tp->item_count > 1 );
+	assert( tp->item_count >= 1 );
 
 	if (pos == XmLAST_POSITION)
 	{
