@@ -26,7 +26,6 @@
 #include "nsHTMLIIDs.h"
 #include "nsCSSRendering.h"
 
-#include "nsIFloaterContainer.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIReflowCommand.h"
@@ -166,6 +165,8 @@ struct nsBlockReflowState : public nsFrameReflowState {
    */
   void GetAvailableSpace();
 
+  void InitFloater(nsPlaceholderFrame* aPlaceholderFrame);
+
   void AddFloater(nsPlaceholderFrame* aPlaceholderFrame);
 
   void PlaceFloater(nsPlaceholderFrame* aFloater, PRBool& aIsLeftFloater);
@@ -239,6 +240,11 @@ struct nsBlockReflowState : public nsFrameReflowState {
 
 // XXX This is vile. Make it go away
 void
+nsLineLayout::InitFloater(nsPlaceholderFrame* aFrame)
+{
+  mBlockReflowState->InitFloater(aFrame);
+}
+void
 nsLineLayout::AddFloater(nsPlaceholderFrame* aFrame)
 {
   mBlockReflowState->AddFloater(aFrame);
@@ -248,15 +254,11 @@ nsLineLayout::AddFloater(nsPlaceholderFrame* aFrame)
 
 #define nsBlockFrameSuper nsHTMLContainerFrame
 
-class nsBlockFrame : public nsBlockFrameSuper,
-                     public nsIFloaterContainer
+class nsBlockFrame : public nsBlockFrameSuper
 {
 public:
   nsBlockFrame(nsIContent* aContent, nsIFrame* aParent);
   ~nsBlockFrame();
-
-  // nsISupports
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // nsIFrame
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
@@ -290,19 +292,6 @@ public:
   NS_IMETHOD MoveInSpaceManager(nsIPresContext& aPresContext,
                                 nsISpaceManager* aSpaceManager,
                                 nscoord aDeltaX, nscoord aDeltaY);
-
-  // nsIFloaterContainer
-  virtual PRBool AddFloater(nsIPresContext*          aPresContext,
-                            const nsHTMLReflowState& aPlaceholderReflowState,
-                            nsIFrame*                aFloater,
-                            nsPlaceholderFrame*      aPlaceholder);
-
-  // XXX temporary
-  enum AnchoringPosition {eAnchoringPosition_HTMLFloater};
-  void AddAnchoredItem(nsIFrame*         aAnchoredItem,
-                       AnchoringPosition aPosition,
-                       nsIFrame*         aContainer);
-  void RemoveAnchoredItem(nsIFrame* aAnchoredItem);
 
 #ifdef DO_SELECTION
   NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext,
@@ -399,8 +388,7 @@ public:
 
   nsresult SplitLine(nsBlockReflowState& aState,
                      LineData* aLine,
-                     nsIFrame* aFrame,
-                     PRBool aLineWasComplete);
+                     nsIFrame* aFrame);
 
   PRBool ReflowBlockFrame(nsBlockReflowState& aState,
                           LineData* aLine,
@@ -901,7 +889,6 @@ BulletFrame::Reflow(nsIPresContext& aPresContext,
 
 #define LINE_IS_DIRTY                 0x1
 #define LINE_IS_BLOCK                 0x2
-#define LINE_LAST_CONTENT_IS_COMPLETE 0x4
 #define LINE_NEED_DID_REFLOW          0x8
 #define LINE_TOP_MARGIN_IS_AUTO       0x10
 #define LINE_BOTTOM_MARGIN_IS_AUTO    0x20
@@ -933,27 +920,6 @@ struct LineData {
   nsIFrame* LastChild() const;
 
   PRBool IsLastChild(nsIFrame* aFrame) const;
-
-  void SetLastContentIsComplete() {
-    mState |= LINE_LAST_CONTENT_IS_COMPLETE;
-  }
-
-  void ClearLastContentIsComplete() {
-    mState &= ~LINE_LAST_CONTENT_IS_COMPLETE;
-  }
-
-  void SetLastContentIsComplete(PRBool aValue) {
-    if (aValue) {
-      SetLastContentIsComplete();
-    }
-    else {
-      ClearLastContentIsComplete();
-    }
-  }
-
-  PRBool GetLastContentIsComplete() {
-    return 0 != (LINE_LAST_CONTENT_IS_COMPLETE & mState);
-  }
 
   PRBool IsBlock() const {
     return 0 != (LINE_IS_BLOCK & mState);
@@ -1099,10 +1065,9 @@ ListTextRuns(FILE* out, PRInt32 aIndent, nsTextRun* aRuns)
 char*
 LineData::StateToString(char* aBuf, PRInt32 aBufSize) const
 {
-  PR_snprintf(aBuf, aBufSize, "%s,%s,%scomplete",
+  PR_snprintf(aBuf, aBufSize, "%s,%s",
               (mState & LINE_IS_DIRTY) ? "dirty" : "clean",
-              (mState & LINE_IS_BLOCK) ? "block" : "inline",
-              (mState & LINE_LAST_CONTENT_IS_COMPLETE) ? "" : "!");
+              (mState & LINE_IS_BLOCK) ? "block" : "inline");
   return aBuf;
 }
 
@@ -1199,9 +1164,6 @@ LineData::Verify()
   if (nsnull != lastFrame) {
     nsIFrame* nextInFlow;
     lastFrame->GetNextInFlow(nextInFlow);
-    if (GetLastContentIsComplete()) {
-      NS_ASSERTION(nsnull == nextInFlow, "bad mState");
-    }
     if (nsnull != mNext) {
       nsIFrame* nextSibling;
       lastFrame->GetNextSibling(nextSibling);
@@ -1518,30 +1480,6 @@ nsBlockFrame::~nsBlockFrame()
   NS_IF_RELEASE(mFirstLineStyle);
   NS_IF_RELEASE(mFirstLetterStyle);
   nsTextRun::DeleteTextRuns(mTextRuns);
-}
-
-NS_IMETHODIMP
-nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kBlockFrameCID)) {
-    *aInstancePtr = (void*) (this);
-    return NS_OK;
-  }
-#if XXX
-  if (aIID.Equals(kIAnchoredItemsIID)) {
-    *aInstancePtr = (void*) ((nsIAnchoredItems*) this);
-    return NS_OK;
-  }
-#endif
-  if (aIID.Equals(kIFloaterContainerIID)) {
-    *aInstancePtr = (void*) ((nsIFloaterContainer*) this);
-    return NS_OK;
-  }
-  return nsBlockFrameSuper::QueryInterface(aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP
@@ -2322,15 +2260,12 @@ nsBlockFrame::AppendNewFrames(nsIPresContext& aPresContext,
       if (0 != pendingInlines) {
         // Set this to true in case we don't end up reflowing all of the
         // frames on the line (because they end up being pushed).
-        lastLine->SetLastContentIsComplete();
         lastLine->MarkDirty();
         pendingInlines = 0;
       }
 
       // Create a line for the block
-      LineData* line = new LineData(frame, 1,
-                                    (LINE_IS_BLOCK |
-                                     LINE_LAST_CONTENT_IS_COMPLETE));
+      LineData* line = new LineData(frame, 1, LINE_IS_BLOCK);
       if (nsnull == line) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -2368,7 +2303,6 @@ nsBlockFrame::AppendNewFrames(nsIPresContext& aPresContext,
   if (0 != pendingInlines) {
     // Set this to true in case we don't end up reflowing all of the
     // frames on the line (because they end up being pushed).
-    lastLine->SetLastContentIsComplete();
     lastLine->MarkDirty();
   }
 
@@ -2661,12 +2595,6 @@ nsBlockFrame::FrameRemovedReflow(nsBlockReflowState& aState)
         nsIFrame* nextFrame;
         deletedFrame->GetNextSibling(nextFrame);
         line->mFirstChild = nextFrame;
-      }
-      else {
-        nsIFrame* lastFrame = line->LastChild();
-        if (lastFrame == deletedFrame) {
-          line->SetLastContentIsComplete();
-        }
       }
 
       // Take deletedFrame out of the sibling list
@@ -3341,12 +3269,6 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     return PR_FALSE;
   }
   aReflowResult = reflowStatus;
-  if (NS_FRAME_IS_COMPLETE(reflowStatus)) {
-    aLine->SetLastContentIsComplete();
-  }
-  else {
-    aLine->ClearLastContentIsComplete();
-  }
 
   // XXX We need to check the *type* of break and if it's a column/page
   // break apply and cause the block to be split (assuming we are
@@ -3445,9 +3367,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     if (nsnull != nextInFlow) {
       // We made a next-in-flow for the block child frame. Create a
       // line to map the block childs next-in-flow.
-      LineData* line = new LineData(nextInFlow, 1,
-                                    (LINE_IS_BLOCK |
-                                     LINE_LAST_CONTENT_IS_COMPLETE));
+      LineData* line = new LineData(nextInFlow, 1, LINE_IS_BLOCK);
       if (nsnull == line) {
         aReflowResult = NS_ERROR_OUT_OF_MEMORY;
         return PR_FALSE;
@@ -3538,19 +3458,16 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     return PR_FALSE;
   }
 
-  PRBool lineWasComplete = aLine->GetLastContentIsComplete();
   if (!NS_INLINE_IS_BREAK(aReflowResult)) {
     aState.mPrevChild = aFrame;
     if (NS_FRAME_IS_COMPLETE(aReflowResult)) {
       aFrame->GetNextSibling(aFrame);
-      aLine->SetLastContentIsComplete();
       return PR_TRUE;
     }
 
     // Create continuation frame (if necessary); add it to the end of
     // the current line so that it can be pushed to the next line
     // properly.
-    aLine->ClearLastContentIsComplete();
     rv = nsHTMLContainerFrame::CreateNextInFlow(aState.mPresContext,
                                                 this, aFrame, nextInFlow);
     if (NS_OK != rv) {
@@ -3577,14 +3494,10 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   else {
     if (NS_INLINE_IS_BREAK_AFTER(aReflowResult)) {
       aState.mPrevChild = aFrame;
-      if (NS_FRAME_IS_COMPLETE(aReflowResult)) {
-        aLine->SetLastContentIsComplete();
-      }
-      else {
+      if (NS_FRAME_IS_NOT_COMPLETE(aReflowResult)) {
         // Create continuation frame (if necessary); add it to the end of
         // the current line so that it can be pushed to the next line
         // properly.
-        aLine->ClearLastContentIsComplete();
         rv = nsHTMLContainerFrame::CreateNextInFlow(aState.mPresContext,
                                                     this, aFrame,
                                                     nextInFlow);
@@ -3599,13 +3512,10 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       }
       aFrame->GetNextSibling(aFrame);
     }
-    else {
-      NS_ASSERTION(aLine->GetLastContentIsComplete(), "bad mState");
-    }
   }
 
   // Split line since we aren't going to keep going
-  rv = SplitLine(aState, aLine, aFrame, lineWasComplete);
+  rv = SplitLine(aState, aLine, aFrame);
   if (NS_IS_REFLOW_ERROR(rv)) {
     aReflowResult = rv;
   }
@@ -3650,8 +3560,7 @@ nsBlockFrame::RestoreStyleFor(nsIPresContext& aPresContext, nsIFrame* aFrame)
 nsresult
 nsBlockFrame::SplitLine(nsBlockReflowState& aState,
                         LineData* aLine,
-                        nsIFrame* aFrame,
-                        PRBool aLineWasComplete)
+                        nsIFrame* aFrame)
 {
   PRInt32 pushCount = aLine->ChildCount() -
     aState.mInlineReflow->GetCurrentFrameNum();
@@ -3682,7 +3591,6 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
     if (nsnull == to) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    to->SetLastContentIsComplete(aLineWasComplete);
     aLine->mChildCount -= pushCount;
 #ifdef NS_DEBUG
     if (GetVerifyTreeEnable()) {
@@ -4259,8 +4167,7 @@ nsBlockFrame::InsertNewFrame(nsIPresContext& aPresContext,
 
     if (line->IsBlock() || newFrameIsBlock) {
       // Create a new line
-      newLine = new LineData(aNewFrame, 1, LINE_LAST_CONTENT_IS_COMPLETE |
-                             newFrameIsBlock);
+      newLine = new LineData(aNewFrame, 1, newFrameIsBlock);
       if (nsnull == newLine) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -4280,8 +4187,7 @@ nsBlockFrame::InsertNewFrame(nsIPresContext& aPresContext,
     if (nsnull != line) {
       if (line->IsBlock()) {
         // Create a new line just after line
-        newLine = new LineData(aNewFrame, 1, LINE_LAST_CONTENT_IS_COMPLETE |
-                               newFrameIsBlock);
+        newLine = new LineData(aNewFrame, 1, newFrameIsBlock);
         if (nsnull == newLine) {
           return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -4295,8 +4201,7 @@ nsBlockFrame::InsertNewFrame(nsIPresContext& aPresContext,
           // The new frame goes after prevSibling and prevSibling is
           // the last frame on the line. Therefore we don't need to
           // split the line, just create a new line.
-          newLine = new LineData(aNewFrame, 1, LINE_LAST_CONTENT_IS_COMPLETE |
-                                 newFrameIsBlock);
+          newLine = new LineData(aNewFrame, 1, newFrameIsBlock);
           if (nsnull == newLine) {
             return NS_ERROR_OUT_OF_MEMORY;
           }
@@ -4316,15 +4221,13 @@ nsBlockFrame::InsertNewFrame(nsIPresContext& aPresContext,
 
               // Create new line to hold the remaining frames
               NS_ASSERTION(n - i - 1 > 0, "bad line count");
-              newLine = new LineData(nextSibling, n - i - 1,
-                               line->mState & LINE_LAST_CONTENT_IS_COMPLETE);
+              newLine = new LineData(nextSibling, n - i - 1, 0);
               if (nsnull == newLine) {
                 return NS_ERROR_OUT_OF_MEMORY;
               }
               newLine->mNext = line->mNext;
               line->mNext = newLine;
               line->MarkDirty();
-              line->SetLastContentIsComplete();
               line->mChildCount = i + 1;
               break;
             }
@@ -4332,8 +4235,7 @@ nsBlockFrame::InsertNewFrame(nsIPresContext& aPresContext,
           }
 
           // Now create a new line to hold the block
-          newLine = new LineData(aNewFrame, 1,
-                             newFrameIsBlock | LINE_LAST_CONTENT_IS_COMPLETE);
+          newLine = new LineData(aNewFrame, 1, newFrameIsBlock);
           if (nsnull == newLine) {
             return NS_ERROR_OUT_OF_MEMORY;
           }
@@ -4472,26 +4374,6 @@ nsBlockFrame::RemoveChild(LineData* aLines, nsIFrame* aChild)
 // Floater support
 
 void
-nsBlockFrame::AddAnchoredItem(nsIFrame*         aAnchoredItem,
-                              AnchoringPosition aPosition,
-                              nsIFrame*         aContainer)
-{
-  // Set the geometric parent and add the anchored frame to the child list
-  aAnchoredItem->SetGeometricParent(this);
-//XXX  AddFrame(aAnchoredItem);
-}
-
-void
-nsBlockFrame::RemoveAnchoredItem(nsIFrame* aAnchoredItem)
-{
-  NS_PRECONDITION(IsChild(aAnchoredItem), "bad anchored item");
-  NS_ASSERTION(aAnchoredItem != mFirstChild, "unexpected anchored item");
-  // Remove the anchored item from the child list
-  // XXX Implement me
-  //XXX mChildCount--;
-}
-
-void
 nsBlockFrame::ReflowFloater(nsIPresContext& aPresContext,
                             nsBlockReflowState& aState,
                             nsIFrame* aFloaterFrame)
@@ -4563,32 +4445,14 @@ nsBlockFrame::ReflowFloater(nsIPresContext& aPresContext,
   }
 }
 
-PRBool
-nsBlockFrame::AddFloater(nsIPresContext* aPresContext,
-                         const nsHTMLReflowState& aReflowState,
-                         nsIFrame* aFloater,
-                         nsPlaceholderFrame* aPlaceholder)
+void
+nsBlockReflowState::InitFloater(nsPlaceholderFrame* aPlaceholder)
 {
-  // Walk up reflow state chain, looking for ourself
-  const nsReflowState* rs = &aReflowState;
-  while (nsnull != rs) {
-    if (rs->frame == this) {
-      break;
-    }
-    rs = rs->parentReflowState;
-  }
-  if (nsnull == rs) {
-    // Never mind
-    return PR_FALSE;
-  }
+  nsIFrame* floater = aPlaceholder->GetAnchoredItem();
+  floater->SetGeometricParent(mBlock);
+  mBlock->ReflowFloater(mPresContext, *this, floater);
 
-  AddAnchoredItem(aFloater, eAnchoringPosition_HTMLFloater, this);
-
-  // Reflow the floater (the first time we do it here; later on it's
-  // done during the reflow of the line that contains the floater)
-  nsBlockReflowState* state = (nsBlockReflowState*) rs;
-  ReflowFloater(*aPresContext, *state, aFloater);
-  return PR_TRUE;
+  AddFloater(aPlaceholder);
 }
 
 // This is called by the line layout's AddFloater method when a
