@@ -22,7 +22,7 @@
 DEPTH=..\..
 THEME_ROOT_DEPTH = .
 
-DIRS=communicator editor global messenger navigator
+DIRS=communicator editor global messenger navigator preview
 
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
@@ -32,10 +32,16 @@ CHROME_TYPE = skin
 
 CHROME_MISC = \
 	.\manifest.rdf \
+	.\preview\win\preview.png \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
+
 # choose Classic skin as default
 chrome::
     echo skin,install,select,classic/1.0 >>$(DIST)\bin\chrome\installed-chrome.txt
+
+	
+	
+	

@@ -1,5 +1,6 @@
 skins/classic.jar:
     manifest.rdf                                               
+    preview.png                                                  (preview/win/preview.png)
     communicator/skin/search-widgets.css                         (communicator/win/search-widgets.css)
     communicator/skin/navbar-endbox.gif                          (communicator/navbar-endbox.gif)
     communicator/skin/toolbar-bg.gif                             (communicator/toolbar-bg.gif)

@@ -34,6 +34,7 @@ CHROME_TYPE = skin
 
 CHROME_MISC = \
 	manifest.rdf \
+	preview/win/preview.png \
 	$(NULL)
 
 DIRS  = communicator editor global messenger navigator
