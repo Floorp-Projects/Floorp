@@ -3236,6 +3236,10 @@ nsPluginInstanceOwner::MouseMove(nsIDOMEvent* aMouseEvent)
   // continue only for cases without child window
 #endif
 
+  // don't send mouse events if we are hiddden
+  if (!mWidgetVisible)
+    return NS_OK;
+
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aMouseEvent));
   if (privateEvent) {
     nsMouseEvent* mouseEvent = nsnull;
@@ -3327,6 +3331,10 @@ nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent)
     return NS_ERROR_FAILURE; // means consume event
   // continue only for cases without child window
 #endif
+
+  // don't send mouse events if we are hiddden
+  if (!mWidgetVisible)
+    return NS_OK;
 
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aMouseEvent));
   if (privateEvent) {
@@ -3566,6 +3574,11 @@ NS_IMETHODIMP_(void) nsPluginInstanceOwner::Notify(nsITimer* /* timer */)
         EventRecord idleEvent;
         InitializeEventRecord(&idleEvent);
         idleEvent.what = nullEvent;
+
+        // give a bogus 'where' field of our null event when hidden, so Flash
+        // won't respond to mouse moves in other tabs, see bug 120875
+        if (!mWidgetVisible)
+          idleEvent.where.h = idleEvent.where.v = 20000;
         
         nsPluginPort* pluginPort = GetPluginPort();
         nsPluginEvent pluginEvent = { &idleEvent, nsPluginPlatformWindowRef(pluginPort->port) };
@@ -3857,6 +3870,10 @@ static void GetWidgetPosClipAndVis(nsIWidget* aWidget,nscoord& aAbsX, nscoord& a
   aClipRect.x += aAbsX; 
   aClipRect.y += aAbsY; 
 
+  // if we are not visible, clear out the plugin's clip so it won't paint
+  if (!aIsVisible)
+    aClipRect.Empty();
+
   //printf("--------------\n"); 
   //printf("Widget clip X %d Y %d rect %d %d %d %d\n", aAbsX, aAbsY,  aClipRect.x,  aClipRect.y, aClipRect.width,  aClipRect.height ); 
   //printf("--------------\n"); 
@@ -3939,6 +3956,9 @@ void nsPluginInstanceOwner::FixUpPluginWindow()
     
     GetWidgetPosClipAndVis(mWidget,absWidgetX,absWidgetY,widgetClip,isVisible);
 
+    if (mWidgetVisible != isVisible)
+      mWidgetVisible = isVisible;
+
     // set the port coordinates
     mPluginWindow.x = absWidgetX;
     mPluginWindow.y = absWidgetY;
@@ -3963,19 +3983,6 @@ void nsPluginInstanceOwner::FixUpPluginWindow()
     macColor.blue  = COLOR8TOCOLOR16(NS_GET_B(color));
     ::RGBBackColor(&macColor);
     ::SetPort(savePort);  // restore port
-
-    // now we need to check if we've been hidden or made visible and then update the plugin 
-    // with the correct port if visible or null if hidden,
-    // if visiblity has changed, then update the plugin
-    if (isVisible != mWidgetVisible) {
-      mWidgetVisible = isVisible;
-      nsPluginWindow *window;
-      GetWindow(window);
-      if (window && mInstance) {
-        window->window = mWidgetVisible ? GetPluginPort() : nsnull;
-        mInstance->SetWindow(window);
-      }
-    }
   }
 }
 
