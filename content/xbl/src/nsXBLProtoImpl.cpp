@@ -57,7 +57,9 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIConten
   if (!mMembers)  // Constructor and destructor also live in mMembers
     return NS_OK; // Nothing to do, so let's not waste time.
 
-  nsIDocument* document = aBoundElement->GetDocument();
+  // If the way this gets the script context changes, fix
+  // nsXBLProtoImplAnonymousMethod::Execute
+  nsIDocument* document = aBoundElement->GetOwnerDoc();
   if (!document) return NS_OK;
 
   nsIScriptGlobalObject *global = document->GetScriptGlobalObject();
@@ -128,7 +130,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
     return rv;
 
   // Root ourselves in the document.
-  nsIDocument* doc = aBoundElement->GetDocument();
+  nsIDocument* doc = aBoundElement->GetOwnerDoc();
   if (doc) {
     nsCOMPtr<nsIXPConnectWrappedNative> nativeWrapper(do_QueryInterface(wrapper));
     if (nativeWrapper)

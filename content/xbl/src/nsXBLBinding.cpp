@@ -211,10 +211,12 @@ nsXBLBinding::InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElem
 {
   // We need to ensure two things.
   // (1) The anonymous content should be fooled into thinking it's in the bound
-  // element's document.
-  nsCOMPtr<nsIDocument> doc = aElement->GetDocument();
+  // element's document, assuming that the bound element is in a document
+  nsIDocument* doc = aElement->GetCurrentDoc();
 
-  aAnonParent->SetDocument(doc, PR_TRUE, AllowScripts());
+  if (doc) {
+    aAnonParent->SetDocument(doc, PR_TRUE, AllowScripts());
+  }
 
   // (2) The children's parent back pointer should not be to this synthetic root
   // but should instead point to the enclosing parent element.
@@ -534,7 +536,7 @@ nsXBLBinding::GenerateAnonymousContent()
 #endif
 
   if (hasContent || hasInsertionPoints) {
-    nsIDocument* doc = mBoundElement->GetDocument();
+    nsIDocument* doc = mBoundElement->GetOwnerDoc();
 
     // XXX doc will be null if we're in the midst of paint suppression.
     if (! doc)
@@ -1240,7 +1242,7 @@ nsXBLBinding::InitClass(const nsCString& aClassName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Root mBoundElement so that it doesn't lose it's binding
-  nsIDocument* doc = mBoundElement->GetDocument();
+  nsIDocument* doc = mBoundElement->GetOwnerDoc();
 
   if (doc) {
     nsCOMPtr<nsIXPConnectWrappedNative> native_wrapper =
