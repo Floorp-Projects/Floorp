@@ -5,8 +5,8 @@
 # errors and creating links into the source code where the errors
 # occurred.
 
-# $Revision: 1.8 $ 
-# $Date: 2002/05/02 01:39:47 $ 
+# $Revision: 1.9 $ 
+# $Date: 2002/05/02 03:18:40 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/Error_Parse.pm,v $ 
 # $Name:  $ 
@@ -157,6 +157,24 @@ sub line_type {
             ($line =~ /jmake.MakerFailedException:/) ||         # Java error
             0);
 
+
+  if ($error) {
+      my  $ignore = (
+
+                     # note that the word inline was followed by a
+                     # quote mark which emacs thought was a bit funny
+                     # so I removed it.
+
+                     ($line =~ m/warning: ANSI does not permit the keyword `inline/) ||
+                     ($line =~ m/warning: operator new should throw an exception, not return NULL/) ||
+                     ($line =~ m/zip warning: .* not found or empty/) ||
+                     0);
+      
+      if ($ignore) {
+          undefine $error;
+      }
+  }
+
   if ($error) {
     return('error');
   }
@@ -170,23 +188,6 @@ sub line_type {
               ($line =~ m/not implemented:/) ||
 
               0);
-
-  if ($warning) {
-      my  $ignore = (
-
-                     # note that the word inline was followed by a
-                     # quote mark which emacs thought was a bit funny
-                     # so I removed it.
-
-                     ($line =~ m/warning: ANSI does not permit the keyword `inline/) ||
-                     ($line =~ m/warning: operator new should throw an exception, not return NULL/) ||
-                     ($line =~ m/zip warning: .* not found or empty/) ||
-                     0);
-      
-      if ($ignore) {
-          undefine $warning;
-      }
-  }
 
   if ($warning) {
     return('warning');
@@ -304,6 +305,17 @@ sub line_type {
             ($line =~ /\bCan\'t (create)|(open)|(find) /) ||	# CW project error
     0);
 
+  if ($error) {
+      my  $ignore = (
+
+                     ($line =~ m/Warning : cannot find matching deallocation function for/) ||
+                     0);
+      
+      if ($ignore) {
+          undefine $error;
+      }
+  }
+
   ($error) && 
     return('error');
   
@@ -313,17 +325,6 @@ sub line_type {
               ($line =~ m/warning/i) ||
               ($line =~ m/not implemented:/i) ||
               0);
-
-  if ($warning) {
-      my  $ignore = (
-
-                     ($line =~ m/Warning : cannot find matching deallocation function for/) ||
-                     0);
-      
-      if ($ignore) {
-          undefine $warning;
-      }
-  }
 
   ($warning) &&
     return('warning');
