@@ -389,7 +389,7 @@ void nsImportGenericMail::GetDefaultDestination( void)
 		if (pName) {
 			IMPORT_LOG1( "* Creating folder for importing mail: %s\n", pName);
 			nsAutoString childName; childName.AssignWithConversion(pName);
-			rootFolder->CreateSubfolder( childName.GetUnicode());
+			rootFolder->CreateSubfolder( childName.GetUnicode(),nsnull);
 			nsCOMPtr<nsISupports> subFolder;
 			rootFolder->GetChildNamed( pName, getter_AddRefs( subFolder));
 			if (subFolder) {
@@ -874,7 +874,7 @@ ImportMailThread( void *stuff)
 				IMPORT_LOG1( "* Creating new import folder: %s\n", pStr);
 				nsAutoString newName; newName.AssignWithConversion(pStr);
 
-				rv = curProxy->CreateSubfolder( newName.GetUnicode());
+				rv = curProxy->CreateSubfolder( newName.GetUnicode(),nsnull);
 				
 				IMPORT_LOG1( "New folder created, rv: 0x%lx\n", (long) rv);
 				if (NS_SUCCEEDED( rv)) {
