@@ -114,7 +114,13 @@ nsPresContext::~nsPresContext()
 
   // Unregister preference callbacks
   if (mPrefs) {
-    mPrefs->UnregisterCallback("browser.", PrefChangedCallback, (void*)this);
+    mPrefs->UnregisterCallback("browser.screen_resolution", PrefChangedCallback, (void*)this);
+    mPrefs->UnregisterCallback("browser.use_document_fonts", PrefChangedCallback, (void*)this);
+    mPrefs->UnregisterCallback("browser.use_document_colors", PrefChangedCallback, (void*)this);
+    mPrefs->UnregisterCallback("browser.background_color", PrefChangedCallback, (void*)this);
+    mPrefs->UnregisterCallback("browser.foreground_color", PrefChangedCallback, (void*)this);
+    mPrefs->UnregisterCallback("browser.base_font_scaler", PrefChangedCallback, (void*)this);
+    mPrefs->UnregisterCallback("browser.wfe.use_windows_colors", PrefChangedCallback, (void*)this);
     mPrefs->UnregisterCallback("font.", PrefChangedCallback, (void*)this);
   }
 }
@@ -272,7 +278,13 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
   mPrefs = do_GetService(NS_PREF_PROGID);
   if (mPrefs) {
     // Register callbacks so we're notified when the preferences change
-    mPrefs->RegisterCallback("browser.", PrefChangedCallback, (void*)this);
+    mPrefs->RegisterCallback("browser.screen_resolution", PrefChangedCallback, (void*)this);
+    mPrefs->RegisterCallback("browser.use_document_fonts", PrefChangedCallback, (void*)this);
+    mPrefs->RegisterCallback("browser.use_document_colors", PrefChangedCallback, (void*)this);
+    mPrefs->RegisterCallback("browser.background_color", PrefChangedCallback, (void*)this);
+    mPrefs->RegisterCallback("browser.foreground_color", PrefChangedCallback, (void*)this);
+    mPrefs->RegisterCallback("browser.base_font_scaler", PrefChangedCallback, (void*)this);
+    mPrefs->RegisterCallback("browser.wfe.use_windows_colors", PrefChangedCallback, (void*)this);
     mPrefs->RegisterCallback("font.", PrefChangedCallback, (void*)this);
 
     // Initialize our state from the user preferences
