@@ -29,7 +29,7 @@
 
 /**
  * Multi-line text editor. 
- * @see nsITextWidget for capabilities. 
+ * See nsITextWidget for capabilities. 
  * Displays a scrollbar when the text content exceeds the number of lines 
  * displayed.
  */

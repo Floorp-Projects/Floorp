@@ -50,8 +50,8 @@ class nsITextWidget : public nsIWidget
     /**
      * Set the text of this component.
      *
-     * @param   nsString, the text to set, must be null terminated
-     * @return  PRUint32, the number of chars in the text string
+     * @param   aTextBuffer   on return it contains the text contents.
+     * @return  the number of chars in the text string
      *
      */
 

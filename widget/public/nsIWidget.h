@@ -39,7 +39,7 @@ struct  nsRect;
 struct  nsFont;
 
 /**
- * Callback function that deals with events.
+ * Callback function that processes events.
  * The argument is actually a subtype (subclass) of nsEvent which carries
  * platform specific information about the event. Platform specific code knows
  * how to deal with it.
@@ -50,7 +50,7 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 
 /**
  * Flags for the getNativeData function.
- * @see getNativeData()
+ * See getNativeData()
  */
 #define NS_NATIVE_WINDOW    0
 #define NS_NATIVE_GRAPHIC   1
@@ -70,15 +70,15 @@ typedef void* nsNativeWindow;
 
 /**
  * Cursor types.
- * eCursor_standard   (normal cursor,       usually rendered as an arrow)
- * eCursor_wait       (system is busy,      usually rendered as a hourglass or watch)
- * eCursor_select     (Selecting something, usually rendered as an IBeam)
- * eCursor_hyperlink  (can hyper-link,      usually rendered as a human hand)
  */
 
-enum nsCursor { eCursor_standard,  
+enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
+                eCursor_standard, 
+                  ///(system is busy,      usually rendered as a hourglass or watch)
                 eCursor_wait, 
+                  ///(Selecting something, usually rendered as an IBeam)
                 eCursor_select, 
+                  ///(can hyper-link,      usually rendered as a human hand)
                 eCursor_hyperlink }; 
 
 /**
@@ -272,7 +272,7 @@ class nsIWidget : public nsISupports {
     /**
      * Set the font for this widget 
      *
-     * @param aFont font to display. @see nsFont for allowable fonts
+     * @param aFont font to display. See nsFont for allowable fonts
      */
 
     virtual void SetFont(const nsFont &aFont) = 0;
@@ -315,7 +315,7 @@ class nsIWidget : public nsISupports {
     /**
      * Return the widget's toolkit
      *
-     * @return the toolkit this widget was created in. @see nsToolkit.
+     * @return the toolkit this widget was created in. See nsToolkit.
      */
 
     virtual nsIToolkit* GetToolkit() = 0;    
@@ -340,36 +340,17 @@ class nsIWidget : public nsISupports {
 
     virtual void Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect) = 0;
 
-    /*
+    /** 
      * Internal methods
      */
 
-    /**
-     * Internal Method
-    */
+    //@{
     virtual void AddChild(nsIWidget* aChild) = 0;
-
-    /**
-     * Internal Method
-    */
     virtual void RemoveChild(nsIWidget* aChild) = 0;
-
-    /**
-     * Internal Method
-    */
     virtual void* GetNativeData(PRUint32 aDataType) = 0;
-
-    /**
-     * Internal Method
-    */
     virtual nsIRenderingContext* GetRenderingContext() = 0;
-
-    /**
-     * Internal Method
-    */
     virtual nsIDeviceContext* GetDeviceContext() = 0;
-
-
+    //@}
 };
 
 #endif // nsIWidget_h__

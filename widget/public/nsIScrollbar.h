@@ -29,9 +29,8 @@
 
 /**
  *
- * Scrollbar.
- * Converts mouse input into values that can be used
- * to shift the contents of a window
+ * Scrollbar, converts mouse input into values that can be used
+ * to shift the contents of a window.
  *
  */
 

@@ -30,9 +30,12 @@ class nsIWidget;
  */
 
 enum nsEventStatus {  
-  nsEventStatus_eIgnore,            // The event is ignored, do default processing
-  nsEventStatus_eConsumeNoDefault,  // The event is consumed, don't do default processing
-  nsEventStatus_eConsumeDoDefault   // The event is consumed, but do default processing
+    /// The event is ignored, do default processing
+  nsEventStatus_eIgnore,            
+    /// The event is consumed, don't do default processing
+  nsEventStatus_eConsumeNoDefault, 
+    /// The event is consumed, but do default processing
+  nsEventStatus_eConsumeDoDefault  
 };
 
 /**
@@ -40,13 +43,16 @@ enum nsEventStatus {
  */
 
 struct nsGUIEvent {
-  PRUint32    message;              // see GUI MESSAGES
-  nsIWidget*  widget;               // Originator of the event
-  nsPoint     point;                // in widget relative coordinates
-  PRUint32    time;                 // elapsed time, in milliseconds, from the 
-                                    // time the system was started to the time 
-                                    // the message was created
-  void*     nativeMsg;              // Internal platform specific mesasge.
+                /// See GUI MESSAGES,
+  PRUint32    message;              
+                /// Originator of the event
+  nsIWidget*  widget;           
+                /// in widget relative coordinates
+  nsPoint     point;               
+                /// elapsed time, in milliseconds, from the time the system was started to the time the message was created
+  PRUint32    time;                                                
+                /// Internal platform specific message.
+  void*     nativeMsg;        
 };
 
 /**
@@ -54,7 +60,8 @@ struct nsGUIEvent {
  */
 
 struct nsSizeEvent : public nsGUIEvent {
-    nsRect          *windowSize;    // x,y width, height in pixels
+                /// x,y width, height in pixels
+    nsRect          *windowSize;    
 };
 
 /**
@@ -62,8 +69,10 @@ struct nsSizeEvent : public nsGUIEvent {
  */
 
 struct nsPaintEvent : public nsGUIEvent {
+                /// Context to paint in.
     nsIRenderingContext *renderingContext;
-    nsRect              *rect;      // x,y, width, height in pixels of area to paint
+                /// x,y, width, height in pixels of area to paint
+    nsRect              *rect;      
 };
 
 /**
@@ -71,9 +80,8 @@ struct nsPaintEvent : public nsGUIEvent {
  */
 
 struct nsScrollbarEvent : public nsGUIEvent {
-    PRUint32        position;       // ranges between scrollbar 0
-                                    // and (maxRange - thumbSize)
-                                    // see nsIScrollbar.h
+                /// ranges between scrollbar 0 and (maxRange - thumbSize). See nsIScrollbar
+    PRUint32        position; 
 };
 
 /**
@@ -81,16 +89,21 @@ struct nsScrollbarEvent : public nsGUIEvent {
  */
 
 struct nsKeyEvent : public nsGUIEvent {
-    PRUint32        keyCode;        // @see NS_VK codes
-    PRBool          isShift;        // indicates whether the shift key in down
-    PRBool          isControl;      // indicates whether the control key in down
-    PRBool          isAlt;          // indicates whether the alt key in down
+                /// see NS_VK codes
+    PRUint32        keyCode;   
+                /// PR_TRUE indicates the shift key in down
+    PRBool          isShift;        
+                /// PR_TRUE indicates the control key in down
+    PRBool          isControl;      
+                /// PR_TRUE indicates the alt key in down
+    PRBool          isAlt;          
 };
 
 
-/*
+/**
  * GUI MESSAGES
  */
+ //@{
 
 #define NS_WINDOW_START                 100
 #define NS_CREATE                       (NS_WINDOW_START)
@@ -120,7 +133,7 @@ struct nsKeyEvent : public nsGUIEvent {
 #define NS_SCROLLBAR_PAGE_PREV          (NS_SCROLLBAR_MESSAGE_START + 2)
 #define NS_SCROLLBAR_LINE_NEXT          (NS_SCROLLBAR_MESSAGE_START + 3)
 #define NS_SCROLLBAR_LINE_PREV          (NS_SCROLLBAR_MESSAGE_START + 4)
-
+//@}
 
 /*
  * Virtual key bindings for keyboard events
