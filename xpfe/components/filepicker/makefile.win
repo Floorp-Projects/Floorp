@@ -22,6 +22,4 @@
 
 DEPTH=..\..\..
 
-DIRS = res
-
 include <$(DEPTH)\config\rules.mak>
