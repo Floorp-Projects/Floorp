@@ -33,7 +33,7 @@ toolbox {
 }
 
 :toolbox-normal {
-	background-color: #CCCCCC;
+	background-color: #666699;
 	background-image: url("resource:/res/toolbar/TB_Tab.gif");
 	background-repeat: no-repeat;
 	color: lightgray;
@@ -43,7 +43,7 @@ toolbox {
 	border-right: solid darkGray 1px;
 }
 :toolbox-rollover {
-	background-color: #666699;
+	background-color: #ccccff;
 	background-image: url("resource:/res/toolbar/TB_Tab_mo.gif");
 	background-repeat: no-repeat;
 	color: green;
