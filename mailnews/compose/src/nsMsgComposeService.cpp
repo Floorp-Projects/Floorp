@@ -141,7 +141,38 @@ nsresult nsMsgComposeService::OpenComposeWindowWithValues(const PRUnichar *msgCo
 	return rv;
 }
 
-nsresult nsMsgComposeService::InitCompose(nsIDOMWindow *aWindow, const PRUnichar *originalMsgURI, PRInt32 type, PRInt32 format, nsIMsgCompose **_retval)
+nsresult nsMsgComposeService::OpenComposeWindowWithCompFields(const PRUnichar *msgComposeWindowURL,
+														  MSG_ComposeFormat format,
+														  nsIMsgCompFields *compFields)
+{
+	nsAutoString args = "";
+	nsresult rv;
+
+	NS_WITH_SERVICE(nsIDOMToolkitCore, toolkitCore, kToolkitCoreCID, &rv); 
+    if (NS_FAILED(rv))
+		return rv;
+
+	args.Append("format=");
+	args.Append(format);
+	
+	if (compFields)
+	{
+		NS_ADDREF(compFields);
+		args.Append(",fieldsAddr="); args.Append((PRInt32)compFields, 10);
+	}
+
+	if (msgComposeWindowURL && *msgComposeWindowURL)
+		toolkitCore->ShowWindowWithArgs(msgComposeWindowURL, nsnull, args);
+	else
+		toolkitCore->ShowWindowWithArgs("chrome://messengercompose/content/", nsnull, args);
+
+    if (NS_FAILED(rv))
+		NS_IF_RELEASE(compFields);
+    	
+	return rv;
+}
+
+nsresult nsMsgComposeService::InitCompose(nsIDOMWindow *aWindow, const PRUnichar *originalMsgURI, PRInt32 type, PRInt32 format, PRInt32 compFieldsAddr, nsIMsgCompose **_retval)
 {
 	nsresult rv;
 	nsIMsgCompose * msgCompose = nsnull;
@@ -164,8 +195,12 @@ nsresult nsMsgComposeService::InitCompose(nsIDOMWindow *aWindow, const PRUnichar
 					break;
 				}
     	/*--- temporary hack ---*/
-	
-		msgCompose->Initialize(aWindow, originalMsgURI, type, format, object);
+		
+// ducarroz: I am not quiet sure than dynamic_cast is supported on all platforms/compilers!
+//		nsIMsgCompFields* compFields = dynamic_cast<nsIMsgCompFields *>((nsIMsgCompFields *)compFieldsAddr);
+		nsIMsgCompFields* compFields = (nsIMsgCompFields *)compFieldsAddr;
+		msgCompose->Initialize(aWindow, originalMsgURI, type, format, compFields, object);
+		NS_IF_RELEASE(compFields);
 		m_msgQueue->AppendElement(msgCompose);
 		*_retval = msgCompose;
 

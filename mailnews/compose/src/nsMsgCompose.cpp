@@ -119,7 +119,7 @@ nsMsgCompose::SetQuotingToFollow(PRBool aVal)
 
 
 nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow, const PRUnichar *originalMsgURI,
-	MSG_ComposeType type, MSG_ComposeFormat format, nsISupports *object)
+	MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgCompFields *compFields, nsISupports *object)
 {
 	nsresult rv = NS_OK;
 
@@ -153,7 +153,7 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow, const PRUnichar *origin
 
 	}
 	
-	 CreateMessage(originalMsgURI, type, format, object); //object is temporary
+	 CreateMessage(originalMsgURI, type, format, compFields, object); //object is temporary
 
 	return rv;
 }
@@ -556,12 +556,20 @@ nsresult nsMsgCompose::GetWrapLength(PRInt32 *aWrapLength)
 	return NS_OK;
 }
 
-nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsISupports * object)
+nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format,
+									 nsIMsgCompFields * compFields, nsISupports * object)
 {
   nsresult rv = NS_OK;
-  /* At this point, we have a list of URI of original message to reply to or forward but as the BE isn't ready yet,
+   
+  	if (compFields)
+  	{
+  		if (m_compFields)
+  			m_compFields->Copy(compFields);
+  		return rv;
+  	}
+
+ /* At this point, we have a list of URI of original message to reply to or forward but as the BE isn't ready yet,
   we still need to use the old patch... gather the information from the object and the temp file use to display the selected message*/
-  
  	if (object)
  	{
     nsCOMPtr<nsIMessage> message;

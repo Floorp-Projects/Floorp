@@ -40,8 +40,8 @@ class nsMsgCompose : public nsIMsgCompose
 
 /*** nsIMsgCompose pure virtual functions */
 
-	/* void Initialize (in nsIDOMWindow aWindow, in wstring originalMsgURI, in long type, in long format); */
-	NS_IMETHOD Initialize(nsIDOMWindow *aWindow, const PRUnichar *originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsISupports *object);
+	/* void Initialize (in nsIDOMWindow aWindow, in wstring originalMsgURI, in MSG_ComposeType type, in MSG_ComposeFormat format, in nsIMsgCompFields compFields, in nsISupports object); */
+	NS_IMETHOD Initialize(nsIDOMWindow *aWindow, const PRUnichar *originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgCompFields *compFields, nsISupports *object);
 
 	/* void LoadFields (); */
 	NS_IMETHOD LoadFields();
@@ -89,7 +89,7 @@ class nsMsgCompose : public nsIMsgCompose
  private:
 
 	nsresult _SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity, const PRUnichar *callback);
-	nsresult CreateMessage(const PRUnichar * originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsISupports* object);
+	nsresult CreateMessage(const PRUnichar * originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgCompFields* compFields, nsISupports* object);
 	void HackToGetBody(PRInt32 what); //Temporary
 	void CleanUpRecipients(nsString& recipients);
 
