@@ -37,7 +37,6 @@ public:
 	BOOL BrowseFile(WIDGET *curWidget);
 	BOOL BrowseDir(WIDGET *curWidget);
 	BOOL Progress();  // Not actually used right now
-	void CopyDir(CString from, CString to);
 	void ExecuteCommand(char *command, int showflag);
 	BOOL IterateListBox(char *parms);
 	CString replaceVars(CString str, char *listval);

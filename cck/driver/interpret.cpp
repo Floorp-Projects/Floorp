@@ -9,9 +9,6 @@
 #include "NewDialog.h"
 #include "NewConfigDialog.h"
 
-// for CopyDir
-#include "winbase.h"  
-
 // The following is included to make 
 // the browse for a dir code compile
 #include <shlobj.h>
@@ -220,44 +217,6 @@ BOOL CInterpret::Progress()
 #endif
 
 	return TRUE;
-}
-
-void CInterpret::CopyDir(CString from, CString to)
-{
-	WIN32_FIND_DATA data;
-	HANDLE d;
-	CString dot = ".";
-	CString dotdot = "..";
-	CString fchild, tchild;
-	CString pattern = from + "\\*.*";
-	int		found;
-	DWORD	tmp;
-
-
-	d = FindFirstFile((const char *) to, &data);
-	if (d == INVALID_HANDLE_VALUE)
-		mkdir(to);
-
-	d = FindFirstFile((const char *) pattern, &data);
-	found = (d != INVALID_HANDLE_VALUE);
-
-	while (found)
-	{
-		if (data.cFileName != dot && data.cFileName != dotdot)
-		{
-			fchild = from + "\\" + data.cFileName;
-			tchild = to + "\\" + data.cFileName;
-			tmp = data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
-			if (tmp == FILE_ATTRIBUTE_DIRECTORY)
-				CopyDir(fchild, tchild);
-			else
-				CopyFile((const char *) fchild, (const char *) tchild, FALSE);
-		}
-
-		found = FindNextFile(d, &data);
-	}
-
-	FindClose(d);
 }
 
 void CInterpret::ExecuteCommand(char *command, int showflag)
@@ -604,8 +563,6 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 				else if (strcmp(pcmd, "Message") ==0)
 				{
 					int rv = AfxMessageBox(parms,MB_YESNO);
-					if (rv == IDYES)
-						return TRUE;
 					if (rv == IDNO)
 						return FALSE;
 				}

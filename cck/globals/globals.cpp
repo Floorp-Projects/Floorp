@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "WizardTypes.h"
+#include "winbase.h"  // for CopyDir
+#include <direct.h>
 
 __declspec(dllexport) WIDGET GlobalWidgetArray[1000];
 __declspec(dllexport) int GlobalArrayIndex=0;
@@ -50,4 +52,42 @@ char *GetGlobal(CString theName)
 	return "";
 }
 
+extern "C" __declspec(dllexport)
+void CopyDir(CString from, CString to)
+{
+	WIN32_FIND_DATA data;
+	HANDLE d;
+	CString dot = ".";
+	CString dotdot = "..";
+	CString fchild, tchild;
+	CString pattern = from + "\\*.*";
+	int		found;
+	DWORD	tmp;
+
+
+	d = FindFirstFile((const char *) to, &data);
+	if (d == INVALID_HANDLE_VALUE)
+		mkdir(to);
+
+	d = FindFirstFile((const char *) pattern, &data);
+	found = (d != INVALID_HANDLE_VALUE);
+
+	while (found)
+	{
+		if (data.cFileName != dot && data.cFileName != dotdot)
+		{
+			fchild = from + "\\" + data.cFileName;
+			tchild = to + "\\" + data.cFileName;
+			tmp = data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+			if (tmp == FILE_ATTRIBUTE_DIRECTORY)
+				CopyDir(fchild, tchild);
+			else
+				CopyFile((const char *) fchild, (const char *) tchild, FALSE);
+		}
+
+		found = FindNextFile(d, &data);
+	}
+
+	FindClose(d);
+}
 
