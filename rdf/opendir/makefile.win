@@ -16,13 +16,14 @@ OBJS = opendir.o \
        remstore.o \
        hash.o  \
        genopendir.o \
+       query.o  \
        gs.o   \
        $(NULL)	
     
 
 all: opendir
 
-opendir: opendir.c rdf.c rdfparse.c remstore.c hash.c genopendir.c gs.c
+opendir: opendir.c rdf.c rdfparse.c remstore.c hash.c genopendir.c gs.c query.c
 	$(CC) $(CPPFLAGS) $(LIBS) $? -o  $@
 
 clean:

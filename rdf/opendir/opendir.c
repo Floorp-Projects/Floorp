@@ -58,6 +58,14 @@ Run(ServerSession_t obj)
     AnswerOpenDirQuery(WriteClient, obj, val, cookie);
   } else if (strcmp(query, "search") == 0) {
     AnswerSearchQuery(WriteClient, obj, val, cookie);
+  } else if (strcmp(query, "query") == 0) {
+    char** ans = processRDFQuery(val);
+    if (ans) {
+      int n = 0;
+      for (n = 0; ans[n] != 0; n++) {
+        WriteClient(obj, ans[n]);
+      }
+    }
   }
   /*  WriteClient(obj, POSTFIX); */
   return 0;
@@ -73,34 +81,34 @@ int WINAPI WinMain(
    )
 
 {
-	int argc = 0;
-	char **argv = NULL;
+  int argc = 0;
+  char **argv = NULL;
 #else
-int main(int argc, char **argv)
-{
+  int main(int argc, char **argv)
+    {
 #endif
-    char localhost[256];
-    char *host;
-    RDF_Resource u;
-    int n = 2;
-    IIOPWebAppService_t obj;
-
-	//
+      char localhost[256];
+      char *host;
+      RDF_Resource u;
+      int n = 2;
+      IIOPWebAppService_t obj;
+      
+      //
 	// Normally we expect to see a hostname:port as
-	// our one and only argument.  If we are started by
-	// the OAD we will see an extra argument which should
-	// be ignored.
-	// The recommended registration with the OAD should 
+             // our one and only argument.  If we are started by
+             // the OAD we will see an extra argument which should
+             // be ignored.
+             // The recommended registration with the OAD should 
 	// specify the hostname:port as an argument to the
-	// object provider.
-	//
-	// So try to ferrit out the hostname:port
+             // object provider.
+             //
+             // So try to ferrit out the hostname:port
 #ifndef WIN32
-	// Easier if we just have a normal main.
-	if (argc > 1){
-		if (argc == 1)
-			host = argv[1];
-		else if (*argv[1] != '-')
+             // Easier if we just have a normal main.
+                               if (argc > 1){
+                                 if (argc == 1)
+                                   host = argv[1];
+                                 else if (*argv[1] != '-')
 			host = argv[1];
 
 #else
@@ -127,13 +135,15 @@ int main(int argc, char **argv)
 #ifndef WIN32
 	obj = WAIcreateWebAppService("OpenDir", Run, argc, argv);
 #else
-	obj = WAIcreateWebAppService("OpenDir", Run, 0, 0);
+	/* obj = WAIcreateWebAppService("OpenDir", Run, 0, 0); */
 #endif
-	WAIregisterService(obj, host);
+/*	WAIregisterService(obj, host); */
         RDF_Initialize();
         printf("RDF Initialized!\n");
-		if (argc == 0) {
-			RDF_ReadFile("three_level");
+        if (argc == 0) {
+        char** ans;
+        RDF_ReadFile("s1");
+        RDF_ReadFile("s2");
 		} else {
         while (n < argc) {
            char* name = argv[n++];

@@ -79,8 +79,6 @@ parseQuery (char* query, RDF_Resource *root, int *numSegments) {
     return ans;
 }
 
-  
-
 char**
 processRDFQuery (char* query) {
     RDF_Resource root;
@@ -103,9 +101,10 @@ processRDFQuery (char* query) {
 	    RDF_Cursor c = getSlotValues(NULL, (RDF_Resource)currentValArray[nc], q->s, 
                                      ansType, q->inversep, 1);
 	    RDF_Resource ans;
-		int lc = 0;
-	    while (c  && (lc++ < q->num) && (ans = nextValue(c))) {
-          newValArray[count++] = (char*) ans;
+            int lc = 0;
+	    while (c  && (lc++ <= q->num) && (ans = nextValue(c))) {
+              newValArray[count] = (char*) ans;
+              count++;
 	    }
         if (c) disposeCursor(c);
       }

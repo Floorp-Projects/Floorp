@@ -25,6 +25,7 @@ char* error_string = NULL;
 int lineNumber = 0;
 
 static HashTable resourceHash = NULL;
+static RDF_Resource gURL = NULL;
 
 RDF_Resource 
 getResource (char* key, int createp) {
@@ -35,6 +36,12 @@ getResource (char* key, int createp) {
     existing = (RDF_Resource)fgetMem(sizeof(RDF_ResourceStruct));
     existing->url = fcopyString(key);
     HashAdd(resourceHash, existing->url, existing);
+    if (!gURL) {
+      gURL = (RDF_Resource)fgetMem(sizeof(RDF_ResourceStruct));
+      gURL->url = fcopyString("URL");
+      HashAdd(resourceHash, gURL->url, gURL);
+    }
+    remoteStoreAdd(NULL, existing, gURL, existing->url, RDF_STRING_TYPE,1); 
     return existing;
   } else return NULL;
 }
