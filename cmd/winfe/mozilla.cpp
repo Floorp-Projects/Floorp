@@ -2274,9 +2274,10 @@ int CNetscapeApp::ExitInstance()
 
 
     BOOL javaShutdownSuccessful = fe_ShutdownJava();
-
+#ifndef NU_CACHE 
     if(!m_pCacheDir.IsEmpty())
 	NET_CleanupCacheDirectory((char *)(const char *)m_pCacheDir, CACHE_PREFIX);
+#endif /* NU_CACHE */
     NET_ShutdownNetLib();
 
 #ifdef MOZ_MAIL_NEWS

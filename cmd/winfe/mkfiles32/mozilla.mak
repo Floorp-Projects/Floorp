@@ -183,6 +183,9 @@ CFLAGS_RELEASE=/DNDEBUG /DCookieManagement /DSingleSignon /DJS_THREADSAFE \
 !else
 CFLAGS_RELEASE=/DNDEBUG \
 !endif
+!ifdef NU_CACHE
+	/DNU_CACHE	\
+!endif
 !if defined(MOZ_FULLCIRCLE)
 	/DMOZ_FULLCIRCLE \
 !endif
@@ -227,6 +230,9 @@ CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /Bd /DDEBUG /D_DEBUG $(MOZ_USERDEBUG) /DCookieMan
 !endif
 !else
 CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /Bd /DDEBUG /D_DEBUG $(MOZ_USERDEBUG)\
+!endif
+!ifdef NU_CACHE
+	/DNU_CACHE	\
 !endif
 !if defined(MOZ_FULLCIRCLE)
 	/DMOZ_FULLCIRCLE \
