@@ -456,6 +456,9 @@ finish:
     if( hostnameStr != NULL ) {
         (*env)->ReleaseStringUTFChars(env, hostname, hostnameStr);
     }
+    if( addrBAelems != NULL ) {
+        (*env)->ReleaseByteArrayElements(env, addrBA, addrBAelems, JNI_ABORT);
+    }
 }
 
 JNIEXPORT jobject JNICALL
