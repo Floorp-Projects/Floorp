@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -18,21 +18,19 @@
  */
 #include "prmem.h"
 #include "plstr.h"
-
 #include "nsString.h"
 #include "nsISupportsArray.h"
-
 #include "nsIURL.h"
 #include "nsIStreamListener.h"
 #include "nsIPostToServer.h"
 #include "nsIFactory.h"
+#include "nsIDocumentLoader.h"
+#include "nsIContentViewerContainer.h"
 
 // XXX: Only needed for dummy factory...
-#include "nsIWebWidget.h"
 #include "nsIDocument.h"
-
-#include "nsIDocumentLoader.h"
-#include "nsIDocumentWidget.h"
+#include "nsIDocumentViewer.h"
+#include "nsICSSParser.h"
 
 /* Forward declarations.... */
 class nsDocLoaderImpl;
@@ -51,7 +49,7 @@ class nsDocumentBindInfo : public nsIStreamListener
 public:
     nsDocumentBindInfo(nsDocLoaderImpl* aDocLoader,
                        const char *aCommand, 
-                       nsIViewerContainer* aContainer,
+                       nsIContentViewerContainer* aContainer,
                        nsISupports* aExtraInfo,
                        nsIStreamObserver* anObserver);
 
@@ -73,7 +71,7 @@ protected:
 protected:
     char*               m_Command;
     nsIURL*             m_Url;
-    nsIViewerContainer* m_Container;
+    nsIContentViewerContainer* m_Container;
     nsISupports*        m_ExtraInfo;
     nsIStreamObserver*  m_Observer;
     nsIStreamListener*  m_NextStream;
@@ -91,11 +89,14 @@ public:
     NS_IMETHOD CreateInstance(nsIURL* aURL,
                               const char* aContentType, 
                               const char* aCommand,
-                              nsIViewerContainer* aContainer,
+                              nsIContentViewerContainer* aContainer,
                               nsIStreamListener** aDocListener,
                               nsIContentViewer** aDocViewer);
+
+    nsresult InitUAStyleSheet();
 };
 
+static nsIStyleSheet* gUAStyleSheet;
 
 nsDocFactoryImpl::nsDocFactoryImpl()
 {
@@ -114,13 +115,13 @@ NS_IMETHODIMP
 nsDocFactoryImpl::CreateInstance(nsIURL* aURL, 
                                  const char* aContentType, 
                                  const char *aCommand,
-                                 nsIViewerContainer* aContainer,
+                                 nsIContentViewerContainer* aContainer,
                                  nsIStreamListener** aDocListener,
                                  nsIContentViewer** aDocViewer)
 {
     nsresult rv = NS_ERROR_FAILURE;
     nsIDocument* doc = nsnull;
-    nsIWebWidgetViewer* ww = nsnull;
+    nsIDocumentViewer* docv = nsnull;
 
     int typeIndex=0;
     while(gValidTypes[typeIndex]) {
@@ -131,6 +132,11 @@ nsDocFactoryImpl::CreateInstance(nsIURL* aURL,
     goto done;
 
 nextstep:
+    // Load the UA style sheet if we haven't already done that
+    if (nsnull == gUAStyleSheet) {
+        InitUAStyleSheet();
+    }
+
     /*
      * Create the HTML document...
      */
@@ -142,10 +148,11 @@ nextstep:
     /*
      * Create the HTML Content Viewer...
      */
-    rv = NS_NewContentViewer(&ww);
+    rv = NS_NewDocumentViewer(docv);
     if (NS_OK != rv) {
         goto done;
     }
+    docv->SetUAStyleSheet(gUAStyleSheet);
 
     /* 
      * Initialize the document to begin loading the data...
@@ -155,20 +162,63 @@ nextstep:
      */
     rv = doc->StartDocumentLoad(aURL, aContainer, aDocListener);
     if (NS_OK != rv) {
+        NS_IF_RELEASE(docv);
         goto done;
     }
 
     /*
      * Bind the document to the Content Viewer...
      */
-    rv = ww->BindToDocument(doc, aCommand);
-    *aDocViewer = ww;
+    rv = docv->BindToDocument(doc, aCommand);
+    *aDocViewer = docv;
 
 done:
     NS_IF_RELEASE(doc);
     return rv;
 }
 
+#define UA_CSS_URL "resource:/res/ua.css"
+
+nsresult nsDocFactoryImpl::InitUAStyleSheet()
+{
+  nsresult rv = NS_OK;
+
+  if (nsnull == gUAStyleSheet) {  // snarf one
+    nsIURL* uaURL;
+    rv = NS_NewURL(&uaURL, nsnull, UA_CSS_URL); // XXX this bites, fix it
+    if (NS_OK == rv) {
+      // Get an input stream from the url
+      PRInt32 ec;
+      nsIInputStream* in = uaURL->Open(&ec);
+      if (nsnull != in) {
+        // Translate the input using the argument character set id into unicode
+        nsIUnicharInputStream* uin;
+        rv = NS_NewConverterStream(&uin, nsnull, in);
+        if (NS_OK == rv) {
+          // Create parser and set it up to process the input file
+          nsICSSParser* css;
+          rv = NS_NewCSSParser(&css);
+          if (NS_OK == rv) {
+            // Parse the input and produce a style set
+            // XXX note: we are ignoring rv until the error code stuff in the
+            // input routines is converted to use nsresult's
+            css->Parse(uin, uaURL, gUAStyleSheet);
+            NS_RELEASE(css);
+          }
+          NS_RELEASE(uin);
+        }
+        NS_RELEASE(in);
+      }
+      else {
+//        printf("open of %s failed: error=%x\n", UA_CSS_URL, ec);
+        rv = NS_ERROR_ILLEGAL_VALUE;  // XXX need a better error code here
+      }
+
+      NS_RELEASE(uaURL);
+    }
+  }
+  return rv;
+}
 
 
 
@@ -184,7 +234,7 @@ public:
 
     NS_IMETHOD LoadURL(const nsString& aURLSpec, 
                        const char *aCommand,
-                       nsIViewerContainer* aContainer,
+                       nsIContentViewerContainer* aContainer,
                        nsIPostData* aPostData = nsnull,
                        nsISupports* aExtraInfo = nsnull, 
                        nsIStreamObserver *anObserver = nsnull);
@@ -241,7 +291,7 @@ nsDocLoaderImpl::SetDocumentFactory(nsIDocumentLoaderFactory* aFactory)
 NS_IMETHODIMP
 nsDocLoaderImpl::LoadURL(const nsString& aURLSpec, 
                             const char* aCommand,
-                            nsIViewerContainer* aContainer,
+                            nsIContentViewerContainer* aContainer,
                             nsIPostData* aPostData,
                             nsISupports* aExtraInfo,
                             nsIStreamObserver* anObserver)
@@ -285,7 +335,7 @@ void nsDocLoaderImpl::LoadURLComplete(nsISupports* docInfo)
 
 nsDocumentBindInfo::nsDocumentBindInfo(nsDocLoaderImpl* aDocLoader,
                                        const char *aCommand, 
-                                       nsIViewerContainer* aContainer,
+                                       nsIContentViewerContainer* aContainer,
                                        nsISupports* aExtraInfo,
                                        nsIStreamObserver* anObserver)
 {
