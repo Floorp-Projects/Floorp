@@ -254,6 +254,12 @@ PRInt32 nsCRT::strcmp(const PRUnichar* s1, const PRUnichar* s2) {
       if ((0==c1) || (0==c2)) break;
     }
   }
+  else {
+    if (s1)                     // s2 must have been null
+      return -1;
+    if (s2)                     // s1 must have been null
+      return 1;
+  }
   return 0;
 }
 
@@ -362,6 +368,12 @@ PRInt32 nsCRT::strcmp(const PRUnichar* s1, const char* s2) {
       }
       if ((0==c1) || (0==c2)) break;
     }
+  }
+  else {
+    if (s1)                     // s2 must have been null
+      return -1;
+    if (s2)                     // s1 must have been null
+      return -1;
   }
   return 0;
 }
