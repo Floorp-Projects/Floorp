@@ -1529,7 +1529,7 @@ GlobalWindowImpl::Unescape(const nsString& aStr, nsString& aReturn)
 
   // Unescape the string
   char* src = nsUnescape(inBuf);
-  nsAllocator::Free(inBuf);
+//  nsAllocator::Free(inBuf);
   if (nsnull == src) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
