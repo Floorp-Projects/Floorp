@@ -607,7 +607,7 @@ nsJAR::ParseOneFile(nsISignatureVerifier* verifier,
   const char* curPos;
   const char* sectionStart = nextLineStart;
 
-  nsJARManifestItem* curItemMF;
+  nsJARManifestItem* curItemMF = nsnull;
   PRBool foundName = PR_FALSE;
   if (aFileType == JAR_MF)
     curItemMF = new nsJARManifestItem();
