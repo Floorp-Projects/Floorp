@@ -630,7 +630,7 @@ nsMathMLChar::SetEnum(nsIPresContext*  aPresContext,
   mEnum = aEnum;
   // some assumptions until proven otherwise!
   // note that mGlyph is not initialized
-  mData = "";
+  mData = nsAutoString();
   mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
   mBoundingMetrics.Clear();
   mGlyphTable = nsnull;
@@ -742,7 +742,7 @@ static void SetFirstFamily(nsFont& aFont, const nsString& aFamily)
   nsAutoString familyList(aFamily);
   // XXX hack to force CMSY10 to be at least the second best choice !
   if (!aFamily.EqualsIgnoreCase("CMSY10"))
-    familyList.Append(",CMSY10");
+    familyList.AppendWithConversion(",CMSY10");
   // loop over font-family: (skipping aFamily if present)
   aFont.EnumerateFamilies(FontEnumCallback, &familyList);
   // overwrite the old value of font-family:

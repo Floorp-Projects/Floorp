@@ -235,10 +235,10 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
   }
 
   aString.Right(value, stringLength - i);
-  if      (value.Equals("width"))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_WIDTH;
-  else if (value.Equals("height")) aPseudoUnit = NS_MATHML_PSEUDO_UNIT_HEIGHT;
-  else if (value.Equals("depth"))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_DEPTH;
-  else if (value.Equals("lspace")) aPseudoUnit = NS_MATHML_PSEUDO_UNIT_LSPACE;
+  if      (value.EqualsWithConversion("width"))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_WIDTH;
+  else if (value.EqualsWithConversion("height")) aPseudoUnit = NS_MATHML_PSEUDO_UNIT_HEIGHT;
+  else if (value.EqualsWithConversion("depth"))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_DEPTH;
+  else if (value.EqualsWithConversion("lspace")) aPseudoUnit = NS_MATHML_PSEUDO_UNIT_LSPACE;
   else // unexpected pseudo-unit
   {
     aCSSValue.Reset();

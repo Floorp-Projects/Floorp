@@ -86,11 +86,11 @@ nsMathMLmstyleFrame::Init(nsIPresContext*  aPresContext,
   nsAutoString value;
   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
                    nsMathMLAtoms::displaystyle_, value)) {
-    if (value == "true") {
+    if (value.EqualsWithConversion("true")) {
       mPresentationData.flags |= NS_MATHML_MSTYLE_WITH_DISPLAYSTYLE;
       mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
     }
-    else if (value == "false") {
+    else if (value.EqualsWithConversion("false")) {
       mPresentationData.flags |= NS_MATHML_MSTYLE_WITH_DISPLAYSTYLE;
       mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
     }

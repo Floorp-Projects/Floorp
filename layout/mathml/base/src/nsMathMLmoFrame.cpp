@@ -233,7 +233,7 @@ nsMathMLmoFrame::SetInitialChildList(nsIPresContext* aPresContext,
                        nsMathMLAtoms::accent_, value))
       {
         accentAttribute = PR_TRUE;
-        if (value.Equals("true"))
+        if (value.EqualsWithConversion("true"))
         {
           mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
         }
@@ -244,7 +244,7 @@ nsMathMLmoFrame::SetInitialChildList(nsIPresContext* aPresContext,
                        nsMathMLAtoms::movablelimits_, value))
       {
         movablelimitsAttribute = PR_TRUE;
-        if (value.Equals("true"))
+        if (value.EqualsWithConversion("true"))
         {
           mEmbellishData.flags |= NS_MATHML_EMBELLISH_MOVABLELIMITS;
         }
@@ -301,9 +301,9 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
   PRBool hasEmbellishAncestor = PR_FALSE;
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::form_, value)) {
-    if (value == "prefix")
+    if (value.EqualsWithConversion("prefix"))
       aForm = NS_MATHML_OPERATOR_FORM_PREFIX;
-    else if (value == "postfix")
+    else if (value.EqualsWithConversion("postfix"))
       aForm = NS_MATHML_OPERATOR_FORM_POSTFIX;
 
     // flag if we have an embellished ancestor
@@ -409,7 +409,9 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
   // For each attribute disabled by the user, turn off its bit flag.
   // movablelimits|separator|largeop|accent|fence|stretchy|form
 
-  nsAutoString kfalse("false"), ktrue("true");
+  nsAutoString kfalse, ktrue;
+  kfalse.AssignWithConversion("false");
+  ktrue.AssignWithConversion("true");
   if (NS_MATHML_OPERATOR_IS_STRETCHY(mFlags)) {
     if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                      nsMathMLAtoms::stretchy_, value) && value == kfalse)

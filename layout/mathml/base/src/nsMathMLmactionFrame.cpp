@@ -123,25 +123,28 @@ nsMathMLmactionFrame::Init(nsIPresContext*  aPresContext,
   mActionType = NS_MATHML_ACTION_TYPE_NONE;
   if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_None, 
                    nsMathMLAtoms::actiontype_, value)) {
-    if (value == "toggle")       
+    if (value.EqualsWithConversion("toggle"))
       mActionType = NS_MATHML_ACTION_TYPE_TOGGLE;
 
     // XXX use goto to jump out of these if?
 
     if (NS_MATHML_ACTION_TYPE_NONE == mActionType) {
-      prefix = "tooltip#"; // expected tooltip prefix (8ch)...
+      // expected tooltip prefix (8ch)...
+      prefix.AssignWithConversion("tooltip#");
       if (8 < value.Length() && 0 == value.Find(prefix))
         mActionType = NS_MATHML_ACTION_TYPE_TOOLTIP;
     }
 
     if (NS_MATHML_ACTION_TYPE_NONE == mActionType) {
-      prefix = "statusline#"; // expected statusline prefix (11ch)...
+      // expected statusline prefix (11ch)...
+      prefix.AssignWithConversion("statusline#");
       if (11 < value.Length() && 0 == value.Find(prefix))
         mActionType = NS_MATHML_ACTION_TYPE_STATUSLINE;
     }
 
     if (NS_MATHML_ACTION_TYPE_NONE == mActionType) {
-      prefix = "restyle#"; // expected restyle prefix (8ch)...
+      // expected restyle prefix (8ch)...
+      prefix.AssignWithConversion("restyle#");
       if (8 < value.Length() && 0 == value.Find(prefix)) {
         mActionType = NS_MATHML_ACTION_TYPE_RESTYLE;
         mRestyle = value;
@@ -151,7 +154,7 @@ nsMathMLmactionFrame::Init(nsIPresContext*  aPresContext,
         // given us the associated style. But we want to start with our default style.
 
         // So... first, remove the attribute actiontype="restyle#id"
-        value = "";
+        value.SetLength(0);
         PRBool notify = PR_FALSE; // don't trigger a reflow yet!
         aContent->SetAttribute(kNameSpaceID_None, nsMathMLAtoms::actiontype_, value, notify);
 
@@ -380,7 +383,9 @@ nsMathMLmactionFrame::MouseOver(nsIDOMEvent* aMouseEvent)
     if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
                      nsMathMLAtoms::actiontype_, value)) 
     {
-      nsAutoString statusline = "statusline#"; // expected statusline prefix (11ch)...
+      // expected statusline prefix (11ch)...
+      nsAutoString statusline;
+      statusline.AssignWithConversion("statusline#");
       if (11 < value.Length() && 0 == value.Find(statusline)) {
         value.Cut(0, 11);
         ShowStatus(mPresContext, value);
@@ -396,7 +401,8 @@ nsMathMLmactionFrame::MouseOut(nsIDOMEvent* aMouseEvent)
   // see if we should remove the status message
   if (NS_MATHML_ACTION_TYPE_STATUSLINE == mActionType) 
   {
-    nsAutoString value = "";
+    nsAutoString value;
+    value.SetLength(0);
     ShowStatus(mPresContext, value);
   }
   return NS_OK;
@@ -412,7 +418,7 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
       PRInt32 selection = (mSelection == mChildCount)? 1 : mSelection + 1;
       char cbuf[10];
       PR_snprintf(cbuf, sizeof(cbuf), "%d", selection);
-      value = cbuf;
+      value.AssignWithConversion(cbuf);
       PRBool notify = PR_FALSE; // don't yet notify the document
       mContent->SetAttribute(kNameSpaceID_None, nsMathMLAtoms::selection_, value, notify);
 
@@ -427,9 +433,9 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
       if (node.get()) {
         if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
                          nsMathMLAtoms::actiontype_, value))
-          node->RemoveAttribute("actiontype");
+          node->RemoveAttribute(NS_ConvertASCIItoUCS2("actiontype"));
         else
-          node->SetAttribute("actiontype", mRestyle);
+          node->SetAttribute(NS_ConvertASCIItoUCS2("actiontype"), mRestyle);
       }
     }
   }

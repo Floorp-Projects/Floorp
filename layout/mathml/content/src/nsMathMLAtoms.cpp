@@ -44,7 +44,7 @@ void nsMathMLAtoms::AddRefAtoms() {
     */
     if (NS_SUCCEEDED(NS_NewNameSpaceManager(&gNameSpaceManager)))
 //    gNameSpaceManager->CreateRootNameSpace(namespace);
-      gNameSpaceManager->RegisterNameSpace(kMathMLNameSpace, nameSpaceID);
+      gNameSpaceManager->RegisterNameSpace(NS_ConvertASCIItoUCS2(kMathMLNameSpace), nameSpaceID);
     else
       NS_ASSERTION(0, "failed to create MathML atoms namespace manager");
 
