@@ -424,7 +424,8 @@ nsLDAPDataSource.prototype = {
                     done = true;
                 }
                 while(!done) {
-                    var resource = enumerator.currentItem();
+                    var resource = enumerator.currentItem().QueryInterface(
+                            Components.interfaces.nsIRDFResource);
                     if (resource.Value == target.Value) {
                         return true;
                     }
