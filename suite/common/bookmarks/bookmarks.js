@@ -102,11 +102,17 @@ dump("Got clipboard.\n");
 	if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
 	if ( !trans )	return(false);
 	trans.addDataFlavor("text/unicode");
-
 dump("Got trans\n");
-	var data = clip.getData(trans);
-dump("Got data.\n");
-	if (!data)	dump("Data is null.\n");
+
+	clip.getData(trans);
+	var data = new Object();
+	var dataLen = new Object();
+	trans.getTransferData("text/unicode", data, dataLen);
+	if (data)	data = data.value.QueryInterface(Components.interfaces.nsISupportsWString);
+	var url=null;
+	if (data)	url = data.data.substring(0, dataLen.value / 2);	// double byte data
+	if (!url)	return(false);
+dump("ID: " + url + "\n\n"); 
 
 	return(true);
 }
@@ -115,7 +121,6 @@ dump("Got data.\n");
 
 function doDelete()
 {
-/*
 	var treeNode = document.getElementById("bookmarksTree");
 	if (!treeNode)    return(false);
 	var select_list = treeNode.selectedItems;
@@ -123,6 +128,13 @@ function doDelete()
 	if (select_list.length < 1)    return(false);
 
 	dump("# of Nodes selected: " + select_list.length + "\n\n");
+
+	var ok = confirm("Delete all the selected nodes?");
+	if (!ok)
+	{
+		dump("Aborting.\n");
+		return(false);
+	}
 
 	for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++)
 	{
@@ -135,7 +147,6 @@ function doDelete()
 		
 		// XXX delete the node
 	}
-*/
 	return(true);
 }
 
