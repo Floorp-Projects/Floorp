@@ -46,20 +46,19 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="replicationProgress"
-        height="110"
+        height="130"
         width="300"
         onload="onLoad()"
         onclose="return DoReplicationClose()">
 
   <stringbundle id="bundle_replication" src="chrome://messenger/locale/addressbook/replicationProgress.properties"/>
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/replicationProgress.js"/>
-
+    <separator/>
     <grid flex="1">
       <columns>
         <column/>
         <column flex="1"/>
       </columns>
-      
       <rows>
         <row>
           <hbox pack="end">
