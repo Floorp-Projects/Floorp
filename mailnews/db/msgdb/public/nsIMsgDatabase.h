@@ -95,6 +95,7 @@ public:
   // a new header, fill in its properties, and then call AddNewHdrToDB.
   // AddNewHdrToDB will send notifications to any listeners.
   NS_IMETHOD CreateNewHdr(nsMsgKey key, nsIMessage **newHdr) = 0;
+
   NS_IMETHOD AddNewHdrToDB(nsIMessage *newHdr, PRBool notify) = 0;
   // extract info from an nsIMessage into a nsMsgHdrStruct
   NS_IMETHOD GetMsgHdrStructFromnsMsgHdr(nsIMessage *msgHdr, 
@@ -169,7 +170,7 @@ public:
                          nsIDBChangeListener *instigator) = 0;
 
   // returns NS_OK on success, NS_COMFALSE on failure
-  NS_IMETHOD  AllMsgKeysImapDeleted(const nsMsgKeyArray *keys) = 0;
+  NS_IMETHOD AllMsgKeysImapDeleted(const nsMsgKeyArray *keys) = 0;
 
   NS_IMETHOD MarkImapDeleted(nsMsgKey key, PRBool deleted,
                              nsIDBChangeListener *instigator) = 0;
