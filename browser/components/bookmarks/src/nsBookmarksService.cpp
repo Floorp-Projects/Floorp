@@ -3117,16 +3117,17 @@ nsBookmarksService::UpdateBookmarkIcon(const char *aURL, const char *aMIMEType,
         rv = gRDF->GetLiteral (NS_LITERAL_STRING("data:").get(), getter_AddRefs(iconDataLiteral));
         if (NS_FAILED(rv)) return rv;
     } else {
+        PRInt32 len = ((aIconDataLen + 2) / 3) * 4;
         char *iconDataBase64 = PL_Base64Encode((const char *) aIconData, aIconDataLen, nsnull);
         if (!iconDataBase64) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
         nsString dataUri;
-        dataUri.AssignLiteral("data:");
-        dataUri.AppendASCII(aMIMEType);
-        dataUri.AppendLiteral(";base64,");
-        dataUri.AppendASCII(iconDataBase64);
+        dataUri += NS_LITERAL_STRING("data:");
+        dataUri += NS_ConvertASCIItoUTF16(aMIMEType);
+        dataUri += NS_LITERAL_STRING(";base64,");
+        dataUri += NS_ConvertASCIItoUTF16(iconDataBase64, len);
         nsMemory::Free(iconDataBase64);
 
         rv = gRDF->GetLiteral (dataUri.get(), getter_AddRefs(iconDataLiteral));
