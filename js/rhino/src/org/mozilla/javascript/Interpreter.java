@@ -1501,713 +1501,713 @@ public class Interpreter extends LabelTable {
         while (pc < iCodeLength) {
             try {
                 switch (iCode[pc] & 0xff) {
-                    case TokenStream.ENDTRY :
-                        tryStackTop--;
-                        break;
-                    case TokenStream.TRY :
-                        if (tryStackTop == 0) {
-                            tryStack = new int[maxTryDepth * 2];
-                        }
-                        i = getTarget(iCode, pc + 1);
-                        if (i == pc) i = 0;
-                        tryStack[tryStackTop * 2] = i;
-                        i = getTarget(iCode, pc + 3);
-                        if (i == (pc + 2)) i = 0;
-                        tryStack[tryStackTop * 2 + 1] = i;
-                        stack[TRY_SCOPE_SHFT + tryStackTop] = scope;
-                        ++tryStackTop;
-                        pc += 4;
-                        break;
-                    case TokenStream.GE :
-                        --stackTop;
-                        rhs = stack[stackTop + 1];
-                        lhs = stack[stackTop];
-                        if (rhs == DBL_MRK || lhs == DBL_MRK) {
-                            rDbl = stack_double(stack, sDbl, stackTop + 1);
-                            lDbl = stack_double(stack, sDbl, stackTop);
-                            valBln = (rDbl == rDbl && lDbl == lDbl
-                                      && rDbl <= lDbl);
-                        }
-                        else {
-                            valBln = (1 == ScriptRuntime.cmp_LE(rhs, lhs));
-                        }
-                        stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-                        break;
-                    case TokenStream.LE :
-                        --stackTop;
-                        rhs = stack[stackTop + 1];
-                        lhs = stack[stackTop];
-                        if (rhs == DBL_MRK || lhs == DBL_MRK) {
-                            rDbl = stack_double(stack, sDbl, stackTop + 1);
-                            lDbl = stack_double(stack, sDbl, stackTop);
-                            valBln = (rDbl == rDbl && lDbl == lDbl
-                                      && lDbl <= rDbl);
-                        }
-                        else {
-                            valBln = (1 == ScriptRuntime.cmp_LE(lhs, rhs));
-                        }
-                        stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-                        break;
-                    case TokenStream.GT :
-                        --stackTop;
-                        rhs = stack[stackTop + 1];
-                        lhs = stack[stackTop];
-                        if (rhs == DBL_MRK || lhs == DBL_MRK) {
-                            rDbl = stack_double(stack, sDbl, stackTop + 1);
-                            lDbl = stack_double(stack, sDbl, stackTop);
-                            valBln = (rDbl == rDbl && lDbl == lDbl
-                                      && rDbl < lDbl);
-                        }
-                        else {
-                            valBln = (1 == ScriptRuntime.cmp_LT(rhs, lhs));
-                        }
-                        stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-                        break;
-                    case TokenStream.LT :
-                        --stackTop;
-                        rhs = stack[stackTop + 1];
-                        lhs = stack[stackTop];
-                        if (rhs == DBL_MRK || lhs == DBL_MRK) {
-                            rDbl = stack_double(stack, sDbl, stackTop + 1);
-                            lDbl = stack_double(stack, sDbl, stackTop);
-                            valBln = (rDbl == rDbl && lDbl == lDbl
-                                      && lDbl < rDbl);
-                        }
-                        else {
-                            valBln = (1 == ScriptRuntime.cmp_LT(lhs, rhs));
-                        }
-                        stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-                        break;
-                    case TokenStream.IN :
-                        rhs = stack[stackTop];
-                        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
-                        --stackTop;
-                        lhs = stack[stackTop];
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        valBln = ScriptRuntime.in(lhs, rhs, scope);
-                        stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-                        break;
-                    case TokenStream.INSTANCEOF :
-                        rhs = stack[stackTop];
-                        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
-                        --stackTop;
-                        lhs = stack[stackTop];
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        valBln = ScriptRuntime.instanceOf(scope, lhs, rhs);
-                        stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-                        break;
-                    case TokenStream.EQ :
-                        --stackTop;
-                        valBln = do_eq(stack, sDbl, stackTop);
-                        stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-                        break;
-                    case TokenStream.NE :
-                        --stackTop;
-                        valBln = !do_eq(stack, sDbl, stackTop);
-                        stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-                        break;
-                    case TokenStream.SHEQ :
-                        --stackTop;
-                        valBln = do_sheq(stack, sDbl, stackTop);
-                        stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-                        break;
-                    case TokenStream.SHNE :
-                        --stackTop;
-                        valBln = !do_sheq(stack, sDbl, stackTop);
-                        stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-                        break;
-                    case TokenStream.IFNE :
-                        val = stack[stackTop];
-                        if (val != DBL_MRK) {
-                            valBln = !ScriptRuntime.toBoolean(val);
-                        }
-                        else {
-                            valDbl = sDbl[stackTop];
-                            valBln = !(valDbl == valDbl && valDbl != 0.0);
-                        }
-                        --stackTop;
-                        if (valBln) {
-                            if (instructionThreshold != 0) {
-                                instructionCount += pc + 3 - pcPrevBranch;
-                                if (instructionCount > instructionThreshold) {
-                                    cx.observeInstructionCount
-                                        (instructionCount);
-                                    instructionCount = 0;
-                                }
-                            }
-                            pcPrevBranch = pc = getTarget(iCode, pc + 1);
-                            continue;
-                        }
-                        pc += 2;
-                        break;
-                    case TokenStream.IFEQ :
-                        val = stack[stackTop];
-                        if (val != DBL_MRK) {
-                            valBln = ScriptRuntime.toBoolean(val);
-                        }
-                        else {
-                            valDbl = sDbl[stackTop];
-                            valBln = (valDbl == valDbl && valDbl != 0.0);
-                        }
-                        --stackTop;
-                        if (valBln) {
-                            if (instructionThreshold != 0) {
-                                instructionCount += pc + 3 - pcPrevBranch;
-                                if (instructionCount > instructionThreshold) {
-                                    cx.observeInstructionCount
-                                        (instructionCount);
-                                    instructionCount = 0;
-                                }
-                            }
-                            pcPrevBranch = pc = getTarget(iCode, pc + 1);
-                            continue;
-                        }
-                        pc += 2;
-                        break;
-                    case TokenStream.GOTO :
+                case TokenStream.ENDTRY :
+                    tryStackTop--;
+                    break;
+                case TokenStream.TRY :
+                    if (tryStackTop == 0) {
+                        tryStack = new int[maxTryDepth * 2];
+                    }
+                    i = getTarget(iCode, pc + 1);
+                    if (i == pc) i = 0;
+                    tryStack[tryStackTop * 2] = i;
+                    i = getTarget(iCode, pc + 3);
+                    if (i == (pc + 2)) i = 0;
+                    tryStack[tryStackTop * 2 + 1] = i;
+                    stack[TRY_SCOPE_SHFT + tryStackTop] = scope;
+                    ++tryStackTop;
+                    pc += 4;
+                    break;
+                case TokenStream.GE :
+                    --stackTop;
+                    rhs = stack[stackTop + 1];
+                    lhs = stack[stackTop];
+                    if (rhs == DBL_MRK || lhs == DBL_MRK) {
+                        rDbl = stack_double(stack, sDbl, stackTop + 1);
+                        lDbl = stack_double(stack, sDbl, stackTop);
+                        valBln = (rDbl == rDbl && lDbl == lDbl
+                                  && rDbl <= lDbl);
+                    }
+                    else {
+                        valBln = (1 == ScriptRuntime.cmp_LE(rhs, lhs));
+                    }
+                    stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
+                    break;
+                case TokenStream.LE :
+                    --stackTop;
+                    rhs = stack[stackTop + 1];
+                    lhs = stack[stackTop];
+                    if (rhs == DBL_MRK || lhs == DBL_MRK) {
+                        rDbl = stack_double(stack, sDbl, stackTop + 1);
+                        lDbl = stack_double(stack, sDbl, stackTop);
+                        valBln = (rDbl == rDbl && lDbl == lDbl
+                                  && lDbl <= rDbl);
+                    }
+                    else {
+                        valBln = (1 == ScriptRuntime.cmp_LE(lhs, rhs));
+                    }
+                    stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
+                    break;
+                case TokenStream.GT :
+                    --stackTop;
+                    rhs = stack[stackTop + 1];
+                    lhs = stack[stackTop];
+                    if (rhs == DBL_MRK || lhs == DBL_MRK) {
+                        rDbl = stack_double(stack, sDbl, stackTop + 1);
+                        lDbl = stack_double(stack, sDbl, stackTop);
+                        valBln = (rDbl == rDbl && lDbl == lDbl
+                                  && rDbl < lDbl);
+                    }
+                    else {
+                        valBln = (1 == ScriptRuntime.cmp_LT(rhs, lhs));
+                    }
+                    stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
+                    break;
+                case TokenStream.LT :
+                    --stackTop;
+                    rhs = stack[stackTop + 1];
+                    lhs = stack[stackTop];
+                    if (rhs == DBL_MRK || lhs == DBL_MRK) {
+                        rDbl = stack_double(stack, sDbl, stackTop + 1);
+                        lDbl = stack_double(stack, sDbl, stackTop);
+                        valBln = (rDbl == rDbl && lDbl == lDbl
+                                  && lDbl < rDbl);
+                    }
+                    else {
+                        valBln = (1 == ScriptRuntime.cmp_LT(lhs, rhs));
+                    }
+                    stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
+                    break;
+                case TokenStream.IN :
+                    rhs = stack[stackTop];
+                    if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
+                    --stackTop;
+                    lhs = stack[stackTop];
+                    if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+                    valBln = ScriptRuntime.in(lhs, rhs, scope);
+                    stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
+                    break;
+                case TokenStream.INSTANCEOF :
+                    rhs = stack[stackTop];
+                    if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
+                    --stackTop;
+                    lhs = stack[stackTop];
+                    if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+                    valBln = ScriptRuntime.instanceOf(scope, lhs, rhs);
+                    stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
+                    break;
+                case TokenStream.EQ :
+                    --stackTop;
+                    valBln = do_eq(stack, sDbl, stackTop);
+                    stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
+                    break;
+                case TokenStream.NE :
+                    --stackTop;
+                    valBln = !do_eq(stack, sDbl, stackTop);
+                    stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
+                    break;
+                case TokenStream.SHEQ :
+                    --stackTop;
+                    valBln = do_sheq(stack, sDbl, stackTop);
+                    stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
+                    break;
+                case TokenStream.SHNE :
+                    --stackTop;
+                    valBln = !do_sheq(stack, sDbl, stackTop);
+                    stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
+                    break;
+                case TokenStream.IFNE :
+                    val = stack[stackTop];
+                    if (val != DBL_MRK) {
+                        valBln = !ScriptRuntime.toBoolean(val);
+                    }
+                    else {
+                        valDbl = sDbl[stackTop];
+                        valBln = !(valDbl == valDbl && valDbl != 0.0);
+                    }
+                    --stackTop;
+                    if (valBln) {
                         if (instructionThreshold != 0) {
                             instructionCount += pc + 3 - pcPrevBranch;
                             if (instructionCount > instructionThreshold) {
-                                cx.observeInstructionCount(instructionCount);
+                                cx.observeInstructionCount
+                                    (instructionCount);
                                 instructionCount = 0;
                             }
                         }
                         pcPrevBranch = pc = getTarget(iCode, pc + 1);
                         continue;
-                    case TokenStream.GOSUB :
-                        sDbl[++stackTop] = pc + 3;
+                    }
+                    pc += 2;
+                    break;
+                case TokenStream.IFEQ :
+                    val = stack[stackTop];
+                    if (val != DBL_MRK) {
+                        valBln = ScriptRuntime.toBoolean(val);
+                    }
+                    else {
+                        valDbl = sDbl[stackTop];
+                        valBln = (valDbl == valDbl && valDbl != 0.0);
+                    }
+                    --stackTop;
+                    if (valBln) {
                         if (instructionThreshold != 0) {
                             instructionCount += pc + 3 - pcPrevBranch;
                             if (instructionCount > instructionThreshold) {
-                                cx.observeInstructionCount(instructionCount);
+                                cx.observeInstructionCount
+                                    (instructionCount);
                                 instructionCount = 0;
                             }
                         }
-                        pcPrevBranch = pc = getTarget(iCode, pc + 1);                                    continue;
-                    case TokenStream.RETSUB :
-                        slot = (iCode[pc + 1] & 0xFF);
-                        if (instructionThreshold != 0) {
-                            instructionCount += pc + 2 - pcPrevBranch;
-                            if (instructionCount > instructionThreshold) {
-                                cx.observeInstructionCount(instructionCount);
-                                instructionCount = 0;
-                            }
-                        }
-                        pcPrevBranch = pc = (int)sDbl[LOCAL_SHFT + slot];
+                        pcPrevBranch = pc = getTarget(iCode, pc + 1);
                         continue;
-                    case TokenStream.POP :
-                        stackTop--;
-                        break;
-                    case TokenStream.DUP :
-                        stack[stackTop + 1] = stack[stackTop];
-                        sDbl[stackTop + 1] = sDbl[stackTop];
-                        stackTop++;
-                        break;
-                    case TokenStream.POPV :
-                        result = stack[stackTop];
-                        if (result == DBL_MRK)
-                            result = doubleWrap(sDbl[stackTop]);
-                        --stackTop;
-                        break;
-                    case TokenStream.RETURN :
-                        result = stack[stackTop];
-                        if (result == DBL_MRK)
-                            result = doubleWrap(sDbl[stackTop]);
-                        --stackTop;
-                        pc = getTarget(iCode, pc + 1);
-                        break;
-                    case TokenStream.BITNOT :
-                        rIntValue = stack_int32(stack, sDbl, stackTop);
-                        stack[stackTop] = DBL_MRK;
-                        sDbl[stackTop] = ~rIntValue;
-                        break;
-                    case TokenStream.BITAND :
-                        rIntValue = stack_int32(stack, sDbl, stackTop);
-                        --stackTop;
-                        lIntValue = stack_int32(stack, sDbl, stackTop);
-                        stack[stackTop] = DBL_MRK;
-                        sDbl[stackTop] = lIntValue & rIntValue;
-                        break;
-                    case TokenStream.BITOR :
-                        rIntValue = stack_int32(stack, sDbl, stackTop);
-                        --stackTop;
-                        lIntValue = stack_int32(stack, sDbl, stackTop);
-                        stack[stackTop] = DBL_MRK;
-                        sDbl[stackTop] = lIntValue | rIntValue;
-                        break;
-                    case TokenStream.BITXOR :
-                        rIntValue = stack_int32(stack, sDbl, stackTop);
-                        --stackTop;
-                        lIntValue = stack_int32(stack, sDbl, stackTop);
-                        stack[stackTop] = DBL_MRK;
-                        sDbl[stackTop] = lIntValue ^ rIntValue;
-                        break;
-                    case TokenStream.LSH :
-                        rIntValue = stack_int32(stack, sDbl, stackTop);
-                        --stackTop;
-                        lIntValue = stack_int32(stack, sDbl, stackTop);
-                        stack[stackTop] = DBL_MRK;
-                        sDbl[stackTop] = lIntValue << rIntValue;
-                        break;
-                    case TokenStream.RSH :
-                        rIntValue = stack_int32(stack, sDbl, stackTop);
-                        --stackTop;
-                        lIntValue = stack_int32(stack, sDbl, stackTop);
-                        stack[stackTop] = DBL_MRK;
-                        sDbl[stackTop] = lIntValue >> rIntValue;
-                        break;
-                    case TokenStream.URSH :
-                        rIntValue = stack_int32(stack, sDbl, stackTop) & 0x1F;
-                        --stackTop;
-                        lDbl = stack_double(stack, sDbl, stackTop);
-                        stack[stackTop] = DBL_MRK;
-                        sDbl[stackTop] = ScriptRuntime.toUint32(lDbl)
-                                            >>> rIntValue;
-                        break;
-                    case TokenStream.ADD :
-                        --stackTop;
-                        do_add(stack, sDbl, stackTop);
-                        break;
-                    case TokenStream.SUB :
-                        rDbl = stack_double(stack, sDbl, stackTop);
-                        --stackTop;
-                        lDbl = stack_double(stack, sDbl, stackTop);
-                        stack[stackTop] = DBL_MRK;
-                        sDbl[stackTop] = lDbl - rDbl;
-                        break;
-                    case TokenStream.NEG :
-                        rDbl = stack_double(stack, sDbl, stackTop);
-                        stack[stackTop] = DBL_MRK;
-                        sDbl[stackTop] = -rDbl;
-                        break;
-                    case TokenStream.POS :
-                        rDbl = stack_double(stack, sDbl, stackTop);
-                        stack[stackTop] = DBL_MRK;
-                        sDbl[stackTop] = rDbl;
-                        break;
-                    case TokenStream.MUL :
-                        rDbl = stack_double(stack, sDbl, stackTop);
-                        --stackTop;
-                        lDbl = stack_double(stack, sDbl, stackTop);
-                        stack[stackTop] = DBL_MRK;
-                        sDbl[stackTop] = lDbl * rDbl;
-                        break;
-                    case TokenStream.DIV :
-                        rDbl = stack_double(stack, sDbl, stackTop);
-                        --stackTop;
-                        lDbl = stack_double(stack, sDbl, stackTop);
-                        stack[stackTop] = DBL_MRK;
-                        // Detect the divide by zero or let Java do it ?
-                        sDbl[stackTop] = lDbl / rDbl;
-                        break;
-                    case TokenStream.MOD :
-                        rDbl = stack_double(stack, sDbl, stackTop);
-                        --stackTop;
-                        lDbl = stack_double(stack, sDbl, stackTop);
-                        stack[stackTop] = DBL_MRK;
-                        sDbl[stackTop] = lDbl % rDbl;
-                        break;
-                    case TokenStream.BINDNAME :
-                        name = strings[getShort(iCode, pc + 1)];
-                        stack[++stackTop] = ScriptRuntime.bind(scope, name);
-                        pc += 2;
-                        break;
-                    case TokenStream.GETBASE :
-                        name = strings[getShort(iCode, pc + 1)];
-                        stack[++stackTop] = ScriptRuntime.getBase(scope, name);
-                        pc += 2;
-                        break;
-                    case TokenStream.SETNAME :
-                        rhs = stack[stackTop];
-                        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
-                        --stackTop;
-                        lhs = stack[stackTop];
-                        // what about class cast exception here for lhs?
-                        stack[stackTop] = ScriptRuntime.setName
-                            ((Scriptable)lhs, rhs, scope,
-                             strings[getShort(iCode, pc + 1)]);
-                        pc += 2;
-                        break;
-                    case TokenStream.DELPROP :
-                        rhs = stack[stackTop];
-                        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
-                        --stackTop;
-                        lhs = stack[stackTop];
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop] = ScriptRuntime.delete(lhs, rhs);
-                        break;
-                    case TokenStream.GETPROP :
-                        name = (String)stack[stackTop];
-                        --stackTop;
-                        lhs = stack[stackTop];
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop]
-                                = ScriptRuntime.getProp(lhs, name, scope);
-                        break;
-                    case TokenStream.SETPROP :
-                        rhs = stack[stackTop];
-                        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
-                        --stackTop;
-                        name = (String)stack[stackTop];
-                        --stackTop;
-                        lhs = stack[stackTop];
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop]
-                                = ScriptRuntime.setProp(lhs, name, rhs, scope);
-                        break;
-                    case TokenStream.GETELEM :
-                        do_getElem(cx, stack, sDbl, stackTop, scope);
-                        --stackTop;
-                        break;
-                    case TokenStream.SETELEM :
-                        do_setElem(cx, stack, sDbl, stackTop, scope);
-                        stackTop -= 2;
-                        break;
-                    case TokenStream.PROPINC :
-                        name = (String)stack[stackTop];
-                        --stackTop;
-                        lhs = stack[stackTop];
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop]
-                                = ScriptRuntime.postIncrement(lhs, name, scope);
-                        break;
-                    case TokenStream.PROPDEC :
-                        name = (String)stack[stackTop];
-                        --stackTop;
-                        lhs = stack[stackTop];
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop]
-                                = ScriptRuntime.postDecrement(lhs, name, scope);
-                        break;
-                    case TokenStream.ELEMINC :
-                        rhs = stack[stackTop];
-                        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
-                        --stackTop;
-                        lhs = stack[stackTop];
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop]
-                           = ScriptRuntime.postIncrementElem(lhs, rhs, scope);
-                        break;
-                    case TokenStream.ELEMDEC :
-                        rhs = stack[stackTop];
-                        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
-                        --stackTop;
-                        lhs = stack[stackTop];
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop]
-                           = ScriptRuntime.postDecrementElem(lhs, rhs, scope);
-                        break;
-                    case TokenStream.GETTHIS :
-                        lhs = stack[stackTop];
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop]
-                            = ScriptRuntime.getThis((Scriptable)lhs);
-                        break;
-                    case TokenStream.NEWTEMP :
-                        slot = (iCode[++pc] & 0xFF);
-                        stack[LOCAL_SHFT + slot] = stack[stackTop];
-                        sDbl[LOCAL_SHFT + slot] = sDbl[stackTop];
-                        break;
-                    case TokenStream.USETEMP :
-                        slot = (iCode[++pc] & 0xFF);
-                        ++stackTop;
-                        stack[stackTop] = stack[LOCAL_SHFT + slot];
-                        sDbl[stackTop] = sDbl[LOCAL_SHFT + slot];
-                        break;
-                    case TokenStream.CALLSPECIAL :
-                        if (instructionThreshold != 0) {
-                            instructionCount += INVOCATION_COST;
-                            cx.instructionCount = instructionCount;
-                            instructionCount = -1;
+                    }
+                    pc += 2;
+                    break;
+                case TokenStream.GOTO :
+                    if (instructionThreshold != 0) {
+                        instructionCount += pc + 3 - pcPrevBranch;
+                        if (instructionCount > instructionThreshold) {
+                            cx.observeInstructionCount(instructionCount);
+                            instructionCount = 0;
                         }
-                        int lineNum = getShort(iCode, pc + 1);
-                        name = strings[getShort(iCode, pc + 3)];
-                        count = getShort(iCode, pc + 5);
-                        outArgs = getArgsArray(stack, sDbl, stackTop, count);
-                        stackTop -= count;
-                        rhs = stack[stackTop];
-                        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
-                        --stackTop;
-                        lhs = stack[stackTop];
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop] = ScriptRuntime.callSpecial(
-                                            cx, lhs, rhs, outArgs,
-                                            thisObj, scope, name, lineNum);
-                        pc += 6;
-                        instructionCount = cx.instructionCount;
-                        break;
-                    case TokenStream.CALL :
-                        if (instructionThreshold != 0) {
-                            instructionCount += INVOCATION_COST;
-                            cx.instructionCount = instructionCount;
-                            instructionCount = -1;
+                    }
+                    pcPrevBranch = pc = getTarget(iCode, pc + 1);
+                    continue;
+                case TokenStream.GOSUB :
+                    sDbl[++stackTop] = pc + 3;
+                    if (instructionThreshold != 0) {
+                        instructionCount += pc + 3 - pcPrevBranch;
+                        if (instructionCount > instructionThreshold) {
+                            cx.observeInstructionCount(instructionCount);
+                            instructionCount = 0;
                         }
+                    }
+                    pcPrevBranch = pc = getTarget(iCode, pc + 1);                                    continue;
+                case TokenStream.RETSUB :
+                    slot = (iCode[pc + 1] & 0xFF);
+                    if (instructionThreshold != 0) {
+                        instructionCount += pc + 2 - pcPrevBranch;
+                        if (instructionCount > instructionThreshold) {
+                            cx.observeInstructionCount(instructionCount);
+                            instructionCount = 0;
+                        }
+                    }
+                    pcPrevBranch = pc = (int)sDbl[LOCAL_SHFT + slot];
+                    continue;
+                case TokenStream.POP :
+                    stackTop--;
+                    break;
+                case TokenStream.DUP :
+                    stack[stackTop + 1] = stack[stackTop];
+                    sDbl[stackTop + 1] = sDbl[stackTop];
+                    stackTop++;
+                    break;
+                case TokenStream.POPV :
+                    result = stack[stackTop];
+                    if (result == DBL_MRK)
+                        result = doubleWrap(sDbl[stackTop]);
+                    --stackTop;
+                    break;
+                case TokenStream.RETURN :
+                    result = stack[stackTop];
+                    if (result == DBL_MRK)
+                        result = doubleWrap(sDbl[stackTop]);
+                    --stackTop;
+                    pc = getTarget(iCode, pc + 1);
+                    break;
+                case TokenStream.BITNOT :
+                    rIntValue = stack_int32(stack, sDbl, stackTop);
+                    stack[stackTop] = DBL_MRK;
+                    sDbl[stackTop] = ~rIntValue;
+                    break;
+                case TokenStream.BITAND :
+                    rIntValue = stack_int32(stack, sDbl, stackTop);
+                    --stackTop;
+                    lIntValue = stack_int32(stack, sDbl, stackTop);
+                    stack[stackTop] = DBL_MRK;
+                    sDbl[stackTop] = lIntValue & rIntValue;
+                    break;
+                case TokenStream.BITOR :
+                    rIntValue = stack_int32(stack, sDbl, stackTop);
+                    --stackTop;
+                    lIntValue = stack_int32(stack, sDbl, stackTop);
+                    stack[stackTop] = DBL_MRK;
+                    sDbl[stackTop] = lIntValue | rIntValue;
+                    break;
+                case TokenStream.BITXOR :
+                    rIntValue = stack_int32(stack, sDbl, stackTop);
+                    --stackTop;
+                    lIntValue = stack_int32(stack, sDbl, stackTop);
+                    stack[stackTop] = DBL_MRK;
+                    sDbl[stackTop] = lIntValue ^ rIntValue;
+                    break;
+                case TokenStream.LSH :
+                    rIntValue = stack_int32(stack, sDbl, stackTop);
+                    --stackTop;
+                    lIntValue = stack_int32(stack, sDbl, stackTop);
+                    stack[stackTop] = DBL_MRK;
+                    sDbl[stackTop] = lIntValue << rIntValue;
+                    break;
+                case TokenStream.RSH :
+                    rIntValue = stack_int32(stack, sDbl, stackTop);
+                    --stackTop;
+                    lIntValue = stack_int32(stack, sDbl, stackTop);
+                    stack[stackTop] = DBL_MRK;
+                    sDbl[stackTop] = lIntValue >> rIntValue;
+                    break;
+                case TokenStream.URSH :
+                    rIntValue = stack_int32(stack, sDbl, stackTop) & 0x1F;
+                    --stackTop;
+                    lDbl = stack_double(stack, sDbl, stackTop);
+                    stack[stackTop] = DBL_MRK;
+                    sDbl[stackTop] = ScriptRuntime.toUint32(lDbl)
+                                        >>> rIntValue;
+                    break;
+                case TokenStream.ADD :
+                    --stackTop;
+                    do_add(stack, sDbl, stackTop);
+                    break;
+                case TokenStream.SUB :
+                    rDbl = stack_double(stack, sDbl, stackTop);
+                    --stackTop;
+                    lDbl = stack_double(stack, sDbl, stackTop);
+                    stack[stackTop] = DBL_MRK;
+                    sDbl[stackTop] = lDbl - rDbl;
+                    break;
+                case TokenStream.NEG :
+                    rDbl = stack_double(stack, sDbl, stackTop);
+                    stack[stackTop] = DBL_MRK;
+                    sDbl[stackTop] = -rDbl;
+                    break;
+                case TokenStream.POS :
+                    rDbl = stack_double(stack, sDbl, stackTop);
+                    stack[stackTop] = DBL_MRK;
+                    sDbl[stackTop] = rDbl;
+                    break;
+                case TokenStream.MUL :
+                    rDbl = stack_double(stack, sDbl, stackTop);
+                    --stackTop;
+                    lDbl = stack_double(stack, sDbl, stackTop);
+                    stack[stackTop] = DBL_MRK;
+                    sDbl[stackTop] = lDbl * rDbl;
+                    break;
+                case TokenStream.DIV :
+                    rDbl = stack_double(stack, sDbl, stackTop);
+                    --stackTop;
+                    lDbl = stack_double(stack, sDbl, stackTop);
+                    stack[stackTop] = DBL_MRK;
+                    // Detect the divide by zero or let Java do it ?
+                    sDbl[stackTop] = lDbl / rDbl;
+                    break;
+                case TokenStream.MOD :
+                    rDbl = stack_double(stack, sDbl, stackTop);
+                    --stackTop;
+                    lDbl = stack_double(stack, sDbl, stackTop);
+                    stack[stackTop] = DBL_MRK;
+                    sDbl[stackTop] = lDbl % rDbl;
+                    break;
+                case TokenStream.BINDNAME :
+                    name = strings[getShort(iCode, pc + 1)];
+                    stack[++stackTop] = ScriptRuntime.bind(scope, name);
+                    pc += 2;
+                    break;
+                case TokenStream.GETBASE :
+                    name = strings[getShort(iCode, pc + 1)];
+                    stack[++stackTop] = ScriptRuntime.getBase(scope, name);
+                    pc += 2;
+                    break;
+                case TokenStream.SETNAME :
+                    rhs = stack[stackTop];
+                    if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
+                    --stackTop;
+                    lhs = stack[stackTop];
+                    // what about class cast exception here for lhs?
+                    stack[stackTop] = ScriptRuntime.setName
+                        ((Scriptable)lhs, rhs, scope,
+                         strings[getShort(iCode, pc + 1)]);
+                    pc += 2;
+                    break;
+                case TokenStream.DELPROP :
+                    rhs = stack[stackTop];
+                    if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
+                    --stackTop;
+                    lhs = stack[stackTop];
+                    if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+                    stack[stackTop] = ScriptRuntime.delete(lhs, rhs);
+                    break;
+                case TokenStream.GETPROP :
+                    name = (String)stack[stackTop];
+                    --stackTop;
+                    lhs = stack[stackTop];
+                    if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+                    stack[stackTop]
+                            = ScriptRuntime.getProp(lhs, name, scope);
+                    break;
+                case TokenStream.SETPROP :
+                    rhs = stack[stackTop];
+                    if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
+                    --stackTop;
+                    name = (String)stack[stackTop];
+                    --stackTop;
+                    lhs = stack[stackTop];
+                    if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+                    stack[stackTop]
+                            = ScriptRuntime.setProp(lhs, name, rhs, scope);
+                    break;
+                case TokenStream.GETELEM :
+                    do_getElem(cx, stack, sDbl, stackTop, scope);
+                    --stackTop;
+                    break;
+                case TokenStream.SETELEM :
+                    do_setElem(cx, stack, sDbl, stackTop, scope);
+                    stackTop -= 2;
+                    break;
+                case TokenStream.PROPINC :
+                    name = (String)stack[stackTop];
+                    --stackTop;
+                    lhs = stack[stackTop];
+                    if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+                    stack[stackTop]
+                            = ScriptRuntime.postIncrement(lhs, name, scope);
+                    break;
+                case TokenStream.PROPDEC :
+                    name = (String)stack[stackTop];
+                    --stackTop;
+                    lhs = stack[stackTop];
+                    if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+                    stack[stackTop]
+                            = ScriptRuntime.postDecrement(lhs, name, scope);
+                    break;
+                case TokenStream.ELEMINC :
+                    rhs = stack[stackTop];
+                    if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
+                    --stackTop;
+                    lhs = stack[stackTop];
+                    if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+                    stack[stackTop]
+                       = ScriptRuntime.postIncrementElem(lhs, rhs, scope);
+                    break;
+                case TokenStream.ELEMDEC :
+                    rhs = stack[stackTop];
+                    if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
+                    --stackTop;
+                    lhs = stack[stackTop];
+                    if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+                    stack[stackTop]
+                       = ScriptRuntime.postDecrementElem(lhs, rhs, scope);
+                    break;
+                case TokenStream.GETTHIS :
+                    lhs = stack[stackTop];
+                    if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+                    stack[stackTop]
+                        = ScriptRuntime.getThis((Scriptable)lhs);
+                    break;
+                case TokenStream.NEWTEMP :
+                    slot = (iCode[++pc] & 0xFF);
+                    stack[LOCAL_SHFT + slot] = stack[stackTop];
+                    sDbl[LOCAL_SHFT + slot] = sDbl[stackTop];
+                    break;
+                case TokenStream.USETEMP :
+                    slot = (iCode[++pc] & 0xFF);
+                    ++stackTop;
+                    stack[stackTop] = stack[LOCAL_SHFT + slot];
+                    sDbl[stackTop] = sDbl[LOCAL_SHFT + slot];
+                    break;
+                case TokenStream.CALLSPECIAL :
+                    if (instructionThreshold != 0) {
+                        instructionCount += INVOCATION_COST;
                         cx.instructionCount = instructionCount;
-                        count = getShort(iCode, pc + 3);
-                        outArgs = getArgsArray(stack, sDbl, stackTop, count);
-                        stackTop -= count;
-                        rhs = stack[stackTop];
-                        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
-                        --stackTop;
-                        lhs = stack[stackTop];
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        if (lhs == undefined) {
-                            i = getShort(iCode, pc + 1);
-                            if (i != -1)
-                                lhs = strings[i];
-                        }
-                        Scriptable calleeScope = scope;
-                        if (theData.itsNeedsActivation) {
-                            calleeScope = ScriptableObject.
-                                getTopLevelScope(scope);
-                        }
-                        stack[stackTop] = ScriptRuntime.call(cx, lhs, rhs,
-                                                             outArgs,
-                                                             calleeScope);
-                        pc += 4;
-                        instructionCount = cx.instructionCount;
-                        break;
-                    case TokenStream.NEW :
-                        if (instructionThreshold != 0) {
-                            instructionCount += INVOCATION_COST;
-                            cx.instructionCount = instructionCount;
-                            instructionCount = -1;
-                        }
-                        count = getShort(iCode, pc + 3);
-                        outArgs = getArgsArray(stack, sDbl, stackTop, count);
-                        stackTop -= count;
-                        lhs = stack[stackTop];
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        if (lhs == undefined && getShort(iCode, pc + 1) != -1)
-                        {
-                            // special code for better error message for call
-                            //  to undefined
-                            lhs = strings[getShort(iCode, pc + 1)];
-                        }
-                        stack[stackTop] = ScriptRuntime.newObject(cx, lhs,
-                                                                  outArgs,
-                                                                  scope);
-                        pc += 4;                                                                         instructionCount = cx.instructionCount;
-                        break;
-                    case TokenStream.TYPEOF :
-                        lhs = stack[stackTop];
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop] = ScriptRuntime.typeof(lhs);
-                        break;
-                    case TokenStream.TYPEOFNAME :
-                        name = strings[getShort(iCode, pc + 1)];
-                        stack[++stackTop]
-                                    = ScriptRuntime.typeofName(scope, name);
-                        pc += 2;
-                        break;
-                    case TokenStream.STRING :
-                        stack[++stackTop] = strings[getShort(iCode, pc + 1)];
-                        pc += 2;
-                        break;
-                    case SHORTNUMBER_ICODE :
-                        ++stackTop;
-                        stack[stackTop] = DBL_MRK;
-                        sDbl[stackTop] = getShort(iCode, pc + 1);
-                        pc += 2;
-                        break;
-                    case INTNUMBER_ICODE :
-                        ++stackTop;
-                        stack[stackTop] = DBL_MRK;
-                        sDbl[stackTop] = getInt(iCode, pc + 1);
-                        pc += 4;
-                        break;
-                    case TokenStream.NUMBER :
-                        ++stackTop;
-                        stack[stackTop] = DBL_MRK;
-                        sDbl[stackTop] = theData.
-                                    itsDoubleTable[getShort(iCode, pc + 1)];
-                        pc += 2;
-                        break;
-                    case TokenStream.NAME :
-                        stack[++stackTop] = ScriptRuntime.name
-                                    (scope, strings[getShort(iCode, pc + 1)]);
-                        pc += 2;
-                        break;
-                    case TokenStream.NAMEINC :
-                        stack[++stackTop] = ScriptRuntime.postIncrement
-                                    (scope, strings[getShort(iCode, pc + 1)]);
-                        pc += 2;
-                        break;
-                    case TokenStream.NAMEDEC :
-                        stack[++stackTop] = ScriptRuntime.postDecrement
-                                    (scope, strings[getShort(iCode, pc + 1)]);
-                        pc += 2;
-                        break;
-                    case TokenStream.SETVAR :
-                        slot = (iCode[++pc] & 0xFF);
-                        stack[VAR_SHFT + slot] = stack[stackTop];
-                        sDbl[VAR_SHFT + slot] = sDbl[stackTop];
-                        break;
-                    case TokenStream.GETVAR :
-                        slot = (iCode[++pc] & 0xFF);
-                        ++stackTop;
-                        stack[stackTop] = stack[VAR_SHFT + slot];
-                        sDbl[stackTop] = sDbl[VAR_SHFT + slot];
-                        break;
-                    case TokenStream.VARINC :
-                        slot = (iCode[++pc] & 0xFF);
-                        ++stackTop;
-                        stack[stackTop] = stack[VAR_SHFT + slot];
-                        sDbl[stackTop] = sDbl[VAR_SHFT + slot];
-                        stack[VAR_SHFT + slot] = DBL_MRK;
-                        sDbl[VAR_SHFT + slot]
-                            = stack_double(stack, sDbl, stackTop) + 1.0;
-                        break;
-                    case TokenStream.VARDEC :
-                        slot = (iCode[++pc] & 0xFF);
-                        ++stackTop;
-                        stack[stackTop] = stack[VAR_SHFT + slot];
-                        sDbl[stackTop] = sDbl[VAR_SHFT + slot];
-                        stack[VAR_SHFT + slot] = DBL_MRK;
-                        sDbl[VAR_SHFT + slot]
-                            = stack_double(stack, sDbl, stackTop) - 1.0;
-                        break;
-                    case TokenStream.ZERO :
-                        ++stackTop;
-                        stack[stackTop] = DBL_MRK;
-                        sDbl[stackTop] = 0;
-                        break;
-                    case TokenStream.ONE :
-                        ++stackTop;
-                        stack[stackTop] = DBL_MRK;
-                        sDbl[stackTop] = 1;
-                        break;
-                    case TokenStream.NULL :
-                        stack[++stackTop] = null;
-                        break;
-                    case TokenStream.THIS :
-                        stack[++stackTop] = thisObj;
-                        break;
-                    case TokenStream.THISFN :
-                        stack[++stackTop] = fnOrScript;
-                        break;
-                    case TokenStream.FALSE :
-                        stack[++stackTop] = Boolean.FALSE;
-                        break;
-                    case TokenStream.TRUE :
-                        stack[++stackTop] = Boolean.TRUE;
-                        break;
-                    case TokenStream.UNDEFINED :
-                        stack[++stackTop] = Undefined.instance;
-                        break;
-                    case TokenStream.THROW :
-                        result = stack[stackTop];
-                        if (result == DBL_MRK)
-                            result = doubleWrap(sDbl[stackTop]);
-                        --stackTop;
-                        throw new JavaScriptException(result);
-                    case TokenStream.JTHROW :
-                        result = stack[stackTop];
-                        // No need to check for DBL_MRK: result is Exception
-                        --stackTop;
-                        if (result instanceof JavaScriptException)
-                            throw (JavaScriptException)result;
-                        else
-                            throw (RuntimeException)result;
-                    case TokenStream.ENTERWITH :
-                        lhs = stack[stackTop];
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        --stackTop;
-                        scope = ScriptRuntime.enterWith(lhs, scope);
-                        break;
-                    case TokenStream.LEAVEWITH :
-                        scope = ScriptRuntime.leaveWith(scope);
-                        break;
-                    case TokenStream.NEWSCOPE :
-                        stack[++stackTop] = ScriptRuntime.newScope();
-                        break;
-                    case TokenStream.ENUMINIT :
-                        slot = (iCode[++pc] & 0xFF);
-                        lhs = stack[stackTop];
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        --stackTop;
-                        stack[LOCAL_SHFT + slot]
-                            = ScriptRuntime.initEnum(lhs, scope);
-                        break;
-                    case TokenStream.ENUMNEXT :
-                        slot = (iCode[++pc] & 0xFF);
-                        val = stack[LOCAL_SHFT + slot];
-                        ++stackTop;
-                        stack[stackTop] = ScriptRuntime.
-                            nextEnum((Enumeration)val);
-                        break;
-                    case TokenStream.GETPROTO :
-                        lhs = stack[stackTop];
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop] = ScriptRuntime.getProto(lhs, scope);
-                        break;
-                    case TokenStream.GETPARENT :
-                        lhs = stack[stackTop];
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop] = ScriptRuntime.getParent(lhs);
-                        break;
-                    case TokenStream.GETSCOPEPARENT :
-                        lhs = stack[stackTop];
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop] = ScriptRuntime.getParent(lhs, scope);
-                        break;
-                    case TokenStream.SETPROTO :
-                        rhs = stack[stackTop];
-                        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
-                        --stackTop;
-                        lhs = stack[stackTop];
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop]
-                                = ScriptRuntime.setProto(lhs, rhs, scope);
-                        break;
-                    case TokenStream.SETPARENT :
-                        rhs = stack[stackTop];
-                        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
-                        --stackTop;
-                        lhs = stack[stackTop];
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop]
-                                = ScriptRuntime.setParent(lhs, rhs, scope);
-                        break;
-                    case TokenStream.SCOPE :
-                        stack[++stackTop] = scope;
-                        break;
-                    case TokenStream.CLOSURE :
+                        instructionCount = -1;
+                    }
+                    int lineNum = getShort(iCode, pc + 1);
+                    name = strings[getShort(iCode, pc + 3)];
+                    count = getShort(iCode, pc + 5);
+                    outArgs = getArgsArray(stack, sDbl, stackTop, count);
+                    stackTop -= count;
+                    rhs = stack[stackTop];
+                    if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
+                    --stackTop;
+                    lhs = stack[stackTop];
+                    if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+                    stack[stackTop] = ScriptRuntime.callSpecial(
+                                        cx, lhs, rhs, outArgs,
+                                        thisObj, scope, name, lineNum);
+                    pc += 6;
+                    instructionCount = cx.instructionCount;
+                    break;
+                case TokenStream.CALL :
+                    if (instructionThreshold != 0) {
+                        instructionCount += INVOCATION_COST;
+                        cx.instructionCount = instructionCount;
+                        instructionCount = -1;
+                    }
+                    cx.instructionCount = instructionCount;
+                    count = getShort(iCode, pc + 3);
+                    outArgs = getArgsArray(stack, sDbl, stackTop, count);
+                    stackTop -= count;
+                    rhs = stack[stackTop];
+                    if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
+                    --stackTop;
+                    lhs = stack[stackTop];
+                    if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+                    if (lhs == undefined) {
                         i = getShort(iCode, pc + 1);
-                        stack[++stackTop]
-                            = new InterpretedFunction(
-                                    theData.itsNestedFunctions[i],
-                                    scope, cx);
-                        createFunctionObject(
-                              (InterpretedFunction)stack[stackTop], scope);
-                        pc += 2;
-                        break;
-                    case TokenStream.OBJECT :
-                        i = getShort(iCode, pc + 1);
-                        stack[++stackTop] = theData.itsRegExpLiterals[i];
-                        pc += 2;
-                        break;
-                    case SOURCEFILE_ICODE :
-                        cx.interpreterSourceFile = theData.itsSourceFile;
-                        break;
-                    case LINE_ICODE :
-                    case BREAKPOINT_ICODE :
-                        i = getShort(iCode, pc + 1);
-                        cx.interpreterLine = i;
-                        if (frame != null)
-                            frame.setLineNumber(i);
-                        if ((iCode[pc] & 0xff) == BREAKPOINT_ICODE ||
-                            cx.inLineStepMode)
-                        {
-                            cx.getDebuggableEngine().
-                                getDebugger().handleBreakpointHit(cx);
-                        }
-                        pc += 2;
-                        break;
-                    default :
-                        dumpICode(theData);
-                        throw new RuntimeException("Unknown icode : "
-                                     + (iCode[pc] & 0xff) + " @ pc : " + pc);
+                        if (i != -1)
+                            lhs = strings[i];
+                    }
+                    Scriptable calleeScope = scope;
+                    if (theData.itsNeedsActivation) {
+                        calleeScope = ScriptableObject.
+                            getTopLevelScope(scope);
+                    }
+                    stack[stackTop] = ScriptRuntime.call(cx, lhs, rhs,
+                                                         outArgs,
+                                                         calleeScope);
+                    pc += 4;
+                    instructionCount = cx.instructionCount;
+                    break;
+                case TokenStream.NEW :
+                    if (instructionThreshold != 0) {
+                        instructionCount += INVOCATION_COST;
+                        cx.instructionCount = instructionCount;
+                        instructionCount = -1;
+                    }
+                    count = getShort(iCode, pc + 3);
+                    outArgs = getArgsArray(stack, sDbl, stackTop, count);
+                    stackTop -= count;
+                    lhs = stack[stackTop];
+                    if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+                    if (lhs == undefined && getShort(iCode, pc + 1) != -1)
+                    {
+                        // special code for better error message for call
+                        //  to undefined
+                        lhs = strings[getShort(iCode, pc + 1)];
+                    }
+                    stack[stackTop] = ScriptRuntime.newObject(cx, lhs,
+                                                              outArgs,
+                                                              scope);
+                    pc += 4;                                                                         instructionCount = cx.instructionCount;
+                    break;
+                case TokenStream.TYPEOF :
+                    lhs = stack[stackTop];
+                    if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+                    stack[stackTop] = ScriptRuntime.typeof(lhs);
+                    break;
+                case TokenStream.TYPEOFNAME :
+                    name = strings[getShort(iCode, pc + 1)];
+                    stack[++stackTop]
+                                = ScriptRuntime.typeofName(scope, name);
+                    pc += 2;
+                    break;
+                case TokenStream.STRING :
+                    stack[++stackTop] = strings[getShort(iCode, pc + 1)];
+                    pc += 2;
+                    break;
+                case SHORTNUMBER_ICODE :
+                    ++stackTop;
+                    stack[stackTop] = DBL_MRK;
+                    sDbl[stackTop] = getShort(iCode, pc + 1);
+                    pc += 2;
+                    break;
+                case INTNUMBER_ICODE :
+                    ++stackTop;
+                    stack[stackTop] = DBL_MRK;
+                    sDbl[stackTop] = getInt(iCode, pc + 1);
+                    pc += 4;
+                    break;
+                case TokenStream.NUMBER :
+                    ++stackTop;
+                    stack[stackTop] = DBL_MRK;
+                    sDbl[stackTop] = theData.
+                                itsDoubleTable[getShort(iCode, pc + 1)];
+                    pc += 2;
+                    break;
+                case TokenStream.NAME :
+                    stack[++stackTop] = ScriptRuntime.name
+                                (scope, strings[getShort(iCode, pc + 1)]);
+                    pc += 2;
+                    break;
+                case TokenStream.NAMEINC :
+                    stack[++stackTop] = ScriptRuntime.postIncrement
+                                (scope, strings[getShort(iCode, pc + 1)]);
+                    pc += 2;
+                    break;
+                case TokenStream.NAMEDEC :
+                    stack[++stackTop] = ScriptRuntime.postDecrement
+                                (scope, strings[getShort(iCode, pc + 1)]);
+                    pc += 2;
+                    break;
+                case TokenStream.SETVAR :
+                    slot = (iCode[++pc] & 0xFF);
+                    stack[VAR_SHFT + slot] = stack[stackTop];
+                    sDbl[VAR_SHFT + slot] = sDbl[stackTop];
+                    break;
+                case TokenStream.GETVAR :
+                    slot = (iCode[++pc] & 0xFF);
+                    ++stackTop;
+                    stack[stackTop] = stack[VAR_SHFT + slot];
+                    sDbl[stackTop] = sDbl[VAR_SHFT + slot];
+                    break;
+                case TokenStream.VARINC :
+                    slot = (iCode[++pc] & 0xFF);
+                    ++stackTop;
+                    stack[stackTop] = stack[VAR_SHFT + slot];
+                    sDbl[stackTop] = sDbl[VAR_SHFT + slot];
+                    stack[VAR_SHFT + slot] = DBL_MRK;
+                    sDbl[VAR_SHFT + slot]
+                        = stack_double(stack, sDbl, stackTop) + 1.0;
+                    break;
+                case TokenStream.VARDEC :
+                    slot = (iCode[++pc] & 0xFF);
+                    ++stackTop;
+                    stack[stackTop] = stack[VAR_SHFT + slot];
+                    sDbl[stackTop] = sDbl[VAR_SHFT + slot];
+                    stack[VAR_SHFT + slot] = DBL_MRK;
+                    sDbl[VAR_SHFT + slot]
+                        = stack_double(stack, sDbl, stackTop) - 1.0;
+                    break;
+                case TokenStream.ZERO :
+                    ++stackTop;
+                    stack[stackTop] = DBL_MRK;
+                    sDbl[stackTop] = 0;
+                    break;
+                case TokenStream.ONE :
+                    ++stackTop;
+                    stack[stackTop] = DBL_MRK;
+                    sDbl[stackTop] = 1;
+                    break;
+                case TokenStream.NULL :
+                    stack[++stackTop] = null;
+                    break;
+                case TokenStream.THIS :
+                    stack[++stackTop] = thisObj;
+                    break;
+                case TokenStream.THISFN :
+                    stack[++stackTop] = fnOrScript;
+                    break;
+                case TokenStream.FALSE :
+                    stack[++stackTop] = Boolean.FALSE;
+                    break;
+                case TokenStream.TRUE :
+                    stack[++stackTop] = Boolean.TRUE;
+                    break;
+                case TokenStream.UNDEFINED :
+                    stack[++stackTop] = Undefined.instance;
+                    break;
+                case TokenStream.THROW :
+                    result = stack[stackTop];
+                    if (result == DBL_MRK)
+                        result = doubleWrap(sDbl[stackTop]);
+                    --stackTop;
+                    throw new JavaScriptException(result);
+                case TokenStream.JTHROW :
+                    result = stack[stackTop];
+                    // No need to check for DBL_MRK: result is Exception
+                    --stackTop;
+                    if (result instanceof JavaScriptException)
+                        throw (JavaScriptException)result;
+                    else
+                        throw (RuntimeException)result;
+                case TokenStream.ENTERWITH :
+                    lhs = stack[stackTop];
+                    if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+                    --stackTop;
+                    scope = ScriptRuntime.enterWith(lhs, scope);
+                    break;
+                case TokenStream.LEAVEWITH :
+                    scope = ScriptRuntime.leaveWith(scope);
+                    break;
+                case TokenStream.NEWSCOPE :
+                    stack[++stackTop] = ScriptRuntime.newScope();
+                    break;
+                case TokenStream.ENUMINIT :
+                    slot = (iCode[++pc] & 0xFF);
+                    lhs = stack[stackTop];
+                    if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+                    --stackTop;
+                    stack[LOCAL_SHFT + slot]
+                        = ScriptRuntime.initEnum(lhs, scope);
+                    break;
+                case TokenStream.ENUMNEXT :
+                    slot = (iCode[++pc] & 0xFF);
+                    val = stack[LOCAL_SHFT + slot];
+                    ++stackTop;
+                    stack[stackTop] = ScriptRuntime.
+                        nextEnum((Enumeration)val);
+                    break;
+                case TokenStream.GETPROTO :
+                    lhs = stack[stackTop];
+                    if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+                    stack[stackTop] = ScriptRuntime.getProto(lhs, scope);
+                    break;
+                case TokenStream.GETPARENT :
+                    lhs = stack[stackTop];
+                    if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+                    stack[stackTop] = ScriptRuntime.getParent(lhs);
+                    break;
+                case TokenStream.GETSCOPEPARENT :
+                    lhs = stack[stackTop];
+                    if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+                    stack[stackTop] = ScriptRuntime.getParent(lhs, scope);
+                    break;
+                case TokenStream.SETPROTO :
+                    rhs = stack[stackTop];
+                    if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
+                    --stackTop;
+                    lhs = stack[stackTop];
+                    if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+                    stack[stackTop]
+                            = ScriptRuntime.setProto(lhs, rhs, scope);
+                    break;
+                case TokenStream.SETPARENT :
+                    rhs = stack[stackTop];
+                    if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
+                    --stackTop;
+                    lhs = stack[stackTop];
+                    if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+                    stack[stackTop]
+                            = ScriptRuntime.setParent(lhs, rhs, scope);
+                    break;
+                case TokenStream.SCOPE :
+                    stack[++stackTop] = scope;
+                    break;
+                case TokenStream.CLOSURE :
+                    i = getShort(iCode, pc + 1);
+                    stack[++stackTop]
+                        = new InterpretedFunction(
+                                theData.itsNestedFunctions[i],
+                                scope, cx);
+                    createFunctionObject(
+                          (InterpretedFunction)stack[stackTop], scope);
+                    pc += 2;
+                    break;
+                case TokenStream.OBJECT :
+                    i = getShort(iCode, pc + 1);
+                    stack[++stackTop] = theData.itsRegExpLiterals[i];
+                    pc += 2;
+                    break;
+                case SOURCEFILE_ICODE :
+                    cx.interpreterSourceFile = theData.itsSourceFile;
+                    break;
+                case LINE_ICODE :
+                case BREAKPOINT_ICODE :
+                    i = getShort(iCode, pc + 1);
+                    cx.interpreterLine = i;
+                    if (frame != null)
+                        frame.setLineNumber(i);
+                    if ((iCode[pc] & 0xff) == BREAKPOINT_ICODE ||
+                        cx.inLineStepMode)
+                    {
+                        cx.getDebuggableEngine().
+                            getDebugger().handleBreakpointHit(cx);
+                    }
+                    pc += 2;
+                    break;
+                default :
+                    dumpICode(theData);
+                    throw new RuntimeException("Unknown icode : "
+                                 + (iCode[pc] & 0xff) + " @ pc : " + pc);
                 }
                 pc++;
             }
