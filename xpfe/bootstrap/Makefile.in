@@ -76,7 +76,7 @@ EXTRA_DSO_LIBS += mpfilelocprovider_s
 EXTRA_DSO_LDOPTS += libuls.lib libconv.lib unikbd.lib
 _COMPONENT_LIST := $(shell cat $(FINAL_LINK_COMP_NAMES))
 else
-EXTRA_DSO_LDOPTS = -L$(DEPTH)/dist/lib/components
+EXTRA_DSO_LDOPTS = -L$(DIST)/lib/components
 EXTRA_DSO_LIBS = $(shell cat $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS))
 _COMPONENT_LIST := $(shell cat $(FINAL_LINK_COMP_NAMES))
 endif
