@@ -239,7 +239,8 @@ sub insert
 
   SendSQL("LOCK TABLES attachstatusdefs WRITE");
   SendSQL("SELECT MAX(id) FROM attachstatusdefs");
-  my $id = FetchSQLData() + 1;
+  my $id = FetchSQLData() || 0;
+  $id++;
   SendSQL("INSERT INTO attachstatusdefs (id, name, description, sortkey, product)
            VALUES ($id, $name, $desc, $::FORM{'sortkey'}, $product)");
   SendSQL("UNLOCK TABLES");
