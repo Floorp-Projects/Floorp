@@ -1123,11 +1123,6 @@ MOZ_ARG_DISABLE_BOOL(editor,
 [  --disable-editor         Dont build the editor],
   MOZ_EDITOR= )
 
-dnl Remove this once clipboard is working.
-MOZ_ARG_ENABLE_BOOL(new-clipboard,
-[  --enable-new-clipboard         Enable new clipboard.],
-  NEW_CLIPBOARD_SUPPORT=1)
-
 dnl This will be part of the address book
 dnl MOZ_ARG_ENABLE_BOOL(ldap,
 dnl [  --enable-ldap           Enable LDAP directory access],
@@ -1403,9 +1398,6 @@ AC_SUBST(MOZ_BUILD_XPFE)
 dnl AC_SUBST(MOZ_LDAP)
 AC_SUBST(MOZ_EDITOR)
 AC_SUBST(MOZ_BRPROF)
-
-dnl Remove this once clipboard is working.
-AC_SUBST(NEW_CLIPBOARD_SUPPORT)
 
 AC_SUBST(UNIX_SKIP_ASSERTS)
 AC_SUBST(NO_UNIX_ASYNC_DNS)
@@ -1698,7 +1690,6 @@ else
   AC_DEFINE(X_PLUGINS)
   AC_DEFINE(UNIX_LDAP)
   AC_DEFINE(UNIX_ASYNC_DNS)
-  AC_DEFINE(NEW_CLIPBOARD_SUPPORT)
 fi
 
 AC_DEFINE(JS_THREADSAFE)
@@ -1707,13 +1698,6 @@ AC_DEFINE(NETSCAPE)
 
 if test "$MOZ_EDITOR"; then
   AC_DEFINE(NGEDITOR)
-fi
-
-dnl
-dnl Remove this once clipboard is working.
-dnl 
-if test "$NEW_CLIPBOARD_SUPPORT"; then
-  AC_DEFINE(NEW_CLIPBOARD_SUPPORT)
 fi
 
 # Used for LD_LIBRARY_PATH of run_viewer target
