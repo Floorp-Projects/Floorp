@@ -102,8 +102,9 @@ enum Document_slots {
   DOCUMENTSTYLE_STYLESHEETS = -4,
   DOCUMENTVIEW_DEFAULTVIEW = -5,
   NSDOCUMENT_CHARACTERSET = -6,
-  NSDOCUMENT_PLUGINS = -7,
-  NSDOCUMENT_LOCATION = -8
+  NSDOCUMENT_DIR = -7,
+  NSDOCUMENT_PLUGINS = -8,
+  NSDOCUMENT_LOCATION = -9
 };
 
 /***********************************************************************/
@@ -224,6 +225,25 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case NSDOCUMENT_DIR:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_DIR, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMNSDocument* b;
+          if (NS_OK == a->QueryInterface(kINSDocumentIID, (void **)&b)) {
+            rv = b->GetDir(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
       case NSDOCUMENT_PLUGINS:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_PLUGINS, PR_FALSE);
@@ -292,6 +312,26 @@ SetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!secMan)
         return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
+      case NSDOCUMENT_DIR:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_DIR, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+      
+          nsIDOMNSDocument *b;
+          if (NS_OK == a->QueryInterface(kINSDocumentIID, (void **)&b)) {
+            b->SetDir(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
       case NSDOCUMENT_LOCATION:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_LOCATION, PR_TRUE);
@@ -337,6 +377,7 @@ static JSPropertySpec DocumentProperties[] =
   {"styleSheets",    DOCUMENTSTYLE_STYLESHEETS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"defaultView",    DOCUMENTVIEW_DEFAULTVIEW,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"characterSet",    NSDOCUMENT_CHARACTERSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"dir",    NSDOCUMENT_DIR,    JSPROP_ENUMERATE},
   {"plugins",    NSDOCUMENT_PLUGINS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"location",    NSDOCUMENT_LOCATION,    JSPROP_ENUMERATE},
   {0}

@@ -766,6 +766,7 @@
     "notation.systemid", \
     "nsdocument.characterset", \
     "nsdocument.createrange", \
+    "nsdocument.dir", \
     "nsdocument.getboxobjectfor", \
     "nsdocument.load", \
     "nsdocument.location", \
