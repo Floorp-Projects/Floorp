@@ -70,9 +70,6 @@ function onLoad()
 
   //Read the existing prefs, if any
   initializeSelection();
-
-  //Set Values for the update url
-  updateSelectedURLControls();  
 }
 
 function updateSelectedTimingControls()
