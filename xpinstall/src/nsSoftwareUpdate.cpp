@@ -392,6 +392,7 @@ nsSoftwareUpdate::SetProgramDirectory(nsIFileSpec *aDir)
     if (NS_SUCCEEDED(rv))
     {
         VR_SetRegDirectory( path );
+        nsCRT::free( path );
     }
 
     return rv;
