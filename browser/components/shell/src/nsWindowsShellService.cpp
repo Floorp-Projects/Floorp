@@ -22,6 +22,7 @@
  *  Ben Goodger    <ben@mozilla.org>     (Clients, Mail, New Default Browser)
  *  Joe Hewitt     <hewitt@netscape.com> (Set Background)
  *  Blake Ross     <blake@blakeross.com> (Desktop Color)
+ *  Jungshik Shin  <jshin@mailaps.org>   (I18N)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -55,6 +56,10 @@
 #include "nsNetUtil.h"
 #include "nsShellService.h"
 #include "nsWindowsShellService.h"
+#include "nsNativeCharsetUtils.h"
+
+#include <mbstring.h>
+
 
 #define MOZ_HWND_BROADCAST_MSG_TIMEOUT 5000
 #define MOZ_BACKUP_REGISTRY "SOFTWARE\\Mozilla\\Desktop"
@@ -257,10 +262,13 @@ nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefault
   ::GetShortPathName(buf, buf, sizeof(buf));
   ToUpperCase(appPath = buf);
 
-  PRInt32 n = appPath.RFind("\\");
+  // 0x5C can be the second byte of a multibyte character.
+  char *pathSep = (char *) _mbsrchr((const unsigned char *) buf, '\\');
   nsCAutoString exeName;
-  if (n != kNotFound) 
+  if (pathSep) {
+    PRInt32 n = pathSep - buf; 
     exeName = Substring(appPath, n + 1, appPath.Length() - (n - 1));
+  }
   else
     exeName = appPath;
 
@@ -321,10 +329,13 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   ::GetShortPathName(buf, buf, sizeof(buf));
   ToUpperCase(appPath = buf);
 
-  PRInt32 n = appPath.RFind("\\");
+  // 0x5C can be the second byte of a multibyte character.
+  char *pathSep = (char *) _mbsrchr((const unsigned char *) buf, '\\');
   nsCAutoString exeName;
-  if (n != kNotFound) 
+  if (pathSep) {
+    PRInt32 n = pathSep - buf; 
     exeName = Substring(appPath, n + 1, appPath.Length() - (n - 1));
+  }
   else
     exeName = appPath;
 
@@ -361,8 +372,10 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   nsCAutoString key1(NS_LITERAL_CSTRING(SMI));
   key1.Append(exeName);
   key1.Append("\\");
-  SetRegKey(key1.get(), "", NS_ConvertUCS2toUTF8(brandFullName).get(), PR_TRUE, 
-            backupKey, aClaimAllTypes, aForAllUsers);
+  nsCAutoString nativeFullName;
+  // For now, we use 'A' APIs (see bug 240272,  239279)
+  NS_CopyUnicodeToNative(brandFullName, nativeFullName);
+  SetRegKey(key1.get(), "", nativeFullName.get(), PR_TRUE, backupKey, aClaimAllTypes);
   
   // Set the Options menu item title
   nsXPIDLString brandShortName;
@@ -377,8 +390,11 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   nsCAutoString key2(NS_LITERAL_CSTRING(SMI "%APPEXE%\\shell\\properties"));
   PRInt32 offset = key2.Find("%APPEXE%");
   key2.Replace(offset, 8, exeName);
-  SetRegKey(key2.get(), "", NS_ConvertUCS2toUTF8(optionsTitle).get(), PR_TRUE, 
-            backupKey, aClaimAllTypes, aForAllUsers);
+  nsCAutoString nativeTitle;
+  // For now, we use 'A' APIs (see bug 240272,  239279)
+  NS_CopyUnicodeToNative(optionsTitle, nativeTitle);
+  
+  SetRegKey(key2.get(), "", nativeTitle.get(), PR_TRUE, backupKey, aClaimAllTypes);
 
   // Refresh the Shell
   ::SendMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, NULL,
@@ -594,7 +610,7 @@ nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
   char winDir[256];
   ::GetWindowsDirectory(winDir, sizeof(winDir));
   nsAutoString winPath;
-  winPath.AssignWithConversion(winDir);
+  NS_CopyNativeToUnicode(nsDependentCString(winDir), winPath);
 
   // get the product brand name from localized strings
   nsXPIDLString brandName;
@@ -654,7 +670,11 @@ nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
       style[1] = '\0';
       ::RegSetValueEx(key, "TileWallpaper", 0, REG_SZ, tile, sizeof(tile));
       ::RegSetValueEx(key, "WallpaperStyle", 0, REG_SZ, style, sizeof(style));
-      ::SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, ToNewCString(winPath), SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
+      nsCAutoString nativePath;
+      NS_CopyUnicodeToNative(winPath, nativePath);
+      char *pathCStr = ToNewCString(nativePath);
+      ::SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, pathCStr, SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
+      nsMemory::Free(pathCStr);
     }
   }
   return rv;
@@ -710,7 +730,7 @@ nsWindowsShellService::OpenPreferredApplication(PRInt32 aApplication)
   if (REG_FAILED(result) || nsDependentCString(buf).IsEmpty()) 
     return NS_ERROR_FAILURE;
 
-  nsCAutoString path; path.Assign(buf);
+  nsCAutoString path(buf);
 
   // Look for any embedded environment variables and substitute their 
   // values, as |::CreateProcess| is unable to do this. 
@@ -718,6 +738,7 @@ nsWindowsShellService::OpenPreferredApplication(PRInt32 aApplication)
   PRInt32 cursor = 0, temp = 0;
   ::ZeroMemory(buf, sizeof(buf));
   do {
+    // XXX : This would not work with multibyte strings. 
     cursor = path.FindChar('%', cursor);
     if (cursor < 0) 
       break;
@@ -744,10 +765,10 @@ nsWindowsShellService::OpenPreferredApplication(PRInt32 aApplication)
   ::ZeroMemory(&si, sizeof(STARTUPINFO));
   ::ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
 
-  char* pathCStr = ToNewCString(path);
+  char *pathCStr = ToNewCString(path);
   BOOL success = ::CreateProcess(NULL, pathCStr, NULL, NULL, FALSE, 0, NULL, 
                                  NULL, &si, &pi);
-  nsCRT::free(pathCStr);
+  nsMemory::Free(pathCStr);
   if (!success)
     return NS_ERROR_FAILURE;
 
