@@ -199,11 +199,6 @@ public:
 #endif
 
 
-#ifdef HAVE_PANE
-  NS_IMETHOD	MarkAllRead(MSG_Pane *pane, PRBool deep);
-  NS_IMETHOD SetFlagInAllFolderPanes(PRUint32 which);
-#endif
-
 #ifdef HAVE_NET
   NS_IMETHOD EscapeMessageId(const char *messageId, const char **escapeMessageID);
   NS_IMETHOD ShouldPerformOperationOffline(PRBool *performOffline);

@@ -88,7 +88,9 @@ public:
   NS_IMETHOD SetGettingNewMessages(PRBool gettingNewMessages);
 
   NS_IMETHOD ShouldStoreMsgOffline(nsMsgKey msgKey, PRBool *result);
-  NS_IMETHOD GetOfflineFileChannel(nsIFileChannel **aFileChannel);
+  NS_IMETHOD GetOfflineFileChannel(nsMsgKey msgKey, nsIFileChannel **aFileChannel);
+  NS_IMETHOD HasMsgOffline(nsMsgKey msgKey, PRBool *result);
+  NS_IMETHOD DownloadMessagesForOffline(nsISupportsArray *messages);
 
 protected:
 	virtual nsresult ReadDBFolderInfo(PRBool force);

@@ -86,6 +86,7 @@ nsIRDFResource* nsMsgMessageDataSource::kNC_ToggleRead= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_MarkFlagged= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_MarkUnflagged= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_MarkThreadRead= nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_DownloadSelected= nsnull;
 
 nsrefcnt nsMsgMessageDataSource::gMessageResourceRefCnt = 0;
 
@@ -138,6 +139,7 @@ nsMsgMessageDataSource::nsMsgMessageDataSource()
 		rdf->GetResource(NC_RDF_MARKFLAGGED, &kNC_MarkFlagged);
 		rdf->GetResource(NC_RDF_MARKUNFLAGGED, &kNC_MarkUnflagged);
     rdf->GetResource(NC_RDF_MARKTHREADREAD, &kNC_MarkThreadRead);
+    rdf->GetResource(NC_RDF_DOWNLOADSELECTED, &kNC_DownloadSelected);
 
     kStatusAtom = NS_NewAtom("Status");
     kFlaggedAtom = NS_NewAtom("Flagged");
@@ -189,6 +191,7 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 		NS_RELEASE2(kNC_MarkFlagged, refcnt);
 		NS_RELEASE2(kNC_MarkUnflagged, refcnt);
 		NS_RELEASE2(kNC_MarkThreadRead, refcnt);
+		NS_RELEASE2(kNC_DownloadSelected, refcnt);
 
     NS_RELEASE(kStatusAtom);
     NS_RELEASE(kFlaggedAtom);
@@ -721,6 +724,8 @@ nsMsgMessageDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/ * aSource
 		rv = DoMarkMessagesFlagged(aSources, PR_FALSE);
   else if((aCommand == kNC_MarkThreadRead))
     rv = DoMarkThreadRead(aSources, aArguments);
+  else if ((aCommand == kNC_DownloadSelected))
+    rv = DoDownloadSelectedMessages(aSources);
 
   //for the moment return NS_OK, because failure stops entire DoCommand process.
   return NS_OK;
@@ -1943,6 +1948,31 @@ nsresult nsMsgMessageDataSource::DoMarkThreadRead(nsISupportsArray *folders, nsI
 	return rv;
 }
 
+nsresult
+nsMsgMessageDataSource::DoDownloadSelectedMessages(nsISupportsArray *messages)
+{
+	PRUint32 count;
+	nsresult rv;
+
+	rv = messages->Count(&count);
+	if(NS_FAILED(rv))
+		return rv;
+	while(count > 0)
+	{
+		nsCOMPtr<nsISupportsArray> messageArray;
+		nsCOMPtr<nsIMsgFolder> folder;
+	
+		rv = GetMessagesAndFirstFolder(messages, getter_AddRefs(folder), getter_AddRefs(messageArray));
+		if(NS_FAILED(rv))
+			return rv;
+
+		folder->DownloadMessagesForOffline(messageArray);
+		rv = messages->Count(&count);
+		if(NS_FAILED(rv))
+			return rv;
+	}
+	return rv;
+}
 
 nsresult nsMsgMessageDataSource::DoMessageHasAssertion(nsIMessage *message, nsIRDFResource *property, nsIRDFNode *target,
 													 PRBool tv, PRBool *hasAssertion)

@@ -183,6 +183,7 @@ protected:
 
   nsresult DoMarkThreadRead(nsISupportsArray *folders, nsISupportsArray *arguments);
 
+  nsresult DoDownloadSelectedMessages(nsISupportsArray *messages);
 	nsresult DoMessageHasAssertion(nsIMessage *message, nsIRDFResource *property, nsIRDFNode *target,
 													 PRBool tv, PRBool *hasAssertion);
 
@@ -260,7 +261,7 @@ protected:
 	static nsIRDFResource* kNC_MarkFlagged;
 	static nsIRDFResource* kNC_MarkUnflagged;
   static nsIRDFResource* kNC_MarkThreadRead;
-
+  static nsIRDFResource* kNC_DownloadSelected;
 	//Cached literals
 	nsCOMPtr<nsIRDFNode> kEmptyStringLiteral;
 	nsCOMPtr<nsIRDFNode> kLowestLiteral;

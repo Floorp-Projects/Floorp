@@ -105,7 +105,8 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_COMPACT				NC_NAMESPACE_URI "Compact"
 #define NC_RDF_RENAME				NC_NAMESPACE_URI "Rename"
 #define NC_RDF_EMPTYTRASH   NC_NAMESPACE_URI "EmptyTrash"
-
+#define NC_RDF_DOWNLOADFLAGGED NC_NAMESPACE_URI "DownloadFlaggedMessages"
+#define NC_RDF_DOWNLOADSELECTED NC_NAMESPACE_URI "DownloadSelectedMessages"
 //Message Commands
 #define NC_RDF_MARKREAD				NC_NAMESPACE_URI "MarkRead"
 #define NC_RDF_MARKUNREAD			NC_NAMESPACE_URI "MarkUnread"

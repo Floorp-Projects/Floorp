@@ -213,7 +213,7 @@ protected:
   static nsIRDFResource* kNC_Compact;
   static nsIRDFResource* kNC_Rename;
   static nsIRDFResource* kNC_EmptyTrash;
-
+  static nsIRDFResource* kNC_DownloadFlagged;
   //Cached literals
   nsCOMPtr<nsIRDFNode> kTrueLiteral;
   nsCOMPtr<nsIRDFNode> kFalseLiteral;

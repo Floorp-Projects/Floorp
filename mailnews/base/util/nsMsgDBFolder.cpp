@@ -511,6 +511,12 @@ nsresult nsMsgDBFolder::SendFlagNotifications(nsISupports *item, PRUint32 oldFla
 		return rv;
 }
 
+NS_IMETHODIMP nsMsgDBFolder:: DownloadMessagesForOffline(nsISupportsArray *messages)
+{
+  NS_ASSERTION(PR_FALSE, "imap and news need to override this");
+  return NS_OK;
+}
+
 nsresult nsMsgDBFolder::GetOfflineStoreInputStream(nsIInputStream **stream)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
@@ -526,7 +532,7 @@ nsresult nsMsgDBFolder::GetOfflineStoreInputStream(nsIInputStream **stream)
   return rv;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::GetOfflineFileChannel(nsIFileChannel **aFileChannel)
+NS_IMETHODIMP nsMsgDBFolder::GetOfflineFileChannel(nsMsgKey msgKey, nsIFileChannel **aFileChannel)
 {
   NS_ENSURE_ARG(aFileChannel);
 
@@ -544,6 +550,21 @@ NS_IMETHODIMP nsMsgDBFolder::GetOfflineFileChannel(nsIFileChannel **aFileChannel
     if (NS_SUCCEEDED(rv) && localStore)
     {
       rv = (*aFileChannel)->Init(localStore, PR_CREATE_FILE | PR_RDWR, 0);
+      if (NS_SUCCEEDED(rv))
+      {
+
+	      nsCOMPtr<nsIMsgDBHdr> hdr;
+	      rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(hdr));
+        if (hdr && NS_SUCCEEDED(rv))
+        {
+          PRUint32 messageOffset;
+          PRUint32 messageSize;
+          hdr->GetMessageOffset(&messageOffset);
+          hdr->GetOfflineMessageSize(&messageSize);
+          (*aFileChannel)->SetTransferOffset(messageOffset);
+          (*aFileChannel)->SetTransferCount(messageSize);
+        }
+      }
     }
   }
   return rv;
@@ -900,6 +921,31 @@ NS_IMETHODIMP nsMsgDBFolder::ShouldStoreMsgOffline(nsMsgKey msgKey, PRBool *resu
       if (! (msgFlags & MSG_FLAG_OFFLINE))
         *result = PR_TRUE;
     }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDBFolder::HasMsgOffline(nsMsgKey msgKey, PRBool *result)
+{
+  NS_ENSURE_ARG(result);
+  *result = PR_FALSE;
+	if(!mDatabase)
+		return NS_ERROR_FAILURE;
+
+	nsresult rv;
+	nsCOMPtr<nsIMsgDBHdr> hdr;
+	rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(hdr));
+	if(NS_FAILED(rv))
+		return rv;
+
+  if (hdr)
+  {
+    PRUint32 msgFlags = 0;
+
+    hdr->GetFlags(&msgFlags);
+    // check if we already have this message body offline
+    if ((msgFlags & MSG_FLAG_OFFLINE))
+      *result = PR_TRUE;
   }
   return NS_OK;
 }

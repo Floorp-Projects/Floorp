@@ -180,6 +180,9 @@ public:
 	NS_IMETHOD SetPath(nsIFileSpec * aPath);
 
   NS_IMETHOD Shutdown(PRBool shutdownChildren);
+
+  NS_IMETHOD DownloadMessagesForOffline(nsISupportsArray *messages);
+
     // nsIMsgImapMailFolder methods
 	NS_DECL_NSIMSGIMAPMAILFOLDER
 

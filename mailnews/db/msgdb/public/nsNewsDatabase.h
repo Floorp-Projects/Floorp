@@ -58,6 +58,7 @@ public:
   NS_IMETHOD				ListNextUnread(ListContext **pContext, nsMsgHdr **pResult);
   NS_IMETHOD                GetHighWaterArticleNum(nsMsgKey *key);
   NS_IMETHOD                GetLowWaterArticleNum(nsMsgKey *key);
+  NS_IMETHOD         MarkAllRead(nsMsgKeyArray *thoseMarked);
 
   // for nsINewsDatabase
   NS_IMETHOD                GetReadSet(nsMsgKeySet **pSet);

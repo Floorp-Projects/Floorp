@@ -438,9 +438,13 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
       PRUint32 messageSize;
       PRBool useMimePartsOnDemand = gMIMEOnDemand;
       PRBool shouldStoreMsgOffline = PR_FALSE;
+      PRBool hasMsgOffline = PR_FALSE;
 
       if (folder)
+      {
         folder->ShouldStoreMsgOffline(key, &shouldStoreMsgOffline);
+        folder->HasMsgOffline(key, &hasMsgOffline);
+      }
 
       if (imapMessageSink)
         imapMessageSink->SetNotifyDownloadedLines(shouldStoreMsgOffline);
@@ -489,6 +493,9 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
         msgurl->SetAddToMemoryCache(PR_FALSE);
       }
       PRBool msgLoadingFromCache = PR_FALSE;
+      if (hasMsgOffline)
+        msgurl->SetMsgIsInLocalCache(PR_TRUE);
+
       rv = FetchMessage(imapUrl, nsIImapUrl::nsImapMsgFetch, folder, imapMessageSink,
                         aMsgWindow, aURL, aDisplayConsumer, msgKey, PR_TRUE);
       if (NS_SUCCEEDED(rv))
@@ -1564,6 +1571,8 @@ nsImapService::SetImapUrlSink(nsIMsgFolder* aMsgFolder,
       aImapUrl->SetImapMiscellaneousSink((nsIImapMiscellaneousSink*) aInst);
   NS_IF_RELEASE (aInst);
   aInst = nsnull;
+
+  aImapUrl->SetImapFolder(aMsgFolder);
 
   return NS_OK;
 }

@@ -337,8 +337,9 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
     nsIMsgDatabase getDBFolderInfoAndDB(out nsIDBFolderInfo folderInfo);
 
   boolean shouldStoreMsgOffline(in nsMsgKey msgKey);
-  readonly attribute nsIFileChannel offlineFileChannel;
-        
+  boolean hasMsgOffline(in nsMsgKey msgKey);
+  nsIFileChannel getOfflineFileChannel(in nsMsgKey msgKey);
+  void DownloadMessagesForOffline(in nsISupportsArray messages);        
 	nsIMsgFolder getChildWithURI(in string uri, in boolean deep);
 
 	/**

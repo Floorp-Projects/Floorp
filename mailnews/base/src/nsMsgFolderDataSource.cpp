@@ -89,6 +89,7 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_MarkAllMessagesRead= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Compact= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Rename= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_EmptyTrash= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_DownloadFlagged= nsnull;
 
 nsrefcnt nsMsgFolderDataSource::gFolderResourceRefCnt = 0;
 
@@ -139,6 +140,7 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
     rdf->GetResource(NC_RDF_COMPACT, &kNC_Compact);
     rdf->GetResource(NC_RDF_RENAME, &kNC_Rename);
     rdf->GetResource(NC_RDF_EMPTYTRASH, &kNC_EmptyTrash);
+    rdf->GetResource(NC_RDF_DOWNLOADFLAGGED, &kNC_DownloadFlagged);
 
     kTotalMessagesAtom           = NS_NewAtom("TotalMessages");
     kTotalUnreadMessagesAtom     = NS_NewAtom("TotalUnreadMessages");
@@ -191,6 +193,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 		NS_RELEASE2(kNC_Compact, refcnt);
 		NS_RELEASE2(kNC_Rename, refcnt);
 		NS_RELEASE2(kNC_EmptyTrash, refcnt);
+		NS_RELEASE2(kNC_DownloadFlagged, refcnt);
 
     NS_RELEASE(kTotalMessagesAtom);
     NS_RELEASE(kTotalUnreadMessagesAtom);
@@ -565,6 +568,7 @@ nsMsgFolderDataSource::GetAllCommands(nsIRDFResource* source,
     cmds->AppendElement(kNC_Compact);
     cmds->AppendElement(kNC_Rename);
     cmds->AppendElement(kNC_EmptyTrash);
+    cmds->AppendElement(kNC_DownloadFlagged);
   }
 
   if (cmds != nsnull)
@@ -606,7 +610,8 @@ nsMsgFolderDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aS
             (aCommand == kNC_MarkAllMessagesRead) ||
             (aCommand == kNC_Compact) || 
             (aCommand == kNC_Rename) ||
-            (aCommand == kNC_EmptyTrash) )) 
+            (aCommand == kNC_EmptyTrash) ||
+            (aCommand == kNC_DownloadFlagged) )) 
       {
         *aResult = PR_FALSE;
         return NS_OK;

@@ -2940,6 +2940,11 @@ nsImapMailFolder::SetupMsgWriteStream(const char * aNativeString, PRBool addDumm
     return rv;
 }
 
+NS_IMETHODIMP nsImapMailFolder::DownloadMessagesForOffline(nsISupportsArray *messages)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsImapMailFolder::GetNotifyDownloadedLines(PRBool *notifyDownloadedLines)
 {
@@ -2958,7 +2963,6 @@ nsImapMailFolder::SetNotifyDownloadedLines(PRBool notifyDownloadedLines)
 nsresult nsImapMailFolder::StartNewOfflineMessage()
 {
   nsresult rv = GetOfflineStoreOutputStream(getter_AddRefs(m_tempMessageStream));
-  PRUint32 statusOffset;
   WriteStartOfNewLocalMessage();
   return rv;
 }
@@ -2990,6 +2994,7 @@ nsresult nsImapMailFolder::WriteStartOfNewLocalMessage()
                              &writeCount);
   if (randomStore)
   {
+    m_tempMessageStream->Flush();
     randomStore->Tell(&curStorePos);
     m_offlineHeader->SetStatusOffset(curStorePos);
   }
@@ -3032,18 +3037,35 @@ NS_IMETHODIMP
 nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage, PRBool markRead)
 {
   nsresult res = NS_OK;
-  if (m_tempMessageStream)
-  {
-    m_tempMessageStream->Close();
-    m_tempMessageStream = nsnull;
-  }
+  PRBool commit = PR_FALSE;
 
   if (m_offlineHeader)
   {
     PRUint32 newFlags;
 
+    nsCOMPtr <nsIRandomAccessStore> randomStore;
+    PRInt32 curStorePos;
+    PRUint32 messageOffset;
+
+    if (m_offlineHeader)
+      randomStore = do_QueryInterface(m_tempMessageStream);
+
     m_offlineHeader->OrFlags(MSG_FLAG_OFFLINE, &newFlags);
+    if (randomStore)
+    {
+      m_tempMessageStream->Flush();
+
+      randomStore->Tell(&curStorePos);
+      m_offlineHeader->GetMessageOffset(&messageOffset);
+      m_offlineHeader->SetOfflineMessageSize(curStorePos - messageOffset);
+    }
     m_offlineHeader = nsnull;
+    commit = PR_TRUE;
+  }
+  if (m_tempMessageStream)
+  {
+    m_tempMessageStream->Close();
+    m_tempMessageStream = nsnull;
   }
   if (markRead)
   {
@@ -3052,8 +3074,14 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage, PRBool markRead
     m_curMsgUid = uidOfMessage;
     res = GetMessageHeader(m_curMsgUid, getter_AddRefs(msgHdr));
     if (NS_SUCCEEDED(res))
+    {
       msgHdr->MarkRead(PR_TRUE);
+      commit = PR_TRUE;
+    }
+
   }
+  if (commit && mDatabase)
+    mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
   return res;
 }
 

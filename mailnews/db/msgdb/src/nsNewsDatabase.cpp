@@ -399,3 +399,17 @@ PRBool nsNewsDatabase::SetHdrReadFlag(nsIMsgDBHdr *msgHdr, PRBool bRead)
     }
     return PR_TRUE;
 }
+
+NS_IMETHODIMP nsNewsDatabase::MarkAllRead(nsMsgKeyArray *thoseMarked)
+{
+  nsMsgKey lowWater, highWater;
+  GetLowWaterArticleNum(&lowWater);
+  GetHighWaterArticleNum(&highWater);
+	if (lowWater > 2)
+		m_readSet->AddRange(1, lowWater - 1);
+	nsresult err = nsMsgDatabase::MarkAllRead(thoseMarked);
+	if (NS_SUCCEEDED(err) && 1 <= highWater)
+		m_readSet->AddRange(1, highWater);	// mark everything read in newsrc.
+
+	return err;
+}

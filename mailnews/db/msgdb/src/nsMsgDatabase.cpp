@@ -621,10 +621,12 @@ nsMsgDatabase::nsMsgDatabase()
 	  m_threadParentColumnToken(0),
 	  m_threadRootKeyColumnToken(0),
     m_offlineMsgOffsetColumnToken(0),
+    m_offlineMessageSizeColumnToken(0),
 	  m_HeaderParser(nsnull),
 	  m_cachedHeaders(nsnull),
 	  m_headersInUse(nsnull),
 	  m_bCacheHeaders(PR_FALSE)
+
 {
 	NS_INIT_REFCNT();
 	m_bCacheHeaders = PR_TRUE;
@@ -1102,7 +1104,7 @@ const char *kMessageCharSetColumnName = "msgCharSet";
 const char *kThreadParentColumnName = "threadParent";
 const char *kThreadRootColumnName = "threadRoot";
 const char *kOfflineMsgOffsetColumnName = "msgOffset";
-
+const char *kOfflineMsgSizeColumnName = "offlineMsgSize";
 struct mdbOid gAllMsgHdrsTableOID;
 struct mdbOid gAllThreadsTableOID;
 
@@ -1217,6 +1219,8 @@ nsresult nsMsgDatabase::InitMDBInfo()
 			err	= GetStore()->StringToToken(GetEnv(), kThreadParentColumnName, &m_threadParentColumnToken);
 			err	= GetStore()->StringToToken(GetEnv(), kThreadRootColumnName, &m_threadRootKeyColumnToken);
       err = GetStore()->StringToToken(GetEnv(), kOfflineMsgOffsetColumnName, &m_offlineMsgOffsetColumnToken);
+      err = GetStore()->StringToToken(GetEnv(), kOfflineMsgSizeColumnName, &m_offlineMessageSizeColumnToken);
+
 			if (err == NS_OK)
 			{
 				// The table of all message hdrs will have table id 1.
@@ -2512,9 +2516,9 @@ NS_IMETHODIMP nsMsgDatabase::AddNewHdrToDB(nsIMsgDBHdr *newHdr, PRBool notify)
 			m_dbFolderInfo->ChangeNumVisibleMessages(1);
             PRBool isRead = PR_TRUE;
             IsHeaderRead(newHdr, &isRead);
-			if (!isRead) {
+			if (!isRead) 
 				m_dbFolderInfo->ChangeNumNewMessages(1);
-            }
+      m_dbFolderInfo->SetHighWater(key, PR_FALSE);
 		}
 
 		err = m_mdbAllMsgHeadersTable->AddRow(GetEnv(), hdr->GetMDBRow());

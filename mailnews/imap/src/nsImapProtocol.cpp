@@ -6913,10 +6913,18 @@ NS_IMETHODIMP nsImapMockChannel::AsyncRead(nsIStreamListener *listener, nsISuppo
   mailnewsUrl->GetMsgIsInLocalCache(&useLocalCache);
   if (useLocalCache)
   {
+    nsXPIDLCString messageIdString;
+    imapUrl->CreateListOfMessageIdsString(getter_Copies(messageIdString));
+    nsCOMPtr <nsIMsgFolder> folder;
+    rv = imapUrl->GetImapFolder(getter_AddRefs(folder));
+    if (folder && NS_SUCCEEDED(rv))
+    {
     // we want to create a file channel and read the msg from there.
-      nsCOMPtr<nsIChannel> fileChannel;
+      nsCOMPtr<nsIFileChannel> fileChannel;
+      nsMsgKey msgKey = atoi(messageIdString);
+      rv = folder->GetOfflineFileChannel(msgKey, getter_AddRefs(fileChannel));
       // get the file channel from the folder, somehow (through the message or
-      // folder sync?
+      // folder sink?) We also need to set the transfer offset to the message offset
       if (fileChannel && NS_SUCCEEDED(rv))
       {
         fileChannel->SetLoadGroup(m_loadGroup);
@@ -6941,8 +6949,9 @@ NS_IMETHODIMP nsImapMockChannel::AsyncRead(nsIStreamListener *listener, nsISuppo
           imapUrl->SetMsgLoadingFromCache(PR_TRUE);
           return rv;
         }
-      }    
+      }
     }
+  }
 
   // okay, add the mock channel to the load group..
   imapUrl->AddChannelToLoadGroup();

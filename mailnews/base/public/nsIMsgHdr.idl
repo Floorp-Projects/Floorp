@@ -69,7 +69,7 @@ interface nsIMsgHdr : nsISupports
     attribute unsigned long lineCount;
     attribute unsigned long statusOffset;
     attribute unsigned long messageOffset;
-
+    attribute unsigned long offlineMessageSize;
     /* common headers */
     attribute PRTime date;
     attribute string messageId;

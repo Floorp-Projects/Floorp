@@ -483,6 +483,22 @@ NS_IMETHODIMP nsMsgHdr::SetMessageSize(PRUint32 messageSize)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgHdr::GetOfflineMessageSize(PRUint32 *result)
+{
+	PRUint32 size;
+	nsresult res = GetUInt32Column(m_mdb->m_offlineMessageSizeColumnToken, &size);
+
+	*result = size;
+	return res;
+}
+
+NS_IMETHODIMP nsMsgHdr::SetOfflineMessageSize(PRUint32 messageSize)
+{
+	SetUInt32Column(messageSize, m_mdb->m_offlineMessageSizeColumnToken);
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP nsMsgHdr::SetLineCount(PRUint32 lineCount)
 {
 	SetUInt32Column(lineCount, m_mdb->m_numLinesColumnToken);
@@ -552,7 +568,7 @@ NS_IMETHODIMP nsMsgHdr::GetMessageOffset(PRUint32 *result)
 NS_IMETHODIMP nsMsgHdr::SetMessageOffset(PRUint32 offset)
 {
 
-	nsresult rv = SetUInt32Column(m_mdb->m_offlineMsgOffsetColumnToken, offset);
+	nsresult rv = SetUInt32Column(offset, m_mdb->m_offlineMsgOffsetColumnToken);
   return NS_OK;
 }
 

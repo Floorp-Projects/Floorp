@@ -408,6 +408,23 @@ NS_IMETHODIMP nsMessage::SetMessageSize(PRUint32 messageSize)
 		return NS_ERROR_FAILURE;
 }
 
+
+NS_IMETHODIMP nsMessage::GetOfflineMessageSize(PRUint32 *result)
+{
+	if(mMsgHdr)
+		return mMsgHdr->GetOfflineMessageSize(result);
+	else
+		return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsMessage::SetOfflineMessageSize(PRUint32 messageSize)
+{
+	if(mMsgHdr)
+		return mMsgHdr->SetOfflineMessageSize(messageSize);
+	else
+		return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP nsMessage::SetLineCount(PRUint32 lineCount)
 {
 	if(mMsgHdr)
