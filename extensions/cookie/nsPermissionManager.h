@@ -41,15 +41,19 @@
 
 #include "nsIPermissionManager.h"
 #include "nsIObserver.h"
+#include "nsIObserverService.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
 #include "nsIIOService.h"
+#include "nsVoidArray.h"
+#include "nsIFile.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsPermissionManager : public nsIPermissionManager,
                             public nsIObserver,
-                            public nsSupportsWeakReference {
+                            public nsSupportsWeakReference
+{
 public:
 
   // nsISupports
@@ -58,13 +62,29 @@ public:
   NS_DECL_NSIOBSERVER
 
   nsPermissionManager();
-  virtual ~nsPermissionManager(void);
+  virtual ~nsPermissionManager();
   nsresult Init();
 
-protected:
-  // cached IOService
-  nsCOMPtr<nsIIOService>       mIOService;
-  
+private:
+
+  nsresult AddInternal(const nsACString &aHost,
+                       PRUint32 aType,
+                       PRUint32 aPermission);
+
+  nsresult Read();
+  nsresult Write();
+  nsresult NotifyObservers(const nsACString &aHost);
+  nsresult RemoveAllFromMemory();
+
+  nsCOMPtr<nsIObserverService> mObserverService;
+  nsCOMPtr<nsIFile>            mPermissionsFile;
+  nsVoidArray                  mPermissionList;
+  PRBool                       mChangedList;
+ 
 };
+
+// {4F6B5E00-0C36-11d5-A535-0010A401EB10}
+#define NS_PERMISSIONMANAGER_CID \
+{ 0x4f6b5e00, 0xc36, 0x11d5, { 0xa5, 0x35, 0x0, 0x10, 0xa4, 0x1, 0xeb, 0x10 } }
 
 #endif /* nsPermissionManager_h__ */

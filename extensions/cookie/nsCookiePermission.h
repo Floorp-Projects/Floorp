@@ -34,40 +34,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef nsCookiePermission_h__
+#define nsCookiePermission_h__
 
-/**
- * An interface to open a dialog to ask to permission to accept the cookie.
- */
+#include "nsICookiePermission.h"
+#include "nsIDOMWindow.h"
+#include "nsCOMPtr.h"
+#include "nsIPermissionManager.h"
 
-interface nsIDOMWindow;
-interface nsICookie;
+#include "nsIURI.h"
 
-[scriptable, uuid(CE002B28-92B7-4701-8621-CC925866FB87)]
-interface nsICookiePromptService : nsISupports
+class nsCookiePermission : public nsICookiePermission
 {
+public:
+  nsCookiePermission();
+  virtual ~nsCookiePermission();
+  nsresult Init();
 
-  /* Open a dialog that asks for permission to accept a cookie
-   * Returns true when the permission is given.
-   * return values are not modified when something fails.
-   * 
-   * @param parent
-   * @param cookie
-   * @param hostname          the host that wants to set the cookie, 
-   *                           not the domain: part of the cookie
-   * @param cookiesFromHost   the number of cookies there are already for this host
-   * @param aChangingCookie   are we changing this cookie?
-   * @param checkValue        is the decision remembered?
-   */
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICOOKIEPERMISSION
 
-  boolean cookieDialog(in nsIDOMWindow parent,
-                       in nsICookie cookie,
-                       in ACString hostname,
-                       in long cookiesFromHost,
-                       in boolean changingCookie,
-                       out boolean rememberDecision);
+private:
+  nsCOMPtr<nsIPermissionManager> mPermissionManager;
 };
 
-%{C++
-#define NS_COOKIEPROMPTSERVICE_CONTRACTID "@mozilla.org/embedcomp/cookieprompt-service;1"
-%}
+// {CE002B28-92B7-4701-8621-CC925866FB87}
+#define NS_COOKIEPERMISSION_CID \
+ {0xEF565D0A, 0xAB9A, 0x4A13, {0x91, 0x60, 0x06, 0x44, 0xcd, 0xfd, 0x85, 0x9a }}
+
+#endif

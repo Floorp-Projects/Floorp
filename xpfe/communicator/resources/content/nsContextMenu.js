@@ -462,8 +462,6 @@ nsContextMenu.prototype = {
           // but cancel if it's an unsuitable URL
           const PM = Components.classes["@mozilla.org/PopupWindowManager;1"]
                      .getService(CI.nsIPopupWindowManager);
-          if (!PM.testSuitability(this.popupURL))
-            this.popupURL = null;
         }
       } catch(e) {
       }

@@ -21,7 +21,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
+const popupType = nsIPermissionManager.POPUP_TYPE;
+
 var popupManager = null;
+var permissionManager = null;
 
 var permissions = [];
 
@@ -30,8 +34,6 @@ var listCapability; // the capability of sites on the currently viewed list
 // the whitelist are allowed and have permission.capability = true
 // FALSE: current popup policy is ALLOW ALL WITH EXCEPTIONS - sites on
 // the blacklist are blocked and have permission.capability = false
-
-const POPUP_TYPE = 2;
 
 var additions = [];
 var removals = [];
@@ -66,6 +68,8 @@ var popupStringBundle;
 function Startup() {
   popupManager = Components.classes["@mozilla.org/PopupWindowManager;1"]
                            .getService(Components.interfaces.nsIPopupWindowManager);
+  permissionManager = Components.classes["@mozilla.org/permissionmanager;1"]
+                           .getService(Components.interfaces.nsIPermissionManager);
 
   permissionsTree = document.getElementById("permissionsTree");
 
@@ -204,15 +208,18 @@ function Permission(host, number) {
 }
 
 function loadPermissions(table) {
-  var enumerator = popupManager.getEnumerator();
+  var enumerator = permissionManager.enumerator;
   var count = 0;
   
   while (enumerator.hasMoreElements()) {
-    var permission = enumerator.getNext()
-                               .QueryInterface(Components.interfaces.nsIPermission);
-    if (permission.capability == listCapability) {
-      var host = permission.host;
-      table[count] = new Permission(host,count++);
+    var permission = enumerator.getNext();
+    if (permission) {
+      permission = permission.QueryInterface(Components.interfaces.nsIPermission);
+      if ((permission.type == popupType) &&
+          (permission.capability == listCapability)) {
+        var host = permission.host;
+        table[count] = new Permission(host,count++);
+      }
     }
   }
 }
@@ -297,7 +304,7 @@ function deleteAllPermissions() {
 }
 
 function updatePendingRemovals(host) {
-  if (additions[host] != null)
+  if (additions[host])
     additions[host] = null;
   else
     removals[host] = host;
@@ -317,23 +324,26 @@ function finalizeChanges() {
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                             .getService(Components.interfaces.nsIIOService);
   
+  var uri;
+  var host;
+  var i;
+
+  var perm = (listCapability == true) ? nsIPermissionManager.ALLOW_ACTION : nsIPermissionManager.DENY_ACTION
   //note: the scheme will be taken off later, it is being added now only to
   //create the uri for add/remove
-  for (var i in additions) {
-    var host = additions[i];
+  for (i in additions) {
+    host = additions[i];
     if (host != null) {
       host = "http://" + host;
-      var uri = ioService.newURI(host, null, null);
-      popupManager.add(uri, listCapability);
+      uri = ioService.newURI(host, null, null);
+      permissionManager.add(uri, popupType, listCapability);
     }
   }
 
-  for (var i in removals) {
-    var host = removals[i];
+  for (i in removals) {
+    host = removals[i];
     if (host != null) {
-      host = "http://" + host;
-      var uri = ioService.newURI(host, null, null);
-      popupManager.remove(uri);
+      permissionManager.remove(host, popupType);
     }
   }
 

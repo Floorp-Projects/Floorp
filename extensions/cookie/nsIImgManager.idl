@@ -36,10 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
-
-  This file contains an interface to the Image Manager.
-
+/**
+ * This file contains an interface to the Image Manager,
+ * used for blocking images from user-specified sites.
  */
 
 #include "nsISupports.idl"
@@ -49,12 +48,16 @@ interface nsIURI;
 [scriptable, uuid(D60B3710-166D-11d5-A542-0010A401EB10)]
 interface nsIImgManager : nsISupports
 {
-  void block(in nsIURI imageURL);
+  /**
+   * Test if the given image from URI can be loaded
+   * @param uri      the uri of the image which wants to be loaded
+   * @param firstUri the uri of the document which tried to load the image
+   * @return         whether the image has permission to be loaded
+   */
+  boolean testPermission(in nsIURI uri,
+                         in nsIURI firstUri);
 };
 
 %{ C++
-// {D60B3710-166D-11d5-A542-0010A401EB10}
-#define NS_IMGMANAGER_CID \
-{ 0xd60b3710, 0x166d, 0x11d5, { 0xa5, 0x42, 0x0, 0x10, 0xa4, 0x1, 0xeb, 0x10 } }
 #define NS_IMGMANAGER_CONTRACTID "@mozilla.org/imgmanager;1"
 %}

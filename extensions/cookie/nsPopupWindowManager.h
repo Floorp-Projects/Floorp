@@ -45,11 +45,13 @@
 #include "nsIPermissionManager.h"
 #include "nsIPopupWindowManager.h"
 #include "nsIPrefBranch.h"
+#include "nsWeakReference.h"
 
 class nsIURI;
 
 class nsPopupWindowManager : public nsIPopupWindowManager,
-                             public nsIObserver {
+                             public nsIObserver,
+                             public nsSupportsWeakReference {
 
 public:
   NS_DECL_ISUPPORTS
@@ -61,15 +63,9 @@ public:
   nsresult Init();
 
 private:
-  nsresult ObserveThings();
-  nsresult StopObservingThings();
-  nsresult NotifyObservers(nsIURI *aURI);
-  void     DeInitialize();
-
   PRUint32                       mPolicy;
-  nsCOMPtr<nsIObserverService>   mOS;
-  nsCOMPtr<nsIPermissionManager> mPermManager;
-  nsCOMPtr<nsIPrefBranch>        mPopupPrefBranch;
+  nsCOMPtr<nsIPermissionManager> mPermissionManager;
+  nsCOMPtr<nsIPrefBranch>        mPrefBranch;
 };
 
 // {4275d3f4-752a-427a-b432-14d5dda1c20b}

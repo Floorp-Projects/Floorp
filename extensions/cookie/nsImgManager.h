@@ -44,11 +44,19 @@
 #include "nsCOMPtr.h"
 #include "nsIIOService.h"
 #include "nsIDocShell.h"
+#include "nsIObserver.h"
+#include "nsWeakReference.h"
+#include "nsIPermissionManager.h"
+
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsImgManager : public nsIImgManager,
-                     public nsIContentPolicy
+                     public nsIContentPolicy,
+                     public nsIObserver,
+                     public nsSupportsWeakReference
 {
 public:
 
@@ -56,17 +64,32 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIIMGMANAGER
   NS_DECL_NSICONTENTPOLICY
+  NS_DECL_NSIOBSERVER
 
   nsImgManager();
-  virtual ~nsImgManager(void);
+  virtual ~nsImgManager();
   nsresult Init();
+
+private:
+
+  nsresult ReadPrefs();
+  
+  PRBool   mBlockerPref;
+  PRInt32  mBehaviorPref;
+  PRBool   mWarningPref;
+  PRBool   mBlockInMailNewsPref;
+
+  PRBool   mPolicy;
 
 protected:
   NS_IMETHOD GetRootDocShell(nsIDOMWindow *aWindow, nsIDocShell **result);
 
-  // cached IOService
-  nsCOMPtr<nsIIOService>       mIOService;
-
+  nsCOMPtr<nsIPermissionManager> mPermissionManager;
+  nsCOMPtr<nsIPrefBranch>        mPrefBranch;
 };
+
+// {D60B3710-166D-11d5-A542-0010A401EB10}
+#define NS_IMGMANAGER_CID \
+{ 0xd60b3710, 0x166d, 0x11d5, { 0xa5, 0x42, 0x0, 0x10, 0xa4, 0x1, 0xeb, 0x10 } }
 
 #endif /* nsImgManager_h__ */

@@ -63,60 +63,11 @@ interface nsIPopupWindowManager : nsISupports {
   attribute PRUint32 defaultPermission;
 
   /**
-   * Add permission information for a website.
-   * @param aURI the website to be blocked
-   * @param aPermit true to grant permission to the website
-   *                false to refuse permission
-   */
-  void add(in nsIURI aURI, in boolean aPermit);
-
-  /**
-   * Remove permission information for a website. Popups will be permitted
-   * or not depending on whether this is a white- or black-list.
-   * is permitted to show popups.)
-   * @param aURI the website to be unblocked
-   */
-  void remove(in nsIURI aURI);
-
-  /**
-   * Clear permission information for all websites.
-   */
-  void removeAll();
-
-  /**
-   * Test whether a website is suitable for popup permission storage.
-   * @param aURI the website to be tested
-   * @return true if permission can be stored for the website
-   */
-  boolean testSuitability(in nsIURI aURI);
-
-  /**
    * Test whether a website has permission to show a popup window.
-   * @param aURI the website to be tested
-   * @return one of the ALLOW/DENY consts defined above
+   * @param   uri is the URI to be tested
+   * @return  one of the enumerated permission actions defined above
    */
-  PRUint32 testPermission(in nsIURI aURI);
-
-  /**
-   * Enumerates all stored permissions
-   * @return an enumerator which itself returns nsISupports objects which
-   *         can be QIed to an nsIPermission
-   */
-  nsISimpleEnumerator getEnumerator();
-
-  /**
-   * This service broadcasts a PPM_CHANGE_NOTIFICATION notification
-   * when any popup permission changes. Add yourself as an observer.
-   * @param observer the observer
-   */
-  void addObserver(in nsIObserver aObserver);
-
-  /**
-   * This service broadcasts a PPM_CHANGE_NOTIFICATION notification
-   * when any popup permission changes. Remove yourself as an observer.
-   * @param observer the observer
-   */
-  void removeObserver(in nsIObserver aObserver);
+  PRUint32 testPermission(in nsIURI uri);
 };
 
 %{ C++

@@ -45,38 +45,33 @@
 NS_IMPL_ISUPPORTS2(nsPermission, nsIPermission, nsISupportsWeakReference);
 
 nsPermission::nsPermission()
-  : permissionHost(0)
 {
 }
 
 nsPermission::nsPermission
-  (char * host,
-   PRInt32 type,
-   PRBool capability) {
-  permissionHost = host;
-  permissionType = type;
-  permissionCapability = capability;
+  (const nsACString &aHost,
+   PRUint32 aType,
+   PRUint32 aCapability)
+: mHost(aHost),
+  mType(aType),
+  mCapability(aCapability)
+{
 }
 
-nsPermission::~nsPermission(void) {
-  if (permissionHost)
-    PL_strfree(permissionHost);
+nsPermission::~nsPermission() {
 }
 
-NS_IMETHODIMP nsPermission::GetHost(char * *aHost) {
-  if (permissionHost) {
-    *aHost = (char *) nsMemory::Clone(permissionHost, strlen(permissionHost) + 1);
-    return NS_OK;
-  }
-  return NS_ERROR_NULL_POINTER;
-}
-
-NS_IMETHODIMP nsPermission::GetType(PRInt32 *aType) {
-  *aType = permissionType;
+NS_IMETHODIMP nsPermission::GetHost(nsACString& aHost) {
+  aHost = mHost;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPermission::GetCapability(PRBool *aCapability) {
-  *aCapability = permissionCapability;
+NS_IMETHODIMP nsPermission::GetType(PRUint32 *aType) {
+  *aType = mType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPermission::GetCapability(PRUint32 *aCapability) {
+  *aCapability = mCapability;
   return NS_OK;
 }

@@ -31,15 +31,16 @@ var popupmanager          = null;          // popup manager
 var gDateService = null;
 
 // cookies and permissions list
-var cookies               = [];
-var permissions           = [];
+var cookies              = [];
+var permissions          = [];
 var deletedCookies       = [];
 var deletedPermissions   = [];
 
 // differentiate between cookies, images, and popups
-const cookieType = 0;
-const imageType = 1;
-const popupType = 2;
+const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
+const cookieType = nsIPermissionManager.COOKIE_TYPE;
+const imageType = nsIPermissionManager.IMAGE_TYPE;
+const popupType = nsIPermissionManager.POPUP_TYPE;
 
 var dialogType = cookieType;
 if (window.arguments[0] == "imageManager")
@@ -120,10 +121,12 @@ function Startup() {
   // be prepared to reload the display if anything changes
   kObserverService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
   kObserverService.addObserver(cookieReloadDisplay, "cookieChanged", false);
+  kObserverService.addObserver(cookieReloadDisplay, "perm-changed", false);
 }
 
 function Shutdown() {
   kObserverService.removeObserver(cookieReloadDisplay, "cookieChanged");
+  kObserverService.removeObserver(cookieReloadDisplay, "perm-changed");
 }
 
 var cookieReloadDisplay = {
@@ -135,13 +138,13 @@ var cookieReloadDisplay = {
           lastCookieSortAscending = !lastCookieSortAscending; // prevents sort from being reversed
         }
         loadCookies();
-      } else if (state == "permissions") {
-        permissions.length = 0;
-        if (lastPermissionSortColumn == "rawHost") {
-          lastPermissionSortAscending = !lastPermissionSortAscending; // prevents sort from being reversed
-        }
-        loadPermissions();
       }
+    } else if (topic == "perm-changed") {
+      permissions.length = 0;
+      if (lastPermissionSortColumn == "rawHost") {
+        lastPermissionSortAscending = !lastPermissionSortAscending; // prevents sort from being reversed
+      }
+      loadPermissions();
     }
   }
 }
@@ -445,11 +448,12 @@ function loadPermissions() {
     nextPermission = nextPermission.QueryInterface(Components.interfaces.nsIPermission);
     if (nextPermission.type == dialogType) {
       var host = nextPermission.host;
+      var capability = ( nextPermission.capability == nsIPermissionManager.ALLOW_ACTION ) ? true : false;
       permissions[count] = 
         new Permission(count++, host,
                        (host.charAt(0)==".") ? host.substring(1,host.length) : host,
                        nextPermission.type,
-                       cookieBundle.getString(nextPermission.capability?canStr:cannotStr));
+                       cookieBundle.getString(capability?canStr:cannotStr));
     }
   }
   permissionsTreeView.rowCount = permissions.length;
