@@ -17,8 +17,8 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIPrincipal.idl"
 
-interface nsIPrincipal;
 interface nsIScriptContext;
 interface nsIURI;
 
