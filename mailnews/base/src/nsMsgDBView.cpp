@@ -2085,9 +2085,21 @@ NS_IMETHODIMP nsMsgDBView::DoCommand(nsMsgViewCommandTypeValue command)
     rv = ExpandAndSelectThread();
     break;
   case nsMsgViewCommandType::selectFlagged:
-#ifdef DEBUG_seth
-    printf("clear current selection, and then select all flagged messages, we may have to expand all first to look for them\n");
-#endif
+    if (!mTreeSelection)
+      rv = NS_ERROR_UNEXPECTED;
+    else
+    {
+      mTreeSelection->SetSelectEventsSuppressed(PR_TRUE);
+      mTreeSelection->ClearSelection();
+      // XXX ExpandAll?
+      nsMsgViewIndex numIndices = GetSize();
+      for (nsMsgViewIndex curIndex = 0; curIndex < numIndices; curIndex++)
+      {
+        if (m_flags.GetAt(curIndex) & MSG_FLAG_MARKED)
+          mTreeSelection->ToggleSelect(curIndex);
+      }
+      mTreeSelection->SetSelectEventsSuppressed(PR_FALSE);
+    }
     break;
   case nsMsgViewCommandType::markAllRead:
     if (m_folder)

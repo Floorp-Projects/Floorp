@@ -127,6 +127,8 @@
 <!ENTITY selectThreadCmd.label "Thread">
 <!ENTITY selectThreadCmd.accesskey "T">
 <!ENTITY selectThreadCmd.key "a">
+<!ENTITY selectFlaggedCmd.label "Flagged Messages">
+<!ENTITY selectFlaggedCmd.accesskey "F">
 <!ENTITY selectInvertCmd.label ".Invert Selection">
 <!ENTITY selectInvertCmd.accesskey "I">
 <!ENTITY filtersCmd.label "Message Filters...">

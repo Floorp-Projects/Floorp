@@ -1160,6 +1160,9 @@
            accesskey="&selectThreadCmd.accesskey;"
            key="key_selectThread"
            observes="cmd_selectThread"/>
+          <menuitem label="&selectFlaggedCmd.label;"
+                    accesskey="&selectFlaggedCmd.accesskey;"
+                    command="cmd_selectFlagged"/>
         </menupopup>
       </menu>
       <menuseparator/>

@@ -227,6 +227,7 @@ var DefaultController =
       case "cmd_close":
       case "cmd_selectAll":
       case "cmd_selectThread":
+      case "cmd_selectFlagged":
 				return true;
       case "cmd_downloadFlagged":
       case "cmd_downloadSelected":
@@ -370,6 +371,7 @@ var DefaultController =
       case "cmd_search":
         return IsCanSearchMessagesEnabled();
       case "cmd_selectAll":
+      case "cmd_selectFlagged":
         return gDBView != null;
       // these are enabled on when we are in threaded mode
       case "cmd_selectThread":
@@ -688,6 +690,9 @@ var DefaultController =
             case "cmd_selectThread":
                 gDBView.doCommand(nsMsgViewCommandType.selectThread);
                 break;
+      case "cmd_selectFlagged":
+        gDBView.doCommand(nsMsgViewCommandType.selectFlagged);
+        break;
 		}
 	},
 	
