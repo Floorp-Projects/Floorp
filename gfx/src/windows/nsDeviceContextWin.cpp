@@ -183,7 +183,7 @@ NS_IMETHODIMP nsDeviceContextWin::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
       logPal->palNumEntries = COLOR_CUBE_SIZE + 20;
   
       // Initialize it from the default Windows palette
-      HPALETTE  hDefaultPalette = ::GetStockObject(DEFAULT_PALETTE);
+      HPALETTE  hDefaultPalette = (HPALETTE)::GetStockObject(DEFAULT_PALETTE);
   
       // First ten system colors
       ::GetPaletteEntries(hDefaultPalette, 0, 10, logPal->palPalEntry);

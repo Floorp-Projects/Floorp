@@ -70,7 +70,7 @@ HBITMAP             srcbits,dstbits;
 
   // source
   mTempB1 = CreateCompatibleBitmap(srcdc,3,3);
-  srcbits = ::SelectObject(srcdc, mTempB1);
+  srcbits = (HBITMAP)::SelectObject(srcdc, mTempB1);
   numbytes = ::GetObject(srcbits,sizeof(BITMAP),&mSrcInfo);
   BuildDIB(&mSrcbinfo,&mSrcBytes,mSrcInfo.bmWidth,mSrcInfo.bmHeight,mSrcInfo.bmBitsPixel);
   numbytes = ::GetDIBits(srcdc,srcbits,0,mSrcInfo.bmHeight,mSrcBytes,(LPBITMAPINFO)mSrcbinfo,DIB_RGB_COLORS);
@@ -79,7 +79,7 @@ HBITMAP             srcbits,dstbits;
     {
     // destination
     mTempB2 = CreateCompatibleBitmap(dstdc,3,3);
-    dstbits = ::SelectObject(dstdc, mTempB2);
+    dstbits = (HBITMAP)::SelectObject(dstdc, mTempB2);
     ::GetObject(dstbits,sizeof(BITMAP),&mDstInfo);
     BuildDIB(&mDstbinfo,&mDstBytes,mDstInfo.bmWidth,mDstInfo.bmHeight,mDstInfo.bmBitsPixel);
     numbytes = ::GetDIBits(dstdc,dstbits,0,mDstInfo.bmHeight,mDstBytes,(LPBITMAPINFO)mDstbinfo,DIB_RGB_COLORS);
@@ -217,7 +217,7 @@ nsColorMap          *colormap;
       // put the new bits in
     dstdc = ((nsDrawingSurfaceWin *)aDst)->mDC;
     dstbits = ::CreateDIBitmap(dstdc, mDstbinfo, CBM_INIT, mDstBytes, (LPBITMAPINFO)mDstbinfo, DIB_RGB_COLORS);
-    tb1 = ::SelectObject(dstdc,dstbits);
+    tb1 = (HBITMAP)::SelectObject(dstdc,dstbits);
     ::DeleteObject(tb1);
     }
 
@@ -259,7 +259,7 @@ HBITMAP   dstbits, tb1;
       // put the new bits in
     dstdc = ((nsDrawingSurfaceWin *)aDst)->mDC;
     dstbits = ::CreateDIBitmap(dstdc, mDstbinfo, CBM_INIT, mDstBytes, (LPBITMAPINFO)mDstbinfo, DIB_RGB_COLORS);
-    tb1 = ::SelectObject(dstdc,dstbits);
+    tb1 = (HBITMAP)::SelectObject(dstdc,dstbits);
     ::DeleteObject(tb1);
     }
   return(result);
