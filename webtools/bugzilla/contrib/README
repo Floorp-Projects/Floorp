@@ -5,18 +5,23 @@ be useful to you.
 
 This directory includes:
 
-  mysqld-watcher.pl --  This script can be installed as a frequent cron 
-                        job to clean up stalled/dead queries.
-        gnats2bz.pl --  A perl script to help import bugs from a GNATS 
-                        database into a Bugzilla database.  Contributed by
-                        Tom Schutter <tom@platte.com>
-
-       bug_email.pl --  A perl script that can receive email containing
-                        bug reports (email-interface). Contributed by
-                        Klaas Freitag <freitag@SuSE.de>
-	
-      README.Mailif --  Readme describing the mail interface.
-  bugmail_help.html --  User help page for the mail interface.
-
-       yp_nomail.sh --  Script you can run via cron that regularly updates
-                        the nomail file for terminated employees 
+   mysqld-watcher.pl --  This script can be installed as a frequent cron 
+                         job to clean up stalled/dead queries.
+         gnats2bz.pl --  A perl script to help import bugs from a GNATS 
+                         database into a Bugzilla database.  Contributed by
+                         Tom Schutter <tom@platte.com>
+ 
+        bug_email.pl --  A perl script that can receive email containing
+                         bug reports (email-interface). Contributed by
+                         Klaas Freitag <freitag@SuSE.de>
+ 	
+       README.Mailif --  Readme describing the mail interface.
+   bugmail_help.html --  User help page for the mail interface.
+ 
+        yp_nomail.sh --  Script you can run via cron that regularly updates
+                         the nomail file for terminated employees 
+bugzilla_ldapsync.rb --  Script you can run via cron that queries an LDAP
+                         server for e-mail addresses to add Bugzilla users
+                         for. Will optionally disable Bugzilla users with
+                         no matching LDAP record. Contributed by Thomas
+                         Stromberg <thomas+bugzilla@stromberg.org>
