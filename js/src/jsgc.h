@@ -39,6 +39,7 @@
  */
 #include "jsprvtd.h"
 #include "jspubtd.h"
+#include "jsdhash.h"
 
 JS_BEGIN_EXTERN_C
 
