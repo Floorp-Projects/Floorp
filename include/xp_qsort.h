@@ -32,7 +32,7 @@
 extern "C" {
 #endif
 
-#if defined(SOLARIS) || defined(BROKEN_QSORT) || !defined(HAVE_QSORT)
+#if defined(BROKEN_QSORT) || !defined(HAVE_QSORT)
 extern void XP_QSORT(void *, size_t, size_t,
                      int (*)(const void *, const void *));
 #elif defined(XP_OS2)
