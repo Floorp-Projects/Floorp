@@ -174,6 +174,9 @@ public:
                    const nsString& aTargetSpec,
                    PRBool aClick);
 
+  nsresult JoinTextNodes(nsIContent* aFirst,
+                         nsIContent* aSecond);
+
   static void SetDocumentInChildrenOf(nsIContent* aContent, 
 				      nsIDocument* aDocument);
 
