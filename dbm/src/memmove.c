@@ -1,4 +1,4 @@
-#if defined(__sun) && !defined(__svr4__)
+#if defined(__sun) && !defined(__SVR4)
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.

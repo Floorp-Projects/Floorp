@@ -71,7 +71,7 @@ typedef unsigned int	sigset_t;
  * If your system's vsprintf returns a char *, not an int,
  * change the 0 to a 1.
  */
-#if defined (__sun) && !defined(SVR4) /* SUNOS */
+#if defined (__sun) && !defined(__SVR4) /* SUNOS */
 #define	VSPRINTF_CHARSTAR
 #endif
 /*
