@@ -575,19 +575,14 @@ my $line_count = 0;
 my $max_table_size = 50;
 
 SendSQL("SELECT keyworddefs.name, keyworddefs.description, 
-                COUNT(keywords.bug_id), keywords.bug_id
+                COUNT(keywords.bug_id)
          FROM keyworddefs LEFT JOIN keywords ON keyworddefs.id=keywords.keywordid
          GROUP BY keyworddefs.id
          ORDER BY keyworddefs.name");
 
 while (MoreSQLData()) {
-    my ($name, $description, $bugs, $onebug) = FetchSQLData();
-    if ($bugs && $onebug) {
-        # This 'onebug' stuff is silly hackery for old versions of
-        # MySQL that seem to return a count() of 1 even if there are
-        # no matching.  So, we ask for an actual bug number.  If it
-        # can't find any bugs that match the keyword, then we set the
-        # count to be zero, ignoring what it had responded.
+    my ($name, $description, $bugs) = FetchSQLData();
+    if ($bugs) {
         my $q = url_quote($name);
         $bugs = qq{<A HREF="buglist.cgi?keywords=$q">$bugs</A>};
     } else {
