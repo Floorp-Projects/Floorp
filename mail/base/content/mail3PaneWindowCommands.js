@@ -239,7 +239,6 @@ var DefaultController =
     if (IsFakeAccount()) 
       return false;
 
-    // note, all commands that get fired on a single key need to check MailAreaHasFocus() as well
     switch ( command )
     {
       case "cmd_delete":
@@ -259,9 +258,9 @@ var DefaultController =
           gDBView.getCommandStatus(nsMsgViewCommandType.junk, enabled, checkStatus);
         return enabled.value;
       case "cmd_killThread":
-        return ((GetNumSelectedMessages() == 1) && MailAreaHasFocus() && IsViewNavigationItemEnabled());
+        return GetNumSelectedMessages() == 1;
       case "cmd_watchThread":
-        if (MailAreaHasFocus() && (GetNumSelectedMessages() == 1) && gDBView)
+        if ((GetNumSelectedMessages() == 1) && gDBView)
           gDBView.getCommandStatus(nsMsgViewCommandType.toggleThreadWatched, enabled, checkStatus);
         return enabled.value;
       case "cmd_createFilterFromPopup":
@@ -339,7 +338,7 @@ var DefaultController =
       case "cmd_label3":
       case "cmd_label4":
       case "cmd_label5":
-        return(MailAreaHasFocus() && GetNumSelectedMessages() > 0);
+        return GetNumSelectedMessages() > 0;
       case "button_previous":
       case "button_next":
         return IsViewNavigationItemEnabled();
@@ -348,10 +347,10 @@ var DefaultController =
       case "cmd_nextUnreadThread":
       case "cmd_previousMsg":
       case "cmd_previousUnreadMsg":
-        return (MailAreaHasFocus() && IsViewNavigationItemEnabled());
+        return IsViewNavigationItemEnabled();
       case "cmd_markAllRead":
       case "cmd_markReadByDate":
-        return (MailAreaHasFocus() && IsFolderSelected());
+        return IsFolderSelected();
       case "cmd_find":
       case "cmd_findAgain":
       case "cmd_findPrev":
@@ -407,11 +406,11 @@ var DefaultController =
       case "cmd_downloadFlagged":
         return(CheckOnline());
       case "cmd_downloadSelected":
-        return(MailAreaHasFocus() && IsFolderSelected() && CheckOnline() && GetNumSelectedMessages() > 0);
+        return (IsFolderSelected() && CheckOnline() && GetNumSelectedMessages() > 0);
       case "cmd_synchronizeOffline":
         return CheckOnline() && IsAccountOfflineEnabled();       
       case "cmd_settingsOffline":
-        return (MailAreaHasFocus() && IsAccountOfflineEnabled());
+        return IsAccountOfflineEnabled();
       default:
         return false;
     }
@@ -677,31 +676,6 @@ var DefaultController =
         }
 	}
 };
-
-function MailAreaHasFocus()
-{
-  //Input and TextAreas should get access to the keys that cause these commands.
-  //Currently if we don't do this then we will steal the key away and you can't type them
-  //in these controls. This is a bug that should be fixed and when it is we can get rid of
-  //this.
-  var focusedElement = top.document.commandDispatcher.focusedElement;
-  if (focusedElement) 
-  {
-    var name = focusedElement.localName.toLowerCase();
-    return ((name != "input") && (name != "textarea"));
-  }
-
-  // check if the message pane has focus 
-  // see bug #129988
-  if (GetMessagePane() == WhichPaneHasFocus())
-    return true;
-
-  // if there is no focusedElement,
-  // and the message pane doesn't have focus
-  // then a mail area can't be focused
-  // see bug #128101
-  return false;
-}
 
 function GetNumSelectedMessages()
 {
