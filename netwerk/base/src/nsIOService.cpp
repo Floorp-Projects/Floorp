@@ -443,17 +443,17 @@ nsIOService::GetParserForScheme(const char *scheme, nsIURLParser **_retval)
     // Walk the list of parsers...
     while (1) {
         rv = parserList->GetNext(getter_AddRefs(entry));
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) break;
 
         // get the entry string
         nsXPIDLCString entryString;
         rv = entry->GetData(getter_Copies(entryString));
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) break;
 
         if (nsCRT::strcmp(entryString, scheme) == 0) {
             nsXPIDLCString contractID;
             rv = catmgr->GetCategoryEntry(NS_IURLPARSER_KEY,(const char *)entryString, getter_Copies(contractID));
-            if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv)) break;
 
             CacheURLParser(scheme, *_retval);
             return nsServiceManager::GetService(contractID, NS_GET_IID(nsIURLParser), (nsISupports **)_retval);
