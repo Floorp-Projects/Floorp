@@ -84,7 +84,6 @@ JPEG_OBJS=        .\$(OBJDIR)\jdapimin.obj \
 		  .\$(OBJDIR)\jidctfst.obj \
 		  .\$(OBJDIR)\jidctflt.obj \
 		  .\$(OBJDIR)\jidctint.obj \
-		  .\$(OBJDIR)\jidctred.obj \
 		  .\$(OBJDIR)\jdsample.obj \
 		  .\$(OBJDIR)\jdcolor.obj \
 		  .\$(OBJDIR)\jquant1.obj \
