@@ -1025,7 +1025,9 @@ nsHTMLCopyEncoder::Init(nsIDocument* aDocument,
 
   mMimeType = NS_LITERAL_STRING("text/html");
   
-  mFlags = aFlags;
+  // Make all links absolute when copying
+  // (see related bugs #57296, #41924, #58646, #32768)
+  mFlags = aFlags | OutputAbsoluteLinks;
 
   nsresult rv;
   mParserService = do_GetService(kParserServiceCID, &rv);
