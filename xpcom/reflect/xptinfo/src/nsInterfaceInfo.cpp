@@ -202,16 +202,11 @@ nsInterfaceInfo::GetInfoForParam(nsXPTParamInfo *param, nsIInterfaceInfo** info)
     interface_name =
         which_header->interface_directory[param->type.type.interface - 1].name;
 
-    // does addref.  I'll have to do addreff if I find it through a magic
+    // does addref.  I'll have to do addref if I find it through a magic
     // array walk.
     nsresult nsr = mgr->GetInfoForName(interface_name, info);
-    if (NS_IS_ERROR(nsr)) {
-        // *info has been set to null by well-behaved GetInfoForName
-        NS_RELEASE(mgr);
-        return NS_ERROR_FAILURE;
-    }
-
-    return NS_OK;
+    NS_RELEASE(mgr);
+    return nsr;
 }
 
 NS_IMETHODIMP
@@ -238,15 +233,9 @@ nsInterfaceInfo::GetIIDForParam(nsXPTParamInfo* param, nsIID** iid)
         which_header->interface_directory[param->type.type.interface - 1].name;
 
     nsresult nsr = mgr->GetIIDForName(interface_name, iid);
-    if (NS_IS_ERROR(nsr)) {
-        // *iid has been set to NULL by well-behaved GetIIDForName
-        NS_RELEASE(mgr);
-        return NS_ERROR_FAILURE;
-    }
-
-    return NS_OK;
+    NS_RELEASE(mgr);
+    return nsr;
 }
-
 
 
 #ifdef DEBUG
