@@ -388,6 +388,8 @@ pk11_InitGeneric(PK11Session *session,PK11SessionContext **contextPtr,
 
     /* find the key */
     if (keyPtr) {
+	CK_KEY_TYPE kt;
+	unsigned int size, i;
         key = pk11_ObjectFromHandle(hKey,session);
         if (key == NULL) {
 	    return CKR_KEY_HANDLE_INVALID;
@@ -402,7 +404,12 @@ pk11_InitGeneric(PK11Session *session,PK11SessionContext **contextPtr,
 	/* get the key type */
 	att = pk11_FindAttribute(key,CKA_KEY_TYPE);
 	PORT_Assert(att != NULL);
-	*keyTypePtr = *(CK_KEY_TYPE *)att->attrib.pValue;
+	size = sizeof(CK_KEY_TYPE);
+	kt = 0;
+	for (i=0; i<size; i+=8) {
+	    kt |= ((unsigned char *)att->attrib.pValue)[i] << i*8;
+	}
+	*keyTypePtr = kt;
 	pk11_FreeAttribute(att);
 	*keyPtr = key;
     }
