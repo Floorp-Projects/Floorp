@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.18 2002/07/19 00:59:20 jpierre%netscape.com Exp $
+ * $Id: cert.h,v 1.19 2002/08/02 17:51:17 relyea%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -570,6 +570,16 @@ extern SECStatus
 CERT_VerifyCertificateNow(CERTCertDBHandle *handle, CERTCertificate *cert,
 		   PRBool checkSig, SECCertificateUsage requiredUsages,
                    void *wincx, SECCertificateUsage* returnedUsages);
+
+/*
+** Verify that a CA cert can certify some (unspecified) leaf cert for a given
+** purpose. This is used by UI code to help identify where a chain may be
+** broken and why. This takes identical parameters to CERT_VerifyCert
+*/
+extern SECStatus
+CERT_VerifyCACertForUsage(CERTCertDBHandle *handle, CERTCertificate *cert,
+		PRBool checkSig, SECCertUsage certUsage, int64 t,
+		void *wincx, CERTVerifyLog *log);
 
 /*
 ** OLD OBSOLETE FUNCTIONS with enum SECCertUsage - DO NOT USE FOR NEW CODE
