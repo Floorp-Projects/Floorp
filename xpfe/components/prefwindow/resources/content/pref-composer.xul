@@ -27,7 +27,7 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="return StartUp('Composer');"  alighn="vertical" title="&title.label;">
+        onload="return StartUp('Composer');"  align="vertical" title="&title.label;">
 
 <html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
 <html:div flex="100%">
@@ -49,29 +49,36 @@
 			&authorName;
 			<html:input name="author" type="text" id="pref:string:editor.author" />
 		</html:div>
+<!-- Take out Auto-Save; not supported at this time
 		<html:div>
 			<html:input name="autosave" type="checkbox" id="pref:0:int:editor.auto_save_delay" />
 			<html:label for="pref:0:int:editor.auto_save_delay" accesskey="a" tabindex="0">
 				&AutoSaveCheck.label;
 			</html:label>		
 			<html:input name="time" type="text" size="3" value="5" id="pref:5:int:editor.auto_save_delay" />
-			&minText;	
+			<html:label for="pref:5:int:editor.auto_save_delay">
+	  		&minText;	
+			</html:label>		
 		</html:div>
+  -->
 	</html:fieldset>
 	</box>  
 
+<!-- External Editors are not supported at this time
 <box align="vertical" flex="100%" style="width: 100%;">
 		<html:fieldset style="width: 100%;">
 					<html:legend align="left"> 
-			<html:div>&exterLegand.label;</html:div> 
+			<html:div>&exterLegend.label;</html:div> 
 					</html:legend> 
+		<html:input name="htmlSourceEditorCheckbox" type="checkbox" id="pref:0:int:editor.use_html_editor" />
 	 	<html:div>
 			&htmlSource;
 		</html:div>
 		<html:div>
-			<html:input name="&chooseButton.label;" type="text" id="pref:string:editor.html_directory" />
+			<html:input name="&chooseButton.label;" type="text" id="pref:string:editor.html_editor" />
 			<titledbutton name=""  value="&chooseButton.label;" />
 		</html:div>
+		<html:input name="htmlImageEditorCheckbox" type="checkbox" id="pref:0:int:editor.use_image_editor" />
 	<html:div>
 			&img;
 		</html:div>
@@ -82,81 +89,74 @@
 
 	</html:fieldset>
 	</box> 
+  -->
+
 
 	<box align="vertical" flex="100%" style="width: 100%;">
 		<html:fieldset style="width: 50%;">
 					<html:legend align="left"> 
-			<html:div>&fontSizeHeader;</html:div> 
+			<html:div>&pageColorHeader;</html:div> 
 					</html:legend> 
 	<html:div>
-		<html:input name="font" type="radio" id="pref:0:int:fontsize_mode" checked="true" />	
-		<html:label for="pref:0:int:fontsize_mode" accesskey="s" tabindex="0">
-		&relSizeRadio.label;			
+		<html:input name="color" type="radio" id="pref:0:int:editor.use_custom_colors" checked="true" />	
+		<html:label for="pref:0:int:editor.unknown" tabindex="0">
+		&UseNavigatorColor.label;			
 		</html:label>
 	</html:div>
 	<html:div>
-		<html:input name="font" type="radio" id="pref:1:int:fontsize_mode" />
-		<html:label for="pref:1:int:fontsize_mode" accesskey="f" tabindex="0">
-		&relfontRadio.label;			
+		<html:input name="color" type="radio" id="pref:1:int:editor.use_custom_colors" />
+		<html:label for="pref:1:int:editor.unknown" tabindex="0">
+		&UseCustomColors.label;			
 		</html:label>
 	</html:div>
-	<html:div>
-		<html:input name="font" type="radio" id="pref:2:int:fontsize_mode" />
-		<html:label for="pref:2:int:fontsize_mode" accesskey="c" tabindex="0">			
-		&relScaleRadio.label;
-		</html:label>
-	</html:div>
+	
+	<box align="horizontal" flex="100%" >
+	<box align="vertical" flex="100%" >
+		<html:div>
+			<html:input name="text" type="checkbox" id="pref:0:int:editor.text_color" />
+			<html:label for="pref:0:int:editor.text_color" accesskey="t" tabindex="0">			
+			&colorPick; &NormalText.label; 
+			</html:label>
+		</html:div>
+		<html:div>
+			<html:input name="link" type="checkbox" id="pref:0:int:editor.link_color" />
+			<html:label for="pref:0:int:editor.link_color" accesskey="l" tabindex="0">			
+			&colorPick; &LinkText.label; 
+			</html:label>
+		</html:div>
+		<html:div>
+			<html:input name="active" type="checkbox" id="pref:0:int:editor.active_link_color" />
+			<html:label for="pref:0:int:editor.active_link_color" accesskey="c" tabindex="0">			
+			&colorPick; &ActiveLinkText.label; 
+			</html:label>
+		</html:div>
+		<html:div>
+			<html:input name="followed" type="checkbox" id="pref:0:int:editor.followed_link_color" />
+			<html:label for="pref:0:int:editor.followed_link_color" accesskey="f" tabindex="0">			
+			&colorPick; &FollowedLinkText.label; 
+			</html:label>
+		</html:div>
+		<html:div>
+			<html:input name="background" type="checkbox" id="pref:0:int:editor.background_color" />
+			<html:label for="pref:0:int:editor.background_color" accesskey="b" tabindex="0">			
+			&colorPick; &BackgroundColor.label;
+			</html:label>
+		</html:div>
+	</box>
+
+	<box align="vertical" flex="100%" id="colorpreview" style="min-width:100px; min-height:50px; background-color:gray">
+	<html:div id="normaltext" style="color:black;">  &NormalText.label;  </html:div>
+	<html:div id="linktext" style="color:red;">  &LinkText.label;  </html:div>
+	<html:div id="activelinktext" style="color:blue;">  &ActiveLinkText.label;  </html:div>
+	<html:div id="followedlinktext" style="color:purple;">  &FollowedLinkText.label;  </html:div>
+	</box>
+
+	</box>
 	</html:fieldset>
 	</box>  
 
 
 
-<!--
-<html:DIV ID="top">
-		<html:SPAN ID="lefttext">&compheader;</html:SPAN>
-</html:DIV>
-
-<form>
-<html:table> 
-      <html:tr><html:td>&authorName;
-	  <html:input name="author" type="text" id="pref:string:editor.author" /></html:td></html:tr>           
-			<html:tr><html:td><html:label>
-			<html:input name="autosave" type="checkbox" id="pref:0:int:editor.auto_save_delay" />
-			&AutoSaveCheck.label;</html:label></html:td>
-			<html:td>
-			<html:input name="time" type="text" size="3" value="5" id="pref:5:int:editor.auto_save_delay" />
-			&minText;</html:td></html:tr>			
-</html:table>
-</form>
-&exterLegand.label;	
-<form>	
-<html:table>		
-      <html:tr><html:td>&htmlSource;</html:td></html:tr>
-			<html:tr><html:td>
-			<html:input name="&chooseButton.label;" type="text" id="pref:string:editor.html_directory" /></html:td>
-			<html:td><html:input name="" type="button" value="&chooseButton.label;" /></html:td></html:tr>
-			
-			<html:tr><html:td>&img;</html:td></html:tr>
-			<html:tr><html:td>
-			<html:input name="chooseButton.label" type="text" id="pref:string:editor.image_editor" /></html:td>
-			<html:td><html:input name="chooseButton.label" type="button" value="choose..." /></html:td></html:tr>
-</html:table>
-</form>
-<form>
-&fontSizeHeader;
-<html:table>
-      		
-			<html:tr><html:td><html:label>
-			<html:input name="font" type="radio" id="pref:0:int:fontsize_mode" val="checked" />
-			&relSizeRadio.label;</html:label></html:td></html:tr>
-			<html:tr><html:td><html:label><html:input name="font" type="radio" id="pref:1:int:fontsize_mode" />
-			&relfontRadio.label;</html:label></html:td></html:tr>
-			<html:tr><html:td><html:label><html:input name="font" type="radio" id="pref:2:int:fontsize_mode" />
-			&relScaleRadio.label;</html:label></html:td></html:tr>
-</html:table>
-</form>
-
--->
 </html:div>
 </window>
 
