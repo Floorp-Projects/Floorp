@@ -163,14 +163,22 @@ nsresult nsMsgComposeService::OpenWindow(const char *chrome, nsIMsgComposeParams
 {
   nsresult rv;
   
+  NS_ENSURE_ARG_POINTER(params);
+  
+  //Use default identity if no identity has been specified
+  nsCOMPtr<nsIMsgIdentity> identity; 
+  params->GetIdentity(getter_AddRefs(identity));
+  if (!identity)
+  {
+    GetDefaultIdentity(getter_AddRefs(identity));
+    params->SetIdentity(identity);
+  }
+
   //if we have a cached window for the default chrome, try to reuse it...
   if (chrome == nsnull || nsCRT::strcasecmp(chrome, DEFAULT_CHROME) == 0)
   {
     MSG_ComposeFormat format;
     params->GetFormat(&format);
-
-    nsCOMPtr<nsIMsgIdentity> identity;
-    params->GetIdentity(getter_AddRefs(identity));
 
     PRBool composeHTML = PR_TRUE;
     rv = DetermineComposeHTML(identity, format, &composeHTML);
@@ -219,7 +227,8 @@ nsMsgComposeService::DetermineComposeHTML(nsIMsgIdentity *aIdentity, MSG_Compose
   NS_ENSURE_ARG_POINTER(aComposeHTML);
 
   *aComposeHTML = PR_TRUE;
-  switch (aFormat) {
+  switch (aFormat)
+  {
     case nsIMsgCompFormat::HTML: 
       *aComposeHTML = PR_TRUE;					
       break;
@@ -230,17 +239,7 @@ nsMsgComposeService::DetermineComposeHTML(nsIMsgIdentity *aIdentity, MSG_Compose
     default:
       nsCOMPtr<nsIMsgIdentity> identity = aIdentity;
       if (!identity)
-      {
-        nsresult rv;
-        nsCOMPtr<nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
-        if (NS_SUCCEEDED(rv) && accountManager)
-        {
-          nsCOMPtr<nsIMsgAccount> defaultAccount;
-          rv = accountManager->GetDefaultAccount(getter_AddRefs(defaultAccount));
-          if (NS_SUCCEEDED(rv) && defaultAccount)
-            defaultAccount->GetDefaultIdentity(getter_AddRefs(identity));
-        }
-      }
+        GetDefaultIdentity(getter_AddRefs(identity));
       
       if (identity)
       {
@@ -491,6 +490,24 @@ NS_IMETHODIMP nsMsgComposeService::InitCompose(nsIDOMWindowInternal *aWindow,
   NS_IF_ADDREF(*_retval);
 
  	return rv;
+}
+
+NS_IMETHODIMP
+nsMsgComposeService::GetDefaultIdentity(nsIMsgIdentity **_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
+
+  nsresult rv;
+  nsCOMPtr<nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && accountManager)
+  {
+    nsCOMPtr<nsIMsgAccount> defaultAccount;
+    rv = accountManager->GetDefaultAccount(getter_AddRefs(defaultAccount));
+    if (NS_SUCCEEDED(rv) && defaultAccount)
+      defaultAccount->GetDefaultIdentity(_retval);
+  }
+  return rv;
 }
 
 /* readonly attribute boolean logComposePerformance; */

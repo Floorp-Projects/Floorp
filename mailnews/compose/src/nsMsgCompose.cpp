@@ -1117,9 +1117,12 @@ NS_IMETHODIMP nsMsgCompose::CloseWindow(PRBool recycleIt)
   //We are going away for real, we need to do some clean up first
   if (m_baseWindow)
   {
+    if (m_editor)
+    {
     m_editor->UnregisterDocumentStateListener(mDocumentListener);
     m_editor = nsnull;  /* m_editor will be destroyed during yje close window. Set it to null to */
                         /* be sure we wont uses it anymore */
+    }
     nsIBaseWindow * aWindow = m_baseWindow;
     m_baseWindow = nsnull;
     rv = aWindow->Destroy();
