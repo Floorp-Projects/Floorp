@@ -5,9 +5,9 @@
 # customizable settings.
 
 
-# $Revision: 1.3 $ 
-# $Date: 2001/01/04 00:28:00 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.4 $ 
+# $Date: 2001/02/15 20:55:49 $ 
+# $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
 
@@ -123,6 +123,7 @@ $PopUpImpl = (
 @DBImpl = (
 	   'TinderDB::Time',
 	   'TinderDB::VC_CVS',
+	   'TinderDB::VC_Bonsai',
 	   'TinderDB::Notice',
 	   'TinderDB::BT_Generic',
 	   'TinderDB::Build',
@@ -214,6 +215,12 @@ $PersistenceImpl = (
 
 $BONSAI_URL = "http://tinderbox.mozilla.org/bonsai";
 
+# If we query bonsai data we need to know the directory which bonsai
+# is installed in.
+
+$BONSAI_DIR = "/home/httpd/cgi-bin/bonsai";
+
+
 # The default number of hours shown on the status page
 
 $DEFAULT_DISPLAY_HOURS = 6;
@@ -226,7 +233,7 @@ $DEFAULT_HTML_PAGE = 'status.html';
 
 # The amount of time rmlogs keeps logs on file
 
-$BRIEF_LOG_TRIM_DAYS = 1;
+$BRIEF_LOG_TRIM_DAYS = 7;
 $FULL_LOG_TRIM_DAYS = 7;
 
 # Should we write performance data to the log file?
