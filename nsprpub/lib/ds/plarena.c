@@ -206,7 +206,7 @@ PR_IMPLEMENT(void *) PL_ArenaAllocate(PLArenaPool *pool, PRUint32 nb)
     /* attempt to allocate from the heap */ 
     {  
         PRUint32 sz = PR_MAX(pool->arenasize, nb);
-        sz += (PRUword)PL_ARENA_ALIGN(pool, sizeof(*a)); /* force alignment */
+        sz += sizeof *a + pool->mask;  /* header and alignment slop */
         a = (PLArena*)PR_MALLOC(sz);
         if ( NULL != a )  {
             a->limit = (PRUword)a + sz;
