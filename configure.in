@@ -984,7 +984,7 @@ case "$target" in
         CXX="$CXX -mno-cygwin"
         CFLAGS="$CFLAGS -mms-bitfields"
         CXXFLAGS="$CXXFLAGS -mms-bitfields"
-        DSO_LDOPTS='-shared -Wl,--export-all-symbols -Wl,--out-implib -Wl,$(IMPORT_LIBRARY)'
+        DSO_LDOPTS='-shared'
         MKSHLIB='$(CXX) $(DSO_LDOPTS) -o $@'
         MKCSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
         RC='$(CYGWIN_WRAPPER) $(WINDRES)'
