@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.16 $ $Date: 2002/01/30 00:48:24 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.17 $ $Date: 2002/03/15 19:51:27 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -168,6 +168,19 @@ nssCKObject_GetAttributes
 	nssrv = nssArena_Unmark(arenaOpt, mark);
 	if (nssrv != PR_SUCCESS) {
 	    goto loser;
+	}
+    }
+
+    if (count > 1 && ((ckrv == CKR_ATTRIBUTE_TYPE_INVALID) || 
+					(ckrv == CKR_ATTRIBUTE_SENSITIVE))) {
+	/* old tokens would keep the length of '0' and not deal with any
+	 * of the attributes we passed. For those tokens read them one at
+	 * a time */
+	for (i=0; i < count; i++) {
+	    if (obj_template[i].ulValueLen == 0) {
+		(void) nssCKObject_GetAttributes(object,&obj_template[i], 1,
+			arenaOpt, session, slot);
+	    }
 	}
     }
     return PR_SUCCESS;
