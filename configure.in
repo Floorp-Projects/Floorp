@@ -4032,7 +4032,8 @@ else
 fi
 _MOZ_CPP_EXCEPTIONS=1 ])
 
-if test "$_MOZ_CPP_EXCEPTIONS" -o -z "$GNU_CC"; then
+# Irix CC doesn't like exception declarations when exceptions are disabled
+if test "$_MOZ_CPP_EXCEPTIONS" -o -n "$MIPSPRO_CXX"; then
     AC_DEFINE(CPP_THROW_NEW, [])
 else
     AC_DEFINE(CPP_THROW_NEW, [throw()])
