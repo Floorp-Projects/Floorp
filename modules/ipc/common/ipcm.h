@@ -67,7 +67,11 @@ enum {
 //
 // returns IPCM message type.
 //
-int IPCM_GetMsgType(const ipcMessage *msg);
+static inline int
+IPCM_GetMsgType(const ipcMessage *msg)
+{
+    return ((const ipcMessage_DWORD *) msg)->First();
+}
 
 //
 // NOTE: this file declares some helper classes that simplify construction
@@ -170,6 +174,23 @@ public:
 //
 // IPCM_MSG_TYPE_CLIENT_INFO
 //
+// this message is sent from the daemon to provide the list of names
+// and targets for a particular client.
+//
+class ipcmMessageClientInfo : public ipcMessage
+{
+public:
+    static const PRUint32 MSG_TYPE;
+
+    ipcmMessageClientInfo(PRUint32 clientID, const char **names, const nsID **targets);
+
+    PRUint32 ClientID() const;
+    PRUint32 NameCount() const;
+    PRUint32 TargetCount() const;
+
+    const char *NextName(const char *name) const;
+    const nsID *NextTarget(const nsID *target) const;
+};
 
 //
 // IPCM_MSG_TYPE_CLIENT_ADD_NAME
@@ -231,8 +252,8 @@ public:
 // IPCM_MSG_TYPE_QUERY_CLIENT_BY_NAME
 //
 // this message is sent from a client to the daemon to request the ID of the
-// client corresponding to the given name or alias.  in response the daemon
-// will either send a CLIENT_ID or ERROR message.
+// client corresponding to the given name.  in response the daemon will either
+// send a CLIENT_ID or ERROR message.
 //
 class ipcmMessageQueryClientByName : public ipcMessage_DWORD_STR
 {
@@ -243,6 +264,24 @@ public:
         : ipcMessage_DWORD_STR(IPCM_TARGET, MSG_TYPE, name) {}
 
     const char *Name() const { return Second(); }
+};
+
+//
+// IPCM_MSG_TYPE_QUERY_CLIENT_INFO
+//
+// thie message is sent from a client to the daemon to request complete
+// information about the client corresponding to the given client ID. in
+// response the daemon will either send a CLIENT_INFO or ERROR message.
+//
+class ipcmMessageQueryClientInfo : public ipcMessage_DWORD_DWORD
+{
+public:
+    static const PRUint32 MSG_TYPE;
+
+    ipcmMessageQueryClientInfo(PRUint32 clientID)
+        : ipcMessage_DWORD_DWORD(IPCM_TARGET, MSG_TYPE, clientID) {}
+
+    PRUint32 ClientID() const { return Second(); }
 };
 
 //

@@ -38,40 +38,18 @@
 #ifndef ipcService_h__
 #define ipcService_h__
 
-#include "ipcIService.h"
-#include "ipcTransport.h"
-#include "ipcList.h"
-#include "ipcMessage.h"
-#include "ipcMessageQ.h"
 #include "nsIRequest.h"
 #include "nsIStreamListener.h"
 #include "nsIStreamProvider.h"
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
 
-//----------------------------------------------------------------------------
-// ipcClientInfo
-//----------------------------------------------------------------------------
-
-class ipcClientInfo : public ipcIClientInfo
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_IPCICLIENTINFO
-
-    ipcClientInfo() : mID(0) { NS_INIT_ISUPPORTS(); }
-    virtual ~ipcClientInfo() {}
-
-    void Init(PRUint32 cID, const nsACString &cName)
-    {
-        mID = cID;
-        mName = cName;
-    }
-
-private:
-    PRUint32  mID;
-    nsCString mName;
-};
+#include "ipcIService.h"
+#include "ipcTransport.h"
+#include "ipcList.h"
+#include "ipcMessage.h"
+#include "ipcMessageQ.h"
+#include "ipcm.h"
 
 //----------------------------------------------------------------------------
 // ipcClientQuery
@@ -113,7 +91,9 @@ public:
 
 private:
     nsresult ErrorAccordingToIPCM(PRUint32 err);
-    void     HandleQueryResult(const ipcMessage *, PRBool succeeded); 
+    void     OnIPCMClientID(const ipcmMessageClientID *);
+    void     OnIPCMClientInfo(const ipcmMessageClientInfo *);
+    void     OnIPCMError(const ipcmMessageError *);
 
     // ipcTransportObserver:
     void OnConnectionEstablished(PRUint32 clientID);
