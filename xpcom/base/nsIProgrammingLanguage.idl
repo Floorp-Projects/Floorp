@@ -35,6 +35,12 @@
 
 #include "nsISupports.idl"
 
+%{C++
+#ifdef XP_OS2 // OS2 has UNKNOWN problems :)
+#undef UNKNOWN
+#endif
+%}
+
 [scriptable, uuid(ea604e90-40ba-11d5-90bb-0010a4e73d9a)]
 interface nsIProgrammingLanguage : nsISupports
 {
