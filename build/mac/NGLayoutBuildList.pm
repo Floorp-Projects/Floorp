@@ -804,7 +804,7 @@ sub MakeResourceAliases()
 	_InstallResources(":mozilla:intl:strres:tests:MANIFEST",			"$resource_dir");
 
 	# Install skin files
-	# InstallSkinFiles("modern");     # fix me
+	InstallSkinFiles("modern");     # fix me
 
 	print("--- Resource copying complete ----\n");
 }
