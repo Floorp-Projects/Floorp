@@ -186,15 +186,9 @@ pref("capability.policy.default.HTMLDocument.write", "allAccess");
 pref("capability.policy.default.HTMLDocument.writeln", "allAccess");
 
 pref("capability.policy.default.Location.hash.set", "allAccess");
-pref("capability.policy.default.Location.host.set", "allAccess");
-pref("capability.policy.default.Location.hostname.set", "allAccess");
 pref("capability.policy.default.Location.href.set", "allAccess");
-pref("capability.policy.default.Location.pathname.set", "allAccess");
-pref("capability.policy.default.Location.port.set", "allAccess");
-pref("capability.policy.default.Location.protocol.set", "allAccess");
 pref("capability.policy.default.Location.reload", "allAccess");
 pref("capability.policy.default.Location.replace", "allAccess");
-pref("capability.policy.default.Location.search.set", "allAccess");
 
 pref("capability.policy.default.Navigator.preference", "allAccess");
 pref("capability.policy.default.Navigator.preferenceinternal.get", "UniversalPreferencesRead");
@@ -239,6 +233,10 @@ pref("capability.policy.mailnews.Range.toString", "noAccess");
 pref("capability.policy.mailnews.sites", "mailbox: imap: news:");
 pref("capability.policy.mailnews.Window.name.set", "noAccess");
 pref("capability.policy.mailnews.Window.location", "noAccess");
+////////////////////////////////////////////////////////////
+pref("capability.principal.codebase.foo.id", "http://www.netscape.com");
+pref("capability.principal.codebase.foo.granted", "UniversalFoo");
+//////////////////////////////////////////////////////////
 
 pref("javascript.enabled",                  true);
 pref("javascript.allow.mailnews",           false);
