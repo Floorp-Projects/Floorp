@@ -57,8 +57,6 @@ function DisplayCardViewPane(messageNode)
 
 	var doc = parent.frames["cardViewFrame"].document;
 
-	dump("label: " + parent.entities.search.label + "\n");
-
 	/* Card View - Title */
 	var CardTitle		= doc.getElementById("CardTitle");
 	/* Name section */
