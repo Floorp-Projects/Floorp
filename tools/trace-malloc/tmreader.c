@@ -167,15 +167,27 @@ static int get_tmevent(FILE *fp, tmevent *event)
       case TM_EVENT_MALLOC:
       case TM_EVENT_CALLOC:
       case TM_EVENT_FREE:
-        event->u.alloc.oldsize = 0;
+        if (!get_uint32(fp, &event->u.alloc.interval))
+            return 0;
+        if (!get_uint32(fp, &event->u.alloc.ptr))
+            return 0;
         if (!get_uint32(fp, &event->u.alloc.size))
             return 0;
+        event->u.alloc.oldserial = 0;
+        event->u.alloc.oldptr = 0;
+        event->u.alloc.oldsize = 0;
         break;
 
       case TM_EVENT_REALLOC:
+        if (!get_uint32(fp, &event->u.alloc.interval))
+            return 0;
+        if (!get_uint32(fp, &event->u.alloc.ptr))
+            return 0;
         if (!get_uint32(fp, &event->u.alloc.size))
             return 0;
         if (!get_uint32(fp, &event->u.alloc.oldserial))
+            return 0;
+        if (!get_uint32(fp, &event->u.alloc.oldptr))
             return 0;
         if (!get_uint32(fp, &event->u.alloc.oldsize))
             return 0;
@@ -243,7 +255,7 @@ static void generic_freetable(void *pool, void *item)
 
 static PLHashEntry *callsite_allocentry(void *pool, const void *key)
 {
-    return malloc(sizeof(tmcallsite));
+    return calloc(1, sizeof(tmcallsite));
 }
 
 static PLHashEntry *graphnode_allocentry(void *pool, const void *key)

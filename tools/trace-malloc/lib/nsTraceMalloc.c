@@ -445,6 +445,29 @@ static void log_event4(logfile *fp, char event, uint32 serial, uint32 ui2,
     log_uint32(fp, ui4);
 }
 
+static void log_event5(logfile *fp, char event, uint32 serial, uint32 ui2,
+                       uint32 ui3, uint32 ui4, uint32 ui5)
+{
+    log_event4(fp, event, serial, ui2, ui3, ui4);
+    log_uint32(fp, ui5);
+}
+
+static void log_event6(logfile *fp, char event, uint32 serial, uint32 ui2,
+                       uint32 ui3, uint32 ui4, uint32 ui5, uint32 ui6)
+{
+    log_event5(fp, event, serial, ui2, ui3, ui4, ui5);
+    log_uint32(fp, ui6);
+}
+
+static void log_event7(logfile *fp, char event, uint32 serial, uint32 ui2,
+                       uint32 ui3, uint32 ui4, uint32 ui5, uint32 ui6,
+                       uint32 ui7)
+{
+    log_event6(fp, event, serial, ui2, ui3, ui4, ui5, ui6);
+    log_uint32(fp, ui7);
+}
+
+
 typedef struct callsite callsite;
 
 struct callsite {
@@ -1256,7 +1279,8 @@ __ptr_t malloc(size_t size)
     } else if (suppress_tracing == 0) {
         site = backtrace(1);
         if (site)
-            log_event2(logfp, TM_EVENT_MALLOC, site->serial, size);
+            log_event4(logfp, TM_EVENT_MALLOC,
+                       site->serial, PR_IntervalNow(), (uint32)ptr, size);
         if (get_allocations()) {
             suppress_tracing++;
             he = PL_HashTableAdd(allocations, ptr, site);
@@ -1287,7 +1311,8 @@ __ptr_t calloc(size_t count, size_t size)
         site = backtrace(1);
         size *= count;
         if (site)
-            log_event2(logfp, TM_EVENT_CALLOC, site->serial, size);
+            log_event4(logfp, TM_EVENT_CALLOC,
+                       site->serial, PR_IntervalNow(), (uint32)ptr, size);
         if (get_allocations()) {
             suppress_tracing++;
             he = PL_HashTableAdd(allocations, ptr, site);
@@ -1343,8 +1368,9 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
     } else if (suppress_tracing == 0) {
         site = backtrace(1);
         if (site) {
-            log_event4(logfp, TM_EVENT_REALLOC, site->serial, size,
-                       oldsite ? oldsite->serial : 0, oldsize);
+            log_event7(logfp, TM_EVENT_REALLOC,
+                       site->serial, PR_IntervalNow(), (uint32)ptr, size,
+                       oldsite ? oldsite->serial : 0, (uint32)oldptr, oldsize);
         }
         if (ptr && allocations) {
             suppress_tracing++;
@@ -1396,8 +1422,8 @@ void free(__ptr_t ptr)
                 site = (callsite*) he->value;
                 if (site) {
                     alloc = (allocation*) he;
-                    log_event2(logfp, TM_EVENT_FREE, site->serial,
-                               alloc->size);
+                    log_event4(logfp, TM_EVENT_FREE,
+                               site->serial, PR_IntervalNow(), (uint32)ptr, alloc->size);
                 }
                 PL_HashTableRawRemove(allocations, hep, he);
             }
@@ -1809,7 +1835,7 @@ NS_TraceMallocFlushLogfiles()
 #ifdef XP_WIN32
 
 PR_IMPLEMENT(void)
-MallocCallback(void *aPtr, size_t size)
+MallocCallback(void *ptr, size_t size)
 {
     callsite *site;
     PLHashEntry *he;
@@ -1817,15 +1843,16 @@ MallocCallback(void *aPtr, size_t size)
 
     TM_ENTER_MONITOR();
     tmstats.malloc_calls++;
-    if (!aPtr) {
+    if (!ptr) {
         tmstats.malloc_failures++;
     } else if (suppress_tracing == 0) {
         site = backtrace(4);
         if (site)
-            log_event2(logfp, TM_EVENT_MALLOC, site->serial, size);
+            log_event4(logfp, TM_EVENT_MALLOC,
+                       site->serial, PR_IntervalNow(), (uint32)ptr, size);
         if (get_allocations()) {
             suppress_tracing++;
-            he = PL_HashTableAdd(allocations, aPtr, site);
+            he = PL_HashTableAdd(allocations, ptr, site);
             suppress_tracing--;
             if (he) {
                 alloc = (allocation*) he;
@@ -1851,7 +1878,8 @@ CallocCallback(void *ptr, size_t count, size_t size)
         site = backtrace(1);
         size *= count;
         if (site)
-            log_event2(logfp, TM_EVENT_CALLOC, site->serial, size);
+            log_event4(logfp, TM_EVENT_CALLOC,
+                       site->serial, PR_IntervalNow(), (uint32)ptr, size);
         if (get_allocations()) {
             suppress_tracing++;
             he = PL_HashTableAdd(allocations, ptr, site);
@@ -1901,8 +1929,9 @@ ReallocCallback(void * oldptr, void *ptr, size_t size)
     } else if (suppress_tracing == 0) {
         site = backtrace(1);
         if (site) {
-            log_event4(logfp, TM_EVENT_REALLOC, site->serial, size,
-                       oldsite ? oldsite->serial : 0, oldsize);
+            log_event7(logfp, TM_EVENT_REALLOC,
+                       site->serial, PR_IntervalNow(), (uint32)ptr, size,
+                       oldsite ? oldsite->serial : 0, (uint32)oldptr, oldsize);
         }
         if (ptr && allocations) {
             suppress_tracing++;
@@ -1953,7 +1982,8 @@ FreeCallback(void * ptr)
                 site = (callsite*) he->value;
                 if (site) {
                     alloc = (allocation*) he;
-                    log_event2(logfp, TM_EVENT_FREE, site->serial, alloc->size);
+                    log_event4(logfp, TM_EVENT_FREE,
+                               site->serial, PR_IntervalNow(), (uint32)ptr, alloc->size);
                 }
                 PL_HashTableRawRemove(allocations, hep, he);
             }
