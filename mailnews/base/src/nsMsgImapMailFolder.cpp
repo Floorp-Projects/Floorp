@@ -29,7 +29,7 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsMsgImapMailFolder::nsMsgImapMailFolder(const char* uri, nsString& name)
-  : nsMsgFolder(uri, name)
+  : nsMsgFolder(uri /*, name */)
 {
 	mHaveReadNameFromDB = PR_FALSE;
 	mPathName = nsnull;
