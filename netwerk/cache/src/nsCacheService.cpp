@@ -307,7 +307,7 @@ nsCacheService::ProcessRequest(nsCacheRequest * request,
         // call listener to report error or descriptor
         rv = NotifyListener(request, descriptor, accessGranted, rv);
     } else {        // Synchronous
-        NS_ADDREF(*result = descriptor);
+        NS_IF_ADDREF(*result = descriptor);
     }
     return rv;
 }
