@@ -1555,6 +1555,7 @@ XPCConvert::NativeArray2JS(XPCCallContext& ccx,
 
     // root this early
     *d = OBJECT_TO_JSVAL(array);
+    AUTO_MARK_JSVAL(ccx, d);
 
     if(pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
