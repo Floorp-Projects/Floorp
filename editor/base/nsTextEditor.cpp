@@ -1378,16 +1378,19 @@ NS_IMETHODIMP nsTextEditor::InsertAsQuotation(const nsString& aQuotedText)
   nsresult rv = nsServiceManager::GetService(kPrefServiceCID,
                                              nsIPref::GetIID(),
                                              (nsISupports**)&prefs);
-  char *citationType;
+  char *citationType = 0;
   rv = prefs->CopyCharPref("mail.compose.citationType", &citationType);
                           
-  if (NS_SUCCEEDED(rv) && citationType[0]
-      && !strncmp(citationType, "aol", 3))
-    citer = new nsAOLCiter;
+  if (NS_SUCCEEDED(rv) && citationType[0])
+  {
+    if (!strncmp(citationType, "aol", 3))
+      citer = new nsAOLCiter;
+    else
+      citer = new nsInternetCiter;
+    PL_strfree(citationType);
+  }
   else
     citer = new nsInternetCiter;
-  
-  if (citationType) PL_strfree(citationType);
   
   nsServiceManager::ReleaseService(kPrefServiceCID, prefs);
 
