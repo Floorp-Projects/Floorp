@@ -72,7 +72,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 	      break;
     case eColor_TextSelectBackground:
         res = NS_RGB(0x00,0x00,0x80);
-        aColor;
+        break;
     case eColor_TextSelectForeground:
         aColor = NS_RGB(0xff,0xff,0xff);
         break;
@@ -117,4 +117,8 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     return res;
 }
 
-
+NS_METHOD nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetric)
+{
+  // FIXME: Need to implement.  --ZuperDee
+  return NS_OK;
+}

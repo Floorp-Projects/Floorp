@@ -19,6 +19,8 @@
 #include "nsMenu.h"
 #include "nsIMenu.h"
 #include "nsIMenuBar.h"
+#include "nsIMenuItem.h"
+#include "nsIMenuListener.h"
 
 #include "nsString.h"
 #include "nsStringUtil.h"
@@ -142,23 +144,15 @@ Widget nsMenu::GetNativeParent()
 // Create the proper widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::Create(nsIMenuBar *aParent, const nsString &aLabel)
+//NS_METHOD nsMenu::Create(nsIMenuBar * aParent, const nsString &aLabel)
+NS_METHOD nsMenu::Create(nsISupports * aParent, const nsString &aLabel)
 {
-  mMenuBarParent = aParent;
-  NS_ADDREF(mMenuBarParent);
-  Create(GetNativeParent(), aLabel);
-  NS_ASSERTION(0, "nsIMenu has changed.  fix me!");
-  //aParent->AddMenu(this);
-  return NS_OK;
-}
+//  FIXME: This needs to be fixed. This doesn't work at all.  --ZuperDee
 
-//-------------------------------------------------------------------------
-NS_METHOD nsMenu::Create(nsIMenu *aParent, const nsString &aLabel)
-{
-  mMenuParent = aParent;
-  NS_ADDREF(mMenuParent);
-  Create(GetNativeParent(), aLabel);
-  NS_ASSERTION(0, "nsIMenu has changed.  fix me!");
+//  mMenuBarParent = aParent;
+//  NS_ADDREF(mMenuBarParent);
+//  Create(GetNativeParent(), aLabel);
+//  NS_ASSERTION(0, "nsIMenu has changed.  fix me!");
   //aParent->AddMenu(this);
   return NS_OK;
 }
@@ -184,7 +178,7 @@ NS_METHOD nsMenu::GetLabel(nsString &aText)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::SetLabel(nsString &aText)
+NS_METHOD nsMenu::SetLabel(const nsString &aText)
 {
    mLabel = aText;
   
@@ -192,7 +186,7 @@ NS_METHOD nsMenu::SetLabel(nsString &aText)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::AddItem(const nsString &aText)
+NS_METHOD nsMenu::AddItem(nsISupports* aItem)
 {
   return NS_OK;
 }
@@ -231,19 +225,13 @@ NS_METHOD nsMenu::GetItemCount(PRUint32 &aCount)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::GetItemAt(const PRUint32 aCount, nsIMenuItem *& aMenuItem)
+NS_METHOD nsMenu::GetItemAt(const PRUint32 aPos, nsISupports *& aMenuItem)
 {
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::InsertItemAt(const PRUint32 aCount, nsIMenuItem *& aMenuItem)
-{
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsMenu::InsertItemAt(const PRUint32 aCount, const nsString & aMenuItemName)
+NS_METHOD nsMenu::InsertItemAt(const PRUint32 aPos, nsISupports * aMenuItem)
 {
   return NS_OK;
 }
@@ -266,15 +254,66 @@ NS_METHOD nsMenu::RemoveAll()
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-NS_METHOD nsMenu::GetNativeData(void *& aData)
+NS_METHOD nsMenu::GetNativeData(void ** aData)
 {
   aData = (void *)mMenu;
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
+NS_METHOD nsMenu::AddMenuListener(nsIMenuListener * aMenuListener)
+{
+  //FIXME: Need to implement.  --ZuperDee
+  return NS_OK;
+}
+
+NS_METHOD nsMenu::RemoveMenuListener(nsIMenuListener * aMenuListener)
+{
+  //FIXME: Need to implement.  --ZuperDee
+  return NS_OK;
+}
+
+NS_METHOD nsMenu::SetDOMNode(nsIDOMNode * aMenuNode)
+{
+  //FIXME: Need to implement.  --ZuperDee
+  return NS_OK;
+}
+
+NS_METHOD nsMenu::SetDOMElement(nsIDOMElement * aMenuElement)
+{ 
+  //FIXME: Need to implement.  --ZuperDee
+  return NS_OK;
+}
+
+NS_METHOD nsMenu::SetWebShell(nsIWebShell * aWebShell)
+{
+  //FIXME: Need to implement.  --ZuperDee
+  return NS_OK;
+}
+
+nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
+{
+  return nsEventStatus_eIgnore;
+}
+
 nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
+{
+  return nsEventStatus_eIgnore;
+}
+
+// FIXME: Need to implement.  --ZuperDee
+nsEventStatus nsMenu::MenuDeselected(const nsMenuEvent & aMenuEvent)
+{
+  return nsEventStatus_eIgnore;
+}
+
+// FIXME: Need to implement.  --ZuperDee
+nsEventStatus nsMenu::MenuConstruct(const struct nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, void * menubarNode, void * aWebShell)
+{
+  return nsEventStatus_eIgnore;
+}
+
+// FIXME: Need to implement.  --ZuperDee
+nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
   return nsEventStatus_eIgnore;
 }

@@ -68,6 +68,30 @@ nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
   return nsEventStatus_eIgnore;
 }
 
+nsEventStatus nsMenuBar::MenuItemSelected(const nsMenuEvent & aMenuEvent)
+{
+  return nsEventStatus_eIgnore;
+}
+
+nsEventStatus nsMenuBar::MenuDeselected(const nsMenuEvent & aMenuEvent)
+{
+  return nsEventStatus_eIgnore;
+}
+
+nsEventStatus nsMenuBar::MenuConstruct(
+    const nsMenuEvent& aMenuEvent,
+    nsIWidget        * aParentWindow,
+    void             * menubarNode,
+    void             * aWebShell)
+{
+  return nsEventStatus_eIgnore;
+}
+
+nsEventStatus nsMenuBar::MenuDestruct(const nsMenuEvent & aMenuEvent)
+{
+  return nsEventStatus_eIgnore;
+}
+
 //-------------------------------------------------------------------------
 //
 // nsMenuBar constructor

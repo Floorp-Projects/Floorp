@@ -126,16 +126,19 @@ public:
     NS_IMETHOD            ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
     NS_IMETHOD            AddMouseListener(nsIMouseListener * aListener);
     NS_IMETHOD            AddEventListener(nsIEventListener * aListener);
+    NS_IMETHOD            AddMenuListener(nsIMenuListener * aListener);
     NS_IMETHOD            BeginResizingChildren(void);
     NS_IMETHOD            EndResizingChildren(void);
-    NS_IMETHOD            SetMenuBar(nsIMenuBar * aMenuBar); 
+    NS_IMETHOD            SetMenuBar(nsIMenuBar * aMenuBar);
     NS_IMETHOD            ShowMenuBar(PRBool aShow);
     NS_IMETHOD            GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
     NS_IMETHOD            SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
     NS_IMETHOD            DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
+    NS_IMETHOD            SetVerticalScrollbar(nsIWidget * aScrollbar);
     NS_IMETHOD            GetClientBounds(nsRect &aRect);
     NS_IMETHOD            GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight);
     NS_IMETHOD            Paint(nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect);
+    NS_IMETHOD            EnableFileDrop(PRBool aEnable);
 
 
     virtual PRBool IsChild() { return(PR_FALSE); };

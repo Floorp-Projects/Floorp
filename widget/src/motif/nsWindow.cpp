@@ -1223,6 +1223,12 @@ NS_METHOD nsWindow::AddEventListener(nsIEventListener * aListener)
   return NS_OK;
 }
 
+// FIXME: Needs to be implemented.  --ZuperDee
+NS_METHOD nsWindow::AddMenuListener(nsIMenuListener * aListener)
+{
+  return NS_OK;
+}
+
 PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 {
   switch(aStatus) {
@@ -1374,12 +1380,13 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
   return result;
 }
 
-
+// FIXME: Needs to be implemented??  Looks like a stub to me...
 NS_METHOD nsWindow::BeginResizingChildren(void)
 {
   return NS_OK;
 }
 
+// FIXME: Needs to be implemented??  Looks like a stub to me...
 NS_METHOD nsWindow::EndResizingChildren(void)
 {
   return NS_OK;
@@ -1590,12 +1597,12 @@ extern "C" void nsWindow_ResizeWidget(Widget w)
 NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar) 
 {
   return NS_ERROR_FAILURE;
-} 
+}
 
 NS_METHOD nsWindow::ShowMenuBar(PRBool aShow)
 {
   return NS_ERROR_FAILURE;
-} 
+}
 
 NS_METHOD nsWindow::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
 {
@@ -1620,6 +1627,11 @@ NS_METHOD nsWindow::GetClientBounds(nsRect &aRect)
   return GetBounds(aRect);
 }
 
+// FIXME: Needs to be implemented.  --ZuperDee
+NS_METHOD nsWindow::SetVerticalScrollbar(nsIWidget * aScrollbar)
+{
+  return NS_OK;
+}
 
 /**
  * Calculates the border width and height  
@@ -1652,5 +1664,11 @@ NS_METHOD nsWindow::Paint(nsIRenderingContext& aRenderingContext,
 
   aRenderingContext.DrawRect(rect);
 
+  return NS_OK;
+}
+
+// FIXME: Needs to be implemented. --ZuperDee
+NS_METHOD nsWindow::EnableFileDrop(PRBool aEnable)
+{
   return NS_OK;
 }

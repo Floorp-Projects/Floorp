@@ -18,9 +18,28 @@
 
 #include "nsAppShell.h"
 #include "nsIAppShell.h"
+#include "nsIServiceManager.h"
+#include "nsIEventQueueService.h"
+#include "nsICmdLineService.h"
 #include <stdlib.h>
 
+#ifdef LINUX
+#define DO_THE_EDITRES_THING
+#endif
+
+#ifdef DO_THE_EDITRES_THING
+#include <X11/Xmu/Editres.h>
+#endif
+
 extern XtAppContext gAppContext;
+
+//-------------------------------------------------------------------------
+//
+// XPCOM CIDs
+//
+//-------------------------------------------------------------------------
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 
 //XtAppContext nsAppShell::gAppContext = NULL;
 
@@ -37,7 +56,6 @@ NS_IMPL_ISUPPORTS(nsAppShell,kIAppShellIID);
 NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 {
   mDispatchListener = aDispatchListener;
-
   return NS_OK;
 }
 
@@ -47,13 +65,45 @@ NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD nsAppShell::Create(int* argc, char ** argv)
+NS_METHOD nsAppShell::Create(int* bac, char ** bav)
 {
+  char *home=nsnull;
+  char *path=nsnull;
+
+  int argc = bac ? *bac : 0;
+  char **argv = bav;
+
+#if 1
+  nsresult rv;
+
+  NS_WITH_SERVICE(nsICmdLineService, cmdLineArgs, kCmdLineServiceCID, &rv);
+  if (NS_SUCCEEDED(rv))
+  {
+    rv = cmdLineArgs->GetArgc(&argc);
+    if(NS_FAILED(rv))
+      argc = bac ? *bac : 0;
+
+    rv = cmdLineArgs->GetArgv(&argv);
+    if(NS_FAILED(rv))
+      argv = bav;
+  }
+#endif
+
   XtSetLanguageProc(NULL, NULL, NULL);
-  mTopLevel = XtVaAppInitialize(&mAppContext, "nsAppShell", NULL, 
-                                0, argc, argv, NULL, NULL);
+							
+  mTopLevel = XtAppInitialize(&mAppContext,          // app_context_return
+							  "nsAppShell", 		 //	application_class
+							  NULL, 				 //	options
+							  0, 			         //	num_options
+                              &argc,
+							  argv,
+							  NULL, 				 //	fallback_resources
+							  NULL,                  // args 
+							  0);		             //	num_args
+
   // XXX This is BAD -- needs to be fixed
   gAppContext = mAppContext;
+
   return NS_OK;
 }
 
@@ -63,18 +113,147 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 //
 //-------------------------------------------------------------------------
 
+// static void event_processor_callback(gpointer data,
+//                                      gint source,
+//                                      GdkInputCondition condition)
+// {
+//   nsIEventQueue *eventQueue = (nsIEventQueue*)data;
+//   eventQueue->ProcessPendingEvents();
+// }
+
+static void nsUnixEventProcessorCallback(XtPointer       aClosure, 
+                                         int *           aFd, 
+                                         XtIntervalId *  aId) 
+{
+//   NS_ASSERTION(*aFd==PR_GetEventQueueSelectFD(gUnixMainEventQueue), "Error in nsUnixMain.cpp:nsUnixEventProcessCallback");
+//   PR_ProcessPendingEvents(gUnixMainEventQueue);
+
+  nsIEventQueue *eventQueue = (nsIEventQueue*) aClosure;
+  eventQueue->ProcessPendingEvents();
+}
+
+// NS_METHOD nsAppShell::Run()
+// {
+//   XtRealizeWidget(mTopLevel);
+
+//   XEvent event;
+//   for (;;) {
+//     XtAppNextEvent(mAppContext, &event);
+//     XtDispatchEvent(&event);
+//     if (mDispatchListener)
+//       mDispatchListener->AfterDispatch();
+//   } 
+
+//   return NS_OK;
+// }
+
+
 NS_METHOD nsAppShell::Run()
 {
+  NS_ADDREF_THIS();
+
+  nsresult   rv = NS_OK;
+
+  nsIEventQueue * EQueue = nsnull;
+
+  // Get the event queue service 
+  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+  if (NS_FAILED(rv)) {
+    NS_ASSERTION("Could not obtain event queue service", PR_FALSE);
+    return rv;
+  }
+
+#ifdef DEBUG
+  printf("Got the event queue from the service\n");
+#endif /* DEBUG */
+
+  //Get the event queue for the thread.
+  rv = eventQService->GetThreadEventQueue(PR_GetCurrentThread(), &EQueue);
+
+  // If a queue already present use it.
+  if (EQueue)
+    goto done;
+
+  // Create the event queue for the thread
+  rv = eventQService->CreateThreadEventQueue();
+  if (NS_OK != rv) {
+    NS_ASSERTION("Could not create the thread event queue", PR_FALSE);
+    return rv;
+  }
+  //Get the event queue for the thread
+  rv = eventQService->GetThreadEventQueue(PR_GetCurrentThread(), &EQueue);
+  if (NS_OK != rv) {
+    NS_ASSERTION("Could not obtain the thread event queue", PR_FALSE);
+    return rv;
+  }    
+
+
+done:
+  printf("Calling gdk_input_add with event queue\n");
+
+  XtAppAddInput(gAppContext, 
+                EQueue->GetEventQueueSelectFD(),
+                (XtPointer)(XtInputReadMask), 
+                nsUnixEventProcessorCallback, 
+                0);
+
+//   gdk_input_add(EQueue->GetEventQueueSelectFD(),
+//                 GDK_INPUT_READ,
+//                 event_processor_callback,
+//                 EQueue);
+//   gtk_main();
+
   XtRealizeWidget(mTopLevel);
 
+#ifdef DO_THE_EDITRES_THING
+	XtAddEventHandler(mTopLevel,
+                    (EventMask) 0,
+                    True,
+                    (XtEventHandler) _XEditResCheckMessages,
+                    (XtPointer)NULL);
+#endif
+
   XEvent event;
-  for (;;) {
+
+  for (;;) 
+  {
     XtAppNextEvent(mAppContext, &event);
+
     XtDispatchEvent(&event);
+
     if (mDispatchListener)
       mDispatchListener->AfterDispatch();
   } 
 
+  NS_IF_RELEASE(EQueue);
+  Release();
+  return NS_OK;
+}
+
+
+//This one put here by ZuperDee.
+
+NS_METHOD nsAppShell::Spinup()
+{
+  //FIXME: Need to implement.  --ZuperDee
+  return NS_OK;
+}
+
+NS_METHOD nsAppShell::Spindown()
+{
+  //FIXME: Need to implement.  --ZuperDee
+  return NS_OK;
+}
+
+NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
+{
+  //FIXME: Need to implement.  --ZuperDee
+  return NS_OK;
+}
+
+NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void * aEvent)
+{
+  //FIXME: Need to implement.  --ZuperDee
   return NS_OK;
 }
 
@@ -123,4 +302,9 @@ void* nsAppShell::GetNativeData(PRUint32 aDataType)
   return nsnull;
 }
 
-
+NS_METHOD nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent, nsIWidget *aWidget,
+                                            PRBool *aForWindow)
+{
+  //FIXME: Need to implement.  --ZuperDee
+  return NS_OK;
+}

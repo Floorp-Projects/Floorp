@@ -42,14 +42,19 @@ class nsAppShell : public nsIAppShell
 
     // nsIAppShellInterface
     NS_IMETHOD        Create(int* argc, char ** argv);
-    NS_IMETHOD        Run(); 
+    NS_IMETHOD        Run();
+    NS_IMETHOD        Spinup();
+    NS_IMETHOD        Spindown();
+    NS_IMETHOD        GetNativeEvent(PRBool &aRealEvent, void *&aEvent);
+    NS_IMETHOD        DispatchNativeEvent(PRBool aRealEvent, void * aEvent);
     NS_IMETHOD        Exit();
     NS_IMETHOD        SetDispatchListener(nsDispatchListener* aDispatchListener);
     virtual void*     GetNativeData(PRUint32 aDataType);
+    NS_IMETHOD        EventIsForModalWindow(PRBool aRealEvent, void *aEvent, nsIWidget *aWidget,
+                                            PRBool *aForWindow);
 
     // Public global
     //static XtAppContext gAppContext;
 };
 
 #endif // nsAppShell_h__
-

@@ -182,6 +182,24 @@ PRBool nsFileWidget::Show()
  return PR_TRUE;
 }
 
+// FIXME: Need to implement.  --ZuperDee
+nsFileDlgResults nsFileWidget::GetFile(class nsIWidget *, const class nsString &, class nsFileSpec &)
+{
+  return NS_OK;
+}
+
+// FIXME: Need to implement.  --ZuperDee
+nsFileDlgResults nsFileWidget::GetFolder(class nsIWidget *, const class nsString &, class nsFileSpec &)
+{
+  return NS_OK;
+}
+
+// FIXME: Need to implement.  --ZuperDee
+nsFileDlgResults nsFileWidget::PutFile(class nsIWidget *, const class nsString &, class nsFileSpec &)
+{
+  return NS_OK;
+}
+
 //-------------------------------------------------------------------------
 //
 // Convert filter titles + filters into a Windows filter string
@@ -217,6 +235,12 @@ NS_METHOD nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,const nsString a
   return NS_OK;
 }
 
+// FIXME: Need to implement. --ZuperDee
+NS_METHOD nsFileWidget::GetSelectedType(PRInt16& theType)
+{
+  return NS_OK;
+}
+
 //-------------------------------------------------------------------------
 //
 // Get the file + path
@@ -235,13 +259,23 @@ NS_METHOD  nsFileWidget::GetFile(nsFileSpec& aFile)
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD  nsFileWidget::SetDefaultString(const nsString& aString)
+NS_METHOD nsFileWidget::SetDefaultString(const nsString& aString)
 {
   mDefault = aString;
   return NS_OK;
 }
 
+// FIXME: Need to implement. --ZuperDee
+NS_METHOD nsFileWidget::SetDisplayDirectory(const nsFileSpec& aDirectory)
+{
+  return NS_OK;
+}
 
+// FIXME: Need to implement. --ZuperDee
+NS_METHOD nsFileWidget::GetDisplayDirectory(nsFileSpec& aDirectory)
+{
+  return NS_OK;
+}
 
 //-------------------------------------------------------------------------
 //
