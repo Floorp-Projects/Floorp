@@ -676,6 +676,8 @@ nsHTMLSelectElement::RemoveOption(nsIContent* aContent)
   // as we will manually update the widget at frame construction time.
   if (!mOptions) return NS_OK;
 
+  PRInt32 oldIndex = mOptions->IndexOf(aContent);
+
   // Remove the option from the options list
   mOptions->RemoveOption(aContent);
 
@@ -689,7 +691,7 @@ nsHTMLSelectElement::RemoveOption(nsIContent* aContent)
       // We can't get our index if we've already been replaced in the OptionList.
       // If we couldn't get our index, pass -1, remove all options and recreate
       // Coincidentally, IndexOf returns -1 if the option isn't found in the list
-      result = selectFrame->RemoveOption(mOptions->IndexOf(aContent));
+      result = selectFrame->RemoveOption(oldIndex);
     }
   }
 
