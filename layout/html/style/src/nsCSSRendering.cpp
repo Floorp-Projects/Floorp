@@ -29,6 +29,7 @@
 #include "nsStyleUtil.h"
 #include "nsIScrollableView.h"
 #include "nsLayoutAtoms.h"
+#include "nsIDrawingSurface.h"
 
 #ifdef DCDEBUG
 #include "nsTransform2D.h"
@@ -2087,19 +2088,28 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
       }
     }
 
-#ifdef NOTNOW
-    nsDrawingSurface  theSurface;
-    nsRect            srcRect,destRect;
-    PRInt32           x,y;
-    PRInt32           flag = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_XFORM_SOURCE_VALUES;
+#ifdef DOTILE
+    nsIDrawingSurface  *theSurface,*ts;
+    nsRect              srcRect,destRect;
+    PRUint32            x,y;
+    PRInt32             flag = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_XFORM_SOURCE_VALUES;
+    PRUint32            dsFlag = 0;
 
+
+    aRenderingContext.GetDrawingSurface((void**)&theSurface);
+    theSurface->GetDimensions(&x,&y);
+    srcRect.SetRect(0,0,x,y);
+    //ts = newSurface;
+    aRenderingContext.CreateDrawingSurface(&srcRect,dsFlag,(nsDrawingSurface&)ts);
+    aRenderingContext.SelectOffScreenDrawingSurface(ts);
+
+
+    // create a bigger tile in our new drawingsurface
+    // XXX pushing state to fix clipping problem, need to look into why the clip is set here
     srcRect.x = x0;
     srcRect.y = y0;
     srcRect.width = tileWidth;
     srcRect.height = tileHeight;
-
-    // create a bigger tile
-    // XXX pushing state to fix clipping problem, need to look into why the clip is set here
     aRenderingContext.PushState();
     PRBool  clip;
     aRenderingContext.SetClipRect(aBorderArea, nsClipCombine_kReplace, clip);
@@ -2121,23 +2131,29 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     }
 
 
-    aRenderingContext.GetDrawingSurface(&theSurface);
-    TileImage(aRenderingContext,theSurface,srcRect,x1-x0,y1-y0,flag);
+    //aRenderingContext.GetDrawingSurface(&theSurface);
+    TileImage(aRenderingContext,ts,srcRect,x1-x0,y1-y0,flag);
 
     // setting back the clip from the background clip push
     aRenderingContext.PopState(clip);
+    
+    // set back to the old drawingsurface
+    aRenderingContext.SelectOffScreenDrawingSurface((void**)theSurface);
 
 
    // use the tile to fill in the rest of the image
     destRect = srcRect;
 
-    for(y=srcRect.y;y<y1;y+=srcRect.height){
-      for(x=srcRect.x;x<x1;x+=srcRect.width){
+    for(y=srcRect.y;y<(PRUint32)y1;y+=srcRect.height){
+      for(x=srcRect.x;x<(PRUint32)x1;x+=srcRect.width){
         destRect.x = x;
         destRect.y = y;
-        aRenderingContext.CopyOffScreenBits(theSurface,srcRect.x,srcRect.y,destRect,flag);
+        aRenderingContext.CopyOffScreenBits(ts,srcRect.x,srcRect.y,destRect,flag);
       }
-    }  
+    } 
+
+    aRenderingContext.DestroyDrawingSurface(ts);
+
 #endif
 
     nscoord x,y;
@@ -2146,6 +2162,7 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
         aRenderingContext.DrawImage(image,x,y,tileWidth,tileHeight);
       }
     }
+
     // Restore clipping
     aRenderingContext.PopState(clipState);
 
