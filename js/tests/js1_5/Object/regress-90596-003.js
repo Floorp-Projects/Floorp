@@ -23,6 +23,13 @@
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=90596
 *
 * NOTE: some inefficiencies in the test are made for the sake of readability.
+* For example, we quote string values like "Hi" in lines like this:
+*
+*                    actual = enumerateThis(obj);
+*                    expect = '{prop:"Hi"}';
+*
+* But enumerateThis(obj) gets literal value Hi for obj.prop, not literal "Hi".
+* We take care of all these details in the compactThis(), sortThis() functions.
 * Sorting properties alphabetically is necessary for the test to work in Rhino.
 */
 //-----------------------------------------------------------------------------
@@ -31,7 +38,6 @@ var bug = 90596;
 var summary = '[DontEnum] props (if overridden) should appear in for-in loops';
 var cnCOMMA = ',';
 var cnCOLON = ':';
-var cnEMPTY = '';
 var cnLBRACE = '{';
 var cnRBRACE = '}';
 var status = '';
@@ -41,6 +47,7 @@ var actualvalues = [];
 var expect= '';
 var expectedvalues = [];
 var obj = {};
+
 
 status = inSection(1);
 obj = {toString:9};
@@ -189,23 +196,23 @@ function addThis()
  */
 function sortThis(sList)
 {
-  sList = formatThis(sList);
+  sList = compactThis(sList);
+  sList = stripBraces(sList);
   var arr = sList.split(cnCOMMA);
   arr = arr.sort();
   var ret = String(arr);
-  return addBraces(ret);
+  ret = addBraces(ret);
+  return ret;
 }
 
 
 /*
- * Strips out braces at beginning/end of text, and any whitespace or quotes
+ * Strips out any whitespace or quotes from the text -
  */
-function formatThis(text)
+function compactThis(text)
 {
   var charCode = 0;
   var ret = '';
-
-  text = stripBraces(text);
 
   for (var i=0; i<text.length; i++)
   {
@@ -216,21 +223,6 @@ function formatThis(text)
   }
 
   return ret;
-}
-
-
-/*
- * strips off braces at beginning and end of text -
- */
-function stripBraces(text)
-{
-  // remember to escape the braces...
-  var arr = text.match(/^\{(.*)\}$/);
-
-  // defend against a null match...
-  if (arr && arr[1])
-    return arr[1];
-  return cnEMPTY;
 }
 
 
@@ -265,6 +257,21 @@ function isQuote(charCode)
     default:
       return false;
   }
+}
+
+
+/*
+ * strips off braces at beginning and end of text -
+ */
+function stripBraces(text)
+{
+  // remember to escape the braces...
+  var arr = text.match(/^\{(.*)\}$/);
+
+  // defend against a null match...
+  if (arr != null && arr[1] != null)
+    return arr[1];
+  return text;
 }
 
 
