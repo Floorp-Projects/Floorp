@@ -297,14 +297,16 @@ RemoveObjectEntry(PLDHashTable& table, nsISupports* aKey)
 static nsresult
 SetOrRemoveObject(PLDHashTable& table, nsISupports* aKey, nsISupports* aValue)
 {
-  // lazily create the table, but don't create it just to remove a
-  // non-existent element!
-  if (!table.ops && aValue)
-    PL_DHashTableInit(&table, &ObjectTableOps, nsnull,
-                      sizeof(ObjectEntry), 16);
-
-  if (aValue)
+  if (aValue) {
+    // lazily create the table, but only when adding elements
+    if (!table.ops &&
+        !PL_DHashTableInit(&table, &ObjectTableOps, nsnull,
+                           sizeof(ObjectEntry), 16)) {
+      table.ops = nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     return AddObjectEntry(table, aKey, aValue);
+  }
 
   // no value, so remove the key from the table
   if (table.ops)
