@@ -910,7 +910,7 @@ $(XPIDL_GEN_DIR):
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; mkdir $@; else true; fi
 
 $(XPIDL_GEN_DIR)/%.h: %.idl $(IDL_COMPILE) $(XPIDL_GEN_DIR)
-	$(XPIDL_COMPILE) -m header -w -I $(XPDIST)/idl -o $(XPIDL_GEN_DIR)/$* $<
+	$(XPIDL_COMPILE) -m header -w -I $(XPDIST)/idl -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $<
 	@if test -n "$(findstring $*.h, $(EXPORTS))"; \
 	  then echo "*** WARNING: file $*.h generated from $*.idl overrides $(srcdir)/$*.h"; fi
 
