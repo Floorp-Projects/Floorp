@@ -20,9 +20,10 @@ extern COMPONENT Components[100];
 extern int		numComponents;
 
 extern "C" __declspec(dllexport)
-int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath)
+int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath,int invisibleCount)
 {
 	*compNum = 0;
+	int invNum = *compNum;
 
 	// Get all the component info from each component section
 	CString component;
@@ -48,9 +49,18 @@ int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath)
 		comps[*compNum].selected = (strstr(attr, "SELECTED") != NULL);
 		comps[*compNum].invisible = (strstr(attr, "INVISIBLE") != NULL);
 		comps[*compNum].launchapp = (strstr(attr, "LAUNCHAPP") != NULL);
-
-		(*compNum)++;
-		component.Format("Component%d", *compNum);
+		
+		if (!(comps[*compNum].selected && comps[*compNum].invisible && invisibleCount))
+		{
+			(*compNum)++;
+			invNum++;
+			component.Format("Component%d", invNum);
+		}
+		else
+		{
+			invNum++;
+			component.Format("Component%d", invNum);
+		}
 		GetPrivateProfileString(component, "Archive", "", archive, MAX_SIZE, iniSrcPath);
 	}
 
@@ -72,7 +82,7 @@ int GenerateComponentList(CString parms, WIDGET *curWidget)
 		nscpxpiPath = rootPath + "NSCPXPI";
 	iniSrcPath		= nscpxpiPath + "\\config.ini";
 
-	BuildComponentList(Components, &numComponents, iniSrcPath);
+	BuildComponentList(Components, &numComponents, iniSrcPath, 1);
 
 	int i;
 	CString WidgetValue("");

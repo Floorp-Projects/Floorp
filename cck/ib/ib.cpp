@@ -28,10 +28,12 @@ CString outputPath;
 CString xpiDstPath;
 
 WIDGET *tempWidget;
-int selCount;
 char buffer[50000];
 XPI	xpiList[100];
 int xpiLen = -1;
+// Setup Sections for config.ini
+CString Setup0Short = "&Typical";
+CString Setup1Short = "C&ustom";
 
 COMPONENT Components[100];
 int		numComponents;
@@ -351,31 +353,51 @@ void init_components()
 {
 	int i;
 	WIDGET *w = findWidget("SelectedComponents");
-	BuildComponentList(Components, &numComponents, iniSrcPath);
+	BuildComponentList(Components, &numComponents, iniSrcPath,0);
 
 	// Turn off components that aren't selected
 	for (i=0; i<numComponents; i++)
-		if (strstr(w->value, Components[i].name) == NULL)
+		if ((strstr(w->value, Components[i].name) == NULL) && (!(Components[i].selected && Components[i].invisible)))
 			Components[i].selected = FALSE;
 
 }
-
+/*Post Beta - we will use the DISABLED key.
+Now this is implemented the round about way here.
+We have to take only the components that are chosen and mark the rest as disabled
+Disabled doesnt work now - so what we are doing is re writing every key in the sections
+besides that we are also deleting the keys in the setup types 2&3 so that we have only two 
+as per request of mktg.
+*/
 void invisible()
 {
+
+	CString Setup0Long = "Program will be installed with the most common options";
+
+	CString Setup1Long = "You may choose the options you want to install.  Recommended for advanced users.";
+
+	WritePrivateProfileString("Setup Type0", NULL, "", iniDstPath);
+	WritePrivateProfileString("Setup Type1", NULL, "", iniDstPath);
+
+	WritePrivateProfileString("Setup Type0","Description Short",(LPCTSTR)Setup0Short,iniDstPath);
+	WritePrivateProfileString("Setup Type0","Description Long", (LPCTSTR)Setup0Long,iniDstPath);
+	WritePrivateProfileString("Setup Type1","Description Short",(LPCTSTR)Setup1Short,iniDstPath);
+	WritePrivateProfileString("Setup Type1","Description Long", (LPCTSTR)Setup1Long,iniDstPath);
+	WritePrivateProfileString("Setup Type2",NULL," ",iniDstPath);
+	WritePrivateProfileString("Setup Type3",NULL," ",iniDstPath);
+	CString Cee;
 	tempWidget = findWidget("SelectedComponents");
 	CString component;
+	for (int i=0; i<numComponents; i++)
 	{
-		selCount = (((CCheckListBox *)tempWidget->control))->GetCount();
-			
-		for (int i=0; i < selCount; i++)
+		if (Components[i].selected)
 		{
-			if (((CCheckListBox *)tempWidget->control)->GetCheck(i) != 1)
-			{
 			component = Components[i].compname;	
-			WritePrivateProfileString(Components[i].compname, "Attributes", "INVISIBLE", iniDstPath);
-				
-			}
+			Cee.Format("C%d", i);
+			WritePrivateProfileString("Setup Type0",(LPCTSTR)Cee,(LPCTSTR)component, iniDstPath);
+			WritePrivateProfileString("Setup Type1",(LPCTSTR)Cee,(LPCTSTR)component, iniDstPath);
 		}
+		else
+			WritePrivateProfileString(Components[i].compname, "Attributes", "INVISIBLE", iniDstPath);
 	}
 }
 void AddThirdParty()
@@ -391,7 +413,7 @@ void AddThirdParty()
 	CString compSDesc	= "Description Short=";
 	CString compLDesc	= "Description Long=";
 	CString compArchive = "Archive=";
-	CString compISize	= "Install Size=";
+	CString compISize	= "Install Size Archive=";
 	CString compAttrib	= "Attributes=SELECTED|LAUNCHAPP";
 	int archiveLen		= tpCompPath1.GetLength();
 	int findLen			= tpCompPath1.ReverseFind('\\');
@@ -447,28 +469,24 @@ void AddThirdParty()
 
 	if (!tpCompPath1.IsEmpty())
 	{
-		componentName.Format("Component%d", (selCount));
-		cName.Format("C%d", (selCount -1));
+		componentName.Format("Component%d", (numComponents));
+		cName.Format("C%d", (numComponents -1));
 
 		WritePrivateProfileString("Setup Type0", cName, componentName, iniDstPath);
 		WritePrivateProfileString("Setup Type1", cName, componentName, iniDstPath);
-		WritePrivateProfileString("Setup Type2", cName, componentName, iniDstPath);
-		WritePrivateProfileString("Setup Type3", cName, componentName, iniDstPath);
 		WritePrivateProfileSection(componentName, cBuffer1, iniDstPath);
-		selCount++;
+		numComponents++;
 		CopyFile(tpCompPath1, xpiDstPath + "\\" + Archive1, FALSE);
 		DWORD e1 = GetLastError();
 
 	}
 	if (!tpCompPath2.IsEmpty())
 	{
-		componentName.Format("Component%d", (selCount));
-		cName.Format("C%d", (selCount -1));
+		componentName.Format("Component%d", (numComponents));
+		cName.Format("C%d", (numComponents -1));
 
 		WritePrivateProfileString("Setup Type0", cName, componentName, iniDstPath);
 		WritePrivateProfileString("Setup Type1", cName, componentName, iniDstPath);
-		WritePrivateProfileString("Setup Type2", cName, componentName, iniDstPath);
-		WritePrivateProfileString("Setup Type3", cName, componentName, iniDstPath);
 		WritePrivateProfileSection(componentName, cBuffer2, iniDstPath);
 		CopyFile(tpCompPath2, xpiDstPath + "\\" + Archive2, FALSE);
 		DWORD e2 = GetLastError();
@@ -769,7 +787,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 		}
 		
 	}
-	
+
 	// Didn't work...
 	dlg->SetWindowText("         Checking for neccessary components to install");
 
