@@ -869,7 +869,10 @@ nsresult nsMsgDBView::GetMsgHdrForViewIndex(nsMsgViewIndex index, nsIMsgDBHdr **
     return NS_MSG_INVALID_DBVIEW_INDEX;
   
   if (key == m_cachedMsgKey)
+  {
     *msgHdr = m_cachedHdr;
+    NS_IF_ADDREF(*msgHdr);
+  }
   else
   {
     rv = m_db->GetMsgHdrForKey(key, msgHdr);
@@ -879,7 +882,6 @@ nsresult nsMsgDBView::GetMsgHdrForViewIndex(nsMsgViewIndex index, nsIMsgDBHdr **
       m_cachedMsgKey = key;
     }
   }
-  NS_IF_ADDREF(*msgHdr);
 
   return rv;
 }
