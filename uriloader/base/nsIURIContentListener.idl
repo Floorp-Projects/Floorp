@@ -137,7 +137,7 @@ interface nsIURIContentListener : nsISupports
   * by the docshell as the implementation is generic to all doc
   * shells. The isPreferred decision is a decision made by a top level
   * application content listener that sits at the top of the docshell
-  * hiearchy.
+  * hierarchy.
   */
   boolean canHandleContent(in string aContentType, 
                            in boolean aIsContentPreferred, 
