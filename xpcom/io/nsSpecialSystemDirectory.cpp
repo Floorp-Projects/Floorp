@@ -33,6 +33,9 @@
 #include <Processes.h>
 #include <Gestalt.h>
 #include "nsIInternetConfigService.h"
+#ifdef DEBUG
+#include "prenv.h" // For PR_Getenv
+#endif
 #elif defined(XP_WIN)
 #include <windows.h>
 #include <shlobj.h>
