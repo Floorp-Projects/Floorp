@@ -211,7 +211,7 @@ nsAddbookProtocolHandler::NewChannel( const char *verb,
   // or launch the UI dialog window and go from there.
   //
   mAddbookOperation = nsIAddbookUrlOperation::InvalidUrl;
-  nsCOMPtr <nsIAddbookUrl> addbookUrl = do_QueryInterface(getter_AddRefs(aURI));
+  nsCOMPtr <nsIAddbookUrl> addbookUrl = do_QueryInterface(aURI);
   if (!addbookUrl)
     return NS_ERROR_ABORT;
 
