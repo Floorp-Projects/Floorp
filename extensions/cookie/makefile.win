@@ -1,0 +1,78 @@
+#!gmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+DEPTH=..\..
+IGNORE_MANIFEST=1
+
+DEFINES=-D_IMPL_NS_COOKIE -DWIN32_LEAN_AND_MEAN
+MODULE=cookie 
+
+EXPORTS = nsICookieService.h nsCookieHTTPNotify.h nsCookie.h
+
+
+CSRCS=				\
+ $(NULL)
+
+CPPSRCS=				\
+ nsCookieService.cpp			\
+ nsCookie.cpp			\
+ nsCookieHTTPNotify.cpp			\
+ $(NULL)
+
+C_OBJS=				\
+ $(NULL)
+
+
+CPP_OBJS=				\
+ .\$(OBJDIR)\nsCookieService.obj	\
+ .\$(OBJDIR)\nsCookie.obj	\
+ .\$(OBJDIR)\nsCookieHTTPNotify.obj	\
+ $(NULL)
+
+LINCS = -I$(DEPTH)\include \
+
+MAKE_OBJ_TYPE = DLL
+DLLNAME = cookie
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
+
+LCFLAGS = \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
+
+# These are the libraries we need to link with to create the dll
+LLIBS	= \
+ $(DIST)\lib\plc3.lib \
+ $(LIBNSPR) \
+ $(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib \
+ $(DIST)\lib\xplib.lib		\
+ $(DIST)\lib\xpcom.lib \
+ $(DIST)\lib\netwerk.lib \
+ $(DIST)\lib\xppref32.lib \
+ $(DIST)\lib\secfreenav32.lib	\
+ $(HASHLIBS)
+
+include <$(DEPTH)\config\rules.mak>
+
+install:: $(DLL)
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\bin\components\$(DLLNAME).dll
+	rm -f $(DIST)\lib\$(DLLNAME).lib
