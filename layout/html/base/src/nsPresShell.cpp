@@ -6450,6 +6450,10 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
     if (aInterruptible)
       deadline = PR_IntervalNow() + PR_MicrosecondsToInterval(gMaxRCProcessingTime);
 
+    // force flushing of any pending notifications
+    mDocument->BeginUpdate();
+    mDocument->EndUpdate();
+
     mIsReflowing = PR_TRUE;
 
     do {
