@@ -63,6 +63,7 @@
     IBOutlet id passwordPanelCheck;
     IBOutlet id passwordPanelText;
     IBOutlet id passwordPanelInput;
+    IBOutlet id postToInsecureFromSecurePanel;
     IBOutlet id securityMismatchPanel;
     IBOutlet id expiredCertPanel;
     IBOutlet id securityUnknownPanel;

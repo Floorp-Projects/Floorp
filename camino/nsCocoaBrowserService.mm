@@ -715,6 +715,21 @@ nsCocoaBrowserService::AlertMixedMode(nsIInterfaceRequestor *ctx)
 
 
 nsresult
+nsCocoaBrowserService::EnsureSecurityStringBundle()
+{
+  if (!mSecurityStringBundle) {
+    #define STRING_BUNDLE_URL "chrome://communicator/locale/security.properties"
+    nsCOMPtr<nsIStringBundleService> service = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+    if ( service ) {
+      nsresult rv = service->CreateBundle(STRING_BUNDLE_URL, getter_AddRefs(mSecurityStringBundle));
+      if (NS_FAILED(rv)) return rv;
+    }
+  }
+  return NS_OK;
+}
+
+
+nsresult
 nsCocoaBrowserService::AlertDialog(nsIInterfaceRequestor *ctx, const char *prefName,
                           const PRUnichar *dialogMessageName,
                           const PRUnichar *showAgainName)
@@ -722,21 +737,19 @@ nsCocoaBrowserService::AlertDialog(nsIInterfaceRequestor *ctx, const char *prefN
   nsresult rv = NS_OK;
 
   // Get user's preference for this alert
+  nsCOMPtr<nsIPrefBranch> pref;
   PRBool prefValue = PR_TRUE;
-  nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
-  if ( pref )
-  	pref->GetBoolPref(prefName, &prefValue);
+  if ( prefName ) {
+    pref = do_GetService("@mozilla.org/preferences-service;1");
+    if ( pref )
+      pref->GetBoolPref(prefName, &prefValue);
 
-  // Stop if alert is not requested
-  if (!prefValue) return NS_OK;
-  
-  if (!mSecurityStringBundle) {
-    #define STRING_BUNDLE_URL "chrome://communicator/locale/security.properties"
-    nsCOMPtr<nsIStringBundleService> service = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-    if ( service )
-      rv = service->CreateBundle(STRING_BUNDLE_URL, getter_AddRefs(mSecurityStringBundle));
-    if (NS_FAILED(rv)) return rv;
+    // Stop if alert is not requested
+    if (!prefValue) return NS_OK;
   }
+  
+  if ( NS_FAILED(rv = EnsureSecurityStringBundle()) )
+    return rv;
   
   // Get Prompt to use
   nsCOMPtr<nsIPrompt> prompt = do_GetInterface(ctx);
@@ -747,13 +760,17 @@ nsCocoaBrowserService::AlertDialog(nsIInterfaceRequestor *ctx, const char *prefN
 
   mSecurityStringBundle->GetStringFromName(NS_LITERAL_STRING("Title").get(), getter_Copies(windowTitle));
   mSecurityStringBundle->GetStringFromName(dialogMessageName, getter_Copies(message));
-  mSecurityStringBundle->GetStringFromName(showAgainName, getter_Copies(dontShowAgain));
-  if (!windowTitle || !message || !dontShowAgain) return NS_ERROR_FAILURE;
-      
-  rv = prompt->AlertCheck(windowTitle, message, dontShowAgain, &prefValue);
+  if ( prefName )
+    mSecurityStringBundle->GetStringFromName(showAgainName, getter_Copies(dontShowAgain));
+  if (!windowTitle.get() || !message.get()) return NS_ERROR_FAILURE;
+  
+  if ( prefName )
+    rv = prompt->AlertCheck(windowTitle, message, dontShowAgain, &prefValue);
+  else
+    rv = prompt->AlertCheck(windowTitle, message, nil, nil);
   if (NS_FAILED(rv)) return rv;
       
-  if (!prefValue)
+  if (prefName && !prefValue)
     pref->SetBoolPref(prefName, PR_FALSE);
  
   return rv;
@@ -770,7 +787,14 @@ nsCocoaBrowserService::ConfirmPostToInsecure(nsIInterfaceRequestor *ctx, PRBool*
 nsresult
 nsCocoaBrowserService::ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor *ctx, PRBool* _result)
 {
-  // users may care about this one, but we haven't yet implemented ConfirmEx().
-  *_result = PR_TRUE;
+  nsAlertController* controller = GetAlertController();
+  if (!controller)
+    return NS_ERROR_FAILURE;
+
+  // HACK: there is no way to get which window this is for from the API. The
+  // security team in mozilla just cheats and assumes the frontmost window so
+  // that's what we'll do. Yes, it's wrong. Yes, it's skanky. Oh well.
+  *_result = (PRBool)[controller postToInsecureFromSecure:[NSApp mainWindow]];
+  
   return NS_OK;
 }

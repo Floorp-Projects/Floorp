@@ -29,6 +29,7 @@
                 passwordPanelCheck = id; 
                 passwordPanelInput = id; 
                 passwordPanelText = id; 
+                postToInsecureFromSecurePanel = id; 
                 promptPanel = id; 
                 promptPanelCheck = id; 
                 promptPanelInput = id; 

@@ -268,6 +268,15 @@
 }
 
 
+- (BOOL)postToInsecureFromSecure:(NSWindow*)parent
+{
+  int result = [NSApp runModalForWindow:postToInsecureFromSecurePanel relativeToWindow:parent];
+  [postToInsecureFromSecurePanel close];
+
+  return (result == 1);
+}
+
+
 - (BOOL)badCert:(NSWindow*)parent
 {
   int result = [NSApp runModalForWindow:securityMismatchPanel relativeToWindow:parent];
