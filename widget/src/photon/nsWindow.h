@@ -19,21 +19,23 @@
  *
  * Contributor(s): 
  */
-#ifndef Window_h__
-#define Window_h__
 
-#include "nsBaseWidget.h"
-#include "nsToolkit.h"
+#ifndef nsWindow_h__
+#define nsWindow_h__
+
+
+
+#include "nsISupports.h"
+
 #include "nsWidget.h"
-#include "nsIMenuBar.h"
-#include "nsIMouseListener.h"
-#include "nsIEventListener.h"
-#include "nsStringUtil.h"
+
 #include "nsString.h"
-#include "nsVoidArray.h"
 
 #include <Pt.h>
 #include <Ap.h>
+
+class nsFont;
+class nsIAppShell;
 
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
@@ -46,64 +48,84 @@ class nsWindow : public nsWidget
 {
 
 public:
-
   // nsIWidget interface
 
   nsWindow();
   virtual ~nsWindow();
 
-  // nsIsupports
-//  NS_IMETHOD_(nsrefcnt) AddRef();
-//  NS_IMETHOD_(nsrefcnt) Release();
-//  NS_IMETHOD            QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  
-  virtual void          ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
-  NS_IMETHOD            PreCreateWidget(nsWidgetInitData *aWidgetInitData);
-  virtual void*         GetNativeData(PRUint32 aDataType);
-  NS_IMETHOD            SetColorMap(nsColorMap *aColorMap);
-  NS_IMETHOD            Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
-  NS_IMETHOD            SetTitle(const nsString& aTitle);
-  NS_IMETHOD            SetMenuBar(nsIMenuBar * aMenuBar);
-  NS_IMETHOD            Show(PRBool state);
-  NS_IMETHOD            ShowMenuBar(PRBool aShow);
-  NS_IMETHOD            GetClientBounds( nsRect &aRect );
-  NS_IMETHOD            Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
-  NS_IMETHOD            SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);
-  NS_IMETHOD            UpdateTooltips(nsRect* aNewTips[]);
-  NS_IMETHOD            RemoveTooltips();
-  NS_IMETHOD            BeginResizingChildren(void);
-  NS_IMETHOD            EndResizingChildren(void);
-  virtual PRBool           IsChild() { return(PR_FALSE); };
-  virtual void               SetIsDestroying( PRBool val) { mIsDestroying = val; };
-  virtual int                 GetMenuBarHeight();
-  NS_IMETHOD            Destroy(void);
-  NS_IMETHOD            GetAttention(void);
-  NS_IMETHOD            SetModal(PRBool aModal);
+  NS_IMETHOD           WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect);
 
-  /* Add this because of bug 11088 */
-  virtual NS_IMETHOD    Move(PRInt32 aX, PRInt32 aY);
+  NS_IMETHOD           PreCreateWidget(nsWidgetInitData *aWidgetInitData);
+
+  virtual void*        GetNativeData(PRUint32 aDataType);
+
+  NS_IMETHOD           Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
+  NS_IMETHOD           ScrollRect(nsRect &aSrcRect, PRInt32 aDx, PRInt32 aDy);
+
+  NS_IMETHOD           SetTitle(const nsString& aTitle);
+  NS_IMETHOD           Show(PRBool state);
+  NS_IMETHOD           CaptureMouse(PRBool aCapture);
+ 
+  NS_IMETHOD           Move(PRInt32 aX, PRInt32 aY);
+
+  NS_IMETHOD           Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
+  NS_IMETHOD           Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
+                              PRInt32 aHeight, PRBool aRepaint);
+
+  NS_IMETHOD           BeginResizingChildren(void);
+  NS_IMETHOD           EndResizingChildren(void);
+
+  NS_IMETHOD           CaptureRollupEvents(nsIRollupListener * aListener,
+                                           PRBool aDoCapture,
+                                           PRBool aConsumeRollupEvent);
+  NS_IMETHOD           Invalidate(PRBool aIsSynchronous);
+  NS_IMETHOD           Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
+  NS_IMETHOD           InvalidateRegion(const nsIRegion* aRegion, PRBool aIsSynchronous);
+  NS_IMETHOD           SetBackgroundColor(const nscolor &aColor);
+  NS_IMETHOD           SetFocus(void);
+  NS_IMETHOD           GetAttention(void);
+
+  NS_IMETHOD           Update(void);
+  
+  virtual PRBool       IsChild() const;
+
 
   // Utility methods
-
   virtual PRBool        OnPaint(nsPaintEvent &event);
   PRBool                OnKey(nsKeyEvent &aEvent);
   PRBool                DispatchFocus(nsGUIEvent &aEvent);
   virtual PRBool        OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
   NS_IMETHOD            GetFrameSize(int *FrameLeft, int *FrameRight, int *FrameTop, int *FrameBottom) const;
+  NS_IMETHOD            SetColorMap(nsColorMap *aColorMap);
+  NS_IMETHOD            GetClientBounds( nsRect &aRect );
+  NS_IMETHOD            SetModal(PRBool aModal);
+  void                  ScreenToWidget( PhPoint_t &pt );
+
+ // Native draw function... like doPaint()
+ static void            RawDrawFunc( PtWidget_t *pWidget, PhTile_t *damage );
+
+ nsIRegion              *GetRegion();
 
 protected:
+  // this is the "native" destroy code that will destroy any
+  // native windows / widgets for this logical widget
+  virtual void          DestroyNative(void);
+  void                  DestroyNativeChildren(void);
 
-  static void           RawDrawFunc( PtWidget_t *pWidget, PhTile_t *damage );
+  // grab in progress
+  PRBool GrabInProgress(void);
+  
   static int            MenuRegionCallback(PtWidget_t *widget, ApInfo_t *apinfo, PtCallbackInfo_t *cbinfo);  
 
   NS_IMETHOD            CreateNative(PtWidget_t *parentWidget);
+
   static int            ResizeHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
   static int            WindowCloseHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
   PRBool                HandleEvent( PtCallbackInfo_t* aCbInfo );
-  void                  ScreenToWidget( PhPoint_t &pt );
   NS_METHOD             GetSiblingClippedRegion( PhTile_t **btiles, PhTile_t **ctiles );
   NS_METHOD             SetWindowClipping( PhTile_t *damage, PhPoint_t &offset );
-//  void                  StartResizeHoldOff( PtWidget_t *top );
+  PhTile_t              *GetWindowClipping(PhPoint_t &offset);
+
   void                  ResizeHoldOff();
   void                  RemoveResizeWidget();
   static int            ResizeWorkProc( void *data );
@@ -117,10 +139,11 @@ protected:
   PRBool                mIsDestroyingWindow;
 
   nsIFontMetrics        *mFontMetrics;
+  PRBool                mVisible;
+  PRBool                mDisplayed;
+  PRBool                mIsTooSmall;
   PRBool                mClipChildren;
   PRBool                mClipSiblings;
-//  nsWindowType          mWindowType;
-//  nsBorderStyle         mBorderStyle;
   static PRBool         mResizeQueueInited;
   static int            mModalCount;
   PRBool                mIsResizing;
@@ -131,9 +154,22 @@ protected:
   int                   mFrameRight;
   int                   mFrameTop;
   int                   mFrameBottom;
+  PRBool                mIsUpdating;
 
+  // when this is PR_TRUE we will block focus
+  // events to prevent recursion
+  PRBool                mBlockFocusEvents;
+  
   static DamageQueueEntry *mResizeQueue;
   static PtWorkProcId_t *mResizeProcID;
+
+  // are we doing a grab?
+  static PRBool      mIsGrabbing;
+  static nsWindow   *mGrabWindow;
+
+  // this is the last window that had a drag event happen on it.
+  static nsWindow  *mLastDragMotionWindow;
+  static nsWindow  *mLastLeaveWindow;
 };
 
 //
@@ -144,7 +180,6 @@ class ChildWindow : public nsWindow {
     ChildWindow();
     ~ChildWindow();
 	virtual PRBool IsChild() const;
-    NS_IMETHOD Destroy(void);
 };
 
 
