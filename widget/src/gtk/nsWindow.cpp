@@ -645,19 +645,21 @@ gboolean
 nsWindow::UpdateIdle (gpointer data)
 {
   GSList *old_queue = update_queue;
-  GSList *tmp_list = old_queue;
+  GSList *it;
   
   update_idle = 0;
   update_queue = nsnull;
   
-  while (tmp_list)
+  for (it = old_queue; it; it = it->next)
   {
-    nsWindow *window = (nsWindow *)tmp_list->data;
-    
+    nsWindow *window = (nsWindow *)it->data;
     window->mIsUpdating = PR_FALSE;
+  }
+  
+  for (it = old_queue; it; it = it->next)
+  {
+    nsWindow *window = (nsWindow *)it->data;
     window->Update();
-    
-    tmp_list = tmp_list->next;
   }
   
   g_slist_free (old_queue);
