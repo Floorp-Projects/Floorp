@@ -526,6 +526,7 @@ protected:
     PRBool              mStyleHandlingEnabled;
     PRBool              mIsText;
     PRBool              mRequestedHead;
+    PRBool              mIsFormContainer;
 
 #ifdef NS_DEBUG
     PRInt32 gNodeCount;

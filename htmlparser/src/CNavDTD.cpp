@@ -87,9 +87,6 @@ static char gShowCRC;
 #  define START_TIMER()
 #endif
 
-
-
-
 /************************************************************************
   And now for the main class -- CNavDTD...
  ************************************************************************/
@@ -159,6 +156,7 @@ CNavDTD::CNavDTD() : nsIDTD(), mMisplacedContent(0), mSkippedContent(0), mShared
   mStyleHandlingEnabled=PR_TRUE;
   mIsText=PR_FALSE;
   mRequestedHead=PR_FALSE;
+  mIsFormContainer=PR_FALSE;
 
   if(!gHTMLElements) {
     InitializeElementTable();
@@ -1371,11 +1369,6 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           aToken->SetTypeID(theChildTag=eHTMLTag_img);
           break;
 
-        //case eHTMLTag_userdefined:
-        case eHTMLTag_noscript:     //HACK XXX! Throw noscript on the floor for now.
-          isTokenHandled=PR_TRUE;
-          break;
-
         case eHTMLTag_script:
           theHeadIsParent=((!mHasOpenBody) || mRequestedHead);
           mHasOpenScript=PR_TRUE;
@@ -1387,7 +1380,17 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
       if(!isTokenHandled) {
         if(theHeadIsParent || 
            (mHasOpenHead && ((eHTMLTag_newline==theChildTag) || (eHTMLTag_whitespace==theChildTag)))) {
-              result=AddHeadLeaf(theNode);
+          //Ref. Bug 21008 -- Creating model for NOSCRIPT content
+          static eHTMLTags gNoXTags[]={eHTMLTag_noembed,eHTMLTag_noframes,eHTMLTag_nolayer,eHTMLTag_noscript};
+          if(FindTagInSet(theChildTag,gNoXTags,sizeof(gNoXTags)/sizeof(theChildTag))) {
+             result=OpenContainer(theNode,theChildTag,PR_TRUE);
+          }
+          else if(HasOpenContainer(gNoXTags,sizeof(gNoXTags)/sizeof(eHTMLTag_unknown))) {
+            result=AddLeaf(theNode);   
+          }
+          else {
+            result=AddHeadLeaf(theNode);
+          }
         }
         else result=HandleDefaultStartToken(aToken,theChildTag,theNode); 
       }
@@ -1665,6 +1668,13 @@ nsresult CNavDTD::HandleSavedTokens(PRInt32 anIndex) {
         PRInt32   theTopIndex = anIndex + 1;
         PRInt32   theTagCount = mBodyContext->GetCount();
         eHTMLTags theParentTag= mBodyContext->TagAt(anIndex);
+               
+        //XXX  In the content sink, FORM behaves as a container for parents 
+        //other than eHTMLTag_table,eHTMLTag_tbody,eHTMLTag_tr,eHTMLTag_col,
+        //eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_colgroup.In those cases the stack 
+        //position, in the parser, should be synchronized with the sink. -- Ref: Bug 20087.
+
+        if(mHasOpenForm && mIsFormContainer) anIndex++;
 
         STOP_TIMER()
         MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleSavedTokensAbove(), this=%p\n", this));     
@@ -1681,6 +1691,7 @@ nsresult CNavDTD::HandleSavedTokens(PRInt32 anIndex) {
           mTempContext->Push((nsCParserNode*)mBodyContext->Pop(theChildStyleStack));
         }
      
+        PRInt32 theIndex;
         // Now flush out all the bad contents.
         while(theBadTokenCount > 0){
           theToken=(CToken*)mMisplacedContent.PopFront();
@@ -1694,9 +1705,12 @@ nsresult CNavDTD::HandleSavedTokens(PRInt32 anIndex) {
                 mTokenizer->PushTokenFront(theAttrToken);
               }
             }
+            
             // Make sure that the BeginContext() is ended only by the call to
-            // EndContext(). 
-            if(theTag!=theParentTag || eToken_end!=theToken->GetTokenType())
+            // EndContext(). Ref: Bug 25202
+            if(eToken_end==theToken->GetTokenType()) theIndex=mBodyContext->LastOf(theTag);
+              
+            if(!(theIndex!=kNotFound && theIndex<=mBodyContext->mContextTopIndex))
               result=HandleToken(theToken,mParser);
             else mTokenRecycler->RecycleToken(theToken);
           }
@@ -2187,7 +2201,10 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild,PRBool& aParentContai
       }
     }
     else if (!aParentContains) {
-      return PR_TRUE;
+      if(!gHTMLElements[aChild].HasSpecialProperty(kBadContentWatch)) {
+        return PR_TRUE; 
+      }
+      return PR_FALSE; // Ref. Bug 25658
     }
   }
 
@@ -2643,8 +2660,12 @@ nsresult CNavDTD::CloseBody(const nsIParserNode *aNode){
  * @return  TRUE if ok, FALSE if error
  */
 nsresult CNavDTD::OpenForm(const nsIParserNode *aNode){
+  static eHTMLTags gTableElements[]={eHTMLTag_table,eHTMLTag_tbody,eHTMLTag_tr,eHTMLTag_col,
+                                       eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_colgroup};
   if(mHasOpenForm)
     CloseForm(aNode);
+    
+  mIsFormContainer=!(FindTagInSet(mBodyContext->Last(),gTableElements,sizeof(gTableElements)/sizeof(eHTMLTag_unknown)));
 
   STOP_TIMER();
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenForm(), this=%p\n", this));
@@ -2680,6 +2701,9 @@ nsresult CNavDTD::CloseForm(const nsIParserNode *aNode){
 
     MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseForm(), this=%p\n", this));
     START_TIMER();
+        
+    if(mIsFormContainer)
+      mIsFormContainer=PR_FALSE;
 
   }
   return result;
@@ -3283,16 +3307,7 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode *aNode){
 nsresult CNavDTD::AddHeadLeaf(nsIParserNode *aNode){
   nsresult result=NS_OK;
 
-  static eHTMLTags gNoXTags[]={eHTMLTag_noembed,eHTMLTag_noframes,eHTMLTag_nolayer,eHTMLTag_noscript};
-  
-  //this code has been added to prevent <meta> tags from being processed inside
-  //the document if the <meta> tag itself was found in a <noframe>, <nolayer>, or <noscript> tag.
   eHTMLTags theTag=(eHTMLTags)aNode->GetNodeType();
-
-  if(eHTMLTag_meta==theTag)
-    if(HasOpenContainer(gNoXTags,sizeof(gNoXTags)/sizeof(eHTMLTag_unknown))) {
-      return result;
-    }
 
   if(mSink) {
     result=OpenHead(aNode);
