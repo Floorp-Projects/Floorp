@@ -176,13 +176,13 @@ nsFontMetricsPango::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
     // Hang on to the device context
     mDeviceContext = aContext;
-
-    mPixelSize = NSTwipsToFloatPoints(mFont->size);
+    
+    mPointSize = NSTwipsToFloatPoints(mFont->size);
 
     // Make sure to clamp the pixel size to something reasonable so we
     // don't make the X server blow up.
     nscoord screenPixels = gdk_screen_height();
-    mPixelSize = PR_MIN(screenPixels * FONT_MAX_FONT_SCALE, mPixelSize);
+    mPointSize = PR_MIN(screenPixels * FONT_MAX_FONT_SCALE, mPointSize);
 
     // enumerate over the font names passed in
     mFont->EnumerateFamilies(nsFontMetricsPango::EnumFontCallback, this);
@@ -222,26 +222,32 @@ nsFontMetricsPango::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
         name.Append(langGroup);
 
-        PRInt32 minimum = 0;
+        PRInt32 minimumInt = 0;
+        float minimum;
         nsresult res;
-        res = prefService->GetIntPref(name.get(), &minimum);
+        res = prefService->GetIntPref(name.get(), &minimumInt);
         if (NS_FAILED(res))
-            prefService->GetDefaultIntPref(name.get(), &minimum);
+            prefService->GetDefaultIntPref(name.get(), &minimumInt);
 
-        if (minimum < 0)
-            minimum = 0;
+        if (minimumInt < 0)
+            minimumInt = 0;
 
-        if (mPixelSize < minimum)
-            mPixelSize = minimum;
+        minimum = minimumInt;
+
+        // The minimum size is specified in pixels, not in points.
+        // Convert the size from pixels to points.
+        minimum = NSTwipsToFloatPoints(NSFloatPixelsToTwips(minimum, mDeviceContext->DevUnitsToAppUnits()));
+        if (mPointSize < minimum)
+            mPointSize = minimum;
     }
 
     // Make sure that the pixel size is at least greater than zero
-    if (mPixelSize < 1) {
+    if (mPointSize < 1) {
 #ifdef DEBUG
-        printf("*** Warning: nsFontMetricsPango created with pixel size %f\n",
-               mPixelSize);
+        printf("*** Warning: nsFontMetricsPango created with point size %f\n",
+               mPointSize);
 #endif
-        mPixelSize = 1;
+        mPointSize = 1;
     }
 
     nsresult rv = RealizeFont();
@@ -988,11 +994,8 @@ nsFontMetricsPango::RealizeFont(void)
                                       familyList.get());
 
     // Set the point size
-    // We've done some round-tripping of floating point numbers so they
-    // might not be quite right.  Since Xft rounds down, add a little,
-    // so we don't go from 9.00000 to 8.99999 to 8.
     pango_font_description_set_size(mPangoFontDesc,
-                                (gint)((mPixelSize + 0.000001) * PANGO_SCALE));
+                                    (gint)(mPointSize * PANGO_SCALE));
 
     // Set the style
     pango_font_description_set_style(mPangoFontDesc,
