@@ -6,3 +6,4 @@ CvtURL
 PropertiesTest
 TestAutoLock
 TestObserverService
+TestGtkTimers
