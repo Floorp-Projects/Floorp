@@ -283,6 +283,22 @@ nsFontMetricsMac :: GetSubscriptOffset(nscoord& aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFontMetricsMac :: GetStrikeout(nscoord& aOffset, nscoord& aSize)
+{
+  aOffset = 0; /* XXX */
+  aSize = 0;  /* XXX */
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsMac :: GetUnderline(nscoord& aOffset, nscoord& aSize)
+{
+  aOffset = 0; /* XXX */
+  aSize = 0;  /* XXX */
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsFontMetricsMac :: GetWidth(char ch, nscoord &aWidth)
 {
   char buf[1];

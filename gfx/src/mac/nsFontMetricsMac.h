@@ -46,6 +46,8 @@ public:
   NS_IMETHOD  GetXHeight(nscoord& aResult);
   NS_IMETHOD  GetSuperscriptOffset(nscoord& aResult);
   NS_IMETHOD  GetSubscriptOffset(nscoord& aResult);
+  NS_IMETHOD  GetStrikeout(nscoord& aOffset, nscoord& aSize);
+  NS_IMETHOD  GetUnderline(nscoord& aOffset, nscoord& aSize);
   NS_IMETHOD  GetWidth(char aC, nscoord &aWidth);
   NS_IMETHOD  GetWidth(PRUnichar aC, nscoord &aWidth);
   NS_IMETHOD  GetWidth(const nsString& aString, nscoord &aWidth);
