@@ -50,7 +50,7 @@ mozSqlRequest::~mozSqlRequest()
 
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(mozSqlRequest,
-                              mozISqlRequest);
+                              mozISqlRequest)
 
 NS_IMETHODIMP
 mozSqlRequest::GetErrorMessage(nsAString & aErrorMessage)
