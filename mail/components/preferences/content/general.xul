@@ -73,7 +73,7 @@
     <stringbundle id="mapiBundle" src="chrome://messenger-mapi/locale/mapi.properties"/>
     <stringbundle id="brandBundle" src="chrome://global/locale/brand.properties"/>
 
-    <groupbox align="start">
+    <groupbox align="start" id="defaultClientBox">
       <caption label="&generalSettings.caption;"/>
     
 #ifdef XP_WIN
@@ -90,7 +90,7 @@
 #endif
 
 #ifdef MOZ_WIDGET_GTK2
-      <vbox align="left" id="defaultClientBox">
+      <vbox align="left">
         <label value="&whenStartingCheck.label;"/>
         <grid flex="1" style="margin-left: 20px;">
           <columns>

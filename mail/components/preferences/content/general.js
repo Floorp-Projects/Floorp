@@ -51,6 +51,9 @@ var gGeneralPane = {
 
     this.onReadDefaultMailPref();
     this.onReadDefaultNewsPref();
+#ifdef XP_MACOSX
+    document.getElementById("defaultClientBox").hidden = true;
+#endif
 
 #ifdef MOZ_WIDGET_GTK2
   // first check whether GNOME is available.  if it's not, hide the whole
