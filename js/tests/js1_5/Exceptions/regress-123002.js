@@ -71,9 +71,7 @@ var expectedvalues = [];
 /*
  * Are we in Rhino or SpiderMonkey?
  */
-var java = eval('java');
-var inRhino = java? true : false;
-var LENGTH_EXPECTED = inRhino? LENGTH_RHINO : LENGTH_SPIDERMONKEY; 
+var LENGTH_EXPECTED = inRhino()? LENGTH_RHINO : LENGTH_SPIDERMONKEY; 
 
 /*
  * The various NativeError objects; see ECMA-262 Edition 3, Section 15.11.6
