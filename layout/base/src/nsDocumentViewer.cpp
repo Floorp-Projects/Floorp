@@ -311,7 +311,7 @@ NS_IMETHODIMP
 DocumentViewerImpl::GetContainer(nsIContentViewerContainer*& aResult)
 {
    if(mContainer)
-      return CallQueryInterface(mContainer, &aResult);
+      return mContainer->QueryInterface( nsIContentViewerContainer::GetIID(), (void**)&aResult );
    else
       aResult = nsnull;
    return NS_OK;
