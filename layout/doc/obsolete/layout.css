@@ -40,7 +40,7 @@ SectionHeading {
 Body {
   display: block;
   margin-top: 1em;
-  margin-botom: .5em;
+  margin-bottom: .5em;
 }
 SectionHeading + Body {  /* body after section heading */
   margin-top: 0;
