@@ -10,10 +10,13 @@
 <!ENTITY enbJsCheckMailNews.accesskey  "J">
 
 <!-- Password Manager -->
-<!ENTITY signonHeader.label            "Passwords">
+<!ENTITY signonHeader.label            "Saved Passwords">
 <!ENTITY signonDescription.label       "Manage stored mail server passwords:">
-<!ENTITY viewSignons.label             "Manage Stored Passwords">
+<!ENTITY viewSignons.label             "View Saved Passwords...">
 <!ENTITY viewSignons.accesskey         "e">
+<!ENTITY masterPasswordDesc.label      "Manage master password settings:">
+<!ENTITY masterPassword.label          "Master Password...">
+<!ENTITY masterPassword.accesskey      "m">
 
 <!-- General -->
 <!ENTITY generalSettings.label         "General Settings">

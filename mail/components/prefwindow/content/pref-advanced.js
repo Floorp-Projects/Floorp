@@ -165,6 +165,11 @@ function editPasswords()
   window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","_blank","chrome,centerscreen,resizable=yes", "S");
 }
 
+function editMasterPassword()
+{
+  window.openDialog("chrome://messenger/content/pref-masterpass.xul","_blank","chrome,centerscreen,resizable=yes", "masterPassword");
+}
+
 function checkForUpdates()
 {
   var updates = Components.classes["@mozilla.org/updates/update-service;1"]

@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE dialog [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % masterPassDTD SYSTEM "chrome://messenger/locale/pref-masterpass.dtd" >
+%masterPassDTD;
+]>
+
+<dialog id="masterPassword"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&dialog.title;"
+        onload="onLoad();"
+        ondialogaccept="return onAccept();">
+
+  <script type="application/x-javascript" src="chrome://pippki/content/pref-masterpass.js"/>
+  <script>
+    <![CDATA[
+    var gPrefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+
+    function onLoad()
+    {
+      var el = document.getElementById('passwordTimeout');
+      el.setAttribute("value", gPrefService.getIntPref(el.getAttribute("prefstring")) );
+
+      el = document.getElementById('passwordAskTimes');
+      el.selectedItem = el.getElementsByAttribute('value', gPrefService.getIntPref(el.getAttribute("prefstring")))[0];
+
+      onMasterPasswordLoad();
+    }
+
+    function onAccept()
+    {
+      var el = document.getElementById('passwordAskTimes');
+      gPrefService.setIntPref(el.getAttribute("prefstring"), parseInt(el.value));
+      
+      var el = document.getElementById('passwordTimeout');
+      gPrefService.setIntPref(el.getAttribute("prefstring"), parseInt(el.value) );
+    }
+  ]]>
+  </script>  
+ 
+  <!-- Change Password -->
+  <groupbox>
+    <caption label="&changepassword.label;"/>
+    <description wdith="1">&changepassword.text;</description>
+    <hbox align="center">
+      <button label="&changepassword.button;"
+              oncommand="ChangePW();"
+              id="changePasswordButton"
+              accesskey="&changepassword.accesskey;"
+              prefstring="security.disable_button.changePassword"/>
+    </hbox>
+  </groupbox>
+
+  <!-- Password Prefs -->
+  <groupbox>
+    
+    <checkbox id="askEveryTimeHidden" value="false" checked="false" hidden="true"/>
+
+    <caption label="&managepassword.label;"/>
+    <description width="1">&managepassword.text;</description>
+    <hbox align="center">
+      <radiogroup id="passwordAskTimes"
+                  prefstring="security.ask_for_password"
+                  flex="1">
+        <!-- note that these values are different than what NSS uses, which
+             are (0, -1, 1) respectively -->
+        <radio value="0" label="&managepassword.askfirsttime;" id="askFirstTime"
+               style="margin: 0px;" oncommand="changePasswordSettings(false);"/>
+        <radio value="1" label="&managepassword.askeverytime;" id="askEveryTime"
+               style="margin: 0px;" oncommand="changePasswordSettings(false);"/>
+        <hbox align="center">
+          <radio value="2" label="&managepassword.asktimeout;" id="askTimeout"
+                 style="margin: 0px;" oncommand="changePasswordSettings(true);"/>
+          <textbox id="passwordTimeout" size="4"
+                   preftype="int"
+                   prefstring="security.password_lifetime"
+                   oninput="changePasswordSettings(false);"/>
+          <label value="&managepassword.timeout.unit;" style="margin: 4px;"/>
+        </hbox>
+      </radiogroup>
+    </hbox>
+  </groupbox>
+
+  <!-- Reset Password -->
+  <groupbox>
+    <caption label="&resetpassword.label;"/>
+    <description width="1">&resetpassword.text;</description>
+    <hbox align="center">
+      <button label="&resetpassword.button;"
+              oncommand="ResetPW();"
+              id="resetPasswordButton"
+              accesskey="&resetpassword.accesskey;"
+              prefstring="security.disable_button.resetPassword"/>
+    </hbox>
+  </groupbox>
+
+</dialog>

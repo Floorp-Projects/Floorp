@@ -23,3 +23,10 @@
 <!ENTITY  managecertsPref.label  "Manage your personal certificates:"> 
 <!ENTITY  managedevicesPref.label "Manage your security devices such as smart cards:"> 
 <!ENTITY  passwordAndSecurity.label      "Passwords and Security">
+
+<!-- Certs -->
+<!ENTITY certs.label                  "Certificates">
+<!ENTITY  managecerts.label           "Manage Certificates">
+<!ENTITY  managecerts.text            "Use the Certificate Manager to manage your personal certificates, as well as those of other people and certificate authorities.">
+<!ENTITY  managedevices.label         "Manage Security Devices">
+<!ENTITY  managedevices.text          "Manage your security devices, such as smart cards.">

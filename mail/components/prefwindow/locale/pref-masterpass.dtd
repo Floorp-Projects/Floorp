@@ -1,0 +1,18 @@
+<!ENTITY  dialog.title    "Master Password">
+
+<!ENTITY  managepassword.label    "Master Password Timeout">
+<!ENTITY  managepassword.text     "&brandShortName; will ask for your master password:">
+<!ENTITY  managepassword.askfirsttime "The first time it is needed">
+<!ENTITY  managepassword.askeverytime "Every time it is needed">
+<!ENTITY  managepassword.asktimeout   "If it has not been used for ">
+<!ENTITY  managepassword.timeout.unit   "minutes or longer">
+
+<!ENTITY  changepassword.label    "Change Master Password">
+<!ENTITY  changepassword.text     "Your master password protects sensitive information such as e-mail account passwords and certificates.">
+<!ENTITY  changepassword.button   "Change Password...">
+<!ENTITY  changepassword.accesskey  "C">
+
+<!ENTITY  resetpassword.label    "Reset Master Password">
+<!ENTITY  resetpassword.text     "If you reset your master password, all of your stored e-mail passwords will be lost.">
+<!ENTITY  resetpassword.button   "Reset Password">
+<!ENTITY  resetpassword.accesskey   "R">

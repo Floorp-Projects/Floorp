@@ -7,6 +7,7 @@ messenger.jar:
 *+   content/messenger/pref-mailnews.js                                 (content/pref-mailnews.js)
 *+  content/messenger/pref-advanced.xul                                (content/pref-advanced.xul)
 *+  content/messenger/pref-advanced.js                                 (content/pref-advanced.js)
+    content/messenger/pref-masterpass.xul                              (content/pref-masterpass.xul)
 
 comm.jar:
 +   content/communicator/pref/pref.xul                                 (content/pref.xul)
@@ -26,6 +27,7 @@ en-US.jar:
 +   locale/en-US/messenger/pref-viewing_messages.dtd                   (locale/pref-viewing_messages.dtd)
 +   locale/en-US/messenger/AccountManager.dtd                          (locale/AccountManager.dtd)
 +   locale/en-US/messenger/pref-advanced.dtd                           (locale/pref-advanced.dtd)
++   locale/en-US/messenger/pref-masterpass.dtd                         (locale/pref-masterpass.dtd)
 +   locale/en-US/mozapps/downloads/pref-downloads.dtd                  (locale/pref-downloads.dtd)
 
 en-win.jar:
