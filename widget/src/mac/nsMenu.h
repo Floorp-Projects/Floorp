@@ -76,6 +76,7 @@ public:
   NS_IMETHOD RemoveItem(const PRUint32 aPos);
   NS_IMETHOD RemoveAll();
   NS_IMETHOD GetNativeData(void** aData);
+  NS_IMETHOD SetNativeData(void* aData);
   NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD SetDOMNode(nsIDOMNode * aMenuNode);
@@ -107,10 +108,11 @@ protected:
   bool            mConstructed;
 
   // MacSpecific
-  PRInt16			  mMacMenuID;
-  MenuHandle          mMacMenuHandle;
-  nsIMenuListener *   mListener;
-  UnicodeToTextRunInfo	mUnicodeTextRunConverter;
+  PRInt16			   mMacMenuID;
+  MenuHandle           mMacMenuHandle;
+  nsIMenuListener *    mListener;
+  UnicodeToTextRunInfo mUnicodeTextRunConverter;
+  PRBool               mIsHelpMenu;
 
 void LoadMenuItem(
   nsIMenu *    pParentMenu,
