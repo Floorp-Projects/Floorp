@@ -31,7 +31,6 @@ REQUIRES	= xpcom \
 		  string \
 		  necko \
 		  nkcache \
-		  dbm \
 		  util \
 		  $(NULL)
 
@@ -47,7 +46,6 @@ CPPSRCS		= \
 		urltest.cpp \
 		TestFileInput2.cpp \
 		TestCallbacks.cpp \
-		TestDBMAccess.cpp \
 		TestMCTransport.cpp \
 		TestPageLoad.cpp \
 		TestPerf.cpp \
@@ -60,12 +58,6 @@ CPPSRCS		= \
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 include $(topsrcdir)/config/config.mk
-
-ifeq ($(OS_ARCH),WINNT)
-EXTRA_DSO_LIBS	= dbm$(MOZ_BITS)
-else
-EXTRA_DSO_LIBS	= mozdbm_s
-endif
 
 LIBS		= \
 		$(EXTRA_DSO_LIBS) \

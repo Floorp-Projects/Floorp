@@ -82,10 +82,6 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../protocol/keyword/src \
 		$(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-EXTRA_DSO_LIBS	+= mozdbm_s
-endif
-
 ifdef MOZ_PERF_METRICS
 EXTRA_DSO_LIBS	+= mozutil_s
 endif
