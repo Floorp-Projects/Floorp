@@ -65,6 +65,11 @@ void CreateViewerMenus(QWidget *aParent, void * data, PRInt32 * aMenuBarHeight)
                      SIGNAL(activated(int)), 
                      eventHandler, 
                      SLOT(MenuItemActivated(int)));
+    QPopupMenu * eventdebug = new QPopupMenu(aParent);
+    QObject::connect(eventdebug, 
+                     SIGNAL(activated(int)), 
+                     eventHandler, 
+                     SLOT(MenuItemActivated(int)));
     QPopupMenu * style = new QPopupMenu(aParent);
     QObject::connect(style, 
                      SIGNAL(activated(int)), 
@@ -91,9 +96,9 @@ void CreateViewerMenus(QWidget *aParent, void * data, PRInt32 * aMenuBarHeight)
                      eventHandler, 
                      SLOT(MenuItemActivated(int)));
 
-    InsertMenuItem(file, "New Window", eventHandler, VIEWER_WINDOW_OPEN);
-    InsertMenuItem(file, "Open", eventHandler, VIEWER_FILE_OPEN);
-    InsertMenuItem(file, "View Source", eventHandler, VIEW_SOURCE);
+    InsertMenuItem(file, "&New Window", eventHandler, VIEWER_WINDOW_OPEN);
+    InsertMenuItem(file, "&Open", eventHandler, VIEWER_FILE_OPEN);
+    InsertMenuItem(file, "&View Source", eventHandler, VIEW_SOURCE);
 
     InsertMenuItem(samples, "demo #0", eventHandler, VIEWER_DEMO0);
     InsertMenuItem(samples, "demo #1", eventHandler, VIEWER_DEMO1);
@@ -111,38 +116,55 @@ void CreateViewerMenus(QWidget *aParent, void * data, PRInt32 * aMenuBarHeight)
     InsertMenuItem(samples, "demo #13", eventHandler, VIEWER_DEMO13);
     InsertMenuItem(samples, "demo #14", eventHandler, VIEWER_DEMO14);
     InsertMenuItem(samples, "demo #15", eventHandler, VIEWER_DEMO15);
+    InsertMenuItem(samples, "demo #16", eventHandler, VIEWER_DEMO16);
+    InsertMenuItem(samples, "demo #17", eventHandler, VIEWER_DEMO17);
 
-    file->insertItem("Samples", samples);
+    file->insertItem("&Samples", samples);
 
-    InsertMenuItem(file, "Test Sites", eventHandler, VIEWER_TOP100);
+    InsertMenuItem(file, "&Test Sites", eventHandler, VIEWER_TOP100);
 
     InsertMenuItem(xptests, "Toolbar Test 1", eventHandler, VIEWER_XPTOOLKITTOOLBAR1);
     InsertMenuItem(xptests, "Tree Test 1", eventHandler, VIEWER_XPTOOLKITTREE1);
+
+    file->insertItem("XPToolkit Tests", xptests);
 
     InsertMenuItem(file, nsnull, nsnull, 0);
     InsertMenuItem(file, "Print Preview", eventHandler, VIEWER_ONE_COLUMN);
     InsertMenuItem(file, "Print", eventHandler, VIEWER_PRINT);
     InsertMenuItem(file, "Print Setup", eventHandler, VIEWER_PRINT_SETUP);
     InsertMenuItem(file, nsnull, nsnull, 0);
-    InsertMenuItem(file, "Exit", eventHandler, VIEWER_EXIT);
+    InsertMenuItem(file, "&Exit", eventHandler, VIEWER_EXIT);
 
-    InsertMenuItem(edit, "Cut", eventHandler, VIEWER_EDIT_CUT);
-    InsertMenuItem(edit, "Copy", eventHandler, VIEWER_EDIT_COPY);
-    InsertMenuItem(edit, "Paste", eventHandler, VIEWER_EDIT_PASTE);
+    InsertMenuItem(edit, "Cu&t", eventHandler, VIEWER_EDIT_CUT);
+    InsertMenuItem(edit, "&Copy", eventHandler, VIEWER_EDIT_COPY);
+    InsertMenuItem(edit, "&Paste", eventHandler, VIEWER_EDIT_PASTE);
     InsertMenuItem(edit, nsnull, nsnull, 0);
     InsertMenuItem(edit, "Select All", eventHandler, VIEWER_EDIT_SELECTALL);
     InsertMenuItem(edit, nsnull, nsnull, 0);
     InsertMenuItem(edit, "Find in Page", eventHandler, VIEWER_EDIT_FINDINPAGE);
 
-    InsertMenuItem(debug, "Visual Debugging", eventHandler, VIEWER_VISUAL_DEBUGGING);
-    InsertMenuItem(debug, "Reflow Test", eventHandler, VIEWER_REFLOW_TEST);
+    InsertMenuItem(debug, "&Visual Debugging", eventHandler, VIEWER_VISUAL_DEBUGGING);
     InsertMenuItem(debug, nsnull, nsnull, 0);
-    InsertMenuItem(debug, "Dump Content", eventHandler, VIEWER_DUMP_CONTENT);
-    InsertMenuItem(debug, "Dump Frames", eventHandler, VIEWER_DUMP_FRAMES);
-    InsertMenuItem(debug, "Dump Views", eventHandler, VIEWER_DUMP_VIEWS);
+
+    InsertMenuItem(eventdebug, "Toggle Paint Flashing", eventHandler, VIEWER_TOGGLE_PAINT_FLASHING);
+    InsertMenuItem(eventdebug, "Toggle Paint Dumping", eventHandler, VIEWER_TOGGLE_PAINT_DUMPING);
+    InsertMenuItem(eventdebug, "Toggle Invalidate Dumping", eventHandler, VIEWER_TOGGLE_INVALIDATE_DUMPING);
+    InsertMenuItem(eventdebug, "Toggle Event Dumping", eventHandler, VIEWER_TOGGLE_EVENT_DUMPING);
+    InsertMenuItem(eventdebug, nsnull, nsnull, 0);
+    InsertMenuItem(eventdebug, "Toggle Motion Event Dumping", eventHandler, VIEWER_TOGGLE_MOTION_EVENT_DUMPING);
+    InsertMenuItem(eventdebug, "Toggle Crossing Event Dumping", eventHandler, VIEWER_TOGGLE_CROSSING_EVENT_DUMPING);
+
+    debug->insertItem("Event Debugging", eventdebug);
+
     InsertMenuItem(debug, nsnull, nsnull, 0);
-    InsertMenuItem(debug, "Dump Style Sheets", eventHandler, VIEWER_DUMP_STYLE_SHEETS);
-    InsertMenuItem(debug, "Dump Style Contexts", eventHandler, VIEWER_DUMP_STYLE_CONTEXTS);
+    InsertMenuItem(debug, "&Reflow Test", eventHandler, VIEWER_REFLOW_TEST);
+    InsertMenuItem(debug, nsnull, nsnull, 0);
+    InsertMenuItem(debug, "Dump &Content", eventHandler, VIEWER_DUMP_CONTENT);
+    InsertMenuItem(debug, "Dump &Frames", eventHandler, VIEWER_DUMP_FRAMES);
+    InsertMenuItem(debug, "Dump &Views", eventHandler, VIEWER_DUMP_VIEWS);
+    InsertMenuItem(debug, nsnull, nsnull, 0);
+    InsertMenuItem(debug, "Dump &Style Sheets", eventHandler, VIEWER_DUMP_STYLE_SHEETS);
+    InsertMenuItem(debug, "Dump &Style Contexts", eventHandler, VIEWER_DUMP_STYLE_CONTEXTS);
     InsertMenuItem(debug, nsnull, nsnull, 0);
     InsertMenuItem(debug, "Show Content Size", eventHandler, VIEWER_SHOW_CONTENT_SIZE);
     InsertMenuItem(debug, "Show Frame Size", eventHandler, VIEWER_SHOW_FRAME_SIZE);
@@ -168,20 +190,20 @@ void CreateViewerMenus(QWidget *aParent, void * data, PRInt32 * aMenuBarHeight)
     InsertMenuItem(select, "Select Alternative 3", eventHandler, VIEWER_SELECT_STYLE_THREE);
     InsertMenuItem(select, "Select Alternative 4", eventHandler, VIEWER_SELECT_STYLE_FOUR);
 
-    style->insertItem("Select Style Sheet", select);
+    style->insertItem("Select &Style Sheet", select);
 
     InsertMenuItem(compatibility, "Nav Quirks", eventHandler, VIEWER_NAV_QUIRKS_MODE);
     InsertMenuItem(compatibility, "Standard", eventHandler, VIEWER_STANDARD_MODE);
 
-    style->insertItem("Compatibility Mode", compatibility);
+    style->insertItem("&Compatibility Mode", compatibility);
 
     InsertMenuItem(render, "Native", eventHandler, VIEWER_NATIVE_WIDGET_MODE);
     InsertMenuItem(render, "Gfx", eventHandler, VIEWER_GFX_WIDGET_MODE);
 
-    style->insertItem("Widget Render Mode", render);
+    style->insertItem("&Widget Render Mode", render);
 
-    InsertMenuItem(tools, "JavaScript Console", eventHandler, JS_CONSOLE);
-    InsertMenuItem(tools, "Editor Mode", eventHandler, EDITOR_MODE);
+    InsertMenuItem(tools, "&JavaScript Console", eventHandler, JS_CONSOLE);
+    InsertMenuItem(tools, "&Editor Mode", eventHandler, EDITOR_MODE);
 
     menuBar->insertItem("&File", file);
     menuBar->insertItem("&Edit", edit);
