@@ -536,8 +536,9 @@
 
       <!-- On a click (up+down on the same item), deselect everything
            except this item. -->
-      <handler event="click" button="0">
+      <handler event="click">
       <![CDATA[
+         if (event.button != 0) return;
          var t = event.originalTarget;
          if (t.localName == 'treecell') {
            if (event.ctrlKey || event.metaKey) {

@@ -52,31 +52,31 @@
 
       <!-- On a click (up+down on the same item), deselect everything
            except this item. -->
-      <handler event="click" button="0">
-        <![CDATA[
-          // XXX Check for cycler.
-          var row = {};
-          var col = {};
-          var b = this.parentNode.outlinerBoxObject;
-          b.getCellAt(event.clientX, event.clientY, row, col);
-          var augment = event.ctrlKey || event.metaKey;
-          if (event.shiftKey) {
-            b.selection.rangedSelect(-1, row.value, augment);
-            b.currentIndex = row.value;
-          }
-          else if (augment) {
-            b.selection.toggleSelect(row.value);
-            b.selection.currentIndex = row.value;
-          }
-          else {
-            /* We want to deselect all the selected items except what was
-               clicked, UNLESS it was a right-click.  We have to do this
-               in click rather than mousedown so that you can drag a
-               selected group of items */
-
-            b.selection.select(row.value);
-          }
-        ]]>
+      <handler event="click">
+      <![CDATA[
+	     // XXX Check for cycler.
+       if (event.button != 0) return;
+       var row = {};
+	     var col = {};
+	     var b = this.parentNode.outlinerBoxObject;
+	     b.getCellAt(event.clientX, event.clientY, row, col);
+		   var augment = event.ctrlKey || event.metaKey;
+		   if (event.shiftKey) {
+		     b.selection.rangedSelect(-1, row.value, augment);
+         b.currentIndex = row.value;
+       }
+       else if (augment) {
+         b.selection.toggleSelect(row.value);
+         b.selection.currentIndex = row.value;
+       }
+       else {
+        /* We want to deselect all the selected items except what was
+          clicked, UNLESS it was a right-click.  We have to do this
+          in click rather than mousedown so that you can drag a
+          selected group of items */
+         b.selection.select(row.value);  
+       }
+      ]]>
       </handler>
 
       <!-- double-click -->
