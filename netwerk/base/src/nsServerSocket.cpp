@@ -104,9 +104,6 @@ nsServerSocket::nsServerSocket()
   , mFD(nsnull)
   , mAttached(PR_FALSE)
 {
-  mCondition = NS_OK;
-  mPollFlags = 0;
-
   // we want to be able to access the STS directly, and it may not have been
   // constructed yet.  the STS constructor sets gSocketTransportService.
   if (!gSocketTransportService)
@@ -222,6 +219,11 @@ nsServerSocket::OnSocketReady(PRFileDesc *fd, PRInt16 outFlags)
 {
   NS_ASSERTION(NS_SUCCEEDED(mCondition), "oops");
   NS_ASSERTION(mFD == fd, "wrong file descriptor");
+
+  // If our poll timeout (of 2^16 seconds!) is reached, just go back to
+  // polling on the listening socket.
+  if (outFlags == -1)
+    return;
 
   if (outFlags & (PR_POLL_ERR | PR_POLL_HUP | PR_POLL_NVAL))
   {

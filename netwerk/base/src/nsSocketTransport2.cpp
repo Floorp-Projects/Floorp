@@ -72,6 +72,14 @@
 
 //-----------------------------------------------------------------------------
 
+// Large default timeouts approximate behavior of no timeout.  (It's better to
+// let the servers or host operating system time us out.)  These timeout values
+// are given in seconds.
+#define DEFAULT_TIMEOUT_CONNECT    (10 * 60)
+#define DEFAULT_TIMEOUT_READ_WRITE (10 * 60)
+
+//-----------------------------------------------------------------------------
+
 static NS_DEFINE_CID(kSocketProviderServiceCID, NS_SOCKETPROVIDERSERVICE_CID);
 static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
 
@@ -695,6 +703,9 @@ nsSocketTransport::nsSocketTransport()
     LOG(("creating nsSocketTransport @%x\n", this));
 
     NS_ADDREF(gSocketTransportService);
+
+    mTimeouts[TIMEOUT_CONNECT]    = DEFAULT_TIMEOUT_CONNECT;
+    mTimeouts[TIMEOUT_READ_WRITE] = DEFAULT_TIMEOUT_READ_WRITE;
 }
 
 nsSocketTransport::~nsSocketTransport()
@@ -806,6 +817,7 @@ nsSocketTransport::InitWithConnectedSocket(PRFileDesc *fd, const PRNetAddr *addr
     memcpy(&mNetAddr, addr, sizeof(PRNetAddr));
 
     mPollFlags = (PR_POLL_READ | PR_POLL_WRITE | PR_POLL_EXCEPT);
+    mPollTimeout = mTimeouts[TIMEOUT_READ_WRITE];
     mState = STATE_TRANSFERRING;
 
     mFD = fd;
@@ -1091,6 +1103,7 @@ nsSocketTransport::InitiateSocket()
 
     LOG(("  advancing to STATE_CONNECTING\n"));
     mState = STATE_CONNECTING;
+    mPollTimeout = mTimeouts[TIMEOUT_CONNECT];
     SendStatus(STATUS_CONNECTING_TO);
 
 #if defined(PR_LOGGING)
@@ -1278,6 +1291,7 @@ nsSocketTransport::OnSocketConnected()
     LOG(("  advancing to STATE_TRANSFERRING\n"));
 
     mPollFlags = (PR_POLL_READ | PR_POLL_WRITE | PR_POLL_EXCEPT);
+    mPollTimeout = mTimeouts[TIMEOUT_READ_WRITE];
     mState = STATE_TRANSFERRING;
 
     SendStatus(STATUS_CONNECTED_TO);
@@ -1415,6 +1429,12 @@ nsSocketTransport::OnSocketReady(PRFileDesc *fd, PRInt16 outFlags)
     LOG(("nsSocketTransport::OnSocketReady [this=%x outFlags=%hd]\n",
         this, outFlags));
 
+    if (outFlags == -1) {
+        LOG(("socket timeout expired\n"));
+        mCondition = NS_ERROR_NET_TIMEOUT;
+        return;
+    }
+
     if (mState == STATE_TRANSFERRING) {
         // if waiting to write and socket is writable or hit an exception.
         if ((mPollFlags & PR_POLL_WRITE) && (outFlags & ~PR_POLL_READ)) {
@@ -1430,6 +1450,8 @@ nsSocketTransport::OnSocketReady(PRFileDesc *fd, PRInt16 outFlags)
             mPollFlags &= ~PR_POLL_READ;
             mInput.OnSocketReady(NS_OK);
         }
+        // Update poll timeout in case it was changed
+        mPollTimeout = mTimeouts[TIMEOUT_READ_WRITE];
     }
     else if (mState == STATE_CONNECTING) {
         PRStatus status = PR_ConnectContinue(fd, outFlags);
@@ -1450,6 +1472,8 @@ nsSocketTransport::OnSocketReady(PRFileDesc *fd, PRInt16 outFlags)
             if ((PR_WOULD_BLOCK_ERROR == code) || (PR_IN_PROGRESS_ERROR == code)) {
                 // Set up the select flags for connect...
                 mPollFlags = (PR_POLL_EXCEPT | PR_POLL_WRITE);
+                // Update poll timeout in case it was changed
+                mPollTimeout = mTimeouts[TIMEOUT_CONNECT];
             } 
             else {
                 //
@@ -1756,6 +1780,23 @@ nsSocketTransport::GetSelfAddr(PRNetAddr *addr)
     }
 
     return rv;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetTimeout(PRUint32 type, PRUint32 *value)
+{
+    NS_ENSURE_ARG_MAX(type, nsISocketTransport::TIMEOUT_READ_WRITE);
+    *value = (PRUint32) mTimeouts[type];
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::SetTimeout(PRUint32 type, PRUint32 value)
+{
+    NS_ENSURE_ARG_MAX(type, nsISocketTransport::TIMEOUT_READ_WRITE);
+    // truncate overly large timeout values.
+    mTimeouts[type] = (PRUint16) PR_MIN(value, PR_UINT16_MAX);
+    return NS_OK;
 }
 
 NS_IMETHODIMP

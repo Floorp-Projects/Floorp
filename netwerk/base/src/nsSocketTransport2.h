@@ -262,6 +262,9 @@ private:
     friend class nsSocketInputStream;
     friend class nsSocketOutputStream;
 
+    // socket timeouts are not protected by any lock.
+    PRUint16 mTimeouts[2];
+
     //
     // mFD access methods: called with mLock held.
     //
