@@ -364,7 +364,6 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
         <!-- items are filled out from editorOverlay -->
         <html:select id="ParagraphSelect"/>
         <html:select id="FontFaceSelect"/>
-        <html:select id="FontSizeSelect"/>
       </html:div>
 
       <menu>
@@ -376,23 +375,25 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
         <menupopup id="BackColorPopup"/>
       </menu>
       
- 	  <html:div class="separator" align="vertical"/>
+      <titledbutton id="DecreaseFontSizeButton"/>
+      <titledbutton id="IncreaseFontSizeButton"/>
+
       <titledbutton id="boldButton"/>
       <titledbutton id="italicButton"/>
       <titledbutton id="underlineButton"/>
 
- 	  <html:div class="separator" align="vertical"/>
       <titledbutton id="ulButton"/>
       <titledbutton id="olButton"/>
 
       <titledbutton id="outdentButton"/>
       <titledbutton id="indentButton"/>
 
- 	  <html:div class="separator" align="vertical"/>
       <menu>
         <titledbutton id="AlignPopupButton"/>
         <menupopup id="AlignmentPopup"/>
       </menu>
+
+      <!-- TODO: Put Insert Object Popup here -->
       <spring flex="100%"/>
   </toolbar>
 </toolbox>
