@@ -19,6 +19,7 @@
 #include "nsIServiceManager.h"
 #include "nsVector.h"
 #include "prcmon.h"
+#include "prthread.h" /* XXX: only used for the NSPR initialization hack (rick) */
 
 // XXX move to nsID.h or nsHashtable.h? (copied from nsRepository.cpp)
 class IDKey: public nsHashKey {
@@ -209,6 +210,10 @@ nsServiceManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
                                  nsIShutdownListener* shutdownListener)
 {
     nsresult err = NS_OK;
+    /* XXX: This is a hack to force NSPR initialization..  This should be 
+     *      removed once PR_CEnterMonitor(...) initializes NSPR... (rick)
+     */
+    (void)PR_GetCurrentThread();
     PR_CEnterMonitor(this);
 
     IDKey key(aClass);
