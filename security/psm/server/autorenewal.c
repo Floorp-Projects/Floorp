@@ -321,7 +321,7 @@ SendRenewalUIEvent(SSMControlConnection *conn,
     reply.resourceID = rid;
     reply.width = 715;
     reply.height = 545;
-	reply.isModal = CM_FALSE;
+	reply.isModal = 3;
     reply.url = url;
     reply.clientContext.len = 0;
     reply.clientContext.data = NULL;
@@ -429,7 +429,7 @@ endloop:
 	if ((certRes->super.m_buttonType == SSM_BUTTON_OK) && (certRes->m_renewCert == PR_TRUE)) {
 		/* Send a UI event asking about renewal */
 		/* Send UI prompting the user */
-		SendRenewalUIEvent(ctrl, url);
+		/* SendRenewalUIEvent(ctrl, url); */
 	}
 loser:
 done:
@@ -504,6 +504,7 @@ SSMStatus SSM_RenewalCertInfoHandler(SSMTextGenContext* cx)
     SSMResource* target = NULL;
     SSMResourceCert* renewalCertRes = NULL;
     CERTCertificate* renewalCert = NULL;
+	char *url = NULL;
 	char *fmt = NULL, *issuerCN = NULL;
 	char *validNotBefore = NULL, *validNotAfter = NULL;
 
@@ -526,18 +527,20 @@ SSMStatus SSM_RenewalCertInfoHandler(SSMTextGenContext* cx)
     issuerCN = CERT_GetCommonName(&renewalCert->issuer),
     validNotBefore = DER_UTCDayToAscii(&renewalCert->validity.notBefore);
     validNotAfter = DER_UTCDayToAscii(&renewalCert->validity.notAfter);
+	url = CERT_GetAuthorityInfoAccessLocation(renewalCert, SEC_OID_CERT_RENEWAL_LOCATOR);
 
 	rv = SSM_GetAndExpandTextKeyedByString(cx, "cert_renewal_cert_info", &fmt);
 	if (rv != SSM_SUCCESS) {
 		goto loser;
 	}
 
-	cx->m_result = PR_smprintf(fmt, renewalCert->nickname, validNotBefore, validNotAfter, issuerCN);
+	cx->m_result = PR_smprintf(fmt, renewalCert->nickname, validNotBefore, validNotAfter, issuerCN, url);
 
 	PR_FREEIF(fmt);
 	PR_FREEIF(issuerCN);
 	PR_FREEIF(validNotBefore);
 	PR_FREEIF(validNotAfter);
+	PR_FREEIF(url);
 	return SSM_SUCCESS;
 
 loser:
