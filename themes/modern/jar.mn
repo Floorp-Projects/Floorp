@@ -197,6 +197,8 @@ skins/modern.jar:
 	global/skin/tb-grippy-up-clicked.gif					   (global/tb-grippy-up-clicked.gif)
 	global/skin/tb-grippy-up.gif							   (global/tb-grippy-up.gif)
 	global/skin/tb-grippy-down-clicked.gif					   (global/tb-grippy-down-clicked.gif)
+	global/skin/tb-grippy-up-bg.gif							   (global/tb-grippy-up-bg.gif)
+	global/skin/tb-grippy-up-clicked-bg.gif					   (global/tb-grippy-up-clicked-bg.gif)
 	global/skin/button-clicked-left.gif					   	   (global/button-clicked-left.gif)
 	global/skin/button-clicked-middle.gif					   (global/button-clicked-middle.gif)
 	global/skin/button-def-clicked-middle.gif				   (global/button-def-clicked-middle.gif)
