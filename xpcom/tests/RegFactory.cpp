@@ -21,6 +21,7 @@
 #include "prlink.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsCOMPtr.h"
 
 static PRBool gUnreg = PR_FALSE;
 
@@ -43,54 +44,27 @@ void print_err(nsresult err)
     cerr << hex << err << dec;
   }
 }
-PRLibrary *GetLib(const char *path) {
-  return PR_LoadLibrary(path);
-}
 
 nsresult Register(const char *path) 
-{
-  nsresult res = NS_OK;
-  PRLibrary *instance = GetLib(path);
-  if (instance != NULL) {
-    nsRegisterProc proc = (nsRegisterProc) PR_FindSymbol(instance,
-                                                         "NSRegisterSelf");
-    if (proc != NULL) {
-      nsIServiceManager* servMgr = NULL;
-      res = nsServiceManager::GetGlobalServiceManager(&servMgr);
-      if (res == NS_OK)
-      {
-        res = proc(servMgr, path);
-      }
-    }
-    PR_UnloadLibrary(instance);
-  } else {
-    res = NS_ERROR_FACTORY_NOT_LOADED;
-  }
-
+{ 
+  nsCOMPtr<nsIFileSpec> spec;
+  nsresult res = NS_NewFileSpec(getter_AddRefs(spec));
+  if (NS_FAILED(res)) return res;
+  res = spec->SetNativePath((char *)path);
+  if (NS_FAILED(res)) return res;
+  res = nsComponentManager::AutoRegisterComponent(nsIComponentManager::NS_Startup, spec);
   return res;
 }
 
 nsresult Unregister(const char *path) 
 {
-  nsresult res = NS_OK;
-  PRLibrary *instance = GetLib(path);
-  if (instance != NULL) {
-    nsUnregisterProc proc = (nsUnregisterProc) PR_FindSymbol(instance,
-                                                             "NSUnregisterSelf");
-    if (proc != NULL) {
-      nsIServiceManager* servMgr = NULL;
-      res = nsServiceManager::GetGlobalServiceManager(&servMgr);
-      if (res == NS_OK)
-      {
-        res = proc(servMgr, path);
-      }
-    }
-    PR_UnloadLibrary(instance);
-  } else {
-    res = NS_ERROR_FACTORY_NOT_LOADED;
-  }
-
+  /* NEEDS IMPLEMENTATION */
+#if 0
+  nsresult res = nsComponentManager::AutoUnregisterComponent(path);
   return res;
+#else
+  return NS_ERROR_FAILURE;
+#endif
 }
 
 int ProcessArgs(int argc, char *argv[])
@@ -154,3 +128,18 @@ int main(int argc, char *argv[])
 
     return ret;
 }
+
+#ifdef XP_UNIX
+/* The timer code doesn't get linked in. Some components link with libraries
+ * in bin/ directory that assume that app that they are used in has libtimer_s.a
+ * So ensure libtimer_s.a gets linked in.
+ */
+#include "nsITimer.h"
+
+void dummy()
+{
+  nsITimer *timer;
+  (void) NS_NewTimer(&timer);
+  NS_IF_RELEASE(timer);
+}
+#endif /* XP_UNIX */
