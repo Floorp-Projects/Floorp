@@ -193,7 +193,7 @@
  * for now.  Jerry.Kirk@Nexarecorp.com
  */
 #define PT_PRIO_MIN            0
-#define PT_PRIO_MAX            30 
+#define PT_PRIO_MAX            30
 #elif defined(SOLARIS)
 /*
  * Solaris doesn't seem to have macros for the min/max priorities.
