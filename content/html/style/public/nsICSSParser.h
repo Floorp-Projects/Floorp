@@ -67,12 +67,12 @@ public:
                    nsIURI*                aInputURL,
                    nsICSSStyleSheet*&     aResult) = 0;
 
-  // Parse declarations assuming that the outer curly braces have
-  // already been accounted for. aBaseURL is the base url to use for
-  // relative links in the declaration.
-  NS_IMETHOD ParseDeclarations(const nsAReadableString& aDeclaration,
-                               nsIURI*                  aBaseURL,
-                               nsIStyleRule*&           aResult) = 0;
+  // Parse HTML style attribute or its equivalent in other markup
+  // languages.  aBaseURL is the base url to use for relative links in
+  // the declaration.
+  NS_IMETHOD ParseStyleAttribute(const nsAReadableString& aAttributeValue,
+                                 nsIURI*                  aBaseURL,
+                                 nsIStyleRule**           aResult) = 0;
 
   NS_IMETHOD ParseAndAppendDeclaration(const nsAReadableString& aBuffer,
                                        nsIURI*                  aBaseURL,

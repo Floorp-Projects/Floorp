@@ -128,14 +128,14 @@ int main(int argc, char** argv)
 
   if (nsnull != string) {
     nsIStyleRule* rule;
-    rv = css->ParseDeclarations(*string, nsnull, rule);
+    rv = css->ParseStyleAttribute(*string, nsnull, &rule);
     if (NS_OK == rv) {
       if (verbose && (nsnull != rule)) {
         rule->List();
       }
     }
     else {
-      printf("ParseDeclarations failed: rv=%d\n", rv);
+      printf("ParseStyleAttribute failed: rv=%d\n", rv);
     }
   }
   else {

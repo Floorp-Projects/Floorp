@@ -144,9 +144,9 @@ public:
                    nsIURI*                aInputURL,
                    nsICSSStyleSheet*&     aResult);
 
-  NS_IMETHOD ParseDeclarations(const nsAReadableString& aDeclaration,
-                               nsIURI*                  aBaseURL,
-                               nsIStyleRule*&           aResult);
+  NS_IMETHOD ParseStyleAttribute(const nsAReadableString& aAttributeValue,
+                                 nsIURI*                  aBaseURL,
+                                 nsIStyleRule**           aResult);
   
   NS_IMETHOD ParseAndAppendDeclaration(const nsAReadableString& aBuffer,
                                        nsIURI*                  aBaseURL,
@@ -596,13 +596,15 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
 }
 
 NS_IMETHODIMP
-CSSParserImpl::ParseDeclarations(const nsAReadableString& aDeclaration,
-                                 nsIURI*                  aBaseURL,
-                                 nsIStyleRule*&           aResult)
+CSSParserImpl::ParseStyleAttribute(const nsAReadableString& aAttributeValue,
+                                   nsIURI*                  aBaseURL,
+                                   nsIStyleRule**           aResult)
 {
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
 
-  nsString* str = new nsString(aDeclaration);
+  // XXXldb XXXperf nsIUnicharInputStream is horrible!  It makes us make
+  // a copy.
+  nsString* str = new nsString(aAttributeValue);
   if (nsnull == str) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -622,17 +624,31 @@ CSSParserImpl::ParseDeclarations(const nsAReadableString& aDeclaration,
   mSection = eCSSSection_General;
   PRInt32 errorCode = NS_OK;
 
-  nsICSSDeclaration* declaration = ParseDeclarationBlock(errorCode, PR_FALSE);
+  // In quirks mode, allow style declarations to have braces or not
+  // (bug 99554).
+  PRBool haveBraces;
+  if (mNavQuirkMode) {
+    GetToken(errorCode, PR_TRUE);
+    haveBraces = eCSSToken_Symbol == mToken.mType &&
+                 '{' == mToken.mSymbol;
+    UngetToken();
+  }
+  else {
+    haveBraces = PR_FALSE;
+  }
+
+  nsICSSDeclaration* declaration =
+      ParseDeclarationBlock(errorCode, haveBraces);
   if (nsnull != declaration) {
     // Create a style rule for the delcaration
     nsICSSStyleRule* rule = nsnull;
     NS_NewCSSStyleRule(&rule, nsCSSSelector());
     rule->SetDeclaration(declaration);
-    aResult = rule;
+    *aResult = rule;
     NS_RELEASE(declaration);
   }
   else {
-    aResult = nsnull;
+    *aResult = nsnull;
   }
 
   ReleaseScanner();

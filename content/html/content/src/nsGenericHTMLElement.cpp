@@ -3141,7 +3141,7 @@ nsGenericHTMLElement::ParseStyleAttribute(const nsAReadableString& aValue, nsHTM
         mDocument->GetBaseURL(docURL);
 
         nsIStyleRule* rule;
-        result = cssParser->ParseDeclarations(aValue, docURL, rule);
+        result = cssParser->ParseStyleAttribute(aValue, docURL, &rule);
         if (cssLoader) {
           cssLoader->RecycleParser(cssParser);
           NS_RELEASE(cssLoader);
