@@ -43,6 +43,7 @@
 #ifdef DOING_FILTERS
 #include "nsIMsgFilter.h"
 #include "nsIMsgFilterService.h"
+#include "nsImapMoveCoalescer.h"
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
 #endif
 
@@ -90,12 +91,20 @@ nsImapMailFolder::nsImapMailFolder() :
     if (NS_SUCCEEDED(rv) && pEventQService)
         pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
                                             getter_AddRefs(m_eventQueue));
+#ifdef DOING_FILTERS
+	m_moveCoalescer = nsnull;
+#endif
+
 }
 
 nsImapMailFolder::~nsImapMailFolder()
 {
 	if (m_pathName)
 		delete m_pathName;
+#ifdef DOING_FILTERS
+	if (m_moveCoalescer)
+		delete m_moveCoalescer;
+#endif
 }
 
 NS_IMPL_ADDREF_INHERITED(nsImapMailFolder, nsMsgDBFolder)
@@ -1403,12 +1412,6 @@ NS_IMETHODIMP nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
 		// here we need to tweak flags from uid state..
 		mDatabase->AddNewHdrToDB(newMsgHdr, PR_TRUE);
 		m_msgParser->FinishHeader();
-		if (mDatabase)
-			mDatabase->Commit(kLargeCommit);	// don't really want to do this
-                                            // for every message... 
-											// but I can't find the event that
-                                            // means we've finished getting
-                                            // headers 
 	}
     return NS_OK;
 }
@@ -1704,7 +1707,11 @@ nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 {
 	nsresult err = NS_OK;
 	
+	if (!m_moveCoalescer)
+		m_moveCoalescer = new nsImapMoveCoalescer(this);
+	if (m_moveCoalescer)
 	{
+
 	 	// look for matching imap folders, then pop folders
 		nsCOMPtr<nsIMsgIncomingServer> server;
 		nsresult rv = GetServer(getter_AddRefs(server));
@@ -1731,8 +1738,9 @@ nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 
 			if (sourceDB && msgFolder)
 			{
-				PRBool imapDeleteIsMoveToTrash = PR_TRUE/* m_host->GetDeleteIsMoveToTrash() */;
+				PRBool imapDeleteIsMoveToTrash = PR_TRUE /* ### DMB m_host->GetDeleteIsMoveToTrash() */;
 
+				m_moveCoalescer->AddMove (msgFolder, keyToFilter);
 				// For each folder, we need to keep track of the ids we want to move to that
 				// folder - we used to store them in the MSG_FolderInfo and then when we'd finished
 				// downloading headers, we'd iterate through all the folders looking for the ones
@@ -2335,6 +2343,16 @@ nsImapMailFolder::GetShowAttachmentsInline(nsIImapProtocol* aProtocol,
 NS_IMETHODIMP
 nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
 {
+	if (mDatabase)
+		mDatabase->Commit(kLargeCommit);
+#ifdef DOING_FILTERS
+	if (m_moveCoalescer)
+	{
+		m_moveCoalescer->PlaybackMoves (m_eventQueue);
+		delete m_moveCoalescer;
+		m_moveCoalescer = nsnull;
+	}
+#endif
     return NS_OK;
 }
 

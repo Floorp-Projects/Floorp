@@ -20,7 +20,8 @@
 #define _nsImapMoveCoalescer_H
 
 #include "msgCore.h"
-#include "nsImapMailFolder.h"
+class nsImapMailFolder;
+
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 
@@ -32,7 +33,7 @@
 
 #include "nsISupportsArray.h"
 
-class nsImapMoveCoalescer : public nsISupportsArray
+class nsImapMoveCoalescer 
 {
 public:
 	nsImapMoveCoalescer(nsImapMailFolder *sourceFolder);

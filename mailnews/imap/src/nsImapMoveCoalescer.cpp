@@ -17,6 +17,7 @@
  */
 
 #include "msgCore.h"
+#include "nsImapMailFolder.h"
 #include "nsImapMoveCoalescer.h"
 #include "nsMsgKeySet.h"
 #include "nsImapService.h"
@@ -74,6 +75,9 @@ nsresult nsImapMoveCoalescer::PlaybackMoves(nsIEventQueue *eventQueue)
 {
 	PRUint32 numFolders;
 	nsresult rv = NS_OK;
+
+	if (!m_destFolders)
+		return NS_OK;	// nothing to do.
 
 	m_destFolders->Count(&numFolders);
 	for (PRUint32 i = 0; i < numFolders; i++)

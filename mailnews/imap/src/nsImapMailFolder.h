@@ -32,11 +32,14 @@
 #include "nsITransactionManager.h"
 #include "nsMsgTxn.h"
 #ifdef DEBUG_bienvenu
-//#define DOING_FILTERS
+#define DOING_FILTERS
 #endif
 #ifdef DOING_FILTERS
 #include "nsIMsgFilterHitNotify.h"
 #include "nsIMsgFilterList.h"
+
+class nsImapMoveCoalescer;
+
 #endif
 
 /* fa32d000-f6a0-11d2-af8d-001083002da8 */
@@ -291,6 +294,7 @@ protected:
 #ifdef DOING_FILTERS
 	nsCOMPtr<nsIMsgFilterList> m_filterList;
 	PRBool				m_msgMovedByFilter;
+	nsImapMoveCoalescer *m_moveCoalescer;
 #endif
 	nsMsgKey			m_curMsgUid;
 	PRInt32			m_nextMessageByteLength;
