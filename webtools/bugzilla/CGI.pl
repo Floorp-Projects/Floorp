@@ -55,7 +55,7 @@ use vars qw($template $vars);
 # to the user about the downtime.  (do)editparams.cgi is exempted from
 # this message, of course, since it needs to be available in order for
 # the administrator to open Bugzilla back up.
-if (Param("shutdownhtml") && $0 !~ m:[\\/](do)?editparams.cgi$:) {
+if (Param("shutdownhtml") && $0 !~ m:(^|[\\/])(do)?editparams\.cgi$:) {
     $::vars->{'message'} = "shutdown";
     
     # Return the appropriate HTTP response headers.
