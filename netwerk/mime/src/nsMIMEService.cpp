@@ -248,6 +248,18 @@ nsMIMEService::InitFromHack() {
     if (NS_FAILED(rv)) return rv;
     rv = AppendExtension(APPLICATION_OCTET_STREAM, "bin");
     if (NS_FAILED(rv)) return rv;
+#if defined(VMS)
+    rv = AppendExtension(APPLICATION_OCTET_STREAM, "sav");
+    if (NS_FAILED(rv)) return rv;
+    rv = AppendExtension(APPLICATION_OCTET_STREAM, "bck");
+    if (NS_FAILED(rv)) return rv;
+    rv = AppendExtension(APPLICATION_OCTET_STREAM, "pcsi");
+    if (NS_FAILED(rv)) return rv;
+    rv = AppendExtension(APPLICATION_OCTET_STREAM, "pcsi-dcx_axpexe");
+    if (NS_FAILED(rv)) return rv;
+    rv = AppendExtension(APPLICATION_OCTET_STREAM, "pcsi-dcx_vaxexe");
+    if (NS_FAILED(rv)) return rv;
+#endif
 
     rv = AddMapping(TEXT_HTML, "htm", "Hyper Text Markup Language", nsnull);
     if (NS_FAILED(rv)) return rv;
