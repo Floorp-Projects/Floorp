@@ -89,11 +89,11 @@ MacGetFileType(nsFileSpec   *fs,
       nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
       if (NS_SUCCEEDED(rv) && mimeFinder) 
       {
-        char *mimeType = nsnull;
-        rv = mimeFinder->GetTypeFromURI(tURI, &mimeType);
-        if (NS_SUCCEEDED(rv) && mimeType) 
+        nsCAutoString mimeType;
+        rv = mimeFinder->GetTypeFromURI(tURI, mimeType);
+        if (NS_SUCCEEDED(rv)) 
         {
-          *fileType = mimeType;
+          *fileType = ToNewCString(mimeType);
           return;
         }        
       }
