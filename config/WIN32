@@ -73,7 +73,6 @@ OS_LFLAGS=/DEBUG /DEBUGTYPE:CV /PDB:NONE
 
 !else
 
-
 # if MOZ_DEBUG is not set and MOZ_DEBUGOPT is set, then we generate
 # an optimized build with debugging symbols. useful for debugging
 # compiler optimization bugs
@@ -88,7 +87,26 @@ OPTIMIZER=/Zi -O1 -UDEBUG -DNDEBUG
 OPTIMIZER=-O1 -UDEBUG -DNDEBUG
 OS_LFLAGS=
 !endif
+# MOZ_DEBUGOPT
 
+!endif
+# MOZ_DEBUG
+!endif
+# MOZ_PROF
+
+# Replace optimizer and pdb related flags to use our own conventions
+!ifdef LIBRARY_NAME
+!ifdef MOZ_DEBUG
+OPTIMIZER=-Zi -DDEBUG -UNDEBUG -D_DEBUG
+OS_LFLAGS=/DEBUG /DEBUGTYPE:CV /PDB:$(LIBRARY_NAME)
+!endif
+!endif
+
+# Replace optimizer and pdb related flags to use our own conventions
+!ifdef DLLNAME
+!ifdef MOZ_DEBUG
+OPTIMIZER=-Zi -DDEBUG -UNDEBUG -D_DEBUG
+OS_LFLAGS=/DEBUG /DEBUGTYPE:CV /PDB:$(DLLNAME)
 !endif
 !endif
 
