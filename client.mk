@@ -38,7 +38,7 @@
 #   MOZ_OBJDIR           - Destination object directory
 #   MOZ_CO_BRANCH        - Branch tag to use for checkout (default: HEAD)
 #   MOZ_CO_DATE          - Date tag to use for checkout (default: none)
-#   MOZ_CO_MODULE        - Module to checkout (default: SeaMonkeyEditor)
+#   MOZ_CO_MODULE        - Module to checkout (default: SeaMonkeyAll)
 #   MOZ_CVS_FLAGS        - Flags to pass cvs (default: -q -z3)
 #   MOZ_CO_FLAGS         - Flags to pass after 'cvs co' (default: -P)
 #   MOZ_MAKE_FLAGS       - Flags to pass to $(MAKE)
@@ -126,7 +126,7 @@ ifdef MOZ_CO_DATE
 endif
 
 ifndef MOZ_CO_MODULE
-  MOZ_CO_MODULE := SeaMonkeyEditor
+  MOZ_CO_MODULE := SeaMonkeyAll
 endif
 
 ifdef MOZ_OBJDIR
@@ -158,6 +158,18 @@ everything: checkout clobber_all build
 
 ####################################
 # CVS checkout
+#
+# The code for checkout is a little ugly because the cvs command needs
+# to pipe to "tee" and be able to return a cvs error. The tee
+# command saves the output to a file and also prints it to stdout.
+# Without the little magic below, the pipe would swallow up the error.
+#
+# Here is the psedo-code,
+#
+# { cvs || touch error-file } | tee log-file
+# if error-file exists then remove it and exit with an error.
+# (Next, look for checkout conflicts).
+#
 
 checkout:
 	@if test -f $(CVSCO_LOGFILE) ; then \
@@ -165,15 +177,22 @@ checkout:
 	else true; \
 	fi
 	@date | tee $(CVSCO_LOGFILE)
-	cd $(ROOTDIR) && \
-	  $(CVSCO) $(MOZ_CO_MODULE) 2>&1 | tee -a $(CVSCO_LOGFILE)
+	@echo cd $(ROOTDIR)\; $(CVSCO) $(MOZ_CO_MODULE)
+	@cd $(ROOTDIR) && \
+	  { $(CVSCO) $(MOZ_CO_MODULE) || touch cvs-failed.tmp$$$$ } 2>&1 \
+	  | tee -a $(CVSCO_LOGFILE);
+	if [ -f cvs-failed.tmp$$$$ ]; then \
+	  rm cvs-failed.tmp$$$$; \
+	  false; \
+	else true; \
+	fi
 	@date | tee -a $(CVSCO_LOGFILE)
 	@conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\
 	if test "$$conflicts" ; then \
 	  echo "$(MAKE): *** Conflicts during checkout." ;\
 	  echo "$$conflicts" ;\
 	  echo "$(MAKE): Refer to $(CVSCO_LOGFILE) for full log." ;\
-	  exit 1; \
+	  false; \
 	else true; \
 	fi
 
