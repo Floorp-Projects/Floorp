@@ -49,9 +49,8 @@ protected:
 protected:
    nsDocShell*                      mDocShell;
    nsCOMPtr<nsIPresContext>         mPresContext;
-   nsCOMPtr<nsISupports>            mLoadCookie; // the load cookie associated with the window context.
 
-   nsIURIContentListener*            mParentContentListener;  // Weak Reference
+   nsIURIContentListener*           mParentContentListener;  // Weak Reference
 };
 
 #endif /* nsDSURIContentListener_h__ */
