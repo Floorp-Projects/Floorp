@@ -24,7 +24,6 @@
 #include <stdio.h>
 
 #include "nsEditorShell.h"
-#include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
 #include "nsIBaseWindow.h"
 #include "nsIContentViewerFile.h"
