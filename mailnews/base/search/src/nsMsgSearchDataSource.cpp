@@ -48,6 +48,11 @@ nsMsgSearchDataSource::nsMsgSearchDataSource()
 nsresult
 nsMsgSearchDataSource::Init()
 {
+    nsresult rv;
+	rv = nsMsgRDFDataSource::Init();
+    if (NS_FAILED(rv))
+        return rv;
+    
     if (gInstanceCount++ == 0) {
 
         getRDFService()->GetResource(NC_RDF_MESSAGECHILD, getter_AddRefs(kNC_MessageChild));
@@ -74,7 +79,7 @@ NS_IMPL_ISUPPORTS2(nsMsgSearchDataSource,
                    nsIRDFDataSource,
                    nsIMsgSearchNotify)
 
-    NS_IMETHODIMP
+NS_IMETHODIMP
 nsMsgSearchDataSource::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
 {
     nsresult rv;
