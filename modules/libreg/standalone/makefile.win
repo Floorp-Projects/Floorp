@@ -1,0 +1,115 @@
+#!gmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+IGNORE_MANIFEST=1
+#//------------------------------------------------------------------------
+#//
+#// Makefile to build 
+#//
+#//------------------------------------------------------------------------
+
+
+#//------------------------------------------------------------------------
+#//
+#// Specify the depth of the current directory relative to the
+#// root of NS
+#//
+#//------------------------------------------------------------------------
+DEPTH= ..\..\..
+
+!ifndef MAKE_OBJ_TYPE
+MAKE_OBJ_TYPE=DLL
+!endif
+
+#//------------------------------------------------------------------------
+#//
+#// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
+#//
+#//------------------------------------------------------------------------
+
+#//------------------------------------------------------------------------
+#// 
+#// Define the files necessary to build the target (ie. OBJS)
+#//
+#//------------------------------------------------------------------------
+
+OBJS=                                       \
+    .\$(OBJDIR)\reg.obj                     \
+    .\$(OBJDIR)\VerReg.obj                  \
+    .\$(OBJDIR)\vr_stubs.obj                \
+    $(NULL)
+
+#//------------------------------------------------------------------------
+#//
+#// Define any Public Targets here (ie. PROGRAM, LIBRARY, DLL, ...)
+#// (these must be defined before the common makefiles are included)
+#//
+#//------------------------------------------------------------------------
+
+
+LIBNAME=nsreg
+DLL=$(OBJDIR)\$(LIBNAME).dll
+
+#//------------------------------------------------------------------------
+#//
+#// Define any local options for the make tools 
+#//     (ie. LCFLAGS, LLFLAGS, LLIBS, LINCS)
+#//
+#//------------------------------------------------------------------------
+
+LCFLAGS = -DSTANDALONE_REGISTRY
+
+LINCS= $(LINCS) -I$(PUBLIC)/libreg   \
+       $(NULL)
+
+#//------------------------------------------------------------------------
+#//
+#// Include the common makefile rules
+#//
+#//------------------------------------------------------------------------
+include <$(DEPTH)/config/rules.mak>
+
+reg.c::
+    $(RM) $(DEPTH)\modules\libreg\standalone\reg.h
+    $(RM) $(DEPTH)\modules\libreg\standalone\reg.c
+    $(RM) $(DEPTH)\modules\libreg\standalone\vr_stubs.h
+    $(RM) $(DEPTH)\modules\libreg\standalone\vr_stubs.c
+    $(RM) $(DEPTH)\modules\libreg\standalone\VerReg.c
+
+    copy $(DEPTH)\modules\libreg\src\reg.h $(DEPTH)\modules\libreg\standalone\reg.h
+    copy $(DEPTH)\modules\libreg\src\reg.c $(DEPTH)\modules\libreg\standalone\reg.c
+    copy $(DEPTH)\modules\libreg\src\vr_stubs.h $(DEPTH)\modules\libreg\standalone\vr_stubs.h
+    copy $(DEPTH)\modules\libreg\src\vr_stubs.c $(DEPTH)\modules\libreg\standalone\vr_stubs.c
+    copy $(DEPTH)\modules\libreg\src\VerReg.c $(DEPTH)\modules\libreg\standalone\VerReg.c
+
+export:: $(DLL)	
+    
+    $(MAKE_INSTALL) $(DLL) $(DIST)\bin
+     
+    $(RM) $(DEPTH)\modules\libreg\standalone\reg.h
+    $(RM) $(DEPTH)\modules\libreg\standalone\reg.c
+    $(RM) $(DEPTH)\modules\libreg\standalone\vr_stubs.h
+    $(RM) $(DEPTH)\modules\libreg\standalone\vr_stubs.c
+    $(RM) $(DEPTH)\modules\libreg\standalone\VerReg.c
+
+clobber::
+    
+    $(RM) $(DIST)\bin\$(DLL)
+    $(RM) $(DEPTH)\modules\libreg\standalone\reg.h
+    $(RM) $(DEPTH)\modules\libreg\standalone\reg.c
+    $(RM) $(DEPTH)\modules\libreg\standalone\vr_stubs.h
+    $(RM) $(DEPTH)\modules\libreg\standalone\vr_stubs.c
+    $(RM) $(DEPTH)\modules\libreg\standalone\VerReg.c
