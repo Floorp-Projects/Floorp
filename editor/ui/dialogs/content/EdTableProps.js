@@ -1019,7 +1019,7 @@ function ApplyTableAttributes()
         TableCaptionElement.setAttribute("align", newAlign);
 
       // Insert it into the table - caption is always inserted as first child
-      editorShell.InsertElement(TableCaptionElement, TableElement, 0);
+      editorShell.InsertElement(TableCaptionElement, TableElement, 0, true);
 
       // Put selecton back where it was
       ChangeSelection(RESET_SELECTION);

@@ -496,7 +496,7 @@ function onOK()
           if (anchorNode) {
             anchorNode.name = name;
             // Remember to use editorShell method so it is undoable!
-            editorShell.InsertElement(anchorNode, headNode, 0);
+            editorShell.InsertElement(anchorNode, headNode, 0, false);
           }
         } else {
           dump("HREF is a heading but is not in the list!\n");
