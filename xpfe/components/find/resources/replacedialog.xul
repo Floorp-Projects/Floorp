@@ -1,4 +1,4 @@
-<?xml version="1.0"?> <!-- -*- Mode: HTML -*- -->
+<?xml version="1.0"?>
 
 <!--
 The contents of this file are subject to the Netscape Public
@@ -23,9 +23,7 @@ Contributor(s): Kin Blas <kin@netscape.com>
 -->
 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
-
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <!DOCTYPE window SYSTEM "chrome://global/locale/replacedialog.dtd">
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
@@ -34,39 +32,40 @@ Contributor(s): Kin Blas <kin@netscape.com>
   onload="onLoad();"
   onunload="onUnload();"
   title="&replaceDialog.title;"
-  debug="false"
   class="dialog"
   align="vertical"
   persist="screenX screenY"
   screenX="24" screenY="24">
 
-  <html:script language="JavaScript" src="chrome://global/content/replacedialog.js"/>
-
+  <script type="text/javascript" src="chrome://global/content/replacedialog.js"/>
+  <stringbundle id="replaceBundle" src="chrome://global/locale/finddialog.properties"/>
+   
   <box>
   
     <!-- hack. we seem to need this separator to get it to render -->
     <separator orient="vertical" class="thin"/>
 
-    <box orient="vertical">
+    <vbox>
       <text class="label" value="&findField.label;"/>
+      <separator class="thin"/>
       <text class="label" value="&replaceField.label;"/>
-    </box>
+    </vbox>
     
-    <box orient="vertical">
-      <textfield id="dialog.findKey" oninput="return onTyping();"/>
-      <textfield id="dialog.replaceKey" oninput="return onTyping();"/>
-      <box orient="vertical" autostretch="never">
+    <vbox>
+      <textfield id="dialog.findKey" oninput="doEnabling();"/>
+      <textfield id="dialog.replaceKey" oninput="doEnabling();"/>
+      <vbox autostretch="never">
         <checkbox id="dialog.caseSensitive" value="&caseSensitiveCheckbox.label;"/>
         <checkbox id="dialog.wrap" value="&wrapCheckbox.label;"/>
         <checkbox id="dialog.searchBackwards" value="&backwardsCheckbox.label;"/>
-      </box>
-    </box>
-    <box orient="vertical">
+      </vbox>
+    </vbox>
+    <vbox>
       <button class="dialog" id="findNext" value="&findNextButton.label;" oncommand="onFindNext();"/>
       <button class="dialog" id="replace" value="&replaceButton.label;" oncommand="onReplace();"/>
       <button class="dialog" id="replaceAll" value="&replaceAllButton.label;" oncommand="onReplaceAll();"/>
-      <button class="dialog" id="close" value="&closeButton.label;" oncommand="onClose();"/>
-    </box>
+      <button class="dialog" id="close" value="&closeButton.label;" oncommand="close();"/>
+    </vbox>
   </box>
 
   <separator/>
