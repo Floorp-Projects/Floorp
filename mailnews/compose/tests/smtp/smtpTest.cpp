@@ -194,6 +194,14 @@ nsresult nsSmtpTestDriver::OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode)
 		}
 	}
 
+	///////////////////////////////////////////////////////////////////////////////////////////
+	// the following strings are used by QA as part of the smoketest. DO NOT REMOVE THEM!!!!!!!
+	///////////////////////////////////////////////////////////////////////////////////////////
+	if (NS_SUCCEEDED(aExitCode))
+		printf("\nMessage Sent: PASSED\n");
+	else
+		printf("\nMessage Sent: FAILED!\n");
+
 	return NS_OK;
 }
 
