@@ -46,10 +46,6 @@
 
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
-extern "C" gboolean nsTimerExpired(gpointer aCallData);
-
-
-
 TimeVal::TimeVal()
 {
   mSeconds = 0;
@@ -191,9 +187,7 @@ PRBool TimeVal::operator<=(const struct timeval &tv) const
 PRBool nsTimerGtk::FireTimeout()
 {
   //  printf("%p FireTimeout() priority = %i\n", this, mPriority);
-  // because Notify can cause 'this' to get destroyed, we need to hold a ref
-  nsCOMPtr<nsITimer> kungFuDeathGrip = this;
-  
+
   if (mFunc != NULL) {
     (*mFunc)(this, mClosure);
   }
@@ -267,6 +261,16 @@ void process_timers(nsVoidArray *array)
     timer = (nsTimerGtk*)array->ElementAt(i);
 
     if (timer) {
+      /*
+        Because FireTimeout can cause |timer| to be destroyed (either because
+        the timer is non-repeating, in which case we won't need it but
+        FireTimeout will need this reference held throughout, or because the
+        timer is repeating but the timer is released from its own callback, in
+        which case this function also needs the reference), we hold a strong
+        ref until we leave this scope.
+      */
+      nsCOMPtr<nsITimer> kungFuDeathGrip = timer;
+
       if (((timer->mSchedTime + timer->mDelay) <= tv)) {
         ret = timer->FireTimeout();
         if( ret == 0 ) {
@@ -447,12 +451,6 @@ void nsTimerGtk::Cancel()
     nsTimerGtk::gLowestList->RemoveElement(this);
     break;
   }
-}
-
-gboolean nsTimerExpired(gpointer aCallData)
-{
-  nsTimerGtk* timer = (nsTimerGtk *)aCallData;
-  return timer->FireTimeout();
 }
 
 #ifdef MOZ_MONOLITHIC_TOOLKIT
