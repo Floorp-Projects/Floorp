@@ -1692,7 +1692,8 @@ void
 nsViewManager::WillBitBlit(nsView* aView, nsPoint aScrollAmount)
 {
   if (!IsRootVM()) {
-    return RootViewManager()->WillBitBlit(aView, aScrollAmount);
+    RootViewManager()->WillBitBlit(aView, aScrollAmount);
+    return;
   }
 
   NS_PRECONDITION(aView, "Must have a view");
