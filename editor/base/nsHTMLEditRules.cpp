@@ -323,7 +323,8 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ECo
       }
     
       // at end of text node and deleted?
-      if ((offset == strLength) && (aAction == nsIEditor::eDeleteRight))
+      if ((offset == (PRInt32)strLength)
+          && (aAction == nsIEditor::eDeleteRight))
       {
         nsCOMPtr<nsIDOMNode> nextNode;
         res = mEditor->GetNextNode(node, PR_TRUE, getter_AddRefs(nextNode));
