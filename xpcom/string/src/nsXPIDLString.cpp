@@ -45,7 +45,7 @@ class nsImportedStringHandle
     public:
       nsImportedStringHandle() : nsFlexBufferHandle<CharT>(0, 0, 0, 0) { }
 
-      CharT** AddressOfDataStart() { return &(this->mDataStart); }
+      CharT** AddressOfStorageStart() { return &(this->mStorageStart); }
       void RecalculateBoundaries() const;
   };
 
@@ -57,18 +57,17 @@ nsImportedStringHandle<CharT>::RecalculateBoundaries() const
     size_t data_length = 0;
     size_t storage_length = 0;
 
-    CharT* data_start = NS_CONST_CAST(CharT*, this->DataStart());
-    if ( data_start )
+    CharT* storage_start = NS_CONST_CAST(CharT*, this->StorageStart());
+    if ( storage_start )
       {
-        data_length = nsCharTraits<CharT>::length(data_start);
+        data_length = nsCharTraits<CharT>::length(storage_start);
         storage_length = data_length + 1;
       }
 
     nsImportedStringHandle<CharT>* mutable_this = NS_CONST_CAST(nsImportedStringHandle<CharT>*, this);
-    mutable_this->DataEnd(data_start+data_length);
-
-    mutable_this->StorageStart(data_start);
-    mutable_this->StorageEnd(data_start+storage_length);
+    mutable_this->DataStart(storage_start);
+    mutable_this->DataEnd(storage_start+data_length);
+    mutable_this->StorageEnd(storage_start+storage_length);
   }
 
 
@@ -103,7 +102,7 @@ nsXPIDLString::GetSharedBufferHandle() const
   {
     const nsImportedStringHandle<PRUnichar>* answer = NS_STATIC_CAST(const nsImportedStringHandle<PRUnichar>*, mBuffer.get());
     
-    if ( answer && !answer->DataEnd() )
+    if ( answer && !answer->DataEnd() && answer->StorageStart() )
       answer->RecalculateBoundaries();
 
 #if DEBUG_STRING_STATS
@@ -123,7 +122,7 @@ nsXPIDLString::PrepareForUseAsOutParam()
 #if DEBUG_STRING_STATS
     ++sAssignCount;
 #endif
-    return handle->AddressOfDataStart();
+    return handle->AddressOfStorageStart();
   }
 
 
@@ -158,7 +157,7 @@ nsXPIDLCString::GetSharedBufferHandle() const
   {
     const nsImportedStringHandle<char>* answer = NS_STATIC_CAST(const nsImportedStringHandle<char>*, mBuffer.get());
     
-    if ( answer && !answer->DataEnd() )
+    if ( answer && !answer->DataEnd() && answer->StorageStart() )
       answer->RecalculateBoundaries();
 
 #if DEBUG_STRING_STATS
@@ -178,5 +177,5 @@ nsXPIDLCString::PrepareForUseAsOutParam()
 #if DEBUG_STRING_STATS
     ++sAssignCount;
 #endif
-    return handle->AddressOfDataStart();
+    return handle->AddressOfStorageStart();
   }

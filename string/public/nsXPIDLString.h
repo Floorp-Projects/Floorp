@@ -43,11 +43,16 @@
    * must be called before any other object can share the buffer,
    * and as the default implementation for |GetBufferHandle|, which is
    * the operation on which all other flat string operations are based.
-   * A valid handle always contains a non-|NULL| data start and end.
-   * After use as an `out' string pointer parameter, an |nsXPIDLC?String|'s
-   * handle will have a non-|NULL| data start, but its data end will be
-   * |NULL|.  This is the signal that the length needs to be recalculated.
-   * |GetSharedBufferHandle| detects this situation and repairs it.
+   * A valid handle will either have all |NULL| or all non-|NULL|
+   * pointers.  After use as an `out' string pointer parameter, an
+   * |nsXPIDLC?String|'s handle will have a non-|NULL| storage start, but
+   * all other members will be |NULL|.  This is the signal that the
+   * length needs to be recalculated.  |GetSharedBufferHandle| detects
+   * this situation and repairs it.
+   *
+   * The one situation this _doesn't_ catch, is if no one ever tries to use
+   * the string before it's destruction.  In this case, because the start of
+   * storage is known, storage can still be freed in the usual way.
    *
    * An |nsXPIDLC?String| is now a sharable object, just like |nsSharableC?String|.
    * This simple implementation always allocates an intermediary handle
