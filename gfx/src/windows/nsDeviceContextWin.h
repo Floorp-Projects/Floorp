@@ -37,7 +37,7 @@ public:
   virtual nsresult Init(nsNativeDeviceContext aNativeDeviceContext);
 
   virtual nsIRenderingContext * CreateRenderingContext(nsIView *aView);
-  virtual void InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWidget);
+  virtual nsresult InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWidget);
 
   virtual float GetTwipsToDevUnits() const;
   virtual float GetDevUnitsToTwips() const;

@@ -33,6 +33,7 @@ static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
 #define NS_TO_X(a) (NS_TO_X_RED(a) | NS_TO_X_GREEN(a) | NS_TO_X_BLUE(a))
 
+
 nsDeviceContextUnix :: nsDeviceContextUnix()
 {
   NS_INIT_REFCNT();
@@ -176,16 +177,20 @@ nsIRenderingContext * nsDeviceContextUnix :: CreateRenderingContext(nsIView *aVi
 
   rv = NSRepository::CreateInstance(kRCCID, nsnull, kRCIID, (void **)&pContext);
 
-  if (NS_OK == rv)
-    InitRenderingContext(pContext, win);
+  if (NS_OK == rv) {
+    rv = InitRenderingContext(pContext, win);
+    if (NS_OK != rv) {
+      NS_RELEASE(pContext);
+    }
+  }
 
-  NS_IF_RELEASE(win);
+  NS_IF_RELEASE(win);  
   return pContext;
 }
 
-void nsDeviceContextUnix :: InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWin)
+nsresult nsDeviceContextUnix :: InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWin)
 {
-  aContext->Init(this, aWin);
+  return (aContext->Init(this, aWin));
 }
 
 PRUint32 nsDeviceContextUnix :: ConvertPixel(nscolor aColor)

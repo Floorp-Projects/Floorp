@@ -44,7 +44,7 @@ public:
   virtual nsresult Init(nsNativeDeviceContext aNativeDeviceContext) = 0;
 
   virtual nsIRenderingContext * CreateRenderingContext(nsIView *aView) = 0;
-  virtual void InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWindow) = 0;
+  virtual nsresult InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWindow) = 0;
 
   //these are queries to figure out how large an output unit
   //(i.e. pixel) is in terms of twips (1/20 of a point)

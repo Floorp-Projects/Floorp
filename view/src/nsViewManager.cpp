@@ -67,8 +67,6 @@ nsViewManager :: ~nsViewManager()
   {
     nsIRenderingContext *rc;
 
-    //interesting way of killing things
-
     static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
@@ -294,11 +292,9 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   {
     localcx = CreateRenderingContext(*aView);
 
-    //couldn't get rendering context. ack.
-
+    //couldn't get rendering context. this is ok at init time atleast
     if (nsnull == localcx)
     {
-      NS_ASSERTION(PR_FALSE, "unable to create rendering context.");
       return;
     }
   }
@@ -359,11 +355,9 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
   {
     localcx = CreateRenderingContext(*aView);
 
-    //couldn't get rendering context. ack.
-
+    //couldn't get rendering context. this is ok if at startup
     if (nsnull == localcx)
     {
-      NS_ASSERTION(PR_FALSE, "unable to create rendering context.");
       return;
     }
   }
@@ -895,7 +889,9 @@ nsIRenderingContext * nsViewManager :: CreateRenderingContext(nsIView &aView)
   {
     dx = mContext->GetDeviceContext();
     cx = dx->CreateRenderingContext(&aView);
-    cx->Translate(ax, ay);
+
+    if (nsnull != cx)
+      cx->Translate(ax, ay);
 
     NS_RELEASE(dx);
     NS_RELEASE(win);
