@@ -521,6 +521,7 @@ have_fun:
     frame.constructing = constructing;
     frame.overrides = 0;
     frame.debugging = JS_FALSE;
+    frame.internalCall = JS_FALSE;
     frame.dormantNext = NULL;
 
     /*
@@ -801,6 +802,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,
     frame.constructing = JS_FALSE;
     frame.overrides = 0;
     frame.debugging = debugging;
+    frame.internalCall = JS_FALSE;
     frame.dormantNext = NULL;
 
     /*
