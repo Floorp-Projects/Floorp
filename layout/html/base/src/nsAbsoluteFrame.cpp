@@ -82,16 +82,29 @@ nsIView* AbsoluteFrame::CreateView(nsIView*         aContainingView,
     // See if the containing view is a scroll view
     nsIScrollableView*  scrollView = nsnull;
     nsresult            result;
-    nsViewClip          clip;
-    nsViewClip*         pClip = NS_STYLE_CLIP_RECT == aPosition->mClipFlags ?
-                                &clip : nsnull;
+    nsViewClip          clip = {0, 0, 0, 0};
+    PRUint8             clipType = (aPosition->mClipFlags & NS_STYLE_CLIP_TYPE_MASK);
+    nsViewClip*         pClip = nsnull;
 
     // Is there a clip rect specified?
-    if (NS_STYLE_CLIP_RECT == aPosition->mClipFlags) {
-      clip.mLeft = aPosition->mClip.left;
-      clip.mRight = aPosition->mClip.right;
-      clip.mTop = aPosition->mClip.top;
-      clip.mBottom = aPosition->mClip.bottom;
+    if (NS_STYLE_CLIP_RECT == clipType) {
+      if ((NS_STYLE_CLIP_LEFT_AUTO & aPosition->mClipFlags) == 0) {
+        clip.mLeft = aPosition->mClip.left;
+      }
+      if ((NS_STYLE_CLIP_RIGHT_AUTO & aPosition->mClipFlags) == 0) {
+        clip.mRight = aPosition->mClip.right;
+      }
+      if ((NS_STYLE_CLIP_TOP_AUTO & aPosition->mClipFlags) == 0) {
+        clip.mTop = aPosition->mClip.top;
+      }
+      if ((NS_STYLE_CLIP_BOTTOM_AUTO & aPosition->mClipFlags) == 0) {
+        clip.mBottom = aPosition->mClip.bottom;
+      }
+      pClip = &clip;
+    }
+    else if (NS_STYLE_CLIP_INHERIT == clipType) {
+      // XXX need to handle clip inherit (get from parent style context)
+      NS_NOTYETIMPLEMENTED("clip inherit");
     }
 
     PRInt32 zIndex = 0;
