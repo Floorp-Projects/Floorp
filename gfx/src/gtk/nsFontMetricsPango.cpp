@@ -1073,22 +1073,23 @@ nsFontMetricsPango::DrawStringSlowly(const gchar *aText,
      * attributes in pango are in byte offsets in the UTF-8 string, so
      * we need to store the offsets based on the UTF-8 string.
      */
-    nscoord *spacing = new nscoord[strlen(aText)];
+    nscoord *utf8spacing = new nscoord[strlen(aText)];
 
     if (aOrigString) {
-        gint outpos = 0;
-        gunichar c;
-        gchar outbuf[6];
-        const PRUnichar *curpos = aOrigString;
+        const gchar *curChar = aText;
+        bzero(utf8spacing, sizeof(nscoord) * strlen(aText));
 
-        for (guint i = 0; i < aLength; i++, curpos++) {
-            spacing[outpos] = aSpacing[i];
-            c = *curpos;
-            outpos += g_unichar_to_utf8(c, outbuf);
+        // Covert the utf16 spacing offsets to utf8 spacing offsets
+        for (PRUint32 curOffset=0; curOffset < aLength;
+             curOffset++, curChar = g_utf8_find_next_char(curChar, NULL)) {
+            utf8spacing[curChar - aText] = aSpacing[curOffset];
+
+            if (IS_HIGH_SURROGATE(aOrigString[curOffset]))
+                curOffset++;
         }
     }
     else {
-        memcpy(spacing, aSpacing, (sizeof(nscoord *) * aLength));
+        memcpy(utf8spacing, aSpacing, (sizeof(nscoord *) * aLength));
     }
 
     gint curRun = 0;
@@ -1101,14 +1102,14 @@ nsFontMetricsPango::DrawStringSlowly(const gchar *aText,
         /*        printf("    Rendering run %d: \"%s\"\n", curRun,
                   &aText[layoutRun->item->offset]); */
 
-        if (layoutRun->glyphs->num_glyphs != (gint)aLength) {
-            NS_WARNING("Warning: the number of glyphs does not match the "
-                       "length of the string - this is going to generate "
-                       "some exciting rendering!");
-        }
-
         for (gint i=0; i < layoutRun->glyphs->num_glyphs; i++) {
-            gint thisOffset = (gint)(spacing[layoutRun->glyphs->log_clusters[i]] * app2dev * PANGO_SCALE);
+            /* printf("glyph %d offset %d orig width %d new width %d\n", i,
+             *        layoutRun->glyphs->log_clusters[i] + layoutRun->item->offset,
+             *        layoutRun->glyphs->glyphs[i].geometry.width,
+             *       (gint)(utf8spacing[layoutRun->glyphs->log_clusters[i] + layoutRun->item->offset] * app2dev * PANGO_SCALE));
+             */
+            gint thisOffset = (gint)(utf8spacing[layoutRun->glyphs->log_clusters[i] + layoutRun->item->offset]
+                                     * app2dev * PANGO_SCALE);
             layoutRun->glyphs->glyphs[i].geometry.width = thisOffset;
             tmpOffset += thisOffset;
         }
@@ -1116,12 +1117,12 @@ nsFontMetricsPango::DrawStringSlowly(const gchar *aText,
         /*        printf("    rendering at X coord %d\n", aX + offset); */
 
         gdk_draw_glyphs(aDrawable, aGC, layoutRun->item->analysis.font,
-                        aX + offset, aY, layoutRun->glyphs);
+                        aX + (gint)(offset / PANGO_SCALE), aY, layoutRun->glyphs);
 
         offset += tmpOffset;
     }
 
-    delete[] spacing;
+    delete[] utf8spacing;
 }
 
 nsresult
