@@ -24,6 +24,10 @@
 #include "nsIURL.h"
 #include "nsIStreamListener.h"
 
+#ifdef SingleSignon
+#include "lo_ele.h"
+#endif
+
  /* XXX: This should be moved to ns/xpcom/src/nserror.h */
 #define NS_OK    0
 #define NS_FALSE 1
@@ -98,6 +102,13 @@ struct nsINetService : public nsISupports
      * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
      */
     NS_IMETHOD SetCookieString(nsIURL *aURL, const nsString& aCookie)=0;
+
+#ifdef SingleSignon
+    NS_IMETHOD SI_RememberSignonData
+        (char* URLName, LO_FormSubmitData *submit)=0;
+    NS_IMETHOD SI_RestoreSignonData
+        (char* URLNAME, char* name, char** value)=0;
+#endif
 
    /**
      * Get the http proxy used for http transactions.

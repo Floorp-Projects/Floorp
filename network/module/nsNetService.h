@@ -47,6 +47,13 @@ public:
     NS_IMETHOD GetCookieString(nsIURL *aURL, nsString& aCookie);
     NS_IMETHOD SetCookieString(nsIURL *aURL, const nsString& aCookie);
 
+#ifdef SingleSignon
+    NS_IMETHOD SI_RememberSignonData
+        (char* URLName, LO_FormSubmitData *submit);
+    NS_IMETHOD SI_RestoreSignonData
+        (char* URLNAME, char* name, char** value);
+#endif
+
     NS_IMETHOD GetProxyHTTP(nsString& aProxyHTTP);
     NS_IMETHOD SetProxyHTTP(nsString& aProxyHTTP);
     NS_IMETHOD GetHTTPOneOne(PRBool& aOneOne);
