@@ -26,19 +26,6 @@
     var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
     controller.doCommand('cmd_paste');"/>
     
-<key id="winCutKey" key="x" control="true"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
-    controller.doCommand('cmd_cut');"/>
-<key id="winCopyKey" key="c" control="true"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
-    controller.doCommand('cmd_copy');"/>
-<key id="winPasteKey" key="v" control="true"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
-    controller.doCommand('cmd_paste');"/>
-
 <key id="key_homectrlshift" keycode="VK_HOME" shift="true" control="true" alt="false"
     onkeypress="
         var controller =
@@ -51,7 +38,7 @@
         controller.doCommand('cmd_selectBottom');"/>
 </keyset>
 
-<!-- End Unix-specific keybindings -->
+<!-- End Windows-specific keybindings -->
 
 </keybinding>
 

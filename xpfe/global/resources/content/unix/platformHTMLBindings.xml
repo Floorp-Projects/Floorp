@@ -27,15 +27,7 @@
     <handler event="keypress" id="key_del_eol" key="k" modifiers="control"
         command="cmd_deleteToEndOfLine"/>
 
-    <!-- Windows copy/paste/undo/redo keys -->
-    <handler event="keypress" id="key_wincopy" key="c" modifiers="control"
-        command="cmd_copy"/>
-    <handler event="keypress" id="key_wincut" key="x" modifiers="control"
-        command="cmd_cut"/>
-    <handler event="keypress" id="key_winundo" key="z" modifiers="control"
-        command="cmd_undo"/>
-    <handler event="keypress" id="key_winredo" key="r" modifiers="control"
-        command="cmd_redo"/>
+    <!-- Alternate Windows copy/paste/undo/redo keys -->
     <handler event="keypress" id="key_altwincut" keycode="VK_DELETE" modifiers="shift"
         command="cmd_cut"/>
     <handler event="keypress" id="key_altwincopy" keycode="VK_INSERT" modifiers="control" 
@@ -60,7 +52,7 @@
         command="cmd_selectWordPrevious"/>
     <handler event="keypress" id="key_rightshiftcontrol" keycode="VK_RIGHT" modifiers="shift,control" 
         command="cmd_selectWordNext"/>
-    <handler event="keypress" id="key_redo" key="y" modifiers="primary"
+    <handler event="keypress" id="key_redo" key="y" modifiers="accel"
         command="cmd_redo"/>
     </handlers>
   </binding>
@@ -88,15 +80,7 @@
     <handler event="keypress" id="key_del_eol" key="k" modifiers="control"
         command="cmd_deleteToEndOfLine"/>
 
-    <!-- Windows copy/paste/undo/redo keys -->
-    <handler event="keypress" id="key_wincopy" key="c" modifiers="control"
-        command="cmd_copy"/>
-    <handler event="keypress" id="key_wincut" key="x" modifiers="control"
-        command="cmd_cut"/>
-    <handler event="keypress" id="key_winundo" key="z" modifiers="control"
-        command="cmd_undo"/>
-    <handler event="keypress" id="key_winredo" key="r" modifiers="control"
-        command="cmd_redo"/>
+    <!-- Alternate Windows copy/paste/undo/redo keys -->
     <handler event="keypress" id="key_altwincut" keycode="VK_DELETE" modifiers="shift"
         command="cmd_cut"/>
     <handler event="keypress" id="key_altwincopy" keycode="VK_INSERT" modifiers="control"
@@ -127,7 +111,7 @@
         command="cmd_selectWordPrevious"/>
     <handler event="keypress" id="key_rightshiftcontrol" keycode="VK_RIGHT" modifiers="shift,control" 
         command="cmd_selectWordNext"/>
-    <handler event="keypress" id="key_redo" key="y" modifiers="primary"
+    <handler event="keypress" id="key_redo" key="y" modifiers="accel"
         command="cmd_redo"/>
     </handlers>
   </binding>

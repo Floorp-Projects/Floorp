@@ -191,26 +191,20 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
   // so look for special keys using keyCode
   if (0 != keyCode)
   {
-    PRBool isAnyModifierKey;
+    PRBool isAnyModifierKeyButShift;
     nsresult rv;
-    rv = keyEvent->GetAltKey(&isAnyModifierKey);
+    rv = keyEvent->GetAltKey(&isAnyModifierKeyButShift);
     if (NS_FAILED(rv)) return rv;
     
-    if (!isAnyModifierKey)
+    if (!isAnyModifierKeyButShift)
     {
-      rv = keyEvent->GetMetaKey(&isAnyModifierKey);
+      rv = keyEvent->GetMetaKey(&isAnyModifierKeyButShift);
       if (NS_FAILED(rv)) return rv;
       
-      if (!isAnyModifierKey)
+      if (!isAnyModifierKeyButShift)
       {
-        rv = keyEvent->GetShiftKey(&isAnyModifierKey);
+        rv = keyEvent->GetCtrlKey(&isAnyModifierKeyButShift);
         if (NS_FAILED(rv)) return rv;
-        
-        if (!isAnyModifierKey)
-        {
-          rv = keyEvent->GetCtrlKey(&isAnyModifierKey);
-          if (NS_FAILED(rv)) return rv;
-        }
       }
     }
 
@@ -225,7 +219,7 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
         break;
 
       case nsIDOMKeyEvent::DOM_VK_BACK_SPACE: 
-        if (isAnyModifierKey)
+        if (isAnyModifierKeyButShift)
           return NS_OK;
 
         mEditor->DeleteSelection(nsIEditor::ePrevious);
@@ -235,7 +229,7 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
         break;
  
       case nsIDOMKeyEvent::DOM_VK_DELETE:
-        if (isAnyModifierKey)
+        if (isAnyModifierKeyButShift)
           return NS_OK;
 
         mEditor->DeleteSelection(nsIEditor::eNext);
