@@ -1159,8 +1159,8 @@ CSSStyleSheetImpl::Init(nsIURL* aURL)
   if (! aURL)
     return NS_ERROR_NULL_POINTER;
 
-  NS_ASSERTION(mURL == nsnull, "already initialized");
-  if (mURL != nsnull)
+  NS_ASSERTION(mURL.IsNull(), "already initialized");
+  if (mURL.IsNotNull())
     return NS_ERROR_ALREADY_INITIALIZED;
 
   mURL.SetAddRef(aURL);
