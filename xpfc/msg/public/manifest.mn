@@ -15,6 +15,7 @@ EXPORTS = \
     nsIMIMEService.h \
 	nsISMTPObserver.h \
 	nsIMessage.h \
+	nsIMIMEMessage.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \

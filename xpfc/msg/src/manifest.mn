@@ -21,6 +21,7 @@ CPPSRCS = \
     nsSMTPService.cpp \
     nsMIMEService.cpp \
 	nsMessage.cpp \
+	nsMIMEMessage.cpp \
 	nsSMTPServerCallback.cpp \
 	$(NULL)
 
