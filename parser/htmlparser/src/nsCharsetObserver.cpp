@@ -74,11 +74,9 @@ NS_IMETHODIMP nsCharsetObserver::Notify(
                      const nsString& aTag, 
                      PRUint32 numOfAttributes, 
                      const nsString* nameArray, 
-                     const nsString* valueArray,
-                     PRBool *oContinue)
+                     const nsString* valueArray)
 {
     nsresult res = NS_OK;
-    *oContinue = PR_TRUE; // be default, continue
     if(aTag.EqualsIgnoreCase("META")) 
     {
       if((numOfAttributes >= 2) && 

@@ -48,8 +48,7 @@ public:
    *   @param valueArray - array of value
    */
   NS_IMETHOD Notify(PRUint32 aDocumentID, const nsString& aTag, PRUint32 numOfAttributes, 
-                    const nsString* nameArray, const nsString* valueArray,
-                    PRBool* oContinue);
+                    const nsString* nameArray, const nsString* valueArray);
 
   NS_IMETHOD Notify(nsISupports** result) = 0;
 };
