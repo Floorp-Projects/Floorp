@@ -402,12 +402,12 @@ public final class RDN implements java.io.Serializable {
      * @see org.ietf.ldap.util.RDN#getAttributeSyntax
      */
     public static String[] getAttributesForSyntax( String oid ) {
-        Enumeration enum = m_attributehash.keys();
+        Enumeration itr = m_attributehash.keys();
         Vector key_v = new Vector();
         String tmp_str = null;
 
-        while ( enum.hasMoreElements() ) {
-            tmp_str = (String)enum.nextElement();
+        while ( itr.hasMoreElements() ) {
+            tmp_str = (String)itr.nextElement();
             if ( oid.equals( (String)m_attributehash.get( tmp_str ) ) ) {
                 key_v.addElement( tmp_str );
             }

@@ -152,8 +152,8 @@ class AttributesImpl implements Attributes {
      */
     static LDAPAttributeSet jndiAttrsToLdapAttrSet(Attributes jndiAttrs) throws NamingException{
         LDAPAttributeSet attrs = new LDAPAttributeSet();
-        for (Enumeration enum = jndiAttrs.getAll(); enum.hasMoreElements();) {
-            attrs.add(jndiAttrToLdapAttr((Attribute) enum.nextElement()));
+        for (Enumeration itr = jndiAttrs.getAll(); itr.hasMoreElements();) {
+            attrs.add(jndiAttrToLdapAttr((Attribute) itr.nextElement()));
         }
         return attrs;
     }    
@@ -184,12 +184,12 @@ class AttributesImpl implements Attributes {
      */
     static Attribute ldapAttrToJndiAttr(LDAPAttribute attr) {
         BasicAttribute jndiAttr = new BasicAttribute(attr.getName());
-        Enumeration enumVals = null;
+        Enumeration itrVals = null;
         if (isBinaryAttribute(attr.getName())) {
-            enumVals = attr.getByteValues();
+            itrVals = attr.getByteValues();
         }
         else {
-            enumVals = attr.getStringValues();
+            itrVals = attr.getStringValues();
         }
 	/* Performance enhancement for an attribute with many values.
 	 * If number of value over threshold, use TreeSet to quickly
@@ -197,9 +197,9 @@ class AttributesImpl implements Attributes {
 	 * to pass TreeSet directly to Vector of JNDI attribute.
 	 */    
 	if (attr.size() < 50 ) {
-          if (enumVals != null) {
-              while ( enumVals.hasMoreElements() ) {
-                  jndiAttr.add(enumVals.nextElement());
+          if (itrVals != null) {
+              while ( itrVals.hasMoreElements() ) {
+                  jndiAttr.add(itrVals.nextElement());
               }
           }    
 	} 
@@ -214,9 +214,9 @@ class AttributesImpl implements Attributes {
 		}
 	  }
 	  TreeSet valSet = new TreeSet();
-          if (enumVals != null) {
-              while ( enumVals.hasMoreElements() ) {
-                  valSet.add(enumVals.nextElement());
+          if (itrVals != null) {
+              while ( itrVals.hasMoreElements() ) {
+                  valSet.add(itrVals.nextElement());
               }
           }    
           jndiAttr = new BigAttribute(attr.getName(), valSet);

@@ -465,8 +465,8 @@ public class ObjectMapper {
      */
     static Attributes encodeDirCtxObj(DirContext obj, Attributes attrs) throws NamingException{
         Attributes ctxAttrs = obj.getAttributes("");
-        for (NamingEnumeration enum = ctxAttrs.getAll(); enum.hasMore();) {
-            attrs.put((Attribute)enum.next());
+        for (NamingEnumeration itr = ctxAttrs.getAll(); itr.hasMore();) {
+            attrs.put((Attribute)itr.next());
         }
         return attrs;
     }

@@ -2064,16 +2064,16 @@ public class LDAPConnection
      *
      * LDAPAttributeSet foundAttrs = foundEntry.getAttributeSet();
      * int size = foundAttrs.size();
-     * Enumeration enumAttrs = foundAttrs.getAttributes();
+     * Enumeration itrAttrs = foundAttrs.getAttributes();
      * System.out.println( "Attributes: " );
      *
-     * while ( enumAttrs.hasMoreElements() ) {
-     *      LDAPAttribute anAttr = ( LDAPAttribute )enumAttrs.nextElement();
+     * while ( itrAttrs.hasMoreElements() ) {
+     *      LDAPAttribute anAttr = ( LDAPAttribute )itrAttrs.nextElement();
      *      String attrName = anAttr.getName();
      *      System.out.println( "\t" + attrName );
-     *      Enumeration enumVals = anAttr.getStringValues();
-     *      while ( enumVals.hasMoreElements() ) {
-     *           String aVal = ( String )enumVals.nextElement();
+     *      Enumeration itrVals = anAttr.getStringValues();
+     *      while ( itrVals.hasMoreElements() ) {
+     *           String aVal = ( String )itrVals.nextElement();
      *           System.out.println( "\t\t" + aVal );
      *      }
      * }
@@ -4519,9 +4519,9 @@ public class LDAPConnection
         LDAPControl[] controls = null;
 
         synchronized(m_responseControlTable) {            
-            Enumeration enum = m_responseControlTable.keys();          
-            while (enum.hasMoreElements()) {
-                Object client = enum.nextElement();
+            Enumeration itr = m_responseControlTable.keys();          
+            while (itr.hasMoreElements()) {
+                Object client = itr.nextElement();
                 ResponseControls rspCtrls = (ResponseControls)m_responseControlTable.get(client);
 
                 if (msgID == rspCtrls.msgID) {

@@ -263,9 +263,9 @@ public class LDAPPersistSearchControl extends LDAPControl {
             BERSequence s = (BERSequence)BERElement.getElement(decoder, inStream,
               numRead);
 
-            BEREnumerated enum = (BEREnumerated)s.elementAt(0);
+            BEREnumerated itr = (BEREnumerated)s.elementAt(0);
 
-            con.setChangeType(enum.getValue());
+            con.setChangeType(itr.getValue());
 
             if (s.size() > 1) {
                 if (s.elementAt(1) instanceof BEROctetString) {
