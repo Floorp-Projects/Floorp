@@ -29,6 +29,9 @@
 #include "nsIEventStateManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsINameSpaceManager.h"
+#include "nsIDOMXULDocument.h"
+#include "nsIDocument.h"
+#include "nsIPresShell.h"
 
 
 NS_IMPL_ADDREF(nsToolbarDragListener)
@@ -38,14 +41,18 @@ NS_IMPL_RELEASE(nsToolbarDragListener)
 //
 // nsToolbarDragListener ctor
 //
-// Not much to do besides init member variables
+// Init member variables. We can't really do much of anything important here because
+// any subframes might not be totally intialized yet, or in the hash table
 //
-
 nsToolbarDragListener :: nsToolbarDragListener ( nsToolbarFrame* inToolbar, nsIPresContext* inPresContext )
   : mToolbar(inToolbar), mPresContext(inPresContext), mCurrentDropLoc(-1)
 {
   NS_INIT_REFCNT();
-}
+  
+  // we really need this all over the place. just be safe that we have it.
+  NS_ASSERTION ( mPresContext, "no pres context set on toolbar drag listener" );
+ 
+} // nsToolbarDragListener ctor
 
 
 //
@@ -131,16 +138,22 @@ nsToolbarDragListener :: ItemMouseIsOver ( nsIDOMEvent* aDragEvent, nscoord* out
 {
   *outOnChild = PR_FALSE;
 
+  // figure out which frame is the right one for determining the drop feedback. Do we
+  // want to do this every time? We certainly can't do it upon toolbar creation (hash
+  // tables not setup at that time), so we're forced to do it now. What happens if while
+  // we're dragging some rule gets fired that causes the frame to go away? 
+  nsIFrame* dropAreaFrame = LocateDropAreaFrame();
+  if ( !dropAreaFrame ) {
+    // gaaak, we're doomed.
+    outIndex = 0;
+    outXLoc = 0;
+    return;
+  }
+  
   nsCOMPtr<nsIDOMUIEvent> uiEvent(do_QueryInterface(aDragEvent));
   PRInt32 x,y = 0;
   uiEvent->GetClientX(&x);
   uiEvent->GetClientY(&y);
-
-  // This is kind of hooky but its the easiest thing to do
-  // The mPresContext is set into this class from the nsToolbarFrame
-  // It's needed here for figuring out twips & 
-  // resetting the active state in the event manager after the drop takes place.
-  NS_ASSERTION ( mPresContext, "no pres context set on listener" );
 
   // translate the mouse coords into twips
   float p2t;
@@ -152,7 +165,7 @@ nsToolbarDragListener :: ItemMouseIsOver ( nsIDOMEvent* aDragEvent, nscoord* out
 
   // get the toolbar's rect
   nsRect tbRect;
-  mToolbar->GetRect(tbRect);
+  dropAreaFrame->GetRect(tbRect);
 
   PRUint32 count = 0;
   PRBool found = PR_FALSE;
@@ -161,7 +174,7 @@ nsToolbarDragListener :: ItemMouseIsOver ( nsIDOMEvent* aDragEvent, nscoord* out
   nsRect    prevRect(-1, -1, 0, 0);
 
   // Now loop through the child and see if the mouse is over a child
-  mToolbar->FirstChild(nsnull, &childFrame); 
+  dropAreaFrame->FirstChild(nsnull, &childFrame); 
   while ( childFrame ) {    
 
     // The mouse coords are in the toolbar's domain
@@ -360,4 +373,61 @@ nsToolbarDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
   // this code should all be in JS.
   return NS_OK;
 }
+
+
+//
+// LocateDropAreaFrame
+//
+// Returns the frame (or subframe) that contains the buttons that can be dragged.
+// Either it will be the toolbar frame as a whole, or it will be some subframe of the bar id'd by
+// the |dragdroparea| attribute.
+//
+nsIFrame*
+nsToolbarDragListener :: LocateDropAreaFrame ( )
+{
+  nsIFrame* retVal = nsnull;
+  
+  // is a subframe the drag/drop area? determine if the attribute is set.
+  nsString dropAreaID;
+  PRBool dropAreaIsSubframe = PR_FALSE;
+  nsCOMPtr<nsIContent> toolbarContent;
+  mToolbar->GetContent ( getter_AddRefs(toolbarContent) );
+  if ( toolbarContent ) {
+    if ( toolbarContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::tbDragDropArea, dropAreaID) == NS_CONTENT_ATTR_HAS_VALUE )
+      dropAreaIsSubframe = PR_TRUE;
+  }
+
+  // if there is a named subframe, go find it, otherwise use the entire toolbar
+  if ( dropAreaIsSubframe ) {
+  
+    // get the presShell so we can call GetPrimaryFrameFor later.
+    nsCOMPtr<nsIPresShell> presShell;
+    mPresContext->GetShell ( getter_AddRefs(presShell) );
+    
+    // get the document so we can get do a GetElementByID.
+    nsCOMPtr<nsIDocument> document;
+    toolbarContent->GetDocument ( *getter_AddRefs(document) );
+    if ( document ) {
+      nsCOMPtr<nsIDOMXULDocument> xulDoc ( do_QueryInterface(document) );
+      if ( xulDoc ) {
+        nsCOMPtr<nsIDOMElement> domElementOfSubframe;
+        xulDoc->GetElementById ( dropAreaID, getter_AddRefs(domElementOfSubframe) );
+
+        // finally get the frame associated with that dom node
+        nsCOMPtr<nsIContent> contentOfSubframe ( do_QueryInterface(domElementOfSubframe) );
+        if ( contentOfSubframe && presShell )
+          presShell->GetPrimaryFrameFor ( contentOfSubframe, &retVal );       
+      }
+    }
+    
+  } // if named subframe
+  else
+    retVal = mToolbar;
+    
+  NS_ASSERTION ( retVal, "toolbar drag listener couldn't figure out the drag area." );
+  return retVal;
+  
+} // LocateDropAreaFrame
+
+
 
