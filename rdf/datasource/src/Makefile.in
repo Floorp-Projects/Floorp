@@ -32,6 +32,7 @@ CPPSRCS =				\
 	nsFileSystemDataSource.cpp	\
 	nsFindDataSource.cpp		\
 	nsFTPDataSource.cpp		\
+	nsSearchDataSource.cpp		\
 	nsXULContentSink.cpp		\
 	$(NULL)
 
