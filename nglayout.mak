@@ -111,6 +111,7 @@ DIST_DIRS =			\
   modules\libimg		\
   modules\plugin		\
   modules\oji		\
+  intl                          \
   base                          \
   caps                          \
   lib\xp			\
@@ -217,6 +218,7 @@ pull_lizard:
 	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/oji
 	$(CVSCO_LIZARD) $(MOZ_TOP)/caps
         $(CVSCO_LIZARD) $(MOZ_TOP)/rdf
+        $(CVSCO_LIZARD) $(MOZ_TOP)/intl
 !if defined(NGPREFS)
 	$(CVSCO_LIZARD) $(MOZ_TOP)/cmd/wincom
 	$(CVSCO_LIZARD) $(MOZ_TOP)/cmd/winfe/defaults.h
