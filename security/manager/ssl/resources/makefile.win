@@ -39,4 +39,4 @@ include <$(DEPTH)\config\rules.mak>
 
 chrome::
 	$(REGCHROME) content pipnss pipnss.jar
-	$(REGCHROME) locale en-US/pipnss pipnss.jar
+	$(REGCHROME) locale en-US/pipnss en-US.jar
