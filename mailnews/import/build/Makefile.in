@@ -119,4 +119,8 @@ EXTRA_DSO_LDOPTS += \
 	$(MOZ_XPCOM_OBSOLETE_LIBS) \
 	$(NULL)
 
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+EXTRA_DSO_LDOPTS += $(TK_LIBS)
+endif
+
 include $(topsrcdir)/config/rules.mk
