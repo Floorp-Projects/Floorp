@@ -839,6 +839,8 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
   
   PRInt32 prevColIndex; // remember the col index of the previous cell to handle rowspans into this row
 
+  nsTableFrame* tableFrame = nsnull;
+  rv = nsTableFrame::GetTableFrame(this, tableFrame);
   nsTableIteration dir = (aReflowState.reflowState.availableWidth == NS_UNCONSTRAINEDSIZE)
                          ? eTableLTR : eTableDIR;
   nsTableIterator iter(aPresContext, *this, dir);
@@ -846,14 +848,13 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
     prevColIndex = -1;
   }
   else {
-    nsTableFrame* tableFrame = nsnull;
-    rv = nsTableFrame::GetTableFrame(this, tableFrame);
     if (NS_FAILED(rv) || (nsnull == tableFrame)) {
       return rv;
     }
     prevColIndex = tableFrame->GetColCount();
   }
 
+  PRBool isAutoLayout = tableFrame->IsAutoLayout();
   // Reflow each of our existing cell frames
   nsIFrame* kidFrame = iter.First();
   while (nsnull != kidFrame) {
@@ -870,9 +871,9 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
     }
 
     // Reflow the child frame
+    const nsStyleDisplay *kidDisplay;
+    kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)kidDisplay));
     if (doReflowChild) {
-      const nsStyleDisplay *kidDisplay;
-      kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)kidDisplay));
       if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay) {
         PRInt32 cellColIndex;
         ((nsTableCellFrame *)kidFrame)->GetColIndex(cellColIndex);
@@ -908,7 +909,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
         // Calculate the available width for the table cell using the known
         // column widths
         nscoord availWidth;
-        if (!mPrevInFlow && (frameState & NS_FRAME_FIRST_REFLOW)) {
+        if (!mPrevInFlow && isAutoLayout && (frameState & NS_FRAME_FIRST_REFLOW)) {
           // This is the initial reflow for the cell and so we do an unconstrained
           // reflow.
           // Note: don't assume that we have known column widths. If we don't, then
@@ -942,11 +943,9 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
           nsSize  kidAvailSize(availWidth, aReflowState.reflowState.availableHeight);
 
           // If it's a dirty frame, then check whether it's the initial reflow
-          nsReflowReason  reason = eReflowReason_Resize;
-          if (!mPrevInFlow && (frameState & NS_FRAME_FIRST_REFLOW)) {
-            // Newly inserted frame
-            reason = eReflowReason_Initial;
-
+          nsReflowReason reason = 
+            (frameState & NS_FRAME_FIRST_REFLOW) ? eReflowReason_Initial :eReflowReason_Resize;
+          if (!mPrevInFlow && isAutoLayout && (frameState & NS_FRAME_FIRST_REFLOW)) {
             // Use an unconstrained width so we can get the child's maximum width
             // XXX What about fixed layout tables?
             kidAvailSize.SizeTo(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
@@ -983,6 +982,8 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
             if (kidMaxElementSize) {
               ((nsTableCellFrame *)kidFrame)->SetPass1MaxElementSize(*kidMaxElementSize);
             }
+            // XXX if we did an unconstrained reflow, do we need to do another one
+            // there needs to be more test cases to show this             
           }
 
           // If any of the cells are not complete, then we're not complete
@@ -1037,6 +1038,12 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
         kidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
       }
     }
+    else if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay) {
+      // we need to account for the cell's width even if it isn't reflowed
+      nsRect rect;
+      kidFrame->GetRect(rect);
+      aReflowState.x += rect.width;
+    }
 
     kidFrame = iter.Next(); // Get the next child
     // if this was the last child, and it had a colspan>1, add in the cellSpacing for the colspan
@@ -1082,7 +1089,7 @@ nsTableRowFrame::InitialReflow(nsIPresContext*      aPresContext,
   nsSize    kidMaxElementSize(0,0);
   nscoord   x = 0;
   nsTableFrame* table = aReflowState.tableFrame;
-  PRBool    isAutoLayout = table->IsAutoLayout(&aReflowState.reflowState);
+  PRBool    isAutoLayout = table->IsAutoLayout();
   nscoord   cellSpacingX = table->GetCellSpacingX();
 
   nsIFrame* kidFrame;
