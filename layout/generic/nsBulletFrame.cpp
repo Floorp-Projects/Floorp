@@ -884,6 +884,12 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
         mStyleContext->GetStyleData(eStyleStruct_List);
       if (myList->mListStyleImage != oldImageURL) {
         mImageLoader.UpdateURLSpec(aPresContext, myList->mListStyleImage);
+        // XXX - invlidate here is fragile as our parent can choose to change our size
+        //       however currently the parent accepts our size so this works.
+        //       Also, it might be better to invalidate when the image has actually loaded
+        //       instead of when we request the image to load...
+        //       This, however, works as it is currently used (bug 8862 is fixed)
+        Invalidate(aPresContext, nsRect(0, 0, mRect.width, mRect.height));
       }
     }
   }
