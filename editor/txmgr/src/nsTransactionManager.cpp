@@ -60,16 +60,50 @@ nsTransactionManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsTransactionManager::Do(nsITransaction *aTransaction)
 {
+  nsTransactionItem *tx;
   nsresult result = NS_OK;
 
   if (!aTransaction)
     return NS_ERROR_NULL_POINTER;
 
+  NS_ADDREF(aTransaction);
+
+  tx = new nsTransactionItem(aTransaction);
+
+  if (!tx) {
+    NS_RELEASE(aTransaction);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   LOCK_TX_MANAGER(this);
 
-  result = aTransaction->Do();
+  result = mDoStack.Push(tx);
 
   if (! NS_SUCCEEDED(result)) {
+    delete tx;
+    UNLOCK_TX_MANAGER(this);
+    return result;
+  }
+
+  result = tx->Do();
+
+  if (! NS_SUCCEEDED(result)) {
+    mDoStack.Pop(&tx);
+    delete tx;
+    UNLOCK_TX_MANAGER(this);
+    return result;
+  }
+
+  mDoStack.Pop(&tx);
+
+  nsTransactionItem *top = 0;
+
+  result = mDoStack.Peek(&top);
+  if (top) {
+    result = top->AddChild(tx);
+
+    // XXX: What do we do if this fails?
+
     UNLOCK_TX_MANAGER(this);
     return result;
   }
@@ -81,8 +115,7 @@ nsTransactionManager::Do(nsITransaction *aTransaction)
   // XXX: Check to see if we've hit the max level of undo. If so,
   //      pop the bottom transaction of the undo stack and release it!
 
-  NS_ADDREF(aTransaction);
-  mUndoStack.Push(aTransaction);
+  mUndoStack.Push(tx);
 
   result = ClearRedoStack();
 
@@ -99,8 +132,8 @@ nsTransactionManager::Do(nsITransaction *aTransaction)
 nsresult
 nsTransactionManager::Undo()
 {
-  nsresult result    = NS_OK;
-  nsITransaction *tx = 0;
+  nsresult result       = NS_OK;
+  nsTransactionItem *tx = 0;
 
   LOCK_TX_MANAGER(this);
 
@@ -129,8 +162,8 @@ nsTransactionManager::Undo()
 nsresult
 nsTransactionManager::Redo()
 {
-  nsresult result    = NS_OK;
-  nsITransaction *tx = 0;
+  nsresult result       = NS_OK;
+  nsTransactionItem *tx = 0;
 
   LOCK_TX_MANAGER(this);
 

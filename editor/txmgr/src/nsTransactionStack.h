@@ -19,23 +19,18 @@
 #ifndef nsTransactionStack_h__
 #define nsTransactionStack_h__
 
-#include "nsITransaction.h"
+#include "nsTransactionItem.h"
 #include "nsDeque.h"
+
+class nsTransactionItem;
 
 class nsTransactionReleaseFunctor : public nsDequeFunctor
 {
 public:
 
   nsTransactionReleaseFunctor()  {}
-
   ~nsTransactionReleaseFunctor() {}
-
-  virtual void *operator()(void *aObject)
-  {
-    nsITransaction *t = (nsITransaction *)aObject;
-    NS_IF_RELEASE(t);
-    return 0;
-  }
+  virtual void *operator()(void *aObject);
 };
 
 class nsTransactionStack
@@ -48,10 +43,10 @@ public:
   nsTransactionStack();
   virtual ~nsTransactionStack();
 
-  virtual nsresult Push(nsITransaction *aTransaction);
-  virtual nsresult Pop(nsITransaction **aTransaction);
-  virtual nsresult PopBottom(nsITransaction **aTransaction);
-  virtual nsresult Peek(nsITransaction **aTransaction);
+  virtual nsresult Push(nsTransactionItem *aTransactionItem);
+  virtual nsresult Pop(nsTransactionItem **aTransactionItem);
+  virtual nsresult PopBottom(nsTransactionItem **aTransactionItem);
+  virtual nsresult Peek(nsTransactionItem **aTransactionItem);
   virtual nsresult Clear(void);
   virtual nsresult GetSize(PRInt32 *aStackSize);
   virtual nsresult Write(nsIOutputStream *aOutputStream);
@@ -61,6 +56,7 @@ class nsTransactionRedoStack: public nsTransactionStack
 {
 public:
 
+  virtual ~nsTransactionRedoStack();
   virtual nsresult Clear(void);
 };
 

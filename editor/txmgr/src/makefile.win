@@ -21,11 +21,13 @@ IGNORE_MANIFEST=1
 LIBRARY_NAME=txmgr
 
 CPPSRCS =				\
+	nsTransactionItem.cpp	\
 	nsTransactionManager.cpp	\
 	nsTransactionStack.cpp	\
 	$(NULL)
 
 CPP_OBJS =					\
+	.\$(OBJDIR)\nsTransactionItem.obj	\
 	.\$(OBJDIR)\nsTransactionManager.obj	\
 	.\$(OBJDIR)\nsTransactionStack.obj	\
 	$(NULL)

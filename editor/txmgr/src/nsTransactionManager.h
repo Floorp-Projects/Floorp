@@ -30,6 +30,7 @@ class nsTransactionManager : public nsITransactionManager
 private:
 
   PRInt32                mMaxLevelsOfUndo;
+  nsTransactionStack     mDoStack;
   nsTransactionStack     mUndoStack;
   nsTransactionRedoStack mRedoStack;
 

@@ -30,7 +30,7 @@ nsTransactionStack::~nsTransactionStack()
 }
 
 nsresult
-nsTransactionStack::Push(nsITransaction *aTransaction)
+nsTransactionStack::Push(nsTransactionItem *aTransaction)
 {
   if (!aTransaction)
     return NS_ERROR_NULL_POINTER;
@@ -44,7 +44,7 @@ nsTransactionStack::Push(nsITransaction *aTransaction)
 }
 
 nsresult
-nsTransactionStack::Pop(nsITransaction **aTransaction)
+nsTransactionStack::Pop(nsTransactionItem **aTransaction)
 {
   if (!aTransaction)
     return NS_ERROR_NULL_POINTER;
@@ -52,13 +52,13 @@ nsTransactionStack::Pop(nsITransaction **aTransaction)
   /* nsDeque is a FIFO, so the top of our stack is actually
    * the back of the deque.
    */
-  *aTransaction = (nsITransaction *)mQue.PopBack();
+  *aTransaction = (nsTransactionItem *)mQue.PopBack();
 
   return NS_OK;
 }
 
 nsresult
-nsTransactionStack::PopBottom(nsITransaction **aTransaction)
+nsTransactionStack::PopBottom(nsTransactionItem **aTransaction)
 {
   if (!aTransaction)
     return NS_ERROR_NULL_POINTER;
@@ -66,13 +66,13 @@ nsTransactionStack::PopBottom(nsITransaction **aTransaction)
   /* nsDeque is a FIFO, so the bottom of our stack is actually
    * the front of the deque.
    */
-  *aTransaction = (nsITransaction *)mQue.Pop();
+  *aTransaction = (nsTransactionItem *)mQue.Pop();
 
   return NS_OK;
 }
 
 nsresult
-nsTransactionStack::Peek(nsITransaction **aTransaction)
+nsTransactionStack::Peek(nsTransactionItem **aTransaction)
 {
   if (!aTransaction)
     return NS_ERROR_NULL_POINTER;
@@ -81,7 +81,7 @@ nsTransactionStack::Peek(nsITransaction **aTransaction)
    * passed the last entry of the deque. We need to decrement
    * to get to the last entry.
    */
-  *aTransaction = (nsITransaction *)(--mQue.End());
+  *aTransaction = (nsTransactionItem *)(--mQue.End());
 
   return NS_OK;
 }
@@ -89,7 +89,7 @@ nsTransactionStack::Peek(nsITransaction **aTransaction)
 nsresult
 nsTransactionStack::Clear(void)
 {
-  nsITransaction *tx = 0;
+  nsTransactionItem *tx = 0;
   nsresult result    = NS_OK;
 
   /* Pop all transactions off the stack and release them. */
@@ -100,7 +100,7 @@ nsTransactionStack::Clear(void)
     return result;
 
   while (tx) {
-    NS_IF_RELEASE(tx);
+    delete tx;
 
     result = Pop(&tx);
 
@@ -130,20 +130,25 @@ nsTransactionStack::Write(nsIOutputStream *aOutputStream)
    */
 
   nsDequeIterator di = mQue.End();
-  nsITransaction *tx = (nsITransaction *)--di;
+  nsTransactionItem *tx = (nsTransactionItem *)--di;
 
   while (tx) {
     tx->Write(aOutputStream);
-    tx = (nsITransaction *)--di;
+    tx = (nsTransactionItem *)--di;
   }
 }
 
 
+nsTransactionRedoStack::~nsTransactionRedoStack()
+{
+  Clear();
+}
+
 nsresult
 nsTransactionRedoStack::Clear(void)
 {
-  nsITransaction *tx = 0;
-  nsresult result    = NS_OK;
+  nsTransactionItem *tx = 0;
+  nsresult result       = NS_OK;
 
   /* When clearing a Redo stack, we have to clear from the
    * bottom of the stack towards the top!
@@ -155,7 +160,7 @@ nsTransactionRedoStack::Clear(void)
     return result;
 
   while (tx) {
-    NS_IF_RELEASE(tx);
+    delete tx;
 
     result = PopBottom(&tx);
 
@@ -164,4 +169,12 @@ nsTransactionRedoStack::Clear(void)
   }
 
   return NS_OK;
+}
+
+void *
+nsTransactionReleaseFunctor::operator()(void *aObject)
+{
+  nsTransactionItem *item = (nsTransactionItem *)aObject;
+  delete item;
+  return 0;
 }
