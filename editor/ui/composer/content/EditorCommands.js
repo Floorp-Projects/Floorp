@@ -252,13 +252,13 @@ function EditorSetBackgroundColor(color)
 function EditorApplyStyle(styleName)
 {
   dump("applying style\n");
-  window.editorShell.SetTextProperty(styleName, null, null);
+  window.editorShell.SetTextProperty(styleName, "", "");
   contentWindow.focus();
 }
 
 function EditorRemoveStyle(styleName)
 {
-  window.editorShell.RemoveTextProperty(styleName, null);
+  window.editorShell.RemoveTextProperty(styleName, "");
   contentWindow.focus();
 }
 
