@@ -1033,6 +1033,17 @@
             // clean up the before/afterselected attributes before removing the tab
             oldTab.selected = false;
 
+            // Because of the way XBL works (fields just set JS
+            // properties on the element) and the code we have in place
+            // to preserve the JS objects for any elements that have
+            // JS properties set on them, the browser element won't be
+            // destroyed until the document goes away.  So we force a
+            // cleanup ourselves.
+            oldBrowser.destroy();
+
+            if (oldBrowser == this.mCurrentBrowser)
+              this.mCurrentBrowser = null;
+
             this.mTabContainer.removeChild(oldTab);
             this.mPanelContainer.removeChild(oldBrowser);
 
