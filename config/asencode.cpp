@@ -43,6 +43,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <libgen.h>
+#include <Carbon/Carbon.h>
+
+typedef struct ASFinderInfo
+{
+  FInfo ioFlFndrInfo;     /* PBGetFileInfo() or PBGetCatInfo() */
+  FXInfo ioFlXFndrInfo;   /* PBGetCatInfo() (HFS only) */
+} ASFinderInfo; /* ASFinderInfo */
 
 #define EXIT_IF_FALSE(x)                                                      \
   do {                                                                        \
@@ -123,7 +130,7 @@ int main(int argc, char** argv)
 
   EXIT_IF_FALSE(fwrite(&header, sizeof(header), 1, output) == 1);
 
-  short entry_count = 4;
+  short entry_count = 5;
   EXIT_IF_FALSE(fwrite(&entry_count, sizeof(entry_count), 1, output) == 1);
 
   struct entry {
@@ -164,6 +171,10 @@ int main(int argc, char** argv)
   entries[3].offset = entries[2].offset + entries[2].length;
   entries[3].length = sizeof(dates);
 
+  entries[4].id = 9; // finder info
+  entries[4].offset = entries[3].offset + entries[3].length;
+  entries[4].length = sizeof(ASFinderInfo);
+
   EXIT_IF_FALSE(fwrite(entries, sizeof(entry), entry_count, output) ==
                 entry_count);
 
@@ -182,6 +193,27 @@ int main(int argc, char** argv)
   dates.access = input_st.st_atime - Y2K_SECONDS;
 
   EXIT_IF_FALSE(fwrite(&dates, 1, sizeof(dates), output) == sizeof(dates));
+
+  char abs_input_name[PATH_MAX];
+  EXIT_IF_FALSE(realpath(input_name, abs_input_name) == abs_input_name);
+
+  FSRef fsref;
+  EXIT_IF_FALSE(FSPathMakeRef((unsigned char *)abs_input_name, &fsref, 0) == 0);
+
+  FSCatalogInfo cat_info;
+  memset(&cat_info, 0, sizeof(cat_info));
+  EXIT_IF_FALSE(FSGetCatalogInfo(&fsref,
+                                 kFSCatInfoGettableInfo,
+                                 &cat_info, NULL, NULL, NULL) == 0);
+
+  ASFinderInfo finder_info;
+  memcpy(&finder_info.ioFlFndrInfo, &cat_info.finderInfo,
+         sizeof(finder_info.ioFlFndrInfo));
+  memcpy(&finder_info.ioFlXFndrInfo, &cat_info.extFinderInfo,
+         sizeof(finder_info.ioFlXFndrInfo));
+
+  EXIT_IF_FALSE(fwrite(&finder_info, 1, sizeof(finder_info), output) ==
+                sizeof(finder_info));
 
   fclose(output);
 
