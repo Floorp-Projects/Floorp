@@ -732,7 +732,7 @@ public:
     void FireOnStatusURLLoad(nsIURL* aURL, nsString& aMsg);
 
     void FireOnEndURLLoad(nsIURL* aURL, PRInt32 aStatus);
-    void AreAllConnectionsComplete(void);
+    //    void AreAllConnectionsComplete(void);
     void LoadURLComplete(nsIURL* aURL, nsISupports* aLoader, PRInt32 aStatus);
     void SetParent(nsDocLoaderImpl* aParent);
     void SetDocumentUrl(nsIURL* aUrl);
@@ -944,6 +944,7 @@ nsDocLoaderImpl::LoadDocument(const nsString& aURLSpec,
     loadType = nsURLLoadNormal;
   }
   if (nsURLLoadBackground != loadType) {
+    printf("In nsDocLoader::LoadDocument initializing mForegroundURLs to 1\n");
     mForegroundURLs = 1;
   }
   mTotalURLs = 1;
@@ -1386,6 +1387,7 @@ void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRIn
 {
   PRBool rv;
   PRBool bIsForegroundURL = PR_FALSE;
+  PRBool bIsBusy = PR_TRUE;
 
   /*
    * If the entry is not found in the list, then it must have been cancelled
@@ -1429,7 +1431,7 @@ void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRIn
   /*
    * Fire the OnEndDocumentLoad notification to any observers...
    */
-  if (0 == mForegroundURLs) {
+  if ((PR_FALSE != bIsForegroundURL) && (0 == mForegroundURLs)) {
 #if defined(DEBUG)
     const char* buffer;
 
@@ -1441,17 +1443,9 @@ void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRIn
     FireOnEndDocumentLoad(aStatus);
   }
 
-  /* 
-   * If this was the last URL for the entire document (including any sub 
-   * documents) then fire an OnConnectionsComplete(...) notification.
-   *
-   * If the URL was a background URL, then ignore it...
-   */
-  if (PR_FALSE != bIsForegroundURL) {
-    AreAllConnectionsComplete();
-  }
 }
 
+#if 0
 void nsDocLoaderImpl::AreAllConnectionsComplete(void)
 {
   PRBool bIsBusy = PR_TRUE;
@@ -1490,6 +1484,7 @@ void nsDocLoaderImpl::AreAllConnectionsComplete(void)
     mParent->AreAllConnectionsComplete();
   }
 }
+#endif  /* 0 */
 
 void nsDocLoaderImpl::SetParent(nsDocLoaderImpl* aParent)
 {
@@ -1690,7 +1685,10 @@ nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec,
      * Set the URL has the current "document" being loaded...
      */
     m_DocLoader->SetDocumentUrl(url);
-
+    /*
+     * Fire the OnStarDocumentLoad interfaces 
+     */
+    m_DocLoader->FireOnStartDocumentLoad(url, m_Command);
     /*
      * Initiate the network request...
      */
@@ -1717,7 +1715,7 @@ nsresult nsDocumentBindInfo::Bind(nsIURL* aURL, nsIStreamListener* aListener)
          ("DocLoader - OnStartDocumentLoad(...) called for %s.\n", buffer));
 #endif /* DEBUG */
 
-  m_DocLoader->FireOnStartDocumentLoad(aURL, m_Command);
+  //  m_DocLoader->FireOnStartDocumentLoad(aURL, m_Command);
 
   /* Set up the stream listener (if provided)... */
   if (nsnull != aListener) {
