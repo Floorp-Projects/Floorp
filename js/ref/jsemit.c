@@ -36,8 +36,9 @@
 #include "jsparse.h"
 #include "jsscript.h"
 
-#define CGINCR  256     /* code generation bytecode allocation increment */
-#define SNINCR  64      /* source note allocation increment */
+#define CGINCR  (256 * sizeof(jsbytecode))  /* code allocation increment */
+#define SNINCR  (64 * sizeof(jssrcnote))    /* srcnote allocation increment */
+#define TNINCR  (64 * sizeof(JSTryNote))    /* trynote allocation increment */
 
 JS_FRIEND_API(JSBool)
 js_InitCodeGenerator(JSContext *cx, JSCodeGenerator *cg,
@@ -2431,16 +2432,31 @@ js_FinishTakingSrcNotes(JSContext *cx, JSCodeGenerator *cg)
 JSBool
 js_AllocTryNotes(JSContext *cx, JSCodeGenerator *cg)
 {
-    size_t size;
+    size_t size, incr;
+    ptrdiff_t delta;
 
-    if (!cg->treeContext.tryCount)
+    size = cg->treeContext.tryCount * sizeof(JSTryNote);
+    if (size <= cg->tryNoteSpace)
 	return JS_TRUE;
 
-    size = (cg->treeContext.tryCount + 1) * sizeof(JSTryNote);
-    PR_ARENA_ALLOCATE(cg->tryBase, &cx->tempPool, size);
-    if (!cg->tryBase)
-	return JS_FALSE;
-    cg->tryNext = cg->tryBase;
+    if (!cg->tryBase) {
+	size = PR_ROUNDUP(size, TNINCR);
+	PR_ARENA_ALLOCATE(cg->tryBase, &cx->tempPool, size);
+	if (!cg->tryBase)
+	    return JS_FALSE;
+	cg->tryNoteSpace = size;
+	cg->tryNext = cg->tryBase;
+    } else {
+	delta = (char *)cg->tryNext - (char *)cg->tryBase;
+	incr = size - cg->tryNoteSpace;
+	incr = PR_ROUNDUP(incr, TNINCR);
+	size = cg->tryNoteSpace;
+	PR_ARENA_GROW(cg->tryBase, &cx->tempPool, size, incr);
+	if (!cg->tryBase)
+	    return JS_FALSE;
+	cg->tryNoteSpace = size + incr;
+	cg->tryNext = (JSTryNote *)((char *)cg->tryBase + delta);
+    }
     return JS_TRUE;
 }
 

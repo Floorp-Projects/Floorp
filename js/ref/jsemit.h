@@ -97,6 +97,7 @@ struct JSCodeGenerator {
     ptrdiff_t       lastNoteOffset; /* code offset for last source note */
     JSTryNote       *tryBase;       /* first exception handling note */
     JSTryNote       *tryNext;       /* next available note */
+    size_t          tryNoteSpace;   /* # of bytes allocated at tryBase */
 };
 
 #define CG_CODE(cg,offset)  ((cg)->base + (offset))
