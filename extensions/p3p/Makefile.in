@@ -44,5 +44,41 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE	= p3p
 DIRS      = public src
+CHROME_DEPS = p3p200005.xsl p3p200010.xsl p3p200012.xsl p3p200109.xsl \
+	p3p200201.xsl
+
+PP = $(PERL) -I$(topsrcdir)/config $(topsrcdir)/config/preprocessor.pl
+
+# Use the XUL preprocessor to adjust the stylesheet template to the slightly
+# varying needs of the supported versions of the p3p specification.
+
+p3p200005.xsl: resources/content/p3p.xsl.in Makefile.in
+	@$(RM) -f $@
+	$(PP) -DNAMESPACE=http://www.w3.org/2000/P3Pv1 \
+	$< > $@
+
+p3p200010.xsl: resources/content/p3p.xsl.in Makefile.in
+	@$(RM) -f $@
+	$(PP) -DNAMESPACE=http://www.w3.org/2000/10/18/P3Pv1 \
+	-DHAS_TMPL_RETENTION\
+	$< > $@
+
+p3p200012.xsl: resources/content/p3p.xsl.in Makefile.in
+	@$(RM) -f $@
+	$(PP) -DNAMESPACE=http://www.w3.org/2000/12/P3Pv1 \
+	-DHAS_CALL_OURS\
+	$< > $@
+
+p3p200109.xsl: resources/content/p3p.xsl.in Makefile.in
+	@$(RM) -f $@
+	$(PP) -DNAMESPACE=http://www.w3.org/2001/09/P3Pv1 \
+	-DHAS_CALL_OURS\
+	$< > $@
+
+p3p200201.xsl: resources/content/p3p.xsl.in Makefile.in
+	@$(RM) -f $@
+	$(PP) -DNAMESPACE=http://www.w3.org/2002/01/P3Pv1 \
+	-DHAS_CALL_OURS -DHAS_PURPOSE_SRC\
+	$< > $@
 
 include $(topsrcdir)/config/rules.mk

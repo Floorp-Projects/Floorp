@@ -21,6 +21,7 @@
    -
    - Contributor(s): Harish Dhurvasula <harishd@netscape.com>
    -                 Heikki Toivonen <heikki@netscape.com>
+   -                 Axel Hecht <axel@pike.org>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,7 +44,7 @@
 -->
 <xsl:stylesheet 
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" 
-  xmlns:p3p="http://www.w3.org/2000/12/P3Pv1" 
+#expand   xmlns:p3p="__NAMESPACE__" 
   version="1.0">
 
 <!-- set the output properties -->
@@ -281,7 +282,18 @@
 </xsl:template>
 
 <xsl:template match="p3p:PURPOSE">
-  <xsl:apply-templates mode="PURPOSE" select="*"/>
+#ifdef HAS_PURPOSE_SRC
+ <xsl:choose>
+   <xsl:when test = "@src">
+     <img src="{@src}" width="{@width}" height="{@height}"/>
+   </xsl:when>
+   <xsl:otherwise>
+#endif
+   <xsl:apply-templates mode="PURPOSE" select="*"/>
+#ifdef HAS_PURPOSE_SRC
+   </xsl:otherwise>
+ </xsl:choose>
+#endif
 </xsl:template>
 
 <xsl:template mode="PURPOSE" match="p3p:current">
@@ -435,7 +447,11 @@
 </xsl:template>
 
 <xsl:template mode="RECIPIENT" match="p3p:ours">
- <li>&p3p.recipient.ours;<xsl:call-template name="ours"/></li>
+ <li>&p3p.recipient.ours;
+#ifdef HAS_CALL_OURS
+  <xsl:call-template name="ours"/>
+#endif
+ </li>
 </xsl:template>
 
 <xsl:template mode="RECIPIENT" match="p3p:delivery">
@@ -537,6 +553,12 @@
   <a class="anchor" message="&p3p.legalrequirement.init;">
   &p3p.clickhereforinfo;</a>
 </xsl:template>
+
+#ifdef HAS_TMPL_RETENTION
+<xsl:template mode="RETENTION" match="p3p:indefinitely">
+ <li>&p3p.retention.indefinitely;</li>
+</xsl:template>
+#endif
 
 <!-- CATEGORIES -->
 
