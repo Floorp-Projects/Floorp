@@ -221,7 +221,16 @@ nsresult nsPref::useUserPrefFile()
         if (NS_SUCCEEDED(rv) && userPrefFile) 
         {
             if (NS_SUCCEEDED(userPrefFile->AppendRelativeUnixPath((char*)userFiles[0])))
-                rv = ReadUserPrefsFrom(userPrefFile);
+            {
+                if (NS_FAILED(StartUp()))
+    	            return NS_ERROR_FAILURE;
+
+	            JS_BeginRequest(gMochaContext);
+                if (pref_OpenFileSpec(userPrefFile, PR_FALSE, PR_FALSE, PR_FALSE, PR_TRUE)
+                    != PREF_NOERROR)
+                    rv = NS_ERROR_FAILURE;
+                JS_EndRequest(gMochaContext);
+            }
         }
     }
     return rv;
