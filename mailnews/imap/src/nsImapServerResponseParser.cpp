@@ -52,8 +52,8 @@ nsImapServerResponseParser::nsImapServerResponseParser(nsImapProtocol &imapProto
     fCurrentCommandTag(nsnull),
     fSelectedMailboxName(nsnull),
     fIMAPstate(kNonAuthenticated),
-	fLastChunk(PR_FALSE),
-	fServerIsNetscape3xServer(PR_FALSE),
+	  fLastChunk(PR_FALSE),
+	  fServerIsNetscape3xServer(PR_FALSE),
     m_shell(nsnull),
 	fServerConnection(imapProtocolConnection),
 	fHostSessionList(nsnull)
@@ -71,6 +71,7 @@ nsImapServerResponseParser::nsImapServerResponseParser(nsImapProtocol &imapProto
 	fLastAlert = nsnull;
 	fDownloadingHeaders = PR_FALSE;
 	fFolderUIDValidity = 0;
+  fCRAMDigest = nsnull;
 }
 
 nsImapServerResponseParser::~nsImapServerResponseParser()
@@ -85,9 +86,10 @@ nsImapServerResponseParser::~nsImapServerResponseParser()
 	PR_FREEIF( fManageListsUrl );
 	PR_FREEIF( fManageFiltersUrl );
 	PR_FREEIF( fSelectedMailboxName );
+  PR_FREEIF(fCRAMDigest);
 
-    NS_IF_RELEASE (fHostSessionList);
-    fCopyResponseKeyArray.RemoveAll();
+  NS_IF_RELEASE (fHostSessionList);
+  fCopyResponseKeyArray.RemoveAll();
 }
 
 PRBool nsImapServerResponseParser::LastCommandSuccessful()
@@ -159,7 +161,7 @@ void nsImapServerResponseParser::InitializeState()
 	fCurrentCommandFailed 	  = PR_FALSE;
 }
 
-void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentCommand)
+void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentCommand, PRBool aIgnoreBadAndNOResponses)
 {
 
     NS_ASSERTION(currentCommand && *currentCommand != '\r' && 
@@ -211,6 +213,12 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
 					NS_ASSERTION((fNumberOfTaggedResponsesExpected - numberOfTaggedResponsesReceived) == 1, 
 						" didn't get the number of tagged responses we expected");
 					numberOfTaggedResponsesReceived = fNumberOfTaggedResponsesExpected;
+          if (commandToken && !nsCRT::strcasecmp(commandToken, "authenticate") && placeInTokenString && 
+            !nsCRT::strncasecmp(placeInTokenString, "CRAM-MD5", nsCRT::strlen("CRAM-MD5")))
+          {
+            // we need to store the digest from the server if we are using CRAM-MD5. 
+            cramResponse_data();
+          }
 				}
 				else
 					numberOfTaggedResponsesReceived++;
@@ -224,11 +232,14 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
 			} while (ContinueParse() && (numberOfTaggedResponsesReceived < fNumberOfTaggedResponsesExpected));
 			
 			// check and see if the server is waiting for more input
+      // it's possible that we ate this + while parsing certain responses (like cram data),
+      // in these cases, the parsing routine for that specific command will manually set
+      // fWaitingForMoreClientInput so we don't lose that information....
 			if (*fNextToken == '+')
 			{
 				fWaitingForMoreClientInput = PR_TRUE;
 			}
-			else
+			else if (!fWaitingForMoreClientInput) // if we aren't still waiting for more input....
 			{
 				if (ContinueParse())
 					response_done();
@@ -242,7 +253,7 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
 				{
 					// a failed command may change the eIMAPstate
 					ProcessBadCommand(commandToken);
-					if (fReportingErrors)
+					if (fReportingErrors && !aIgnoreBadAndNOResponses)
 						fServerConnection.AlertUserEventFromServer(fCurrentLine);
 				}
 			}
@@ -468,6 +479,8 @@ void nsImapServerResponseParser::ProcessBadCommand(const char *commandToken)
 		}
 	}
 }
+
+
 /*
  response_data   ::= "*" SPACE (resp_cond_state / resp_cond_bye /
                               mailbox_data / message_data / capability_data)
@@ -528,7 +541,10 @@ void nsImapServerResponseParser::response_data()
 		case 'L':
 			if (!PL_strcasecmp(fNextToken, "LIST")  || !PL_strcasecmp(fNextToken, "LSUB"))
 				mailbox_data();
-			else SetSyntaxError(PR_TRUE);
+			else if (!PL_strcasecmp(fNextToken, "LANGUAGE"))
+        language_data();
+      else
+        SetSyntaxError(PR_TRUE);
 			break;
 		case 'M':
 			if (!PL_strcasecmp(fNextToken, "MAILBOX"))
@@ -1275,9 +1291,9 @@ void nsImapServerResponseParser::envelope_data()
 				fServerConnection.HandleMessageDownLoadLine(headerLine.GetBuffer(), PR_FALSE);
 		}
 		else
-		  break;
-            // only fetch the next token if we aren't eating a parenthes
-    	    if (ContinueParse() && (*fNextToken != ')') || tableIndex < (int)(sizeof(EnvelopeTable) / sizeof(EnvelopeTable[0])) - 1 )
+			break;
+    // only fetch the next token if we aren't eating a parenthes
+    if (ContinueParse() && (*fNextToken != ')') || tableIndex < (int)(sizeof(EnvelopeTable) / sizeof(EnvelopeTable[0])) - 1 )
 		  fNextToken = GetNextToken();
 	}
 
@@ -1479,6 +1495,7 @@ void nsImapServerResponseParser::resp_cond_state()
 	if ((!PL_strcasecmp(fNextToken, "NO") ||
 	     !PL_strcasecmp(fNextToken, "BAD") ) &&
 	    	fProcessingTaggedResponse)
+
 		fCurrentCommandFailed = PR_TRUE;
 	
 	fNextToken = GetNextToken();
@@ -1892,6 +1909,8 @@ void nsImapServerResponseParser::capability_data()
 				fCapabilityFlag |= kHasAuthLoginCapability;
 			else if (! PL_strcasecmp(fNextToken, "AUTH=PLAIN"))
 				fCapabilityFlag |= kHasAuthPlainCapability;
+      else if (! PL_strcasecmp(fNextToken, "AUTH=CRAM-MD5"))
+        fCapabilityFlag |= kHasCRAMCapability;
 			else if (! PL_strcasecmp(fNextToken, "X-NETSCAPE"))
 				fCapabilityFlag |= kHasXNetscapeCapability;
 			else if (! PL_strcasecmp(fNextToken, "XSENDER"))
@@ -1920,6 +1939,8 @@ void nsImapServerResponseParser::capability_data()
 				fCapabilityFlag |= kLiteralPlusCapability;
 			else if (! PL_strcasecmp(fNextToken, "XAOL-OPTION"))
 				fCapabilityFlag |= kAOLImapCapability;
+      else if (! PL_strcasecmp(fNextToken, "LANGUAGE"))
+        fCapabilityFlag |= kHasLanguageCapability;
 		}
 	} while (fNextToken && 
 			 !at_end_of_line() &&
@@ -1990,12 +2011,36 @@ void nsImapServerResponseParser::xserverinfo_data()
 	} while (fNextToken && !at_end_of_line() && ContinueParse());
 }
 
+void nsImapServerResponseParser::language_data()
+{
+  // we may want to go out and store the language returned to us
+  // by the language command in the host info session stuff. 
+
+  // for now, just eat the language....
+  do
+  {
+    // eat each language returned to us
+    fNextToken = GetNextToken();
+  } while (fNextToken && !at_end_of_line() && ContinueParse());
+}
+
+// cram response data ::= "+" SPACE digest/challenge CRLF
+// the server expects more client data after issuing it's challenge
+
+void nsImapServerResponseParser::cramResponse_data()
+{
+  fNextToken = GetNextToken();
+  fCRAMDigest = nsCRT::strdup(fNextToken);
+  fWaitingForMoreClientInput = PR_TRUE; 
+  
+  skip_to_CRLF();
+}
 
 void nsImapServerResponseParser::namespace_data()
 {
 	EIMAPNamespaceType namespaceType = kPersonalNamespace;
 	PRBool namespacesCommitted = PR_FALSE;
-    const char* serverKey = fServerConnection.GetImapServerKey();
+  const char* serverKey = fServerConnection.GetImapServerKey();
 	while ((namespaceType != kUnknownNamespace) && ContinueParse())
 	{
 		fNextToken = GetNextToken();
@@ -2044,6 +2089,9 @@ void nsImapServerResponseParser::namespace_data()
 					}
 					if (ContinueParse())
 					{
+            // add code to parse the TRANSLATE attribute if it is present....
+            // we'll also need to expand the name space code to take in the translated prefix name.
+
 						nsIMAPNamespace *newNamespace = new nsIMAPNamespace(namespaceType, namespacePrefix, namespaceDelimiter, PR_FALSE);
 						// add it to a temporary list in the host
 						if (newNamespace && fHostSessionList)
