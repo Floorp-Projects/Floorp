@@ -191,6 +191,8 @@ void MRJFrame::menuSelected(UInt32 message, SInt16 modifiers)
 
 void MRJFrame::print(GrafPtr printingPort, Point frameOrigin)
 {
+#if 0
+	// this doesn't work, as Apple hasn't implemented it yet.
 	OSStatus status = JMDrawFrameInPort(mFrameRef, printingPort, frameOrigin, printingPort->clipRgn, false);
 	if (status != noErr) {
 		::MoveTo(10, 12);
@@ -198,4 +200,5 @@ void MRJFrame::print(GrafPtr printingPort, Point frameOrigin)
 		::TextSize(12);
 		::DrawString("\pMRJPlugin:  printing failed.");
 	}
+#endif
 }
