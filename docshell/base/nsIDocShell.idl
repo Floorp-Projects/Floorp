@@ -116,7 +116,8 @@ interface nsIDocShell : nsISupports
 	attribute nsIChromeEventHandler chromeEventHandler;
 
 	/*
-	URI content listener parent
+	URI content listener parent.  This is not refcounted and is assumed to be
+	nulled out by the parent when the parent is going away.
 	*/
 	attribute nsIURIContentListener parentURIContentListener;
 
