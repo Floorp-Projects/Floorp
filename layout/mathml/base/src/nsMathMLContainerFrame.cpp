@@ -47,6 +47,8 @@
 #include "nsMathMLContainerFrame.h"
 #include "nsAutoPtr.h"
 
+NS_DEFINE_CID(kInlineFrameCID, NS_INLINE_FRAME_CID);
+
 //
 // nsMathMLContainerFrame implementation
 //
@@ -722,7 +724,7 @@ nsMathMLContainerFrame::WrapForeignFrames(nsIPresContext* aPresContext)
     nsIFrame* child = next;
     next->GetNextSibling(&next);
     nsInlineFrame* inlineFrame;
-    child->QueryInterface(nsInlineFrame::kInlineFrameCID, (void**)&inlineFrame);
+    child->QueryInterface(kInlineFrameCID, (void**)&inlineFrame);
     if (inlineFrame) {
       // create a new wrapper frame to wrap this child
       nsCOMPtr<nsIPresShell> shell;
