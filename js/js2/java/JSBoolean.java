@@ -27,6 +27,17 @@ class JSBoolean extends JSValue {
         return this;
     }
     
+    JSValue toPrimitive(String hint) {
+        return this;
+    }
+    
+    JSString toJSString() {
+        return (b) ? new JSString("true") : new JSString("false");
+    }
+    
+    JSDouble toJSDouble() {
+        return (b) ? new JSDouble(1) : new JSDouble(0);
+    }
             
     boolean b;
     

@@ -39,9 +39,10 @@ class ControlNode {
     
     String print()
     {
-        StringBuffer result = new StringBuffer("ControlNode ");
+        StringBuffer result = new StringBuffer(getClass().toString().substring(6));
+        result.append(" #");
         result.append(index);
-        result.append("\nexpr:  ");
+        result.append("\nexpr:  \n");
         if (expr == null)
             result.append("expr = null\n");
         else

@@ -27,6 +27,10 @@ class JSInteger extends JSNumber {
         return this;
     }
     
+    JSValue toPrimitive() {
+        return this;
+    }
+    
     JSString toJSString() {
         return new JSString(Integer.toString(i));
     }
