@@ -75,33 +75,16 @@ rdf_MakeRelativeRef(const nsString& aBaseURI, nsString& aURI)
     // This implementation is extremely simple: e.g., it can't compute
     // relative paths, or anything fancy like that. If the context URI
     // is not a prefix of the URI in question, we'll just bail.
-    if (aURI.Find(aBaseURI) != 0)
-        return NS_OK;
+    PRUint32 prefixLen = aBaseURI.Length();
+    if (prefixLen && Substring(aURI, 0, prefixLen) == aBaseURI) {
+        if (prefixLen < aURI.Length() && aURI.CharAt(prefixLen) == '/')
+            ++prefixLen; // chop the leading slash so it's not `absolute'
 
-    // Otherwise, pare down the target URI, removing the context URI.
-    aURI.Cut(0, aBaseURI.Length());
-
-    if (aURI.First() == '/')
-        aURI.Cut(0, 1);
-
-    return NS_OK;
-}
-
-
-nsresult
-rdf_MakeRelativeName(const nsString& aBaseURI, nsString& aURI)
-{
-    nsresult rv;
-
-    rv = rdf_MakeRelativeRef(aBaseURI, aURI);
-    if (NS_FAILED(rv)) return rv;
-    
-    if (aURI.First() == '#')
-        aURI.Cut(0, 1);
+        aURI.Cut(0, prefixLen);
+    }
 
     return NS_OK;
 }
-
 
 static PRBool
 rdf_RequiresAbsoluteURI(const nsString& uri)

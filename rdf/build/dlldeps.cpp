@@ -56,7 +56,6 @@ void XXXNeverCalled()
 
     // rdfutils
     rdf_MakeRelativeRef(s, s);
-    rdf_MakeRelativeName(s, s);
     rdf_MakeAbsoluteURI(s, s);
     rdf_MakeAbsoluteURI(s, cStr);
 
