@@ -238,6 +238,7 @@ nsFrameImageLoader::DamageRepairFrame()
     }
     gXXXInstalledColorMap = PR_TRUE;
   }
+  NS_RELEASE(window);
 
   // Determine damaged area and tell view manager to redraw it
   nsPoint offset;

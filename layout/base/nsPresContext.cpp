@@ -224,6 +224,7 @@ nsPresContext::GetImageGroup(nsIImageGroup*& aGroupResult)
                    mDeviceContext->GetAppUnitsToDevUnits());
     rv = mImageGroup->Init(drawCtx);
     NS_RELEASE(drawCtx);
+    NS_RELEASE(window);
     if (NS_OK != rv) {
       return rv;
     }
@@ -277,6 +278,7 @@ nsPresContext::LoadImage(const nsString& aURL,
     if (NS_OK != rv) {
       return rv;
     }
+    NS_RELEASE(group);
   }
 
   // We haven't seen that image before. Create a new loader and
