@@ -222,7 +222,7 @@ ifdef MOZ_DEBUG
   pattern := ALL_MODULES ^ALL_MODULES
 else
   MOZ_DBGRINFO_MODULES += ^ALL_MODULES
-  pattern := ^ALL_MODULES
+  pattern := ALL_MODULES ^ALL_MODULES
 endif
 
 ifdef MODULE
