@@ -26,18 +26,17 @@ function prefCacheSelectFolder()
 
 function prefClearCache(aType)
 {
-  var cacheService = Components.classes['@mozilla.org/network/cache;1?name=manager']
-                               .getService(nsINetDataCacheManager);
-  cacheService.clear(aType);
+    var classID = Components.classes["@mozilla.org/network/cache-service;1"];
+    var cacheService = classID.getService(Components.interfaces.nsICacheService);
+    cacheService.evictEntries(aType);
 }
 
 function prefClearMemCache()
 {
-  prefClearCache(nsINetDataCacheManager.MEM_CACHE);
+    prefClearCache(Components.interfaces.nsICache.STORE_IN_MEMORY);
 }
 
 function prefClearDiskCache()
 {
-  prefClearCache(nsINetDataCacheManager.FILE_CACHE |
-                 nsINetDataCacheManager.FLAT_CACHE);
+    prefClearCache(Components.interfaces.nsICache.STORE_ON_DISK);
 }
