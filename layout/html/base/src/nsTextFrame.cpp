@@ -168,19 +168,6 @@ public:
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth);
 
-/*  // TextFrame methods
-  struct SelectionInfo {
-    PRInt32 mStartOffset;
-    PRInt32 mEndOffset;
-    PRBool mEmptySelection;
-  };
-  */
-
-/*  void ComputeSelectionInfo(nsIRenderingContext& aRenderingContext,
-                            nsIDocument* aDocument,
-                            PRInt32* aIndicies, PRInt32 aTextLength,
-                            SelectionInfo& aResult);*/
-
   struct TextStyle {
     const nsStyleFont* mFont;
     const nsStyleText* mText;
