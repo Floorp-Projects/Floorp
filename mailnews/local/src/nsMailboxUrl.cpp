@@ -122,6 +122,7 @@ nsMailboxUrl::nsMailboxUrl()
 	m_messageKey = 0;
 	m_messageSize = 0;
 	m_messageFileSpec = nsnull;
+    m_addDummyEnvelope = PR_FALSE;
 }
  
 nsMailboxUrl::~nsMailboxUrl()
@@ -141,15 +142,15 @@ nsresult nsMailboxUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;
     }
  
-    if (aIID.Equals(nsIMailboxUrl::GetIID()) || aIID.Equals(kISupportsIID)) 
+    if (aIID.Equals(NS_GET_IID(nsIMailboxUrl)) || aIID.Equals(kISupportsIID)) 
 	{
         *aInstancePtr = (void*) ((nsIMailboxUrl*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-	if (aIID.Equals(nsIMsgUriUrl::GetIID()))
+	if (aIID.Equals(NS_GET_IID(nsIMsgMessageUrl)))
 	{
-		*aInstancePtr = (void *) ((nsIMsgUriUrl *) this);
+		*aInstancePtr = (void *) ((nsIMsgMessageUrl *) this);
 		NS_ADDREF_THIS();
 		return NS_OK;
 	}
@@ -294,6 +295,8 @@ NS_IMETHODIMP nsMailboxUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
 	return rv;
 }
 
+NS_IMPL_GETSET(nsMailboxUrl, AddDummyEnvelope, PRBool, m_addDummyEnvelope);
+
 NS_IMETHODIMP nsMailboxUrl::SetMessageFile(nsIFileSpec * aFileSpec)
 {
 	m_messageFileSpec = dont_QueryInterface(aFileSpec);
@@ -310,22 +313,6 @@ NS_IMETHODIMP nsMailboxUrl::GetMessageFile(nsIFileSpec ** aFileSpec)
 	return NS_OK;
 }
 
-#if 0   // mscott - i can remove this function once I move the funcionality elsewhere...
-NS_IMETHODIMP nsMailboxUrl::SetURLInfo(URL_Struct *URL_s)
-{
-	nsresult rv = nsMsgMailNewsUrl::SetURLInfo(URL_s);
-	if (m_mailboxAction == nsIMailboxUrl::ActionDisplayMessage || m_mailboxAction == nsIMailboxUrl::ActionCopyMessage
-		|| m_mailboxAction == nsIMailboxUrl::ActionMoveMessage || m_mailboxAction == 	nsIMailboxUrl::ActionSaveMessageToDisk 
-		|| m_mailboxAction == nsIMailboxUrl::ActionAppendMessageToDisk)
-	{
-		// set the byte field range for the url struct...
-		char * byteRange = PR_smprintf("bytes=%d-%d", m_messageKey, m_messageKey+m_messageSize - 1);
-		m_URL_s->range_header = byteRange;
-	}
-
-    return rv;
-}
-#endif
 ////////////////////////////////////////////////////////////////////////////////////
 // End nsIMailboxUrl specific support
 ////////////////////////////////////////////////////////////////////////////////////

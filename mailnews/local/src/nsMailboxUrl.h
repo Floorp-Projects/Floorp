@@ -26,7 +26,7 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 
-class nsMailboxUrl : public nsIMailboxUrl, public nsMsgMailNewsUrl, public nsIMsgUriUrl
+class nsMailboxUrl : public nsIMailboxUrl, public nsMsgMailNewsUrl, public nsIMsgMessageUrl
 {
 public:
 	// nsIURI over-ride...
@@ -45,14 +45,10 @@ public:
 	NS_IMETHOD SetMessageSize(PRUint32 aMessageSize);
 	NS_IMPL_CLASS_GETSET(MailboxAction, nsMailboxAction, m_mailboxAction);
 
-	// used by save message to disk....
-	NS_IMETHOD SetMessageFile(nsIFileSpec * aFileSpec);
-	NS_IMETHOD GetMessageFile(nsIFileSpec ** aFileSpec);
-
     // nsMailboxUrl
     nsMailboxUrl();
 	virtual ~nsMailboxUrl();
-    NS_DECL_NSIMSGURIURL
+    NS_DECL_NSIMSGMESSAGEURL
     NS_DECL_ISUPPORTS_INHERITED
 
 
@@ -74,6 +70,7 @@ protected:
 
 	// used by save message to disk
 	nsCOMPtr<nsIFileSpec> m_messageFileSpec;
+    PRBool                m_addDummyEnvelope;
 	nsresult ParseSearchPart();
 };
 
