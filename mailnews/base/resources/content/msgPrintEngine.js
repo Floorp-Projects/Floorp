@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -78,18 +78,20 @@ function BrowserExitPrintPreview()
 
 // This observer is called once the progress dialog has been "opened"
 var gPrintPreviewObs = {
-    observe: function(aSubject, aTopic, aData)
-    {
-      setTimeout(FinishPrintPreview, 0);
-    },
+  observe: function(aSubject, aTopic, aData)
+  {
+    setTimeout(FinishPrintPreview, 0);
+  },
 
-    QueryInterface : function(iid)
-    {
-     if (iid.equals(Components.interfaces.nsIObserver) || iid.equals(Components.interfaces.nsISupportsWeakReference))
+  QueryInterface : function(iid)
+  {
+    if (iid.equals(Components.interfaces.nsIObserver) ||
+        iid.equals(Components.interfaces.nsISupportsWeakReference) ||
+        iid.equals(Components.interfaces.nsISupports))
       return this;
-     
-     throw Components.results.NS_NOINTERFACE;
-    }
+
+    throw Components.results.NS_NOINTERFACE;
+  }
 };
 
 function getBundle(aURI)

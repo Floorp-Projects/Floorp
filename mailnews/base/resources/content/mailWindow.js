@@ -283,7 +283,8 @@ nsMsgStatusFeedback.prototype =
   QueryInterface : function(iid)
     {
       if (iid.equals(Components.interfaces.nsIMsgStatusFeedback) ||
-          iid.equals(Components.interfaces.nsIXULBrowserWindow))
+          iid.equals(Components.interfaces.nsIXULBrowserWindow) ||
+          iid.equals(Components.interfaces.nsISupports))
         return this;
       throw Components.results.NS_NOINTERFACE;
     },
@@ -395,10 +396,10 @@ nsMsgWindowCommands.prototype =
 {
   QueryInterface : function(iid)
   {
-    if(iid.equals(Components.interfaces.nsIMsgWindowCommands))
+    if (iid.equals(Components.interfaces.nsIMsgWindowCommands) ||
+        iid.equals(Components.interfaces.nsISupports))
       return this;
     throw Components.results.NS_NOINTERFACE;
-        return null;
   },
   SelectFolder: function(folderUri)
   {
@@ -419,10 +420,10 @@ nsMessagePaneController.prototype =
 {
   QueryInterface : function(iid)
   {
-    if(iid.equals(Components.interfaces.nsIMsgMessagePaneController))
+    if (iid.equals(Components.interfaces.nsIMsgMessagePaneController) ||
+        iid.equals(Components.interfaces.nsISupports))
       return this;
     throw Components.results.NS_NOINTERFACE;
-        return null;
   },
   clearMsgPane: function()
   {

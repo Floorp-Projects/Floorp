@@ -440,23 +440,23 @@ function nsMsgSearchCommandUpdater()
 nsMsgSearchCommandUpdater.prototype =
 {
   updateCommandStatus : function()
-    {
-      // the back end is smart and is only telling us to update command status
-      // when the # of items in the selection has actually changed.
-      document.commandDispatcher.updateCommands('mail-search');
-    },
+  {
+    // the back end is smart and is only telling us to update command status
+    // when the # of items in the selection has actually changed.
+    document.commandDispatcher.updateCommands('mail-search');
+  },
   displayMessageChanged : function(aFolder, aSubject, aKeywords)
   {
   },
 
   QueryInterface : function(iid)
-   {
-     if(iid.equals(Components.interfaces.nsIMsgDBViewCommandUpdater))
+  {
+    if (iid.equals(Components.interfaces.nsIMsgDBViewCommandUpdater) ||
+        iid.equals(Components.interfaces.nsISupports))
       return this;
 
-     throw Components.results.NS_NOINTERFACE;
-     return null;
-   }
+    throw Components.results.NS_NOINTERFACE;
+  }
 }
 
 function setupDatasource() {

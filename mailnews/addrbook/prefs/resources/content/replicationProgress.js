@@ -84,18 +84,16 @@ var progressListener = {
       gProgressMeter.setAttribute("mode","normal");
       gProgressMeter.setAttribute("value", "100");
 
-      if (aStatus) {
+      if (aStatus)
         SetProgressText(gReplicationBundle.getString("replicationSucceeded"));
-      }
-      else {
+      else
         SetProgressText(gReplicationBundle.getString("replicationFailed"));
-      }  
       window.close();
     }
   },
   onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
   {
-     SetProgressText(gReplicationBundle.getFormattedString("currentCount", [aCurSelfProgress]));     
+    SetProgressText(gReplicationBundle.getFormattedString("currentCount", [aCurSelfProgress]));     
   },
   onLocationChange: function(aWebProgress, aRequest, aLocation)
   {
@@ -109,7 +107,8 @@ var progressListener = {
   QueryInterface : function(iid)
   {
     if (iid.equals(Components.interfaces.nsIWebProgressListener) || 
-        iid.equals(Components.interfaces.nsISupportsWeakReference))
+        iid.equals(Components.interfaces.nsISupportsWeakReference) || 
+        iid.equals(Components.interfaces.nsISupports))
       return this;
     throw Components.results.NS_NOINTERFACE;
   }

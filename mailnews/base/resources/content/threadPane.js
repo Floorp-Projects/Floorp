@@ -86,11 +86,11 @@ nsMsgDBViewCommandUpdater.prototype =
 
   QueryInterface : function(iid)
    {
-     if(iid.equals(Components.interfaces.nsIMsgDBViewCommandUpdater))
-	    return this;
+     if (iid.equals(Components.interfaces.nsIMsgDBViewCommandUpdater) ||
+         iid.equals(Components.interfaces.nsISupports))
+       return this;
 	  
      throw Components.results.NS_NOINTERFACE;
-     return null;
     }
 }
 

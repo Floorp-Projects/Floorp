@@ -48,21 +48,22 @@ function nsCommandHandler()
 nsCommandHandler.prototype = 
 {
   QueryInterface : function(iid)
+  {
+    if (iid.equals(Components.interfaces.nsICommandHandler) ||
+        iid.equals(Components.interfaces.nsISupports))
     {
-      if (iid.equals(Components.interfaces.nsICommandHandler))
-      {
-        return this;
-      }
-      throw Components.results.NS_NOINTERFACE;
-    },
+      return this;
+    }
+    throw Components.results.NS_NOINTERFACE;
+  },
 
-    exec : function(command, params)
-      {
-      },
-    query : function(command, params, result)
-      {
-        result = "";
-      }
+  exec : function(command, params)
+  {
+  },
+  query : function(command, params, result)
+  {
+    result = "";
+  }
 }
 
 //
@@ -77,8 +78,11 @@ nsBrowserStatusHandler.prototype =
   QueryInterface : function(aIID)
   {
     if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
-        aIID.equals(Components.interfaces.nsISupportsWeakReference))
+        aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
+        aIID.equals(Components.interfaces.nsISupports))
+    {
       return this;
+    }
     throw Components.results.NS_NOINTERFACE;
   },
 

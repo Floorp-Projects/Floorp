@@ -8,7 +8,8 @@ var observer1 =  {
       print("observer1 notified for: "+aTopic+" with: "+someData);  
     },
     QueryInterface: function (iid) {
-        if (iid.equals(Components.interfaces.nsISupportsWeakReference)) {
+        if (iid.equals(Components.interfaces.nsISupportsWeakReference) ||
+            iid.equals(Components.interfaces.nsISupports)) {
             return this;
         }
         throw Components.results.NS_ERROR_NO_INTERFACE;
