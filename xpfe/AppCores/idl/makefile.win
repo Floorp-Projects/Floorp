@@ -33,6 +33,7 @@ IDLSRCS= \
 	BrowserAppCore.idl  \
 	EditorAppCore.idl   \
 	MailCore.idl        \
+	PrefsCore.idl       \
 	RDFCore.idl         \
 	Toolbar.idl         \
 	ToolkitCore.idl
