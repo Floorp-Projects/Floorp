@@ -809,7 +809,11 @@ PRBool  skippedSide = PR_FALSE;
         bSolid = PR_FALSE;
         
         // This is our dot or dash..
-        dashRect.width = borderInside.x - borderOutside.x;
+        if(whichSide==NS_SIDE_LEFT){ 
+          dashRect.width = borderInside.x - borderOutside.x;
+        } else {
+          dashRect.width = borderOutside.XMost() - borderInside.XMost();
+        }
         if( dashRect.width >0 ) {
           dashRect.height = dashRect.width * dashLength;
           dashRect.y = borderOutside.y;
@@ -870,7 +874,12 @@ PRBool  skippedSide = PR_FALSE;
         bSolid = PR_FALSE;
         
         // This is our dot or dash..
-        dashRect.height = borderInside.y - borderOutside.y;
+
+        if(whichSide==NS_SIDE_TOP){ 
+          dashRect.height = borderInside.y - borderOutside.y;
+        } else {
+          dashRect.height = borderOutside.YMost() - borderInside.YMost();
+        }
         if( dashRect.height >0 ) {
           dashRect.width = dashRect.height * dashLength;
           dashRect.x = borderOutside.x;
