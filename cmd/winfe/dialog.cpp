@@ -199,6 +199,7 @@ void CDialogURL::OnOK()
     if( bEdit ) {
 		pComposerBox->GetWindowText(url_string);
     } else
+		pNavBox->GetWindowText(url_string);
 #else
 	if(pNavBox) {
 		pNavBox->GetWindowText(url_string);
