@@ -153,17 +153,17 @@ foreach $ac_file (@makefiles) {
     or ( warn "Unable to create $ac_file\n" and next);
 
   while (<INFILE>) {
-    if (/\@[_a-zA-Z]*\@.*\@[_a-zA-Z]*\@/) {
-      #warn "Two defines on a line:$ac_file:$.:$_";
-      push @unhandled, $ac_file;
-      last;
-    }
+    #if (/\@[_a-zA-Z]*\@.*\@[_a-zA-Z]*\@/) {
+    #  warn "Two defines on a line:$ac_file:$.:$_";
+    #  push @unhandled, $ac_file;
+    #  last;
+    #}
 
-    s/\@srcdir\@/$srcdir/;
-    s/\@top_srcdir\@/$top_srcdir/;
+    s/\@srcdir\@/$srcdir/g;
+    s/\@top_srcdir\@/$top_srcdir/g;
 
     if (/\@[_a-zA-Z]*\@/) {
-      #warn "Unknown variable:$ac_file:$.:$_";
+      warn "Unknown variable:$ac_file:$.:$_";
       push @unhandled, $ac_file;
       last;
     }
