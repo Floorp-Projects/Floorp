@@ -440,6 +440,7 @@ pref("network.cookie.lifetime.days",        90);
 pref("network.cookie.p3p",                  "drdraaaa");
 pref("network.cookie.p3plevel",             1);
 pref("signon.rememberSignons",              true);
+pref("signon.expireMasterPassword",         false);
 pref("network.enablePad",                   false); // Allow client to do proxy autodiscovery
 pref("network.enableIDN",                   false); // Turn on/off IDN (Internationalized Domain Name) resolution
 pref("converter.html2txt.structs",          true); // Output structured phrases (strong, em, code, sub, sup, b, i, u)
