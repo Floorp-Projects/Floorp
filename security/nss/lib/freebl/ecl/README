@@ -46,7 +46,7 @@ that does not have access to mp_ints.
 
 ecl-curve.h - Provides hex encodings (in the form of ECCurveParams
 structs) of standardizes elliptic curve domain parameters and mappings
-from ECCurveName to ECCurveParams. For use be code that does not have
+from ECCurveName to ECCurveParams. For use by code that does not have
 access to mp_ints.
 
 ecl.h - Interface to constructors for curve parameters and group object,
