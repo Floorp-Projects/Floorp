@@ -27,7 +27,13 @@ REQUIRES=util img xpcom raptor netlib
 
 LCFLAGS+=-D_IMPL_NS_GFXONXP 
 
-EXTRA_DSO_LDOPTS+=$(DIST)/lib/libxpcom.a $(DIST)/lib/libraptorbase.a $(DIST)/lib/libraptorgfx.a
+EXTRA_DSO_LDOPTS+=\
+	$(DIST)/lib/libxpcom.a \
+	$(DIST)/lib/libraptorgfx.a \
+	$(DIST)/lib/libraptorbase.a \
+	$(DIST)/lib/libreg.a \
+	$(LIBNSPR)\
+	$(DIST)/lib/libplc21.a -lXt -lX11
 
 CPPSRCS=nsDeviceContextUnix.cpp nsFontMetricsUnix.cpp nsGfxFactoryUnix.cpp \
 	nsRenderingContextUnix.cpp nsRegionUnix.cpp nsImageUnix.cpp

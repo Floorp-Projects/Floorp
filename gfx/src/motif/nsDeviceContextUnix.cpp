@@ -199,13 +199,11 @@ nsIFontCache* nsDeviceContextUnix::GetFontCache()
 
 nsresult nsDeviceContextUnix::CreateFontCache()
 {
-#if 0
   nsresult rv = NS_NewFontCache(&mFontCache);
   if (NS_OK != rv) {
     return rv;
   }
   mFontCache->Init(this);
-#endif
   return NS_OK;
 }
 
@@ -231,6 +229,11 @@ float nsDeviceContextUnix :: GetZoom() const
 nsDrawingSurface nsDeviceContextUnix :: GetDrawingSurface(nsIRenderingContext &aContext)
 {
   return ( aContext.CreateDrawingSurface(nsnull));
+}
+
+nsDrawingSurface nsDeviceContextUnix :: GetDrawingSurface()
+{
+  return (mSurface);
 }
 
 float nsDeviceContextUnix :: GetGamma(void)
