@@ -38,19 +38,6 @@
 #include "nsILanguageAtomService.h"
 #include "nsIServiceManager.h"
 
-// Needed for Localization
-#include "nsIServiceManager.h"
-#include "nsIIOService.h"
-#include "nsIURI.h"
-#include "nsIStringBundle.h"
-#include "nsITextContent.h"
-#include "nsISupportsArray.h"
-#include "nsXPIDLString.h"
-#include "nsNetCID.h"
-
-static NS_DEFINE_CID(kIOServiceCID,            NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
-// done I10N
 
 NS_IMPL_ISUPPORTS1(DeviceContextImpl, nsIDeviceContext)
 
@@ -504,61 +491,6 @@ NS_IMETHODIMP DeviceContextImpl :: FlushFontCache(void)
     mFontCache->Flush();
 
   return NS_OK;
-}
-
-//----------------------------------------------------------------------------------
-// Return localized bundle for resource strings
-nsresult
-DeviceContextImpl::GetLocalizedBundle(const char * aPropFileName, nsIStringBundle** aStrBundle)
-{
-  NS_ENSURE_ARG_POINTER(aPropFileName);
-  NS_ENSURE_ARG_POINTER(aStrBundle);
-
-  nsresult rv;
-  nsCOMPtr<nsIStringBundle> bundle;
-  
-  // Create a URL for the string resource file
-  // Create a bundle for the localization
-  nsCOMPtr<nsIIOService> pNetService(do_GetService(kIOServiceCID, &rv));
-  if (NS_SUCCEEDED(rv) && pNetService) {
-    nsCOMPtr<nsIURI> uri;
-    rv = pNetService->NewURI(aPropFileName, nsnull, getter_AddRefs(uri));
-    if (NS_SUCCEEDED(rv) && uri) {
-
-      // Create bundle
-      nsCOMPtr<nsIStringBundleService> stringService = 
-               do_GetService(kStringBundleServiceCID, &rv);
-      if (NS_SUCCEEDED(rv) && stringService) {
-        nsXPIDLCString spec;
-        rv = uri->GetSpec(getter_Copies(spec));
-        if (NS_SUCCEEDED(rv) && spec) {
-          rv = stringService->CreateBundle(spec, aStrBundle);
-        }
-      }
-    }
-  }
-  return rv;
-}
-
-//--------------------------------------------------------
-// Return localized string 
-nsresult
-DeviceContextImpl::GetLocalizedString(nsIStringBundle* aStrBundle, const char* aKey, nsString& oVal)
-{
-  NS_ENSURE_ARG_POINTER(aStrBundle);
-  NS_ENSURE_ARG_POINTER(aKey);
-
-  // Determine default label from string bundle
-  nsXPIDLString valUni;
-  nsAutoString key; 
-  key.AssignWithConversion(aKey);
-  nsresult rv = aStrBundle->GetStringFromName(key.get(), getter_Copies(valUni));
-  if (NS_SUCCEEDED(rv) && valUni) {
-    oVal.Assign(valUni);
-  } else {
-    oVal.Truncate();
-  }
-  return rv;
 }
 
 

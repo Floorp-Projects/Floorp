@@ -28,7 +28,6 @@
 #include "nsIDeviceContextSpec.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
-#include "nsIStringBundle.h"
 #include "nsVoidArray.h"
 
 class nsIImageRequest;
@@ -109,8 +108,6 @@ public:
 
   NS_IMETHOD GetDepth(PRUint32& aDepth);
 
-  static nsresult GetLocalizedString(nsIStringBundle* aStrBundle, const char* aKey, nsString& oVal);
-  static nsresult GetLocalizedBundle(const char * aPropFileName, nsIStringBundle** aStrBundle);
 
 protected:
   virtual ~DeviceContextImpl();
