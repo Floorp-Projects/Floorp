@@ -979,12 +979,12 @@ nsNntpService::ConstructNntpUrl(const char *urlString, nsIUrlListener *aUrlListe
 }
 
 nsresult
-nsNntpService::CreateNewsAccount(const char *username, const char *hostname, PRBool isSecure, PRInt32 port, nsIMsgIncomingServer **server)
+nsNntpService::CreateNewsAccount(const char *aHostname, PRBool aIsSecure, PRInt32 aPort, nsIMsgIncomingServer **aServer)
 {
-	nsresult rv;
-	// username can be null.
-	if (!hostname || !server) return NS_ERROR_NULL_POINTER;
-	
+    NS_ENSURE_ARG_POINTER(aHostname);
+    NS_ENSURE_ARG_POINTER(aServer);
+
+    nsresult rv;	
 	nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
 
@@ -992,13 +992,14 @@ nsNntpService::CreateNewsAccount(const char *username, const char *hostname, PRB
 	rv = accountManager->CreateAccount(getter_AddRefs(account));
 	if (NS_FAILED(rv)) return rv;
 
-	rv = accountManager->CreateIncomingServer(username, hostname, "nntp", server);
+    // for news, username is always null
+	rv = accountManager->CreateIncomingServer(nsnull /* username */, aHostname, "nntp", aServer);
 	if (NS_FAILED(rv)) return rv;
 
-	rv = (*server)->SetIsSecure(isSecure);
+	rv = (*aServer)->SetIsSecure(aIsSecure);
 	if (NS_FAILED(rv)) return rv;
 	
-	rv = (*server)->SetPort(port);
+	rv = (*aServer)->SetPort(aPort);
 	if (NS_FAILED(rv)) return rv;
 
 	nsCOMPtr <nsIMsgIdentity> identity;
@@ -1011,11 +1012,11 @@ nsNntpService::CreateNewsAccount(const char *username, const char *hostname, PRB
     NS_ENSURE_SUCCESS(rv,rv);
 
 	// the identity isn't filled in, so it is not valid.
-	rv = (*server)->SetValid(PR_FALSE);
+	rv = (*aServer)->SetValid(PR_FALSE);
 	if (NS_FAILED(rv)) return rv;
 
 	// hook them together
-	rv = account->SetIncomingServer(*server);
+	rv = account->SetIncomingServer(*aServer);
 	if (NS_FAILED(rv)) return rv;
 	rv = account->AddIdentity(identity);
 	if (NS_FAILED(rv)) return rv;
@@ -1031,14 +1032,12 @@ nsresult
 nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTPProtocol **aProtocol)
 {
   nsCAutoString hostName;
-  nsCAutoString userPass;
   nsCAutoString scheme;
   nsCAutoString path;
   PRInt32 port = 0;
   nsresult rv;
   
   rv = aUri->GetAsciiHost(hostName);
-  rv = aUri->GetUserPass(userPass);
   rv = aUri->GetScheme(scheme);
   rv = aUri->GetPort(&port);
   rv = aUri->GetPath(path);
@@ -1082,7 +1081,7 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
   //
   // xxx todo what if we have two servers on the same host, but different ports?
   // or no port, but isSecure (snews:// vs news://) is different?
-  rv = accountManager->FindServer(userPass.get(),
+  rv = accountManager->FindServer("",
                                 hostName.get(),
                                 "nntp",
                                 getter_AddRefs(server));
@@ -1126,7 +1125,7 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
               port = SECURE_NEWS_PORT;
           }
 	  }
-	  rv = CreateNewsAccount(userPass.get(),hostName.get(),isSecure,port,getter_AddRefs(server));
+	  rv = CreateNewsAccount(hostName.get(), isSecure, port, getter_AddRefs(server));
   }
    
   if (NS_FAILED(rv)) return rv;
@@ -1196,7 +1195,7 @@ nsNntpService::RunNewsUrl(nsIURI * aUri, nsIMsgWindow *aMsgWindow, nsISupports *
 
 NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const char *uri, PRBool aGetOld, nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **_retval)
 {
-  if (!uri) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(uri);
 
   NS_LOCK_INSTANCE();
   nsresult rv = NS_OK;
@@ -1224,8 +1223,7 @@ NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const
     rv = RunNewsUrl(aUrl, aMsgWindow, nsnull);  
 	
     if (_retval) {
-      *_retval = aUrl;
-      NS_IF_ADDREF(*_retval);
+      NS_IF_ADDREF(*_retval = aUrl);
     }
   }
   else {

@@ -426,16 +426,13 @@ nsMsgAccountManager::CreateIncomingServer(const char* username,
                                           nsIMsgIncomingServer **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-  nsresult rv;
 
-  rv = LoadAccounts();
+  nsresult rv = LoadAccounts();
   if (NS_FAILED(rv)) return rv;
 
   nsCAutoString key;
   getUniqueKey(SERVER_PREFIX, &m_incomingServers, key);
-  rv = createKeyedServer(key.get(), username, hostname, type, _retval);
-
-  return rv;
+  return createKeyedServer(key.get(), username, hostname, type, _retval);
 }
 
 nsresult

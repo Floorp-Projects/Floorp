@@ -348,12 +348,16 @@ function PageDataToAccountData(pageData, accountData)
 // (but don't fill in any fields, that's for finishAccount()
 function createAccount(accountData)
 {
-
     var server = accountData.incomingServer;
-    dump("am.createIncomingServer(" + server.username + "," +
+    
+    // for news, username is always null
+    var username = (server.type == "nntp") ? null : server.username;
+
+    dump("am.createIncomingServer(" + username + "," +
                                       server.hostName + "," +
                                       server.type + ")\n");
-    var server = am.createIncomingServer(server.username,
+    
+    var server = am.createIncomingServer(username,
                                          server.hostName,
                                          server.type);
     
@@ -375,8 +379,8 @@ function createAccount(accountData)
 
 // given an accountData structure, copy the data into the
 // given account, incoming server, and so forth
-function finishAccount(account, accountData) {
-
+function finishAccount(account, accountData) 
+{
     if (accountData.incomingServer) {
 
         var destServer = account.incomingServer;
@@ -496,7 +500,7 @@ function copyObjectToInterface(dest, src) {
         catch (ex) {
             dump("Error copying the " +
                  i + " attribute: " + ex + "\n");
-            dump("(This is ok if this is a ServerType-* attribute)\n");
+            dump("[This is ok if this is a ServerType-* attribute, or if this is a readonly attribute (like receiptHeaderType)]\n");
         }
     }
 }
@@ -842,11 +846,17 @@ function PrefillAccountForIsp(ispName)
 // - anything else?
 function FixupAccountDataForIsp(accountData)
 {
+    // no fixup for news
+    // setting the username does bad things
+    // see bugs #42105 and #154213
+    if (accountData.incomingServer.type == "nntp")
+      return;
+
     var email = accountData.identity.email;
     var username;
 
     if (email) {
-		username = getUsernameFromEmail(email);
+      username = getUsernameFromEmail(email);
     }
     
     // fix up the username

@@ -644,9 +644,9 @@ NS_IMETHODIMP
 nsMsgIdentity::GetRequestReturnReceipt(PRBool *aVal)
 {
   NS_ENSURE_ARG_POINTER(aVal);
-  nsresult rv;
+
   PRBool useCustomPrefs = PR_FALSE;
-  rv = GetBoolAttribute("use_custom_prefs", &useCustomPrefs);
+  nsresult rv = GetBoolAttribute("use_custom_prefs", &useCustomPrefs);
   NS_ENSURE_SUCCESS(rv, rv);
   if (useCustomPrefs)
   {
@@ -664,9 +664,9 @@ NS_IMETHODIMP
 nsMsgIdentity::GetReceiptHeaderType(PRInt32 *aType)
 {
   NS_ENSURE_ARG_POINTER(aType);
-  nsresult rv;
+
   PRBool useCustomPrefs = PR_FALSE;
-  rv = GetBoolAttribute("use_custom_prefs", &useCustomPrefs);
+  nsresult rv = GetBoolAttribute("use_custom_prefs", &useCustomPrefs);
   NS_ENSURE_SUCCESS(rv, rv);
   if (useCustomPrefs)
   {

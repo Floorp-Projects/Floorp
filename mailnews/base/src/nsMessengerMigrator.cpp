@@ -2323,7 +2323,8 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 
     // create the server
 	nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = accountManager->CreateIncomingServer(nsnull, hostname.get(), "nntp",
+    // for news, username is always null
+    rv = accountManager->CreateIncomingServer(nsnull /* username */, hostname.get(), "nntp",
                               getter_AddRefs(server));
     NS_ENSURE_SUCCESS(rv,rv);
  
