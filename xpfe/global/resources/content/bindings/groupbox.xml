@@ -25,7 +25,7 @@
         <getter>
           <![CDATA[
             var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return (accService? accService.createXULGroupboxAccessible(this): null);
+            return accService.createXULGroupboxAccessible(this);
           ]]>
         </getter>
       </property>

@@ -196,7 +196,7 @@
         <getter>
           <![CDATA[
             var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return (accService? accService.createIFrameAccessible(this): null);
+            return accService.createIFrameAccessible(this);
           ]]>
         </getter>
       </property>
@@ -241,7 +241,7 @@
         <getter>
           <![CDATA[
             var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return (accService? accService.createXULStatusBarAccessible(this): null);
+            return accService.createXULStatusBarAccessible(this);
           ]]>
         </getter>
       </property>
@@ -264,7 +264,7 @@
         <getter>
           <![CDATA[
             var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return (accService? accService.createXULImageAccessible(this): null);
+            return accService.createXULImageAccessible(this);
           ]]>
         </getter>
       </property>
@@ -319,7 +319,7 @@
         <getter>
           <![CDATA[
             var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return (accService? accService.createXULDropmarkerAccessible(this): null);
+            return accService.createXULDropmarkerAccessible(this);
           ]]>
         </getter>
       </property>

@@ -17,7 +17,7 @@
         <getter>
           <![CDATA[
             var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return (accService? accService.createXULTabBoxAccessible(this): null);
+            return accService.createXULTabBoxAccessible(this);
           ]]>
         </getter>
       </property>
@@ -171,7 +171,7 @@
         <getter>
           <![CDATA[
             var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return (accService? accService.createXULTabsAccessible(this): null);
+            return accService.createXULTabsAccessible(this);
           ]]>
         </getter>
       </property>
@@ -344,7 +344,7 @@
         <getter>
           <![CDATA[
             var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return (accService? accService.createXULTabPanelsAccessible(this): null);
+            return accService.createXULTabPanelsAccessible(this);
           ]]>
         </getter>
       </property>
@@ -403,7 +403,7 @@
         <getter>
           <![CDATA[
             var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return (accService? accService.createXULTabAccessible(this): null);
+            return accService.createXULTabAccessible(this);
           ]]>
         </getter>
       </property>

@@ -11,7 +11,7 @@
         <getter>
           <![CDATA[
             var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return (accService? accService.createXULTextAccessible(this): null);
+            return accService.createXULTextAccessible(this);
           ]]>
         </getter>
       </property>

@@ -14,7 +14,7 @@
         <getter>
           <![CDATA[
             var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return (accService? accService.createXULRadioGroupAccessible(this): null);
+            return accService.createXULRadioGroupAccessible(this);
           ]]>
         </getter>
       </property>
@@ -304,7 +304,7 @@
         <getter>
           <![CDATA[
             var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return (accService? accService.createXULRadioButtonAccessible(this): null);
+            return accService.createXULRadioButtonAccessible(this);
           ]]>
         </getter>
       </property>

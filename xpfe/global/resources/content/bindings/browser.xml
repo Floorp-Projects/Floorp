@@ -44,7 +44,7 @@
         <getter>
           <![CDATA[
             var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return (accService? accService.createIFrameAccessible(this): null);
+            return accService.createIFrameAccessible(this);
           ]]>
         </getter>
       </property>

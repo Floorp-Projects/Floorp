@@ -753,7 +753,7 @@ nsAccessibilityService::CreateXULImageAccessible(nsIDOMNode *aNode, nsIAccessibl
   *_retval = nsnull;
 
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aNode));
-  if (NS_WARN_IF_FALSE(elt, "No DOM element or node!"))
+  if (!elt)
     return NS_ERROR_FAILURE;
   PRBool hasTextEquivalent;
   elt->HasAttribute(NS_LITERAL_STRING("tooltiptext"), &hasTextEquivalent); // Prefer value over tooltiptext
