@@ -120,6 +120,14 @@ public class Interpreter extends LabelTable {
             System.arraycopy(itsData.itsICode, 0, tmp, 0, theICodeTop);
             itsData.itsICode = tmp;
         }
+        itsData.itsMaxVars = itsVariableTable.size();
+        // itsMaxFrameArray: interpret method needs this amount for its
+        // stack and sDbl arrays
+        itsData.itsMaxFrameArray = itsData.itsMaxVars
+                                   + itsData.itsMaxLocals
+                                   + itsData.itsMaxTryDepth
+                                   + itsData.itsMaxStack;
+
     }
 
     private Object[] generateRegExpLiterals(Context cx,
@@ -464,8 +472,8 @@ public class Interpreter extends LabelTable {
                     else
                         childCount -= 2;
                     iCodeTop = addShort(childCount, iCodeTop);
-                    if (childCount > itsData.itsMaxArgs)
-                        itsData.itsMaxArgs = childCount;
+                    if (childCount > itsData.itsMaxCalleeArgs)
+                        itsData.itsMaxCalleeArgs = childCount;
 
                     iCodeTop = addByte(SOURCEFILE_ICODE, iCodeTop);
                 }
@@ -1407,7 +1415,7 @@ public class Interpreter extends LabelTable {
                 callSetProp = true;
             } else {
                 try {
-                    // ECMA specifies that functions defined in global and 
+                    // ECMA specifies that functions defined in global and
                     // function scope should have DONTDELETE set.
                     ((ScriptableObject) scope).defineProperty(
                         fn.itsData.itsName, fn, ScriptableObject.PERMANENT);
@@ -1449,39 +1457,39 @@ public class Interpreter extends LabelTable {
         final Object DBL_MRK = Interpreter.DBL_MRK;
         final Scriptable undefined = Undefined.instance;
 
-        final int VAR_SHFT = theData.itsMaxStack;
-        final int maxVars = (fnOrScript.argNames == null)
-                            ? 0 : fnOrScript.argNames.length;
+        final int VAR_SHFT = 0;
+        final int maxVars = theData.itsMaxVars;
         final int LOCAL_SHFT = VAR_SHFT + maxVars;
-        final int TRY_SCOPE_SHFT = LOCAL_SHFT + theData.itsMaxLocals;
+        final int TRY_STACK_SHFT = LOCAL_SHFT + theData.itsMaxLocals;
+        final int STACK_SHFT = TRY_STACK_SHFT + theData.itsMaxTryDepth;
 
-// stack[0 <= i < VAR_SHFT]: stack data
 // stack[VAR_SHFT <= i < LOCAL_SHFT]: variables
-// stack[LOCAL_SHFT <= i < TRY_SCOPE_SHFT]: used for newtemp/usetemp
-// stack[TRY_SCOPE_SHFT <= i]: try scopes
-// when 0 <= i < LOCAL_SHFT and stack[x] == DBL_MRK,
-// sDbl[i]  gives the number value
+// stack[LOCAL_SHFT <= i < TRY_STACK_SHFT]: used for newtemp/usetemp
+// stack[TRY_STACK_SHFT <= i < STACK_SHFT]: stack of try scopes
+// stack[STACK_SHFT <= i < STACK_SHFT + theData.itsMaxStack]: stack data
 
-        Object[] stack = new Object[TRY_SCOPE_SHFT + theData.itsMaxTryDepth];
-        double[] sDbl = new double[TRY_SCOPE_SHFT];
-        int stackTop = -1;
+// sDbl[TRY_STACK_SHFT <= i < STACK_SHFT]: stack of try block pc, stored as doubles
+// sDbl[any other i]: if stack[i] is DBL_MRK, sDbl[i] holds the number value
 
-// tryStack[i]: starting pc of try block that itself points via its pc+1 and
-// pc+3 to catch and finaly blocks
-        int[] tryStack = null;
-        int tryStackTop = 0;
+        int maxFrameArray = theData.itsMaxFrameArray;
+        if (maxFrameArray != STACK_SHFT + theData.itsMaxStack)
+            Context.codeBug();
 
-        if (maxVars != 0) {
-            int definedArgs = fnOrScript.argCount;
-            if (definedArgs != 0) {
-                if (definedArgs > args.length) { definedArgs = args.length; }
-                for (int i = 0; i != definedArgs; ++i) {
-                    stack[VAR_SHFT + i] = args[i];
-                }
+        Object[] stack = new Object[maxFrameArray];
+        double[] sDbl = new double[maxFrameArray];
+
+        int stackTop = STACK_SHFT - 1;
+        int tryStackTop = 0; // add TRY_STACK_SHFT to get real index
+
+        int definedArgs = fnOrScript.argCount;
+        if (definedArgs != 0) {
+            if (definedArgs > args.length) { definedArgs = args.length; }
+            for (int i = 0; i != definedArgs; ++i) {
+                stack[VAR_SHFT + i] = args[i];
             }
-            for (int i = definedArgs; i != maxVars; ++i) {
-                stack[VAR_SHFT + i] = undefined;
-            }
+        }
+        for (int i = definedArgs; i != maxVars; ++i) {
+            stack[VAR_SHFT + i] = undefined;
         }
 
         if (theData.isFunction) {
@@ -1537,16 +1545,13 @@ public class Interpreter extends LabelTable {
                 case TokenStream.ENDTRY :
                     tryStackTop--;
                     break;
-                case TokenStream.TRY : {
-                    if (tryStackTop == 0) {
-                        tryStack = new int[theData.itsMaxTryDepth];
-                    }
-                    tryStack[tryStackTop] = pc;
-                    stack[TRY_SCOPE_SHFT + tryStackTop] = scope;
+                case TokenStream.TRY :
+                    stack[TRY_STACK_SHFT + tryStackTop] = scope;
+                    sDbl[TRY_STACK_SHFT + tryStackTop] = (double)pc;
                     ++tryStackTop;
+                    // Skip starting pc of catch/finally blocks
                     pc += 4;
                     break;
-                }
                 case TokenStream.GE : {
                     --stackTop;
                     Object rhs = stack[stackTop + 1];
@@ -2371,7 +2376,7 @@ public class Interpreter extends LabelTable {
                     // (exType == OTHER), as they can be used to terminate
                     // long running script
                     --tryStackTop;
-                    int try_pc = tryStack[tryStackTop];
+                    int try_pc = (int)sDbl[TRY_STACK_SHFT + tryStackTop];
                     if (exType == SCRIPT_THROW || exType == ECMA) {
                         // Allow JS to catch only JavaScriptException and
                         // EcmaError
@@ -2424,9 +2429,9 @@ public class Interpreter extends LabelTable {
                 pcPrevBranch = pc;
 
                 // prepare stack and restore this function's security domain.
-                scope = (Scriptable)stack[TRY_SCOPE_SHFT + tryStackTop];
-                stackTop = 0;
-                stack[0] = errObj;
+                scope = (Scriptable)stack[TRY_STACK_SHFT + tryStackTop];
+                stackTop = STACK_SHFT;
+                stack[stackTop] = errObj;
             }
         }
         if (frame != null) {

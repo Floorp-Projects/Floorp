@@ -118,10 +118,13 @@ class InterpreterData implements Serializable {
     byte[] itsICode;
     int itsICodeTop;
 
+    int itsMaxVars;
     int itsMaxLocals;
-    int itsMaxArgs;
-    int itsMaxStack;
     int itsMaxTryDepth;
+    int itsMaxStack;
+    int itsMaxFrameArray;
+
+    int itsMaxCalleeArgs;
 
     UintMap itsLineNumberTable;
 
