@@ -24,19 +24,20 @@
 <!ENTITY windowTitle.label "Check Spelling">
 
 <!ENTITY misspelledWord.label "Misspelled word:">
-<!ENTITY wordEditField.label "Change to:">
+<!ENTITY wordEditField.label "Replace with:">
 <!ENTITY checkwordButton.label "Check Word">
 <!ENTITY suggestions.label "Suggestions:">
 
 <!ENTITY ignoreButton.label "Ignore">
 <!ENTITY ignoreAllButton.label "Ignore All">
-<!ENTITY changeButton.label "Change">
-<!ENTITY changeAllButton.label "Change All">
+<!ENTITY replaceButton.label "Replace">
+<!ENTITY replaceAllButton.label "Replace All">
+<!ENTITY stopButton.label "Stop">
 
 <!ENTITY userDictionary.label "Personal Dictionary:">
 <!ENTITY moreDictionaries.label "Download More">
 <!ENTITY addToUserDictionaryButton.label "Add Word">
 <!ENTITY editUserDictionaryButton.label "Edit...">
-<!ENTITY recheckButton.label "Recheck">
+<!ENTITY recheckButton.label "Recheck Page">
 <!ENTITY closeButton.label "Close">
 <!ENTITY languagePopup.label "Language:">

@@ -29,8 +29,10 @@
 <!-- dialog containing a control requiring initial setup -->
 <dialog buttons="cancel" title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    persist="screenX screenY"
     onload = "Startup()"
-    ondialogcancel="return onClose();">
+    ondialogaccept="return doDefault();"
+    ondialogcancel="return CancelSpellCheck();">
 
   <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -39,31 +41,24 @@
   <script type="application/x-javascript" src="chrome://editor/content/EdSpellCheck.js"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js" />
 
-  <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
-  <keyset id="keys">
-    <key keycode="VK_ENTER"  oncommand="doDefault()"/>
-    <key keycode="VK_RETURN" oncommand="doDefault()"/>
-    <key keycode="VK_ESCAPE" oncommand="onClose()"/>
-  </keyset>
   <broadcaster id="args" value=""/>
 
   <grid>
     <columns>
       <column class="spell-check"/>
+      <column class="spell-check" flex="1"/>
       <column class="spell-check"/>
     </columns>
     <rows>
       <row align="center">
         <label id="MisspelledWordLabel" value="&misspelledWord.label;"/>
         <label class="bold" id="MisspelledWord"/>
-        <spacer/>
+        <button  class="spell-check" label="&recheckButton.label;" oncommand="Recheck();"/>
       </row>
       <row align="center">
         <label id="ReplaceWordLabel" value="&wordEditField.label;"/>
-        <hbox align="center" flex="1">
-          <textbox id="ReplaceWordInput" oninput="ChangeReplaceWord()"/>
-          <button id="CheckWord" oncommand="CheckWord()" label="&checkwordButton.label;"/>
-        </hbox>
+        <textbox id="ReplaceWordInput" oninput="ChangeReplaceWord()" flex="1"/>
+        <button id="CheckWord" oncommand="CheckWord()" label="&checkwordButton.label;"/>
       </row>
     </rows>
   </grid>
@@ -73,22 +68,18 @@
     <rows>
       <row flex="1">
         <!-- BUG! setting class="MinWidth20em" on tree doesn't work (width=0) -->
-        <tree rows="6" class="list" id="SuggestedList" onselect="SelectSuggestedWord()">
-          <treecolgroup>
-            <treecol flex="1"/>
-          </treecolgroup>
-        </tree>
+        <listbox  rows="6" id="SuggestedList" onselect="SelectSuggestedWord()" ondblclick="Replace();"/>
         <vbox>
           <grid flex="1">
             <columns><column class="spell-check" flex="1"/><column class="spell-check" flex="1"/></columns>
             <rows>
               <row>
-                <button id="Replace" oncommand="Replace()" label="&changeButton.label;"/>
-                <button id="Ignore"  oncommand="Ignore()" label="&ignoreButton.label;"/>
+                <button id="Replace" oncommand="Replace();" label="&replaceButton.label;"/>
+                <button id="Ignore"  oncommand="Ignore();" label="&ignoreButton.label;"/>
               </row>
               <row>
-                <button id="ReplaceAll" oncommand="ReplaceAll()" label="&changeAllButton.label;"/>
-                <button id="IgnoreAll"  oncommand="IgnoreAll()" label="&ignoreAllButton.label;"/>
+                <button id="ReplaceAll" oncommand="ReplaceAll();" label="&replaceAllButton.label;"/>
+                <button id="IgnoreAll"  oncommand="IgnoreAll();" label="&ignoreAllButton.label;"/>
               </row>
             </rows> 
           </grid>
@@ -113,8 +104,9 @@
           </menupopup>
         </menulist>
         <hbox flex="1">
-          <button class="spell-check" id="Recheck" label="&recheckButton.label;" oncommand="Recheck()"/>
-          <button dlgtype="cancel" id="Close" label="&closeButton.label;" class="spell-check" oncommand="onClose()"/>
+          <button class="spell-check" dlgtype="cancel" id="Stop" label="&stopButton.label;" oncommand="CancelSpellCheck();"/>
+          <spacer flex="1"/>
+          <button class="spell-check" id="Close" label="&closeButton.label;" oncommand="onClose();"/>
         </hbox>
       </row>
     </rows>
