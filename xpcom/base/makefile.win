@@ -35,6 +35,7 @@ EXPORTS =                  \
 	nsIPtr.h           \
         nsISupportsUtils.h \
         nsTraceRefcnt.h    \
+        nsWeakReference.h  \
         nscore.h           \
         $(NULL)			
 
@@ -67,6 +68,7 @@ CPP_OBJS =                            \
         .\$(OBJDIR)\nsCOMPtr.obj      \
         .\$(OBJDIR)\nsID.obj          \
         .\$(OBJDIR)\nsTraceRefcnt.obj \
+        .\$(OBJDIR)\nsWeakReference.obj \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
