@@ -27,7 +27,7 @@ LIBRARY_NAME	= jsloader
 IS_COMPONENT	= 1
 REQUIRES	= xpcom string xpconnect js caps dom
 
-CPPSRCS		= mozJSComponentLoader.cpp
+CPPSRCS		= mozJSComponentLoader.cpp mozJSSubScriptLoader.cpp
 
 include $(topsrcdir)/config/rules.mk
 

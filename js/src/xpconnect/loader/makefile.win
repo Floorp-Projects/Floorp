@@ -67,8 +67,9 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 C_OBJS=                                     \
      $(NULL)
 
-CPP_OBJS=                                    \
+CPP_OBJS=										\
     .\$(OBJDIR)\mozJSComponentLoader.obj     	\
+    .\$(OBJDIR)\mozJSSubScriptLoader.obj     	\
      $(NULL)
 
 #//------------------------------------------------------------------------

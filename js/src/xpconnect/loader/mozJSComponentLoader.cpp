@@ -18,7 +18,12 @@
  *   Mike Shaver <shaver@zeroknowledge.com>
  *   John Bandhauer <jband@netscape.com>
  *   IBM Corporation
+ *   Robert Ginda <rginda@netscape.com>
  */
+
+#ifdef XPCONNECT_STANDALONE
+#define NO_SUBSCRIPT_LOADER
+#endif
 
 #include "prlog.h"
 
@@ -45,6 +50,9 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptObjectOwner.h"
 #endif
+#ifndef NO_SUBSCRIPT_LOADER
+#include "mozJSSubScriptLoader.h"
+#endif
 
 // For reporting errors with the console service
 #include "nsIScriptError.h"
@@ -52,6 +60,10 @@
 
 const char mozJSComponentLoaderContractID[] = "@mozilla.org/moz/jsloader;1";
 const char jsComponentTypeName[] = "text/javascript";
+
+#ifndef NO_SUBSCRIPT_LOADER
+const char mozJSSubScriptLoadContractID[] = "@mozilla.org/moz/jssubscript-loader;1";
+#endif
 
 /* XXX export properly from libxpcom, for now this will let Mac build */
 #ifdef RHAPSODY
@@ -1163,10 +1175,18 @@ UnregisterJSLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSComponentLoader);
 
+#ifndef NO_SUBSCRIPT_LOADER
+NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSSubScriptLoader);
+#endif
+
 static nsModuleComponentInfo components[] = {
     { "JS component loader", MOZJSCOMPONENTLOADER_CID,
       mozJSComponentLoaderContractID, mozJSComponentLoaderConstructor,
-      RegisterJSLoader, UnregisterJSLoader }
+      RegisterJSLoader, UnregisterJSLoader },
+#ifndef NO_SUBSCRIPT_LOADER
+   { "JS subscript loader", MOZ_JSSUBSCRIPTLOADER_CID,
+      mozJSSubScriptLoadContractID, mozJSSubScriptLoaderConstructor }
+#endif
 };
 
 NS_IMPL_NSGETMODULE("JS component loader", components);
