@@ -482,7 +482,12 @@ sub LogDependencyActivity {
 #
 foreach my $id (@idlist) {
     my %dependencychanged;
-    SendSQL("lock tables bugs write, bugs_activity write, cc write, profiles write, dependencies write, votes write, keywords write, longdescs write, fielddefs write, keyworddefs read");
+    my $write = "LOW_PRIORITY WRITE"; # Might want to make a param to control
+                                      # whether we do LOW_PRIORITY ...
+    SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
+            "profiles $write, dependencies $write, votes $write, " .
+            "keywords $write, longdescs $write, fielddefs $write, " .
+            "keyworddefs READ, groups READ");
     my @oldvalues = SnapShotBug($id);
 
     if (defined $::FORM{'delta_ts'} && $::FORM{'delta_ts'} ne $delta_ts) {
