@@ -68,10 +68,6 @@
 
 #include "nsIDataFlavor.h"
 
-// XXX This is just a temporary thing until 
-//the new Clipboard support comes on line
-//#define NEW_CLIPBOARD_SUPPORT
-
 #ifdef NEW_CLIPBOARD_SUPPORT
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
