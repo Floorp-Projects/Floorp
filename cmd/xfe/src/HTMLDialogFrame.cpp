@@ -51,7 +51,8 @@ XFE_HTMLDialogFrame::XFE_HTMLDialogFrame(Widget toplevel,
 
 	D(printf ("in XFE_HTMLDialogFrame::XFE_HTMLDialogFrame()\n");)
 
-	htmlview = new XFE_HTMLView(this, getChromeParent(), NULL, m_context);
+	htmlview = new XFE_HTMLView(this, getChromeParent(),
+                                (XFE_View *)NULL, m_context);
 
 	setView(htmlview);
 
