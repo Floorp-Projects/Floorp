@@ -478,11 +478,8 @@ nsresult
 nsLocalFile::GetLeafNameRaw(const char **_retval)
 {
     CHECK_mPath();
-    const char *leafName = strrchr((const char *)mPath, '/');
-    NS_ASSERTION(leafName, "non-canonical mPath?");
-    if (!leafName)
-        return NS_ERROR_FILE_INVALID_PATH;
-    *_retval = leafName+1;
+    const char *leafName = strrchr(mPath.get(), '/');
+    *_retval = leafName ? leafName + 1 : mPath.get();
     return NS_OK;
 }
 
