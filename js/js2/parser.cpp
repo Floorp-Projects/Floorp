@@ -1279,7 +1279,7 @@ JS::InvokeExprNode *JS::Parser::parseInvoke(ExprNode *target, uint32 pos, Token:
 			ExprNode *value = parseAssignmentExpression(false);
 			if (lexer.eat(false, Token::colon)) {
 				field = value;
-				if (!isFieldKind(field->getKind()))
+				if (!ExprNode::isFieldKind(field->getKind()))
 					syntaxError("Argument name must be an identifier, string, or number");
 				hasNamedArgument = true;
 				value = parseAssignmentExpression(false);
