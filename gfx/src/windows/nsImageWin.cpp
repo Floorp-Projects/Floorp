@@ -1678,7 +1678,7 @@ nsImageWin::ConvertDDBtoDIB()
       if (nsnull != mBHead){
         delete[] mBHead;
       }
-      BuildDIB(&mBHead,tWidth,tHeight,srcinfo.bmBitsPixel,&mNumBytesPixel);
+      BuildDIB(&mBHead,tWidth,tHeight,mNumBytesPixel * 8,&mNumBytesPixel);
       mRowBytes = CalcBytesSpan(mBHead->biWidth);
       mSizeImage = mRowBytes * mBHead->biHeight; // no compression
 
