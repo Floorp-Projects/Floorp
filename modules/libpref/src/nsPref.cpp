@@ -48,6 +48,7 @@
 #include "nsISecurityPref.h"
 #include "nsIPrefService.h"
 #include "nsISupportsPrimitives.h"
+#include "nsWeakReference.h"
 
 #include "nsIJSRuntimeService.h"
 #include "nsIModule.h"
@@ -63,7 +64,8 @@ class nsPref : public nsIPref,
                public nsIObserver,
                public nsIPrefBranch,
                public nsIPrefBranchInternal,
-               public nsISecurityPref
+               public nsISecurityPref,
+               public nsSupportsWeakReference
 {
 public:
   static nsPref *GetInstance();
@@ -124,7 +126,7 @@ nsPref* nsPref::gInstance = NULL;
 static PRInt32 g_InstanceCount = 0;
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS6(nsPref, nsIPref, nsIPrefService, nsIObserver, nsIPrefBranch, nsIPrefBranchInternal, nsISecurityPref);
+NS_IMPL_THREADSAFE_ISUPPORTS7(nsPref, nsIPref, nsIPrefService, nsIObserver, nsIPrefBranch, nsIPrefBranchInternal, nsISecurityPref, nsISupportsWeakReference);
 
 //----------------------------------------------------------------------------------------
 nsPref::nsPref()

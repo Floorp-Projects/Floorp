@@ -31,10 +31,12 @@
 #include "nsISupportsPrimitives.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
+#include "nsWeakReference.h"
 
 class nsPrefBranch : public nsIPrefBranch,
                      public nsIPrefBranchInternal,
-                     public nsISecurityPref
+                     public nsISecurityPref,
+                     public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
