@@ -210,7 +210,7 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
     switch (keyCode)
     {
-      // we should be handling DOM_VK_META here too but it doesn't exist at the moment
+      case nsIDOMKeyEvent::DOM_VK_META:
       case nsIDOMKeyEvent::DOM_VK_SHIFT:
       case nsIDOMKeyEvent::DOM_VK_CONTROL:
       case nsIDOMKeyEvent::DOM_VK_ALT:
@@ -642,6 +642,7 @@ nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
         if ((flags & nsIPlaintextEditor::eEditorDisabledMask) || 
             (flags & nsIPlaintextEditor::eEditorReadonlyMask)) {
           dragSession->SetCanDrop(PR_FALSE);
+          aDragEvent->PreventDefault(); // consumed
           return NS_OK;
         }
       }
@@ -655,7 +656,7 @@ nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
         dragSession->IsDataFlavorSupported(kJPEGImageMime, &flavorSupported);
       if ( flavorSupported ) {
         dragSession->SetCanDrop(PR_TRUE);
-        aDragEvent->PreventBubble();
+        aDragEvent->PreventDefault();
       }
     } 
   }
