@@ -2695,7 +2695,8 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
     SyncFlags(flagState);
     PRInt32 numUnreadFromServer;
     aSpec->GetNumUnseenMessages(&numUnreadFromServer);
-    if (mNumUnreadMessages + keysToFetch.GetSize() > numUnreadFromServer)
+    if (mDatabase&&
+        mNumUnreadMessages + keysToFetch.GetSize() > numUnreadFromServer)
       mDatabase->SyncCounts();
 
     if (keysToFetch.GetSize())
