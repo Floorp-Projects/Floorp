@@ -5462,7 +5462,7 @@ void PrintUsage(void)
    */
 
   if(sgProduct.szParentProcessFilename && *sgProduct.szParentProcessFilename != '\0')
-    lstrcpy(szProcessFilename, sgProduct.szParentProcessFilename);
+    ParsePath(sgProduct.szParentProcessFilename, szProcessFilename, sizeof(szProcessFilename), FALSE, PP_FILENAME_ONLY);
   else
   {
     GetModuleFileName(NULL, szBuf, sizeof(szBuf));
@@ -8216,30 +8216,27 @@ void SaveInstallerFiles()
 {
   int       i;
   char      szBuf[MAX_BUF];
-  char      szSource[MAX_BUF];
-  char      szDestination[MAX_BUF];
+  char      destInstallDir[MAX_BUF];
+  char      destInstallXpiDir[MAX_BUF];
   char      szMFN[MAX_BUF];
   char      szArchivePath[MAX_BUF];
   DWORD     dwIndex0;
   siC       *siCObject = NULL;
 
-  GetSaveInstallerPath(szDestination, sizeof(szDestination));
-  AppendBackSlash(szDestination, sizeof(szDestination));
-
-  /* copy all files from the ns_temp dir to the install dir */
-  CreateDirectoriesAll(szDestination, ADD_TO_UNINSTALL_LOG);
+  GetSaveInstallerPath(destInstallDir, sizeof(destInstallDir));
+  AppendBackSlash(destInstallDir, sizeof(destInstallDir));
+  CreateDirectoriesAll(destInstallDir, ADD_TO_UNINSTALL_LOG);
 
   /* copy the self extracting file that spawned setup.exe, if one exists */
   if((*sgProduct.szAlternateArchiveSearchPath != '\0') && (*sgProduct.szParentProcessFilename != '\0'))
   {
-    lstrcpy(szSource, szSetupDir);
-    AppendBackSlash(szSource, sizeof(szSource));
-    lstrcat(szSource, "*.*");
+    FileCopy(sgProduct.szParentProcessFilename, destInstallDir, FALSE, FALSE);
 
-    lstrcpy(szSource, sgProduct.szAlternateArchiveSearchPath);
-    AppendBackSlash(szSource, sizeof(szSource));
-    lstrcat(szSource, sgProduct.szParentProcessFilename);
-    FileCopy(szSource, szDestination, FALSE, FALSE);
+    /* The dir for xpi files is .\xpi because the self-extracting
+     * .exe file will automatically look for the .xpi files in a xpi subdir
+     * off of the current working dir. */
+    _snprintf(destInstallXpiDir, sizeof(destInstallXpiDir), "%sxpi\\", destInstallDir);
+    CreateDirectoriesAll(destInstallXpiDir, ADD_TO_UNINSTALL_LOG);
   }
   else
   {
@@ -8252,7 +8249,7 @@ void SaveInstallerFiles()
     lstrcpy(szBuf, szSetupDir);
     AppendBackSlash(szBuf, sizeof(szBuf));
     lstrcat(szBuf, szMFN);
-    FileCopy(szBuf, szDestination, FALSE, FALSE);
+    FileCopy(szBuf, destInstallDir, FALSE, FALSE);
 
     /* now copy the rest of the setup files */
     i = 0;
@@ -8264,10 +8261,21 @@ void SaveInstallerFiles()
       lstrcpy(szBuf, szSetupDir);
       AppendBackSlash(szBuf, sizeof(szBuf));
       lstrcat(szBuf, SetupFileList[i]);
-      FileCopy(szBuf, szDestination, FALSE, FALSE);
+      FileCopy(szBuf, destInstallDir, FALSE, FALSE);
 
       ++i;
     }
+    /* copy the license file */
+    if(*diLicense.szLicenseFilename != '\0')
+      FileCopy(diLicense.szLicenseFilename, destInstallDir, FALSE, FALSE);
+    /* copy the readme file */
+    if(*diSetupType.szReadmeFilename != '\0')
+      FileCopy(diLicense.szLicenseFilename, destInstallDir, FALSE, FALSE);
+
+    /* The dir for xpi files is just "." as opposed to ".\xpi"
+     * because the setup.exe (not the self-extracting .exe) will look for the
+     * .xpi files in the cwd. */
+    MozCopyStr(destInstallDir, destInstallXpiDir, sizeof(destInstallXpiDir));
   }
 
   dwIndex0 = 0;
@@ -8280,7 +8288,7 @@ void SaveInstallerFiles()
       lstrcpy(szBuf, szArchivePath);
       AppendBackSlash(szBuf, sizeof(szBuf));
       lstrcat(szBuf, siCObject->szArchiveName);
-      FileCopy(szBuf, szDestination, FALSE, FALSE);
+      FileCopy(szBuf, destInstallXpiDir, FALSE, FALSE);
     }
 
     ++dwIndex0;

@@ -2955,13 +2955,14 @@ void CommitInstall(void)
        * appropriate Windows registry keys */
       SetTurboArgs();
 
-      if(gbDownloadTriggered || gbPreviousUnfinishedDownload)
-        SetSetupState(SETUP_STATE_UNPACK_XPCOM);
-
       /* POST_DOWNLOAD process file manipulation functions */
       ProcessFileOpsForAll(T_POST_DOWNLOAD);
       /* PRE_XPCOM process file manipulation functions */
       ProcessFileOpsForAll(T_PRE_XPCOM);
+
+      /* save the installer files in the local machine */
+      if(diAdditionalOptions.bSaveInstaller)
+        SaveInstallerFiles();
 
       if(CheckInstances())
       {
@@ -2971,6 +2972,9 @@ void CommitInstall(void)
 
         return;
       }
+
+      if(gbDownloadTriggered || gbPreviousUnfinishedDownload)
+        SetSetupState(SETUP_STATE_UNPACK_XPCOM);
 
       if(ProcessXpinstallEngine() != WIZ_OK)
       {
@@ -2988,10 +2992,6 @@ void CommitInstall(void)
       ProcessFileOpsForAll(T_POST_XPCOM);
       /* PRE_SMARTUPDATE process file manipulation functions */
       ProcessFileOpsForAll(T_PRE_SMARTUPDATE);
-
-      /* save the installer files in the local machine */
-      if(diAdditionalOptions.bSaveInstaller)
-        SaveInstallerFiles();
 
       lstrcat(szDestPath, "uninstall\\");
       CreateDirectoriesAll(szDestPath, ADD_TO_UNINSTALL_LOG);
