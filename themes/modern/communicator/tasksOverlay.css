@@ -23,7 +23,7 @@
 	  list-style-image      : url("chrome://global/skin/taskbar-composer.gif");
   }
 
-#taskbar > toolbar
+#taskbar
   {
     margin-top            : 2px;
     min-height            : 1em;
@@ -39,9 +39,4 @@
   {
     min-width             : 0.3em;
     width                 : 1em;
-  }
-
-#taskbar > toolbargrippy
-  {
-    display               : none;
   }
