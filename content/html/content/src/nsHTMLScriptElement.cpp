@@ -82,8 +82,14 @@ public:
   NS_IMETHOD SetLineNumber(PRUint32 aLineNumber);
   NS_IMETHOD GetLineNumber(PRUint32* aLineNumber);
 
+  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                     const nsAString& aValue, PRBool aNotify);
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
+                           PRBool aNotify, PRBool aDeepSetDocument);
+  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                           PRBool aDeepSetDocument);
 
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
@@ -91,6 +97,22 @@ public:
 
 protected:
   PRUint32 mLineNumber;
+  PRPackedBool mIsEvaluated;
+
+  /**
+   * Processes the script if it's in the document-tree and links to or
+   * contains a script. Once it has been evaluated there is no way to make it
+   * reevaluate the script, you'll have to create a new element. This also means
+   * that when adding a src attribute to an element that already contains an
+   * inline script, the script referenced by the src attribute will not be
+   * loaded.
+   *
+   * In order to be able to use multiple childNodes, or to use the
+   * fallback-mechanism of using both inline script and linked script you have
+   * to add all attributes and childNodes before adding the element to the
+   * document-tree.
+   */
+  void MaybeProcessScript();
 };
 
 nsresult
@@ -123,6 +145,7 @@ NS_NewHTMLScriptElement(nsIHTMLContent** aInstancePtrResult,
 nsHTMLScriptElement::nsHTMLScriptElement()
 {
   mLineNumber = 0;
+  mIsEvaluated = PR_FALSE;
 }
 
 nsHTMLScriptElement::~nsHTMLScriptElement()
@@ -142,21 +165,60 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLScriptElement,
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLScriptElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
+
+NS_IMETHODIMP 
+nsHTMLScriptElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                             const nsAString& aValue, PRBool aNotify)
+{
+  nsresult rv = nsGenericHTMLContainerElement::SetAttr(aNameSpaceID,
+                                                       aName,
+                                                       aValue,
+                                                       aNotify);
+  if (NS_SUCCEEDED(rv) && aNotify && aName == nsHTMLAtoms::src &&
+      aNameSpaceID == kNameSpaceID_None) {
+    MaybeProcessScript();
+  }
+
+  return rv;
+}
+
 NS_IMETHODIMP 
 nsHTMLScriptElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                  PRBool aCompileEventHandlers)
 {
   nsresult rv = nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
                                                            aCompileEventHandlers);
-
-  if (NS_SUCCEEDED(rv) && mDocument && mParent) {
-    nsCOMPtr<nsIScriptLoader> loader;
-    mDocument->GetScriptLoader(getter_AddRefs(loader));
-    if (loader) {
-      loader->ProcessScriptElement(this, this);
-    }
+  if (NS_SUCCEEDED(rv) && aDocument) {
+    MaybeProcessScript();
   }
- 
+
+  return rv;
+}
+
+NS_IMETHODIMP 
+nsHTMLScriptElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
+                                   PRBool aNotify, PRBool aDeepSetDocument)
+{
+  nsresult rv = nsGenericHTMLContainerElement::InsertChildAt(aKid, aIndex,
+                                                             aNotify,
+                                                             aDeepSetDocument);
+  if (NS_SUCCEEDED(rv) && aNotify) {
+    MaybeProcessScript();
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP 
+nsHTMLScriptElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                                   PRBool aDeepSetDocument)
+{
+  nsresult rv = nsGenericHTMLContainerElement::AppendChildTo(aKid, aNotify,
+                                                             aDeepSetDocument);
+  if (NS_SUCCEEDED(rv) && aNotify) {
+    MaybeProcessScript();
+  }
+
   return rv;
 }
 
@@ -380,4 +442,18 @@ nsHTMLScriptElement::GetLineNumber(PRUint32* aLineNumber)
   *aLineNumber = mLineNumber;
 
   return NS_OK;
+}
+
+void
+nsHTMLScriptElement::MaybeProcessScript()
+{
+  if (!mIsEvaluated && mDocument && mParent &&
+      (HasAttr(kNameSpaceID_None, nsHTMLAtoms::src) || mChildren.Count())) {
+    mIsEvaluated = PR_TRUE;
+    nsCOMPtr<nsIScriptLoader> loader;
+    mDocument->GetScriptLoader(getter_AddRefs(loader));
+    if (loader) {
+      loader->ProcessScriptElement(this, this);
+    }
+  }
 }
