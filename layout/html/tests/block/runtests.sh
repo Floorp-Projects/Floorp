@@ -81,7 +81,7 @@ else
  TESTS_FILE=$TEMP\\$$-tests.txt
  TESTS_FILE=`cygpath -w $TESTS_FILE`
 fi
-MOZ_TEST_BASE=`echo $MOZ_TEST_BASE | sed -e"s,cygdrive/\(.\),\1:,"`
+MOZ_TEST_BASE=`cygpath -w $MOZ_TEST_BASE | sed -e 's|\\|/|g'`
 cp /dev/null $TESTS_FILE
 
 for FILE in `ls file_list.txt file_list[0-9].txt 2> /dev/null`; do

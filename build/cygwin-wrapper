@@ -7,11 +7,17 @@ shift
 if test -z "$prog"; then
     exit 0
 fi
+mountpoint=`mount -p | grep ^/ | awk '{ print $1 }'`
+if test -z "$mountpoint"; then
+   print "Cannot determine cygwin mount points. Exiting"
+   exit 1
+fi
+mountpoint=`echo $mountpoint | sed 's|/$||'`
 if test "$prog" = "-up"; then
    prog=$1
    shift
-   args=`echo $* | sed -e 's|-I\(.\):|-I/cygdrive/\1|g;'`
+   args=`echo $* | sed -e "s|-I\([a-zA-Z]\):/|-I${mountpoint}/\1/|g;"`
 else
-   args=`echo $* | sed -e 's|/cygdrive/\(.\)/|\1:/|g;'`
+   args=`echo $* | sed -e "s|${mountpoint}/\([a-zA-Z]\)/|\1:/|g;"`
 fi
 exec $prog $args

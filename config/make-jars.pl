@@ -2,7 +2,10 @@
 
 # make-jars [-f] [-v] [-l] [-d <chromeDir>] [-s <srcdir>] < <jar.mn>
 
-if ($^O ne "cygwin") {
+my $cygwin_mountprefix = "";
+if ($^O eq "cygwin") {
+$cygwin_mountprefix = `mount -p | grep ^/ | awk '{print $1}'`;
+} else {
 # we'll be pulling in some stuff from the script directory
 require FindBin;
 import FindBin;
@@ -353,7 +356,7 @@ sub EnsureFileInDir
 	    my $preproc_file = $file;
 	    if ($^O eq 'cygwin' && $file =~ /^[a-zA-Z]:/) {
 		# convert to a cygwin path
-		$preproc_file =~ s|^([a-zA-Z]):|/cygdrive/\1|;
+		$preproc_file =~ s|^([a-zA-Z]):|$cygwin_mountprefix/\1|;
 	    }
 	    if ($vms) {
 		# use a temporary file otherwise cmd is too long for system()
