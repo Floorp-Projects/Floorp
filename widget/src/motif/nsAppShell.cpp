@@ -59,14 +59,15 @@ NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
   return NS_OK;
 }
 
+//#define DR_EVIL 1
+
 //-------------------------------------------------------------------------
 //
 // Create the application shell
 //
 //-------------------------------------------------------------------------
 
-// EVIL
-#if 1
+#ifdef DR_EVIL
 extern Display *  gDisplay;
 extern Screen *   gScreen;
 extern Visual *   gVisual;
@@ -82,7 +83,6 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
   int argc = bac ? *bac : 0;
   char **argv = bav;
 
-#if 1
   nsresult rv;
 
   NS_WITH_SERVICE(nsICmdLineService, cmdLineArgs, kCmdLineServiceCID, &rv);
@@ -96,7 +96,6 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
     if(NS_FAILED(rv))
       argv = bav;
   }
-#endif
 
   XtSetLanguageProc(NULL, NULL, NULL);
 							
@@ -113,11 +112,9 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
   // XXX This is BAD -- needs to be fixed
   gAppContext = mAppContext;
 
-#if 1
+#ifdef DR_EVIL
   gDisplay = XtDisplay(mTopLevel);
   gScreen = XtScreen(mTopLevel);
-
-  printf("%s\tgDisplay = %p\n",__FUNCTION__,gDisplay);
 
   int          numVisuals;
   XVisualInfo  visualInfo;
