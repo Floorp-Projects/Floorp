@@ -37,17 +37,7 @@
 
 // nsISupports Implementation
 
-NS_IMPL_THREADSAFE_ADDREF(nsAutoConfig)
-NS_IMPL_THREADSAFE_RELEASE(nsAutoConfig)
-
-NS_INTERFACE_MAP_BEGIN(nsAutoConfig)
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAutoConfig)
-    NS_INTERFACE_MAP_ENTRY(nsIAutoConfig)
-    NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
-    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
-    NS_INTERFACE_MAP_ENTRY(nsIObserver)
-    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
-NS_INTERFACE_MAP_END
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsAutoConfig, nsIAutoConfig, nsITimerCallback, nsIStreamListener, nsIObserver, nsIRequestObserver)
 
 nsAutoConfig::nsAutoConfig()
 {
@@ -82,6 +72,30 @@ nsresult nsAutoConfig::Init()
 
 nsAutoConfig::~nsAutoConfig()
 {
+}
+
+// attribute string configURL
+NS_IMETHODIMP nsAutoConfig::GetConfigURL(char * *aConfigURL)
+{
+    if (!aConfigURL) 
+        return NS_ERROR_NULL_POINTER;
+
+    if (mConfigURL.IsEmpty()) {
+        *aConfigURL = nsnull;
+        return NS_OK;
+    }
+    
+    *aConfigURL = mConfigURL.ToNewCString();
+    if (!*aConfigURL)
+        return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+NS_IMETHODIMP nsAutoConfig::SetConfigURL(const char * aConfigURL)
+{
+    if (!aConfigURL)
+        return NS_ERROR_NULL_POINTER;
+    mConfigURL.Assign(aConfigURL);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -167,12 +181,12 @@ nsAutoConfig::OnStopRequest(nsIRequest* request, nsISupports* context,
 // Notify method as a TimerCallBack function 
 NS_IMETHODIMP_(void) nsAutoConfig::Notify(nsITimer *timer) 
 {
-    DownloadAutoCfg();
+    downloadAutoConfig();
 }
 
 /* Observe() is called twice: once at the instantiation time and other 
    after the profile is set. It doesn't do anything but return NS_OK during the
-   creation time. Second time it calls  DownloadAutoCfg().
+   creation time. Second time it calls  downloadAutoConfig().
 */
 
 NS_IMETHODIMP nsAutoConfig::Observe(nsISupports *aSubject, 
@@ -198,11 +212,11 @@ NS_IMETHODIMP nsAutoConfig::Observe(nsISupports *aSubject,
             }
         } 
 
-        // We will be calling DownloadAutoCfg even if there is no profile 
+        // We will be calling downloadAutoConfig even if there is no profile 
         // name. Nothing will be passed as a parameter to the URL and the
         // default case will be picked up by the script.
         
-        rv = DownloadAutoCfg();
+        rv = downloadAutoConfig();
 
         // We are done with AutoConfig, removing it from the observer list
 
@@ -219,7 +233,7 @@ NS_IMETHODIMP nsAutoConfig::Observe(nsISupports *aSubject,
     return rv;
 }
 
-NS_IMETHODIMP nsAutoConfig::DownloadAutoCfg()
+nsresult nsAutoConfig::downloadAutoConfig()
 {
     nsresult rv;
     nsCAutoString emailAddr;
@@ -227,13 +241,11 @@ NS_IMETHODIMP nsAutoConfig::DownloadAutoCfg()
     PRBool appendMail=PR_FALSE, offline=PR_FALSE;
     static PRBool firstTime = PR_TRUE;
     
+    if (mConfigURL.IsEmpty()) {
+        NS_WARNING("AutoConfig called without global_config_url");
+        return NS_OK;
+    }
     
-    // get the value of the autoconfig url
-    rv = mPrefBranch->GetCharPref("autoadmin.global_config_url",
-                                  getter_Copies(urlName));
-    if (NS_FAILED(rv) || (nsCRT::strlen(urlName) == 0))  
-        return NS_OK; // Return ok if there is no config url set.
-
     // Check to see if the network is online/offline 
     nsCOMPtr<nsIIOService> ios = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) 
@@ -257,8 +269,6 @@ NS_IMETHODIMP nsAutoConfig::DownloadAutoCfg()
     
     
     
-    nsCAutoString cfgUrl(urlName);
-    
     /* Append user's identity at the end of the URL if the pref says so.
        First we are checking for the user's email address but if it is not
        available in the case where the client is used without messenger, user's
@@ -275,8 +285,8 @@ NS_IMETHODIMP nsAutoConfig::DownloadAutoCfg()
                In this case the autoconfig URL is a script and 
                emailAddr as passed as an argument 
             */
-            cfgUrl.Append("?");
-            cfgUrl.Append(emailAddr); 
+            mConfigURL.Append("?");
+            mConfigURL.Append(emailAddr); 
         }
     }
     
@@ -300,7 +310,7 @@ NS_IMETHODIMP nsAutoConfig::DownloadAutoCfg()
     nsCOMPtr<nsIURI> url;
     nsCOMPtr<nsIChannel> channel;
     
-    rv = NS_NewURI(getter_AddRefs(url), cfgUrl, nsnull, nsnull);
+    rv = NS_NewURI(getter_AddRefs(url), mConfigURL, nsnull, nsnull);
     if (NS_FAILED(rv)) 
         return rv;
     
@@ -346,11 +356,11 @@ NS_IMETHODIMP nsAutoConfig::DownloadAutoCfg()
         PLEvent *event;
         while (!mLoaded) {
             rv = currentThreadQ->WaitForEvent(&event);
-            NS_ASSERTION(NS_SUCCEEDED(rv),"-->nsAutoConfig::DownloadAutoCfg: currentThreadQ->WaitForEvent failed...");
+            NS_ASSERTION(NS_SUCCEEDED(rv),"-->nsAutoConfig::downloadAutoConfig: currentThreadQ->WaitForEvent failed...");
             if (NS_FAILED(rv)) 
                 return rv;
             rv = currentThreadQ->HandleEvent(event);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "-->nsAutoConfig::DownloadAutoCfg: currentThreadQ->HandleEvent failed...");
+            NS_ASSERTION(NS_SUCCEEDED(rv), "-->nsAutoConfig::downloadAutoConfig: currentThreadQ->HandleEvent failed...");
             if (NS_FAILED(rv)) 
                 return rv;
         }
@@ -359,7 +369,7 @@ NS_IMETHODIMP nsAutoConfig::DownloadAutoCfg()
     
     return NS_OK;
 
-} // nsPref::DownloadAutoCfg()
+} // nsPref::downloadAutoConfig()
 
 
 

@@ -43,5 +43,5 @@
 
 [uuid (80DB54AE-13F2-11d5-BE44-00108335A220)]
 interface nsIAutoConfig : nsISupports {
-  void downloadAutoCfg();
+  attribute string configURL;
 };

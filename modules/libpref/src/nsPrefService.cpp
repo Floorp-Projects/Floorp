@@ -27,6 +27,7 @@
 #include "nsISignatureVerifier.h"
 #include "nsPrefBranch.h"
 #include "nsXPIDLString.h"
+#include "nsIAutoConfig.h"
 
 #include "nsQuickSort.h"
 #include "prefapi.h"
@@ -158,55 +159,76 @@ NS_IMETHODIMP nsPrefService::ReadConfigFile()
   nsXPIDLCString lockFileName;
   nsXPIDLCString lockVendor;
   PRUint32 fileNameLen = 0;
-  PRUint32 vendorLen = 0;
     
-  // This preference is set in the all.js or all-ns.js (depending whether running mozilla or netscp6)
-  // default - preference is commented out, so it doesn't exist
-  rv = mRootBranch->GetCharPref("general.config.filename", getter_Copies(lockFileName));
-  if(NS_FAILED(rv))
+  // This preference is set in the all.js or all-ns.js (depending whether 
+  // running mozilla or netscp6) default - preference is commented out, so 
+  // it doesn't exist
+  rv = mRootBranch->GetCharPref("general.config.filename", 
+                                getter_Copies(lockFileName));
+  if (NS_FAILED(rv))
     return NS_OK;
-    // If the lockFileName is NULL return ok, because no lockFile will be used
-
-  rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, getter_AddRefs(lockPrefFile));
-  if (NS_SUCCEEDED(rv))
-  {
-
+  // If the lockFileName is NULL return ok, because no lockFile will be used
+  
+  rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, 
+                              getter_AddRefs(lockPrefFile));
+  if (NS_SUCCEEDED(rv)) {
+      
 #ifdef XP_MAC
     lockPrefFile->Append("Essential Files");
 #endif
-        
-    if (NS_SUCCEEDED(lockPrefFile->Append(lockFileName)))
-    {
-      if (NS_FAILED(openPrefFile(lockPrefFile, PR_FALSE, PR_TRUE, PR_FALSE, PR_TRUE)))
+    
+    if (NS_SUCCEEDED(lockPrefFile->Append(lockFileName))) {
+      if (NS_FAILED(openPrefFile(lockPrefFile, PR_FALSE, PR_TRUE, 
+                                 PR_FALSE, PR_TRUE)))
         return NS_ERROR_FAILURE;
       // failure here means problem within the config file script
     }
   }
-
-  //  Once the config file is read, we should check that the vendor name is consistent
-  //  By checking for the vendor name after reading the config file we allow for the
-  //  preference to be set (and locked) by the creator of the cfg file meaning the 
-  //  file can not be renamed (successfully).
-  rv = mRootBranch->GetCharPref("general.config.filename", getter_Copies(lockFileName));
-  if(NS_FAILED(rv))
+  
+  //  Once the config file is read, we should check that the vendor name 
+  // is consistent By checking for the vendor name after reading the config 
+  // file we allow for the preference to be set (and locked) by the creator 
+  // of the cfg file meaning the file can not be renamed (successfully).
+  
+  rv = mRootBranch->GetCharPref("general.config.filename", 
+                                getter_Copies(lockFileName));
+  if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
-    // There is NO REASON we should ever get here. This is POST reading of the config file.
+  // There is NO REASON we should ever get here. This is POST reading 
+  // of the config file.
+  
+  rv = mRootBranch->GetCharPref("general.config.vendor", 
+                                getter_Copies(lockVendor));
+  // If vendor is not NULL, do this check
+  if (NS_SUCCEEDED(rv)) {
 
-  rv = mRootBranch->GetCharPref("general.config.vendor", getter_Copies(lockVendor));
-  if(NS_FAILED(rv))
-    return NS_OK;
-    // if the vendor is null (default) ignore this check
-
-  fileNameLen = PL_strlen(lockFileName);
-  vendorLen = PL_strlen(lockVendor);
-
-  //  lockVendor and lockFileName should be the same with the addtion of .cfg to the filename
-  //  by checking this post reading of the cfg file this value can be set within the cfg file
-  //  adding a level of security.
-  if (PL_strncmp(lockFileName, lockVendor, fileNameLen -4) != 0)
-    return NS_ERROR_FAILURE;
-
-  return rv;
+    fileNameLen = PL_strlen(lockFileName);
+    
+    //  lockVendor and lockFileName should be the same with the addtion of 
+    // .cfg to the filename by checking this post reading of the cfg file 
+    // this value can be set within the cfg file adding a level of security.
+    
+    if (PL_strncmp(lockFileName, lockVendor, fileNameLen -4) != 0)
+      return NS_ERROR_FAILURE;
+  }
+  
+  // get the value of the autoconfig url
+  nsXPIDLCString urlName;
+  rv = mRootBranch->GetCharPref("autoadmin.global_config_url",
+                                getter_Copies(urlName));
+  if (NS_SUCCEEDED(rv) && *urlName != '\0' ) {  
+    
+    // Instantiating nsAutoConfig object if the pref is present
+    nsCOMPtr<nsIAutoConfig> autocfg;
+    autocfg = do_CreateInstance(NS_AUTOCONFIG_CONTRACTID,&rv);
+    if (NS_FAILED(rv))
+      return NS_ERROR_OUT_OF_MEMORY;
+    rv = autocfg->SetConfigURL(urlName);
+    if (NS_FAILED(rv))
+      return NS_ERROR_FAILURE;
+  }
+  
+  return NS_OK;
 } // nsPref::ReadConfigFile
 
 
