@@ -4,8 +4,8 @@
   <RDF:Bag ID="NC:FlashDataSources">
     <RDF:li>
       <!-- The Tinderbox Flash -->
-      <RDF:Description about="http://cvs-mirror.mozilla.org/webtools/tinderbox/showbuilds.cgi?tree=SeaMonkey&amp;flash=1">
-        <NC:poll-interval>60</NC:poll-interval>
+      <RDF:Description about="http://cvs-mirror.mozilla.org/webtools/tinderbox/SeaMonkey/flash.rdf">
+        <NC:poll-interval>300</NC:poll-interval>
       </RDF:Description>
     </RDF:li>
   </RDF:Bag>

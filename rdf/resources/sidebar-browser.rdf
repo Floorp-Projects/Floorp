@@ -28,7 +28,7 @@
     <RDF:li>
        <RDF:Description ID="tinderbox">
          <NC:title>&sidebar.tinderbox.label;</NC:title>
-         <NC:content>http://cvs-mirror.mozilla.org/webtools/tinderbox/showbuilds.cgi?tree=SeaMonkey&amp;panel=1</NC:content>
+         <NC:content>http://cvs-mirror.mozilla.org/webtools/tinderbox/SeaMonkey/panel.html</NC:content>
        </RDF:Description>
     </RDF:li>
   </RDF:Seq>
