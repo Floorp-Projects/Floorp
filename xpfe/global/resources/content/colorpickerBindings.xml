@@ -1,0 +1,427 @@
+<?xml version="1.0"?>
+
+<bindings id="xulBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="colorpicker" extends="xul:box">
+    <content>
+      <xul:box flex="1" orient="vertical">
+
+        <xul:box orient="horizontal">
+          <xul:spring class="colorpickertile" style="background-color: #FFFFFF" color="#FFFFFF"/>
+          <xul:spring class="colorpickertile" style="background-color: #FFCCCC" color="#FFCCCC"/>
+          <xul:spring class="colorpickertile" style="background-color: #FFCC99" color="#FFCC99"/>
+          <xul:spring class="colorpickertile" style="background-color: #FFFF99" color="#FFFF99"/>
+          <xul:spring class="colorpickertile" style="background-color: #FFFFCC" color="#FFFFCC"/>
+          <xul:spring class="colorpickertile" style="background-color: #99FF99" color="#99FF99"/>
+          <xul:spring class="colorpickertile" style="background-color: #99FFFF" color="#99FFFF"/>
+          <xul:spring class="colorpickertile" style="background-color: #CCFFFF" color="#CCFFFF"/>
+          <xul:spring class="colorpickertile" style="background-color: #CCCCFF" color="#CCCCFF"/>
+          <xul:spring class="colorpickertile" style="background-color: #FFCCFF" color="#FFCCFF"/>
+        </xul:box>
+        <xul:box orient="horizontal">
+          <xul:spring class="colorpickertile" style="background-color: #CCCCCC" color="#CCCCCC"/>
+          <xul:spring class="colorpickertile" style="background-color: #FF6666" color="#FF6666"/>
+          <xul:spring class="colorpickertile" style="background-color: #FFCC33" color="#FFCC33"/>
+          <xul:spring class="colorpickertile" style="background-color: #FFFF66" color="#FFFF66"/>
+          <xul:spring class="colorpickertile" style="background-color: #FFFF99" color="#FFFF99"/>
+          <xul:spring class="colorpickertile" style="background-color: #66FF99" color="#66FF99"/>
+          <xul:spring class="colorpickertile" style="background-color: #33FFFF" color="#33FFFF"/>
+          <xul:spring class="colorpickertile" style="background-color: #66FFFF" color="#66FFFF"/>
+          <xul:spring class="colorpickertile" style="background-color: #9999FF" color="#9999FF"/>
+          <xul:spring class="colorpickertile" style="background-color: #FF99FF" color="#FF99FF"/>
+        </xul:box>
+        <xul:box orient="horizontal">
+          <xul:spring class="colorpickertile" style="background-color: #C0C0C0" color="#C0C0C0"/>
+          <xul:spring class="colorpickertile" style="background-color: #FF0000" color="#FF0000"/>
+          <xul:spring class="colorpickertile" style="background-color: #FF9900" color="#FF9900"/>
+          <xul:spring class="colorpickertile" style="background-color: #FFCC66" color="#FFCC66"/>
+          <xul:spring class="colorpickertile" style="background-color: #FFFF00" color="#FFFF00"/>
+          <xul:spring class="colorpickertile" style="background-color: #33FF33" color="#33FF33"/>
+          <xul:spring class="colorpickertile" style="background-color: #66CCCC" color="#66CCCC"/>
+          <xul:spring class="colorpickertile" style="background-color: #33CCFF" color="#33CCFF"/>
+          <xul:spring class="colorpickertile" style="background-color: #6666CC" color="#6666CC"/>
+          <xul:spring class="colorpickertile" style="background-color: #CC66CC" color="#CC66CC"/>
+        </xul:box>
+        <xul:box orient="horizontal">
+          <xul:spring class="colorpickertile" style="background-color: #999999" color="#999999"/>
+          <xul:spring class="colorpickertile" style="background-color: #CC0000" color="#CC0000"/>
+          <xul:spring class="colorpickertile" style="background-color: #FF6600" color="#FF6600"/>
+          <xul:spring class="colorpickertile" style="background-color: #FFCC33" color="#FFCC33"/>
+          <xul:spring class="colorpickertile" style="background-color: #FFCC00" color="#FFCC00"/>
+          <xul:spring class="colorpickertile" style="background-color: #33CC00" color="#33CC00"/>
+          <xul:spring class="colorpickertile" style="background-color: #00CCCC" color="#00CCCC"/>
+          <xul:spring class="colorpickertile" style="background-color: #3366FF" color="#3366FF"/>
+          <xul:spring class="colorpickertile" style="background-color: #6633FF" color="#6633FF"/>
+          <xul:spring class="colorpickertile" style="background-color: #CC33CC" color="#CC33CC"/>
+        </xul:box>
+        <xul:box orient="horizontal">
+          <xul:spring class="colorpickertile" style="background-color: #666666" color="#666666"/>
+          <xul:spring class="colorpickertile" style="background-color: #990000" color="#990000"/>
+          <xul:spring class="colorpickertile" style="background-color: #CC6600" color="#CC6600"/>
+          <xul:spring class="colorpickertile" style="background-color: #CC9933" color="#CC9933"/>
+          <xul:spring class="colorpickertile" style="background-color: #999900" color="#999900"/>
+          <xul:spring class="colorpickertile" style="background-color: #009900" color="#009900"/>
+          <xul:spring class="colorpickertile" style="background-color: #339999" color="#339999"/>
+          <xul:spring class="colorpickertile" style="background-color: #3333FF" color="#3333FF"/>
+          <xul:spring class="colorpickertile" style="background-color: #6600CC" color="#6600CC"/>
+          <xul:spring class="colorpickertile" style="background-color: #993399" color="#993399"/>
+        </xul:box>
+        <xul:box orient="horizontal">
+          <xul:spring class="colorpickertile" style="background-color: #333333" color="#333333"/>
+          <xul:spring class="colorpickertile" style="background-color: #660000" color="#660000"/>
+          <xul:spring class="colorpickertile" style="background-color: #993300" color="#993300"/>
+          <xul:spring class="colorpickertile" style="background-color: #996633" color="#996633"/>
+          <xul:spring class="colorpickertile" style="background-color: #666600" color="#666600"/>
+          <xul:spring class="colorpickertile" style="background-color: #006600" color="#006600"/>
+          <xul:spring class="colorpickertile" style="background-color: #336666" color="#336666"/>
+          <xul:spring class="colorpickertile" style="background-color: #000099" color="#000099"/>
+          <xul:spring class="colorpickertile" style="background-color: #333399" color="#333399"/>
+          <xul:spring class="colorpickertile" style="background-color: #663366" color="#663366"/>
+        </xul:box>
+        <xul:box orient="horizontal">
+          <xul:spring class="colorpickertile" style="background-color: #000000" color="#000000"/>
+          <xul:spring class="colorpickertile" style="background-color: #330000" color="#330000"/>
+          <xul:spring class="colorpickertile" style="background-color: #663300" color="#663300"/>
+          <xul:spring class="colorpickertile" style="background-color: #663333" color="#663333"/>
+          <xul:spring class="colorpickertile" style="background-color: #333300" color="#333300"/>
+          <xul:spring class="colorpickertile" style="background-color: #003300" color="#003300"/>
+          <xul:spring class="colorpickertile" style="background-color: #003333" color="#003333"/>
+          <xul:spring class="colorpickertile" style="background-color: #000066" color="#000066"/>
+          <xul:spring class="colorpickertile" style="background-color: #330099" color="#330099"/>
+          <xul:spring class="colorpickertile" style="background-color: #330033" color="#330033"/>
+        </xul:box>
+
+      </xul:box>
+    </content>
+    
+    <implementation>
+    
+      <property name="color">
+        <getter><![CDATA[
+          return this.mSelectedCell ? this.mSelectedCell.getAttribute("color") : null;
+        ]]></getter>
+        <setter><![CDATA[
+          var cells = this.mBox.getElementsByAttribute("color", val);
+          if (cells.length > 0)
+            this.selectCell(cells[0]);
+        ]]></setter>
+      </property>
+      
+      <method name="initialize">
+        <body><![CDATA[
+          this.mSelectedCell = null;
+          this.mHoverCell = null;
+          this.mBox = document.getAnonymousNodes(this)[0];
+
+          this.hoverCell(this.mBox.childNodes[0].childNodes[0]);
+          
+          var onselect = this.getAttribute("onselect");
+          if (onselect) {
+            try {
+              this.onselect = new Function(onselect);
+            } catch (ex) {
+              // watch out for syntax errors in the function code
+            }
+          }
+        ]]></body>
+      </method>
+
+      <method name="resetHover">
+        <body><![CDATA[
+          if (this.mHoverCell)
+            this.mHoverCell.removeAttribute("hover");
+        ]]></body>
+      </method>
+
+      <method name="getColIndex">
+        <parameter name="aCell"/>
+        <body><![CDATA[
+          var cell = aCell;
+          var idx;
+          for (idx = -1; cell; idx++)
+            cell = cell.previousSibling;
+
+          return idx;
+        ]]></body>
+      </method>
+
+      <method name="isColorCell">
+        <parameter name="aCell"/>
+        <body><![CDATA[
+          return aCell && aCell.hasAttribute("color");
+        ]]></body>
+      </method>
+
+      <method name="hoverLeft">
+        <body><![CDATA[
+          var cell = this.mHoverCell.previousSibling;
+          this.hoverCell(cell);
+        ]]></body>
+      </method>
+      
+      <method name="hoverRight">
+        <body><![CDATA[
+          var cell = this.mHoverCell.nextSibling;
+          this.hoverCell(cell);
+        ]]></body>
+      </method>
+
+      <method name="hoverUp">
+        <body><![CDATA[
+          var row = this.mHoverCell.parentNode.previousSibling;
+          if (row) {
+            var colIdx = this.getColIndex(this.mHoverCell);
+            var cell = row.childNodes[colIdx];
+            this.hoverCell(cell);
+          }
+        ]]></body>
+      </method>
+
+      <method name="hoverDown">
+        <body><![CDATA[
+          var row = this.mHoverCell.parentNode.nextSibling;
+          if (row) {
+            var colIdx = this.getColIndex(this.mHoverCell);
+            var cell = row.childNodes[colIdx];
+            this.hoverCell(cell);
+          }
+        ]]></body>
+      </method>
+
+      <method name="hoverTo">
+        <parameter name="aRow"/>
+        <parameter name="aCol"/>
+        
+        <body><![CDATA[
+          var row = this.mBox.childNodes[aRow];
+          if (!row) return;
+          var cell = row.childNodes[aCol];
+          if (!cell) return;
+          this.hoverCell(cell);
+        ]]></body>
+      </method>
+
+      <method name="hoverCell">
+        <parameter name="aCell"/>
+        
+        <body><![CDATA[
+          if (this.isColorCell(aCell)) {
+            this.resetHover();
+            aCell.setAttribute("hover", "true");
+            this.mHoverCell = aCell;
+          }
+        ]]></body>
+      </method>
+
+      <method name="selectHoverCell">
+        <body><![CDATA[
+          this.selectCell(this.mHoverCell);
+        ]]></body>
+      </method>
+
+      <method name="selectCell">
+        <parameter name="aCell"/>
+        
+        <body><![CDATA[
+          if (this.isColorCell(aCell)) {
+            if (this.mSelectedCell)
+              this.mSelectedCell.removeAttribute("selected");
+
+            this.mSelectedCell = aCell;
+            aCell.setAttribute("selected", "true");
+
+            if (this.onselect) 
+              this.onselect();            
+          }
+        ]]></body>
+      </method>
+      
+    </implementation>    
+    
+    <handlers>
+      <handler event="bindingattached"><![CDATA[
+        this.initialize();
+      ]]></handler>
+      
+      <handler event="mouseover"><![CDATA[
+        this.hoverCell(event.originalTarget);
+      ]]></handler>
+      
+      <handler event="click"><![CDATA[
+        if (event.originalTarget.hasAttribute("color"))
+          this.selectCell(event.originalTarget);
+      ]]></handler>
+    </handlers>
+  </binding>
+
+  <binding id="colorpickerButton" extends="xul:box">
+    <content>
+      <xul:box class="colorpicker-button-internal-box" allowevents="true" flex="1">
+
+        <xul:box class="colorpicker-button-colorbox" role="colorbox" flex="1"/>
+
+        <xul:popupset>
+          <xul:popup class="colorpicker-button-menupopup" role="colorpopup"
+            onmousedown="event.stopPropagation()"
+            oncreate="this._colorPicker.onPopupCreate()"
+            ondestroy="this._colorPicker.onPopupDestroy()">
+  
+            <xul:colorpicker inherits="palettename" allowevents="true" role="colorpicker"
+             onselect="this.parentNode.parentNode.parentNode.parentNode.pickerChange()"/>
+  
+           </xul:popup>
+         </xul:popupset>
+      </xul:box>
+    </content>
+    
+    <implementation>
+    
+      <property name="open" onget="return this.mOpen"/>
+
+      <property name="color">
+        <getter><![CDATA[
+          return this.getAttribute("color");
+        ]]></getter>
+        <setter><![CDATA[
+          this.mColorBox.setAttribute("style", "background-color: " + val);
+          return this.setAttribute("color", val);
+        ]]></setter>
+      </property>
+      
+      <method name="initialize">
+        <body><![CDATA[
+          this.mOpen = false;
+          this.onchange = null;
+                    
+          this.mColorBox = this.getElementByRole("colorbox");
+        
+          var popup = this.getElementByRole("colorpopup");
+          popup._colorPicker = this;
+          
+          this.mPicker = this.getElementByRole("colorpicker");
+
+          var change = this.getAttribute("onchange");
+          if (change) {
+            try {
+              this.onchange = new Function("event", change);
+            } catch (ex) {
+              // watch out for syntax errors in the function code
+            }
+          }
+                    
+          // used to capture keydown at the document level
+          this.mPickerKeyDown = function(aEvent)
+          {
+            document._focusedPicker.pickerKeyDown(aEvent);
+          }
+        ]]></body>
+      </method>
+      
+      <method name="getElementByRole">
+        <parameter name="aValue"/>
+        <body><![CDATA[
+          var nodes = document.getAnonymousNodes(this);
+          var results;
+          for (var i = 0; i < nodes.length; i++) {
+            results = nodes[i].getElementsByAttribute("role", aValue);
+            if (results.length > 0)
+              return results[0];
+          }
+          return null;
+        ]]></body>
+      </method>
+      
+      <method name="openPopup">
+        <body><![CDATA[
+          this.mPicker.parentNode.openPopup(this, -1, -1, "popup", "bottomleft", "topleft");
+        ]]></body>
+      </method>
+      
+      <method name="closePopup">
+        <body><![CDATA[
+          this.mPicker.parentNode.closePopup();
+        ]]></body>
+      </method>
+
+      <method name="onPopupCreate">
+        <body><![CDATA[
+          this.mOpen = true;
+          this.setAttribute("open", "true");
+
+          this.mPicker.resetHover();
+
+          document._focusedPicker = this;
+          document.addEventListener("keydown", this.mPickerKeyDown, true);
+        ]]></body>
+      </method>
+      
+      <method name="onPopupDestroy">
+        <body><![CDATA[
+          this.mOpen = false;
+          this.removeAttribute("open");
+
+          document._focusedPicker = null;
+          document.removeEventListener("keydown", this.mPickerKeyDown, true);
+        ]]></body>
+      </method>
+
+      <method name="pickerChange">
+        <body><![CDATA[
+          this.color = this.mPicker.color;
+          setTimeout(function(aPopup) { aPopup.closePopup() }, 1, this.mPicker.parentNode);
+          
+          if (this.onchange) 
+            this.onchange();
+        ]]></body>
+      </method>
+
+      <method name="pickerKeyDown">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          switch (aEvent.keyCode) {
+            case 37: // left
+              this.mPicker.hoverLeft();
+              break;
+            case 38: // up
+              this.mPicker.hoverUp();
+              break;
+            case 39: // right
+              this.mPicker.hoverRight();
+              break;
+            case 40: // down
+              this.mPicker.hoverDown();
+              break;
+            case 13: // enter
+              this.mPicker.selectHoverCell();
+          }
+        ]]></body>
+      </method>
+
+    </implementation>
+
+    <handlers>
+      <handler event="bindingattached"><![CDATA[
+        this.initialize();
+      ]]></handler>
+      
+      <handler event="keydown"><![CDATA[
+        // open popup if key is up/left/right/down and popup is closed
+        if (event.keyCode > 36 && event.keyCode < 41 && !this.mOpen)
+          this.openPopup();
+      ]]></handler>
+
+      <handler event="mousedown"><![CDATA[
+        // Though I would prefer the open the popup using the built-in
+        // popup="_child" mechanism, I can't use that because I can't seem to
+        // get it to recognize the popupalign and popupanchor attributes that way
+        // So, I have to do it manually...
+        this.openPopup();
+      ]]></handler>
+    </handlers>
+    
+  </binding>
+
+</bindings>
+
