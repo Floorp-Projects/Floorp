@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!-- Window title -->
+<!ENTITY windowTitle.label "Horizontal Line Properties">
+
+<!ENTITY dimensionsFieldset.label "Dimensions">
+<!ENTITY heightEditField.label "Height">
+<!ENTITY widthEditField.label "Width">
+<!ENTITY pixelsPopup.value "pixels">
+<!ENTITY percentPopup.value "percent">
+
+<!ENTITY alignmentFieldset.label "Alignment">
+<!ENTITY leftPopup.value "Left">
+<!ENTITY centerPopup.value "Center">
+<!ENTITY rightPopup.value "Right">
+
+<!ENTITY threeDShading.label "3-D Shading">
+<!ENTITY saveSettings.label "Save Settings">
+<!ENTITY OKButton.label "OK">
+<!ENTITY CancelButton.label "Cancel">
+<!ENTITY AdvancedEditButton.label "Advanced Edit...">

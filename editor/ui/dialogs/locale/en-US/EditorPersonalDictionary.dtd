@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!-- Window title -->
+<!ENTITY windowTitle.label "Personal Dictionary">
+
+<!ENTITY wordEditField.label "New word:">
+<!ENTITY AddButton.label "Add">
+<!ENTITY DictionaryList.label "Words in dictionary:">
+<!ENTITY ReplaceButton.label "Replace">
+<!ENTITY RemoveButton.label "Remove">
+
+<!ENTITY CloseButton.label "Close">

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+
+<!-- Window title -->
+<!ENTITY windowTitle.label "Check Spelling">
+
+<!ENTITY wordEditField.label "Word">
+<!ENTITY checkwordButton.label "Check Word">
+<!ENTITY suggestions.label "Suggestions:">
+
+<!ENTITY ignoreButton.label "Ignore">
+<!ENTITY ignoreallButton.label "Ignore All">
+<!ENTITY changeButton.label "Change">
+<!ENTITY changeallButton.label "Change All">
+
+<!ENTITY userDictionary.label "User Dictionary:">
+<!ENTITY addtouserdictionaryButton.label "Add">
+<!ENTITY edituserdictionaryButton.label "Edit">
+<!ENTITY closeButton.label "Close">
+
+<!ENTITY languagePopup.label "Language:">
+<!ENTITY englishLanguagePopup.value "English">
+<!ENTITY spanishLanguagePopup.value "Spanish">
+<!ENTITY frenchLanguagePopup.value "French">
