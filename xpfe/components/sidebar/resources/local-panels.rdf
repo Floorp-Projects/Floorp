@@ -21,7 +21,7 @@
    -                 Chris Waterson <waterson@netscape.com>
   --> 
 
-<!DOCTYPE RDF SYSTEM "chrome://sidebar/locale/sidebar-rdf.dtd" >
+<!DOCTYPE RDF SYSTEM "chrome://sidebar/locale/local-panels.dtd" >
 <RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:NC="http://home.netscape.com/NC-rdf#">
 
