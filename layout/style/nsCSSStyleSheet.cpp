@@ -1123,7 +1123,7 @@ CloneRuleInto(nsISupports* aRule, void* aArray)
   return PR_TRUE;
 }
 
-static PRBool
+static PRBool PR_CALLBACK
 CopyRelevantAttributes(nsHashKey *aAttrKey, void *aAtom, void *aTable)
 {
   nsHashtable *table = NS_STATIC_CAST(nsHashtable *, aTable);

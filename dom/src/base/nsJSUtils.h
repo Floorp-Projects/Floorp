@@ -107,7 +107,7 @@ public:
                                        JSObject* aObj,
                                        jsval aValue);
 
-  static NS_EXPORT void nsGenericFinalize(JSContext* aContext,
+  static NS_EXPORT void PR_CALLBACK nsGenericFinalize(JSContext* aContext,
                                 JSObject* aObj);
 
   static NS_EXPORT JSBool nsGenericEnumerate(JSContext* aContext,
