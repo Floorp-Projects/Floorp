@@ -83,27 +83,19 @@ protected:
                      PRBool* aDidFlush=nsnull);
 
   nsresult AddContentAsLeaf(nsIContent *aContent);
-  void FindNameSpaceAttributes(const nsIParserNode& aNode);
-
-  PRInt32 OpenNameSpace(const nsString& aPrefix, const nsString& aURI);
-  PRInt32 GetNameSpaceId(const nsString& aPrefix);
-  void    CloseNameSpacesAtNestLevel(PRInt32 mNestLevel);
+  void    PushNameSpacesFrom(const nsIParserNode& aNode);
+  nsIAtom*  CutNameSpacePrefix(nsString& aString);
+  PRInt32 GetNameSpaceId(nsIAtom* aPrefix);
+  void    PopNameSpaces();
   PRBool  IsHTMLNameSpace(PRInt32 aId);
 
   nsIContent* GetCurrentContent();
   PRInt32 PushContent(nsIContent *aContent);
   nsIContent* PopContent();
-  PRInt32 GetCurrentNestLevel();
 
   nsresult EvaluateScript(nsString& aScript, PRUint32 aLineNo);
   nsresult ProcessEndSCRIPTTag(const nsIParserNode& aNode);
   nsresult ProcessStartSCRIPTTag(const nsIParserNode& aNode);
-
-  struct NameSpaceStruct {
-    nsIAtom* mPrefix;
-    PRInt32 mId;
-    PRInt32 mNestLevel;
-  };
 
   nsIDocument* mDocument;
   nsIURL* mDocumentURL;
@@ -112,10 +104,9 @@ protected:
   nsIContent* mRootElement;
   nsIContent* mDocElement;
   XMLContentSinkState mState;
-  nsVoidArray* mNameSpaces;
 
-  PRInt32 mNestLevel;
   nsVoidArray* mContentStack;
+  nsVoidArray* mNameSpaceStack;
 
   nsScrollPreference mOriginalScrollPreference;
 

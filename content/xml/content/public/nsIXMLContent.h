@@ -23,8 +23,6 @@
 #include "nsISupports.h"
 #include "nsIContent.h"
 
-#define gNameSpaceId_Unknown 0
-
 #define NS_IXMLCONTENT_IID \
  { 0xa6cf90cb, 0x15b3, 0x11d2, \
  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } }
@@ -35,11 +33,10 @@
 class nsIXMLContent : public nsIContent {
 public:
   // XXX A convenience - the id can be used to get the namespace Atom
-  NS_IMETHOD SetNameSpace(nsIAtom* aNameSpace)=0;
-  NS_IMETHOD GetNameSpace(nsIAtom*& aNameSpace)=0;
+  NS_IMETHOD SetNameSpacePrefix(nsIAtom* aNameSpace) = 0;
+  NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aNameSpace) const = 0;
 
-  NS_IMETHOD SetNameSpaceIdentifier(PRInt32 aNSIdentifier)=0;
-  NS_IMETHOD GetNameSpaceIdentifier(PRInt32& aNSIdentifier)=0;
+  NS_IMETHOD SetNameSpaceID(PRInt32 aNSIdentifier) = 0;
 };
 
 extern nsresult

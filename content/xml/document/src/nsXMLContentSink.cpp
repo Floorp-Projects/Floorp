@@ -41,13 +41,14 @@
 #include "nsHTMLAtoms.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptContextOwner.h"
+#include "nsINameSpace.h"
+#include "nsINameSpaceManager.h"
 #include "prtime.h"
 #include "prlog.h"
 #include "prmem.h"
 
 static char kNameSpaceSeparator[] = ":";
 static char kNameSpaceDef[] = "xmlns";
-static char kHTMLNameSpaceURI[] = "http://www.w3.org/TR/REC-html40";
 static char kStyleSheetPI[] = "<?xml-stylesheet";
 static char kCSSType[] = "text/css";
 static char kQuote = '\"';
@@ -105,9 +106,8 @@ nsXMLContentSink::nsXMLContentSink()
   mWebShell = nsnull;
   mRootElement = nsnull;
   mDocElement = nsnull;
-  mNameSpaces = nsnull;
-  mNestLevel = 0;
   mContentStack = nsnull;
+  mNameSpaceStack = nsnull;
   mText = nsnull;
   mTextLength = 0;
   mTextSize = 0;
@@ -122,22 +122,23 @@ nsXMLContentSink::~nsXMLContentSink()
   NS_IF_RELEASE(mWebShell);
   NS_IF_RELEASE(mRootElement);
   NS_IF_RELEASE(mDocElement);
-  if (nsnull != mNameSpaces) {
-    // There shouldn't be any here except in an error condition
-    PRInt32 i, count = mNameSpaces->Count();
-    
-    for (i=0; i < count; i++) {
-      NameSpaceStruct *ns = (NameSpaceStruct *)mNameSpaces->ElementAt(i);
-      
-      if (nsnull != ns) {
-        NS_IF_RELEASE(ns->mPrefix);
-        delete ns;
-      }
-    }
-    delete mNameSpaces;
-  }
   if (nsnull != mContentStack) {
+    // there shouldn't be anything here except in an error condition
+    PRInt32 index = mContentStack->Count();
+    while (0 < index--) {
+      nsIContent* content = (nsIContent*)mContentStack->ElementAt(index);
+      NS_RELEASE(content);
+    }
     delete mContentStack;
+  }
+  if (nsnull != mNameSpaceStack) {
+    // There shouldn't be any here except in an error condition
+    PRInt32 index = mNameSpaceStack->Count();
+    while (0 < index--) {
+      nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack->ElementAt(index);
+      NS_RELEASE(nameSpace);
+    }
+    delete mNameSpaceStack;
   }
   if (nsnull != mText) {
     PR_FREEIF(mText);
@@ -193,7 +194,7 @@ nsXMLContentSink::WillBuildModel(void)
   NS_RELEASE(tagAtom);
   // For XML elements, set the namespace
   if (NS_OK == result) {
-    content->SetNameSpaceIdentifier(gNameSpaceId_Unknown);
+    content->SetNameSpaceIdentifier(kNameSpaceID_None);
     content->SetDocument(mDocument, PR_FALSE);
 
     mRootElement = content;
@@ -419,42 +420,87 @@ AddAttributes(const nsIParserNode& aNode,
 }
 
 void
-nsXMLContentSink::FindNameSpaceAttributes(const nsIParserNode& aNode)
+nsXMLContentSink::PushNameSpacesFrom(const nsIParserNode& aNode)
 {
   nsAutoString k, uri, prefix;
   PRInt32 ac = aNode.GetAttributeCount();
   PRInt32 offset;
   nsresult result = NS_OK;
+  nsINameSpace* nameSpace = nsnull;
 
-  for (PRInt32 i = 0; i < ac; i++) {
-    const nsString& key = aNode.GetKeyAt(i);
-    k.Truncate();
-    k.Append(key);
-    // Look for "xmlns" at the start of the attribute name
-    offset = k.Find(kNameSpaceDef);
-    if (0 == offset) {
-      PRUnichar next = k.CharAt(sizeof(kNameSpaceDef)-1);
-      // If the next character is a :, there is a namespace prefix
-      if (':' == next) {
-        k.Right(prefix, k.Length()-sizeof(kNameSpaceDef));
-      }
-
-      // Get the attribute value (the URI for the namespace)
-      GetAttributeValueAt(aNode, i, uri);
-      
-      // Open a local namespace
-      OpenNameSpace(prefix, uri);
+  if ((nsnull != mNameSpaceStack) && (0 < mNameSpaceStack->Count())) {
+    nameSpace = (nsINameSpace*)mNameSpaceStack->ElementAt(mNameSpaceStack->Count() - 1);
+    NS_ADDREF(nameSpace);
+  }
+  else {
+    nsINameSpaceManager* manager = nsnull;
+    mDocument->GetNameSpaceManager(manager);
+    NS_ASSERTION(nsnull != manager, "no name space manager in document");
+    if (nsnull != manager) {
+      manager->CreateRootNameSpace(nameSpace);
+      NS_RELEASE(manager);
     }
   }
+
+  if (nsnull != nameSpace) {
+    for (PRInt32 i = 0; i < ac; i++) {
+      const nsString& key = aNode.GetKeyAt(i);
+      k.Truncate();
+      k.Append(key);
+      // Look for "xmlns" at the start of the attribute name
+      offset = k.Find(kNameSpaceDef);
+      if (0 == offset) {
+        PRUnichar next = k.CharAt(sizeof(kNameSpaceDef)-1);
+        // If the next character is a :, there is a namespace prefix
+        if (':' == next) {
+          k.Right(prefix, k.Length()-sizeof(kNameSpaceDef));
+        }
+        else {
+          prefix.Truncate();
+        }
+
+        // Get the attribute value (the URI for the namespace)
+        GetAttributeValueAt(aNode, i, uri);
+      
+        // Open a local namespace
+        nsIAtom* prefixAtom = ((0 < prefix.Length()) ? NS_NewAtom(prefix) : nsnull);
+        nsINameSpace* child = nsnull;
+        nameSpace->CreateChildNameSpace(prefixAtom, uri, child);
+        if (nsnull != child) {
+          NS_RELEASE(nameSpace);
+          nameSpace = child;
+        }
+        NS_IF_RELEASE(prefixAtom);
+      }
+    }
+    if (nsnull == mNameSpaceStack) {
+      mNameSpaceStack = new nsVoidArray();
+    }
+    mNameSpaceStack->AppendElement(nameSpace);
+  }
+}
+
+nsIAtom*  nsXMLContentSink::CutNameSpacePrefix(nsString& aString)
+{
+  nsAutoString  prefix;
+  PRInt32 nsoffset = aString.Find(kNameSpaceSeparator);
+  if (-1 != nsoffset) {
+    aString.Left(prefix, nsoffset);
+    aString.Cut(0, nsoffset+1);
+  }
+  if (0 < prefix.Length()) {
+    return NS_NewAtom(prefix);
+  }
+  return nsnull;
 }
 
 NS_IMETHODIMP 
 nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
 {
   nsresult result = NS_OK;
-  nsAutoString tag, nameSpace;
-  PRInt32 nsoffset;
-  PRInt32 id = gNameSpaceId_Unknown;
+  nsAutoString tag;
+  nsIAtom* nameSpacePrefix;
+  PRInt32 nameSpaceID = kNameSpaceID_Unknown;
   PRBool isHTML = PR_FALSE;
   PRBool pushContent = PR_TRUE;
   nsIContent *content;
@@ -469,28 +515,19 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
   mState = eXMLContentSinkState_InDocumentElement;
 
   tag = aNode.GetText();
-  nsoffset = tag.Find(kNameSpaceSeparator);
-  if (-1 != nsoffset) {
-    tag.Left(nameSpace, nsoffset);
-    tag.Cut(0, nsoffset+1);
-  }
-  else {
-    nameSpace.Truncate();
-  }
+  nameSpacePrefix = CutNameSpacePrefix(tag);
 
   // We must register namespace declarations found in the attribute list
   // of an element before creating the element. This is because the
   // namespace prefix for an element might be declared within the attribute
   // list.
-  FindNameSpaceAttributes(aNode);
+  PushNameSpacesFrom(aNode);
 
-  id = GetNameSpaceId(nameSpace);
-  isHTML = IsHTMLNameSpace(id);
+  nameSpaceID = GetNameSpaceId(nameSpacePrefix);
+  isHTML = IsHTMLNameSpace(nameSpaceID);
 
-  // XXX We have to uppercase the tag since the CSS system does the
-  // same. We need to teach the CSS system to be case insensitive.
-  tag.ToUpperCase();
   if (isHTML) {
+    tag.ToUpperCase();  // HTML is case-insensative
     nsIAtom* tagAtom = NS_NewAtom(tag);
     if (nsHTMLAtoms::script == tagAtom) {
       result = ProcessStartSCRIPTTag(aNode);
@@ -513,15 +550,12 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
     NS_RELEASE(tagAtom);
     // For XML elements, set the namespace
     if (NS_OK == result) {
-      if (0 < nameSpace.Length()) {
-        nsIAtom *nameSpaceAtom = NS_NewAtom(nameSpace);
-        xmlContent->SetNameSpace(nameSpaceAtom);
-        NS_RELEASE(nameSpaceAtom);
-      }
-      xmlContent->SetNameSpaceIdentifier(id);
+      xmlContent->SetNameSpacePrefix(nameSpacePrefix);
+      xmlContent->SetNameSpaceID(nameSpaceID);
     }
     content = (nsIContent *)xmlContent;
   }
+  NS_IF_RELEASE(nameSpacePrefix);
 
   if (NS_OK == result) {
     content->SetDocument(mDocument, PR_FALSE);
@@ -553,9 +587,9 @@ NS_IMETHODIMP
 nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
 {
   nsresult result = NS_OK;
-  nsAutoString tag, nameSpace;
-  PRInt32 nsoffset;
-  PRInt32 id = gNameSpaceId_Unknown;
+  nsAutoString tag;
+  nsIAtom* nameSpacePrefix;
+  PRInt32 nameSpaceID = kNameSpaceID_Unknown;
   PRBool isHTML = PR_FALSE;
   PRBool popContent = PR_TRUE;
 
@@ -565,17 +599,9 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
   PR_ASSERT(eXMLContentSinkState_InDocumentElement == mState);
 
   tag = aNode.GetText();
-  nsoffset = tag.Find(kNameSpaceSeparator);
-  if (-1 != nsoffset) {
-    tag.Left(nameSpace, nsoffset);
-    tag.Cut(0, nsoffset+1);
-  }
-  else {
-    nameSpace.Truncate();
-  }
-
-  id = GetNameSpaceId(nameSpace);
-  isHTML = IsHTMLNameSpace(id);
+  nameSpacePrefix = CutNameSpacePrefix(tag);
+  nameSpaceID = GetNameSpaceId(nameSpacePrefix);
+  isHTML = IsHTMLNameSpace(nameSpaceID);
 
   if (!mInScript) {
     FlushText();
@@ -597,13 +623,9 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
   if (popContent) {
     nsIContent* content = PopContent();
     if (nsnull != content) {
-      PRInt32 nestLevel = GetCurrentNestLevel();
-      
-      CloseNameSpacesAtNestLevel(nestLevel);
-      
       if (mDocElement == content) {
         mState = eXMLContentSinkState_InEpilog;
-    }
+      }
       NS_RELEASE(content);
     }
     else {
@@ -612,6 +634,7 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
       PR_ASSERT(0);
     }
   }
+  PopNameSpaces();
 
   return result;
 }
@@ -620,6 +643,7 @@ NS_IMETHODIMP
 nsXMLContentSink::AddLeaf(const nsIParserNode& aNode)
 {
   // XXX For now, all leaf content is character data
+  // XXX make sure to push/pop name spaces here too (for attributes)
   AddCharacterData(aNode);
   return NS_OK;
 }
@@ -704,6 +728,7 @@ nsXMLContentSink::LoadStyleSheet(nsIURL* aURL,
     nsICSSStyleSheet* sheet = nsnull;
     // XXX note: we are ignoring rv until the error code stuff in the
     // input routines is converted to use nsresult's
+    parser->SetCaseSensative(PR_TRUE);
     parser->Parse(aUIN, aURL, sheet);
     if (nsnull != sheet) {
       mDocument->AddStyleSheet(sheet);
@@ -933,131 +958,44 @@ nsXMLContentSink::AddEntityReference(const nsIParserNode& aNode)
 }
 
 PRInt32 
-nsXMLContentSink::OpenNameSpace(const nsString& aPrefix, const nsString& aURI)
+nsXMLContentSink::GetNameSpaceId(nsIAtom* aPrefix)
 {
-  nsIAtom *nameSpaceAtom = nsnull;
-  PRInt32 id = gNameSpaceId_Unknown;
-
-  nsIXMLDocument *xmlDoc;
-  nsresult result = mDocument->QueryInterface(kIXMLDocumentIID, 
-                                              (void **)&xmlDoc);
-  if (NS_OK != result) {
-    return id;
-  }
-
-  if (0 < aPrefix.Length()) {
-    nameSpaceAtom = NS_NewAtom(aPrefix);
-  }
+  PRInt32 id = kNameSpaceID_Unknown;
   
-  result = xmlDoc->RegisterNameSpace(nameSpaceAtom, aURI, id);
-  if (NS_OK == result) {
-    NameSpaceStruct *ns;
-    
-    ns = new NameSpaceStruct;
-    if (nsnull != ns) {
-      ns->mPrefix = nameSpaceAtom;
-      NS_IF_ADDREF(nameSpaceAtom);
-      ns->mId = id;
-      ns->mNestLevel = GetCurrentNestLevel();
-      
-      if (nsnull == mNameSpaces) {
-        mNameSpaces = new nsVoidArray();
-      }
-      // XXX Should check for duplication
-      mNameSpaces->AppendElement((void *)ns);
-    }
+  if ((nsnull != mNameSpaceStack) && (0 < mNameSpaceStack->Count())) {
+    PRInt32 index = mNameSpaceStack->Count() - 1;
+    nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack->ElementAt(index);
+    nameSpace->FindNameSpaceID(aPrefix, id);
   }
-
-  NS_IF_RELEASE(nameSpaceAtom);
-  NS_RELEASE(xmlDoc);
-
-  return id;
-}
-
-PRInt32 
-nsXMLContentSink::GetNameSpaceId(const nsString& aPrefix)
-{
-  nsIAtom *nameSpaceAtom = nsnull;
-  PRInt32 id = gNameSpaceId_Unknown;
-  PRInt32 i, count;
-  
-  if (nsnull == mNameSpaces) {
-    return id;
-  }
-
-  if (0 < aPrefix.Length()) {
-    nameSpaceAtom = NS_NewAtom(aPrefix);
-  }
-
-  count = mNameSpaces->Count();
-  for (i = 0; i < count; i++) {
-    NameSpaceStruct *ns = (NameSpaceStruct *)mNameSpaces->ElementAt(i);
-    
-    if ((nsnull != ns) && (ns->mPrefix == nameSpaceAtom)) {
-      id = ns->mId;
-      break;
-    }
-  }
-
-  NS_IF_RELEASE(nameSpaceAtom);
 
   return id;
 }
 
 void    
-nsXMLContentSink::CloseNameSpacesAtNestLevel(PRInt32 mNestLevel)
+nsXMLContentSink::PopNameSpaces()
 {
-  PRInt32 nestLevel = GetCurrentNestLevel();
-
-  if (nsnull == mNameSpaces) {
-    return;
-  }
-
-  PRInt32 i, count;
-  count = mNameSpaces->Count();
-  // Go backwards so that we can delete as we go along
-  for (i = count; i >= 0; i--) {
-    NameSpaceStruct *ns = (NameSpaceStruct *)mNameSpaces->ElementAt(i);
-    
-    if ((nsnull != ns) && (ns->mNestLevel == nestLevel)) {
-      NS_IF_RELEASE(ns->mPrefix);
-      mNameSpaces->RemoveElementAt(i);
-      delete ns;
-    }
+  if ((nsnull != mNameSpaceStack) && (0 < mNameSpaceStack->Count())) {
+    PRInt32 index = mNameSpaceStack->Count() - 1;
+    nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack->ElementAt(index);
+    mNameSpaceStack->RemoveElementAt(index);
+    NS_RELEASE(nameSpace);
   }
 }
 
 PRBool  
-nsXMLContentSink::IsHTMLNameSpace(PRInt32 aId)
+nsXMLContentSink::IsHTMLNameSpace(PRInt32 aID)
 {
-  nsAutoString uri;
-  PRBool isHTML = PR_FALSE;
-  nsIXMLDocument *xmlDoc;
-  nsresult result = mDocument->QueryInterface(kIXMLDocumentIID, 
-                                              (void **)&xmlDoc);
-  if (NS_OK != result) {
-    return isHTML;
-  }
-
-  result = xmlDoc->GetNameSpaceURI(aId, uri);
-  if ((NS_OK == result) &&
-      (uri.Equals(kHTMLNameSpaceURI))) {
-    isHTML = PR_TRUE;
-  }
-  
-  NS_RELEASE(xmlDoc);
-  return isHTML;
+  return PRBool(kNameSpaceID_HTML == aID);
 }
 
 nsIContent* 
 nsXMLContentSink::GetCurrentContent()
 {
-  if ((nsnull == mContentStack) ||
-      (0 == mNestLevel)) {
-    return nsnull;
+  if (nsnull != mContentStack) {
+    PRInt32 index = mContentStack->Count() - 1;
+    return (nsIContent *)mContentStack->ElementAt(index);
   }
-  
-  return (nsIContent *)mContentStack->ElementAt(mNestLevel-1);
+  return nsnull;
 }
 
 PRInt32 
@@ -1068,31 +1006,21 @@ nsXMLContentSink::PushContent(nsIContent *aContent)
   }
   
   mContentStack->AppendElement((void *)aContent);
-  return ++mNestLevel;
+  return mContentStack->Count();
 }
  
 nsIContent*
 nsXMLContentSink::PopContent()
 {
-  nsIContent *content;
-  if ((nsnull == mContentStack) ||
-      (0 == mNestLevel)) {
-    return nsnull;
+  nsIContent* content = nsnull;
+  if (nsnull != mContentStack) {
+    PRInt32 index = mContentStack->Count() - 1;
+    content = (nsIContent *)mContentStack->ElementAt(index);
+    mContentStack->RemoveElementAt(index);
   }
-  
-  --mNestLevel;
-  content = (nsIContent *)mContentStack->ElementAt(mNestLevel);
-  mContentStack->RemoveElementAt(mNestLevel);
-
   return content;
 }
  
-PRInt32 
-nsXMLContentSink::GetCurrentNestLevel()
-{
-  return mNestLevel;
-}
-
 void
 nsXMLContentSink::StartLayout()
 {

@@ -97,6 +97,7 @@ public:
   NS_IMETHOD IsSynthetic(PRBool& aResult) {
     return mInner.IsSynthetic(aResult);
   }
+  NS_IMETHOD GetNameSpaceID(PRInt32& aResult) const;
   NS_IMETHOD GetTag(nsIAtom*& aResult) const {
     return mInner.GetTag(aResult);
   }
@@ -138,10 +139,9 @@ public:
                             nsEventStatus& aEventStatus);
 
   // nsIXMLContent
-  NS_IMETHOD SetNameSpace(nsIAtom* aNameSpace);
-  NS_IMETHOD GetNameSpace(nsIAtom*& aNameSpace);
-  NS_IMETHOD SetNameSpaceIdentifier(PRInt32 aNameSpaceId);
-  NS_IMETHOD GetNameSpaceIdentifier(PRInt32& aNameSpeceId);
+  NS_IMETHOD SetNameSpacePrefix(nsIAtom* aNameSpace);
+  NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aNameSpace) const;
+  NS_IMETHOD SetNameSpaceID(PRInt32 aNameSpaceId);
 
   // nsIDOMEventReceiver
   NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
@@ -175,8 +175,8 @@ public:
 protected:
   nsGenericContainerElement mInner;
   
-  nsIAtom* mNameSpace;
-  PRInt32 mNameSpaceId;
+  nsIAtom* mNameSpacePrefix;
+  PRInt32 mNameSpaceID;
   void *mScriptObject;
   PRBool mIsLink;
 };

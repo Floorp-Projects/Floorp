@@ -62,7 +62,6 @@ NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
 nsXMLDocument::nsXMLDocument()
 {
   mParser = nsnull;
-  mNameSpaces = nsnull;
   mAttrStyleSheet = nsnull;
   mInlineStyleSheet = nsnull;
   mProlog = nsnull;
@@ -75,19 +74,6 @@ nsXMLDocument::nsXMLDocument()
 nsXMLDocument::~nsXMLDocument()
 {
   NS_IF_RELEASE(mParser);
-  if (nsnull != mNameSpaces) {
-    int i;
-    for (i = 0; i < mNameSpaces->Count(); i++) {
-      nsXMLNameSpace *ns = (nsXMLNameSpace *)mNameSpaces->ElementAt(i);
-      
-      if (nsnull != ns) {
-        NS_IF_RELEASE(ns->mPrefix);
-        delete ns->mURI;
-        delete ns;
-      }
-    }
-    mNameSpaces = nsnull;
-  }
   if (nsnull != mAttrStyleSheet) {
     mAttrStyleSheet->SetOwningDocument(nsnull);
     NS_RELEASE(mAttrStyleSheet);
@@ -344,65 +330,6 @@ nsXMLDocument::CreateTextNode(const nsString& aData, nsIDOMText** aReturn)
 
 
 // nsIXMLDocument interface
-NS_IMETHODIMP 
-nsXMLDocument::RegisterNameSpace(nsIAtom *aPrefix, const nsString& aURI, 
-                                 PRInt32& aNameSpaceId)
-{
-  if (nsnull == mNameSpaces) {
-    mNameSpaces = new nsVoidArray();
-    if (nsnull == mNameSpaces) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  nsXMLNameSpace* ns = new nsXMLNameSpace;
-  if (nsnull == ns) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  ns->mPrefix = aPrefix;
-  NS_IF_ADDREF(ns->mPrefix);
-  ns->mURI = new nsString(aURI);
-
-  mNameSpaces->AppendElement((void *)ns);
-  aNameSpaceId = mNameSpaces->Count();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsXMLDocument::GetNameSpaceURI(PRInt32 aNameSpaceId, nsString& aURI)
-{
-  if (nsnull == mNameSpaces) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-  
-  nsXMLNameSpace *ns = (nsXMLNameSpace *)mNameSpaces->ElementAt(aNameSpaceId - 1);
-  if (nsnull == ns) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-  aURI.SetString(*ns->mURI);
-
-  return NS_OK;
-}
- 
-NS_IMETHODIMP 
-nsXMLDocument::GetNameSpacePrefix(PRInt32 aNameSpaceId, nsIAtom*& aPrefix)
-{
-  if (nsnull == mNameSpaces) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-  
-  nsXMLNameSpace *ns = (nsXMLNameSpace *)mNameSpaces->ElementAt(aNameSpaceId - 1);
-  if (nsnull == ns) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-  
-  aPrefix = ns->mPrefix;
-  NS_IF_ADDREF(aPrefix);
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP 
 nsXMLDocument::PrologElementAt(PRInt32 aIndex, nsIContent** aContent)
 {
