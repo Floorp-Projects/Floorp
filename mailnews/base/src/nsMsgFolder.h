@@ -27,16 +27,16 @@
 
 #include "msgCore.h"
 #include "nsIMsgFolder.h" /* include the interface we are going to support */
-#include "nsIRDFNode.h"
+#include "nsRDFResource.h"
 
  /* 
   * MsgFolder
   */ 
 
- class nsMsgFolder: public nsIMsgFolder
+ class nsMsgFolder: public nsRDFResource, public nsIMsgFolder
  {
 public: 
-	nsMsgFolder();
+	nsMsgFolder(const char* uri);
 	virtual ~nsMsgFolder();
 
 	/* this macro defines QueryInterface, AddRef and Release for this class */
@@ -299,7 +299,7 @@ public:
 class nsMsgMailFolder : public nsMsgFolder, public nsIMsgMailFolder
 {
 public:
-	nsMsgMailFolder();
+	nsMsgMailFolder(const char* uri);
 	~nsMsgMailFolder();
 
 	NS_IMETHOD QueryInterface(REFNSIID aIID,

@@ -27,8 +27,12 @@
 static NS_DEFINE_IID(kIMsgFolderIID, NS_IMSGFOLDER_IID);
 static NS_DEFINE_IID(kIMsgMailFolderIID, NS_IMSGMAILFOLDER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
+static NS_DEFINE_IID(kIRDFNodeIID, NS_IRDFNODE_IID);
+static NS_DEFINE_IID(kIRDFResourceFactoryIID,  NS_IRDFRESOURCEFACTORY_IID);
 
-nsMsgFolder::nsMsgFolder()
+nsMsgFolder::nsMsgFolder(const char* uri)
+  : nsRDFResource(PL_strdup(uri))
 {
 	NS_INIT_REFCNT();
 
@@ -91,15 +95,10 @@ nsMsgFolder::QueryInterface(REFNSIID iid, void** result)
   if(iid.Equals(kIMsgFolderIID) ||
 		iid.Equals(kISupportsIID)) {
 		*result = NS_STATIC_CAST(nsIMsgFolder*, this);
-	}
-
-  if(*result != nsnull)
-	{
 		AddRef();
 		return NS_OK;
 	}
-
-	return NS_NOINTERFACE;
+	return nsRDFResource::QueryInterface(iid, result);
 }
 
 NS_IMETHODIMP nsMsgFolder::GetType(FolderType *type)
@@ -1403,7 +1402,8 @@ NS_IMETHODIMP nsMsgFolder::GetHostName(char **hostName)
 }
 
 
-nsMsgMailFolder::nsMsgMailFolder()
+nsMsgMailFolder::nsMsgMailFolder(const char* uri)
+:nsMsgFolder(uri)
 {
 	mHaveReadNameFromDB = PR_FALSE;
 	mPathName = nsnull;
@@ -1424,22 +1424,14 @@ nsMsgMailFolder::QueryInterface(REFNSIID iid, void** result)
 		return NS_ERROR_NULL_POINTER;
 
 	*result = nsnull;
-  if(iid.Equals(kIMsgFolderIID) ||
-		iid.Equals(kISupportsIID)) {
-		*result = NS_STATIC_CAST(nsIMsgFolder*, this);
-	}
-	else if(iid.Equals(kIMsgMailFolderIID))
+	if(iid.Equals(kIMsgMailFolderIID) ||
+		iid.Equals(kISupportsIID))
 	{
 		*result = NS_STATIC_CAST(nsIMsgMailFolder*, this);
-	}
-
-  if(*result != nsnull)
-	{
 		AddRef();
 		return NS_OK;
 	}
-
-	return NS_NOINTERFACE;
+	return nsMsgFolder::QueryInterface(iid, result);
 }
 
 NS_IMETHODIMP nsMsgMailFolder::GetType(FolderType *type)
@@ -2068,19 +2060,61 @@ NS_IMETHODIMP nsMsgMailFolder::SetPathName(char * aPathName)
 	return NS_OK;
 }
 
-nsresult
-NS_NewMsgMailFolder(nsIMsgFolder** aResult)
+/**
+ * This class creates resources for message folder URIs. It should be
+ * registered for the "mailnewsfolder:" prefix.
+ */
+class nsMsgFolderResourceFactoryImpl : public nsIRDFResourceFactory
+{
+public:
+  nsMsgFolderResourceFactoryImpl(void);
+  virtual ~nsMsgFolderResourceFactoryImpl(void);
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD CreateResource(const char* aURI, nsIRDFResource** aResult);
+};
+
+nsMsgFolderResourceFactoryImpl::nsMsgFolderResourceFactoryImpl(void)
+{
+  NS_INIT_REFCNT();
+}
+
+nsMsgFolderResourceFactoryImpl::~nsMsgFolderResourceFactoryImpl(void)
+{
+}
+
+NS_IMPL_ISUPPORTS(nsMsgFolderResourceFactoryImpl, kIRDFResourceFactoryIID);
+
+NS_IMETHODIMP
+nsMsgFolderResourceFactoryImpl::CreateResource(const char* aURI, nsIRDFResource** aResult)
 {
   if (! aResult)
     return NS_ERROR_NULL_POINTER;
 
-  nsMsgMailFolder* folder =
-		new nsMsgMailFolder();
-
+  nsMsgMailFolder *folder = new nsMsgMailFolder(aURI);
   if (! folder)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  NS_ADDREF(folder);
-  *aResult = folder;
+	folder->QueryInterface(kIRDFResourceIID, (void**)aResult);
+    return NS_OK;
+}
+
+nsresult
+NS_NewRDFMsgFolderResourceFactory(nsIRDFResourceFactory** aResult)
+{
+  if (! aResult)
+    return NS_ERROR_NULL_POINTER;
+
+  nsMsgFolderResourceFactoryImpl* factory =
+		new nsMsgFolderResourceFactoryImpl();
+
+  if (! factory)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(factory);
+  *aResult = factory;
   return NS_OK;
 }
+
+
