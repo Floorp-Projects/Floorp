@@ -31,7 +31,7 @@ install::
 	$(MAKE_INSTALL) platformDialogOverlay.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) platformBrowserBindings.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) platformInputBindings.xul $(DISTBROWSER)
-	$(MAKE_INSTALL) platformTextFieldBindings.xul $(DISTBROWSER)
+	$(MAKE_INSTALL) platformTextAreaBindings.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) platformEditorBindings.xul $(DISTBROWSER)
 
 clobber::
