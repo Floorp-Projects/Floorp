@@ -51,7 +51,6 @@
 #include "xp_mem.h"
 #include "xp_debug.h"
 #include "xp_str.h"
-#include "xp_list.h"
 
 
 /* platform-specific types */

@@ -10,7 +10,6 @@ xpassert.h
 xp_core.h
 xp_debug.h
 xp_file.h
-xp_list.h
 xp_mcom.h
 xp_mem.h
 xp_path.h
