@@ -22,6 +22,7 @@
  */
 
 #include "nsCRT.h"
+#include "nsDiskCache.h"
 #include "nsDiskCacheBlockFile.h"
 
 /******************************************************************************
@@ -132,7 +133,13 @@ nsDiskCacheBlockFile::Close()
 nsresult
 nsDiskCacheBlockFile::Trim()
 {
-    return NS_OK;
+    PRInt32  estimatedSize = kBitMapBytes;
+    PRInt32  lastBlock = LastBlock();
+    if (lastBlock >= 0)
+        estimatedSize += (lastBlock + 1) * mBlockSize;
+            
+    nsresult rv = nsDiskCache::Truncate(mFD, estimatedSize);
+    return rv;
 }
 
 

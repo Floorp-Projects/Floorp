@@ -118,3 +118,38 @@ ClientKeyFromCacheKey(const nsACString& key, char ** result)
     }
     return rv;
 }
+
+
+
+NS_IMPL_THREADSAFE_ISUPPORTS0(nsCacheLock);
+
+
+nsCacheLock::nsCacheLock()
+    : mLock(nsnull)
+{
+  NS_INIT_ISUPPORTS();
+}
+
+
+nsCacheLock::~nsCacheLock()
+{
+    if (!mLock)  return;
+    
+    PR_DestroyLock(mLock);
+}
+
+
+nsCacheLock *
+nsCacheLock::Create()
+{
+    nsCacheLock * cacheLock = new nsCacheLock;
+    if (!cacheLock)  return nsnull;
+    cacheLock->mLock = PR_NewLock();
+    if (!cacheLock->mLock) {
+        delete cacheLock;
+        return nsnull;
+    }
+    
+    NS_ADDREF(cacheLock);
+    return cacheLock;
+}

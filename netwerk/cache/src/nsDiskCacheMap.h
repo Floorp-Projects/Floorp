@@ -67,6 +67,9 @@ struct nsDiskCacheEntry;
  *
  *****************************************************************************/
 
+#define BLOCK_SIZE_FOR_INDEX(index)  ((index) ? (256 << (2 * ((index) - 1))) : 0)
+#define kSeparateFile   0
+
 class nsDiskCacheRecord {
 
 private:
@@ -118,9 +121,7 @@ public:
 
     // DataLocation accessors
     PRBool    DataLocationInitialized() { return mDataLocation & eLocationInitializedMask; }
-    
-    PRUint32  DataLocation()                      { return mDataLocation; }
-    void      SetDataLocation( PRUint32 location) { mDataLocation = location; }
+    void      ClearDataLocation()       { mDataLocation = 0; }
     
     PRUint32  DataFile() const
     {
@@ -159,6 +160,11 @@ public:
         return (mDataLocation & eBlockNumberMask);
     }
     
+    PRUint32   DataBlockSize() const
+    {
+        return BLOCK_SIZE_FOR_INDEX(DataFile());
+    }
+    
     PRUint32   DataFileSize() const  { return (mDataLocation & eFileSizeMask) >> eFileSizeOffset; }
     void       SetDataFileSize(PRUint32  size)
     {
@@ -182,9 +188,9 @@ public:
 
     // MetaLocation accessors
     PRBool    MetaLocationInitialized() { return mMetaLocation & eLocationInitializedMask; }
+    void      ClearMetaLocation()       { mMetaLocation = 0; }
     
     PRUint32  MetaLocation()                     { return mMetaLocation; }
-    void      SetMetaLocation( PRUint32 location) { mMetaLocation = location; }
     
     PRUint32  MetaFile() const
     {
@@ -223,6 +229,11 @@ public:
         return (mMetaLocation & eBlockNumberMask);
     }
 
+    PRUint32   MetaBlockSize() const
+    {
+        return BLOCK_SIZE_FOR_INDEX(MetaFile());
+    }
+    
     PRUint32   MetaFileSize() const  { return (mMetaLocation & eFileSizeMask) >> eFileSizeOffset; }
     void       SetMetaFileSize(PRUint32  size)
     {
@@ -401,6 +412,7 @@ public:
  */
     nsresult  Open( nsILocalFile *  cacheDirectory);
     nsresult  Close();
+    nsresult  Trim();
 
 //  nsresult  Flush();
     nsresult  FlushHeader();
@@ -436,6 +448,10 @@ public:
 
     nsresult    WriteDiskCacheEntry( nsDiskCacheBinding *  binding);
     
+    nsresult    ReadDataCacheBlocks(nsDiskCacheBinding * binding, char * buffer, PRUint32 size);
+    nsresult    WriteDataCacheBlocks(nsDiskCacheBinding * binding, char * buffer, PRUint32 size);
+    nsresult    DeleteStorage( nsDiskCacheRecord * record, PRBool metaData);
+    
     /**
      *  Statistical Operations
      */
@@ -466,11 +482,11 @@ private:
     nsresult    OpenBlockFiles();
     nsresult    CloseBlockFiles();
 
+    PRUint32    CalculateFileIndex(PRUint32 size);
+
     nsresult    GetBlockFileForIndex( PRUint32 index, nsILocalFile ** result);
     PRUint32    GetBlockSizeForIndex( PRUint32 index);
     
-    nsresult    DeleteStorage( nsDiskCacheRecord * record, PRBool metaData);
-
     nsresult GetBucketForHashNumber( PRUint32  hashNumber, nsDiskCacheBucket ** result)
     {
         *result = &mBuckets[GetBucketIndex(hashNumber)];

@@ -32,12 +32,13 @@
 class nsDiskCache {
 public:
     enum {
-            kCurrentVersion = 0x00010003      // XXX whats the format?
+            kCurrentVersion = 0x00010005      // format = 16 bits major version/16 bits minor version
     };
 
     enum { kData, kMetaData };
 
     static PLDHashNumber    Hash(const char* key);
+    static nsresult         Truncate(PRFileDesc *  fd, PRUint32  newEOF);
 };
 
 #endif // _nsDiskCache_h_

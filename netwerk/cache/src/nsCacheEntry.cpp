@@ -304,8 +304,9 @@ nsCacheEntry::RemoveRequest(nsCacheRequest * request)
 PRBool
 nsCacheEntry::RemoveDescriptor(nsCacheEntryDescriptor * descriptor)
 {
-    // XXX if debug: verify this descriptor belongs to this entry
+    NS_ASSERTION(descriptor->CacheEntry() == this, "### Wrong cache entry!!");
     PR_REMOVE_AND_INIT_LINK(descriptor);
+    descriptor->ClearCacheEntry();
 
     if (!PR_CLIST_IS_EMPTY(&mDescriptorQ))
         return PR_TRUE;  // stay active if we still have open descriptors

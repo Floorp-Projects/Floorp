@@ -1098,6 +1098,13 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsDiskCacheStreams.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS></FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsDiskCacheBlockFile.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
@@ -1195,6 +1202,11 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsDiskCacheMap.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsDiskCacheStreams.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -2244,6 +2256,13 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsDiskCacheStreams.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsDiskCacheBlockFile.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
@@ -2345,6 +2364,11 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsDiskCacheStreams.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsDiskCacheBlockFile.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
@@ -2436,6 +2460,12 @@
                 <TARGETNAME>Cache.shlb</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsDiskCacheMap.cpp</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>
+            <FILEREF>
+                <TARGETNAME>Cache.shlb</TARGETNAME>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>nsDiskCacheStreams.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
         </GROUP>

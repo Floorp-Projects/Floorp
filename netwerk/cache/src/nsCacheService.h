@@ -65,17 +65,14 @@ public:
     /**
      * Methods called by nsCacheSession
      */
-    nsresult         OpenCacheEntry(nsCacheSession *           session,
+    static nsresult  OpenCacheEntry(nsCacheSession *           session,
                                     const char *               key,
                                     nsCacheAccessMode          accessRequested,
                                     PRBool                     blockingMode,
                                     nsICacheListener *         listener,
                                     nsICacheEntryDescriptor ** result);
 
-    nsresult         EvictEntriesForSession(nsCacheSession *   session);
-
-    nsresult         EvictEntriesForClient(const char *          clientID,
-                                           nsCacheStoragePolicy  storagePolicy);
+    static nsresult  EvictEntriesForSession(nsCacheSession *   session);
 
     static nsresult  IsStorageEnabledForPolicy(nsCacheStoragePolicy  storagePolicy,
                                                PRBool *              result);
@@ -83,34 +80,37 @@ public:
     /**
      * Methods called by nsCacheEntryDescriptor
      */
-    nsresult         SetCacheElement(nsCacheEntry * entry, nsISupports * element);
 
-    nsresult         OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize);
+    static void      CloseDescriptor(nsCacheEntryDescriptor * descriptor);
 
-    nsresult         ValidateEntry(nsCacheEntry * entry);
+    static nsresult  GetFileForEntry(nsCacheEntry *         entry,
+                                     nsIFile **             result);
 
-    nsresult         GetTransportForEntry(nsCacheEntry *     entry,
+    static nsresult  GetTransportForEntry(nsCacheEntry *     entry,
                                           nsCacheAccessMode  mode,
                                           nsITransport **    result);
 
-    void             CloseDescriptor(nsCacheEntryDescriptor * descriptor);
+    static nsresult  OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize);
 
-    nsresult         GetFileForEntry(nsCacheEntry *         entry,
-                                     nsIFile **             result);
+    static PRLock *  ServiceLock();
+    
+    static nsresult  SetCacheElement(nsCacheEntry * entry, nsISupports * element);
+
+    static nsresult  ValidateEntry(nsCacheEntry * entry);
+
 
     /**
      * Methods called by any cache classes
      */
 
     static
-    nsCacheService * GlobalInstance()  { return gService; };
+    nsCacheService * GlobalInstance()   { return gService; }
+    
+    static nsresult  DoomEntry(nsCacheEntry * entry);
 
-    nsresult         DoomEntry(nsCacheEntry * entry);
+    static void      ProxyObjectRelease(nsISupports * object, PRThread * thread);
 
-    nsresult         DoomEntry_Locked(nsCacheEntry * entry);
-
-    static
-    void             ProxyObjectRelease(nsISupports * object, PRThread * thread);
+    static PRBool    IsStorageEnabledForPolicy_Locked(nsCacheStoragePolicy policy);
 
     /**
      * Methods called by nsCacheProfilePrefObserver
@@ -140,6 +140,11 @@ private:
                                    nsICacheListener * listener,
                                    nsCacheRequest **  request);
 
+    nsresult         DoomEntry_Internal(nsCacheEntry * entry);
+
+    nsresult         EvictEntriesForClient(const char *          clientID,
+                                           nsCacheStoragePolicy  storagePolicy);
+
     nsresult         NotifyListener(nsCacheRequest *          request,
                                     nsICacheEntryDescriptor * descriptor,
                                     nsCacheAccessMode         accessGranted,
@@ -164,7 +169,6 @@ private:
     void             ClearActiveEntries(void);
     void             DoomActiveEntries(void);
 
-    PRBool           IsStorageEnabledForPolicy_Locked(nsCacheStoragePolicy policy);
 
     static
     PLDHashOperator PR_CALLBACK  DeactivateAndClearEntry(PLDHashTable *    table,
@@ -191,6 +195,8 @@ private:
     nsCacheProfilePrefObserver *    mObserver;
     
     PRLock *                        mCacheServiceLock;
+    
+    PRBool                          mInitialized;
     
     PRBool                          mEnableMemoryDevice;
     PRBool                          mEnableDiskDevice;

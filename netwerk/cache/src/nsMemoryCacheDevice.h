@@ -63,14 +63,14 @@ public:
 
     virtual nsresult EvictEntries(const char * clientID);
     
-    void             SetCapacity(PRUint32  capacity);
+    void             SetCapacity(PRInt32  capacity);
  
 private:
     friend class nsMemoryCacheDeviceInfo;
-    void      AdjustMemoryLimits( PRUint32  softLimit, PRUint32  hardLimit);
+    void      AdjustMemoryLimits( PRInt32  softLimit, PRInt32  hardLimit);
     void      EvictEntry( nsCacheEntry * entry );
     void      EvictEntriesIfNecessary();
-    int       EvictionList(nsCacheEntry * entry, PRUint32  deltaSize);
+    int       EvictionList(nsCacheEntry * entry, PRInt32  deltaSize);
 
     /*
      *  Data members
@@ -81,17 +81,17 @@ private:
     
     enum { mostLikelyToEvict = 0, leastLikelyToEvict = 1 };   // constants to differentiate eviction lists
     PRCList                 mEvictionList[2];
-    PRUint32                mEvictionThreshold;
+    PRInt32                mEvictionThreshold;
 
-    PRUint32                mHardLimit;
-    PRUint32                mSoftLimit;
+    PRInt32                mHardLimit;
+    PRInt32                mSoftLimit;
 
-    PRUint32                mTotalSize;
-    PRUint32                mInactiveSize;
+    PRInt32                mTotalSize;
+    PRInt32                mInactiveSize;
 
-    PRUint32                mEntryCount;
+    PRInt32                mEntryCount;
 
-    PRUint32                mMaxEntryCount;
+    PRInt32                mMaxEntryCount;
     // XXX what other stats do we want to keep?
 };
 

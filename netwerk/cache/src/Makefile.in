@@ -54,6 +54,7 @@ CPPSRCS		= \
 	nsDiskCacheDevice.cpp \
 	nsDiskCacheEntry.cpp \
 	nsDiskCacheMap.cpp \
+	nsDiskCacheStreams.cpp \
 	nsMemoryCacheDevice.cpp \
 	$(NULL)
 
@@ -70,6 +71,10 @@ EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
+# For fruncate
+ifeq ($(OS_ARCH),Linux)
+DEFINES += -D_BSD_SOURCE
+endif
 ifeq ($(OS_ARCH),WINNT)
 DEFINES		+= -DWIN32_LEAN_AND_MEAN
 endif

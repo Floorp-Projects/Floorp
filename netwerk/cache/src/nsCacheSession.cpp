@@ -74,12 +74,12 @@ nsCacheSession::OpenCacheEntry(const char *               key,
                                nsICacheEntryDescriptor ** result)
 {
     nsresult rv;
-    rv =  nsCacheService::GlobalInstance()->OpenCacheEntry(this,
-                                                           key,
-                                                           accessRequested,
-                                                           blockingMode,
-                                                           nsnull, // no listener
-                                                           result);
+    rv =  nsCacheService::OpenCacheEntry(this,
+                                         key,
+                                         accessRequested,
+                                         blockingMode,
+                                         nsnull, // no listener
+                                         result);
     return rv;
 }
 
@@ -89,12 +89,12 @@ NS_IMETHODIMP nsCacheSession::AsyncOpenCacheEntry(const char *key,
                                                   nsICacheListener *listener)
 {
     nsresult rv;
-    rv = nsCacheService::GlobalInstance()->OpenCacheEntry(this,
-                                                          key,
-                                                          accessRequested,
-                                                          nsICache::BLOCKING,
-                                                          listener,
-                                                          nsnull); // no result
+    rv = nsCacheService::OpenCacheEntry(this,
+                                        key,
+                                        accessRequested,
+                                        nsICache::BLOCKING,
+                                        listener,
+                                        nsnull); // no result
 
     if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) rv = NS_OK;
     return rv;
@@ -102,7 +102,7 @@ NS_IMETHODIMP nsCacheSession::AsyncOpenCacheEntry(const char *key,
 
 NS_IMETHODIMP nsCacheSession::EvictEntries()
 {
-    return nsCacheService::GlobalInstance()->EvictEntriesForSession(this);
+    return nsCacheService::EvictEntriesForSession(this);
 }
 
 

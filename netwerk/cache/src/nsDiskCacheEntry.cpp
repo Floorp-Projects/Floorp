@@ -103,11 +103,10 @@ CreateDiskCacheEntry(nsDiskCacheBinding *  binding)
     PRUint32  size     = sizeof(nsDiskCacheEntry) + keySize + metaSize;
     
     // pad size so we can write to block files without overrunning buffer
-    PRInt32 pad = size;
-    if      (pad <  1024) pad =  1024;
-    else if (pad <  4096) pad =  4096;
-    else if (pad < 16384) pad = 16384;
-    // XXX be more precise
+    PRInt32 pad;
+    if      (size <=  1024) pad = (((size-1)/ 256) + 1) *  256;
+    else if (size <=  4096) pad = (((size-1)/1024) + 1) * 1024;
+    else if (size <= 16384) pad = (((size-1)/4096) + 1) * 4096;
     
     nsDiskCacheEntry * diskEntry = (nsDiskCacheEntry *)new char[pad];
     if (!diskEntry)  return nsnull;
