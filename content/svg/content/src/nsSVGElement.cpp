@@ -398,6 +398,7 @@ nsSVGElement::GetAttrCount(PRInt32& aResult) const
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsSVGElement::List(FILE* out, PRInt32 aIndent) const
 {
@@ -413,6 +414,7 @@ nsSVGElement::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const
   fprintf(out, "some SVG element\n");
   return NS_OK; 
 }
+#endif // DEBUG
 
 //----------------------------------------------------------------------
 // nsIStyledContent methods
