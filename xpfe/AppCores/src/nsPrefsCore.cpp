@@ -25,6 +25,7 @@
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
 #include "nsFileSpec.h"
+#include "nsFileStream.h"
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
 #include "pratom.h"
@@ -132,52 +133,63 @@ NS_IMETHODIMP nsPrefsCore::GetScriptObject(nsIScriptContext *aContext, void** aS
 nsresult nsPrefsCore::InitializePrefsManager()
 //----------------------------------------------------------------------------------------
 { 
-	nsIPref* prefs;
-	nsresult rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&prefs);
-	if (NS_FAILED(rv))
-	    return rv;
-	if (!prefs)
-	    return NS_ERROR_FAILURE;
-	
-	nsIFileLocator* locator;
-	rv = nsServiceManager::GetService(kFileLocatorCID, kIFileLocatorIID, (nsISupports**)&locator);
-	if (NS_FAILED(rv))
-	    return rv;
-	if (!locator)
-	    return NS_ERROR_FAILURE;
-	    
-	nsFileSpec newPrefs;
-	rv = locator->GetFileLocation(nsSpecialFileSpec::App_PreferencesFile50, &newPrefs);
+    nsIPref* prefs;
+    nsresult rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&prefs);
+    if (NS_FAILED(rv))
+        return rv;
+    if (!prefs)
+        return NS_ERROR_FAILURE;
+    
+    nsIFileLocator* locator;
+    rv = nsServiceManager::GetService(kFileLocatorCID, kIFileLocatorIID, (nsISupports**)&locator);
+    if (NS_FAILED(rv))
+        return rv;
+    if (!locator)
+        return NS_ERROR_FAILURE;
+        
+    nsFileSpec newPrefs;
+    rv = locator->GetFileLocation(nsSpecialFileSpec::App_PreferencesFile50, &newPrefs);
 #if 0
-	if (NS_FAILED(rv) || !newPrefs.Exists())
-	{
-	    nsFileSpec oldPrefs;
-	    rv = locator->GetFileLocation(App_PreferencesFile40, &oldPrefs);
-		if (NS_FAILED(rv) || !oldPrefs.Exists())
-		{
-		    rv = locator->GetFileLocation(App_PreferencesFile30, &oldPrefs);
-		}
-		if (NS_SUCCEEDED(rv) && oldPrefs.Exists())
-		{
-		    nsFileSpec newParent;
-		    rv = locator->GetFileLocation(App_PrefsDirectory50, &newParent);
-		    if (NS_SUCCEEDED(rv))
-		    {
-			    oldPrefs.Copy(newParent);
-			    const char* oldName = oldPrefs.GetLeafName();
-			    newPrefs = newParent + oldName;
-			    delete [] oldName;
-			    newPrefs.Rename("prefs.js");
-			}
-		}
-	}
+    if (NS_FAILED(rv) || !newPrefs.Exists())
+    {
+        nsFileSpec oldPrefs;
+        rv = locator->GetFileLocation(App_PreferencesFile40, &oldPrefs);
+        if (NS_FAILED(rv) || !oldPrefs.Exists())
+        {
+            rv = locator->GetFileLocation(App_PreferencesFile30, &oldPrefs);
+        }
+        if (NS_SUCCEEDED(rv) && oldPrefs.Exists())
+        {
+            nsFileSpec newParent;
+            rv = locator->GetFileLocation(App_PrefsDirectory50, &newParent);
+            if (NS_SUCCEEDED(rv))
+            {
+                oldPrefs.Copy(newParent);
+                const char* oldName = oldPrefs.GetLeafName();
+                newPrefs = newParent + oldName;
+                delete [] oldName;
+                newPrefs.Rename("prefs.js");
+            }
+        }
+    }
 #endif
     nsServiceManager::ReleaseService(kFileLocatorCID, locator);
     
-	if (NS_SUCCEEDED(rv) && newPrefs.Exists())
-        rv = prefs->Startup(newPrefs.GetCString());
-    else
-        rv = NS_ERROR_FAILURE;
+    if (NS_SUCCEEDED(rv))
+    {
+	    if (!newPrefs.Exists())
+	    {
+	        nsOutputFileStream stream(newPrefs);
+	        if (stream.is_open())
+	        {
+	            stream << "// This is an empty prefs file" << nsEndl;
+	        }
+	    }
+	    if (newPrefs.Exists())
+	        rv = prefs->Startup(newPrefs.GetCString());
+	    else
+	        rv = NS_ERROR_FAILURE;
+    }
 
     if (prefs && NS_FAILED(rv))
         nsServiceManager::ReleaseService(kPrefCID, prefs);
@@ -277,23 +289,23 @@ nsresult nsPrefsCore::InitializeOneWidget(
     PL_strcat(tempPrefName, inPrefName);
     switch (inPrefType)
     {
-    	case eBool:
-    	{
-    	    PRBool boolVal;
-    	    // Check the subtree first, then the real tree.
-    	    // If the preference value is not set at all, let the HTML
-    	    // determine the setting.
-    	    if (NS_SUCCEEDED(mPrefs->GetBoolPref(tempPrefName, &boolVal))
-    	    || NS_SUCCEEDED(mPrefs->GetBoolPref(inPrefName, &boolVal)))
-    	    {
-	    	    if (inWidgetType == "checkbox")
-	    	    {
-		    	    boolVal = (PRBool)(boolVal ^ inPrefOrdinal);
-	        	    inElement->SetDefaultChecked(boolVal);
-	        	    inElement->SetChecked(boolVal);
-	    	    }
-	    	    else if (inWidgetType == "radio" && inPrefOrdinal == boolVal)
-	    	    {
+        case eBool:
+        {
+            PRBool boolVal;
+            // Check the subtree first, then the real tree.
+            // If the preference value is not set at all, let the HTML
+            // determine the setting.
+            if (NS_SUCCEEDED(mPrefs->GetBoolPref(tempPrefName, &boolVal))
+            || NS_SUCCEEDED(mPrefs->GetBoolPref(inPrefName, &boolVal)))
+            {
+                if (inWidgetType == "checkbox")
+                {
+                    boolVal = (PRBool)(boolVal ^ inPrefOrdinal);
+                    inElement->SetDefaultChecked(boolVal);
+                    inElement->SetChecked(boolVal);
+                }
+                else if (inWidgetType == "radio" && inPrefOrdinal == boolVal)
+                {
                     // Radio pairs representing a boolean pref must have their
                     // ordinals "0" and "1". They work just like radio buttons
                     // representing int prefs.
@@ -301,59 +313,69 @@ nsresult nsPrefsCore::InitializeOneWidget(
                     // The others will turn off automatically.
                     inElement->SetDefaultChecked(PR_TRUE);
                     inElement->SetChecked(PR_TRUE);
-	    	    }
-        	}
-    	    break;
-    	}
-    	case eInt:
-    	{
-    	    PRInt32 intVal;
-    	    // Check the subtree first, then the real tree.
-    	    // If the preference value is not set at all, let the HTML
-    	    // determine the setting.
-    	    if (NS_SUCCEEDED(mPrefs->GetIntPref(tempPrefName, &intVal))
-    	    || NS_SUCCEEDED(mPrefs->GetIntPref(inPrefName, &intVal)))
-    	    {
-                // Turn on the radio whose ordinal matches the value.
-                // The others will turn off automatically.
-                if (inWidgetType == "radio" && inPrefOrdinal == intVal)
-    	        {
-                    inElement->SetDefaultChecked(PR_TRUE);
-                    inElement->SetChecked(PR_TRUE);
                 }
             }
-    	    break;
-    	}
-    	case eString:
-    	{
-    	    // Check the subtree first, then the real tree.
-    	    // If the preference value is not set at all, let the HTML
-    	    // determine the setting.
-    	    char* charVal;
-    	    if (NS_SUCCEEDED(mPrefs->CopyCharPref(tempPrefName, &charVal))
-    	    || NS_SUCCEEDED(mPrefs->CopyCharPref(inPrefName, &charVal)))
-    	    {
-    	        nsString newValue = charVal;
+            break;
+        }
+        case eInt:
+        {
+            PRInt32 intVal;
+            // Check the subtree first, then the real tree.
+            // If the preference value is not set at all, let the HTML
+            // determine the setting.
+            if (NS_SUCCEEDED(mPrefs->GetIntPref(tempPrefName, &intVal))
+            || NS_SUCCEEDED(mPrefs->GetIntPref(inPrefName, &intVal)))
+            {
+                if (inWidgetType == "radio")
+                {
+                    // Turn on the radio whose ordinal matches the value.
+                    // The others will turn off automatically.
+                    if (inPrefOrdinal == intVal)
+                    {
+                        inElement->SetDefaultChecked(PR_TRUE);
+                        inElement->SetChecked(PR_TRUE);
+                    }
+                }
+                else if (inWidgetType == "text")
+                {
+                    char charVal[32];
+                    sprintf(charVal, "%d", (int)intVal);
+                    nsString newValue(charVal);
+                    inElement->SetValue(newValue);
+                }
+            }
+            break;
+        }
+        case eString:
+        {
+            // Check the subtree first, then the real tree.
+            // If the preference value is not set at all, let the HTML
+            // determine the setting.
+            char* charVal;
+            if (NS_SUCCEEDED(mPrefs->CopyCharPref(tempPrefName, &charVal))
+            || NS_SUCCEEDED(mPrefs->CopyCharPref(inPrefName, &charVal)))
+            {
+                nsString newValue = charVal;
                 PR_Free(charVal);
                 inElement->SetValue(newValue);
-    	    }
-    	    break;
-    	}
-    	case ePath:
-    	{
-    	    // Check the subtree first, then the real tree.
-    	    // If the preference value is not set at all, let the HTML
-    	    // determine the setting.
-    	    char* charVal;
-    	    if (NS_SUCCEEDED(mPrefs->CopyPathPref(tempPrefName, &charVal))
-    	    || NS_SUCCEEDED(mPrefs->CopyPathPref(inPrefName, &charVal)))
-    	    {
-    	        nsString newValue = charVal;
+            }
+            break;
+        }
+        case ePath:
+        {
+            // Check the subtree first, then the real tree.
+            // If the preference value is not set at all, let the HTML
+            // determine the setting.
+            char* charVal;
+            if (NS_SUCCEEDED(mPrefs->CopyPathPref(tempPrefName, &charVal))
+            || NS_SUCCEEDED(mPrefs->CopyPathPref(inPrefName, &charVal)))
+            {
+                nsString newValue = charVal;
                 PR_Free(charVal);
                 inElement->SetValue(newValue);
-    	    }
-    	    break;
-    	}
+            }
+            break;
+        }
     }
     return NS_OK;
 }
@@ -369,16 +391,16 @@ nsresult nsPrefsCore::InitializeWidgetsRecursive(nsIDOMNode* inParentNode)
     inParentNode->HasChildNodes(&hasChildren); 
     if (hasChildren)
     {
-	    //nsCOMPtr<nsIDOMNodeList> childList;
-	    //inParentNode->GetChildNodes(getter_AddRefs(childList));
-	    nsCOMPtr<nsIDOMNode> nextChild;
-	    nsresult aResult = inParentNode->GetFirstChild(getter_AddRefs(nextChild));
-	    while (NS_SUCCEEDED(aResult) && nextChild)
-	    {
-	        nsCOMPtr<nsIDOMNode> child = nextChild;
-	        InitializeWidgetsRecursive(child);
-	        aResult = child->GetNextSibling(getter_AddRefs(nextChild));
-	    }
+        //nsCOMPtr<nsIDOMNodeList> childList;
+        //inParentNode->GetChildNodes(getter_AddRefs(childList));
+        nsCOMPtr<nsIDOMNode> nextChild;
+        nsresult aResult = inParentNode->GetFirstChild(getter_AddRefs(nextChild));
+        while (NS_SUCCEEDED(aResult) && nextChild)
+        {
+            nsCOMPtr<nsIDOMNode> child = nextChild;
+            InitializeWidgetsRecursive(child);
+            aResult = child->GetNextSibling(getter_AddRefs(nextChild));
+        }
     }
     // OK, the buck stops here. Do the real work.
     PRUint16 aNodeType;
@@ -440,60 +462,70 @@ nsresult nsPrefsCore::FinalizeOneWidget(
     PL_strcat(tempPrefName, inPrefName);
     switch (inPrefType)
     {
-    	case eBool:
-    	{
-    	    PRBool boolVal;
-    	    nsresult rv = inElement->GetChecked(&boolVal);
-    	    if (NS_FAILED(rv))
-    	        return rv;
-    	    if (inWidgetType == "checkbox")
-    	    {
-	   		        boolVal = (PRBool)(boolVal ^ inPrefOrdinal);    	    
-    			    mPrefs->SetBoolPref(tempPrefName, boolVal);
-	        }
-	        else if (inWidgetType == "radio" && boolVal)
-	    	    {
-		    	    // The radio that is ON writes out its ordinal. Others do nothing.
-	                mPrefs->SetBoolPref(tempPrefName, inPrefOrdinal);
-	    	    }
-    	    break;
-    	}
-    	case eInt:
-    	{
+        case eBool:
+        {
+            PRBool boolVal;
+            nsresult rv = inElement->GetChecked(&boolVal);
+            if (NS_FAILED(rv))
+                return rv;
+            if (inWidgetType == "checkbox")
+            {
+                       boolVal = (PRBool)(boolVal ^ inPrefOrdinal);            
+                    mPrefs->SetBoolPref(tempPrefName, boolVal);
+            }
+            else if (inWidgetType == "radio" && boolVal)
+                {
+                    // The radio that is ON writes out its ordinal. Others do nothing.
+                    mPrefs->SetBoolPref(tempPrefName, inPrefOrdinal);
+                }
+            break;
+        }
+        case eInt:
+        {
             if (inWidgetType == "radio")
-	        {
-	    	    // The radio that is ON writes out its ordinal. Others do nothing.
+            {
+                // The radio that is ON writes out its ordinal. Others do nothing.
                 PRBool boolVal;
                 nsresult rv = inElement->GetChecked(&boolVal);
                 if (NS_FAILED(rv) || !boolVal)
-    	            return rv;
+                    return rv;
                 mPrefs->SetIntPref(tempPrefName, inPrefOrdinal);
             }
-    	    break;
-    	}
-    	case eString:
-    	{
-    	    nsString fieldValue;
+            else if (inWidgetType == "text")
+            {
+                nsString fieldValue;
+                nsresult rv = inElement->GetValue(fieldValue);
+                if (NS_FAILED(rv))
+                    return rv;
+                char* s = fieldValue.ToNewCString();
+                mPrefs->SetIntPref(tempPrefName, atoi(s));
+                delete [] s;
+            }
+            break;
+        }
+        case eString:
+        {
+            nsString fieldValue;
             nsresult rv = inElement->GetValue(fieldValue);
-    	    if (NS_FAILED(rv))
-    	        return rv;
-    	    char* s = fieldValue.ToNewCString();
-    	    mPrefs->SetCharPref(tempPrefName, s);
-    	    delete [] s;
-    	    break;
-    	}
-    	case ePath:
-    	{
-    	    nsString fieldValue;
+            if (NS_FAILED(rv))
+                return rv;
+            char* s = fieldValue.ToNewCString();
+            mPrefs->SetCharPref(tempPrefName, s);
+            delete [] s;
+            break;
+        }
+        case ePath:
+        {
+            nsString fieldValue;
             nsresult rv = inElement->GetValue(fieldValue);
-    	    if (NS_FAILED(rv))
-    	        return rv;
-    	    char* s = fieldValue.ToNewCString();
-    	    mPrefs->SetPathPref(tempPrefName, s, PR_TRUE);
-    	    delete [] s;
-    	    break;
-    	    break;
-    	}
+            if (NS_FAILED(rv))
+                return rv;
+            char* s = fieldValue.ToNewCString();
+            mPrefs->SetPathPref(tempPrefName, s, PR_TRUE);
+            delete [] s;
+            break;
+            break;
+        }
     }
 //    if (inWidgetType == "checkbox" || inWidgetType = "radio")
 //    {
@@ -513,16 +545,16 @@ nsresult nsPrefsCore::FinalizeWidgetsRecursive(nsIDOMNode* inParentNode)
     inParentNode->HasChildNodes(&hasChildren); 
     if (hasChildren)
     {
-	    //nsCOMPtr<nsIDOMNodeList> childList;
-	    //inParentNode->GetChildNodes(getter_AddRefs(childList));
-	    nsCOMPtr<nsIDOMNode> nextChild;
-	    nsresult aResult = inParentNode->GetFirstChild(getter_AddRefs(nextChild));
-	    while (NS_SUCCEEDED(aResult) && nextChild)
-	    {
-	        nsCOMPtr<nsIDOMNode> child = nextChild;
-	        FinalizeWidgetsRecursive(child);
-	        aResult = child->GetNextSibling(getter_AddRefs(nextChild));
-	    }
+        //nsCOMPtr<nsIDOMNodeList> childList;
+        //inParentNode->GetChildNodes(getter_AddRefs(childList));
+        nsCOMPtr<nsIDOMNode> nextChild;
+        nsresult aResult = inParentNode->GetFirstChild(getter_AddRefs(nextChild));
+        while (NS_SUCCEEDED(aResult) && nextChild)
+        {
+            nsCOMPtr<nsIDOMNode> child = nextChild;
+            FinalizeWidgetsRecursive(child);
+            aResult = child->GetNextSibling(getter_AddRefs(nextChild));
+        }
     }
     // OK, the buck stops here. Do the real work.
     PRUint16 aNodeType;
@@ -572,7 +604,7 @@ NS_IMETHODIMP nsPrefsCore::Init(const nsString& aId)
     if (NS_FAILED(rv))
         return rv;
     
-	rv = InitializePrefsManager();
+    rv = InitializePrefsManager();
     if (NS_FAILED(rv))
         return rv;
 
@@ -664,14 +696,14 @@ NS_IMETHODIMP nsPrefsCore::PanelLoaded(nsIDOMWindow* aWin)
         if (NS_FAILED(rv))
             return rv;
     }
-	return NS_OK;
+    return NS_OK;
 }
 
 //----------------------------------------------------------------------------------------
 static nsCOMPtr<nsIWebShellWindow>
-	DOMWindowToWebShellWindow(nsIDOMWindow *DOMWindow)
+    DOMWindowToWebShellWindow(nsIDOMWindow *DOMWindow)
 // horribly complicated routine simply to convert from one to the other
-//----------------------------------------------------------------------------------------	
+//----------------------------------------------------------------------------------------    
 {
     nsCOMPtr<nsIWebShellWindow> webWindow;
     nsCOMPtr<nsIScriptGlobalObject> globalScript(do_QueryInterface(DOMWindow));
@@ -689,7 +721,7 @@ static nsCOMPtr<nsIWebShellWindow>
 
 //----------------------------------------------------------------------------------------
 static nsresult Close(nsIDOMWindow*& dw)
-//----------------------------------------------------------------------------------------	
+//----------------------------------------------------------------------------------------    
 {
     if (!dw)
         return NS_ERROR_FAILURE;
@@ -711,23 +743,23 @@ NS_IMETHODIMP nsPrefsCore::SavePrefs()
     FinalizePrefWidgets();
     if (mPrefs)
     {
-		// Do the prefs stuff...
-		mPrefs->CopyPrefsTree("temp_tree", "");
-		mPrefs->DeleteBranch("temp_tree");
-		mPrefs->SavePrefFile();
+        // Do the prefs stuff...
+        mPrefs->CopyPrefsTree("temp_tree", "");
+        mPrefs->DeleteBranch("temp_tree");
+        mPrefs->SavePrefFile();
     }
-	// Then close    
-	return Close(mPanelWindow);
+    // Then close    
+    return Close(mPanelWindow);
 }
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPrefsCore::CancelPrefs()
 //----------------------------------------------------------------------------------------
 {
-	// Do the prefs stuff...
-	if (mPrefs)
-		mPrefs->DeleteBranch("temp_tree");
-	
-	// Then close    
-	return Close(mPanelWindow);
+    // Do the prefs stuff...
+    if (mPrefs)
+        mPrefs->DeleteBranch("temp_tree");
+    
+    // Then close    
+    return Close(mPanelWindow);
 }
