@@ -2256,7 +2256,7 @@ PRInt32 nsBidi::doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
         j=srcLength;
         if(options&NSBIDI_DO_MIRRORING) {
           /* mirror only the base character */
-          c = SymmSwap((PRUnichar)c);
+          c = SymmSwap(c);
 
           PRInt32 k=0;
           UTF_APPEND_CHAR_UNSAFE(dest, k, c);
@@ -2335,7 +2335,7 @@ nsCharType nsBidi::GetCharType(PRUnichar aChar)
   return oResult;
 }
 
-PRUnichar nsBidi::SymmSwap(PRUnichar aChar)
+PRUint32 nsBidi::SymmSwap(PRUint32 aChar)
 {
   return Mirrored(aChar);
 }
