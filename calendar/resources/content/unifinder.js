@@ -78,7 +78,7 @@ function selectSelectedEventsInTree( EventsToSelect )
    if( EventsToSelect === false )
       EventsToSelect = gCalendarWindow.EventSelection.selectedEvents;
 
-   dump( "\nCALENDAR unifinder.js->on selection changed" );
+   dump( "CALENDAR unifinder.js->on selection changed\n" );
    var SearchTree = document.getElementById( UnifinderTreeName );
       
    /* The following is a brutal hack, caused by 
@@ -121,7 +121,7 @@ function selectSelectedEventsInTree( EventsToSelect )
    }
    else
    {
-      dump( "\n--->>>>unifinder.js selection callback :: Clear selection" );
+      dump( "--->>>>unifinder.js selection callback :: Clear selection\n" );
       SearchTree.view.selection.clearSelection( );
    }
    
@@ -272,7 +272,7 @@ function getCalendarEventFromEvent( event )
 
 function unifinderOnSelect( event )
 {
-   dump( "\n\nin unifinder onselect\n" );
+   dump( "in unifinder onselect\n" );
 
    if( event.target.view.selection.getRangeCount() == 0 )
        return;
@@ -298,7 +298,7 @@ function unifinderOnSelect( event )
          }
          catch( e )
          {
-            dump( "e is "+e );
+            dump( "e is "+e+"\n" );
             return;
          }
          ArrayOfEvents.push( calendarEvent );
@@ -442,7 +442,7 @@ function getAndSetEventTable( )
          return( gEventSource.getEventsForRange( MidnightSelectedDate, EndDate ) );
       
       default: 
-         dump( "there's no case for "+document.getElementById( "event-filter-menulist" ).selectedItem.value );
+         dump( "there's no case for "+document.getElementById( "event-filter-menulist" ).selectedItem.value+"\n" );
          return( eventTable = new Array() );
    }
 }
@@ -486,7 +486,7 @@ var treeView =
    getImageSrc : function(){return false;},
    cycleHeader : function(col, element) // element parameter used in Moz1.7-
    {                                    // not in Moz1.8+
-      //dump( "\nin cycle header" );
+      //dump( "in cycle header\n" );
       var sortActive;
       var treeCols;
    
