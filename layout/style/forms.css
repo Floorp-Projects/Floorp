@@ -234,6 +234,7 @@ optgroup {
   line-height: normal !important;
   font-style: italic;
   font-weight: bold;
+  font-size: inherit;
   -moz-user-select: none;
   -moz-user-focus: none;
   text-indent: 0;
