@@ -438,6 +438,8 @@ main(int argc, char **argv)
         return 1;
     }
     
+    XPT_SetDataOffset(state, header_sz);
+
     if (!XPT_MakeCursor(state, XPT_HEADER, header_sz, cursor)) {
         perror("FAILED: error making cursor");
         return 1;
