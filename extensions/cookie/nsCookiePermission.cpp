@@ -61,12 +61,6 @@
  ************************ nsCookiePermission ********************
  ****************************************************************/
 
-// additional values for nsCookieAccess, which are for internal use only
-// (and thus do not belong in the public nsICookiePermission API). these
-// private values could be defined as a separate set of constants, but
-// have been chosen to extend nsCookieAccess for convenience.
-static const nsCookieAccess ACCESS_SESSION = 8;
-
 // values for mCookiesLifetimePolicy
 // 0 == accept normally
 // 1 == ask before accepting
@@ -290,10 +284,9 @@ nsCookiePermission::CanAccess(nsIURI         *aURI,
     case nsIPermissionManager::DENY_ACTION:    // ACCESS_DENY
       break;
 
-    // for types not publicly available, we need to convert the value
-    // into an understandable one. ACCESS_SESSION means the cookie can be
-    // accepted; the session downgrade will occur in CanSetCookie().
-    case ACCESS_SESSION:
+    // ACCESS_SESSION means the cookie can be accepted; the session 
+    // downgrade will occur in CanSetCookie().
+    case nsICookiePermission::ACCESS_SESSION:
       *aResult = ACCESS_ALLOW;
       break;
 
@@ -321,7 +314,7 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
   PRUint32 perm;
   mPermMgr->TestPermission(aURI, kPermissionType, &perm);
   switch (perm) {
-  case ACCESS_SESSION:
+  case nsICookiePermission::ACCESS_SESSION:
     *aIsSession = PR_TRUE;
 
   case nsIPermissionManager::ALLOW_ACTION: // ACCESS_ALLOW
@@ -429,7 +422,7 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
             mPermMgr->Add(aURI, kPermissionType, (PRUint32) nsIPermissionManager::ALLOW_ACTION);
             break;
           case nsICookiePromptService::ACCEPT_SESSION_COOKIE:
-            mPermMgr->Add(aURI, kPermissionType, ACCESS_SESSION);
+            mPermMgr->Add(aURI, kPermissionType, nsICookiePermission::ACCESS_SESSION);
             break;
           default:
             break;

@@ -56,6 +56,14 @@ interface nsICookiePermission : nsISupports
   const nsCookieAccess ACCESS_DENY    = 2;
 
   /**
+   * additional values for nsCookieAccess, which are not directly used by
+   * any methods on this interface, but are nevertheless convenient to define
+   * here. these may be relocated somewhere else if we ever consider freezing
+   * this interface.
+   */
+  const nsCookieAccess ACCESS_SESSION = 8;
+
+  /**
    * setAccess
    *
    * this method is called to block cookie access for the given URI.  this
@@ -83,7 +91,8 @@ interface nsICookiePermission : nsISupports
    * @param aChannel
    *        the channel corresponding to aURI
    *
-   * @return nsCookieAccess value
+   * @return one of the following nsCookieAccess values:
+   *         ACCESS_DEFAULT, ACCESS_ALLOW, or ACCESS_DENY
    */
   nsCookieAccess canAccess(in nsIURI     aURI,
                            in nsIURI     aFirstURI,
