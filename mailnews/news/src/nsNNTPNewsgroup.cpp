@@ -212,10 +212,7 @@ nsresult nsNNTPNewsgroup::GetSubscribed(PRBool *aSubscribed)
 
 nsresult nsNNTPNewsgroup::SetSubscribed(PRBool aSubscribed)
 {
-	if (aSubscribed)
-	{
-		m_isSubscribed = aSubscribed;
-	}
+    m_isSubscribed = aSubscribed;
 
 	return NS_OK;
 }
@@ -276,23 +273,27 @@ nsresult nsNNTPNewsgroup::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youn
 	return NS_OK;
 }
 
-nsresult nsNNTPNewsgroup::Initialize(const char *line,
+nsresult nsNNTPNewsgroup::Initialize(const char *name,
                                      nsMsgKeySet *set,
                                      PRBool subscribed)
 {
 #ifdef DEBUG_NEWS
-	printf("nsNNTPNewsgroup::Intialize(line = %s, subscribed = %s)\n",line?line:"(null)", subscribed?"TRUE":"FALSE");
+	printf("nsNNTPNewsgroup::Intialize(name = %s, subscribed = %s)\n",name?name:"(null)", subscribed?"TRUE":"FALSE");
 #endif
 	nsresult rv = NS_OK;
 
     rv = SetSubscribed(subscribed);
     if (NS_FAILED(rv)) return rv;
     
-	if (line) {
-        rv = SetName((char *)line);
+	if (name) {
+        rv = SetName((char *)name);
         if (NS_FAILED(rv)) return rv;
 	}
 
+    if (set) {
+        NS_ASSERTION(0, "not doing anything with set in nsNNTPNewsgroup::Initialize() yet...");
+    }
+    
 	return rv;
 }
 

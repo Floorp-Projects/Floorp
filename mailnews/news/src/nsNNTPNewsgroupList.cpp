@@ -452,7 +452,6 @@ nsNNTPNewsgroupList::AddToKnownArticles(PRInt32 first, PRInt32 last)
 nsresult
 nsNNTPNewsgroupList::InitXOVER(PRInt32 first_msg, PRInt32 last_msg)
 {
-    
 	int		status = 0;
 
 	// Tell the FE to show the GetNewMessages progress dialog

@@ -64,7 +64,7 @@ public:
 
 	 NS_IMETHOD UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRInt32 total_messages);
 
-     NS_IMETHOD Initialize(const char *line, nsMsgKeySet *set, PRBool subscribed);
+     NS_IMETHOD Initialize(const char *name, nsMsgKeySet *set, PRBool subscribed);
 
 protected:
 	 char * m_groupName;

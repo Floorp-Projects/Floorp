@@ -93,7 +93,7 @@ interface nsINNTPHost : nsISupports {
      group (the user clicks on the newsgroup line), in case the data has
      changed since the initial passthrough.  The "nowvisiting" parameter
      is TRUE in the latter case, FALSE otherwise. */
-    void DisplaySubscribedGroup(in string name,
+    void DisplaySubscribedGroup(in nsINNTPNewsgroup newsgroup,
                                 in long first_message, in long last_message,
                                 in long total_messages,
                                 in boolean visit_now);
@@ -114,9 +114,6 @@ interface nsINNTPHost : nsISupports {
 
     void SetPrettyName(in string name, in string prettyName);
 
-	/* Go load the newsrc for this host.  Creates the subscribed hosts as
-       children of the given nsIMsgFolder. */
-    void LoadNewsrc(in string uri);
 	/* Write out the newsrc for this host right now.  In general, either
        MarkDirty() or WriteIfDirty() should be called instead. */
     void WriteNewsrc();

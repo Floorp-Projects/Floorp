@@ -481,15 +481,19 @@ nsNntpService::RunNewsUrl(nsString& urlString, nsString &newsgroupName, nsMsgKey
     rv = nsComponentManager::CreateInstance(kCNNTPNewsgroupCID, nsnull, nsINNTPNewsgroup::GetIID(), getter_AddRefs(newsgroup));
     if (NS_FAILED(rv) || !newsgroup) return rv;                       
        
-    rv = newsgroup->Initialize(nsnull /* line */, nsnull /* set */, PR_FALSE /* subscribed */);
-  
-    newsgroup->SetName((char *)(newsgroupName.GetBuffer()));
-    nntpUrl->SetNewsgroup(newsgroup);
-
+    rv = newsgroup->Initialize(newsgroupName.GetBuffer(), nsnull /* set */, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = nntpUrl->SetNewsgroup(newsgroup);
+    if (NS_FAILED(rv)) return rv;
+    
     // if we are running a news url to display a message, these
     // will be used later, to mark the message as read after we finish loading
-    nntpUrl->SetMessageKey(key);
-    nntpUrl->SetNewsgroupName((char *)(newsgroupName.GetBuffer()));
+    rv = nntpUrl->SetMessageKey(key);
+    if (NS_FAILED(rv)) return rv;
+        
+    rv = nntpUrl->SetNewsgroupName((char *)(newsgroupName.GetBuffer()));
+    if (NS_FAILED(rv)) return rv;
   }
   
   if (aUrlListener) // register listener if there is one...

@@ -56,7 +56,7 @@ interface nsINNTPNewsgroup : nsISupports {
                                  in long youngest,
                                  in long total_messages);
 
-  void Initialize(in string line,
+  void Initialize(in string name,
                   in nsMsgKeySet set,
                   in boolean subscribed);
 };

@@ -547,10 +547,12 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 	  // save it on our url for future use....
 	  m_runningURL->SetNntpHost(m_newsHost);
 
+#if SETH_HACK
 	  // read in the newsrc file now, to build up the host correctly.
       char *newshosturi = PR_smprintf("%s/%s", kNewsRootURI, hostAndPort /* really just hostname */);
 	  rv = m_newsHost->LoadNewsrc(newshosturi);
       PR_FREEIF(newshosturi);
+#endif
 
 	  if (NS_FAILED(rv))
 			goto FAIL;
@@ -2859,8 +2861,8 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 PRInt32 nsNNTPProtocol::BeginReadXover()
 {
     PRInt32 count;     /* Response fields */
-	PRInt32 status = 0; 
-
+    nsresult rv = NS_OK;
+    
 	/* Make sure we never close and automatically reopen the connection at this
 	   point; we'll confuse libmsg too much... */
 
@@ -2878,16 +2880,12 @@ PRInt32 nsNNTPProtocol::BeginReadXover()
 
 	/* We now know there is a summary line there; make sure it has the
 	   right numbers in it. */
-    char *group_name = nsnull;
-    m_newsgroup->GetName(&group_name);
-    
-    m_newsHost->DisplaySubscribedGroup(group_name,
-                                          m_firstPossibleArticle,
-                                          m_lastPossibleArticle,
-                                          count, PR_TRUE);
-    PR_Free(group_name);
-	group_name = nsnull;
-	if (status < 0) return status;
+    rv = m_newsHost->DisplaySubscribedGroup(m_newsgroup,
+                                            m_firstPossibleArticle,
+                                            m_lastPossibleArticle,
+                                            count, PR_TRUE);
+
+    if (NS_FAILED(rv)) return -1;
 
 	m_numArticlesLoaded = 0;
 	m_numArticlesWanted = net_NewsChunkSize > 0 ? net_NewsChunkSize : 1L << 30;
@@ -3655,10 +3653,15 @@ PRInt32 nsNNTPProtocol::DisplayNewsRCResponse()
 			last_art = atol(high);
 		}
 
-        m_newsHost->DisplaySubscribedGroup(group,
+#if SETH_HACK
+        rv = m_newsHost->DisplaySubscribedGroup(group,
                                               low ? atol(low) : 0,
                                               high ? atol(high) : 0,
                                               atol(num_arts), PR_FALSE);
+#else
+        printf("seth hack\n");
+        PR_ASSERT(0);
+#endif
 		if (status < 0)
 		  return status;
 	  }
@@ -3673,8 +3676,13 @@ PRInt32 nsNNTPProtocol::DisplayNewsRCResponse()
 	  {
 		/* only on news server error or when zero articles
 		 */
+#if SETH_HACK
         m_newsHost->DisplaySubscribedGroup(m_currentGroup,
 	                                             0, 0, 0, PR_FALSE);
+#else
+        printf("seth hack\n");
+        PR_ASSERT(0);
+#endif
 	  }
 
 	m_nextState = NEWS_DISPLAY_NEWS_RC;

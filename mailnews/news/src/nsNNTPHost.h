@@ -123,10 +123,6 @@ public:
     NS_IMETHOD AddSearchableHeader(const char *headerName);
     NS_IMETHOD QuerySearchableHeader(const char *headerName, PRBool *_retval);
     
-	// Go load the newsrc for this host.  Creates the subscribed hosts as
-	// children of the given nsIMsgFolder.
-	NS_IMETHOD LoadNewsrc(const char *uri);
-    
 	// Write out the newsrc for this host right now.  In general, either
 	// MarkDirty() or WriteIfDirty() should be called instead.
 	NS_IMETHOD WriteNewsrc();
@@ -179,7 +175,7 @@ public:
        individual strings must not be free'd. */
     NS_IMETHOD GetGroupList(char **_retval) { return NS_OK;}
 
-    NS_IMETHOD DisplaySubscribedGroup(const char *name,
+    NS_IMETHOD DisplaySubscribedGroup(nsINNTPNewsgroup *newsgroup,
                                       PRInt32 first_message,
                                       PRInt32 last_message,
                                       PRInt32 total_messages,
@@ -187,10 +183,6 @@ public:
     // end of nsINNTPHost
     
 private:
-	nsresult LoadNewsrcFileAndCreateNewsgroups(nsFileSpec &newsrcFile);
-	nsresult MapHostToNewsrcFile(char *newshostname, nsFileSpec &fatFile, nsFileSpec &newsrcFile);
-	nsresult GetNewsrcFile(char *newshostname, nsFileSpec &path, nsFileSpec &newsrcFile);
-
     // simplify the QueryInterface calls
     static nsIMsgFolder *getFolderFor(nsINNTPNewsgroup *group);
     static nsIMsgFolder *getFolderFor(nsINNTPCategoryContainer *catContainer);
@@ -349,9 +341,7 @@ private:
 
 protected:
 	void OpenGroupFile(const PRIntn = PR_WRONLY);
-	nsresult RememberLine(char* line);
-	static nsresult ProcessLine_s(char* line, PRUint32 line_size, void* closure);
-	nsresult ProcessLine(char* line, PRUint32 line_size);
+  
 	static void WriteTimer(void* closure);
 	PRInt32 CreateFileHeader();
 	PRInt32 ReadInitialPart();
