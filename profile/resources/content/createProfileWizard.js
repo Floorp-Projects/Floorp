@@ -1,6 +1,58 @@
-
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Ben Goodger (30/09/99)
+ */ 
 
 // The WIZARD of GORE
+
+// NOTICE! Wanting to add a panel to this wizard? Follow these instructions:
+/* 1) Add your panel to the testMap Below. If you're adding your panel after 
+      the last one, remember to set the "next" property on that element to the
+      idfier of your panel, and make the "next" property on your panel null. 
+      This is important because the state of the Next/Back buttons depends on
+      correct filling of testMap.
+   2) You must create GetFields and SetFields functions in the JS file 
+      associated with your panel XUL file. This is true even if your panel 
+      contains no fields, only text, as functions in this file will expect to 
+      find them. if you do not plan to include data fields, simply include empty
+      functions
+
+   PERSISTING & SAVING DATA:
+   3) You are responsible for collecting data from your panel. You do this with
+      the GetFields function in your panel JS file. However you do this, this
+      function must return an array with the following format:
+         [[identifier, value],[identifier,value],...]
+      where identifier is some string identifier of the element (usually just 
+      the ID attribute), and the value is the value being saved.
+      Make sure you don't choose an identifier that conflicts with one used 
+      for any other panel. It is recommended you choose something fairly unique.
+   4) You are responsible for setting the contents of your panel. You do this 
+      with the SetFields function, which is called for each element you've saved
+      when the panel loads. This function can set attributes, use DOM 
+      manipulation, whatever you deem necessary to populate the panel.
+    
+    You can find examples of usage of GetFields and SetFields in 
+    newProfile1_2.js
+      
+ */
 
 var wizardMap = ["newProfile1_1.xul"];
 var content;
@@ -10,6 +62,7 @@ var firstTime = true;
 var profile = Components.classes["component://netscape/profile/manager"].createInstance();
 profile = profile.QueryInterface(Components.interfaces.nsIProfile); 
 
+// Navigation Set for pages contained in wizard 
 var testMap = {
     newProfile1_1: { previous: null, next: "newProfile1_2" },
     newProfile1_2: { previous: "newProfile1_1", next: null},
@@ -107,17 +160,13 @@ function displayPage(content)
 }
 
 
-function populatePage() 
+function populatePage()
 {
 	var contentWindow = window.frames["content"];
 	var doc = contentWindow.document;
-  for (var i in wizardHash) 
-  {
-    var element = doc.getElementById(i);
-    if (element)
-      contentWindow.SetFields(element,wizardHash[i]);
-  }
-}
+	for (var i in wizardHash)
+	contentWindow.SetFields(i,wizardHash[i]);
+}   
 
 function saveData()
 {

@@ -70,12 +70,13 @@ function GetFields()
 // must provide its own SetFields function
 function SetFields(element,set)
 {
+  element = document.getElementById(element);
   //dump("In SetFields(" + element + "," + set + ");\n");
   if(element.id == "ProfileDir" && set != "")
     getProfileDir(set,false);
   else if(element.id == "ProfileName")
     element.value = set;
-}
+}  
 
 // function createProfileWizard.js::chooseFolder();
 // utility function responsible for displaying a folder selection dialog.
