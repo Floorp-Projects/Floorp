@@ -828,7 +828,7 @@ nsImapProtocol::TellThreadToDie(PRBool isSaveToClose)
                                &writeCount);
   }
 
-  if (NS_SUCCEEDED(rv) && TestFlag(IMAP_CONNECTION_IS_OPEN))
+  if (NS_SUCCEEDED(rv) && TestFlag(IMAP_CONNECTION_IS_OPEN) && m_outputStream)
   {
     IncrementCommandTagNumber();
     command = GetServerCommandTag();
