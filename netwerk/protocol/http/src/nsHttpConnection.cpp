@@ -114,7 +114,8 @@ nsHttpConnection::Init(nsHttpConnectionInfo *info)
 nsresult
 nsHttpConnection::SetTransaction(nsHttpTransaction *transaction)
 {
-    LOG(("nsHttpConnection::SetTransaction [this=%x]\n"));
+    LOG(("nsHttpConnection::SetTransaction [this=%x trans=%x]\n",
+         this, transaction));
 
     NS_ENSURE_TRUE(!mTransaction, NS_ERROR_IN_PROGRESS);
     NS_ENSURE_ARG_POINTER(transaction);
@@ -249,7 +250,7 @@ nsHttpConnection::OnTransactionComplete(nsresult status)
     if (mSocketTransport)
         mSocketTransport->SetNotificationCallbacks(nsnull, 0);
 
-    if (!mKeepAlive) {
+    if (!mKeepAlive || NS_FAILED(status)) {
         // if we're not going to be keeping this connection alive...
         mSocketTransport->SetReuseConnection(PR_FALSE);
         mSocketTransport = 0;
