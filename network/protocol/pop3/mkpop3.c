@@ -55,11 +55,11 @@ and change the POP3_QUIT_RESPONSE state to flush the newly committed deletes. */
 #include "msgcom.h"
 #include "msgnet.h"
 #include "secnav.h"
-#include HG09438
-
+#include  "ssl.h"
+#include "prio.h"
 #include "xp_error.h"
 #include "xpgetstr.h"
-
+#include "prerror.h"
 #include "prefapi.h"
 
 extern int MK_OUT_OF_MEMORY;
