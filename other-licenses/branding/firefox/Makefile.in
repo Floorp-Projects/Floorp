@@ -13,6 +13,9 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 export::
+	cp $(srcdir)/default.xpm $(DEPTH)/browser/app/default.xpm
+	cp $(srcdir)/mozicon16.xpm $(DEPTH)/browser/app/mozicon16.xpm
+	cp $(srcdir)/mozicon50.xpm $(DEPTH)/browser/app/mozicon50.xpm
 	cp $(srcdir)/firefox.ico $(DEPTH)/browser/app/firefox.ico
 	cp $(srcdir)/firefox.ico $(DEPTH)/toolkit/mozapps/installer/windows/wizard/setuprsc/browser.ico
 	if [ ! -d $(DEPTH)/browser/app/macbuild ] ; then \
