@@ -266,56 +266,20 @@ nsPop3IncomingServer::SetFlagsOnDefaultMailboxes()
 
 NS_IMETHODIMP nsPop3IncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
 {
-  nsresult rv;
-  PRBool exists;
   if (!path) return NS_ERROR_NULL_POINTER;
   
-  rv = path->AppendRelativeUnixPath("Inbox");
+  (void) path->AppendRelativeUnixPath("Inbox");
+  nsresult rv = CreateLocalFolder(path, "Inbox");
   if (NS_FAILED(rv)) return rv;
-  rv = path->Exists(&exists);
-  if (!exists) {
-    rv = path->Touch();
-    if (NS_FAILED(rv)) return rv;
-  }
-  
-  rv = path->SetLeafName("Trash");
+  rv = CreateLocalFolder(path, "Trash");
   if (NS_FAILED(rv)) return rv;
-  rv = path->Exists(&exists);
+  rv = CreateLocalFolder(path, "Sent");
   if (NS_FAILED(rv)) return rv;
-  if (!exists)
-  {
-    rv = path->Touch();
-    if (NS_FAILED(rv)) return rv;
-  }
-  
-  rv = path->SetLeafName("Sent");
+  rv = CreateLocalFolder(path, "Drafts");
   if (NS_FAILED(rv)) return rv;
-  rv = path->Exists(&exists);
+  rv = CreateLocalFolder(path, "Drafts");
   if (NS_FAILED(rv)) return rv;
-  if (!exists) 
-  {
-    rv = path->Touch();
-    if (NS_FAILED(rv)) return rv;
-  }
-  
-  rv = path->SetLeafName("Drafts");
-  if (NS_FAILED(rv)) return rv;
-  rv = path->Exists(&exists);
-  if (NS_FAILED(rv)) return rv;
-  if (!exists)
-  {
-    rv = path->Touch();
-    if (NS_FAILED(rv)) return rv;
-  }
-  
-  rv = path->SetLeafName("Templates");
-  if (NS_FAILED(rv)) return rv;
-  rv = path->Exists(&exists);
-  if (NS_FAILED(rv)) return rv;
-  if (!exists) {
-    rv = path->Touch();
-    if (NS_FAILED(rv)) return rv;
-  }
+  rv = CreateLocalFolder(path, "Templates");
   
   return NS_OK;
 }
@@ -343,6 +307,18 @@ NS_IMETHODIMP nsPop3IncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlL
   NS_ENSURE_SUCCESS(rv,rv);
 
   return pop3Service->GetNewMail(aMsgWindow, aUrlListener, inbox, this, aResult);
+}
+
+NS_IMETHODIMP
+nsPop3IncomingServer::GetNewMessages(nsIMsgFolder *aFolder, nsIMsgWindow *aMsgWindow, 
+                      nsIUrlListener *aUrlListener)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIPop3Service> pop3Service = do_GetService(kCPop3ServiceCID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  return pop3Service->GetNewMail(aMsgWindow, aUrlListener, aFolder, this, nsnull);
 }
 
 NS_IMETHODIMP

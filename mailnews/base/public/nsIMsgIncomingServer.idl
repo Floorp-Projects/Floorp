@@ -48,6 +48,7 @@ interface nsIMsgRetentionSettings;
 interface nsIMsgDownloadSettings;
 interface nsISpamSettings;
 interface nsIMsgFilterPlugin;
+interface nsIUrlListener;
 
 /*
  * Interface for incoming mail/news host
@@ -195,6 +196,9 @@ interface nsIMsgIncomingServer : nsISupports {
   /* do a biff */
   void PerformBiff(in nsIMsgWindow aMsgWindow);
   
+  /* get new messages */
+  void getNewMessages(in nsIMsgFolder aFolder, in nsIMsgWindow aMsgWindow, 
+                      in nsIUrlListener aUrlListener);
   /* this checks if a server needs a password to do biff */
   readonly attribute boolean serverRequiresPasswordForBiff;
   

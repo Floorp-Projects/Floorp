@@ -744,7 +744,7 @@ function GetMessagesForInboxOnServer(server)
   folders[0] = inboxFolder;
 
   var compositeDataSource = GetCompositeDataSource("GetNewMessages");
-  GetNewMessages(folders, compositeDataSource);
+  GetNewMessages(folders, server, compositeDataSource);
 }
 
 function MsgGetMessage()
@@ -1900,7 +1900,7 @@ function GetFolderMessages()
   folders[0] = folder;
 
   var compositeDataSource = GetCompositeDataSource("GetNewMessages");
-  GetNewMessages(folders, compositeDataSource);
+  GetNewMessages(folders, folder.server, compositeDataSource);
 }
 
 function SendUnsentMessages()

@@ -33,7 +33,7 @@ function DoRDFCommand(dataSource, command, srcArray, argumentArray)
     }
 }
 
-function GetNewMessages(selectedFolders, compositeDataSource)
+function GetNewMessages(selectedFolders, server, compositeDataSource)
 {
 	var numFolders = selectedFolders.length;
 	if(numFolders > 0)
@@ -55,8 +55,10 @@ function GetNewMessages(selectedFolders, compositeDataSource)
 			var folderResource = msgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
 		    var folderArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
 			folderArray.AppendElement(folderResource);
+		  var serverArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+      serverArray.AppendElement(server);
 
-			DoRDFCommand(compositeDataSource, "http://home.netscape.com/NC-rdf#GetNewMessages", folderArray, null);
+			DoRDFCommand(compositeDataSource, "http://home.netscape.com/NC-rdf#GetNewMessages", folderArray, server);
 		}
 	}
 	else {

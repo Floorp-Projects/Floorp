@@ -772,7 +772,9 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
       }
       else if((aCommand == kNC_GetNewMessages))
       {
-        rv = folder->GetNewMessages(mWindow, nsnull);
+        nsCOMPtr<nsIMsgIncomingServer> server = do_QueryElementAt(aArguments, i, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = server->GetNewMessages(folder, mWindow, nsnull);
       }
       else if((aCommand == kNC_Copy))
       {

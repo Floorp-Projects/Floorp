@@ -51,6 +51,7 @@
 #include "nsIMsgLocalMailFolder.h"
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
+#include "nsIMsgAccountManager.h"
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsNoIncomingServer,
                             nsMsgIncomingServer,
@@ -161,68 +162,72 @@ NS_IMETHODIMP nsNoIncomingServer::CopyDefaultMessages(const char *folderNameOnDi
 	return NS_OK;
 }
 
+PRBool nsNoIncomingServer::IsDeferredTo()
+{
+  nsCOMPtr<nsIMsgAccountManager> accountManager 
+    = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID);
+  if (accountManager)
+  {
+    nsCOMPtr <nsIMsgAccount> thisAccount;
+    accountManager->FindAccountForServer(this, getter_AddRefs(thisAccount));
+    if (thisAccount)
+    {
+      nsCOMPtr <nsISupportsArray> allServers;
+      nsXPIDLCString accountKey;
+      thisAccount->GetKey(getter_Copies(accountKey));
+      accountManager->GetAllServers(getter_AddRefs(allServers));
+      if (allServers)
+      {
+        PRUint32 serverCount;
+        allServers->Count(&serverCount);
+        for (PRUint32 i = 0; i < serverCount; i++)
+        {
+          nsCOMPtr <nsIMsgIncomingServer> server (do_QueryElementAt(allServers, i));
+          if (server)
+          {
+            nsXPIDLCString deferredToAccount;
+            server->GetCharValue("deferred_to_account", getter_Copies(deferredToAccount));
+            if (deferredToAccount.Equals(accountKey))
+              return PR_TRUE;
+          }
+        }
+      }
+    }
+  }
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP nsNoIncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
 {
-        nsresult rv;
-        PRBool exists;
-        if (!path) 
-          return NS_ERROR_NULL_POINTER;
-
-		// notice, no Inbox
-        rv = path->AppendRelativeUnixPath("Trash");
-        if (NS_FAILED(rv)) return rv;
-        rv = path->Exists(&exists);
-        if (!exists) {
-                rv = path->Touch();
-                if (NS_FAILED(rv)) return rv;
-        }
-
-        rv = path->SetLeafName("Sent");
-        if (NS_FAILED(rv)) return rv;
-        rv = path->Exists(&exists);
-        if (NS_FAILED(rv)) return rv;
-        if (!exists) {
-                rv = path->Touch();
-                if (NS_FAILED(rv)) return rv;
-        }
-
-        rv = path->SetLeafName("Drafts");
-        if (NS_FAILED(rv)) return rv;
-        rv = path->Exists(&exists);
-        if (NS_FAILED(rv)) return rv;
-        if (!exists) {
-                rv = path->Touch();
-                if (NS_FAILED(rv)) return rv;
-        }
-
-		// copy the default templates into the Templates folder
-		nsCOMPtr<nsIFileSpec> parentDir;
-		rv = path->GetParent(getter_AddRefs(parentDir));
-		if (NS_FAILED(rv)) return rv;
-		rv = CopyDefaultMessages("Templates",parentDir);
-        if (NS_FAILED(rv)) return rv;
-
-		// we may not have had any default templates.  if so
-		// we still want to create the Templates folder
-        rv = path->SetLeafName("Templates");
-        if (NS_FAILED(rv)) return rv;
-        rv = path->Exists(&exists);
-        if (NS_FAILED(rv)) return rv;
-        if (!exists) {
-                rv = path->Touch();
-                if (NS_FAILED(rv)) return rv;
-        }
-
-        rv = path->SetLeafName("Unsent Messages");
-        if (NS_FAILED(rv)) return rv;
-        rv = path->Exists(&exists);
-        if (NS_FAILED(rv)) return rv;
-        if (!exists) {
-                rv = path->Touch();
-                if (NS_FAILED(rv)) return rv;
-        }
-
-        return NS_OK;
+  nsresult rv;
+  if (!path) 
+    return NS_ERROR_NULL_POINTER;
+  
+  // notice, no Inbox, unless we're deferred to...
+   // need to have a leaf to start with
+  rv = path->AppendRelativeUnixPath("Trash"); 
+  if (IsDeferredTo())
+    CreateLocalFolder(path, "Inbox");
+  CreateLocalFolder(path, "Trash");
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = CreateLocalFolder(path, "Sent");
+  if (NS_FAILED(rv)) return rv;
+  rv = CreateLocalFolder(path, "Drafts");
+  if (NS_FAILED(rv)) return rv;
+  
+  // copy the default templates into the Templates folder
+  nsCOMPtr<nsIFileSpec> parentDir;
+  rv = path->GetParent(getter_AddRefs(parentDir));
+  if (NS_FAILED(rv)) return rv;
+  rv = CopyDefaultMessages("Templates",parentDir);
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = CreateLocalFolder(path, "Drafts");
+  if (NS_FAILED(rv)) return rv;
+  
+  (void ) CreateLocalFolder(path, "Unsent Messages");
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsNoIncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIMsgFolder *aInbox, nsIURI **aResult)

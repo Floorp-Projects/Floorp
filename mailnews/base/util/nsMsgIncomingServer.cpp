@@ -131,8 +131,8 @@ nsMsgIncomingServer::SetKey(const char * serverKey)
 NS_IMETHODIMP
 nsMsgIncomingServer::SetRootFolder(nsIMsgFolder * aRootFolder)
 {
-	m_rootFolder = aRootFolder;
-	return NS_OK;
+  m_rootFolder = aRootFolder;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -187,6 +187,12 @@ nsMsgIncomingServer::PerformBiff(nsIMsgWindow* aMsgWindow)
   return NS_ERROR_NOT_IMPLEMENTED;	
 }
 
+NS_IMETHODIMP
+nsMsgIncomingServer::GetNewMessages(nsIMsgFolder *aFolder, nsIMsgWindow *aMsgWindow, 
+                      nsIUrlListener *aUrlListener)
+{
+  return aFolder->GetNewMessages(aMsgWindow, aUrlListener);
+}
 
 NS_IMETHODIMP nsMsgIncomingServer::GetPerformingBiff(PRBool *aPerformingBiff)
 {
@@ -358,10 +364,25 @@ nsMsgIncomingServer::GetServerURI(char* *aResult)
     return NS_OK;
 }
 
+// helper routine to create local folder on disk, if it doesn't exist.
+// Path must already have a LeafName for this to work...
+nsresult
+nsMsgIncomingServer::CreateLocalFolder(nsIFileSpec *path, const char *folderName)
+{
+  (void) path->SetLeafName(folderName); // never fails
+  PRBool exists;
+  nsresult rv = path->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!exists) 
+    rv = path->Touch();
+  return rv;
+}
+
+
 nsresult
 nsMsgIncomingServer::CreateRootFolder()
 {
-	nsresult rv;
+  nsresult rv;
 			  // get the URI from the incoming server
   nsXPIDLCString serverUri;
   rv = GetServerURI(getter_Copies(serverUri));
@@ -420,6 +441,7 @@ nsMsgIncomingServer::GetBoolValue(const char *prefname,
   return rv;
 }
 
+
 nsresult
 nsMsgIncomingServer::getDefaultBoolPref(const char *prefname,
                                         PRBool *val) {
@@ -434,6 +456,7 @@ nsMsgIncomingServer::getDefaultBoolPref(const char *prefname,
   }
   return rv;
 }
+
 
 nsresult
 nsMsgIncomingServer::SetBoolValue(const char *prefname,
