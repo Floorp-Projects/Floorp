@@ -146,7 +146,8 @@ nsXULPrototypeCache::PutPrototype(nsIXULPrototypeDocument* aDocument)
     rv = aDocument->GetURI(getter_AddRefs(uri));
 
     nsIURIKey key(uri);
-    mPrototypeTable.Put(&key, aDocument);
+    nsIXULPrototypeDocument* oldproto = NS_STATIC_CAST(nsIXULPrototypeDocument*, mPrototypeTable.Put(&key, aDocument));
+    NS_IF_RELEASE(oldproto);
 
     return NS_OK;
 }
@@ -177,7 +178,8 @@ nsXULPrototypeCache::PutStyleSheet(nsICSSStyleSheet* aStyleSheet)
     rv = aStyleSheet->GetURL(*getter_AddRefs(uri));
 
     nsIURIKey key(uri);
-    mStyleSheetTable.Put(&key, aStyleSheet);
+    nsICSSStyleSheet* oldsheet = NS_STATIC_CAST(nsICSSStyleSheet*, mStyleSheetTable.Put(&key, aStyleSheet));
+    NS_IF_RELEASE(oldsheet);
 
     return NS_OK;
 }
