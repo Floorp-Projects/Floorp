@@ -73,4 +73,5 @@ CSS_PSEUDO_CLASS(firstChild, ":first-child")
 CSS_PSEUDO_CLASS(firstNode, ":-moz-first-node")
 CSS_PSEUDO_CLASS(lastChild, ":last-child")
 CSS_PSEUDO_CLASS(lastNode, ":-moz-last-node")
+CSS_PSEUDO_CLASS(onlyChild, ":only-child")
 
