@@ -1036,15 +1036,13 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
         if (nsnull == captionFrame) {
           NS_NewBodyFrame(childContent, aNewFrame, captionFrame);
           captionFrame->SetStyleContext(aPresContext, childStyleContext);
-
           // Process the caption's child content and initialize it
           nsIFrame* captionChildList;
           ProcessChildren(aPresContext, captionFrame, childContent, captionChildList);
           captionFrame->Init(*aPresContext, captionChildList);
 
           // Prepend the caption frame to the outer frame's child list
-          captionFrame->SetNextSibling(innerFrame);
-          childList = captionFrame;
+          innerFrame->SetNextSibling(captionFrame);
         }
         break;
 

@@ -111,14 +111,9 @@ NS_IMETHODIMP nsTableOuterFrame::Init(nsIPresContext& aPresContext, nsIFrame* aC
   NS_ASSERTION(mChildCount > 0, "bad child list");
 
   // Set our internal member data
-  if (1 == mChildCount) {
-    mInnerTableFrame = (nsTableFrame*)mFirstChild;
-  } else {
-    mCaptionFrame = mFirstChild;
-
-    nsIFrame* f;
-    mFirstChild->GetNextSibling(f);
-    mInnerTableFrame = (nsTableFrame*)f;
+  mInnerTableFrame = (nsTableFrame*)mFirstChild;
+  if (2 == mChildCount) {
+    mFirstChild->GetNextSibling(mCaptionFrame);
   }
 
   return NS_OK;
@@ -444,8 +439,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
       }
     }
 
-    // At this point, we must have at least one child frame, and we must have an
-    // inner table frame
+    // At this point, we must have an inner table frame, and we might have a caption
     NS_ASSERTION(nsnull != mFirstChild, "no children");
     NS_ASSERTION(nsnull != mInnerTableFrame, "no mInnerTableFrame");
 
@@ -488,7 +482,10 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
 
       // Compute the caption's y-origin
       nscoord captionY = captionMargin.top;
-      if (mFirstChild == mInnerTableFrame) {
+      const nsStyleText* captionTextStyle;
+      mCaptionFrame->GetStyleData(eStyleStruct_Text, ((nsStyleStruct *&)captionTextStyle));
+      if ((captionTextStyle->mVerticalAlign.GetUnit()==eStyleUnit_Enumerated) &&
+          (captionTextStyle->mVerticalAlign.GetIntValue()==NS_STYLE_VERTICAL_ALIGN_BOTTOM)) {
         captionY += innerSize.height;
       }
 
@@ -514,12 +511,13 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
 
       // Place the inner table
       nscoord innerY;
-      if (mFirstChild == mCaptionFrame) {
-        // Inner table is below the caption
+      if ((captionTextStyle->mVerticalAlign.GetUnit()!=eStyleUnit_Enumerated) ||
+          (captionTextStyle->mVerticalAlign.GetIntValue()!=NS_STYLE_VERTICAL_ALIGN_BOTTOM)) {
+        // top caption
         innerY = captionRect.YMost() + captionMargin.bottom;
         state.y = innerY + innerSize.height;
       } else {
-        // Caption is below the inner table
+        // bottom caption
         innerY = 0;
         state.y = captionRect.YMost() + captionMargin.bottom;
       }
