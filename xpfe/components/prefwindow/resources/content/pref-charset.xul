@@ -171,14 +171,14 @@
   <!-- horz 6 -->
   <box align="horizontal">
     <spring flex="48%"/>
-    <titledbutton onclick="window.close()"
-       class="dialog push"
-       value="&charset.customize.cancel.label;" />
-    <spring flex="4%"/>
     <titledbutton id="save_button" onclick="Save();"
        class="dialog push"
        value="&charset.customize.save.label;"
        disabled="true"/>
+    <spring flex="4%"/>
+    <titledbutton onclick="window.close()"
+       class="dialog push"
+       value="&charset.customize.cancel.label;" />
     <spring flex="48%"/>
   </box>
   <!-- horz 6 -->
