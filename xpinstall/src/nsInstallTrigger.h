@@ -18,7 +18,7 @@
 
 #define CHROME_SKIN         1
 #define CHROME_LOCALE       2
-#define CHROME_SAFEMAX      CHROME_LOCALE
+#define CHROME_SAFEMAX      CHROME_SKIN
 #define CHROME_CONTENT      4
 #define CHROME_ALL          (CHROME_SKIN | CHROME_LOCALE | CHROME_CONTENT)
 #define CHROME_PROFILE      8
