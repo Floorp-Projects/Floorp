@@ -526,15 +526,23 @@ nsHTMLImageElement::GetCallerSourceURL(JSContext* cx,
   nsCOMPtr<nsIScriptGlobalObject> global;
   nsLayoutUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(global));
   if (global) {
-    nsCOMPtr<nsIWebShell> webShell;
-    
-    global->GetWebShell(getter_AddRefs(webShell));
-    if (webShell) {
-      const PRUnichar* url;
+    nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(global);
 
-      // XXX Ughh - incorrect ownership rules for url?
-      webShell->GetURL(&url);
-      result = NS_NewURI(sourceURL, url);
+    if (window) {
+      nsCOMPtr<nsIDOMDocument> domDoc;
+
+      result = window->GetDocument(getter_AddRefs(domDoc));
+      if (NS_SUCCEEDED(result)) {
+        nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+
+        if (doc) {
+          result = doc->GetBaseURL(*sourceURL);
+        }
+        
+        if (!*sourceURL) {
+          *sourceURL = doc->GetDocumentURL();
+        }
+      }
     }
   }
 
