@@ -297,10 +297,11 @@ nsEventStatus nsImageButton::PaintForeground(nsIRenderingContext& aRenderingCont
     aRenderingContext.SetColor(GetForegroundColor());
 
   if (mState & eButtonState_disabled) { 
-    aRenderingContext.DrawString(aLabel, aLabel.Length(), aRect.x+1, aRect.y+1, 0);
+    aRenderingContext.DrawString(aLabel, aLabel.Length(), aRect.x+1, aRect.y+1, 0, nsnull);
     aRenderingContext.SetColor(NS_RGB(128, 128, 128));
   }
-  aRenderingContext.DrawString(aLabel, aLabel.Length(), aRect.x, aRect.y, 0);
+  aRenderingContext.DrawString(aLabel, aLabel.Length(), aRect.x, aRect.y, 0,
+                               nsnull);
 
 
   return nsEventStatus_eConsumeNoDefault;  
