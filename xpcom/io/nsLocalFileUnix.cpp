@@ -532,12 +532,12 @@ nsLocalFile::GetPath(char **_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
 
-    if (!(const char *)mPath) {
+    if (!mPath.get()) {
         *_retval = nsnull;
         return NS_OK;
     }
 
-    *_retval = nsCRT::strdup((const char *)mPath);
+    *_retval = (char *)nsMemory::Clone(mPath.get(), strlen(mPath.get())+1);
     if (!*_retval)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
@@ -1158,7 +1158,7 @@ nsLocalFile::GetParent(nsIFile **aParent)
 
     if(root) {
         mPath.Adopt(orig);
-    }   else {
+    } else {
         *slashp = '/';
         nsMemory::Free(orig);
     }
@@ -1328,7 +1328,7 @@ nsLocalFile::GetTarget(char **_retval)
     NS_ENSURE_ARG_POINTER(_retval);
 
     struct stat symStat;
-    lstat(mPath, &symStat);
+    lstat(mPath.get(), &symStat);
     if (!S_ISLNK(symStat.st_mode))
         return NS_ERROR_FILE_INVALID_PATH;
 
@@ -1342,13 +1342,78 @@ nsLocalFile::GetTarget(char **_retval)
     if (!target)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    if (readlink(mPath, target, (size_t)size) < 0) {
+    if (readlink(mPath.get(), target, (size_t)size) < 0) {
         nsMemory::Free(target);
         return NSRESULT_FOR_ERRNO();
     }
     target[size] = '\0';
-    *_retval = target;
-    return NS_OK;
+    *_retval = nsnull;
+
+    nsresult rv;
+    PRBool isSymlink;
+    nsCOMPtr<nsIFile> self(dont_QueryInterface(this));
+    nsCOMPtr<nsIFile> parent;
+    while (NS_SUCCEEDED(rv = self->GetParent(getter_AddRefs(parent)))) {
+        NS_ASSERTION(parent != nsnull, "no parent?!");
+        NS_ASSERTION(*_retval == nsnull, "leaking *_retval!");
+
+        if (target[0] != '/') {
+            nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(parent, &rv));
+            if (NS_FAILED(rv))
+                break;
+            if (NS_FAILED(rv = localFile->AppendRelativePath(target)))
+                break;
+            if (NS_FAILED(rv = parent->GetPath(_retval)))
+                break;
+            if (NS_FAILED(rv = parent->IsSymlink(&isSymlink)))
+                break;
+            self = parent;
+        } else {
+            nsCOMPtr<nsILocalFile> localFile;
+            rv = NS_NewLocalFile(target, PR_TRUE, getter_AddRefs(localFile));
+            if (NS_FAILED(rv))
+                break;
+            if (NS_FAILED(rv = localFile->IsSymlink(&isSymlink)))
+                break;
+            *_retval = target;
+            self = do_QueryInterface(localFile);
+        }
+        if (NS_FAILED(rv) || !isSymlink)
+            break;
+
+        // strip off any and all trailing '/'
+        PRInt32 len = strlen(target);
+        while (target[len-1] == '/' && len > 1)
+            target[--len] = '\0';
+        if (lstat(*_retval, &symStat) < 0) {
+            rv = NSRESULT_FOR_ERRNO();
+            break;
+        }
+        if (!S_ISLNK(symStat.st_mode)) {
+            rv = NS_ERROR_FILE_INVALID_PATH;
+            break;
+        }
+        size = symStat.st_size;
+        if (readlink(*_retval, target, size) < 0) {
+            rv = NSRESULT_FOR_ERRNO();
+            break;
+        }
+        target[size] = '\0';
+
+        if (*_retval) {
+            if (*_retval != target)
+                nsMemory::Free(*_retval);
+            *_retval = nsnull;
+        }
+    }
+
+    if (target != *_retval)
+        nsMemory::Free(target);
+    if (NS_FAILED(rv) && *_retval) {
+        nsMemory::Free(*_retval);
+        *_retval = nsnull;
+    }
+    return rv;
 }
 
 NS_IMETHODIMP
