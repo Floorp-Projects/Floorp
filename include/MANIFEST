@@ -34,6 +34,5 @@ xp_list.h
 xp_mcom.h
 xp_mem.h
 xp_path.h
-xp_regexp.h
 xp_str.h
 xp_trace.h

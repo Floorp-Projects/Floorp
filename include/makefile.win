@@ -62,7 +62,6 @@ EXPORTS = \
                 xp_file.h \
 		xp_mem.h \
 		xp_path.h \
-		xp_regexp.h \
 		xp_str.h \
                 $(NULL)
 
