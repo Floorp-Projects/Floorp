@@ -178,7 +178,7 @@ nsresult RecursiveCopy(nsIFile* srcDir, nsIFile* destDir)
           }
         }
         else
-          rv = dirEntry->CopyTo(destDir, nsString());
+          rv = dirEntry->CopyTo(destDir, EmptyString());
       }
       
     }

@@ -121,7 +121,7 @@ mozLineTerm::mozLineTerm() :
   mSuspended(PR_FALSE),
   mEchoFlag(PR_TRUE),
   mObserver(nsnull),
-  mCookie(nsAutoString()),
+  mCookie(EmptyString()),
   mLastTime(LL_ZERO)
 {
   mLTerm = lterm_new();

@@ -346,7 +346,7 @@ nsDOMImplementation::CreateDocumentType(const nsAString& aQualifiedName,
   NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
 
   return NS_NewDOMDocumentType(aReturn, name, nsnull, nsnull,
-                               aPublicId, aSystemId, nsString());
+                               aPublicId, aSystemId, EmptyString());
 }
 
 NS_IMETHODIMP
@@ -1017,7 +1017,7 @@ nsDocument::GetLineBreaker()
       do_GetService(NS_LWBRK_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, nsnull);
 
-    lbf->GetBreaker(nsString(), getter_AddRefs(mLineBreaker));
+    lbf->GetBreaker(EmptyString(), getter_AddRefs(mLineBreaker));
     NS_ENSURE_TRUE(mLineBreaker, nsnull);
   }
 
@@ -1040,7 +1040,7 @@ nsDocument::GetWordBreaker()
       do_GetService(NS_LWBRK_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, nsnull);
 
-    wbf->GetBreaker(nsString(), getter_AddRefs(mWordBreaker));
+    wbf->GetBreaker(EmptyString(), getter_AddRefs(mWordBreaker));
     NS_ENSURE_TRUE(wbf, nsnull);
   }
 

@@ -1810,7 +1810,7 @@ nsMsgIncomingServer::GetPasswordPromptRequired(PRBool *aPasswordIsRequired)
       nsAutoString passwordFound;
 
       // Get password entry corresponding to the host URI we are passing in.
-      rv = passwordMgrInt->FindPasswordEntry(currServerUri, nsString(), nsString(),
+      rv = passwordMgrInt->FindPasswordEntry(currServerUri, EmptyString(), EmptyString(),
                                              hostFound, userNameFound, passwordFound);
       if (NS_FAILED(rv)) 
       {

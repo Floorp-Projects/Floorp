@@ -141,7 +141,7 @@ NS_METHOD CAppFileLocationProvider::GetAppDataDirectory(nsILocalFile **aLocalFil
     FSRef fsRef;
     err = ::FSFindFolder(kUserDomain, kApplicationSupportFolderType, kCreateFolder, &fsRef);
     if (err) return NS_ERROR_FAILURE;
-    NS_NewLocalFile(nsString(), PR_TRUE, getter_AddRefs(localDir));
+    NS_NewLocalFile(EmptyString(), PR_TRUE, getter_AddRefs(localDir));
     if (!localDir) return NS_ERROR_FAILURE;
     nsCOMPtr<nsILocalFileMac> localDirMac(do_QueryInterface(localDir));
     rv = localDirMac->InitWithFSRef(&fsRef);

@@ -76,7 +76,7 @@ CurrentAppDirMatchesPersistentDescriptor(xptiInterfaceInfoManager* aMgr,
     aMgr->GetApplicationDir(getter_AddRefs(appDir));
 
     nsCOMPtr<nsILocalFile> descDir;
-    nsresult rv = NS_NewNativeLocalFile(nsCString(), PR_FALSE, getter_AddRefs(descDir));
+    nsresult rv = NS_NewNativeLocalFile(EmptyCString(), PR_FALSE, getter_AddRefs(descDir));
     if(NS_FAILED(rv))
         return PR_FALSE;
 

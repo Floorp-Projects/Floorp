@@ -1442,7 +1442,7 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
             CFURLRef pathURLRef = ::CFURLCreateWithFileSystemPath(NULL, pathStrRef, kCFURLHFSPathStyle, true);
             if (pathURLRef)
             {
-                rv = NS_NewNativeLocalFile(nsCString(), PR_TRUE, getter_AddRefs(tempLocal));
+                rv = NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(tempLocal));
                 if (NS_SUCCEEDED(rv))
                 {
                     nsCOMPtr<nsILocalFileMac> tempLocalMac(do_QueryInterface(tempLocal));
@@ -1467,7 +1467,7 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
         regLocationData = regData;
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
-            rv = NS_NewNativeLocalFile(nsCString(), PR_TRUE, getter_AddRefs(tempLocal));
+            rv = NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(tempLocal));
         if (NS_SUCCEEDED(rv)) // regLocationData is ASCII so no loss
             rv = tempLocal->SetPersistentDescriptor(NS_LossyConvertUCS2toASCII(regLocationData));
 #else

@@ -1653,7 +1653,7 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   {
     widget->SetForegroundColor(NS_RGB(0, 0, 0));
     PRUint32 size;
-    mStatus->SetText(nsAutoString(),size);
+    mStatus->SetText(EmptyString(),size);
     mStatus->SetMaxTextLength(MAX_TEXT_LENGTH);
 
     nsITextWidget* textWidget = nsnull;
