@@ -1207,10 +1207,10 @@ void nsXULWindow::StaggerPosition(PRInt32 &aRequestedX, PRInt32 &aRequestedY,
   if (NS_FAILED(rv))
     return;
 
-  PRInt32 screenTop,
-          screenRight,
-          screenBottom,
-          screenLeft;
+  PRInt32 screenTop = 0,    // it's pointless to initialize these ...
+          screenRight = 0,  // ... but to prevent oversalubrious and ...
+          screenBottom = 0, // ... underbright compilers from ...
+          screenLeft = 0;   // ... issuing warnings.
   PRBool  gotScreen = PR_FALSE;
 
   { // fetch screen coordinates
