@@ -107,7 +107,7 @@ namespace MetaData {
             try {
                 a = JS2VAL_VOID;
                 b = JS2VAL_VOID;
-#ifdef DEBUG
+#ifdef TRACE_DEBUG
                 if (traceInstructions)
                     printInstruction(pc, bCon->getCodeStart(), bCon, this);
 #endif
@@ -493,7 +493,7 @@ namespace MetaData {
         delete [] activationStack;
     }
 
-#ifdef DEBUG
+#ifdef TRACE_DEBUG
 
     enum { BRANCH_OFFSET = 1, STR_PTR, TYPE_PTR, NAME_INDEX, FRAME_INDEX, BRANCH_PAIR, U16, FLOAT64, S32, BREAK_OFFSET_AND_COUNT };
     struct {

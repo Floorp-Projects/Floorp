@@ -610,6 +610,8 @@ public:
     JS2Class *type;                 // Type of values that may be stored in this variable
 
     virtual Access instanceMemberAccess()   { return ReadAccess; }
+    virtual void mark();
+
 };
 
 class InstanceSetter : public InstanceMember {
@@ -620,6 +622,7 @@ public:
     JS2Class *type;                 // Type of values that may be stored in this variable
 
     virtual Access instanceMemberAccess()   { return WriteAccess; }
+    virtual void mark();
 };
 
 class InstanceBinding {
@@ -1615,6 +1618,14 @@ public:
 
     inline char narrow(char16 ch) { return char(ch); }
 
+    inline void Setter::mark()              { GCMARKOBJECT(type); GCMARKOBJECT(code); }
+    inline void Getter::mark()              { GCMARKOBJECT(type); GCMARKOBJECT(code); }
+
+    inline void InstanceGetter::mark()      { InstanceMember::mark(); GCMARKOBJECT(type); GCMARKOBJECT(fInst); }
+    inline void InstanceSetter::mark()      { InstanceMember::mark(); GCMARKOBJECT(type); GCMARKOBJECT(fInst); }
+
+    inline void InstanceMember::mark()      { GCMARKOBJECT(multiname); }
+    
 }; // namespace MetaData
 
 inline bool operator==(MetaData::LocalBindingEntry *s1, const String &s2) { return s1->name == s2;}

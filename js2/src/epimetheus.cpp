@@ -223,16 +223,18 @@ js2val print(JS2Metadata * /* meta */, const js2val /* thisValue */, js2val argv
     return JS2VAL_UNDEFINED;
 }
 
+#ifdef TRACE_DEBUG
+js2val trace(JS2Metadata *meta, const js2val /* thisValue */, js2val /* argv */ [], uint32 /* argc */)
+{
+    meta->engine->traceInstructions = !meta->engine->traceInstructions;
+    return JS2VAL_UNDEFINED;
+}
+#endif
+
 #ifdef DEBUG
 js2val trees(JS2Metadata *meta, const js2val /* thisValue */, js2val /* argv */ [], uint32 /* argc */)
 {
     meta->showTrees = !meta->showTrees;
-    return JS2VAL_UNDEFINED;
-}
-
-js2val trace(JS2Metadata *meta, const js2val /* thisValue */, js2val /* argv */ [], uint32 /* argc */)
-{
-    meta->engine->traceInstructions = !meta->engine->traceInstructions;
     return JS2VAL_UNDEFINED;
 }
 
@@ -487,10 +489,11 @@ int main(int argc, char **argv)
     metadata->addGlobalObjectFunction("dump", dump, 1);
     metadata->addGlobalObjectFunction("dumpAt", dumpAt, 1);
     metadata->addGlobalObjectFunction("trees", trees, 0);
-    metadata->addGlobalObjectFunction("trace", trace, 0);
     metadata->addGlobalObjectFunction("gc", forceGC, 0);
 #endif
-
+#ifdef TRACE_DEBUG
+    metadata->addGlobalObjectFunction("trace", trace, 0);
+#endif
     try {
         bool doInteractive = true;
         int result = 0;

@@ -372,7 +372,7 @@ public:
 
 };
 
-#ifdef DEBUG
+#ifdef TRACE_DEBUG
 uint8 *printInstruction(uint8 *pc, uint8 *start, BytecodeContainer *bCon, JS2Engine *engine);
 #endif
 

@@ -3884,7 +3884,8 @@ static const uint8 urlCharType[256] =
         // A 'forbidden' member, used to mark hidden bindings
         forbiddenMember = new LocalMember(Member::ForbiddenMember, true);
     
-        FunctionInstance *fInst;
+        FunctionInstance *fInst = NULL;
+        DEFINE_ROOTKEEPER(rk1, fInst);
         Variable *v;
         
 // XXX Built-in Attributes... XXX 
@@ -4865,27 +4866,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     {
     }
 
- /************************************************************************************
- *
- *  Getter
- *
- ************************************************************************************/
-
-    void Getter::mark()
-    {
-        GCMARKOBJECT(type); 
-    }
-
- /************************************************************************************
- *
- *  Setter
- *
- ************************************************************************************/
-
-    void Setter::mark()
-    {
-        GCMARKOBJECT(type); 
-    }
 
  /************************************************************************************
  *
@@ -5115,19 +5095,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     {
         if (pluralFrame)
             env->instantiateFrame(pluralFrame, this);
-    }
-
-
- /************************************************************************************
- *
- *  InstanceMember
- *
- ************************************************************************************/
-
-    // gc-mark all contained JS2Objects and visit contained structures to do likewise
-    void InstanceMember::mark()                 
-    { 
-        GCMARKOBJECT(multiname);
     }
 
 

@@ -435,6 +435,7 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
 
     JS2RegExp *RE = NULL;
     const String *R = NULL;
+    DEFINE_ROOTKEEPER(rk2, R);
     if (meta->objectType(separatorV) == meta->regexpClass)
         RE = (checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(separatorV)))->mRegExp;
     else
@@ -463,7 +464,7 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
     }
 
     String *T = NULL;
-    DEFINE_ROOTKEEPER(rk2, T);
+    DEFINE_ROOTKEEPER(rk3, T);
 
     while (true) {
         uint32 q = p;
