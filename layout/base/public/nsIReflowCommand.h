@@ -103,6 +103,11 @@ public:
   NS_IMETHOD GetTarget(nsIFrame*& aTargetFrame) const = 0;
 
   /**
+   * Change the target of the reflow command.
+   */
+  NS_IMETHOD SetTarget(nsIFrame* aTargetFrame) = 0;
+
+  /**
    * Get the type of reflow command.
    */
   NS_IMETHOD GetType(ReflowType& aReflowType) const = 0;

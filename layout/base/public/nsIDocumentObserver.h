@@ -98,9 +98,12 @@ public:
    *
    * @param aDocument The document being observed
    * @param aContainer the container that had a new child appended
+   * @param aNewIndexInContainer the index in the container of the first
+   *          new child
    */
   NS_IMETHOD ContentAppended(nsIDocument *aDocument,
-                             nsIContent* aContainer) = 0;
+                             nsIContent* aContainer,
+                             PRInt32     aNewIndexInContainer) = 0;
 
   /**
    * Notification that content has been inserted. This method is called

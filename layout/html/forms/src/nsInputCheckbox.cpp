@@ -53,6 +53,18 @@ protected:
                               nsSize& aDesiredWidgetSize);
 };
 
+nsresult
+NS_NewInputCheckboxFrame(nsIContent* aContent,
+                         nsIFrame*   aParent,
+                         nsIFrame*&  aResult)
+{
+  aResult = new nsInputCheckboxFrame(aContent, aParent);
+  if (nsnull == aResult) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+
 nsInputCheckboxFrame::nsInputCheckboxFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsInputFrame(aContent, aParentFrame)
 {

@@ -86,6 +86,27 @@ nsBodyFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 /////////////////////////////////////////////////////////////////////////////
 // nsIFrame
 
+NS_IMETHODIMP
+nsBodyFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+{
+  // Create a block frame and set its style context
+  NS_NewCSSBlockFrame(&mFirstChild, mContent, this);
+  mChildCount = 1;
+  nsIStyleContext* pseudoStyleContext =
+   aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::columnPseudo, this);
+  mFirstChild->SetStyleContext(&aPresContext, pseudoStyleContext);
+  NS_RELEASE(pseudoStyleContext);
+
+  // Set the geometric and content parent for each of the child frames
+  for (nsIFrame* frame = aChildList; nsnull != frame; frame->GetNextSibling(frame)) {
+    frame->SetGeometricParent(mFirstChild);
+    frame->SetContentParent(mFirstChild);
+  }
+
+  // Queue up the frames for the block frame
+  return mFirstChild->Init(aPresContext, aChildList);
+}
+
 NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
                               nsReflowMetrics&     aDesiredSize,
                               const nsReflowState& aReflowState,
@@ -98,15 +119,20 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
+  // XXX CONSTRUCTION
   // Do we have any children?
   if (nsnull == mFirstChild) {
-    // No, create a pseudo block frame
+    // No, create a pseudo block frame.
+    // XXX Temp hack until all frame construction work is complete. This is needed
+    // in case the Init() member function wasn't called...
     NS_ASSERTION(eReflowReason_Initial == aReflowState.reason, "bad reason");
     CreateColumnFrame(&aPresContext);
   }
+#if 0
   else {
     NS_ASSERTION(eReflowReason_Initial != aReflowState.reason, "bad reason");
   }
+#endif
 
   nsIFrame*                    reflowCmdTarget;
   nsIReflowCommand::ReflowType reflowCmdType;
@@ -117,6 +143,27 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
     // Get the target and the type of reflow command
     aReflowState.reflowCommand->GetTarget(reflowCmdTarget);
     aReflowState.reflowCommand->GetType(reflowCmdType);
+
+    // XXX CONSTRUCTION
+    if (this == reflowCmdTarget) {
+      NS_ASSERTION(nsIReflowCommand::FrameAppended == reflowCmdType,
+                   "unexpected reflow command");
+
+      // Append reflow commands will be targeted at us. Reset the target and
+      // send the reflow command.
+      // XXX Would it be better to have the frame generate the reflow command
+      // that way it could correctly set the target?
+      reflowCmdTarget = mFirstChild;
+      aReflowState.reflowCommand->SetTarget(mFirstChild);
+
+      // Reset the geometric and content parent for each of the child frames
+      nsIFrame* childList;
+      aReflowState.reflowCommand->GetChildFrame(childList);
+      for (nsIFrame* frame = childList; nsnull != frame; frame->GetNextSibling(frame)) {
+        frame->SetGeometricParent(mFirstChild);
+        frame->SetContentParent(mFirstChild);
+      }
+    }
 
     // The reflow command should never be target for us
 #ifdef NS_DEBUG
@@ -131,7 +178,7 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
     // positioned elements...
     nsIFrame* nextFrame;
     aReflowState.reflowCommand->GetNext(nextFrame);
-    if (mFirstChild != nextFrame) {
+    if ((nsnull != nextFrame) && (mFirstChild != nextFrame)) {
       NS_ASSERTION(this != nextFrame, "huh?");
       NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                      ("nsBodyFrame::Reflow: reflowing frame=%p",
@@ -296,6 +343,8 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
   return NS_OK;
 }
 
+// XXX CONSTRUCTION
+#if 0
 NS_METHOD nsBodyFrame::ContentAppended(nsIPresShell*   aShell,
                                        nsIPresContext* aPresContext,
                                        nsIContent*     aContainer)
@@ -306,6 +355,7 @@ NS_METHOD nsBodyFrame::ContentAppended(nsIPresShell*   aShell,
   // reflow command
   return mFirstChild->ContentAppended(aShell, aPresContext, aContainer);
 }
+#endif
 
 NS_METHOD nsBodyFrame::ContentInserted(nsIPresShell*   aShell,
                                        nsIPresContext* aPresContext,
@@ -1044,4 +1094,5 @@ NS_METHOD nsBodyFrame::VerifyTree() const
 #endif
   return NS_OK;
 }
+
 

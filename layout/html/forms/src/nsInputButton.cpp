@@ -351,6 +351,18 @@ nsInputButton::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
 //----------------------------------------------------------------------
 // nsInputButtonFrame Implementation
 
+nsresult
+NS_NewInputButtonFrame(nsIContent* aContent,
+                       nsIFrame*   aParent,
+                       nsIFrame*&  aResult)
+{
+  aResult = new nsInputButtonFrame(aContent, aParent);
+  if (nsnull == aResult) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+
 nsInputButtonFrame::nsInputButtonFrame(nsIContent* aContent,
                            nsIFrame* aParentFrame)
   : nsInputFrame(aContent, aParentFrame)

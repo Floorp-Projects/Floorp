@@ -134,6 +134,7 @@ public:
   static nsIAtom* iframe;
   static nsIAtom* img;
   static nsIAtom* index;
+  static nsIAtom* input;
   static nsIAtom* ismap;
 
   static nsIAtom* label;
@@ -205,6 +206,7 @@ public:
   static nsIAtom* scheme;
   static nsIAtom* scope;
   static nsIAtom* scrolling;
+  static nsIAtom* select;
   static nsIAtom* selected;
   static nsIAtom* selectedindex;
   static nsIAtom* shape;
@@ -224,6 +226,7 @@ public:
   static nsIAtom* target;
   static nsIAtom* td;
   static nsIAtom* text;
+  static nsIAtom* textarea;
   static nsIAtom* th;
   static nsIAtom* title;
   static nsIAtom* top;

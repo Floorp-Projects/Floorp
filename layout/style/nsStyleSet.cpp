@@ -22,8 +22,13 @@
 #include "nsISupportsArray.h"
 #include "nsIFrame.h"
 #include "nsHashtable.h"
+#include "nsIPresContext.h"
+#include "nsIPresShell.h"
+#include "nsIContent.h"
+#include "nsIStyleFrameConstruction.h"
 
 static NS_DEFINE_IID(kIStyleSetIID, NS_ISTYLE_SET_IID);
+static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_IID);
 
 class ContextKey : public nsHashKey {
 public:
@@ -207,6 +212,31 @@ public:
                                                nsIFrame* aParentFrame,
                                                PRBool aForceUnique = PR_FALSE);
 
+  NS_IMETHODIMP ConstructFrame(nsIPresContext* aPresContext,
+                               nsIContent*     aContent,
+                               nsIFrame*       aParentFrame,
+                               nsIFrame*&      aFrameSubTree);
+  NS_IMETHOD ContentAppended(nsIPresContext* aPresContext,
+                             nsIDocument*    aDocument,
+                             nsIContent*     aContainer,
+                             PRInt32         aNewIndexInContainer);
+  NS_IMETHOD ContentInserted(nsIPresContext* aPresContext,
+                             nsIDocument*    aDocument,
+                             nsIContent*     aContainer,
+                             nsIContent*     aChild,
+                             PRInt32         aIndexInContainer);
+  NS_IMETHOD ContentReplaced(nsIPresContext* aPresContext,
+                             nsIDocument*    aDocument,
+                             nsIContent*     aContainer,
+                             nsIContent*     aOldChild,
+                             nsIContent*     aNewChild,
+                             PRInt32         aIndexInContainer);
+  NS_IMETHOD ContentRemoved(nsIPresContext* aPresContext,
+                            nsIDocument*    aDocument,
+                            nsIContent*     aContainer,
+                            nsIContent*     aChild,
+                            PRInt32         aIndexInContainer);
+
   // xxx style rules enumeration
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0);
@@ -240,13 +270,15 @@ protected:
   nsISupportsArray* mDocSheets;
   nsISupportsArray* mBackstopSheets;
   nsHashtable mStyleContexts;
+  nsIStyleFrameConstruction* mFrameConstructor;
 };
 
 
 StyleSetImpl::StyleSetImpl()
   : mOverrideSheets(nsnull),
     mDocSheets(nsnull),
-    mBackstopSheets(nsnull)
+    mBackstopSheets(nsnull),
+    mFrameConstructor(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -262,6 +294,7 @@ StyleSetImpl::~StyleSetImpl()
   NS_IF_RELEASE(mOverrideSheets);
   NS_IF_RELEASE(mDocSheets);
   NS_IF_RELEASE(mBackstopSheets);
+  NS_IF_RELEASE(mFrameConstructor);
   mStyleContexts.Enumerate(ReleaseContext);
 }
 
@@ -340,6 +373,9 @@ void StyleSetImpl::AppendDocStyleSheet(nsIStyleSheet* aSheet)
   NS_PRECONDITION(nsnull != aSheet, "null arg");
   if (EnsureArray(&mDocSheets)) {
     mDocSheets->AppendElement(aSheet);
+    if (nsnull == mFrameConstructor) {
+      aSheet->QueryInterface(kIStyleFrameConstructionIID, (void **)&mFrameConstructor);
+    }
   }
 }
 
@@ -350,6 +386,9 @@ void StyleSetImpl::InsertDocStyleSheetAfter(nsIStyleSheet* aSheet,
   if (EnsureArray(&mDocSheets)) {
     PRInt32 index = mDocSheets->IndexOf(aAfterSheet);
     mDocSheets->InsertElementAt(aSheet, ++index);
+    if (nsnull == mFrameConstructor) {
+      aSheet->QueryInterface(kIStyleFrameConstructionIID, (void **)&mFrameConstructor);
+    }
   }
 }
 
@@ -360,6 +399,9 @@ void StyleSetImpl::InsertDocStyleSheetBefore(nsIStyleSheet* aSheet,
   if (EnsureArray(&mDocSheets)) {
     PRInt32 index = mDocSheets->IndexOf(aBeforeSheet);
     mDocSheets->InsertElementAt(aSheet, ((-1 < index) ? index : 0));
+    if (nsnull == mFrameConstructor) {
+      aSheet->QueryInterface(kIStyleFrameConstructionIID, (void **)&mFrameConstructor);
+    }
   }
 }
 
@@ -663,6 +705,67 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
   NS_IF_RELEASE(parentContext);
 
   return result;
+}
+
+NS_IMETHODIMP StyleSetImpl::ConstructFrame(nsIPresContext* aPresContext,
+                                           nsIContent*     aContent,
+                                           nsIFrame*       aParentFrame,
+                                           nsIFrame*&      aFrameSubTree)
+{
+  return mFrameConstructor->ConstructFrame(aPresContext, aContent,
+                                           aParentFrame, aFrameSubTree);
+}
+
+NS_IMETHODIMP StyleSetImpl::ContentAppended(nsIPresContext* aPresContext,
+                                            nsIDocument*    aDocument,
+                                            nsIContent*     aContainer,
+                                            PRInt32         aNewIndexInContainer)
+{
+  return mFrameConstructor->ContentAppended(aPresContext, aDocument,
+                                            aContainer, aNewIndexInContainer);
+}
+
+NS_IMETHODIMP StyleSetImpl::ContentInserted(nsIPresContext* aPresContext,
+                                            nsIDocument*    aDocument,
+                                            nsIContent*     aContainer,
+                                            nsIContent*     aChild,
+                                            PRInt32         aIndexInContainer)
+{
+#if 0
+  return mFrameConstructor->ContentInserted(aPresContext, aDocument, aContainer,
+                                            aChild, aIndexInContainer);
+#else
+  return NS_OK;
+#endif
+}
+
+NS_IMETHODIMP StyleSetImpl::ContentReplaced(nsIPresContext* aPresContext,
+                                            nsIDocument*    aDocument,
+                                            nsIContent*     aContainer,
+                                            nsIContent*     aOldChild,
+                                            nsIContent*     aNewChild,
+                                            PRInt32         aIndexInContainer)
+{
+#if 0
+  return mFrameConstructor->ContentReplaced(aPresContext, aDocument, aContainer,
+                                            aOldChild, aNewChild, aIndexInContainer);
+#else
+  return NS_OK;
+#endif
+}
+
+NS_IMETHODIMP StyleSetImpl::ContentRemoved(nsIPresContext* aPresContext,
+                                           nsIDocument*    aDocument,
+                                           nsIContent*     aContainer,
+                                           nsIContent*     aChild,
+                                           PRInt32         aIndexInContainer)
+{
+#if 0
+  return mFrameConstructor->ContentRemoved(aPresContext, aDocument, aContainer,
+                                           aChild, aIndexInContainer);
+#else
+  return NS_OK;
+#endif
 }
 
 // xxx style rules enumeration

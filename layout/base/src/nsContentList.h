@@ -69,7 +69,8 @@ public:
 			    nsIContent* aContent,
                             nsISupports* aSubContent) { return NS_OK; }
   NS_IMETHOD ContentAppended(nsIDocument *aDocument,
-			     nsIContent* aContainer);
+			     nsIContent* aContainer,
+           PRInt32     aNewIndexInContainer);
   NS_IMETHOD ContentInserted(nsIDocument *aDocument,
 			     nsIContent* aContainer,
                              nsIContent* aChild,

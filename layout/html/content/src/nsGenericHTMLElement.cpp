@@ -3266,7 +3266,7 @@ nsGenericHTMLContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
     if (nsnull != doc) {
       aKid->SetDocument(doc);
       if (aNotify) {
-        doc->ContentAppended(mContent);
+        doc->ContentAppended(mContent, mChildren->Count() - 1);
       }
     }
   }

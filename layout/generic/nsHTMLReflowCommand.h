@@ -46,6 +46,7 @@ public:
                       const nsSize&    aMaxSize);
   NS_IMETHOD GetNext(nsIFrame*& aNextFrame);
   NS_IMETHOD GetTarget(nsIFrame*& aTargetFrame) const;
+  NS_IMETHOD SetTarget(nsIFrame* aTargetFrame);
   NS_IMETHOD GetType(ReflowType& aReflowType) const;
   NS_IMETHOD GetChildFrame(nsIFrame*& aChildFrame) const;
 

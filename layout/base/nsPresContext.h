@@ -26,6 +26,7 @@
 struct nsFont;
 
 class nsIContent;
+class nsIDocument;
 class nsIDeviceContext;
 class nsIFontMetrics;
 class nsIFrame;
@@ -214,6 +215,35 @@ public:
   virtual nsIDeviceContext * GetDeviceContext() const = 0;
 
   NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager) = 0;
+
+  /**
+   * Handles association of elements in the content model to frames. Finds the
+   * applicable construction rule, applies the action, and produces a sub-tree
+   * of frame objects. Can return nsnull.
+   */
+  NS_IMETHOD  ConstructFrame(nsIContent* aContent,
+                             nsIFrame*   aParentFrame,
+                             nsIFrame*&  aFrameSubTree) = 0;
+
+  /**
+   * Notifications of content changes
+   */
+  NS_IMETHOD  ContentAppended(nsIDocument* aDocument,
+                              nsIContent*  aContainer,
+                              PRInt32      aNewIndexInContainer) = 0;
+  NS_IMETHOD  ContentInserted(nsIDocument* aDocument,
+                              nsIContent*  aContainer,
+                              nsIContent*  aChild,
+                              PRInt32      aIndexInContainer) = 0;
+  NS_IMETHOD  ContentReplaced(nsIDocument *aDocument,
+                              nsIContent* aContainer,
+                              nsIContent* aOldChild,
+                              nsIContent* aNewChild,
+                              PRInt32     aIndexInContainer) = 0;
+  NS_IMETHOD  ContentRemoved(nsIDocument* aDocument,
+                             nsIContent*  aContainer,
+                             nsIContent*  aChild,
+                             PRInt32      aIndexInContainer) = 0;
 };
 
 // Bit values for StartLoadImage's aImageStatus

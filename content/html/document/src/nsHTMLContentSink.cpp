@@ -170,6 +170,7 @@ public:
 
   nsIHTMLContent* mRoot;
   nsIHTMLContent* mBody;
+  PRInt32         mBodyChildCount;
   nsIHTMLContent* mFrameset;
   nsIHTMLContent* mHead;
   nsString* mTitle;
@@ -1378,7 +1379,8 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
              ("HTMLContentSink::DidBuildModel: layout final content"));
 
   // Reflow the last batch of content
-  mDocument->ContentAppended(mBody);
+  mDocument->ContentAppended(mBody, mBodyChildCount);
+  mBody->ChildCount(mBodyChildCount);
   ScrollToRef();
 
   mDocument->EndLoad();
@@ -1391,7 +1393,8 @@ HTMLContentSink::WillInterrupt()
   SINK_TRACE(SINK_TRACE_CALLS,
              ("HTMLContentSink::WillInterrupt: this=%p", this));
   if (mDirty && !mInMonolithicContainer) {
-    mDocument->ContentAppended(mBody);
+    mDocument->ContentAppended(mBody, mBodyChildCount);
+    mBody->ChildCount(mBodyChildCount);
     mDirty = PR_FALSE;
   }
   return NS_OK;
@@ -1571,6 +1574,7 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
     return rv;
   }
   mBody = mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;
+  mBodyChildCount = 0;
   NS_ADDREF(mBody);
 
   StartLayout();
@@ -1592,7 +1596,8 @@ HTMLContentSink::CloseBody(const nsIParserNode& aNode)
 
   if (didFlush) {
     // Trigger a reflow for the flushed text
-    mDocument->ContentAppended(mBody);
+    mDocument->ContentAppended(mBody, mBodyChildCount);
+    mBody->ChildCount(mBodyChildCount);
   }
 
   return NS_OK;
@@ -1815,7 +1820,7 @@ HTMLContentSink::StartLayout()
       nsIPresContext* cx = shell->GetPresContext();
       nsRect r;
       cx->GetVisibleArea(r);
-      shell->ResizeReflow(r.width, r.height);
+      shell->InitialReflow(r.width, r.height);
       NS_RELEASE(cx);
 
       // Now trigger a refresh

@@ -57,6 +57,18 @@ protected:
                               nsSize& aDesiredWidgetSize);
 };
 
+nsresult
+NS_NewInputRadioFrame(nsIContent* aContent,
+                      nsIFrame*   aParent,
+                      nsIFrame*&  aResult)
+{
+  aResult = new nsInputRadioFrame(aContent, aParent);
+  if (nsnull == aResult) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+
 nsInputRadioFrame::nsInputRadioFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsInputFrame(aContent, aParentFrame)
 {

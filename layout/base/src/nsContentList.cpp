@@ -277,7 +277,8 @@ void nsContentList::PopulateSelf(nsIContent *aContent)
 
 NS_IMETHODIMP
 nsContentList::ContentAppended(nsIDocument *aDocument,
-                               nsIContent* aContainer)
+                               nsIContent* aContainer,
+                               PRInt32     aNewIndexInContainer)
 {
   PRInt32 count;
   aContainer->ChildCount(count);

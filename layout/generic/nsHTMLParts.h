@@ -282,6 +282,40 @@ nsresult
 NS_NewWBRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                nsIFrame*& aResult);
 
+extern nsresult
+NS_NewCSSInlineFrame(nsIFrame**  aInstancePtrResult,
+                     nsIContent* aContent,
+                     nsIFrame*   aParent);
+
+extern nsresult
+NS_NewCSSBlockFrame(nsIFrame**  aInstancePtrResult,
+                    nsIContent* aContent,
+                    nsIFrame*   aParent);
+
+extern nsresult
+NS_NewInputButtonFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                       nsIFrame*& aResult);
+
+extern nsresult
+NS_NewInputCheckboxFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                         nsIFrame*& aResult);
+
+extern nsresult
+NS_NewInputFileFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                     nsIFrame*& aResult);
+
+extern nsresult
+NS_NewInputTextFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                     nsIFrame*& aResult);
+
+extern nsresult
+NS_NewInputRadioFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                      nsIFrame*& aResult);
+
+extern nsresult
+NS_NewHTMLSelectFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                      nsIFrame*& aResult);
+
 // Everything below this line is obsolete...
 //----------------------------------------------------------------------
 // XXX naming consistency puhleeze!

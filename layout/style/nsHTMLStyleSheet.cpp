@@ -35,10 +35,17 @@
 #include "nsTableColFrame.h"
 #include "nsTableFrame.h"
 #include "nsHTMLIIDs.h"
+#include "nsIStyleFrameConstruction.h"
+#include "nsHTMLParts.h"
+#include "nsIPresShell.h"
+#include "nsIViewManager.h"
+#include "nsStyleConsts.h"
+#include "nsTableOuterFrame.h"
 
 static NS_DEFINE_IID(kIHTMLStyleSheetIID, NS_IHTML_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
+static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_IID);
 
 
 class HTMLAnchorRule : public nsIStyleRule {
@@ -173,7 +180,8 @@ nsHashKey* AttributeKey::Clone(void) const
 
 // -----------------------------------------------------------
 
-class HTMLStyleSheetImpl : public nsIHTMLStyleSheet {
+class HTMLStyleSheetImpl : public nsIHTMLStyleSheet,
+                           public nsIStyleFrameConstruction {
 public:
   void* operator new(size_t size);
   void* operator new(size_t size, nsIArena* aArena);
@@ -217,6 +225,15 @@ public:
   NS_IMETHOD UnsetAttributeFor(nsIAtom* aAttribute, nsIHTMLContent* aContent, 
                                nsIHTMLAttributes*& aAttributes);
 
+  NS_IMETHOD ConstructFrame(nsIPresContext* aPresContext,
+                            nsIContent*     aContent,
+                            nsIFrame*       aParentFrame,
+                            nsIFrame*&      aFrameSubTree);
+
+  NS_IMETHOD ContentAppended(nsIPresContext* aPresContext,
+                             nsIDocument*    aDocument,
+                             nsIContent*     aContainer,
+                             PRInt32         aNewIndexInContainer);
 
   // XXX style rule enumerations
 
@@ -238,6 +255,14 @@ protected:
                               nsMapAttributesFunc aMapFunc,
                               PRInt32 aAttrCount,
                               nsIHTMLAttributes*& aAttributes);
+
+  nsresult ProcessChildren(nsIPresContext* aPresContext,
+                           nsIFrame*       aFrame,
+                           nsIContent*     aContent);
+
+  nsresult CreateInputFrame(nsIContent* aContent,
+                            nsIFrame*   aParentFrame,
+                            nsIFrame*&  aFrame);
 
 protected:
   PRUint32 mInHeap : 1;
@@ -330,8 +355,13 @@ nsresult HTMLStyleSheetImpl::QueryInterface(const nsIID& aIID,
     AddRef();
     return NS_OK;
   }
+  if (aIID.Equals(kIStyleFrameConstructionIID)) {
+    *aInstancePtrResult = (void*) ((nsIStyleFrameConstruction*)this);
+    AddRef();
+    return NS_OK;
+  }
   if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtrResult = (void*) ((nsISupports*)this);
+    *aInstancePtrResult = (void*) this;
     AddRef();
     return NS_OK;
   }
@@ -816,6 +846,316 @@ NS_IMETHODIMP HTMLStyleSheetImpl::UnsetAttributeFor(nsIAtom* aAttribute,
 
 }
 
+nsresult HTMLStyleSheetImpl::ProcessChildren(nsIPresContext* aPresContext,
+                                             nsIFrame*       aFrame,
+                                             nsIContent*     aContent)
+{
+  nsIFrame* childList = nsnull;
+  nsIFrame* lastChildFrame = nsnull;
+  PRInt32   count;
+  aContent->ChildCount(count);
+
+  for (PRInt32 i = 0; i < count; i++) {
+    nsIContent* childContent;
+    aContent->ChildAt(i, childContent);
+
+    if (nsnull != childContent) {
+      nsIFrame* childFrame;
+
+      // Construct a child frame
+      ConstructFrame(aPresContext, childContent, aFrame, childFrame);
+
+      if (nsnull != childFrame) {
+        // Link the frame into the child list
+        if (nsnull == lastChildFrame) {
+          childList = childFrame;
+        } else {
+          lastChildFrame->SetNextSibling(childFrame);
+        }
+        lastChildFrame = childFrame;
+      }
+
+      NS_RELEASE(childContent);
+    }
+  }
+
+  // Initialize the frame giving it its child list.
+  // XXX Should we call Init(), or just return the child list and let the
+  // caller call Init()?
+  aFrame->Init(*aPresContext, childList);
+  return NS_OK;
+}
+
+nsresult
+HTMLStyleSheetImpl::CreateInputFrame(nsIContent* aContent,
+                                     nsIFrame*   aParentFrame,
+                                     nsIFrame*&  aFrame)
+{
+  nsresult  rv;
+
+  // Figure out which type of input frame to create
+  nsAutoString  val;
+  if (NS_OK == aContent->GetAttribute(nsAutoString("type"), val)) {
+    if (val.EqualsIgnoreCase("submit")) {
+      rv = NS_NewInputButtonFrame(aContent, aParentFrame, aFrame);
+    }
+    else if (val.EqualsIgnoreCase("reset")) {
+      rv = NS_NewInputButtonFrame(aContent, aParentFrame, aFrame);
+    }
+    else if (val.EqualsIgnoreCase("button")) {
+      rv = NS_NewInputButtonFrame(aContent, aParentFrame, aFrame);
+    }
+    else if (val.EqualsIgnoreCase("checkbox")) {
+      rv = NS_NewInputCheckboxFrame(aContent, aParentFrame, aFrame);
+    }
+    else if (val.EqualsIgnoreCase("file")) {
+      rv = NS_NewInputFileFrame(aContent, aParentFrame, aFrame);
+    }
+    else if (val.EqualsIgnoreCase("hidden")) {
+      rv = NS_NewInputButtonFrame(aContent, aParentFrame, aFrame);
+    }
+    else if (val.EqualsIgnoreCase("image")) {
+      rv = NS_NewInputButtonFrame(aContent, aParentFrame, aFrame);
+    }
+    else if (val.EqualsIgnoreCase("password")) {
+      rv = NS_NewInputTextFrame(aContent, aParentFrame, aFrame);
+    }
+    else if (val.EqualsIgnoreCase("radio")) {
+      rv = NS_NewInputRadioFrame(aContent, aParentFrame, aFrame);
+    }
+    else if (val.EqualsIgnoreCase("text")) {
+      rv = NS_NewInputTextFrame(aContent, aParentFrame, aFrame);
+    }
+    else {
+      rv = NS_NewInputTextFrame(aContent, aParentFrame, aFrame);
+    }
+  } else {
+    rv = NS_NewInputTextFrame(aContent, aParentFrame, aFrame);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext* aPresContext,
+                                                 nsIContent*     aContent,
+                                                 nsIFrame*       aParentFrame,
+                                                 nsIFrame*&      aFrameSubTree)
+{
+  // Get the tag
+  nsIAtom*  tag;
+  aContent->GetTag(tag);
+
+  aFrameSubTree = nsnull;
+
+  // Resolve the style context.
+  // XXX Cheesy hack for text
+  nsIStyleContext* styleContext;
+  if (nsnull == tag) {
+    styleContext = aPresContext->ResolvePseudoStyleContextFor(nsHTMLAtoms::text, aParentFrame);
+  } else {
+    styleContext = aPresContext->ResolveStyleContextFor(aContent, aParentFrame);
+  }
+
+  // Create a frame.
+  if (nsnull == aParentFrame) {
+    // This should only be the case for the root content object.
+    // XXX Add assertion...
+    nsIFrame* rootFrame;
+
+    // Create the root frame and set its style context
+    NS_NewHTMLFrame(aContent, nsnull, rootFrame);
+    rootFrame->SetStyleContext(aPresContext, styleContext);
+
+    // Bind root frame to root view (and root window)
+    nsIPresShell*   presShell = aPresContext->GetShell();
+    nsIViewManager* viewManager = presShell->GetViewManager();
+    nsIView*        rootView;
+
+    NS_RELEASE(presShell);
+    viewManager->GetRootView(rootView);
+    rootFrame->SetView(rootView);
+    NS_RELEASE(viewManager);
+
+    // Process the children
+    ProcessChildren(aPresContext, rootFrame, aContent);
+
+    // Return the frame sub-tree
+    aFrameSubTree = rootFrame;
+
+  } else {
+    nsIFrame* frame = nsnull;
+    nsresult  rv = NS_OK;
+
+    // Handle specific frame types
+    if (nsnull == tag) {
+      rv = NS_NewTextFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::applet == tag) {
+      rv = NS_NewObjectFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::body == tag) {
+      rv = NS_NewBodyFrame(aContent, aParentFrame, frame);
+
+      // Process the children
+      ProcessChildren(aPresContext, frame, aContent);
+    }
+    else if (nsHTMLAtoms::frameset == tag) {
+      rv = NS_NewHTMLFramesetFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::br == tag) {
+      rv = NS_NewBRFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::embed == tag) {
+      rv = NS_NewObjectFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::hr == tag) {
+      rv = NS_NewHRFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::img == tag) {
+      rv = NS_NewImageFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::object == tag) {
+      rv = NS_NewObjectFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::spacer == tag) {
+      rv = NS_NewSpacerFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::wbr == tag) {
+      rv = NS_NewWBRFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::table == tag) {
+      rv = nsTableOuterFrame::NewFrame(&frame, aContent, aParentFrame);
+    }
+    else if (nsHTMLAtoms::input == tag) {
+      rv = CreateInputFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::textarea == tag) {
+      rv = NS_NewInputTextFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::select == tag) {
+      rv = NS_NewHTMLSelectFrame(aContent, aParentFrame, frame);
+    }
+    if (NS_OK != rv) {
+      NS_RELEASE(styleContext);
+      NS_IF_RELEASE(tag);
+      return rv;
+    }
+  
+    // XXX add code in here to force the odd ones into the empty frame?
+    // AREA, HEAD, META, MAP, etc...
+  
+    if (nsnull == frame) {
+      // When there is no explicit frame to create, assume it's a
+      // container and let style dictate the rest.
+      const nsStyleDisplay* styleDisplay = (const nsStyleDisplay*)
+        styleContext->GetStyleData(eStyleStruct_Display);
+  
+      // Use style to choose what kind of frame to create
+      nsresult rv;
+      switch (styleDisplay->mDisplay) {
+      case NS_STYLE_DISPLAY_BLOCK:
+      case NS_STYLE_DISPLAY_LIST_ITEM:
+        rv = NS_NewCSSBlockFrame(&frame, aContent, aParentFrame);
+        ProcessChildren(aPresContext, frame, aContent);
+        break;
+  
+      case NS_STYLE_DISPLAY_INLINE:
+        rv = NS_NewCSSInlineFrame(&frame, aContent, aParentFrame);
+        break;
+  
+      default:
+        // XXX Don't create a placeholder frame for content that's not
+        // displayed...
+#if 0
+        // Create an empty frame for holding content that is not being
+        // reflowed.
+        rv = nsFrame::NewFrame(&frame, aContent, aParentFrame);
+#endif
+        break;
+      }
+      if (NS_OK != rv) {
+        NS_RELEASE(styleContext);
+        NS_IF_RELEASE(tag);
+        return rv;
+      }
+    }
+  
+    if (nsnull != frame) {
+      frame->SetStyleContext(aPresContext, styleContext);
+    }
+    aFrameSubTree = frame;
+  }
+
+  NS_RELEASE(styleContext);
+  NS_IF_RELEASE(tag);
+  return NS_OK;
+}
+
+NS_IMETHODIMP HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
+                                                  nsIDocument*    aDocument,
+                                                  nsIContent*     aContainer,
+                                                  PRInt32         aNewIndexInContainer)
+{
+  nsIPresShell* shell = aPresContext->GetShell();
+  nsIContent* parentContainer = aContainer;
+  while (nsnull != parentContainer) {
+    nsIFrame* parentFrame = shell->FindFrameWithContent(parentContainer);
+    if (nsnull != parentFrame) {
+      // Get the parent frame's last-in-flow
+      nsIFrame* nextInFlow = parentFrame;
+      while (nsnull != nextInFlow) {
+        parentFrame->GetNextInFlow(nextInFlow);
+        if (nsnull != nextInFlow) {
+          parentFrame = nextInFlow;
+        }
+      }
+
+      // Create some new frames
+      PRInt32   count;
+      nsIFrame* lastChildFrame = nsnull;
+      nsIFrame* firstAppendedFrame = nsnull;
+
+      aContainer->ChildCount(count);
+
+      for (PRInt32 i = aNewIndexInContainer; i < count; i++) {
+        nsIContent* child;
+        nsIFrame*   frame;
+
+        aContainer->ChildAt(i, child);
+        ConstructFrame(aPresContext, child, parentFrame, frame);
+
+        // Link the frame into the child frame list
+        if (nsnull == lastChildFrame) {
+          firstAppendedFrame = frame;
+        } else {
+          lastChildFrame->SetNextSibling(frame);
+        }
+
+        // XXX We should probably mark the frame as being dirty: that way the
+        // parent frame can easily identify the newly added frames. Either that
+        // or pass along in count in which case they must be contiguus...
+        lastChildFrame = frame;
+      }
+
+      // Notify the parent frame with a reflow command, passing it the list of
+      // new frames.
+      nsIReflowCommand* reflowCmd;
+      nsresult          result;
+
+      result = NS_NewHTMLReflowCommand(&reflowCmd, parentFrame,
+                                       nsIReflowCommand::FrameAppended,
+                                       firstAppendedFrame);
+      if (NS_SUCCEEDED(result)) {
+        shell->AppendReflowCommand(reflowCmd);
+      }
+      break;
+    }
+    parentContainer->GetParent(parentContainer);
+  }
+
+  NS_RELEASE(shell);
+  return NS_OK;
+}
 
 void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 {

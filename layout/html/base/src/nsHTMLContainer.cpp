@@ -203,7 +203,7 @@ nsHTMLContainer::AppendChildTo(nsIContent* aKid, PRBool aNotify)
     if (nsnull != doc) {
       aKid->SetDocument(doc);
       if (aNotify) {
-        doc->ContentAppended(this);
+        doc->ContentAppended(this, mChildren.Count() - 1);
       }
     }
   }
