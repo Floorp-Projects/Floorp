@@ -140,8 +140,18 @@ nsPrincipal::GetOrigin(char **aOrigin)
   NS_ASSERTION(uri, "No Domain or Codebase");
 
   nsCAutoString hostPort;
-  nsresult rv = uri->GetHostPort(hostPort);
-  if (NS_SUCCEEDED(rv)) {
+
+  // chrome: URLs don't have a meaningful origin, so make
+  // sure we just get the full spec for them.
+  // XXX this should be removed in favor of the solution in
+  // bug 160042.
+  PRBool isChrome;
+  nsresult rv = uri->SchemeIs("chrome", &isChrome);
+  if (NS_SUCCEEDED(rv) && !isChrome) {
+    rv = uri->GetHostPort(hostPort);
+  }
+
+  if (NS_SUCCEEDED(rv) && !isChrome) {
     nsCAutoString scheme;
     rv = uri->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);

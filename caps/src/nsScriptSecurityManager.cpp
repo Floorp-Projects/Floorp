@@ -1654,25 +1654,28 @@ nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
     rv = CreateCodebasePrincipal(aURI, getter_AddRefs(principal));
     if (NS_FAILED(rv)) return rv;
 
-    //-- Check to see if we already have this principal.
-    nsCOMPtr<nsIPrincipal> fromTable;
-    mPrincipals.Get(principal, getter_AddRefs(fromTable));
-    if (fromTable)
-        principal = fromTable;
-    else //-- Check to see if we have a more general principal
+    if (mPrincipals.Count() > 0)
     {
-        nsXPIDLCString originUrl;
-        rv = principal->GetOrigin(getter_Copies(originUrl));
-        if (NS_FAILED(rv)) return rv;
-        nsCOMPtr<nsIURI> newURI;
-        rv = NS_NewURI(getter_AddRefs(newURI), originUrl, nsnull, sIOService);
-        if (NS_FAILED(rv)) return rv;
-        nsCOMPtr<nsIPrincipal> principal2;
-        rv = CreateCodebasePrincipal(newURI, getter_AddRefs(principal2));
-        if (NS_FAILED(rv)) return rv;
-        mPrincipals.Get(principal2, getter_AddRefs(fromTable));
+        //-- Check to see if we already have this principal.
+        nsCOMPtr<nsIPrincipal> fromTable;
+        mPrincipals.Get(principal, getter_AddRefs(fromTable));
         if (fromTable)
             principal = fromTable;
+        else //-- Check to see if we have a more general principal
+        {
+            nsXPIDLCString originUrl;
+            rv = principal->GetOrigin(getter_Copies(originUrl));
+            if (NS_FAILED(rv)) return rv;
+            nsCOMPtr<nsIURI> newURI;
+            rv = NS_NewURI(getter_AddRefs(newURI), originUrl, nsnull, sIOService);
+            if (NS_FAILED(rv)) return rv;
+            nsCOMPtr<nsIPrincipal> principal2;
+            rv = CreateCodebasePrincipal(newURI, getter_AddRefs(principal2));
+            if (NS_FAILED(rv)) return rv;
+            mPrincipals.Get(principal2, getter_AddRefs(fromTable));
+            if (fromTable)
+                principal = fromTable;
+        }
     }
 
     NS_IF_ADDREF(*result = principal);
