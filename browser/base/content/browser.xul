@@ -789,7 +789,7 @@ Contributor(s):
   
     <!-- Bookmarks in the personal toolbar folder -->
     <toolbar id="PersonalToolbar" class="chromeclass-directories">
-      <bookmarks-toolbar id="bookmarks-toolbar" flex="1"/>
+      <bookmarks-toolbar id="bookmarks-toolbar" hidden="true" flex="1"/>
     </toolbar>
 
   </toolbox>
