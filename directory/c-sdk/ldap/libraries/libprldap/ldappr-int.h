@@ -61,6 +61,15 @@
  */
 #define PRLDAP_DEFAULT_ADDRESS_FAMILY	PR_AF_INET6
 
+/*
+ * Max length for sending message with one PR_Send.
+ * If a single message is larger than this size, the message is divided
+ * into multiple pieces up to this length and sent out.  This is necessary
+ * on Microsoft Windows at least where attempts to send really large
+ * messages in one PR_Send() call result in an error.
+ */
+#define PRLDAP_MAX_SEND_SIZE (8*1024*1024) /* 8MB */
+
 
 /*
  * Data structures:

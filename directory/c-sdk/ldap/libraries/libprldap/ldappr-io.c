@@ -198,15 +198,37 @@ prldap_write( int s, const void *buf, int len,
 	struct lextiof_socket_private *socketarg )
 {
     PRIntervalTime	prit;
+    char		*ptr = (char *)buf;
+    int			rest = len;
 
     prit = prldap_timeout2it( LDAP_X_IO_TIMEOUT_NO_TIMEOUT,
 			socketarg->prsock_io_max_timeout );
 
-    /*
-     * Note the 4th parameter (flags) to PR_Send() has been obsoleted and
-     * must always be 0
-     */
-    return( PR_Send( PRLDAP_GET_PRFD(socketarg), buf, len, 0, prit ));
+    while ( rest > 0 ) {
+	int rval;
+	if ( rest > PRLDAP_MAX_SEND_SIZE ) {
+	    len = PRLDAP_MAX_SEND_SIZE;
+	} else {
+	    len = rest;
+	}
+	/*
+	 * Note the 4th parameter (flags) to PR_Send() has been obsoleted and
+	 * must always be 0
+	 */
+	rval = PR_Send( PRLDAP_GET_PRFD(socketarg), ptr, len, 0, prit );
+	if ( 0 > rval ) {
+	    return rval;
+	}
+
+	if ( 0 == rval ) {
+	    break;
+	}
+
+	ptr += rval;
+	rest -= rval;
+    }
+
+    return (int)( ptr - (char *)buf );
 }
 
 
