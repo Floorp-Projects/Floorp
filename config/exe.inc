@@ -32,7 +32,7 @@ CONFIG_EXE_INC=1
 #// Rule to build a 16-bit executable using the PROGRAM target
 #//
 #//------------------------------------------------------------------------
-$(PROGRAM):: $(OBJDIR) $(OBJS) $(LLIBS) $(RESFILE) $(DEFFILE) $(MISCDEP)
+$(PROGRAM):: $(OBJDIR) $(OBJS) $(LLIBS) $(RESFILE) $(DEFFILE) $(MISCDEP) makefile.win  $(DEPTH)\config\exe.inc
 	echo +++ make: Creating EXE: $@
 #   //
 #   // create response file for the command.  The format is:
@@ -65,7 +65,7 @@ $(PROGRAM):: $(OBJDIR) $(OBJS) $(LLIBS) $(RESFILE) $(DEFFILE) $(MISCDEP)
 #// Rule to build a 32-bit executable using the PROGRAM target
 #//
 #//------------------------------------------------------------------------
-$(PROGRAM):: $(OBJDIR) $(OBJS) $(LLIBS) $(RESFILE) $(DEFFILE) $(MISCDEP)
+$(PROGRAM):: $(OBJDIR) $(OBJS) $(LLIBS) $(RESFILE) $(DEFFILE) $(MISCDEP) makefile.win  $(DEPTH)\config\exe.inc
 	echo +++ make: Creating EXE: $@
     $(LD) @<<$(CFGFILE)
         /NOLOGO /OUT:$@ 

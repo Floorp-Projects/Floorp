@@ -31,7 +31,7 @@ CONFIG_LIB_INC=1
 #// Rule to build a 16-bit Library
 #//
 #//------------------------------------------------------------------------
-$(LIBRARY):: $(OBJDIR) $(OBJS)
+$(LIBRARY):: $(OBJDIR) $(OBJS) makefile.win $(DEPTH)\config\lib.inc
 #   //
 #   // create response file for the command.  The format is:
 #   //     LIBNAME, -+foo.obj -+bar.obj , LISTFILE, NEWLIB
@@ -55,7 +55,7 @@ $(LIBRARY):: $(OBJDIR) $(OBJS)
 #// Rule to build a 32-bit Library
 #//
 #//------------------------------------------------------------------------
-$(LIBRARY):: $(OBJDIR) $(OBJS)
+$(LIBRARY):: $(OBJDIR) $(OBJS) makefile.win $(DEPTH)\config\lib.inc
     $(RM) $@ 2> NUL
     $(AR) @<<$(CFGFILE)
         -NOLOGO -OUT:$@

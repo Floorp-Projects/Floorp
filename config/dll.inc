@@ -32,7 +32,7 @@ CONFIG_DLL_INC=1
 #// Rule to build a 16-bit DLL using the DLL target
 #//
 #//------------------------------------------------------------------------
-$(DLL): $(OBJDIR) $(OBJS) $(LLIBS) $(RESFILE) $(DEFFILE) $(MISCDEP)
+$(DLL): $(OBJDIR) $(OBJS) $(LLIBS) $(RESFILE) $(DEFFILE) $(MISCDEP) makefile.win  $(DEPTH)\config\dll.inc
 	echo +++ make: Creating DLL: $@
 #   //
 #   // create response file for the command.  The format is:
@@ -68,7 +68,7 @@ $(DLL): $(OBJDIR) $(OBJS) $(LLIBS) $(RESFILE) $(DEFFILE) $(MISCDEP)
 #// Rule to build a 32-bit DLL using the DLL target
 #//
 #//------------------------------------------------------------------------
-$(DLL): $(OBJDIR) $(OBJS) $(LLIBS) $(RESFILE) $(DEFFILE) $(MISCDEP)
+$(DLL): $(OBJDIR) $(OBJS) $(LLIBS) $(RESFILE) $(DEFFILE) $(MISCDEP) makefile.win $(DEPTH)\config\dll.inc
 	echo +++ make: Creating DLL: $@
     $(LD) @<<$(CFGFILE)
         /NOLOGO /DLL /OUT:$@ 
