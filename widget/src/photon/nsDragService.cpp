@@ -328,6 +328,7 @@ NS_IMETHODIMP nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBo
   return NS_OK;
 }
 
+#if 0
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsDragService::GetCurrentSession (nsIDragSession **aSession)
 {
@@ -341,6 +342,7 @@ NS_IMETHODIMP nsDragService::GetCurrentSession (nsIDragSession **aSession)
   NS_ADDREF(*aSession);
   return NS_OK;
 }
+#endif
 
 #if 0
 //-------------------------------------------------------------------------
