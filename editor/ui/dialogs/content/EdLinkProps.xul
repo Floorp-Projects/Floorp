@@ -52,19 +52,21 @@
 
     <titledbox orient="vertical"><title><text class="label" value="&LinkURLBox.label;"/></title>
       <text class="label" value="&LinkURLEditField.label;"/>
-      <box autostretch="never"  valign="middle">
-        <textfield id="hrefInput" flex="1"/>
-        <spring class="spacer"/>
-        <!-- from EdDialogOverlay.xul -->
-        <!-- The style: width setting is need to cover a bug in button width resizing when text changes -->
-        <button class="dialog" id="ChooseFile" style="width: 7em"/>
-      </box>
-      <spring class="spacer"/>
-      <box>
-        <button class="dialog" id="MoreFewerButton" align="left" oncommand="onMoreFewer()" persist="more"/>
-        <spring flex="1"/>
-        <button class="dialog" id="RemoveLink" oncommand="RemoveLink()" value="&RemoveLinkButton.label;" style="width: 7em"/>
-      </box>
+      <grid>
+        <columns><column/><column/></columns>
+        <rows>
+          <row autostretch="never" vertical-align="middle">
+            <textfield id="hrefInput" flex="1"/>
+            <button class="dialog" id="ChooseFile" flex="1"/>
+          </row>
+          <row>
+            <box autostretch="never">
+              <button class="dialog" id="MoreFewerButton" align="left" oncommand="onMoreFewer()" persist="more"/>
+            </box>
+            <button class="dialog" id="RemoveLink" oncommand="RemoveLink()" value="&RemoveLinkButton.label;" flex="1"/>
+          </row>
+        </rows>
+      </grid>
       <box id="MoreSection" orient="vertical">
         <spring class="bigspacer"/>
         <text class="label" align="left" value="&NamedAnchorMsg.label;"/>

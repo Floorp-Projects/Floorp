@@ -195,10 +195,10 @@
     <toolbar id="EditModeToolbar" chromeclass="extrachrome" persist="collapsed">
       <text class="margin-left-right" value="&editMode.label;"/>
       <!-- From editorOverlay.xul -->
-      <text id="WYSIWYGModeButton"/>
       <text id="NormalModeButton"/>
       <text id="TagModeButton"/>
 <!--      <text id="HTMLModeButton"/> -->
+      <text id="PreviewModeButton"/>
       <spring flex="1"/>
     </toolbar>
 

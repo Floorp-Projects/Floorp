@@ -1037,7 +1037,7 @@ function EditorSetDisplayMode(mode)
   editorShell.SetDisplayMode(mode);
 
   // Set the UI states
-  document.getElementById("WYSIWYGModeButton").setAttribute("selected",Number(mode == 0));
+  document.getElementById("PreviewModeButton").setAttribute("selected",Number(mode == 0));
   document.getElementById("NormalModeButton").setAttribute("selected",Number(mode == 1));
   document.getElementById("TagModeButton").setAttribute("selected",Number(mode == 2));
   contentWindow.focus();
