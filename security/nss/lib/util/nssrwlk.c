@@ -337,7 +337,12 @@ NSSRWLock_UnlockWrite(NSSRWLock *rwlock)
 		PZ_NotifyCondVar(rwlock->rw_writer_waitq);
 	    else if (rwlock->rw_waiting_readers > 0)
 		PZ_NotifyAllCondVar(rwlock->rw_reader_waitq);
-	}
+	} else {
+	    /* Give preference to waiting writers. */
+	    if (  rwlock->rw_waiting_writers == 0 &&
+                  rwlock->rw_waiting_readers > 0)
+		PZ_NotifyAllCondVar(rwlock->rw_reader_waitq);
+        }
     }
     PZ_Unlock(rwlock->rw_lock);
 
