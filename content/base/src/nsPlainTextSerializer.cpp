@@ -55,7 +55,6 @@
 #include "nsReadableUtils.h"
 
 static NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
 #define PREF_STRUCTS "converter.html2txt.structs"
