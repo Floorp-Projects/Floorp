@@ -155,6 +155,7 @@ nsHTMLEditRules::WillInsertText(nsIDOMSelection *aSelection,
   // initialize out param
   *aCancel = PR_TRUE;
   nsresult res;
+  nsAutoEditMayBatch optionalBatch;
 
   char specialChars[] = {'\t',' ',nbsp,'\n',0};
   
@@ -169,7 +170,7 @@ nsHTMLEditRules::WillInsertText(nsIDOMSelection *aSelection,
   }
 
   // split any mailcites in the way
-  if (mFlags & nsIHTMLEditor::eEditorMailMask)
+  if (1 || mFlags & nsIHTMLEditor::eEditorMailMask)
   {
     nsCOMPtr<nsIDOMNode> citeNode, selNode;
     PRInt32 selOffset, newOffset;
@@ -180,6 +181,8 @@ nsHTMLEditRules::WillInsertText(nsIDOMSelection *aSelection,
     
     if (citeNode)
     {
+      // turn batching on
+      optionalBatch.batch();
       res = mEditor->SplitNodeDeep(citeNode, selNode, selOffset, &newOffset);
       if (NS_FAILED(res)) return res;
       res = citeNode->GetParentNode(getter_AddRefs(selNode));
@@ -247,6 +250,7 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
   *aCancel = PR_FALSE;
   
   nsresult res;
+  nsAutoEditMayBatch optionalBatch;
   res = WillInsert(aSelection, aCancel);
   if (NS_FAILED(res)) return res;
   
@@ -264,6 +268,29 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
     if (NS_FAILED(res)) return res;
   }
   
+  // split any mailcites in the way
+  if (1 || mFlags & nsIHTMLEditor::eEditorMailMask)
+  {
+    nsCOMPtr<nsIDOMNode> citeNode, selNode;
+    PRInt32 selOffset, newOffset;
+    res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
+    if (NS_FAILED(res)) return res;
+    res = GetTopEnclosingMailCite(selNode, &citeNode);
+    if (NS_FAILED(res)) return res;
+    
+    if (citeNode)
+    {
+      // turn batching on
+      optionalBatch.batch();
+      res = mEditor->SplitNodeDeep(citeNode, selNode, selOffset, &newOffset);
+      if (NS_FAILED(res)) return res;
+      res = citeNode->GetParentNode(getter_AddRefs(selNode));
+      if (NS_FAILED(res)) return res;
+      res = aSelection->Collapse(selNode, newOffset);
+      if (NS_FAILED(res)) return res;
+    }
+  }
+
   // smart splitting rules
   nsCOMPtr<nsIDOMNode> node;
   PRInt32 offset;

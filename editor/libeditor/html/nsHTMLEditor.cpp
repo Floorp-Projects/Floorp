@@ -4764,6 +4764,8 @@ nsHTMLEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parent
     nsCOMPtr<nsIDOMCharacterData>selectedParentNodeAsText;
     selectedParentNodeAsText = do_QueryInterface(parentSelectedNode);
 
+    offsetOfNewNode = offsetOfSelectedNode;
+    
     /* if the selection is a text node, split the text node if necesary
        and compute where to put the new node
     */
@@ -4795,6 +4797,14 @@ nsHTMLEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parent
         }
       }
     }
+    
+  // I dont know what is up with this, but there is no reason to split 
+  // any node we happen to be inserting into.  The code below (ifdef'd out) 
+  // breaks InsertBreak().
+  
+  
+#if 0  
+
     /* if the selection is not a text node, split the parent node if necesary
        and compute where to put the new node
     */
@@ -4854,6 +4864,7 @@ nsHTMLEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parent
         }
       }
     }
+#endif
 
     // Here's where the new node was inserted
   }
