@@ -1300,10 +1300,10 @@ function ss_setThisObj (e)
     var sessionView = console.views.session;
     if (sessionView.currentContent)
     {
+        var title = abbreviateWord(urlFile, 30);
         sessionView.currentContent.setAttribute ("title",
                                                  getMsg(MSN_SESSION_TITLE,
-                                                        [urlFile, functionName])
-                                                 );
+                                                        [title, functionName]));
     }
 }
     
