@@ -101,29 +101,34 @@ LINE: while (<MANIFEST>) {
 	s/^\s+//;			# nuke leading whitespace
 	s/\s+$//;			# nuke trailing whitespace
 
+	($debug >= 2) && print "\n";
+	($debug >= 8) && print "line $lineno:$_\n";
 
 	# it's a blank line, skip it.
 	/^$/	&& do {
+			($debug >= 10) && print "blank line.\n";
 			next LINE;
-		};
+	};
 
 	# it's a new component
 	/^\[/	&& do {
 			$component = $_;
+			($debug >= 10) && print "component.\n";
 			do_component ();
 			next LINE;
-		};
+	};
 
 	# make sure a component is defined before doing any copies or deletes.
-	( $component eq "") &&
+	( $component eq "" ) &&
 		die "Error: item $_ outside a component ($package, $lineno).  Exiting...\n";
 
 	# delete the file or directory following the '-'
 	/^-/	&& do {
 			s/^-//;		# strip leading '-'
+			($debug >= 10) && print "delete.\n";
 			do_delete ("$destdir$PD$component$PD$_");
 			next LINE;
-		};
+	};
 
 	# file/directory being copied to different target location
 	/\,/	&& do {
@@ -132,24 +137,28 @@ LINE: while (<MANIFEST>) {
 			($file, $altdest) = split (/\s*\,\s*/, $_, 2);
 			$file =~ s/$PD*$//;	# strip any trailing delimiter
 			$altdest =~ s/$PD*$//;	# strip any trailing delimiter
+			($debug >= 10) && print "relocate: $file, $altdest.\n";
 		};
 
 	($file eq "") && ($file = $_);	# if $file not set, set it.
 
 	# if it has wildcards, do recursive copy.
 	/(?:\*|\?)/	&& do {
+		($debug >= 10) && print "wildcard copy.\n";
 		do_batchcopy ("$srcdir$PD$file");
 		next LINE;
 	};
 
 	# if it's a directory, do recursive copy.
  	(-d "$srcdir$PD$file") && do {
+		($debug >= 10) && print "directory copy.\n";
 		do_batchcopy ("$srcdir$PD$file");
 		next LINE;
 	};
 
 	# if it's a single file, copy it.
 	( -f "$srcdir$PD$file" ) && do {
+		($debug >= 10) && print "file copy.\n";
 		do_copyfile ();
 		$file = "";
 		next LINE;
@@ -174,13 +183,13 @@ sub do_delete
 {
 	local ($target) = $_[0];
 
-	($debug >= 2) && print "do_delete:\n";
+	($debug >= 2) && print "do_delete():\n";
 
 	if (-f $target) {
 		!(-w $target) &&
 			die "Error: delete failed: $target not writeable ($package, $component, $lineno).  Exiting...\n";
 		if ($debug >= 1) {
-			print "-$target\n";
+			print "-$target (file)\n";
 		}
 		unlink ($target) ||
 			die "Error: unlink() failed: $!.  Exiting...\n";
@@ -188,7 +197,7 @@ sub do_delete
 		!(-w $target) &&
 			die "Error: delete failed: $target not writeable ($package, $component, $lineno).  Exiting...\n";
 		if ($debug >= 1) {
-			print "-$target\n";
+			print "-$target (directory)\n";
 		}
 		rmtree ($target, 0, 0) ||
 			die "Error: rmtree() failed: $!.  Exiting...\n";
@@ -208,7 +217,7 @@ sub do_copyfile
 	local ($path)  = "";
 	my ($srcfile) = "";
 	
-	($debug >= 2) && print "do_copyfile:\n";
+	($debug >= 2) && print "do_copyfile():\n";
 
 	# set srcfile correctly depending on how called
 	if ($batch) {
@@ -276,7 +285,7 @@ sub do_copyfile
 				print "$file\n";	# from single file
 			}
 			if ($debug >= 3) {
-				print "\tcopy\t$srcfile => $path$PD$basefile\n";
+				print "copy\t$srcfile =>\n\t\t$path$PD$basefile\n";
 			}
 		}
 		copy ("$srcfile", "$path$PD$basefile") ||
@@ -303,7 +312,7 @@ sub do_batchcopy
 	my ($entry) = $_[0];
 	my (@list) = ();
 
-	($debug >= 2) && print "do_batchcopy:\n";
+	($debug >= 2) && print "do_batchcopy():\n";
 
 	if ($entry =~ /(?:\*|\?)/) {		# it's a wildcard,
 		@list = glob($entry);		# expand it, and
@@ -323,7 +332,7 @@ sub do_batchcopy
 #
 sub do_component
 {
-	($debug >= 2) && print "do_component:\n";
+	($debug >= 2) && print "do_component():\n";
 
 	( $component =~ /^\[.*(?:\s|\[|\])+.*\]/ ) &&	# no brackets or ws
 		die "Error: malformed component $component.  Exiting...\n";
@@ -349,7 +358,7 @@ sub check_arguments
 {
 	my ($exitval) = 0;
 
-	($debug >= 2) && print "check_arguments:\n";
+	($debug >= 2) && print "check_arguments():\n";
 
 	# if --help print usage
 	if ($help) {
@@ -392,14 +401,20 @@ sub check_arguments
 	} elsif ( $os =~ /mac/i ) {
 		$os = "MacOS";
 		$PD = ":";
-		print "Error: MacOS not yet implemented.\n";
-		$exitval = 1;
+		fileparse_set_fstype ($os);
+		($debug >= 4) && print "OS: $os\n";
+		warn "Warning: MacOS not fully implemented/tested.\n";
 	} elsif ( $os =~ /dos/i ) {
 		$os = "MSDOS";
 		$PD = "\\";
+		fileparse_set_fstype ($os);
+		($debug >= 4) && print "OS: $os\n";
+		warn "Warning: MSDOS not fully implemented/tested.\n";
 	} elsif ( $os =~ /unix/i ) {	# null because Unix is default for
 		$os = "";		# fileparse_set_fstype()
 		$PD = "/";
+		fileparse_set_fstype ($os);
+		($debug >= 4) && print "OS: Unix\n";
 	} else {
 		print "Error: OS type \"$os\" unknown.\n";
 		$exitval += 16;
@@ -428,7 +443,7 @@ sub do_badargument
 #
 sub print_usage
 {
-	($debug >= 2) && print "print_usage:\n";
+	($debug >= 2) && print "print_usage():\n";
 
 	print <<EOC
 
