@@ -148,7 +148,7 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
     if (NS_SUCCEEDED(res) && decoder) {
       PRInt32 unicharLength = 0;
       PRInt32 srcLength = (PRInt32) PL_strlen(strOut);
-      res = decoder->Length(strOut, 0, srcLength, &unicharLength);
+      res = decoder->GetMaxLength(strOut, srcLength, &unicharLength);
       PRUnichar *unichars = new PRUnichar [ unicharLength ];
   
       if (nsnull != unichars) {
