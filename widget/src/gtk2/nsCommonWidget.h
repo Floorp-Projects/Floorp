@@ -109,6 +109,8 @@ class nsCommonWidget : public nsBaseWidget {
 				       PRInt32 &aHeight);
   NS_IMETHOD         SetPreferredSize (PRInt32 aWidth,
 				       PRInt32 aHeight);
+  NS_IMETHOD         Enable           (PRBool  aState);
+  NS_IMETHOD         IsEnabled        (PRBool *aState);
 
   // called when we are destroyed
   void OnDestroy(void);
@@ -131,6 +133,8 @@ class nsCommonWidget : public nsBaseWidget {
   // This flag tracks if we're hidden or shown.
   PRPackedBool        mIsShown;
   PRPackedBool        mNeedsShow;
+  // is this widget enabled?
+  PRBool              mEnabled;
 
   // Preferred sizes
   PRUint32            mPreferredWidth;
