@@ -66,6 +66,7 @@ nsXPFCCanvasManager :: nsXPFCCanvasManager()
   mFocusedCanvas = nsnull;
   mMouseOverCanvas = nsnull;
   mPressedCanvas = nsnull;
+  mViewManager = nsnull;
 }
 
 nsXPFCCanvasManager :: ~nsXPFCCanvasManager()  
@@ -411,5 +412,16 @@ nsresult nsXPFCCanvasManager::SetWebViewerContainer(nsIWebViewerContainer * aWeb
 nsIWebViewerContainer * nsXPFCCanvasManager::GetWebViewerContainer()
 {
   return(mWebViewerContainer);
+}
+
+nsresult nsXPFCCanvasManager::SetViewManager(nsIViewManager * aViewManager)
+{
+  mViewManager = aViewManager;
+  return NS_OK;
+}
+
+nsIViewManager * nsXPFCCanvasManager::GetViewManager()
+{
+  return(mViewManager);
 }
 

@@ -25,6 +25,7 @@ class nsIXPFCCanvas;
 class nsIView;
 class nsIWidget;
 class nsIWebViewerContainer;
+class nsIViewManager;
 
 // IID for the nsIXPFCCanvasManager interface
 #define NS_IXPFC_CANVAS_MANAGER_IID   \
@@ -129,6 +130,9 @@ public:
 
   NS_IMETHOD_(nsIWebViewerContainer *) GetWebViewerContainer() = 0;
   NS_IMETHOD SetWebViewerContainer(nsIWebViewerContainer * aWebViewerContainer) = 0;
+
+  NS_IMETHOD_(nsIViewManager *) GetViewManager() = 0;
+  NS_IMETHOD SetViewManager(nsIViewManager * aViewManager) = 0;
 
 
 };

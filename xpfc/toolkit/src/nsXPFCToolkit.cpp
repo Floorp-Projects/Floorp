@@ -33,7 +33,7 @@ nsXPFCToolkit :: nsXPFCToolkit()
   if (gXPFCToolkit == nsnull)
     gXPFCToolkit = (nsXPFCToolkit *)this;
 
-  mApplicationShell    = nsnull;
+  mApplicationShell = nsnull;
   mObserverManager  = nsnull;
   mCanvasManager    = nsnull;
 
@@ -109,6 +109,11 @@ nsIXPFCCanvasManager * nsXPFCToolkit::GetCanvasManager()
 nsresult nsXPFCToolkit::GetRootCanvas(nsIXPFCCanvas ** aCanvas)
 {
   return (mCanvasManager->GetRootCanvas(aCanvas));
+}
+
+nsIViewManager * nsXPFCToolkit::GetViewManager()
+{
+  return (mCanvasManager->GetViewManager());
 }
 
 EVENT_CALLBACK nsXPFCToolkit::GetShellEventCallback()

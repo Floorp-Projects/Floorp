@@ -24,6 +24,7 @@
 #include "nsIApplicationShell.h"
 #include "nsIXPFCObserverManager.h"
 #include "nsIXPFCCanvasManager.h"
+#include "nsIViewManager.h"
 
 CLASS_EXPORT_XPFC nsXPFCToolkit : public nsIXPFCToolkit
 {
@@ -45,6 +46,8 @@ public:
 
   NS_IMETHOD SetApplicationShell(nsIApplicationShell * aApplicationShell) ;
   NS_IMETHOD_(nsIApplicationShell *) GetApplicationShell() ;
+
+  NS_IMETHOD_(nsIViewManager *) GetViewManager() ;
 
 protected:
   ~nsXPFCToolkit();
