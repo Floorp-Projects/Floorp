@@ -451,27 +451,11 @@ NS_IMETHODIMP nsRenderingContextGTK::GetClipRegion(nsIRegion **aRegion)
 
   NS_ASSERTION(!(nsnull == aRegion), "no region ptr");
 
-  if (nsnull == *aRegion)
+  if (*aRegion)
   {
-    nsRegionGTK *rgn = new nsRegionGTK();
-
-    if (nsnull != rgn)
-    {
-      NS_ADDREF(rgn);
-
-      rv = rgn->Init();
-
-      if (NS_OK == rv)
-        *aRegion = rgn;
-      else
-        NS_RELEASE(rgn);
-    }
-    else
-      rv = NS_ERROR_OUT_OF_MEMORY;
+    nsIRegion *nRegion = (nsIRegion*)mClipRegion;;
+    (*aRegion)->SetTo(*nRegion);
   }
-
-  if (rv == NS_OK)
-    (*aRegion)->SetTo(*mClipRegion);
 
   return rv;
 }
@@ -671,6 +655,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawPolyline(const nsPoint aPoints[], PRInt
     mTMatrix->TransformCoord(&p.x,&p.y);
     pts[i].x = p.x;
     pts[i].y = p.y;
+    printf("(%i,%i)\n", p.x, p.y);
   }
 
   ::gdk_draw_lines(mSurface->GetDrawable(),

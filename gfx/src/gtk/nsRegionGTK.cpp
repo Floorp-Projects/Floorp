@@ -22,8 +22,6 @@
 #include "xregion.h"
 #include "prmem.h"
 
-static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
-
 nsRegionGTK::nsRegionGTK()
 {
   NS_INIT_REFCNT();
@@ -34,12 +32,12 @@ nsRegionGTK::nsRegionGTK()
 
 nsRegionGTK::~nsRegionGTK()
 {
-   if (mRegion)
-     ::gdk_region_destroy(mRegion);
+  if (mRegion)
+    ::gdk_region_destroy(mRegion);
   mRegion = nsnull;
 }
 
-NS_IMPL_QUERY_INTERFACE(nsRegionGTK, kRegionIID)
+NS_IMPL_QUERY_INTERFACE1(nsRegionGTK, nsIRegion)
 NS_IMPL_ADDREF(nsRegionGTK)
 NS_IMPL_RELEASE(nsRegionGTK)
 
@@ -53,7 +51,7 @@ nsresult nsRegionGTK::Init(void)
 
 void nsRegionGTK::SetTo(const nsIRegion &aRegion)
 {
-  nsRegionGTK * pRegion = (nsRegionGTK *)&aRegion;
+  nsRegionGTK *pRegion = (nsRegionGTK *)&aRegion;
 
   SetRegionEmpty();
   
@@ -127,7 +125,7 @@ void nsRegionGTK::Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 
 void nsRegionGTK::Subtract(const nsIRegion &aRegion)
 {
-  nsRegionGTK * pRegion = (nsRegionGTK *)&aRegion;
+  nsRegionGTK *pRegion = (nsRegionGTK *)&aRegion;
 
    GdkRegion *nRegion = ::gdk_regions_subtract(mRegion, pRegion->mRegion);
    ::gdk_region_destroy(mRegion);
@@ -283,9 +281,9 @@ void nsRegionGTK::SetRegionEmpty()
 }
 
 GdkRegion *nsRegionGTK::CreateRectRegion(PRInt32 aX,
-					 PRInt32 aY,
-					 PRInt32 aWidth,
-					 PRInt32 aHeight)
+                                         PRInt32 aY,
+                                         PRInt32 aWidth,
+                                         PRInt32 aHeight)
 {
   GdkRegion *tRegion = ::gdk_region_new();
   GdkRectangle rect;
