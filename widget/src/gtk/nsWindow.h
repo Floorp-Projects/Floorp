@@ -79,7 +79,7 @@ public:
     NS_IMETHOD           EndResizingChildren(void);
     NS_IMETHOD           Destroy(void);
 
-    GdkWMDecoration ConvertBorderStyles(nsBorderStyle bs);
+    gint                 ConvertBorderStyles(nsBorderStyle bs);
 
     virtual PRBool IsChild() const;
 
