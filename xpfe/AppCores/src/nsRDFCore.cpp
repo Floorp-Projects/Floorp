@@ -38,7 +38,6 @@
 #include "nsRDFCID.h"
 #include "rdf.h"
 #include "nsIXULSortService.h"
-#include "nsIBookmarkDataSource.h"
 #include "nsIRDFService.h"
 
 
@@ -171,103 +170,4 @@ nsRDFCore::DoSort(nsIDOMNode* node, const nsString& sortResource,
         return(rv);
 }
 
-
-NS_IMETHODIMP
-nsRDFCore::AddBookmark(const nsString& aUrl, const nsString& aOptionalTitle)
-{
-#ifdef	DEBUG
-        printf("----------------------------\n");
-        printf("-- Add Bookmark \n");
-        char *str1 = aUrl.ToNewCString();
-        if (str1)
-        {
-		printf("-- URL: %s  \n", str1);
-		delete [] str1;
-	}
-	char *str2 = aOptionalTitle.ToNewCString();
-	if (str2)
-	{
-		printf("-- Title (opt): %s  \n", str2);
-		delete [] str2;
-	}
-        printf("----------------------------\n");
-#endif
-
-        nsIRDFService* rdf;
-	nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-                                                   nsIRDFService::GetIID(),
-                                                   (nsISupports**) &rdf);
-	if (NS_SUCCEEDED(rv))
-	{
-                nsCOMPtr<nsIRDFDataSource> ds;
-                rv = rdf->GetDataSource("rdf:bookmarks", getter_AddRefs(ds));
-
-                nsCOMPtr<nsIRDFBookmarkDataSource> RDFBookmarkDataSource
-                    = do_QueryInterface(ds);
-
-		if (RDFBookmarkDataSource)
-		{
-			char *url = aUrl.ToNewCString();
-			rv = RDFBookmarkDataSource->AddBookmark(url, aOptionalTitle.GetUnicode());
-			if (url)		delete []url;
-		}
-	}
-
-        nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
-
-        return(rv);
-}
-
-
-
-NS_IMETHODIMP
-nsRDFCore::FindBookmarkShortcut(const nsString& aUserInput, nsString & shortcutURL)
-{
-#ifdef	DEBUG
-        printf("----------------------------\n");
-        printf("-- Find Bookmark Shortcut\n");
-        char *str1 = aUserInput.ToNewCString();
-        if (str1)
-        {
-		printf("-- user input: %s  \n", str1);
-		delete [] str1;
-	}
-        printf("----------------------------\n");
-#endif
-
-        nsIRDFService* rdf;
-	nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-                                                   nsIRDFService::GetIID(),
-                                                   (nsISupports**) &rdf);
-
-	if (NS_SUCCEEDED(rv))
-	{
-                nsCOMPtr<nsIRDFDataSource> ds;
-                rv = rdf->GetDataSource("rdf:bookmarks", getter_AddRefs(ds));
-
-                nsCOMPtr<nsIRDFBookmarkDataSource> RDFBookmarkDataSource
-                    = do_QueryInterface(ds);
-
-		if (RDFBookmarkDataSource)
-		{
-			char *userInput = aUserInput.ToNewCString();
-			char *cShortcutURL = nsnull;
-			if (NS_SUCCEEDED(rv = RDFBookmarkDataSource->FindBookmarkShortcut(userInput,
-					&cShortcutURL)))
-			{
-				shortcutURL = cShortcutURL;
-			}
-			if (userInput)		delete []userInput;
-		}
-	}
-
-        nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
-
-	if (NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE))
-	{
-		shortcutURL = "";
-		rv = NS_OK;
-	}
-        return(rv);
-}
 
