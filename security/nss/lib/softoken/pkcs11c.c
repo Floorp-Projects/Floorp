@@ -735,7 +735,7 @@ finish_des:
 	    (unsigned char*)att->attrib.pValue,
 	    (unsigned char*)pMechanism->pParameter,
 	    pMechanism->mechanism == CKM_AES_ECB ? NSS_AES : NSS_AES_CBC,
-	    att->attrib.ulValueLen,16);
+	    PR_TRUE, att->attrib.ulValueLen, 16);
 	pk11_FreeAttribute(att);
 	if (context->cipherInfo == NULL) {
 	    crv = CKR_HOST_MEMORY;
@@ -1143,7 +1143,7 @@ finish_des:
 	    (unsigned char*)att->attrib.pValue,
 	    (unsigned char*)pMechanism->pParameter,
 	    pMechanism->mechanism == CKM_AES_ECB ? NSS_AES : NSS_AES_CBC,
-	    att->attrib.ulValueLen,16);
+	    PR_TRUE, att->attrib.ulValueLen,16);
 	pk11_FreeAttribute(att);
 	if (context->cipherInfo == NULL) {
 	    crv = CKR_HOST_MEMORY;
