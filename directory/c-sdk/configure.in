@@ -1608,6 +1608,8 @@ mips-sony-newsos*)
         MDCPUCFG_H=_solaris32.cfg
     fi
     PR_MD_CSRCS=solaris.c
+    LD=/usr/ccs/bin/ld
+    RANLIB=/usr/ccs/bin/ranlib
     DSO_LDOPTS='-G -h $(notdir $@)'
     if test -n "$GNU_CC"; then
         DSO_CFLAGS=-fPIC
