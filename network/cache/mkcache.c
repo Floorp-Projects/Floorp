@@ -855,7 +855,7 @@ net_CacheStore(net_CacheObject * obj,
 #endif /* NU_CACHE */
 
 /* Public accesor function for Netcaster */
-static PRBool
+PUBLIC PRBool
 NET_CacheStore(net_CacheObject * obj,  
 			   URL_Struct      * URL_s, 
 			   PRBool	         accept_partial_files)
