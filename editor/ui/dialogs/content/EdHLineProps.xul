@@ -50,31 +50,36 @@
       <columns><column/><column/><column /></columns>
       <rows>
         <row align="center">
-          <label value="&widthEditField.label;" />
+          <label control="width"
+                 value="&widthEditField.label;"
+                 accesskey="&widthEditField.accessKey;"/>
           <textbox class="narrow" id="width" flex="1" oninput="forceInteger('width')"/>
           <menulist id="pixelOrPercentMenulist" />
           <!-- menupopup and menuitems added by JS -->
         </row>
         <row align="center">
-          <label value="&heightEditField.label;" />
+          <label control="height"
+                 value="&heightEditField.label;"
+                 accesskey="&heightEditField.accessKey;"/>
           <textbox class="narrow" id="height" oninput="forceInteger('height')"/>
           <label value="&pixelsPopup.value;" />
         </row>
       </rows>
     </grid>        
-    <checkbox id="3dShading" label="&threeDShading.label;" />
+    <checkbox id="3dShading" label="&threeDShading.label;" accesskey="&threeDShading.accessKey;"/>
   </groupbox>
   <groupbox><caption label="&alignmentBox.label;"/>
     <radiogroup id="alignmentGroup" orient="horizontal">
       <spacer class="spacer"/>
-      <radio id="leftAlign" label="&leftRadio.value;" />
-      <radio id="centerAlign" label="&centerRadio.value;" />
-      <radio id="rightAlign" label="&rightRadio.value;" />
+      <radio id="leftAlign"   label="&leftRadio.value;"   accesskey="&leftRadio.accessKey;"/>
+      <radio id="centerAlign" label="&centerRadio.value;" accesskey="&centerRadio.accessKey;"/>
+      <radio id="rightAlign"  label="&rightRadio.value;"  accesskey="&rightRadio.accessKey;"/>
     </radiogroup>
   </groupbox>
   <spacer class="spacer"/>
   <hbox>
     <button  id="SaveDefault" label="&saveSettings.label;" 
+         accesskey="&saveSettings.accessKey;"
          oncommand="onSaveDefault()"
          tooltiptext="&saveSettings.tooltip;" />
     <spacer flex="1"/>

@@ -27,6 +27,7 @@
 <!ENTITY ListType.label "List Type">
 <!ENTITY bulletStyle.label "Bullet Style:">
 <!ENTITY startingNumber.label "Start at:">
+<!ENTITY startingNumber.accessKey "S">
 <!ENTITY startingHelp.label "E.g.: use &quot;2&quot; to start at 2, II, ii, B, or b">
 <!ENTITY none.value "None">
 <!ENTITY bulletList.value "Bullet (Unnumbered) List">
@@ -34,4 +35,6 @@
 <!ENTITY definitionList.value "Definition List">
 <!ENTITY changeListMsg.label "When changing list type:">
 <!ENTITY changeEntireListRadio.label "Change entire list">
+<!ENTITY changeEntireListRadio.accessKey "C">
 <!ENTITY changeSelectedRadio.label "Change just selected items">
+<!ENTITY changeSelectedRadio.accessKey "I">

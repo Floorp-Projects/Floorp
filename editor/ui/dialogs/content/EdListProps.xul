@@ -62,15 +62,16 @@
     <menulist class="MinWidth10em" id="BulletStyle" oncommand="SelectBulletStyle()"/>
     <spacer class="spacer"/>
     <hbox>
-      <label id="StartingNumberLabel" value="&startingNumber.label;"/>
+      <label id="StartingNumberLabel" control="StartingNumber"
+             value="&startingNumber.label;" accesskey="&startingNumber.accessKey;"/>
       <textbox class="narrow" id="StartingNumber" oninput="forceInteger(this.id)"/>
       <spacer/>
     </hbox>
     <description id="StartExample" class="wrap" flex="1" style="width: 1em">&startingHelp.label;</description>
   </groupbox>
   <radiogroup id="RadioGroup" index="0" persist="index">
-    <radio id="ChangeAll"      label="&changeEntireListRadio.label;"/>
-    <radio id="ChangeSelected" label="&changeSelectedRadio.label;"/>
+    <radio id="ChangeAll"      label="&changeEntireListRadio.label;" accesskey="&changeEntireListRadio.accessKey;"/>
+    <radio id="ChangeSelected" label="&changeSelectedRadio.label;"   accesskey="&changeSelectedRadio.accessKey;"/>
   </radiogroup>
   <!-- from EdDialogOverlay -->
   <vbox id="AdvancedEdit"/>

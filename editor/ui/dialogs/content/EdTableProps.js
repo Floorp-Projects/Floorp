@@ -271,6 +271,7 @@ function InitDialog()
   if (applyButton)
   {
     applyButton.label = GetString("Apply");
+    applyButton.setAttribute("accesskey", GetString("ApplyAccessKey"));
     applyButton.removeAttribute("collapsed");
   }
   

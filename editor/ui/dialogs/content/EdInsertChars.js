@@ -45,7 +45,10 @@ function Startup()
   // Change button text: "Ok" to "Insert"; "Cancel" to "Close"
   var insertButton = document.documentElement.getButton("accept");
   if (insertButton)
+  {
     insertButton.setAttribute("label", GetString("Insert"));
+    insertButton.setAttribute("accesskey", GetString("InsertAccessKey"));
+  }
 
   var cancelButton = document.getElementById("insertCharsDlg").getButton("cancel");
   if (cancelButton)

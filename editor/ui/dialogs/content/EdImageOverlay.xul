@@ -40,6 +40,7 @@
     <spacer class="spacer"/>
     <label control = "srcInput"
       value = "&locationEditField.label;"
+      accesskey="&locationEditField.accessKey;"
       tooltiptext="&locationEditField.tooltip;"
       />
     <textbox id="srcInput" oninput="ChangeImageSrc();"/>
@@ -56,20 +57,22 @@
       <hbox align="center">
         <radio id = "altTextRadio" 
           label   = "&altText.label;"
+          accesskey = "&altText.accessKey;"
           oncommand = "SetAltTextDisabled(false);"/>
         <textbox flex="1"
           id      = "altTextInput"
           style   = "min-width : 20em"
-          tooltip = "aTooltip" tooltiptext="&altTextEditField.tooltip;"
+          tooltiptext="&altTextEditField.tooltip;"
           oninput = "SetAltTextDisabled(false);"/>
       </hbox>
       <radio id = "noAltTextRadio" 
         label   = "&noAltText.label;"
+        accesskey = "&noAltText.accessKey;"
         oncommand = "SetAltTextDisabled(true);"/>
     </radiogroup>
   </vbox>
 
-  <groupbox id="imagePreview" orient="horizontal">
+  <groupbox id="imagePreview" orient="horizontal" flex="1">
     <caption label="&previewBox.label;"/>
     <hbox id="preview-image-box" align="center">
       <spacer flex="1"/>
@@ -100,18 +103,21 @@
         <radio
           id      = "actualSizeRadio" 
           label   = "&actualSizeRadio.label;"
-          tooltip = "aTooltip" tooltiptext="&actualSizeRadio.tooltip;"
+          accesskey = "&actualSizeRadio.accessKey;"
+          tooltiptext="&actualSizeRadio.tooltip;"
           oncommand = "SetActualSize()"/>
         <radio
           id      = "customSizeRadio" 
           label   = "&customSizeRadio.label;"
-          tooltip = "aTooltip" tooltiptext="&customSizeRadio.tooltip;"
+          accesskey = "&customSizeRadio.accessKey;"
+          tooltiptext="&customSizeRadio.tooltip;"
           oncommand = "doDimensionEnabling();" />
       </radiogroup>
       <spacer flex="1"/>
       <vbox>
         <spacer flex="1"/>
         <checkbox id="constrainCheckbox" label="&constrainCheckbox.label;"
+             accesskey="&constrainCheckbox.accessKey;"
              oncommand="ToggleConstrain()"
              tooltiptext="&constrainCheckbox.tooltip;"/>
       </vbox>
@@ -124,6 +130,7 @@
         <row align="center">
           <label id    = "widthLabel"
             control   = "widthInput"
+            accesskey = "&widthEditField.accessKey;"
             value = "&widthEditField.label;" />
           <textbox
             id       = "widthInput" 
@@ -136,6 +143,7 @@
         <row align="center">
           <label id    = "heightLabel"
             control   = "heightInput"
+            accesskey = "&heightEditField.accessKey;"
             value = "&heightEditField.label;" />
           <textbox
             id       = "heightInput" 
@@ -160,6 +168,8 @@
             <label 
               class = "align-right" 
               id    = "leftrightLabel"
+              control = "imageleftrightInput"
+              accesskey = "&leftRightEditField.accessKey;"
               value = "&leftRightEditField.label;"/>
             <textbox
               class     = "narrow"
@@ -174,6 +184,8 @@
             <label 
               class = "align-right" 
               id    = "topbottomLabel"
+              control = "imagetopbottomInput"
+              accesskey = "&topBottomEditField.accessKey;"
               value = "&topBottomEditField.label;"/>
             <textbox
               class     = "narrow"
@@ -187,6 +199,8 @@
           <row align="center">
             <label class = "align-right" 
               id    = "borderLabel"
+              control = "border"
+              accesskey = "&borderEditField.accessKey;"
               value = "&borderEditField.label;"/>
             <textbox
               class     = "narrow"
@@ -230,6 +244,7 @@
         <button
           id      = "removeImageMap"
           oncommand = "removeImageMap()"
+          accesskey = "&removeImageMapButton.accessKey;"
           label   = "&removeImageMapButton.label;"
           flex    = "1"/>
         <spacer flex="1"/><!-- remove when we restore Image Map Editor -->

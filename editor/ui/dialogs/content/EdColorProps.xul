@@ -49,8 +49,10 @@
     <caption label="&pageColors.label;"/>
     <radiogroup id="PageColorGroup">
       <radio id="DefaultColorsRadio" label="&defaultColorsRadio.label;" oncommand="UseDefaultColors()"
+        accesskey="&defaultColorsRadio.accessKey;"
         tooltiptext="&defaultColorsRadio.tooltip;" />
       <radio id="CustomColorsRadio" label="&customColorsRadio.label;" oncommand="UseCustomColors()"
+        accesskey="&customColorsRadio.accessKey;"
         tooltiptext="&customColorsRadio.tooltip;" />
     </radiogroup>
     <hbox class="big-left-margin">
@@ -58,31 +60,41 @@
         <columns><column/><column/></columns>
         <rows>
           <row align="center">
-            <label id="Text" value="&normalText.label;&colon.character;" />
+            <label id="Text" control="TextButton"
+                   value="&normalText.label;&colon.character;"
+                   accesskey="&normalText.accessKey;"/>
             <button id="TextButton" class="color-button" oncommand="GetColorAndUpdate('textCW');">
               <spacer id="textCW" class="color-well"/>
             </button>
           </row>
           <row align="center">
-            <label id="Link" value="&linkText.label;&colon.character;" />
+            <label id="Link" control="LinkButton"
+                   value="&linkText.label;&colon.character;"
+                   accesskey="&linkText.accessKey;"/>
             <button id="LinkButton" class="color-button" oncommand="GetColorAndUpdate('linkCW');">
               <spacer id="linkCW" class="color-well"/>
             </button>
           </row>
           <row align="center">
-            <label id="Active" value="&activeLinkText.label;&colon.character;" />
+            <label id="Active" control="ActiveLinkButton"
+                   value="&activeLinkText.label;&colon.character;"
+                   accesskey="&activeLinkText.accessKey;"/>
             <button id="ActiveLinkButton" class="color-button" oncommand="GetColorAndUpdate('activeCW');">
               <spacer id="activeCW" class="color-well"/>
             </button>
           </row>
           <row align="center">
-            <label id="Visited" value ="&visitedLinkText.label;&colon.character;" />
+            <label id="Visited" control="VisitedLinkButton"
+                   value="&visitedLinkText.label;&colon.character;"
+                   accesskey="&visitedLinkText.accessKey;"/>
             <button id="VisitedLinkButton" class="color-button" oncommand="GetColorAndUpdate('visitedCW');">
               <spacer id="visitedCW" class="color-well"/>
             </button>
           </row>
           <row align="center">
-            <label id="Background" value="&background.label;" />
+            <label id="Background" control="BackgroundButton"
+                   value="&background.label;"
+                   accesskey="&background.accessKey;"/>
             <button id="BackgroundButton" class="color-button" oncommand="GetColorAndUpdate('backgroundCW');">
               <spacer id="backgroundCW" class="color-well"/>
             </button>
@@ -105,7 +117,9 @@
     <spacer class="spacer"/>
   </groupbox>
   <spacer class="spacer"/>
-  <label value="&backgroundImage.label;"/>
+  <label control="BackgroundImageInput"
+         value="&backgroundImage.label;"
+         accesskey="&backgroundImage.accessKey;"/>
   <textbox id="BackgroundImageInput" oninput="ChangeBackgroundImage()"
    tooltiptext="&backgroundImage.tooltip;" flex="1"/>
   <hbox align="center">

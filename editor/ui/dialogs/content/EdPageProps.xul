@@ -55,15 +55,15 @@
       </row>
       <spacer class="spacer"/>
       <row align="center">
-        <label value="&titleInput.label;"/>
+        <label value="&titleInput.label;" accesskey="&titleInput.accessKey;" control="TitleInput"/>
         <textbox class="MinWidth20em" id="TitleInput" oninput="TextboxChanged(this.id)"/>
       </row>
       <row align="center">
-        <label value="&authorInput.label;"/>
+        <label value="&authorInput.label;" accesskey="&authorInput.accessKey;" control="AuthorInput"/>
         <textbox class="MinWidth20em" id="AuthorInput" oninput="TextboxChanged(this.id)"/>
       </row>
       <row align="center">
-        <label value="&descriptionInput.label;"/>
+        <label value="&descriptionInput.label;" accesskey="&descriptionInput.accessKey;" control="DescriptionInput"/>
         <textbox class="MinWidth20em" id="DescriptionInput" oninput="TextboxChanged(this.id)"/>
       </row>
     </rows>

@@ -69,7 +69,10 @@
         <spacer class="spacer"/>
         <vbox id="LinkLocationBox"/>
         <spacer class="spacer"/>
-        <checkbox id="showLinkBorder" label="&showImageLinkBorder.label;" oncommand="ToggleShowLinkBorder();"/>
+        <checkbox id="showLinkBorder"
+                  label="&showImageLinkBorder.label;"
+                  accesskey="&showImageLinkBorder.accessKey;"
+                  oncommand="ToggleShowLinkBorder();"/>
       </vbox>
     </tabpanels>
   </tabbox>
