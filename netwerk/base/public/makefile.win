@@ -45,10 +45,11 @@ XPIDLSRCS =                        \
         .\nsIPrompt.idl            \
         .\nsIProtocolHandler.idl   \
         .\nsIProgressEventSink.idl \
-	.\nsINetModRegEntry.idl    \
-	.\nsINetModuleMgr.idl      \
-	.\nsINetNotify.idl         \
-	.\nsILoadGroup.idl         \
+		.\nsINetModRegEntry.idl    \
+		.\nsINetModuleMgr.idl      \
+		.\nsINetNotify.idl         \
+		.\nsILoadGroup.idl         \
+		.\nsIStreamConverter2.idl	\
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
