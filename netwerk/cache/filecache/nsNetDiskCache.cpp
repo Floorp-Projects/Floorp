@@ -50,6 +50,8 @@
 ERROR! Must have a byte order
 #endif
 
+#include "nsXPIDLString.h" 
+
 #ifdef IS_LITTLE_ENDIAN
 #define COPY_INT32(_a,_b)  memcpy(_a, _b, sizeof(int32))
 #else
@@ -195,8 +197,15 @@ NS_IMETHODIMP nsNetDiskCache::InitCacheFolder()
 
 // don't initialize if no cache folder is set. 
  if(!mDiskCacheFolder) return NS_OK ;
-	
 	nsresult rv;
+
+    nsXPIDLCString path;
+    rv = mDiskCacheFolder -> GetPath (getter_Copies (path));
+    if (NS_FAILED (rv))
+        return rv;
+
+	fixCacheVersion (path, CURRENT_CACHE_VERSION);
+
 	if(!mDB) {
     mDB = new nsDBAccessor() ;
     if(!mDB)
@@ -745,4 +754,88 @@ nsNetDiskCache::RenameCacheSubDirs(void)
   mDBCorrupted = PR_TRUE ;
 
   return NS_OK ;
+}
+
+#define	VERSION_FILE	"Version"
+
+PRBool
+nsNetDiskCache::fixCacheVersion (const char *cache_dir, unsigned version)
+{
+	nsCString versionName;
+
+	versionName.Append (  cache_dir );
+	versionName.Append ("/");
+	versionName.Append (VERSION_FILE);
+
+	PRFileDesc *vf;
+	char  vBuf[12];
+	unsigned fVersion = 0;
+
+	memset (vBuf, 0, sizeof (vBuf));
+
+	if ((vf = PR_Open (versionName, PR_RDWR, 0)) != NULL)
+	{
+		PR_Read (vf, vBuf, 12);
+		fVersion = atoi (vBuf);
+	}
+	else
+	{
+		if ((vf = PR_Open (versionName, PR_CREATE_FILE|PR_RDWR, 0777)) == NULL)
+			return PR_FALSE;
+	}
+
+	if (fVersion < version)
+	{
+		sprintf  (vBuf, "%u", version);
+		if (PR_Write (vf, vBuf, sizeof (vBuf)) != sizeof (vBuf))
+		{
+			PR_Close (vf);
+			return PR_FALSE;
+		}
+
+		removeAllFiles (cache_dir, VERSION_FILE);
+	}
+
+	PR_Close (vf);
+	
+	return PR_TRUE;
+}
+
+void
+nsNetDiskCache::removeAllFiles (const char *dir, const char *tagFile)
+{
+	PRDir *dp = PR_OpenDir (dir);
+	PRDirEntry *de;
+	PRFileInfo	finfo;
+
+	if (dp == NULL)
+		return;
+
+	nsCString fileName;	// don't make it static here (stack may overflow)
+
+	while ((de = PR_ReadDir (dp, PR_SKIP_BOTH)) != NULL)
+	{
+		if (tagFile != NULL
+			&& !strcmp (de -> name, tagFile))
+			continue;
+
+		fileName.Truncate ();
+		fileName.Append (dir);
+		fileName.Append ("/");
+		fileName.Append (de -> name);
+
+		if (PR_GetFileInfo (fileName, &finfo) != PR_SUCCESS)
+			continue;
+
+		if (finfo.type == PR_FILE_DIRECTORY)
+		{
+			removeAllFiles (fileName);
+			PR_RmDir	   (fileName);
+		}
+		else
+			PR_Delete (fileName);
+
+	}
+
+	PR_CloseDir (dp);
 }

@@ -41,6 +41,8 @@ class nsICachedNetData; /* forward decl */
 class nsISimpleEnumerator; /* forward decl */
 class nsIFile; /* forward decl */
 
+#define CURRENT_CACHE_VERSION   2
+
 /* starting interface:    nsNetDiskCache */
 
 class nsNetDiskCache : public nsINetDataDiskCache {
@@ -68,6 +70,9 @@ class nsNetDiskCache : public nsINetDataDiskCache {
   private:
   NS_IMETHODIMP InitCacheFolder();
 		
+  PRBool    fixCacheVersion (const char *cache_dir, unsigned version);
+  void      removeAllFiles  (const char *dir, const char *tagFile = NULL);
+
   PRBool 			                mEnabled ;
   PRUint32 			                mNumEntries ;
   nsCOMPtr<nsINetDataCache> 	    mpNextCache ;
