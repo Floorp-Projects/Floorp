@@ -5,6 +5,7 @@ nsCppSharedAllocator.h
 nsCRT.h
 nsDeque.h
 nsEnumeratorUtils.h
+nsFixedSizeAllocator.h
 nsHashtable.h
 nsHashtableEnumerator.h
 nsIArena.h

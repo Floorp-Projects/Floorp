@@ -107,12 +107,13 @@
 #define nsFixedSizeAllocator_h__
 
 #include "nscore.h"
+#include "nsCom.h"
 #include "nsError.h"
 #include "plarena.h"
 
 #define NS_SIZE_IN_HEAP(_size) ((_size) + sizeof(double))
 
-class nsFixedSizeAllocator
+class NS_COM nsFixedSizeAllocator
 {
 protected:
     PLArenaPool mPool;
