@@ -143,7 +143,7 @@
 #endif
 
 #ifdef _WIN32
-#  ifdef __MWERKS__
+#  if defined(__MWERKS__) || defined(__GNUC__)
 #    define JS_IMPORT_API(__x)      __x
 #  else
 #    define JS_IMPORT_API(__x)      __declspec(dllimport) __x
@@ -304,7 +304,7 @@ typedef unsigned long JSUint64;
 #elif defined(WIN16)
 typedef __int64 JSInt64;
 typedef unsigned __int64 JSUint64;
-#elif defined(WIN32)
+#elif defined(WIN32) && !defined(__GNUC__)
 typedef __int64  JSInt64;
 typedef unsigned __int64 JSUint64;
 #else

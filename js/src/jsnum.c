@@ -438,7 +438,7 @@ static JSConstDoubleSpec number_constants[] = {
 
 static jsdouble NaN;
 
-#if !defined __MWERKS__ && defined XP_PC && (defined _M_IX86 || defined __GNUC__)
+#if !defined __MWERKS__ && defined XP_PC && (defined _M_IX86 || (defined __GNUC__ && !defined(__MINGW32__)))
 
 /*
  * Set the exception mask to mask all exceptions and set the FPU precision
