@@ -837,7 +837,7 @@ nsHTTPIndexParser::ParseInt(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** 
 //
 
 nsHTTPIndex::nsHTTPIndex()
-	: mContainer(nsnull), mInner(nsnull)
+	: mInner(nsnull), mContainer(nsnull)
 {
 	NS_INIT_REFCNT();
 }
@@ -845,7 +845,7 @@ nsHTTPIndex::nsHTTPIndex()
 
 
 nsHTTPIndex::nsHTTPIndex(nsISupports* aContainer)
-  : mContainer(aContainer), mInner(nsnull)
+	: mInner(nsnull), mContainer(aContainer)
 {
 	NS_INIT_REFCNT();
 }
