@@ -31,7 +31,7 @@ interface Window {
                  attribute  wstring defaultStatus;
                  attribute  wstring name;
 		 attribute  jsval location;
-		 replaceable attribute DOMString title;
+		 attribute  DOMString title;
                  attribute  long innerWidth;
                  attribute  long innerHeight;
                  attribute  long outerWidth;
