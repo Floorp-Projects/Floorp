@@ -22,6 +22,7 @@
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #include "jsapi.h"
+#include "jsnum.h"
 #include "nsJSUtils.h"
 #include "nsDOMError.h"
 #include "nscore.h"
@@ -35,19 +36,24 @@
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
 #include "nsIDOMProcessingInstruction.h"
+#include "nsIDOMStyleSheet.h"
+#include "nsIDOMLinkStyle.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIProcessingInstructionIID, NS_IDOMPROCESSINGINSTRUCTION_IID);
+static NS_DEFINE_IID(kIStyleSheetIID, NS_IDOMSTYLESHEET_IID);
+static NS_DEFINE_IID(kILinkStyleIID, NS_IDOMLINKSTYLE_IID);
 
 //
 // ProcessingInstruction property ids
 //
 enum ProcessingInstruction_slots {
   PROCESSINGINSTRUCTION_TARGET = -1,
-  PROCESSINGINSTRUCTION_DATA = -2
+  PROCESSINGINSTRUCTION_DATA = -2,
+  LINKSTYLE_SHEET = -3
 };
 
 /***********************************************************************/
@@ -90,6 +96,26 @@ GetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
           rv = a->GetData(prop);
           if (NS_SUCCEEDED(rv)) {
             nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+        break;
+      }
+      case LINKSTYLE_SHEET:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_LINKSTYLE_SHEET, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMStyleSheet* prop;
+          nsIDOMLinkStyle* b;
+          if (NS_OK == a->QueryInterface(kILinkStyleIID, (void **)&b)) {
+            rv = b->GetSheet(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
         }
         break;
@@ -210,6 +236,7 @@ static JSPropertySpec ProcessingInstructionProperties[] =
 {
   {"target",    PROCESSINGINSTRUCTION_TARGET,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"data",    PROCESSINGINSTRUCTION_DATA,    JSPROP_ENUMERATE},
+  {"sheet",    LINKSTYLE_SHEET,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
