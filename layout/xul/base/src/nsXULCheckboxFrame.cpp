@@ -23,6 +23,13 @@
 #include "nsXULCheckboxFrame.h"
 #include "nsIDOMXULCheckboxElement.h"
 #include "nsIContent.h"
+#include "nsIDOMXULRadioElement.h"
+#include "nsIDocument.h"
+#include "nsIDOMXULDocument.h"
+#include "nsIDOMNodeList.h"
+#include "nsHTMLAtoms.h"
+#include "nsINameSpaceManager.h"
+
 
 //
 // NS_NewXULCheckboxFrame
@@ -45,41 +52,6 @@ NS_NewXULCheckboxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   return NS_OK;
   
 } // NS_NewXULCheckboxFrame
-
-void nsXULCheckboxFrame::ToggleCheckState()
-{
-  nsCOMPtr<nsIDOMXULCheckboxElement> element = do_QueryInterface(mContent);
-  if(element) {
-    PRBool disabled;
-    element->GetDisabled(&disabled);
-    if(!disabled) {
-      PRBool checked;
-      element->GetChecked(&checked);
-      element->SetChecked(!checked);
-    }
-  }
-}
-
-NS_IMETHODIMP nsXULCheckboxFrame::HandleEvent(
-  nsIPresContext* aPresContext, 
-  nsGUIEvent* aEvent,
-  nsEventStatus* aEventStatus)
-{
-    switch (aEvent->message) {
-      case NS_MOUSE_LEFT_BUTTON_UP:
-        ToggleCheckState();
-        break;
-      case NS_KEY_PRESS:
-        if (NS_KEY_EVENT == aEvent->eventStructType) {
-          nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
-          if (NS_VK_SPACE == keyEvent->keyCode) 
-            ToggleCheckState();
-        }
-        break;
-  }
-
-  return nsTitledButtonFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
-}
 
 PRIntn nsXULCheckboxFrame::GetDefaultAlignment()
 {

@@ -361,15 +361,15 @@ nsXBLEventHandler::MouseEventMatched(nsIDOMUIEvent* aMouseEvent)
 NS_IMETHODIMP
 nsXBLEventHandler::ExecuteHandler(const nsString& aEventName, nsIDOMEvent* aEvent)
 {
-  // We are the default action for this command.
-  // Stop any other default action from executing.
-  aEvent->PreventDefault();
-
   // This is a special-case optimization to make command handling fast.
   // It isn't really a part of XBL, but it helps speed things up.
   nsAutoString command;
   mHandlerElement->GetAttribute(kNameSpaceID_None, kCommandAtom, command);
   if (!command.IsEmpty()) {
+    // We are the default action for this command.
+    // Stop any other default action from executing.
+    aEvent->PreventDefault();
+
     // Instead of executing JS, let's get the controller for the bound
     // element and call doCommand on it.
     nsCOMPtr<nsIController> controller;

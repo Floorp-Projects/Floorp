@@ -51,6 +51,7 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsJSXULTitledButtonElement.obj      \
 		.\$(OBJDIR)\nsJSXULCheckboxElement.obj      \
 		.\$(OBJDIR)\nsJSXULRadioElement.obj      \
+		.\$(OBJDIR)\nsJSXULRadioGroupElement.obj      \
 		.\$(OBJDIR)\nsJSXULMenuListElement.obj    \
         .\$(OBJDIR)\nsRDFDOMNodeList.obj          \
         .\$(OBJDIR)\nsXULElement.obj              \
@@ -68,6 +69,7 @@ CPP_OBJS=\
 		.\$(OBJDIR)\nsXULMenuListElement.obj      \
 		.\$(OBJDIR)\nsXULCheckboxElement.obj         \
 		.\$(OBJDIR)\nsXULRadioElement.obj         \
+		.\$(OBJDIR)\nsXULRadioGroupElement.obj         \
 	$(NULL)
 
 # XXX we are including layout\html\base\src to get HTML elements

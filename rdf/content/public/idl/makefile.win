@@ -36,6 +36,7 @@ IDLSRCS =  \
 		XULTitledButtonElement.idl \
 		XULCheckboxElement.idl \
 		XULRadioElement.idl \
+		XULRadioGroupElement.idl \
 		XULMenuListElement.idl \
        $(NULL)
 

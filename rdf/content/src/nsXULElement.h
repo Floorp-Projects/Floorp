@@ -344,6 +344,7 @@ protected:
     static nsIAtom*             kTitledButtonAtom;
     static nsIAtom*             kCheckboxAtom;
     static nsIAtom*             kRadioAtom;
+    static nsIAtom*             kRadioGroupAtom;
     static nsIAtom*             kTooltipAtom;
     static nsIAtom*             kTreeAtom;
     static nsIAtom*             kTreeCellAtom;
