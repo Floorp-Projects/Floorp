@@ -180,56 +180,50 @@ END
 // Dialog
 //
 
-IDD_CONFIRMCHECK DIALOG DISCARDABLE  0, 0, 263, 95
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Dialog"
+IDD_PROMPT DIALOG DISCARDABLE  0, 0, 263, 113
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Enter Value"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Static",IDC_MESSAGE,36,7,220,41
-    CONTROL         "Check1",IDC_CHECKMSG,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,7,52,249,19
-    PUSHBUTTON      "&Yes",IDC_BUTTON1,75,74,50,14
-    PUSHBUTTON      "&No",IDC_BUTTON2,128,74,50,14
-    ICON            "",IDC_QUESTION,7,7,20,20
+    LTEXT           "Value:",IDC_STATIC,7,71,21,8
+    EDITTEXT        IDC_VALUE,32,71,224,14,ES_AUTOHSCROLL
+    CONTROL         "Check msg",IDC_CHECKMSG,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,50,249,19
+    DEFPUSHBUTTON   "OK",IDOK,152,92,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,206,92,50,14
+    LTEXT           "Message",IDC_MESSAGE,36,7,220,41
+    ICON            IDI_MOZILLABROWSER,IDC_QUESTION,7,7,20,20
 END
 
-IDD_PROMPT DIALOG DISCARDABLE  0, 0, 263, 95
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Dialog"
+IDD_PROMPTUSERPASS DIALOG DISCARDABLE  0, 0, 263, 135
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Authentication Required"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Static",IDC_MESSAGE,36,7,220,41
-    CONTROL         "Check1",IDC_CHECKMSG,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,7,52,249,19
-    PUSHBUTTON      "&Yes",IDC_BUTTON1,75,74,50,14
-    PUSHBUTTON      "&No",IDC_BUTTON2,128,74,50,14
-    ICON            "",IDC_QUESTION,7,7,20,20
+    LTEXT           "Username:",IDC_STATIC,7,71,35,8
+    EDITTEXT        IDC_USERNAME,44,71,212,14,ES_AUTOHSCROLL
+    LTEXT           "Password:",IDC_STATIC,7,92,34,8
+    EDITTEXT        IDC_PASSWORD,44,92,212,14,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "CheckMsg",IDC_CHECKMSG,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,50,249,19
+    PUSHBUTTON      "OK",IDOK,153,114,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,206,114,50,14
+    LTEXT           "Message",IDC_MESSAGE,36,7,220,41
+    ICON            IDI_MOZILLABROWSER,IDC_QUESTION,7,7,20,20
 END
 
-IDD_PROMPTUSERNAMEANDPASSWORD DIALOG DISCARDABLE  0, 0, 263, 95
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Dialog"
+IDD_CONFIRMEX DIALOG DISCARDABLE  0, 0, 263, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Confirmation"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Static",IDC_MESSAGE,36,7,220,41
-    CONTROL         "Check1",IDC_CHECKMSG,"Button",BS_AUTOCHECKBOX | 
+    DEFPUSHBUTTON   "0",IDC_BUTTON0,204,74,50,14
+    PUSHBUTTON      "2",IDC_BUTTON2,88,74,50,14
+    PUSHBUTTON      "1",IDC_BUTTON1,146,74,50,14
+    ICON            IDI_MOZILLABROWSER,IDC_QUESTION,7,7,20,20
+    LTEXT           "Message",IDC_MESSAGE,36,7,220,41
+    CONTROL         "Check Msg",IDC_CHECKMSG,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,7,52,249,19
-    PUSHBUTTON      "&Yes",IDC_BUTTON1,75,74,50,14
-    PUSHBUTTON      "&No",IDC_BUTTON2,128,74,50,14
-    ICON            "",IDC_QUESTION,7,7,20,20
-END
-
-IDD_PROMPTPASSWORD DIALOG DISCARDABLE  0, 0, 263, 95
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Dialog"
-FONT 8, "MS Sans Serif"
-BEGIN
-    LTEXT           "Static",IDC_MESSAGE,36,7,220,41
-    CONTROL         "Check1",IDC_CHECKMSG,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,7,52,249,19
-    PUSHBUTTON      "&Yes",IDC_BUTTON1,75,74,50,14
-    PUSHBUTTON      "&No",IDC_BUTTON2,128,74,50,14
-    ICON            "",IDC_QUESTION,7,7,20,20
 END
 
 
@@ -241,31 +235,23 @@ END
 #ifdef APSTUDIO_INVOKED
 GUIDELINES DESIGNINFO DISCARDABLE 
 BEGIN
-    IDD_CONFIRMCHECK, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 256
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 88
-    END
-
     IDD_PROMPT, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 256
         TOPMARGIN, 7
-        BOTTOMMARGIN, 88
+        BOTTOMMARGIN, 106
     END
 
-    IDD_PROMPTUSERNAMEANDPASSWORD, DIALOG
+    IDD_PROMPTUSERPASS, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 256
         TOPMARGIN, 7
-        BOTTOMMARGIN, 88
+        BOTTOMMARGIN, 128
     END
 
-    IDD_PROMPTPASSWORD, DIALOG
+    IDD_CONFIRMEX, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 256
@@ -291,6 +277,17 @@ BEGIN
     IDS_LOCATEMOZILLA       "The browser control does not know where Mozilla is installed and may not function correctly.\nDo you want to locate Mozilla now?"
     IDS_LOCATEMOZILLATITLE  "Cannot locate Mozilla bin directory"
     IDS_CANNOTCREATEPREFS   "The Mozilla control cannot create a critical component. This prevents the control from functioning correctly. Possible reasons for the problem are:\n\n1. The PATH environment variable does not point to the Mozilla bin directory.\n2. The registry key HKEY_LOCAL_MACHINE\\Software\\Mozilla\\BinDirectoryPath registry key has not been set or is incorrect\n3. The file component.reg has not been generated or is empty.\n\nPlease refer to http://www.iol.ie/~locka/mozilla/mozilla.htm for guidance on how to resolve these problems."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CONFIRMEX_OK        "OK"
+    IDS_CONFIRMEX_CANCEL    "Cancel"
+    IDS_CONFIRMEX_YES       "Yes"
+    IDS_CONFIRMEX_NO        "No"
+    IDS_CONFIRMEX_SAVE      "Save"
+    IDS_CONFIRMEX_DONTSAVE  "Don't Save"
+    IDS_CONFIRMEX_REVERT    "Revert"
 END
 
 #endif    // English (U.S.) resources
