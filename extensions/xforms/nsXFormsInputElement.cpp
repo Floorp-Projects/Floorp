@@ -53,9 +53,6 @@
 #include "nsAutoPtr.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIDOMFocusListener.h"
-#include "nsIDOM3EventTarget.h"
-#include "nsIDOMEventReceiver.h"
-#include "nsIDOMEventGroup.h"
 
 static const nsIID sScriptingIIDs[] = {
   NS_IDOMELEMENT_IID,
@@ -121,14 +118,17 @@ nsXFormsInputElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   mInput = do_QueryInterface(inputElement);
   NS_ENSURE_TRUE(mInput, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mInput);
-  nsCOMPtr<nsIDOMEventGroup> group;
-  receiver->GetSystemEventGroup(getter_AddRefs(group));
+  // We can't use xtf handleDefault here because editor stops blur events from
+  // bubbling, and we can't use a system event group handler because blur
+  // events don't go to the system event group (bug 263240).  So, just install
+  // a bubbling listener in the normal event group.  This works out because
+  // content can't get at the anonymous content to install an event handler,
+  // and the event doesn't bubble up.
 
-  nsCOMPtr<nsIDOM3EventTarget> targ = do_QueryInterface(mInput);
-  targ->AddGroupedEventListener(NS_LITERAL_STRING("blur"), this,
-                                PR_FALSE, group);
+  nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(mInput);
+  NS_ASSERTION(targ, "input must be an event target!");
 
+  targ->AddEventListener(NS_LITERAL_STRING("blur"), this, PR_FALSE);
   return NS_OK;
 }
 
@@ -166,16 +166,10 @@ nsXFormsInputElement::DidLayout()
 NS_IMETHODIMP
 nsXFormsInputElement::OnDestroyed()
 {
-  if (!mInput)
-    return NS_OK;
-
-  nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mInput);
-  nsCOMPtr<nsIDOMEventGroup> group;
-  receiver->GetSystemEventGroup(getter_AddRefs(group));
-
-  nsCOMPtr<nsIDOM3EventTarget> targ = do_QueryInterface(mInput);
-  targ->RemoveGroupedEventListener(NS_LITERAL_STRING("blur"), this,
-                                   PR_FALSE, group);
+  nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(mInput);
+  if (NS_LIKELY(targ != nsnull)) {
+    targ->RemoveEventListener(NS_LITERAL_STRING("blur"), this, PR_FALSE);
+  }
 
   return NS_OK;
 }
