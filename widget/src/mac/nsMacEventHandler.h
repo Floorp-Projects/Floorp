@@ -77,9 +77,9 @@ public:
 
 protected:
 	nsMacWindow*	mTopLevelWidget;
-	nsWindow*			mLastWidgetHit;
-	PRBool				mMouseInWidgetHit;
-	nsWindow*			mLastWidgetPointed;
+	static nsWindow*		mLastWidgetHit;			// These items have been made static to fix #9456
+	static PRBool				mMouseInWidgetHit;
+	static nsWindow*		mLastWidgetPointed;
 	RgnHandle			mUpdateRgn;
 	TSMDocumentID		mTSMDocument;
 	PRBool				mIMEIsComposing;

@@ -40,6 +40,11 @@
 
 PRBool	nsMacEventHandler::mInBackground = PR_FALSE;
 
+nsWindow*		nsMacEventHandler::mLastWidgetHit = nsnull;
+PRBool			nsMacEventHandler::mMouseInWidgetHit = PR_FALSE;
+nsWindow*		nsMacEventHandler::mLastWidgetPointed = nsnull;
+
+
 //-------------------------------------------------------------------------
 //
 // nsMacEventHandler constructor/destructor
@@ -51,8 +56,6 @@ nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget)
 	InterfaceTypeList supportedServices;
 	
 	mTopLevelWidget			= aTopLevelWidget;
-	mLastWidgetHit			= nsnull;
-	mLastWidgetPointed	= nsnull;
 	mTSMDocument				= nsnull;
 	
 	//
