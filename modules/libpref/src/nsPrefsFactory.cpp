@@ -25,6 +25,9 @@
 #include "nsPrefService.h"
 #include "nsPrefBranch.h"
 #include "nsIPref.h"
+#include "nsAutoConfig.h"
+#include "nsIAppStartupNotifier.h"
+#include "nsICategoryManager.h"
 
 // remove this when nsPref goes away
 extern NS_IMETHODIMP nsPrefConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult);
@@ -32,6 +35,49 @@ extern NS_IMETHODIMP nsPrefConstructor(nsISupports *aOuter, REFNSIID aIID, void 
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefLocalizedString, Init)
+  // Factory constructor for nsAutoConfig. nsAutoConfig doesn't have a 
+  //separate module so it is bundled with pref module.
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAutoConfig,Init)
+ 
+ // Registering nsAutoConfig module as part of the app-startup category to 
+ // get it instantiated.
+ 
+static NS_METHOD 
+RegisterAutoConfig(nsIComponentManager *aCompMgr,
+                   nsIFile *aPath,
+                   const char *registryLocation,
+                   const char *componentType,
+                   const nsModuleComponentInfo *info)
+{
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> 
+    categoryManager(do_GetService("@mozilla.org/categorymanager;1", &rv));
+  if (NS_SUCCEEDED(rv)) {
+    rv = categoryManager->AddCategoryEntry(APPSTARTUP_CATEGORY,
+                                           "AutoConfig Module",
+                                           NS_AUTOCONFIG_CONTRACTID,
+                                           PR_TRUE, PR_TRUE,nsnull);
+  }
+  return rv;
+}
+
+static NS_METHOD 
+UnRegisterAutoConfig(nsIComponentManager *aCompMgr,
+                   nsIFile *aPath,
+                   const char *registryLocation,
+                   const nsModuleComponentInfo *info)
+{
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> 
+    categoryManager(do_GetService("@mozilla.org/categorymanager;1", &rv));
+  if (NS_SUCCEEDED(rv)) {
+    rv = categoryManager->DeleteCategoryEntry(APPSTARTUP_CATEGORY,
+                                              "AutoConfig Module",
+                                              PR_TRUE,nsnull);
+  }
+  return rv;
+}
+
 
 // The list of components we register
 static nsModuleComponentInfo components[] = 
@@ -55,6 +101,14 @@ static nsModuleComponentInfo components[] =
     NS_PREF_CID,
     NS_PREF_CONTRACTID, 
     nsPrefConstructor
+  },
+  { 
+    NS_AUTOCONFIG_CLASSNAME, 
+    NS_AUTOCONFIG_CID, 
+    NS_AUTOCONFIG_CONTRACTID, 
+    nsAutoConfigConstructor, 
+    RegisterAutoConfig,
+    UnRegisterAutoConfig
   },
 };
 
