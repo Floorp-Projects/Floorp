@@ -1,8 +1,8 @@
 #
-# Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
+# Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile.in,v 1.1 2003/01/04 02:13:58 wtc%netscape.com Exp $"
+#ident	"$Id: Makefile.in,v 1.2 2004/11/29 16:26:02 christophe.ravel.bugs%sun.com Exp $"
 #
 
 MOD_DEPTH = ../..
@@ -12,30 +12,47 @@ VPATH	    = @srcdir@
 
 include $(MOD_DEPTH)/config/autoconf.mk
 
+abs_dist_libdir := $(shell (cd $(dist_libdir);pwd))
+abs_dist_includedir := $(shell (cd $(dist_includedir);pwd))
+
 %: %.ksh
 	$(RM) $@
 	cp $< $@
 	chmod +x $@
 
-ifeq ($(USE_64), 1)
 DIRS = \
-	SUNWprx
-else
-DIRS = \
-	SUNWpr
-endif
+	SUNWpr \
+	SUNWprd
+
+include $(srcdir)/Makefile.com
 
 PROTO = \
 	$(ROOT) \
-	$(ROOT)/usr \
-	$(ROOT)/usr/lib \
-	$(ROOT)/usr/lib/mps
+	$(ROOT)/usr/lib/mps \
+	$(ROOT)/usr/include/mps
 
-ifdef USE_64
-PROTO += $(ROOT)/usr/lib/mps/sparcv9
+ifeq ($(MACH), sparc)
+	PROTO += $(ROOT)/usr/lib/mps/cpu/sparcv8plus
 endif
 
-include $(srcdir)/Makefile.com
+ifeq ($(USE_64), 1)
+ifeq ($(MACH), sparc)
+# Sparc
+	PROTO += $(ROOT)/usr/lib/mps/sparcv9
+else
+# AMD64
+	PROTO += $(ROOT)/usr/lib/mps/amd64
+endif
+	abs_dist64_libdir = $(abs_dist_libdir)
+	abs_dist32_libdir = $(shell echo $(abs_dist_libdir) | sed -e "s|_64_OPT|_OPT|g" -e "s|_64_DBG|_DBG|g")
+	abs_dist64_includedir = $(abs_dist_includedir)
+	abs_dist32_includedir = $(shell echo $(abs_dist_includedir) | sed -e "s|_64_OPT|_OPT|g" -e "s|_64_DBG|_DBG|g")
+else
+	abs_dist32_libdir = $(abs_dist_libdir)
+	abs_dist64_libdir = $(shell echo $(abs_dist_libdir) | sed -e "s|_OPT|_64_OPT|g" -e "s|_DBG|_64_DBG|g")
+	abs_dist32_includedir = $(abs_dist_includedir)
+	abs_dist64_includedir = $(shell echo $(abs_dist_includedir) | sed -e "s|_OPT|_64_OPT|g" -e "s|_DBG|_64_DBG|g")
+endif
 
 awk_pkginfo: bld_awk_pkginfo
 	./bld_awk_pkginfo -m $(MACH) -p "$(PRODUCT_VERSION)" -o $@ -v $(PRODUCT_VERSION)
@@ -48,13 +65,21 @@ clean clobber::
 	$(RM) awk_pkginfo bld_awk_pkginfo
 	$(RM) -r $(ROOT)
 
-$(ROOT) $(ROOT)/%:
+$(ROOT):
 	mkdir -p $@
 
-ifdef USE_64
 $(ROOT)/usr/lib/mps/sparcv9:
-	$(LN) -sf ../../../../$(dist_libdir) $@
-else
+	mkdir -p $@
+	$(CP) -r $(abs_dist64_libdir)/*.so $@
+$(ROOT)/usr/lib/mps/amd64:
+	mkdir -p $@
+	$(CP) -r $(abs_dist64_libdir)/*.so $@
 $(ROOT)/usr/lib/mps:
-	$(LN) -sf ../../../$(dist_libdir) $@
-endif
+	mkdir -p $@
+	$(CP) -r $(abs_dist32_libdir)/*.so $@
+$(ROOT)/usr/lib/mps/cpu/sparcv8plus:
+	mkdir -p $@
+	$(CP) -r $(abs_dist32_libdir)/cpu/sparcv8plus/*.so $@
+$(ROOT)/usr/include/mps:
+	mkdir -p $@
+	$(CP) -r $(abs_dist32_includedir)/* $@

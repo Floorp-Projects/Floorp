@@ -1,9 +1,11 @@
 Summary: Netscape Portable Runtime
 Name: %{name}
-Vendor: Sun Microsystems
+Vendor: Sun Microsystems, Inc.
 Version: %{version}
 Release: %{release}
-Copyright: MPL/GPL
+Copyright: Copyright 2004 Sun Microsystems, Inc.  All rights reserved.  Use is subject to license terms.  Also under other license(s) as shown at the Description field.
+Distribution: Sun Java(TM) Enterprise System
+URL: http://www.sun.com
 Group: System Environment/Base
 Source: %{name}-%{version}.tar.gz
 ExclusiveOS: Linux
@@ -18,6 +20,8 @@ memory management (malloc and free) and shared library linking.
 
 See: http://www.mozilla.org/projects/nspr/about-nspr.html
 
+Under "MPL/GPL" license.
+
 %package devel
 Summary: Development Libraries for the Netscape Portable Runtime
 Group: Development/Libraries
@@ -25,6 +29,8 @@ Requires: %{name} = %{version}-%{release}
 
 %description devel
 Header files for doing development with the Netscape Portable Runtime.
+
+Under "MPL/GPL" license.
 
 %prep
 %setup -c
@@ -42,80 +48,72 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%dir /usr
-%dir /usr/lib
-%dir /usr/lib/mps
-/usr/lib/mps/libnspr4.so
-/usr/lib/mps/libplc4.so
-/usr/lib/mps/libplds4.so
+%dir /opt
+%dir /opt/sun
+%dir /opt/sun/private
+%dir /opt/sun/private/lib
+/opt/sun/private/lib/libnspr4.so
+/opt/sun/private/lib/libplc4.so
+/opt/sun/private/lib/libplds4.so
 
 %files devel
 %defattr(-,root,root)
-/usr/lib/mps/libnspr4.a
-/usr/lib/mps/libplc4.a
-/usr/lib/mps/libplds4.a
-%dir /usr
-%dir /usr/include
-%dir /usr/include/mps
-%dir /usr/include/mps/nspr
-%dir /usr/include/mps/nspr/obsolete
-%dir /usr/include/mps/nspr/private
-/usr/include/mps/nspr/private/pprio.h
-/usr/include/mps/nspr/private/pprthred.h
-/usr/include/mps/nspr/private/prpriv.h
-/usr/include/mps/nspr/prcpucfg.h
-/usr/include/mps/nspr/obsolete/pralarm.h
-/usr/include/mps/nspr/obsolete/probslet.h
-/usr/include/mps/nspr/obsolete/protypes.h
-/usr/include/mps/nspr/obsolete/prsem.h
-/usr/include/mps/nspr/nspr.h
-/usr/include/mps/nspr/pratom.h
-/usr/include/mps/nspr/prbit.h
-/usr/include/mps/nspr/prclist.h
-/usr/include/mps/nspr/prcmon.h
-/usr/include/mps/nspr/prcountr.h
-/usr/include/mps/nspr/prcvar.h
-/usr/include/mps/nspr/prdtoa.h
-/usr/include/mps/nspr/prenv.h
-/usr/include/mps/nspr/prerr.h
-/usr/include/mps/nspr/prerror.h
-/usr/include/mps/nspr/prinet.h
-/usr/include/mps/nspr/prinit.h
-/usr/include/mps/nspr/prinrval.h
-/usr/include/mps/nspr/prio.h
-/usr/include/mps/nspr/pripcsem.h
-/usr/include/mps/nspr/prlink.h
-/usr/include/mps/nspr/prlock.h
-/usr/include/mps/nspr/prlog.h
-/usr/include/mps/nspr/prlong.h
-/usr/include/mps/nspr/prmem.h
-/usr/include/mps/nspr/prmon.h
-/usr/include/mps/nspr/prmwait.h
-/usr/include/mps/nspr/prnetdb.h
-/usr/include/mps/nspr/prolock.h
-/usr/include/mps/nspr/prpdce.h
-/usr/include/mps/nspr/prprf.h
-/usr/include/mps/nspr/prproces.h
-/usr/include/mps/nspr/prrng.h
-/usr/include/mps/nspr/prrwlock.h
-/usr/include/mps/nspr/prshma.h
-/usr/include/mps/nspr/prshm.h
-/usr/include/mps/nspr/prsystem.h
-/usr/include/mps/nspr/prthread.h
-/usr/include/mps/nspr/prtime.h
-/usr/include/mps/nspr/prtpool.h
-/usr/include/mps/nspr/prtrace.h
-/usr/include/mps/nspr/prtypes.h
-/usr/include/mps/nspr/prvrsion.h
-/usr/include/mps/nspr/prwin16.h
-/usr/include/mps/nspr/plarenas.h
-/usr/include/mps/nspr/plarena.h
-/usr/include/mps/nspr/plhash.h
-/usr/include/mps/nspr/plbase64.h
-/usr/include/mps/nspr/plerror.h
-/usr/include/mps/nspr/plgetopt.h
-/usr/include/mps/nspr/plresolv.h
-/usr/include/mps/nspr/plstr.h
+%dir /opt
+%dir /opt/sun
+%dir /opt/sun/private
+%dir /opt/sun/private/include
+%dir /opt/sun/private/include/nspr
+%dir /opt/sun/private/include/nspr/obsolete
+/opt/sun/private/include/nspr/prcpucfg.h
+/opt/sun/private/include/nspr/obsolete/protypes.h
+/opt/sun/private/include/nspr/nspr.h
+/opt/sun/private/include/nspr/pratom.h
+/opt/sun/private/include/nspr/prbit.h
+/opt/sun/private/include/nspr/prclist.h
+/opt/sun/private/include/nspr/prcmon.h
+/opt/sun/private/include/nspr/prcountr.h
+/opt/sun/private/include/nspr/prcvar.h
+/opt/sun/private/include/nspr/prdtoa.h
+/opt/sun/private/include/nspr/prenv.h
+/opt/sun/private/include/nspr/prerr.h
+/opt/sun/private/include/nspr/prerror.h
+/opt/sun/private/include/nspr/prinet.h
+/opt/sun/private/include/nspr/prinit.h
+/opt/sun/private/include/nspr/prinrval.h
+/opt/sun/private/include/nspr/prio.h
+/opt/sun/private/include/nspr/pripcsem.h
+/opt/sun/private/include/nspr/prlink.h
+/opt/sun/private/include/nspr/prlock.h
+/opt/sun/private/include/nspr/prlog.h
+/opt/sun/private/include/nspr/prlong.h
+/opt/sun/private/include/nspr/prmem.h
+/opt/sun/private/include/nspr/prmon.h
+/opt/sun/private/include/nspr/prmwait.h
+/opt/sun/private/include/nspr/prnetdb.h
+/opt/sun/private/include/nspr/prolock.h
+/opt/sun/private/include/nspr/prpdce.h
+/opt/sun/private/include/nspr/prprf.h
+/opt/sun/private/include/nspr/prproces.h
+/opt/sun/private/include/nspr/prrng.h
+/opt/sun/private/include/nspr/prrwlock.h
+/opt/sun/private/include/nspr/prshma.h
+/opt/sun/private/include/nspr/prshm.h
+/opt/sun/private/include/nspr/prsystem.h
+/opt/sun/private/include/nspr/prthread.h
+/opt/sun/private/include/nspr/prtime.h
+/opt/sun/private/include/nspr/prtpool.h
+/opt/sun/private/include/nspr/prtrace.h
+/opt/sun/private/include/nspr/prtypes.h
+/opt/sun/private/include/nspr/prvrsion.h
+/opt/sun/private/include/nspr/prwin16.h
+/opt/sun/private/include/nspr/plarenas.h
+/opt/sun/private/include/nspr/plarena.h
+/opt/sun/private/include/nspr/plhash.h
+/opt/sun/private/include/nspr/plbase64.h
+/opt/sun/private/include/nspr/plerror.h
+/opt/sun/private/include/nspr/plgetopt.h
+/opt/sun/private/include/nspr/plresolv.h
+/opt/sun/private/include/nspr/plstr.h
 
 %changelog
 * Sat Jan 18 2003 Kirk Erickson <kirk.erickson@sun.com>

@@ -2,21 +2,21 @@
 # Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile.in,v 1.1 2003/01/04 02:14:04 wtc%netscape.com Exp $"
+#ident	"$Id: Makefile.in,v 1.2 2004/11/29 16:26:03 christophe.ravel.bugs%sun.com Exp $"
 #
 
 MOD_DEPTH = ../../..
 topsrcdir   = @top_srcdir@
-srcdir	    = @srcdir@
-VPATH	    = @srcdir@
+srcdir      = @srcdir@
+VPATH       = @srcdir@
 
 include $(MOD_DEPTH)/config/autoconf.mk
 
-include $(srcdir)/../Makefile.com
+include $(srcdir)/../Makefile-devl.com
 
 DATAFILES += 
 
 all:: $(FILES)
 publish:: all pkg
 
-include $(srcdir)/../Makefile.targ
+include $(srcdir)/../Makefile-devl.targ

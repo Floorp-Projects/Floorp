@@ -2,7 +2,7 @@
 # Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile.in,v 1.2 2003/02/13 01:57:42 wtc%netscape.com Exp $"
+#ident	"$Id: Makefile.in,v 1.3 2004/11/29 16:26:02 christophe.ravel.bugs%sun.com Exp $"
 #
 
 MOD_DEPTH = ../..
@@ -11,34 +11,33 @@ srcdir	    = @srcdir@
 VPATH	    = @srcdir@
 
 NAME        = sun-nspr
-RELEASE     = 1
+RELEASE     = 2
 TOPDIR      = /usr/src/redhat
 VERSION     = `grep PR_VERSION $(dist_includedir)/prinit.h \
                   | sed -e 's/"$$//' -e 's/.*"//' -e 's/ .*//'`
+
+SPECFILE    = $(NAME).spec
 
 include $(MOD_DEPTH)/config/autoconf.mk
 
 publish:
 	$(MAKE) clean
-	mkdir -p usr/lib/mps
-	cp -L $(MOD_DEPTH)/dist/lib/* usr/lib/mps
-	mkdir -p usr/include/mps
-	cp -Lr $(MOD_DEPTH)/dist/include/* usr/include/mps
-	tar czvf $(NAME)-$(VERSION).tar.gz usr
-	echo "%define name $(NAME)" >$(NAME).spec
-	echo "%define version $(VERSION)" >>$(NAME).spec
-	echo "%define release $(RELEASE)" >>$(NAME).spec
-
-	cat $(srcdir)/$(NAME).spec >>$(NAME).spec
-	cp $(NAME)-$(VERSION).tar.gz $(TOPDIR)/SOURCES
-	rpm -ba $(NAME).spec
-	if [ ! -d RPMS ] ; then mkdir -p RPMS ; fi
-	if [ ! -d SRPMS ] ; then mkdir -p SRPMS ; fi
-	cp -v $(TOPDIR)/RPMS/i386/$(NAME)-$(VERSION)-* RPMS
-	cp -v $(TOPDIR)/RPMS/i386/$(NAME)-devel-$(VERSION)-* RPMS
-	cp -v $(TOPDIR)/SRPMS/$(NAME)-$(VERSION)-* SRPMS
+	mkdir -p SOURCES SRPMS RPMS BUILD
+	(cd $(MOD_DEPTH)/../../dist/$(RELEASE_OBJDIR_NAME)/lib && tar cphf - .) \
+	| (mkdir -p opt/sun/private/lib && cd opt/sun/private/lib && tar xvfBp -)
+	(cd $(MOD_DEPTH)/../../dist/$(RELEASE_OBJDIR_NAME)/include && tar cphf - .) \
+	| (mkdir -p opt/sun/private/include/nspr && cd opt/sun/private/include/nspr && tar xvfBp -)
+	tar czvf SOURCES/$(NAME)-$(VERSION).tar.gz opt
+	echo "%define name $(NAME)" >$(SPECFILE)
+	echo "%define version $(VERSION)" >>$(SPECFILE)
+	echo "%define release $(RELEASE)" >>$(SPECFILE)
+	echo "%define buildroot `pwd`/$(NAME)-root" >>$(SPECFILE)
+	echo "%define _topdir `pwd`" >>$(SPECFILE)
+	cat $(srcdir)/$(NAME).spec >>$(SPECFILE)
+	rpm -ba $(SPECFILE)
 
 clean:
 	rm -rf $(TOPDIR)/BUILD/$(NAME)
-	rm -rf RPMS SRPMS usr
+	rm -rf SOURCES SRPMS RPMS BUILD
+	rm -rf RPMS SRPMS opt
 	rm -f $(NAME)-$(VERSION).tar.gz
