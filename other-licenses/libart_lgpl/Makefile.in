@@ -8,6 +8,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE	= libart_lgpl
 LIBRARY_NAME = moz_art_lgpl
+ifneq ($(OS_ARCH),WINNT)
+SHORT_LIBNAME = moz_art
+endif
 GRE_MODULE = 1
 LIB_IS_C_ONLY=1
 

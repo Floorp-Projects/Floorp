@@ -228,7 +228,7 @@ nsSVGLibartBitmapAlpha::GetBits()
 NS_IMETHODIMP_(nsISVGLibartBitmap::PixelFormat)
 nsSVGLibartBitmapAlpha::GetPixelFormat()
 {
-#if defined(XP_WIN) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
+#if defined(XP_WIN) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON) || defined(XP_OS2)
   return PIXEL_FORMAT_32_BGRA;
 #else
   return PIXEL_FORMAT_32_RGBA;
