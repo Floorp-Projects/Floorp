@@ -66,8 +66,6 @@ public:
   NS_IMETHOD  SetScrolledView(nsIView *aScrolledView);
   NS_IMETHOD  GetScrolledView(nsIView *&aScrolledView) const;
 
-  NS_IMETHOD  SetScrollPreference(nsScrollPreference aPref);
-  NS_IMETHOD  GetScrollPreference(nsScrollPreference &aScrollPreference) const;
   NS_IMETHOD  GetScrollPosition(nscoord &aX, nscoord &aY) const;
   NS_IMETHOD  ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags);
   NS_IMETHOD  GetScrollbarVisibility(PRBool *aVerticalVisible,

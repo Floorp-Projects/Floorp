@@ -46,21 +46,13 @@ class nsIView;
 class nsIScrollPositionListener;
 struct nsMargin;
 
-typedef enum {
-  nsScrollPreference_kAuto = 0,
-  nsScrollPreference_kNeverScroll,
-  nsScrollPreference_kAlwaysScroll,
-  nsScrollPreference_kAlwaysScrollHorizontal,
-  nsScrollPreference_kAlwaysScrollVertical
-} nsScrollPreference;
-
 // the percentage of the page that is scrolled on a page up or down
 #define PAGE_SCROLL_PERCENT 0.9
 
 // IID for the nsIScrollableView interface
 #define NS_ISCROLLABLEVIEW_IID    \
-{ 0xc95f1830, 0xc376, 0x11d1, \
-{ 0xb7, 0x21, 0x0, 0x60, 0x8, 0x91, 0xd8, 0xc9 } }
+{ 0x6d63ae50, 0x55c7, 0x47b9, \
+{ 0xad, 0x00, 0xe7, 0xa7, 0x79, 0x1e, 0x3d, 0x87 } }
 
 /**
  * A scrolling view allows an arbitrary view that you supply to be scrolled
@@ -115,20 +107,6 @@ public:
    * @result child view
    */
   NS_IMETHOD  GetScrolledView(nsIView *&aScrolledView) const = 0;
-
-  /**
-   * Select whether scroll bars should be displayed all the time, never or
-   * only when necessary.
-   * @param aPref desired scrollbar selection
-   */
-  NS_IMETHOD  SetScrollPreference(nsScrollPreference aPref) = 0;
-
-  /**
-   * Query whether scroll bars should be displayed all the time, never or
-   * only when necessary.
-   * @return current scrollbar selection
-   */
-  NS_IMETHOD  GetScrollPreference(nsScrollPreference& aScrollPreference) const = 0;
 
   /**
    * Get the position of the scrolled view.
