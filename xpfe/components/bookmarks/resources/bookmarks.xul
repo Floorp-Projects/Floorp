@@ -39,6 +39,7 @@
   <html:script src="chrome://bookmarks/content/bookmarks.js"/>
   <html:script src="chrome://bookmarks/content/bookmarksDD.js"/>
   <html:script src="chrome://global/content/treePopups.js"/>
+  <html:script src="chrome://global/content/strres.js"/>
 
   <menubar>
     <menu value="&menu.file.label;">
