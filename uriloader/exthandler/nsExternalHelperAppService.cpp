@@ -2229,7 +2229,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const char *aM
 NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const char *aFileExt, char **aContentType) 
 {
   // First of all, check our default entries
-  for (PRIntn i = 0; i < NS_ARRAY_LENGTH(defaultMimeEntries); i++)
+  for (size_t i = 0; i < NS_ARRAY_LENGTH(defaultMimeEntries); i++)
   {
     if (strcmp(defaultMimeEntries[i].mFileExtension, aFileExt) == 0) {
       *aContentType = nsCRT::strdup(defaultMimeEntries[i].mMimeType);
