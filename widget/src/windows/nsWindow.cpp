@@ -1402,9 +1402,6 @@ static void AdjustMenus(nsIMenu * aCurrentMenu, nsIMenu * aNewMenu, nsMenuEvent 
   }
 }
 
-LONG baseTime = 0;
-
-//nsIMenu * mLastHitMenu = nsnull;
 
 //-------------------------------------------------------------------------
 nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aFlags, UINT aCommand)
@@ -1414,30 +1411,16 @@ nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aF
   event.eventStructType = NS_MENU_EVENT;
   InitEvent(event, NS_MENU_SELECTED);
 
-  if (baseTime == 0) {
-    baseTime = ::GetMessageTime();
-  }
-
   // The MF_POPUP flag tells us if we are a menu item or a menu
-  // the uItems is either the command ID of the menu item or 
+  // the aItemNum is either the command ID of the menu item or 
   // the position of the menu as a child pf its parent
   PRBool isMenuItem = !(aFlags & MF_POPUP);
-  /*printf("\n*********native 0x%x  ", aNativeMenu);
-  if (isMenuItem) {
-    printf("isItem %s  item %d  ", (isMenuItem?"True":"False"), aItemNum);
-  } else {
-    printf("isItem %s  cmd  %d  ", (isMenuItem?"True":"False"), aItemNum);
-  }
-  printf("TIME %d\n", (::GetMessageTime()-baseTime)/100);
-  */
 
   // uItem is the position of the item that was clicked
-  // clickedMenu is a handle to the menu that was clicked
-  UINT  uItem       = aItemNum;
-  HMENU clickedMenu = aNativeMenu;
+  // aNativeMenu is a handle to the menu that was clicked
 
-  // if clickedMenu is NULL then the menu is being deselected
-  if (!clickedMenu) {
+  // if aNativeMenu is NULL then the menu is being deselected
+  if (!aNativeMenu) {
     printf("///////////// Menu is NULL!\n");
     // check to make sure something had been selected
     AdjustMenus(mHitMenu, nsnull, event);
@@ -1458,8 +1441,8 @@ nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aF
 
     // first check to see if it is a member of the menubar
     nsIMenu * hitMenu = nsnull;
-    if (clickedMenu == nativeMenuBar) {
-      mMenuBar->GetMenuAt(uItem, hitMenu);
+    if (aNativeMenu == nativeMenuBar) {
+      mMenuBar->GetMenuAt(aItemNum, hitMenu);
       if (mHitMenu != hitMenu) {
         AdjustMenus(mHitMenu, hitMenu, event);
         NS_IF_RELEASE(mHitMenu);
@@ -1470,19 +1453,6 @@ nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aF
     } else {
       // At this point we know we are inside a menu
 
-      /*printf("===================\n");
-      for (int inx=0;inx<mHitSubMenus->Count();inx++) {
-        nsIMenu * mm = (nsIMenu *)mHitSubMenus->ElementAt(inx);
-        nsString name;
-        mm->GetLabel(name);
-        for (int k=0;k<inx;k++) {
-          printf("  ");
-        }
-        printf("[%s] \n", name.ToNewCString());
-      }
-      printf("===================\n");
-      */
-
       // Find the menu we are in (the parent menu)
       nsIMenu * parentMenu = nsnull;
       PRInt32 fndDepth = 0;
@@ -1492,11 +1462,8 @@ nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aF
         nsIMenu * menu;
         mMenuBar->GetMenuAt(i, menu);
         PRInt32 depth = 0;
-        parentMenu = FindMenu(menu, clickedMenu, depth);
+        parentMenu = FindMenu(menu, aNativeMenu, depth);
         if (parentMenu) {
-          //nsString name;
-          //parentMenu->GetLabel(name);
-          //printf("Found menu [%s] depth %d\n", name.ToNewCString(), depth);
           fndDepth = depth;
           break;
         }
@@ -1508,7 +1475,6 @@ nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aF
         // Sometimes an event comes through for a menu that is being popup down
         // So it its depth is great then the current hit list count it already gone.
         if (fndDepth > mHitSubMenus->Count()) {
-          //printf("Depth > Count, bailing out....\n");
           NS_RELEASE(parentMenu);
           return NS_OK;
         }
@@ -1517,9 +1483,9 @@ nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aF
 
         // Skip if it is a menu item, otherwise, we get the menu by position
         if (!isMenuItem) {
-          printf("Getting submenu by position %d from parentMenu\n", uItem);
+          printf("Getting submenu by position %d from parentMenu\n", aItemNum);
           nsISupports * item;
-          parentMenu->GetItemAt((PRUint32)uItem, item);
+          parentMenu->GetItemAt((PRUint32)aItemNum, item);
           if (NS_OK != item->QueryInterface(kIMenuIID, (void **)&newMenu)) {
             printf("Item was not a menu! What are we doing here? Return early....\n");
             return NS_ERROR_FAILURE;
@@ -1535,7 +1501,6 @@ nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aF
             break;
           }
         }
-        //printf("New Item Found %s in hit listlevel %d\n", (newFound?"Yes":"No"), newLevel);
 
         // Figure out if the parent menu is in the list of popup'ed menus
         PRBool found = PR_FALSE;
@@ -1546,7 +1511,6 @@ nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aF
             break;
           }
         }
-        //printf("Found menu %s in hit listlevel %d\n", (found?"Yes":"No"), level);
 
         // So now figure out were we are compared to the hit list depth
         // we figure out how many items are open below
@@ -1567,14 +1531,12 @@ nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aF
             numToRemove = mHitSubMenus->Count();
           }
         }
-        //printf("Rmv %d  Found is Last %s  \n", numToRemove, (parentMenu == (nsIMenu *)mHitSubMenus->ElementAt(mHitSubMenus->Count()-1)?"Yes":"No"));
 
         // If we are to remove 1 item && the new menu to be added is the 
         // same as the one we would be removing, then don't remove it.
         if (numToRemove == 1 && newMenu == (nsIMenu *)mHitSubMenus->ElementAt(mHitSubMenus->Count()-1)) {
           numToRemove = 0;
         }
-        //printf("numToRemove %d\n", numToRemove);
 
         // Now loop thru and removing the menu from thre list
         PRInt32 ii;
@@ -1583,7 +1545,6 @@ nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aF
           AdjustMenus(m, nsnull, event);
           nsString name;
           m->GetLabel(name);
-          //printf("Removing [%s]\n", name.ToNewCString());
           NS_RELEASE(m);
           mHitSubMenus->RemoveElementAt(mHitSubMenus->Count()-1);
         }
@@ -1602,14 +1563,12 @@ nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aF
           mHitSubMenus->AppendElement(newMenu);
           NS_ADDREF(newMenu);
           AdjustMenus(nsnull, newMenu, event);
-          //printf("Adding [%s]\n", name.ToNewCString());  
-        } else { // skip adding it
-          //printf("Skipping Adding [%s]\n", name.ToNewCString());      
         }
 
         NS_RELEASE(parentMenu);
       } else {
         printf("no menu was found. This is bad.\n");
+        // XXX need to assert here!
       }
     }
   }  
