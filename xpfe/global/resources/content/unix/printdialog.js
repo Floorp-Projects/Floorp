@@ -53,6 +53,7 @@ function initDialog()
   dialog.grayRadio       = document.getElementById("grayRadio");
 
   dialog.a4Radio         = document.getElementById("a4Radio");
+  dialog.a3Radio         = document.getElementById("a3Radio");
   dialog.letterRadio     = document.getElementById("letterRadio");
   dialog.legalRadio      = document.getElementById("legalRadio");
   dialog.exectiveRadio   = document.getElementById("exectiveRadio");
@@ -249,6 +250,8 @@ function loadDialog()
     dialog.exectiveRadio.checked = true;
   } else if ( print_paper_size == gPrintOptInterface.kA4PaperSize ) {
     dialog.a4Radio.checked = true;
+  } else if ( print_paper_size == gPrintOptInterface.kA3PaperSize ) {
+    dialog.a3Radio.checked = true;  
   }
 
   dialog.allpagesRadio.checked = true;
@@ -352,6 +355,8 @@ function onOK()
       print_paper_size = gPrintOptInterface.kExecutivePaperSize;
     } else if (dialog.a4Radio.checked) {
       print_paper_size = gPrintOptInterface.kA4PaperSize;
+    } else if (dialog.a3Radio.checked) {
+      print_paper_size = gPrintOptInterface.kA3PaperSize;
     }
     printService.paperSize = print_paper_size;
 
