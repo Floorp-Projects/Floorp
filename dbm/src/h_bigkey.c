@@ -429,7 +429,7 @@ __big_return(
 		}
 
 	val->size = collect_data(hashp, bufp, (int)len, set_current);
-	if ((val->size + 1) == 0) /* unsigned ints are not really negative */
+	if (val->size == (size_t)-1)
 		return (-1);
 	if (save_p->addr != save_addr) {
 		/* We are pretty short on buffers. */
@@ -515,7 +515,7 @@ __big_keydata(
 	int set)
 {
 	key->size = collect_key(hashp, bufp, 0, val, set);
-	if ((key->size + 1) == 0) /* same compile warning about comparing signed and unsigned */
+	if (key->size == (size_t)-1)
 		return (-1);
 	key->data = (uint8 *)hashp->tmp_key;
 	return (0);
