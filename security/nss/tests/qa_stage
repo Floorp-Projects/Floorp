@@ -1,0 +1,212 @@
+#! /bin/sh
+########################################################################
+#
+# /u/sonmi/bin/qa_stage - /u/svbld/bin/init/nss/qa_stage
+#
+# this script is supposed to convert the tinderbox and daily QA files
+# for use on mozilla.org
+#
+# parameters
+# ----------
+#   nssversion  (supported: 30b, 31, tip)
+#   builddate   (default - today)
+#
+########################################################################
+
+if [ -z "$BUILDNUMBER" ]
+then
+    BUILDNUMBER=1
+fi
+
+Echo()
+{
+    if [ ! "$O_SILENT" = "ON" ] ; then
+        echo $*
+    fi
+}
+
+################################### qa_stage_init ##########################
+# 
+########################################################################
+qa_stage_init()
+{
+    umask 000
+
+    eval_opts $*
+
+    if [ -z "${QAYEAR}" ] ; then 
+        QAYEAR=`date +%Y`
+    elif [ "$QAYEAR" = ""  ] ; then
+        QAYEAR=`date +%Y`
+    fi
+
+    Echo "Init..."
+    DAYBUILD=${QAYEAR}${BUILDDATE}.${BUILDNUMBER}
+    NSS_D0=/share/builds/mccrel/nss
+    NSS_VER_DIR=${NSS_D0}/nss${NSSVER}
+    NTDIST=${NSS_VER_DIR}/builds/${DAYBUILD}/blowfish_NT4.0_Win95/mozilla/dist
+    UXDIST=${NSS_VER_DIR}/builds/${DAYBUILD}/booboo_Solaris8/mozilla/dist
+    TESTSCRIPTDIR=${NSS_VER_DIR}/builds/${DAYBUILD}/booboo_Solaris8/mozilla/security/nss/tests
+    RESULTDIR=${NSS_VER_DIR}/builds/${DAYBUILD}/booboo_Solaris8/mozilla/tests_results/security
+    TBX_RESULTDIR=${NSS_D0}/nsstip/tinderbox/tests_results/security
+
+    MOZ_D0=/pub/security/nss
+    MOZ_RESULTDIR=${MOZ_D0}/daily_qa/${DAYBUILD}
+    MOZ_TBX_RESULTDIR=${MOZ_D0}/tinderbox
+    
+    export BUILDDATE NSSVER QAYEAR NTDIST UXDIST TESTSCRIPTDIR RESULTDIR 
+
+
+    IPLANET_TBX_URL="http://cindercone.red.iplanet.com${TBX_RESULTDIR}"
+    IPLANET_DQA_URL="http://cindercone.red.iplanet.com${RESULTDIR}"
+
+    MOZ_TBX_URL="ftp://ftp.mozilla.org${MOZ_TBX_RESULTDIR}"
+    MOZ_DQA_URL="ftp://ftp.mozilla.org${MOZ_RESULTDIR}"
+
+    export IPLANET_TBX_URL IPLANET_DQA_URL MOZ_TBX_URL MOZ_DQA_URL
+    STAGE_1=/u/sonmi/tmp/ftp_stage
+    cd $STAGE_1
+    rm all.tar*
+    TBX_STAGE=$STAGE_1/tinderbox
+    DQA_STAGE=$STAGE_1/daily_qa/${DAYBUILD}
+
+}
+
+################################### qa_stage_dqa ##########################
+# 
+########################################################################
+qa_stage_dqa()
+{
+    Echo "DQA:..."
+    cd $RESULTDIR
+    #for w in `find . -name "result*html"`
+    for w in `find . -name "result.html"`
+    do
+        if [ ! -d $DQA_STAGE/`dirname $w` ] ; then
+            mkdir -p $DQA_STAGE/`dirname $w`
+        fi
+        rm $DQA_STAGE/$w 2>/dev/null
+        cat $w | reformat_qa >$DQA_STAGE/$w
+    done
+    for w in `find . -name "output.log" -o  -name "results.html"`
+    do
+#echo $w
+        if [ ! -d $DQA_STAGE/`dirname $w` ] ; then
+            mkdir -p $DQA_STAGE/`dirname $w`
+        fi
+        cp $w $DQA_STAGE/$w
+    done
+}
+
+
+################################### qa_stage_tbx ##########################
+# 
+########################################################################
+qa_stage_tbx()
+{
+    Echo "tbx: "
+    cd $TBX_RESULTDIR
+    for w in `find . $tbx_find_at -name "result.html"`
+    do
+        if [ ! -d $TBX_STAGE/`dirname $w` ] ; then
+            mkdir -p $TBX_STAGE/`dirname $w`
+        fi
+        rm $TBX_STAGE/$w 2>/dev/null
+        cat $w | reformat_qa >$TBX_STAGE/$w
+    done
+    for w in `find . $tbx_find_at -name "output.log" -o  -name "results.html"`
+    do
+        if [ ! -d $TBX_STAGE/`dirname $w` ] ; then
+            mkdir -p $TBX_STAGE/`dirname $w`
+        fi
+        cp $w $TBX_STAGE/$w
+    done
+}
+
+################################### eval_opts ##########################
+# global shell function, evapuates options and parameters, sets flags
+# variables and defaults
+########################################################################
+eval_opts()
+{
+  DO_TBX=OFF
+  DO_DQA=OFF
+  DO_CLEAN=OFF
+  O_SILENT=OFF
+  O_INCREMENTAL=OFF
+  BUILDDATE=`date +%m%d`
+  NSSVER=tip
+  tbx_find_at=""
+
+  while [ -n "$1" ]
+  do
+    case $1 in
+        -d)
+            DO_DQA=ON
+            ;;
+        -ti)
+            DO_TBX=ON
+            tbx_find_at="-atime 1"
+            O_INCREMENTAL=ON
+            ;;
+        -t)
+            DO_TBX=ON
+            ;;
+        -c)
+            DO_CLEAN=ON
+            ;;
+        -s)
+            O_SILENT=ON
+            ;;
+
+        tip|3[0-9]*)
+            NSSVER=$1
+            ;;
+        [01][0-9][0-3][0-9])
+            BUILDDATE=$1
+            ;;
+    esac
+    shift
+  done
+}
+
+qa_stage_init $*
+
+if [ "$DO_CLEAN" = "ON" ] ; then
+    Echo "Cleaning old stuff"
+    cd $STAGE_1
+    rm -rf $TBX_STAGE/*
+fi
+if [ "$DO_DQA" = "ON" ] ; then
+    qa_stage_dqa 
+fi
+if [ "$DO_TBX" = "ON" ] ; then
+    qa_stage_tbx
+fi
+cd $STAGE_1
+Echo "tar..."
+if [ ! "$O_SILENT" = "ON" ] ; then
+    tar cf all.tar daily_qa        tinderbox
+else
+    tar cvf all.tar daily_qa        tinderbox
+fi
+gzip all.tar
+SSH_AUTH_SOCK=`grep SSH_AUTH_SOCK /u/sonmi/.ssh/ssh-agent.info | sed -e 's/setenv SSH_AUTH_SOCK //' -e 's/;//'`
+SSH_AGENT_PID=`grep SSH_AGENT_PID /u/sonmi/.ssh/ssh-agent.info | sed -e 's/setenv SSH_AGENT_PID //' -e 's/;//'`
+export SSH_AUTH_SOCK SSH_AGENT_PID
+set -x
+scp all.tar.gz sonmi@stage.mozilla.org:/home/ftp/pub/security/nss
+ssh -l sonmi stage.mozilla.org '/home/sonmi/bin/nssqa_stage'
+
+#" rlogin huey "
+#" sftp  sonmi@stage.mozilla.org"
+#" cd /home/ftp/pub/security/nss"
+#" lcd tmp/ftp_stage"
+#" put all.tar.gz"
+#" quit "
+#" ssh -l sonmi stage.mozilla.org"
+#" cd /home/ftp/pub/security/nss"
+#" gunzip all.tar.gz"
+#" tar xvf all.tar"
+#" rm all.tar"
+
