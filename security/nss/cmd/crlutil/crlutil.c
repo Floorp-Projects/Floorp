@@ -252,7 +252,6 @@ int main(int argc, char **argv)
     int deleteCRL;
     int rv;
     char *nickName;
-    char *progName;
     char *url;
     int crlType;
     PLOptState *optstate;
