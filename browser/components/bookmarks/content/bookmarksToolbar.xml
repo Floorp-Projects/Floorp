@@ -66,6 +66,7 @@
           var width = window.innerWidth;
           if (theToolbar.boxObject.width < width)
             width = theToolbar.boxObject.width;
+          width -= theToolbar.boxObject.x;
           var overflowed = false;
           menu.collapsed = true;
           for (var i=4; i<buttons.childNodes.length; i++) {
