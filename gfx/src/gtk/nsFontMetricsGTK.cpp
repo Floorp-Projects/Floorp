@@ -785,6 +785,11 @@ ReverseBuffer(char* aBuf, gint count)
     }
 }
 
+// the following code assume all the PRUnichar is draw in the same
+// direction- left to right, without mixing with characters which should
+// draw from right to left. This mean it should not be used untill the 
+// upper level code resolve bi-di and ensure this assumption. otherwise
+// it may break non-bidi pages on a system which have hebrew/arabic fonts
 static gint
 SingleByteConvertReverse(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
   PRInt32 aSrcLen, char* aDestBuf, PRInt32 aDestLen)
@@ -882,7 +887,10 @@ static nsFontCharSetInfo ISO88596 =
 static nsFontCharSetInfo ISO88597 =
   { "ISO-8859-7", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88598 =
-  { "ISO-8859-8", SingleByteConvertReverse, 0 };
+  { "ISO-8859-8", SingleByteConvert, 0 };
+// change from  
+// { "ISO-8859-8", SingleByteConvertReverse, 0 };
+// untill we fix the layout and ensure we only call this with pure RTL text
 static nsFontCharSetInfo ISO88599 =
   { "ISO-8859-9", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO885915 =
