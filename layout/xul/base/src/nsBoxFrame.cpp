@@ -1271,6 +1271,7 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
         aAttribute == nsHTMLAtoms::top ||
         aAttribute == nsXULAtoms::flex ||
         aAttribute == nsXULAtoms::orient ||
+        aAttribute == nsXULAtoms::dir ||
         aAttribute == nsXULAtoms::equalsize ||
         aAttribute == nsXULAtoms::autostretch) {
 
