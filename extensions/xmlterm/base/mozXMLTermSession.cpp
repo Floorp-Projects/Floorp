@@ -2915,7 +2915,7 @@ NS_IMETHODIMP mozXMLTermSession::ScrollToBottomLeft(void)
   if (NS_FAILED(result) || !presShell)
     return NS_ERROR_FAILURE;
 
-  presShell->FlushPendingNotifications();
+  presShell->FlushPendingNotifications(PR_FALSE);
 
   // Get DOM Window
   nsCOMPtr<nsIDocShell> docShell;

@@ -866,7 +866,7 @@ public:
                                          PRBool                        aProcessDummyLayoutRequest = PR_TRUE);  
   NS_IMETHOD CancelAllReflowCommands();
   NS_IMETHOD IsSafeToFlush(PRBool& aIsSafeToFlush);
-  NS_IMETHOD FlushPendingNotifications();
+  NS_IMETHOD FlushPendingNotifications(PRBool aUpdateViews=PR_FALSE);
 
   /**
    * Post a request to handle a DOM event after Reflow has finished.
@@ -4868,13 +4868,21 @@ PresShell::IsSafeToFlush(PRBool& aIsSafeToFlush)
 
 
 NS_IMETHODIMP 
-PresShell::FlushPendingNotifications()
+PresShell::FlushPendingNotifications(PRBool aUpdateViews)
 {
   PRBool isSafeToFlush;
   IsSafeToFlush(isSafeToFlush);
 
   if (isSafeToFlush) {
+    if (aUpdateViews && mViewManager) {
+      mViewManager->BeginUpdateViewBatch();
+    }
+
     ProcessReflowCommands(PR_FALSE);
+
+    if (aUpdateViews && mViewManager) {
+      mViewManager->EndUpdateViewBatch(NS_VMREFRESH_IMMEDIATE);
+    }
   }
 
   return NS_OK;

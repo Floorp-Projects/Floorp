@@ -1588,7 +1588,7 @@ static void EnsureReflowFlushAndPaint(nsIDocShell* aDocShell)
     return;
 
   // Flush pending reflows.
-  presShell->FlushPendingNotifications();
+  presShell->FlushPendingNotifications(PR_FALSE);
 
   // Unsuppress painting.
   presShell->UnsuppressPainting();
