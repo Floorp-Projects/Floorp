@@ -408,14 +408,17 @@ void nsMsgSearchNews::ReportHits ()
     err = scopeFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
   }
 
-	for (PRUint32 i = 0; i < m_hits.GetSize(); i++)
-	{
-    nsCOMPtr <nsIMsgDBHdr> header;
+  if (db)
+  {
+	  for (PRUint32 i = 0; i < m_hits.GetSize(); i++)
+	  {
+      nsCOMPtr <nsIMsgDBHdr> header;
 
-		db->GetMsgHdrForKey(m_hits.ElementAt(i), getter_AddRefs(header));
-		if (header)
-			ReportHit(header, scopeFolder);
-	}
+		  db->GetMsgHdrForKey(m_hits.ElementAt(i), getter_AddRefs(header));
+		  if (header)
+			  ReportHit(header, scopeFolder);
+	  }
+  }
 }
 
 // ### this should take an nsIMsgFolder instead of a string location.
