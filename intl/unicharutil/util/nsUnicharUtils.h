@@ -23,7 +23,7 @@
 #include "nsAString.h"
 
 // to be turned on as a part of bug 100214
-#if 0
+//#if 0
 void ToLowerCase( nsAString& );
 void ToUpperCase( nsAString& );
 
@@ -38,7 +38,7 @@ class nsCaseInsensitiveStringComparator
   };
 
 
-#endif
+//#endif
 
 PRUnichar ToUpperCase(PRUnichar);
 PRUnichar ToLowerCase(PRUnichar);

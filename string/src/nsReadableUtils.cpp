@@ -359,15 +359,6 @@ class ConvertToUpperCase
 
 NS_COM
 void
-ToUpperCase( nsAString& aString )
-  {
-    nsAString::iterator fromBegin, fromEnd;
-    ConvertToUpperCase<PRUnichar> converter;
-    copy_string(aString.BeginWriting(fromBegin), aString.EndWriting(fromEnd), converter);
-  }
-
-NS_COM
-void
 ToUpperCase( nsACString& aCString )
   {
     nsACString::iterator fromBegin, fromEnd;
@@ -396,15 +387,6 @@ class ConvertToLowerCase
 
 NS_COM
 void
-ToLowerCase( nsAString& aString )
-  {
-    nsAString::iterator fromBegin, fromEnd;
-    ConvertToLowerCase<PRUnichar> converter;
-    copy_string(aString.BeginWriting(fromBegin), aString.EndWriting(fromEnd), converter);
-  }
-
-NS_COM
-void
 ToLowerCase( nsACString& aCString )
   {
     nsACString::iterator fromBegin, fromEnd;
@@ -429,7 +411,8 @@ FindInReadable_Impl( const StringT& aPattern, IteratorT& aSearchStart, IteratorT
         while ( !found_it )
           {
               // fast inner loop (that's what it's called, not what it is) looks for a potential match
-            while ( aSearchStart != aSearchEnd && !compare(*aPatternStart, *aSearchStart) )
+            while ( aSearchStart != aSearchEnd &&
+                    compare(*aPatternStart, *aSearchStart) )
               ++aSearchStart;
 
               // if we broke out of the `fast' loop because we're out of string ... we're done: no match
@@ -466,7 +449,7 @@ FindInReadable_Impl( const StringT& aPattern, IteratorT& aSearchStart, IteratorT
 
                   // else if we mismatched ... it's time to advance to the next search position
                   //  and get back into the `fast' loop
-                if ( !compare(*testPattern, *testSearch) )
+                if ( compare(*testPattern, *testSearch) )
                   {
                     ++aSearchStart;
                     break;
@@ -479,56 +462,25 @@ FindInReadable_Impl( const StringT& aPattern, IteratorT& aSearchStart, IteratorT
   }
 
 
-class CaseSensitivePRUnicharComparator
-  {
-    public:
-      PRBool operator()( PRUnichar lhs, PRUnichar rhs ) const { return lhs == rhs; }
-  };
-
-class CaseSensitiveCharComparator
-  {
-    public:
-      PRBool operator()( char lhs, char rhs ) const { return lhs == rhs; }
-  };
-
-class CaseInsensitivePRUnicharComparator
-  {
-    public:
-      PRBool operator()( PRUnichar lhs, PRUnichar rhs ) const { return nsCRT::ToUpper(lhs) == nsCRT::ToUpper(rhs); }
-  };
-
-class CaseInsensitiveCharComparator
-  {
-    public:
-      PRBool operator()( char lhs, char rhs ) const { return nsCRT::ToUpper(lhs) == nsCRT::ToUpper(rhs); }
-  };
-
 NS_COM
 PRBool
-FindInReadable( const nsAString& aPattern, nsAString::const_iterator& aSearchStart, nsAString::const_iterator& aSearchEnd )
+FindInReadable( const nsAString& aPattern, nsAString::const_iterator& aSearchStart, nsAString::const_iterator& aSearchEnd, const nsStringComparator& aComparator )
   {
-    return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, CaseSensitivePRUnicharComparator());
+    return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, aComparator);
   }
 
 NS_COM
 PRBool
-FindInReadable( const nsACString& aPattern, nsACString::const_iterator& aSearchStart, nsACString::const_iterator& aSearchEnd )
+FindInReadable( const nsACString& aPattern, nsACString::const_iterator& aSearchStart, nsACString::const_iterator& aSearchEnd, const nsCStringComparator& aComparator)
   {
-    return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, CaseSensitiveCharComparator());
-  }
-
-NS_COM
-PRBool
-CaseInsensitiveFindInReadable( const nsAString& aPattern, nsAString::const_iterator& aSearchStart, nsAString::const_iterator& aSearchEnd )
-  {
-    return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, CaseInsensitivePRUnicharComparator());
+    return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, aComparator);
   }
 
 NS_COM
 PRBool
 CaseInsensitiveFindInReadable( const nsACString& aPattern, nsACString::const_iterator& aSearchStart, nsACString::const_iterator& aSearchEnd )
   {
-    return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, CaseInsensitiveCharComparator());
+    return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, nsCaseInsensitiveCStringComparator());
   }
 
   /**
