@@ -1114,7 +1114,7 @@ static PRIOMethods tcpMethods = {
 	_PR_SocketGetSocketOption,
 	_PR_SocketSetSocketOption,
     SocketSendFile, 
-    SocketConnectContinue;
+    SocketConnectContinue,
     (PRReservedFN)_PR_InvalidInt, 
     (PRReservedFN)_PR_InvalidInt, 
     (PRReservedFN)_PR_InvalidInt, 
