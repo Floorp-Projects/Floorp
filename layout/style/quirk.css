@@ -111,8 +111,7 @@ table {
 td, th, tr {
   background: inherit;
 }
-
-td[bgcolor], td[background], th[bgcolor], th[background] {
+td, th {
   empty-cells: show;
 }
 
