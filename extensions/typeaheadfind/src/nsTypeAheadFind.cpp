@@ -328,7 +328,7 @@ nsTypeAheadFind::PrefsReset()
   }
   mNotFoundSoundURL = soundStr;
 
-  PRBool isTimeoutEnabled;
+  PRBool isTimeoutEnabled = PR_FALSE;
   prefBranch->GetBoolPref("accessibility.typeaheadfind.enabletimeout",
                           &isTimeoutEnabled);
   PRInt32 timeoutLength = 0;
