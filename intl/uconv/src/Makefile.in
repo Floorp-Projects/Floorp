@@ -71,20 +71,20 @@ CPPSRCS		= \
 		$(NULL)
 
 EXPORT_RESOURCE	= \
-		$(srcdir)/charsetalias.properties \
-		$(srcdir)/charsetData.properties \
+		charsetalias.properties \
+		charsetData.properties \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CPPSRCS			+= nsOS2Charset.cpp
-EXPORT_RESOURCE		+= $(srcdir)/os2charset.properties
+EXPORT_RESOURCE		+= os2charset.properties
 else
 CPPSRCS			+= nsUNIXCharset.cpp
-EXPORT_RESOURCE		+= $(srcdir)/unixcharset.properties
+EXPORT_RESOURCE		+= unixcharset.properties
 # add platform charset remapping properties files here if necessary
 # (see unixcharset.sample.properties for an example file)
 # eg: if we needed a charset remap for OSARCH=Linux then add the following line:
-#EXPORT_RESOURCE		+= $(srcdir)/unixcharset.Linux.properties
+#EXPORT_RESOURCE		+= unixcharset.Linux.properties
 endif
 
 EXTRA_DSO_LDOPTS = $(MOZ_NECKO_UTIL_LIBS) \
@@ -120,5 +120,6 @@ ifeq ($(OS_ARCH), Linux)
 DEFINES         += -D_XOPEN_SOURCE=500
 endif
 
-install::
-	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res
+install:: $(EXPORT_RESOURCE)
+	$(INSTALL) $^ $(DIST)/bin/res
+
