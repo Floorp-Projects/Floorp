@@ -480,7 +480,7 @@ nsHTTPIndex::OnIndexAvailable(nsIRequest* aRequest, nsISupports *aContext,
       PRInt64 size;
       rv = aIndex->GetSize(&size);
       if (NS_FAILED(rv)) return rv;
-      if (size != LL_INIT(0, -1)) {
+      if (LL_NE(size, LL_INIT(0, -1))) {
         PRInt32 intSize;
         LL_L2I(intSize, size);
         // XXX RDF should support 64 bit integers (bug 240160)
