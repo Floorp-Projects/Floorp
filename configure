@@ -4764,7 +4764,7 @@ echo "configure:4762: checking for VisualAge C++ compiler version >= 5.0.2.0" >&
 #include "confdefs.h"
 
 int main() {
-#if (__IBMCPP__ < 520)
+#if (__IBMCPP__ < 502)
              #error "Bad compiler"
              #endif
 ; return 0; }
