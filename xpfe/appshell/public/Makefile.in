@@ -42,7 +42,6 @@ XPIDLSRCS	= \
 		nsICommonDialogs.idl \
 		nsIDialogParamBlock.idl \
 		nsICmdLineService.idl \
-		nsIQFAServices.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
