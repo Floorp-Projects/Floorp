@@ -812,6 +812,11 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     if (NS_SUCCEEDED(rv) && charsetConv) {
       rv = charsetConv->GetUnicodeDecoder(characterSet.get(),
                                           getter_AddRefs(unicodeDecoder));
+      if (NS_FAILED(rv)) {
+        // fall back to ISO-8859-1 if charset is not supported. (bug 230104)
+        rv = charsetConv->GetUnicodeDecoderRaw("ISO-8859-1",
+                                               getter_AddRefs(unicodeDecoder));
+      }
     }
 
     // converts from the charset to unicode
