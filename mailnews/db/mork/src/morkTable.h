@@ -133,6 +133,9 @@ public: // other table methods
   // void DirtyAllTableContent(morkEnv* ev);
 
   mork_seed TableSeed() const { return mTable_RowArray.mArray_Seed; }
+  
+  morkRow* SafeRowAt(morkEnv* ev, mork_pos inPos)
+  { return (morkRow*) mTable_RowArray.SafeAt(ev, inPos); }
 
   nsIMdbTable* AcquireTableHandle(morkEnv* ev); // mObject_Handle
   
