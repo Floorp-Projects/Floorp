@@ -1445,7 +1445,9 @@ nsInlineFrame::ReflowInlineFrames(nsIPresContext* aPresContext,
   // that are empty we force to empty so that things like collapsed
   // whitespace in an inline element don't affect the line-height.
   nsSize size;
-  lineLayout->EndSpan(this, size, aMetrics.maxElementSize);
+  PRBool haveAtLeastOneNonEmptyTextFrame;
+  lineLayout->EndSpan(this, size, aMetrics.maxElementSize,
+                      &haveAtLeastOneNonEmptyTextFrame);
   if ((0 == size.height) && (0 == size.width) &&
       ((nsnull != mPrevInFlow) || (nsnull != mNextInFlow))) {
     // This is a continuation of a previous inline. Therefore make
@@ -1475,53 +1477,91 @@ nsInlineFrame::ReflowInlineFrames(nsIPresContext* aPresContext,
     nsIFontMetrics* fm;
     aReflowState.rendContext->GetFontMetrics(fm);
 
-    // Compute final height. The height of our box is the sum of our
-    // font size plus the top and bottom border and padding. The height
-    // of children do not affect our height.
-    fm->GetMaxAscent(aMetrics.ascent);
-    fm->GetMaxDescent(aMetrics.descent);
-    fm->GetHeight(aMetrics.height);
-    aMetrics.ascent += aReflowState.mComputedBorderPadding.top;
-    aMetrics.descent += aReflowState.mComputedBorderPadding.bottom;
-    aMetrics.height += aReflowState.mComputedBorderPadding.top +
-      aReflowState.mComputedBorderPadding.bottom;
+#ifdef DEBUG_kipp
+    static PRBool forceStrictMode = PR_FALSE;
+#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
+    {
+      static PRBool firstTime = PR_TRUE;
+      if (firstTime) {
+        if (getenv("GECKO_FORCE_STRICT_MODE")) {
+          forceStrictMode = PR_TRUE;
+        }
+      }
+    }
+#endif
+#endif
+
+    // Compute final height.
+    if (lineLayout->InStrictMode() || haveAtLeastOneNonEmptyTextFrame ||
+#ifdef DEBUG_kipp
+        forceStrictMode ||
+#endif
+        aReflowState.mComputedBorderPadding.top ||
+        aReflowState.mComputedBorderPadding.right ||
+        aReflowState.mComputedBorderPadding.bottom ||
+        aReflowState.mComputedBorderPadding.left ||
+        aReflowState.mComputedMargin.top ||
+        aReflowState.mComputedMargin.right ||
+        aReflowState.mComputedMargin.bottom ||
+        aReflowState.mComputedMargin.left) {
+      // Do things the standard css2 way. The height of our box is the
+      // sum of our font size plus the top and bottom border and
+      // padding. The height of children do not affect our height.
+      fm->GetMaxAscent(aMetrics.ascent);
+      fm->GetMaxDescent(aMetrics.descent);
+      fm->GetHeight(aMetrics.height);
+      aMetrics.ascent += aReflowState.mComputedBorderPadding.top;
+      aMetrics.descent += aReflowState.mComputedBorderPadding.bottom;
+      aMetrics.height += aReflowState.mComputedBorderPadding.top +
+        aReflowState.mComputedBorderPadding.bottom;
 
 #ifdef DEBUG_kipp
-    // Note: we use the actual font height for sizing our selves
-    // instead of the computed font height. On systems where they
-    // disagree the actual font height is more appropriate. This
-    // little hack lets us override that behavior to allow for more
-    // precise layout in the face of imprecise fonts.
-    static PRBool useComputedHeight = PR_FALSE;
+      // Note: we use the actual font height for sizing our selves
+      // instead of the computed font height. On systems where they
+      // disagree the actual font height is more appropriate. This
+      // little hack lets us override that behavior to allow for more
+      // precise layout in the face of imprecise fonts.
+      static PRBool useComputedHeight = PR_FALSE;
 #if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
-    static PRBool firstTime = 1;
-    if (firstTime) {
-      if (getenv("GECKO_USE_COMPUTED_HEIGHT")) {
-        useComputedHeight = PR_TRUE;
-      }
-      firstTime = 0;
-    }
-#endif
-    if (useComputedHeight) {
-      // Special debug code that violates the above CSS2 spec
-      // clarification. Why? So that we can predictably compute the
-      // values for testing layout.
-      nscoord computedHeight = aReflowState.mComputedBorderPadding.top +
-        aReflowState.mComputedBorderPadding.bottom +
-        font->mFont.size;
-      if (computedHeight != aMetrics.height) {
-#ifdef DEBUG
-        if (0 == (mState & 0x80000000)) {
-          nsFrame::ListTag(stdout, this);
-          printf(": using computedHeight %d instead of actual height %d\n",
-                 computedHeight, aMetrics.height);
-          mState |= 0x80000000;
+      static PRBool firstTime = 1;
+      if (firstTime) {
+        if (getenv("GECKO_USE_COMPUTED_HEIGHT")) {
+          useComputedHeight = PR_TRUE;
         }
-#endif
-        aMetrics.height = computedHeight;
+        firstTime = 0;
       }
-    }
+#endif
+      if (useComputedHeight) {
+        // Special debug code that violates the above CSS2 spec
+        // clarification. Why? So that we can predictably compute the
+        // values for testing layout.
+        nscoord computedHeight = aReflowState.mComputedBorderPadding.top +
+          aReflowState.mComputedBorderPadding.bottom +
+          font->mFont.size;
+        if (computedHeight != aMetrics.height) {
+#ifdef DEBUG
+          if (0 == (mState & 0x80000000)) {
+            nsFrame::ListTag(stdout, this);
+            printf(": using computedHeight %d instead of actual height %d\n",
+                   computedHeight, aMetrics.height);
+            mState |= 0x80000000;
+          }
+#endif
+          aMetrics.height = computedHeight;
+        }
+      }
 #endif /* DEBUG_kipp */
+    }
+    else {
+      // When in compatability mode, and we have no css2 style applied
+      // to us, make this frame disappear if it has no text in
+      // it. That way it will not affect the line box's height and
+      // thus be more compatible.
+      aMetrics.ascent = 0;
+      aMetrics.descent = 0;
+      aMetrics.height = 0;
+    }
+
     NS_RELEASE(fm);
   }
 

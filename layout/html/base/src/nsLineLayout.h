@@ -75,7 +75,10 @@ public:
                      nscoord aRightEdge);
 
   void EndSpan(nsIFrame* aFrame, nsSize& aSizeResult,
-               nsSize* aMaxElementSize);
+               nsSize* aMaxElementSize,
+               PRBool* aHaveAtLeastOneNonEmptyTextFrame);
+
+  PRBool InStrictMode();
 
   PRInt32 GetCurrentSpanCount() const;
 
@@ -219,6 +222,8 @@ protected:
   PRBool mUpdatedBand;
   PRBool mImpactedByFloaters;
   PRBool mCanPlaceFloater;
+  PRBool mKnowStrictMode;
+  PRBool mInStrictMode;
   PRUint8 mPlacedFloaters;
   PRInt32 mTotalPlacedFrames;
   nsVoidArray mWordFrames;
@@ -267,6 +272,7 @@ protected:
 
     // Other state we use
     PRUint8 mVerticalAlign;
+    PRBool mIsNonEmptyTextFrame;
   };
   PerFrameData mFrameDataBuf[NS_LINELAYOUT_NUM_FRAMES];
   PerFrameData* mFrameFreeList;
