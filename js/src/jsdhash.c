@@ -188,7 +188,7 @@ JS_DHashTableInit(JSDHashTable *table, JSDHashTableOps *ops, void *data,
         capacity = JS_DHASH_MIN_SIZE;
     log2 = JS_CeilingLog2(capacity);
     capacity = JS_BIT(log2);
-    if (capacity >= JS_DHASH_MAX_SIZE)
+    if (capacity >= JS_DHASH_SIZE_LIMIT)
         return JS_FALSE;
     table->hashShift = JS_DHASH_BITS - log2;
     table->maxAlphaFrac = 0xC0;                 /* 12/16 or .75 */
@@ -428,7 +428,7 @@ ChangeTable(JSDHashTable *table, int deltaLog2)
     newLog2 = oldLog2 + deltaLog2;
     oldCapacity = JS_BIT(oldLog2);
     newCapacity = JS_BIT(newLog2);
-    if (newCapacity >= JS_DHASH_MAX_SIZE)
+    if (newCapacity >= JS_DHASH_SIZE_LIMIT)
         return JS_FALSE;
     entrySize = table->entrySize;
     nbytes = newCapacity * entrySize;

@@ -50,9 +50,9 @@ PR_BEGIN_EXTERN_C
 #define PL_DHASHMETER 1
 #endif
 
-/* Maximum table size, do not equal or exceed (see min&maxAlphaFrac, below). */
-#undef PL_DHASH_MAX_SIZE
-#define PL_DHASH_MAX_SIZE       PR_BIT(24)
+/* Table size limit, do not equal or exceed (see min&maxAlphaFrac, below). */
+#undef PL_DHASH_SIZE_LIMIT
+#define PL_DHASH_SIZE_LIMIT     PR_BIT(24)
 
 /* Minimum table size, or gross entry count (net is at most .75 loaded). */
 #ifndef PL_DHASH_MIN_SIZE

@@ -49,9 +49,9 @@ JS_BEGIN_EXTERN_C
 #define JS_DHASHMETER 1
 #endif
 
-/* Maximum table size, do not equal or exceed (see min&maxAlphaFrac, below). */
-#undef JS_DHASH_MAX_SIZE
-#define JS_DHASH_MAX_SIZE       JS_BIT(24)
+/* Table size limit, do not equal or exceed (see min&maxAlphaFrac, below). */
+#undef JS_DHASH_SIZE_LIMIT
+#define JS_DHASH_SIZE_LIMIT     JS_BIT(24)
 
 /* Minimum table size, or gross entry count (net is at most .75 loaded). */
 #ifndef JS_DHASH_MIN_SIZE
