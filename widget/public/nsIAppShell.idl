@@ -115,13 +115,6 @@ interface nsIAppShell : nsISupports
 
   void Exit();
 
-  /**
-   * Determines whether a given event should be processed assuming the given
-   * widget is a currently active modal window
-   */
-  void EventIsForModalWindow(in PRBool aRealEvent, in voidStar aEvent, in UndefinednsIWidget aWidget,
-                             out PRBool aForWindow);
-
 };
 
 #endif // nsIAppShell_h__

@@ -46,8 +46,6 @@ class nsAppShell : public nsIAppShell
    NS_IMETHOD Exit();
 
    NS_IMETHOD GetNativeEvent( PRBool &aRealEvent, void *&aEvent);
-   NS_IMETHOD EventIsForModalWindow( PRBool aRealEvent, void *aEvent,
-                                     nsIWidget *aWidget, PRBool *aForWindow);
    NS_IMETHOD DispatchNativeEvent( PRBool aRealEvent, void *aEvent);
 
    // return the HMQ for NS_NATIVE_SHELL, fwiw

@@ -287,10 +287,3 @@ NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 	return NS_OK;
 }
 
-NS_METHOD nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent, nsIWidget *aWidget, PRBool *aForWindow)
-{
-	printf("nsAppShell::EventIsForModalWindow - FIXME: not implemented\n");
-	*aForWindow = PR_FALSE;
-	return NS_OK;
-}
-

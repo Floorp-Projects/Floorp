@@ -90,6 +90,9 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD SetFocus();
    NS_IMETHOD IsVisible( PRBool &aState);
 
+   NS_IMETHOD ModalEventFilter( PRBool aRealEvent, void *aEvent,
+                                PRBool *aForWindow );
+
    NS_IMETHOD GetPreferredSize( PRInt32 &aWidth, PRInt32 &aHeight);
    NS_IMETHOD SetPreferredSize( PRInt32 aWidth, PRInt32 aHeight);
 

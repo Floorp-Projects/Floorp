@@ -52,8 +52,6 @@ class nsAppShell : public nsIAppShell
     NS_IMETHOD        ListenToEventQueue(nsIEventQueue *aQueue, PRBool aListen);
     NS_IMETHOD        GetNativeEvent(PRBool &aRealEvent, void *&aEvent);
     NS_IMETHOD        DispatchNativeEvent(PRBool aRealEvent, void * aEvent);
-    NS_IMETHOD        EventIsForModalWindow(PRBool aRealEvent, void *aEvent, nsIWidget *aWidget,
-                                  PRBool *aForWindow);
 
     NS_IMETHOD        Exit();
     NS_IMETHOD        SetDispatchListener(nsDispatchListener* aDispatchListener);

@@ -1617,3 +1617,62 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 #endif
 }
 
+//-------------------------------------------------------------------------
+//
+// Determine whether an event should be processed, assuming we're
+// a modal window.
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
+                                     PRBool *aForWindow)
+{
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::ModalEventFilter aEvent=<%p> - Not Implemented.\n", aEvent));
+
+#if 1
+    *aForWindow = PR_FALSE;
+    return NS_OK;
+#else
+  PRBool isInWindow, isMouseEvent;
+  PhEvent_t *msg = (PhEvent_t *) aEvent;
+
+  if (aRealEvent == PR_FALSE)
+  {
+    *aForWindow = PR_FALSE;
+    return NS_OK;
+  }
+
+  isInWindow = PR_FALSE;
+
+  // Get native window
+  PtWidget_t *win;
+  win = (PtWidget_t *)GetNativeData(NS_NATIVE_WINDOW);
+  PtWidget_t *eWin = (PtWidget_t *) msg->collector.handle;
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::ModalEventFilter win=<%p> eWin=<%p>\n",win, eWin));
+
+  if (nsnull != eWin) {
+    if (win == eWin) {
+      isInWindow = PR_TRUE;
+    }
+  }
+  
+  switch(msg->type)
+  {
+    case Ph_EV_BUT_PRESS:
+    case Ph_EV_BUT_RELEASE:
+    case Ph_EV_BUT_REPEAT:
+    case Ph_EV_PTR_MOTION_BUTTON:
+    case Ph_EV_PTR_MOTION_NOBUTTON:
+       isMouseEvent = PR_TRUE;
+       break;
+    default:
+       isMouseEvent = PR_FALSE;
+       break;
+  }
+
+  *aForWindow = isInWindow == PR_TRUE || isMouseEvent == PR_FALSE ? PR_TRUE : PR_FALSE;
+
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::ModalEventFilter isInWindow=<%d> isMouseEvent=<%d> aForWindow=<%d>\n", isInWindow, isMouseEvent, *aForWindow));
+  return NS_OK;
+#endif
+}
+

@@ -1282,6 +1282,51 @@ nsresult nsWindow::IsVisible( PRBool &aState)
    return NS_OK;
 }
 
+nsresult nsWindow::ModalEventFilter( PRBool aRealEvent,
+                                     void */*aEvent*/,
+                                     PRBool *aForWindow )
+{
+   if( PR_FALSE == aRealEvent)
+      *aForWindow = PR_FALSE;
+   else
+   {
+      // Set aForWindow if either:
+      //   * the message is for a descendent of the given window
+      //   * the message is for another window, but is a message which
+      //     should be allowed for a disabled window.
+
+      PRBool isMouseEvent = PR_FALSE;
+      PRBool isInWindow = PR_FALSE;
+
+      // Examine the target window & find the frame
+      // XXX should GetNativeData() use GetMainWindow() ?
+      HWND hwnd = (HWND)GetNativeData(NS_NATIVE_WINDOW);
+      hwnd = WinQueryWindow(hwnd, QW_PARENT);
+
+      if( hwnd == mQmsg.hwnd || WinIsChild( mQmsg.hwnd, hwnd))
+         isInWindow = PR_TRUE;
+
+      // XXX really ought to do something about focus here
+
+      if( !isInWindow)
+      {
+         // Block mouse messages for non-modal windows
+         if( mQmsg.msg >= WM_MOUSEFIRST && mQmsg.msg <= WM_MOUSELAST)
+            isMouseEvent = PR_TRUE;
+         else if( mQmsg.msg >= WM_MOUSETRANSLATEFIRST &&
+                  mQmsg.msg <= WM_MOUSETRANSLATELAST)
+            isMouseEvent = PR_TRUE;
+         else if( mQmsg.msg == WMU_MOUSEENTER || mQmsg.msg == WMU_MOUSELEAVE)
+            isMouseEvent = PR_TRUE;
+      }
+
+      // set dispatch indicator
+      *aForWindow = isInWindow || !isMouseEvent;
+   }
+
+   return NS_OK;
+}
+
 // nsFrameWindow overrides this...
 nsresult nsWindow::GetClientBounds( nsRect &aRect)
 {

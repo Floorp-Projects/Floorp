@@ -55,9 +55,6 @@ class nsAppShell : public nsIAppShell
     NS_IMETHOD        Exit();
     NS_IMETHOD        SetDispatchListener(nsDispatchListener* aDispatchListener);
     virtual void*     GetNativeData(PRUint32 aDataType);
-    NS_IMETHOD        EventIsForModalWindow(PRBool aRealEvent, void *aEvent, nsIWidget *aWidget,
-                                            PRBool *aForWindow);
-
 
   static XtAppContext GetAppContext() { return sAppContext; }
 
