@@ -37,22 +37,18 @@ public:
 
   NS_IMETHOD    SetWindow(nsIDOMWindow* aWin)=0;
 
-  NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin)=0;
-
   NS_IMETHOD    SetStatus(const nsString& aMsg)=0;
 };
 
 
 #define NS_DECL_IDOMTOOLBARCORE   \
   NS_IMETHOD    SetWindow(nsIDOMWindow* aWin);  \
-  NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin);  \
   NS_IMETHOD    SetStatus(const nsString& aMsg);  \
 
 
 
 #define NS_FORWARD_IDOMTOOLBARCORE(_to)  \
   NS_IMETHOD    SetWindow(nsIDOMWindow* aWin) { return _to##SetWindow(aWin); }  \
-  NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin) { return _to##SetWebShellWindow(aWin); }  \
   NS_IMETHOD    SetStatus(const nsString& aMsg) { return _to##SetStatus(aMsg); }  \
 
 
