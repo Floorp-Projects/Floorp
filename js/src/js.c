@@ -1414,6 +1414,29 @@ Intern(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+static JSBool
+Clone(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSFunction *fun;
+    JSObject *funobj, *parent, *clone;
+
+    fun = JS_ValueToFunction(cx, argv[0]);
+    if (!fun)
+        return JS_FALSE;
+    funobj = JS_GetFunctionObject(fun);
+    if (argc > 1) {
+        if (!JS_ValueToObject(cx, argv[1], &parent))
+            return JS_FALSE;
+    } else {
+        parent = JS_GetParent(cx, funobj);
+    }
+    clone = JS_CloneFunctionObject(cx, funobj, parent);
+    if (!clone)
+        return JS_FALSE;
+    *rval = OBJECT_TO_JSVAL(clone);
+    return JS_TRUE;
+}
+
 static JSFunctionSpec shell_functions[] = {
     {"version",         Version,        0},
     {"options",         Options,        0},
@@ -1434,7 +1457,7 @@ static JSFunctionSpec shell_functions[] = {
     {"stats",           DumpStats,      1},
 #endif
 #ifdef TEST_EXPORT
-    {"doexp",           DoExport,       2},
+    {"xport",           DoExport,       2},
 #endif
 #ifdef TEST_CVTARGS
     {"cvtargs",         ConvertArgs,    0, 0, 12},
@@ -1442,6 +1465,7 @@ static JSFunctionSpec shell_functions[] = {
     {"build",           BuildDate,      0},
     {"clear",           Clear,          0},
     {"intern",          Intern,         1},
+    {"clone",           Clone,          1},
     {0}
 };
 
@@ -1451,14 +1475,14 @@ static char *shell_help_messages[] = {
     "version([number])      Get or set JavaScript version number",
     "options([option ...])  Get or toggle JavaScript options",
     "load(['foo.js' ...])   Load files named by string arguments",
-    "print([expr ...])      Evaluate and print expressions",
+    "print([exp ...])       Evaluate and print expressions",
     "help([name ...])       Display usage and help messages",
     "quit()                 Quit the shell",
     "gc()                   Run the garbage collector",
-    "trap([fun] [pc] expr)  Trap bytecode execution",
-    "untrap([fun] [pc])     Remove a trap",
-    "line2pc([fun] line)    Map line number to PC",
-    "pc2line([fun] [pc])    Map PC to line number",
+    "trap([fun, [pc,]] exp) Trap bytecode execution",
+    "untrap(fun[, pc])      Remove a trap",
+    "line2pc([fun,] line)   Map line number to PC",
+    "pc2line(fun[, pc])     Map PC to line number",
 #ifdef DEBUG
     "dis([fun])             Disassemble functions into bytecodes",
     "dissrc([fun])          Disassemble functions with source lines",
@@ -1467,7 +1491,7 @@ static char *shell_help_messages[] = {
     "stats([string ...])    Dump 'arena', 'atom', 'global' stats",
 #endif
 #ifdef TEST_EXPORT
-    "doexp(obj, id)         Export identified property from object",
+    "xport(obj, id)         Export identified property from object",
 #endif
 #ifdef TEST_CVTARGS
     "cvtargs(b, c, ...)     Test JS_ConvertArguments",
@@ -1475,6 +1499,7 @@ static char *shell_help_messages[] = {
     "build()                Show build date and time",
     "clear([obj])           Clear properties of object",
     "intern(str)            Internalize str in the atom table",
+    "clone(fun[, scope])    Clone function object",
     0
 };
 
@@ -1554,12 +1579,12 @@ enum its_tinyid {
 };
 
 static JSPropertySpec its_props[] = {
-    {"color",           ITS_COLOR,	JSPROP_ENUMERATE},
-    {"height",          ITS_HEIGHT,	JSPROP_ENUMERATE},
-    {"width",           ITS_WIDTH,	JSPROP_ENUMERATE},
-    {"funny",           ITS_FUNNY,	JSPROP_ENUMERATE},
-    {"array",           ITS_ARRAY,	JSPROP_ENUMERATE},
-    {"rdonly",		ITS_RDONLY,	JSPROP_READONLY},
+    {"color",           ITS_COLOR,      JSPROP_ENUMERATE},
+    {"height",          ITS_HEIGHT,     JSPROP_ENUMERATE},
+    {"width",           ITS_WIDTH,      JSPROP_ENUMERATE},
+    {"funny",           ITS_FUNNY,      JSPROP_ENUMERATE},
+    {"array",           ITS_ARRAY,      JSPROP_ENUMERATE},
+    {"rdonly",          ITS_RDONLY,     JSPROP_READONLY},
     {0}
 };
 
@@ -1860,7 +1885,7 @@ Exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         exit(127);
       default:
         while (waitpid(pid, &status, 0) < 0 && errno == EINTR)
-            ;
+            continue;
         break;
     }
     JS_free(cx, nargv);
