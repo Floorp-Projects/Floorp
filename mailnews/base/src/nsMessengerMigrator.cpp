@@ -183,6 +183,8 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 #define DEFAULT_DRAFT_FOLDER_PREF_NAME  "mail.identity.default.draft_folder"
 #define DEFAULT_STATIONERY_FOLDER_PREF_NAME "mail.identity.default.stationery_folder"
 
+#define DEFAULT_PAB_FILENAME_PREF_NAME "ldap_2.servers.pab.filename"
+
 // this is for the hidden preference setting in mozilla/modules/libpref/src/init/mailnews.js
 // pref("mail.migration.copyMailFiles", true);
 //
@@ -1922,10 +1924,21 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
 #ifdef DEBUG_AB_MIGRATION
   printf("investigate pref: %s\n",aPref);
 #endif
+  nsXPIDLCString abFileName;
+  if (!strncmp(aPref, "ldap_2.servers.pab", strlen("ldap_2.servers.pab")))
+  {
+    // check for pab without a filename and if so, set it to pab.na2
+      rv = prefs->CopyCharPref(DEFAULT_PAB_FILENAME_PREF_NAME, getter_Copies(abFileName));
+      if (NS_FAILED(rv))
+      {
+        // pab.filename not set - set it to pab.na2 and pretend aPref is it.
+        prefs->SetCharPref(DEFAULT_PAB_FILENAME_PREF_NAME, "pab.na2");
+        aPref = "ldap_2.servers.pab.filename";
+      }
+  }
   // we only care about ldap_2.servers.*.filename" prefs
   if (!charEndsWith(aPref, ADDRESSBOOK_PREF_NAME_SUFFIX)) return;
       
-  nsXPIDLCString abFileName;
   rv = prefs->CopyCharPref(aPref,getter_Copies(abFileName));
   NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed: failed to get ab filename");
   if (NS_FAILED(rv)) return;
