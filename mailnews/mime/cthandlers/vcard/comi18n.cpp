@@ -28,7 +28,6 @@
 
 
 // BEGIN EXTERNAL DEPENDANCY
-#define XP_MEMCPY memcpy
 
 #define INTL_NextChar(a,b) ((b)+1)
 #define INTL_DefaultMailCharSetID(a) (a)
@@ -61,7 +60,9 @@ extern "C" PRInt16 INTL_CharSetNameToID(char *charset) { return 0; }
 //typedef void* CCCDataObject;
 typedef unsigned char *(*CCCFunc)(CCCDataObject, const unsigned char*,PRInt32);
 
+#undef StrAllocCopy
 #define StrAllocCopy(dest, src) vCard_SACopy (&(dest), src)
+
 
 // END EXTERNAL DEPENDANCY
 
@@ -605,7 +606,7 @@ artifical terminator. So, restore the original character */
                                         PR_Free(retbuf);
                                         return NULL;
                                 }
-                                XP_MEMCPY(buf1, begin, len);
+                                nsCRT:memcpy(buf1, begin, len);
                                 *(buf1 + len) = '\0';
                         }
 
