@@ -51,7 +51,7 @@ PRLogModuleInfo* gLoadGroupLog = nsnull;
 nsLoadGroup::nsLoadGroup(nsISupports* outer)
     : mChannels(nsnull), mSubGroups(nsnull), 
       mDefaultLoadAttributes(nsIChannel::LOAD_NORMAL),
-      mObserver(nsnull), mParent(nsnull), mForegroundCount(0),
+      mParent(nsnull), mForegroundCount(0),
       mIsActive(PR_FALSE)
 {
     NS_INIT_AGGREGATED(outer);
@@ -76,7 +76,6 @@ nsLoadGroup::~nsLoadGroup()
     NS_ASSERTION(NS_SUCCEEDED(rv), "Cancel failed");
     NS_IF_RELEASE(mChannels);
     NS_IF_RELEASE(mSubGroups);
-    NS_IF_RELEASE(mObserver);
     NS_IF_RELEASE(mParent);
 
     PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
@@ -114,8 +113,11 @@ nsresult nsLoadGroup::SubGroupIsEmpty(nsresult aStatus)
             PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
                    ("LOADGROUP: %x Firing OnStopRequest(...).\n", 
                    this));
-            rv = mObserver->OnStopRequest(mDefaultLoadChannel, nsnull, 
-                                          aStatus, nsnull);
+            nsCOMPtr<nsIStreamObserver> observer = do_QueryReferent(mObserver);
+            if (observer) {
+                rv = observer->OnStopRequest(mDefaultLoadChannel, nsnull, 
+                                             aStatus, nsnull);
+            }
 
             if (mParent) {
                 mParent->SubGroupIsEmpty(aStatus);
@@ -367,7 +369,6 @@ nsLoadGroup::Init(nsIStreamObserver *observer, nsILoadGroup *parent)
 {
     nsresult rv;
 
-    NS_IF_RELEASE(mObserver);
     if (observer) {
 /*
         nsCOMPtr<nsIEventQueue> eventQueue;
@@ -384,8 +385,7 @@ nsLoadGroup::Init(nsIStreamObserver *observer, nsILoadGroup *parent)
 
         mObserver = asyncObserver;
 */
-mObserver = observer;
-        NS_ADDREF(mObserver);
+        mObserver = getter_AddRefs(NS_GetWeakReference(observer));
     }
 
     if (parent) {
@@ -481,7 +481,10 @@ nsLoadGroup::AddChannel(nsIChannel *channel, nsISupports* ctxt)
                     PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
                            ("LOADGROUP: %x Firing OnStartRequest(...).\n", 
                            this));
-                    rv = mObserver->OnStartRequest(channel, ctxt);
+                    nsCOMPtr<nsIStreamObserver> observer = do_QueryReferent(mObserver);
+                    if (observer) {
+                        rv = observer->OnStartRequest(channel, ctxt);
+                    }
                 }
                 // return with rv, below
             }
@@ -556,8 +559,11 @@ nsLoadGroup::RemoveChannel(nsIChannel *channel, nsISupports* ctxt,
                 if (mObserver) {
                     PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
                            ("LOADGROUP: %x Firing OnStopRequest(...).\n", 
-                           this));
-                    rv = mObserver->OnStopRequest(channel, ctxt, status, errorMsg);
+                            this));
+                    nsCOMPtr<nsIStreamObserver> observer = do_QueryReferent(mObserver);
+                    if (observer) {
+                        rv = observer->OnStopRequest(channel, ctxt, status, errorMsg);
+                    }
                     // return with rv, below
                 }
                 if (mParent) {
@@ -636,15 +642,16 @@ nsLoadGroup::GetSubGroups(nsISimpleEnumerator * *aSubGroups)
 NS_IMETHODIMP
 nsLoadGroup::GetGroupListenerFactory(nsILoadGroupListenerFactory * *aFactory)
 {
-    *aFactory = mGroupListenerFactory;
-    NS_IF_ADDREF(*aFactory);
+    if (mGroupListenerFactory) {
+        mGroupListenerFactory->QueryReferent(NS_GET_IID(nsILoadGroupListenerFactory), (void**)aFactory);
+    }
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLoadGroup::SetGroupListenerFactory(nsILoadGroupListenerFactory *aFactory)
 {
-    mGroupListenerFactory = aFactory;
+    mGroupListenerFactory = getter_AddRefs(NS_GetWeakReference(aFactory));
     return NS_OK;
 }
 
