@@ -52,13 +52,16 @@ EXPORT_RESOURCE	= \
 		$(srcdir)/charsetalias.properties \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS =\
-				$(MOZ_NECKO_UTIL_LIBS) \
-				$(NULL)
+EXTRA_DSO_LDOPTS = $(MOZ_NECKO_UTIL_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
-CFLAGS		+= -DUSE_NSREG -D__STDC__
+CFLAGS		+= -DUSE_NSREG
+
+# Reserved name __STDC__ cannot be defined as a macro name on AIX.
+ifneq ($(OS_ARCH),AIX)
+CFLAGS		+= -D__STDC__
+endif
 
 INCLUDES	+= -I$(srcdir)/../ucvlatin -I$(srcdir)/../ucvja
 
