@@ -47,6 +47,7 @@ EXPORTS =				\
 	nsIDOMSelection.h		\
 	nsIDOMSelectionListener.h		\
 	nsISpaceManager.h		\
+	nsIStyledContent.h      \
 	nsIStyleContext.h		\
 	nsIStyleFrameConstruction.h	\
 	nsIStyleRule.h			\
