@@ -374,8 +374,8 @@ GlobalWindowImpl::SetContext(nsIScriptContext* aContext)
 NS_IMETHODIMP
 GlobalWindowImpl::GetContext(nsIScriptContext ** aContext)
 {
-  *aContext = mContext;
-  NS_IF_ADDREF(*aContext);
+  NS_IF_ADDREF(*aContext = mContext);
+
   return NS_OK;
 }
 
@@ -711,8 +711,8 @@ GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
 NS_IMETHODIMP
 GlobalWindowImpl::GetDocShell(nsIDocShell ** aDocShell)
 {
-  *aDocShell = mDocShell;
-  NS_IF_ADDREF(*aDocShell);
+  NS_IF_ADDREF(*aDocShell = mDocShell);
+
   return NS_OK;
 }
 
@@ -735,8 +735,8 @@ GlobalWindowImpl::GetGlobalObjectOwner(nsIScriptGlobalObjectOwner ** aOwner)
 {
   NS_ENSURE_ARG_POINTER(aOwner);
 
-  *aOwner = mGlobalObjectOwner;
-  NS_IF_ADDREF(*aOwner);
+  NS_IF_ADDREF(*aOwner = mGlobalObjectOwner);
+
   return NS_OK;
 }
 
@@ -1023,8 +1023,8 @@ GlobalWindowImpl::GetDocument(nsIDOMDocument** aDocument)
   if (!mDocument && mDocShell)
     nsCOMPtr<nsIDOMDocument> domdoc(do_GetInterface(mDocShell));
 
-  *aDocument = mDocument;
-  NS_IF_ADDREF(*aDocument);
+  NS_IF_ADDREF(*aDocument = mDocument);
+
   return NS_OK;
 }
 
@@ -1032,8 +1032,9 @@ GlobalWindowImpl::GetDocument(nsIDOMDocument** aDocument)
 NS_IMETHODIMP GlobalWindowImpl::GetExtantDocument(nsIDOMDocument** aDocument)
 {
   NS_ENSURE_ARG_POINTER(aDocument);
-  *aDocument = mDocument;
-  NS_IF_ADDREF(*aDocument);
+
+  NS_IF_ADDREF(*aDocument = mDocument);
+
   return NS_OK;
 }
 
@@ -1060,6 +1061,8 @@ GlobalWindowImpl::GetSelf(nsIDOMWindowInternal** aWindow)
 NS_IMETHODIMP
 GlobalWindowImpl::GetNavigator(nsIDOMNavigator** aNavigator)
 {
+  *aNavigator = nsnull;
+
   if (!mNavigator) {
     mNavigator = new NavigatorImpl(mDocShell);
     if (!mNavigator) {
@@ -1075,14 +1078,16 @@ GlobalWindowImpl::GetNavigator(nsIDOMNavigator** aNavigator)
 NS_IMETHODIMP
 GlobalWindowImpl::GetScreen(nsIDOMScreen** aScreen)
 {
+  *aScreen = nsnull;
+
   if (!mScreen && mDocShell) {
     mScreen = new ScreenImpl(mDocShell);
     if (!mScreen) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-  }
 
-  NS_ADDREF(*aScreen = mScreen);
+    NS_ADDREF(*aScreen = mScreen);
+  }
 
   return NS_OK;
 }
@@ -1090,14 +1095,16 @@ GlobalWindowImpl::GetScreen(nsIDOMScreen** aScreen)
 NS_IMETHODIMP
 GlobalWindowImpl::GetHistory(nsIDOMHistory** aHistory)
 {
+  *aHistory = nsnull;
+
   if (!mHistory && mDocShell) {
     mHistory = new HistoryImpl(mDocShell);
     if (!mHistory) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-  }
 
-  NS_ADDREF(*aHistory = mHistory);
+    NS_ADDREF(*aHistory = mHistory);
+  }
 
   return NS_OK;
 }
@@ -1161,8 +1168,7 @@ GlobalWindowImpl::GetContent(nsIDOMWindow** aContent)
   treeOwner->GetPrimaryContentShell(getter_AddRefs(primaryContent));
 
   nsCOMPtr<nsIDOMWindowInternal> domWindow(do_GetInterface(primaryContent));
-  *aContent = domWindow;
-  NS_IF_ADDREF(*aContent);
+  NS_IF_ADDREF(*aContent = domWindow);
 
   return NS_OK;
 }
@@ -1206,6 +1212,8 @@ GlobalWindowImpl::GetPrompter(nsIPrompt** aPrompt)
 NS_IMETHODIMP
 GlobalWindowImpl::GetMenubar(nsIDOMBarProp** aMenubar)
 {
+  *aMenubar = nsnull;
+
   if (!mMenubar) {
     mMenubar = new MenubarPropImpl();
     if (!mMenubar) {
@@ -1226,6 +1234,8 @@ GlobalWindowImpl::GetMenubar(nsIDOMBarProp** aMenubar)
 NS_IMETHODIMP
 GlobalWindowImpl::GetToolbar(nsIDOMBarProp** aToolbar)
 {
+  *aToolbar = nsnull;
+
   if (!mToolbar) {
     mToolbar = new ToolbarPropImpl();
     if (!mToolbar) {
@@ -1246,6 +1256,8 @@ GlobalWindowImpl::GetToolbar(nsIDOMBarProp** aToolbar)
 NS_IMETHODIMP
 GlobalWindowImpl::GetLocationbar(nsIDOMBarProp** aLocationbar)
 {
+  *aLocationbar = nsnull;
+
   if (!mLocationbar) {
     mLocationbar = new LocationbarPropImpl();
     if (!mLocationbar) {
@@ -1266,6 +1278,8 @@ GlobalWindowImpl::GetLocationbar(nsIDOMBarProp** aLocationbar)
 NS_IMETHODIMP
 GlobalWindowImpl::GetPersonalbar(nsIDOMBarProp** aPersonalbar)
 {
+  *aPersonalbar = nsnull;
+
   if (!mPersonalbar) {
     mPersonalbar = new PersonalbarPropImpl();
     if (!mPersonalbar) {
@@ -1286,6 +1300,8 @@ GlobalWindowImpl::GetPersonalbar(nsIDOMBarProp** aPersonalbar)
 NS_IMETHODIMP
 GlobalWindowImpl::GetStatusbar(nsIDOMBarProp** aStatusbar)
 {
+  *aStatusbar = nsnull;
+
   if (!mStatusbar) {
     mStatusbar = new StatusbarPropImpl();
     if (!mStatusbar) {
@@ -1306,6 +1322,8 @@ GlobalWindowImpl::GetStatusbar(nsIDOMBarProp** aStatusbar)
 NS_IMETHODIMP
 GlobalWindowImpl::GetScrollbars(nsIDOMBarProp** aScrollbars)
 {
+  *aScrollbars = nsnull;
+
   if (!mScrollbars) {
     mScrollbars = new ScrollbarsPropImpl(this);
     if (!mScrollbars) {
@@ -1342,15 +1360,17 @@ GlobalWindowImpl::GetClosed(PRBool* aClosed)
 NS_IMETHODIMP
 GlobalWindowImpl::GetFrames(nsIDOMWindowCollection** aFrames)
 {
+  *aFrames = nsnull;
+
   if (!mFrames && mDocShell) {
     mFrames = new nsDOMWindowList(mDocShell);
     if (!mFrames) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-  }
 
-  *aFrames = NS_STATIC_CAST(nsIDOMWindowCollection *, mFrames);
-  NS_ADDREF(*aFrames);
+    *aFrames = NS_STATIC_CAST(nsIDOMWindowCollection *, mFrames);
+    NS_ADDREF(*aFrames);
+  }
 
   return NS_OK;
 }
@@ -1358,26 +1378,24 @@ GlobalWindowImpl::GetFrames(nsIDOMWindowCollection** aFrames)
 NS_IMETHODIMP
 GlobalWindowImpl::GetCrypto(nsIDOMCrypto** aCrypto)
 {
-  nsresult rv;
-
   if (!mCrypto) {
-    mCrypto = do_CreateInstance(kCryptoContractID, &rv);
+    mCrypto = do_CreateInstance(kCryptoContractID);
   }
-  *aCrypto = mCrypto;
-  NS_IF_ADDREF(*aCrypto);
+
+  NS_IF_ADDREF(*aCrypto = mCrypto);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 GlobalWindowImpl::GetPkcs11(nsIDOMPkcs11** aPkcs11)
 {
-  nsresult rv;
-
   if (!mPkcs11) {
-    mPkcs11 = do_CreateInstance(kPkcs11ContractID, &rv);
+    mPkcs11 = do_CreateInstance(kPkcs11ContractID);
   }
-  *aPkcs11 = mPkcs11;
-  NS_IF_ADDREF(*aPkcs11);
+
+  NS_IF_ADDREF(*aPkcs11 = mPkcs11);
+
   return NS_OK;
 }
 
@@ -4198,14 +4216,16 @@ GlobalWindowImpl::GetPrivateRoot(nsIDOMWindowInternal ** aParent)
 NS_IMETHODIMP
 GlobalWindowImpl::GetLocation(nsIDOMLocation ** aLocation)
 {
+  *aLocation = nsnull;
+
   if (!mLocation && mDocShell) {
     mLocation = new LocationImpl(mDocShell);
     if (!mLocation) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-  }
 
-  NS_ADDREF(*aLocation = mLocation);
+    NS_ADDREF(*aLocation = mLocation);
+  }
 
   return NS_OK;
 }
@@ -4357,8 +4377,8 @@ GlobalWindowImpl::Deactivate()
 NS_IMETHODIMP
 GlobalWindowImpl::GetChromeEventHandler(nsIChromeEventHandler** aHandler)
 {
-  *aHandler = mChromeEventHandler;
-  NS_IF_ADDREF(*aHandler);
+  NS_IF_ADDREF(*aHandler = mChromeEventHandler);
+
   return NS_OK;
 }
 
@@ -5396,8 +5416,8 @@ GlobalWindowImpl::GetWebBrowserChrome(nsIWebBrowserChrome **aBrowserChrome)
   GetTreeOwner(getter_AddRefs(treeOwner));
 
   nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(treeOwner));
-  *aBrowserChrome = browserChrome;
-  NS_IF_ADDREF(*aBrowserChrome);
+  NS_IF_ADDREF(*aBrowserChrome = browserChrome);
+
   return NS_OK;
 }
 
