@@ -27,6 +27,74 @@
 #include "nsSupportsArrayEnumerator.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
+#include <string.h>
+
+#if DEBUG_SUPPORTSARRAY
+#define MAXSUPPORTS 20
+
+class SupportsStats {
+public:
+  SupportsStats();
+  ~SupportsStats();
+
+};
+
+static int sizesUsed; // number of the elements of the arrays used
+static int sizesAlloced[MAXSUPPORTS]; // sizes of the allocations.  sorted
+static int NumberOfSize[MAXSUPPORTS]; // number of this allocation size (1 per array)
+static int AllocedOfSize[MAXSUPPORTS]; // number of this allocation size (each size for array used)
+static int GrowInPlace[MAXSUPPORTS];
+
+// these are per-allocation  
+static int MaxElements[3000];
+
+// very evil
+#define ADD_TO_STATS(x,size) do {int i; for (i = 0; i < sizesUsed; i++) \
+                                  { \
+                                    if (sizesAlloced[i] == (int)(size)) \
+                                    { ((x)[i])++; break; } \
+                                  } \
+                                  if (i >= sizesUsed && sizesUsed < MAXSUPPORTS) \
+                                  { sizesAlloced[sizesUsed] = (size); \
+                                    ((x)[sizesUsed++])++; break; \
+                                  } \
+                                } while (0);
+
+#define SUB_FROM_STATS(x,size) do {int i; for (i = 0; i < sizesUsed; i++) \
+                                    { \
+                                      if (sizesAlloced[i] == (int)(size)) \
+                                      { ((x)[i])--; break; } \
+                                    } \
+                                  } while (0);
+
+
+SupportsStats::SupportsStats()
+{
+  sizesUsed = 1;
+  sizesAlloced[0] = 0;
+}
+
+SupportsStats::~SupportsStats()
+{
+  int i;
+  for (i = 0; i < sizesUsed; i++)
+  {
+    printf("Size %d:\n",sizesAlloced[i]);
+    printf("\tNumber of SupportsArrays this size (max):     %d\n",NumberOfSize[i]);
+    printf("\tNumber of allocations this size (total):  %d\n",AllocedOfSize[i]);
+    printf("\tNumber of GrowsInPlace this size (total): %d\n",GrowInPlace[i]);
+  }
+  printf("Max Size of SupportsArray:\n");
+  for (i = 0; i < (int)(sizeof(MaxElements)/sizeof(MaxElements[0])); i++)
+  {
+    if (MaxElements[i])
+      printf("\t%d: %d\n",i,MaxElements[i]);
+  }
+}
+
+// Just so constructor/destructor get called
+SupportsStats gSupportsStats;
+#endif
 
 nsresult
 nsQueryElementAt::operator()( const nsIID& aIID, void** aResult ) const
@@ -41,7 +109,8 @@ nsQueryElementAt::operator()( const nsIID& aIID, void** aResult ) const
     return status;
   }
 
-static const PRUint32 kGrowArrayBy = 8;
+static const PRInt32 kGrowArrayBy = 8;
+static const PRInt32 kLinearThreshold = 16 * sizeof(nsISupports *);
 
 nsSupportsArray::nsSupportsArray()
 {
@@ -49,11 +118,93 @@ nsSupportsArray::nsSupportsArray()
   mArray = mAutoArray;
   mArraySize = kAutoArraySize;
   mCount = 0;
+#if DEBUG_SUPPORTSARRAY
+  mMaxCount = 0;
+  mMaxSize = 0;
+  ADD_TO_STATS(NumberOfSize,kAutoArraySize*sizeof(mArray[0]));
+  MaxElements[0]++;
+#endif
 }
 
 nsSupportsArray::~nsSupportsArray()
 {
   DeleteArray();
+}
+
+PRBool nsSupportsArray::GrowArrayBy(PRInt32 aGrowBy)
+{
+  // We have to grow the array. Grow by kGrowArrayBy slots if we're smaller
+  // than kLinearThreshold bytes, or a power of two if we're larger.
+  // This is much more efficient with most memory allocators, especially
+  // if it's very large, or of the allocator is binned.
+  if (aGrowBy < kGrowArrayBy)
+    aGrowBy = kGrowArrayBy;
+
+  PRUint32 newCount = mArraySize + aGrowBy;  // Minimum increase
+  PRUint32 newSize = sizeof(mArray[0]) * newCount;
+
+  if (newSize >= (PRUint32) kLinearThreshold)
+  {
+    // newCount includes enough space for at least kGrowArrayBy new slots.
+    // Select the next power-of-two size in bytes above that.
+    // It's painful to find the biggest 1 bit.  We check for a
+    // power-of-two here, and then double if it is one.
+    PRUint32 oldSize = sizeof(mArray[0]) * mArraySize;
+    
+    if ((oldSize & (oldSize-1)) == 0) // oldSize = 2^n for some n
+    {
+      newSize = oldSize << 1; // easy 2^(n+1)
+    }
+    else // count bits and stuff.
+    {
+      PRUint32 bits = 0;
+      while (newSize >>= 1)
+      {
+        bits++;
+      }
+      bits++; // bump to the next power of two;
+      newSize = 1 << bits;
+    }
+    // Make sure we have enough space -- the array can grow by a lot
+    while (newSize/sizeof(mArray[0]) < newCount)
+      newSize <<= 1;
+
+    // inverse of equation above.
+    newCount = newSize/sizeof(mArray[0]);
+  }
+  // XXX This would be far more efficient in many allocators if we used
+  // XXX PR_Realloc(), etc
+  nsISupports** oldArray = mArray;
+  
+  mArray = new nsISupports*[newCount];
+  if (!mArray) {                    // ran out of memory
+    mArray = oldArray;
+    return PR_FALSE;
+  }
+  mArraySize = newCount;
+
+#if DEBUG_SUPPORTSARRAY
+  if (oldArray == mArray) // can't happen without use of realloc
+    ADD_TO_STATS(GrowInPlace,mCount);
+  ADD_TO_STATS(AllocedOfSize,mArraySize*sizeof(mArray[0]));
+  if (mArraySize > mMaxSize)
+  {
+    ADD_TO_STATS(NumberOfSize,mArraySize*sizeof(mArray[0]));
+    if (oldArray != &(mAutoArray[0]))
+      SUB_FROM_STATS(NumberOfSize,mCount*sizeof(mArray[0]));
+    mMaxSize = mArraySize;
+  }
+#endif
+  if (oldArray) {                   // need to move old data
+    if (0 < mCount) {
+      ::memcpy(mArray, oldArray, mCount * sizeof(nsISupports*));
+    }
+    if (oldArray != &(mAutoArray[0])) {
+      delete[] oldArray;
+    }
+  }
+
+  return PR_TRUE;
 }
 
 NS_METHOD
@@ -84,7 +235,7 @@ nsSupportsArray::Read(nsIObjectInputStream *aStream)
 
   if (newArraySize <= kAutoArraySize) {
     if (mArray != mAutoArray) {
-      delete mArray;
+      delete[] mArray;
       mArray = mAutoArray;
       newArraySize = kAutoArraySize;
     }
@@ -99,7 +250,7 @@ nsSupportsArray::Read(nsIObjectInputStream *aStream)
       if (!array)
         return NS_ERROR_OUT_OF_MEMORY;
       if (mArray != mAutoArray)
-        delete mArray;
+        delete[] mArray;
       mArray = array;
     }
   }
@@ -164,15 +315,9 @@ nsSupportsArray::operator=(nsISupportsArray const& aOther)
   
   if (otherCount > mArraySize) {
     DeleteArray();
-    nsISupports** array = new nsISupports*[otherCount];
-    if (!array) {
-      // Can't grow mArray, can't return an error -- copy mCount elements.
-      otherCount = mCount;
-    }
-    else {
-      mArraySize = otherCount;
-      mArray = array;
-    }
+    if (!GrowArrayBy(otherCount - mArraySize))
+      // Can't grow mArray, can't return an error -- copy mArraySize elements.
+      otherCount = mArraySize;
   }
   else {
     Clear();
@@ -181,6 +326,15 @@ nsSupportsArray::operator=(nsISupportsArray const& aOther)
   while (0 < otherCount--) {
     mArray[otherCount] = ((nsISupportsArray&)aOther).ElementAt(otherCount);
   }
+#if DEBUG_SUPPORTSARRAY
+  if (mCount > mMaxCount &&
+      mCount < (PRInt32)(sizeof(MaxElements)/sizeof(MaxElements[0])))
+  {
+    MaxElements[mCount]++;
+    MaxElements[mMaxCount]--;
+    mMaxCount = mCount;
+  }
+#endif
   return *this;
 }
 
@@ -267,38 +421,77 @@ nsSupportsArray::InsertElementAt(nsISupports* aElement, PRUint32 aIndex)
     return PR_FALSE;
   }
   if (aIndex <= mCount) {
-    if (mArraySize < (mCount + 1)) {    // need to grow the array
-      mArraySize += kGrowArrayBy;
-      nsISupports** oldArray = mArray;
-      mArray = new nsISupports*[mArraySize];
-      if (!mArray) {                    // ran out of memory
-        mArray = oldArray;
-        mArraySize -= kGrowArrayBy;
+    if (mArraySize < (mCount + 1)) {
+      // need to grow the array
+      if (!GrowArrayBy(1))
         return PR_FALSE;
-      }
-      if (oldArray) {                   // need to move old data
-        if (0 < aIndex) {
-          ::memcpy(mArray, oldArray, aIndex * sizeof(nsISupports*));
-        }
-        PRUint32 slide = (mCount - aIndex);
-        if (0 < slide) {
-          ::memcpy(mArray + aIndex + 1, oldArray + aIndex, slide * sizeof(nsISupports*));
-        }
-        if (oldArray != &(mAutoArray[0])) {
-          delete[] oldArray;
-        }
-      }
     }
-    else {
-      PRUint32 slide = (mCount - aIndex);
-      if (0 < slide) {
-        ::memmove(mArray + aIndex + 1, mArray + aIndex, slide * sizeof(nsISupports*));
-      }
+
+    // Could be slightly more efficient if GrowArrayBy knew about the
+    // split, but the difference is trivial.
+    PRUint32 slide = (mCount - aIndex);
+    if (0 < slide) {
+      ::memmove(mArray + aIndex + 1, mArray + aIndex, slide * sizeof(nsISupports*));
     }
 
     mArray[aIndex] = aElement;
     NS_ADDREF(aElement);
     mCount++;
+
+#if DEBUG_SUPPORTSARRAY
+    if (mCount > mMaxCount &&
+        mCount < (PRInt32)(sizeof(MaxElements)/sizeof(MaxElements[0])))
+    {
+      MaxElements[mCount]++;
+      MaxElements[mMaxCount]--;
+      mMaxCount = mCount;
+    }
+#endif
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+NS_IMETHODIMP_(PRBool)
+nsSupportsArray::InsertElementsAt(nsISupportsArray* aElements, PRUint32 aIndex)
+{
+  if (!aElements) {
+    return PR_FALSE;
+  }
+  PRUint32 countElements;
+  if (NS_FAILED( aElements->Count( &countElements ) ))
+    return PR_FALSE;
+
+  if (aIndex <= mCount) {
+    if (mArraySize < (mCount + countElements)) {
+      // need to grow the array
+      if (!GrowArrayBy(countElements))
+        return PR_FALSE;
+    }
+
+    // Could be slightly more efficient if GrowArrayBy knew about the
+    // split, but the difference is trivial.
+    PRUint32 slide = (mCount - aIndex);
+    if (0 < slide) {
+      ::memmove(mArray + aIndex + countElements, mArray + aIndex,
+                slide * sizeof(nsISupports*));
+    }
+
+    for (PRUint32 i = 0; i < countElements; ++i, ++mCount) { 
+      // use GetElementAt to copy and do AddRef for us
+      if (NS_FAILED( aElements->GetElementAt( i, mArray + aIndex + i) ))
+        return PR_FALSE;
+    }
+
+#if DEBUG_SUPPORTSARRAY
+    if (mCount > mMaxCount &&
+        mCount < (PRInt32)(sizeof(MaxElements)/sizeof(MaxElements[0])))
+    {
+      MaxElements[mCount]++;
+      MaxElements[mMaxCount]--;
+      mMaxCount = mCount;
+    }
+#endif
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -317,14 +510,17 @@ nsSupportsArray::ReplaceElementAt(nsISupports* aElement, PRUint32 aIndex)
 }
 
 NS_IMETHODIMP_(PRBool)
-nsSupportsArray::RemoveElementAt(PRUint32 aIndex)
+nsSupportsArray::RemoveElementsAt(PRUint32 aIndex, PRUint32 aCount)
 {
   if (aIndex < mCount) {
-    NS_RELEASE(mArray[aIndex]);
-    mCount--;
+    for (PRUint32 i = 0; i < aCount; i++)
+    {
+      NS_RELEASE(mArray[aIndex+i]);
+    }
+    mCount -= aCount;
     PRInt32 slide = (mCount - aIndex);
     if (0 < slide) {
-      ::memmove(mArray + aIndex, mArray + aIndex + 1,
+      ::memmove(mArray + aIndex, mArray + aIndex + aCount,
                 slide * sizeof(nsISupports*));
     }
     return PR_TRUE;
@@ -335,76 +531,55 @@ nsSupportsArray::RemoveElementAt(PRUint32 aIndex)
 NS_IMETHODIMP_(PRBool)
 nsSupportsArray::RemoveElement(const nsISupports* aElement, PRUint32 aStartIndex)
 {
-  if (aStartIndex < mCount) {
-    nsISupports** ep = mArray;
-    nsISupports** end = ep + mCount;
-    while (ep < end) {
-      if (*ep == aElement) {
-        return RemoveElementAt(PRUint32(ep - mArray));
-      }
-      ep++;
-    }
-  }
+  PRInt32 theIndex = IndexOfStartingAt(aElement,aStartIndex);
+  if (theIndex >= 0)
+    return RemoveElementAt(theIndex);
+
   return PR_FALSE;
 }
 
 NS_IMETHODIMP_(PRBool)
 nsSupportsArray::RemoveLastElement(const nsISupports* aElement)
 {
-  if (0 < mCount) {
-    nsISupports** ep = (mArray + mCount);
-    while (mArray <= --ep) {
-      if (*ep == aElement) {
-        return RemoveElementAt(PRUint32(ep - mArray));
-      }
-    }
-  }
+  PRInt32 theIndex = LastIndexOf(aElement);
+  if (theIndex >= 0)
+    return RemoveElementAt(theIndex);
+
   return PR_FALSE;
 }
 
 NS_IMETHODIMP_(PRBool)
-nsSupportsArray::AppendElements(nsISupportsArray* aElements)
+nsSupportsArray::MoveElement(PRInt32 aFrom, PRInt32 aTo)
 {
-  if (!aElements)
-    return PR_FALSE;
+  nsISupports *tempElement;
 
-  PRUint32 countElements;
-  if (NS_FAILED( aElements->Count( &countElements ) ))
-    return PR_FALSE;
-
-  if (0 < countElements) {
-    if (mArraySize < (mCount + countElements)) {  // need to grow the array
-      PRUint32 count = mCount + countElements;
-      PRUint32 oldSize = mArraySize;
-      // growth is linear; consider geometric (e.g., doubling) to avoid the n^2
-      //  (amortized) cost we are paying to copy elements now
-      mArraySize += ((count - mArraySize + kGrowArrayBy - 1) / kGrowArrayBy) * kGrowArrayBy;
-      nsISupports** oldArray = mArray;
-      mArray = new nsISupports*[mArraySize];
-      if (!mArray) {                                // ran out of memory
-        mArray = oldArray;
-        mArraySize = oldSize;
-        return PR_FALSE;
-      }
-      if (oldArray) {                               // need to move old data
-        if (0 < mCount) {
-          ::memcpy(mArray, oldArray, mCount * sizeof(nsISupports*));
-        }
-        if (oldArray != &(mAutoArray[0])) {
-          delete[] oldArray;
-        }
-      }
-    }
-
-    PRUint32 i = 0;
-    for (i = 0; i < countElements; ++i, ++mCount) { 
-      // use GetElementAt to copy and do AddRef for us
-      if (NS_FAILED( aElements->GetElementAt( i, mArray + mCount) ))
-        return PR_FALSE;
-    }
+  if (aTo == aFrom)
     return PR_TRUE;
+
+  if (aTo < 0 || aFrom < 0 ||
+      (PRUint32) aTo >= mCount || (PRUint32) aFrom >= mCount)
+  {
+    // can't extend the array when moving an element.  Also catches mImpl = null
+    return PR_FALSE;
   }
-  return PR_FALSE;
+  tempElement = mArray[aFrom];
+
+  if (aTo < aFrom)
+  {
+    // Moving one element closer to the head; the elements inbetween move down
+    ::memmove(mArray + aTo + 1, mArray + aTo,
+              (aFrom-aTo) * sizeof(mArray[0]));
+    mArray[aTo] = tempElement;
+  }
+  else // already handled aFrom == aTo
+  {
+    // Moving one element closer to the tail; the elements inbetween move up
+    ::memmove(mArray + aFrom, mArray + aFrom + 1,
+              (aTo-aFrom) * sizeof(mArray[0]));
+    mArray[aTo] = tempElement;
+  }
+
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP
@@ -422,6 +597,9 @@ nsSupportsArray::Clear(void)
 NS_IMETHODIMP
 nsSupportsArray::Compact(void)
 {
+#if DEBUG_SUPPORTSARRAY
+  PRUint32 oldArraySize = mArraySize;
+#endif
   if ((mArraySize != mCount) && (kAutoArraySize < mArraySize)) {
     nsISupports** oldArray = mArray;
     if (mCount <= kAutoArraySize) {
@@ -436,10 +614,55 @@ nsSupportsArray::Compact(void)
       }
       mArraySize = mCount;
     }
+#if DEBUG_SUPPORTSARRAY
+    if (oldArray == mArray &&
+        oldArray != &(mAutoArray[0])) // can't happen without use of realloc
+      ADD_TO_STATS(GrowInPlace,oldArraySize);
+    if (oldArray != &(mAutoArray[0]))
+      ADD_TO_STATS(AllocedOfSize,mArraySize*sizeof(mArray[0]));
+#endif
     ::memcpy(mArray, oldArray, mCount * sizeof(nsISupports*));
     delete[] oldArray;
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP_(PRBool)
+nsSupportsArray::SizeTo(PRInt32 aSize)
+{
+#if DEBUG_SUPPORTSARRAY
+  PRUint32 oldArraySize = mArraySize;
+#endif
+  // XXX for aSize < mCount we could resize to mCount
+  if (mArraySize == aSize || aSize < mCount)  // nothing to do
+    return PR_TRUE;
+
+  // switch back to autoarray if possible
+  nsISupports** oldArray = mArray;
+  if (kAutoArraySize <= aSize) {
+    mArray = mAutoArray;
+    mArraySize = kAutoArraySize;
+  }
+  else {
+    mArray = new nsISupports*[aSize];
+    if (!mArray) {
+      mArray = oldArray;
+      return PR_FALSE;
+    }
+    mArraySize = aSize;
+  }
+#if DEBUG_SUPPORTSARRAY
+  if (oldArray == mArray &&
+      oldArray != &(mAutoArray[0])) // can't happen without use of realloc
+    ADD_TO_STATS(GrowInPlace,oldArraySize);
+  if (oldArray != &(mAutoArray[0]))
+    ADD_TO_STATS(AllocedOfSize,mArraySize*sizeof(mArray[0]));
+#endif
+  ::memcpy(mArray, oldArray, mCount * sizeof(nsISupports*));
+  if (oldArray != mAutoArray)
+    delete[] oldArray;
+
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP_(PRBool)

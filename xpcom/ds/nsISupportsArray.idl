@@ -87,6 +87,18 @@ interface nsISupportsArray : nsICollection {
                                  in voidPtr aData);
 
   nsISupportsArray clone();
+
+  [notxpcom] boolean MoveElement(in long aFrom,
+                                 in long aTo);
+
+  [notxpcom] boolean InsertElementsAt(in nsISupportsArray aOther,
+                                      in unsigned long aIndex);
+
+  [notxpcom] boolean RemoveElementsAt(in unsigned long aIndex,
+                                      in unsigned long aCount);
+
+  [notxpcom] boolean SizeTo(in long aSize);
+  
 %{C++
 private:
 //  NS_IMETHOD_(nsISupportsArray&) operator=(const nsISupportsArray& other) = 0;

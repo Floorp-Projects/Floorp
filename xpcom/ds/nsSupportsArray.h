@@ -23,9 +23,11 @@
 #ifndef nsSupportsArray_h__
 #define nsSupportsArray_h__
 
+//#define DEBUG_SUPPORTSARRAY 1
+
 #include "nsISupportsArray.h"
 
-static const PRUint32 kAutoArraySize = 4;
+static const PRUint32 kAutoArraySize = 8;
 
 class NS_COM nsSupportsArray : public nsISupportsArray {
 public:
@@ -65,6 +67,7 @@ public:
     // XXX This incorrectly returns a PRBool instead of an nsresult.
     return RemoveElement(aElement, 0);
   }
+  NS_IMETHOD_(PRBool) MoveElement(PRInt32 aFrom, PRInt32 aTo);
   NS_IMETHOD Enumerate(nsIEnumerator* *result);
   NS_IMETHOD Clear(void);
 
@@ -98,7 +101,9 @@ public:
 
   NS_IMETHOD_(PRBool) ReplaceElementAt(nsISupports* aElement, PRUint32 aIndex);
 
-  NS_IMETHOD_(PRBool) RemoveElementAt(PRUint32 aIndex);
+  NS_IMETHOD_(PRBool) RemoveElementAt(PRUint32 aIndex) {
+    return RemoveElementsAt(aIndex,1);
+  }
   NS_IMETHOD_(PRBool) RemoveElement(const nsISupports* aElement, PRUint32 aStartIndex = 0);
   NS_IMETHOD_(PRBool) RemoveLastElement(const nsISupports* aElement);
 
@@ -110,7 +115,9 @@ public:
     return (RemoveElementAt(aIndex) ? NS_OK : NS_ERROR_FAILURE);
   }
   
-  NS_IMETHOD_(PRBool) AppendElements(nsISupportsArray* aElements);
+  NS_IMETHOD_(PRBool) AppendElements(nsISupportsArray* aElements) {
+    return InsertElementsAt(aElements,mCount);
+  }
   
   NS_IMETHOD Compact(void);
 
@@ -119,6 +126,11 @@ public:
 
   NS_IMETHOD Clone(nsISupportsArray **_retval);
 
+  NS_IMETHOD_(PRBool) InsertElementsAt(nsISupportsArray *aOther, PRUint32 aIndex);
+
+  NS_IMETHOD_(PRBool) RemoveElementsAt(PRUint32 aIndex, PRUint32 aCount);
+
+  NS_IMETHOD_(PRBool) SizeTo(PRInt32 aSize);
 protected:
   NS_IMETHOD_(nsISupportsArray&) operator=(const nsISupportsArray& aOther);
   NS_IMETHOD_(PRBool) operator==(const nsISupportsArray& aOther) { return Equals(&aOther); }
@@ -126,10 +138,16 @@ protected:
   
   void DeleteArray(void);
 
+  NS_IMETHOD_(PRBool) GrowArrayBy(PRInt32 aGrowBy);
+
   nsISupports** mArray;
   PRUint32 mArraySize;
   PRUint32 mCount;
   nsISupports*  mAutoArray[kAutoArraySize];
+#if DEBUG_SUPPORTSARRAY
+  PRUint32 mMaxCount;
+  PRUint32 mMaxSize;
+#endif
 
 private:
   // Copy constructors are not allowed
