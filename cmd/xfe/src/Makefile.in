@@ -338,7 +338,7 @@ $(LIBRARY): $(OBJS)
 # note the header file is generated as a side effect here.
 $(OBJDIR)/commands.c $(OBJDIR)/commands.h: $(OBJDIR)/mkcommands xfe_commands
 	@echo Generating command table information... ; \
-	$(OBJDIR)/mkcommands -table $(OBJDIR)/commands.c -header $(OBJDIR)/commands.h $(srcdir)xfe_commands
+	$(OBJDIR)/mkcommands -table $(OBJDIR)/commands.c -header $(OBJDIR)/commands.h $(srcdir)/xfe_commands
 
 $(OBJDIR)/commands.o: $(OBJDIR)/commands.c
 	$(CC) -c -I. -o $@ $(OBJDIR)/commands.c
