@@ -930,6 +930,15 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                       aReflowState.mComputedMinHeight),
                                aReflowState.mComputedMaxHeight);
     }
+
+#if defined (MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2) || defined (MOZ_WIDGET_XLIB)  
+    // We need to make sure that the size of the object frame does not
+    // exceed the maximum size of X coordinates.  See bug #225357 for
+    // more information.  In theory Gtk2 can handle large coordinates,
+    // but underlying plugins can't.
+    aMetrics.height = PR_MIN(NSIntPixelsToTwips(PR_INT16_MAX, p2t), aMetrics.height);
+    aMetrics.width = PR_MIN(NSIntPixelsToTwips(PR_INT16_MAX, p2t), aMetrics.width);
+#endif
   }
 
   // At this point, the width has an unconstrained value only if we have
