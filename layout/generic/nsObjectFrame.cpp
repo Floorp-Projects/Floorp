@@ -1423,16 +1423,19 @@ nsObjectFrame::IsHidden(PRBool aCheckVisibilityStyle) const
   // only <embed> tags support the HIDDEN attribute
   if (tag.get() == nsHTMLAtoms::embed) {
     nsAutoString hidden;
-    mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
+    nsresult result = mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
 
     // Yes, these are really the kooky ways that you could tell 4.x
     // not to hide the <embed> once you'd put the 'hidden' attribute
     // on the tag...
       // these |NS_ConvertASCIItoUCS2|s can't be |NS_LITERAL_STRING|s until |EqualsIgnoreCase| get's fixed
-    if (!hidden.IsEmpty() &&
+    // HIDDEN w/ no attributes gets translated as we are hidden for compatibility
+    // w/ 4.x and IE so we don't create a non-painting widget in layout. See bug 188959.
+    if (NS_CONTENT_ATTR_NOT_THERE != result &&
+       (hidden.IsEmpty() ||
         !hidden.Equals(NS_LITERAL_STRING("false"), nsCaseInsensitiveStringComparator()) &&
         !hidden.Equals(NS_LITERAL_STRING("no"), nsCaseInsensitiveStringComparator()) &&
-        !hidden.Equals(NS_LITERAL_STRING("off"), nsCaseInsensitiveStringComparator())) {
+        !hidden.Equals(NS_LITERAL_STRING("off"), nsCaseInsensitiveStringComparator()))) {
       return PR_TRUE;
     }
   }
