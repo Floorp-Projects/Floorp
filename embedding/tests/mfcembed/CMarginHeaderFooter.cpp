@@ -12,8 +12,11 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-static char* sCBXTitles[] = {"--Blank--", "Title", "URL", "Date/Time", "Page #", "Page # of #", "Custom...", NULL};
-static char* sCBXValues[] = {"", "&T", "&U", "&D", "&P", "&PT", "", NULL};
+static TCHAR* sCBXTitles[] = {
+    _T("--Blank--"), _T("Title"), _T("URL"), _T("Date/Time"), _T("Page #"),
+    _T("Page # of #"), _T("Custom..."), NULL};
+static TCHAR* sCBXValues[] = {
+    _T(""), _T("&T"), _T("&U"), _T("&D"), _T("&P"), _T("&PT"), _T(""), NULL};
 
 /////////////////////////////////////////////////////////////////////////////
 // CMarginHeaderFooter property page
@@ -67,7 +70,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CMarginHeaderFooter message handlers
 
-void CMarginHeaderFooter::SetComboboxValue(int aId, const char* aItem)
+void CMarginHeaderFooter::SetComboboxValue(int aId, const TCHAR *aItem)
 {
     CComboBox* cbx = (CComboBox*)GetDlgItem(aId);
     if (cbx) 
@@ -75,7 +78,7 @@ void CMarginHeaderFooter::SetComboboxValue(int aId, const char* aItem)
         int inx = 0;
         while (sCBXValues[inx] != NULL) 
         {
-            if (!strcmp(sCBXValues[inx], aItem)) 
+            if (!_tcscmp(sCBXValues[inx], aItem)) 
             {
                 cbx->SetCurSel(inx);
                 return;
@@ -86,7 +89,7 @@ void CMarginHeaderFooter::SetComboboxValue(int aId, const char* aItem)
     }
 }
 
-void CMarginHeaderFooter::AddCBXItem(int aId, const char* aItem)
+void CMarginHeaderFooter::AddCBXItem(int aId, const TCHAR * aItem)
 {
     CComboBox* cbx = (CComboBox*)GetDlgItem(aId);
     if (cbx) 
@@ -97,7 +100,7 @@ void CMarginHeaderFooter::AddCBXItem(int aId, const char* aItem)
 
 BOOL CMarginHeaderFooter::OnInitDialog() 
 {
-	  CDialog::OnInitDialog();
+	CDialog::OnInitDialog();
 
     int inx = 0;
     while (sCBXTitles[inx] != NULL) 
@@ -110,12 +113,12 @@ BOOL CMarginHeaderFooter::OnInitDialog()
         AddCBXItem(IDC_FTR_RIGHT_CMBX,  sCBXTitles[inx]);
         inx++;
     }
-	  SetComboboxValue(IDC_HDR_LEFT_CMBX, LPCSTR(m_HeaderLeftText));
-	  SetComboboxValue(IDC_HDR_CENTER_CMBX, LPCSTR(m_HeaderCenterText));
-	  SetComboboxValue(IDC_HDR_RIGHT_CMBX, LPCSTR(m_HeaderRightText));
-	  SetComboboxValue(IDC_FTR_LEFT_CMBX, LPCSTR(m_FooterLeftText));
-	  SetComboboxValue(IDC_FTR_CENTER_CMBX, LPCSTR(m_FooterCenterText));
-	  SetComboboxValue(IDC_FTR_RIGHT_CMBX, LPCSTR(m_FooterRightText));
+	  SetComboboxValue(IDC_HDR_LEFT_CMBX, m_HeaderLeftText);
+	  SetComboboxValue(IDC_HDR_CENTER_CMBX, m_HeaderCenterText);
+	  SetComboboxValue(IDC_HDR_RIGHT_CMBX, m_HeaderRightText);
+	  SetComboboxValue(IDC_FTR_LEFT_CMBX, m_FooterLeftText);
+	  SetComboboxValue(IDC_FTR_CENTER_CMBX, m_FooterCenterText);
+	  SetComboboxValue(IDC_FTR_RIGHT_CMBX, m_FooterRightText);
 
 	  return TRUE;  // return TRUE unless you set the focus to a control
 	                // EXCEPTION: OCX Property Pages should return FALSE

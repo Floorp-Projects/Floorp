@@ -70,7 +70,7 @@ public:
     void OpenURLInNewWindow(const PRUnichar* pUrl);
     void LoadHomePage();
 
-    void GetBrowserWindowTitle(nsCString& title);
+    void GetBrowserWindowTitle(nsAString& title);
     
     // Called by the CBrowserFrame after it creates the view
     // Essentially a back pointer to the BrowserFrame
@@ -108,7 +108,7 @@ public:
 
     inline void ClearFindDialog() { m_pFindDlg = NULL; }
     CFindDialog* m_pFindDlg;
-  CPrintProgressDialog* m_pPrintProgressDlg;
+    CPrintProgressDialog* m_pPrintProgressDlg;
     // When set to TRUE...
     // indicates that the clipboard operation needs to be 
     // performed on the UrlBar rather than on
@@ -121,6 +121,7 @@ public:
 
     void Activate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 
+    BOOL OpenViewSourceWindow(const PRUnichar* pUrl);
     BOOL OpenViewSourceWindow(const char* pUrl);
     BOOL IsViewSourceUrl(CString& strUrl);
 

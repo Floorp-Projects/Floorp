@@ -81,7 +81,7 @@ CPPSRCS		= \
 		BrowserImpl.cpp \
 		BrowserImplWebPrgrsLstnr.cpp \
 		BrowserImplCtxMenuLstnr.cpp \
-        BrowserToolTip.cpp \
+		BrowserToolTip.cpp \
 		Dialogs.cpp       \
 		ProfileMgr.cpp \
 		ProfilesDlg.cpp \
@@ -152,9 +152,14 @@ ifdef BUILD_STATIC_LIBS
 include $(topsrcdir)/config/static-rules.mk
 endif # BUILD_STATIC_LIBS
 
+# UNICODE
+ifdef BUILD_UNICODE_MFCEMBED
+CXXFLAGS        += /D "_UNICODE"
+LDFLAGS         += /ENTRY:wWinMainCRTStartup
+endif
 
 CXXFLAGS	+= /D "_AFXDLL" /D "USE_SINGLE_SIGN_ON" -DMOZILLA_VERSION=\"$(MOZILLA_VERSION)\"
-LDFLAGS		+= -SUBSYSTEM:windows
+LDFLAGS		+= /SUBSYSTEM:windows
 
 libs:: mfcembed.htm
 	$(INSTALL) $^ $(DIST)/bin

@@ -57,20 +57,19 @@ static void ValidateProfileName(const CString& profileName, CDataExchange* pDX)
     {
         nsCOMPtr<nsIProfile> profileService = 
                  do_GetService(NS_PROFILE_CONTRACTID, &rv);
-        rv = profileService->ProfileExists(T2W(profileName), &exists);
+        rv = profileService->ProfileExists(T2CW(profileName), &exists);
     }
 
     if (NS_SUCCEEDED(rv) && exists)
     {
         CString errMsg;
-
-        errMsg.Format(_T("Error: A profile named \"%s\" already exists."), (const char *)profileName);
+        errMsg.Format(_T("Error: A profile named \"%s\" already exists."), profileName);
         AfxMessageBox( errMsg, MB_ICONEXCLAMATION );
         errMsg.Empty();
         pDX->Fail();
     }
 
-    if (profileName.FindOneOf("\\/") != -1)
+    if (profileName.FindOneOf(_T("\\/")) != -1)
     {
         AfxMessageBox( _T("Error: A profile name cannot contain the characters \"\\\" or \"/\"."), MB_ICONEXCLAMATION );
         pDX->Fail();
@@ -186,7 +185,7 @@ void CProfilesDlg::DoDataExchange(CDataExchange* pDX)
         {
             CString itemText;
             m_ProfileList.GetText(itemIndex, itemText);
-            m_SelectedProfile.Assign(T2W(itemText));
+            m_SelectedProfile.Assign(T2CW(itemText));
         }
     }
 }
@@ -258,7 +257,7 @@ void CProfilesDlg::OnNewProfile()
         {
             USES_CONVERSION;
 
-               rv = profileService->CreateNewProfile(T2W(dialog.m_Name), nsnull, nsnull, PR_FALSE);
+            rv = profileService->CreateNewProfile(T2CW(dialog.m_Name), nsnull, nsnull, PR_FALSE);
             ASSERT(NS_SUCCEEDED(rv));
             if (NS_SUCCEEDED(rv))
             {
@@ -292,7 +291,7 @@ void CProfilesDlg::OnRenameProfile()
         ASSERT(NS_SUCCEEDED(rv));
         if (NS_SUCCEEDED(rv))
         {
-            rv = profileService->RenameProfile(T2W(dialog.m_CurrentName), T2W(dialog.m_NewName));
+            rv = profileService->RenameProfile(T2CW(dialog.m_CurrentName), T2CW(dialog.m_NewName));
             ASSERT(NS_SUCCEEDED(rv));
         }
     }    
@@ -316,7 +315,7 @@ void CProfilesDlg::OnDeleteProfile()
     {
         USES_CONVERSION;
 
-        rv = profileService->DeleteProfile(T2W(selectedProfile), PR_TRUE);
+        rv = profileService->DeleteProfile(T2CW(selectedProfile), PR_TRUE);
         ASSERT(NS_SUCCEEDED(rv));
         if (NS_SUCCEEDED(rv))
         {

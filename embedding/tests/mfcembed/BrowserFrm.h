@@ -59,18 +59,20 @@ public:
         SetWindowText(pUrl);
     }
     inline void AddURLToList(CString& url, bool bAddToMRUList = true) {
+        USES_CONVERSION;
         COMBOBOXEXITEM ci;
         ci.mask = CBEIF_TEXT; ci.iItem = -1;
-        ci.pszText = (LPTSTR)(LPCTSTR)url;
+        ci.pszText = const_cast<TCHAR *>((LPCTSTR)url);
         InsertItem(&ci);
 
         if(bAddToMRUList)
-            m_MRUList.AddURL((LPTSTR)(LPCTSTR)url);
+            m_MRUList.AddURL(T2CA(url));
     }
     inline void LoadMRUList() {
         for (int i=0;i<m_MRUList.GetNumURLs();i++) 
         {
-            CString urlStr(_T(m_MRUList.GetURL(i)));
+            USES_CONVERSION;
+            CString urlStr(A2CT(m_MRUList.GetURL(i)));
             AddURLToList(urlStr, false); 
         }
     }

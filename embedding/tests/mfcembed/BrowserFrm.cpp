@@ -195,7 +195,7 @@ int CBrowserFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
     m_wndReBar.AddBar(&m_wndToolBar);
 
     if (!mIsEditor)
-          m_wndReBar.AddBar(&m_wndUrlBar, "Enter URL:");
+          m_wndReBar.AddBar(&m_wndUrlBar, _T("Enter URL:"));
 
     // Create the status bar with two panes - one pane for actual status
     // text msgs. and the other for the progress control

@@ -79,7 +79,7 @@ static char THIS_FILE[] = __FILE__;
 
 // this is for overriding the Mozilla default PromptService component
 #include "PromptService.h"
-#define kComponentsLibname "mfcEmbedComponents.dll"
+#define kComponentsLibname _T("mfcEmbedComponents.dll")
 #define NS_PROMPTSERVICE_CID \
  {0xa2112d6a, 0x0e28, 0x421f, {0xb4, 0x6a, 0x25, 0xc0, 0xb3, 0x8, 0xcb, 0xd0}}
 static NS_DEFINE_CID(kPromptServiceCID, NS_PROMPTSERVICE_CID);
@@ -136,15 +136,22 @@ public:
     }
 
     // handle flag-based parameters
-    void HandleFlag(const nsACString& flag, const char* param=nsnull)
+#ifdef _UNICODE
+    void HandleFlag(const nsAString& flag, const TCHAR * param = nsnull)
+#else
+    void HandleFlag(const nsACString& flag, const TCHAR * param = nsnull)
+#endif
     {
-        if (flag.Equals("console"))
+        if (flag.Equals(_T("console")))
             DoConsole();
-        else if (flag.Equals("chrome"))
+        else if (flag.Equals(_T("chrome")))
             DoChrome();
 #ifdef NS_TRACE_MALLOC
-        else if (flag.Equals("trace-malloc"))
-            DoTraceMalloc(flag, param);
+        else if (flag.Equals(_T("trace-malloc")))
+        {
+            USES_CONVERSION;
+            DoTraceMalloc(flag, T2CA(param));
+        }
 #endif
         // add new flag handlers here (please add a DoFoo() method below!)
     }
@@ -180,7 +187,11 @@ public:
     
 private:
     // autostring is fine, this is a stack based object anyway
+#ifdef _UNICODE
+    nsAutoString mLastFlag;
+#else
     nsCAutoString mLastFlag;
+#endif
 
     CMfcEmbedApp& mApp;
 };
@@ -373,11 +384,12 @@ BOOL CMfcEmbedApp::InitInstance()
     // Please see http://www.mozilla.org/projects/embedding/MRE.html
     // for more info. on GRE
 
-    char curDir[_MAX_PATH+1];
+    TCHAR curDir[_MAX_PATH+1];
     ::GetCurrentDirectory(_MAX_PATH, curDir);
+    USES_CONVERSION;
     nsresult rv;
     nsCOMPtr<nsILocalFile> mreAppDir;
-    rv = NS_NewNativeLocalFile(nsDependentCString(curDir), TRUE, getter_AddRefs(mreAppDir));
+    rv = NS_NewNativeLocalFile(nsDependentCString(T2A(curDir)), TRUE, getter_AddRefs(mreAppDir));
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create mreAppDir localfile");
 
     // Take a look at 
@@ -587,8 +599,9 @@ void CMfcEmbedApp::OnEditPreferences()
         nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
         if (NS_SUCCEEDED(rv)) 
         {
+            USES_CONVERSION;
             prefs->SetIntPref("browser.startup.page", m_iStartupPage);
-            rv = prefs->SetCharPref("browser.startup.homepage", m_strHomePage);
+            rv = prefs->SetCharPref("browser.startup.homepage", T2CA(m_strHomePage));
             if (NS_SUCCEEDED(rv))
                 rv = prefs->SavePrefFile(nsnull);
         }
@@ -627,7 +640,7 @@ BOOL CMfcEmbedApp::CreateHiddenWindow()
         return FALSE;
 
     RECT bounds = { -10010, -10010, -10000, -10000 };
-    hiddenWnd->Create(NULL, "main", WS_DISABLED, bounds, NULL, NULL, 0, NULL);
+    hiddenWnd->Create(NULL, _T("main"), WS_DISABLED, bounds, NULL, NULL, 0, NULL);
     m_pMainWnd = hiddenWnd;
 
     return TRUE;
@@ -647,11 +660,12 @@ nsresult CMfcEmbedApp::InitializePrefs()
         rv = prefs->GetBoolPref("mfcbrowser.prefs_inited", &inited);
         if (NS_FAILED(rv) || !inited)
         {
+            USES_CONVERSION;
             m_iStartupPage = 1;
             m_strHomePage = "http://www.mozilla.org/projects/embedding";
 
             prefs->SetIntPref("browser.startup.page", m_iStartupPage);
-            prefs->SetCharPref("browser.startup.homepage", m_strHomePage);
+            prefs->SetCharPref("browser.startup.homepage", T2CA(m_strHomePage));
             prefs->SetIntPref("font.size.variable.x-western", 16);
             prefs->SetIntPref("font.size.fixed.x-western", 13);
             rv = prefs->SetBoolPref("mfcbrowser.prefs_inited", PR_TRUE);
@@ -664,12 +678,17 @@ nsresult CMfcEmbedApp::InitializePrefs()
 
             prefs->GetIntPref("browser.startup.page", &m_iStartupPage);
 
-            CString strBuf;
-            char *pBuf = strBuf.GetBuffer(_MAX_PATH);
-            prefs->CopyCharPref("browser.startup.homepage", &pBuf);
-            strBuf.ReleaseBuffer(-1);
-            if(pBuf)
-                m_strHomePage = pBuf;
+            nsXPIDLCString str;
+            prefs->GetCharPref("browser.startup.homepage", getter_Copies(str));
+            if (!str.IsEmpty())
+            {
+                USES_CONVERSION;
+                m_strHomePage = A2CT(str.get());
+            }
+            else
+            {
+                m_strHomePage.Empty();
+            }
         }       
     }
     else
@@ -718,7 +737,9 @@ NS_IMETHODIMP CMfcEmbedApp::Observe(nsISupports *aSubject, const char *aTopic, c
     if (nsCRT::strcmp(aTopic, "profile-approve-change") == 0)
     {
         // Ask the user if they want to
-        int result = MessageBox(NULL, "Do you want to close all windows in order to switch the profile?", "Confirm", MB_YESNO | MB_ICONQUESTION);
+        int result = MessageBox(NULL,
+            _T("Do you want to close all windows in order to switch the profile?"),
+            _T("Confirm"), MB_YESNO | MB_ICONQUESTION);
         if (result != IDYES)
         {
             nsCOMPtr<nsIProfileChangeStatus> status = do_QueryInterface(aSubject);

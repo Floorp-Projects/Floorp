@@ -328,7 +328,7 @@ void CBrowserView::OnNewUrlEnteredInUrlBar()
         OpenViewSourceWindow(strUrl.GetBuffer(0));
     else
         // Navigate to that URL
-        OpenURL(strUrl.GetBuffer(0));    
+        OpenURL(strUrl.GetBuffer(0));
 
     // Add what was just entered into the UrlBar
     mpBrowserFrame->m_wndUrlBar.AddURLToList(strUrl);
@@ -350,10 +350,15 @@ void CBrowserView::OnUrlSelectedInUrlBar()
 
 BOOL CBrowserView::IsViewSourceUrl(CString& strUrl)
 {
-    return (strUrl.Find("view-source:", 0) != -1) ? TRUE : FALSE;
+    return (strUrl.Find(_T("view-source:"), 0) != -1) ? TRUE : FALSE;
 }
 
 BOOL CBrowserView::OpenViewSourceWindow(const char* pUrl)
+{
+    return OpenViewSourceWindow(NS_ConvertASCIItoUCS2(pUrl).get());
+}
+
+BOOL CBrowserView::OpenViewSourceWindow(const PRUnichar* pUrl)
 {
     // Create a new browser frame in which we'll show the document source
     // Note that we're getting rid of the toolbars etc. by specifying
@@ -392,16 +397,15 @@ void CBrowserView::OnViewSource()
         return;
 
     // Build the view-source: url
-    nsCAutoString viewSrcUrl;
-    viewSrcUrl.Append("view-source:");
-    viewSrcUrl.Append(uriString);
+    nsAutoString viewSrcUrl(L"view-source:");
+    viewSrcUrl.AppendWithConversion(uriString.get());
 
     OpenViewSourceWindow(viewSrcUrl.get());
 }
 
 void CBrowserView::OnViewInfo() 
 {
-    AfxMessageBox("To Be Done...");
+    AfxMessageBox(_T("To Be Done..."));
 }
 
 void CBrowserView::OnNavBack() 
@@ -604,9 +608,9 @@ void CBrowserView::OnSelectNone()
 
 void CBrowserView::OnFileOpen()
 {
-    char *lpszFilter =
-        "HTML Files Only (*.htm;*.html)|*.htm;*.html|"
-        "All Files (*.*)|*.*||";
+    TCHAR *lpszFilter =
+        _T("HTML Files Only (*.htm;*.html)|*.htm;*.html|")
+        _T("All Files (*.*)|*.*||");
 
     CFileDialog cf(TRUE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
                     lpszFilter, this);
@@ -617,43 +621,45 @@ void CBrowserView::OnFileOpen()
     }
 }
 
-void CBrowserView::GetBrowserWindowTitle(nsCString& title)
+void CBrowserView::GetBrowserWindowTitle(nsAString& title)
 {
     nsXPIDLString idlStrTitle;
     if(mBaseWindow)
         mBaseWindow->GetTitle(getter_Copies(idlStrTitle));
 
-    title.AssignWithConversion(idlStrTitle);
-
-    // Sanitize the title of all illegal characters
-    title.CompressWhitespace();     // Remove whitespace from the ends
-    title.StripChars("\\*|:\"><?"); // Strip illegal characters
-    title.ReplaceChar('.', L'_');   // Dots become underscores
-    title.ReplaceChar('/', L'-');   // Forward slashes become hyphens
+    title = idlStrTitle;
 }
 
 void CBrowserView::OnFileSaveAs()
 {
-    nsCString fileName;
+    nsAutoString fileName;
 
     GetBrowserWindowTitle(fileName); // Suggest the window title as the filename
 
-    char *lpszFilter =
-        "Web Page, HTML Only (*.htm;*.html)|*.htm;*.html|"
-        "Web Page, Complete (*.htm;*.html)|*.htm;*.html|" 
-        "Text File (*.txt)|*.txt||";
+    // Sanitize the file name of all illegal characters
 
-    CFileDialog cf(FALSE, "htm", fileName.get(), OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+    USES_CONVERSION;
+    fileName.CompressWhitespace();     // Remove whitespace from the ends
+    fileName.StripChars("\\*|:\"><?"); // Strip illegal characters
+    fileName.ReplaceChar('.', L'_');   // Dots become underscores
+    fileName.ReplaceChar('/', L'-');   // Forward slashes become hyphens
+
+    TCHAR *lpszFilter =
+        _T("Web Page, HTML Only (*.htm;*.html)|*.htm;*.html|")
+        _T("Web Page, Complete (*.htm;*.html)|*.htm;*.html|")
+        _T("Text File (*.txt)|*.txt||");
+
+    CFileDialog cf(FALSE, _T("htm"), W2CT(fileName.get()), OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
                     lpszFilter, this);
 
     if(cf.DoModal() == IDOK)
     {
         CString strFullPath = cf.GetPathName(); // Will be like: c:\tmp\junk.htm
-        char *pStrFullPath = strFullPath.GetBuffer(0); // Get char * for later use
+        TCHAR *pStrFullPath = strFullPath.GetBuffer(0); // Get char * for later use
         
         BOOL bSaveAll = FALSE;        
         CString strDataPath; 
-        char *pStrDataPath = NULL;
+        TCHAR *pStrDataPath = NULL;
         if(cf.m_ofn.nFilterIndex == 2) 
         {
             // cf.m_ofn.nFilterIndex == 2 indicates
@@ -679,17 +685,19 @@ void CBrowserView::OnFileSaveAs()
         nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(mWebBrowser));
         if(persist)
         {
+            nsCAutoString fullPath(T2CA(pStrFullPath));
             nsCOMPtr<nsILocalFile> file;
-            NS_NewNativeLocalFile(nsDependentCString(T2A(pStrFullPath)), TRUE, getter_AddRefs(file));
+            NS_NewNativeLocalFile(fullPath, TRUE, getter_AddRefs(file));
 
-            nsCOMPtr<nsILocalFile> dataPath;
+            nsCOMPtr<nsILocalFile> data;
             if (pStrDataPath)
             {
-                NS_NewNativeLocalFile(nsDependentCString(pStrDataPath), TRUE, getter_AddRefs(dataPath));
+                nsCAutoString dataPath(T2CA(pStrDataPath));
+                NS_NewNativeLocalFile(dataPath, TRUE, getter_AddRefs(data));
             }
 
             if(bSaveAll)
-                persist->SaveDocument(nsnull, file, dataPath, nsnull, 0, 0);
+                persist->SaveDocument(nsnull, file, data, nsnull, 0, 0);
             else
                 persist->SaveURI(nsnull, nsnull, nsnull, nsnull, nsnull, file);
         }
@@ -814,24 +822,24 @@ void CBrowserView::OnSaveLinkAs()
 
     // Now, use this file name in a File Save As dlg...
 
-    char *lpszFilter =
-        "HTML Files (*.htm;*.html)|*.htm;*.html|"
-        "Text Files (*.txt)|*.txt|" 
-        "All Files (*.*)|*.*||";
+    TCHAR *lpszFilter =
+        _T("HTML Files (*.htm;*.html)|*.htm;*.html|")
+        _T("Text Files (*.txt)|*.txt|")
+        _T("All Files (*.*)|*.*||");
 
-    const char *pFileName = fileName.Length() ? fileName.get() : NULL;
+    CString strFilename = fileName.get();
 
-    CFileDialog cf(FALSE, "htm", pFileName, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+    CFileDialog cf(FALSE, _T("htm"), strFilename, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
         lpszFilter, this);
     if(cf.DoModal() == IDOK)
     {
-        CString strFullPath = cf.GetPathName();
-
+        USES_CONVERSION;
+        nsCAutoString fullPath; fullPath.Assign(T2CA(cf.GetPathName()));
         nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(mWebBrowser));
         if(persist)
         {
             nsCOMPtr<nsILocalFile> file;
-            NS_NewNativeLocalFile(nsDependentCString(strFullPath.GetBuffer(0)), TRUE, getter_AddRefs(file));
+            NS_NewNativeLocalFile(fullPath, TRUE, getter_AddRefs(file));
             persist->SaveURI(linkURI, nsnull, nsnull, nsnull, nsnull, file);
         }
     }
@@ -864,20 +872,21 @@ void CBrowserView::OnSaveImageAs()
 
     // Now, use this file name in a File Save As dlg...
 
-    char *lpszFilter = "All Files (*.*)|*.*||";
-    const char *pFileName = fileName.Length() ? fileName.get() : NULL;
+    TCHAR *lpszFilter = _T("All Files (*.*)|*.*||");
+    CString strFilename = fileName.get();
 
-    CFileDialog cf(FALSE, NULL, pFileName, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+    CFileDialog cf(FALSE, NULL, strFilename, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
         lpszFilter, this);
     if(cf.DoModal() == IDOK)
     {
-        CString strFullPath = cf.GetPathName();
+        USES_CONVERSION;
+        nsCAutoString fullPath; fullPath.Assign(T2CA(cf.GetPathName()));
 
         nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(mWebBrowser));
         if(persist)
         {
             nsCOMPtr<nsILocalFile> file;
-            NS_NewNativeLocalFile(nsDependentCString(strFullPath.GetBuffer(0)), TRUE, getter_AddRefs(file));
+            NS_NewNativeLocalFile(fullPath, TRUE, getter_AddRefs(file));
             persist->SaveURI(linkURI, nsnull, nsnull, nsnull, nsnull, file);
         }
     }
@@ -1142,11 +1151,11 @@ void CBrowserView::ShowSecurityInfo()
     if(m_SecurityState == SECURITY_STATE_INSECURE) {
         CString csMsg;
         csMsg.LoadString(IDS_NOSECURITY_INFO);
-        ::MessageBox(hParent, csMsg, "MfcEmbed", MB_OK);
+        ::MessageBox(hParent, csMsg, _T("MfcEmbed"), MB_OK);
         return;
     }
 
-    ::MessageBox(hParent, "To Be Done..........", "MfcEmbed", MB_OK);
+    ::MessageBox(hParent, _T("To Be Done.........."), _T("MfcEmbed"), MB_OK);
 }
 
 // Determintes if the currently loaded document
@@ -1181,13 +1190,11 @@ BOOL CBrowserView::ViewContentContainsFrames()
 
 void CBrowserView::OnViewFrameSource()
 {
-    USES_CONVERSION;
-
     // Build the view-source: url
     //
-    nsCAutoString viewSrcUrl;
-    viewSrcUrl.Append("view-source:");
-    viewSrcUrl.Append(W2T(mCtxMenuCurrentFrameURL.get()));
+    nsAutoString viewSrcUrl;
+    viewSrcUrl.Append(L"view-source:");
+    viewSrcUrl.Append(mCtxMenuCurrentFrameURL);
 
     OpenViewSourceWindow(viewSrcUrl.get());
 }

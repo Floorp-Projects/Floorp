@@ -239,8 +239,11 @@ NS_IMETHODIMP CHelperAppLauncherDialog::Show(nsIHelperAppLauncher *aLauncher,
 
         m_FileName = dlg.m_OpenWithAppName;
 
+        USES_CONVERSION;
+        nsCAutoString fileName(T2CA(m_FileName));
+
         nsCOMPtr<nsILocalFile> openWith;
-        nsresult rv = NS_NewNativeLocalFile(nsDependentCString(m_FileName), PR_FALSE, getter_AddRefs(openWith));
+        nsresult rv = NS_NewNativeLocalFile(fileName, PR_FALSE, getter_AddRefs(openWith));
         if (NS_FAILED(rv))
             return aLauncher->LaunchWithApplication(nsnull, PR_FALSE);
         else
@@ -261,15 +264,16 @@ NS_IMETHODIMP CHelperAppLauncherDialog::PromptForSaveToFile(nsISupports *aWindow
 
     NS_ENSURE_ARG_POINTER(_retval);
 
-    char *lpszFilter = "All Files (*.*)|*.*||";
-    CFileDialog cf(FALSE, W2T(aSuggestedFileExtension), W2T(aDefaultFile),
+    TCHAR *lpszFilter = _T("All Files (*.*)|*.*||");
+    CFileDialog cf(FALSE, W2CT(aSuggestedFileExtension), W2CT(aDefaultFile),
                     OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
                     lpszFilter, GetParentFromContext(aWindowContext));
     if(cf.DoModal() == IDOK)
     {
         m_FileName = cf.GetPathName(); // Will be like: c:\tmp\junk.exe
-
-        return NS_NewNativeLocalFile(nsDependentCString(m_FileName), PR_FALSE, _retval);
+        USES_CONVERSION;
+        nsCAutoString fileName(T2CA(m_FileName));
+        return NS_NewNativeLocalFile(fileName, PR_FALSE, _retval);
     }
     else
         return NS_ERROR_FAILURE;
@@ -335,7 +339,10 @@ BOOL CChooseActionDlg::OnInitDialog()
         {
             CStatic *pMimeType = (CStatic *)GetDlgItem(IDC_CONTENT_TYPE);
             if(pMimeType)
-                pMimeType->SetWindowText(mimeType.get());
+            {
+                USES_CONVERSION;
+                pMimeType->SetWindowText(A2CT(mimeType.get()));
+            }
         }
 
         // See if we can get the preferred action from the mime info
@@ -376,7 +383,7 @@ void CChooseActionDlg::InitWithPreferredAction(nsIMIMEInfo* aMimeInfo)
     if(NS_SUCCEEDED(rv)) 
     {
         USES_CONVERSION;
-        m_OpenWithAppName = W2T(appDesc.get());
+        m_OpenWithAppName = W2CT(appDesc.get());
 
         // Update with the app name
         //
@@ -449,9 +456,9 @@ void CChooseActionDlg::OnSaveToDiskRadioBtnClicked()
 
 void CChooseActionDlg::OnChooseAppClicked() 
 {	
-    char *lpszFilter =
-        "EXE Files Only (*.exe)|*.exe|"
-        "All Files (*.*)|*.*||";
+    TCHAR *lpszFilter =
+        _T("EXE Files Only (*.exe)|*.exe|")
+        _T("All Files (*.*)|*.*||");
 
     CFileDialog cf(TRUE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
                     lpszFilter, this);
@@ -474,8 +481,9 @@ void CChooseActionDlg::OnOK()
         //
         if(m_OpenWithAppName.IsEmpty())
         {
-            ::MessageBox(this->m_hWnd, "You have chosen to open the content with an external application, but,\nno application has been specified.\n\nPlease click the Choose... button to select an application",
-            "MfcEmbed", MB_OK);
+            ::MessageBox(this->m_hWnd,
+                _T("You have chosen to open the content with an external application, but,\nno application has been specified.\n\nPlease click the Choose... button to select an application"),
+                _T("MfcEmbed"), MB_OK);
             return;
         }
         else
@@ -582,16 +590,16 @@ BOOL CProgressDlg::OnInitDialog()
         {
             nsCAutoString uriString;
             srcUri->GetSpec(uriString);
-
-            m_SavingFrom.SetWindowText(uriString.get());
+            USES_CONVERSION;
+            m_SavingFrom.SetWindowText(A2CT(uriString.get()));
         }
     }
 
     // Set the "Action" field
     if(m_HandleContentOp == CONTENT_SAVE_TO_DISK)
-        m_Action.SetWindowText("[Saving file to:] " + m_FileName);
+        m_Action.SetWindowText(_T("[Saving file to:] ") + m_FileName);
     else if(m_HandleContentOp == CONTENT_LAUNCH_WITH_APP)
-        m_Action.SetWindowText("[Opening file with:] " + m_FileName);
+        m_Action.SetWindowText(_T("[Opening file with:] ") + m_FileName);
 
     return TRUE;
 }

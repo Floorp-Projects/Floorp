@@ -110,8 +110,9 @@ char * CMostRecentUrls::GetURL(int aInx)
 
 void CMostRecentUrls::AddURL(const char * aURL)
 {
-    TCHAR szTemp[512];
-    strcpy(szTemp, aURL);
+    char szTemp[512];
+    strncpy(szTemp, aURL, sizeof(szTemp));
+    szTemp[sizeof(szTemp) - 1] = '\0';
 
     // check to see if an existing url matches the one passed in
     for (int i=0; i<MAX_URLS-1; i++)

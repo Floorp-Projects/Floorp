@@ -42,9 +42,9 @@
 //				CPromptDialog Stuff
 //--------------------------------------------------------------------------//
 
-CPromptDialog::CPromptDialog(CWnd* pParent, const char* pTitle, const char* pText,
-                             const char* pInitPromptText,
-                             BOOL bHasCheck, const char* pCheckText, int initCheckVal)
+CPromptDialog::CPromptDialog(CWnd* pParent, const TCHAR* pTitle, const TCHAR* pText,
+                             const TCHAR* pInitPromptText,
+                             BOOL bHasCheck, const TCHAR* pCheckText, int initCheckVal)
     : CDialog(CPromptDialog::IDD, pParent),
     m_bHasCheckBox(bHasCheck)
 {   
@@ -115,9 +115,9 @@ int CPromptDialog::OnInitDialog()
 //				CPromptPasswordDialog Stuff
 //--------------------------------------------------------------------------//
 
-CPromptPasswordDialog::CPromptPasswordDialog(CWnd* pParent, const char* pTitle, const char* pText,
-                                             const char* pInitPasswordText,
-                                             BOOL bHasCheck, const char* pCheckText, int initCheckVal)
+CPromptPasswordDialog::CPromptPasswordDialog(CWnd* pParent, const TCHAR* pTitle, const TCHAR* pText,
+                                             const TCHAR* pInitPasswordText,
+                                             BOOL bHasCheck, const TCHAR* pCheckText, int initCheckVal)
     : CDialog(CPromptPasswordDialog::IDD, pParent),
     m_bHasCheckBox(bHasCheck), m_bCheckBoxValue(initCheckVal)
 {   
@@ -186,9 +186,9 @@ int CPromptPasswordDialog::OnInitDialog()
 //				CPromptUsernamePasswordDialog Stuff
 //--------------------------------------------------------------------------//
 
-CPromptUsernamePasswordDialog::CPromptUsernamePasswordDialog(CWnd* pParent, const char* pTitle, const char* pText,
-                                  const char* pInitUsername, const char* pInitPassword, 
-		                          BOOL bHasCheck, const char* pCheckText, int initCheckVal)
+CPromptUsernamePasswordDialog::CPromptUsernamePasswordDialog(CWnd* pParent, const TCHAR* pTitle, const TCHAR* pText,
+                                  const TCHAR* pInitUsername, const TCHAR* pInitPassword, 
+		                          BOOL bHasCheck, const TCHAR* pCheckText, int initCheckVal)
     : CDialog(CPromptUsernamePasswordDialog::IDD, pParent),
     m_bHasCheckBox(bHasCheck), m_bCheckBoxValue(initCheckVal)
 {
@@ -267,8 +267,8 @@ int CPromptUsernamePasswordDialog::OnInitDialog()
 //				CAlertCheckDialog Stuff
 //--------------------------------------------------------------------------//
 
-CAlertCheckDialog::CAlertCheckDialog(CWnd* pParent, const char* pTitle, const char* pText,
-                             const char* pCheckText, int initCheckVal)
+CAlertCheckDialog::CAlertCheckDialog(CWnd* pParent, const TCHAR* pTitle, const TCHAR* pText,
+                             const TCHAR* pCheckText, int initCheckVal)
         : CDialog(CAlertCheckDialog::IDD, pParent)
 {   
     if(pTitle)
@@ -317,10 +317,10 @@ int CAlertCheckDialog::OnInitDialog()
 //				CConfirmCheckDialog Stuff
 //--------------------------------------------------------------------------//
 
-CConfirmCheckDialog::CConfirmCheckDialog(CWnd* pParent, const char* pTitle, const char* pText,
-                            const char* pCheckText, int initCheckVal,
-                            const char *pBtn1Text, const char *pBtn2Text, 
-                            const char *pBtn3Text)
+CConfirmCheckDialog::CConfirmCheckDialog(CWnd* pParent, const TCHAR* pTitle, const TCHAR* pText,
+                            const TCHAR* pCheckText, int initCheckVal,
+                            const TCHAR *pBtn1Text, const TCHAR *pBtn2Text, 
+                            const TCHAR *pBtn3Text)
             : CDialog(CConfirmCheckDialog::IDD, pParent)
 {   
     if(pTitle)

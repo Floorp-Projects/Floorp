@@ -15,7 +15,7 @@ const int kMinScaleRange = 30;
 
 /////////////////////////////////////////////////////////////////////////////
 typedef struct {
-  char*   mDesc;
+  TCHAR*   mDesc;
   short   mUnit;
   double  mWidth;
   double  mHeight;
@@ -23,10 +23,10 @@ typedef struct {
 } PaperSizes;
 
 static const PaperSizes gPaperSize[] = {
-  {"Letter (8.5 x 11.0)", nsIPrintSettings::kPaperSizeInches, 8.5, 11.0, FALSE},
-  {"Legal (8.5 x 14.0)",  nsIPrintSettings::kPaperSizeInches, 8.5, 14.0, FALSE},
-  {"A4 (210 x 297mm)",    nsIPrintSettings::kPaperSizeMillimeters, 210.0, 297.0, FALSE},
-  {"User Defined",        nsIPrintSettings::kPaperSizeInches, 8.5, 11.0, TRUE}
+  {_T("Letter (8.5 x 11.0)"), nsIPrintSettings::kPaperSizeInches, 8.5, 11.0, FALSE},
+  {_T("Legal (8.5 x 14.0)"),  nsIPrintSettings::kPaperSizeInches, 8.5, 14.0, FALSE},
+  {_T("A4 (210 x 297mm)"),    nsIPrintSettings::kPaperSizeMillimeters, 210.0, 297.0, FALSE},
+  {_T("User Defined"),        nsIPrintSettings::kPaperSizeInches, 8.5, 11.0, TRUE}
 };
 static const int gNumPaperSizes = 4;
 
@@ -130,14 +130,14 @@ BOOL CFormatOptionTab::OnInitDialog()
             CString hStr;
             if (unit == nsIPrintSettings::kPaperSizeInches) 
             {
-                wStr.Format("%6.2f", paperWidth);
-                hStr.Format("%6.2f", paperHeight);
+                wStr.Format(_T("%6.2f"), paperWidth);
+                hStr.Format(_T("%6.2f"), paperHeight);
                 CheckRadioButton(IDC_INCHES_RD, IDC_MILLI_RD, IDC_INCHES_RD);
             } 
             else 
             {
-                wStr.Format("%d", int(paperWidth));
-                hStr.Format("%d", int(paperHeight));
+                wStr.Format(_T("%d"), int(paperWidth));
+                hStr.Format(_T("%d"), int(paperHeight));
                 CheckRadioButton(IDC_INCHES_RD, IDC_MILLI_RD, IDC_MILLI_RD);
             }
 	          CWnd* widthTxt  = GetDlgItem(IDC_UD_PAPER_WDTH);
@@ -162,17 +162,17 @@ void CFormatOptionTab::OnCustomdrawScale(NMHDR* pNMHDR, LRESULT* pResult)
     if (scale != NULL && scaleTxt != NULL) 
     {
         CString str;
-        str.Format("%d", scale->GetPos());
+        str.Format(_T("%d"), scale->GetPos());
         scaleTxt->SetWindowText(str);
     }
 	  
 	  *pResult = 0;
 }
 
-static int GetIntFromStr(const char* aStr, int aMinVal = kMinScaleRange, int aMaxVal = 100)
+static int GetIntFromStr(const TCHAR * aStr, int aMinVal = kMinScaleRange, int aMaxVal = 100)
 {
     int val = aMinVal;
-    sscanf(aStr, "%d", &val);
+    _stscanf(aStr, _T("%d"), &val);
     if (val < aMinVal) 
     {
         return aMinVal;
