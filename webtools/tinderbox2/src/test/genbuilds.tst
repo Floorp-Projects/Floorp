@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!#perl# --
 
 # generate random build data for testing purposes.  This program will
 # generate several hours worth of 'randomized builds' starting at the
@@ -6,8 +6,8 @@
 # URL.
 
 
-# $Revision: 1.7 $ 
-# $Date: 2000/09/10 20:44:03 $ 
+# $Revision: 1.8 $ 
+# $Date: 2000/09/22 14:55:47 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbuilds.tst,v $ 
 # $Name:  $ 

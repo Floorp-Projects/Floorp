@@ -1,12 +1,12 @@
-#!/usr/local/bin/perl
+#!#perl# --
 
 # generate random notices for testing purposes.  This program will
 # generate several hours worth of 'random notes' staring at the
 # current time.
 
 
-# $Revision: 1.5 $ 
-# $Date: 2000/08/30 02:15:06 $ 
+# $Revision: 1.6 $ 
+# $Date: 2000/09/22 14:55:58 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/gennotices.tst,v $ 
 # $Name:  $ 
