@@ -1,0 +1,49 @@
+<html>
+
+<script>
+var profileCore = parent.GetProfileCore();
+
+var curProfileName = parent.GetProfileName();
+
+function GoBack()
+{
+	dump("************Inside GoBack\n");
+	// Load this xul to see the updated profile list
+	this.location.replace("resource:/res/profile/profileManager.html");
+}
+
+</script>
+
+
+<body>
+
+<table>
+<tr>
+	<td>
+		Please select a profile first.
+	</td>
+</tr>
+
+
+<tr></tr>
+<tr></tr>
+<tr></tr>
+
+<tr>
+	<td></td>
+	<td></td>
+	<td></td>
+	<td></td>
+	<td></td>
+	<td></td>
+	<td></td>
+	<td></td>
+	<td>
+		<input name=backButton type="button" value="Back         " onclick="GoBack();">
+	</td>
+
+</tr>
+
+</table>
+</body>
+</html>
