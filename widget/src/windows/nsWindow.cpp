@@ -2857,7 +2857,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			break;
 
 		case WM_INPUTLANGCHANGE: {
-#ifdef DEBUG_tague
+#if defined(DEBUG_tague) || defined(DEBUG_ftang)
 			printf("input language changed\n");
 #endif
 
@@ -2873,7 +2873,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			HIMC hIMEContext;
 
 			mIMEIsComposing = PR_TRUE;
-#ifdef DEBUG_tague
+#if defined(DEBUG_tague) || defined(DEBUG_ftang)
 			printf("IME: Recieved WM_IME_STARTCOMPOSITION\n");
 #endif
 			if ((mIMEProperty & IME_PROP_SPECIAL_UI) || (mIMEProperty & IME_PROP_AT_CARET)) {
@@ -2938,7 +2938,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			// This provides us with a composition string
 			//
 			if (lParam & GCS_COMPSTR) {
-#ifdef DEBUG_tague
+#if defined(DEBUG_tague) || defined(DEBUG_ftang)
 				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: handling GCS_COMPSTR\n");
 #endif
 				long compStrLen = ::ImmGetCompositionString(hIMEContext,GCS_COMPSTR,NULL,0);
@@ -2959,7 +2959,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			// This catches a fixed result
 			//
 			if (lParam & GCS_RESULTSTR) {
-#ifdef DEBUG_tague
+#if defined(DEBUG_tague) || defined(DEBUG_ftang)
 				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: handling GCS_RESULTSTR\n");
 #endif
 				long compStrLen = ::ImmGetCompositionString(hIMEContext,GCS_RESULTSTR,NULL,0);
@@ -2986,7 +2986,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 		case WM_IME_ENDCOMPOSITION:
 
 			mIMEIsComposing = PR_FALSE;
-#ifdef DEBUG_tague
+#if defined(DEBUG_tague) || defined(DEBUG_ftang)
 			printf("IME: Received WM_IME_ENDCOMPOSITION\n");
 #endif
 			HandleEndComposition();
@@ -3808,7 +3808,7 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
 	candForm.dwStyle = CFS_CANDIDATEPOS;
 	candForm.ptCurrentPos.x = event.theReply.mCursorPosition.x + IME_X_OFFSET;
 	candForm.ptCurrentPos.y = event.theReply.mCursorPosition.y + IME_Y_OFFSET;
-#ifdef DEBUG_tague
+#if defined(DEBUG_tague) || defined(DEBUG_ftang)
 	printf("Candidate window position: x=%d, y=%d\n",candForm.ptCurrentPos.x,candForm.ptCurrentPos.y);
 #endif
 	::ImmSetCandidateWindow(hIMEContext,&candForm);
