@@ -122,7 +122,7 @@ var PrintUtils = {
   {
     var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
                           .getService(Components.interfaces.nsIPrintSettingsService);
-    PSSVC.savePrintSettingsToPrefs(printSettings, false, aPrintSettings.kInitSaveNativeData);
+    PSSVC.savePrintSettingsToPrefs(aPrintSettings, false, aPrintSettings.kInitSaveNativeData);
   },
 
   ////////////////////////////////////////
