@@ -299,6 +299,7 @@ tree {
 
 treecol {
   min-width: 16px;
+  width: 16px;
 }
 
 tree > treechildren {
