@@ -64,11 +64,11 @@
 <!ENTITY walletSafeFillCmd.label "Safe Form Fill">
 <!ENTITY walletQuickFillCmd.label "Quick Form Fill">
 <!ENTITY walletRequestToCaptureCmd.label "Capture Form">
-<!ENTITY walletContentsCmd.label "Wallet Contents ...">
-<!ENTITY walletDisplaySignonsCmd.label "Display Signons ...">
-<!ENTITY walletDisplayCookiesCmd.label "Display Cookies ...">
+<!ENTITY walletContentsCmd.label "Wallet Contents...">
+<!ENTITY walletDisplaySignonsCmd.label "Display Signons...">
+<!ENTITY walletDisplayCookiesCmd.label "Display Cookies...">
 <!ENTITY walletSamplesCmd.label "Samples">
-<!ENTITY walletChangePasswordCmd.label "Change Password ...">
+<!ENTITY walletChangePasswordCmd.label "Change Password...">
 <!ENTITY selectAllCmd.label "Select All">
 <!ENTITY viewMenu.label "View">
 <!ENTITY toolbarsCmd.label "Toolbars">
