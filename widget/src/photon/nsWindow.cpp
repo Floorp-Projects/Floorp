@@ -803,7 +803,7 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
 
       PtRawCallback_t callback;
         callback.event_mask = sense;
-        callback.event_f = MenuRegionCallback;
+        callback.event_f = (void *) MenuRegionCallback;
         callback.data = (ApInfo_t *) this;
 	  
       PhRid_t    rid;
