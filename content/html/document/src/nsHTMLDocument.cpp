@@ -291,8 +291,8 @@ nsHTMLDocument::nsHTMLDocument()
     mBaseTarget(nsnull),
     mLastModified(nsnull),
     mReferrer(nsnull),
-    mIsWriting(0),
     mNumForms(0),
+    mIsWriting(0),
     mDomainWasSet(PR_FALSE)
 {
   mImages = nsnull;
