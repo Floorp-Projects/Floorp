@@ -72,6 +72,7 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  unicharutil \
 		  embedcomponents \
+      xulapp \
 		  $(NULL)
 
 EXPORTS		= \
