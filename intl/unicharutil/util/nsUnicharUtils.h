@@ -21,11 +21,14 @@
  */
 
 #include "nsAString.h"
+#include "nsASingleFragmentString.h"
 
-// to be turned on as a part of bug 100214
-//#if 0
 void ToLowerCase( nsAString& );
 void ToUpperCase( nsAString& );
+
+void ToLowerCase( nsASingleFragmentString& );
+void ToUpperCase( nsASingleFragmentString& );
+
 void ToLowerCase( const nsAString& aSource, nsAString& aDest );
 void ToUpperCase( const nsAString& aSource, nsAString& aDest );
 
@@ -39,8 +42,6 @@ class nsCaseInsensitiveStringComparator
       virtual int operator()( PRUnichar, PRUnichar ) const;
   };
 
-
-//#endif
 
 PRUnichar ToUpperCase(PRUnichar);
 PRUnichar ToLowerCase(PRUnichar);
