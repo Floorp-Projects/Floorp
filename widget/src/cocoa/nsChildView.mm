@@ -205,22 +205,7 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
     // inherit the top-level window. NS_NATIVE_WIDGET is always a NSView
     // regardless of if we're asking a window or a view (for compatibility
     // with windows).
-    mParentView = (NSView*)aParent->GetNativeData(NS_NATIVE_WIDGET);
-   
-#if 0
-    // get the event sink for our view. Walk up the parent chain to the
-    // toplevel window, it's the sink.
-    nsCOMPtr<nsIWidget> curr = aParent;
-    nsCOMPtr<nsIWidget> topLevel = nsnull;
-    while ( curr ) {
-      topLevel = curr;
-      nsCOMPtr<nsIWidget> temp = curr;
-      curr = dont_AddRef(temp->GetParent());
-    }
-    nsCOMPtr<nsIEventSink> sink ( do_QueryInterface(topLevel) );
-    NS_ASSERTION(sink, "no event sink, event dispatching will not work");
-#endif
-    
+    mParentView = (NSView*)aParent->GetNativeData(NS_NATIVE_WIDGET);     
   }
   else
     mParentView = NS_REINTERPRET_CAST(NSView*,aNativeParent);
@@ -239,12 +224,26 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
     if (![mParentView isKindOfClass: [ChildView class]]) {
       [mParentView addSubview:mView];
       mVisible = PR_TRUE;
-      [mView setNativeWindow: [mParentView window]];
+      NSWindow* window = [mParentView window];
+      if (!window) {
+        // The enclosing view that embeds Gecko is actually hidden
+        // right now!  This can happen when Gecko is embedded in the
+        // tab of a Cocoa tab view.  See if the parent view responds
+        // to our special getNativeWindow selector, and if it does,
+        // use that to get the window instead.
+        //if ([mParentView respondsToSelector: @selector(getNativeWindow:)])
+          [mView setNativeWindow: [mParentView getNativeWindow]];
+      }
+      else
+        [mView setNativeWindow: window];
     }
     else
       [mView setNativeWindow: [mParentView getNativeWindow]];
   }
   
+  NSWindow* window = [mView getNativeWindow];
+  if (!window)
+    printf("MOTHER FUCK!\n");
   return NS_OK;
 }
 
