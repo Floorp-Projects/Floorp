@@ -186,9 +186,9 @@ std::string TypeDesc::ToCString()
     default:
     case T_UNSUPPORTED:
         {
-            std::string str = "void * /* ";
+            std::string str = "/*";
             str += mData.mName;
-            str += " */";
+            str += " */ void ";
             return str;
         }
    }
@@ -233,9 +233,9 @@ std::string TypeDesc::ToXPIDLString()
     default:
     case T_UNSUPPORTED:
         {
-            std::string str = "void * /* ";
+            std::string str = "/* ";
             str += mData.mName;
-            str += " */";
+            str += " */ void";
             return str;
         }
    }
