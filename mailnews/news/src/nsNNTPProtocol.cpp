@@ -3824,7 +3824,7 @@ PRInt32 nsNNTPProtocol::Cancel()
   cancelInfo.from = nsnull;
 
   NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &rv);
-  if (NS_FAILED(rv)) return -1;  /* unable to get the dialog service */
+  if (NS_FAILED(rv) || !dialog) return -1;  /* unable to get the dialog service */
 
   PR_ASSERT (id && newsgroups);
   if (!id || !newsgroups) return -1; /* "unknown error"... */
@@ -4543,6 +4543,7 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 {
 	PRInt32 status = 0; 
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+	if (!mailnewsurl) return NS_ERROR_FAILURE;
 
 #ifdef UNREADY_CODE
     if (m_offlineNewsState != NULL)
@@ -4954,8 +4955,7 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 				// cache so we aren't creating new connections to process each request...
 				// but until that time, we always want to properly shutdown the connection
 
-        			if (mailnewsurl)
-					SendData(mailnewsurl, "quit"CRLF); // this will cause OnStopRequest get called, which will call CloseSocket()
+				SendData(mailnewsurl, NNTP_CMD_QUIT); // this will cause OnStopRequest get called, which will call CloseSocket()
 				return NS_OK;
 				break;
 
