@@ -41,7 +41,8 @@ public:
                    const nsRect& aDirtyRect);
 
   // nsIInlineReflow
-  NS_IMETHOD FindTextRuns(nsCSSLineLayout& aLineLayout);
+  NS_IMETHOD FindTextRuns(nsCSSLineLayout&  aLineLayout,
+                          nsIReflowCommand* aReflowCommand);
   NS_IMETHOD InlineReflow(nsCSSLineLayout&     aLineLayout,
                           nsReflowMetrics&     aDesiredSize,
                           const nsReflowState& aReflowState);
@@ -90,7 +91,8 @@ BRFrame::Paint(nsIPresContext&      aPresContext,
 }
 
 NS_IMETHODIMP
-BRFrame::FindTextRuns(nsCSSLineLayout& aLineLayout)
+BRFrame::FindTextRuns(nsCSSLineLayout&  aLineLayout,
+                      nsIReflowCommand* aReflowCommand)
 {
   aLineLayout.EndTextRun();
   return NS_OK;

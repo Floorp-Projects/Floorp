@@ -458,7 +458,13 @@ NS_METHOD RootContentFrame::Reflow(nsIPresContext*      aPresContext,
       }
     }
   }
-  PropagateContentOffsets();
+
+  // We are always a pseudo-frame; make sure our content offset is
+  // properly pushed upwards
+  nsContainerFrame* parent = (nsContainerFrame*) mGeometricParent;
+  parent->PropagateContentOffsets(this, mFirstContentOffset,
+                                  mLastContentOffset, mLastContentIsComplete);
+
 #ifdef NS_DEBUG
   PostReflowCheck(aStatus);
 #endif
