@@ -6982,9 +6982,6 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
     nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
                                              aStyleContext, aParentFrame, PR_FALSE);
 
-    // Add the new frame to our list of frame items.
-    aFrameItems.AddChild(newFrame);
-
     // Process the child content if requested
     nsFrameItems childItems;
     if (processChildren) {
@@ -7014,6 +7011,10 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
 
       // Add the placeholder frame to the flow
       aFrameItems.AddChild(placeholderFrame);
+    }
+    else {
+      // Add the new frame to our list of frame items.
+      aFrameItems.AddChild(newFrame);
     }
   }
   return rv;
