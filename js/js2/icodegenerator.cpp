@@ -37,6 +37,21 @@ ostream &JS::operator<<(ostream &s, ICodeGenerator &i)
 // ICodeGenerator
 //
 
+InstructionStream *ICodeGenerator::complete()
+{
+#ifdef DEBUG
+    ASSERT(stitcher.empty());
+    for (LabelIterator i = labels.begin(); i != labels.end(); i++) {
+        ASSERT((*i)->itsBase == iCode);
+        ASSERT((*i)->itsOffset >= 0);
+        ASSERT((*i)->itsOffset < iCode->size());
+    }
+#endif            
+    return iCode;
+}
+
+
+/***********************************************************************************************/
 
 Register ICodeGenerator::loadVariable(int32 frameIndex)
 {
@@ -129,6 +144,26 @@ void ICodeGenerator::setLabel(int32 label)
     l->itsOffset = iCode->size();
 }
 
+/***********************************************************************************************/
+
+void MultiPathICodeState::mergeStream(InstructionStream *mainStream, LabelList &labels)
+{
+    if (itsTopLabel < labels.size()) { 
+            // labels (might) have been allocated in this stream
+            // we need to adjust their position relative to the 
+            // size of the stream we're joining
+        for (LabelList::iterator i = labels.begin() + itsTopLabel; i != labels.end(); i++) {
+            if ((*i)->itsBase == its_iCode) {
+                (*i)->itsBase = mainStream;
+                (*i)->itsOffset += mainStream->size();
+            }
+        }
+    }
+
+    for (InstructionIterator i = its_iCode->begin(); i != its_iCode->end(); i++)
+        mainStream->push_back(*i);
+
+}
 
 /***********************************************************************************************/
 
@@ -150,13 +185,14 @@ void ICodeGenerator::beginWhileStatement(const SourcePosition &pos)
 
 void ICodeGenerator::endWhileExpression(Register condition)
 {
-    WhileCodeState *ics = (WhileCodeState *)(stitcher.top());
+    WhileCodeState *ics = static_cast<WhileCodeState *>(stitcher.top());
+    ASSERT(ics->stateKind == While_State);
 
     branchConditional(ics->whileBodyLabel, condition);
     resetTopRegister();
     // stash away the condition expression and switch 
     // back to the main stream
-    iCode = stitcher.top()->swap_iCode(iCode);
+    iCode = ics->swapStream(iCode);
     setLabel(ics->whileBodyLabel);         // mark the start of the while block
 }
   
@@ -164,29 +200,14 @@ void ICodeGenerator::endWhileStatement()
 {
     // recover the while stream
     WhileCodeState *ics = static_cast<WhileCodeState *>(stitcher.top());
+    ASSERT(ics->stateKind == While_State);
     stitcher.pop();
 
     // mark the start of the condition code
     // and re-attach it to the main stream
     setLabel(ics->whileConditionLabel);
 
-    if (ics->itsTopLabel < labels.size()) { 
-            // labels (might) have been allocated in this stream
-            // we need to adjust their position relative to the 
-            // size of the stream we're joining
-
-        // XXXX how do I start at 'ics->itsTopLabel' ???
-        //
-        for (LabelList::iterator i = labels.begin(); i != labels.end(); i++) {
-            if ((*i)->itsBase == ics->its_iCode) {
-                (*i)->itsBase = iCode;
-                (*i)->itsOffset += iCode->size();
-            }
-        }
-    }
-
-    for (InstructionIterator i = ics->its_iCode->begin(); i != ics->its_iCode->end(); i++)
-        iCode->push_back(*i);
+    ics->mergeStream(iCode, labels);
 
     delete ics->its_iCode;
     delete ics;
@@ -201,8 +222,7 @@ void ICodeGenerator::beginIfStatement(const SourcePosition &pos, Register condit
 {
     int32 elseLabel = getLabel();
     
-    // save off the current stream while we gen code for the condition
-    stitcher.push(new IfCodeState(iCode, labels.size(), elseLabel, -1));
+    stitcher.push(new IfCodeState(elseLabel, -1));
 
     Register notCond = op(NOT, condition);
     branchConditional(elseLabel, notCond);
@@ -212,7 +232,8 @@ void ICodeGenerator::beginIfStatement(const SourcePosition &pos, Register condit
 
 void ICodeGenerator::beginElseStatement(bool hasElse)
 {
-    IfCodeState *ics = (IfCodeState *)(stitcher.top());
+    IfCodeState *ics = static_cast<IfCodeState *>(stitcher.top());
+    ASSERT(ics->stateKind == If_State);
 
     if (hasElse) {
         int32 beyondElse = getLabel();
@@ -225,7 +246,8 @@ void ICodeGenerator::beginElseStatement(bool hasElse)
 
 void ICodeGenerator::endIfStatement()
 {
-    IfCodeState *ics = (IfCodeState *)(stitcher.top());
+    IfCodeState *ics = static_cast<IfCodeState *>(stitcher.top());
+    ASSERT(ics->stateKind == If_State);
 
     if (ics->beyondElse != -1) {     // had an else
         setLabel(ics->beyondElse);   // the beyond else label

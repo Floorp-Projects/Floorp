@@ -99,36 +99,47 @@ namespace JavaScript {
     };
 
     typedef std::vector<Label *> LabelList;
+    typedef LabelList::iterator LabelIterator;
 
     /****************************************************************/
     /****************************************************************/
 
-    class ICodeState {
+    enum StateKind { While_State, If_state };
+
+    class ICodeState { 
+    public :
+        ICodeState(StateKind kind) : stateKind(kind) { }
+        StateKind stateKind;
+    };
+
+    // an ICodeState that handles switching to a new InstructionStream 
+    // and then re-combining the streams later
+    class MultiPathICodeState : public ICodeState {
     public:
-        ICodeState(InstructionStream *iCode, int32 topLabel) : its_iCode(iCode), itsTopLabel(topLabel) {}
-        virtual ~ICodeState() { }
-    
-        InstructionStream *swap_iCode(InstructionStream *iCode) { InstructionStream *t = its_iCode; its_iCode = iCode; return t; }
+        MultiPathICodeState(StateKind kind,InstructionStream *iCode, int32 topLabel)
+                            : ICodeState(kind), its_iCode(iCode), itsTopLabel(topLabel) {}
+
+        InstructionStream *swapStream(InstructionStream *iCode) { InstructionStream *t = its_iCode; its_iCode = iCode; return t; }
 
         InstructionStream *its_iCode;
         int32 itsTopLabel;      // set to the highest label allocated when this stream
                                 // was created. If that value changes, this stream may
                                 // contain labels that will need to be adjusted when
                                 // the streams are merged.
+        void mergeStream(InstructionStream *mainStream, LabelList &labels);
     };
 
-    class WhileCodeState : public ICodeState {
+    class WhileCodeState : public MultiPathICodeState {
     public:
         WhileCodeState(InstructionStream *iCode, int32 topLabel, int32 a, int32 b) 
-                    : ICodeState(iCode, topLabel), whileConditionLabel(a), whileBodyLabel(b) { }
+                    : MultiPathICodeState(While_State, iCode, topLabel), whileConditionLabel(a), whileBodyLabel(b) { }
         int32 whileConditionLabel;
         int32 whileBodyLabel;
     };
 
     class IfCodeState : public ICodeState {
     public:
-        IfCodeState(InstructionStream *iCode, int32 topLabel, int32 a, int32 b)
-                    : ICodeState(iCode, topLabel), elseLabel(a), beyondElse(b) { }
+        IfCodeState(int32 a, int32 b) : ICodeState(If_state), elseLabel(a), beyondElse(b) { }
         int32 elseLabel;
         int32 beyondElse;
     };
@@ -160,6 +171,8 @@ namespace JavaScript {
     
     public:
         ICodeGenerator() { iCode = new InstructionStream(); }
+
+        InstructionStream *complete();
 
         ostream &print(ostream &s);
 
