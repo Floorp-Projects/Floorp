@@ -32,13 +32,17 @@
 var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService()
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService)
 
-var defaultsidebar = new Object
+// the default sidebar:
+var defaultsidebar = new Object;
 defaultsidebar.db = null;
-var default_sidebar_db = 'chrome://sidebar/content/sidebar.rdf'
-defaultsidebar.resource = 'NC:SidebarRoot'
+defaultsidebar.resource = 'NC:SidebarRoot';
 
 // the current sidebar:
-var sidebar;
+var sidebar = new Object;
+sidebar.db = null;
+sidebar.resource = 'NC:SidebarRoot';
+
+var default_sidebar_db = 'chrome://sidebar/content/sidebar.rdf'
 
 function sidebarOverlayInit(usersidebar)
 {
@@ -51,7 +55,8 @@ function sidebarOverlayInit(usersidebar)
 	sidebar_url.URLString += "sidebar.rdf";
       
 	if (!(sidebar_url.exists())) {
-		dump("using default, " + sidebar_url.URLString + "does not exist\n");
+		dump("using " + default_sidebar_db + " because " + sidebar_url.URLString + " does not exist\n");
+		
 		defaultsidebar.db = default_sidebar_db;
 	}
 	else {
@@ -73,8 +78,12 @@ function sidebarOverlayInit(usersidebar)
   // load up user-specified sidebar
   if (!usersidebar)
     sidebar = defaultsidebar;
-  else
-    sidebar = usersidebar;
+  else {
+    dump("usersidebar = " + usersidebar + "\n");
+    sidebar.db = usersidebar;
+  }
+
+  dump("sidebar.db = " + sidebar.db + "\n");
 
   var registry
   try {
