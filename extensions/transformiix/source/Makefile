@@ -25,7 +25,7 @@ INCLUDE_PATHS = -I$(BASE_PATH)          \
                 -I$(XPATH_PATH)         \
                 -I$(XSLT_PATH)          \
                 -I$(XSLTFUNC_PATH)      \
-		        -I$(XMLUTIL_PATH)       \
+		    -I$(XMLUTIL_PATH)       \
                 -I$(XSLTUTIL_PATH)      \
                 -I$(XMLPARSER_PATH)     \
                 -I$(XMLPRINTER_PATH)    \
@@ -57,7 +57,7 @@ ALL_OBJS = $(BASE_OBJS)           \
            $(EXPAT_PARSER_OBJS)   \
            $(XSLT_OBJS)           \
            $(XSLTFUNC_OBJS)       \
-	       $(XSLTUTIL_OBJS)
+	     $(XSLTUTIL_OBJS)
 
 MAIN_CPP = main/transformiix.cpp
 

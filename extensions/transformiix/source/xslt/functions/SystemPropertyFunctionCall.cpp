@@ -26,12 +26,8 @@ SystemPropertyFunctionCall::SystemPropertyFunctionCall() :
  * @see FunctionCall.h
 **/
 ExprResult* SystemPropertyFunctionCall::evaluate(Node* context, ContextState* cs) {
+    ExprResult* result = NULL;
 
-    //int argc = params.getLength();
-
-    ExprResult* result = 0;
-
-    //if (argc > 0) {
     if ( requireParams(1,1,cs) ) {
         ListIterator* iter = params.iterator();
         Expr* param = (Expr*) iter->next();
@@ -41,7 +37,7 @@ ExprResult* SystemPropertyFunctionCall::evaluate(Node* context, ContextState* cs
             String property;
             exprResult->stringValue(property);
             if (XMLUtils::isValidQName(property)) {
-			    String propertyNsURI;
+                String propertyNsURI;
                 cs->getNameSpaceURI(property, propertyNsURI);
                 if (propertyNsURI.isEqual(XSLT_NS)) {
                     String localName;

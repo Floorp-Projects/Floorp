@@ -121,6 +121,8 @@ OBJS =../source/base/ArrayList.o \
   ../source/xslt/XSLTProcessor.o \
   ../source/xslt/functions/CurrentFunctionCall.o \
   ../source/xslt/functions/DocumentFunctionCall.o \
+  ../source/xslt/functions/ElementAvailableFnCall.o \
+  ../source/xslt/functions/FunctionAvailableFnCall.o \
   ../source/xslt/functions/GenerateIdFunctionCall.o \
   ../source/xslt/functions/SystemPropertyFunctionCall.o \
   ../source/xslt/util/NodeSorter.o \

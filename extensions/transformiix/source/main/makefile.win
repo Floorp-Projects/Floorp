@@ -108,6 +108,8 @@ CPP_OBJS=                                       \
   ../xslt/$(OBJDIR)/XSLTProcessor.obj \
   ../xslt/functions/$(OBJDIR)/CurrentFunctionCall.obj \
   ../xslt/functions/$(OBJDIR)/DocumentFunctionCall.obj \
+  ../xslt/functions/$(OBJDIR)/ElementAvailableFnCall.obj \
+  ../xslt/functions/$(OBJDIR)/FunctionAvailableFnCall.obj \
   ../xslt/functions/$(OBJDIR)/GenerateIdFunctionCall.obj \
   ../xslt/functions/$(OBJDIR)/SystemPropertyFunctionCall.obj \
   ../xslt/util/$(OBJDIR)/NodeSorter.obj \

@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.31 2001/01/22 20:23:50 axel%pike.org Exp $
+ * $Id: XSLTProcessor.cpp,v 1.32 2001/01/24 14:44:03 axel%pike.org Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -51,9 +51,9 @@
 //-----------------------------------/
 
 /**
- * XSLTProcessor is a class for Processing XSL styelsheets
+ * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.31 $ $Date: 2001/01/22 20:23:50 $
+ * @version $Revision: 1.32 $ $Date: 2001/01/24 14:44:03 $
 **/
 
 /**
@@ -74,7 +74,7 @@ XSLTProcessor::XSLTProcessor() {
 
     xslVersion.append("1.0");
     appName.append("TransforMiiX");
-    appVersion.append("1.0 [beta v20010121]");
+    appVersion.append("1.0 [beta v20010123]");
 
 
     //-- create XSL element types
