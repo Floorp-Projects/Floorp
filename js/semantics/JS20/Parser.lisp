@@ -18,17 +18,15 @@
        
        (%subsection "Identifiers")
        (production :identifier ($identifier) identifier-identifier)
-       (production :identifier (box) identifier-box)
        (production :identifier (get) identifier-get)
-       (production :identifier (language) identifier-language)
-       (production :identifier (local) identifier-local)
        (production :identifier (set) identifier-set)
-       (production :identifier (override) identifier-override)
-       (production :identifier (version) identifier-version)
-       
+       (production :identifier (language) identifier-language)
+
        (production :qualified-identifier (:identifier) qualified-identifier-identifier)
-       (production :qualified-identifier (:qualified-identifier \:\: :identifier) qualified-identifier-multi-level)
-       (production :qualified-identifier (:parenthesized-expression \:\: :identifier) qualified-identifier-parenthesized-expression)
+       (production :qualified-identifier (:qualifier \:\: :qualified-identifier) qualified-identifier-qualifier)
+
+       (production :qualifier (:identifier) qualifier-identifier)
+       (production :qualifier (:parenthesized-expression) qualifier-parenthesized-expression)
        
        
        (%subsection "Primary Expressions")
@@ -41,7 +39,6 @@
        (production :primary-expression (this) primary-expression-this)
        (production :primary-expression (super) primary-expression-super)
        (production :primary-expression (:qualified-identifier) primary-expression-qualified-identifier)
-       (production :primary-expression (? :identifier) primary-expression-scope-identifier)
        (production :primary-expression ($regular-expression) primary-expression-regular-expression)
        (production :primary-expression (:parenthesized-expression) primary-expression-parenthesized-expression)
        (production :primary-expression (:parenthesized-expression :no-line-break $string) primary-expression-parenthesized-expression-with-unit)
@@ -134,6 +131,7 @@
        (production :unary-expression (- :unary-expression) unary-expression-minus)
        (production :unary-expression (~ :unary-expression) unary-expression-bitwise-not)
        (production :unary-expression (! :unary-expression) unary-expression-logical-not)
+       ;(production :unary-expression (? :unary-expression) unary-expression-question)
        
        
        (%subsection "Multiplicative Operators")
@@ -180,13 +178,13 @@
        
        (production (:bitwise-xor-expression :beta) ((:bitwise-and-expression :beta)) bitwise-xor-expression-bitwise-and)
        (production (:bitwise-xor-expression :beta) ((:bitwise-xor-expression :beta) ^ (:bitwise-and-expression :beta)) bitwise-xor-expression-xor)
-       (production (:bitwise-xor-expression :beta) ((:bitwise-xor-expression :beta) ^ *) bitwise-xor-expression-null)
-       (production (:bitwise-xor-expression :beta) ((:bitwise-xor-expression :beta) ^ ?) bitwise-xor-expression-undefined)
+       ;(production (:bitwise-xor-expression :beta) ((:bitwise-xor-expression :beta) ^ *) bitwise-xor-expression-null)
+       ;(production (:bitwise-xor-expression :beta) ((:bitwise-xor-expression :beta) ^ ?) bitwise-xor-expression-undefined)
        
        (production (:bitwise-or-expression :beta) ((:bitwise-xor-expression :beta)) bitwise-or-expression-bitwise-xor)
        (production (:bitwise-or-expression :beta) ((:bitwise-or-expression :beta) \| (:bitwise-xor-expression :beta)) bitwise-or-expression-or)
-       (production (:bitwise-or-expression :beta) ((:bitwise-or-expression :beta) \| *) bitwise-or-expression-null)
-       (production (:bitwise-or-expression :beta) ((:bitwise-or-expression :beta) \| ?) bitwise-or-expression-undefined)
+       ;(production (:bitwise-or-expression :beta) ((:bitwise-or-expression :beta) \| *) bitwise-or-expression-null)
+       ;(production (:bitwise-or-expression :beta) ((:bitwise-or-expression :beta) \| ?) bitwise-or-expression-undefined)
        
        
        (%subsection "Binary Logical Operators")
@@ -253,6 +251,7 @@
        
        (production (:top-statement :omega_3) ((:statement :omega_3)) top-statement-statement)
        (production (:top-statement :omega_3) ((:language-declaration :omega_3)) top-statement-language-declaration)
+       (production (:top-statement :omega_3) (:package-definition) top-statement-package-definition)
        
        (production (:statement :omega) ((:annotated-definition :omega)) statement-annotated-definition)
        (production (:statement :omega) ((:empty-statement :omega)) statement-empty-statement)
@@ -289,8 +288,7 @@
        
        
        (%subsection "Block")
-       (production :annotated-block (:block) annotated-block-block)
-       (production :annotated-block (:visibility :no-line-break :block) annotated-block-visibility-block)
+       (production :annotated-block (:attributes :block) annotated-block-attributes-block)
        
        (production :block ({ :top-statements }) block-top-statements)
        
@@ -411,24 +409,39 @@
        |#
        
        (%section "Definitions")
-       (production (:annotated-definition :omega) (:visibility :no-line-break (:definition :omega)) annotated-definition-visibility-and-definition)
-       (production (:annotated-definition :omega) ((:definition :omega)) annotated-definition-definition)
+       (production (:annotated-definition :omega) (:attributes (:definition :omega)) annotated-definition-attributes-and-definition)
+
+       (production :attributes () attributes-none)
+       (production :attributes (:fixed-attribute :no-line-break :attributes) attributes-fixed-attribute-more)
+       (production :attributes ($identifier :no-line-break :attributes) attributes-identifier-more)
+       (production :attributes (get :no-line-break :attributes) attributes-get-more)
+       (production :attributes (set :no-line-break :attributes) attributes-set-more)
+       (production :attributes (language :no-line-break :attributes) attributes-language-more)
        
-       ;(production (:definition :omega) (:version-definition (:semicolon :omega)) definition-version-definition)
+       (%text :grammar
+         "The third through sixth " (:grammar-symbol :attributes) " productions are merely the result of manually inlining the "
+         (:grammar-symbol :identifier) " rule inside "
+         (:grammar-symbol :attributes) " " :derives-10 " " (:grammar-symbol :identifier) " " :no-line-break " " (:grammar-symbol :attributes)
+         ". Without manually inlining the " (:grammar-symbol :identifier) " rule here the grammar would not be LR(1).")
+
+       (production :fixed-attribute (private) fixed-attribute-private)
+       (production :fixed-attribute (public) fixed-attribute-public)
+       (production :fixed-attribute (final) fixed-attribute-final)
+       ;(production :fixed-attribute (static) fixed-attribute-static)
+       
        (production (:definition :omega) (:variable-definition (:semicolon :omega)) definition-variable-definition)
        (production (:definition :omega) ((:function-definition :omega)) definition-function-definition)
-       (production (:definition :omega) (:class-definition) definition-class-definition)       
-       
-       
+       (production (:definition :omega) (:class-definition) definition-class-definition)
+
+       #|
        (%subsection "Visibility Specifications")
-       (production :visibility (:parenthesized-expression) visibility-parenthesized-expression)
+       (production :visibility (:identifier) visibility-qualified-identifier)
        (production :visibility (local) visibility-local)
        (production :visibility (box) visibility-box)
        (production :visibility (private) visibility-private)
        (production :visibility (package) visibility-package)
        (production :visibility (public) visibility-public)
        (production :visibility ($identifier) visibility-user-defined)
-       #|
        (production :visibility (public :versions-and-renames) visibility-public)
        
        (production :versions-and-renames () versions-and-renames-none)
@@ -466,8 +479,6 @@
        
        (production :variable-definition-kind (var) variable-definition-kind-var)
        (production :variable-definition-kind (const) variable-definition-kind-const)
-       (production :variable-definition-kind (static :no-line-break var) variable-definition-kind-static-var)
-       (production :variable-definition-kind (static :no-line-break const) variable-definition-kind-static-const)
        
        (production (:variable-binding-list :beta) ((:variable-binding :beta)) variable-binding-list-one)
        (production (:variable-binding-list :beta) ((:variable-binding-list :beta) \, (:variable-binding :beta)) variable-binding-list-more)
@@ -486,15 +497,9 @@
        (production (:function-definition :omega) (:concrete-function-definition) function-definition-concrete)
        (production (:function-definition :omega) ((:abstract-function-definition :omega)) function-definition-abstract)
        
-       (production :concrete-function-definition (:function-prefix function :function-name :function-signature :block) concrete-function-definition-signature-and-body)
+       (production :concrete-function-definition (function :function-name :function-signature :block) concrete-function-definition-signature-and-body)
        
-       (production (:abstract-function-definition :omega) (:function-prefix function :function-name :function-signature (:semicolon :omega)) abstract-function-definition-signature)
-       
-       (production :function-prefix () function-prefix-none)
-       (production :function-prefix (override :no-line-break) function-prefix-override)
-       (production :function-prefix (final :no-line-break) function-prefix-final)
-       (production :function-prefix (final :no-line-break override :no-line-break) function-prefix-final-override)
-       (production :function-prefix (static :no-line-break) function-prefix-static)
+       (production (:abstract-function-definition :omega) (function :function-name :function-signature (:semicolon :omega)) abstract-function-definition-signature)
        
        (production :function-name (:identifier) function-name-function)
        (production :function-name (get :no-line-break :identifier) function-name-getter)
@@ -533,16 +538,27 @@
        ;(production :result-signature ((:- {) (:type-expression allow-in)) result-signature-type-expression)
        
        
-       (%section "Class Definition")
-       (production :class-definition (class :identifier :superclasses :block) class-definition-normal)
-       (production :class-definition (class extends (:type-expression allow-in) :block) class-definition-augmented)
+       (%subsection "Class Definition")
+       (production :class-definition (:class-definition-kind :identifier :superclasses :implementees :block) class-definition-normal)
        
+       (production :class-definition-kind (class) class-definition-kind-class)
+       (production :class-definition-kind (interface) class-definition-kind-interface)
+
        (production :superclasses () superclasses-none)
-       (production :superclasses (extends (:type-expression allow-in)) superclasses-one)
+       (production :superclasses (extends :superclass-list) superclasses-one)
+       
+       (production :superclass-list ((:type-expression allow-in)) superclass-list-one)
+       (production :superclass-list (:superclass-list \, (:type-expression allow-in)) superclass-list-more)
+
+       (production :implementees () implementees-none)
+       (production :implementees (implements :implementee-list) implementees-one)
+       
+       (production :implementee-list ((:type-expression allow-in)) implementee-list-one)
+       (production :implementee-list (:implementee-list \, (:type-expression allow-in)) implementee-list-more)
        
        
-       (%subsection "Language Declaration")
-       (production (:language-declaration :omega_3) (language :language-id :language-id-list :language-alternatives (:language-semicolon :omega_3))
+       (%section "Language Declaration")
+       (production (:language-declaration :omega_3) (language :no-line-break :language-ids :language-alternatives (:language-semicolon :omega_3))
                    language-declaration-one-or-more)
        
        (production (:language-semicolon :omega_3) (\;) language-semicolon-semicolon)
@@ -550,13 +566,27 @@
        (production (:language-semicolon abbrev-non-empty) () language-semicolon-abbrev-non-empty)
        
        (production :language-alternatives () language-alternatives-none)
-       (production :language-alternatives (:language-alternatives \| :language-id-list) language-alternatives-more)
+       (production :language-alternatives (\|) language-alternatives-empty)
+       (production :language-alternatives (\| :language-ids :language-alternatives) language-alternatives-more)
        
-       (production :language-id-list () language-id-list-none)
-       (production :language-id-list (:language-id-list :language-id) language-id-list-more)
+       (production :language-ids ($identifier :language-ids-rest) language-ids-identifier-more)
+       (production :language-ids (get :language-ids-rest) language-ids-get-more)
+       (production :language-ids (set :language-ids-rest) language-ids-set-more)
+       (production :language-ids (language :language-ids-rest) language-ids-language-more)
+       (production :language-ids ($number :language-ids-rest) language-ids-number-more)
        
-       (production :language-id (:identifier) language-id-identifier)
-       (production :language-id ($number) language-id-number)
+       (production :language-ids-rest () language-ids-rest-none)
+       (production :language-ids-rest (:no-line-break :language-ids) language-ids-rest-some)
+       
+       (%text :grammar
+         "The first through fourth " (:grammar-symbol :language-ids) " productions are merely the result of manually inlining the "
+         (:grammar-symbol :identifier) " rule inside "
+         (:grammar-symbol :language-ids) " " :derives-10 " " (:grammar-symbol :identifier) " " (:grammar-symbol :language-ids-rest)
+         ". Without manually inlining the " (:grammar-symbol :identifier) " rule here the grammar would not be LR(1).")
+       
+       
+       (%section "Package Definition")
+       (production :package-definition (package :identifier :block) package-definition-named)
        
        (%section "Programs")
        
@@ -639,11 +669,13 @@
            (depict markup-stream bin-name)
            (depict-list markup-stream #'depict-terminal bin-terminals :separator '(" " :spc " "))))))
     
-    (let ((bins (make-array 6 :initial-element nil))
-          (terminals (grammar-terminals grammar)))
+    (let* ((bins (make-array 6 :initial-element nil))
+           (all-terminals (grammar-terminals grammar))
+           (terminals (remove-if #'lf-terminal? all-terminals)))
+      (assert-true (= (length all-terminals) (1- (* 2 (length terminals)))))
       (setf (svref bins 2) (list '\# '&&= '-> '@ '^^ '^^= '\|\|=))
       (setf (svref bins 4) (list 'abstract 'class 'const 'debugger 'enum 'export 'extends 'final 'goto 'implements 'import
-                                 'interface 'native 'package 'private 'protected 'public 'static 'super 'synchronized
+                                 'interface 'native 'package 'private 'protected 'public #|'static|# 'super 'synchronized
                                  'throws 'transient 'volatile))
       (do ((i (length terminals)))
           ((zerop i))
