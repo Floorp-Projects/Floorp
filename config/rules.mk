@@ -335,8 +335,10 @@ endif
 # Make sure to wrap static libs inside linker specific flags to turn on & off
 # inclusion of all symbols inside the static libs
 #
+ifndef NO_LD_ARCHIVE_FLAGS
 ifdef SHARED_LIBRARY_LIBS
 EXTRA_DSO_LDOPTS := $(MKSHLIB_FORCE_ALL) $(SHARED_LIBRARY_LIBS) $(MKSHLIB_UNFORCE_ALL) $(EXTRA_DSO_LDOPTS)
+endif
 endif
 
 #
