@@ -647,6 +647,7 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:docshell:base:MANIFEST_IDL",                     "$distdirectory:idl:");
 
     #EMBEDDING
+    InstallFromManifest(":mozilla:embedding:base:MANIFEST_IDL",                    "$distdirectory:idl:");
     InstallFromManifest(":mozilla:embedding:browser:webbrowser:MANIFEST_IDL",      "$distdirectory:idl:");
     InstallFromManifest(":mozilla:embedding:components:windowwatcher:public:MANIFEST_IDL", "$distdirectory:idl:");
 
@@ -937,8 +938,9 @@ sub BuildIDLProjects()
         
     BuildIDLProject(":mozilla:webshell:macbuild:webshellIDL.mcp",                   "webshell");
     BuildIDLProject(":mozilla:docshell:macbuild:docshellIDL.mcp",                   "docshell");
+    BuildIDLProject(":mozilla:embedding:base:macbuild:EmbedIDL.mcp",                "EmbedBase");
     BuildIDLProject(":mozilla:embedding:browser:macbuild:browserIDL.mcp",           "embeddingbrowser");
-    BuildIDLProject(":mozilla:embedding:components:build:macbuild:EmbedComponentsIDL.mcp", "embedcomponents");
+    BuildIDLProject(":mozilla:embedding:components:build:macbuild:EmbedComponentsIDL.mcp", "EmbedComponents");
 
     BuildIDLProject(":mozilla:extensions:wallet:macbuild:walletIDL.mcp","wallet");
     BuildIDLProject(":mozilla:extensions:xml-rpc:macbuild:xml-rpcIDL.mcp","xml-rpc");
@@ -1413,7 +1415,7 @@ sub BuildEmbeddingProjects()
 
     StartBuildModule("embedding");
 
-    BuildOneProject(":mozilla:embedding:components:build:macbuild:EmbedComponents.mcp",       "embedComponents$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:embedding:components:build:macbuild:EmbedComponents.mcp",       "EmbedComponents$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:embedding:browser:macbuild:webBrowser.mcp",       "webBrowser$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
     BuildOneProject(":mozilla:embedding:base:macbuild:EmbedAPI.mcp", "EmbedAPI$D.o", 0, 0, 0);
