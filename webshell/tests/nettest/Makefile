@@ -36,6 +36,7 @@ EX_LIBS = \
 	$(DIST)/bin/libxp.so	\
 	$(DIST)/bin/libpref.so	\
 	$(DIST)/bin/libjs.so	\
+	$(DIST)/bin/libraptorbase.so \
 	$(DIST)/lib/libplc21.a	\
 	$(DIST)/lib/libplds21.a	\
 	$(DIST)/lib/libnspr21.a	\
