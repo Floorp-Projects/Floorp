@@ -104,7 +104,7 @@ nsLocale::Hash_HashFunction(const void* key)
 	length = stringKey->Length();
 
 	for(length-=1;length>=0;length--)
-		hash += (PLHashNumber)((*stringKey)[length]);
+		hash += (PLHashNumber)stringKey->CharAt(length);
 
 	return hash;
 }
