@@ -783,7 +783,7 @@ nsPresContext::GetImageGroup(nsIImageGroup** aResult)
     if (NS_SUCCEEDED(mShell->GetDocument(getter_AddRefs(doc)))) {
       NS_ASSERTION(doc, "expect document here");
       if (doc) {
-        loadGroup = doc->GetDocumentLoadGroup();
+        doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
       }
     }
 #else
