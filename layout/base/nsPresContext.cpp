@@ -95,6 +95,7 @@ nsPresContext::nsPresContext()
   mCompatibilityLocked = PR_FALSE;
   mWidgetRenderingMode = eWidgetRendering_Gfx; 
   mImageAnimationMode = eImageAnimation_Normal;
+  mImageAnimationModePref = eImageAnimation_Normal;
 
   mStopped = PR_FALSE;
   mStopChrome = PR_TRUE;
@@ -154,6 +155,7 @@ nsPresContext::~nsPresContext()
     mPrefs->UnregisterCallback("browser.underline_anchors", PrefChangedCallback, (void*)this);
     mPrefs->UnregisterCallback("browser.link_color", PrefChangedCallback, (void*)this);
     mPrefs->UnregisterCallback("browser.visited_color", PrefChangedCallback, (void*)this);
+    mPrefs->UnregisterCallback("image.animation_mode", PrefChangedCallback, (void*)this);
   }
 }
 
@@ -292,6 +294,19 @@ nsPresContext::GetUserPreferences()
   }
   
   GetFontPreferences();
+
+  // * image animation
+  char* animatePref = 0;
+  nsresult rv = mPrefs->CopyCharPref("image.animation_mode", &animatePref);
+  if (NS_SUCCEEDED(rv) && animatePref) {
+    if (!nsCRT::strcmp(animatePref, "normal"))
+      mImageAnimationModePref = eImageAnimation_Normal;
+    else if (!nsCRT::strcmp(animatePref, "none"))
+      mImageAnimationModePref = eImageAnimation_None;
+    else if (!nsCRT::strcmp(animatePref, "once"))
+      mImageAnimationModePref = eImageAnimation_LoopOnce;
+    nsMemory::Free(animatePref);
+  }
 }
 
 NS_IMETHODIMP
@@ -390,6 +405,7 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
     mPrefs->RegisterCallback("browser.underline_anchors", PrefChangedCallback, (void*)this);
     mPrefs->RegisterCallback("browser.link_color", PrefChangedCallback, (void*)this);
     mPrefs->RegisterCallback("browser.visited_color", PrefChangedCallback, (void*)this);
+    mPrefs->RegisterCallback("image.animation_mode", PrefChangedCallback, (void*)this);
 
     // Initialize our state from the user preferences
     GetUserPreferences();
@@ -414,6 +430,18 @@ nsPresContext::SetShell(nsIPresShell* aShell)
       NS_ASSERTION(doc, "expect document here");
       if (doc) {
         doc->GetBaseURL(*getter_AddRefs(mBaseURL));
+
+        if (mBaseURL) {
+          char* scheme = 0;
+          mBaseURL->GetScheme(&scheme);
+          if (nsCRT::strncmp(scheme, "chrome", 6) &&
+              nsCRT::strncmp(scheme, "resource", 8))
+            mImageAnimationMode = mImageAnimationModePref;
+          else
+            mImageAnimationMode = eImageAnimation_Normal;
+          nsMemory::Free(scheme);
+        }
+
         if (mLangService) {
           nsAutoString charset;
           doc->AddCharSetObserver(this);
