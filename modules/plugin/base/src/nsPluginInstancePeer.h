@@ -57,6 +57,13 @@ public:
 
   NS_IMETHOD
   GetAttribute(const char* name, const char* *result);
+
+  //locals
+
+  nsresult Initialize(nsIPluginInstance *aInstance);
+
+private:
+  nsIPluginInstance *mInstance;     //we don't add a ref to this
 };
 
 #endif

@@ -183,7 +183,8 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
         // back from the plugin's SetWindow(). Is this the correct
         // behavior?!?
 
-        NS_ASSERTION(error == NS_OK, "error in setwindow");
+        if (error != NS_OK)
+          printf("error in setwindow %d\n", error);
     }
 
     return error;

@@ -17,13 +17,35 @@
  */
 
 #include "nsPluginStreamPeer.h"
+#include "nsIURL.h"
+#include "prmem.h"
+#include "nsString.h"
 
 nsPluginStreamPeer ::  nsPluginStreamPeer()
 {
+  mURL = nsnull;
+  mLength = 0;
+  mLastMod = 0;
+  mNotifyData = nsnull;
+  mMIMEType = nsnull;
+  mURLSpec = nsnull;
 }
 
 nsPluginStreamPeer :: ~nsPluginStreamPeer()
 {
+  NS_IF_RELEASE(mURL);
+
+  if (nsnull != mMIMEType)
+  {
+    PR_Free((void *)mMIMEType);
+    mMIMEType = nsnull;
+  }
+
+  if (nsnull != mURLSpec)
+  {
+    PR_Free((void *)mURLSpec);
+    mURLSpec = nsnull;
+  }
 }
 
 NS_IMPL_ADDREF(nsPluginStreamPeer);
@@ -56,35 +78,82 @@ NS_IMETHODIMP nsPluginStreamPeer :: QueryInterface(const nsIID& iid, void** inst
 
 NS_IMETHODIMP nsPluginStreamPeer :: GetURL(const char* *result)
 {
-  return NS_OK;
+  if (nsnull != mURL)
+  {
+    if (nsnull == mURLSpec)
+    {
+      nsString  string;
+
+      mURL->ToString(string);
+
+      mURLSpec = (char *)PR_Malloc(string.Length() + 1);
+
+      if (nsnull != mURLSpec)
+        string.ToCString(mURLSpec, string.Length() + 1);
+      else
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    *result = mURLSpec;
+
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP nsPluginStreamPeer :: GetEnd(PRUint32 *result)
 {
+  *result = mLength;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginStreamPeer :: GetLastModified(PRUint32 *result)
 {
+  *result = mLastMod;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginStreamPeer :: GetNotifyData(void* *result)
 {
+  *result = mNotifyData;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginStreamPeer :: GetReason(nsPluginReason *result)
 {
+  *result = nsPluginReason_NoReason;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginStreamPeer :: GetMIMEType(nsMIMEType *result)
 {
+  *result = mMIMEType;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginStreamPeer :: Initialize(void)
+nsresult nsPluginStreamPeer :: Initialize(nsIURL *aURL, PRUint32 aLength,
+                                          PRUint32 aLastMod, nsMIMEType aMIMEType,
+                                          void *aNotifyData)
 {
+  mURL = aURL;
+  NS_ADDREF(mURL);
+
+  mLength = aLength;
+  mLastMod = aLastMod;
+
+  if (nsnull != aMIMEType)
+  {
+    PRInt32   len = strlen(aMIMEType);
+    mMIMEType = (char *)PR_Malloc(len + 1);
+
+    if (nsnull != mMIMEType)
+      strcpy((char *)mMIMEType, (char *)aMIMEType);
+    else
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  mNotifyData = aNotifyData;
+
   return NS_OK;
 }

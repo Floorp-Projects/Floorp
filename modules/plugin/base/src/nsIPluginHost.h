@@ -22,6 +22,7 @@
 #include "xp_core.h"
 #include "nsplugindefs.h"
 #include "nsIFactory.h"
+#include "nsString.h"
 
 #define NS_IPLUGINHOST_IID \
 { 0x264c0640, 0x1c31, 0x11d2, \
@@ -38,7 +39,17 @@ public:
   LoadPlugins(void) = 0;
 
   NS_IMETHOD
-  InstantiatePlugin(char *aMimeType, nsIPluginInstance ** aPluginInst) = 0;
+  InstantiatePlugin(const char *aMimeType, nsIPluginInstance ** aPluginInst) = 0;
+
+  NS_IMETHOD
+  InstantiatePlugin(const char *aMimeType, nsIPluginInstance ** aPluginInst,
+                    nsPluginWindow *aWindow, nsString& aURL) = 0;
+
+  NS_IMETHOD
+  NewPluginStream(const nsString& aURL, nsIPluginInstance *aInstance, void *aNotifyData) = 0;
+
+  NS_IMETHOD
+  NewPluginStream(const nsString& aURL, nsIPluginInstance **aInstance, nsPluginWindow *aWindow) = 0;
 };
 
 #endif
