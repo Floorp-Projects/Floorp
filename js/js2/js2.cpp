@@ -181,6 +181,37 @@ static JSValue time(Context *cx, const JSValues &argv)
 }
 #endif
 
+/**
+ * Poor man's instruction tracing facility.
+ */
+class Tracer : public Context::Listener {
+    typedef InstructionStream::difference_type InstructionOffset;
+    void listen(Context* context, Context::Event event)
+    {
+        if (event & Context::EV_STEP) {
+            ICodeModule *iCode = context->getICode();
+            JSValues &registers = context->getRegisters();
+            InstructionIterator pc = context->getPC();
+            
+            
+            InstructionOffset offset = (pc - iCode->its_iCode->begin());
+            printFormat(stdOut, "trace [%02u:%04u]: ",
+                        iCode->mID, offset);
+
+            Instruction* i = *pc;
+            stdOut << *i;
+            if (i->op() != BRANCH && i->count() > 0) {
+                stdOut << " [";
+                i->printOperands(stdOut, registers);
+                stdOut << "]\n";
+            } else {
+                stdOut << '\n';
+            }
+        }
+    }
+};
+
+
 static void readEvalPrint(FILE *in, World &world)
 {
     JSScope global;
@@ -196,7 +227,12 @@ static void readEvalPrint(FILE *in, World &world)
     String buffer;
     string line;
     LineReader inReader(in);
-        
+
+#ifdef HAVE_GEORGE_TRACE_IT
+    Tracer *george = new Tracer();
+    cx.addListener(george);
+#endif
+    
     while (promptLine(inReader, line, buffer.empty() ? "js> " : "> ")) {
         appendChars(buffer, line.data(), line.size());
         try {
@@ -261,37 +297,6 @@ static void readEvalPrint(FILE *in, World &world)
 }
 
 
-/**
- * Poor man's instruction tracing facility.
- */
-class Tracer : public Context::Listener {
-    typedef InstructionStream::difference_type InstructionOffset;
-    void listen(Context* context, Context::Event event)
-    {
-        if (event & Context::EV_STEP) {
-            ICodeModule *iCode = context->getICode();
-            JSValues &registers = context->getRegisters();
-            InstructionIterator pc = context->getPC();
-            
-            
-            InstructionOffset offset = (pc - iCode->its_iCode->begin());
-            printFormat(stdOut, "trace [%02u:%04u]: ",
-                        iCode->mID, offset);
-
-            Instruction* i = *pc;
-            stdOut << *i;
-            if (i->op() != BRANCH && i->count() > 0) {
-                stdOut << " [";
-                i->printOperands(stdOut, registers);
-                stdOut << "]\n";
-            } else {
-                stdOut << '\n';
-            }
-        }
-    }
-};
-
-
 
 char * tests[] = {
     "function fact(n) { if (n > 1) return n * fact(n-1); else return 1; } print(fact(6), \" should be 720\"); return;" ,
@@ -316,7 +321,7 @@ static void testCompile()
             icg.genStmt(s);
             s = s->next;
         }
-        cx.interpret(icg.complete(), JSValues());
+        cx.interpret(icg.complete(&Void_Type), JSValues());
     }
 }
 
