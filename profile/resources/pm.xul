@@ -18,12 +18,15 @@ function CreateProfile()
 	this.location.replace("resource:/res/profile/cpwManager.xul");
 }
 
-function RenameProfile()
+function RenameProfile(w)
 {
+	dump("RenameProfile\n");
+	var newName = w.document.getElementById("NewName").value;
+	dump("RenameProfile : " + lastName + " to " + newName + "\n");
 	if (lastName != "")
 	{
 		dump("Rename '" + lastName + "'\n");
-		dump("Need to do a rename dialog here...\n");
+		profileCore.RenameProfile(lastName, newName);
 		this.location.replace(this.location);
 	}
 	else
@@ -57,7 +60,7 @@ function ExitManager()
 	}
 }
 
-function addTreeElement(num, name)
+function addTreeItem(num, name)
 {
   dump("Adding element " + num + " : " + name + "\n");
   var body = document.getElementById("theTreeBody");
@@ -120,7 +123,7 @@ function loadElements()
 	profileList = profileList.split(",");
 
 	for (var i=0; i &lt; profileList.length; i++)
-		addTreeElement(i, profileList[i]);
+		addTreeItem(i, profileList[i]);
 }
 
 // -------------------------------------------- begin Hack for OnLoad handling
@@ -129,14 +132,16 @@ setTimeout("loadElements()", 0);
 
 </html:script>
 
+[[[[     Please ignore these fields until popups behave better
 <popup id="renamePopup">
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" width="200" height="50">
-<input type="text" id="NewName" size="20" />
-<titledbutton value="Ok" class="push" onclick="opener.RenameProfile(NewName.value);window.close();" />
+If you don't type in the input field, it works.
+<html:input type="text" id="NewName" size="20" value="zz"  />
+<titledbutton value="Ok" class="push" onclick="opener.RenameProfile(window);window.close();" />
 <titledbutton value="Cancel" class="push" onclick="window.close();" />
 </window>
 </popup>
-
+]]]]
 
 <html:center>
 <html:table>
