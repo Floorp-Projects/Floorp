@@ -55,7 +55,7 @@ use Chatbot::Eliza;
 
 $|++;
 
-my $VERSION = "1.13"; # keep me in sync with the mozilla.org cvs repository
+my $VERSION = "1.16"; # keep me in sync with the mozilla.org cvs repository
 my $debug = 1; # debug output also includes warnings, errors
 
 my %msgcmds = (
@@ -139,7 +139,7 @@ my $last_slashdot = 0;
 # leave $mozillazine undef'd if you don't want mozillazine
 # headlines checked every eight hours
 
-my $mozillazine = "http://www.mozillazine.org/home.html";
+my $mozillazine = "http://www.mozillazine.org/index.html";
 my @mozillazine;
 my $last_mozillazine = 0;
 
@@ -416,7 +416,7 @@ sub bot_slashdot {
 }
 
 
-sub bot_mozillazine {
+sub bot_mozillazine{
     my ($nick, $cmd, $rest) = (@_);
     do_headlines($nick,
                  "Headlines from mozillaZine (http://www.mozillazine.org/)",
@@ -779,9 +779,11 @@ sub mozillazine
 
 	foreach (@mz)
 		{
-		if (my ($h) = $_ =~ /COLOR="#FEFEFE"><B>([^<>]+)/)
+            print $_;
+		if (m@<!--head-->([^<>]+)<!--head-end-->@)
 			{
-			$h =~ s/&nbsp;//g;
+			my $h = $1;
+            $h =~ s/&nbsp;//g;
 			push @mozillazine, $h; 
 			}
 		}
