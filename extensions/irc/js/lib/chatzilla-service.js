@@ -224,9 +224,8 @@ BogusChannel.prototype.bufferMaxSize = 0;
 BogusChannel.prototype.shouldCache = false;
 BogusChannel.prototype.pipeliningAllowed = false;
 
-BogusChannel.prototype.openInputStream =
-BogusChannel.prototype.openOutputStream =
-BogusChannel.prototype.asyncWrite =
+BogusChannel.prototype.open =
+BogusChannel.prototype.asyncOpen =
 function ()
 {
     throw Components.results.NS_ERROR_NOT_IMPLEMENTED;

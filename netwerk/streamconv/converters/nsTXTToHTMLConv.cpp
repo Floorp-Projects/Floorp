@@ -55,7 +55,7 @@ nsTXTToHTMLConv::AsyncConvertData(const PRUnichar *aFromType,
 
 // nsIStreamObserver methods
 NS_IMETHODIMP
-nsTXTToHTMLConv::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext) {
+nsTXTToHTMLConv::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     mBuffer.AssignWithConversion("<html>\n<head><title>");
     mBuffer.Append(mPageTitle);
     mBuffer.AppendWithConversion("</title></head>\n<body>\n");
@@ -66,7 +66,7 @@ nsTXTToHTMLConv::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext) {
     // Push mBuffer to the listener now, so the initial HTML will not
     // be parsed in OnDataAvailable().
 
-    nsresult rv = mListener->OnStartRequest(aChannel, aContext);
+    nsresult rv = mListener->OnStartRequest(request, aContext);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIInputStream> inputData;
@@ -75,7 +75,7 @@ nsTXTToHTMLConv::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext) {
     if (NS_FAILED(rv)) return rv;
 
     inputData = do_QueryInterface(inputDataSup);
-    rv = mListener->OnDataAvailable(aChannel, aContext,
+    rv = mListener->OnDataAvailable(request, aContext,
                                     inputData, 0, mBuffer.Length());
     if (NS_FAILED(rv)) return rv;
     mBuffer.AssignWithConversion("");
@@ -83,7 +83,7 @@ nsTXTToHTMLConv::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext) {
 }
 
 NS_IMETHODIMP
-nsTXTToHTMLConv::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
+nsTXTToHTMLConv::OnStopRequest(nsIRequest* request, nsISupports *aContext,
                                nsresult aStatus, const PRUnichar* aStatusArg) {
     nsresult rv = NS_OK;
     if (mToken) {
@@ -105,11 +105,11 @@ nsTXTToHTMLConv::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
 
     inputData = do_QueryInterface(inputDataSup);
 
-    rv = mListener->OnDataAvailable(aChannel, aContext,
+    rv = mListener->OnDataAvailable(request, aContext,
                                     inputData, 0, mBuffer.Length());
     if (NS_FAILED(rv)) return rv;
 
-    return mListener->OnStopRequest(aChannel, aContext, aStatus, aStatusArg);
+    return mListener->OnStopRequest(request, aContext, aStatus, aStatusArg);
 }
 
 // nsITXTToHTMLConv methods
@@ -127,7 +127,7 @@ nsTXTToHTMLConv::PreFormatHTML(PRBool value) {
 
 // nsIStreamListener method
 NS_IMETHODIMP
-nsTXTToHTMLConv::OnDataAvailable(nsIChannel *aChannel, nsISupports *aContext,
+nsTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsISupports *aContext,
                                  nsIInputStream *aInStream,
                                  PRUint32 aOffset, PRUint32 aCount) {
     nsresult rv = NS_OK;
@@ -180,7 +180,7 @@ nsTXTToHTMLConv::OnDataAvailable(nsIChannel *aChannel, nsISupports *aContext,
 
             inputData = do_QueryInterface(inputDataSup);
 
-            rv = mListener->OnDataAvailable(aChannel, aContext,
+            rv = mListener->OnDataAvailable(request, aContext,
                                             inputData, 0, pushBuffer.Length());
             if (NS_FAILED(rv)) {
                 nsMemory::Free(buffer);
@@ -277,17 +277,3 @@ nsTXTToHTMLConv::CatHTML(PRInt32 front, PRInt32 back) {
     return cursor;
 }
 
-nsresult
-NS_NewNSTXTToHTMLConv(nsTXTToHTMLConv** aTXTToHTMLConv)
-{
-    NS_PRECONDITION(aTXTToHTMLConv != nsnull, "null ptr");
-    if (!aTXTToHTMLConv)
-        return NS_ERROR_NULL_POINTER;
-
-    *aTXTToHTMLConv = new nsTXTToHTMLConv();
-    if (!*aTXTToHTMLConv)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(*aTXTToHTMLConv);
-    return (*aTXTToHTMLConv)->Init();
-}

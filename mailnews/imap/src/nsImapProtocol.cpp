@@ -602,7 +602,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
 			    rv = socketService->CreateTransportOfType(connectionType, hostName, port, nsnull, -1, 0, 0, getter_AddRefs(m_channel));
         
         if (NS_SUCCEEDED(rv))
-          rv = m_channel->OpenOutputStream(getter_AddRefs(m_outputStream));
+          rv = m_channel->OpenOutputStream(0, -1, 0, getter_AddRefs(m_outputStream));
       }
     } // if m_runningUrl
 
@@ -616,7 +616,12 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
       // Copy over the notification callbacks object from the mock channel
       nsCOMPtr<nsIInterfaceRequestor> callbacks;
       m_mockChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
-      m_channel->SetNotificationCallbacks(callbacks);
+      if (callbacks) {
+          nsCOMPtr<nsIProgressEventSink> progressSink;
+          (void)callbacks->GetInterface(NS_GET_IID(nsIProgressEventSink),
+                                    getter_AddRefs(progressSink));
+          m_channel->SetProgressEventSink(progressSink);
+      }
 
       // and if we have a cache entry that we are saving the message to, set the security info on it too.
       // since imap only uses the memory cache, passing this on is the right thing to do.
@@ -1004,7 +1009,8 @@ PRBool nsImapProtocol::ProcessCurrentURL()
 
   if (!TestFlag(IMAP_CONNECTION_IS_OPEN) && m_channel)
   {
-    m_channel->AsyncRead(this /* stream observer */, nsnull);
+      nsCOMPtr<nsIRequest> request;
+    m_channel->AsyncRead(this /* stream observer */, nsnull, 0,-1,0, getter_AddRefs(request));
     SetFlag(IMAP_CONNECTION_IS_OPEN);
   }
 #ifdef DEBUG_bienvenu   
@@ -1036,9 +1042,10 @@ PRBool nsImapProtocol::ProcessCurrentURL()
     // if we are set up as a channel, we should notify our channel listener that we are starting...
   // so pass in ourself as the channel and not the underlying socket or file channel the protocol
   // happens to be using
-  if (m_channelListener)
-    m_channelListener->OnStartRequest(m_mockChannel, m_channelContext);
-
+  if (m_channelListener) {
+      nsCOMPtr<nsIRequest> request = do_QueryInterface(m_mockChannel);
+      m_channelListener->OnStartRequest(request, m_channelContext);
+  }
   // mscott - I believe whenever we get here that we will also have
   // a connection. Why? Because when we load the url we open the 
   // connection if it isn't open already....However, if we haven't received
@@ -1123,9 +1130,13 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   // if we are set up as a channel, we should notify our channel listener that we are starting...
   // so pass in ourself as the channel and not the underlying socket or file channel the protocol
   // happens to be using
-  if (m_channelListener)
-    rv = m_channelListener->OnStopRequest(m_mockChannel, m_channelContext, NS_OK, nsnull);
+    if (m_channelListener) 
+    {
+        nsCOMPtr<nsIRequest> request = do_QueryInterface(m_mockChannel);
+        if (!request) return NS_ERROR_FAILURE;
 
+        rv = m_channelListener->OnStopRequest(request, m_channelContext, NS_OK, nsnull);
+    }
   m_lastActiveTime = PR_Now(); // ** jt -- is this the best place for time stamp
   SetFlag(IMAP_CLEAN_UP_URL_STATE);
   if (NS_SUCCEEDED(rv) && GetConnectionStatus() >= 0 && GetServerStateParser().LastCommandSuccessful() 
@@ -1189,7 +1200,7 @@ void nsImapProtocol::ParseIMAPandCheckForNewMail(const char* commandString, PRBo
 /////////////////////////////////////////////////////////////////////////////////////////////
 // we suppport the nsIStreamListener interface 
 ////////////////////////////////////////////////////////////////////////////////////////////
-NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIChannel * /* aChannel */, nsISupports *ctxt, nsIInputStream *aIStream, PRUint32 aSourceOffset, PRUint32 aLength)
+NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, nsIInputStream *aIStream, PRUint32 aSourceOffset, PRUint32 aLength)
 {
     nsresult res = NS_OK;
 
@@ -1213,7 +1224,7 @@ NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIChannel * /* aChannel */, nsISu
   return res;
 }
 
-NS_IMETHODIMP nsImapProtocol::OnStartRequest(nsIChannel * /* aChannel */, nsISupports *ctxt)
+NS_IMETHODIMP nsImapProtocol::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
   // we used to change the url state here......but OnStartRequest only gets called
   // once....when the connnection is first build from necko...So we'll set the url
@@ -1230,7 +1241,7 @@ NS_IMETHODIMP nsImapProtocol::OnStartRequest(nsIChannel * /* aChannel */, nsISup
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIChannel * /* aChannel */, nsISupports *ctxt, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus, const PRUnichar* aMsg)
 {
 
   PRBool killThread = PR_FALSE;
@@ -2809,8 +2820,11 @@ nsImapProtocol::PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete)
       {
         nsresult rv = m_channelOutputStream->Write(line, PL_strlen(line), &count);
         if (NS_SUCCEEDED(rv))
-          m_channelListener->OnDataAvailable(m_mockChannel, m_channelContext, m_channelInputStream, 0, count); 
-        // here is where we should echo the line to the local folder copy of an online message
+        {
+          nsCOMPtr<nsIRequest> request = do_QueryInterface(m_mockChannel);
+          m_channelListener->OnDataAvailable(request, m_channelContext, m_channelInputStream, 0, count); 
+        }
+          // here is where we should echo the line to the local folder copy of an online message
       }
       if (m_imapMessageSink)
         m_imapMessageSink->GetNotifyDownloadedLines(&echoLineToMessageSink);
@@ -3509,8 +3523,11 @@ PRBool nsImapProtocol::DeathSignalReceived()
   // ignore mock channel status if we've been pseudo interrupted
   // ### need to make sure we clear pseudo interrupted status appropriately.
 	if (!GetPseudoInterrupted() && m_mockChannel) 
-		m_mockChannel->GetStatus(&returnValue);
-
+    { 
+        nsCOMPtr<nsIRequest> request = do_QueryInterface(m_mockChannel);
+        if (request) 
+            request->GetStatus(&returnValue);
+    }
 	if (NS_SUCCEEDED(returnValue))	// check the other way of cancelling.
 	{
 		PR_EnterMonitor(m_threadDeathMonitor);
@@ -6709,23 +6726,23 @@ nsresult nsImapCacheStreamListener::Init(nsIStreamListener * aStreamListener, ns
 }
 
 NS_IMETHODIMP
-nsImapCacheStreamListener::OnStartRequest(nsIChannel * aChannel, nsISupports * aCtxt)
+nsImapCacheStreamListener::OnStartRequest(nsIRequest *request, nsISupports * aCtxt)
 {
   nsCOMPtr <nsILoadGroup> loadGroup;
   mChannelToUse->GetLoadGroup(getter_AddRefs(loadGroup));
   if (loadGroup)
-    loadGroup->AddChannel(mChannelToUse, nsnull /* context isupports */);
-  return mListener->OnStartRequest(mChannelToUse, aCtxt);
+    loadGroup->AddRequest(request, nsnull /* context isupports */);
+  return mListener->OnStartRequest(request, aCtxt);
 }
 
 NS_IMETHODIMP
-nsImapCacheStreamListener::OnStopRequest(nsIChannel * aChannel, nsISupports * aCtxt, nsresult aStatus, const PRUnichar* aMsg)
+nsImapCacheStreamListener::OnStopRequest(nsIRequest *request, nsISupports * aCtxt, nsresult aStatus, const PRUnichar* aMsg)
 {
-  nsresult rv = mListener->OnStopRequest(mChannelToUse, aCtxt, aStatus, aMsg);
+  nsresult rv = mListener->OnStopRequest(request, aCtxt, aStatus, aMsg);
   nsCOMPtr <nsILoadGroup> loadGroup;
   mChannelToUse->GetLoadGroup(getter_AddRefs(loadGroup));
   if (loadGroup)
-			loadGroup->RemoveChannel(mChannelToUse, nsnull, aStatus, nsnull);
+			loadGroup->RemoveRequest(request, nsnull, aStatus, nsnull);
 
   mListener = nsnull;
   mChannelToUse = nsnull;
@@ -6733,9 +6750,9 @@ nsImapCacheStreamListener::OnStopRequest(nsIChannel * aChannel, nsISupports * aC
 }
 
 NS_IMETHODIMP
-nsImapCacheStreamListener::OnDataAvailable(nsIChannel * aChannel, nsISupports * aCtxt, nsIInputStream * aInStream, PRUint32 aSourceOffset, PRUint32 aCount)
+nsImapCacheStreamListener::OnDataAvailable(nsIRequest *request, nsISupports * aCtxt, nsIInputStream * aInStream, PRUint32 aSourceOffset, PRUint32 aCount)
 {
-  return mListener->OnDataAvailable(mChannelToUse, aCtxt, aInStream, aSourceOffset, aCount);
+  return mListener->OnDataAvailable(request, aCtxt, aInStream, aSourceOffset, aCount);
 }
 
 NS_IMPL_THREADSAFE_ADDREF(nsImapMockChannel)
@@ -6765,12 +6782,6 @@ NS_IMETHODIMP nsImapMockChannel::Close()
 {
     m_channelListener = null_nsCOMPtr();
     return NS_OK;
-}
-
-NS_IMETHODIMP nsImapMockChannel::SetSecurityInfo(nsISupports * aSecurityInfo)
-{
-  mSecurityInfo = aSecurityInfo;
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMockChannel::GetProgressEventSink(nsIProgressEventSink ** aProgressEventSink)
@@ -6855,19 +6866,13 @@ NS_IMETHODIMP nsImapMockChannel::SetURI(nsIURI* aURI)
     return NS_OK; 
 }
  
-NS_IMETHODIMP nsImapMockChannel::OpenInputStream(nsIInputStream **_retval)
+NS_IMETHODIMP nsImapMockChannel::Open(nsIInputStream **_retval)
 {
-    NS_NOTREACHED("nsImapMockChannel::OpenInputStream");
+    NS_NOTREACHED("nsImapMockChannel::Open");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsImapMockChannel::OpenOutputStream(nsIOutputStream **_retval)
-{
-    NS_NOTREACHED("nsImapMockChannel::OpenOutputStream");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsImapMockChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
+NS_IMETHODIMP nsImapMockChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
   nsCOMPtr<nsICachedNetData>  cacheEntry;
   PRUint32 contentLength = 0;
@@ -6935,8 +6940,8 @@ NS_IMETHODIMP nsImapMockChannel::AsyncRead(nsIStreamListener *listener, nsISuppo
     if (NS_SUCCEEDED(rv) && annotationLength == nsCRT::strlen("Not Modified") 
       && annotation && !nsCRT::strncmp(annotation, "Not Modified", annotationLength))
     {
-      nsCOMPtr<nsIChannel> cacheChannel;
-      rv = cacheEntry->NewChannel(m_loadGroup, getter_AddRefs(cacheChannel));
+      nsCOMPtr<nsITransport> cacheChannel;
+      rv = cacheEntry->NewTransport(m_loadGroup, getter_AddRefs(cacheChannel));
       if (NS_SUCCEEDED(rv))
       {
         // .and force the url to remove its reference on the mock channel...this is to solve
@@ -6947,7 +6952,8 @@ NS_IMETHODIMP nsImapMockChannel::AsyncRead(nsIStreamListener *listener, nsISuppo
         nsImapCacheStreamListener * cacheListener = new nsImapCacheStreamListener();
         NS_ADDREF(cacheListener);
         cacheListener->Init(m_channelListener, NS_STATIC_CAST(nsIChannel *, this));
-        rv = cacheChannel->AsyncRead(cacheListener, m_channelContext);
+        nsCOMPtr<nsIRequest> request;
+        rv = cacheChannel->AsyncRead(cacheListener, m_channelContext, 0, -1, 0, getter_AddRefs(request));
         NS_RELEASE(cacheListener);
 
         if (NS_SUCCEEDED(rv)) // ONLY if we succeeded in actually starting the read should we return
@@ -6959,7 +6965,6 @@ NS_IMETHODIMP nsImapMockChannel::AsyncRead(nsIStreamListener *listener, nsISuppo
           nsCOMPtr<nsISupports> securityInfo;
           cacheEntry->GetSecurityInfo(getter_AddRefs(securityInfo));
           SetSecurityInfo(securityInfo);
-
           return rv;
         }
       }    
@@ -6978,14 +6983,17 @@ NS_IMETHODIMP nsImapMockChannel::AsyncRead(nsIStreamListener *listener, nsISuppo
     if (folder && NS_SUCCEEDED(rv))
     {
     // we want to create a file channel and read the msg from there.
-      nsCOMPtr<nsIFileChannel> fileChannel;
+      nsCOMPtr<nsITransport> fileChannel;
       nsMsgKey msgKey = atoi(messageIdString);
-      rv = folder->GetOfflineFileChannel(msgKey, getter_AddRefs(fileChannel));
+      PRUint32 size, offset;
+      rv = folder->GetOfflineFileTransport(msgKey, &offset, &size, getter_AddRefs(fileChannel));
       // get the file channel from the folder, somehow (through the message or
       // folder sink?) We also need to set the transfer offset to the message offset
       if (fileChannel && NS_SUCCEEDED(rv))
       {
-        fileChannel->SetLoadGroup(m_loadGroup);
+          // dougt - This may break the ablity to "cancel" a read from offline mail reading.
+          // fileChannel->SetLoadGroup(m_loadGroup);
+        
         // force the url to remove its reference on the mock channel...this is to solve
         // a nasty reference counting problem...
         imapUrl->SetMockChannel(nsnull);
@@ -6994,7 +7002,8 @@ NS_IMETHODIMP nsImapMockChannel::AsyncRead(nsIStreamListener *listener, nsISuppo
         nsImapCacheStreamListener * cacheListener = new nsImapCacheStreamListener();
         NS_ADDREF(cacheListener);
         cacheListener->Init(m_channelListener, NS_STATIC_CAST(nsIChannel *, this));
-        rv = fileChannel->AsyncRead(cacheListener, m_channelContext);
+        nsCOMPtr<nsIRequest> request;
+        rv = fileChannel->AsyncRead(cacheListener, m_channelContext, offset, size, 0, getter_AddRefs(request));
         NS_RELEASE(cacheListener);
 
         if (NS_SUCCEEDED(rv)) // ONLY if we succeeded in actually starting the read should we return
@@ -7028,12 +7037,6 @@ NS_IMETHODIMP nsImapMockChannel::AsyncRead(nsIStreamListener *listener, nsISuppo
   if (NS_FAILED(rv)) return rv;
   rv = imapServer->GetImapConnectionAndLoadUrl(queue, imapUrl, nsnull);
   return rv;
-}
-
-NS_IMETHODIMP nsImapMockChannel::AsyncWrite(nsIStreamProvider *provider, nsISupports *ctxt)
-{
-    NS_NOTREACHED("nsImapMockChannel::AsyncWrite");
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsImapMockChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
@@ -7077,83 +7080,6 @@ nsImapMockChannel::SetContentLength(PRInt32 aContentLength)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsImapMockChannel::GetTransferOffset(PRUint32 *aTransferOffset)
-{
-    NS_NOTREACHED("nsImapMockChannel::GetTransferOffset");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsImapMockChannel::SetTransferOffset(PRUint32 aTransferOffset)
-{
-    NS_NOTREACHED("nsImapMockChannel::SetTransferOffset");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsImapMockChannel::GetTransferCount(PRInt32 *aTransferCount)
-{
-    NS_NOTREACHED("nsImapMockChannel::GetTransferCount");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsImapMockChannel::SetTransferCount(PRInt32 aTransferCount)
-{
-    NS_NOTREACHED("nsImapMockChannel::SetTransferCount");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsImapMockChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
-{
-    NS_NOTREACHED("nsImapMockChannel::GetBufferSegmentSize");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsImapMockChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
-{
-    NS_NOTREACHED("nsImapMockChannel::SetBufferSegmentSize");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsImapMockChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
-{
-    NS_NOTREACHED("nsImapMockChannel::GetBufferMaxSize");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsImapMockChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
-{
-    NS_NOTREACHED("nsImapMockChannel::SetBufferMaxSize");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsImapMockChannel::GetLocalFile(nsIFile* *file)
-{
-    NS_NOTREACHED("GetLocalFile");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsImapMockChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
-{
-    *aPipeliningAllowed = PR_FALSE;
-    return NS_OK;
-}
- 
-NS_IMETHODIMP
-nsImapMockChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
-{
-    NS_NOTREACHED("SetPipeliningAllowed");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP nsImapMockChannel::GetOwner(nsISupports * *aPrincipal)
 {
   *aPrincipal = mOwner;
@@ -7167,13 +7093,22 @@ NS_IMETHODIMP nsImapMockChannel::SetOwner(nsISupports * aPrincipal)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsImapMockChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsImapMockChannel::SetSecurityInfo(nsISupports *aSecurityInfo)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // From nsIRequest
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP nsImapMockChannel::GetName(PRUnichar* *result)
 {
-    NS_NOTREACHED("nsImapMockChannel::GetName");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -7233,10 +7168,3 @@ nsImapMockChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotification
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsImapMockChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
-{
-    *aSecurityInfo = mSecurityInfo;
-    NS_IF_ADDREF(*aSecurityInfo);
-    return NS_OK;
-}

@@ -79,7 +79,7 @@ CBSConnection.prototype.connect = function(host, port, bind, tcp_flag)
     if (!this._channel)
         throw ("Error opening channel.");
 
-    this._outputStream = this._channel.openOutputStream(0);
+    this._outputStream = this._channel.open(0);
     if (!this._outputStream)
         throw ("Error getting output stream.");
 

@@ -37,7 +37,7 @@ interface nsIStreamProvider : nsIStreamObserver
     /**
      * Called when data may be written to the channel.
      *
-     * @param channel - the channel being written to
+     * @param request - the request returned by AsyncWrite
      * @param ctxt - opaque parameter passed to AsyncWrite
      * @param output - output stream for writing data chunk
      * @param offset - current stream position (informational)
@@ -52,7 +52,7 @@ interface nsIStreamProvider : nsIStreamObserver
      *   becomes available.
      * @return <other-error> - if failure.
      */
-    void onDataWritable(in nsIChannel channel,
+    void onDataWritable(in nsIRequest request,
                         in nsISupports ctxt,
                         in nsIOutputStream output,
                         in unsigned long offset,

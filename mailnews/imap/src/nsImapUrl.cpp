@@ -1132,7 +1132,8 @@ NS_IMETHODIMP nsImapUrl::AddChannelToLoadGroup()
 		
     if (loadGroup)
 		{
-			loadGroup->AddChannel(m_mockChannel, nsnull /* context isupports */);
+            nsCOMPtr<nsIRequest> request = do_QueryInterface(m_mockChannel);
+			loadGroup->AddRequest(request, nsnull /* context isupports */);
 		}
 	}
 	return NS_OK;
@@ -1150,7 +1151,8 @@ NS_IMETHODIMP nsImapUrl::RemoveChannel(nsresult status)
       GetLoadGroup(getter_AddRefs(loadGroup));
 		if (loadGroup)
 		{
-			loadGroup->RemoveChannel(m_mockChannel, nsnull, status, nsnull);
+            nsCOMPtr<nsIRequest> request = do_QueryInterface(m_mockChannel);
+            loadGroup->RemoveRequest(request, nsnull, status, nsnull);
 		}
     // break deadly embrace between mock channel and url
     SetMockChannel(nsnull);

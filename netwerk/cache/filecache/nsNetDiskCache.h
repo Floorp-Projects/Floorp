@@ -58,21 +58,21 @@ class nsNetDiskCache : public nsINetDataDiskCache, public nsIObserver, public ns
   NS_DECL_NSINETDATADISKCACHE
   NS_DECL_NSIOBSERVER
 
-  NS_IMETHOD Init(void) ;
+  NS_IMETHOD Init(void);
 
   nsNetDiskCache() ;
-  virtual ~nsNetDiskCache() ;
+  virtual ~nsNetDiskCache();
 
   protected:
   NS_IMETHOD ShutdownDB();
-  NS_IMETHOD InitDB(void) ;
-  NS_IMETHOD CreateDir(nsIFile* dir_spec) ;
-  NS_IMETHOD GetSizeEntry(void) ;
-  NS_IMETHOD SetSizeEntry(void) ;
-  NS_IMETHOD SetSizeEntryExplicit(PRUint32 numEntries, PRUint32 storageInUse) ;
+  NS_IMETHOD InitDB(void);
+  NS_IMETHOD CreateDir(nsIFile* dir_spec);
+  NS_IMETHOD GetSizeEntry(void);
+  NS_IMETHOD SetSizeEntry(void);
+  NS_IMETHOD SetSizeEntryExplicit(PRUint32 numEntries, PRUint32 storageInUse);
 
-  NS_IMETHOD RenameCacheSubDirs(void) ;
-  NS_IMETHOD DBRecovery(void) ;
+  NS_IMETHOD RenameCacheSubDirs(void);
+  NS_IMETHOD DBRecovery(void);
 
   private:
   NS_IMETHODIMP InitCacheFolder();
@@ -80,22 +80,22 @@ class nsNetDiskCache : public nsINetDataDiskCache, public nsIObserver, public ns
   PRBool    fixCacheVersion (const char *cache_dir, unsigned version);
   void      removeAllFiles  (const char *dir, const char *tagFile = NULL);
 
-  PRBool 			                mEnabled ;
-  PRUint32 			                mNumEntries ;
-  nsCOMPtr<nsINetDataCache> 	    mpNextCache ;
-  nsCOMPtr<nsIFile>   	        	mDiskCacheFolder ;
-  nsCOMPtr<nsIFile>            		mDBFile ;
+  PRBool 			                mEnabled;
+  PRUint32 			                mNumEntries;
+  nsCOMPtr<nsINetDataCache> 	    mpNextCache;
+  nsCOMPtr<nsIFile>   	        	mDiskCacheFolder;
+  nsCOMPtr<nsIFile>            		mDBFile;
 
-  PRUint32                          mMaxEntries ;
-  PRUint32                          mStorageInUse ;
-  nsIDBAccessor*                    mDB ;
+  PRUint32                          mMaxEntries;
+  PRUint32                          mStorageInUse;
+  nsIDBAccessor*                    mDB;
 
   // this is used to indicate a db corruption 
-  PRBool                            mDBCorrupted ;
+  PRBool                            mDBCorrupted;
 
-  friend class nsDiskCacheRecord ;
-  friend class nsDiskCacheRecordChannel ;
-  friend class nsDBEnumerator ;
-} ;
+  friend class nsDiskCacheRecord;
+  friend class nsDiskCacheRecordTransport;
+  friend class nsDBEnumerator;
+};
 
 #endif /* __gen_nsNetDiskCache_h__ */

@@ -35,16 +35,14 @@ nsStreamLoader::Init(nsIURI* aURL,
                      nsISupports* context,
                      nsILoadGroup* aGroup,
                      nsIInterfaceRequestor* notificationCallbacks,
-                     nsLoadFlags loadAttributes,
-                     PRUint32 bufferSegmentSize,
-                     PRUint32 bufferMaxSize)
+                     nsLoadFlags loadAttributes)
 {
   nsresult rv = NS_OK;
   mObserver = observer;
   mContext  = context;
 
   rv = NS_OpenURI(this, nsnull, aURL, nsnull, aGroup, notificationCallbacks,
-                  loadAttributes, bufferSegmentSize, bufferMaxSize);
+                  loadAttributes);
   if (NS_FAILED(rv) && mObserver) {
     // don't callback synchronously as it puts the caller
     // in a recursive situation and breaks the asynchronous
@@ -96,26 +94,27 @@ nsStreamLoader::GetNumBytesRead(PRUint32* aNumBytes)
   return NS_OK;
 }
 
+/* readonly attribute nsIRequest request; */
 NS_IMETHODIMP 
-nsStreamLoader::GetChannel(nsIChannel** aChannel)
+nsStreamLoader::GetRequest(nsIRequest * *aRequest)
 {
-  *aChannel = mChannel.get();
-  NS_IF_ADDREF(*aChannel);
+    NS_IF_ADDREF(*aRequest=mRequest);
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP 
+nsStreamLoader::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
+{
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsStreamLoader::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsStreamLoader::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
+nsStreamLoader::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                               nsresult aStatus, const PRUnichar* aStatusArg)
 {
   nsresult rv;
-  mChannel = channel;
+  mRequest = request;
   rv = mObserver->OnStreamComplete(this, mContext, aStatus, 
                                    mData.Length(),
                                    mData.GetBuffer());
@@ -125,7 +124,7 @@ nsStreamLoader::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 #define BUF_SIZE 1024
 
 NS_IMETHODIMP 
-nsStreamLoader::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, 
+nsStreamLoader::OnDataAvailable(nsIRequest* request, nsISupports *ctxt, 
                                 nsIInputStream *inStr, 
                                 PRUint32 sourceOffset, PRUint32 count)
 {

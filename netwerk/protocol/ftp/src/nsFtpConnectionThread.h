@@ -40,6 +40,7 @@
 #include "nsAutoLock.h"
 #include "nsIEventQueueService.h"
 #include "nsIPrompt.h"
+#include "nsITransport.h"
 
 #include "nsFtpControlConnection.h"
 
@@ -85,7 +86,7 @@ typedef enum _FTP_STATE {
 typedef enum _FTP_ACTION { GET, PUT, MKDIR, DEL} FTP_ACTION;
 
 class nsFtpState : public nsIStreamListener,
-                              public nsIRequest {
+                   public nsIRequest {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMLISTENER
@@ -95,10 +96,7 @@ public:
     nsFtpState();
     virtual ~nsFtpState();
 
-    nsresult Init(nsIFTPChannel         *aChannel,
-                  nsIPrompt             *aPrompter,
-                  PRUint32              bufferSegmentSize,
-                  PRUint32              bufferMaxSize);
+    nsresult Init(nsIFTPChannel *aChannel, nsIPrompt *aPrompter);
 
     // use this to set an observer.
     nsresult SetStreamObserver(nsIStreamObserver *aObserver, nsISupports *aContext);
@@ -143,9 +141,7 @@ private:
     nsresult    Process();
 
     virtual nsresult CreateTransport(const char * host, PRInt32 port,
-                                     PRUint32 bufferSegmentSize,
-                                     PRUint32 bufferMaxSize,
-                                     nsIChannel** o_pTrans);
+                                     nsITransport** o_pTrans);
 
     void KillControlConnnection();
     nsresult StopProcessing();
@@ -165,8 +161,8 @@ private:
 
         // ****** channel/transport/stream vars 
     nsFtpControlConnection*         mControlConnection;// cacheable control connection (owns mCPipe)
-    nsCOMPtr<nsIChannel>            mDPipe;            // the data channel transport
-
+    nsCOMPtr<nsITransport>          mDPipe;            // the data transport
+    nsCOMPtr<nsIRequest>            mDPipeRequest;
         // ****** consumer vars
     nsCOMPtr<nsIStreamListener>     mListener;        // the consumer of our read events
     nsCOMPtr<nsISupports>           mListenerContext; // the context we pass through our read events
@@ -216,7 +212,5 @@ private:
   
 };
 
-#define NS_FTP_BUFFER_READ_SIZE             (8*1024)
-#define NS_FTP_BUFFER_WRITE_SIZE            (8*1024)
 
 #endif //__nsFtpState__h_

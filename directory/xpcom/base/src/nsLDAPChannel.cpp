@@ -54,7 +54,9 @@ static NS_DEFINE_IID(kILDAPMessageListenerIID, NS_ILDAPMESSAGELISTENER_IID);
 static NS_DEFINE_IID(kILoadGroupIID, NS_ILOADGROUP_IID);
 static NS_DEFINE_IID(kIProgressEventSink, NS_IPROGRESSEVENTSINK_IID);
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsLDAPChannel, nsIChannel, nsIRequest,	
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsLDAPChannel, 
+                              nsIChannel, 
+                              nsIRequest,	
                               nsILDAPMessageListener);
 
 nsLDAPChannel::nsLDAPChannel()
@@ -212,7 +214,7 @@ nsLDAPChannel::Cancel(nsresult aStatus)
     // remove self from loadgroup to stop the throbber
     //
     if (mLoadGroup) {
-        rv = mLoadGroup->RemoveChannel(this, mResponseContext, aStatus,
+        rv = mLoadGroup->RemoveRequest(this, mResponseContext, aStatus,
                                        nsnull);
         if (NS_FAILED(rv)) 
             return rv;
@@ -281,55 +283,6 @@ nsLDAPChannel::GetURI(nsIURI* *aURI)
     *aURI = mURI;
     NS_IF_ADDREF(*aURI);
     return NS_OK;
-}
-
-// getter and setter for transferOffset attribute:
-//
-// The start offset from the beginning of the data from/to which
-// reads/writes will occur. Users may set the transferOffset before making
-// any of the following requests: asyncOpen, asyncRead, asyncWrite,
-// openInputStream, openOutputstream.
-//
-NS_IMETHODIMP
-nsLDAPChannel::SetTransferOffset(PRUint32 newOffset)
-{
-    NS_NOTYETIMPLEMENTED("nsLDAPChannel::SetTransferOffset");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsLDAPChannel::GetTransferOffset(PRUint32 *offset)
-{
-    NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetTransferOffset");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-// getter and setter for transferCount attribute
-//
-// Accesses the count of bytes to be transfered. For openInputStream and
-// asyncRead, this specifies the amount to read, for asyncWrite, this
-// specifies the amount to write (note that for openOutputStream, the
-// end of the data can be signified simply by closing the stream). 
-// If the transferCount is set after reading has been initiated, the
-// amount specified will become the current remaining amount to read
-// before the channel is closed (this can be useful if the content
-// length is encoded at the start of the stream).
-//
-// A transferCount value of -1 means the amount is unspecified, i.e. 
-// read or write all the data that is available.
-//
-NS_IMETHODIMP
-nsLDAPChannel::SetTransferCount(PRInt32 newCount)
-{
-    NS_NOTYETIMPLEMENTED("nsLDAPChannel::SetTransferCount");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsLDAPChannel::GetTransferCount(PRInt32 *count)
-{
-    NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetTransferCount");
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // getter and setter for loadAttributes attribute:
@@ -563,86 +516,6 @@ nsLDAPChannel::GetSecurityInfo(nsISupports* *aSecurityInfo)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-// getter and setter for bufferSegmentSize attribute
-//
-// The buffer segment size is used as the initial size for any
-// transfer buffers, and the increment size for whenever the buffer
-// space needs to be grown.  (Note this parameter is passed along to
-// any underlying nsIPipe objects.)  If unspecified, the channel
-// implementation picks a default.
-//
-// attribute unsigned long bufferSegmentSize;
-//
-NS_IMETHODIMP
-nsLDAPChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
-{
-    NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetBufferSegmentSize");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsLDAPChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
-{
-    NS_NOTYETIMPLEMENTED("nsLDAPChannel::SetBufferSegmentSize");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-// getter and setter for the bufferMaxSize attribute
-//
-// Accesses the buffer maximum size. The buffer maximum size is the limit
-// size that buffer will be grown to before suspending the channel.
-// (Note this parameter is passed along to any underlying nsIPipe objects.)
-// If unspecified, the channel implementation picks a default.
-//
-// attribute unsigned long bufferMaxSize;
-//
-NS_IMETHODIMP
-nsLDAPChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
-{
-    NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetBufferMaxSize");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsLDAPChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
-{
-    NS_NOTYETIMPLEMENTED("nsLDAPChannel::SetBufferMaxSize");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-// Returns a local file to the channel's data if one exists, null otherwise.
-//
-// readonly attribute nsIFile localFile;
-NS_IMETHODIMP
-nsLDAPChannel::GetLocalFile(nsIFile* *aFile)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-// getter and setter for pipeliningAllowed attribute
-//
-// Setting pipeliningAllowed causes the load of a URL (issued via asyncOpen,
-// asyncRead or asyncWrite) to be deferred in order to allow the request to
-// be pipelined for greater throughput efficiency. Pipelined requests will
-// be forced to load when the first non-pipelined request is issued.
-//
-// attribute boolean pipeliningAllowed;
-//
-NS_IMETHODIMP
-nsLDAPChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
-{
-    NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetPipeLiningAllowed");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsLDAPChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
-{
-    NS_NOTYETIMPLEMENTED("nsLDAPChannel::SetPipeliningAllowed");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 // nsIChannel operations
 
 // Opens a blocking input stream to the URL's specified source.
@@ -653,35 +526,13 @@ nsLDAPChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
 //  the data, the amount available is returned in the stream.
 //
 NS_IMETHODIMP
-nsLDAPChannel::OpenInputStream(nsIInputStream* *result)
+nsLDAPChannel::Open(nsIInputStream* *result)
 {
     NS_NOTYETIMPLEMENTED("nsLDAPChannel::OpenInputStream");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-// Opens a blocking output stream to the URL's specified destination.
-// @param startPosition - The offset from the start of the data
-//   from which to begin writing.
-//
-NS_IMETHODIMP
-nsLDAPChannel::OpenOutputStream(nsIOutputStream* *result)
-{
-    NS_NOTYETIMPLEMENTED("nsLDAPChannel::OpenOutputStream");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-// Reads asynchronously from the URL's specified source. Notifications
-// are provided to the stream listener on the thread of the specified
-// event queue.
-// The startPosition argument designates the offset in the source where
-// the data will be read.
-// If the readCount == -1 then all the available data is delivered to
-// the stream listener.
-//
-// void asyncRead(in nsIStreamListener listener,
-//                in nsISupports ctxt);
-NS_IMETHODIMP
-nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
+nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
                          nsISupports* aCtxt)
 {
     nsresult rv;
@@ -696,7 +547,7 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
     // add ourselves to the appropriate loadgroup
     //
     if (mLoadGroup) {
-        mLoadGroup->AddChannel(this, mResponseContext);
+        mLoadGroup->AddRequest(this, mResponseContext);
     }
 
     // slurp out relevant pieces of the URL
@@ -810,24 +661,6 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
     }
 
     return NS_OK;
-}
-
-// Writes asynchronously to the URL's specified destination. Notifications
-// are provided to the stream observer on the thread of the specified
-// event queue.
-// The startPosition argument designates the offset in the destination where
-// the data will be written.
-// If the writeCount == -1, then all the available data in the input
-// stream is written.
-//
-// void asyncWrite(in nsIStreamProvider provider,
-//                 in nsISupports ctxt);
-NS_IMETHODIMP
-nsLDAPChannel::AsyncWrite(nsIStreamProvider* provider,
-                          nsISupports* ctxt)
-{
-    NS_NOTYETIMPLEMENTED("nsLDAPChannel::AsyncWrite");
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /**
@@ -1004,7 +837,7 @@ nsLDAPChannel::OnLDAPSearchResult(nsILDAPMessage *aMessage)
     // remove self from loadgroup to stop the throbber
     //
     if (mLoadGroup) {
-        rv = mLoadGroup->RemoveChannel(this, mResponseContext, NS_OK, nsnull);
+        rv = mLoadGroup->RemoveRequest(this, mResponseContext, NS_OK, nsnull);
         if (NS_FAILED(rv)) {
             NS_WARNING("nsLDAPChannel::OnSearchResult(): "
                        "mLoadGroup->RemoveChannel() failed");

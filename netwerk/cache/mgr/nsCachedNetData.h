@@ -143,7 +143,7 @@ protected:
     friend class nsReplacementPolicy;
     friend class nsCacheManager;
     friend class StreamAsFile;
-    friend class nsCacheEntryChannel;
+    friend class nsCacheEntryTransport;
     friend class CacheOutputStream;
     friend class InterceptStreamListener;
 
@@ -193,8 +193,8 @@ private:
 
 protected:
 
-    // Number of nsCacheEntryChannels referring to this record
-    PRUint8     mChannelCount;
+    // Number of nsCacheEntryTransport's referring to this record
+    PRUint8     mTransportCount;
 
     // Below members are statistics kept per cache-entry, used to decide how
     // profitable it will be to evict a record from the cache relative to other

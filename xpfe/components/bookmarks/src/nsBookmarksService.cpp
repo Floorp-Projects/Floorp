@@ -2000,13 +2000,12 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 					if (httpChannel)
 					{
 						bmks->htmlSize = 0;
-
 						nsCOMPtr<nsIAtom> headAtom = getter_AddRefs(NS_NewAtom("HEAD"));
 						if (headAtom)
 						{
 							httpChannel->SetRequestMethod(headAtom);
 						}
-						if (NS_SUCCEEDED(rv = channel->AsyncRead(bmks, nsnull)))
+						if (NS_SUCCEEDED(rv = channel->AsyncOpen(bmks, nsnull)))
 						{
 							bmks->busySchedule = PR_TRUE;
 						}
@@ -2042,7 +2041,7 @@ else
 
 
 NS_IMETHODIMP
-nsBookmarksService::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
+nsBookmarksService::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 {
 	return(NS_OK);
 }
@@ -2050,7 +2049,7 @@ nsBookmarksService::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
 
 
 NS_IMETHODIMP
-nsBookmarksService::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, nsIInputStream *aIStream,
+nsBookmarksService::OnDataAvailable(nsIRequest* request, nsISupports *ctxt, nsIInputStream *aIStream,
 					  PRUint32 sourceOffset, PRUint32 aLength)
 {
 	// calculate html page size if server doesn't tell us in headers
@@ -2062,7 +2061,7 @@ nsBookmarksService::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, nsII
 
 
 NS_IMETHODIMP
-nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
+nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 					nsresult status, const PRUnichar *errorMsg) 
 {
 	nsresult		rv;
@@ -2074,7 +2073,7 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 		printf("Finished polling '%s'\n", uri);
 #endif
 	}
-
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
 	nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
 	if (httpChannel)
 	{

@@ -37,7 +37,6 @@
 #include "nsIInputStream.h"
 #include "nsIStreamConverterService.h"
 #include "nsWeakReference.h"
-
 #include "nsIHTTPChannel.h"
 
 #include "nsIDocShellTreeItem.h"
@@ -83,13 +82,13 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    nsresult Open(nsIChannel * aChannel, 
+    nsresult Open(nsIChannel* channel, 
                   nsURILoadCommand aCommand,
                   const char * aWindowTarget,
                   nsISupports * aWindowContext);
 
-    nsresult DispatchContent(nsIChannel * aChannel, nsISupports * aCtxt);
-    nsresult RetargetOutput(nsIChannel * aChannel, const char * aSrcContentType, 
+    nsresult DispatchContent(nsIRequest *request, nsISupports * aCtxt);
+    nsresult RetargetOutput(nsIRequest *request, const char * aSrcContentType, 
                             const char * aOutContentType, nsIStreamListener * aStreamListener);
 
     // nsIStreamObserver methods:
@@ -104,7 +103,7 @@ protected:
     // ProcessCanceledCase will do a couple of things....(1) it checks to see if the channel was canceled,
     // if it was, it will go out and release all of the document open info's local state for this load
     // and it will return TRUE.
-    PRBool ProcessCanceledCase(nsIChannel * aChannel);
+    PRBool ProcessCanceledCase(nsIRequest *request);
 
 protected:
     nsCOMPtr<nsIURIContentListener> m_contentListener;
@@ -162,14 +161,14 @@ nsDocumentOpenInfo* nsDocumentOpenInfo::Clone()
 // ProcessCanceledCase will do a couple of things....(1) it checks to see if the channel was canceled,
 // if it was, it will go out and release all of the document open info's local state for this load
 // and it will return TRUE.
-PRBool nsDocumentOpenInfo::ProcessCanceledCase(nsIChannel * aChannel)
+PRBool nsDocumentOpenInfo::ProcessCanceledCase(nsIRequest *request)
 {
   PRBool canceled = PR_FALSE;
   nsresult rv = NS_OK;
 
-  if (aChannel)
+  if (request)
   {
-    aChannel->GetStatus(&rv);
+    request->GetStatus(&rv);
 
     // if we were aborted or if the js returned no result (i.e. we aren't replacing any window content)
     if (rv == NS_BINDING_ABORTED || rv == NS_ERROR_DOM_RETVAL_UNDEFINED)
@@ -186,7 +185,7 @@ PRBool nsDocumentOpenInfo::ProcessCanceledCase(nsIChannel * aChannel)
   return canceled;
 }
 
-nsresult nsDocumentOpenInfo::Open(nsIChannel * aChannel,  
+nsresult nsDocumentOpenInfo::Open(nsIChannel *aChannel,  
                                   nsURILoadCommand aCommand,
                                   const char * aWindowTarget,
                                   nsISupports * aWindowContext)
@@ -204,8 +203,10 @@ nsresult nsDocumentOpenInfo::Open(nsIChannel * aChannel,
   mCommand = aCommand;
 
   // now just open the channel!
-  if (aChannel)
-    rv =  aChannel->AsyncRead(this, nsnull);
+  if (aChannel){
+    rv =  aChannel->AsyncOpen(this, nsnull);
+  }
+
   if (rv == NS_ERROR_DOM_RETVAL_UNDEFINED) {
       NS_WARNING("js returned no result -- not replacing window contents");
       rv = NS_OK;
@@ -213,7 +214,7 @@ nsresult nsDocumentOpenInfo::Open(nsIChannel * aChannel,
   return rv;
 }
 
-NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIChannel * aChannel, nsISupports * aCtxt)
+NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest *request, nsISupports * aCtxt)
 {
   nsresult rv = NS_OK;
 
@@ -224,7 +225,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIChannel * aChannel, nsISuppo
   //   content handler.  Just return.  This causes the request to be
   //   ignored.
   //
-  nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel, &rv));
+  nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(request, &rv));
 
   if (NS_SUCCEEDED(rv)) {
     PRUint32 responseCode = 0;
@@ -235,16 +236,16 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIChannel * aChannel, nsISuppo
     }
   }
 
-  if (ProcessCanceledCase(aChannel))
+  if (ProcessCanceledCase(request))
     return NS_OK;
 
-  rv = DispatchContent(aChannel, aCtxt);
+  rv = DispatchContent(request, aCtxt);
   if (m_targetStreamListener)
-    rv = m_targetStreamListener->OnStartRequest(aChannel, aCtxt);
+    rv = m_targetStreamListener->OnStartRequest(request, aCtxt);
   return rv;
 }
 
-NS_IMETHODIMP nsDocumentOpenInfo::OnDataAvailable(nsIChannel * aChannel, nsISupports * aCtxt,
+NS_IMETHODIMP nsDocumentOpenInfo::OnDataAvailable(nsIRequest *request, nsISupports * aCtxt,
                                                   nsIInputStream * inStr, PRUint32 sourceOffset, PRUint32 count)
 {
   // if we have retarged to the end stream listener, then forward the call....
@@ -252,26 +253,26 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnDataAvailable(nsIChannel * aChannel, nsISupp
 
   nsresult rv = NS_OK;
   
-  if (ProcessCanceledCase(aChannel))
+  if (ProcessCanceledCase(request))
     return NS_OK;
 
   if (m_targetStreamListener)
-    rv = m_targetStreamListener->OnDataAvailable(aChannel, aCtxt, inStr, sourceOffset, count);
+    rv = m_targetStreamListener->OnDataAvailable(request, aCtxt, inStr, sourceOffset, count);
   return rv;
 }
 
-NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIChannel * aChannel, nsISupports *aCtxt, 
+NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIRequest *request, nsISupports *aCtxt, 
                                                 nsresult aStatus, const PRUnichar * errorMsg)
 {
   nsresult rv = NS_OK;
   
-  if (ProcessCanceledCase(aChannel))
+  if (ProcessCanceledCase(request))
     return NS_OK;
 
   if (!mOnStopFired && m_targetStreamListener)
   {
     mOnStopFired = PR_TRUE;
-    m_targetStreamListener->OnStopRequest(aChannel, aCtxt, aStatus, errorMsg);
+    m_targetStreamListener->OnStopRequest(request, aCtxt, aStatus, errorMsg);
   }
 
   m_targetStreamListener = 0;
@@ -279,12 +280,15 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIChannel * aChannel, nsISuppor
   return rv;
 }
 
-nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports * aCtxt)
+nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * aCtxt)
 {
   nsresult rv;
   nsXPIDLCString contentType;
   nsCOMPtr<nsISupports> originalWindowContext = m_originalContext; // local variable to keep track of this.
   nsCOMPtr<nsIStreamListener> contentStreamListener;
+  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
+  if (!aChannel)
+      return NS_ERROR_FAILURE;
 
   rv = aChannel->GetContentType(getter_Copies(contentType));
   if (NS_FAILED(rv)) return rv;
@@ -302,7 +306,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
     //
     PRBool abortDispatch = PR_FALSE;
     rv = pURILoader->DispatchContent(contentType, mCommand, m_windowTarget, 
-                                     aChannel, aCtxt, 
+                                     request, aCtxt, 
                                      m_contentListener, 
                                      m_originalContext,
                                      getter_Copies(desiredContentType), 
@@ -320,7 +324,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
     //
     if (!contentListener) 
     {
-      rv = RetargetOutput(aChannel, contentType, "*/*", nsnull);
+      rv = RetargetOutput(request, contentType, "*/*", nsnull);
       if (m_targetStreamListener)
         return NS_OK;
     }
@@ -363,7 +367,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
       }
 
       rv = contentListener->DoContent(contentTypeToUse, mCommand, m_windowTarget, 
-                                    aChannel, getter_AddRefs(contentStreamListener),
+                                    request, getter_AddRefs(contentStreamListener),
                                     &bAbortProcess);
 
       // the listener is doing all the work from here...we are done!!!
@@ -381,7 +385,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
         {
             rv = helperAppService->DoContent(contentType, uri, m_originalContext, &abortProcess, getter_AddRefs(contentStreamListener));
             if (NS_SUCCEEDED(rv) && contentStreamListener)
-              return RetargetOutput(aChannel, contentType, contentType, contentStreamListener);
+              return RetargetOutput(request, contentType, contentType, contentStreamListener);
         }
         rv = NS_ERROR_FAILURE; // this will cause us to bring up the unknown content handler dialog.
       }
@@ -389,14 +393,14 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
       // okay, all registered listeners have had a chance to handle this content...
       // did one of them give us a stream listener back? if so, let's start reading data
       // into it...
-      rv = RetargetOutput(aChannel, contentType, desiredContentType, contentStreamListener);
+      rv = RetargetOutput(request, contentType, desiredContentType, contentStreamListener);
       m_originalContext = nsnull; // we don't need this anymore....
     } 
   }
   return rv;
 }
 
-nsresult nsDocumentOpenInfo::RetargetOutput(nsIChannel * aChannel, const char * aSrcContentType, const char * aOutContentType,
+nsresult nsDocumentOpenInfo::RetargetOutput(nsIRequest *request, const char * aSrcContentType, const char * aOutContentType,
                                             nsIStreamListener * aStreamListener)
 {
   nsresult rv = NS_OK;
@@ -435,7 +439,7 @@ nsresult nsDocumentOpenInfo::RetargetOutput(nsIChannel * aChannel, const char * 
       rv = StreamConvService->AsyncConvertData(from_w.GetUnicode(), 
                                                to_w.GetUnicode(), 
                                                nextLink, 
-                                               aChannel,
+                                               request,
                                                getter_AddRefs(m_targetStreamListener));
       NS_RELEASE(nextLink);
   }
@@ -495,12 +499,12 @@ NS_IMETHODIMP nsURILoader::UnRegisterContentListener(nsIURIContentListener * aCo
   
 }
 
-NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel * aChannel, 
+NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel *channel, 
                                    nsURILoadCommand aCommand,
                                    const char * aWindowTarget,
                                    nsISupports * aWindowContext)
 {
-  return OpenURIVia(aChannel, aCommand, aWindowTarget, aWindowContext, 0 /* ip address */); 
+  return OpenURIVia(channel, aCommand, aWindowTarget, aWindowContext, 0 /* ip address */); 
 }
 
 //
@@ -640,7 +644,7 @@ PRBool ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem, nsIDocShellTreeItem*
   return SameOrSubdomainOfTarget(originDocumentURI, targetPrincipalURI, documentDomainSet);
 }
 
-NS_IMETHODIMP nsURILoader::GetTarget(nsIChannel * aChannel, nsCString &aWindowTarget, 
+NS_IMETHODIMP nsURILoader::GetTarget(nsIChannel *channel, nsCString &aWindowTarget, 
                                      nsISupports * aWindowContext,
                                      nsISupports ** aRetargetedWindowContext)
 {
@@ -767,7 +771,7 @@ NS_IMETHODIMP nsURILoader::GetTarget(nsIChannel * aChannel, nsCString &aWindowTa
   return NS_OK;
 }
 
-NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel * aChannel, 
+NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel *channel, 
                                       nsURILoadCommand aCommand,
                                       const char * aWindowTarget,
                                       nsISupports * aOriginalWindowContext,
@@ -775,19 +779,19 @@ NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel * aChannel,
 {
   // we need to create a DocumentOpenInfo object which will go ahead and open the url
   // and discover the content type....
-
   nsresult rv = NS_OK;
   nsDocumentOpenInfo* loader = nsnull;
 
-  if (!aChannel) return NS_ERROR_NULL_POINTER;
+  if (!channel) return NS_ERROR_NULL_POINTER;
 
   // Let the window context's uriListener know that the open is starting.  This
   // gives that window a chance to abort the load process.
   nsCOMPtr<nsIURIContentListener> winContextListener(do_GetInterface(aOriginalWindowContext));
   if(winContextListener)
     {
+      // get channel from request
     nsCOMPtr<nsIURI> uri;
-    aChannel->GetURI(getter_AddRefs(uri));
+    channel->GetURI(getter_AddRefs(uri));
     if(uri)
       {
       PRBool doAbort = PR_FALSE;
@@ -800,7 +804,7 @@ NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel * aChannel,
 
   nsCAutoString windowTarget(aWindowTarget);
   nsCOMPtr<nsISupports> retargetedWindowContext;
-  NS_ENSURE_SUCCESS(GetTarget(aChannel, windowTarget, aOriginalWindowContext, getter_AddRefs(retargetedWindowContext)), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(GetTarget(channel, windowTarget, aOriginalWindowContext, getter_AddRefs(retargetedWindowContext)), NS_ERROR_FAILURE);
 
   NS_NEWXPCOM(loader, nsDocumentOpenInfo);
   if (!loader) return NS_ERROR_OUT_OF_MEMORY;
@@ -812,7 +816,7 @@ NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel * aChannel,
   loader->Init(retargetedWindowContext, aOriginalWindowContext);    // Extra Info
 
   // now instruct the loader to go ahead and open the url
-  rv = loader->Open(aChannel, aCommand, windowTarget, retargetedWindowContext);
+  rv = loader->Open(channel, aCommand, windowTarget, retargetedWindowContext);
   NS_RELEASE(loader);
 
   return rv;
@@ -962,7 +966,7 @@ PRBool nsURILoader::ShouldHandleContent(nsIURIContentListener * aCntListener,
 NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
                                            nsURILoadCommand aCommand,
                                            const char * aWindowTarget,
-                                           nsIChannel * aChannel, 
+                                           nsIRequest *request, 
                                            nsISupports * aCtxt, 
                                            nsIURIContentListener * aContentListener,
                                            nsISupports * aSrcWindowContext,
@@ -971,7 +975,7 @@ NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
                                            PRBool * aAbortProcess)
 {
   NS_ENSURE_ARG(aContentType);
-  NS_ENSURE_ARG(aChannel);
+  NS_ENSURE_ARG(request);
 
   // okay, now we've discovered the content type. We need to do the following:
   // (1) We always start with the original content listener (if any) that originated the request
@@ -1051,7 +1055,7 @@ NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
   rv = nsComponentManager::CreateInstance(handlerContractID, nsnull, NS_GET_IID(nsIContentHandler), getter_AddRefs(aContentHandler));
   if (NS_SUCCEEDED(rv)) // we did indeed have a content handler for this type!! yippee...
   {
-      rv = aContentHandler->HandleContent(aContentType, "view", aWindowTarget, aSrcWindowContext, aChannel);
+      rv = aContentHandler->HandleContent(aContentType, "view", aWindowTarget, aSrcWindowContext, request);
       *aAbortProcess = PR_TRUE;
   }
   

@@ -228,7 +228,7 @@ nsResProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
         return rv;
     }
 
-    *result = channel;
+    *result = (nsIChannel*)(nsIResChannel*)channel;
     return NS_OK;
 }
 

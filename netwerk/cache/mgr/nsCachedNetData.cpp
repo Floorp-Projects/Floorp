@@ -645,7 +645,7 @@ nsCachedNetData::GetInUse(PRBool *aInUse)
     rv = GetUpdateInProgress(aInUse);
     if (NS_FAILED(rv)) return rv;
     if (!*aInUse)
-        *aInUse = (mChannelCount != 0);
+        *aInUse = (mTransportCount != 0);
     return NS_OK;
 }
 
@@ -1122,24 +1122,22 @@ nsCachedNetData::GetCache(nsINetDataCache* *aCache)
 }
 
 NS_IMETHODIMP
-nsCachedNetData::NewChannel(nsILoadGroup* aLoadGroup, nsIChannel* *aChannel)
+nsCachedNetData::NewTransport(nsILoadGroup* aLoadGroup, nsITransport* *aTransport)
 {
     nsresult rv;
-    nsCOMPtr<nsIChannel> channel;
+    nsCOMPtr<nsITransport> transport;
 
     CHECK_AVAILABILITY();
 
-    rv =  mRecord->NewChannel(0, getter_AddRefs(channel));
+    rv =  mRecord->NewTransport(0, getter_AddRefs(transport));
     if (NS_FAILED(rv)) return rv;
 
-    nsCacheEntryChannel *cacheEntryChannel;
-    cacheEntryChannel = new nsCacheEntryChannel(this, channel, aLoadGroup);
-    if (!cacheEntryChannel)
+    nsCacheEntryTransport *cacheEntryTransport;
+    cacheEntryTransport = new nsCacheEntryTransport(this, transport, aLoadGroup);
+    if (!cacheEntryTransport)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    *aChannel = cacheEntryChannel;
-    NS_ADDREF(*aChannel);
-
+    NS_ADDREF(*aTransport = cacheEntryTransport);
     return NS_OK;
 }
 
@@ -1175,22 +1173,19 @@ public:
         // Just in case the protocol handler forgot to set this flag...
         mCacheEntry->SetFlag(nsCachedNetData::UPDATE_IN_PROGRESS);
 
-        rv = mCacheEntry->NewChannel(0, getter_AddRefs(mChannel));
+        rv = mCacheEntry->NewTransport(nsnull, getter_AddRefs(mTransport));
         if (NS_FAILED(rv)) return rv;
 
-        rv = mChannel->SetTransferOffset(aStartingOffset);
-        if (NS_FAILED(rv)) return rv;
-
-        return mChannel->OpenOutputStream(getter_AddRefs(mCacheStream));
+        return mTransport->OpenOutputStream(0, -1, 0, getter_AddRefs(mCacheStream));
     }
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD OnStartRequest(nsIChannel *channel, nsISupports *ctxt) {
-        return mOriginalListener->OnStartRequest(channel, ctxt);
+    NS_IMETHOD OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
+        return mOriginalListener->OnStartRequest(request, ctxt);
     }
 
-    NS_IMETHOD OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
+    NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports *ctxt,
                              nsresult aStatus, const PRUnichar* aStatusArg) {
         if (NS_FAILED(aStatus)) {
             mCacheEntry->SetFlag(nsCachedNetData::TRUNCATED_CONTENT);
@@ -1208,14 +1203,14 @@ public:
         // Tell any stream-as-file observers that the file has been completely written
         mCacheEntry->Notify(nsIStreamAsFileObserver::NOTIFY_AVAILABLE, NS_OK);
 
-        return mOriginalListener->OnStopRequest(channel, ctxt, aStatus, aStatusArg);
+        return mOriginalListener->OnStopRequest(request, ctxt, aStatus, aStatusArg);
     }
 
-    NS_IMETHOD OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
+    NS_IMETHOD OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
                                nsIInputStream *inStr, PRUint32 sourceOffset,
                                PRUint32 count) {
         mOriginalStream = inStr;
-        return mOriginalListener->OnDataAvailable(channel, ctxt, 
+        return mOriginalListener->OnDataAvailable(request, ctxt, 
                                                   NS_STATIC_CAST(nsIInputStream*, this),
                                                   sourceOffset, count);
     }
@@ -1306,7 +1301,7 @@ private:
     nsCOMPtr<nsIOutputStream>    mCacheStream;
 
     nsCOMPtr<nsIInputStream>     mOriginalStream;
-    nsCOMPtr<nsIChannel>         mChannel;
+    nsCOMPtr<nsITransport>       mTransport;
 };
 
 

@@ -21,10 +21,9 @@
  */
 
 #include "nsISupports.idl"
-#include "nsrootidl.idl"
 
 interface nsIFile;
-interface nsIChannel;
+interface nsITransport;
 interface nsINetDataCache;
 
 /**
@@ -108,15 +107,10 @@ interface nsINetDataCacheRecord : nsISupports
     void delete();
 
     /**
-     * Create a channel for reading or writing a stream of content into the
-     * entry.  However, many of the nsIChannel methods may return
-     * NS_NOT_IMPLEMENTED, including:
-     *
-     *    + GetURI()
-     *    + GetContentType()
-     *    + GetContentLength()
+     * Create a transport for reading or writing a stream of content into the
+     * entry.
      */
-    nsIChannel newChannel(in nsILoadGroup loadGroup);
+    nsITransport newTransport(in nsILoadGroup loadGroup);
 
     /**
      * If a cache is implemented such that it stores each URI's content in an

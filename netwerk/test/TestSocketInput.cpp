@@ -33,7 +33,8 @@
 #include "nsISocketTransportService.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
-#include "nsIChannel.h"
+#include "nsITransport.h"
+#include "nsIRequest.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 
@@ -53,14 +54,14 @@ public:
   NS_DECL_ISUPPORTS
 
   // IStreamListener interface...
-  NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports* context);
+  NS_IMETHOD OnStartRequest(nsIRequest *request, nsISupports* context);
 
-  NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports* context,
+  NS_IMETHOD OnDataAvailable(nsIRequest *request, nsISupports* context,
                              nsIInputStream *aIStream, 
                              PRUint32 aSourceOffset,
                              PRUint32 aLength);
 
-  NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
+  NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports* context,
                            nsresult aStatus, const PRUnichar* aStatusArg);
 
 };
@@ -81,7 +82,7 @@ NS_IMPL_ISUPPORTS(InputTestConsumer,kIStreamListenerIID);
 
 
 NS_IMETHODIMP
-InputTestConsumer::OnStartRequest(nsIChannel* channel, nsISupports* context)
+InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)
 {
   printf("+++ OnStartRequest +++\n");
   return NS_OK;
@@ -89,7 +90,7 @@ InputTestConsumer::OnStartRequest(nsIChannel* channel, nsISupports* context)
 
 
 NS_IMETHODIMP
-InputTestConsumer::OnDataAvailable(nsIChannel* channel, 
+InputTestConsumer::OnDataAvailable(nsIRequest *request, 
                                    nsISupports* context,
                                    nsIInputStream *aIStream, 
                                    PRUint32 aSourceOffset,
@@ -110,7 +111,7 @@ InputTestConsumer::OnDataAvailable(nsIChannel* channel,
 
 
 NS_IMETHODIMP
-InputTestConsumer::OnStopRequest(nsIChannel* channel, nsISupports* context,
+InputTestConsumer::OnStopRequest(nsIRequest *request, nsISupports* context,
                                  nsresult aStatus, const PRUnichar* aStatusArg)
 {
   gKeepRunning = 0;
@@ -159,11 +160,12 @@ main(int argc, char* argv[])
   NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  nsIChannel* transport;
+  nsITransport* transport;
 
   rv = sts->CreateTransport(hostName, port, nsnull, -1, 0, 0, &transport);
   if (NS_SUCCEEDED(rv)) {
-    transport->AsyncRead(nsnull, new InputTestConsumer);
+    nsCOMPtr<nsIRequest> request;
+    transport->AsyncRead(nsnull, new InputTestConsumer, 0, -1, 0, getter_AddRefs(request));
 
     NS_RELEASE(transport);
   }

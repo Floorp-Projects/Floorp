@@ -95,8 +95,11 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
   // print a load error on bad status
   if (NS_FAILED(aStatus)) {
     if (aLoader) {
+      nsCOMPtr<nsIRequest> request;
       nsCOMPtr<nsIChannel> channel;
-      aLoader->GetChannel(getter_AddRefs(channel));
+      aLoader->GetRequest(getter_AddRefs(request));
+      if (request)
+          channel = do_QueryInterface(request);
       if (channel) {
         nsCOMPtr<nsIURI> uri;
         channel->GetURI(getter_AddRefs(uri));

@@ -116,27 +116,25 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRequest
-    NS_IMETHOD GetName(PRUnichar* *result) { 
-        NS_NOTREACHED("nsCachedChromeChannel::GetName");
-        return NS_ERROR_NOT_IMPLEMENTED;
-    }
+    NS_IMETHOD GetName(PRUnichar* *result) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD IsPending(PRBool *_retval) { *_retval = PR_TRUE; return NS_OK; }
     NS_IMETHOD GetStatus(nsresult *status) { *status = mStatus; return NS_OK; }
     NS_IMETHOD Cancel(nsresult status)  { mStatus = status; return NS_OK; }
     NS_IMETHOD Suspend(void) { return NS_OK; }
     NS_IMETHOD Resume(void)  { return NS_OK; }
-
-    // nsIChannel    
+    
+// nsIChannel    
     NS_DECL_NSICHANNEL
+
 };
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* nsCachedChromeChannel::gLog;
 #endif
 
-NS_IMPL_ADDREF(nsCachedChromeChannel);
-NS_IMPL_RELEASE(nsCachedChromeChannel);
-NS_IMPL_QUERY_INTERFACE2(nsCachedChromeChannel, nsIRequest, nsIChannel);
+NS_IMPL_ISUPPORTS2(nsCachedChromeChannel, 
+                   nsIChannel, 
+                   nsIRequest);
 
 nsresult
 nsCachedChromeChannel::Create(nsIURI* aURI, nsIChannel** aResult)
@@ -211,7 +209,7 @@ nsCachedChromeChannel::SetURI(nsIURI* aURI)
 }
 
 NS_IMETHODIMP
-nsCachedChromeChannel::OpenInputStream(nsIInputStream **_retval)
+nsCachedChromeChannel::Open(nsIInputStream **_retval)
 {
 //    NS_NOTREACHED("don't do that");
     *_retval = nsnull;
@@ -219,15 +217,7 @@ nsCachedChromeChannel::OpenInputStream(nsIInputStream **_retval)
 }
 
 NS_IMETHODIMP
-nsCachedChromeChannel::OpenOutputStream(nsIOutputStream **_retval)
-{
-    NS_NOTREACHED("don't do that");
-    *_retval = nsnull;
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsCachedChromeChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
+nsCachedChromeChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
     if (listener) {
         nsresult rv;
@@ -237,7 +227,7 @@ nsCachedChromeChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
                    ("nsCachedChromeChannel[%p]: adding self to load group %p",
                     this, mLoadGroup.get()));
 
-            rv = mLoadGroup->AddChannel(this, nsnull);
+            rv = mLoadGroup->AddRequest(this, nsnull);
             if (NS_FAILED(rv)) return rv;
         }
 
@@ -257,7 +247,7 @@ nsCachedChromeChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
                        ("nsCachedChromeChannel[%p]: removing self from load group %p",
                         this, mLoadGroup.get()));
 
-                (void) mLoadGroup->RemoveChannel(this, nsnull, nsnull, nsnull);
+                (void) mLoadGroup->RemoveRequest(this, nsnull, nsnull, nsnull);
             }
 
             return rv;
@@ -271,10 +261,9 @@ nsCachedChromeChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 }
 
 NS_IMETHODIMP
-nsCachedChromeChannel::AsyncWrite(nsIStreamProvider *provider, nsISupports *ctxt)
+nsCachedChromeChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 {
-    NS_NOTREACHED("don't do that");
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -289,113 +278,6 @@ nsCachedChromeChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 {
     mLoadAttributes = aLoadAttributes;
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCachedChromeChannel::GetContentType(char * *aContentType)
-{
-    *aContentType = nsXPIDLCString::Copy("text/cached-xul");
-    return *aContentType ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-NS_IMETHODIMP
-nsCachedChromeChannel::SetContentType(const char *aContentType)
-{
-    // Do not allow the content-type to be changed.
-    NS_NOTREACHED("don't do that");
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsCachedChromeChannel::GetContentLength(PRInt32 *aContentLength)
-{
-    NS_NOTREACHED("don't do that");
-    *aContentLength = 0;
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsCachedChromeChannel::SetContentLength(PRInt32 aContentLength)
-{
-    NS_NOTREACHED("nsCachedChromeChannel::SetContentLength");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCachedChromeChannel::GetTransferOffset(PRUint32 *aTransferOffset)
-{
-    NS_NOTREACHED("nsCachedChromeChannel::GetTransferOffset");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCachedChromeChannel::SetTransferOffset(PRUint32 aTransferOffset)
-{
-    NS_NOTREACHED("nsCachedChromeChannel::SetTransferOffset");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCachedChromeChannel::GetTransferCount(PRInt32 *aTransferCount)
-{
-    NS_NOTREACHED("nsCachedChromeChannel::GetTransferCount");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCachedChromeChannel::SetTransferCount(PRInt32 aTransferCount)
-{
-    NS_NOTREACHED("nsCachedChromeChannel::SetTransferCount");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCachedChromeChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
-{
-    NS_NOTREACHED("nsCachedChromeChannel::GetBufferSegmentSize");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCachedChromeChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
-{
-    NS_NOTREACHED("nsCachedChromeChannel::SetBufferSegmentSize");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCachedChromeChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
-{
-    NS_NOTREACHED("nsCachedChromeChannel::GetBufferMaxSize");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCachedChromeChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
-{
-    NS_NOTREACHED("nsCachedChromeChannel::SetBufferMaxSize");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCachedChromeChannel::GetLocalFile(nsIFile* *file)
-{
-    *file = nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCachedChromeChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
-{
-    *aPipeliningAllowed = PR_FALSE;
-    return NS_OK;
-}
- 
-NS_IMETHODIMP
-nsCachedChromeChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
-{
-    NS_NOTREACHED("SetPipeliningAllowed");
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -441,12 +323,34 @@ nsCachedChromeChannel::SetNotificationCallbacks(nsIInterfaceRequestor * aNotific
     return NS_OK;	// ignored
 }
 
-
 NS_IMETHODIMP 
-nsCachedChromeChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
+nsCachedChromeChannel::GetContentType(char * *aContentType)
 {
-    *aSecurityInfo = nsnull;
-    return NS_OK;
+    *aContentType = nsXPIDLCString::Copy("text/cached-xul");
+    return *aContentType ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP
+nsCachedChromeChannel::SetContentType(const char *aContentType)
+{
+    // Do not allow the content-type to be changed.
+    NS_NOTREACHED("don't do that");
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsCachedChromeChannel::GetContentLength(PRInt32 *aContentLength)
+{
+    NS_NOTREACHED("don't do that");
+    *aContentLength = 0;
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsCachedChromeChannel::SetContentLength(PRInt32 aContentLength)
+{
+    NS_NOTREACHED("nsCachedChromeChannel::SetContentLength");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
@@ -523,12 +427,14 @@ nsCachedChromeChannel::HandleStopLoadEvent(PLEvent* aEvent)
     // remove it from the load group.
     LoadEvent* event = NS_REINTERPRET_CAST(LoadEvent*, aEvent);
     nsCachedChromeChannel* channel = event->mChannel;
+    nsIRequest* request = NS_REINTERPRET_CAST(nsIRequest*, channel);
+
 
     PR_LOG(gLog, PR_LOG_DEBUG,
            ("nsCachedChromeChannel[%p]: firing OnStopRequest for %p",
             channel, channel->mListener.get()));
 
-    (void) channel->mListener->OnStopRequest(channel, channel->mContext, 
+    (void) channel->mListener->OnStopRequest(request, channel->mContext, 
                                              channel->mStatus, nsnull);
 
     if (channel->mLoadGroup) {
@@ -536,7 +442,7 @@ nsCachedChromeChannel::HandleStopLoadEvent(PLEvent* aEvent)
                ("nsCachedChromeChannel[%p]: removing self from load group %p",
                 channel, channel->mLoadGroup.get()));
 
-        (void) channel->mLoadGroup->RemoveChannel(channel, nsnull, nsnull, nsnull);
+        (void) channel->mLoadGroup->RemoveRequest(request, nsnull, nsnull, nsnull);
     }
 
     channel->mListener = nsnull;

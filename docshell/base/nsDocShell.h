@@ -191,9 +191,9 @@ protected:
    NS_IMETHOD EnsureDeviceContext();
    NS_IMETHOD CreateAboutBlankContentViewer();
    NS_IMETHOD CreateContentViewer(const char* aContentType, 
-      nsIChannel* aOpenedChannel, nsIStreamListener** aContentHandler);
+      nsIRequest *request, nsIStreamListener** aContentHandler);
    NS_IMETHOD NewContentViewerObj(const char* aContentType, 
-      nsIChannel* aOpenedChannel, nsILoadGroup* aLoadGroup, 
+      nsIRequest *request, nsILoadGroup* aLoadGroup, 
       nsIStreamListener** aContentHandler, nsIContentViewer** aViewer);
    NS_IMETHOD SetupNewViewer(nsIContentViewer* aNewViewer);
 

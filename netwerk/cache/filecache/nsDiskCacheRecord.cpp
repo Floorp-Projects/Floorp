@@ -68,7 +68,7 @@ nsDiskCacheRecord::nsDiskCacheRecord(nsIDBAccessor* db, nsNetDiskCache* aCache) 
   mDB(db) ,
   mInfo(0) ,
   mInfoSize(0) ,
-  mNumChannels(0) ,
+  mNumTransports(0) ,
   mDiskCache(aCache) 
 {
   NS_INIT_REFCNT();
@@ -284,7 +284,7 @@ nsDiskCacheRecord::SetSecurityInfo (nsISupports  * o_SecurityInfo)
 NS_IMETHODIMP
 nsDiskCacheRecord::Delete(void)
 {
-  if(mNumChannels)
+  if(mNumTransports)
     return NS_ERROR_NOT_AVAILABLE ;
 
   // Delete any file associated with this entry. Remember we might
@@ -333,19 +333,20 @@ nsDiskCacheRecord::GetFile(nsIFile * *aFile)
 }
 
 NS_IMETHODIMP
-nsDiskCacheRecord::NewChannel(nsILoadGroup *loadGroup, nsIChannel **_retval) 
+nsDiskCacheRecord::NewTransport(nsILoadGroup *loadGroup, nsITransport **_retval) 
 {
-  nsDiskCacheRecordChannel* channel = new nsDiskCacheRecordChannel(this, loadGroup) ;
-  if(!channel) 
-    return NS_ERROR_OUT_OF_MEMORY ;
+  nsDiskCacheRecordTransport* transport =
+      new nsDiskCacheRecordTransport(this, loadGroup);
+  if(!transport) 
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  nsresult rv = channel->Init() ;
+  nsresult rv = transport->Init();
   if(NS_FAILED(rv))
-    return rv ;
+    return rv;
 
-  NS_ADDREF(channel) ;
-  *_retval = NS_STATIC_CAST(nsIChannel*, channel) ;
-  return NS_OK ;
+  NS_ADDREF(transport);
+  *_retval = NS_STATIC_CAST(nsITransport*, transport);
+  return NS_OK;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -561,3 +562,4 @@ nsDiskCacheRecord::UpdateFileInfo()
     mFile = spec;
   return rv;
 }
+

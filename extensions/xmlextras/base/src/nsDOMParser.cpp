@@ -82,7 +82,9 @@ nsDOMParserChannel::~nsDOMParserChannel()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsDOMParserChannel, nsIRequest, nsIChannel)
+NS_IMPL_ISUPPORTS2(nsDOMParserChannel, 
+                   nsIChannel,
+                   nsIRequest)
 
 /* boolean isPending (); */
 NS_IMETHODIMP nsDOMParserChannel::GetName(PRUnichar* *result)
@@ -159,38 +161,6 @@ NS_IMETHODIMP nsDOMParserChannel::SetURI(nsIURI * aURI)
   return NS_OK;
 }
 
-/* attribute unsigned long transferOffset; */
-NS_IMETHODIMP nsDOMParserChannel::GetTransferOffset(PRUint32 *aTransferOffset)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsDOMParserChannel::SetTransferOffset(PRUint32 aTransferOffset)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute long transferCount; */
-NS_IMETHODIMP nsDOMParserChannel::GetTransferCount(PRInt32 *aTransferCount)
-{
-  NS_ENSURE_ARG(aTransferCount);
-  *aTransferCount = -1;
-  return NS_OK;
-}
-NS_IMETHODIMP nsDOMParserChannel::SetTransferCount(PRInt32 aTransferCount)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute nsLoadFlags loadAttributes; */
-NS_IMETHODIMP nsDOMParserChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsDOMParserChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 /* attribute string contentType; */
 NS_IMETHODIMP nsDOMParserChannel::GetContentType(char * *aContentType)
 {
@@ -232,6 +202,16 @@ NS_IMETHODIMP nsDOMParserChannel::SetOwner(nsISupports * aOwner)
   return NS_OK;
 }
 
+/* attribute nsLoadFlags loadAttributes; */
+NS_IMETHODIMP nsDOMParserChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP nsDOMParserChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* attribute nsILoadGroup loadGroup; */
 NS_IMETHODIMP nsDOMParserChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 {
@@ -262,62 +242,12 @@ NS_IMETHODIMP nsDOMParserChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* attribute unsigned long bufferSegmentSize; */
-NS_IMETHODIMP nsDOMParserChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsDOMParserChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
+NS_IMETHODIMP nsDOMParserChannel::Open(nsIInputStream **_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* attribute unsigned long bufferMaxSize; */
-NS_IMETHODIMP nsDOMParserChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsDOMParserChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* readonly attribute nsIFile localFile; */
-NS_IMETHODIMP nsDOMParserChannel::GetLocalFile(nsIFile * *aLocalFile)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute boolean pipeliningAllowed; */
-NS_IMETHODIMP nsDOMParserChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsDOMParserChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* nsIInputStream openInputStream (); */
-NS_IMETHODIMP nsDOMParserChannel::OpenInputStream(nsIInputStream **_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* nsIOutputStream openOutputStream (); */
-NS_IMETHODIMP nsDOMParserChannel::OpenOutputStream(nsIOutputStream **_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void asyncRead (in nsIStreamListener listener, in nsISupports ctxt); */
-NS_IMETHODIMP nsDOMParserChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void asyncWrite (in nsIStreamProvider provider, in nsISupports ctxt); */
-NS_IMETHODIMP nsDOMParserChannel::AsyncWrite(nsIStreamProvider *provider, nsISupports *ctxt)
+NS_IMETHODIMP nsDOMParserChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -509,6 +439,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   if (principal) {
     channel->SetOwner(principal);
   }
+  nsCOMPtr<nsIRequest> request = NS_STATIC_CAST(nsIRequest*, parserChannel);
 
   // Tell the document to start loading
   nsCOMPtr<nsIStreamListener> listener;
@@ -525,15 +456,15 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   // Now start pumping data to the listener
   nsresult status;
 
-  rv = listener->OnStartRequest(channel, nsnull);
-  channel->GetStatus(&status);
+  rv = listener->OnStartRequest(request, nsnull);
+  request->GetStatus(&status);
 
   if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(status)) {
-    rv = listener->OnDataAvailable(channel, nsnull, stream, 0, contentLength);
-    channel->GetStatus(&status);
+    rv = listener->OnDataAvailable(request, nsnull, stream, 0, contentLength);
+    request->GetStatus(&status);
   }
 
-  rv = listener->OnStopRequest(channel, nsnull, status, nsnull);
+  rv = listener->OnStopRequest(request, nsnull, status, nsnull);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
   *_retval = domDocument;

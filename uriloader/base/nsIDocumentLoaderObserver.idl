@@ -28,8 +28,7 @@
 
 interface nsIDocumentLoader;
 interface nsIURI;
-interface nsIChannel;
-
+interface nsIRequest;
 /* we'll be phasing this interface out in place of a new
    improved progress sink interface
 */
@@ -55,7 +54,7 @@ interface nsIDocumentLoaderObserver : nsISupports
   /**
    * Notify the observer that a document has been completely loaded.
    */
-  void onEndDocumentLoad(in nsIDocumentLoader loader, in nsIChannel aChannel, in unsigned long aStatus);
+  void onEndDocumentLoad(in nsIDocumentLoader loader, in nsIRequest request, in unsigned long aStatus);
 
   /**
    * Notify the observer that the specified nsIURI has just started to load.
@@ -63,26 +62,26 @@ interface nsIDocumentLoaderObserver : nsISupports
    * This notification occurs after DNS resolution, and a connection to the
    * server has been established.
    */
-  void onStartURLLoad(in nsIDocumentLoader aLoader, in nsIChannel channel);
+  void onStartURLLoad(in nsIDocumentLoader aLoader, in nsIRequest request);
   
   /**
    * Notify the observer that progress has occurred in the loading of the 
    * specified URL...
    */
   void onProgressURLLoad(in nsIDocumentLoader aLoader,
-                         in nsIChannel aChannel, in unsigned long aProgress, 
+                         in nsIRequest aRequest, in unsigned long aProgress, 
                          in unsigned long aProgressMax);
 
   /**
    * Notify the observer that status text is available regarding the URL
    * being loaded...
    */
-  [noscript] void onStatusURLLoad(in nsIDocumentLoader loader, in nsIChannel channel, in nsStringRef aMsg);
+  [noscript] void onStatusURLLoad(in nsIDocumentLoader loader, in nsIRequest request, in nsStringRef aMsg);
 
   /**
    * Notify the observer that the specified nsIURI has finished loading.
    */
-  void onEndURLLoad(in nsIDocumentLoader aLoader, in nsIChannel aChannel, in unsigned long aStatus);
+  void onEndURLLoad(in nsIDocumentLoader aLoader, in nsIRequest aRequest, in unsigned long aStatus);
 };
 
 /* the following is a transition define. nsIDocumentLoaderObserver wasn't scriptable and now it is.

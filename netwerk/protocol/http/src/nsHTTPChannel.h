@@ -27,6 +27,7 @@
 
 #include "nsIHTTPChannel.h"
 #include "nsIChannel.h"
+#include "nsITransport.h"
 #include "nsHTTPEnums.h"
 #include "nsIURI.h"
 #include "nsHTTPHandler.h"
@@ -45,6 +46,7 @@
 #include "nsIPrompt.h"
 #include "nsIHTTPEventSink.h"
 #include "nsIStreamAsFile.h"
+
 class nsIFile;
 
 class nsHTTPRequest;
@@ -88,13 +90,13 @@ public:
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIPROGRESSEVENTSINK
     NS_DECL_NSIPROXY
-		NS_DECL_NSISTREAMASFILE
+	NS_DECL_NSISTREAMASFILE
 		
     // nsHTTPChannel methods:
     nsresult            Authenticate(const char *iChallenge,
                                      PRBool bProxyAuth = PR_FALSE);
     nsresult            Init();
-    nsresult            Open(PRBool bIgnoreCache=PR_FALSE);
+    nsresult            Begin(PRBool bIgnoreCache=PR_FALSE);
     nsresult            Redirect(const char *aURL,
                                  nsIChannel **aResult, PRInt32 aStatusCode);
 
@@ -192,11 +194,9 @@ protected:
     // (such as socks) we want to reverse conditional proxy behavior
     PRBool                              mProxyTransparent;
    
-    PRUint32                            mBufferSegmentSize;
-    PRUint32                            mBufferMaxSize;
     nsresult                            mStatus;
 
-    nsCOMPtr<nsIChannel>                mCacheTransport;
+    nsCOMPtr<nsITransport>              mCacheTransport;
 
     PRBool                              mPipeliningAllowed;
     nsHTTPPipelinedRequest*             mPipelinedRequest;
@@ -204,7 +204,7 @@ protected:
     // Stream as file
     nsCOMPtr<nsISupportsArray>						mStreamAsFileObserverArray;
     PRBool                              mApplyConversion;
-    PRBool                              mOpenInputStreamHasEventQueue;
+    PRBool                              mOpenHasEventQueue;
 };
 
 #include "nsIRunnable.h"

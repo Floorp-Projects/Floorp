@@ -28,7 +28,7 @@
 static NS_DEFINE_IID(kINetDataCacheRecord, NS_INETDATACACHERECORD_IID);
 
 nsMemCacheRecord::nsMemCacheRecord()
-    : mKey(0), mKeyLength(0), mMetaData(0), mMetaDataLength(0), mNumChannels(0)
+    : mKey(0), mKeyLength(0), mMetaData(0), mMetaDataLength(0), mNumTransports(0)
 {
     NS_INIT_REFCNT();
 }
@@ -156,7 +156,7 @@ nsMemCacheRecord::SetSecurityInfo (nsISupports  * o_SecurityInfo)
 NS_IMETHODIMP
 nsMemCacheRecord::Delete(void)
 {
-    if (mNumChannels)
+    if (mNumTransports)
         return NS_ERROR_NOT_AVAILABLE;
   
     return mCache->Delete(this);
@@ -169,16 +169,16 @@ nsMemCacheRecord::GetFile(nsIFile* *aFilename)
 }
 
 NS_IMETHODIMP
-nsMemCacheRecord::NewChannel(nsILoadGroup *aLoadGroup, nsIChannel* *aResult)
+nsMemCacheRecord::NewTransport(nsILoadGroup *aLoadGroup, nsITransport* *aResult)
 {
     NS_ENSURE_ARG(aResult);
 
-    nsMemCacheChannel* channel = new nsMemCacheChannel(this, aLoadGroup);
-    if (!channel)
+    nsMemCacheTransport* transport = new nsMemCacheTransport(this, aLoadGroup);
+    if (!transport)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    NS_ADDREF(channel);
-    *aResult = NS_STATIC_CAST(nsIChannel*, channel);
+    NS_ADDREF(transport);
+    *aResult = NS_STATIC_CAST(nsITransport*, transport);
     return NS_OK;
 
 }

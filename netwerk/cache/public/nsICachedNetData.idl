@@ -20,13 +20,11 @@
  * Contributor(s): 
  */
 
-#include "nsrootidl.idl"
 #include "nsISupports.idl"
-
 
 interface nsIURI;
 interface nsIObserver;
-interface nsIChannel;
+interface nsITransport;
 interface nsINetDataCache;
 interface nsINetDataCacheRecord;
 interface nsILoadGroup;
@@ -214,19 +212,14 @@ interface nsICachedNetData : nsISupports
     readonly attribute nsINetDataCache cache;
 
     /**
-     * Create a channel for reading or writing a stream of content into the
-     * entry.  It is expected that many of the nsIChannel methods return
-     * NS_NOT_IMPLEMENTED, including:
+     * Create a transport for reading or writing a stream of content into the
+     * entry.
      *
-     *    + GetURI()
-     *    + GetContentType()
-     *    + GetContentLength()
-     *
-     * Though nsIChannel provides for both async and synchronous I/O APIs, both
-     * may not be implemented.  Only AsyncRead() and OpenOutputStream() is
-     * required.  
+     * Though nsITransport provides for both async and synchronous I/O APIs,
+     * both may not be implemented.  Only AsyncRead() and OpenOutputStream()
+     * is required.  
      */
-    nsIChannel newChannel(in nsILoadGroup aLoadGroup);
+    nsITransport newTransport(in nsILoadGroup aLoadGroup);
 
     /**
      * This method can be used by a caching protocol handler to store data in

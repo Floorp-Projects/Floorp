@@ -33,12 +33,12 @@
 // Design Overview
 //
 // A stream provider proxy maintains a pipe.  When requested to provide data
-// to the channel, whatever data is in the pipe (up to the amount requested)
-// is provided to the channel.  If there is no data in the pipe, then the 
+// to the request, whatever data is in the pipe (up to the amount requested)
+// is provided to the request.  If there is no data in the pipe, then the 
 // proxy posts an asynchronous event for more data, and returns WOULD_BLOCK
-// indicating that the channel should suspend itself.
+// indicating that the request should suspend itself.
 //
-// The channel is only resumed once the event has been successfully handled;
+// The request is only resumed once the event has been successfully handled;
 // meaning that data has been written to the pipe.
 //----------------------------------------------------------------------------
 //
@@ -59,12 +59,12 @@ class nsOnDataWritableEvent : public nsStreamObserverEvent
 {
 public:
     nsOnDataWritableEvent(nsStreamProxyBase *aProxy,
-                         nsIChannel *aChannel,
+                         nsIRequest *aRequest,
                          nsISupports *aContext,
                          nsIOutputStream *aSink,
                          PRUint32 aOffset,
                          PRUint32 aCount)
-        : nsStreamObserverEvent(aProxy, aChannel, aContext)
+        : nsStreamObserverEvent(aProxy, aRequest, aContext)
         , mSink(aSink)
         , mOffset(aOffset)
         , mCount(aCount)
@@ -89,7 +89,7 @@ NS_IMETHODIMP
 nsOnDataWritableEvent::HandleEvent()
 {
     LOG(("nsOnDataWritableEvent: HandleEvent [event=%x chan=%x]",
-        this, mChannel.get()));
+        this, mRequest.get()));
 
     nsStreamProviderProxy *providerProxy = 
         NS_STATIC_CAST(nsStreamProviderProxy *, mProxy);
@@ -101,18 +101,18 @@ nsOnDataWritableEvent::HandleEvent()
     }
 
     nsresult status = NS_OK;
-    nsresult rv = mChannel->GetStatus(&status);
+    nsresult rv = mRequest->GetStatus(&status);
     NS_ASSERTION(NS_SUCCEEDED(rv), "GetStatus failed");
 
     //
-    // We should only forward this event to the provider if the channel is
+    // We should only forward this event to the provider if the request is
     // still in a "good" state.  Because these events are being processed
     // asynchronously, there is a very real chance that the provider might
-    // have cancelled the channel after _this_ event was triggered.
+    // have cancelled the request after _this_ event was triggered.
     //
     if (NS_SUCCEEDED(status)) {
         LOG(("nsOnDataWritableEvent: Calling the consumer's OnDataWritable\n"));
-        rv = provider->OnDataWritable(mChannel, mContext, mSink, mOffset, mCount);
+        rv = provider->OnDataWritable(mRequest, mContext, mSink, mOffset, mCount);
         LOG(("nsOnDataWritableEvent: Done with the consumer's OnDataWritable [rv=%x]\n", rv));
 
         //
@@ -122,11 +122,11 @@ nsOnDataWritableEvent::HandleEvent()
             rv != NS_BASE_STREAM_WOULD_BLOCK ? rv : NS_OK);
 
         //
-        // The channel is already suspended, so unless the provider returned
-        // NS_BASE_STREAM_WOULD_BLOCK, we should wake up the channel.
+        // The request is already suspended, so unless the provider returned
+        // NS_BASE_STREAM_WOULD_BLOCK, we should wake up the request.
         //
         if (rv != NS_BASE_STREAM_WOULD_BLOCK)
-            mChannel->Resume();
+            mRequest->Resume();
     }
     else
         LOG(("nsOnDataWritableEvent: Not calling OnDataWritable"));
@@ -149,14 +149,14 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsStreamProviderProxy,
 //----------------------------------------------------------------------------
 //
 NS_IMETHODIMP
-nsStreamProviderProxy::OnStartRequest(nsIChannel *aChannel,
+nsStreamProviderProxy::OnStartRequest(nsIRequest *request,
                                       nsISupports *aContext)
 {
-    return nsStreamProxyBase::OnStartRequest(aChannel, aContext);
+    return nsStreamProxyBase::OnStartRequest(request, aContext);
 }
 
 NS_IMETHODIMP
-nsStreamProviderProxy::OnStopRequest(nsIChannel *aChannel,
+nsStreamProviderProxy::OnStopRequest(nsIRequest* request,
                                      nsISupports *aContext,
                                      nsresult aStatus,
                                      const PRUnichar *aStatusText)
@@ -167,7 +167,7 @@ nsStreamProviderProxy::OnStopRequest(nsIChannel *aChannel,
     mPipeIn = 0;
     mPipeOut = 0;
 
-    return nsStreamProxyBase::OnStopRequest(aChannel, aContext,
+    return nsStreamProxyBase::OnStopRequest(request, aContext,
                                             aStatus, aStatusText);
 }
 
@@ -189,7 +189,7 @@ nsWriteToSink(nsIInputStream *source,
 }
 
 NS_IMETHODIMP
-nsStreamProviderProxy::OnDataWritable(nsIChannel *aChannel,
+nsStreamProviderProxy::OnDataWritable(nsIRequest *aRequest,
                                       nsISupports *aContext,
                                       nsIOutputStream *aSink,
                                       PRUint32 aOffset,
@@ -215,7 +215,7 @@ nsStreamProviderProxy::OnDataWritable(nsIChannel *aChannel,
     }
 
     //
-    // Provide the channel with whatever data is already in the pipe (not
+    // Provide the request with whatever data is already in the pipe (not
     // exceeding aCount).
     //
     PRUint32 count;
@@ -236,7 +236,7 @@ nsStreamProviderProxy::OnDataWritable(nsIChannel *aChannel,
     // Post an event requesting the provider for more data.
     //
     nsOnDataWritableEvent *ev =
-        new nsOnDataWritableEvent(this, aChannel, aContext,
+        new nsOnDataWritableEvent(this, aRequest, aContext,
                                  mPipeOut, aOffset, aCount);
     if (!ev)
         return NS_ERROR_OUT_OF_MEMORY;

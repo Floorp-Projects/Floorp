@@ -83,7 +83,7 @@ private:
 	
     nsCOMPtr<nsISupports>   mAsyncConvContext;
 
-    nsresult do_OnDataAvailable (nsIChannel *aChannel, nsISupports *aContext, PRUint32 aSourceOffset, char *buffer, PRUint32 aCount);
+    nsresult do_OnDataAvailable (nsIRequest *request, nsISupports *aContext, PRUint32 aSourceOffset, char *buffer, PRUint32 aCount);
 
     PRBool      mCheckHeaderDone;
     PRBool      mGzipStreamEnded;

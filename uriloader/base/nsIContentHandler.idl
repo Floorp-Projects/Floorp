@@ -21,7 +21,7 @@
  */
 
 #include "nsISupports.idl"
-interface nsIChannel;
+interface nsIRequest;
 
 [scriptable, uuid(2F0F927A-8677-11d3-989D-001083010E9B)]
 interface nsIContentHandler : nsISupports
@@ -31,11 +31,11 @@ interface nsIContentHandler : nsISupports
 						trying to display. When is this typically used? Well, if handle
 						content needs to create a new window in order to display the content,
 						it needs to know about the dom window where the content originated from.
-	 aChannel is an open channel whose content type is already known (aContentType) */
+	 aRequest is a request whose content type is already known (aContentType) */
   void handleContent(in string aContentType,
                      in string aCommand,
                      in string aWindowTarget,
 					 in nsISupports aSourceContext,
-                     in nsIChannel aChannel);
+                     in nsIRequest aRequest);
 };
 
