@@ -343,8 +343,7 @@ static void		ConfirmWeWillRun();
 static Boolean	NetscapeIsRunning(ProcessSerialNumber& psn);
 static Boolean	LicenseHasExpired();
 static void 	CheckForOtherNetscapes();
-static void		Assert68020();
-static void		AssertSystem7();
+static void		AssertAppearanceLib();
 
 static const OSType kConferenceAppSig = 'Ncq¹';
 static const OSType kCalendarAppSig = 'NScl';
@@ -473,6 +472,7 @@ void FE_ClearTimeout( void* timer_id )
 
 #pragma mark -
 
+#if 0
 void Assert68020() 
 {
 	long response = 0;
@@ -489,6 +489,16 @@ void AssertSystem7()
 	OSErr err = ::Gestalt (gestaltSystemVersion, &response);
 	if (err || response < 0x700) {
 		::Alert (14001, NULL);
+		::ExitToShell ();
+	}
+}
+#endif
+
+static void AssertAppearanceLib ( )
+{
+	if ( ! UEnvironment::HasFeature(env_HasAppearance) ) {
+		::InitCursor();
+		::Alert (14004, NULL);
 		::ExitToShell ();
 	}
 }
@@ -839,7 +849,6 @@ CFrontApp::CFrontApp()
 	// We really should be adjusting this dynamically
 {
 	// Set environment features
-	
 	CEnvironment::SetAllFeatures();
 
 	// Static data members
@@ -1105,6 +1114,9 @@ CFrontApp::~CFrontApp()
 void CFrontApp::Initialize()
 //-----------------------------------
 {
+	// this will always succeed since we require AppearanceLib.
+	::RegisterAppearanceClient();
+	
 	// Insert commands to update before seleting menu into list
 	
 	sCommandsToUpdateBeforeSelectingMenu.push_front(cmd_Redo);
@@ -3710,9 +3722,9 @@ void main( void )
 	//		it's important that this is done VERY early
 	Memory_InitializeMemory();
 	
-	// ¥Êif we're not on a PowerPC, check that we're on an '020 or later
-	//		and have System 7 installed
+	// ¥Êinit environment and do sanity checking. Will exitToShell if conditions not met.
 	ConfirmWeWillRun();
+
 	RNG_RNGInit();		// This needs to be called before the main loop
 	ProcessSerialNumber psn;
 	if (NetscapeIsRunning(psn))
@@ -3761,10 +3773,9 @@ static void InitDebugging()
 
 static void ConfirmWeWillRun()
 {
-#ifndef powerc
-	Assert68020();
-	AssertSystem7();
-#endif
+	UEnvironment::InitEnvironment();
+	
+	AssertAppearanceLib();		// make sure AppearanceLib is installed
 	AssertRequiredGuts();
 }
 
