@@ -1488,7 +1488,7 @@ Rights Reserved.
 
 <hbox id="searchBox" persist="collapsed" align="center">
   <label id="searchCriteria" value="&SearchSubjectOrSender.label;"/>
-  <textbox id="searchInput" flex="1" onfocus="searchInputFocus();" oninput="onSearchInput(event);"/>
+  <textbox id="searchInput" flex="1" onfocus="this.select();" oninput="onSearchInput(event);"/>
   <button id="clearButton" label="&clearButton.label;" disabled="true" tooltiptext="&clearButton.tooltip;" oncommand="onClearSearch();" accesskey="&clearButton.accesskey;"/>
   <button id="advancedButton" label="&advancedButton.label;" tooltiptext="&advancedButton.tooltip;" oncommand="onAdvancedSearch();"/>
 </hbox>

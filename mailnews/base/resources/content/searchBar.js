@@ -82,6 +82,7 @@ function getDocumentElements()
   gStatusBar = document.getElementById('statusbar-icon');
   gSearchCriteria =document.getElementById('searchCriteria');
   gClearButton = document.getElementById('clearButton');
+  GetSearchInput();
 }
 
 function addListeners()
@@ -129,8 +130,10 @@ function onEnterInSearchBar()
      return;
    }
    else
+   {
+     gSearchInput.select();
      gClearButton.setAttribute("disabled", false); //coming into search enable clear button
-
+   }
 
    ClearThreadPaneSelection();
    ClearMessagePane();
@@ -232,11 +235,4 @@ function disableQuickSearchClearButton()
 {
  if (gClearButton)
    gClearButton.setAttribute("disabled", true); //going out of search disable clear button
-}
-
-function searchInputFocus()
-{
-  var searchInput = GetSearchInput();
-  if (searchInput.value)
-    searchInput.select();
 }
