@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *       Michael Ang <mang@subcarrier.org>
  */
 
 /*
@@ -614,7 +615,7 @@ int
 xpidl_process_idl(char *filename, IncludePathEntry *include_path,
                   char *file_basename, ModeData *mode)
 {
-    char *tmp, *outname, *mode_outname = NULL;
+    char *tmp, *outname, *real_outname = NULL;
     IDL_tree top;
     TreeState state;
     int rv;
@@ -675,7 +676,6 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
         return 0;
     }
 
-
     state.basename = xpidl_strdup(filename);
     tmp = strrchr(state.basename, '.');
     if (tmp)
@@ -689,11 +689,26 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
 
     if (strcmp(outname, "-")) {
         const char *fopen_mode;
+#if defined(XP_UNIX)
+        const char os_separator = '/';
+#elif defined(XP_WIN)
+        const char os_separator = '\\';
+#endif
 
-        mode_outname = g_strdup_printf("%s.%s", outname, mode->suffix);
+#if defined(XP_UNIX) || defined(XP_WIN)
+        tmp = strrchr(outname, os_separator);
+        if (!file_basename && tmp) {
+            real_outname = g_strdup_printf("%s.%s", tmp + 1, mode->suffix);
+        } else {
+            real_outname = g_strdup_printf("%s.%s", outname, mode->suffix);
+        }
+#else
+        real_outname = g_strdup_printf("%s.%s", outname, mode->suffix);
+#endif
+
         /* Use binary write for typelib mode */
         fopen_mode = (strcmp(mode->mode, "typelib")) ? "w" : "wb";
-        state.file = fopen(mode_outname, fopen_mode);
+        state.file = fopen(real_outname, fopen_mode);
         if (!state.file) {
             perror("error opening output file");
             return 0;
@@ -723,16 +738,16 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
     if (top)
         IDL_tree_free(top);
 
-    if (mode_outname != NULL) {
+    if (real_outname != NULL) {
         /*
          * Delete partial output file on failure.  (Mac does this in the plugin
          * driver code, if the compiler returns failure.)
          */
 #if defined(XP_UNIX) || defined(XP_WIN)
         if (!ok)
-            unlink(mode_outname);
+            unlink(real_outname);
 #endif
-        free(mode_outname);
+        free(real_outname);
     }
 
     return ok;
