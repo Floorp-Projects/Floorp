@@ -74,8 +74,8 @@ extern "C" {
 
 #if defined(XP_UNIX) || defined(XP_MAC)
 DB *
-dbopen(const char *fname, int flags,int mode, DBTYPE type, 
-       const void *openinfo)
+dbopen(const char */*fname*/, int /*flags*/,int /*mode*/, DBTYPE /*type*/, 
+       const void */*openinfo*/)
 {
 #if defined(XP_MAC)
 	PR_ASSERT(FALSE);
@@ -87,14 +87,14 @@ dbopen(const char *fname, int flags,int mode, DBTYPE type,
 
 /*  Meta charset is weakest. Only set doc_csid if no http or override */
 void
-INTL_SetCSIDocCSID (INTL_CharSetInfo c, int16 doc_csid)
+INTL_SetCSIDocCSID (INTL_CharSetInfo /*c*/, int16 /*doc_csid*/)
 {
     MOZ_FUNCTION_STUB;
 }
 
 
 int16
-INTL_GetCSIDocCSID(INTL_CharSetInfo c)
+INTL_GetCSIDocCSID(INTL_CharSetInfo /*c*/)
 {
     MOZ_FUNCTION_STUB;
     return 0;
@@ -102,14 +102,14 @@ INTL_GetCSIDocCSID(INTL_CharSetInfo c)
 
 
 void
-INTL_SetCSIWinCSID(INTL_CharSetInfo c, int16 win_csid)
+INTL_SetCSIWinCSID(INTL_CharSetInfo /*c*/, int16 /*win_csid*/)
 {
     MOZ_FUNCTION_STUB;
 }
 
 
 int16
-INTL_GetCSIWinCSID(INTL_CharSetInfo c)
+INTL_GetCSIWinCSID(INTL_CharSetInfo /*c*/)
 {
     MOZ_FUNCTION_STUB;
     return 0;
@@ -117,7 +117,7 @@ INTL_GetCSIWinCSID(INTL_CharSetInfo c)
 
 
 INTL_CharSetInfo 
-LO_GetDocumentCharacterSetInfo(MWContext *context)
+LO_GetDocumentCharacterSetInfo(MWContext */*context*/)
 {
     MOZ_FUNCTION_STUB;
     return NULL;
@@ -158,10 +158,10 @@ char* INTL_GetAcceptLanguage()
  *---------------------------------------------------------------------------
  */
 PUBLIC Stream *
-INTL_ConvCharCode (int         format_out,
-                   void       *data_obj,
-                   URL_Struct *URL_s,
-                   MWContext  *mwcontext)
+INTL_ConvCharCode (int         /*format_out*/,
+                   void       */*data_obj*/,
+                   URL_Struct */*URL_s*/,
+                   MWContext  */*mwcontext*/)
 {
     MOZ_FUNCTION_STUB;
     return NULL;
@@ -188,9 +188,9 @@ INTL_ConvCharCode (int         format_out,
  * first conversion entry that matches the from_csid.
  */
 int
-INTL_GetCharCodeConverter(register int16  from_csid,
-                          register int16  to_csid,
-                          CCCDataObject   obj)
+INTL_GetCharCodeConverter(register int16  /*from_csid*/,
+                          register int16  /*to_csid*/,
+                          CCCDataObject   /*obj*/)
 {
     MOZ_FUNCTION_STUB;
     return 0;
@@ -206,8 +206,8 @@ INTL_CreateCharCodeConverter()
 
 
 unsigned char *
-INTL_CallCharCodeConverter(CCCDataObject obj, const unsigned char *buf,
-                           int32 bufsz)
+INTL_CallCharCodeConverter(CCCDataObject /*obj*/, const unsigned char */*buf*/,
+                           int32 /*bufsz*/)
 {
     MOZ_FUNCTION_STUB;
     return NULL;
@@ -215,7 +215,7 @@ INTL_CallCharCodeConverter(CCCDataObject obj, const unsigned char *buf,
 
 
 void
-INTL_DestroyCharCodeConverter(CCCDataObject obj)
+INTL_DestroyCharCodeConverter(CCCDataObject /*obj*/)
 {
     MOZ_FUNCTION_STUB;
 }
@@ -226,7 +226,7 @@ INTL_DestroyCharCodeConverter(CCCDataObject obj)
  *---------------------------------------------------------------------------
  */
 int16
-INTL_CharSetNameToID(char	*charset)
+INTL_CharSetNameToID(char	*/*charset*/)
 {
     MOZ_FUNCTION_STUB;
     return 0;
@@ -239,11 +239,11 @@ INTL_CharSetNameToID(char	*charset)
  *---------------------------------------------------------------------------
  */
 uint32    INTL_TextToUnicode(
-    INTL_Encoding_ID encoding,
-    unsigned char*   src,
-    uint32           srclen,
-    INTL_Unicode*    ustr,
-    uint32           ubuflen
+    INTL_Encoding_ID /*encoding*/,
+    unsigned char*   /*src*/,
+    uint32           /*srclen*/,
+    INTL_Unicode*    /*ustr*/,
+    uint32           /*ubuflen*/
 )
 {
     MOZ_FUNCTION_STUB;
@@ -252,9 +252,9 @@ uint32    INTL_TextToUnicode(
 
 
 uint32    INTL_TextToUnicodeLen(
-    INTL_Encoding_ID encoding,
-    unsigned char*   src,
-    uint32           srclen
+    INTL_Encoding_ID /*encoding*/,
+    unsigned char*   /*src*/,
+    uint32           /*srclen*/
 )
 {
     MOZ_FUNCTION_STUB;
@@ -278,7 +278,7 @@ uint32    INTL_TextToUnicodeLen(
         for Cyrillic users. 
 
 */
-int16 INTL_DocToWinCharSetID(int16 csid)
+int16 INTL_DocToWinCharSetID(int16 /*csid*/)
 {
     MOZ_FUNCTION_STUB;
     return CS_FE_ASCII;
@@ -291,7 +291,7 @@ int16 INTL_DocToWinCharSetID(int16 csid)
  *---------------------------------------------------------------------------
  */
 
-PUBLIC void INTL_CCCReportMetaCharsetTag(MWContext *context, char *charset_tag)
+PUBLIC void INTL_CCCReportMetaCharsetTag(MWContext */*context*/, char */*charset_tag*/)
 {
     MOZ_FUNCTION_STUB;
 }
@@ -301,7 +301,7 @@ PUBLIC void INTL_CCCReportMetaCharsetTag(MWContext *context, char *charset_tag)
  * From ns/cmd/winfe/authdll.cpp
  *---------------------------------------------------------------------------
  */
-char * WFE_BuildCompuserveAuthString(URL_Struct *URL_s)
+char * WFE_BuildCompuserveAuthString(URL_Struct */*URL_s*/)
 {
     MOZ_FUNCTION_STUB;
     return NULL;
@@ -309,9 +309,9 @@ char * WFE_BuildCompuserveAuthString(URL_Struct *URL_s)
 
 
 int
-WFE_DoCompuserveAuthenticate(MWContext *context,
-                             URL_Struct *URL_s, 
-                             char *authenticate_header_value)
+WFE_DoCompuserveAuthenticate(MWContext */*context*/,
+                             URL_Struct */*URL_s*/, 
+                             char */*authenticate_header_value*/)
 {
     MOZ_FUNCTION_STUB;
     return NET_AUTH_FAILED_DONT_DISPLAY;
@@ -338,8 +338,9 @@ WFE_DoCompuserveAuthenticate(MWContext *context,
 //      01-17-95        created GAB
 //
 
-XP_Bool FE_UseExternalProtocolModule(MWContext *pContext, FO_Present_Types iFormatOut, URL_Struct *pURL,
-                                     Net_GetUrlExitFunc *pExitFunc)	
+XP_Bool FE_UseExternalProtocolModule(MWContext */*pContext*/, FO_Present_Types /*iFormatOut*/,
+                                     URL_Struct */*pURL*/,
+                                     Net_GetUrlExitFunc */*pExitFunc*/)	
 {
     MOZ_FUNCTION_STUB;
     return FALSE;
@@ -355,13 +356,13 @@ XP_Bool FE_UseExternalProtocolModule(MWContext *pContext, FO_Present_Types iForm
 //
 // Prompt the user for a local file name
 //
-int FE_PromptForFileName(MWContext *context,
-                         const char *prompt_string,
-                         const char *default_path,
-                         XP_Bool file_must_exist_p,
-                         XP_Bool directories_allowed_p,
-                         ReadFileNameCallbackFunction fn,
-                         void *closure)
+int FE_PromptForFileName(MWContext */*context*/,
+                         const char */*prompt_string*/,
+                         const char */*default_path*/,
+                         XP_Bool /*file_must_exist_p*/,
+                         XP_Bool /*directories_allowed_p*/,
+                         ReadFileNameCallbackFunction /*fn*/,
+                         void */*closure*/)
 {
     MOZ_FUNCTION_STUB;
     return -1;
@@ -378,7 +379,7 @@ int FE_PromptForFileName(MWContext *context,
 //  For windows, we just return what was passed in.
 //  We must provide it in a seperate buffer, otherwise they might change
 //      the original and change also what they believe to be saved.
-char *WH_FilePlatformName(const char *pName)
+char *WH_FilePlatformName(const char */*pName*/)
 {
     MOZ_FUNCTION_STUB;
     return NULL;
@@ -445,8 +446,8 @@ void FE_SetRefreshURLTimer(MWContext *pContext, URL_Struct *URL_s)
 
 
 PUBLIC void 
-FE_ConnectToRemoteHost(MWContext * context, int url_type, char *
-    hostname, char * port, char * username) 
+FE_ConnectToRemoteHost(MWContext * /*context*/, int /*url_type*/,
+                       char * /*hostname*/, char * /*port*/, char * /*username*/) 
 {
     MOZ_FUNCTION_STUB;
 }
@@ -493,7 +494,7 @@ void FEU_StayingAlive()
  * From ns/cmd/winfe/cfe.cpp
  *---------------------------------------------------------------------------
  */
-void FE_RunNetcaster(MWContext *context) 
+void FE_RunNetcaster(MWContext */*context*/) 
 {
     MOZ_FUNCTION_STUB;
 }
@@ -508,7 +509,7 @@ void FE_RunNetcaster(MWContext *context)
  * if the passed context is in the global context list
  * TRUE is returned.  Otherwise false
  */
-Bool XP_IsContextInList(MWContext *context)
+Bool XP_IsContextInList(MWContext */*context*/)
 {
     MOZ_FUNCTION_STUB;
     return FALSE;
@@ -520,8 +521,8 @@ Bool XP_IsContextInList(MWContext *context)
  *---------------------------------------------------------------------------
  */
 
-size_t XP_StrfTime(MWContext* context, char *result, size_t maxsize, int format,
-                   const struct tm *timeptr)
+size_t XP_StrfTime(MWContext* /*context*/, char */*result*/, size_t /*maxsize*/, int /*format*/,
+                   const struct tm */*timeptr*/)
 {
     MOZ_FUNCTION_STUB;
     return 0;
@@ -534,7 +535,7 @@ size_t XP_StrfTime(MWContext* context, char *result, size_t maxsize, int format,
  *---------------------------------------------------------------------------
  */
 
-void EDT_SavePublishUsername(MWContext *pContext, char *pAddress, char *pUsername)
+void EDT_SavePublishUsername(MWContext */*pContext*/, char */*pAddress*/, char */*pUsername*/)
 {
     MOZ_FUNCTION_STUB;
 }
@@ -550,7 +551,7 @@ void EDT_SavePublishUsername(MWContext *pContext, char *pAddress, char *pUsernam
  * fixed width font.  Return -1 on error.
  */
 int16
-LO_WindowWidthInFixedChars(MWContext *context)
+LO_WindowWidthInFixedChars(MWContext */*context*/)
 {
     MOZ_FUNCTION_STUB;
     return 80;
@@ -578,7 +579,7 @@ LO_WindowWidthInFixedChars(MWContext *context)
  *              completly laid out and info can be found.
  */
 PUBLIC intn
-LO_DocumentInfo(MWContext *context, NET_StreamClass *stream)
+LO_DocumentInfo(MWContext */*context*/, NET_StreamClass */*stream*/)
 {
     MOZ_FUNCTION_STUB;
     return -1;
@@ -597,7 +598,7 @@ LO_DocumentInfo(MWContext *context, NET_StreamClass *stream)
  */
 #ifndef XP_MAC
 int
-IL_Type(const char *buf, int32 len)
+IL_Type(const char */*buf*/, int32 /*len*/)
 {
     MOZ_FUNCTION_STUB;
     return 0; /* IL_NOTFOUND */
@@ -615,8 +616,8 @@ IL_Type(const char *buf, int32 len)
  * the image cache.  Use "about:memory-cache" URL to acess.
  */
 static int 
-IL_DisplayMemCacheInfoAsHTML(FO_Present_Types format_out, URL_Struct *urls,
-                             OPAQUE_CONTEXT *cx)
+IL_DisplayMemCacheInfoAsHTML(FO_Present_Types /*format_out*/, URL_Struct */*urls*/,
+                             OPAQUE_CONTEXT */*cx*/)
 {
     MOZ_FUNCTION_STUB;
     return 0;
@@ -625,7 +626,7 @@ IL_DisplayMemCacheInfoAsHTML(FO_Present_Types format_out, URL_Struct *urls,
 
 #ifndef XP_MAC
 char *
-IL_HTMLImageInfo(char *url_address)
+IL_HTMLImageInfo(char */*url_address*/)
 {
     MOZ_FUNCTION_STUB;
     return NULL;
@@ -637,7 +638,7 @@ IL_HTMLImageInfo(char *url_address)
    by the imagelib.  */
 #ifndef XP_MAC
 void
-IL_SetCacheSize(uint32 new_size)
+IL_SetCacheSize(uint32 /*new_size*/)
 {
     MOZ_FUNCTION_STUB;
 }
@@ -651,8 +652,8 @@ IL_SetCacheSize(uint32 new_size)
  *---------------------------------------------------------------------------
  */
 static NET_StreamClass *
-IL_ViewStream(FO_Present_Types format_out, void *newshack, URL_Struct *urls,
-              OPAQUE_CONTEXT *cx)
+IL_ViewStream(FO_Present_Types /*format_out*/, void */*newshack*/, URL_Struct */*urls*/,
+              OPAQUE_CONTEXT */*cx*/)
 {
     MOZ_FUNCTION_STUB;
     return NULL;
@@ -696,9 +697,9 @@ GH_SaveGlobalHistory(void)
  * the global history
  */
 MODULE_PRIVATE int
-NET_DisplayGlobalHistoryInfoAsHTML(MWContext *context,
-                                   URL_Struct *URL_s,
-                                   int format_out)
+NET_DisplayGlobalHistoryInfoAsHTML(MWContext */*context*/,
+                                   URL_Struct */*URL_s*/,
+                                   int /*format_out*/)
 {
     MOZ_FUNCTION_STUB;
     return MK_UNABLE_TO_CONVERT;
@@ -712,7 +713,7 @@ NET_DisplayGlobalHistoryInfoAsHTML(MWContext *context,
  *---------------------------------------------------------------------------
  */
 PUBLIC int
-SHIST_GetIndex(History * hist, History_entry * entry)
+SHIST_GetIndex(History * /*hist*/, History_entry * /*entry*/)
 {
     MOZ_FUNCTION_STUB;
     return -1;
@@ -726,7 +727,8 @@ SHIST_GetIndex(History * hist, History_entry * entry)
  */
 
 XP_Bool
-NPL_HandleURL(MWContext *cx, FO_Present_Types iFormatOut, URL_Struct *pURL, Net_GetUrlExitFunc *pExitFunc)
+NPL_HandleURL(MWContext */*cx*/,
+              FO_Present_Types /*iFormatOut*/, URL_Struct */*pURL*/, Net_GetUrlExitFunc */*pExitFunc*/)
 {
     MOZ_FUNCTION_STUB;
     return FALSE;
@@ -740,7 +742,7 @@ NPL_HandleURL(MWContext *cx, FO_Present_Types iFormatOut, URL_Struct *pURL, Net_
  */
 
 const char *
-LM_SkipWysiwygURLPrefix(const char *url_string)
+LM_SkipWysiwygURLPrefix(const char */*url_string*/)
 {
     MOZ_FUNCTION_STUB;
     return NULL;
@@ -755,14 +757,14 @@ LM_SkipWysiwygURLPrefix(const char *url_string)
  */
 
 void
-XP_HandleHTMLPanel(URL_Struct *url)
+XP_HandleHTMLPanel(URL_Struct */*url*/)
 {
     MOZ_FUNCTION_STUB;
 }
 
 
 void
-XP_HandleHTMLDialog(URL_Struct *url)
+XP_HandleHTMLDialog(URL_Struct */*url*/)
 {
     MOZ_FUNCTION_STUB;
 }
@@ -782,7 +784,7 @@ char ** fe_encoding_extensions = NULL;
  */
 
 PUBLIC void
-GH_UpdateGlobalHistory(URL_Struct * URL_s)
+GH_UpdateGlobalHistory(URL_Struct * /*URL_s*/)
 {
     MOZ_FUNCTION_STUB;
 }
@@ -805,7 +807,7 @@ GH_ClearGlobalHistory(void)
 
 
 PUBLIC History_entry *
-SHIST_GetCurrent(History * hist)
+SHIST_GetCurrent(History * /*hist*/)
 {
     MOZ_FUNCTION_STUB;
     return NULL;
@@ -1535,7 +1537,7 @@ XP_Stat(const char * name, XP_StatStruct * info, XP_FileType type)
 #endif /* XP_PC */
 
 PUBLIC void *
-FE_AboutData (const char *which,
+FE_AboutData (const char */*which*/,
               char **data_ret, int32 *length_ret, char **content_type_ret)
 {
     MOZ_FUNCTION_STUB;
@@ -1549,7 +1551,7 @@ FE_AboutData (const char *which,
 
 
 PUBLIC void
-FE_FreeAboutData (void * data, const char* which2)
+FE_FreeAboutData (void * /*data*/, const char* /*which2*/)
 {
     MOZ_FUNCTION_STUB;
 }
@@ -1560,7 +1562,8 @@ FE_FreeAboutData (void * data, const char* which2)
  *---------------------------------------------------------------------------
  */
 
-int FE_AsyncDNSLookup(MWContext *context, char * host_port, PRHostEnt ** hoststruct_ptr_ptr, PRFileDesc *socket)
+int FE_AsyncDNSLookup(MWContext */*context*/, char * /*host_port*/,
+                      PRHostEnt ** /*hoststruct_ptr_ptr*/, PRFileDesc */*socket*/)
 {
     MOZ_FUNCTION_STUB;
     return -1;
@@ -1584,7 +1587,7 @@ char *INTL_ResourceCharSet(void)
  *---------------------------------------------------------------------------
  */
 
-int32 FE_GetContextID(MWContext *pContext)
+int32 FE_GetContextID(MWContext */*pContext*/)
 {
     MOZ_FUNCTION_STUB;
     return 0;
@@ -1602,7 +1605,7 @@ XP_Bool FE_IsNetcasterInstalled(void)
 //  We need to mark it in the new context if it has ncapi_data (which we use
 //  to track such things under windows).
 */
-void FE_UrlChangedContext(URL_Struct *pUrl, MWContext *pOldContext, MWContext *pNewContext)
+void FE_UrlChangedContext(URL_Struct */*pUrl*/, MWContext */*pOldContext*/, MWContext */*pNewContext*/)
 {
     MOZ_FUNCTION_STUB;
 }
@@ -1614,7 +1617,7 @@ void FE_UrlChangedContext(URL_Struct *pUrl, MWContext *pOldContext, MWContext *p
  * From ns/cmd/winfe/urlecho.cpp
  *---------------------------------------------------------------------------
  */
-void FE_URLEcho(URL_Struct *pURL, int iStatus, MWContext *pContext)  {
+void FE_URLEcho(URL_Struct */*pURL*/, int /*iStatus*/, MWContext */*pContext*/)  {
 /*
 //  Purpose:  Echo the URL to all appropriately registered applications that are monitoring such URL traffic.
 //  Arguments:  pURL  The URL which is being loaded.
@@ -1644,19 +1647,19 @@ void FE_URLEcho(URL_Struct *pURL, int iStatus, MWContext *pContext)  {
 //   when downloading remote files 
 //
 */
-void FE_SaveDialogCreate( MWContext *pMWContext, int iFileCount, ED_SaveDialogType saveType  )
+void FE_SaveDialogCreate( MWContext */*pMWContext*/, int /*iFileCount*/, ED_SaveDialogType /*saveType*/  )
 {
     MOZ_FUNCTION_STUB;
 }
 
 
-void FE_SaveDialogSetFilename( MWContext *pMWContext, char *pFilename )
+void FE_SaveDialogSetFilename( MWContext */*pMWContext*/, char */*pFilename*/ )
 {
     MOZ_FUNCTION_STUB;
 }
 
 
-void FE_SaveDialogDestroy( MWContext *pMWContext, int status, char *pFileURL )
+void FE_SaveDialogDestroy( MWContext */*pMWContext*/, int /*status*/, char */*pFileURL*/ )
 {
     MOZ_FUNCTION_STUB;
 }
@@ -1669,11 +1672,11 @@ void FE_SaveDialogDestroy( MWContext *pMWContext, int status, char *pFileURL )
  *---------------------------------------------------------------------------
  */
 void FE_AlternateCompose(
-    char * from, char * reply_to, char * to, char * cc, char * bcc,
-    char * fcc, char * newsgroups, char * followup_to,
-    char * organization, char * subject, char * references,
-    char * other_random_headers, char * priority,
-    char * attachment, char * newspost_url, char * body)
+    char * /*from*/, char * /*reply_to*/, char * /*to*/, char * /*cc*/, char * /*bcc*/,
+    char * /*fcc*/, char * /*newsgroups*/, char * /*followup_to*/,
+    char * /*organization*/, char * /*subject*/, char * /*references*/,
+    char * /*other_random_headers*/, char * /*priority*/,
+    char * /*attachment*/, char * /*newspost_url*/, char * /*body*/)
 {
     MOZ_FUNCTION_STUB;
 }
@@ -1705,7 +1708,7 @@ char * FE_GetNetHelpDir()
  * From ns/cmd/winfe/femess.cpp
  *---------------------------------------------------------------------------
  */
-int FE_GetURL(MWContext *pContext, URL_Struct *pUrl)
+int FE_GetURL(MWContext */*pContext*/, URL_Struct */*pUrl*/)
 {
     MOZ_FUNCTION_STUB;
 
@@ -1719,7 +1722,7 @@ int FE_GetURL(MWContext *pContext, URL_Struct *pUrl)
  * From ns/cmd/winfe/fmabstra.cpp
  *---------------------------------------------------------------------------
  */
-void FE_RaiseWindow(MWContext *pContext)
+void FE_RaiseWindow(MWContext */*pContext*/)
 {
     MOZ_FUNCTION_STUB;
 }
@@ -1738,7 +1741,8 @@ void FE_RaiseWindow(MWContext *pContext)
 //  pChrome specifies the attributes of a window.
 //  If you use this call, Toolbar information will not be saved in the preferences.
 */
-MWContext *FE_MakeNewWindow(MWContext *pOldContext, URL_Struct *pUrl, char *pContextName, Chrome *pChrome)
+MWContext *FE_MakeNewWindow(MWContext */*pOldContext*/, URL_Struct */*pUrl*/,
+                            char */*pContextName*/, Chrome */*pChrome*/)
 {
     MOZ_FUNCTION_STUB;
 
@@ -1771,7 +1775,7 @@ MWContext *FE_MakeNewWindow(MWContext *pOldContext, URL_Struct *pUrl, char *pCon
  * msecs:   The number of milli-seconds in the interval
  */
 PUBLIC void * 
-FE_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs)
+FE_SetTimeout(TimeoutCallbackFunction /*func*/, void * /*closure*/, uint32 /*msecs*/)
 {
     MOZ_FUNCTION_STUB;
     return NULL;
@@ -1784,7 +1788,7 @@ FE_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs)
  */
 
 JSBool
-ET_PostMessageBox(MWContext* context, char* szMessage, JSBool bConfirm)
+ET_PostMessageBox(MWContext* /*context*/, char* szMessage, JSBool /*bConfirm*/)
 {
     MOZ_FUNCTION_STUB;
     fprintf(stdout, "%c%s  (y/n)?  ", '\007', szMessage); /* \007 is BELL */
@@ -1802,9 +1806,9 @@ ET_PostMessageBox(MWContext* context, char* szMessage, JSBool bConfirm)
 }
 
 JSBool
-ET_PostCheckConfirmBox(MWContext* context,
+ET_PostCheckConfirmBox(MWContext* /*context*/,
 	char* szMainMessage, char* szCheckMessage,
-	char* szOKMessage, char* szCancelMessage,
+	char* /*szOKMessage*/, char* /*szCancelMessage*/,
 	XP_Bool *bChecked)
 {
     MOZ_FUNCTION_STUB;
@@ -1842,8 +1846,8 @@ ET_PostCheckConfirmBox(MWContext* context,
  * Tell the backend about a new load event.
  */
 void
-ET_SendLoadEvent(MWContext * pContext, int32 type, ETVoidPtrFunc fnClosure,
-                 NET_StreamClass *stream, int32 layer_id, Bool resize_reload)
+ET_SendLoadEvent(MWContext * /*pContext*/, int32 /*type*/, ETVoidPtrFunc /*fnClosure*/,
+                 NET_StreamClass */*stream*/, int32 /*layer_id*/, Bool /*resize_reload*/)
 {
     MOZ_FUNCTION_STUB;
 }
@@ -1855,8 +1859,8 @@ ET_SendLoadEvent(MWContext * pContext, int32 type, ETVoidPtrFunc fnClosure,
  */
 
 NET_StreamClass *
-LM_WysiwygCacheConverter(MWContext *context, URL_Struct *url_struct,
-                         const char * wysiwyg_url, const char * base_href)
+LM_WysiwygCacheConverter(MWContext */*context*/, URL_Struct */*url_struct*/,
+                         const char * /*wysiwyg_url*/, const char * /*base_href*/)
 {
     MOZ_FUNCTION_STUB;
     return NULL;
@@ -1872,7 +1876,7 @@ LM_WysiwygCacheConverter(MWContext *context, URL_Struct *url_struct,
  * Entry point for front-ends to notify JS code of help events.
  */
 void
-LM_SendOnHelp(MWContext *context)
+LM_SendOnHelp(MWContext */*context*/)
 {
     MOZ_FUNCTION_STUB;
 }
@@ -1883,7 +1887,7 @@ LM_SendOnHelp(MWContext *context)
  *---------------------------------------------------------------------------
  */
 
-const char* INTL_ctime(MWContext* context, time_t *date)
+const char* INTL_ctime(MWContext* /*context*/, time_t */*date*/)
 {
   static char result[40];	
 
@@ -1913,7 +1917,7 @@ const char* INTL_ctime(MWContext* context, time_t *date)
  * siblings first. 
  */
 
-MWContext * XP_FindNamedContextInList(MWContext * context, char *name)
+MWContext * XP_FindNamedContextInList(MWContext * /*context*/, char */*name*/)
 {
     MOZ_FUNCTION_STUB;
     return NULL;
@@ -1945,7 +1949,7 @@ XP_FindSomeContext()
  * results in the new context gets its own completion routine.
  */
 void
-NPL_URLExit(URL_Struct *urls, int status, MWContext *cx)
+NPL_URLExit(URL_Struct */*urls*/, int /*status*/, MWContext */*cx*/)
 {
     MOZ_FUNCTION_STUB;
 }
@@ -1958,7 +1962,7 @@ NPL_URLExit(URL_Struct *urls, int status, MWContext *cx)
  *---------------------------------------------------------------------------
  */
 
-void LO_SetBaseURL( MWContext *context, char *pURL )
+void LO_SetBaseURL( MWContext */*context*/, char */*pURL*/ )
 {
     MOZ_FUNCTION_STUB;
 }
@@ -1972,14 +1976,14 @@ void LO_SetBaseURL( MWContext *context, char *pURL )
     get first(last) if current element is NULL.
 */
 Bool
-LO_getNextTabableElement( MWContext *context, LO_TabFocusData *pCurrentFocus, int forward )
+LO_getNextTabableElement( MWContext */*context*/, LO_TabFocusData */*pCurrentFocus*/, int /*forward*/ )
 {
     MOZ_FUNCTION_STUB;
     return FALSE;
 }
 
 PUBLIC int
-NET_ParseNetHelpURL(URL_Struct *URL_s)
+NET_ParseNetHelpURL(URL_Struct */*URL_s*/)
 {
 	MOZ_FUNCTION_STUB;
 /*	return MK_OUT_OF_MEMORY; */
@@ -1987,10 +1991,10 @@ NET_ParseNetHelpURL(URL_Struct *URL_s)
 }
 
 #ifdef XP_UNIX
-PUBLIC NET_StreamClass* NET_ExtViewerConverter ( FO_Present_Types format_out,
-                                                 void       *data_obj,
-                                                 URL_Struct *URL_s,
-                                                 MWContext  *window_id)
+PUBLIC NET_StreamClass* NET_ExtViewerConverter ( FO_Present_Types /*format_out*/,
+                                                 void       */*data_obj*/,
+                                                 URL_Struct */*URL_s*/,
+                                                 MWContext  */*window_id*/)
 {
 	return NULL;
 }
@@ -2163,7 +2167,7 @@ char *XP_AppendStr(char *in, const char *append)
     return in;
 }
 
-void RDF_AddCookieResource(char* name, char* path, char* host, char* expires)
+void RDF_AddCookieResource(char* /*name*/, char* /*path*/, char* /*host*/, char* /*expires*/)
 {
 	MOZ_FUNCTION_STUB;    
 }
