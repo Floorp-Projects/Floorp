@@ -297,7 +297,7 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
 	nsAutoString currentFolderNameStr;
 	nsCOMPtr<nsIMsgFolder> child;
 	char *folderName;
-	for (nsDirectoryIterator dir(path); dir.Exists(); dir++) 
+	for (nsDirectoryIterator dir(path, PR_FALSE); dir.Exists(); dir++) 
 	{
 		nsFileSpec currentFolderPath = (nsFileSpec&)dir;
 

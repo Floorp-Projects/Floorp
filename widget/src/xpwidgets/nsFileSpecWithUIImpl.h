@@ -131,6 +131,14 @@ class nsFileSpecWithUIImpl
     /* boolean isHidden (); */
 	NS_IMETHOD isHidden(PRBool *_retval)
 		{ return mBaseFileSpec ? mBaseFileSpec->isHidden(_retval) : NS_ERROR_NOT_INITIALIZED; }
+    
+    /* boolean isSymlink (); */
+	NS_IMETHOD isSymlink(PRBool *_retval)
+		{ return mBaseFileSpec ? mBaseFileSpec->isSymlink(_retval) : NS_ERROR_NOT_INITIALIZED; }
+
+    /* void resolveSymlink (); */
+	NS_IMETHOD resolveSymlink()
+		{ return mBaseFileSpec ? mBaseFileSpec->resolveSymlink() : NS_ERROR_NOT_INITIALIZED; }
 
 	/* readonly attribute unsigned long FileSize; */
 	NS_IMETHOD GetFileSize(PRUint32 *aFileSize)

@@ -347,7 +347,7 @@ nsInterfaceInfoManager::initInterfaceTables()
     int which = 0;
 #endif
 
-	for (nsDirectoryIterator i(sysdir); i.Exists(); i++) {
+	for (nsDirectoryIterator i(sysdir, PR_FALSE); i.Exists(); i++) {
 		// XXX need to copy?
 		nsFileSpec spec = i.Spec();
 		

@@ -1024,7 +1024,7 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, nsISimpleEnumerator*
 
 	nsFileURL 		parentDir(uri);
 	nsNativeFileSpec 	nativeDir(parentDir);
-	for (nsDirectoryIterator i(nativeDir); i.Exists(); i++)
+	for (nsDirectoryIterator i(nativeDir, PR_FALSE); i.Exists(); i++)
 	{
 		const nsNativeFileSpec	nativeSpec = (const nsNativeFileSpec &)i;
 		if (!isVisible(nativeSpec))	continue;

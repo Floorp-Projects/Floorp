@@ -675,14 +675,8 @@ nsGlobalHistory::ReadHistory()
   rv = GetHistoryDir(&dir);
   if (NS_FAILED(rv)) return rv;
 
-  for (nsDirectoryIterator i(dir); i.Exists(); i++) {
+  for (nsDirectoryIterator i(dir, PR_TRUE); i.Exists(); i++) {
     const nsFileSpec spec = i.Spec();
-#ifdef XP_MAC
-    {
-      PRBool wasAlias;
-      spec.ResolveAlias(wasAlias);
-    }
-#endif
 
     // convert to a path so we can inspect it: we only want to read
     const char* path = (const char*) spec;

@@ -1515,7 +1515,7 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseA
       dirWithTheNewsrcFiles = homeDir;
     }
 
-    for (nsDirectoryIterator i(dirWithTheNewsrcFiles); i.Exists(); i++) {
+    for (nsDirectoryIterator i(dirWithTheNewsrcFiles, PR_FALSE); i.Exists(); i++) {
       nsFileSpec possibleRcFile = i.Spec();
 
       char *filename = possibleRcFile.GetLeafName();

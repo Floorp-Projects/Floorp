@@ -92,6 +92,12 @@ class NS_COM nsFileSpecImpl
     /* boolean isHidden (); */
 	NS_IMETHOD isHidden(PRBool *_retval);
 
+    /* boolean isSymlink (); */
+	NS_IMETHOD isSymlink(PRBool *_retval);
+
+    /* void resolveSymlink (); */
+	NS_IMETHOD resolveSymlink();
+
 	/* readonly attribute unsigned long FileSize; */
 	NS_IMETHOD GetFileSize(PRUint32 *aFileSize);
 

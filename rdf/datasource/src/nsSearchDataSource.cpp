@@ -1079,7 +1079,7 @@ SearchDataSource::GetSearchEngineList()
 	searchSitesDir += "search";
 	nsFileSpec 			nativeDir(searchSitesDir);
 #endif
-	for (nsDirectoryIterator i(nativeDir); i.Exists(); i++)
+	for (nsDirectoryIterator i(nativeDir, PR_FALSE); i.Exists(); i++)
 	{
 		const nsFileSpec	fileSpec = (const nsFileSpec &)i;
 		const char		*childURL = fileSpec;
@@ -1229,7 +1229,7 @@ SearchDataSource::ReadFileContents(char *baseFilename, nsString& sourceContents)
 		// on Mac, use system's search files
 		nsSpecialSystemDirectory	searchSitesDir(nsSpecialSystemDirectory::Mac_InternetSearchDirectory);
 		nsFileSpec 			nativeDir(searchSitesDir);
-		for (nsDirectoryIterator i(nativeDir); i.Exists(); i++)
+		for (nsDirectoryIterator i(nativeDir, PR_FALSE); i.Exists(); i++)
 		{
 			const nsFileSpec	fileSpec = (const nsFileSpec &)i;
 			const char		*childURL = fileSpec;

@@ -201,6 +201,38 @@ PRBool nsFileSpec::IsHidden() const
 } // nsFileSpec::IsHidden
 
 //----------------------------------------------------------------------------------------
+PRBool nsFileSpec::IsSymlink() const
+//----------------------------------------------------------------------------------------
+{
+    struct stat st;
+    if (!mPath.IsEmpty() && stat(mPath, &st) == 0 && S_ISLNK(st.st_mode))
+        return PR_TRUE;
+
+    return PR_FALSE;
+} // nsFileSpec::IsSymlink
+
+//----------------------------------------------------------------------------------------
+nsresult nsFileSpec::ResolveSymlink(PRBool& wasAliased)
+//----------------------------------------------------------------------------------------
+{
+    wasAliased = PR_FALSE;
+
+    char resolvedPath[MAXPATHLEN];
+    int charCount = readlink(mPath, (char*)&resolvedPath, MAXPATHLEN);
+    if (0 < charCount)
+    {
+        if (MAXPATHLEN > charCount)
+            resolvedPath[charCount] = '\0';
+        
+        wasAliased = PR_TRUE;
+        mPath = (char*)&resolvedPath;
+    }
+    
+    return NS_OK;
+} // nsFileSpec::ResolveSymlink
+
+
+//----------------------------------------------------------------------------------------
 void nsFileSpec::GetParent(nsFileSpec& outSpec) const
 //----------------------------------------------------------------------------------------
 {
@@ -246,7 +278,7 @@ void nsFileSpec::Delete(PRBool inRecursive) const
     {
         if (inRecursive)
         {
-            for (nsDirectoryIterator i(*this); i.Exists(); i++)
+            for (nsDirectoryIterator i(*this, PR_FALSE); i.Exists(); i++)
             {
                 nsFileSpec& child = (nsFileSpec&)i;
                 child.Delete(inRecursive);
@@ -269,7 +301,7 @@ void nsFileSpec::RecursiveCopy(nsFileSpec newDir) const
 			newDir.CreateDirectory();
 		}
 
-		for (nsDirectoryIterator i(*this); i.Exists(); i++)
+		for (nsDirectoryIterator i(*this, PR_FALSE); i.Exists(); i++)
 		{
 			nsFileSpec& child = (nsFileSpec&)i;
 
@@ -445,6 +477,9 @@ nsresult nsFileSpec::Execute(const char* inArgs ) const
 PRUint32 nsFileSpec::GetDiskSpaceAvailable() const
 //----------------------------------------------------------------------------------------
 {
+
+#if defined(HAVE_SYS_STATFS_H) || defined(HAVE_SYS_STATVFS_H)
+
     char curdir [MAXPATHLEN];
     if (mPath.IsEmpty())
     {
@@ -467,7 +502,17 @@ PRUint32 nsFileSpec::GetDiskSpaceAvailable() const
     printf("DiskSpaceAvailable: %d bytes\n", 
        fs_buf.f_bsize * (fs_buf.f_bavail - 1));
 #endif
+
     return fs_buf.f_bsize * (fs_buf.f_bavail - 1);
+
+#else 
+    /*
+    ** This platform doesn't have statfs or statvfs, so we don't have much
+    ** choice but to "hope for the best as we did in cheddar".
+    */
+    return ULONG_MAX;
+#endif /* HAVE_SYS_STATFS_H or HAVE_SYS_STATVFS_H */
+
 } // nsFileSpec::GetDiskSpace()
 
 //========================================================================================
@@ -475,13 +520,12 @@ PRUint32 nsFileSpec::GetDiskSpaceAvailable() const
 //========================================================================================
 
 //----------------------------------------------------------------------------------------
-nsDirectoryIterator::nsDirectoryIterator(
-    const nsFileSpec& inDirectory
-,   int /*inIterateDirection*/)
+nsDirectoryIterator::nsDirectoryIterator(const nsFileSpec& inDirectory, PRBool resolveSymLinks)
 //----------------------------------------------------------------------------------------
     : mCurrent(inDirectory)
     , mExists(PR_FALSE)
     , mDir(nsnull)
+    , mResoveSymLinks(resolveSymLinks)
 {
     mCurrent += "sysygy"; // prepare the path for SetLeafName
     mDir = opendir((const char*)nsFilePath(inDirectory));
@@ -514,6 +558,11 @@ nsDirectoryIterator& nsDirectoryIterator::operator ++ ()
     {
         mExists = PR_TRUE;
         mCurrent.SetLeafName(entry->d_name);
+        if (mResoveSymLinks)
+        {   
+            PRBool ignore;
+            mCurrent.ResolveSymlink(ignore);
+        }
     }
     return *this;
 } // nsDirectoryIterator::operator ++

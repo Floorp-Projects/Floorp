@@ -310,6 +310,23 @@ NS_IMETHODIMP nsFileSpecImpl::isHidden(PRBool *_retval)
 }
 
 //----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsFileSpecImpl::isSymlink(PRBool *_retval)
+//----------------------------------------------------------------------------------------
+{
+	TEST_OUT_PTR(_retval)
+	*_retval = mFileSpec.IsSymlink();
+	return mFileSpec.Error();
+}
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsFileSpecImpl::resolveSymlink()
+//----------------------------------------------------------------------------------------
+{
+    PRBool ignore;
+	return mFileSpec.ResolveSymlink(ignore);
+}
+
+//----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsFileSpecImpl::GetFileSize(PRUint32 *aFileSize)
 //----------------------------------------------------------------------------------------
 {
@@ -646,7 +663,7 @@ NS_IMETHODIMP nsDirectoryIteratorImpl::Init(nsIFileSpec *parent)
 //----------------------------------------------------------------------------------------
 {
 	delete mDirectoryIterator;
-	mDirectoryIterator = new nsDirectoryIterator(FILESPEC(parent));
+	mDirectoryIterator = new nsDirectoryIterator(FILESPEC(parent), PR_FALSE);
 	if (!mDirectoryIterator)
 		return NS_ERROR_OUT_OF_MEMORY;
 	return NS_OK;
