@@ -123,6 +123,9 @@
     if (![mOutlineView isExpandable: item]) {
       // We can't be used as the parent.  Try our parent.
       nsIContent* content = [item contentNode];
+      if (!content)
+        return;
+
       nsCOMPtr<nsIContent> parentContent;
       content->GetParent(*getter_AddRefs(parentContent));
       nsCOMPtr<nsIContent> root;
@@ -277,37 +280,52 @@
   int index = [mOutlineView selectedRow];
   if (index == -1)
     return;
-  if ([mOutlineView numberOfSelectedRows] == 1) {
-    BookmarkItem* item = [mOutlineView itemAtRow: index];
-    [self deleteBookmark: item];
-    int total = [mOutlineView numberOfRows];
-    if (index == total)
-      index--;
-    [mOutlineView selectRow: index byExtendingSelection: NO];
-  }
-  else {
-    NSMutableArray* itemsToDelete = [[[NSMutableArray alloc] init] autorelease];
-    NSEnumerator* selRows = [mOutlineView selectedRowEnumerator];
-    for (NSNumber* currIndex = [selRows nextObject];
-         currIndex != nil;
-         currIndex = [selRows nextObject]) {
-      index = [currIndex intValue];
-      BookmarkItem* item = [mOutlineView itemAtRow: index];
-      [itemsToDelete addObject: item];
-    }
 
-    int count = [itemsToDelete count];
-    for (int i = 0; i < count; i++) {
-      BookmarkItem* item = [itemsToDelete objectAtIndex: i];
-      [self deleteBookmark: item];
-    }
+  // we'll run into problems if a parent item and one if its children are both selected.
+  // A cheap way of having to avoid scanning the list to remove children is to have the
+  // outliner collapse all items that are being deleted. This will cull the selection
+  // for us and eliminate any children that happened to be selected.
+  NSEnumerator* selRows = [mOutlineView selectedRowEnumerator];
+  for (NSNumber* currIndex = [selRows nextObject];
+      currIndex != nil;
+      currIndex = [selRows nextObject]) {
+    index = [currIndex intValue];
+    BookmarkItem* item = [mOutlineView itemAtRow: index];
+    [mOutlineView collapseItem: item];
   }
+
+  // create array of items we need to delete. Deleting items out of of the
+  // selection array is problematic for some reason.
+  NSMutableArray* itemsToDelete = [[[NSMutableArray alloc] init] autorelease];
+  selRows = [mOutlineView selectedRowEnumerator];
+  for (NSNumber* currIndex = [selRows nextObject];
+      currIndex != nil;
+      currIndex = [selRows nextObject]) {
+    index = [currIndex intValue];
+    BookmarkItem* item = [mOutlineView itemAtRow: index];
+    [itemsToDelete addObject: item];
+  }
+
+  // delete all bookmarks that are in our array
+  int count = [itemsToDelete count];
+  for (int i = 0; i < count; i++) {
+    BookmarkItem* item = [itemsToDelete objectAtIndex: i];
+    [self deleteBookmark: item];
+  }
+
+  // restore selection to location near last item deleted
+  int total = [mOutlineView numberOfRows];
+  if (index == total)
+    index--;
+  [mOutlineView selectRow: index byExtendingSelection: NO];
 }
 
 -(void)deleteBookmark:(id)aItem
 {
   nsCOMPtr<nsIContent> content = [aItem contentNode];
   nsCOMPtr<nsIDOMElement> child(do_QueryInterface(content));
+  if (!child)
+    return;
   if (child == BookmarksService::gToolbarRoot)
     return; // Don't allow the personal toolbar to be deleted.
   
@@ -315,7 +333,8 @@
   child->GetParentNode(getter_AddRefs(parent));
   nsCOMPtr<nsIContent> parentContent(do_QueryInterface(parent));
   nsCOMPtr<nsIDOMNode> dummy;
-  parent->RemoveChild(child, getter_AddRefs(dummy));
+  if (parent)
+    parent->RemoveChild(child, getter_AddRefs(dummy));
   mBookmarks->BookmarkRemoved(parentContent, content);
 }
 
