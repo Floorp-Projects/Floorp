@@ -120,10 +120,36 @@ NS_IMETHODIMP MimeTypeArrayImpl::Item(PRUint32 aIndex, nsIDOMMimeType** aReturn)
 	return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP MimeTypeArrayImpl::NamedItem(const nsString& aName, nsIDOMMimeType** aReturn)
+NS_IMETHODIMP MimeTypeArrayImpl::NamedItem(const nsString& aName,
+                                           nsIDOMMimeType** aReturn)
 {
-	*aReturn = nsnull;
-	return NS_OK;
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  if (mMimeTypeArray == nsnull) {
+    nsresult rv = GetMimeTypes();
+    if (rv != NS_OK)
+      return rv;
+  }
+
+  PRUint32 i;
+
+  for (i = 0; i < mMimeTypeCount; i++) {
+    nsIDOMMimeType *mtype = mMimeTypeArray[i];
+
+    nsAutoString type;
+    mtype->GetType(type);
+
+    if (type.Equals(aName)) {
+      *aReturn = mtype;
+
+      NS_ADDREF(*aReturn);
+
+      break;
+    }
+  }
+
+  return NS_OK;
 }
 
 nsresult MimeTypeArrayImpl::GetMimeTypes()
