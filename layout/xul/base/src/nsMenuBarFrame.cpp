@@ -115,19 +115,21 @@ nsMenuBarFrame::Init(nsIPresContext&  aPresContext,
 
   // Create the menu bar listener.
   mMenuBarListener = new nsMenuBarListener(this);
+  if (! mMenuBarListener)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // Hook up the menu bar as a key listener (capturer) on the whole document.  It will see every
   // key press that occurs before anyone else does and will know when to take control.
   nsCOMPtr<nsIDocument> doc;
   aContent->GetDocument(*getter_AddRefs(doc));
   nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(doc);
-  nsIDOMEventListener* domEventListener = (nsIDOMKeyListener*)mMenuBarListener;
 
   mTarget = target;
 
-  target->AddEventListener("keypress", domEventListener, PR_TRUE); 
-	target->AddEventListener("keydown", domEventListener, PR_TRUE);  
-  target->AddEventListener("keyup", domEventListener, PR_TRUE);   
+  target->AddEventListener("keypress", mMenuBarListener, PR_TRUE); 
+	target->AddEventListener("keydown", mMenuBarListener, PR_TRUE);  
+  target->AddEventListener("keyup", mMenuBarListener, PR_TRUE);   
+  NS_ADDREF(mMenuBarListener);
   
   return rv;
 }
@@ -534,8 +536,7 @@ nsMenuBarFrame::Destroy(nsIPresContext& aPresContext)
 	mTarget->RemoveEventListener("keydown", mMenuBarListener, PR_TRUE);  
   mTarget->RemoveEventListener("keyup", mMenuBarListener, PR_TRUE);
 
-  delete mMenuBarListener;
-  mMenuBarListener = nsnull;
+  NS_IF_RELEASE(mMenuBarListener);
 
   return nsToolbarFrame::Destroy(aPresContext);
 }
