@@ -361,7 +361,7 @@ int morkParser::eat_line_break(morkEnv* ev, int inLast)
   return c;
 }
 
-int morkParser::eat_line_continue(morkEnv* ev) // last char was '\\'
+int morkParser::eat_line_continue(morkEnv* ev) // last char was '\'
 {
   morkStream* s = mParser_Stream;
   register int c = s->Getc(ev);
@@ -825,7 +825,10 @@ morkBuf* morkParser::ReadValue(morkEnv* ev)
     {
       if ( c == '\\' ) // "\" escapes the next char? 
       {
-        if ( (c = s->Getc(ev)) == EOF || ev->Bad() )
+			  if ( (c = s->Getc(ev)) == 0xA || c == 0xD ) // linebreak after \?
+			    c = this->eat_line_break(ev, c);
+
+        if ( c == EOF || ev->Bad() )
           break; // end while loop
       }
       else if ( c == '$' ) // "$" escapes next two hex digits?
