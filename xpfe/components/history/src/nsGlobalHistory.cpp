@@ -415,6 +415,7 @@ nsGlobalHistory::nsGlobalHistory()
     mStore(nsnull),
     mTable(nsnull),
     mExpireDays(9), // make default be nine days
+    mNowValid(PR_FALSE),
     mDirty(PR_FALSE)
 {
   NS_INIT_REFCNT();
