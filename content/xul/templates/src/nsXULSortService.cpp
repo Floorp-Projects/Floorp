@@ -719,7 +719,7 @@ XULSortServiceImpl::GetNodeValue(nsIContent *node1, nsIRDFResource *sortProperty
 		nsCOMPtr<nsIRDFNode>	target1;
 		nsXPIDLCString		sortPropertyURI;
 		sortInfo->sortProperty->GetValue( getter_Copies(sortPropertyURI) );
-		if ((nsnull != sortPropertyURI) && (nsnull != res1))
+		if ((sortPropertyURI) && (res1))
 		{
 			// for any given property, first ask the graph for its value with "?collation=true" appended
 			// to indicate that if there is a collation key available for this value, we want it
@@ -785,7 +785,7 @@ XULSortServiceImpl::GetNodeValue(nsIContent *node1, nsIRDFResource *sortProperty
 		if (cellVal1.Length() == 0)
 		{
 			// if no collation key and no special sorting value, just get the property value
-			if ((nsnull != res1) && (NS_SUCCEEDED(rv = (sortInfo->db)->GetTarget(res1, sortProperty,
+			if ((res1) && (NS_SUCCEEDED(rv = (sortInfo->db)->GetTarget(res1, sortProperty,
 				PR_TRUE, getter_AddRefs(target1))) && (rv != NS_RDF_NO_VALUE)))
 			{
 				nsIRDFLiteral *literal1;
