@@ -84,10 +84,6 @@
            <treecell><html:hr width="100%" align="center" size="1" /></treecell>
            <treecell><html:hr width="100%" align="center" size="1" /></treecell>
            <treecell><html:hr width="100%" align="center" size="1" /></treecell>
-           <treecell><html:hr width="100%" align="center" size="1" /></treecell>
-           <treecell><html:hr width="100%" align="center" size="1" /></treecell>
-           <treecell><html:hr width="100%" align="center" size="1" /></treecell>
-           <treecell><html:hr width="100%" align="center" size="1" /></treecell>
          </treerow>
        </treeitem>  		
       </treechildren>
@@ -98,10 +94,9 @@
 >
        <treeitem uri="..." persist="open" web:status="rdf:http://home.netscape.com/WEB-rdf#status" rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type" loading="rdf:http://home.netscape.com/NC-rdf#loading">
          <treerow>
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#Name"
-             indent="true" />
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#URL"/>
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#Date"/>
+           <treecell value="rdf:http://home.netscape.com/NC-rdf#Name" indent="true" />
+           <treecell value="rdf:http://home.netscape.com/NC-rdf#URL" />
+           <treecell value="rdf:http://home.netscape.com/NC-rdf#Date" />
          </treerow>
        </treeitem>
       </treechildren>
