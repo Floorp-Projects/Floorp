@@ -35,7 +35,6 @@
 #include "nsIMIMEInfo.h"
 #include "prtypes.h"
 #include "prerror.h"
-#include "nsEscape.h"
 
 #include "nsReadableUtils.h"
 #include "nsITimelineService.h"

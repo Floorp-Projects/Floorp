@@ -34,8 +34,6 @@
 #include "prtypes.h"
 #include "prio.h"
 
-#include "nsEscape.h"
-
 #include <ctype.h>    // needed for toupper
 #include <string.h>
 
