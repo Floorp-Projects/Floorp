@@ -58,9 +58,12 @@
 #include "nsIFrameDebug.h"
 #include "nsIFrame.h"
 #include "nsStyleStruct.h"
+#include "nsIFrameUtil.h"
+#include "nsLayoutCID.h"
  
 NS_IMPL_ISUPPORTS1(nsDebugObject, nsIDebugObject)
-
+static NS_DEFINE_IID(kFrameUtilCID, NS_FRAME_UTIL_CID);
+static NS_DEFINE_IID(kIFrameUtilIID, NS_IFRAME_UTIL_IID);
 
 /** ---------------------------------------------------
  *  See documentation in nsDebugObject.h
@@ -113,10 +116,18 @@ PRBool      stillLoading;
         presShell->GetRootFrame(&root);
         if (NS_SUCCEEDED(CallQueryInterface(root, &fdbg))) {
 
-          FILE* fp = fopen("s:/testdump.txt", "wt");
+          // create the string for the output
+          nsCAutoString outputPath;
+          outputPath.AssignWithConversion(aFilePath);
+          outputPath.AppendWithConversion(aFileName);
+          char* filePath = ToNewCString(outputPath);
+
+          FILE* fp = fopen(filePath, "wt");
+
           presShell->GetPresContext(&thePC);
           fdbg->DumpRegressionData(thePC, fp, 0, PR_TRUE);
           fclose(fp);
+          delete filePath;
           result = NS_OK;    // the document is now loaded, and the frames are dumped.
         }
       }
@@ -126,5 +137,47 @@ PRBool      stillLoading;
   return result;
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsDebugObject.h
+ *	@update 6/21/00 dwc
+ */
+NS_IMETHODIMP
+nsDebugObject::CompareFrameModels(const PRUnichar *aBasePath, const PRUnichar *aVerifyPath,
+            const PRUnichar *aBaseLineFileName, const PRUnichar *aVerifyFileName, PRUint32 aFlags) 
+{
+nsresult        result = NS_ERROR_FAILURE;
+nsCAutoString   tempString;
+nsCAutoString   verifyFile;
+char*           baselineFilePath; 
+char*           verifyFilePath;
+FILE            *bp,*vp;
 
+
+  tempString.AssignWithConversion(aBasePath);
+  tempString.AppendWithConversion(aBaseLineFileName);
+  baselineFilePath = ToNewCString(tempString);
+
+  tempString.AssignWithConversion(aVerifyPath);
+  tempString.AppendWithConversion(aVerifyFileName);
+  verifyFilePath = ToNewCString(tempString);
+
+  bp = fopen(baselineFilePath, "rt");
+  if (bp) {
+    vp = fopen(verifyFilePath, "rt");
+    if (vp) {
+      nsIFrameUtil* fu;
+      nsresult rv = nsComponentManager::CreateInstance(kFrameUtilCID, nsnull,
+                                          kIFrameUtilIID, (void **)&fu);
+      if (NS_SUCCEEDED(rv)) {
+        result = fu->CompareRegressionData(bp,vp,1);
+      }
+      fclose(vp);          
+    }
+    fclose(bp);
+  }
+  delete baselineFilePath;
+  delete verifyFilePath;
+
+  return result;
+}
 

@@ -117,7 +117,6 @@ NS_IMETHODIMP nsScriptablePeer::GetVersion(char * *aVersion)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP nsScriptablePeer::DumpLayout(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName, PRInt32 *aResult)
 {
 nsresult  rv = NS_OK;
@@ -134,6 +133,22 @@ PRBool    retVal;
   return rv;
 }
 
+NS_IMETHODIMP nsScriptablePeer::CompareLayoutFiles(const PRUnichar *aBasePath, const PRUnichar *aVerPath,
+                  const PRUnichar *aBaseFile, const PRUnichar *aVerFile, PRUint32 aFlags, PRInt32 *aResult)
+{
+nsresult  rv = NS_OK;
+PRBool    retVal;
+
+  if (mPlugin){
+    mPlugin->CompareLayoutFrames(aBasePath,aVerPath,aBaseFile,aVerFile,aFlags, &retVal);
+    if (retVal == NS_OK) {
+      *aResult= 0;
+    } else {
+      *aResult = 1;
+    }
+  }
+  return rv;
+}
 
 //
 // the following method will be callable from JavaScript

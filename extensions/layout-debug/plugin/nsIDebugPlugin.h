@@ -39,6 +39,9 @@ class NS_NO_VTABLE nsIDebugPlugin : public nsISupports {
   /* void GetNextFileInDirectory ([retval] out string aFileName); */
   NS_IMETHOD GetNextFileInDirectory(char **aFileName) = 0;
 
+  /* void CompareLayoutFiles (in wstring aBasePath, in wstring aVerPath, in wstring aBaseFile, in wstring aVerFile, in unsigned long aFlags, [retval] out long aResult); */
+  NS_IMETHOD CompareLayoutFiles(const PRUnichar *aBasePath, const PRUnichar *aVerPath, const PRUnichar *aBaseFile, const PRUnichar *aVerFile, PRUint32 aFlags, PRInt32 *aResult) = 0;
+
 };
 
 /* Use this macro when declaring classes that implement this interface. */
@@ -46,21 +49,24 @@ class NS_NO_VTABLE nsIDebugPlugin : public nsISupports {
   NS_IMETHOD GetVersion(char * *aVersion); \
   NS_IMETHOD DumpLayout(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName, PRInt32 *aResult); \
   NS_IMETHOD StartDirectorySearch(const char *aFilePath); \
-  NS_IMETHOD GetNextFileInDirectory(char **aFileName); 
+  NS_IMETHOD GetNextFileInDirectory(char **aFileName); \
+  NS_IMETHOD CompareLayoutFiles(const PRUnichar *aBasePath, const PRUnichar *aVerPath, const PRUnichar *aBaseFile, const PRUnichar *aVerFile, PRUint32 aFlags, PRInt32 *aResult); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDEBUGPLUGIN(_to) \
   NS_IMETHOD GetVersion(char * *aVersion) { return _to GetVersion(aVersion); } \
   NS_IMETHOD DumpLayout(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName, PRInt32 *aResult) { return _to DumpLayout(aWindow, aFilePath, aFileName, aResult); } \
   NS_IMETHOD StartDirectorySearch(const char *aFilePath) { return _to StartDirectorySearch(aFilePath); } \
-  NS_IMETHOD GetNextFileInDirectory(char **aFileName) { return _to GetNextFileInDirectory(aFileName); } 
+  NS_IMETHOD GetNextFileInDirectory(char **aFileName) { return _to GetNextFileInDirectory(aFileName); } \
+  NS_IMETHOD CompareLayoutFiles(const PRUnichar *aBasePath, const PRUnichar *aVerPath, const PRUnichar *aBaseFile, const PRUnichar *aVerFile, PRUint32 aFlags, PRInt32 *aResult) { return _to CompareLayoutFiles(aBasePath, aVerPath, aBaseFile, aVerFile, aFlags, aResult); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDEBUGPLUGIN(_to) \
   NS_IMETHOD GetVersion(char * *aVersion) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetVersion(aVersion); } \
   NS_IMETHOD DumpLayout(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName, PRInt32 *aResult) { return !_to ? NS_ERROR_NULL_POINTER : _to->DumpLayout(aWindow, aFilePath, aFileName, aResult); } \
   NS_IMETHOD StartDirectorySearch(const char *aFilePath) { return !_to ? NS_ERROR_NULL_POINTER : _to->StartDirectorySearch(aFilePath); } \
-  NS_IMETHOD GetNextFileInDirectory(char **aFileName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNextFileInDirectory(aFileName); } 
+  NS_IMETHOD GetNextFileInDirectory(char **aFileName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNextFileInDirectory(aFileName); } \
+  NS_IMETHOD CompareLayoutFiles(const PRUnichar *aBasePath, const PRUnichar *aVerPath, const PRUnichar *aBaseFile, const PRUnichar *aVerFile, PRUint32 aFlags, PRInt32 *aResult) { return !_to ? NS_ERROR_NULL_POINTER : _to->CompareLayoutFiles(aBasePath, aVerPath, aBaseFile, aVerFile, aFlags, aResult); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -111,6 +117,12 @@ NS_IMETHODIMP nsDebugPlugin::StartDirectorySearch(const char *aFilePath)
 
 /* void GetNextFileInDirectory ([retval] out string aFileName); */
 NS_IMETHODIMP nsDebugPlugin::GetNextFileInDirectory(char **aFileName)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void CompareLayoutFiles (in wstring aBasePath, in wstring aVerPath, in wstring aBaseFile, in wstring aVerFile, in unsigned long aFlags, [retval] out long aResult); */
+NS_IMETHODIMP nsDebugPlugin::CompareLayoutFiles(const PRUnichar *aBasePath, const PRUnichar *aVerPath, const PRUnichar *aBaseFile, const PRUnichar *aVerFile, PRUint32 aFlags, PRInt32 *aResult)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

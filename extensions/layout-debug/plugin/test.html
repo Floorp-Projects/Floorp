@@ -2,16 +2,14 @@
 <HEAD>
 <TITLE>Debug Plug-in Test</TITLE>
 </HEAD>
+
+
+
 <BODY>
 
 <center>
-<h1> XPConnect Scriptable Debug Plug-in </h1>
+<h2> Example XPConnect Scriptable Debug Plug-in Regression Page</h1>
 </center>
-
-
-<br><br>
-
-<center>
 
 <embed type="application/debug-plugin" width=1 height=1 hidden="true"><br>
 
@@ -19,17 +17,141 @@
 var embed = document.embeds[0];
 var started = false;
 var theWindow;
+var fileDirectory;
+var baseExt;
+var verExt;
+var baseDir;
+var verDir;
+var testType;
+var compare;
+
+function CompareFiles(baseDir,verDir,baselineFile,verFile)
+{
+  err = embed.CompareLayoutFiles(baseDir,verDir,baselineFile,verFile,1);
+
+  if(err == 0) {
+    WriteOutput(baselineFile,false,true);
+  } else {
+    WriteOutput(baselineFile + " FAILED ",false,false);
+  }
+}
+
+
+function WriteOutput( Text, Replace, Success )
+{
+
+  textarea = document.getElementById('output');
+  statusarea = document.getElementById('status'); 
+
+  if(Success){
+    statusarea.innerHTML = "<font color=green>" + Text +"</font>";
+  } else {
+    statusarea.innerHTML = "<font color=red>" + Text + "</font>";
+  }
+
+
+  if( Replace ) {
+    if(Success){
+      textarea.innerHTML = "<font color=green>" + Text +"</font>";
+    } else {
+      textarea.innerHTML = "<font color=red>" + Text + "</font>";
+    }
+  } else {
+    if(Success){
+      textarea.innerHTML = "<font color=green>" + textarea.innerHTML + "<br>" + Text+"</font>";
+    } else {
+      textarea.innerHTML = "<font color=red>" + textarea.innerHTML + "<br>" + Text + "</font>";
+    }
+  }
+}
+
+function  placeWindows(outputWindow,newWindow)
+{
+
+  height = window.screen.availHeight/2;
+  width = window.screen.availWidth;
+  top = window.screen.availTop;
+  left = window.screen.availLeft;
+
+  outputWindow.focus();
+  outputWindow.moveTo(left,top);
+  outputWindow.resizeTo(width,height);
+
+  newWindow.resizeTo(width,height);
+  newWindow.moveTo(left,height);
+
+
+  outputWindow.focus();
+  yamount = outputWindow.pageYOffset;
+  xamount = outputWindow.pageXOffset;
+
+  outputWindow.scroll(-xamount,-yamount);
+
+}
+
+
+function DumpFrames1(firstTime,lastFile)
+{
+
+  outputWindow = window;
+  newWindow = window.open();
+  placeWindows(outputWindow,newWindow);
+
+
+
+
+
+
+WriteOutput( "Starting Tests",true,true );
+WriteOutput( "1",false,true );
+WriteOutput( "2",false,true );
+WriteOutput( "3",false,false );
+WriteOutput( "4",false,true );
+WriteOutput( "5",false,false );
+WriteOutput( "6",false,true );
+WriteOutput( "7",false,true );
+WriteOutput( "asf",false,false );
+WriteOutput( "7",false,true );
+WriteOutput( "asdf",false,false );
+WriteOutput( "wre",false,true );
+WriteOutput( "wfw",false,true );
+WriteOutput( "jhgj",false,false );
+WriteOutput( "gjghj",false,true );
+WriteOutput( "rtj",false,false );
+
+}
+
 
 function DumpFrames(firstTime,lastFile)
 {
 var loadingFlag;
 
   if (firstTime == true) {
-    var filedirectory = "file:///S|/mozilla/layout/html/tests/block";
-    embed.StartDirectorySearch(filedirectory);
+    WriteOutput( "Starting Tests",true,true );
+
+    // first verify all the fields are set up correctly
+    fileDirectory = document.TestForm.RegTestDir.value;
+    baseExt = document.TestForm.baseExt.value;
+    verExt = document.TestForm.verExt.value;
+    baseDir = document.TestForm.baseDir.value;
+    verDir = document.TestForm.verDir.value;
+    testType = document.getElementById('bl').checked;
+    if(testType){
+      // never compare if doing baseline
+      compare = false;
+    } else {
+      // get the checkbox value
+      compare = document.getElementById('comp').checked;
+    }
+
+    //var filedirectory = "file:///S|/mozilla/layout/html/tests/table/dom";
+    embed.StartDirectorySearch(fileDirectory);
     filename=embed.GetNextFileInDirectory();
     if( filename != null) {
+      outputWindow = window;
       theWindow = window.open(filename);
+      outputWindow = window;
+      placeWindows(outputWindow,theWindow);
     }
     started = true;
   } else {
@@ -37,22 +159,34 @@ var loadingFlag;
   }
 
   while ( filename != null) {
-    alert(filename);
-    outputfilename = filename.replace (".html",".tst"); 
-    
-	  loading = embed.DumpLayout(theWindow,"s:/tests","outputfilename");
+    // take off the file path.. so we just have the file name for the output
+    var startindex = filename.lastIndexOf("/");
+    var outputfilename = filename.slice(startindex+1,filename.length);
 
-    alert (loading);
+    if (testType) {
+      // if checked..since we check the baseline radio button.. this is baseline
+      outputfilename = outputfilename.replace (".html",baseExt);
+      loading = embed.DumpLayout(theWindow,baseDir,outputfilename);
+    } else {
+      outputfilename = outputfilename.replace (".html",verExt);
+      loading = embed.DumpLayout(theWindow,verDir,outputfilename);
+    }
+
     if (loading != 0) {
       setTimeout("DumpFrames(false,filename)",1000);
-      alert("Waiting");
       break;
     } else {
-      theWindow.close();
+      if(compare){
+        baseline = outputfilename.replace (verExt,baseExt);
+        CompareFiles(baseDir,verDir,baseline,outputfilename);
+      }
+
       filename=embed.GetNextFileInDirectory();
-      alert("successful");
       if( filename != null) {
-        theWindow = window.open(filename);
+        theWindow.location = filename;
+      } else {
+        // all complete
+        theWindow.close();
       }
     }
   }
@@ -60,12 +194,87 @@ var loadingFlag;
 
 </script>
 
+<center>
+<h3 id="status">  OUTPUT IDLE </h3>
+<div id="output" align="left" style="overflow:auto; width:600; height:100; border:solid red">
+</div>
 <br>
-<form name="formname">
-<input type=button value="DumpFrames" onclick='DumpFrames(true,0)'>
+<form name="TestForm">
+<table>
+<tr>
+  <td>
+    Regression Directory 
+  </td>
+  <td>
+    <input type="text" name="RegTestDir" value="file:///S|/mozilla/layout/html/tests/table/dom" size=50>
+  </td>
+</tr>
+<tr>
+  <td>
+    BaseLine Extension
+  </td>
+  <td>
+    <input type="text" name="baseExt" value=".bas">
+  </td>
+  <td>
+    Verify Extension 
+  </td>
+  <td>
+    <input type="text" name="verExt" value=".ver">
+  </td>
+
+
+</tr>
+<tr>
+  <td>
+    BaseLine Output Directory
+  </td>
+  <td>
+    <input type="text" name="baseDir" value = "s:/tests/">
+  </td>
+  <td>
+    Verify Output Directory
+  </td>
+  <td>
+    <input type="text" name="verDir" value = "s:/tests/">
+  </td>
+</tr>
+<tr>
+  <td>
+    Run Baseline
+  </td>
+  <td>
+    <input id="bl" type="radio" name="testType" value="runbaseline" checked >
+  </td>
+</tr>
+<tr>
+  <td>
+    Run Verify
+  </td>
+  <td>
+    <input id="vf" type="radio" name="testType" value="runverify" >
+  </td>
+  <td>
+    Compare Now
+  <td>
+  <td>
+    <input id="comp" type="checkbox" name="compare" checked >    
+  </td)
+</tr>
+
+
+<tr>
+  <td>
+    <input type=button value="DumpFrames" onclick='DumpFrames(true,0)'>
+  </td>
+</tr>
+
+</table>
 </form>
 
 </center>
+
+
 
 </BODY>
 </HTML>

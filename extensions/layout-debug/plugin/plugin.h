@@ -62,6 +62,8 @@ public:
   // locals
   void    getVersion(char* *aVersion);
   void    OutPutLayoutFrames(nsISupports *aWindow,const PRUnichar *aFilePath, const PRUnichar *aFileName, PRInt32 *aRetVal);
+  void    CompareLayoutFrames(const PRUnichar *aBasePath, const PRUnichar *aVerPath, 
+              const PRUnichar *aBaseFile, const PRUnichar *aVerFile,  PRUint32 aFlags, PRInt32 *aRetVal);
   void    StartDirectorySearch(const char *aFilePath);
   void    GetNextFileInDirectory(char **aFilePath);
   nsIDebugPlugin* getScriptablePeer();

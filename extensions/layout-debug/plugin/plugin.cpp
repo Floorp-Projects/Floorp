@@ -191,6 +191,24 @@ void nsPluginInstance::OutPutLayoutFrames(nsISupports *aWindow, const PRUnichar 
 }
 
 //-----------------------------------------------------
+ 
+void nsPluginInstance::CompareLayoutFrames(const PRUnichar *aBasePath, const PRUnichar *aVerPath,
+            const PRUnichar *aBaseFile, const PRUnichar *aVerFile,  PRUint32 aFlags, PRInt32 *aRetVal)
+{
+  nsIDebugObject *theDebugObject=NULL;
+
+  *aRetVal = NS_ERROR_FAILURE;
+
+  if (gServiceManager) {
+    // get service using its contract id and use it to allocate the memory
+    gServiceManager->GetServiceByContractID("@mozilla.org/debug/debugobject;1", NS_GET_IID(nsIDebugObject), (void **)&theDebugObject);
+    if(theDebugObject){
+      *aRetVal = theDebugObject->CompareFrameModels(aBasePath,aVerPath,aBaseFile,aVerFile,aFlags);
+    }
+  }
+}
+
+//-----------------------------------------------------
 
 void 
 nsPluginInstance::StartDirectorySearch(const char *aFilePath)
