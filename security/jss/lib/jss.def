@@ -68,7 +68,6 @@ Java_org_mozilla_jss_CryptoManager_importCertToPermNative;
 Java_org_mozilla_jss_CryptoManager_initializeAllNative;
 Java_org_mozilla_jss_CryptoManager_putModulesInVector;
 Java_org_mozilla_jss_CryptoManager_setNativePasswordCallback;
-Java_org_mozilla_jss_CryptoManager_verifyCertNowNative;
 Java_org_mozilla_jss_pkcs11_CertProxy_releaseNativeResources;
 Java_org_mozilla_jss_pkcs11_CipherContextProxy_releaseNativeResources;
 Java_org_mozilla_jss_pkcs11_PK11Module_getLibraryName;
@@ -243,6 +242,7 @@ Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_engineSetKeyEntryNati
 Java_org_mozilla_jss_CryptoManager_initializeAllNative2;
 Java_org_mozilla_jss_ssl_SocketBase_getLocalAddressNative;
 Java_org_mozilla_jss_pkcs11_PK11PrivKey_getDSAParamsNative;
+Java_org_mozilla_jss_CryptoManager_verifyCertNowNative;
 ;+    local:
 ;+       *;
 ;+};
