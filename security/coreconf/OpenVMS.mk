@@ -53,4 +53,4 @@ endif
 XCFLAGS                        += $(OPTIMIZER)
 
 # The command to build a shared library in POSIX on OpenVMS.
-MKSHLIB = vmsld_psm $(OPTIMIZER)
+MKSHLIB = vmsld_psm OBJDIR=$(OBJDIR) $(OPTIMIZER)
