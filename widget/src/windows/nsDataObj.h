@@ -47,6 +47,7 @@
 //#include "Ddforw.h"
 #include "nsString.h"
 #include "nsILocalFile.h"
+#include "nsIURI.h"
 
 #define MAX_FORMATS 32
 
@@ -73,9 +74,9 @@ class nsITransferable;
  */
 class nsDataObj : public IDataObject
 {
-	public: // construction, destruction
-		nsDataObj();
-		~nsDataObj();
+  public: // construction, destruction
+    nsDataObj(nsIURI *uri = nsnull);
+    ~nsDataObj();
 
 	public: // IUnknown methods - see iunknown.h for documentation
 		STDMETHODIMP_(ULONG) AddRef        ();
@@ -181,6 +182,9 @@ class nsDataObj : public IDataObject
     
       // munge our HTML data to win32's CF_HTML spec. Will null terminate
     nsresult BuildPlatformHTML ( const char* inOurHTML, char** outPlatformHTML ) ;
+
+    // Used for the SourceURL part of CF_HTML
+    nsCString mSourceURL;
 
     nsString mStringData;
 

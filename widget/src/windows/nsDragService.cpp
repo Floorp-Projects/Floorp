@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Mike Pinkerton (pinkerton@netscape.com)
  *   Mark Hammond (MarkH@ActiveState.com)
+ *   David Gardiner <david.gardiner@unisa.edu.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -53,6 +54,7 @@
 #include "nsNativeDragSource.h"
 #include "nsClipboard.h"
 #include "nsISupportsArray.h"
+#include "nsIDocument.h"
 #include "nsDataObjCollection.h"
 
 #include "nsAutoPtr.h"
@@ -89,6 +91,15 @@ NS_IMETHODIMP nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode, nsISupport
   nsBaseDragService::InvokeDragSession ( aDOMNode, anArrayTransferables, aRegion, aActionType );
   
   nsresult rv;
+
+  // Try and get source URI of the items that are being dragged
+  nsIURI *uri = nsnull;
+
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mSourceDocument));
+  if (doc) {
+    uri = doc->GetDocumentURI();
+  }
+
   PRUint32 numItemsToDrag = 0;
   rv = anArrayTransferables->Count(&numItemsToDrag);
   if ( !numItemsToDrag )
@@ -112,7 +123,7 @@ NS_IMETHODIMP nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode, nsISupport
       nsCOMPtr<nsITransferable> trans(do_QueryInterface(supports));
       if ( trans ) {
         nsRefPtr<IDataObject> dataObj;
-        if ( NS_SUCCEEDED(nsClipboard::CreateNativeDataObject(trans, getter_AddRefs(dataObj))) ) {
+        if ( NS_SUCCEEDED(nsClipboard::CreateNativeDataObject(trans, getter_AddRefs(dataObj), uri)) ) {
           dataObjCollection->AddDataObject(dataObj);
         }
         else
@@ -125,7 +136,7 @@ NS_IMETHODIMP nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode, nsISupport
     anArrayTransferables->GetElementAt(0, getter_AddRefs(supports));
     nsCOMPtr<nsITransferable> trans(do_QueryInterface(supports));
     if ( trans ) {
-      if ( NS_FAILED(nsClipboard::CreateNativeDataObject(trans, getter_AddRefs(itemToDrag))) )
+      if ( NS_FAILED(nsClipboard::CreateNativeDataObject(trans, getter_AddRefs(itemToDrag), uri)) )
         return NS_ERROR_FAILURE;
     }
   } // else dragging a single object

@@ -24,6 +24,7 @@
  *   Blake Ross <blaker@netscape.com>
  *   Brodie Thiesfield <brofield@jellycan.com>
  *   Masayuki Nakano <masayuki@d-toybox.com>
+ *   David Gardiner <david.gardiner@unisa.edu.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -104,16 +105,21 @@ EXTERN_C GUID CDECL CLSID_nsDataObj =
 //-----------------------------------------------------
 // construction 
 //-----------------------------------------------------
-nsDataObj::nsDataObj()
+nsDataObj::nsDataObj(nsIURI * uri)
+: m_cRef(0), mTransferable(nsnull)
 {
-	m_cRef	        = 0;
-  mTransferable   = nsnull;
   mDataFlavors    = new nsVoidArray();
+  m_enumFE        = new CEnumFormatEtc(32);
+ 
+  m_enumFE->AddRef();
 
-  m_enumFE = new CEnumFormatEtc(32);
-  m_enumFE->AddRef();  
+  if (uri) {
+
+    // A URI was obtained, so pass this through to the DataObject
+    // so it can create a SourceURL for CF_HTML flavour
+    uri->GetSpec(mSourceURL);
+  }
 }
-
 //-----------------------------------------------------
 // destruction
 //-----------------------------------------------------
@@ -1189,8 +1195,18 @@ nsDataObj :: BuildPlatformHTML ( const char* inOurHTML, char** outPlatformHTML )
   const char* const endHTMLPrefix   = "\r\nEndHTML:";
   const char* const startFragPrefix = "\r\nStartFragment:";
   const char* const endFragPrefix   = "\r\nEndFragment:";
+  const char* const startSourceURLPrefix = "\r\nSourceURL:";
   const char* const endFragTrailer  = "\r\n";
 
+  // Do we already have mSourceURL from a drag?
+  if (mSourceURL.IsEmpty()) {
+    nsAutoString url;
+    ExtractShortcutURL(url);
+
+    AppendUTF16toUTF8(url, mSourceURL);
+  }
+
+  const PRInt32 kSourceURLLength    = mSourceURL.Length();
   const PRInt32 kNumberLength       = strlen(numPlaceholder);
 
   const PRInt32 kTotalHeaderLen     = strlen(startHTMLPrefix) +
@@ -1198,6 +1214,8 @@ nsDataObj :: BuildPlatformHTML ( const char* inOurHTML, char** outPlatformHTML )
                                       strlen(startFragPrefix) + 
                                       strlen(endFragPrefix) + 
                                       strlen(endFragTrailer) +
+                                      (kSourceURLLength > 0 ? strlen(startSourceURLPrefix) : 0) +
+                                      kSourceURLLength +
                                       (4 * kNumberLength);
 
   NS_NAMED_LITERAL_CSTRING(htmlHeaderString, "<html><body>\r\n");
@@ -1236,6 +1254,9 @@ nsDataObj :: BuildPlatformHTML ( const char* inOurHTML, char** outPlatformHTML )
 
   clipboardString.Append(endFragPrefix);
   clipboardString.Append(nsPrintfCString("%08u", endFragOffset));
+
+  clipboardString.Append(startSourceURLPrefix);
+  clipboardString.Append(mSourceURL);
 
   clipboardString.Append(endFragTrailer);
 

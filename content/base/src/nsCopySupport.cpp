@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Kathleen Brade <brade@netscape.com>
+ *   David Gardiner <david.gardiner@unisa.edu.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -78,48 +79,70 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
 {
   nsresult rv = NS_OK;
   
+  PRBool bIsPlainTextContext = PR_FALSE;
+
+  rv = IsPlainTextContext(aSel, aDoc, &bIsPlainTextContext);
+  if (NS_FAILED(rv)) 
+    return rv;
+
+  PRBool bIsHTMLCopy = !bIsPlainTextContext;
+  nsAutoString mimeType;
+
   nsCOMPtr<nsIDocumentEncoder> docEncoder;
 
   docEncoder = do_CreateInstance(NS_HTMLCOPY_ENCODER_CONTRACTID);
   NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
 
-  PRBool bIsPlainTextContext = PR_FALSE;
-
-  rv = IsPlainTextContext(aSel, aDoc, &bIsPlainTextContext);
-  if (NS_FAILED(rv)) return rv;
-
-  PRBool bIsHTMLCopy = !bIsPlainTextContext;
-  PRUint32 flags = 0;
-  nsAutoString mimeType;
-
-  if (bIsHTMLCopy)
-    mimeType.AssignLiteral(kHTMLMime);
-  else
-  {
-    flags |= nsIDocumentEncoder::OutputBodyOnly | nsIDocumentEncoder::OutputPreformatted;
-    mimeType.AssignLiteral(kUnicodeMime);
-  }
+  // We always require a plaintext version
+  mimeType.AssignLiteral(kUnicodeMime);
+  PRUint32 flags = nsIDocumentEncoder::OutputPreformatted;
 
   rv = docEncoder->Init(aDoc, mimeType, flags);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) 
+    return rv;
   rv = docEncoder->SetSelection(aSel);
-  if (NS_FAILED(rv)) return rv;
-    
-  nsAutoString buffer, parents, info;
+  if (NS_FAILED(rv)) 
+    return rv;
 
-  if (bIsHTMLCopy)
-  {
+  nsAutoString buffer, parents, info, shortcut, textBuffer, plaintextBuffer;
+
+  rv = docEncoder->EncodeToString(textBuffer);
+  if (NS_FAILED(rv)) 
+    return rv;
+
+  // this string may still contain HTML formatting, so we need to remove that too.
+  nsCOMPtr<nsIFormatConverter> htmlConverter = do_CreateInstance(kHTMLConverterCID);
+  NS_ENSURE_TRUE(htmlConverter, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsISupportsString> plainHTML;
+  plainHTML = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+  NS_ENSURE_TRUE(plainHTML, NS_ERROR_FAILURE);
+  nsresult plainhtml_rv = plainHTML->SetData(textBuffer);
+
+  nsCOMPtr<nsISupportsString> ConvertedData;
+  PRUint32 ConvertedLen;
+  htmlConverter->Convert(kHTMLMime, plainHTML, textBuffer.Length() * 2, kUnicodeMime, getter_AddRefs(ConvertedData), &ConvertedLen);
+
+  nsresult converted_rv = ConvertedData->GetData(plaintextBuffer);
+
+  // sometimes we also need the HTML version
+  if (bIsHTMLCopy) {
+    mimeType.AssignLiteral(kHTMLMime);
+
+    flags = 0;
+
+    rv = docEncoder->Init(aDoc, mimeType, flags);
+    if (NS_FAILED(rv)) 
+      return rv;
+    rv = docEncoder->SetSelection(aSel);
+    if (NS_FAILED(rv)) 
+      return rv;
+
     // encode the selection as html with contextual info
     rv = docEncoder->EncodeToStringWithContext(buffer, parents, info);
     if (NS_FAILED(rv)) 
       return rv;
-  }
-  else
-  {
-    // encode the selection
-    rv = docEncoder->EncodeToString(buffer);
-    if (NS_FAILED(rv)) 
-      return rv;
+
   }
   
   // Get the Clipboard
@@ -133,47 +156,58 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
     nsCOMPtr<nsITransferable> trans = do_CreateInstance(kCTransferableCID);
     if ( trans ) 
     {
+      nsCOMPtr<nsISupportsString> textWrapper;
+
+      textWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+      NS_ENSURE_TRUE(textWrapper, NS_ERROR_FAILURE);
+
+      nsresult text_rv = textWrapper->SetData(plaintextBuffer);
+
       if (bIsHTMLCopy)
       {
         // set up the data converter
-        nsCOMPtr<nsIFormatConverter> htmlConverter = do_CreateInstance(kHTMLConverterCID);
-        NS_ENSURE_TRUE(htmlConverter, NS_ERROR_FAILURE);
         trans->SetConverter(htmlConverter);
-      }
-      
-      // get wStrings to hold clip data
-      nsCOMPtr<nsISupportsString> dataWrapper, contextWrapper, infoWrapper;
-      dataWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
-      NS_ENSURE_TRUE(dataWrapper, NS_ERROR_FAILURE);
-      if (bIsHTMLCopy)
-      {
+
+        // get wStrings to hold clip data
+        nsCOMPtr<nsISupportsString> dataWrapper, contextWrapper, infoWrapper, urlWrapper;
+
+        dataWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+        NS_ENSURE_TRUE(dataWrapper, NS_ERROR_FAILURE);
         contextWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
         NS_ENSURE_TRUE(contextWrapper, NS_ERROR_FAILURE);
         infoWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
         NS_ENSURE_TRUE(infoWrapper, NS_ERROR_FAILURE);
-      }
-      
-      // populate the strings
-      nsresult data_rv = NS_OK, context_rv = NS_OK, info_rv = NS_OK;
-      data_rv =
-        dataWrapper->SetData(buffer);
-      if (bIsHTMLCopy)
-      {
-        context_rv =
-          contextWrapper->SetData(parents);
-        info_rv =
-          infoWrapper->SetData(info);
-      }
-      
-      // QI the data object an |nsISupports| so that when the transferable holds
-      // onto it, it will addref the correct interface.
-      nsCOMPtr<nsISupports> genericDataObj ( do_QueryInterface(dataWrapper) );
-      if (bIsHTMLCopy)
-      {
+        urlWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+        NS_ENSURE_TRUE(urlWrapper, NS_ERROR_FAILURE);
+
+        // populate the strings
+        nsresult data_rv = dataWrapper->SetData(buffer);
+        nsresult context_rv = contextWrapper->SetData(parents);
+        nsresult info_rv = infoWrapper->SetData(info);
+
+        // Try and get source URI of the items that are being dragged
+        nsIURI *uri = aDoc->GetDocumentURI();
+
+        nsCAutoString spec;
+        uri->GetSpec(spec);
+
+        AppendUTF8toUTF16(spec, shortcut);
+        shortcut.Append(PRUnichar('\n'));
+
+        // and get document title
+        shortcut.Append(aDoc->GetDocumentTitle());
+
+        nsresult url_rv = urlWrapper->SetData(shortcut);
+
+        // QI the data object an |nsISupports| so that when the transferable holds
+        // onto it, it will addref the correct interface.
+        nsCOMPtr<nsISupports> genericDataObj;
+
         if (!buffer.IsEmpty() && NS_SUCCEEDED(data_rv))
         {
           // Add the html DataFlavor to the transferable
           trans->AddDataFlavor(kHTMLMime);
+          genericDataObj = do_QueryInterface(dataWrapper);
           trans->SetTransferData(kHTMLMime, genericDataObj, buffer.Length()*2);
         }
         if (!parents.IsEmpty() && NS_SUCCEEDED(context_rv))
@@ -190,14 +224,37 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
           genericDataObj = do_QueryInterface(infoWrapper);
           trans->SetTransferData(kHTMLInfo, genericDataObj, info.Length()*2);
         }
+        if (!plaintextBuffer.IsEmpty() && NS_SUCCEEDED(text_rv))
+        {
+          // unicode text
+          // Add the unicode DataFlavor to the transferable
+          // If we didn't have this, then nsDataObj::GetData matches text/unicode against
+          // the kURLMime flavour which is not desirable (eg. when pasting into Notepad)
+          trans->AddDataFlavor(kUnicodeMime);
+          genericDataObj = do_QueryInterface(textWrapper);
+          trans->SetTransferData(kUnicodeMime, genericDataObj, plaintextBuffer.Length()*2);
+        }
+        // url
+        if (!shortcut.IsEmpty() && NS_SUCCEEDED(url_rv))
+        {
+          // Add the URL DataFlavor to the transferable
+          trans->AddDataFlavor(kURLMime);
+          genericDataObj = do_QueryInterface(urlWrapper);
+          trans->SetTransferData(kURLMime, genericDataObj, shortcut.Length()*2);
+        }
+
       }
       else
       {
-        if (!buffer.IsEmpty() && NS_SUCCEEDED(data_rv))
+        // QI the data object an |nsISupports| so that when the transferable holds
+        // onto it, it will addref the correct interface.
+        nsCOMPtr<nsISupports> genericDataObj ( do_QueryInterface(textWrapper) );
+
+        if (!plaintextBuffer.IsEmpty() && NS_SUCCEEDED(text_rv))
         {
          // Add the unicode DataFlavor to the transferable
           trans->AddDataFlavor(kUnicodeMime);
-          trans->SetTransferData(kUnicodeMime, genericDataObj, buffer.Length()*2);
+          trans->SetTransferData(kUnicodeMime, genericDataObj, plaintextBuffer.Length()*2);
         }
       }
 
