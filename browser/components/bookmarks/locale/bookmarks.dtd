@@ -98,4 +98,4 @@
 <!ENTITY emptyItem.label "(Empty)">
 
 <!-- selectBookmark.xul -->
-<!ENTITY selectBookmark.title      "Select a bookmark...">
+<!ENTITY selectBookmark.title      "Set Homepage">

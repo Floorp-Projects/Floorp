@@ -43,8 +43,6 @@ function Startup()
 {
   initServices();
   initBMService();
-  var textNode = document.createTextNode(window.arguments[0]);
-  document.getElementById("selectBookmarkDescription").appendChild(textNode);
   gBookmarkTree = document.getElementById("bookmarks-view");  
   gBookmarkTree.treeBoxObject.selection.select(0);
   gBookmarkTree.tree.focus();
@@ -69,5 +67,5 @@ function onOK(aEvent)
 {
   var selection = gBookmarkTree._selection;
   var url = BookmarksUtils.getProperty(selection.item[0], NC_NS+"URL", gBookmarkTree.tree.database);
-  window.arguments[1].url = url;
+  window.arguments[0].url = url;
 }

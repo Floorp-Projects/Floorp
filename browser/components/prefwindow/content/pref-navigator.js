@@ -29,15 +29,9 @@ function setHomePageToCurrentPage()
 
 function setHomePageToBookmark()
 {
-  var prefutilitiesBundle = document.getElementById("bundle_prefutilities");
-  var title = prefutilitiesBundle.getString("choosebookmark");
-  var brandBundle = document.getElementById("bundle_brand");
-  var brand = brandBundle.getString("brandShortName");
-  title = title.replace(/%brand%/g, brand);
-
   var rv = { url: null };
   openDialog("chrome://browser/content/bookmarks/selectBookmark.xul", "", 
-             "centerscreen,chrome,modal=yes,dialog=yes,resizable=yes", title, rv);
+             "centerscreen,chrome,modal=yes,dialog=yes,resizable=yes", rv);
   if (rv.url) {
     var homePageField = document.getElementById("browserStartupHomepage");
     homePageField.value = rv.url;
