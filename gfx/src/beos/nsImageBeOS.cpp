@@ -253,33 +253,6 @@ void nsImageBeOS::DrawNoLock(BView *aView, PRInt32 aX, PRInt32 aY, PRInt32 aWidt
  * @param aWidth The destination width of the pixelmap 
  * @param aHeight The destination height of the pixelmap 
  */ 
-NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
-	nsRect &aSrcRect, nsRect &aTileRect) {
-	
-	PRInt32 aY0 = aTileRect.y, aX0 = aTileRect.x, aY1 = aTileRect.y + aTileRect.height,
-		aX1 = aTileRect.x + aTileRect.width;
-	
-	nsDrawingSurfaceBeOS *beosdrawing = (nsDrawingSurfaceBeOS *)aSurface;
-	BView *view;
-	
-	if (!mImageCurrent || (nsnull == mImage)) BuildImage(aSurface);
-	if (nsnull == mImage) return PR_FALSE;
-	if(((nsRenderingContextBeOS&)aContext).LockAndUpdateView()) {
-		beosdrawing->AcquireView(&view);
-		if (view) {
-			for (PRInt32 y = aY0; y < aY1; y += aSrcRect.height) {
-				for (PRInt32 x = aX0; x < aX1; x += aSrcRect.width) {
-					DrawNoLock(view, x, y, PR_MIN(aSrcRect.width, aX1 - x),
-						PR_MIN(aSrcRect.height, aY1 - y));
-				}
-			}
-			view->Sync();
-			view->UnlockLooper();
-		}
-		beosdrawing->ReleaseView();
-	}
-	return NS_OK;
-}
 
 NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 	PRInt32 aSXOffset, PRInt32 aSYOffset, const nsRect &aTileRect) {
