@@ -100,9 +100,7 @@ static NS_DEFINE_IID(kIDOMCDATASectionIID, NS_IDOMCDATASECTION_IID);
 #ifdef MOZ_XSL
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
-static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIObserverIID, NS_IOBSERVER_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 #endif
@@ -334,14 +332,13 @@ nsXMLContentSink::StartLayoutProcess()
 NS_IMETHODIMP
 nsXMLContentSink::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
 {
-  nsIContent* content;
+  nsCOMPtr<nsIContent> content;
   nsresult rv = NS_OK;
 
   // Set the output content model on the document
-  rv = aSubject->QueryInterface(kIContentIID, (void **) &content);
+  content = do_QueryInterface(aSubject, &rv);
   if (NS_SUCCEEDED(rv)) {
-    mDocument->SetRootContent(content);
-    NS_RELEASE(content);
+    mDocument->SetRootContent(content);    
   }
   else
     mDocument->SetRootContent(mDocElement);
