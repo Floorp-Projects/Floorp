@@ -41,8 +41,14 @@ CPPSRCS		= \
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
 
+include $(topsrcdir)/config/config.mk
+
+ifeq ($(OS_ARCH)$(OS_TEST),NetBSDarm32)
+NO_LD_ARCHIVE_FLAGS := 1
+endif
+
 ifdef NO_LD_ARCHIVE_FLAGS
-LOST_SYM_LIBS	= -lxpcomds_s -lxptinfo -lmozreg_s
+LOST_SYM_LIBS	= -lxpcomds_s -lxpcomio_s -lxptinfo -lmozreg_s
 endif
 
 LIBS		= \
