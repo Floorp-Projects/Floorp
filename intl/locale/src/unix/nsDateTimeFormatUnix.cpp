@@ -16,7 +16,6 @@
  * Reserved.
  */
 
-#define NS_IMPL_IDS
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsDateTimeFormatUnix.h"
