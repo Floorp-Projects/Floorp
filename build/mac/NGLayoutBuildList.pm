@@ -603,37 +603,18 @@ sub BuildClientDist()
    _InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST",					"$distdirectory:xpfe:components");
    _InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST_IDL",				"$distdirectory:idl:");
 
-   # find
-   _InstallFromManifest(":mozilla:xpfe:components:find:public:MANIFEST_IDL",			"$distdirectory:idl:");
-
-   # search
-   _InstallFromManifest(":mozilla:xpfe:components:search:public:MANIFEST_IDL",			"$distdirectory:idl:");
-
-   # bookmarks
-   _InstallFromManifest(":mozilla:xpfe:components:bookmarks:public:MANIFEST_IDL",	"$distdirectory:idl:");
+   my $dir = '';
+   for $dir (qw(bookmarks find history prefwindow related sample search
+                sidebar ucth xfer)) {
+     _InstallFromManifest(":mozilla:xpfe:components:$dir:public:MANIFEST_IDL",
+                          "$distdirectory:idl:");
+   }
 
    # directory
    _InstallFromManifest(":mozilla:xpfe:components:directory:MANIFEST_IDL",			"$distdirectory:idl:");
-   
    # regviewer
    _InstallFromManifest(":mozilla:xpfe:components:regviewer:MANIFEST_IDL",			"$distdirectory:idl:");
-   
-   # history
-   _InstallFromManifest(":mozilla:xpfe:components:history:public:MANIFEST_IDL",		"$distdirectory:idl:");
-   
-   # related
-   _InstallFromManifest(":mozilla:xpfe:components:related:public:MANIFEST_IDL",		"$distdirectory:idl:");
 
-   # prefwindow
-   _InstallFromManifest(":mozilla:xpfe:components:prefwindow:public:MANIFEST_IDL",	"$distdirectory:idl:");
-
-   # sample
-   _InstallFromManifest(":mozilla:xpfe:components:sample:public:MANIFEST_IDL",		"$distdirectory:idl:");
-   # ucth
-   _InstallFromManifest(":mozilla:xpfe:components:ucth:public:MANIFEST_IDL",			"$distdirectory:idl:");
-   # xfer
-   _InstallFromManifest(":mozilla:xpfe:components:xfer:public:MANIFEST_IDL",			"$distdirectory:idl:");
-	
 	# XPAPPS
 	_InstallFromManifest(":mozilla:xpfe:AppCores:public:MANIFEST",					"$distdirectory:xpfe:");
 	_InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST",					"$distdirectory:xpfe:");
@@ -1404,6 +1385,8 @@ sub MakeResourceAliases()
           _InstallResources(":mozilla:xpfe:components:sidebar:resources:MANIFEST-content",		"$sidebar_chrome_dir:content:default");
           _InstallResources(":mozilla:xpfe:components:sidebar:resources:MANIFEST-skin",		"$sidebar_chrome_dir:skin:default");
           _InstallResources(":mozilla:xpfe:components:sidebar:resources:locale:MANIFEST",		"$sidebar_chrome_dir:locale");
+          _InstallResources(":mozilla:xpfe:components:sidebar:src:MANIFEST",
+                            "${dist_dir}Components");
         }
 	_InstallResources(":mozilla:xpfe:components:ucth:resources:MANIFEST",			"$global_chrome_dir:content:default");
 	_InstallResources(":mozilla:xpfe:components:ucth:resources:locale:MANIFEST",	"$global_chrome_dir:locale");
