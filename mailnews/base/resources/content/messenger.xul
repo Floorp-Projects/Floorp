@@ -51,6 +51,7 @@ Rights Reserved.
 <html:script src="chrome://messenger/content/shareglue.js"/>
 <html:script src="chrome://messenger/content/msgViewNavigation.js"/>
 <html:script src="chrome://messenger/content/msgMail3PaneWindow.js"/>
+<html:script src="chrome://messenger/content/mailContextMenus.js"/>
 
 <commands id="commands">
 	<commandset id="CommandUpdate_Mail"
@@ -105,6 +106,156 @@ Rights Reserved.
         onkeypress="goDoCommand('button_delete')"/>
 </keyset>
 
+<popupset>
+	<popup id="threadPaneContext" oncreate="return fillThreadPaneContextMenu();" >
+		<menuitem id="threadPaneContext-openNewWindow"
+			  value="&contextOpenNewWindow.label;"
+			  accesskey=""
+			  oncommand="MsgOpenNewWindowForMessage();"/>
+		<menuitem id="threadPaneContext-editAsNew"
+			  value="&contextEditAsNew.label;"
+			  accesskey=""
+			  oncommand="MsgEditMessageAsNew();"/>
+		<menuseparator id="threadPaneContext-sep-open"/>
+		<menuitem id="threadPaneContext-replySender"
+			  value="&contextReplySender.label;"
+			  accesskey=""
+			  oncommand="MsgReplyMessage(null);"/>
+		<menuitem id="threadPaneContext-replyAll"
+			  value="&contextReplyAll.label;"
+			  accesskey=""
+			  oncommand="MsgReplyToAllMessage(null);"/>
+		<menuitem id="threadPaneContext-forward"
+			  value="&contextForward.label;"
+			  accesskey=""
+			  oncommand="MsgForwardMessage(null);"/>
+		<menuseparator id="threadPaneContext-sep-reply"/>
+		<menu id="threadPaneContext-moveMenu"
+			  value="&contextMoveMsgMenu.label;"
+			  datasources="rdf:null"
+			  rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
+			<menupopup/>
+			<template> 
+				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
+					<menupopup>
+						<menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+							SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+							BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+							IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+							ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+							<menupopup>
+								<menuitem uri="..." value="&fileHereMenu.label;" 
+									oncommand="MsgMoveMessage(event.target)"
+									SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+									BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+									IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+									ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
+								<menuseparator/>
+							</menupopup>
+						</menu>
+					</menupopup>
+				</rule>
+				<rule nc:CanFileMessages="false" nc:ServerType="nntp">
+					<!-- don't show nntp servers in the file and copies menus -->
+				</rule>
+				<rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+					<!-- note, there is no "file here" -->
+					<menupopup>
+						<menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+									SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+									BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+									IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+									ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+							<menupopup/>
+						</menu>
+					</menupopup>
+				</rule>
+				<rule nc:CanFileMessages="true">
+					<menupopup>
+						<menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target)" 
+							SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+							BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+							IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+							ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+					</menupopup>
+				</rule>
+			</template>
+		</menu>
+		<menu id="threadPaneContext-copyMenu"
+			value="&contextCopyMsgMenu.label;"
+			datasources="rdf:null" 
+			rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
+			<menupopup/>
+			<template>
+				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
+					<menupopup>
+						<menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+							SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+							BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+							IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+							ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+							<menupopup>
+								<menuitem uri="..." value="&fileHereMenu.label;" 
+									oncommand="MsgCopyMessage(event.target)"
+									SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+									BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+									IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+									ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+								<menuseparator/>
+							</menupopup>
+						</menu>
+					</menupopup>
+				</rule>
+				<rule nc:CanFileMessages="false" nc:ServerType="nntp">
+					<!-- don't show nntp servers in the file and copies menus -->
+				</rule>
+				<rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+					<!-- note, there is no "file here" -->
+					<menupopup>
+						<menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+									SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+									BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+									IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+									ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+							<menupopup/>
+						</menu>
+					</menupopup>
+				</rule>
+				<rule nc:CanFileMessages="true">
+					<menupopup>
+						<menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" 
+							oncommand="MsgCopyMessage(event.target)" 
+							SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+							BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+							IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+							ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+					</menupopup>
+			  </rule>
+			</template>
+		</menu>
+		<menuitem id="threadPaneContext-saveAs"
+			  value="&contextSaveAs.label;"
+			  accesskey=""
+			  oncommand="MsgSaveAsFile();"/>
+		<menuitem id="threadPaneContext-print"
+			  value="&contextPrint.label;"
+			  accesskey=""
+			  oncommand="Print();"/>
+		<menuitem id="threadPaneContext-delete"
+			  value="&contextDelete.label;"
+			  accesskey=""
+			  oncommand="MsgDeleteMessage(false);"/>
+		<menuseparator id="threadPaneContext-sep-edit"/>
+		<menuitem id="threadPaneContext-addSenderToAddressBook"
+			  value="&contextAddSenderToAddressBook.label;"
+			  accesskey=""
+			  oncommand="MsgAddSenderToAddressBook();"/>
+		<menuitem id="threadPaneContext-addAllToAddressBook"
+			  value="&contextAddAllToAddressBook.label;"
+			  accesskey=""
+			  oncommand="MsgAddAllToAddressBook();"/>
+	</popup>
+</popupset>
         <menubar>
           <menu id="menu_File">
             <menupopup id="menu_FilePopup">
@@ -573,7 +724,7 @@ Rights Reserved.
           <box align="vertical" flex="1">
      
 
-		<tree id="threadTree" flex="2" style="height:0px"/>
+		<tree id="threadTree" flex="2" style="height:0px" context="threadPaneContext"/>
 
 		<!-- if you change this id, please change GetThreadAndMessagePaneSplitter() -->
 	    <splitter id="gray_horizontal_splitter" collapse="after" persist="state"

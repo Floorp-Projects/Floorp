@@ -693,3 +693,5 @@ function GetSelectTrashUri(folder)
     }
     return null;
 }
+
+

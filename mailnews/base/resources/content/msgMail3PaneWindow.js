@@ -338,25 +338,20 @@ function InitMsgWindow()
 function AddDataSources()
 {
 
-	//to move menu item
 	accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
 	folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-	var moveMenu = document.getElementById('moveMenu');
-	if(moveMenu)
-	{
-		moveMenu.database.AddDataSource(accountManagerDataSource);
-		moveMenu.database.AddDataSource(folderDataSource);
-		moveMenu.setAttribute('ref', 'msgaccounts:/');
-	}
+	//to move menu item
+	SetupMoveCopyMenus('moveMenu', accountManagerDataSource, folderDataSource);
 
 	//to copy menu item
-	var copyMenu = document.getElementById('copyMenu');
-	if(copyMenu)
-	{
-		copyMenu.database.AddDataSource(accountManagerDataSource);
-		copyMenu.database.AddDataSource(folderDataSource);
-		copyMenu.setAttribute('ref', 'msgaccounts:/');
-	}
+	SetupMoveCopyMenus('copyMenu', accountManagerDataSource, folderDataSource);
+
+	//To threadpane move context menu
+	SetupMoveCopyMenus('threadPaneContext-moveMenu', accountManagerDataSource, folderDataSource);
+
+	//To threadpane copy content menu
+	SetupMoveCopyMenus('threadPaneContext-copyMenu', accountManagerDataSource, folderDataSource);
+
 	//Add statusFeedback
 
 	var msgDS = folderDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
@@ -369,6 +364,17 @@ function AddDataSources()
 	msgDS.window = msgWindow;
 
 }	
+
+function SetupMoveCopyMenus(menuid, accountManagerDataSource, folderDataSource)
+{
+	var menu = document.getElementById(menuid);
+	if(menu)
+	{
+		menu.database.AddDataSource(accountManagerDataSource);
+		menu.database.AddDataSource(folderDataSource);
+		menu.setAttribute('ref', 'msgaccounts:/');
+	}
+}
 
 function InitPanes()
 {

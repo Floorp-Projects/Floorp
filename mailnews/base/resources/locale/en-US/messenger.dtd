@@ -257,3 +257,16 @@ Rights Reserved.
 <!-- Destination for click on throbber button -->
 <!ENTITY throbber.url "http://www.mozilla.org/mailnews"> 
 
+<!-- Thread Pane Context Menu -->
+<!ENTITY contextOpenNewWindow.label "Open in New Window">
+<!ENTITY contextEditAsNew.label "Edit As New...">
+<!ENTITY contextReplySender.label "Reply To Sender">
+<!ENTITY contextReplyAll.label "Reply To All">
+<!ENTITY contextForward.label "Forward">
+<!ENTITY contextMoveMsgMenu.label "Move To">
+<!ENTITY contextCopyMsgMenu.label "Copy To">
+<!ENTITY contextSaveAs.label "Save As...">
+<!ENTITY contextPrint.label "Print...">
+<!ENTITY contextDelete.label "Delete">
+<!ENTITY contextAddSenderToAddressBook.label "Add Sender To Address Book">
+<!ENTITY contextAddAllToAddressBook.label "Add All To Address Book">

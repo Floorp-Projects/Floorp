@@ -34,7 +34,9 @@ Rights Reserved.
 <html:script src="chrome://global/content/treePopups.js"/>
 <html:script src="chrome://messenger/content/messengerdnd.js"/>
 
-<tree datasources="rdf:null" id="threadTree"
+
+
+<tree datasources="rdf:null" id="threadTree" 
 	  		  onselect="top.ThreadPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
 			  onblur="goOnEvent(this,'blur')"
 			  containment="http://home.netscape.com/NC-rdf#MessageChild"
