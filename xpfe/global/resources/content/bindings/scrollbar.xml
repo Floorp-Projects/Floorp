@@ -100,6 +100,9 @@
         ]]></body>
       </method>
     </implementation>
+    <handlers>                                                                      
+      <handler event="contextmenu" action="event.preventDefault();"/>           
+    </handlers>  
   </binding>
 
   <binding id="slider">
