@@ -207,8 +207,7 @@ private:
     static nsIAtom* kTreeAtom;
     static nsIAtom* kXMLNSAtom;
     static nsIAtom* kXULContentsGeneratedAtom;
-    static nsIAtom* kXULIncludeSrcAtom;
-
+    
     static nsIRDFResource* kRDF_instanceOf;
     static nsIRDFResource* kRDF_nextVal;
     static nsIRDFResource* kRDF_type;
@@ -368,7 +367,6 @@ nsIAtom*        RDFXULBuilderImpl::kToolbarAtom;
 nsIAtom*        RDFXULBuilderImpl::kTreeAtom;
 nsIAtom*        RDFXULBuilderImpl::kXMLNSAtom;
 nsIAtom*        RDFXULBuilderImpl::kXULContentsGeneratedAtom;
-nsIAtom*        RDFXULBuilderImpl::kXULIncludeSrcAtom;
 
 nsIRDFResource* RDFXULBuilderImpl::kRDF_instanceOf;
 nsIRDFResource* RDFXULBuilderImpl::kRDF_nextVal;
@@ -443,8 +441,7 @@ RDFXULBuilderImpl::Init()
         kTreeAtom                 = NS_NewAtom("tree");
         kXMLNSAtom                = NS_NewAtom("xmlns");
         kXULContentsGeneratedAtom = NS_NewAtom("xulcontentsgenerated");
-        kXULIncludeSrcAtom        = NS_NewAtom("include");
-
+        
         rv = nsServiceManager::GetService(kRDFServiceCID,
                                           kIRDFServiceIID,
                                           (nsISupports**) &gRDFService);
@@ -505,7 +502,6 @@ RDFXULBuilderImpl::~RDFXULBuilderImpl(void)
 
         NS_IF_RELEASE(kContainerAtom);
         NS_IF_RELEASE(kXULContentsGeneratedAtom);
-        NS_IF_RELEASE(kXULIncludeSrcAtom);
         NS_IF_RELEASE(kIdAtom);
         NS_IF_RELEASE(kItemContentsGeneratedAtom);
         NS_IF_RELEASE(kDataSourcesAtom);
@@ -768,92 +764,6 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
         rv = AppendChild(containingNameSpace, aElement, child);
         NS_ASSERTION(NS_SUCCEEDED(rv), "problem appending child to content model");
         if (NS_FAILED(rv)) return rv;
-    }
-
-    // Now that we've built the children, check to see if the includesrc attribute
-    // exists on the node.
-    nsAutoString includeSrc;
-    if (NS_FAILED(rv = aElement->GetAttribute(kNameSpaceID_None,
-                                              kXULIncludeSrcAtom,
-                                              includeSrc))) {
-        NS_ERROR("unable to retrieve includeSrc attribute");
-        return rv;
-    }
-
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        // Build a URL object from the attribute's value.
-        
-        nsCOMPtr<nsIDocument> parentDoc;
-        aElement->GetDocument(*getter_AddRefs(parentDoc));
-
-        if (parentDoc == nsnull) {
-            NS_ERROR("Unable to retrieve parent document for a subdocument.");
-            return rv;
-        }
-    
-        nsCOMPtr<nsIContentViewerContainer> container;
-        nsCOMPtr<nsIXULParentDocument> xulParentDocument;
-        xulParentDocument = do_QueryInterface(parentDoc);
-        if (xulParentDocument == nsnull) {
-            NS_ERROR("Unable to turn document into a XUL parent document.");
-            return rv;
-        }
-
-        if (NS_FAILED(rv = xulParentDocument->GetContentViewerContainer(getter_AddRefs(container)))) {
-            NS_ERROR("Unable to retrieve content viewer container from parent document.");
-            return rv;
-        }
-
-        nsAutoString command;
-        if (NS_FAILED(rv = xulParentDocument->GetCommand(command))) {
-            NS_ERROR("Unable to retrieve the command from parent document.");
-            return rv;
-        }
-        
-        nsCOMPtr<nsIDOMXULElement> xulElement;
-        xulElement = do_QueryInterface(aElement);
-        if (!xulElement) {
-            NS_ERROR("The fragment root is not a XUL element.");
-            return rv;
-        }
-
-        nsCOMPtr<nsIRDFResource> rdfResource;
-        xulElement->GetResource(getter_AddRefs(rdfResource));
-        if (!rdfResource) {
-            NS_ERROR("The fragment root doesn't have an RDF resource behind it.");
-            return rv;
-        }
-        
-        nsCOMPtr<nsIXULDocumentInfo> docInfo;
-        if (NS_FAILED(rv = nsComponentManager::CreateInstance(kXULDocumentInfoCID,
-                                                              nsnull,
-                                                              kIXULDocumentInfoIID,
-                                                              (void**) getter_AddRefs(docInfo)))) {
-            NS_ERROR("unable to create document info object");
-            return rv;
-        }
-        
-        if (NS_FAILED(rv = docInfo->Init(parentDoc, rdfResource))) {
-            NS_ERROR("unable to initialize doc info object.");
-            return rv;
-        }
-        
-        // Turn the content viewer into a webshell
-        nsCOMPtr<nsIWebShell> webshell;
-        webshell = do_QueryInterface(container);
-        if (webshell == nsnull) {
-            NS_ERROR("this isn't a webshell. we're in trouble.");
-            return rv;
-        }
-
-        nsCOMPtr<nsIDocumentLoader> docLoader;
-        if (NS_FAILED(rv = webshell->GetDocumentLoader(*getter_AddRefs(docLoader)))) {
-            NS_ERROR("unable to obtain the document loader to kick off the load.");
-            return rv;
-        }
-
-        docLoader->LoadSubDocument(includeSrc,
-                                   docInfo.get());
     }
 
     return rv;
