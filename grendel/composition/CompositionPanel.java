@@ -33,6 +33,7 @@ import calypso.util.PreferencesFactory;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.FileDialog;
 import java.awt.Font;
 import java.awt.Frame;
@@ -864,21 +865,21 @@ public class CompositionPanel extends GeneralPanel {
     GrendelToolBar toolBar = new GrendelToolBar();
 
     addToolbarButton(toolBar, new SendNow(),
-                     "send",       "Send this message");
+                     "send",       "Send",     "Send this message");
     addToolbarButton(toolBar, new QuoteOriginalText(),
-                     "quote",      "Quote the previous document");
+                     "quote",      "Quote",    "Quote the previous document");
     addToolbarButton(toolBar, new SelectAddresses(),
-                     "address",    "Address this message");
+                     "address",    "Address",  "Address this message");
     addToolbarButton(toolBar, new AttachFile(),
-                     "attach",     "Include an attachment");
+                     "attach",     "Attach",   "Include an attachment");
     addToolbarButton(toolBar, null,
-                     "spelling",   "Check Spelling");
+                     "spelling",   "Spelling", "Check Spelling");
     addToolbarButton(toolBar, new SaveDraft(),
-                     "save",       "Save this message as a draft");
+                     "save",       "Save",     "Save this message as a draft");
     addToolbarButton(toolBar, null,
-                     "security",   "Show security Information");
+                     "security",   "Security", "Show security Information");
     addToolbarButton(toolBar, null,
-                     "stop",       "Stop the current Transfer (ESC)" );
+                     "stop",       "Stop",     "Stop the current Transfer (ESC)" );
     //addToolbarButton(toolBar, new AddSignatureAction(),
     //                 "signature",  "Add the signature of the current personality" );
 
@@ -897,6 +898,7 @@ public class CompositionPanel extends GeneralPanel {
   public void addToolbarButton(GrendelToolBar aToolBar,
                                UIAction aActionListener,
                                String aImageName,
+                               String aText,
                                String aToolTip) {
     JButton b = new JButton();
 
@@ -906,6 +908,10 @@ public class CompositionPanel extends GeneralPanel {
     b.setBorder(BorderFactory.createEmptyBorder());
     b.setMargin(new Insets(5,5,5,5));
     b.setToolTipText(aToolTip);
+    Font f=b.getFont();
+    Font nf=new Font(f.getName(), Font.PLAIN, f.getSize()-1);
+    b.setFont(nf);
+    b.setText(aText);
 
     URL iconUrl = getClass().getResource("images/" + aImageName + ".gif");
     b.setIcon(new ImageIcon(iconUrl));
@@ -921,6 +927,19 @@ public class CompositionPanel extends GeneralPanel {
     iconUrl = getClass().getResource("images/" +
                                      aImageName + "-rollover.gif");
     b.setRolloverIcon(new ImageIcon(iconUrl));
+
+    Dimension d=b.getPreferredSize();
+    System.out.println(d.getWidth());
+    System.out.println(d.getHeight());
+    double w=d.getWidth();
+    if (w > 48) {
+      d.setSize(w, 38);
+    } else {
+      d.setSize(48, 38);
+    }
+    b.setMinimumSize(d);
+    b.setMaximumSize(d);
+    b.setPreferredSize(d);
 
 
 //        JButton b = new JButton(new ImageIcon(aImageName));

@@ -29,6 +29,8 @@ import grendel.ui.ToolBarLayout;
 import grendel.widgets.GrendelToolBar;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Image;
 import java.awt.datatransfer.Clipboard;
 import java.util.Enumeration;
@@ -71,12 +73,33 @@ public class GeneralPanel extends JPanel {
     JButton res = new JButton();
 
     res.setIcon(icon);
+    res.setHorizontalTextPosition(JButton.CENTER);
+    res.setVerticalTextPosition(JButton.BOTTOM);
     res.setDisabledIcon(iconDisabled);
     res.setPressedIcon(iconPressed);
     res.setRolloverIcon(iconRollover);
     res.setActionCommand(aAction);
     res.setRolloverEnabled(true);
     res.setBorder(BorderFactory.createEmptyBorder());
+    Font f=res.getFont();
+    Font nf=new Font(f.getName(), Font.PLAIN, f.getSize()-1);
+    res.setFont(nf);
+    ResourceBundle resources = ResourceBundle.getBundle(fResourceBase + ".Toolbar");
+    String text = resources.getString(aAction);
+    res.setText(text);
+    
+    Dimension d=res.getPreferredSize();
+    System.out.println(d.getWidth());
+    System.out.println(d.getHeight());
+    double w=d.getWidth();
+    if (w > 48) {
+      d.setSize(w, 38);
+    } else {
+      d.setSize(48, 38);
+    }
+    res.setMinimumSize(d);
+    res.setMaximumSize(d);
+    res.setPreferredSize(d);
 
     return res;
   }
