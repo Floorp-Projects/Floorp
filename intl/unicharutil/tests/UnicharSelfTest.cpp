@@ -347,12 +347,14 @@ void TestCaseConversion()
 void RegisterFactories()
 {
    nsresult res;
-   res = nsRepository::RegisterFactory(kUnicharUtilCID,
+   res = nsRepository::RegisterComponent(kUnicharUtilCID,
+                                 NULL,
+                                 NULL,
                                  UNICHARUTIL_DLL_NAME,
                                  PR_FALSE,
                                  PR_TRUE);
    if(NS_FAILED(res))
-     cout << "RegisterFactory failed\n";
+     cout << "RegisterComponent failed\n";
 }
  
 int main(int argc, char** argv) {
