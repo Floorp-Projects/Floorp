@@ -22,6 +22,8 @@
 #include "MailNewsTypes.h"
 #include "nsString2.h"
 
+class nsMsgDatabase;
+class nsIMsgFolder;
 
 typedef enum
 {
@@ -127,7 +129,7 @@ typedef enum
 	nsMsgSearchOpNameCompletion,   /* Name Completion operator...as the name implies =) */
 
     kNumMsgSearchOperators       /* must be last operator            */
-} MSG_SearchOperator;
+} nsMsgSearchOperator;
 
 /* FEs use this to help build the search dialog box */
 typedef enum
@@ -149,6 +151,8 @@ typedef enum
 	nsMsgSearchNameCompletion
 } nsMsgSearchType;
 
+typedef enum {nsMsgSearchBooleanOR, nsMsgSearchBooleanAND} nsMsgSearchBooleanOp;
+
 /* Use this to specify the value of a search term */
 typedef struct nsMsgSearchValue
 {
@@ -156,28 +160,111 @@ typedef struct nsMsgSearchValue
     union
     {
         char *string;
-        MSG_PRIORITY priority;
+        nsMsgPriority priority;
         time_t date;
         PRUint32 msgStatus; /* see MSG_FLAG in msgcom.h */
         PRUint32 size;
         nsMsgKey key;
 		PRUint32 age; /* in days */
-		MSG_FolderInfo *folder;
+		nsIMsgFolder *folder;
     } u;
 } nsMsgSearchValue;
+
+struct nsMsgScopeTerm;
+struct nsMsgResultElement;
+struct nsMsgDIRServer;
+
+//---------------------------------------------------------------------------
+// nsMsgSearchTerm specifies one criterion, e.g. name contains phil
+//---------------------------------------------------------------------------
+
+class nsMsgSearchTerm
+{
+public:
+	nsMsgSearchTerm();
+	nsMsgSearchTerm (nsMsgSearchAttribute, nsMsgSearchOperator, nsMsgSearchValue *, PRBool, char * arbitraryHeader); // the bool is true if AND, FALSE if OR
+	nsMsgSearchTerm (nsMsgSearchAttribute, nsMsgSearchOperator, nsMsgSearchValue *, nsMsgSearchBooleanOp, char * arbitraryHeader);
+
+	virtual ~nsMsgSearchTerm ();
+
+	void StripQuotedPrintable (unsigned char*);
+	int32 GetNextIMAPOfflineMsgLine (char * buf, int bufferSize, int msgOffset, nsIMessage * msg, nsMsgDatabase * db);
+
+
+	nsresult MatchBody (nsMsgScopeTerm*, PRUint32 offset, PRUint32 length, PRInt16 csid, nsIMsgFolder * msg, nsMsgDatabase * db);
+	nsresult MatchArbitraryHeader (nsMsgScopeTerm *,PRUint32 offset, PRUint32 length, PRInt16 csid, nsIMsgFolder * msg, nsMsgDatabase *db,
+											char * headers, /* NULL terminated header list for msgs being filtered. Ignored unless ForFilters */
+											PRUint32 headersSize, /* size of the NULL terminated list of headers */
+											PRBool ForFilters /* true if we are filtering */);
+	nsresult MatchString (const char *, PRInt16 csid, PRBool body = FALSE);
+	nsresult MatchDate (time_t);
+	nsresult MatchStatus (PRUint32);
+	nsresult MatchPriority (nsMsgPriority);
+	nsresult MatchSize (PRUint32);
+	nsresult MatchRfc822String(const char *, int16 csid);
+	nsresult MatchAge (time_t);
+
+	nsresult EnStreamNew (char **, PRInt16 *length);
+	nsresult DeStream (char *, PRInt16 length);
+	nsresult DeStreamNew (char *, PRInt16 length);
+
+	nsresult GetLocalTimes (time_t, time_t, struct tm &, struct tm &);
+
+	PRBool IsBooleanOpAND() { return m_booleanOp == nsMsgSearchBooleanAND ? PR_TRUE : PR_FALSE;}
+	nsMsgSearchBooleanOp GetBooleanOp() {return m_booleanOp;}
+	char * GetArbitraryHeader() {return m_arbitraryHeader;}
+
+	static char *	EscapeQuotesInStr(const char *str);
+	PRBool MatchAllBeforeDeciding ();
+	nsMsgSearchAttribute m_attribute;
+	nsMsgSearchOperator m_operator;
+	nsMsgSearchValue m_value;
+	nsMsgSearchBooleanOp m_booleanOp;  // boolean operator to be applied to this search term and the search term which precedes it.
+	char * m_arbitraryHeader;         // user specified string for the name of the arbitrary header to be used in the search
+									  // only has a value when m_attribute = attribOtherHeader!!!!
+protected:
+	nsresult		OutputValue(nsString2 &outputStr);
+	nsMsgSearchAttribute ParseAttribute(char *inStream);
+	nsMsgSearchOperator	ParseOperator(char *inStream);
+	nsresult		ParseValue(char *inStream);
+	virtual PRUint32 GetExpectedMagic ();
+	static PRUint32 m_expectedMagic;
+};
+
+inline PRUint32 nsMsgSearchTerm::GetExpectedMagic ()
+{
+	return m_expectedMagic; 
+}
+
 
 /* Use this to help build menus in the search dialog. See APIs below */
 #define kMsgSearchMenuLength 64
 typedef struct nsMsgSearchMenuItem 
 {
     int16 attrib;
-    char name[kSearchMenuLength];
+    char name[kMsgSearchMenuLength];
     PRBool isEnabled;
 } nsMsgSearchMenuItem;
 
-struct nsMsgScopeTerm;
-struct nsMsgResultElement;
-struct nsMsgDIRServer;
+
+class nsMsgSearchTermArray : public nsVoidArray
+{
+public:
+	nsMsgSearchTerm *ElementAt(PRUint32 i) const { return (nsMsgSearchTerm*) nsVoidArray::ElementAt(i); }
+};
+
+class nsMsgSearchValueArray : public nsVoidArray
+{
+public:
+	nsMsgSearchValue *ElementAt(PRUint32 i) const { return (nsMsgSearchValue*) nsVoidArray::ElementAt(i); }
+};
+
+class nsMsgScopeTermArray : public nsVoidArray
+{
+public:
+	nsMsgScopeTerm *ElementAt(PRUint32 i) const { return (nsMsgScopeTerm*) nsVoidArray::ElementAt(i); }
+};
+
 
 
 #endif // _nsMsgSearchCore_H_

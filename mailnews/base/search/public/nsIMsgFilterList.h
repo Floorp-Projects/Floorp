@@ -16,11 +16,12 @@
  * Reserved.
  */
 
-#ifndef _nsMsgFilterList_H_
-#define _nsMsgFilterList_H_
+#ifndef _nsIMsgFilterList_H_
+#define _nsIMsgFilterList_H_
 
 #include "nscore.h"
 #include "nsISupports.h"
+#include "nsMsgFilterCore.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // The Msg Filter List is an interface designed to make accessing filter lists
@@ -28,27 +29,34 @@
 // or add new filters, or change the order around...
 //
 ////////////////////////////////////////////////////////////////////////////////////////
+// 08ecbcb4-0493-11d3-a50a-0060b0fc04b7
 
+#define NS_IMSGFILTERLIST_IID                         \
+{ 0x08ecbcb4, 0x0493, 0x11d3,                 \
+    { 0xa5, 0x0a, 0x0, 0x60, 0xb0, 0xfc, 0x04, 0xb7 } }
+
+class nsIMsgFilter;
 
 class nsIMsgFilterList : public nsISupports
 {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IMSGFILTERLIST_IID; return iid; }
 
-NS_IMETHOD GetFolderForFilterList(nsIMsgFolder **aFolder);
-NS_IMETHOD GetFilterCount(PRInt32 *pCount);
-NS_IMETHOD GetFilterAt(nsMsgFilterIndex filterIndex, nsIMsgFilter **filter);
-/* these methods don't delete filters - they just change the list. FE still must
-	call MSG_DestroyFilter to delete a filter.
-*/
-NS_IMETHOD SetFilterAt(nsMsgFilterIndex filterIndex, nsIMsgFilter *filter);
-NS_IMETHOD RemoveFilterAt(nsMsgFilterIndex filterIndex);
-NS_IMETHOD MoveFilterAt(nsMsgFilterIndex filterIndex, nsMsgFilterMotion motion);
-NS_IMETHOD InsertFilterAt(nsMsgFilterIndex filterIndex, nsMsgFilter *filter);
+	NS_IMETHOD GetFolderForFilterList(nsIMsgFolder **aFolder)= 0;
+	NS_IMETHOD GetFilterCount(PRInt32 *pCount)= 0;
+	NS_IMETHOD GetFilterAt(PRUint32 filterIndex, nsIMsgFilter **filter)= 0;
+	/* these methods don't delete filters - they just change the list. FE still must
+		call MSG_DestroyFilter to delete a filter.
+	*/
+	NS_IMETHOD SetFilterAt(PRUint32 filterIndex, nsIMsgFilter *filter)= 0;
+	NS_IMETHOD RemoveFilterAt(PRUint32 filterIndex)= 0;
+	NS_IMETHOD MoveFilterAt(PRUint32 filterIndex, nsMsgFilterMotion motion)= 0;
+	NS_IMETHOD InsertFilterAt(PRUint32 filterIndex, nsIMsgFilter *filter)= 0;
 
-NS_IMETHOD EnableLogging(PRBool enable);
-NS_IMETHOD IsLoggingEnabled(PRBool *aResult);
+	NS_IMETHOD EnableLogging(PRBool enable)= 0;
+	NS_IMETHOD IsLoggingEnabled(PRBool *aResult)= 0;
 
+	NS_IMETHOD CreateFilter(char *name,	nsIMsgFilter **result)= 0;
 
 };
 

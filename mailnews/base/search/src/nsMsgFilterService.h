@@ -16,37 +16,29 @@
  * Reserved.
  */
 
-#ifndef _nsIMsgFilterService_H_
-#define _nsIMsgFilterService_H_
+#ifndef _nsMsgFilterService_H_
+#define _nsMsgFilterService_H_
+
+#include "nsIMsgFilterService.h"
 
 // The filter service is used to acquire and manipulate filter lists.
-#define NS_IMSGFILTERSERVICE_IID                         \
-{ 0x5cbb0700, 0x04bc, 0x11d3,                 \
-    { 0xa5, 0x0a, 0x0, 0x60, 0xb0, 0xfc, 0x04, 0xb7 } }
 
-// 5cbb0700-04bc-11d3-a50a-0060b0fc04b7
-
-#include "nsISupports.h"
-
-class nsIMsgFilterList;
-
-class nsIMsgFilterService : public nsISupports
+class nsMsgFilterService : public nsIMsgFilterService
 {
 
 public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IMSGFILTERSERVICE_IID; return iid; }
-
+  NS_DECL_ISUPPORTS
 /* clients call OpenFilterList to get a handle to a FilterList, of existing nsMsgFilter *.
 	These are manipulated by the front end as a result of user interaction
    with dialog boxes. To apply the new list call MSG_CloseFilterList.
 
 */
-	NS_IMETHOD OpenFilterList(nsFileSpec *filterFile, nsIMsgFilterList **filterList) = 0;
-	NS_IMETHOD CloseFilterList(nsIMsgFilterList *filterList) = 0;
-	NS_IMETHOD	SaveFilterList(nsIMsgFilterList *filterList) = 0;	/* save without deleting */
-	NS_IMETHOD CancelFilterList(nsIMsgFilterList *filterList) = 0;
+	NS_IMETHOD OpenFilterList(nsFileSpec *filterFile, nsIMsgFilterList **filterList);
+	NS_IMETHOD CloseFilterList(nsIMsgFilterList *filterList);
+	NS_IMETHOD	SaveFilterList(nsIMsgFilterList *filterList);	/* save without deleting */
+	NS_IMETHOD CancelFilterList(nsIMsgFilterList *filterList);
 
 };
 
-#endif  // _nsIMsgFilterService_H_
+#endif  // _nsMsgFilterService_H_
 

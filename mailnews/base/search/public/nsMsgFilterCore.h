@@ -21,7 +21,7 @@
 
 #include "MailNewsTypes.h"
 #include "nsString2.h"
-
+#include "nsMsgSearchCore.h"
 
 typedef enum
  {
@@ -53,11 +53,6 @@ typedef enum
 
 typedef PRInt32 nsMsgFilterIndex;
 
-// shouldn't need these...probably should be interfaces.
-struct nsMsgFilter;
-struct nsMsgRule;
-struct nsMsgRuleAction;
-struct nsMsgFilterList;
 
 #endif
 
