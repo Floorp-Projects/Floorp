@@ -14,11 +14,13 @@
 #include "plstr.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsIXMLContent.h"
 #include "nsIXMLContentSink.h"
 #include "nsLayoutCID.h"
 #include "nsXMLDocument.h"
 #include "nsIDOMElement.h"
 #include "nsSupportsArray.h"
+#include "nsINameSpace.h"
 
 // Event listeners
 #include "nsIDOMMouseListener.h"
@@ -31,11 +33,14 @@
 #include "nsIDOMMenuListener.h"
 #include "nsIDOMDragListener.h"
 
+#include "nsIDOMAttr.h"
+#include "nsIDOMNamedNodeMap.h"
+
 #include "nsXBLEventHandler.h"
 #include "nsIXBLBinding.h"
 
 // Static IIDs/CIDs. Try to minimize these.
-// None
+static char kNameSpaceSeparator = ':';
 
 // Helper classes
 // {A2892B81-CED9-11d3-97FB-00400553EEF0}
@@ -86,6 +91,8 @@ class nsXBLBinding: public nsIXBLBinding
   NS_IMETHOD GenerateAnonymousContent(nsIContent* aBoundElement);
   NS_IMETHOD InstallEventHandlers(nsIContent* aBoundElement);
 
+  NS_IMETHOD GetBaseTag(nsIAtom** aResult);
+
   NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag);
 
 public:
@@ -102,6 +109,7 @@ public:
   static nsIAtom* kInheritsAtom;
   static nsIAtom* kTypeAtom;
   static nsIAtom* kCapturerAtom;
+  static nsIAtom* kExtendsAtom;
 
   // Used to easily obtain the correct IID for an event.
   struct EventHandlerMapEntry {
@@ -145,6 +153,7 @@ nsIAtom* nsXBLBinding::kExcludesAtom = nsnull;
 nsIAtom* nsXBLBinding::kInheritsAtom = nsnull;
 nsIAtom* nsXBLBinding::kTypeAtom = nsnull;
 nsIAtom* nsXBLBinding::kCapturerAtom = nsnull;
+nsIAtom* nsXBLBinding::kExtendsAtom = nsnull;
 
 nsXBLBinding::EventHandlerMapEntry
 nsXBLBinding::kEventHandlerMap[] = {
@@ -212,6 +221,7 @@ nsXBLBinding::nsXBLBinding(void)
     kInheritsAtom = NS_NewAtom("inherits");
     kTypeAtom = NS_NewAtom("type");
     kCapturerAtom = NS_NewAtom("capturer");
+    kExtendsAtom = NS_NewAtom("extends");
 
     EventHandlerMapEntry* entry = kEventHandlerMap;
     while (entry->mAttributeName) {
@@ -234,6 +244,7 @@ nsXBLBinding::~nsXBLBinding(void)
     NS_RELEASE(kInheritsAtom);
     NS_RELEASE(kTypeAtom);
     NS_RELEASE(kCapturerAtom);
+    NS_RELEASE(kExtendsAtom);
 
     EventHandlerMapEntry* entry = kEventHandlerMap;
     while (entry->mAttributeName) {
@@ -331,6 +342,32 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
     else return NS_OK;
   }
 
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
+  nsCOMPtr<nsIDOMNamedNodeMap> namedMap;
+
+  node->GetAttributes(getter_AddRefs(namedMap));
+  PRUint32 length;
+  namedMap->GetLength(&length);
+
+  nsCOMPtr<nsIDOMNode> attribute;
+  for (PRUint32 i = 0; i < length; ++i)
+  {
+    namedMap->Item(i, getter_AddRefs(attribute));
+    nsCOMPtr<nsIDOMAttr> attr(do_QueryInterface(attribute));
+    nsAutoString name;
+    attr->GetName(name);
+    if (name != L"excludes") {
+      nsAutoString value;
+      nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mBoundElement));
+      element->GetAttribute(name, value);
+      if (value == "") {
+        nsAutoString value2;
+        attr->GetValue(value2);
+        element->SetAttribute(name, value2);
+      }
+    }
+  }
+
   // Plan to build the content by default.
   PRBool buildContent = PR_TRUE;
   PRInt32 childCount;
@@ -382,64 +419,106 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
   nsCOMPtr<nsIContent> handlers;
   GetImmediateChild(kHandlersAtom, getter_AddRefs(handlers));
 
-  if (!handlers)
-    return NS_OK;
+  if (handlers) {
+    // Now walk the handlers and add event listeners to the bound
+    // element.
+    PRInt32 childCount;
+    handlers->ChildCount(childCount);
+    for (PRInt32 i = 0; i < childCount; i++) {
+      nsCOMPtr<nsIContent> child;
+      handlers->ChildAt(i, *getter_AddRefs(child));
 
-  // Now walk the handlers and add event listeners to the bound
-  // element.
-  PRInt32 childCount;
-  handlers->ChildCount(childCount);
-  for (PRInt32 i = 0; i < childCount; i++) {
-    nsCOMPtr<nsIContent> child;
-    handlers->ChildAt(i, *getter_AddRefs(child));
-
-    // Fetch the type attribute.
-    // XXX Deal with a comma-separated list of types
-    nsAutoString type;
-    child->GetAttribute(kNameSpaceID_None, kTypeAtom, type);
+      // Fetch the type attribute.
+      // XXX Deal with a comma-separated list of types
+      nsAutoString type;
+      child->GetAttribute(kNameSpaceID_None, kTypeAtom, type);
     
-    if (type != "") {
-      nsCOMPtr<nsIAtom> eventAtom = getter_AddRefs(NS_NewAtom(type));
-      PRBool found = PR_FALSE;
-      nsIID iid;
-      GetEventHandlerIID(eventAtom, &iid, &found);
-      if (found) {
-        // Add an event listener for mouse and key events only.
-        PRBool mouse = IsMouseHandler(type);
-        PRBool key = IsKeyHandler(type);
-        PRBool xul = IsXULHandler(type);
+      if (type != "") {
+        nsCOMPtr<nsIAtom> eventAtom = getter_AddRefs(NS_NewAtom(type));
+        PRBool found = PR_FALSE;
+        nsIID iid;
+        GetEventHandlerIID(eventAtom, &iid, &found);
+        if (found) {
+          // Add an event listener for mouse and key events only.
+          PRBool mouse = IsMouseHandler(type);
+          PRBool key = IsKeyHandler(type);
+          PRBool xul = IsXULHandler(type);
 
-        if (mouse || key || xul) {
-          // Create a new nsXBLEventHandler.
-          nsXBLEventHandler* handler;
-          NS_NewXBLEventHandler(mBoundElement, child, type, &handler);
+          if (mouse || key || xul) {
+            // Create a new nsXBLEventHandler.
+            nsXBLEventHandler* handler;
+            NS_NewXBLEventHandler(mBoundElement, child, type, &handler);
 
-          // Figure out if we're using capturing or not.
-          PRBool useCapture = PR_FALSE;
-          nsAutoString capturer;
-          child->GetAttribute(kNameSpaceID_None, kCapturerAtom, capturer);
-          if (capturer == "true")
-            useCapture = PR_TRUE;
+            // Figure out if we're using capturing or not.
+            PRBool useCapture = PR_FALSE;
+            nsAutoString capturer;
+            child->GetAttribute(kNameSpaceID_None, kCapturerAtom, capturer);
+            if (capturer == "true")
+              useCapture = PR_TRUE;
 
-          // Add the event listener.
-          nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
-          if (mouse)
-            receiver->AddEventListener(type, (nsIDOMMouseListener*)handler, useCapture);
-          else if(key)
-            receiver->AddEventListener(type, (nsIDOMKeyListener*)handler, useCapture);
-          else
-            receiver->AddEventListener(type, (nsIDOMMenuListener*)handler, useCapture);
+            // Add the event listener.
+            nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
+            if (mouse)
+              receiver->AddEventListener(type, (nsIDOMMouseListener*)handler, useCapture);
+            else if(key)
+              receiver->AddEventListener(type, (nsIDOMKeyListener*)handler, useCapture);
+            else
+              receiver->AddEventListener(type, (nsIDOMMenuListener*)handler, useCapture);
 
-          NS_RELEASE(handler);
-        }
+            NS_RELEASE(handler);
+          }
       
-        // XXX Call AddScriptEventListener for other IID types
+          // XXX Call AddScriptEventListener for other IID types
+        }
       }
     }
   }
 
   if (mNextBinding)
     mNextBinding->InstallEventHandlers(aBoundElement);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLBinding::GetBaseTag(nsIAtom** aResult)
+{
+  if (mNextBinding)
+    return mNextBinding->GetBaseTag(aResult);
+
+  // XXX Cache the value as a "base" attribute so that we don't do this
+  // check over and over each time the bound element occurs.
+
+  // We are the base binding. Obtain the extends attribute.
+  nsAutoString extends;
+  mBinding->GetAttribute(kNameSpaceID_None, kExtendsAtom, extends);
+
+  if (extends != "") {
+    // Obtain the namespace prefix.
+    nsAutoString prefix;
+    PRInt32 offset = extends.FindChar(kNameSpaceSeparator);
+    if (-1 != offset) {
+      extends.Left(prefix, offset);
+      extends.Cut(0, offset+1);
+    }
+    if (prefix.Length() > 0) {
+      // Look up the prefix.
+      nsCOMPtr<nsIAtom> prefixAtom = getter_AddRefs(NS_NewAtom(prefix));
+      nsCOMPtr<nsINameSpace> nameSpace;
+      nsCOMPtr<nsIXMLContent> xmlContent(do_QueryInterface(mBinding));
+      if (xmlContent) {
+        xmlContent->GetContainingNameSpace(*getter_AddRefs(nameSpace));
+
+        nsCOMPtr<nsINameSpace> tagSpace;
+        nameSpace->FindNameSpace(prefixAtom, *getter_AddRefs(tagSpace));
+        if (tagSpace) {
+          // Score! Return the tag.
+          // XXX We should really return the namespace as well.
+          *aResult = NS_NewAtom(extends); // The addref happens here
+        }
+      }
+    }
+  }
 
   return NS_OK;
 }
