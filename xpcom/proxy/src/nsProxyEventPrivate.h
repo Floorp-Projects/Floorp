@@ -64,7 +64,7 @@ public:
     NS_DECL_ISUPPORTS
     
     
-    static const nsIID& GetIID() {static nsIID iid = kProxyEventClassIID; return iid;}
+    static const nsIID& GetIID() {static nsIID iid = NS_PROXYEVENT_CLASS_IID; return iid;}
     static nsProxyEventClass* GetNewOrUsedClass(REFNSIID aIID);
     
     NS_IMETHOD DelegatedQueryInterface( nsProxyEventObject* self, 
@@ -96,7 +96,7 @@ class nsProxyEventObject : public nsXPTCStubBase
 public:
 
     NS_DECL_ISUPPORTS
-    static const nsIID& GetIID() {static nsIID iid = kProxyEventObjectIID; return iid;}
+    static const nsIID& GetIID() {static nsIID iid = NS_PROXYEVENT_OBJECT_IID; return iid;}
     
     static nsProxyEventObject* GetNewOrUsedProxy(nsIEventQueue *destQueue,
                                                  PRInt32 proxyType,
