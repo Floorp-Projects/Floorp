@@ -2122,6 +2122,10 @@ GlobalWindowImpl::CalculateChromeFlags(char *aFeatures) {
     return NS_CHROME_ALL_CHROME;
 
   PRBool presenceFlag = PR_FALSE;
+
+  // ((only) titlebars default to "on" if not mentioned)
+  chromeFlags |= WinHasOption(aFeatures, "titlebar", presenceFlag) ? NS_CHROME_TITLEBAR_ON : 0;
+  chromeFlags |= WinHasOption(aFeatures, "close", presenceFlag) ? NS_CHROME_WINDOW_CLOSE_ON : 0;
   chromeFlags |= WinHasOption(aFeatures, "toolbar", presenceFlag) ? NS_CHROME_TOOL_BAR_ON : 0;
   chromeFlags |= WinHasOption(aFeatures, "location", presenceFlag) ? NS_CHROME_LOCATION_BAR_ON : 0;
   chromeFlags |= (WinHasOption(aFeatures, "directories", presenceFlag) | WinHasOption(aFeatures, "personalbar", presenceFlag))
@@ -2130,7 +2134,13 @@ GlobalWindowImpl::CalculateChromeFlags(char *aFeatures) {
   chromeFlags |= WinHasOption(aFeatures, "menubar", presenceFlag) ? NS_CHROME_MENU_BAR_ON : 0;
   chromeFlags |= WinHasOption(aFeatures, "scrollbars", presenceFlag) ? NS_CHROME_SCROLLBARS_ON : 0;
   chromeFlags |= WinHasOption(aFeatures, "resizable", presenceFlag) ? NS_CHROME_WINDOW_RESIZE_ON : 0;
-  chromeFlags |= NS_CHROME_WINDOW_CLOSE_ON;
+  // default to "on" if titlebar, closebox, or resizable aren't mentioned
+  if (!PL_strcasestr(aFeatures, "titlebar"))
+    chromeFlags |= NS_CHROME_TITLEBAR_ON;
+  if (!PL_strcasestr(aFeatures, "close"))
+    chromeFlags |= NS_CHROME_WINDOW_CLOSE_ON;
+  if (!PL_strcasestr(aFeatures, "resizable"))
+    chromeFlags |= NS_CHROME_WINDOW_RESIZE_ON;
 
   // From this point onward, if the above features weren't specified at all,
   // we will assume that all chrome is present.
@@ -2157,9 +2167,6 @@ GlobalWindowImpl::CalculateChromeFlags(char *aFeatures) {
       if (XP_STRCASESTR(aFeatures,"hotkeys")==NULL)
           chromeFlags->disable_commands = FALSE;
   }*/
-  /* If titlebar condition not specified, default to shown */
-  /*if (XP_STRCASESTR(aFeatures,"titlebar")==0)*/
-  chromeFlags |= NS_CHROME_TITLEBAR_ON;
 
   /* XXX Add security check on z-ordering, modal, hide title, disable hotkeys */
 

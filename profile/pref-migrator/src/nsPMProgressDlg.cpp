@@ -41,6 +41,7 @@ static NS_DEFINE_IID( kNetServiceCID,      NS_NETSERVICE_CID );
 #include "nsNeckoUtil.h"
 #endif // NECKO
 
+#include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 
@@ -182,11 +183,11 @@ nsPrefMigrationProgressDialog::CreateProfileProgressDialog()
             rv = appShell->CreateTopLevelWindow( nsnull,
                                                  url,
                                                  PR_TRUE,
-                                                 getter_AddRefs(newWindow),
-                                                 nsnull,
+                                                 NS_CHROME_ALL_CHROME,
                                                  this,  // callbacks??
                                                  0,
-                                                 0 );
+                                                 0,
+                                                 getter_AddRefs(newWindow));
 
             if ( NS_SUCCEEDED( rv ) ) 
             {

@@ -26,7 +26,6 @@
 
 interface nsIWebShellWindow;
 interface nsIURI;
-interface nsIStreamObserver;
 interface nsIXULWindowCallbacks;
 interface nsICmdLineService;
 
@@ -47,32 +46,104 @@ class nsIFactory;
 interface nsIAppShellService : nsISupports
 {
 
+  /**
+   * Required initialization routine.
+   * @param aCmdLineService is stored and passed to appshell components as
+   *                        they are initialized.
+   */
   void Initialize(in nsICmdLineService aCmdLineService);
+
+  /**
+   * Runs an application event loop: normally the main event pump which
+   * defines the lifetime of the application.
+   */
   void Run();
+
+  /**
+   * Required exit routine.  Stops the event loop and cleanly shuts down
+   * the appshell components.
+   */
   void Shutdown();
 
+  /**
+   * Create a window.
+   * @param aParent the parent window.  Can be null.
+   * @param aUrl the contents of the new window.
+   * @param aShowWindow the window remains invisible if PR_FALSE.
+   * @param aChromeMask chrome flags affecting the kind of OS border
+   *                    given to the window. see nsIBrowserWindow for
+   *                    bit/flag definitions.
+   * @param aCallbacks interface providing C++ hooks for window initialization
+   *                   before the window is made visible.  Can be null.
+   *                   Deprecated.
+   * @param aInitialWidth width, in pixels, of the window.  Width of window
+   *                      at creation.  Can be overridden by the "width"
+   *                      tag in the XUL.  Set to NS_SIZETOCONTENT to force
+   *                      the window to wrap to its contents.
+   * @param aInitialHeight like aInitialWidth, but subtly different.
+   * @param aResult the newly created window is returned here.
+   */
   void CreateTopLevelWindow(in nsIWebShellWindow aParent,
                             in nsIURI aUrl, 
                             in boolean showWindow, 
-                            out nsIWebShellWindow aResult, 
-                            in nsIStreamObserver anObserver,
+                            in PRUint32 aChromeMask,
                             in nsIXULWindowCallbacks aCallbacks,
-                            in long aInitialWidth, in long aInitialHeight);
-  void CreateDialogWindow(  in nsIWebShellWindow aParent,
-                            in nsIURI aUrl, 
-                            in boolean showWindow,
-                            out nsIWebShellWindow aResult, 
-                            in nsIStreamObserver anObserver,
-                            in nsIXULWindowCallbacks aCallbacks,
-                            in long aInitialWidth, in long aInitialHeight);
-  void RunModalDialog(      out nsIWebShellWindow aWindow,
-                            in nsIURI aUrl, 
+                            in long aInitialWidth, in long aInitialHeight,
+                            out nsIWebShellWindow aResult);
+
+  /**
+   * Run a window modally.
+   * @param aWindow the window to run modally.  If null or pointing to null,
+   *                a new window is created.  If aWindow != null, the window
+   *                is returned from this method, but callers should use it
+   *                carefully: it's been closed, and is therefore partially
+   *                deconstructed.  Note that all other parameters are ignored
+   *                if an already created window is passed in.
+   * @param aParent the parent window.  Can be null.
+   * @param aUrl the contents of the window.
+   * @param aChromeMask chrome flags affecting the kind of OS border
+   *                    given to the window. see nsIBrowserWindow for
+   *                    bit/flag definitions.
+   * @param aCallbacks interface providing C++ hooks for window initialization
+   *                   before the window is made visible.  Deprecated.
+   * @param aInitialWidth width, in pixels, of the window.  Width of window
+   *                      at creation.  Can be overridden by the "width"
+   *                      tag in the XUL.  Set to NS_SIZETOCONTENT to force
+   *                      the window to wrap to its contents.
+   * @param aInitialHeight like aInitialWidth.
+   */
+  void RunModalDialog(      inout nsIWebShellWindow aWindow,
                             in nsIWebShellWindow aParent, 
-                            in nsIStreamObserver anObserver,
+                            in nsIURI aUrl, 
+                            in PRUint32 aChromeMask,
                             in nsIXULWindowCallbacks aCallbacks,
                             in long aInitialWidth, in long aInitialHeight);
+
+  /**
+   * Close a window.
+   * @param aWindow a window.
+   */
   void CloseTopLevelWindow(in nsIWebShellWindow aWindow);
+
+  /**
+   * Return the (singleton) application hidden window, automatically created
+   * and maintained by this AppShellService.
+   * @param aResult the hidden window.  Do not unhide hidden window.
+   *                Do not taunt hidden window.
+   */
   void GetHiddenWindow(out nsIWebShellWindow aResult);
+
+  /**
+   * Add a window to the application's registry of windows.  These windows
+   * are generally shown in the Windows taskbar, and the application
+   * knows it can't quit until it's out of registered windows.
+   * @param aWindow yes
+   */
   void RegisterTopLevelWindow(in nsIWebShellWindow aWindow);
+
+  /**
+   * Remove a window from the application's window registry.
+   * @param aWindow you see the pattern
+   */
   void UnregisterTopLevelWindow(in nsIWebShellWindow aWindow);
 };

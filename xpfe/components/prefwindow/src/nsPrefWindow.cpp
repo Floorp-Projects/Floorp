@@ -182,7 +182,6 @@ NS_IMETHODIMP nsPrefWindow::showWindow(
         return NS_ERROR_FAILURE;
 
     // (code adapted from nsToolkitCore::ShowModal. yeesh.)
-    nsIWebShellWindow* window = nsnull;
     nsCOMPtr<nsIURI> urlObj;
     char * urlStr = "chrome://pref/content/";
     nsresult rv;
@@ -209,13 +208,9 @@ NS_IMETHODIMP nsPrefWindow::showWindow(
     nsIXULWindowCallbacks *cb = nsnull;
     nsCOMPtr<nsIWebShellWindow> parent;
     DOMWindowToWebShellWindow(currentFrontWin, &parent);
-    appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, &window,
-                                 nsnull, cb, 504, 436);
-    if (window != nsnull)
-    {
-      appShell->RunModalDialog(&window, nsnull, parent, nsnull, cb, 504, 436);
-      NS_RELEASE(window);
-    }
+    rv = appShell->RunModalDialog(nsnull, parent, nsnull,
+                               NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
+                               cb, 504, 436);
     return rv;
 } // nsPrefWindow::showWindow()
 

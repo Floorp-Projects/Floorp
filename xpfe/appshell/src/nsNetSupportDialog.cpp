@@ -34,6 +34,7 @@
 #include "nsNeckoUtil.h"
 #endif // NECKO
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIBrowserWindow.h"
 #include "nsIWebShellWindow.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIURL.h"
@@ -519,13 +520,15 @@ nsresult nsNetSupportDialog::DoDialog(  nsString& inXULURL  )
     return result;
   }
 
-  result = appShellService->CreateDialogWindow(nsnull, dialogURL, PR_TRUE,
-                              &dialogWindow, nsnull, this, 300, 200);
+  result = appShellService->CreateTopLevelWindow(nsnull, dialogURL, PR_TRUE,
+                              NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
+                              this, 300, 200, &dialogWindow);
   mWebShellWindow = dialogWindow;
 
   if (NS_SUCCEEDED(result))
-    appShellService->RunModalDialog(&dialogWindow, dialogURL, nsnull,
-                       nsnull, this, 300, 200);
+    appShellService->RunModalDialog(&dialogWindow, nsnull, dialogURL,
+                       NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
+                       this, 300, 200);
 
   // cleanup
   if ( mOKButton )

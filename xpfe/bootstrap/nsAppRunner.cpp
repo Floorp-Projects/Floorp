@@ -23,6 +23,7 @@
 #include "nsNeckoUtil.h"
 #endif // NECKO
 #include "nsIWidget.h"
+#include "nsIBrowserWindow.h"
 #include "nsIWebShellWindow.h"
 #include "nsIPref.h"
 #include "plevent.h"
@@ -648,9 +649,11 @@ int main(int argc, char* argv[])
 				goto done;
 			} 
 
-		  nsCOMPtr<nsIWebShellWindow>  profWindow;
-			rv = profAppShell->CreateTopLevelWindow(nsnull, profURL, PR_TRUE, getter_AddRefs(profWindow),
-				       nsnull, nsnull, profWinWidth, profWinHeight);
+	 		nsCOMPtr<nsIWebShellWindow>  profWindow;
+			rv = profAppShell->CreateTopLevelWindow(nsnull, profURL,
+				PR_TRUE, NS_CHROME_ALL_CHROME,
+				nsnull, profWinWidth, profWinHeight,
+				getter_AddRefs(profWindow));
 
 			NS_RELEASE(profURL);
 		
@@ -698,8 +701,10 @@ int main(int argc, char* argv[])
 
   if ( !useArgs ) {
       nsCOMPtr<nsIWebShellWindow> newWindow;
-      rv = appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, getter_AddRefs(newWindow),
-                       nsnull, nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT);
+      rv = appShell->CreateTopLevelWindow(nsnull, url,
+                               PR_TRUE, NS_CHROME_ALL_CHROME,
+                               nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
+                               getter_AddRefs(newWindow));
   } else {
       nsIDOMToolkitCore* toolkit = nsnull;
       rv = nsServiceManager::GetService(kToolkitCoreCID,

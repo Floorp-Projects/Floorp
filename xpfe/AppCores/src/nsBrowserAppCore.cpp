@@ -432,8 +432,9 @@ newWind(char* urlName)
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIWebShellWindow> newWindow;
-  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, getter_AddRefs(newWindow),
-              nsnull, nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT);
+  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, NS_CHROME_ALL_CHROME,
+              nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
+              getter_AddRefs(newWindow));
 
   NS_RELEASE(url);
   
@@ -500,10 +501,12 @@ nsBrowserAppCore::WalletEditor(nsIDOMWindow* aWin)
     nsCOMPtr<nsIWebShellWindow> parent;
     DOMWindowToWebShellWindow(aWin, &parent);
     window = nsnull;
-    appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, &window,
-                                 nsnull, cb, 504, 436);
+    appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, 
+                              NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
+                              cb, 504, 436, &window);
     if (window != nsnull) {
-      appShell->RunModalDialog(&window, nsnull, parent, nsnull, cb, 504, 436);
+      appShell->RunModalDialog(&window, parent, nsnull, NS_CHROME_ALL_CHROME,
+                               cb, 504, 436);
       NS_RELEASE(window);
     }
     nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
@@ -551,10 +554,12 @@ nsBrowserAppCore::SignonViewer(nsIDOMWindow* aWin)
     nsCOMPtr<nsIWebShellWindow> parent;
     DOMWindowToWebShellWindow(aWin, &parent);
     window = nsnull;
-    appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, &window,
-                                 nsnull, cb, 504, 436);
+    appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE,
+                                 NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
+                                 cb, 504, 436, &window);
     if (window != nsnull) {
-      appShell->RunModalDialog(&window, nsnull, parent, nsnull, cb, 504, 436);
+      appShell->RunModalDialog(&window, parent, nsnull, NS_CHROME_ALL_CHROME,
+                               cb, 504, 436);
       NS_RELEASE(window);
     }
     nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
@@ -601,11 +606,13 @@ nsBrowserAppCore::CookieViewer(nsIDOMWindow* aWin)
     nsCOMPtr<nsIWebShellWindow> parent;
     DOMWindowToWebShellWindow(aWin, &parent);
     window = nsnull;
-    appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, &window,
-                                 nsnull, cb, 504, 436);
+    appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE,
+                              NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
+                              cb, 504, 436, &window);
 
     if (window != nsnull) {
-      appShell->RunModalDialog(&window, nsnull, parent, nsnull, cb, 504, 436);
+      appShell->RunModalDialog(&window, parent, nsnull, NS_CHROME_ALL_CHROME,
+                               cb, 504, 436);
       NS_RELEASE(window);
     }
 
@@ -696,10 +703,12 @@ nsBrowserAppCore::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
     nsCOMPtr<nsIWebShellWindow> parent;
     DOMWindowToWebShellWindow(aWin, &parent);
     window = nsnull;
-    appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, &window,
-                                 nsnull, cb, 504, 436);
+    appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE,
+                              NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
+                              cb, 504, 436, &window);
     if (window != nsnull) {
-      appShell->RunModalDialog(&window, nsnull, parent, nsnull, cb, 504, 436);
+      appShell->RunModalDialog(&window, parent, nsnull, NS_CHROME_ALL_CHROME,
+                               cb, 504, 436);
       NS_RELEASE(window);
     }
     nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
@@ -1546,8 +1555,9 @@ nsBrowserAppCore::NewWindow()
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIWebShellWindow> newWindow;
-  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, getter_AddRefs(newWindow),
-              nsnull, nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT);
+  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, NS_CHROME_ALL_CHROME,
+              nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
+              getter_AddRefs(newWindow));
   NS_RELEASE(url);
   
   return NS_OK;
@@ -1798,9 +1808,6 @@ nsBrowserAppCore::DoDialog()
 {
   // (adapted from nsToolkitCore)
   nsresult           rv;
-  nsIWebShellWindow  *window;
-
-  window = nsnull;
 
   nsCOMPtr<nsIURI> urlObj;
   char * urlstr = "resource:/res/samples/Password.html";
@@ -1824,9 +1831,9 @@ nsBrowserAppCore::DoDialog()
   if (NS_FAILED(rv))
     return rv;
 
-  rv = appShell->RunModalDialog(&window, urlObj, mWebShellWin, nsnull, nsnull, 300, 200);
-  if (NS_SUCCEEDED(rv))
-    NS_RELEASE(window);
+  rv = appShell->RunModalDialog(nsnull, mWebShellWin, urlObj,
+                               NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
+                               nsnull, 300, 200);
   return rv;
 }
 

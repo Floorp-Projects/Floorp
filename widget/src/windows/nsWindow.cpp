@@ -671,10 +671,28 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
       if (mWindowType == eWindowType_dialog) {
         extendedStyle &= ~WS_EX_CLIENTEDGE;
-      }  else if (mWindowType == eWindowType_popup) {
+      } else if (mWindowType == eWindowType_popup) {
         extendedStyle = WS_EX_TOPMOST;
         style = WS_POPUP;
         mBorderlessParent = parent;
+      }
+
+      if (aInitData->mBorderStyle != eBorderStyle_all) {
+        if (aInitData->mBorderStyle == eBorderStyle_none ||
+            !(aInitData->mBorderStyle & eBorderStyle_title)) {
+          style &= ~WS_DLGFRAME;
+          style |= WS_POPUP;
+        }
+        if (aInitData->mBorderStyle == eBorderStyle_none ||
+            !(aInitData->mBorderStyle & eBorderStyle_close)) {
+          style &= ~WS_SYSMENU;
+        }
+        if (aInitData->mBorderStyle == eBorderStyle_none ||
+            !(aInitData->mBorderStyle & eBorderStyle_resizeh)) {
+          style &= ~WS_THICKFRAME;
+          style &= ~WS_MINIMIZEBOX;
+          style &= ~WS_MAXIMIZEBOX;
+        }
       }
     }
 

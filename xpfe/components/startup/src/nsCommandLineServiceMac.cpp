@@ -36,6 +36,7 @@
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsIDOMToolkitCore.h"
+#include "nsIBrowserWindow.h"
 #include "nsIWebShellWindow.h"
 #include "nsIWebShell.h"
 #include "nsIScriptContextOwner.h"
@@ -1042,10 +1043,10 @@ nsIWebShellWindow* FindWebShellWindow(nsIXULWindowCallbacks* inCallbacks)
     	nsnull,
     	urlObj, // nsIURI* of chrome
     	PR_TRUE,
-    	&aWindow,
-        nsnull,
+        NS_CHROME_ALL_CHROME,
         inCallbacks, // callbacks
-        NS_SIZETOCONTENT, NS_SIZETOCONTENT);
+        NS_SIZETOCONTENT, NS_SIZETOCONTENT,
+    	&aWindow);
 	if (NS_FAILED(rv))
 		return nsnull;
 	return aWindow;

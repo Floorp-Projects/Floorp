@@ -24,6 +24,7 @@
 /* rhp - for access to webshell */
 #include "nsCOMPtr.h"
 #include "nsIDOMWindow.h"
+#include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsIScriptGlobalObject.h"
@@ -276,11 +277,11 @@ nsMessenger::Open3PaneWindow()
 	appShell->CreateTopLevelWindow(nsnull,      // parent
                                    url,
                                    PR_TRUE,
-                                   getter_AddRefs(newWindow),   // result widget
-                                   nsnull,      // observer
+                                   NS_CHROME_ALL_CHROME,
                                    nsnull,      // callbacks
-                                   NS_SIZETOCONTENT,         // width
-                                   NS_SIZETOCONTENT);        // height
+                                   NS_SIZETOCONTENT,           // width
+                                   NS_SIZETOCONTENT,           // height
+                                   getter_AddRefs(newWindow)); // result widget
 	done:
 	NS_IF_RELEASE(url);
 	return NS_OK;

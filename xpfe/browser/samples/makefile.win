@@ -26,8 +26,10 @@ install:: $(DLL)
 	$(MAKE_INSTALL) dexanimdialog.xul $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) dexparammaster.xul $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) dexparamdialog.xul $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) dexparamdialog.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) dexsimplemaster.xul $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) dexsimpledialog.xul $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) dexopenchrome.xul $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) tab.xul $(DIST)\bin\res\samples
         $(MAKE_INSTALL) xpmenu.xul $(DIST)\bin\res\samples
 
@@ -36,6 +38,9 @@ clobber::
 	rm -f $(DIST)\res\samples\dexanimdialog.xul
 	rm -f $(DIST)\res\samples\dexparammaster.xul
 	rm -f $(DIST)\res\samples\dexparamdialog.xul
+	rm -f $(DIST)\res\samples\dexparamdialog.html
 	rm -f $(DIST)\res\samples\dexsimplemaster.xul
 	rm -f $(DIST)\res\samples\dexsimpledialog.xul
+	rm -f $(DIST)\res\samples\dexopenchrome.xul
 	rm -f $(DIST)\res\samples\tab.xul
+	rm -f $(DIST)\res\samples\xpmenu.xul
