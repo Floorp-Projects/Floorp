@@ -61,126 +61,13 @@ public:
 
 public:
 
-/* we're still trying to decide how edit atoms will work.  Until then, use these */
-// XXX: fix ASAP!
-  // inline tags
-  static nsIAtom *b;         
-  static nsIAtom *big;       
-  static nsIAtom *i;         
-  static nsIAtom *small;     
-  static nsIAtom *strike;    
-  static nsIAtom *sub;       
-  static nsIAtom *sup;       
-  static nsIAtom *tt;        
-  static nsIAtom *u;         
-  static nsIAtom *em;        
-  static nsIAtom *strong;    
-  static nsIAtom *dfn;       
-  static nsIAtom *code;      
-  static nsIAtom *samp;      
-  static nsIAtom *kbd;       
-  static nsIAtom *var;       
-  static nsIAtom *cite;      
-  static nsIAtom *abbr;      
-  static nsIAtom *acronym;   
-  static nsIAtom *font;      
-  static nsIAtom *a;         
-  static nsIAtom *href;         
-  static nsIAtom *name;         
-  static nsIAtom *img;       
-  static nsIAtom *object;    
-  static nsIAtom *br;        
-  static nsIAtom *script;    
-  static nsIAtom *map;       
-  static nsIAtom *q;         
-  static nsIAtom *span;      
-  static nsIAtom *bdo;       
-  static nsIAtom *input;     
-  static nsIAtom *select;    
-  static nsIAtom *textarea;  
-  static nsIAtom *label;     
-  static nsIAtom *button;   
-  // Block tags
-  static nsIAtom *p;         
-  static nsIAtom *div;       
-  static nsIAtom *blockquote;
-  static nsIAtom *h1;        
-  static nsIAtom *h2;        
-  static nsIAtom *h3;        
-  static nsIAtom *h4;        
-  static nsIAtom *h5;        
-  static nsIAtom *h6;        
-  static nsIAtom *ul;        
-  static nsIAtom *ol;        
-  static nsIAtom *dl;        
-  static nsIAtom *pre;       
-  static nsIAtom *noscript;  
-  static nsIAtom *form;      
-  static nsIAtom *hr;        
-  static nsIAtom *table;     
-  static nsIAtom *fieldset;  
-  static nsIAtom *address;   
-  // Assumed to be block:
-  static nsIAtom *body;      
-  static nsIAtom *head;      
-  static nsIAtom *tr;        
-  static nsIAtom *td;        
-  static nsIAtom *th;        
-  static nsIAtom *caption;   
-  static nsIAtom *col;       
-  static nsIAtom *colgroup;  
-  static nsIAtom *tbody;     
-  static nsIAtom *thead;     
-  static nsIAtom *tfoot;     
-  static nsIAtom *li;        
-  static nsIAtom *dt;        
-  static nsIAtom *dd;        
-  static nsIAtom *legend;    
-
-  /** properties **/
-  static nsIAtom *color;     
-  static nsIAtom *face;      
-  static nsIAtom *size;      
+#define EDITOR_ATOM(name_, value_) static nsIAtom* name_;
+#include "nsEditPropertyAtomList.h"
+#undef EDITOR_ATOM
 
   /** special strings */
   static nsString *allProperties;   // this magic string represents the union of all inline style tags
 
-  // XXX: end temp code
-
-  /** CSS strings */
-  static nsIAtom *cssBackgroundColor;
-  static nsIAtom *cssBackgroundImage;
-  static nsIAtom *cssBorder;
-  static nsIAtom *cssCaptionSide;
-  static nsIAtom *cssColor;
-  static nsIAtom *cssFloat;
-  static nsIAtom *cssFontFamily;
-  static nsIAtom *cssFontSize;
-  static nsIAtom *cssFontStyle;
-  static nsIAtom *cssFontWeight;
-  static nsIAtom *cssHeight;
-  static nsIAtom *cssLeft;
-  static nsIAtom *cssListStyleType;
-  static nsIAtom *cssMarginLeft;
-  static nsIAtom *cssMarginRight;
-  static nsIAtom *cssTextAlign;
-  static nsIAtom *cssTextDecoration;
-  static nsIAtom *cssTop;
-  static nsIAtom *cssVerticalAlign;
-  static nsIAtom *cssWhitespace;
-  static nsIAtom *cssWidth;
-
-  static nsIAtom *cssMozUserSelect;
-
-  static nsIAtom *cssPxUnit;
-  static nsIAtom *cssEmUnit;
-  static nsIAtom *cssCmUnit;
-  static nsIAtom *cssPercentUnit;
-  static nsIAtom *cssInUnit;
-  static nsIAtom *cssMmUnit;
-  static nsIAtom *cssPtUnit;
-  static nsIAtom *cssPcUnit;
-  static nsIAtom *cssExUnit;
 };
 
 extern nsresult NS_NewEditProperty(nsIEditProperty **aResult);

@@ -40,6 +40,7 @@
 #include "nscore.h"
 #include "nsLayoutCID.h"
 #include "nsIAtom.h"
+#include "nsStaticAtom.h"
 #include "nsString.h"
 #include "nsIEnumerator.h"
 #include "nsIContent.h"
@@ -95,41 +96,21 @@ public:
   PRBool  mIsValid;
 };
 
-// XXX: Should change these pointers to
-//      nsCOMPtr<nsIAtom> pointers!
+#define TS_ATOM(name_, value_) nsIAtom* nsTextServicesDocument::name_ = 0;
+#include "nsTSAtomList.h"
+#undef TS_ATOM
 
-nsIAtom *nsTextServicesDocument::sAAtom;
-nsIAtom *nsTextServicesDocument::sAddressAtom;
-nsIAtom *nsTextServicesDocument::sBigAtom;
-nsIAtom *nsTextServicesDocument::sBlinkAtom;
-nsIAtom *nsTextServicesDocument::sBAtom;
-nsIAtom *nsTextServicesDocument::sCiteAtom;
-nsIAtom *nsTextServicesDocument::sCodeAtom;
-nsIAtom *nsTextServicesDocument::sDfnAtom;
-nsIAtom *nsTextServicesDocument::sEmAtom;
-nsIAtom *nsTextServicesDocument::sFontAtom;
-nsIAtom *nsTextServicesDocument::sIAtom;
-nsIAtom *nsTextServicesDocument::sKbdAtom;
-nsIAtom *nsTextServicesDocument::sKeygenAtom;
-nsIAtom *nsTextServicesDocument::sNobrAtom;
-nsIAtom *nsTextServicesDocument::sSAtom;
-nsIAtom *nsTextServicesDocument::sSampAtom;
-nsIAtom *nsTextServicesDocument::sSmallAtom;
-nsIAtom *nsTextServicesDocument::sSpacerAtom;
-nsIAtom *nsTextServicesDocument::sSpanAtom;      
-nsIAtom *nsTextServicesDocument::sStrikeAtom;
-nsIAtom *nsTextServicesDocument::sStrongAtom;
-nsIAtom *nsTextServicesDocument::sSubAtom;
-nsIAtom *nsTextServicesDocument::sSupAtom;
-nsIAtom *nsTextServicesDocument::sTtAtom;
-nsIAtom *nsTextServicesDocument::sUAtom;
-nsIAtom *nsTextServicesDocument::sVarAtom;
-nsIAtom *nsTextServicesDocument::sWbrAtom;
 
 PRInt32 nsTextServicesDocument::sInstanceCount;
 
 nsTextServicesDocument::nsTextServicesDocument()
 {
+static const nsStaticAtom ts_atoms[] = {
+#define TS_ATOM(name_, value_) { value_, &name_ },
+#include "nsTSAtomList.h"
+#undef TS_ATOM
+};
+
   mRefCnt         = 0;
 
   mSelStartIndex  = -1;
@@ -140,35 +121,7 @@ nsTextServicesDocument::nsTextServicesDocument()
   mIteratorStatus = eIsDone;
 
   if (sInstanceCount <= 0)
-  {
-    sAAtom = NS_NewAtom("a");
-    sAddressAtom = NS_NewAtom("address");
-    sBigAtom = NS_NewAtom("big");
-    sBlinkAtom = NS_NewAtom("blink");
-    sBAtom = NS_NewAtom("b");
-    sCiteAtom = NS_NewAtom("cite");
-    sCodeAtom = NS_NewAtom("code");
-    sDfnAtom = NS_NewAtom("dfn");
-    sEmAtom = NS_NewAtom("em");
-    sFontAtom = NS_NewAtom("font");
-    sIAtom = NS_NewAtom("i");
-    sKbdAtom = NS_NewAtom("kbd");
-    sKeygenAtom = NS_NewAtom("keygen");
-    sNobrAtom = NS_NewAtom("nobr");
-    sSAtom = NS_NewAtom("s");
-    sSampAtom = NS_NewAtom("samp");
-    sSmallAtom = NS_NewAtom("small");
-    sSpacerAtom = NS_NewAtom("spacer");
-    sSpanAtom = NS_NewAtom("span");      
-    sStrikeAtom = NS_NewAtom("strike");
-    sStrongAtom = NS_NewAtom("strong");
-    sSubAtom = NS_NewAtom("sub");
-    sSupAtom = NS_NewAtom("sup");
-    sTtAtom = NS_NewAtom("tt");
-    sUAtom = NS_NewAtom("u");
-    sVarAtom = NS_NewAtom("var");
-    sWbrAtom = NS_NewAtom("wbr");
-  }
+    NS_RegisterStaticAtoms(ts_atoms, NS_ARRAY_LENGTH(ts_atoms));
 
   ++sInstanceCount;
 }
@@ -179,37 +132,6 @@ nsTextServicesDocument::~nsTextServicesDocument()
     mEditor->RemoveEditActionListener(mNotifier);
 
   ClearOffsetTable();
-
-  if (sInstanceCount <= 1)
-  {
-    NS_IF_RELEASE(sAAtom);
-    NS_IF_RELEASE(sAddressAtom);
-    NS_IF_RELEASE(sBigAtom);
-    NS_IF_RELEASE(sBlinkAtom);
-    NS_IF_RELEASE(sBAtom);
-    NS_IF_RELEASE(sCiteAtom);
-    NS_IF_RELEASE(sCodeAtom);
-    NS_IF_RELEASE(sDfnAtom);
-    NS_IF_RELEASE(sEmAtom);
-    NS_IF_RELEASE(sFontAtom);
-    NS_IF_RELEASE(sIAtom);
-    NS_IF_RELEASE(sKbdAtom);
-    NS_IF_RELEASE(sKeygenAtom);
-    NS_IF_RELEASE(sNobrAtom);
-    NS_IF_RELEASE(sSAtom);
-    NS_IF_RELEASE(sSampAtom);
-    NS_IF_RELEASE(sSmallAtom);
-    NS_IF_RELEASE(sSpacerAtom);
-    NS_IF_RELEASE(sSpanAtom);      
-    NS_IF_RELEASE(sStrikeAtom);
-    NS_IF_RELEASE(sStrongAtom);
-    NS_IF_RELEASE(sSubAtom);
-    NS_IF_RELEASE(sSupAtom);
-    NS_IF_RELEASE(sTtAtom);
-    NS_IF_RELEASE(sUAtom);
-    NS_IF_RELEASE(sVarAtom);
-    NS_IF_RELEASE(sWbrAtom);
-  }
 
   --sInstanceCount;
 }
