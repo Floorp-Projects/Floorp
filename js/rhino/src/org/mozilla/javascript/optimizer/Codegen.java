@@ -1791,6 +1791,10 @@ class BodyCodegen
                 visitGetElem(node, child, false);
                 break;
 
+              case Token.GET_REF:
+                visitGetRef(node, child);
+                break;
+
               case Token.GETVAR:
                 visitGetVar(node);
                 break;
@@ -1809,62 +1813,14 @@ class BodyCodegen
                 break;
 
               case Token.SETELEM:
-              case Token.SETELEM_OP: {
-                generateCodeFromNode(child, node);
-                child = child.getNext();
-                if (type == Token.SETELEM_OP) {
-                    cfw.add(ByteCode.DUP);
-                }
-                generateCodeFromNode(child, node);
-                child = child.getNext();
-                boolean indexIsNumber
-                    = (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1);
-                if (type == Token.SETELEM_OP) {
-                    if (indexIsNumber) {
-                        // stack: ... object object number
-                        //        -> ... object number object number
-                        cfw.add(ByteCode.DUP2_X1);
-                        cfw.addALoad(variableObjectLocal);
-                        addOptRuntimeInvoke(
-                            "getElem",
-                            "(Ljava/lang/Object;D"
-                            +"Lorg/mozilla/javascript/Scriptable;"
-                            +")Ljava/lang/Object;");
-                    } else {
-                        // stack: ... object object indexObject
-                        //        -> ... object indexObject object indexObject
-                        cfw.add(ByteCode.DUP_X1);
-                        cfw.addALoad(variableObjectLocal);
-                        addScriptRuntimeInvoke(
-                            "getElem",
-                            "(Ljava/lang/Object;"
-                            +"Ljava/lang/Object;"
-                            +"Lorg/mozilla/javascript/Scriptable;"
-                            +")Ljava/lang/Object;");
-                    }
-                }
-                generateCodeFromNode(child, node);
-                cfw.addALoad(variableObjectLocal);
-                if (indexIsNumber) {
-                    addOptRuntimeInvoke(
-                        "setElem",
-                        "(Ljava/lang/Object;"
-                        +"D"
-                        +"Ljava/lang/Object;"
-                        +"Lorg/mozilla/javascript/Scriptable;"
-                        +")Ljava/lang/Object;");
-                }
-                else {
-                    addScriptRuntimeInvoke(
-                        "setElem",
-                        "(Ljava/lang/Object;"
-                        +"Ljava/lang/Object;"
-                        +"Ljava/lang/Object;"
-                        +"Lorg/mozilla/javascript/Scriptable;"
-                        +")Ljava/lang/Object;");
-                }
+              case Token.SETELEM_OP:
+                visitSetElem(type, node, child);
                 break;
-              }
+
+              case Token.SET_REF:
+              case Token.SET_REF_OP:
+                visitSetRef(type, node, child);
+                break;
 
               case Token.DELPROP:
                 cfw.addALoad(contextLocal);
@@ -1887,6 +1843,10 @@ class BodyCodegen
 
               case Token.LOCAL_LOAD:
                 cfw.addALoad(getLocalBlockRegister(node));
+                break;
+
+              case Token.SPECIAL_REF:
+                visitSpecialRef(node, child);
                 break;
 
               default:
@@ -2794,16 +2754,26 @@ class BodyCodegen
             break;
           }
           case Token.GETELEM: {
+            int incrDecrType = node.getExistingIntProp(Node.INCRDECR_PROP);
             Node getElemChild = child.getFirstChild();
             generateCodeFromNode(getElemChild, node);
             generateCodeFromNode(getElemChild.getNext(), node);
             cfw.addALoad(variableObjectLocal);
-            cfw.addPush(node.getExistingIntProp(Node.INCRDECR_PROP));
+            cfw.addPush(incrDecrType);
             addScriptRuntimeInvoke("elemIncrDecr",
                                    "(Ljava/lang/Object;"
                                    +"Ljava/lang/Object;"
                                    +"Lorg/mozilla/javascript/Scriptable;"
                                    +"I)Ljava/lang/Object;");
+            break;
+          }
+          case Token.GET_REF: {
+            int incrDecrType = node.getExistingIntProp(Node.INCRDECR_PROP);
+            Node refChild = child.getFirstChild();
+            generateCodeFromNode(refChild, node);
+            cfw.addPush(incrDecrType);
+            addScriptRuntimeInvoke(
+                "referenceIncrDecr", "(Ljava/lang/Object;I)Ljava/lang/Object;");
             break;
           }
           default:
@@ -3307,24 +3277,6 @@ class BodyCodegen
         if (dupObject) {
             cfw.add(ByteCode.DUP);
         }
-        int special = node.getIntProp(Node.SPECIAL_PROP_PROP, 0);
-        if (special != 0) {
-            cfw.addALoad(variableObjectLocal);
-            String runtimeMethod;
-            if (special == Node.SPECIAL_PROP_PROTO) {
-                runtimeMethod = "getProto";
-            } else if (special == Node.SPECIAL_PROP_PARENT) {
-                runtimeMethod = "getParent";
-            } else {
-                throw Codegen.badTree();
-            }
-            addScriptRuntimeInvoke(
-                runtimeMethod,
-                "(Ljava/lang/Object;"
-                +"Lorg/mozilla/javascript/Scriptable;"
-                +")Lorg/mozilla/javascript/Scriptable;");
-            return;
-        }
         Node nameChild = child.getNext();
         generateCodeFromNode(nameChild, node);  // the name
         /*
@@ -3375,49 +3327,18 @@ class BodyCodegen
         }
     }
 
+    private void visitGetRef(Node node, Node child)
+    {
+        generateCodeFromNode(child, node); // reference
+        addScriptRuntimeInvoke(
+            "getReference", "(Ljava/lang/Object;)Ljava/lang/Object;");
+    }
+
     private void visitSetProp(int type, Node node, Node child)
     {
         Node objectChild = child;
         generateCodeFromNode(child, node);
         child = child.getNext();
-        int special = node.getIntProp(Node.SPECIAL_PROP_PROP, 0);
-        if (special != 0) {
-            if (type == Token.SETPROP_OP) {
-                cfw.add(ByteCode.DUP);
-                String runtimeMethod;
-                if (special == Node.SPECIAL_PROP_PROTO) {
-                    runtimeMethod = "getProto";
-                } else if (special == Node.SPECIAL_PROP_PARENT) {
-                    runtimeMethod = "getParent";
-                } else {
-                    throw Codegen.badTree();
-                }
-                cfw.addALoad(variableObjectLocal);
-                addScriptRuntimeInvoke(
-                    runtimeMethod,
-                    "(Ljava/lang/Object;"
-                    +"Lorg/mozilla/javascript/Scriptable;"
-                    +")Lorg/mozilla/javascript/Scriptable;");
-            }
-            generateCodeFromNode(child, node);
-            cfw.addALoad(variableObjectLocal);
-            String runtimeMethod;
-            if (special == Node.SPECIAL_PROP_PROTO) {
-                runtimeMethod = "setProto";
-            } else if (special == Node.SPECIAL_PROP_PARENT) {
-                runtimeMethod = "setParent";
-            } else {
-                throw Codegen.badTree();
-            }
-            addScriptRuntimeInvoke(
-                runtimeMethod,
-                "(Ljava/lang/Object;"
-                +"Ljava/lang/Object;"
-                +"Lorg/mozilla/javascript/Scriptable;"
-                +")Ljava/lang/Object;");
-            return;
-        }
-
         if (type == Token.SETPROP_OP) {
             cfw.add(ByteCode.DUP);
         }
@@ -3459,6 +3380,78 @@ class BodyCodegen
             +")Ljava/lang/Object;");
     }
 
+    private void visitSetElem(int type, Node node, Node child)
+    {
+        generateCodeFromNode(child, node);
+        child = child.getNext();
+        if (type == Token.SETELEM_OP) {
+            cfw.add(ByteCode.DUP);
+        }
+        generateCodeFromNode(child, node);
+        child = child.getNext();
+        boolean indexIsNumber = (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1);
+        if (type == Token.SETELEM_OP) {
+            if (indexIsNumber) {
+                // stack: ... object object number
+                //        -> ... object number object number
+                cfw.add(ByteCode.DUP2_X1);
+                cfw.addALoad(variableObjectLocal);
+                addOptRuntimeInvoke(
+                    "getElem",
+                    "(Ljava/lang/Object;D"
+                    +"Lorg/mozilla/javascript/Scriptable;"
+                    +")Ljava/lang/Object;");
+            } else {
+                // stack: ... object object indexObject
+                //        -> ... object indexObject object indexObject
+                cfw.add(ByteCode.DUP_X1);
+                cfw.addALoad(variableObjectLocal);
+                addScriptRuntimeInvoke(
+                    "getElem",
+                    "(Ljava/lang/Object;"
+                    +"Ljava/lang/Object;"
+                    +"Lorg/mozilla/javascript/Scriptable;"
+                    +")Ljava/lang/Object;");
+            }
+        }
+        generateCodeFromNode(child, node);
+        cfw.addALoad(variableObjectLocal);
+        if (indexIsNumber) {
+            addOptRuntimeInvoke(
+                "setElem",
+                "(Ljava/lang/Object;"
+                +"D"
+                +"Ljava/lang/Object;"
+                +"Lorg/mozilla/javascript/Scriptable;"
+                +")Ljava/lang/Object;");
+        } else {
+            addScriptRuntimeInvoke(
+                "setElem",
+                "(Ljava/lang/Object;"
+                +"Ljava/lang/Object;"
+                +"Ljava/lang/Object;"
+                +"Lorg/mozilla/javascript/Scriptable;"
+                +")Ljava/lang/Object;");
+        }
+    }
+
+    private void visitSetRef(int type, Node node, Node child)
+    {
+        generateCodeFromNode(child, node);
+        child = child.getNext();
+        if (type == Token.SET_REF_OP) {
+            cfw.add(ByteCode.DUP);
+            addScriptRuntimeInvoke(
+                "getReference", "(Ljava/lang/Object;)Ljava/lang/Object;");
+        }
+        generateCodeFromNode(child, node);
+        cfw.add(ByteCode.DUP_X1);
+        // stack: value ref value
+        addScriptRuntimeInvoke(
+            "setReference", "(Ljava/lang/Object;Ljava/lang/Object;)V");
+        // stack: value
+    }
+
     private void visitBind(Node node, Node child)
     {
         while (child != null) {
@@ -3472,6 +3465,18 @@ class BodyCodegen
             "(Lorg/mozilla/javascript/Scriptable;"
             +"Ljava/lang/String;"
             +")Lorg/mozilla/javascript/Scriptable;");
+    }
+
+    private void visitSpecialRef(Node node, Node child)
+    {
+        int special = node.getExistingIntProp(Node.SPECIAL_PROP_PROP);
+        generateCodeFromNode(child, node);
+        cfw.addALoad(variableObjectLocal);             // get variable object
+        cfw.addPush(special);                 // push name
+        addScriptRuntimeInvoke("specialReference",
+            "(Ljava/lang/Object;"
+            +"Lorg/mozilla/javascript/Scriptable;"
+            +"I)Ljava/lang/Object;");
     }
 
     private int getLocalBlockRegister(Node node)

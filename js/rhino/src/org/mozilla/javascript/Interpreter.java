@@ -69,80 +69,75 @@ public class Interpreter
         Icode_PROPDEC                   = -9,
         Icode_VARDEC                    = -10,
 
-        Icode_ELEM_PRE_INC              = -11,
-        Icode_ELEM_PRE_DEC              = -12,
-        Icode_ELEM_POST_INC             = -13,
-        Icode_ELEM_POST_DEC             = -14,
+        Icode_ELEM_INC_DEC              = -11,
+        Icode_REF_INC_DEC               = -12,
 
     // helper codes to deal with activation
-        Icode_SCOPE                     = -15,
-        Icode_TYPEOFNAME                = -16,
+        Icode_SCOPE                     = -13,
+        Icode_TYPEOFNAME                = -14,
 
     // helper for function calls
-        Icode_NAME_FAST_THIS            = -17,
-        Icode_NAME_SLOW_THIS            = -18,
-        Icode_PUSH_PARENT               = -19,
-
-    // Access to parent scope and prototype
-        Icode_GETPROTO                  = -20,
-        Icode_GETSCOPEPARENT            = -21,
-        Icode_SETPROTO                  = -22,
-        Icode_SETPARENT                 = -23,
+        Icode_NAME_FAST_THIS            = -15,
+        Icode_NAME_SLOW_THIS            = -16,
+        Icode_PUSH_PARENT               = -17,
 
     // Create closure object for nested functions
-        Icode_CLOSURE                   = -24,
+        Icode_CLOSURE                   = -18,
 
     // Special calls
-        Icode_CALLSPECIAL               = -25,
+        Icode_CALLSPECIAL               = -19,
 
     // To return undefined value
-        Icode_RETUNDEF                  = -26,
+        Icode_RETUNDEF                  = -20,
 
     // Exception handling implementation
-        Icode_CATCH                     = -27,
-        Icode_GOSUB                     = -28,
-        Icode_RETSUB                    = -29,
+        Icode_CATCH                     = -21,
+        Icode_GOSUB                     = -22,
+        Icode_RETSUB                    = -23,
 
     // To indicating a line number change in icodes.
-        Icode_LINE                      = -30,
+        Icode_LINE                      = -24,
 
     // To store shorts and ints inline
-        Icode_SHORTNUMBER               = -31,
-        Icode_INTNUMBER                 = -32,
+        Icode_SHORTNUMBER               = -25,
+        Icode_INTNUMBER                 = -26,
 
     // To create and populate array to hold values for [] and {} literals
-        Icode_LITERAL_NEW               = -33,
-        Icode_LITERAL_SET               = -34,
+        Icode_LITERAL_NEW               = -27,
+        Icode_LITERAL_SET               = -28,
 
     // Array literal with skipped index like [1,,2]
-        Icode_SPARE_ARRAYLIT            = -35,
+        Icode_SPARE_ARRAYLIT            = -29,
 
     // Load index register to prepare for the following index operation
-        Icode_REG_IND_C0                = -36,
-        Icode_REG_IND_C1                = -37,
-        Icode_REG_IND_C2                = -38,
-        Icode_REG_IND_C3                = -39,
-        Icode_REG_IND_C4                = -40,
-        Icode_REG_IND_C5                = -41,
-        Icode_REG_IND1                  = -42,
-        Icode_REG_IND2                  = -43,
-        Icode_REG_IND4                  = -44,
+        Icode_REG_IND_C0                = -30,
+        Icode_REG_IND_C1                = -31,
+        Icode_REG_IND_C2                = -32,
+        Icode_REG_IND_C3                = -33,
+        Icode_REG_IND_C4                = -34,
+        Icode_REG_IND_C5                = -35,
+        Icode_REG_IND1                  = -36,
+        Icode_REG_IND2                  = -37,
+        Icode_REG_IND4                  = -38,
 
     // Load string register to prepare for the following string operation
-        Icode_REG_STR_C0                = -45,
-        Icode_REG_STR_C1                = -46,
-        Icode_REG_STR_C2                = -47,
-        Icode_REG_STR_C3                = -48,
-        Icode_REG_STR1                  = -49,
-        Icode_REG_STR2                  = -50,
-        Icode_REG_STR4                  = -51,
+        Icode_REG_STR_C0                = -39,
+        Icode_REG_STR_C1                = -40,
+        Icode_REG_STR_C2                = -41,
+        Icode_REG_STR_C3                = -42,
+        Icode_REG_STR1                  = -43,
+        Icode_REG_STR2                  = -44,
+        Icode_REG_STR4                  = -45,
 
     // Version of getvar/setvar that read var index directly from bytecode
-        Icode_GETVAR1                   = -52,
-        Icode_SETVAR1                   = -53,
+        Icode_GETVAR1                   = -46,
+        Icode_SETVAR1                   = -47,
+
+    // Construct special reference
+        Icode_SPECIAL_REF               = -48,
 
     // Last icode
-        MIN_ICODE                       = -53;
+        MIN_ICODE                       = -48;
 
     static {
         // Checks for byte code consistencies, good compiler can eliminate them
@@ -154,16 +149,6 @@ public class Interpreter
         }
         if (MIN_ICODE < -128) {
             String str = "Violation of Interpreter.MIN_ICODE >= -128";
-            System.err.println(str);
-            throw new IllegalStateException(str);
-        }
-
-        if (!(Icode_ELEM_PRE_INC - Node.PRE_INC == Icode_ELEM_PRE_INC
-              && Icode_ELEM_PRE_INC - Node.PRE_DEC == Icode_ELEM_PRE_DEC
-              && Icode_ELEM_PRE_INC - Node.POST_INC == Icode_ELEM_POST_INC
-              && Icode_ELEM_PRE_INC - Node.POST_DEC == Icode_ELEM_POST_DEC))
-        {
-            String str = "Violation of pre/post mapping into elem bytecodes";
             System.err.println(str);
             throw new IllegalStateException(str);
         }
@@ -695,12 +680,17 @@ public class Interpreter
 
             case Token.GETPROP :
                 stackDelta = 1;
-                iCodeTop = visitGetProp(iCodeTop, node, child, false);
+                iCodeTop = visitGetProp(node, child, false, iCodeTop);
                 break;
 
             case Token.GETELEM :
                 stackDelta = 1;
-                iCodeTop = visitGetElem(iCodeTop, node, child, false);
+                iCodeTop = visitGetElem(node, child, false, iCodeTop);
+                break;
+
+            case Token.GET_REF :
+                stackDelta = 1;
+                iCodeTop = visitGetRef(node, child, iCodeTop);
                 break;
 
             case Token.DELPROP :
@@ -754,45 +744,18 @@ public class Interpreter
                 stackDelta = 1;
                 iCodeTop = generateICode(child, iCodeTop);
                 child = child.getNext();
-                int special = node.getIntProp(Node.SPECIAL_PROP_PROP, 0);
-                if (special != 0) {
-                    if (type == Token.SETPROP_OP) {
-                        iCodeTop = addIcode(Icode_DUP, iCodeTop);
-                        if (itsStackDepth > itsData.itsMaxStack)
-                            itsData.itsMaxStack = itsStackDepth;
-                        if (special == Node.SPECIAL_PROP_PROTO) {
-                            iCodeTop = addIcode(Icode_GETPROTO, iCodeTop);
-                        } else if (special == Node.SPECIAL_PROP_PARENT) {
-                            iCodeTop = addIcode(Icode_GETSCOPEPARENT, iCodeTop);
-                        } else {
-                            throw badTree(node);
-                        }
-                        // Compensate for the following USE_STACK
-                        itsStackDepth--;
-                    }
-                    iCodeTop = generateICode(child, iCodeTop);
-                    if (special == Node.SPECIAL_PROP_PROTO) {
-                        iCodeTop = addIcode(Icode_SETPROTO, iCodeTop);
-                    } else if (special == Node.SPECIAL_PROP_PARENT) {
-                        iCodeTop = addIcode(Icode_SETPARENT, iCodeTop);
-                    } else {
-                        throw badTree(node);
-                    }
-                    itsStackDepth--;
-                } else {
-                    String property = child.getString();
-                    child = child.getNext();
-                    if (type == Token.SETPROP_OP) {
-                        iCodeTop = addIcode(Icode_DUP, iCodeTop);
-                        stackChange(1);
-                        iCodeTop = addStringOp(Token.GETPROP, property, iCodeTop);
-                        // Compensate for the following USE_STACK
-                        stackChange(-1);
-                    }
-                    iCodeTop = generateICode(child, iCodeTop);
-                    iCodeTop = addStringOp(Token.SETPROP, property, iCodeTop);
+                String property = child.getString();
+                child = child.getNext();
+                if (type == Token.SETPROP_OP) {
+                    iCodeTop = addIcode(Icode_DUP, iCodeTop);
+                    stackChange(1);
+                    iCodeTop = addStringOp(Token.GETPROP, property, iCodeTop);
+                    // Compensate for the following USE_STACK
                     stackChange(-1);
                 }
+                iCodeTop = generateICode(child, iCodeTop);
+                iCodeTop = addStringOp(Token.SETPROP, property, iCodeTop);
+                stackChange(-1);
                 break;
             }
 
@@ -814,6 +777,23 @@ public class Interpreter
                 iCodeTop = generateICode(child, iCodeTop);
                 iCodeTop = addToken(Token.SETELEM, iCodeTop);
                 stackChange(-2);
+                break;
+
+            case Token.SET_REF :
+            case Token.SET_REF_OP :
+                stackDelta = 1;
+                iCodeTop = generateICode(child, iCodeTop);
+                child = child.getNext();
+                if (type == Token.SET_REF_OP) {
+                    iCodeTop = addIcode(Icode_DUP, iCodeTop);
+                    stackChange(1);
+                    iCodeTop = addToken(Token.GET_REF, iCodeTop);
+                    // Compensate for the following USE_STACK
+                    stackChange(-1);
+                }
+                iCodeTop = generateICode(child, iCodeTop);
+                iCodeTop = addToken(Token.SET_REF, iCodeTop);
+                stackChange(-1);
                 break;
 
             case Token.SETNAME :
@@ -1067,8 +1047,17 @@ public class Interpreter
             case Token.ARRAYLIT:
             case Token.OBJECTLIT:
                 stackDelta = 1;
-                iCodeTop = visitLiteral(iCodeTop, node, child);
+                iCodeTop = visitLiteral(node, child, iCodeTop);
                 break;
+
+            case Token.SPECIAL_REF: {
+                stackDelta = 1;
+                iCodeTop = generateICode(child, iCodeTop);
+                int special = node.getExistingIntProp(Node.SPECIAL_PROP_PROP);
+                iCodeTop = addIcode(Icode_SPECIAL_REF, iCodeTop);
+                iCodeTop = addByte(special, iCodeTop);
+                break;
+            }
 
             default :
                 throw badTree(node);
@@ -1110,13 +1099,13 @@ public class Interpreter
           case Token.GETPROP:
             // x.y(...)
             //  -> tmp = x, (tmp.y, tmp)(...)
-            iCodeTop = visitGetProp(iCodeTop, left, left.getFirstChild(), true);
+            iCodeTop = visitGetProp(left, left.getFirstChild(), true, iCodeTop);
             iCodeTop = addIcode(Icode_SWAP, iCodeTop);
             break;
           case Token.GETELEM:
             // x[y](...)
             //  -> tmp = x, (tmp[y], tmp)(...)
-            iCodeTop = visitGetElem(iCodeTop, left, left.getFirstChild(), true);
+            iCodeTop = visitGetElem(left, left.getFirstChild(), true, iCodeTop);
             iCodeTop = addIcode(Icode_SWAP, iCodeTop);
             break;
           default:
@@ -1129,31 +1118,22 @@ public class Interpreter
         return iCodeTop;
     }
 
-    private int visitGetProp(int iCodeTop, Node node, Node child, boolean dupObject)
+    private int visitGetProp(Node node, Node child, boolean dupObject,
+                             int iCodeTop)
     {
         iCodeTop = generateICode(child, iCodeTop);
         if (dupObject) {
             iCodeTop = addIcode(Icode_DUP, iCodeTop);
             stackChange(1);
         }
-        int special = node.getIntProp(Node.SPECIAL_PROP_PROP, 0);
-        if (special != 0) {
-            if (special == Node.SPECIAL_PROP_PROTO) {
-                iCodeTop = addIcode(Icode_GETPROTO, iCodeTop);
-            } else if (special == Node.SPECIAL_PROP_PARENT) {
-                iCodeTop = addIcode(Icode_GETSCOPEPARENT, iCodeTop);
-            } else {
-                throw badTree(node);
-            }
-        } else {
-            child = child.getNext();
-            String property = child.getString();
-            iCodeTop = addStringOp(Token.GETPROP, property, iCodeTop);
-        }
+        child = child.getNext();
+        String property = child.getString();
+        iCodeTop = addStringOp(Token.GETPROP, property, iCodeTop);
         return iCodeTop;
     }
 
-    private int visitGetElem(int iCodeTop, Node node, Node child, boolean dupObject)
+    private int visitGetElem(Node node, Node child, boolean dupObject,
+                             int iCodeTop)
     {
         iCodeTop = generateICode(child, iCodeTop);
         if (dupObject) {
@@ -1164,6 +1144,13 @@ public class Interpreter
         iCodeTop = generateICode(child, iCodeTop);
         iCodeTop = addToken(Token.GETELEM, iCodeTop);
         stackChange(-1);
+        return iCodeTop;
+    }
+
+    private int visitGetRef(Node node, Node child, int iCodeTop)
+    {
+        iCodeTop = generateICode(child, iCodeTop);
+        iCodeTop = addToken(Token.GET_REF, iCodeTop);
         return iCodeTop;
     }
 
@@ -1199,14 +1186,22 @@ public class Interpreter
             break;
           }
           case Token.GETELEM : {
+            int incrDecrType = node.getExistingIntProp(Node.INCRDECR_PROP);
             Node object = child.getFirstChild();
             iCodeTop = generateICode(object, iCodeTop);
             Node index = object.getNext();
             iCodeTop = generateICode(index, iCodeTop);
-            int op = Icode_ELEM_PRE_INC
-                     - node.getExistingIntProp(Node.INCRDECR_PROP);
-            iCodeTop = addIcode(op, iCodeTop);
+            iCodeTop = addIcode(Icode_ELEM_INC_DEC, iCodeTop);
+            iCodeTop = addByte(incrDecrType, iCodeTop);
             stackChange(-1);
+            break;
+          }
+          case Token.GET_REF : {
+            int incrDecrType = node.getExistingIntProp(Node.INCRDECR_PROP);
+            Node ref = child.getFirstChild();
+            iCodeTop = generateICode(ref, iCodeTop);
+            iCodeTop = addIcode(Icode_REF_INC_DEC, iCodeTop);
+            iCodeTop = addByte(incrDecrType, iCodeTop);
             break;
           }
           default : {
@@ -1223,7 +1218,7 @@ public class Interpreter
         return iCodeTop;
     }
 
-    private int visitLiteral(int iCodeTop, Node node, Node child)
+    private int visitLiteral(Node node, Node child, int iCodeTop)
     {
         int type = node.getType();
         int count;
@@ -1618,19 +1613,13 @@ public class Interpreter
           case Icode_NAMEDEC:          return "NAMEDEC";
           case Icode_PROPDEC:          return "PROPDEC";
           case Icode_VARDEC:           return "VARDEC";
-          case Icode_ELEM_PRE_INC:     return "ELEM_PRE_INC";
-          case Icode_ELEM_PRE_DEC:     return "ELEM_PRE_DEC";
-          case Icode_ELEM_POST_INC:    return "ELEM_POST_INC";
-          case Icode_ELEM_POST_DEC:    return "ELEM_POST_DEC";
+          case Icode_ELEM_INC_DEC:     return "ELEM_INC_DEC";
+          case Icode_REF_INC_DEC:      return "REF_INC_DEC";
           case Icode_SCOPE:            return "SCOPE";
           case Icode_TYPEOFNAME:       return "TYPEOFNAME";
           case Icode_NAME_FAST_THIS:   return "NAME_FAST_THIS";
           case Icode_NAME_SLOW_THIS:   return "NAME_SLOW_THIS";
-          case Icode_GETPROTO:         return "GETPROTO";
           case Icode_PUSH_PARENT:      return "PUSH_PARENT";
-          case Icode_GETSCOPEPARENT:   return "GETSCOPEPARENT";
-          case Icode_SETPROTO:         return "SETPROTO";
-          case Icode_SETPARENT:        return "SETPARENT";
           case Icode_CLOSURE:          return "CLOSURE";
           case Icode_CALLSPECIAL:      return "CALLSPECIAL";
           case Icode_RETUNDEF:         return "RETUNDEF";
@@ -1661,6 +1650,7 @@ public class Interpreter
           case Icode_REG_STR4:         return "LOAD_STR4";
           case Icode_GETVAR1:          return "GETVAR1";
           case Icode_SETVAR1:          return "SETVAR1";
+          case Icode_SPECIAL_REF:      return "SPECIAL_REF";
         }
 
         // icode without name
@@ -1706,6 +1696,21 @@ public class Interpreter
                 pc += 2;
                 break;
               }
+              case Icode_ELEM_INC_DEC :
+              case Icode_REF_INC_DEC: {
+                int incrDecrType = iCode[pc];
+                out.println(tname + " " + incrDecrType);
+                ++pc;
+                break;
+              }
+
+              case Icode_SPECIAL_REF : {
+                int specialType = iCode[pc];
+                out.println(tname + " " + specialType);
+                ++pc;
+                break;
+              }
+
               case Icode_CALLSPECIAL : {
                 int callType = iCode[pc] & 0xFF;
                 boolean isNew =  (iCode[pc + 1] != 0);
@@ -1854,6 +1859,15 @@ public class Interpreter
             case Token.NEW :
                 // index of potential function name for debugging
                 return 1 + 2;
+
+            case Icode_ELEM_INC_DEC:
+            case Icode_REF_INC_DEC:
+                // type of ++/--
+                return 1 + 1;
+
+            case Icode_SPECIAL_REF:
+                // type of special property
+                return 1 + 1;
 
             case Icode_SHORTNUMBER :
                 // short number
@@ -2482,25 +2496,46 @@ switch (op) {
     case Token.SETELEM :
         stackTop = do_setElem(stack, sDbl, stackTop, cx, scope);
         continue Loop;
-    case Icode_PROPINC :
-    case Icode_PROPDEC : {
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.postIncrDecr(lhs, stringReg, scope,
-                                                     op == Icode_PROPINC);
-        continue Loop;
-    }
-    case Icode_ELEM_PRE_INC:
-    case Icode_ELEM_PRE_DEC:
-    case Icode_ELEM_POST_INC:
-    case Icode_ELEM_POST_DEC: {
+    case Icode_ELEM_INC_DEC: {
         Object rhs = stack[stackTop];
         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.elemIncrDecr(lhs, rhs, scope,
-                                                     Icode_ELEM_PRE_INC - op);
+                                                     iCode[pc]);
+        ++pc;
+        continue Loop;
+    }
+    case Token.GET_REF : {
+        Object lhs = stack[stackTop];
+        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.getReference(lhs);
+        continue Loop;
+    }
+    case Token.SET_REF : {
+        Object rhs = stack[stackTop];
+        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
+        --stackTop;
+        Object lhs = stack[stackTop];
+        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        ScriptRuntime.setReference(lhs, rhs);
+        stack[stackTop] = rhs;
+        continue Loop;
+    }
+    case Icode_REF_INC_DEC : {
+        Object lhs = stack[stackTop];
+        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.referenceIncrDecr(lhs, iCode[pc]);
+        ++pc;
+        continue Loop;
+    }
+    case Icode_PROPINC :
+    case Icode_PROPDEC : {
+        Object lhs = stack[stackTop];
+        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.postIncrDecr(lhs, stringReg, scope,
+                                                     op == Icode_PROPINC);
         continue Loop;
     }
     case Token.LOCAL_SAVE :
@@ -2773,12 +2808,13 @@ switch (op) {
         stack[++stackTop] = ScriptRuntime.getParent(lhs);
         continue Loop;
     }
-    case Icode_GETPROTO :
-    case Icode_GETSCOPEPARENT :
-    case Icode_SETPROTO :
-    case Icode_SETPARENT :
-        stackTop = do_specialProp(stack, sDbl, stackTop, op, scope);
+    case Icode_SPECIAL_REF : {
+        Object lhs = stack[stackTop];
+        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.specialReference(lhs, scope, iCode[pc]);
+        ++pc;
         continue Loop;
+    }
     case Icode_SCOPE :
         stack[++stackTop] = scope;
         continue Loop;
@@ -3281,36 +3317,6 @@ switch (op) {
         stack[++stackTop] = prop;
         stack[++stackTop] = thisArg;
 
-        return stackTop;
-    }
-
-    private static int do_specialProp(Object[] stack, double[] sDbl,
-                                      int stackTop, int op, Scriptable scope)
-    {
-        Object val;
-        Object top = stack[stackTop];
-        if (top == DBL_MRK) top = doubleWrap(sDbl[stackTop]);
-        switch (op) {
-          default: throw Kit.codeBug();
-          case Icode_GETPROTO:
-            val = ScriptRuntime.getProto(top, scope);
-            break;
-          case Icode_GETSCOPEPARENT:
-            val = ScriptRuntime.getParent(top, scope);
-            break;
-          case Icode_SETPROTO:
-          case Icode_SETPARENT:
-            --stackTop;
-            Object snd = stack[stackTop];
-            if (snd == DBL_MRK) snd = doubleWrap(sDbl[stackTop]);
-            if (op == Icode_SETPROTO) {
-                val = ScriptRuntime.setProto(snd, top, scope);
-            } else {
-                val = ScriptRuntime.setParent(snd, top, scope);
-            }
-            break;
-        }
-        stack[stackTop] = val;
         return stackTop;
     }
 

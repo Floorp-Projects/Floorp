@@ -1255,6 +1255,57 @@ public class ScriptRuntime {
         return value;
     }
 
+    public static Object getReference(Object obj)
+    {
+        if (!(obj instanceof Reference)) {
+            String msg = getMessage1("msg.no.ref.to.get", toString(obj));
+            throw constructError("ReferenceError", msg);
+        }
+        Reference ref = (Reference)obj;
+        return ref.get();
+    }
+
+    public static void setReference(Object obj, Object value)
+    {
+        if (!(obj instanceof Reference)) {
+            String msg = getMessage2("msg.no.ref.to.set",
+                                     toString(obj), toString(value));
+            throw constructError("ReferenceError", msg);
+        }
+        Reference ref = (Reference)obj;
+        ref.set(value);
+    }
+
+    public static Object specialReference(final Object obj,
+                                          final Scriptable scope,
+                                          final int specialType)
+    {
+        if (!(specialType == Node.SPECIAL_PROP_PROTO
+              || specialType == Node.SPECIAL_PROP_PARENT))
+        {
+            throw Kit.codeBug();
+        }
+        return new Reference() {
+            public Object get()
+            {
+                if (specialType == Node.SPECIAL_PROP_PROTO) {
+                    return getProto(obj, scope);
+                } else {
+                    return getParent(obj, scope);
+                }
+            }
+
+            public void set(Object value)
+            {
+                if (specialType == Node.SPECIAL_PROP_PROTO) {
+                    setProto(obj, value, scope);
+                } else {
+                    setParent(obj, value, scope);
+                }
+            }
+        };
+    }
+
     /**
      * The delete operator
      *
@@ -1722,6 +1773,36 @@ public class ScriptRuntime {
         }
         Number result = new Double(number);
         setElem(obj, index, result, scope);
+        if (post) {
+            return value;
+        } else {
+            return result;
+        }
+    }
+
+    public static Object referenceIncrDecr(Object obj, int type)
+    {
+        Object value = getReference(obj);
+        if (value == Undefined.instance)
+            return value;
+        boolean post = (type == Node.POST_INC || type == Node.POST_DEC);
+        double number;
+        if (value instanceof Number) {
+            number = ((Number)value).doubleValue();
+        } else {
+            number = toNumber(value);
+            if (post) {
+                // convert result to number
+                value = new Double(number);
+            }
+        }
+        if (type == Node.PRE_INC || type == Node.POST_INC) {
+            ++number;
+        } else {
+            --number;
+        }
+        Number result = new Double(number);
+        setReference(obj, result);
         if (post) {
             return value;
         } else {

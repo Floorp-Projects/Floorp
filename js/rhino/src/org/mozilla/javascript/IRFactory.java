@@ -375,6 +375,7 @@ class IRFactory
           case Token.NAME:
           case Token.GETPROP:
           case Token.GETELEM:
+          case Token.GET_REF:
             break;
 
           case Token.VAR:
@@ -841,7 +842,7 @@ class IRFactory
             Node lvalueLeft = Node.newString(Token.BINDNAME, s);
             return new Node(Token.SETNAME, lvalueLeft, op);
 
-        } else if (childType == Token.GETELEM) {
+        } else if (childType == Token.GETELEM || childType == Token.GET_REF) {
             Node n = new Node(nodeType, childNode);
             int type;
             if (nodeType == Token.INC) {
@@ -901,12 +902,11 @@ class IRFactory
                 }
             }
             if (special != 0) {
-                Node result = new Node(nodeType, left);
-                result.putIntProp(Node.SPECIAL_PROP_PROP, special);
-                return result;
-            } else {
-                checkActivationName(id, Token.GETPROP);
+                Node ref = new Node(Token.SPECIAL_REF, left);
+                ref.putIntProp(Node.SPECIAL_PROP_PROP, special);
+                return new Node(Token.GET_REF, ref);
             }
+            checkActivationName(id, Token.GETPROP);
             break;
 
           case Token.LB:
@@ -1070,16 +1070,14 @@ class IRFactory
             int type;
             if (nodeType == Token.GETPROP) {
                 type = Token.SETPROP;
-                int special = left.getIntProp(Node.SPECIAL_PROP_PROP, 0);
-                if (special != 0) {
-                    Node result = new Node(Token.SETPROP, obj, right);
-                    result.putIntProp(Node.SPECIAL_PROP_PROP, special);
-                    return result;
-                }
             } else {
                 type = Token.SETELEM;
             }
             return new Node(type, obj, id, right);
+          }
+          case Token.GET_REF: {
+            Node ref = left.getFirstChild();
+            return new Node(Token.SET_REF, ref, right);
           }
 
           default:
@@ -1127,6 +1125,17 @@ class IRFactory
             }
             Node op = new Node(assignOp, opLeft, right);
             return new Node(type, obj, id, op);
+          }
+
+          case Token.GET_REF: {
+            Node ref = left.getFirstChild();
+
+            Node opLeft = new Node(Token.USE_STACK);
+            if (tonumber) {
+                opLeft = new Node(Token.POS, opLeft);
+            }
+            Node op = new Node(assignOp, opLeft, right);
+            return new Node(Token.SET_REF_OP, ref, op);
           }
 
           default:
