@@ -361,10 +361,11 @@ function ValidateAndPreviewImage(ShowErrorMessage)
   {
     if (IsValidImage(image))
     {
-      backgroundImage = gHaveDocumentUrl ? MakeAbsoluteUrl(image) : image;
+      backgroundImage = image;
 
-      // Append image style
-      styleValue += backImageStyle+backgroundImage+");";
+      // Display must use absolute URL if possible
+      var displayImage = gHaveDocumentUrl ? MakeAbsoluteUrl(image) : image;
+      styleValue += backImageStyle+displayImage+");";
     }
     else
     {
