@@ -185,7 +185,7 @@ InflateFiles(void *hZip, void *hFind, short tgtVRefNum, long tgtDirID)
 	OSErr		err = noErr;
 	Boolean		bFoundAll = false;
 	PRInt32		rv = 0;
-	char		filename[255] = "\0", *lastslash, *leaf;
+	char		filename[255] = "\0", *lastslash, *leaf, macfilename[255] = "\0";
 	Handle		fullPathH = 0;
 	short 		fullPathLen = 0;
 	Ptr			fullPathStr = 0;
@@ -209,7 +209,7 @@ InflateFiles(void *hZip, void *hFind, short tgtVRefNum, long tgtDirID)
 		lastslash = strrchr(filename, '/');
 		if (lastslash == (&filename[0] + strlen(filename) - 1)) /* dir entry encountered */
 			continue;
-			
+
 		/* grab leaf filename only */
 		if (lastslash == 0)
 			leaf = filename;
@@ -221,14 +221,15 @@ InflateFiles(void *hZip, void *hFind, short tgtVRefNum, long tgtDirID)
 		if (err!=noErr)
 			return err;
 
+        strncpy(macfilename, filename, strlen(filename));
+        SLASHES_2_COLONS(macfilename);
 		HLock(fullPathH);
-		fullPathStr = NewPtrClear(fullPathLen + strlen(filename) + 1);
+		fullPathStr = NewPtrClear(fullPathLen + strlen(macfilename) + 1);
 		strncat(fullPathStr, *fullPathH, fullPathLen);
-		strcat(fullPathStr, filename);	/* tack on filename to dirpath */
-		*(fullPathStr+fullPathLen+strlen(filename)) = '\0';
+		strcat(fullPathStr, macfilename);	/* tack on filename to dirpath */
+		*(fullPathStr+fullPathLen+strlen(macfilename)) = '\0';
 		
 		/* create directories if file is nested in new subdirs */
-		SLASHES_2_COLONS(fullPathStr);
 		WhackDirectories(fullPathStr);
 		err = DirCreateRecursive(fullPathStr);			
 		
