@@ -1610,10 +1610,23 @@ nsFrameManager::ReResolveStyleContext(nsIPresContext    *aPresContext,
               NS_ASSERTION(outOfFlowFrame != resolvedChild,
                            "out-of-flow frame not a true descendant");
 
+              // Note that the out-of-flow may not be a geometric descendant of
+              // the frame where we started the reresolve.  Therefore, even if
+              // aMinChange already includes nsChangeHint_ReflowFrame we don't
+              // want to pass that on to the out-of-flow reresolve, since that
+              // can lead to the out-of-flow not getting reflown when it should
+              // be (eg a reresolve starting at <body> that involves reflowing
+              // the <body> would miss reflowing fixed-pos nodes that also need
+              // reflow).  In the cases when the out-of-flow _is_ a geometric
+              // descendant of a frame we already have a reflow hint for,
+              // reflow coalescing should keep us from doing the work twice.
+
               // |nsFrame::GetParentStyleContextFrame| checks being out
               // of flow so that this works correctly.
               ReResolveStyleContext(aPresContext, outOfFlowFrame,
-                                    content, aChangeList, aMinChange);
+                                    content, aChangeList,
+                                    NS_SubtractHint(aMinChange,
+                                                    nsChangeHint_ReflowFrame));
 
               // reresolve placeholder's context under the same parent
               // as the out-of-flow frame
