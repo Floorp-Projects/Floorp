@@ -266,7 +266,7 @@ public class Codegen extends Interpreter {
     {
         boolean hasScript = (scriptOrFnNodes[0].getType() == Token.SCRIPT);
         boolean hasFunctions = (scriptOrFnNodes.length > 1 || !hasScript);
-        
+
         String sourceFile = null;
         if (generateDebugInfo) {
             sourceFile = scriptOrFnNodes[0].getSourceName();
@@ -285,7 +285,7 @@ public class Codegen extends Interpreter {
         if (hasFunctions) {
             generateFunctionConstructor(cfw);
         }
-        
+
         if (hasScript) {
             cfw.addInterface("org/mozilla/javascript/Script");
             generateScriptCtor(cfw);
