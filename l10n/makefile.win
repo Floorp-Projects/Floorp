@@ -16,8 +16,8 @@
 # 
 # Contributor(s): _____________________________.
 # 
-DEPTH = ..\..
+DEPTH = ..
 
-DIRS=lang
+DIRS=langpacks
 
 include <$(DEPTH)\config\rules.mak>
