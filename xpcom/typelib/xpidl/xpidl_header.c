@@ -754,7 +754,7 @@ codefrag(TreeState *state)
 {
     const char *desc = IDL_CODEFRAG(state->tree).desc;
     
-    if (strcmp(desc, "C++")) {
+    if (strcmp(desc, "C++") && /* libIDL bug? */ strcmp(desc, "C++\r")) {
         XPIDL_WARNING((state->tree, IDL_WARNING1,
                        "ignoring '%%{%s' escape. "
                        "(Use '%%{C++' to escape verbatim C++ code.)", desc));
