@@ -1267,7 +1267,13 @@ NS_IMETHODIMP nsRenderingContextMac::GetWidth(const PRUnichar *aString, PRUint32
  	if (NS_FAILED(rv))
  		return rv;
 
-	rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS, mPort, mRightToLeftText);
+#ifdef IBMBIDI
+  PRBool rtlText = mRightToLeftText;
+#else
+  PRBool rtlText = PR_FALSE;
+#endif
+
+	rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS, mPort, rtlText);
 	if (NS_SUCCEEDED(rv))
     rv = mUnicodeRenderingToolkit.GetWidth(aString, aLength, aWidth, aFontID);
     
@@ -1299,7 +1305,13 @@ nsRenderingContextMac::GetTextDimensions(const PRUnichar* aString, PRUint32 aLen
   if (NS_FAILED(rv))
     return rv;
 
-  rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS, mPort, mRightToLeftText);
+#ifdef IBMBIDI
+  PRBool rtlText = mRightToLeftText;
+#else
+  PRBool rtlText = PR_FALSE;
+#endif
+
+  rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS, mPort, rtlText);
 	if (NS_SUCCEEDED(rv))
     rv = mUnicodeRenderingToolkit.GetTextDimensions(aString, aLength, aDimensions, aFontID);
     
@@ -1371,7 +1383,13 @@ NS_IMETHODIMP nsRenderingContextMac::DrawString(const PRUnichar *aString, PRUint
 	if (nsnull == mGS->mFontMetrics)
 		return NS_ERROR_NULL_POINTER;
 
-	rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS, mPort,mRightToLeftText);
+#ifdef IBMBIDI
+  PRBool rtlText = mRightToLeftText;
+#else
+  PRBool rtlText = PR_FALSE;
+#endif
+
+	rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS, mPort, rtlText);
 	if (NS_SUCCEEDED(rv))
 		rv = mUnicodeRenderingToolkit.DrawString(aString, aLength, aX, aY, aFontID, aSpacing);
 
@@ -1552,7 +1570,13 @@ nsRenderingContextMac::GetBoundingMetrics(const PRUnichar*   aString,
   if(NS_FAILED(rv))
     return rv;
   
-  rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS, mPort, mRightToLeftText);
+#ifdef IBMBIDI
+  PRBool rtlText = mRightToLeftText;
+#else
+  PRBool rtlText = PR_FALSE;
+#endif
+
+  rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS, mPort, rtlText);
   if(NS_SUCCEEDED(rv))
     rv = mUnicodeRenderingToolkit.GetTextBoundingMetrics(aString, aLength, aBoundingMetrics, aFontID);
   
