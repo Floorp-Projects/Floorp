@@ -168,7 +168,23 @@ main(int argc, char* argv[])
         return -1;
     }
 #endif
-    rv = NS_NewPipe2(&in, &out, 4096, 4096 * 4);
+    // test for small buffers
+    rv = NS_NewPipe2(&in, &out, 12, 24);
+    if (NS_FAILED(rv)) {
+        printf("NewPipe failed\n");
+        return -1;
+    }
+
+    rv = TestPipe(in, out);
+    NS_RELEASE(in);
+    NS_RELEASE(out);
+    if (NS_FAILED(rv)) {
+        printf("TestPipe failed\n");
+        return -1;
+    }
+
+    // test for large buffers
+    rv = NS_NewPipe2(&in, &out, 4096, 4096*16);
     if (NS_FAILED(rv)) {
         printf("NewPipe failed\n");
         return -1;

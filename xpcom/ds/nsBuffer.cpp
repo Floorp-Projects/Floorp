@@ -148,8 +148,69 @@ nsBuffer::PopReadSegment()
 // nsIBuffer methods:
 
 NS_IMETHODIMP
+nsBuffer::ReadSegments(nsWriteSegmentFun writer, void* closure, PRUint32 count,
+                       PRUint32 *readCount)
+{
+    nsresult rv;
+    PRUint32 readBufferLen;
+    char* readBuffer;
+
+    *readCount = 0;
+    while (count > 0) {
+        rv = GetReadBuffer(0, &readBuffer, &readBufferLen);
+        if (rv == NS_BASE_STREAM_EOF)      // all we're going to get
+            return *readCount > 0 ? NS_OK : NS_BASE_STREAM_EOF;
+        if (NS_FAILED(rv)) return rv;
+
+        if (readBufferLen == 0)
+            return mEOF && *readCount == 0 ? NS_BASE_STREAM_EOF : NS_OK;
+
+        readBufferLen = PR_MIN(readBufferLen, count);
+        while (readBufferLen > 0) {
+            PRUint32 writeCount;
+            rv = writer(closure, readBuffer, *readCount, readBufferLen, &writeCount);
+            if (NS_FAILED(rv)) {
+                // if we failed to write just report what we were
+                // able to read so far
+                return NS_OK;
+            }
+            NS_ASSERTION(writeCount <= readBufferLen, "writer returned bad writeCount");
+            readBuffer += writeCount;
+            readBufferLen -= writeCount;
+            *readCount += writeCount;
+            count -= writeCount;
+
+            if (mReadCursor + writeCount == mReadSegmentEnd) {
+                rv = PopReadSegment();
+                if (NS_FAILED(rv)) return rv;
+            }
+            else {
+                mReadCursor += writeCount;
+            }
+        }
+    }
+    return NS_OK;
+}
+
+NS_METHOD
+nsWriteToRawBuffer(void* closure,
+                   const char* fromRawSegment,
+                   PRUint32 offset,
+                   PRUint32 count,
+                   PRUint32 *writeCount)
+{
+    char* toBuf = (char*)closure;
+    nsCRT::memcpy(&toBuf[offset], fromRawSegment, count);
+    *writeCount = count;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsBuffer::Read(char* toBuf, PRUint32 bufLen, PRUint32 *readCount)
 {
+#if 1
+    return ReadSegments(nsWriteToRawBuffer, toBuf, bufLen, readCount);
+#else
     nsresult rv;
     PRUint32 readBufferLen;
     char* readBuffer;
@@ -179,6 +240,7 @@ nsBuffer::Read(char* toBuf, PRUint32 bufLen, PRUint32 *readCount)
         }
     }
     return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP
@@ -260,8 +322,79 @@ nsBuffer::GetReadBuffer(PRUint32 startPosition,
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
+nsBuffer::WriteSegments(nsReadSegmentFun reader, void* closure, PRUint32 count,
+                        PRUint32 *writeCount)
+{
+    nsresult rv;
+
+    if (mEOF)
+        return NS_BASE_STREAM_EOF;
+
+    *writeCount = 0;
+    while (count > 0) {
+        PRUint32 writeBufLen;
+        char* writeBuf;
+        rv = GetWriteBuffer(0, &writeBuf, &writeBufLen);
+        if (NS_FAILED(rv)) {
+            // if we failed to allocate a new segment, we're probably out
+            // of memory, but we don't care -- just report what we were
+            // able to write so far
+            return NS_OK;
+        }
+
+        writeBufLen = PR_MIN(writeBufLen, count);
+        while (writeBufLen > 0) {
+            PRUint32 readCount;
+            rv = reader(closure, writeBuf, *writeCount, writeBufLen, &readCount);
+            if (rv == NS_BASE_STREAM_EOF) {
+                // If the input stream ends, set EOF on the buffer so that
+                // nsBuffer::Read later notices it.
+                SetEOF();
+                return NS_OK;
+            }
+            else if (NS_FAILED(rv)) {
+                // if we failed to read just report what we were
+                // able to write so far
+                return NS_OK;
+            }
+            NS_ASSERTION(readCount <= writeBufLen, "reader returned bad readCount");
+            writeBuf += readCount;
+            writeBufLen -= readCount;
+            *writeCount += readCount;
+            count -= readCount;
+
+            // set the write cursor after the data is valid
+            if (mWriteCursor + readCount == mWriteSegmentEnd) {
+                mWriteSegment = nsnull;      // allocate a new segment next time around
+                mWriteSegmentEnd = nsnull;
+                mWriteCursor = nsnull;
+            }
+            else
+                mWriteCursor += readCount;
+        }
+    }
+    return NS_OK;
+}
+
+NS_METHOD
+nsReadFromRawBuffer(void* closure,
+                    char* toRawSegment,
+                    PRUint32 offset,
+                    PRUint32 count,
+                    PRUint32 *readCount)
+{
+    const char* fromBuf = (const char*)closure;
+    nsCRT::memcpy(toRawSegment, &fromBuf[offset], count);
+    *readCount = count;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsBuffer::Write(const char* fromBuf, PRUint32 bufLen, PRUint32 *writeCount)
 {
+#if 1
+    return WriteSegments(nsReadFromRawBuffer, (void*)fromBuf, bufLen, writeCount);
+#else
     nsresult rv;
 
     if (mEOF)
@@ -294,11 +427,26 @@ nsBuffer::Write(const char* fromBuf, PRUint32 bufLen, PRUint32 *writeCount)
             mWriteCursor += count;
     }
     return NS_OK;
+#endif
+}
+
+NS_METHOD
+nsReadFromInputStream(void* closure,
+                      char* toRawSegment, 
+                      PRUint32 offset,
+                      PRUint32 count,
+                      PRUint32 *readCount)
+{
+    nsIInputStream* fromStream = (nsIInputStream*)closure;
+    return fromStream->Read(toRawSegment, count, readCount);
 }
 
 NS_IMETHODIMP
 nsBuffer::WriteFrom(nsIInputStream* fromStream, PRUint32 count, PRUint32 *writeCount)
 {
+#if 1
+    return WriteSegments(nsReadFromInputStream, fromStream, count, writeCount);
+#else
     nsresult rv;
 
     if (mEOF)
@@ -341,6 +489,7 @@ nsBuffer::WriteFrom(nsIInputStream* fromStream, PRUint32 count, PRUint32 *writeC
             mWriteCursor += readCount;
     }
     return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP
