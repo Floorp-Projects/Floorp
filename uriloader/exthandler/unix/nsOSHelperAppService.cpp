@@ -1292,6 +1292,14 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
   nsresult rv = nsExternalHelperAppService::GetFileTokenForPath(platformAppPath, aFile);
   if (NS_SUCCEEDED(rv))
     return rv;
+  // If the reason for failure was that the file doesn't exist, return too
+  // (because it means the path was absolute, and so that we shouldn't search in
+  // the path)
+  if (rv == NS_ERROR_FILE_NOT_FOUND)
+    return rv;
+
+  // If we get here, we really should have a relative path.
+  NS_ASSERTION(*platformAppPath != PRUnichar('/'), "Unexpected absolute path");
 
   nsCOMPtr<nsILocalFile> localFile (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
 
@@ -1312,15 +1320,17 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
     }
     localFile->InitWithNativePath(Substring(start_iter, colon_iter));
     rv = localFile->AppendRelativePath(nsDependentString(platformAppPath));
-    if (NS_SUCCEEDED(rv)) {
-      localFile->Exists(&exists);
-      if (!exists) {
-        if (colon_iter == end_iter) {
-          break;
-        }
-        ++colon_iter;
-        start_iter = colon_iter;
+    // Failing AppendRelativePath is a bad thing - it should basically always
+    // succeed given a relative path. Show a warning if it does fail.
+    // To prevent infinite loops when it does fail, return at this point.
+    NS_ENSURE_SUCCESS(rv, rv);
+    localFile->Exists(&exists);
+    if (!exists) {
+      if (colon_iter == end_iter) {
+        break;
       }
+      ++colon_iter;
+      start_iter = colon_iter;
     }
   }
 
