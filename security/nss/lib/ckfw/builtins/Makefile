@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.5 $ $Date: 2000/10/13 22:42:53 $ $Name:  $"
+MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.6 $ $Date: 2001/01/22 17:16:45 $ $Name:  $"
 
 include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
@@ -49,11 +49,6 @@ EXTRA_LIBS = \
 
 else
 
-# OSF 1 linker is very agressive. It includes the entire archive,
-# not just the .o's that we need from that archive.
-#
-ifneq ($(OS_ARCH), OSF1)
-
 ifeq ($(OS_ARCH), OS2)
 PLC_STATIC_LIB = $(DIST)/lib/plc4.$(LIB_SUFFIX)
 PLDS_STATIC_LIB = $(DIST)/lib/plds4.$(LIB_SUFFIX)
@@ -69,7 +64,6 @@ EXTRA_LIBS += \
 	$(PLDS_STATIC_LIB) \
 	$(NULL)
 
-endif
 endif
 
 
