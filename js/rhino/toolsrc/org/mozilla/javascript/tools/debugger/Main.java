@@ -589,10 +589,10 @@ class MoreWindows extends JDialog implements ActionListener {
     contentPane.add(buttonPane, BorderLayout.SOUTH);
     pack();
     addKeyListener(new KeyAdapter() {
-            public void keyPressed(KeyEvent e) {
-                int code = e.getKeyCode();
+            public void keyPressed(KeyEvent ke) {
+                int code = ke.getKeyCode();
                 if(code == KeyEvent.VK_ESCAPE) {
-                    e.consume();
+                    ke.consume();
                     value = null;
                     setVisible(false);
                 }
@@ -746,10 +746,10 @@ class FindFunction extends JDialog implements ActionListener {
 	contentPane.add(buttonPane, BorderLayout.SOUTH);
 	pack();
 	addKeyListener(new KeyAdapter() {
-		public void keyPressed(KeyEvent e) {
-		    int code = e.getKeyCode();
+		public void keyPressed(KeyEvent ke) {
+		    int code = ke.getKeyCode();
 		    if(code == KeyEvent.VK_ESCAPE) {
-			e.consume();
+			ke.consume();
                         value = null;
                         setVisible(false);
 		    }
@@ -2407,7 +2407,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
     static void swingInvokeLater(Runnable f) {
 	try {
 	    SwingUtilities.invokeLater(f);
-	} catch(Exception exc) {
+	} catch(RuntimeException exc) {
 	    exc.printStackTrace();
 	}
     }
@@ -3041,7 +3041,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
 	    }
 	    try {
 		resultString = ScriptRuntime.toString(result);
-	    } catch(Exception exc) {
+	    } catch(RuntimeException exc) {
 		resultString = result.toString();
 	    }
 	} catch(Exception exc) {

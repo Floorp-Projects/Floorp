@@ -141,7 +141,7 @@ public class VariableModel extends AbstractTreeTableModel
                 String result;
                 try {
                     result = Context.toString(value);
-                } catch(Exception exc) {
+                } catch(RuntimeException exc) {
                     result = value.toString();
                 }
                 StringBuffer buf = new StringBuffer();
