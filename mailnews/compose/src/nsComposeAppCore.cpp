@@ -970,7 +970,9 @@ NS_IMETHODIMP nsComposeAppCore::SendMsg(nsAutoString& aAddrTo,
 					NULL,             				// nsMsgSendPart                     *relatedPart,
 					NULL);            				// void  (*message_delivery_done_callback)(MWContext *context, void *fe_data,
 								             			//                                         int status, const char *error_message))
-        PR_FREEIF(bodyString);
+// ducarroz: please don't delete bodyString, because GetBody did not create a new string
+//		     but just get back the address of the body into the msgCompFields object!
+//        PR_FREEIF(bodyString);
     }
 	}
 	if (nsnull != mScriptContext) {

@@ -179,8 +179,11 @@ function MessageSent()
 	{
 //		editorAppCore.selectAll();
 //		editorAppCore.insertText("");
-		editorAppCore.loadUrl("about:blank");
 
+//		if (composeAppCore && composeAppCore.useHtml)
+//			editorAppCore.loadUrl("chrome://messengercompose/content/defaultHtmlBody.html");
+//		else
+//			editorAppCore.loadUrl("chrome://messengercompose/content/defaultTextBody.html");
 	}
 
 	window.close();	// <-- doesn't work yet!
