@@ -37,8 +37,8 @@
 DEPTH=..\..\..\..
 
 MODULE           = MapiProxy
-EXPORT_LIBRARY   = $(MODULE)
 LIBRARY_NAME     = $(MODULE)
+META_COMPONENT   = mail
 DEFFILE          = MapiProxy.def
 
 include <$(DEPTH)\config\config.mak>

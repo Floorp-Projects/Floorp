@@ -51,15 +51,20 @@ LLIBS           = $(DIST)\lib\gkgfx.lib         \
                   $(DIST)\lib\unicharutil_s.lib \
                   $(LIBNSPR)
 
+WIN_LIBS        = rpcrt4.lib    \
+                  ole32.lib
+
+
 !ifdef MOZ_GECKO_DLL
 LLIBS           = $(LLIBS)                      \
                   $(DIST)\lib\png.lib           \
                   $(DIST)\lib\mng.lib           \
                   $(DIST)\lib\util.lib          \
                   $(DIST)\lib\expat.lib         \
-                  $(DIST)\lib\nsldap32v40.lib   
+                  $(DIST)\lib\nsldap32v40.lib
 
-WIN_LIBS        = comctl32.lib  \
+WIN_LIBS        = $(WIN_LIBS)
+                  comctl32.lib  \
                   comdlg32.lib  \
                   uuid.lib      \
                   ole32.lib     \
@@ -132,7 +137,7 @@ export::
 !endif
 
 
-install:: $(DLL)
+libs:: $(DLL)
         $(MAKE_INSTALL) $(DLL) $(DIST)/bin/components
 
 clobber::

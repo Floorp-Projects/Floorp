@@ -38,9 +38,9 @@
 DEPTH=..\..\..\..
 
 MODULE          = msgMapi
-MAKE_OBJ_TYPE = DLL
-LIBRARY_NAME=$(MODULE)
-MODULE_NAME	= $(MODULE)
+LIBRARY_NAME    =$(MODULE)
+MODULE_NAME     =msgMapiModule
+META_COMPONENT  =mail
 
 REQUIRES        = xpcom \
                   string \
