@@ -225,7 +225,7 @@ sub getDefaultString {
 sub changePassword {
     my $self = shift;
     my($app, $user) = @_;
-    my($password, $crypt) = $app->getService('service.passwords')->newPassword();
+    my($crypt, $password) = $app->getService('service.passwords')->newPassword();
     $user->password($crypt);
     return $password;
 }
@@ -237,7 +237,7 @@ sub createUser {
     if ((defined($validator)) and (not $validator->checkAddress($address))) {
         return (undef, undef);
     }
-    my($password, $crypt) = $app->getService('service.passwords')->newPassword();
+    my($crypt, $password) = $app->getService('service.passwords')->newPassword();
     my $user = $app->getService('user.factory')->getNewUser($app, $crypt);
     $user->getField('contact', $protocol)->data($address);
     return ($user, $password);
@@ -248,6 +248,6 @@ sub sendPassword {
     my($app, $user, $protocol, $password) = @_;
     my $field = $user->hasField('contact', $protocol);
     $self->assert(defined($field), 1, 'Tried to send a password using a protocol that the user has no mention of!'); # XXX grammar... :-)
-    $app->output($protocol, $user)->loginDetails($app, $field->username, $password);
-    $app->output->loginDetailsSent($app, $field->address, $protocol);
+    $app->output($protocol, $user)->loginDetails($field->username, $password);
+    $app->output->loginDetailsSent($field->address, $protocol);
 }
