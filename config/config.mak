@@ -319,7 +319,7 @@ CFLAGS = $(CFLAGS) -Gh
 #enable builds on any drive if defined.
 MOZ_SRC=y:
 !endif
-MAKE_INSTALL=$(QUIET)$(DEPTH)\config\makecopy.exe -s
+MAKE_INSTALL=$(QUIET)$(DEPTH)\config\makecopy.exe
 MAKE_MANGLE=$(DEPTH)\config\mangle.exe
 MAKE_UNMANGLE=if exist unmangle.bat call unmangle.bat
 
