@@ -1322,12 +1322,14 @@ nsBrowserWindow::~nsBrowserWindow()
   if (nsnull != mImageInspector) {
     delete mImageInspector;
   }
-  if(mWebBrowserChrome)
-   {
-   mWebBrowserChrome->BrowserWindow(nsnull);
-   NS_RELEASE(mWebBrowserChrome);
-   }
-
+  if (mWebBrowserChrome) {
+    mWebBrowserChrome->BrowserWindow(nsnull);
+    NS_RELEASE(mWebBrowserChrome);
+  }
+  if (nsnull != gTitleSuffix) {
+    delete gTitleSuffix;
+    gTitleSuffix = nsnull;
+  }
 }
 
 NS_IMPL_ADDREF(nsBrowserWindow)
