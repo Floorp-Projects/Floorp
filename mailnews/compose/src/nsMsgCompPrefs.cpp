@@ -42,17 +42,17 @@ nsMsgCompPrefs::nsMsgCompPrefs(void * identiy /*= nsnull*/)
 		// now release the mail service because we are done with it
 		nsServiceManager::ReleaseService(kCMsgMailSessionCID, mailSession);
 		if (NS_SUCCEEDED(res) && identity) {
-			const char * aString = nsnull;
+			char * aString = nsnull;
 
 			identity->GetOrganization(&aString);
 			if (aString)
 				m_organization = PL_strdup(aString);
 
-			identity->GetUserFullName(&aString);
+			identity->GetFullName(&aString);
 			if (aString)
 				m_userFullName = PL_strdup(aString);
 
-			identity->GetUserEmail(&aString);
+			identity->GetEmail(&aString);
 			if (aString)
 				m_userEmail = PL_strdup(aString);
 			else
