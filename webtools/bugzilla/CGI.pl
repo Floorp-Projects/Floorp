@@ -1395,11 +1395,12 @@ Edit <a href="userprefs.cgi">prefs</a>
         my $anynamedqueries = 0;
         while (MoreSQLData()) {
             my ($name) = (FetchSQLData());
+            my $disp_name = $name;
+            $disp_name =~ s/ /&nbsp;/g;
             if ($anynamedqueries || $mybugslink) { $html .= " | " }
             $anynamedqueries = 1;
-            $name =~ s/ /&nbsp;/g;
             $html .= "<A HREF=\"buglist.cgi?cmdtype=runnamed&amp;namedcmd=" .
-                     url_quote($name) . "\">$name</A>\n";
+                     url_quote($name) . "\">$disp_name</A>\n";
         }
         $html .= "</TD></TR>\n";
     } else {
