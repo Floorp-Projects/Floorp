@@ -58,6 +58,8 @@
     ]]>
   </script>
 
+  <script src="chrome://global/content/strres.js"/>
+
   <script src="chrome://venkman/content/html-consts.js"/>
   <script src="chrome://venkman/content/command-manager.js"/>
 
@@ -67,6 +69,8 @@
   <script src="chrome://venkman/content/venkman-debugger.js"/>
   <script src="chrome://venkman/content/venkman-commands.js"/>
   <script src="chrome://venkman/content/venkman-prefs.js"/>
+  <script src="chrome://venkman/content/venkman-eval.js"/>
+  <script src="chrome://venkman/content/venkman-msg.js"/>
 
   <commandset id="tasksCommands">
     <command id="cmd_close" oncommand="window.close();"/>
