@@ -37,7 +37,7 @@ struct nsWritableFragment
   {
     CharT*    mStart;
     CharT*    mEnd;
-    PRUint32  mFragmentIdentifier;
+    void*     mFragmentIdentifier;
 
     nsWritableFragment()
         : mStart(0), mEnd(0), mFragmentIdentifier(0)
@@ -66,9 +66,6 @@ class nsWritingIterator
       CharT*                          mPosition;
       basic_nsAWritableString<CharT>* mOwningString;
 
-      inline void normalize_forward();
-      inline void normalize_backward();
-
       nsWritingIterator( nsWritableFragment<CharT>& aFragment,
                          CharT* aStartingPosition,
                          basic_nsAWritableString<CharT>& aOwningString )
@@ -82,6 +79,9 @@ class nsWritingIterator
     public:
       // nsWritingIterator( const nsWritingIterator<CharT>& ); ...use default copy-constructor
       // nsWritingIterator<CharT>& operator=( const nsWritingIterator<CharT>& ); ...use default copy-assignment operator
+
+      inline void normalize_forward();
+      inline void normalize_backward();
 
       pointer
       get() const

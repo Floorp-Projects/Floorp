@@ -64,7 +64,7 @@ struct nsReadableFragment
   {
     const CharT*  mStart;
     const CharT*  mEnd;
-    PRUint32      mFragmentIdentifier;
+    void*         mFragmentIdentifier;
 
     nsReadableFragment()
         : mStart(0), mEnd(0), mFragmentIdentifier(0)
@@ -104,9 +104,6 @@ class nsReadingIterator
       const CharT*                          mPosition;
       const basic_nsAReadableString<CharT>* mOwningString;
 
-      inline void normalize_forward();
-      inline void normalize_backward();
-
       nsReadingIterator( const nsReadableFragment<CharT>& aFragment,
                          const CharT* aStartingPosition,
                          const basic_nsAReadableString<CharT>& aOwningString )
@@ -120,6 +117,9 @@ class nsReadingIterator
     public:
       // nsReadingIterator( const nsReadingIterator<CharT>& ); ...use default copy-constructor
       // nsReadingIterator<CharT>& operator=( const nsReadingIterator<CharT>& ); ...use default copy-assignment operator
+
+      inline void normalize_forward();
+      inline void normalize_backward();
 
       pointer
       get() const
@@ -857,20 +857,20 @@ class nsPromiseConcatenation
       int
       GetCurrentStringFromFragment( const nsReadableFragment<CharT>& aFragment ) const
         {
-          return (aFragment.mFragmentIdentifier & mFragmentIdentifierMask) ? kRightString : kLeftString;
+          return (NS_REINTERPRET_CAST(PRUint32, aFragment.mFragmentIdentifier) & mFragmentIdentifierMask) ? kRightString : kLeftString;
         }
 
       int
       SetLeftStringInFragment( nsReadableFragment<CharT>& aFragment ) const
         {
-          aFragment.mFragmentIdentifier &= ~mFragmentIdentifierMask;
+          aFragment.mFragmentIdentifier = NS_REINTERPRET_CAST(void*, NS_REINTERPRET_CAST(PRUint32, aFragment.mFragmentIdentifier) & ~mFragmentIdentifierMask);
           return kLeftString;
         }
 
       int
       SetRightStringInFragment( nsReadableFragment<CharT>& aFragment ) const
         {
-          aFragment.mFragmentIdentifier |= mFragmentIdentifierMask;
+          aFragment.mFragmentIdentifier = NS_REINTERPRET_CAST(void*, NS_REINTERPRET_CAST(PRUint32, aFragment.mFragmentIdentifier) | mFragmentIdentifierMask);
           return kRightString;
         }
 
