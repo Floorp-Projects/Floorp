@@ -427,7 +427,7 @@ static PRBool IsViewVisible(nsView *aView)
   // content boundaries in DocumentViewerImpl::MakeWindow).
   nsCOMPtr<nsIViewObserver> vo;
   aView->GetViewManager()->GetViewObserver(*getter_AddRefs(vo));
-  return vo->IsVisible();
+  return vo && vo->IsVisible();
 }
 
 void
