@@ -21,6 +21,7 @@
 
 #include "msgCore.h"
 #include "nsIImapIncomingServer.h"
+#include "nsISupportsArray.h"
 #include "nsMsgIncomingServer.h"
 #include "nsIImapServerSink.h"
 #include "nsIStringBundle.h"
