@@ -119,6 +119,7 @@ typedef PRUint32  nsCSSFrameType;
 
 #define NS_INTRINSICSIZE  NS_UNCONSTRAINEDSIZE
 #define NS_AUTOHEIGHT     NS_UNCONSTRAINEDSIZE
+#define NS_AUTOMARGIN     NS_UNCONSTRAINEDSIZE
 
 /**
  * HTML version of the reflow state.
