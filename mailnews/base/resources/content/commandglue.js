@@ -98,7 +98,7 @@ function GetNewMessages()
 function MsgAccountManager()
 {
     dump('Opening account manager..\n');
-    messenger.AccountManager(window);
+    window.openDialog("chrome://messenger/content/AccountManager.xul", "AccountManager", "chrome");
 }
 
 function MsgSubscribe()
