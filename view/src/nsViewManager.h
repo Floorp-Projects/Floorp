@@ -137,13 +137,13 @@ private:
   void RenderView(nsIView *aView, nsIRenderingContext &aRC,
                   const nsRect &aDamageRect, nsRect &aGlobalRect, PRBool &aResult);
   PRBool CreateDisplayList(nsIView *aView, PRInt32 *aIndex, nscoord aOriginX, nscoord aOriginY,
-                           nsIView *aRealView, nsIView *aTopView,
-                           const nsRect *aDamageRect = nsnull,
+                           nsIView *aRealView, const nsRect *aDamageRect = nsnull,
+                           nsIView *aTopView = nsnull, nsVoidArray *aArray = nsnull,
                            nscoord aX = 0, nscoord aY = 0);
 //  void FlattenViewTreeUp(nsIView *aView, PRInt32 *aIndex, const nsRect *aDamageRect,
 //                         nsIView *aStartView, nsVoidArray *aArray);
-  PRBool AddToDisplayList(PRInt32 *aIndex, nsIView *aView, nsRect &aRect, PRUint32 aFlags);
-  void ShowDisplayList(PRInt32 flatlen);
+  PRBool AddToDisplayList(nsVoidArray *aArray, PRInt32 *aIndex,
+                          nsIView *aView, nsRect &aRect, PRUint32 aFlags);
   void ComputeViewOffset(nsIView *aView, nscoord *aX, nscoord *aY, PRInt32 aFlag);
   PRBool DoesViewHaveNativeWidget(nsIView &aView);
   void PauseTimer(void);
