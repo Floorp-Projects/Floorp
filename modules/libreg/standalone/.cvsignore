@@ -7,3 +7,5 @@ mmapio.c
 nr_bufio.c
 reg.c
 vr_stubs.c
+Makefile
+.deps_S
