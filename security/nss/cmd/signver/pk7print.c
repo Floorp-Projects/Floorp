@@ -214,6 +214,7 @@ sv_PrintName(FILE *out, CERTName *name, char *msg)
 
     str = CERT_NameToAscii(name);
     fprintf(out, "%s%s\n", msg, str);
+    PORT_Free(str);
 }
 
 
