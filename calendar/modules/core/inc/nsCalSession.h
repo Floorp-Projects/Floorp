@@ -67,6 +67,14 @@ public:
   nsresult        GetSession(CAPISession& s, const char* psPassword=0);
 
   /**
+   * Establish a CAPI session to the supplied curl. If a session already
+   * exists, bump the reference count and return the existing session.
+   * @return 0 on success
+   *         CAPI errors associated with not getting a session.
+   */
+  nsresult        EstablishSession(const char* psPassword=0);
+
+  /**
    * Release the session. That is, a consumer is indicating that they
    * are finished using the session. Decrement the usage count.
    * The session should not be destroyed until the usage count is 0.

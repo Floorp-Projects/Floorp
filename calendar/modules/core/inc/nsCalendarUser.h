@@ -38,10 +38,21 @@ public:
   NS_IMETHOD GetLayer(nsILayer *& aLayer);
   NS_IMETHOD SetLayer(nsILayer* aLayer);
 
+  /**
+   * Check to see whether or not the user has a particular layer
+   * in the list of layers that make up their calendar.
+   * @param aCurl     the curl containing the host and csid
+   * @param aContains return value set to PR_TRUE if the user's 
+   *                  calendar list contains the specified curl
+   *                  or PR_FALSE otherwise.
+   * @return NS_OK on success.
+   */
+  NS_IMETHOD HasLayer(const JulianString& aCurl,PRBool& aContains);
+
 protected:
-  nsISupports * mUserSupports;
-  nsIUser     * mUser;
-  nsILayer    * mLayer;
+  nsISupports * mpUserSupports;
+  nsIUser     * mpUser;
+  nsILayer    * mpLayer;
 
 };
 

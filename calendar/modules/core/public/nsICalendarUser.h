@@ -34,6 +34,7 @@ public:
 
   NS_IMETHOD GetLayer(nsILayer *& aLayer) = 0;
   NS_IMETHOD SetLayer(nsILayer* aLayer) = 0;
+  NS_IMETHOD HasLayer(const JulianString& aCurl,PRBool& aContains) = 0;
 
 };
 

@@ -1,17 +1,17 @@
 /**
- * nsCalUserList.cpp: implementation of the nsCalUserList class.
+ * nsICalendarUserList.cpp: implementation of the nsICalendarUserList class.
  * This class manages the list of calendars currently in memory.
  * All calendars that are to be displayed should be registered
  * in this list.
  */
 
-#if !defined(AFX_NSCALUSERLIST_H__BC9A7773_3EF1_11D2_8ED1_000000000000__INCLUDED_)
-#define AFX_NSCALUSERLIST_H__BC9A7773_3EF1_11D2_8ED1_000000000000__INCLUDED_
+#if !defined(AFX_nsICalendarUserLIST_H__BC9A7773_3EF1_11D2_8ED1_000000000000__INCLUDED_)
+#define AFX_nsICalendarUserLIST_H__BC9A7773_3EF1_11D2_8ED1_000000000000__INCLUDED_
 
 #include "jdefines.h"
 #include "ptrarray.h"
 #include "nscalexport.h"
-#include "nsCalUser.h"
+#include "nsICalendarUser.h"
 
 class NS_CALENDAR nsCalUserList  
 {
@@ -26,7 +26,7 @@ public:
    * @param pUser pointer to the user to add
    * @return 0 on success
    */
-  nsresult Add(nsCalUser* pUser);
+  nsresult Add(nsICalendarUser* pUser);
 
   /**
    * Delete the user matching the supplied pointer.
@@ -34,7 +34,7 @@ public:
    * @return 0 on success
    *         1 if not found
    */
-  nsresult Delete(nsCalUser* pUser);
+  nsresult Delete(nsICalendarUser* pUser);
 
   /**
    * Delete all users having the supplied cal url
@@ -66,10 +66,10 @@ public:
    * @return 0 if the index is bad, otherwise it is a pointer
    *           to the calendar at index i in the list
    */ 
-  nsCalUser* GetAt(int i);
+  nsICalendarUser* GetAt(int i);
 
 };
 
-#endif /* !defined(AFX_NSCALUSERLIST_H__BC9A7773_3EF1_11D2_8ED1_000000000000__INCLUDED_) */
+#endif /* !defined(AFX_nsICalendarUserLIST_H__BC9A7773_3EF1_11D2_8ED1_000000000000__INCLUDED_) */
 
 

@@ -29,6 +29,7 @@
 #include "ptrarray.h"
 #include "nscal.h"
 #include "nspr.h"
+#include "nsICalendarUser.h"
 #include "nsCalUserList.h"
 
 nsCalUserList::nsCalUserList()
@@ -45,7 +46,7 @@ nsCalUserList::~nsCalUserList()
  * @return 0 on success
  *         1 problems adding the calendar
  */
-nsresult nsCalUserList::Add(nsCalUser* pUser)
+nsresult nsCalUserList::Add(nsICalendarUser* pUser)
 {
   if (0 > m_List.Add(pUser))
     return 1;
@@ -58,10 +59,9 @@ nsresult nsCalUserList::Add(nsCalUser* pUser)
  * @return 0 on success
  *         1 if not found
  */
-nsresult nsCalUserList::Delete(nsCalUser* pUser)
+nsresult nsCalUserList::Delete(nsICalendarUser* pUser)
 {
   return (1 ==  m_List.Remove(pUser)) ? 0 : 1;
-
 }
 
 /**
@@ -94,7 +94,7 @@ nsresult nsCalUserList::Delete(char* psCurl)
  */
 nsresult nsCalUserList::Find(char* p, int iStart, int* piFound)
 {
-  nsCalUser* pUser;
+  nsICalendarUser* pUser;
   JulianPtrArray* pList;
   JulianString* psCurl;
   int i,j;
@@ -106,9 +106,10 @@ nsresult nsCalUserList::Find(char* p, int iStart, int* piFound)
       iStart = m_List.GetSize() - 1;
 	  for (i = 0; i < m_List.GetSize(); i++)
 	  {
-		  pUser = (nsCalUser*) m_List.GetAt(i);
+		  pUser = (nsICalendarUser*) m_List.GetAt(i);
       if (0 != pUser)
       {
+#if 0
         pList = pUser->GetCalAddrList();
         for (j = 0; j < pList->GetSize(); j++)
         {
@@ -117,8 +118,9 @@ nsresult nsCalUserList::Find(char* p, int iStart, int* piFound)
           {
             *piFound = i;
             return NS_OK;
-          }
+           }
         }
+#endif
       }
 	  }
   }
@@ -130,8 +132,8 @@ nsresult nsCalUserList::Find(char* p, int iStart, int* piFound)
  * @param i the index of the calendar to fetch
  * @return a pointer to the calendar at the supplied index.
  */ 
-nsCalUser* nsCalUserList::GetAt(int i)
+nsICalendarUser* nsCalUserList::GetAt(int i)
 {
-  return (nsCalUser*) m_List.GetAt(i);
+  return (nsICalendarUser*) m_List.GetAt(i);
 }
 

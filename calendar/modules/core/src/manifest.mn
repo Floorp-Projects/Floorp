@@ -18,18 +18,18 @@ PRIVATE_EXPORTS = \
 MODULE = trex
 
 CPPSRCS = \
+	nsCalUserList.cpp \
 	nsCalList.cpp \
 	nsCalLoggedInUser.cpp \
 	nsCalScheduler.cpp \
 	nsCalSession.cpp \
 	nsCalSessionMgr.cpp \
 	nsCalUser.cpp \
-	nsCalUserList.cpp \
 	nsLayer.cpp \
 	nsLayerCollection.cpp \
 	nsCoreFactory.cpp \
 	nsCalendarUser.cpp \
-    nsCalendarModel.cpp \
+	nsCalendarModel.cpp \
 	$(NULL)
 
 

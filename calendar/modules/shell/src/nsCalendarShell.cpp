@@ -26,12 +26,11 @@
 #include "plstr.h"
 #include "prmem.h"
 #include "prenv.h"
-#include "julnstr.h"
 #include "icalfrdr.h"
 #include "nsIPref.h"
 #include "nsCurlParser.h"
-#include "nsCalUser.h"
-#include "nsCalLoggedInUser.h"
+//#include "nsCalUser.h"
+//#include "nsCalLoggedInUser.h"
 #include "nsCalendarShell.h"
 #include "nscalstrings.h"
 #include "nsxpfcCIID.h"
@@ -91,12 +90,17 @@ static NS_DEFINE_IID(kCXPFCObserverManagerCID, NS_XPFC_OBSERVERMANAGER_CID);
   #define CORE_DLL   "libcalcore10.so"
 #endif
 
-static NS_DEFINE_IID(kCCapiLocalCID,            NS_CAPI_LOCAL_CID);
-static NS_DEFINE_IID(kCCapiCSTCID,              NS_CAPI_CST_CID);
-static NS_DEFINE_IID(kCLayerCID,                NS_LAYER_CID);
-static NS_DEFINE_IID(kCLayerCollectionCID,      NS_LAYER_COLLECTION_CID);
-static NS_DEFINE_IID(kCCalendarUserCID,         NS_CALENDAR_USER_CID);
-static NS_DEFINE_IID(kCCalendarModelCID,        NS_CALENDAR_MODEL_CID);
+static NS_DEFINE_IID(kCCapiLocalCID,        NS_CAPI_LOCAL_CID);
+static NS_DEFINE_IID(kCCapiCSTCID,          NS_CAPI_CST_CID);
+static NS_DEFINE_IID(kCLayerCID,            NS_LAYER_CID);
+static NS_DEFINE_IID(kILayerIID,            NS_ILAYER_IID);
+static NS_DEFINE_IID(kCLayerCollectionCID,  NS_LAYER_COLLECTION_CID);
+static NS_DEFINE_IID(kCCalendarModelCID,    NS_CALENDAR_MODEL_CID);
+static NS_DEFINE_IID(kICalendarUserIID,     NS_ICALENDAR_USER_IID); 
+static NS_DEFINE_IID(kCCalendarUserCID,     NS_CALENDAR_USER_CID);
+static NS_DEFINE_IID(kIUserIID,             NS_IUSER_IID);
+static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kCUserCID,             NS_USER_CID);
 
 // All Application Must implement this function
 nsresult NS_RegisterApplicationShellFactory()
@@ -146,7 +150,6 @@ nsCalendarShell::~nsCalendarShell()
   NS_IF_RELEASE(mCommandServer);
 }
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
 
 
@@ -179,11 +182,12 @@ NS_IMPL_RELEASE(nsCalendarShell)
 nsresult nsCalendarShell::Init()
 {
   mScheduler.SetShell(this);
-
   /*
    * Register class factrories needed for application
    */
   RegisterFactories() ;
+
+  InitFactoryObjs();
 
   /*
    * Load Application Prefs
@@ -204,6 +208,27 @@ nsresult nsCalendarShell::Init()
 }
 
 /**
+ * Create factory objects...
+ * @return NS_OK on success
+ */
+nsresult nsCalendarShell::InitFactoryObjs()
+{
+  nsresult res;
+
+  res = nsRepository::CreateInstance(kCCalendarUserCID,  // class id that we want to create
+                                     nsnull,             // not aggregating anything  (this is the aggregatable interface)
+                                     kICalendarUserIID,  // interface id of the object we want to get back
+                                     (void**)&mpLoggedInUser);
+
+  if (NS_OK == res) 
+  {
+    mpLoggedInUser->Init();
+  }
+
+  return res;
+}
+
+/**
  * This method establishes a logged in user and opens a connection to 
  * the calendar server (or local database file if they're working offline).
  *
@@ -213,12 +238,22 @@ nsresult nsCalendarShell::Init()
 nsresult nsCalendarShell::Logon()
 {
   CAPIStatus s;
+  nsIUser* pUser;
   nsresult res;
+
+  if (NS_OK != (res = mpLoggedInUser->QueryInterface(kIUserIID,(void**)&pUser)))
+    return res ;
 
   /*
    *  Getting the first calendar by user name should be reviewed.
    */
-  nsCurlParser theURL(mpLoggedInUser->GetUserName());
+  nsString nsstrUserName;
+  pUser->GetUserName(nsstrUserName);
+  JulianString sUserName(256);
+  nsstrUserName.ToCString(sUserName.GetBuffer(),256);
+  sUserName.DoneWithBuffer();
+
+  nsCurlParser theURL(sUserName);
   nsCurlParser sessionURL(msCalURL);
   theURL |= sessionURL;
 
@@ -231,14 +266,20 @@ nsresult nsCalendarShell::Logon()
         GetCAPIPassword(), 
         mCAPISession);
   
-  JulianString sHandle = mpLoggedInUser->GetUserName();
+  pUser->GetUserName(nsstrUserName);
+  JulianString sHandle(256);
+  nsstrUserName.ToCString(sHandle.GetBuffer(),256);
+  sHandle.DoneWithBuffer();
+
   
+  NS_RELEASE(pUser);
+
   if (nsCurlParser::eCAPI == theURL.GetProtocol())
   {
     nsX400Parser x(theURL.GetExtra());
     x.Delete("ND");
     x.GetValue(sHandle);
-    sHandle.Prepend(":");   // this is disgusting. we must get cst to fix this
+    sHandle.Prepend(":");
   }
 
   s = mSessionMgr.GetAt(0L)->mCapi->CAPI_GetHandle(mCAPISession,sHandle.GetBuffer(),0,&mCAPIHandle);
@@ -257,7 +298,18 @@ nsresult nsCalendarShell::Logon()
     case nsCurlParser::eFILE:
     case nsCurlParser::eCAPI:
     {
-      mScheduler.InitialLoadData();
+      DateTime d;
+      DateTime d1;
+      JulianPtrArray EventList;
+      nsILayer *pLayer;
+      d.prevDay(14);
+      d1.nextDay(14);
+      //mScheduler.InitialLoadData();
+      mpLoggedInUser->GetLayer(pLayer);
+      NS_ASSERTION(0 != pLayer,"null pLayer");
+      pLayer->SetShell(this);
+      pLayer->FetchEventsByRange(&d,&d1,&EventList);
+      mpCalendar->addEventList(&EventList);
     }
     break;
 
@@ -416,12 +468,9 @@ nsresult nsCalendarShell::LoadPreferences()
 
   sBuf[0]=0;
 
-  mpLoggedInUser = new nsCalLoggedInUser();
-  if (nsnull == mpLoggedInUser)
-  {
-    // XXX
-    // return NOT OK
-  }
+  nsIUser* pUser;
+  if (NS_OK != (res = mpLoggedInUser->QueryInterface(kIUserIID,(void**)&pUser)))
+    return res ;
 
   /*
    * fill in info for the user...
@@ -429,12 +478,21 @@ nsresult nsCalendarShell::LoadPreferences()
   mShellInstance->GetPreferences()->GetCharPref(CAL_STRING_PREF_USERNAME,sBuf, &iBufSize );
   s = sBuf;
   EnvVarsToValues(s);
-  mpLoggedInUser->SetUserName(s.GetBuffer());
+  nsString nsstrUserName = s.GetBuffer();
+  pUser->SetUserName(nsstrUserName);
 
   /*
    * Add the logged in user to the user list...
    */
   mUserList.Add( mpLoggedInUser );
+
+  /*****************************************************************/
+  
+  /*
+   *  This section of code needs to be revamped after a review.
+   *  Currently, it expects to load a local and preferred cal url.
+   *  We need to rethink this.
+   */
 
   /*
    *  Get the local cal address.
@@ -444,8 +502,8 @@ nsresult nsCalendarShell::LoadPreferences()
   EnvVarsToValues(s);
   curl = s;   
   curl.ResolveFileURL();
-  mpLoggedInUser->SetLocalCapiUrl(curl.GetCSID().GetBuffer());
 
+  /* XXX for now, we're ignoring this value... */
 
   /*
    *  Load the preferred cal address. For now, the local cal address is the default too...
@@ -455,23 +513,42 @@ nsresult nsCalendarShell::LoadPreferences()
   EnvVarsToValues(s);
   curl = s;   
   curl.ResolveFileURL();
-  mpLoggedInUser->AddCalAddr(new JulianString(curl.GetCurl().GetBuffer()));
+  // mpLoggedInUser->AddCalAddr(new JulianString(curl.GetCurl().GetBuffer()));
+
+  /*
+   * create a layer for the preferred address
+   */
+  nsILayer* pLayer;
+  if (NS_OK != (res = nsRepository::CreateInstance(
+          kCLayerCID,         // class id that we want to create
+          nsnull,             // not aggregating anything  (this is the aggregatable interface)
+          kILayerIID,         // interface id of the object we want to get back
+          (void**)&pLayer)))
+    return 1;  // XXX fix this
+  pLayer->Init();
+  pLayer->SetCurl(curl.GetCurl());
+  mpLoggedInUser->SetLayer(pLayer);
+
+  /*****************************************************************/
 
   /*
    *  Get the user's display name
    */
   mShellInstance->GetPreferences()->GetCharPref(CAL_STRING_PREF_USER_DISPLAY_NAME,sBuf, &iBufSize );
-  mpLoggedInUser->SetDisplayName(sBuf);
+  // mpLoggedInUser->SetDisplayName(sBuf); // XXX fix this
 
   /*
    *  Set the curl to use for the logged in user's calendar...
    */
-  msCalURL = * mpLoggedInUser->GetPreferredCalAddr();
+  // msCalURL = * mpLoggedInUser->GetPreferredCalAddr();
+  msCalURL = curl.GetCurl();
 
   /*
    *  XXX: We gotta ask for this or save a secure password pref or something...
    */
   SetCAPIPassword("HeyBaby");
+
+  NS_RELEASE(pUser);
 
   return NS_OK;
 }

@@ -22,11 +22,14 @@
 #include "nscalexport.h"
 #include "nsILayer.h"
 
+class nsCalendarShell;
+
 class NS_CALENDAR nsLayer : public nsILayer 
 {
 
   JulianString msCurl;
   NSCalendar* mpCal;
+  nsCalendarShell* mpShell;
 
 public:
   nsLayer(nsISupports* outer);
@@ -37,13 +40,26 @@ public:
   NS_IMETHOD Init();
   NS_IMETHOD SetCurl(const JulianString& s);
   NS_IMETHOD GetCurl(JulianString& s);
+
+  /**
+   * Check to see if the layer matches the supplied curl.
+   * In this case, matching means that the host and CSID 
+   * values are equal.
+   * @param  s  the curl
+   * @return NS_OK on success
+   */
+  NS_IMETHOD URLMatch(const JulianString& aCurl, PRBool& aMatch);
+  
   NS_IMETHOD SetCal(NSCalendar* aCal);
   NS_IMETHOD GetCal(NSCalendar*& aCal);
+  NS_IMETHOD SetShell(nsCalendarShell* aShell) {mpShell = aShell; return NS_OK;}
   NS_IMETHOD FetchEventsByRange(
                       const DateTime* aStart, 
                       const DateTime* aStop,
-                      JulianPtrArray* &anArray
+                      JulianPtrArray* anArray
                       );
+private:
+  nsresult FetchEventsByRange();
 };
 
 #endif //nsLayer_h___

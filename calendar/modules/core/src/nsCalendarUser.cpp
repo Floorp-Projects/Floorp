@@ -25,12 +25,15 @@ static NS_DEFINE_IID(kICalendarUserIID, NS_ICALENDAR_USER_IID);
 static NS_DEFINE_IID(kIUserIID,         NS_IUSER_IID);
 static NS_DEFINE_IID(kISupportsIID,     NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCUserCID,         NS_USER_CID);
+static NS_DEFINE_IID(kILayerIID,        NS_ILAYER_IID);
+static NS_DEFINE_IID(kCLayerCollectionCID,  NS_LAYER_COLLECTION_CID);
 
 nsCalendarUser::nsCalendarUser(nsISupports* outer)
 {
   NS_INIT_REFCNT();
-  mUserSupports = nsnull;
-  mUser = nsnull;
+  mpUserSupports  = nsnull;
+  mpUser          = nsnull;
+  mpLayer         = nsnull;
 }
 
 nsresult nsCalendarUser::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
@@ -52,8 +55,8 @@ nsresult nsCalendarUser::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;                                                        
   }                                                                      
 
-  if (nsnull != mUserSupports)
-    return mUserSupports->QueryInterface(aIID, aInstancePtr);
+  if (nsnull != mpUserSupports)
+    return mpUserSupports->QueryInterface(aIID, aInstancePtr);
 
   return (NS_NOINTERFACE);
 
@@ -65,18 +68,20 @@ NS_IMPL_RELEASE(nsCalendarUser)
 
 nsCalendarUser::~nsCalendarUser()
 {
-  NS_IF_RELEASE(mUserSupports); 
-  mUser = nsnull; // Do Not Release
+  NS_IF_RELEASE(mpUserSupports); 
+  NS_IF_RELEASE(mpLayer);
+  mpUser = nsnull; // Do Not Release
 }
 
 nsresult nsCalendarUser::Init()
 {
   nsresult res;
 
+  /*
+   * Aggregate in the XPFC User Implementation
+   */
   nsISupports * supports ;
-
   res = QueryInterface(kISupportsIID, (void **) &supports);
-
   if (NS_OK != res)
     return res;
 
@@ -85,37 +90,52 @@ nsresult nsCalendarUser::Init()
   res = nsRepository::CreateInstance(kCUserCID, 
                                      supports, 
                                      kISupportsIID, 
-                                     (void**)&mUserSupports);
+                                     (void**)&mpUserSupports);
 
   if (NS_OK == res) 
   {
-    res = mUserSupports->QueryInterface(kIUserIID, (void**)&mUser);
+    res = mpUserSupports->QueryInterface(kIUserIID, (void**)&mpUser);
     if (NS_OK != res) 
     {
-	    mUserSupports->Release();
-	    mUserSupports = NULL;
+	    mpUserSupports->Release();
+	    mpUserSupports = NULL;
     }
     else 
     {
-      mUser->Release();
+      mpUser->Release();
     }
   }
 
+  /*
+   * Create a LayerCollection for this User, by default
+   */
+  res = nsRepository::CreateInstance(
+          kCLayerCollectionCID,  // class id that we want to create
+          nsnull,                // not aggregating anything  (this is the aggregatable interface)
+          kILayerIID,            // interface id of the object we want to get back
+          (void**)&mpLayer);     // pointer to the interface object
+
+  if (NS_OK == res) 
+    mpLayer->Init();
 
   return res;
-
 }
 
 
 NS_IMETHODIMP nsCalendarUser :: GetLayer(nsILayer *& aLayer)
 {
-  aLayer = mLayer;
+  aLayer = mpLayer;
+  NS_ADDREF(mpLayer);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsCalendarUser :: SetLayer(nsILayer* aLayer)
 {
-  mLayer = aLayer;
+  mpLayer = aLayer;
   return NS_OK;
 }
 
+NS_IMETHODIMP nsCalendarUser::HasLayer(const JulianString& aCurl, PRBool& aContains)
+{
+  return  mpLayer->URLMatch(aCurl,aContains);
+}

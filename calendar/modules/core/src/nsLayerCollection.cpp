@@ -18,6 +18,8 @@
 
 #include <stdio.h>
 #include "nscore.h"
+#include "jdefines.h"
+#include "ptrarray.h"
 #include "nsLayerCollection.h"
 #include "nsCoreCIID.h"
 #include "nsxpfcCIID.h"
@@ -137,11 +139,75 @@ nsresult nsLayerCollection::GetCal(NSCalendar*& aCal)
 }
 
 
+/**
+ * @param aStart Starting time for fetch
+ * @param aStart ending time for fetch
+ * @param anArray Match a returned boolean value. If a match is found this value
+ *               is returned as PR_TRUE. Otherwise, the it is set to PR_FALSE.
+ *
+ * @return NS_OK on success
+ */
 nsresult nsLayerCollection::FetchEventsByRange(
                       const DateTime*  aStart, 
                       const DateTime*  aStop,
-                      JulianPtrArray*& anArray
+                      JulianPtrArray*  anArray
                       )
 {
-  return (NS_OK);
+  PRInt32 i,j;
+  PRInt32 iSize = mLayers->Count();
+  PRInt32 iTmpSize;
+  nsILayer *pLayer;
+  JulianPtrArray TmpArray;
+
+  /*
+   *  XXX:
+   *  This should be made multi-threaded...
+   */
+  for ( i = 0; i < iSize; i++)
+  {
+    pLayer = (nsILayer*)mLayers->ElementAt(i);
+    if (NS_OK == (pLayer->FetchEventsByRange(aStart,aStop,&TmpArray)))
+    {
+      /*
+       * copy the stuff in TmpArray into anArray...
+       */
+      for (j = 0, iTmpSize = TmpArray.GetSize(); j < iTmpSize; j++)
+      {
+        /*
+         *  XXX:  should sort these chronologically
+         */
+        anArray->Add( TmpArray.GetAt(j) );
+      }
+
+      TmpArray.RemoveAll();
+    }
+  }
+  return NS_OK;
+}
+
+/**
+ * @param aUrl   the url for comparison. In this case, we check to see if 
+ *               both the host and cal store id match on any layer in
+ *               the list.
+ * @param aMatch a returned boolean value. If a match is found this value
+ *               is returned as PR_TRUE. Otherwise, the it is set to PR_FALSE.
+ *
+ * @return NS_OK on success
+ */
+nsresult nsLayerCollection::URLMatch(const JulianString& aUrl, PRBool& aMatch)
+{
+  PRInt32 i;
+  PRInt32 iSize = mLayers->Count();
+  nsILayer *pLayer;
+  aMatch = PR_FALSE;
+  for ( i = 0; i < iSize; i++)
+  {
+    pLayer = (nsILayer*)mLayers->ElementAt(i);
+    if (NS_OK == (pLayer->URLMatch(aUrl,aMatch)))
+    {
+      if (PR_TRUE == aMatch)
+        return NS_OK;
+    }
+  }
+  return NS_OK;
 }

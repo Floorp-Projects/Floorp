@@ -20,10 +20,10 @@ LIBRARY_NAME      = util
 LIBRARY_VERSION   = 10
 
 LD_LIBS += \
+	$(NATIVE_JULIAN_DLL) \
+	$(NATIVE_LIBNLS_LIBS) \
 	raptorbase \
 	xpcom$(MOZ_BITS) \
-	$(NATIVE_JULIAN_DLL) \
-    $(NATIVE_LIBNLS_LIBS) \
 	$(XP_REG_LIB)
 
 EXTRA_LIBS += $(NSPR_LIBS)

@@ -10,6 +10,7 @@
 
 #include "jdefines.h"
 #include "ptrarray.h"
+#include "julnstr.h"
 #include "nsCalSession.h"
 #include "nscalexport.h"
 
@@ -30,6 +31,15 @@ public:
    * @return 0 on success
    */
   nsresult GetSession(const char* psCurl, long lFlags, const char* psPassword, CAPISession& s);
+
+  /**
+   * Get a session to the supplied curl.
+   * @param sCurl     the curl to the calendar store
+   * @param psPassword the password needed for logging in
+   * @param s          the session
+   * @return 0 on success
+   */
+  nsresult GetSession(const JulianString sCurl, long lFlags, const char* psPassword, nsCalSession* &pCalSession);
 
   /**
    * Release a session

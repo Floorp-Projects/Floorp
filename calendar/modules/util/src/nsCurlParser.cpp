@@ -89,7 +89,7 @@ nsCurlParser::nsCurlParser()
   Init();
 }
 
-nsCurlParser::nsCurlParser(JulianString& sCurl)
+nsCurlParser::nsCurlParser(const JulianString& sCurl)
 {
   Init();
   SetCurl(sCurl);

@@ -96,11 +96,28 @@ nsCalSession::~nsCalSession()
  */
 nsresult nsCalSession::GetSession(CAPISession& Session, const char* psPassword)
 {
+  Session = 0;
+  nsresult res = EstablishSession(psPassword);
+  ++m_iCount;
+  Session = m_Session;
+  return res;
+}
+
+/**
+ * Establish a CAPI session. If a session already
+ * exists, bump the reference count and return the existing session.
+ * If the value of s is 0 on return, there was a problem getting the
+ * session.
+ * @return 0 on success
+ *         1 general failure
+ *         CAPI errors associated with not getting a session.
+ */
+nsresult nsCalSession::EstablishSession(const char* psPassword)
+{
   nsresult res = NS_OK;
   if (0 == m_Session)
   {
     CAPIStatus s;
-    Session = 0;
     nsICapiLocal * capi_local = nsnull;
 
     if ( m_sCurl == "")
@@ -172,10 +189,7 @@ nsresult nsCalSession::GetSession(CAPISession& Session, const char* psPassword)
 
     if (CAPI_ERR_OK != s)
       return res;
-    ++m_iCount;
   }
-
-  Session = m_Session;
 
   return res;
 }

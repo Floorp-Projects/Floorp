@@ -84,7 +84,7 @@ private:
 public:
                 nsCurlParser();
                 nsCurlParser(const char* psCurl);
-                nsCurlParser(JulianString& sCurl);
+                nsCurlParser(const JulianString& sCurl);
                 nsCurlParser(const nsCurlParser& curl);
   virtual       ~nsCurlParser();
 

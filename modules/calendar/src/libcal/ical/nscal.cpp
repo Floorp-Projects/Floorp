@@ -20,6 +20,11 @@
 // John Sun
 // 1:35 PM Febuary 18 1998
 
+/*
+ * Updated 9/24/98  sman
+ * We need to be able to append a list of events:  AddEventList
+ */
+
 #include "stdafx.h"
 #include "jdefines.h"
 
@@ -1198,6 +1203,21 @@ void NSCalendar::addEvent(ICalComponent * v)
         m_VEventVctr->Add(v);
         //m_VEventVctr->InsertBinary(v, TimeBasedEvent::CompareTimeBasedEventsByDTStart);
     }
+}
+//---------------------------------------------------------------------
+void NSCalendar::addEventList(JulianPtrArray* pEventList)
+{
+  int j;
+  ICalComponent* pEvent;
+  if (0 != pEventList)
+  {
+    for (j = 0; j < pEventList->GetSize(); j++)
+    {
+      pEvent = (ICalComponent*)pEventList->GetAt(j);
+      if (0 != pEvent)
+        addEvent(pEvent);
+    }
+  }
 }
 //---------------------------------------------------------------------
 void NSCalendar::addTodo(ICalComponent * v)

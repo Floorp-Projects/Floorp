@@ -90,6 +90,7 @@ public:
 
   NS_IMETHOD StartCommandServer();
   NS_IMETHOD ReceiveCommand(nsString& aCommand, nsString& aReply);
+  NS_IMETHOD InitFactoryObjs();
 
 private:
   NS_METHOD InitialLoadData();
@@ -106,7 +107,7 @@ public:
   CAPISession mCAPISession;
   CAPIHandle mCAPIHandle;
   NSCalendar * mpCalendar;
-  nsCalLoggedInUser* mpLoggedInUser;
+  nsICalendarUser* mpLoggedInUser;
 
   JulianString msCalURL;  /* the calendar associated with this user */
   char * mCAPIPassword;   /* the password which must be entered by the user */

@@ -143,17 +143,17 @@ static int RcvData(void * pData,
  * will need to change local CAPI so null gasViewPropList will return 
  * all properties.
  */
-char * gasViewPropList[10] = {
+static char * gasViewPropList[10] = {
   "ATTENDEE", "DTSTART", "DTEND", "UID", "RECURRENCE-ID",
     "DTSTAMP", "SUMMARY", "DESCRIPTION", "ORGANIZER", "TRANSP"
 };
-int giViewPropListCount = 10;
+static int giViewPropListCount = 10;
 
 /**
  * Given an nsICapi interface, log in and get some initial data.
  * @return NS_OK on success.
  */
-nsresult nsCalScheduler::InitialLoadData()
+nsresult nsCalScheduler::InitialLoadData(/*nsIUser* pUser*/)
 {
   nsresult res;
   ErrorCode status = ZERO_ERROR;

@@ -21,6 +21,10 @@
  * John Sun
  * 2/18/98 1:35:06 PM
  */
+/*
+ * Updated 9/24/98  sman
+ * We need to be able to append a list of events:  AddEventList
+ */
 
 #ifndef __NSCALENDAR_H_
 #define __NSCALENDAR_H_
@@ -349,6 +353,14 @@ public:
      */
     void addEvent(ICalComponent * v);
   
+    /**
+     * Append the supplied vector of events to this NSCalendar's
+     * event list. Note that it does not clone the events. It simply
+     * adds the pointer to the events to the event list.
+     * @param  pEventList  the list of events to add...
+     */
+    void addEventList(JulianPtrArray *pEventList);
+
     /**
      * Add the ICalComponent to the vector of Todos.  
      * NOTE: doesn't add clone of v, but actually ptr to v, so don't deallocate

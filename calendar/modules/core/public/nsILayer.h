@@ -30,6 +30,7 @@
 class NSCalendar;
 class DateTime;
 class JulianPtrArray;
+class nsCalendarShell;
 
 class nsILayer : public nsISupports
 {
@@ -37,14 +38,42 @@ class nsILayer : public nsISupports
 public:
   NS_IMETHOD Init() = 0;
 
+  /**
+   * Set the curl that points to the cal store
+   * @param  s  the curl
+   * @return NS_OK on success
+   */
   NS_IMETHOD SetCurl(const JulianString& s) = 0;
+  
+  /**
+   * Set the shell pointer
+   * @param  s  the curl
+   * @return NS_OK on success
+   */
+  NS_IMETHOD SetShell(nsCalendarShell* aShell) = 0;
+  
+  /**
+   * Get the curl that points to the cal store
+   * @param  s  the curl
+   * @return NS_OK on success
+   */
   NS_IMETHOD GetCurl(JulianString& s) = 0;
+
+  /**
+   * Check to see if the layer matches the supplied curl.
+   * In this case, matching means that the host and CSID 
+   * values are equal.
+   * @param  s  the curl
+   * @return NS_OK on success
+   */
+  NS_IMETHOD URLMatch(const JulianString& aCurl, PRBool& aMatch)  = 0;
+
   NS_IMETHOD SetCal(NSCalendar* aCal) = 0;
   NS_IMETHOD GetCal(NSCalendar*& aCal) = 0;
   NS_IMETHOD FetchEventsByRange(
                       const DateTime* aStart, 
                       const DateTime* aStop,
-                      JulianPtrArray* &anArray
+                      JulianPtrArray* anArray
                       ) = 0;
 };
 

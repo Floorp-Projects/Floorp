@@ -111,6 +111,48 @@ nsresult nsCalSessionMgr::GetSession(const char* psCurl, long lFlags, const char
 }
 
 /**
+ * Get a session to the supplied curl.
+ * @param sCurl       the curl to the calendar store
+ * @param psPassword  the password needed for logging in
+ * @param pCalSession the session object that was found or created
+ * @return 0 on success (that is, the session was established with the
+ *           capi server) or the error that occurred while trying to
+ *           establish the session.
+ */
+nsresult nsCalSessionMgr::GetSession(const JulianString sCurl, long lFlags, const char* psPassword, nsCalSession* &pCalSession)
+{
+  /*
+   * First, search the current sessions and see if we already have a
+   * session to the requested server...
+   */
+  nsCurlParser Curl(sCurl);
+  int iIndex;
+
+  pCalSession = 0;
+
+  if (0 == Find(Curl.GetCurl().GetBuffer(), 0, &iIndex))
+  {
+    /*
+     * Found it
+     */
+    pCalSession = GetAt(iIndex);
+    if (0 == pCalSession)
+      return 1;
+    return pCalSession->EstablishSession(psPassword);
+  }
+  else
+  {
+    /*
+     * nothing found, have to create it.
+     */
+    pCalSession = new nsCalSession(sCurl,lFlags);
+    m_List.Add(pCalSession);
+    return pCalSession->EstablishSession(psPassword ? psPassword : "");
+  }
+}
+
+
+/**
  * Release a session
  * @param pUser pointer to the calendar to add
  * @return 0 on success
