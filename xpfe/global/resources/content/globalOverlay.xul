@@ -11,30 +11,30 @@
 
 	<!-- File Menu (Exit) -->
 	<menu id="fileMenu">
-		<menuitem name="&quitApplicationCmd.label;" onclick="goQuitApplication()"/>
+		<menuitem value="&quitApplicationCmd.label;" onaction="goQuitApplication()"/>
 	</menu>
 	
 	<!-- Page Setup menu item -->
-	<menuitem id="pageSetup" name="&pageSetupCmd.label;" onclick="goPageSetup()"/>
+	<menuitem id="pageSetup" value="&pageSetupCmd.label;" onaction="goPageSetup()"/>
 
 	<!-- Help Menu -->
-	<menu id="helpMenu" name="&helpMenu.label;">
-		<menuitem name="&helpContentCmd.label;" onclick="goHelp()"/>
-		<menuitem name="&referenceLibraryCmd.label;" onclick="goHelp()"/>
-		<menuitem name="&releaseNotesCmd.label;" onclick="goHelp()"/>
-		<menuitem name="&productInfoCmd.label;" onclick="goHelp()"/>
-		<separator/>
-		<menuitem name="&softwareUpdatesCmd.label;" onclick="goHelp()"/>
-		<menuitem name="&registerCmd.label;" onclick="goHelp()"/>
-		<menuitem name="&memberServicesCmd.label;" onclick="goHelp()"/>
-		<separator/>
-		<menuitem name="&internationalCmd.label;" onclick="goHelp()"/>
-		<menuitem name="&securityCmd.label;" onclick="goHelp()"/>
-		<menuitem name="&netwatchCmd.label;" onclick="goHelp()"/>
-		<separator/>
-		<menuitem name="&aboutPluginsCmd.label;" onclick="goHelp()"/>
-		<menuitem name="&aboutFontCmd.label;" onclick="goHelp()"/>
-		<menuitem name="&aboutCmd.label;" onclick="goHelp()"/>
+	<menu id="helpMenu" value="&helpMenu.label;">
+		<menuitem value="&helpContentCmd.label;" onaction="goHelp()"/>
+		<menuitem value="&referenceLibraryCmd.label;" onaction="goHelp()"/>
+		<menuitem value="&releaseNotesCmd.label;" onaction="goHelp()"/>
+		<menuitem value="&productInfoCmd.label;" onaction="goHelp()"/>
+		<menuseparator/>
+		<menuitem value="&softwareUpdatesCmd.label;" onaction="goHelp()"/>
+		<menuitem value="&registerCmd.label;" onaction="goHelp()"/>
+		<menuitem value="&memberServicesCmd.label;" onaction="goHelp()"/>
+		<menuseparator/>
+		<menuitem value="&internationalCmd.label;" onaction="goHelp()"/>
+		<menuitem value="&securityCmd.label;" onaction="goHelp()"/>
+		<menuitem value="&netwatchCmd.label;" onaction="goHelp()"/>
+		<menuseparator/>
+		<menuitem value="&aboutPluginsCmd.label;" onaction="goHelp()"/>
+		<menuitem value="&aboutFontCmd.label;" onaction="goHelp()"/>
+		<menuitem value="&aboutCmd.label;" onaction="goHelp()"/>
 	</menu>
 	
 </overlay>		
