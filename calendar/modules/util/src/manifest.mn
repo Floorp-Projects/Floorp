@@ -19,6 +19,7 @@ MODULE = trex
 
 CPPSRCS = \
 	nsCurlParser.cpp \
+	nsX400Parser.cpp \
 	nsDateTime.cpp \
 	nsDuration.cpp \
 	nsUtilFactory.cpp \
