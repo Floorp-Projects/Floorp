@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.148 $ ';
+$::UtilsVersion = '$Revision: 1.149 $ ';
 
 package TinderUtils;
 
@@ -209,7 +209,7 @@ sub GetSystemInfo {
     }
 
     $Settings::DirName = "${Settings::OS}_${os_ver}_$build_type";
-    $Settings::BuildName = "$host $Settings::OS ${os_ver} $build_type";
+    $Settings::BuildName = "$Settings::OS ${os_ver} $host $build_type";
 
     # Make the build names reflect architecture/OS
 
@@ -217,35 +217,35 @@ sub GetSystemInfo {
         # $Settings::BuildName set above.
     }
     if ($Settings::OS eq 'BSD_OS') {
-        $Settings::BuildName = "$host BSD/OS $os_ver $build_type";
+        $Settings::BuildName = "BSD/OS $os_ver $host $build_type";
     }
     if ($Settings::OS eq 'Darwin') {
-        $Settings::BuildName = "$host MacOSX/Darwin $os_ver $build_type";
+        $Settings::BuildName = "MacOSX/Darwin $os_ver $host $build_type";
     }
     if ($Settings::OS eq 'FreeBSD') {
-        $Settings::BuildName = "$host $Settings::OS/$Settings::CPU $os_ver $build_type";
+        $Settings::BuildName = "$Settings::OS/$Settings::CPU $os_ver $host $build_type";
     }
     if ($Settings::OS eq 'HP-UX') {
-        $Settings::BuildName = "$host $Settings::OS $os_ver $build_type";
+        $Settings::BuildName = "$Settings::OS $os_ver $host $build_type";
     }
     if ($Settings::OS eq 'IRIX') {
         # $Settings::BuildName set above.
     }
     if ($Settings::OS eq 'Linux') {
         if ($Settings::CPU eq 'alpha' or $Settings::CPU eq 'sparc') {
-            $Settings::BuildName = "$host $Settings::OS/$Settings::CPU $os_ver $build_type";
+            $Settings::BuildName = "$Settings::OS/$Settings::CPU $os_ver $host $build_type";
         } elsif ($Settings::CPU eq 'armv4l' or $Settings::CPU eq 'sa110') {
-            $Settings::BuildName = "$host $Settings::OS/arm $os_ver $build_type";
+            $Settings::BuildName = "$Settings::OS/arm $os_ver $host $build_type";
         } elsif ($Settings::CPU eq 'ppc') {
-            $Settings::BuildName = "$host $Settings::OS/$Settings::CPU $os_ver $build_type";
+            $Settings::BuildName = "$Settings::OS/$Settings::CPU $os_ver $host $build_type";
         } elsif (($Settings::CPU eq 'i686') or ($Settings::CPU eq 'i586')) {
-            $Settings::BuildName = "$host $Settings::OS $build_type";
+            $Settings::BuildName = "$Settings::OS $host $build_type";
         } else {
             # $Settings::BuildName set above
         }
     }
     if ($Settings::OS eq 'NetBSD') {
-        $Settings::BuildName = "$host $Settings::OS/$Settings::CPU $os_ver $build_type";
+        $Settings::BuildName = "$Settings::OS/$Settings::CPU $os_ver $host $build_type";
     }
     if ($Settings::OS eq 'OSF1') {
         # Assumes 4.0D for now.
@@ -254,11 +254,11 @@ sub GetSystemInfo {
     }
     if ($Settings::OS eq 'SunOS') {
         if ($Settings::CPU eq 'i86pc') {
-            $Settings::BuildName = "$host $Settings::OS/i386 $os_ver $build_type";
+            $Settings::BuildName = "$Settings::OS/i386 $os_ver $host $build_type";
         } else {
             $Settings::OSVerMajor = substr($os_ver, 0, 1);
             if ($Settings::OSVerMajor ne '4') {
-                $Settings::BuildName = "$host $Settings::OS/sparc $os_ver $build_type";
+                $Settings::BuildName = "$Settings::OS/sparc $os_ver $host $build_type";
             }
         }
     }
