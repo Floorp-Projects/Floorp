@@ -57,13 +57,12 @@ function onLoad() {
   getDirectoryContents(document.getElementById("directoryList"), sfile.directoryEntries);
 }
 
-function onMenuListChanged(target)
+function onFilterChanged(target)
 {
-  dump("onMenuListChanged\n");
   var filterTypes = target.getAttribute("filters");
   currentFilter = filterTypes;
 
-  getDirectoryContents(document.getElementById("directoryList"), sfile.directoryEntries);
+  loadDirectory();
 }
 
 function onOK()

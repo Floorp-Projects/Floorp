@@ -16,7 +16,7 @@
 
 <box align="horizontal">
   <text value="Look in:"/>
-  <menulist id="lookInMenuList" flex="1" oncommand="onMenuListChanged(event.target);">
+  <menulist id="lookInMenuList" flex="1">
     <menupopup id="lookInMenu"/>
   </menulist>
 
@@ -45,7 +45,7 @@
 
 <box align="horizontal">
   <text value="Files of type:"/>
-  <menulist id="filterMenuList" flex="1"/>
+  <menulist id="filterMenuList" flex="1" oncommand="onFilterChanged(event.target);"/>
 </box>
 
 <box id="okCancelButtons"/>
