@@ -189,7 +189,7 @@
 
   #define HAVE_CPP_NAMESPACE_STD
   #define HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL
-//#define HAVE_CPP_2BYTE_WCHAR_T
+  #define HAVE_CPP_2BYTE_WCHAR_T
 #endif
 
   /* until we get an autoconf test for this, we'll assume it's on (since we're using it already) */
