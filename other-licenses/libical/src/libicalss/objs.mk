@@ -21,17 +21,14 @@
 
 ICALSS_SRC_LCSRCS = \
 		icalclassify.c \
-                icalcstp.c \
-                icalcstpclient.c \
-                icalcstpserver.c \
-                icaldirset.c \
-                icalfileset.c \
-                icalgauge.c \
-                icalmessage.c \
-                icalset.c \
-                icalspanlist.c \
-                icalsslexer.c \
-                icalssyacc.c \
+		icaldirset.c \
+		icalfileset.c \
+		icalgauge.c \
+		icalmessage.c \
+		icalset.c \
+		icalspanlist.c \
+		icalsslexer.c \
+		icalssyacc.c \
 		$(NULL)
 
 ICALSS_SRC_LEXPORTS = icalss.h
