@@ -100,6 +100,8 @@ extern int MK_MSG_COLLABRA_DISABLED;
 extern int MK_MSG_EXPIRE_NEWS_ARTICLES;
 extern int MK_MSG_HTML_IMAP_NO_CACHED_BODY;
 
+static NS_DEFINE_IID(kIWebShell, NS_IWEB_SHELL_IID);
+
 /* Logging stuff */
 
 PRLogModuleInfo* NNTP = NULL;
@@ -398,7 +400,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
 
   nsINntpUrl * nntpUrl = NULL;
   if (aConsumer) // did the caller pass in a display stream?
-	  aConsumer->QueryInterface(nsIWebShell::IID(), (void **) m_displayConsumer);
+	  aConsumer->QueryInterface(kIWebShell, (void **) &m_displayConsumer);
 
   if (aURL)
   {
@@ -446,8 +448,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
   // if we don't have a news host already, go get one...
   if (m_newsHost == nsnull)
   {
-	  // THIS IS TEMPORARY!!!!!!!!!!!!!!!!!! hack alert...
-//	  rv = NS_NewNNTPHost(&m_newsHost, hostAndPort, port ? port : NEWS_PORT);
+	  rv = NS_NewNNTPHost(&m_newsHost, hostAndPort, port ? port : NEWS_PORT);
 	  // save it on our url for future use....
 	  m_runningURL->SetNntpHost(m_newsHost);
   }
@@ -2068,7 +2069,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 
 		// mscott: hack alert...now that the file is done...turn around and fire a file url 
 		// to display the message....
-		char * fileUrl = PR_smprintf("file://%s", ARTICLE_PATH);
+		char * fileUrl = PR_smprintf("file:///%s", ARTICLE_PATH_URL);
 		if (m_displayConsumer)
 		{
 			nsIURL * url = nsnull;
