@@ -681,15 +681,7 @@ function changeQuickSearchMode(aMenuItem)
 
 function saveViewAsVirtualFolder()
 {
-// prompt for view name - create virtual folder in ok callback.
-  getViewName(CreateView, gSearchInput.value);
-}
-
-function CreateView(newName, origFolderURI)
-{
-  var selectedFolder = GetResourceFromUri(origFolderURI);
-  var folderToSearch = selectedFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
-  CreateVirtualFolder(newName, folderToSearch.parent, origFolderURI, gSearchSession.searchTerms);
+  openNewVirtualFolderDialogWithArgs(gSearchInput.value, gSearchSession);
 }
 
 function InitQuickSearchPopup()

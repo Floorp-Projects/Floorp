@@ -7,6 +7,8 @@
 <!ENTITY newMessage.accesskey "N">
 <!ENTITY newFolderCmd.label "Folder...">
 <!ENTITY newFolderCmd.accesskey "F">
+<!ENTITY newVirtualFolderCmd.label "Saved Search...">
+<!ENTITY newVirtualFolderCmd.accesskey "S">
 <!ENTITY newAccountCmd.label "Account...">
 <!ENTITY newAccountCmd.accesskey "A">
 <!ENTITY openMessageMenu.label "Open">
@@ -502,7 +504,7 @@
 <!ENTITY viewPickerAll.label "All">
 <!ENTITY viewPickerUnread.label "Unread">
 <!ENTITY viewPickerCustomView.label "Customize...">
-<!ENTITY viewPickerSaveAsVirtualFolder.label "Save As Virtual Folder">
+<!ENTITY viewPickerSaveAsVirtualFolder.label "Save Search as a Folder...">
 <!ENTITY SearchNameOrEmail.label "Name or Email contains:">
 <!ENTITY SearchNameOrEmail.accesskey "N">
 <!ENTITY clearButton.label "Clear">
@@ -514,7 +516,7 @@
 <!ENTITY searchSubjectOrSenderMenu.label "Subject Or Sender">
 <!ENTITY searchMessageBody.label "Entire Message">
 <!ENTITY findInMessageMenu.label "Find In Message">
-<!ENTITY saveAsVirtualFolderMenu.label "Save as Virtual Folder...">
+<!ENTITY saveAsVirtualFolderMenu.label "Save Search as a Folder...">
 
 <!-- Thread Pane -->
 <!ENTITY threadColumn.label "Thread">

@@ -1050,6 +1050,9 @@
               <menuitem id="menu_newFolder" label="&newFolderCmd.label;"
                          oncommand="MsgNewFolder(NewFolder);"
                          accesskey="&newFolderCmd.accesskey;"/>
+              <menuitem id="menu_newVirtualFolder" label="&newVirtualFolderCmd.label;"
+                         oncommand="MsgVirtualFolderProperties(false);"
+                         accesskey="&newVirtualFolderCmd.accesskey;"/>
               <menuitem id="newAccountMenuItem" label="&newAccountCmd.label;"
                          accesskey="&newAccountCmd.accesskey;"
                          oncommand="MsgAccountWizard();"/>

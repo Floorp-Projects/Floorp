@@ -1,0 +1,14 @@
+<!ENTITY virtualFolderProperties.title "New Saved Search Folder">
+<!ENTITY name.label                 "Name:">
+<!ENTITY name.accesskey             "n">
+<!ENTITY description.label          "Create as a subfolder of:">
+<!ENTITY description.accesskey      "c">
+<!ENTITY searchCriteriaText.label   "Modify the search criteria used for this saved search:">
+<!ENTITY searchCriteriaButton.label "Search Criteria...">
+<!ENTITY searchCriteriaButton.accesskey "S">
+
+<!ENTITY searchTermCaption.label "Configure the search criteria used for this virtual folder: ">
+
+<!ENTITY folderSelectionCaption.label "Select the folders to search: ">
+<!ENTITY chooseFoldersButton.label "Choose...">
+<!ENTITY chooseFoldersButton.accesskey "C">

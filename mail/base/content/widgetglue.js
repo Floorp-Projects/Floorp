@@ -175,6 +175,45 @@ function MsgCompactFolder(isAll)
   }
 }
 
+function openNewVirtualFolderDialogWithArgs(defaultViewName, aSearchSession)
+{
+  var folderURI = GetSelectedFolderURI();
+  var folderTree = GetFolderTree();
+  var name = GetFolderNameFromUri(folderURI, folderTree);
+  name += "-" + defaultViewName;
+
+  var dialog = window.openDialog("chrome://messenger/content/virtualFolderProperties.xul", "",
+                                 "chrome,titlebar,modal,centerscreen",
+                                 {preselectedURI:folderURI,
+                                  searchTermSession:aSearchSession,
+                                  newFolderName:name});
+}
+
+function MsgVirtualFolderProperties(aEditExistingVFolder)
+{
+  var preselectedFolder = GetFirstSelectedMsgFolder();
+  var preselectedURI;
+  if(preselectedFolder)
+  {
+    var preselectedFolderResource = preselectedFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+    if(preselectedFolderResource)
+      preselectedURI = preselectedFolderResource.Value;
+  }
+
+  var dialog = window.openDialog("chrome://messenger/content/virtualFolderProperties.xul", "",
+                                 "chrome,titlebar,modal,centerscreen",
+                                 {preselectedURI:preselectedURI,
+                                  editExistingFolder: aEditExistingVFolder,
+                                  onOKCallback:onEditVirtualFolderPropertiesCallback,
+                                  msgWindow:msgWindow});
+}
+
+function onEditVirtualFolderPropertiesCallback(aVirtualFolder)
+{
+  // we need to reload the folder if it is the currently loaded folder...
+  FolderPaneSelectionChange();
+}
+
 function MsgFolderProperties() 
 {
   var preselectedURI = GetSelectedFolderURI();
@@ -189,11 +228,12 @@ function MsgFolderProperties()
   var serverType = msgFolder.server.type;
   var folderTree = GetFolderTree();
 
-  // we'll probably want a new "server type" for virtual folders
-  // that will allow the user to edit the search criteria.
-  // But for now, we'll just disable other properties.
   if (msgFolder.flags & MSG_FOLDER_FLAG_VIRTUAL)
-    serverType = "none";
+  { 
+    // virtual folders get there own property dialog that contains all of the
+    // search information related to the virtual folder.
+    return MsgVirtualFolderProperties(true);
+  }
 
   var name = GetFolderNameFromUri(preselectedURI, folderTree);
 

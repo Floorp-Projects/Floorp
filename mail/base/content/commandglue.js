@@ -993,6 +993,8 @@ function RemoveMailOfflineObserver()
   observerService.removeObserver(mailOfflineObserver,"network:offline-status-changed");
 }
 
+// This routine (getViewName) will become obsolete once all of the callers have been converted
+// to use openNewVirtualFolderDialogWithArgs
 function getViewName(okCallbackFunc, defaultViewName) 
 {
   var preselectedURI = GetSelectedFolderURI();
