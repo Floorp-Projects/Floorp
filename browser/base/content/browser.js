@@ -146,24 +146,6 @@ function HandleBookmarkIcon(iconURL, addFlag)
   }
 }
 
-function getHomePage()
-{
-  var url;
-  try {
-    url = gPrefService.getComplexValue("browser.startup.homepage",
-                               Components.interfaces.nsIPrefLocalizedString).data;
-  } catch (e) {
-  }
-
-  // use this if we can't find the pref
-  if (!url) {
-    var navigatorRegionBundle = document.getElementById("bundle_browser_region");
-    url = navigatorRegionBundle.getString("homePageDefault");
-  }
-
-  return url;
-}
-
 function UpdateBackForwardButtons()
 {
   var backBroadcaster = document.getElementById("Browser:Back");
@@ -449,7 +431,8 @@ function delayedStartup()
   // Initialize
   gFormFillPrefListener.toggleFormFill();
 
-  updateHomeTooltip();
+  pbi.addObserver(gHomeButton.prefDomain, gHomeButton, false);
+  gHomeButton.updateTooltip();
   
   // Initialize Plugin Overrides
   const kOverridePref = "browser.download.pluginOverrideTypes";
@@ -686,7 +669,7 @@ function BrowserReloadSkipCache()
 
 function BrowserHome()
 {
-  var homePage = getHomePage();
+  var homePage = gHomeButton.getHomePage();
   loadOneOrMoreURIs(homePage);
 }
 
@@ -1900,7 +1883,7 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
     gProxyButton = document.getElementById("page-proxy-button");
     gProxyFavIcon = document.getElementById("page-proxy-favicon");
     gProxyDeck = document.getElementById("page-proxy-deck");
-    updateHomeTooltip();
+    gHomeButton.updateTooltip();
     window.XULBrowserWindow.init();
   }
 
@@ -2527,15 +2510,44 @@ function openPreferences()
              "chrome,titlebar,resizable,modal");
 }
 
-function updateHomeTooltip()
-{
-  var homeButton = document.getElementById("home-button");
-  if (homeButton) {
-    var homePage = getHomePage();
-    homePage = homePage.replace(/\|/g,', ');
-    homeButton.setAttribute("tooltiptext", homePage);
+var gHomeButton = {
+  prefDomain: "browser.startup.homepage",
+  observe: function (aSubject, aTopic, aPrefName)
+  {
+    if (aTopic != "nsPref:changed" || aPrefName != this.prefDomain)
+      return;
+      
+    this.updateTooltip();
+  },
+  
+  updateTooltip: function ()
+  {
+    var homeButton = document.getElementById("home-button");
+    if (homeButton) {
+      var homePage = this.getHomePage();
+      homePage = homePage.replace(/\|/g,', ');
+      homeButton.setAttribute("tooltiptext", homePage);
+    }
+  },
+    
+  getHomePage: function ()
+  {
+    var url;
+    try {
+      url = gPrefService.getComplexValue(this.prefDomain,
+                                Components.interfaces.nsIPrefLocalizedString).data;
+    } catch (e) {
+    }
+
+    // use this if we can't find the pref
+    if (!url) {
+      var navigatorRegionBundle = document.getElementById("bundle_browser_region");
+      url = navigatorRegionBundle.getString("homePageDefault");
+    }
+
+    return url;
   }
-}
+};
 
 function nsContextMenu( xulMenu ) {
     this.target         = null;
