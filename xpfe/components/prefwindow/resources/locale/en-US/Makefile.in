@@ -46,6 +46,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/pref-publish.dtd \
 		$(srcdir)/pref-smart_browsing.dtd \
 		$(srcdir)/pref-smartupdate.dtd \
+		$(srcdir)/pref-mousewheel.dtd	\
 		$(srcdir)/preftree.dtd \
 		$(NULL)
 
