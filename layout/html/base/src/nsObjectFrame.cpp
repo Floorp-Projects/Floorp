@@ -1140,7 +1140,7 @@ nsresult nsPluginInstanceOwner::QueryInterface(const nsIID& aIID,
     return NS_OK;
   }
 
-  if (aIID.Equals(nsISupports::GetIID()))
+  if (aIID.Equals(::nsISupports::GetIID()))
   {
     *aInstancePtrResult = (void *)((nsISupports *)((nsIPluginTagInfo *)this));
     AddRef();
