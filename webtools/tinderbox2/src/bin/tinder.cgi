@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.37 $ 
-# $Date: 2004/07/18 16:43:27 $ 
+# $Revision: 1.38 $ 
+# $Date: 2004/08/07 13:12:10 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -257,6 +257,7 @@ sub HTML_status_page {
 
   # load the headers these all have well known namespaces
   
+  my ($banner) = TinderHeader::gettree_header('Banner', $tree);
   my ($motd) = TinderHeader::gettree_header('MOTD', $tree);
   my ($tree_state) = TinderHeader::gettree_header('TreeState', $tree);
   my ($break_times) = TinderHeader::gettree_header('Build', $tree);
@@ -336,6 +337,14 @@ sub HTML_status_page {
                     "linktxt"=>"Show current status", 
                     "href"=>$status_page_url,
                    ).
+   "<br>\n";
+  my ($links) = 
+    HTMLPopUp::Link(
+                    "linktxt"=>"Add to Notice Board",
+                    "href"=>("$FileStructure::URLS{'addnote'}".
+                             "\?".
+                             "tree=$tree"),
+                   ).
   "<br><p>\n\n".
   HTMLPopUp::Link(
                   "linktxt"=>"Regnerate HTML Pages",
@@ -356,14 +365,6 @@ sub HTML_status_page {
                     "href"=>("$FileStructure::URLS{'indexpage'}"),
                     ).
   "<br>\n";
-  my ($links) = 
-    HTMLPopUp::Link(
-                    "linktxt"=>"Add to Notice Board",
-                    "href"=>("$FileStructure::URLS{'addnote'}".
-                             "\?".
-                             "tree=$tree"),
-                   ).
- "<br>\n";
 
   $out .= HTMLPopUp::page_header('title'=>"Tinderbox Status Page tree: $tree", 
                                  'refresh'=>$REFRESH_TIME);
@@ -371,6 +372,11 @@ sub HTML_status_page {
   $out .= "<!-- /Build Page Headers -->\n\n\n";
   $out .= "$links\n";
   $out .= "<br>\n";
+  $out .= HTMLPopUp::Link("name"=>"Banner",)."\n";
+  $out .= "<!-- Banner -->\n";
+  $out .=  $banner;
+  $out .= "<p>\n<!-- /Banner -->\n";
+  $out .= "\n\n";
   $out .= HTMLPopUp::Link("name"=>"MOTD",)."\n";
   $out .= "<!-- Message of the Day -->\n";
   $out .=  $motd;

@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.51 $ 
-# $Date: 2004/06/08 00:09:09 $ 
+# $Revision: 1.52 $ 
+# $Date: 2004/08/07 13:12:09 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -47,9 +47,9 @@ package TinderConfig;
 
 
 # set the path for Tinderbox.
-
 $ENV{'PATH'}=  (
                 '/bin'.
+':/home/kestes/mozilla/webtools/tinderbox2/build/test/vcsim'.
                 ':/usr/bin'.
                 ':/usr/local/bin'.
                 ':/opt/gnu/bin'.
@@ -220,10 +220,10 @@ $PopUpImpl = (
 
            # version control systems
 
-	   'TinderDB::VC_CVS',
+#	   'TinderDB::VC_CVS',
 #	   'TinderDB::VC_Bonsai',
 #	   'TinderDB::VC_PVCSDimensions',
-#          'TinderDB::VC_Perforce',
+         'TinderDB::VC_Perforce',
 
 	   'TinderDB::Build',
 
@@ -256,12 +256,12 @@ $ROW_SPACING_DISIPLINE = (
                           # This keeps the cell box sizes independent
                           # of the amount of data.
 
-                          #'uniform',
+                          'uniform',
 
                           # Use build event times to create times column.
                           # This is traditional Tinderbox1 discipline.
 
-                          'build_event_driven',
+                          #'build_event_driven',
 
                           # Use all event times to create times column.
 

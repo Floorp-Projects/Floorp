@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.25 $ 
-# $Date: 2003/08/17 00:44:03 $ 
+# $Revision: 1.26 $ 
+# $Date: 2004/08/07 13:12:10 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/admintree.cgi,v $ 
 # $Name:  $ 
@@ -85,6 +85,9 @@ sub get_params {
                 cookie(-name=>"tinderbox_mailaddr"));
   $MAILADDR = main::extract_user($MAILADDR);
 
+  $NEW_BANNER = param("banner");
+  $NEW_BANNER = extract_printable_chars($NEW_BANNER);
+
   $NEW_MOTD = param("motd");
   $NEW_MOTD = extract_printable_chars($NEW_MOTD);
 
@@ -123,6 +126,8 @@ sub setup_environment {
   
   @CURRENT_IGNORE_BUILDS = get_current_ignore_builds($TREE);
 
+  $CURRENT_BANNER = TinderHeader::gettree_header('Banner', $TREE);
+  
   $CURRENT_MOTD = TinderHeader::gettree_header('MOTD', $TREE);
   
   get_passwd_table();
@@ -327,6 +332,14 @@ sub format_input_page {
   } # end if
   
   push @out, (
+              h3("Banner"),
+              "New Banner, global to all projects (must be valid HTML)",p(),
+              textarea(-name=>'banner', -default=>$CURRENT_BANNER,
+                       -rows=>30, -cols=>75, -wrap=>'physical',),
+              p(),
+             );
+  
+  push @out, (
               h3("Message of the Day"),
               "New Message of the Day (must be valid HTML)",p(),
               textarea(-name=>'motd', -default=>$CURRENT_MOTD,
@@ -468,6 +481,22 @@ sub change_ignore_builds {
   return @results;
 }
 
+
+
+sub change_banner {
+  my (@results) = ();
+
+  # remember new_motd could be empty.  As long as it is different than
+  # old_motd we should save it.
+
+  ($NEW_BANNER eq $CURRENT_BANNER) &&
+    return ;
+
+  TinderHeader::savetree_header('Banner', $TREE, $NEW_BANNER);
+  push @results, "Banner changed: \n\t'\n$NEW_BANNER\n\t' \n";
+    
+  return @results;  
+}
 
 
 sub change_motd {
