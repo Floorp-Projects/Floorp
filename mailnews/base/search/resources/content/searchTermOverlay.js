@@ -493,6 +493,75 @@ function onReset(event)
     onMore(event);
 }
 
+// Get the short date format option of the current locale.
+// This supports the common case which the date separator is
+// either '/', '-', '.' and using Christian year.
+function getLocaleShortDateFormat()
+{
+  // default to mm/dd/yyyy
+  gSearchDateFormat = 3;
+  gSearchDateSeparator = "/";
+
+  try {
+    var dateFormatService = Components.classes["@mozilla.org/intl/scriptabledateformat;1"]
+                                    .getService(Components.interfaces.nsIScriptableDateFormat);
+    var dateString = dateFormatService.FormatDate("", 
+                                                  dateFormatService.dateFormatShort, 
+                                                  1999, 
+                                                  12, 
+                                                  31);
+    // find out the separator
+    var arrayOfStrings = dateString.split("/");
+    if (arrayOfStrings.length == 3)
+      gSearchDateSeparator = "/";
+    else
+    {
+      arrayOfStrings = dateString.split("-");
+      if (arrayOfStrings.length == 3)
+        gSearchDateSeparator = "-";
+      else
+      {
+        arrayOfStrings = dateString.split(".");
+        if (arrayOfStrings.length == 3)
+          gSearchDateSeparator = ".";
+      }
+    }
+
+    // check the format option
+    if (arrayOfStrings.length == 3)
+    {
+      switch (arrayOfStrings[0])
+      {
+        case "1999":
+          if (arrayOfStrings[1] == "12" &&
+              arrayOfStrings[2] == "31")
+            gSearchDateFormat = 1;
+          else if (arrayOfStrings[1] == "31" &&
+              arrayOfStrings[2] == "12")
+            gSearchDateFormat = 2;
+          break;
+        case "12":
+          if (arrayOfStrings[1] == "31" &&
+              arrayOfStrings[2] == "1999")
+            gSearchDateFormat = 3;
+          else if (arrayOfStrings[1] == "1999" &&
+              arrayOfStrings[2] == "31")
+            gSearchDateFormat = 4;
+          break;
+        case "31":
+          if (arrayOfStrings[1] == "12" &&
+              arrayOfStrings[2] == "1999")
+            gSearchDateFormat = 5;
+          else if (arrayOfStrings[1] == "1999" &&
+              arrayOfStrings[2] == "12")
+            gSearchDateFormat = 6;
+          break;
+      }
+    }
+  }
+  catch (e) {}
+}
+
 function initializeSearchDateFormat()
 {
   if (gSearchDateFormat)
@@ -506,12 +575,19 @@ function initializeSearchDateFormat()
                pref.getComplexValue("mailnews.search_date_format", 
                                     Components.interfaces.nsIPrefLocalizedString);
     gSearchDateFormat = parseInt(gSearchDateFormat);
-    if (gSearchDateFormat < 1 || gSearchDateFormat > 6)
-      gSearchDateFormat = 3;
 
-    gSearchDateSeparator =
-               pref.getComplexValue("mailnews.search_date_separator", 
-                                    Components.interfaces.nsIPrefLocalizedString);
+    // if the option is 0 then try to use the format of the current locale
+    if (gSearchDateFormat == 0)
+      getLocaleShortDateFormat();
+    else
+    {
+      if (gSearchDateFormat < 1 || gSearchDateFormat > 6)
+        gSearchDateFormat = 3;
+
+      gSearchDateSeparator =
+                 pref.getComplexValue("mailnews.search_date_separator", 
+                                      Components.interfaces.nsIPrefLocalizedString);
+    }
   } catch (ex) {
     // set to mm/dd/yyyy in case of error
     gSearchDateFormat = 3;
