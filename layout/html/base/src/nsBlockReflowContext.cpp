@@ -387,10 +387,7 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
 
       // Apply post-reflow horizontal alignment. When a block element
       // doesn't use it all of the available width then we need to
-      // align it using the text-align property. Note that
-      // block-non-replaced elements will always take up the available
-      // width (counting the margins!) so we shouldn't be handling
-      // them here.
+      // align it using the text-align property.
       if (NS_UNCONSTRAINEDSIZE != mSpace.width) {
         nscoord remainder = mSpace.XMost() -
           (x + mMetrics.width + mMargin.right);
