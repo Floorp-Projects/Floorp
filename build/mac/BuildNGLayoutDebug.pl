@@ -38,8 +38,8 @@ $pull{mac} = 0;
 
 $build{all} = 1;
 $build{dist} = 1;
-$build{common}= 1;
-$build{nglayout}= 1;
+$build{common} = 1;
+$build{nglayout} = 1;
 
 # do the work
 # you should not have to edit anything bellow
