@@ -34,7 +34,7 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.3 2000/09/13 06:15:13 mcgreer%netscape.com Exp $
+ * $Id: cmssigdata.c,v 1.4 2000/09/13 18:13:17 mcgreer%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -150,9 +150,11 @@ NSS_CMSSignedData_Encode_BeforeStart(NSSCMSSignedData *sigd)
 	version = NSS_CMS_SIGNED_DATA_VERSION_EXT;
 
     signerinfos = sigd->signerInfos;
+    if (!signerinfos)
+	goto encode_version;
     /* prepare all the SignerInfos (there may be none) */
-    while (signerinfos) {
-	signerinfo = *signerinfos;
+    for (i=0; signerinfos[i] != NULL; i++) {
+	signerinfo = signerinfos[i];
 
 	/* RFC2630 5.1 "version is the syntax version number..." */
 	if (NSS_CMSSignerInfo_GetVersion(signerinfo) != NSS_CMS_SIGNER_INFO_VERSION_ISSUERSN)
@@ -175,9 +177,9 @@ NSS_CMSSignedData_Encode_BeforeStart(NSSCMSSignedData *sigd)
 	} else {
 	    /* found it, nothing to do */
 	}
-	signerinfos++;
     }
 
+encode_version:
     dummy = SEC_ASN1EncodeInteger(poolp, &(sigd->version), (long)version);
     if (dummy == NULL)
 	return SECFailure;
@@ -226,7 +228,7 @@ NSS_CMSSignedData_Encode_AfterData(NSSCMSSignedData *sigd)
     SECStatus rv;
     SECItem *contentType;
     int certcount;
-    int ci, cli, n, rci, si;
+    int i, ci, cli, n, rci, si;
     PLArenaPool *poolp;
     CERTCertificateList *certlist;
     extern const SEC_ASN1Template NSSCMSSignerInfoTemplate[];
@@ -245,9 +247,12 @@ NSS_CMSSignedData_Encode_AfterData(NSSCMSSignedData *sigd)
     signerinfos = sigd->signerInfos;
     certcount = 0;
 
+    if (!signerinfos)
+	goto prepare_certs;
+
     /* prepare all the SignerInfos (there may be none) */
-    while (signerinfos) {
-	signerinfo = *signerinfos;
+    for (i=0; signerinfos[i] != NULL; i++) {
+	signerinfo = signerinfos[i];
 
 	/* find correct digest for this signerinfo */
 	digestalgtag = NSS_CMSSignerInfo_GetDigestAlgTag(signerinfo);
@@ -275,7 +280,6 @@ NSS_CMSSignedData_Encode_AfterData(NSSCMSSignedData *sigd)
 	certlist = NSS_CMSSignerInfo_GetCertList(signerinfo);
 	if (certlist)
 	    certcount += certlist->len;
-	signerinfos++;
     }
 
     /* this is a SET OF, so we need to sort them guys */
@@ -283,6 +287,7 @@ NSS_CMSSignedData_Encode_AfterData(NSSCMSSignedData *sigd)
     if (rv != SECSuccess)
 	goto loser;
 
+prepare_certs:
     /*
      * now prepare certs & crls
      */
