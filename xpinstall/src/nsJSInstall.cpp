@@ -639,7 +639,6 @@ InstallDeleteFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 PR_STATIC_CALLBACK(JSBool)
 InstallDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-#if 0
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRUint64 nativeRet;
   nsAutoString b0;
@@ -662,25 +661,18 @@ InstallDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
       return JS_FALSE;
     }
 
-    if ( nativeRet <= JSVAL_INT_MAX )
-      *rval = INT_TO_JSVAL(nativeRet);
-    else
-    {
-      JSInt64 l;
-      jsdouble d;
-
-      JSLL_UI2L( l, nativeRet );
-      JSLL_L2D( d, l );
-
-      JS_NewDoubleValue( cx, d, rval );
-    }
+#if 0
+    jsdouble d;
+	LL_L2F(d, nativeRet);
+	JS_NewDoubleValue( cx, d, rval );
+#endif    
+    
   }
   else
   {
     JS_ReportError(cx, "Function DiskSpaceAvailable requires 1 parameters");
     return JS_FALSE;
   }
-#endif
 
   return JS_TRUE;
 }
@@ -1749,7 +1741,7 @@ InstallFileOpFileGetNativeVersion(JSContext *cx, JSObject *obj, uintN argc, jsva
 PR_STATIC_CALLBACK(JSBool)
 InstallFileOpFileGetDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-#if 0
+
   nsInstall*   nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRUint64     nativeRet;
   nsAutoString b0;
@@ -1773,26 +1765,18 @@ InstallFileOpFileGetDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc,
     {
       return JS_FALSE;
     }
-
-    if ( nativeRet <= JSVAL_INT_MAX )
-      *rval = INT_TO_JSVAL(nativeRet);
-    else
-    {
-      JSInt64 l;
-      jsdouble d;
-
-      JSLL_UI2L( l, nativeRet );
-      JSLL_L2D( d, l );
-
-      JS_NewDoubleValue( cx, d, rval );
-    }
+#if 0
+    jsdouble d;
+	LL_L2F(d, nativeRet);
+	JS_NewDoubleValue( cx, d, rval );
+#endif    
   }
   else
   {
     JS_ReportError(cx, "Function FileGetDiskSpaceAvailable requires 1 parameter");
     return JS_FALSE;
   }
-#endif
+
   return JS_TRUE;
 }
 
