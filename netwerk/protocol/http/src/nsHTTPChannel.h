@@ -47,7 +47,7 @@ class nsHTTPRequest;
 class nsHTTPResponse;
 class nsICachedNetData;
 
-#define LOOPING_REDIRECT_ERROR_URI  "chrome://necko/content/redirect_loop.xul"
+#define LOOPING_REDIRECT_ERROR_URI  "chrome://packages/core/necko/content/redirect_loop.xul"
 
 // Utility functions- TODO share from nsURLHelpers...
 nsresult           
@@ -90,7 +90,7 @@ public:
     nsresult            Init();
     nsresult            Open(PRBool bIgnoreCache=PR_FALSE);
     nsresult            Redirect(const char *aURL,
-                                 nsIChannel **aResult);
+                                 nsIChannel **aResult, PRInt32 aStatusCode);
 
     nsresult            ResponseCompleted(nsIStreamListener *aListener,
                                           nsresult aStatus,
