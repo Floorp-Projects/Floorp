@@ -188,15 +188,15 @@ char * nsFontMetricsGTK::PickAppropriateSize(char **names, XFontStruct *fonts, i
   float       app2dev;
   mContext->GetAppUnitsToDevUnits(app2dev);
 //  XXX FIX ME
-  PRInt32     desiredpix = NSToIntRound(app2dev * desired) + 10;
+  PRInt32     desiredpix = NSToIntRound(app2dev * desired);
   XFontStruct *curfont;
   PRInt32     closestmin = -1, minidx;
 
   //first try an exact or closest smaller match...
-
+  
   for (idx = 0, curfont = fonts; idx < cnt; idx++, curfont++)
   {
-    PRInt32 height = curfont->ascent + curfont->descent;
+    PRInt32 height = NSToIntRound(0.75 * (curfont->ascent + curfont->descent));
 
     if (height == desiredpix)
       break;
@@ -218,7 +218,7 @@ char * nsFontMetricsGTK::PickAppropriateSize(char **names, XFontStruct *fonts, i
 
     for (idx = 0, curfont = fonts; idx < cnt; idx++, curfont++)
     {
-      PRInt32 height = curfont->ascent + curfont->descent;
+      PRInt32 height = NSToIntRound(0.75 * (curfont->ascent + curfont->descent));
 
       if ((height > desiredpix) && (height < closestmin))
       {
