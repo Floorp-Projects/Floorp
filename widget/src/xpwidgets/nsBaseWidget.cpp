@@ -27,7 +27,34 @@
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
+#ifndef LOG_ADDREF_RELEASE
 NS_IMPL_ISUPPORTS(nsBaseWidget, kIWidgetIID)
+#else
+extern "C" {
+  void __log_addref(void* p, int oldrc, int newrc);
+  void __log_release(void* p, int oldrc, int newrc);
+}
+
+NS_IMPL_QUERY_INTERFACE(nsBaseWidget, kIWidgetIID)
+
+nsrefcnt nsBaseWidget::AddRef(void)
+{
+  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
+  __log_addref((void*) this, mRefCnt, mRefCnt + 1);
+  return ++mRefCnt;
+}
+
+nsrefcnt nsBaseWidget::Release(void)
+{
+  __log_release((void*) this, mRefCnt, mRefCnt - 1);
+  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  if (--mRefCnt == 0) {
+    NS_DELETEXPCOM(this);
+    return 0;
+  }
+  return mRefCnt;
+}
+#endif
 
 NS_IMPL_ADDREF(nsBaseWidget::Enumerator);
 NS_IMPL_RELEASE(nsBaseWidget::Enumerator);
@@ -224,10 +251,14 @@ NS_METHOD nsBaseWidget::Destroy()
     parent->RemoveChild(this);
     NS_RELEASE(parent);
   }
+
+	NS_IF_RELEASE(mVScrollbar);
+
   // disconnect listeners.
   NS_IF_RELEASE(mMouseListener);
   NS_IF_RELEASE(mEventListener);
   NS_IF_RELEASE(mMenuListener);
+
   return NS_OK;
 }
 
@@ -799,10 +830,9 @@ NS_METHOD nsBaseWidget::Paint(nsIRenderingContext& aRenderingContext,
 
 NS_METHOD nsBaseWidget::SetVerticalScrollbar(nsIWidget * aWidget)
 {
+  NS_IF_RELEASE(mVScrollbar);
   mVScrollbar = aWidget;
-  if (nsnull != mVScrollbar) {
-    NS_ADDREF(mVScrollbar);
-  }
+  NS_IF_ADDREF(mVScrollbar);
   return NS_OK;
 }
 
