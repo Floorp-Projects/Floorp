@@ -64,13 +64,13 @@ function normal_keypress_handler( aEvent ) {
 
 ]]></script>
 
-  <textbox id="query-field" class="descriptive-content" value="enter query" onfocus="this.setSelectionRange(0,this.value.length)"/>
+  <textbox id="query-field" class="descriptive-content" value="enter search" onfocus="this.setSelectionRange(0,this.value.length)"/>
 
   <separator class="groove"/>
 
   <box autostretch="never" valign="top">
     <box orient="vertical" flex="1">
-      <text class="text-link" onclick="load_relative_url('query.cgi')" value="new query"/>
+      <text class="text-link" onclick="load_relative_url('query.cgi')" value="new search"/>
       <text class="text-link" onclick="load_relative_url('report.cgi')" value="reports"/>
       <text class="text-link" onclick="load_relative_url('enter_bug.cgi')" value="new [% terms.bug %]"/>
       <separator class="thin"/>

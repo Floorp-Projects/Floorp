@@ -29,29 +29,29 @@
 
 [% message = BLOCK %]
   [% IF    message_tag == "buglist_adding_field" %]
-    [% title = "Adding field to query page..." %]
+    [% title = "Adding field to search page..." %]
     [% link  = "Click here if the page does not redisplay automatically." %]
 
   [% ELSIF message_tag == "buglist_load_named_query" %]
     [% title = BLOCK %]
-      Loading your query named [% namedcmd FILTER html %]
+      Loading your search named [% namedcmd FILTER html %]
     [% END %]
     [% link  = "Click here if the page does not redisplay automatically." %]
 
   [% ELSIF message_tag == "buglist_updated_named_query" %]
-    OK, your query named <code>[% queryname FILTER html %]</code> is updated.
+    OK, your search named <code>[% queryname FILTER html %]</code> is updated.
 
   [% ELSIF message_tag == "buglist_new_default_query" %]
-    OK, you now have a new default query.  You may
-    also bookmark the result of any individual query.
+    OK, you now have a new default search.  You may
+    also bookmark the result of any individual search.
 
   [% ELSIF message_tag == "buglist_new_named_query" %]
-    OK, you have a new query named <code>[% queryname FILTER html %]</code>.
+    OK, you have a new search named <code>[% queryname FILTER html %]</code>.
 
   [% ELSIF message_tag == "buglist_query_gone" %]
-    [% title = "Query is gone" %]
-    [% link  = "Go back to the query page." %]
-    OK, the <b>[% namedcmd FILTER html %]</b> query is gone.
+    [% title = "Search is gone" %]
+    [% link  = "Go back to the search page." %]
+    OK, the <b>[% namedcmd FILTER html %]</b> search is gone.
 
   [% ELSIF message_tag == "buglist_sorted_by_relevance" %]
     [% terms.Bugs %] on this list are sorted by relevance, with the most
@@ -60,7 +60,7 @@
 
   [% ELSIF message_tag == "change_columns" %]
     [% title = "Change columns" %]
-    Resubmitting your query with new columns...
+    Resubmitting your search with new columns...
     Click <a href="[% redirect_url FILTER html %]">here</a>
     if the page does not automatically refresh.
 

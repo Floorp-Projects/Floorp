@@ -22,8 +22,8 @@
 [%# INTERFACE:
   # mybugslink: boolean. True if the user wishes the My Bugs link to appear.
   # queries: array of hashes. May be empty. Each hash has two members:
-  #   name:   string. The name of the query.
-  #   footer: boolean. True if the query appears in the footer.
+  #   name:   string. The name of the search.
+  #   footer: boolean. True if the search appears in the footer.
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
@@ -45,10 +45,10 @@
   [% IF queries.size %]
     [% FOREACH query = queries %]
       <tr>
-        <th align="right">Your query named '[% query.name FILTER html %]':</th>
+        <th align="right">Your search named '[% query.name FILTER html %]':</th>
         <td>
           <select name="query-[% loop.index %]">
-            <option value="0">should only appear in the query page</option>
+            <option value="0">should only appear in the search page</option>
             <option value="1"
               [% " selected" IF query.footer %]>
               should appear on the footer of every page
@@ -66,7 +66,7 @@
       <td colspan="4">
         <br>
         If you create remembered queries using the
-        <a href="query.cgi">query page</a>,
+        <a href="query.cgi">search page</a>,
         you can then come to this page and choose to have some of them
         appear in the footer of each [% terms.Bugzilla %] page.
         <br>

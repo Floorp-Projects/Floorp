@@ -238,7 +238,7 @@
     It cannot be <em>[% sortkey FILTER html %]</em>.
   
   [% ELSIF error == "illegal_at_least_x_votes" %]
-    [% title = "Your Query Makes No Sense" %]
+    [% title = "Your Search Makes No Sense" %]
     The <em>At least ___ votes</em> field must be a simple number. 
     You entered <tt>[% value FILTER html %]</tt>, which isn't.
     
@@ -252,7 +252,7 @@
     [%+ bug_id FILTER html %].
          
   [% ELSIF error == "illegal_attachment_is_patch" %]
-    [% title = "Your Query Makes No Sense" %]
+    [% title = "Your Search Makes No Sense" %]
     The only legal values for the <em>Attachment is patch</em> field are
     0 and 1.
          
@@ -266,7 +266,7 @@
     sufficiently empowered user, may change that field.
   
   [% ELSIF error == "illegal_changed_in_last_x_days" %]
-    [% title = "Your Query Makes No Sense" %]
+    [% title = "Your Search Makes No Sense" %]
     The <em>Changed in last ___ days</em> field must be a simple number. 
     You entered <tt>[% value FILTER html %]</tt>, which isn't.
     
@@ -293,13 +293,13 @@
     [% groupname FILTER html %]&quot; is illegal.
 
   [% ELSIF error == "illegal_is_obsolete" %]
-    [% title = "Your Query Makes No Sense" %]
+    [% title = "Your Search Makes No Sense" %]
     The only legal values for the <em>Attachment is obsolete</em> field are
     0 and 1.
 
   [% ELSIF error == "illegal_query_name" %]
-    [% title = "Illegal Query Name" %]
-    The name of your query cannot contain any of the following characters: 
+    [% title = "Illegal Search Name" %]
+    The name of your search cannot contain any of the following characters: 
     &lt;, &gt;, &amp;.
 
   [% ELSIF error == "illegal_series_creation" %]
@@ -458,7 +458,7 @@
     You must specify one or more datasets to plot.
     
   [% ELSIF error == "missing_email_type" %]
-    [% title = "Your Query Makes No Sense" %]
+    [% title = "Your Search Makes No Sense" %]
     You must specify one or more fields in which to search for
     <tt>[% email FILTER html %]</tt>.
     
@@ -471,8 +471,8 @@
     You did not specify a name for this series.
                 
   [% ELSIF error == "missing_query" %]
-    [% title = "Missing Query" %]
-    The query named <em>[% queryname FILTER html %]</em> does not
+    [% title = "Missing Search" %]
+    The search named <em>[% queryname FILTER html %]</em> does not
     exist.
         
   [% ELSIF error == "must_be_patch" %]
@@ -612,8 +612,8 @@
     [% product FILTER html %].
 
   [% ELSIF error == "query_name_missing" %]
-    [% title = "No Query Name Specified" %]
-    You must enter a name for your query.
+    [% title = "No Search Name Specified" %]
+    You must enter a name for your search.
 
   [% ELSIF error == "quips_disabled" %]
     [% title = "Quips Disabled" %]
