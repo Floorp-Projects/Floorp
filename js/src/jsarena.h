@@ -26,7 +26,6 @@
  * Also supports LIFO allocation (JS_ARENA_MARK/JS_ARENA_RELEASE).
  */
 #include <stdlib.h>
-#include <string.h>
 #include "jstypes.h"
 #include "jscompat.h"
 
