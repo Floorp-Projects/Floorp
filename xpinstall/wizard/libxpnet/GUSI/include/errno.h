@@ -31,6 +31,8 @@
 #undef ENOMEM
 #undef ENOSYS
 #undef ENAMETOOLONG
+#undef EDEADLK
+#undef EAGAIN
 #else
 #include <mpw/errno.h>
 #endif

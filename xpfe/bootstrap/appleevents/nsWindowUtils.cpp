@@ -67,6 +67,8 @@
 
 #include "nsAEUtils.h"
 
+using namespace nsWindowUtils;
+
 // CIDs
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
@@ -210,7 +212,7 @@ static TWindowKind GetXULWindowKind(nsIXULWindow *inXULWindow)
 	CountWindowsOfKind 
 	
 ----------------------------------------------------------------------------*/
-long CountWindowsOfKind(TWindowKind windowKind)
+long nsWindowUtils::CountWindowsOfKind(TWindowKind windowKind)
 {
 	nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
 	ThrowErrIfNil(windowMediator, paramErr);
@@ -246,7 +248,7 @@ long CountWindowsOfKind(TWindowKind windowKind)
 }
 
 
-WindowPtr GetNamedOrFrontmostWindow(TWindowKind windowKind, const char* windowName)
+WindowPtr nsWindowUtils::GetNamedOrFrontmostWindow(TWindowKind windowKind, const char* windowName)
 {
 	// Search for window with the desired kind and name.
 	nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
@@ -311,7 +313,7 @@ WindowPtr GetNamedOrFrontmostWindow(TWindowKind windowKind, const char* windowNa
 }
 
 
-WindowPtr GetIndexedWindowOfKind(TWindowKind windowKind, TAEListIndex index)
+WindowPtr nsWindowUtils::GetIndexedWindowOfKind(TWindowKind windowKind, TAEListIndex index)
 {
 	nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
 	ThrowErrIfNil(windowMediator, paramErr);
@@ -358,7 +360,7 @@ WindowPtr GetIndexedWindowOfKind(TWindowKind windowKind, TAEListIndex index)
 }
 
 
-TAEListIndex GetWindowIndex(TWindowKind windowKind, WindowPtr theWindow)
+TAEListIndex nsWindowUtils::GetWindowIndex(TWindowKind windowKind, WindowPtr theWindow)
 {
 	nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
 	ThrowErrIfNil(windowMediator, paramErr);
@@ -404,7 +406,7 @@ TAEListIndex GetWindowIndex(TWindowKind windowKind, WindowPtr theWindow)
 
 
 //---------------------------------------------------------
-void GetCleanedWindowName(WindowPtr wind, char* outName, long maxLen)
+void nsWindowUtils::GetCleanedWindowName(WindowPtr wind, char* outName, long maxLen)
 {
 	Str255 uncleanName;
 	GetWTitle(wind, uncleanName);
@@ -412,7 +414,7 @@ void GetCleanedWindowName(WindowPtr wind, char* outName, long maxLen)
 }
 
 //---------------------------------------------------------
-void GetWindowUrlString(WindowPtr wind, char** outUrlStringPtr)
+void nsWindowUtils::GetWindowUrlString(WindowPtr wind, char** outUrlStringPtr)
 {
 	*outUrlStringPtr = NULL;
 
@@ -458,7 +460,7 @@ static void LocalToGlobalRect (Rect *r)
 	LocalToGlobal((Point*)&r->bottom);
 }
 
-void GetWindowGlobalBounds(WindowPtr wind, Rect* outBounds)
+void nsWindowUtils::GetWindowGlobalBounds(WindowPtr wind, Rect* outBounds)
 {
 	GrafPtr	curPort;
 	GetWindowPortRect(wind, outBounds);
@@ -473,7 +475,7 @@ void GetWindowGlobalBounds(WindowPtr wind, Rect* outBounds)
 	LoadURLInWindow 
 
 ----------------------------------------------------------------------------*/
-void LoadURLInWindow(WindowPtr wind, const char* urlString)
+void nsWindowUtils::LoadURLInWindow(WindowPtr wind, const char* urlString)
 {
   OSErr err = noErr;
 
@@ -494,7 +496,7 @@ void LoadURLInWindow(WindowPtr wind, const char* urlString)
   }
 }
 
-void LoadURLInXULWindow(nsIXULWindow* inWindow, const char* urlString)
+void nsWindowUtils::LoadURLInXULWindow(nsIXULWindow* inWindow, const char* urlString)
 {
   nsCOMPtr<nsIDocShellTreeItem> contentShell;
   inWindow->GetPrimaryContentShell(getter_AddRefs(contentShell));
@@ -515,7 +517,7 @@ void LoadURLInXULWindow(nsIXULWindow* inWindow, const char* urlString)
 
 ----------------------------------------------------------------------------*/
 
-Boolean WindowIsResizeable(WindowPtr wind)
+Boolean nsWindowUtils::WindowIsResizeable(WindowPtr wind)
 {
 	OSStatus		status;
 	UInt32		features;
@@ -527,7 +529,7 @@ Boolean WindowIsResizeable(WindowPtr wind)
 	WindowIsZoomable 
 
 ----------------------------------------------------------------------------*/
-Boolean WindowIsZoomable(WindowPtr wind)
+Boolean nsWindowUtils::WindowIsZoomable(WindowPtr wind)
 {
 	OSStatus		status;
 	UInt32		features;
@@ -539,7 +541,7 @@ Boolean WindowIsZoomable(WindowPtr wind)
 	WindowIsZoomed 
 
 ----------------------------------------------------------------------------*/
-Boolean WindowIsZoomed(WindowPtr wind)
+Boolean nsWindowUtils::WindowIsZoomed(WindowPtr wind)
 {
 	Rect			r, userRect;
 	GetWindowUserState(wind, &userRect);
@@ -553,7 +555,7 @@ Boolean WindowIsZoomed(WindowPtr wind)
 	
 	This stuff only works in 8.0 and later (Appearance Mgr)
 ----------------------------------------------------------------------------*/
-Boolean WindowHasTitleBar(WindowPtr wind)
+Boolean nsWindowUtils::WindowHasTitleBar(WindowPtr wind)
 {
 	OSStatus		status;
 	UInt32		features;
@@ -566,7 +568,7 @@ Boolean WindowHasTitleBar(WindowPtr wind)
 	
 	This stuff only works in 8.5 and later (Appearance Mgr)
 ----------------------------------------------------------------------------*/
-Boolean WindowIsCloseable(WindowPtr wind)
+Boolean nsWindowUtils::WindowIsCloseable(WindowPtr wind)
 {
 	if ((long)GetWindowAttributes != kUnresolvedCFragSymbolAddress)
 	{
@@ -585,7 +587,7 @@ Boolean WindowIsCloseable(WindowPtr wind)
 	
 	This stuff only works in 8.0 and later (Appearance Mgr)
 ----------------------------------------------------------------------------*/
-Boolean WindowIsModal(WindowPtr wind)
+Boolean nsWindowUtils::WindowIsModal(WindowPtr wind)
 {
 	OSStatus		status;
 	UInt32		features;
@@ -597,7 +599,7 @@ Boolean WindowIsModal(WindowPtr wind)
 	WindowIsFloating 
 	
 ----------------------------------------------------------------------------*/
-Boolean WindowIsFloating(WindowPtr wind)
+Boolean nsWindowUtils::WindowIsFloating(WindowPtr wind)
 {
 	WindowClass 	windClass;
 	if (GetWindowClass(wind, &windClass) == noErr)
@@ -612,7 +614,7 @@ Boolean WindowIsFloating(WindowPtr wind)
 	WindowIsModified 
 	
 ----------------------------------------------------------------------------*/
-Boolean WindowIsModified(WindowPtr wind)
+Boolean nsWindowUtils::WindowIsModified(WindowPtr wind)
 {
 	// еее write me
 	return false;

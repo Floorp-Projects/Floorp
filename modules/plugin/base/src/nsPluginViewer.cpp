@@ -521,8 +521,9 @@ HandlePluginEvent(nsGUIEvent *aEvent)
   // followed by the mouse down event, so we need to handle this
   } else {
     // on Mac, we store a pointer to this class as native data in the widget
-    PluginViewerImpl * pluginViewer;
-    (nsIWidget*)(aEvent->widget)->GetClientData((PluginViewerImpl *)pluginViewer);
+    void *clientData;
+    (nsIWidget*)(aEvent->widget)->GetClientData(clientData);
+    PluginViewerImpl * pluginViewer = (PluginViewerImpl *)clientData;
     if (pluginViewer != nsnull && pluginViewer->mOwner != nsnull)
       return pluginViewer->mOwner->ProcessEvent(*aEvent);
 #endif // XP_MAC

@@ -114,10 +114,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsWindow)
  * @param ctrl - The Control being tracked
  * @param part - Part of the control (arrow, thumb, gutter) being hit
  */
-#if TARGET_CARBON
-pascal 
-#endif
-void nsScrollbar::ScrollActionProc(ControlHandle ctrl, ControlPartCode part)
+pascal void nsScrollbar::ScrollActionProc(ControlHandle ctrl, ControlPartCode part)
 {
 	nsScrollbar* me = (nsScrollbar*)(::GetControlReference(ctrl));
 	NS_ASSERTION(nsnull != me, "NULL nsScrollbar");

@@ -57,6 +57,7 @@
 
 #include <UModalDialogs.h>
 #include <LStream.h>
+#include <UNavServicesDialogs.h>
 
 #include "ApplIDs.h"
 #include "CBrowserWindow.h"
@@ -71,14 +72,7 @@
 #include "LCheckBox.h"
 #endif
 
-#if PP_Target_Carbon
-#include <UNavServicesDialogs.h>
-#else
-#include <UConditionalDialogs.h>
-#endif
-
 static NS_DEFINE_IID(kWindowCID, NS_WINDOW_CID);
-
 
 //*****************************************************************************
 //***    CBrowserShell: constructors/destructor
@@ -740,11 +734,7 @@ NS_METHOD CBrowserShell::SaveCurrentURI(const FSSpec& outSpec)
 
 Boolean CBrowserShell::DoSaveFileDialog(FSSpec& outSpec, Boolean& outIsReplacing)
 {
-#if PP_Target_Carbon
 	UNavServicesDialogs::LFileDesignator	designator;
-#else
-	UConditionalDialogs::LFileDesignator	designator;
-#endif
 
     nsresult rv;
     nsAutoString docTitle;

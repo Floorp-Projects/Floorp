@@ -49,6 +49,15 @@
 #include <Menus.h>
 #include <MacWindows.h>
 
+#if UNIVERSAL_INTERFACES_VERSION < 0x0341
+enum {
+  inToolbarButton               = 13    	/* Mac OS X forward*/
+};
+enum {
+  kWindowToolbarButtonAttribute = (1L << 6)	/* this window has a toolbar button widget in the titlebar (Mac OS X only)*/
+};
+#endif
+
 //
 // for non-carbon builds, provide various accessors to keep the code below free of ifdefs.
 //
@@ -94,20 +103,6 @@ inline void GetPortHiliteColor ( GrafPtr port, RGBColor* color )
 	}
 }
 
-#undef DisposeAEEventHandlerUPP
-
-inline void DisposeAEEventHandlerUPP ( RoutineDescriptor* proc )
-{
-	::DisposeRoutineDescriptor(proc);
-}
-
-#undef DisposeNavEventUPP
-
-inline void DisposeNavEventUPP ( RoutineDescriptor* proc )
-{
-	::DisposeRoutineDescriptor(proc);
-}
-
 inline Rect* GetRegionBounds(RgnHandle region, Rect* rect)
 {
 	*rect = (**region).rgnBBox;
@@ -117,12 +112,6 @@ inline Rect* GetRegionBounds(RgnHandle region, Rect* rect)
 inline Boolean IsRegionComplex(RgnHandle region)
 {
 	return (**region).rgnSize != sizeof(MacRegion);
-}
-
-inline Rect* GetWindowPortBounds(WindowRef window, Rect* rect)
-{
-	*rect = ((GrafPtr)window)->portRect;
-	return rect;
 }
 
 inline void GetPortVisibleRegion(GrafPtr port, RgnHandle visRgn)

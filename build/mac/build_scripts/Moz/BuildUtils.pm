@@ -33,6 +33,8 @@ use vars qw(@ISA @EXPORT);
                 GetBinDirectory
                 BuildOneProjectWithOutput
                 BuildOneProject
+                BuildProject
+                BuildProjectClean
                 BuildIDLProject
                 BuildFolderResourceAliases
                 AskAndPersistFile
@@ -83,6 +85,7 @@ sub SetupDefaultBuildOptions($$$)
     $main::CLOBBER_DIST_ALL       = 1;    # turn on to clobber all aliases/files inside dist (headers/xsym/libs)
     $main::CLOBBER_DIST_LIBS      = 0;    # turn on to clobber only aliases/files for libraries/sym files in dist
     $main::CLOBBER_IDL_PROJECTS   = 0;    # turn on to clobber all IDL projects.
+    $main::CLOBBER_PROJECTS       = 0;    # turn on to remove object code from each project before building it
     
     $main::UNIVERSAL_INTERFACES_VERSION = 0x0320;
     
@@ -395,7 +398,7 @@ sub BuildOneProjectWithOutput($$$$$$)
         unlink "$project_dir$output_name.xSYM";
     }
     
-    BuildProject($project_path, $target_name);
+    DoBuildProject($project_path, $target_name, $main::CLOBBER_PROJECTS);
     
     $alias_lib  ? MakeAlias("$project_dir$output_name",      "$output_path") : 0;
     $alias_xSYM ? MakeAlias("$project_dir$output_name.xSYM", "$output_path") : 0;
@@ -414,6 +417,33 @@ sub BuildOneProject($$$$$)
     
 	BuildOneProjectWithOutput($project_path, $target_name, $target_name,
 							  $alias_lib, $alias_xSYM, $component);
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// For compatiblity with existing scripts, BuildProject now just calls
+#// BuildOneProjectWithOutput, with the output name and target name identical.
+#// Note that this routine assumes that the target name and the shared libary name
+#// are the same. No aliases of the output are made.
+#//--------------------------------------------------------------------------------------------------
+
+sub BuildProject($$)
+{
+    my ($project_path, $target_name) = @_;
+    
+	BuildOneProjectWithOutput($project_path, $target_name, $target_name, 0, 0, 0);
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// Identical to BuildProject but clobbers the project before building it.
+#//--------------------------------------------------------------------------------------------------
+
+sub BuildProjectClean($$)
+{
+    my ($project_path, $target_name) = @_;
+    my ($save_clobber_flag) = $main::CLOBBER_PROJECTS;
+    $main::CLOBBER_PROJECTS = 1;
+	BuildOneProjectWithOutput($project_path, $target_name, $target_name, 0, 0, 0);
+	$main::CLOBBER_PROJECTS = $save_clobber_flag;
 }
 
 #//--------------------------------------------------------------------------------------------------

@@ -482,7 +482,7 @@ public:
            const PRUnichar* aCharset,
            PRInt32          aIndex);
 
-	nsresult SetIEFavoritesRoot(nsCString& IEFavoritesRootURL)
+	nsresult SetIEFavoritesRoot(const nsCString& IEFavoritesRootURL)
 	{
 		mIEFavoritesRoot = IEFavoritesRootURL;
 		return(NS_OK);

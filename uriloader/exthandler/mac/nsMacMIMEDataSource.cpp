@@ -43,7 +43,7 @@
 #include <MacTypes.h>
 
 // Yumm
-static void ConvertCharStringToStr255( char* inString, Str255& outString  )
+static void ConvertCharStringToStr255( const char* inString, Str255& outString  )
 {
 		if ( inString == NULL )
 			return;
@@ -61,7 +61,7 @@ static void ConvertCharStringToStr255( char* inString, Str255& outString  )
 static nsresult MakeMIMEInfo( ICMapEntry &entry, nsIMIMEInfo*& info )
 {
 	// Create nsIMIMEInfo
-	nsresult rv = nsComponentManager::CreateInstance(NS_MIMEINFO_CONTRACTID, nsnull, nsIMIMEInfo::GetIID(), &info );	  
+	nsresult rv = nsComponentManager::CreateInstance(NS_MIMEINFO_CONTRACTID, nsnull, nsIMIMEInfo::GetIID(), (void**)&info );	  
 	if ( NS_FAILED( rv ) )
 		return rv;
 	// Stuff in the data;

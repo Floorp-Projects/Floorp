@@ -64,10 +64,11 @@
 #define OLDROUTINELOCATIONS	0
 #endif
 
-/* OpenTransport.h has changed to not include the error messages we need from
- * it unless this is defined. Why? dunnno...(pinkerton)
+/* We used to define OTUNIXERRORS so that OpenTransport.h would define these errors
+ * We can't do this with CW 7 because it causes conflict with definitions in
+ * errno.h. 
  */
-#define OTUNIXERRORS 1
+//#define OTUNIXERRORS 1
 
 #ifdef DEBUG
 #define DEVELOPER_DEBUG 1

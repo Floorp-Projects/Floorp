@@ -291,7 +291,7 @@ InLicenseContent(EventRecord* evt, WindowPtr wCurrPtr)
 		case kControlDownButtonPart:
 		case kControlPageUpPart:
 		case kControlPageDownPart:
-			scrollActionFunctionUPP = NewControlActionProc((ProcPtr) DoScrollProc);
+			scrollActionFunctionUPP = NewControlActionUPP(DoScrollProc);
 			value = TrackControl(scrollBar, localPt, scrollActionFunctionUPP);
  			return;
 			

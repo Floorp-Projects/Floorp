@@ -3200,7 +3200,7 @@ VR_INTERFACE(REGERR) NR_RegSetEntry( HREG hReg, RKEY key, char *name, uint16 typ
         case REGTYPE_ENTRY_FILE:
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
-            nr_MacAliasFromPath(buffer, &data, &datalen);
+            nr_MacAliasFromPath(buffer, (void **)&data, &datalen);
             if (data)
                 needFree = TRUE;
 #else

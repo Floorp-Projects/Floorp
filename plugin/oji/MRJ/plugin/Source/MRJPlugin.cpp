@@ -94,12 +94,12 @@ nsresult NSGetFactory(nsISupports* serviceManager, const nsCID &aClass, const ch
 	nsresult result = NS_OK;
 
 	if (theServiceManager == NULL) {
-		if (serviceManager->QueryInterface(NS_GET_IID(nsIServiceManager), &theServiceManager) != NS_OK)
+		if (serviceManager->QueryInterface(NS_GET_IID(nsIServiceManager), (void **)&theServiceManager) != NS_OK)
 			return NS_ERROR_FAILURE;
 
 		// Our global operator new wants to use nsIMalloc to do all of its allocation.
 		// This should be available from the Service Manager.
-		if (theServiceManager->GetService(kMemoryCID, NS_GET_IID(nsIMemory), (nsISupports**)&theMemoryAllocator) != NS_OK)
+		if (theServiceManager->GetService(kMemoryCID, NS_GET_IID(nsIMemory), (void**)&theMemoryAllocator) != NS_OK)
 			return NS_ERROR_FAILURE;
 	}
 
@@ -267,24 +267,24 @@ NS_METHOD MRJPlugin::Initialize()
 
 	// try to get a plugin manager.
 	if (thePluginManager == NULL) {
-		result = theServiceManager->GetService(kPluginManagerCID, NS_GET_IID(nsIPluginManager), (nsISupports**)&thePluginManager);
+		result = theServiceManager->GetService(kPluginManagerCID, NS_GET_IID(nsIPluginManager), (void**)&thePluginManager);
 		if (result != NS_OK || thePluginManager == NULL)
 			return NS_ERROR_FAILURE;
 	}
 
 	// see if the enhanced plugin manager exists.
 	if (thePluginManager2 == NULL) {
-		if (thePluginManager->QueryInterface(NS_GET_IID(nsIPluginManager2), &thePluginManager2) != NS_OK)
+		if (thePluginManager->QueryInterface(NS_GET_IID(nsIPluginManager2), (void**)&thePluginManager2) != NS_OK)
 			thePluginManager2 = NULL;
 	}
 
 	// try to get a JVM manager. we have to be able to run without one.
-	if (theServiceManager->GetService(kJVMManagerCID, NS_GET_IID(nsIJVMManager), (nsISupports**)&mManager) != NS_OK)
+	if (theServiceManager->GetService(kJVMManagerCID, NS_GET_IID(nsIJVMManager), (void**)&mManager) != NS_OK)
 		mManager = NULL;
 	
 	// try to get a Thread manager.
 	if (mManager != NULL) {
-		if (mManager->QueryInterface(NS_GET_IID(nsIThreadManager), &mThreadManager) != NS_OK)
+		if (mManager->QueryInterface(NS_GET_IID(nsIThreadManager), (void**)&mThreadManager) != NS_OK)
 			mThreadManager = NULL;
 
 		if (mThreadManager != NULL)
@@ -630,7 +630,7 @@ static const char* kGetDocumentBaseScriptURL = "javascript:window.location";
 static bool hasTagInfo(nsISupports* supports)
 {
 	nsIJVMPluginTagInfo* tagInfo;
-	if (supports->QueryInterface(NS_GET_IID(nsIJVMPluginTagInfo), &tagInfo) == NS_OK) {
+	if (supports->QueryInterface(NS_GET_IID(nsIJVMPluginTagInfo), (void **)&tagInfo) == NS_OK) {
 		NS_RELEASE(tagInfo);
 		return true;
 	}
@@ -644,7 +644,7 @@ NS_METHOD MRJPluginInstance::Initialize(nsIPluginInstancePeer* peer)
 	mPeer->AddRef();
 
 	// See if we have a windowless peer.
-	nsresult result = mPeer->QueryInterface(kIWindowlessPluginInstancePeerIID, &mWindowlessPeer);
+	nsresult result = mPeer->QueryInterface(kIWindowlessPluginInstancePeerIID, (void **)&mWindowlessPeer);
 	if (result != NS_OK) mWindowlessPeer = NULL;
 
 	// create a context for the applet we will run.

@@ -53,8 +53,7 @@ use Moz::CodeWarriorLib;
                   GetCodeWarriorRelativePath
                   current_directory
                   full_path_to
-                  BuildProject
-                  BuildProjectClean
+                  DoBuildProject
                   ImportXMLProject
                   ExportProjectToXML
                   OpenErrorLog
@@ -223,8 +222,8 @@ sub log_recent_errors($)
 				die "### Errors encountered building \"$project_name\".\n";
 			}
 	}
-
-sub build_project($$$)
+	
+sub DoBuildProject($$$)
 	{
 		my ($project_path, $target_name, $clean_build) = @_;
 		$project_path = full_path_to($project_path);
@@ -258,26 +257,6 @@ sub build_project($$$)
 			{
 				log_recent_errors($project_path);
 			}
-	}
-
-=head2 Getting CodeWarrior to build projects - C<BuildProject($project, $opt_target)>, C<BuildProjectClean($project, $opt_target)>
-
-C<BuildProject()> and C<BuildProjectClean()> are identical, except that the latter first removes object code.
-  In both, CodeWarrior opens the project if it wasn't already open; builds the given (or else current) target; and finally closes
- the project, if it wasn't already open.
-
-=cut
-
-sub BuildProject($;$)
-	{
-		my ($project_path, $target_name) = @_;
-		build_project($project_path, $target_name, 0);
-	}
-
-sub BuildProjectClean($;$)
-	{
-		my ($project_path, $target_name) = @_;
-		build_project($project_path, $target_name, 1);
 	}
 
 

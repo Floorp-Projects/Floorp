@@ -55,8 +55,6 @@
 #include <Sound.h>
 
 /* compiler headers */
-#include <A4Stuff.h>
-#include <SetUpA4.h>
 #include <DropInPanel.h>
 
 /* project headers */
@@ -115,10 +113,7 @@ pascal short	xpidl_panel(PanelParameterBlock *pb);
 pascal short xpidl_panel(PanelParameterBlock *pb)
 {
 	short	result;
-	
-	EnterCodeResource();
-	PrepareCallback();
-	
+		
 	result = noErr;
 			
 	switch (pb->request)
@@ -241,9 +236,7 @@ pascal short xpidl_panel(PanelParameterBlock *pb)
 		result = paramErr;
 		break;
 	}
-	
-	ExitCodeResource();
-	
+		
 	return (result);
 }
 

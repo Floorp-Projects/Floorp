@@ -101,7 +101,7 @@ void RemoveConsole(void)
 long WriteCharsToConsole(char *buffer, long n)
 {
 	long size = 0;
-	char* ptr = NULL;
+	void* ptr = NULL;
 
 	if (CWGetMemHandleSize(gPluginContext, mac_console_handle, &size) == noErr) {
 		if (mac_console_count + n >= size) {
@@ -112,7 +112,7 @@ long WriteCharsToConsole(char *buffer, long n)
 	}
 
 	if (CWLockMemHandle(gPluginContext, mac_console_handle, false, &ptr) == noErr) {
-		BlockMoveData(buffer, ptr + mac_console_count, n);
+		BlockMoveData(buffer, (char *)ptr + mac_console_count, n);
 		mac_console_count += n;
 		CWUnlockMemHandle(gPluginContext, mac_console_handle);
 	}

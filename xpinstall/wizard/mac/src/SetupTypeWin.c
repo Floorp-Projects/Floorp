@@ -340,7 +340,7 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 		
 		err = NavGetDefaultDialogOptions(&dlgOpts);
 		GetResourcedString( dlgOpts.message, rInstList, sFolderDlgMsg );
-		eventProc = NewNavEventProc( (ProcPtr) OurNavEventFunction );
+		eventProc = NewNavEventUPP( OurNavEventFunction );
 		
 		if (!bFirstFolderSelection)
 			GetParentID(gControls->opt->vRefNum, gControls->opt->dirID, "\p", &realDirID);

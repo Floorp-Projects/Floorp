@@ -102,11 +102,7 @@ protected:
 
 private:
 
-	static 
-	#if TARGET_CARBON
-	pascal
-	#endif
-	        void					ScrollActionProc(ControlHandle, ControlPartCode);
+	static pascal void				ScrollActionProc(ControlHandle, ControlPartCode);
 	void							DoScrollAction(ControlPartCode);
 
 // DATA

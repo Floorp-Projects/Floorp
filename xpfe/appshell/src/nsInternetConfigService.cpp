@@ -50,7 +50,7 @@
 #include <Processes.h>
 
 // helper converter function.....
-static void ConvertCharStringToStr255( char* inString, Str255& outString  )
+static void ConvertCharStringToStr255( const char* inString, Str255& outString  )
 {
 		if ( inString == NULL )
 			return;

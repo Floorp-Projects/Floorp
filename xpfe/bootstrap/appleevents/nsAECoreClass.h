@@ -78,19 +78,19 @@ public:
 	void					ResumeEventHandling(const AppleEvent *appleEvent, AppleEvent *reply, Boolean dispatchEvent);
 	
 	// AE Handlers
-	static pascal OSErr		SuspendEventHandler(const AppleEvent *appleEvent, AppleEvent *reply, UInt32 refCon);
-	static pascal OSErr		RequiredSuiteHandler(const AppleEvent *appleEvent, AppleEvent *reply, UInt32 refCon);
-	static pascal OSErr		CoreSuiteHandler(const AppleEvent *appleEvent, AppleEvent *reply, UInt32 refCon);
-	static pascal OSErr		CreateElementHandler(const AppleEvent *appleEvent, AppleEvent *reply, UInt32 refCon);
+	static pascal OSErr		SuspendEventHandler(const AppleEvent *appleEvent, AppleEvent *reply, SInt32 refCon);
+	static pascal OSErr		RequiredSuiteHandler(const AppleEvent *appleEvent, AppleEvent *reply, SInt32 refCon);
+	static pascal OSErr		CoreSuiteHandler(const AppleEvent *appleEvent, AppleEvent *reply, SInt32 refCon);
+	static pascal OSErr		CreateElementHandler(const AppleEvent *appleEvent, AppleEvent *reply, SInt32 refCon);
 
 	// Handler for Mozilla Suite events
-	static pascal OSErr		MozillaSuiteHandler(const AppleEvent *appleEvent, AppleEvent *reply, UInt32 refCon);
+	static pascal OSErr		MozillaSuiteHandler(const AppleEvent *appleEvent, AppleEvent *reply, SInt32 refCon);
 
 	// Handler for GetURL events
-	static pascal OSErr		GetURLSuiteHandler(const AppleEvent *appleEvent, AppleEvent *reply, UInt32 refCon);
+	static pascal OSErr		GetURLSuiteHandler(const AppleEvent *appleEvent, AppleEvent *reply, SInt32 refCon);
 
 	// Handler for GetURL events
-	static pascal OSErr		SpyglassSuiteHandler(const AppleEvent *appleEvent, AppleEvent *reply, UInt32 refCon);
+	static pascal OSErr		SpyglassSuiteHandler(const AppleEvent *appleEvent, AppleEvent *reply, SInt32 refCon);
 
 
 	AEDispatchHandler*		GetDispatchHandler(DescType dispatchClass);
