@@ -1374,10 +1374,11 @@ void nsGfxTextControlFrame::SetTextControlFrameState(const nsString& aValue)
     }
   }
   else {
-    if (mCachedState) delete mCachedState;
-    mCachedState = new nsString(aValue);
-    NS_ASSERTION(mCachedState, "Error: new nsString failed!");
-    //if (!mCachedState) rv = NS_ERROR_OUT_OF_MEMORY;
+    if (mCachedState == nsnull) {
+      mCachedState = new nsString(aValue);
+    } else {
+      *mCachedState = aValue;
+    }
     if (mDisplayContent)
     {
       const PRUnichar *text = mCachedState->GetUnicode();
@@ -1626,6 +1627,8 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext* aPresContext,
                        );
   if (NS_FAILED(rv)) { return rv; }
   NS_RELEASE(widget);
+  // move the view to the proper location
+  viewMan->MoveViewTo(view, origin.x, origin.y);
 
 #ifdef NEW_WEBSHELL_INTERFACES
   mWebShell->SetDocLoaderObserver(mTempObserver);
@@ -2388,6 +2391,8 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
         printf("%p mDisplayFrame resized to: x=%d, y=%d, w=%d, h=%d\n", mDisplayFrame, subBounds.x, subBounds.y, subBounds.width, subBounds.height); 
 #endif
         mDisplayFrame->SetRect(aPresContext, subBounds);
+        // finish the reflow
+        mDisplayFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
       }
     }
   }
