@@ -19,17 +19,24 @@
    - 
    - Contributor(s): 
    -   Dan Haddix (dan6992@hotmail.com)
+   -   Brian King (briano9@yahoo.com)
   -->
 
 <!-- Window title -->
 
 <!ENTITY windowTitle.label "Hotspot Properties">
 
-
-<!ENTITY urlFieldset.label	"Hotspot URL:">
-<!ENTITY altFieldset.label	"Hotspot Alt Text:">
-<!ENTITY browseButton.label	"Browse...">
+<!ENTITY link.label				"Hotspot Link">
+<!ENTITY urlFieldset.label		"Hotspot URL:">
+<!ENTITY altFieldset.label		"Hotspot Alt Text:">
+<!ENTITY browseButton.label		"Browse...">
 <!ENTITY targetFieldset.label	"Target Setting">
-<!ENTITY target.label		"Hotspot Target:">
-<!ENTITY commonFieldset.label	"Common Targets">
+<!ENTITY target.label			"Hotspot Target">
+
+<!-- Targets -->
+<!ENTITY commonFieldset.label	"Common Targets:">
+<!ENTITY same.value				"Same Frame">
+<!ENTITY whole.value			"Whole Page">
+<!ENTITY new.value				"New Window">
+<!ENTITY parent.value			"Parent Frame">
 
