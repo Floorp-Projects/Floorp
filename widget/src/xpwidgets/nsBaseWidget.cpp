@@ -61,6 +61,7 @@ nsBaseWidget::nsBaseWidget()
 ,	mOnDestroyCalled(PR_FALSE)
 ,	mBounds(0,0,0,0)
 ,	mVScrollbar(nsnull)
+,   mZIndex(0)
 {
     NS_NewISupportsArray(getter_AddRefs(mChildren));
     
@@ -245,7 +246,56 @@ void nsBaseWidget::RemoveChild(nsIWidget* aChild)
 {
   mChildren->RemoveElement(aChild);
 }
-    
+
+
+//-------------------------------------------------------------------------
+//
+// Sets widget's position within its parent's child list.
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsBaseWidget::SetZIndex(PRInt32 aZIndex)
+{
+	mZIndex = aZIndex;
+
+	// reorder this child in its parent's list.
+	nsBaseWidget* parent = NS_STATIC_CAST(nsBaseWidget*, GetParent());
+	if (nsnull != parent) {
+		parent->mChildren->RemoveElement(this);
+		PRUint32 childCount, index;
+		if (NS_SUCCEEDED(parent->mChildren->Count(&childCount))) {
+			for (index = 0; index < childCount; index++) {
+				nsCOMPtr<nsIWidget> childWidget;
+				if (NS_SUCCEEDED(parent->mChildren->QueryElementAt(index, NS_GET_IID(nsIWidget), (void**)getter_AddRefs(childWidget)))) {
+					PRInt32 childZIndex;
+					if (NS_SUCCEEDED(childWidget->GetZIndex(&childZIndex))) {
+						if (aZIndex < childZIndex) {
+							parent->mChildren->InsertElementAt(this, index);
+							break;
+						}
+					}
+				}
+			}
+			// were we added to the list?
+			if (index == childCount) {
+				parent->mChildren->AppendElement(this);
+			}
+		}
+		NS_RELEASE(parent);
+	}
+	return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Gets widget's position within its parent's child list.
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsBaseWidget::GetZIndex(PRInt32* aZIndex)
+{
+	*aZIndex = mZIndex;
+	return NS_OK;
+}
+
 //-------------------------------------------------------------------------
 //
 // Get the foreground color
