@@ -102,6 +102,9 @@ interface nsIFile : nsISupports
      *  If 'this' is not created we will return an error
      *  (NS_ERROR_FILE_TARGET_DOES_NOT_EXIST).
      *
+     *  copyTo may fail if the file already exists in the destination 
+     *  directory.
+     *
      *  copyTo will NOT resolve aliases/shortcuts during the copy.
      *
      *   @param newParentDir
