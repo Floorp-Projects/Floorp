@@ -721,11 +721,11 @@ public:
   PRBool  EqualsWithConversion(const nsString &aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
   PRBool  EqualsWithConversion(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
   PRBool  EqualsWithConversion(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+  PRBool  EqualsAtom(/*FIX: const */nsIAtom* anAtom,PRBool aIgnoreCase) const;   
 
   PRBool  EqualsIgnoreCase(const nsString& aString) const;
   PRBool  EqualsIgnoreCase(const char* aString,PRInt32 aCount=-1) const;
   PRBool  EqualsIgnoreCase(/*FIX: const */nsIAtom *aAtom) const;
-  PRBool  EqualsIgnoreCase(const PRUnichar* s1, const PRUnichar* s2) const;
 
 #ifndef NEW_STRING_APIS
   virtual PRInt32 Compare(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const {
@@ -765,10 +765,11 @@ public:
     return EqualsWithConversion(aString,aIgnoreCase,aCount);
   }
 
-  PRBool  Equals(/*FIX: const */nsIAtom* anAtom,PRBool aIgnoreCase) const;   
+  PRBool  Equals(/*FIX: const */nsIAtom* anAtom,PRBool aIgnoreCase) const { return EqualsAtom(anAtom, aIgnoreCase); }
   PRBool  Equals(const PRUnichar* s1, const PRUnichar* s2,PRBool aIgnoreCase=PR_FALSE) const;
   PRBool  Equals(const nsStr& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
 
+  PRBool  EqualsIgnoreCase(const PRUnichar* s1, const PRUnichar* s2) const;
 
   /**
    * These methods compare a given string type to this one
