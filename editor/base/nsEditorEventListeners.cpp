@@ -530,7 +530,7 @@ nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
         else
           editor->Paste(nsIClipboard::kSelectionClipboard);
 
-        // Prevent the event from bubbling up to be possibly handled
+     // Prevent the event from bubbling up to be possibly handled
         // again by the containing window:
         mouseEvent->PreventBubble();
         mouseEvent->PreventDefault();
@@ -816,6 +816,10 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
   if ( htmlEditor )
   {
+    //some day we want to use another way to stop this from bubbling.
+    aMouseEvent->PreventBubble();
+    aMouseEvent->PreventDefault();
+
     return htmlEditor->InsertFromDrop(aMouseEvent);
   }
 
