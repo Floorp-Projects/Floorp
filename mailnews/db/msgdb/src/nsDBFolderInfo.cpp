@@ -416,6 +416,11 @@ nsresult nsDBFolderInfo::LoadMemberVariables()
   nsresult rv = GetUint32Property(kCharacterSetOverrideColumnName, &propertyValue, gDefaultCharacterOverride);
   if (NS_SUCCEEDED(rv))
     m_charSetOverride = propertyValue;
+
+  nsXPIDLCString charSet;
+  if (NS_SUCCEEDED(m_mdb->GetProperty(m_mdbRow, kCharacterSetColumnName, getter_Copies(charSet))))
+    m_charSet = charSet;
+
   return ret;
 }
 
