@@ -37,6 +37,7 @@
 #include "nsGFXUtils.h"
 #include "DefProcFakery.h"
 #include "nsMacResources.h"
+#include "nsRegionMac.h"
 
 #include <Quickdraw.h>
 
@@ -610,14 +611,19 @@ nsMacWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
     
       case kEventWindowBoundsChanged:
       {
-        Rect bounds;
-        ::InvalWindowRect(myWind, ::GetWindowPortBounds(myWind, &bounds));
-
-        // resize the window and repaint
-        nsMacWindow* self = NS_REINTERPRET_CAST(nsMacWindow*, userData);
-        if ( self ) {
-          self->mMacEventHandler->ResizeEvent(myWind);
-          self->mMacEventHandler->UpdateEvent();
+        // are we moving or resizing the window? we only care about resize.
+        UInt32 attributes = 0;
+        ::GetEventParameter ( inEvent, kEventParamAttributes, typeUInt32, NULL, sizeof(attributes), NULL, &attributes );
+        if ( attributes & kWindowBoundsChangeSizeChanged ) {
+          Rect bounds;
+          ::InvalWindowRect(myWind, ::GetWindowPortBounds(myWind, &bounds));
+          
+          // resize the window and repaint
+          nsMacWindow* self = NS_REINTERPRET_CAST(nsMacWindow*, userData);
+          if ( self ) {
+            self->mMacEventHandler->ResizeEvent(myWind);
+            self->mMacEventHandler->UpdateEvent();
+          }
         }
         break;
       }
