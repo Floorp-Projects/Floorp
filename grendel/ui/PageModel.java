@@ -42,7 +42,8 @@ import javax.swing.event.DocumentListener;
 /**
  * Model for a "page" or what is commonly termed as a panel.
  */
-public class PageModel {
+public class PageModel 
+  implements ActionListener {
 
   /**
    * Hashtable of values the model will use to communicate with other
@@ -78,6 +79,9 @@ public class PageModel {
       JToggleButton toggle = (JToggleButton)comp;
       toggle.addItemListener(new ToggleHandler(toggle, key));
     }
+  }
+  
+  public void actionPerformed(ActionEvent event) {
   }
 
   class ToggleHandler

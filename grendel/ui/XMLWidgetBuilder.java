@@ -57,6 +57,15 @@ public abstract class XMLWidgetBuilder {
   protected abstract void processNode(Node node, JComponent component);
 
   /**
+   * Set the reference point for URL location.
+   * 
+   * @param ref the reference point for local urls to be loaded from.
+   */
+  public void setReference(Class ref) {
+    this.ref = ref;
+  }
+
+  /**
    * Set the element as the item containing configuration for the 
    * builder. This would usually be the link tag in the head.
    *
@@ -65,11 +74,13 @@ public abstract class XMLWidgetBuilder {
   public void setConfiguration(Element config) {
     try {
       URL linkURL;
+      Class local = ((ref == null) ? getClass() : ref);;
       // get the string properties
       if (config.getAttribute("href") != null 
 	  && config.getAttribute("role").equals("stringprops")
 	  && config.getTagName().equals("link")) {
-	linkURL = ref.getResource(config.getAttribute("href"));
+
+	linkURL = local.getResource(config.getAttribute("href"));
 	properties = new Properties();
 	if (linkURL != null) properties.load(linkURL.openStream());
       }

@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.IOException;
 
 import java.net.URL;
+import java.util.Hashtable;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.NoSuchElementException;
@@ -39,6 +40,7 @@ import javax.swing.JList;
 import javax.swing.JFrame;
 import javax.swing.JDialog;
 import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import javax.swing.JButton;
 import javax.swing.RootPaneContainer;
@@ -78,12 +80,43 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
   static final String layout_attr = "layout";
   static final int ELEMENT_TYPE = 1;
 
-  JPanel component;
+  PageUI component;
   String title;
   String id;
   String attr;
   PageModel model;
-  Class ref;
+  Hashtable group = new Hashtable();
+  Hashtable everything = new Hashtable();
+
+  /**
+   * Build a menu builder which operates on XML formatted data
+   * 
+   * @param attr attribute
+   * @param id the value of the attribute to have a match
+   * @param model the page model for the page to be created
+   * @param panel the PageUI to be used as the basis for this builder
+   * @param reference the reference point used to find urls
+   */
+  public XMLPageBuilder(String attr, String id, PageModel model, 
+                        PageUI panel, Class reference) {
+    this(attr, id, model, panel);
+    setReference(reference);
+  }
+
+
+  /**
+   * Build a menu builder which operates on XML formatted data
+   * 
+   * @param attr attribute
+   * @param id the value of the attribute to have a match
+   * @param model the page model for the page to be created
+   * @param panel the PageUI to be used as the basis for this builder
+   */
+  public XMLPageBuilder(String attr, String id, PageModel model, 
+                        PageUI panel) {
+    this(attr, id, model);
+    component = panel;
+  }
 
   /**
    * Build a menu builder which operates on XML formatted data
@@ -96,10 +129,6 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     this.attr = attr;
     this.id = id;
     this.model = model;
-  }
-
-  public void setReference(Class reference) {
-    ref = reference;
   }
 
   /**
@@ -129,34 +158,6 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
       buildFrom(new TreeWalker(tree.getNextElement("body")));
     } catch (Throwable t) {
       t.printStackTrace();
-    }
-  }
-
-  /**
-   * Set the element as the item containing configuration for the 
-   * builder
-   *
-   * @param config the element containing configuration data
-   */
-  public void setConfiguration(Element config) {
-    try {
-      URL linkURL;
-      // get the string properties
-      if (config.getAttribute("href") != null 
-	  && config.getAttribute("role").equals("stringprops")
-	  && config.getTagName().equals("link")) {
-        if (ref == null) {
-          linkURL = getClass().getResource(config.getAttribute("href"));
-        } else {
-          linkURL = ref.getResource(config.getAttribute("href"));
-        }
-	properties = new Properties();
-	if (linkURL != null) {
-          properties.load(linkURL.openStream());
-        }
-      }
-    } catch (IOException io) {
-      io.printStackTrace();
     }
   }
 
@@ -224,14 +225,14 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
       node = node.getFirstChild().getNextSibling();
       processNode(node, component);
     } else if (tag.equals(panel_tag)) { // panel tag ... meat!
-      JPanel panel = new JPanel();
+      PageUI panel = new PageUI();
       // first panel
       if (component == null) {
 	component = panel;
       }
-      panel.setLayout(new GridBagLayout());
+      component.setLayout(new GridBagLayout());
       node = node.getFirstChild().getNextSibling();
-      processNode(node, panel);
+      processNode(node, component);
     } else {
       item = buildComponent(current, parent);
 
@@ -272,8 +273,11 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     // gridwidth
     width = current.getAttribute("gridwidth");
     if (width != null) {
-      if (width.trim().equals("remainder")) {
+      width = width.trim();
+      if (width.equals("remainder")) {
 	constraints.gridwidth = GridBagConstraints.REMAINDER;
+      } else if (width.equals("relative")) {
+        constraints.gridwidth = GridBagConstraints.RELATIVE;
       }
     }
 
@@ -304,9 +308,10 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
 	int column = Integer.parseInt(s);
 	item = new JTextField(column);
       } catch (NumberFormatException nfe) {
-	item = new JTextField();
       }
-    } else {
+    }
+
+    if (item == null) {
       item = new JTextField();
     }
 
@@ -316,11 +321,26 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
   protected JRadioButton buildRadioButton(Element current) {
     JRadioButton item = null;
     String label = getReferencedLabel(current, "title");
+    String group_str = current.getAttribute("group");
 
+    // the label
     item = new JRadioButton();
     if (label != null) {
       item.setText(label);
     }
+
+    // button group matters
+    if (group_str != null) {
+      ButtonGroup bg = null;
+      if (group.containsKey(group_str)) {
+        bg = (ButtonGroup)group.get(group_str);
+      } else {
+        bg = new ButtonGroup();
+        group.put(group_str, bg);
+      }
+      bg.add(item);
+    }
+    
     return item;
   }
 
@@ -334,7 +354,12 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     } else if (type.equals("text")) { // text type
       item = buildTextField(current);
     } else if (type.equals("button")) { // buttons
-      item = new JButton(getReferencedLabel(current, "command"));
+      JButton button = new JButton(getReferencedLabel(current, "title"));
+      button.addActionListener(model);
+      button.setActionCommand(getReferencedLabel(current, "command"));
+      item = button;
+    } else if (type.equals("checkbox")) {
+      item = new JCheckBox(getReferencedLabel(current, "title"));
     } else if (type.equals("jlist")) {
       item = buildList(current);
     } else if (type.equals("custom")) {
@@ -342,11 +367,15 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     }
     
     if (item != null && ID != null) {
-      System.out.println("Adding " + ID + " to list");
       model.add(item, ID);
+      everything.put(ID, item);
     }  
 
     return item;
+  }
+
+  public JComponent getCtrlByName(String key) {
+    return (JComponent)everything.get(key);
   }
 
   protected JList buildList(Element current) {
@@ -375,10 +404,21 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
 	cons = buildConstraints(current);
       }
       
-      if (cons == null) {
-	parent.add(item);
-      } else {
-	parent.add(item, cons);
+      if (cons == null) { // no constraints
+        if (parent instanceof PageUI) {
+          ((PageUI)parent).addCtrl(current.getAttribute("ID"), item);
+        }
+        else {
+          parent.add(item);
+        }
+      } else { // we have constraints
+        if (parent instanceof PageUI) {
+          ((PageUI)parent).addCtrl(current.getAttribute("ID"), 
+                                   item, cons);
+        }
+        else {
+          parent.add(item, cons);
+        }
       }
     }
     
@@ -443,4 +483,3 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     }
   }
 }
-
