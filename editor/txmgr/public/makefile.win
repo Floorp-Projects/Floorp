@@ -18,9 +18,10 @@
 DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
-EXPORTS =		\
-    nsITransaction.h	\
-    nsITransactionManager.h	\
+EXPORTS =						\
+    nsITransaction.h			\
+    nsITransactionListener.h	\
+    nsITransactionManager.h		\
     $(NULL)
 
 MODULE = txmgr 
