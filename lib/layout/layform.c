@@ -104,7 +104,7 @@ lo_return_next_form_element(MWContext *context,
 	lo_FormData *form_list;
 	lo_FormData *prev_form_list=NULL;
 	LO_Element **ele_list;
-	LO_FormElementStruct *form_ele;
+	LO_FormElementStruct *form_ele=NULL;
 
     /*
      * Get the unique document ID, and retreive this

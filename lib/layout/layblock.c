@@ -1855,10 +1855,10 @@ lo_RestoreLayerExitFn(void *myclosure,
 	lo_RestoreLayerClosure *closure = (lo_RestoreLayerClosure *)myclosure;
 	MWContext *context = closure->context;
 	lo_DocState *state = closure->state;
-	lo_TopState *top_state;
+	lo_TopState *top_state = NULL;
 	int32 doc_id = closure->doc_id;
 	PRBool flushp = (PRBool)(param->src == NULL);
-	LO_Element *blocking_element;
+	LO_Element *blocking_element=NULL;
 
 	if (doc_id == XP_DOCID(context)) {
 		top_state = state->top_state;
