@@ -296,8 +296,6 @@ private:
   static PRBool writeFolderCache(nsHashKey *aKey, void *aData, void *closure);
 
   // methods for migration / upgrading
-  nsresult upgradePrefs();
-
   nsresult createSpecialFile(nsFileSpec & dir, const char *specialFileName);
   nsresult CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *destIdentity);
   
@@ -912,7 +910,7 @@ nsMsgAccountManager::LoadAccounts()
 #ifdef DEBUG_ACCOUNTMANAGER
     printf("No accounts. I'll try to migrate 4.x prefs..\n");
 #endif
-    rv = upgradePrefs();
+    rv = UpgradePrefs();
     return rv;
   }
 
@@ -983,19 +981,6 @@ nsMsgAccountManager::WriteToFolderCache(nsIMsgFolderCache *folderCache)
 {
 	m_incomingServers.Enumerate(writeFolderCache, folderCache);
 	return folderCache->Close();
-}
-
-nsresult
-nsMsgAccountManager::MigratePrefs()
-{
-#ifdef DEBUG_ACCOUNTMANAGER
-	printf("nsMsgAccountManager::MigratePrefs()\n");
-#endif
-
-	// do nothing right now.
-	// right now, all the migration happens when we don't find
-	// the mail.accountmanager.accounts pref in LoadAccounts()
-	return NS_OK;
 }
 
 nsresult
@@ -1110,8 +1095,8 @@ nsMsgAccountManager::createSpecialFile(nsFileSpec & dir, const char *specialFile
 	return rv;
 }
 
-nsresult
-nsMsgAccountManager::upgradePrefs()
+NS_IMETHODIMP
+nsMsgAccountManager::UpgradePrefs()
 {
     nsresult rv;
     PRInt32 oldMailType;

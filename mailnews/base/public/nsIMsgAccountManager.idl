@@ -112,7 +112,7 @@ interface nsIMsgAccountManager : nsISupports {
 
   void WriteToFolderCache(in nsIMsgFolderCache folderCache);
 
-  /* search for 4.x prefs, and migrate to 5.0 prefs */
-  void MigratePrefs();
+  /* search for 4.x mailnews prefs, and migrate to 5.0 prefs */
+  void UpgradePrefs();
 };
 
