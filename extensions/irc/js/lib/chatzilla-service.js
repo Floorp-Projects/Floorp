@@ -50,8 +50,8 @@ const IRCPROT_HANDLER_CID =
 /* components used in this file */
 const MEDIATOR_CONTRACTID =
     "@mozilla.org/rdf/datasource;1?name=window-mediator";
-const SIMPLEURI_CONTRACTID = 
-    "@mozilla.org/network/simple-uri;1";
+const STANDARDURL_CONTRACTID = 
+    "@mozilla.org/network/standard-url;1";
 const ASS_CONTRACTID =
     "@mozilla.org/appshell/appShellService;1";
 
@@ -62,6 +62,7 @@ const nsICategoryManager = Components.interfaces.nsICategoryManager;
 const nsIContentHandler  = Components.interfaces.nsIContentHandler;
 const nsIProtocolHandler = Components.interfaces.nsIProtocolHandler;
 const nsIURI             = Components.interfaces.nsIURI;
+const nsIStandardURL     = Components.interfaces.nsIStandardURL;
 const nsIChannel         = Components.interfaces.nsIChannel;
 const nsIRequest         = Components.interfaces.nsIRequest;
 const nsIAppShellService = Components.interfaces.nsIAppShellService;
@@ -182,10 +183,11 @@ function (aSpec, aBaseURI)
         return null;
     }
     
-    var uri = Components.classes[SIMPLEURI_CONTRACTID].createInstance(nsIURI);
-    uri.spec = aSpec;
+    var url = Components.classes[STANDARDURL_CONTRACTID].
+      createInstance(nsIStandardURL);
+    url.init(nsIStandardURL.URLTYPE_STANDARD, 6667, aSpec, aBaseURI);
     
-    return uri;
+    return url.QueryInterface(nsIURI);
 }
 
 IRCProtocolHandler.prototype.newChannel =

@@ -87,10 +87,10 @@ function bc_connect(host, port, bind, tcp_flag, observer)
     if (!pps)
         throw ("Couldn't get protocol proxy service");
 
-    var uri = Components.classes["@mozilla.org/network/simple-uri;1"].
-        createInstance(Components.interfaces.nsIURI);
-    uri.spec = "irc:" + host + ':' + port;
-
+    var ios = Components.classes["@mozilla.org/network/io-service;1"].
+      getService(Components.interfaces.nsIIOService);
+    var spec = "irc://" + host + ':' + port;
+    var uri = ios.newURI(spec,null);
     var info = pps.examineForProxy(uri);
 
     this._transport = this._sockService.createTransport (host, port, info,
