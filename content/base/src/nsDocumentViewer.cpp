@@ -949,9 +949,6 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
         (*aStyleSet)->AddDocStyleSheet(sheet, aDocument);
       }
     }
-    if (mUAStyleSheet) {
-      (*aStyleSet)->AppendBackstopStyleSheet(mUAStyleSheet);
-    }
 
     NS_WITH_SERVICE(nsIChromeRegistry, chromeRegistry, "component://netscape/chrome/chrome-registry", &rv);
     if (NS_SUCCEEDED(rv) && chromeRegistry) {
@@ -966,6 +963,10 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
           (*aStyleSet)->AppendBackstopStyleSheet(sheet);
         }
       }
+    }
+
+    if (mUAStyleSheet) {
+      (*aStyleSet)->AppendBackstopStyleSheet(mUAStyleSheet);
     }
   }
   return rv;
