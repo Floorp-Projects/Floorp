@@ -82,6 +82,7 @@ static PRStatus convert_cert(NSSCertificate *c, void *arg)
     CERTCertificate *nss3cert;
     SECStatus secrv;
     struct nss3_cert_cbstr *nss3cb = (struct nss3_cert_cbstr *)arg;
+    nssTrustDomain_AddCertsToCache(STAN_GetDefaultTrustDomain(), &c, 1);
     nss3cert = STAN_GetCERTCertificate(c);
     if (!nss3cert) return PR_FAILURE;
     secrv = (*nss3cb->callback)(nss3cert, nss3cb->arg);
