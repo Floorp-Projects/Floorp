@@ -1575,6 +1575,10 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromURI(nsIURI *aURI, char **aC
       nsXPIDLCString ext;
       rv = url->GetFileExtension(getter_Copies(ext));
       if (NS_FAILED(rv)) return rv;
+      if (ext.IsEmpty()) {
+          *aContentType = nsnull;
+          return NS_ERROR_FAILURE;
+      }
       rv = GetTypeFromExtension(ext, aContentType);
       return rv;
   }
