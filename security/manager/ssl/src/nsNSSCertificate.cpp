@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.42 2001/08/03 18:38:55 javi%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.43 2001/08/09 01:38:48 kaie%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -3258,8 +3258,6 @@ nsNSSCertificateDB::GetCrls(nsISupportsArray ** aCrls)
   CERTCertificate *caCert = nsnull;
   nsAutoString org;
   nsAutoString orgUnit;
-  nsAutoString nextUpdate;
-  nsAutoString lastUpdate;
   PRTime tmpDate;
   nsCOMPtr<nsISupportsArray> crlsArray;
   nsresult rv;
@@ -3291,19 +3289,27 @@ nsNSSCertificateDB::GetCrls(nsISupportsArray ** aCrls)
         orgUnit = NS_ConvertASCIItoUCS2(ou);
       }
 
+      nsAutoString nextUpdate;
+      nsAutoString lastUpdate;
+      
       // Last Update time
-      sec_rv = DER_UTCTimeToTime(&tmpDate, &(node->crl->crl.lastUpdate));
-      if (sec_rv == SECSuccess) {
-        dateFormatter->FormatPRTime(nsnull, kDateFormatShort, kTimeFormatNone,
-                              tmpDate, lastUpdate);
+      if (node->crl->crl.lastUpdate.len) {
+        sec_rv = DER_UTCTimeToTime(&tmpDate, &(node->crl->crl.lastUpdate));
+        if (sec_rv == SECSuccess) {
+          dateFormatter->FormatPRTime(nsnull, kDateFormatShort, kTimeFormatNone,
+                                tmpDate, lastUpdate);
+        }
       }
 
-      // Next update time
-      sec_rv = DER_UTCTimeToTime(&tmpDate, &(node->crl->crl.nextUpdate));
-      if (sec_rv == SECSuccess) {
-        dateFormatter->FormatPRTime(nsnull, kDateFormatShort, kTimeFormatNone,
-                              tmpDate, nextUpdate);
+      if (node->crl->crl.nextUpdate.len) {
+        // Next update time
+        sec_rv = DER_UTCTimeToTime(&tmpDate, &(node->crl->crl.nextUpdate));
+        if (sec_rv == SECSuccess) {
+          dateFormatter->FormatPRTime(nsnull, kDateFormatShort, kTimeFormatNone,
+                                tmpDate, nextUpdate);
+        }
       }
+      
       nsCOMPtr<nsICrlEntry> entry = new nsCrlEntry(org.get(), orgUnit.get(), lastUpdate.get(), nextUpdate.get());
       crlsArray->AppendElement(entry);
     }
