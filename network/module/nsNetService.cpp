@@ -287,13 +287,6 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
     }
     NS_ADDREF(pConn);
 
-    /* We've got a nsConnectionInfo(), now hook it up
-     * to the nsISupports of the nsIContentViewerContainer
-     */
-    pConn->pContainer = aUrl->GetContainer();
-    NS_VERIFY_THREADSAFE_INTERFACE(pConn->pContainer);
-
-    
     /* 
      * XXX: Rewrite the resource: URL into a file: URL
      */
@@ -404,12 +397,6 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
             goto loser;
         }
         NS_ADDREF(pConn);
-
-        /* We've got a nsConnectionInfo(), now hook it up
-         * to the nsISupports of the nsIContentViewerContainer
-         */
-        pConn->pContainer = aUrl->GetContainer();
-        NS_VERIFY_THREADSAFE_INTERFACE(pConn->pContainer);
 
         /* 
          * XXX: Rewrite the resource: URL into a file: URL
