@@ -213,19 +213,18 @@ GlobalWindowImpl::SetContext(nsIScriptContext *aContext)
 NS_IMETHODIMP_(void)       
 GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
 {
-  if (nsnull != mDocument) {
-    ClearAllTimeouts();
+  ClearAllTimeouts();
 
-    if (nsnull != mScriptObject && nsnull != mContext) {
-      JS_ClearScope((JSContext *)mContext->GetNativeContext(),
-                    (JSObject *)mScriptObject);
-    }
-    
-    NS_RELEASE(mDocument);
-    if (nsnull != mContext) {
-      mContext->GC();
-    }
+  if (nsnull != mScriptObject && nsnull != mContext) {
+    JS_ClearScope((JSContext *)mContext->GetNativeContext(),
+                  (JSObject *)mScriptObject);
   }
+    
+  if (nsnull != mDocument)
+    NS_RELEASE(mDocument);
+    
+  if (nsnull != mContext)
+    mContext->GC();
 
   mDocument = aDocument;
   
