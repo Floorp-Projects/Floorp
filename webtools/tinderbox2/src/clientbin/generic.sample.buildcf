@@ -24,8 +24,8 @@
 # vairiables substituted.
 
 
-# $Revision: 1.2 $ 
-# $Date: 2001/08/30 18:54:25 $ 
+# $Revision: 1.3 $ 
+# $Date: 2001/10/09 15:51:35 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/clientbin/generic.sample.buildcf,v $ 
 # $Name:  $ 
@@ -91,7 +91,8 @@ sub cvs_time_str {
 
 # given a time return a human readable string suitable for using as
 # part of a file name but similar to the CVS checkout string for the
-# same time (no space).
+# same time (no space, shell does not likes spaces in filenames; no
+# colon tar interprets colons specially).
 
 sub filename_time_str {
     my ($time) = @_;
@@ -102,7 +103,7 @@ sub filename_time_str {
     $mon++;
     $year += 1900;
 
-    my $str = sprintf "%04d-%02d-%02d.%02d:%02d", $year,$mon,$mday,$hour,$min;
+    my $str = sprintf "%04d-%02d-%02d.%02d%02d", $year,$mon,$mday,$hour,$min;
     return $str;
 }
 
@@ -253,16 +254,7 @@ $BUILDS = {
 			     'script' => [
                                           ". ./setupenv; ./configure",
                                           ". ./setupenv; make $make_flags install",
-
-                                          # If a tarfile name contains
-                                          # a colon then everything
-                                          # before the colon is
-                                          # interpreted as a hostname.
-                                          # We do not want this
-                                          # behavor so we use stdout
-                                          # to get arround this.
-
-                                          "tar zc \./reef/aprt >$tar_file",
+                                          "tar zcf $tar_file \./install",
                                           ". ./setupenv; make $make_flags distclean",
 					 ],
 			    },
