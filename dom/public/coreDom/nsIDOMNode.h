@@ -37,7 +37,7 @@ class nsIDOMNodeList;
  { 0xa6cf907c, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
-class nsIDOMNode : public nsISupports {
+class NS_NO_VTABLE nsIDOMNode : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMNODE_IID; return iid; }
   enum {

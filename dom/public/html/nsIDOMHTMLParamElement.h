@@ -34,7 +34,7 @@
  { 0xa6cf90ad, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
-class nsIDOMHTMLParamElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE nsIDOMHTMLParamElement : public nsIDOMHTMLElement {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLPARAMELEMENT_IID; return iid; }
 

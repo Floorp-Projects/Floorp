@@ -38,7 +38,7 @@ class nsIDOMWindow;
  { 0xa6cf906b, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
-class nsIDOMWindow : public nsISupports {
+class NS_NO_VTABLE nsIDOMWindow : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMWINDOW_IID; return iid; }
 

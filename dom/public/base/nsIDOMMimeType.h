@@ -33,7 +33,7 @@ class nsIDOMPlugin;
 #define NS_IDOMMIMETYPE_IID \
  { 0xf6134682, 0xf28b, 0x11d2, { 0x83, 0x60, 0xc9, 0x08, 0x99, 0x04, 0x9c, 0x3c } } 
 
-class nsIDOMMimeType : public nsISupports {
+class NS_NO_VTABLE nsIDOMMimeType : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMMIMETYPE_IID; return iid; }
 

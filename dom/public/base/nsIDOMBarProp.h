@@ -33,7 +33,7 @@
  { 0x9eb2c150, 0x1d56, 0x11d3, \
   { 0x82, 0x21, 0x00, 0x60, 0x08, 0x3a, 0x0b, 0xcf } } 
 
-class nsIDOMBarProp : public nsISupports {
+class NS_NO_VTABLE nsIDOMBarProp : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMBARPROP_IID; return iid; }
 

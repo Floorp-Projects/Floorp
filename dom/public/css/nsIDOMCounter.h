@@ -33,7 +33,7 @@
  { 0x31adb439, 0x0055, 0x402d, \
   { 0x9b, 0x1d, 0xd5, 0xca, 0x94, 0xf3, 0xf5, 0x5b } } 
 
-class nsIDOMCounter : public nsISupports {
+class NS_NO_VTABLE nsIDOMCounter : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMCOUNTER_IID; return iid; }
 

@@ -36,7 +36,7 @@ class nsIDOMCSSStyleDeclaration;
  { 0x0b9341f3, 0x95d4, 0x4fa4, \
   { 0xad, 0xcd, 0xe1, 0x19, 0xe0, 0xdb, 0x28, 0x89 } } 
 
-class nsIDOMViewCSS : public nsIDOMAbstractView {
+class NS_NO_VTABLE nsIDOMViewCSS : public nsIDOMAbstractView {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMVIEWCSS_IID; return iid; }
 

@@ -37,7 +37,7 @@ class nsIControllers;
  { 0xf3c50361, 0x14fe, 0x11d3, \
 		{ 0xbf, 0x87, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } } 
 
-class nsIDOMXULCommandDispatcher : public nsISupports {
+class NS_NO_VTABLE nsIDOMXULCommandDispatcher : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMXULCOMMANDDISPATCHER_IID; return iid; }
 

@@ -35,7 +35,7 @@ class nsIDOMAbstractView;
  { 0x028e0e6e, 0x8b01, 0x11d3, \
   { 0xaa, 0xe7, 0x00, 0x10, 0x83, 0x8a, 0x31, 0x23 } } 
 
-class nsIDOMKeyEvent : public nsIDOMUIEvent {
+class NS_NO_VTABLE nsIDOMKeyEvent : public nsIDOMUIEvent {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMKEYEVENT_IID; return iid; }
   enum {

@@ -33,7 +33,7 @@
  { 0x6fd344d0, 0x7e5f, 0x11d2, \
   { 0xbd, 0x91, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4 } } 
 
-class nsIDOMNSHTMLButtonElement : public nsISupports {
+class NS_NO_VTABLE nsIDOMNSHTMLButtonElement : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSHTMLBUTTONELEMENT_IID; return iid; }
 

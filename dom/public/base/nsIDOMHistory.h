@@ -34,7 +34,7 @@
  { 0x896d1d20, 0xb4c4, 0x11d2, \
   { 0xbd, 0x93, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4 } } 
 
-class nsIDOMHistory : public nsISupports {
+class NS_NO_VTABLE nsIDOMHistory : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMHISTORY_IID; return iid; }
 

@@ -37,7 +37,7 @@ class nsIDOMRect;
  { 0xe249031f, 0x8df9, 0x4e7a, \
   { 0xb6, 0x44, 0x18, 0x94, 0x6d, 0xce, 0x00, 0x19 } } 
 
-class nsIDOMCSSPrimitiveValue : public nsIDOMCSSValue {
+class NS_NO_VTABLE nsIDOMCSSPrimitiveValue : public nsIDOMCSSValue {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMCSSPRIMITIVEVALUE_IID; return iid; }
   enum {

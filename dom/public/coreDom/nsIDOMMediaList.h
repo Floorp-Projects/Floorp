@@ -33,7 +33,7 @@
  { 0x9b0c2ed7, 0x111c, 0x4824, \
   { 0xad, 0xf9, 0xef, 0x0d, 0xa6, 0xda, 0xd3, 0x71 } } 
 
-class nsIDOMMediaList : public nsISupports {
+class NS_NO_VTABLE nsIDOMMediaList : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMMEDIALIST_IID; return iid; }
 

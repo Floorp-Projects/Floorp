@@ -34,7 +34,7 @@ class nsIDOMCSSPrimitiveValue;
  { 0x6aff3102, 0x320d, 0x4986, \
   { 0x97, 0x90, 0x12, 0x31, 0x6b, 0xb8, 0x7c, 0xf9 } } 
 
-class nsIDOMRGBColor : public nsISupports {
+class NS_NO_VTABLE nsIDOMRGBColor : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMRGBCOLOR_IID; return iid; }
 

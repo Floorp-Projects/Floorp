@@ -34,7 +34,7 @@ class nsIDOMStyleSheetList;
  { 0x3d9f4973, 0xdd2e, 0x48f5, \
   { 0xb5, 0xf7, 0x26, 0x34, 0xe0, 0x9e, 0xad, 0xd9 } } 
 
-class nsIDOMDocumentStyle : public nsISupports {
+class NS_NO_VTABLE nsIDOMDocumentStyle : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMDOCUMENTSTYLE_IID; return iid; }
 
