@@ -81,9 +81,9 @@ nsresult nsOutlookMail::GetMailFolders( nsISupportsArray **pArray)
 	if (m_storeList.GetSize() > 1) {
 		while ((pFolder = m_storeList.GetItem( i))) {
 			CMapiFolder *pItem = new CMapiFolder( pFolder);
-			pItem->SetDepth( 0);
+			pItem->SetDepth( 1);
 			m_folderList.AddItem( pItem);
-			if (!m_mapi.GetStoreFolders( pItem->GetCBEntryID(), pItem->GetEntryID(), m_folderList, 1)) {
+			if (!m_mapi.GetStoreFolders( pItem->GetCBEntryID(), pItem->GetEntryID(), m_folderList, 2)) {
 				IMPORT_LOG1( "GetStoreFolders for index %d failed.\n", i);
 			}
 			i++;
@@ -91,7 +91,7 @@ nsresult nsOutlookMail::GetMailFolders( nsISupportsArray **pArray)
 	}
 	else {
 		if ((pFolder = m_storeList.GetItem( i))) {
-			if (!m_mapi.GetStoreFolders( pFolder->GetCBEntryID(), pFolder->GetEntryID(), m_folderList, 0)) {
+			if (!m_mapi.GetStoreFolders( pFolder->GetCBEntryID(), pFolder->GetEntryID(), m_folderList, 1)) {
 				IMPORT_LOG1( "GetStoreFolders for index %d failed.\n", i);
 			}
 		}
