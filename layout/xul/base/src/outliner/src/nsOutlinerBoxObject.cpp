@@ -27,6 +27,9 @@
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIFrame.h"
+#include "nsOutlinerBodyFrame.h"
+#include "nsIAtom.h"
+#include "nsXULAtoms.h"
 
 class nsOutlinerBoxObject : public nsIOutlinerBoxObject, public nsBoxObject
 {
@@ -42,7 +45,8 @@ public:
   //NS_PIBOXOBJECT interfaces
   NS_IMETHOD Init(nsIContent* aContent, nsIPresShell* aPresShell);
   NS_IMETHOD SetDocument(nsIDocument* aDocument);
- 
+
+  nsIOutlinerBoxObject* mOutlinerBody;
 };
 
 /* Implementation file */
@@ -60,6 +64,7 @@ nsOutlinerBoxObject::SetDocument(nsIDocument* aDocument)
 
   
 nsOutlinerBoxObject::nsOutlinerBoxObject()
+:mOutlinerBody(nsnull)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -77,40 +82,54 @@ NS_IMETHODIMP nsOutlinerBoxObject::Init(nsIContent* aContent, nsIPresShell* aPre
   return NS_OK;
 }
 
-nsIOutlinerBoxObject*
+static void FindBodyElement(nsIContent* aParent, nsIContent** aResult)
+{
+  nsCOMPtr<nsIAtom> tag;
+  aParent->GetTag(*getter_AddRefs(tag));
+  if (tag.get() == nsXULAtoms::outlinerbody) {
+    *aResult = aParent;
+    NS_IF_ADDREF(*aResult);
+  }
+  else {
+    PRInt32 count;
+    aParent->ChildCount(count);
+    for (PRInt32 i = 0; i < count; i++) {
+      nsCOMPtr<nsIContent> child;
+      aParent->ChildAt(i, *getter_AddRefs(child));
+      FindBodyElement(child, aResult);
+      if (*aResult)
+        break;
+    }
+  }
+}
+
+inline nsIOutlinerBoxObject*
 nsOutlinerBoxObject::GetOutlinerBody()
 {
+  if (mOutlinerBody)
+    return mOutlinerBody;
+
   nsIFrame* frame = GetFrame();
   if (!frame)
     return nsnull;
 
-  // For now we assume that the outliner body is under child 1 somewhere (since child 0 holds
-  // the columns).
-  nsCOMPtr<nsIPresContext> cx;
-  mPresShell->GetPresContext(getter_AddRefs(cx));
+  // Iterate over our content model children looking for the body.
+  nsCOMPtr<nsIContent> startContent;
+  frame->GetContent(getter_AddRefs(startContent));
 
-  nsIFrame* currFrame;
-  frame->FirstChild(cx, nsnull, &currFrame);
-  if (!currFrame)
-    return nsnull;
+  nsCOMPtr<nsIContent> content;
+  FindBodyElement(startContent, getter_AddRefs(content));
 
-  currFrame->GetNextSibling(&currFrame);
-  if (!currFrame)
-    return nsnull;
+  mPresShell->GetPrimaryFrameFor(content, &frame);
 
-  nsIFrame* childFrame;
-  currFrame->FirstChild(cx, nsnull, &childFrame);
-  while (childFrame) {
-    nsIOutlinerBoxObject* result = nsnull;
-    childFrame->QueryInterface(NS_GET_IID(nsIOutlinerBoxObject), (void**)&result);
-    if (result)
-      return result;
-    childFrame->GetNextSibling(&childFrame);
-  }
+  // It's a frame. Refcounts are irrelevant.
+  frame->QueryInterface(NS_GET_IID(nsIOutlinerBoxObject), (void**)&mOutlinerBody);
 
-  return nsnull;
+  nsOutlinerBodyFrame* bodyFrame = NS_STATIC_CAST(nsOutlinerBodyFrame*, frame);
+  bodyFrame->SetBoxObject(this);
+
+  return mOutlinerBody;
 }
-
 
 NS_IMETHODIMP nsOutlinerBoxObject::GetView(nsIOutlinerView * *aView)
 {
@@ -125,6 +144,22 @@ NS_IMETHODIMP nsOutlinerBoxObject::SetView(nsIOutlinerView * aView)
   nsIOutlinerBoxObject* body = GetOutlinerBody();
   if (body)
     return body->SetView(aView);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerBoxObject::GetFocused(PRBool* aFocused)
+{
+  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  if (body)
+    return body->GetFocused(aFocused);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerBoxObject::SetFocused(PRBool aFocused)
+{
+  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  if (body)
+    return body->SetFocused(aFocused);
   return NS_OK;
 }
 

@@ -540,6 +540,15 @@ NS_IMETHODIMP nsOutlinerSelection::SetCurrentIndex(PRInt32 aIndex)
 NS_IMETHODIMP
 nsOutlinerSelection::AdjustSelection(PRInt32 aIndex, PRInt32 aCount)
 {
+  // XXX Write me!
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOutlinerSelection::InvalidateSelection()
+{
+  if (mFirstRange)
+    mFirstRange->Invalidate();
   return NS_OK;
 }
 

@@ -226,9 +226,14 @@ public:
   friend nsresult NS_NewOutlinerBodyFrame(nsIPresShell* aPresShell, 
                                           nsIFrame** aNewFrame);
 
+  friend class nsOutlinerBoxObject;
+
 protected:
   nsOutlinerBodyFrame(nsIPresShell* aPresShell);
   virtual ~nsOutlinerBodyFrame();
+
+  // Caches our box object.
+  void SetBoxObject(nsIOutlinerBoxObject* aBoxObject) { mOutlinerBoxObject = aBoxObject; };
 
   // Returns the height of rows in the tree.
   PRInt32 GetRowHeight();
@@ -260,10 +265,16 @@ protected: // Data Members
   // Our cached pres context.
   nsIPresContext* mPresContext;
 
+  // The cached box object parent.
+  nsIOutlinerBoxObject* mOutlinerBoxObject;
+
   // The current view for this outliner widget.  We get all of our row and cell data
   // from the view.
   nsCOMPtr<nsIOutlinerView> mView;    
   
+  // Whether or not we're currently focused.
+  PRBool mFocused;
+
   // A cache of all the style contexts we have seen for rows and cells of the tree.  This is a mapping from
   // a list of atoms to a corresponding style context.  This cache stores every combination that
   // occurs in the tree, so for n distinct properties, this cache could have 2 to the n entries
