@@ -268,22 +268,23 @@ NS_IMETHODIMP nsView :: GetViewManager(nsIViewManager *&aViewMgr) const
 NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
                               PRUint32 aPaintFlags, PRBool &aResult)
 {
-	if (aPaintFlags & NS_VIEW_FLAG_JUST_PAINT)
-	{
-		//new compositor
-
+	if (aPaintFlags & NS_VIEW_FLAG_JUST_PAINT) {
+		// Just paint, assume compositor knows what it's doing.
 		if (nsnull != mClientData) {
 			nsCOMPtr<nsIViewObserver> observer;
 			if (NS_OK == mViewManager->GetViewObserver(*getter_AddRefs(observer))) {
-				if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom)) {
+				if ((mClip.mLeft != 0) && (mClip.mRight != 0) && (mClip.mTop != 0) && (mClip.mBottom != 0)) {
 					nsRect  crect;
 					crect.x = mClip.mLeft;
 					crect.y = mClip.mTop;
 					crect.width = mClip.mRight - mClip.mLeft;
 					crect.height = mClip.mBottom - mClip.mTop;
 					rc.SetClipRect(crect, nsClipCombine_kIntersect, aResult);
+					if (!aResult)
+						observer->Paint((nsIView *)this, rc, rect);
+				} else {
+					observer->Paint((nsIView *)this, rc, rect);
 				}
-				observer->Paint((nsIView *)this, rc, rect);
 			}
 		}
 	} else {
@@ -960,6 +961,7 @@ NS_IMETHODIMP nsView :: GetBounds(nsRect &aBounds) const
 
 NS_IMETHODIMP nsView :: SetClip(nscoord aLeft, nscoord aTop, nscoord aRight, nscoord aBottom)
 {
+  NS_PRECONDITION(aLeft <= aRight && aTop <= aBottom, "bad clip values");
   mClip.mLeft = aLeft;
   mClip.mTop = aTop;
   mClip.mRight = aRight;
@@ -970,10 +972,9 @@ NS_IMETHODIMP nsView :: SetClip(nscoord aLeft, nscoord aTop, nscoord aRight, nsc
 NS_IMETHODIMP nsView :: GetClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom,
                                 PRBool &aResult) const
 {
-  if ((mClip.mLeft == mClip.mRight) || (mClip.mTop == mClip.mBottom))
+  if ((mClip.mLeft == 0) && (mClip.mRight == 0) && (mClip.mTop == 0) && (mClip.mBottom == 0))
     aResult = PR_FALSE;
-  else
-  {
+  else {
     *aLeft = mClip.mLeft;
     *aTop = mClip.mTop;
     *aRight = mClip.mRight;
