@@ -1051,6 +1051,8 @@ nsRenderingContextPS :: DrawString(const char *aString, PRUint32 aLength,
 PRInt32	      x = aX;
 PRInt32       y = aY;
 
+  mPSObj->setlanggroup(nsnull);
+
   SetupFontAndColor();
   PRInt32 dxMem[500];
   PRInt32* dx0 = 0;
@@ -1107,6 +1109,13 @@ nsRenderingContextPS :: DrawString(const PRUnichar *aString, PRUint32 aLength,
 PRInt32         x = aX;
 PRInt32         y = aY;
 nsIFontMetrics  *fMetrics;
+
+  nsCOMPtr<nsIAtom> langGroup = nsnull;
+  ((nsFontMetricsPS*)mFontMetrics)->GetLangGroup(getter_AddRefs(langGroup));
+  mPSObj->setlanggroup(langGroup.get());
+
+  /* build up conversion table */
+  mPSObj->preshow(aString, aLength);
 
   SetupFontAndColor();
 
@@ -1365,7 +1374,7 @@ const nsFont    *font;
 
   mPSObj->moveto(aX, aY);
   if (PR_TRUE == aIsUnicode) {  
-	   mPSObj->show(aString, aLength, "");
+    mPSObj->show(aString, aLength, "");
   }
 }
 

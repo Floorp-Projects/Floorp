@@ -367,11 +367,13 @@ NS_IMETHODIMP nsDeviceContextPS :: ConvertPixel(nscolor aColor, PRUint32 & aPixe
  *  See documentation in nsIDeviceContext.h
  *	@update 12/21/98 dwc
  */
-NS_IMETHODIMP nsDeviceContextPS::GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup, nsIFontMetrics  *&aMetrics)
-{
-	return GetMetricsFor(aFont, aMetrics);
-}
 NS_IMETHODIMP nsDeviceContextPS::GetMetricsFor(const nsFont& aFont, nsIFontMetrics  *&aMetrics)
+{
+    mWestern = getter_AddRefs(NS_NewAtom("x-western"));
+    return GetMetricsFor(aFont, mWestern, aMetrics);
+}
+
+NS_IMETHODIMP nsDeviceContextPS::GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup, nsIFontMetrics  *&aMetrics)
 {
 PRInt32         n,cnt;
 nsresult        rv;
@@ -379,12 +381,16 @@ nsresult        rv;
   // First check our cache
   n = mFontMetrics.Count();
 
-  for (cnt = 0; cnt < n; cnt++){
+  for (PRInt32 cnt = 0; cnt < n; cnt++)
+  {
     aMetrics = (nsIFontMetrics*) mFontMetrics.ElementAt(cnt);
 
-    const nsFont  *font;
+    const nsFont* font;
     aMetrics->GetFont(font);
-    if (aFont.Equals(*font)){
+    nsCOMPtr<nsIAtom> langGroup;
+    aMetrics->GetLangGroup(getter_AddRefs(langGroup));
+    if (aFont.Equals(*font) && (aLangGroup == langGroup.get()))
+    {
       NS_ADDREF(aMetrics);
       return NS_OK;
     }
@@ -397,8 +403,7 @@ nsresult        rv;
     return NS_ERROR_FAILURE;
   }
 
-  // XXX need to pass real lang group
-  rv = fm->Init(aFont, nsnull, this);
+  rv = fm->Init(aFont, aLangGroup, this);
 
   if (NS_OK != rv) {
     aMetrics = nsnull;

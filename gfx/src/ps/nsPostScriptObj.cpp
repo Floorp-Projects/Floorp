@@ -34,6 +34,14 @@
 #include "nsFont.h"
 #include "nsIImage.h"
 #include "nsAFMObject.h"
+
+#include "nsIServiceManager.h"
+#include "nsICharsetConverterManager.h"
+#include "nsIUnicodeEncoder.h"
+#include "nsIUnicodeDecoder.h"
+
+#include "nsICharsetAlias.h"
+
 #ifdef VMS
 #include <stdlib.h>
 #endif
@@ -52,10 +60,56 @@ extern "C" PS_FontInfo *PSFE_MaskToFI[N_FONTS];   // need fontmetrics.c
 #define NS_TWIPS_TO_POINTS(x) ((x / 20))
 #define NS_IS_BOLD(x) (((x) >= 401) ? 1 : 0) 
 
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_IID(kICharsetConverterManagerIID, NS_ICHARSETCONVERTERMANAGER_IID);
+
 /* 
  * Paper Names 
  */
 char* paper_string[]={ "Letter", "Legal", "Executive", "A4" };
+
+/* 
+ * global
+ */
+static nsIUnicodeEncoder *gEncoder = nsnull;
+static nsHashtable *gU2Ntable = nsnull;
+static nsIPref *gPrefs = nsnull;
+static nsHashtable *gLangGroups = nsnull;
+
+static PRBool
+FreeU2Ntable(nsHashKey * aKey, void *aData, void *aClosure)
+{
+  delete(int *) aData;
+  return PR_TRUE;
+}
+
+static PRBool
+ResetU2Ntable(nsHashKey * aKey, void *aData, void *aClosure)
+{
+  PS_LangGroupInfo *linfo = (PS_LangGroupInfo *)aData;
+  if (linfo && linfo->mU2Ntable) {
+    linfo->mU2Ntable->Reset(FreeU2Ntable, nsnull);
+  }
+  return PR_TRUE;
+}
+
+static PRBool
+FreeLangGroups(nsHashKey * aKey, void *aData, void *aClosure)
+{
+  PS_LangGroupInfo *linfo = (PS_LangGroupInfo *) aData;
+
+  NS_IF_RELEASE(linfo->mEncoder);
+
+  if (linfo->mU2Ntable) {
+    linfo->mU2Ntable->Reset(FreeU2Ntable, nsnull);
+    delete linfo->mU2Ntable;
+    linfo->mU2Ntable = nsnull;
+  }
+  delete linfo;
+  linfo = nsnull;
+  return PR_TRUE;
+}
 
 /** ---------------------------------------------------
  *  Default Constructor
@@ -65,6 +119,11 @@ nsPostScriptObj::nsPostScriptObj()
 {
 	mPrintContext = nsnull;
 	mPrintSetup = nsnull;
+
+        nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref),
+          (nsISupports**) &gPrefs);
+
+	gLangGroups = new nsHashtable();
 }
 
 /** ---------------------------------------------------
@@ -108,6 +167,14 @@ nsPostScriptObj::~nsPostScriptObj()
   if (nsnull != mPrintSetup) {
 	  delete mPrintSetup;
 	  mPrintSetup = nsnull;
+  }
+
+  NS_IF_RELEASE(gPrefs);
+
+  if (gLangGroups) {
+    gLangGroups->Reset(FreeLangGroups, nsnull);
+    delete gLangGroups;
+    gLangGroups = nsnull;
   }
 }
 
@@ -367,7 +434,7 @@ char* charset_name = NULL;
 	          "	/Encoding isolatin1encoding def\n"
 	          "    currentdict end\n"
 	          "definefont pop\n"
-	          "/f%d { /F%d findfont exch scalefont setfont } bind def\n",
+	          "/f%d { /csize exch def /F%d findfont csize scalefont setfont } bind def\n",
 		        i, PSFE_MaskToFI[i]->name, i, i);
   }
 
@@ -389,7 +456,7 @@ char* charset_name = NULL;
 	          "	/Encoding isolatin1encoding def\n"
 	          "    currentdict end\n"
 	          "definefont pop\n"
-	          "/f%d { /F%d findfont exch scalefont setfont } bind def\n",
+	          "/f%d { /csize exch def /F%d findfont csize scalefont setfont } bind def\n",
 		        i, gSubstituteFonts[i].mPSName, i, i);
 
   }
@@ -466,74 +533,183 @@ char* charset_name = NULL;
   XP_FilePrintf(f, "  countdictstack dict_count sub {end} repeat\n");
   XP_FilePrintf(f, "  b4_Inc_state restore\n");
   XP_FilePrintf(f, "} bind def\n");
-  XP_FilePrintf(f, "%%%%EndProlog\n");
+
+  XP_FilePrintf(f, "\n");
 
 
+  XP_FilePrintf(f, "10 dict dup begin\n");
+  XP_FilePrintf(f, "  /FontType 3 def\n");
+  XP_FilePrintf(f, "  /FontMatrix [.001 0 0 .001 0 0 ] def\n");
+  XP_FilePrintf(f, "  /FontBBox [0 0 100 100] def\n");
+  XP_FilePrintf(f, "  /Encoding 256 array def\n");
+  XP_FilePrintf(f, "  0 1 255 {Encoding exch /.notdef put} for\n");
+  XP_FilePrintf(f, "  Encoding 97 /openbox put\n");
+  XP_FilePrintf(f, "  /CharProcs 2 dict def\n");
+  XP_FilePrintf(f, "  CharProcs begin\n");
+  XP_FilePrintf(f, "    /.notdef { } def\n");
+  XP_FilePrintf(f, "    /openbox\n");
+  XP_FilePrintf(f, "      { newpath\n");
+  XP_FilePrintf(f, "          90 30 moveto  90 670 lineto\n");
+  XP_FilePrintf(f, "          730 670 lineto  730 30 lineto\n");
+  XP_FilePrintf(f, "        closepath\n");
+  XP_FilePrintf(f, "        60 setlinewidth\n");
+  XP_FilePrintf(f, "        stroke } def\n");
+  XP_FilePrintf(f, "  end\n");
+  XP_FilePrintf(f, "  /BuildChar\n");
+  XP_FilePrintf(f, "    { 1000 0 0\n");
+  XP_FilePrintf(f, "	0 750 750\n");
+  XP_FilePrintf(f, "        setcachedevice\n");
+  XP_FilePrintf(f, "	exch begin\n");
+  XP_FilePrintf(f, "        Encoding exch get\n");
+  XP_FilePrintf(f, "        CharProcs exch get\n");
+  XP_FilePrintf(f, "	end\n");
+  XP_FilePrintf(f, "	exec\n");
+  XP_FilePrintf(f, "    } def\n");
+  XP_FilePrintf(f, "end\n");
+  XP_FilePrintf(f, "/NoglyphFont exch definefont pop\n");
+  XP_FilePrintf(f, "\n");
+  XP_FilePrintf(f, "/mbshow {\n");
+  XP_FilePrintf(f, "  dup -8 bitshift 255 and\n");
+  XP_FilePrintf(f, "  exch 255 and\n");
+  XP_FilePrintf(f, "  2 string dup\n");
+  XP_FilePrintf(f, "  4 -1 roll\n");
+  XP_FilePrintf(f, "  0 exch put\n");
+  XP_FilePrintf(f, "  dup 3 -1 roll\n");
+  XP_FilePrintf(f, "  1 exch put\n");
+  XP_FilePrintf(f, "  show\n");
+  XP_FilePrintf(f, "} def\n");
+  XP_FilePrintf(f, "\n");
 
-  XP_FilePrintf(f, "%s%s%s%s%s%s%s%s%s%s%s%s%s\n", 
-  " /U27721 { ",
-  " {{-100 -100 2000 2000 480 878 507 878 517 688 561 530 638 405 548 269 433 173 292 117 290 114 290 113 292 113 439 157 562 243",
-  " 660 371 694 321 733 277 777 239 821 201 872 168 929 140 945 162 969 175 1000 180 1000 187 868 233 763 307 687 410 767 527 828 ",
-  " 674 871 850 881 866 892 876 906 882 888 901 871 918 855 932 851 926 846 921 841 915 836 909 830 903 824 897 433 897 449 874 480",
-  " 878 820 878 783 705 731 561 663 445 587 559 542 703 528 878 820 878 417 823 250 432 228 396 211 379 199 382 185 382 173 382 161",
-  " 383 149 383 138 384 128 386 113 383 113 378 128 370 156 364 177 355 191 343 203 338 210 326 214 307 212 290 211 274 209 259 207 ",
-  " 243 205 228 203 214 197 198 195 187 195 183 195 170 199 158 207 148 217 140 228 137 238 137 256 131 265 134 265 144 265 153 264 ",
-  " 162 264 171 263 180 262 189 261 199 255 249 257 300 265 354 429 823 417 823 105 745 149 705 182 653 203 589 218 575 231 579 242 ",
-  " 600 265 657 221 707 109 749 106 749 105 747 105 745 203 952 238 915 265 868 285 811 299 797 312 801 324 823 350 872 311 916 207 ",
-  " 956 204 956 203 954 203 952 }",
-  " <0b00010305050505050505030505050505050303030105050301030505050505050505050505050505050303010505050501050505050a>",
-  " }",
-  " ufill } bind def ");
-
-  XP_FilePrintf(f, "\n /NoglyphUnicodedict \n");
-  XP_FilePrintf(f, " << \n");
-  XP_FilePrintf(f, "  0 (U27721) \n");
-  XP_FilePrintf(f, " >> def \n");
-
-  //definition of 'show' command to handle unicode
-
-  //  XP_FilePrintf(f, "/cwidth 12 def\n");
-  //  XP_FilePrintf(f, "/cheight 12 def\n");
-
+  XP_FilePrintf(f, "/draw_undefined_char\n");
+  XP_FilePrintf(f, "{\n");
+  XP_FilePrintf(f, "  /NoglyphFont findfont csize scalefont setfont (a) show\n");
+  XP_FilePrintf(f, "} bind def\n");
+  XP_FilePrintf(f, "\n");
+  XP_FilePrintf(f, "/real_unicodeshow\n");
+  XP_FilePrintf(f, "{\n");
+  XP_FilePrintf(f, "  /ccode exch def\n");
+  XP_FilePrintf(f, "  /Unicodedict where {\n");
+  XP_FilePrintf(f, "    pop\n");
+  XP_FilePrintf(f, "    Unicodedict ccode known {\n");
+  XP_FilePrintf(f, "      /cwidth {currentfont /ScaleMatrix get 0 get} def \n");
+  XP_FilePrintf(f, "      /cheight cwidth def \n");
+  XP_FilePrintf(f, "      gsave\n");
+  XP_FilePrintf(f, "      currentpoint translate\n");
+  XP_FilePrintf(f, "      cwidth 1056 div cheight 1056 div scale\n");
+  XP_FilePrintf(f, "      2 -2 translate\n");
+  XP_FilePrintf(f, "      ccode Unicodedict exch get\n");
+  XP_FilePrintf(f, "      cvx exec\n");
+  XP_FilePrintf(f, "      grestore\n");
+  XP_FilePrintf(f, "      currentpoint exch cwidth add exch moveto\n");
+  XP_FilePrintf(f, "      true\n");
+  XP_FilePrintf(f, "    } {\n");
+  XP_FilePrintf(f, "      false\n");
+  XP_FilePrintf(f, "    } ifelse\n");
+  XP_FilePrintf(f, "  } {\n");
+  XP_FilePrintf(f, "    false\n");
+  XP_FilePrintf(f, "  } ifelse\n");
+  XP_FilePrintf(f, "} bind def\n");
+  XP_FilePrintf(f, "\n");
+  XP_FilePrintf(f, "/real_unicodeshow_native\n");
+  XP_FilePrintf(f, "{\n");
+  XP_FilePrintf(f, "  /ccode exch def\n");
+  XP_FilePrintf(f, "  /NativeFont where {\n");
+  XP_FilePrintf(f, "    pop\n");
+  XP_FilePrintf(f, "    NativeFont findfont /FontName get /Courier eq {\n");
+  XP_FilePrintf(f, "      false\n");
+  XP_FilePrintf(f, "    } {\n");
+  XP_FilePrintf(f, "      NativeFont findfont csize scalefont setfont\n");
+  XP_FilePrintf(f, "      /Unicode2NativeDict where {\n");
+  XP_FilePrintf(f, "        pop\n");
+  XP_FilePrintf(f, "        Unicode2NativeDict ccode known {\n");
+  XP_FilePrintf(f, "          Unicode2NativeDict ccode get mbshow\n");
+  XP_FilePrintf(f, "          true\n");
+  XP_FilePrintf(f, "        } {\n");
+  XP_FilePrintf(f, "          false\n");
+  XP_FilePrintf(f, "        } ifelse\n");
+  XP_FilePrintf(f, "      } {\n");
+  XP_FilePrintf(f, "	  false\n");
+  XP_FilePrintf(f, "      } ifelse\n");
+  XP_FilePrintf(f, "    } ifelse\n");
+  XP_FilePrintf(f, "  } {\n");
+  XP_FilePrintf(f, "    false\n");
+  XP_FilePrintf(f, "  } ifelse\n");
+  XP_FilePrintf(f, "} bind def\n");
+  XP_FilePrintf(f, "\n");
+  XP_FilePrintf(f, "/real_unicodeshow_cid\n");
+  XP_FilePrintf(f, "{\n");
+  XP_FilePrintf(f, "  /ccode exch def\n");
+  XP_FilePrintf(f, "  /UCS2Font where {\n");
+  XP_FilePrintf(f, "    pop\n");
+  XP_FilePrintf(f, "    UCS2Font findfont /FontName get /Courier eq {\n");
+  XP_FilePrintf(f, "      false\n");
+  XP_FilePrintf(f, "    } {\n");
+  XP_FilePrintf(f, "      UCS2Font findfont csize scalefont setfont\n");
+  XP_FilePrintf(f, "      ccode mbshow\n");
+  XP_FilePrintf(f, "      true\n");
+  XP_FilePrintf(f, "    } ifelse\n");
+  XP_FilePrintf(f, "  } {\n");
+  XP_FilePrintf(f, "    false\n");
+  XP_FilePrintf(f, "  } ifelse\n");
+  XP_FilePrintf(f, "} bind def\n");
+  XP_FilePrintf(f, "\n");
   XP_FilePrintf(f, "/unicodeshow \n");
   XP_FilePrintf(f, "{\n");
-  XP_FilePrintf(f, "/cwidth {currentfont /ScaleMatrix get 0 get} def \n");
-  XP_FilePrintf(f, "/cheight cwidth def \n");
-  XP_FilePrintf(f, "	/str exch def\n");
-  XP_FilePrintf(f, "	/i 0 def\n");
-  XP_FilePrintf(f, "	str length /ls exch def\n");
-  XP_FilePrintf(f, "    { i 1 add ls ge {exit} if\n");
-  XP_FilePrintf(f, "	str i get /c1 exch def\n");
-  XP_FilePrintf(f, "	str i 1 add get /c2 exch def\n");
-  XP_FilePrintf(f, "	c2 1 ge \n");
-  XP_FilePrintf(f, "    {	\n");
-  XP_FilePrintf(f, "        gsave\n");
-  XP_FilePrintf(f, "        currentpoint translate\n");
-  XP_FilePrintf(f, "		cwidth 1056 div cheight 1056 div scale\n");
-  XP_FilePrintf(f, "        2 -2 translate \n");
-
-  XP_FilePrintf(f, "     /Unicodedict where { \n");
-  XP_FilePrintf(f, "       pop \n");  
-  XP_FilePrintf(f, "        /c c2 256 mul c1 add def c Unicodedict\n");
-  XP_FilePrintf(f, "      }{ \n");
-  XP_FilePrintf(f, "      0 NoglyphUnicodedict \n");
-  XP_FilePrintf(f, "      } ifelse \n");
-
-  XP_FilePrintf(f, "		exch get cvx exec	\n");
-  XP_FilePrintf(f, "		grestore\n");
-  XP_FilePrintf(f, "		currentpoint exch cwidth add exch moveto\n");
-  XP_FilePrintf(f, "		/i i 2 add def \n");
-  XP_FilePrintf(f, "      \n");
-  XP_FilePrintf(f, "      }\n");
-  XP_FilePrintf(f, "	  {\n");
-  XP_FilePrintf(f, "		 str i 1 getinterval show /i i 2 add def\n"); 
-  XP_FilePrintf(f, "	  }\n");
-  XP_FilePrintf(f, "	ifelse\n");
-  XP_FilePrintf(f, "\n");
-  XP_FilePrintf(f, " }\n");
-  XP_FilePrintf(f, " loop\n");
+  XP_FilePrintf(f, "  /cfont currentfont def\n");
+  XP_FilePrintf(f, "  /str exch def\n");
+  XP_FilePrintf(f, "  /i 0 def\n");
+  XP_FilePrintf(f, "  str length /ls exch def\n");
+  XP_FilePrintf(f, "  {\n");
+  XP_FilePrintf(f, "    i 1 add ls ge {exit} if\n");
+  XP_FilePrintf(f, "    str i get /c1 exch def\n");
+  XP_FilePrintf(f, "    str i 1 add get /c2 exch def\n");
+  XP_FilePrintf(f, "    /c c2 256 mul c1 add def\n");
+  XP_FilePrintf(f, "    c2 1 ge \n");
+  XP_FilePrintf(f, "    {\n");
+  XP_FilePrintf(f, "      c unicodeshow1\n");
+  XP_FilePrintf(f, "      {\n");
+  XP_FilePrintf(f, "        %% do nothing\n");
+  XP_FilePrintf(f, "      } {\n");
+  XP_FilePrintf(f, "        c real_unicodeshow_cid	%% try CID \n");
+  XP_FilePrintf(f, "        {\n");
+  XP_FilePrintf(f, "          %% do nothing\n");
+  XP_FilePrintf(f, "        } {\n");
+  XP_FilePrintf(f, "          c unicodeshow2\n");
+  XP_FilePrintf(f, "          {\n");
+  XP_FilePrintf(f, "            %% do nothing\n");
+  XP_FilePrintf(f, "          } {\n");
+  XP_FilePrintf(f, "            draw_undefined_char\n");
+  XP_FilePrintf(f, "          } ifelse\n");
+  XP_FilePrintf(f, "        } ifelse\n");
+  XP_FilePrintf(f, "      } ifelse\n");
+  XP_FilePrintf(f, "    } {\n");
+  XP_FilePrintf(f, "      %% ascii\n");
+  XP_FilePrintf(f, "      cfont setfont\n");
+  XP_FilePrintf(f, "      str i 1 getinterval show\n");
+  XP_FilePrintf(f, "    } ifelse\n");
+  XP_FilePrintf(f, "    /i i 2 add def\n");
+  XP_FilePrintf(f, "  } loop\n");
   XP_FilePrintf(f, "}  bind def\n");
+  XP_FilePrintf(f, "\n");
 
+  XP_FilePrintf(f, "/u2nadd {Unicode2NativeDict 3 1 roll put} bind def\n");
+  XP_FilePrintf(f, "\n");
+
+  XP_FilePrintf(f, "/Unicode2NativeDictdef 0 dict def\n");
+  XP_FilePrintf(f, "/default_ls {\n");
+  XP_FilePrintf(f, "  /Unicode2NativeDict Unicode2NativeDictdef def\n");
+  XP_FilePrintf(f, "  /UCS2Font   /Courier def\n");
+  XP_FilePrintf(f, "  /NativeFont /Courier def\n");
+  XP_FilePrintf(f, "  /unicodeshow1 { real_unicodeshow } bind def\n");
+  XP_FilePrintf(f, "  /unicodeshow2 { real_unicodeshow_native } bind def\n");
+  XP_FilePrintf(f, "} bind def\n");
+
+  XP_FilePrintf(f, "\n");
+
+  // setup prolog for each langgroup
+  initlanggroup();
+
+  XP_FilePrintf(f, "%%%%EndProlog\n");
 }
 
 /** ---------------------------------------------------
@@ -563,6 +739,9 @@ XP_File f;
 			PAGE_TO_POINT_I(mPrintContext->prInfo->page_height),
 			PAGE_TO_POINT_I(mPrintContext->prInfo->page_width));
   XP_FilePrintf(f, " closepath clip newpath\n");
+
+  // need to reset all U2Ntable
+  gLangGroups->Enumerate(ResetU2Ntable, nsnull);
 }
 
 /** ---------------------------------------------------
@@ -636,6 +815,55 @@ XP_File f;
   XP_FilePrintf(f, ") %sshow\n", align);
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsPostScriptObj.h
+ *	@update 6/1/2000 katakai
+ */
+void 
+nsPostScriptObj::preshow(const PRUnichar* txt, int len)
+{
+  XP_File f = mPrintContext->prSetup->out;
+  unsigned char highbyte, lowbyte;
+  PRUnichar uch;
+
+  char outbuffer[6];
+  PRUnichar inbuffer[2];
+  nsresult res = NS_OK;
+
+  if (gEncoder && gU2Ntable) {
+    while (len-- > 0) {
+      uch = *txt;
+      highbyte = (uch >> 8 ) & 0xff;
+      if (highbyte > 0) {
+	inbuffer[0] = uch;
+	inbuffer[1] = 0;
+
+	PRInt32 *ncode = nsnull;
+	nsStringKey key(inbuffer);
+
+	ncode = (int *) gU2Ntable->Get(&key);
+
+	if (ncode && *ncode) {
+	} else {
+	  PRInt32 insize, outsize;
+	  outsize = 6;
+	  insize = 1;
+	  res = gEncoder->Convert(inbuffer, &insize, outbuffer, &outsize);
+	  if (NS_SUCCEEDED(res) && outsize > 1) {
+	    PRInt32 code = ((outbuffer[0] & 0xff) << 8) + (outbuffer[1] & 0xff);
+	    if (code > 1) {
+	      ncode = new PRInt32;
+	      *ncode = code;
+	      gU2Ntable->Put(&key, ncode);
+	      XP_FilePrintf(f, "%d %d u2nadd\n", uch, code);
+            }
+	  }
+	}
+      }
+      txt++;
+    }
+  }
+}
 
 /** ---------------------------------------------------
  *  See documentation in nsPostScriptObj.h
@@ -644,11 +872,10 @@ XP_File f;
 void 
 nsPostScriptObj::show(const PRUnichar* txt, int len, char *align)
 {
-XP_File f;
+ XP_File f = mPrintContext->prSetup->out;
  unsigned char highbyte, lowbyte;
  PRUnichar uch;
 
-  f = mPrintContext->prSetup->out;
   XP_FilePrintf(f, "(");
 
   while (len-- > 0) {
@@ -1210,4 +1437,179 @@ nsPostScriptObj::comment(char *aTheComment)
 
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsPostScriptObj.h
+ *	@update 5/30/00 katakai
+ */
+void
+nsPostScriptObj::setlanggroup(nsIAtom * aLangGroup)
+{
+  XP_File f = mPrintContext->prSetup->out;
 
+  gEncoder = nsnull;
+  gU2Ntable = nsnull;
+
+  if (aLangGroup == nsnull) {
+    XP_FilePrintf(f, "default_ls\n");
+    return;
+  }
+  nsAutoString langstr;
+  aLangGroup->ToString(langstr);
+  nsCAutoString langstrC;
+  langstrC.AssignWithConversion(langstr);
+
+  /* already exist */
+  nsStringKey key((const char *) langstrC);
+  PS_LangGroupInfo *linfo = (PS_LangGroupInfo *) gLangGroups->Get(&key);
+
+  if (linfo) {
+    XP_FilePrintf(f, "%s_ls\n", (const char *) langstrC);
+    gEncoder = linfo->mEncoder;
+    gU2Ntable = linfo->mU2Ntable;
+    return;
+  } else {
+    XP_FilePrintf(f, "default_ls\n");
+  }
+}
+
+/* make <langgroup>_ls define for each LangGroup here */
+static void PrefEnumCallback(const char *aName, void *aClosure)
+{
+  XP_File f = (XP_File) aClosure;
+
+  nsCAutoString lang(aName);
+
+  if (strstr(aName, "print.psnativefont.")) {
+    lang.Cut(0, 19);
+  } else if (strstr(aName, "print.psunicodefont.")) {
+    lang.Cut(0, 20);
+  }
+  nsStringKey key((const char *) lang);
+
+  PS_LangGroupInfo *linfo = (PS_LangGroupInfo *) gLangGroups->Get(&key);
+
+  if (linfo) {
+    /* already exist */
+    return;
+  }
+
+  /* define new language group */
+  char *psnativefont = nsnull;
+  char *psnativecode = nsnull;
+  char *psunicodefont = nsnull;
+  int psfontorder = 0;
+
+  /* check native fonts */
+  nsCAutoString namepsnativefont("print.psnativefont.");
+  namepsnativefont.Append(lang);
+  gPrefs->CopyCharPref(namepsnativefont.GetBuffer(), &psnativefont);
+
+  nsCAutoString namepsnativecode("print.psnativecode.");
+  namepsnativecode.Append(lang);
+  gPrefs->CopyCharPref(namepsnativecode.GetBuffer(), &psnativecode);
+
+  /* psnativefont and psnativecode both should be set */
+  if (!psnativefont || !psnativecode) {
+    if (psnativefont) {
+      nsMemory::Free(psnativefont);
+    }
+    psnativefont = nsnull;
+    if (psnativecode) {
+      nsMemory::Free(psnativecode);
+    }
+    psnativecode = nsnull;
+  } else {
+    nsCAutoString namepsfontorder("print.psfontorder.");
+    namepsfontorder.Append(lang);
+    gPrefs->GetIntPref(namepsfontorder.GetBuffer(), &psfontorder);
+  }
+
+  /* check UCS fonts */
+  nsCAutoString namepsunicodefont("print.psunicodefont.");
+  namepsunicodefont.Append(lang);
+  gPrefs->CopyCharPref(namepsunicodefont.GetBuffer(), &psunicodefont);
+
+  nsresult res = NS_OK;
+
+  if (psnativefont || psunicodefont) {
+    linfo = new PS_LangGroupInfo;
+    linfo->mEncoder = nsnull;
+    linfo->mU2Ntable = nsnull;
+
+    if (psnativecode) {
+      nsAutoString str;
+      nsICharsetConverterManager *ccMain = nsnull;
+      nsICharsetAlias *aliasmgr = nsnull;
+      res = nsServiceManager::GetService(kCharsetConverterManagerCID,
+	   kICharsetConverterManagerIID, (nsISupports **) & ccMain);
+      if (NS_SUCCEEDED(res) && ccMain) {
+        res = nsServiceManager::GetService(NS_CHARSETALIAS_PROGID,
+	  NS_GET_IID(nsICharsetAlias), (nsISupports **) & aliasmgr);
+	if (NS_SUCCEEDED(res) && aliasmgr) {
+	  res = aliasmgr->GetPreferred(NS_ConvertASCIItoUCS2(psnativecode), str);
+	  if (NS_SUCCEEDED(res)) {
+	    res = ccMain->GetUnicodeEncoder(&str, &linfo->mEncoder);
+	  }
+          nsServiceManager::ReleaseService(NS_CHARSETALIAS_PROGID, aliasmgr);
+	}
+        nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccMain);
+      }
+    }
+
+    gLangGroups->Put(&key, (void *) linfo);
+
+    if (psnativefont && linfo->mEncoder) {
+      XP_FilePrintf(f, "/Unicode2NativeDict%s 0 dict def\n", (const char *) lang);
+    }
+
+    XP_FilePrintf(f, "/%s_ls {\n", (const char *) lang);
+    XP_FilePrintf(f, "  /NativeFont /%s def\n",
+      (psnativefont && linfo->mEncoder) ? psnativefont : "Courier");
+    XP_FilePrintf(f, "  /UCS2Font /%s def\n",
+		  psunicodefont ? psunicodefont : "Courier");
+    if (psnativefont && linfo->mEncoder) {
+      XP_FilePrintf(f, "  /Unicode2NativeDict Unicode2NativeDict%s def\n",
+		    (const char *) lang);
+    }
+
+    if (psfontorder) {
+      XP_FilePrintf(f, "  /unicodeshow1 { real_unicodeshow_native } bind def\n");
+      XP_FilePrintf(f, "  /unicodeshow2 { real_unicodeshow } bind def\n");
+    } else {
+      XP_FilePrintf(f, "  /unicodeshow1 { real_unicodeshow } bind def\n");
+      XP_FilePrintf(f, "  /unicodeshow2 { real_unicodeshow_native } bind def\n");
+    }
+
+    XP_FilePrintf(f, "} bind def\n");
+
+    if (linfo->mEncoder) {
+      linfo->mEncoder->SetOutputErrorBehavior(
+		    linfo->mEncoder->kOnError_Replace, nsnull, '?');
+      linfo->mU2Ntable = new nsHashtable();
+    }
+  }
+  if (psnativefont) {
+    nsMemory::Free(psnativefont);
+  }
+  if (psunicodefont) {
+    nsMemory::Free(psunicodefont);
+  }
+  if (psnativecode) {
+    nsMemory::Free(psnativecode);
+  }
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsPostScriptObj.h
+ *	@update 5/30/00 katakai
+ */
+void
+nsPostScriptObj::initlanggroup()
+{
+  /* check langgroup of preference */
+  gPrefs->EnumerateChildren("print.psnativefont.",
+	    PrefEnumCallback, (void *) mPrintContext->prSetup->out);
+
+  gPrefs->EnumerateChildren("print.psunicodefont.",
+	    PrefEnumCallback, (void *) mPrintContext->prSetup->out);
+}

@@ -33,6 +33,10 @@
 #include "nsCoord.h"
 #include "nsString.h"
 
+#include "nsIPref.h"
+#include "nsHashtable.h"
+#include "nsIUnicodeEncoder.h"
+
 #include "nsIDeviceContextSpecPS.h"
 
 class nsIImage;
@@ -72,6 +76,11 @@ typedef struct page_breaks {
     int32 y_top;
     int32 y_break;
 } PageBreaks;
+
+typedef struct PS_LangGroupInfo_ {
+  nsIUnicodeEncoder *mEncoder;
+  nsHashtable       *mU2Ntable;
+} PS_LangGroupInfo;
 
 typedef struct LineRecord_struct LineRecord;
 
@@ -374,8 +383,16 @@ public:
    *	@update 2/1/99 dwc
    */
   void comment(char *aTheComment);
-
-
+  /** ---------------------------------------------------
+   *  setup language group
+   *	@update 5/30/00 katakai
+   */
+  void setlanggroup(nsIAtom* aLangGroup);
+  /** ---------------------------------------------------
+   *  prepare conversion table for native ps fonts
+   *	@update 6/1/2000 katakai
+   */
+  void preshow(const PRUnichar* aText, int aLen);
 private:
   PSContext             *mPrintContext;
   PrintSetup            *mPrintSetup;
@@ -388,6 +405,11 @@ private:
    *	@update 2/1/99 dwc
    */
   void initialize_translation(PrintSetup* aPi);
+  /** ---------------------------------------------------
+   *  initialize language group
+   *	@update 5/30/00 katakai
+   */
+  void initlanggroup();
 
 };
 
