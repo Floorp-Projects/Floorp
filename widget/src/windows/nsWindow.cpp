@@ -365,7 +365,6 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 // Initialize an event to dispatch
 //
 //-------------------------------------------------------------------------
-
 void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint)
 {
     event.widget = this;
@@ -398,6 +397,8 @@ void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint
 
     mLastPoint.x = event.point.x;
     mLastPoint.y = event.point.y;
+
+    event.nativeMsg = (void *)&mPluginEvent;
 }
 
 //-------------------------------------------------------------------------
@@ -2143,6 +2144,11 @@ BOOL nsWindow::OnChar( UINT aVirtualKeyCode )
 //-------------------------------------------------------------------------
 PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue)
 {
+    //~~~ Cache this for event.nativeMsg initialization
+    mPluginEvent.event = msg;
+    mPluginEvent.wParam = wParam;
+    mPluginEvent.lParam = lParam;
+
     static UINT vkKeyCached = 0;                // caches VK code fon WM_KEYDOWN
     static BOOL firstTime = TRUE;                // for mouse wheel logic
     static int  iDeltaPerLine, iAccumDelta ;     // for mouse wheel logic

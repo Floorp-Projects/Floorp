@@ -533,10 +533,20 @@ NS_IMETHODIMP ns4xPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* hand
 #if !TARGET_CARBON
 // pinkerton
 // relies on routine descriptors, not present in carbon. We need to fix this.
-#if defined(XP_MAC) || defined(XP_WIN) //~~~
+#ifdef XP_MAC
         res = CallNPP_HandleEventProc(fCallbacks->event,
                                         &fNPP,
                                         (void*) event->event);
+#endif
+
+#ifdef XP_WIN //~~~
+        NPEvent npEvent;
+        npEvent.event = event->event;
+        npEvent.wParam = event->wParam;
+        npEvent.lParam = event->lParam;
+        res = CallNPP_HandleEventProc(fCallbacks->event,
+                                        &fNPP,
+                                        (void*)&npEvent);
 #endif
 
 #endif
