@@ -2577,14 +2577,6 @@ nsHTMLDocument::GetLayers(nsIDOMHTMLCollection** aLayers)
 #endif
 
 NS_IMETHODIMP    
-nsHTMLDocument::GetPlugins(nsIDOMHTMLCollection** aPlugins)
-{
-  //XXX TBImplemented
-  *aPlugins = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
 nsHTMLDocument::GetSelection(nsString& aReturn)
 {
   aReturn.Truncate();
