@@ -2533,10 +2533,10 @@ if test ! "$MOZ_DEBUG"
 then
     case "$host" in
         *-linux*)
-            MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(topsrcdir)/build/unix/gnu-ld-scripts/components-version-script'
+            MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
         ;;
         *-nto*) 
-            MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(topsrcdir)/build/unix/gnu-ld-scripts/components-version-script'
+            MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
         ;;
     esac
 fi
