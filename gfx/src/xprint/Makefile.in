@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= layout
 LIBRARY_NAME	= gfxxprt
 IS_COMPONENT	= 1
+EXTRA_DSO_LIBS	= gkgfx
 REQUIRES	= xpcom string widget view img util dom pref locale uconv unicharutil
 
 CSRCS		= ../xlibrgb/xlibrgb.c \
@@ -64,7 +65,12 @@ endif
 CFLAGS		+= $(TK_CFLAGS)
 CXXFLAGS	+= $(TK_CFLAGS)
 
-LLIBS		+= $(DIST)/lib/libxpcom.a $(DIST)/lib/libgkgfx.a
+EXTRA_DSO_LDOPTS += \
+		-L$(DIST)/bin \
+		-L$(DIST)/lib \
+		$(EXTRA_DSO_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
+		$(NULL)
 
 INCLUDES	+= \
 		-I$(srcdir)/../gtk \
