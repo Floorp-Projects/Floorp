@@ -229,8 +229,9 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
   while (posInString < length)
   {
 #ifdef DEBUG_wrapping
-    nsAutoString debug (Substring(tString, posInString, length-posInString));
-    printf("Outer loop: '%s'\n", NS_LossyConvertUCS2toASCII(debug).get());
+    printf("Outer loop: '%s'\n",
+           NS_LossyConvertUCS2toASCII(Substring(tString, posInString,
+                                                length-posInString)).get());
 #endif
 
     // Get the new cite level here since we're at the beginning of a line
@@ -261,6 +262,12 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
       outStringCol = 0;
       continue;
     }
+
+#ifdef DEBUG_wrapping
+    printf("Outer loop after skipping over cite: '%s'\n",
+           NS_LossyConvertUCS2toASCII(Substring(tString, posInString,
+                                                length-posInString)).get());
+#endif
 
     // If the cite level has changed, then start a new line with the
     // new cite level (but if we're at the beginning of the string,
@@ -308,9 +315,9 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
     if (citeLevel == 0)
     {
 #ifdef DEBUG_wrapping
-      nsAutoString debug (Substring(tString, posInString,
-                                    nextNewline-posInString));
-      printf("Unquoted: appending '%s'\n", NS_LossyConvertUCS2toASCII(debug).get());
+      printf("Unquoted: appending '%s'\n",
+             NS_LossyConvertUCS2toASCII(Substring(tString, posInString,
+                                             nextNewline-posInString)).get());
 #endif
       aOutString.Append(Substring(tString, posInString,
                                   nextNewline-posInString));
@@ -332,9 +339,14 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
     while ((PRInt32)posInString < nextNewline)
     {
 #ifdef DEBUG_wrapping
-      nsAutoString debug (Substring(tString, posInString, nextNewline-posInString));
-      printf("Inner loop: '%s'\n", NS_LossyConvertUCS2toASCII(debug).get());
+      printf("Inner loop: '%s'\n",
+             NS_LossyConvertUCS2toASCII(Substring(tString, posInString,
+                                              nextNewline-posInString)).get());
 #endif
+      // Skip over initial spaces:
+      while (posInString < nextNewline
+             && nsCRT::IsAsciiSpace(tString[posInString]))
+        ++posInString;
 
       // If this is a short line, just append it and continue:
       if (outStringCol + nextNewline - posInString <= aWrapCol-citeLevel-1)
@@ -343,13 +355,21 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
         // then we need to include the final newline, if any:
         if (nextNewline+1 == (PRInt32)length && tString[nextNewline-1] == nl)
           ++nextNewline;
+
+        // Trim trailing spaces:
+        PRInt32 lastRealChar = nextNewline;
+        while (lastRealChar > posInString
+               && nsCRT::IsAsciiSpace(tString[lastRealChar-1]))
+          --lastRealChar;
 #ifdef DEBUG_wrapping
-        nsAutoString debug (Substring(tString, posInString, nextNewline - posInString));
-        printf("Short line: '%s'\n", NS_LossyConvertUCS2toASCII(debug).get());
+        printf("Short line: '%s'\n",
+               NS_LossyConvertUCS2toASCII(Substring(tString, posInString,
+                                          lastRealChar - posInString)).get());
 #endif
+
         aOutString += Substring(tString,
-                                posInString, nextNewline - posInString);
-        outStringCol += nextNewline - posInString;
+                                posInString, lastRealChar - posInString);
+        outStringCol += lastRealChar - posInString;
         posInString = nextNewline + 1;
         continue;
       }
@@ -384,6 +404,21 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
 #endif
         breakPt = eol;
       }
+
+      // Special case: maybe we should have wrapped last time.
+      // If the first breakpoint here makes the current line too long,
+      // then break the current line and loop around again.
+      if (outStringCol + breakPt > aWrapCol)
+      {
+#ifdef DEBUG_wrapping
+        printf("line would be too long, breaking early\n");
+#endif
+        aOutString.Append(nl);
+        AddCite(aOutString, citeLevel);
+        outStringCol = citeLevel + (citeLevel ? 1 : 0);
+        continue;
+      }
+
 #ifdef DEBUG_wrapping
       printf("breakPt = %d\n", breakPt);
 #endif
@@ -406,6 +441,10 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
 #endif
   } // end outer loop over lines of aInString
 
+#ifdef DEBUG_wrapping
+  printf("About to return: \n%s\n",
+         NS_LossyConvertUCS2toASCII(aOutString).get());
+#endif
   return NS_OK;
 }
 
