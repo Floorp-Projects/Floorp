@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: source,v 1.10 1998/06/23 01:01:11 jwz Exp $
+# $Id: source,v 1.11 1998/07/28 19:17:03 jwz%netscape.com Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -23,81 +23,11 @@
 
 ######################################################################
 
+use Local;
 use lib 'lib/';
 use SimpleParse;
 use LXR::Common;
 use LXR::Config;
-
-
-# dme: Search the beginning of a source file for a short description
-# to be displayed in directory listings. Not all files have
-# them and the ones that do use different formats so there are
-# lots of ways to end up with junk. The basic format is: a file
-# name possibly followed by a colon or dash(es) with whitespace
-# strewn in followed by the description and maybe some stray comment
-# characters. Don't be confused by #includes or rcs comments 
-# at the beginning of the file.
-# -dme
-sub fdescexpand {
-    my $linecount=0;
-    local $desc= "";
-
-    #ignore files that aren't source code
-    if (!(
-	    ($filename =~ /\.c$/) |
-	    ($filename =~ /\.h$/) | 
-	    ($filename =~ /\.cc$/) |
-	    ($filename =~ /\.cp$/) | 
-	    ($filename =~ /\.cpp$/) | 
-	    ($filename =~ /\.java$/)
-	    )){
-	return("");
-	}
-
-    if (open(FILE, $Path->{'real'}."/".$filename)) {
-	while(<FILE>){
-	    if($linecount++ > 40) {
-		last;
-	    }elsif (/Id: $filename/){
-		#ignore cvs headers
-	    }elsif (/^#/){
-		#ignore cpp directives
-	    }elsif (/$filename\s*- ?-*\s*/i){
-	        $desc = (split(/ $filename\s*- ?-*\s*/i))[1];
-		if ($desc) {last};
-	    }elsif (/$filename\s*:\s*/i){
-	        $desc = (split(/ $filename\s*:\s*/i))[1];
-		if ($desc) {last};
-	    }elsif (/$filename\s\s*/i){
-	        $desc = (split(/ $filename\s\s*/i))[1];
-		if ($desc) {last};
-	    }
-	}
-	close(FILE);
-    }
-    if (!($desc)){
-	return("");
-	}
-
-    #strip trailing asterisks and "*/"
-    $desc =~ s#\*/?\s*$##;
-
-    #htmlify the comments making links to symbols and files
-    $desc = markupstring($desc, $Path->{'virt'});
-
-    return($desc);
-}
-
-sub descexpand {
-
-    $desc= "";
-    if (open(DESC, $Path->{'real'}."/doc/".$filename.".short")) {
-	$desc=<DESC>;   
-	close(DESC);
-    }
-    return($desc);
-}
-
 
 sub diricon {
     my $img, $link;
@@ -206,28 +136,30 @@ sub direxpand {
     local $filename;
     local $filestat;
     local $color="#FFFFFF";
+    my $virtpath = $Path->{'virt'};
+    my $realpath = $Path->{'real'};
 
     foreach $filename (@dirs) {
 	$line++;
 	$direx .= &expandtemplate($templ,
-				  ('iconlink',		\&diricon),
-				  ('namelink',		\&dirname),
-				  ('filesize',		sub {return('-')}),
-				  ('modtime',		\&modtime),
-				  ('bgcolor',		\&bgcolor),
-				  ('description',	\&descexpand));
+	    ('iconlink',		\&diricon),
+	    ('namelink',		\&dirname),
+	    ('filesize',		sub {return('-')}),
+	    ('modtime',		\&modtime),
+	    ('bgcolor',		\&bgcolor),
+	    ('description',	\&descexpand));
     }
 	
     foreach $filename (@files) {
 	$line++;
 	next if $filename =~ /^.*\.[oa]$|^core$|^00-INDEX$/;
 	$direx .= &expandtemplate($templ,
-				  ('iconlink',		\&fileicon),
-				  ('namelink',		\&filename),
-				  ('filesize',		\&filesize),
-				  ('modtime',		\&modtime),
-				  ('bgcolor',		\&bgcolor),
-				  ('description',	\&fdescexpand));
+	    ('iconlink',	\&fileicon),
+	    ('namelink',	\&filename),
+	    ('filesize',	\&filesize),
+	    ('modtime',		\&modtime),
+	    ('bgcolor',		\&bgcolor),
+	    ('description',	\&fdescexpand));
     }
 
     return($direx);
@@ -274,7 +206,7 @@ sub printdir {
 	}
 	return;
     }
-    
+ 
     if (-f $Path->{'real'}."00-INDEX") {
 	open(INDEX,$Path->{'real'}."00-INDEX") ||
 	    &warning("Existing \"00-INDEX\" could not be opened.");
@@ -290,50 +222,39 @@ sub printdir {
 	unshift(@dirs, '..');
     }
 
-    if (open(DESC, $Path->{'real'}."/doc/index.html")) {
-	print(<DESC>);
-	print("\n<p>\n");
-	close(DESC);
-    }
+    # print the description of the current directory
+    dirdesc($Path->{'virt'});
 
+    #print the listing itself
     print(&expandtemplate($template,
 			  ('files',	\&direxpand)));
 }
 
-
 sub printfile {
+    my $string;
 
     unless ($Path->{'file'}) {
 	&printdir;
-
-	if ( (-f $Path->{'real'}.README) &&
-	     (open(SRCFILE, $Path->{'real'}.README)) ) {
-	    print("<hr><pre>");
-	    &markupfile(\*SRCFILE, $Path->{'virt'}, 'README', 
-			sub { print shift });
-	    print("</pre>");
-	    close(SRCFILE);
-	}
-
     } else {
 	if (open(SRCFILE, $Path->{'realf'})) {
 	    if (($Path->{'file'} =~ /\.(html)$/)) {
 		print <SRCFILE>;
-		}
-	    else {
-    		if(open(DESC, $Path->{'real'}."doc/".$Path->{'file'}.".long")){
-		    print(<DESC>);   
-		    close(DESC);
-    		    }
+	    } elsif ($Path->{'file'} =~ /README$/) {
+		print("<PRE>");
+		while(<SRCFILE>) {
+            	    $string = $string . $_;
+        	}
+                print(markupstring($string, $Path->{'virt'}));
+		print("</PRE>");
+	    } else {
 		print("<pre>");
 		&markupfile(\*SRCFILE, $Path->{'virt'}, $Path->{'file'},
-                            sub { print shift });
+                             sub { print shift });
 		print("</pre>");
-		}
+	    }
 	    close(SRCFILE);
 	} else {
 	    print("<p align=center>\n<i>This file does not exist.</i>\n");
-	    
 	    if (-f $Path->{'real'}.$Path->{'file'}) {
 		&warning("Unable to open ".$Path->{'realf'});
 	    }
