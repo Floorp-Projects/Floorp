@@ -46,14 +46,13 @@ protected:
   virtual ~nsLeafFrame();
 
   /**
-   * Return the desired size of the frame. Note that this method
-   * doesn't need to deal with padding or borders (the caller will
+   * Return the desired size of the frame's content area. Note that this
+   * method doesn't need to deal with padding or borders (the caller will
    * deal with it). In addition, the ascent will be set to the height
    * and the descent will be set to zero.
    */
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
-                              const nsSize& aMaxSize,
                               nsReflowMetrics& aDesiredSize) = 0;
 
   /**

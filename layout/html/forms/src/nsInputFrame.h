@@ -190,12 +190,10 @@ protected:
     */
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
-                              const nsSize& aMaxSize,
                               nsReflowMetrics& aDesiredSize);
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
-                              const nsSize& aMaxSize,
                               nsReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
 

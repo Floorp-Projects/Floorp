@@ -128,7 +128,6 @@ protected:
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
-                              const nsSize& aMaxSize,
                               nsReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
 
@@ -419,8 +418,7 @@ nsInputButtonFrame::Reflow(nsIPresContext*      aPresContext,
   if ((kButtonTag_Input == GetButtonTagType()) &&
       (kButton_Image == GetButtonType())) {
     nsSize ignore;
-    GetDesiredSize(aPresContext, aReflowState, aReflowState.maxSize,
-                   aDesiredSize, ignore);
+    GetDesiredSize(aPresContext, aReflowState, aDesiredSize, ignore);
     AddBordersAndPadding(aPresContext, aDesiredSize);
     if (nsnull != aDesiredSize.maxElementSize) {
       aDesiredSize.maxElementSize->width = aDesiredSize.width;
@@ -438,7 +436,6 @@ nsInputButtonFrame::Reflow(nsIPresContext*      aPresContext,
 void 
 nsInputButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                    const nsReflowState& aReflowState,
-                                   const nsSize& aMaxSize,
                                    nsReflowMetrics& aDesiredLayoutSize,
                                    nsSize& aDesiredWidgetSize)
 {
@@ -456,8 +453,7 @@ nsInputButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
       if (eContentAttr_HasValue == mContent->GetAttribute("SRC", src)) {
         mImageLoader.SetURL(src);
       }
-      mImageLoader.GetDesiredSize(aPresContext, aReflowState, aMaxSize,
-                                  aDesiredLayoutSize);
+      mImageLoader.GetDesiredSize(aPresContext, aReflowState, aDesiredLayoutSize);
     }
     else {  // there is a widget
       nsSize styleSize;

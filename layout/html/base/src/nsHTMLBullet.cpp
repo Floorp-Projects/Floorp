@@ -68,7 +68,6 @@ public:
 protected:
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
-                              const nsSize& aMaxSize,
                               nsReflowMetrics& aDesiredSize);
 
   /**
@@ -260,7 +259,7 @@ BulletFrame::Reflow(nsIPresContext*      aCX,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus)
 {
-  GetDesiredSize(aCX, aReflowState, aReflowState.maxSize, aDesiredSize);
+  GetDesiredSize(aCX, aReflowState, aDesiredSize);
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width = aDesiredSize.width;
     aDesiredSize.maxElementSize->height = aDesiredSize.height;
@@ -494,7 +493,6 @@ BulletFrame::GetListItemText(nsIPresContext* aCX,
 void
 BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
                             const nsReflowState& aReflowState,
-                            const nsSize&    aMaxSize,
                             nsReflowMetrics& aDesiredSize)
 {
   nsStyleList* myList =
@@ -505,7 +503,7 @@ BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
   nsIFontMetrics* fm = aCX->GetMetricsFor(myFont->mFont);
   if (myList->mListStyleImage.Length() > 0) {
     mImageLoader.SetURL(myList->mListStyleImage);
-    mImageLoader.GetDesiredSize(aCX, aReflowState, aMaxSize, aDesiredSize);
+    mImageLoader.GetDesiredSize(aCX, aReflowState, aDesiredSize);
     aDesiredSize.ascent = aDesiredSize.height;
     aDesiredSize.descent = 0;
   }
