@@ -452,8 +452,14 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
          // Set image foreground and background colors. These are used in transparent images for blitting 1-bit masks.
          // To invert colors on ROP_SRCAND we map 1 to black and 0 to white
          IMAGEBUNDLE ib;
-         ib.lColor     = GFX (::GpiQueryColorIndex (MemPS, 0, MK_RGB (0, 0, 0)), GPI_ALTERROR);        // map 1 in mask to 0x000000 (black) in destination
-         ib.lBackColor = GFX (::GpiQueryColorIndex (MemPS, 0, MK_RGB (255, 255, 255)), GPI_ALTERROR);  // map 0 in mask to 0xFFFFFF (white) in destination
+         ib.lColor     = GFX (::GpiQueryColorIndex (MemPS, 0, MK_RGB (0x00, 0x00, 0x00)), GPI_ALTERROR); // CLR_BLACK
+         if (ib.lColor == -1) {
+            ib.lColor = MK_RGB (0x00, 0x00, 0x00);
+         }
+         ib.lBackColor = GFX (::GpiQueryColorIndex (MemPS, 0, MK_RGB (0xFF, 0xFF, 0xFF)), GPI_ALTERROR); // CLR_WHITE
+         if (ib.lBackColor == -1) {
+            ib.lBackColor = MK_RGB (0xFF, 0xFF, 0xFF);
+         }
          ib.usMixMode  = FM_OVERPAINT;
          ib.usBackMixMode = BM_OVERPAINT;
          GFX (::GpiSetAttrs (MemPS, PRIM_IMAGE, IBB_COLOR | IBB_BACK_COLOR | IBB_MIX_MODE | IBB_BACK_MIX_MODE, 0, (PBUNDLE)&ib), FALSE);
