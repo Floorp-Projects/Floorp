@@ -542,6 +542,12 @@ PRBool nsHTMLParser::HandleStartToken(CToken* aToken) {
         result=mSink->SetTitle(attrNode.GetSkippedContent());
       }
       break;
+    case eHTMLTag_textarea:
+      {
+        CollectSkippedContent(attrNode);
+        result=AddLeaf(attrNode);
+      }
+      break;
     case eHTMLTag_form:
       result = mSink->OpenForm(attrNode);
       break;
@@ -632,6 +638,7 @@ PRBool nsHTMLParser::HandleEndToken(CToken* aToken) {
     case eHTMLTag_style:
     case eHTMLTag_link:
     case eHTMLTag_meta:
+    case eHTMLTag_textarea:
       result=PR_TRUE;
       break;
 
@@ -1068,6 +1075,8 @@ PRBool nsHTMLParser::CloseContainer(const nsIParserNode& aNode){
       result=CloseHTML(aNode); break;
 
     case eHTMLTag_style:
+      break;
+    case eHTMLTag_textarea:
       break;
     case eHTMLTag_head:
       result=CloseHead(aNode); break;
