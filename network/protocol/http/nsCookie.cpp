@@ -25,6 +25,8 @@
  * and HTTP cookies
  */
 
+// #define newI18N 1
+
 #define alphabetize 1
 #include "nsString.h"
 #include "nsINetService.h"
@@ -1421,10 +1423,13 @@ net_IntSetCookieString(MWContext * context,
 		char * new_string=0;
 		int count;
 
-/* ???		char * remember_string = cookie_Localize("RememberThisDecision"); */
+#ifdef newI18N
+		char * remember_string = cookie_Localize("RememberThisDecision");
+#else
                 char * remember_string = 0;
                 StrAllocCopy
                     (remember_string, XP_GetString(MK_ACCESS_COOKIES_REMEMBER));
+#endif
 
 		/* find out how many cookies this host has already set */
 		count = net_CookieCount(host_from_header);
@@ -1434,29 +1439,42 @@ net_IntSetCookieString(MWContext * context,
 		net_unlock_cookie_list();
                 char * message;
 		if (prev_cookie) {
-/* ???              message = cookie_Localize("PermissionToModifyCookie"); */
+#ifdef newI18N
+                    message = cookie_Localize("PermissionToModifyCookie");
+#else
                     message = XP_GetString(MK_ACCESS_COOKIES_WISHES_MODIFY);
+#endif
 		    new_string = PR_smprintf(message,
 			host_from_header ? host_from_header : "");
 		} else if (count>1) {
-/* ???              message = cookie_Localize("PermissionToSetAnotherCookie"); */
+#ifdef newI18N
+                    message = cookie_Localize("PermissionToSetAnotherCookie");
+#else
                     message = XP_GetString(MK_ACCESS_COOKIES_WISHESN);
+#endif
 		    new_string = PR_smprintf(message,
 			host_from_header ? host_from_header : "",
 			count);
 		} else if (count==1){
-/* ???              message = cookie_Localize("PermissionToSetSecondCookie"); */
+#ifdef newI18N
+                    message = cookie_Localize("PermissionToSetSecondCookie");
+#else
                     message = XP_GetString(MK_ACCESS_COOKIES_WISHES1);
+#endif
 		    new_string = PR_smprintf(message,
 			host_from_header ? host_from_header : "");
 		} else {
-/* ???              message = cookie_Localize("PermissionToSetACookie"); */
+#ifdef newI18N
+                    message = cookie_Localize("PermissionToSetACookie");
+#else
                     message = XP_GetString(MK_ACCESS_COOKIES_WISHES0);
+#endif
 		    new_string = PR_smprintf(message,
 			host_from_header ? host_from_header : "");
 		}
-/* ???          PR_FREEIF(message); */
-
+#ifdef newI18N
+                PR_FREEIF(message);
+#endif
 
 		/* 
 		 * Who knows what thread we are on.  Only the mozilla thread
