@@ -28,6 +28,15 @@ function symlink(lnk, tgt)
     var err = execute("symlink.sh", tgt + " " + lnk);
     logComment("execute symlink.sh "+tgt+" "+lnk+" returned: "+err);
 }
+
+// this function makes the argument executable
+function chmodx(tgt)
+{
+    var err = execute("chmodx.sh", tgt);
+    logComment("execute chmodx.sh "+tgt+" returned: "+err);
+}
+
+
  
  // main
  var srDest;
@@ -36,7 +45,7 @@ function symlink(lnk, tgt)
  
  srDest = 1000;
 logComment("Starting Install Process");
- err    = initInstall("Webclient", "Webclient", "1.0"); 
+ err    = initInstall("Webclient", "Webclient", "1.2"); 
  logComment("initInstall: " + err);
  
  fProgram = getFolder("Program");
@@ -46,7 +55,7 @@ logComment("Starting Install Process");
  {
    setPackageFolder(fProgram);
    err = addDirectory("",
-     "1.0",
+     "1.2",
      "javadev", // dir name in jar to extract 
      fProgram, // Where to put this file 
                // (Returned from GetFolder) 
@@ -58,20 +67,7 @@ logComment("Starting Install Process");
    var fJavadev        = getFolder("Program","javadev");
    symlink(fComponents + "libjavadom.so", 
            getFolder(fJavadev, "lib/libjavadom.so"));
-   symlink(fComponents + "libbcorb.so", 
-           getFolder(fJavadev, "lib/libbcorb.so"));
-   symlink(fComponents + "libbcjavastubs.so", 
-           getFolder(fJavadev, "lib/libbcjavastubs.so"));
-   symlink(fComponents + "libjavaloader.so", 
-           getFolder(fJavadev, "lib/libjavaloader.so"));
-   symlink(fComponents + "libjavaSample.so", 
-           getFolder(fJavadev, "lib/libjavaSample.so"));
-   symlink(fComponents + "libbcTest.so", 
-           getFolder(fJavadev, "lib/libbcTest.so"));
-   symlink(fComponents + "libbcxpcomstubs.so", 
-           getFolder(fJavadev, "lib/libbcxpcomstubs.so"));
-   symlink(fProgram + "regxpcom", 
-           getFolder(fJavadev, "lib/regxpcom"));
+   chmodx(getFolder(fJavadev, "example/runem.bat"));
 
    // check return value
    if(err == SUCCESS)

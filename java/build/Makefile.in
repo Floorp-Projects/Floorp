@@ -29,7 +29,7 @@ PACKAGE_LIB=$(PACKAGE_DIR)/lib
 PACKAGE_EXAMPLE=$(PACKAGE_DIR)/example
 
 ifeq ($(PACKAGE_VER),)
-PACKAGE_VER=1.2
+PACKAGE_VER=1_2
 endif
 
 
@@ -135,9 +135,11 @@ ifneq ($(BUILD_WEBCLIENT_ONLY),)
 	cp $(DIST)/../java/build/install_webclient_unix.js $(DIST)/install.js
 	cp $(DIST)/../java/build/symlink.sh $(DIST)/symlink.sh
 	chmod 775 $(DIST)/symlink.sh
+	cp $(DIST)/../java/build/chmodx.sh $(DIST)/chmodx.sh
+	chmod 775 $(DIST)/chmodx.sh
 	cp $(DIST)/../java/build/README.WEBCLIENT $(PACKAGE_DIR)/README.WEBCLIENT
 	cd $(DIST) ; \
-	$(JDKHOME)/bin/jar -cvfM0 webclient_$(PACKAGE_VER)_$(PACKAGE_OS).xpi install.js symlink.sh javadev
+	$(JDKHOME)/bin/jar -cvfM0 webclient_$(PACKAGE_VER)_$(PACKAGE_OS).xpi install.js symlink.sh chmodx.sh javadev
 else
 ifneq ($(BUILD_BLACKCONNECT_ONLY),)
 	if test ! -d $(PACKAGE_DIR) ; then mkdir $(PACKAGE_DIR) ; else true ; fi ;
