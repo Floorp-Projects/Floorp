@@ -21,7 +21,7 @@
 
 // Generate this!
 // {2C453161-0942-11d3-BF87-00105A1B0627}
-#define NS_IXULPOPUPLISTENER_IID \
+#define NS_IXULKEYLISTENER_IID \
 { 0x2c453161, 0x942, 0x11d3, { 0xbf, 0x87, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
 
 class nsIDOMElement;
@@ -30,7 +30,9 @@ class nsIXULKeyListener: public nsISupports {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IXULKEYLISTENER_IID; return iid; }
 
-    NS_IMETHOD Init(nsIDOMElement* anElement) = 0;
+    NS_IMETHOD Init(
+      nsIDOMElement  * anElement,
+      nsIDOMDocument * aDocument) = 0;
 };
 
 extern nsresult
