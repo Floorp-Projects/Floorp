@@ -675,6 +675,7 @@ JSBool
 LM_SetNodeFlags(DOM_Node *node, uint32 flags)
 {
     DOM_HTMLElementPrivate *priv;
+    XP_ASSERT(PR_CurrentThread() == mozilla_thread);
     if (!(node->type == NODE_TYPE_ELEMENT ||
           node->type == NODE_TYPE_TEXT))
         return JS_FALSE;
@@ -689,6 +690,7 @@ JSBool
 LM_ClearNodeFlags(DOM_Node *node, uint32 flags)
 {
     DOM_HTMLElementPrivate *priv = ELEMENT_PRIV(node);
+    XP_ASSERT(PR_CurrentThread() == mozilla_thread);
     if (!(node->type == NODE_TYPE_ELEMENT ||
           node->type == NODE_TYPE_TEXT) ||
         !priv)
