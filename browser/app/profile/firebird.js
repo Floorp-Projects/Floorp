@@ -300,7 +300,7 @@ pref("javascript.options.strict",           false);
 pref("javascript.options.showInConsole",    false);
 
 // popups.policy 1=allow,2=reject
-pref("privacy.popups.policy",               2);
+pref("privacy.popups.policy",               1);
 pref("privacy.popups.usecustom",            false);
 
 // advanced prefs
