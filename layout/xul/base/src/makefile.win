@@ -42,7 +42,6 @@ CPPSRCS=					\
 	nsTreeIndentationFrame.cpp \
 	nsTreeCellFrame.cpp \
 	nsTreeTwistyListener.cpp \
-	nsTriStateCheckboxFrame.cpp \
 	nsSpinnerFrame.cpp \
 	nsScrollbarFrame.cpp \
         nsScrollbarButtonFrame.cpp \
@@ -75,7 +74,6 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsTreeIndentationFrame.obj \
 	.\$(OBJDIR)\nsTreeCellFrame.obj \
 	.\$(OBJDIR)\nsTreeTwistyListener.obj \
-	.\$(OBJDIR)\nsTriStateCheckboxFrame.obj \
 	.\$(OBJDIR)\nsSpinnerFrame.obj \
 	.\$(OBJDIR)\nsScrollbarFrame.obj \
 	.\$(OBJDIR)\nsScrollbarButtonFrame.obj \

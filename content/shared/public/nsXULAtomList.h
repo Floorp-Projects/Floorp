@@ -36,7 +36,6 @@
 
 
 XUL_ATOM(button, "button")
-XUL_ATOM(checkbox, "checkbox")
 XUL_ATOM(spinner, "spinner")
 XUL_ATOM(scrollbar, "scrollbar")
 XUL_ATOM(slider, "slider")

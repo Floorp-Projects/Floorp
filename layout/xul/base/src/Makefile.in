@@ -54,7 +54,6 @@ CPPSRCS =				\
 	nsTreeIndentationFrame.cpp \
 	nsTreeCellFrame.cpp \
 	nsTreeTwistyListener.cpp \
-	nsTriStateCheckboxFrame.cpp \
 	nsSpinnerFrame.cpp \
 	nsScrollbarFrame.cpp \
 	nsScrollbarButtonFrame.cpp \
