@@ -1341,38 +1341,39 @@ nsresult nsRange::CompareBoundaryPoints(PRUint16 how, nsIDOMRange* srcRange,
   if (srcRange == 0)
     return NS_ERROR_INVALID_ARG;
 
-  nsCOMPtr<nsIDOMNode> node1;
-  nsCOMPtr<nsIDOMNode> node2;
-  PRInt32 offset1, offset2;
+  nsCOMPtr<nsIDOMNode> boundaryNode;  // the Invoking range
+  nsCOMPtr<nsIDOMNode> sourceNode;    // the sourceRange
+  PRInt32 boundaryOffset, sourceOffset;
+
   switch (how)
   {
-  case nsIDOMRange::START_TO_START:
-    node1 = mStartParent;
-    offset1 = mStartOffset;
-    res = srcRange->GetStartContainer(getter_AddRefs(node2));
+  case nsIDOMRange::START_TO_START: // where is the start point of boundary range
+    boundaryNode = mStartParent;    // relative to the start point of the source range?
+    boundaryOffset = mStartOffset;
+    res = srcRange->GetStartContainer(getter_AddRefs(sourceNode));
     if (NS_SUCCEEDED(res))
-      res = srcRange->GetStartOffset(&offset2);
+      res = srcRange->GetStartOffset(&sourceOffset);
     break;
-  case nsIDOMRange::START_TO_END:
-    node1 = mStartParent;
-    offset1 = mStartOffset;
-    res = srcRange->GetEndContainer(getter_AddRefs(node2));
+  case nsIDOMRange::START_TO_END: // where is the end point of the boundary range
+    boundaryNode = mEndParent;  // relative to the start point of source range?
+    boundaryOffset = mEndOffset;
+    res = srcRange->GetStartContainer(getter_AddRefs(sourceNode));
     if (NS_SUCCEEDED(res))
-      res = srcRange->GetEndOffset(&offset2);
+      res = srcRange->GetStartOffset(&sourceOffset);
     break;
-  case nsIDOMRange::END_TO_START:
-    node1 = mEndParent;
-    offset1 = mEndOffset;
-    res = srcRange->GetStartContainer(getter_AddRefs(node2));
+  case nsIDOMRange::END_TO_START: // where is the the start point of the boundary range
+    boundaryNode = mStartParent;    // relative to end point of source range?
+    boundaryOffset = mStartOffset;
+    res = srcRange->GetEndContainer(getter_AddRefs(sourceNode));
     if (NS_SUCCEEDED(res))
-      res = srcRange->GetStartOffset(&offset2);
+      res = srcRange->GetEndOffset(&sourceOffset);
     break;
-  case nsIDOMRange::END_TO_END:
-    node1 = mEndParent;
-    offset1 = mEndOffset;
-    res = srcRange->GetEndContainer(getter_AddRefs(node2));
+  case nsIDOMRange::END_TO_END: // where is the end point of boundary range
+    boundaryNode = mEndParent;  // relative to the end point of the source range?
+    boundaryOffset = mEndOffset;
+    res = srcRange->GetEndContainer(getter_AddRefs(sourceNode));
     if (NS_SUCCEEDED(res))
-      res = srcRange->GetEndOffset(&offset2);
+      res = srcRange->GetEndOffset(&sourceOffset);
     break;
 
   default:  // shouldn't get here
@@ -1382,12 +1383,13 @@ nsresult nsRange::CompareBoundaryPoints(PRUint16 how, nsIDOMRange* srcRange,
   if (NS_FAILED(res))
     return res;
 
-  if ((node1 == node2) && (offset1 == offset2))
-    *aCmpRet = 0;
-  else if (IsIncreasing(node1, offset1, node2, offset2))
-    *aCmpRet = 1;
+  if ((boundaryNode == sourceNode) && (boundaryOffset == sourceOffset))
+    *aCmpRet = 0;//then the points are equal
+  else if (IsIncreasing(boundaryNode, boundaryOffset, sourceNode, sourceOffset))
+      *aCmpRet = -1;//then boundary point is before source point
   else
-    *aCmpRet = -1;
+      *aCmpRet = 1;//then boundary point is after source point
+
   return NS_OK;
 }
 
@@ -1539,9 +1541,9 @@ return NS_ERROR_NOT_IMPLEMENTED;
     // from the start and end points, and add them
     // to the parent doc frag:
     res = CloneSibsAndParents(mStartParent, mStartOffset, 0,
-                              commonParent, docfrag, PR_TRUE);
+                              commonParent, docFrag, PR_TRUE);
     res = CloneSibsAndParents(mEndParent, mEndOffset, 0,
-                              commonParent, docfrag, PR_FALSE);
+                              commonParent, docFrag, PR_FALSE);
 
     // XXX Now we need to add the sibs between the two top-level
     // XXX doc frag cloned elements.
