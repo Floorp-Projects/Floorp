@@ -63,7 +63,7 @@ Rights Reserved.
                   allowevents="true" />
 
 				<treecell class="treecell-text" value="rdf:http://home.netscape.com/NC-rdf#StatusString"/>
-				<treecell class="treecell-align-right" value="rdf:http://home.netscape.com/NC-rdf#Size"/>
+				<treecell class="treecell-align-right" value="rdf:http://home.netscape.com/NC-rdf#Size" id ="SizeColumnTemplate"/>
 				<treecell class="treecell-align-right" value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
 				<treecell class="treecell-align-right" value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
 				<treecell class="treecell-text" value="rdf:http://home.netscape.com/NC-rdf#OrderReceived"/>
@@ -90,7 +90,7 @@ Rights Reserved.
     <splitter class="tree-splitter"/>
     <treecol persist="hidden width" width="0" flex="1" id="StatusColumn" resource="http://home.netscape.com/NC-rdf#Status"/>
 	  <splitter class="tree-splitter"/>
-    <treecol persist="hidden width" width="0" flex="1" id="SizeColumn" resource="http://home.netscape.com/NC-rdf#Size"/>
+    <treecol persist="hidden width" width="0" flex="1" id="MemoryColumn" resource="http://home.netscape.com/NC-rdf#Size"/>
 	  <splitter class="tree-splitter"/>
     <treecol persist="hidden width" width="0" flex="1" id="UnreadColumn" resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
 	  <splitter class="tree-splitter"/>
