@@ -44,9 +44,12 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  unicharutil \
 		  txmgr \
+		  xmlextras \
 		  $(NULL)
 
-CPPSRCS		= nsBookmarksService.cpp
+CPPSRCS		= nsBookmarksService.cpp \
+		  nsBookmarksFeedHandler.cpp \
+		  $(NULL)
 
 #EXTRA_COMPONENTS = nsBookmarkProtocolHandler.js
 

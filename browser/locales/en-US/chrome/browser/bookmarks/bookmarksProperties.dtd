@@ -35,6 +35,7 @@
 <!ENTITY bookmarks.information.label  "Information:">
 <!ENTITY bookmarks.name.label         "Name:">
 <!ENTITY bookmarks.location.label     "Location:">
+<!ENTITY bookmarks.feedurl.label      "Feed Location:">
 <!ENTITY bookmarks.shortcut.label     "Keyword:">
 <!ENTITY bookmarks.description.label  "Description:">
 <!ENTITY bookmarks.webpanels.label    "Load this bookmark in the sidebar">

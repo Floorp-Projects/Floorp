@@ -928,6 +928,16 @@
             datasources="rdf:bookmarks rdf:files rdf:localsearch" ref="NC:BookmarksTopRoot" flags="dont-build-content"
             onselect="this.parentNode.treeBoxObject.view.selectionChanged();">
         <template>
+          <!-- I don't want these things to appear at all, but that's not an option -->
+          <rule rdf:type="http://home.netscape.com/NC-rdf#Livemark">
+            <treechildren>
+              <treeitem uri="rdf:*">
+                <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
+                  <treecell label="rdf:http://home.netscape.com/NC-rdf#Name" />
+                </treerow>
+              </treeitem>
+            </treechildren>
+          </rule>
           <rule iscontainer="true">
             <treechildren>
               <treeitem uri="rdf:*">

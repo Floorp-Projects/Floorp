@@ -61,11 +61,13 @@
   <command id="cmd_bm_managefolder"              oncommand="goDoCommand('cmd_bm_managefolder');"/>
   <command id="cmd_bm_newfolder"                 oncommand="goDoCommand('cmd_bm_newfolder');"/>
   <command id="cmd_bm_newbookmark"               oncommand="goDoCommand('cmd_bm_newbookmark');"/>
+  <command id="cmd_bm_newlivemark"               oncommand="goDoCommand('cmd_bm_newlivemark');"/>
   <command id="cmd_bm_newseparator"              oncommand="goDoCommand('cmd_bm_newseparator');"/>
   <command id="cmd_bm_find"                      oncommand="goDoCommand('cmd_bm_find');"/>
   <command id="cmd_bm_setnewbookmarkfolder"      oncommand="goDoCommand('cmd_bm_setnewbookmarkfolder');"/>
   <command id="cmd_bm_setpersonaltoolbarfolder"  oncommand="goDoCommand('cmd_bm_setpersonaltoolbarfolder');"/>
   <command id="cmd_bm_setnewsearchfolder"        oncommand="goDoCommand('cmd_bm_setnewsearchfolder');"/>
+  <command id="cmd_bm_refreshlivemark"           oncommand="goDoCommand('cmd_bm_refreshlivemark');"/>
   <command id="cmd_bm_properties"                oncommand="goDoCommand('cmd_bm_properties');"/>
   <command id="cmd_bm_rename"                    oncommand="goDoCommand('cmd_bm_rename');"/>
   <command id="cmd_bm_import"                    oncommand="goDoCommand('cmd_bm_import');"/>
@@ -87,6 +89,9 @@
           <menuitem label="&menuitem.newBookmark.label;" 
                     accesskey="&menuitem.newBookmark.accesskey;"
                     command="cmd_bm_newbookmark"/>
+          <menuitem label="&menuitem.newLivemark.label;" 
+                    accesskey="&menuitem.newLivemark.accesskey;"
+                    command="cmd_bm_newlivemark"/>
           <menuitem label="&menuitem.newFolder.label;" 
                     accesskey="&menuitem.newFolder.accesskey;"
                     command="cmd_bm_newfolder"/>
@@ -121,6 +126,9 @@
           <menuitem label="&command.moveBookmark.label;"
                     accesskey="&command.moveBookmark.accesskey;"
                     command="cmd_bm_movebookmark"/>
+          <menuseparator/>
+          <menuitem label="&command.refreshLivemark.label;"
+                    command="cmd_bm_refreshlivemark"/>
           <menuseparator/>
           <menuitem label="&command.properties.label;"
                     key="bm_key_properties" accesskey="&command.properties.accesskey;"

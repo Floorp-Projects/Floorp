@@ -30,8 +30,10 @@
                                                                                              
 <!ENTITY menuitem.newBookmark.label    "New Bookmark...">
 <!ENTITY menuitem.newBookmark.accesskey "B">
+<!ENTITY menuitem.newLivemark.label    "New Livemark...">
+<!ENTITY menuitem.newLivemark.accesskey "L">
 <!ENTITY menuitem.newFolder.label        "New Folder...">
-<!ENTITY menuitem.newFolder.accesskey    "F">
+<!ENTITY menuitem.newFolder.accesskey    "o">
 <!ENTITY menuitem.newSeparator.label     "New Separator">
 <!ENTITY menuitem.newSeparator.accesskey "S">
 <!ENTITY menuitem.import.label         "Import...">
@@ -54,6 +56,7 @@
 <!ENTITY command.moveBookmark.accesskey "M">
 <!ENTITY command.addBookmark.label     "Add...">
 <!ENTITY command.manageBookmarks.label "Manage">
+<!ENTITY command.refreshLivemark.label "Refresh Livemark">
 
 <!ENTITY menuitem.view.command.toolbar.label        "Toolbar">
 <!ENTITY menuitem.view.command.toolbar.accesskey    "t">

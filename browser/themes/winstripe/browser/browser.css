@@ -751,6 +751,16 @@ statusbarpanel#statusbar-display {
   padding: 0px 3px 0px 3px;
 }
 
+#livemark-button {
+  display: none;
+}
+
+#livemark-button[livemarks] {
+  display: -moz-box;
+  list-style-image: url("chrome://browser/skin/page-livemarks.png");
+  padding: 0px 3px 0px 3px;
+}
+
 /* ::::: throbber ::::: */
 
 #navigator-throbber {

@@ -67,7 +67,11 @@
               </row>
               <row id="locationrow" align="center">
                 <label value="&bookmarks.location.label;" control="url"/>
-          			<textbox id="url" />
+                <textbox id="url" />
+              </row>
+              <row id="feedurlrow" align="center">
+                <label value="&bookmarks.feedurl.label;" control="feedurl"/>
+                <textbox id="feedurl" />
               </row>
               <row id="shortcutrow" align="center">
                 <label value="&bookmarks.shortcut.label;" control="shortcut"/>

@@ -72,7 +72,18 @@ interface nsIBookmarksService : nsISupports
                                              in wstring aShortcutURL,
                                              in wstring aDescription,
                                              in wstring aDocCharSet,
-                                             in wstring aPostData, 
+                                             in wstring aPostData,
+                                             in nsIRDFResource aFolder,
+                                             in long aIndex);
+
+    nsIRDFResource createLivemark(in wstring aName,
+                                  in wstring aURL,
+                                  in wstring aRSSURL,
+                                  in wstring aDescription);
+    nsIRDFResource createLivemarkInContainer(in wstring aName,
+                                             in wstring aURL,
+                                             in wstring aRSSURL,
+                                             in wstring aDescription,
                                              in nsIRDFResource aFolder,
                                              in long aIndex);
 

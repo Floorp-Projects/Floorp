@@ -132,6 +132,10 @@ function initBMService()
 }
 
 /**
+ * XXX - 24 Jul 04
+ * If you add a command that needs to run from the main browser window,
+ * it needs to be added to browser/base/content/browser-sets.inc as well!
+ *
  * XXX - 04/16/01
  *  ACK! massive command name collision problems are causing big issues
  *  in getting this stuff to work in the Navigator window. For sanity's 
@@ -189,7 +193,7 @@ var BookmarksCommand = {
         
     var commonCommands = [];
     for (var i = 0; i < aSelection.length; ++i) {
-      var commands = this.getCommands(aSelection.item[i]);
+      var commands = this.getCommands(aSelection.item[i], aSelection.parent[i]);
       if (!commands) {
         aEvent.preventDefault();
         return;
@@ -221,6 +225,7 @@ var BookmarksCommand = {
       if (element) 
         popup.appendChild(element);
     }
+
     switch (popup.firstChild.getAttribute("command")) {
     case "cmd_bm_open":
     case "cmd_bm_expandfolder":
@@ -259,11 +264,20 @@ var BookmarksCommand = {
   /////////////////////////////////////////////////////////////////////////////
   // For a given URI (a unique identifier of a resource in the graph) return 
   // an enumeration of applicable commands for that URI. 
-  getCommands: function (aNodeID)
+  getCommands: function (aNodeID, aParent)
   {
     var type = BookmarksUtils.resolveType(aNodeID);
     if (!type)
       return null;
+
+    var ptype = null;
+    if (aParent) {
+      ptype = BookmarksUtils.resolveType(aParent);
+      if (ptype == "Livemark") {
+        type = "LivemarkBookmark";
+      }
+    }
+
     var commands = [];
     // menu order:
     // 
@@ -279,6 +293,8 @@ var BookmarksCommand = {
     // paste
     // ---------------------
     // delete
+    // ---------------------
+    // bm_refreshlivemark
     // ---------------------
     // bm_properties
     switch (type) {
@@ -319,6 +335,16 @@ var BookmarksCommand = {
       commands = ["bm_open", "bm_openinnewwindow", "bm_openinnewtab", "bm_separator",
                   "copy"];
       break;
+    case "Livemark":
+      commands = ["cut", "copy", "bm_separator",
+                  "delete", "bm_separator",
+                  "bm_refreshlivemark", "bm_separator",
+                  "bm_properties"];
+      break;
+    case "LivemarkBookmark":
+      commands = ["bm_open", "bm_openinnewwindow", "bm_openinnewtab", "bm_separator",
+                  "copy"];
+      break;
     default: 
       commands = [];
     }
@@ -333,24 +359,6 @@ var BookmarksCommand = {
   {
     var cmdName = aCommand.substring(NC_NS_CMD.length);
     return BookmarksUtils.getLocaleString ("cmd_" + cmdName);
-    /*
-    try {
-      // Note: this will succeed only if there's a string in the bookmarks
-      //       string bundle for this command name. Otherwise, <xul:stringbundle/>
-      //       will throw, we'll catch & stifle the error, and look up the command
-      //       name in the datasource. 
-      return BookmarksUtils.getLocaleString ("cmd_" + cmdName);
-    }
-    catch (e) {
-    }   
-    // XXX - WORK TO DO HERE! (rjc will cry if we don't fix this) 
-    // need to ask the ds for the commands for this node, however we don't
-    // have the right params. This is kind of a problem. 
-    dump("*** BAD! EVIL! WICKED! NO! ACK! ARGH! ORGH!"+aCommand+"\n");
-    const rName = RDF.GetResource(NC_NS + "Name");
-    const rSource = RDF.GetResource(aNodeID);
-    return BMDS.GetTarget(rSource, rName, true).Value;
-    */
   },
     
   ///////////////////////////////////////////////////////////////////////////
@@ -644,6 +652,13 @@ var BookmarksCommand = {
     this.createNewResource(resource, aTarget, "newbookmark");
   },
 
+  createNewLivemark: function (aTarget)
+  {
+    var name     = BookmarksUtils.getLocaleString("ile_newlivemark");
+    var resource = BMSVC.createLivemark(name, "", "", null);
+    this.createNewResource(resource, aTarget, "newlivemark");
+  },
+
   createNewFolder: function (aTarget)
   {
     var name     = BookmarksUtils.getLocaleString("ile_newfolder");
@@ -734,6 +749,18 @@ var BookmarksCommand = {
     var selection = RDF.GetResource("NC:BookmarksRoot");
     var args = [{ property: NC_NS+"URL", literal: fileName}];
     this.doBookmarksCommand(selection, NC_NS_CMD+"export", args);
+  },
+
+  refreshLivemark: function (aSelection)
+  {
+    var exp = RDF.GetResource(NC_NS+"LivemarkExpiration");
+    for (var i = 0; i < aSelection.length; i++) {
+      rsrc = RDF.GetResource(aSelection.item[i].Value);
+      oldtgt = BMDS.GetTarget(rsrc, exp, true);
+      if (oldtgt) {
+        BMDS.Unassert(rsrc, exp, oldtgt);
+      }
+    }
   }
 
 }
@@ -762,6 +789,7 @@ var BookmarksController = {
     case "cmd_bm_openfolder":
     case "cmd_bm_managefolder":
     case "cmd_bm_newbookmark":
+    case "cmd_bm_newlivemark":
     case "cmd_bm_newfolder":
     case "cmd_bm_newseparator":
     case "cmd_bm_properties":
@@ -772,6 +800,7 @@ var BookmarksController = {
     case "cmd_bm_import":
     case "cmd_bm_export":
     case "cmd_bm_movebookmark":
+    case "cmd_bm_refreshlivemark":
       isCommandSupported = true;
       break;
     default:
@@ -851,6 +880,7 @@ var BookmarksController = {
     case "cmd_bm_export":
       return true;
     case "cmd_bm_newbookmark":
+    case "cmd_bm_newlivemark":
     case "cmd_bm_newfolder":
     case "cmd_bm_newseparator":
       return BookmarksUtils.isValidTargetContainer(aTarget.parent);
@@ -858,12 +888,18 @@ var BookmarksController = {
     case "cmd_bm_rename":
       return length == 1;
     case "cmd_bm_setpersonaltoolbarfolder":
-      if (length != 1)
+      if (length != 1 || type0 == "Livemark")
         return false;
       return item0 != BMSVC.getBookmarksToolbarFolder().Value && 
              item0 != "NC:BookmarksRoot" && type0 == "Folder";
     case "cmd_bm_movebookmark":
       return length > 0 && !aSelection.containsImmutable;
+    case "cmd_bm_refreshlivemark":
+      for (i=0; i<length; ++i) {
+        if (aSelection.type[i] != "Livemark")
+          return false;
+      }
+      return length > 0;
     default:
       return false;
     }
@@ -922,6 +958,9 @@ var BookmarksController = {
     case "cmd_bm_newbookmark":
       BookmarksCommand.createNewBookmark(aTarget);
       break;
+    case "cmd_bm_newlivemark":
+      BookmarksCommand.createNewLivemark(aTarget);
+      break;
     case "cmd_bm_newfolder":
       BookmarksCommand.createNewFolder(aTarget);
       break;
@@ -934,6 +973,9 @@ var BookmarksController = {
     case "cmd_bm_export":
       BookmarksCommand.exportBookmarks();
       break;
+    case "cmd_bm_refreshlivemark":
+      BookmarksCommand.refreshLivemark(aSelection);
+      break;
     default: 
       dump("Bookmark command "+aCommand+" not handled!\n");
     }
@@ -942,11 +984,11 @@ var BookmarksController = {
 
   onCommandUpdate: function (aSelection, aTarget)
   {
-    var commands = ["cmd_bm_newbookmark", "cmd_bm_newfolder", "cmd_bm_newseparator",
+    var commands = ["cmd_bm_newbookmark", "cmd_bm_newlivemark", "cmd_bm_newfolder", "cmd_bm_newseparator",
                     "cmd_undo", "cmd_redo", "cmd_bm_properties", "cmd_bm_rename", 
                     "cmd_copy", "cmd_paste", "cmd_cut", "cmd_delete",
-                    "cmd_bm_setpersonaltoolbarfolder", "cmd_bm_movebookmark", 
-                    "cmd_bm_openfolder", "cmd_bm_managefolder"];
+                    "cmd_bm_setpersonaltoolbarfolder", "cmd_bm_movebookmark",
+                    "cmd_bm_openfolder", "cmd_bm_managefolder", "cmd_bm_refreshlivemark"];
     for (var i = 0; i < commands.length; ++i) {
       var enabled = this.isCommandEnabled(commands[i], aSelection, aTarget);
       var commandNode = document.getElementById(commands[i]);
@@ -1071,7 +1113,7 @@ var BookmarksUtils = {
     aSelection.isContainer = new Array(aSelection.length);
     aSelection.containsPTF = false;
     aSelection.containsImmutable = false;
-    var index, item, parent, type, protocol, isContainer, isImmutable;
+    var index, item, parent, type, ptype, protocol, isContainer, isImmutable;
     for (var i=0; i<aSelection.length; ++i) {
       item        = aSelection.item[i];
       parent      = aSelection.parent[i];
@@ -1087,9 +1129,13 @@ var BookmarksUtils = {
                              // getsynthesizeType says a bookmark is not a
                              // bookmark when it's not a child of sth.
                type != "Bookmark" && type != "BookmarkSeparator" && 
-               type != "Folder"   && type != "PersonalToolbarFolder")
+               type != "Folder"   && type != "PersonalToolbarFolder" &&
+               type != "Livemark")
         isImmutable = true;
       else if (parent) {
+        var ptype = BookmarksUtils.resolveType(parent);
+        if (ptype == "Livemark")
+          isImmutable = true;
         var parentProtocol = parent.Value.split(":")[0];
         if (parentProtocol == "find" || parentProtocol == "file")
           aSelection.parent[i] = null;
@@ -1346,6 +1392,21 @@ var BookmarksUtils = {
     return BMSVC.createBookmark(aName, aURL, null, null, aCharSet, null);
   },
 
+  createLivemark: function (aName, aURL, aFeedURL, aDefaultName)
+  {
+    if (!aName) {
+      // look up in the history ds to retrieve the name
+      var rSource = RDF.GetResource(aURL);
+      var HISTDS  = RDF.GetDataSource("rdf:history");
+      var nameArc = RDF.GetResource(NC_NS+"Name");
+      var rName   = HISTDS.GetTarget(rSource, nameArc, true);
+      aName       = rName ? rName.QueryInterface(kRDFLITIID).Value : aDefaultName;
+      if (!aName)
+        aName = aURL;
+    }
+    return BMSVC.createLivemark(aName, aURL, aFeedURL, null);
+  },
+
   flushDataSource: function ()
   {
     var remoteDS = BMDS.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
@@ -1358,6 +1419,13 @@ var BookmarksUtils = {
     openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
                "centerscreen,chrome,dialog,resizable,dependent", aTitle, aURL, null, aCharset,
                null, null, aIsWebPanel);
+  },
+ 
+  addLivemark: function (aURL, aFeedURL, aTitle)
+  {
+    openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
+               "centerscreen,chrome,dialog,resizable,dependent", aTitle, aURL, null, null,
+               null, null, false, null, null, null, aFeedURL);
   },
  
   loadFavIcon: function (aURL, aFavIconURL) {
