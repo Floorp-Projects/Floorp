@@ -1,2 +1,3 @@
 file:///s|/mozilla/layout/html/tests/printer/images/imagejpg.html
 file:///s|/mozilla/layout/html/tests/printer/images/imagegif.html
+file:///s|/mozilla/layout/html/tests/printer/images/test2.html
