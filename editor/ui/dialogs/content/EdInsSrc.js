@@ -46,9 +46,8 @@ function Startup()
     dump("Not all dialog controls were found!!!\n");
   }
 
-  selection = editorShell.GetContentsAs("text/html", 1);
-  selection = (selection.replace(/<body>/,"")).replace(/<\/body>/,"");
-  //dump("Got selection: '" + selection + "'\n");
+  selection = editorShell.GetContentsAs("text/html", 35);
+  selection = (selection.replace(/<body[^>]*>/,"")).replace(/<\/body>/,"");
   if (selection != "")
     dialog.srcInput.value = selection;
 
