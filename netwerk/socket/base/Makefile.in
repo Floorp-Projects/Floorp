@@ -67,10 +67,6 @@ XPIDLSRCS	= \
 		nsISSLSocketControl.idl \
 		$(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
-NO_GEN_XPT=1
-endif
-
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
 FORCE_STATIC_LIB = 1
