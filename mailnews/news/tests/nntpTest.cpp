@@ -577,11 +577,7 @@ nsNntpTestDriver::OnPostMessage()
         post->SetSubject(subject);
 
         // fake out these headers so that it's a valid post
-        post->SetDate("Mon Feb  8 11:41:38 PST 1999");
         post->SetFrom("userid@somewhere.com");
-        post->SetPath("");
-        post->SetRelayVersion("1.0");
-        post->SetPostingVersion("5.0");
     }
     
     m_url->SetMessageToPost(post);
