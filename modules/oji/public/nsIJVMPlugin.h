@@ -44,6 +44,15 @@ class nsISecureEnv;
  */
 #define NS_JVM_MIME_TYPE        "application/x-java-vm" // XXX "application/java" ?
 
+
+#define NS_IJVMPLUGIN_IID                            \
+{ /* da6f3bc0-a1bc-11d1-85b1-00805f0e4dfe */         \
+    0xda6f3bc0,                                      \
+    0xa1bc,                                          \
+    0x11d1,                                          \
+    {0x85, 0xb1, 0x00, 0x80, 0x5f, 0x0e, 0x4d, 0xfe} \
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Java VM Plugin Interface
 // This interface defines additional entry points that a plugin developer needs
@@ -88,15 +97,8 @@ public:
 	NS_IMETHOD
 	UnwrapJavaWrapper(JNIEnv* jenv, jobject jobj, jint* obj) = 0;
 
+ 	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJVMPLUGIN_IID)
 };
-
-#define NS_IJVMPLUGIN_IID                            \
-{ /* da6f3bc0-a1bc-11d1-85b1-00805f0e4dfe */         \
-    0xda6f3bc0,                                      \
-    0xa1bc,                                          \
-    0x11d1,                                          \
-    {0x85, 0xb1, 0x00, 0x80, 0x5f, 0x0e, 0x4d, 0xfe} \
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 

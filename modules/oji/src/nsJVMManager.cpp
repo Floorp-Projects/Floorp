@@ -599,7 +599,17 @@ nsJVMManager::StartupJVM(void)
     }
 
     nsIPlugin* pluginFactory = NULL;
-    err = pluginHost->GetPluginFactory(NS_JVM_MIME_TYPE, &pluginFactory);
+     // this code is the correct way to obtain pluggable JVM
+    NS_WITH_SERVICE(nsIPlugin, f,  
+                    NS_INLINE_PLUGIN_CONTRACTID_PREFIX NS_JVM_MIME_TYPE, 
+                    &err);
+    if (NS_FAILED(err) || !f) {
+        err = pluginHost->GetPluginFactory(NS_JVM_MIME_TYPE, &pluginFactory);
+    } 
+    else {
+        pluginFactory  = f;
+    }
+    
     if (pluginFactory == NULL) {
         fStatus = nsJVMStatus_Failed;
 
