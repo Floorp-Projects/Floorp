@@ -544,8 +544,10 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
 
   // ----------- Back space -------------------------
   if (keyCode == nsIDOMKeyEvent::DOM_VK_BACK_SPACE) {
-    aEvent->PreventDefault(); // Prevent normal processing of this keystroke
-    HandleBackspace();
+    if (HandleBackspace()) {
+      aEvent->PreventDefault(); // Prevent normal processing of this keystroke
+    }
+
     return NS_OK;
   }
   
@@ -563,7 +565,7 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
 }
 
 
-void
+PRBool
 nsTypeAheadFind::HandleBackspace()
 {
   // In normal type ahead find, remove a printable char from 
@@ -579,7 +581,7 @@ nsTypeAheadFind::HandleBackspace()
       mFocusedDocSelection->GetRangeAt(0, getter_AddRefs(mStartFindRange));
     }
     else {
-      return;    // No find string to backspace in!
+      return PR_FALSE;  // No find string to backspace in!
     }
   }
 
@@ -594,7 +596,7 @@ nsTypeAheadFind::HandleBackspace()
     mFocusedDocSelection->CollapseToStart();
     CancelFind();
 
-    return;
+    return PR_TRUE;
   }
 
   // ---------- Multiple chars in string ----------
@@ -632,7 +634,7 @@ nsTypeAheadFind::HandleBackspace()
       }
     }
     if (!presShell) {
-      return;
+      return PR_FALSE;
     }
     // Set the selection to the where the first character was found
     // so that find starts from there
@@ -654,6 +656,8 @@ nsTypeAheadFind::HandleBackspace()
   mIsFindingText = PR_FALSE;
 
   SaveFind();
+
+  return PR_TRUE;   // Backspace handled
 }
 
 

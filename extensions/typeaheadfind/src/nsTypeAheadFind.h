@@ -128,7 +128,7 @@ protected:
 
   // Helper methods
   nsresult HandleChar(PRUnichar aChar);
-  void HandleBackspace();
+  PRBool HandleBackspace();
   void SaveFind();
   nsresult GetWebBrowserFind(nsIWebBrowserFind **aWebBrowserFind);
   void StartTimeout();
