@@ -810,7 +810,5 @@ if [ `echo "$MOZ_EXTENSIONS" | grep -c xmlterm` != 0 ]; then
   extensions/xmlterm/scripts/Makefile
   extensions/xmlterm/tests/Makefile
   extensions/xmlterm/ui/Makefile
-  extensions/xmlterm/ui/content/Makefile
-  extensions/xmlterm/ui/skin/Makefile
 END_EXTENSIONS_XMLTERM_MAKEFILES
 fi
