@@ -76,39 +76,65 @@ function executeTestCase()
        var value = getValue(accNode);
        var newvalue = value.toString();
 
-       var col1 = new Array("Property", "Name->", "Role->", "State->", "Value->");
-       var col2 = new Array("Values", name, role, state, value);
-       var col3 = new Array("Result");
+       var expectedName      = null;
+       var expectedRole      = "29";
+       var expectedState     = "0";
+       var expectedValue     = "NS_ERROR_NOT_IMPLEMENTED";
 
-       if (name == null)         col3[1] = "PASS"; else col3[1] = "FAIL";
-       if (role == "29")         col3[2] = "PASS"; else col3[2] = "FAIL";
-       if (state == "0")         col3[3] = "PASS"; else col3[3] = "FAIL";
+       var row0 = new Array("Property/Method", "Expected Values", "Actual Values", "Result");
+       var row1 = new Array("Name->", expectedName, name);
+       var row2 = new Array("Role->", expectedRole, role);
+       var row3 = new Array("State->", expectedState, state);
+       var row4 = new Array("Value->", expectedValue, value);
+
+       if (name == expectedName)     row1[3] = "PASS"; else row1[3] = "FAIL";
+       if (role == expectedRole)     row2[3] = "PASS"; else row2[3] = "FAIL";
+       if (state == expectedState)   row3[3] = "PASS"; else row3[3] = "FAIL";
        if (newvalue.search("NS_ERROR_NOT_IMPLEMENTED"))
-                                 col3[4] = "PASS"; else col3[4] = "FAIL";
+                                     row4[3] = "PASS"; else row4[3] = "FAIL";
 
-       res += "<table border cols=2 width='75%'>";
-
-       for(i=0; i<=4; i++)
+       res += "<table border cols=4 width='70%'>";
+       res += "<tr>";
+       for(col=0; col<4; col++)
+        res += "<td><b>" + row0[col] + "</b></td>";
+       res += "</tr>";
+       res += "<tr>";
+       for(col=0; col<4; col++)
        {
-	     res += "<tr>";
-	     res += " <td width='20%'><b>" + col1[i] + "</b></td>";
-	     if(i==0)
-	       res += " <td width='70%'><b>" + col2[i] + "</b></td>";
-	     else
-	       res += " <td>" + col2[i] + "</td>";
-	     if (i==0)
-	       res += " <td><b>" + col3[i] + "</b></td>";
-	     else
-	     {
-	       if (col3[i] == "FAIL")
-	         res += " <td bgcolor='#FF0000' width='10%'>" + col3[i] + "</td>";
-	       else
-	         res += " <td>" + col3[i] + "</td>";
-	     }
-         res += "</tr>";
+        if(row1[col] == "FAIL")
+         res += "<td bgcolor='#FF0000'>" + row1[col] + "</td>";
+        else
+        res += "<td>" + row1[col] + "</td>";
        }
-	   res += "</table>";
-
+       res += "</tr>";
+       res += "<tr>";
+       for(col=0; col<4; col++)
+       {
+        if(row2[col] == "FAIL")
+         res += "<td bgcolor='#FF0000'>" + row2[col] + "</td>";
+        else
+         res += "<td>" + row2[col] + "</td>";
+       }
+       res += "</tr>";
+       res += "<tr>";
+       for(col=0; col<4; col++)
+       {
+        if(row3[col] == "FAIL")
+         res += "<td bgcolor='#FF0000'>" + row3[col] + "</td>";
+        else
+         res += "<td>" + row3[col] + "</td>";
+       }
+       res += "</tr>";
+       res += "<tr>";
+       for(col=0; col<4; col++)
+       {
+        if(row4[col] == "FAIL")
+         res += "<td bgcolor='#FF0000'>" + row4[col] + "</td>";
+        else
+         res += "<td>" + row4[col] + "</td>";
+       }
+       res += "</tr>";
+       res += "</table>";
       }
       catch(e){
        alert("Exception**: " + e);

@@ -112,34 +112,39 @@ function constructResults()
    var role = getRole(accNode);
    var state = getState(accNode);
    var value = getValue(accNode);
-   var newvalue = value.toString();
 
    if (focused == true) focus = "Focused"; else focus = "Not Focused";
    if (varaccFocused == true) tookfocus = "Focused"; else tookfocus = "Not Focused";
 
-   var row0 = new Array("Property", "Values", "Result");
-   var row1 = new Array("Name->", name);
-   var row2 = new Array("Role->", role);
-   var row3 = new Array("State->", state);
-   var row4 = new Array("Value->", value);
-   var row5 = new Array("accTakeFocus->", focus);
-   var row6 = new Array("accFocused->", tookfocus);
+   var expectedName      = null;
+   var expectedRole      = "42";
+   var expectedState     = "1048580";
+   var expectedValue     = "Default text..";
+   var expectedFocus     = "Focused";
+   var expectedTookfocus = "Focused";
 
-   if (name == null)            row1[2] = "PASS"; else row1[2] = "FAIL";
-   if (role == "42")            row2[2] = "PASS"; else row2[2] = "FAIL";
-   if (state == "1048580")      row3[2] = "PASS"; else row3[2] = "FAIL";
-   if (newvalue.search("NS_ERROR_NOT_IMPLEMENTED"))
-                                row4[2] = "PASS"; else row4[2] = "FAIL";
-   if (focus == "Focused")      row5[2] = "PASS"; else row5[2] = "FAIL";
-   if (tookfocus == "Focused")  row6[2] = "PASS"; else row6[2] = "FAIL";
+   var row0 = new Array("Property/Method", "Expected Values", "Actual Values", "Result");
+   var row1 = new Array("Name->", expectedName, name);
+   var row2 = new Array("Role->", expectedRole, role);
+   var row3 = new Array("State->", expectedState, state);
+   var row4 = new Array("Value->", expectedValue, value);
+   var row5 = new Array("accTakeFocus->", expectedFocus, focus);
+   var row6 = new Array("accFocused->", expectedTookfocus, tookfocus);
 
-   res += "<table border cols=3 width='70%'>";
+   if (name == expectedName)            row1[3] = "PASS"; else row1[3] = "FAIL";
+   if (role == expectedRole)            row2[3] = "PASS"; else row2[3] = "FAIL";
+   if (state == expectedState)          row3[3] = "PASS"; else row3[3] = "FAIL";
+   if (value == expectedValue)          row4[3] = "PASS"; else row4[3] = "FAIL";
+   if (focus == expectedFocus)          row5[3] = "PASS"; else row5[3] = "FAIL";
+   if (tookfocus == expectedTookfocus)  row6[3] = "PASS"; else row6[3] = "FAIL";
+
+   res += "<table border cols=4 width='70%'>";
    res += "<tr>";
-   for(col=0; col<3; col++)
+   for(col=0; col<4; col++)
      res += "<td><b>" + row0[col] + "</b></td>";
    res += "</tr>";
    res += "<tr>";
-   for(col=0; col<3; col++)
+   for(col=0; col<4; col++)
    {
     if(row1[col] == "FAIL")
      res += "<td bgcolor='#FF0000'>" + row1[col] + "</td>";
@@ -148,7 +153,7 @@ function constructResults()
    }
    res += "</tr>";
    res += "<tr>";
-   for(col=0; col<3; col++)
+   for(col=0; col<4; col++)
    {
     if(row2[col] == "FAIL")
      res += "<td bgcolor='#FF0000'>" + row2[col] + "</td>";
@@ -157,7 +162,7 @@ function constructResults()
    }
    res += "</tr>";
    res += "<tr>";
-   for(col=0; col<3; col++)
+   for(col=0; col<4; col++)
    {
     if(row3[col] == "FAIL")
      res += "<td bgcolor='#FF0000'>" + row3[col] + "</td>";
@@ -166,7 +171,7 @@ function constructResults()
    }
    res += "</tr>";
    res += "<tr>";
-   for(col=0; col<3; col++)
+   for(col=0; col<4; col++)
    {
     if(row4[col] == "FAIL")
      res += "<td bgcolor='#FF0000'>" + row4[col] + "</td>";
@@ -175,7 +180,7 @@ function constructResults()
    }
    res += "</tr>";
    res += "<tr>";
-   for(col=0; col<3; col++)
+   for(col=0; col<4; col++)
    {
     if(row5[col] == "FAIL")
      res += "<td bgcolor='#FF0000'>" + row5[col] + "</td>";
@@ -184,7 +189,7 @@ function constructResults()
    }
    res += "</tr>";
    res += "<tr>";
-   for(col=0; col<3; col++)
+   for(col=0; col<4; col++)
    {
     if(row6[col] == "FAIL")
      res += "<td bgcolor='#FF0000'>" + row6[col] + "</td>";
