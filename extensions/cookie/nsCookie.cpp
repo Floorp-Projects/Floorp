@@ -1982,7 +1982,7 @@ cookie_LoadCookies() {
       new_cookie->xxx = PR_FALSE;
     }
     char * expiresCString = expires.ToNewCString();
-    new_cookie->expires = atol(expiresCString);
+    new_cookie->expires = strtoul(expiresCString, nsnull, 10);
     nsCRT::free(expiresCString);
 
     /* start new cookie list if one does not already exist */
