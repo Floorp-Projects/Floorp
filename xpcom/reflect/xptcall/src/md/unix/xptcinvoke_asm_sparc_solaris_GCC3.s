@@ -22,14 +22,15 @@
  *     gcc 3/sparc-sun-solaris from gcc 2.x/sparc-sun-solaris)
  */
 
-/* Platform specific code to invoke XPCOM methods on native objects
-   for solaris/sparc with gcc 3 ABI. */
+/*
+ * Platform specific code to invoke XPCOM methods on native objects for
+ * solaris/sparc with gcc 3 ABI.
+ */
         .global XPTC_InvokeByIndex
 /*
-    XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
-                   PRUint32 paramCount, nsXPTCVariant* params);
-    
-*/
+ *  XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+ *                     PRUint32 paramCount, nsXPTCVariant* params);
+ */
 XPTC_InvokeByIndex:
         save    %sp,-(64 + 32),%sp  ! room for the register window and
                                     ! struct pointer, rounded up to 0 % 32
