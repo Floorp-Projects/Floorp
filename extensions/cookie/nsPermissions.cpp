@@ -52,6 +52,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIIOService.h"
 #include "nsNetCID.h"
+#include "nsTextFormatter.h"
 
 static const char *kCookiesPermFileName = "cookperm.txt";
 
@@ -183,7 +184,8 @@ Permission_Check(
      const char * hostname,
      PRInt32 type,
      PRBool warningPref,
-     PRUnichar * message)
+     const char * message_string,
+     int count_for_message)
 {
   PRBool permission;
 
@@ -198,9 +200,15 @@ Permission_Check(
   }
 
   /* we need to prompt */
+  PRUnichar * message_fmt =
+      CKutil_Localize(NS_ConvertASCIItoUCS2(message_string).get());
+  PRUnichar * message = nsTextFormatter::smprintf(message_fmt,
+                            hostname ? hostname : "", count_for_message);
   PRBool rememberChecked = permission_GetRememberChecked(type);
   PRUnichar * remember_string = CKutil_Localize(NS_LITERAL_STRING("RememberThisDecision").get());
   permission = permission_CheckConfirmYN(aPrompter, message, remember_string, &rememberChecked);
+  nsTextFormatter::smprintf_free(message);
+  nsMemory::Free(message_fmt);
 
   /* see if we need to remember this decision */
   if (rememberChecked) {

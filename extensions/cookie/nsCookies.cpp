@@ -48,7 +48,6 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsIPref.h"
-#include "nsTextFormatter.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIObserverService.h"
 #include "nsICookieConsent.h"
@@ -1313,21 +1312,16 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
   int count = cookie_Count(host_from_header);
   prev_cookie = cookie_CheckForPrevCookie
     (path_from_header, host_from_header, name_from_header);
-  PRUnichar * message;
+  const char *message_string;
   if (prev_cookie) {
-    message = CKutil_Localize(NS_LITERAL_STRING("PermissionToModifyCookie").get());
-    new_string = nsTextFormatter::smprintf(message, host_from_header ? host_from_header : "");
+    message_string = "PermissionToModifyCookie";
   } else if (count>1) {
-    message = CKutil_Localize(NS_LITERAL_STRING("PermissionToSetAnotherCookie").get());
-    new_string = nsTextFormatter::smprintf(message, host_from_header ? host_from_header : "", count);
+    message_string = "PermissionToSetAnotherCookie";
   } else if (count==1){
-    message = CKutil_Localize(NS_LITERAL_STRING("PermissionToSetSecondCookie").get());
-    new_string = nsTextFormatter::smprintf(message, host_from_header ? host_from_header : "");
+    message_string = "PermissionToSetSecondCookie";
   } else {
-    message = CKutil_Localize(NS_LITERAL_STRING("PermissionToSetACookie").get());
-    new_string = nsTextFormatter::smprintf(message, host_from_header ? host_from_header : "");
+    message_string = "PermissionToSetACookie";
   }
-  Recycle(message);
 
   //TRACEMSG(("mkaccess.c: Setting cookie: %s for host: %s for path: %s",
   //          cookie_from_header, host_from_header, path_from_header));
@@ -1341,9 +1335,8 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
 // until generalized per-site preferences are available.
                                        //cookie_GetLifetimeAsk(timeToExpire) ||
                                        cookie_GetWarningPref(),
-                                       new_string);
+                                       message_string, count);
   }
-  PR_FREEIF(new_string);
   if (!permission) {
     PR_FREEIF(path_from_header);
     PR_FREEIF(host_from_header);

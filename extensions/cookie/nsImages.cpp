@@ -43,12 +43,12 @@
 #include "nsVoidArray.h"
 #include "prmem.h"
 #include "nsIPref.h"
-#include "nsTextFormatter.h"
 #include "nsIServiceManager.h"
 #include "nsIIOService.h"
 
 #define image_behaviorPref "network.image.imageBehavior"
 #define image_warningPref "network.image.warnAboutImages"
+#define image_blockerPref "imageblocker.enabled"
 
 typedef struct _permission_HostStruct {
   char * host;
@@ -60,51 +60,45 @@ typedef struct _permission_TypeStruct {
   PRBool permission;
 } permission_TypeStruct;
 
-PRIVATE PERMISSION_BehaviorEnum image_behavior = PERMISSION_Accept;
-PRIVATE PRBool image_warning = PR_FALSE;
+#define kBehaviorPrefDefault PERMISSION_Accept
+#define kWarningPrefDefault PR_FALSE
+#define kBlockerPrefDefault PR_FALSE
 
-PRIVATE void
-image_SetBehaviorPref(PERMISSION_BehaviorEnum x) {
-  image_behavior = x;
-}
+static PERMISSION_BehaviorEnum gBehaviorPref = kBehaviorPrefDefault;
+static PRBool gWarningPref = kWarningPrefDefault;
+static PRBool gBlockerPref = kBlockerPrefDefault;
 
-PRIVATE void
-image_SetWarningPref(PRBool x) {
-  image_warning = x;
-}
-
-PRIVATE PERMISSION_BehaviorEnum
-image_GetBehaviorPref() {
-  return image_behavior;
-}
-
-PRIVATE PRBool
-image_GetWarningPref() {
-  return image_warning;
-}
-
-MODULE_PRIVATE int PR_CALLBACK
+PR_STATIC_CALLBACK(int)
 image_BehaviorPrefChanged(const char * newpref, void * data) {
   PRInt32 n;
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (NS_FAILED(prefs->GetIntPref(image_behaviorPref, &n))) {
-    image_SetBehaviorPref(PERMISSION_Accept);
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+  if (!prefs || NS_FAILED(prefs->GetIntPref(image_behaviorPref, &n))) {
+    gBehaviorPref = kBehaviorPrefDefault;
   } else {
-    image_SetBehaviorPref((PERMISSION_BehaviorEnum)n);
+    gBehaviorPref = (PERMISSION_BehaviorEnum)n;
   }
   return 0;
 }
 
-MODULE_PRIVATE int PR_CALLBACK
+PR_STATIC_CALLBACK(int)
 image_WarningPrefChanged(const char * newpref, void * data) {
   PRBool x;
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (NS_FAILED(prefs->GetBoolPref(image_warningPref, &x))) {
-    x = PR_FALSE;
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+  if (!prefs || NS_FAILED(prefs->GetBoolPref(image_warningPref, &x))) {
+    x = kWarningPrefDefault;
   }
-  image_SetWarningPref(x);
+  gWarningPref = x;
+  return 0;
+}
+
+PR_STATIC_CALLBACK(int)
+image_BlockerPrefChanged(const char * newpref, void * data) {
+  PRBool x;
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+  if (!prefs || NS_FAILED(prefs->GetBoolPref(image_blockerPref, &x))) {
+    x = kBlockerPrefDefault;
+  }
+  gBlockerPref = x;
   return 0;
 }
 
@@ -112,22 +106,34 @@ PUBLIC void
 IMAGE_RegisterPrefCallbacks(void) {
   PRInt32 n;
   PRBool x;
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+  if (!prefs) {
+    NS_NOTREACHED("couldn't get prefs");
+    // All the prefs should still have their default values from the
+    // static initializers.
+    return;
+  }
 
   // Initialize for image_behaviorPref
   if (NS_FAILED(prefs->GetIntPref(image_behaviorPref, &n))) {
-    n = PERMISSION_Accept;
+    n = kBehaviorPrefDefault;
   }
-  image_SetBehaviorPref((PERMISSION_BehaviorEnum)n);
+  gBehaviorPref = (PERMISSION_BehaviorEnum)n;
   prefs->RegisterCallback(image_behaviorPref, image_BehaviorPrefChanged, NULL);
 
   // Initialize for image_warningPref
   if (NS_FAILED(prefs->GetBoolPref(image_warningPref, &x))) {
-    x = PR_FALSE;
+    x = kWarningPrefDefault;
   }
-  image_SetWarningPref(x);
+  gWarningPref = x;
   prefs->RegisterCallback(image_warningPref, image_WarningPrefChanged, NULL);
+
+  // Initialize for image_blockerPref
+  if (NS_FAILED(prefs->GetBoolPref(image_blockerPref, &x))) {
+    x = kBlockerPrefDefault;
+  }
+  gBlockerPref = x;
+  prefs->RegisterCallback(image_blockerPref, image_BlockerPrefChanged, NULL);
 }
 
 PUBLIC nsresult
@@ -135,22 +141,17 @@ IMAGE_CheckForPermission
     (const char * hostname, const char * firstHostname, PRBool *permission) {
 
   /* exit if imageblocker is not enabled */
-  nsresult rv;
-  PRBool prefvalue = PR_FALSE;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (NS_FAILED(rv) || 
-      NS_FAILED(prefs->GetBoolPref("imageblocker.enabled", &prefvalue)) ||
-      !prefvalue) {
-    *permission = (image_GetBehaviorPref() != PERMISSION_DontUse);
+  if (!gBlockerPref) {
+    *permission = (gBehaviorPref != PERMISSION_DontUse);
     return NS_OK;
   }
 
   /* try to make a decision based on pref settings */
-  if ((image_GetBehaviorPref() == PERMISSION_DontUse)) {
+  if ((gBehaviorPref == PERMISSION_DontUse)) {
     *permission = PR_FALSE;
     return NS_OK;
   }
-  if (image_GetBehaviorPref() == PERMISSION_DontAcceptForeign) {
+  if (gBehaviorPref == PERMISSION_DontAcceptForeign) {
     /* compare tails of names checking to see if they have a common domain */
     /* we do this by comparing the tails of both names where each tail includes at least one dot */
     PRInt32 dotcount = 0;
@@ -184,16 +185,13 @@ IMAGE_CheckForPermission
   }
 
   /* use common routine to make decision */
-  PRUnichar * message = CKutil_Localize(NS_LITERAL_STRING("PermissionToAcceptImage").get());
-  PRUnichar * new_string = nsTextFormatter::smprintf(message, hostname ? hostname : "");
   if (NS_SUCCEEDED(PERMISSION_Read())) {
     *permission = Permission_Check(0, hostname, IMAGEPERMISSION,
-                                   PR_FALSE /*image_GetWarningPref()*/, new_string);
+                                   PR_FALSE /* gWarningPref */,
+                                   "PermissionToAcceptImage", 0);
   } else {
     *permission = PR_TRUE;
   }
-  PR_FREEIF(new_string);
-  Recycle(message);
   return NS_OK;
 }
 
