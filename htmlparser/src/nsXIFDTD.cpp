@@ -920,16 +920,6 @@ PRBool nsXIFDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 }
 
 /**
- *  
- *  
- *  @update  gess 4/01/99
- *  @param   aTokenizer 
- *  @return  
- */
-void nsXIFDTD::EmitMisplacedContent(nsITokenizer* aTokenizer){
-}
-
-/**
  *  This method gets called to determine whether a given 
  *  tag can contain newlines. Most do not.
  *  
@@ -1525,7 +1515,9 @@ nsITokenizer* nsXIFDTD::GetTokenizer(void){
  */
 nsITokenRecycler* nsXIFDTD::GetTokenRecycler(void){
   nsITokenizer* theTokenizer=GetTokenizer();
-  return theTokenizer->GetTokenRecycler();
+  if(theTokenizer)
+    return theTokenizer->GetTokenRecycler();
+  return 0;
 }
 
 /**

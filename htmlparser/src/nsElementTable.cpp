@@ -138,7 +138,7 @@ CTagList  gTREndParents(5,0,eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTa
 //*********************************************************************************************
 
 CTagList  gContainsText(4,0,eHTMLTag_text,eHTMLTag_newline,eHTMLTag_whitespace,eHTMLTag_entity);
-CTagList  gContainsHTML(1,0,eHTMLTag_html);
+CTagList  gUnknownKids(2,0,eHTMLTag_html,eHTMLTag_frameset);
 CTagList  gContainsOpts(3,0,eHTMLTag_option,eHTMLTag_optgroup,eHTMLTag_script);
 CTagList  gContainsParam(1,0,eHTMLTag_param);
 CTagList  gColgroupKids(1,0,eHTMLTag_col); 
@@ -237,7 +237,7 @@ nsHTMLElement gHTMLElements[] = {
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
     /*special props, prop-range*/       kOmitWS, 10,
-    /*special parents,kids,skip*/       0,&gContainsHTML,eHTMLTag_unknown},
+    /*special parents,kids,skip*/       0,&gUnknownKids,eHTMLTag_unknown},
 
 
   /*************************************************

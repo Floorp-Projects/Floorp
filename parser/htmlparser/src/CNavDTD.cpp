@@ -1913,16 +1913,6 @@ CITokenHandler* CNavDTD::GetTokenHandler(eHTMLTokenTypes aType) const {
   return result;
 }
 
-/**
- *  
- *  
- *  @update  gess 4/01/99
- *  @param   aTokenizer 
- *  @return  
- */
-void CNavDTD::EmitMisplacedContent(nsITokenizer* aTokenizer){
-}
-
            
  /***********************************************************************************
    The preceeding tables determine the set of elements each tag can contain...

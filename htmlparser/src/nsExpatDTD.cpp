@@ -275,7 +275,9 @@ NS_IMETHODIMP nsExpatDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,
  */
 nsITokenRecycler* nsExpatDTD::GetTokenRecycler(void){
   nsITokenizer* theTokenizer=GetTokenizer();
-  return theTokenizer->GetTokenRecycler();
+  if(theTokenizer)
+    return theTokenizer->GetTokenRecycler();
+  return 0;
 }
 
 
@@ -365,16 +367,6 @@ PRBool nsExpatDTD::Verify(nsString& aURLRef,nsIParser* aParser) {
  * @return
  */
 void nsExpatDTD::SetVerification(PRBool aEnabled){
-}
-
-/**
- *  
- *  
- *  @update  gess 4/01/99
- *  @param   aTokenizer 
- *  @return  
- */
-void nsExpatDTD::EmitMisplacedContent(nsITokenizer* aTokenizer){
 }
 
 /**

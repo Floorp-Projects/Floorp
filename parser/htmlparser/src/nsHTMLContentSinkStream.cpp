@@ -512,7 +512,9 @@ void nsHTMLContentSinkStream::EnsureBufferSize(PRInt32 aNewSize)
     delete [] mBuffer;
     mBufferSize = 2*aNewSize+1; // make the twice as large
     mBuffer = new char[mBufferSize];
-    mBuffer[0] = 0;
+    if(mBuffer){
+      mBuffer[0] = 0;
+    }
   }
 }
 
@@ -946,9 +948,11 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
     const   nsString& data = aNode.GetSkippedContent();
     PRInt32 size = data.Length();
     char*   buffer = new char[size+1];
-    data.ToCString(buffer,size+1);
-    Write(buffer);
-    delete[] buffer;
+    if(buffer){
+      data.ToCString(buffer,size+1);
+      Write(buffer);
+      delete[] buffer;
+    }
   }
   else
   {

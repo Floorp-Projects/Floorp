@@ -350,6 +350,7 @@ protected:
     nsString            mUnusedInput;
     nsString            mCharset;
     nsCharsetSource     mCharsetSource;
+    nsresult            mInternalState;
 };
 
 

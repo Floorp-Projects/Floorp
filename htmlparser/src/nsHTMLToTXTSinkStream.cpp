@@ -462,8 +462,10 @@ void nsHTMLToTXTSinkStream::EnsureBufferSize(PRInt32 aNewSize)
     delete [] mBuffer;
     mBufferSize = 2*aNewSize+1; // make the twice as large
     mBuffer = new char[mBufferSize];
-    mBuffer[0] = 0;
-    mBufferLength = 0;
+    if(mBuffer){
+      mBuffer[0] = 0;
+      mBufferLength = 0;
+    }
   }
 }
 
