@@ -86,6 +86,8 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 OSHELPER	+= nsGNOMERegistry.cpp
 endif
 
+LOCAL_INCLUDES = -I$(srcdir)
+
 EXPORTS = 	nsExternalHelperAppService.h \
 		nsExternalProtocolHandler.h \
 		$(OSDIR)/nsOSHelperAppService.h \
@@ -105,6 +107,7 @@ endif
 CPPSRCS	= \
 	nsExternalHelperAppService.cpp	\
 	nsExternalProtocolHandler.cpp \
+	nsMIMEInfoImpl.cpp \
 	$(OSHELPER) \
 	$(NULL)
 
