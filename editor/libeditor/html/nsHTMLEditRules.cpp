@@ -145,29 +145,74 @@ nsHTMLEditRules::WillInsertText(nsIDOMSelection *aSelection,
                                 nsString       *outString,
                                 TypeInState    typeInState,
                                 PRInt32         aMaxLength)
-{
-  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+{  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
   // initialize out param
   *aCancel = PR_FALSE;
+  nsresult res;
 
-  // XXX - need to handle strings of length >1 with embedded tabs or spaces
-  // XXX - what about embedded returns?
+  char specialChars[] = {'\t',' ',nbsp,'\n',0};
   
-  // is it a tab?
+  mEditor->BeginTransaction();  // we have to batch this in case there are returns
+                                // Insert Break txns don't auto merge with insert text txns
+
+  // strategy: there are simple cases and harder cases.  The harder cases
+  // we handle recursively by breaking them into a series of simple cases.
+  // The simple cases are:
+  // 1) a single space
+  // 2) a single nbsp
+  // 3) a single tab
+  // 4) a single return
+  // 5) a run of chars containing no spaces, nbsp's, tabs, or returns
+  char nbspStr[2] = {nbsp, 0};
+  
+  // is it a solo tab?
   if (*inString == "\t" )
-    return InsertTab(aSelection,aCancel,aTxn,outString);
-  // is it a space?
-  if (*inString == " ")
-    return InsertSpace(aSelection,aCancel,aTxn,outString);
-  
-  // otherwise, return nsTextEditRules version
-  return nsTextEditRules::WillInsertText(aSelection, 
-                                         aCancel, 
-                                         aTxn,
-                                         inString,
-                                         outString,
-                                         typeInState,
-                                         aMaxLength);
+  {
+    res = InsertTab(aSelection,aCancel,aTxn,outString);
+  }
+  // is it a solo space?
+  else if (*inString == " ")
+  {
+    res = InsertSpace(aSelection,aCancel,aTxn,outString);
+  }
+  // is it a solo nbsp?
+  else if (*inString == nbspStr)
+  {
+    res = InsertSpace(aSelection,aCancel,aTxn,outString);
+  }
+  // is it a solo return?
+  else if (*inString == "\n")
+  {
+    // special case - cancel default handling
+    *aCancel = PR_TRUE;
+    res = mEditor->InsertBreak();
+  }
+  else
+  {
+    // is it an innocous run of chars?  no spaces, nbsps, returns, tabs?
+    PRInt32 pos = inString->FindCharInSet(specialChars);
+    if (pos == -1)
+    {
+      // no special chars, easy case
+      res = nsTextEditRules::WillInsertText(aSelection, aCancel, aTxn, inString, outString, typeInState, aMaxLength);
+    }
+    else
+    {
+      // else we need to break it up into two parts and recurse
+      *aCancel = PR_TRUE;
+      nsString firstString;
+      // if first char is special, then use just it
+      if (pos == 0) pos = 1;
+      inString->Left(firstString, pos);
+      inString->Cut(0, pos);
+      if (NS_SUCCEEDED(mEditor->InsertText(firstString)))
+      {
+        res = mEditor->InsertText(*inString);
+      }
+    }
+  }
+  mEditor->EndTransaction();
+  return res;
 }
 
 nsresult
