@@ -185,11 +185,11 @@ Netscape_Java_java_lang_Class_newInstance0(Java_java_lang_Class *inClass)
     nDeclaredConstructors = 
         const_cast<Class *>(&clazz)->getDeclaredConstructors(declaredConstructors);
     
-        /* Now go through each of these declared constructors and see if we have
-        * package access to any of them
-        * FIXME This is horrendous, too much work. Think about not doing this much
-        * work everytime
-    */
+    /* Now go through each of these declared constructors and see if we have
+     * package access to any of them
+     * FIXME This is horrendous, too much work. Think about not doing this much
+     * work everytime.
+     */
     for (int i = 0; i < nDeclaredConstructors; i++) {
         constructor = const_cast<Constructor*>(declaredConstructors[i]);
         
