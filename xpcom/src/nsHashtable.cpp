@@ -17,6 +17,7 @@
  */
 
 #include "prmem.h"
+#include "prlog.h"
 #include "nsHashtable.h"
 
 //
@@ -95,23 +96,41 @@ nsHashKey::~nsHashKey(void)
 {
 }
 
-nsHashtable::nsHashtable(PRUint32 aInitSize) {
+nsHashtable::nsHashtable(PRUint32 aInitSize, PRBool threadSafe)
+  : mLock(NULL)
+{
   hashtable = PL_NewHashTable(aInitSize,
                               _hashValue,
                               _hashKeyCompare,
                               _hashValueCompare,
                               &_hashAllocOps,
                               NULL);
+  if (threadSafe == PR_TRUE)
+  {
+    mLock = PR_NewLock();
+    if (mLock == NULL)
+    {
+      // Cannot create a lock. If running on a multiprocessing system
+      // we are sure to die.
+      PR_ASSERT(mLock != NULL);
+    }
+  }
 }
 
 nsHashtable::~nsHashtable() {
   PL_HashTableDestroy(hashtable);
+  if (mLock) PR_DestroyLock(mLock);
 }
 
 PRBool nsHashtable::Exists(nsHashKey *aKey)
 {
   PLHashNumber hash = aKey->HashValue();
+
+  if (mLock) PR_Lock(mLock);
+
   PLHashEntry **hep = PL_HashTableRawLookup(hashtable, hash, (void *) aKey);
+
+  if (mLock) PR_Unlock(mLock);
 
   return *hep != NULL;
 }
@@ -120,6 +139,9 @@ void *nsHashtable::Put(nsHashKey *aKey, void *aData) {
   void *res =  NULL;
   PLHashNumber hash = aKey->HashValue();
   PLHashEntry *he;
+
+  if (mLock) PR_Lock(mLock);
+
   PLHashEntry **hep = PL_HashTableRawLookup(hashtable, hash, (void *) aKey);
 
   if ((he = *hep) != NULL) {
@@ -130,16 +152,28 @@ void *nsHashtable::Put(nsHashKey *aKey, void *aData) {
                        (void *) aKey->Clone(), aData);
   }
 
+  if (mLock) PR_Unlock(mLock);
+
   return res;
 }
 
 void *nsHashtable::Get(nsHashKey *aKey) {
-  return PL_HashTableLookup(hashtable, (void *) aKey);
+
+  if (mLock) PR_Lock(mLock);
+
+  void *ret = PL_HashTableLookup(hashtable, (void *) aKey);
+
+  if (mLock) PR_Unlock(mLock);
+
+  return ret;
 }
 
 void *nsHashtable::Remove(nsHashKey *aKey) {
   PLHashNumber hash = aKey->HashValue();
   PLHashEntry *he;
+
+  if (mLock) PR_Lock(mLock);
+
   PLHashEntry **hep = PL_HashTableRawLookup(hashtable, hash, (void *) aKey);
   void *res = NULL;
   
@@ -147,6 +181,8 @@ void *nsHashtable::Remove(nsHashKey *aKey) {
     res = he->value;
     PL_HashTableRawRemove(hashtable, hep, he);
   }
+
+  if (mLock) PR_Unlock(mLock);
 
   return res;
 }
@@ -159,8 +195,11 @@ static PR_CALLBACK PRIntn _hashEnumerateCopy(PLHashEntry *he, PRIntn i, void *ar
 }
 
 nsHashtable * nsHashtable::Clone() {
-  nsHashtable *newHashTable = new nsHashtable(hashtable->nentries);
-  
+  PRBool threadSafe = PR_FALSE;
+  if (mLock)
+    threadSafe = PR_TRUE;
+  nsHashtable *newHashTable = new nsHashtable(hashtable->nentries, threadSafe);
+
   PL_HashTableEnumerateEntries(hashtable, _hashEnumerateCopy, newHashTable);
   return newHashTable;
 }

@@ -149,12 +149,12 @@ nsComponentManagerImpl::nsComponentManagerImpl()
 nsresult nsComponentManagerImpl::Init(void) 
 {
     if (mFactories == NULL) {
-        mFactories = new nsHashtable();
+        mFactories = new nsHashtable(256, PR_TRUE);
         if (mFactories == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
     }
     if (mProgIDs == NULL) {
-        mProgIDs = new nsHashtable();
+        mProgIDs = new nsHashtable(256, PR_TRUE);
         if (mProgIDs == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -164,7 +164,7 @@ nsresult nsComponentManagerImpl::Init(void)
             return NS_ERROR_OUT_OF_MEMORY;
     }
     if (mDllStore == NULL) {
-        mDllStore = new nsHashtable();
+        mDllStore = new nsHashtable(256, PR_TRUE);
         if (mDllStore == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
     }
