@@ -100,6 +100,14 @@ function checkValid(elementID)
 }
 
 //---------------------------------------------------
+function stripTrailingWhitespace(element)
+{
+  var stringIn = element.value;
+  stringIn = stringIn.replace(/\s+$/,"");
+  element.value = stringIn;
+}
+
+//---------------------------------------------------
 function doPrintToFile( value )
 {
   if (value ) {

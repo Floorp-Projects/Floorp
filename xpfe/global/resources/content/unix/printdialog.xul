@@ -60,7 +60,7 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
       <row valign="baseline">
         <text id="fileLabel" class="label" value="&fileInput.label;"/>
         <box>
-          <textfield id="fileInput" flex ="1"/>
+          <textfield id="fileInput" flex ="1" onblur="stripTrailingWhitespace(this)"/>
           <button id="chooseFile" value = "&chooseButton.label;" oncommand = "onChooseFile()"/>
         </box>
       </row>
