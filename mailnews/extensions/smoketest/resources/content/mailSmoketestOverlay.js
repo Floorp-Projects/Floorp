@@ -21,10 +21,10 @@
 function StartSmoketestTimers() 
 {
   dump("Inside StartSmoketestTimers \n\n\n");
-  setTimeout("SelectInboxFolderMessage();",10000);
-  setTimeout("MsgReplySender();",15000);
-  setTimeout("SendMessageNow();",25000);
-  setTimeout("window.close();",35000);
+  setTimeout("SelectInboxFolderMessage();",10000); //at 10 seconds, load the 1st message in the Inbox
+  setTimeout("MsgReplySender();",15000); //at 15 seconds, reply to the message
+  setTimeout("SendMessageNow();",25000); //at 25 seconds, send the message
+  setTimeout("window.close();",35000); //at 35 seconds, close the window
 }
 
 function SelectInboxFolderMessage()
@@ -32,12 +32,12 @@ function SelectInboxFolderMessage()
   var folderURI = window.parent.GetSelectedFolderURI();
   var server = GetServer(folderURI);
   try {
-    OpenInboxForServer(server);
+    OpenInboxForServer(server); //open the Inbox
   }
   catch(ex) {
     dump("Error -> " + ex + "\n");
   } 
-  MsgNextMessage();
+  MsgNextMessage(); //select and load the next message in the Inbox
 }
 
 function SendMessageNow()
@@ -45,8 +45,8 @@ function SendMessageNow()
   var cwindowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
   var iwindowManager = Components.interfaces.nsIWindowMediator;           
   var windowManager  = cwindowManager.QueryInterface(iwindowManager);     
-  var composeWindow = windowManager.getMostRecentWindow('msgcompose');       
-  composeWindow.SendMessage();
+  var composeWindow = windowManager.getMostRecentWindow('msgcompose'); //find the open msgcompose window and get it      
+  composeWindow.SendMessage(); //send the message that we've done a Reply to
 }
 
 addEventListener("load",StartSmoketestTimers,false);
