@@ -25,6 +25,7 @@
 
 #include "nsBaseDragService.h"
 #include "nsIDragSessionGTK.h"
+#include "nsIObserver.h"
 #include <gtk/gtk.h>
 
 
@@ -32,7 +33,9 @@
  * Native GTK DragService wrapper
  */
 
-class nsDragService : public nsBaseDragService, public nsIDragSessionGTK
+class nsDragService : public nsBaseDragService,
+                      public nsIDragSessionGTK,
+                      public nsIObserver
 {
 
 public:
@@ -40,6 +43,8 @@ public:
   virtual ~nsDragService();
   
   NS_DECL_ISUPPORTS_INHERITED
+
+  NS_DECL_NSIOBSERVER
 
   // nsIDragService
   NS_IMETHOD InvokeDragSession (nsIDOMNode *aDOMNode,
