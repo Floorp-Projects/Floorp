@@ -25,7 +25,6 @@
 #include "nsIPluginHost.h"
 #include "nsCRT.h"
 #include "prlink.h"
-#include "nsIMalloc.h"
 #include "nsIFileUtilities.h"
 #include "nsPluginsDir.h"
 
@@ -222,7 +221,6 @@ private:
 
   char        *mPluginPath;
   nsPluginTag *mPlugins;
-  nsIMalloc   *mMalloc;
   PRBool      mPluginsLoaded;
   nsIServiceManager *mServiceMgr;
 };
