@@ -336,7 +336,7 @@ void TestCase_2(void *arg)
 
 static void PR_CALLBACK ProxyTest( void *arg )
 {
-//    TestCase_TwoClassesOneInterface(arg);
+    TestCase_TwoClassesOneInterface(arg);
     TestCase_2(arg);
 
 }
