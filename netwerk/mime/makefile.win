@@ -21,8 +21,6 @@
 
 DEPTH = ..\..
 
-MODULE = mime
-
 DIRS=          \
 	public \
 	src    \
