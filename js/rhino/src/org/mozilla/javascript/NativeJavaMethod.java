@@ -220,69 +220,94 @@ public class NativeJavaMethod extends NativeFunction implements Function {
             }
             javaObject = ((Wrapper) o).unwrap();        
         }
-        retry:
-        for (int attempt=0; ; attempt++) {
+        try {
+            if (debug) {
+                printDebug("Calling ", meth, args);
+            }
+
+            Object retval;
             try {
-                if (debug) {
-                    printDebug("Calling ", meth, args);
-                }
+                retval = meth.invoke(javaObject, args);
+            } catch (IllegalAccessException e) {
+                retval = retryIllegalAccessInvoke(meth, javaObject, args, e);
+            }
+            Class staticType = meth.getReturnType();
 
-                Object retval = meth.invoke(javaObject, args);
-                Class staticType = meth.getReturnType();
+            if (debug) {
+                Class actualType = (retval == null) ? null 
+                                                    : retval.getClass();
+                System.err.println(" ----- Returned " + retval + 
+                                   " actual = " + actualType +
+                                   " expect = " + staticType);
+            }
 
-                if (debug) {
-                    Class actualType = (retval == null) ? null 
-                                                        : retval.getClass();
-                    System.err.println(" ----- Returned " + retval + 
-                                       " actual = " + actualType +
-                                       " expect = " + staticType);
-                }
+            Object wrapped = NativeJavaObject.wrap(scope, retval, staticType);
 
-                Object wrapped = NativeJavaObject.wrap(scope, retval, staticType);
+            if (debug) {
+                Class actualType = (wrapped == null) ? null 
+                                                     : wrapped.getClass();
+                System.err.println(" ----- Wrapped as " + wrapped + 
+                                   " class = " + actualType);
+            }
 
-                if (debug) {
-                    Class actualType = (wrapped == null) ? null 
-                                                         : wrapped.getClass();
-                    System.err.println(" ----- Wrapped as " + wrapped + 
-                                       " class = " + actualType);
-                }
-
-                if (wrapped == Undefined.instance)
-                    return wrapped;
-                if (wrapped == null && staticType == Void.TYPE)
-                    return Undefined.instance;
+            if (wrapped == Undefined.instance)
                 return wrapped;
-            } catch (IllegalAccessException accessEx) {
-                if (Modifier.isPublic(meth.getModifiers()) && attempt == 0) {
-                    /**
-                     * Due to a bug in Suns VM, public methods in private
-                     * classes are not accessible by default (Sun Bug #4071593).
-                     * We have to explicitly set the method accessible 
-                     * via meth.setAccessible(true) but we have to use 
-                     * reflection because the setAccessible() in Method is 
-                     * not available under jdk 1.1. We wait until a failure 
-                     * to retry to avoid the overhead of this call on cases 
-                     * that don't require it.
-                     */
-                    if (method_setAccessible != null) {
-                        Object[] args_wrapper = { Boolean.TRUE };
-                        try {
-                            method_setAccessible.invoke(meth, args_wrapper);
-                        }
-                        catch (IllegalAccessException ex) { }
-                        catch (IllegalArgumentException ex) { }
-                        catch (InvocationTargetException ex) { }
-                    }
-                    continue retry;
+            if (wrapped == null && staticType == Void.TYPE)
+                return Undefined.instance;
+            return wrapped;
+        } catch (IllegalAccessException accessEx) {
+            throw Context.reportRuntimeError(
+                "While attempting to call \"" + meth.getName() + 
+                "\" in class \"" + meth.getDeclaringClass().getName() +
+                "\" receieved " + accessEx.toString());
+        } catch (InvocationTargetException e) {
+            throw JavaScriptException.wrapException(scope, e);
+        }
+    }
+
+    static Object retryIllegalAccessInvoke(Method method, Object obj, 
+                                           Object[] args, 
+                                           IllegalAccessException illegalAccess)
+        throws IllegalAccessException, InvocationTargetException
+    {
+        if (Modifier.isPublic(method.getModifiers())) {
+            String name = method.getName();
+            Class[] parms = method.getParameterTypes();
+            Class c = method.getDeclaringClass();
+            Class[] intfs = c.getInterfaces();
+            for (int i=0; i < intfs.length; i++) {
+                c = intfs[i];
+                try {
+                    Method m = c.getMethod(name, parms);
+                    return m.invoke(obj, args);
+                } catch (NoSuchMethodException ex) {
+                    continue;
+                } catch (IllegalAccessException ex) {
+                    continue;
                 }
-                throw Context.reportRuntimeError(
-                    "While attempting to call \"" + meth.getName() + 
-                    "\" in class \"" + meth.getDeclaringClass().getName() +
-                    "\" receieved " + accessEx.toString());
-            } catch (InvocationTargetException e) {
-                throw JavaScriptException.wrapException(scope, e);
             }
         }
+        /**
+         * Due to a bug in Sun's VM, public methods in private
+         * classes are not accessible by default (Sun Bug #4071593).
+         * We have to explicitly set the method accessible 
+         * via method.setAccessible(true) but we have to use 
+         * reflection because the setAccessible() in Method is 
+         * not available under jdk 1.1. We wait until a failure 
+         * to retry to avoid the overhead of this call on cases 
+         * that don't require it.
+         */
+        if (method_setAccessible != null) {
+            Object[] args_wrapper = { Boolean.TRUE };
+            try {
+                method_setAccessible.invoke(method, args_wrapper);
+            }
+            catch (IllegalAccessException ex) { }
+            catch (IllegalArgumentException ex) { }
+            catch (InvocationTargetException ex) { }
+            return method.invoke(obj, args);
+        }
+        throw illegalAccess;
     }
 
     /** 

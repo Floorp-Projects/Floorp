@@ -91,7 +91,15 @@ class JavaMembers {
         try {
             if (member instanceof BeanProperty) {
                 BeanProperty bp = (BeanProperty) member;
-                rval = bp.getter.invoke(javaObject, ScriptRuntime.emptyArgs);
+                try {
+                    rval = bp.getter.invoke(javaObject, null);
+                } catch (IllegalAccessException e) {
+                    rval = NativeJavaMethod.retryIllegalAccessInvoke(
+                            bp.getter,
+                            javaObject,
+                            null,
+                            e);
+                }
                 type = bp.getter.getReturnType();
             } else {
                 Field field = (Field) member;
