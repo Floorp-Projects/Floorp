@@ -336,8 +336,8 @@ public:
 
   NS_IMETHOD LoadInlineStyle(nsIContent* aElement,
                              nsIUnicharInputStream* aIn, 
-                             const nsString& aTitle, 
-                             const nsString& aMedia, 
+                             const nsAString& aTitle, 
+                             const nsAString& aMedia, 
                              PRInt32 aDefaultNameSpaceID,
                              nsIParser* aParserToUnblock,
                              PRBool& aCompleted,
@@ -345,8 +345,8 @@ public:
 
   NS_IMETHOD LoadStyleLink(nsIContent* aElement,
                            nsIURI* aURL, 
-                           const nsString& aTitle, 
-                           const nsString& aMedia, 
+                           const nsAString& aTitle, 
+                           const nsAString& aMedia, 
                            PRInt32 aDefaultNameSpaceID,
                            nsIParser* aParserToUnblock,
                            PRBool& aCompleted,
@@ -354,7 +354,7 @@ public:
 
   NS_IMETHOD LoadChildSheet(nsICSSStyleSheet* aParentSheet,
                             nsIURI* aURL, 
-                            const nsString& aMedia,
+                            const nsAString& aMedia,
                             PRInt32 aDefaultNameSpaceID,
                             nsICSSImportRule* aRule);
 
@@ -1806,8 +1806,8 @@ CSSLoaderImpl::SheetComplete(SheetLoadData* aLoadData, PRBool aSucceeded)
 NS_IMETHODIMP
 CSSLoaderImpl::LoadInlineStyle(nsIContent* aElement,
                                nsIUnicharInputStream* aStream, 
-                               const nsString& aTitle, 
-                               const nsString& aMedia, 
+                               const nsAString& aTitle, 
+                               const nsAString& aMedia, 
                                PRInt32 aDefaultNameSpaceID,
                                nsIParser* aParserToUnblock,
                                PRBool& aCompleted,
@@ -1860,8 +1860,8 @@ CSSLoaderImpl::LoadInlineStyle(nsIContent* aElement,
 NS_IMETHODIMP
 CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
                              nsIURI* aURL, 
-                             const nsString& aTitle, 
-                             const nsString& aMedia, 
+                             const nsAString& aTitle, 
+                             const nsAString& aMedia, 
                              PRInt32 aDefaultNameSpaceID,
                              nsIParser* aParserToUnblock,
                              PRBool& aCompleted,
@@ -1949,7 +1949,7 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
 NS_IMETHODIMP
 CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
                               nsIURI* aURL, 
-                              const nsString& aMedia,
+                              const nsAString& aMedia,
                               PRInt32 aDefaultNameSpaceID,
                               nsICSSImportRule* aParentRule)
 {

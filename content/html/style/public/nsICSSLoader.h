@@ -44,7 +44,6 @@
 #include "nsICSSImportRule.h"
 
 class nsIAtom;
-class nsString;
 class nsIURI;
 class nsICSSParser;
 class nsICSSStyleSheet;
@@ -86,8 +85,8 @@ public:
   //   will be marked complete when complete
   NS_IMETHOD LoadInlineStyle(nsIContent* aElement,
                              nsIUnicharInputStream* aStream, 
-                             const nsString& aTitle, 
-                             const nsString& aMedia, 
+                             const nsAString& aTitle, 
+                             const nsAString& aMedia, 
                              PRInt32 aDefaultNameSpaceID,
                              nsIParser* aParserToUnblock,
                              PRBool& aCompleted,
@@ -100,8 +99,8 @@ public:
   //   will be marked complete when complete
   NS_IMETHOD LoadStyleLink(nsIContent* aElement,
                            nsIURI* aURL, 
-                           const nsString& aTitle, 
-                           const nsString& aMedia, 
+                           const nsAString& aTitle, 
+                           const nsAString& aMedia, 
                            PRInt32 aDefaultNameSpaceID,
                            nsIParser* aParserToUnblock,
                            PRBool& aCompleted,
@@ -110,7 +109,7 @@ public:
   // Load a child style sheet (@import)
   NS_IMETHOD LoadChildSheet(nsICSSStyleSheet* aParentSheet,
                             nsIURI* aURL, 
-                            const nsString& aMedia,
+                            const nsAString& aMedia,
                             PRInt32 aDefaultNameSpaceID,
                             nsICSSImportRule* aRule) = 0;
 
