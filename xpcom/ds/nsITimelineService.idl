@@ -123,16 +123,16 @@ interface nsITimelineService : nsISupports
  * These are equivalent to the corresponding nsITimelineService
  * methods, and can be called before XPCOM is initialized.
  */
-PR_EXTERN(nsresult) NS_TimelineMark(const char *text, ...);
-PR_EXTERN(nsresult) NS_TimelineForceMark(const char *text, ...);
-PR_EXTERN(nsresult) NS_TimelineStartTimer(const char *timerName);
-PR_EXTERN(nsresult) NS_TimelineStopTimer(const char *timerName);
-PR_EXTERN(nsresult) NS_TimelineResetTimer(const char *timerName);
-PR_EXTERN(nsresult) NS_TimelineMarkTimer(const char *timerName, const char *str=nsnull);
-PR_EXTERN(nsresult) NS_TimelineIndent();
-PR_EXTERN(nsresult) NS_TimelineOutdent();
-PR_EXTERN(nsresult) NS_TimelineEnter(const char *text);
-PR_EXTERN(nsresult) NS_TimelineLeave(const char *text);
+extern "C" NS_COM nsresult NS_TimelineMark(const char *text, ...);
+extern "C" NS_COM nsresult NS_TimelineForceMark(const char *text, ...);
+extern "C" NS_COM nsresult NS_TimelineStartTimer(const char *timerName);
+extern "C" NS_COM nsresult NS_TimelineStopTimer(const char *timerName);
+extern "C" NS_COM nsresult NS_TimelineResetTimer(const char *timerName);
+extern "C" NS_COM nsresult NS_TimelineMarkTimer(const char *timerName, const char *str=nsnull);
+extern "C" NS_COM nsresult NS_TimelineIndent();
+extern "C" NS_COM nsresult NS_TimelineOutdent();
+extern "C" NS_COM nsresult NS_TimelineEnter(const char *text);
+extern "C" NS_COM nsresult NS_TimelineLeave(const char *text);
 
 /*
  * Use these macros for the above calls so we can easily compile them
