@@ -465,7 +465,8 @@ END of Deprecated -->
         <menuitem value="#1 Technicolor DIV" oncommand="window._content.location.href='http://www.shadowland.org/xbl/test1/test.html'"/>
         <menuitem value="#2 Rollover Madness" oncommand="window._content.location.href='http://www.shadowland.org/xbl/test2/test.html'"/>
         <menuitem value="#3 Popups in HTML" oncommand="window._content.location.href='http://www.shadowland.org/xbl/test3/test.html'"/>
-        <menuitem value="#4 Partition Magic" oncommand="window._content.location.href='http://www.shadowland.org/xbl/test4/test.html'"/>
+        <menuitem value="#4 Partition Magic" oncommand="window._content.location.href='http://www.shadowland.org/xbl/test4/test.html'"/>        
+        <menuitem value="#5 Sticky Notes" oncommand="window._content.location.href='http://www.shadowland.org/xbl/test5/test.html'"/>
        </menupopup>
       </menu>
 
