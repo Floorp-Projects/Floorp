@@ -23,6 +23,7 @@
 #include "nsTextEditRules.h"
 
 #include "nsEditor.h"
+#include "nsHTMLEditUtils.h"
 
 #include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
@@ -322,7 +323,7 @@ nsTextEditRules::WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel)
   if (NS_FAILED(res)) return res;
   // get prior node
   res = GetPriorHTMLNode(selNode, selOffset, &priorNode);
-  if (NS_SUCCEEDED(res) && priorNode && IsMozBR(priorNode))    
+  if (NS_SUCCEEDED(res) && priorNode && nsHTMLEditUtils::IsMozBR(priorNode))
   {
     nsCOMPtr<nsIDOMNode> block1, block2;
     if (mEditor->IsBlockNode(selNode)) block1 = selNode;
@@ -456,7 +457,7 @@ nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
   if (NS_FAILED(res)) return res;
   res = GetPriorHTMLNode(selNode, selOffset, &nearNode);
   if (NS_FAILED(res)) return res;
-  if (nearNode && IsBreak(nearNode) && !IsMozBR(nearNode))
+  if (nearNode && nsHTMLEditUtils::IsBreak(nearNode) && !nsHTMLEditUtils::IsMozBR(nearNode))
   {
     PRBool bIsLast;
     res = IsLastEditableChild(nearNode, &bIsLast);
@@ -483,7 +484,7 @@ nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
       nsCOMPtr<nsIDOMNode> nextNode;
       res = GetNextHTMLNode(nearNode, &nextNode);
       if (NS_FAILED(res)) return res;
-      if (IsMozBR(nextNode))
+      if (nsHTMLEditUtils::IsMozBR(nextNode))
       {
         res = nsEditor::GetNodeLocation(nextNode, &selNode, &selOffset);
         if (NS_FAILED(res)) return res;
@@ -1666,7 +1667,7 @@ nsTextEditRules::GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outN
   if (NS_FAILED(res)) return res;
   
   // if it's not in the body, then zero it out
-  if (*outNode && !InBody(*outNode))
+  if (*outNode && !nsHTMLEditUtils::InBody(*outNode))
   {
     *outNode = nsnull;
   }
@@ -1685,7 +1686,7 @@ nsTextEditRules::GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMP
   if (NS_FAILED(res)) return res;
   
   // if it's not in the body, then zero it out
-  if (*outNode && !InBody(*outNode))
+  if (*outNode && !nsHTMLEditUtils::InBody(*outNode))
   {
     *outNode = nsnull;
   }
@@ -1705,7 +1706,7 @@ nsTextEditRules::GetNextHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNo
   if (NS_FAILED(res)) return res;
   
   // if it's not in the body, then zero it out
-  if (*outNode && !InBody(*outNode))
+  if (*outNode && !nsHTMLEditUtils::InBody(*outNode))
   {
     *outNode = nsnull;
   }
@@ -1724,7 +1725,7 @@ nsTextEditRules::GetNextHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPt
   if (NS_FAILED(res)) return res;
   
   // if it's not in the body, then zero it out
-  if (*outNode && !InBody(*outNode))
+  if (*outNode && !nsHTMLEditUtils::InBody(*outNode))
   {
     *outNode = nsnull;
   }
@@ -1829,98 +1830,6 @@ nsTextEditRules::GetLastEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *
   
   *aOutLastChild = child;
   return res;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// IsBody: true if node an html body node
-//                  
-PRBool 
-nsTextEditRules::IsBody(nsIDOMNode *node)
-{
-  NS_PRECONDITION(node, "null node passed to nsTextEditRules::IsBody");
-  nsAutoString tag;
-  nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
-  if (tag == "body")
-  {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-
-
-///////////////////////////////////////////////////////////////////////////
-// IsBreak: true if node an html break node
-//                  
-PRBool 
-nsTextEditRules::IsBreak(nsIDOMNode *node)
-{
-  NS_PRECONDITION(node, "null node passed to nsTextEditRules::IsBreak");
-  nsAutoString tag;
-  nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
-  if (tag == "br")
-  {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// IsMozBR: true if node an html br node with type = _moz
-//                  
-PRBool 
-nsTextEditRules::IsMozBR(nsIDOMNode *node)
-{
-  NS_PRECONDITION(node, "null node passed to nsTextEditRules::IsMozBR");
-  if (IsBreak(node) && HasMozAttr(node)) return PR_TRUE;
-  return PR_FALSE;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// HasMozAttr: true if node has type attribute = _moz
-//             (used to indicate the div's and br's we use in
-//              mail compose rules)
-//                  
-PRBool 
-nsTextEditRules::HasMozAttr(nsIDOMNode *node)
-{
-  NS_PRECONDITION(node, "null parent passed to nsTextEditRules::HasMozAttr");
-  nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(node);
-  if (elem)
-  {
-    nsAutoString typeAttrName("type");
-    nsAutoString typeAttrVal;
-    nsresult res = elem->GetAttribute(typeAttrName, typeAttrVal);
-    typeAttrVal.ToLowerCase();
-    if (NS_SUCCEEDED(res) && (typeAttrVal == "_moz"))
-      return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-///////////////////////////////////////////////////////////////////////////
-// InBody: true if node is a descendant of the body
-//                  
-PRBool 
-nsTextEditRules::InBody(nsIDOMNode *node)
-{
-  NS_PRECONDITION(node, "null parent passed to nsTextEditRules::InBody");
-  nsCOMPtr<nsIDOMNode> tmp;
-  nsCOMPtr<nsIDOMNode> p = do_QueryInterface(node);
-
-  while (p && !IsBody(p))
-  {
-    if ( NS_FAILED(p->GetParentNode(getter_AddRefs(tmp))) || !tmp) // no parent, ran off top of tree
-      return PR_FALSE;
-    p = tmp;
-  }
-  if (p) return PR_TRUE;
-  return PR_FALSE;
 }
 
 

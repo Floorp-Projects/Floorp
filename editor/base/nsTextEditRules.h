@@ -219,13 +219,6 @@ protected:
   nsresult GetFirstEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstChild);
   nsresult GetLastEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastChild);
 
-  static PRBool IsBody(nsIDOMNode *aNode);
-  static PRBool IsBreak(nsIDOMNode *aNode);
-  static PRBool IsMozBR(nsIDOMNode *aNode);
-  static PRBool HasMozAttr(nsIDOMNode *aNode);
-
-  static PRBool InBody(nsIDOMNode *aNode);
-
   nsresult CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outBRNode);
 
 

@@ -80,38 +80,20 @@ protected:
   nsresult ReturnInHeader(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
   nsresult ReturnInParagraph(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset, PRBool *aCancel, PRBool *aHandled);
   nsresult ReturnInListItem(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
-
-  // helper methods
-  static PRBool IsHeader(nsIDOMNode *aNode);
-  static PRBool IsParagraph(nsIDOMNode *aNode);
-  static PRBool IsListItem(nsIDOMNode *aNode);
-  static PRBool IsTableCell(nsIDOMNode *aNode);
-  static PRBool IsList(nsIDOMNode *aNode);
-  static PRBool IsUnorderedList(nsIDOMNode *aNode);
-  static PRBool IsOrderedList(nsIDOMNode *aNode);
-  static PRBool IsBlockquote(nsIDOMNode *aNode);
-  static PRBool IsAnchor(nsIDOMNode *aNode);
-  static PRBool IsImage(nsIDOMNode *aNode);
-  static PRBool IsDiv(nsIDOMNode *aNode);
-  static PRBool IsNormalDiv(nsIDOMNode *aNode);
-  static PRBool IsMozDiv(nsIDOMNode *aNode);
-  static PRBool IsMailCite(nsIDOMNode *aNode);
-  
   
   nsresult IsEmptyBlock(nsIDOMNode *aNode, 
-                       PRBool *outIsEmptyBlock, 
-                       PRBool aMozBRDoesntCount = PR_FALSE,
-                       PRBool aListItemsNotEmpty = PR_FALSE);
+                        PRBool *outIsEmptyBlock, 
+                        PRBool aMozBRDoesntCount = PR_FALSE,
+                        PRBool aListItemsNotEmpty = PR_FALSE);
   nsresult IsEmptyNode(nsIDOMNode *aNode, 
                        PRBool *outIsEmptyBlock, 
                        PRBool aMozBRDoesntCount = PR_FALSE,
                        PRBool aListItemsNotEmpty = PR_FALSE);
-  PRBool IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent);
   PRBool IsFirstNode(nsIDOMNode *aNode);
   PRBool IsLastNode(nsIDOMNode *aNode);
   PRBool AtStartOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);
   PRBool AtEndOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);
-  
+
   nsresult GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt32 aOffset, 
                             PRInt32 actionID, nsCOMPtr<nsIDOMNode> *outNode, PRInt32 *outOffset);
   nsresult GetPromotedRanges(nsIDOMSelection *inSelection, 

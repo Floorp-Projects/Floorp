@@ -24,6 +24,7 @@
 
 #include "nsHTMLEditor.h"
 #include "nsHTMLEditRules.h"
+#include "nsHTMLEditUtils.h"
 
 #include "nsEditorEventListeners.h"
 
@@ -3421,6 +3422,7 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
 NS_IMETHODIMP
 nsHTMLEditor::InsertFormattingForNode(nsIDOMNode* aNode)
 {
+  return NS_OK;
   nsresult res;
 
   // Don't insert any formatting unless it's an element node
@@ -3431,54 +3433,102 @@ nsHTMLEditor::InsertFormattingForNode(nsIDOMNode* aNode)
   if (nodeType != nsIDOMNode::ELEMENT_NODE)
     return NS_OK;
 
-  // Insert formatting only for block nodes
-  // (would it be better to insert for any non-inline node?)
-  PRBool block;
-  res = IsNodeBlock(aNode, block);
-  if (NS_FAILED(res))
-    return res;
-  if (!block)
+  // Don't insert formatting if we're a plaintext editor.
+  // The newlines get considered to be part of the text.
+  // This, of course, makes the html look lousy, but we're expecting
+  // that plaintext editors will only output plaintext, not html.
+  if (mFlags & nsHTMLEditor::eEditorPlaintextMask)
     return NS_OK;
 
   nsCOMPtr<nsIDOMNode> parent;
   res = aNode->GetParentNode(getter_AddRefs(parent));
   if (NS_FAILED(res))
     return res;
-  PRInt32 offset = GetIndexOf(parent, aNode);
-
-  nsString namestr;
-  aNode->GetNodeName(namestr);
-
-  // Don't insert formatting for pre or br if we're a plaintext editor.
-  // The newlines get considered to be part of the text, yet the
-  // edit rules also insert breaks, so we end up with too much
-  // vertical whitespace any time the user hits return.
-  // This, of course, makes the html look lousy, but we're
-  // expecting that no one will look at the html from a plaintext editor.
-  if ((mFlags & nsHTMLEditor::eEditorPlaintextMask)
-      && (namestr.Equals("pre", PR_TRUE) || namestr.Equals("br", PR_TRUE)))
-    return NS_OK;
 
 #ifdef DEBUG_akkana
+#define DEBUG_formatting
+#endif
+#ifdef DEBUG_formatting
+  nsString namestr;
+  aNode->GetNodeName(namestr);
   //DumpContentTree();
   char* nodename = namestr.ToNewCString();
   printf("Inserting formatting for node <%s> at offset %d\n",
-         nodename, offset);
+         nodename, GetIndexOf(parent, aNode));
+#endif /* DEBUG_formatting */
+
+  // If it has children, first iterate over the children:
+  nsCOMPtr<nsIDOMNode> child;
+  res = aNode->GetFirstChild(getter_AddRefs(child));
+  if (NS_SUCCEEDED(res) && child) 
+  {
+#ifdef DEBUG_formatting
+    printf("%s: Iterating over children\n", nodename);
+#endif /* DEBUG_formatting */
+
+    while (child)
+    {
+#ifdef DEBUG_formatting
+      printf("%s child\n", nodename);
+#endif /* DEBUG_formatting */
+      InsertFormattingForNode(child);
+      nsCOMPtr<nsIDOMNode> nextSib;
+      child->GetNextSibling(getter_AddRefs(nextSib));
+      child = nextSib;
+    }
+  }
+
+  nsAutoString newline ("\n");
+
+  //
+  // XXX Would be nice, ultimately, to format according to user prefs.
+  //
+  res = NS_OK;
+
+  PRInt32 offset = GetIndexOf(parent, aNode);
+
+  if (nsHTMLEditUtils::IsBreak(aNode) && !nsHTMLEditUtils::IsMozBR(aNode))
+  {
+    // After the close tag
+    res = InsertNoneditableTextNode(parent, offset+1, newline);
+  }
+
+  else if (nsEditor::IsBlockNode(aNode))
+  {
+#ifdef DEBUG_formatting
+    printf("Block node %s at offset %d\n-----------\n", nodename, offset);
+    DumpContentTree();
+#endif /* DEBUG_formatting */
+    if (!nsHTMLEditUtils::IsListItem(aNode))
+    {
+      // After the close tag
+      InsertNoneditableTextNode(parent, offset+1, newline);
+#ifdef DEBUG_formatting
+      printf("Now %s has offset %d\n-----------\n",
+             nodename, GetIndexOf(parent, aNode));
+      DumpContentTree();
+      printf("----------------\n");
+#endif /* DEBUG_formatting */
+    }
+
+    // Before the open tag
+    res = InsertNoneditableTextNode(parent, offset, newline);
+#ifdef DEBUG_formatting
+    printf("And NOW, %s has offset %d\n-----------\n", nodename, GetIndexOf(parent, aNode));
+    DumpContentTree();
+    printf("----------------\n");
+#endif /* DEBUG_formatting */
+  }
+
+  // Some inline tags for which we might want formatting:
+  else if (nsHTMLEditUtils::IsImage(aNode))
+  {
+    res = InsertNoneditableTextNode(parent, offset, newline);
+  }
+
+#ifdef DEBUG_formatting
   Recycle(nodename);
-#endif /* DEBUG_akkana */
-
-  //
-  // XXX We don't yet have a real formatter. As a cheap stopgap,
-  // XXX just insert a newline before and after each newly inserted tag.
-  //
-
-  nsAutoString str ("\n");
-
-  // After the close tag
-  //res = InsertNoneditableTextNode(parent, offset+1, str);
-
-  // Before the open tag
-  res = InsertNoneditableTextNode(parent, offset, str);
+#endif /* DEBUG_formatting */
 
   return res;
 }
@@ -3725,15 +3775,14 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRBool &aCanPaste)
   // add the HTML-editor only flavors
   if ((editorFlags & eEditorPlaintextMask) == 0)
   {
-  
-    for (char** flavor = htmlEditorFlavors; *flavor; flavor++)
+    for (char** htmlFlavor = htmlEditorFlavors; *htmlFlavor; htmlFlavor++)
     {
       nsCOMPtr<nsISupportsString> flavorString;            
       nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
            NS_GET_IID(nsISupportsString), getter_AddRefs(flavorString));
       if (flavorString)
       {
-        flavorString->SetData(*flavor);
+        flavorString->SetData(*htmlFlavor);
         flavorsList->AppendElement(flavorString);
       }
     }
