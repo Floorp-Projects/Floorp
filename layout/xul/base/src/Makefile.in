@@ -98,6 +98,8 @@ CPPSRCS		= \
 		nsMenuDismissalListener.cpp \
 		nsPopupSetFrame.cpp \
 		nsRepeatService.cpp \
+		nsTitleBarFrame.cpp \
+		nsResizerFrame.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

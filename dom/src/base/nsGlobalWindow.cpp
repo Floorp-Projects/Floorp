@@ -2635,6 +2635,26 @@ NS_IMETHODIMP GlobalWindowImpl::GetRootCommandDispatcher (
 	return NS_OK;
 }
 
+
+
+NS_IMETHODIMP GlobalWindowImpl::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy, PRBool fRepaint)
+{
+	nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
+   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
+   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
+
+	return treeOwnerAsWin->SetPositionAndSize(x,y,cx,cy,fRepaint);
+}
+
+NS_IMETHODIMP GlobalWindowImpl::GetPositionAndSize(PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy)
+{
+	nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
+   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
+   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
+
+	return treeOwnerAsWin->GetPositionAndSize(x,y,cx,cy);
+}
+
 //*****************************************************************************
 // GlobalWindowImpl::nsIDOMViewCSS
 //*****************************************************************************   

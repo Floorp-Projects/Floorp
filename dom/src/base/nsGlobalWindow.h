@@ -155,6 +155,10 @@ public:
      nsIDocument * aDoc,
      nsIDOMXULCommandDispatcher ** aDispatcher);
 
+	
+  NS_IMETHOD SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy, PRBool fRepaint);
+  NS_IMETHOD GetPositionAndSize(PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy);
+
 
    // nsIDOMViewCSS
    NS_DECL_IDOMVIEWCSS

@@ -58,6 +58,15 @@ public:
   NS_IMETHOD GetRootCommandDispatcher (
     nsIDocument * aDoc,
     nsIDOMXULCommandDispatcher ** aDispatcher)=0;
+
+  /* from nsIBaseWindow
+  /* void setPositionAndSize (in long x, in long y, in long cx, in long cy, in boolean fRepaint); */
+  NS_IMETHOD SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy, PRBool fRepaint) = 0;
+
+  /* void getPositionAndSize (out long x, out long y, out long cx, out long cy); */
+  NS_IMETHOD GetPositionAndSize(PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy) = 0;
+
+
 };
 
 #endif // nsPIDOMWindow_h__

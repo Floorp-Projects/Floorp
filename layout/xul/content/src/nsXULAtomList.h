@@ -177,3 +177,7 @@ XUL_ATOM(textarea, "textarea")
 XUL_ATOM(listbox, "listbox")
 
 XUL_ATOM(blankrow, "blankrow")
+XUL_ATOM(titlebar, "titlebar")
+XUL_ATOM(resizer, "resizer")
+XUL_ATOM(dir, "dir")
+

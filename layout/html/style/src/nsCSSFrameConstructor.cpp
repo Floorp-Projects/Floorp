@@ -274,6 +274,13 @@ NS_NewBulletinBoardLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aN
 
 // end grid
 
+nsresult
+NS_NewTitleBarFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+
+nsresult
+NS_NewResizerFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+
+
 #endif
 
 //static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
@@ -5699,6 +5706,62 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 
       } 
     } // End of BUTTON CONSTRUCTION logic
+
+
+	 // TITLEBAR CONSTRUCTION
+	 else if (aTag == nsXULAtoms::titlebar) {
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      rv = NS_NewTitleBarFrame(aPresShell, &newFrame);
+
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+           aStyleContext->GetStyleData(eStyleStruct_Display);
+		// Boxes can scroll.
+      if (IsScrollable(aPresContext, display)) {
+
+        // set the top to be the newly created scrollframe
+        BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+                         topFrame, aStyleContext);
+
+        // we have a scrollframe so the parent becomes the scroll frame.
+        newFrame->GetParent(&aParentFrame);
+
+        primaryFrameSet = PR_TRUE;
+
+        frameHasBeenInitialized = PR_TRUE;
+
+      } 
+    } // End of TITLEBAR CONSTRUCTION logic
+
+	 // RESIZER CONSTRUCTION
+	 else if (aTag == nsXULAtoms::resizer) {
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      rv = NS_NewResizerFrame(aPresShell, &newFrame);
+
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+           aStyleContext->GetStyleData(eStyleStruct_Display);
+
+      // Boxes can scroll.
+      if (IsScrollable(aPresContext, display)) {
+
+        // set the top to be the newly created scrollframe
+        BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+                         topFrame, aStyleContext);
+
+        // we have a scrollframe so the parent becomes the scroll frame.
+        newFrame->GetParent(&aParentFrame);
+
+        primaryFrameSet = PR_TRUE;
+
+        frameHasBeenInitialized = PR_TRUE;
+
+      } 
+    } // End of RESIZER CONSTRUCTION logic
+
+
+
+
 
     // TITLED BUTTON CONSTRUCTION
     else if (aTag == nsXULAtoms::titledbutton) {
