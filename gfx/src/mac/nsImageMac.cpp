@@ -296,8 +296,8 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
 	NS_ASSERTION(destPixels, "No dest pixels!");
 	
 	// can only do this if we are NOT printing
-	nsDeviceContextMac	*theDevContext;
-	aContext.GetDeviceContext(theDevContext);
+	nsCOMPtr<nsDeviceContextMac> theDevContext;
+	aContext.GetDeviceContext(*getter_AddRefs(theDevContext));
 	if (theDevContext->IsPrinter())		// we are printing
 	{
 		if (!mAlphaGWorld)
