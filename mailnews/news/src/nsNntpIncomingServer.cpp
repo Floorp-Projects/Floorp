@@ -302,7 +302,7 @@ nsresult nsNntpIncomingServer::SetupNewsrcSaveTimer()
 		mNewsrcSaveTimer->Cancel();
 	}
     mNewsrcSaveTimer = do_CreateInstance("@mozilla.org/timer;1");
-	mNewsrcSaveTimer->Init(OnNewsrcSaveTimer, (void*)this, timeInMSUint32, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
+	mNewsrcSaveTimer->Init(OnNewsrcSaveTimer, (void*)this, timeInMSUint32, PR_TRUE, NS_TYPE_REPEATING_SLACK);
 
     return NS_OK;
 }

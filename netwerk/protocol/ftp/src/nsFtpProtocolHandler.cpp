@@ -319,7 +319,7 @@ nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsISupports *aConn)
     rv = timer->Init(nsFtpProtocolHandler::Timeout,
                      ts,
                      mIdleTimeout*1000,
-                     NS_PRIORITY_LOW);
+                     PR_TRUE);
     if (NS_FAILED(rv)) {
         delete ts;
         return rv;

@@ -275,7 +275,7 @@ void nsBlinkTimer::Start()
   nsresult rv;
   mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_OK == rv) {
-    mTimer->Init(this, 750, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_PRECISE);
+    mTimer->Init(this, 750, PR_TRUE, NS_TYPE_REPEATING_PRECISE);
   }
 }
 

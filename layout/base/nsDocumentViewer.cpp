@@ -787,7 +787,7 @@ public:
     if (NS_FAILED(result)) {
       NS_WARNING("unable to start the timer");
     } else {
-      mTimer->Init(this, aUseDelay?mDelay:0, NS_PRIORITY_NORMAL, NS_TYPE_ONE_SHOT);
+      mTimer->Init(this, aUseDelay?mDelay:0, PR_TRUE, NS_TYPE_ONE_SHOT);
     }
     return result;
   }

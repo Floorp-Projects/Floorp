@@ -100,27 +100,26 @@ public:
   NS_IMETHOD Init(nsTimerCallbackFunc aFunc,
                   void *aClosure,
                   PRUint32 aDelay,
-                  PRUint32 aPriority,
+                  PRBool aIdle,
                   PRUint32 aType);
 
   NS_IMETHOD Init(nsITimerCallback *aCallback,
                   PRUint32 aDelay,
-                  PRUint32 aPriority,
+                  PRBool aIdle,
                   PRUint32 aType);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCRIPTABLETIMER
 
-  NS_IMETHOD_(PRUint32) GetDelay() { return mDelay; }
+  NS_IMETHOD_(PRBool) IsIdle() const { return mIdle; }
+
+  NS_IMETHOD_(PRUint32) GetDelay() const { return mDelay; }
   NS_IMETHOD_(void) SetDelay(PRUint32 aDelay);
 
-  NS_IMETHOD_(PRUint32) GetPriority() { return mPriority; }
-  NS_IMETHOD_(void) SetPriority(PRUint32 aPriority);
-
-  NS_IMETHOD_(PRUint32) GetType() { return (PRUint32)mType; }
+  NS_IMETHOD_(PRUint32) GetType() const { return (PRUint32)mType; }
   NS_IMETHOD_(void) SetType(PRUint32 aType);
 
-  NS_IMETHOD_(void*) GetClosure() { return mClosure; }
+  NS_IMETHOD_(void*) GetClosure() const { return mClosure; }
 
 private:
   nsCOMPtr<nsIThread>   mCallingThread;
@@ -135,7 +134,7 @@ private:
 
   // These members are set by Init (called from NS_NewTimer) and never reset.
   PRUint8               mCallbackType;
-  PRUint8               mPriority;
+  PRPackedBool          mIdle;
 
   // These members are set by the initiating thread, when the timer's type is
   // changed and during the period where it fires on that thread.

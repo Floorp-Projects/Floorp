@@ -199,7 +199,7 @@ NS_IMETHODIMP imgContainer::AppendFrame(gfxIImageFrame *item)
           // Since we have more than one frame we need a timer
           mTimer = do_CreateInstance("@mozilla.org/timer;1");
           mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this), 
-                       timeout, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
+                       timeout, PR_TRUE, NS_TYPE_REPEATING_SLACK);
         }
       }
   }
@@ -322,7 +322,7 @@ NS_IMETHODIMP imgContainer::StartAnimation()
         if (!mTimer) mTimer = do_CreateInstance("@mozilla.org/timer;1");
       
         mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this),
-                     timeout, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
+                     timeout, PR_TRUE, NS_TYPE_REPEATING_SLACK);
       }
     } else {
       // XXX hack.. the timer notify code will do the right thing, so just get that started
@@ -330,7 +330,7 @@ NS_IMETHODIMP imgContainer::StartAnimation()
       if (!mTimer) mTimer = do_CreateInstance("@mozilla.org/timer;1");
 
       mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this),
-                   100, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
+                   100, PR_TRUE, NS_TYPE_REPEATING_SLACK);
     }
   }
 

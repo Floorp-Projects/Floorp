@@ -1702,6 +1702,6 @@ void oeICalImpl::SetupAlarmManager() {
         if( NS_FAILED( rv ) )
             m_alarmtimer = nsnull;
         else
-            m_alarmtimer->Init( AlarmTimerCallback, this, timediff*1000, NS_PRIORITY_NORMAL, NS_TYPE_ONE_SHOT );
+            m_alarmtimer->Init( AlarmTimerCallback, this, timediff*1000, PR_TRUE, NS_TYPE_ONE_SHOT );
     }
 }

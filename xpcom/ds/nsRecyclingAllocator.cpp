@@ -236,7 +236,7 @@ nsRecyclingAllocator::Malloc(PRUint32 bytes, PRBool zeroit)
             if (mNAllocations && !mRecycleTimer)
             {
                 (void) NS_NewTimer(&mRecycleTimer, nsRecycleTimerCallback, this,
-                                   NS_SEC_TO_MS(mRecycleAfter), NS_PRIORITY_LOWEST,
+                                   NS_SEC_TO_MS(mRecycleAfter), PR_TRUE,
                                    NS_TYPE_REPEATING_SLACK);
             }
             return ptr;

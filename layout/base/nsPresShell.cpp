@@ -2914,7 +2914,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
       nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
       if (prefs)
         prefs->GetIntPref("nglayout.initialpaint.delay", &delay);
-      mPaintSuppressionTimer->Init(sPaintSuppressionCallback, this, delay, NS_PRIORITY_HIGHEST);
+      mPaintSuppressionTimer->Init(sPaintSuppressionCallback, this, delay, PR_FALSE);
     }
   }
 
@@ -3051,7 +3051,7 @@ PresShell::CreateResizeEventTimer ()
 
   mResizeEventTimer = do_CreateInstance("@mozilla.org/timer;1");
   if (mResizeEventTimer) {
-    mResizeEventTimer->Init(sResizeEventCallback, this, RESIZE_EVENT_DELAY, NS_PRIORITY_HIGH);  
+    mResizeEventTimer->Init(sResizeEventCallback, this, RESIZE_EVENT_DELAY, PR_TRUE);
   }
 }
 

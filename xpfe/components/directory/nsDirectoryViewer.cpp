@@ -928,7 +928,7 @@ nsHTTPIndex::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aProperty, PRBo
             		if (NS_SUCCEEDED(rv))
             		{
                 		mTimer->Init(nsHTTPIndex::FireTimer, this, 1,
-                		    NS_PRIORITY_LOWEST, NS_TYPE_ONE_SHOT);
+                		    PR_TRUE, NS_TYPE_ONE_SHOT);
                 		// Note: don't addref "this" as we'll cancel the
                 		// timer in the httpIndex destructor
             		}
@@ -964,7 +964,7 @@ nsHTTPIndex::AddElement(nsIRDFResource *parent, nsIRDFResource *prop, nsIRDFNode
 		if (NS_FAILED(rv))  return(rv);
 
 		mTimer->Init(nsHTTPIndex::FireTimer, this, 1,
-		    NS_PRIORITY_LOWEST, NS_TYPE_ONE_SHOT);
+		    PR_TRUE, NS_TYPE_ONE_SHOT);
 		// Note: don't addref "this" as we'll cancel the
 		// timer in the httpIndex destructor
 	}
@@ -1105,7 +1105,7 @@ nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
       if (httpIndex->mTimer)
       {
         httpIndex->mTimer->Init(nsHTTPIndex::FireTimer, aClosure, 10,
-                                NS_PRIORITY_LOWEST, NS_TYPE_ONE_SHOT);
+                                PR_TRUE, NS_TYPE_ONE_SHOT);
         // Note: don't addref "this" as we'll cancel the
         // timer in the httpIndex destructor
       }
