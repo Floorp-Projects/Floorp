@@ -1,0 +1,208 @@
+#
+# $Id: MUTTUCData.txt,v 1.1 1999/01/08 00:19:19 ftang%netscape.com Exp $
+#
+# Copyright 1996, 1997, 1998 Computing Research Labs,
+# New Mexico State University
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE COMPUTING RESEARCH LAB OR NEW MEXICO STATE UNIVERSITY BE LIABLE FOR ANY
+# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
+# OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
+# THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# Implementation specific character properties.
+#
+#
+# Space, other.
+#
+0009;;Ss;;;;;;;;;;;;
+000A;;Ss;;;;;;;;;;;;
+000B;;Ss;;;;;;;;;;;;
+000C;;Ss;;;;;;;;;;;;
+000D;;Ss;;;;;;;;;;;;
+#
+# Non-breaking.
+#
+00A0;;Nb;;;;;;;;;;;;
+2007;;Nb;;;;;;;;;;;;
+2011;;Nb;;;;;;;;;;;;
+FEFF;;Nb;;;;;;;;;;;;
+#
+# Symmetric.
+#
+0028;;Sy;;;;;;;;;;;;
+0029;;Sy;;;;;;;;;;;;
+005B;;Sy;;;;;;;;;;;;
+005D;;Sy;;;;;;;;;;;;
+007B;;Sy;;;;;;;;;;;;
+007D;;Sy;;;;;;;;;;;;
+00AB;;Sy;;;;;;;;;;;;
+00BB;;Sy;;;;;;;;;;;;
+0F3A;;Sy;;;;;;;;;;;;
+0F3B;;Sy;;;;;;;;;;;;
+0F3C;;Sy;;;;;;;;;;;;
+0F3D;;Sy;;;;;;;;;;;;
+0F3E;;Sy;;;;;;;;;;;;
+0F3F;;Sy;;;;;;;;;;;;
+2018;;Sy;;;;;;;;;;;;
+2019;;Sy;;;;;;;;;;;;
+201A;;Sy;;;;;;;;;;;;
+201B;;Sy;;;;;;;;;;;;
+201C;;Sy;;;;;;;;;;;;
+201D;;Sy;;;;;;;;;;;;
+201E;;Sy;;;;;;;;;;;;
+201F;;Sy;;;;;;;;;;;;
+2039;;Sy;;;;;;;;;;;;
+203A;;Sy;;;;;;;;;;;;
+2045;;Sy;;;;;;;;;;;;
+2046;;Sy;;;;;;;;;;;;
+207D;;Sy;;;;;;;;;;;;
+207E;;Sy;;;;;;;;;;;;
+208D;;Sy;;;;;;;;;;;;
+208E;;Sy;;;;;;;;;;;;
+2329;;Sy;;;;;;;;;;;;
+232A;;Sy;;;;;;;;;;;;
+3008;;Sy;;;;;;;;;;;;
+3009;;Sy;;;;;;;;;;;;
+300A;;Sy;;;;;;;;;;;;
+300B;;Sy;;;;;;;;;;;;
+300C;;Sy;;;;;;;;;;;;
+300D;;Sy;;;;;;;;;;;;
+300E;;Sy;;;;;;;;;;;;
+300F;;Sy;;;;;;;;;;;;
+3010;;Sy;;;;;;;;;;;;
+3011;;Sy;;;;;;;;;;;;
+3014;;Sy;;;;;;;;;;;;
+3015;;Sy;;;;;;;;;;;;
+3016;;Sy;;;;;;;;;;;;
+3017;;Sy;;;;;;;;;;;;
+3018;;Sy;;;;;;;;;;;;
+3019;;Sy;;;;;;;;;;;;
+301A;;Sy;;;;;;;;;;;;
+301B;;Sy;;;;;;;;;;;;
+301D;;Sy;;;;;;;;;;;;
+301E;;Sy;;;;;;;;;;;;
+FD3E;;Sy;;;;;;;;;;;;
+FD3F;;Sy;;;;;;;;;;;;
+FE35;;Sy;;;;;;;;;;;;
+FE36;;Sy;;;;;;;;;;;;
+FE37;;Sy;;;;;;;;;;;;
+FE38;;Sy;;;;;;;;;;;;
+FE39;;Sy;;;;;;;;;;;;
+FE3A;;Sy;;;;;;;;;;;;
+FE3B;;Sy;;;;;;;;;;;;
+FE3C;;Sy;;;;;;;;;;;;
+FE3D;;Sy;;;;;;;;;;;;
+FE3E;;Sy;;;;;;;;;;;;
+FE3F;;Sy;;;;;;;;;;;;
+FE40;;Sy;;;;;;;;;;;;
+FE41;;Sy;;;;;;;;;;;;
+FE42;;Sy;;;;;;;;;;;;
+FE43;;Sy;;;;;;;;;;;;
+FE44;;Sy;;;;;;;;;;;;
+FE59;;Sy;;;;;;;;;;;;
+FE5A;;Sy;;;;;;;;;;;;
+FE5B;;Sy;;;;;;;;;;;;
+FE5C;;Sy;;;;;;;;;;;;
+FE5D;;Sy;;;;;;;;;;;;
+FE5E;;Sy;;;;;;;;;;;;
+FF08;;Sy;;;;;;;;;;;;
+FF09;;Sy;;;;;;;;;;;;
+FF3B;;Sy;;;;;;;;;;;;
+FF3D;;Sy;;;;;;;;;;;;
+FF5B;;Sy;;;;;;;;;;;;
+FF5D;;Sy;;;;;;;;;;;;
+FF62;;Sy;;;;;;;;;;;;
+FF63;;Sy;;;;;;;;;;;;
+#
+# Hex digit.
+#
+0030;;Hd;;;;;;;;;;;;
+0031;;Hd;;;;;;;;;;;;
+0032;;Hd;;;;;;;;;;;;
+0033;;Hd;;;;;;;;;;;;
+0034;;Hd;;;;;;;;;;;;
+0035;;Hd;;;;;;;;;;;;
+0036;;Hd;;;;;;;;;;;;
+0037;;Hd;;;;;;;;;;;;
+0038;;Hd;;;;;;;;;;;;
+0039;;Hd;;;;;;;;;;;;
+0041;;Hd;;;;;;;;;;;;
+0042;;Hd;;;;;;;;;;;;
+0043;;Hd;;;;;;;;;;;;
+0044;;Hd;;;;;;;;;;;;
+0045;;Hd;;;;;;;;;;;;
+0046;;Hd;;;;;;;;;;;;
+0061;;Hd;;;;;;;;;;;;
+0062;;Hd;;;;;;;;;;;;
+0063;;Hd;;;;;;;;;;;;
+0064;;Hd;;;;;;;;;;;;
+0065;;Hd;;;;;;;;;;;;
+0066;;Hd;;;;;;;;;;;;
+FF10;;Hd;;;;;;;;;;;;
+FF11;;Hd;;;;;;;;;;;;
+FF12;;Hd;;;;;;;;;;;;
+FF13;;Hd;;;;;;;;;;;;
+FF14;;Hd;;;;;;;;;;;;
+FF15;;Hd;;;;;;;;;;;;
+FF16;;Hd;;;;;;;;;;;;
+FF17;;Hd;;;;;;;;;;;;
+FF18;;Hd;;;;;;;;;;;;
+FF19;;Hd;;;;;;;;;;;;
+FF21;;Hd;;;;;;;;;;;;
+FF22;;Hd;;;;;;;;;;;;
+FF23;;Hd;;;;;;;;;;;;
+FF24;;Hd;;;;;;;;;;;;
+FF25;;Hd;;;;;;;;;;;;
+FF26;;Hd;;;;;;;;;;;;
+FF41;;Hd;;;;;;;;;;;;
+FF42;;Hd;;;;;;;;;;;;
+FF43;;Hd;;;;;;;;;;;;
+FF44;;Hd;;;;;;;;;;;;
+FF45;;Hd;;;;;;;;;;;;
+FF46;;Hd;;;;;;;;;;;;
+#
+# Quote marks.
+#
+0022;;Qm;;;;;;;;;;;;
+0027;;Qm;;;;;;;;;;;;
+00AB;;Qm;;;;;;;;;;;;
+00BB;;Qm;;;;;;;;;;;;
+2018;;Qm;;;;;;;;;;;;
+2019;;Qm;;;;;;;;;;;;
+201A;;Qm;;;;;;;;;;;;
+201B;;Qm;;;;;;;;;;;;
+201C;;Qm;;;;;;;;;;;;
+201D;;Qm;;;;;;;;;;;;
+201E;;Qm;;;;;;;;;;;;
+201F;;Qm;;;;;;;;;;;;
+2039;;Qm;;;;;;;;;;;;
+203A;;Qm;;;;;;;;;;;;
+300C;;Qm;;;;;;;;;;;;
+300D;;Qm;;;;;;;;;;;;
+300E;;Qm;;;;;;;;;;;;
+300F;;Qm;;;;;;;;;;;;
+301D;;Qm;;;;;;;;;;;;
+301E;;Qm;;;;;;;;;;;;
+301F;;Qm;;;;;;;;;;;;
+FE41;;Qm;;;;;;;;;;;;
+FE42;;Qm;;;;;;;;;;;;
+FE43;;Qm;;;;;;;;;;;;
+FE44;;Qm;;;;;;;;;;;;
+FF02;;Qm;;;;;;;;;;;;
+FF07;;Qm;;;;;;;;;;;;
+FF62;;Qm;;;;;;;;;;;;
+FF63;;Qm;;;;;;;;;;;;
