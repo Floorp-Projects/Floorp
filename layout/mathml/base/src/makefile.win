@@ -100,5 +100,19 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
+install::
+	$(MAKE_INSTALL) mathfont.properties $(DIST)\bin\res\fonts
+	$(MAKE_INSTALL) mathfontCMSY10.properties $(DIST)\bin\res\fonts
+	$(MAKE_INSTALL) mathfontCMEX10.properties $(DIST)\bin\res\fonts
+	$(MAKE_INSTALL) mathfontMTExtra.properties $(DIST)\bin\res\fonts
+	$(MAKE_INSTALL) mathfontMath4.properties $(DIST)\bin\res\fonts
+	$(MAKE_INSTALL) mathfontSymbol.properties $(DIST)\bin\res\fonts
+
 clobber::
 	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+	rm -f $(DIST)\bin\res\fonts\mathfont.properties
+	rm -f $(DIST)\bin\res\fonts\mathfontCMSY10.properties
+	rm -f $(DIST)\bin\res\fonts\mathfontCMEX10.properties
+	rm -f $(DIST)\bin\res\fonts\mathfontMTExtra.properties
+	rm -f $(DIST)\bin\res\fonts\mathfontMath4.properties
+	rm -f $(DIST)\bin\res\fonts\mathfontSymbol.properties
