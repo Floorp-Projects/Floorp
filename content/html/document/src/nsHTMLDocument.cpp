@@ -1945,6 +1945,8 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain)
   // Check new domain - must be a superdomain of the current host
   // For example, a page from foo.bar.com may set domain to bar.com,
   // but not to ar.com, baz.com, or fi.foo.bar.com.
+  if (aDomain.IsEmpty())
+    return NS_ERROR_DOM_BAD_DOCUMENT_DOMAIN;
   nsAutoString current;
   if (NS_FAILED(GetDomain(current)))
     return NS_ERROR_FAILURE;
@@ -1956,7 +1958,7 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain)
     current.Right(suffix, aDomain.Length());
     PRUnichar c = current.CharAt(current.Length() - aDomain.Length() - 1);
     if (suffix.Equals(aDomain, nsCaseInsensitiveStringComparator()) &&
-        (c == '.' || c == '/'))
+        (c == '.'))
       ok = PR_TRUE;
   }
   if (!ok) {
