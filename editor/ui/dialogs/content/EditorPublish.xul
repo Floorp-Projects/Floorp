@@ -64,17 +64,15 @@
             <row align="center">
               <label value="&siteList.label;"/>
               <!-- Contents filled in at runtime -->
-              <menulist id="SiteList" class="minWidth15" oncommand="SelectSiteList();"/>
+              <menulist id="SiteList" 
+                style="min-width:15em; max-width:20em;" crop="right"
+                oncommand="SelectSiteList();"/>
               <hbox>
                 <button label="&newSiteButton.label;" oncommand="AddNewSite();"/>
                 <spacer flex="1"/>
               </hbox>
             </row>
-            <row>
-              <spacer class="spacer"/>
-              <spacer class="spacer"/>
-              <spacer class="spacer"/>
-            </row>
+            <spacer class="spacer"/>
             <row align="center">
               <label value="&pageTitle.label;"/>
               <textbox id="PageTitleInput" class="minWidth15"/>
@@ -98,27 +96,33 @@
 -->
         </hbox>
         <spacer class="spacer"/>
-        <checkbox id="OtherDirCheckbox" label="&publishImgCheckbox.label;" oncommand="doEnabling();"/>
-        <radiogroup id="OtherDirRadiogroup">
+        <groupbox>
+          <caption>
+            <checkbox id="OtherDirCheckbox" label="&publishImgCheckbox.label;" oncommand="doEnabling();"/>
+          </caption>
+          <vbox>
+          <radiogroup id="OtherDirRadiogroup">
+            <hbox>
+              <spacer class="checkbox-spacer"/>
+              <radio id="SameLocationRadio" label="&sameLocationRadio.label;" oncommand="doEnabling();"/>
+            </hbox>
+            <hbox>
+              <spacer class="checkbox-spacer"/>
+              <radio id="UseSubdirRadio" label="&useSubdirRadio.label;" oncommand="doEnabling();"/>
+            </hbox>
+          </radiogroup>
+          </vbox>
           <hbox>
             <spacer class="checkbox-spacer"/>
-            <radio id="SameLocationRadio" label="&sameLocationRadio.label;" oncommand="doEnabling();"/>
-          </hbox>
-          <hbox>
-            <spacer class="checkbox-spacer"/>
-            <radio id="UseSubdirRadio" label="&useSubdirRadio.label;" oncommand="doEnabling();"/>
-          </hbox>
-        </radiogroup>
-        <hbox>
-          <spacer class="checkbox-spacer"/>
-          <spacer class="radio-spacer"/>
-          <!-- Contents filled in at runtime -->
-          <menulist id="OtherDirList" class="minWidth20" editable="true" flex="1"
-                    oninput="onInputSettings();"/>
+            <spacer class="radio-spacer"/>
+            <!-- Contents filled in at runtime -->
+            <menulist id="OtherDirList" class="minWidth20" editable="true" flex="1"
+                      oninput="onInputSettings();"/>
 <!-- 
-          <button label="&chooseDirButton.label;" oncommand="ChooseDir(gDialog.OtherDirList);" disabled="true"/>
+            <button label="&chooseDirButton.label;" oncommand="ChooseDir(gDialog.OtherDirList);" disabled="true"/>
 -->
-        </hbox>
+          </hbox>
+        </groupbox>
         <spacer flex="1"/>
       </vbox><!-- Publish Panel -->
 
