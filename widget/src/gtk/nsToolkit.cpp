@@ -82,12 +82,12 @@ NS_METHOD nsToolkit::Init(PRThread *aThread)
   return NS_OK;
 }
 
-void nsToolkit::SetSharedGC(GdkGC aGC)
+void nsToolkit::SetSharedGC(GdkGC *aGC)
 {
   mSharedGC = aGC;
 }
 
-GdkGC nsToolkit::GetSharedGC()
+GdkGC *nsToolkit::GetSharedGC()
 {
   return (mSharedGC);
 }
