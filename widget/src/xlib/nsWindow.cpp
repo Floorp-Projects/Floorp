@@ -92,14 +92,14 @@ nsWindow::CreateNative(Window aParent, nsRect aRect)
                               gVisual,        // get the visual from xlibrgb
                               attr_mask,
                               &attr);
+  printf("nsWindow Created window 0x%lx with parent 0x%lx\n",
+         mBaseWindow, aParent);
+  // XXX when we stop getting lame values for this remove it.
+  // sometimes the dimensions have been corrected by the code above.
+  mBounds.height = height;
+  mBounds.width = width;
   // add the callback for this
   AddWindowCallback(mBaseWindow, this);
-  // map this window and flush the connection.  we want to see this
-  // thing now.
-  XMapWindow(gDisplay,
-             mBaseWindow);
-  XSync(gDisplay, False);
-
 }
 
 ChildWindow::ChildWindow(): nsWindow()

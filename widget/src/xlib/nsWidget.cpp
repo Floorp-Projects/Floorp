@@ -49,12 +49,16 @@ public:
 
 nsWidget::nsWidget() : nsBaseWidget()
 {
+  int r, g, b;
+  r =(int)(255.0*rand()/(RAND_MAX+1.0));
+  g =(int)(255.0*rand()/(RAND_MAX+1.0));
+  b =(int)(255.0*rand()/(RAND_MAX+1.0));
   mPreferredWidth = 0;
   mPreferredHeight = 0;
   mBaseWindow = 0;
-  mBackground = NS_RGB(192,192,192);
+  mBackground = NS_RGB(r, g, b);
   bg_pixel = xlib_rgb_xpixel_from_rgb(mBackground);
-  border_rgb = NS_RGB(192,192,192);
+  mBackground = NS_RGB(r, g, b);
   border_pixel = xlib_rgb_xpixel_from_rgb(border_rgb);
   mGC = 0;
   parentWidget = nsnull;
@@ -149,7 +153,7 @@ NS_IMETHODIMP nsWidget::Destroy()
 
 NS_IMETHODIMP nsWidget::Move(PRUint32 aX, PRUint32 aY)
 {
-  printf("nsWidget::Move\n");
+  printf("nsWidget::Move(x, y)\n");
   if (aX < 0) {
     printf("*** x is %d, fixing.\n", aX);
     aX = 0;
@@ -158,6 +162,7 @@ NS_IMETHODIMP nsWidget::Move(PRUint32 aX, PRUint32 aY)
     printf("*** y is %d, fixing.\n", aY);
     aY = 0;
   }
+  printf("Moving window 0x%lx to %d, %d\n", mBaseWindow, aX, aY);
   XMoveWindow(gDisplay, mBaseWindow, aX, aY);
   return NS_OK;
 }
@@ -166,7 +171,7 @@ NS_IMETHODIMP nsWidget::Resize(PRUint32 aWidth,
                                PRUint32 aHeight,
                                PRBool   aRepaint)
 {
-  printf("nsWidget::Resize\n");
+  printf("nsWidget::Resize(width, height)\n");
   if (aWidth <= 0) {
     printf("*** width is %d, fixing.\n", aWidth);
     aWidth = 1;
@@ -175,7 +180,10 @@ NS_IMETHODIMP nsWidget::Resize(PRUint32 aWidth,
     printf("*** height is %d, fixing.\n", aHeight);
     aHeight = 1;
   }
-  XMoveWindow(gDisplay, mBaseWindow, aWidth, aHeight);
+  printf("Resizing window 0x%lx to %d, %d\n", mBaseWindow, aWidth, aHeight);
+  mBounds.width = aWidth;
+  mBounds.height = aHeight;
+  XResizeWindow(gDisplay, mBaseWindow, aWidth, aHeight);
   return NS_OK;
 }
 
@@ -185,7 +193,7 @@ NS_IMETHODIMP nsWidget::Resize(PRUint32 aX,
                                PRUint32 aHeight,
                                PRBool   aRepaint)
 {
-  printf("nsWidget::Resize\n");
+  printf("nsWidget::Resize(x, y, width, height)\n");
   if (aWidth <= 0) {
     printf("*** width is %d, fixing.\n", aWidth);
     aWidth = 1;
@@ -202,6 +210,8 @@ NS_IMETHODIMP nsWidget::Resize(PRUint32 aX,
     printf("*** y is %d, fixing.\n", aY);
     aY = 0;
   }
+  printf("Resizing window 0x%lx to %d, %d\n", mBaseWindow, aWidth, aHeight);
+  printf("Moving window 0x%lx to %d, %d\n", mBaseWindow, aX, aY);
   XMoveResizeWindow(gDisplay, mBaseWindow, aX, aY, aWidth, aHeight);
   return NS_OK;
 }
@@ -316,6 +326,9 @@ NS_IMETHODIMP nsWidget::SetColorMap(nsColorMap *aColorMap)
 
 NS_IMETHODIMP nsWidget::Show(PRBool bState)
 {
+  if (mBaseWindow) {
+    XMapWindow(gDisplay, mBaseWindow);
+  }
   return NS_OK;
 }
 
@@ -425,13 +438,14 @@ void nsWidget::CreateNative(Window aParent, nsRect aRect)
                               gVisual, // visual
                               attr_mask,
                               &attr);
+  printf("nsWidget: Created window 0x%lx with parent 0x%lx\n",
+         mBaseWindow, aParent);
+  // XXX when we stop getting lame values for this remove it.
+  // sometimes the dimensions have been corrected by the code above.
+  mBounds.height = height;
+  mBounds.width = width;
   // add the callback for this
   AddWindowCallback(mBaseWindow, this);
-  // map this window and flush the connection.  we want to see this
-  // thing now.
-  XMapWindow(gDisplay,
-             mBaseWindow);
-  XSync(gDisplay, False);
 }
 
 nsWidget *
