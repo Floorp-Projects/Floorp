@@ -26,13 +26,14 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "GenericElementCollection.h"
 
 static NS_DEFINE_IID(kIDOMHTMLMapElementIID, NS_IDOMHTMLMAPELEMENT_IID);
 
 class nsHTMLMapElement : public nsIDOMHTMLMapElement,
-                  public nsIScriptObjectOwner,
-                  public nsIDOMEventReceiver,
-                  public nsIHTMLContent
+                         public nsIScriptObjectOwner,
+                         public nsIDOMEventReceiver,
+                         public nsIHTMLContent
 {
 public:
   nsHTMLMapElement(nsIAtom* aTag);
@@ -69,6 +70,7 @@ public:
 
 protected:
   nsGenericHTMLContainerElement mInner;
+  GenericElementCollection* mAreas;
 };
 
 nsresult
@@ -89,10 +91,15 @@ nsHTMLMapElement::nsHTMLMapElement(nsIAtom* aTag)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
+  mAreas = nsnull;
 }
 
 nsHTMLMapElement::~nsHTMLMapElement()
 {
+  if (nsnull != mAreas) {
+    mAreas->ParentDestroyed();
+    NS_RELEASE(mAreas);
+  }
 }
 
 NS_IMPL_ADDREF(nsHTMLMapElement)
@@ -126,8 +133,20 @@ nsHTMLMapElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsHTMLMapElement::GetAreas(nsIDOMHTMLCollection** aAreas)
 {
-  *aAreas = nsnull;
-  return NS_ERROR_OUT_OF_MEMORY;/* XXX */
+  if (nsnull == aAreas) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (nsnull == mAreas) {
+    mAreas = new GenericElementCollection(NS_STATIC_CAST(nsIContent*, this),
+                                          nsHTMLAtoms::area);
+    if (nsnull == mAreas) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(mAreas);
+  }
+  *aAreas = NS_STATIC_CAST(nsIDOMHTMLCollection*, mAreas);
+  NS_ADDREF(mAreas);
+  return NS_OK;
 }
 
 
@@ -135,19 +154,17 @@ NS_IMPL_STRING_ATTR(nsHTMLMapElement, Name, name)
 
 NS_IMETHODIMP
 nsHTMLMapElement::StringToAttribute(nsIAtom* aAttribute,
-                             const nsString& aValue,
-                             nsHTMLValue& aResult)
+                                    const nsString& aValue,
+                                    nsHTMLValue& aResult)
 {
-  // XXX write me
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 NS_IMETHODIMP
 nsHTMLMapElement::AttributeToString(nsIAtom* aAttribute,
-                             const nsHTMLValue& aValue,
-                             nsString& aResult) const
+                                    const nsHTMLValue& aValue,
+                                    nsString& aResult) const
 {
-  // XXX write me
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
@@ -156,8 +173,8 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
-  // XXX write me
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
+                                                aPresContext);
 }
 
 NS_IMETHODIMP
@@ -170,10 +187,10 @@ nsHTMLMapElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) con
 
 NS_IMETHODIMP
 nsHTMLMapElement::HandleDOMEvent(nsIPresContext& aPresContext,
-                          nsEvent* aEvent,
-                          nsIDOMEvent** aDOMEvent,
-                          PRUint32 aFlags,
-                          nsEventStatus& aEventStatus)
+                                 nsEvent* aEvent,
+                                 nsIDOMEvent** aDOMEvent,
+                                 PRUint32 aFlags,
+                                 nsEventStatus& aEventStatus)
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
@@ -181,8 +198,8 @@ nsHTMLMapElement::HandleDOMEvent(nsIPresContext& aPresContext,
 
 NS_IMETHODIMP
 nsHTMLMapElement::GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const
+  const nsIAtom* aAttribute,
+  PRInt32 *aHint) const
 {
   nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, aAttribute, aHint);
   return NS_OK;
