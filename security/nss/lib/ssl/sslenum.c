@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslenum.c,v 1.3 2001/04/11 00:29:18 nelsonb%netscape.com Exp $
+ * $Id: sslenum.c,v 1.4 2001/09/21 03:07:35 nelsonb%netscape.com Exp $
  */
 
 #include "ssl.h"
@@ -75,6 +75,14 @@ const PRUint16 SSL_ImplementedCiphers[] = {
     SSL_DHE_RSA_WITH_DES_CBC_SHA,
     SSL_DHE_DSS_WITH_DES_CBC_SHA,
     TLS_DHE_DSS_WITH_RC4_128_SHA,
+
+    /* AES ciphersuites */
+    TLS_DHE_DSS_WITH_AES_128_CBC_SHA,
+    TLS_DHE_RSA_WITH_AES_128_CBC_SHA,
+    TLS_RSA_WITH_AES_128_CBC_SHA,
+    TLS_DHE_DSS_WITH_AES_256_CBC_SHA,
+    TLS_DHE_RSA_WITH_AES_256_CBC_SHA,
+    TLS_RSA_WITH_AES_256_CBC_SHA,
 
     0
 

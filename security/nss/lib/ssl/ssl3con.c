@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.25 2001/09/20 21:26:40 relyea%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.26 2001/09/21 03:07:34 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -93,11 +93,17 @@ static SECStatus Null_Cipher(void *ctx, unsigned char *output, int *outputLen,
  */
 static ssl3CipherSuiteCfg cipherSuites[ssl_V3_SUITES_IMPLEMENTED] = {
    /*      cipher_suite                         policy      enabled is_present*/
+ { TLS_DHE_DSS_WITH_AES_256_CBC_SHA, 	   SSL_NOT_ALLOWED, PR_FALSE,PR_FALSE},
+ { TLS_DHE_RSA_WITH_AES_256_CBC_SHA, 	   SSL_NOT_ALLOWED, PR_FALSE,PR_FALSE},
+ { TLS_RSA_WITH_AES_256_CBC_SHA,     	   SSL_NOT_ALLOWED, PR_FALSE,PR_FALSE},
+ { TLS_DHE_DSS_WITH_AES_128_CBC_SHA, 	   SSL_NOT_ALLOWED, PR_FALSE,PR_FALSE},
+ { TLS_DHE_RSA_WITH_AES_128_CBC_SHA,       SSL_NOT_ALLOWED, PR_FALSE,PR_FALSE},
  { TLS_DHE_DSS_WITH_RC4_128_SHA,           SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
  { SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA,      SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
  { SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA,      SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
  { SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA, SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
  { SSL_FORTEZZA_DMS_WITH_RC4_128_SHA,      SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
+ { TLS_RSA_WITH_AES_128_CBC_SHA,     	   SSL_NOT_ALLOWED, PR_FALSE,PR_FALSE},
  { SSL_RSA_WITH_RC4_128_SHA,               SSL_NOT_ALLOWED, PR_FALSE,PR_FALSE},
  { SSL_RSA_WITH_RC4_128_MD5,               SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
  { SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA,     SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
@@ -167,6 +173,8 @@ static const ssl3BulkCipherDef bulk_cipher_defs[] = {
     {cipher_des40,     calg_des,       8,  5, type_block,   8, 8, kg_export},
     {cipher_idea,      calg_idea,     16, 16, type_block,   8, 8, kg_strong},
     {cipher_fortezza,  calg_fortezza, 10, 10, type_block,  24, 8, kg_null},
+    {cipher_aes_128,   calg_aes,      16, 16, type_block,  16,16, kg_strong},
+    {cipher_aes_256,   calg_aes,      32, 32, type_block,  16,16, kg_strong},
     {cipher_missing,   calg_null,      0,  0, type_stream,  0, 0, kg_null},
 };
 
@@ -244,6 +252,22 @@ static const ssl3CipherSuiteDef cipher_suite_defs[] = {
                                   cipher_fortezza, mac_sha, kea_fortezza},
     {SSL_FORTEZZA_DMS_WITH_RC4_128_SHA, cipher_rc4, mac_sha, kea_fortezza},
 
+/* New TLS cipher suites */
+    {TLS_RSA_WITH_AES_128_CBC_SHA,     	cipher_aes_128, mac_sha, kea_rsa},
+    {TLS_DHE_DSS_WITH_AES_128_CBC_SHA, 	cipher_aes_128, mac_sha, kea_dhe_dss},
+    {TLS_DHE_RSA_WITH_AES_128_CBC_SHA, 	cipher_aes_128, mac_sha, kea_dhe_rsa},
+    {TLS_RSA_WITH_AES_256_CBC_SHA,     	cipher_aes_256, mac_sha, kea_rsa},
+    {TLS_DHE_DSS_WITH_AES_256_CBC_SHA, 	cipher_aes_256, mac_sha, kea_dhe_dss},
+    {TLS_DHE_RSA_WITH_AES_256_CBC_SHA, 	cipher_aes_256, mac_sha, kea_dhe_rsa},
+#if 0
+    {TLS_DH_DSS_WITH_AES_128_CBC_SHA,  	cipher_aes_128, mac_sha, kea_dh_dss},
+    {TLS_DH_RSA_WITH_AES_128_CBC_SHA,  	cipher_aes_128, mac_sha, kea_dh_rsa},
+    {TLS_DH_ANON_WITH_AES_128_CBC_SHA, 	cipher_aes_128, mac_sha, kea_dh_anon},
+    {TLS_DH_DSS_WITH_AES_256_CBC_SHA,  	cipher_aes_256, mac_sha, kea_dh_dss},
+    {TLS_DH_RSA_WITH_AES_256_CBC_SHA,  	cipher_aes_256, mac_sha, kea_dh_rsa},
+    {TLS_DH_ANON_WITH_AES_256_CBC_SHA, 	cipher_aes_256, mac_sha, kea_dh_anon},
+#endif
+
     {TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA,
                                     cipher_des,    mac_sha,kea_rsa_export_1024},
     {TLS_RSA_EXPORT1024_WITH_RC4_56_SHA,
@@ -274,6 +298,7 @@ static const SSLCipher2Mech alg2Mech[] = {
     { calg_3des     , CKM_DES3_CBC			},
     { calg_idea     , CKM_IDEA_CBC			},
     { calg_fortezza , CKM_SKIPJACK_CBC64		},
+    { calg_aes      , CKM_AES_CBC			},
 /*  { calg_init     , (CK_MECHANISM_TYPE)0x7fffffffL    }  */
 };
 
