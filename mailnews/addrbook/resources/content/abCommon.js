@@ -319,21 +319,16 @@ function RestoreResultsTreeSelection(selectionArray)
   }
 }
 
+var addrbooksession =Components.classes["@mozilla.org/addressbook/services/session;1"].getService().QueryInterface(Components.interfaces.nsIAddrBookSession);
+
 function WaitUntilDocumentIsLoaded()
 {
-    // we used to call msgNavigationService.EnsureDocumentIsLoaded(document);
-    // just to do this.  there is no more msg navigation service, so we need 
-    // to find another way to do this.
-    // is it still needed?
-    //
-    // here's the C++:
-    // nsCOMPtr <nsIDocument> doc = do_QueryInterface(document);
-    // doc->FlushPendingNotifcations();
-    //
-    // nsIDocument isn't scriptable, so we can't do that from js.
-    // it seems like a hack.  perhaps we should add it to an address book service
-    // if we still need it.
-    dump("XXX fix me to flush pending notifcations\n");
+  try {
+    addrbooksession.ensureDocumentIsLoaded(document);
+  }
+  catch (ex) {
+    dump("failed to flush pending notifications: " + ex + "\n");
+  }
 }
 
 function GetResultsTreeChildren()

@@ -36,6 +36,8 @@
 #include "nsIAbDirectory.idl"
 #include "nsIAbCard.idl"
 
+interface nsIDOMXULDocument;
+
 [scriptable, uuid(C5339441-303F-11d3-9E13-00A0C92B5F0D)]
 interface nsIAddrBookSession : nsISupports {
 
@@ -49,5 +51,11 @@ interface nsIAddrBookSession : nsISupports {
   void notifyDirectoryItemDeleted(in nsIAbDirectory directory, in nsISupports item);
 
   [noscript] readonly attribute nsFileSpec userProfileDirectory;
+
+  /** 
+   * this is used to flush the pending notifcations on the document
+   * used to be in the msg view navigation service, but that is gone 
+   */
+  void ensureDocumentIsLoaded(in nsIDOMXULDocument xulDocument);
 };
 

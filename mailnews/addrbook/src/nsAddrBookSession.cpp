@@ -28,7 +28,8 @@
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsXPIDLString.h"
-
+#include "nsIDOMXULDocument.h"
+#include "nsIDocument.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAddrBookSession, nsIAddrBookSession)
     
@@ -131,4 +132,16 @@ NS_IMETHODIMP nsAddrBookSession::GetUserProfileDirectory(nsFileSpec * *userDir)
 	return rv;
 }
 
+// used to live in the msg view navigation service
+NS_IMETHODIMP nsAddrBookSession::EnsureDocumentIsLoaded(nsIDOMXULDocument *xulDocument)
+{
+  nsresult rv;
 
+  nsCOMPtr<nsIDocument> document = do_QueryInterface(xulDocument, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (!document) return NS_ERROR_FAILURE;
+  rv = document->FlushPendingNotifications();
+  NS_ENSURE_SUCCESS(rv,rv); 
+  return NS_OK;
+}
