@@ -719,7 +719,9 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
             nsIFrameSelection *frameselection = nsnull;
             if (NS_SUCCEEDED(selection->QueryInterface(kIFrameSelection,
                                                   (void **)&frameselection))) {
+              frameselection->EnableFrameNotification(PR_FALSE);
               frameselection->TakeFocus(tracker, this, startPos, contentOffset, PR_FALSE);
+              frameselection->EnableFrameNotification(PR_TRUE);//prevent cyclic call to reset selection.
               NS_RELEASE(frameselection);
             }
             NS_RELEASE(tracker);
@@ -760,7 +762,9 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
           if (NS_SUCCEEDED(shell->QueryInterface(kIFocusTracker,(void **)&tracker))) {
             nsIFrameSelection* frameselection;
             if (NS_SUCCEEDED(selection->QueryInterface(kIFrameSelection, (void **)&frameselection))) {
+              frameselection->EnableFrameNotification(PR_FALSE);
               frameselection->TakeFocus(tracker, this, startPos, contentOffset, PR_TRUE); //TRUE IS THE DIFFERENCE
+              frameselection->EnableFrameNotification(PR_TRUE);//prevent cyclic call to reset selection.
               NS_RELEASE(frameselection);
             }
             NS_RELEASE(tracker);

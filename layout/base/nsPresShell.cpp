@@ -56,6 +56,8 @@
 #include "nsCaretProperties.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIScrollableView.h"
+#include "nsIDOMSelectionListener.h"
+
 
 static PRBool gsNoisyRefs = PR_FALSE;
 #undef NOISY
@@ -173,6 +175,7 @@ static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDOMRangeIID, NS_IDOMRANGE_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIFocusTrackerIID, NS_IFOCUSTRACKER_IID);
+static NS_DEFINE_IID(kIDomSelectionListenerIID, NS_IDOMSELECTIONLISTENER_IID);
 static NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kICaretIID, NS_ICARET_IID);
 static NS_DEFINE_IID(kICaretID,  NS_ICARET_IID);
@@ -181,8 +184,8 @@ static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 
 class PresShell : public nsIPresShell, public nsIViewObserver,
-                  private nsIDocumentObserver, public nsIFocusTracker
-
+                  private nsIDocumentObserver, public nsIFocusTracker,
+                  public nsIDOMSelectionListener
 {
 public:
   PresShell();
@@ -310,6 +313,8 @@ public:
   NS_IMETHOD GetCaret(nsICaret **outCaret);
   NS_IMETHOD RefreshCaret();
 
+  // nsIDOMSelectionListener interface
+  NS_IMETHOD NotifySelectionChanged();
 
   // implementation
   void HandleCantRenderReplacedElementEvent(nsIFrame* aFrame);
@@ -467,6 +472,12 @@ PresShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  if (aIID.Equals(kIDomSelectionListenerIID)) {
+    nsIDOMSelectionListener* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   if (aIID.Equals(kISupportsIID)) {
     nsIPresShell* tmp = this;
     nsISupports* tmp2 = tmp;
@@ -543,7 +554,7 @@ PresShell::Init(nsIDocument* aDocument,
                                         getter_AddRefs(mSelection));
   if (!NS_SUCCEEDED(result))
     return result;
-
+  domselection->AddSelectionListener(this);//possible circular reference
   // XXX This code causes the document object (and the entire content model) to be leaked...
 #if 0
   nsCOMPtr<nsIDOMRange>range;
@@ -766,6 +777,16 @@ PresShell::EndObservingDocument()
   if (nsnull != mDocument) {
     mDocument->RemoveObserver(this);
   }
+  if (mSelection){
+    nsCOMPtr<nsIDOMSelection> domselection;
+    nsresult result;
+    domselection = do_QueryInterface(mSelection , &result);
+    if (NS_FAILED(result))
+      return result;
+    if (!domselection)
+      return NS_ERROR_UNEXPECTED;
+    domselection->RemoveSelectionListener(this);
+  }
   return NS_OK;
 }
 
@@ -937,6 +958,17 @@ NS_IMETHODIMP PresShell::RefreshCaret()
   	mCaret->Refresh();
 
   return NS_OK;
+}
+
+/*implementation of the nsIDOMSelectionListener
+  it will invoke the resetselection to update the presentation shell's frames
+*/
+NS_IMETHODIMP PresShell::NotifySelectionChanged()
+{
+  if (!mSelection)
+    return NS_ERROR_NULL_POINTER;
+  mSelection->ResetSelection(this, mRootFrame);
+  return NS_ERROR_NULL_POINTER;
 }
 
 nsresult PresShell::DisableCaret()
@@ -1757,7 +1789,10 @@ PresShell::HandleEvent(nsIView         *aView,
   if (nsnull != frame) {
     if (mSelection && mFocusEventFrame && aEvent->eventStructType == NS_KEY_EVENT)
     {
+      mSelection->EnableFrameNotification(PR_FALSE);
       mSelection->HandleKeyEvent((nsIFocusTracker *)this, aEvent, mFocusEventFrame);
+      mSelection->EnableFrameNotification(PR_TRUE); //prevents secondary reset selection called since
+      //we are a listener now.
     }
     frame->GetFrameForPoint(aEvent->point, &mCurrentEventFrame);
     if (nsnull != mCurrentEventFrame) {

@@ -84,6 +84,19 @@ public:
   NS_IMETHOD AddSelectionListener(nsIDOMSelectionListener* inNewListener) = 0;
   NS_IMETHOD RemoveSelectionListener(nsIDOMSelectionListener* inListenerToRemove) = 0;
 
+  /** StartBatchChanges
+   *  will return NS_OK if there is no previous unmatched StartBatchChanges Called
+   *  calling this multiple times should have no effect.
+   */
+  NS_IMETHOD StartBatchChanges() = 0;
+
+  /** EndBatchChanges
+   *  will return NS_OK if there was a StartBatch Changes Called
+   *  calling this multiple times should have no effect.  will return NS_ERROR_FAILURE
+   *  after the first call.  if any changes took place, it will then immediately notify all
+   */
+  NS_IMETHOD EndBatchChanges() = 0;
+
 };
 
 

@@ -11,17 +11,17 @@ class nsFrameIterator: public nsIEnumerator
 public:
   NS_DECL_ISUPPORTS
 
-  virtual nsresult First();
+  NS_IMETHOD First();
 
-  virtual nsresult Last();
+  NS_IMETHOD Last();
   
-  virtual nsresult Next()=0;
+  NS_IMETHOD Next()=0;
 
-  virtual nsresult Prev()=0;
+  NS_IMETHOD Prev()=0;
 
-  virtual nsresult CurrentItem(nsISupports **aItem);
+  NS_IMETHOD CurrentItem(nsISupports **aItem);
 
-  virtual nsresult IsDone();//what does this mean??off edge? yes
+  NS_IMETHOD IsDone();//what does this mean??off edge? yes
 
   nsFrameIterator();
 protected:
@@ -60,9 +60,9 @@ public:
   nsLeafIterator(nsIFrame *start);
 private :
   
-  virtual nsresult Next();
+  NS_IMETHOD Next();
 
-  virtual nsresult Prev();
+  NS_IMETHOD Prev();
 
 };
 
@@ -127,7 +127,7 @@ nsFrameIterator::nsFrameIterator()
 
 
 
-nsresult
+NS_IMETHODIMP
 nsFrameIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (NULL == aInstancePtr) {
@@ -148,7 +148,7 @@ nsFrameIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 
 
-nsresult
+NS_IMETHODIMP
 nsFrameIterator::CurrentItem(nsISupports **aItem)
 {
   if (!aItem)
@@ -159,7 +159,7 @@ nsFrameIterator::CurrentItem(nsISupports **aItem)
 
 
 
-nsresult
+NS_IMETHODIMP
 nsFrameIterator::IsDone()//what does this mean??off edge? yes
 {
   if (mOffEdge != 0)
@@ -169,7 +169,7 @@ nsFrameIterator::IsDone()//what does this mean??off edge? yes
 
 
 
-nsresult
+NS_IMETHODIMP
 nsFrameIterator::First()
 {
   mCurrent = mStart;
@@ -178,7 +178,7 @@ nsFrameIterator::First()
 
 
 
-nsresult
+NS_IMETHODIMP
 nsFrameIterator::Last()
 {
   return NS_ERROR_FAILURE;
@@ -198,7 +198,7 @@ nsLeafIterator::nsLeafIterator(nsIFrame *aStart)
 
 
 
-nsresult
+NS_IMETHODIMP
 nsLeafIterator::Next()
 {
 //recursive-oid method to get next frame
@@ -243,7 +243,7 @@ nsLeafIterator::Next()
 
 
 
-nsresult
+NS_IMETHODIMP
 nsLeafIterator::Prev()
 {
 //recursive-oid method to get prev frame
