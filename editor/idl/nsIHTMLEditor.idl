@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Daniel Glazman <glazman@netscape.com>
  *   Akkana Peck <akkana@netscape.com>
+ *   Kathleen Brade <brade@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,6 +43,7 @@
 #include "nsIAtom.idl"
 
 interface nsISupportsArray;
+interface nsIContentFilter;
 
 %{C++
 #define NS_EDITOR_ELEMENT_NOT_FOUND \
@@ -217,11 +219,22 @@ interface nsIHTMLEditor : nsISupports
    *
    * @param aInputString   the string to be inserted
    * @param aCharset       Charset of string
-   * @param aParentNode    Parent to insert under.
-   *                       If null, insert at the current location.
+   * @param aContextStr    Context of insertion
+   * @param aInfoStr       Related info to aInputString 
+   * @param aFlavor        Transferable flavor, can be ""
+   * @param aDestinationNode    location for insertion (such as when dropped)
+   * @param aDestinationOffset  used with aDestNode to determine insert location
+   * @param aDeleteSelection    used with aDestNode during drag&drop 
+   * @param aCollapseSelection  used with aDestNode during drag&drop
    */
-  void insertHTMLWithCharset(in AString aInputString,
-                             in AString aCharset);
+  void insertHTMLWithCharsetAndContext(in AString aInputString,
+                                       in AString aCharset,
+                                       in AString aContextStr,
+                                       in AString aInfoStr,
+                                       in AString aFlavor,
+                                       in nsIDOMNode aDestinationNode,
+                                       in long aDestinationOffset,
+                                       in boolean aDeleteSelection);
 
 
   /** 
@@ -505,6 +518,20 @@ interface nsIHTMLEditor : nsISupports
     * @return    true if CSS handled and enabled
     */
   attribute boolean isCSSEnabled;
+
+  /**
+   * Add listener for insertion override
+   * @param inFilter  function which callers want called during insertion
+   */
+
+  void addInsertionListener(in nsIContentFilter inFilter);
+
+  /**
+   * Remove listener for insertion override
+   * @param inFilter  function which callers do not want called during insertion
+   */
+
+  void removeInsertionListener(in nsIContentFilter inFilter);
 
   nsIDOMCSSStyleRule parseStyleAttrIntoCSSRule(in AString aString);
 };
