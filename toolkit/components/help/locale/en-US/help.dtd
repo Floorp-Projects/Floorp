@@ -54,3 +54,6 @@
 <!ENTITY textZoomEnlargeCmd.commandkey	"+">
 <!ENTITY textZoomEnlargeCmd.commandkey2 "="> <!-- + is above this key on many keyboards -->
 <!ENTITY textZoomResetCmd.commandkey    "0">
+
+<!ENTITY zLevel.label                   "Always on Top">
+<!ENTITY zLevel.accesskey               "T">

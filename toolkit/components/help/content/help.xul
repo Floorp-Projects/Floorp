@@ -60,7 +60,11 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="700"
         height="550"
+#ifdef XP_WIN
+        persist="width height screenX screenY zlevel"
+#else
         persist="width height screenX screenY"
+#endif
         onload="init();"
         onunload="uninitFindBar(); window.XULBrowserWindow.destroy();">
 
