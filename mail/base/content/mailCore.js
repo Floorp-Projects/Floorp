@@ -45,7 +45,8 @@ function MailToolboxCustomizeDone(aToolboxChanged)
     menubar.childNodes[i].setAttribute("disabled", false);
   
   // Update (or create) "File" button's tree
-  SetupMoveCopyMenus('button-file', accountManagerDataSource, folderDataSource);
+  if (document.getElementById("button-file"))
+    SetupMoveCopyMenus('button-file', accountManagerDataSource, folderDataSource);
 
   var customizePopup = document.getElementById("CustomizeMailToolbar");
   customizePopup.removeAttribute("disabled");
