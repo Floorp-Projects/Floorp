@@ -42,7 +42,7 @@
 
 interface nsITreeSelection;
 
-[scriptable, uuid(7660811D-3CB8-441f-8E58-466DE4F3FA9A)]
+[scriptable, uuid(58A53734-1837-4f30-9BFD-EE58F63CA049)]
 interface nsITreeView : nsISupports
 {
   /** 

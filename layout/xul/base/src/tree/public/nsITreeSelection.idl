@@ -41,7 +41,7 @@ interface nsITreeBoxObject;
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(F848D7CF-F3D6-4775-8C9F-135546E61E1E)]
+[scriptable, uuid(F8A13364-184E-4da3-BADF-5C04837537F8)]
 interface nsITreeSelection : nsISupports
 {
   /**
