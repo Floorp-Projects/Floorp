@@ -48,6 +48,7 @@
 #define IPC_WINDOW_NAME               "Mozilla:IPCWindow"
 #define IPC_CLIENT_WINDOW_CLASS       "Mozilla:IPCAppWindowClass"
 #define IPC_CLIENT_WINDOW_NAME_PREFIX "Mozilla:IPCAppWindow:"
+#define IPC_SYNC_EVENT_NAME           "Local\\MozillaIPCSyncEvent"
 #define IPC_DAEMON_APP_NAME           "mozipcd.exe"
 #define IPC_PATH_SEP_CHAR             '\\'
 

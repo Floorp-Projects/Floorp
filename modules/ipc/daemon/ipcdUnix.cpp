@@ -383,8 +383,10 @@ int main(int argc, char **argv)
     else
         socket_path = argv[1];
 
-    if (!InitDaemonDir(socket_path))
+    if (!InitDaemonDir(socket_path)) {
+        PR_Close(listenFD);
         return 0;
+    }
 
     addr.local.family = PR_AF_LOCAL;
     PL_strncpyz(addr.local.path, socket_path, sizeof(addr.local.path));
