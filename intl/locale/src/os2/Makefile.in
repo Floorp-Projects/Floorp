@@ -35,6 +35,7 @@ REQUIRES	= xpcom \
 		  uconv \
 		  $(NULL)
 
+SHARED_LIBRARY_LIBS = ../libnslocale.$(LIB_SUFFIX)
 
 CPPSRCS		= \
 		nsOS2Locale.cpp \
@@ -43,10 +44,7 @@ CPPSRCS		= \
 		nsLocaleModule.cpp \
 		$(NULL)
 
-EXTRA_DSO_LIBS = nslocale_s 
-
 EXTRA_DSO_LDOPTS += \
-		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
