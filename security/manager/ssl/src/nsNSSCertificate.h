@@ -76,7 +76,7 @@ private:
   nsresult CreateASN1Struct();
   nsresult CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
                                           nsINSSComponent *nssComponent);
-  nsresult GetSortableDate(PRTime aTime, PRUnichar **_aSortableDate);
+  nsresult GetSortableDate(PRTime aTime, nsAString &_aSortableDate);
 };
 
 #define NS_NSS_LONG 4

@@ -65,7 +65,7 @@ interface nsIASN1Object : nsISupports {
   // values above.
   attribute unsigned long type;
   attribute unsigned long tag;
-  attribute wstring displayName;
-  attribute wstring displayValue;
+  attribute AString displayName;
+  attribute AString displayValue;
 };
 

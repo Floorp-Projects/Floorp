@@ -90,7 +90,7 @@ nsNSSCertificateDB::~nsNSSCertificateDB()
 
 NS_IMETHODIMP
 nsNSSCertificateDB::GetCertByNickname(nsISupports *aToken,
-                                      const PRUnichar *nickname,
+                                      const nsAString &nickname,
                                       nsIX509Cert **_rvCert)
 {
   CERTCertificate *cert = NULL;
@@ -289,11 +289,11 @@ nsNSSCertificateDB::handleCACertDownload(nsISupportsArray *x509Certs,
     nsXPIDLString cert1SubjectName;
     nsXPIDLString cert1IssuerName;
 
-    cert0->GetIssuerName(getter_Copies(cert0IssuerName));
-    cert0->GetSubjectName(getter_Copies(cert0SubjectName));
+    cert0->GetIssuerName(cert0IssuerName);
+    cert0->GetSubjectName(cert0SubjectName);
 
-    cert1->GetIssuerName(getter_Copies(cert1IssuerName));
-    cert1->GetSubjectName(getter_Copies(cert1SubjectName));
+    cert1->GetIssuerName(cert1IssuerName);
+    cert1->GetSubjectName(cert1SubjectName);
 
     if (nsCRT::strcmp(cert1IssuerName.get(), cert0SubjectName.get()) == 0) {
       // In this case, the first cert in the list signed the second,
@@ -1073,15 +1073,14 @@ nsNSSCertificateDB::EnableOCSP()
 
 /* nsIX509Cert getDefaultEmailEncryptionCert (); */
 NS_IMETHODIMP
-nsNSSCertificateDB::GetEmailEncryptionCert(const PRUnichar* aNickname, nsIX509Cert **_retval)
+nsNSSCertificateDB::GetEmailEncryptionCert(const nsAString &aNickname, nsIX509Cert **_retval)
 {
-  if (!aNickname || !_retval)
+  if (!_retval)
     return NS_ERROR_FAILURE;
 
   *_retval = 0;
 
-  nsDependentString aDepNickname(aNickname);
-  if (aDepNickname.IsEmpty())
+  if (aNickname.IsEmpty())
     return NS_OK;
 
   nsresult rv = NS_OK;
@@ -1089,7 +1088,7 @@ nsNSSCertificateDB::GetEmailEncryptionCert(const PRUnichar* aNickname, nsIX509Ce
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   nsNSSCertificate *nssCert = nsnull;
   char *asciiname = NULL;
-  NS_ConvertUCS2toUTF8 aUtf8Nickname(aDepNickname);
+  NS_ConvertUCS2toUTF8 aUtf8Nickname(aNickname);
   asciiname = NS_CONST_CAST(char*, aUtf8Nickname.get());
 
   /* Find a good cert in the user's database */
@@ -1113,15 +1112,14 @@ loser:
 
 /* nsIX509Cert getDefaultEmailSigningCert (); */
 NS_IMETHODIMP
-nsNSSCertificateDB::GetEmailSigningCert(const PRUnichar* aNickname, nsIX509Cert **_retval)
+nsNSSCertificateDB::GetEmailSigningCert(const nsAString &aNickname, nsIX509Cert **_retval)
 {
-  if (!aNickname || !_retval)
+  if (!_retval)
     return NS_ERROR_FAILURE;
 
   *_retval = 0;
 
-  nsDependentString aDepNickname(aNickname);
-  if (aDepNickname.IsEmpty())
+  if (aNickname.IsEmpty())
     return NS_OK;
 
   nsresult rv = NS_OK;
@@ -1129,7 +1127,7 @@ nsNSSCertificateDB::GetEmailSigningCert(const PRUnichar* aNickname, nsIX509Cert 
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   nsNSSCertificate *nssCert = nsnull;
   char *asciiname = NULL;
-  NS_ConvertUCS2toUTF8 aUtf8Nickname(aDepNickname);
+  NS_ConvertUCS2toUTF8 aUtf8Nickname(aNickname);
   asciiname = NS_CONST_CAST(char*, aUtf8Nickname.get());
 
   /* Find a good cert in the user's database */

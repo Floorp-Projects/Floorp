@@ -42,7 +42,7 @@ interface nsIASN1Tree : nsITreeView {
 
   void loadASN1Structure(in nsIASN1Object asn1Object);
 
-  wstring getDisplayData(in unsigned long index);
+  AString getDisplayData(in unsigned long index);
 
 };
 

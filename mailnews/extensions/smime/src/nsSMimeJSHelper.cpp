@@ -179,7 +179,7 @@ NS_IMETHODIMP nsSMimeJSHelper::GetRecipientCertsInfo(
           
           nsXPIDLString id, ed;
 
-          if (NS_SUCCEEDED(cert->GetIssuedDate(getter_Copies(id))))
+          if (NS_SUCCEEDED(cert->GetIssuedDate(id)))
           {
             *iCII = ToNewUnicode(id);
             if (!*iCII) {
@@ -188,7 +188,7 @@ NS_IMETHODIMP nsSMimeJSHelper::GetRecipientCertsInfo(
             }
           }
           
-          if (NS_SUCCEEDED(cert->GetExpiresDate(getter_Copies(ed))))
+          if (NS_SUCCEEDED(cert->GetExpiresDate(ed)))
           {
             *iCEI = ToNewUnicode(ed);
             if (!*iCEI) {

@@ -324,17 +324,14 @@ nsNSSASN1Tree::GetCellText(PRInt32 row, const PRUnichar *colID,
       return NS_ERROR_FAILURE;
 
     //There's only one column for ASN1 dump.
-    PRUnichar* displayName = nsnull;
-    rv = n->obj->GetDisplayName(&displayName); // copies
-    _retval = displayName; // copies again!
-    nsCRT::free(displayName);
+    rv = n->obj->GetDisplayName(_retval);
   }
   return rv;
 }
 
 /* wstring getDisplayData (in unsigned long index); */
 NS_IMETHODIMP 
-nsNSSASN1Tree::GetDisplayData(PRUint32 index, PRUnichar **_retval)
+nsNSSASN1Tree::GetDisplayData(PRUint32 index, nsAString &_retval)
 {
   myNode *n = FindNodeFromIndex(index);
   if (!n)

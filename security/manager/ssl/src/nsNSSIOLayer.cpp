@@ -1243,7 +1243,7 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
     {
       nsXPIDLCString url; url.Adopt(SSL_RevealURL(sslSocket));
       NS_ASSERTION(url.get(), "could not find valid URL in ssl socket");
-      rv = badCertHandler->MismatchDomain(csi, NS_ConvertASCIItoUCS2(url).get(),
+      rv = badCertHandler->MismatchDomain(csi, url,
                                           callBackCert, &retVal);
       if (NS_SUCCEEDED(rv) && retVal) {
         rv = CERT_AddOKDomainName(peerCert, url);
@@ -1262,7 +1262,7 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
     {
       nsXPIDLCString url; url.Adopt(SSL_RevealURL(sslSocket));
       NS_ASSERTION(url, "could not find valid URL in ssl socket");
-      rv = badCertHandler->CrlNextupdate(csi, NS_ConvertASCIItoUCS2(url).get(), callBackCert);
+      rv = badCertHandler->CrlNextupdate(csi, url, callBackCert);
       if (NS_SUCCEEDED(rv) && retVal) {
         rv = CERT_AddOKDomainName(peerCert, url.get());
       }

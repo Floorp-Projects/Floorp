@@ -56,7 +56,7 @@ static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 // field from a cert) has an element in the array.  The numChildren field
 // stores the number of certs corresponding to that thread.
 struct treeArrayElStr {
-  PRUnichar *orgName;     /* heading for thread                   */
+  nsString   orgName;     /* heading for thread                   */
   PRBool     open;        /* toggle open state for thread         */
   PRInt32    certIndex;   /* index into cert array for 1st cert   */
   PRInt32    numChildren; /* number of chidren (certs) for thread */
@@ -404,7 +404,7 @@ nsCertTree::UpdateUIContents()
   nsCOMPtr<nsISupports> isupport = dont_AddRef(mCertArray->ElementAt(j));
   nsCOMPtr<nsIX509Cert> orgCert = do_QueryInterface(isupport);
   for (PRInt32 i=0; i<mNumOrgs; i++) {
-    orgCert->GetIssuerOrganization(&mTreeArray[i].orgName);
+    orgCert->GetIssuerOrganization(mTreeArray[i].orgName);
     mTreeArray[i].open = PR_TRUE;
     mTreeArray[i].certIndex = j;
     mTreeArray[i].numChildren = 1;
@@ -664,29 +664,32 @@ nsCertTree::GetCellText(PRInt32 row, const PRUnichar *colID,
   }
   nsCOMPtr<nsIX509Cert> cert = dont_AddRef(GetCertAtIndex(row));
   if (cert == nsnull) return NS_ERROR_FAILURE;
-  char *str = NULL;
-  PRUnichar *wstr = NULL;
   if (strcmp(col, "certcol") == 0) {
-    rv = cert->GetCommonName(&wstr);
-    if (NS_FAILED(rv) || !wstr) {
-      // can this be fixed to not do copying?
-      PRUnichar *tmp = nsnull;
-      rv = cert->GetNickname(&tmp);
-      nsAutoString nick(tmp);
-      char *tmps = ToNewCString(nick);
-      char *mark = strchr(tmps, ':');
-      if (mark) {
-        str = PL_strdup(mark + 1);
-      } else {
-        wstr = ToNewUnicode(nick);
+    rv = cert->GetCommonName(_retval);
+    if (NS_FAILED(rv)) {
+      // kaie: I didn't invent the idea to cut off anything before 
+      //       the first colon. :-)
+      nsAutoString nick;
+      rv = cert->GetNickname(nick);
+      
+      nsAString::const_iterator start, end, end2;
+      nick.BeginReading(start);
+      nick.EndReading(end);
+      end2 = end;
+
+      if (FindInReadable(NS_LITERAL_STRING(":"), start, end)) {
+        // found. end points to the first char after the colon,
+        // that's what we want.
+        _retval = Substring(end, end2);
       }
-      nsMemory::Free(tmp);
-      nsMemory::Free(tmps);
+      else {
+        _retval = nick;
+      }
     }
   } else if (strcmp(col, "tokencol") == 0) {
-    rv = cert->GetTokenName(&wstr);
+    rv = cert->GetTokenName(_retval);
   } else if (strcmp(col, "emailcol") == 0) {
-    rv = cert->GetEmailAddress(&wstr);
+    rv = cert->GetEmailAddress(_retval);
   } else if (strcmp(col, "purposecol") == 0 && mNSSComponent) {
     PRUint32 verified;
     PRBool ocspEnabled;
@@ -695,45 +698,46 @@ nsCertTree::GetCellText(PRInt32 row, const PRUnichar *colID,
       mNSSComponent->DisableOCSP();
     }
 
-    rv = cert->GetPurposes(&verified, NULL);
+    nsAutoString dummyPurposes;
+    rv = cert->GetPurposes(&verified, dummyPurposes);
     if (NS_FAILED(rv)) {
       verified = nsIX509Cert::NOT_VERIFIED_UNKNOWN;
     }
 
     switch (verified) {
       case nsIX509Cert::VERIFIED_OK:
-        rv = cert->GetPurposes(&verified, &wstr);
+        rv = cert->GetPurposes(&verified, _retval);
         break;
 
       case nsIX509Cert::CERT_REVOKED:
         rv = mNSSComponent->GetPIPNSSBundleString(
-                                  NS_LITERAL_STRING("VerifyRevoked").get(), &wstr);
+                                  NS_LITERAL_STRING("VerifyRevoked").get(), _retval);
         break;
       case nsIX509Cert::CERT_EXPIRED:
         rv = mNSSComponent->GetPIPNSSBundleString(
-                                  NS_LITERAL_STRING("VerifyExpired").get(), &wstr);
+                                  NS_LITERAL_STRING("VerifyExpired").get(), _retval);
         break;
       case nsIX509Cert::CERT_NOT_TRUSTED:
         rv = mNSSComponent->GetPIPNSSBundleString(
-                                  NS_LITERAL_STRING("VerifyNotTrusted").get(), &wstr);
+                                  NS_LITERAL_STRING("VerifyNotTrusted").get(), _retval);
         break;
       case nsIX509Cert::ISSUER_NOT_TRUSTED:
         rv = mNSSComponent->GetPIPNSSBundleString(
-                                  NS_LITERAL_STRING("VerifyIssuerNotTrusted").get(), &wstr);
+                                  NS_LITERAL_STRING("VerifyIssuerNotTrusted").get(), _retval);
         break;
       case nsIX509Cert::ISSUER_UNKNOWN:
         rv = mNSSComponent->GetPIPNSSBundleString(
-                                  NS_LITERAL_STRING("VerifyIssuerUnknown").get(), &wstr);
+                                  NS_LITERAL_STRING("VerifyIssuerUnknown").get(), _retval);
         break;
       case nsIX509Cert::INVALID_CA:
         rv = mNSSComponent->GetPIPNSSBundleString(
-                                  NS_LITERAL_STRING("VerifyInvalidCA").get(), &wstr);
+                                  NS_LITERAL_STRING("VerifyInvalidCA").get(), _retval);
         break;
       case nsIX509Cert::NOT_VERIFIED_UNKNOWN:
       case nsIX509Cert::USAGE_NOT_ALLOWED:
       default:
         rv = mNSSComponent->GetPIPNSSBundleString(
-                                  NS_LITERAL_STRING("VerifyUnknown").get(), &wstr);
+                                  NS_LITERAL_STRING("VerifyUnknown").get(), _retval);
         break;
     }
 
@@ -741,23 +745,14 @@ nsCertTree::GetCellText(PRInt32 row, const PRUnichar *colID,
       mNSSComponent->EnableOCSP();
     }
   } else if (strcmp(col, "issuedcol") == 0) {
-    rv = cert->GetIssuedDate(&wstr);
+    rv = cert->GetIssuedDate(_retval);
   } else if (strcmp(col, "expiredcol") == 0) {
-    rv = cert->GetExpiresDate(&wstr);
+    rv = cert->GetExpiresDate(_retval);
   } else if (strcmp(col, "serialnumcol") == 0) {
-    rv = cert->GetSerialNumber(&wstr);
-/*
-  } else if (strcmp(col, "certdbkeycol") == 0) {
-    rv = cert->GetDbKey(&str);
-*/
+    rv = cert->GetSerialNumber(_retval);
   } else {
     return NS_ERROR_FAILURE;
   }
-  if (str) {
-    nsAutoString astr = NS_ConvertASCIItoUCS2(str);
-    wstr = ToNewUnicode(astr);
-  }
-  _retval = wstr;
   return rv;
 }
 
@@ -928,22 +923,22 @@ nsCertTree::CmpInitCriterion(nsIX509Cert *cert, CompareCacheHashEntry *entry,
   
   switch (crit) {
     case sort_IssuerOrg:
-      cert->GetIssuerOrganization(getter_Copies(str));
+      cert->GetIssuerOrganization(str);
       break;
     case sort_Org:
-      cert->GetOrganization(getter_Copies(str));
+      cert->GetOrganization(str);
       break;
     case sort_Token:
-      cert->GetTokenName(getter_Copies(str));
+      cert->GetTokenName(str);
       break;
     case sort_CommonName:
-      cert->GetCommonName(getter_Copies(str));
+      cert->GetCommonName(str);
       break;
     case sort_IssuedDateDescending:
-      cert->GetIssuedDateSortable(getter_Copies(str));
+      cert->GetIssuedDateSortable(str);
       break;
     case sort_Email:
-      cert->GetEmailAddress(getter_Copies(str));
+      cert->GetEmailAddress(str);
       break;
     case sort_None:
     default:

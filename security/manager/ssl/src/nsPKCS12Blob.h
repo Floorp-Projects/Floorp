@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.h,v 1.8 2002/09/17 18:51:14 kaie%netscape.com Exp $
+ * $Id: nsPKCS12Blob.h,v 1.9 2002/09/23 20:17:14 kaie%netscape.com Exp $
  */
 
 #ifndef _NS_PKCS12BLOB_H_
@@ -86,7 +86,7 @@ private:
   nsresult getPKCS12FilePassword(SECItem *);
   nsresult newPKCS12FilePassword(SECItem *);
   nsresult inputToDecoder(SEC_PKCS12DecoderContext *, nsILocalFile *);
-  void unicodeToItem(PRUnichar *, SECItem *);
+  void unicodeToItem(const PRUnichar *, SECItem *);
   PRBool handleError(int myerr = 0);
   nsresult ImportFromFileHelper(nsILocalFile *file, PRBool &aWantRetry);
 

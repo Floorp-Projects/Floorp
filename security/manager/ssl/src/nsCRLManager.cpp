@@ -210,8 +210,7 @@ done:
     if(importSuccessful){
       PRUnichar *updateTime;
       nsCAutoString updateTimeStr;
-      PRUnichar *updateURL;
-      nsCAutoString updateURLStr;
+      nsCString updateURL;
       PRInt32 timingTypePref;
       double dayCnt;
       char *dayCntStr;
@@ -255,10 +254,8 @@ done:
       }
       
       //Update the url to download from, next time
-      crlData->GetLastFetchURL(&updateURL);
-      updateURLStr.AssignWithConversion(updateURL);
-      nsMemory::Free(updateURL);
-      pref->SetCharPref(updateUrlPrefStr.get(),updateURLStr.get());
+      crlData->GetLastFetchURL(updateURL);
+      pref->SetCharPref(updateUrlPrefStr.get(),updateURL.get());
       
       pref->SetIntPref(updateErrCntPrefStr.get(),0);
       pref->SavePrefFile(nsnull);

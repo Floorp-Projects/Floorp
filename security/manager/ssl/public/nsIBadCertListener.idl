@@ -49,14 +49,14 @@ interface nsIBadCertListener : nsISupports {
                         out short certAddType);
 
   boolean mismatchDomain(in nsIInterfaceRequestor socketInfo,
-                         in wstring targetURL,
+                         in AUTF8String targetURL,
                          in nsIX509Cert cert);
 
   boolean certExpired(in nsIInterfaceRequestor socketInfo,
                       in nsIX509Cert cert);
 
   void crlNextupdate(in nsIInterfaceRequestor socketInfo,
-                     in wstring targetURL, in nsIX509Cert cert);
+                     in AUTF8String targetURL, in nsIX509Cert cert);
 
 };
 

@@ -46,10 +46,10 @@ interface nsICertificateDialogs : nsISupports
   boolean cACertExists(in nsIInterfaceRequestor ctx);
 
   boolean setPKCS12FilePassword(in nsIInterfaceRequestor ctx, 
-                                out wstring password);
+                                out AString password);
 
   boolean getPKCS12FilePassword(in nsIInterfaceRequestor ctx, 
-                                out wstring password);
+                                out AString password);
 
   void viewCert(in nsIInterfaceRequestor ctx, 
                 in nsIX509Cert cert);
