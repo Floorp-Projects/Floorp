@@ -114,21 +114,33 @@ function WSM_SavePageData( currentPageTag, optAttributes, exclElements, inclElem
             for( var j = 0, idx = 0; j < formElement.options.length; j++ )
             {
               if( formElement.options[j].selected ) {
-                elementEntry.value[idx] = formElement.options[j].text;
+                elementEntry.value[idx] = formElement.options[j].value;
                 idx++;
               }
             }
           }
           else {
-            // single selections
-            var value = formElement.options[formElement.selectedIndex].text;
-            formElement.arbitraryvalue = value;
-            this.AddAttributes( formElement, elementEntry, "arbitraryvalue", optAttributes );
+              // single selections
+              if (formElement.options[formElement.selectedIndex]) {
+                  var value = formElement.options[formElement.selectedIndex].value;
+                  dump("*** VALUE=" + value + "\n");
+                  formElement.arbitraryvalue = value;
+                  this.AddAttributes( formElement, elementEntry, "arbitraryvalue", optAttributes );
+              }
           }
       }
-      else if( formElement.getAttribute("type") && ( formElement.type.toLowerCase() == "checkbox" || formElement.type.toLowerCase() == "radio" ) ) {
+      else if( formElement.getAttribute("type") && formElement.type.toLowerCase() == "checkbox"  ) {
         // XXX 11/04/99
         this.AddAttributes( formElement, elementEntry, "checked", optAttributes );
+      }
+      else if( formElement.getAttribute("type") && formElement.type.toLowerCase() == "radio" ) {
+        if( formElement.getAttribute("preftype").toLowerCase() == "bool" ) {
+          if( formElement.getAttribute("checked") == true )
+            this.AddAttributes( formElement, elementEntry, "prefindex", optAttributes );              
+        }
+        else {
+          this.AddAttributes( formElement, elementEntry, "checked", optAttributes );
+        }
       }
       else if( formElement.type == "text" &&
                formElement.getAttribute( "datatype" ) == "nsIFileSpec" &&
@@ -176,7 +188,7 @@ function WSM_SetPageData( currentPageTag, hasExtraAttributes )
       var id    = this.PageData[currentPageTag][i].id;
       var value = this.PageData[currentPageTag][i].value;
 
-      //dump("*** id & value: " + id + " : " + value + "\n");
+      dump("*** id & value: " + id + " : " + value + "\n");
       
       if( this.content_frame.SetFields && !hasExtraAttributes )
         this.content_frame.SetFields( id, value );  // user provided setfields
@@ -238,7 +250,7 @@ function WSM_SetPageData( currentPageTag, hasExtraAttributes )
               {
                 for ( var k = 0; k < formElement.options.length; k++ )
                 {
-                  if( formElement.options[k].text == value[j] )
+                  if( formElement.options[k].value == value[j] )
                     formElement.options[k].selected = true;
                 }
               }
@@ -247,7 +259,8 @@ function WSM_SetPageData( currentPageTag, hasExtraAttributes )
               // single selected item
               for ( var k = 0; k < formElement.options.length; k++ )
               {
-                if( formElement.options[k].text == value )
+                dump("*** value=" + value + "; options[k].value=" + formElement.options[k].value + "\n");
+                if( formElement.options[k].value == value )
                   formElement.options[k].selected = true;
               }
             }            
@@ -313,7 +326,11 @@ function WSM_toString()
  **/
 function WSM_AddAttributes( formElement, elementEntry, valueAttribute, optAttributes )
 {
-  elementEntry.value = formElement[valueAttribute]; // get the value (e.g. "checked")
+  // 07/01/00 adding in a reversed thing here for alecf's ultra picky mail prefs :P:P
+  if( formElement.getAttribute("reversed") )
+    elementEntry.value = !formElement[valueAttribute]; // get the value (e.g. "checked")
+  else
+    elementEntry.value = formElement[valueAttribute]; // get the value (e.g. "checked")
   
   if( optAttributes ) {   // if we've got optional attributes, add em
     for(var k = 0; k < optAttributes.length; k++ ) 

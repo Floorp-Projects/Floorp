@@ -65,11 +65,8 @@ function goEditCardDialog(abURI, card, okCallback)
 
 function goPreferences(id, pane)
 {
-	if (!top.goPrefWindow)
-		top.goPrefWindow = Components.classes['component://netscape/prefwindow'].getService(Components.interfaces.nsIPrefWindow);
-	
-	if ( top.goPrefWindow )
-		top.goPrefWindow.showWindow(id, window, pane);
+  //if( !top.goPrefWindow ) // XXXX commenting out for now until we find a way to duplicate this.
+    top.goPrefWindow = window.openDialog("chrome://pref/content/pref.xul","PrefWindow", "chrome,modal=yes,resizable=yes", pane);
 }
 
 
