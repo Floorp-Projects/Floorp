@@ -195,6 +195,7 @@ namespace JavaScript {
 			Import,						// import
 			In,							// in
 			Instanceof,					// instanceof
+			Interface,					// interface
 			Native,						// native
 			New,						// new
 			Null,						// null
@@ -881,6 +882,9 @@ namespace JavaScript {
 		ExprNode *expr;					// Attribute expression; non-nil only
 		
 		explicit ExprList(ExprNode *expr): next(0), expr(expr) {ASSERT(expr);}
+		
+		void printCommaList(PrettyPrinter &f) const;
+		static void printOptionalCommaList(PrettyPrinter &f, const char *name, const ExprList *list);
 	};
 	
 	struct UseStmtNode: StmtNode {
@@ -927,15 +931,19 @@ namespace JavaScript {
 
 		NamespaceStmtNode(uint32 pos, Kind kind, IdentifierList *attributes, ExprNode *name, ExprList *supers):
 			AttributeStmtNode(pos, kind, attributes), name(name), supers(supers) {ASSERT(name);}
+
+		void print(PrettyPrinter &f, bool noSemi) const;
 	};
 
 	struct ClassStmtNode: NamespaceStmtNode {
-		ExprNode *superclass;			// Superclass expression (classes only)
-		BlockStmtNode *body;			// The class's body; non-nil only
+		ExprNode *superclass;			// Superclass expression (classes only); nil if omitted
+		BlockStmtNode *body;			// The class's body; nil if omitted
 
 		ClassStmtNode(uint32 pos, Kind kind, IdentifierList *attributes, ExprNode *name, ExprNode *superclass, ExprList *superinterfaces,
 					  BlockStmtNode *body):
-			NamespaceStmtNode(pos, kind, attributes, name, superinterfaces), superclass(superclass), body(body) {ASSERT(body);}
+			NamespaceStmtNode(pos, kind, attributes, name, superinterfaces), superclass(superclass), body(body) {}
+
+		void print(PrettyPrinter &f, bool noSemi) const;
 	};
 
 	struct LanguageStmtNode: StmtNode {
@@ -1022,8 +1030,10 @@ namespace JavaScript {
 		ExprNode *parseAssignmentExpression(bool noIn) {return parseExpression(noIn, false, true);}
 	  private:
 		ExprNode *parseParenthesizedExpression();
+		ExprNode *parseTypeExpression(bool noIn);
 		const StringAtom &parseTypedIdentifier(ExprNode *&type);
-		ExprNode *parseTypeBinding(bool noIn);
+		ExprNode *parseTypeBinding(Token::Kind kind, bool noIn);
+		ExprList *parseTypeListBinding(Token::Kind kind);
 		VariableBinding *parseVariableBinding(bool noQualifiers, bool noIn);
 		void parseFunctionName(FunctionName &fn);
 		void parseFunctionSignature(FunctionDefinition &fd);
@@ -1031,7 +1041,7 @@ namespace JavaScript {
 		enum SemicolonState {semiNone, semiNoninsertable, semiInsertable};
 		enum AttributeStatement {asAny, asBlock, asConstVar};
 		StmtNode *parseBlock(bool inSwitch, bool noCloseBrace);
-		BlockStmtNode *parseBlockStatement(uint32 pos, IdentifierList *attributes);
+		BlockStmtNode *parseBody(SemicolonState *semicolonState);
 		StmtNode *parseAttributeStatement(uint32 pos, IdentifierList *attributes, const Token &t, bool noIn, SemicolonState &semicolonState);
 		StmtNode *parseAttributesAndStatement(const Token *t, AttributeStatement as, SemicolonState &semicolonState);
 		StmtNode *parseAnnotatedBlock();
