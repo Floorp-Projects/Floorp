@@ -91,12 +91,12 @@ DIRS		+= \
 		modules/libpref \
 		modules/libimg \
 		modules/oji \
-		modules/plugin \
 		modules/libjar \
 		caps \
 		expat \
 		htmlparser \
 		gfx \
+		modules/plugin \
 		dom \
 		view \
 		widget \

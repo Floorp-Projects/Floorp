@@ -62,7 +62,6 @@ DIRS =                         \
   modules\libjar               \
   modules\libimg               \
   modules\libpref              \
-  modules\plugin               \
   modules\oji                  \
   caps                         \
   intl                         \
@@ -71,6 +70,7 @@ DIRS =                         \
 # the following are associated with the layout engine
   expat                        \
   gfx                          \
+  modules\plugin               \
   uriloader                    \
   htmlparser                   \
   widget                       \
