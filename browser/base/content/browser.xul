@@ -379,7 +379,7 @@
              toolbarname="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;"
              fullscreentoolbar="true" mode="icons" iconsize="small"
              customizable="true"
-             defaultset="back-button,forward-button,reload-button,stop-button,home-button,urlbar-container,search-container,window-controls"
+             defaultset="back-button,forward-button,reload-button,stop-button,home-button,urlbar-container,go-container,search-container,window-controls"
              context="toolbar-context-menu">
       <hbox id="window-controls" hidden="true" fullscreencontrol="true">
         <toolbarbutton id="minimize-button" class="toolbarbutton-1"
