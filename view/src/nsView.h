@@ -23,7 +23,6 @@
 #ifndef nsView_h___
 #define nsView_h___
 
-#include "nsViewManager.h"
 #include "nsIView.h"
 #include "nsRect.h"
 #include "nsCRT.h"
@@ -34,6 +33,7 @@
 //mmptemp
 
 class nsIPresContext;
+class nsIViewManager;
 
 class nsView : public nsIView
 {
