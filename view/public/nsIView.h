@@ -394,6 +394,18 @@ public:
   NS_IMETHOD  GetScrollOffset(nscoord *aDx, nscoord *aDy) = 0;
 
   /**
+   * Gets the dirty region associated with this view. Used by the view
+   * manager.
+   */
+  NS_IMETHOD GetDirtyRegion(nsIRegion *&aRegion) = 0;
+
+  /**
+   * Sets the dirty region associated with this view. Used by the view
+   * manager.
+   */
+  NS_IMETHOD SetDirtyRegion(nsIRegion *aRegion) = 0;
+
+  /**
    * Output debug info to FILE
    * @param out output file handle
    * @param aIndent indentation depth
