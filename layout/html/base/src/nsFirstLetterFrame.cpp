@@ -49,6 +49,9 @@ public:
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
+
+  NS_IMETHOD SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
+
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout);
 
 protected:
@@ -148,6 +151,21 @@ nsFirstLetterFrame::SetInitialChildList(nsIPresContext& aPresContext,
   mFrames.SetFrames(aChildList);
   if (aChildList) {
     aPresContext.ReParentStyleContext(aChildList, mStyleContext);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFirstLetterFrame::SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
+{
+  if (aSelected && ParentDisablesSelection())
+    return NS_OK;
+  nsIFrame *child;
+  nsresult result = FirstChild(nsnull, &child);
+  while (NS_SUCCEEDED(result) && child)
+  {
+    child->SetSelected(aPresContext,aRange, aSelected,aSpread);//dont worry about result. there are more frames to come
+    result = child->GetNextSibling(&child);
   }
   return NS_OK;
 }
