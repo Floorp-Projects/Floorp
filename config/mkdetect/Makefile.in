@@ -24,7 +24,11 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 # A uniq identifier that describes this host
-DETECT_UNIQ_IDENT = $(shell $(DETECT_DIR)/detect_hostident.sh)
+ifdef MOZILLA_CONFIG_HOST_IDENT
+DETECT_UNIQ_IDENT	= $(MOZILLA_CONFIG_HOST_IDENT)
+else
+DETECT_UNIQ_IDENT	= $(shell $(DETECT_DIR)/detect_hostident.sh)
+endif
 
 # Where we live
 DETECT_DIR	= $(topsrcdir)/config/mkdetect
@@ -74,10 +78,7 @@ export: $(DETECT_NAME)
 detect: $(DETECT_NAME)
 
 realclean clobber clobber_all clean:
-	@rm -f $(DETECT_NAME)
-	@$(DETECT_X11) --cleanup 
-	@$(DETECT_MOTIF) --cleanup 
-	@$(DETECT_GLIBC) --cleanup
+	@rm -f $(DETECT_NAME) *_motif_$(DETECT_UNIQ_IDENT)* *_glibc_$(DETECT_UNIQ_IDENT)* *_x11_$(DETECT_UNIQ_IDENT)*
 
 # This is needed for DETECT_MOTIF to work
 X11_INCLUDE_FLAGS=$(shell $(DETECT_X11) -if)

@@ -356,8 +356,16 @@ endif
 ifneq (,$(filter Linux,$(OS_ARCH)))
 MOZILLA_DETECT		= 1
 MOZILLA_DETECT_DIR	= $(DEPTH)/config/mkdetect
-MOZILLA_DETECT_IDENT	= $(shell $(topsrcdir)/config/mkdetect/detect_hostident.sh)
-MOZILLA_DETECT_NAME	= detect_$(MOZILLA_DETECT_IDENT)_gen.mk
+
+# A uniq identifier that describes this host
+ifdef MOZILLA_CONFIG_HOST_IDENT
+MOZILLA_DETECT_UNIQ_IDENT	= $(MOZILLA_CONFIG_HOST_IDENT)
+else
+MOZILLA_DETECT_UNIQ_IDENT	= $(shell $(topsrcdir)/config/mkdetect/detect_hostident.sh)
+endif
+
+MOZILLA_DETECT_NAME	= detect_$(MOZILLA_DETECT_UNIQ_IDENT)_gen.mk
+
 MOZILLA_DETECT_GEN	= $(MOZILLA_DETECT_DIR)/$(MOZILLA_DETECT_NAME)
 endif
 
