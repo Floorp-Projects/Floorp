@@ -43,6 +43,9 @@ use_jars        1
 transformiix    1
 mathml          0      MOZ_MATHML
 svg             0      MOZ_SVG
+# svg requires libart, which is an lgpl library. You need to pull it 
+# explicitly.
+libart_lgpl     0
 mng             1
 ldap            1      MOZ_LDAP_XPCOM
 ldap_experimental 0    MOZ_LDAP_XPCOM_EXPERIMENTAL
