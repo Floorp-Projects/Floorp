@@ -227,7 +227,7 @@ function EditorSharedStartup()
 
   // Remove a Privacy menu that causes problems
   // (method is in tasksOverlay.js)
-  HideImage();
+  // HideImage();
 
   // hide UI that we don't have components for
   RemoveInapplicableUIElements();
