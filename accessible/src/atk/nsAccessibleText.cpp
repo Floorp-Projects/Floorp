@@ -434,6 +434,61 @@ nsresult nsAccessibleText::GetTextHelperCore(EGetTextType aType, nsAccessibleTex
     GetCurrectOffset(aClosure, aDomSel, aEndOffset);
     break;
   case BOUNDARY_WORD_END:
+    {
+    // please refer to atk implementation (atktext.c)
+    // for specification of ATK_TEXT_BOUNDARY_WORD_END when before/at/after offset
+    // XXX, need to follow exact definition of ATK_TEXT_BOUNDARY_WORD_END
+
+    if (aType != eGetAt) {
+      // XXX, don't support yet
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    // Example of current code: _AB_CD_E_ ("_" is space)
+    // offset      return string   startOffset endOffset
+    //      0      AB_             1           4
+    //      1      AB_             1           4
+    //      2      AB_             1           4
+    //      3      AB_             1           4
+    //      4      CD_             4           7
+    //      5      CD_             4           7
+    //      6      CD_             4           7
+    //      7      E_              7           9
+    //      8      E_              7           9
+
+    PRUnichar prevChar, offsetChar;
+    if (aOffset > 0)
+      GetCharacterAtOffset(aOffset - 1, &prevChar);
+    nsresult rv = GetCharacterAtOffset(aOffset, &offsetChar);
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRBool isPrevEmpty =  prevChar == ' ' || prevChar == '\t' || prevChar == '\n';
+    PRBool isOffsetEmpty =  offsetChar == ' ' || offsetChar == '\t' || offsetChar == '\n';
+
+    PRInt32 stepBackwardCount = 0; // Times of move backward to find the word(e.g. "AB_") start boundary
+    if (aOffset == 0) {
+      if (isOffsetEmpty)
+        aSelCon->WordMove(PR_TRUE, PR_FALSE); // Move caret to the first word start boundary
+    }
+    else {
+      if (!isPrevEmpty)
+        stepBackwardCount = 1;
+      else if (isOffsetEmpty)
+        stepBackwardCount = 2;
+      else
+        stepBackwardCount = 0;
+
+      PRUint32 step;
+      for (step = 0; step < stepBackwardCount; step++)
+        aSelCon->WordMove(PR_FALSE, PR_FALSE); // Move caret to current word start boundary
+    }
+
+    GetCurrectOffset(aClosure, aDomSel, aStartOffset);
+    // Move twice to select a "word"
+    aSelCon->WordMove(PR_TRUE, PR_TRUE);
+    aSelCon->WordMove(PR_TRUE, PR_TRUE);
+    GetCurrectOffset(aClosure, aDomSel, aEndOffset);
+    }
+    break;
   case BOUNDARY_LINE_END:
   case BOUNDARY_SENTENCE_START:
   case BOUNDARY_SENTENCE_END:
