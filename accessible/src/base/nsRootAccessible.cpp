@@ -54,6 +54,7 @@
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDocument.h"
+#include "nsIHTMLDocument.h"
 #include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIScriptGlobalObject.h"
@@ -229,6 +230,9 @@ nsresult nsRootAccessible::AddEventListeners()
     target->AddEventListener(NS_LITERAL_STRING("unload"), 
                              NS_STATIC_CAST(nsIDOMXULListener*, this), 
                              PR_TRUE);
+    target->AddEventListener(NS_LITERAL_STRING("load"), 
+                             NS_STATIC_CAST(nsIDOMXULListener*, this), 
+                             PR_TRUE);
   }
 
   if (!mCaretAccessible)
@@ -257,6 +261,9 @@ nsresult nsRootAccessible::RemoveEventListeners()
   GetChromeEventHandler(getter_AddRefs(target));
   if (target) {
     target->RemoveEventListener(NS_LITERAL_STRING("unload"), 
+                                NS_STATIC_CAST(nsIDOMXULListener*, this), 
+                                PR_TRUE);
+    target->RemoveEventListener(NS_LITERAL_STRING("load"), 
                                 NS_STATIC_CAST(nsIDOMXULListener*, this), 
                                 PR_TRUE);
   }
@@ -503,6 +510,13 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       do_QueryInterface(accessible);
     if (privateAccDoc) {
       privateAccDoc->Destroy();
+    }
+  }
+  else if (eventType.EqualsIgnoreCase("load")) {
+    nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(targetNode));
+    if (htmlDoc) {
+      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_REORDER, 
+                                accessible, nsnull);
     }
   }
   else if (eventType.LowerCaseEqualsLiteral("focus") || 

@@ -375,8 +375,15 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
                                    NULL);
         }
         else {
+            //
+            // EVENT_REORDER is normally fired by "HTML Document".
+            //
+            // In GOK, [only] "children_changed::add" can cause foreground
+            // window accessible to update it children, which will
+            // refresh "UI-Grab" window.
+            //
             g_signal_emit_by_name (accWrap->GetAtkObject(),
-                                   "children_changed",
+                                   "children_changed::add",
                                    -1, NULL, NULL);
         }
 
