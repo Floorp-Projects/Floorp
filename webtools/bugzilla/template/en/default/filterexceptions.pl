@@ -339,7 +339,6 @@
   'bug_list.last', 
   'bug.bug_id', 
   'bug.votes', 
-  'PerformSubsts(Param(\'mybugstemplate\'), substs)', 
 ],
 
 'bug/comments.html.tmpl' => [

@@ -249,10 +249,6 @@ sub create {
             # Function to create date strings
             'time2str' => \&Date::Format::time2str,
 
-            # Function for processing global parameters that contain references
-            # to other global parameters.
-            'PerformSubsts' => \&::PerformSubsts ,
-
             # Generic linear search function
             'lsearch' => \&Bugzilla::Util::lsearch,
 
@@ -268,10 +264,6 @@ sub create {
                 require Bugzilla::BugMail;
                 Bugzilla::BugMail::Send($id, $mailrecipients);
             },
- 
-            # SyncAnyPendingShadowChanges
-            # - called in the footer to sync the shadowdb
-            'SyncAnyPendingShadowChanges' => \&::SyncAnyPendingShadowChanges,
 
             # Bugzilla version
             # This could be made a ref, or even a CONSTANT with TT2.08
