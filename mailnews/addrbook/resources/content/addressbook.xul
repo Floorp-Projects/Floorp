@@ -41,7 +41,7 @@ Rights Reserved.
 		align="vertical"
 		title="&addressbookWindow.title;"
 		windowtype="mail:addressbook"
-		persist="width height screenX screenY"
+		persist="width height screenX screenY sizemode"
 		onload="OnLoadAddressBook()">
 
 <script language="JavaScript" src="chrome://messenger/content/accountUtils.js"/>

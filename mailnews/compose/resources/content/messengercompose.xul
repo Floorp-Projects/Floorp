@@ -44,7 +44,7 @@
         windowtype="msgcompose"
         orient="vertical"
         width="640" height="480"
-        persist="screenX screenY width height"> 
+        persist="screenX screenY width height sizemode"> 
 
 <script language="JavaScript" src="chrome://global/content/strres.js"></script>
 <script language="JavaScript" src="chrome://messenger/content/accountUtils.js"></script>
