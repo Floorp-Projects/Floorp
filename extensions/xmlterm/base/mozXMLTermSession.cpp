@@ -986,7 +986,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
               nsAutoString lsCommand;
               lsCommand.SetLength(0);
 
-              if (commandArgs.Length() > 0) {
+              if (!commandArgs.IsEmpty()) {
                 lsCommand.Append(NS_LITERAL_STRING("cd "));
                 lsCommand.Append(commandArgs);
                 lsCommand.Append(NS_LITERAL_STRING(";"));
@@ -1192,7 +1192,7 @@ NS_IMETHODIMP mozXMLTermSession::ExportHTML(const PRUnichar* aFilename,
 
   nsAutoString filename( aFilename );
 
-  if (filename.Length() == 0) {
+  if (filename.IsEmpty()) {
     // Write to STDERR
     char* htmlCString = ToNewCString(htmlString);
     fprintf(stderr, "mozXMLTermSession::ExportHTML:\n%s\n\n", htmlCString);
@@ -1365,7 +1365,7 @@ NS_IMETHODIMP mozXMLTermSession::DisplayInput(const nsString& aString,
   // Without this workaround, the cursor is positioned too close to the prompt
   // (i.e., too far to the left, ignoring the prompt whitespace)
 
-  if ((cursorCol > 0) || (mPromptHTML.Length() > 0)) {
+  if ((cursorCol > 0) || !mPromptHTML.IsEmpty()) {
     // Collapse selection to new cursor location
     result = selection->Collapse(mInputTextNode, cursorCol);
 
@@ -1655,7 +1655,7 @@ NS_IMETHODIMP mozXMLTermSession::BreakOutput(PRBool positionCursorBelow)
 
       mFragmentBuffer.SetLength(0);
 
-      if (jsOutput.Length() > 0) {
+      if (!jsOutput.IsEmpty()) {
         // Display JS output as HTML fragment
         result = InsertFragment(jsOutput, mOutputBlockNode,
                                 mCurrentEntryNumber);
@@ -1871,7 +1871,7 @@ NS_IMETHODIMP mozXMLTermSession::LimitOutputLines(PRBool deleteAllOld)
       attValue.SetLength(0);
       result = mozXMLTermUtils::GetNodeAttribute(nextChild, "class", attValue);
 
-      if (NS_FAILED(result)|| (attValue.Length() == 0)) {
+      if (NS_FAILED(result)|| attValue.IsEmpty())) {
         deleteNode = 1;
 
       } else {
@@ -2699,7 +2699,7 @@ NS_IMETHODIMP mozXMLTermSession::DeepSanitizeFragment(
 
       attValue.SetLength(0);
       result = domElement->GetAttribute(attName, attValue);
-      if (NS_SUCCEEDED(result) && (attValue.Length() > 0)) {
+      if (NS_SUCCEEDED(result) && !attValue.IsEmpty()) {
         // Save allowed event attribute value for re-insertion
         eventAttrVals[j] = attValue;
       }
@@ -2762,7 +2762,7 @@ NS_IMETHODIMP mozXMLTermSession::DeepSanitizeFragment(
       attValue.SetLength(0);
       result = domElement->GetAttribute(attName, attValue);
 
-      if (NS_SUCCEEDED(result) && (attValue.Length() > 0)) {
+      if (NS_SUCCEEDED(result) && !attValue.IsEmpty()) {
         // Modify attribute value
         SubstituteCommandNumber(attValue, entryNumber);
         domElement->SetAttribute(attName, attValue);
@@ -2775,7 +2775,7 @@ NS_IMETHODIMP mozXMLTermSession::DeepSanitizeFragment(
       attName.AppendWithConversion(sessionEventNames[j]);
       attValue = eventAttrVals[j];
 
-      if (attValue.Length() > 0) {
+      if (!attValue.IsEmpty()) {
         SubstituteCommandNumber(attValue, entryNumber);
 
         // Sanitize attribute value
@@ -2836,7 +2836,7 @@ NS_IMETHODIMP mozXMLTermSession::DeepRefreshEventHandlers(
     attValue.SetLength(0);
     result = domElement->GetAttribute(attName, attValue);
 
-    if (NS_SUCCEEDED(result) && (attValue.Length() > 0)) {
+    if (NS_SUCCEEDED(result) && !attValue.IsEmpty()) {
       // Refresh attribute value
       domElement->SetAttribute(attName, attValue);
     }
@@ -2904,7 +2904,7 @@ NS_IMETHODIMP mozXMLTermSession::FlushOutput(FlushActionType flushAction)
       // Clear incomplete PRE text
       mPreTextIncomplete.SetLength(0);
 
-      if ((mPreTextBufferLines == 0) && (mPreTextBuffered.Length() == 0)) {
+      if ((mPreTextBufferLines == 0) && mPreTextBuffered.IsEmpty()) {
         // Remove lone text node
         nsCOMPtr<nsIDOMNode> resultNode;
         result = mOutputDisplayNode->RemoveChild(mOutputTextNode,
@@ -2956,7 +2956,7 @@ NS_IMETHODIMP mozXMLTermSession::FlushOutput(FlushActionType flushAction)
       mOutputTextNode = nsnull;
 
       if ( (flushAction == SPLIT_INCOMPLETE_FLUSH) &&
-           (preTextSplit.Length() > 0) ) {
+           !preTextSplit.IsEmpty() ) {
         // Create new PRE element with incomplete text
         nsAutoString styleStr; styleStr.SetLength(0);
 
@@ -3334,7 +3334,7 @@ NS_IMETHODIMP mozXMLTermSession::NewEntry(const nsString& aPrompt)
 
   nsCOMPtr<nsIDOMNode> resultNode;
 
-  if (mPromptHTML.Length() == 0) {
+  if (mPromptHTML.IsEmpty()) {
 
 #define DEFAULT_ICON_PROMPT
 #ifdef DEFAULT_ICON_PROMPT    // Experimental code; has scrolling problems
@@ -3971,7 +3971,7 @@ NS_IMETHODIMP mozXMLTermSession::NewAnchor(const nsString& classAttribute,
   nsAutoString hrefVal(NS_LITERAL_STRING("#"));
   newElement->SetAttribute(hrefAtt, hrefVal);
 
-  if (classAttribute.Length() > 0) {
+  if (!classAttribute.IsEmpty()) {
     nsAutoString classStr(NS_LITERAL_STRING("class"));
     newElement->SetAttribute(classStr, classAttribute);
 
@@ -4028,7 +4028,7 @@ NS_IMETHODIMP mozXMLTermSession::NewElement(const nsString& tagName,
   if (NS_FAILED(result) || !newElement)
     return NS_ERROR_FAILURE;
 
-  if (name.Length() > 0) {
+  if (!name.IsEmpty()) {
     // Set attributes
     nsAutoString classAtt(NS_LITERAL_STRING("class"));
     nsAutoString classVal(name);
@@ -4164,19 +4164,19 @@ NS_IMETHODIMP mozXMLTermSession::NewIFrame(nsIDOMNode* parentNode,
   attValue.AppendInt(frameBorder,10);
   newElement->SetAttribute(attName, attValue);
 
-  if (src.Length() > 0) {
+  if (!src.IsEmpty()) {
     // Set SRC attribute
     attName.Assign(NS_LITERAL_STRING("src"));
     newElement->SetAttribute(attName, src);
   }
 
-  if (width.Length() > 0) {
+  if (!width.IsEmpty()) {
     // Set WIDTH attribute
     attName.Assign(NS_LITERAL_STRING("width"));
     newElement->SetAttribute(attName, width);
   }
 
-  if (height.Length() > 0) {
+  if (!height.IsEmpty()) {
     // Set HEIGHT attribute
     attName.Assign(NS_LITERAL_STRING("height"));
     newElement->SetAttribute(attName, height);
@@ -4379,7 +4379,7 @@ NS_IMETHODIMP mozXMLTermSession::ToHTMLString(nsIDOMNode* aNode,
                 }
 
                 result = attr->GetValue(attrValue);
-                if (NS_SUCCEEDED(result) && (attrName.Length() > 0)) {
+                if (NS_SUCCEEDED(result) && !attrName.IsEmpty()) {
                   htmlString.Append(NS_LITERAL_STRING("=\""));
                   htmlString.Append(attrValue);
                   htmlString.Append(NS_LITERAL_STRING("\""));
@@ -4412,7 +4412,7 @@ NS_IMETHODIMP mozXMLTermSession::ToHTMLString(nsIDOMNode* aNode,
             break;
         }
 
-        if (htmlInner.Length() > 0) {
+        if (!htmlInner.IsEmpty()) {
           if (insidePRENode)
             htmlString.Append(NS_LITERAL_STRING("\n>"));
           else
@@ -4587,7 +4587,7 @@ void mozXMLTermSession::TraverseDOMTree(FILE* fileStream,
 	  attValue.SetLength(0);
 
           result = domElement->GetAttribute(attName, attValue);
-          if (NS_SUCCEEDED(result) && (attValue.Length() > 0)) {
+          if (NS_SUCCEEDED(result) && !attValue.IsEmpty()) {
             // Print attribute value
             char* tagCString2 = ToNewCString(attValue);
             fprintf(fileStream, " %s=%s", printAttributeNames[j], tagCString2);

@@ -82,7 +82,7 @@ nsSVGStroke::Build(ArtVpath* path, const nsSVGStrokeStyle& style)
       NS_ERROR("not reached");
   }
 
-  if (style.dasharray.Length() > 0) {
+  if (!style.dasharray.IsEmpty()) {
     ArtVpathDash dash;
     dash.offset = style.dashoffset;
 

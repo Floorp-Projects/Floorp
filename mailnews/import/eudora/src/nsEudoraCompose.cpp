@@ -598,13 +598,13 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 	nsString	charSet;
 	nsString	headerVal;
 	GetHeaderValue( m_pHeaders, m_headerLen, "From:", headerVal);
-	if (headerVal.Length())
+	if (!headerVal.IsEmpty())
 		m_pMsgFields->SetFrom( headerVal.get());
 	GetHeaderValue( m_pHeaders, m_headerLen, "To:", headerVal);
-	if (headerVal.Length())
+	if (!headerVal.IsEmpty())
 		m_pMsgFields->SetTo( headerVal.get());
 	GetHeaderValue( m_pHeaders, m_headerLen, "Subject:", headerVal);
-	if (headerVal.Length())
+	if (!headerVal.IsEmpty())
 		m_pMsgFields->SetSubject( headerVal.get());
 	GetHeaderValue( m_pHeaders, m_headerLen, "Content-type:", headerVal);
 	bodyType = headerVal;
@@ -613,12 +613,12 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
   // Use platform charset as default if the msg doesn't specify one
   // (ie, no 'charset' param in the Content-Type: header). As the last
   // resort we'll use the mail defaul charset.
-  if (! headerVal.Length())
+  if (headerVal.IsEmpty())
   {
     headerVal.AssignWithConversion(nsMsgI18NFileSystemCharset());
-    if (! headerVal.Length())
+    if (headerVal.IsEmpty())
     { // last resort
-      if (!m_defCharset.Length())
+      if (m_defCharset.IsEmpty())
       {
         nsXPIDLString defaultCharset;
         nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
@@ -632,18 +632,18 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
   m_pMsgFields->SetCharacterSet( NS_LossyConvertUCS2toASCII(headerVal).get() );
   charSet = headerVal;
 	GetHeaderValue( m_pHeaders, m_headerLen, "CC:", headerVal);
-	if (headerVal.Length())
+	if (!headerVal.IsEmpty())
 		m_pMsgFields->SetCc( headerVal.get());
 	GetHeaderValue( m_pHeaders, m_headerLen, "Message-ID:", headerVal);
-	if (headerVal.Length())
+	if (!headerVal.IsEmpty())
 		m_pMsgFields->SetMessageId( NS_LossyConvertUCS2toASCII(headerVal).get() );
 	GetHeaderValue( m_pHeaders, m_headerLen, "Reply-To:", headerVal);
-	if (headerVal.Length())
+	if (!headerVal.IsEmpty())
 		m_pMsgFields->SetReplyTo( headerVal.get());
 
 	// what about all of the other headers?!?!?!?!?!?!
 	char *pMimeType = nsnull;
-	if (bodyType.Length())
+	if (!bodyType.IsEmpty())
 		pMimeType = ToNewCString(bodyType);
 	
 	// IMPORT_LOG0( "Outlook compose calling CreateAndSendMessage\n");
@@ -1083,7 +1083,7 @@ nsresult nsEudoraCompose::WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCopi
 	do {
 		GetNthHeader( m_pHeaders, m_headerLen, n, header, val, PR_FALSE);
 		// GetNthHeader( newHeaders.m_pBuffer, newHeaders.m_writeOffset, n, header, val, PR_FALSE);
-		if (header.Length()) {
+		if (!header.IsEmpty()) {
 			if ((specialHeader = IsSpecialHeader( header.get())) != -1) {
 				header.Append( ':');
 				GetHeaderValue( newHeaders.m_pBuffer, newHeaders.m_writeOffset - 1, header.get(), val, PR_FALSE);
@@ -1095,10 +1095,10 @@ nsresult nsEudoraCompose::WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCopi
 				header.Append( ':');
 				GetHeaderValue( newHeaders.m_pBuffer, newHeaders.m_writeOffset - 1, header.get(), replaceVal, PR_FALSE);
 				header.Truncate( header.Length() - 1);
-				if (replaceVal.Length())
+				if (!replaceVal.IsEmpty())
 					val = replaceVal;
 			}
-			if (val.Length()) {
+			if (!val.IsEmpty()) {
         // See if we're writing out a Date: header.
         if (!nsCRT::strcasecmp(header.get(), "Date"))
           hasDateHeader = PR_TRUE;
@@ -1113,7 +1113,7 @@ nsresult nsEudoraCompose::WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCopi
 			}
 		}
 		n++;
-	} while (NS_SUCCEEDED( rv) && (header.Length() != 0));
+	} while (NS_SUCCEEDED( rv) && !header.IsEmpty());
 
   // If we don't have Date: header so far then use the default one (taken from Eudora "From " line).
   if (!hasDateHeader)
@@ -1129,7 +1129,7 @@ nsresult nsEudoraCompose::WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCopi
 			header.Append( ':');
 			GetHeaderValue( newHeaders.m_pBuffer, newHeaders.m_writeOffset - 1, header.get(), val, PR_FALSE);
 			header.Truncate( header.Length() - 1);
-			if (val.Length()) {
+			if (!val.IsEmpty()) {
 				rv = pDst->Write( header.get(), header.Length(), &written);
 				if (NS_SUCCEEDED( rv))
 					rv = pDst->Write( ": ", 2, &written);

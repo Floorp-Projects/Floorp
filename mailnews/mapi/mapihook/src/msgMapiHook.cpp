@@ -443,19 +443,19 @@ nsresult nsMapiHook::PopulateCompFields(lpnsMapiMessage aMessage,
                 switch (aMessage->lpRecips[i].ulRecipClass)
                 {
                 case MAPI_TO :
-                    if (To.Length() > 0)
+                    if (!To.IsEmpty())
                         To += Comma ;
                     To += (PRUnichar *) aMessage->lpRecips[i].lpszAddress ;
                     break ;
 
                 case MAPI_CC :
-                    if (Cc.Length() > 0)
+                    if (!Cc.IsEmpty())
                         Cc += Comma ;
-                    Cc += (PRUnichar *) aMessage->lpRecips[i].lpszAddress ; 
+                    Cc += (PRUnichar *) aMessage->lpRecips[i].lpszAddress ;
                     break ;
 
                 case MAPI_BCC :
-                    if (Bcc.Length() > 0)
+                    if (!Bcc.IsEmpty())
                         Bcc += Comma ;
                     Bcc += (PRUnichar *) aMessage->lpRecips[i].lpszAddress ; 
                     break ;
@@ -681,19 +681,19 @@ nsresult nsMapiHook::PopulateCompFieldsWithConversion(lpnsMapiMessage aMessage,
                 switch (aMessage->lpRecips[i].ulRecipClass)
                 {
                 case MAPI_TO :
-                    if (To.Length() > 0)
+                    if (!To.IsEmpty())
                         To += Comma ;
                     To.AppendWithConversion ((char *) aMessage->lpRecips[i].lpszAddress);
                     break ;
 
                 case MAPI_CC :
-                    if (Cc.Length() > 0)
+                    if (!Cc.IsEmpty())
                         Cc += Comma ;
-                    Cc.AppendWithConversion ((char *) aMessage->lpRecips[i].lpszAddress); 
+                    Cc.AppendWithConversion ((char *) aMessage->lpRecips[i].lpszAddress);
                     break ;
 
                 case MAPI_BCC :
-                    if (Bcc.Length() > 0)
+                    if (!Bcc.IsEmpty())
                         Bcc += Comma ;
                     Bcc.AppendWithConversion ((char *) aMessage->lpRecips[i].lpszAddress) ; 
                     break ;
@@ -777,7 +777,7 @@ nsresult nsMapiHook::PopulateCompFieldsForSendDocs(nsIMsgCompFields * aCompField
     nsCString Attachments ;
 
     // only 1 file is to be sent, no delim specified
-    if ((!strDelimChars.Length()) && (strFilePaths.Length()>0))
+    if (strDelimChars.IsEmpty() && !strFilePaths.IsEmpty())
     {
         nsCOMPtr <nsILocalFile> pFile = do_CreateInstance (NS_LOCAL_FILE_CONTRACTID, &rv) ;
         if (NS_FAILED(rv) || (!pFile) ) return rv ;        
@@ -830,7 +830,7 @@ nsresult nsMapiHook::PopulateCompFieldsForSendDocs(nsIMsgCompFields * aCompField
             NS_GetURLSpecFromFile(pFile, pURL);
             if (!pURL.IsEmpty())
             {
-                if (Attachments.Length() > 0)
+                if (!Attachments.IsEmpty())
                     Attachments.Append(",") ;
                 Attachments.Append(pURL) ;
             }

@@ -82,7 +82,7 @@ nsresult nsPop3URL::GetPop3Sink(nsIPop3Sink** aPop3Sink)
 NS_IMETHODIMP
 nsPop3URL::GetMessageUri(char ** aMessageUri)
 {
-    if(!aMessageUri || m_messageUri.Length() == 0)
+    if(!aMessageUri || m_messageUri.IsEmpty())
         return NS_ERROR_NULL_POINTER;
     *aMessageUri = ToNewCString(m_messageUri);
     return NS_OK;

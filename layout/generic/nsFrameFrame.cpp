@@ -772,11 +772,11 @@ PRBool nsHTMLFrameInnerFrame::GetURL(nsIContent* aContent, nsString& aResult)
 
   if (type.get() == nsHTMLAtoms::object) {
     if (NS_CONTENT_ATTR_HAS_VALUE == (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, aResult)))
-      if (aResult.Length() > 0)
+      if (!aResult.IsEmpty())
         return PR_TRUE;
   }else
     if (NS_CONTENT_ATTR_HAS_VALUE == (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, aResult)))
-      if (aResult.Length() > 0)
+      if (!aResult.IsEmpty())
         return PR_TRUE;
 
   return PR_FALSE;
@@ -787,7 +787,7 @@ PRBool nsHTMLFrameInnerFrame::GetName(nsIContent* aContent, nsString& aResult)
   aResult.SetLength(0);
 
   if (NS_CONTENT_ATTR_HAS_VALUE == (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, aResult))) {
-    if (aResult.Length() > 0) {
+    if (!aResult.IsEmpty()) {
       return PR_TRUE;
     }
   }

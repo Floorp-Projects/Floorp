@@ -317,7 +317,7 @@ nsTextBoxFrame::PaintTitle(nsIPresContext*      aPresContext,
                            const nsRect&        aDirtyRect,
                            const nsRect&        aRect)
 {
-    if (mTitle.Length() == 0)
+    if (mTitle.IsEmpty())
         return NS_OK;
 
     // determine (cropped) title and underline position
@@ -509,7 +509,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext*      aPresContext,
                                        nsIRenderingContext& aRenderingContext,
                                        nscoord              aWidth)
 {
-    if (mTitle.Length() == 0)
+    if (mTitle.IsEmpty())
         return;
 
     nsCOMPtr<nsIDeviceContext> deviceContext;

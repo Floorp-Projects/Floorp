@@ -1403,7 +1403,7 @@ nsWindowWatcher::FindItemWithName(
   *aFoundItem = 0;
 
   /* special cases */
-  if(name.Length() == 0)
+  if(name.IsEmpty())
     return NS_OK;
   if(name.EqualsIgnoreCase("_blank") || name.EqualsIgnoreCase("_new"))
     return NS_OK;

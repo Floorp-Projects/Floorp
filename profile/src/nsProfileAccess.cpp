@@ -1503,7 +1503,7 @@ nsresult ProfileStruct::ExternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
                                  regData.get());
 
     }
-    else if (regLocationData.Length() != 0)
+    else if (!regLocationData.IsEmpty())
     {
         // Write the original data back out - maybe it can be resolved later.
         rv = aRegistry->SetString(profKey,

@@ -442,7 +442,7 @@ NS_IMETHODIMP nsPrintSettings::SetPrintRange(PRInt16 aPrintRange)
 NS_IMETHODIMP nsPrintSettings::GetTitle(PRUnichar * *aTitle)
 {
   NS_ENSURE_ARG_POINTER(aTitle);
-  if (mTitle.Length() > 0) {
+  if (!mTitle.IsEmpty()) {
     *aTitle = ToNewUnicode(mTitle);
   } else {
     *aTitle = nsnull;
@@ -463,7 +463,7 @@ NS_IMETHODIMP nsPrintSettings::SetTitle(const PRUnichar * aTitle)
 NS_IMETHODIMP nsPrintSettings::GetDocURL(PRUnichar * *aDocURL)
 {
   NS_ENSURE_ARG_POINTER(aDocURL);
-  if (mURL.Length() > 0) {
+  if (!mURL.IsEmpty()) {
     *aDocURL = ToNewUnicode(mURL);
   } else {
     *aDocURL = nsnull;
@@ -694,7 +694,7 @@ NS_IMETHODIMP nsPrintSettings::SetShowPrintProgress(PRBool aShowPrintProgress)
 NS_IMETHODIMP nsPrintSettings::GetPaperName(PRUnichar * *aPaperName)
 {
   NS_ENSURE_ARG_POINTER(aPaperName);
-  if (mPaperName.Length()) {
+  if (!mPaperName.IsEmpty()) {
     *aPaperName = ToNewUnicode(mPaperName);
   } else {
     *aPaperName = nsnull;

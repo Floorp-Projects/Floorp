@@ -1038,7 +1038,7 @@ NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onli
 	// If this host has an online server directory configured
 	onlineDir = (char *)(!aString.IsEmpty() ? ToNewCString(aString) : nsnull);
 
-	if (currentPath && onlineDir.Length() > 0)
+	if (currentPath && !onlineDir.IsEmpty())
 	{
 		// By definition, the online dir must be at the root.
 		if (delimiterToUse && delimiterToUse != kOnlineHierarchySeparatorUnknown)

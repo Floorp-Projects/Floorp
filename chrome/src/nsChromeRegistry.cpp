@@ -484,7 +484,7 @@ SplitURL(nsIURI *aChromeURI, nsCString& aPackage, nsCString& aProvider, nsCStrin
   aProvider.Right(aFile, aProvider.Length() - (idx + 1));
   aProvider.Truncate(idx);
 
-  PRBool nofile = (aFile.Length() == 0);
+  PRBool nofile = aFile.IsEmpty();
   if (nofile) {
     // If there is no file, then construct the default file
     aFile = aPackage;

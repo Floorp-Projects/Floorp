@@ -1844,7 +1844,7 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
             {
               PRBool isInbox = 
                 PL_strcasecmp("Inbox", folderNameForProposedUrl) == 0;
-              if (curUrlFolderName.Length() > 0)
+              if (!curUrlFolderName.IsEmpty())
               {
                 PRBool matched = isInbox ?
                   PL_strcasecmp(curUrlFolderName.get(),
@@ -2252,14 +2252,14 @@ void nsImapProtocol::ProcessSelectedStateURL()
           m_runningUrl->CreateListOfMessageIdsString(getter_Copies(messageIdString));
           m_runningUrl->GetCustomAddFlags(getter_Copies(addFlags));
           m_runningUrl->GetCustomSubtractFlags(getter_Copies(subtractFlags));
-          if (addFlags.Length() > 0)
+          if (!addFlags.IsEmpty())
           {
             nsCAutoString storeString("+FLAGS (");
             storeString.Append(addFlags);
             storeString.Append(")");
             Store(messageIdString, storeString.get(), PR_TRUE);
           }
-          if (subtractFlags.Length() > 0)
+          if (!subtractFlags.IsEmpty())
           {
             nsCAutoString storeString("-FLAGS (");
             storeString.Append(subtractFlags);
@@ -3431,7 +3431,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
       
       GetCurrentUrl()->CreateListOfMessageIdsString(getter_Copies(undoIdsStr));
       undoIds.Assign(undoIdsStr);
-      if (undoIds.Length() > 0)
+      if (!undoIds.IsEmpty())
       {
         char firstChar = (char) undoIds.CharAt(0);
         undoIds.Cut(0, 1);  // remove first character
@@ -4351,7 +4351,7 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
           {
             SetConnectionStatus(-1);
           }
-          else if (boxNameCopy.Length() && 
+          else if (!boxNameCopy.IsEmpty() && 
             (GetMailboxDiscoveryStatus() == 
             eListMyChildren) &&
             (!useSubscription || GetSubscribingNow()))
@@ -4364,7 +4364,7 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
           {
             if (m_hierarchyNameState ==
               kListingForInfoAndDiscovery &&
-              boxNameCopy.Length() && 
+              !boxNameCopy.IsEmpty() && 
               !(adoptedBoxSpec->box_flags & kNameSpace))
             {
               // remember the info here also
@@ -5189,7 +5189,7 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
           rv = m_imapExtensionSink->GetMessageId(this, &messageId,
             m_runningUrl);
           WaitForFEEventCompletion();
-          if (NS_SUCCEEDED(rv) && messageId.Length() > 0 &&
+          if (NS_SUCCEEDED(rv) && !messageId.IsEmpty() &&
             GetServerStateParser().LastCommandSuccessful())
           {
             // if the appended to folder isn't selected in the connection,
@@ -5846,7 +5846,7 @@ PRBool nsImapProtocol::DeleteSubFolders(const char* selectedMailbox, PRBool &aDe
         pattern.Append(onlineDirSeparator);
         pattern.Append('*');
 
-    if (pattern.Length())
+    if (!pattern.IsEmpty())
     {
       List(pattern.get(), PR_FALSE);
     }
@@ -6100,7 +6100,7 @@ void nsImapProtocol::OnMoveFolderHierarchy(const char * sourceMailbox)
         else
             oldBoxName.Right(leafName, length-(leafStart+1));
 
-        if ( newBoxName.Length() > 0 )
+        if ( !newBoxName.IsEmpty() )
              newBoxName.Append(onlineDirSeparator);
         newBoxName.Append(leafName);
         PRBool  renamed = RenameHierarchyByHand(sourceMailbox,
@@ -6240,17 +6240,17 @@ void nsImapProtocol::DiscoverAllAndSubscribedBoxes()
     			nsCOMPtr<nsIImapIncomingServer> imapServer = do_QueryReferent(m_server, &rv);
 				if (NS_FAILED(rv) || !imapServer) return;
 
-				if (allPattern.Length())
+				if (!allPattern.IsEmpty())
 				{
 					imapServer->SetDoingLsub(PR_TRUE);
 					Lsub(allPattern.get(), PR_TRUE);	// LSUB all the subscribed
 				}
-				if (topLevelPattern.Length())
+				if (!topLevelPattern.IsEmpty())
 				{
 					imapServer->SetDoingLsub(PR_FALSE);
 					List(topLevelPattern.get(), PR_TRUE);	// LIST the top level
 				}
-				if (secondLevelPattern.Length())
+				if (!secondLevelPattern.IsEmpty())
 				{
 					imapServer->SetDoingLsub(PR_FALSE);
 					List(secondLevelPattern.get(), PR_TRUE);	// LIST the second level
@@ -7035,7 +7035,7 @@ void nsImapProtocol::SetupMessageFlagsString(nsCString& flagString,
       flagString.Append(" ");
     }
     // eat the last space
-    if (flagString.Length() > 0)
+    if (!flagString.IsEmpty())
         flagString.SetLength(flagString.Length()-1);
 }
 
@@ -7836,7 +7836,7 @@ nsresult nsImapMockChannel::ReadFromMemCache(nsICacheEntryDescriptor *entry)
   if (entryKey.FindChar('?') != kNotFound)
   {
     entry->GetMetaDataElement("contentType", getter_Copies(contentType));
-    if (contentType.Length() > 0)
+    if (!contentType.IsEmpty())
       SetContentType(contentType);
     shouldUseCacheEntry = PR_TRUE;
   }

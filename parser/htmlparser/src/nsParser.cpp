@@ -1567,7 +1567,7 @@ nsParser::Parse(const nsAString& aSourceBuffer,
 
   nsresult result=NS_OK;
 
-  if(aLastCall && (0==aSourceBuffer.Length())) {
+  if(aLastCall && aSourceBuffer.IsEmpty()) {
     // Nothing is being passed to the parser so return
     // immediately. mUnusedInput will get processed when
     // some data is actually passed in.
@@ -1583,7 +1583,7 @@ nsParser::Parse(const nsAString& aSourceBuffer,
   // till we're completely done. 
   nsCOMPtr<nsIParser> kungFuDeathGrip(this);
 
-  if(aSourceBuffer.Length() || mUnusedInput.Length()) { 
+  if(!aSourceBuffer.IsEmpty() || !mUnusedInput.IsEmpty()) {
     
     if (aVerifyEnabled) {
       mFlags |= NS_PARSER_FLAG_DTD_VERIFICATION;
@@ -1747,7 +1747,7 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk, PRBo
        
       while((result==NS_OK) && (theIterationIsOk)) {
         theFirstTime=PR_FALSE;
-        if(mUnusedInput.Length()>0) {
+        if(!mUnusedInput.IsEmpty()) {
           if(mParserContext->mScanner) {
             // -- Ref: Bug# 22485 --
             // Insert the unused input into the source buffer 
@@ -2163,7 +2163,7 @@ static PRBool DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsS
    // }
    // break;
  }  // switch
- return oCharset.Length() > 0;
+ return !oCharset.IsEmpty();
 }
 
 inline const char GetNextChar(nsACString::const_iterator& aStart,

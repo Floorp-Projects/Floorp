@@ -210,7 +210,7 @@ nsresult nsMsgOfflineImapOperation::GetCopiesFromDB()
   nsresult rv = m_mdb->GetProperty(m_mdbRow, PROP_COPY_DESTS, getter_Copies(copyDests));
   nsCAutoString copyDestsCString((const char *) copyDests);
   // use 0x1 as the delimiter between folder names since it's not a legal character
-  if (NS_SUCCEEDED(rv) && copyDestsCString.Length() > 0)
+  if (NS_SUCCEEDED(rv) && !copyDestsCString.IsEmpty())
   {
     PRInt32 curCopyDestStart = 0;
     PRInt32 nextCopyDestPos = 0;

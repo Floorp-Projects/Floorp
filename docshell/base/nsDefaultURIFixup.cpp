@@ -314,7 +314,7 @@ PRBool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
     // Security - URLs with user / password info should NOT be fixed up
     nsCAutoString userpass;
     aURI->GetUserPass(userpass);
-    if (userpass.Length() > 0) {
+    if (!userpass.IsEmpty()) {
         return PR_FALSE;
     }
 
@@ -364,12 +364,12 @@ PRBool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
     }
     else if (numDots == 1)
     {
-        if (prefix.Length() > 0 &&
+        if (!prefix.IsEmpty() &&
                 oldHost.EqualsIgnoreCase(prefix.get(), prefix.Length())) {
             newHost.Assign(oldHost);
             newHost.Append(suffix);
         }
-        else if (suffix.Length() > 0) {
+        else if (!suffix.IsEmpty()) {
             newHost.Assign(prefix);
             newHost.Append(oldHost);
         }

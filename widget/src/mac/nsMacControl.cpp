@@ -613,7 +613,7 @@ void nsMacControl::GetFileSystemCharset(nsString & fileSystemCharset)
   static nsAutoString aCharset;
   nsresult rv;
 
-  if (aCharset.Length() < 1) {
+  if (aCharset.IsEmpty()) {
     nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
 	  if (NS_SUCCEEDED(rv)) 
 		  rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);

@@ -187,7 +187,7 @@ nsLocalMoveCopyMsgTxn::UndoImapDeleteFlag(nsIMsgFolder* folder,
 
             for (i=0; i < count; i++)
             {
-                if (msgIds.Length() > 0)
+                if (!msgIds.IsEmpty())
                     msgIds.Append(',');
                 msgIds.AppendInt((PRInt32) keyArray.GetAt(i));
             }

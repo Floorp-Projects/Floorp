@@ -821,7 +821,7 @@ nsresult nsMsgSearchTerm::MatchBody (nsIMsgSearchScopeTerm *scope, PRUint32 offs
 					StripQuotedPrintable ((unsigned char*)buf);
 			    nsCString  compare(buf);
 //				ConvertToUnicode(charset, buf, compare);
-				if (compare.Length() > 0) {
+				if (!compare.IsEmpty()) {
 					char startChar = (char) compare.CharAt(0);
 					if (startChar != nsCRT::CR && startChar != nsCRT::LF)
 					{

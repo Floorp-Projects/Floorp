@@ -473,7 +473,7 @@ nsSmtpService::loadSmtpServers()
     // Get the list of smtp servers (either from regular pref i.e, mail.smtpservers or
     // from preconfigured pref mail.smtpservers.appendsmtpservers) and create a keyed 
     // server list.
-    if ((serverList.Length() > 0) || (appendServerList.Length() > 0)) {
+    if (!serverList.IsEmpty() || !appendServerList.IsEmpty()) {
       /** 
        * Check to see if we need to add pre-configured smtp servers.
        * Following prefs are important to note in understanding the procedure here.
@@ -508,8 +508,8 @@ nsSmtpService::loadSmtpServers()
       // Update the smtp server list if needed
       if ((appendSmtpServersCurrentVersion <= appendSmtpServersDefaultVersion)) {
         // If there are pre-configured servers, add them to the existing server list
-        if (appendServerList.Length() > 0) {
-          if (serverList.Length() > 0) {
+        if (!appendServerList.IsEmpty()) {
+          if (!serverList.IsEmpty()) {
             nsCStringArray existingSmtpServersArray;
             existingSmtpServersArray.ParseString(serverList.get(), SERVER_DELIMITER);
 

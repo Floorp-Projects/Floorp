@@ -701,7 +701,7 @@ nsJAR::ParseOneFile(nsISignatureVerifier* verifier,
             curItemSF->status = mGlobalStatus;
             if (curItemSF->status == nsIJAR::VALID)
             { // Compare digests
-              if (storedSectionDigest.Length() == 0)
+              if (storedSectionDigest.IsEmpty())
                 curItemSF->status = nsIJAR::NOT_SIGNED;
               else
               {

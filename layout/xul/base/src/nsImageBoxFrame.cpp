@@ -376,7 +376,7 @@ nsImageBoxFrame::GetImageSource()
     // get the list-style-image
     const nsStyleList* myList = GetStyleList();
   
-    if (myList->mListStyleImage.Length() > 0) {
+    if (!myList->mListStyleImage.IsEmpty()) {
       mSrc = myList->mListStyleImage;
     }
   }

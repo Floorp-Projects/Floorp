@@ -102,7 +102,7 @@ nsresult nsMsgI18NConvertFromUnicode(const nsCString& aCharset,
   nsCOMPtr <nsICharsetAlias> calias = do_GetService(NS_CHARSETALIAS_CONTRACTID, &res);
   if (NS_SUCCEEDED(res)) {
     nsAutoString aAlias; aAlias.AssignWithConversion(aCharset.get());
-    if (aAlias.Length()) {
+    if (!aAlias.IsEmpty()) {
       res = calias->GetPreferred(aAlias, convCharset);
     }
   }
@@ -170,7 +170,7 @@ nsresult nsMsgI18NConvertToUnicode(const nsCString& aCharset,
   nsCOMPtr <nsICharsetAlias> calias = do_GetService(NS_CHARSETALIAS_CONTRACTID, &res);
   if (NS_SUCCEEDED(res)) {
     nsAutoString aAlias; aAlias.AssignWithConversion(aCharset.get());
-    if (aAlias.Length()) {
+    if (!aAlias.IsEmpty()) {
       res = calias->GetPreferred(aAlias, convCharset);
     }
   }
@@ -365,7 +365,7 @@ const char * nsMsgI18NFileSystemCharset()
 	/* Get a charset used for the file. */
 	static nsCAutoString fileSystemCharset;
 
-	if (fileSystemCharset.Length() < 1) 
+	if (fileSystemCharset.IsEmpty()) 
 	{
 		nsresult rv;
 		nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);

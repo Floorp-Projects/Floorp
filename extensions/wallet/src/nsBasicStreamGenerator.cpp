@@ -82,7 +82,7 @@ NS_IMETHODIMP nsBasicStreamGenerator::GetLevel(float *aLevel) {
 NS_IMETHODIMP nsBasicStreamGenerator::GetByte(PRUint32 offset, PRUint8 *retval) {
   NS_ENSURE_ARG_POINTER(retval);
   nsresult rv = NS_OK;
-  if (mPassword.Length() == 0) {
+  if (mPassword.IsEmpty()) {
     /* this is the first time, so we need to get the password */
     nsCOMPtr<nsIPasswordSink> weakPasswordSink = do_QueryReferent(mWeakPasswordSink);
     if (!weakPasswordSink) {

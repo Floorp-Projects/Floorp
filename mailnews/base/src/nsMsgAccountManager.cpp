@@ -1370,8 +1370,8 @@ nsMsgAccountManager::LoadAccounts()
                                           getter_Copies(appendAccountList));
 
       // If there are pre-configured accounts, we need to add them to the existing list.
-      if (appendAccountList.Length() > 0) {
-        if (accountList.Length() > 0) {
+      if (!appendAccountList.IsEmpty()) {
+        if (!accountList.IsEmpty()) {
           nsCStringArray existingAccountsArray;
           existingAccountsArray.ParseString(accountList.get(), ACCOUNT_DELIMITER);
 

@@ -55,7 +55,7 @@ mozSqlConnectionPgsql::GetPrimaryKeys(const nsAString& aSchema, const nsAString&
     select = NS_LITERAL_STRING("SELECT n.nspname AS TABLE_SCHEM, ");
     from = NS_LITERAL_STRING(" FROM pg_catalog.pg_namespace n, pg_catalog.pg_class ct, pg_catalog.pg_class ci, pg_catalog.pg_attribute a, pg_catalog.pg_index i");
     where = NS_LITERAL_STRING(" AND ct.relnamespace = n.oid ");
-    if (aSchema.Length() > 0) {
+    if (!aSchema.IsEmpty()) {
       where.Append(NS_LITERAL_STRING(" AND n.nspname = '") + aSchema);
       where.Append(PRUnichar('\''));
     }
@@ -65,7 +65,7 @@ mozSqlConnectionPgsql::GetPrimaryKeys(const nsAString& aSchema, const nsAString&
     from = NS_LITERAL_STRING(" FROM pg_class ct, pg_class ci, pg_attribute a, pg_index i ");
   }
 
-  if (aTable.Length() > 0) {
+  if (!aTable.IsEmpty()) {
     where.Append(NS_LITERAL_STRING(" AND ct.relname = '") + aTable);
     where.Append(PRUnichar('\''));
   }

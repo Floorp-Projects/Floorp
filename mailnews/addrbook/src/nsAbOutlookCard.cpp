@@ -330,7 +330,7 @@ NS_IMETHODIMP nsAbOutlookCard::EditCardToDatabase(const char *aUru)
     GetHomeAddress(getter_Copies(unichar)) ;
     GetHomeAddress2(getter_Copies(unichar2)) ;
     utility.Assign(unichar.get()) ;
-    if (utility.Length() > 0) { utility.AppendWithConversion(CRLF) ; }
+    if (!utility.IsEmpty()) { utility.AppendWithConversion(CRLF) ; }
     utility.Append(unichar2.get()) ;
     if (!mapiAddBook->SetPropertyUString(*mMapiData, PR_HOME_ADDRESS_STREET_W, utility.get())) {
         PRINTF(("Cannot set home address.\n")) ;
@@ -338,7 +338,7 @@ NS_IMETHODIMP nsAbOutlookCard::EditCardToDatabase(const char *aUru)
     GetWorkAddress(getter_Copies(unichar)) ;
     GetWorkAddress2(getter_Copies(unichar2)) ;
     utility.Assign(unichar.get()) ;
-    if (utility.Length() > 0) { utility.AppendWithConversion(CRLF) ; }
+    if (!utility.IsEmpty()) { utility.AppendWithConversion(CRLF) ; }
     utility.Append(unichar2.get()) ;
     if (!mapiAddBook->SetPropertyUString(*mMapiData, PR_BUSINESS_ADDRESS_STREET_W, utility.get())) {
         PRINTF(("Cannot set work address.\n")) ;

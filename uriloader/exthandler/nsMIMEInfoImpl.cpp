@@ -181,7 +181,7 @@ NS_IMETHODIMP
 nsMIMEInfoImpl::GetMIMEType(char * *aMIMEType) {
     if (!aMIMEType) return NS_ERROR_NULL_POINTER;
 
-    if (mMIMEType.Length() < 1)
+    if (mMIMEType.IsEmpty())
         return NS_ERROR_NOT_INITIALIZED;
 
     *aMIMEType = ToNewCString(mMIMEType);
@@ -266,7 +266,7 @@ NS_IMETHODIMP nsMIMEInfoImpl::SetFileExtensions( const char* aExtensions )
 		mExtensions.AppendCString( ext );
 		extList.Cut(0, breakLocation+1 );
 	}
-	if ( extList.Length() )
+	if ( !extList.IsEmpty() )
 		mExtensions.AppendCString( extList );
 	return NS_OK;
 }

@@ -576,7 +576,7 @@ void nsObjectFrame::IsSupportedDocument(nsIContent* aContent, PRBool* aDoc)
     nsXPIDLCString value;
     rv = catman->GetCategoryEntry("Gecko-Content-Viewers",contentType, getter_Copies(value));
 
-    if (NS_SUCCEEDED(rv) && value && *value && (value.Length() > 0))
+    if (NS_SUCCEEDED(rv) && !value.IsEmpty())
       *aDoc = PR_TRUE;
 
     if (contentType)
@@ -1158,7 +1158,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 
         // now try to instantiate a plugin instance based on a mime type
         const char* mimeType = mimeTypeStr.get();
-        if (mimeType || (src.Length() > 0)) {
+        if (mimeType || !src.IsEmpty()) {
           if (!mimeType) {
             // we don't have a mime type, try to figure it out from extension
             nsXPIDLCString extension;
@@ -3015,7 +3015,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
         // let's NOT count up param tags that don't have a name attribute
         nsAutoString name;
         domelement->GetAttribute(NS_LITERAL_STRING("name"), name);
-        if (name.Length() > 0) {
+        if (!name.IsEmpty()) {
           nsCOMPtr<nsIDOMNode> parent;
           nsCOMPtr<nsIDOMHTMLObjectElement> domobject;
           nsCOMPtr<nsIDOMHTMLAppletElement> domapplet;

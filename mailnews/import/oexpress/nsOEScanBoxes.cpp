@@ -796,7 +796,7 @@ void nsOEScanBoxes::BuildMailboxList( MailboxEntry *pBox, nsIFileSpec * root, PR
 			pID->SetDepth( depth);
 			pID->SetIdentifier( pBox->index);
 			pID->SetDisplayName( (PRUnichar *)pBox->mailName.get());
-			if (pBox->fileName.Length() > 0) {
+			if (!pBox->fileName.IsEmpty()) {
 				pID->GetFileSpec( &file);
 				file->FromFileSpec( root);
 				file->AppendRelativeUnixPath( pBox->fileName.get());

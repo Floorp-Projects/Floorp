@@ -133,7 +133,7 @@ void nsGtkIMEHelper::SetupUnicodeDecoder()
     nsAutoString charset;
     charset.Assign(NS_LITERAL_STRING(""));
     result = platform->GetCharset(kPlatformCharsetSel_Menu, charset);
-    if (NS_FAILED(result) || (charset.Length() == 0)) {
+    if (NS_FAILED(result) || charset.IsEmpty()) {
       charset.Assign(NS_LITERAL_STRING("ISO-8859-1"));   // default
     }
     nsICharsetConverterManager* manager = nsnull;

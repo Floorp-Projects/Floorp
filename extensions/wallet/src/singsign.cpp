@@ -1612,7 +1612,7 @@ si_PutData(const char *passwordRealm, nsVoidArray *signonData, PRBool save) {
   PRInt32 count = signonData->Count();
   for (PRInt32 i=0; i<count; i++) {
     data2 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(i));
-    if (data2->isPassword && data2->value.Length()==0) {
+    if (data2->isPassword && data2->value.IsEmpty()) {
       return;
     }
   }
@@ -2339,8 +2339,8 @@ si_RememberSignonData
     data0 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(pswd[0]));
     data1 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(pswd[1]));
     data2 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(pswd[2]));
-    if (data0->value.Length() == 0 || data1->value.Length() == 0 ||
-        data2->value.Length() == 0 || data1->value != data2->value) {
+    if (data0->value.IsEmpty() || data1->value.IsEmpty() ||
+        data2->value.IsEmpty() || data1->value != data2->value) {
       return;
     }
 
@@ -2450,7 +2450,7 @@ si_RestoreSignonData(nsIPrompt* dialog,
       LOG(("  got [name=%s value=%s]\n",
               NS_LossyConvertUCS2toASCII(data->name).get(),
               NS_LossyConvertUCS2toASCII(data->value).get()));
-      if(correctedName.Length() && (data->name == correctedName)) {
+      if(!correctedName.IsEmpty() && (data->name == correctedName)) {
         nameFound = PR_TRUE;
       }
     }
@@ -2473,7 +2473,7 @@ si_RestoreSignonData(nsIPrompt* dialog,
   if (user) {
     data = NS_STATIC_CAST(si_SignonDataStruct *,
                     user->signonData_list.ElementAt(0)); /* 1st item on form */
-    if(data->isPassword && correctedName.Length() && (data->name == correctedName)) {
+    if(data->isPassword && !correctedName.IsEmpty() && (data->name == correctedName)) {
       /* current item is first item on form and is a password */
       user = (passwordRealm, MK_SIGNON_PASSWORDS_FETCH);
       if (user) {
@@ -2505,7 +2505,7 @@ si_RestoreSignonData(nsIPrompt* dialog,
       LOG(("  got [name=%s value=%s]\n",
               NS_LossyConvertUCS2toASCII(data->name).get(),
               NS_LossyConvertUCS2toASCII(data->value).get()));
-      if(correctedName.Length() && (data->name == correctedName)) {
+      if(!correctedName.IsEmpty() && (data->name == correctedName)) {
         nsAutoString password;
         if (NS_SUCCEEDED(si_Decrypt(data->value, password))) {
           *value = ToNewUnicode(password);
@@ -2581,7 +2581,7 @@ si_RestoreOldSignonDataFromBrowser
 
   /* get the data from previous time this URL was visited */
   si_lock_signon_list();
-  if (username.Length() != 0) {
+  if (!username.IsEmpty()) {
     user = si_GetSpecificUser(passwordRealm, username, NS_ConvertASCIItoUCS2(USERNAMEFIELD));
   } else {
     si_LastFormForWhichUserHasBeenSelected = -1;
@@ -2776,17 +2776,17 @@ SINGSIGN_PromptPassword
   }
 
   /* get previous password used with this username, pick first user if no username found */
-  si_RestoreOldSignonDataFromBrowser(dialog, passwordRealm, (username.Length() == 0), username, password);
+  si_RestoreOldSignonDataFromBrowser(dialog, passwordRealm, username.IsEmpty(), username, password);
+
+  *pwd = ToNewUnicode(password);
 
   /* return if a password was found */
-  if (password.Length() != 0) {
-    *pwd = ToNewUnicode(password);
+  if (!password.IsEmpty()) {
     *pressedOK = PR_TRUE;
     return NS_OK;
   }
 
   /* no password found, get new password from user */
-  *pwd = ToNewUnicode(password);
   PRBool checked = PR_FALSE;
   res = si_CheckGetPassword(pwd, dialogTitle, text, dialog, savePassword, &checked);
   if (NS_FAILED(res)) {
@@ -2832,7 +2832,7 @@ SINGSIGN_Prompt
   si_RestoreOldSignonDataFromBrowser(dialog, passwordRealm, PR_TRUE, emptyUsername, data);
 
   /* return if data was found */
-  if (data.Length() != 0) {
+  if (!data.IsEmpty()) {
     *resultText = ToNewUnicode(data);
     *pressedOK = PR_TRUE;
     return NS_OK;
@@ -2968,9 +2968,9 @@ SINGSIGN_HaveData(nsIPrompt* dialog, const char *passwordRealm, const PRUnichar 
   }
 
   /* get previous data used with this username, pick first user if no username found */
-  si_RestoreOldSignonDataFromBrowser(dialog, passwordRealm, (usernameForLookup.Length() == 0), usernameForLookup, data);
+  si_RestoreOldSignonDataFromBrowser(dialog, passwordRealm, usernameForLookup.IsEmpty(), usernameForLookup, data);
 
-  if (data.Length()) {
+  if (!data.IsEmpty()) {
     *retval = PR_TRUE;
   }
 

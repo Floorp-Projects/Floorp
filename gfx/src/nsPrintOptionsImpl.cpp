@@ -231,7 +231,7 @@ NS_IMETHODIMP nsPrinterListEnumerator::GetNext(nsISupports **aPrinter)
 NS_IMETHODIMP 
 nsPrintOptions::SetFontNamePointSize(nsString& aFontName, PRInt32 aPointSize)
 {
-  if (sDefaultFont != nsnull && aFontName.Length() > 0 && aPointSize > 0) {
+  if (sDefaultFont != nsnull && !aFontName.IsEmpty() && aPointSize > 0) {
     sDefaultFont->name = aFontName;
     sDefaultFont->size = NSIntPointsToTwips(aPointSize);
   }

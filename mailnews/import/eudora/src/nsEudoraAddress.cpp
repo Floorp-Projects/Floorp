@@ -437,7 +437,7 @@ PRBool CAliasData::Process( const char *pLine, PRInt32 len)
 		if (*pLine == '"') {
 			if (tCnt && !endCollect) {
 				str.Trim( kWhitespace);
-				if (str.Length())
+				if (!str.IsEmpty())
 					str.Append( " ", 1);
 				str.Append( pStart, tCnt);
 			}
@@ -453,7 +453,7 @@ PRBool CAliasData::Process( const char *pLine, PRInt32 len)
 		else if (*pLine == '<') {
 			if (tCnt && !endCollect) {
 				str.Trim( kWhitespace);
-				if (str.Length())
+				if (!str.IsEmpty())
 					str.Append( " ", 1);
 				str.Append( pStart, tCnt);
 			}
@@ -470,7 +470,7 @@ PRBool CAliasData::Process( const char *pLine, PRInt32 len)
 		else if (*pLine == '(') {
 			if (tCnt && !endCollect) {
 				str.Trim( kWhitespace);
-				if (str.Length())
+				if (!str.IsEmpty())
 					str.Append( " ", 1);
 				str.Append( pStart, tCnt);
 			}
@@ -495,27 +495,27 @@ PRBool CAliasData::Process( const char *pLine, PRInt32 len)
 	
 	if (tCnt) {
 		str.Trim( kWhitespace);
-		if (str.Length())
+		if (!str.IsEmpty())
 			str.Append( " ", 1);
 		str.Append( pStart, tCnt);
 	}
 	
 	str.Trim( kWhitespace);
 	
-	if (m_realName.Length() && m_email.Length())
+	if (!m_realName.IsEmpty() && !m_email.IsEmpty())
 		return( PR_TRUE);
 	
 	// now we should have a string with any remaining non-delimitted text
 	// we assume that the last token is the email
 	// anything before that is realName
-	if (m_email.Length()) {
+	if (!m_email.IsEmpty()) {
 		m_realName = str;
 		return( PR_TRUE);
 	}
 	
 	tCnt = str.RFindChar( ' ');
 	if (tCnt == -1) {
-		if (str.Length()) {
+		if (!str.IsEmpty()) {
 			m_email = str;
 			return( PR_TRUE);
 		}
@@ -527,7 +527,7 @@ PRBool CAliasData::Process( const char *pLine, PRInt32 len)
 	m_realName.Trim( kWhitespace);
 	m_email.Trim( kWhitespace);
 	
-	return( (m_email.Length() != 0));
+	return( !m_email.IsEmpty());
 }
 
 #ifdef IMPORT_DEBUG
@@ -738,7 +738,7 @@ void nsEudoraAddress::AddSingleCard( CAliasEntry *pEntry, nsVoidArray &emailList
   nsCString	addressWK, address2WK, cityWK, stateWK, zipWK, countryWK;
 	nsCString	note(pEntry->m_notes);
 
-	if (note.Length() > 0)
+	if (!note.IsEmpty())
   {
 		ExtractNoteField( note, fax, "fax");
 		ExtractNoteField( note, phone, "phone");

@@ -192,7 +192,7 @@ nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
 
   // Append a text node under the TITLE
   //  only if the title text isn't empty
-  if (titleNode && aTitle.Length() > 0)
+  if (titleNode && !aTitle.IsEmpty())
   {
     nsCOMPtr<nsIDOMText> textNode;
     res = domDoc->CreateTextNode(aTitle, getter_AddRefs(textNode));

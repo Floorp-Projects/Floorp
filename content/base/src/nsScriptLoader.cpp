@@ -705,7 +705,7 @@ DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsString& oCharse
     }
     break;
   }  // switch
-  return oCharset.Length() > 0;
+  return !oCharset.IsEmpty();
 }
 
 

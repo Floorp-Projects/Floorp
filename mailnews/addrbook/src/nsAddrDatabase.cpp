@@ -2619,61 +2619,61 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
   // there is no reason to set / copy all these attributes on the card, when we'll never even
   // ask for them.
     err = GetStringColumn(cardRow, m_FirstNameColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetFirstName(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_LastNameColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetLastName(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_PhoneticFirstNameColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetPhoneticFirstName(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_PhoneticLastNameColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetPhoneticLastName(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_DisplayNameColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetDisplayName(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_NickNameColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetNickName(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_PriEmailColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetPrimaryEmail(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_2ndEmailColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetSecondEmail(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_DefaultEmailColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetDefaultEmail(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_CardTypeColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetCardType(tempString.get());
     }
@@ -2684,234 +2684,234 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
         newCard->SetPreferMailFormat(format);
 
     err = GetStringColumn(cardRow, m_WorkPhoneColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetWorkPhone(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_HomePhoneColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetHomePhone(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_FaxColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetFaxNumber(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_PagerColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetPagerNumber(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_CellularColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetCellularNumber(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_WorkPhoneTypeColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
         newCard->SetWorkPhoneType(tempString.get());
 
     err = GetStringColumn(cardRow, m_HomePhoneTypeColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
         newCard->SetHomePhoneType(tempString.get());
 
     err = GetStringColumn(cardRow, m_FaxTypeColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
         newCard->SetFaxNumberType(tempString.get());
 
     err = GetStringColumn(cardRow, m_PagerTypeColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
         newCard->SetPagerNumberType(tempString.get());
 
     err = GetStringColumn(cardRow, m_CellularTypeColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
         newCard->SetCellularNumberType(tempString.get());
 
     err = GetStringColumn(cardRow, m_HomeAddressColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetHomeAddress(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_HomeAddress2ColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetHomeAddress2(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_HomeCityColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetHomeCity(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_HomeStateColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetHomeState(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_HomeZipCodeColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetHomeZipCode(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_HomeCountryColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetHomeCountry(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_WorkAddressColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetWorkAddress(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_WorkAddress2ColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetWorkAddress2(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_WorkCityColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetWorkCity(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_WorkStateColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetWorkState(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_WorkZipCodeColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetWorkZipCode(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_WorkCountryColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetWorkCountry(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_JobTitleColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetJobTitle(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_DepartmentColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetDepartment(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_CompanyColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetCompany(tempString.get());
     }
 
     // AimScreenName
     err = GetStringColumn(cardRow, m_AimScreenNameColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
         newCard->SetAimScreenName(tempString.get());
 
     err = GetStringColumn(cardRow, m_AnniversaryYearColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
         newCard->SetAnniversaryYear(tempString.get());
 
     err = GetStringColumn(cardRow, m_AnniversaryMonthColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
         newCard->SetAnniversaryMonth(tempString.get());
 
     err = GetStringColumn(cardRow, m_AnniversaryDayColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
         newCard->SetAnniversaryDay(tempString.get());
 
     err = GetStringColumn(cardRow, m_SpouseNameColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
         newCard->SetSpouseName(tempString.get());
 
     err = GetStringColumn(cardRow, m_FamilyNameColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
         newCard->SetFamilyName(tempString.get());
 
     err = GetStringColumn(cardRow, m_DefaultAddressColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
         newCard->SetDefaultAddress(tempString.get());
 
     err = GetStringColumn(cardRow, m_CategoryColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
         newCard->SetCategory(tempString.get());
 
     err = GetStringColumn(cardRow, m_WebPage1ColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetWebPage1(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_WebPage2ColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetWebPage2(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_BirthYearColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetBirthYear(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_BirthMonthColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetBirthMonth(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_BirthDayColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetBirthDay(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_Custom1ColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetCustom1(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_Custom2ColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetCustom2(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_Custom3ColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetCustom3(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_Custom4ColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetCustom4(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_NotesColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newCard->SetNotes(tempString.get());
     }
@@ -2941,18 +2941,18 @@ nsresult nsAddrDatabase::GetListCardFromDB(nsIAbCard *listCard, nsIMdbRow* listR
     nsAutoString tempString;
 
     err = GetStringColumn(listRow, m_ListNameColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         listCard->SetDisplayName(tempString.get());
         listCard->SetLastName(tempString.get());
     }
     err = GetStringColumn(listRow, m_ListNickNameColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         listCard->SetNickName(tempString.get());
     }
     err = GetStringColumn(listRow, m_ListDescriptionColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         listCard->SetNotes(tempString.get());
     }
@@ -2976,17 +2976,17 @@ nsresult nsAddrDatabase::GetListFromDB(nsIAbDirectory *newList, nsIMdbRow* listR
     nsAutoString tempString;
 
     err = GetStringColumn(listRow, m_ListNameColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newList->SetDirName(tempString.get());
     }
     err = GetStringColumn(listRow, m_ListNickNameColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newList->SetListNickName(tempString.get());
     }
     err = GetStringColumn(listRow, m_ListDescriptionColumnToken, tempString);
-    if (NS_SUCCEEDED(err) && tempString.Length())
+    if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
     {
         newList->SetDescription(tempString.get());
     }

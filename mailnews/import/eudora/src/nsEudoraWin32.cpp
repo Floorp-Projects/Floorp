@@ -383,7 +383,7 @@ nsresult nsEudoraWin32::ScanDescmap( nsIFileSpec *pFolder, nsISupportsArray *pAr
 
 		IMPORT_LOG2( "name: %s, fName: %s\n", name.get(), fName.get());
 
-		if (fName.Length() && name.Length() && (type.Length() == 1)) {
+		if (!fName.IsEmpty() && !name.IsEmpty() && (type.Length() == 1)) {
 			entry->FromFileSpec( pFolder);
 			rv = entry->AppendRelativeUnixPath( fName.get());
 			if (NS_SUCCEEDED( rv)) {
@@ -583,7 +583,7 @@ PRBool nsEudoraWin32::ImportSettings( nsIFileSpec *pIniFile, nsIMsgAccount **loc
 	nsIMsgAccount *	pAccount;
 
 	do {
-		if (sectionName.Length()) {
+		if (!sectionName.IsEmpty()) {
 			pAccount = nsnull;
 			valInt = ::GetPrivateProfileInt( sectionName.get(), "UsesPOP", 1, iniPath.get());
 			if (valInt) {
@@ -721,7 +721,7 @@ PRBool nsEudoraWin32::BuildPOPAccount( nsIMsgAccountManager *accMgr, const char 
 	
 	GetServerAndUserName( pSection, pIni, serverName, userName, valBuff);
 	
-	if (!serverName.Length() || !userName.Length())
+	if (serverName.IsEmpty() || userName.IsEmpty())
 		return( PR_FALSE);
 
 	PRBool	result = PR_FALSE;
@@ -783,7 +783,7 @@ PRBool nsEudoraWin32::BuildIMAPAccount( nsIMsgAccountManager *accMgr, const char
 	
 	GetServerAndUserName( pSection, pIni, serverName, userName, valBuff);
 	
-	if (!serverName.Length() || !userName.Length())
+	if (serverName.IsEmpty() || userName.IsEmpty())
 		return( PR_FALSE);
 
 	PRBool	result = PR_FALSE;
@@ -857,7 +857,7 @@ void nsEudoraWin32::SetIdentities(nsIMsgAccountManager *accMgr, nsIMsgAccount *a
 		fullName.AssignWithConversion(realName.get());
 		id->SetFullName( fullName.get());
 		id->SetIdentityName( fullName.get());
-		if (email.Length() == 0) {
+		if (email.IsEmpty()) {
 			email = userName;
 			email += "@";
 			email += serverName;
@@ -927,7 +927,7 @@ nsresult nsEudoraWin32::GetAttachmentInfo( const char *pFileName, nsIFileSpec *p
 				GetMimeTypeFromExtension( ext, mimeType);
 			}
 		}
-		if (!mimeType.Length())
+		if (mimeType.IsEmpty())
 			mimeType = "application/octet-stream";
 
 		return( NS_OK);
@@ -1022,7 +1022,7 @@ void nsEudoraWin32::GetMimeTypeFromExtension( nsCString& ext, nsCString& mimeTyp
 		::RegCloseKey( sKey);
 	}
 
-	if (mimeType.Length() || !m_mailImportLocation || (ext.Length() > 10))
+	if (!mimeType.IsEmpty() || !m_mailImportLocation || (ext.Length() > 10))
 		return;
 	
 	// TLR: FIXME: We should/could cache the extension to mime type maps we find
@@ -1127,7 +1127,7 @@ void nsEudoraWin32::GetMimeTypeFromExtension( nsCString& ext, nsCString& mimeTyp
 			tStr.Truncate();
 			tStr.Append( pStart, len);
 			tStr.Trim( kWhitespace);
-			if (!tStr.Length()) continue;
+			if (tStr.IsEmpty()) continue;
 			mimeType.Truncate();
 			mimeType.Append( tStr.get());
 			mimeType.Append( "/");
@@ -1141,7 +1141,7 @@ void nsEudoraWin32::GetMimeTypeFromExtension( nsCString& ext, nsCString& mimeTyp
 			tStr.Truncate();
 			tStr.Append( pStart, len);
 			tStr.Trim( kWhitespace);
-			if (!tStr.Length()) continue;
+			if (tStr.IsEmpty()) continue;
 			mimeType.Append( tStr.get());
 
 			IMPORT_LOG1( "Found Mime Type: %s\n", mimeType.get());
@@ -1261,7 +1261,7 @@ nsresult nsEudoraWin32::FindAddressBooks( nsIFileSpec *pRoot, nsISupportsArray *
 	while ((idx = dirs.FindChar( ';')) != -1) {
 		dirs.Left( currentDir, idx);
 		currentDir.Trim( kWhitespace);
-		if (currentDir.Length()) {
+		if (!currentDir.IsEmpty()) {
 			rv = spec->SetNativePath( currentDir.get());
 			exists = PR_FALSE;
 			isDir = PR_FALSE;
@@ -1278,7 +1278,7 @@ nsresult nsEudoraWin32::FindAddressBooks( nsIFileSpec *pRoot, nsISupportsArray *
 		dirs = currentDir;
 		dirs.Trim( kWhitespace);
 	}
-	if (dirs.Length()) {
+	if (!dirs.IsEmpty()) {
 		rv = spec->SetNativePath( dirs.get());
 		exists = PR_FALSE;
 		isDir = PR_FALSE;

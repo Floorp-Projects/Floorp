@@ -510,7 +510,7 @@ nsPageFrame::DrawHeaderFooter(nsIPresContext*      aPresContext,
 
   // first make sure we have a vaild string and that the height of the
   // text will fit in the margin
-  if (aStr.Length() > 0 && 
+  if (!aStr.IsEmpty() && 
       ((aHeaderFooter == eHeader && aHeight < mMargin.top) ||
        (aHeaderFooter == eFooter && aHeight < mMargin.bottom))) {
     nsAutoString str;

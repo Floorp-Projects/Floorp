@@ -116,7 +116,7 @@ NS_IMETHODIMP nsChromeTreeOwner::FindItemWithName(const PRUnichar* aName,
    PRBool fIs_Content = PR_FALSE;
 
    /* Special Cases */
-   if(name.Length() == 0)
+   if(name.IsEmpty())
       return NS_OK;
    if(name.EqualsIgnoreCase("_blank"))
       return NS_OK;

@@ -1906,7 +1906,7 @@ Fix4xCookies(nsIFileSpec * profilePath) {
   while (GetCookieLine(inStream,inBuffer) != -1){
 
     /* skip line if it is a comment or null line */
-    if (inBuffer.Length() == 0 || inBuffer.CharAt(0) == '#' ||
+    if (inBuffer.IsEmpty() || inBuffer.CharAt(0) == '#' ||
         inBuffer.CharAt(0) == nsCRT::CR || inBuffer.CharAt(0) == nsCRT::LF) {
       PutCookieLine(outStream, inBuffer);
       continue;

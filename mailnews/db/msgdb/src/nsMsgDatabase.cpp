@@ -3488,7 +3488,7 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 		// but we have to handle case of promoting new header to top-level
 		// in case the top-level header comes after a reply.
 
-		if (reference.Length() == 0)
+		if (reference.IsEmpty())
 			break;
 
 		thread = getter_AddRefs(GetThreadForReference(reference, getter_AddRefs(replyToHdr))) ;

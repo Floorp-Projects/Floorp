@@ -1144,10 +1144,10 @@ NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty,
   if (!aProperty || !aFirst || !aAny || !aAll)
     return NS_ERROR_NULL_POINTER;
   const nsAString *att = nsnull;
-  if (aAttribute.Length())
+  if (!aAttribute.IsEmpty())
     att = &aAttribute;
   const nsAString *val = nsnull;
-  if (aValue.Length())
+  if (!aValue.IsEmpty())
     val = &aValue;
   return GetInlinePropertyBase( aProperty, att, val, aFirst, aAny, aAll, nsnull);
 }
@@ -1164,10 +1164,10 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
   if (!aProperty || !aFirst || !aAny || !aAll)
     return NS_ERROR_NULL_POINTER;
   const nsAString *att = nsnull;
-  if (aAttribute.Length())
+  if (!aAttribute.IsEmpty())
     att = &aAttribute;
   const nsAString *val = nsnull;
-  if (aValue.Length())
+  if (!aValue.IsEmpty())
     val = &aValue;
   return GetInlinePropertyBase( aProperty, att, val, aFirst, aAny, aAll, &outValue);
 }
@@ -1863,7 +1863,7 @@ nsHTMLEditor::HasStyleOrIdOrClass(nsIDOMElement * aElement, PRBool *aHasStyleOrI
   *aHasStyleOrIdOrClass = PR_TRUE;
   nsresult res = GetAttributeValue(aElement,  NS_LITERAL_STRING("style"), styleVal, &isStyleSet);
   if (NS_FAILED(res)) return res;
-  if (!isStyleSet || (0 == styleVal.Length())) {
+  if (!isStyleSet || styleVal.IsEmpty()) {
     res = mHTMLCSSUtils->HasClassOrID(aElement, *aHasStyleOrIdOrClass);
     if (NS_FAILED(res)) return res;
   }

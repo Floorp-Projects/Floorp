@@ -420,7 +420,7 @@ void nsImapServerResponseParser::ProcessOkCommand(const char *commandToken)
 	}
 	else if (!PL_strcasecmp(commandToken, "FETCH"))
 	{
-		if (fZeroLengthMessageUidString.Length())
+		if (!fZeroLengthMessageUidString.IsEmpty())
 		{
 			// "Deleting zero length message");
 			fServerConnection.Store(fZeroLengthMessageUidString.get(), "+Flags (\\Deleted)", PR_TRUE);
@@ -1199,13 +1199,10 @@ void nsImapServerResponseParser::msg_fetch()
 					char uidString[100];
 					sprintf(uidString, "%ld", (long)CurrentResponseUID());
 					
-					if (!fZeroLengthMessageUidString.Length())
-						fZeroLengthMessageUidString = uidString;
-					else
-					{
+					if (!fZeroLengthMessageUidString.IsEmpty())
 						fZeroLengthMessageUidString += ",";
-						fZeroLengthMessageUidString += uidString;
-					}
+
+                    fZeroLengthMessageUidString += uidString;
 				}
 				
 				// if this token ends in ')', then it is the last token
@@ -1379,7 +1376,7 @@ void nsImapServerResponseParser::envelope_data()
 				nsCAutoString address;
 				parse_address(address);
 				headerLine += address;
-				if (address.Length() == 0)
+				if (address.IsEmpty())
 					headerNonNil = PR_FALSE;
 			}
 			if (headerNonNil)

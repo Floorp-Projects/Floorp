@@ -130,7 +130,7 @@ NS_IMETHODIMP nsSOAPCall::Invoke(nsISOAPResponse ** _retval)
   nsresult rv;
   nsCOMPtr < nsISOAPTransport > transport;
 
-  if (mTransportURI.Length() == 0) {
+  if (mTransportURI.IsEmpty()) {
     return SOAP_EXCEPTION(NS_ERROR_NOT_INITIALIZED,"SOAP_TRANSPORT_URI", "No transport URI was specified.");
   }
 
@@ -172,7 +172,7 @@ NS_IMETHODIMP
   nsresult rv;
   nsCOMPtr < nsISOAPTransport > transport;
 
-  if (mTransportURI.Length() == 0) {
+  if (mTransportURI.IsEmpty()) {
     return SOAP_EXCEPTION(NS_ERROR_NOT_INITIALIZED,"SOAP_TRANSPORT_URI", "No transport URI was specified.");
   }
 

@@ -309,7 +309,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::DeleteCards(nsISupportsArray *aCardList)
         NS_ENSURE_SUCCESS(retCode, retCode) ;
 
         retCode = ExtractCardEntry(card, entryString) ;
-        if (NS_SUCCEEDED(retCode) && entryString.Length() > 0) {
+        if (NS_SUCCEEDED(retCode) && !entryString.IsEmpty()) {
 
             cardEntry.Assign(entryString) ;
             if (!mapiAddBook->DeleteEntry(*mMapiData, cardEntry)) {
@@ -347,7 +347,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::DeleteDirectory(nsIAbDirectory *aDirectory)
 
     if (!mapiAddBook->IsOK()) { return NS_ERROR_FAILURE ; }
     retCode = ExtractDirectoryEntry(aDirectory, entryString) ;
-    if (NS_SUCCEEDED(retCode) && entryString.Length() > 0) {
+    if (NS_SUCCEEDED(retCode) && !entryString.IsEmpty()) {
         nsMapiEntry directoryEntry ;
 
         directoryEntry.Assign(entryString) ;
@@ -412,7 +412,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::AddMailList(nsIAbDirectory *aMailList)
 
     if (!mapiAddBook->IsOK()) { return NS_ERROR_FAILURE ; }
     retCode = ExtractDirectoryEntry(aMailList, entryString) ;
-    if (NS_SUCCEEDED(retCode) && entryString.Length() > 0) {
+    if (NS_SUCCEEDED(retCode) && !entryString.IsEmpty()) {
         nsMapiEntry sourceEntry ;
 
         sourceEntry.Assign(entryString) ;
@@ -1256,7 +1256,7 @@ nsresult nsAbOutlookDirectory::CreateCard(nsIAbCard *aData, nsIAbCard **aNewCard
     // If we get a RDF resource and it maps onto an Outlook card uri,
     // we simply copy the contents of the Outlook card.
     retCode = ExtractCardEntry(aData, entryString) ;
-    if (NS_SUCCEEDED(retCode) && entryString.Length() > 0) {
+    if (NS_SUCCEEDED(retCode) && !entryString.IsEmpty()) {
         nsMapiEntry sourceEntry ;
         
         

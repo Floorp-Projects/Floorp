@@ -657,7 +657,7 @@ mozSqlResult::ClearRows()
 nsresult
 mozSqlResult::EnsureTableName()
 {
-  if (mTableName.Length() > 0)
+  if (!mTableName.IsEmpty())
     return NS_OK;
 
   nsAString::const_iterator start, end;

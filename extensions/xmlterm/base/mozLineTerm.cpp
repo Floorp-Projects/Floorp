@@ -544,7 +544,7 @@ NS_IMETHODIMP mozLineTerm::Write(const PRUnichar *buf,
     nsAutoString timeStamp;
     result = mozXMLTermUtils::TimeStamp(60, mLastTime, timeStamp);
 
-    if (NS_SUCCEEDED(result) && (timeStamp.Length() > 0)) {
+    if (NS_SUCCEEDED(result) && !timeStamp.IsEmpty()) {
       char* temStr = ToNewCString(timeStamp);
       PR_LogPrint("<TS %s>\n", temStr);
       nsMemory::Free(temStr);

@@ -92,7 +92,7 @@ static NS_METHOD streamParse (nsIInputStream* in,
   int i = 0;
   char *tmp;
 
-  if(globalStream.Length() > 0) {
+  if(!globalStream.IsEmpty()) {
     globalStream.AppendWithConversion(fromRawSegment);
     tmp = ToNewCString(globalStream);
     //printf("\n>>NOW:\n^^^^^\n%s\n^^^^^^^^^^^^^^", tmp);

@@ -373,8 +373,8 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemFont(nsSystemFontID aID, nsFont *aF
                ::TECDisposeConverter(converter);
            }             
         }
-        NS_ASSERTION(aFont->name.Length() > 0, "empty font name");
-        if (aFont->name.Length()  == 0) 
+        NS_ASSERTION(!aFont->name.IsEmpty(), "empty font name");
+        if (aFont->name.IsEmpty()) 
         {
            aFont->name.AssignWithConversion( (char*)&fontName[1], fontName[0] );
         }

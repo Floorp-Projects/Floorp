@@ -734,8 +734,8 @@ nsresult AddressBookParser::ParseLDIFFile()
         }
     }
     //last row
-    if (mLine.Length() > 0 && mLine.Find("groupOfNames") == kNotFound)
-        AddLdifRowToDatabase(PR_FALSE); 
+    if (!mLine.IsEmpty() && mLine.Find("groupOfNames") == kNotFound)
+        AddLdifRowToDatabase(PR_FALSE);
 
     // mail Lists
     PRInt32 i, pos, size;
@@ -824,7 +824,7 @@ void AddressBookParser::AddLdifRowToDatabase(PRBool bIsList)
 
 void AddressBookParser::ClearLdifRecordBuffer()
 {
-  if (mLine.Length() > 0)
+  if (!mLine.IsEmpty())
   {
       mLine.Truncate();
       mLFCount = 0;

@@ -1991,7 +1991,7 @@ PresShell::GetActiveAlternateStyleSheet(nsString& aSheetTitle)
         if (PR_FALSE == type.Equals(textHtml)) {
           nsAutoString title;
           sheet->GetTitle(title);
-          if (0 < title.Length()) {
+          if (!title.IsEmpty()) {
             aSheetTitle = title;
             index = count;  // stop looking
           }
@@ -2060,7 +2060,7 @@ PresShell::ListAlternateStyleSheets(nsStringArray& aTitleList)
         if (PR_FALSE == type.Equals(textHtml)) {
           nsAutoString  title;
           sheet->GetTitle(title);
-          if (0 < title.Length()) {
+          if (!title.IsEmpty()) {
             if (-1 == aTitleList.IndexOf(title)) {
               aTitleList.AppendString(title);
             }

@@ -916,7 +916,7 @@ nsImageMap::AddArea(nsIContent* aArea)
   frameManager->SetPrimaryFrameFor(aArea, mImageFrame);
 
   Area* area;
-  if ((0 == shape.Length()) ||
+  if (shape.IsEmpty() ||
       shape.EqualsIgnoreCase("rect") ||
       shape.EqualsIgnoreCase("rectangle")) {
     area = new RectArea(aArea, hasURL);
@@ -994,7 +994,7 @@ nsImageMap::IsInside(nscoord aX, nscoord aY) const
     if (area->IsInside(aX, aY)) {
       nsAutoString href;
       area->GetHREF(href);
-      if (href.Length() > 0) {
+      if (!href.IsEmpty()) {
         return PR_TRUE;
       }
       else {

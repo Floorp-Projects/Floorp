@@ -956,7 +956,7 @@ nsExpatDriver::CanParse(CParserContext& aParserContext,
       result=ePrimaryDetect;
     }
     else {
-      if (0 == aParserContext.mMimeType.Length() &&
+      if (aParserContext.mMimeType.IsEmpty() &&
           kNotFound != aBuffer.Find("<?xml ")) {
         aParserContext.SetMimeType(NS_LITERAL_CSTRING(kXMLTextContentType));
         result=eValidDetect;

@@ -526,7 +526,7 @@ nsresult DeviceContextImpl::AliasFont(const nsString& aFont,
           result = NS_ERROR_OUT_OF_MEMORY;
         }
       }
-      else if ((0 < aAltAlias.Length()) && NS_SUCCEEDED(CheckFontExistence(aAltAlias))) {
+      else if (!aAltAlias.IsEmpty() && NS_SUCCEEDED(CheckFontExistence(aAltAlias))) {
         nsString* entry = new nsString(aAltAlias);
         if (nsnull != entry) {
           FontAliasKey key(aFont);

@@ -867,7 +867,7 @@ nsComboboxControlFrame::ReflowItems(nsIPresContext* aPresContext,
       if (optionElement) {
         nsAutoString text;
         rv = optionElement->GetLabel(text);
-        if (NS_CONTENT_ATTR_HAS_VALUE != rv || 0 == text.Length()) {
+        if (NS_CONTENT_ATTR_HAS_VALUE != rv || text.IsEmpty()) {
           if (NS_OK == optionElement->GetText(text)) {
             nscoord width;
             aReflowState.rendContext->GetWidth(text, width);
@@ -1928,7 +1928,7 @@ nsComboboxControlFrame::RedisplayText(PRInt32 aIndex)
       fragment->AppendTo(value);
     }
     PRBool shouldSetValue = PR_FALSE;
-    if (NS_FAILED(result) || value.Length() == 0) {
+    if (NS_FAILED(result) || value.IsEmpty()) {
       shouldSetValue = PR_TRUE;
     } else {
        shouldSetValue = value != textToDisplay;

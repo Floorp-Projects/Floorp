@@ -496,7 +496,7 @@ nsresult nsTextAddress::ProcessLine( const char *pLine, PRInt32 len, nsString& e
             rv = m_fieldMap->GetFieldActive( i, &active);
         if (NS_SUCCEEDED( rv) && active) {
             if (GetField( pLine, len, i, fieldVal, m_delim)) {
-                if (fieldVal.Length()) {
+                if (!fieldVal.IsEmpty()) {
                     if (!newRow) {
                         rv = m_database->GetNewRow( &newRow);
                         if (NS_FAILED( rv)) {
@@ -889,7 +889,7 @@ nsresult nsTextAddress::ParseLdifFile( nsIFileSpec *pSrc, PRUint32 *pProgress)
 
             while (NS_SUCCEEDED(GetLdifStringRecord(buf, len, startPos)))
             {
-                 if (m_ldifLine.Find("groupOfNames") == -1)
+                 if (m_ldifLine.Find("groupOfNames") == kNotFound)
                     AddLdifRowToDatabase(PR_FALSE);
                 else
                 {
@@ -905,7 +905,7 @@ nsresult nsTextAddress::ParseLdifFile( nsIFileSpec *pSrc, PRUint32 *pProgress)
         }
     }
     //last row
-    if (m_ldifLine.Length() > 0 && m_ldifLine.Find("groupOfNames") == -1)
+    if (!m_ldifLine.IsEmpty() && m_ldifLine.Find("groupOfNames") == kNotFound)
         AddLdifRowToDatabase(PR_FALSE); 
 
     // mail Lists
@@ -929,7 +929,7 @@ nsresult nsTextAddress::ParseLdifFile( nsIFileSpec *pSrc, PRUint32 *pProgress)
 
                 while (NS_SUCCEEDED(GetLdifStringRecord(listBuf, len, startPos)))
                 {
-                    if (m_ldifLine.Find("groupOfNames") != -1)
+                    if (m_ldifLine.Find("groupOfNames") != kNotFound)
                     {
                         AddLdifRowToDatabase(PR_TRUE);
                         if (NS_SUCCEEDED(pSrc->Seek(0)))
@@ -993,7 +993,7 @@ void nsTextAddress::AddLdifRowToDatabase(PRBool bIsList)
 
 void nsTextAddress::ClearLdifRecordBuffer()
 {
-  if (m_ldifLine.Length() > 0)
+  if (!m_ldifLine.IsEmpty())
   {
       m_ldifLine.Truncate();
       m_LFCount = 0;

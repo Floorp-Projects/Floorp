@@ -593,13 +593,13 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode m
     nsCAutoString asciiHeaderVal;
 
 	GetHeaderValue( m_Headers.get(), m_Headers.Length(), "From:", headerVal);
-	if (headerVal.Length())
+	if (!headerVal.IsEmpty())
 		m_pMsgFields->SetFrom( headerVal.get());
 	GetHeaderValue( m_Headers.get(), m_Headers.Length(), "To:", headerVal);
-	if (headerVal.Length())
+	if (!headerVal.IsEmpty())
 		m_pMsgFields->SetTo( headerVal.get());
 	GetHeaderValue( m_Headers.get(), m_Headers.Length(), "Subject:", headerVal);
-	if (headerVal.Length())
+	if (!headerVal.IsEmpty())
 		m_pMsgFields->SetSubject( headerVal.get());
 	GetHeaderValue( m_Headers.get(), m_Headers.Length(), "Content-type:", headerVal);
 
@@ -630,20 +630,20 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode m
   m_pMsgFields->SetCharacterSet( NS_LossyConvertUCS2toASCII(headerVal).get() );
   charSet = headerVal;
 	GetHeaderValue( m_Headers.get(), m_Headers.Length(), "CC:", headerVal);
-	if (headerVal.Length())
+	if (!headerVal.IsEmpty())
 		m_pMsgFields->SetCc( headerVal.get());
 	GetHeaderValue( m_Headers.get(), m_Headers.Length(), "Message-ID:", headerVal);
-	if (headerVal.Length()) {
+	if (!headerVal.IsEmpty()) {
         asciiHeaderVal.AssignWithConversion(headerVal);
 		m_pMsgFields->SetMessageId(asciiHeaderVal.get());
     }
 	GetHeaderValue( m_Headers.get(), m_Headers.Length(), "Reply-To:", headerVal);
-	if (headerVal.Length())
+	if (!headerVal.IsEmpty())
 		m_pMsgFields->SetReplyTo( headerVal.get());
 
 	// what about all of the other headers?!?!?!?!?!?!
 	char *pMimeType = nsnull;
-	if (bodyType.Length())
+	if (!bodyType.IsEmpty())
 		pMimeType = ToNewCString(bodyType);
 	
 	// IMPORT_LOG0( "Outlook compose calling CreateAndSendMessage\n");
@@ -1023,7 +1023,7 @@ nsresult nsOutlookCompose::WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCop
 	do {
 		GetNthHeader( m_Headers.get(), m_Headers.Length(), n, header, val, PR_FALSE);
 		// GetNthHeader( newHeaders.m_pBuffer, newHeaders.m_writeOffset, n, header.get(), val, PR_FALSE);
-		if (header.Length()) {
+		if (!header.IsEmpty()) {
 			if ((specialHeader = IsSpecialHeader( header.get())) != -1) {
 				header.Append( ':');
 				GetHeaderValue( newHeaders.m_pBuffer, newHeaders.m_writeOffset - 1, header.get(), val, PR_FALSE);
@@ -1039,10 +1039,10 @@ nsresult nsOutlookCompose::WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCop
 				header.Append( ':');
 				GetHeaderValue( newHeaders.m_pBuffer, newHeaders.m_writeOffset - 1, header.get(), replaceVal, PR_FALSE);
 				header.Truncate( header.Length() - 1);
-				if (replaceVal.Length())
+				if (!replaceVal.IsEmpty())
 					val = replaceVal;
 			}
-			if (val.Length()) {
+			if (!val.IsEmpty()) {
 				rv = pDst->Write( header.get(), header.Length(), &written);
 				if (NS_SUCCEEDED( rv))
 					rv = pDst->Write( ": ", 2, &written);
@@ -1054,7 +1054,7 @@ nsresult nsOutlookCompose::WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCop
 			}
 		}
 		n++;
-	} while (NS_SUCCEEDED( rv) && (header.Length() != 0));
+	} while (NS_SUCCEEDED( rv) && !header.IsEmpty());
 
 	for (i = 0; (i < kMaxSpecialHeaders) && NS_SUCCEEDED( rv); i++) {
 		if (!specials[i]) {
@@ -1062,7 +1062,7 @@ nsresult nsOutlookCompose::WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCop
 			header.Append( ':');
 			GetHeaderValue( newHeaders.m_pBuffer, newHeaders.m_writeOffset - 1, header.get(), val, PR_FALSE);
 			header.Truncate( header.Length() - 1);
-			if (val.Length()) {
+			if (!val.IsEmpty()) {
 				rv = pDst->Write( header.get(), header.Length(), &written);
 				if (NS_SUCCEEDED( rv))
 					rv = pDst->Write( ": ", 2, &written);

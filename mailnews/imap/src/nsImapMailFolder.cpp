@@ -527,7 +527,7 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
     {
       // use the unicode name as the "pretty" name. Set it so it won't be
       // automatically computed from the URI, which is in utf7 form.
-      if (currentFolderNameStr.Length() > 0)
+      if (!currentFolderNameStr.IsEmpty())
         child->SetPrettyName(currentFolderNameStr.get());
 
     }
@@ -876,7 +876,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
       if (imapFolder)
       {
         nsCAutoString onlineName(m_onlineFolderName); 
-        if (onlineName.Length() > 0)
+        if (!onlineName.IsEmpty())
           onlineName.Append(char(hierarchyDelimiter));
         onlineName.AppendWithConversion(folderNameStr);
         imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
@@ -1798,7 +1798,7 @@ nsImapMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatab
           nsAutoString autoOnlineName; 
           // autoOnlineName.AssignWithConversion(name);
           (*folderInfo)->GetMailboxName(&autoOnlineName);
-          if (autoOnlineName.Length() == 0)
+          if (autoOnlineName.IsEmpty())
           {
             nsXPIDLCString uri;
             rv = GetURI(getter_Copies(uri));
@@ -3127,13 +3127,13 @@ nsresult nsImapMailFolder::GetFolderOwnerUserName(char **userName)
   if (!(mFlags & MSG_FOLDER_FLAG_IMAP_OTHER_USER))
     return NS_OK;
   
-  if (!m_ownerUserName.Length())
+  if (m_ownerUserName.IsEmpty())
   {
     nsXPIDLCString onlineName;
     GetOnlineName(getter_Copies(onlineName));
     m_ownerUserName = nsIMAPNamespaceList::GetFolderOwnerNameFromPath(GetNamespaceForFolder(), onlineName.get());
   }
-  *userName = (m_ownerUserName.Length()) ? ToNewCString(m_ownerUserName) : nsnull;
+  *userName = !m_ownerUserName.IsEmpty() ? ToNewCString(m_ownerUserName) : nsnull;
   return NS_OK;
 }
 
@@ -3148,7 +3148,7 @@ nsresult nsImapMailFolder::GetOwnersOnlineFolderName(char **retName)
   {
     nsXPIDLCString user;
     GetFolderOwnerUserName(getter_Copies(user));
-    if (onlineName.Length() && user.Length())
+    if (!onlineName.IsEmpty() && !user.IsEmpty())
     {
       const char *where = PL_strstr(onlineName.get(), user.get());
       NS_ASSERTION(where, "user name not in online name");
@@ -3264,7 +3264,7 @@ NS_IMETHODIMP nsImapMailFolder::GetHasAdminUrl(PRBool *aBool)
   NS_ENSURE_ARG_POINTER(aBool);
   nsXPIDLCString manageMailAccountUrl;
   nsresult rv = GetServerAdminUrl(getter_Copies(manageMailAccountUrl));
-  *aBool = (NS_SUCCEEDED(rv) && manageMailAccountUrl.Length());
+  *aBool = (NS_SUCCEEDED(rv) && !manageMailAccountUrl.IsEmpty());
   return rv;
 }
 
@@ -3644,7 +3644,7 @@ NS_IMETHODIMP nsImapMailFolder::DownloadMessagesForOffline(nsISupportsArray *mes
 //  return DownloadAllForOffline(nsnull, window);
 #endif
   nsresult rv = BuildIdsAndKeyArray(messages, messageIds, srcKeyArray);
-  if (NS_FAILED(rv) || messageIds.Length() == 0) return rv;
+  if (NS_FAILED(rv) || messageIds.IsEmpty()) return rv;
 
   nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
@@ -5030,7 +5030,7 @@ nsImapMailFolder::FillInFolderProps(nsIMsgImapFolderProps *aFolderProps)
     nsXPIDLCString owner;
     nsXPIDLString uniOwner;
     GetFolderOwnerUserName(getter_Copies(owner));
-    if (!owner.Length())
+    if (owner.IsEmpty())
     {
       rv = IMAPGetStringByID(folderTypeStringID, getter_Copies(uniOwner));
       // Another user's folder, for which we couldn't find an owner name
@@ -5060,9 +5060,9 @@ nsImapMailFolder::FillInFolderProps(nsIMsgImapFolderProps *aFolderProps)
   if (NS_SUCCEEDED(rv))
     aFolderProps->SetFolderType(folderType);
 
-  if (!folderTypeDesc.Length() && folderTypeDescStringID != 0)
+  if (folderTypeDesc.IsEmpty() && folderTypeDescStringID != 0)
     rv = IMAPGetStringByID(folderTypeDescStringID, getter_Copies(folderTypeDesc));
-  if (folderTypeDesc.Length())
+  if (!folderTypeDesc.IsEmpty())
     aFolderProps->SetFolderTypeDescription(folderTypeDesc.get());
 
   nsXPIDLString rightsString;
@@ -5167,7 +5167,7 @@ void nsMsgIMAPFolderACL::BuildInitialACLFromCache()
   if (startingFlags & IMAP_ACL_ADMINISTER_FLAG)
     myrights += "a";
   
-  if (myrights.Length())
+  if (!myrights.IsEmpty())
     SetFolderRightsForUser(nsnull, myrights.get());
 }
 
@@ -5261,7 +5261,7 @@ const char *nsMsgIMAPFolderACL::GetRightsStringForUser(const char *inUserName)
 {
   nsXPIDLCString userName;
   userName.Assign(inUserName);
-  if (!userName.Length())
+  if (userName.IsEmpty())
   {
     nsCOMPtr <nsIMsgIncomingServer> server;
 
@@ -5437,49 +5437,49 @@ nsresult nsMsgIMAPFolderACL::CreateACLRightsString(PRUnichar **rightsString)
     }
     if (GetCanIWriteFolder())
     {
-      if (rights.Length()) rights += NS_LITERAL_STRING(", ");
+      if (!rights.IsEmpty()) rights += NS_LITERAL_STRING(", ");
       bundle->GetStringFromID(IMAP_ACL_WRITE_RIGHT, getter_Copies(curRight));
       rights.Append(curRight);
     }
     if (GetCanIInsertInFolder())
     {
-      if (rights.Length()) rights += NS_LITERAL_STRING(", ");
+      if (!rights.IsEmpty()) rights += NS_LITERAL_STRING(", ");
       bundle->GetStringFromID(IMAP_ACL_INSERT_RIGHT, getter_Copies(curRight));
       rights.Append(curRight);
     }
     if (GetCanILookupFolder())
     {
-      if (rights.Length()) rights += NS_LITERAL_STRING(", ");
+      if (!rights.IsEmpty()) rights += NS_LITERAL_STRING(", ");
       bundle->GetStringFromID(IMAP_ACL_LOOKUP_RIGHT, getter_Copies(curRight));
       rights.Append(curRight);
     }
     if (GetCanIStoreSeenInFolder())
     {
-      if (rights.Length()) rights += NS_LITERAL_STRING(", ");
+      if (!rights.IsEmpty()) rights += NS_LITERAL_STRING(", ");
       bundle->GetStringFromID(IMAP_ACL_SEEN_RIGHT, getter_Copies(curRight));
       rights.Append(curRight);
     }
     if (GetCanIDeleteInFolder())
     {
-      if (rights.Length()) rights += NS_LITERAL_STRING(", ");
+      if (!rights.IsEmpty()) rights += NS_LITERAL_STRING(", ");
       bundle->GetStringFromID(IMAP_ACL_DELETE_RIGHT, getter_Copies(curRight));
       rights.Append(curRight);
     }
     if (GetCanICreateSubfolder())
     {
-      if (rights.Length()) rights += NS_LITERAL_STRING(", ");
+      if (!rights.IsEmpty()) rights += NS_LITERAL_STRING(", ");
       bundle->GetStringFromID(IMAP_ACL_CREATE_RIGHT, getter_Copies(curRight));
       rights.Append(curRight);
     }
     if (GetCanIPostToFolder())
     {
-      if (rights.Length()) rights += NS_LITERAL_STRING(", ");
+      if (!rights.IsEmpty()) rights += NS_LITERAL_STRING(", ");
       bundle->GetStringFromID(IMAP_ACL_POST_RIGHT, getter_Copies(curRight));
       rights.Append(curRight);
     }
     if (GetCanIAdministerFolder())
     {
-      if (rights.Length()) rights += NS_LITERAL_STRING(", ");
+      if (!rights.IsEmpty()) rights += NS_LITERAL_STRING(", ");
       bundle->GetStringFromID(IMAP_ACL_ADMINISTER_RIGHT, getter_Copies(curRight));
       rights.Append(curRight);
     }
@@ -6955,7 +6955,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFold
         if (imapFolder)
         {
           nsCAutoString onlineName(m_onlineFolderName); 
-          if (onlineName.Length() > 0)
+          if (!onlineName.IsEmpty())
           onlineName.Append(char(hierarchyDelimiter));
           onlineName.AppendWithConversion(folderNameStr);
           imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);

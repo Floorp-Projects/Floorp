@@ -1327,7 +1327,7 @@ nsWebBrowserPersist::GetDocEncoderContentType(nsIDOMDocument *aDocument, const P
         if (nsDoc)
         {
             nsAutoString type;
-            if (NS_SUCCEEDED(nsDoc->GetContentType(type)) && type.Length() > 0)
+            if (NS_SUCCEEDED(nsDoc->GetContentType(type)) && !type.IsEmpty())
             {
                 contentType.Assign(type);
             }
@@ -1344,7 +1344,7 @@ nsWebBrowserPersist::GetDocEncoderContentType(nsIDOMDocument *aDocument, const P
     //   text/html
     //   text/plain
 
-    if (contentType.Length() > 0 &&
+    if (!contentType.IsEmpty() &&
         !contentType.Equals(defaultContentType, nsCaseInsensitiveStringComparator()))
     {
         // Check if there is an encoder for the desired content type
@@ -1542,7 +1542,7 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         // Get the content type to save with
         nsXPIDLString realContentType;
         GetDocEncoderContentType(aDocument,
-            (mContentType.Length() > 0) ? mContentType.get() : nsnull,
+            !mContentType.IsEmpty() ? mContentType.get() : nsnull,
             getter_Copies(realContentType));
 
         nsCAutoString contentType; contentType.AssignWithConversion(realContentType);
@@ -1599,7 +1599,7 @@ nsresult nsWebBrowserPersist::SaveDocuments()
         // Get the content type
         nsXPIDLString realContentType;
         GetDocEncoderContentType(docData->mDocument,
-            (mContentType.Length() > 0) ? mContentType.get() : nsnull,
+            !mContentType.IsEmpty() ? mContentType.get() : nsnull,
             getter_Copies(realContentType));
 
         nsCAutoString contentType; contentType.AssignWithConversion(realContentType.get());
@@ -1903,7 +1903,7 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
     aChannel->GetContentType(contentType);
 
     // Get the content type from the MIME service
-    if (contentType.Length() == 0)
+    if (contentType.IsEmpty())
     {
         nsCOMPtr<nsIURI> uri;
         aChannel->GetOriginalURI(getter_AddRefs(uri));
@@ -1914,7 +1914,7 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
     }
 
     // Append the extension onto the file
-    if (contentType.Length())
+    if (!contentType.IsEmpty())
     {
         nsCOMPtr<nsIMIMEInfo> mimeInfo;
         mMIMEService->GetFromMIMEType(
@@ -3206,7 +3206,7 @@ nsWebBrowserPersist::SaveDocumentWithFixup(
         encoder->SetWrapColumn(mWrapColumn);
 
     nsAutoString charsetStr(aSaveCharset);
-    if (charsetStr.Length() == 0)
+    if (charsetStr.IsEmpty())
     {
         rv = aDocument->GetDocumentCharacterSet(charsetStr);
         if(NS_FAILED(rv))

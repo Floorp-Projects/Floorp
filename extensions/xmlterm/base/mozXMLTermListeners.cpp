@@ -390,7 +390,7 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
     XMLT_LOG(mozXMLTermKeyListener::KeyPress,53,
              ("escPrefix=%d, keyChar=0x%x, \n", escPrefix, keyChar));
 
-    if (JSCommand.Length() > 0) {
+    if (!JSCommand.IsEmpty()) {
       // Execute JS command
       nsCOMPtr<nsIDOMDocument> domDocument;
       result = mXMLTerminal->GetDocument(getter_AddRefs(domDocument));

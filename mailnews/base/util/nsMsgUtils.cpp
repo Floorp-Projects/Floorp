@@ -316,12 +316,11 @@ nsresult NS_MsgCreatePathStringFromFolderURI(const char *folderURI, nsCString& p
     while (startSlashPos != -1) {
 	  oldPath.Mid(pathPiece, startSlashPos + 1, endSlashPos - startSlashPos);
       // skip leading '/' (and other // style things)
-      if (pathPiece.Length() > 0) {
+      if (!pathPiece.IsEmpty()) {
 
         // add .sbd onto the previous path
         if (haveFirst) {
-          pathString+=".sbd";
-          pathString += "/";
+          pathString += ".sbd/";
         }
         
         NS_MsgHashIfNecessary(pathPiece);

@@ -1422,7 +1422,7 @@ void nsWebShellWindow::LoadContentAreas() {
 
   // content URLs are specified in the search part of the URL
   // as <contentareaID>=<escapedURL>[;(repeat)]
-  if (searchSpec.Length() > 0) {
+  if (!searchSpec.IsEmpty()) {
     PRInt32     begPos,
                 eqPos,
                 endPos;

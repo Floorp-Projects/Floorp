@@ -609,7 +609,7 @@ nsLoggingSink::WriteAttributes(const nsIParserNode& aNode) {
  
     tmp.Truncate();
     tmp.Append(v);
-    if(tmp.Length() > 0) {
+    if(!tmp.IsEmpty()) {
       PRUnichar first = tmp.First();
       if ((first == '"') || (first == '\'')) {
         if (tmp.Last() == first) {
@@ -669,7 +669,7 @@ nsLoggingSink::WillWriteAttributes(const nsIParserNode& aNode)
     PRInt32 lineNo = 0;
 
     dtd->CollectSkippedContent(aNode.GetNodeType(), content, lineNo);
-    if (content.Length() > 0) {
+    if (!content.IsEmpty()) {
       return PR_TRUE;
     }
   }
@@ -778,7 +778,7 @@ nsLoggingSink::GetNewCString(const nsAString& aValue, char** aResult)
   nsAutoString temp;
   result=QuoteText(aValue,temp);
   if(NS_SUCCEEDED(result)) {
-    if(temp.Length()>0) {
+    if(!temp.IsEmpty()) {
       *aResult = ToNewCString(temp);
     }
   }

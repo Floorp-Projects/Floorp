@@ -178,12 +178,12 @@ PRBool nsFont::EnumerateFamilies(nsFontFamilyEnumFunc aFunc, void* aData) const
 
     if (PR_FALSE == quoted) {
       familyStr.CompressWhitespace(PR_FALSE, PR_TRUE);
-      if (0 < familyStr.Length()) {
+      if (!familyStr.IsEmpty()) {
         generic = IsGenericFontFamily(familyStr);
       }
     }
 
-    if (0 < familyStr.Length()) {
+    if (!familyStr.IsEmpty()) {
       running = (*aFunc)(familyStr, generic, aData);
     }
 

@@ -91,7 +91,7 @@ nsLDAPURL::GetSpec(nsACString &_retval)
     
     spec = ((mOptions & OPT_SECURE) ? kLDAPSSLScheme : kLDAPScheme);
     spec.Append("://");
-    if (mHost.Length() > 0) {
+    if (!mHost.IsEmpty()) {
         spec.Append(mHost);
     }
     if (mPort > 0) {
@@ -99,7 +99,7 @@ nsLDAPURL::GetSpec(nsACString &_retval)
         spec.AppendInt(mPort);
     }
     spec.Append('/');
-    if (mDN.Length() > 0) {
+    if (!mDN.IsEmpty()) {
         spec.Append(mDN);
     }
 
@@ -115,7 +115,7 @@ nsLDAPURL::GetSpec(nsACString &_retval)
         }
     }
 
-    if ((mScope) || mFilter.Length()) {
+    if (mScope || !mFilter.IsEmpty()) {
         spec.Append((count ? "?" : "??"));
         if (mScope) {
             if (mScope == SCOPE_ONELEVEL) {
@@ -124,7 +124,7 @@ nsLDAPURL::GetSpec(nsACString &_retval)
                 spec.Append("sub");
             }
         }
-        if (mFilter.Length()) {
+        if (!mFilter.IsEmpty()) {
             spec.Append('?');
             spec.Append(mFilter);
         }

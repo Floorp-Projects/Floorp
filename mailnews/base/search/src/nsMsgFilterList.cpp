@@ -1079,7 +1079,7 @@ NS_IMETHODIMP nsMsgFilterList::GetShouldDownloadAllHeaders(PRBool *aResult)
 nsresult nsMsgFilterList::ComputeArbitraryHeaders()
 {
   nsresult rv = NS_OK;
-  if (m_arbitraryHeaders.Length() == 0)
+  if (m_arbitraryHeaders.IsEmpty())
   {
     PRUint32 numFilters;
     rv = m_filters->Count(&numFilters);
@@ -1102,7 +1102,7 @@ nsresult nsMsgFilterList::ComputeArbitraryHeaders()
           filter->GetTerm(i, &attrib, nsnull,nsnull,nsnull, getter_Copies(arbitraryHeader));
           if (arbitraryHeader && arbitraryHeader[0])
           {
-            if (m_arbitraryHeaders.Length() == 0)
+            if (m_arbitraryHeaders.IsEmpty())
               m_arbitraryHeaders.Assign(arbitraryHeader);
             else if (PL_strncasecmp(m_arbitraryHeaders.get(), arbitraryHeader, arbitraryHeader.Length()))
             {

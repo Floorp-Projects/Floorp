@@ -102,7 +102,7 @@ NS_IMETHODIMP nsSOAPHeaderBlock::GetMustUnderstand(PRBool *
                        nsSOAPUtils::kMustUnderstandAttribute, m);
     if (NS_FAILED(rc))
       return rc;
-    if (m.Length() == 0)
+    if (m.IsEmpty())
       *aMustUnderstand = PR_FALSE;
     else if (m.Equals(nsSOAPUtils::kTrue)
              || m.Equals(nsSOAPUtils::kTrueA))
