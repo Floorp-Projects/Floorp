@@ -479,6 +479,11 @@
   'section_num'
 ],
 
+'admin/table.html.tmpl' => [
+  'link_uri',
+  'c.content'
+],
+
 'admin/products/groupcontrol/confirm-edit.html.tmpl' => [
   'group.count', 
 ],
@@ -491,11 +496,6 @@
   'const.CONTROLMAPSHOWN', 
   'const.CONTROLMAPDEFAULT', 
   'const.CONTROLMAPMANDATORY', 
-],
-
-'admin/keywords/list.html.tmpl' => [
-  'keyword.id',
-  'keyword.bug_count',
 ],
 
 'admin/keywords/edit.html.tmpl' => [
