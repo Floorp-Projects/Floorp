@@ -130,16 +130,22 @@ label.dialog[disabled],legend.dialog[disabled] {
 
 titledbutton.SizeToParent {
   width: 100%;
+  /* A hack to get buttons to be the same width */
+  min-width: 5em;
 }
 
 spring.spacer {
-      width:  5px;
-      height: 5px;
+  width:  5px;
+  height: 5px;
+  min-width:  5px;
+  min-height: 5px;
 }
 
 spring.bigspacer {
-      width:  10px;
-      height: 10px;
+  width:  10px;
+  height: 10px;
+  min-width:  10px;
+  min-height: 10px;
 }
 
 img.AlignIcon {
