@@ -51,7 +51,7 @@ window {
 
 html|html {
   /* XXX Doesn't seem to work. (Same with "html|body".) */
-  background-color: white;
+  background-color: window;
 }
 
 mailattachcount {
@@ -123,6 +123,10 @@ div.headerdisplayname {
 
 .moz-text-plain[graphical-quote="true"] .moz-txt-citetags {
   display: none;
+}
+
+span.moz-txt-underscore {
+  text-decoration: underline;
 }
 
 /* ::::: signature ::::: */

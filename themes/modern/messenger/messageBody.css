@@ -125,6 +125,10 @@ div.headerdisplayname {
   display: none;
 }
 
+span.moz-txt-underscore {
+  text-decoration: underline;
+}
+
 /* ::::: signature ::::: */
 
 .moz-txt-sig,
