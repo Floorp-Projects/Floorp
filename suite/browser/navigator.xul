@@ -84,6 +84,9 @@ Contributor(s): ______________________________________. -->
 <!ENTITY translateButton.label "Translate">
 <!ENTITY translateEngtoFrenCmd.label "English to French">
 <!ENTITY translateEngtoGermCmd.label "English to German">
+<!ENTITY translateEngtoItalianCmd.label "English to Italian">
+<!ENTITY translateEngtoJapaneseCmd.label "English to Japanese">
+<!ENTITY translateEngtoPortCmd.label "English to Portugese">
 <!ENTITY translateEngtoSpanCmd.label "English to Spanish">
 <!ENTITY translateFrentoEngCmd.label "French to English">
 <!ENTITY translateFrentoGermCmd.label "French to German">
@@ -91,6 +94,9 @@ Contributor(s): ______________________________________. -->
 <!ENTITY translateGermtoEngCmd.label "German to English">
 <!ENTITY translateGermtoFrenCmd.label "German to French">
 <!ENTITY translateGermtoSpanCmd.label "German to Spanish">
+<!ENTITY translateItaliantoEngCmd.label "Italian to English">
+<!ENTITY tanslateJapanesetoEngCmd.label "Japanese to English">
+<!ENTITY translatePorttoEngCmd.label "Portugese to English">
 <!ENTITY tanslateSpantoEngCmd.label "Spanish to English">
 <!ENTITY translateSpantoFrenCmd.label "Spanish to French">
 <!ENTITY translateSpantoGermCmd.label "Spanish to German">
@@ -302,21 +308,30 @@ Contributor(s): ______________________________________. -->
 
 <popup id="translationlist">
 	<menu>
-		<menuitem name="&translateEngtoFrenCmd.label;" onclick="Translate('en', 'fr');" />
-		<menuitem name="&translateEngtoGermCmd.label;" onclick="Translate('en', 'de');"/>
-		<menuitem name="&translateEngtoSpanCmd.label;" onclick="Translate('en', 'es');"/>
+		<menuitem name="&translateEngtoFrenCmd.label;" onclick="Translate('en', 'fr', 'SSI');" />
+		<menuitem name="&translateEngtoGermCmd.label;" onclick="Translate('en', 'de', 'SSI');"/>
+		<menuitem name="&translateEngtoItalianCmd.label;" onclick="Translate('en', 'it', 'SSI');"/>
+		<menuitem name="&translateEngtoJapaneseCmd.label;" onclick="Translate('en', 'ja', 'Neocortech');"/>
+		<menuitem name="&translateEngtoPortCmd.label;" onclick="Translate('en', 'po', 'SSI');"/>
+		<menuitem name="&translateEngtoSpanCmd.label;" onclick="Translate('en', 'es', 'SSI');"/>
 		<separator />
-		<menuitem name="&translateFrentoEngCmd.label;" onclick="Translate('fr', 'en')"/>
-		<menuitem name="&translateFrentoGermCmd.label;" onclick="Translate('fr', 'de')"/>
-		<menuitem name="&translateFrentoSpanCmd.label;" onclick="Translate('fr', 'es')"/>
+		<menuitem name="&translateFrentoEngCmd.label;" onclick="Translate('fr', 'en', 'SSI')"/>
+		<menuitem name="&translateFrentoGermCmd.label;" onclick="Translate('fr', 'de', 'SSI')"/>
+		<menuitem name="&translateFrentoSpanCmd.label;" onclick="Translate('fr', 'es', 'SSI')"/>
 		<separator />
-		<menuitem name="&translateGermtoEngCmd.label;" onclick="Translate('de', 'en')"/>
-		<menuitem name="&translateGermtoFrenCmd.label;" onclick="Translate('de', 'fr')"/>
-		<menuitem name="&translateGermtoSpanCmd.label;" onclick="Translate('de', 'es')"/>
+		<menuitem name="&translateGermtoEngCmd.label;" onclick="Translate('de', 'en', 'SSI')"/>
+		<menuitem name="&translateGermtoFrenCmd.label;" onclick="Translate('de', 'fr', 'SSI')"/>
+		<menuitem name="&translateGermtoSpanCmd.label;" onclick="Translate('de', 'es', 'SSI')"/>
 		<separator />
-		<menuitem name="&tanslateSpantoEngCmd.label;" onclick="Translate('es', 'en')"/>
-		<menuitem name="&translateSpantoFrenCmd.label;" onclick="Translate('es', 'fr')"/>
-		<menuitem name="&translateSpantoGermCmd.label;" onclick="Translate('es', 'de')"/>
+		<menuitem name="&translateItaliantoEngCmd.label;" onclick="Translate('it', 'en', 'SSI');"/>
+		<separator />
+		<menuitem name="&tanslateJapanesetoEngCmd.label;" onclick="Translate('ja', 'en', 'SSI');"/>
+		<separator />
+		<menuitem name="&translatePorttoEngCmd.label;" onclick="Translate('po', 'en', 'SSI');"/>
+		<separator />
+		<menuitem name="&tanslateSpantoEngCmd.label;" onclick="Translate('es', 'en', 'SSI')"/>
+		<menuitem name="&translateSpantoFrenCmd.label;" onclick="Translate('es', 'fr', 'SSI')"/>
+		<menuitem name="&translateSpantoGermCmd.label;" onclick="Translate('es', 'de', 'SSI')"/>
 	</menu>
 </popup>
 
@@ -422,21 +437,30 @@ Contributor(s): ______________________________________. -->
       <menuitem name="&pageInfoCmd.label;" onclick="BrowserReload();"/>
       <separator />
       <menu name="&translateMenu.label;">
-	      <menuitem name="&translateEngtoFrenCmd.label;" onclick="Translate('en', 'fr');"/>
-	      <menuitem name="&translateEngtoGermCmd.label;" onclick="Translate('en', 'de');"/>
-	      <menuitem name="&translateEngtoSpanCmd.label;" onclick="Translate('en', 'es');"/>
+	      <menuitem name="&translateEngtoFrenCmd.label;" onclick="Translate('en', 'fr', 'SSI');"/>
+	      <menuitem name="&translateEngtoGermCmd.label;" onclick="Translate('en', 'de', 'SSI');"/>
+	      <menuitem name="&translateEngtoItalianCmd.label;" onclick="Translate('en', 'it', 'SSI');"/>
+	      <menuitem name="&translateEngtoJapaneseCmd.label;" onclick="Translate('en', 'ja', 'Neocortech');"/>
+	      <menuitem name="&translateEngtoPortCmd.label;" onclick="Translate('en', 'po', 'SSI');"/>
+	      <menuitem name="&translateEngtoSpanCmd.label;" onclick="Translate('en', 'es', 'SSI');"/>
 	      <separator />
-	      <menuitem name="&translateFrentoEngCmd.label; " onclick="Translate('fr', 'en');"/>
-	      <menuitem name="&translateFrentoGermCmd.label;" onclick="Translate('fr', 'de');"/>
-	      <menuitem name="&translateFrentoSpanCmd.label;" onclick="Translate('fr', 'es');"/>
+	      <menuitem name="&translateFrentoEngCmd.label; " onclick="Translate('fr', 'en', 'SSI');"/>
+	      <menuitem name="&translateFrentoGermCmd.label;" onclick="Translate('fr', 'de', 'SSI');"/>
+	      <menuitem name="&translateFrentoSpanCmd.label;" onclick="Translate('fr', 'es', 'SSI');"/>
 	      <separator />
-	      <menuitem name="&translateGermtoEngCmd.label;" onclick="Translate('de', 'en');"/>
-	      <menuitem name="&translateGermtoFrenCmd.label;" onclick="Translate('de', 'fr');"/>
-	      <menuitem name="&translateGermtoSpanCmd.label;" onclick="Translate('de', 'es');"/>
+	      <menuitem name="&translateGermtoEngCmd.label;" onclick="Translate('de', 'en', 'SSI');"/>
+	      <menuitem name="&translateGermtoFrenCmd.label;" onclick="Translate('de', 'fr', 'SSI');"/>
+	      <menuitem name="&translateGermtoSpanCmd.label;" onclick="Translate('de', 'es', 'SSI');"/>
 	      <separator />
-	      <menuitem name="&tanslateSpantoEngCmd.label;" onclick="Translate('es', 'en');"/>
-	      <menuitem name="&translateSpantoFrenCmd.label;" onclick="Translate('es', 'fr');"/>
-	      <menuitem name="&translateSpantoGermCmd.label;" onclick="Translate('es', 'de');"/>
+	      <menuitem name="&translateItaliantoEngCmd.label;" onclick="Translate('it', 'en', 'SSI');"/>
+	      <separator />
+	      <menuitem name="&tanslateJapanesetoEngCmd.label;" onclick="Translate('ja', 'en', 'SSI');"/>
+	      <separator />
+	      <menuitem name="&translatePorttoEngCmd.label;" onclick="Translate('po', 'en', 'SSI');"/>
+	      <separator />
+	      <menuitem name="&tanslateSpantoEngCmd.label;" onclick="Translate('es', 'en', 'SSI');"/>
+	      <menuitem name="&translateSpantoFrenCmd.label;" onclick="Translate('es', 'fr', 'SSI');"/>
+	      <menuitem name="&translateSpantoGermCmd.label;" onclick="Translate('es', 'de', 'SSI');"/>
     </menu>
 
       <menu name="&dcharMenu.label;">
