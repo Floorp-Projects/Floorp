@@ -455,7 +455,7 @@ class NS_COM nsACString
          *   1) to |Cut| a suffix of the string;
          *   2) to prepare to |Append| or move characters around.
          *
-         * External callers are not allowed to use |SetLength| is this
+         * External callers are not allowed to use |SetLength| in this
          * latter capacity, and should prefer |Truncate| for the former.
          * In other words, |SetLength| is deprecated for all use outside
          * of the string library and the internal use may at some point
