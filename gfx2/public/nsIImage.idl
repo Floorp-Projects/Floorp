@@ -81,10 +81,12 @@ interface nsIImage : nsISupports
    */
   readonly attribute gfx_format format;
 
-  /**
-   * this data is const and if you touch it you will die!
-   */
-  PRUint8 getBits();
+  readonly attribute unsigned long bytesPerRow;
+
+  readonly attribute unsigned long bitsLength;
+
+
+  readonly attribute PRUint8 bits;
 
   /**
    * Sets \a length bytes of \a data in this object.

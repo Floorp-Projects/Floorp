@@ -71,10 +71,22 @@ NS_IMETHODIMP nsImage::GetFormat(gfx_format *aFormat)
   return NS_OK;
 }
 
-/* PRUint8 getBits (); */
-NS_IMETHODIMP nsImage::GetBits(PRUint8 *_retval)
+/* readonly attribute unsigned long bytesPerRow; */
+NS_IMETHODIMP nsImage::GetBytesPerRow(PRUint32 *aBytesPerRow)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute unsigned long bitsLength; */
+NS_IMETHODIMP nsImage::GetBitsLength(PRUint32 *aBitsLength)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute PRUint8 bits; */
+NS_IMETHODIMP nsImage::GetBits(PRUint8 *aBits)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* void setBits ([array, size_is (length), const] in PRUint8 data, in unsigned long length, in long offset); */
