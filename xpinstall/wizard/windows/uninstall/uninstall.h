@@ -67,6 +67,7 @@ typedef int PRInt32;
 #define PP_ROOT_ONLY                    3
 
 #define MAX_BUF                         4096
+#define MAX_BUF_TINY                    256
 #define ERROR_CODE_HIDE                 0
 #define ERROR_CODE_SHOW                 1
 #define CX_CHECKBOX                     13

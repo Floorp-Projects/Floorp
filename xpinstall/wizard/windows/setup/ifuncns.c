@@ -128,8 +128,8 @@ HRESULT MeetCondition(LPSTR szSection)
   if(strcmp(pszCondition, "DefaultApp") == 0)
   {
     GetPrivateProfileString("General", "Default AppID", "", szBuf, sizeof(szBuf), szFileIniConfig);
-    if(strcmp(szBuf, sgProduct.szAppID) != 0)
-      bResult = FALSE;
+    if(strcmp(szBuf, sgProduct.szAppID) == 0)
+      bResult = TRUE;
   }
   // The condition "RecaptureHPChecked" is met if the RecaptureHome checkbox in "Additional Options" dialog.
   //   has been checked by the user.

@@ -754,11 +754,8 @@ Wait=FALSE
 Target=[SETUP PATH]\$MainExeFile$
 Parameters=-installer
 WorkingDir=[SETUP PATH]
-;The Criterion ID=RecaptureHP associates the decision to run this app with
-;  the user input to the Recapture Homepage checkbox offered (optionally) in the
 ;  Additional Options dialog.
-Criterion ID=RecaptureHP
-Run App If Criterion=FALSE
+Condition=not RecaptureHPChecked
 
 [RunApp1]
 Timing=depend reboot
@@ -766,11 +763,8 @@ Wait=FALSE
 Target=[SETUP PATH]\$MainExeFile$
 Parameters=-installer -resetPref browser.startup.homepage
 WorkingDir=[SETUP PATH]
-;The Criterion ID=RecaptureHP associates the decision to run this app with
-;  the user input to the Recapture Homepage checkbox offered (optionally) in the
 ;  Additional Options dialog.
-Criterion ID=RecaptureHP
-Run App If Criterion=TRUE
+Condition=RecaptureHPChecked
 
 [Windows Registry0]
 Root Key=HKEY_LOCAL_MACHINE
