@@ -866,6 +866,7 @@ if ($dotweak) {
 # Generate HTTP headers
 
 my $contenttype;
+my $disp = "inline";
 
 if ($format->{'extension'} eq "html") {
     my $cookiepath = Param("cookiepath");
@@ -894,6 +895,12 @@ else {
     $contenttype = $format->{'ctype'};
 }
 
+if ($format->{'extension'} eq "csv") {
+    # We set CSV files to be downloaded, as they are designed for importing
+    # into other programs.
+    $disp = "attachment";
+}
+
 if ($serverpush) {
     print $cgi->multipart_start(-type=>$contenttype);
 } else {
@@ -901,7 +908,7 @@ if ($serverpush) {
     # If we are doing server push, then we did this already in the HTTP headers
     # that started the server push, so we don't have to do it again here.
     print $cgi->header(-type => $contenttype,
-                       -content_disposition => "inline; filename=$filename");
+                       -content_disposition => "$disp; filename=$filename");
 }
 
 
