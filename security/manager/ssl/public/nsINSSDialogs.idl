@@ -121,6 +121,9 @@ interface nsICertificateDialogs : nsISupports
                       out unsigned long trust,
                       out boolean canceled);
 
+  void cACertExists(in nsIInterfaceRequestor ctx,
+					out boolean canceled);
+
   void setPKCS12FilePassword(in nsIInterfaceRequestor ctx, 
                              out wstring password,
                              out boolean canceled);
