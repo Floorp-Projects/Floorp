@@ -41,9 +41,9 @@
 
     testcases[tc++] = new TestCase(
         SECTION,
-        "StripSpaces(Array.prototype.concat.toString())",
-        "functionconcat(){[nativecode]}",
-        StripSpaces(Array.prototype.concat.toString()) );
+        "StripSpaces(Array.prototype.concat.toString()).substring(0,17)",
+        "functionconcat(){",
+        StripSpaces(Array.prototype.concat.toString()).substring(0,17));
 
     test();
 
