@@ -32,8 +32,8 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-# $Revision: 1.4 $
-# $Date: 2001/03/19 23:33:43 $
+# $Revision: 1.5 $
+# $Date: 2001/03/26 13:37:24 $
 # $Author: kestes%tradinglinx.com $
 # $Name:  $
 
@@ -244,6 +244,7 @@ sub get_env {
 # set_static_vars) so that the error environment is setup incase of
 # problems.
 
+  umask 0022; 
   $| = 1;
   $PROGRAM = File::Basename::basename($0);
   $PID = $$; 
@@ -750,8 +751,8 @@ sub slow_build_speed {
   
   my ($actual_build_seconds) = $END_TIME - $START_TIME;
   
-  if ($actual_build_seconds <  $MINIMUM_BUILD_SECONDS) {
-    my ($sleep_time) = $minimum_build_seconds - $actual_build_seconds;
+  if ($actual_build_seconds < $MINIMUM_BUILD_SECONDS) {
+    my ($sleep_time) = $MINIMUM_BUILD_SECONDS - $actual_build_seconds;
     sleep($sleep_time);
   }
 
