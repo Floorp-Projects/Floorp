@@ -111,8 +111,6 @@ wsDeallocateInitContextEvent::handleEvent ()
         docShellAsItem->SetTreeOwner(nsnull);
     }
 
-    mInitContext->docShell->SetDocLoaderObserver(nsnull);
-
     mInitContext->docShell = nsnull;
 
     // PENDING(edburns): this is a leak.  For some reason, webShell's

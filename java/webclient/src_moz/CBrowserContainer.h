@@ -33,11 +33,11 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebProgressListener.h"
+#include "nsIWebProgress.h"
 #include "nsIWebShell.h"  // We still have to implement nsIWebShellContainer
                           // in order to receveive some DocumentLoaderObserver
                           // events.  edburns
 #include "nsIURIContentListener.h"
-#include "nsIDocumentLoaderObserver.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrompt.h"
@@ -60,7 +60,6 @@ class CBrowserContainer :
 		public nsIWebProgressListener,
 		public nsIWebShellContainer,
 		public nsIURIContentListener,
-		public nsIDocumentLoaderObserver,
 		public nsIDocShellTreeOwner,
 		public nsIInterfaceRequestor,
 		public nsIPrompt,
@@ -131,7 +130,6 @@ public:
 	NS_DECL_NSIWEBBROWSERCHROME
 	NS_DECL_NSIDOCSHELLTREEOWNER
 	NS_DECL_NSIURICONTENTLISTENER
-	NS_DECL_NSIDOCUMENTLOADEROBSERVER
 	NS_DECL_NSIINTERFACEREQUESTOR
 	NS_DECL_NSIWEBPROGRESSLISTENER
 
@@ -171,6 +169,16 @@ protected:
 jobject JNICALL getPropertiesFromEvent(nsIDOMEvent *aMouseEvent);
 
 void JNICALL addMouseEventDataToProperties(nsIDOMEvent *aMouseEvent);
+
+/**
+
+ * Called from our nsIWebProgressListener.OnStateChanged()
+
+ */ 
+
+nsresult JNICALL doStartDocumentLoad(const PRUnichar *documentName);
+  //nsresult JNICALL doStartUrlLoad(const PRUnichar *documentName);
+nsresult JNICALL doEndDocumentLoad(nsIWebProgress *aWebProgress);
 
 static  nsresult JNICALL takeActionOnNode(nsCOMPtr<nsIDOMNode> curNode, 
                                           void *yourObject);

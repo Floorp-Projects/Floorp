@@ -28,10 +28,14 @@
 #include "CBrowserContainer.h"
 #include "nsCWebBrowser.h"
 #include "nsIWebBrowser.h"
+#include "nsIRequest.h"
 #include "nsIDOMNamedNodeMap.h"
+#include "nsIDOMWindow.h"
 #include "nsIDocShellTreeItem.h"
 
 #include "prprf.h" // for PR_snprintf
+#include "nsReadableUtils.h" 
+#include "nsXPIDLString.h" 
 #include "nsFileSpec.h" // for nsAutoCString
 
 #include "dom_util.h"
@@ -92,7 +96,6 @@ NS_INTERFACE_MAP_BEGIN(CBrowserContainer)
 	NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
 	NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
 	NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
-	NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
 	NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
 	NS_INTERFACE_MAP_ENTRY(nsIWebShellContainer)
     NS_INTERFACE_MAP_ENTRY(nsIAuthPrompt)
@@ -214,11 +217,13 @@ NS_IMETHODIMP CBrowserContainer::PromptUsernameAndPassword(const PRUnichar *dial
 // nsIPrompt
 
 NS_IMETHODIMP CBrowserContainer::ConfirmEx(const PRUnichar *dialogTitle, 
-                                           const PRUnichar *text,
-                                           PRUint32 button0And1Flags, 
-                                           const PRUnichar *button2Title,
+                                           const PRUnichar *text, 
+                                           PRUint32 buttonFlags, 
+                                           const PRUnichar *button0Title, 
+                                           const PRUnichar *button1Title, 
+                                           const PRUnichar *button2Title, 
                                            const PRUnichar *checkMsg, 
-                                           PRBool *checkValue,
+                                           PRBool *checkValue, 
                                            PRInt32 *buttonPressed)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -405,7 +410,35 @@ NS_IMETHODIMP CBrowserContainer::OnStateChange(nsIWebProgress *aWebProgress,
                                                PRInt32 aStateFlags, 
                                                PRUint32 aStatus)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsXPIDLString name;
+    nsCOMPtr<nsIDOMWindow> domWin;
+    nsresult rv;
+    
+    if ((aStateFlags & STATE_START) && (aStateFlags & STATE_IS_DOCUMENT)) {
+        if (NS_FAILED(rv = aRequest->GetName(getter_Copies(name)))) {
+            return rv;
+        }
+        if (NS_FAILED(rv =aWebProgress->GetDOMWindow(getter_AddRefs(domWin)))||
+            !domWin) {
+            return rv;
+        }
+        
+        domWin->GetDocument(getter_AddRefs(mInitContext->currentDocument));
+        doStartDocumentLoad(name.get());
+    }
+    if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_DOCUMENT)) {
+        doEndDocumentLoad(aWebProgress);
+    }
+    if (aStateFlags & STATE_REDIRECTING) {
+        printf("debug: edburns: STATE_REDIRECTING\n");
+    }
+    if (aStateFlags & STATE_TRANSFERRING) {
+        printf("debug: edburns: STATE_TRANSFERRING\n");
+    }
+    if (aStateFlags & STATE_NEGOTIATING) {
+        printf("debug: edburns: STATE_NEGOTIATING\n");
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP CBrowserContainer::OnSecurityChange(nsIWebProgress *aWebProgress,
@@ -423,26 +456,53 @@ NS_IMETHODIMP CBrowserContainer::OnProgressChange(nsIWebProgress *aWebProgress,
                                                   PRInt32 curTotalProgress, 
                                                   PRInt32 maxTotalProgress)
 {
-  //	NG_TRACE(_T("CBrowserContainer::OnProgressChange(...)\n"));
-	
-	long nProgress = curTotalProgress;
-	long nProgressMax = maxTotalProgress;
+    PRInt32 percentComplete;
+    nsXPIDLString name;
+    nsAutoString autoName;
+    jobject msgJStr = nsnull;
+    nsresult rv;
+    
+    if (!mDocTarget) {
+        return NS_OK;
+    }
+    
+    // PENDING(edburns): Allow per fetch progress reporting.  Right now
+    // we only have coarse grained support.
+    percentComplete = curTotalProgress / maxTotalProgress;
+    
+#if DEBUG_RAPTOR_CANVAS
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 4, 
+               ("CBrowserContainer: OnProgressURLLoad\n"));
+    }
+#endif
 
-	if (nProgress == 0)
-	{
-	}
-	if (nProgressMax == 0)
-	{
-		nProgressMax = LONG_MAX;
-	}
-	if (nProgress > nProgressMax)
-	{
-		nProgress = nProgressMax; // Progress complete
-	}
+    if (NS_FAILED(rv = aRequest->GetName(getter_Copies(name)))) {
+        return rv;
+    }
+    autoName = name;
+    // build up the string to be sent
+    autoName.AppendWithConversion(" ");
+    autoName.AppendInt(percentComplete);
+    autoName.AppendWithConversion("%");
 
-    //PENDING (Ashu)
-    // Code to indicate Status Change goes here
 
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    
+    msgJStr = (jobject) ::util_NewString(env, autoName.GetUnicode(), 
+                                         autoName.Length());
+    
+    util_SendEventToJava(mInitContext->env, 
+                         mInitContext->nativeEventThread, mDocTarget, 
+                         DOCUMENT_LOAD_LISTENER_CLASSNAME,
+                         DocumentLoader_maskValues[PROGRESS_URL_LOAD_EVENT_MASK], 
+                         msgJStr);
+
+    if (msgJStr) {
+        ::util_DeleteString(mInitContext->env, (jstring) msgJStr);
+    }
+
+    
     return NS_OK;
 }
 
@@ -452,8 +512,36 @@ NS_IMETHODIMP CBrowserContainer::OnStatusChange(nsIWebProgress *aWebProgress,
                                                 nsresult aStatus, 
                                                 const PRUnichar *aMessage)
 {
-
-    return NS_OK;
+    if (!mDocTarget) {
+        return NS_OK;
+    }
+#if DEBUG_RAPTOR_CANVAS
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 4, 
+               ("CBrowserContainer: OnStatusURLLoad\n"));
+    }
+#endif
+    nsAutoString aMsg(aMessage);
+    int length = aMsg.Length();
+    
+    // IMPORTANT: do not use initContext->env here since it comes
+    // from another thread.  Use JNU_GetEnv instead.
+    
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    jstring statusMessage = ::util_NewString(env, (const jchar *) 
+                                             aMsg.GetUnicode(), length);
+    
+    util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, 
+                         mDocTarget, 
+                         DOCUMENT_LOAD_LISTENER_CLASSNAME,
+                         DocumentLoader_maskValues[STATUS_URL_LOAD_EVENT_MASK], 
+                         (jobject) statusMessage);
+    
+    if (statusMessage) {
+        ::util_DeleteString(mInitContext->env, statusMessage);
+    }
+    
+	return NS_OK; 
 }
 
 /* void onLocationChange (in nsIURI location); */
@@ -463,6 +551,101 @@ NS_IMETHODIMP CBrowserContainer::OnLocationChange(nsIWebProgress *aWebProgress,
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+//
+// Helper methods for our nsIWebProgressListener implementation
+//
+
+nsresult JNICALL
+CBrowserContainer::doStartDocumentLoad(const PRUnichar *aDocumentName)
+{
+    // remove the old mouse listener for the old document
+    if (mDomEventTarget) {
+        mDomEventTarget->RemoveEventListener(NS_LITERAL_STRING("mouseover"), 
+                                             this, PR_FALSE);
+        mDomEventTarget = nsnull;
+    }
+
+    if (!mDocTarget) {
+        return NS_OK;
+    }
+#if DEBUG_RAPTOR_CANVAS
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 4, 
+               ("CBrowserContainer: OnStartDocumentLoad\n"));
+    }
+#endif
+    jobject urlJStr = nsnull;
+    if (nsnull != aDocumentName) {
+        
+        // IMPORTANT: do not use initContext->env here since it comes
+        // from another thread.  Use JNU_GetEnv instead.
+        
+        JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+        
+        urlJStr = (jobject) ::util_NewString(env, aDocumentName, 
+                                             nsCRT::strlen(aDocumentName));
+    }  
+    
+    // maskValues array comes from ../src_share/jni_util.h
+    util_SendEventToJava(mInitContext->env, 
+                         mInitContext->nativeEventThread, mDocTarget, 
+                         DOCUMENT_LOAD_LISTENER_CLASSNAME,
+                         DocumentLoader_maskValues[START_DOCUMENT_LOAD_EVENT_MASK], 
+                         urlJStr);
+    
+    
+    if (urlJStr) {
+        ::util_DeleteString(mInitContext->env, (jstring) urlJStr);
+    }
+    
+	return NS_OK; 
+} 
+
+// we need this to fire the document complete 
+nsresult JNICALL
+CBrowserContainer::doEndDocumentLoad(nsIWebProgress *aWebProgress)
+{
+    nsCOMPtr<nsIDOMWindow> domWin;
+    
+    if (nsnull != aWebProgress) {
+        if (NS_SUCCEEDED(aWebProgress->GetDOMWindow(getter_AddRefs(domWin)))
+            && domWin) {
+            if (NS_SUCCEEDED(domWin->GetDocument(getter_AddRefs(mInitContext->currentDocument)))) {
+                // if we have a mouse listener
+                if (mMouseTarget) {
+                    // turn the currentDocument into an nsIDOMEventTarget
+                    mDomEventTarget = 
+                        do_QueryInterface(mInitContext->currentDocument);
+                    // if successful
+                    if (mDomEventTarget) {
+                        mDomEventTarget->AddEventListener(NS_LITERAL_STRING("mouseover"), 
+                                                          this, PR_FALSE);
+                    }
+                }
+            }
+        }
+    }
+    if (!mDocTarget) {
+        return NS_OK;
+    }
+#if DEBUG_RAPTOR_CANVAS
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 4, 
+               ("CBrowserContainer: OnEndDocumentLoad\n"));
+    }
+#endif
+
+    util_SendEventToJava(mInitContext->env, 
+                         mInitContext->nativeEventThread, mDocTarget, 
+                         DOCUMENT_LOAD_LISTENER_CLASSNAME,
+                         DocumentLoader_maskValues[END_DOCUMENT_LOAD_EVENT_MASK], 
+                         nsnull);
+    
+
+	return NS_OK; 
+} 
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -826,100 +1009,10 @@ CBrowserContainer::ExitModalEventLoop(nsresult aStatus)
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIDocumentLoaderObserver implementation 
+#if 0
 
-
-NS_IMETHODIMP
-CBrowserContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
-                                       const char* aCommand)
-{
-    // remove the old mouse listener for the old document
-    if (mDomEventTarget) {
-        mDomEventTarget->RemoveEventListener(NS_LITERAL_STRING("mouseover"), 
-                                             this, PR_FALSE);
-        mDomEventTarget = nsnull;
-    }
-
-    if (!mDocTarget) {
-        return NS_OK;
-    }
-#if DEBUG_RAPTOR_CANVAS
-    if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 4, 
-               ("CBrowserContainer: OnStartDocumentLoad\n"));
-    }
-#endif
-    char *urlStr = nsnull;
-    jobject urlJStr = nsnull;
-    if (nsnull != aURL) {
-
-        // IMPORTANT: do not use initContext->env here since it comes
-        // from another thread.  Use JNU_GetEnv instead.
-
-        JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
-        
-        aURL->GetSpec(&urlStr);
-        if (nsnull != urlStr) {
-            urlJStr = (jobject) ::util_NewStringUTF(env, urlStr);
-            ::Recycle(urlStr);
-        }
-    }  
-
-    // maskValues array comes from ../src_share/jni_util.h
-    util_SendEventToJava(mInitContext->env, 
-                         mInitContext->nativeEventThread, mDocTarget, 
-                         DOCUMENT_LOAD_LISTENER_CLASSNAME,
-                         DocumentLoader_maskValues[START_DOCUMENT_LOAD_EVENT_MASK], 
-                         urlJStr);
-    
-
-    if (urlJStr) {
-        ::util_DeleteStringUTF(mInitContext->env, (jstring) urlJStr);
-    }
-
-	return NS_OK; 
-} 
-
-
-// we need this to fire the document complete 
-NS_IMETHODIMP
-CBrowserContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIRequest *aRequest, nsresult aStatus)
-{
-    if (nsnull != loader) {
-        if (mInitContext->currentDocument = dom_getDocumentFromLoader(loader)){
-            // if we have a mouse listener
-            if (mMouseTarget) {
-                // turn the currentDocument into an nsIDOMEventTarget
-                mDomEventTarget = 
-                    do_QueryInterface(mInitContext->currentDocument);
-                // if successful
-                if (mDomEventTarget) {
-                    mDomEventTarget->AddEventListener(NS_LITERAL_STRING("mouseover"), 
-                                                      this, PR_FALSE);
-                }
-            }
-        }
-    }
-
-    if (!mDocTarget) {
-        return NS_OK;
-    }
-#if DEBUG_RAPTOR_CANVAS
-    if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 4, 
-               ("CBrowserContainer: OnEndDocumentLoad\n"));
-    }
-#endif
-
-    util_SendEventToJava(mInitContext->env, 
-                         mInitContext->nativeEventThread, mDocTarget, 
-                         DOCUMENT_LOAD_LISTENER_CLASSNAME,
-                         DocumentLoader_maskValues[END_DOCUMENT_LOAD_EVENT_MASK], 
-                         nsnull);
-    
-
-	return NS_OK; 
-} 
-
+// PENDING(edburns): when you figure out how to do this, implement it
+// with nsIWebProgressListener.
 
 NS_IMETHODIMP
 CBrowserContainer::OnStartURLLoad(nsIDocumentLoader* loader, 
@@ -945,72 +1038,6 @@ CBrowserContainer::OnStartURLLoad(nsIDocumentLoader* loader,
 	return NS_OK; 
 } 
 
-
-NS_IMETHODIMP
-CBrowserContainer::OnProgressURLLoad(nsIDocumentLoader* loader, 
-                                     nsIRequest* aRequest, 
-                                     PRUint32 aProgress, 
-                                     PRUint32 aProgressMax)
-{ 
-    if (!mDocTarget) {
-        return NS_OK;
-    }
-#if DEBUG_RAPTOR_CANVAS
-    if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 4, 
-               ("CBrowserContainer: OnProgressURLLoad\n"));
-    }
-#endif
-
-    util_SendEventToJava(mInitContext->env, 
-                         mInitContext->nativeEventThread, mDocTarget, 
-                         DOCUMENT_LOAD_LISTENER_CLASSNAME,
-                         DocumentLoader_maskValues[PROGRESS_URL_LOAD_EVENT_MASK], 
-                         nsnull);
-    
-
-	return NS_OK;
-} 
-
-
-NS_IMETHODIMP
-CBrowserContainer::OnStatusURLLoad(nsIDocumentLoader* loader, 
-                                   nsIRequest* request, nsString& aMsg)
-{ 
-
-	//NOTE: This appears to get fired for each individual item on a page, indicating the status of that item.
-    if (!mDocTarget) {
-        return NS_OK;
-    }
-#if DEBUG_RAPTOR_CANVAS
-    if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 4, 
-               ("CBrowserContainer: OnStatusURLLoad\n"));
-    }
-#endif
-    int length = aMsg.Length();
-
-    // IMPORTANT: do not use initContext->env here since it comes
-    // from another thread.  Use JNU_GetEnv instead.
-    
-    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
-    jstring statusMessage = ::util_NewString(env, (const jchar *) 
-                                             aMsg.GetUnicode(), length);
-    
-    util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, 
-                         mDocTarget, 
-                         DOCUMENT_LOAD_LISTENER_CLASSNAME,
-                         DocumentLoader_maskValues[STATUS_URL_LOAD_EVENT_MASK], 
-                         (jobject) statusMessage);
-    
-    if (statusMessage) {
-        ::util_DeleteString(mInitContext->env, statusMessage);
-    }
-    
-	return NS_OK; 
-} 
-
-
 NS_IMETHODIMP
 CBrowserContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIRequest* request, nsresult aStatus)
 {
@@ -1033,6 +1060,7 @@ CBrowserContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIRequest* request, 
 	return NS_OK; 
 } 
 
+#endif
 
 nsresult
 CBrowserContainer::HandleEvent(nsIDOMEvent* aEvent)

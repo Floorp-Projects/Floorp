@@ -116,9 +116,8 @@ wsRealizeBrowserEvent::handleEvent ()
     nsCOMPtr<nsIDocShellTreeOwner> treeOwner(do_QueryInterface(mInitContext->browserContainer));
     docShellAsItem->SetTreeOwner(treeOwner);
     
-    // set the docloaderobserver
-    nsCOMPtr<nsIDocumentLoaderObserver> observer(do_QueryInterface(mInitContext->browserContainer));
-    mInitContext->docShell->SetDocLoaderObserver(observer);
+    // set the docloaderobserver PENDING(edburns): how to we make our
+    // presence as a nsIWebProgressListener know?n
     
     if (nsnull == gHistory) {
         rv = gComponentManager->CreateInstance(kSHistoryCID, nsnull, 
