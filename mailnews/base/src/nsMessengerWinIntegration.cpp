@@ -706,11 +706,7 @@ nsresult nsMessengerWinIntegration::GetFirstFolderWithNewMail(char ** aFolderURI
 void nsMessengerWinIntegration::DestroyBiffIcon()
 {
   GenericShellNotify(NIM_DELETE); 
-  
-  if (mUseWideCharBiffIcon && mWideBiffIconData.hIcon)
-	  DestroyIcon(mWideBiffIconData.hIcon);
-  else if (mAsciiBiffIconData.hIcon)
-	  DestroyIcon(mAsciiBiffIconData.hIcon);
+  // Don't call DestroyIcon().  see http://bugzilla.mozilla.org/show_bug.cgi?id=134745
 }
 
 PRUint32 nsMessengerWinIntegration::GetToolTipSize()
@@ -742,11 +738,11 @@ void nsMessengerWinIntegration::GenericShellNotify(DWORD aMessage)
     BOOL res = mShellNotifyWideChar( aMessage, &mWideBiffIconData );
     if (!res)
       RevertToNonUnicodeShellAPI(); // oops we don't really implement the unicode shell apis...fall back.
-  else
+    else
       return; 
   }
   
-    ::Shell_NotifyIcon( aMessage, &mAsciiBiffIconData ); 
+  ::Shell_NotifyIcon( aMessage, &mAsciiBiffIconData ); 
 }
 
 // some flavors of windows define ShellNotifyW but when you actually try to use it,
@@ -755,8 +751,6 @@ void nsMessengerWinIntegration::GenericShellNotify(DWORD aMessage)
 void nsMessengerWinIntegration::RevertToNonUnicodeShellAPI()
 {
   mUseWideCharBiffIcon = PR_FALSE;
-  if (mWideBiffIconData.hIcon)  // release any windows handles
-	  DestroyIcon(mWideBiffIconData.hIcon);
 
   // now initialize the ascii shell notify struct
   InitializeBiffStatusIcon();
