@@ -518,6 +518,7 @@ private:
   PRInt32           mUpdateCnt;
   PRInt32           mUpdateBatchCnt;
   PRUint32          mUpdateBatchFlags;
+  PRInt32           mScrollCnt;
   nsCOMPtr<nsIEventQueue>         mInvalidateEventQueue;
   // Use IsRefreshEnabled() to check the value of mRefreshEnabled.
   PRPackedBool      mRefreshEnabled;

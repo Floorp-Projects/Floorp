@@ -1701,8 +1701,7 @@ nsViewManager::WillBitBlit(nsView* aView, nsPoint aScrollAmount)
   NS_PRECONDITION(aView, "Must have a view");
   NS_PRECONDITION(aView->HasWidget(), "View must have a widget");
 
-  NS_PRECONDITION(!mInScroll, "Nested scrolls?");
-  mInScroll = PR_TRUE;
+  ++mScrollCnt;
   
   // Since the view is actually moving the widget by -aScrollAmount, that's the
   // offset we want to use when accumulating dirty rects.
@@ -1713,7 +1712,7 @@ nsViewManager::WillBitBlit(nsView* aView, nsPoint aScrollAmount)
 void
 nsViewManager::UpdateViewAfterScroll(nsView *aView)
 {
-  NS_ASSERTION(RootViewManager()->mInScroll,
+  NS_ASSERTION(RootViewManager()->mScrollCnt > 0,
                "Someone forgot to call WillBitBlit()");
   // Look at the view's clipped rect. It may be that part of the view is clipped out
   // in which case we don't need to worry about invalidating the clipped-out part.
@@ -1732,7 +1731,7 @@ nsViewManager::UpdateViewAfterScroll(nsView *aView)
   UpdateWidgetArea(RootViewManager()->GetRootView(), nsRegion(damageRect), aView);
 
   Composite();
-  mInScroll = PR_FALSE;
+  --mScrollCnt;
 }
 
 /**
@@ -2004,7 +2003,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             // XXXbz do we need to notify other view observers for viewmanagers
             // in our tree?
             // Make sure to not send WillPaint notifications while scrolling
-            if (!mInScroll) {
+            if (mScrollCnt == 0) {
               nsIViewObserver* observer = GetViewObserver();
               if (observer) {
                 // Do an update view batch, and make sure we don't process
@@ -4228,7 +4227,7 @@ nsViewManager::FlushPendingInvalidates()
   NS_ASSERTION(gViewManagers, "Better have a viewmanagers array!");
 
   // Make sure to not send WillPaint notifications while scrolling
-  if (!mInScroll) {
+  if (mScrollCnt == 0) {
     // Disable refresh while we notify our view observers, so that if they do
     // view update batches we don't reenter this code and so that we batch
     // all of them together.  We don't use
