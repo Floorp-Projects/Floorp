@@ -1137,12 +1137,18 @@ nsHttpChannel::ProcessAuthentication(PRUint32 httpStatus)
     mPrevTransaction = mTransaction;
     mTransaction = nsnull;
 
+    // toggle mIsPending to allow nsIHttpNotify implementations to modify
+    // the request headers (bug 95044).
+    mIsPending = PR_FALSE;
+
     // notify nsIHttpNotify implementations.. the server response could
     // have included cookies that must be sent with this authentication
     // attempt (bug 84794).
     rv = nsHttpHandler::get()->OnModifyRequest(this);
     NS_ASSERTION(NS_SUCCEEDED(rv), "OnModifyRequest failed");
    
+    mIsPending = PR_TRUE;
+
     // and create a new one...
     rv = SetupTransaction();
     if (NS_FAILED(rv)) return rv;
