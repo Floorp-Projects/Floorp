@@ -9,13 +9,13 @@ xmlns:html="http://www.w3.org/TR/REC-html40"
 <box align="vertical" flex="1">
 	<tabcontrol align="vertical" flex="100%" >
 	   <tabbox align="horizontal">
-		  <tab selected="true">centered</tab>
-		  <tab>percent</tab>
-		  <tab>html</tab>
+		  <tab selected="true" value="centered"/>
+		  <tab value="percent"/>
+		  <tab value="html"/>
 		  <tab><html:img src="resource:/res/toolbar/stop.gif"/></tab>
-          <tab>native</tab>
-          <tab>iframe</tab>
-		  <tab>dialog</tab>
+      <tab value="native"/>
+      <tab value="iframe"/>
+		  <tab value="dialog"/>
 		  <spring flex="1"/>
 	   </tabbox>
    
