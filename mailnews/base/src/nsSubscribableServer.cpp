@@ -31,7 +31,9 @@
 #include "nsXPIDLString.h"
 #include "nsIFolder.h"
 
-#if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
+#include "rdf.h"
+
+#if defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_SUBSCRIBE 1
 #endif
 
@@ -227,13 +229,28 @@ nsSubscribableServer::FindAndAddParentToSubscribeDS(const char *uri, const char 
 		rv = mRDFService->GetResource((const char *) uriCStr, getter_AddRefs(parentResource));
 		if(NS_FAILED(rv)) return rv;
 
-		PRBool prune = PR_FALSE;
-#if 0
-		rv = mSubscribeDatasource->HasAssertion(parentResource, kNC_Subscribed, kFalseLiteral, PR_TRUE, &prune);
+		PRBool parentExists = PR_TRUE;
+		nsCOMPtr <nsIRDFNode> firstChild;
+		// see if the parent already exists.
+		// for the in memory datasource. HasAssertion() will be O(n), 
+		// see bug #35817
+		// to make the check for a parent constant time, I have a trick:
+		// call GetTarget() to get the first child of the parent
+		// (note, this current child has not been asserted.
+		//
+		// that will be constant time since the parent,
+		// if it exists, will have #Name, #Subscribe, and 0 to <n> #child
+		// 
+		// if that fails, then do HasAssertion(), which will be constant
+		// since <n> will be zero.
+		rv = mSubscribeDatasource->GetTarget(parentResource, kNC_Child, PR_TRUE, getter_AddRefs(firstChild));
 		if(NS_FAILED(rv)) return rv;
-#endif
+		if ((!firstChild) && (rv == NS_RDF_NO_VALUE)) {
+			rv = mSubscribeDatasource->HasAssertion(parentResource, kNC_Subscribed, kFalseLiteral, PR_TRUE, &parentExists);
+			if(NS_FAILED(rv)) return rv;
+		}
 
-		if (!prune) {
+		if (!parentExists) {
 			rv = SetPropertiesInSubscribeDS((const char *)uriCStr, (const char *)nameCStr, parentResource);
 			if(NS_FAILED(rv)) return rv;
 		}
@@ -242,8 +259,8 @@ nsSubscribableServer::FindAndAddParentToSubscribeDS(const char *uri, const char 
 		rv = mSubscribeDatasource->Assert(parentResource, kNC_Child, aChildResource, PR_TRUE);
 		if(NS_FAILED(rv)) return rv;
 
-		// recurse
-		if (!prune) {
+		// recurse upwards
+		if (!parentExists) {
 			rv = FindAndAddParentToSubscribeDS((const char *)uriCStr, serverUri, (const char *)nameCStr, parentResource);
 			if(NS_FAILED(rv)) return rv;
 		}

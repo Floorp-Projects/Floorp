@@ -806,6 +806,9 @@ nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo(nsIMsgWindow *aMsg
 
 	mGroupsOnServer.EnumerateForwards((nsCStringArrayEnumFunc)addGroup, (void *)this);
 
+	rv = UpdateSubscribedInSubscribeDS();
+	if (NS_FAILED(rv)) return rv;
+
 	rv = StopPopulatingSubscribeDS();
 	if (NS_FAILED(rv)) return rv;
 
