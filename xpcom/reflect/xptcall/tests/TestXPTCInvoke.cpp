@@ -19,6 +19,9 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Stuart Parmenter <pavlov@netscape.com>
+ *   Chris Seawood <cls@seawood.org>
+ *  
  */
 
 /* Invoke tests xptcall. */
@@ -46,6 +49,12 @@ public:
     NS_IMETHOD AddTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval) = 0;
     NS_IMETHOD MultTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval) = 0;
 
+    NS_IMETHOD AddManyInts(PRInt32 p1, PRInt32 p2, PRInt32 p3, PRInt32 p4,
+                           PRInt32 p5, PRInt32 p6, PRInt32 p7, PRInt32 p8,
+                           PRInt32 p9, PRInt32 p10, PRInt32* retval) = 0;
+
+    NS_IMETHOD AddTwoFloats(float p1, float p2, float* retval) = 0;
+
     NS_IMETHOD AddManyDoubles(double p1, double p2, double p3, double p4,
                               double p5, double p6, double p7, double p8,
                               double p9, double p10, double* retval) = 0;
@@ -53,6 +62,16 @@ public:
     NS_IMETHOD AddManyFloats(float p1, float p2, float p3, float p4,
                              float p5, float p6, float p7, float p8,
                              float p9, float p10, float* retval) = 0;
+
+    NS_IMETHOD AddManyManyFloats(float p1, float p2, float p3, float p4,
+                                 float p5, float p6, float p7, float p8,
+                                 float p9, float p10, float p11, float p12, 
+                                 float p13, float p14, float p15, float p16, 
+                                 float p17, float p18, float p19, float p20, 
+                                 float *retval) = 0;
+
+    NS_IMETHOD PassTwoStrings(const char* s1, const char* s2, char** retval) = 0;
+
 };
 
 class InvokeTestTarget : public InvokeTestTargetInterface
@@ -64,6 +83,12 @@ public:
     NS_IMETHOD AddTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval);
     NS_IMETHOD MultTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval);
 
+    NS_IMETHOD AddManyInts(PRInt32 p1, PRInt32 p2, PRInt32 p3, PRInt32 p4,
+                           PRInt32 p5, PRInt32 p6, PRInt32 p7, PRInt32 p8,
+                           PRInt32 p9, PRInt32 p10, PRInt32* retval);
+
+    NS_IMETHOD AddTwoFloats(float p1, float p2, float* retval);
+
     NS_IMETHOD AddManyDoubles(double p1, double p2, double p3, double p4,
                               double p5, double p6, double p7, double p8,
                               double p9, double p10, double* retval);
@@ -71,6 +96,15 @@ public:
     NS_IMETHOD AddManyFloats(float p1, float p2, float p3, float p4,
                              float p5, float p6, float p7, float p8,
                              float p9, float p10, float* retval);
+
+    NS_IMETHOD AddManyManyFloats(float p1, float p2, float p3, float p4,
+                                 float p5, float p6, float p7, float p8,
+                                 float p9, float p10, float p11, float p12, 
+                                 float p13, float p14, float p15, float p16, 
+                                 float p17, float p18, float p19, float p20, 
+                                 float *retval);
+
+    NS_IMETHOD PassTwoStrings(const char* s1, const char* s2, char** retval);
 
     InvokeTestTarget();
 };
@@ -112,10 +146,37 @@ InvokeTestTarget::MultTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval)
 }
 
 NS_IMETHODIMP
+InvokeTestTarget::AddManyInts(PRInt32 p1, PRInt32 p2, PRInt32 p3, PRInt32 p4,
+                              PRInt32 p5, PRInt32 p6, PRInt32 p7, PRInt32 p8,
+                              PRInt32 p9, PRInt32 p10, PRInt32* retval)
+{
+#ifdef DEBUG_TESTINVOKE
+    printf("%d, %d, %d, %d, %d, %d, %d, %d, %d, %d\n", 
+           p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
+#endif
+    *retval = p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9 + p10;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+InvokeTestTarget::AddTwoFloats(float p1, float p2, float *retval)
+{
+#ifdef DEBUG_TESTINVOKE
+    printf("%f, %f\n", p1, p2);
+#endif
+    *retval = p1 + p2;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 InvokeTestTarget::AddManyDoubles(double p1, double p2, double p3, double p4,
                                  double p5, double p6, double p7, double p8,
                                  double p9, double p10, double* retval)
 {
+#ifdef DEBUG_TESTINVOKE
+    printf("%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf\n", 
+           p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
+#endif
     *retval = p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9 + p10;
     return NS_OK;
 }
@@ -125,10 +186,41 @@ InvokeTestTarget::AddManyFloats(float p1, float p2, float p3, float p4,
                                 float p5, float p6, float p7, float p8,
                                 float p9, float p10, float* retval)
 {
+#ifdef DEBUG_TESTINVOKE
+    printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", 
+           p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
+#endif
     *retval = p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9 + p10;
     return NS_OK;
 }
 
+NS_IMETHODIMP
+InvokeTestTarget::AddManyManyFloats(float p1, float p2, float p3, float p4,
+                                    float p5, float p6, float p7, float p8,
+                                    float p9, float p10, float p11, float p12, 
+                                    float p13, float p14, float p15, float p16, 
+                                    float p17, float p18, float p19, float p20,
+                                    float *retval)
+{
+#ifdef DEBUG_TESTINVOKE
+    printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, "
+           "%f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", 
+           p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
+           p11, p12, p13, p14, p15, p16, p17, p18, p19, p20);
+#endif
+    *retval = p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9 + p10 +
+        p11 + p12 + p13 + p14 + p15 + p16 + p17 + p18 + p19 + p20;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+InvokeTestTarget::PassTwoStrings(const char* s1, const char* s2, char** retval)
+{
+    char *ret = "milk";
+    printf("\t%s %s", s1, s2);
+    *retval = ret;
+    return NS_OK;
+}
 
 int main()
 {
@@ -169,19 +261,44 @@ int main()
 
     double outD;
     float outF;
+    PRInt32 outI;
+    char *outS;
+
+    if(NS_SUCCEEDED(test->AddManyInts(1,2,3,4,5,6,7,8,9,10,&outI)))
+        printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %d\n", outI);
+    else
+        printf("\tFAILED");
+
+    if(NS_SUCCEEDED(test->AddTwoFloats(1,2,&outF)))
+        printf("\t1 + 2 = %ff\n", (double)outF);
+    else
+        printf("\tFAILED");
+
     if(NS_SUCCEEDED(test->AddManyDoubles(1,2,3,4,5,6,7,8,9,10,&outD)))
         printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %f\n", outD);
     else
         printf("\tFAILED");
+
     if(NS_SUCCEEDED(test->AddManyFloats(1,2,3,4,5,6,7,8,9,10,&outF)))
         printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %ff\n", (double)outF);
     else
         printf("\tFAILED");
 
-    nsXPTCVariant var[11];
+    if(NS_SUCCEEDED(test->AddManyManyFloats(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,&outF)))
+        printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 + 11 + 12 + 13 + 14 +1 15 + 16 + 17 + 18 + 19 + 20 = %ff\n", (double)outF);
+    else
+        printf("\tFAILED");
+
+    if(NS_SUCCEEDED(test->PassTwoStrings("moo","cow",&outS)))
+        printf(" = %s\n", outS);
+    else
+        printf("\tFAILED");
+
 
 
     printf("calling via invoke:\n");
+
+    nsXPTCVariant var[21];
 
     var[0].val.i32 = 1;
     var[0].type = nsXPTType::T_I32;
@@ -255,6 +372,73 @@ int main()
     else
         printf("\tFAILED");
 
+    var[0].val.i32 = 1.0;
+    var[0].type = nsXPTType::T_I32;
+    var[0].flags = 0;
+
+    var[1].val.i32 = 2.0;
+    var[1].type = nsXPTType::T_I32;
+    var[1].flags = 0;
+
+    var[2].val.i32 = 3.0;
+    var[2].type = nsXPTType::T_I32;
+    var[2].flags = 0;
+
+    var[3].val.i32 = 4.0;
+    var[3].type = nsXPTType::T_I32;
+    var[3].flags = 0;
+
+    var[4].val.i32 = 5.0;
+    var[4].type = nsXPTType::T_I32;
+    var[4].flags = 0;
+
+    var[5].val.i32 = 6.0;
+    var[5].type = nsXPTType::T_I32;
+    var[5].flags = 0;
+
+    var[6].val.i32 = 7.0;
+    var[6].type = nsXPTType::T_I32;
+    var[6].flags = 0;
+
+    var[7].val.i32 = 8.0;
+    var[7].type = nsXPTType::T_I32;
+    var[7].flags = 0;
+
+    var[8].val.i32 = 9.0;
+    var[8].type = nsXPTType::T_I32;
+    var[8].flags = 0;
+
+    var[9].val.i32 = 10.0;
+    var[9].type = nsXPTType::T_I32;
+    var[9].flags = 0;
+
+    var[10].val.i32 = 0.0;
+    var[10].type = nsXPTType::T_I32;
+    var[10].flags = nsXPTCVariant::PTR_IS_DATA;
+    var[10].ptr = &var[10].val.i32;
+
+    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 7, 11, var)))
+        printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %d\n",
+                var[10].val.i32);
+
+    var[0].val.f = 1.0f;
+    var[0].type = nsXPTType::T_FLOAT;
+    var[0].flags = 0;
+
+    var[1].val.f = 2.0f;
+    var[1].type = nsXPTType::T_FLOAT;
+    var[1].flags = 0;
+
+    var[2].val.f = 0.0f;
+    var[2].type = nsXPTType::T_FLOAT;
+    var[2].flags = nsXPTCVariant::PTR_IS_DATA;
+    var[2].ptr = &var[2].val.f;
+
+    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 8, 3, var)))
+        printf("\t1 + 2 = %ff\n",
+                (double) var[2].val.f);
+
+
     var[0].val.d = 1.0;
     var[0].type = nsXPTType::T_DOUBLE;
     var[0].flags = 0;
@@ -300,7 +484,7 @@ int main()
     var[10].flags = nsXPTCVariant::PTR_IS_DATA;
     var[10].ptr = &var[10].val.d;
 
-    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 7, 11, var)))
+    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 9, 11, var)))
         printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %f\n",
                 var[10].val.d);
     else
@@ -351,9 +535,117 @@ int main()
     var[10].flags = nsXPTCVariant::PTR_IS_DATA;
     var[10].ptr = &var[10].val.f;
 
-    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 8, 11, var)))
+    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 10, 11, var)))
         printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %ff\n",
                 (double) var[10].val.f);
+
+    var[0].val.f = 1.0f;
+    var[0].type = nsXPTType::T_FLOAT;
+    var[0].flags = 0;
+
+    var[1].val.f = 2.0f;
+    var[1].type = nsXPTType::T_FLOAT;
+    var[1].flags = 0;
+
+    var[2].val.f = 3.0f;
+    var[2].type = nsXPTType::T_FLOAT;
+    var[2].flags = 0;
+
+    var[3].val.f = 4.0f;
+    var[3].type = nsXPTType::T_FLOAT;
+    var[3].flags = 0;
+
+    var[4].val.f = 5.0f;
+    var[4].type = nsXPTType::T_FLOAT;
+    var[4].flags = 0;
+
+    var[5].val.f = 6.0f;
+    var[5].type = nsXPTType::T_FLOAT;
+    var[5].flags = 0;
+
+    var[6].val.f = 7.0f;
+    var[6].type = nsXPTType::T_FLOAT;
+    var[6].flags = 0;
+
+    var[7].val.f = 8.0f;
+    var[7].type = nsXPTType::T_FLOAT;
+    var[7].flags = 0;
+
+    var[8].val.f = 9.0f;
+    var[8].type = nsXPTType::T_FLOAT;
+    var[8].flags = 0;
+
+    var[9].val.f = 10.0f;
+    var[9].type = nsXPTType::T_FLOAT;
+    var[9].flags = 0;
+
+    var[10].val.f = 11.0f;
+    var[10].type = nsXPTType::T_FLOAT;
+    var[10].flags = 0;
+
+    var[11].val.f = 12.0f;
+    var[11].type = nsXPTType::T_FLOAT;
+    var[11].flags = 0;
+
+    var[12].val.f = 13.0f;
+    var[12].type = nsXPTType::T_FLOAT;
+    var[12].flags = 0;
+
+    var[13].val.f = 14.0f;
+    var[13].type = nsXPTType::T_FLOAT;
+    var[13].flags = 0;
+
+    var[14].val.f = 15.0f;
+    var[14].type = nsXPTType::T_FLOAT;
+    var[14].flags = 0;
+
+    var[15].val.f = 16.0f;
+    var[15].type = nsXPTType::T_FLOAT;
+    var[15].flags = 0;
+
+    var[16].val.f = 17.0f;
+    var[16].type = nsXPTType::T_FLOAT;
+    var[16].flags = 0;
+
+    var[17].val.f = 18.0f;
+    var[17].type = nsXPTType::T_FLOAT;
+    var[17].flags = 0;
+
+    var[18].val.f = 19.0f;
+    var[18].type = nsXPTType::T_FLOAT;
+    var[18].flags = 0;
+
+    var[19].val.f = 20.0f;
+    var[19].type = nsXPTType::T_FLOAT;
+    var[19].flags = 0;
+
+    var[20].val.f = 0.0f;
+    var[20].type = nsXPTType::T_FLOAT;
+    var[20].flags = nsXPTCVariant::PTR_IS_DATA;
+    var[20].ptr = &var[20].val.f;
+
+    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 11, 21, var)))
+        printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 + 11 + 12 + 13 + 14 + 15 + 16 + 17 + 18 + 19 + 20 = %ff\n",
+                (double) var[20].val.f);
+
+    var[0].val.p = "moo";
+    var[0].type = nsXPTType::T_CHAR_STR;
+    var[0].flags = 0;
+
+    var[1].val.p = "cow";
+    var[1].type = nsXPTType::T_CHAR_STR;
+    var[1].flags = 0;
+    
+    var[2].val.p = 0;
+    var[2].type = nsXPTType::T_CHAR_STR;
+    var[2].flags = nsXPTCVariant::PTR_IS_DATA;
+    var[2].ptr = &var[2].val.p;
+    
+    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 12, 3, var)))
+        printf(" = %s\n", var[2].val.p);
+    else
+        printf("\tFAILED");
+
 
     DoMultipleInheritenceTest();
     DoMultipleInheritenceTest2();
@@ -551,9 +843,9 @@ static void DoMultipleInheritenceTest()
     if(NS_SUCCEEDED(impl->QueryInterface(NS_GET_IID(nsIFoo), (void**)&foo)) &&
        NS_SUCCEEDED(impl->QueryInterface(NS_GET_IID(nsIBar), (void**)&bar)))
     {
-        printf("impl == %x\n", (int) impl);
-        printf("foo  == %x\n", (int) foo);
-        printf("bar  == %x\n", (int) bar);
+        printf("impl == %p\n", impl);
+        printf("foo  == %p\n", foo);
+        printf("bar  == %p\n", bar);
 
         printf("Calling Foo...\n");
         printf("direct calls:\n");
@@ -722,9 +1014,9 @@ static void DoMultipleInheritenceTest2()
     if(NS_SUCCEEDED(impl->QueryInterface(NS_GET_IID(nsIFoo), (void**)&foo)) &&
        NS_SUCCEEDED(impl->QueryInterface(NS_GET_IID(nsIBar), (void**)&bar)))
     {
-        printf("impl == %x\n", (int) impl);
-        printf("foo  == %x\n", (int) foo);
-        printf("bar  == %x\n", (int) bar);
+        printf("impl == %p\n", impl);
+        printf("foo  == %p\n", foo);
+        printf("bar  == %p\n", bar);
 
         printf("Calling Foo...\n");
         printf("direct calls:\n");
