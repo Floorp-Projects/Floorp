@@ -54,8 +54,11 @@ sub init {
 
 sub get {
     my $self = shift;
-    my($app, $uri) = @_;
+    my($app, $uri, $referrer) = @_;
     my $request = HTTP::Request->new('GET', $uri);
+    if (defined($referrer)) {
+        $request->referer($referrer);
+    }
     my $response = $self->ua->request($request);
     if (wantarray) {
         return ($response->content, $response);
