@@ -317,10 +317,15 @@ OS_LDFLAGS += /PDB:NONE
 endif
 endif
 
+ifdef MOZ_QUANTIFY
 # /FIXED:NO is needed for Quantify to work, but it increases the size
 # of executables, so only use it if building for Quantify.
-ifdef MOZ_QUANTIFY
 WIN32_EXE_LDFLAGS=/FIXED:NO
+
+# We need /OPT:NOICF to prevent identical methods from being merged together.
+# Otherwise, Quantify doesn't know which method was actually called when it's
+# showing you the profile.
+OS_LDFLAGS += /OPT:NOICF
 endif
 
 # if MOZ_COVERAGE is set, we handle pdb files slightly differently
