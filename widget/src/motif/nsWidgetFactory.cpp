@@ -29,6 +29,7 @@
 #include "nsScrollbar.h"
 #include "nsCheckButton.h"
 #include "nsTextWidget.h"
+#include "nsFileWidget.h"
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
@@ -37,15 +38,18 @@ static NS_DEFINE_IID(kCHorzScrollbarCID, NS_HORZSCROLLBAR_CID);
 static NS_DEFINE_IID(kCVertScrollbarCID, NS_VERTSCROLLBAR_CID);
 static NS_DEFINE_IID(kCCheckButtonCID, NS_CHECKBUTTON_CID);
 static NS_DEFINE_IID(kCTextWidgetCID, NS_TEXTFIELD_CID);
+static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 
 
 static NS_DEFINE_IID(kIWidget,        NS_IWIDGET_IID);
+static NS_DEFINE_IID(kIAppShellIID,   NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kIButton,        NS_IBUTTON_IID);
 static NS_DEFINE_IID(kICheckButton,   NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kIScrollbar,     NS_ISCROLLBAR_IID);
+static NS_DEFINE_IID(kIFileWidget,    NS_IFILEWIDGET_IID);
+
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
-static NS_DEFINE_IID(kIAppShellIID,   NS_IAPPSHELL_IID);
 
 
 class nsWidgetFactory : public nsIFactory
@@ -140,11 +144,14 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         inst = (nsIWidget*)nsnull;
         fprintf(stderr, "------ NOT CreatingkIScrollbar Scrollbar\n");
     }
-    else if (aIID.Equals(kIWidget)) {
-        inst = (nsIWidget*)new nsWindow(aOuter);
-    }
     else if (mClassID.Equals(kCTextWidgetCID)) {
         inst = (nsIWidget*)new nsTextWidget(aOuter);
+    }
+    else if (aIID.Equals(kIFileWidget)) {
+        inst = (nsIWidget*)new nsFileWidget(aOuter);
+    }
+    else if (aIID.Equals(kIWidget)) {
+        inst = (nsIWidget*)new nsWindow(aOuter);
     }
     else if (mClassID.Equals(kCChild)) {
         inst = (nsIWidget*)new ChildWindow(aOuter);
