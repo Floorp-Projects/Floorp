@@ -108,6 +108,8 @@ public:
 
   // there is no set row index because row index depends on the cell's parent row only
 
+  /*---------------- nsITableCellLayout methods ------------------------*/
+
   /**
    * return the cell's starting row index (starting at 0 for the first row).
    * for continued cell frames the row index is that of the cell's first-in-flow
