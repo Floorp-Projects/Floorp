@@ -598,7 +598,7 @@ ExternalDTDStreamReaderFunc(nsIUnicharInputStream* aIn,
 {
   // Pass the buffer to expat for parsing. XML_Parse returns 0 for
   // fatal errors.
-  if (XML_Parse((XML_Parser)aClosure, (char *)aFromSegment,
+  if (XML_Parse((XML_Parser)aClosure, (const char *)aFromSegment,
                 aCount * sizeof(PRUnichar), 0)) {
     *aWriteCount = aCount;
 
