@@ -461,7 +461,6 @@ PR_IMPLEMENT(void) PR_Abort(void)
     abort();
 }
 
-#ifdef DEBUG
 #if defined(XP_OS2)
 /*
  * Added definitions for DebugBreak() for 2 different OS/2 compilers.
@@ -479,11 +478,9 @@ static void DebugBreak(void) { int *pTrap=NULL; *pTrap = 1; }
 static void DebugBreak(void) { }
 #endif
 #endif /* XP_OS2 */
-#endif /* DEBUG */
 
 PR_IMPLEMENT(void) PR_Assert(const char *s, const char *file, PRIntn ln)
 {
-#ifdef DEBUG
     PR_LogPrint("Assertion failure: %s, at %s:%d\n", s, file, ln);
 #if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
     fprintf(stderr, "Assertion failure: %s, at %s:%d\n", s, file, ln);
@@ -497,7 +494,6 @@ PR_IMPLEMENT(void) PR_Assert(const char *s, const char *file, PRIntn ln)
 #ifndef XP_MAC
     abort();
 #endif
-#endif /* DEBUG */
 }
 
 #ifdef XP_MAC
