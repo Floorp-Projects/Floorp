@@ -42,11 +42,9 @@ OS_CFLAGS	= $(DSO_CFLAGS) -DBSDI -DHAVE_STRERROR -DNEED_BSDREGEX
 
 ifeq (86,$(findstring 86,$(OS_TEST)))
 CPU_ARCH	= x86
-OS_CFLAGS	+= -D__386BSD__ -Di386
 endif
 ifeq (sparc,$(findstring sparc,$(OS_TEST)))
 CPU_ARCH	= sparc
-OS_CFLAGS	+= -D__sparc__ -Dsparc
 endif
 
 ifeq ($(OS_RELEASE),2.1)
