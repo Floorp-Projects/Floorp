@@ -30,6 +30,7 @@
 #include "nsIMailboxService.h"
 #include "nsParseMailbox.h"
 #include "nsIFolderListener.h"
+#include "nsIMsgMailSession.h"
 #include "nsCOMPtr.h"
 #include "nsIRDFService.h"
 #include "nsIRDFDataSource.h"
@@ -40,15 +41,11 @@
 #include "nsMsgUtils.h"
 #include "nsLocalUtils.h"
 
-
-
-// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
-// that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
+static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -130,6 +127,34 @@ nsShouldIgnoreFile(nsString& name)
   return PR_FALSE;
 }
 
+NS_IMETHODIMP
+nsMsgLocalMailFolder::Init(const char* aURI)
+{
+  nsresult rv;
+  rv = nsRDFResource::Init(aURI);
+  if (NS_FAILED(rv)) return rv;
+
+#ifdef DEBUG_alecf
+  fprintf(stderr, "nsMsgLocalMailFolder::Init(%s)\n", aURI);
+#endif
+
+#if 0
+  // find the server from the account manager
+  NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIMsgAccountManager> accountManager;
+  rv = session->GetAccountManager(getter_AddRefs(accountManager));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsISupportsArray> matchingServers;
+  accountManager->FindServersByHostname();
+#endif
+
+  return rv;
+
+}
+  
 nsresult
 nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 {
@@ -137,6 +162,9 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 	nsAutoString currentFolderNameStr;
 	nsIMsgFolder *child;
 	char *folderName;
+#ifdef DEBUG_alecf
+      printf("CreateSubFolders(%s)\n", (const char*)path);
+#endif
 	for (nsDirectoryIterator dir(path); dir.Exists(); dir++) {
 		nsFileSpec currentFolderPath = (nsFileSpec&)dir;
 
@@ -161,13 +189,9 @@ nsresult nsMsgLocalMailFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **ch
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult rv = NS_OK;
-	nsIRDFService* rdf;
-	rv = nsServiceManager::GetService(kRDFServiceCID,
-                                    nsIRDFService::GetIID(),
-                                    (nsISupports**)&rdf);
-
-	if(NS_FAILED(rv))
-		return rv;
+  NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+  
+	if(NS_FAILED(rv)) return rv;
 
 	nsAutoString uri;
 	uri.Append(mURI);
@@ -198,7 +222,6 @@ nsresult nsMsgLocalMailFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **ch
 	mSubFolders->AppendElement(folder);
 	*child = folder;
 	NS_ADDREF(*child);
-    (void)nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
 
 	return rv;
 }
@@ -209,16 +232,16 @@ nsresult nsMsgLocalMailFolder::ParseFolder(nsFileSpec& path)
 {
 	nsresult rv = NS_OK;
 
-	nsIMailboxService *mailboxService;
-	rv = nsServiceManager::GetService(kMailboxServiceCID, nsIMailboxService::GetIID(),
-																	(nsISupports**)&mailboxService);
+  NS_WITH_SERVICE(nsIMailboxService, mailboxService,
+                  kMailboxServiceCID, &rv);
+  
 	if (NS_FAILED(rv)) return rv; 
 	nsMsgMailboxParser *parser = new nsMsgMailboxParser;
 	if(!parser)
 		return NS_ERROR_OUT_OF_MEMORY;
+  
 	rv = mailboxService->ParseMailbox(path, parser, nsnull, nsnull);
 
-	nsServiceManager::ReleaseService(kMailboxServiceCID, mailboxService);
 	return rv;
 }
 
@@ -241,8 +264,10 @@ nsMsgLocalMailFolder::Enumerate(nsIEnumerator* *result)
 nsresult
 nsMsgLocalMailFolder::AddDirectorySeparator(nsFileSpec &path)
 {
-	nsresult rv = NS_OK;
-	if (nsCRT::strcmp(mURI, kMailboxRootURI) == 0) {
+	nsresult rv;
+  nsFileSpec rootPath;
+  rv = GetPath(rootPath);
+	if (NS_SUCCEEDED(rv) && rootPath == path) {
     // don't concat the full separator with .sbd
   }
   else {
@@ -265,6 +290,7 @@ nsMsgLocalMailFolder::AddDirectorySeparator(nsFileSpec &path)
 NS_IMETHODIMP
 nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
 {
+  printf("nsMsgLocalMailFolder::GetSubFolders..\n");
   if (!mInitialized) {
     nsFileSpec path;
     nsresult rv = GetPath(path);
@@ -275,7 +301,6 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
 
     // we have to treat the root folder specially, because it's name
     // doesn't end with .sbd
-
     PRInt32 newFlags = MSG_FOLDER_FLAG_MAIL;
     if (path.IsDirectory()) {
       newFlags |= (MSG_FOLDER_FLAG_DIRECTORY | MSG_FOLDER_FLAG_ELIDED);
@@ -433,15 +458,10 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BuildFolderURL(char **url)
   nsFileSpec path;
   nsresult rv = GetPath(path);
   if (NS_FAILED(rv)) return rv;
-#if defined(XP_MAC)
-  nsAutoString tmpPath((nsFilePath)path);	//ducarroz: please don't cast a nsFilePath to char* on Mac
+  nsAutoString tmpPath((nsFilePath)path);
   const char *pathName = tmpPath.ToNewCString();
   *url = PR_smprintf("%s%s", urlScheme, pathName);
   delete [] pathName;
-#else
-  const char *pathName = path;
-  *url = PR_smprintf("%s%s", urlScheme, pathName);
-#endif
   return NS_OK;
 
 }
@@ -1063,6 +1083,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetPath(nsFileSpec& aPathName)
   nsFileSpec nopath("");
   if (mPath == nopath) {
     nsresult rv = nsLocalURI2Path(kMailboxRootURI, mURI, mPath);
+    printf("Path of %s is %s (%s)\n", mURI, (const char*)mPath,
+           NS_SUCCEEDED(rv) ? "succeeded" : "failed");
     if (NS_FAILED(rv)) return rv;
   }
   aPathName = mPath;
@@ -1088,7 +1110,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteMessage(nsIMessage *message)
 	return rv;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message)
+NS_IMETHODIMP
+nsMsgLocalMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr,
+                                                nsIMessage **message)
 {
 	
     nsresult rv; 
@@ -1096,17 +1120,17 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDB
     if (NS_FAILED(rv)) return rv;
 
 	char* msgURI = nsnull;
-	nsFileSpec path;
 	nsMsgKey key;
     nsCOMPtr<nsIRDFResource> resource;
 
 	rv = msgDBHdr->GetMessageKey(&key);
-
+  
 	if(NS_SUCCEEDED(rv))
-		rv = GetPath(path);
-
-	if(NS_SUCCEEDED(rv))
-		rv = nsBuildLocalMessageURI(path, key, &msgURI);
+		rv = nsBuildLocalMessageURI(mURI, key, &msgURI);
+  
+#ifdef DEBUG_alecf
+  fprintf(stderr, "nsBuildLocalMessageURI(%s, %d -> %s) in nsMsgLocalMailFolder::CreateMessageFromMsgDBHdr\n", mURI, key, msgURI);
+#endif
 
 	if(NS_SUCCEEDED(rv))
 	{

@@ -37,8 +37,10 @@ typedef struct {
 	nsMsgKey dstKey;
 } nsLocalMailCopyState;
 
-class nsMsgLocalMailFolder : public nsMsgFolder, public nsIMsgLocalMailFolder,
-							public nsIDBChangeListener, public nsICopyMessageListener
+class nsMsgLocalMailFolder : public nsMsgFolder,
+                             public nsIMsgLocalMailFolder,
+                             public nsIDBChangeListener,
+                             public nsICopyMessageListener
 {
 public:
 	nsMsgLocalMailFolder(void);
@@ -48,6 +50,9 @@ public:
 #if 0
   static nsresult GetRoot(nsIMsgFolder* *result);
 #endif
+  // nsIRDFResource methods:
+  NS_IMETHOD Init(const char *aURI);
+  
   // nsICollection methods:
   NS_IMETHOD Enumerate(nsIEnumerator* *result);
 
