@@ -95,10 +95,15 @@
 
     <!-- Cookies -->
     <expander id="cookies" label="&cookies.label;" clearlabel="&clearCookies.label;" persist="open">
-      <hbox flex="1">
-        <vbox flex="1">
+      <vbox flex="1">
+        <hbox flex="1">
           <label value="&cookieExplanation.label;"/>
-          <separator class="thin"/>
+          <spacer flex="1"/>
+          <button label="&exceptions.label;" oncommand="cookieExceptions();"/>
+          <button label="&viewCookies.label;" oncommand="viewCookies();"/>
+       </hbox>
+       <separator class="thin"/>
+       <vbox flex="1">
           <checkbox id="enableCookies"
                     oncommand="updateBroadcaster(!this.checked);"
                     label="&enableCookies.label;" accesskey="&enableCookies.accesskey;"
@@ -116,11 +121,7 @@
                     prefstring="network.cookie.warnAboutCookies"
                     style="margin-left: 23px;"/>
         </vbox>
-        <hbox align="start" pack="end">
-          <button label="&exceptions.label;" oncommand="cookieExceptions();"/>
-          <button label="&viewCookies.label;" oncommand="viewCookies();"/>
-        </hbox>
-      </hbox>
+      </vbox>
     </expander>    
     
     <!-- Cache -->
