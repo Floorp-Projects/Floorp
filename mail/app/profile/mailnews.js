@@ -353,6 +353,7 @@ pref("mail.server.default.fetch_by_chunks", true);
 pref("mail.server.default.mime_parts_on_demand", true);
 
 pref("mail.server.default.always_authenticate",false);
+pref("mail.server.default.singleSignon", true);
 pref("mail.server.default.max_articles", 500);
 pref("mail.server.default.notify.on", true);
 pref("mail.server.default.mark_old_read", false);
