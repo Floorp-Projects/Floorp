@@ -239,6 +239,9 @@ else
 DYNAMIC_SYMBOLS_F	= # nothing for gcc
 endif
 endif
+ifeq ($(OS_ARCH),OSF1)
+DYNAMIC_SYMBOLS_F	=
+endif
 
 ifeq ($(OS_ARCH),AIX)
 NSPR_LIB	= 
@@ -411,9 +414,6 @@ ifndef NO_LAYERS
 BASIC_LIBS	+= $(DIST)/lib/liblayer.a
 endif
 
-BASIC_LIBS += $(DIST)/lib/libxpcom.a \
-              $(DIST)/lib/libcaps.a
-
 ########################################################################
 # Java
 #
@@ -436,8 +436,6 @@ endif
 BASIC_LIBS	+= \
 		  $(DIST)/lib/libnsn.a \
 		  $(DIST)/lib/libnsc.a \
-		  $(DIST)/lib/libcaps.a \
-		  $(DIST)/lib/libxpcom.a \
 		  $(DIST)/lib/libjpw.a \
 		  $(DIST)/lib/libzpw.a \
 		  $(DIST)/lib/libiawt.a \
@@ -634,16 +632,16 @@ EXPORT_LDFLAGS				=\
 							$(EXPORT_LIB) \
 							$(BASIC_LIBS_2) \
 							$(BASIC_DSOS) \
-							$(OTHER_LIBS) \
-							$(NSPR_LIB)
+							$(NSPR_LIB) \
+							$(OTHER_LIBS)
 
 EXPORT_DYN_MOTIF_LDFLAGS 	=\
 							$(BASIC_LIBS) \
 							$(EXPORT_LIB) \
 							$(BASIC_LIBS_2) \
 							$(BASIC_DSOS) \
-							$(OTHER_DYN_MOTIF_LIBS) \
-							$(NSPR_LIB)
+							$(NSPR_LIB) \
+							$(OTHER_DYN_MOTIF_LIBS)
 
 EXPORT_DEPLIBS				=\
 							$(BASIC_LIBS) \
@@ -720,10 +718,6 @@ HPUX_RESOURCE_HACK	= -Wp,-H16384
 
 OTHER_LIBS	= $(HPUX_XLIBS) -lXm -L$(DIST)/lib -lXmu -lXt -lX11 -lXext $(OS_LIBS)
 
-ifdef NS_USE_GCC
-EXPORT_LDFLAGS        = $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB) $(OTHER_LIBS)
-endif
-
 ifndef NO_EDITOR
 
 ifdef NS_USE_GCC
@@ -789,6 +783,13 @@ endif
 # Linux
 ifeq ($(OS_ARCH),Linux)
 
+# Override the definition of OS_LIBS in config/Linux.mk.
+ifeq ($(USE_PTHREADS),1)
+OS_LIBS			= -lpthread -lm -ldl -lc
+else
+OS_LIBS			= -lm -ldl
+endif
+
 XFE_MOTIF_LDFLAGS	=\
 					$(MOZILLA_XFE_GLIBC_BROKEN_LOCALE_FLAGS) \
 					$(MOZILLA_XFE_MOTIF_STATIC_FLAGS) \
@@ -806,8 +807,7 @@ XFE_X11_LDFLAGS		=\
 OTHER_LIBS			=\
 					$(XFE_MOTIF_LDFLAGS) \
 					$(XFE_X11_LDFLAGS) \
-					-lm \
-					-ldl
+					$(OS_LIBS)
 
 # Dynamic motif binary
 ifdef MOZILLA_XFE_MOTIF_HAVE_DYNAMIC_LIB
@@ -827,8 +827,7 @@ PLUGIN_DSO	+= $(DIST)/bin/libnullplugin-dynMotif.so
 OTHER_DYN_MOTIF_LIBS =\
 					$(XFE_DYN_MOTIF_LDFLAGS) \
 					$(XFE_X11_LDFLAGS) \
-					-lm \
-					-ldl
+					$(OS_LIBS)
 
 endif
 
@@ -869,8 +868,6 @@ ifeq ($(OS_ARCH),OSF1)
 # the process.
 # 
 OTHER_LIBS	= -lXm -lXmu -lXt -lX11 -lXext -ldnet_stub -lm -lots $(OS_LIBS)
-
-EXPORT_LDFLAGS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB) $(OTHER_LIBS)
 
 endif
 
@@ -959,7 +956,7 @@ endif
 
 EXPORT_LDFLAGS	= -z defs -L$(MOTIF)/lib -L$(USRLIBDIR) -R$(MOTIF)/lib \
 		  -R$(USRLIBDIR) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) \
-		  $(BASIC_DSOS) $(OTHER_LIBS) $(NSPR_LIB)
+		  $(BASIC_DSOS) $(NSPR_LIB) $(OTHER_LIBS)
 
 endif
 endif
