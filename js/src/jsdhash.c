@@ -17,6 +17,9 @@
  * Copyright (C) 1999,2000 Netscape Communications Corporation.
  * All Rights Reserved.
  *
+ * Original Contributor: 
+ *   Brendan Eich <brendan@mozilla.org>
+ *
  * Contributor(s): 
  *
  * Alternatively, the contents of this file may be used under the
@@ -34,6 +37,7 @@
 /*
  * Double hashing implementation.
  */
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "jsbit.h"
@@ -61,22 +65,12 @@ JS_DHashFreeTable(JSDHashTable *table, void *ptr)
 JS_PUBLIC_API(JSDHashNumber)
 JS_DHashStringKey(JSDHashTable *table, const void *key)
 {
-    const char *s;
-    size_t n, m;
     JSDHashNumber h;
+    const unsigned char *s;
 
-    s = key;
-    n = strlen(s);
     h = 0;
-    if (n < 16) {
-	/* Hash every char in a short string. */
-	for (; n; s++, n--)
-	    h = (h >> 28) ^ (h << 4) ^ *s;
-    } else {
-	/* Sample a la java.lang.String.hash(). */
-	for (m = n / 8; n >= m; s += m, n -= m)
-	    h = (h >> 28) ^ (h << 4) ^ *s;
-    }
+    for (s = key; *s != '\0'; s++)
+        h = (h >> (JS_DHASH_BITS - 4)) ^ (h << 4) ^ *s;
     return h;
 }
 
@@ -170,6 +164,17 @@ JS_DHashTableInit(JSDHashTable *table, JSDHashTableOps *ops, void *data,
     int log2;
     uint32 nbytes;
 
+#ifdef DEBUG
+    if (entrySize > 6 * sizeof(void *)) {
+        fprintf(stderr,
+                "jsdhash: for the table at address 0x%p, the given entrySize"
+                " of %lu %s favors chaining over double hashing.\n",
+                table,
+                (unsigned long) entrySize,
+                (entrySize > 16 * sizeof(void*)) ? "definitely" : "probably");
+    }
+#endif
+
     table->ops = ops;
     table->data = data;
     if (capacity < JS_DHASH_MIN_SIZE)
@@ -178,10 +183,11 @@ JS_DHashTableInit(JSDHashTable *table, JSDHashTableOps *ops, void *data,
     capacity = JS_BIT(log2);
     table->hashShift = JS_DHASH_BITS - log2;
     table->sizeLog2 = log2;
-    table->sizeMask = JS_BITMASK(table->sizeLog2);
+    table->sizeMask = JS_BITMASK(log2);
     table->entrySize = entrySize;
     table->entryCount = table->removedCount = 0;
     nbytes = capacity * entrySize;
+
     table->entryStore = ops->allocTable(table, nbytes);
     if (!table->entryStore)
         return JS_FALSE;
@@ -259,21 +265,75 @@ SearchTable(JSDHashTable *table, const void *key, JSDHashNumber keyHash)
     return entry;
 }
 
-JS_PUBLIC_API(JSDHashEntryHdr *)
-JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
+static JSBool
+ChangeTable(JSDHashTable *table, int deltaLog2, JSDHashEntryHdr *skipEntry)
 {
-    int change;
-    JSDHashNumber keyHash;
-    uint32 i, size, capacity, nbytes, entrySize;
-    JSDHashEntryHdr *entry, *oldEntry, *newEntry;
-    char *entryStore, *newEntryStore, *entryAddr;
+    int oldLog2, newLog2;
+    uint32 oldCapacity, newCapacity;
+    char *newEntryStore, *oldEntryStore, *oldEntryAddr;
+    uint32 entrySize, i, nbytes;
+    JSDHashEntryHdr *oldEntry, *newEntry;
     JSDHashGetKey getKey;
     JSDHashMoveEntry moveEntry;
 
-    /* Usually we don't grow or shrink the table. */
-    change = 0;
+    /* Look, but don't touch, until we succeed in getting new entry store. */
+    oldLog2 = table->sizeLog2;
+    newLog2 = oldLog2 + deltaLog2;
+    oldCapacity = JS_BIT(oldLog2);
+    newCapacity = JS_BIT(newLog2);
+    entrySize = table->entrySize;
+    nbytes = newCapacity * entrySize;
 
-    /* Avoid 0 and 1 hash codes, they indicate free and deleted entries. */
+    newEntryStore = table->ops->allocTable(table, nbytes);
+    if (!newEntryStore)
+        return JS_FALSE;
+
+    table->hashShift = JS_DHASH_BITS - newLog2;
+    table->sizeLog2 = newLog2;
+    table->sizeMask = JS_BITMASK(newLog2);
+    table->removedCount = 0;
+
+    memset(newEntryStore, 0, nbytes);
+    oldEntryAddr = oldEntryStore = table->entryStore;
+    table->entryStore = newEntryStore;
+    getKey = table->ops->getKey;
+    moveEntry = table->ops->moveEntry;
+
+    /* Copy only live entries, leaving removed ones (and skipEntry) behind. */
+    for (i = 0; i < oldCapacity; i++) {
+        oldEntry = (JSDHashEntryHdr *)oldEntryAddr;
+        if (oldEntry != skipEntry && ENTRY_IS_LIVE(oldEntry)) {
+            newEntry = SearchTable(table, getKey(table, oldEntry),
+                                   oldEntry->keyHash);
+            JS_ASSERT(JS_DHASH_ENTRY_IS_FREE(newEntry));
+            moveEntry(table, oldEntry, newEntry);
+            newEntry->keyHash = oldEntry->keyHash;
+        }
+        oldEntryAddr += entrySize;
+    }
+
+    table->ops->freeTable(table, oldEntryStore);
+    return JS_TRUE;
+}
+
+JS_PUBLIC_API(JSDHashEntryHdr *)
+JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
+{
+    int biasedDeltaLog2;
+    JSDHashNumber keyHash;
+    JSDHashEntryHdr *entry;
+    uint32 size;
+
+/*
+ * Usually we don't grow or shrink the table, so optimize for test-not-zero
+ * by biasing the deltaLog2 of -1 (shrink), 0 (compress), or 1 (grow) so that
+ * the biased no-change value is 0.
+ */
+#define DELTA_LOG2_BIAS 2
+
+    biasedDeltaLog2 = 0;
+
+    /* Avoid 0 and 1 hash codes, they indicate free and removed entries. */
     keyHash = table->ops->hashKey(table, key);
     ENSURE_LIVE_KEYHASH(keyHash);
     keyHash *= JS_DHASH_GOLDEN_RATIO;
@@ -291,12 +351,16 @@ JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
             entry->keyHash = keyHash;
             table->entryCount++;
 
-            /* If alpha is >= .75, set change to trigger table growth below. */
+            /* If alpha is >= .75, set biasedDeltaLog2 to trigger growth. */
             size = JS_BIT(table->sizeLog2);
             if (table->entryCount + table->removedCount >= size - (size >> 2)) {
-                METER(table->stats.grows++);
-                change = 1;
-                capacity = size << 1;
+                if (table->removedCount >= size >> 2) {
+                    METER(table->stats.compresses++);
+                    biasedDeltaLog2 = 0 + DELTA_LOG2_BIAS;
+                } else {
+                    METER(table->stats.grows++);
+                    biasedDeltaLog2 = 1 + DELTA_LOG2_BIAS;
+                }
             }
         }
         METER(else table->stats.addHits++);
@@ -312,8 +376,7 @@ JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
             size = JS_BIT(table->sizeLog2);
             if (size > JS_DHASH_MIN_SIZE && table->entryCount <= size >> 2) {
                 METER(table->stats.shrinks++);
-                change = -1;
-                capacity = size >> 1;
+                biasedDeltaLog2 = -1 + DELTA_LOG2_BIAS;
             }
         }
         METER(else table->stats.removeMisses++);
@@ -324,11 +387,8 @@ JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
         JS_ASSERT(0);
     }
 
-    if (change) {
-        entrySize = table->entrySize;
-        nbytes = capacity * entrySize;
-        newEntryStore = table->ops->allocTable(table, nbytes);
-        if (!newEntryStore) {
+    if (biasedDeltaLog2) {
+        if (!ChangeTable(table, biasedDeltaLog2 - DELTA_LOG2_BIAS, entry)) {
             /* If we just grabbed the last free entry, undo and fail hard. */
             if (op == JS_DHASH_ADD &&
                 table->entryCount + table->removedCount == size) {
@@ -338,38 +398,16 @@ JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
                 entry = NULL;
             }
         } else {
-            memset(newEntryStore, 0, nbytes);
-            entryStore = table->entryStore;
-            table->entryStore = newEntryStore;
-
-            table->sizeLog2 += change;
-            table->sizeMask = JS_BITMASK(table->sizeLog2);
-            table->hashShift = JS_DHASH_BITS - table->sizeLog2;
-            table->removedCount = 0;
-
-            getKey = table->ops->getKey;
-            moveEntry = table->ops->moveEntry;
-            entryAddr = entryStore;
-            for (i = 0; i < size; i++) {
-                oldEntry = (JSDHashEntryHdr *)entryAddr;
-                if (oldEntry != entry && ENTRY_IS_LIVE(oldEntry)) {
-                    newEntry = SearchTable(table, getKey(table,oldEntry),
-                                           oldEntry->keyHash);
-                    JS_ASSERT(JS_DHASH_ENTRY_IS_FREE(newEntry));
-                    moveEntry(table, oldEntry, newEntry);
-                    newEntry->keyHash = oldEntry->keyHash;
-                }
-                entryAddr += entrySize;
-            }
-            table->ops->freeTable(table, entryStore);
-
             if (op == JS_DHASH_ADD) {
+                /* If the table grew, add the new (skipped) entry. */ 
                 entry = SearchTable(table, key, keyHash);
                 JS_ASSERT(JS_DHASH_ENTRY_IS_FREE(entry));
                 entry->keyHash = keyHash;
             }
         }
     }
+
+#undef DELTA_LOG2_BIAS
 
     return entry;
 }
@@ -387,14 +425,14 @@ JS_PUBLIC_API(uint32)
 JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
 {
     char *entryAddr;
-    uint32 i, j, n, entrySize;
+    uint32 i, j, capacity, entrySize;
     JSDHashEntryHdr *entry;
     JSDHashOperator op;
 
     entryAddr = table->entryStore;
     entrySize = table->entrySize;
-    n = JS_BIT(table->sizeLog2);
-    for (i = j = 0; i < n; i++) {
+    capacity = JS_BIT(table->sizeLog2);
+    for (i = j = 0; i < capacity; i++) {
         entry = (JSDHashEntryHdr *)entryAddr;
         if (ENTRY_IS_LIVE(entry)) {
             op = etor(table, entry, j++, arg);
@@ -407,12 +445,23 @@ JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
         }
         entryAddr += entrySize;
     }
+
+    /* Shrink or compress if enough entries were removed that alpha < .5. */
+    if (table->removedCount >= capacity >> 2) {
+        METER(table->stats.enumShrinks++);
+        capacity = table->entryCount;
+        capacity += capacity >> 1;
+        if (capacity < JS_DHASH_MIN_SIZE)
+            capacity = JS_DHASH_MIN_SIZE;
+        (void) ChangeTable(table,
+                           JS_CeilingLog2(capacity) - table->sizeLog2,
+                           NULL);
+    }
     return j;
 }
 
 #ifdef JS_DHASHMETER
 #include <math.h>
-#include <stdio.h>
 
 JS_PUBLIC_API(void)
 JS_DHashTableDumpMeter(JSDHashTable *table, JSDHashEnumerator dump, FILE *fp)
@@ -489,6 +538,8 @@ JS_DHashTableDumpMeter(JSDHashTable *table, JSDHashEnumerator dump, FILE *fp)
     fprintf(fp, "  removes while enumerating: %u\n", table->stats.removeEnums);
     fprintf(fp, "            number of grows: %u\n", table->stats.grows);
     fprintf(fp, "          number of shrinks: %u\n", table->stats.shrinks);
+    fprintf(fp, "       number of compresses: %u\n", table->stats.compresses);
+    fprintf(fp, "number of enumerate shrinks: %u\n", table->stats.enumShrinks);
 
     if (maxChainLen && hash2) {
         fputs("Maximum hash chain:\n", fp);

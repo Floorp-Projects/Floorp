@@ -6,10 +6,12 @@ s/jsdhash_h___/pldhash_h___/
 s/jstypes\.h/prtypes.h/
 s/jsbit\.h/prbit.h/
 s/jsdhash\.h/pldhash.h/
+s/jsdhash:/pldhash:/
 s/jsutil\.h/prlog.h/
 s/JS_DHASH/PL_DHASH/g
 s/JS_DHash/PL_DHash/g
 s/JSDHash/PLDHash/g
+s/JSHash/PLHash/g
 s/uint32  /PRUint32/g
 s/\([^U]\)int32  /\1PRInt32/g
 s/uint16  /PRUint16/g
