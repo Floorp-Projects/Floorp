@@ -90,6 +90,7 @@ public:
     static HINSTANCE mDllInstance;
     // OS flag
     static PRBool    mUseImeApiW;
+    static PRBool    mW2KXP_CP936;
 
     static void Startup(HINSTANCE hModule);
     static void Shutdown();

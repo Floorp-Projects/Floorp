@@ -350,6 +350,16 @@ static PRBool is_vk_down(int vk)
     } \
   } 
 
+#define NS_IMM_GETPROPERTY(hKL, dwIndex, dwProp) \
+  { \
+    if (nsToolkit::gAIMMApp) \
+      nsToolkit::gAIMMApp->GetProperty(hKL, dwIndex, &(dwProp)); \
+    else { \
+      nsIMM& theIMM = nsIMM::LoadModule(); \
+      dwProp = (DWORD)theIMM.GetProperty(hKL, dwIndex);  \
+    } \
+  }
+
 #else /* !MOZ_AIMM */
 
 #define NS_IMM_GETCOMPOSITIONSTRING(hIMC, dwIndex, pBuf, dwBufLen, compStrLen) \
@@ -398,6 +408,12 @@ static PRBool is_vk_down(int vk)
   { \
     nsIMM &theIMM = nsIMM::LoadModule(); \
     theIMM.SetConversionStatus(hIMC, (lpfdwConversion), (lpfdwSentence)); \
+  }
+
+#define NS_IMM_GETPROPERTY(hKL, dwIndex, dwProp) \
+  { \
+    nsIMM& theIMM = nsIMM::LoadModule(); \
+    dwProp = (DWORD)theIMM.GetProperty(hKL, dwIndex);  \
   }
 
 #endif /* MOZ_AIMM */
@@ -630,6 +646,12 @@ nsWindow::nsWindow() : nsBaseWidget()
     gbInitGlobalValue = TRUE;
     gKeyboardLayout = GetKeyboardLayout(0);
     LangIDToCP((WORD)(0x0FFFFL & (DWORD)gKeyboardLayout), gCurrentKeyboardCP);
+    
+    if (nsToolkit::mW2KXP_CP936)    {
+        DWORD imeProp = 0;
+        NS_IMM_GETPROPERTY(gKeyboardLayout, IGP_PROPERTY, imeProp);
+        nsToolkit::mUseImeApiW = (imeProp & IME_PROP_UNICODE) ? PR_TRUE : PR_FALSE;
+    }
 
     //
     // Reconvert message for Windows 95 / NT 4.0
@@ -5427,6 +5449,11 @@ BOOL nsWindow::OnInputLangChange(HKL aHKL, LRESULT *oRetValue)
     gKeyboardLayout = aHKL;
     *oRetValue = LangIDToCP((WORD)((DWORD)gKeyboardLayout & 0x0FFFF),
                     gCurrentKeyboardCP);
+    if (nsToolkit::mW2KXP_CP936)    {
+        DWORD imeProp = 0;
+        NS_IMM_GETPROPERTY(gKeyboardLayout, IGP_PROPERTY, imeProp);
+        nsToolkit::mUseImeApiW = (imeProp & IME_PROP_UNICODE) ? PR_TRUE : PR_FALSE;
+    }
   }
 
   ResetInputState();
