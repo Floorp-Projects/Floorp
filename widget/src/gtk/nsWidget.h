@@ -35,6 +35,10 @@
 class nsILookAndFeel;
 class nsIAppShell;
 class nsIToolkit;
+#ifdef USE_XIM
+class nsIMEGtkIC;
+class nsIMEPreedit;
+#endif // USE_XIM 
 
 #include <gtk/gtk.h>
 
@@ -322,13 +326,56 @@ protected:
 
   static void  SuppressModality(PRBool aSuppress);
 
-
-public:
+#ifdef USE_XIM
+protected:
   PRBool            mIMEEnable;
-  PRUnichar*        mIMECompositionUniString;
-  PRInt32           mIMECompositionUniStringSize;
+  PRBool            mIMEIsDeactivating;
+  void		    GetXIC();
+  static GdkFont    *gPreeditFontset;
+  static GdkFont    *gStatusFontset;
+  static GdkIMStyle gInputStyle;
+  nsIMEGtkIC        *mXIC;
+  PRBool	    mIMECallComposeStart;
+  PRBool	    mIMECallComposeEnd;
+  nsWidget*         mIMEShellWidget;
+  PRBool	    mICPerShell;
   void              SetXICSpotLocation(nsPoint aPoint);
   void              SetXICBaseFontSize(int height);
+  void		    IMECheckPreedit_PreProc();
+  void		    IMECheckPreedit_PostProc();
+
+  void              GetXYFromPosition(unsigned long *aX, unsigned long *aY);
+  nsITimer          *mICSpotTimer;
+  static void       ICSpotCallback(nsITimer* aTimer, void* aClosure);
+  nsresult          KillICSpotTimer();
+  nsresult          PrimeICSpotTimer();
+  nsresult          UpdateICSpot();
+  int               mXICFontSize;
+  nsWidget*         GetShellWidget2();
+
+public:
+  void		    ime_preedit_start();
+  void 		    ime_preedit_draw();
+  void		    ime_preedit_done();
+  void		    ime_status_draw();
+
+  void 		    IMEUnsetFocusWidget();
+  void 		    IMESetFocusWidget();
+  void 		    IMEDeactivateWidget();
+  void 		    IMEActivateWidget();
+  void 		    IMEDestroyIC();
+#endif // USE_XIM 
+protected:
+  void              IMEComposeStart(guint aTime);
+  void		    IMEComposeText(GdkEventKey*,
+                             const PRUnichar *aText,
+                             const PRInt32 aLen,
+                             const char *aFeedback);
+  void              IMEComposeEnd(guint aTime);
+  PRUnichar*        mIMECompositionUniString;
+  PRInt32           mIMECompositionUniStringSize;
+public:
+  void              IMECommitEvent(GdkEventKey *aEvent);
 
 protected:
 
@@ -446,29 +493,16 @@ protected:
   PRUint32 mPreferredWidth, mPreferredHeight;
   PRBool       mListenForResizes;
 
-  GdkICPrivate *mIC;
-  GdkICPrivate *GetXIC();
-  void SetXIC(GdkICPrivate *aIC);
-  void GetXYFromPosition(unsigned long *aX, unsigned long *aY);
-
   // this is the rollup listener variables
   static nsCOMPtr<nsIRollupListener> gRollupListener;
   static nsCOMPtr<nsIWidget>         gRollupWidget;
   static PRBool             gRollupConsumeRollupEvent;
 
-  nsITimer* mICSpotTimer;
-  static void ICSpotCallback(nsITimer* aTimer, void* aClosure);
   // this is the last time that an event happened.  we keep this
   // around so that we can synth drag events properly
   static guint32 sLastEventTime;
-public:
-  nsresult KillICSpotTimer();
-  nsresult PrimeICSpotTimer();
-  nsresult UpdateICSpot();
-
 
 private:
-  int    mXICFontSize;
   static nsILookAndFeel *sLookAndFeel;
   static PRUint32 sWidgetCount;
 

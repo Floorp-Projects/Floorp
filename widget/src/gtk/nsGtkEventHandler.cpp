@@ -594,97 +594,6 @@ void handle_scrollbar_value_changed(GtkAdjustment *adj, gpointer p)
 #endif
 }
 
-static gint composition_start(GdkEventKey *aEvent, nsWidget *aWin)
-{
-  nsCompositionEvent compEvent;
-
-  compEvent.widget = (nsWidget*)aWin;
-  compEvent.point.x = 0;
-  compEvent.point.y = 0;
-  compEvent.time = aEvent->time;
-  compEvent.message = NS_COMPOSITION_START;
-  compEvent.eventStructType = NS_COMPOSITION_START;
-  compEvent.compositionMessage = NS_COMPOSITION_START;
-  aWin->OnComposition(compEvent);
-
-  // set SpotLocation
-  nsPoint spot;
-  spot.x = compEvent.theReply.mCursorPosition.x;
-  spot.y = compEvent.theReply.mCursorPosition.y + 
-                compEvent.theReply.mCursorPosition.height;
-  return PR_TRUE;
-}
-
-static gint composition_draw(GdkEventKey *aEvent, nsWidget *aWin)
-{
-  nsresult res= NS_OK;
-  if (!aWin->mIMECompositionUniString) {
-    aWin->mIMECompositionUniStringSize = 128;
-    aWin->mIMECompositionUniString =
-      new PRUnichar[aWin->mIMECompositionUniStringSize];
-  }
-  PRUnichar *uniChar;
-  PRInt32 uniCharSize;
-  PRInt32 srcLen = aEvent->length;
-  for (;;) {
-    uniChar = aWin->mIMECompositionUniString;
-    uniCharSize = aWin->mIMECompositionUniStringSize - 1;
-    res = nsGtkIMEHelper::GetSingleton()->ConvertToUnicode(
-            (char*)aEvent->string, &srcLen, uniChar, &uniCharSize);
-    if(NS_ERROR_ABORT == res)
-      return FALSE;
-    if (srcLen == aEvent->length &&
-        uniCharSize < aWin->mIMECompositionUniStringSize - 1) {
-      break;
-    }
-    aWin->mIMECompositionUniStringSize += 32;
-    if(aWin->mIMECompositionUniString)
-	delete [] aWin->mIMECompositionUniString;
-    aWin->mIMECompositionUniString =
-      new PRUnichar[aWin->mIMECompositionUniStringSize];
-  }
-  aWin->mIMECompositionUniString[uniCharSize] = 0;
-
-  nsTextEvent textEvent;
-  textEvent.message = NS_TEXT_EVENT;
-  textEvent.widget = (nsWidget*)aWin;
-  textEvent.time = aEvent->time;
-  textEvent.point.x = 0;
-  textEvent.point.y = 0;
-  textEvent.theText = aWin->mIMECompositionUniString;
-  textEvent.rangeCount = 0;
-  textEvent.rangeArray = nsnull;
-  textEvent.isShift = (aEvent->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
-  textEvent.isControl = (aEvent->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
-  textEvent.isAlt = (aEvent->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
-  // XXX
-  textEvent.isMeta = PR_FALSE; //(aEvent->state & GDK_MOD2_MASK) ? PR_TRUE : PR_FALSE;
-  textEvent.eventStructType = NS_TEXT_EVENT;
-  aWin->OnText(textEvent);
-
-  nsPoint spot;
-  spot.x = textEvent.theReply.mCursorPosition.x;
-  spot.y = textEvent.theReply.mCursorPosition.y + 
-                textEvent.theReply.mCursorPosition.height;
-  return True;
-}
-
-static gint composition_end(GdkEventKey *aEvent, nsWidget *aWin)
-{
-  nsCompositionEvent compEvent;
-
-  compEvent.widget = (nsWidget*)aWin;
-  compEvent.point.x = 0;
-  compEvent.point.y = 0;
-  compEvent.time = aEvent->time;
-  compEvent.message = NS_COMPOSITION_END;
-  compEvent.eventStructType = NS_COMPOSITION_END;
-  compEvent.compositionMessage = NS_COMPOSITION_END;
-  aWin->OnComposition(compEvent);
-
-  return PR_TRUE;
-}
-
 // GTK's text widget already does XIM, so we don't want to do this again
 gint handle_key_press_event_for_text(GtkObject *w, GdkEventKey* event,
                                      gpointer p)
@@ -794,9 +703,7 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
   //
   if (event->length) {
     if (nsGtkIMEHelper::GetSingleton() && (!kevent.keyCode)) {
-      composition_start(event, win);
-      composition_draw(event, win);
-      composition_end(event, win);
+      win->IMECommitEvent(event);
     } else {
       InitKeyPressEvent(event, win, kevent);
       win->OnKey(kevent);
