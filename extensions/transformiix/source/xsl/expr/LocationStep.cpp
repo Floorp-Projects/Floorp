@@ -21,13 +21,13 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: LocationStep.cpp,v 1.2 1999/11/15 07:13:12 nisheeth%netscape.com Exp $
+ * $Id: LocationStep.cpp,v 1.3 2000/02/17 07:58:10 kvisco%ziplink.net Exp $
  */
 
 /**
  * LocationStep
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:13:12 $
+ * @version $Revision: 1.3 $ $Date: 2000/02/17 07:58:10 $
 **/
 
 #include "Expr.h"
@@ -226,7 +226,7 @@ double LocationStep::getDefaultPriority(Node* node, Node* context, ContextState*
     if ( !nodeExpr ) {
         return Double::NEGATIVE_INFINITY;
     }
-    if (!PredicateList::isEmpty()) {
+    if (!this->isEmpty()) {
         return 0.5;
     }
     return nodeExpr->getDefaultPriority(node, context, cs);
@@ -262,8 +262,8 @@ MBool LocationStep::matches(Node* node, Node* context, ContextState* cs) {
     NodeSet nodes;
     nodes.add(node);
     evaluatePredicates(&nodes, cs);
-    if (nodes.size() > 0) return MB_TRUE;
-    return MB_FALSE;
+
+    return (MBool)(nodes.size() > 0);
 
 } //-- matches
 
