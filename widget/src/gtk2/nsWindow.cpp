@@ -58,6 +58,15 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 
+#ifdef ACCESSIBILITY
+#include "prenv.h"
+#include "stdlib.h"
+static PRBool sAccessibilityChecked = PR_FALSE;
+static PRBool sAccessibilityEnabled = PR_FALSE;
+static const char sGconfAccKey [] = "/desktop/gnome/interface/accessibility";
+static const char sAccEnv [] = "GNOME_ACCESSIBILITY";
+#endif
+
 /* For SetIcon */
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsXPIDLString.h"
@@ -249,7 +258,7 @@ nsWindow::nsWindow()
 #endif
 
 #ifdef ACCESSIBILITY
-    mTopLevelAccessible  = nsnull;
+    mRootAccessible  = nsnull;
 #endif
 }
 
@@ -276,9 +285,6 @@ nsWindow::Create(nsIWidget        *aParent,
 {
     nsresult rv = NativeCreate(aParent, nsnull, aRect, aHandleEventFunction,
                                aContext, aAppShell, aToolkit, aInitData);
-#ifdef ACCESSIBILITY
-    CreateTopLevelAccessible();
-#endif
     return rv;
 }
 
@@ -293,9 +299,6 @@ nsWindow::Create(nsNativeWidget aParent,
 {
     nsresult rv = NativeCreate(nsnull, aParent, aRect, aHandleEventFunction,
                                aContext, aAppShell, aToolkit, aInitData);
-#ifdef ACCESSIBILITY
-    CreateTopLevelAccessible();
-#endif
     return rv;
 }
 
@@ -376,9 +379,11 @@ nsWindow::Destroy(void)
     OnDestroy();
 
 #ifdef ACCESSIBILITY
-    if (mTopLevelAccessible) {
-        nsAccessibilityInterface::RemoveTopLevel(mTopLevelAccessible);
-        mTopLevelAccessible = nsnull;
+    if (mRootAccessible) {
+        nsCOMPtr<nsIAccessNode> accNode(do_QueryInterface(mRootAccessible));
+        if (accNode)
+            accNode->Shutdown();
+        mRootAccessible = nsnull;
     }
 #endif
 
@@ -2221,6 +2226,37 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
     // resize so that everything is set to the right dimensions
     Resize(mBounds.width, mBounds.height, PR_FALSE);
 
+#ifdef ACCESSIBILITY
+    nsresult rv;
+    if (!sAccessibilityChecked) {
+        sAccessibilityChecked = PR_TRUE;
+
+        //check if accessibility enabled/disabled by environment variable
+        const char *envValue = PR_GetEnv(sAccEnv);
+        if (envValue) {
+            sAccessibilityEnabled = atoi(envValue);
+            LOG(("Accessibility Env %s=%s\n", sAccEnv, envValue));
+        }
+        //check gconf-2 setting
+        else {
+            nsCOMPtr<nsIPrefBranch> sysPrefService =
+                do_GetService(sGconfAccKey, &rv);
+            if (NS_SUCCEEDED(rv) && sysPrefService) {
+
+                // do the work to get gconf setting.
+                // will be done soon later.
+                sysPrefService->GetBoolPref("accessibility.enabled",
+                                            &sAccessibilityEnabled);
+            }
+
+        }
+    }
+    if (sAccessibilityEnabled) {
+        LOG(("nsWindow:: Create Toplevel Accessibility\n"));
+        CreateRootAccessible();
+    }
+#endif
+
     return NS_OK;
 }
 
@@ -3537,22 +3573,19 @@ key_event_to_context_menu_event(const nsKeyEvent* aKeyEvent,
 #ifdef ACCESSIBILITY
 /**
  * void
- * nsWindow::CreateTopLevelAccessible
+ * nsWindow::CreateRootAccessible
  *
  * request to create the nsIAccessible Object for the toplevel window
  **/
 void
-nsWindow::CreateTopLevelAccessible()
+nsWindow::CreateRootAccessible()
 {
-    if (mIsTopLevel && !mTopLevelAccessible &&
-        nsAccessibilityInterface::IsInitialized()) {
-
+    if (mIsTopLevel && !mRootAccessible) {
         nsCOMPtr<nsIAccessible> acc;
         DispatchAccessibleEvent(getter_AddRefs(acc));
 
         if (acc) {
-            mTopLevelAccessible = acc;
-            nsAccessibilityInterface::AddTopLevel(acc);
+            mRootAccessible = acc;
         }
     }
 }

@@ -60,14 +60,11 @@ CPPSRCS		= \
 		nsClipboard.cpp \
 		nsDragService.cpp \
 		nsSound.cpp \
-		nsGConfInterface.cpp \
 		$(NULL)
 
 # build our subdirs, too
 ifdef ACCESSIBILITY
-DIRS		 = mai
 REQUIRES	+= accessibility
-CPPSRCS		+= nsAccessibilityInterface.cpp
 endif
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a

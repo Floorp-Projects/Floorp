@@ -56,4 +56,3 @@ class nsAccessNodeWrap :  public nsAccessNode
 };
 
 #endif
-

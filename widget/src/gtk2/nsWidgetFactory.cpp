@@ -51,10 +51,6 @@
 #include "nsSound.h"
 #include "nsBidiKeyboard.h"
 
-#ifdef ACCESSIBILITY
-#include "nsAccessibilityInterface.h"
-#endif
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
@@ -123,9 +119,6 @@ static const nsModuleComponentInfo components[] =
 PR_STATIC_CALLBACK(void)
 nsWidgetGtk2ModuleDtor(nsIModule *aSelf)
 {
-#ifdef ACCESSIBILITY
-    nsAccessibilityInterface::ShutDown();
-#endif
 }
 
 NS_IMPL_NSGETMODULE_WITH_DTOR(nsWidgetGtk2Module,

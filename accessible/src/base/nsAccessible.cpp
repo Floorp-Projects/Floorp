@@ -298,6 +298,11 @@ NS_IMETHODIMP nsAccessible::GetChildAt(PRInt32 aChildNum, nsIAccessible **aChild
   PRInt32 numChildren;
   GetAccChildCount(&numChildren);
 
+  if (aChildNum >= numChildren) {
+    *aChild = nsnull;
+    return NS_ERROR_FAILURE;
+  }
+
   nsCOMPtr<nsIAccessible> current(mFirstChild), nextSibling;
   PRInt32 index = 0;
 
