@@ -227,12 +227,19 @@ function ComposeStartup()
 	    		if (args.body) //We need to set the body before setting
                                //msgCompose.editor;
                 {
-                    if (args.bodyislink == "true" && msgCompose.composeHTML)
-                    {
-                        msgCompFields.SetBody("<A HREF=\"" + args.body +
-                                                  "\">" + unescape(args.body)
-                                                  + "</A>");
-                    }
+                    if (args.bodyislink == "true")
+					{
+						if (msgCompose.composeHTML)
+						{
+							msgCompFields.SetBody("<BR><A HREF=\"" + args.body +
+													  "\">" + unescape(args.body)
+													  + "</A><BR>");
+						}
+						else
+						{
+							msgCompFields.SetBody("\n" + args.body + "\n");
+						}
+					}
                     else
                     {
                         msgCompFields.SetBody(args.body);
