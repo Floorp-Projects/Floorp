@@ -549,7 +549,7 @@ public class TokenStream {
             RESERVED,	                // public
             RESERVED,	                // short
             RESERVED,	                // static
-            PRIMARY | (NOP << 8),	// super
+            RESERVED,                   // super
             RESERVED,	                // synchronized
             THROW,	                // throw
             RESERVED,	                // throws
