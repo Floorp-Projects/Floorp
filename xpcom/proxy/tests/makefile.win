@@ -44,7 +44,7 @@ LINCS =                        \
 
 include <$(DEPTH)\config\rules.mak>
 
-export:: $(PROGRAM)
+install:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 
 clobber::
