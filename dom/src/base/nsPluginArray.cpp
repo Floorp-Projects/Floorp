@@ -113,7 +113,9 @@ PluginArrayImpl::GetScriptObject(nsIScriptContext *aContext,
 NS_IMETHODIMP
 PluginArrayImpl::GetLength(PRUint32* aLength)
 {
-  return mPluginHost->GetPluginCount(aLength);
+  if (mPluginHost && NS_SUCCEEDED(mPluginHost->GetPluginCount(aLength)))
+    return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -175,7 +177,7 @@ PluginArrayImpl::Refresh(PRBool aReloadDocuments)
 nsresult
 PluginArrayImpl::GetPlugins()
 {
-  nsresult rv = mPluginHost->GetPluginCount(&mPluginCount);
+  nsresult rv = GetLength(&mPluginCount);
   if (rv == NS_OK) {
     mPluginArray = new nsIDOMPlugin*[mPluginCount];
     if (mPluginArray != nsnull) {
