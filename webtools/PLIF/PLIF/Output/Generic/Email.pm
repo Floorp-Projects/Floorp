@@ -47,7 +47,7 @@ sub init {
     my $self = shift;
     my($app) = @_;
     $self->SUPER::init(@_);
-    require Net::SMTP; import New::SMTP; # DEPENDENCY
+    require Net::SMTP; import Net::SMTP; # DEPENDENCY
     eval {
         $app->getService('dataSource.configuration')->getSettings($app, $self, 'protocol.email');
     };
