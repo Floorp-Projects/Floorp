@@ -108,7 +108,7 @@ sub execute_js_tests {
         $js_test_bugnumber = 0;
         $runtime_error = "";
 
-        local $passed = 1;
+        local $passed = -1;
 
         # create the test command
         $test_command =
@@ -124,11 +124,16 @@ sub execute_js_tests {
 
         $test_path = $test_dir ."/" . $suite ."/". $test_subdir ."/". $js_test;
 
+
         if ( !-e $test_path ) {
             &js_print( " FAILED! file not found\n",
                 "<font color=#990000>", "</font><br>\n");
         } else {
             open( RUNNING_TEST,  "$test_command" . ' 2>&1 |');
+
+
+			# this is where we want the tests to provide a lot more information
+			# that this script must parse so that we can  
 
         	while( <RUNNING_TEST> ){
     	        if ( $js_verbose && !$js_quiet ) {
@@ -137,6 +142,9 @@ sub execute_js_tests {
                 if ( $_ =~ /BUGNUMBER/ ) {
                     $js_test_bugnumber = $_;
                 }
+				if ( $_ =~ /PASSED/ && $passed == -1 ) {
+					$passed = 1;
+				}
                 if ( $_ =~ /FAILED/ && $_ =~ /expected/) {
                     &js_print_suitename;
                     &js_print_filename;
@@ -179,10 +187,21 @@ sub execute_js_tests {
                         "","<br>" );
                 }
             } else {
-                if ( $passed && !$js_quiet) {
+                if ( $passed == 1 && !$js_quiet) {
                     &js_print( " PASSED!\n " , "&nbsp;&nbsp;<font color=#009900>",
                         "</font><br>" );
-                }
+                } else {
+					if ($passed == -1) {
+						&js_print_suitename;
+						&js_print_filename;
+						&js_print_bugnumber;
+						&js_print( " FAILED!\n " , "&nbsp;&nbsp;<font color=#990000>",
+						"</font><br>" );
+						&js_print( " Missing 'PASSED' in output\n", "","<br>" );
+						&js_print( $log, "output:<br><pre>", "</pre>" );
+                     }
+				}						
+
             }
         }
     }
@@ -209,7 +228,7 @@ sub setup_env {
     # make sure that the test dir exists
     if ( ! -e $test_dir ) {
         die "The JavaScript Test Library could not be found.\n" .
-            "Check the tests out from /mozilla/js/src/tests or\n" .
+            "Check the tests out from /mozilla/js/tests or\n" .
             "Set the value of your JS_TEST_DIR environment variable\n " .
             "to the location of the test library.\n";
     }
