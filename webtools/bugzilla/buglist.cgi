@@ -168,7 +168,7 @@ sub LookupNamedQuery {
     my $qname = SqlQuote($name);
     SendSQL("SELECT query FROM namedqueries WHERE userid = $userid AND name = $qname");
     my $result = FetchOneColumn();
-    $result || ThrowUserError("missing_query", {'queryname' => '$name'});
+    $result || ThrowUserError("missing_query", {'queryname' => $name});
     return $result;
 }
 
