@@ -780,7 +780,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
     content->GetTag(*getter_AddRefs(atom));
 
     // skip over any splitters
-    if (atom != nsXULAtoms::splitter) { 
+    if (atom.get() != nsXULAtoms::splitter) { 
         nsSize prefSize(0,0);
         nsSize minSize(0,0);
         nsSize maxSize(0,0);
