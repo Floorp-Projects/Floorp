@@ -85,36 +85,24 @@ private:
     return inlinedGetFrameAt(mCurrentAnimationFrameIndex, _retval);
   }
 
-  /* additional members */
-  nsSupportsArray mFrames;
-  nsSize mSize;
-  nsWeakPtr mObserver;
-
-  PRUint32 mCurrentDecodingFrameIndex; // 0 to numFrames-1
-  PRUint32 mCurrentAnimationFrameIndex; // 0 to numFrames-1
-  PRBool   mCurrentFrameIsFinishedDecoding;
-  PRBool   mDoneDecoding;
-  PRBool   mAnimating;
-  PRUint16 mAnimationMode;
-  PRInt32  mLoopCount;
-
-private:
-
-  // GIF specific bits
-  nsCOMPtr<nsITimer> mTimer;
-
-  // GIF animations will use the mCompositingFrame to composite images
-  // and just hand this back to the caller when it is time to draw the frame.
-  nsCOMPtr<gfxIImageFrame> mCompositingFrame;
-  nsCOMPtr<gfxIImageFrame> mCompositingPrevFrame;
-
   // Private function for doing the frame compositing of animations and in cases
   // where there is a backgound color and single frame placed withing a larger
   // logical screen size. Smart GIF compressors may do this to save space.
   void DoComposite(gfxIImageFrame** aFrameToUse, nsRect* aDirtyRect,
                    PRInt32 aPrevFrame, PRInt32 aNextFrame);
 
-  void BuildCompositeMask(gfxIImageFrame* aCompositingFrame, gfxIImageFrame* aOverlayFrame);
+  /** 
+   * Combine aOverlayFrame's mask into aCompositingFrame's mask.
+   *
+   * This takes the mask information from the passed in aOverlayFrame and 
+   * inserts that information into the aCompositingFrame's mask at the proper 
+   * offsets. It does *not* rebuild the entire mask.
+   *
+   * @param aCompositingFrame Target frame
+   * @param aOverlayFrame     This frame's mask is being copied
+   */
+  void BuildCompositeMask(gfxIImageFrame* aCompositingFrame, 
+                          gfxIImageFrame* aOverlayFrame);
 
   /** Sets an area of the frame's mask.
    *
@@ -125,12 +113,15 @@ private:
    */
   void SetMaskVisibility(gfxIImageFrame *aFrame, PRBool aVisible);
   //! @overload
-  void SetMaskVisibility(gfxIImageFrame *aFrame,
-                         PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
+  void SetMaskVisibility(gfxIImageFrame *aFrame, 
+                         PRInt32 aX, PRInt32 aY, 
+                         PRInt32 aWidth, PRInt32 aHeight, 
                          PRBool aVisible);
   //! @overload
-  void SetMaskVisibility(gfxIImageFrame *aFrame, nsRect &aRect, PRBool aVisible) {
-    SetMaskVisibility(aFrame, aRect.x, aRect.y, aRect.width, aRect.height, aVisible);
+  void SetMaskVisibility(gfxIImageFrame *aFrame, 
+                         nsRect &aRect, PRBool aVisible) {
+    SetMaskVisibility(aFrame, aRect.x, aRect.y, 
+                      aRect.width, aRect.height, aVisible);
   }
 
   /** Fills an area of <aFrame> with black.
@@ -141,11 +132,51 @@ private:
    */
   void BlackenFrame(gfxIImageFrame* aFrame);
   //! @overload
-  void BlackenFrame(gfxIImageFrame *aFrame, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
+  void BlackenFrame(gfxIImageFrame* aFrame, 
+                    PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   //! @overload
   inline void BlackenFrame(gfxIImageFrame* aFrame, nsRect &aRect) {
     BlackenFrame(aFrame, aRect.x, aRect.y, aRect.width, aRect.height);
   }
+
+  //! imgIContainerObserver; used for telling observers that the frame changed
+  nsWeakPtr            mObserver;
+  //! All the <gfxIImageFrame>s of the GIF
+  nsSupportsArray      mFrames;
+  //! Size of GIF (not necessarily the frame)
+  nsSize               mSize;
+
+  PRInt32              mCurrentDecodingFrameIndex; // 0 to numFrames-1
+  PRInt32              mCurrentAnimationFrameIndex; // 0 to numFrames-1
+  PRBool               mCurrentFrameIsFinishedDecoding;
+  //! Whether we can assume there will be no more frames
+  //! (and thus loop the animation)
+  PRBool               mDoneDecoding;
+
+
+  //! Are we currently animating the GIF?
+  PRBool               mAnimating;
+  //! See imgIContainer for mode constants
+  PRUint16             mAnimationMode;
+  //! # loops remaining before animation stops (-1 no stop)
+  PRInt32              mLoopCount;
+
+  nsCOMPtr<nsITimer>   mTimer;
+
+  /** For managing blending of frames
+   *
+   * Some GIF animations will use the mCompositeFrame to composite images
+   * and just hand this back to the caller when it is time to draw the frame.
+   */
+  nsCOMPtr<gfxIImageFrame> mCompositingFrame;
+
+  /** the previous composited frame, for DISPOSE_RESTORE_PREVIOUS
+   *
+   * The Previous Frame (all frames composited up to the current) needs to be
+   * stored in cases where the GIF specifies it wants the last frame back 
+   * when it's done with the current frame.
+   */
+  nsCOMPtr<gfxIImageFrame> mCompositingPrevFrame;
 };
 
 #endif /* __imgContainerGIF_h__ */
