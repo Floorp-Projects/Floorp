@@ -95,6 +95,13 @@ Default Setup Type=Setup Type 0
 ;   TRUE
 Refresh Icons=FALSE
 
+; GRE Cleanup Orphans= will cleanup old copies of GRE that will are no
+; longer being used by anyone except for the app that will install/use
+; it (dictated by -app_path).
+; Possible values: TRUE, FALSE
+; Default: FALSE
+GRE Cleanup Orphans=TRUE
+
 ;*** LOCALIZE ME BABY ***
 GRE Cleanup Orphans Message=Cleaning up orphaned GREs (Gecko Runtime Environments), please wait...
 

@@ -477,6 +477,8 @@ typedef struct setupStruct
   LPSTR     szAppID;
   LPSTR     szAppPath;
   LPSTR     szRegPath;
+  BOOL      greCleanupOrphans;
+  char      greCleanupOrphansMessage[MAX_BUF];
   char      greID[MAX_BUF];
   char      grePrivateKey[MAX_BUF];
 } setupGen;
