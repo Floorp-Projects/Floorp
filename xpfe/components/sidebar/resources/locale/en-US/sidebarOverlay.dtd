@@ -33,6 +33,7 @@
 <!ENTITY sidebarCmd.label            "Sidebar">
 <!ENTITY sidebarCmd.accesskey        "b">
 <!ENTITY sidebar.loading.label       "Loading...">
+<!ENTITY sidebar.loadstopped.label   "Load stopped">
 <!ENTITY sidebar.loading.stop.label  "Stop">
 
 <!ENTITY sidebar.no-panels.state     "The sidebar is currently empty.">
@@ -41,5 +42,5 @@
 <!ENTITY sidebar.sbDirectory.label   "Sidebar Directory...">
 
 <!ENTITY sidebar.pagenotfound.label  "This tab is not available right now.">
-<!ENTITY sidebar.close.tooltip       "Close">
+<!ENTITY sidebar.close.tooltip       "Close Sidebar">
 

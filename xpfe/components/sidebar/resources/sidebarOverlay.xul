@@ -97,7 +97,8 @@
             <menuseparator />
           </menupopup>
         </toolbarbutton>
-        <toolbarbutton id="sidebar-close-button" oncommand="SidebarShowHide();"/>
+        <toolbarbutton id="sidebar-close-button" oncommand="SidebarShowHide();"
+                       tooltiptext="&sidebar.close.tooltip;"/>
       </sidebarheader>
   
       <vbox id="sidebar-panels"
@@ -134,8 +135,13 @@
                     <image class="image-panel-loading"/>
                     <label class="text-panel-loading"
                       value="&sidebar.loading.label;"/>
-                    <button label="&sidebar.loading.stop.label;" hidden="true"
+                    <label class="text-panel-loading" hidden="true" 
+                      loading="false"
+                      value="&sidebar.loadstopped.label;"/>
+                    <button type="stop" label="&sidebar.loading.stop.label;"
                             oncommand="SidebarStopPanelLoad(this.parentNode.parentNode.parentNode.previousSibling);"/>
+                    <button label="&sidebar.reload.label;" hidden="true"
+                            oncommand="SidebarReload();"/>
                   </hbox>
                   <spacer flex="100%"/>
                 </vbox>
