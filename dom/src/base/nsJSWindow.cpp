@@ -620,6 +620,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                                                   kIWindowIID, NS_ConvertASCIItoUCS2("Window"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
+            break;
           }
       
           rv = a->SetOpener(prop);
@@ -674,6 +675,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           rv = a->SetInnerWidth(prop);
@@ -692,6 +694,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           rv = a->SetInnerHeight(prop);
@@ -710,6 +713,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           rv = a->SetOuterWidth(prop);
@@ -728,6 +732,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           rv = a->SetOuterHeight(prop);
@@ -746,6 +751,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           rv = a->SetScreenX(prop);
@@ -764,6 +770,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           rv = a->SetScreenY(prop);
@@ -782,6 +789,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           rv = a->SetPageXOffset(prop);
@@ -800,6 +808,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           rv = a->SetPageYOffset(prop);

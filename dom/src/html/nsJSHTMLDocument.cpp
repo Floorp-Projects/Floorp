@@ -474,6 +474,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                                                   kIHTMLElementIID, NS_ConvertASCIItoUCS2("HTMLElement"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
+            break;
           }
       
           rv = a->SetBody(prop);

@@ -185,6 +185,7 @@ SetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
                                                   kIElementIID, NS_ConvertASCIItoUCS2("Element"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
+            break;
           }
       
           rv = a->SetFocusedElement(prop);
@@ -201,6 +202,7 @@ SetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
                                                   kIWindowIID, NS_ConvertASCIItoUCS2("Window"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
+            break;
           }
       
           rv = a->SetFocusedWindow(prop);
@@ -215,6 +217,7 @@ SetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
           PRBool prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;
+            break;
           }
       
           rv = a->SetSuppressFocus(prop);
@@ -229,6 +232,7 @@ SetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
           PRBool prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;
+            break;
           }
       
           rv = a->SetSuppressFocusScroll(prop);
@@ -243,6 +247,7 @@ SetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
           PRBool prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;
+            break;
           }
       
           rv = a->SetActive(prop);

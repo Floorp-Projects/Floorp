@@ -305,6 +305,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                                                   kIHTMLTableCaptionElementIID, NS_ConvertASCIItoUCS2("HTMLTableCaptionElement"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
+            break;
           }
       
           rv = a->SetCaption(prop);
@@ -321,6 +322,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                                                   kIHTMLTableSectionElementIID, NS_ConvertASCIItoUCS2("HTMLTableSectionElement"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
+            break;
           }
       
           rv = a->SetTHead(prop);
@@ -337,6 +339,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                                                   kIHTMLTableSectionElementIID, NS_ConvertASCIItoUCS2("HTMLTableSectionElement"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
+            break;
           }
       
           rv = a->SetTFoot(prop);

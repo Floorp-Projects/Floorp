@@ -221,6 +221,7 @@ SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           PRBool prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;
+            break;
           }
       
           rv = a->SetDefaultSelected(prop);
@@ -247,6 +248,7 @@ SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           PRBool prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;
+            break;
           }
       
           rv = a->SetDisabled(prop);
@@ -273,6 +275,7 @@ SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           PRBool prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;
+            break;
           }
       
           rv = a->SetSelected(prop);

@@ -221,6 +221,7 @@ SetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           rv = a->SetRowIndex(prop);
@@ -239,6 +240,7 @@ SetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           rv = a->SetSectionRowIndex(prop);
@@ -255,6 +257,7 @@ SetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
                                                   kIHTMLCollectionIID, NS_ConvertASCIItoUCS2("HTMLCollection"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
+            break;
           }
       
           rv = a->SetCells(prop);

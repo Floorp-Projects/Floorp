@@ -179,6 +179,7 @@ SetNSHTMLOptionCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval 
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           rv = a->SetLength(prop);
@@ -197,6 +198,7 @@ SetNSHTMLOptionCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval 
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           rv = a->SetSelectedIndex(prop);

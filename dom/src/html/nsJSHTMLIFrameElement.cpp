@@ -376,6 +376,7 @@ SetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                                                   kIDocumentIID, NS_ConvertASCIItoUCS2("Document"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
+            break;
           }
       
           rv = a->SetContentDocument(prop);

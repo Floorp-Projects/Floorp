@@ -174,6 +174,7 @@ SetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                                                   kINodeIID, NS_ConvertASCIItoUCS2("Node"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
+            break;
           }
       
           rv = a->SetPopupNode(prop);
@@ -190,6 +191,7 @@ SetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                                                   kINodeIID, NS_ConvertASCIItoUCS2("Node"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
+            break;
           }
       
           rv = a->SetTooltipNode(prop);

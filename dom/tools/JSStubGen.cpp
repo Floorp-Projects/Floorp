@@ -865,12 +865,14 @@ static const char kObjectSetCaseStr[] =
 "                                                  kI%sIID, NS_ConvertASCIItoUCS2(\"%s\"),\n"
 "                                                  cx, *vp)) {\n"
 "            rv = NS_ERROR_DOM_NOT_OBJECT_ERR;\n"
+"            break;\n"
 "          }\n";
 
 static const char kXPIDLObjectSetCaseStr[] = 
 "          if (PR_FALSE == nsJSUtils::nsConvertJSValToXPCObject((nsISupports **) &prop,\n"
 "                                                  kI%sIID, cx, *vp)) {\n"
 "            rv = NS_ERROR_DOM_NOT_XPC_OBJECT_ERR;\n"
+"            break;\n"
 "          }\n";
 
 static const char kObjectSetCaseEndStr[] = "NS_IF_RELEASE(prop);";
@@ -887,11 +889,13 @@ static const char kIntSetCaseStr[] =
 "          }\n"
 "          else {\n"
 "            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;\n"
+"            break;\n"
 "          }\n";
 
 static const char kBoolSetCaseStr[] =
 "          if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {\n"
 "            rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;\n"
+"            break;\n"
 "          }\n";
 
 static const char kJSValSetCaseStr[] =

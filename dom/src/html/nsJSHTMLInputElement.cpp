@@ -442,6 +442,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           PRBool prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;
+            break;
           }
       
           rv = a->SetDefaultChecked(prop);
@@ -504,6 +505,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           PRBool prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;
+            break;
           }
       
           rv = a->SetChecked(prop);
@@ -518,6 +520,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           PRBool prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;
+            break;
           }
       
           rv = a->SetDisabled(prop);
@@ -536,6 +539,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           rv = a->SetMaxLength(prop);
@@ -562,6 +566,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           PRBool prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;
+            break;
           }
       
           rv = a->SetReadOnly(prop);
@@ -604,6 +609,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           rv = a->SetTabIndex(prop);
@@ -658,6 +664,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           nsIDOMNSHTMLInputElement *b;
@@ -684,6 +691,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           nsIDOMNSHTMLInputElement *b;
