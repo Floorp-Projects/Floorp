@@ -119,25 +119,25 @@ class TestScan
             }
         }
         else if (opt == "-ir") {
-            IRFactory nf = new IRFactory(ts);
+            IRFactory nf = new IRFactory(ts, null);
             Parser p = new Parser(nf);
             Node parsetree = (Node) p.parse(ts);
             System.out.print(parsetree.toStringTree());
         }
         else if (opt == "-nt") {
-            IRFactory nf = new IRFactory(ts);
+            IRFactory nf = new IRFactory(ts, null);
             NodeTransformer nt = new NodeTransformer();
             Parser p = new Parser(nf);
             Node parsetree = (Node) p.parse(ts);
-            nt.transform(parsetree, null, ts);
+            nt.transform(parsetree, null, ts, null);
             System.out.print(parsetree.toStringTree());
         }
         else if (opt == "-opt") {
-            IRFactory nf = new IRFactory(ts);
+            IRFactory nf = new IRFactory(ts, null);
             NodeTransformer nt = new NodeTransformer();
             Parser p = new Parser(nf);
             Node parsetree = (Node) p.parse(ts);
-            nt.transform(parsetree, null, ts);
+            nt.transform(parsetree, null, ts, null);
             cx.setOptimizationLevel(level);
             try {
                 Class optimizerClass 
