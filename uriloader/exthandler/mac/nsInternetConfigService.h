@@ -61,6 +61,9 @@ protected:
   
   nsresult GetICKeyPascalString(PRUint32 inIndex, const unsigned char*& outICKey);
   nsresult GetICPreference(PRUint32 inKey, void *outData, long *ioSize);
+  
+  PRBool mRunningOSX;
+  PRBool mRunningJaguar;
 };
 
 #endif

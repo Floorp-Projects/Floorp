@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Steve Dagley <sdagley@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -48,22 +49,28 @@
 #include "nsILocalFileMac.h"
 #include "nsMimeTypes.h"
 #include <TextUtils.h>
+#include <CodeFragments.h>
 #include <Processes.h>
+#include <Gestalt.h>
+#include <CFURL.h>
+#include <Finder.h>
+#include <LaunchServices.h>
+
 
 // helper converter function.....
-static void ConvertCharStringToStr255( const char* inString, Str255& outString  )
+static void ConvertCharStringToStr255(const char* inString, Str255& outString)
 {
-		if ( inString == NULL )
-			return;
-		PRInt32 len = strlen(inString);
-		NS_ASSERTION( len<= 255 , " String is too big");
-		if ( len> 255 )
-		{
-			len = 255;
-			
-		}
-		memcpy(&outString[1], inString, len);
-		outString[0] = len;
+  if (inString == NULL)
+    return;
+  
+  PRInt32 len = strlen(inString);
+  NS_ASSERTION(len <= 255 , " String is too big");
+  if (len> 255)
+  {
+    len = 255;
+  }
+  memcpy(&outString[1], inString, len);
+  outString[0] = len;
 }
 
 /* Define Class IDs */
@@ -72,6 +79,11 @@ static NS_DEFINE_CID(kICServiceCID, NS_INTERNETCONFIGSERVICE_CID);
 nsInternetConfigService::nsInternetConfigService()
 {
   NS_INIT_ISUPPORTS();
+
+  long  version;
+  OSErr err;
+  mRunningOSX = ((err = ::Gestalt(gestaltSystemVersion, &version)) == noErr && version >= 0x00001000);
+  mRunningJaguar = (err == noErr && version >= 0x00001200);
 }
 
 nsInternetConfigService::~nsInternetConfigService()
@@ -82,35 +94,43 @@ nsInternetConfigService::~nsInternetConfigService()
 /*
  * Implement the nsISupports methods...
  */
-NS_IMPL_THREADSAFE_ADDREF(nsInternetConfigService)
-NS_IMPL_THREADSAFE_RELEASE(nsInternetConfigService)
-
-NS_INTERFACE_MAP_BEGIN(nsInternetConfigService)
-  NS_INTERFACE_MAP_ENTRY(nsIInternetConfigService)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInternetConfigService)
-NS_INTERFACE_MAP_END_THREADSAFE
+NS_IMPL_ISUPPORTS1(nsInternetConfigService, nsIInternetConfigService)
 
 // void LaunchURL (in string url);
-// given a url string, call ICLaunchURL using url
+// Given a url string, call ICLaunchURL using url
+// Under OS X use LaunchServices instead of IC
 NS_IMETHODIMP nsInternetConfigService::LaunchURL(const char *url)
 {
-  nsresult result;
-  size_t len = strlen(url);
-  long selStart = 0, selEnd = len;
-  ICInstance inst = nsInternetConfig::GetInstance();
+  nsresult rv = NS_ERROR_FAILURE;
   
-  if (inst)
+#if TARGET_CARBON
+  if (mRunningOSX && ((UInt32)LSOpenCFURLRef != (UInt32)kUnresolvedCFragSymbolAddress))
   {
-    result = ::ICLaunchURL(inst, "\p", (Ptr)url, (long)len, &selStart, &selEnd);
-    if (result == noErr)
-      return NS_OK;
-    else
-      return NS_ERROR_FAILURE;
+    CFURLRef myURLRef = ::CFURLCreateWithBytes(
+                                              kCFAllocatorDefault,
+                                              (const UInt8*)url,
+                                              strlen(url),
+                                              kCFStringEncodingUTF8, NULL);
+    if (myURLRef)
+    {
+      rv = ::LSOpenCFURLRef(myURLRef, NULL);
+      ::CFRelease(myURLRef);
+    }
   }
   else
+#endif
   {
-    return NS_ERROR_FAILURE;
+    size_t len = strlen(url);
+    long selStart = 0, selEnd = len;
+    ICInstance inst = nsInternetConfig::GetInstance();
+    
+    if (inst)
+    {
+      if (::ICLaunchURL(inst, "\p", (Ptr)url, (long)len, &selStart, &selEnd) == noErr)
+        rv = NS_OK;
+    }
   }
+  return rv;
 }
 
 // boolean HasMappingForMIMEType (in string mimetype);
@@ -131,65 +151,119 @@ NS_IMETHODIMP nsInternetConfigService::HasMappingForMIMEType(const char *mimetyp
 // protocol handler for protocol
 NS_IMETHODIMP nsInternetConfigService::HasProtocolHandler(const char *protocol, PRBool *_retval)
 {
-  *_retval = PR_FALSE;
-  // look for IC pref "\pHelper¥<protocol>"
-  Str255 pref = kICHelper;
-
-  if (strlen(protocol) > 248)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  memcpy(pref + pref[0] + 1, protocol, strlen(protocol));
-  pref[0] = pref[0] + strlen(protocol);
+  *_retval = PR_FALSE;            // Presume failure
+  nsresult rv = NS_ERROR_FAILURE; // Ditto
   
-  ICInstance instance = nsInternetConfig::GetInstance();
-  if ( !instance )
-    return NS_ERROR_FAILURE;
-
-  OSStatus err;
-  ICAttr junk;
-  ICAppSpec spec;
-  long ioSize = sizeof(ICAppSpec);
-  err = ::ICGetPref( instance, pref, &junk, (void *)&spec, &ioSize );
-  if ( err != noErr )
-    return NS_ERROR_FAILURE;
-  // check if registered protocol helper is us
-  // if so, return PR_FALSE because we'll go into infinite recursion
-  // continually launching back into ourselves
-  ProcessSerialNumber psn;
-  OSErr oserr = ::GetCurrentProcess(&psn);
-  if (oserr == noErr)
+#if TARGET_CARBON
+  // Use LaunchServices directly when we're running under OS X to avoid the problem of some protocols
+  // apparently not being reflected into the IC mappings (webcal for one).  Even better it seems
+  // LaunchServices under 10.1.x will often fail to find an app when using LSGetApplicationForURL
+  // so we only use it for 10.2 or later.
+  
+  // Since protocol comes in with _just_ the protocol we have to add a ':' to the end of it or
+  // LaunchServices will be very unhappy with the CFURLRef created from it (crashes trying to look
+  // up a handler for it with LSGetApplicationForURL, at least under 10.2.1)
+  if (mRunningJaguar)
   {
-    ProcessInfoRec info;
-    info.processInfoLength = sizeof(ProcessInfoRec);
-    info.processName = nsnull;
-    info.processAppSpec = nsnull;
-    err = ::GetProcessInformation(&psn, &info);
-    if (err == noErr)
+    nsCAutoString scheme(protocol);
+    scheme += ":";
+    CFURLRef myURLRef = ::CFURLCreateWithBytes(
+                                                kCFAllocatorDefault,
+                                                (const UInt8 *)scheme.get(),
+                                                scheme.Length(),
+                                                kCFStringEncodingUTF8, NULL);
+    if (myURLRef)
     {
-      if (info.processSignature != spec.fCreator)
-        *_retval = PR_TRUE;
-      else
-        return NS_ERROR_NOT_AVAILABLE;
+      FSRef appFSRef;
+      
+      if (::LSGetApplicationForURL(myURLRef, kLSRolesAll, &appFSRef, NULL) == noErr)
+      { // Now see if the FSRef for the found app == the running app
+        ProcessSerialNumber psn;
+        if (::GetCurrentProcess(&psn) == noErr)
+        {
+          FSRef runningAppFSRef;
+          if (::GetProcessBundleLocation(&psn, &runningAppFSRef) == noErr)
+          {
+            if (::FSCompareFSRefs(&appFSRef, &runningAppFSRef) == noErr)
+            { // Oops, the current app is the handler which would cause infinite recursion
+              rv = NS_ERROR_NOT_AVAILABLE;
+            }
+            else
+            {
+              *_retval = PR_TRUE;
+              rv = NS_OK;
+            }
+          }
+        }
+      }
+      ::CFRelease(myURLRef);
     }
-    else
-      return NS_ERROR_FAILURE;
   }
   else
-    return NS_ERROR_FAILURE;
+#endif
+  {
+    // look for IC pref "\pHelper¥<protocol>"
+    Str255 pref = kICHelper;
 
-  return NS_OK;
+    if (nsCRT::strlen(protocol) > 248)
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    else
+    {
+      memcpy(pref + pref[0] + 1, protocol, nsCRT::strlen(protocol));
+      pref[0] = pref[0] + nsCRT::strlen(protocol);
+      
+      ICInstance instance = nsInternetConfig::GetInstance();
+      if (instance)
+      {
+        OSStatus  err;
+        ICAttr    junk;
+        ICAppSpec spec;
+        long      ioSize = sizeof(ICAppSpec);
+        err = ::ICGetPref(instance, pref, &junk, (void *)&spec, &ioSize);
+      
+        if (err == noErr)
+        {
+          // check if registered protocol helper is us
+          // if so, return PR_FALSE because we'll go into infinite recursion
+          // continually launching back into ourselves
+          ProcessSerialNumber psn;
+          OSErr oserr = ::GetCurrentProcess(&psn);
+          if (oserr == noErr)
+          {
+            ProcessInfoRec info;
+            info.processInfoLength = sizeof(ProcessInfoRec);
+            info.processName = nsnull;
+            info.processAppSpec = nsnull;
+            err = ::GetProcessInformation(&psn, &info);
+            if (err == noErr)
+            {
+              if (info.processSignature != spec.fCreator)
+              {
+                *_retval = PR_TRUE;
+                rv = NS_OK;
+              }
+              else
+                rv = NS_ERROR_NOT_AVAILABLE;
+            }
+          }
+        }
+      }
+    }
+  }
+  return rv;
 }
 
 // This method does the dirty work of traipsing through IC mappings database
 // looking for a mapping for mimetype
 nsresult nsInternetConfigService::GetMappingForMIMEType(const char *mimetype, const char *fileextension, ICMapEntry *entry)
 {
-  ICInstance inst = nsInternetConfig::GetInstance();
-  OSStatus err = noErr;
-  ICAttr attr;
-  Handle prefH;
-  PRBool domimecheck = PR_TRUE, gotmatch = PR_FALSE;
-  ICMapEntry ent;
+  ICInstance  inst = nsInternetConfig::GetInstance();
+  OSStatus    err = noErr;
+  ICAttr      attr;
+  Handle      prefH;
+  PRBool      domimecheck = PR_TRUE;
+  PRBool      gotmatch = PR_FALSE;
+  ICMapEntry  ent;
   
   // if mime type is "unknown" or "octet stream" *AND* we have a file extension,
   // then disable match on mime type
@@ -215,7 +289,7 @@ nsresult nsInternetConfigService::GetMappingForMIMEType(const char *mimetype, co
           if (err == noErr)
           {
             long pos;
-            for(long i = 1; i <= count; i++)
+            for (long i = 1; i <= count; ++i)
             {
               err = ::ICGetIndMapEntry(inst, prefH, i, &pos, &ent);
               if (err == noErr)
@@ -270,20 +344,21 @@ nsresult nsInternetConfigService::GetMappingForMIMEType(const char *mimetype, co
       err = ::ICEnd(inst);
       if (err == noErr && gotmatch == PR_FALSE)
       {
-      	err = fnfErr; // return SOME kind of error
+        err = fnfErr; // return SOME kind of error
       }
     }
   }
+  
   if (err != noErr)
-	return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
   else
-  	return NS_OK;
+    return NS_OK;
 }
 
 nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIMIMEInfo ** mimeinfo)
 {
   // create a mime info object and we'll fill it in based on the values from IC mapping entry
-  nsresult rv = NS_OK;
+  nsresult  rv = NS_OK;
   nsCOMPtr<nsIMIMEInfo> info (do_CreateInstance(NS_MIMEINFO_CONTRACTID));
   if (info)
   {
@@ -304,8 +379,8 @@ nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIM
     
     // convert entry.extension which is a Str255 
     // don't forget to remove the '.' in front of the file extension....
-  	nsCAutoString temp((char *)&entry.extension[2], entry.extension[0] > 0 ? (int)entry.extension[0]-1 : 0);
-  	info->AppendExtension(temp.get());
+    nsCAutoString temp((char *)&entry.extension[2], entry.extension[0] > 0 ? (int)entry.extension[0]-1 : 0);
+    info->AppendExtension(temp.get());
     info->SetMacType(entry.fileType);
     info->SetMacCreator(entry.fileCreator);
     temp.Assign((char *) &entry.entryName[1], entry.entryName[0]);
@@ -316,21 +391,21 @@ nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIM
     
     if (entry.flags & kICMapPostMask)
     {
-       // there is a post processor app
-       info->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
-       nsCOMPtr<nsILocalFileMac> file (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
-       if (file)
-       {
-         rv = file->InitToAppWithCreatorCode(entry.postCreator);
-         if (rv == NS_OK)
-         {
-           //info->SetAlwaysAskBeforeHandling(PR_FALSE);
-           nsCOMPtr<nsIFile> nsfile = do_QueryInterface(file, &rv);
-           if (rv == NS_OK)
-             info->SetPreferredApplicationHandler(nsfile);
-         }
-       }
-    } 
+      // there is a post processor app
+      info->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
+      nsCOMPtr<nsILocalFileMac> file (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
+      if (file)
+      {
+        rv = file->InitToAppWithCreatorCode(entry.postCreator);
+        if (rv == NS_OK)
+        {
+          //info->SetAlwaysAskBeforeHandling(PR_FALSE);
+          nsCOMPtr<nsIFile> nsfile = do_QueryInterface(file, &rv);
+          if (rv == NS_OK)
+            info->SetPreferredApplicationHandler(nsfile);
+        }
+      }
+    }
     else
     {
       // there isn't a post processor app so set the preferred action to be save to disk.
@@ -339,18 +414,18 @@ nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIM
     
     *mimeinfo = info;
     NS_IF_ADDREF(*mimeinfo);
- }
- else // we failed to allocate the info object...
-   rv = NS_ERROR_FAILURE;
+  }
+  else // we failed to allocate the info object...
+    rv = NS_ERROR_FAILURE;
    
- return rv;
+  return rv;
 }
 
 /* void FillInMIMEInfo (in string mimetype, in string fileExtension, out nsIMIMEInfo mimeinfo); */
 NS_IMETHODIMP nsInternetConfigService::FillInMIMEInfo(const char *mimetype, const char * aFileExtension, nsIMIMEInfo **mimeinfo)
 {
-  nsresult rv;
-  ICMapEntry entry;
+  nsresult    rv;
+  ICMapEntry  entry;
   
   NS_ENSURE_ARG_POINTER(mimeinfo);
   *mimeinfo = nsnull;
@@ -366,90 +441,84 @@ NS_IMETHODIMP nsInternetConfigService::FillInMIMEInfo(const char *mimetype, cons
   {
     rv = GetMappingForMIMEType(mimetype, nsnull, &entry);
   }
+  
   if (rv == NS_OK)
-  {
-	rv = FillMIMEInfoForICEntry(entry, mimeinfo);
-
-  }
+    rv = FillMIMEInfoForICEntry(entry, mimeinfo);
   else
-  {
     rv = NS_ERROR_FAILURE;
-  }
+
   return rv;
 }
 
 NS_IMETHODIMP nsInternetConfigService::GetMIMEInfoFromExtension(const char *aFileExt, nsIMIMEInfo **_retval)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  ICInstance instance = nsInternetConfig::GetInstance();
-  if ( instance )
+  nsresult    rv = NS_ERROR_FAILURE;
+  ICInstance  instance = nsInternetConfig::GetInstance();
+  if (instance)
   {
     nsCAutoString filename("foobar.");
-	filename+=aFileExt;
-	Str255 pFileName;
-	ConvertCharStringToStr255( filename.get(), pFileName  );
-	ICMapEntry entry;
-	OSStatus err = ::ICMapFilename( instance, pFileName, &entry );
-	if( err == noErr )
-	{
-	  rv = FillMIMEInfoForICEntry(entry, _retval);
-	}
+    filename += aFileExt;
+    Str255  pFileName;
+    ConvertCharStringToStr255(filename.get(), pFileName);
+    ICMapEntry  entry;
+    OSStatus  err = ::ICMapFilename(instance, pFileName, &entry);
+    if (err == noErr)
+    {
+      rv = FillMIMEInfoForICEntry(entry, _retval);
+    }
   }   
-  
   return rv;
- }
-	
-	
+}
+
+
 NS_IMETHODIMP nsInternetConfigService::GetMIMEInfoFromTypeCreator(PRUint32 aType, PRUint32 aCreator, const char *aFileExt, nsIMIMEInfo **_retval)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  ICInstance instance = nsInternetConfig::GetInstance();
-  if ( instance )
+  nsresult    rv = NS_ERROR_FAILURE;
+  ICInstance  instance = nsInternetConfig::GetInstance();
+  if (instance)
   {
-	nsCAutoString filename("foobar.");
-	filename+=aFileExt;
-	Str255 pFileName;
-	ConvertCharStringToStr255( filename.get(), pFileName  );
-	ICMapEntry entry;
-	OSStatus err = ::ICMapTypeCreator( instance, aType, aCreator, pFileName, &entry );
-	if( err == noErr )
-		rv = FillMIMEInfoForICEntry(entry,_retval);
+    nsCAutoString filename("foobar.");
+    filename += aFileExt;
+    Str255  pFileName;
+    ConvertCharStringToStr255(filename.get(), pFileName);
+    ICMapEntry  entry;
+    OSStatus  err = ::ICMapTypeCreator(instance, aType, aCreator, pFileName, &entry);
+    if (err == noErr)
+      rv = FillMIMEInfoForICEntry(entry,_retval);
   }
-	
   return rv;
 }
 
 
 NS_IMETHODIMP nsInternetConfigService::GetFileMappingFlags(FSSpec* fsspec, PRBool lookupByExtensionFirst, PRInt32 *_retval)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  OSStatus err = noErr;
+  nsresult  rv = NS_ERROR_FAILURE;
+  OSStatus  err = noErr;
 
   NS_ENSURE_ARG(_retval);
   *_retval = -1;
   
   ICInstance instance = nsInternetConfig::GetInstance();
-  if ( instance )
+  if (instance)
   {
-    ICMapEntry entry;
+    ICMapEntry  entry;
     
     if (lookupByExtensionFirst)
-      err = ::ICMapFilename( instance, fsspec->name, &entry );
+      err = ::ICMapFilename(instance, fsspec->name, &entry);
   
     if (!lookupByExtensionFirst || err != noErr)
     {
       FInfo info;
-  		err = FSpGetFInfo (fsspec, &info);
-  		if (err == noErr)
-        err = ::ICMapTypeCreator( instance, info.fdType, info.fdCreator, fsspec->name, &entry );
+      err = FSpGetFInfo(fsspec, &info);
+      if (err == noErr)
+        err = ::ICMapTypeCreator(instance, info.fdType, info.fdCreator, fsspec->name, &entry);
     }
 
-  	if (err == noErr)
-  	  *_retval = entry.flags;
-  	 
-  	 rv = NS_OK;
+    if (err == noErr)
+      *_retval = entry.flags;
+     
+     rv = NS_OK;
   }
-	
   return rv;
 }
 
@@ -457,10 +526,10 @@ NS_IMETHODIMP nsInternetConfigService::GetFileMappingFlags(FSSpec* fsspec, PRBoo
 /* void GetDownloadFolder (out FSSpec fsspec); */
 NS_IMETHODIMP nsInternetConfigService::GetDownloadFolder(FSSpec *fsspec)
 {
-  ICInstance inst = nsInternetConfig::GetInstance();
-  OSStatus err;
-  Handle prefH;
-  nsresult rv = NS_ERROR_FAILURE;
+  ICInstance  inst = nsInternetConfig::GetInstance();
+  OSStatus    err;
+  Handle      prefH;
+  nsresult    rv = NS_ERROR_FAILURE;
   
   NS_ENSURE_ARG_POINTER(fsspec);
   
@@ -472,7 +541,7 @@ NS_IMETHODIMP nsInternetConfigService::GetDownloadFolder(FSSpec *fsspec)
       prefH = ::NewHandle(256); // ICFileSpec ~= 112 bytes + variable, 256 bytes hopefully is sufficient
       if (prefH)
       {
-        ICAttr attr;
+        ICAttr  attr;
         err = ::ICFindPrefHandle(inst, kICDownloadFolder, &attr, prefH);
         if (err == noErr)
         {
@@ -490,7 +559,7 @@ NS_IMETHODIMP nsInternetConfigService::GetDownloadFolder(FSSpec *fsspec)
               err = ::ICFindPrefHandle(inst, kICDownloadFolder, &attr, prefH);
               if (err == noErr)
               { // Use FSMakeFSSpec to verify the saved FSSpec is still valid
-                FSSpec tempSpec = (*(ICFileSpecHandle)prefH)->fss;
+                FSSpec  tempSpec = (*(ICFileSpecHandle)prefH)->fss;
                 err = ::FSMakeFSSpec(tempSpec.vRefNum, tempSpec.parID, tempSpec.name, fsspec);
                 if (err == noErr)
                   rv = NS_OK;
@@ -509,7 +578,7 @@ NS_IMETHODIMP nsInternetConfigService::GetDownloadFolder(FSSpec *fsspec)
 
 nsresult nsInternetConfigService::GetICKeyPascalString(PRUint32 inIndex, const unsigned char*& outICKey)
 {
-  nsresult result = NS_OK;
+  nsresult  rv = NS_OK;
 
   switch (inIndex)
   {
@@ -571,10 +640,9 @@ nsresult nsInternetConfigService::GetICKeyPascalString(PRUint32 inIndex, const u
     case eICText_Plan:                 outICKey = kICPlan;               break;
 
     default:
-      result = NS_ERROR_INVALID_ARG;
+      rv = NS_ERROR_INVALID_ARG;
   }
-
-  return result;
+  return rv;
 }
 
 
@@ -582,41 +650,43 @@ nsresult nsInternetConfigService::GetICPreference(PRUint32 inKey,
                                                   void *outData, long *ioSize)
 {
   const unsigned char *icKey;
-  nsresult result = GetICKeyPascalString( inKey, icKey );
-  if (NS_FAILED(result))
-    return result;
-
-  ICInstance instance = nsInternetConfig::GetInstance();
-  if ( !instance )
-    return NS_ERROR_FAILURE;
-
-  OSStatus err;
-  ICAttr junk;
-  err = ::ICGetPref( instance, icKey, &junk, outData, ioSize );
-  if ( err )
-    return NS_ERROR_UNEXPECTED;
-
-  return NS_OK;
+  nsresult  rv = GetICKeyPascalString(inKey, icKey);
+  if (rv == NS_OK)
+  {
+    ICInstance  instance = nsInternetConfig::GetInstance();
+    if (instance)
+    {
+      OSStatus  err;
+      ICAttr    junk;
+      err = ::ICGetPref(instance, icKey, &junk, outData, ioSize);
+      if (err != noErr)
+        rv = NS_ERROR_UNEXPECTED;
+    }
+    else
+      rv = NS_ERROR_FAILURE;
+  }
+  return rv;
 }
 
 
-NS_IMETHODIMP nsInternetConfigService::GetString(PRUint32 inKey, char **value)
+NS_IMETHODIMP nsInternetConfigService::GetString(PRUint32 inKey, nsACString& value)
 {
-  long size = 256;
-  char buffer[256];
-  nsresult result = GetICPreference( inKey, (void *)&buffer, &size );
-  if ( result == NS_OK ) {
-    if ( size == 0 ) {
-      *value = nsnull;
-      return NS_ERROR_UNEXPECTED;
+  long      size = 256;
+  char      buffer[256];
+  nsresult  rv = GetICPreference(inKey, (void *)&buffer, &size);
+  if (rv == NS_OK)
+  {
+    if (size == 0)
+    {
+      value = "";
+      rv = NS_ERROR_UNEXPECTED;
     }
-
-    // Buffer is a Pascal string; convert it to a c-string
-    nsCString temp( &buffer[1], buffer[0] );
-    *value = ToNewCString(temp);
+    else
+    { // Buffer is a Pascal string so adjust for length byte when assigning
+      value.Assign(&buffer[1], (unsigned char)buffer[0]);
+    }
   }
-
-  return result;
+  return rv;
 }
 
 
@@ -629,43 +699,35 @@ NS_IMETHODIMP nsInternetConfigService::GetColor(PRUint32 inKey, PRUint32 *outCol
   #define MAKE_NS_RGB(_r,_g,_b) \
     ((PRUint32) ((255 << 24) | ((_b)<<16) | ((_g)<<8) | (_r)))
 
-  RGBColor buffer;
-  long size = sizeof(RGBColor);
-  nsresult result = GetICPreference( inKey, &buffer, &size );
-  if ( result == NS_OK ) {
-    if ( size != sizeof(RGBColor) ) {
-      *outColor = MAKE_NS_RGB(0xff, 0xff, 0xff); // default to white if we didn't get the right size
-      return NS_OK;
+  RGBColor  buffer;
+  long      size = sizeof(RGBColor);
+  nsresult  rv = GetICPreference(inKey, &buffer, &size);
+  if (rv == NS_OK)
+  {
+    if (size != sizeof(RGBColor))
+    { // default to white if we didn't get the right size
+      *outColor = MAKE_NS_RGB(0xff, 0xff, 0xff);
     }
-
-    // convert to a web color
-    *outColor = MAKE_NS_RGB( buffer.red>>8, buffer.green>>8, buffer.blue>>8 );
+    else
+    { // convert to a web color
+      *outColor = MAKE_NS_RGB(buffer.red >> 8, buffer.green >> 8, buffer.blue >> 8);
+    }
   }
-
-  return result;
+  return rv;
 }
 
 
 NS_IMETHODIMP nsInternetConfigService::GetBoolean(PRUint32 inKey, PRBool *outFlag)
 {
-  Boolean buffer;
-  long size = sizeof(Boolean);
-  nsresult result = GetICPreference( inKey, (void *)&buffer, &size );
-  if ( result == NS_OK ) {
-    if ( (size_t)size < sizeof(Boolean) ) {
+  Boolean   buffer;
+  long      size = sizeof(Boolean);
+  nsresult  rv = GetICPreference(inKey, (void *)&buffer, &size);
+  if (rv == NS_OK)
+  {
+    if ((size_t)size < sizeof(Boolean))
       *outFlag = PR_FALSE;  // default to false if we didn't get the right amount of data
-      return NS_OK;
-    }
-
-    *outFlag = buffer;
-    result = NS_OK;
+    else
+      *outFlag = buffer;
   }
-
-  return result;
-}
-
-
-NS_IMETHODIMP nsInternetConfigService::GetText(PRUint32 inKey, PRUint32 *ioLength, PRUnichar **outText)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return rv;
 }
