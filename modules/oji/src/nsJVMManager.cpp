@@ -890,11 +890,11 @@ nsJVMManager::MaybeStartupLiveConnect(void)
 
 	do {
 		static PRBool registeredLiveConnectFactory = NS_SUCCEEDED(JSJ_RegisterLiveConnectFactory());
-        if (IsLiveConnectEnabled() && StartupJVM() == nsJVMStatus_Running) {
+        if (IsLiveConnectEnabled()) {
             JVM_InitLCGlue();
+#if 0
             nsIJVMPlugin* plugin = GetJVMPlugin();
             if (plugin) {
-#if 0
 	            const char* classpath = NULL;
 	            nsresult err = plugin->GetClassPath(&classpath);
 	            if (err != NS_OK) break;
@@ -907,7 +907,7 @@ nsJVMManager::MaybeStartupLiveConnect(void)
 	            if (fJSJavaVM != NULL)
 	                return PR_TRUE;
 	            // plugin->Release(); // GetJVMPlugin no longer calls AddRef
-	        }
+	        //}
 	    }
 	} while (0);
     return PR_FALSE;
