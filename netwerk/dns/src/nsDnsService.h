@@ -36,6 +36,10 @@
 #include <Winsock2.h>
 #endif
 
+//#ifdef DEBUG
+#define DNS_TIMING 1    // XXX remove later
+//#endif
+
 class nsIDNSListener;
 class nsDNSLookup;
 
@@ -88,6 +92,14 @@ protected:
     nsVoidArray         mCompletionQueue;
     PRUint32            mMsgIDBitVector[4];
 #endif /* XP_PC */
+
+#ifdef DNS_TIMING
+    double              mCount;
+    double              mTimes;
+    double              mSquaredTimes;
+    FILE*               mOut;
+    friend class nsDNSRequest;
+#endif
 };
 
 #endif /* nsDNSService_h__ */
