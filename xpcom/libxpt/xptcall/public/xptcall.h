@@ -25,7 +25,6 @@
 #include "nscore.h"
 #include "nsISupports.h"
 #include "xpt_struct.h"
-#include "xpt_cpp.h"
 #include "xptinfo.h"
 #include "nsIInterfaceInfo.h"
 

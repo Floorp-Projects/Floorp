@@ -25,7 +25,7 @@ MODULE		= xptinfo
 
 CFLAGS	+= -DEXPORT_XPCI_API
 
-EXPORTS		= xpt_cpp.h		\
+EXPORTS		= \
 		  xptinfo.h \
 		  nsIInterfaceInfoManager.h \
 		  nsIInterfaceInfo.h \
