@@ -815,6 +815,14 @@ static unsigned gFirstUserCollection = 0;
   return;
 }
 
+-(void) writeSafariFile:(NSString *)pathToFile
+{
+  NSDictionary* dict = [[self rootBookmarks] writeSafariDictionary];
+  if (![dict writeToFile:[pathToFile stringByStandardizingPath] atomically:YES])
+    NSLog(@"writeSafariFile: Failed to write file %@",pathToFile);
+  return;
+  
+}
 -(void)writePropertyListFile:(NSString *)pathToFile
 {
   NSDictionary* dict = [[self rootBookmarks] writeNativeDictionary];

@@ -70,10 +70,8 @@ NSString *URLLoadSuccessKey = @"url_bool";
 {
   if ((self = [super init])) {
     mURL = [[NSString alloc] init];
-    NSNumber *tempNumber = [[NSNumber alloc] initWithUnsignedInt:0];
-    mStatus = [tempNumber retain];
-    mNumberOfVisits = [tempNumber retain];
-    [tempNumber release];
+    mStatus = [[NSNumber alloc] initWithUnsignedInt:0];//retain count +1
+    mNumberOfVisits = [mStatus retain]; //retain count +2
     mLastVisit = [[NSDate date] retain];
     mIcon = [[NSImage imageNamed:@"smallbookmark"] retain];
     // register for notifications
@@ -505,17 +503,6 @@ static void doHTTPUpdateCallBack(CFReadStreamRef stream, CFStreamEventType type,
 // for reading/writing from/to disk
 //
 
-NSString *BMTitleKey = @"Title";
-NSString *BMDescKey = @"Description";
-NSString *BMStatusKey = @"Status";
-NSString *BMURLKey = @"URL";
-NSString *BMKeywordKey = @"Keyword";
-NSString *BMLastVisitKey = @"LastVisitedDate";
-NSString *BMNumberVisitsKey = @"VisitCount";
-
-NSString *SafariURIDictKey = @"URIDictionary";
-NSString *SafariBookmarkTitleKey = @"title";
-NSString *SafariURLStringKey = @"URLString";
 
 -(BOOL) readNativeDictionary:(NSDictionary *)aDict
 {
@@ -548,10 +535,10 @@ NSString *SafariURLStringKey = @"URLString";
       elementInfoPtr = (CFXMLElementInfo *)CFXMLNodeGetInfoPtr(myNode);
       if (elementInfoPtr) {
         NSDictionary* attribDict = (NSDictionary*)elementInfoPtr->attributes;
-        [self setTitle:[[attribDict objectForKey:@"name"] stringByRemovingAmpEscapes]];
-        [self setKeyword:[[attribDict objectForKey:@"id"] stringByRemovingAmpEscapes]];
-        [self setDescription:[[attribDict objectForKey:@"description"] stringByRemovingAmpEscapes]];
-        [self setUrl:[[attribDict objectForKey:@"href"] stringByRemovingAmpEscapes]];
+        [self setTitle:[[attribDict objectForKey:CaminoNameKey] stringByRemovingAmpEscapes]];
+        [self setKeyword:[[attribDict objectForKey:CaminoKeywordKey] stringByRemovingAmpEscapes]];
+        [self setDescription:[[attribDict objectForKey:CaminoDescKey] stringByRemovingAmpEscapes]];
+        [self setUrl:[[attribDict objectForKey:CaminoURLKey] stringByRemovingAmpEscapes]];
       } else {
         NSLog(@"Bookmark:readCaminoXML - elementInfoPtr null, load failed");
         return NO;
@@ -589,18 +576,39 @@ NSString *SafariURLStringKey = @"URLString";
   return dict;
 }
 
+-(NSDictionary *)writeSafariDictionary
+{
+  NSDictionary* dict = nil;
+  if (![self isSeparator]) {
+    NSDictionary *uriDict = [NSDictionary dictionaryWithObjectsAndKeys:
+      mTitle,SafariBookmarkTitleKey,
+      mURL,[NSString string],
+      nil];
+    if (!uriDict) {
+      return nil;
+    }
+
+    dict = [NSDictionary dictionaryWithObjectsAndKeys:
+      uriDict,SafariURIDictKey,
+      mURL,SafariURLStringKey,
+      SafariLeaf,SafariTypeKey,
+      [self UUID],SafariUUIDKey,
+      nil];
+  }
+  return dict;
+}
+
 
 -(NSString *)writeHTML:(unsigned int)aPad
 {
-  NSString*formatString;
+  NSString* formatString;
   NSMutableString *padString = [NSMutableString string];
   for (unsigned i = 0;i<aPad;i++)
     [padString insertString:@"    " atIndex:0];  
-  padString = [@" " stringByPaddingToLength:aPad withString:@" " startingAtIndex:0];
   if ([mDescription length] > 0)
-    formatString = [NSString stringWithString:@"%@<DT><A HREF=\"%s\">%s</A>\n%@<DD>%s\n"];
+    formatString = @"%@<DT><A HREF=\"%s\">%s</A>\n%@<DD>%s\n";
   else
-    formatString = [NSString stringWithString:@"%@<DT><A HREF=\"%s\">%s</A>\n%@\n"];
+    formatString = @"%@<DT><A HREF=\"%s\">%s</A>\n";
   return [NSString stringWithFormat:formatString,
     padString,
     [[self url] UTF8String],

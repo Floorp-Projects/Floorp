@@ -48,6 +48,7 @@
   NSString* mTitle;       
   NSString* mDescription;
   NSString* mKeyword; 
+  NSString* mUUID;
   NSImage* mIcon;
 }
 
@@ -57,12 +58,14 @@
 -(NSString *) description;
 -(NSString *) keyword;
 -(NSImage *) icon;
+-(NSString *) UUID;
 
 -(void)	setParent:(id)aParent;
 -(void) setTitle:(NSString *)aString;
 -(void) setDescription:(NSString *)aString;
 -(void) setKeyword:(NSString *)aKeyword;
 -(void) setIcon:(NSImage *)aIcon;
+-(void) setUUID:(NSString *)aUUID;
 
 // Status checks
 -(BOOL) isChildOfItem:(BookmarkItem *)anItem;
@@ -79,8 +82,47 @@
 -(BOOL) readCaminoXML:(CFXMLTreeRef)aTreeRef;
 
 -(NSDictionary *)writeNativeDictionary;
+-(NSDictionary *)writeSafariDictionary;
 -(NSString *)writeHTML:(unsigned)aPad;
 
-
-
 @end
+
+// Bunch of Keys for reading/writing dictionaries.
+
+// Safari & Camino plist keys
+extern NSString *BMTitleKey;
+extern NSString *BMChildrenKey;
+
+// Camino plist keys
+extern NSString *BMFolderDescKey;
+extern NSString *BMFolderTypeKey;
+extern NSString *BMFolderKeywordKey;
+extern NSString *BMDescKey;
+extern NSString *BMStatusKey;
+extern NSString *BMURLKey;
+extern NSString *BMKeywordKey;
+extern NSString *BMLastVisitKey;
+extern NSString *BMNumberVisitsKey;
+
+// safari keys
+extern NSString *SafariTypeKey;
+extern NSString *SafariLeaf;
+extern NSString *SafariList;
+extern NSString *SafariAutoTab;
+extern NSString *SafariUUIDKey;
+extern NSString *SafariURIDictKey;
+extern NSString *SafariBookmarkTitleKey;
+extern NSString *SafariURLStringKey;
+
+// camino XML keys
+extern NSString *CaminoNameKey;
+extern NSString *CaminoDescKey;
+extern NSString *CaminoTypeKey;
+extern NSString *CaminoKeywordKey;
+extern NSString *CaminoURLKey;
+extern NSString *CaminoToolbarKey;
+extern NSString *CaminoDockMenuKey;
+extern NSString *CaminoGroupKey;
+extern NSString *CaminoBookmarkKey;
+extern NSString *CaminoFolderKey;
+extern NSString *CaminoTrueKey;

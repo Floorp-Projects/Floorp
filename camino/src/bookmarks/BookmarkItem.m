@@ -42,6 +42,45 @@
 // Notifications
 NSString *BookmarkItemChangedNotification = @"bi_cg";
 
+// all our saving/loading keys
+// Safari & Camino plist keys
+NSString *BMTitleKey = @"Title";
+NSString *BMChildrenKey = @"Children";
+
+// Camino plist keys
+NSString *BMFolderDescKey = @"FolderDescription";
+NSString *BMFolderTypeKey = @"FolderType";
+NSString *BMFolderKeywordKey = @"FolderKeyword";
+NSString *BMDescKey = @"Description";
+NSString *BMStatusKey = @"Status";
+NSString *BMURLKey = @"URL";
+NSString *BMKeywordKey = @"Keyword";
+NSString *BMLastVisitKey = @"LastVisitedDate";
+NSString *BMNumberVisitsKey = @"VisitCount";
+
+// safari keys
+NSString *SafariTypeKey = @"WebBookmarkType";
+NSString *SafariLeaf = @"WebBookmarkTypeLeaf";
+NSString *SafariList = @"WebBookmarkTypeList";
+NSString *SafariAutoTab = @"WebBookmarkAutoTab";
+NSString *SafariUUIDKey = @"WebBookmarkUUID";
+NSString *SafariURIDictKey = @"URIDictionary";
+NSString *SafariBookmarkTitleKey = @"title";
+NSString *SafariURLStringKey = @"URLString";
+
+// camino XML keys
+NSString *CaminoNameKey = @"name";
+NSString *CaminoDescKey = @"description";
+NSString *CaminoTypeKey = @"type";
+NSString *CaminoKeywordKey = @"id";
+NSString *CaminoURLKey = @"href";
+NSString *CaminoToolbarKey = @"toolbar";
+NSString *CaminoDockMenuKey = @"dockmenu";
+NSString *CaminoGroupKey = @"group";
+NSString *CaminoBookmarkKey = @"bookmark";
+NSString *CaminoFolderKey = @"folder";
+NSString *CaminoTrueKey = @"true";
+
 
 @implementation BookmarkItem
 //Initialization
@@ -49,11 +88,11 @@ NSString *BookmarkItemChangedNotification = @"bi_cg";
 {
   if ((self = [super init]))
   {
-//    NSString *tempString = [[NSString alloc] init];
     mParent = NULL;
-    mTitle = [[NSString alloc] init];
-    mKeyword = [[NSString alloc] init];
-    mDescription = [[NSString alloc] init];
+    mTitle = [[NSString alloc] init]; //retain count +1
+    mKeyword = [mTitle retain]; //retain count +2
+    mDescription = [mTitle retain]; //retain count +3! and just 1 allocation.
+    mUUID = nil;
     // if we set the icon here, we will get a memory leak.  so don't.
     // subclass will provide icon.
     mIcon = NULL; 
@@ -70,6 +109,7 @@ NSString *BookmarkItemChangedNotification = @"bi_cg";
   [doppleganger setKeyword:[self keyword]];
   [doppleganger setParent:[self parent]];
   [doppleganger setIcon:[self icon]];
+  // do NOT copy the UUID.  It wouldn't be "U" then, would it?
   return doppleganger;
 }
 
@@ -79,6 +119,7 @@ NSString *BookmarkItemChangedNotification = @"bi_cg";
   [mDescription release];
   [mKeyword release];
   [mIcon release];
+  [mUUID release];
   [super dealloc];
 }
 
@@ -104,6 +145,19 @@ NSString *BookmarkItemChangedNotification = @"bi_cg";
   return mKeyword;
 }
 
+// if we ask for a UUID, it means we need
+// one.  So generate it if it doesn't exist. 
+-(NSString *) UUID
+{
+  if (!mUUID) {
+    CFUUIDRef aUUID = CFUUIDCreate(kCFAllocatorDefault);
+    if (aUUID) {
+      mUUID =(NSString *)CFUUIDCreateString(kCFAllocatorDefault, aUUID);
+      CFRelease (aUUID);
+    }
+  }
+  return mUUID;
+}
 
 -(NSImage *)icon
 {
@@ -152,6 +206,13 @@ NSString *BookmarkItemChangedNotification = @"bi_cg";
   mKeyword = aKeyword;
 }
 
+-(void) setUUID:(NSString *)aUUID
+{
+  [aUUID retain];
+  [mUUID release];
+  mUUID = aUUID;
+}
+
 -(void) setIcon:(NSImage *)aIcon
 {
   if (!aIcon)
@@ -194,6 +255,11 @@ NSString *BookmarkItemChangedNotification = @"bi_cg";
 }
 
 -(NSDictionary *)writeNativeDictionary
+{
+  return [NSDictionary dictionary];
+}
+
+-(NSDictionary *)writeSafariDictionary
 {
   return [NSDictionary dictionary];
 }

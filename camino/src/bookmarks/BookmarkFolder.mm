@@ -787,43 +787,19 @@ NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 // reading/writing from/to disk
 //
 #pragma mark -
-//
-// keys for both safari & camino
-//
-NSString *BMFolderTitleKey = @"Title";
-NSString *BMFolderChildrenKey = @"Children";
-// camino only key
-NSString *BMFolderDescKey = @"FolderDescription";
-NSString *BMFolderTypeKey = @"FolderType";
-NSString *BMFolderKeywordKey = @"FolderKeyword";
-// safari only keys
-NSString *SafariTypeKey = @"WebBookmarkType";
-NSString *SafariLeaf = @"WebBookmarkTypeLeaf";
-NSString *SafariList = @"WebBookmarkTypeList";
-NSString *SafariAutoTab = @"WebBookmarkAutoTab";
-
-NSString *CaminoNameKey = @"name";
-NSString *CaminoDescKey = @"description";
-NSString *CaminoTypeKey = @"type";
-NSString *CaminoToolbarKey = @"toolbar";
-NSString *CaminoDockMenuKey = @"dockmenu";
-NSString *CaminoGroupKey = @"group";
-NSString *CaminoBookmarkKey = @"bookmark";
-NSString *CaminoFolderKey = @"folder";
-NSString *CaminoTrueKey = @"true";
 
 -(BOOL) readNativeDictionary:(NSDictionary *)aDict
 {
   id aKid;
   NSEnumerator *enumerator;
   BOOL noErr = YES;
-  [self setTitle:[aDict objectForKey:BMFolderTitleKey]];
+  [self setTitle:[aDict objectForKey:BMTitleKey]];
   [self setDescription:[aDict objectForKey:BMFolderDescKey]];
   [self setKeyword:[aDict objectForKey:BMFolderKeywordKey]];
   [self setSpecialFlag:[[aDict objectForKey:BMFolderTypeKey] unsignedIntValue]];
-  enumerator = [[aDict objectForKey:BMFolderChildrenKey] objectEnumerator];
+  enumerator = [[aDict objectForKey:BMChildrenKey] objectEnumerator];
   while ((aKid = [enumerator nextObject]) && noErr) {
-    if ([aKid objectForKey:BMFolderChildrenKey])
+    if ([aKid objectForKey:BMChildrenKey])
       noErr = [self addBookmarkFolderFromNativeDict:(NSDictionary *)aKid];
     else 
       noErr = [self addBookmarkFromNativeDict:(NSDictionary *)aKid];
@@ -836,8 +812,8 @@ NSString *CaminoTrueKey = @"true";
   id aKid;
   NSEnumerator *enumerator;
   BOOL noErr = YES;
-  [self setTitle:[aDict objectForKey:BMFolderTitleKey]];
-  enumerator = [[aDict objectForKey:BMFolderChildrenKey] objectEnumerator];
+  [self setTitle:[aDict objectForKey:BMTitleKey]];
+  enumerator = [[aDict objectForKey:BMChildrenKey] objectEnumerator];
   while ((aKid = [enumerator nextObject]) && noErr) {
     if ([[aKid objectForKey:SafariTypeKey] isEqualToString:SafariLeaf])
       noErr = [self addBookmarkFromSafariDict:(NSDictionary *)aKid];
@@ -912,11 +888,72 @@ NSString *CaminoTrueKey = @"true";
         [children addObject:aDict];
     }
     return [NSDictionary dictionaryWithObjectsAndKeys:
-      mTitle,BMFolderTitleKey,
+      mTitle,BMTitleKey,
       mDescription,BMFolderDescKey,
       mKeyword,BMFolderKeywordKey,
       mSpecialFlag,BMFolderTypeKey,
-      children,BMFolderChildrenKey, nil];
+      children,BMChildrenKey, nil];
+  }
+  return nil;
+}
+
+-(NSDictionary *)writeSafariDictionary
+{
+  if (![self isSmartFolder]) {
+    id item;
+    NSMutableArray* children = [NSMutableArray array];
+    NSEnumerator* enumerator = [mChildArray objectEnumerator];
+    //get chillins first
+    while ((item = [enumerator nextObject])) {
+      id aDict = [item writeSafariDictionary];
+      if (aDict)
+        [children addObject:aDict];
+    }
+    NSString *titleString;
+    if ([self isToolbar])
+      titleString = @"BookmarksBar";
+    else if ([[BookmarkManager sharedBookmarkManager] bookmarkMenuFolder] == self)
+      titleString = @"BookmarksMenu";
+    else
+      titleString = [self title];
+
+    NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+      titleString,BMTitleKey,
+      SafariList,SafariTypeKey,
+      [self UUID],SafariUUIDKey,
+      children,BMChildrenKey, nil];
+
+    if ([self isGroup])
+      [dict setObject:[NSNumber numberWithBool:YES] forKey:SafariAutoTab];
+    return dict;
+    // now we handle the smart folders
+  } else {
+    NSString *SafariProxyKey = @"WebBookmarkIdentifier";
+    NSString *SafariProxyType = @"WebBookmarkTypeProxy";
+    if ([[BookmarkManager sharedBookmarkManager] rendezvousFolder] == self) {
+      return [NSDictionary dictionaryWithObjectsAndKeys:
+        @"Rendezvous",BMTitleKey,
+        @"Rendezvous Bookmark Proxy Identifier",SafariProxyKey,
+        SafariProxyType,SafariTypeKey,
+        [self UUID],SafariUUIDKey,
+        nil];
+    }
+    else if ([[BookmarkManager sharedBookmarkManager] addressBookFolder] == self) {
+      return [NSDictionary dictionaryWithObjectsAndKeys:
+        @"Address Book",BMTitleKey,
+        @"Address Book Bookmark Proxy Identifier",SafariProxyKey,
+        SafariProxyType,SafariTypeKey,
+        [self UUID],SafariUUIDKey,
+        nil];
+    }
+    else if ([[BookmarkManager sharedBookmarkManager] historyFolder] == self) {
+      return [NSDictionary dictionaryWithObjectsAndKeys:
+        @"History",BMTitleKey,
+        @"History Bookmark Proxy Identifier",SafariProxyKey,
+        SafariProxyType,SafariTypeKey,
+        [self UUID],SafariUUIDKey,
+        nil];
+    }
   }
   return nil;
 }
@@ -929,11 +966,14 @@ NSString *CaminoTrueKey = @"true";
   for (unsigned i = 0;i<aPad;i++) 
     [padString insertString:@"    " atIndex:0];
   // Normal folders
-  if (![self isSpecial])
-    htmlString = [NSString stringWithFormat:@"%@<DT><H3>%@</H3>\n%@<DL><p>\n",
-      padString,
-      [NSString stringWithUTF8String:[[mTitle stringByAddingAmpEscapes] UTF8String]],
-      padString];
+  if ((![self isToolbar] && ![self isRoot] && ![self isSmartFolder])) {
+    NSString *formatString;
+    if ([self isGroup])
+      formatString = @"%@<DT><H3 FOLDER_GROUP=\"true\">%@</H3>\n%@<DL><p>\n";
+    else
+      formatString = @"%@<DT><H3>%@</H3>\n%@<DL><p>\n";
+    htmlString = [NSString stringWithFormat:formatString, padString, [NSString stringWithUTF8String:[[mTitle stringByAddingAmpEscapes] UTF8String]], padString];
+  }
   // Toolbar Folder
   else if ([self isToolbar])
     htmlString = [NSString stringWithFormat:@"%@<DT><H3 PERSONAL_TOOLBAR_FOLDER=\"true\">%@</H3>\n%@<DL><p>\n",
@@ -948,8 +988,8 @@ NSString *CaminoTrueKey = @"true";
       @"<TITLE>Bookmarks</TITLE>",
       @"<H1>Bookmarks</H1>"];
    // Folder-Not-Appearing-In-This-File Folder (ie, smart folders)
-   else
-     htmlString = [NSString stringWithString:@""];
+   else if ([self isSmartFolder])
+     return [NSString string];
   NSEnumerator* enumerator = [mChildArray objectEnumerator];
   //get chillins first
   while ((item = [enumerator nextObject]))

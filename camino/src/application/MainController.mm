@@ -507,6 +507,7 @@ const int kReuseWindowOnAE = 2;
 {
   if ( !mFindDialog )
      mFindDialog = [[FindDlgController alloc] initWithWindowNibName: @"FindDialog"];
+  NSLog(@"window is %@", [[mFindDialog window] description]);
   [mFindDialog showWindow:self];
 }
 
@@ -722,16 +723,46 @@ const int kReuseWindowOnAE = 2;
   [[BookmarkManager sharedBookmarkManager] startImportBookmarks];
 }
 
+// helper for exportBookmarks function
+-(IBAction) setFileExtension:(id)aSender
+{
+  if ([[aSender title] isEqualToString:@"HTML"])
+    [[aSender representedObject] setRequiredFileType:@"html"];
+  else
+    [[aSender representedObject] setRequiredFileType:@"plist"];
+}
+
 -(IBAction) exportBookmarks:(id)aSender
 {
   NSSavePanel* savePanel = [NSSavePanel savePanel];
-  [savePanel setPrompt:@"Export"];		// XXX localize
+  [savePanel setPrompt:NSLocalizedString(@"Export", @"Export")];
+  // make an accessory view for HTML or Safari .plist output
+  NSPopUpButton *button = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(0,0,0,0) pullsDown:NO];
+  [button insertItemWithTitle:@"HTML" atIndex:0];
+  NSMenuItem *fileType = [button itemAtIndex:0];
+  [fileType setTarget:self];
+  [fileType setAction:@selector(setFileExtension:)];
+  [fileType setRepresentedObject:savePanel];
+  [button insertItemWithTitle:@"Safari" atIndex:1];
+  fileType = [button itemAtIndex:1];
+  [fileType setTarget:self];
+  [fileType setAction:@selector(setFileExtension:)];
+  [fileType setRepresentedObject:savePanel];
+  [button selectItemAtIndex:0];
   [savePanel setRequiredFileType:@"html"];
-  
-  int saveResult = [savePanel runModalForDirectory:@"" file:@"Exported Bookmarks"];
+  [button synchronizeTitleAndSelectedItem];
+  [button sizeToFit];
+  [savePanel setAccessoryView:button];
+  // start the save panel
+  int saveResult = [savePanel runModalForDirectory:nil file:NSLocalizedString(@"ExportedBookmarkFile", @"Exported Bookmarks")];
+  int selectedButton = [button indexOfSelectedItem];
+  [button release];
   if (saveResult != NSFileHandlingPanelOKButton)
     return;
-  [[BookmarkManager sharedBookmarkManager] writeHTMLFile:[savePanel filename]];
+  if (0 == selectedButton)
+    [[BookmarkManager sharedBookmarkManager] writeHTMLFile:[savePanel filename]];
+  else
+    [[BookmarkManager sharedBookmarkManager] writeSafariFile:[savePanel filename]];
 }
 
 -(IBAction) addBookmark:(id)aSender

@@ -102,5 +102,6 @@
 // Writing bookmark files
 -(void)writeHTMLFile:(NSString *)pathToFile;
 -(void)writePropertyListFile:(NSString *)pathToFile;
+-(void)writeSafariFile:(NSString *)pathToFile;
 
 @end
