@@ -115,7 +115,7 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
         tmTime.tm_yday = tmTime.tm_wday = 0;
         tmTime.tm_isdst = -1;
         timetTime = mktime(&tmTime);
-        if (-1 != timetTime) {
+        if ((time_t)-1 != timetTime) {
           rv = aDateTimeFormat->FormatTime(aLocale, dateFormatSelector, timeFormatSelector, 
                                            timetTime, mStringOut);
           if (NS_SUCCEEDED(rv)) {
