@@ -711,22 +711,30 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
 
     if (strcmp(outname, "-")) {
         const char *fopen_mode;
+        const char *out_basename;
 #if defined(XP_UNIX)
         const char os_separator = '/';
 #elif defined(XP_WIN)
         const char os_separator = '\\';
 #endif
 
-#if defined(XP_UNIX) || defined(XP_WIN)
-        tmp = strrchr(outname, os_separator);
-        if (!file_basename && tmp) {
-            real_outname = g_strdup_printf("%s.%s", tmp + 1, mode->suffix);
+        /* explicit_output_filename can't be true without a filename */
+        if (explicit_output_filename) {
+            real_outname = g_strdup(outname);
         } else {
-            real_outname = g_strdup_printf("%s.%s", outname, mode->suffix);
-        }
+
+#if defined(XP_UNIX) || defined(XP_WIN)
+            tmp = strrchr(outname, os_separator);
+            if (!file_basename && tmp) {
+                out_basename = tmp + 1;
+            } else {
+                out_basename = outname;
+            }
 #else
-        real_outname = g_strdup_printf("%s.%s", outname, mode->suffix);
+            out_basename = outname;
 #endif
+            real_outname = g_strdup_printf("%s.%s", out_basename, mode->suffix);
+        }
 
         /* Use binary write for typelib mode */
         fopen_mode = (strcmp(mode->mode, "typelib")) ? "w" : "wb";
