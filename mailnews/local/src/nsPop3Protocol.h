@@ -259,14 +259,12 @@ public:
     const char* GetUsername() { return m_username.GetBuffer(); };
     void SetUsername(const char* name);
 
-    const char* GetPassword();
-    void SetPassword(const char* password);
+    nsresult GetPassword(char ** aPassword);
 
 private:
 
     PRUint32 m_pop3CapabilityFlags;
     nsCString m_username;
-    nsCString m_password;
     Pop3ConData* m_pop3ConData;
 	nsCString m_senderInfo;
 	nsCString m_commandResponse;

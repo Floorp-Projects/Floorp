@@ -428,74 +428,31 @@ void nsPop3Protocol::SetUsername(const char* name)
 		m_username = name;
 }
 
-const char * nsPop3Protocol::GetPassword()
+nsresult nsPop3Protocol::GetPassword(char ** aPassword)
 {
-	// okay, here's the scoop for this messs...
-	// (1) if we have a password already, go ahead and use it!
-	// (2) if we don't have a password, see if we've already asked the user
-	//	   for the password this session by checking with the server...If it has a pwd use it!!!
-	// (3) otherwise prompt the user for a password and then remember that password in the server
+	nsresult rv = NS_OK;
+	nsCOMPtr<nsIMsgIncomingServer> server;
+	nsCOMPtr<nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(m_nsIPop3URL);
+	msgUrl->GetServer(getter_AddRefs(server));
 
-	if (m_password.IsEmpty() || TestFlag(POP3_PASSWORD_FAILED))
+	if (server)
 	{
-		nsCOMPtr<nsIMsgIncomingServer> server;
-		nsCOMPtr<nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(m_nsIPop3URL);
-		msgUrl->GetServer(getter_AddRefs(server));
-		nsXPIDLCString serverPassword;
-		server->GetPassword(getter_Copies(serverPassword));
+		if (TestFlag(POP3_PASSWORD_FAILED))
+		{
+			// if we've already gotten a password and it wasn't correct..clear
+			// out the password and try again.
+			rv = server->SetPassword("");
+		}
 
-		// (2) see if the server already knows the password and use it if does...
-		// side note....if the password failed sign is present then we should ignore the server password
-		// and prompt the user for it again.
-		if (!TestFlag(POP3_PASSWORD_FAILED) && serverPassword && nsCRT::strlen(serverPassword) > 0) 
-			m_password = serverPassword;
-		else
-		{	
-			// (3) prompt the user for the password
-			// we don't have one so ask the user for it.
-			ClearFlag(POP3_PASSWORD_FAILED);
-			nsresult rv = NS_OK;
-			NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
-			if (NS_SUCCEEDED(rv))
-			{
-				PRUnichar * uniPassword;
-				PRBool okayValue = PR_TRUE;
-				char * promptText = nsnull;
-				nsXPIDLCString hostName;
-			
-				msgUrl->GetHost(getter_Copies(hostName));
+		ClearFlag(POP3_PASSWORD_FAILED);
+		rv = server->GetPassword(PR_TRUE /* ask for UI */, aPassword);
 
-				// mscott - this is just a temporary hack using the raw string..this needs to be pushed into
-				// a string bundle!!!!!
-				if (hostName)
-					promptText = PR_smprintf("Enter your password for %s@%s.", (const char *) m_username, (const char *) hostName);
-				else
-					promptText = PL_strdup("Enter your password here: ");
-
-				dialog->PromptPassword(nsAutoString(promptText).GetUnicode(), &uniPassword, &okayValue);
-				PR_FREEIF(promptText);
-				
-				if (!okayValue) // if the user pressed cancel, just return NULL;
-					return nsnull;
-
-				m_password = uniPassword;
-				// this ugly cast is ok...there is a bug in the idl compiler that is preventing 
-				// the char * argument to SetPassword from being const.
-				server->SetPassword((char *) m_password.GetBuffer());
-			}
-		} // if the server doesn't know the password
 	}
-	
-	return m_password.GetBuffer();
-}
+	else
+		rv = NS_ERROR_FAILURE;
 
-void nsPop3Protocol::SetPassword(const char* passwd)
-{
-    NS_ASSERTION(passwd, "no password specified!");
-	if (passwd)
-		m_password = passwd;
+	return rv;
 }
-
 
 nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
 {
@@ -512,9 +469,10 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
 	// -*-*-*- To Do:
 	// Call SetUsername(accntName);
 	// Call SetPassword(aPassword);
-	const char * password = GetPassword();
+	nsXPIDLCString password;
+	rv = GetPassword(getter_Copies(password));
 	// if we didn't get a password back, abort the entire operation!
-	if (!password)
+	if (NS_FAILED(rv) || !password)
 		return NS_ERROR_FAILURE;
 	
 	nsCOMPtr<nsIURL> url = do_QueryInterface(aURL, &rv);
@@ -842,8 +800,9 @@ PRInt32 nsPop3Protocol::SendPassword()
     /* check username response */
     if (!m_pop3ConData->command_succeeded)
         return(Error(MK_POP3_USERNAME_FAILURE));
-    const char * password = GetPassword();
-    if (!password || !*password)
+    nsXPIDLCString password;
+	nsresult rv = GetPassword(getter_Copies(password));
+    if (NS_FAILED(rv) || !password || !(* (const char *) password))
         return Error(MK_POP3_PASSWORD_UNDEFINED);
 
 #if 0
@@ -862,7 +821,7 @@ PRInt32 nsPop3Protocol::SendPassword()
 
 	nsCAutoString cmd;
 	cmd = "PASS ";
-	cmd += password;
+	cmd += (const char *) password;
 	cmd += CRLF;
 	nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
     return SendData(url, cmd);
@@ -901,7 +860,6 @@ PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
         /* clear the bogus password in case 
          * we need to sync with auth smtp password 
          */
-		m_password = "";
         return 0;
 	  }
 #if 0 // not yet
@@ -2342,10 +2300,12 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
             /* If we're just checking for new mail (biff) then don't
                prompt the user for a password; just tell him we don't
                know whether he has new mail. */
-			nsCAutoString password = GetPassword();
+			nsXPIDLCString password;
+			nsresult rv = GetPassword(getter_Copies(password));
+			const char * pwd = (const char *) password;
             if ((m_pop3ConData->only_check_for_new_mail /* ||
                  MSG_Biff_Master_NikiCallingGetNewMail() */) && 
-                (password.IsEmpty() || m_username.IsEmpty())) 
+                (!password || !*password || m_username.IsEmpty())) 
             {
                 status = MK_POP3_PASSWORD_UNDEFINED;
                 m_pop3ConData->biffstate = nsMsgBiffState_Unknown;
@@ -2424,8 +2384,10 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
                 net_pop3_password_pending = PR_TRUE;
             }
 #endif 
-           nsCAutoString pwd = GetPassword();
-           if (m_username.IsEmpty() || pwd.IsEmpty())
+           nsXPIDLCString apwd;
+		   GetPassword(getter_Copies(apwd));
+		   const char * cpwd = (const char *) pwd;
+           if (m_username.IsEmpty() || !pwd || !*pwd)
             {
                 // net_pop3_block = PR_FALSE;
                 return NS_OK;

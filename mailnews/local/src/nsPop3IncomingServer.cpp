@@ -55,16 +55,9 @@ public:
     NS_IMETHOD GetServerURI(char * *uri);
 
 	NS_IMETHOD PerformBiff();
-
-	// Override the implementations of Get/Set Password in 
-	// nsMsgIncomingServer. We don't want to get the password
-	// from preferences
-	NS_IMETHOD GetPassword(char * *aPassword);
-	NS_IMETHOD SetPassword(char * aPassword);
     
 private:
     char *m_rootFolderPath;
-	nsCString m_password;
     PRBool m_leaveOnServer;
     PRBool m_deleteMailLeftOnServer;
 };
@@ -86,28 +79,6 @@ nsPop3IncomingServer::nsPop3IncomingServer() :
 nsPop3IncomingServer::~nsPop3IncomingServer()
 {
     PR_FREEIF(m_rootFolderPath);
-}
-
-NS_IMETHODIMP nsPop3IncomingServer::GetPassword(char * *aPassword)
-{
-	nsresult rv = NS_OK;
-	if (aPassword) 
-		*aPassword = m_password.ToNewCString();
-	else 
-		rv = NS_ERROR_NULL_POINTER;
-
-	return rv;	
-}
-
-NS_IMETHODIMP nsPop3IncomingServer::SetPassword(char * aPassword)
-{
-	nsresult rv = NS_OK;
-	if (aPassword)
-		m_password = aPassword;
-	else
-		rv = NS_ERROR_NULL_POINTER;
-
-	return rv;
 }
 
 NS_IMPL_SERVERPREF_STR(nsPop3IncomingServer,
