@@ -337,8 +337,15 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         }
         break;
 
+    case eMetric_ScrollArrowStyle:
+        aMetric = eMetric_ScrollArrowStyleSingle;
+        break;
+    case eMetric_ScrollSliderStyle:
+        aMetric = eMetric_ScrollThumbStyleProportional;
+        break;
+
     default:
-        aMetric = -1;
+        aMetric = 0;
         res = NS_ERROR_FAILURE;
     }
   return res;
