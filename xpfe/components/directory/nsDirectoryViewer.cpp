@@ -1028,6 +1028,9 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
                                          nsIStreamListener** aDocListenerResult,
                                          nsIContentViewer** aDocViewerResult)
 {
+  // This is where we shunt the HTTP/Index stream into our datasource,
+  // and open the directory viewer XUL file as the content stream to
+  // load in its place.
   nsresult rv;
 
   // Create a dummy loader that will load a stub XUL document.
