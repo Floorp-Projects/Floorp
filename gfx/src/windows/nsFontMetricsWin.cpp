@@ -304,7 +304,7 @@ GetIndexToLocFormat(HDC aDC)
 }
 
 static PRUint8*
-GetSpaces(HDC aDC)
+GetSpaces(HDC aDC, PRUint32* aMaxGlyph)
 {
   int isLong = GetIndexToLocFormat(aDC);
   if (isLong < 0) {
@@ -325,6 +325,7 @@ GetSpaces(HDC aDC)
   }
   if (isLong) {
     DWORD longLen = ((len / 4) - 1);
+    *aMaxGlyph = longLen;
     PRUint32* longBuf = (PRUint32*) buf;
     for (PRUint32 i = 0; i < longLen; i++) {
       if (longBuf[i] == longBuf[i+1]) {
@@ -337,6 +338,7 @@ GetSpaces(HDC aDC)
   }
   else {
     DWORD shortLen = ((len / 2) - 1);
+    *aMaxGlyph = shortLen;
     PRUint16* shortBuf = (PRUint16*) buf;
     for (PRUint16 i = 0; i < shortLen; i++) {
       if (shortBuf[i] == shortBuf[i+1]) {
@@ -472,7 +474,8 @@ nsFontMetricsWin::GetCMAP(HDC aDC)
     }
     SET_SPACE(0x3000);
   }
-  PRUint8* isSpace = GetSpaces(aDC);
+  PRUint32 maxGlyph;
+  PRUint8* isSpace = GetSpaces(aDC, &maxGlyph);
   if (!isSpace) {
     PR_Free(buf);
     delete name;
@@ -490,13 +493,15 @@ nsFontMetricsWin::GetCMAP(HDC aDC)
         if ((PRUint8*) g < end) {
           if (*g) {
             PRUint16 glyph = idDelta[i] + *g;
-            if (isSpace[glyph]) {
-              if (SHOULD_BE_SPACE(c)) {
+            if (glyph < maxGlyph) {
+              if (isSpace[glyph]) {
+                if (SHOULD_BE_SPACE(c)) {
+                  ADD_GLYPH(map, c);
+                }
+              }
+              else {
                 ADD_GLYPH(map, c);
               }
-            }
-            else {
-              ADD_GLYPH(map, c);
             }
           }
         }
@@ -510,13 +515,15 @@ nsFontMetricsWin::GetCMAP(HDC aDC)
       PRUint16 endC = endCode[i];
       for (PRUint32 c = startCode[i]; c <= endC; c++) {
         PRUint16 glyph = idDelta[i] + c;
-        if (isSpace[glyph]) {
-          if (SHOULD_BE_SPACE(c)) {
+        if (glyph < maxGlyph) {
+          if (isSpace[glyph]) {
+            if (SHOULD_BE_SPACE(c)) {
+              ADD_GLYPH(map, c);
+            }
+          }
+          else {
             ADD_GLYPH(map, c);
           }
-        }
-        else {
-          ADD_GLYPH(map, c);
         }
       }
       //printf("0x%04X-0x%04X ", startCode[i], endC);
