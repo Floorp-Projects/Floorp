@@ -125,3 +125,11 @@ NS_IMETHODIMP nsScriptableRegion::ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 a
 	*containsRect = mRegion->ContainsRect(aX, aY, aWidth, aHeight);
 	return NS_OK;
 }
+
+
+NS_IMETHODIMP nsScriptableRegion::GetRegion(nsIRegion** outRgn)
+{
+  *outRgn = mRegion;
+  NS_IF_ADDREF(*outRgn);
+  return NS_OK;
+}

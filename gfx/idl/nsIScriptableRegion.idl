@@ -22,10 +22,17 @@
 
 #include "nsISupports.idl"
 
+%{C++
+class nsIRegion;
+%}
+
+[ptr] native nsIRegion(nsIRegion);
+
+
 [scriptable, uuid(82d8f400-5bde-11d3-b033-b27a62766bbc)]
 interface nsIScriptableRegion : nsISupports
 {
-  void Init ( ) ;
+  void init ( ) ;
 
   /**
   * copy operator equivalent that takes another region
@@ -35,7 +42,7 @@ interface nsIScriptableRegion : nsISupports
   *
   **/
 
-  void SetToRegion ( in nsIScriptableRegion aRegion );
+  void setToRegion ( in nsIScriptableRegion aRegion );
 
   /**
   * copy operator equivalent that takes a rect
@@ -48,7 +55,7 @@ interface nsIScriptableRegion : nsISupports
   *
   **/
 
-  void SetToRect ( in long aX, in long aY, in long aWidth, in long aHeight );
+  void setToRect ( in long aX, in long aY, in long aWidth, in long aHeight );
 
   /**
   * destructively intersect another region with this one
@@ -58,7 +65,7 @@ interface nsIScriptableRegion : nsISupports
   *
   **/
 
-  void IntersectRegion ( in nsIScriptableRegion aRegion ) ;
+  void intersectRegion ( in nsIScriptableRegion aRegion ) ;
 
   /**
   * destructively intersect a rect with this region
@@ -71,7 +78,7 @@ interface nsIScriptableRegion : nsISupports
   *
   **/
 
-  void IntersectRect ( in long aX, in long aY, in long aWidth, in long aHeight ) ;
+  void intersectRect ( in long aX, in long aY, in long aWidth, in long aHeight ) ;
 
   /**
   * destructively union another region with this one
@@ -81,7 +88,7 @@ interface nsIScriptableRegion : nsISupports
   *
   **/
 
-  void UnionRegion ( in nsIScriptableRegion aRegion ) ;
+  void unionRegion ( in nsIScriptableRegion aRegion ) ;
 
   /**
   * destructively union a rect with this region
@@ -94,7 +101,7 @@ interface nsIScriptableRegion : nsISupports
   *
   **/
 
-  void UnionRect ( in long aX, in long aY, in long aWidth, in long aHeight ) ;
+  void unionRect ( in long aX, in long aY, in long aWidth, in long aHeight ) ;
 
   /**
   * destructively subtract another region with this one
@@ -104,7 +111,7 @@ interface nsIScriptableRegion : nsISupports
   *
   **/
 
-  void SubtractRegion ( in nsIScriptableRegion aRegion ) ;
+  void subtractRegion ( in nsIScriptableRegion aRegion ) ;
 
   /**
   * destructively subtract a rect from this region
@@ -117,7 +124,7 @@ interface nsIScriptableRegion : nsISupports
   *
   **/
 
-  void SubtractRect ( in long aX, in long aY, in long aWidth, in long aHeight ) ;
+  void subtractRect ( in long aX, in long aY, in long aWidth, in long aHeight ) ;
   
   /**
   * is this region empty? i.e. does it contain any pixels
@@ -127,7 +134,7 @@ interface nsIScriptableRegion : nsISupports
   *
   **/
 
-  boolean IsEmpty ( ) ;
+  boolean isEmpty ( ) ;
 
   /**
   * == operator equivalent i.e. do the regions contain exactly
@@ -138,7 +145,7 @@ interface nsIScriptableRegion : nsISupports
   *
   **/
 
-  boolean IsEqualRegion ( in nsIScriptableRegion aRegion ) ;
+  boolean isEqualRegion ( in nsIScriptableRegion aRegion ) ;
 
   /**
   * returns the bounding box of the region i.e. the smallest
@@ -151,7 +158,7 @@ interface nsIScriptableRegion : nsISupports
   * @return     void
   *
   **/
-  void GetBoundingBox ( out long aX, out long aY, out long aWidth, out long aHeight ) ;
+  void getBoundingBox ( out long aX, out long aY, out long aWidth, out long aHeight ) ;
 
   /**
   * offsets the region in x and y
@@ -161,7 +168,7 @@ interface nsIScriptableRegion : nsISupports
   * @return          void
   *
   **/
-  void Offset ( in long aXOffset, in long aYOffset ) ;
+  void offset ( in long aXOffset, in long aYOffset ) ;
 
   /**
   * does the region intersect the rectangle?
@@ -171,7 +178,9 @@ interface nsIScriptableRegion : nsISupports
   *
   **/
 
-  boolean ContainsRect ( in long aX, in long aY, in long aWidth, in long aHeight ) ;
+  boolean containsRect ( in long aX, in long aY, in long aWidth, in long aHeight ) ;
+  
+  [noscript] readonly attribute nsIRegion region;
   
 };
 
