@@ -51,20 +51,25 @@
 #include "nsAString.h"
 
 //
-// choose a conversion library.  under linux we prefer using wcrtomb/mbrtowc
-// to improve performance.  other platforms in which wchar_t is unicode might
-// benefit from this optimization as well.
+// choose a conversion library.  we used to use mbrtowc/wcrtomb under Linux,
+// but that doesn't work for non-BMP characters whether we use '-fshort-wchar'
+// or not (see bug 206811 and 
+// news://news.mozilla.org:119/bajml3$fvr1@ripley.netscape.com). we now use
+// iconv for all platforms where nltypes.h and nllanginfo.h are present 
+// along with iconv.
 //
-#if defined(__linux) && defined(HAVE_WCRTOMB) && defined(HAVE_MBRTOWC)
-#define USE_STDCONV 1
-#elif defined(HAVE_ICONV) && defined(HAVE_NL_TYPES_H) && defined(HAVE_NL_LANGINFO)
+#if 1
+#if defined(HAVE_ICONV) && defined(HAVE_NL_TYPES_H) && defined(HAVE_NL_LANGINFO)
 #define USE_ICONV 1
+#else
+#define USE_STDCONV 1
+#endif
 #else
 #define USE_STDCONV 1
 #endif
 
 static void
-isolatin1_to_ucs2(const char **input, PRUint32 *inputLeft, PRUnichar **output, PRUint32 *outputLeft)
+isolatin1_to_utf16(const char **input, PRUint32 *inputLeft, PRUnichar **output, PRUint32 *outputLeft)
 {
     while (*inputLeft && *outputLeft) {
         **output = (unsigned char) **input;
@@ -76,7 +81,7 @@ isolatin1_to_ucs2(const char **input, PRUint32 *inputLeft, PRUnichar **output, P
 }
 
 static void
-ucs2_to_isolatin1(const PRUnichar **input, PRUint32 *inputLeft, char **output, PRUint32 *outputLeft)
+utf16_to_isolatin1(const PRUnichar **input, PRUint32 *inputLeft, char **output, PRUint32 *outputLeft)
 {
     while (*inputLeft && *outputLeft) {
         **output = (unsigned char) **input;
@@ -174,7 +179,13 @@ xp_iconv_open(const char **to_list, const char **from_list)
     return INVALID_ICONV_T;
 }
 
-static const char *UCS_2_NAMES[] = {
+// PRUnichar[] is NOT a UCS-2 array BUT for UTF-16 string. Therefore, we
+// have to use UTF-16 with iconv(3) on platforms where it's supported.
+// We could list 'UTF-16' name variants, but all platforms known (to me) to 
+// support UTF-16 in iconv(3) uses 'UTF-16'. Let me know (jshin) if there's an
+// exception. (bug 206811)
+static const char *UTF_16_NAMES[] = {
+    "UTF-16",
     "UCS-2",
     "UCS2",
     "UCS_2",
@@ -265,18 +276,18 @@ nsNativeCharsetConverter::LazyInit()
     else
         native_charset_list[0] = native_charset;
 
-    gNativeToUnicode = xp_iconv_open(UCS_2_NAMES, native_charset_list);
-    gUnicodeToNative = xp_iconv_open(native_charset_list, UCS_2_NAMES);
+    gNativeToUnicode = xp_iconv_open(UTF_16_NAMES, native_charset_list);
+    gUnicodeToNative = xp_iconv_open(native_charset_list, UTF_16_NAMES);
 
 #if defined(ENABLE_UTF8_FALLBACK_SUPPORT)
     if (gNativeToUnicode == INVALID_ICONV_T) {
         gNativeToUTF8 = xp_iconv_open(UTF_8_NAMES, native_charset_list);
-        gUTF8ToUnicode = xp_iconv_open(UCS_2_NAMES, UTF_8_NAMES);
+        gUTF8ToUnicode = xp_iconv_open(UTF_16_NAMES, UTF_8_NAMES);
         NS_ASSERTION(gNativeToUTF8 != INVALID_ICONV_T, "no native to utf-8 converter");
         NS_ASSERTION(gUTF8ToUnicode != INVALID_ICONV_T, "no utf-8 to ucs-2 converter");
     }
     if (gUnicodeToNative == INVALID_ICONV_T) {
-        gUnicodeToUTF8 = xp_iconv_open(UTF_8_NAMES, UCS_2_NAMES);
+        gUnicodeToUTF8 = xp_iconv_open(UTF_8_NAMES, UTF_16_NAMES);
         gUTF8ToNative = xp_iconv_open(native_charset_list, UTF_8_NAMES);
         NS_ASSERTION(gUnicodeToUTF8 != INVALID_ICONV_T, "no unicode to utf-8 converter");
         NS_ASSERTION(gUTF8ToNative != INVALID_ICONV_T, "no utf-8 to native converter");
@@ -459,7 +470,7 @@ nsNativeCharsetConverter::NativeToUnicode(const char **input,
 #endif
 
     // fallback: zero-pad and hope for the best
-    isolatin1_to_ucs2(input, inputLeft, output, outputLeft);
+    isolatin1_to_utf16(input, inputLeft, output, outputLeft);
 
     return NS_OK;
 }
@@ -534,7 +545,7 @@ nsNativeCharsetConverter::UnicodeToNative(const PRUnichar **input,
 #endif
 
     // fallback: truncate and hope for the best
-    ucs2_to_isolatin1(input, inputLeft, output, outputLeft);
+    utf16_to_isolatin1(input, inputLeft, output, outputLeft);
 
     return NS_OK;
 }
@@ -645,7 +656,7 @@ nsNativeCharsetConverter::NativeToUnicode(const char **input,
     else {
         // wchar_t isn't unicode, so the best we can do is treat the
         // input as if it is isolatin1 :(
-        isolatin1_to_ucs2(input, inputLeft, output, outputLeft);
+        isolatin1_to_utf16(input, inputLeft, output, outputLeft);
     }
 
     return NS_OK;
@@ -683,7 +694,7 @@ nsNativeCharsetConverter::UnicodeToNative(const PRUnichar **input,
     else {
         // wchar_t isn't unicode, so the best we can do is treat the
         // input as if it is isolatin1 :(
-        ucs2_to_isolatin1(input, inputLeft, output, outputLeft);
+        utf16_to_isolatin1(input, inputLeft, output, outputLeft);
     }
 
     return NS_OK;
