@@ -1808,8 +1808,7 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
   //Capturing stage evaluation
   if (NS_EVENT_FLAG_BUBBLE != aFlags && aEvent->message != NS_PAGE_LOAD &&
       aEvent->message != NS_SCRIPT_LOAD &&
-      aEvent->message != NS_IMAGE_ERROR && aEvent->message != NS_IMAGE_LOAD &&
-      aEvent->message != NS_SCROLL_EVENT) {
+      aEvent->message != NS_IMAGE_ERROR && aEvent->message != NS_IMAGE_LOAD) {
     //Initiate capturing phase.  Special case first call to document
     if (parent) {
       parent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
@@ -1836,10 +1835,6 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
     nsCOMPtr<nsIDOMEventTarget> curTarg(do_QueryInterface(NS_STATIC_CAST(nsIHTMLContent *, this)));
     mDOMSlots->mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, curTarg, aFlags, aEventStatus);
     aEvent->flags &= ~aFlags;
-    // We don't want scroll events to bubble further after it has been 
-    // handled at the local stage.
-    if (aEvent->message == NS_SCROLL_EVENT && aFlags == NS_EVENT_FLAG_BUBBLE)
-      aEvent->flags = NS_EVENT_FLAG_CANT_BUBBLE;
   }
 
   if (retarget) {
@@ -1854,8 +1849,7 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
   //Bubbling stage
   if (NS_EVENT_FLAG_CAPTURE != aFlags && mDocument &&
       aEvent->message != NS_PAGE_LOAD && aEvent->message != NS_SCRIPT_LOAD &&
-      aEvent->message != NS_IMAGE_ERROR && aEvent->message != NS_IMAGE_LOAD &&
-      (aEvent->message == NS_SCROLL_EVENT && aEvent->flags != NS_EVENT_FLAG_CANT_BUBBLE)) {
+      aEvent->message != NS_IMAGE_ERROR && aEvent->message != NS_IMAGE_LOAD) {
     if (parent) {
       /*
        * If there's a parent we pass the event to the parent...
