@@ -1191,7 +1191,11 @@ PR_IMPLEMENT(PRFileDesc*) PR_Socket(PRInt32 domain, PRInt32 type, PRInt32 proto)
 	}
 #ifdef HAVE_SOCKET_KEEPALIVE
 	/* "Keep-alive" packets are specific to TCP. */
-	if (domain == AF_INET && type == SOCK_STREAM) {
+	if ((domain == AF_INET
+#if defined(_PR_INET6)
+			|| domain == AF_INET6
+#endif
+			) && type == SOCK_STREAM) {
 		if (setsockopt(osfd, (int)SOL_SOCKET, SO_KEEPALIVE,
 #ifdef XP_OS2_VACPP
             (char *)&one, sizeof(one) ) < 0) {
