@@ -605,12 +605,14 @@ function checkSetTimeDate()
 
 /**
 *   Called when the start or due datetime checkbox is clicked.
-*   Enables/disables corresponding datetime picker.
+*   Enables/disables corresponding datetime picker and alarm relation.
 */
 function onDateTimeCheckbox(checkbox, pickerId)
 {
    var picker = document.getElementById( pickerId );
    picker.disabled = !checkbox.checked;
+
+   updateAlarmItemEnabled();   
 
    updateOKButton();
 }
@@ -753,42 +755,45 @@ function commandAlarm()
 }
 
 
-/**
-*   Enable/Disable Alarm items
-*/
-
+/** Enable/Disable Alarm options with alarm checked.
+  
+    Enables/disables alarm trigger relations menulist depending on whether
+    start/due dates are enabled.
+    If both disabled, alarm checkbox is disabled.
+    If one disabled, other relation is selected and menulist is disabled.
+    (Prevents crash that occurs if alarm checked but no corresponding date.) **/
 function updateAlarmItemEnabled()
 {
-   var alarmCheckBox = "alarm-checkbox";
-   
-   var alarmField = "alarm-length-field";
-   var alarmMenu = "alarm-length-units";
-   var alarmTrigger = "alarm-trigger-relation";
-      
-   var alarmEmailCheckbox = "alarm-email-checkbox";
-   var alarmEmailField = "alarm-email-field";
+  var startChecked = getFieldValue("start-checkbox", "checked");
+  var dueChecked = getFieldValue("due-checkbox", "checked");
 
-//   if( getFieldValue(alarmCheckBox, "checked" ) || getFieldValue( alarmEmailCheckbox, "checked" ) )
-   if( getFieldValue(alarmCheckBox, "checked" ) )
-   {
-      // call remove attribute beacuse some widget code checks for the presense of a 
-      // disabled attribute, not the value.
-      setFieldValue( alarmField, false, "disabled" );
-      setFieldValue( alarmMenu, false, "disabled" );
-      setFieldValue( alarmTrigger, false, "disabled" );
-      setFieldValue( alarmEmailField, false, "disabled" );
-      setFieldValue( alarmEmailCheckbox, false, "disabled" );
-   }
-   else
-   {
-      setFieldValue( alarmField, true, "disabled" );
-      setFieldValue( alarmMenu, true, "disabled" );
-      setFieldValue( alarmTrigger, true, "disabled" );
-      setFieldValue( alarmEmailField, true, "disabled" );
-      setFieldValue( alarmEmailCheckbox, true, "disabled" );
-   }
+  // disable alarm-checkbox if and only if neither checked
+  var alarmDisabled = !(startChecked || dueChecked);
+  setFieldValue("alarm-checkbox", alarmDisabled, "disabled");
+  // uncheck alarm-checkbox if disabled (no alarm can trigger)
+  if (alarmDisabled)
+    setFieldValue("alarm-checkbox", false, "checked");
+
+  var alarmChecked = getFieldValue("alarm-checkbox", "checked" );
+  setFieldValue( "alarm-length-field", !alarmChecked, "disabled" );
+  setFieldValue( "alarm-length-units", !alarmChecked, "disabled" );
+  setFieldValue( "alarm-email-field", !alarmChecked, "disabled" );
+  setFieldValue( "alarm-email-checkbox", !alarmChecked, "disabled" );
+
+  // if exactly one checked, select its relation
+  if (startChecked && !dueChecked)
+  {
+    menuListFieldSelectItem("alarm-trigger-relation", "ICAL_RELATED_START");
+  }  
+  else if (!startChecked && dueChecked)
+  {
+    menuListFieldSelectItem("alarm-trigger-relation", "ICAL_RELATED_END");
+  } 
+
+  // choice enabled if alarm on and both dates checked,
+  var triggerChoiceEnabled = alarmChecked && startChecked && dueChecked;
+  setFieldValue("alarm-trigger-relation", !triggerChoiceEnabled, "disabled");
 }
-
 
 /**
 *   Called when the alarm checkbox is clicked.
@@ -1421,6 +1426,39 @@ function loadURL()
    launch = true;
 }
 
+/** Select value in menuList with id menuListId **/
+function menuListFieldSelectItem(menuListId, value)
+{
+  menuListSelectItem(document.getElementById(menuListId), value);
+}
+
+/** Select value in menuList.  Throws string if no such value. **/
+function menuListSelectItem(menuList, value)
+{
+  var index = menuListIndexOf(menuList, value);
+  if (index != -1) {
+    menuList.selectedIndex = index;
+  } else {
+    throw "No such Element: "+value;
+  }
+}
+
+/** Find index of menuitem with the given value, or return -1 if not found. **/
+function menuListIndexOf(menuList, value)
+{
+  var items = menuList.menupopup.childNodes;
+  var index = -1;
+  for (var i = 0; i < items.length; i++)
+  {
+    var element = items[i];
+    if (element.nodeName == "menuitem")
+      index++;
+    if (element.getAttribute("value") == value)
+      return index;
+  }
+  return -1; // not found
+}
+
 
 
 /**
@@ -1443,6 +1481,8 @@ function setFieldValue( elementId, newValue, propertyName  )
       
       if( newValue === false )
       {
+         // calls removeAttribute because some widget code checks
+         // for the presence of a disabled attribute, not the value.
          field.removeAttribute( propertyName );
       }
       else
