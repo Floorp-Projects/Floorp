@@ -33,7 +33,7 @@
  *
  */
 
-const __vnk_version        = "0.9.36+";
+const __vnk_version        = "0.9.37";
 const __vnk_requiredLocale = "0.9.x";
 var   __vnk_versionSuffix  = "";
 
@@ -133,10 +133,11 @@ function isURLVenkman (url)
 
 function isURLFiltered (url)
 {
-    return ((console.prefs["enableChromeFilter"] &&
-            (url.search(/^chrome:/) == 0 ||
-             ("componentPath" in console &&
-              url.indexOf(console.componentPath) == 0))) ||
+    return (!url ||
+            (console.prefs["enableChromeFilter"] &&
+             (url.search(/^chrome:/) == 0 ||
+              ("componentPath" in console &&
+               url.indexOf(console.componentPath) == 0))) ||
             (url.search (/^chrome:\/\/venkman/) == 0 &&
              url.search (/test/) == -1));
 }
