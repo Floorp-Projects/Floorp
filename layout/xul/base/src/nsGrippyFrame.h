@@ -38,6 +38,8 @@ public:
 
   friend nsresult NS_NewGrippyFrame(nsIFrame** aNewFrame);
 
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
+
   static nsIFrame* GetChildBeforeAfter(nsIFrame* start, PRBool before);
   static nsIFrame* GetChildAt(nsIFrame* parent, PRInt32 index);
   static PRInt32 IndexOf(nsIFrame* parent, nsIFrame* child);

@@ -1254,3 +1254,9 @@ nsTitledButtonFrame::Release(void)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsTitledButtonFrame::GetFrameName(nsString& aResult) const
+{
+  aResult = "TitledButton";
+  return NS_OK;
+}

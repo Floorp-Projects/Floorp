@@ -199,3 +199,9 @@ nsGrippyFrame::GetChildAt(nsIFrame* parent, PRInt32 index)
   return nsnull;
 }
 
+NS_IMETHODIMP
+nsGrippyFrame::GetFrameName(nsString& aResult) const
+{
+  aResult = "Grippy";
+  return NS_OK;
+}
