@@ -568,6 +568,7 @@ toolbar titledbutton[disabled="true"]:active {
 
 xpmenubar xpmenu {
   border: 1px solid transparent;
+  padding: 4px;
 }
 
 xpmenu[menuactive="true"] {
