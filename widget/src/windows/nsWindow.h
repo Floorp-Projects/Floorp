@@ -412,6 +412,7 @@ public:
 #ifdef ACCESSIBILITY
     virtual PRBool          DispatchAccessibleEvent(PRUint32 aEventType, nsIAccessible** aAccessible, nsPoint* aPoint = nsnull);
     void                    CreateRootAccessible();
+    void                    ClearRootAccessible();
 #endif
     virtual PRBool          AutoErase();
     nsPoint*                GetLastPoint() { return &mLastPoint; }
