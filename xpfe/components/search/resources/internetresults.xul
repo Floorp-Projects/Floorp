@@ -49,8 +49,8 @@
   
   <tree id="resultsList" flex="1" class="plain"
            datasources="rdf:internetsearch" context="contextual"
-           onselect="listSelect(event);"
-           onclick="listClick(event);">
+           onselect="return listSelect(event);"
+           onclick ="return listClick (event);">
 
     <treecols onclick="doSort(event.target.id, 'http://home.netscape.com/NC-rdf#PageRank');">
       <treecol id="NameColumn" primary="true" label="&name.column.label;"
