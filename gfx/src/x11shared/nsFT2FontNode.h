@@ -41,7 +41,6 @@
 #define NS_FT2_FONT_NODE_H
 
 #include "nsFontMetricsGTK.h"
-#include "nsFT2FontCatalog.h"
 
 class nsFT2FontNode {
 public:
@@ -51,10 +50,14 @@ public:
 
 #if (defined(MOZ_ENABLE_FREETYPE2))
 protected:
-  static nsFontNode* LoadNode(nsFontCatalogEntry*,const char*,nsFontNodeArray*);
-  static PRBool      LoadNodeTable(nsFontCatalog *);
+  static PRBool ParseXLFD(char *, char**, char**, char**, char**);
+  static nsFontNode* LoadNode(nsITrueTypeFontCatalogEntry*,
+                              const char*,
+                              nsFontNodeArray*);
+  static PRBool      LoadNodeTable();
   static nsHashtable *mFreeTypeNodes;
   static PRBool      sInited;
+  static nsIFontCatalogService* sFcs;
 #endif //MOZ_ENABLE_FREETYPE2
 
 };
