@@ -207,15 +207,42 @@ void nsStr::Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUin
         if(aSrcOffset<aSource.mLength) {
             //here's the only new case we have to handle. 
             //chars are really being inserted into our buffer...
-          GrowCapacity(aDest,aDest.mLength+theLength,anAgent);
 
-            //shift the chars right by theDelta...
-          (*gShiftChars[aDest.mCharSize][KSHIFTRIGHT])(aDest.mStr,aDest.mLength,aDestOffset,theLength);
+          if(aDest.mLength+theLength > aDest.mCapacity) {
+            nsStr theTempStr;
+            nsStr::Initialize(theTempStr,aDest.mCharSize);
+
+            nsIMemoryAgent* theAgent=(anAgent) ? anAgent : GetDefaultAgent();
+            EnsureCapacity(theTempStr,aDest.mLength+theLength,theAgent);  //grow the temp buffer to the right size
+
+            if(aDestOffset) {
+              Append(theTempStr,aDest,0,aDestOffset,theAgent); //first copy leftmost data...
+            } 
+              
+            Append(theTempStr,aSource,0,aSource.mLength,theAgent); //next copy inserted (new) data
+            
+            PRUint32 theRemains=aDest.mLength-aDestOffset;
+            if(theRemains) {
+              Append(theTempStr,aDest,aDestOffset,theRemains,theAgent); //next copy rightmost data
+            }
+
+            theAgent->Free(aDest);
+            aDest.mStr = theTempStr.mStr;
+            theTempStr.mStr=0; //make sure to null this out so that you don't lose the buffer you just stole...
+            aDest.mCapacity=theTempStr.mCapacity;
+            aDest.mOwnsBuffer=theTempStr.mOwnsBuffer;
+
+          }
+
+          else {
+              //shift the chars right by theDelta...
+            (*gShiftChars[aDest.mCharSize][KSHIFTRIGHT])(aDest.mStr,aDest.mLength,aDestOffset,theLength);
       
-          //now insert new chars, starting at offset
-          (*gCopyChars[aSource.mCharSize][aDest.mCharSize])(aDest.mStr,aDestOffset,aSource.mStr,aSrcOffset,theLength);
+            //now insert new chars, starting at offset
+            (*gCopyChars[aSource.mCharSize][aDest.mCharSize])(aDest.mStr,aDestOffset,aSource.mStr,aSrcOffset,theLength);
+          }
 
-          //finally, make sure to update the string length...
+            //finally, make sure to update the string length...
           aDest.mLength+=theLength;
           AddNullTerminator(aDest);
 
