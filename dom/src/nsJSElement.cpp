@@ -467,7 +467,10 @@ ElementSetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   if (argc >= 1) {
 
-    if (JSVAL_IS_OBJECT(argv[0])) {
+    if (JSVAL_IS_NULL(argv[0])){
+      b0 = nsnull;
+    }
+    else if (JSVAL_IS_OBJECT(argv[0])) {
       nsISupports *supports0 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
       NS_ASSERTION(nsnull != supports0, "null pointer");
 
@@ -475,9 +478,6 @@ ElementSetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
           (NS_OK != supports0->QueryInterface(kIAttributeIID, (void **)(b0.Query())))) {
         return JS_FALSE;
       }
-    }
-    else if (JSVAL_IS_NULL(argv[0])){
-      b0 = nsnull;
     }
     else {
       return JS_FALSE;
@@ -516,7 +516,10 @@ ElementRemoveAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
   if (argc >= 1) {
 
-    if (JSVAL_IS_OBJECT(argv[0])) {
+    if (JSVAL_IS_NULL(argv[0])){
+      b0 = nsnull;
+    }
+    else if (JSVAL_IS_OBJECT(argv[0])) {
       nsISupports *supports0 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
       NS_ASSERTION(nsnull != supports0, "null pointer");
 
@@ -524,9 +527,6 @@ ElementRemoveAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
           (NS_OK != supports0->QueryInterface(kIAttributeIID, (void **)(b0.Query())))) {
         return JS_FALSE;
       }
-    }
-    else if (JSVAL_IS_NULL(argv[0])){
-      b0 = nsnull;
     }
     else {
       return JS_FALSE;

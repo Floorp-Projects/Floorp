@@ -400,7 +400,10 @@ TextSplice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
   if (argc >= 3) {
 
-    if (JSVAL_IS_OBJECT(argv[0])) {
+    if (JSVAL_IS_NULL(argv[0])){
+      b0 = nsnull;
+    }
+    else if (JSVAL_IS_OBJECT(argv[0])) {
       nsISupports *supports0 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
       NS_ASSERTION(nsnull != supports0, "null pointer");
 
@@ -408,9 +411,6 @@ TextSplice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
           (NS_OK != supports0->QueryInterface(kIElementIID, (void **)(b0.Query())))) {
         return JS_FALSE;
       }
-    }
-    else if (JSVAL_IS_NULL(argv[0])){
-      b0 = nsnull;
     }
     else {
       return JS_FALSE;
