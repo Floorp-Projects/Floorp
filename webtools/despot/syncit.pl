@@ -314,7 +314,11 @@ while (@reprow = $repquery->fetchrow()) {
     <tbody>
       <tr>
         <th>Owner:</th>
-        <td><a href="$maillist">| . join(', ', @ownernames) . qq|</a></td>
+        <td>
+          <a href="$maillist">
+            | . join(",\n            ", @ownernames) . qq|
+          </a>
+        </td>
       </tr>
       <tr>
         <th>Source:</th>
@@ -351,14 +355,16 @@ while (@reprow = $repquery->fetchrow()) {
       </tr>
       <tr>
         <th>Peers:</th>
-        <td>|;
+        <td>
+          |;
                 my @peerlist;
                 foreach $i (@peers) {
                     $i =~ s/\@/&#x40;/g;
                     push @peerlist, qq|<a href="mailto:$i">| . shift(@peernames) . "</a>";
                 }
-                print OWNERS join(', ', @peerlist);
-                print OWNERS qq|</td>
+                print OWNERS join(",\n          ", @peerlist);
+                print OWNERS qq|
+        </td>
       </tr>
       <tr>
         <th>Documents:</th>
