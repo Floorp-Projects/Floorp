@@ -1191,8 +1191,8 @@ static PRBool pt_recvfrom_cont(pt_Continuation *op, PRInt16 revents)
 static PRBool pt_aix_sendfile_cont(pt_Continuation *op, PRInt16 revents)
 {
     struct sf_parms *sf_struct = (struct sf_parms *) op->arg2.buffer;
-    int rv;
-	long long saved_file_offset;
+    ssize_t rv;
+	unsigned long long saved_file_offset;
 	long long saved_file_bytes;
 
 	saved_file_offset = sf_struct->file_offset;
@@ -2180,7 +2180,7 @@ static PRInt32 pt_AIXSendFile(PRFileDesc *sd, PRSendFileData *sfd,
     ssize_t rv;
     int syserrno;
     PRInt32 count;
-	long long saved_file_offset;
+	unsigned long long saved_file_offset;
 	long long saved_file_bytes;
 
     sf_struct.header_data = (void *) sfd->header;  /* cast away the 'const' */
@@ -2201,6 +2201,8 @@ static PRInt32 pt_AIXSendFile(PRFileDesc *sd, PRSendFileData *sfd,
 
     send_flags = 0;			/* flags processed at the end */
 
+    /* The first argument to send_file() is int*. */
+    PR_ASSERT(sizeof(int) == sizeof(sd->secret->md.osfd));
     do {
         rv = AIX_SEND_FILE(&sd->secret->md.osfd, &sf_struct, send_flags);
     } while (rv == -1 && (syserrno = errno) == EINTR);
