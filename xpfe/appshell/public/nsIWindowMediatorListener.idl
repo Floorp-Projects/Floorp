@@ -39,11 +39,6 @@
 
 interface nsIXULWindow;
 
-%{C++
-#define NS_WINDOWMEDIATOR_LISTENER_CATEGORY \
-  "Window-Mediator-Listeners"
-%}
-
 [scriptable, uuid(2F276982-0D60-4377-A595-D350BA516395)]
 interface nsIWindowMediatorListener : nsISupports
 {
