@@ -145,15 +145,15 @@ nsFTPConn::Get(char *aSrvPath, char *aLoclPath, int aType, int aOvWrite,
     /* initialize data connection */
     ERR_CHECK(DataInit(mHost, kDataPort, &mDataSock));
 
+    /* issue TYPE command on control connection */
+    sprintf(cmd, "TYPE %s\r\n", aType==BINARY ? "I" : "A");
+    ERR_CHECK(IssueCmd(cmd, resp, kRespBufSize, mCntlSock));
+    
     /* issue SIZE command on control connection */
     sprintf(cmd, "SIZE %s\r\n", aSrvPath);
     err = IssueCmd(cmd, resp, kRespBufSize, mCntlSock); /* non-fatal */
     if (err == OK && (resp[0] == '2'))
         fileSize = atoi(&resp[4]);
-
-    /* issue TYPE command on control connection */
-    sprintf(cmd, "TYPE %s\r\n", aType==BINARY ? "I" : "A");
-    ERR_CHECK(IssueCmd(cmd, resp, kRespBufSize, mCntlSock));
 
     /* issue RETR command on control connection */
     sprintf(cmd, "RETR %s\r\n", aSrvPath);

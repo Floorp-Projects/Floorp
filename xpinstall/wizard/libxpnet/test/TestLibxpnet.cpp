@@ -66,6 +66,10 @@ usage(char *prog)
 {
     fprintf(stderr, "usage: %s <URL> [ProxyServer ", prog);
     fprintf(stderr, "ProxyPort [ProxyUserName ProxyPassword]\n");
+    
+#ifdef macintosh
+    int fin = getchar();
+#endif
 }
 
 int

@@ -279,7 +279,7 @@ nsHTTPConn::Response(HTTPGetCB aCallback, char *aDestFile)
         return E_PARAM;
 
     // open dest file 
-    destFd = fopen(aDestFile, "w+");
+    destFd = fopen(aDestFile, "w+b");
     if (!destFd)
         return E_OPEN_FILE;
 
