@@ -112,7 +112,7 @@ function xlateURL(key)
 
 function loadXURL(key)
 {
-	window.content.location.href = xlateURL(key);
+	window._content.location.href = xlateURL(key);
 }
 
 loadDS();

@@ -73,7 +73,7 @@ function OnClick(event)
         var selectedItem = tree.selectedItems[0];
     
         //if( selectedItem.getAttribute( "type" ) == "FILE" )
-            window.content.location.href =  selectedItem.getAttribute('id');
+            window._content.location.href =  selectedItem.getAttribute('id');
       }
 }
 

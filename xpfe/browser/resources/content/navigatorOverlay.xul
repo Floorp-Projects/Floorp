@@ -115,7 +115,7 @@ Contributor(s): ______________________________________. -->
 
 	<broadcaster id="cmd_close" oncommand="BrowserClose()"/>
 
-	<broadcaster id="Browser:EditPage"  value="&editPageCmd.label;" oncommand="BrowserEditPage(window.content.location.href);"/>
+	<broadcaster id="Browser:EditPage"  value="&editPageCmd.label;" oncommand="BrowserEditPage(window._content.location.href);"/>
  	
 	<broadcaster id="Browser:PrintSetup"  value="&printSetupCmd.label;"     disabled ="true" oncommand="BrowserReload();"/>
 	<broadcaster id="Browser:PrintPreview"  value="&printPreviewCmd.label;" disabled="true"  oncommand="BrowserReload();"/>
@@ -130,7 +130,7 @@ Contributor(s): ______________________________________. -->
 	<broadcaster id="Browser:Find"      value="&findOnCmd.label;"            oncommand="BrowserFind();" />
 	<broadcaster id="Browser:FindAgain" value="&findAgainCmd.label;"         oncommand="BrowserFindAgain();" />	
 	
-	<broadcaster id="Browser:AddBookmark" value="&addCurPageCmd.label;" 	 oncommand="BrowserAddBookmark(window.content.location.href,window.content.document.title);"/>
+	<broadcaster id="Browser:AddBookmark" value="&addCurPageCmd.label;" 	 oncommand="BrowserAddBookmark(window._content.location.href,window._content.document.title);"/>
 	<broadcaster id="Browser:ManageBookmark" value="&manBookmarksCmd.label;" oncommand="BrowserEditBookmarks();" />
 
   <broadcaster id="Browser:SavePage" value="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" oncommand="savePage();"/>
@@ -383,73 +383,73 @@ END of Deprecated -->
     <menupopup>
       <menu value="&debugVerCmd.label;">
         <menupopup>
-          <menuitem value="&ver1Cmd.label;"  oncommand="window.content.location.href='http://www.mozilla.org'"/>
-          <menuitem value="&ver2Cmd.label;"  oncommand="window.content.location.href='http://www.yahoo.com'"/>
-          <menuitem value="&ver3Cmd.label;"  oncommand="window.content.location.href='http://www.netscape.com'"/>
-          <menuitem value="&ver4Cmd.label;"  oncommand="window.content.location.href='http://www.excite.com'"/>
-          <menuitem value="&ver5Cmd.label;"  oncommand="window.content.location.href='http://www.microsoft.com'"/>
-          <menuitem value="&ver6Cmd.label;"  oncommand="window.content.location.href='http://www.city.net'"/>
-          <menuitem value="&ver7Cmd.label;"  oncommand="window.content.location.href='http://www.mirabilis.com'"/>
-          <menuitem value="&ver8Cmd.label;"  oncommand="window.content.location.href='http://www.pathfinder.com/welcome'"/>
-          <menuitem value="&ver9Cmd.label;"  oncommand="window.content.location.href='http://www.warnerbros.com/home_moz3_day.html'"/>
-          <menuitem value="&ver10Cmd.label;" oncommand="window.content.location.href='http://www.cnn.com'"/>
-          <menuitem value="&ver11Cmd.label;" oncommand="window.content.location.href='http://www.usatoday.com'"/>
-          <menuitem value="&ver12Cmd.label;" oncommand="window.content.location.href='http://www.disney.go.com'"/>
-          <menuitem value="&ver13Cmd.label;" oncommand="window.content.location.href='http://www.hotwired.com'"/>
-          <menuitem value="&ver14Cmd.label;" oncommand="window.content.location.href='http://www.hotbot.com'"/>
+          <menuitem value="&ver1Cmd.label;"  oncommand="window._content.location.href='http://www.mozilla.org'"/>
+          <menuitem value="&ver2Cmd.label;"  oncommand="window._content.location.href='http://www.yahoo.com'"/>
+          <menuitem value="&ver3Cmd.label;"  oncommand="window._content.location.href='http://www.netscape.com'"/>
+          <menuitem value="&ver4Cmd.label;"  oncommand="window._content.location.href='http://www.excite.com'"/>
+          <menuitem value="&ver5Cmd.label;"  oncommand="window._content.location.href='http://www.microsoft.com'"/>
+          <menuitem value="&ver6Cmd.label;"  oncommand="window._content.location.href='http://www.city.net'"/>
+          <menuitem value="&ver7Cmd.label;"  oncommand="window._content.location.href='http://www.mirabilis.com'"/>
+          <menuitem value="&ver8Cmd.label;"  oncommand="window._content.location.href='http://www.pathfinder.com/welcome'"/>
+          <menuitem value="&ver9Cmd.label;"  oncommand="window._content.location.href='http://www.warnerbros.com/home_moz3_day.html'"/>
+          <menuitem value="&ver10Cmd.label;" oncommand="window._content.location.href='http://www.cnn.com'"/>
+          <menuitem value="&ver11Cmd.label;" oncommand="window._content.location.href='http://www.usatoday.com'"/>
+          <menuitem value="&ver12Cmd.label;" oncommand="window._content.location.href='http://www.disney.go.com'"/>
+          <menuitem value="&ver13Cmd.label;" oncommand="window._content.location.href='http://www.hotwired.com'"/>
+          <menuitem value="&ver14Cmd.label;" oncommand="window._content.location.href='http://www.hotbot.com'"/>
           <menuseparator />
-          <menuitem value="&ver15Cmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_frame_index.html'"/>
-          <menuitem value="&ver16Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/test6.html'"/>
-          <menuitem value="&ver17Cmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_applet.html'"/>
-          <menuitem value="&ver18Cmd.label;" oncommand="window.content.location.href='http://www.abcnews.com'"/>
-          <menuitem value="&ver19Cmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_imagemap.html'"/>
-          <menuitem value="&ver20Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/test2.html'"/>
-          <menuitem value="&ver21Cmd.label;" oncommand="window.content.location.href='http://www.cdrom.com/pub/png/png-MagnoliaAlpha.html'"/>
-          <menuitem value="&ver22Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/test13.html'"/>
-          <menuitem value="&ver23Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/test2.html'"/>
-          <menuitem value="&ver24Cmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_html_mix3.html'"/>
-          <menuitem value="&ver25Cmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_link.html'"/>
+          <menuitem value="&ver15Cmd.label;" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_frame_index.html'"/>
+          <menuitem value="&ver16Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test6.html'"/>
+          <menuitem value="&ver17Cmd.label;" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_applet.html'"/>
+          <menuitem value="&ver18Cmd.label;" oncommand="window._content.location.href='http://www.abcnews.com'"/>
+          <menuitem value="&ver19Cmd.label;" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_imagemap.html'"/>
+          <menuitem value="&ver20Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test2.html'"/>
+          <menuitem value="&ver21Cmd.label;" oncommand="window._content.location.href='http://www.cdrom.com/pub/png/png-MagnoliaAlpha.html'"/>
+          <menuitem value="&ver22Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test13.html'"/>
+          <menuitem value="&ver23Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test2.html'"/>
+          <menuitem value="&ver24Cmd.label;" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_html_mix3.html'"/>
+          <menuitem value="&ver25Cmd.label;" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_link.html'"/>
         </menupopup>
       </menu>
 
       <menu value="&viewDemoMenu.label;">
        <menupopup>
-        <menuitem value="&demo0Cmd.label;"  oncommand="window.content.location.href='resource:/res/samples/test0.html'"/>
-        <menuitem value="&demo1Cmd.label;"  oncommand="window.content.location.href='resource:/res/samples/test1.html'"/>
-        <menuitem value="&demo2Cmd.label;"  oncommand="window.content.location.href='resource:/res/samples/test2.html'"/>
-        <menuitem value="&demo3Cmd.label;"  oncommand="window.content.location.href='resource:/res/samples/test3.html'"/>
-        <menuitem value="&demo4Cmd.label;"  oncommand="window.content.location.href='resource:/res/samples/test4.html'"/>
-        <menuitem value="&demo5Cmd.label;"  oncommand="window.content.location.href='resource:/res/samples/test5.html'"/>
-        <menuitem value="&demo6Cmd.label;"  oncommand="window.content.location.href='resource:/res/samples/test6.html'"/>
-        <menuitem value="&demo7Cmd.label;"  oncommand="window.content.location.href='resource:/res/samples/test7.html'"/>
-        <menuitem value="&demo8Cmd.label;"  oncommand="window.content.location.href='resource:/res/samples/test8.html'"/>
-        <menuitem value="&demo9Cmd.label;"  oncommand="window.content.location.href='resource:/res/samples/test9.html'"/>
-        <menuitem value="&demo10Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/test10.html'"/>
-        <menuitem value="&demo11Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/test11.html'"/>
-        <menuitem value="&demo12Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/test12.html'"/>
-        <menuitem value="&demo13Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/test13.html'"/>
-        <menuitem value="&demo14Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/test14.html'"/>
-        <menuitem value="&demo15Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/test15.html'"/>
-        <menuitem value="&demo16Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/test16.html'"/>
+        <menuitem value="&demo0Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test0.html'"/>
+        <menuitem value="&demo1Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test1.html'"/>
+        <menuitem value="&demo2Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test2.html'"/>
+        <menuitem value="&demo3Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test3.html'"/>
+        <menuitem value="&demo4Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test4.html'"/>
+        <menuitem value="&demo5Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test5.html'"/>
+        <menuitem value="&demo6Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test6.html'"/>
+        <menuitem value="&demo7Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test7.html'"/>
+        <menuitem value="&demo8Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test8.html'"/>
+        <menuitem value="&demo9Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test9.html'"/>
+        <menuitem value="&demo10Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test10.html'"/>
+        <menuitem value="&demo11Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test11.html'"/>
+        <menuitem value="&demo12Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test12.html'"/>
+        <menuitem value="&demo13Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test13.html'"/>
+        <menuitem value="&demo14Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test14.html'"/>
+        <menuitem value="&demo15Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test15.html'"/>
+        <menuitem value="&demo16Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test16.html'"/>
        </menupopup>
       </menu>
 
       <menu value="&xptkMenu.label;">
        <menupopup>
-        <menuitem value="&xptk1Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/checkboxTest.xul'"/>
-        <menuitem value="&xptk2Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/toolbarTest1.xul'"/>
+        <menuitem value="&xptk1Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/checkboxTest.xul'"/>
+        <menuitem value="&xptk2Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/toolbarTest1.xul'"/>
         <menuitem value="&xptk3Cmd.label;" oncommand="BrowserReallyReload(0)"/>
-        <menuitem value="&xptk4Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/dexopenchrome.xul'"/>
+        <menuitem value="&xptk4Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/dexopenchrome.xul'"/>
         <menuitem value="&xptk7Cmd.label;" oncommand="BrowserReallyReload(0)"/>
-        <menuitem value="&xptk8Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/beeptest.html'"/>
-        <menuitem value="&xptk9Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/soundtest.html'"/>
-        <menuitem value="&xptk10Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/xpmenu.xul'"/>
-        <menuitem value="&xptk11Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/colorpicker.xul'"/>
+        <menuitem value="&xptk8Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/beeptest.html'"/>
+        <menuitem value="&xptk9Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/soundtest.html'"/>
+        <menuitem value="&xptk10Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/xpmenu.xul'"/>
+        <menuitem value="&xptk11Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/colorpicker.xul'"/>
        </menupopup>
       </menu>
 
-     <menuitem value="&domviewer.label;" oncommand="window.content.location.href='chrome://communicator/content/domviewer/DOMDataSourceViewer.xul'"/>
-     <menuitem value="&browserbuster.label;" oncommand="window.content.location.href='http://komodo.mozilla.org/buster/'"/>
+     <menuitem value="&domviewer.label;" oncommand="window._content.location.href='chrome://communicator/content/domviewer/DOMDataSourceViewer.xul'"/>
+     <menuitem value="&browserbuster.label;" oncommand="window._content.location.href='http://komodo.mozilla.org/buster/'"/>
      <!-- TEMPORARY UNTIL -edit WORKS TO STARTUP COMPOSER (bug 16789)  -->
      <menuitem value="Composer with Test Page" oncommand="window.openDialog('chrome://editor/content','_blank','chrome,all,dialog=no','chrome://editor/content/EditorInitPage.html')"/>
     
@@ -458,14 +458,14 @@ END of Deprecated -->
 
   <menu accesskey="q" value="&QA.label;">
     <menupopup>
-      <menuitem value="&PrecheckinTests.label;"  oncommand="window.content.location.href='http://www.mozilla.org/quality/precheckin-tests.html'"/>
+      <menuitem value="&PrecheckinTests.label;"  oncommand="window._content.location.href='http://www.mozilla.org/quality/precheckin-tests.html'"/>
       <menuseparator />
-      <menuitem value="&QABugCmd.label;"        oncommand="window.content.location.href='http://www.mozilla.org/quality/bug-writing-guidelines.html'"/>
-      <menuitem value="&QATempCmd.label;"       oncommand="window.content.location.href='http://www.mozilla.org/quality/help/bug-form.html'"/>
-      <menuitem value="&QASmokeCmd.label;"      oncommand="window.content.location.href='http://www.mozilla.org/quality/smoketests/'"/>
-      <menuitem value="&QAKnownBugCmd.label;"   oncommand="window.content.location.href='http://www.mozilla.org/quality/most-frequent-bugs/'"/>
+      <menuitem value="&QABugCmd.label;"        oncommand="window._content.location.href='http://www.mozilla.org/quality/bug-writing-guidelines.html'"/>
+      <menuitem value="&QATempCmd.label;"       oncommand="window._content.location.href='http://www.mozilla.org/quality/help/bug-form.html'"/>
+      <menuitem value="&QASmokeCmd.label;"      oncommand="window._content.location.href='http://www.mozilla.org/quality/smoketests/'"/>
+      <menuitem value="&QAKnownBugCmd.label;"   oncommand="window._content.location.href='http://www.mozilla.org/quality/most-frequent-bugs/'"/>
       <menuseparator />
-      <menuitem value="&strresCmd.label;"       oncommand="window.content.location.href='resource:/res/strres-test.xul'"/>
+      <menuitem value="&strresCmd.label;"       oncommand="window._content.location.href='resource:/res/strres-test.xul'"/>
       <menu value="&languages.label;">
         <menupopup>
            <menuitem value="&en-US.label;"      oncommand="localeTo('', 'en-US');"/>
@@ -474,9 +474,9 @@ END of Deprecated -->
         </menupopup>
       </menu>
       <menuseparator />
-      <menuitem value="&BloatDumpNewCmd.label;" oncommand="window.content.location.href='about:bloat?new'"/>
-      <menuitem value="&BloatDumpAllCmd.label;" oncommand="window.content.location.href='about:bloat'"/>
-      <menuitem value="&BloatClearCmd.label;"   oncommand="window.content.location.href='about:bloat?clear'"/>
+      <menuitem value="&BloatDumpNewCmd.label;" oncommand="window._content.location.href='about:bloat?new'"/>
+      <menuitem value="&BloatDumpAllCmd.label;" oncommand="window._content.location.href='about:bloat'"/>
+      <menuitem value="&BloatClearCmd.label;"   oncommand="window._content.location.href='about:bloat?clear'"/>
       <menuitem value="&BloatLeaksCmd.label;"   oncommand="dumpMemoryLeaks();"/>
     </menupopup>
   </menu>

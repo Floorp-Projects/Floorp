@@ -63,7 +63,7 @@ function SelectDetectors( event )
    if (pref) {
        debug("get pref 2\n");
        pref.SetCharPref("intl.charset.detector", prefvalue);
-       window.content.location.reload();
+       window._content.location.reload();
    }
   }
 

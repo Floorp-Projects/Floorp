@@ -478,7 +478,7 @@ function doStop()
 	// show appropriate column(s)
 	if ((rdf) && (internetSearch))
 	{
-		var resultsTree = top.content.document.getElementById("internetresultstree");
+		var resultsTree = top._content.document.getElementById("internetresultstree");
 		if( !resultsTree )
 			return(false);
 		var searchURL = resultsTree.getAttribute("ref");
@@ -499,38 +499,38 @@ function doStop()
 
 		if(hasPriceFlag == true)
 		{
-			var colNode = top.content.document.getElementById("PriceColumn");
+			var colNode = top._content.document.getElementById("PriceColumn");
 			if (colNode)
 			{
 				colNode.removeAttribute("style", "width: 0; visibility: collapse;");
 				if (sortSetFlag == false)
 				{
-					top.content.setInitialSort(colNode, "ascending");
+					top._content.setInitialSort(colNode, "ascending");
 					sortSetFlag = true;
 				}
 			}
 		}
 		if (hasAvailabilityFlag == true)
 		{
-			colNode = top.content.document.getElementById("AvailabilityColumn");
+			colNode = top._content.document.getElementById("AvailabilityColumn");
 			if (colNode)
 				colNode.removeAttribute("style", "width: 0; visibility: collapse;");
 		}
 		if (hasDateFlag == true)
 		{
-			colNode = top.content.document.getElementById("DateColumn");
+			colNode = top._content.document.getElementById("DateColumn");
 			if (colNode)
 				colNode.removeAttribute("style", "width: 0; visibility: collapse;");
 		}
 		if (hasRelevanceFlag == true)
 		{
-			colNode = top.content.document.getElementById("RelevanceColumn");
+			colNode = top._content.document.getElementById("RelevanceColumn");
 			if (colNode)
 			{
 				colNode.removeAttribute("style", "width: 0; visibility: collapse;");
 				if (sortSetFlag == false)
 				{
-					top.content.setInitialSort(colNode, "descending");
+					top._content.setInitialSort(colNode, "descending");
 					sortSetFlag = true;
 				}
 			}
@@ -539,9 +539,9 @@ function doStop()
 
 	if (sortSetFlag == false)
 	{
-		colNode = top.content.document.getElementById("PageRankColumn");
+		colNode = top._content.document.getElementById("PageRankColumn");
 		if (colNode)
-			top.content.setInitialSort(colNode, "ascending");
+			top._content.setInitialSort(colNode, "ascending");
 	}
 	switchTab(0);
 }
@@ -589,12 +589,12 @@ function doSearch()
     return;
   
 	// hide various columns
-  if( parent.content.isMozillaSearchWindow ) {
-  	colNode = parent.content.document.getElementById("RelevanceColumn");
+  if( parent._content.isMozillaSearchWindow ) {
+  	colNode = parent._content.document.getElementById("RelevanceColumn");
   	if (colNode)	colNode.setAttribute("style", "width: 0; visibility: collapse;");
-	  colNode = parent.content.document.getElementById("PriceColumn");
+	  colNode = parent._content.document.getElementById("PriceColumn");
   	if (colNode)	colNode.setAttribute("style", "width: 0; visibility: collapse;");
-	  colNode = parent.content.document.getElementById("AvailabilityColumn");
+	  colNode = parent._content.document.getElementById("AvailabilityColumn");
   	if (colNode)	colNode.setAttribute("style", "width: 0; visibility: collapse;");
   }
 
@@ -665,8 +665,8 @@ function doSearch()
 function checkSearchProgress( aSearchURL )
 {
 	var	activeSearchFlag = false;
-	var	resultsTree = top.content.document.getElementById("internetresultstree");
-	var	enginesBox = top.content.document.getElementById("engineTabs");
+	var	resultsTree = top._content.document.getElementById("internetresultstree");
+	var	enginesBox = top._content.document.getElementById("engineTabs");
 	if( !resultsTree || !enginesBox )
 	{	
 		doStop();
@@ -784,8 +784,8 @@ function sidebarOpenURL(event, treeitem, root)
 	{
 	}
 
-  if ( window.content )
-    window.content.location = id;
+  if ( window._content )
+    window._content.location = id;
   else {
     window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", id );
   }
@@ -865,7 +865,7 @@ function OpenSearch( tabName, forceDialogFlag, aSearchStr, engineURIs )
           }
           // load the results page of selected or default engine in the content area
           if( defaultSearchURL )
-            top.content.location.href = defaultSearchURL;
+            top._content.location.href = defaultSearchURL;
         }
         else {
           // multiple providers
@@ -882,7 +882,7 @@ function OpenSearch( tabName, forceDialogFlag, aSearchStr, engineURIs )
           
           gURL = searchURL;
           
-          top.content.location.href = "chrome://communicator/content/search/internetresults.xul";
+          top._content.location.href = "chrome://communicator/content/search/internetresults.xul";
         }
   		}
   		catch(ex)

@@ -86,7 +86,7 @@ function setHomePageToCurrentPage(folderFieldId)
   if( !parent.opener.appCore )
     return false;
   var homePageField = document.getElementById(folderFieldId);
-  var url = parent.opener.content.location.href;
+  var url = parent.opener._content.location.href;
   if( url )
     homePageField.value = url;
 }

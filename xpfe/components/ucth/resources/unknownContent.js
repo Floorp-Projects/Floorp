@@ -88,7 +88,7 @@ function more()
     // Have parent browser window go to appropriate web page.
     var moreInfo = "http://cgi.netscape.com/cgi-bin/plug-in_finder.cgi?";
     moreInfo += data.contentType;
-    window.opener.content.location = moreInfo;
+    window.opener._content.location = moreInfo;
 }
 
 function pick() 

@@ -82,7 +82,7 @@ function SelectDetector(event, doReload)
  
     if (pref) {
         pref.SetCharPref("intl.charset.detector", prefvalue);
-        if (doReload) window.content.location.reload();
+        if (doReload) window._content.location.reload();
     }
 }
 
@@ -121,7 +121,7 @@ function SetForcedCharset(charset)
 function UpdateCurrentCharset()
 {
     var wnd = document.commandDispatcher.focusedWindow;
-    if (window == wnd) wnd = window.content;
+    if (window == wnd) wnd = window._content;
 
     var charset = wnd.document.characterSet;
 	dump("Update current charset: " + charset + "\n");
@@ -169,7 +169,7 @@ function charsetLoadListener (event)
         menu = menu.QueryInterface(Components.interfaces.nsICurrentCharsetListener);
     }
 
-    var charset = window.content.document.characterSet;
+    var charset = window._content.document.characterSet;
 
     if (menu) {
         menu.SetCurrentCharset(charset);

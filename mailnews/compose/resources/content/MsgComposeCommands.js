@@ -328,7 +328,7 @@ function ComposeStartup()
 				dump("editor initialized in PLAIN TEXT mode\n");
 			}
 			window.editorShell.webShellWindow = window;
-			window.editorShell.contentWindow = window.content;
+			window.editorShell.contentWindow = window._content;
 
       // Do setup common to Message Composer and Web Composer
       EditorSharedStartup();

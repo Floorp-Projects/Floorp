@@ -36,9 +36,9 @@ function searchResultsOpenURL(event, node)
 		return(false);
 
 	dump("Opening URL: " + url + "\n");
-	if( top.content )
+	if( top._content )
 	{
-		top.content.location.href = url;
+		top._content.location.href = url;
 	}
 	return true;
 }

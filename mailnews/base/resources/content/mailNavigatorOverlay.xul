@@ -21,8 +21,8 @@
 
     function sendPage()
       {
-        var pageUrl = window.content.location.href;
-        var pageTitle =  window.content.document.title;
+        var pageUrl = window._content.location.href;
+        var pageTitle =  window._content.document.title;
         window.openDialog( "chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
                            "chrome,all,dialog=no", 
                            "attachment='" + pageUrl + "',body='" + pageUrl +
@@ -35,7 +35,7 @@
   <!-- navigator specific commands -->
   <broadcasterset id="broadcasterset">
   	<broadcaster id="cmd_sendPage" value="&sendPage.label;" accesskey="&sendPage.accesskey;" oncommand="sendPage();"/>
-  	<broadcaster id="Browser:SendLink" value="&sendLinkCmd.label;" accesskey="&sendLinkCmd.accesskey;" oncommand="sendLink(window.content.location.href, window.content.document.title);"/>
+  	<broadcaster id="Browser:SendLink" value="&sendLinkCmd.label;" accesskey="&sendLinkCmd.accesskey;" oncommand="sendLink(window._content.location.href, window._content.document.title);"/>
   </broadcasterset>
          
   <!-- navigator specific UI items -->

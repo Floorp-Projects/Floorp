@@ -27,7 +27,7 @@
  */
 
 // get handle to the BrowserAppCore in the content area.
-var appCore = window.content.appCore;
+var appCore = window._content.appCore;
 
 function clicked(event, target)
 {
@@ -76,7 +76,7 @@ function OpenBookmarkURL(node, datasources)
 	}
   
 	// Check if we have a browser window
-	if (window.content == null)
+	if (window._content == null)
 	{
 		window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url ); 
 	}

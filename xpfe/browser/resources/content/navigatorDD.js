@@ -222,7 +222,7 @@ var contentAreaDNDObserver = {
     {  
       var htmlstring = null;
       var textstring = null;
-      var domselection = window.content.getSelection();
+      var domselection = window._content.getSelection();
       if (domselection && !domselection.isCollapsed && 
           domselection.containsNode(aEvent.target,false))
         {
@@ -237,8 +237,8 @@ var contentAreaDNDObserver = {
               case 'AREA':
               case 'IMG':
                 var imgsrc = aEvent.target.getAttribute("src");
-                var baseurl = window.content.location.href;
-                // need to do some stuff with the window.content.location here (path?) 
+                var baseurl = window._content.location.href;
+                // need to do some stuff with the window._content.location here (path?) 
                 // to get base URL for image.
                 textstring = imgsrc;
                 htmlstring = "<img src=\"" + textstring + "\">";

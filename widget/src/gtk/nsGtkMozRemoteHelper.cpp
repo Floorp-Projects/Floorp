@@ -570,7 +570,7 @@ nsGtkMozRemoteHelper::OpenURL        (const char *aURL, PRBool aNewWindow)
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
     // get the content area for that window
-    rv = lastUsedWindow->GetContent(getter_AddRefs(innerWindow));
+    rv = lastUsedWindow->Get_content(getter_AddRefs(innerWindow));
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
     // get the script global object for that window

@@ -117,7 +117,7 @@ var DocumentStateListener =
     
     // udpate menu items now that we have an editor to play with
     dump("Updating 'create' commands\n");
-    window.content.focus();
+    window._content.focus();
     window.updateCommands("create");
   },
   
@@ -132,7 +132,7 @@ var DocumentStateListener =
     // hack! Should not need this updateCommands, but there is some controller
     //  bug that this works around. ??
     // comment out the following line because it cause 41573 IME problem on Mac
-    //window.content.focus();
+    //window._content.focus();
     window.updateCommands("create");
     window.updateCommands("save");
   }
@@ -170,7 +170,7 @@ function EditorStartup(editorType, editorElement)
   editorShell.SetEditorType(editorType);
 
   editorShell.webShellWindow = window;
-  editorShell.contentWindow = window.content;
+  editorShell.contentWindow = window._content;
 
   // add a listener to be called when document is really done loading
   editorShell.RegisterDocumentStateListener( DocumentStateListener );
@@ -194,7 +194,7 @@ function EditorSharedStartup()
   SetupControllerCommands();
 
   // Just for convenience
-  gContentWindow = window.content;
+  gContentWindow = window._content;
 
   gIsWin = navigator.appVersion.indexOf("Win") != -1;
   gIsUNIX = (navigator.appVersion.indexOf("X11") || 
@@ -397,7 +397,7 @@ function EditorViewSource()
 
   fileurl = "";
   try {
-    fileurl = window.content.location;
+    fileurl = window._content.location;
   } catch (e) {
     return;
   }
@@ -476,7 +476,7 @@ function EditorSetParagraphFormat(commandID, paraFormat)
 {
   var commandNode = document.getElementById(commandID);
   commandNode.setAttribute("state", paraFormat);
-  window.content.focus();   // needed for command dispatch to work
+  window._content.focus();   // needed for command dispatch to work
   goDoCommand(commandID);
 }
 
@@ -525,7 +525,7 @@ function EditorSetFontFace(commandID, fontFace)
   dump("Setting font face to " + fontFace + "\n");
   var commandNode = document.getElementById(commandID);
   commandNode.setAttribute("state", fontFace);
-  window.content.focus();   // needed for command dispatch to work
+  window._content.focus();   // needed for command dispatch to work
   goDoCommand(commandID);
 }
 
@@ -646,7 +646,7 @@ function EditorSelectBackColor(ColorPickerID, ColorWellID)
   if (menupopup) menupopup.closePopup();
 
   EditorSetBackgroundColor(color);
-  window.content.focus();
+  window._content.focus();
 }
 
 function EditorRemoveBackColor(ColorWellID)
@@ -658,7 +658,7 @@ function EditorRemoveBackColor(ColorWellID)
   }
   //TODO: Set colorwell to browser's default color
   editorShell.SetBackgroundColor("");
-  window.content.focus();
+  window._content.focus();
 }
 
 
@@ -673,25 +673,25 @@ function SetManualTextColor()
 function EditorSetFontColor(color)
 {
   editorShell.SetTextProperty("font", "color", color);
-  window.content.focus();
+  window._content.focus();
 }
 
 function EditorSetBackgroundColor(color)
 {
   editorShell.SetBackgroundColor(color);
-  window.content.focus();
+  window._content.focus();
 }
 
 function EditorApplyStyle(tagName)
 {
   editorShell.SetTextProperty(tagName, "", "");
-  window.content.focus();
+  window._content.focus();
 }
 
 function EditorRemoveLinks()
 {
   editorShell.RemoveTextProperty("href", "");
-  window.content.focus();
+  window._content.focus();
 }
 
 /*TODO: We need an oncreate hook to do enabling/disabling for the 
@@ -772,9 +772,9 @@ function SetEditMode(mode)
       if (bodyNode)
         editorShell.editorSelection.collapse(bodyNode, 0);
 
-      window.content.focus();
+      window._content.focus();
       // yuck. what is this?
-      setTimeout("window.content.focus()", 10);
+      setTimeout("window._content.focus()", 10);
     }
   }
 }
@@ -830,7 +830,7 @@ function SetDisplayMode(mode)
       // TODO: WE MUST ENABLE APPROPRIATE COMMANDS
       // and change UI back to "normal"
 
-      window.content.focus();
+      window._content.focus();
     }
     return true;
   }
@@ -1642,7 +1642,7 @@ function EditorInsertOrEditTable(insertAllowed)
   if (IsInTable()) {
     // Edit properties of existing table
     window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "","TablePanel");
-    window.content.focus();
+    window._content.focus();
   } else if(insertAllowed) {
     EditorInsertTable();
   }
@@ -1653,7 +1653,7 @@ function EditorInsertTable()
 dump("EditorInsertTable\n");
   // Insert a new table
   window.openDialog("chrome://editor/content/EdInsertTable.xul", "_blank", "chrome,close,titlebar,modal", "");
-  window.content.focus();
+  window._content.focus();
 }
 
 function EditorTableCellProperties()
@@ -1662,7 +1662,7 @@ function EditorTableCellProperties()
   if (cell) {
     // Start Table Properties dialog on the "Cell" panel
     window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "", "CellPanel");
-    window.content.focus();
+    window._content.focus();
   }
 }
 

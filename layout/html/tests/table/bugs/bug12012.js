@@ -103,7 +103,7 @@ function handleRClick ( event ) {
 // ************************************************************
 
 function gotoURL( url ) {
-	window.content.location = url;
+	window._content.location = url;
 	}
 
 function getAddDiv() {

@@ -237,7 +237,7 @@ nsContextMenu.prototype = {
         }
     
         // See if the user clicked in a frame.
-        if ( this.target.ownerDocument != window.content.document ) {
+        if ( this.target.ownerDocument != window._content.document ) {
             this.inFrame = true;
         }
 
@@ -537,7 +537,7 @@ nsContextMenu.prototype = {
     savePage : function ( url ) {
         // Default is to save current page.
         if ( !url ) {
-            url = window.content.location.href;
+            url = window._content.location.href;
         }
         // Use stream xfer component to prompt for destination and save.
         var xfer = this.getService( "component://netscape/appshell/component/xfer",
