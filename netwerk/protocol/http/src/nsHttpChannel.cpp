@@ -96,6 +96,7 @@ nsHttpChannel::nsHttpChannel()
     , mTransactionReplaced(PR_FALSE)
     , mUploadStreamHasHeaders(PR_FALSE)
     , mAuthRetryPending(PR_FALSE)
+    , mSuppressDefensiveAuth(PR_FALSE)
     , mResuming(PR_FALSE)
 {
     LOG(("Creating nsHttpChannel @%x\n", this));
@@ -689,6 +690,10 @@ nsHttpChannel::ProcessResponse()
     // notify nsIHttpNotify implementations
     gHttpHandler->OnExamineResponse(this);
 
+    // handle unused username and password in url (see bug 232567)
+    if (httpStatus != 401 && httpStatus != 407)
+        CheckForSuperfluousAuth();
+
     // handle different server response categories
     switch (httpStatus) {
     case 200:
@@ -749,6 +754,7 @@ nsHttpChannel::ProcessResponse()
         if (NS_FAILED(rv)) {
             LOG(("ProcessAuthentication failed [rv=%x]\n", rv));
             CloseCacheEntry(NS_ERROR_ABORT);
+            CheckForSuperfluousAuth();
             rv = ProcessNormal();
         }
         break;
@@ -807,7 +813,7 @@ nsHttpChannel::ProcessNormal()
     // expiration time (bug 87710).
     if (mCacheEntry) {
         rv = InitCacheEntry();
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) return rv; // XXX this early return prevents OnStartRequest from firing!
     }
 
     // Check that the server sent us what we were asking for
@@ -2245,6 +2251,23 @@ nsHttpChannel::GetCredentialsForChallenge(const char *challenge,
         }
     }
 
+    // If the defensive auth pref is set, then we'll warn the user before
+    // automatically using the identity from the URL to automatically log
+    // them into a site (see bug 232567).
+    if (identFromURI) {
+        // ask the user...
+        if (!ConfirmAuth(NS_LITERAL_STRING("AutomaticAuth"), PR_FALSE)) {
+            // calling cancel here sets our mStatus and aborts the HTTP
+            // transaction, which prevents OnDataAvailable events.
+            Cancel(NS_ERROR_ABORT);
+            // this return code alone is not equivalent to Cancel, since
+            // it only instructs our caller that authentication failed.
+            // without an explicit call to Cancel, our caller would just
+            // load the page that accompanies the HTTP auth challenge.
+            return NS_ERROR_ABORT;
+        }
+    }
+
     //
     // get credentials for the given user:pass
     //
@@ -2438,16 +2461,111 @@ nsHttpChannel::PromptForIdentity(const char *scheme,
                                                key.get(),
                                                nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
                                                &user, &pass, &retval);
-    if (NS_FAILED(rv))
-        return rv;
+    if (NS_FAILED(rv)) return rv;
+
+    // remember that we successfully showed the user an auth dialog
+    if (!proxyAuth)
+        mSuppressDefensiveAuth = PR_TRUE;
+
     if (!retval || !user || !pass)
-        return NS_ERROR_ABORT;
+        rv = NS_ERROR_ABORT;
+    else
+        SetIdent(ident, authFlags, user, pass);
+  
+    if (user) nsMemory::Free(user);
+    if (pass) nsMemory::Free(pass);
+    return rv;
+}
 
-    SetIdent(ident, authFlags, user, pass);
+PRBool
+nsHttpChannel::ConfirmAuth(const nsString &bundleKey, PRBool doYesNoPrompt)
+{
+    // skip prompting the user if
+    //   1) we've already prompted the user
+    //   2) we're not a toplevel channel
+    //   3) the userpass length is less than the "phishy" threshold
 
-    nsMemory::Free(user);
-    nsMemory::Free(pass);
-    return NS_OK;
+    if (mSuppressDefensiveAuth || !(mLoadFlags & LOAD_INITIAL_DOCUMENT_URI))
+        return PR_TRUE;
+
+    nsresult rv;
+    nsCAutoString userPass;
+    rv = mURI->GetUserPass(userPass);
+    if (NS_FAILED(rv) || (userPass.Length() < gHttpHandler->PhishyUserPassLength()))
+        return PR_TRUE;
+
+    // we try to confirm by prompting the user.  if we cannot do so, then
+    // assume the user said ok.  this is done to keep things working in
+    // embedded builds, where the string bundle might not be present, etc.
+
+    nsCOMPtr<nsIStringBundleService> bundleService =
+            do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+    if (!bundleService)
+        return PR_TRUE;
+
+    nsCOMPtr<nsIStringBundle> bundle;
+    bundleService->CreateBundle(NECKO_MSGS_URL, getter_AddRefs(bundle));
+    if (!bundle)
+        return PR_TRUE;
+
+    nsCAutoString host;
+    rv = mURI->GetHost(host);
+    if (NS_FAILED(rv))
+        return PR_TRUE;
+
+    nsCAutoString user;
+    rv = mURI->GetUsername(user);
+    if (NS_FAILED(rv))
+        return PR_TRUE;
+
+    NS_ConvertUTF8toUTF16 ucsHost(host), ucsUser(user);
+    const PRUnichar *strs[2] = { ucsHost.get(), ucsUser.get() };
+
+    nsXPIDLString msg;
+    bundle->FormatStringFromName(bundleKey.get(), strs, 2, getter_Copies(msg));
+    if (!msg)
+        return PR_TRUE;
+    
+    nsCOMPtr<nsIPrompt> prompt;
+    GetCallback(NS_GET_IID(nsIPrompt), getter_AddRefs(prompt));
+    if (!prompt)
+        return PR_TRUE;
+
+    PRBool confirmed;
+    if (doYesNoPrompt) {
+        PRInt32 choice;
+        rv = prompt->ConfirmEx(nsnull, msg,
+                               nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0 +
+                               nsIPrompt::BUTTON_TITLE_NO  * nsIPrompt::BUTTON_POS_1,
+                               nsnull, nsnull, nsnull, nsnull, nsnull, &choice);
+        if (NS_FAILED(rv))
+            return PR_TRUE;
+
+        confirmed = choice == 0;
+    }
+    else {
+        rv = prompt->Confirm(nsnull, msg, &confirmed);
+        if (NS_FAILED(rv))
+            return PR_TRUE;
+    }
+
+    return confirmed;
+}
+
+void
+nsHttpChannel::CheckForSuperfluousAuth()
+{
+    // check whether authentication was provided, even if not required.
+    // if so, prompt the user as to whether to continue, as this might be an
+    // attempt to spoof a different site (see bug 232567).
+    if (!mAuthRetryPending) {
+        // ask user...
+        if (!ConfirmAuth(NS_LITERAL_STRING("SuperfluousAuth"), PR_TRUE)) {
+            // calling cancel here sets our mStatus and aborts the HTTP
+            // transaction, which prevents OnDataAvailable events.
+            Cancel(NS_ERROR_ABORT);
+        }
+    }
 }
 
 void
@@ -2509,6 +2627,13 @@ nsHttpChannel::SetAuthorizationHeader(nsHttpAuthCache *authCache,
         if (creds[0]) {
             LOG(("   adding \"%s\" request header\n", header.get()));
             mRequestHead.SetHeader(header, nsDependentCString(creds));
+
+            // suppress defensive auth prompting for this channel since we know
+            // that we already prompted at least once this session.  we only do
+            // this for non-proxy auth since the URL's userpass is not used for
+            // proxy auth.
+            if (header == nsHttp::Authorization)
+                mSuppressDefensiveAuth = PR_TRUE;
         }
         else
             ident.Clear(); // don't remember the identity

@@ -92,6 +92,7 @@ public:
     PRUint16       MaxRequestAttempts()      { return mMaxRequestAttempts; }
     const char    *DefaultSocketType()       { return mDefaultSocketType.get(); /* ok to return null */ }
     nsIIDNService *IDNConverter()            { return mIDNConverter; }
+    PRUint32       PhishyUserPassLength()    { return mPhishyUserPassLength; }
     
     PRBool         IsPersistentHttpsCachingEnabled() { return mEnablePersistentHttpsCaching; }
 
@@ -233,6 +234,12 @@ private:
 
     PRUint8  mRedirectionLimit;
 
+    // we'll warn the user if we load an URL containing a userpass field
+    // unless its length is less than this threshold.  this warning is
+    // intended to protect the user against spoofing attempts that use
+    // the userpass field of the URL to obscure the actual origin server.
+    PRUint8  mPhishyUserPassLength;
+
     nsCString mAccept;
     nsCString mAcceptLanguages;
     nsCString mAcceptEncodings;
@@ -270,7 +277,7 @@ private:
     // if true allow referrer headers between secure non-matching hosts
     PRPackedBool   mSendSecureXSiteReferrer;
 
-    // Persitent HTTPS caching flag
+    // Persistent HTTPS caching flag
     PRPackedBool   mEnablePersistentHttpsCaching;
 };
 

@@ -536,9 +536,6 @@ pref("network.http.proxy.pipelining", false);
 // Max number of requests in the pipeline
 pref("network.http.pipelining.maxrequests" , 4);
 
-// Whether to warn if the user connects to a site with authentication
-// information that isn't required.
-pref("network.http.confirm_superfluous_auth",true);
 // </http>
 
 // This preference controls whether or not internationalized domain names (IDN)
