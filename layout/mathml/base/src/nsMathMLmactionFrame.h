@@ -75,15 +75,15 @@ public:
         nsHTMLReflowMetrics& aDesiredSize);
 
   // nsIDOMMouseListener methods
-  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent)  { MOUSE(down) return NS_OK; }
-  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent) { MOUSE(up) return NS_OK; }
-  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent);// { MOUSE(click) return NS_OK; }
-  virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent) { MOUSE(dblclik) return NS_OK; }
-  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent);// { MOUSE(over) return NS_OK; }
-  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent);// { MOUSE(out) return NS_OK; }
+  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent)  { MOUSE(down) return NS_OK; }
+  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent) { MOUSE(up) return NS_OK; }
+  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);// { MOUSE(click) return NS_OK; }
+  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { MOUSE(dblclik) return NS_OK; }
+  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent);// { MOUSE(over) return NS_OK; }
+  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent);// { MOUSE(out) return NS_OK; }
 
   // nsIDOMEventListener methods
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent)  { MOUSE(event); return NS_OK; }
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent)  { MOUSE(event); return NS_OK; }
 
 protected:
   nsMathMLmactionFrame();
