@@ -103,12 +103,6 @@ NS_METHOD TimerImpl::SetupTimer( PRUint32 aDelay )
   struct itimerspec  tv;
   int err;
 
-  if ((aDelay > 10000) || (aDelay < 0))
-  {
-    NS_WARNING("TimerImpl::SetupTimer called with bogus value\n");
-    return NS_ERROR_FAILURE;
-  }
-
   mDelay = aDelay;
   if( mPulsePid )
   {
