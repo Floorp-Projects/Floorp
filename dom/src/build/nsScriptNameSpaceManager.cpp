@@ -44,6 +44,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIScriptExternalNameSet.h"
 #include "nsIScriptNameSpaceManager.h"
+#include "nsIScriptContext.h"
 #include "nsIInterfaceInfoManager.h"
 #include "nsIInterfaceInfo.h"
 #include "xptinfo.h"
@@ -181,6 +182,9 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
 
     if (NS_FAILED(rv)) {
       NS_WARNING("Bad contract id registed with the script namespace manager");
+
+      // Make sure we don't leak this error code to the caller.
+      rv = NS_OK;
 
       continue;
     }
