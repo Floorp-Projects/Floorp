@@ -60,6 +60,7 @@
 #include "nsIPrompt.h"
 
 #include "nsIDOMNodeFilter.h"
+#include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLTableElement.h"
 #include "nsIDOMHTMLTableRowElement.h"
@@ -160,6 +161,24 @@ const PRUint32 kDefaultMaxFilenameLength = 31;
 #else
 const PRUint32 kDefaultMaxFilenameLength = 64;
 #endif
+
+// Schemes that cannot be saved because they contain no useful content
+const char *kNonpersistableSchemes[] = {
+    "about:",
+    "news:", 
+    "snews:",
+    "ldap:",
+    "ldaps:",
+    "mailto:", 
+    "finger:",
+    "telnet:", 
+    "gopher:", 
+    "javascript:",
+    "view-source:",
+    "irc:",
+    "mailbox:"
+};
+const PRUint32 kNonpersistableSchemesSize = sizeof(kNonpersistableSchemes) / sizeof(kNonpersistableSchemes[0]);
 
 // Default flags for persistence
 const PRUint32 kDefaultPersistFlags = 
@@ -1377,7 +1396,9 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
         nsCOMPtr<nsIDOMTreeWalker> walker;
         rv = trav->CreateTreeWalker(docAsNode, 
-            nsIDOMNodeFilter::SHOW_ELEMENT | nsIDOMNodeFilter::SHOW_DOCUMENT,
+            nsIDOMNodeFilter::SHOW_ELEMENT |
+                nsIDOMNodeFilter::SHOW_DOCUMENT |
+                nsIDOMNodeFilter::SHOW_PROCESSING_INSTRUCTION,
             nsnull, PR_TRUE, getter_AddRefs(walker));
         NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
@@ -2167,8 +2188,168 @@ nsWebBrowserPersist::EnumCleanupUploadList(nsHashKey *aKey, void *aData, void* c
 }
 
 
+PRBool
+nsWebBrowserPersist::GetQuotedAttributeValue(
+    const nsAString &aSource, const nsAString &aAttribute, nsAString &aValue)
+{  
+    // NOTE: This code was lifted verbatim from nsParserUtils.cpp
+    aValue.Truncate();
+    nsAString::const_iterator start, end;
+    aSource.BeginReading(start);
+    aSource.EndReading(end);
+    nsAString::const_iterator iter(end);
+
+    while (start != end) {
+        if (FindInReadable(aAttribute, start, iter))
+        {
+            // walk past any whitespace
+            while (iter != end && nsCRT::IsAsciiSpace(*iter))
+            {
+                ++iter;
+            }
+
+            if (iter == end)
+                break;
+            
+            // valid name="value" pair?
+            if (*iter != '=')
+            {
+                start = iter;
+                iter = end;
+                continue;
+            }
+            // move past the =
+            ++iter;
+
+            while (iter != end && nsCRT::IsAsciiSpace(*iter))
+            {
+                ++iter;
+            }
+
+            if (iter == end)
+                break;
+
+            PRUnichar q = *iter;
+            if (q != '"' && q != '\'')
+            {
+                start = iter;
+                iter = end;
+                continue;
+            }
+
+            // point to the first char of the value
+            ++iter;
+            start = iter;
+            if (FindCharInReadable(q, iter, end))
+            {
+                aValue = Substring(start, iter);
+                return PR_TRUE;
+            }
+
+            // we've run out of string.  Just return...
+            break;
+         }
+    }
+    return PR_FALSE;
+}
+
+nsresult nsWebBrowserPersist::FixupXMLStyleSheetLink(nsIDOMProcessingInstruction *aPI, nsAString &aHref)
+{
+    NS_ENSURE_ARG_POINTER(aPI);
+    nsresult rv = NS_OK;
+
+    nsAutoString data;
+    rv = aPI->GetData(data);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+    nsAutoString href;
+    nsAutoString alternate;
+    nsAutoString charset;
+    nsAutoString title;
+    nsAutoString type;
+    nsAutoString media;
+
+    GetQuotedAttributeValue(data, NS_LITERAL_STRING("href"), href);
+    GetQuotedAttributeValue(data, NS_LITERAL_STRING("alternate"), alternate);
+    GetQuotedAttributeValue(data, NS_LITERAL_STRING("charset"), charset);
+    GetQuotedAttributeValue(data, NS_LITERAL_STRING("title"), title);
+    GetQuotedAttributeValue(data, NS_LITERAL_STRING("type"), type);
+    GetQuotedAttributeValue(data, NS_LITERAL_STRING("media"), media);
+
+    // Construct and set a new data value for the xml-stylesheet
+    if (!aHref.IsEmpty())
+    {
+        NS_NAMED_LITERAL_STRING(kCloseAttr, "\" ");
+        nsAutoString newData;
+        if (!aHref.IsEmpty())
+        {
+            newData += NS_LITERAL_STRING("href=\"") + href + kCloseAttr;
+        }
+        if (!title.IsEmpty())
+        {
+            newData += NS_LITERAL_STRING("title=\"") + title + kCloseAttr;
+        }
+        if (!media.IsEmpty())
+        {
+            newData += NS_LITERAL_STRING("media=\"") + media + kCloseAttr;
+        }
+        if (!type.IsEmpty())
+        {
+            newData += NS_LITERAL_STRING("type=\"") + type + kCloseAttr;
+        }
+        if (!charset.IsEmpty())
+        {
+            newData += NS_LITERAL_STRING("charset=\"") + charset + kCloseAttr;
+        }
+        if (!alternate.IsEmpty())
+        {
+            newData += NS_LITERAL_STRING("alternate=\"") + alternate + kCloseAttr;
+        }
+        if (newData.Length() > 0)
+        {
+            newData.Truncate(newData.Length() - 1);  // Remove the extra space on the end.
+        }
+        aPI->SetData(newData);
+    }
+
+    aHref = href;
+
+    return rv;
+}
+
+nsresult nsWebBrowserPersist::GetXMLStyleSheetLink(nsIDOMProcessingInstruction *aPI, nsAString &aHref)
+{
+    NS_ENSURE_ARG_POINTER(aPI);
+
+    nsresult rv = NS_OK;
+    nsAutoString data;
+    rv = aPI->GetData(data);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+    GetQuotedAttributeValue(data, NS_LITERAL_STRING("href"), aHref);
+
+    return NS_OK;
+}
+
 nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
 {
+    // Fixup xml-stylesheet processing instructions
+    nsCOMPtr<nsIDOMProcessingInstruction> nodeAsPI = do_QueryInterface(aNode);
+    if (nodeAsPI)
+    {
+        nsAutoString target;
+        nodeAsPI->GetTarget(target);
+        if (target.Equals(NS_LITERAL_STRING("xml-stylesheet")))
+        {
+            nsAutoString href;
+            GetXMLStyleSheetLink(nodeAsPI, href);
+            if (!href.IsEmpty())
+            {
+                StoreURI(NS_ConvertUCS2toUTF8(href).get());
+            }
+        }
+    }
+
     // Test the node to see if it's an image, frame, iframe, css, js
     nsCOMPtr<nsIDOMHTMLImageElement> nodeAsImage = do_QueryInterface(aNode);
     if (nodeAsImage)
@@ -2308,6 +2489,29 @@ nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(
 {
     nsresult rv;
     *aNodeOut = nsnull;
+
+    // Fixup xml-stylesheet processing instructions
+    nsCOMPtr<nsIDOMProcessingInstruction> nodeAsPI = do_QueryInterface(aNodeIn);
+    if (nodeAsPI)
+    {
+        nsAutoString target;
+        nodeAsPI->GetTarget(target);
+        if (target.Equals(NS_LITERAL_STRING("xml-stylesheet")))
+        {
+            rv = GetNodeToFixup(aNodeIn, aNodeOut);
+            if (NS_SUCCEEDED(rv) && *aNodeOut)
+            {
+                nsCOMPtr<nsIDOMProcessingInstruction> outNode = do_QueryInterface(*aNodeOut);
+                nsAutoString href;
+                GetXMLStyleSheetLink(nodeAsPI, href);
+                if (!href.IsEmpty())
+                {
+                    FixupURI(href);
+                    FixupXMLStyleSheetLink(outNode, href);
+                }
+            }
+        }
+    }
 
     // Fix up href and file links in the elements
 
@@ -2472,6 +2676,38 @@ nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(
 }
 
 nsresult
+nsWebBrowserPersist::StoreURI(
+    const char *aURI, PRBool aNeedsPersisting, URIData **aData)
+{
+    NS_ENSURE_ARG_POINTER(aURI);
+    if (aData)
+        *aData = nsnull;
+    
+    // Test whether this URL should be persisted
+    PRBool shouldPersistURI = PR_TRUE;
+    for (PRUint32 i = 0; i < kNonpersistableSchemesSize; i++)
+    {
+        PRUint32 schemeLen = strlen(kNonpersistableSchemes[i]);
+        if (nsCRT::strncasecmp(aURI, kNonpersistableSchemes[i], schemeLen) == 0)
+        {
+            shouldPersistURI = PR_FALSE;
+            break;
+        }
+    }
+    if (shouldPersistURI)
+    {
+        URIData *data = nsnull;
+        MakeAndStoreLocalFilenameInURIMap(aURI, aNeedsPersisting, &data);
+        if (aData)
+        {
+            *aData = data;
+        }
+    }
+
+    return NS_OK;
+}
+
+nsresult
 nsWebBrowserPersist::StoreURIAttribute(
     nsIDOMNode *aNode, const char *aAttribute, PRBool aNeedsPersisting,
     URIData **aData)
@@ -2496,37 +2732,76 @@ nsWebBrowserPersist::StoreURIAttribute(
         nsAutoString oldValue;
         attrNode->GetNodeValue(oldValue);
         nsCAutoString oldCValue; oldCValue.AssignWithConversion(oldValue);
-
-        // Test whether this URL should be persisted
-        PRBool shouldPersistURI = PR_TRUE;
-        if (oldCValue.EqualsWithConversion("about:", PR_TRUE, 6) ||
-            oldCValue.EqualsWithConversion("news:", PR_TRUE, 5) ||
-            oldCValue.EqualsWithConversion("snews:", PR_TRUE, 6) ||
-            oldCValue.EqualsWithConversion("ldap:", PR_TRUE, 5) ||
-            oldCValue.EqualsWithConversion("ldaps:", PR_TRUE, 6) ||
-            oldCValue.EqualsWithConversion("mailto:", PR_TRUE, 7) ||
-            oldCValue.EqualsWithConversion("finger:", PR_TRUE, 7) ||
-            oldCValue.EqualsWithConversion("telnet:", PR_TRUE, 7) ||
-            oldCValue.EqualsWithConversion("gopher:", PR_TRUE, 7) ||
-            oldCValue.EqualsWithConversion("javascript:", PR_TRUE, 11) ||
-            oldCValue.EqualsWithConversion("view-source:", PR_TRUE, 12) ||
-            oldCValue.EqualsWithConversion("irc:", PR_TRUE, 4) ||
-            oldCValue.EqualsWithConversion("mailbox:", PR_TRUE, 8))
-        {
-            shouldPersistURI = PR_FALSE;
-        }
-
-        if (shouldPersistURI)
-        {
-            URIData *data = nsnull;
-            MakeAndStoreLocalFilenameInURIMap(oldCValue.get(), aNeedsPersisting, &data);
-            if (aData)
-            {
-                *aData = data;
-            }
-        }
+        return StoreURI(oldCValue.get(), aNeedsPersisting, aData);
     }
 
+    return NS_OK;
+}
+
+nsresult
+nsWebBrowserPersist::FixupURI(nsAString &aURI)
+{
+    // get the current location of the file (absolutized)
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8(aURI).get(), mCurrentBaseURI);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    nsCAutoString spec;
+    rv = uri->GetSpec(spec);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+    // Search for the URI in the map and replace it with the local file
+    nsCStringKey key(spec.get());
+    if (!mURIMap.Exists(&key))
+    {
+        return NS_ERROR_FAILURE;
+    }
+    URIData *data = (URIData *) mURIMap.Get(&key);
+    nsCOMPtr<nsIURI> fileAsURI;
+    if (data->mFile)
+    {
+        rv = data->mFile->Clone(getter_AddRefs(fileAsURI)); 
+        NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    }
+    else
+    {
+        rv = data->mDataPath->Clone(getter_AddRefs(fileAsURI));
+        NS_ENSURE_SUCCESS(rv, PR_FALSE);
+        rv = AppendPathToURI(fileAsURI, data->mFilename);
+        NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    }
+    nsAutoString newValue;
+
+    // remove username/password if present
+    fileAsURI->SetUserPass(NS_LITERAL_CSTRING(""));
+
+    // reset node attribute 
+    // Use relative or absolute links
+    if (data->mDataPathIsRelative)
+    {
+        nsCOMPtr<nsIURL> url(do_QueryInterface(fileAsURI));
+        NS_ENSURE_TRUE(url, NS_ERROR_FAILURE);
+        nsCAutoString filename;
+        url->GetFileName(filename);
+
+        nsCAutoString rawPathURL(data->mRelativePathToData);
+        rawPathURL.Append(filename);
+
+        nsCAutoString buf;
+        newValue = NS_ConvertUTF8toUCS2(
+            NS_EscapeURL(rawPathURL, esc_FilePath, buf));
+    }
+    else
+    {
+        nsCAutoString fileurl;
+        fileAsURI->GetSpec(fileurl);
+        newValue.Assign(NS_ConvertUTF8toUCS2(fileurl));
+    }
+    if (data->mIsSubFrame)
+    {
+        newValue.Append(data->mSubFrameExt);
+    }
+
+    aURI = newValue;
     return NS_OK;
 }
 
@@ -2551,70 +2826,10 @@ nsWebBrowserPersist::FixupNodeAttribute(nsIDOMNode *aNode,
     rv = attrMap->GetNamedItem(attribute, getter_AddRefs(attrNode));
     if (attrNode)
     {
-        nsString oldValue;
-        attrNode->GetNodeValue(oldValue);
-        nsCString oldCValue; oldCValue.AssignWithConversion(oldValue);
-
-        // get the current location of the file (absolutized)
-        nsCOMPtr<nsIURI> uri;
-        rv = NS_NewURI(getter_AddRefs(uri), oldCValue.get(), mCurrentBaseURI);
-        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-        nsCAutoString spec;
-        rv = uri->GetSpec(spec);
-        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
-        // Search for the URI in the map and replace it with the local file
-        nsCStringKey key(spec.get());
-        if (mURIMap.Exists(&key))
-        {
-            URIData *data = (URIData *) mURIMap.Get(&key);
-            nsCOMPtr<nsIURI> fileAsURI;
-            if (data->mFile)
-            {
-                rv = data->mFile->Clone(getter_AddRefs(fileAsURI)); 
-                NS_ENSURE_SUCCESS(rv, PR_FALSE);
-            }
-            else
-            {
-                rv = data->mDataPath->Clone(getter_AddRefs(fileAsURI));
-                NS_ENSURE_SUCCESS(rv, PR_FALSE);
-                rv = AppendPathToURI(fileAsURI, data->mFilename);
-                NS_ENSURE_SUCCESS(rv, PR_FALSE);
-            }
-            nsAutoString newValue;
-
-            // remove username/password if present
-            fileAsURI->SetUserPass(NS_LITERAL_CSTRING(""));
-
-            // reset node attribute 
-            // Use relative or absolute links
-            if (data->mDataPathIsRelative)
-            {
-                nsCOMPtr<nsIURL> url(do_QueryInterface(fileAsURI));
-                NS_ENSURE_TRUE(url, NS_ERROR_FAILURE);
-                nsCAutoString filename;
-                url->GetFileName(filename);
-
-                nsCAutoString rawPathURL;
-                rawPathURL.Assign(data->mRelativePathToData);
-                rawPathURL.Append(filename);
-
-                nsCAutoString buf;
-                newValue = NS_ConvertUTF8toUCS2(
-                    NS_EscapeURL(rawPathURL, esc_FilePath, buf));
-            }
-            else
-            {
-                nsCAutoString fileurl;
-                fileAsURI->GetSpec(fileurl);
-                newValue.Assign(NS_ConvertUTF8toUCS2(fileurl));
-            }
-            if (data->mIsSubFrame)
-            {
-                newValue.Append(data->mSubFrameExt);
-            }
-            attrNode->SetNodeValue(newValue);
-        }
+        nsString uri;
+        attrNode->GetNodeValue(uri);
+        FixupURI(uri);
+        attrNode->SetNodeValue(uri);
     }
 
     return NS_OK;
@@ -3001,7 +3216,8 @@ NS_IMETHODIMP nsEncoderNodeFixup::FixupNode(
     // Test whether we need to fixup the node
     PRUint16 type = 0;
     aNode->GetNodeType(&type);
-    if (type == nsIDOMNode::ELEMENT_NODE)
+    if (type == nsIDOMNode::ELEMENT_NODE ||
+        type == nsIDOMNode::PROCESSING_INSTRUCTION_NODE)
     {
         return mWebBrowserPersist->CloneNodeWithFixedUpURIAttributes(aNode, aOutNode);
     }
