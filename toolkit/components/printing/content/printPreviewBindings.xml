@@ -204,8 +204,7 @@
 
           // hide scale widgets (indices: 8, 9, 10, 11)
           // hide orient widgets (indices: 12, 13)
-          var i;
-          for (i = 8; i <= 13; ++i)
+          for (var i = 8; i <= 13; ++i)
           {
             document.getAnonymousNodes(this)[i].setAttribute("hidden", "true");
           }
