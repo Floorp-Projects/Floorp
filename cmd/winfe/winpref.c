@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-#include "windows.h"
+#include <windows.h>
 #include "jsapi.h"
 #include "xp_core.h"
 #include "xp_mcom.h"
@@ -24,131 +24,43 @@
 
 extern HINSTANCE hAppInst;
 
-int pref_InitInitialObjects(JSContext *js_context,JSObject *js_object) {
-    int ok;
-    jsval result;
-	HRSRC hFound;
-	HGLOBAL hRes;
-	char * lpBuff = NULL;
-	XP_File fp;
-	XP_StatStruct stats;
-	long fileLength;
+#define GETRESOURCE(A, B, C)	((LPSTR) LockResource((A) = LoadResource((B), FindResource((B), (C), RT_RCDATA))))
+#define ZAPRESOURCE(A)			(UnlockResource(A), FreeResource(A))
 
-	if (!(js_context&&js_object)) return FALSE;
+static char
+szss[] = "%s%s",
+szPref[][9] = {
+	"init", "all", "mailnews", "editor", "security", "win", "config"
+},
+szprefs[] = "_prefs"
+;
 
-	hFound = FindResource(hAppInst, "init_prefs", RT_RCDATA);
-	hRes = LoadResource(hAppInst, hFound);
-	lpBuff = (char *)LockResource(hRes);
-    if (lpBuff) {
-    	ok = JS_EvaluateScript(js_context,js_object,
-			      lpBuff, strlen(lpBuff), NULL, 0,
-			      &result);
-	} 
-	else ok = JS_FALSE;
+#define _PREFS_		7
 
-#ifndef XP_WIN32	
-	UnlockResource(hRes);
-	FreeResource(hRes);
+int pref_InitInitialObjects(JSContext *js_context, JSObject *js_object)
+{
+	BOOL fok = 1; jsval result; HGLOBAL hglobal; LPSTR lpstr; char s[MAX_PATH]; register r;
+
+	if (js_context && js_object)
+		for (r = 0; r < _PREFS_; r++) {
+			wsprintf(s, szss, szPref[r], szprefs);
+
+			fok = ((lpstr = GETRESOURCE(hglobal, hAppInst, s))?
+					JS_EvaluateScript(js_context, js_object, lpstr, lstrlen(lpstr), 0, 0, &result): 0);
+
+#ifndef XP_WIN32
+			ZAPRESOURCE(hglobal);
 #endif
 
 #ifdef DEBUG
-	if (!ok) {
-		MessageBox(NULL,"Initial preference resource failed!  Is there a bug in initpref.js? -- Aborting","Debug Error!", MB_OK);
-		return ok;
-	}
+			if (!fok) {
+					char szdebug[MAX_PATH * 2];
+
+					wsprintf(szdebug, "Initialization failure - %s.", s);
+					MessageBox(0, szdebug, "pref_InitInitialObjects", MB_ICONINFORMATION);
+			}
 #endif
+		}
 
-
-	hFound = FindResource(hAppInst, "all_prefs", RT_RCDATA);
-	hRes = LoadResource(hAppInst, hFound);
-	lpBuff = (char *)LockResource(hRes);
-    if (lpBuff) {
-    	ok = JS_EvaluateScript(js_context,js_object,
-			      lpBuff, strlen(lpBuff), NULL, 0,
-			      &result);
-	} 
-	else ok = JS_FALSE;
-#ifndef XP_WIN32	
-	UnlockResource(hRes);
-	FreeResource(hRes);
-#endif
-
-	hFound = FindResource(hAppInst, "mailnews_prefs", RT_RCDATA);
-	hRes = LoadResource(hAppInst, hFound);
-	lpBuff = (char *)LockResource(hRes);
-    if (lpBuff) {
-    	ok = JS_EvaluateScript(js_context,js_object,
-			      lpBuff, strlen(lpBuff), NULL, 0,
-			      &result);
-	} 
-	else ok = JS_FALSE;
-#ifndef XP_WIN32	
-	UnlockResource(hRes);
-	FreeResource(hRes);
-#endif
-
-	hFound = FindResource(hAppInst, "editor_prefs", RT_RCDATA);
-	hRes = LoadResource(hAppInst, hFound);
-	lpBuff = (char *)LockResource(hRes);
-    if (lpBuff) {
-    	ok = JS_EvaluateScript(js_context,js_object,
-			      lpBuff, strlen(lpBuff), NULL, 0,
-			      &result);
-	} 
-	else ok = JS_FALSE;
-#ifndef XP_WIN32	
-	UnlockResource(hRes);
-	FreeResource(hRes);
-#endif
-
-	hFound = FindResource(hAppInst, "security_prefs", RT_RCDATA);
-	hRes = LoadResource(hAppInst, hFound);
-	lpBuff = (char *)LockResource(hRes);
-    if (lpBuff) {
-    	ok = JS_EvaluateScript(js_context,js_object,
-			      lpBuff, strlen(lpBuff), NULL, 0,
-			      &result);
-	} 
-	else ok = JS_FALSE;
-#ifndef XP_WIN32	
-	UnlockResource(hRes);
-	FreeResource(hRes);
-#endif
-
-	hFound = FindResource(hAppInst, "win_prefs", RT_RCDATA);
-	hRes = LoadResource(hAppInst, hFound);
-	lpBuff = (char *)LockResource(hRes);
-    if (lpBuff) {
-    	ok = JS_EvaluateScript(js_context,js_object,
-			      lpBuff, strlen(lpBuff), NULL, 0,
-			      &result);
-	} 
-	else ok = JS_FALSE;
-#ifndef XP_WIN32	
-	UnlockResource(hRes);
-	FreeResource(hRes);
-#endif
-
-#ifdef DEBUG
-	if (!ok) MessageBox(NULL,"Initial preference resource failed!  Is there a bug in all.js or winpref.js? -- Aborting","Debug Error!", MB_OK);
-#endif
-
-	hFound = FindResource(hAppInst, "config_prefs", RT_RCDATA);
-	hRes = LoadResource(hAppInst, hFound);
-	lpBuff = (char *)LockResource(hRes);
-    if (lpBuff) {
-    	ok = JS_EvaluateScript(js_context,js_object,
-			      lpBuff, strlen(lpBuff), NULL, 0,
-			      &result);
-	} else ok = JS_FALSE;
-#ifndef XP_WIN32	
-	UnlockResource(hRes);
-	FreeResource(hRes);
-#endif
-
-#ifdef DEBUG
-	//if (!ok) MessageBox(NULL,"Initial preference resource failed!  Is there a bug in all.js? -- Aborting","Debug Error!", MB_OK);
-#endif
-
-	return ok;
+	return(fok);
 }
