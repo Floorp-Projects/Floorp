@@ -415,7 +415,6 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent, nsIFrame *aFrame)
 PRInt32
 compareFrames(nsIFrame *aBegin, nsIFrame *aEnd)
 {
-  return 0;
   if (!aBegin || !aEnd)
     return 0;
   nsCOMPtr<nsIContent> beginContent;
