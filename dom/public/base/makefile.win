@@ -20,7 +20,7 @@ IGNORE_MANIFEST=1
 
 DEFINES=-D_IMPL_NS_DOM 
 EXPORTS=nsIDOMWindow.h nsIDOMNavigator.h nsIDOMLocation.h \
-	nsIDOMWindowCollection.h
+	nsIDOMWindowCollection.h nsIDOMScreen.h nsIDOMHistory.h
 
 MODULE=dom 
 

@@ -29,6 +29,8 @@ EXPORTS =			 \
 	nsIDOMNavigator.h 	 \
 	nsIDOMLocation.h \
 	nsIDOMWindowCollection.h \
+	nsIDOMScreen.h \
+	nsIDOMHistory.h \
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
