@@ -1324,7 +1324,7 @@ PRInt32 CStyleToken::GetTokenType(void) {
  *  @param   aName -- string to init token name with
  *  @return  
  */
-CSkippedContentToken::CSkippedContentToken() : CAttributeToken(eHTMLTag_unknown) {
+CSkippedContentToken::CSkippedContentToken() : CAttributeToken() {
 }
 
 
