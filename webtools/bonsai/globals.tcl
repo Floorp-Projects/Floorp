@@ -60,8 +60,9 @@ if {[info exists tcl_version] && $tcl_version >= 8.0} {
         }
         return [clock scan $str]
     }
-    proc fmtclock {date args} {
-    }
+    # defining this to a null proc screws up rebuilding the checkins database
+    # proc fmtclock {date args} {
+    # }
 }
     
 
@@ -72,7 +73,7 @@ proc NOTDEF {foo} {
 proc ConnectToDatabase {} {
     global mysqlhandle
     if {![info exists mysqlhandle]} {
-        set mysqlhandle [mysqlconnect]
+        set mysqlhandle [mysqlconnect -user bonsai]
         mysqluse $mysqlhandle "bonsai"
     }
 }

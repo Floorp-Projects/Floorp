@@ -1,0 +1,16 @@
+This file contains only important changes made to Bonsai.  If you
+are updating from an older verseion, make sure that you check this file!
+
+For a more complete list of what has changed, use Bonsai itself, at
+(http://cvs-mirror.mozilla.org/webtools/bonsai/cvsqueryform.cgi) to
+query the CVS tree.  For example,
+
+    http://cvs-mirror.mozilla.org/webtools/bonsai/cvsquery.cgi?module=all&branch=HEAD&branchtype=match&dir=mozilla%2Fwebtools%2Fbonsai&file=&filetype=match&who=&whotype=match&sortby=Date&hours=2&date=week&mindate=&maxdate=&cvsroot=%2Fcvsroot 
+
+will tell you what has been changed in the last week.
+
+
+
+4/9/99 Now uses DBI::mysql instead of the mysql perl module that came with 
+mysql.  One side effect of htis is that it now tries to log in as user
+"bonsai"; I'm actually not sure what username it was trying before.

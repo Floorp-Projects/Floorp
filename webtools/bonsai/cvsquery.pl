@@ -37,7 +37,7 @@ $CI_LOG=11;
 $NOT_LOCAL = 1;
 $IS_LOCAL = 2;
 
-
+chomp($CVS_ROOT);
 if( $CVS_ROOT eq "" ){
     $CVS_ROOT = pickDefaultRepository();
 }
@@ -171,12 +171,13 @@ sub query_checkins {
         print "<pre wrap> Query: $qstring</PRE>";
     }
 
-    $query = $db->Query($qstring) || die $Mysql::db_errstr;
+    $query = $db->prepare($qstring) || die $DBD::mysql::db_errstr;
+    $query->execute;
 
     $lastlog = 0;
-    while(@row = $query->fetchrow) {
-        $ci = [];
+    while(@row = $query->fetchrow_array) {
 # print "<pre>";
+        $ci = [];
         for ($i=0 ; $i<=$CI_LOG ; $i++) {
             $ci->[$i] = $row[$i];
 # print "$row[$i] ";
@@ -399,7 +400,12 @@ sub get_module_map {
 sub parse_modules {
     while( $l = &get_line ){
         ($mod_name, $flag, @params) = split(/[ \t]+/,$l);
-	if( $flag eq '-d' ){
+
+        if ( $#params eq -1 ) {
+            @params = $flag;
+            $flag = "";
+        }
+	elsif( $flag eq '-d' ){
 	    ($mod_name, $dummy, $dummy, @params) = split(/[ \t]+/,$l);
 	}
         elsif( $flag ne '-a' ){

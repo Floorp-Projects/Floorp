@@ -16,7 +16,7 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-use Mysql;
+use DBD::mysql;
 
 require 'header.pl';
 
@@ -107,8 +107,7 @@ sub validateRepository {
 
 sub ConnectToDatabase {
     if ($dbh == "") {
-        $dbh = Mysql->Connect("localhost") || die "Can't connect to database server -- $Mysql::db_errstr";
-        $dbh->SelectDB("bonsai") || die "Can't select bonsai database";
+        $dbh = DBI->connect("bonsai","bonsai","","mysql") || die "Can't connect to database server -- $DBD::mysql::db_errstr";
     }
     return $dbh;
 }

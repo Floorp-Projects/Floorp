@@ -307,7 +307,7 @@ sub refigureStartDateIfNecessary {
 
     my $db = ConnectToDatabase();
 
-    my $query = $db->Query("select min(when) from checkins,repositories where repositories.id = repositoryid and repository = '$CVS_ROOT'") || die $Mysql::db_errstr;
+    my $query = $db->prepare( "select min(when) from checkins,repositories where repositories.id = repositoryid and repository = '$CVS_ROOT'") || die $DBD::mysql::db_errstr;
 
     my @row = $query->fetchrow();
     my $startdate = $row[0];
