@@ -143,12 +143,6 @@ Begin of Item 000D
 End of Item 000D 
 
 Begin of Item 000E
- Format 2
-  srcBegin = 20AC
-  destBegin = 00A0
-End of Item 000E 
-
-Begin of Item 000F
  Format 1
   srcBegin = 2111
   srcEnd = 2126
@@ -157,39 +151,39 @@ Begin of Item 000F
   00C1 FFFD FFFD FFFD FFFD FFFD FFFD 00C3 
   FFFD FFFD FFFD 00C2 FFFD FFFD FFFD FFFD 
   FFFD 00D4 FFFD FFFD FFFD 0057 
-End of Item 000F 
+End of Item 000E 
 
-Begin of Item 0010
+Begin of Item 000F
  Format 2
   srcBegin = 2135
   destBegin = 00C0
-End of Item 0010 
+End of Item 000F 
 
-Begin of Item 0011
+Begin of Item 0010
  Format 1
   srcBegin = 2190
   srcEnd = 2194
   mappingOffset = 0085
  Mapping  = 
   00AC 00AD 00AE 00AF 00AB 
-End of Item 0011 
+End of Item 0010 
 
-Begin of Item 0012
+Begin of Item 0011
  Format 2
   srcBegin = 21B5
   destBegin = 00BF
-End of Item 0012 
+End of Item 0011 
 
-Begin of Item 0013
+Begin of Item 0012
  Format 1
   srcBegin = 21D0
   srcEnd = 21D4
   mappingOffset = 008A
  Mapping  = 
   00DC 00DD 00DE 00DF 00DB 
-End of Item 0013 
+End of Item 0012 
 
-Begin of Item 0014
+Begin of Item 0013
  Format 1
   srcBegin = 2200
   srcEnd = 2248
@@ -205,48 +199,48 @@ Begin of Item 0014
   FFFD FFFD FFFD FFFD 007E FFFD FFFD FFFD 
   FFFD FFFD FFFD FFFD FFFD 0040 FFFD FFFD 
   00BB 
-End of Item 0014 
+End of Item 0013 
 
-Begin of Item 0015
+Begin of Item 0014
  Format 1
   srcBegin = 2260
   srcEnd = 2265
   mappingOffset = 00D8
  Mapping  = 
   00B9 00BA FFFD FFFD 00A3 00B3 
-End of Item 0015 
+End of Item 0014 
 
-Begin of Item 0016
+Begin of Item 0015
  Format 1
   srcBegin = 2282
   srcEnd = 2287
   mappingOffset = 00DE
  Mapping  = 
   00CC 00C9 00CB FFFD 00CD 00CA 
-End of Item 0016 
+End of Item 0015 
 
-Begin of Item 0017
+Begin of Item 0016
  Format 1
   srcBegin = 2295
   srcEnd = 2297
   mappingOffset = 00E4
  Mapping  = 
   00C5 FFFD 00C4 
+End of Item 0016 
+
+Begin of Item 0017
+ Format 2
+  srcBegin = 22A5
+  destBegin = 005E
 End of Item 0017 
 
 Begin of Item 0018
  Format 2
-  srcBegin = 22A5
-  destBegin = 005E
+  srcBegin = 22C5
+  destBegin = 00D7
 End of Item 0018 
 
 Begin of Item 0019
- Format 2
-  srcBegin = 22C5
-  destBegin = 00D7
-End of Item 0019 
-
-Begin of Item 001A
  Format 1
   srcBegin = 2320
   srcEnd = 232A
@@ -254,24 +248,24 @@ Begin of Item 001A
  Mapping  = 
   00F3 00F5 FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD 00E1 00F1 
-End of Item 001A 
+End of Item 0019 
 
-Begin of Item 001B
+Begin of Item 001A
  Format 2
   srcBegin = 25CA
   destBegin = 00E0
-End of Item 001B 
+End of Item 001A 
 
-Begin of Item 001C
+Begin of Item 001B
  Format 1
   srcBegin = 2660
   srcEnd = 2666
   mappingOffset = 00F2
  Mapping  = 
   00AA FFFD FFFD 00A7 FFFD 00A9 00A8 
-End of Item 001C 
+End of Item 001B 
 
-Begin of Item 001D
+Begin of Item 001C
  Format 1
   srcBegin = F8E5
   srcEnd = F8F5
@@ -280,11 +274,11 @@ Begin of Item 001D
   0060 00BD 00BE 00E2 00E3 00E4 FFFD FFFD 
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   00F4 
-End of Item 001D 
+End of Item 001C 
 
 ========================================================*/
 /* Offset=0x0000  ItemOfList */
-  0x001E,
+  0x001D,
 /*-------------------------------------------------------*/
 /* Offset=0x0001  offsetToFormatArray */
   0x0004,
@@ -293,15 +287,15 @@ End of Item 001D
   0x000C,
 /*-------------------------------------------------------*/
 /* Offset=0x0003  offsetToMappingTable */ 
-  0x0066,
+  0x0063,
 /*-------------------------------------------------------*/
 /*       Offset=0x0004   Start of Format Array */ 
 /*	Total of Format 0 : 0x0003			 */
 /*	Total of Format 1 : 0x0011			 */
-/*	Total of Format 2 : 0x000A			 */
+/*	Total of Format 2 : 0x0009			 */
 /*	Total of Format 3 : 0x0000			 */
 
-0x1000, 0x2111, 0x1122, 0x1221, 0x1212, 0x1111, 0x2122, 0x0011, 
+0x1000, 0x2111, 0x1122, 0x2121, 0x1121, 0x2111, 0x1212, 0x0001, 
 /*-------------------------------------------------------*/
 /*       Offset=0x000C   Start of MapCell Array */ 
 /* 0000 */    0x002E, 0x003F, 0x002E, 
@@ -318,24 +312,23 @@ End of Item 001D
 /* 000B */    0x2022, 0x2026, 0x0068, 
 /* 000C */    0x2032, 0x2033, 0x006D, 
 /* 000D */    0x2044, 0x0000, 0x00A4, 
-/* 000E */    0x20AC, 0x0000, 0x00A0, 
-/* 000F */    0x2111, 0x2126, 0x006F, 
-/* 0010 */    0x2135, 0x0000, 0x00C0, 
-/* 0011 */    0x2190, 0x2194, 0x0085, 
-/* 0012 */    0x21B5, 0x0000, 0x00BF, 
-/* 0013 */    0x21D0, 0x21D4, 0x008A, 
-/* 0014 */    0x2200, 0x2248, 0x008F, 
-/* 0015 */    0x2260, 0x2265, 0x00D8, 
-/* 0016 */    0x2282, 0x2287, 0x00DE, 
-/* 0017 */    0x2295, 0x2297, 0x00E4, 
-/* 0018 */    0x22A5, 0x0000, 0x005E, 
-/* 0019 */    0x22C5, 0x0000, 0x00D7, 
-/* 001A */    0x2320, 0x232A, 0x00E7, 
-/* 001B */    0x25CA, 0x0000, 0x00E0, 
-/* 001C */    0x2660, 0x2666, 0x00F2, 
-/* 001D */    0xF8E5, 0xF8F5, 0x00F9, 
+/* 000E */    0x2111, 0x2126, 0x006F, 
+/* 000F */    0x2135, 0x0000, 0x00C0, 
+/* 0010 */    0x2190, 0x2194, 0x0085, 
+/* 0011 */    0x21B5, 0x0000, 0x00BF, 
+/* 0012 */    0x21D0, 0x21D4, 0x008A, 
+/* 0013 */    0x2200, 0x2248, 0x008F, 
+/* 0014 */    0x2260, 0x2265, 0x00D8, 
+/* 0015 */    0x2282, 0x2287, 0x00DE, 
+/* 0016 */    0x2295, 0x2297, 0x00E4, 
+/* 0017 */    0x22A5, 0x0000, 0x005E, 
+/* 0018 */    0x22C5, 0x0000, 0x00D7, 
+/* 0019 */    0x2320, 0x232A, 0x00E7, 
+/* 001A */    0x25CA, 0x0000, 0x00E0, 
+/* 001B */    0x2660, 0x2666, 0x00F2, 
+/* 001C */    0xF8E5, 0xF8F5, 0x00F9, 
 /*-------------------------------------------------------*/
-/*       Offset=0x0066   Start of MappingTable */ 
+/*       Offset=0x0063   Start of MappingTable */ 
 
 /* 0000 */    0x0020, 0x0021, 0xFFFD, 0x0023, 0xFFFD, 0x0025, 0x0026, 0xFFFD, 
 /* 0008 */    0x0028, 0x0029, 0xFFFD, 0x002B, 0x002C, 0x005B, 0xFFFD, 0x005D, 
@@ -371,4 +364,4 @@ End of Item 001D
 /* 00F8 */    0x00A8, 0x0060, 0x00BD, 0x00BE, 0x00E2, 0x00E3, 0x00E4, 0xFFFD, 
 /* 0100 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
 /* 0108 */    0xFFFD, 0x00F4, 
-/*	End of table Total Length = 0x0170 * 2 */
+/*	End of table Total Length = 0x016D * 2 */
