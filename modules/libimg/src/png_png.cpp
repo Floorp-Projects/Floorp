@@ -109,12 +109,12 @@ void info_callback(png_structp png_ptr, png_infop info)
 #else
     screen_gamma = 2.2;  /*good for PC.*/
 #endif
-
+/*
     if (png_get_gAMA(png_ptr, info, (double *)&png_ptr->gamma))
       png_set_gamma(png_ptr, screen_gamma, png_ptr->gamma);
     else
       png_set_gamma(png_ptr, screen_gamma, 0.45);
-
+*/
     if(png_ptr->interlaced == PNG_INTERLACE_ADAM7)
         number_passes = png_set_interlace_handling(png_ptr);
 
