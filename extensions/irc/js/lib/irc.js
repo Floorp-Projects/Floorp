@@ -1329,7 +1329,7 @@ CIRCServer.prototype.onJoin =
 function serv_join (e)
 {
 
-    e.channel = new CIRCChannel (this, e.meat);
+    e.channel = new CIRCChannel (this, (e.meat ? e.meat : e.params[1]));
     if (e.user == this.me)
         e.server.sendData ("MODE " + e.channel.encodedName + "\n" /* +
                            "BANS " + e.channel.encodedName + "\n" */);
