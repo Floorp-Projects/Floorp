@@ -29,13 +29,30 @@
 class nsIScrollableView : public nsISupports
 {
 public:
-
+  /**
+   * Set the height of the container in nscoords.
+   * @param aSize height of container in twips.
+   */
   virtual void SetContainerSize(PRInt32 aSize) = 0;
+
+  /**
+   * Get the height of the container
+   * @result height of container
+   */
   virtual PRInt32 GetContainerSize(void) = 0;
 
+  /**
+   * Set the offset into the container of the
+   * topmost visible coordinate
+   * @param aOffset offset in twips
+   */
   virtual void SetVisibleOffset(PRInt32 aOffset) = 0;
-  virtual PRInt32 GetVisibleOffset(void) = 0;
 
+  /**
+   * Get the offset of the topmost visible coordinate
+   * @result coordinate in twips
+   */
+  virtual PRInt32 GetVisibleOffset(void) = 0;
 };
 
 #endif
