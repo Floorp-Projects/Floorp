@@ -53,6 +53,7 @@
 #include "nsMsgCreate.h"    // For drafts...I know, awful file name...
 #include "nsSmtpServer.h"
 #include "nsIContentHandler.h"
+#include "nsMsgRecipientArray.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpServer);
@@ -66,6 +67,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgQuote);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgQuoteListener);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpUrl);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMailtoUrl);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgRecipientArray);
 
 ////////////////////////////////////////////////////////////
 //
@@ -128,7 +130,11 @@ static nsModuleComponentInfo components[] =
   { "Msg Quote Listener",
     NS_MSGQUOTELISTENER_CID,
     NS_MSGQUOTELISTENER_PROGID,
-    nsMsgQuoteListenerConstructor }
+    nsMsgQuoteListenerConstructor },
+  { "Msg Recipient Array",
+    NS_MSGRECIPIENTARRAY_CID,
+    NS_MSGRECIPIENTARRAY_PROGID,
+    nsMsgRecipientArrayConstructor }
 };
 
   

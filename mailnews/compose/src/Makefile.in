@@ -49,6 +49,7 @@ CPPSRCS		= \
 		nsMsgComposeService.cpp \
 		nsMsgCompose.cpp \
 		nsMsgQuote.cpp \
+		nsMsgRecipientArray.cpp \
 		nsURLFetcher.cpp \
 		nsSmtpServer.cpp \
 		$(NULL)
@@ -71,6 +72,7 @@ EXPORTS		= \
 		nsMsgAttachmentHandler.h \
 		nsMsgPrompts.h \
 		nsMsgQuote.h \
+		nsMsgRecipientArray.h \
 		nsURLFetcher.h \
 		nsMsgSend.h \
 		nsSmtpServer.h \

@@ -45,6 +45,7 @@ XPIDLSRCS	= \
 		nsIMsgSend.idl \
 		nsIMsgSendLater.idl \
 		nsIMsgDraft.idl \
+		nsIMsgRecipientArray.idl \
 		nsISmtpServer.idl \
 		nsISmtpUrl.idl \
 		nsISmtpService.idl \

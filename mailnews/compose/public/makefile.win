@@ -29,12 +29,13 @@ XPIDLSRCS =										\
 				.\nsIMsgQuote.idl				\
 				.\nsIMsgSendListener.idl		\
 				.\nsIMsgSendLaterListener.idl	\
-				.\nsIMsgSend.idl			\
-				.\nsIMsgSendLater.idl		\
-				.\nsIMsgDraft.idl			\
-				.\nsISmtpServer.idl			\
-				.\nsISmtpUrl.idl			\
-				.\nsISmtpService.idl		\
+				.\nsIMsgSend.idl				\
+				.\nsIMsgSendLater.idl			\
+				.\nsIMsgRecipientArray.idl		\
+				.\nsIMsgDraft.idl				\
+				.\nsISmtpServer.idl				\
+				.\nsISmtpUrl.idl				\
+				.\nsISmtpService.idl			\
 				$(NULL)
 
 ################################################################################
