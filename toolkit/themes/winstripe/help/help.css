@@ -111,12 +111,13 @@ toolbar[mode="text"] .toolbarbutton-icon {
   -moz-user-focus: ignore;
   margin: 0 !important;
   border: none !important;
-  padding: 0px !important;
+  padding: 0 !important;
   min-width: 0;
   background-color: transparent;
-  list-style-image: url("chrome://help/skin/throbber.png");
+  list-style-image: url("chrome://browser/skin/Throbber-small.png");
 }
 
 #help-throbber[busy="true"] {
-  list-style-image: url("chrome://help/skin/throbber-busy.gif");
+  list-style-image: url("chrome://browser/skin/Throbber-small.gif");
+  -moz-opacity: 0.5;
 }
