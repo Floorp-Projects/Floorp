@@ -8,7 +8,9 @@ DLLNAMESTUB = libwebclientstub.so
 MOZILLA_TOP = ../../..
 DIST = ${MOZILLA_TOP}/dist
 LIBDIR = ${DIST}/lib
+# WARNING: YOU NEED TO RUN 'gtk-config --cflags' and stick it in here
 GTKINCLUDES = -I/usr/X11R6/include -I/usr/lib/glib/include
+# WARNING: YOU NEED TO RUN 'gtk-config --libs' and stick it in here
 GTKLIBS = -L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -rdynamic -lgmodule -lglib -ldl -lXext -lX11 -lm
 JAVAINCLUDE = -I${JAVADIR}/include -I${JAVADIR}/include/genunix -I${JAVADIR}/include/linux
 # For JDK1.2
