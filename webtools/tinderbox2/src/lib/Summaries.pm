@@ -8,8 +8,8 @@
 # The only external interface to this library is summary_pages() and
 # create_global_index() these functions are only called by tinder.cgi.
 
-# $Revision: 1.10 $ 
-# $Date: 2002/04/26 22:05:02 $ 
+# $Revision: 1.11 $ 
+# $Date: 2002/12/10 19:24:37 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Summaries.pm,v $ 
 # $Name:  $ 
@@ -58,7 +58,7 @@ sub summary_pages {
 # Look! we use 'my' here but we wish to change $summary_ref and pass
 # it back to the caller, see the return statement.
 
-  my ($tree, $summary_ref) = @_;
+  my ($tree, $summary_ref, $refresh_time) = @_;
 
   # Build all the summary pages and save data into the $symmary_ref
   # also take the time to build an index page for this tree pointing
@@ -86,6 +86,8 @@ sub summary_pages {
     $TREE = $tree;
     $TREE_STATE = TinderHeader::gettree_header('TreeState', $tree);
     $HTML_TIME = HTMLPopUp::timeHTML($main::TIME);
+
+    $REFRESH_TIME = $refresh_time;
 
   };
 
