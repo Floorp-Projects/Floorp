@@ -5,6 +5,7 @@
 #include "nsHashtable.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIChannel.h"
 #include "nsXPIDLString.h"
 #include "nsIParser.h"
@@ -19,6 +20,18 @@
 #include "nsIDOMElement.h"
 #include "nsSupportsArray.h"
 
+// Event listeners
+#include "nsIDOMMouseListener.h"
+#include "nsIDOMMouseMotionListener.h"
+#include "nsIDOMLoadListener.h"
+#include "nsIDOMFocusListener.h"
+#include "nsIDOMPaintListener.h"
+#include "nsIDOMKeyListener.h"
+#include "nsIDOMFormListener.h"
+#include "nsIDOMMenuListener.h"
+#include "nsIDOMDragListener.h"
+
+#include "nsXBLEventHandler.h"
 #include "nsIXBLBinding.h"
 
 // Static IIDs/CIDs. Try to minimize these.
@@ -87,6 +100,17 @@ public:
   static nsIAtom* kHandlersAtom;
   static nsIAtom* kExcludesAtom;
   static nsIAtom* kInheritsAtom;
+  static nsIAtom* kTypeAtom;
+  static nsIAtom* kCapturerAtom;
+
+  // Used to easily obtain the correct IID for an event.
+  struct EventHandlerMapEntry {
+    const char*  mAttributeName;
+    nsIAtom*     mAttributeAtom;
+    const nsIID* mHandlerIID;
+  };
+
+  static EventHandlerMapEntry kEventHandlerMap[];
 
 // Internal member functions
 protected:
@@ -94,6 +118,11 @@ protected:
   PRBool IsInExcludesList(nsIAtom* aTag, const nsString& aList);
 
   NS_IMETHOD ConstructAttributeTable(nsIContent* aElement); 
+
+  PRBool IsMouseHandler(const nsString& aName);
+  PRBool IsKeyHandler(const nsString& aName);
+
+  static void GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound);
 
 // MEMBER VARIABLES
 protected:
@@ -113,6 +142,55 @@ nsIAtom* nsXBLBinding::kInterfaceAtom = nsnull;
 nsIAtom* nsXBLBinding::kHandlersAtom = nsnull;
 nsIAtom* nsXBLBinding::kExcludesAtom = nsnull;
 nsIAtom* nsXBLBinding::kInheritsAtom = nsnull;
+nsIAtom* nsXBLBinding::kTypeAtom = nsnull;
+nsIAtom* nsXBLBinding::kCapturerAtom = nsnull;
+
+nsXBLBinding::EventHandlerMapEntry
+nsXBLBinding::kEventHandlerMap[] = {
+    { "click",         nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
+    { "dblclick",      nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
+    { "mousedown",     nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
+    { "mouseup",       nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
+    { "mouseover",     nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
+    { "mouseout",      nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
+
+    { "mousemove",     nsnull, &NS_GET_IID(nsIDOMMouseMotionListener) },
+
+    { "keydown",       nsnull, &NS_GET_IID(nsIDOMKeyListener)         },
+    { "keyup",         nsnull, &NS_GET_IID(nsIDOMKeyListener)         },
+    { "keypress",      nsnull, &NS_GET_IID(nsIDOMKeyListener)         },
+
+    { "load",          nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
+    { "unload",        nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
+    { "abort",         nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
+    { "error",         nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
+
+    { "create",        nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+    { "close",         nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+    { "destroy",       nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+    { "command",       nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+    { "broadcast",     nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+    { "commandupdate", nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+
+    { "focus",         nsnull, &NS_GET_IID(nsIDOMFocusListener)       },
+    { "blur",          nsnull, &NS_GET_IID(nsIDOMFocusListener)       },
+
+    { "submit",        nsnull, &NS_GET_IID(nsIDOMFormListener)        },
+    { "reset",         nsnull, &NS_GET_IID(nsIDOMFormListener)        },
+    { "change",        nsnull, &NS_GET_IID(nsIDOMFormListener)        },
+    { "select",        nsnull, &NS_GET_IID(nsIDOMFormListener)        },
+    { "input",         nsnull, &NS_GET_IID(nsIDOMFormListener)        },
+
+    { "paint",         nsnull, &NS_GET_IID(nsIDOMPaintListener)       },
+    
+    { "dragenter",     nsnull, &NS_GET_IID(nsIDOMDragListener)        },
+    { "dragover",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
+    { "dragexit",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
+    { "dragdrop",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
+    { "draggesture",   nsnull, &NS_GET_IID(nsIDOMDragListener)        },
+
+    { nsnull,            nsnull, nsnull                                 }
+};
 
 // Implementation /////////////////////////////////////////////////////////////////
 
@@ -131,6 +209,8 @@ nsXBLBinding::nsXBLBinding(void)
     kHandlersAtom = NS_NewAtom("handlers");
     kExcludesAtom = NS_NewAtom("excludes");
     kInheritsAtom = NS_NewAtom("inherits");
+    kTypeAtom = NS_NewAtom("type");
+    kCapturerAtom = NS_NewAtom("capturer");
   }
 }
 
@@ -143,6 +223,8 @@ nsXBLBinding::~nsXBLBinding(void)
     NS_RELEASE(kHandlersAtom);
     NS_RELEASE(kExcludesAtom);
     NS_RELEASE(kInheritsAtom);
+    NS_RELEASE(kTypeAtom);
+    NS_RELEASE(kCapturerAtom);
   }
 }
 
@@ -281,7 +363,61 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
 NS_IMETHODIMP
 nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
 {
-  // XXX Implement me!
+  // Fetch the handlers element for this binding.
+  nsCOMPtr<nsIContent> handlers;
+  GetImmediateChild(kHandlersAtom, getter_AddRefs(handlers));
+
+  if (!handlers)
+    return NS_OK;
+
+  // Now walk the handlers and add event listeners to the bound
+  // element.
+  PRInt32 childCount;
+  handlers->ChildCount(childCount);
+  for (PRInt32 i = 0; i < childCount; i++) {
+    nsCOMPtr<nsIContent> child;
+    handlers->ChildAt(i, *getter_AddRefs(child));
+
+    // Fetch the type attribute.
+    // XXX Deal with a comma-separated list of types
+    nsAutoString type;
+    child->GetAttribute(kNameSpaceID_None, kTypeAtom, type);
+    
+    if (type != "") {
+      nsCOMPtr<nsIAtom> eventAtom = getter_AddRefs(NS_NewAtom(type));
+      PRBool found = PR_FALSE;
+      nsIID iid;
+      GetEventHandlerIID(eventAtom, &iid, &found);
+      if (found) {
+        // Add an event listener for mouse and key events only.
+        PRBool mouse = IsMouseHandler(type);
+        PRBool key = IsKeyHandler(type);
+
+        if (mouse || key) {
+          // Create a new nsXBLEventHandler.
+          nsXBLEventHandler* handler;
+          NS_NewXBLEventHandler(mBoundElement, child, &handler);
+
+          // Figure out if we're using capturing or not.
+          PRBool useCapture = PR_FALSE;
+          nsAutoString capturer;
+          child->GetAttribute(kNameSpaceID_None, kCapturerAtom, capturer);
+          if (capturer == "true")
+            useCapture = PR_TRUE;
+
+          // Add the event listener.
+          nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
+          if (mouse)
+            receiver->AddEventListener(type, (nsIDOMMouseListener*)handler, useCapture);
+          else
+            receiver->AddEventListener(type, (nsIDOMKeyListener*)handler, useCapture);
+        }
+      
+        // XXX Call AddScriptEventListener for other IID types
+      }
+    }
+  }
+
   return NS_OK;
 }
 
@@ -471,6 +607,35 @@ nsXBLBinding::ConstructAttributeTable(nsIContent* aElement)
     ConstructAttributeTable(child);
   }
   return NS_OK;
+}
+
+void
+nsXBLBinding::GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound)
+{
+  *aFound = PR_FALSE;
+
+  EventHandlerMapEntry* entry = kEventHandlerMap;
+  while (entry->mAttributeAtom) {
+    if (entry->mAttributeAtom == aName) {
+        *aIID = *entry->mHandlerIID;
+        *aFound = PR_TRUE;
+        break;
+    }
+    ++entry;
+  }
+}
+
+PRBool
+nsXBLBinding::IsMouseHandler(const nsString& aName)
+{
+  return ((aName == "click") || (aName == "dblclick") || (aName=="mousedown") ||
+          (aName == "mouseover") || (aName == "mouseout") || (aName == "mouseup"));
+}
+
+PRBool
+nsXBLBinding::IsKeyHandler(const nsString& aName)
+{
+  return ((aName == "keypress") || (aName == "keydown") || (aName == "keyup"));
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

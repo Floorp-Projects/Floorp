@@ -15,6 +15,12 @@ PRUint32 nsXBLEventHandler::gRefCnt = 0;
 nsIAtom* nsXBLEventHandler::kKeyCodeAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kCharCodeAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kKeyAtom = nsnull;
+nsIAtom* nsXBLEventHandler::kPrimaryAtom = nsnull;
+nsIAtom* nsXBLEventHandler::kShiftAtom = nsnull;
+nsIAtom* nsXBLEventHandler::kControlAtom = nsnull;
+nsIAtom* nsXBLEventHandler::kMetaAtom = nsnull;
+nsIAtom* nsXBLEventHandler::kAltAtom = nsnull;
+nsIAtom* nsXBLEventHandler::kValueAtom = nsnull;
 
 nsXBLEventHandler::nsXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHandlerElement)
 {
