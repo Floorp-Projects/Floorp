@@ -3434,12 +3434,16 @@ nsTableFrame::CalcDesiredHeight(const nsHTMLReflowState& aReflowState)
       return tableSpecifiedHeight;
     return 0;
   }
-
-  nscoord desiredHeight = borderPadding.top + cellSpacingY + borderPadding.bottom;
-  for (PRUint32 rgX = 0; rgX < numRowGroups; rgX++) {
-    nsIFrame* rg = (nsIFrame*)rowGroups.ElementAt(rgX);
-    if (rg) {
-      desiredHeight += rg->GetSize().height + cellSpacingY;
+  PRInt32 rowCount = cellMap->GetRowCount();
+  PRInt32 colCount = cellMap->GetColCount();
+  nscoord desiredHeight = borderPadding.top + borderPadding.bottom;
+  if (rowCount > 0 && colCount > 0) {
+    desiredHeight += cellSpacingY;
+    for (PRUint32 rgX = 0; rgX < numRowGroups; rgX++) {
+      nsIFrame* rg = (nsIFrame*)rowGroups.ElementAt(rgX);
+      if (rg) {
+        desiredHeight += rg->GetSize().height + cellSpacingY;
+      }
     }
   }
 
