@@ -55,9 +55,9 @@ else
 	PTHREADS_USER = 1
 endif
 
-DEFAULT_COMPILER = xlC_r
+DEFAULT_COMPILER = xlc_r
 
-CC		= xlC_r
+CC		= xlc_r
 CCC		= xlC_r
 
 CPU_ARCH	= rs6000
