@@ -36,6 +36,7 @@ EXPORTS = \
 	secmod.h \
 	secmodt.h \
 	pk11func.h \
+	pk11sdr.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
@@ -55,6 +56,7 @@ CSRCS = \
 	pk11skey.c \
 	pk11kea.c \
 	pk11util.c \
+	pk11sdr.c \
 	$(NULL)
 
 REQUIRES = security dbm
