@@ -219,9 +219,9 @@ void InitExposeEvent(GdkEventExpose *aGEE,
 
 //=============================================================
 void UninitExposeEvent(GdkEventExpose *aGEE,
-                              gpointer   p,
-                              nsPaintEvent &anEvent,
-                              PRUint32   aEventType)
+                       gpointer   p,
+                       nsPaintEvent &anEvent,
+                       PRUint32   aEventType)
 {
   if (aGEE != nsnull) {
     delete anEvent.rect;
@@ -342,6 +342,9 @@ void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
   NS_ADDREF(widget);
   widget->OnResize(event);
   NS_RELEASE(widget);
+
+  if (event && event.rect)
+    delete event.rect;
 }
 
 #if 0
