@@ -865,21 +865,32 @@ handle_gdk_event (GdkEvent *event, gpointer data)
       // It was an event on one of our superwindows
 
       nsWindow *window = (nsWindow *)gtk_object_get_data (object, "nsWindow");
-      
-      if (gtk_grab_get_current () != nsnull)
-        {
-          // A GTK+ grab is in effect. Rewrite the event to point to
-          // our toplevel, and pass it through.
-          // XXX: We should actually translate the coordinates
+      GtkWidget *current_grab = gtk_grab_get_current();
 
-          gdk_window_unref (event->any.window);
-          event->any.window = GTK_WIDGET (window->GetMozArea())->window;
-          gdk_window_ref (event->any.window);
+      if (current_grab) {
+        // walk up the list of our parents looking for the widget.
+        // if it's there, then don't rewrite the event
+        GtkWidget *this_widget = GTK_WIDGET(window->GetMozArea());
+        while (this_widget) {
+          // if this widget is the grab widget then let the event pass
+          // through as a superwin.  this takes care of
+          // superwin windows inside of a modal window.
+          if (this_widget == current_grab)
+            goto handle_as_superwin;
+          this_widget = this_widget->parent;
         }
+        // A GTK+ grab is in effect. Rewrite the event to point to
+        // our toplevel, and pass it through.
+        // XXX: We should actually translate the coordinates
+        
+        gdk_window_unref (event->any.window);
+        event->any.window = GTK_WIDGET (window->GetMozArea())->window;
+        gdk_window_ref (event->any.window);
+      }
       else
         {
           // Handle it ourselves.
-
+        handle_as_superwin:
           switch (event->type)
             {
             case GDK_KEY_PRESS:
