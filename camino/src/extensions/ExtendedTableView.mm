@@ -80,15 +80,25 @@
   NSPoint point;
   point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
   rowIndex = [self rowAtPoint:point];
-  if (rowIndex >= 0) {
+  if (rowIndex >= 0)
+  {
     [self abortEditing];
     id delegate = [self delegate];
-    if (![self isRowSelected:rowIndex]) {
-      if ([delegate respondsToSelector:@selector(tableView:shouldSelectRow:)]) {
+    if (![self isRowSelected:rowIndex])
+    {
+      // if we've clicked on an unselected row, ask the table view if
+      // it is selectable
+      if ([delegate respondsToSelector:@selector(tableView:shouldSelectRow:)])
+      {
         if (![delegate tableView:self shouldSelectRow:rowIndex])
           return [self menu];
       }
+
+      // it is selectable, so select it
+      [self selectRow:rowIndex byExtendingSelection:NO];
     }
+    
+    // now (we're on a selected row) get the contet menu
     if ([delegate respondsToSelector:@selector(tableView:contextMenuForRow:)])
       return [delegate tableView:self contextMenuForRow:rowIndex];
   }

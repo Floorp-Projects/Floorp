@@ -223,11 +223,13 @@ static NSString* const kAutosaveSortDirectionKey        = @"sort_descending";
       id delegate = [self delegate];
       // Make sure the item is the only selected one
       if (![delegate respondsToSelector:@selector(outlineView:shouldSelectItem:)] ||
-           [delegate outlineView:self shouldSelectItem:item]) {
+           [delegate outlineView:self shouldSelectItem:item])
+      {
         // we don't want anything but what was right-clicked selected
         // XXX sure we do. I should be able to context-click on a bunch of selected bookmarks
-        // and say 'open in tabs'.
-        [self deselectAll:self];
+        // and say 'open in tabs'. However, the current delegate method prevents this, because
+        // it only allows you to pass a single item. This needs fixing.
+        [self deselectAll:nil];
         [self selectRow:rowIndex byExtendingSelection:NO];
       }
       

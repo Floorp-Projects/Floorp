@@ -23,13 +23,11 @@
 		<key>56</key>
 		<string>419 485 314 64 0 0 1152 746 </string>
 		<key>654</key>
-		<string>159 629 198 144 0 0 1280 832 </string>
+		<string>206 786 198 149 0 0 1600 1002 </string>
 		<key>801</key>
 		<string>418 469 201 79 0 0 1024 746 </string>
 		<key>826</key>
 		<string>84 401 213 60 0 0 1152 746 </string>
-		<key>894</key>
-		<string>249 643 130 49 0 0 1024 746 </string>
 	</dict>
 	<key>IBFramework Version</key>
 	<string>364.0</string>
