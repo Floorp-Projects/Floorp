@@ -123,8 +123,8 @@ NS_IMETHODIMP nsUnicodeDecodeUtil::Convert(
     PRInt32         aBehavior,
     PRUint16        numberOfTable,
     uRange         *aRangeArray,
-    uShiftTable    *aShiftTableArray,
-    uMappingTable  *aMappingTableArray
+    uShiftTable    ** aShiftTableArray,
+    uMappingTable  ** aMappingTableArray
 )
 {
   PRUint32 ubuflen = *aDestLength;
@@ -143,9 +143,9 @@ NS_IMETHODIMP nsUnicodeDecodeUtil::Convert(
       for(i=0;i<numberOfTable;i++) {
         if((aRangeArray[i].min  <= *src) &&  
            (*src <= aRangeArray[i].max)) {  
-          if(uScan(&aShiftTableArray[i], (PRInt32*) 0,
+          if(uScan(aShiftTableArray[i], (PRInt32*) 0,
 		          src, &med, srclen, &scanlen)) {
-            uMapCode((uTable*) &aMappingTableArray[i],med, dest);
+            uMapCode((uTable*) aMappingTableArray[i],med, dest);
             if(*dest != NOMAPPING)
               break;
 		  } else {
