@@ -313,6 +313,7 @@
          } catch (e) {}
          // Extend the selection from the existing pivot, if any
          this.view.selection.rangedSelect(-1, c + 1, false);
+         this.treeBoxObject.ensureRowIsVisible(c + 1);
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_up" modifiers="control">
