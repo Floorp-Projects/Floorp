@@ -22,7 +22,7 @@ require			Exporter;
 
 @ISA				= qw(Exporter);
 @EXPORT			= qw();
-@EXPORT_OK	= qw(BuildProject,OpenErrorLog,CloseErrorLog,UseCodeWarriorLib,Configure);
+@EXPORT_OK	= qw(BuildProject,OpenErrorLog,CloseErrorLog,UseCodeWarriorLib,Configure,StopForErrors,DontStopForErrors);
 
 	use Cwd;
 
@@ -76,6 +76,7 @@ sub Configure($)
 
 $logging								= 0;
 $recent_errors_file			= "";
+$stop_on_1st_error			= 1;
 
 sub CloseErrorLog()
 	{
@@ -103,6 +104,16 @@ sub OpenErrorLog($)
 			}
 	}
 
+sub StopForErrors()
+	{
+		$stop_on_1st_error = 1;
+	}
+
+sub DontStopForErrors()
+	{
+		$stop_on_1st_error = 0;		
+	}
+
 sub log_message($)
 	{
 		if ( $logging )
@@ -124,17 +135,29 @@ sub log_message_with_time($)
 
 sub log_recent_errors()
 	{
+		my $found_errors = 0;
+
 		if ( $logging )
 			{
 				open(RECENT_ERRORS, "<$recent_errors_file");
 
 				while( <RECENT_ERRORS> )
 					{
+						if ( $_ =~ m/^Error/ )
+							{
+								$found_errors = 1;
+							}
 						print ERROR_LOG $_;
 					}
 
 				close(RECENT_ERRORS);
 				unlink("$recent_errors_file");
+			}
+
+		if ( $stop_on_1st_error && $found_errors )
+			{
+				print ERROR_LOG "### Build failed.\n";
+				die "### Build failed with errors, stopped";
 			}
 	}
 
