@@ -292,6 +292,7 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
 Handle nsMacMemoryCushion::sMemoryReserve;
 
 nsMacMemoryCushion::nsMacMemoryCushion()
+: mBufferHandle(nsnull)
 {
 }
 
@@ -300,15 +301,25 @@ nsMacMemoryCushion::~nsMacMemoryCushion()
   ::SetGrowZone(nsnull);
   if (sMemoryReserve)
     ::DisposeHandle(sMemoryReserve);
+
+  if (mBufferHandle)
+    ::DisposeHandle(mBufferHandle);
 }
 
 
-OSErr nsMacMemoryCushion::Init(Size reserveSize)
+OSErr nsMacMemoryCushion::Init(Size bufferSize, Size reserveSize)
 {
   sMemoryReserve = ::NewHandle(reserveSize);
   if (sMemoryReserve == nsnull)
     return ::MemError();
   
+  mBufferHandle = ::NewHandle(bufferSize);
+  if (mBufferHandle == nsnull)
+    return ::MemError();
+
+  // make this purgable
+  ::HPurge(mBufferHandle);
+
 	::SetGrowZone(NewGrowZoneProc(GrowZoneProc));
 	return noErr;
 }
@@ -316,17 +327,20 @@ OSErr nsMacMemoryCushion::Init(Size reserveSize)
 
 void nsMacMemoryCushion::RepeatAction(const EventRecord &aMacEvent)
 {
-  if (!RecoverMemoryReserve(kMemoryReserveSize))
+  if (!RecoverMemoryBuffer(kMemoryBufferSize))
   {
-    nsMemory::HeapMinimize();
-    
     // until imglib implements nsIMemoryPressureObserver (bug 46337)
     // manually flush the imglib cache here
     nsCOMPtr<nsIImageManager> imageManager = do_GetService(kImageManagerCID);
     if (imageManager)
     {
       imageManager->FlushCache();
-    }    
+    }
+  }
+
+  if (!RecoverMemoryReserve(kMemoryReserveSize))
+  {
+    nsMemory::HeapMinimize();
   }
 }
 
@@ -337,6 +351,16 @@ Boolean nsMacMemoryCushion::RecoverMemoryReserve(Size reserveSize)
   if (*sMemoryReserve != nsnull) return true;   // everything is OK
   
   ::ReallocateHandle(sMemoryReserve, reserveSize);
+  if (::MemError() != noErr) return false;
+  return true;
+}
+
+Boolean nsMacMemoryCushion::RecoverMemoryBuffer(Size bufferSize)
+{
+  if (!mBufferHandle) return true;     // not initted yet
+  if (*mBufferHandle != nsnull) return true;   // everything is OK
+  
+  ::ReallocateHandle(mBufferHandle, bufferSize);
   if (::MemError() != noErr) return false;
   return true;
 }
