@@ -91,6 +91,8 @@
 #include "nsIDialogParamBlock.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIWindowWatcher.h"
+#include "jsapi.h"
+#include "nsIJSContextStack.h"
 
 #if defined (XP_UNIX)
 #elif defined (XP_MAC)
@@ -450,7 +452,6 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
     nsCOMPtr<nsIPrefBranch> prefBranch;
     nsCOMPtr<nsIURI> profileURL;
     PRInt32 numProfiles=0;
-    nsXPIDLString currentProfileStr;
   
     nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -461,6 +462,15 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
 
     if (profileURLStr.Length() == 0)
     {
+        // If this flag is TRUE, it makes the multiple profile case
+        // just like the single profile case - the profile will be
+        // set to that returned by GetCurrentProfile(). It will prevent
+        // the profile selection dialog from being shown when we have
+        // multiple profiles.
+        
+        PRBool startWithLastUsedProfile = PR_FALSE;
+        GetStartWithLastUsedProfile(&startWithLastUsedProfile);
+        
         // This means that there was no command-line argument to force
         // profile UI to come up. But we need the UI anyway if there
         // are no profiles yet, or if there is more than one.
@@ -470,7 +480,7 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
             if (NS_FAILED(rv)) return rv;
             // Will get set in call to SetCurrentProfile() below
         }
-        else if (numProfiles == 1)
+        else if (numProfiles == 1 || startWithLastUsedProfile)
         {
             // If we get here and the 1 profile is the current profile,
             // which can happen with QuickLaunch, there's no need to do
@@ -507,13 +517,16 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
 
         nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
         if (NS_FAILED(rv)) return rv;
- 
-        // We need to send a param to OpenWindow if the window is to be considered
-        // a dialog. It needs to be for script security reasons. This param block
-        // will be made use of soon. See bug 66833.
+
         nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID, &rv));
         if (NS_FAILED(rv)) return rv;
-       
+
+        // String0  -> mode
+        // Int0    <-  result code (1 == OK, 0 == Cancel)
+
+        ioParamBlock->SetNumberStrings(1);
+        ioParamBlock->SetString(0, NS_LITERAL_STRING("startup").get());
+
         nsCOMPtr<nsIDOMWindow> newWindow;
         rv = windowWatcher->OpenWindow(nsnull,
                                        profileURLStr.get(),
@@ -522,15 +535,14 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
                                        ioParamBlock,
                                        getter_AddRefs(newWindow));
         if (NS_FAILED(rv)) return rv;
+        PRInt32 dialogConfirmed;
+        ioParamBlock->GetInt(0, &dialogConfirmed);
+        if (dialogConfirmed == 0) return NS_ERROR_ABORT;
     }
 
-    // if we get here, and we don't have a current profile, 
-    // return a failure so we will exit
-    // this can happen, if the user hits Exit in the profile manager dialog
+    nsXPIDLString currentProfileStr;    
     rv = GetCurrentProfile(getter_Copies(currentProfileStr));
-    if (NS_FAILED(rv) || (*(const PRUnichar*)currentProfileStr == 0)) {
-        return NS_ERROR_FAILURE;
-    }
+    if (NS_FAILED(rv)) return rv;
 
     // if at this point we have a current profile but it is not set, set it
     if (!mCurrentProfileAvailable) {
@@ -1098,6 +1110,16 @@ NS_IMETHODIMP nsProfile::GetFirstProfile(PRUnichar **profileName)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsProfile::GetStartWithLastUsedProfile(PRBool *aStartWithLastUsedProfile)
+{
+    NS_ENSURE_ARG_POINTER(aStartWithLastUsedProfile);
+    return gProfileDataAccess->GetStartWithLastUsedProfile(aStartWithLastUsedProfile);
+}
+
+NS_IMETHODIMP nsProfile::SetStartWithLastUsedProfile(PRBool aStartWithLastUsedProfile)
+{
+    return gProfileDataAccess->SetStartWithLastUsedProfile(aStartWithLastUsedProfile);
+}
 
 // Returns the name of the current profile i.e., the last used profile
 NS_IMETHODIMP
@@ -1185,6 +1207,18 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
             return NS_OK;
         }
         
+        // Phase 2c: Now that things are torn down, force JS GC so that things which depend on
+        // resources which are about to go away in "profile-before-change" are destroyed first.
+        nsCOMPtr<nsIThreadJSContextStack> stack =
+          do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
+        if (NS_SUCCEEDED(rv))
+        {
+          JSContext *cx = nsnull;
+          stack->GetSafeJSContext(&cx);
+          if (cx)
+            ::JS_GC(cx);
+        }
+        
         // Phase 3: Notify observers of a profile change
         observerService->NotifyObservers(subject, "profile-before-change", context.get());        
         
@@ -1216,7 +1250,7 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
         observerService->NotifyObservers(subject, "profile-change-net-restore", context.get());
         mShutdownProfileToreDownNetwork = PR_FALSE;
     }
-+
+
     // Phase 4: Notify observers that the profile has changed - Here they respond to new profile
     observerService->NotifyObservers(subject, "profile-do-change", context.get());
 
@@ -1226,6 +1260,9 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
     // Now that a profile is established, set the profile defaults dir for the locale of this profile
     rv = DefineLocaleDefaultsDir();
     NS_ASSERTION(NS_SUCCEEDED(rv), "nsProfile::DefineLocaleDefaultsDir failed");
+
+    // Phase 6: One last notification after the new profile is established
+    observerService->NotifyObservers(subject, "profile-initial-state", context.get());
       
     return NS_OK;
 }
@@ -1277,6 +1314,18 @@ NS_IMETHODIMP nsProfile::ShutDownCurrentProfile(PRUint32 shutDownType)
 
       // Phase 2b: Send the "teardown" notification
       observerService->NotifyObservers(subject, "profile-change-teardown", context.get());
+
+      // Phase 2c: Now that things are torn down, force JS GC so that things which depend on
+      // resources which are about to go away in "profile-before-change" are destroyed first.
+      nsCOMPtr<nsIThreadJSContextStack> stack =
+        do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
+      if (NS_SUCCEEDED(rv))
+      {
+        JSContext *cx = nsnull;
+        stack->GetSafeJSContext(&cx);
+        if (cx)
+          ::JS_GC(cx);
+      }
       
       // Phase 3: Notify observers of a profile change
       observerService->NotifyObservers(subject, "profile-before-change", context.get());        
@@ -1907,30 +1956,6 @@ nsresult nsProfile::Update4xProfileInfo()
     /* XP_UNIX */
     rv = gProfileDataAccess->Get4xProfileInfo(nsnull, PR_TRUE);
 #endif /* XP_PC || XP_MAC */
-    return rv;
-}
-
-// launch the application with a profile of user's choice
-// Prefs and FileLocation services are used here.
-// FileLocation service to make ir forget about the global profile dir it had.
-// Prefs service to kick off the startup to start the app with new profile's prefs.
-NS_IMETHODIMP nsProfile::StartApprunner(const PRUnichar* profileName)
-{
-    NS_ENSURE_ARG_POINTER(profileName);   
-
-    nsresult rv = NS_OK;
-
-#if defined(DEBUG_profile)
-    {
-      printf("ProfileManager : StartApprunner\n");
-
-      printf("profileName passed in: %s\n", NS_LossyConvertUCS2toASCII(profileName).get());
-    }
-#endif
-
-    rv = SetCurrentProfile(profileName);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to set profile");
-
     return rv;
 }
 

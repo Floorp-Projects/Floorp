@@ -84,8 +84,6 @@ interface nsIProfileInternal : nsIProfile {
     
     void getProfileListX(in unsigned long which, out unsigned long length, [retval, array, size_is(length)] out wstring profileNames);
    
-    void startApprunner(in wstring profileName);
-
     void migrateProfileInfo();
     void migrateAllProfiles();
     void migrateProfile(in wstring profileName);
@@ -119,6 +117,13 @@ interface nsIProfileInternal : nsIProfile {
     attribute boolean automigrate;
     readonly attribute nsIFile defaultProfileParentDir;
     readonly attribute wstring firstProfile;
+    
+    /**
+     * Affects startup behavior when there are multiple profiles.
+     *  If FALSE, the profile selection dialog will be shown.
+     *  If TRUE, the last used profile will be chosen automatically.
+     */ 
+    attribute boolean startWithLastUsedProfile;
 
     [noscript] void updateRegistry(in nsIFile regName);
     [noscript] void getRegStrings(in wstring profileName,

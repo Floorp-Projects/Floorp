@@ -64,7 +64,7 @@
 
     <!-- instructions -->
     <deck id="prattle">
-      <description id="intro" style="width: 17em;border:1px solid transparent;" flex="1">&introgeneral.label;</description>
+      <description id="intro" style="width: 17em;border:1px solid transparent;" flex="1">""</description>
       <vbox id="manager">
         <description style="width: 17em;" class="label">&pmTextA.label;</description>
         <separator/>
@@ -90,9 +90,10 @@
           <listheader label="&availprofiles.label;"/>
         </listhead>
       </listbox>
-      <hbox align="start">
+      <vbox>
         <checkbox id="offlineState" label="&offlineState.label;" accesskey="&offlineState.accesskey;"/> 
-      </hbox>
+        <checkbox id="autoSelectLastProfile" label="&autoSelectLastProfile.label;" accesskey="&autoSelectLastProfile.accesskey;"/> 
+      </vbox>
     </vbox>
   </hbox>
   

@@ -281,10 +281,24 @@ function DoEnabling()
   else {
     if( renbutton.getAttribute( "disabled" ) == "true" )
       renbutton.removeAttribute( "disabled", "true" );
-    if( delbutton.getAttribute( "disabled" ) == "true" )
-      delbutton.removeAttribute( "disabled", "true" );
     if( start.getAttribute( "disabled" ) == "true" )
       start.removeAttribute( "disabled", "true" );
+    
+    var canDelete = true;
+    if (!gStartupMode) {  
+      var selected = profileList.selectedItems[0];
+      var profileName = selected.getAttribute("profile_name");
+      var currentProfile = profile.currentProfile;
+      if (currentProfile && (profileName == currentProfile))
+        canDelete = false;      
+    }
+    if (canDelete) {
+      if ( delbutton.getAttribute( "disabled" ) == "true" )
+        delbutton.removeAttribute( "disabled" );
+    }
+    else
+      delbutton.setAttribute( "disabled", "true" );
+      
   }
 }
 

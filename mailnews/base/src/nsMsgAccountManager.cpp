@@ -1414,6 +1414,7 @@ nsMsgAccountManager::LoadAccounts()
   }
 
   m_accountsLoaded = PR_TRUE;  //It is ok to return null accounts like when we create new profile
+  m_haveShutdown = PR_FALSE;
   
   if (!accountList || !accountList[0]) {
 #ifdef DEBUG_ACCOUNTMANAGER

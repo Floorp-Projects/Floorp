@@ -100,6 +100,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 #define kRegistryVersionString (NS_LITERAL_STRING("Version"))
 #define kRegistryVersion_1_0 (NS_LITERAL_STRING("1.0"))
 #define kRegistryCurrentVersion (NS_LITERAL_STRING("1.0"))
+#define kRegistryStartWithLastString (NS_LITERAL_CSTRING("AutoStartWithLast"))
 
 // **********************************************************************
 // class nsProfileAccess
@@ -114,6 +115,7 @@ nsProfileAccess::nsProfileAccess()
     mProfileDataChanged  =  PR_FALSE;
     mForgetProfileCalled =  PR_FALSE;
     m4xProfilesAdded     =  PR_FALSE;
+    mStartWithLastProfile = PR_FALSE;
     mProfiles            =  new nsVoidArray();
 
     // Get the profile registry path
@@ -352,6 +354,14 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
         mHavePREGInfo = kRegistryNoString;
         mProfileDataChanged = PR_TRUE;
     }
+    
+    // Get the StartWithLastProfile flag
+    PRInt32 tempLong;
+    rv = registry->GetInt(profilesTreeKey,
+                           kRegistryStartWithLastString.get(),
+                           &tempLong);
+    if (NS_SUCCEEDED(rv))
+        mStartWithLastProfile = tempLong;
 
     rv = registry->EnumerateSubtrees( profilesTreeKey, getter_AddRefs(enumKeys));
     if (NS_FAILED(rv)) return rv;
@@ -693,6 +703,12 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
                              mHavePREGInfo.get());
     if (NS_FAILED(rv)) return rv;
 
+    // Set the StartWithLastProfile flag
+    rv = registry->SetInt(profilesTreeKey,
+                          kRegistryStartWithLastString.get(),
+                          mStartWithLastProfile);
+    if (NS_FAILED(rv)) return rv;
+
     rv = registry->EnumerateSubtrees(profilesTreeKey, getter_AddRefs(enumKeys));
     if (NS_FAILED(rv)) return rv;
 
@@ -916,6 +932,22 @@ nsProfileAccess::SetProfileLastModTime(const PRUnichar *profileName, PRInt64 las
         return NS_OK;
     }
     return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsProfileAccess::GetStartWithLastUsedProfile(PRBool *aStartWithLastUsedProfile)
+{
+    NS_ENSURE_ARG_POINTER(aStartWithLastUsedProfile);
+    *aStartWithLastUsedProfile = mStartWithLastProfile;
+    return NS_OK;
+}
+
+nsresult
+nsProfileAccess::SetStartWithLastUsedProfile(PRBool aStartWithLastUsedProfile)
+{
+    mStartWithLastProfile = aStartWithLastUsedProfile;
+    mProfileDataChanged = PR_TRUE;
+    return NS_OK;
 }
 
 // Return the list of profiles, 4x, 5x, or both.

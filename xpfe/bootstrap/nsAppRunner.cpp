@@ -60,8 +60,6 @@
 #include "nsIAppShellService.h"
 #include "nsIAppStartupNotifier.h"
 #include "nsIObserverService.h"
-#include "nsIPlatformCharset.h"
-#include "nsICharsetConverterManager.h"
 #include "nsAppShellCIDs.h"
 #include "prprf.h"
 #include "nsCRT.h"
@@ -573,43 +571,6 @@ static void DumpArbitraryHelp()
   return;
 }
 
-static
-nsresult LaunchApplication(const char *aParam, PRInt32 height, PRInt32 width, PRBool *windowOpened)
-{
-  nsresult rv = NS_OK;
-
-  nsCOMPtr <nsICmdLineService> cmdLine =
-    do_GetService("@mozilla.org/appshell/commandLineService;1", &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr <nsICmdLineHandler> handler;
-  rv = cmdLine->GetHandlerForParam(aParam, getter_AddRefs(handler));
-  if (NS_FAILED(rv)) return rv;
-
-  nsXPIDLCString chromeUrlForTask;
-  rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
-  if (NS_FAILED(rv)) return rv;
-
-  PRBool handlesArgs = PR_FALSE;
-  rv = handler->GetHandlesArgs(&handlesArgs);
-  if (handlesArgs) {
-    nsXPIDLString defaultArgs;
-    rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
-    if (NS_FAILED(rv)) return rv;
-    rv = OpenWindow(chromeUrlForTask, defaultArgs);
-  }
-  else {
-    rv = OpenWindow(chromeUrlForTask, width, height);
-  }
-  
-  // If we get here without an error, then a window was opened OK.
-  if (NS_SUCCEEDED(rv)) {
-    *windowOpened = PR_TRUE;
-  }
-
-  return rv;
-}
-
 static nsresult
 LaunchApplicationWithArgs(const char *commandLineArg,
                           nsICmdLineService *cmdLineArgs,
@@ -708,52 +669,6 @@ LaunchApplicationWithArgs(const char *commandLineArg,
   return NS_OK;
 }
 
-typedef struct
-{
-  nsIPref *prefs;
-  PRInt32 height;
-  PRInt32 width;
-  PRBool  windowOpened;
-} StartupClosure;
-
-static
-void startupPrefEnumerationFunction(const char *prefName, void *data)
-{
-  nsresult rv;
-  PRBool prefValue = PR_FALSE;
-
-  if (!data || !prefName) return;
-
-  StartupClosure *closure = (StartupClosure *)data;
-
-#ifdef DEBUG_CMD_LINE
-  printf("getting %s\n", prefName);
-#endif /* DEBUG_CMD_LINE */
-
-  rv = closure->prefs->GetBoolPref(prefName, &prefValue);
-  if (NS_FAILED(rv)) return;
-
-#ifdef DEBUG_CMD_LINE
-  printf("%s = %d\n", prefName, prefValue);
-#endif /* DEBUG_CMD_LINE */
-
-  PRUint32 prefixLen = PL_strlen(PREF_STARTUP_PREFIX);
-
-  // if the pref is "general.startup.", ignore it.
-  if (PL_strlen(prefName) <= prefixLen) return;
-
-  if (prefValue) {
-    // skip past the "general.startup." part of the string
-    const char *param = prefName + prefixLen;
-
-#ifdef DEBUG_CMD_LINE
-    printf("cmd line parameter = %s\n", param);
-#endif /* DEBUG_CMD_LINE */
-    rv = LaunchApplication(param, closure->height, closure->width, &closure->windowOpened);
-  }
-  return;
-}
-
 static PRBool IsStartupCommand(const char *arg)
 {
   if (!arg) return PR_FALSE;
@@ -772,38 +687,34 @@ static PRBool IsStartupCommand(const char *arg)
   return PR_FALSE;
 }
 
-static nsresult HandleArbitraryStartup(nsICmdLineService* cmdLineArgs, nsIPref *prefs,  PRBool heedGeneralStartupPrefs, PRBool *windowOpened)
+
+// This should be done by app shell enumeration someday
+nsresult DoCommandLines(nsICmdLineService* cmdLineArgs, PRBool heedGeneralStartupPrefs, PRBool *windowOpened)
 {
-	nsresult rv;
+  NS_ENSURE_ARG(windowOpened);
+  *windowOpened = PR_FALSE;
+
+  nsresult rv;
+
 	PRInt32 height = nsIAppShellService::SIZE_TO_CONTENT;
 	PRInt32 width  = nsIAppShellService::SIZE_TO_CONTENT;
 	nsXPIDLCString tempString;
 
 	// Get the value of -width option
 	rv = cmdLineArgs->GetCmdLineValue("-width", getter_Copies(tempString));
-	if (NS_FAILED(rv)) return rv;
-
-	if ((const char*)tempString) PR_sscanf(tempString, "%d", &width);
+	if (NS_SUCCEEDED(rv) && !tempString.IsEmpty())
+    PR_sscanf(tempString.get(), "%d", &width);
 
 	// Get the value of -height option
 	rv = cmdLineArgs->GetCmdLineValue("-height", getter_Copies(tempString));
-	if (NS_FAILED(rv)) return rv;
-
-	if ((const char*)tempString) PR_sscanf(tempString, "%d", &height);
-
+	if (NS_SUCCEEDED(rv) && !tempString.IsEmpty())
+    PR_sscanf(tempString.get(), "%d", &height);
+  
   if (heedGeneralStartupPrefs) {
-#ifdef DEBUG_CMD_LINE
-    printf("XXX iterate over all the general.startup.* prefs\n");
-#endif /* DEBUG_CMD_LINE */
-    StartupClosure closure;
-
-    closure.prefs = prefs;
-    closure.height = height;
-    closure.width = width;
-    closure.windowOpened = *windowOpened;
-
-    prefs->EnumerateChildren(PREF_STARTUP_PREFIX, startupPrefEnumerationFunction,(void *)(&closure));
-    *windowOpened = closure.windowOpened;
+    nsCOMPtr<nsIAppShellService> appShell(do_GetService("@mozilla.org/appshell/appShellService;1", &rv));
+    if (NS_FAILED(rv)) return rv;
+    rv = appShell->CreateStartupState(width, height, windowOpened);
+    if (NS_FAILED(rv)) return rv;
   }
   else {
     PRInt32 argc = 0;
@@ -834,29 +745,12 @@ static nsresult HandleArbitraryStartup(nsICmdLineService* cmdLineArgs, nsIPref *
         rv = LaunchApplicationWithArgs((const char *)(argv[i]),
                                        cmdLineArgs, command,
                                        height, width, windowOpened);
-        if (rv == NS_ERROR_NOT_AVAILABLE || rv == NS_ERROR_ABORT) {
+        if (rv == NS_ERROR_NOT_AVAILABLE || rv == NS_ERROR_ABORT)
           return rv;
-        }
       }
     }
   }
-
   return NS_OK;
-}
-
-// This should be done by app shell enumeration someday
-nsresult DoCommandLines(nsICmdLineService* cmdLine, PRBool heedGeneralStartupPrefs, PRBool *windowOpened)
-{
-  NS_ENSURE_ARG(windowOpened);
-  *windowOpened = PR_FALSE;
-
-  nsresult rv;
-
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = HandleArbitraryStartup(cmdLine, prefs, heedGeneralStartupPrefs, windowOpened);
-  return rv;
 }
 
 static nsresult DoOnShutdown()
@@ -894,180 +788,6 @@ static nsresult DoOnShutdown()
       clipService->ForceDataToClipboard(nsIClipboard::kGlobalClipboard);
   }
 
-  return rv;
-}
-
-static nsresult ConvertToUnicode(nsString& aCharset, const char* inString, nsAString& outString)
-{
-  nsresult rv;
-
-  // convert result to unicode
-  nsCOMPtr<nsICharsetConverterManager> ccm(do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID , &rv));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr <nsIUnicodeDecoder> decoder; 
-  rv = ccm->GetUnicodeDecoder(&aCharset, getter_AddRefs(decoder));
-  if (NS_FAILED(rv))
-    return rv;
-
-  PRInt32 uniLength = 0;
-  PRInt32 srcLength = strlen(inString);
-  rv = decoder->GetMaxLength(inString, srcLength, &uniLength);
-  if (NS_FAILED(rv))
-    return rv;
-
-  PRUnichar *unichars = new PRUnichar [uniLength];
-  if (nsnull != unichars) {
-    // convert to unicode
-    rv = decoder->Convert(inString, &srcLength, unichars, &uniLength);
-    if (NS_SUCCEEDED(rv)) {
-      // Pass back the unicode string
-      outString.Assign(unichars, uniLength);
-    }
-    delete [] unichars;
-  }
-  else {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return rv;
-}
-static PRBool IsAscii(const char *aString) {
-  while(*aString) {
-     if( 0x80 & *aString)
-        return PR_FALSE;
-     aString++;
-  }
-  return PR_TRUE;
-}
- 
-static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
-{
-    nsresult rv;
-    nsCOMPtr<nsICmdLineHandler> handler(do_GetService("@mozilla.org/commandlinehandler/general-startup;1?type=browser", &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    nsXPIDLCString chromeUrlForTask;
-    rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr <nsICmdLineService> cmdLine = do_GetService("@mozilla.org/appshell/commandLineService;1", &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsXPIDLCString urlToLoad;
-    rv = cmdLine->GetURLToLoad(getter_Copies(urlToLoad));
-    if (NS_FAILED(rv)) return rv;
-
-    if (!urlToLoad.IsEmpty()) {
-
-#ifdef DEBUG_CMD_LINE
-      printf("url to load: %s\n", urlToLoad.get());
-#endif /* DEBUG_CMD_LINE */
-
-      nsAutoString url; 
-      if (IsAscii(urlToLoad))  {
-        url.AssignWithConversion(urlToLoad);
-      }
-      else {
-        // get a platform charset
-        nsAutoString charSet;
-        nsCOMPtr <nsIPlatformCharset> platformCharset(do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv));
-        if (NS_FAILED(rv)) {
-          NS_ASSERTION(0, "Failed to get a platform charset");
-          return rv;
-        }
-
-        rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, charSet);
-        if (NS_FAILED(rv)) {
-          NS_ASSERTION(0, "Failed to get a charset");
-          return rv;
-        }
-
-        // convert the cmdLine URL to Unicode
-        rv = ConvertToUnicode(charSet, urlToLoad, url);
-        if (NS_FAILED(rv)) {
-          NS_ASSERTION(0, "Failed to convert commandline url to unicode");
-          return rv;
-        }
-      }
-      rv = OpenWindow(chromeUrlForTask, url, width, height);
-
-    } else {
-
-      nsXPIDLString defaultArgs;
-      rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
-      if (NS_FAILED(rv)) return rv;
-
-#ifdef DEBUG_CMD_LINE
-      printf("default args: %s\n", NS_ConvertUCS2toUTF8(defaultArgs).get());
-#endif /* DEBUG_CMD_LINE */
-
-      rv = OpenWindow(chromeUrlForTask, defaultArgs, width, height);
-    }
-
-    return rv;
-}
-
-
-static nsresult Ensure1Window(nsICmdLineService* cmdLineArgs)
-{
-  nsresult rv;
-
-  // If starting up in server mode, then we do things differently.
-  nsCOMPtr<nsINativeAppSupport> nativeApp;
-  rv = GetNativeAppSupport(getter_AddRefs(nativeApp));
-  if (NS_SUCCEEDED(rv)) {
-      PRBool isServerMode = PR_FALSE;
-      nativeApp->GetIsServerMode(&isServerMode);
-      if (isServerMode) {
-          nativeApp->StartServerMode();
-      }
-      PRBool shouldShowUI = PR_TRUE;
-      nativeApp->GetShouldShowUI(&shouldShowUI);
-      if (!shouldShowUI) {
-          return NS_OK;
-      }
-  }
-  
-  nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID, &rv));
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-
-  if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator))))
-  {
-    PRBool more;
-
-    windowEnumerator->HasMoreElements(&more);
-    if (!more)
-    {
-      // No window exists so lets create a browser one
-      PRInt32 height = nsIAppShellService::SIZE_TO_CONTENT;
-      PRInt32 width  = nsIAppShellService::SIZE_TO_CONTENT;
-				
-      // Get the value of -width option
-      nsXPIDLCString tempString;
-      rv = cmdLineArgs->GetCmdLineValue("-width", getter_Copies(tempString));
-      if (NS_FAILED(rv))
-        return rv;
-      if ((const char*)tempString)
-        PR_sscanf(tempString, "%d", &width);
-
-
-      // Get the value of -height option
-      rv = cmdLineArgs->GetCmdLineValue("-height", getter_Copies(tempString));
-      if (NS_FAILED(rv))
-        return rv;
-
-      if ((const char*)tempString)
-        PR_sscanf(tempString, "%d", &height);
-
-      rv = OpenBrowserWindow(height, width);
-    }
-  }
   return rv;
 }
 
@@ -1466,8 +1186,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   NS_TIMELINE_LEAVE("InitializeProfileService");
   if (NS_FAILED(rv)) return rv;
 
-  // rjc: now must explicitly call appshell's CreateHiddenWindow() function AFTER profile manager.
-  //      if the profile manager ever switches to using nsIDOMWindowInternal stuff, this might have to change
   NS_TIMELINE_ENTER("appShell->CreateHiddenWindow");
   appShell->CreateHiddenWindow();
   NS_TIMELINE_LEAVE("appShell->CreateHiddenWindow");
@@ -1517,7 +1235,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 
   // Make sure there exists at least 1 window.
   NS_TIMELINE_ENTER("Ensure1Window");
-  rv = Ensure1Window(cmdLineArgs);
+  rv = appShell->Ensure1Window(cmdLineArgs);
   NS_TIMELINE_LEAVE("Ensure1Window");
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to Ensure1Window");
   if (NS_FAILED(rv)) return rv;

@@ -103,7 +103,7 @@ function onFinish()
       window.opener.CreateProfile(profName, profDir);
     }
     else {
-      profile.startApprunner(profName);
+      profile.currentProfile = profName;
     }
     window.close();
   }
