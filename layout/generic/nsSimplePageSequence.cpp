@@ -510,10 +510,6 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*  aPresContext,
   aPresContext->GetShell(getter_AddRefs(presShell));
   NS_ASSERTION(presShell, "nsIPresShell can't be NULL!");
 
-  nsCOMPtr<nsIViewManager> vm;
-  presShell->GetViewManager(getter_AddRefs(vm));
-  NS_ASSERTION(vm, "nsIViewManager can't be NULL!");
-
   nsresult rv = NS_OK;
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
