@@ -44,7 +44,6 @@ LINCS=                        \
 
 LLIBS=                        \
       $(LIBNSPR)	            \
-      $(DIST)\lib\plc3.lib    \
       $(DIST)\lib\zlib.lib    \
       $(DIST)\lib\xplib.lib   \
       $(NULL)

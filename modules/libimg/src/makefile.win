@@ -44,7 +44,6 @@ LCFLAGS		= $(LCFLAGS) -DDEBUG_GC
 LCFLAGS		= $(LCFLAGS) /TP 
 
 LLIBS= $(LIBNSPR)  \
-	$(DIST)\lib\plc3.lib	\
 	$(DIST)\lib\util.lib            \
 	$(DIST)\lib\xpcom.lib \
 !ifdef NU_CACHE
@@ -52,7 +51,6 @@ LLIBS= $(LIBNSPR)  \
 !endif
 	$(NULL)
 
-MISCDEP=$(LLIBS)
 
 
 #LIBRARY= .\$(OBJDIR)\$(LIBNAME).lib
