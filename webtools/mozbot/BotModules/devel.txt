@@ -1,7 +1,7 @@
 MODULE API DOCUMENTATION  
 ========================
 
-This file documents the mozbot 2.2 bot module API.
+This file documents the mozbot 2.4 bot module API.
 Revisions are welcome.
 
 Sample module
@@ -493,6 +493,7 @@ The $event variable is a hash with the following keys:
     'target' => the target of the 'say' function (channel || from)
     'user' => the userhost of the event
     'data' => the main data of the event
+    'fulldata' => the data of the event before it got mangled [3]
     'to' => the target of the event
     'subtype' => the IRC module's idea of what the event was [1]
     'maintype' => the name of the first handler called (eg. 'Told')
@@ -522,6 +523,9 @@ so that you can read directories by branching to a disk address.
 [2]: The 'channel' field is ALWAYS lowercase. You should always lowercase
 any channel names you get from users before using them in comparisons or
 hash lookups.
+
+[3] This is the same as the 'data' slot except for Told and Baffled
+events where it also contains the prefix that was stripped.
 
 
 Module API
@@ -623,6 +627,40 @@ recommended.
     push(@{$module->{'files'}}, 'BotModules/SupportFile.pm');
 
 
+*** getModules()
+
+ Returns the list of module names that are loaded, in alphabetical
+ order, which you can then use with getModule().
+
+ Example:
+    my @modulenames = $self->getModules();
+    local $" = ', ';
+    $self->ctcpReply($event, 'VERSION', "mozbot $VERSION (@modulenames)");
+
+
+*** getHelpLine()
+
+ Returns the bot's help line.
+
+ Example:
+    $self->say($event, $self->getHelpLine());
+
+
+*** getLogFilename($name)
+
+ Returns a filename (with path) appropriate to use for logging. $name
+ should be the filename wanted, without a path.
+
+ Example:
+    my $logName = $self->getLogFilename("$channel.log");
+    if (open(LOG, ">>$logName")) {
+        print LOG $data;
+        close LOG;
+    } else {
+        # XXX error handling
+    }
+
+
 *** unescapeXML($xml)
 
  Performs the following conversions on the argument and returns the result: 
@@ -676,7 +714,7 @@ recommended.
     $self->directSay($event, 'Actually, that\'s not right.');
 
 
-*** directSay($event, $data)
+*** channelSay($event, $data)
 
  Sends a message to the channel in which the message was given.
  If the original command was sent in a /msg, then this will result
@@ -725,6 +763,18 @@ recommended.
 
  Examples:
     $self->ctcpReply($event, 'VERSION', "Version $major.$minor");
+
+
+*** notice($event, $data)
+ 
+ Sends a notice containing $data to whatever channel the event was
+ spotted in (this can be /msg if that is how the event occured).
+
+ Example:
+    foreach (@{$self->{'channels'}}) {
+        local $event->{'target'} = $_;
+        $self->notice($event, 'This is a test of the emergency announcement system.');
+    }
 
 
 *** isAdmin($event)

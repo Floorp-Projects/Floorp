@@ -381,6 +381,12 @@ sub connect {
         318, # endofwhois
         319, # whoischannels
     ], \&on_notice);
+    $bot->add_handler([ # names (currently just ignored)
+        353, # RPL_NAMREPLY "<channel> :[[@|+]<nick> [[@|+]<nick> [...]]]"
+    ], \&on_notice);
+    $bot->add_handler([ # end of names (we use this to establish that we have entered a channel)
+        366, # RPL_ENDOFNAMES "<channel> :End of /NAMES list"
+    ], \&on_join_channel);
 
     &debug(" + CTCP handlers");
     $bot->add_handler('cping', \&on_cping); # client to client ping
@@ -500,10 +506,11 @@ sub on_connect {
     #   <timeless> not very stable.
 
     # now load all modules
-    @modules = ( # the 'internal' modules
-        BotModules::Admin->create('Admin', ''), # admin commands
-    );
-    foreach (@modulenames) {
+    my @modulesToLoad = @modulenames;
+    @modules = (BotModules::Admin->create('Admin', '')); # admin commands
+    @modulenames = ('Admin');
+    foreach (@modulesToLoad) {
+        next if $_ eq 'Admin'; # Admin is static and is installed manually above
         my $result = LoadModule($_);
         if (ref($result)) {
             &debug("loaded $_");
@@ -530,12 +537,8 @@ sub on_connect {
         } else {
             $self->join($channel);
         }
-        foreach (@modules) {
-            # XXX this hack will be removed once JoinedChannel really gets called
-            # when we join a channel -- see bug 112049
-            $_->JoinedChannel({'bot' => $self, 'channel' => $channel}, $channel);
-        }
     }
+    @channels = ();
 
     # try to get our hostname
     $self->whois($self->nick);
@@ -578,6 +581,18 @@ sub on_disconnected {
     &connect();
 }
 
+# on_join_channel: called when we join a channel
+sub on_join_channel: {
+    my ($self, $event) = @_;
+    my ($nick, $channel) = $event->args;
+    push(@channels, $channel);
+    &Configuration::Save($cfgfile, &configStructure(\@channels));
+    &debug("joined $channel, about to autojoin modules...");
+    foreach (@modules) {
+        $_->JoinedChannel({'bot' => $self, 'channel' => $channel, 'target' => $channel, 'nick' => $nick}, $channel);
+    }
+}
+
 # if something nasty happens
 sub on_destroy {
     &debug("Connection: garbage collected");
@@ -586,23 +601,22 @@ sub on_destroy {
 # on_public: messages received on channels
 sub on_public {
     my ($self, $event) = @_;
-    if ($event->nick ne $self->nick) {
-        my $data = join(' ', $event->args);
-        my $nick = quotemeta($self->nick);
-        if ($data =~ /^(\s*$nick(?:[-\s,:;.!?]+|\s*-+>?\s+))(.+)$/is) {
-            if ($2) {
-                $event->args($2);
-                &do($self, $event, 'Told', 'Baffled'); 
-            } else {
-                &do($self, $event, 'Heard'); 
-            }
+    my $data = join(' ', $event->args);
+    my $nick = quotemeta($self->nick);
+    if ($data =~ /^(\s*$nick(?:[\s,:;.!?]+|\s*:-\s*|\s*--+\s*|\s*-+>?\s+))(.+)$/is) {
+        if ($2) {
+            $event->args($2);
+            $event->{'__mozbot__fulldata'} = $data;
+            &do($self, $event, 'Told', 'Baffled');
         } else {
             &do($self, $event, 'Heard');
         }
+    } else {
+        &do($self, $event, 'Heard');
     }
 }
 
-sub on_private { 
+sub on_private {
     my ($self, $event) = @_;
     my $data = join(' ', $event->args);
     my $nick = quotemeta($self->nick);
@@ -612,22 +626,20 @@ sub on_private {
         # have to remember to omit the bot name).
         $event->args($2);
     }
-    &do($self, $event, 'Told', 'Baffled'); 
+    &do($self, $event, 'Told', 'Baffled');
 }
 
 # on_me: /me actions (CTCP actually)
 sub on_me {
     my ($self, $event) = @_;
-    if ($event->nick ne $self->nick) {
-        my @data = $event->args;
-        my $data = join(' ', @data);
-        $event->args($data);
-        my $nick = quotemeta($self->nick);
-        if ($data =~ /(?:^|[\s":<([])$nick(?:[])>.,?!\s'&":]|$)/is) {
-            &do($self, $event, 'Felt'); 
-        } else {
-            &do($self, $event, 'Saw');
-        }
+    my @data = $event->args;
+    my $data = join(' ', @data);
+    $event->args($data);
+    my $nick = quotemeta($self->nick);
+    if ($data =~ /(?:^|[\s":<([])$nick(?:[])>.,?!\s'&":]|$)/is) {
+        &do($self, $event, 'Felt');
+    } else {
+        &do($self, $event, 'Saw');
     }
 }
 
@@ -698,26 +710,28 @@ sub on_version { &do(@_, 'CTCPVersion'); }
 sub on_source { &do(@_, 'CTCPSource'); }
 sub on_cping { &do(@_, 'CTCPPing'); }
 
-
-sub do {
-    my $self = shift @_;
-    my $event = shift @_;
-    my $channel = ''; # if message was sent to one channel only, this is it.
-    my $to = $event->to;
-    foreach (@$to) {
+sub toToChannel {
+    my $self = shift;
+    my $channel;
+    foreach (@_) {
         if (/^[#&+\$]/os) {
-            if ($channel) {
-                $channel = '';
-                last;
+            if (defined($channel)) {
+                return '';
             } else {
                 $channel = $_;
             }
         } elsif ($_ eq $self->nick) {
-            $channel = '';
-            last;
+            return '';
         }
     }
-    $channel = lc($channel);
+    return lc($channel); # if message was sent to one person only, this is it
+}
+
+sub do {
+    my $self = shift @_;
+    my $event = shift @_;
+    my $to = $event->to;
+    my $channel = &toToChannel($self, @$to);
     my $e = {
         'bot' => $self,
         '_event' => $event, # internal internal internal do not use... ;-)
@@ -726,6 +740,7 @@ sub do {
         'target' => $channel || $event->nick,
         'user' => $event->userhost,
         'data' => join(' ', $event->args),
+        'fulldata' => defined($event->{'__mozbot__fulldata'}) ? $event->{'__mozbot__fulldata'} : join(' ', $event->args),
         'to' => $to,
         'subtype' => $event->type,
         'firsttype' => $_[0],
@@ -779,6 +794,11 @@ sub do {
     } else {
         &debug("Ignored: $channel <".$event->nick.'> '.join(' ', $event->args));
     }
+    &doLog($e);
+}
+
+sub doLog {
+    my $e = shift;
     foreach my $module (@modules) {
         eval {
             $module->Log($e);
@@ -807,12 +827,13 @@ sub sendmsg {
     unless ((defined($do) and defined($msg) and defined($who) and ($who ne '')) and
             ((($do eq 'msg') and (not ref($msg))) or
              (($do eq 'me') and (not ref($msg))) or
+             (($do eq 'notice') and (not ref($msg))) or
              (($do eq 'ctcpSend') and (ref($msg) eq 'ARRAY') and (@$msg >= 2)) or
              (($do eq 'ctcpReply') and (not ref($msg))))) {
         cluck('Wrong arguments passed to sendmsg() - ignored');
     } else {
         $self->schedule($delaytime / 2, \&drainmsgqueue) unless @msgqueue;
-        if ($do eq 'msg' or $do eq 'me') {
+        if ($do eq 'msg' or $do eq 'me' or $do eq 'notice') {
             foreach (splitMessageAcrossLines($msg)) {
                 push(@msgqueue, [$who, $_, $do]);
             }
@@ -829,21 +850,48 @@ sub drainmsgqueue {
     my $qln = @msgqueue;
     if (@msgqueue > 0) {
         my ($who, $msg, $do) = getnextmsg();
+        my $type;
         if ($do eq 'msg') {
             &debug("->$who: $msg"); # XXX this makes logfiles large quickly...
             $self->privmsg($who, $msg); # it seems 'who' can be an arrayref and it works
+            $type = 'Heard';
         } elsif ($do eq 'me') {
             &debug("->$who * $msg"); # XXX
             $self->me($who, $msg);
+            $type = 'Saw';
+        } elsif ($do eq 'notice') {
+            &debug("=notice=>$who: $msg");
+            $self->notice($who, $msg);
+            # $type = 'XXX';
         } elsif ($do eq 'ctcpSend') {
             { local $" = ' '; &debug("->$who CTCP PRIVMSG @$msg"); }
             my $type = shift @$msg; # @$msg contains (type, args)
             $self->ctcp($type, $who, @$msg);
+            # $type = 'XXX';
         } elsif ($do eq 'ctcpReply') {
             { local $" = ' '; &debug("->$who CTCP NOTICE $msg"); }
             $self->ctcp_reply($who, $msg);
+            # $type = 'XXX';
         } else {
             &debug("Unknown action '$do' intended for '$who' (content: '$msg') ignored.");
+        }
+        if (defined($type)) {
+            &doLog({
+                'bot' => $self,
+                '_event' => undef,
+                'channel' => &toToChannel($self, $who),
+                'from' => $self->nick,
+                'target' => $who,
+                'user' => undef, # XXX
+                'data' => $msg,
+                'fulldata' => $msg,
+                'to' => $who,
+                'subtype' => undef,
+                'firsttype' => $type,
+                'nick' => $self->nick,
+                'level' => 0,
+                'type' => $type,
+            });
         }
         if (@msgqueue > 0) {
             if ((@msgqueue % 10 == 0) and (time() - $timeLastSetAway > 5 * $delaytime)) {
@@ -1073,9 +1121,10 @@ sub LoadModule {
     my $filename = "./BotModules/$name.bm"; # bm = bot module
     my $result = open(my $file, "< $filename"); 
     if ($result) {
-        local $/;
-        undef $/; # enable "slurp" mode
-        my $code = <$file>; # whole file now here
+        my $code = do {
+            local $/ = undef; # enable "slurp" mode
+            <$file>; # whole file now here
+        };
         if ($code) {
 #           if ($code =~ /package\s+\QBotModules::$name\E\s*;/gos) { XXX doesn't work reliably?? XXX
                 # eval the file
@@ -1099,6 +1148,8 @@ sub LoadModule {
                     } else {
                         # if ok, then add it to the @modules list
                         push(@modules, $newmodule);
+                        push(@modulenames, $newmodule->{'_name'});
+                        &Configuration::Save($cfgfile, &::configStructure(\@modulenames));
                         # Done!!!
                         return $newmodule;
                     }
@@ -1124,6 +1175,7 @@ sub UnloadModule {
     my ($name) = @_;
     # remove the reference from @modules
     my @newmodules;
+    my @newmodulenames;
     foreach (@modules) {
         if ($name eq $_->{'_name'}) {
             if ($_->{'_static'}) {
@@ -1132,12 +1184,15 @@ sub UnloadModule {
             $_->unload();
         } else {
             push(@newmodules, $_);
+            push(@newmodulenames, $_->{'_name'});
         }
     }
     if (@modules == @newmodules) {
         return 'Module not loaded. Are you sure you have the right name?';
     } else {
         @modules = @newmodules;
+        @modulenames = @newmodulenames;
+        &Configuration::Save($cfgfile, &::configStructure(\@modulenames));
         return;
     }
 }
@@ -1475,6 +1530,23 @@ sub getModule {
     return &::getModule(@_);
 }
 
+# returns the value of $helpline
+sub getHelpLine {
+    return $helpline;
+}
+
+# returns a sorted list of module names
+sub getModules {
+    return sort(@modulenames);
+}
+
+# returns a filename with path suitable to use for logging
+sub getLogFilename {
+    my $self = shift;
+    my($name) = @_;
+    return "$LOGFILEDIR/$name";
+}
+
 # tellAdmin - may try to talk to an admin.
 # NO GUARANTEES! This will PROBABLY NOT reach anyone!
 sub tellAdmin {
@@ -1492,7 +1564,7 @@ sub tellAdmin {
 sub ctcpSend {
     my $self = shift;
     my ($event, $type, $data) = @_;
-    &::sendmsg($event->{'bot'}, $event->{'from'}, [$type, $data], 'ctcpSend');
+    &::sendmsg($event->{'bot'}, $event->{'target'}, [$type, $data], 'ctcpSend');
 }
 
 # ctcpReply - Sends a CTCP reply to someone
@@ -1507,6 +1579,13 @@ sub ctcpReply {
     } else {
         &::sendmsg($event->{'bot'}, $event->{'from'}, $type, 'ctcpReply');
     }
+}
+
+# notice - Sends a notice to a channel or person
+sub notice {
+    my $self = shift;
+    my ($event, $data) = @_;
+    &::sendmsg($event->{'bot'}, $event->{'target'}, $data, 'notice');
 }
 
 # say - Sends a message to the channel
@@ -2164,7 +2243,7 @@ sub Help {
     my $self = shift;
     my ($event) = @_;
     my $result = {
-        'auth' => 'Authenticate yourself: auth <username> <password>',
+        'auth' => 'Authenticate yourself. Append the word \'quiet\' after your password if you don\'t want confirmation. Syntax: auth <username> <password> [quiet]',
         'password' => 'Change your password: password <oldpassword> <newpassword> <newpassword>',
         'newuser' => 'Registers a new username and password (with no privileges). Syntax: newuser <username> <newpassword> <newpassword>',
     };
@@ -2190,12 +2269,14 @@ sub Help {
 sub Told {
     my $self = shift;
     my ($event, $message) = @_;
-    if ($message =~ /^\s*auth\s+($variablepattern)\s+($variablepattern)\s*$/osi) {
+    if ($message =~ /^\s*auth\s+($variablepattern)\s+($variablepattern)(\s+quiet)?\s*$/osi) {
         if (not $event->{'channel'}) {
             if (defined($users{$1})) {
                 if (&::checkPassword($2, $users{$1})) {
                     $authenticatedUsers{$event->{'user'}} = $1;
-                    $self->directSay($event, "Hi $1!");
+                    if (not defined($3)) {
+                        $self->directSay($event, "Hi $1!");
+                    }
                     &::do($event->{'bot'}, $event->{'_event'}, 'Authed'); # hack hack hack
                 } else {
                     $self->directSay($event, "No...");
@@ -2523,12 +2604,6 @@ sub Invited {
             } else {
                 $event->{'bot'}->join($channel);
             }
-            push(@channels, $channel);
-            &Configuration::Save($cfgfile, &::configStructure(\@channels));
-            $self->debug('about to autojoin modules...');
-            foreach (@modules) {
-                $_->JoinedChannel($event, $channel);
-            }
         } else { 
             $self->debug($event->{'from'}." asked me to join $channel, but I refused.");
             $self->directSay($event, "Please contact one of my administrators if you want me to join $channel.");
@@ -2566,13 +2641,10 @@ sub LoadModule {
     my $newmodule = &::LoadModule($name);
     if (ref($newmodule)) { 
         # configure module
-        $newmodule->{'channels'} = [@channels]; 
+        $newmodule->{'channels'} = [@channels];
         &Configuration::Get($cfgfile, $newmodule->configStructure());
         $newmodule->Schedule($event);
-        # ensure we don't add it if it is there already
-        push(@modulenames, $newmodule->{'_name'}) unless grep $_ eq $newmodule->{'_name'}, @modulenames;
         $newmodule->saveConfig();
-        &Configuration::Save($cfgfile, &::configStructure(\@modulenames)); 
         $self->debug("Successfully loaded module '$name'.");
         if ($requested) {
             $self->say($event, "Loaded module '$name'.");
@@ -2595,24 +2667,18 @@ sub UnloadModule {
     my $self = shift;
     my ($event, $name, $requested) = @_;
     my $result = &::UnloadModule($name);
-    if ($result) { # failed
+    if (defined($result)) { # failed
         if ($requested) {
             $self->say($event, $result);
         } else {
             $self->debug($result);
         }
     } else { 
-        my @newmodulenames;
-        foreach (@modulenames) {
-           push(@newmodulenames, $_) unless ($name eq $_);
-        }
-        @modulenames = @newmodulenames;
         if ($requested) {
             $self->say($event, "Unloaded module '$name'.");
         } else {
             $self->debug("Successfully unloaded module '$name'.");
         }
-        &Configuration::Save($cfgfile, &::configStructure(\@modulenames));
     }
 }
 
