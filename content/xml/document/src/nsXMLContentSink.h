@@ -107,6 +107,12 @@ protected:
                                  PRInt32 aNameSpaceID, 
                                  nsIAtom* aTagName,
                                  PRUint32 aLineNumber) { return PR_TRUE; }
+  // Set the given content as the root element for the created document
+  //  don't set if root element was already set.
+  //  return TRUE if this call set the root element
+  virtual PRBool SetDocElement(PRInt32 aNameSpaceID, 
+                               nsIAtom *aTagName,
+                               nsIContent *aContent);
   virtual nsresult CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
                                  nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
                                  nsIContent** aResult, PRBool* aAppendContent);
@@ -125,6 +131,11 @@ protected:
   PRInt32 PushContent(nsIContent *aContent);
   already_AddRefed<nsIContent> PopContent();
 
+  // node is the base content which will be cleared out and an error fragment will be inserted
+  // return value indicates whether fragment was successfully created
+  NS_IMETHOD ReportErrorFrom(const PRUnichar* aErrorText, 
+                             const PRUnichar* aSourceText,
+                             nsIDOMNode* aNode);
 
   nsresult ProcessBASETag(nsIContent* aContent);
 

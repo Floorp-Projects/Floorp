@@ -83,7 +83,7 @@
 #include "nsIGenericFactory.h"
 #include "nsIHTMLCSSStyleSheet.h"
 #include "nsIHTMLContent.h"
-#include "nsIHTMLFragmentContentSink.h"
+#include "nsIFragmentContentSink.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsIHTMLToTextSink.h"
 #include "nsILayoutDebugger.h"
@@ -575,8 +575,10 @@ MAKE_CTOR(CreateHTMLCopyTextEncoder,      nsIDocumentEncoder,          NS_NewHTM
 MAKE_CTOR(CreateXMLContentSerializer,     nsIContentSerializer,        NS_NewXMLContentSerializer)
 MAKE_CTOR(CreateHTMLContentSerializer,    nsIContentSerializer,        NS_NewHTMLContentSerializer)
 MAKE_CTOR(CreatePlainTextSerializer,      nsIContentSerializer,        NS_NewPlainTextSerializer)
-MAKE_CTOR(CreateHTMLFragmentSink,         nsIHTMLFragmentContentSink,  NS_NewHTMLFragmentContentSink)
-MAKE_CTOR(CreateHTMLFragmentSink2,        nsIHTMLFragmentContentSink,  NS_NewHTMLFragmentContentSink2)
+MAKE_CTOR(CreateHTMLFragmentSink,         nsIFragmentContentSink,      NS_NewHTMLFragmentContentSink)
+MAKE_CTOR(CreateHTMLFragmentSink2,        nsIFragmentContentSink,      NS_NewHTMLFragmentContentSink2)
+MAKE_CTOR(CreateXMLFragmentSink,          nsIFragmentContentSink,      NS_NewXMLFragmentContentSink)
+MAKE_CTOR(CreateXMLFragmentSink2,         nsIFragmentContentSink,      NS_NewXMLFragmentContentSink2)
 MAKE_CTOR(CreateSanitizingHTMLSerializer, nsIContentSerializer,        NS_NewSanitizingHTMLSerializer)
 MAKE_CTOR(CreateXBLService,               nsIXBLService,               NS_NewXBLService)
 MAKE_CTOR(CreateBindingManager,           nsIBindingManager,           NS_NewBindingManager)
@@ -1143,6 +1145,16 @@ static const nsModuleComponentInfo gComponents[] = {
     MOZ_SANITIZINGHTMLSERIALIZER_CID,
     MOZ_SANITIZINGHTMLSERIALIZER_CONTRACTID,
     CreateSanitizingHTMLSerializer },
+
+  { "xml fragment sink",
+    NS_XMLFRAGMENTSINK_CID,
+    NS_XMLFRAGMENTSINK_CONTRACTID,
+    CreateXMLFragmentSink },
+
+  { "xml fragment sink 2",
+    NS_XMLFRAGMENTSINK2_CID,
+    NS_XMLFRAGMENTSINK2_CONTRACTID,
+    CreateXMLFragmentSink2 },
 
   { "XBL Service",
     NS_XBLSERVICE_CID,

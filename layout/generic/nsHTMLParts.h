@@ -49,7 +49,7 @@ class nsIDocument;
 class nsIFrame;
 class nsIHTMLContent;
 class nsIHTMLContentSink;
-class nsIHTMLFragmentContentSink;
+class nsIFragmentContentSink;
 class nsPresContext;
 class nsITextContent;
 class nsIURI;
@@ -253,9 +253,9 @@ NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
                       nsISupports* aContainer, // e.g. docshell
                       nsIChannel* aChannel);
 nsresult
-NS_NewHTMLFragmentContentSink(nsIHTMLFragmentContentSink** aInstancePtrResult);
+NS_NewHTMLFragmentContentSink(nsIFragmentContentSink** aInstancePtrResult);
 nsresult
-NS_NewHTMLFragmentContentSink2(nsIHTMLFragmentContentSink** aInstancePtrResult);
+NS_NewHTMLFragmentContentSink2(nsIFragmentContentSink** aInstancePtrResult);
 
 /** Create a new HTML reflow command */
 nsresult

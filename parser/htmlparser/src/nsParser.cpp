@@ -1672,27 +1672,47 @@ NS_IMETHODIMP
 nsParser::ParseFragment(const nsAString& aSourceBuffer,
                         void* aKey,
                         nsVoidArray& aTagStack,
-                        PRUint32 anInsertPos,
+                        PRBool aXMLMode,
                         const nsACString& aMimeType,
                         nsDTDMode aMode)
 {
   nsresult result = NS_OK;
-  nsAutoString  theContext;
+  nsAutoString  theContext, endContext;
   PRUint32 theCount = aTagStack.Count();
   PRUint32 theIndex = 0;
   
-  while (theIndex++ < theCount){
+  for (theIndex = 0; theIndex < theCount; theIndex++) {
     theContext.AppendLiteral("<");
-    theContext.Append((PRUnichar*)aTagStack.ElementAt(theCount - theIndex));
+    theContext.Append((PRUnichar*)aTagStack.ElementAt(theCount - theIndex - 1));
     theContext.AppendLiteral(">");
   }
   
-  theContext.AppendLiteral("<endnote>");       //XXXHack! I'll make this better later.
+  // Note duplication: nsHTMLAtoms::endnote == an atom in nsHTMLTags
+  theContext.AppendLiteral("<");
+  theContext.Append(nsHTMLTags::GetStringValue(eHTMLTag_endnote));
+  theContext.AppendLiteral(">");
+
+  if (aXMLMode) {
+    endContext.AppendLiteral("</");
+    endContext.Append(nsHTMLTags::GetStringValue(eHTMLTag_endnote));
+    endContext.AppendLiteral(">");
+
+    for (theIndex = 0; theIndex < theCount; theIndex++) {
+      endContext.AppendLiteral("</");
+      nsAutoString thisTag( (PRUnichar*)aTagStack.ElementAt(theIndex) );
+      PRInt32 endOfTag = thisTag.FindChar(PRUnichar(' '));  // was there an xmlns=?
+      if (endOfTag == -1)
+        endContext.Append( thisTag );
+      else
+        endContext.Append( Substring(thisTag,0,endOfTag) );
+      endContext.AppendLiteral(">");
+    }
+  }
     
   //now it's time to try to build the model from this fragment
 
   mFlags &= ~NS_PARSER_FLAG_OBSERVERS_ENABLED; //disable observers for fragments
-  result = Parse(theContext + aSourceBuffer,(void*)&theContext,aMimeType,PR_FALSE,PR_TRUE, aMode);
+  result = Parse(theContext + aSourceBuffer + endContext,(void*)&theContext,aMimeType,PR_FALSE,PR_TRUE, aMode);
   mFlags |= NS_PARSER_FLAG_OBSERVERS_ENABLED; //now reenable.
 
   return result;

@@ -36,7 +36,8 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
-#include "nsIHTMLFragmentContentSink.h"
+#include "nsIFragmentContentSink.h"
+#include "nsIHTMLContentSink.h"
 #include "nsIParser.h"
 #include "nsIParserService.h"
 #include "nsIHTMLContent.h"
@@ -68,9 +69,10 @@
 // at some pointe really soon!
 //
 
-class nsHTMLFragmentContentSink : public nsIHTMLFragmentContentSink {
+class nsHTMLFragmentContentSink : public nsIFragmentContentSink,
+                                  public nsIHTMLContentSink {
 public:
-  nsHTMLFragmentContentSink();
+  nsHTMLFragmentContentSink(PRBool aAllContent = PR_FALSE);
   virtual ~nsHTMLFragmentContentSink();
 
   // nsISupports
@@ -119,7 +121,7 @@ public:
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
   NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
 
-  // nsIHTMLFragmentContentSink
+  // nsIFragmentContentSink
   NS_IMETHOD GetFragment(nsIDOMDocumentFragment** aFragment);
   NS_IMETHOD SetTargetDocument(nsIDocument* aDocument);
 
@@ -160,43 +162,45 @@ public:
   nsRefPtr<nsNodeInfoManager> mNodeInfoManager;
 };
 
-class nsHTMLFragmentContentSink2 : public nsHTMLFragmentContentSink
-{
-public:
-  nsHTMLFragmentContentSink2() { mHitSentinel = PR_TRUE; mSeenBody = PR_FALSE;}
-  virtual ~nsHTMLFragmentContentSink2() {}
-};
-
-nsresult
-NS_NewHTMLFragmentContentSink2(nsIHTMLFragmentContentSink** aResult)
+static nsresult
+NewHTMLFragmentContentSinkHelper(PRBool aAllContent, nsIFragmentContentSink** aResult)
 {
   NS_PRECONDITION(aResult, "Null out ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
-  *aResult = new nsHTMLFragmentContentSink2();
-  NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
-
-  NS_ADDREF(*aResult);
-
+  nsHTMLFragmentContentSink* it = new nsHTMLFragmentContentSink(aAllContent);
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  NS_ADDREF(*aResult = it);
+  
   return NS_OK;
 }
 
 nsresult
-NS_NewHTMLFragmentContentSink(nsIHTMLFragmentContentSink** aResult)
+NS_NewHTMLFragmentContentSink2(nsIFragmentContentSink** aResult)
 {
-  NS_PRECONDITION(aResult, "Null out ptr");
-
-  *aResult = new nsHTMLFragmentContentSink();
-  NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
-
-  NS_ADDREF(*aResult);
-
-  return NS_OK;
+  return NewHTMLFragmentContentSinkHelper(PR_TRUE,aResult);
 }
 
-nsHTMLFragmentContentSink::nsHTMLFragmentContentSink()
+nsresult
+NS_NewHTMLFragmentContentSink(nsIFragmentContentSink** aResult)
 {
-  mHitSentinel = PR_FALSE;
-  mSeenBody = PR_TRUE;
+  return NewHTMLFragmentContentSinkHelper(PR_FALSE,aResult);
+}
+
+nsHTMLFragmentContentSink::nsHTMLFragmentContentSink(PRBool aAllContent)
+{
+  if (aAllContent) {
+    mHitSentinel = PR_TRUE;
+    mSeenBody = PR_FALSE;
+  } else {
+    mHitSentinel = PR_FALSE;
+    mSeenBody = PR_TRUE;
+  }
   mRoot = nsnull;
   mParser = nsnull;
   mCurrentForm = nsnull;
@@ -233,10 +237,10 @@ NS_IMPL_ADDREF(nsHTMLFragmentContentSink)
 NS_IMPL_RELEASE(nsHTMLFragmentContentSink)
 
 NS_INTERFACE_MAP_BEGIN(nsHTMLFragmentContentSink)
-  NS_INTERFACE_MAP_ENTRY(nsIHTMLFragmentContentSink)
+  NS_INTERFACE_MAP_ENTRY(nsIFragmentContentSink)
   NS_INTERFACE_MAP_ENTRY(nsIHTMLContentSink)
   NS_INTERFACE_MAP_ENTRY(nsIContentSink)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIHTMLFragmentContentSink)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFragmentContentSink)
 NS_INTERFACE_MAP_END
 
 
@@ -441,8 +445,6 @@ nsHTMLFragmentContentSink::AddBaseTagInfo(nsIContent* aContent)
   }
 }
 
-static const char kSentinelStr[] = "endnote";
-
 NS_IMETHODIMP
 nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
 {
@@ -452,7 +454,8 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
   nsresult result = NS_OK;
 
   tag.Assign(aNode.GetText());
-  if (tag.EqualsIgnoreCase(kSentinelStr)) {
+
+  if (nsHTMLAtoms::endnote->Equals(tag)) {
     mHitSentinel = PR_TRUE;
   }
   else if (mHitSentinel) {

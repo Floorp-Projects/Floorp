@@ -58,7 +58,8 @@
 #include "nsIParser.h"
 #include "nsIComponentManager.h"
 #include "nsParserCIID.h"
-#include "nsIHTMLFragmentContentSink.h"
+#include "nsIFragmentContentSink.h"
+#include "nsIContentSink.h"
 #include "nsIEnumerator.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptGlobalObject.h"
@@ -2366,8 +2367,40 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
     
     parent->GetNodeType(&nodeType);
     if (nsIDOMNode::ELEMENT_NODE == nodeType) {
-      nsAutoString tagName;
+      PRInt32 namespaceID;
+      nsAutoString tagName, uriStr;
       parent->GetNodeName(tagName);
+
+      // see if we need to add xmlns declarations
+      nsCOMPtr<nsIContent> content( do_QueryInterface(parent) );
+      PRUint32 count = content->GetAttrCount();
+      if (count > 0) {
+        PRUint32 index;
+        nsAutoString nameStr, prefixStr, valueStr;
+        nsCOMPtr<nsIAtom> attrName, attrPrefix;
+
+        for (index = 0; index < count; index++) {
+    
+          content->GetAttrNameAt(index,
+                                &namespaceID,
+                                getter_AddRefs(attrName),
+                                getter_AddRefs(attrPrefix));
+    
+          if (namespaceID == kNameSpaceID_XMLNS) {
+            content->GetAttr(namespaceID, attrName, uriStr);
+
+            // really want something like nsXMLContentSerializer::SerializeAttr()
+            tagName.Append(NS_LITERAL_STRING(" xmlns")); // space important
+            if (attrPrefix) {
+              tagName.Append(PRUnichar(':'));
+              attrName->ToString(nameStr);
+              tagName.Append(nameStr);
+            }
+            tagName.Append(NS_LITERAL_STRING("=\"") + uriStr + NS_LITERAL_STRING("\""));
+          }
+        }
+      }
+
       // XXX Wish we didn't have to allocate here
       PRUnichar* name = ToNewUnicode(tagName);
       if (name) {
@@ -2387,22 +2420,29 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
 
   if (NS_SUCCEEDED(result)) {
     nsCAutoString contentType;
-    nsCOMPtr<nsIHTMLFragmentContentSink> sink;
+    PRBool bCaseSensitive = PR_TRUE;
+    if (document) {
+      nsAutoString buf;
+      document->GetContentType(buf);
+      CopyUCS2toASCII(buf, contentType);
+      bCaseSensitive = document->IsCaseSensitive();
+    }
+    else {
+      contentType.AssignLiteral("text/xml");
+    }
 
-    result = NS_NewHTMLFragmentContentSink(getter_AddRefs(sink));
+    nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(domDocument));
+    PRBool bHTML = htmlDoc && !bCaseSensitive;
+    nsCOMPtr<nsIFragmentContentSink> sink;
+    if (bHTML) {
+      result = NS_NewHTMLFragmentContentSink(getter_AddRefs(sink));
+    } else {
+      result = NS_NewXMLFragmentContentSink(getter_AddRefs(sink));
+    }
     if (NS_SUCCEEDED(result)) {
       sink->SetTargetDocument(document);
-      parser->SetContentSink(sink);
-      nsCOMPtr<nsIDOMNSDocument> domnsDocument(do_QueryInterface(document));
-      if (domnsDocument) {
-        nsAutoString buf;
-        domnsDocument->GetContentType(buf);
-        CopyUCS2toASCII(buf, contentType);
-      }
-      else {
-        // Who're we kidding. This only works for html.
-        contentType.AssignLiteral("text/html");
-      }
+      nsCOMPtr<nsIContentSink> contentsink( do_QueryInterface(sink) );
+      parser->SetContentSink(contentsink);
 
       // If there's no JS or system JS running,
       // push the current document's context on the JS context stack
@@ -2445,7 +2485,7 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
 
       nsDTDMode mode = eDTDMode_autodetect;
       nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(domDocument));
-      if (htmlDoc) {
+      if (bHTML) {
         switch (htmlDoc->GetCompatibilityMode()) {
           case eCompatibility_NavQuirks:
             mode = eDTDMode_quirks;
@@ -2460,10 +2500,12 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
             NS_NOTREACHED("unknown mode");
             break;
         }
+      } else {
+        mode = eDTDMode_full_standards;
       }
       result = parser->ParseFragment(aFragment, (void*)0,
                                      tagStack,
-                                     0, contentType, mode);
+                                     !bHTML, contentType, mode);
 
       if (ContextStack) {
         JSContext *notused;
