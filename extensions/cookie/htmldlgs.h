@@ -233,7 +233,7 @@ XP_MakeHTMLDialog2(XPDialogInfo *dialogInfo) {
           XP_FREE(argv[j]);
         }
       }
-      delete[] cookies;
+      nsCRT::free(cookies);
     }
     NS_RELEASE(netservice);
   }
