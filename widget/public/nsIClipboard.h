@@ -50,25 +50,7 @@ class nsIClipboard : public nsISupports {
     * @result NS_Ok if no errors
     */
   
-    NS_IMETHOD GetData(nsITransferable ** aTransferable) = 0;
-
-   /**
-    * Gets the data from the clipboard and put it into the transferable object
-    *
-    * @param  aTransferable The transferable
-    * @result NS_Ok if no errors
-    */
-  
-    NS_IMETHOD GetClipboard() = 0;
-
-   /**
-    * Sets the clipboard from the transferable object
-    *
-    * @param  aTransferable The transferable
-    * @result NS_Ok if no errors
-    */
-  
-    NS_IMETHOD SetClipboard() = 0;
+    NS_IMETHOD GetData(nsITransferable * aTransferable) = 0;
 
    /**
     * Check to set if ant of the native data on the clipboard matches this data flavor
