@@ -355,7 +355,7 @@ nsComponentManagerImpl::PlatformVersionCheck()
     {        
         return rv;
     }
-
+    	
     char *buf;
     nsresult err = mRegistry->GetString(xpcomKey, versionValueName, &buf);
     autoFree bufAutoFree(buf);
@@ -370,37 +370,39 @@ nsComponentManagerImpl::PlatformVersionCheck()
 
         // Delete the XPCOM and CLSID hierarchy
         nsIRegistry::Key netscapeKey;
-		rv = mRegistry->GetSubtree(nsIRegistry::Common,netscapeKeyName, &netscapeKey);
+        rv = mRegistry->GetSubtree(nsIRegistry::Common,netscapeKeyName, &netscapeKey);
         if(NS_FAILED(rv))
         {
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsComponentManager: Failed To Get Subtree (%s)",netscapeKeyName));
-            return rv;
+                   ("nsComponentManager: Failed To Get Subtree (%s)",netscapeKeyName));         
         }
-
-        rv = mRegistry->RemoveSubtreeRaw(netscapeKey, xpcomBaseName);
-        if(NS_FAILED(rv))
-        {
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsComponentManager: Failed To Nuke Subtree (%s)",xpcomKeyName));
-            return rv;
-        }
+		else
+		{
+			rv = mRegistry->RemoveSubtreeRaw(netscapeKey, xpcomBaseName);
+			if(NS_FAILED(rv))
+			{
+				PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+					   ("nsComponentManager: Failed To Nuke Subtree (%s)",xpcomKeyName));
+				return rv;
+			}
+		}
 
         rv = mRegistry->GetSubtree(nsIRegistry::Common,classesKeyName, &netscapeKey);
         if(NS_FAILED(rv))
         {
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                    ("nsComponentManager: Failed To Get Subtree (%s)",classesKeyName));
-            return rv;
         }
-
-        rv = mRegistry->RemoveSubtreeRaw(netscapeKey, classIDKeyName);
-        if(NS_FAILED(rv))
-        {
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsComponentManager: Failed To Nuke Subtree (%s/%s)",classesKeyName,classIDKeyName));
-            return rv;
-        }
+		else
+		{
+			rv = mRegistry->RemoveSubtreeRaw(netscapeKey, classIDKeyName);
+			if(NS_FAILED(rv))
+			{
+				PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+					   ("nsComponentManager: Failed To Nuke Subtree (%s/%s)",classesKeyName,classIDKeyName));
+				return rv;
+			}
+		}
         
         // Recreate XPCOM and CLSID keys
         rv = mRegistry->AddSubtree(nsIRegistry::Common,xpcomKeyName, &xpcomKey);
@@ -481,7 +483,7 @@ nsComponentManagerImpl::PlatformCreateDll(const char *fullname, nsDll* *result)
 
     nsIRegistry::Key fullnameKey;
 
-    rv = mRegistry->GetSubtreeRaw(mXPCOMKey,(char *)fullname, &fullnameKey);
+    rv = mRegistry->GetSubtreeRaw(mXPCOMKey,fullname, &fullnameKey);
     if(NS_FAILED(rv))
     {        
         return rv;
@@ -522,7 +524,7 @@ nsComponentManagerImpl::PlatformMarkNoComponents(nsDll *dll)
     nsresult rv;
 
     nsIRegistry::Key dllPathKey;
-    rv = mRegistry->AddSubtreeRaw(mXPCOMKey, (char *)dll->GetFullPath(), &dllPathKey);    
+    rv = mRegistry->AddSubtreeRaw(mXPCOMKey, dll->GetFullPath(), &dllPathKey);    
     if(NS_FAILED(rv))
     {
         return rv;
@@ -555,22 +557,22 @@ nsComponentManagerImpl::PlatformRegister(QuickRegisterData* regd, nsDll *dll)
     if (NS_FAILED(rv)) return (rv);
 
     nsIRegistry::Key IDkey;
-    rv = mRegistry->AddSubtreeRaw(clsIDkey, (char *)regd->CIDString, &IDkey);
+    rv = mRegistry->AddSubtreeRaw(clsIDkey, regd->CIDString, &IDkey);
     if (NS_FAILED(rv)) return (rv);
 
 
-    rv = mRegistry->SetString(IDkey,classNameValueName, (char *)regd->className);
+    rv = mRegistry->SetString(IDkey,classNameValueName, regd->className);
     if (regd->progID)
     {
-        rv = mRegistry->SetString(IDkey,progIDValueName, (char *)(regd->progID));        
+        rv = mRegistry->SetString(IDkey,progIDValueName, regd->progID);        
     }
-    rv = mRegistry->SetString(IDkey, inprocServerValueName, (char *)dll->GetFullPath());
+    rv = mRegistry->SetString(IDkey, inprocServerValueName, dll->GetFullPath());
     
     if (regd->progID)
     {
         nsIRegistry::Key progIDKey;
-        rv = mRegistry->AddSubtreeRaw(mClassesKey, (char *)regd->progID, &progIDKey);
-        rv = mRegistry->SetString(progIDKey, classIDValueName, (char *)regd->CIDString);
+        rv = mRegistry->AddSubtreeRaw(mClassesKey, regd->progID, &progIDKey);
+        rv = mRegistry->SetString(progIDKey, classIDValueName, regd->CIDString);
     }
 
     // XXX Gross. LongLongs dont have a serialization format. This makes
@@ -578,7 +580,7 @@ nsComponentManagerImpl::PlatformRegister(QuickRegisterData* regd, nsDll *dll)
     // XXX a longlong serialization function please!
     
     nsIRegistry::Key dllPathKey;
-    rv = mRegistry->AddSubtreeRaw(mXPCOMKey,(char *)dll->GetFullPath(), &dllPathKey);
+    rv = mRegistry->AddSubtreeRaw(mXPCOMKey,dll->GetFullPath(), &dllPathKey);
 
     PRTime lastModTime = dll->GetLastModifiedTime();
     int32 fileSize = dll->GetSize();
@@ -607,7 +609,7 @@ nsComponentManagerImpl::PlatformUnregister(QuickRegisterData* regd, const char *
     if(NS_FAILED(rv)) return rv;
     	
     nsIRegistry::Key cidKey;
-    rv = mRegistry->AddSubtreeRaw(clsIDKey,(char *)regd->CIDString, &cidKey);
+    rv = mRegistry->AddSubtreeRaw(clsIDKey,regd->CIDString, &cidKey);
 
     char *progID = NULL;
     rv = mRegistry->GetString(cidKey, progIDValueName, &progID);
@@ -618,10 +620,10 @@ nsComponentManagerImpl::PlatformUnregister(QuickRegisterData* regd, const char *
         PR_FREEIF(progID);
     }
 
-    mRegistry->RemoveSubtree(clsIDKey, (char *)regd->CIDString);
+    mRegistry->RemoveSubtree(clsIDKey, regd->CIDString);
     	
     nsIRegistry::Key libKey;
-    rv = mRegistry->GetSubtreeRaw(mXPCOMKey,(char *)aLibrary, &libKey);
+    rv = mRegistry->GetSubtreeRaw(mXPCOMKey,aLibrary, &libKey);
     if(NS_FAILED(rv)) return rv;
 
     // We need to reduce the ComponentCount by 1.
@@ -634,7 +636,7 @@ nsComponentManagerImpl::PlatformUnregister(QuickRegisterData* regd, const char *
     if (nComponents <= 0)
     {
         // XXX RemoveSubtreeRaw
-        rv = mRegistry->RemoveSubtree(libKey, (char *)aLibrary);
+        rv = mRegistry->RemoveSubtree(libKey, aLibrary);
     }
     else
     {
@@ -704,7 +706,7 @@ nsComponentManagerImpl::PlatformProgIDToCLSID(const char *aProgID, nsCID *aClass
     nsresult rv;
     	
     nsIRegistry::Key progIDKey;
-    rv = mRegistry->GetSubtreeRaw(mClassesKey, (char *)aProgID, &progIDKey);
+    rv = mRegistry->GetSubtreeRaw(mClassesKey, aProgID, &progIDKey);
     if (NS_FAILED(rv)) return rv;
 
     char *cidString;
