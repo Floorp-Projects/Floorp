@@ -141,7 +141,7 @@ LINCS=  -I$(PUBLIC)\xpcom  \
         -I$(PUBLIC)\expat
 
 MAKE_OBJ_TYPE = DLL
-DLLNAME = raptorhtmlpars
+DLLNAME = gkparser
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LCFLAGS = \

@@ -88,7 +88,7 @@ LINCS=  \
   $(NULL)
 
 LLIBS=                         \
- $(DIST)\lib\raptorgfxwin.lib   \
+ $(DIST)\lib\gkgfxwin.lib   \
  $(DIST)\lib\timer_s.lib \
  $(DIST)\lib\widgetsupport_s.lib \
  $(DIST)\lib\DebugRobot.lib     \

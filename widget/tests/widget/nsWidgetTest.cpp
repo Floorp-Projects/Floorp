@@ -89,8 +89,8 @@ char * gFailedMsg = NULL;
 
 #ifdef XP_PC
 #define XPCOM_DLL "xpcom32.dll"
-#define WIDGET_DLL "raptorwidget.dll"
-#define GFXWIN_DLL "raptorgfxwin.dll"
+#define WIDGET_DLL "gkwidget.dll"
+#define GFXWIN_DLL "gkgfxwin.dll"
 #define TEXT_HEIGHT 25
 #endif
 

@@ -20,7 +20,7 @@ include <$(DEPTH)/config/config.mak>
 
 
 MAKE_OBJ_TYPE = DLL
-DLLNAME = raptorgfxwin
+DLLNAME = gkgfxwin
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 #RESFILE = $(DLLNAME).res
 

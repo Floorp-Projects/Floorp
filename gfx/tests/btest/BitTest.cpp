@@ -1145,8 +1145,8 @@ static HWND CreateTopLevel(const char* clazz, const char* title,int aWidth, int 
   return window;
 }
 
-#define WIDGET_DLL "raptorwidget.dll"
-#define GFXWIN_DLL "raptorgfxwin.dll"
+#define WIDGET_DLL "gkwidget.dll"
+#define GFXWIN_DLL "gkgfxwin.dll"
 
 //------------------------------------------------------------
 

@@ -27,7 +27,7 @@ CPP_OBJS=                               \
  $(NULL)
 
 MAKE_OBJ_TYPE=DLL
-DLLNAME = bookmarks
+DLLNAME = bookmark
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LCFLAGS = \

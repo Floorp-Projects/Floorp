@@ -24,7 +24,7 @@ DEPTH=..\..
 include <$(DEPTH)\config\config.mak>
 
 LLIBS=				\
- $(DIST)\lib\raptorhtmlpars.lib	\
+ $(DIST)\lib\gkparser.lib	\
  $(DIST)\lib\xpcom.lib	\
  $(LIBNSPR)			\
 !ifndef NECKO

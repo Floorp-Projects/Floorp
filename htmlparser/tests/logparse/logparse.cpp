@@ -24,7 +24,7 @@
 #include <fstream.h>
 
 #ifdef XP_PC
-#define PARSER_DLL "raptorhtmlpars.dll"
+#define PARSER_DLL "gkparser.dll"
 #endif
 #ifdef XP_MAC
 #endif

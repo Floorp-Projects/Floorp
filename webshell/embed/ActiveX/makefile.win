@@ -95,8 +95,8 @@ LINCS=  \
 
 LLIBS=                         \
 !ifdef MOZ_ACTIVEX_CONTROL_SUPPORT
- $(DIST)\lib\raptorgfxwin.lib   \
- $(DIST)\lib\raptorweb.lib      \
+ $(DIST)\lib\gkgfxwin.lib   \
+ $(DIST)\lib\gkweb.lib      \
  $(DIST)\lib\xpcom.lib        \
  $(LIBNSPR)                     \
 !endif

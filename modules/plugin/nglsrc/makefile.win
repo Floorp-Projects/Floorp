@@ -25,7 +25,7 @@ EXPORTS =	\
 	nsIPluginInstanceOwner.h
 
 MAKE_OBJ_TYPE	= DLL
-DLLNAME = raptorplugin
+DLLNAME = gkplugin
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 MODULE=raptor 

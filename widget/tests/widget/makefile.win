@@ -33,8 +33,8 @@ LLIBS=                         \
  $(DIST)\lib\xpcom.lib        \
  $(LIBNSPR)                     \
  $(DIST)\lib\widgetsupport_s.lib \
- $(DIST)\lib\raptorwidget.lib   \
- $(DIST)\lib\raptorgfxwin.lib   \
+ $(DIST)\lib\gkwidget.lib   \
+ $(DIST)\lib\gkgfxwin.lib   \
  $(NULL)
 
 LLFLAGS=-SUBSYSTEM:CONSOLE 

@@ -22,7 +22,7 @@
 #     Daniel Veditz <dveditz@netscape.com>
 #     Douglas Turner <dougt@netscape.com>
 
-MODULE=nsxpi
+MODULE=xpinstall
 DEPTH=..\..
 
 EXPORTS=    nsIDOMInstallTriggerGlobal.h \

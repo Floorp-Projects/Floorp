@@ -23,7 +23,7 @@ DEPTH=..\..\..
 MODULE=xpcom_nativeapp
 
 MAKE_OBJ_TYPE=DLL
-DLLNAME=nativeapp
+DLLNAME=nativapp
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 XPIDLSRCS=						\

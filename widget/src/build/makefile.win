@@ -20,7 +20,7 @@ DEPTH=..\..\..
 
 MODULE=raptor 
 MAKE_OBJ_TYPE   = DLL
-DLLNAME = raptorwidget
+DLLNAME = gkwidget
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 RESFILE = widget.res
 
@@ -55,7 +55,7 @@ WIN_LIBS=                               \
 
 LLIBS= \
  $(DIST)\lib\xpcom.lib                \
- $(DIST)\lib\raptorgfxwin.lib           \
+ $(DIST)\lib\gkgfxwin.lib           \
  $(DIST)\lib\raptorbasewidget_s.lib		  \
  $(DIST)\lib\raptorwidget_s.lib	        \
  $(LIBNSPR) 

@@ -56,12 +56,12 @@
 #include "prlog.h"	// PR_ASSERT
 
 #ifdef XP_PC
-    #define WIDGET_DLL "raptorwidget.dll"
-    #define GFXWIN_DLL "raptorgfxwin.dll"
-    #define VIEW_DLL   "raptorview.dll"
-    #define WEB_DLL    "raptorweb.dll"
+    #define WIDGET_DLL "gkwidget.dll"
+    #define GFXWIN_DLL "gkgfxwin.dll"
+    #define VIEW_DLL   "gkview.dll"
+    #define WEB_DLL    "gkweb.dll"
     #define DOM_DLL    "jsdom.dll"
-    #define PLUGIN_DLL "raptorplugin.dll"
+    #define PLUGIN_DLL "gkplugin.dll"
     #define CAPS_DLL   "caps.dll"
     #define LIVECONNECT_DLL    "jsj3250.dll"
     #define OJI_DLL    "oji.dll"

@@ -63,7 +63,7 @@ LINCS=-I..\public -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
       -I$(PUBLIC)\caps
 
 MAKE_OBJ_TYPE = DLL
-DLLNAME = raptorweb
+DLLNAME = gkweb
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 DEFFILE=webshell.def
@@ -76,7 +76,7 @@ LCFLAGS = \
 # These are the libraries we need to link with to create the dll
 LLIBS=				\
  $(DIST)\lib\xpcom.lib	\
- $(DIST)\lib\raptorgfxwin.lib	\
+ $(DIST)\lib\gkgfxwin.lib	\
  $(DIST)\lib\timer_s.lib \
  $(DIST)\lib\img32$(VERSION_NUMBER).lib     \
  $(DIST)\lib\util.lib        \
