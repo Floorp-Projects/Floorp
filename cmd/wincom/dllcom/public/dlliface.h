@@ -30,6 +30,8 @@
 #include <objbase.h>
 #endif
 #include <olectl.h>
+#if (_MSC_VER < 1200)
 #include <olectlid.h>
+#endif
 
 #endif // __DllInterfaces_H
