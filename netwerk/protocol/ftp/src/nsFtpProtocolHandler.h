@@ -58,7 +58,8 @@ protected:
     nsCOMPtr<nsIThreadPool> mPool;                // thread pool for FTP connections
 };
 
-#define NS_FTP_CONNECTION_COUNT  4
-#define NS_FTP_CONNECTION_STACK_SIZE (64 * 1024)
+#define NS_FTP_MIN_CONNECTION_COUNT  1
+#define NS_FTP_MAX_CONNECTION_COUNT  4
+#define NS_FTP_CONNECTION_STACK_SIZE 0
 
 #endif /* nsFtpProtocolHandler_h___ */

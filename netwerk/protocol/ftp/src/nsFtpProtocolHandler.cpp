@@ -90,8 +90,9 @@ nsFtpProtocolHandler::Init() {
     nsresult rv;
     NS_NEWXPCOM(mRootConnectionList, nsHashtable);
     if (!mRootConnectionList) return NS_ERROR_OUT_OF_MEMORY;
-    rv = NS_NewThreadPool(getter_AddRefs(mPool), NS_FTP_CONNECTION_COUNT,
-                          NS_FTP_CONNECTION_COUNT,
+    rv = NS_NewThreadPool(getter_AddRefs(mPool), 
+                          NS_FTP_MIN_CONNECTION_COUNT,
+                          NS_FTP_MAX_CONNECTION_COUNT,
                           NS_FTP_CONNECTION_STACK_SIZE);
     if (NS_FAILED(rv)) return rv;
 
