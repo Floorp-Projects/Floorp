@@ -191,6 +191,12 @@ def test_base_interface(c):
     test_attribute(c, "wstring_value", "dee", u"a null >\0<", "a null >") # strings are NULL terminated!!
     test_attribute(c, "wstring_value", "dee", u"")
     test_attribute(c, "wstring_value", "dee", really_big_wstring)
+    # This will fail internal string representation :(  Test we don't crash
+    try:
+        c.wstring_value = "a big char >" + chr(129) + "<"
+        print_error("strings with chars > 128 appear to have stopped failing?")
+    except UnicodeError:
+        pass
 
     test_attribute(c, "iid_value", component_iid, new_iid)
     test_attribute(c, "iid_value", component_iid, str(new_iid), new_iid)
@@ -324,8 +330,11 @@ def test_derived_interface(c):
     test_method(c.AppendArray, ([1,2,3],[4,5,6]), [1,2,3,4,5,6])
 
     c = c.queryInterface(xpcom.components.interfaces.nsIPythonTestInterfaceDOMStrings)
-    test_method(c.GetDOMStringResult, (), "A DOM String")
-    test_method(c.GetDOMStringOut, (), "Another DOM String")
+# NULL DOM strings don't work yet.
+#    test_method(c.GetDOMStringResult, (-1,), None)
+    test_method(c.GetDOMStringResult, (3,), "PPP")
+#    test_method(c.GetDOMStringOut, (-1,), None)
+    test_method(c.GetDOMStringOut, (4,), "yyyy")
     val = "Hello there"
     test_method(c.GetDOMStringLength, (val,), len(val))
     test_method(c.GetDOMStringRefLength, (val,), len(val))
@@ -446,4 +455,3 @@ if __name__=='__main__':
     ng = xpcom._xpcom._GetGatewayCount()
     if ni or ng:
         print "********* WARNING - Leaving with %d/%d objects alive" % (ni,ng)
-    

@@ -318,25 +318,32 @@ class PythonTestComponent:
         return rc
 
     # Some tests for the "new" (Feb-2001) DOMString type.
-    def GetDOMStringResult( self ):
+    def GetDOMStringResult( self, length ):
         # Result: DOMString &
-        return "A DOM String"
-    def GetDOMStringOut( self ):
+        if length == -1:
+            return None
+        return "P" * length
+    def GetDOMStringOut( self, length ):
         # Result: DOMString &
-        return "Another DOM String"
+        if length == -1:
+            return None
+        return "y" * length
     def GetDOMStringLength( self, param0 ):
         # Result: uint32
         # In: param0: DOMString &
+        if param0 is None: return -1
         return len(param0)
 
     def GetDOMStringRefLength( self, param0 ):
         # Result: uint32
         # In: param0: DOMString &
+        if param0 is None: return -1
         return len(param0)
 
     def GetDOMStringPtrLength( self, param0 ):
         # Result: uint32
         # In: param0: DOMString *
+        if param0 is None: return -1
         return len(param0)
 
     def ConcatDOMStrings( self, param0, param1 ):
