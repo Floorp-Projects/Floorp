@@ -81,6 +81,17 @@ struct ip_mreq {
 #define _PR_STAT_HAS_ONLY_ST_ATIME
 #define _PR_NO_LARGE_FILES
 
+/* IPv6 support */
+#define _PR_HAVE_GETIPNODEBYNAME
+#define _PR_HAVE_GETIPNODEBYADDR
+#define _PR_INET6_PROBE
+#ifndef _PR_INET6
+#define AF_INET6 26
+#define AI_V4MAPPED 0x00000010
+#define AI_ALL      0x00000008
+#define AI_ADDRCONFIG 0x00000020
+#endif
+
 #undef  USE_SETJMP
 
 #include <setjmp.h>
