@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.35 2003/04/17 00:32:54 jpierre%netscape.com Exp $
+ * $Id: cert.h,v 1.36 2003/06/17 23:44:13 nelsonb%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -80,7 +80,7 @@ extern SECOidTag CERT_GetAVATag(CERTAVA *ava);
 /*
 ** Compare two AVA's, returning the difference between them.
 */
-extern SECComparison CERT_CompareAVA(CERTAVA *a, CERTAVA *b);
+extern SECComparison CERT_CompareAVA(const CERTAVA *a, const CERTAVA *b);
 
 /*
 ** Create an RDN (relative-distinguished-name). The argument list is a
@@ -703,7 +703,7 @@ extern char *CERT_HTMLCertInfo(CERTCertificate *cert, PRBool showImages,
 ** XXX This function resides in certhtml.c, should it be
 ** moved elsewhere?
 */
-extern SECItem *CERT_DecodeAVAValue(SECItem *derAVAValue);
+extern SECItem *CERT_DecodeAVAValue(const SECItem *derAVAValue);
 
 /*
  * take a DER certificate and decode it into a certificate structure
