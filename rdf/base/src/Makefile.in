@@ -30,7 +30,6 @@ CPPSRCS =				\
 	nsContainerCursor.cpp		\
 	nsEmptyCursor.cpp               \
 	nsMemoryDataSource.cpp          \
-	nsRDFBaseFactory.cpp            \
 	nsRDFResourceManager.cpp        \
 	nsSimpleDataBase.cpp            \
 	rdfutil.cpp			\
