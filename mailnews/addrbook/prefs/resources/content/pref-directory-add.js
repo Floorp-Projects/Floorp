@@ -75,15 +75,6 @@ function fillSettings()
       prefValue = gMaxHits;
     }
     document.getElementById("results").value = prefValue;
-    try {
-      prefValue = gPrefInt.GetBoolPref(gCurrentDirectoryString+ ".auth.enabled");
-    }
-    catch(ex) {
-      prefValue = false;
-    }
-    if (prefValue) {
-      document.getElementById("login").checked = true;
-    }
   }
 }
 
@@ -211,18 +202,6 @@ function onOK()
   }
   catch(ex) {
     pref_string_content = false;
-  }
-  var auth = document.getElementById("login").checked;
-  if (auth && (auth != pref_string_content))
-  {
-    gPrefInt.SetBoolPref(pref_string_title, true);
-  }
-  else
-  {
-    try{
-      gPrefInt.ClearUserPref(pref_string_title);
-    }
-    catch(ex){}
   }
   window.opener.gNewServer = description;
   window.opener.gNewServerString = gPref_string_desc;  

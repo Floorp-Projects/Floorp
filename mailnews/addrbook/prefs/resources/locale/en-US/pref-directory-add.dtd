@@ -35,10 +35,6 @@ Rights Reserved.
 <!ENTITY advancedOptionsTitle.label        "Advanced Options">
 <!ENTITY portNumber.label                  "Port Number: ">
 <!ENTITY portNumber.accesskey              "p">
-<!ENTITY loginID.label                     "Login with username and password ">
-<!ENTITY loginID.accesskey                 "n">
-<!ENTITY password.label                    "Save password ">
-<!ENTITY password.accesskey                "a">
 <!ENTITY searchFilter.label                "Search Filter: ">
 <!ENTITY searchFilter.accesskey            "f">
 <!ENTITY scope.label                       "Scope: ">

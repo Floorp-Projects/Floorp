@@ -109,13 +109,7 @@
               </row>
             </rows>
           </grid>
-          <box orient="horizontal">
-	        <checkbox id="login" label="&loginID.label;"/>
-          </box>
-          <box orient="horizontal" class="indent">
-            <checkbox class="indent" id="password" 
-                      label="&password.label;" disabled="true"/>
-          </box>
+          <separator class="thin"/>
           <box orient="horizontal">
             <html>&scope.label;</html>
           </box>
