@@ -674,27 +674,8 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
       //Do we need to setup an Mime Stream Converter Listener?
       if (mMimeStreamConverterListener)
         bridge_set_mime_stream_converter_listener((nsMIMESession *)mBridgeStream, mMimeStreamConverterListener, mOutputType);
-      
-      PRUint32 whattodo = mozITXTToHTMLConv::kURLs;
-      PRBool enable_emoticons = PR_TRUE;
-      PRBool enable_structs = PR_TRUE;
-  
-      NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
-      if (NS_SUCCEEDED(rv) && prefs) 
-      {
-        rv = prefs->GetBoolPref(PREF_MAIL_DISPLAY_GLYPH,&enable_emoticons);
-        if (NS_FAILED(rv) || enable_emoticons) 
-        {
-  	      whattodo = whattodo | mozITXTToHTMLConv::kGlyphSubstitution;
-        }
-        rv = prefs->GetBoolPref(PREF_MAIL_DISPLAY_STRUCT,&enable_structs);
-        if (NS_FAILED(rv) || enable_structs) 
-        {
-        	whattodo = whattodo | mozITXTToHTMLConv::kStructPhrase;
-        }
-      }      
 
-      return rv;
+      return NS_OK;
     }
   }
 }
