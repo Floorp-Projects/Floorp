@@ -12225,14 +12225,6 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
         rv = ContentInserted(aPresContext, container, aContent, indexInContainer, mTempFrameTreeState, PR_FALSE);
       }      
     }
-  } else {
-    // The content is the root node, so just rebuild the world.
-#ifdef DEBUG
-    nsCOMPtr<nsIDocument> doc;
-    aContent->GetDocument(*getter_AddRefs(doc));
-    NS_ASSERTION(doc, "content not in document");
-#endif
-    ReconstructDocElementHierarchy(aPresContext);
   }
   return rv;
 }
