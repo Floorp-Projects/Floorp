@@ -4,6 +4,8 @@ mozilla/dom/src/base/nsGlobalWindow.cpp
 mozilla/dom/src/base/nsJSEnvironment.cpp
 mozilla/dom/src/base/nsJSLocation.cpp
 mozilla/dom/src/base/nsJSNavigator.cpp
+mozilla/dom/src/base/nsJSSecurityManager.cpp
+mozilla/dom/src/base/nsJSUtils.cpp
 mozilla/dom/src/base/nsJSWindow.cpp
 mozilla/dom/src/base/nsJSWindowCollection.cpp
 mozilla/dom/src/base/nsLocation.cpp
@@ -28,9 +30,11 @@ mozilla/dom/src/coreDOM/nsJSProcessingInstruction.cpp
 mozilla/dom/src/coreDOM/nsJSStyleSheet.cpp
 mozilla/dom/src/coreDOM/nsJSStyleSheetCollection.cpp
 mozilla/dom/src/coreDOM/nsJSText.cpp
+mozilla/dom/src/css/nsJSCSS2Properties.cpp
 mozilla/dom/src/css/nsJSCSSFontFaceRule.cpp
 mozilla/dom/src/css/nsJSCSSMediaRule.cpp
 mozilla/dom/src/css/nsJSCSSPageRule.cpp
+mozilla/dom/src/css/nsJSCSSRule.cpp
 mozilla/dom/src/css/nsJSCSSStyleDeclaration.cpp
 mozilla/dom/src/css/nsJSCSSStyleRule.cpp
 mozilla/dom/src/css/nsJSCSSStyleRuleCollection.cpp
