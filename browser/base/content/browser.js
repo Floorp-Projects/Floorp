@@ -544,18 +544,28 @@ function Shutdown()
 
   var bt = document.getElementById("bookmarks-ptf");
   if (bt) {
-    bt.database.RemoveObserver(BookmarksToolbarRDFObserver);
-    bt.controllers.removeController(BookmarksMenuController);
+    try {
+      bt.database.RemoveObserver(BookmarksToolbarRDFObserver);
+      bt.controllers.removeController(BookmarksMenuController);
+    } catch (ex) {
+    }
   }
-  var bm = document.getElementById("bookmarks-menu");
-  bm.controllers.removeController(BookmarksMenuController);
 
-  var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-  pbi.removeObserver(gFormFillPrefListener.domain, gFormFillPrefListener);
-  pbi.removeObserver(gHomeButton.prefDomain, gHomeButton);
+  try {
+    var bm = document.getElementById("bookmarks-menu");
+    bm.controllers.removeController(BookmarksMenuController);
+  } catch (ex) {
+  }
+
+  try {
+    var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+    pbi.removeObserver(gFormFillPrefListener.domain, gFormFillPrefListener);
+    pbi.removeObserver(gHomeButton.prefDomain, gHomeButton);
+  } catch (ex) {
+  }
 
   BrowserOffline.uninit();
-  
+
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
   var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
   var enumerator = windowManagerInterface.getEnumerator(null);
@@ -4197,8 +4207,11 @@ var BrowserOffline = {
   
   uninit: function ()
   {
-    var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-    os.removeObserver(this, "network:offline-status-changed");
+    try {
+      var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+      os.removeObserver(this, "network:offline-status-changed");
+    } catch (ex) {
+    }
   },
 
   toggleOfflineStatus: function ()
