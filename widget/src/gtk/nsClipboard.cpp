@@ -101,14 +101,16 @@ void __gtk_selection_target_list_remove (GtkWidget *widget, GdkAtom selection)
     if (sellist->selection == selection) {
       gtk_target_list_unref (sellist->list);
       g_free (sellist);
-      tmp_list2 = tmp_list->next;
-      g_list_remove_link(lists, tmp_list);
-      if (tmp_list2)
-        tmp_list = tmp_list2->prev;
+      tmp_list->data = nsnull;
+      tmp_list2 = tmp_list->prev;
+      lists = g_list_remove_link(lists, tmp_list);
+      g_list_free_1(tmp_list);
+      tmp_list = tmp_list2;
     }
     if (tmp_list)
       tmp_list = tmp_list->next;
   }
+  gtk_object_set_data(GTK_OBJECT(widget), gtk_selection_handler_key, lists);
 }
 
 //-------------------------------------------------------------------------
