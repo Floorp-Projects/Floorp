@@ -195,8 +195,6 @@ InflateFiles(void *hZip, void *hFind, short tgtVRefNum, long tgtDirID)
 	
 	while (!bFoundAll)
 	{
-	    YieldToAnyThread();
-	    
 		/* find next item if one exists */
 		rv = ZIP_FindNext( hFind, filename, 255 );
 		if (rv==ZIP_ERR_FNF)
