@@ -63,10 +63,10 @@ static PRBool get_method_type(const char* sig, PRUint32& arg_count, jni_type*& a
 {
 	arg_count = 0;
 	if (sig[0] == '(') {
-		nsVector vec(10);
+		nsVector vec(0, 10);
 		++sig;
 		while (*sig != ')' && *sig) {
-			char arg_sig = *sig++;
+			char arg_sig = *sig;
 			jni_type arg_type = get_jni_type(arg_sig);
 			if (arg_type == jobject_type) {
 				// could be an array or an object.
@@ -76,9 +76,9 @@ static PRBool get_method_type(const char* sig, PRUint32& arg_count, jni_type*& a
 					++sig;
 					while (*sig != ';') ++sig;
 				}
-				// skip over scalar or ';'.
-				++sig;
 			}
+			// skip over scalar or ';'.
+			++sig;
 			vec.Add((void*)arg_type);
 		}
 		arg_count = vec.GetSize();
@@ -167,39 +167,42 @@ JNIMethod::~JNIMethod()
  */
 jvalue* JNIMethod::marshallArgs(va_list args)
 {
+	jvalue* jargs = NULL;
 	PRUint32 argCount = mArgCount;
-	jni_type* argTypes = mArgTypes;
-	jvalue* jargs = new jvalue[argCount];
-	if (jargs != NULL) {
-		for (int i = 0; i < argCount; i++) {
-			switch (argTypes[i]) {
-			case jobject_type:
-				jargs[i].l = va_arg(args, jobject);
-				break;
-			case jboolean_type:
-				jargs[i].z = va_arg(args, jboolean);
-				break;
-			case jbyte_type:
-				jargs[i].b = va_arg(args, jbyte);
-				break;
-			case jchar_type:
- 				jargs[i].b = va_arg(args, jbyte);
-				break;
-			case jshort_type:
- 				jargs[i].s = va_arg(args, jshort);
-				break;
-			case jint_type:
- 				jargs[i].i = va_arg(args, jint);
-				break;
-			case jlong_type:
- 				jargs[i].j = va_arg(args, jlong);
-				break;
-			case jfloat_type:
- 				jargs[i].f = va_arg(args, jfloat);
-				break;
-			case jdouble_type:
- 				jargs[i].d = va_arg(args, jdouble);
-				break;
+	if (argCount > 0) {
+		jni_type* argTypes = mArgTypes;
+		jargs = new jvalue[argCount];
+		if (jargs != NULL) {
+			for (int i = 0; i < argCount; i++) {
+				switch (argTypes[i]) {
+				case jobject_type:
+					jargs[i].l = va_arg(args, jobject);
+					break;
+				case jboolean_type:
+					jargs[i].z = va_arg(args, jboolean);
+					break;
+				case jbyte_type:
+					jargs[i].b = va_arg(args, jbyte);
+					break;
+				case jchar_type:
+	 				jargs[i].b = va_arg(args, jbyte);
+					break;
+				case jshort_type:
+	 				jargs[i].s = va_arg(args, jshort);
+					break;
+				case jint_type:
+	 				jargs[i].i = va_arg(args, jint);
+					break;
+				case jlong_type:
+	 				jargs[i].j = va_arg(args, jlong);
+					break;
+				case jfloat_type:
+	 				jargs[i].f = va_arg(args, jfloat);
+					break;
+				case jdouble_type:
+	 				jargs[i].d = va_arg(args, jdouble);
+					break;
+				}
 			}
 		}
 	}
@@ -213,7 +216,7 @@ jvalue* JNIMethod::marshallArgs(va_list args)
 class MarshalledArgs {
 public:
 	MarshalledArgs(JNIMethod* forMethod, va_list args) : mArgs(forMethod->marshallArgs(args)) {}
-	~MarshalledArgs() { delete[] mArgs; }
+	~MarshalledArgs() { if (mArgs != NULL) delete[] mArgs; }
 
 	operator jvalue* () { return mArgs; }
 	
