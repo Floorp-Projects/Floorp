@@ -4,7 +4,7 @@ function AbNewCardDialog()
 {
 	window.openDialog("chrome://addressbook/content/abNewCardDialog.xul",
 					  "",
-					  "chrome",
+					  "chrome,resizeable=no",
 					  {GetAddressBooksAndURIs:GetAddressBooksAndURIs});
 }
 
@@ -48,7 +48,7 @@ function AbEditCardDialog(card, okCallback)
 {
 	var dialog = window.openDialog("chrome://addressbook/content/abEditCardDialog.xul",
 								   "",
-								   "chrome",
+								   "chrome,resizeable=no",
 								   {abURI:document.getElementById('resultsTree').getAttribute('ref'),
 								    card:card, okCallback:okCallback});
 	
