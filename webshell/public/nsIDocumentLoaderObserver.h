@@ -38,8 +38,46 @@ class nsIContentViewer;
 class nsIDocumentLoaderObserver : public nsISupports 
 {
 public:
+  /**
+   * Notify the observer that a new document will be loaded.  
+   *
+   * This notification occurs before any DNS resolution occurs, or
+   * a connection is established with the server...
+   */
+  NS_IMETHOD OnStartDocumentLoad(nsIURL* aURL, const char* aCommand) = 0;
+
+  /**
+   * Notify the observer that a document has been completely loaded.
+   */
+  NS_IMETHOD OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus) = 0;
+
+  /**
+   * Notify the observer that the specified nsIURL has just started to load.
+   *
+   * This notification occurs after DNS resolution, and a connection to the
+   * server has been established.
+   */
   NS_IMETHOD OnStartURLLoad(nsIURL* aURL, const char* aContentType, 
                             nsIContentViewer* aViewer) = 0;
+  
+  /**
+   * Notify the observer that progress has occurred in the loading of the 
+   * specified URL...
+   */
+  NS_IMETHOD OnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress, 
+                               PRUint32 aProgressMax) = 0;
+
+  /**
+   * Notify the observer that status text is available regarding the URL
+   * being loaded...
+   */
+  NS_IMETHOD OnStatusURLLoad(nsIURL* aURL, nsString& aMsg) = 0;
+
+  /**
+   * Notify the observer that the specified nsIURL has finished loading.
+   */
+  NS_IMETHOD OnEndURLLoad(nsIURL* aURL, PRInt32 aStatus) = 0;
+
   /**
    * Notify the observer that all connections are complete
    */

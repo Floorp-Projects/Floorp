@@ -245,8 +245,14 @@ public:
   NS_IMETHOD ReleaseScriptContext(nsIScriptContext *aContext);
 
   // nsIDocumentLoaderObserver
+  NS_IMETHOD OnStartDocumentLoad(nsIURL* aURL, const char* aCommand);
+  NS_IMETHOD OnEndDocumentLoad(nsIURL* aURL, PRInt32 aStatus);
   NS_IMETHOD OnStartURLLoad(nsIURL* aURL, const char* aContentType, 
                             nsIContentViewer* aViewer);
+  NS_IMETHOD OnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress, 
+                               PRUint32 aProgressMax);
+  NS_IMETHOD OnStatusURLLoad(nsIURL* aURL, nsString& aMsg);
+  NS_IMETHOD OnEndURLLoad(nsIURL* aURL, PRInt32 aStatus);
   NS_IMETHOD OnConnectionsComplete();
 
   // nsIRefreshURL interface methods...
@@ -2063,12 +2069,42 @@ nsWebShell::ReleaseScriptContext(nsIScriptContext *aContext)
 }
 
 NS_IMETHODIMP
+nsWebShell::OnStartDocumentLoad(nsIURL* aURL, const char* aCommand)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::OnEndDocumentLoad(nsIURL* aURL, PRInt32 aStatus)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsWebShell::OnStartURLLoad(nsIURL* aURL, const char* aContentType, 
                            nsIContentViewer* aViewer)
 {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWebShell::OnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress, 
+                              PRUint32 aProgressMax)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::OnStatusURLLoad(nsIURL* aURL, nsString& aMsg)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::OnEndURLLoad(nsIURL* aURL, PRInt32 aStatus)
+{
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsWebShell::OnConnectionsComplete()

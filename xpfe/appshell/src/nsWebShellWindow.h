@@ -104,7 +104,14 @@ public:
   nsIWidget* GetWidget(void) { return mWindow; }
 
   // nsIDocumentLoaderObserver
+  NS_IMETHOD OnStartDocumentLoad(nsIURL* aURL, const char* aCommand);
+  NS_IMETHOD OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus);
   NS_IMETHOD OnStartURLLoad(nsIURL* aURL, const char* aContentType, nsIContentViewer* aViewer);
+  NS_IMETHOD OnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress, 
+                               PRUint32 aProgressMax);
+  NS_IMETHOD OnStatusURLLoad(nsIURL* aURL, nsString& aMsg);
+  NS_IMETHOD OnEndURLLoad(nsIURL* aURL, PRInt32 aStatus);
+
   NS_IMETHOD OnConnectionsComplete();
 
   // nsIDocumentObserver

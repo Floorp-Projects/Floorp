@@ -360,7 +360,7 @@ nsDocFactoryImpl::CreateDefaultDocument(nsIURL* aURL,
                                       nsnull,
                                       kIDocumentIID,
                                       (void **)&doc);
-    if (NS_OK != rv) {
+    if (NS_FAILED(rv)) {
         goto done;
     }
 
@@ -368,7 +368,7 @@ nsDocFactoryImpl::CreateDefaultDocument(nsIURL* aURL,
      * Create the HTML Content Viewer...
      */
     rv = NS_NewDocumentViewer(docv);
-    if (NS_OK != rv) {
+    if (NS_FAILED(rv)) {
         goto done;
     }
     docv->SetUAStyleSheet(gUAStyleSheet);
@@ -380,7 +380,7 @@ nsDocFactoryImpl::CreateDefaultDocument(nsIURL* aURL,
      * aDocListener.
      */
     rv = doc->StartDocumentLoad(aURL, aContainer, aDocListener, aCommand);
-    if (NS_OK != rv) {
+    if (NS_FAILED(rv)) {
         NS_IF_RELEASE(docv);
         goto done;
     }
@@ -419,7 +419,7 @@ nsDocFactoryImpl::CreateXMLDocument(nsIURL* aURL,
                                       nsnull,
                                       kIDocumentIID,
                                       (void **)&doc);
-    if (NS_OK != rv) {
+    if (NS_FAILED(rv)) {
         goto done;
     }
 
@@ -427,7 +427,7 @@ nsDocFactoryImpl::CreateXMLDocument(nsIURL* aURL,
      * Create the image content viewer...
      */
     rv = NS_NewDocumentViewer(docv);
-    if (NS_OK != rv) {
+    if (NS_FAILED(rv)) {
         goto done;
     }
     docv->SetUAStyleSheet(gUAStyleSheet);
@@ -439,7 +439,7 @@ nsDocFactoryImpl::CreateXMLDocument(nsIURL* aURL,
      * aDocListener.
      */
     rv = doc->StartDocumentLoad(aURL, aContainer, aDocListener, aCommand);
-    if (NS_OK != rv) {
+    if (NS_FAILED(rv)) {
         NS_IF_RELEASE(docv);
         goto done;
     }
@@ -561,7 +561,7 @@ nsDocFactoryImpl::CreateImageDocument(nsIURL* aURL,
                                       nsnull,
                                       kIDocumentIID,
                                       (void **)&doc);
-    if (NS_OK != rv) {
+    if (NS_FAILED(rv)) {
         goto done;
     }
 
@@ -569,7 +569,7 @@ nsDocFactoryImpl::CreateImageDocument(nsIURL* aURL,
      * Create the image content viewer...
      */
     rv = NS_NewDocumentViewer(docv);
-    if (NS_OK != rv) {
+    if (NS_FAILED(rv)) {
         goto done;
     }
     docv->SetUAStyleSheet(gUAStyleSheet);
@@ -581,7 +581,7 @@ nsDocFactoryImpl::CreateImageDocument(nsIURL* aURL,
      * aDocListener.
      */
     rv = doc->StartDocumentLoad(aURL, aContainer, aDocListener,aCommand);
-    if (NS_OK != rv) {
+    if (NS_FAILED(rv)) {
         NS_IF_RELEASE(docv);
         goto done;
     }
@@ -628,19 +628,19 @@ nsresult nsDocFactoryImpl::InitUAStyleSheet()
   if (nsnull == gUAStyleSheet) {  // snarf one
     nsIURL* uaURL;
     rv = NS_NewURL(&uaURL, nsString(UA_CSS_URL)); // XXX this bites, fix it
-    if (NS_OK == rv) {
+    if (NS_SUCCEEDED(rv)) {
       // Get an input stream from the url
       nsIInputStream* in;
       rv = NS_OpenURL(uaURL, &in);
-      if (rv == NS_OK) {
+      if (NS_SUCCEEDED(rv)) {
         // Translate the input using the argument character set id into unicode
         nsIUnicharInputStream* uin;
         rv = NS_NewConverterStream(&uin, nsnull, in);
-        if (NS_OK == rv) {
+        if (NS_SUCCEEDED(rv)) {
           // Create parser and set it up to process the input file
           nsICSSParser* css;
           rv = NS_NewCSSParser(&css);
-          if (NS_OK == rv) {
+          if (NS_SUCCEEDED(rv)) {
             // Parse the input and produce a style set
             // XXX note: we are ignoring rv until the error code stuff in the
             // input routines is converted to use nsresult's
@@ -720,12 +720,22 @@ public:
     NS_IMETHOD RemoveChildGroup(nsIURLGroup* aGroup);
 
     // Implementation specific methods...
-    void LoadURLComplete(nsIURL* aURL, nsISupports* aLoader, PRInt32 aStatus);
-    void LoadURLStarted(nsIURL* aURL, const char* aContentType, 
-                        nsIContentViewer* aViewer);
-    void AreAllConnectionsComplete(void);
-    void SetParent(nsDocLoaderImpl* aParent);
+    void FireOnStartDocumentLoad(nsIURL* aURL, const char* aCOmmand);
+    void FireOnEndDocumentLoad(PRInt32 aStatus);
 
+    void FireOnStartURLLoad(nsIURL* aURL, const char* aContentType, 
+                            nsIContentViewer* aViewer);
+
+    void FireOnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress, 
+                               PRUint32 aProgressMax);
+
+    void FireOnStatusURLLoad(nsIURL* aURL, nsString& aMsg);
+
+    void FireOnEndURLLoad(nsIURL* aURL, PRInt32 aStatus);
+    void AreAllConnectionsComplete(void);
+    void LoadURLComplete(nsIURL* aURL, nsISupports* aLoader, PRInt32 aStatus);
+    void SetParent(nsDocLoaderImpl* aParent);
+    void SetDocumentUrl(nsIURL* aUrl);
 protected:
     virtual ~nsDocLoaderImpl();
 
@@ -738,6 +748,7 @@ public:
     nsIDocumentLoaderFactory* m_DocFactory;
 
 protected:
+    nsIURL*                    mDocumentUrl;
     nsISupportsArray*          m_LoadingDocsList;
 
     nsVoidArray                mChildGroupList;
@@ -772,6 +783,7 @@ nsDocLoaderImpl::nsDocLoaderImpl()
     }
 #endif /* DEBUG || FORCE_PR_LOG */
 
+    mDocumentUrl    = nsnull;
     mParent         = nsnull;
     mStreamObserver = nsnull;
     mContainer      = nsnull;
@@ -805,6 +817,7 @@ nsDocLoaderImpl::~nsDocLoaderImpl()
   NS_IF_RELEASE(m_LoadAttrib);
   NS_IF_RELEASE(mStreamObserver);
   NS_IF_RELEASE(mContainer);
+  NS_IF_RELEASE(mDocumentUrl);
 
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
          ("DocLoader - DocLoader [%p] deleted.\n", this));
@@ -895,7 +908,7 @@ nsDocLoaderImpl::LoadDocument(const nsString& aURLSpec,
   nsURLLoadType loadType;
   nsDocumentBindInfo* loader = nsnull;
 
-#ifdef DEBUG
+#if defined(DEBUG)
   char buffer[256];
 
   aURLSpec.ToCString(buffer, sizeof(buffer));
@@ -968,7 +981,6 @@ nsDocLoaderImpl::LoadSubDocument(const nsString& aURLSpec,
                                  const PRUint32 aLocalIP)
 {
   nsresult rv;
-  nsURLLoadType loadType;
   nsDocumentBindInfo* loader = nsnull;
 
 #ifdef DEBUG
@@ -1001,7 +1013,6 @@ nsDocLoaderImpl::LoadSubDocument(const nsString& aURLSpec,
   rv = loader->Bind(aURLSpec, nsnull, nsnull);
 
   return rv;
-
 }
 
 NS_IMETHODIMP
@@ -1125,7 +1136,7 @@ nsDocLoaderImpl::CreateURL(nsIURL** aInstancePtrResult,
       nsILoadAttribs* loadAttributes;
 
       rv = url->GetLoadAttribs(&loadAttributes);
-      if (rv == NS_OK) {
+      if (NS_SUCCEEDED(rv)) {
         loadAttributes->Clone(m_LoadAttrib);
         NS_RELEASE(loadAttributes);
       }
@@ -1144,7 +1155,7 @@ nsDocLoaderImpl::OpenStream(nsIURL *aUrl, nsIStreamListener *aConsumer)
   nsDocumentBindInfo* loader = nsnull;
   nsURLLoadType loadType = nsURLLoadNormal;
 
-#ifdef DEBUG
+#if defined(DEBUG)
   const char* buffer;
 
   aUrl->GetSpec(&buffer);
@@ -1172,7 +1183,7 @@ nsDocLoaderImpl::OpenStream(nsIURL *aUrl, nsIStreamListener *aConsumer)
   nsILoadAttribs* loadAttributes;
 
   rv = aUrl->GetLoadAttribs(&loadAttributes);
-  if (rv == NS_OK) {
+  if (NS_SUCCEEDED(rv)) {
     rv = loadAttributes->GetLoadType(&loadType);
     if (NS_FAILED(rv)) {
       loadType = nsURLLoadNormal;
@@ -1240,8 +1251,51 @@ nsDocLoaderImpl::RemoveChildGroup(nsIURLGroup* aGroup)
 }
 
 
-void nsDocLoaderImpl::LoadURLStarted(nsIURL* aURL, const char* aContentType, 
-                                     nsIContentViewer* aViewer)
+void nsDocLoaderImpl::FireOnStartDocumentLoad(nsIURL* aURL, 
+                                              const char* aCommand)
+{
+  PRInt32 count = mDocObservers.Count();
+  PRInt32 index;
+
+  /*
+   * First notify any observers that the URL load has begun...
+   */
+  for (index = 0; index < count; index++) {
+    nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
+    observer->OnStartDocumentLoad(aURL, aCommand);
+  }
+
+  /*
+   * Finally notify the parent...
+   */
+  if (nsnull != mParent) {
+    mParent->FireOnStartDocumentLoad(aURL, aCommand);
+  }
+}
+
+void nsDocLoaderImpl::FireOnEndDocumentLoad(PRInt32 aStatus)
+{
+  PRInt32 count = mDocObservers.Count();
+  PRInt32 index;
+
+  /*
+   * First notify any observers that the URL load has begun...
+   */
+  for (index = 0; index < count; index++) {
+    nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
+    observer->OnEndDocumentLoad(mDocumentUrl, aStatus);
+  }
+
+  /*
+   * Finally notify the parent...
+   */
+  if (nsnull != mParent) {
+    mParent->FireOnEndDocumentLoad(aStatus);
+  }
+}
+
+void nsDocLoaderImpl::FireOnStartURLLoad(nsIURL* aURL, const char* aContentType, 
+                                         nsIContentViewer* aViewer)
 {
   PRInt32 count = mDocObservers.Count();
   PRInt32 index;
@@ -1258,9 +1312,74 @@ void nsDocLoaderImpl::LoadURLStarted(nsIURL* aURL, const char* aContentType,
    * Finally notify the parent...
    */
   if (nsnull != mParent) {
-    mParent->LoadURLStarted(aURL, aContentType, aViewer);
+    mParent->FireOnStartURLLoad(aURL, aContentType, aViewer);
   }
 }
+
+void nsDocLoaderImpl::FireOnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress,
+                                            PRUint32 aProgressMax)
+{
+  PRInt32 count = mDocObservers.Count();
+  PRInt32 index;
+
+  /*
+   * First notify any observers that there is progress information available...
+   */
+  for (index = 0; index < count; index++) {
+    nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
+    observer->OnProgressURLLoad(aURL, aProgress, aProgressMax);
+  }
+
+  /*
+   * Finally notify the parent...
+   */
+  if (nsnull != mParent) {
+    mParent->FireOnProgressURLLoad(aURL, aProgress, aProgressMax);
+  }
+}
+
+void nsDocLoaderImpl::FireOnStatusURLLoad(nsIURL* aURL, nsString& aMsg)
+{
+  PRInt32 count = mDocObservers.Count();
+  PRInt32 index;
+
+  /*
+   * First notify any observers that there is status text available...
+   */
+  for (index = 0; index < count; index++) {
+    nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
+    observer->OnStatusURLLoad(aURL, aMsg);
+  }
+
+  /*
+   * Finally notify the parent...
+   */
+  if (nsnull != mParent) {
+    mParent->FireOnStatusURLLoad(aURL, aMsg);
+  }
+}
+
+void nsDocLoaderImpl::FireOnEndURLLoad(nsIURL* aURL, PRInt32 aStatus)
+{
+  PRInt32 count = mDocObservers.Count();
+  PRInt32 index;
+
+  /*
+   * First notify any observers that the URL load has begun...
+   */
+  for (index = 0; index < count; index++) {
+    nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
+    observer->OnEndURLLoad(aURL, aStatus);
+  }
+
+  /*
+   * Finally notify the parent...
+   */
+  if (nsnull != mParent) {
+    mParent->FireOnEndURLLoad(aURL, aStatus);
+  }
+}
+
 
 
 void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRInt32 aStatus)
@@ -1278,7 +1397,7 @@ void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRIn
     nsURLLoadType loadType = nsURLLoadNormal;
 
     rv = aURL->GetLoadAttribs(&loadAttributes);
-    if (rv == NS_OK) {
+    if (NS_SUCCEEDED(rv)) {
       rv = loadAttributes->GetLoadType(&loadType);
       if (NS_FAILED(rv)) {
         loadType = nsURLLoadNormal;
@@ -1293,7 +1412,7 @@ void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRIn
 
     NS_ASSERTION((mTotalURLs >= mForegroundURLs), "Foreground URL count is wrong.");
 
-#ifdef DEBUG
+#if defined(DEBUG)
   const char* buffer;
 
   aURL->GetSpec(&buffer);
@@ -1301,16 +1420,35 @@ void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRIn
            ("DocLoader - LoadURLComplete(...) called for %s.\nForeground URLs: %d\nTotal URLs: %d\n", 
             buffer, mForegroundURLs, mTotalURLs));
 #endif /* DEBUG */
+  }
+  /*
+   * Fire the OnEndURLLoad notification to any observers...
+   */
+   FireOnEndURLLoad(aURL, aStatus);
 
-    /* 
-     * If this was the last URL for the entire document (including any sub 
-     * documents) then fire an OnConnectionsComplete(...) notification.
-     *
-     * If the URL was a background URL, then ignore it...
-     */
-    if (PR_FALSE != bIsForegroundURL) {
-      AreAllConnectionsComplete();
-    }
+  /*
+   * Fire the OnEndDocumentLoad notification to any observers...
+   */
+  if (0 == mForegroundURLs) {
+#if defined(DEBUG)
+    const char* buffer;
+
+    mDocumentUrl->GetSpec(&buffer);
+    PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+          ("DocLoader - OnEndDocumentLoad(...) called for %s.\n", buffer));
+#endif /* DEBUG */
+
+    FireOnEndDocumentLoad(aStatus);
+  }
+
+  /* 
+   * If this was the last URL for the entire document (including any sub 
+   * documents) then fire an OnConnectionsComplete(...) notification.
+   *
+   * If the URL was a background URL, then ignore it...
+   */
+  if (PR_FALSE != bIsForegroundURL) {
+    AreAllConnectionsComplete();
   }
 }
 
@@ -1360,6 +1498,12 @@ void nsDocLoaderImpl::SetParent(nsDocLoaderImpl* aParent)
   NS_IF_ADDREF(mParent);
 }
 
+void nsDocLoaderImpl::SetDocumentUrl(nsIURL* aUrl)
+{
+  NS_IF_RELEASE(mDocumentUrl);
+  mDocumentUrl = aUrl;
+  NS_IF_ADDREF(mDocumentUrl);
+}
 
 PRBool nsDocLoaderImpl::StopBindInfoEnumerator(nsISupports* aElement, void* aData)
 {
@@ -1367,7 +1511,7 @@ PRBool nsDocLoaderImpl::StopBindInfoEnumerator(nsISupports* aElement, void* aDat
     nsDocumentBindInfo* bindInfo;
 
     rv = aElement->QueryInterface(kDocumentBindInfoIID, (void**)&bindInfo);
-    if (NS_OK == rv) {
+    if (NS_SUCCEEDED(rv)) {
         bindInfo->Stop();
         NS_RELEASE(bindInfo);
     }
@@ -1382,7 +1526,7 @@ PRBool nsDocLoaderImpl::StopDocLoaderEnumerator(void* aElement, void* aData)
   nsIDocumentLoader* docLoader;
     
   rv = ((nsISupports*)aElement)->QueryInterface(kIDocumentLoaderIID, (void**)&docLoader);
-  if (NS_OK == rv) {
+  if (NS_SUCCEEDED(rv)) {
     docLoader->Stop();
     NS_RELEASE(docLoader);
   }
@@ -1398,7 +1542,7 @@ PRBool nsDocLoaderImpl::IsBusyEnumerator(void* aElement, void* aData)
   PRBool* result = (PRBool*)aData;
     
   rv = ((nsISupports*)aElement)->QueryInterface(kIDocumentLoaderIID, (void**)&docLoader);
-  if (NS_OK == rv) {
+  if (NS_SUCCEEDED(rv)) {
     docLoader->IsBusy(*result);
     NS_RELEASE(docLoader);
   }
@@ -1467,7 +1611,6 @@ nsDocumentBindInfo::~nsDocumentBindInfo()
     NS_IF_RELEASE(m_ExtraInfo);
 }
 
-
 /*
  * Implementation of ISupports methods...
  */
@@ -1531,7 +1674,7 @@ nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec,
         nsIPostToServer* pts;
 
         rv = url->QueryInterface(kPostToServerIID, (void **)&pts);
-        if (NS_OK == rv) {
+        if (NS_SUCCEEDED(rv)) {
             const char* data = aPostData->GetData();
 
             if (aPostData->IsFile()) {
@@ -1543,6 +1686,14 @@ nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec,
         }
     }
 
+    /*
+     * Set the URL has the current "document" being loaded...
+     */
+    m_DocLoader->SetDocumentUrl(url);
+
+    /*
+     * Initiate the network request...
+     */
     rv = Bind(url, aListener);
     NS_RELEASE(url);
 
@@ -1552,28 +1703,38 @@ nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec,
 
 nsresult nsDocumentBindInfo::Bind(nsIURL* aURL, nsIStreamListener* aListener)
 {
-    nsresult rv = NS_OK;
-    nsINetService *inet = nsnull;
+  nsresult rv = NS_OK;
+  nsINetService *inet = nsnull;
 
-    m_Url = aURL;
-    NS_ADDREF(m_Url);
+  m_Url = aURL;
+  NS_ADDREF(m_Url);
 
-    /* Set up the stream listener (if provided)... */
-    if (nsnull != aListener) {
-        m_NextStream = aListener;
-        NS_ADDREF(m_NextStream);
-    }
+#if defined(DEBUG)
+  const char *buffer;
 
-    /* Start the URL binding process... */
-    rv = nsServiceManager::GetService(kNetServiceCID,
-                                      kINetServiceIID,
-                                      (nsISupports **)&inet);
-    if (NS_OK == rv) {
-      rv = inet->OpenStream(m_Url, this);
-      nsServiceManager::ReleaseService(kNetServiceCID, inet);
-    }
+  aURL->GetSpec(&buffer);
+  PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+         ("DocLoader - OnStartDocumentLoad(...) called for %s.\n", buffer));
+#endif /* DEBUG */
 
-    return rv;
+  m_DocLoader->FireOnStartDocumentLoad(aURL, m_Command);
+
+  /* Set up the stream listener (if provided)... */
+  if (nsnull != aListener) {
+    m_NextStream = aListener;
+    NS_ADDREF(m_NextStream);
+  }
+
+  /* Start the URL binding process... */
+  rv = nsServiceManager::GetService(kNetServiceCID,
+                                    kINetServiceIID,
+                                    (nsISupports **)&inet);
+  if (NS_SUCCEEDED(rv)) {
+    rv = inet->OpenStream(m_Url, this);
+    nsServiceManager::ReleaseService(kNetServiceCID, inet);
+  }
+
+  return rv;
 }
 
 
@@ -1581,13 +1742,16 @@ nsresult nsDocumentBindInfo::Stop(void)
 {
   nsresult rv;
   nsINetService* inet;
+  if (m_Url == nsnull) return NS_OK;
+
+#if defined(DEBUG)
   const char* spec;
 
-  if (m_Url == nsnull) return NS_OK;
   rv = m_Url->GetSpec(&spec);
-  if (rv == NS_OK)
+  if (NS_SUCCEEDED(rv))
       PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
              ("DocLoader - Stop(...) called for %s.\n", spec));
+#endif /* DEBUG */
 
   /* 
    * Mark the IStreamListener as being aborted...  If more data is pushed
@@ -1626,17 +1790,23 @@ NS_METHOD nsDocumentBindInfo::OnProgress(nsIURL* aURL, PRUint32 aProgress,
                                          PRUint32 aProgressMax)
 {
     nsresult rv = NS_OK;
+
+#if defined(DEBUG)
     const char* spec;
     (void)aURL->GetSpec(&spec);
 
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
            ("DocLoader - OnProgress(...) called for %s.  Progress: %d.  ProgressMax: %d\n", 
             spec, aProgress, aProgressMax));
+#endif /* DEBUG */
 
     /* Pass the notification out to the next stream listener... */
     if (nsnull != m_NextStream) {
         rv = m_NextStream->OnProgress(aURL, aProgress, aProgressMax);
     }
+
+    /* Pass the notification out to any observers... */
+    m_DocLoader->FireOnProgressURLLoad(aURL, aProgress, aProgressMax);
 
     /* Pass the notification out to the Observer... */
     if (nsnull != m_Observer) {
@@ -1657,6 +1827,9 @@ NS_METHOD nsDocumentBindInfo::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
         rv = m_NextStream->OnStatus(aURL, aMsg);
     }
 
+    /* Pass the notification out to any observers... */
+    m_DocLoader->FireOnStatusURLLoad(aURL, nsAutoString(aMsg));
+
     /* Pass the notification out to the Observer... */
     if (nsnull != m_Observer) {
         /* XXX: Should we ignore the return value? */
@@ -1671,12 +1844,15 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentT
 {
     nsresult rv = NS_OK;
     nsIContentViewer* viewer = nsnull;
+
+#if defined(DEBUG)
     const char* spec;
     (void)aURL->GetSpec(&spec);
 
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
            ("DocLoader - OnStartBinding(...) called for %s.  Content-type is %s\n",
             spec, aContentType));
+#endif /* DEBUG */
 
     /* If the binding has been canceled via Stop() then abort the load... */
     if (NS_BINDING_ABORTED == mStatus) {
@@ -1702,7 +1878,7 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentT
             rv = NS_ERROR_NULL_POINTER;
         }
 
-        if (NS_OK != rv) {
+        if (NS_FAILED(rv)) {
             printf("DocLoaderFactory: Unable to create ContentViewer for content-type: %s\n", aContentType);
             goto done;
         }
@@ -1714,7 +1890,7 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentT
             viewer->SetContainer(m_Container);
 
             rv = m_Container->Embed(viewer, m_Command, m_ExtraInfo);
-            if (NS_OK != rv) {
+            if (NS_FAILED(rv)) {
                 goto done;
             }
         }
@@ -1735,12 +1911,12 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentT
     if ((nsnull == viewer) && (nsnull != m_Container)) {
       m_Container->GetContentViewer(&viewer);
     }
-    m_DocLoader->LoadURLStarted(m_Url, aContentType, viewer);
+    m_DocLoader->FireOnStartURLLoad(m_Url, aContentType, viewer);
 
     /* Pass the notification out to the Observer... */
     if (nsnull != m_Observer) {
         nsresult rv2 = m_Observer->OnStartBinding(aURL, aContentType);
-        if (rv == NS_OK)
+        if (NS_SUCCEEDED(rv))
         	rv = rv2;
     }
 
@@ -1755,12 +1931,15 @@ NS_METHOD nsDocumentBindInfo::OnDataAvailable(nsIURL* aURL,
                                               nsIInputStream *aStream, PRUint32 aLength)
 {
     nsresult rv = NS_OK;
+
+#if defined(DEBUG)
     const char* spec;
     (void)aURL->GetSpec(&spec);
 
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
            ("DocLoader - OnDataAvailable(...) called for %s.  Bytes available: %d.\n", 
             spec, aLength));
+#endif /* DEBUG */
 
     /* If the binding has been canceled via Stop() then abort the load... */
     if (NS_BINDING_ABORTED == mStatus) {
@@ -1795,12 +1974,15 @@ NS_METHOD nsDocumentBindInfo::OnStopBinding(nsIURL* aURL, nsresult aStatus,
                                             const PRUnichar* aMsg)
 {
     nsresult rv = NS_OK;
+
+#if defined(DEBUG)
     const char* spec;
     (void)aURL->GetSpec(&spec);
 
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
            ("DocLoader - OnStopBinding(...) called for %s.  Status: %d.\n", 
             spec, aStatus));
+#endif /* DEBUG */
 
     if (nsnull != m_NextStream) {
         rv = m_NextStream->OnStopBinding(aURL, aStatus, aMsg);
@@ -1831,7 +2013,7 @@ nsDocumentBindInfo::RefreshURL(nsIURL* aURL, PRInt32 millis, PRBool repeat)
         /* Delegate the actual refresh call up-to the container. */
         rv = m_Container->QueryInterface(kRefreshURLIID, (void**)&refresher);
 
-        if (rv != NS_OK) {
+        if (NS_FAILED(rv)) {
             return PR_FALSE;
         }
         rv = refresher->RefreshURL(aURL, millis, repeat);
@@ -1851,7 +2033,7 @@ nsDocumentBindInfo::CancelRefreshURLTimers(void)
         /* Delegate the actual cancel call up-to the container. */
         rv = m_Container->QueryInterface(kRefreshURLIID, (void**)&refresher);
 
-        if (rv != NS_OK) {
+        if (NS_FAILED(rv)) {
             return PR_FALSE;
         }
         rv = refresher->CancelRefreshURLTimers();
