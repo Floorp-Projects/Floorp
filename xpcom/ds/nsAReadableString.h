@@ -707,6 +707,7 @@ basic_nsAReadableString<CharT>::Equals( const CharT* rhs ) const
     return Compare(basic_nsLiteralString<CharT>(rhs)) == 0;
   }
 
+#if 0
 template <class CharT>
 inline
 PRBool
@@ -714,6 +715,7 @@ basic_nsAReadableString<CharT>::Equals( const CharT* rhs, PRUint32 rhs_length ) 
   {
     return Compare(basic_nsLiteralString<CharT>(rhs, rhs_length)) == 0;
   }
+#endif
 
 template <class CharT>
 inline
