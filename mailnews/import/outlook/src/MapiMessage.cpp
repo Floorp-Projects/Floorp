@@ -293,7 +293,7 @@ BOOL CMapiMessage::GetAttachFileLoc( nsIFileSpec * pLoc)
 
 void CMapiMessage::ProcessHeaderLine( nsCString& line)
 {
-	int				len, start;
+	PRUint32		len, start;
 	nsCString		tStr;
 	nsCString		left13;
 	nsCString		left26;
