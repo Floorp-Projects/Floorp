@@ -150,8 +150,16 @@ struct nsTextRange {
 typedef struct nsTextRange nsTextRange;
 typedef nsTextRange* nsTextRangeArray;
 
+struct nsTextEventReply {
+	nsPoint		mCursorPosition;
+	PRBool		mCursorIsCollapsed;
+};
+
+typedef struct nsTextEventReply nsTextEventReply;
+
 struct nsTextEvent : public nsInputEvent {
 	PRUnichar*			theText;
+	nsTextEventReply	theReply;
 	PRUint32			rangeCount;
 	nsTextRangeArray	rangeArray;
 };
