@@ -30,34 +30,49 @@
 class nsIEnumerator : public nsISupports {
 public:
 
-  static const nsIID& IID() { static nsIID iid = NS_IENUMERATOR_IID; return iid; }
+  static const nsIID& IID(void) { static nsIID iid = NS_IENUMERATOR_IID; return iid; }
 
   /** First will reset the list. will return NS_FAILED if no items
    */
-  NS_IMETHOD First()=0;
-
-  /** Last will reset the list to the end. will return NS_FAILED if no items
-   */
-  NS_IMETHOD Last()=0;
+  NS_IMETHOD First(void) = 0;
   
-  /** Next will advance the list. will return failed if allready at end
+  /** Next will advance the list. will return failed if already at end
    */
-  NS_IMETHOD Next()=0;
-
-  /** Prev will decrement the list. will return failed if allready at beginning
-   */
-  NS_IMETHOD Prev()=0;
+  NS_IMETHOD Next(void) = 0;
 
   /** CurrentItem will return the CurrentItem item it will fail if the list is empty
    *  @param aItem return value
    */
-  NS_IMETHOD CurrentItem(nsISupports **aItem)=0;
+  NS_IMETHOD CurrentItem(nsISupports **aItem) = 0;
 
   /** return if the collection is at the end.  that is the beginning following a call to Prev
    *  and it is the end of the list following a call to next
    *  @param aItem return value
    */
-  NS_IMETHOD IsDone()=0;
+  NS_IMETHOD IsDone(void) = 0;
+
+};
+
+#define NS_IBIDIRECTIONALENUMERATOR_IID              \
+{ /* 75f158a0-cadd-11d2-8cca-0060b0fc14a3 */         \
+    0x75f158a0,                                      \
+    0xcadd,                                          \
+    0x11d2,                                          \
+    {0x8c, 0xca, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
+
+class nsIBidirectionalEnumerator : public nsIEnumerator {
+public:
+
+  static const nsIID& IID(void) { static nsIID iid = NS_IBIDIRECTIONALENUMERATOR_IID; return iid; }
+
+  /** Last will reset the list to the end. will return NS_FAILED if no items
+   */
+  NS_IMETHOD Last(void) = 0;
+
+  /** Prev will decrement the list. will return failed if already at beginning
+   */
+  NS_IMETHOD Prev(void) = 0;
 
 };
 

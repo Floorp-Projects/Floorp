@@ -20,13 +20,15 @@
 
 #include "nsISupports.h"
 
+class nsIEnumerator;
+
 // IID for the nsICollection interface
 #define NS_ICOLLECTION_IID      \
 { 0xaeca730, 0x835b, 0x11d2, \
   { 0x8f, 0x30, 0x0, 0x60, 0x8, 0x31, 0x1, 0x94 } }
 
 
-// IID for the nsICollection Factort interface
+// IID for the nsICollection Factory interface
 #define NS_ICOLLECTIONFACTORY_IID      \
 { 0xf8052641, 0x8768, 0x11d2, \
   { 0x8f, 0x39, 0x0, 0x60, 0x8, 0x31, 0x1, 0x94 } }
@@ -39,21 +41,30 @@
 class nsICollection : public nsISupports {
 public:
 
-  static const nsIID& IID() { static nsIID iid = NS_ICOLLECTION_IID; return iid; }
+  static const nsIID& IID(void) { static nsIID iid = NS_ICOLLECTION_IID; return iid; }
+
+  /** Return the count of elements in the collection.
+   */
+  NS_IMETHOD_(PRUint32) Count(void) const = 0;
 
   /** AddItem will take an ISupports and keep track of it 
    *  @param aItem is the Item to be added WILL BE ADDREFFED
    */
-  virtual nsresult AddItem(nsISupports *aItem)=0;
+  NS_IMETHOD AppendElement(nsISupports *aItem) = 0;
 
   /** RemoveItem will take an nsISupports and remove it from the collection
    *  @param aItem is the item to be removed  WILL BE RELEASED
    */
-  virtual nsresult RemoveItem(nsISupports *aItem)=0;
+  NS_IMETHOD RemoveElement(nsISupports *aItem) = 0;
+
+  /** Return an enumeration for the collection.
+   */
+  NS_IMETHOD Enumerate(nsIEnumerator* *result) = 0;
 
   /** Clear will clear all items from list
    */
-  virtual nsresult Clear()=0;
+  NS_IMETHOD Clear(void) = 0;
+
 };
 
 

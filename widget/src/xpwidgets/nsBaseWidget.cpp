@@ -21,15 +21,32 @@
 #include "nsIDeviceContext.h"
 #include "nsCOMPtr.h"
 #include "nsIMenuListener.h"
-
+#include "nsIEnumerator.h"
 #include "nsGfxCIID.h"
 #include "nsWidgetsCID.h"
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
 
 NS_IMPL_ISUPPORTS(nsBaseWidget, kIWidgetIID)
-NS_IMPL_ISUPPORTS(nsBaseWidget::Enumerator, kIEnumeratorIID)
+
+NS_IMPL_ADDREF(nsBaseWidget::Enumerator);
+NS_IMPL_RELEASE(nsBaseWidget::Enumerator);
+
+NS_IMETHODIMP
+nsBaseWidget::Enumerator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr)
+    return NS_ERROR_NULL_POINTER; 
+
+  if (aIID.Equals(nsIBidirectionalEnumerator::IID()) || 
+      aIID.Equals(nsIEnumerator::IID()) || 
+      aIID.Equals(nsISupports::IID())) {
+    *aInstancePtr = (void*) this; 
+    NS_ADDREF_THIS(); 
+    return NS_OK; 
+  } 
+  return NS_NOINTERFACE; 
+}
 
 
 //-------------------------------------------------------------------------

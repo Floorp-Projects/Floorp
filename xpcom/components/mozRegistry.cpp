@@ -101,9 +101,7 @@ struct mozRegSubtreeEnumerator : public nsIEnumerator {
 
     // This class implements the nsIEnumerator interface functions.
     NS_IMETHOD First();
-    NS_IMETHOD Last();
     NS_IMETHOD Next();
-    NS_IMETHOD Prev();
     NS_IMETHOD CurrentItem(nsISupports **aItem);
     NS_IMETHOD IsDone();
 
@@ -851,15 +849,6 @@ mozRegSubtreeEnumerator::First() {
     return rv;
 }
 
-/*---------------------- mozRegSubtreeEnumerator::Last -------------------------
-| This can't be implemented using the libreg functions.                        |
-------------------------------------------------------------------------------*/
-NS_IMETHODIMP
-mozRegSubtreeEnumerator::Last() {
-    nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
-    return rv;
-}
-
 /*---------------------- mozRegSubtreeEnumerator::Next -------------------------
 | First, we check if we've already advanced to the end by checking the  mDone  |
 | flag.                                                                        |
@@ -901,15 +890,6 @@ NS_IMETHODIMP mozRegSubtreeEnumerator::advance() {
     nsresult rv = regerr2nsresult( mErr );
     return rv;
 };
-
-/*---------------------- mozRegSubtreeEnumerator::Prev -------------------------
-| This can't be implemented on top of libreg.                                  |
-------------------------------------------------------------------------------*/
-NS_IMETHODIMP
-mozRegSubtreeEnumerator::Prev() {
-    nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
-    return rv;
-}
 
 /*------------------- mozRegSubtreeEnumerator::CurrentItem ---------------------
 | Allocates and returns a new instance of class mozRegistryNode.  The node     |

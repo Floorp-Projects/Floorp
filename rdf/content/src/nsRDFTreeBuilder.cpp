@@ -1405,7 +1405,7 @@ RDFTreeBuilderImpl::GetColumnForProperty(nsIContent* aTreeElement,
 
         if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
             if (0 == nsCRT::strcmp(uri, propertyURI)) {
-                *aIndex == index;
+                *aIndex = index;
                 return NS_OK;
             }
         }

@@ -25,7 +25,6 @@
 #include "nsToolkit.h"
 
 #include "nsIWidget.h"
-#include "nsIEnumerator.h"
 
 #include "nsIMenuBar.h"
 

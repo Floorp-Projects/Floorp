@@ -714,8 +714,6 @@ PRBool MySpaceManager::TestResizeRectRegion()
 // Test of getting the band data
 PRBool MySpaceManager::TestGetBandData()
 {
-  BandsInfo bandsInfo;
-  BandRect* bandRect;
   nsresult  status;
 
   // Clear any existing regions

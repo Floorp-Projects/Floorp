@@ -96,7 +96,7 @@ nsXMLDocumentChildNodes::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 
   *aReturn = nsnull;
   if (nsnull != mDocument) {
-    PRUint32 prolog, epilog;
+    PRUint32 prolog;
     
     mDocument->PrologCount(&prolog);
     if (aIndex < prolog) {

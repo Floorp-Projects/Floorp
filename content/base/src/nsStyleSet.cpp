@@ -273,8 +273,8 @@ void StyleSetImpl::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocumen
     mDocSheets->RemoveElement(aSheet);
     // lowest index last
     PRInt32 newDocIndex = aDocument->GetIndexOfStyleSheet(aSheet);
-    PRInt32 count = mDocSheets->Count();
-    PRInt32 index;
+    PRUint32 count = mDocSheets->Count();
+    PRUint32 index;
     for (index = 0; index < count; index++) {
       nsIStyleSheet* sheet = (nsIStyleSheet*)mDocSheets->ElementAt(index);
       PRInt32 sheetDocIndex = aDocument->GetIndexOfStyleSheet(sheet);

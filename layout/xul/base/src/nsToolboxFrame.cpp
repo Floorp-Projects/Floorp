@@ -189,7 +189,7 @@ nsToolboxFrame :: DrawGrippies (  nsIPresContext& aPresContext, nsIRenderingCont
   for ( PRUint32 i = 0; i < mNumToolbars; ++i ) {
     const TabInfo & grippy = mGrippies[i];
     
-    PRBool hilight = (mGrippyHilighted == i) ? PR_TRUE : PR_FALSE;
+    PRBool hilight = (mGrippyHilighted == (PRInt32)i) ? PR_TRUE : PR_FALSE;
     DrawGrippy ( aPresContext, aRenderingContext, grippy.mBoundingRect, hilight );
     
   } // for each child

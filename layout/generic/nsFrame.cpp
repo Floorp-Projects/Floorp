@@ -1605,7 +1605,7 @@ nsFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32 a
 {
   //this will use the nsFrameTraversal as the default peek method.
   //this should change to use geometry and also look to ALL the child lists
-  nsCOMPtr<nsIEnumerator> frameTraversal;
+  nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
   nsresult result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),LEAF,this);
   if (NS_FAILED(result))
     return result;

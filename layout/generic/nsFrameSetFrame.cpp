@@ -1410,7 +1410,7 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
                             size, acx);
     state.reason = eReflowReason_Incremental;
     nsReflowStatus status;
-    nsDidReflowStatus didStatus;
+    nsDidReflowStatus didStatus = 0;
     WillReflow(aPresContext);
     nsFramesetDrag drag(mDragger->mVertical, mDragger->mPrevNeighbor, change, this);
     Reflow(aPresContext, &drag, metrics, state, status);

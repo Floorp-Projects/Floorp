@@ -141,7 +141,7 @@ private:
   nsCOMPtr<nsISupportsArray> mSelectionListeners;
 };
 
-class nsRangeListIterator : public nsIEnumerator
+class nsRangeListIterator : public nsIBidirectionalEnumerator
 {
 public:
 /*BEGIN nsIEnumerator interfaces
@@ -269,7 +269,7 @@ nsRangeListIterator::CurrentItem(nsISupports **aItem)
 {
   if (!aItem)
     return NS_ERROR_NULL_POINTER;
-  if (mIndex >=0 && mIndex < mRangeList->mRangeArray->Count()){
+  if (mIndex >=0 && mIndex < (PRInt32)mRangeList->mRangeArray->Count()){
     nsISupports *indexIsupports = mRangeList->mRangeArray->ElementAt(mIndex);
     return indexIsupports->QueryInterface(kISupportsIID, (void **)aItem);
   }
@@ -283,7 +283,7 @@ nsRangeListIterator::CurrentItem(nsIDOMRange **aItem)
 {
   if (!aItem)
     return NS_ERROR_NULL_POINTER;
-  if (mIndex >=0 && mIndex < mRangeList->mRangeArray->Count()){
+  if (mIndex >=0 && mIndex < (PRInt32)mRangeList->mRangeArray->Count()){
     nsISupports *indexIsupports = mRangeList->mRangeArray->ElementAt(mIndex);
     return indexIsupports->QueryInterface(kIDOMRangeIID, (void **)aItem);
   }
@@ -334,8 +334,9 @@ nsRangeListIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF(mRangeList);
     return NS_OK;
   }
-  if (aIID.Equals(kIEnumeratorIID)) {
-    nsIEnumerator* tmp = this;
+  if (aIID.Equals(kIEnumeratorIID) ||
+      aIID.Equals(nsIBidirectionalEnumerator::IID())) {
+    nsIBidirectionalEnumerator* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -365,7 +366,7 @@ nsRangeList::~nsRangeList()
 {
   if (mRangeArray)
   {
-	  for (PRInt32 i=0;i < mRangeArray->Count(); i++)
+	  for (PRUint32 i=0;i < mRangeArray->Count(); i++)
 	  {
 	    mRangeArray->RemoveElementAt(i);
 	  }
@@ -373,7 +374,7 @@ nsRangeList::~nsRangeList()
   
   if (mSelectionListeners)
   {
-	  for (PRInt32 i=0;i < mSelectionListeners->Count(); i++)
+	  for (PRUint32 i=0;i < mSelectionListeners->Count(); i++)
 	  {
 	    mSelectionListeners->RemoveElementAt(i);
 	  }
@@ -479,7 +480,7 @@ nsRangeList::RemoveItem(nsISupports *aItem)
     return NS_ERROR_FAILURE;
   if (!aItem )
     return NS_ERROR_NULL_POINTER;
-  for (PRInt32 i = 0; i < mRangeArray->Count();i++)
+  for (PRUint32 i = 0; i < mRangeArray->Count();i++)
   {
     if (mRangeArray->ElementAt(i) == aItem)
     {
@@ -497,7 +498,7 @@ nsRangeList::Clear()
 {
   if (!mRangeArray)
     return NS_ERROR_FAILURE;
-  for (PRInt32 i = 0; i < mRangeArray->Count();i++)
+  for (PRUint32 i = 0; i < mRangeArray->Count();i++)
   {
     mRangeArray->RemoveElementAt(i);
     // Does RemoveElementAt also delete the elements?
@@ -549,7 +550,7 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent)
   if (NS_KEY_DOWN == aGuiEvent->message) {
 
     PRBool selected;
-    PRInt32 beginoffset;
+    PRInt32 beginoffset = 0;
     PRInt32 endoffset;
     PRInt32 contentoffset;
     nsresult result = NS_OK;
@@ -979,7 +980,7 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
       frameContent = do_QueryInterface(GetFocusNode(),&res);
   }
   if (NS_SUCCEEDED(res)){
-    for (PRInt32 i =0; i<mRangeArray->Count(); i++){
+    for (PRUint32 i =0; i<mRangeArray->Count(); i++){
       //end content and start content do NOT necessarily mean anchor and focus frame respectively
       PRInt32 anchorOffset = -1; //the frames themselves can talk to the presentation manager.  we will tell them
       PRInt32 frameOffset = -1;  // where we would "like" to have the anchor pt.  actually we count on it.
@@ -1120,7 +1121,7 @@ nsRangeList::NotifySelectionListeners()
     SetDirty();
     return NS_OK;
   }
-  for (PRInt32 i = 0; i < mSelectionListeners->Count();i++)
+  for (PRUint32 i = 0; i < mSelectionListeners->Count();i++)
   {
     nsCOMPtr<nsIDOMSelectionListener> thisListener;
     nsCOMPtr<nsISupports> isupports(dont_AddRef(mSelectionListeners->ElementAt(i)));
@@ -1274,7 +1275,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   if (!mRangeArray)
     return NS_ERROR_FAILURE;
 
-  PRInt32 i;
+  PRUint32 i;
   for (i = 0; i < mRangeArray->Count(); i++)
   {
     nsCOMPtr<nsIDOMRange> range (do_QueryInterface(mRangeArray->ElementAt(i)));

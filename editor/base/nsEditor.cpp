@@ -35,7 +35,6 @@
 #include "nsIPresShell.h"
 #include "nsIViewManager.h"
 #include "nsIDOMSelection.h"
-#include "nsICollection.h"
 #include "nsIEnumerator.h"
 #include "nsIAtom.h"
 #include "nsVoidArray.h"

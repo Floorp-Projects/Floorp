@@ -54,7 +54,7 @@ PRBool FixedTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext *aTableStyl
   NS_ASSERTION(nsnull==tablePIF, "never ever call me on a continuing frame!");
 #endif
 
-  PRBool result;
+  PRBool result = PR_TRUE;
 
   NS_ASSERTION(nsnull!=aTableStyle, "bad arg");
   if (nsnull==aTableStyle)
