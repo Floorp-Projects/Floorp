@@ -3060,6 +3060,12 @@ nsEnderEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
         result = manager->PostHandleEvent(mContext, &event, gfxFrame, &status, mView);
       }
       NS_RELEASE(manager);
+      
+      if(event.flags & NS_EVENT_FLAG_STOP_DISPATCH)
+      {
+        aKeyEvent->PreventCapture();
+        aKeyEvent->PreventBubble();
+      }
     }
   }
   return result;
