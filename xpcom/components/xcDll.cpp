@@ -66,14 +66,14 @@
 
 #include "nsNativeComponentLoader.h"
 
-extern nsresult NS_GetComponentLoaderManager(nsIComponentLoaderManager* *result);
-
-nsDll::nsDll(nsIFile *dllSpec)
+nsDll::nsDll(nsIFile *dllSpec, nsNativeComponentLoader *loader)
     : m_dllSpec(do_QueryInterface(dllSpec)),
+      m_loader(loader),
       m_instance(NULL), 
       m_moduleObject(NULL),
       m_markForUnload(PR_FALSE)
 {
+    NS_ASSERTION(loader, "Null loader when creating a nsDLL");
 }
 
 nsDll::~nsDll(void)
@@ -101,8 +101,7 @@ nsDll::GetDisplayPath(nsACString& aLeafName)
 PRBool
 nsDll::HasChanged()
 {
-    nsCOMPtr<nsIComponentLoaderManager> manager;
-    NS_GetComponentLoaderManager(getter_AddRefs(manager));
+    nsCOMPtr<nsIComponentLoaderManager> manager = do_QueryInterface(m_loader->mCompMgr);
     if (!manager)
         return PR_TRUE;
 
@@ -140,12 +139,15 @@ PRBool nsDll::Load(void)
     //   on the dependent libraries with the assumption that the 
     //   component library holds a reference via the OS so loader.
 
-    nsCOMPtr<nsIComponentLoaderManager> manager;
-    NS_GetComponentLoaderManager(getter_AddRefs(manager));
+    if (!m_loader->mLoadedDependentLibs) {
+        NS_ERROR("huh?  no dependent libs");
+        return PR_TRUE;
+    }
+
+    nsCOMPtr<nsIComponentLoaderManager> manager = do_QueryInterface(m_loader->mCompMgr);
     if (!manager)
         return PR_TRUE;
 
-#if defined(XP_UNIX) && !defined(MACOSX) 
     nsXPIDLCString extraData;
     manager->GetOptionalData(m_dllSpec, nsnull, getter_Copies(extraData));
     
@@ -154,7 +156,6 @@ PRBool nsDll::Load(void)
     // if there was any extra data, treat it as a listing of dependent libs
     if (extraData != nsnull) 
     {
-
         // all dependent libraries are suppose to be in the "gre" directory.
         // note that the gre directory is the same as the "bin" directory, 
         // when there isn't a real "gre" found.
@@ -178,6 +179,11 @@ PRBool nsDll::Load(void)
         char *token = nsCRT::strtok(buffer, " ", &newStr);
         while (token!=nsnull)
         {
+            nsCStringKey key(token);
+            if (m_loader->mLoadedDependentLibs->Get(&key))
+                continue;
+            m_loader->mLoadedDependentLibs->Put(&key, (void*)1);
+
             nsXPIDLCString libpath;
             file->SetNativeLeafName(nsDependentCString(token));
             file->GetNativePath(path);
@@ -212,14 +218,12 @@ PRBool nsDll::Load(void)
         }
         free(buffer);
     }
-#endif
     // load the component
 
     nsCOMPtr<nsILocalFile> lf(do_QueryInterface(m_dllSpec));
     NS_ASSERTION(lf, "nsIFile here must implement a nsILocalFile"); 
     lf->Load(&m_instance);
 
-#if defined(XP_UNIX) && !defined(MACOSX) 
     // Unload any of library dependencies we loaded earlier. The assumption  
     // here is that the component will have a "internal" reference count to
     // the dependency library we just loaded.  
@@ -231,7 +235,6 @@ PRBool nsDll::Load(void)
         for (PRInt32 index = 0; index < arrayCount; index++)
             PR_UnloadLibrary((PRLibrary*)dependentLibArray.ElementAt(index));
     }
-#endif
 
 #ifdef NS_BUILD_REFCNT_LOGGING
         nsTraceRefcnt::SetActivityIsLegal(PR_TRUE);
@@ -308,10 +311,10 @@ nsresult nsDll::GetDllSpec(nsIFile **fsobj)
 
 nsresult nsDll::GetModule(nsISupports *servMgr, nsIModule **cobj)
 {
-    nsCOMPtr<nsIComponentManager> compMgr;
-    nsresult rv = NS_GetComponentManager(getter_AddRefs(compMgr));
+    // using the backpointer of the loader.
+    nsIComponentManager* compMgr = m_loader->mCompMgr;
     NS_ASSERTION(compMgr, "Global Component Manager is null" );
-    if (NS_FAILED(rv)) return rv;
+    if (!compMgr) return NS_ERROR_UNEXPECTED;
 
     NS_ASSERTION(cobj, "xcDll::GetModule : Null argument" );
 
@@ -337,7 +340,7 @@ nsresult nsDll::GetModule(nsISupports *servMgr, nsIModule **cobj)
     if (proc == NULL)
         return NS_ERROR_FACTORY_NOT_LOADED;
 
-    rv = (*proc) (compMgr, m_dllSpec, &m_moduleObject);
+    nsresult rv = (*proc) (compMgr, m_dllSpec, &m_moduleObject);
     if (NS_SUCCEEDED(rv))
     {
         NS_ADDREF(m_moduleObject);
