@@ -25,6 +25,7 @@
 
 #include "nsIPersistentProperties.h"
 #include "nsString.h"
+#include "nsIIOService.h"
 
 class nsURLProperties {
 public:
@@ -34,6 +35,9 @@ public:
   NS_IMETHOD Get( const nsString& aKey, nsString& value);
 
 private:
+  static nsIIOService*  gIOService;    // to speed up creating URLs
+  static nsrefcnt       gRefCnt;
+
   nsIPersistentProperties *mDelegate;
 
 };

@@ -27,15 +27,27 @@
 #include "nsNetUtil.h"
 
 static NS_DEFINE_IID(kIPersistentPropertiesIID, NS_IPERSISTENTPROPERTIES_IID);
+static NS_DEFINE_IID(kIOServiceCID, NS_IOSERVICE_CID);
+
+nsIIOService*   nsURLProperties::gIOService;
+nsrefcnt        nsURLProperties::gRefCnt = 0;
 
 nsURLProperties::nsURLProperties(nsString& aUrl)
 {
+  if (gRefCnt++ == 0) {
+    nsresult rv;
+    rv = nsServiceManager::GetService(kIOServiceCID,
+                                      NS_GET_IID(nsIIOService),
+                                      (nsISupports**)&gIOService);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "can't get nsIOService");
+  }
+
   mDelegate = nsnull; 
   nsresult res = NS_OK;
   nsIURI* url = nsnull;
   nsIInputStream* in = nsnull;
 
-  res = NS_NewURI(&url, aUrl, nsnull);
+  res = gIOService->NewURI(aUrl.GetBuffer(), nsnull, &url);
   if (NS_FAILED(res)) return;
 
   res = NS_OpenURI(&in, url);
@@ -66,6 +78,10 @@ nsURLProperties::nsURLProperties(nsString& aUrl)
 nsURLProperties::~nsURLProperties()
 {
   NS_IF_RELEASE(mDelegate);
+  if (--gRefCnt == 0) {
+    nsServiceManager::ReleaseService(kIOServiceCID, gIOService);
+    gIOService = nsnull;
+  }
 }
 
 NS_IMETHODIMP nsURLProperties::Get(const nsString& aKey, nsString& oValue)
