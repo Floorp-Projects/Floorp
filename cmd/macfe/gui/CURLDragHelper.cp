@@ -341,8 +341,10 @@ CURLDragMixin :: ReceiveDragItem ( DragReference inDragRef, DragAttributes /*inD
 				::ResolveAliasFile(&theData.fileSpec, true, &ignore1, &ignore2);
 				char* localURL = CFileMgr::GetURLFromFileSpec(theData.fileSpec);
 				Assert_(localURL != nil);
-				if ( localURL )
-					HandleDropOfLocalFile ( localURL, CStr255(theData.fileSpec.name), theData );	
+				if ( localURL ) {
+					HandleDropOfLocalFile ( localURL, CStr255(theData.fileSpec.name), theData );
+					XP_FREE(localURL);
+				}
 			}
 			break;
 				
