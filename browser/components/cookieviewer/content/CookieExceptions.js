@@ -28,9 +28,9 @@ var gPermissionManager = {
     },
     getCellText: function (aRow, aColumn)
     {
-      if (aColumn == "siteCol")
+      if (aColumn.id == "siteCol")
         return gPermissionManager._addedPermissions[aRow].rawHost;
-      else if (aColumn == "statusCol")
+      else if (aColumn.id == "statusCol")
         return gPermissionManager._addedPermissions[aRow].capability;
       return "";
     },
@@ -42,10 +42,10 @@ var gPermissionManager = {
     getImageSrc: function(aRow, aColumn) {},
     getProgressMode: function(aRow, aColumn) {},
     getCellValue: function(aRow, aColumn) {},
-    cycleHeader: function(aColId, aElt) {},
-    getRowProperties: function(aRow, aColumn, aProperty) {},
-    getColumnProperties: function(aColumn, aColumnElement, aProperty) {},
-    getCellProperties: function(aRow, aProperty) {}
+    cycleHeader: function(column) {},
+    getRowProperties: function(row,prop){},
+    getColumnProperties: function(column,prop){},
+    getCellProperties: function(row,column,prop){}
   },
   
   onOK: function ()
