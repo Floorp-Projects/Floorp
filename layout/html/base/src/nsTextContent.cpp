@@ -974,7 +974,7 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
   aDesiredSize.height = fm->GetHeight();
   aDesiredSize.ascent = fm->GetMaxAscent();
   aDesiredSize.descent = fm->GetMaxDescent();
-  if ((nsnull != aLineState) && !wrapping) {
+  if (!wrapping) {
     maxWordWidth = x;
   }
   if (nsnull != aMaxElementSize) {
