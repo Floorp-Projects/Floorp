@@ -83,3 +83,4 @@
 #define ZIP_NAME "java"##VERSION_NUMBER
 */
 
+// #define NECKO 1
