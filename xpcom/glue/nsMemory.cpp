@@ -42,17 +42,15 @@
 
 
 static nsIMemory* gMemory = nsnull;
-static PRBool gHasMemoryShutdown = PR_FALSE;
 
 static NS_METHOD FreeGlobalMemory(void)
 {
     NS_IF_RELEASE(gMemory);
-    gHasMemoryShutdown = PR_TRUE;
     return NS_OK;
 }
 
 #define ENSURE_ALLOCATOR \
-  (gMemory ? PR_TRUE : !gHasMemoryShutdown && SetupGlobalMemory())
+  (gMemory ? PR_TRUE : (PRBool) SetupGlobalMemory())
 
 static nsIMemory*
 SetupGlobalMemory()

@@ -590,7 +590,8 @@ nsDirectoryService::~nsDirectoryService()
      NS_IF_RELEASE(nsDirectoryService::sSystemDirectory);
 #endif
 
-
+     // clear the global
+     mService = nsnull;
 
 }
 
