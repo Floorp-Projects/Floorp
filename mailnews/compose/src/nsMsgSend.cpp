@@ -4315,8 +4315,9 @@ void nsMsgSendMimeDeliveryState::StartMessageDelivery(
 		return;
 
 	char *err_msg = NET_ExplainErrorDetails (failure);
-	message_delivery_done_callback (pane->GetContext(), fe_data, failure,
-								  err_msg);
+
+	if (pane)
+		message_delivery_done_callback (pane->GetContext(), fe_data, failure, err_msg);
 	if (err_msg)
 		PR_Free (err_msg);
 }
