@@ -262,7 +262,7 @@ NS_NewHTMLUnknownElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 PR_EXTERN(nsresult)
 NS_CreateHTMLElement(nsIHTMLContent** aResult,
                      nsINodeInfo *aNodeInfo,
-                     PRBool aCaseSensitive = PR_FALSE);
+                     PRBool aCaseSensitive);
 
 // Factory methods for creating html layout objects
 

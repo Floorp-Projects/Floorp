@@ -1376,7 +1376,7 @@ nsHTMLDocument::CreateElementNS(const nsAReadableString& aNamespaceURI,
   if (namespaceID == kNameSpaceID_HTML) {
     nsCOMPtr<nsIHTMLContent> htmlContent;
 
-    rv = NS_CreateHTMLElement(getter_AddRefs(htmlContent), nodeInfo);
+    rv = NS_CreateHTMLElement(getter_AddRefs(htmlContent), nodeInfo, PR_FALSE);
     content = do_QueryInterface(htmlContent);
   }
   else {
@@ -1411,7 +1411,7 @@ nsHTMLDocument::CreateElement(const nsAReadableString& aTagName,
                                 *getter_AddRefs(nodeInfo));
 
   nsCOMPtr<nsIHTMLContent> content;
-  nsresult rv = NS_CreateHTMLElement(getter_AddRefs(content), nodeInfo);
+  nsresult rv = NS_CreateHTMLElement(getter_AddRefs(content), nodeInfo, PR_FALSE);
   if (NS_SUCCEEDED(rv)) {
     content->SetContentID(mNextContentID++);
     rv = content->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aReturn);
