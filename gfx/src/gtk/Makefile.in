@@ -52,7 +52,7 @@ ifdef SUNCTL
 REQUIRES	+= ctl
 endif
 
-#NATIVE_THEME_SUPPORT = 1
+NATIVE_THEME_SUPPORT = 1
 
 CSRCS		= nsPrintdGTK.c
 
