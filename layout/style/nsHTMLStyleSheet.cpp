@@ -61,8 +61,13 @@
 
 #include "nsIStyleSet.h"
 #include "nsISizeOfHandler.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
+#include "nsIObserver.h"
 
 static NS_DEFINE_CID(kCSSFrameConstructorCID, NS_CSSFRAMECONSTRUCTOR_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREFSERVICE_CID);
 
 class HTMLColorRule : public nsIStyleRule {
 public:
@@ -170,8 +175,7 @@ void HTMLColorRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   }
 
   // get or create a tag for this instance
-  nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("HTMLColorRule"));
+  nsCOMPtr<nsIAtom> tag = do_GetAtom("HTMLColorRule");
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(*this);
   aSizeOfHandler->AddSize(tag,aSize);
@@ -258,14 +262,96 @@ void HTMLDocumentColorRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &a
   }
 
   // get or create a tag for this instance
-  nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("HTMLDocumentColorRule"));
+  nsCOMPtr<nsIAtom> tag = do_GetAtom("HTMLDocumentColorRule");
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(*this);
   aSizeOfHandler->AddSize(tag,aSize);
 
   if(mSheet){
     PRUint32 localSize;
+    mSheet->SizeOf(aSizeOfHandler, localSize);
+  }
+}
+#endif
+
+class MarqueeDisableRule : public nsIStyleRule {
+public:
+  MarqueeDisableRule(nsIHTMLStyleSheet* aSheet);
+  virtual ~MarqueeDisableRule();
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
+
+  // The new mapping function.
+  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
+
+#ifdef DEBUG
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+#endif
+
+  nsIHTMLStyleSheet*  mSheet;
+};
+
+MarqueeDisableRule::MarqueeDisableRule(nsIHTMLStyleSheet* aSheet)
+  : mSheet(aSheet)
+{
+  NS_INIT_ISUPPORTS();
+}
+
+MarqueeDisableRule::~MarqueeDisableRule()
+{
+}
+
+NS_IMPL_ISUPPORTS1(MarqueeDisableRule, nsIStyleRule)
+
+NS_IMETHODIMP
+MarqueeDisableRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
+{
+  NS_IF_ADDREF(mSheet);
+  aSheet = mSheet;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MarqueeDisableRule::MapRuleInfoInto(nsRuleData* aRuleData)
+{
+  if (aRuleData->mSID == eStyleStruct_Display) {
+    if (aRuleData->mDisplayData->mDisplay.GetUnit() == eCSSUnit_Null)
+      aRuleData->mDisplayData->mBinding = nsCSSValue(eCSSUnit_None);
+  }
+  return NS_OK;
+}
+
+#ifdef DEBUG
+NS_IMETHODIMP
+MarqueeDisableRule::List(FILE* out, PRInt32 aIndent) const
+{
+  return NS_OK;
+}
+
+void MarqueeDisableRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+
+  if(! uniqueItems->AddItem((void*)this) ){
+    // object has already been accounted for
+    return;
+  }
+
+  // get or create a tag for this instance
+  nsCOMPtr<nsIAtom> tag = do_GetAtom("MarqueeDisableRule");
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(*this);
+  aSizeOfHandler->AddSize(tag,aSize);
+
+  if(mSheet){
+    PRUint32 localSize=0;
     mSheet->SizeOf(aSizeOfHandler, localSize);
   }
 }
@@ -355,8 +441,7 @@ void GenericTableRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   }
 
   // get or create a tag for this instance
-  nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("GenericTableRule"));
+  nsCOMPtr<nsIAtom> tag = do_GetAtom("GenericTableRule");
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(*this);
   aSizeOfHandler->AddSize(tag,aSize);
@@ -808,6 +893,7 @@ protected:
   HTMLColorRule*       mVisitedRule;
   HTMLColorRule*       mActiveRule;
   HTMLDocumentColorRule* mDocumentColorRule;
+  MarqueeDisableRule*  mMarqueeDisableRule;
   TableTbodyRule*      mTableTbodyRule;
   TableRowRule*        mTableRowRule;
   TableColgroupRule*   mTableColgroupRule;
@@ -819,6 +905,49 @@ protected:
   PLDHashTable         mMappedAttrTable;
 };
 
+static PRBool gEnableMarquee = PR_FALSE;
+static PRBool gHaveMarqueePref = PR_FALSE;
+static const char kMarqueePrefBranch[] = "browser.display.";
+static const char kMarqueePrefName[] = "enable_marquee";
+
+class MarqueePrefObserver : public nsIObserver
+{
+public:
+  MarqueePrefObserver();
+  virtual ~MarqueePrefObserver();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+};
+
+MarqueePrefObserver::MarqueePrefObserver()
+{
+  NS_INIT_ISUPPORTS();
+  NS_ASSERTION(gHaveMarqueePref == PR_TRUE, "oops");
+}
+
+MarqueePrefObserver::~MarqueePrefObserver()
+{
+  gHaveMarqueePref = PR_FALSE;
+}
+
+NS_IMPL_ISUPPORTS1(MarqueePrefObserver, nsIObserver)
+
+NS_IMETHODIMP
+MarqueePrefObserver::Observe(nsISupports *aSubject, const char *aTopic,
+                             const PRUnichar *aData)
+{
+  NS_ASSERTION(nsDependentString(aData) ==
+                   NS_ConvertASCIItoUCS2(kMarqueePrefName),
+               "wrong pref");
+
+  nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(aSubject);
+  branch->GetBoolPref(kMarqueePrefName, &gEnableMarquee);
+
+  return NS_OK;
+}
+
+// -----------------------------------------------------------
 
 HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
   : nsIHTMLStyleSheet(),
@@ -837,6 +966,28 @@ HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
 nsresult
 HTMLStyleSheetImpl::Init()
 {
+  if (!gHaveMarqueePref) {
+    // Set |gHaveMarqueePref| now, so we don't recheck if something fails.
+    gHaveMarqueePref = PR_TRUE;
+    nsresult rv;
+    nsCOMPtr<nsIPrefService> prefService = do_GetService(kPrefServiceCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIPrefBranch> branch;
+      rv = prefService->GetBranch(kMarqueePrefBranch, getter_AddRefs(branch));
+      if (NS_SUCCEEDED(rv) && branch) {
+        branch->GetBoolPref(kMarqueePrefName, &gEnableMarquee);
+        nsCOMPtr<nsIPrefBranchInternal> branchInternal
+            = do_QueryInterface(branch);
+        if (branchInternal) {
+          nsCOMPtr<nsIObserver> observer = new MarqueePrefObserver();
+          if (observer) {
+            branchInternal->AddObserver(kMarqueePrefName, observer, PR_FALSE);
+          }
+        }
+      }
+    }
+  }
+
   mTableTbodyRule = new TableTbodyRule(this);
   if (!mTableTbodyRule)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -861,6 +1012,15 @@ HTMLStyleSheetImpl::Init()
   if (!mTableTHRule)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(mTableTHRule);
+
+  if (gEnableMarquee) {
+    mMarqueeDisableRule = nsnull;
+  } else {
+    mMarqueeDisableRule = new MarqueeDisableRule(this);
+    if (!mMarqueeDisableRule)
+      return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(mMarqueeDisableRule);
+  }
 
   mDocumentColorRule = new HTMLDocumentColorRule(this);
   if (!mDocumentColorRule)
@@ -908,6 +1068,10 @@ HTMLStyleSheetImpl::~HTMLStyleSheetImpl()
   if (nsnull != mTableTHRule) {
     mTableTHRule->mSheet = nsnull;
     NS_RELEASE(mTableTHRule);
+  }
+  if (nsnull != mMarqueeDisableRule) {
+    mMarqueeDisableRule->mSheet = nsnull;
+    NS_RELEASE(mMarqueeDisableRule);
   }
   if (mMappedAttrTable.ops)
     PL_DHashTableFinish(&mMappedAttrTable);
@@ -1019,6 +1183,10 @@ HTMLStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData,
       else if (tag == nsHTMLAtoms::table) {
         if (aData->mCompatMode == eCompatibility_NavQuirks)
           ruleWalker->Forward(mDocumentColorRule);
+      }
+      else if (tag == nsHTMLAtoms::marquee) {
+        if (mMarqueeDisableRule)
+          ruleWalker->Forward(mMarqueeDisableRule);
       }
     } // end html element
 
@@ -1408,8 +1576,7 @@ HTMLStyleSheetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   PRUint32 localSize=0;
 
   // create a tag for this instance
-  nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("HTMLStyleSheet"));
+  nsCOMPtr<nsIAtom> tag = do_GetAtom("HTMLStyleSheet");
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(HTMLStyleSheetImpl);
   aSizeOfHandler->AddSize(tag,aSize);
@@ -1428,47 +1595,47 @@ HTMLStyleSheetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
 
   if(mLinkRule && uniqueItems->AddItem((void*)mLinkRule)){
     localSize = sizeof(*mLinkRule);
-    tag = getter_AddRefs(NS_NewAtom("LinkRule"));
+    tag = do_GetAtom("LinkRule");
     aSizeOfHandler->AddSize(tag,localSize);
   }
   if(mVisitedRule && uniqueItems->AddItem((void*)mVisitedRule)){
     localSize = sizeof(*mVisitedRule);
-    tag = getter_AddRefs(NS_NewAtom("VisitedRule"));
+    tag = do_GetAtom("VisitedRule");
     aSizeOfHandler->AddSize(tag,localSize);
   }
   if(mActiveRule && uniqueItems->AddItem((void*)mActiveRule)){
     localSize = sizeof(*mActiveRule);
-    tag = getter_AddRefs(NS_NewAtom("ActiveRule"));
+    tag = do_GetAtom("ActiveRule");
     aSizeOfHandler->AddSize(tag,localSize);
   }
   if(uniqueItems->AddItem((void*)mDocumentColorRule)){
     localSize = sizeof(*mDocumentColorRule);
-    tag = getter_AddRefs(NS_NewAtom("DocumentColorRule"));
+    tag = do_GetAtom("DocumentColorRule");
     aSizeOfHandler->AddSize(tag,localSize);
   }
   if(uniqueItems->AddItem((void*)mTableTbodyRule)){
     localSize = sizeof(*mTableTbodyRule);
-    tag = getter_AddRefs(NS_NewAtom("TableTbodyRule"));
+    tag = do_GetAtom("TableTbodyRule");
     aSizeOfHandler->AddSize(tag,localSize);
   }
   if(uniqueItems->AddItem((void*)mTableRowRule)){
     localSize = sizeof(*mTableRowRule);
-    tag = getter_AddRefs(NS_NewAtom("TableRowRule"));
+    tag = do_GetAtom("TableRowRule");
     aSizeOfHandler->AddSize(tag,localSize);
   }
   if(uniqueItems->AddItem((void*)mTableColgroupRule)){
     localSize = sizeof(*mTableColgroupRule);
-    tag = getter_AddRefs(NS_NewAtom("TableColgroupRule"));
+    tag = do_GetAtom("TableColgroupRule");
     aSizeOfHandler->AddSize(tag,localSize);
   }
   if(uniqueItems->AddItem((void*)mTableColRule)){
     localSize = sizeof(*mTableColRule);
-    tag = getter_AddRefs(NS_NewAtom("TableColRule"));
+    tag = do_GetAtom("TableColRule");
     aSizeOfHandler->AddSize(tag,localSize);
   }
   if(uniqueItems->AddItem((void*)mTableTHRule)){
     localSize = sizeof(*mTableTHRule);
-    tag = getter_AddRefs(NS_NewAtom("TableTHRule"));
+    tag = do_GetAtom("TableTHRule");
     aSizeOfHandler->AddSize(tag,localSize);
   }
   
