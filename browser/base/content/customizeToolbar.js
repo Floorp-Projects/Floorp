@@ -71,6 +71,14 @@ function buildDialog()
   cloneToolbarBox.appendChild(newToolbar);
   
   // Now build up a palette of items.
+  buildPalette(paletteBox, toolbar, currentSet);
+
+  // Set a min height on the new toolbar so it doesn't shrink if all the buttons are removed.
+  newToolbar.setAttribute("minheight", newToolbar.boxObject.height);
+}
+
+function buildPalette(paletteBox, toolbar, currentSet)
+{
   var currentRow = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                             "hbox");
   currentRow.setAttribute("class", "paletteRow");
@@ -136,9 +144,6 @@ function buildDialog()
 
     paletteBox.appendChild(currentRow);
   }
-  
-  // Set a min height on the new toolbar so it doesn't shrink if all the buttons are removed.
-  newToolbar.setAttribute("minheight", newToolbar.boxObject.height);
 }
 
 var dragObserver = {
@@ -419,6 +424,12 @@ function resetToDefault()
       paletteItem = paletteItem.nextSibling;
     }
   }
+
+  // Now rebuild the palette
+  var paletteBox = document.getElementById("palette-box");
+  while (paletteBox.firstChild)
+    paletteBox.removeChild(paletteBox.firstChild);
+  buildPalette(paletteBox, toolbar, defaultSet);
 
   gToolbarChanged = true;
 }
