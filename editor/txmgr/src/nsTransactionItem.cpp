@@ -281,16 +281,16 @@ nsTransactionItem::Write(nsIOutputStream *aOutputStream)
   if (mTransaction)
     mTransaction->Write(aOutputStream);
 
-  aOutputStream->Write("    ItemUndoStack:\n", 0, 19, &len);
+  aOutputStream->Write("    ItemUndoStack:\n", 19, &len);
   if (mUndoStack) {
     mUndoStack->Write(aOutputStream);
   }
 
-  aOutputStream->Write("\n    ItemRedoStack:\n", 0, 20, &len);
+  aOutputStream->Write("\n    ItemRedoStack:\n", 20, &len);
   if (mRedoStack) {
     mRedoStack->Write(aOutputStream);
   }
-  aOutputStream->Write("\n", 0, 1, &len);
+  aOutputStream->Write("\n", 1, &len);
 
   return NS_OK;
 }

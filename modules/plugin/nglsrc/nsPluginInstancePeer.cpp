@@ -23,7 +23,9 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "prprf.h"
-#include "nsIOutputStream.h"
+#include "nsIFileStream.h"
+#include "nsFileSpec.h"
+#include "nsCOMPtr.h"
 
 #ifdef XP_PC
 #include "windows.h"
@@ -147,7 +149,7 @@ public:
 	// nsIOutputStream interface
  
 	NS_IMETHOD
-	Write(const char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aWriteCount);
+	Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount);
 
 	// nsIBaseStream interface
 
@@ -157,24 +159,24 @@ public:
 protected:
 	
 	char* mTarget;
-	char* mFileURL;
-	char* mFilename;
-	FILE* mStreamFile;
+	nsFileURL mFileURL;
+	nsFileSpec mFileSpec;
+	nsCOMPtr<nsIFileOutputStream> mFileThing;
 	nsIPluginInstanceOwner* mOwner;
 };
 
 nsPluginStreamToFile::nsPluginStreamToFile(const char* target, nsIPluginInstanceOwner* owner)
+:	mTarget(PL_strdup(target))
+,	mFileURL(nsnull)
+,	mOwner(owner)
 {
-	mTarget = PL_strdup(target);
-	mOwner = owner;
-
 	// open the file and prepare it for writing
 	char buf[400], tpath[300];
 #ifdef XP_PC
 	::GetTempPath(sizeof(tpath), tpath);
 	PRInt32 len = PL_strlen(tpath);
 
-	if((len > 0) && (tpath[len-1] != '\\'))
+	if ((len > 0) && (tpath[len-1] != '\\'))
 	{
 		tpath[len] = '\\';
 		tpath[len+1] = 0;
@@ -185,43 +187,35 @@ nsPluginStreamToFile::nsPluginStreamToFile(const char* target, nsIPluginInstance
 	tpath[0] = 0;
 #endif // XP_PC
 
-	// create the file
 	PR_snprintf(buf, sizeof(buf), "%s%08X.html", tpath, this);
-	mStreamFile = fopen(buf, "w");
-	fclose(mStreamFile);
 
-	mFilename = PL_strdup(buf);
 
-	// construct the URL we'll use later in calls to GetURL()
-	mFileURL = (char*)PR_Malloc((PL_strlen(buf)+PL_strlen("file://")+1) * sizeof(char));	
-	if(mFileURL == nsnull)
+	// Create and validate the file spec object. (When we have a constructor for the temp
+	// directory, we should use this instead of the per-platform hack above).
+	mFileSpec = buf; 
+	if (mFileSpec.Error())
 		return;
 
-	PL_strcpy(mFileURL, "file://");
-	PL_strcat(mFileURL, buf);
+	// create the file
+	nsISupports* ourStream;
+	if (NS_FAILED(NS_NewTypicalOutputFileStream(&ourStream, mFileSpec)))
+		return;
+	mFileThing = do_QueryInterface(ourStream);
+	NS_RELEASE(ourStream);
+	
+	mFileThing->Close();
 
-	// swap \ with / for the file URL
-	PRInt32 i = 0;
-	while(mFileURL[i] != 0)
-	{
-		if(mFileURL[i] == '\\')
-			mFileURL[i] = '/';
-		++i;
-	}
+	// construct the URL we'll use later in calls to GetURL()
+	mFileURL = mFileSpec;	
 
-	printf("File URL = %s\n", mFileURL);
+	printf("File URL = %s\n", (const char*)mFileURL);
 }
 
 nsPluginStreamToFile::~nsPluginStreamToFile()
 {
-	if(nsnull != mTarget)
+	if (nsnull != mTarget)
 		PL_strfree(mTarget);
 
-	if(nsnull != mFileURL)
-		PL_strfree(mFileURL);
-
-	if(nsnull != mFilename)
-		PL_strfree(mFilename);
 }
 
 
@@ -247,16 +241,14 @@ nsresult nsPluginStreamToFile::QueryInterface(const nsIID& aIID,
 }
 
 NS_IMETHODIMP
-nsPluginStreamToFile::Write(const char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aWriteCount)
+nsPluginStreamToFile::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount)
 {
 	// write the data to the file and update the target
-	if(nsnull != mFilename)
-	{
-		mStreamFile = fopen(mFilename, "a");
-		fwrite(aBuf, 1, aCount, mStreamFile);
-		fclose(mStreamFile);
-		mOwner->GetURL(mFileURL, mTarget, nsnull);
-	}
+	nsCOMPtr<nsIFile>(do_QueryInterface(mFileThing))->Open(mFileSpec, (PR_RDWR|PR_APPEND), 0700);
+	PRUint32 actualCount;
+	mFileThing->Write(aBuf, aCount, &actualCount);
+	mFileThing->Close();
+	mOwner->GetURL(mFileURL, mTarget, nsnull);
 
 	return NS_OK;
 }

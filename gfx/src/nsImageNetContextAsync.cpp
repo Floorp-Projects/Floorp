@@ -205,7 +205,7 @@ ImageConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 
       max_read = IMAGE_BUF_SIZE;
     }
 
-    err = pIStream->Read(mBuffer, 0, 
+    err = pIStream->Read(mBuffer,
                         max_read, &nb);
     if (err != NS_OK) {
       break;

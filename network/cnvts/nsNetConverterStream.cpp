@@ -125,7 +125,7 @@ nsresult nsNetConverterStream :: WriteReady(PRUint32 *aReadyCount)
 }
 
 
-nsresult nsNetConverterStream :: Write(const char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aWriteCount)
+nsresult nsNetConverterStream :: Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount)
 {
   NET_StreamClass *stream;
 
@@ -134,7 +134,7 @@ nsresult nsNetConverterStream :: Write(const char* aBuf, PRUint32 aOffset, PRUin
   {
     int ret;
 
-    ret = stream->put_block(stream, (char *)(aBuf + aOffset), aCount);
+    ret = stream->put_block(stream, (char *)aBuf, aCount);
 
     *aWriteCount = aCount;
     return NS_OK;

@@ -35,15 +35,10 @@
 //                the handy << or >> notation can be yours.
 //                
 //          nsInputFileStream, nsOutputFileStream
-//                These are the STATICALLY LINKED versions of the file i/o streams,
-//                which wrap the NSPR file i/o plus console i/o.
-//
-//  Related files:
-//          prio.h             the NSPR file i/o C API), which is wrapped by
-//          THIS FILE          statically linked C++ wrappers, which in turn are wrapped by
-//          nsIFileStream.h    COM wrappers for this file, which are wrapped by
-//          nsAutoFileStream.h more easily used, nicer syntax wrappers for the
-//                             COMified ones.  Wrapper of a wrapper of a wrapper.
+//                These are the STATICALLY LINKED wrappers for the file-related
+//                versions of the above.
+//          nsIOFileStream
+//                An input and output file stream attached to the same file.
 //
 //  This suite provide the following services:
 //
@@ -91,12 +86,14 @@
 #include "prio.h"
 #endif
 
-#include "nsIFileStream.h"
 #include "nsCOMPtr.h"
+#include "nsIFileStream.h"
 
+// Defined elsewhere
 class nsFileSpec;
-class nsInputFileStream;
-class nsOutputFileStream;
+class nsString;
+class nsIInputStream;
+class nsIOutputStream;
 
 //========================================================================================
 //                          Compiler-specific macros, as needed
@@ -180,16 +177,7 @@ public:
                                       {
                                           mInputStream->Close();
                                       }
-    PRInt32                           read(void* s, PRInt32 n)
-                                      {
-                                          if (!mInputStream)
-                                              return 0;
-                                          PRInt32 result = 0;
-                                          mInputStream->Read((char*)s, 0, n, (PRUint32*)&result);
-                                          if (result < n)
-                                              set_at_eof(PR_TRUE);
-                                          return result;
-                                      }
+    PRInt32                           read(void* s, PRInt32 n);
 
     // Input streamers.  Add more as needed (int&, unsigned int& etc). (but you have to
     // add delegators to the derived classes, too, because these operators don't inherit).
@@ -250,14 +238,7 @@ public:
                                           mOutputStream->Close();
                                       }
     void                              put(char c);
-    PRInt32                           write(const void* s, PRInt32 n)
-                                      {
-                                          if (!mOutputStream)
-                                              return 0;
-                                          PRInt32 result = 0;
-                                          mOutputStream->Write((char*)s, 0, n, (PRUint32*)&result);
-                                          return result;
-                                      }
+    PRInt32                           write(const void* s, PRInt32 n);
     virtual void                      flush();
 
     // Output streamers.  Add more as needed (but you have to add delegators to the derived
@@ -283,28 +264,40 @@ protected:
 typedef nsOutputStream nsBasicOutStream; // Historic support for this name
 
 //========================================================================================
+class NS_BASE nsErrorProne
+// Common (virtual) base class for remembering errors on demand
+//========================================================================================
+{
+public:
+                                      nsErrorProne() // for delayed opening
+                                      :   mResult(NS_OK)
+                                      {
+                                      }
+    PRBool                            failed() const
+                                      {
+                                          return NS_FAILED(mResult);
+                                      }
+
+// DATA
+protected:
+    nsresult                          mResult;
+}; // class nsErrorProne
+
+//========================================================================================
 class NS_BASE nsFileClient
 // Because COM does not allow us to write functions which return a boolean value etc,
 // this class is here to take care of the tedious "declare variable then call with
 // the address of the variable" chores.
 //========================================================================================
+:    public virtual nsErrorProne
 {
 public:
-                                      nsFileClient() // for delayed opening
-                                      :   mResult(NS_OK)
-                                      {
-                                      }
                                       nsFileClient(const nsCOMPtr<nsIFile>& inFile)
                                       :   mFile(do_QueryInterface(inFile))
-                                      ,   mResult(NS_OK)
                                       {
                                       }
     virtual                           ~nsFileClient() {}
-    
-    PRBool                            is_file() const
-                                      {
-                                          return mFile ? PR_TRUE : PR_FALSE;
-                                      }
+
     void                              open(
                                           const nsFileSpec& inFile,
                                           int nsprMode,
@@ -320,10 +313,39 @@ public:
                                               mFile->GetIsOpen(&result);
                                           return result;
                                       }
-    PRBool                            failed() const
+    PRBool                            is_file() const
                                       {
-                                          return NS_FAILED(mResult);
+                                          return mFile ? PR_TRUE : PR_FALSE;
                                       }
+
+protected:
+
+                                      nsFileClient() // for delayed opening
+                                      {
+                                      }
+// DATA
+protected:
+    nsCOMPtr<nsIFile>                 mFile;
+}; // class nsFileClient
+
+//========================================================================================
+class NS_BASE nsRandomAccessStoreClient
+// Because COM does not allow us to write functions which return a boolean value etc,
+// this class is here to take care of the tedious "declare variable then call with
+// the address of the variable" chores.
+//========================================================================================
+:    public virtual nsErrorProne
+{
+public:
+                                      nsRandomAccessStoreClient() // for delayed opening
+                                      {
+                                      }
+                                      nsRandomAccessStoreClient(const nsCOMPtr<nsIRandomAccessStore>& inStore)
+                                      :   mStore(do_QueryInterface(inStore))
+                                      {
+                                      }
+    virtual                           ~nsRandomAccessStoreClient() {}
+    
     void                              seek(PRInt32 offset)
                                       {
                                           seek(PR_SEEK_SET, offset);
@@ -332,49 +354,109 @@ public:
     void                              seek(PRSeekWhence whence, PRInt32 offset)
                                       {
                                           set_at_eof(PR_FALSE);
-                                          if (mFile)
-                                              mResult = mFile->Seek(whence, offset);
+                                          if (mStore)
+                                              mResult = mStore->Seek(whence, offset);
                                       }
     PRIntn                            tell()
                                       {
                                           PRIntn result = -1;
-                                          if (mFile)
-                                              mResult = mFile->Tell(&result);
+                                          if (mStore)
+                                              mResult = mStore->Tell(&result);
                                           return result;
                                       }
+
 protected:
 
    virtual PRBool                     get_at_eof() const
                                       {
-                                          PRBool result;
-                                          if (mFile)
-                                              mFile->GetAtEOF(&result);
+                                          PRBool result = PR_TRUE;
+                                          if (mStore)
+                                              mStore->GetAtEOF(&result);
                                           return result;
                                       }
 
    virtual void                       set_at_eof(PRBool atEnd)
                                       {
-                                          if (mFile)
-                                              mFile->SetAtEOF(atEnd);
+                                          if (mStore)
+                                              mStore->SetAtEOF(atEnd);
                                       }
 
 // DATA
 protected:
-    nsCOMPtr<nsIFile>                 mFile;
-    PRBool                            mResult;
-}; // class nsFileClient
+    nsCOMPtr<nsIRandomAccessStore>    mStore;
+}; // class nsRandomAccessStoreClient
+
+//========================================================================================
+class NS_BASE nsRandomAccessInputStream
+// Please read the comments at the top of this file
+//========================================================================================
+:	public nsRandomAccessStoreClient
+,	public nsInputStream
+{
+public:
+                                      nsRandomAccessInputStream(nsIInputStream* inStream)
+                                      :   nsRandomAccessStoreClient(do_QueryInterface(inStream))
+                                      ,   nsInputStream(inStream)
+                                      {
+                                      }
+    PRBool                            readline(char* s,  PRInt32 n);
+                                          // Result always null-terminated.
+                                          // Check eof() before each call.
+                                          // CAUTION: false result only indicates line was truncated
+                                          // to fit buffer, or an error occurred (OTHER THAN eof).
+
+    // Input streamers.  Unfortunately, they don't inherit!
+    nsInputStream&                    operator >> (char& ch)
+                                         { return nsInputStream::operator >>(ch); }
+    nsInputStream&                    operator >> (nsInputStream& (*pf)(nsInputStream&))
+                                         { return nsInputStream::operator >>(pf); }
+
+protected:
+                                      nsRandomAccessInputStream()
+                                      :  nsInputStream(nsnull)
+                                      {
+                                      }
+
+   virtual PRBool                     get_at_eof() const
+                                      {
+                                          return nsRandomAccessStoreClient::get_at_eof();
+                                      }
+
+   virtual void                       set_at_eof(PRBool atEnd)
+                                      {
+                                          nsRandomAccessStoreClient::set_at_eof(atEnd);
+                                      }
+
+}; // class nsRandomAccessInputStream
+
+//========================================================================================
+class NS_BASE nsInputStringStream
+//========================================================================================
+: public nsRandomAccessInputStream
+{
+public:
+                                      nsInputStringStream(const char* stringToRead);
+                                      nsInputStringStream(const nsString& stringToRead);
+
+    // Input streamers.  Unfortunately, they don't inherit!
+    nsInputStream&                    operator >> (char& ch)
+                                         { return nsInputStream::operator >>(ch); }
+    nsInputStream&                    operator >> (nsInputStream& (*pf)(nsInputStream&))
+                                         { return nsInputStream::operator >>(pf); }
+
+}; // class nsInputStringStream
 
 //========================================================================================
 class NS_BASE nsInputFileStream
 // Please read the comments at the top of this file
 //========================================================================================
-:	public nsInputStream
-,	public nsFileClient
+:	public nsRandomAccessInputStream
+,   public nsFileClient
 {
 public:
 	enum  { kDefaultMode = PR_RDONLY };
                                       nsInputFileStream(nsIInputStream* inStream)
-                                      :   nsInputStream(inStream)
+                                      :   nsRandomAccessInputStream(inStream)
                                       ,   nsFileClient(do_QueryInterface(inStream))
                                       ,   mFileInputStream(do_QueryInterface(inStream))
                                       {
@@ -382,29 +464,12 @@ public:
                                       nsInputFileStream(
                                           const nsFileSpec& inFile,
                                           int nsprMode = kDefaultMode,
-                                          PRIntn accessMode = 00700) // <- OCTAL
-                                      :  nsInputStream(nsnull)
-                                      {
-                                          nsISupports* stream;
-                                          NS_NewIOFileStream(
-                                              &stream,
-                                              inFile, nsprMode, accessMode);
-                                          mFile = nsQueryInterface(stream);
-                                          mInputStream = nsQueryInterface(stream);
-                                          mFileInputStream = nsQueryInterface(stream);
-                                          NS_RELEASE(stream);
-                                      }
-
-    PRBool                            readline(char* s,  PRInt32 n);
-                                          // Result always null-terminated.
-                                          // Check eof() before each call.
-                                          // CAUTION: false result only indicates line was truncated
-                                          // to fit buffer, or an error occurred (OTHER THAN eof).
+                                          PRIntn accessMode = 00700); // <- OCTAL
 
     void                              Open(
-                                           const nsFileSpec& inFile,
-                                           int nsprMode = kDefaultMode,
-                                           PRIntn accessMode = 00700) // <- OCTAL
+                                          const nsFileSpec& inFile,
+                                          int nsprMode = kDefaultMode,
+                                          PRIntn accessMode = 00700) // <- OCTAL
                                       {
                                           if (mFile)
                                               mFile->Open(inFile, nsprMode, accessMode);
@@ -416,47 +481,91 @@ public:
     nsInputStream&                    operator >> (nsInputStream& (*pf)(nsInputStream&))
                                          { return nsInputStream::operator >>(pf); }
 
-protected:
-
-   virtual PRBool                     get_at_eof() const
-                                      {
-                                          return nsFileClient::get_at_eof();
-                                      }
-
-   virtual void                       set_at_eof(PRBool atEnd)
-                                      {
-                                          nsFileClient::set_at_eof(atEnd);
-                                      }
-
-
 // DATA
 protected:
     nsCOMPtr<nsIFileInputStream>      mFileInputStream;
 }; // class nsInputFileStream
 
 //========================================================================================
+class NS_BASE nsRandomAccessOutputStream
+// Please read the comments at the top of this file
+//========================================================================================
+:	public nsRandomAccessStoreClient
+,	public nsOutputStream
+{
+public:
+                                      nsRandomAccessOutputStream(nsIOutputStream* inStream)
+                                      :   nsRandomAccessStoreClient(do_QueryInterface(inStream))
+                                      ,   nsOutputStream(inStream)
+                                      {
+                                      }
+
+    // Output streamers.  Unfortunately, they don't inherit!
+    nsOutputStream&                   operator << (const char* buf)
+                                        { return nsOutputStream::operator << (buf); }
+    nsOutputStream&                   operator << (char ch)
+                                        { return nsOutputStream::operator << (ch); }
+    nsOutputStream&                   operator << (short val)
+                                        { return nsOutputStream::operator << (val); }
+    nsOutputStream&                   operator << (unsigned short val)
+                                        { return nsOutputStream::operator << (val); }
+    nsOutputStream&                   operator << (long val)
+                                        { return nsOutputStream::operator << (val); }
+    nsOutputStream&                   operator << (unsigned long val)
+                                        { return nsOutputStream::operator << (val); }
+    nsOutputStream&                   operator << (nsOutputStream& (*pf)(nsOutputStream&))
+                                        { return nsOutputStream::operator << (pf); }
+
+protected:
+                                      nsRandomAccessOutputStream()
+                                      :  nsOutputStream(nsnull)
+                                      {
+                                      }
+}; // class nsRandomAccessOutputStream
+
+//========================================================================================
+class NS_BASE nsOutputStringStream
+//========================================================================================
+: public nsRandomAccessOutputStream
+{
+public:
+                                      nsOutputStringStream(char*& stringToChange);
+                                      nsOutputStringStream(nsString& stringToChange);
+
+    // Output streamers.  Unfortunately, they don't inherit!
+    nsOutputStream&                   operator << (const char* buf)
+                                        { return nsOutputStream::operator << (buf); }
+    nsOutputStream&                   operator << (char ch)
+                                        { return nsOutputStream::operator << (ch); }
+    nsOutputStream&                   operator << (short val)
+                                        { return nsOutputStream::operator << (val); }
+    nsOutputStream&                   operator << (unsigned short val)
+                                        { return nsOutputStream::operator << (val); }
+    nsOutputStream&                   operator << (long val)
+                                        { return nsOutputStream::operator << (val); }
+    nsOutputStream&                   operator << (unsigned long val)
+                                        { return nsOutputStream::operator << (val); }
+    nsOutputStream&                   operator << (nsOutputStream& (*pf)(nsOutputStream&))
+                                        { return nsOutputStream::operator << (pf); }
+
+}; // class nsOutputStringStream
+
+//========================================================================================
 class NS_BASE nsOutputFileStream
 // Please read the comments at the top of this file
 //========================================================================================
-:	public nsOutputStream
+:	public nsRandomAccessOutputStream
 ,	public nsFileClient
 {
 public:
 	enum  { kDefaultMode = (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE) };
 
                                       nsOutputFileStream() {}
-                                      nsOutputFileStream(nsIOutputStream* inStream)
-                                      :   nsOutputStream(inStream)
-                                      ,   nsFileClient(do_QueryInterface(inStream))
-                                      ,   mFileOutputStream(do_QueryInterface(inStream))
-                                      {
-                                      }
                                       nsOutputFileStream(
                                            const nsFileSpec& inFile,
                                            int nsprMode = kDefaultMode,
                                            PRIntn accessMode = 00700) // <- OCTAL
-                                      :  nsOutputStream(nsnull)
-                                      {
+                                       {
                                           nsISupports* stream;
                                           if (NS_FAILED(NS_NewIOFileStream(
                                               &stream,
@@ -464,6 +573,7 @@ public:
                                               return;
                                           mFile = nsQueryInterface(stream);
                                           mOutputStream = nsQueryInterface(stream);
+                                          mStore = nsQueryInterface(stream);
                                           mFileOutputStream = nsQueryInterface(stream);
                                           NS_RELEASE(stream);
                                       }
@@ -485,18 +595,6 @@ public:
                                         { return nsOutputStream::operator << (val); }
     nsOutputStream&                   operator << (nsOutputStream& (*pf)(nsOutputStream&))
                                         { return nsOutputStream::operator << (pf); }
-
-protected:
-
-   virtual PRBool                     get_at_eof() const
-                                      {
-                                          return nsFileClient::get_at_eof();
-                                      }
-
-   virtual void                       set_at_eof(PRBool atEnd)
-                                      {
-                                          nsFileClient::set_at_eof(atEnd);
-                                      }
 
 // DATA
 protected:
@@ -571,6 +669,7 @@ public:
                                               inFile, nsprMode, accessMode)))
                                               return;
                                           mFile = nsQueryInterface(stream);
+                                          mStore = nsQueryInterface(stream);
                                           mInputStream = nsQueryInterface(stream);
                                           mOutputStream = nsQueryInterface(stream);
                                           mFileInputStream = nsQueryInterface(stream);

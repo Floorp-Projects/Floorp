@@ -42,7 +42,6 @@ public:
     /** Read data from the stream.
      *  @param aErrorCode the error code if an error occurs
      *  @param aBuf the buffer into which the data is read
-     *  @param aOffset the start offset of the data
      *  @param aCount the maximum number of bytes to read
      *  @param aReadCount out parameter to hold the number of
      *         bytes read, eof if 0. if an error occurs, the
@@ -50,7 +49,7 @@ public:
      *  @return error status
      */   
     NS_IMETHOD
-    Read(char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aReadCount) = 0; 
+    Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount) = 0; 
 };
 
 #endif /* nsInputStream_h___ */

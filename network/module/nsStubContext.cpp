@@ -636,7 +636,7 @@ int stub_put_block(NET_StreamClass *stream, const char *buffer, int32 length)
      *       with the string "Transfer Interrupted!"
      */
     NS_ASSERTION(length >= 0, "negative length");
-    errorCode = pConn->pNetStream->Write(buffer, 0, (PRUint32)length, &bytesWritten);
+    errorCode = pConn->pNetStream->Write(buffer, (PRUint32)length, &bytesWritten);
 
     /* Abort the connection... */
     if (NS_BASE_STREAM_EOF == errorCode) {

@@ -127,9 +127,8 @@ public:
         return NS_OK;
     }
     
-    NS_IMETHOD Read(char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aReadCount) {
+    NS_IMETHOD Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount) {
         PRUint32 readCount = 0;
-        aBuf += aOffset;
         while (mIndex < mSize && aCount > 0) {
             *aBuf = mBuffer[mIndex];
             aBuf++;
@@ -469,7 +468,7 @@ rdf_BlockingParse(nsIURL* aURL, nsIStreamListener* aConsumer)
         char buf[1024];
         PRUint32 readCount;
 
-        if (NS_FAILED(rv = in->Read(buf, 0, sizeof(buf), &readCount)))
+        if (NS_FAILED(rv = in->Read(buf, sizeof(buf), &readCount)))
             break; // error or eof
 
         if (readCount == 0)
@@ -889,7 +888,7 @@ rdf_BlockingWrite(nsIOutputStream* stream, const char* buf, PRUint32 size)
         nsresult rv;
         PRUint32 cb;
 
-        if (NS_FAILED(rv = stream->Write(buf, written, remaining, &cb)))
+        if (NS_FAILED(rv = stream->Write(buf + written, remaining, &cb)))
             return rv;
 
         written += cb;

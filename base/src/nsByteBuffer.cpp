@@ -112,9 +112,8 @@ PRInt32 ByteBufferImpl::Fill(nsresult* aErrorCode, nsIInputStream* aStream,
 
   // Read in some new data
   mLength = aKeep;
-  PRUint32 amount = mSpace - aKeep;
   PRUint32 nb;
-  *aErrorCode = aStream->Read(mBuffer, aKeep, amount, &nb);
+  *aErrorCode = aStream->Read(mBuffer + aKeep, mSpace - aKeep, &nb);
   if (NS_SUCCEEDED(*aErrorCode)) {
     mLength += nb;
   }

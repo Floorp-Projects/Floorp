@@ -103,13 +103,11 @@ public:
     NS_IMETHOD GetLength(PRUint32 *aLength);
 
     NS_IMETHOD Read(char *aBuf, 
-                    PRUint32 aOffset, 
                     PRUint32 aCount,
                     PRUint32 *aReadCount);
 
     /* nsIOutputStream interface */
     NS_IMETHOD Write(const char *aBuf, 
-                     PRUint32 aOffset,
                      PRUint32 aLen,
                      PRUint32 *aWriteCount);
 
@@ -141,13 +139,11 @@ public:
     NS_IMETHOD GetLength(PRUint32 *aLength);
 
     NS_IMETHOD Read(char *aBuf, 
-                    PRUint32 aOffset, 
                     PRUint32 aCount,
                     PRUint32 *aReadLength);
 
     /* nsIOutputStream interface */
     NS_IMETHOD Write(const char *aBuf, 
-                     PRUint32 aOffset,
                      PRUint32 aLen,
                      PRUint32 *aWriteLength);
 
@@ -181,13 +177,11 @@ public:
     NS_IMETHOD GetLength(PRUint32 *aLength);
 
     NS_IMETHOD Read(char *aBuf, 
-                    PRUint32 aOffset, 
                     PRUint32 aCount,
                     PRUint32 *aReadLength);
   
     /* nsIOutputStream interface */
     NS_IMETHOD Write(const char *aBuf, 
-                     PRUint32 aOffset,
                      PRUint32 aLen,
                      PRUint32 *aWriteLength);
   

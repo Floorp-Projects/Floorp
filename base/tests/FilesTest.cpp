@@ -26,35 +26,37 @@
 
 struct FilesTest
 {
-	FilesTest() : mConsole() {}
+    FilesTest() : mConsole() {}
 
-	int RunAllTests();
-	
-	void WriteStuff(nsOutputFileStream& s);
-	int InputStream(const char* relativePath);
-	int OutputStream(const char* relativePath);
-	int IOStream(const char* relativePath);
-	int Parent(const char* relativePath, nsFileSpec& outParent);
-	int Delete(nsFileSpec& victim);
-	int CreateDirectory(nsFileSpec& victim);
+    int RunAllTests();
+    
+    void WriteStuff(nsOutputStream& s);
+    int InputStream(const char* relativePath);
+    int OutputStream(const char* relativePath);
+    int IOStream(const char* relativePath);
+    int StringStream();
+    int Parent(const char* relativePath, nsFileSpec& outParent);
+    int Delete(nsFileSpec& victim);
+    int CreateDirectory(nsFileSpec& victim);
     int CreateDirectoryRecursive(const char* aPath);
-	int IterateDirectoryChildren(nsFileSpec& startChild);
-	int CanonicalPath(const char* relativePath);
-	int Persistence(const char* relativePath);
+    int IterateDirectoryChildren(nsFileSpec& startChild);
+    int CanonicalPath(const char* relativePath);
+    int Persistence(const char* relativePath);
 
     int Copy(const char*  sourceFile, const char* targDir);
     int Move(const char*  sourceFile, const char*  targDir);
     int Rename(const char*  sourceFile, const char* newName);
 
     int Execute(const char* appName, const char* args);
+
 #if WHEN_MCMULLEN_REVIEWS
     int SpecialSystemDirectories();
 #endif
-	void Banner(const char* bannerString);
-	void Passed();
-	void Failed();
-	void Inspect();
-		
+    void Banner(const char* bannerString);
+    void Passed();
+    int Failed();
+    void Inspect();
+        
 	nsOutputConsoleStream mConsole;
 };
 
@@ -62,293 +64,323 @@ struct FilesTest
 void FilesTest::Banner(const char* bannerString)
 //----------------------------------------------------------------------------------------
 {
-	mConsole
-		<< nsEndl
-		<< "---------------------------" << nsEndl
-		<< bannerString << " Test"       << nsEndl
-		<< "---------------------------" << nsEndl;
+    mConsole
+        << nsEndl
+        << "---------------------------" << nsEndl
+        << bannerString << " Test"       << nsEndl
+        << "---------------------------" << nsEndl;
 }
 
 //----------------------------------------------------------------------------------------
 void FilesTest::Passed()
 //----------------------------------------------------------------------------------------
 {
-	((nsOutputStream&)mConsole) << "Test passed.";
-	mConsole << nsEndl;
+    ((nsOutputStream&)mConsole) << "Test passed.";
+    mConsole << nsEndl;
 }
 
 //----------------------------------------------------------------------------------------
-void FilesTest::Failed()
+int FilesTest::Failed()
 //----------------------------------------------------------------------------------------
 {
-	mConsole << "ERROR: Test failed." << nsEndl;
+    mConsole << "ERROR: Test failed." << nsEndl;
+    return -1;
 }
 
 //----------------------------------------------------------------------------------------
 void FilesTest::Inspect()
 //----------------------------------------------------------------------------------------
 {
-	mConsole << nsEndl << "^^^^^^^^^^ PLEASE INSPECT OUTPUT FOR ERRORS" << nsEndl;
+    mConsole << nsEndl << "^^^^^^^^^^ PLEASE INSPECT OUTPUT FOR ERRORS" << nsEndl;
 }
 
 //----------------------------------------------------------------------------------------
-void FilesTest::WriteStuff(nsOutputFileStream& s)
+void FilesTest::WriteStuff(nsOutputStream& s)
 //----------------------------------------------------------------------------------------
 {
-	// Initialize a URL from a string without suffix.  Change the path to suit your machine.
-	nsFileURL fileURL("file:///Development/MPW/MPW%20Shell", PR_FALSE);
-	s << "File URL initialized to:     \"" << fileURL << "\""<< nsEndl;
-	
-	// Initialize a Unix path from a URL
-	nsFilePath filePath(fileURL);
-	s << "As a unix path:              \"" << (const char*)filePath << "\""<< nsEndl;
-	
-	// Initialize a native file spec from a URL
-	nsFileSpec fileSpec(fileURL);
-	s << "As a file spec:               " << fileSpec << nsEndl;
-	
-	// Make the spec unique (this one has no suffix).
-	fileSpec.MakeUnique();
-	s << "Unique file spec:             " << fileSpec << nsEndl;
-	
-	// Assign the spec to a URL
-	fileURL = fileSpec;
-	s << "File URL assigned from spec: \"" << fileURL << "\""<< nsEndl;
-	
-	// Assign a unix path using a string with a suffix.
-	filePath = "/Development/MPW/SysErrs.err";
-	s << "File path reassigned to:     \"" << (const char*)filePath << "\""<< nsEndl;	
-	
-	// Assign to a file spec using a unix path.
-	fileSpec = filePath;
-	s << "File spec reassigned to:      " << fileSpec << nsEndl;
-	
-	// Make this unique (this one has a suffix).
-	fileSpec.MakeUnique();
-	s << "File spec made unique:        " << fileSpec << nsEndl;
+    // Initialize a URL from a string without suffix.  Change the path to suit your machine.
+    nsFileURL fileURL("file:///Development/MPW/MPW%20Shell", PR_FALSE);
+    s << "File URL initialized to:     \"" << fileURL << "\""<< nsEndl;
+    
+    // Initialize a Unix path from a URL
+    nsFilePath filePath(fileURL);
+    s << "As a unix path:              \"" << (const char*)filePath << "\""<< nsEndl;
+    
+    // Initialize a native file spec from a URL
+    nsFileSpec fileSpec(fileURL);
+    s << "As a file spec:               " << fileSpec << nsEndl;
+    
+    // Make the spec unique (this one has no suffix).
+    fileSpec.MakeUnique();
+    s << "Unique file spec:             " << fileSpec << nsEndl;
+    
+    // Assign the spec to a URL
+    fileURL = fileSpec;
+    s << "File URL assigned from spec: \"" << fileURL << "\""<< nsEndl;
+    
+    // Assign a unix path using a string with a suffix.
+    filePath = "/Development/MPW/SysErrs.err";
+    s << "File path reassigned to:     \"" << (const char*)filePath << "\""<< nsEndl;    
+    
+    // Assign to a file spec using a unix path.
+    fileSpec = filePath;
+    s << "File spec reassigned to:      " << fileSpec << nsEndl;
+    
+    // Make this unique (this one has a suffix).
+    fileSpec.MakeUnique();
+    s << "File spec made unique:        " << fileSpec << nsEndl;
 } // WriteStuff
 
 //----------------------------------------------------------------------------------------
 int FilesTest::OutputStream(const char* relativePath)
 //----------------------------------------------------------------------------------------
 {
-	nsFilePath myTextFilePath(relativePath, PR_TRUE); // relative path.
-	const char* pathAsString = (const char*)myTextFilePath;
-	nsFileSpec mySpec(myTextFilePath);
-	{
-		mConsole << "WRITING IDENTICAL OUTPUT TO " << pathAsString << nsEndl << nsEndl;
-		nsOutputFileStream testStream(mySpec);
-		if (!testStream.is_open())
-		{
-			mConsole
-			    << "ERROR: File "
-			    << pathAsString
-			    << " could not be opened for output"
-			    << nsEndl;
-			return -1;
-		}
-		FilesTest::WriteStuff(testStream);
-	}	// <-- Scope closes the stream (and the file).
+    nsFilePath myTextFilePath(relativePath, PR_TRUE); // relative path.
+    const char* pathAsString = (const char*)myTextFilePath;
+    nsFileSpec mySpec(myTextFilePath);
+    {
+        mConsole << "WRITING IDENTICAL OUTPUT TO " << pathAsString << nsEndl << nsEndl;
+        nsOutputFileStream testStream(mySpec);
+        if (!testStream.is_open())
+        {
+            mConsole
+                << "ERROR: File "
+                << pathAsString
+                << " could not be opened for output"
+                << nsEndl;
+            return -1;
+        }
+        FilesTest::WriteStuff(testStream);
+    }    // <-- Scope closes the stream (and the file).
 
-	if (!mySpec.Exists() || mySpec.IsDirectory() || !mySpec.IsFile())
-	{
-			mConsole
-			    << "ERROR: File "
-			    << pathAsString
-			    << " is not a file (cela n'est pas un pipe)"
-			    << nsEndl;
-			return -1;
-	}
-	Passed();
-	return 0;
+    if (!mySpec.Exists() || mySpec.IsDirectory() || !mySpec.IsFile())
+    {
+            mConsole
+                << "ERROR: File "
+                << pathAsString
+                << " is not a file (cela n'est pas un pipe)"
+                << nsEndl;
+            return -1;
+    }
+    Passed();
+    return 0;
+}
+
+//----------------------------------------------------------------------------------------
+int FilesTest::StringStream()
+//----------------------------------------------------------------------------------------
+{
+    char* string1 = nsnull, *string2 = nsnull;
+    {
+        mConsole << "WRITING USUAL STUFF TO string1" << nsEndl << nsEndl;
+        nsOutputStringStream streamout(string1);
+        FilesTest::WriteStuff(streamout);
+    }
+    {
+        nsInputStringStream streamin(string1);
+        nsOutputStringStream streamout2(string2);
+        mConsole << "READING LINES FROM string1, writing to string2"
+            << nsEndl << nsEndl;
+        while (!streamin.eof())
+        {
+            char line[5000]; // Use a buffer longer than the file!
+            streamin.readline(line, sizeof(line));
+            streamout2 << line << nsEndl;
+        }
+        if (strcmp(string1, string2) != 0)
+        {
+            mConsole << "Results disagree!" << nsEndl;
+            mConsole << "First string is:" << nsEndl;
+            mConsole << string1 << nsEndl << nsEndl;
+            mConsole << "Second string is:" << nsEndl;
+            mConsole << string2 << nsEndl << nsEndl;
+            return Failed();
+        }
+    }
+    Passed();
+    return 0;
 }
 
 //----------------------------------------------------------------------------------------
 int FilesTest::IOStream(const char* relativePath)
 //----------------------------------------------------------------------------------------
 {
-	nsFilePath myTextFilePath(relativePath, PR_TRUE); // relative path.
-	const char* pathAsString = (const char*)myTextFilePath;
-	nsFileSpec mySpec(myTextFilePath);
-	mConsole
-		<< "Replacing \"path\" by \"ZUUL\" in " << pathAsString << nsEndl << nsEndl;
-	nsIOFileStream testStream(mySpec);
-	if (!testStream.is_open())
-	{
-		mConsole
-		    << "ERROR: File "
-		    << pathAsString
-		    << " could not be opened for input+output"
-		    << nsEndl;
-		return -1;
-	}
-	char line[5000]; // Use a buffer longer than the file!
-	testStream.seek(0); // check that the seek compiles
-	while (!testStream.eof())
-	{
-		PRInt32 pos = testStream.tell();
-		testStream.readline(line, sizeof(line));
-		char* replacementSubstring = strstr(line, "path");
-		if (replacementSubstring)
-		{
-			testStream.seek(pos + (replacementSubstring - line));
-			testStream << "ZUUL";
-			testStream.seek(pos); // back to the start of the line
-		}
-	}
-	return 0;
+    nsFilePath myTextFilePath(relativePath, PR_TRUE); // relative path.
+    const char* pathAsString = (const char*)myTextFilePath;
+    nsFileSpec mySpec(myTextFilePath);
+    mConsole
+        << "Replacing \"path\" by \"ZUUL\" in " << pathAsString << nsEndl << nsEndl;
+    nsIOFileStream testStream(mySpec);
+    if (!testStream.is_open())
+    {
+        mConsole
+            << "ERROR: File "
+            << pathAsString
+            << " could not be opened for input+output"
+            << nsEndl;
+        return -1;
+    }
+    char line[5000]; // Use a buffer longer than the file!
+    testStream.seek(0); // check that the seek compiles
+    while (!testStream.eof())
+    {
+        PRInt32 pos = testStream.tell();
+        testStream.readline(line, sizeof(line));
+        char* replacementSubstring = strstr(line, "path");
+        if (replacementSubstring)
+        {
+            testStream.seek(pos + (replacementSubstring - line));
+            testStream << "ZUUL";
+            testStream.seek(pos); // back to the start of the line
+        }
+    }
+    return 0;
 }
 
 //----------------------------------------------------------------------------------------
 int FilesTest::Persistence(
-	const char* relativePathToWrite)
+    const char* relativePathToWrite)
 //----------------------------------------------------------------------------------------
 {
-	nsFilePath myTextFilePath(relativePathToWrite, PR_TRUE);
-	const char* pathAsString = (const char*)myTextFilePath;
-	nsFileSpec mySpec(myTextFilePath);
+    nsFilePath myTextFilePath(relativePathToWrite, PR_TRUE);
+    const char* pathAsString = (const char*)myTextFilePath;
+    nsFileSpec mySpec(myTextFilePath);
 
-	nsIOFileStream testStream(mySpec, (PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE));
-	if (!testStream.is_open())
-	{
-		mConsole
-		    << "ERROR: File "
-		    << pathAsString
-		    << " could not be opened for input+output"
-		    << nsEndl;
-		return -1;
-	}
-	
-	nsPersistentFileDescriptor myPersistent(mySpec);
-	mConsole
-		<< "Writing persistent file data " << pathAsString << nsEndl << nsEndl;
-	
-	testStream.seek(0); // check that the seek compiles
-	testStream << myPersistent;
-	
-	testStream.seek(0);
-	
-	nsPersistentFileDescriptor mySecondPersistent;
-	testStream >> mySecondPersistent;
-	
-	mySpec = mySecondPersistent;
+    nsIOFileStream testStream(mySpec, (PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE));
+    if (!testStream.is_open())
+    {
+        mConsole
+            << "ERROR: File "
+            << pathAsString
+            << " could not be opened for input+output"
+            << nsEndl;
+        return -1;
+    }
+    
+    nsPersistentFileDescriptor myPersistent(mySpec);
+    mConsole
+        << "Writing persistent file data " << pathAsString << nsEndl << nsEndl;
+    
+    testStream.seek(0); // check that the seek compiles
+    testStream << myPersistent;
+    
+    testStream.seek(0);
+    
+    nsPersistentFileDescriptor mySecondPersistent;
+    testStream >> mySecondPersistent;
+    
+    mySpec = mySecondPersistent;
 #ifdef XP_MAC
     if (mySpec.Error())
-	{
-		Failed();
-		return -1;
-	}
+        return Failed();
 #endif
 
     if (!mySpec.Exists())
-	{
-		Failed();
-		return -1;
-	}
+        return Failed();
     
-	Passed();
-	return 0;
+    Passed();
+    return 0;
 }
 
 //----------------------------------------------------------------------------------------
 int FilesTest::InputStream(const char* relativePath)
 //----------------------------------------------------------------------------------------
 {
-	nsFilePath myTextFilePath(relativePath, PR_TRUE);
-	const char* pathAsString = (const char*)myTextFilePath;
-	mConsole << "READING BACK DATA FROM " << pathAsString << nsEndl << nsEndl;
-	nsFileSpec mySpec(myTextFilePath);
-	nsInputFileStream testStream2(mySpec);
-	if (!testStream2.is_open())
-	{
-		mConsole
-		    << "ERROR: File "
-		    << pathAsString
-		    << " could not be opened for input"
-		    << nsEndl;
-		return -1;
-	}
-	char line[1000];
-	
-	testStream2.seek(0); // check that the seek compiles
-	while (!testStream2.eof())
-	{
-		testStream2.readline(line, sizeof(line));
-		mConsole << line << nsEndl;
-	}
-	Inspect();
-	return 0;
+    nsFilePath myTextFilePath(relativePath, PR_TRUE);
+    const char* pathAsString = (const char*)myTextFilePath;
+    mConsole << "READING BACK DATA FROM " << pathAsString << nsEndl << nsEndl;
+    nsFileSpec mySpec(myTextFilePath);
+    nsInputFileStream testStream2(mySpec);
+    if (!testStream2.is_open())
+    {
+        mConsole
+            << "ERROR: File "
+            << pathAsString
+            << " could not be opened for input"
+            << nsEndl;
+        return -1;
+    }
+    char line[1000];
+    
+    testStream2.seek(0); // check that the seek compiles
+    while (!testStream2.eof())
+    {
+        testStream2.readline(line, sizeof(line));
+        mConsole << line << nsEndl;
+    }
+    Inspect();
+    return 0;
 }
 
 //----------------------------------------------------------------------------------------
 int FilesTest::Parent(
-	const char* relativePath,
-	nsFileSpec& outParent)
+    const char* relativePath,
+    nsFileSpec& outParent)
 //----------------------------------------------------------------------------------------
 {
-	nsFilePath myTextFilePath(relativePath, PR_TRUE);
-	const char* pathAsString = (const char*)myTextFilePath;
-	nsFileSpec mySpec(myTextFilePath);
+    nsFilePath myTextFilePath(relativePath, PR_TRUE);
+    const char* pathAsString = (const char*)myTextFilePath;
+    nsFileSpec mySpec(myTextFilePath);
 
     mySpec.GetParent(outParent);
     nsFilePath parentPath(outParent);
-	mConsole
-		<< "GetParent() on "
-		<< "\n\t" << pathAsString
-		<< "\n yields "
-		<< "\n\t" << (const char*)parentPath
-		<< nsEndl;
-	Inspect();
-	return 0;
+    mConsole
+        << "GetParent() on "
+        << "\n\t" << pathAsString
+        << "\n yields "
+        << "\n\t" << (const char*)parentPath
+        << nsEndl;
+    Inspect();
+    return 0;
 }
 
 //----------------------------------------------------------------------------------------
 int FilesTest::Delete(nsFileSpec& victim)
 //----------------------------------------------------------------------------------------
 {
-	// - Test of non-recursive delete
+    // - Test of non-recursive delete
 
     nsFilePath victimPath(victim);
-	mConsole
-		<< "Attempting to delete "
-		<< "\n\t" << (const char*)victimPath
-		<< "\n without recursive option (should fail)"	
-		<< nsEndl;
-	victim.Delete(PR_FALSE);	
-	if (victim.Exists())
-		Passed();
-	else
-	{
-		mConsole
-		    << "ERROR: File "
-		    << "\n\t" << (const char*)victimPath
-		    << "\n has been deleted without the recursion option,"
-		    << "\n and is a nonempty directory!"
-		    << nsEndl;
-		return -1;
-	}
+    mConsole
+        << "Attempting to delete "
+        << "\n\t" << (const char*)victimPath
+        << "\n without recursive option (should fail)"    
+        << nsEndl;
+    victim.Delete(PR_FALSE);    
+    if (victim.Exists())
+        Passed();
+    else
+    {
+        mConsole
+            << "ERROR: File "
+            << "\n\t" << (const char*)victimPath
+            << "\n has been deleted without the recursion option,"
+            << "\n and is a nonempty directory!"
+            << nsEndl;
+        return -1;
+    }
 
-	// - Test of recursive delete
+    // - Test of recursive delete
 
-	mConsole
-		<< nsEndl
-		<< "Deleting "
-		<< "\n\t" << (const char*)victimPath
-		<< "\n with recursive option"
-		<< nsEndl;
-	victim.Delete(PR_TRUE);
-	if (victim.Exists())
-	{
-		mConsole
-		    << "ERROR: Directory "
-		    << "\n\t" << (const char*)victimPath
-		    << "\n has NOT been deleted despite the recursion option!"
-		    << nsEndl;
-		return -1;
-	}
-	
-	Passed();
-	return 0;
+    mConsole
+        << nsEndl
+        << "Deleting "
+        << "\n\t" << (const char*)victimPath
+        << "\n with recursive option"
+        << nsEndl;
+    victim.Delete(PR_TRUE);
+    if (victim.Exists())
+    {
+        mConsole
+            << "ERROR: Directory "
+            << "\n\t" << (const char*)victimPath
+            << "\n has NOT been deleted despite the recursion option!"
+            << nsEndl;
+        return -1;
+    }
+    
+    Passed();
+    return 0;
 }
 
 //----------------------------------------------------------------------------------------
@@ -394,7 +426,7 @@ int FilesTest::CreateDirectoryRecursive(const char* aPath)
 int FilesTest::IterateDirectoryChildren(nsFileSpec& startChild)
 //----------------------------------------------------------------------------------------
 {
-	// - Test of directory iterator
+    // - Test of directory iterator
 
     nsFileSpec grandparent;
     startChild.GetParent(grandparent); // should be the original default directory.
@@ -403,41 +435,41 @@ int FilesTest::IterateDirectoryChildren(nsFileSpec& startChild)
     mConsole << "Forwards listing of " << (const char*)grandparentPath << ":" << nsEndl;
     for (nsDirectoryIterator i(grandparent, +1); i.Exists(); i++)
     {
-    	char* itemName = ((nsFileSpec&)i).GetLeafName();
-    	mConsole << '\t' << itemName << nsEndl;
-    	delete [] itemName;
+        char* itemName = ((nsFileSpec&)i).GetLeafName();
+        mConsole << '\t' << itemName << nsEndl;
+        delete [] itemName;
     }
 
     mConsole << "Backwards listing of " << (const char*)grandparentPath << ":" << nsEndl;
     for (nsDirectoryIterator j(grandparent, -1); j.Exists(); j--)
     {
-    	char* itemName = ((nsFileSpec&)j).GetLeafName();
-    	mConsole << '\t' << itemName << nsEndl;
-    	delete [] itemName;
+        char* itemName = ((nsFileSpec&)j).GetLeafName();
+        mConsole << '\t' << itemName << nsEndl;
+        delete [] itemName;
     }
     Inspect();
-	return 0;
+    return 0;
 }
 
 //----------------------------------------------------------------------------------------
 int FilesTest::CanonicalPath(
-	const char* relativePath)
+    const char* relativePath)
 //----------------------------------------------------------------------------------------
 {
-	nsFilePath myTextFilePath(relativePath, PR_TRUE);
-	const char* pathAsString = (const char*)myTextFilePath;
-	if (*pathAsString != '/')
-	{
-		mConsole
-		    << "ERROR: after initializing the path object with a relative path,"
-		    << "\n the path consisted of the string "
-		    << "\n\t" << pathAsString
-		    << "\n which is not a canonical full path!"
-		    << nsEndl;
-		return -1;
-	}
-	Passed();
-	return 0;
+    nsFilePath myTextFilePath(relativePath, PR_TRUE);
+    const char* pathAsString = (const char*)myTextFilePath;
+    if (*pathAsString != '/')
+    {
+        mConsole
+            << "ERROR: after initializing the path object with a relative path,"
+            << "\n the path consisted of the string "
+            << "\n\t" << pathAsString
+            << "\n which is not a canonical full path!"
+            << nsEndl;
+        return -1;
+    }
+    Passed();
+    return 0;
 }
 
 //----------------------------------------------------------------------------------------
@@ -445,36 +477,27 @@ int FilesTest::Copy(const char* file, const char* dir)
 //----------------------------------------------------------------------------------------
 {
     nsFileSpec dirPath(dir, PR_TRUE);
-		
-	dirPath.CreateDirectory();
+        
+    dirPath.CreateDirectory();
     if (! dirPath.Exists())
-	{
-		Failed();
-		return -1;
-	}
+        return Failed();
     
 
     nsFileSpec mySpec(file, PR_TRUE); // relative path.
     {
-	    nsIOFileStream testStream(mySpec); // creates the file
-	    // Scope ends here, file gets closed
+        nsIOFileStream testStream(mySpec); // creates the file
+        // Scope ends here, file gets closed
     }
     
     nsFileSpec filePath(file);
     if (! filePath.Exists())
-	{
-		Failed();
-		return -1;
-	}
+        return Failed();
    
     nsresult error = filePath.Copy(dirPath);
 
     dirPath += filePath.GetLeafName();
     if (! dirPath.Exists() || ! filePath.Exists() || NS_FAILED(error))
-	{
-		Failed();
-		return -1;
-	}
+        return Failed();
 
    Passed();
    
@@ -486,13 +509,10 @@ int FilesTest::Move(const char* file, const char* dir)
 //----------------------------------------------------------------------------------------
 {
     nsFileSpec dirPath(dir, PR_TRUE);
-		
-	dirPath.CreateDirectory();
+        
+    dirPath.CreateDirectory();
     if (! dirPath.Exists())
-	{
-		Failed();
-		return -1;
-	}
+        return Failed();
     
 
     nsFileSpec srcSpec(file, PR_TRUE); // relative path.
@@ -502,20 +522,14 @@ int FilesTest::Move(const char* file, const char* dir)
     };
     
     if (! srcSpec.Exists())
-	{
-		Failed();
-		return -1;
-	}
+        return Failed();
    
     nsresult error = srcSpec.Move(dirPath);
 
 
     dirPath += srcSpec.GetLeafName();
     if (! dirPath.Exists() || srcSpec.Exists() || NS_FAILED(error))
-	{
-		Failed();
-		return -1;
-	}
+        return Failed();
 
     Passed();
     return 0;
@@ -527,17 +541,11 @@ int FilesTest::Execute(const char* appName, const char* args)
 {
     nsFileSpec appPath(appName, PR_FALSE);
     if (!appPath.Exists())
-	{
-		Failed();
-		return -1;
-	}
-	
+        return Failed();
+    
     nsresult error = appPath.Execute(args);    
     if (NS_FAILED(error))
-	{
-		Failed();
-		return -1;
-	}
+        return Failed();
 
    Passed();
 
@@ -545,7 +553,9 @@ int FilesTest::Execute(const char* appName, const char* args)
 }
 
 #if WHEN_MCMULLEN_REVIEWS
+//----------------------------------------------------------------------------------------
 int FilesTest::SpecialSystemDirectories()
+//----------------------------------------------------------------------------------------
 {
      mConsole << "Please verify that these are the paths to various system directories:" << nsEndl;
 
@@ -775,7 +785,7 @@ int FilesTest::SpecialSystemDirectories()
     Passed();
     return 0;
 
-}
+} // FilesTest::SpecialSystemDirectories
 #endif
 
 
@@ -812,6 +822,10 @@ int FilesTest::RunAllTests()
 	if (InputStream("mumble/iotest.txt") != 0)
 		return -1;
 	
+    Banner("StringStream");
+    if (StringStream() != 0)
+        return -1;
+        
 	Banner("Parent");
 	nsFileSpec parent;
 	if (Parent("mumble/iotest.txt", parent) != 0)
@@ -848,9 +862,9 @@ int FilesTest::RunAllTests()
 
     Banner("Execute");
 #ifdef XP_MAC
-	// This path is hard-coded to test on jrm's machine.  Finding an app
-	// on an arbitrary Macintosh would cost more trouble than it's worth.
-	// Change path to suit.
+    // This path is hard-coded to test on jrm's machine.  Finding an app
+    // on an arbitrary Macintosh would cost more trouble than it's worth.
+    // Change path to suit.
     if NS_FAILED(Execute("/Projects/Nav45_BRANCH/ns/cmd/macfe/"\
         "projects/client45/Client45PPC", ""))
 #elif XP_PC
@@ -859,16 +873,12 @@ int FilesTest::RunAllTests()
     if NS_FAILED(Execute("/bin/ls", "/"))
 #endif
         return -1;
+
 #if WHEN_MCMULLEN_REVIEWS    
     Banner("Special System Directories");
     if (SpecialSystemDirectories() != 0)
         return -1;
 #endif
-
-    Banner("Move");
-    if (Move("mumble/moveFile.txt", "mumble/move") != 0)
-        return -1;
-
 
 	Banner("Persistence");
 	if (Persistence("mumble/filedesc.dat") != 0)
@@ -879,14 +889,13 @@ int FilesTest::RunAllTests()
 		return -1;
 		
     return 0;
-}
+} // FilesTest::RunAllTests
 
 //----------------------------------------------------------------------------------------
 int main()
 // For use with DEBUG defined.
 //----------------------------------------------------------------------------------------
 {
-	FilesTest tester;
-	return tester.RunAllTests();
+    FilesTest tester;
+    return tester.RunAllTests();
 } // main
- 

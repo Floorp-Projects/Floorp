@@ -186,7 +186,7 @@ nsUnicharStreamLoader::OnDataAvailable(nsIURL* aURL,
       lenRead = BUF_SIZE;
     }
 
-    rv = aIStream->Read(buffer, 0, lenRead, &lenRead);
+    rv = aIStream->Read(buffer, lenRead, &lenRead);
     if (NS_OK != rv) {
       return rv;
     }

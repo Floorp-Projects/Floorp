@@ -252,7 +252,7 @@ nsSocketTransport::OnDataAvailable(nsIURL* pURL,
 		  lenRead = NET_SOCKSTUB_BUF_SIZE;
 		}
 
-		rv = aIStream->Read(m_buffer, 0, lenRead, &lenRead);
+		rv = aIStream->Read(m_buffer, lenRead, &lenRead);
 		if (NS_OK != rv) {
 		  return rv;
 		}

@@ -239,7 +239,6 @@ nsresult nsBufferedStream::GetLength(PRUint32 *aLength)
 
 
 nsresult nsBufferedStream::Write(const char *aBuf, 
-                                 PRUint32 aOffset,
                                  PRUint32 aLen,
                                  PRUint32 *aWriteCount)
 {
@@ -282,11 +281,6 @@ nsresult nsBufferedStream::Write(const char *aBuf,
             }
         }
 
-        /* Skip the appropriate number of bytes in the input buffer... */
-        if (aOffset) {
-            aBuf += aOffset;
-        }
-
         memcpy(&m_Buffer[m_WriteOffset], aBuf, aLen);
         m_WriteOffset += aLen;
 
@@ -302,7 +296,6 @@ done:
 
 
 nsresult nsBufferedStream::Read(char *aBuf, 
-                                PRUint32 aOffset, 
                                 PRUint32 aCount,
                                 PRUint32 *aReadCount)
 {
@@ -325,10 +318,6 @@ nsresult nsBufferedStream::Read(char *aBuf,
     }
 
     if (m_Buffer && m_DataLength) {
-        /* Skip the appropriate number of bytes in the input buffer... */
-        if (aOffset) {
-            aBuf += aOffset;
-        }
 
         /* Do not read more data than there is available... */
         if (aCount > m_DataLength) {
@@ -407,7 +396,6 @@ nsresult nsAsyncStream::GetLength(PRUint32 *aLength)
 
 
 nsresult nsAsyncStream::Write(const char *aBuf, 
-                              PRUint32 aOffset,
                               PRUint32 aLen,
                               PRUint32 *aWriteCount)
 {
@@ -428,10 +416,6 @@ nsresult nsAsyncStream::Write(const char *aBuf,
     }
 
     if (!m_bIsClosed && aBuf) {
-        /* Skip the appropriate number of bytes in the input buffer... */
-        if (aOffset) {
-            aBuf += aOffset;
-        }
 
         /* Do not store more data than there is space for... */
         NS_ASSERTION(m_BufferLength >= m_DataLength, "unsigned madness");
@@ -468,7 +452,6 @@ done:
 
 
 nsresult nsAsyncStream::Read(char *aBuf, 
-                             PRUint32 aOffset, 
                              PRUint32 aCount,
                              PRUint32 *aReadCount)
 {
@@ -490,10 +473,6 @@ nsresult nsAsyncStream::Read(char *aBuf,
     }
 
     if (m_Buffer && m_DataLength) {
-        /* Skip the appropriate number of bytes in the input buffer... */
-        if (aOffset) {
-            aBuf += aOffset;
-        }
 
         /* Do not read more data than there is available... */
         if (aCount > m_DataLength) {
@@ -608,7 +587,6 @@ nsresult nsBlockingStream::GetLength(PRUint32 *aLength)
 
 
 nsresult nsBlockingStream::Write(const char *aBuf, 
-                                 PRUint32 aOffset,
                                  PRUint32 aLen,
                                  PRUint32 *aWriteCount)
 {
@@ -629,10 +607,6 @@ nsresult nsBlockingStream::Write(const char *aBuf,
     }
 
     if (!m_bIsClosed && aBuf) {
-        /* Skip the appropriate number of bytes in the input buffer... */
-        if (aOffset) {
-            aBuf += aOffset;
-        }
 
         /* Do not store more data than there is space for... */
         NS_ASSERTION(m_BufferLength >= m_DataLength, "unsigned madness");
@@ -675,7 +649,6 @@ done:
 
 
 nsresult nsBlockingStream::Read(char *aBuf, 
-                                PRUint32 aOffset, 
                                 PRUint32 aCount,
                                 PRUint32 *aReadCount)
 {
@@ -697,10 +670,6 @@ nsresult nsBlockingStream::Read(char *aBuf,
     }
 
     if (m_Buffer) {
-        /* Skip the appropriate number of bytes in the input buffer... */
-        if (aOffset) {
-            aBuf += aOffset;
-        }
 
         /* 
          * There is either enough data, or some data left in the stream

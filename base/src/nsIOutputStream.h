@@ -33,7 +33,6 @@ public:
 
     /** Write data into the stream.
      *  @param aBuf the buffer into which the data is read
-     *  @param aOffset the start offset of the data
      *  @param aCount the maximum number of bytes to read
      *  @param aWriteCount out parameter to hold the number of
      *         bytes written. if an error occurs, the writecount
@@ -41,7 +40,7 @@ public:
      *  @return error status
      */   
     NS_IMETHOD
-    Write(const char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aWriteCount) = 0; 
+    Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount) = 0; 
 };
 
 
