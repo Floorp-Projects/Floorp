@@ -1466,8 +1466,6 @@ NS_IMETHODIMP GlobalWindowImpl::GetScrollX(PRInt32* aScrollX)
 
   *aScrollX = 0;
 
-  FlushPendingNotifications();
-
   GetScrollInfo(&view, &p2t, &t2p);
   if (view) {
     nscoord xPos, yPos;
@@ -1486,8 +1484,6 @@ NS_IMETHODIMP GlobalWindowImpl::GetScrollY(PRInt32* aScrollY)
   float p2t, t2p;
 
   *aScrollY = 0;
-
-  FlushPendingNotifications();
 
   GetScrollInfo(&view, &p2t, &t2p);
   if (view) {
@@ -4151,6 +4147,10 @@ NS_IMETHODIMP
 GlobalWindowImpl::GetScrollInfo(nsIScrollableView **aScrollableView,
                                 float *aP2T, float *aT2P)
 {
+  // Flush pending notifications so that the presentation is up to
+  // date.
+  FlushPendingNotifications();
+
   nsCOMPtr<nsIPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
   if (presContext) {
