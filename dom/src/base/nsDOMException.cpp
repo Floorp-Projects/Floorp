@@ -22,7 +22,6 @@
  */
 
 #include "nsIDOMDOMException.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsDOMError.h"
 #include "prprf.h"
 #include "nsIScriptGlobalObject.h"
@@ -124,11 +123,6 @@ nsDOMException::QueryInterface(const nsIID& aIID,
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
-    *aInstancePtrResult = (void*) ((nsIScriptObjectOwner*)this);
-    AddRef();
-    return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsIDOMDOMException))) {
     *aInstancePtrResult = (void*) ((nsIDOMDOMException*)this);

@@ -23,7 +23,6 @@
 #ifndef nsMimeTypeArray_h___
 #define nsMimeTypeArray_h___
 
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMMimeTypeArray.h"
 #include "nsIDOMMimeType.h"
 

@@ -32,7 +32,6 @@
 #include "nsINodeInfo.h"
 #include "nsIPrincipal.h"
 #include "nsIRDFContentModelBuilder.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIServiceManager.h"
 #include "nsITextContent.h"
 #include "nsIXULContent.h"

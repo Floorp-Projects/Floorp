@@ -22,10 +22,8 @@
 #ifndef nsScreen_h___
 #define nsScreen_h___
 
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMScreen.h"
 #include "nsISupports.h"
-#include "nscore.h"
 #include "nsIScriptContext.h"
 
 class nsIDocShell;

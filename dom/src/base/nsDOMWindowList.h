@@ -25,7 +25,6 @@
 
 #include "nsISupports.h"
 #include "nsIDOMWindowCollection.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsString.h"
 
 class nsIDocShellTreeNode;

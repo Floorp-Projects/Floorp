@@ -22,7 +22,6 @@
 #ifndef nsHistory_h___
 #define nsHistory_h___
 
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMNSHistory.h"
 #include "nsISupports.h"
 #include "nscore.h"
