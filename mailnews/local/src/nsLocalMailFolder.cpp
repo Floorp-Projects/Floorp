@@ -834,7 +834,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Delete()
     nsFileSpec trashPath;
 
     GetName(getter_Copies(idlName));
-    folderName = idlName;
+    folderName.Assign(idlName);
 
     rv = GetTrashFolder(getter_AddRefs(trashFolder));
     if (NS_FAILED(rv)) return rv;
