@@ -271,7 +271,8 @@ nsBindingManager::ProcessAttachedQueue()
   mAttachedQueue->Count(&count);
   for (PRUint32 i = 0; i < count; i++) {
     nsCOMPtr<nsIXBLBinding> binding;
-    mAttachedQueue->GetElementAt(i, getter_AddRefs(binding));
+    mAttachedQueue->GetElementAt(0, getter_AddRefs(binding));
+	mAttachedQueue->RemoveElementAt(0);
     binding->ExecuteAttachedHandler();
   }
 
