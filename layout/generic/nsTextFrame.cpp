@@ -38,6 +38,7 @@
 #include "nsIDOMText.h"
 #include "nsIDocument.h"
 #include "nsIDeviceContext.h"
+#include "nsIFocusTracker.h"
 #include "nsXIFConverter.h"
 #include "nsHTMLAtoms.h"
 

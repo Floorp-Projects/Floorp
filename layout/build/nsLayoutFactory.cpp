@@ -24,7 +24,7 @@
 #include "nsIHTMLContent.h"
 #include "nsITextContent.h"
 #include "nsIPresShell.h"
-#include "nsISelection.h"
+#include "nsIDOMSelection.h"
 #include "nsIFrameUtil.h"
 
 #include "nsHTMLAtoms.h"
@@ -50,14 +50,13 @@ static NS_DEFINE_IID(kCRangeListCID, NS_RANGELIST_CID);
 static NS_DEFINE_IID(kCRangeCID,     NS_RANGE_CID);
 static NS_DEFINE_CID(kPresShellCID,  NS_PRESSHELL_CID);
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
-static NS_DEFINE_CID(kSelectionCID,  NS_SELECTION_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,  NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kFrameUtilCID,  NS_FRAME_UTIL_CID);
 static NS_DEFINE_CID(kRangeCID,  NS_RANGE_CID);
 static NS_DEFINE_CID(kEventListenerManagerCID, NS_EVENTLISTENERMANAGER_CID);
 
 
-extern nsresult NS_NewRangeList(nsISelection **);
+extern nsresult NS_NewRangeList(nsIDOMSelection **);
 extern nsresult NS_NewRange(nsIDOMRange **);
 extern nsresult NS_NewFrameUtil(nsIFrameUtil** aResult);
 
@@ -196,16 +195,10 @@ nsresult nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kCRangeListCID)) {
-    nsISelection *coll;
-    res = NS_NewRangeList(&coll);
+    res = NS_NewRangeList((nsIDOMSelection**)&inst);
     if (!NS_SUCCEEDED(res)) {
       return res;
     }
-    res = coll->QueryInterface(kISupportsIID, (void **)&inst);
-    if (!NS_SUCCEEDED(res)) {
-      return res;
-    }
-    NS_IF_RELEASE(coll);
     refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kCRangeCID)) {

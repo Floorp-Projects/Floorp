@@ -31,7 +31,7 @@
 
 class nsIEventListenerManager;
 class nsDOMStyleSheetCollection;
-class nsISelection;
+class nsIDOMSelection;
 
 
 class nsPostData : public nsIPostData {
@@ -230,7 +230,7 @@ public:
   /**
     * Returns the Selection Object
    */
-  NS_IMETHOD GetSelection(nsISelection ** aSelection);
+  NS_IMETHOD GetSelection(nsIDOMSelection ** aSelection);
   /**
     * Selects all the Content
    */
@@ -246,7 +246,7 @@ public:
     * document to XIF (XML Interchange Format)
     * and places the result in aBuffer.
     */
-  virtual void CreateXIF(nsString & aBuffer, nsISelection* aSelection);
+  virtual void CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection);
   virtual void ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
   virtual void BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
   virtual void ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
@@ -312,7 +312,7 @@ public:
 
 
   virtual PRBool IsInRange(const nsIContent *aStartContent, const nsIContent* aEndContent, const nsIContent* aContent) const;
-  virtual PRBool IsInSelection(nsISelection* aSelection, const nsIContent *aContent) const;
+  virtual PRBool IsInSelection(nsIDOMSelection* aSelection, const nsIContent *aContent) const;
   virtual PRBool IsBefore(const nsIContent *aNewContent, const nsIContent* aCurrentContent) const;
   virtual nsIContent* GetPrevContent(const nsIContent *aContent) const;
   virtual nsIContent* GetNextContent(const nsIContent *aContent) const;

@@ -63,7 +63,7 @@
 #include "nsIServiceManager.h"
 
 #include "nsLayoutCID.h"
-#include "nsISelection.h"
+#include "nsIDOMSelection.h"
 #include "nsIDOMRange.h"
 #include "nsIEnumerator.h"
 
@@ -1899,7 +1899,7 @@ void      nsDocument::Finalize(JSContext *aContext)
 /**
   * Returns the Selection Object
  */
-NS_IMETHODIMP nsDocument::GetSelection(nsISelection ** aSelection) {
+NS_IMETHODIMP nsDocument::GetSelection(nsIDOMSelection ** aSelection) {
   if (!aSelection)
     return NS_ERROR_NULL_POINTER;
   return NS_ERROR_FAILURE;
@@ -2034,7 +2034,7 @@ void nsDocument::FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNod
 
 void nsDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 {
-  nsISelection* sel = aConverter.GetSelection();
+  nsIDOMSelection* sel = aConverter.GetSelection();
 
   if (sel != nsnull)
   {
@@ -2066,7 +2066,7 @@ void nsDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
   }
 }
 
-void nsDocument::CreateXIF(nsString & aBuffer, nsISelection* aSelection)
+void nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
 {
   
   nsXIFConverter  converter(aBuffer);
@@ -2154,7 +2154,7 @@ PRBool nsDocument::IsInRange(const nsIContent *aStartContent, const nsIContent* 
  *  @param   param -- description
  *  @return  PR_TRUE if the content is found within the selection
  */
-PRBool nsDocument::IsInSelection(nsISelection* aSelection, const nsIContent* aContent) const
+PRBool nsDocument::IsInSelection(nsIDOMSelection* aSelection, const nsIContent* aContent) const
 {
   PRBool          result = PR_FALSE;
   

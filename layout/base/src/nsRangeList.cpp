@@ -23,7 +23,7 @@
 #include "nsIFactory.h"
 #include "nsIEnumerator.h"
 #include "nsIDOMRange.h"
-#include "nsISelection.h"
+#include "nsIFrameSelection.h"
 #include "nsIDOMSelection.h"
 #include "nsIFocusTracker.h"
 #include "nsRepository.h"
@@ -38,7 +38,7 @@
 
 static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kISelectionIID, NS_ISELECTION_IID);
+static NS_DEFINE_IID(kIFrameSelectionIID, NS_IFRAMESELECTION_IID);
 static NS_DEFINE_IID(kIDOMSelectionIID, NS_IDOMSELECTION_IID);
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 static NS_DEFINE_IID(kIDOMRangeIID, NS_IDOMRANGE_IID);
@@ -62,7 +62,7 @@ enum {FORWARD  =1, BACKWARD = 0};
 
 class nsRangeListIterator;
 
-class nsRangeList : public nsISelection,
+class nsRangeList : public nsIFrameSelection,
                     public nsIDOMSelection
 {
 public:
@@ -70,11 +70,11 @@ public:
   
   NS_DECL_ISUPPORTS
 
-/*BEGIN nsISelection interfaces*/
+/*BEGIN nsIFrameSelection interfaces*/
   NS_IMETHOD HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent, nsIFrame *aFrame);
   NS_IMETHOD TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOffset, PRInt32 aContentOffset, PRBool aContinueSelection);
   NS_IMETHOD ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame);
-/*END nsISelection interfacse*/
+/*END nsIFrameSelection interfacse*/
 
 /*BEGIN nsIDOMSelection interface implementations*/
   NS_IMETHOD DeleteFromDocument();
@@ -153,13 +153,13 @@ private:
 
 
 
-nsresult NS_NewRangeList(nsISelection **);
-nsresult NS_NewRangeList(nsISelection **aRangeList)
+nsresult NS_NewRangeList(nsIDOMSelection **aRangeList)
 {
   nsRangeList *rlist = new nsRangeList;
   if (!rlist)
     return NS_ERROR_OUT_OF_MEMORY;
-  nsresult result = rlist->QueryInterface(kISelectionIID , (void **)aRangeList);
+  nsresult result = rlist->QueryInterface(kIDOMSelectionIID ,
+                                          (void **)aRangeList);
   if (!NS_SUCCEEDED(result))
   {
     delete rlist;
@@ -294,12 +294,17 @@ nsRangeListIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(kISupportsIID)) {
-    nsISelection* tmp = mRangeList;
+    nsIDOMSelection* tmp = mRangeList;
     *aInstancePtr = (void*)tmp;
     NS_ADDREF(mRangeList);
     return NS_OK;
   }
-  if (aIID.Equals(kISelectionIID)) {
+  if (aIID.Equals(kIDOMSelectionIID)) {
+    *aInstancePtr = (void *)mRangeList;
+    NS_ADDREF(mRangeList);
+    return NS_OK;
+  }
+  if (aIID.Equals(kIFrameSelectionIID)) {
     *aInstancePtr = (void *)mRangeList;
     NS_ADDREF(mRangeList);
     return NS_OK;
@@ -354,7 +359,7 @@ nsRangeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(kISupportsIID)) {
-    nsISupports* tmp = (nsISupports *)(nsISelection *)this;
+    nsISupports* tmp = (nsISupports *)(nsIDOMSelection *)this;
     *aInstancePtr = (void*)tmp;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -364,8 +369,8 @@ nsRangeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(  kISelectionIID)) {
-    *aInstancePtr = (void*)(nsISelection *)this;
+  if (aIID.Equals(  kIFrameSelectionIID)) {
+    *aInstancePtr = (void*)(nsIFrameSelection *)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -461,7 +466,7 @@ nsRangeList::Clear()
 
 
 
-//BEGIN nsISelection methods
+//BEGIN nsIFrameSelection methods
 
 
 void printRange(nsIDOMRange *aDomRange)
@@ -478,9 +483,10 @@ void printRange(nsIDOMRange *aDomRange)
   aDomRange->GetStartOffset(&startOffset);
   aDomRange->GetEndParent(getter_AddRefs(endNode));
   aDomRange->GetEndOffset(&endOffset);
-  printf("print DOMRANGE 0x%x\t start: 0x%x %ld, \t end: 0x%x,%ld \n",
-         aDomRange,(nsIDOMNode *)startNode, (long)startOffset,
-         (nsIDOMNode *)endNode, (long)endOffset);
+  printf("print DOMRANGE 0x%lx\t start: 0x%lx %ld, \t end: 0x%lx,%ld \n",
+         (unsigned long)aDomRange,
+         (unsigned long)(nsIDOMNode*)startNode, (long)startOffset,
+         (unsigned long)(nsIDOMNode*)endNode, (long)endOffset);
 }
 
 
@@ -538,7 +544,7 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent, ns
 #ifdef DEBUG
 void nsRangeList::printSelection()
 {
-  printf("nsRangeList 0x%x: %d items\n", this,
+  printf("nsRangeList 0x%lx: %d items\n", (unsigned long)this,
          mRangeArray ? mRangeArray->Count() : -99);
 
   // Get an iterator
@@ -563,8 +569,10 @@ void nsRangeList::printSelection()
     iter.Next();
   }
 
-  printf("Anchor is 0x%x, %ld\n", GetAnchorNode(), GetAnchorOffset());
-  printf("Focus is 0x%x, %ld\n", GetFocusNode(), GetFocusOffset());
+  printf("Anchor is 0x%lx, %d\n",
+         (unsigned long)(nsIDOMNode*)GetAnchorNode(), GetAnchorOffset());
+  printf("Focus is 0x%lx, %d\n",
+         (unsigned long)(nsIDOMNode*)GetFocusNode(), GetFocusOffset());
   printf(" ... end of selection\n");
 }
 #endif /* DEBUG */
@@ -934,7 +942,7 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
   return NS_OK;
 }
 
-//END nsISelection methods
+//END nsIFrameSelection methods
 
 //BEGIN nsIDOMSelection interface implementations
 #pragma mark -

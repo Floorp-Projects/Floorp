@@ -40,7 +40,8 @@
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
 #include "nsHTMLParts.h"
-#include "nsISelection.h"
+#include "nsIFrameSelection.h"
+#include "nsIDOMSelection.h"
 #include "nsLayoutCID.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
@@ -158,7 +159,8 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIPresShellIID, NS_IPRESSHELL_IID);
 static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 static NS_DEFINE_IID(kIViewObserverIID, NS_IVIEWOBSERVER_IID);
-static NS_DEFINE_IID(kISelectionIID, NS_ISELECTION_IID);
+static NS_DEFINE_IID(kIFrameSelectionIID, NS_IFRAMESELECTION_IID);
+static NS_DEFINE_IID(kIDOMSelectionIID, NS_IDOMSELECTION_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDOMRangeIID, NS_IDOMRANGE_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
@@ -243,7 +245,7 @@ public:
   NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle);
   NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle);
   NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList);
-  virtual nsresult GetSelection(nsISelection **aSelection);
+  virtual nsresult GetSelection(nsIDOMSelection **aSelection);
   NS_IMETHOD EnterReflowLock();
   NS_IMETHOD ExitReflowLock();
   NS_IMETHOD BeginObservingDocument();
@@ -308,7 +310,7 @@ protected:
   nsIFrame* mCurrentEventFrame;
   nsIFrame* mFocusEventFrame; //keeps track of which frame has focus. 
   nsIFrame* mAnchorEventFrame; //keeps track of which frame has focus. 
-  nsCOMPtr <nsISelection>mSelection;
+  nsCOMPtr <nsIFrameSelection>mSelection;
   FrameHashTable* mPlaceholderMap;
 };
 
@@ -490,10 +492,17 @@ PresShell::Init(nsIDocument* aDocument,
   mStyleSet = aStyleSet;
   NS_ADDREF(aStyleSet);
 
-  nsCOMPtr<nsISelection>selection;
-  nsresult result = nsRepository::CreateInstance(kRangeListCID, nsnull, kISelectionIID, getter_AddRefs(selection));
+  nsCOMPtr<nsIDOMSelection>domselection;
+  nsresult result = nsRepository::CreateInstance(kRangeListCID, nsnull,
+                                                 kIDOMSelectionIID,
+                                                 getter_AddRefs(domselection));
   if (!NS_SUCCEEDED(result))
     return result;
+  result = domselection->QueryInterface(kIDOMSelectionIID,
+                                        getter_AddRefs(mSelection));
+  if (!NS_SUCCEEDED(result))
+    return result;
+
   // XXX This code causes the document object (and the entire content model) to be leaked...
 #if 0
   nsCOMPtr<nsIDOMRange>range;
@@ -516,7 +525,6 @@ PresShell::Init(nsIDocument* aDocument,
     }
   }
 #endif
-  mSelection = selection;
   return NS_OK;
 }
 
@@ -654,11 +662,11 @@ PresShell::ListAlternateStyleSheets(nsStringArray& aTitleList)
 }
 
 nsresult
-PresShell::GetSelection(nsISelection **aSelection)
+PresShell::GetSelection(nsIDOMSelection **aSelection)
 {
   if (!aSelection || !mSelection)
     return NS_ERROR_NULL_POINTER;
-  return mSelection->QueryInterface(kISelectionIID,(void **)aSelection);
+  return mSelection->QueryInterface(kIDOMSelectionIID,(void **)aSelection);
 }
 
 

@@ -20,7 +20,7 @@
 
 #include "nsString.h"
 
-class nsISelection;
+class nsIDOMSelection;
 
 class nsXIFConverter
 {
@@ -54,7 +54,7 @@ private:
   nsString mEndComment;
   nsString mQuote;
   nsString mEqual;
-  nsISelection*  mSelection;
+  nsIDOMSelection*  mSelection;
 
 public:
 
@@ -114,10 +114,10 @@ public:
   // Output routines
   void Write();
 
-  void    SetSelection(nsISelection* aSelection) {
+  void    SetSelection(nsIDOMSelection* aSelection) {
     mSelection = aSelection;
   }
-  nsISelection*  GetSelection() {
+  nsIDOMSelection*  GetSelection() {
     return mSelection;
   }
    

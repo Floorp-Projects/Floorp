@@ -101,7 +101,7 @@
 #endif
 
 // For Copy
-#include "nsISelection.h"
+#include "nsIDOMSelection.h"
 
 // XXX For font setting below
 #include "nsFont.h"
@@ -2150,7 +2150,7 @@ nsBrowserWindow::DoCopy()
     if (nsnull != doc) {
       nsString buffer;
     
-      nsISelection* sel = nsnull;
+      nsIDOMSelection* sel = nsnull;
       shell->GetSelection(&sel);
       
       if (sel != nsnull)
