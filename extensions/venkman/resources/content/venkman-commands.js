@@ -166,6 +166,9 @@ function getCommandContext (id, cx)
 
         default:
             dd ("getCommandContext: unknown id '" + id + "'");
+
+        case "mainmenu:debug-popup":            
+        case "mainmenu:view-popup":
             cx = {
                 commandManager: console.commandManager,
                 contextSource: "default"
@@ -178,7 +181,7 @@ function getCommandContext (id, cx)
         cx.commandManager = console.commandManager;
         if (!("contextSource" in cx))
             cx.contextSource = id;
-        dd ("context '" + id + "'\n" + dumpObjectTree(cx));
+        //dd ("context '" + id + "'\n" + dumpObjectTree(cx));
     }
 
     return cx;
