@@ -25,7 +25,7 @@
 
 #include "plstr.h"
 
-#include "nsIStreamNotification.h"
+#include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIURL.h"
 #include "nsINetService.h"
@@ -42,7 +42,7 @@ extern int  NET_PollSockets();
 extern void NET_ToggleTrace();
 };
 
-class TestConsumer : public nsIStreamNotification
+class TestConsumer : public nsIStreamListener
 {
 
 public:
@@ -147,7 +147,7 @@ int main(int argc, char **argv)
     MSG msg;
 #endif
     nsString url_address;
-    nsIStreamNotification *pConsumer;
+    nsIStreamListener *pConsumer;
     nsIURL *pURL;
     nsresult result;
 
