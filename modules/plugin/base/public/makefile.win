@@ -40,7 +40,8 @@ EXPORTS =                     \
     nsICookieStorage.h            \
     nsPIPluginHost.h              \
     nsPluginLogging.h              \
-    nsPluginError.h
+    nsPluginError.h              \
+    nsDefaultPlugin.h
 
 # 4.x headers moved from mozilla/include
 EXPORTS = $(EXPORTS) \

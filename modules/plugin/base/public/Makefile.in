@@ -55,6 +55,7 @@ EXPORTS		= \
 		nsPIPluginHost.h \
 		nsPluginLogging.h \
 		nsPluginError.h \
+		nsDefaultPlugin.h \
 		$(NULL)
 
 # 4.x headers moved from mozilla/include

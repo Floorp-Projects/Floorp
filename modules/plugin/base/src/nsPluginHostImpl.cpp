@@ -149,6 +149,7 @@
 #include "nsUnicharUtils.h"
 
 #include "imgILoader.h"
+#include "nsDefaultPlugin.h"
 
 #ifdef XP_UNIX
 #if defined(MOZ_WIDGET_GTK)
@@ -2577,12 +2578,15 @@ nsPluginHostImpl::nsPluginHostImpl()
   mIsDestroyed = PR_FALSE;
   mUnusedLibraries = nsnull;
   mOverrideInternalTypes = PR_FALSE;
+  mAllowAlienStarHandler = PR_FALSE;
   
   // check to see if pref is set at startup to let plugins take over in 
   // full page mode for certain image mime types that we handle internally
   nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
-  if (prefs)
+  if (prefs) {
     prefs->GetBoolPref("plugin.override_internal_types", &mOverrideInternalTypes);
+    prefs->GetBoolPref("plugin.allow_alien_star_handler", &mAllowAlienStarHandler);
+  }
 
   nsCOMPtr<nsIObserverService> obsService = do_GetService("@mozilla.org/observer-service;1");
   if (obsService)
@@ -4675,6 +4679,45 @@ static int PR_CALLBACK ComparePluginFileInDirectory (const void *v1, const void 
   return result;
 }
 
+typedef NS_4XPLUGIN_CALLBACK(char *, NP_GETMIMEDESCRIPTION)(void);
+
+static nsresult FixUpPluginInfo(nsPluginInfo &aInfo, nsPluginFile &aPluginFile)
+{
+#ifndef XP_WIN
+  retrun NS_OK;
+#endif
+
+  for (PRUint32 i = 0; i < aInfo.fVariantCount; i++) {
+    if (PL_strcmp(aInfo.fMimeTypeArray[i], "*"))
+      continue;
+
+    // we got "*" type 
+    // check if this is an alien plugin (not our default plugin) 
+    // by trying to find a special entry point
+    PRLibrary *library = nsnull;
+    if (NS_FAILED(aPluginFile.LoadPlugin(library)) || !library)
+      return NS_ERROR_FAILURE;
+
+    NP_GETMIMEDESCRIPTION pf = (NP_GETMIMEDESCRIPTION)PR_FindSymbol(library, "NP_GetMIMEDescription");
+    if (pf) {
+      // if we found it, this is the default plugin, return
+      char * mimedescription = pf();
+      if (!PL_strncmp(mimedescription, NS_PLUGIN_DEFAULT_MIME_DESCRIPTION, 1))
+        return NS_OK;
+    }
+
+    // if we are here that means we have an alien plugin 
+    // which wants to take over "*" type
+
+    // change its "*" mime type to "[*]"
+    PL_strfree(aInfo.fMimeTypeArray[i]);
+    aInfo.fMimeTypeArray[i] = PL_strdup("[*]");
+
+    // continue the loop?
+  }
+  return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////
 nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir, 
                                                 nsIComponentManager * compManager, 
@@ -4805,7 +4848,13 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
         pluginFile.FreePluginInfo(info);
         continue;
       }
-      
+
+      // Check for any potential '*' mime type handlers which are not our 
+      // own default plugin and disable them as they will break the plugin 
+      // finder service, see Bugzilla bug 132430
+      if (!mAllowAlienStarHandler)
+        FixUpPluginInfo(info, pluginFile);
+
       pluginTag = new nsPluginTag(&info);
       pluginFile.FreePluginInfo(info);
       
