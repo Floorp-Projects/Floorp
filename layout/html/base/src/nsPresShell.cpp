@@ -43,7 +43,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMXULDocument.h"
-#include "nsIDocumentObserver.h"
+#include "nsStubDocumentObserver.h"
 #include "nsStyleSet.h"
 #include "nsICSSStyleSheet.h" // XXX for UA sheet loading hack, can this go away please?
 #include "nsIDOMCSSStyleSheet.h"  // for Pref-related rule management (bugs 22963,20760,31816)
@@ -1000,7 +1000,7 @@ IncrementalReflow::Dump(nsIPresContext *aPresContext) const
 // ----------------------------------------------------------------------------
 
 class PresShell : public nsIPresShell, public nsIViewObserver,
-                  private nsIDocumentObserver, public nsIFocusTracker,
+                  public nsStubDocumentObserver, public nsIFocusTracker,
                   public nsISelectionController,
                   public nsSupportsWeakReference
 {
@@ -1208,7 +1208,45 @@ public:
   NS_IMETHOD CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOffset, PRBool *_retval);
 
   // nsIDocumentObserver
-  NS_DECL_NSIDOCUMENTOBSERVER
+  virtual void BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);
+  virtual void EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);
+  virtual void BeginLoad(nsIDocument* aDocument);
+  virtual void EndLoad(nsIDocument* aDocument);
+  virtual void ContentChanged(nsIDocument* aDocument, nsIContent* aContent,
+                              nsISupports* aSubContent);
+  virtual void ContentStatesChanged(nsIDocument* aDocument,
+                                    nsIContent* aContent1,
+                                    nsIContent* aContent2,
+                                    PRInt32 aStateMask);
+  virtual void AttributeChanged(nsIDocument* aDocument, nsIContent* aContent,
+                                PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                                PRInt32 aModType);
+  virtual void ContentAppended(nsIDocument* aDocument, nsIContent* aContainer,
+                               PRInt32 aNewIndexInContainer);
+  virtual void ContentInserted(nsIDocument* aDocument, nsIContent* aContainer,
+                               nsIContent* aChild, PRInt32 aIndexInContainer);
+  virtual void ContentReplaced(nsIDocument* aDocument, nsIContent* aContainer,
+                               nsIContent* aOldChild, nsIContent* aNewChild,
+                               PRInt32 aIndexInContainer);
+  virtual void ContentRemoved(nsIDocument* aDocument, nsIContent* aContainer,
+                              nsIContent* aChild, PRInt32 aIndexInContainer);
+  virtual void StyleSheetAdded(nsIDocument* aDocument,
+                               nsIStyleSheet* aStyleSheet);
+  virtual void StyleSheetRemoved(nsIDocument* aDocument,
+                                 nsIStyleSheet* aStyleSheet);
+  virtual void StyleSheetApplicableStateChanged(nsIDocument* aDocument,
+                                                nsIStyleSheet* aStyleSheet,
+                                                PRBool aApplicable);
+  virtual void StyleRuleChanged(nsIDocument* aDocument,
+                                nsIStyleSheet* aStyleSheet,
+                                nsIStyleRule* aOldStyleRule,
+                                nsIStyleRule* aNewStyleRule);
+  virtual void StyleRuleAdded(nsIDocument* aDocument,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule);
+  virtual void StyleRuleRemoved(nsIDocument* aDocument,
+                                nsIStyleSheet* aStyleSheet,
+                                nsIStyleRule* aStyleRule);
 
 #ifdef MOZ_REFLOW_PERF
   NS_IMETHOD DumpReflows();
@@ -3633,8 +3671,6 @@ PresShell::EndLoad(nsIDocument *aDocument)
   mDocumentLoading = PR_FALSE;
 }
 
-NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(PresShell)
-
 // aReflowCommand is considered to be already in the queue if the
 // frame it targets is targeted by a pre-existing reflow command in
 // the queue.
@@ -5418,11 +5454,6 @@ PresShell::StyleRuleRemoved(nsIDocument *aDocument,
                             nsIStyleRule* aStyleRule) 
 {
   mStylesHaveChanged = PR_TRUE;
-}
-
-void
-PresShell::DocumentWillBeDestroyed(nsIDocument *aDocument)
-{
 }
 
 NS_IMETHODIMP
