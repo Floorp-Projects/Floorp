@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *  Brian Ryner <bryner@netscape.com>
  */
 
 #ifdef NGPREFS
@@ -669,7 +670,7 @@ nsViewerApp::OpenWindow()
   bw->SetApp(this);
   bw->SetShowLoadTimes(mShowLoadTimes);
   bw->Init(mAppShell, nsRect(0, 0, mWidth, mHeight),
-           PRUint32(~0), mAllowPlugins);
+           (PRUint32(~0) & ~nsIWebBrowserChrome::CHROME_OPENAS_CHROME), mAllowPlugins);
   bw->SetVisibility(PR_TRUE);
   nsBrowserWindow*	bwCurrent;
   mCrawler->GetBrowserWindow(&bwCurrent);
@@ -757,7 +758,9 @@ nsViewerApp::OpenWindow(PRUint32 aNewChromeMask, nsBrowserWindow*& aNewWindow)
 
   bw->SetApp(this);
   bw->Init(mAppShell, nsRect(0, 0, 620, 400), aNewChromeMask, mAllowPlugins);
-  bw->SetVisibility(PR_TRUE);
+  // Defer showing chrome windows until the chrome has loaded
+  if (!(aNewChromeMask & nsIWebBrowserChrome::CHROME_OPENAS_CHROME))
+    bw->SetVisibility(PR_TRUE);
 
   aNewWindow = bw;
 

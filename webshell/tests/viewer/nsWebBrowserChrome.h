@@ -18,6 +18,7 @@
  * 
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
+ *   Brian Ryner <bryner@netscape.com>
  */
 
 #ifndef nsWebBrowserChrome_h__
@@ -74,11 +75,20 @@ protected:
    void OnWindowActivityStart();
    void OnWindowActivityFinished();
 
+  void EnableParent(PRBool aEnable);
+
 protected:
    nsBrowserWindow*  mBrowserWindow;
 
-   PRBool            mTimerSet;
+   PRPackedBool       mTimerSet;
+   PRPackedBool       mContinueModalLoop;
+   PRPackedBool       mSizeSet;
+   PRPackedBool       mChromeLoaded;
+
+   PRUint32           mChromeFlags;
+
    MOZ_TIMER_DECLARE(mTotalTime)
+   nsresult mModalStatus;
 
    PRInt32 mActiveDocuments;
    PRInt32 mCurrent, mTotal, mProgress, mMaxProgress;

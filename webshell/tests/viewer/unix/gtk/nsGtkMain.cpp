@@ -93,7 +93,7 @@ nsNativeBrowserWindow::GetMenuBarHeight(PRInt32 * aHeightOut)
 
   *aHeightOut = 0;
 
-  if (nsnull != sgHackMenuBar)
+  if (nsnull != sgHackMenuBar && mHaveMenuBar)
   {
     *aHeightOut = sgHackMenuBar->allocation.height;
   }
