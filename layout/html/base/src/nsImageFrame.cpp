@@ -1606,9 +1606,22 @@ void HaveFixedSize(const nsHTMLReflowState& aReflowState, PRPackedBool& aConstra
       heightUnit == eStyleUnit_Percent));
 }
 
-
 nsresult
 nsImageFrame::LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest)
+{
+  nsresult rv = RealLoadImage(aSpec, aPresContext, aRequest);
+
+  if (NS_FAILED(rv)) {
+    int whichLoad = GetImageLoad(aRequest);
+    if (whichLoad == -1) return NS_ERROR_FAILURE;
+    mLoads[whichLoad].mRequest = nsnull;
+  }
+
+  return rv;
+}
+
+nsresult
+nsImageFrame::RealLoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest)
 {
   nsresult rv = NS_OK;
 
