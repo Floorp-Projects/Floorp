@@ -22,6 +22,7 @@
 #include "nsIHTTPHandler.h"
 #include "nsHTTPRequest.h"
 #include "nsHTTPResponse.h"
+#include "nsITransport.h"
 
 nsHTTPConnection::nsHTTPConnection(
         nsIURL* i_URL, 
@@ -49,6 +50,7 @@ nsHTTPConnection::nsHTTPConnection(
     m_pRequest = new nsHTTPRequest(m_pURL);
     if (!m_pRequest)
         NS_ERROR("unable to create new nsHTTPRequest!");
+    m_pRequest->SetConnection(this);
     
 }
 
@@ -90,7 +92,13 @@ nsHTTPConnection::Resume(void)
 NS_METHOD
 nsHTTPConnection::GetInputStream(nsIInputStream* *o_Stream)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (!m_bConnected)
+        Open();
+    // How do I block here? 
+    if (m_pResponse)
+        return m_pResponse->GetInputStream(o_Stream);
+    return NS_OK; // change to error ? or block till response is set up?
+
 }
 
 NS_METHOD
@@ -130,9 +138,44 @@ nsHTTPConnection::Open(void)
     if (m_bConnected || (m_State > HS_IDLE))
         return NS_ERROR_ALREADY_CONNECTED;
 
-    m_bConnected = PR_TRUE;
+    // Set up a new request observer and a response listener and pass to teh transport
+    nsresult rv = NS_OK;
 
-    return NS_ERROR_NOT_IMPLEMENTED;
+    const char* host;
+    rv = m_pURL->GetHost(&host);
+    if (NS_FAILED(rv)) return rv;
+
+    PRInt32 port;
+    rv = m_pURL->GetPort(&port);
+    if (NS_FAILED(rv)) return rv;
+    nsITransport* temp;
+
+    if (port == -1)
+    {
+        m_pHandler->GetDefaultPort(&port);
+    }
+
+    NS_ASSERTION(port>0, "Bad port setting!");
+    PRUint32 unsignedPort = port;
+
+    rv = m_pHandler->GetTransport(host, unsignedPort, &temp);
+    if (temp)
+    {
+        m_pRequest->SetTransport(temp);
+
+        nsIInputStream* stream;
+        //Get the stream where it will read the request data from
+        m_pRequest->GetInputStream(&stream);
+
+        rv = temp->AsyncWrite(stream, (nsISupports*)(nsIProtocolConnection*)this , m_pEventQ, m_pRequest);
+
+        m_State = HS_WAITING_FOR_RESPONSE;
+        m_bConnected = PR_TRUE;
+    }
+    else
+        NS_ERROR("Failed to create/get a transport!");
+
+    return rv;
 }
 
 NS_METHOD

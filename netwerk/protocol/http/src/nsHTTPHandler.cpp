@@ -26,7 +26,7 @@
 #include "nsITransport.h"
 #include "nsISocketTransportService.h"
 #include "nsIServiceManager.h"
-#include "nsIHTTPEventSink.h"
+#include "nsIHttpEventSink.h"
 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
@@ -42,12 +42,14 @@ NS_METHOD CreateOrGetHTTPHandler(nsIHTTPHandler* *o_HTTPHandler)
 }
 
 nsHTTPHandler::nsHTTPHandler():
-    m_pTransportTable(nsnull),
+    m_pTransportTable(new nsHashtable()),
     mRefCnt(0)
 {
     if (NS_FAILED(NS_NewISupportsArray(getter_AddRefs(m_pConnections)))) {
         NS_ERROR("unable to create new ISupportsArray");
     }
+    if (!m_pTransportTable)
+        NS_ERROR("Failed to create a new transport table");
 }
 
 nsHTTPHandler::~nsHTTPHandler()
@@ -106,8 +108,10 @@ nsHTTPHandler::NewConnection(nsIURL* i_URL,
             if (pNewInstance)
             {
                 NS_ADDREF(pNewInstance);
-                *o_Instance = pNewInstance;
+                pNewInstance->QueryInterface(nsIProtocolConnection::GetIID(), (void**)o_Instance);
                 // add this instance to the active list of connections
+                // TODO!
+                NS_RELEASE(pNewInstance);
                 return NS_OK;
             }
             else
@@ -214,6 +218,8 @@ nsHTTPHandler::GetTransport(const char* i_Host,
     void* oldValue = m_pTransportTable->Put(&key, trans);
     NS_ASSERTION(oldValue == nsnull, "Race condition in transport table!");
     NS_ADDREF(trans);
+
+    *o_pTrans = trans;
 
     return rv;
 }

@@ -94,6 +94,9 @@ public:
     NS_IMETHOD              GetURL(nsIURL* *o_URL) const;
 
     NS_IMETHOD              EventSink(nsIHTTPEventSink* *o_EventSink) const { if (o_EventSink) *o_EventSink = m_pEventSink; return NS_OK; };
+    
+    nsIEventQueue*          EventQueue(void) const { return m_pEventQ; };
+
 private:
     nsCOMPtr<nsIURL>            m_pURL;
     PRBool                      m_bConnected; 

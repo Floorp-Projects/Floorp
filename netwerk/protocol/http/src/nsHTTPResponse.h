@@ -26,6 +26,7 @@
 
 class nsIUrl;
 class nsVoidArray;
+class nsIInputStream;
 
 /* 
     The nsHTTPResponse class is the response object created by the response
@@ -41,7 +42,7 @@ class nsHTTPResponse : public nsIHTTPResponse
 
 public:
     // Constructor and destructor
-    nsHTTPResponse(nsIHTTPConnection* i_pConnection);
+    nsHTTPResponse(nsIHTTPConnection* i_pConnection, nsIInputStream* i_InputStream);
     virtual ~nsHTTPResponse();
 
     // Methods from nsISupports
@@ -160,6 +161,7 @@ public:
 
     NS_IMETHOD          SetServerVersion(const char* i_ServerVersion);
 
+    NS_IMETHOD          GetInputStream(nsIInputStream* *o_Stream);
 protected:
 
     NS_IMETHOD          SetHeaderInternal(const char* i_Header, const char* i_Value);
@@ -172,6 +174,7 @@ protected:
     HTTPVersion                 m_ServerVersion;
     char*                       m_pStatusString;
     PRUint32                    m_Status;
+    nsIInputStream*             m_pInputStream;
 
     friend class nsHTTPResponseListener;
 };

@@ -22,15 +22,24 @@
 #include "nsHeaderPair.h"
 #include "kHTTPHeaders.h"
 #include "nsHTTPEnums.h"
+#include "nsIByteBufferInputStream.h"
+#include "plstr.h"
+#include "nsString.h"
+#include "nsITransport.h"
+#include "nsHTTPConnection.h"
+#include "nsHTTPResponseListener.h"
 
-nsHTTPRequest::nsHTTPRequest(nsIUrl* i_pURL, HTTPMethod i_Method):
+nsHTTPRequest::nsHTTPRequest(nsIUrl* i_pURL, HTTPMethod i_Method, nsITransport* i_pTransport):
     m_pURI(i_pURL),
     m_Method(i_Method),
     m_pArray(new nsVoidArray()),
     m_Version(HTTP_ONE_ZERO),
-    m_Request(nsnull)
+    m_Request(nsnull),
+    m_pTransport(i_pTransport),
+    mRefCnt(0)
 {
-    Build();
+    
+    //Build();
 }
 
 nsHTTPRequest::~nsHTTPRequest()
@@ -45,6 +54,17 @@ nsHTTPRequest::~nsHTTPRequest()
         delete m_pArray;
         m_pArray = 0;
     }
+    if (m_Request)
+    {
+        delete m_Request;
+        m_Request = 0;
+    }
+/*
+    if (m_pTransport)
+        NS_RELEASE(m_pTransport);
+    if (m_pConnection)
+        NS_RELEASE(m_pConnection);
+*/
 }
 
 NS_IMPL_ADDREF(nsHTTPRequest);
@@ -52,7 +72,72 @@ NS_IMPL_ADDREF(nsHTTPRequest);
 nsresult
 nsHTTPRequest::Build()
 {
-    return NS_OK;
+    if (m_Request)
+        NS_ERROR("Request already built!");
+    nsresult rv = NS_NewByteBufferInputStream(&m_Request);
+    if (m_Request)
+    {
+
+        char lineBuffer[1024]; // verify this length!
+        PRUint32 bytesWritten = 0;
+
+        // Do the first line 
+        const char* methodString = MethodToString(m_Method);
+        PL_strncpyz(lineBuffer, methodString, PL_strlen(methodString) +1);
+        const char* filename;
+        NS_ASSERTION(m_pURI, "No URL to build request for!");
+        rv = m_pURI->GetPath(&filename);
+        PL_strcat(lineBuffer, filename);
+        PL_strcat(lineBuffer, " HTTP/1.1\n");
+        
+/*        switch (m_Method)
+        {
+            case HM_GET:
+                PL_strncpy(lineBuffer, MethodToString(m_Method)
+                break;
+            case HM_DELETE:
+            case HM_HEAD:
+            case HM_INDEX:
+            case HM_LINK:
+            case HM_OPTIONS:
+            case HM_POST:
+            case HM_PUT:
+            case HM_PATCH:
+            case HM_TRACE:
+            case HM_UNLINK:
+                NS_ERROR_NOT_IMPLEMENTED;
+                break;
+            default: NS_ERROR("No method set on request!");
+                break;
+        }
+*/
+        // Write the request method and HTTP version
+        
+        // Add additional headers if any
+        if (m_pArray && (0< m_pArray->Count()))
+        {
+            for (PRInt32 i = m_pArray->Count() - 1; i >= 0; --i) 
+            {
+                nsHeaderPair* element = NS_STATIC_CAST(nsHeaderPair*, m_pArray->ElementAt(i));
+                //Copy header, put a ": " and then the value + LF
+                // sprintf would be easier... todo change
+                nsString lineBuffStr;
+                element->atom->ToString(lineBuffStr);
+                lineBuffStr.Append(": ");
+                lineBuffStr.Append((const nsString&)*element->value);
+                lineBuffStr.Append('\n');
+                NS_ASSERTION((lineBuffStr.Length() <= 1024), "Increase line buffer length!");
+                lineBuffStr.ToCString(lineBuffer, lineBuffStr.Length());
+                lineBuffer[lineBuffStr.Length()] = '\0';
+                rv = m_Request->Fill(lineBuffer, PL_strlen(lineBuffer), &bytesWritten);
+                if (NS_FAILED(rv)) return rv;
+                lineBuffer[0] = '\0';
+            }
+        }
+
+    }
+
+    return rv;
 }
 
 nsresult
@@ -67,6 +152,11 @@ nsHTTPRequest::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
     if (aIID.Equals(nsIHTTPRequest::GetIID())) {
         *aInstancePtr = (void*) ((nsIHTTPRequest*)this);
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    if (aIID.Equals(nsIStreamObserver::GetIID())) {
+        *aInstancePtr = (void*) ((nsIStreamObserver*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
@@ -739,5 +829,73 @@ NS_METHOD
 nsHTTPRequest::GetHTTPVersion(HTTPVersion* o_Version) const
 {
     *o_Version = m_Version;
+    return NS_OK;
+}
+
+NS_METHOD
+nsHTTPRequest::GetInputStream(nsIInputStream* *o_Stream)
+{
+    if (o_Stream)
+    {
+        if (!m_Request)
+        {
+            Build();
+        }
+        m_Request->QueryInterface(nsIInputStream::GetIID(), (void**)o_Stream);
+        return NS_OK;
+    }
+    else
+        return NS_ERROR_NULL_POINTER;
+
+}
+
+NS_IMETHODIMP
+nsHTTPRequest::OnStartBinding(nsISupports* i_pContext)
+{
+    //TODO globally replace printf with trace calls. 
+    //printf("nsHTTPRequest::OnStartBinding...\n");
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPRequest::OnStopBinding(nsISupports* i_pContext,
+                                 nsresult iStatus,
+                                 nsIString* i_pMsg)
+{
+    //printf("nsHTTPRequest::OnStopBinding...\n");
+    // if we could write successfully... 
+    if (NS_SUCCEEDED(iStatus)) 
+    {
+        //Prepare to receive the response!
+        nsHTTPResponseListener* pListener = new nsHTTPResponseListener();
+        m_pTransport->AsyncRead(
+            i_pContext, 
+            m_pConnection->EventQueue(), 
+            pListener);
+        //TODO check this portion here...
+        return pListener ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    /*
+        Somewhere here we need to send a message up the event sink 
+        that we successfully (or not) have sent request to the 
+        server. TODO
+    */
+    return iStatus;
+}
+
+NS_IMETHODIMP
+nsHTTPRequest::SetTransport(nsITransport* i_pTransport)
+{
+    NS_ASSERTION(!m_pTransport, "Transport being overwritten!");
+    m_pTransport = i_pTransport;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPRequest::SetConnection(nsHTTPConnection* i_pConnection)
+{
+    m_pConnection = i_pConnection;
     return NS_OK;
 }
