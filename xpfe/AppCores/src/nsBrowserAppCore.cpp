@@ -280,11 +280,6 @@ nsBrowserAppCore::SetDocumentCharset(const nsString& aCharset)
 NS_IMETHODIMP    
 nsBrowserAppCore::Back()
 {
-/*
-  ExecuteScript(mToolbarScriptContext, mDisableScript);
-  ExecuteScript(mContentScriptContext, "window.back();");
-  ExecuteScript(mToolbarScriptContext, mEnableScript);
-*/
   mContentAreaWebShell->Back();
 	return NS_OK;
 }
@@ -292,11 +287,6 @@ nsBrowserAppCore::Back()
 NS_IMETHODIMP    
 nsBrowserAppCore::Forward()
 {
-/*
-  ExecuteScript(mToolbarScriptContext, mDisableScript);
-  ExecuteScript(mContentScriptContext, "window.forward();");
-  ExecuteScript(mToolbarScriptContext, mEnableScript);
-*/
   mContentAreaWebShell->Forward();
 	return NS_OK;
 }
@@ -469,20 +459,6 @@ nsBrowserAppCore::WalletSafeFillin() {
   return NS_OK;
 }
 #endif
-
-NS_IMETHODIMP    
-nsBrowserAppCore::SetDisableCallback(const nsString& aScript)
-{
-  mDisableScript = aScript;
-	return NS_OK;
-}
-
-NS_IMETHODIMP    
-nsBrowserAppCore::SetEnableCallback(const nsString& aScript)
-{
-  mEnableScript = aScript;
-	return NS_OK;
-}
 
 NS_IMETHODIMP    
 nsBrowserAppCore::LoadUrl(const nsString& aUrl)
