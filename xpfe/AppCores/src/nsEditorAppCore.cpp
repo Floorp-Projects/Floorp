@@ -951,14 +951,32 @@ NS_IMETHODIMP
 nsEditorAppCore::GetEditorDocument(nsIDOMDocument** aEditorDocument)
 {
 
-	return NS_ERROR_NOT_IMPLEMENTED;
+	if (mEditor)
+	{
+		nsCOMPtr<nsIEditor>	editor = do_QueryInterface(mEditor);
+		if (editor)
+		{
+			return editor->GetDocument(aEditorDocument);
+		}
+	}
+	
+	return NS_NOINTERFACE;
 }
 
 NS_IMETHODIMP
 nsEditorAppCore::GetEditorSelection(nsIDOMSelection** aEditorSelection)
 {
 
-	return NS_ERROR_NOT_IMPLEMENTED;
+	if (mEditor)
+	{
+		nsCOMPtr<nsIEditor>	editor = do_QueryInterface(mEditor);
+		if (editor)
+		{
+			return editor->GetSelection(aEditorSelection);
+		}
+	}
+	
+	return NS_NOINTERFACE;
 }
 
 // Pop up the link dialog once we have dialogs ...  for now, hardwire it
