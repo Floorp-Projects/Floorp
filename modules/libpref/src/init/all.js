@@ -54,8 +54,6 @@ pref("general.useragent.contentlocale", "chrome://navigator-region/locale/region
 
 pref("general.config.obscure_value", 13); // for MCD .cfg files
 
-pref("backups.number_of_prefs_copies", 1);
-
 pref("browser.cache.disk.enable",           true);
 pref("browser.cache.disk.capacity",         51200);
 pref("browser.cache.memory.enable",         true);
