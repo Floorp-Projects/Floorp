@@ -41,10 +41,11 @@
 
 #include <Quickdraw.h>
 
-#ifdef TARGET_CARBON
+#if UNIVERSAL_INTERFACES_VERSION < 0x0340
 enum {
-  kEventWindowConstrain = 83   // BAD!!! our CarbonEvents.h don't yet support this
+  kEventWindowConstrain = 83
 };
+const UInt32 kWindowLiveResizeAttribute = (1L << 28);
 #endif
 
 // Define Class IDs -- i hate having to do this
@@ -277,8 +278,10 @@ nsMacWindow::nsMacWindow() : Inherited()
 	, mAcceptsActivation(PR_TRUE)
 	, mIsActive(PR_FALSE)
 	, mZoomOnShow(PR_FALSE)
+#if !TARGET_CARBON
 	, mPhantomScrollbar(nsnull)
 	, mPhantomScrollbarData(nsnull)
+#endif
 	, mResizeIsFromUs(PR_FALSE)
 {
 	mMacEventHandler.reset(new nsMacEventHandler(this));
@@ -303,12 +306,13 @@ nsMacWindow::~nsMacWindow()
     if ( mWindowType == eWindowType_popup )
       RemoveBorderlessDefProc ( mWindowPtr );
 
+#if !TARGET_CARBON
   	// cleanup the struct we hang off the scrollbar's refcon	
   	if ( mPhantomScrollbar ) {
   	  ::SetControlReference(mPhantomScrollbar, (long)nsnull);
   	  delete mPhantomScrollbarData;
   	}
-  	
+#endif  	
 		if (mWindowMadeHere)
 			::DisposeWindow(mWindowPtr);
       
@@ -530,22 +534,24 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
   // XXX support it.
   if ( mWindowType == eWindowType_popup )
     ::SetWindowClass(mWindowPtr, kModalWindowClass);
-  
+
   // Setup the live window resizing
   if ( mWindowType == eWindowType_toplevel || mWindowType == eWindowType_invisible ) {
-    const UInt32 kWindowLiveResizeAttribute = (1L << 28);     // BAD!!! our headers don't yet support this
-
     ::ChangeWindowAttributes ( mWindowPtr, kWindowLiveResizeAttribute, kWindowNoAttributes );
     
     EventTypeSpec windEventList[] = { {kEventClassWindow, kEventWindowBoundsChanged},
                                       {kEventClassWindow, kEventWindowConstrain} };
-    OSStatus err = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(WindowEventHandler), 2, windEventList, this, NULL );
+    EventTypeSpec scrollEventList[] = { {kEventClassMouse, kEventMouseWheelMoved} };
+    OSStatus err1 = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(WindowEventHandler), 2, windEventList, this, NULL );
+    OSStatus err2 = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(ScrollEventHandler), 1, scrollEventList, this, NULL );
       // note, passing NULL as the final param to IWEH() causes the UPP to be disposed automatically
       // when the event target (the window) goes away. See CarbonEvents.h for info.
-    NS_ASSERTION(err == noErr, "Couldn't install Carbon Event handler");
+    
+    NS_ASSERTION(err1 == noErr && err2 == noErr, "Couldn't install Carbon Event handlers");
   }  
 #endif
   
+#if !TARGET_CARBON
   // create a phantom scrollbar to catch the attention of mousewheel 
   // drivers. We'll catch events sent to this scrollbar in the eventhandler
   // and dispatch them into gecko as NS_SCROLL_EVENTs at that point. We need
@@ -557,12 +563,15 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
   // anywhere, but must have a valid width (one pixel wide works). The
   // current location (one pixel wide, and flush along the left side of the
   // window) is a reasonable comprimise in the short term. It is not intended
-  // to fix all cases. 
+  // to fix all cases.
+  //
+  // Luckily, NONE of this is required on OSX, which uses CarbonEvents ;)
   Rect sbRect = { 100, 0, 200, 1 };
   mPhantomScrollbarData = new PhantomScrollbarData;
   mPhantomScrollbar = ::NewControl ( mWindowPtr, &sbRect, nil, true, 50, 0, 100, 
                                             kControlScrollBarLiveProc, (long)mPhantomScrollbarData );
   ::EmbedControl ( rootControl, mPhantomScrollbar );
+#endif
     
 	// register tracking and receive handlers with the native Drag Manager
 	if ( mDragTrackingHandlerUPP ) {
@@ -584,6 +593,29 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 
 
 #if TARGET_CARBON
+
+pascal OSStatus
+nsMacWindow :: ScrollEventHandler ( EventHandlerCallRef inHandlerChain, EventRef inEvent, void* userData )
+{
+  EventMouseWheelAxis axis = kEventMouseWheelAxisY;
+  SInt32 delta = 0;
+  Point mouseLoc;
+  OSErr err1 = ::GetEventParameter ( inEvent, kEventParamMouseWheelAxis, typeMouseWheelAxis,
+                        NULL, sizeof(EventMouseWheelAxis), NULL, &axis );	
+  OSErr err2 = ::GetEventParameter ( inEvent, kEventParamMouseWheelDelta, typeLongInteger,
+                        NULL, sizeof(SInt32), NULL, &delta );	
+  OSErr err3 = ::GetEventParameter ( inEvent, kEventParamMouseLocation, typeQDPoint,
+                        NULL, sizeof(Point), NULL, &mouseLoc );	
+
+  if ( err1 == noErr && err2 == noErr && err3 == noErr ) {
+    nsMacWindow* self = NS_REINTERPRET_CAST(nsMacWindow*, userData);
+    if ( self )
+      self->mMacEventHandler->Scroll ( axis, delta, mouseLoc );
+  }
+  return noErr;
+  
+} // ScrollEventHandler
+
 
 pascal OSStatus
 nsMacWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef inEvent, void* userData )
@@ -625,8 +657,8 @@ nsMacWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
             retVal = ::CallNextEventHandler( inHandlerChain, inEvent );
         }
         break;
-      }
-      
+      }      
+      	
       default:
         // do nothing...
         break;

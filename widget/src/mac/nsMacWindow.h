@@ -125,6 +125,8 @@ protected:
 #if TARGET_CARBON
   pascal static OSStatus WindowEventHandler ( EventHandlerCallRef inHandlerChain, 
                                                EventRef inEvent, void* userData ) ;
+  pascal static OSStatus ScrollEventHandler ( EventHandlerCallRef inHandlerChain, 
+                                               EventRef inEvent, void* userData ) ;
 #endif
 
 	PRBool							mWindowMadeHere; // true if we created the window
@@ -136,8 +138,10 @@ protected:
 	PRBool                          mZoomOnShow;
 	PRBool                          mResizeIsFromUs;    // we originated the resize, prevent infinite recursion
 	
+#if !TARGET_CARBON
 	ControlHandle      mPhantomScrollbar;  // a native scrollbar for the scrollwheel
 	PhantomScrollbarData* mPhantomScrollbarData;
+#endif
 };
 
 #endif // MacWindow_h__
