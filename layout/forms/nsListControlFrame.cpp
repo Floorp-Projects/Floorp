@@ -324,10 +324,12 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
         if (content) {
           ScrollToFrame(content);
         }
+#if 0
       } else {
         nsresult rv = nsScrollFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
         aStatus = NS_FRAME_COMPLETE;
         return rv;
+#endif
       }
     }
 
