@@ -56,7 +56,8 @@ BookmarksTree.prototype = {
     var xulElement = document.createElementNS(kXULNS, "menuitem");
     xulElement.setAttribute("command", aCommandName);
     xulElement.setAttribute("observes", "cmd_" + aCommandName.substring(NC_NS_CMD.length));
-
+    var node = xulElement.getAttribute('observes');
+    
     switch (aCommandName) {
     case NC_NS_CMD + "open":
       xulElement.setAttribute("value", aDisplayName);
@@ -80,19 +81,6 @@ BookmarksTree.prototype = {
       break;
     }    
     return xulElement;  
-  },
-  
-  /////////////////////////////////////////////////////////////////////////////
-  // For the given selection, determines the element that should form the 
-  // container to paste items into.
-  resolvePasteFolder: function (aSelection)
-  {
-    const lastSelected = aSelection[aSelection.length-1];  
-    if (lastSelected.getAttribute("container") == "true" &&
-        lastSelected.getAttribute("open") == "true" && 
-        aSelection.length == 1)
-      return lastSelected;
-    return this.findRDFNode(lastSelected, false);
   },
   
   // Command implementation
@@ -146,9 +134,9 @@ BookmarksTree.prototype = {
       var aShell = aParams[0];
       var selItemURI = NODE_ID(aParams[1]);
       aShell.propertySet(selItemURI, aParams[2], aParams[3]); 
-      gBookmarksShell.tree.focus();
       gBookmarksShell.selectFolderItem(NODE_ID(gBookmarksShell.findRDFNode(aParams[1], false)), 
                                        selItemURI, false);
+      gBookmarksShell.tree.focus();
       gSelectionTracker.clickCount = 0;
     },
 
@@ -170,6 +158,8 @@ BookmarksTree.prototype = {
 
       if (!shell.validateNameAndTopic(name, aTopic, relativeNode, dummyItem))
         return;
+      
+      dummyItem.parentNode.removeChild(dummyItem);
       
       // If we're attempting to create a folder as a subfolder of an open folder,
       // we need to set the parentFolder to be relativeNode, which will be the 
@@ -193,6 +183,7 @@ BookmarksTree.prototype = {
       var newFolderItem = document.getElementById(newFolderRDFObserver._newFolderURI);
       gBookmarksShell.tree.focus();
       gBookmarksShell.tree.selectItem(newFolderItem);
+      gSelectionTracker.clickCount = 0;
     },
     
     ///////////////////////////////////////////////////////////////////////////
@@ -256,6 +247,8 @@ BookmarksTree.prototype = {
           else 
             aSelectedItem.parentNode.appendChild(dummyItem);
         }
+        var index = gBookmarksShell.tree.getIndexOfItem(dummyItem);
+        gBookmarksShell.tree.ensureIndexIsVisible(index);
       }
       else {
         if (aSelectedItem.nextSibling)
@@ -397,8 +390,10 @@ BookmarksTree.prototype = {
   // editable cells. 
   treeClicked: function (aEvent)
   {
-    if (this.tree.selectedItems.length > 1 || aEvent.detail > 1 || aEvent.button != 0)
+    if (this.tree.selectedItems.length > 1 || aEvent.detail > 1 || aEvent.button != 0) {
+      gSelectionTracker.clickCount = 0;
       return;
+    }
     if (gSelectionTracker.currentItem == this.tree.currentItem && 
         gSelectionTracker.currentCell == aEvent.target) 
       ++gSelectionTracker.clickCount;
@@ -407,24 +402,43 @@ BookmarksTree.prototype = {
     gSelectionTracker.currentItem = this.tree.currentItem;
     gSelectionTracker.currentCell = aEvent.target;
 
-    if (gSelectionTracker.currentItem.getAttribute("type") != NC_NS + "Bookmark" && 
+    if (gSelectionTracker.currentItem.getAttribute("type") != NC_NS + "Bookmark" &&
         gSelectionTracker.currentItem.getAttribute("type") != NC_NS + "Folder")
       return;
 
     var row = gSelectionTracker.currentItem.firstChild;
-    for (var i = 0; i < row.childNodes.length; ++i) {
-      if (row.childNodes[i] == gSelectionTracker.currentCell) {
-        // Don't allow inline-edit of cells other than name for folders. 
-        if (gSelectionTracker.currentItem.getAttribute("type") != NC_NS + "Bookmark" && i)
-          return;
-        // Don't allow editing of the root folder name
-        if (gSelectionTracker.currentItem.id == "NC:BookmarksRoot")
-          return;
-        if (gSelectionTracker.clickCount == 1) 
-          gBookmarksShell.commands.editCell(this.tree.currentItem, i);
-        break;
+    if (row) {
+      for (var i = 0; i < row.childNodes.length; ++i) {
+        if (row.childNodes[i] == gSelectionTracker.currentCell) {
+          // Don't allow inline-edit of cells other than name for folders. 
+          // XXX - so so skeezy. Change this to look for NC:Name or some such. 
+          if (gSelectionTracker.currentItem.getAttribute("type") != NC_NS + "Bookmark" && i)
+            return;
+          // Don't allow editing of the root folder name
+          if (gSelectionTracker.currentItem.id == "NC:BookmarksRoot")
+            return;
+          if (gSelectionTracker.clickCount == 1 && this.openClickCount > 1) 
+            gBookmarksShell.commands.editCell(this.tree.currentItem, i);
+          break;
+        }
       }
     }
+  },
+  
+  treeOpen: function (aEvent)
+  {
+    if (!this.isValidOpenEvent(aEvent))   
+      return;
+    
+    var rdfNode = this.findRDFNode(aEvent.target, true);
+    if (rdfNode.getAttribute("container") == "true") {
+      if (this.openClickCount == 1)
+        rdfNode.setAttribute("open", rdfNode.getAttribute("open") != "true");
+      gSelectionTracker.clickCount = 0;
+      return;
+    }
+    
+    this.open(aEvent, rdfNode);
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -441,12 +455,8 @@ BookmarksTree.prototype = {
     else if (aEvent.keyCode == 113)
       goDoCommand("cmd_rename");
     else if (aEvent.keyCode == 13 && 
-             this.tree.currentItem.firstChild.getAttribute("inline-edit") != "true") {
-      if (aEvent.altKey)
-        goDoCommand("cmd_properties");
-      else
-        goDoCommand("cmd_open");
-    }
+             this.tree.currentItem.firstChild.getAttribute("inline-edit") != "true")
+      goDoCommand(aEvent.altKey ? "cmd_properties" : "cmd_open");
   },
   
   selectFolderItem: function (aFolderURI, aItemURI, aAdditiveFlag)
@@ -600,7 +610,7 @@ BookmarksTree.prototype = {
                       "cmd_paste", "cmd_cut", "cmd_delete",
                       "cmd_setpersonaltoolbarfolder", "cmd_setnewbookmarkfolder", 
                       "cmd_setnewsearchfolder"];
-      for (var i = 0; i < commands.length; ++i)
+      for (var i = 0; i < commands.length; ++i) 
         goUpdateCommand(commands[i]);
     }
   }

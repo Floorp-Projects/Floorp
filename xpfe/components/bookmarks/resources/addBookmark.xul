@@ -82,19 +82,7 @@
 
   <separator id="createinseparator"/>
 
-  <box id="createinbuttonbox">
-    <button id="createin" class="disclosure-triangle" value="&button.createin.label;" 
-            accesskey="&button.createin.accesskey;"
-            value1="&button.createin.label;"            
-            value2="&button.createin2.label;" 
-            oncommand="toggleCreateIn();"/>
-    <spring flex="1"/>
-    <box id="buttonsparent">
-      <box id="okCancelButtonsRight"/>
-    </box>
-  </box>
-  
-  <box id="folderbox" orient="vertical" hidden="true" flex="1">
+  <box id="folderbox" orient="vertical" flex="1">
     <separator/>
     <grid flex="1">
       <columns>
@@ -144,15 +132,16 @@
     </grid>
     <separator/>
   </box>
-  
+
+  <!-- XXX - todo - remove all the create-in code -->  
   <box valign="bottom">
     <box autostretch="never">
-      <checkbox id="dontaskagain" hidden="true" 
+      <checkbox id="dontaskagain" 
                 value="&alwayscreateinfolder.label;"
                 accesskey="&alwayscreateinfolder.accesskey;"/>
     </box>
     <spring flex="1"/>  
-    <box id="openParent" orient="vertical"/>
+    <box id="okCancelButtonsRight"/>
   </box>
   
 </window>        

@@ -48,8 +48,6 @@ function Startup()
     if (window.arguments[4] == "selectFolder") {
       document.getElementById("bookmarknamegrid").setAttribute("hidden", "true");
       toggleCreateIn();
-      document.getElementById("createinlabel").setAttribute("collapsed", "true");
-      document.getElementById("createinbuttonbox").setAttribute("hidden", "true");
       document.getElementById("dontaskagain").setAttribute("hidden", "true");
       document.getElementById("createinseparator").setAttribute("hidden", "true");
       sizeToContent();
@@ -61,11 +59,8 @@ function Startup()
       gFld_Name.value = window.arguments[0] || "";
       gFld_URL.value = window.arguments[1] || "";
       gBookmarkCharset = window.arguments [3] || null;
-      if (window.arguments[2]) {
+      if (window.arguments[2]) 
         gCreateInFolder = window.arguments[2];
-        document.getElementById("createin").setAttribute("hidden", "true");
-        document.getElementById("folderbox").setAttribute("hidden", "true");
-      }
     }
   }
   
@@ -73,34 +68,6 @@ function Startup()
     onLocationInput();
   gFld_Name.focus();
 } 
-
-function toggleCreateIn()
-{
-  var folderbox = document.getElementById("folderbox");
-  var createInButton = document.getElementById("createin");
-  var dontaskagain = document.getElementById("dontaskagain");
-  var oldID, newID;
-  if (folderbox.getAttribute("hidden") == "true") {
-    createInButton.value = createInButton.getAttribute("value2");
-    folderbox.removeAttribute("hidden");
-    dontaskagain.removeAttribute("hidden");
-    oldID = "buttonsparent";
-    newID = "openParent";
-  }
-  else {
-    createInButton.value = createInButton.getAttribute("value1");
-    folderbox.setAttribute("hidden", "true");
-    dontaskagain.setAttribute("hidden", "true");
-    oldID = "openParent";
-    newID = "buttonsparent";
-  }
-  var oldParent = document.getElementById(oldID);
-  var newParent = document.getElementById(newID);
-  var buttons = oldParent.firstChild.cloneNode(true);
-  oldParent.removeChild(oldParent.firstChild);
-  newParent.appendChild(buttons);
-  sizeToContent();
-}
 
 function onLocationInput ()
 {
@@ -127,6 +94,7 @@ function onOK()
     catch (e) {
       // No "NC:NewBookmarkFolder" exists, just append to the root.
       rFolder = kRDF.GetResource("NC:BookmarksRoot", true);
+      kRDFC.Init(kBMDS, rFolder);
     }
     if (!gFld_URL.value) return;
     
@@ -163,8 +131,10 @@ function onTreeSelect ()
 {
   if (gFolderTree.selectedItems.length < 1) 
     gCreateInFolder = "NC:NewBookmarkFolder";
-  var selectedItem = gFolderTree.selectedItems[0];
-  gCreateInFolder = selectedItem.id;
+  else {
+    var selectedItem = gFolderTree.selectedItems[0];
+    gCreateInFolder = selectedItem.id;
+  }
 }
 
 var gBookmarksShell = null;
@@ -193,7 +163,5 @@ function useDefaultFolder ()
     gCreateInFolder = "NC:BookmarksRoot";
   }
 }
-
-
 
 
