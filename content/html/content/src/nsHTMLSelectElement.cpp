@@ -42,6 +42,7 @@
 #include "nsISelectElement.h"
 #include "nsISelectControlFrame.h"
 #include "nsIDOMNSHTMLOptionCollectn.h"
+#include "nsGUIEvent.h"
 
 // PresState
 #include "nsISupportsArray.h"

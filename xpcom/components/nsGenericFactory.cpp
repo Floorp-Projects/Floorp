@@ -26,6 +26,9 @@
 
 #include "nsGenericFactory.h"
 #include "nsCRT.h"
+#include "nsCOMPtr.h"
+#include "nsIComponentManager.h"
+
 nsGenericFactory::nsGenericFactory(nsModuleComponentInfo *info)
     : mInfo(info)
 {

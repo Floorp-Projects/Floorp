@@ -29,6 +29,7 @@
 #include "nsString.h"
 #include "nsIAtom.h"
 #include "nsWeakReference.h"
+#include "nsIURI.h"
 
 
 class nsIContent;

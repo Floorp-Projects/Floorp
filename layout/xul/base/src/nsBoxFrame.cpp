@@ -80,6 +80,7 @@
 #include "nsViewsCID.h"
 #include "nsIScrollableView.h"
 #include "nsHTMLContainerFrame.h"
+#include "nsIWidget.h"
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);

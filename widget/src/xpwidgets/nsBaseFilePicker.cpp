@@ -35,6 +35,7 @@
 
 #include "nsIStringBundle.h"
 #include "nsXPIDLString.h"
+#include "nsIServiceManager.h"
 
 #include "nsBaseFilePicker.h"
 

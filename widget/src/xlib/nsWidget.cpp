@@ -45,6 +45,7 @@
 #include "nsIRollupListener.h"
 #include "nsGfxCIID.h"
 #include "nsIMenuRollup.h"
+#include "nsIRenderingContext.h"
 #include "nsToolkit.h"
 
 #include "xlibrgb.h"

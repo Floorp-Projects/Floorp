@@ -39,6 +39,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIFocusController.h"
+#include "nsISelection.h"
 
 #if DEBUG
 #include "nsIWebNavigation.h"

@@ -44,6 +44,7 @@
 #include "nsMenuBarListener.h"
 #include "nsIPref.h"
 #include "nsXPIDLString.h"
+#include "nsIServiceManager.h"
 
 #ifdef IBMBIDI
 #include "nsIUBidiUtils.h"

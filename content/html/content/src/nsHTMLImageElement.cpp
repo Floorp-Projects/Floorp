@@ -49,6 +49,7 @@
 #include "nsIImageFrame.h"
 #include "nsLayoutAtoms.h"
 #include "nsNodeInfoManager.h"
+#include "nsGUIEvent.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIDOMWindow.h"
 

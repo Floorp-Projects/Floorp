@@ -46,6 +46,7 @@
 #include "nsLayoutCID.h"
 #include "nsString.h"
 #include "nsITreeBoxObject.h"
+#include "nsGUIEvent.h"
 
 static NS_DEFINE_CID(kCRangeCID, NS_RANGE_CID);
 static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);

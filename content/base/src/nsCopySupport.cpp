@@ -26,6 +26,7 @@
 #include "nsIComponentManager.h" 
 #include "nsIServiceManager.h"
 #include "nsIClipboard.h"
+#include "nsISelection.h"
 #include "nsWidgetsCID.h"
 #include "nsIEventStateManager.h"
 #include "nsIPresContext.h"

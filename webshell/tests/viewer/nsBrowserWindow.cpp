@@ -76,6 +76,7 @@
 #include "nsIBaseWindow.h"
 #include "nsXPIDLString.h"
 #include "nsIViewManager.h"
+#include "nsGUIEvent.h"
 #include "nsIWebProgress.h"
 #include "nsIWebBrowserSetup.h"
 
@@ -101,6 +102,7 @@
 
 // For Copy
 #include "nsISelection.h"
+#include "nsISelectionController.h"
 
 // XXX For font setting below
 #include "nsFont.h"

@@ -23,6 +23,7 @@
 
 
 #include "nsCRT.h"
+#include "nsString.h"
 
 #include "nsIEditor.h"
 #include "nsIEditorMailSupport.h"

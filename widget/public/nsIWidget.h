@@ -27,10 +27,11 @@
 #include "nsColor.h"
 #include "nsIMouseListener.h"
 #include "nsIMenuListener.h"
-#include "nsIImage.h"
+#include "nsCoord.h"
 
 #include "prthread.h"
-#include "nsGUIEvent.h"
+#include "nsEvent.h"
+#include "nsAReadableString.h"
 
 // forward declarations
 class   nsIAppShell;
@@ -40,11 +41,14 @@ class   nsIToolkit;
 class   nsIRenderingContext;
 class   nsIEnumerator;
 class   nsIDeviceContext;
+class   nsIRegion;
 struct  nsRect;
 struct  nsFont;
 class   nsIMenuBar;
 class   nsIEventListener;
 class   nsIRollupListener;
+struct  nsGUIEvent;
+struct  nsColorMap;
 
 /**
  * Callback function that processes events.

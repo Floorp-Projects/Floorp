@@ -47,6 +47,7 @@
 #include "nsIHTMLEditor.h"
 #include "nsIStringBundle.h"
 #include "nsICSSStyleSheet.h"
+#include "nsISupportsArray.h"
 
 // Parser Observation
 #include "nsEditorParserObserver.h"

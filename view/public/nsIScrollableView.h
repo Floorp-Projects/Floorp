@@ -29,6 +29,7 @@
 
 class nsIView;
 class nsIScrollPositionListener;
+struct nsMargin;
 
 typedef enum {
   nsScrollPreference_kAuto = 0,

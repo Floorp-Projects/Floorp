@@ -42,6 +42,7 @@
 #include "nsIScrollbarFrame.h"
 #include "nsIScrollbarMediator.h"
 #include "nsRepeatService.h"
+#include "nsGUIEvent.h"
 
 //
 // NS_NewToolbarFrame

@@ -33,6 +33,7 @@
 
 #include "nsISupports.h"
 #include "nsIWidget.h"
+#include "nsGUIEvent.h"
 #include "nsString.h"
 #include "nsStringUtil.h"
 #include "nsIDocument.h"

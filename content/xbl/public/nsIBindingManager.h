@@ -42,6 +42,7 @@ class nsIXBLDocumentInfo;
 class nsIAtom;
 class nsIStreamListener;
 class nsIXPConnectWrappedJS;
+class nsIDOMNodeList;
 
 // {55D70FE0-C8E5-11d3-97FB-00400553EEF0}
 #define NS_IBINDING_MANAGER_IID \

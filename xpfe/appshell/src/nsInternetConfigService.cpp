@@ -25,7 +25,6 @@
 #include "nsIMIMEInfo.h"
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
-#include "nsComponentManagerUtils.h"
 #include "nsLocalFileMac.h"
 #include "nsIURL.h"
 #include "nsXPIDLString.h"

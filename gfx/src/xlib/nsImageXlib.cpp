@@ -30,6 +30,7 @@
 #include "nsRenderingContextXlib.h"
 #include "xlibrgb.h"
 #include "prlog.h"
+#include "nsRect.h"
 #include "drawers.h"
 #include "imgScaler.h"
 

@@ -34,6 +34,7 @@
 #include "nsICharRepresentable.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
+#include "nsVoidArray.h"
 
 #include <qintdict.h>
 #include <qfontmetrics.h>

@@ -75,6 +75,7 @@
 #include "nsLayoutCID.h"
 #include "nsContentCID.h"
 #include "nsDOMAttribute.h"
+#include "nsGUIEvent.h"
 
 #include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"

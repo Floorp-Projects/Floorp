@@ -41,6 +41,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIViewManager.h"
 #include "nsXULAtoms.h"
+#include "nsGUIEvent.h"
 
 //
 // NS_NewXULButtonFrame

@@ -28,6 +28,7 @@
 #include "nsVoidArray.h"
 #include "nsIFile.h"
 #include "nsCOMPtr.h"
+#include "nsIURI.h"
 
 class nsMIMEInfoImpl : public nsIMIMEInfo {
 public:

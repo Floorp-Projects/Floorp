@@ -40,6 +40,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"         
 #include "nsIBaseWindow.h"       
+#include "nsIWidget.h"
 #include "nsIAppShellService.h"
 #include "nsIProfileInternal.h"
 #include "rdf.h"

@@ -32,6 +32,7 @@
 #include "nsIPresContext.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsGUIEvent.h"
 
 // A helper class for managing our ranges of selection.
 struct nsOutlinerRange

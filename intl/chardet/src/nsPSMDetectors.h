@@ -22,6 +22,7 @@
 #ifndef nsPSMDetectors_h__
 #define nsPSMDetectors_h__
 
+#include "nsCOMPtr.h"
 #include "nsIFactory.h"
 #include "nsVerifier.h"
 //---- for verifiers

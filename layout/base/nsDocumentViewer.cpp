@@ -83,6 +83,8 @@
 #include "nsIFrameManager.h"
 #include "nsIParser.h"
 #include "nsIPrintContext.h"
+#include "nsGUIEvent.h"
+#include "nsHTMLReflowState.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLImageElement.h"
 

@@ -54,6 +54,7 @@
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
 #include "nsXULAtoms.h"
+#include "nsGUIEvent.h"
 #include "nsIXPConnect.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsDOMCID.h"

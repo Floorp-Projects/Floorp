@@ -74,6 +74,7 @@
 #include "nsParserUtils.h"
 #include "nsIDocumentViewer.h"
 #include "nsIScrollable.h"
+#include "nsRect.h"
 #include "nsGenericElement.h"
 #include "nsIWebNavigation.h"
 #include "nsIScriptElement.h"

@@ -33,6 +33,7 @@
 #include "jscntxt.h"
 #include "jsdbgapi.h"
 #include "nsCSecurityContext.h"
+#include "nsIScriptContext.h"
 #include "jvmmgr.h"
 
 // For GetOrigin()
@@ -44,6 +45,7 @@
 #include "nsCertificatePrincipal.h"
 #include "nsScriptSecurityManager.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIServiceManager.h"
 #include "nsIScriptObjectPrincipal.h"
 
 #include "nsTraceRefcnt.h"

@@ -34,11 +34,11 @@ static char* kNullPointer = "null pointer";
 // for #ifdef CSS_REPORT_PARSE_ERRORS
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
+#include "nsIComponentManager.h"
 #include "nsReadableUtils.h"
 #include "nsIURI.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
-#include "nsComponentManagerUtils.h"  // put this higher and gcc barfs...
 
 // Don't bother collecting whitespace characters in token's mIdent buffer
 #undef COLLECT_WHITESPACE

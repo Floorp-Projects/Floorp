@@ -29,6 +29,7 @@
 #include "nsITimerCallback.h"
 
 #include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
 #include "nsIFrameSelection.h"
 #include "nsIFrame.h"
 #include "nsIDOMNode.h"

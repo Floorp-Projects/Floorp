@@ -22,12 +22,11 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIURIContentListener.idl"
-#include "nsIURI.idl"
-#include "nsIContentViewer.idl"
+#include "domstubs.idl"
 
 %{ C++
-#include "nsIPresContext.h"
+class nsIPresContext;
+class nsIPresShell;
 %}
 
 /**
@@ -37,11 +36,15 @@
 [ptr] native nsIPresContext(nsIPresContext);
 [ptr] native nsIPresShell(nsIPresShell);
 
+interface nsIURI;
+interface nsIContentViewer;
+interface nsIURIContentListener;
 interface nsIChromeEventHandler;
 interface nsIDocShellLoadInfo;
 interface nsIDocumentCharsetInfo;
 interface nsIWebNavigation;
 interface nsISimpleEnumerator;
+interface nsIInputStream;
 interface nsISHEntry;
 
 [scriptable, uuid(69E5DE00-7B8B-11d3-AF61-00A024FFC08C)]

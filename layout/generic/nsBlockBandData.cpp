@@ -22,6 +22,7 @@
 #include "nsCOMPtr.h"
 #include "nsBlockBandData.h"
 #include "nsIFrame.h"
+#include "nsHTMLReflowState.h"
 #include "nsIStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"

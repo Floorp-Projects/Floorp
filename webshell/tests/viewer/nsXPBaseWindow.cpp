@@ -58,6 +58,7 @@
 #include "nsIBaseWindow.h"
 #include "nsIWebNavigation.h"
 #include "nsIViewManager.h"
+#include "nsGUIEvent.h"
 
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"

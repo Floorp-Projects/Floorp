@@ -27,6 +27,7 @@
 #include "nsString.h"
 #include "nsIInputStream.h"
 #include "nsCOMPtr.h"
+#include "nsISimpleEnumerator.h"
 
 class nsDirectoryIndexStream : public nsIInputStream
 {

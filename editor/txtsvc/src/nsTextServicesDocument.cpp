@@ -23,6 +23,8 @@
 
 #include "nsLayoutCID.h"
 #include "nsIAtom.h"
+#include "nsString.h"
+#include "nsIEnumerator.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsIDOMNodeList.h"

@@ -24,6 +24,7 @@
 #include "nsDSURIContentListener.h"
 #include "nsIChannel.h"
 #include "nsXPIDLString.h"
+#include "nsIServiceManager.h"
 
 //*****************************************************************************
 //***    nsDSURIContentListener: Object Management

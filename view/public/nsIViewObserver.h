@@ -24,10 +24,11 @@
 #define nsIViewObserver_h___
 
 #include "nsISupports.h"
-#include "nsGUIEvent.h"
+#include "nsEvent.h"
 
 class nsIRenderingContext;
 struct nsRect;
+struct nsGUIEvent;
 
 #define NS_IVIEWOBSERVER_IID   \
 { 0x6a1529e0, 0x3d2c, 0x11d2, \

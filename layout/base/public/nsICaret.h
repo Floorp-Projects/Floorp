@@ -25,13 +25,15 @@
 
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
-#include "nsIPresShell.h"
+#include "nsCoord.h"
 
 class nsIRenderingContext;
 class nsIFrame;
 class nsIView;
+class nsIPresShell;
 struct nsRect;
 struct nsPoint;
+class nsISelection;
 
 // IID for the nsICaret interface
 #define NS_ICARET_IID       \

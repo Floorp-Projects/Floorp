@@ -25,15 +25,16 @@
 
 #include "nslayout.h"
 #include "nsISupports.h"
-#include "nsRect.h"
 #include "nsColor.h"
+#include "nsCoord.h"
 #include "nsIFrameImageLoader.h"
-#include "nsILanguageAtom.h"
+#include "nsAWritableString.h"
 #ifdef IBMBIDI
 class nsBidiPresUtils;
 #endif // IBMBIDI
 
 struct nsFont;
+struct nsRect;
 
 class nsIContent;
 class nsIDocument;
@@ -52,6 +53,7 @@ class nsIEventStateManager;
 class nsIURI;
 class nsILookAndFeel;
 class nsICSSPseudoComparator;
+class nsILanguageAtom;
 
 #ifdef MOZ_REFLOW_PERF
 class nsIRenderingContext;

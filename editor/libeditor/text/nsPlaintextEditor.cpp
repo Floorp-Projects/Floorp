@@ -41,6 +41,7 @@
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsISelectionController.h"
+#include "nsGUIEvent.h"
 
 #include "nsIIndependentSelection.h" //domselections answer to frameselection
 

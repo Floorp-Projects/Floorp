@@ -21,12 +21,12 @@
  */
  
 #include "nsISupports.idl"
-#include "nsIFile.idl"
-#include "nsISupportsArray.idl"
-#include "nsIDocumentStateListener.idl"
-#include "nsISelectionController.idl"
-#include "nsITransactionManager.idl"
 
+interface nsIFile;
+interface nsISupportsArray;
+interface nsIDocumentStateListener;
+interface nsISelectionController;
+interface nsITransactionManager;
 interface nsIDOMWindowInternal;
 interface nsIDOMDocument;
 interface nsISelection;

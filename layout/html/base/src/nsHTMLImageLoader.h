@@ -25,6 +25,7 @@
 #include "nslayout.h"
 #include "nsString.h"
 #include "nsIPresContext.h"
+#include "nsSize.h"
 
 class nsIFrame;
 class nsImageMap;

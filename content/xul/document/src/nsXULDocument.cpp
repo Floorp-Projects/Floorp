@@ -65,6 +65,7 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsGUIEvent.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIDOMText.h"
@@ -137,6 +138,7 @@
 #include "nsIMIMEService.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
+#include "nsISelectionController.h"
 #include "nsContentUtils.h"
 
 

@@ -24,7 +24,8 @@
 
 #include "nsISupports.idl"
 #include "nsIPrefBranch.idl"
-#include "nsIFile.idl"
+
+interface nsIFile;
 
 [scriptable, uuid(decb9cc7-c08f-4ea5-be91-a8fc637ce2d2)]
 interface nsIPrefService : nsISupports

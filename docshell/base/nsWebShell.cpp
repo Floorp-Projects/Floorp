@@ -102,6 +102,9 @@ typedef unsigned long HMTX;
 #include "nsPIDOMWindow.h"
 #include "nsIController.h"
 #include "nsIFocusController.h"
+#include "nsGUIEvent.h"
+#include "nsISelection.h"
+#include "nsISelectionController.h"
 #include "nsIFileStream.h"
 
 #include "nsIHttpChannel.h" // add this to the ick include list...we need it to QI for post data interface

@@ -22,10 +22,9 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIURL.idl"
-#include "nsIFileChannel.idl"
-#include "nsILocalFile.idl"
 
+interface nsILocalFile;
+interface nsIFileURL;
 interface nsIDOMWindowInternal;
 
 [scriptable, uuid(c47de916-1dd1-11b2-8141-82507fa02b21)]

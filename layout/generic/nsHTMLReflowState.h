@@ -23,6 +23,8 @@
 #define nsHTMLReflowState_h___
 
 #include "nslayout.h"
+#include "nsMargin.h"
+#include "nsStyleCoord.h"
 
 class nsIFrame;
 class nsIPresContext;

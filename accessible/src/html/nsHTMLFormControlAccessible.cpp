@@ -29,10 +29,12 @@
 #include "nsHTMLAtoms.h"
 #include "nsIDOMHTMLButtonElement.h"
 #include "nsReadableUtils.h"
+#include "nsString.h"
 #include "nsAccessible.h"
 #include "nsIFrame.h"
 #include "nsIDOMHTMLLabelElement.h"
 #include "nsIDOMHTMLFormElement.h"
+#include "nsISelectionController.h"
 
 nsHTMLFormControlAccessible::nsHTMLFormControlAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
 nsLeafAccessible(aNode, aShell)

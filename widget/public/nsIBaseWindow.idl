@@ -26,7 +26,7 @@
 
 [ptr] native nsIWidget(nsIWidget);
 %{ C++
-#include "nsIWidget.h"
+class nsIWidget;
 %}
 
 typedef voidPtr nativeWindow;

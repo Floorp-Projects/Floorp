@@ -32,14 +32,12 @@
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
 #include "nsString.h"
+#include "nsHashtable.h"
 
 #include "nsIDOMElement.h"
 #include "nsIDOMCSSStyleRule.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 
-#include "nsCOMPtr.h"
-#include "nsISupportsArray.h"
-#include "nsString.h"
 #include "nsIDocument.h"
 #include "nsIStyleSheet.h"
 #include "nsIURI.h"

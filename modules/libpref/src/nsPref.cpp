@@ -34,9 +34,10 @@
  */
 
 #include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
-#include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
 #include "prefapi.h"

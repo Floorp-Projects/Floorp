@@ -22,8 +22,9 @@
 
 #include "nsISupports.idl"
 #include "nsIFactory.idl"
-#include "nsIFile.idl"
-#include "nsIComponentManager.idl"
+
+interface nsIFile;
+interface nsIComponentManager;
 
 [scriptable, uuid(7392D032-5371-11d3-994E-00805FD26FEE)]
 interface nsIModule : nsISupports

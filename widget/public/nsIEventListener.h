@@ -24,7 +24,8 @@
 #define nsIEventListener_h__
 
 #include "nsISupports.h"
-#include "nsGUIEvent.h"
+
+struct nsGUIEvent;
 
 /**
  * Event listener interface.

@@ -54,6 +54,7 @@
 #include "nsCURILoader.h"
 #include "nsNetUtil.h"
 #include "nsIFileChannel.h"
+#include "nsILocalFile.h"
 
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebNavigation.h"
@@ -76,6 +77,7 @@
 #include "nsIPresContext.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
+#include "nsISelectionController.h"
 
 #include "nsIFilePicker.h"
 #include "nsIFindComponent.h"

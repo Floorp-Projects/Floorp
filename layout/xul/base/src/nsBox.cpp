@@ -40,6 +40,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMAttr.h"
+#include "nsIWidget.h"
 
 
 //#define DEBUG_LAYOUT

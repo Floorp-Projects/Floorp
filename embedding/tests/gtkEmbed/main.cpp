@@ -32,6 +32,7 @@
 #include "gtkEmbed.h"
 
 #include "nsCOMPtr.h"
+#include "nsISimpleEnumerator.h"
 #include "nsEmbedAPI.h"
 #include "WebBrowserChrome.h"
 #include "WindowCreator.h"

@@ -27,6 +27,7 @@
 #include "nsISupports.h"
 #include "nsCoord.h"
 #include "nsIView.h"
+#include "nsColor.h"
 
 class nsIRegion;
 class nsIEvent;
@@ -36,6 +37,7 @@ class nsIScrollableView;
 class nsIWidget;
 class nsICompositeListener;
 struct nsRect;
+class nsIDeviceContext;
 
 enum nsContentQuality {
   nsContentQuality_kGood = 0,

@@ -44,6 +44,7 @@
 #include "nsIXULWindow.h"
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
+#include "nsGUIEvent.h"
 
 // nsXULWindow
 

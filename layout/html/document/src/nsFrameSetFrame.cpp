@@ -46,6 +46,9 @@
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
+#include "nsGUIEvent.h"
+#include "nsIRenderingContext.h"
+
 // masks for mEdgeVisibility
 #define LEFT_VIS   0x0001
 #define RIGHT_VIS  0x0002

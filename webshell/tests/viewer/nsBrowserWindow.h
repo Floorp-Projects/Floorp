@@ -59,6 +59,7 @@ class nsIPresContext;
 class nsIPresShell;
 class nsIContentConnector;
 class nsWebCrawler;
+class nsIContent;
 
 #define SAMPLES_BASE_URL "resource:/res/samples"
 

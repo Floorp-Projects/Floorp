@@ -23,6 +23,7 @@
 
 #include "nsIDOMDOMException.h"
 #include "nsDOMError.h"
+#include "nsCRT.h"
 #include "prprf.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsReadableUtils.h"

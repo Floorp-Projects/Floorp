@@ -53,6 +53,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableFrame.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsGUIEvent.h"
 
 #define NS_MENU_POPUP_LIST_INDEX   0
 

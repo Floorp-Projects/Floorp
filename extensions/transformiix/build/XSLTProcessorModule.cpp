@@ -25,6 +25,7 @@
 
 #include "nsIGenericFactory.h"
 #include "nsICategoryManager.h"
+#include "nsIServiceManager.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsXPIDLString.h"
 

@@ -38,6 +38,7 @@
 #include "nsISizeOfHandler.h"
 #include "nsIFormControlFrame.h"
 #include "nsIPresShell.h"
+#include "nsGUIEvent.h"
 
 
 class nsHTMLLabelElement : public nsGenericHTMLContainerFormElement,

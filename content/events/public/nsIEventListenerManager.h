@@ -23,7 +23,7 @@
 #ifndef nsIEventListenerManager_h__
 #define nsIEventListenerManager_h__
 
-#include "nsGUIEvent.h"
+#include "nsEvent.h"
 #include "nsISupports.h"
 #include "nsVoidArray.h"
 

@@ -59,6 +59,7 @@
 #include "nsFrameTraversal.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebNavigation.h"
+#include "nsIContentViewer.h"
 
 #include "nsIServiceManager.h"
 #include "nsIPref.h"

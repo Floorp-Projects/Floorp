@@ -45,6 +45,7 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIDOMDocument.h"
 #include "nsPluginViewer.h"
+#include "nsGUIEvent.h"
 #include "nsIPluginViewer.h"
 
 

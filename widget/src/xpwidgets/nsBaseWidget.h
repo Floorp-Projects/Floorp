@@ -35,6 +35,7 @@
 #include "nsVoidArray.h"
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
+#include "nsGUIEvent.h"
 
 /**
  * Common widget implementation used as base class for native

@@ -31,6 +31,7 @@ class nsIScriptGlobalObject;
 class nsIScriptSecurityManager;
 class nsIScriptContextOwner;
 class nsIPrincipal;
+class nsIAtom;
 
 typedef void (*nsScriptTerminationFunc)(nsISupports* aRef);
 

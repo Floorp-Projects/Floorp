@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  */
+#include "nsIServiceManager.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsCSSRendering.h"

@@ -24,7 +24,7 @@
 #ifndef nsIMouseListener_h__
 #define nsIMouseListener_h__
 
-#include "nsGUIEvent.h"
+#include "nsEvent.h"
 #include "nsISupports.h"
 
 /**

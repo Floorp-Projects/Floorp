@@ -26,7 +26,6 @@
 
 #include "nsCWebBrowser.h"
 #include "nsIComponentManager.h"
-#include "nsComponentManagerUtils.h"
 #include "nsWidgetsCID.h"
 #include "nsRepeater.h"
 #include "nsString.h"
@@ -48,6 +47,7 @@
 #include "nsIWebBrowserFind.h"
 #include "nsIWebBrowserFocus.h"
 #include "nsWeakPtr.h"
+#include "nsRect.h"
 
 #include <UModalDialogs.h>
 #include <LStream.h>

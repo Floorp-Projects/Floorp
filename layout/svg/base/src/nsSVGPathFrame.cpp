@@ -37,7 +37,9 @@
 #include "nsPoint.h"
 #include "nsSVGAtoms.h"
 #include "nsIDeviceContext.h"
+#include "nsGUIEvent.h"
 //#include "nsSVGPathCID.h"
+
 //
 // NS_NewSVGPathFrame
 //

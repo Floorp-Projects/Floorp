@@ -27,6 +27,7 @@
 #include <stdio.h>
 
 #include "nsIFileStreams.h"
+#include "nsILocalFile.h"
 
 class nsANSIInputStream : public nsIInputStream, public nsISeekableStream {
     FILE*       mFile;

@@ -35,6 +35,8 @@
 #include "nsCRT.h"
 #include "prprf.h"
 #include "nsIDeviceContext.h"
+#include "nsGUIEvent.h"
+#include "nsIImage.h"
 
 
 static NS_DEFINE_IID(kChildCID, NS_CHILD_CID);

@@ -66,6 +66,7 @@
 
 #include "jsapi.h"
 #include "nsIXPConnect.h"
+#include "nsIScriptContext.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);

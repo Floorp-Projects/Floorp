@@ -31,6 +31,7 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsIPrivateTextEvent.h"
+#include "nsISelectionController.h"
 
 /////////////////////////////////////////////////////////////////////////
 // mozXMLTermKeyListener factory

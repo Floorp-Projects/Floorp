@@ -32,6 +32,7 @@
 #include "nsIGenericFactory.h"
 #include "nsStyleCoord.h"
 #include "nsHTMLReflowState.h"
+#include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
 
 // Interfaces needed to be included
@@ -58,6 +59,7 @@
 #include "nsPIWindowWatcher.h"
 #include "nsIPrompt.h"
 #include "nsIWalletService.h"
+#include "nsRect.h"
 #include "nsIWebBrowserChromeFocus.h"
 
 static char *sWindowWatcherContractID = "@mozilla.org/embedcomp/window-watcher;1";

@@ -26,8 +26,12 @@
 #include <stdio.h>
 #include "nsISupports.h"
 #include "nsCoord.h"
-#include "nsIWidget.h"
-#include "nsGUIEvent.h"
+#include "nsEvent.h"
+
+struct nsGUIEvent;
+class nsIWidget;
+struct nsWidgetInitData;
+typedef void* nsNativeWidget;
 
 class nsIViewManager;
 class nsIRegion;

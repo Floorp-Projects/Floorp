@@ -24,6 +24,7 @@
 #include <nsCWebBrowser.h>
 #include <nsIComponentManager.h>
 #include <nsIDocShellTreeItem.h>
+#include "nsIWidget.h"
 
 #include "EmbedWindow.h"
 #include "EmbedPrivate.h"

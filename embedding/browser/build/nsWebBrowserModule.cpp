@@ -21,6 +21,7 @@
  */
 
 #include "nsIModule.h"
+#include "nsIServiceManager.h"
 #include "nsIGenericFactory.h"
 #include "nsICategoryManager.h"
 #include "nsXPIDLString.h"

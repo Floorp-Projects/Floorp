@@ -41,6 +41,8 @@
 #include "nsIRefreshURI.h"
 #include "nsStyleConsts.h"
 #include "nsIPresShell.h"
+#include "nsGUIEvent.h"
+#include "nsIPresContext.h"
 
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMViewCSS.h"

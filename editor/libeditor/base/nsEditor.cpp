@@ -48,6 +48,7 @@
 #include "nsIViewManager.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
+#include "nsISelectionController.h"
 #include "nsIEnumerator.h"
 #include "nsIAtom.h"
 #include "nsISupportsArray.h"
@@ -59,6 +60,7 @@
 #include "nsIWidget.h"
 #include "nsIScrollbar.h"
 #include "nsIPlaintextEditor.h"
+#include "nsGUIEvent.h"
 
 #include "nsIFrame.h"  // Needed by IME code
 

@@ -32,6 +32,7 @@
 #include "nsIContentViewer.h"
 #include "nsIPref.h"
 #include "nsVoidArray.h"
+#include "nsIScriptContext.h"
 
 #include "nsCDocShell.h"
 #include "nsIDocShellTreeOwner.h"

@@ -30,6 +30,7 @@
 #include "nsMenuBar.h"
 #include "nsIMenuBar.h"
 #include "DefProcFakery.h"
+#include "nsGUIEvent.h"
 
 #include <Resources.h>
 #include <MixedMode.h>

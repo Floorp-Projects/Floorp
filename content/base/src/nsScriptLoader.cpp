@@ -32,6 +32,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsNetUtil.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptContext.h"
 #include "nsINodeInfo.h"
 #include "nsINameSpaceManager.h"
 #include "nsIScriptSecurityManager.h"

@@ -46,6 +46,7 @@
 #include "nsIPrintListener.h"
 #include "nsIPrintOptions.h"
 #include "nsIWebBrowserPrint.h"
+#include "nsIWidget.h"
 
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMHTMLAnchorElement.h"

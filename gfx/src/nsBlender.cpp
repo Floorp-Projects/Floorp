@@ -23,6 +23,7 @@
 #include "nsBlender.h"
 #include "nsIDeviceContext.h"
 #include "il_util.h"
+#include "nsCRT.h"
 
 /** ---------------------------------------------------
  *  See documentation in nsBlender.h

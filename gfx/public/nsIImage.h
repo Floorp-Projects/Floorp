@@ -24,10 +24,12 @@
 #define nsIImage_h___
 
 #include "nsISupports.h"
-#include "nsRect.h"
 #include "nsIRenderingContext.h"
 
-typedef struct
+struct nsRect;
+class nsIDeviceContext;
+
+struct nsColorMap
 {
   //I lifted this from the image lib. The difference is that
   //this uses nscolor instead of NI_RGB. Multiple color pollution
@@ -38,7 +40,7 @@ typedef struct
   //nscolor *Map;       // Colormap colors.
   PRUint8 *Index;     // NULL, if map is in index order, otherwise
                       // specifies the indices of the map entries. */
-} nsColorMap;
+};
 
 typedef enum {
     nsMaskRequirements_kNoMask,

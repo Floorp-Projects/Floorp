@@ -25,6 +25,7 @@
 #include "nsRenderingContextMac.h"
 #include "nsDeviceContextMac.h"
 #include "nsFontMetricsMac.h"
+#include "nsIImage.h"
 #include "nsIRegion.h"
 #include "nsIEnumerator.h"
 #include "nsRegionMac.h"

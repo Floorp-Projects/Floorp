@@ -5,6 +5,7 @@
 #include "nsIServiceManager.h"
 #include "nsMemory.h"
 #include "nsXPIDLString.h"
+#include "nsISimpleEnumerator.h"
 
 
 PRBool LoopInDir(nsILocalFile* file)

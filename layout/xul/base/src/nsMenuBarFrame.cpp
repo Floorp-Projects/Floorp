@@ -41,6 +41,7 @@
 #include "nsIViewManager.h"
 #include "nsIFrameManager.h"
 #include "nsMenuPopupFrame.h"
+#include "nsGUIEvent.h"
 
 
 //

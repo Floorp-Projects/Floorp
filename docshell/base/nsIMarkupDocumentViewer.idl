@@ -20,8 +20,6 @@
  *   Travis Bogard <travis@netscape.com>
  */
 
-#include "nsISupports.idl"
-
 /**
  * The nsIContentViewerEdit    
  */
