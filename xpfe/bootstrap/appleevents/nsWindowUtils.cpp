@@ -297,7 +297,7 @@ WindowPtr nsWindowUtils::GetNamedOrFrontmostWindow(TWindowKind windowKind, const
     		    // ...see if its name is the desired one.
     		  Str255 pascalTitle;
     		  GetWTitle(windowRef, pascalTitle);   					
-    			if (windowNameString.EqualsWithConversion((const char*)&pascalTitle[1], PR_FALSE, pascalTitle[0]))
+    			if (windowNameString.Compare((const char*)&pascalTitle[1], PR_FALSE, pascalTitle[0]) == 0)
     			{
     				windowPtr = (WindowPtr)windowRef;		// WindowRef is the WindowPtr.
     				break;
