@@ -556,7 +556,7 @@ static nsresult main1(int argc, char* argv[])
   NS_HideSplashScreen();
   // Start main event loop
   rv = appShell->Run();
-
+  
   /*
    * Shut down the Shell instance...  This is done even if the Run(...)
    * method returned an error.
@@ -665,9 +665,20 @@ int main(int argc, char* argv[])
   rv = NS_InitXPCOM(NULL, NULL, NULL);
   NS_ASSERTION( NS_SUCCEEDED(rv), "NS_InitXPCOM failed" );
 
-
   nsresult result = main1( argc, argv );
-	
+
+  {
+        // Scoping this in a block to force the pref service to be           
+        // released. 
+        //
+	// save the prefs, in case they weren't saved
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get prefs, so unable to save them");
+	if (NS_SUCCEEDED(rv)) {
+		prefs->SavePrefFile();
+	}  
+  }
+
 #ifdef DETECT_WEBSHELL_LEAKS
   if ( unsigned long count = NS_TotalWebShellsInExistence() )  {
     printf("XXX WARNING: Number of webshells being leaked: %d \n", count);
