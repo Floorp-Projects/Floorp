@@ -189,8 +189,8 @@ nsresult nsMsgProtocol::OpenFileSocket(nsIURI * aURL, PRUint32 aStartPosition, P
   nsCOMPtr<nsIFileTransportService> fts = 
            do_GetService(kFileTransportServiceCID, &rv);    
   if (NS_FAILED(rv)) return rv;
-
-  rv = fts->CreateTransport(file, PR_RDWR | PR_CREATE_FILE,
+  //we are always using this file socket to read data from the mailbox.
+  rv = fts->CreateTransport(file, PR_RDONLY,
                             0664, getter_AddRefs(m_transport));
   m_socketIsOpen = PR_FALSE;
 
