@@ -21,13 +21,26 @@
  */
 
 #include "nsJARProtocolHandler.h"
-#include "nsIURI.h"
 #include "nsIIOService.h"
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsJARURI.h"
+#include "nsIURL.h"
+#include "nsJARChannel.h"
 
+//temp vars
+/**
+#include "nsIZip.h"
+#include "nsIJAR.h"
+#include "nsCOMPtr.h"
+#include "nsIMIMEService.h"
+#define DEFAULT_TYPE "text/html"
+static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
+static NS_DEFINE_CID(kJARCID, NS_JAR_CID);
+**/
 static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kJARUriCID,        NS_JARURI_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -46,7 +59,9 @@ nsJARProtocolHandler::~nsJARProtocolHandler()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsJARProtocolHandler, nsIProtocolHandler::GetIID());
+NS_IMPL_ISUPPORTS2(nsJARProtocolHandler, 
+                   nsIJARProtocolHandler, 
+                   nsIProtocolHandler)
 
 NS_METHOD
 nsJARProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -85,25 +100,53 @@ nsJARProtocolHandler::GetDefaultPort(PRInt32 *result)
     return NS_OK;
 }
 
-// JAR urls have the following syntax
-//
-// jar:<url>!/(entry)
-//
-// EXAMPLE: jar:http://www.big.com/blue.jar!/ocean.html
 NS_IMETHODIMP
 nsJARProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
-                               nsIURI **result)
+                             nsIURI **result)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+    nsIURI* url;
+    if (aBaseURI) {
+        rv = aBaseURI->Clone(&url);
+        if (NS_FAILED(rv)) return rv;
+        rv = url->SetRelativePath(aSpec);
+    }
+    else {
+        rv = nsJARURI::Create(nsnull, NS_GET_IID(nsIJARURI), (void**)&url);
+        if (NS_FAILED(rv)) return rv;
+        rv = url->SetSpec((char*)aSpec);
+    }
+
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(url);
+        return rv;
+    }
+
+    *result = url;
+    return rv;
 }
 
 NS_IMETHODIMP
 nsJARProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
                                    nsILoadGroup* loadGroup,
                                    nsIEventSinkGetter* eventSinkGetter,
+								   nsIURI* originalURI,
                                    nsIChannel* *result)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+    
+	nsJARChannel* channel;
+    rv = nsJARChannel::Create(nsnull, NS_GET_IID(nsIJARChannel), (void**)&channel);
+    if (NS_FAILED(rv)) return rv;
+
+	rv = channel->Init(this, verb, uri, loadGroup, eventSinkGetter, originalURI);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(channel);
+        return rv;
+    }
+
+    *result = channel;
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -24,22 +24,28 @@ MODULE=necko
 
 IS_COMPONENT=1
 MAKE_OBJ_TYPE=DLL
-DLLNAME=necko_jar
+DLLNAME=nkjar
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LLIBS= $(LLIBS)                 \
 	$(LIBNSPR)              \
 	$(DIST)\lib\xpcom.lib   \
+	$(DIST)\lib\plc3.lib	\
+	$(DIST)\lib\zlib.lib    \
 	$(NULL)
 
-CPP_OBJS=                                      \
+CPP_OBJS=                                    \
+	.\$(OBJDIR)\nsJARURI.obj             \
+	.\$(OBJDIR)\nsJARChannel.obj         \
 	.\$(OBJDIR)\nsJARProtocolHandler.obj \
 	.\$(OBJDIR)\nsJARProtocolModule.obj  \
 	$(NULL)
 
 LOCAL_INCLUDES=-I.	
 
-INCLUDES = $(LOCAL_INCLUDES)
+INCLUDES = $(LOCAL_INCLUDES) \
+	   $(DIST)\include \
+	   $(NULL)
 
 REQUIRES= necko 
 

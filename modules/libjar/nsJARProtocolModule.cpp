@@ -47,7 +47,7 @@ protected:
     void Shutdown();
 
     PRBool mInitialized;
-    nsCOMPtr<nsIGenericFactory> mFactory;
+    nsCOMPtr<nsIGenericFactory> mProtocolHandlerFactory;
 };
 
 static NS_DEFINE_IID(kIModuleIID, NS_IMODULE_IID);
@@ -81,7 +81,7 @@ void
 nsJARProtocolModule::Shutdown()
 {
     // Release the factory object
-    mFactory = nsnull;
+    mProtocolHandlerFactory = nsnull;
 }
 
 // Create a factory object for creating instances of aClass.
@@ -112,11 +112,11 @@ nsJARProtocolModule::GetClassObject(nsIComponentManager *aCompMgr,
     // class type (aClass).
     nsCOMPtr<nsIGenericFactory> fact;
     if (aClass.Equals(kJARProtocolHandlerCID)) {
-        if (!mFactory) {
-            rv = NS_NewGenericFactory(getter_AddRefs(mFactory),
+        if (!mProtocolHandlerFactory) {
+            rv = NS_NewGenericFactory(getter_AddRefs(mProtocolHandlerFactory),
                                       nsJARProtocolHandler::Create);
         }
-        fact = mFactory;
+        fact = mProtocolHandlerFactory;
     }
     else {
         rv = NS_ERROR_FACTORY_NOT_REGISTERED;
@@ -145,7 +145,7 @@ struct Components {
 // The list of components we register
 static Components gComponents[] = {
     { "JAR Protocol Handler", &kJARProtocolHandlerCID,
-      NS_NETWORK_PROTOCOL_PROGID_PREFIX "JAR", },
+      NS_NETWORK_PROTOCOL_PROGID_PREFIX "jar", },
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 

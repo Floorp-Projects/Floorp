@@ -24,10 +24,11 @@ MODULE = necko
 DEPTH = ..\..\..\..
 include <$(DEPTH)/config/config.mak>
 
-XPIDL_MODULE = necko_about
+XPIDL_MODULE = necko_jar
 
 XPIDLSRCS =                  \
         .\nsIJARChannel.idl \
+	.\nsIJARURI.idl \
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
