@@ -64,6 +64,7 @@ protected:
     virtual void InitCallbacks(char * aName = nsnull);
     virtual void OnDestroySignal(GtkWidget* aGtkWidget);
 
+    GtkWidget  *mAlign;  /* workaround for gtkcombo bug */
     GtkWidget  *mCombo;  /* workaround for gtkcombo bug */
     GList *mItems;
     PRBool  mMultiSelect;

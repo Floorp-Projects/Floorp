@@ -59,6 +59,7 @@ nsComboBox::~nsComboBox()
     }
     g_list_free(mItems);
   }
+  gtk_widget_destroy(mCombo);
 }
 
 void nsComboBox::InitCallbacks(char * aName)
@@ -123,18 +124,18 @@ PRInt32  nsComboBox::FindItem(nsString &aItem, PRInt32 aStartPos)
 {
   NS_ALLOC_STR_BUF(val, aItem, 256);
   int i;
-  PRInt32 index = -1;
+  PRInt32 inx = -1;
   GList *items = g_list_nth(mItems, aStartPos);
   for(i=0; items != NULL; items = (GList *) g_list_next(items), i++ )
     {
       if(!strcmp(val, (gchar *) items->data))
         {
-          index = i;
+          inx = i;
           break;
         }
     }
   NS_FREE_STR_BUF(val);
-  return index;
+  return inx;
 }
 
 //-------------------------------------------------------------------------
@@ -307,17 +308,21 @@ NS_METHOD  nsComboBox::CreateNative(GtkWidget *parentWindow)
    add it inside an alignment  set the usize on it..
    (set xscale yscale for the alignment to 1.0)
 */
-  mWidget = ::gtk_alignment_new(1.0,1.0,1.0,1.0);
+  mWidget = ::gtk_event_box_new();
+
+  mAlign = ::gtk_alignment_new(1.0,1.0,1.0,1.0);
   ::gtk_widget_set_name(mWidget, "nsComboBox");
   mCombo = ::gtk_combo_new();
   gtk_widget_show(mCombo);
   /* make the stuff uneditable */
   gtk_entry_set_editable(GTK_ENTRY(GTK_COMBO(mCombo)->entry), PR_FALSE);
-  gtk_container_add(GTK_CONTAINER(mWidget), mCombo);
+  gtk_container_add(GTK_CONTAINER(mAlign), mCombo);
   gtk_signal_connect(GTK_OBJECT(mCombo),
                      "destroy",
                      GTK_SIGNAL_FUNC(DestroySignal),
                      this);
+
+  gtk_container_add(GTK_CONTAINER(mWidget), mAlign);
 
   return NS_OK;
 }

@@ -50,14 +50,14 @@ nsListBox::~nsListBox()
 
 void nsListBox::InitCallbacks(char * aName)
 {
-  InstallButtonPressSignal(mWidget);
-  InstallButtonReleaseSignal(mWidget);
+  InstallButtonPressSignal(mCList);
+  InstallButtonReleaseSignal(mCList);
 
-  InstallEnterNotifySignal(mWidget);
-  InstallLeaveNotifySignal(mWidget);
+  InstallEnterNotifySignal(mCList);
+  InstallLeaveNotifySignal(mCList);
 
   // These are needed so that the events will go to us and not our parent.
-  AddToEventMask(mWidget,
+  AddToEventMask(mCList,
                  GDK_BUTTON_PRESS_MASK |
                  GDK_BUTTON_RELEASE_MASK |
                  GDK_ENTER_NOTIFY_MASK |
@@ -147,14 +147,14 @@ NS_METHOD nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 //-------------------------------------------------------------------------
 PRInt32  nsListBox::FindItem(nsString &aItem, PRInt32 aStartPos)
 {
-  int index = -1;
+  int i = -1;
   if (mCList) {
-    index = gtk_clist_find_row_from_data(GTK_CLIST(mCList), (gpointer)&aItem);
-    if (index < aStartPos) {
-      index = -1;
+    i = gtk_clist_find_row_from_data(GTK_CLIST(mCList), (gpointer)&aItem);
+    if (i < aStartPos) {
+      i = -1;
     }
   }
-  return index;
+  return i;
 }
 
 //-------------------------------------------------------------------------
@@ -214,11 +214,11 @@ NS_METHOD nsListBox::GetSelectedItem(nsString& aItem)
 {
   aItem.Truncate();
   if (mCList) {
-    PRInt32 i=0, index=-1;
+    PRInt32 i=0, idx=-1;
     GtkCList *clist = GTK_CLIST(mCList);
     GList *list = clist->row_list;
 
-    for (i=0; i < clist->rows && index == -1; i++, list = list->next) {
+    for (i=0; i < clist->rows && idx == -1; i++, list = list->next) {
       if (GTK_CLIST_ROW (list)->state == GTK_STATE_SELECTED) {
         char *text = nsnull;
         gtk_clist_get_text(GTK_CLIST(mCList),i,0,&text);
@@ -239,22 +239,22 @@ NS_METHOD nsListBox::GetSelectedItem(nsString& aItem)
 //-------------------------------------------------------------------------
 PRInt32 nsListBox::GetSelectedIndex()
 {
-  PRInt32 i=0, index=-1;
+  PRInt32 i=0, idx=-1;
   if (mCList) {
     if (!mMultiSelect) {
       GtkCList *clist = GTK_CLIST(mCList);
       GList *list = clist->row_list;
 
-      for (i=0; i < clist->rows && index == -1; i++, list = list->next) {
+      for (i=0; i < clist->rows && idx == -1; i++, list = list->next) {
         if (GTK_CLIST_ROW (list)->state == GTK_STATE_SELECTED) {
-          index = i;
+          idx = i;
         }
       }
     } else {
       NS_ASSERTION(PR_FALSE, "Multi selection list box does not support GetSelectedIndex()");
     }
   }
-  return index;
+  return idx;
 }
 
 //-------------------------------------------------------------------------
