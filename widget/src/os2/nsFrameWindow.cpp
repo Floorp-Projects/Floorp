@@ -157,6 +157,10 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
    /* Set some HWNDs and style into properties for fullscreen mode */
    HWND hwndTitleBar = WinWindowFromID(mFrameWnd, FID_TITLEBAR);
    WinSetProperty(mFrameWnd, "hwndTitleBar", (PVOID)hwndTitleBar, 0);
+   HWND hwndSysMenu = WinWindowFromID(mFrameWnd, FID_SYSMENU);
+   WinSetProperty(mFrameWnd, "hwndSysMenu", (PVOID)hwndSysMenu, 0);
+   HWND hwndMinMax = WinWindowFromID(mFrameWnd, FID_MINMAX);
+   WinSetProperty(mFrameWnd, "hwndMinMax", (PVOID)hwndMinMax, 0);
 
 
    SetWindowListVisibility( PR_FALSE);  // Hide from Window List until shown
@@ -383,38 +387,57 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
 
          break;
       }
-
        case WM_ADJUSTWINDOWPOS:
           {
             PSWP pswp = (PSWP)mp1;
+#if 0
             if (pswp->fl & SWP_ZORDER)
               ConstrainZLevel(&pswp->hwndInsertBehind);
+#endif
+            if (mChromeHidden) {
+              if (pswp->fl & SWP_MINIMIZE) {
+                 HWND hwndTemp = (HWND)WinQueryProperty(mFrameWnd, "hwndSysMenu");
+                 if (hwndTemp)
+                   WinSetParent(hwndTemp, mFrameWnd, TRUE);
+              }
+              if (pswp->fl & SWP_RESTORE) {
+                HWND hwndTemp = (HWND)WinQueryProperty(mFrameWnd, "hwndSysMenu");
+                if (hwndTemp)
+                  WinSetParent(hwndTemp, HWND_OBJECT, TRUE);
+              }
+            }
           }
           break;
       case WM_DESTROY:
          WinSubclassWindow( mFrameWnd, fnwpDefFrame);
          WinSetWindowPtr( mFrameWnd, QWL_USER, 0);
          WinRemoveProperty(mFrameWnd, "hwndTitleBar");
+         WinRemoveProperty(mFrameWnd, "hwndSysMenu");
+         WinRemoveProperty(mFrameWnd, "hwndMinMax");
          WinRemoveProperty(mFrameWnd, "ulStyle");
          break;
       case WM_INITMENU:
          /* If we are in fullscreen/kiosk mode, disable maximize menu item */
          if (mChromeHidden) {
-            if (SHORT1FROMMP(mp1) == SC_SYSMENU) {
-               MENUITEM menuitem;
-               WinSendMsg(WinWindowFromID(mFrameWnd, FID_SYSMENU), MM_QUERYITEM, MPFROM2SHORT(SC_SYSMENU, FALSE), MPARAM(&menuitem));
-               mRC = (*fnwpDefFrame)( mFrameWnd, msg, mp1, mp2);
-               WinEnableMenuItem(menuitem.hwndSubMenu, SC_MAXIMIZE, FALSE);
-               bDone = TRUE;
+            if (WinQueryWindowULong(mFrameWnd, QWL_STYLE) & WS_MINIMIZED) {
+              if (SHORT1FROMMP(mp1) == SC_SYSMENU) {
+                MENUITEM menuitem;
+                WinSendMsg(WinWindowFromID(mFrameWnd, FID_SYSMENU), MM_QUERYITEM, MPFROM2SHORT(SC_SYSMENU, FALSE), MPARAM(&menuitem));
+                mRC = (*fnwpDefFrame)( mFrameWnd, msg, mp1, mp2);
+                WinEnableMenuItem(menuitem.hwndSubMenu, SC_MAXIMIZE, FALSE);
+                bDone = TRUE;
+              }
             }
          }
          break;
       case WM_SYSCOMMAND:
          /* If we are in fullscreen/kiosk mode, don't honor maximize requests */
          if (mChromeHidden) {
-            if ((SHORT1FROMMP(mp1) == SC_MAXIMIZE))
-            {
-               bDone = TRUE;
+            if (WinQueryWindowULong(mFrameWnd, QWL_STYLE) & WS_MINIMIZED) {
+              if ((SHORT1FROMMP(mp1) == SC_MAXIMIZE))
+              {
+                bDone = TRUE;
+              }
             }
          }
          break;
