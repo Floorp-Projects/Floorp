@@ -34,7 +34,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsIHTMLTableCellElement.h"
 #include "nsIDOMHTMLTableCellElement.h"
 #include "nsIDOMHTMLTableRowElement.h"
 #include "nsIDOMHTMLCollection.h"
@@ -49,7 +48,6 @@
 #include "nsIDocument.h"
 
 class nsHTMLTableCellElement : public nsGenericHTMLElement,
-                               public nsIHTMLTableCellElement,
                                public nsIDOMHTMLTableCellElement
 {
 public:
@@ -71,10 +69,6 @@ public:
   // nsIDOMHTMLTableCellElement
   NS_DECL_NSIDOMHTMLTABLECELLELEMENT
 
-  // nsIHTMLTableCellElement
-  NS_METHOD GetColIndex (PRInt32* aColIndex);
-  NS_METHOD SetColIndex (PRInt32 aColIndex);
-
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -90,8 +84,6 @@ protected:
   // found the row element that this cell is in or not.
   void GetRow(nsIDOMHTMLTableRowElement** aRow);
   nsIContent * GetTable();
-
-  PRInt32 mColIndex;
 };
 
 nsresult
@@ -123,7 +115,6 @@ NS_NewHTMLTableCellElement(nsIHTMLContent** aInstancePtrResult,
 
 nsHTMLTableCellElement::nsHTMLTableCellElement()
 {
-  mColIndex=0;
 }
 
 nsHTMLTableCellElement::~nsHTMLTableCellElement()
@@ -138,7 +129,6 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLTableCellElement, nsGenericElement)
 // QueryInterface implementation for nsHTMLTableCellElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLTableCellElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLTableCellElement)
-  NS_INTERFACE_MAP_ENTRY(nsIHTMLTableCellElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLTableCellElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -168,20 +158,6 @@ nsHTMLTableCellElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
   NS_ADDREF(*aReturn);
 
-  return NS_OK;
-}
-
-/** @return the starting column for this cell in aColIndex.  Always >= 1 */
-NS_METHOD nsHTMLTableCellElement::GetColIndex (PRInt32* aColIndex)
-{ 
-  *aColIndex = mColIndex;
-  return NS_OK;
-}
-
-/** set the starting column for this cell.  Always >= 1 */
-NS_METHOD nsHTMLTableCellElement::SetColIndex (PRInt32 aColIndex)
-{ 
-  mColIndex = aColIndex;
   return NS_OK;
 }
 

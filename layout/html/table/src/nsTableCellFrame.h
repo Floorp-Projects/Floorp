@@ -119,9 +119,6 @@ public:
   virtual void NotifyPercentHeight(const nsHTMLReflowState& aReflowState);
 
   virtual PRBool NeedsToObserve(const nsHTMLReflowState& aReflowState);
- 
-  void InitCellFrame(PRInt32 aColIndex);
-
 
   /** instantiate a new instance of nsTableCellFrame.
     * @param aResult    the new object is returned in this out-param
@@ -213,7 +210,7 @@ public:
   
   /** return the cell's column index (starting at 0 for the first column) */
   virtual nsresult GetColIndex(PRInt32 &aColIndex) const;
-  virtual nsresult SetColIndex(PRInt32 aColIndex);
+  void SetColIndex(PRInt32 aColIndex);
 
   /** return the available width given to this frame during its last reflow */
   virtual nscoord GetPriorAvailWidth();
