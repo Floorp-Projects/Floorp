@@ -26,7 +26,7 @@
   <menuitem id="offlineGoOfflineCmd" accesskey="&offlineGoOfflineCmd.accesskey;" observes="Communicator:WorkMode"/>
 
 	<!-- File Menu -->
-	<menu id="menu_File" value="&fileMenu.label;" accesskey="&fileMenu.accesskey;"/>
+	<menu id="menu_File" label="&fileMenu.label;" accesskey="&fileMenu.accesskey;"/>
 	
 	<!-- New SubMenu (Under File Menu) -->
 	<broadcaster id="cmd_newNavigator" oncommand="OpenBrowserWindow()"/>
@@ -47,7 +47,7 @@
   <key id="key_newNavigator"    key="&newNavigatorCmd.key;" observes="cmd_newNavigator" modifiers="accel"/>
 
 	<!-- Edit Menu -->
-	<menu id="menu_Edit" value="&editMenu.label;" accesskey="&editMenu.accesskey;"/>
+	<menu id="menu_Edit" label="&editMenu.label;" accesskey="&editMenu.accesskey;"/>
   <menuitem id="menu_undo" label="&undoCmd.label;" key="key_undo" accesskey="&undoCmd.accesskey;" observes="cmd_undo"/>
   <menuitem id="menu_redo" label="&redoCmd.label;" key="key_redo" accesskey="&redoCmd.accesskey;" observes="cmd_redo"/>
   <menuitem id="menu_cut" label="&cutCmd.label;" key="key_cut" accesskey="&cutCmd.accesskey;" observes="cmd_cut"/>
