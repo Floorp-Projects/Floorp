@@ -121,7 +121,7 @@ nsScriptNameSpaceManager::LookupName(const nsString& aName,
     }
   }
 
-  return NS_COMFALSE;
+  return NS_ERROR_INVALID_ARG;
 }
 
 extern "C" NS_DOM nsresult 
