@@ -1836,7 +1836,7 @@ AddAltName(void              *extHandle,
     SECStatus          rv = SECSuccess;
     SECItem            *issuersAltName = NULL;
     CERTCertificate    *issuerCert = NULL;
-    void               *mark;
+    void               *mark = NULL;
 
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
