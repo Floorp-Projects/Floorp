@@ -41,6 +41,7 @@
  ******/
 
 // tags
+SVG_ATOM(path, "path")
 SVG_ATOM(polygon, "polygon")
 SVG_ATOM(polyline, "polyline")
 SVG_ATOM(rect, "rect")
@@ -55,3 +56,4 @@ SVG_ATOM(points, "points")
 SVG_ATOM(x, "x")
 SVG_ATOM(y, "y")
 SVG_ATOM(fill, "fill")
+SVG_ATOM(d, "d")
