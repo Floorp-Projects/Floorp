@@ -23,6 +23,11 @@ include"$page_header";
 <div id="mainContent" class="right">
 
 <h2>About the Developer Control Panel</h2>
+<P class="first">The Mozilla Update Developer Control Panel allows Extension and Theme authors full access to manage the
+listings of their items on Mozilla Update. This includes the ability to add/remove new versions or whole new items,
+add/remove screenshots, update the compatibility information and even to report questionable comments left in the item's feedback
+to the Mozilla Update Staff.</P>
+
 
 </div>
 <div id="side" class="right">
