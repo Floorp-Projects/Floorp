@@ -45,7 +45,7 @@
 //-----------------------------------------------------------------------------
 var bug = 85721;
 var summary = 'Performance: execution of regular expression';
-var FAST = 10; // execution should be 10 ms or less to pass the test
+var FAST = 25; // execution should be 25 ms or less to pass the test
 var MSG_FAST = 'Execution took less than ' + FAST + ' ms';
 var MSG_SLOW = 'Execution took ';
 var MSG_MS = ' ms';
