@@ -56,7 +56,7 @@
  * extensions are assigned a "file type" via a Windows registry entry.
  * For example, given the file extension ".foo", the file type is
  * determined by examing the value stored in the "default" value stored
- * at the registry key HEKY_LOCAL_MACHINE\Software\Classes\.foo.
+ * at the registry key HKEY_LOCAL_MACHINE\Software\Classes\.foo.
  *
  * Once you have the "file type" then you use that the same way you use
  * Internet Shortcut protocol names to determine which application to
@@ -131,6 +131,9 @@ interface nsIWindowsHooksSettings : nsISupports {
     attribute boolean isHandlingJPEG;
     attribute boolean isHandlingGIF;
     attribute boolean isHandlingPNG;
+    attribute boolean isHandlingMNG;
+    attribute boolean isHandlingBMP;
+    attribute boolean isHandlingICO;
     attribute boolean isHandlingXML;
     attribute boolean isHandlingXUL;
 

@@ -22,6 +22,7 @@
  * Contributor(s):
  *  Bill Law    <law@netscape.com>
  *  Syd Logan   <syd@netscape.com> added turbo mode stuff
+ *  Håkan Waara <hwaara@chello.se>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -71,6 +72,9 @@ static ProtocolRegistryEntry
 const char *jpgExts[] = { ".jpg", ".jpeg", 0 };
 const char *gifExts[] = { ".gif", 0 };
 const char *pngExts[] = { ".png", 0 };
+const char *mngExts[] = { ".mng", 0 };
+const char *bmpExts[] = { ".bmp", 0 };
+const char *icoExts[] = { ".ico", 0 };
 const char *xmlExts[] = { ".xml", 0 };
 const char *xulExts[] = { ".xul", 0 };
 const char *htmExts[] = { ".htm", ".html", 0 };
@@ -79,6 +83,9 @@ static FileTypeRegistryEntry
     jpg( jpgExts, "MozillaJPEG", "Mozilla Joint Photographic Experts Group Image File" ),
     gif( gifExts, "MozillaGIF",  "Mozilla Graphics Interchange Format Image File" ),
     png( pngExts, "MozillaPNG",  "Mozilla Portable Network Graphic Image File" ),
+    mng( mngExts, "MozillaMNG",  "Mozilla Multiple-Image Network Graphic Image File" ),
+    bmp( bmpExts, "MozillaBMP",  "Mozilla Bitmap Image File" ),
+    ico( icoExts, "MozillaICO",  "Mozilla Icon File" ),
     xml( xmlExts, "MozillaXML",  "Mozilla XML File Document" ),
     xul( xulExts, "MozillaXUL",  "Mozilla XUL File Document" );
 
@@ -129,6 +136,9 @@ DEFINE_GETTER_AND_SETTER( IsHandlingHTML,   mHandleHTML   )
 DEFINE_GETTER_AND_SETTER( IsHandlingJPEG,   mHandleJPEG   )
 DEFINE_GETTER_AND_SETTER( IsHandlingGIF,    mHandleGIF    )
 DEFINE_GETTER_AND_SETTER( IsHandlingPNG,    mHandlePNG    )
+DEFINE_GETTER_AND_SETTER( IsHandlingMNG,    mHandleMNG    )
+DEFINE_GETTER_AND_SETTER( IsHandlingBMP,    mHandleBMP    )
+DEFINE_GETTER_AND_SETTER( IsHandlingICO,    mHandleICO    )
 DEFINE_GETTER_AND_SETTER( IsHandlingXML,    mHandleXML    )
 DEFINE_GETTER_AND_SETTER( IsHandlingXUL,    mHandleXUL    )
 DEFINE_GETTER_AND_SETTER( IsHandlingHTTP,   mHandleHTTP   )
@@ -176,6 +186,9 @@ nsWindowsHooks::GetSettings( nsWindowsHooksSettings **result ) {
     prefs->mHandleJPEG   = (void*)( BoolRegistryEntry( "isHandlingJPEG"   ) ) ? PR_TRUE : PR_FALSE;
     prefs->mHandleGIF    = (void*)( BoolRegistryEntry( "isHandlingGIF"    ) ) ? PR_TRUE : PR_FALSE;
     prefs->mHandlePNG    = (void*)( BoolRegistryEntry( "isHandlingPNG"    ) ) ? PR_TRUE : PR_FALSE;
+    prefs->mHandleMNG    = (void*)( BoolRegistryEntry( "isHandlingMNG"    ) ) ? PR_TRUE : PR_FALSE;
+    prefs->mHandleBMP    = (void*)( BoolRegistryEntry( "isHandlingBMP"    ) ) ? PR_TRUE : PR_FALSE;
+    prefs->mHandleICO    = (void*)( BoolRegistryEntry( "isHandlingICO"    ) ) ? PR_TRUE : PR_FALSE;
     prefs->mHandleXML    = (void*)( BoolRegistryEntry( "isHandlingXML"    ) ) ? PR_TRUE : PR_FALSE;
     prefs->mHandleXUL    = (void*)( BoolRegistryEntry( "isHandlingXUL"    ) ) ? PR_TRUE : PR_FALSE;
     prefs->mShowDialog   = (void*)( BoolRegistryEntry( "showDialog"       ) ) ? PR_TRUE : PR_FALSE;
@@ -292,6 +305,9 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent ) {
             settings->mHandleJPEG   = PR_TRUE;
             settings->mHandleGIF    = PR_TRUE;
             settings->mHandlePNG    = PR_TRUE;
+            settings->mHandleMNG    = PR_TRUE;
+            settings->mHandleBMP    = PR_TRUE;
+            settings->mHandleICO    = PR_TRUE;
             settings->mHandleXML    = PR_TRUE;
             settings->mHandleXUL    = PR_TRUE;
 
@@ -334,6 +350,12 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent ) {
                  misMatch( settings->mHandleGIF,    gif )
                  ||
                  misMatch( settings->mHandlePNG,    png )
+                 ||
+                 misMatch( settings->mHandlePNG,    mng )
+                 ||
+                 misMatch( settings->mHandlePNG,    bmp )
+                 ||
+                 misMatch( settings->mHandlePNG,    ico )
                  ||
                  misMatch( settings->mHandleXML,    xml )
                  ||
@@ -490,6 +512,9 @@ nsWindowsHooks::SetSettings(nsIWindowsHooksSettings *prefs) {
     putPRBoolIntoRegistry( "isHandlingJPEG",   prefs, &nsIWindowsHooksSettings::GetIsHandlingJPEG );
     putPRBoolIntoRegistry( "isHandlingGIF",    prefs, &nsIWindowsHooksSettings::GetIsHandlingGIF );
     putPRBoolIntoRegistry( "isHandlingPNG",    prefs, &nsIWindowsHooksSettings::GetIsHandlingPNG );
+    putPRBoolIntoRegistry( "isHandlingMNG",    prefs, &nsIWindowsHooksSettings::GetIsHandlingMNG );
+    putPRBoolIntoRegistry( "isHandlingBMP",    prefs, &nsIWindowsHooksSettings::GetIsHandlingBMP );
+    putPRBoolIntoRegistry( "isHandlingICO",    prefs, &nsIWindowsHooksSettings::GetIsHandlingICO );
     putPRBoolIntoRegistry( "isHandlingXML",    prefs, &nsIWindowsHooksSettings::GetIsHandlingXML );
     putPRBoolIntoRegistry( "isHandlingXUL",    prefs, &nsIWindowsHooksSettings::GetIsHandlingXUL );
     putPRBoolIntoRegistry( "showDialog",       prefs, &nsIWindowsHooksSettings::GetShowDialog );
@@ -532,6 +557,21 @@ nsWindowsHooks::SetRegistry() {
         (void) png.set();
     } else {
         (void) png.reset();
+    }
+    if ( prefs->mHandleMNG ) {
+        (void) mng.set();
+    } else {
+        (void) mng.reset();
+    }
+    if ( prefs->mHandleBMP ) {
+        (void) bmp.set();
+    } else {
+        (void) bmp.reset();
+    }
+    if ( prefs->mHandleICO ) {
+        (void) ico.set();
+    } else {
+        (void) ico.reset();
     }
     if ( prefs->mHandleXML ) {
         (void) xml.set();
