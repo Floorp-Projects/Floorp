@@ -760,6 +760,8 @@ nsXIEngine::ExistAllXPIs(int aCustom, nsComponentList *aComps, int *aTotal)
             
             if (0 != stat(currArchivePath, &dummy))
                 bAllExist = FALSE;
+            else
+                currComp->SetDownloaded(TRUE);
 
             (*aTotal)++;
         }
