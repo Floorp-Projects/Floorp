@@ -377,3 +377,9 @@ viewer:chrome:inspector.jar
 viewer:defaults:pref:inspector.js
 viewer:res:inspector:viewer-registry.rdf
 viewer:res:inspector:search-registry.rdf
+
+[typeaheadfind]
+viewer:Components:typeaheadfind.shlb
+viewer:Components:typeaheadfind.xpt
+viewer:chrome:typeaheadfind.jar
+viewer:defaults:pref:typeaheadfind.js
