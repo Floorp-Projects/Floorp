@@ -83,7 +83,7 @@
 #include "nsMsgSearchSession.h"
 #include "nsMsgSearchAdapter.h"
 #include "nsMsgSearchDataSource.h"
-
+#include "nsMsgFolderCompactor.h"
 
 // private factory declarations for each component we know how to produce
 
@@ -119,6 +119,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgServiceProviderService, Init);
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSubscribeDataSource, Init);
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSubscribableServer, Init);
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgPrintEngine, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFolderCompactState)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsOfflineStoreCompactState)
 
 // The list of components we register
 static nsModuleComponentInfo gComponents[] = {
@@ -283,6 +285,14 @@ static nsModuleComponentInfo gComponents[] = {
 	  NS_SUBSCRIBABLESERVER_CONTRACTID,
 	  nsSubscribableServerConstructor,
     },
+    { "Local folder compactor", NS_MSGLOCALFOLDERCOMPACTOR_CID,
+      NS_MSGLOCALFOLDERCOMPACTOR_CONTRACTID,
+      nsFolderCompactStateConstructor,
+    },
+    { "offline store compactor", NS_MSG_OFFLINESTORECOMPACTOR_CID,
+      NS_MSGOFFLINESTORECOMPACTOR_CONTRACTID,
+      nsOfflineStoreCompactStateConstructor,
+    }
 };
 
 NS_IMPL_NSGETMODULE("nsMsgBaseModule", gComponents)

@@ -418,4 +418,20 @@
   {0xd97edfb5, 0xbcbe, 0x4a15, \
     { 0xa4, 0xfb, 0xfb, 0xf2, 0xf9, 0x58, 0xb3, 0x88 }}
 
+#define NS_MSGLOCALFOLDERCOMPACTOR_CONTRACTID \
+  "@mozilla.org/messenger/localfoldercompactor;1"
+
+/* 7d1d315c-e5c6-11d4-a5b7-0060b0fc04b7 */
+#define NS_MSGLOCALFOLDERCOMPACTOR_CID \
+  {0x7d1d315c, 0xe5c6, 0x11d4, \
+    {0xa5, 0xb7, 0x00,0x60, 0xb0, 0xfc, 0x04, 0xb7 }}
+
+#define NS_MSGOFFLINESTORECOMPACTOR_CONTRACTID \
+  "@mozilla.org/messenger/offlinestorecompactor;1"
+
+/* 2db43d16-e5c8-11d4-a5b7-0060b0fc04b7 */
+#define NS_MSG_OFFLINESTORECOMPACTOR_CID \
+  {0x2db43d16, 0xe5c8, 0x11d4, \
+    {0xa5, 0xb7, 0x00,0x60, 0xb0, 0xfc, 0x04, 0xb7 }}
+
 #endif // nsMessageBaseCID_h__

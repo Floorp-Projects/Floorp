@@ -119,7 +119,7 @@ protected:
   nsresult StartNewOfflineMessage();
   nsresult WriteStartOfNewLocalMessage();
   nsresult EndNewOfflineMessage();
-
+  nsresult CompactOfflineStore(nsIMsgWindow *inWindow);
 
 protected:
 	nsCOMPtr<nsIMsgDatabase> mDatabase;

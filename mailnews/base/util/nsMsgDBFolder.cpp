@@ -35,6 +35,7 @@
 #include "nsLocalFolderSummarySpec.h"
 #include "nsIFileStream.h"
 #include "nsIChannel.h"
+#include "nsIMsgFolderCompactor.h"
 #if defined(XP_OS2)
 #define MAX_FILE_LENGTH_WITHOUT_EXTENSION 8
 #elif defined(XP_MAC)
@@ -1392,5 +1393,24 @@ nsresult nsMsgDBFolder::EndNewOfflineMessage()
   }
   m_offlineHeader = nsnull;
   return NS_OK;
+}
+
+nsresult nsMsgDBFolder::CompactOfflineStore(nsIMsgWindow *inWindow)
+{
+  nsresult rv;
+  nsCOMPtr <nsIMsgFolderCompactor> folderCompactor =  do_CreateInstance(NS_MSGOFFLINESTORECOMPACTOR_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && folderCompactor)
+  {
+    GetDatabase(nsnull);
+    if (NS_SUCCEEDED(rv)) 
+    {
+      nsCOMPtr<nsIFileSpec> pathSpec;
+      rv = GetPath(getter_AddRefs(pathSpec));
+      rv = folderCompactor->Init(this, mBaseMessageURI, mDatabase, pathSpec);
+      if (NS_SUCCEEDED(rv))
+        rv = folderCompactor->StartCompacting();
+    }
+  }
+  return rv;
 }
 
