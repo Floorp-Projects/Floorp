@@ -42,7 +42,7 @@ nsresult nsLookAndFeel::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
   if (result == NS_NOINTERFACE && aIID.Equals(kILookAndFeelIID)) {
       *aInstancePtr = (void*) ((nsILookAndFeel*)this);
-      AddRef();
+      NS_ADDREF_THIS();
       result = NS_OK;
   }
 

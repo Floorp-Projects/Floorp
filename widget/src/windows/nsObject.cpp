@@ -79,7 +79,7 @@ nsresult nsObject::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
     if (aIID.Equals(kISupportsIID)) {
         *aInstancePtr = (void*) ((nsISupports*)this);
-        AddRef();
+        NS_ADDREF_THIS();
         return NS_OK;
     }
 

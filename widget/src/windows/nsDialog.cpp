@@ -132,7 +132,7 @@ nsresult nsDialog::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   static NS_DEFINE_IID(kInsDialogIID, NS_IDIALOG_IID);
   if (result == NS_NOINTERFACE && aIID.Equals(kInsDialogIID)) {
       *aInstancePtr = (void*) ((nsIDialog*)this);
-      AddRef();
+      NS_ADDREF_THIS();
       result = NS_OK;
   }
 

@@ -72,7 +72,7 @@ nsresult nsLabel::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
   if (result == NS_NOINTERFACE && aIID.Equals(kILabelIID)) {
       *aInstancePtr = (void*) ((nsILabel*)this);
-      AddRef();
+      NS_ADDREF_THIS();
       result = NS_OK;
   }
 

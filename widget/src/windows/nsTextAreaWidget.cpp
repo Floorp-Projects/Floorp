@@ -80,14 +80,14 @@ nsresult nsTextAreaWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr
   if (aIID.Equals(kITextAreaWidgetIID)) {
       nsITextAreaWidget* textArea = this;
       *aInstancePtr = (void*) (textArea);
-      AddRef();
+      NS_ADDREF_THIS();
       return NS_OK;
   } 
   else if (aIID.Equals(kIWidgetIID))
   {
       nsIWidget* widget = this;
       *aInstancePtr = (void*) (widget);
-      AddRef();
+      NS_ADDREF_THIS();
       return NS_OK;
   }
 

@@ -197,7 +197,7 @@ nsresult nsFileWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     static NS_DEFINE_IID(kInsFileWidgetIID, NS_IFILEWIDGET_IID);
     if (result == NS_NOINTERFACE && aIID.Equals(kInsFileWidgetIID)) {
         *aInstancePtr = (void*) ((nsIFileWidget*)this);
-        AddRef();
+        NS_ADDREF_THIS();
         result = NS_OK;
     }
 

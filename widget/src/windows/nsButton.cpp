@@ -64,7 +64,7 @@ nsresult nsButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     static NS_DEFINE_IID(kIButton, NS_IBUTTON_IID);
     if (aIID.Equals(kIButton)) {
         *aInstancePtr = (void*) ((nsIButton*)this);
-        AddRef();
+        NS_ADDREF_THIS();
         return NS_OK;
     }
 

@@ -64,7 +64,7 @@ nsresult nsScrollbar::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     static NS_DEFINE_IID(kInsScrollbarIID, NS_ISCROLLBAR_IID);
     if (result == NS_NOINTERFACE && aIID.Equals(kInsScrollbarIID)) {
         *aInstancePtr = (void*) ((nsIScrollbar*)this);
-        AddRef();
+        NS_ADDREF_THIS();
         result = NS_OK;
     }
 
