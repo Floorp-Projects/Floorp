@@ -2475,37 +2475,41 @@ PRUint32 WMChar2KeyCode( MPARAM mp1, MPARAM mp2)
    else if( flags & KC_VIRTUALKEY)
    {
       USHORT vk = SHORT2FROMMP( mp2);
-
-      if( vk >= VK_F1 && vk <= VK_F24)
-         rc = NS_VK_F1 + (vk - VK_F1);
-      else switch( vk)
+      if( !(flags & KC_CHAR) ||
+          (vk == VK_BACKSPACE) || (vk == VK_TAB) || 
+          (vk == VK_ENTER) || (vk == VK_NEWLINE) || (vk == VK_SPACE) )
       {
-         case VK_NUMLOCK:   rc = NS_VK_NUM_LOCK; break;
-         case VK_SCRLLOCK:  rc = NS_VK_SCROLL_LOCK; break;
-         case VK_ESC:       rc = NS_VK_ESCAPE; break; // NS_VK_CANCEL
-         case VK_BACKSPACE: rc = NS_VK_BACK; break;
-         case VK_TAB:       rc = NS_VK_TAB; break;
-         case VK_BACKTAB:   rc = NS_VK_TAB; break; // layout tests for isShift
-         case VK_CLEAR:     rc = NS_VK_CLEAR; break;
-         case VK_NEWLINE:   rc = NS_VK_RETURN; break;
-         case VK_ENTER:     rc = NS_VK_ENTER; break;
-         case VK_SHIFT:     rc = NS_VK_SHIFT; break;
-         case VK_CTRL:      rc = NS_VK_CONTROL; break;
-         case VK_ALT:       rc = NS_VK_ALT; break;
-         case VK_PAUSE:     rc = NS_VK_PAUSE; break;
-         case VK_CAPSLOCK:  rc = NS_VK_CAPS_LOCK; break;
-         case VK_SPACE:     rc = NS_VK_SPACE; break;
-         case VK_PAGEUP:    rc = NS_VK_PAGE_UP; break;
-         case VK_PAGEDOWN:  rc = NS_VK_PAGE_DOWN; break;
-         case VK_END:       rc = NS_VK_END; break;
-         case VK_HOME:      rc = NS_VK_HOME; break;
-         case VK_LEFT:      rc = NS_VK_LEFT; break;
-         case VK_UP:        rc = NS_VK_UP; break;
-         case VK_RIGHT:     rc = NS_VK_RIGHT; break;
-         case VK_DOWN:      rc = NS_VK_DOWN; break;
-         case VK_PRINTSCRN: rc = NS_VK_PRINTSCREEN; break;
-         case VK_INSERT:    rc = NS_VK_INSERT; break;
-         case VK_DELETE:    rc = NS_VK_DELETE; break;
+         if( vk >= VK_F1 && vk <= VK_F24)
+            rc = NS_VK_F1 + (vk - VK_F1);
+         else switch( vk)
+         {
+            case VK_NUMLOCK:   rc = NS_VK_NUM_LOCK; break;
+            case VK_SCRLLOCK:  rc = NS_VK_SCROLL_LOCK; break;
+            case VK_ESC:       rc = NS_VK_ESCAPE; break; // NS_VK_CANCEL
+            case VK_BACKSPACE: rc = NS_VK_BACK; break;
+            case VK_TAB:       rc = NS_VK_TAB; break;
+            case VK_BACKTAB:   rc = NS_VK_TAB; break; // layout tests for isShift
+            case VK_CLEAR:     rc = NS_VK_CLEAR; break;
+            case VK_NEWLINE:   rc = NS_VK_RETURN; break;
+            case VK_ENTER:     rc = NS_VK_ENTER; break;
+            case VK_SHIFT:     rc = NS_VK_SHIFT; break;
+            case VK_CTRL:      rc = NS_VK_CONTROL; break;
+            case VK_ALT:       rc = NS_VK_ALT; break;
+            case VK_PAUSE:     rc = NS_VK_PAUSE; break;
+            case VK_CAPSLOCK:  rc = NS_VK_CAPS_LOCK; break;
+            case VK_SPACE:     rc = NS_VK_SPACE; break;
+            case VK_PAGEUP:    rc = NS_VK_PAGE_UP; break;
+            case VK_PAGEDOWN:  rc = NS_VK_PAGE_DOWN; break;
+            case VK_END:       rc = NS_VK_END; break;
+            case VK_HOME:      rc = NS_VK_HOME; break;
+            case VK_LEFT:      rc = NS_VK_LEFT; break;
+            case VK_UP:        rc = NS_VK_UP; break;
+            case VK_RIGHT:     rc = NS_VK_RIGHT; break;
+            case VK_DOWN:      rc = NS_VK_DOWN; break;
+            case VK_PRINTSCRN: rc = NS_VK_PRINTSCREEN; break;
+            case VK_INSERT:    rc = NS_VK_INSERT; break;
+            case VK_DELETE:    rc = NS_VK_DELETE; break;
+         }
       }
    }
 
