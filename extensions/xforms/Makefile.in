@@ -65,6 +65,7 @@ REQUIRES	= \
 		xpconnect \
 		js \
 		layout \
+		schemavalidation \
 		$(NULL)
 
 XPIDLSRCS	= \
@@ -118,6 +119,7 @@ CPPSRCS		= \
 		nsXFormsCaseElement.cpp \
 		nsXFormsSwitchElement.cpp \
 		nsXFormsUploadElement.cpp \
+		nsXFormsSchemaValidator.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)
