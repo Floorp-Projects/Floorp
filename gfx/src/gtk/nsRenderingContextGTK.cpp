@@ -16,7 +16,6 @@
  * Reserved.
  */
 
-#include <gtk/gtk.h>
 #include "nsFontMetricsGTK.h"
 #include "nsRenderingContextGTK.h"
 #include "nsRegionGTK.h"
@@ -24,6 +23,7 @@
 #include "nsGfxCIID.h"
 #include "nsICharRepresentable.h"
 #include <math.h>
+#include <gtk/gtk.h>
 
 #define NS_TO_GDK_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 
