@@ -1109,28 +1109,30 @@ nsWindow::SetFocus(PRBool aRaise)
   printf("top moz area is %p\n", NS_STATIC_CAST(void *, top_mozarea));
 #endif
 
-  // If there is a top_mozarea and it doesn't have focus then we're
-  // going to ignore this request if we're part of the browser.  If
-  // we're embedded then we do grab focus on our toplevel window since
-  // it doesn't hurt anything and the widget has to have focus inside
-  // of the GtkWindow.  If it doesn't then we will not get the right
-  // events when we do actually get focus.
+  // see if the toplevel window has focus
+  gboolean toplevel_focus =
+    gtk_mozarea_get_toplevel_focus(GTK_MOZAREA(top_mozarea));
+
+  // we need to grab focus or make sure that we get focus the next
+  // time that the toplevel gets focus.
   if (top_mozarea && !GTK_WIDGET_HAS_FOCUS(top_mozarea)) {
-    // If the toplevel window doesn't have an nsWindow data pointer
-    // then we are embedded.
-    gpointer data = gtk_object_get_data(GTK_OBJECT(toplevel), "nsWindow");
-    // We're embedded so always set focus unconditionally.
-    if (!data) {
-      data = gtk_object_get_data(GTK_OBJECT(top_mozarea), "nsWindow");
-      nsWindow *mozAreaWindow = NS_STATIC_CAST(nsWindow *, data);
-      mozAreaWindow->mBlockMozAreaFocusIn = PR_TRUE;
-      gtk_widget_grab_focus(top_mozarea);
-      mozAreaWindow->mBlockMozAreaFocusIn = PR_FALSE;
-    }
-    // We're not embedded.  Just return.
-    else {
-      return NS_OK;
-    }
+
+    gpointer data = gtk_object_get_data(GTK_OBJECT(top_mozarea), "nsWindow");
+    nsWindow *mozAreaWindow = NS_STATIC_CAST(nsWindow *, data);
+    mozAreaWindow->mBlockMozAreaFocusIn = PR_TRUE;
+    gtk_widget_grab_focus(top_mozarea);
+    mozAreaWindow->mBlockMozAreaFocusIn = PR_FALSE;
+
+    // !!hack alert!!  This works around bugs in version of gtk older
+    // than 1.2.9, which is what most people use.  If the toplevel
+    // window doesn't have focus then we have to unset the focus flag
+    // on this widget since it was probably just set incorrectly.
+    if (!toplevel_focus)
+      GTK_WIDGET_UNSET_FLAGS(top_mozarea, GTK_HAS_FOCUS);
+    
+    // always dispatch a set focus event
+    DispatchSetFocusEvent();
+    return NS_OK;
   }
 
   if (mHasFocus)
@@ -1285,11 +1287,15 @@ void nsWindow::HandleMozAreaFocusIn(void)
   // want to generate extra focus in events so just return.
   if (mBlockMozAreaFocusIn)
     return;
+
   // otherwise, dispatch our focus events
 #ifdef DEBUG_FOCUS
   printf("nsWindow::HandleMozAreaFocusIn %p\n", NS_STATIC_CAST(void *, this));
 #endif /* DEBUG_FOCUS */
-  gJustGotActivate = PR_TRUE;
+  // we only set the gJustGotActivate signal if we're the toplevel
+  // window.  embedding handles activate semantics for us.
+  if (mIsToplevel)
+    gJustGotActivate = PR_TRUE;
   DispatchSetFocusEvent();
 }
 
@@ -1334,7 +1340,10 @@ void nsWindow::HandleMozAreaFocusOut(void)
       nsCOMPtr<nsIWidget> focusWidgetGuard(focusWidget);
 
       focusWidget->DispatchLostFocusEvent();
-      focusWidget->DispatchDeactivateEvent();
+      // we only send activate/deactivate events for toplevel windows.
+      // activation and deactivation is handled by embedders.
+      if (mIsToplevel)
+        focusWidget->DispatchDeactivateEvent();
       focusWidget->LoseFocus();
     }
   }
@@ -2715,30 +2724,30 @@ gint handle_mozarea_focus_in(GtkWidget *      aWidget,
                              gpointer         aData)
 {
   if (!aWidget)
-    return PR_TRUE;
+    return FALSE;
 
   if (!aGdkFocusEvent)
-    return PR_TRUE;
+    return FALSE;
 
   nsWindow *widget = (nsWindow *)aData;
 
   if (!widget)
-    return PR_TRUE;
+    return FALSE;
 
 #ifdef DEBUG_FOCUS
   printf("handle_mozarea_focus_in\n");
 #endif
 
-  // make sure that we set our focus flag
-  GTK_WIDGET_SET_FLAGS(aWidget, GTK_HAS_FOCUS);
-
 #ifdef DEBUG_FOCUS
   printf("aWidget is %p\n", NS_STATIC_CAST(void *, aWidget));
 #endif
 
+  // set the flag since got a focus in event
+  GTK_WIDGET_SET_FLAGS(aWidget, GTK_HAS_FOCUS);
+
   widget->HandleMozAreaFocusIn();
 
-  return TRUE;
+  return FALSE;
 }
 
 gint handle_mozarea_focus_out(GtkWidget *      aWidget, 
@@ -2750,17 +2759,17 @@ gint handle_mozarea_focus_out(GtkWidget *      aWidget,
 #endif
 
   if (!aWidget) {
-    return PR_TRUE;
+    return FALSE;
   }
   
   if (!aGdkFocusEvent) {
-    return PR_TRUE;
+    return FALSE;
   }
 
   nsWindow *widget = (nsWindow *) aData;
 
   if (!widget) {
-    return PR_TRUE;
+    return FALSE;
   }
 
   // make sure that we unset our focus flag
@@ -2768,7 +2777,7 @@ gint handle_mozarea_focus_out(GtkWidget *      aWidget,
 
   widget->HandleMozAreaFocusOut();
 
-  return TRUE;
+  return FALSE;
 }
 
 

@@ -43,6 +43,8 @@ class EmbedContentListener;
 class EmbedEventListener;
 class EmbedStream;
 
+class nsPIDOMWindow;
+
 class EmbedPrivate {
 
  public:
@@ -82,6 +84,16 @@ class EmbedPrivate {
   // that we can size to content properly and show ourselves if
   // visibility is set.
   void        ContentFinishedLoading(void);
+
+  // these let the widget code know when the toplevel window gets and
+  // looses focus.
+  void        TopLevelFocusIn (void);
+  void        TopLevelFocusOut(void);
+
+  // these are when the widget itself gets focus in and focus out
+  // events
+  void        ChildFocusIn (void);
+  void        ChildFocusOut(void);
 
   GtkMozEmbed                   *mOwningWidget;
 
@@ -135,6 +147,9 @@ class EmbedPrivate {
   void GetListener    (void);
   void AttachListeners(void);
   void DetachListeners(void);
+
+  // this will get the PIDOMWindow for this widget
+  nsresult        GetPIDOMWindow   (nsPIDOMWindow **aPIWin);
   
   static nsresult StartupProfile (void);
   static void     ShutdownProfile(void);
