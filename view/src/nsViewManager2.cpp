@@ -648,7 +648,7 @@ void nsViewManager2::RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, c
 		
 		// draw all views in the display list, from back to front.
 		for (PRInt32 i = count - 1; i>= 0; --i) {
-			DisplayListElement* element = static_cast<DisplayListElement*>(mDisplayList->ElementAt(i));
+			DisplayListElement* element = NS_STATIC_CAST(DisplayListElement*, mDisplayList->ElementAt(i));
 			if (element->mFlags & PUSH_CLIP) {
 				aRC.PushState();
 				aRC.SetClipRect(element->mClip, nsClipCombine_kIntersect, clipEmpty);
