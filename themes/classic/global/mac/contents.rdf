@@ -13,7 +13,7 @@
         chrome:displayName="Classic"
         chrome:accessKey="C"
         chrome:author="mozilla.org"
-        chrome:description="This theme simulates the familiar appearance of previous Netscape versions for the Windows operating system."
+        chrome:description="This theme simulates the familiar appearance of previous Netscape versions for the Macintosh."
         chrome:name="classic/1.0"
         chrome:image="preview.gif">
     <chrome:packages>
