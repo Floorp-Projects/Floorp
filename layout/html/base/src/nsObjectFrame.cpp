@@ -50,6 +50,7 @@
 #include "nsIEventListener.h"
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
+#include "nsLayoutAtoms.h"
 
 // XXX For temporary paint code
 #include "nsIStyleContext.h"
@@ -198,6 +199,7 @@ public:
                           nsEventStatus&  aEventStatus);
 
   NS_IMETHOD Scrolled(nsIView *aView);
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
@@ -382,6 +384,15 @@ nsObjectFrame::Init(nsIPresContext&  aPresContext,
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsObjectFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::objectFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
