@@ -111,7 +111,7 @@ function MsgNewMessage(event)
   var loadedFolder = GetFirstSelectedMsgFolder();
   var messageArray = GetSelectedMessages();
 
-  if (event.shiftKey)
+  if (event && event.shiftKey)
     ComposeMessage(msgComposeType.New, msgComposeFormat.OppositeOfDefault, loadedFolder, messageArray);
   else
     ComposeMessage(msgComposeType.New, msgComposeFormat.Default, loadedFolder, messageArray);

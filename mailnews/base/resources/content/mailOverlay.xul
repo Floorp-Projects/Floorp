@@ -17,6 +17,13 @@
 
     function goOpenNewMessage()
       {
+	try {
+		MsgNewMessage();
+		return;
+	}
+	catch(ex) {
+	;
+	}
       	var msgComposeService = Components.classes["component://netscape/messengercompose"].getService(); 
       	msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService); 
         msgComposeService.OpenComposeWindow(null, null,
