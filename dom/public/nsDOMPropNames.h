@@ -761,6 +761,7 @@
     "screen.pixeldepth", \
     "screen.width", \
     "selection.addrange", \
+    "selection.removerange", \
     "selection.addselectionlistener", \
     "selection.anchornode", \
     "selection.anchoroffset", \
