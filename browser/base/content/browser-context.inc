@@ -54,12 +54,10 @@
                 label="&saveLinkCmd.label;"
                 accesskey="&saveLinkCmd.accesskey;"
                 oncommand="gContextMenu.saveLink();"/>
-#ifndef XP_UNIX
       <menuitem id="context-sendlink"
                 label="&sendLinkCmd.label;"
                 accesskey="&sendLinkCmd.accesskey;"
                 oncommand="gContextMenu.sendLink();"/>
-#endif
       <menuitem id="context-copyemail"
                 label="&copyEmailCmd.label;"
                 accesskey="&copyEmailCmd.accesskey;"
@@ -82,12 +80,10 @@
                 label="&saveImageCmd.label;"
                 accesskey="&saveImageCmd.accesskey;"
                 oncommand="gContextMenu.saveImage();"/>
-#ifndef XP_UNIX
       <menuitem id="context-sendimage"  
                 label="&sendImageCmd.label;" 
                 accesskey="&sendImageCmd.accesskey;" 
                 oncommand="gContextMenu.sendImage();"/>
-#endif
       <menuitem id="context-setWallpaper"
                 label="&setWallpaperCmd.label;"
                 accesskey="&setWallpaperCmd.accesskey;"
@@ -121,12 +117,10 @@
                 label="&savePageCmd.label;"
                 accesskey="&savePageCmd.accesskey;"
                 oncommand="saveDocument(window._content.document);"/>
-#ifndef XP_UNIX
       <menuitem id="context-sendpage"  
                 label="&sendPageCmd.label;" 
                 accesskey="&sendPageCmd.accesskey;" 
                 command="Browser:SendLink"/>
-#endif
       <menuseparator id="context-sep-viewbgimage"/>  
       <menuitem id="context-viewbgimage"
                 label="&viewBGImageCmd.label;"
