@@ -202,7 +202,7 @@ struct JSScope {
     uint32          entryCount;         /* number of entries in table */
     uint32          removedCount;       /* removed entry sentinels in table */
     JSScopeProperty **table;            /* table of ptrs to shared tree nodes */
-    JSScopeProperty *lastProp;          /* tagged ptr to last property added */
+    JSScopeProperty *lastProp;          /* pointer to last property added */
 #ifdef JS_THREADSAFE
     JSContext       *ownercx;           /* creating context, NULL if shared */
     JSThinLock      lock;               /* binary semaphore protecting scope */
