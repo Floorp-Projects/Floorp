@@ -62,10 +62,12 @@ Default Setup Type=Setup Type 0
 ; Default Font Size is 32
 ; Default Font Color is WHITE (of BLACK and GREEN)
 ; Default Font Shadow is TRUE
+;*** LOCALIZE ME BABY ***
 Setup Title0=$ProductName$ Setup
 Setup Title0 Font Size=
 Setup Title0 Font Color=
 Setup Title0 Font Shadow=TRUE
+;*** LOCALIZE ME BABY ***
 Setup Title1=Build $Version$
 Setup Title1 Font Size=12
 Setup Title1 Font Color=BLACK
@@ -96,27 +98,39 @@ Verify Existance=
 [Legacy Check0]
 Filename=[SETUP PATH]\$MainExeFile$
 Version=5.0.0.0
+;*** LOCALIZE ME BABY ***
 Message0=The destination directory already contains an earlier version of $ProductName$. To avoid problems, the installer will delete the destination directory and all its files, and then re-create the directory and install $ProductName$.
+;*** LOCALIZE ME BABY ***
 Message1=If you wish to keep any files currently in the destination directory, either save them to a temporary directory and restore them after the install OR install to an alternate directory.
+;*** LOCALIZE ME BABY ***
 Message2=Click Delete to delete the directory when installation begins. If you prefer not to delete the directory, click Back to go back and choose a different destination directory.
 
 [Dialog Welcome]
 Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
 Title=Welcome
+;*** LOCALIZE ME BABY ***
 Message0=Welcome to %s Setup.
+;*** LOCALIZE ME BABY ***
 Message1=It is strongly recommended that you exit all Windows programs before running this Setup program.
+;*** LOCALIZE ME BABY ***
 Message2=Click Cancel to quit Setup and then close any programs you have running.  Click Next to continue the Setup program.
 
 [Dialog License]
 Show Dialog=FALSE
+;*** LOCALIZE ME BABY ***
 Title=Software License Agreement
 License File=license.txt
+;*** LOCALIZE ME BABY ***
 Message0=Please read the following license agreement.  Use the scroll bar to view the rest of this agreement.
+;*** LOCALIZE ME BABY ***
 Message1=Click Accept if you accept the terms of the preceeding license agreement.  If No is clicked, setup will quit.
 
 [Dialog Setup Type]
 Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
 Title=Setup Type
+;*** LOCALIZE ME BABY ***
 Message0=Click the type of setup you prefer, then click Next.
 Readme Filename=readme.txt
 Readme App=notepad.exe
@@ -124,7 +138,9 @@ Readme App=notepad.exe
 ; at least one Setup Type needs to be set, and up to 4 can be
 ; set (Setup Type0, Setup Type1, Setup Type2, Setup Type3).
 [Setup Type0]
+;*** LOCALIZE ME BABY ***
 Description Short=B&ase
+;*** LOCALIZE ME BABY ***
 Description Long=Program will be installed with the minimal options.
 
 ; List of components to install/enable for this Setup Type.
@@ -138,7 +154,9 @@ C4=Component6
 C5=Component7
 
 [Setup Type1]
+;*** LOCALIZE ME BABY ***
 Description Short=C&omplete
+;*** LOCALIZE ME BABY ***
 Description Long=Program will be installed with the most common options.
 
 ; List of components to install/enable for this Setup Type.
@@ -154,7 +172,9 @@ C6=Component6
 C7=Component7
 
 [Setup Type2]
+;*** LOCALIZE ME BABY ***
 Description Short=C&ustom
+;*** LOCALIZE ME BABY ***
 Description Long=You may choose the options you want to install.  Recommended for advanced users only.
 ;Description Short=&Pro
 ;Description Long=Program will be installed with all the options available.
@@ -186,9 +206,13 @@ C7=Component7
 
 [Dialog Select Components]
 Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
 Title=Select Components
+;*** LOCALIZE ME BABY ***
 Message0=The browser is always installed.  Select or clear the additional components you want to install.
 
+;*** DO NOT LOCALIZE - BEGIN ***
+; do not localize this part because it is not currently being used
 [Dialog Windows Integration]
 Show Dialog=FALSE
 Title=Windows Integration
@@ -211,16 +235,22 @@ Archive=
 CheckBoxState=FALSE
 Description=Use Mozilla Netcenter to search the Web
 Archive=
+;*** DO NOT LOCALIZE - END ***
 
 [Dialog Program Folder]
 Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
 Title=Select Program Folder
+;*** LOCALIZE ME BABY ***
 Message0=Setup will add program icons to the Program Folder listed below.  You may type a new folder name, or select one from the Existing Folders list.  Click Next to continue.
 
 [Dialog Advanced Settings]
 Show Dialog=FALSE
+;*** LOCALIZE ME BABY ***
 Title=Advanced Settings
+;*** LOCALIZE ME BABY ***
 Message0=Select the region you wish to download from, or leave it on Default for Setup to automatically determine the best place to download from relative to where you are.
+;*** LOCALIZE ME BABY ***
 Message1=Check the option below if you wish to save the downloaded installer files locally for future use.  They will be saved into ...\$ProductName$\Install
 Proxy Server=
 Proxy Port=
@@ -228,8 +258,11 @@ Save Installer=
 
 [Dialog Start Install]
 Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
 Title=Start Install
+;*** LOCALIZE ME BABY ***
 Message Install=Setup has enough information to start copying the program files.  If you want to review or change settings, click Back.  If you are satisfied with the current settings, click Install to begin copying files.
+;*** LOCALIZE ME BABY ***
 Message Download=Setup has enough information to start downloading and copying the program files.  If you want to review or change settings, click Back.  If you are satisfied with the current settings, make sure you are currently connected to the internet and click Install to begin downloading files.
 
 [Dialog Reboot]
@@ -263,6 +296,7 @@ exe_param=
 [Check Instance0]
 Class Name=NetscapeWindowClass
 Window Name=
+;*** LOCALIZE ME BABY ***
 Message=Setup has detected that an instance of $ProductName$ is currently running.  Please quit $ProductName$ before continuing Setup.  Click Retry to perform the check again, or Cancel to exit Setup.
 
 ;[Check Instance1]
@@ -274,6 +308,7 @@ Message=Setup has detected that an instance of $ProductName$ is currently runnin
 ; There is no limit to the number of components to install.
 [Component0]
 Description Short=Mozilla Xpinstall Engine
+;*** LOCALIZE ME BABY ***
 Description Long=Install Engine
 Archive=xpcom.xpi
 $InstallSize$:xpcom
@@ -294,6 +329,7 @@ Server Path0=$ServerPath$
 
 [Component1]
 Description Short=Mozilla Seamonkey
+;*** LOCALIZE ME BABY ***
 Description Long=Browser software for the internet
 Archive=browser.xpi
 $InstallSize$:browser
@@ -313,6 +349,7 @@ Server Path0=$ServerPath$
 
 [Component2]
 Description Short=Mail & News
+;*** LOCALIZE ME BABY ***
 Description Long=Seamonkey Mail & News
 Archive=mail.xpi
 $InstallSize$:mail
@@ -333,6 +370,7 @@ Server Path0=$ServerPath$
 
 [Component3]
 Description Short=$CompanyName$ Uninstaller
+;*** LOCALIZE ME BABY ***
 Description Long=Uninstaller for $ProductName$
 Archive=$UninstallFile$
 $InstallSize$:$UninstallFile$
@@ -353,6 +391,7 @@ Server Path0=$ServerPath$
 
 [Component4]
 Description Short=Chatzilla
+;*** LOCALIZE ME BABY ***
 Description Long=Chatzilla IRC client
 Archive=chatzilla.xpi
 $InstallSize$:chatzilla
@@ -373,6 +412,7 @@ Server Path0=$ServerPath$
 
 [Component5]
 Description Short=US English profile defaults
+;*** LOCALIZE ME BABY ***
 Description Long=US English profile defaults
 Archive=deflenus.xpi
 $InstallSize$:deflenus
@@ -393,6 +433,7 @@ Server Path0=$ServerPath$
 
 [Component6]
 Description Short=English-US language pack
+;*** LOCALIZE ME BABY ***
 Description Long=English-US language pack
 Archive=langenus.xpi
 $InstallSize$:langenus
@@ -413,6 +454,7 @@ Server Path0=$ServerPath$
 
 [Component7]
 Description Short=English-GB language pack
+;*** LOCALIZE ME BABY ***
 Description Long=English-GB language pack
 Archive=langengb.xpi
 $InstallSize$:langengb
@@ -438,6 +480,7 @@ Source=[XPI PATH]\xpcom.xpi
 Destination=[WIZTEMP]\xpcom.ns
 $InstallSize$:xpcom
 Cleanup=TRUE
+;*** LOCALIZE ME BABY ***
 Message=Preparing Install, please wait...
 
 [Redirect]
@@ -539,6 +582,7 @@ WorkingDir=[SETUP PATH]
 
 [Windows Registry0]
 Root Key=HKEY_LOCAL_MACHINE
+;*** LOCALIZE ME BABY ***
 Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Main
 Name=Program Folder Path
 Name Value=[Default Folder]
@@ -567,6 +611,7 @@ Timing=post smartupdate
 Root Key=HKEY_LOCAL_MACHINE
 Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ $UserAgentShort$
 Name=UninstallString
+;*** LOCALIZE ME BABY ***
 Name Value=[WINDIR]\$UninstallFile$ /ua "$UserAgent$"
 Type=REG_SZ
 Decrypt Key=FALSE
