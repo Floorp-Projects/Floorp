@@ -63,6 +63,10 @@ nsFontMetricsMac :: ~nsFontMetricsMac()
     delete mFont;
     mFont = nsnull;
   }
+  if (mContext) {
+    mContext->FontMetricsDeleted(this);
+    mContext = nsnull;
+  }
 }
 
 //------------------------------------------------------------------------
@@ -240,6 +244,7 @@ void nsFontMetricsMac::RealizeFont()
 NS_IMETHODIMP
 nsFontMetricsMac::Destroy()
 {
+  mContext = nsnull;
   return NS_OK;
 }
 

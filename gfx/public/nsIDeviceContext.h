@@ -339,6 +339,12 @@ public:
                               PRBool& aAliased) = 0;
 
   /**
+   * Notification when a font metrics instance created for this device is
+   * about to be deleted
+   */
+  NS_IMETHOD FontMetricsDeleted(const nsIFontMetrics* aFontMetrics) = 0;
+
+  /**
    * Attempt to free up resoruces by flushing out any fonts no longer
    * referenced by anything other than the font cache itself.
    * @return error status

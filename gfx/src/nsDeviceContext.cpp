@@ -34,7 +34,7 @@
 #include "nsUnicharUtils.h"
 
 
-NS_IMPL_ISUPPORTS1(DeviceContextImpl, nsIDeviceContext)
+NS_IMPL_ISUPPORTS2(DeviceContextImpl, nsIDeviceContext, nsIObserver)
 
 DeviceContextImpl :: DeviceContextImpl()
 {
@@ -63,6 +63,10 @@ static PRBool PR_CALLBACK DeleteValue(nsHashKey* aKey, void* aValue, void* closu
 
 DeviceContextImpl :: ~DeviceContextImpl()
 {
+  nsCOMPtr<nsIObserverService> obs(do_GetService("@mozilla.org/observer-service;1"));
+  if (obs)
+    obs->RemoveObserver(this, "memory-pressure");
+
   if (nsnull != mFontCache)
   {
     delete mFontCache;
@@ -82,11 +86,26 @@ DeviceContextImpl :: ~DeviceContextImpl()
 
 }
 
+NS_IMETHODIMP
+DeviceContextImpl::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aSomeData)
+{
+  if (mFontCache && !nsCRT::strcmp(aTopic, "memory-pressure")) {
+    mFontCache->Compact();
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP DeviceContextImpl :: Init(nsNativeWidget aWidget)
 {
   mWidget = aWidget;
 
   CommonInit();
+
+  // register as a memory-pressure observer to free font resources
+  // in low-memory situations.
+  nsCOMPtr<nsIObserverService> obs(do_GetService("@mozilla.org/observer-service;1"));
+  if (obs)
+    obs->AddObserver(this, "memory-pressure", PR_FALSE);
 
   return NS_OK;
 }
@@ -220,6 +239,14 @@ NS_IMETHODIMP DeviceContextImpl::CreateFontCache()
     return NS_ERROR_OUT_OF_MEMORY;
   }
   mFontCache->Init(this);
+  return NS_OK;
+}
+
+NS_IMETHODIMP DeviceContextImpl::FontMetricsDeleted(const nsIFontMetrics* aFontMetrics)
+{
+  if (mFontCache) {
+    mFontCache->FontMetricsDeleted(aFontMetrics);
+  }
   return NS_OK;
 }
 
@@ -604,24 +631,23 @@ nsFontCache :: GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
   nsIFontMetrics *&aMetrics)
 {
   // First check our cache
-  PRInt32 n = mFontMetrics.Count()-1;
-
   // start from the end, which is where we put the most-recent-used element
-  for (PRInt32 cnt = n; cnt >= 0; --cnt)
-  {
-    nsIFontMetrics* metrics = NS_STATIC_CAST(nsIFontMetrics*, mFontMetrics[cnt]);
 
+  nsIFontMetrics* fm;
+  PRInt32 n = mFontMetrics.Count() - 1;
+  for (PRInt32 i = n; i >= 0; --i) {
+    fm = NS_STATIC_CAST(nsIFontMetrics*, mFontMetrics[i]);
     const nsFont* font;
-    metrics->GetFont(font);
-    if (aFont.Equals(*font)) {
+    fm->GetFont(font);
+    if (font->Equals(aFont)) {
       nsCOMPtr<nsIAtom> langGroup;
-      metrics->GetLangGroup(getter_AddRefs(langGroup));
+      fm->GetLangGroup(getter_AddRefs(langGroup));
       if (aLangGroup == langGroup.get()) {
-        if (cnt != n) {
+        if (i != n) {
           // promote it to the end of the cache
-          mFontMetrics.MoveElement(cnt, n);
+          mFontMetrics.MoveElement(i, n);
         }
-        NS_ADDREF(aMetrics = metrics);
+        NS_ADDREF(aMetrics = fm);
         return NS_OK;
       }
     }
@@ -629,28 +655,48 @@ nsFontCache :: GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
 
   // It's not in the cache. Get font metrics and then cache them.
 
-  nsIFontMetrics *fm = nsnull;
+  aMetrics = nsnull;
   nsresult rv = CreateFontMetricsInstance(&fm);
-
-  if (NS_FAILED(rv)) {
-    aMetrics = nsnull;
-    return rv;
-  }
-
+  if (NS_FAILED(rv)) return rv;
   rv = fm->Init(aFont, aLangGroup, mContext);
+  if (NS_SUCCEEDED(rv)) {
+    // the mFontMetrics list has the "head" at the end, because append is
+    // cheaper than insert
+    mFontMetrics.AppendElement(fm);
+    aMetrics = fm;
+    NS_ADDREF(aMetrics);
+    return NS_OK;
+  }
+  fm->Destroy();
+  NS_RELEASE(fm);
 
-  if (NS_FAILED(rv)) {
-    aMetrics = nsnull;
-    return rv;
+  // One reason why Init() fails is because the system is running out of resources. 
+  // e.g., on Win95/98 only a very limited number of GDI objects are available.
+  // Compact the cache and try again.
+
+  Compact();
+  rv = CreateFontMetricsInstance(&fm);
+  if (NS_FAILED(rv)) return rv;
+  rv = fm->Init(aFont, aLangGroup, mContext);
+  if (NS_SUCCEEDED(rv)) {
+    mFontMetrics.AppendElement(fm);
+    aMetrics = fm;
+    NS_ADDREF(aMetrics);
+    return NS_OK;
+  }
+  fm->Destroy();
+  NS_RELEASE(fm);
+
+  // could not setup a new one, send an old one (XXX search a "best match"?)
+
+  n = mFontMetrics.Count() - 1; // could have changed in Compact()
+  if (n >= 0) {
+    aMetrics = NS_STATIC_CAST(nsIFontMetrics*, mFontMetrics[n]);
+    NS_ADDREF(aMetrics);
+    return NS_OK;
   }
 
-  // the mFontMetrics list has the "head" at the end, because append is
-  // cheaper than insert
-  mFontMetrics.AppendElement(fm);
-
-  NS_ADDREF(fm);
-  aMetrics = fm;
-  return NS_OK;
+  return rv;
 }
 
 /* PostScript and Xprint module may override this method to create 
@@ -663,14 +709,37 @@ nsFontCache::CreateFontMetricsInstance(nsIFontMetrics** fm)
   return CallCreateInstance(kFontMetricsCID, fm);
 }
 
+nsresult nsFontCache::FontMetricsDeleted(const nsIFontMetrics* aFontMetrics)
+{
+  mFontMetrics.RemoveElement((void*)aFontMetrics);
+  return NS_OK;
+}
+
+nsresult nsFontCache::Compact()
+{
+  // Need to loop backward because the running element can be removed on the way
+  for (PRInt32 i = mFontMetrics.Count()-1; i >= 0; --i) {
+    nsIFontMetrics* fm = NS_STATIC_CAST(nsIFontMetrics*, mFontMetrics[i]);
+    nsIFontMetrics* oldfm = fm;
+    // Destroy() isn't here because we want our device context to be notified
+    NS_RELEASE(fm); // this will reset fm to nsnull
+    // if the font is really gone, it would have called back in
+    // FontMetricsDeleted() and would have removed itself
+    if (mFontMetrics.IndexOf(oldfm) >= 0) {
+      // nope, the font is still there, so let's hold onto it too
+      NS_ADDREF(oldfm);
+    }
+  }
+  return NS_OK;
+}
 
 nsresult nsFontCache :: Flush()
 {
-  PRInt32 i, n = mFontMetrics.Count();
-
-  for (i = 0; i < n; i++)
-  {
-    nsIFontMetrics* fm = (nsIFontMetrics*) mFontMetrics.ElementAt(i);
+  for (PRInt32 i = mFontMetrics.Count()-1; i >= 0; --i) {
+    nsIFontMetrics* fm = NS_STATIC_CAST(nsIFontMetrics*, mFontMetrics[i]);
+    // Destroy() will unhook our device context from the fm so that we won't
+    // waste time in triggering the notification of FontMetricsDeleted()
+    // in the subsequent release
     fm->Destroy();
     NS_RELEASE(fm);
   }

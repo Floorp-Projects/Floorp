@@ -985,6 +985,11 @@ nsFontMetricsXlib::~nsFontMetricsXlib()
   mWesternFont = nsnull;
   mFontHandle = nsnull;
 
+  if (mDeviceContext) {
+    mDeviceContext->FontMetricsDeleted(this);
+    mDeviceContext = nsnull;
+  }
+
   if (!--gFontMetricsXlibCount) {
     FreeGlobals();
   }
@@ -1192,7 +1197,7 @@ nsFontMetricsXlib::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
 NS_IMETHODIMP  nsFontMetricsXlib::Destroy()
 {
-//  NS_IF_RELEASE(mDeviceContext);
+  mDeviceContext = nsnull;
   return NS_OK;
 }
 

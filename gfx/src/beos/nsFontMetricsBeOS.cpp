@@ -66,6 +66,10 @@ nsFontMetricsBeOS::~nsFontMetricsBeOS()
     delete mFont;
     mFont = nsnull;
   }
+  if (mDeviceContext) {
+    mDeviceContext->FontMetricsDeleted(this);
+    mDeviceContext = nsnull;
+  }
 }
  
 NS_IMPL_ISUPPORTS1(nsFontMetricsBeOS, nsIFontMetrics) 
@@ -94,6 +98,7 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
   nsAutoString  firstFace;
   mLangGroup = aLangGroup;
+  mDeviceContext = aContext;
   if (NS_OK != aContext->FirstExistingFont(aFont, firstFace)) {
     aFont.GetFirstFamily(firstFace);
   }
@@ -166,6 +171,7 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
 NS_IMETHODIMP  nsFontMetricsBeOS::Destroy()
 {
+  mDeviceContext = nsnull;
   return NS_OK;
 }
 

@@ -403,7 +403,10 @@ nsFontMetricsWin::~nsFontMetricsWin()
   }
   mLoadedFonts.Clear();
 
-  mDeviceContext = nsnull;
+  if (mDeviceContext) {
+    mDeviceContext->FontMetricsDeleted(this);
+    mDeviceContext = nsnull;
+  }
 }
 
 #ifdef LEAK_DEBUG

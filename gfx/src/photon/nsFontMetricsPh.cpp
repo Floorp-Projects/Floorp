@@ -125,9 +125,12 @@ nsFontMetricsPh :: ~nsFontMetricsPh( )
 		  delete mFont;
 		  mFont = nsnull;
 	  }
-	mDeviceContext = nsnull;
 	if (mFontHandle)
 	   free (mFontHandle);
+  if (mDeviceContext) {
+    mDeviceContext->FontMetricsDeleted(this);
+    mDeviceContext = nsnull;
+  }
 	FreeGlobals();
 }
 
