@@ -34,7 +34,6 @@
 #include "nsIURL.h"
 #include "nsIConnectionInfo.h"
 #include "nsIStreamListener.h"
-#include "nsIDocumentLoadInfo.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptContext.h"
