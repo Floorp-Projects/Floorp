@@ -597,6 +597,11 @@ NS_IMETHODIMP CBrowserImpl::OnStopRequest(nsIRequest *request,
 NS_IMETHODIMP CBrowserImpl::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
 										  const PRUnichar *aTipText)
 {
+    if(! m_pBrowserFrameGlue)
+        return NS_ERROR_FAILURE;
+
+    m_pBrowserFrameGlue->ShowTooltip(aXCoords, aYCoords, aTipText);
+
 	QAOutput("nsITooltipListener->OnShowTooltip()",1);
 	FormatAndPrintOutput("OnShowTooltip() aXCoords = ", aXCoords, 1);
 	FormatAndPrintOutput("OnShowTooltip() aYCoords = ", aYCoords, 1);
@@ -606,6 +611,10 @@ NS_IMETHODIMP CBrowserImpl::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
 
 NS_IMETHODIMP CBrowserImpl::OnHideTooltip() 
 {
+    if(! m_pBrowserFrameGlue)
+        return NS_ERROR_FAILURE;
+
+    m_pBrowserFrameGlue->HideTooltip();
 	QAOutput("nsITooltipListener->OnHideTooltip()",1);
 	return NS_OK;
 }

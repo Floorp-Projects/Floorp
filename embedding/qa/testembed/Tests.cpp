@@ -93,6 +93,7 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_TESTS_GLOBALHISTORY, OnTestsGlobalHistory)
 	ON_COMMAND(ID_TESTS_CREATEFILE, OnTestsCreateFile)
 	ON_COMMAND(ID_TESTS_CREATEPROFILE, OnTestsCreateprofile)
+	ON_COMMAND(ID_TESTS_ADDTOOLTIPLISTENER, OnTestsAddTooltipListener)
 	ON_COMMAND(ID_TESTS_ADDWEBPROGLISTENER, OnTestsAddWebProgListener)
 	ON_COMMAND(ID_TESTS_ADDHISTORYLISTENER, OnTestsAddHistoryListener)
 	ON_COMMAND(ID_TESTS_REMOVEHISTORYLISTENER, OnTestsRemovehistorylistener)
@@ -477,6 +478,17 @@ void CTests::OnTestsCreateprofile()
     }
 	else
 	   QAOutput("Profile switch test not executed.", 2);
+}
+
+// *********************************************************
+
+void CTests::OnTestsAddTooltipListener()
+{
+    nsWeakPtr weakling(
+        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsITooltipListener*, qaBrowserImpl))));
+ 
+	rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsITooltipListener));
+	RvTestResult(rv, "AddWebBrowserListener(). Add Tooltip Listener test", 2);
 }
 
 // *********************************************************

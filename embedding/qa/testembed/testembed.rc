@@ -151,6 +151,7 @@ BEGIN
         MENUITEM "&Global &History",            ID_TESTS_GLOBALHISTORY
         MENUITEM "Create &File",                ID_TESTS_CREATEFILE
         MENUITEM "Create/Switch &Profile",      ID_TESTS_CREATEPROFILE
+        MENUITEM "Add Tooltip Listener",        ID_TESTS_ADDTOOLTIPLISTENER
         MENUITEM "&Add Web Prog Listener",      ID_TESTS_ADDWEBPROGLISTENER
         MENUITEM SEPARATOR
         MENUITEM "Add History &Listener",       ID_TESTS_ADDHISTORYLISTENER

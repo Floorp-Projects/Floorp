@@ -411,3 +411,17 @@ HWND CBrowserFrame::BrowserFrameGlueObj::GetBrowserFrameNativeWnd()
 	METHOD_PROLOGUE(CBrowserFrame, BrowserFrameGlueObj)
 	return pThis->m_hWnd;
 }
+
+void CBrowserFrame::BrowserFrameGlueObj::ShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText)
+{
+    METHOD_PROLOGUE(CBrowserFrame, BrowserFrameGlueObj)
+    pThis->m_wndTooltip.SetTipText(CString(aTipText));
+    pThis->m_wndTooltip.Show(&pThis->m_wndBrowserView, aXCoords, aYCoords);
+}
+
+void CBrowserFrame::BrowserFrameGlueObj::HideTooltip()
+{
+    METHOD_PROLOGUE(CBrowserFrame, BrowserFrameGlueObj)
+    pThis->m_wndTooltip.Hide();
+}
+

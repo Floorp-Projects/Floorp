@@ -76,6 +76,7 @@ CPPSRCS		= \
 	    TestEmbed.cpp     \
 	    BrowserFrm.cpp   \
 	    BrowserFrameGlue.cpp   \
+		BrowserToolTip.cpp \
 	    BrowserView.cpp \
 	    BrowserImpl.cpp \
 	    BrowserImplWebPrgrsLstnr.cpp \

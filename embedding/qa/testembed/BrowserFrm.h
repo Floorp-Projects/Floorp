@@ -49,6 +49,7 @@
 #endif // _MSC_VER > 1000
 
 #include "BrowserView.h"
+#include "BrowserToolTip.h"
 #include "IBrowserFrameGlue.h"
 #include "MostRecentUrls.h"
 
@@ -138,6 +139,7 @@ public:
 	CReBar m_wndReBar;
 	// The view inside which the embedded browser will
 	// be displayed in
+	CBrowserToolTip m_wndTooltip;
 	CBrowserView    m_wndBrowserView;
 
     // Wrapper functions for UrlBar clipboard operations
