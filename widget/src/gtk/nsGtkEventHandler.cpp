@@ -680,16 +680,19 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
   //  character code.  Note we have to check for modifier keys, since
   // gtk returns a character value for them
   //
-  if (event->length) {
-    if (nsGtkIMEHelper::GetSingleton() && (!kevent.keyCode)) {
-      win->IMECommitEvent(event);
-    } else {
-      InitKeyPressEvent(event, win, kevent);
-      win->OnKey(kevent);
 
+  // Call nsConvertCharCodeToUnicode() here to get kevent.charCode 
+  InitKeyPressEvent(event, win, kevent);
+
+  if (event->length) {
+    if (kevent.charCode || kevent.keyCode) {
+      // kevent.charCode or kevent.keyCode is valid, just pass to OnKey()
+      win->OnKey(kevent);
+    } else if (nsGtkIMEHelper::GetSingleton()) {
+      // commit request from IME
+      win->IMECommitEvent(event);
     }
   } else { // for Home/End/Up/Down/Left/Right/PageUp/PageDown key
-    InitKeyPressEvent(event, win, kevent);
     win->OnKey(kevent);
   }
 
