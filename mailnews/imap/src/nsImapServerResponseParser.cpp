@@ -583,24 +583,18 @@ void nsImapServerResponseParser::response_data()
         mailbox_data();
       else if (!PL_strcasecmp(fNextToken, "STATUS"))
       {
-        PRBool gotMailboxName = PR_FALSE;
+        fNextToken = GetNextToken();
+        if (fNextToken)
+        {
+          char *mailboxName = CreateAstring();
+          PL_strfree( mailboxName); 
+        }
         while (	ContinueParse() &&
           !at_end_of_line() )
         {
           fNextToken = GetNextToken();
           if (!fNextToken)
             break;
-          
-          if (!gotMailboxName)	// if we haven't got the mailbox name, get it
-          {
-            // this couldn't be more bogus, but I don't know how to parse the status response.
-            // I need to find the next open parenthesis, and it looks like folder names with
-            // parentheses are quoted...but not ones with spaces...
-            fCurrentTokenPlaceHolder = PL_strchr(fCurrentTokenPlaceHolder, '(');
-            
-            gotMailboxName = PR_TRUE;
-            continue;
-          }
           
           if (*fNextToken == '(') fNextToken++;
           if (!PL_strcasecmp(fNextToken, "UIDNEXT"))

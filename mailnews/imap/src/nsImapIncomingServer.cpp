@@ -3559,7 +3559,7 @@ nsImapIncomingServer::GetSearchScope(nsMsgSearchScopeValue *searchScope)
 // This is a recursive function. It gets new messages for current folder
 // first if it is marked, then calls itself recursively for each subfolder.
 NS_IMETHODIMP 
-nsImapIncomingServer::GetNewMessagesForNonInboxFolders(nsIMsgFolder *aRootFolder,
+nsImapIncomingServer::GetNewMessagesForNonInboxFolders(nsIMsgFolder *aFolder,
                                                        nsIMsgWindow *aWindow,
                                                        PRBool forceAllFolders,
                                                        PRBool performingBiff)
@@ -3567,28 +3567,28 @@ nsImapIncomingServer::GetNewMessagesForNonInboxFolders(nsIMsgFolder *aRootFolder
   nsresult retval = NS_OK;
   static PRBool gGotStatusPref = PR_FALSE;
   static PRBool gUseStatus = PR_FALSE;
-  if (!aRootFolder)
+  if (!aFolder)
     return retval;
 
   // Check this folder for new messages if it is marked to be checked
   // or if we are forced to check all folders
   PRUint32 flags = 0;
-  aRootFolder->GetFlags(&flags);
+  aFolder->GetFlags(&flags);
   if ((forceAllFolders && !(flags & MSG_FOLDER_FLAG_INBOX)) || (flags & MSG_FOLDER_FLAG_CHECK_NEW))
   {
     // Get new messages for this folder.
-    aRootFolder->SetGettingNewMessages(PR_TRUE);
+    aFolder->SetGettingNewMessages(PR_TRUE);
     if (performingBiff)
     {
       nsresult rv;
-      nsCOMPtr<nsIMsgImapMailFolder> imapFolder = do_QueryInterface(aRootFolder, &rv);
+      nsCOMPtr<nsIMsgImapMailFolder> imapFolder = do_QueryInterface(aFolder, &rv);
       if (imapFolder)
         imapFolder->SetPerformingBiff(PR_TRUE);
     }
     PRBool isOpen = PR_FALSE;
     nsCOMPtr <nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID);
-    if (mailSession && aRootFolder)
-      mailSession->IsFolderOpenInWindow(aRootFolder, &isOpen);
+    if (mailSession && aFolder)
+      mailSession->IsFolderOpenInWindow(aFolder, &isOpen);
     // eventually, the gGotStatusPref should go away, once we work out the kinks
     // from using STATUS.
     if (!gGotStatusPref)
@@ -3600,19 +3600,21 @@ nsImapIncomingServer::GetNewMessagesForNonInboxFolders(nsIMsgFolder *aRootFolder
     }
     if (gUseStatus && !isOpen)
     {
-      nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(aRootFolder);
-      if (imapFolder)
+      PRBool isServer;
+      (void) aFolder->GetIsServer(&isServer);
+      nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(aFolder);
+      if (imapFolder && !isServer)
         imapFolder->UpdateStatus(nsnull, aWindow);
     }
     else
     {
-      aRootFolder->UpdateFolder(aWindow);
+      aFolder->UpdateFolder(aWindow);
     }
   }
 
   // Loop through all subfolders to get new messages for them.
   nsCOMPtr<nsIEnumerator> aEnumerator;
-  retval = aRootFolder->GetSubFolders(getter_AddRefs(aEnumerator));
+  retval = aFolder->GetSubFolders(getter_AddRefs(aEnumerator));
   NS_ASSERTION((NS_SUCCEEDED(retval) && aEnumerator), "GetSubFolders() failed to return enumerator.");
   if (NS_FAILED(retval)) 
     return retval;
