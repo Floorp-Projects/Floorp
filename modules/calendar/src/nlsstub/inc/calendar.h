@@ -21,6 +21,9 @@
 
 #include "ptypes.h"
 #include "parsepos.h"
+#include "nspr.h"
+#include "prtime.h"
+#include "prprf.h"
 
 class TimeZone;
 class ParsePosition;
@@ -90,6 +93,14 @@ public:
 
   void clear();
   void clear(EDateFields aField);
+
+public:
+  PRTime          mTime;
+  PRExplodedTime  mExplodedTime;
+
+private:
+  TimeZone * mTimeZone ;
+
 
 };
 

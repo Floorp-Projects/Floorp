@@ -88,8 +88,6 @@ public:
 
 public:
   PRUint32 mLength;
-
-private:
   nsString mString;
 };
 

@@ -19,7 +19,7 @@
 #include "nscore.h"
 #include "simpletz.h"
 
-SimpleTimeZone::SimpleTimeZone()
+SimpleTimeZone::SimpleTimeZone() : TimeZone()
 {
 }
 
@@ -27,7 +27,7 @@ SimpleTimeZone::~SimpleTimeZone()
 {
 }
 
-SimpleTimeZone::SimpleTimeZone(PRInt32 aRawOffset, const UnicodeString& aID)
+SimpleTimeZone::SimpleTimeZone(PRInt32 aRawOffset, const UnicodeString& aID) : TimeZone()
 {
 }
 
@@ -36,13 +36,14 @@ SimpleTimeZone::SimpleTimeZone(PRInt32 aRawOffset, const UnicodeString& aID,
                                 PRInt8  aStartDayOfWeek,  PRInt32 aStartTime,
                                 PRInt8  aEndMonth,        PRInt8 aEndDayOfWeekInMonth,
                                 PRInt8  aEndDayOfWeek,    PRInt32 aEndTime,
-                                PRInt32 aDstSavings)
+                                PRInt32 aDstSavings) : TimeZone()
 {
 }
 
 TimeZone* SimpleTimeZone::clone() const
 {
-  return nsnull;
+  TimeZone * t = (TimeZone*) new TimeZone();
+  return t;
 }
 
 void SimpleTimeZone::setRawOffset(PRInt32 aOffsetMillis)

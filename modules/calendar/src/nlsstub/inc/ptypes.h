@@ -42,7 +42,7 @@ typedef PRInt32   TextOffset;
 #define SUCCESS(x) ((x)<=ZERO_ERROR)
 #define FAILURE(x) ((x)>ZERO_ERROR)
 
-#define kMillisPerSecond (PR_INT32(1000))
+#define kMillisPerSecond (PR_INT32(PR_MSEC_PER_SEC))
 #define kMillisPerMinute (PR_INT32(60) * kMillisPerSecond)
 #define kMillisPerHour   (PR_INT32(60) * kMillisPerMinute)
 #define kMillisPerDay    (PR_INT32(24) * kMillisPerHour)

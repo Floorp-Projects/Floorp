@@ -17,6 +17,9 @@
  */
 
 #include "smpdtfmt.h"
+#include "time.h"
+
+static UnicodeString u("06/06/66");
 
 FieldPosition::FieldPosition()
 {
@@ -31,7 +34,7 @@ FieldPosition::FieldPosition(PRInt32 aField)
 }
 
 
-SimpleDateFormat::SimpleDateFormat()
+SimpleDateFormat::SimpleDateFormat() : DateFormat()
 {
 }
 
@@ -39,24 +42,22 @@ SimpleDateFormat::~SimpleDateFormat()
 {
 }
 
-SimpleDateFormat::SimpleDateFormat(ErrorCode& aStatus)
+SimpleDateFormat::SimpleDateFormat(ErrorCode& aStatus) : DateFormat()
 {
 }
 
-SimpleDateFormat::SimpleDateFormat(const UnicodeString& aPattern, const Locale& aLocale, ErrorCode& aStatus)
+SimpleDateFormat::SimpleDateFormat(const UnicodeString& aPattern, const Locale& aLocale, ErrorCode& aStatus) : DateFormat()
 {
 }
 
 
 UnicodeString& SimpleDateFormat::format(Date aDate, UnicodeString& aAppendTo, FieldPosition& aPosition) const
 {
-  UnicodeString u;
   return (u);
 }
 
 UnicodeString& SimpleDateFormat::format(const Formattable& aObject, UnicodeString& aAppendTo, FieldPosition& aPosition, ErrorCode& aStatus) const
 {
-  UnicodeString u;
   return (u);
 }
 
@@ -67,7 +68,9 @@ void SimpleDateFormat::applyLocalizedPattern(const UnicodeString& aPattern, Erro
 
 Date SimpleDateFormat::parse(const UnicodeString& aUnicodeString, ParsePosition& aPosition) const
 {
-  return ((Date)nsnull);
+  time_t t;
+  time(&t);
+  return ((Date)t*kMillisPerSecond);
 }
 
 PRBool SimpleDateFormat::operator==(const Format& other) const
