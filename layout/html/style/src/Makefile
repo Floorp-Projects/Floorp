@@ -40,7 +40,15 @@ CPPSRCS =				\
 	nsHTMLValue.cpp			\
 	$(NULL)
 
-EXPORTS = nsCSSProps.h  nsCSSPropIDs.h nsICSSStyleSheet.h nsICSSStyleRule.h nsICSSDeclaration.h nsHTMLValue.h nsIHTMLCSSStyleSheet.h 
+EXPORTS =				\
+  nsCSSProps.h  \
+  nsCSSPropIDs.h \
+  nsICSSStyleSheet.h \
+  nsICSSStyleRule.h \
+  nsICSSDeclaration.h \
+  nsHTMLValue.h \
+  nsIHTMLCSSStyleSheet.h \
+  $(NULL)
 
 MODULE = raptor
 
