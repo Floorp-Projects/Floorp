@@ -23,24 +23,29 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE=mimeemitter
-LIBRARY_NAME=emitterutil
+LIBRARY_NAME=emitterutil_s
 # NO_SHARED_LIB=1
 
 EXPORTS = \
-	nsEmitterUtils.h	\
+	nsEmitterUtils.h		\
 	nsMimeRebuffer.h		\
+	nsMimeHtmlEmitter.h		\
+	nsMimeXmlEmitter.h		\
+	nsMimeRawEmitter.h		\
 	$(NULL)
 
 CPPSRCS = \
 	nsEmitterUtils.cpp \
 	nsMimeRebuffer.cpp \
+	nsMimeRawEmitter.cpp \
+	nsMimeXmlEmitter.cpp \
+	nsMimeHtmlEmitter.cpp \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS =	\
 	-L$(DIST)/bin	\
 	-lxp	\
 	-lxpcom	\
-	-lmsgbaseutil	\
 	$(NSPR_LIBS) \
 	$(NULL)
 
