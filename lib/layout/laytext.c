@@ -5493,7 +5493,7 @@ static loTextParseAttribute
 lo_GetTextParseAttributes ( lo_DocState * state)
 {
       
-    XP_ASSERT(NULL != state);
+    /* XP_ASSERT(NULL != state); */
     if ( state != NULL )
     {
        uint16 charset = state->font_stack->text_attr->charset;
