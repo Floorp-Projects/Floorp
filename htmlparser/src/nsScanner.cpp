@@ -258,7 +258,7 @@ PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
     PRUnichar *unichars = new PRUnichar [ unicharLength ];
     nsresult res = mUnicodeDecoder->Convert(unichars, 0, &unicharLength,aBuffer, 0, &srcLength );
     mBuffer.Append(unichars, unicharLength);
-    delete unichars;
+    delete[] unichars;
     mTotalRead += unicharLength;
   }
   else {

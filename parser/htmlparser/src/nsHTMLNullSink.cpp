@@ -123,7 +123,7 @@ static void DebugDump(const char* str1,const nsString& str2,PRInt32 tabs) {
     cout << " "; //add some tabbing to debug output...
   char* cp = str2.ToNewCString();
   cout << str1 << cp << ">" << endl;
-  delete cp;
+  delete[] cp;
 }
 #endif
 
