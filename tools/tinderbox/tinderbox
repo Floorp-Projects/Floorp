@@ -57,7 +57,7 @@ case "$build_action" in
       nohup ./build-seamonkey.pl --$build_type &
       echo "PID $!"
       echo $! > $build_type.pid
-	  \rm nohup.out
+	  \rm -f nohup.out
     fi
     ;;
   stop)
