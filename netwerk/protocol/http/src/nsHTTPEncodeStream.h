@@ -22,17 +22,21 @@
 #include "nsIInputStream.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsIFileStream.h"
 
-class nsHTTPEncodeStream : public nsIInputStream
+class nsHTTPEncodeStream : public nsIInputStream,
+                           public nsIRandomAccessStore
 {
 public:
     NS_DECL_ISUPPORTS
-
-    // nsIBaseStream methods:
     NS_DECL_NSIBASESTREAM
-
-    // nsIInputStream methods:
     NS_DECL_NSIINPUTSTREAM
+
+    NS_IMETHOD Seek(PRSeekWhence whence, PRInt32 offset);
+    NS_IMETHOD Tell(PRIntn* outWhere);
+    // XXX supposedly "protected":
+    NS_IMETHOD GetAtEOF(PRBool* outAtEOF);
+    NS_IMETHOD SetAtEOF(PRBool inAtEOF);
     
     // nsHTTPEncodeStream methods:
     nsHTTPEncodeStream();
