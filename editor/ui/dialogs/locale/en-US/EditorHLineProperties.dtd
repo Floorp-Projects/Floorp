@@ -26,13 +26,20 @@
 
 <!ENTITY dimensionsBox.label "Dimensions">
 <!ENTITY heightEditField.label "Height:">
+<!ENTITY heightEditField.accessKey "G">
 <!ENTITY widthEditField.label "Width:">
+<!ENTITY widthEditField.accessKey "W">
 <!ENTITY pixelsPopup.value "pixels">
 <!ENTITY alignmentBox.label "Alignment">
 <!ENTITY leftRadio.value "Left">
+<!ENTITY leftRadio.accessKey "L">
 <!ENTITY centerRadio.value "Center">
+<!ENTITY centerRadio.accessKey "C">
 <!ENTITY rightRadio.value "Right">
+<!ENTITY rightRadio.accessKey "R">
 
 <!ENTITY threeDShading.label "3-D Shading">
+<!ENTITY threeDShading.accessKey "S">
 <!ENTITY saveSettings.label "Use as Default">
+<!ENTITY saveSettings.accessKey "D">
 <!ENTITY saveSettings.tooltip "Save these settings to use when inserting new horizontal lines">

@@ -30,10 +30,13 @@
 
 <!-- These are in the Location tab panel -->
 <!ENTITY locationEditField.label "Image Location:">
+<!ENTITY locationEditField.accessKey "L">
 <!ENTITY locationEditField.tooltip "Type the image's filename or location">
 <!ENTITY altText.label "Alternate text:">
+<!ENTITY altText.accessKey "A">
 <!ENTITY altTextEditField.tooltip "Type text to display in place of the image">
 <!ENTITY noAltText.label "Don't use alternate text">
+<!ENTITY noAltText.accessKey "D">
 
 <!ENTITY previewBox.label "Image Preview">
 <!ENTITY MoreFewerButton.tooltip "Display more or fewer properties to edit">
@@ -42,17 +45,23 @@
 <!-- actualSize.label should be same as actualSizeRadio.label + ":" -->
 <!ENTITY actualSize.label "Actual Size:">
 <!ENTITY actualSizeRadio.label "Actual Size">
+<!ENTITY actualSizeRadio.accessKey "A">
 <!ENTITY actualSizeRadio.tooltip "Revert to the image's actual size">
 <!ENTITY customSizeRadio.label "Custom Size">
+<!ENTITY customSizeRadio.accessKey "S">
 <!ENTITY customSizeRadio.tooltip "Change the image's size as displayed in the page">
 <!ENTITY heightEditField.label "Height:">
+<!ENTITY heightEditField.accessKey "G">
 <!ENTITY widthEditField.label "Width:">
+<!ENTITY widthEditField.accessKey "W">
 <!ENTITY constrainCheckbox.label "Constrain">
+<!ENTITY constrainCheckbox.accessKey "C">
 <!ENTITY constrainCheckbox.tooltip "Maintain the image's aspect ratio">
 
 <!-- These controls are in the Image Map box of the expanded area -->
 <!ENTITY imagemapBox.label "Image Map">
 <!ENTITY removeImageMapButton.label "Remove">
+<!ENTITY removeImageMapButton.accessKey "R">
 <!ENTITY editImageMapButton.label "Edit...">
 <!ENTITY editImageMapButton.tooltip "Create clickable hotspots for this image">
 
@@ -68,11 +77,15 @@
 <!ENTITY spacingBox.label "Spacing">
 <!ENTITY spacingBox.tooltip "Type a number for the amount of space around image">
 <!ENTITY leftRightEditField.label "Left and Right:">
+<!ENTITY leftRightEditField.accessKey "L">
 <!ENTITY topBottomEditField.label "Top and Bottom:">
+<!ENTITY topBottomEditField.accessKey "T">
 <!ENTITY borderEditField.label "Solid Border:">
+<!ENTITY borderEditField.accessKey "B">
 
 <!-- These controls are in the Link Box -->
 <!ENTITY showImageLinkBorder.label "Show border around linked image">
+<!ENTITY showImageLinkBorder.accessKey "B">
 
 <!-- These controls may be added some day; currently not used -->
 <!ENTITY makePageBackgroundCheckbox.label "Make Page Background">

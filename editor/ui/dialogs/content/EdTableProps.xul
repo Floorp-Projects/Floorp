@@ -60,18 +60,19 @@
             <columns><column/><column/><column/><column/><column/></columns>
               <rows>
                 <row align="center">
-                  <label value="&tableRows.label;"/>
+                  <label value="&tableRows.label;" accesskey="&tableRows.accessKey;" control="TableRowsInput"/>
                   <textbox class="narrow" id="TableRowsInput" oninput="forceInteger(this.id);"/>
                   <spring class="bigspacer"/>
-                  <label value="&tableHeight.label;" id="TableHeightLabel"/>
+                  <label value="&tableHeight.label;" accesskey="&tableHeight.accessKey;"
+                         id="TableHeightLabel" control="TableHeightInput"/>
                   <textbox class="narrow" id="TableHeightInput" oninput="forceInteger(this.id);"/>
                   <menulist id="TableHeightUnits"/>
                 </row>
               <row align="center">
-                <label value="&tableColumns.label;"/>
+                <label value="&tableColumns.label;" accesskey="&tableColumns.accessKey;" control="TableColumnsInput"/>
                 <textbox class="narrow" id="TableColumnsInput" oninput="forceInteger(this.id);"/>
                 <spring class="bigspacer"/>
-                <label value="&tableWidth.label;"/>
+                <label value="&tableWidth.label;" accesskey="&tableWidth.accessKey;" control="TableWidthInput"/>
                 <textbox class="narrow" id="TableWidthInput" oninput="forceInteger(this.id);"/>
                 <menulist id="TableWidthUnits"/>
               </row>
@@ -84,17 +85,23 @@
           <columns><column/><column/><column/></columns>
           <rows>
             <row align="center">
-              <label value="&tableBorderWidth.label;"/>
+              <label control="BorderWidthInput"
+                     value="&tableBorderWidth.label;"
+                     accesskey="&tableBorderWidth.accessKey;"/>
               <textbox class="narrow" id="BorderWidthInput" oninput="forceInteger(this.id);"/>
               <label align="left" value="&pixels.label;"/>
             </row>
             <row align="center">
-              <label value="&tableSpacing.label;"/>
+              <label control="SpacingInput"
+                     value="&tableSpacing.label;"
+                     accesskey="&tableSpacing.accessKey;"/>
               <textbox class="narrow" id="SpacingInput" oninput="forceInteger(this.id);"/>
               <label value="&tablePxBetwCells.label;"/>
             </row>
             <row align="center">
-              <label value="&tablePadding.label;"/>
+              <label control="PaddingInput"
+                     value="&tablePadding.label;"
+                     accesskey="&tablePadding.accessKey;"/>
               <textbox class="narrow" id="PaddingInput" oninput="forceInteger(this.id);"/>
               <label value="&tablePxBetwBrdrCellContent.label;"/>
             </row>
@@ -103,7 +110,9 @@
         </groupbox>
         <!-- Table Alignment and Caption -->
         <hbox flex="1" align="center">
-          <label value="&tableAlignment.label;"/>
+          <label control="TableAlignList"
+                 value="&tableAlignment.label;"
+                 accesskey="&tableAlignment.accessKey;"/>
           <menulist id="TableAlignList">
             <menupopup>
               <menuitem label="&AlignLeft.label;"   value="left"/>
@@ -112,7 +121,9 @@
             </menupopup>
           </menulist>
           <spacer class="spacer"/>
-          <label value="&tableCaption.label;"/>
+          <label control="TableCaptionList"
+                 value="&tableCaption.label;"
+                 accesskey="&tableCaption.accessKey;"/>
           <menulist id="TableCaptionList">
             <menupopup>
               <menuitem label="&tableCaptionNone.label;"  value=""/>
@@ -124,7 +135,7 @@
         <separator class="groove"/>
         <hbox align="center">
           <label value="&backgroundColor.label;"/>
-          <button class="color-button" oncommand="GetColorAndUpdate('tableBackgroundCW');">
+          <button id="tableBackground" class="color-button" oncommand="GetColorAndUpdate('tableBackgroundCW');">
             <spacer id="tableBackgroundCW" class="color-well"/>
           </button>
           <spacer class="spacer"/>
@@ -153,8 +164,8 @@
               </menupopup>
             </menulist>
             <hbox flex="1">
-              <button id="PreviousButton" label="&cellSelectPrevious.label;" oncommand="MoveSelection(0)" flex="1"/>
-              <button id="NextButton" class="align-right" label="&cellSelectNext.label;" oncommand="MoveSelection(1)" flex="1"/>
+              <button id="PreviousButton" label="&cellSelectPrevious.label;" accesskey="&cellSelectPrevious.accessKey;" oncommand="MoveSelection(0)" flex="1"/>
+              <button id="NextButton" class="align-right" label="&cellSelectNext.label;" accesskey="&cellSelectNext.accessKey;" oncommand="MoveSelection(1)" flex="1"/>
             </hbox>
           </vbox>
           <spacer class="bigspacer"/>
@@ -170,13 +181,13 @@
               <columns><column/><column/><column flex="1"/></columns>
               <rows>
                 <row align="center">
-                  <checkbox id="CellHeightCheckbox" label="&tableHeight.label;"/>
+                  <checkbox id="CellHeightCheckbox" label="&tableHeight.label;" accesskey="&tableHeight.accessKey;"/>
                   <textbox class="narrow" id="CellHeightInput"
                            oninput="ChangeIntTextbox(this.id,'CellHeightCheckbox');"/>
                   <menulist id="CellHeightUnits" oncommand="SetCheckbox('CellHeightCheckbox');"/>
                 </row>
                 <row align="center">
-                  <checkbox id="CellWidthCheckbox" label="&tableWidth.label;"/>
+                  <checkbox id="CellWidthCheckbox" label="&tableWidth.label;" accesskey="&tableWidth.accessKey;"/>
                   <textbox class="narrow" id="CellWidthInput"
                            oninput="ChangeIntTextbox(this.id,'CellWidthCheckbox');"/>
                   <menulist id="CellWidthUnits" oncommand="SetCheckbox('CellWidthCheckbox');"/>
@@ -191,7 +202,7 @@
               <columns><column/><column flex="1"/><column/></columns>
               <rows>
                 <row align="center">
-                  <checkbox id="CellVAlignCheckbox" label="&cellVertical.label;"/>
+                  <checkbox id="CellVAlignCheckbox" label="&cellVertical.label;" accesskey="&cellVertical.accessKey;"/>
                   <menulist id="CellVAlignList" oncommand="SetCheckbox('CellVAlignCheckbox');">
                     <menupopup>
                       <menuitem label="&cellAlignTop.label;"    value="top"/>
@@ -201,7 +212,7 @@
                   </menulist>
                 </row>
                 <row align="center">
-                  <checkbox id="CellHAlignCheckbox" label="&cellHorizontal.label;"/>
+                  <checkbox id="CellHAlignCheckbox" label="&cellHorizontal.label;" accesskey="&cellHorizontal.accessKey;"/>
                   <menulist id="CellHAlignList"  oncommand="SelectCellHAlign()">
                     <menupopup>
                       <menuitem label="&AlignLeft.label;"        value="left"/>
@@ -217,7 +228,7 @@
         </hbox>
         <spacer class="spacer"/>
         <hbox align="center">
-          <checkbox id="CellStyleCheckbox" label="&cellStyle.label;"/>
+          <checkbox id="CellStyleCheckbox" label="&cellStyle.label;" accesskey="&cellStyle.accessKey;"/>
           <menulist id="CellStyleList" oncommand="SetCheckbox('CellStyleCheckbox');">
             <menupopup>
               <menuitem label="&cellNormal.label;" value="td"/>
@@ -225,7 +236,7 @@
             </menupopup>
           </menulist>
           <spacer class="bigspacer"/>
-          <checkbox id="TextWrapCheckbox" label="&cellTextWrap.label;"/>
+          <checkbox id="TextWrapCheckbox" label="&cellTextWrap.label;" accesskey="&cellTextWrap.accessKey;"/>
           <menulist id="TextWrapList" oncommand="SetCheckbox('TextWrapCheckbox');">
             <menupopup>
               <menuitem label="&cellWrap.label;" value="wrap"/>
@@ -235,7 +246,7 @@
         </hbox>
         <separator class="groove"/>
         <hbox align="center">
-          <checkbox id="CellColorCheckbox" label="&backgroundColor.label;"/>
+          <checkbox id="CellColorCheckbox" label="&backgroundColor.label;" accesskey="&backgroundColor.accessKey;"/>
           <button class="color-button" oncommand="GetColorAndUpdate('cellBackgroundCW');">
             <spacer id="cellBackgroundCW" class="color-well"/>
           </button>

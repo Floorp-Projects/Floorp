@@ -50,7 +50,7 @@
   <vbox style="min-width: 20em">
     <groupbox><caption id="linkTextCaption"/>
       <vbox>
-        <label id="linkTextMessage"/> 
+        <label id="linkTextMessage" control="linkTextInput"/>
         <textbox id="linkTextInput"/>
       </vbox>
     </groupbox>

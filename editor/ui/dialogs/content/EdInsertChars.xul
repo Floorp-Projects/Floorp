@@ -59,11 +59,11 @@
   <hbox>
     <vbox flex="1">
       <!-- value is set in JS from editor.properties strings -->
-      <label id="LatinL_Label" value="&letter.label;"/>
+      <label id="LatinL_Label" control="LatinL" value="&letter.label;" accesskey="&letter.accessKey;"/>
       <menulist class="larger" flex="1" id="LatinL" oncommand="SelectLatinLetter()"/>
     </vbox>
     <vbox flex="1">
-      <label id="LatinM_Label" value="&character.label;"/>
+      <label id="LatinM_Label" control="LatinM" value="&character.label;" accesskey="&character.accessKey;"/>
       <menulist class="larger" flex="1" id="LatinM" oncommand="SelectLatinModifier()"/>
     </vbox>
   </hbox>
