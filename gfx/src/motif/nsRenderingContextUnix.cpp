@@ -87,6 +87,7 @@ nsRenderingContextUnix :: nsRenderingContextUnix()
   mP2T = 1.0f;
   mStateCache = new nsVoidArray();
   mRegion = nsnull;
+  mCurrFontHandle = 0;
   PushState();
 }
 
@@ -418,18 +419,17 @@ void nsRenderingContextUnix :: SetFont(const nsFont& aFont)
   NS_IF_RELEASE(mFontMetrics);
   mFontMetrics = mFontCache->GetMetricsFor(aFont);
 
-  if (mFontMetrics) {
-    
-    Font handle;
-    handle = ::XLoadFont(mRenderingSurface->display, "fixed");
+  if (mFontMetrics)
+  {  
+//    mCurrFontHandle = (Font)mFontMetrics->GetFontHandle();
+    mCurrFontHandle = ::XLoadFont(mRenderingSurface->display, (char *)mFontMetrics->GetFontHandle());
     
     ::XSetFont(mRenderingSurface->display,
-		 mRenderingSurface->gc,
-	       (Font)handle);
+	       mRenderingSurface->gc,
+	       mCurrFontHandle);
       
     ::XFlushGC(mRenderingSurface->display,
 	       mRenderingSurface->gc);
-    
   }
 }
 
@@ -446,13 +446,13 @@ nsIFontMetrics* nsRenderingContextUnix :: GetFontMetrics()
 // add the passed in translation to the current translation
 void nsRenderingContextUnix :: Translate(nscoord aX, nscoord aY)
 {
-	mTMatrix->AddTranslation((float)aX,(float)aY);
+  mTMatrix->AddTranslation((float)aX,(float)aY);
 }
 
 // add the passed in scale to the current scale
 void nsRenderingContextUnix :: Scale(float aSx, float aSy)
 {
-	mTMatrix->AddScale(aSx, aSy);
+  mTMatrix->AddScale(aSx, aSy);
 }
 
 nsTransform2D * nsRenderingContextUnix :: GetCurrentTransform()
@@ -607,6 +607,19 @@ void nsRenderingContextUnix :: DrawEllipse(const nsRect& aRect)
 
 void nsRenderingContextUnix :: DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+  nscoord x,y,w,h;
+
+  x = aX;
+  y = aY;
+  w = aWidth;
+  h = aHeight;
+
+  mTMatrix->TransformCoord(&x,&y,&w,&h);
+
+  ::XDrawArc(mRenderingSurface->display, 
+	     mRenderingSurface->drawable,
+	     mRenderingSurface->gc,
+	     x,y,w,h, 0, 360 * 64);
 }
 
 void nsRenderingContextUnix :: FillEllipse(const nsRect& aRect)
@@ -616,6 +629,19 @@ void nsRenderingContextUnix :: FillEllipse(const nsRect& aRect)
 
 void nsRenderingContextUnix :: FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+  nscoord x,y,w,h;
+
+  x = aX;
+  y = aY;
+  w = aWidth;
+  h = aHeight;
+
+  mTMatrix->TransformCoord(&x,&y,&w,&h);
+
+  ::XFillArc(mRenderingSurface->display, 
+	     mRenderingSurface->drawable,
+	     mRenderingSurface->gc,
+	     x,y,w,h, 0, 360 * 64);
 }
 
 void nsRenderingContextUnix :: DrawArc(const nsRect& aRect,
@@ -639,7 +665,8 @@ void nsRenderingContextUnix :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, n
   ::XDrawArc(mRenderingSurface->display, 
 	     mRenderingSurface->drawable,
 	     mRenderingSurface->gc,
-	     x,y,w,h, aStartAngle, aEndAngle);
+	     x,y,w,h, NS_TO_INT_ROUND(aStartAngle * 64.0f),
+             NS_TO_INT_ROUND(aEndAngle * 64.0f));
 }
 
 void nsRenderingContextUnix :: FillArc(const nsRect& aRect,
@@ -663,16 +690,14 @@ void nsRenderingContextUnix :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, n
   ::XFillArc(mRenderingSurface->display, 
 	     mRenderingSurface->drawable,
 	     mRenderingSurface->gc,
-	     x,y,w,h, aStartAngle, aEndAngle);
+	     x,y,w,h, NS_TO_INT_ROUND(aStartAngle * 64.0f),
+             NS_TO_INT_ROUND(aEndAngle * 64.0f));
 }
 
 void nsRenderingContextUnix :: DrawString(const char *aString, PRUint32 aLength,
                                     nscoord aX, nscoord aY,
                                     nscoord aWidth)
 {
-  // XXX Hack
-  ::XLoadFont(mRenderingSurface->display, "fixed");
-
   PRInt32 x = aX;
   PRInt32 y = aY;
 
@@ -686,30 +711,78 @@ void nsRenderingContextUnix :: DrawString(const char *aString, PRUint32 aLength,
 		mRenderingSurface->drawable,
 		mRenderingSurface->gc,
 		x, y, aString, aLength);
+
+  if (mFontMetrics)
+  {
+    PRUint8 deco = mFontMetrics->GetFont().decorations;
+
+    if (deco & NS_FONT_DECORATION_OVERLINE)
+      DrawLine(aX, aY, aX + aWidth, aY);
+
+    if (deco & NS_FONT_DECORATION_UNDERLINE)
+    {
+      nscoord ascent = mFontMetrics->GetMaxAscent();
+      nscoord descent = mFontMetrics->GetMaxDescent();
+
+      DrawLine(aX, aY + ascent + (descent >> 1),
+               aX + aWidth, aY + ascent + (descent >> 1));
+    }
+
+    if (deco & NS_FONT_DECORATION_LINE_THROUGH)
+    {
+      nscoord height = mFontMetrics->GetHeight();
+
+      DrawLine(aX, aY + (height >> 1), aX + aWidth, aY + (height >> 1));
+    }
+  }
 }
 
 void nsRenderingContextUnix :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                          nscoord aX, nscoord aY, nscoord aWidth)
 {
+  PRInt32 x = aX;
+  PRInt32 y = aY;
+
+  // Substract xFontStruct ascent since drawing specifies baseline
+  if (mFontMetrics)
+      y += mFontMetrics->GetMaxAscent();
+
+  mTMatrix->TransformCoord(&x, &y);
+
+  ::XDrawString16(mRenderingSurface->display, 
+                mRenderingSurface->drawable,
+                mRenderingSurface->gc,
+                x, y, (XChar2b *)aString, aLength);
+
+  if (mFontMetrics)
+  {
+    PRUint8 deco = mFontMetrics->GetFont().decorations;
+
+    if (deco & NS_FONT_DECORATION_OVERLINE)
+      DrawLine(aX, aY, aX + aWidth, aY);
+
+    if (deco & NS_FONT_DECORATION_UNDERLINE)
+    {
+      nscoord ascent = mFontMetrics->GetMaxAscent();
+      nscoord descent = mFontMetrics->GetMaxDescent();
+
+      DrawLine(aX, aY + ascent + (descent >> 1),
+               aX + aWidth, aY + ascent + (descent >> 1));
+    }
+
+    if (deco & NS_FONT_DECORATION_LINE_THROUGH)
+    {
+      nscoord height = mFontMetrics->GetHeight();
+
+      DrawLine(aX, aY + (height >> 1), aX + aWidth, aY + (height >> 1));
+    }
+  }
 }
 
 void nsRenderingContextUnix :: DrawString(const nsString& aString,
                                          nscoord aX, nscoord aY, nscoord aWidth)
 {
-  // XXX Leak - How to Print UniChar  
-  if (aString.Length() > 0) {
-    char * buf ;
-    
-    buf = (char *) malloc(sizeof(char) * (aString.Length()+1));
-
-    buf[aString.Length()] = '\0';
-
-    aString.ToCString(buf, aString.Length());
-
-    DrawString(buf, aString.Length(), aX, aY, aWidth);
-
-    free(buf);
-  }
+  DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aWidth);
 }
 
 void nsRenderingContextUnix :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)

@@ -63,6 +63,7 @@ protected:
 
 protected:
   void QueryFont();
+  char *PickAppropriateSize(char **names, XFontStruct *fonts, int cnt, nscoord desired);
 
   nsFont            *mFont;
   nsIDeviceContext  *mContext;
@@ -76,6 +77,7 @@ protected:
   nscoord           mMaxAscent;
   nscoord           mMaxDescent;
   nscoord           mMaxAdvance;
+  char *hackyfontnamething;
 };
 
 #endif
