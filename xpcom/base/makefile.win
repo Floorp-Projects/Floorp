@@ -30,6 +30,7 @@ MODULE = xpcom
 EXPORTS =                  \
         nsAgg.h            \
         nsIAllocator.h     \
+        nsMemory.h         \
         nsCOMPtr.h         \
         nsCom.h            \
         nsCWeakReference.h \
@@ -50,6 +51,7 @@ XPIDL_MODULE = xpcom_base
 
 XPIDLSRCS =               \
         .\nsrootidl.idl   \
+        .\nsIMemory.idl \
         .\nsILeakDetector.idl \
         .\nsIInterfaceRequestor.idl \
         .\nsISupports.idl \
@@ -84,6 +86,7 @@ LCFLAGS = $(LCFLAGS) -DGC_LEAK_DETECTOR
 CPP_OBJS =                            \
         .\$(OBJDIR)\nsDebug.obj       \
         .\$(OBJDIR)\nsAllocator.obj   \
+        .\$(OBJDIR)\nsMemoryImpl.obj   \
         .\$(OBJDIR)\nsCOMPtr.obj      \
         .\$(OBJDIR)\nsCWeakReference.obj \
         .\$(OBJDIR)\nsID.obj          \
