@@ -18,7 +18,6 @@
 
 #include "nsWindow.h"
 #include "nsIFontMetrics.h"
-#include "nsIFontCache.h"
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
@@ -689,24 +688,17 @@ nsIFontMetrics* nsWindow::GetFont(void)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::SetFont(const nsFont &aFont)
 {
-    if (mContext == nsnull) {
-      return NS_OK;
-    }
-    nsIFontCache* fontCache = nsnull;
-    mContext->GetFontCache(fontCache);
-    if (fontCache != nsnull) {
-      nsIFontMetrics* metrics;
-      fontCache->GetMetricsFor(aFont, metrics);
-      if (metrics != nsnull) {
+  if (mContext == nsnull) {
+    return NS_OK;
+  }
+  nsIFontMetrics* metrics;
+  mContext->GetMetricsFor(aFont, metrics);
+  if (metrics != nsnull) {
 
-        NS_RELEASE(metrics);
-      } else {
-        printf("****** Error: Metrics is NULL!\n");
-      }
-      NS_RELEASE(fontCache);
-    } else {
-      printf("****** Error: FontCache is NULL!\n");
-    }
+    NS_RELEASE(metrics);
+  } else {
+    printf("****** Error: Metrics is NULL!\n");
+  }
  
  	return NS_OK;
 }

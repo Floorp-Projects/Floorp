@@ -26,7 +26,6 @@
 
 #include "nsIAppShell.h"
 #include "nsIFontMetrics.h"
-#include "nsIFontCache.h"
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"

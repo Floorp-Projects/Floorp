@@ -19,7 +19,6 @@
 #include "nsWindow.h"
 #include "nsIAppShell.h"
 #include "nsIFontMetrics.h"
-#include "nsIFontCache.h"
 #include "nsFont.h"
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
@@ -886,10 +885,8 @@ nsIFontMetrics* nsWindow::GetFont(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::SetFont(const nsFont &aFont)
 {
-    nsIFontCache* fontCache;
-    mContext->GetFontCache(fontCache);
     nsIFontMetrics* metrics;
-    fontCache->GetMetricsFor(aFont, metrics);
+    mContext->GetMetricsFor(aFont, metrics);
     nsFontHandle  fontHandle;
     metrics->GetFontHandle(fontHandle);
     HFONT hfont = (HFONT)fontHandle;
@@ -897,7 +894,6 @@ NS_METHOD nsWindow::SetFont(const nsFont &aFont)
       // Draw in the new font
     ::SendMessage(mWnd, WM_SETFONT, (WPARAM)hfont, (LPARAM)0); 
     NS_RELEASE(metrics);
-    NS_RELEASE(fontCache);
 
      // XXX Temporary, should not be caching the font
     if (mFont == nsnull) {

@@ -18,7 +18,6 @@
 
 #include "nsWindow.h"
 #include "nsIFontMetrics.h"
-#include "nsIFontCache.h"
 #include "nsFont.h"
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
@@ -848,38 +847,30 @@ NS_METHOD nsWindow::SetFont(const nsFont &aFont)
     if (mContext == nsnull) {
       return NS_ERROR_FAILURE;
     }
-    nsIFontCache* fontCache;
-    mContext->GetFontCache(fontCache);
-    if (fontCache != nsnull) {
-      nsIFontMetrics* metrics;
-      fontCache->GetMetricsFor(aFont, metrics);
-      if (metrics != nsnull) {
+    nsIFontMetrics* metrics;
+    mContext->GetMetricsFor(aFont, metrics);
+    if (metrics != nsnull) {
 
-        XmFontList      fontList = NULL;
-        XmFontListEntry entry    = NULL;
-        nsFontHandle    fontHandle;
-        metrics->GetFontHandle(fontHandle);
-        XFontStruct * fontStruct = XQueryFont(XtDisplay(mWidget), (XID)fontHandle);
+      XmFontList      fontList = NULL;
+      XmFontListEntry entry    = NULL;
+      nsFontHandle    fontHandle;
+      metrics->GetFontHandle(fontHandle);
+      XFontStruct * fontStruct = XQueryFont(XtDisplay(mWidget), (XID)fontHandle);
 
-        if (fontStruct != NULL) {
-          entry = XmFontListEntryCreate(XmFONTLIST_DEFAULT_TAG, 
-                                        XmFONT_IS_FONT, fontStruct);
-          fontList = XmFontListAppendEntry(NULL, entry);
+      if (fontStruct != NULL) {
+        entry = XmFontListEntryCreate(XmFONTLIST_DEFAULT_TAG, 
+                                      XmFONT_IS_FONT, fontStruct);
+        fontList = XmFontListAppendEntry(NULL, entry);
 
-          XtVaSetValues(mWidget, XmNfontList, fontList, NULL);
+        XtVaSetValues(mWidget, XmNfontList, fontList, NULL);
 
-          XmFontListEntryFree(&entry);
-          XmFontListFree(fontList);
-        }
-
-        NS_RELEASE(metrics);
-      } else {
-        printf("****** Error: Metrics is NULL!\n");
-        return NS_ERROR_FAILURE;
+        XmFontListEntryFree(&entry);
+        XmFontListFree(fontList);
       }
-      NS_RELEASE(fontCache);
+
+      NS_RELEASE(metrics);
     } else {
-      printf("****** Error: FontCache is NULL!\n");
+      printf("****** Error: Metrics is NULL!\n");
       return NS_ERROR_FAILURE;
     }
 
