@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.52 2002/05/25 01:02:39 wtc%netscape.com Exp $
+ # $Id: nssinit.c,v 1.53 2002/05/25 06:52:19 wtc%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -59,16 +59,15 @@
  * definition (in DBM) was moved from nss3.dll to softokn3.dll
  * in NSS 3.4.  See bug 142575.
  */
-#ifdef WIN32
+#ifdef WIN32_NSS3_DLL_COMPAT
 #include <io.h>
 
+/* exported as 'mktemp' */
 char *
 nss_mktemp(char *path)
 {
     return _mktemp(path);
 }
-
-#pragma comment(linker, "/export:mktemp=_nss_mktemp")
 #endif
 
 #define NSS_MAX_FLAG_SIZE  sizeof("readOnly")+sizeof("noCertDB")+ \
