@@ -110,6 +110,7 @@
 #include "nsAutoPtr.h"
 #include "nsXULAtoms.h"
 #include "nsBoxFrame.h"
+#include "nsScrollBoxFrame.h"
 #include "nsIBoxLayout.h"
 #ifdef MOZ_ENABLE_CAIRO
 #include "nsCanvasFrame.h"
@@ -321,6 +322,9 @@ NS_NewMenuPopupFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
 NS_NewPopupSetFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+
+nsresult
+NS_NewScrollBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 nsresult
 NS_NewMenuFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags );
@@ -4171,6 +4175,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
 
          ^
          |
+     ScrollBox
+
+         ^
          |
      AreaFrame or BoxFrame (InitialContainingBlock)
           
@@ -4184,15 +4191,18 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
   // ----- reattach gfx scrollbars ------
   // Gfx scrollframes were created in the root frame but the primary frame map may have been destroyed if a 
   // new style sheet was loaded so lets reattach the frames to their content.
-  // XXX this seems truly bogus, we wipe out mGfxScrollFrame below
   if (mGfxScrollFrame) {
-    nsIFrame* gfxScrollbarFrame1 = mGfxScrollFrame->GetFirstChild(nsnull);
+    nsIFrame* scrollBox = mGfxScrollFrame->GetFirstChild(nsnull);
+
+    nsIFrame* gfxScrollbarFrame1 = nsnull;
+    nsIFrame* gfxScrollbarFrame2 = nsnull;
+    gfxScrollbarFrame1 = scrollBox->GetNextSibling();
     if (gfxScrollbarFrame1) {
       // XXX This works, but why?
       aState.mFrameManager->
         SetPrimaryFrameFor(gfxScrollbarFrame1->GetContent(), gfxScrollbarFrame1);
 
-      nsIFrame* gfxScrollbarFrame2 = gfxScrollbarFrame1->GetNextSibling();
+      gfxScrollbarFrame2 = gfxScrollbarFrame1->GetNextSibling();
       if (gfxScrollbarFrame2) {
         // XXX This works, but why?
         aState.mFrameManager->
@@ -4250,6 +4260,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
 
   // build a scrollframe
   if (isScrollable) {
+    nsIFrame* newScrollFrame = nsnull;
     nsRefPtr<nsStyleContext> newContext;
 
     newContext = BeginBuildingScrollFrame( aState,
@@ -4259,10 +4270,11 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
                                            nsnull,
                                            nsCSSAnonBoxes::scrolledContent,
                                            PR_FALSE,
-                                           scrollFrame);
+                                           scrollFrame,
+                                           newScrollFrame);
 
     styleContext = newContext;
-    aParentFrame = scrollFrame;
+    aParentFrame = newScrollFrame;
   }
 
   nsIFrame* contentFrame = nsnull;
@@ -4402,6 +4414,10 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
 
          ^
          |
+     ScrollBox <--- RootScrollableView
+
+         ^
+         |
      RootFrame(DocElementContainingBlock)
           
 */    
@@ -4490,6 +4506,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
   // will act as the scrolling mechanism for the viewport. 
   // XXX Do we even need a viewport when printing to a printer?
 
+  //isScrollable = PR_FALSE;
+
   // As long as the webshell doesn't prohibit it, and the device supports
   // it, create a scroll frame that will act as the scolling mechanism for
   // the viewport.
@@ -4517,6 +4535,31 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
       isScrollable = PR_FALSE;
   }
 
+  // Don't create a scrollframe when we're inside a frame or iframe with
+  // scrolling="no".  This makes the frame hierarchy inconsistent and is
+  // unnecessary for correctness (since
+  // nsGfxScrollFrameInner::GetScrollbarStyles handles all the necessary
+  // cases), but it seems to be needed for performance.
+  if (isScrollable) {
+    nsresult rv;
+    if (presContext) {
+      nsCOMPtr<nsISupports> container = presContext->GetContainer();
+      if (container) {
+        nsCOMPtr<nsIScrollable> scrollableContainer = do_QueryInterface(container, &rv);
+        if (NS_SUCCEEDED(rv) && scrollableContainer) {
+          PRInt32 scrolling = -1;
+          scrollableContainer->GetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,&scrolling);
+          if (nsIScrollable::Scrollbar_Never == scrolling) {
+            scrollableContainer->GetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X,&scrolling);
+            if (nsIScrollable::Scrollbar_Never == scrolling) {
+              isScrollable = PR_FALSE;
+            }
+          }
+        }
+      }
+    }
+  }
+
   if (isPaginated) {
     if (isPrintPreview) {
       isScrollable = presContext->HasPaginatedScrolling();
@@ -4540,11 +4583,12 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
   nsIFrame* parentFrame = viewportFrame;
 
   // If paginated, make sure we don't put scrollbars in
-  if (!isScrollable) {
+  if (isPaginated && !isPrintPreview)
     rootPseudoStyle = styleSet->ResolvePseudoStyleFor(nsnull,
                                                       rootPseudo,
                                                       viewportPseudoStyle);
-  } else {
+  else if (isScrollable) {
+
       // Build the frame. We give it the content we are wrapping which is the document,
       // the root frame, the parent view port frame, and we should get back the new
       // frame and the scrollable view if one was created.
@@ -4562,6 +4606,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
       // scroll style to 'hidden' --- dynamic style changes might put
       // scrollbars back on the viewport and we don't want to have to
       // reframe the viewport to create the scrollbar content.
+      nsIFrame* newScrollableFrame = nsnull;
+
       newFrame = nsnull;
       rootPseudoStyle = BeginBuildingScrollFrame( state,
                                                   aDocElement,
@@ -4570,19 +4616,61 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
                                                   nsnull,
                                                   rootPseudo,
                                                   PR_TRUE,
-                                                  newFrame);
+                                                  newFrame,
+                                                  newScrollableFrame);
 
-      nsIScrollableFrame* scrollable;
-      CallQueryInterface(newFrame, &scrollable);
-      NS_ENSURE_TRUE(scrollable, NS_ERROR_FAILURE);
+      // Inform the view manager about the root scrollable view
+      nsIView* view = newScrollableFrame->GetView();
+      NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
 
-      nsIScrollableView* scrollableView = scrollable->GetScrollableView();
+      nsIScrollableView* scrollableView = view->ToScrollableView();
       NS_ENSURE_TRUE(scrollableView, NS_ERROR_FAILURE);
 
       viewManager->SetRootScrollableView(scrollableView);
-      parentFrame = newFrame;
+      parentFrame = newScrollableFrame;
 
       mGfxScrollFrame = newFrame;
+
+  } else {
+    // If no scrollbars and xul, don't build a scrollframe at all. 
+    if (isXUL) {
+      rootPseudoStyle = styleSet->ResolvePseudoStyleFor(nsnull,
+                                                        rootPseudo,
+                                                        viewportPseudoStyle);
+    } else {
+      // if HTML the always create a scrollframe so anchors work. That way you can scroll to 
+      // anchors even if we don't have scrollbars.
+
+      // create a style context for the scrollport of the viewport
+      nsRefPtr<nsStyleContext> scrollPseudoStyle;
+      scrollPseudoStyle = styleSet->ResolvePseudoStyleFor(nsnull,
+                                                          nsCSSAnonBoxes::scrolledContent,
+                                                          viewportPseudoStyle);
+
+      // create scrollframe
+      nsIFrame* scrollFrame = nsnull;
+      NS_NewScrollBoxFrame(mPresShell, &scrollFrame);
+      NS_ENSURE_TRUE(scrollFrame, NS_ERROR_FAILURE);
+
+      scrollFrame->Init(presContext, nsnull, parentFrame, scrollPseudoStyle, nsnull);
+
+      // resolve a new style for the root frame
+      rootPseudoStyle = styleSet->ResolvePseudoStyleFor(nsnull,
+                                                        rootPseudo,
+                                                        scrollPseudoStyle);
+
+      // Inform the view manager about the root scrollable view
+      nsIView* view = scrollFrame->GetView();
+      NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
+
+      nsIScrollableView* scrollableView = view->ToScrollableView();
+      NS_ENSURE_TRUE(scrollableView, NS_ERROR_FAILURE);
+
+      viewManager->SetRootScrollableView(scrollableView);
+
+      parentFrame = scrollFrame;
+      newFrame = scrollFrame;
+    }
   }
   
 
@@ -6197,7 +6285,8 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
                                                 nsIFrame*                aContentParentFrame,
                                                 nsIAtom*                 aScrolledPseudo,
                                                 PRBool                   aIsRoot,
-                                                nsIFrame*&               aNewFrame)
+                                                nsIFrame*&               aNewFrame,
+                                                nsIFrame*&               aScrollableFrame)
 {
   // Check to see the type of parent frame so we know whether we need to 
   // turn off/on scaling for the scrollbars
@@ -6215,6 +6304,7 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
     }
   }
 
+  nsIFrame* scrollFrame = nsnull;
   nsIFrame* parentFrame = nsnull;
   nsIFrame* gfxScrollFrame = aNewFrame;
 
@@ -6223,9 +6313,9 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
   nsRefPtr<nsStyleContext> contentStyle = aContentStyle;
 
   if (!gfxScrollFrame) {
-    // Build a XULScrollFrame when the child is a box, otherwise an
-    // HTMLScrollFrame
-    if (IsXULDisplayType(aContentStyle->GetStyleDisplay())) {
+    // Build a XULScrollFrame when the parent is a box, because XULScrollFrames
+    // do box layout well. Otherwise build an HTMLScrollFrame.
+    if (aParentFrame->IsBoxFrame()) {
       NS_NewXULScrollFrame(mPresShell, &gfxScrollFrame, aIsRoot);
     } else {
       NS_NewHTMLScrollFrame(mPresShell, &gfxScrollFrame, aIsRoot);
@@ -6239,11 +6329,11 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
                                              aContentParentFrame, PR_FALSE);
   }
 
-  // if there are any anonymous children for the scroll frame, create
-  // frames for them.
-  CreateAnonymousFrames(aState, aContent, mDocument, gfxScrollFrame, PR_FALSE,
-                        PR_FALSE, anonymousItems, nsnull, nsnull, PR_FALSE);
+  InitGfxScrollFrame(aState, aContent, mDocument,
+                     aParentFrame, aContentParentFrame, contentStyle,
+                     aIsRoot, gfxScrollFrame, anonymousItems);
 
+  scrollFrame = anonymousItems.childList; // get the scrollport from the anonymous list
   parentFrame = gfxScrollFrame;
   aNewFrame = gfxScrollFrame;
 
@@ -6256,14 +6346,22 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
                                                       contentStyle);
 
   contentStyle = scrollPseudoStyle;
+  InitAndRestoreFrame(aState, aContent, parentFrame, contentStyle, nsnull,
+                      scrollFrame);
+
   nsStyleContext* aScrolledChildStyle = styleSet->ResolvePseudoStyleFor(aContent,
                                                                         aScrolledPseudo,
                                                                         contentStyle).get();
 
+  aScrollableFrame = scrollFrame;
+  
+  // set the child frame for the gfxscrollbar if the is one. This frames will be the 
+  // 2 scrollbars and the scrolled frame.
   if (gfxScrollFrame) {
      gfxScrollFrame->SetInitialChildList(aState.mPresContext, nsnull,
                                          anonymousItems.childList);
   }
+
 
   if (isPrintPreview && noScalingOfTwips) {
     aState.mPresContext->SetScalingOfTwips(PR_TRUE);
@@ -6276,24 +6374,14 @@ void
 nsCSSFrameConstructor::FinishBuildingScrollFrame(nsIFrame* aScrollFrame,
                                                  nsIFrame* aScrolledFrame)
 {
-  aScrollFrame->AppendFrames(nsnull, aScrolledFrame);
-
-  // force the scrolled frame to have a view
+  // create a view
+  // XXXbz should we be passing in a non-null aContentParentFrame?
   nsHTMLContainerFrame::CreateViewForFrame(aScrolledFrame, nsnull, PR_TRUE);
-  nsIView* view = aScrolledFrame->GetView();
-  if (!view)
-    return;
 
-  // reparent the view from the scrollframe's view to its inner scrolling view
-  nsIScrollableFrame* scrollable;
-  CallQueryInterface(aScrollFrame, &scrollable);
-  if (scrollable) {
-    nsIViewManager* vm = view->GetViewManager();
-    vm->RemoveChild(view);
-    vm->InsertChild(scrollable->GetScrollableView()->View(), view, nsnull, PR_TRUE);
-  }
+  // the the scroll frames child list
+  aScrollFrame->SetInitialChildList(aScrollFrame->GetPresContext(), nsnull, aScrolledFrame);
 }
-
+ 
 
 /**
  * Called to wrap a gfx scrollframe around a frame. The hierarchy will look like this
@@ -6304,13 +6392,18 @@ nsCSSFrameConstructor::FinishBuildingScrollFrame(nsIFrame* aScrollFrame,
  *            ScrollFrame
  *                 ^
  *                 |
+ *              ScrollBox
+ *                 ^
+ *                 |
  *               Frame (scrolled frame you passed in)
  *
  *
  *-----------------------------------
  * LEGEND:
  * 
- * ScrollFrame: This is a frame that manages gfx cross platform frame based scrollbars.
+ * GfxScrollFrame: This is a frame that manages gfx cross platform frame based scrollbars.
+ *
+ * ScrollBox: This clips and scrolls its children with a native scrolling window.
  *
  * @param aContent the content node of the child to wrap.
  * @param aScrolledFrame The frame of the content to wrap. This should not be
@@ -6336,15 +6429,25 @@ nsCSSFrameConstructor::BuildScrollFrame(nsFrameConstructorState& aState,
                                         nsIFrame*&               aNewFrame, 
                                         nsStyleContext*&         aScrolledContentStyle)
 {
-    nsRefPtr<nsStyleContext> scrolledContentStyle =
-      BeginBuildingScrollFrame(aState, aContent, aContentStyle, aParentFrame,
-                               aContentParentFrame, nsCSSAnonBoxes::scrolledContent,
-                               PR_FALSE, aNewFrame);
+    nsIFrame *scrollFrame;
+
+    nsRefPtr<nsStyleContext> scrolledContentStyle;
+
     
-    InitAndRestoreFrame(aState, aContent, aNewFrame, scrolledContentStyle,
+    scrolledContentStyle = BeginBuildingScrollFrame(aState,
+                                                    aContent,
+                                                    aContentStyle,
+                                                    aParentFrame,
+                                                    aContentParentFrame,
+                                                    nsCSSAnonBoxes::scrolledContent,
+                                                    PR_FALSE,
+                                                    aNewFrame,
+                                                    scrollFrame);
+    
+    InitAndRestoreFrame(aState, aContent, scrollFrame, scrolledContentStyle,
                         nsnull, aScrolledFrame);
 
-    FinishBuildingScrollFrame(aNewFrame, aScrolledFrame);
+    FinishBuildingScrollFrame(scrollFrame, aScrolledFrame);
 
     aScrolledContentStyle = scrolledContentStyle;
 
@@ -6353,6 +6456,34 @@ nsCSSFrameConstructor::BuildScrollFrame(nsFrameConstructorState& aState,
     return NS_OK;
 
 }
+
+/** 
+ * If we are building GFX scrollframes this will create one
+ * if aNewFrame gets a frame passed in, we'll use it instead
+ * of creating a new frame
+ */
+nsresult
+nsCSSFrameConstructor::InitGfxScrollFrame(nsFrameConstructorState& aState,
+                                          nsIContent*              aContent,
+                                          nsIDocument*             aDocument,
+                                          nsIFrame*                aParentFrame,
+                                          nsIFrame*                aContentParentFrame,
+                                          nsStyleContext*          aStyleContext,
+                                          PRBool                   aIsRoot,
+                                          nsIFrame*&               aNewFrame,
+                                          nsFrameItems&            aAnonymousFrames)
+{
+  nsIFrame* scrollBox;
+  NS_NewScrollBoxFrame(mPresShell, &scrollBox);
+
+  aAnonymousFrames.AddChild(scrollBox);
+
+  // if there are any anonymous children for the scroll frame, create frames for them.
+  CreateAnonymousFrames(aState, aContent, aDocument, aNewFrame, PR_FALSE,
+                        PR_FALSE, aAnonymousFrames, nsnull, nsnull, PR_FALSE);
+
+  return NS_OK;
+} 
 
 nsresult
 nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aState,
@@ -6402,12 +6533,14 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
       ProcessPseudoFrames(aState, aFrameItems); 
     }
 
+    nsIFrame *scrollFrame;
     nsRefPtr<nsStyleContext> scrolledContentStyle
       = BeginBuildingScrollFrame(aState, aContent, aStyleContext,
                                  aState.GetGeometricParent(aDisplay, aParentFrame),
                                  aParentFrame,
                                  nsCSSAnonBoxes::scrolledContent,
-                                 PR_FALSE, newFrame);
+                                 PR_FALSE,
+                                 newFrame, scrollFrame);
     
     // Initialize it
     nsIFrame* scrolledFrame = nsnull;
@@ -6416,11 +6549,11 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
     nsFrameItems blockItem;
     rv = ConstructBlock(aState,
                         scrolledContentStyle->GetStyleDisplay(), aContent,
-                        newFrame, newFrame, scrolledContentStyle,
+                        scrollFrame, scrollFrame, scrolledContentStyle,
                         &scrolledFrame, blockItem, aDisplay->IsPositioned());
     NS_ASSERTION(blockItem.childList == scrolledFrame,
                  "Scrollframe's frameItems should be exactly the scrolled frame");
-    FinishBuildingScrollFrame(newFrame, scrolledFrame);
+    FinishBuildingScrollFrame(scrollFrame, scrolledFrame);
 
     rv = aState.AddChild(newFrame, aFrameItems, aDisplay, aContent,
                          aStyleContext, aParentFrame);
@@ -7673,6 +7806,7 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy()
         //
         // (HTML)
         //    nsHTMLScrollFrame(html)<
+        //     nsScrollBoxFrame(html)<
         //      Canvas(-1)<
         //       Area(html)<
         //        (etc.)
@@ -7680,6 +7814,7 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy()
         // (XUL #1)
         //    RootBoxFrame(window)<
         //     nsXULScrollFrame<
+        //      nsScrollBoxFrame(window)<
         //        (etc.)
         //
         // (XUL #2)
