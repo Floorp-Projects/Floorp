@@ -34,6 +34,7 @@ LIB1 = .\$(OBJDIR)\tmreader.lib
 
 PROGRAMS = $(PROG1) $(PROG2) $(PROG3)
 
+C_OBJS=.\$(OBJDIR)\spacecategory.obj
 CPP_OBJS=.\$(OBJDIR)\tmreader.obj
 
 LINCS= $(LINCS) \
@@ -72,14 +73,15 @@ clobber::
 	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
 
 $(CPP_OBJS): $(OBJDIR)
+$(C_OBJS): $(OBJDIR)
 
-$(LIB1): $(CPP_OBJS)
+$(LIB1): $(CPP_OBJS) $(C_OBJS)
 	$(RM) $@
 	lib /nologo /out:$@ $**
 
 $(PROG1): $(LIB1) bloatblame.c
 
-$(PROG2): $(LIB1) spacetrace.c spacecategory.c
+$(PROG2): $(LIB1) spacetrace.c
 
 $(PROG3): $(LIB1) leakstats.c
 
