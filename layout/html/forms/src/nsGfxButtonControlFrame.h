@@ -73,7 +73,7 @@ public:
                                             PRBool aCompileEventHandlers);
   NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
                             nsIContent *      aContent,
-                            nsIFrame**        aFrame) { if (aFrame) *aFrame = nsnull; return NS_ERROR_FAILURE; }
+                            nsIFrame**        aFrame);
 
 protected:
   NS_IMETHOD AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
