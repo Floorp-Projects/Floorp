@@ -22,6 +22,6 @@
 
 undef @out;
 foreach $d (@ARGV) { 
-    push @out, $d if (!grep(/$d/, @out));
+    push @out, $d if (!grep(/^$d$/, @out));
 }
 print "@out\n"
