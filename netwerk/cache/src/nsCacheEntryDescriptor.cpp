@@ -29,8 +29,9 @@
 #include "nsReadableUtils.h"
 #include "nsIOutputStream.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsCacheEntryDescriptor, nsICacheEntryDescriptor)
-
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsCacheEntryDescriptor,
+                              nsICacheEntryDescriptor,
+                              nsICacheEntryInfo)
 
 nsCacheEntryDescriptor::nsCacheEntryDescriptor(nsCacheEntry * entry,
                                                nsCacheAccessMode accessGranted)
