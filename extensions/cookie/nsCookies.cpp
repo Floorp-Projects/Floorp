@@ -1764,9 +1764,9 @@ COOKIE_SetCookieStringFromHttp(nsIURI * curURL, nsIURI * firstURL, nsIPrompt *aP
       ptr++;
     }
     time_t delta = atoi(ptr); // obtain numeric value of argument
-    if (delta == 0) {
+    if (delta <= 0) {  // negative max-age is not allowed; but this is more robust
       gmtCookieExpires = 1; // force cookie to expire immediately
-    } else if (delta > 0) { // negative max-age is not allowed -- see rfc 2109
+    } else {
       gmtCookieExpires = get_current_time() + delta;
     }
   }
@@ -2235,6 +2235,9 @@ cookie_ParseDate(char *date_string, time_t & date) {
   // TRACEMSG(("Parsing date string: %s\n",date_string));
 
   if(PR_ParseTimeString(date_string, PR_TRUE, &prdate) == PR_SUCCESS) {
+    if (LL_CMP(prdate, <, LL_Zero())) { // prdate < 0
+      return NS_OK; // date = 0 from above
+    }
     PRInt64 r, u;
     LL_I2L(u, PR_USEC_PER_SEC);
     LL_DIV(r, prdate, u);
