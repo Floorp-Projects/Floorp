@@ -119,7 +119,9 @@ static nsCharSetInfo gCharSetInfo[eCharSet_COUNT] =
   { "JOHAB",       FM_DEFN_KANA,     1361, "ko-XXX", }
 };
 
-static curHashValue = 1;
+static ULONG ulSystemCodePage = 0;
+
+static ULONG curHashValue = 1;
 
 // font handle
 nsFontHandleOS2::nsFontHandleOS2()
@@ -186,6 +188,9 @@ nsFontMetricsOS2::nsFontMetricsOS2()
   ++gFontMetricsOS2Count;
   // members are zeroed by new operator (hmm) - yeah right
   mTriedAllGenerics = 0;
+  if (ulSystemCodePage == 0) {
+     ulSystemCodePage = WinQueryCp(HMQ_CURRENT);
+  } /* endif */
 }
   
 nsFontMetricsOS2::~nsFontMetricsOS2()
@@ -306,7 +311,7 @@ static nsFontFamilyName gFamilyNameTableDBCS[] =
   { "arial",           "Arial" },
   { "courier",         "Courier" },
   { "courier new",     "Courier New" },
-
+  { "warpsans",        "WarpSans Combined" },
   { nsnull, nsnull }
 };
 
@@ -512,15 +517,21 @@ nsFontMetricsOS2::FindFont(HPS aPS, PRUnichar aChar)
 }
 
 
+
 static PRBool
 FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
   nsFontMetricsOS2* metrics = (nsFontMetricsOS2*) aData;
   /* Hack for Truetype on OS/2 - if it's Arial and not 1252 or 0, just get another font */
-  if ((metrics->mCodePage != 1252) &&
-      (metrics->mCodePage != 0) &&
-      (aFamily.Find("Arial", IGNORE_CASE) != -1))
-     return PR_TRUE; // don't stop
+  if (aFamily.Find("Arial", IGNORE_CASE) != -1) {
+     if (metrics->mCodePage != 1252) {
+        if ((metrics->mCodePage == 0) &&
+            (ulSystemCodePage != 850) &&
+            (ulSystemCodePage != 437)) {
+           return PR_TRUE; // don't stop
+        }
+     }
+  }
   metrics->mFonts.AppendString(aFamily);
   metrics->mFontIsGeneric.AppendElement((void*) aGeneric);
   if (aGeneric) {
