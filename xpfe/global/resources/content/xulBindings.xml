@@ -154,8 +154,8 @@
                                          if (v == 'true') return true; return false;"/>
     </implementation>
     <handlers>
-      <handler event="click" button="1" action="this.checked = !this.checked;"/>
-      <handler event="keypress" key=" " action="this.checked = !this.checked;"/>
+      <handler event="click" button="1" action="if (!this.disabled) this.checked = !this.checked;"/>
+      <handler event="keypress" key=" " action="if (!this.disabled) this.checked = !this.checked;"/>
     </handlers>
   </binding>
 
