@@ -1039,8 +1039,8 @@ str_lastIndexOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             d = js_DoubleToInteger(d);
             if (d < 0)
                 i = 0;
-            else if (d > textlen - patlen)
-                i = textlen - patlen;
+            else if (d > textlen)
+                i = textlen;
             else
                 i = (jsint)d;
         }
