@@ -454,7 +454,7 @@ static REGERR nr_ReadFile(FILEHANDLE fh, REGOFF offset, int32 len, void *buffer)
         readlen = XP_FileRead(buffer, len, fh );
         /* PR_READ() returns an unreliable length, check EOF separately */
         if (readlen < 0) {
-#if !defined(STANDALONE_REGISTRY) || !defined(XP_MAC) || !defined(XP_MACOSX)
+#if !defined(STANDALONE_REGISTRY) || (!defined(XP_MAC) && !defined(XP_MACOSX))
     #if defined(STANDALONE_REGISTRY)
             if (errno == EBADF) /* bad file handle, not open for read, etc. */
     #else
