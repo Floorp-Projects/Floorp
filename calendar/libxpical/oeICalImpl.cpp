@@ -1500,8 +1500,8 @@ oeICalImpl::GetEventsForRange(PRTime aBeginDate, PRTime aEndDate, nsISimpleEnume
             eventOccurence *occur = new eventOccurence();
             if (!occur) {
                 // I whish i knew a better way to do this cleanup stuff..
-                for (PRInt32 i = 0 ; i < occurList.Count(); ++i) {
-                    eventOccurence *occur = NS_STATIC_CAST(eventOccurence*, occurList[i]);
+                for (PRInt32 j = 0 ; j < occurList.Count(); ++j) {
+                    eventOccurence *occur = NS_STATIC_CAST(eventOccurence*, occurList[j]);
                     delete occur;
                 }
                 return NS_ERROR_OUT_OF_MEMORY;
@@ -1546,7 +1546,8 @@ oeICalImpl::GetFirstEventsForRange(PRTime aBeginDate, PRTime aEndDate, nsISimple
         return NS_ERROR_OUT_OF_MEMORY;
 
     oeIICalEvent *event;
-    for (PRInt32 i = 0 ; i < m_eventlist.Count(); ++i) {
+    PRInt32 i;
+    for (i = 0 ; i < m_eventlist.Count(); ++i) {
         event = NS_STATIC_CAST(oeIICalEvent*, m_eventlist[i]);
         eventArray->AppendElement(event);
     }
@@ -1558,7 +1559,7 @@ oeICalImpl::GetFirstEventsForRange(PRTime aBeginDate, PRTime aEndDate, nsISimple
 
     nsVoidArray occurList;
     oeIICalEvent *tmpevent;
-    for (PRInt32 i = 0 ; i < m_eventlist.Count(); ++i) {
+    for (i = 0 ; i < m_eventlist.Count(); ++i) {
         tmpevent = NS_STATIC_CAST(oeIICalEvent*, m_eventlist[i]);
         struct icaltimetype check = checkdate;
         bool isbeginning;
@@ -1583,7 +1584,7 @@ oeICalImpl::GetFirstEventsForRange(PRTime aBeginDate, PRTime aEndDate, nsISimple
     }
     occurList.Sort(occurCompareFunc, nsnull);
 
-    for (PRInt32 i = 0 ; i < occurList.Count(); ++i) {
+    for (i = 0 ; i < occurList.Count(); ++i) {
         eventOccurence *occur = NS_STATIC_CAST(eventOccurence*, occurList[i]);
         tmpevent = NS_STATIC_CAST(oeIICalEvent*, occur->event);
         ((oeICalEventImpl *)tmpevent)->
