@@ -525,11 +525,6 @@ protected:
 
     // Static helpers
     static nsresult
-    GetElementsByTagName(nsIDOMNode* aNode,
-                         const nsAString& aTagName,
-                         nsRDFDOMNodeList* aElements);
-
-    static nsresult
     GetElementsByAttribute(nsIDOMNode* aNode,
                            const nsAString& aAttributeName,
                            const nsAString& aAttributeValue,

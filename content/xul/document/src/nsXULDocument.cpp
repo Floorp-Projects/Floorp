@@ -160,7 +160,7 @@
 #include "nsIObjectOutputStream.h"
 #include "nsIPref.h"
 #include "nsIFocusController.h"
-
+#include "nsContentList.h"
 
 //----------------------------------------------------------------------
 //
@@ -2954,29 +2954,18 @@ nsXULDocument::CreateEntityReference(const nsAString& aName,
 
 
 NS_IMETHODIMP
-nsXULDocument::GetElementsByTagName(const nsAString& aTagName,
+nsXULDocument::GetElementsByTagName(const nsAString& aTagname,
                                     nsIDOMNodeList** aReturn)
 {
-    nsresult rv;
-    nsRDFDOMNodeList* elements;
-    if (NS_FAILED(rv = nsRDFDOMNodeList::Create(&elements))) {
-        NS_ERROR("unable to create node list");
-        return rv;
-    }
+    nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aTagname);
+    NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
-    nsIContent* root = nsnull;
-    GetRootContent(&root);
-    NS_ASSERTION(root != nsnull, "no doc root");
+    nsCOMPtr<nsIContentList> list;
+    NS_GetContentList(this, nameAtom, kNameSpaceID_Unknown, nsnull,
+                      getter_AddRefs(list));
+    NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
-    if (root != nsnull) {
-        rv = GetElementsByTagName(root, aTagName, kNameSpaceID_Unknown,
-                                  elements);
-
-        NS_RELEASE(root);
-    }
-
-    *aReturn = elements;
-    return NS_OK;
+    return CallQueryInterface(list, aReturn);
 }
 
 NS_IMETHODIMP
@@ -2984,6 +2973,9 @@ nsXULDocument::GetElementsByAttribute(const nsAString& aAttribute,
                                       const nsAString& aValue,
                                       nsIDOMNodeList** aReturn)
 {
+    // XXX This should use nsContentList, but that does not support
+    // _two_ strings being passed to the match func.  Ah, the ability
+    // to create real closures, where art thou?
     nsresult rv;
     nsRDFDOMNodeList* elements;
     if (NS_FAILED(rv = nsRDFDOMNodeList::Create(&elements))) {
@@ -3712,38 +3704,32 @@ nsXULDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                                       const nsAString& aLocalName,
                                       nsIDOMNodeList** aReturn)
 {
-    nsresult rv;
+    PRInt32 nameSpaceId = kNameSpaceID_Unknown;
 
-    nsRDFDOMNodeList* elements;
-    if (NS_FAILED(rv = nsRDFDOMNodeList::Create(&elements))) {
-        NS_ERROR("unable to create node list");
-        return rv;
-    }
+    nsCOMPtr<nsIContentList> list;
 
-    *aReturn = elements;
+    if (!aNamespaceURI.Equals(NS_LITERAL_STRING("*"))) {
+        nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI,
+                                                              nameSpaceId);
 
-    nsCOMPtr<nsIContent> root;
-    GetRootContent(getter_AddRefs(root));
-    NS_ASSERTION(root, "no doc root");
-
-    if (root) {
-        PRInt32 nsid = kNameSpaceID_Unknown;
-        if (!aNamespaceURI.Equals(NS_LITERAL_STRING("*"))) {
-            rv = nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI, nsid);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            if (nsid == kNameSpaceID_Unknown) {
-                // Namespace not found, then there can't be any elements to
-                // be found.
-                return NS_OK;
-            }
+        if (nameSpaceId == kNameSpaceID_Unknown) {
+            // Unknown namespace means no matches, we create an empty list...
+            NS_GetContentList(this, nsnull, kNameSpaceID_None, nsnull,
+                              getter_AddRefs(list));
+            NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
         }
-
-        rv = GetElementsByTagName(root, aLocalName, nsid,
-                                  elements);
     }
 
-    return NS_OK;
+    if (!list) {
+        nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aLocalName);
+        NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
+        
+        NS_GetContentList(this, nameAtom, nameSpaceId, nsnull,
+                      getter_AddRefs(list));
+        NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
+    }
+
+    return CallQueryInterface(list, aReturn);
 }
 
 nsresult
@@ -4518,68 +4504,6 @@ nsXULDocument::StartLayout(void)
     return NS_OK;
 }
 
-
-nsresult
-nsXULDocument::GetElementsByTagName(nsIContent *aContent,
-                                    const nsAString& aName,
-                                    PRInt32 aNamespaceID,
-                                    nsRDFDOMNodeList* aElements)
-{
-    NS_ENSURE_ARG_POINTER(aContent);
-    NS_ENSURE_ARG_POINTER(aElements);
-
-    nsresult rv = NS_OK;
-
-    nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aContent));
-    if (!element)
-      return NS_OK;
-
-    nsCOMPtr<nsINodeInfo> ni;
-    aContent->GetNodeInfo(*getter_AddRefs(ni));
-    NS_ENSURE_TRUE(ni, NS_OK);
-
-    if (aName.Equals(NS_LITERAL_STRING("*"))) {
-        if (aNamespaceID == kNameSpaceID_Unknown ||
-            ni->NamespaceEquals(aNamespaceID)) {
-            if (NS_FAILED(rv = aElements->AppendNode(element))) {
-                NS_ERROR("unable to append element to node list");
-                return rv;
-            }
-        }
-    }
-    else {
-        if (ni->Equals(aName) &&
-            (aNamespaceID == kNameSpaceID_Unknown ||
-             ni->NamespaceEquals(aNamespaceID))) {
-            if (NS_FAILED(rv = aElements->AppendNode(element))) {
-                NS_ERROR("unable to append element to node list");
-                return rv;
-            }
-        }
-    }
-
-    PRInt32 length;
-    if (NS_FAILED(rv = aContent->ChildCount(length))) {
-        NS_ERROR("unable to get childcount");
-        return rv;
-    }
-
-    for (PRInt32 i = 0; i < length; ++i) {
-        nsCOMPtr<nsIContent> child;
-        if (NS_FAILED(rv = aContent->ChildAt(i, *getter_AddRefs(child) ))) {
-            NS_ERROR("unable to get child from content");
-            return rv;
-        }
-
-        if (NS_FAILED(rv = GetElementsByTagName(child, aName, aNamespaceID,
-                                                aElements))) {
-            NS_ERROR("unable to recursively get elements by tag name");
-            return rv;
-        }
-    }
-
-    return NS_OK;
-}
 
 nsresult
 nsXULDocument::GetElementsByAttribute(nsIDOMNode* aNode,
