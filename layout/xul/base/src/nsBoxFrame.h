@@ -161,7 +161,6 @@ public:
 
   virtual PRBool IsHorizontal() const;
 
-  
   virtual ~nsBoxFrame();
 
   virtual nsresult GetContentOf(nsIContent** aContent);

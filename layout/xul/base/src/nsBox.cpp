@@ -577,6 +577,7 @@ NS_IMETHODIMP
 nsBox::GetFlex(nsBoxLayoutState& aState, nscoord& aFlex)
 {
   aFlex = 0;
+  GetDefaultFlex(aFlex);
   PRBool collapsed = PR_FALSE;
   nsIBox::AddCSSFlex(aState, this, aFlex);
 
@@ -1066,6 +1067,13 @@ nsBox::GetMouseThrough(PRBool& aMouseThrough)
   }
 
   return NS_ERROR_FAILURE;
+}
+
+PRBool
+nsBox::GetDefaultFlex(PRInt32& aFlex) 
+{ 
+  aFlex = 0; 
+  return PR_TRUE; 
 }
 
 // nsISupports

@@ -153,6 +153,8 @@ public:
     void DrawLine(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
     void FillRect(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height);
 
+    nsIBox* GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor);
+
     nsBoxFrame::Halignment GetHAlign();
     nsBoxFrame::Valignment GetVAlign();
 
@@ -252,7 +254,6 @@ nsBoxFrame::~nsBoxFrame()
 {
   NS_ASSERTION(mInner == nsnull,"Error Destroy was never called on this Frame!!!");
 }
-
 
 NS_IMETHODIMP
 nsBoxFrame::GetVAlign(Valignment& aAlign)
@@ -1427,16 +1428,6 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     }
   }
 
-  /*
-  if (mMouseThrough == never)
-  {
-     *aFrame = this;
-     return NS_OK;
-  }
-  */
-
-  //nsresult rv = GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, PR_FALSE, aFrame);    
-
   nsIFrame *kid, *hit = nsnull;
   nsPoint tmp;
 
@@ -1456,7 +1447,8 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
         // if the kid had a child before see if this child has mouse
         // though. 
         nsresult rv = NS_OK;
-        nsCOMPtr<nsIBox> box = do_QueryInterface(hit, &rv);
+        PRBool isAdaptor = PR_FALSE;
+        nsCOMPtr<nsIBox> box = mInner->GetBoxForFrame(hit, isAdaptor);
         if (box) {
           PRBool mouseThrough = PR_FALSE;
           box->GetMouseThrough(mouseThrough);
@@ -1504,6 +1496,43 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   }
 
   return NS_ERROR_FAILURE;
+}
+
+nsIBox*
+nsBoxFrameInner::GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor)
+{
+  if (aFrame == nsnull)
+    return nsnull;
+
+  nsIBox* ibox = nsnull;
+  if (NS_FAILED(aFrame->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox))) {
+    aIsAdaptor = PR_TRUE;
+
+    // if we hit a non box. Find the box in out last container
+    // and clear its cache.
+    nsIFrame* parent = nsnull;
+    aFrame->GetParent(&parent);
+    nsIBox* parentBox = nsnull;
+    if (NS_FAILED(parent->QueryInterface(NS_GET_IID(nsIBox), (void**)&parentBox))) 
+       return nsnull;
+
+    if (parentBox) {
+      nsIBox* start = nsnull;
+      parentBox->GetChildBox(&start);
+      while (start) {
+        nsIFrame* frame = nsnull;
+        start->GetFrame(&frame);
+        if (frame == aFrame) {
+          ibox = start;
+          break;
+        }
+
+        start->GetNextBox(&start);
+      }
+    }
+  } 
+
+  return ibox;
 }
 
 /*
