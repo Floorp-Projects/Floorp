@@ -32,7 +32,7 @@ body {
   margin: 8px;
 }
 
-body > *:first-node {
+body > *:first-node, td > *:first-node {
   margin-top: 0;
 }
 
