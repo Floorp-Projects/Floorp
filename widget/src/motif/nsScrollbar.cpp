@@ -52,7 +52,6 @@ void nsScrollbar::Create(nsIWidget *aParent,
 {
   Widget parentWidget = nsnull;
 
-//fprintf(stderr, "aParent 0x%x\n", aParent);
 
   if (aParent) {
     parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
@@ -60,11 +59,8 @@ void nsScrollbar::Create(nsIWidget *aParent,
     parentWidget = (Widget) aInitData ;
   }
 
-fprintf(stderr, "Parent 0x%x\n", parentWidget);
-
   int procDir = mOrientation == XmVERTICAL? XmMAX_ON_BOTTOM:XmMAX_ON_RIGHT;
 
-fprintf(stderr, "mOrient %d %d %d %d\n", mOrientation, XmVERTICAL, XmMAX_ON_BOTTOM, procDir);
   mWidget = ::XtVaCreateManagedWidget("scrollbar",
                                     xmScrollBarWidgetClass,
                                     parentWidget,
@@ -79,8 +75,6 @@ fprintf(stderr, "mOrient %d %d %d %d\n", mOrientation, XmVERTICAL, XmMAX_ON_BOTT
                                     XmNx, aRect.x,
                                     XmNy, aRect.y,
                                     nsnull);
-
-fprintf(stderr, "Scrollbar 0x%x  this 0x%x\n", mWidget, this);
 
   // save the event callback function
   mEventCallback = aHandleEventFunction;
@@ -159,10 +153,8 @@ nsresult nsScrollbar::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //-------------------------------------------------------------------------
 void nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 {
-    fprintf(stderr, "Setting Max Range to %d 0x%x\n", aEndRange, mWidget);
     int max = aEndRange;
     XtVaGetValues(mWidget, XmNmaximum, &max, nsnull);
-    fprintf(stderr, "Max is %d\n", max);
 
     max = aEndRange;
     XtVaSetValues(mWidget, XmNmaximum, max, nsnull);
@@ -176,21 +168,8 @@ void nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 //-------------------------------------------------------------------------
 PRUint32 nsScrollbar::GetMaxRange()
 {
-    /*int value = 0;
-    int slider_size = 0;
-    int increment = 0;
-    int page_increment = 0;
-    XmScrollBarGetValues(mWidget,
-                        &value,
-                        &slider_size,
-                        &increment,
-                        &page_increment) ;
-    printf("%d %d %d %d\n", value, slider_size, increment, page_increment);
-    return (PRUint32)slider_size;*/
-
     int maxRange = 0;
     XtVaGetValues(mWidget, XmNmaximum, &maxRange, nsnull);
-    printf("Got Range %d\n", maxRange);
     return (PRUint32)maxRange;
 }
 
@@ -202,11 +181,6 @@ PRUint32 nsScrollbar::GetMaxRange()
 //-------------------------------------------------------------------------
 void nsScrollbar::SetPosition(PRUint32 aPos)
 {
-    //fprintf(stderr, "Setting SetPosition to %d 0x%x\n", aPos, mWidget);
-    //int pos = aPos;
-    //XtVaGetValues(mWidget, XmNvalue, &pos, nsnull);
-    //fprintf(stderr, "pos is %d\n", pos);
-
     int pos = aPos;
     XtVaSetValues(mWidget, XmNvalue, pos, nsnull);
 }
@@ -304,7 +278,7 @@ PRBool nsScrollbar::OnPaint(nsPaintEvent & aEvent)
 }
 
 
-PRBool nsScrollbar::OnResize(nsRect &aWindowRect)
+PRBool nsScrollbar::OnResize(nsSizeEvent &aEvent)
 {
     return PR_FALSE;
 }
@@ -319,7 +293,6 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
 {
     PRBool result = PR_TRUE;
     int newPosition;
-    fprintf(stderr, "Scrollbar %d pos %d\n", aEvent.message, cPos);
 
     switch (aEvent.message) {
 

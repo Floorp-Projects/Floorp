@@ -38,6 +38,8 @@
 
 #include "stdio.h"
 
+#define DBG 0
+
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
 NS_IMPL_QUERY_INTERFACE(nsWindow, kIWidgetIID)
@@ -126,7 +128,8 @@ nsWindow::~nsWindow()
 // aNativeParent is equal to aWidgetParent->GetNativeData(NS_NATIVE_WIDGET)
 //-------------------------------------------------------------------------
 
-void nsWindow::CreateWindow(nsNativeWindow aNativeParent, nsIWidget *aWidgetParent,
+void nsWindow::CreateWindow(nsNativeWindow aNativeParent, 
+                      nsIWidget *aWidgetParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -211,6 +214,7 @@ void nsWindow::CreateWindow(nsNativeWindow aNativeParent, nsIWidget *aWidgetPare
   					   XmNwidth, aRect.width,
   					   XmNheight, aRect.height,
   					   nsnull);
+
     frameParent = mainWindow;
   }
   else
@@ -240,6 +244,12 @@ void nsWindow::CreateWindow(nsNativeWindow aNativeParent, nsIWidget *aWidgetPare
 
   InitCallbacks();
 
+  XtAddCallback(mWidget,
+                XmNresizeCallback,
+                nsXtWidget_Resize_Callback,
+                this);
+
+
 }
 
 
@@ -249,8 +259,9 @@ void nsWindow::CreateWindow(nsNativeWindow aNativeParent, nsIWidget *aWidgetPare
 // Initialize all the Callbacks
 //
 //-------------------------------------------------------------------------
-void nsWindow::InitCallbacks()
+void nsWindow::InitCallbacks(char * aName)
 {
+  if (DBG) fprintf(stderr, "Setting Up Callbacks 0x%x [%s]\n", this, (aName != nsnull?aName:"<unknown>"));
   // setup the event Handlers
   XtAddEventHandler(mWidget, 
 		    ButtonPressMask, 
@@ -293,6 +304,17 @@ void nsWindow::InitCallbacks()
 		    PR_FALSE, 
 		    nsXtWidget_ExposureMask_EventHandler,
 		    this);
+
+  /*XtAddEventHandler(mWidget, 
+                    ResizeRedirectMask,
+                    PR_FALSE, 
+                    nsXtWidget_ResizeRedirectMask_EventHandler,
+                    this);*/
+
+  /*XtAddCallback(mWidget, 
+                XmNresizeCallback, 
+                nsXtWidget_Resize_Callback, 
+                NULL);*/
 
 
 }
@@ -469,7 +491,7 @@ void nsWindow::GetBounds(nsRect &aRect)
     aRect.height = attrs.height;
     
  } else {
-printf("Bad bounds computed for nsIWidget\n");
+   //printf("Bad bounds computed for nsIWidget\n");
 
    // XXX If this code gets hit, one should question why and how
    // and fix it there.
@@ -843,7 +865,6 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
     event.rect = &rr;
 
     event.renderingContext = nsnull;
-
     static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
     
@@ -878,9 +899,12 @@ void nsWindow::OnDestroy()
 {
 }
 
-PRBool nsWindow::OnResize(nsRect &aWindowRect)
+PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 {
- return FALSE;
+  if (mEventCallback) {
+    return(DispatchEvent(&aEvent));
+  }
+  return FALSE;
 }
 
 PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode)

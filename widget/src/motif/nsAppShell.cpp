@@ -67,7 +67,7 @@ nsresult nsAppShell::Run()
 
 void nsAppShell::Exit()
 {
-  //PostQuitMessage(0);
+  exit(0);
 }
 
 //-------------------------------------------------------------------------

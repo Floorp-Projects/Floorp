@@ -53,7 +53,7 @@ public:
 
 
   virtual PRBool  OnPaint(nsPaintEvent & aEvent);
-  virtual PRBool  OnResize(nsRect &aWindowRect);
+  virtual PRBool  OnResize(nsSizeEvent &aEvent);
 
   // nsTextHelper Interface
   virtual void      SelectAll();

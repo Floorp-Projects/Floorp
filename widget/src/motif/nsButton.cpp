@@ -73,7 +73,7 @@ void nsButton::Create(nsIWidget *aParent,
   // save the event callback function
   mEventCallback = aHandleEventFunction;
 
-  InitCallbacks();
+  InitCallbacks("nsButton");
 
 }
 
@@ -160,7 +160,7 @@ PRBool nsButton::OnPaint(nsPaintEvent &aEvent)
   return PR_FALSE;
 }
 
-PRBool nsButton::OnResize(nsRect &aWindowRect)
+PRBool nsButton::OnResize(nsSizeEvent &aEvent)
 {
     return PR_FALSE;
 }

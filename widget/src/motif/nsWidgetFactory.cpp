@@ -108,8 +108,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
                                           const nsIID &aIID,  
                                           void **aResult)  
 {  
-    fprintf(stderr, "Creating Widget\n");
-
     if (aResult == NULL) {  
         return NS_ERROR_NULL_POINTER;  
     }  

@@ -87,7 +87,7 @@ void nsTextWidget::Create(nsIWidget *aParent,
   // save the event callback function
   mEventCallback = aHandleEventFunction;
 
-  InitCallbacks();
+  InitCallbacks("nsTextWidget");
 
   if (mMakeReadOnly) {
     SetReadOnly(PR_TRUE);
@@ -139,7 +139,7 @@ PRBool nsTextWidget::OnPaint(nsPaintEvent & aEvent)
 
 
 //--------------------------------------------------------------
-PRBool nsTextWidget::OnResize(nsRect &aWindowRect)
+PRBool nsTextWidget::OnResize(nsSizeEvent &aEvent)
 {
   return PR_FALSE;
 }
