@@ -47,14 +47,6 @@
 
 #include "jstypes.h"
 
-char* strdup(const char *str)
-{
-    char* dup = (char*) malloc(1 + strlen(str));
-    if (dup != NULL)
-	    strcpy(dup, str);
-    return dup;
-}
-
 #if defined(LIVECONNECT)
 
 #include "JavaSession.h"
