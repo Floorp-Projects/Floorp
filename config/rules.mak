@@ -643,7 +643,7 @@ install:: chrome
 
 !if exist($(JAR_MANIFEST))
 chrome:: 
-        $(PERL) $(DEPTH)\config\make-jars.pl -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
+        $(PERL) $(DEPTH)\config\make-jars.pl -c -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
 !endif
 
 !if "$(CHROME_TYPE)" != "$(NULL)"
