@@ -303,8 +303,7 @@ void CTearOffBar::ShowPalette()
 //======================================
 class CTearOffWindow
 		: public LWindow,
-			public LListener
-			, public CToolbarModeChangeListener
+			public CToolbarModeChangeListener
 #if SAVE_POSITION
 		, public CSaveWindowStatus
 #endif // SAVE_POSITION
