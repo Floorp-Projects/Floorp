@@ -2394,6 +2394,7 @@ SINGSIGN_PromptUsernameAndPassword
   }
 
   PRBool checked = (nsCRT::strlen(*user) != 0);
+  PRBool remembered = checked;
   res = si_CheckGetUsernamePassword(user, pwd, dialogTitle, text, dialog, savePassword, &checked);
   if (NS_FAILED(res)) {
     /* user pressed Cancel */
@@ -2405,6 +2406,9 @@ SINGSIGN_PromptUsernameAndPassword
   if (checked) {
     Wallet_GiveCaveat(nsnull, dialog);
     si_RememberSignonDataFromBrowser (passwordRealm, nsAutoString(*user), nsAutoString(*pwd));
+  } else if (remembered) {
+    /* a login was remembered but user unchecked the box; we forget the remembered login */
+    si_RemoveUser(passwordRealm, username, PR_TRUE);  
   }
 
   /* cleanup and return */
