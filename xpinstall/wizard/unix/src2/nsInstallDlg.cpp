@@ -343,7 +343,7 @@ nsInstallDlg::RunApps(nsRunApp *aRunAppList, int aSequential)
     nsRunApp *currRunApp = aRunAppList;
     char *argv[3], *dest;
     char apppath[MAXPATHLEN];
-    extern char **environ; /* globally available to all processes */
+    extern NS_IMPORT_(char **) environ; /* globally available to all processes */
 
     dest = gCtx->opt->mDestination;
     if (chdir(dest) < 0) 

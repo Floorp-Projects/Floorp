@@ -162,26 +162,19 @@ NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MAILNEWS, value)
 #define MSG_LINEBREAK NS_LINEBREAK
 #define MSG_LINEBREAK_LEN NS_LINEBREAK_LEN
 
-/* mscott - i'm only turning  NS_MSG_BASE on for windows so
-   define it as empty for the other platforms. */
-
-#ifdef XP_WIN
-
 #ifdef MOZ_STATIC_MAIL_BUILD
 #define NS_MSG_BASE
 #else
 
 #ifdef _IMPL_NS_MSG_BASE
-#define NS_MSG_BASE NS_EXPORT
+#define NS_MSG_BASE                      NS_EXPORT
+#define NS_MSG_BASE_STATIC_MEMBER_(type) NS_EXPORT_STATIC_MEMBER_(type)
 #else
-#define NS_MSG_BASE NS_IMPORT
+#define NS_MSG_BASE                      NS_IMPORT
+#define NS_MSG_BASE_STATIC_MEMBER_(type) NS_IMPORT_STATIC_MEMBER_(type)
 #endif
 
 #endif // MOZ_STATIC_MAIL_BUILD
-
-#else
-#define NS_MSG_BASE
-#endif  // XP_WIN
 
 ////////////////////////////////////////////////////////////////////////////////
 // Utilities 

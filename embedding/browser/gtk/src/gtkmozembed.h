@@ -45,6 +45,16 @@ extern "C" {
 
 #include <stddef.h>
 #include <gtk/gtk.h>
+#ifdef MOZILLA_CLIENT
+#include "nscore.h"
+#ifdef _IMPL_GTKMOZEMBED
+#define GTKMOZEMBED_API(type) NS_EXPORT_(type)
+#else
+#define GTKMOZEMBED_API(type) NS_IMPORT_(type)
+#endif
+#else
+#define GTKMOZEMBED_API(type) type
+#endif
 
 #define GTK_TYPE_MOZ_EMBED             (gtk_moz_embed_get_type())
 #define GTK_MOZ_EMBED(obj)             GTK_CHECK_CAST((obj), GTK_TYPE_MOZ_EMBED, GtkMozEmbed)
@@ -102,39 +112,41 @@ struct _GtkMozEmbedClass
   gint (* dom_focus_out)       (GtkMozEmbed *embed, gpointer dom_event);
 };
 
-GtkType      gtk_moz_embed_get_type         (void);
-GtkWidget   *gtk_moz_embed_new              (void);
-void         gtk_moz_embed_push_startup     (void);
-void         gtk_moz_embed_pop_startup      (void);
-void         gtk_moz_embed_set_comp_path    (const char *aPath);
-void         gtk_moz_embed_set_profile_path (const char *aDir,
-                                             const char *aName);
-void         gtk_moz_embed_load_url         (GtkMozEmbed *embed, 
-					     const char *url);
-void         gtk_moz_embed_stop_load        (GtkMozEmbed *embed);
-gboolean     gtk_moz_embed_can_go_back      (GtkMozEmbed *embed);
-gboolean     gtk_moz_embed_can_go_forward   (GtkMozEmbed *embed);
-void         gtk_moz_embed_go_back          (GtkMozEmbed *embed);
-void         gtk_moz_embed_go_forward       (GtkMozEmbed *embed);
-void         gtk_moz_embed_render_data      (GtkMozEmbed *embed, 
-					     const char *data,
-					     guint32 len,
-					     const char *base_uri, 
-					     const char *mime_type);
-void         gtk_moz_embed_open_stream      (GtkMozEmbed *embed,
-					     const char *base_uri,
-					     const char *mime_type);
-void         gtk_moz_embed_append_data      (GtkMozEmbed *embed,
-					     const char *data, guint32 len);
-void         gtk_moz_embed_close_stream     (GtkMozEmbed *embed);
-char        *gtk_moz_embed_get_link_message (GtkMozEmbed *embed);
-char        *gtk_moz_embed_get_js_status    (GtkMozEmbed *embed);
-char        *gtk_moz_embed_get_title        (GtkMozEmbed *embed);
-char        *gtk_moz_embed_get_location     (GtkMozEmbed *embed);
-void         gtk_moz_embed_reload           (GtkMozEmbed *embed, gint32 flags);
-void         gtk_moz_embed_set_chrome_mask  (GtkMozEmbed *embed, 
-					     guint32 flags);
-guint32      gtk_moz_embed_get_chrome_mask  (GtkMozEmbed *embed);
+GTKMOZEMBED_API(GtkType)    gtk_moz_embed_get_type         (void);
+GTKMOZEMBED_API(GtkWidget*) gtk_moz_embed_new              (void);
+GTKMOZEMBED_API(void)       gtk_moz_embed_push_startup     (void);
+GTKMOZEMBED_API(void)       gtk_moz_embed_pop_startup      (void);
+GTKMOZEMBED_API(void)       gtk_moz_embed_set_comp_path    (const char *aPath);
+GTKMOZEMBED_API(void)       gtk_moz_embed_set_profile_path (const char *aDir,
+							    const char *aName);
+GTKMOZEMBED_API(void)       gtk_moz_embed_load_url         (GtkMozEmbed *embed,
+							    const char *url);
+GTKMOZEMBED_API(void)      gtk_moz_embed_stop_load        (GtkMozEmbed *embed);
+GTKMOZEMBED_API(gboolean)  gtk_moz_embed_can_go_back      (GtkMozEmbed *embed);
+GTKMOZEMBED_API(gboolean)  gtk_moz_embed_can_go_forward   (GtkMozEmbed *embed);
+GTKMOZEMBED_API(void)      gtk_moz_embed_go_back          (GtkMozEmbed *embed);
+GTKMOZEMBED_API(void)      gtk_moz_embed_go_forward       (GtkMozEmbed *embed);
+GTKMOZEMBED_API(void)   gtk_moz_embed_render_data      (GtkMozEmbed *embed, 
+							const char *data,
+							guint32 len,
+							const char *base_uri, 
+							const char *mime_type);
+GTKMOZEMBED_API(void)   gtk_moz_embed_open_stream      (GtkMozEmbed *embed,
+							const char *base_uri,
+							const char *mime_type);
+GTKMOZEMBED_API(void)   gtk_moz_embed_append_data      (GtkMozEmbed *embed,
+							const char *data,
+							guint32 len);
+GTKMOZEMBED_API(void)   gtk_moz_embed_close_stream     (GtkMozEmbed *embed);
+GTKMOZEMBED_API(char*)  gtk_moz_embed_get_link_message (GtkMozEmbed *embed);
+GTKMOZEMBED_API(char*)  gtk_moz_embed_get_js_status    (GtkMozEmbed *embed);
+GTKMOZEMBED_API(char*)  gtk_moz_embed_get_title        (GtkMozEmbed *embed);
+GTKMOZEMBED_API(char*)  gtk_moz_embed_get_location     (GtkMozEmbed *embed);
+GTKMOZEMBED_API(void)   gtk_moz_embed_reload           (GtkMozEmbed *embed,
+							gint32 flags);
+GTKMOZEMBED_API(void)   gtk_moz_embed_set_chrome_mask  (GtkMozEmbed *embed, 
+							guint32 flags);
+GTKMOZEMBED_API(guint32) gtk_moz_embed_get_chrome_mask (GtkMozEmbed *embed);
 
 /* enum types */
 #define GTK_TYPE_MOZ_EMBED_PROGRESS_FLAGS \
@@ -146,10 +158,10 @@ guint32      gtk_moz_embed_get_chrome_mask  (GtkMozEmbed *embed);
 #define GTK_TYPE_MOZ_EMBED_CHROME_FLAGS \
              (gtk_moz_embed_chrome_flags_get_type())
 
-GtkType      gtk_moz_embed_progress_flags_get_type (void);
-GtkType      gtk_moz_embed_status_enums_get_type (void);
-GtkType      gtk_moz_embed_reload_flags_get_type (void);
-GtkType      gtk_moz_embed_chrome_flags_get_type (void);
+GTKMOZEMBED_API(GtkType)      gtk_moz_embed_progress_flags_get_type (void);
+GTKMOZEMBED_API(GtkType)      gtk_moz_embed_status_enums_get_type (void);
+GTKMOZEMBED_API(GtkType)      gtk_moz_embed_reload_flags_get_type (void);
+GTKMOZEMBED_API(GtkType)      gtk_moz_embed_chrome_flags_get_type (void);
 
 /* These are straight out of nsIWebProgressListener.h */
 
@@ -241,7 +253,7 @@ struct _GtkMozEmbedSingleClass
 				guint chromemask);
 };
 
-GtkMozEmbedSingle *
+GTKMOZEMBED_API(GtkMozEmbedSingle *)
 gtk_moz_embed_single_get(void);
 
 #ifdef __cplusplus

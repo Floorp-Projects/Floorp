@@ -41,6 +41,7 @@
 #define __GTK_MOZBOX_H__
 
 #include <gtk/gtkwindow.h>
+#include "gdksuperwin.h" /* for GTKSUPERWIN_API */
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,11 +69,11 @@ struct _GtkMozBoxClass
   GtkWindowClass window_class;
 };
 
-GtkType    gtk_mozbox_get_type (void);
-GtkWidget *gtk_mozbox_new (GdkWindow *parent_window);
-void       gtk_mozbox_set_position (GtkMozBox *mozbox,
-				    gint       x,
-				    gint       y);
+GTKSUPERWIN_API(GtkType)    gtk_mozbox_get_type (void);
+GTKSUPERWIN_API(GtkWidget*) gtk_mozbox_new (GdkWindow *parent_window);
+GTKSUPERWIN_API(void)       gtk_mozbox_set_position (GtkMozBox *mozbox,
+                                                     gint       x,
+                                                     gint       y);
 
 #ifdef __cplusplus
 }

@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id: zconf.h,v 3.7 2004/11/03 04:47:39 tor%cs.brown.edu Exp $ */
+/* @(#) $Id: zconf.h,v 3.8 2004/12/15 05:52:38 bryner%brianryner.com Exp $ */
 
 #ifndef ZCONF_H
 #define ZCONF_H
@@ -238,6 +238,10 @@
 #      define ZEXPORTVA __declspec(dllimport)
 #    endif
 #  endif
+#endif
+
+#ifdef HAVE_VISIBILITY_PRAGMA
+#define ZEXTERN __attribute__((visibility ("default"))) extern
 #endif
 
 #ifndef ZEXTERN

@@ -129,6 +129,8 @@ typedef struct _reginfo
   #endif
 #elif defined XP_MAC
   #define VR_INTERFACE(__x)  __declspec(export) __x
+#elif defined (HAVE_VISIBILITY_PRAGMA)
+  #define VR_INTERFACE(type)     __attribute__ ((visibility ("default"))) type
 #else
   #define VR_INTERFACE(type)     type
 #endif

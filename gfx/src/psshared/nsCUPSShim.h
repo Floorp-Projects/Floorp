@@ -40,6 +40,7 @@
 #define nsCUPSShim_h___
 
 #include "prtypes.h"
+#include "psSharedCore.h"
 
 
 /* Various CUPS data types. We don't #include cups headers to avoid
@@ -74,7 +75,7 @@ typedef int (PR_CALLBACK *CupsTempFdType)(char *filename,
 
 struct PRLibrary;
 
-class nsCUPSShim {
+class NS_PSSHARED nsCUPSShim {
     public:
         nsCUPSShim() : mCupsLib(nsnull) { }
         ~nsCUPSShim();

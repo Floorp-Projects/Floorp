@@ -48,6 +48,7 @@
 #include <sys/stat.h>
 
 #include "libmalloc.h"
+#include "jprof.h"
 #include <string.h>
 #include <errno.h>
 #include <setjmp.h>

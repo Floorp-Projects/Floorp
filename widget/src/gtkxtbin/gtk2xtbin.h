@@ -44,6 +44,16 @@
 #include <X11/Intrinsic.h>
 #include <X11/Xutil.h>
 #include <X11/Xlib.h>
+#ifdef MOZILLA_CLIENT
+#include "nscore.h"
+#ifdef _IMPL_GTKXTBIN_API
+#define GTKXTBIN_API(type) NS_EXPORT_(type)
+#else
+#define GTKXTBIN_API(type) NS_IMPORT_(type)
+#endif
+#else
+#define GTKXTBIN_API(type) type
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -90,14 +100,14 @@ struct _GtkXtBinClass
   GtkSocketClass widget_class;
 };
 
-GtkType    gtk_xtbin_get_type (void);
-GtkWidget *gtk_xtbin_new (GdkWindow *parent_window, String *f);
-void       gtk_xtbin_set_position (GtkXtBin *xtbin,
-                                   gint       x,
-                                   gint       y);
-void       gtk_xtbin_resize (GtkWidget *widget,
-                             gint       width,
-                             gint       height);
+GTKXTBIN_API(GtkType)     gtk_xtbin_get_type (void);
+GTKXTBIN_API(GtkWidget *) gtk_xtbin_new (GdkWindow *parent_window, String *f);
+GTKXTBIN_API(void)        gtk_xtbin_set_position (GtkXtBin *xtbin,
+                                                  gint       x,
+                                                  gint       y);
+GTKXTBIN_API(void)       gtk_xtbin_resize (GtkWidget *widget,
+                                           gint       width,
+                                           gint       height);
 
 typedef struct _XtTMRec {
     XtTranslations  translations;       /* private to Translation Manager    */

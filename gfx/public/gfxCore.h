@@ -43,9 +43,11 @@
 #ifdef _IMPL_NS_GFX
 #define NS_GFX NS_EXPORT
 #define NS_GFX_(type) NS_EXPORT_(type)
+#define NS_GFX_STATIC_MEMBER_(type) NS_EXPORT_STATIC_MEMBER_(type)
 #else
 #define NS_GFX NS_IMPORT
 #define NS_GFX_(type) NS_IMPORT_(type)
+#define NS_GFX_STATIC_MEMBER_(type) NS_IMPORT_STATIC_MEMBER_(type)
 #endif
 
 #endif

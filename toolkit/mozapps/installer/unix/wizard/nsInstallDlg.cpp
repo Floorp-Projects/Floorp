@@ -294,7 +294,7 @@ nsInstallDlg::RunApps()
     nsRunApp *currRunApp = sRunAppList;
     char *argv[3], *dest;
     char apppath[MAXPATHLEN];
-    extern char **environ; /* globally available to all processes */
+    extern NS_IMPORT_(char **) environ; /* globally available to all processes */
     int pid;
 
     dest = gCtx->opt->mDestination;

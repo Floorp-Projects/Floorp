@@ -15,11 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,42 +36,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsColorNames_h___
-#define nsColorNames_h___
+#ifndef psSharedCore_h__
+#define psSharedCore_h__
 
-#include "nsColor.h"
-#include "gfxCore.h"
-#include "nsStringFwd.h"
+#include "nscore.h"
 
-/*
-   Declare the enum list using the magic of preprocessing
-   enum values are "eColorName_foo" (where foo is the color name)
+#ifdef _IMPL_NS_PSSHARED
+#define NS_PSSHARED NS_EXPORT
+#define NS_PSSHARED_(type) NS_EXPORT_(type)
+#define NS_PSSHARED_STATIC_MEMBER_(type) NS_EXPORT_STATIC_MEMBER_(type)
+#else
+#define NS_PSSHARED NS_IMPORT
+#define NS_PSSHARED_(type) NS_IMPORT_(type)
+#define NS_PSSHARED_STATIC_MEMBER_(type) NS_IMPORT_STATIC_MEMBER_(type)
+#endif
 
-   To change the list of colors, see nsColorNameList.h
-
- */
-#define GFX_COLOR(_name, _value) eColorName_##_name,
-enum nsColorName {
-  eColorName_UNKNOWN = -1,
-#include "nsColorNameList.h"
-  eColorName_COUNT
-};
-#undef GFX_COLOR
-
-class NS_GFX nsColorNames {
-public:
-  static void AddRefTable(void);
-  static void ReleaseTable(void);
-
-  // Given a color name, return the color enum value
-  // This only functions provided a valid ref on the table
-  static nsColorName LookupName(const nsAString& aName);
-  static nsColorName LookupName(const nsACString& aName);
-
-  static const nsAFlatCString& GetStringValue(nsColorName aColorName);
-
-  // Color id to rgb value table
-  static NS_GFX_STATIC_MEMBER_(const nscolor) kColors[];
-};
-
-#endif /* nsColorNames_h___ */
+#endif

@@ -76,9 +76,9 @@ struct _GtkMozAreaClass
   void (* toplevel_configure) (GtkMozArea *area);
 };
 
-GtkType    gtk_mozarea_get_type (void);
-GtkWidget *gtk_mozarea_new ();
-gboolean   gtk_mozarea_get_toplevel_focus(GtkMozArea *area);
+GTKSUPERWIN_API(GtkType)    gtk_mozarea_get_type (void);
+GTKSUPERWIN_API(GtkWidget*) gtk_mozarea_new ();
+GTKSUPERWIN_API(gboolean)   gtk_mozarea_get_toplevel_focus(GtkMozArea *area);
 
 #ifdef __cplusplus
 }

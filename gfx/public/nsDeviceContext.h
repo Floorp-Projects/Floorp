@@ -52,7 +52,7 @@
 class nsIImageRequest;
 class nsHashtable;
 
-class nsFontCache
+class NS_GFX nsFontCache
 {
 public:
   nsFontCache();

@@ -72,7 +72,7 @@
 #endif
 
 // Logging of debug output
-extern PRLogModuleInfo *nsComponentManagerLog;
+extern NS_COM PRLogModuleInfo *nsComponentManagerLog;
 
 PRUnichar widestrFormat[] = { PRUnichar('%'),PRUnichar('s'),PRUnichar(0)};
 
