@@ -12,6 +12,8 @@ file:///s:/mozilla/layout/html/tests/table/core/misc.html
 file:///s:/mozilla/layout/html/tests/table/core/misc.html
 file:///s:/mozilla/layout/html/tests/table/core/nested1.html
 file:///s:/mozilla/layout/html/tests/table/core/row_span.html
+file:///s:/mozilla/layout/html/tests/table/core/table_frame.html
 file:///s:/mozilla/layout/html/tests/table/core/table_heights.html
+file:///s:/mozilla/layout/html/tests/table/core/table_rules.html
 file:///s:/mozilla/layout/html/tests/table/core/table_widths.html
 
