@@ -2206,20 +2206,27 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
   char* options;
   *aReturn = nsnull;
   PRBool nameSpecified = PR_FALSE;
+  PRBool loadURL = PR_TRUE;
 
-  if (argc > 0) {
+  if (argc == 0)
+    loadURL = PR_FALSE;
+  else if (argc > 0) {
     JSString *mJSStrURL = JS_ValueToString(cx, argv[0]);
     if (nsnull == mJSStrURL) {
       return NS_ERROR_FAILURE;
     }
 
-    if (mDocument) {
+    nsAutoString mURL;
+    mURL.SetString(JS_GetStringChars(mJSStrURL));
+
+    if (mURL.Equals(""))
+      loadURL = PR_FALSE;
+    else {
+      if (mDocument) {
         // Build absolute URL relative to this document.
         nsAutoString mURL, mEmpty;
         nsIURI* mDocURL = 0;
         nsIDocument* mDoc;
-    
-        mURL.SetString(JS_GetStringChars(mJSStrURL));
     
         if (NS_OK == mDocument->QueryInterface(kIDocumentIID, (void**)&mDoc)) {
           mDocURL = mDoc->GetDocumentURL();
@@ -2232,17 +2239,18 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
     
         rv = NS_MakeAbsoluteURI(mURL, baseUri, mAbsURL);
         NS_RELEASE(baseUri);
-    } else {
+      } else {
         // No document.  Probably because this window's URL hasn't finished
         // loading.  All we can do is hope the URL we've been given is absolute.
         mAbsURL.SetString(JS_GetStringChars(mJSStrURL));
         nsCOMPtr<nsIURI> test;
         // Make URI; if mAbsURL is relative (or otherwise bogus) this will fail.
         rv = NS_NewURI( getter_AddRefs(test), mAbsURL );
+      }
     }
     if (NS_FAILED(rv)) return rv;
   }
-  
+
   /* Sanity-check the optional window_name argument. */
   if (argc > 1) {
     JSString *mJSStrName = JS_ValueToString(cx, argv[1]);
@@ -2303,20 +2311,22 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
         if (aDialog && argc > 3)
           AttachArguments(*aReturn, argv+3, argc-3);
 
-        // Get security manager, check to see if URI is allowed.
-        nsCOMPtr<nsIURI> newUrl;
-        nsCOMPtr<nsIScriptSecurityManager> secMan;
-        nsCOMPtr<nsIScriptContext> scriptCX;
-        nsJSUtils::nsGetStaticScriptContext(cx, (JSObject*) mScriptObject, 
-                                            getter_AddRefs(scriptCX));
-        if (!scriptCX ||
-            NS_FAILED(scriptCX->GetSecurityManager(getter_AddRefs(secMan))) ||
-            NS_FAILED(NS_NewURI(getter_AddRefs(newUrl), mAbsURL)) ||
-            NS_FAILED(secMan->CheckLoadURIFromScript(cx, newUrl))) 
-        {
-          NS_RELEASE(newOuterShell);
-          NS_RELEASE(webShellContainer);
-          return NS_ERROR_FAILURE;
+        if (loadURL) {
+          // Get security manager, check to see if URI is allowed.
+          nsCOMPtr<nsIURI> newUrl;
+          nsCOMPtr<nsIScriptSecurityManager> secMan;
+          nsCOMPtr<nsIScriptContext> scriptCX;
+          nsJSUtils::nsGetStaticScriptContext(cx, (JSObject*) mScriptObject, 
+                                              getter_AddRefs(scriptCX));
+          if (!scriptCX ||
+              NS_FAILED(scriptCX->GetSecurityManager(getter_AddRefs(secMan))) ||
+              NS_FAILED(NS_NewURI(getter_AddRefs(newUrl), mAbsURL)) ||
+              NS_FAILED(secMan->CheckLoadURIFromScript(cx, newUrl))) 
+          {
+            NS_RELEASE(newOuterShell);
+            NS_RELEASE(webShellContainer);
+            return NS_ERROR_FAILURE;
+          }
         }
 
         nsCOMPtr<nsIDocShellTreeItem> newShellAsItem(do_QueryInterface(newOuterShell));
@@ -2327,7 +2337,8 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
         else {
           newShellAsItem->SetName(nsnull);
         }
-        newOuterShell->LoadURL(mAbsURL.GetUnicode());
+        if (loadURL)
+          newOuterShell->LoadURL(mAbsURL.GetUnicode());
         SizeAndShowOpenedWebShell(newOuterShell, options, windowIsNew, aDialog);
         if (windowIsModal) {
           nsIBrowserWindow *newWindow;
