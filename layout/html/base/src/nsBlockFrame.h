@@ -40,9 +40,6 @@ class nsFirstLineFrame;
  */
 #define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET 0x80000000
 #define NS_BLOCK_IS_HTML_PARAGRAPH        0x40000000
-#ifdef BLOCK_DOES_FIRST_LINE
-#define NS_BLOCK_HAS_FIRST_LINE_STYLE     0x20000000
-#endif
 #define NS_BLOCK_HAS_FIRST_LETTER_STYLE   0x10000000
 
 #define nsBlockFrameSuper nsHTMLContainerFrame
@@ -146,10 +143,6 @@ protected:
 
   nsIStyleContext* GetFirstLetterStyle(nsIPresContext* aPresContext);
 
-#ifdef BLOCK_DOES_FIRST_LINE
-  nsIStyleContext* GetFirstLineStyle(nsIPresContext* aPresContext);
-#endif
-
   void SetFlags(PRUint32 aFlags) {
     mFlags = aFlags;
   }
@@ -172,22 +165,6 @@ protected:
   nsresult AddFrames(nsIPresContext* aPresContext,
                      nsIFrame* aFrameList,
                      nsIFrame* aPrevSibling);
-
-#ifdef BLOCK_DOES_FIRST_LINE
-  nsresult AddFirstLineFrames(nsIPresContext* aPresContext,
-                              nsFirstLineFrame* aLineFrame,
-                              nsIFrame* aFrameList,
-                              nsIFrame* aPrevSibling);
-
-  nsIFrame* TakeKidsFromLineFrame(nsFirstLineFrame* aLineFrame,
-                                  nsIFrame* aFromKid);
-
-  nsresult RemoveFirstLineFrame(nsIPresContext* aPresContext,
-                                nsFirstLineFrame* aLineFrame,
-                                nsIFrame* aDeletedFrame);
-
-  nsresult WrapFramesInFirstLineFrame(nsIPresContext* aPresContext);
-#endif
 
   void FixParentAndView(nsIPresContext* aPresContext, nsIFrame* aFrame);
 
@@ -379,73 +356,6 @@ protected:
   nsBulletFrame* mBullet;
 
   friend class nsBlockReflowState;
-};
-
-//----------------------------------------------------------------------
-
-#define nsAnonymousBlockFrameSuper nsBlockFrame
-
-// Anonymous block frame. An anonymous block is used by some other
-// container (the parent frame) to provide block reflow for a set of
-// child frames. The parent is responsible for the maintainance of the
-// anonymous blocks child list. To accomplish this, the normal methods
-// for managing the child list (AppendFrames, InsertFrames, and
-// RemoveFrame) forward the operation to the parent frame (the
-// container of the anonymous block).
-class nsAnonymousBlockFrame : public nsAnonymousBlockFrameSuper {
-public:
-  friend nsresult NS_NewAnonymousBlockFrame(nsIFrame** aNewFrame);
-
-  // nsIFrame overrides
-
-  // AppendFrames/InsertFrames/RemoveFrame are implemented to forward
-  // the method call to the parent frame.
-  NS_IMETHOD  AppendFrames(nsIPresContext& aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
-                           nsIFrame*       aFrameList);
-  NS_IMETHOD  InsertFrames(nsIPresContext& aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
-                           nsIFrame*       aPrevFrame,
-                           nsIFrame*       aFrameList);
-  NS_IMETHOD  RemoveFrame(nsIPresContext& aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
-                          nsIFrame*       aOldFrame);
-
-  // These methods are used by the parent frame to actually modify the
-  // child frames of the anonymous block frame.
-  nsresult AppendFrames2(nsIPresContext* aPresContext,
-                         nsIPresShell*   aPresShell,
-                         nsIAtom*        aListName,
-                         nsIFrame*       aFrameList);
-
-  nsresult InsertFrames2(nsIPresContext* aPresContext,
-                         nsIPresShell*   aPresShell,
-                         nsIAtom*        aListName,
-                         nsIFrame*       aPrevFrame,
-                         nsIFrame*       aFrameList);
-
-  nsresult RemoveFrame2(nsIPresContext* aPresContext,
-                        nsIPresShell*   aPresShell,
-                        nsIAtom*        aListName,
-                        nsIFrame*       aOldFrame);
-
-  // Take the first frame away from the anonymous block frame. The
-  // caller is responsible for the first frames final disposition
-  // (e.g. deleting it if it wants to).
-  void RemoveFirstFrame();
-
-  // Remove from the blocks list of children the frames starting at
-  // aFrame until the end of the child list. The caller is responsible
-  // for the first frames final disposition (e.g. deleting it if it
-  // wants to).
-  void RemoveFramesFrom(nsIFrame* aFrame);
-
-protected:
-  nsAnonymousBlockFrame();
-  ~nsAnonymousBlockFrame();
 };
 
 #endif /* nsBlockFrame_h___ */
