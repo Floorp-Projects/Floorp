@@ -1627,9 +1627,11 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
             */
            nsIInterfaceRequestor * interfaceRequestor = NS_STATIC_CAST(nsIInterfaceRequestor *, this);
            nsCOMPtr<nsIChannel> dummyChannel;
-           rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull, interfaceRequestor);
-           if (NS_FAILED(rv)) return rv;
+           // creating a channel is expensive...don't create it unless we know we have to
+           // so move the creation down into each of the if clauses...
            if (nsnull != (const char *) ref) {
+              rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull, interfaceRequestor);
+              if (NS_FAILED(rv)) return rv;
               rv = OnStartDocumentLoad(mDocLoader, aUri, "load");
               // Go to the anchor in the current document
               rv = presShell->GoToAnchor(nsAutoString(ref));            
@@ -1645,6 +1647,8 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
            }
            else if (aType == nsISessionHistory::LOAD_HISTORY)
            {
+              rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull, interfaceRequestor);
+              if (NS_FAILED(rv)) return rv;
               rv = OnStartDocumentLoad(mDocLoader, aUri, "load");
               // Go to the top of the current document
               nsCOMPtr<nsIViewManager> viewMgr;
