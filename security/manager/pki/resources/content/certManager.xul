@@ -30,7 +30,7 @@
 <?xul-overlay href="chrome://pippki/content/WebSitesOverlay.xul"?>
 <?xul-overlay href="chrome://pippki/content/CAOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://pippki/locale/certManager.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://pippki/locale/certManager.dtd">
 
 <dialog id="certmanager" 
 	windowtype="mozilla:certmanager"
