@@ -293,7 +293,7 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs)
 	nsresult rv;
   // initializations for profile manager
 	PRBool profileDirSet = PR_FALSE;
-	char *profstr;
+	char *profstr=nsnull;
   
   Startup(nsnull);
 
