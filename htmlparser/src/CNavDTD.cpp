@@ -1462,6 +1462,9 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
       if(nsHTMLElement::IsSectionTag(theChildTag)){
         switch(theChildTag){
           case eHTMLTag_body:
+           if(mHasOpenBody)
+              return OpenContainer(attrNode,PR_FALSE);
+            break;
           case eHTMLTag_head:
             if(mHadBodyOrFrameset) {
               result=HandleOmittedTag(aToken,theChildTag,theParent,attrNode);
