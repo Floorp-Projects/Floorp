@@ -74,7 +74,6 @@ public:
     virtual ~nsGenericInterfaceInfoSet();
 
     XPTArena* GetArena() {return mArena;}
-    nsresult AllocateAdditionalType(PRUint16 *aIndex, nsXPTType * *_retval);
 
     const XPTTypeDescriptor* GetAdditionalTypeAt(PRUint16 aIndex)
     {
@@ -121,7 +120,7 @@ public:
     virtual ~nsGenericInterfaceInfo() {}
 
 private:
-    const XPTTypeDescriptor* GetPossiblyNestedType(const nsXPTParamInfo* param)
+    const XPTTypeDescriptor* GetPossiblyNestedType(const XPTParamDescriptor* param)
     {
         const XPTTypeDescriptor* td = &param->type;
         while(XPT_TDP_TAG(td->prefix) == TD_ARRAY)
@@ -129,7 +128,7 @@ private:
         return td;
     }
 
-    const XPTTypeDescriptor* GetTypeInArray(const nsXPTParamInfo* param,
+    const XPTTypeDescriptor* GetTypeInArray(const XPTParamDescriptor* param,
                                             PRUint16 dimension)
     {
         const XPTTypeDescriptor* td = &param->type;

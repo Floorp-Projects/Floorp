@@ -42,6 +42,13 @@
 [scriptable, uuid(b01eb40c-026b-49c9-af55-25e8c9d034c8)]
 interface nsIInterfaceInfoToIDL : nsISupports
 {
-    string generateIDL(in nsIIDRef aIID);
+    string generateIDL(in nsIIDRef aIID, 
+                       in PRBool withIncludes,
+                       in PRBool withForwardDeclarations);
+
+    void getReferencedInterfaceNames(in nsIIDRef aIID, 
+                                     out PRUint32 aArrayLength,
+                                     [retval, array, size_is(aArrayLength)]
+                                     out string aNames);
 };
 

@@ -415,8 +415,28 @@ function doForwardDeclarations(out, iid)
             prev = cur;    
         }    
     }
-    out.writeln("");
 }    
+
+function buildForwardDeclarationsList(iid)
+{
+    var i, cur, prev;
+    var list = [];
+    var outList = [];
+    appendForwardDeclarations(list, new IInfo(iid));
+    list.sort();
+    
+    for(i = 0; i < list.length; i++) 
+    {
+        cur = list[i];
+        if(cur != prev && cur != "nsISupports") 
+        {
+            if(cur != MISSING_INTERFACE)                 
+                outList.push(cur);   
+            prev = cur;    
+        }    
+    }
+    return outList;    
+}       
 
 /*********************************************************/
 
@@ -427,16 +447,40 @@ function nsInterfaceInfoToIDL() {}
 nsInterfaceInfoToIDL.prototype =
 {
     // nsIInterfaceInfoToIDL methods...
-    generateIDL : function (iid) {
+
+    // string generateIDL(in nsIIDRef aIID, 
+    //                    in PRBool withIncludes,
+    //                    in PRBool withForwardDeclarations);
+    generateIDL : function(aIID, withIncludes, withForwardDeclarations) {
         var out = new Buffer;
         out.writeln();    
-        out.writeln('#include "nsISupports.idl"');    
-        out.writeln();    
 
-        doForwardDeclarations(out, iid)
-        doInterface(out, iid);
+        if(withIncludes)
+        {
+            out.writeln('#include "nsISupports.idl"');    
+            out.writeln();    
+        }
+
+        if(withForwardDeclarations)
+        {
+            doForwardDeclarations(out, aIID);
+            out.writeln("");
+        }
+        
+        doInterface(out, aIID);
 
         return out.buffer;
+    },
+
+    // void getReferencedInterfaceNames(in nsIIDRef aIID, 
+    //                                  out PRUint32 aArrayLength,
+    //                                  [retval, array, size_is(aArrayLength)]
+    //                                  out string aNames);
+
+    getReferencedInterfaceNames : function(aIID, aArrayLength) {
+        var list = buildForwardDeclarationsList(aIID);
+        aArrayLength.value = list.length;
+        return list;
     },
 
     // nsISupports methods...
@@ -484,9 +528,9 @@ GenericModule.prototype = {
      * unmolested.
      */
     registerSelf: function (compMgr, fileSpec, location, type) {
-        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
-        compMgr.registerComponentWithType(this.CID, this.name, this.contractID, 
-                                          fileSpec, location, true, true, type);
+        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+        compMgr.registerFactoryLocation(this.CID, this.name, this.contractID, 
+                                        fileSpec, location, type);
     },
 
     /*

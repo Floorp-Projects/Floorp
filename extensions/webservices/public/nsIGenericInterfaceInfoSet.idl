@@ -42,44 +42,49 @@
 #include "nsIInterfaceInfo.idl"
 #include "nsIInterfaceInfoManager.idl"
 
-[ptr]   native nsXPTTypePtr(nsXPTType);
+// forward declaration of non-XPCOM types
+
+[ptr] native XPTMethodDescriptorPtr(XPTMethodDescriptor);
+[ptr] native XPTConstDescriptorPtr(XPTConstDescriptor);
+[ptr] native XPTParamDescriptorPtr(XPTParamDescriptor);
+[ptr] native XPTTypeDescriptorPtr(XPTTypeDescriptor);
 
 /* this is NOT intended to be scriptable */
 [uuid(8344a200-18ed-4538-8d44-e50b5156b564)]
 interface nsIGenericInterfaceInfo : nsIInterfaceInfo
 {
     /**
-    * Caller might allocate one more than the actual param count in
-    * order to have a location for the result pointer used in the methodinfo.
-    */ 
-    nsXPTParamInfoPtr allocateParamArray(in PRUint16 aCount);
-    
-    /**
-    * Used for arrays.
-    */ 
-    nsXPTTypePtr allocateAdditionalType(out PRUint16 aIndex);
-
-    /**
     * All members except params* and result* copied
     */
 
-    PRUint16 appendMethod(in nsXPTMethodInfoPtr aMethod);
+    PRUint16 appendMethod(in XPTMethodDescriptorPtr aMethod);
     
     /**
     * All members copied
     */
-    PRUint16 appendConst(in nsXPTConstantPtr aConst);
+    PRUint16 appendConst(in XPTConstDescriptorPtr aConst);
 };
 
 /* this is NOT intended to be scriptable */
 [uuid(8cc674ee-52ba-45fa-b897-bb88d35eaa91)]
 interface nsIGenericInterfaceInfoSet : nsIInterfaceInfoManager
 {
+    /**
+    * Methods include pointers to param arrays allocated here.
+    */ 
+    XPTParamDescriptorPtr allocateParamArray(in PRUint16 aCount);
+    
+    /**
+    * Used for type that is in an array.
+    */ 
+    XPTTypeDescriptorPtr allocateAdditionalType(out PRUint16 aIndex);
+
     PRUint16 createAndAppendInterface(in string aName, in nsIIDRef aIID,
                                       in PRUint16 aParent, in PRUint8 aFlags,
                                       out nsIGenericInterfaceInfo aInfo);
     PRUint16 appendExternalInterface(in nsIInterfaceInfo aInfo);
     PRUint16 indexOf(in nsIIDRef aIID);
+    PRUint16 indexOfByName(in string aName);
     nsIInterfaceInfo interfaceInfoAt(in PRUint16 aIndex);
 };
 

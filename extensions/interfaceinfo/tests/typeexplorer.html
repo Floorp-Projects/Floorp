@@ -46,7 +46,7 @@ function writeContent(id) {
             new Components.Constructor("@mozilla.org/interfaceinfotoidl;1",
                                        "nsIInterfaceInfoToIDL");
         var gen = new IDL_GENERATOR();
-        text = gen.generateIDL(Components.ID(id));
+        text = gen.generateIDL(Components.ID(id), true, true);
     } catch(e) {
         text = e;
         success = false;

@@ -74,17 +74,6 @@ nsGenericInterfaceInfoSet::~nsGenericInterfaceInfoSet()
         XPT_DestroyArena(mArena);
 }
 
-nsresult
-nsGenericInterfaceInfoSet::AllocateAdditionalType(PRUint16 *aIndex, nsXPTType * *_retval)
-{
-    *_retval = (nsXPTType*) 
-        XPT_MALLOC(GetArena(), sizeof(nsXPTType));
-    if(!*_retval || !mAdditionalTypes.AppendElement(*_retval))
-        return NS_ERROR_OUT_OF_MEMORY;
-    *aIndex = (PRUint16) mAdditionalTypes.Count()-1;
-    return NS_OK;
-}
-
 nsresult 
 nsGenericInterfaceInfoSet::IndexOfIID(const nsIID & aIID, PRUint16 *_retval)
 {
@@ -92,7 +81,8 @@ nsGenericInterfaceInfoSet::IndexOfIID(const nsIID & aIID, PRUint16 *_retval)
 
     for(PRInt32 i = 0; i < count; i++)
     {
-        nsIInterfaceInfo* info = (nsIInterfaceInfo*) mInterfaces.ElementAt(i);
+        nsIInterfaceInfo* info = (nsIInterfaceInfo*) 
+            ClearOwnedFlag(mInterfaces.ElementAt(i));
         const nsID* iid;
         nsresult rv = info->GetIIDShared(&iid);
         if(NS_FAILED(rv))
@@ -113,7 +103,8 @@ nsGenericInterfaceInfoSet::IndexOfName(const char* aName, PRUint16 *_retval)
 
     for(PRInt32 i = 0; i < count; i++)
     {
-        nsIInterfaceInfo* info = (nsIInterfaceInfo*) mInterfaces.ElementAt(i);
+        nsIInterfaceInfo* info = (nsIInterfaceInfo*) 
+            ClearOwnedFlag(mInterfaces.ElementAt(i));
         const char* name;
         nsresult rv = info->GetNameShared(&name);
         if(NS_FAILED(rv))
@@ -129,6 +120,27 @@ nsGenericInterfaceInfoSet::IndexOfName(const char* aName, PRUint16 *_retval)
 
 /************************************************/
 // nsIGenericInterfaceInfoSet methods...
+
+/* XPTParamDescriptorPtr allocateParamArray (in PRUint16 aCount); */
+NS_IMETHODIMP 
+nsGenericInterfaceInfoSet::AllocateParamArray(PRUint16 aCount, XPTParamDescriptor * *_retval)
+{
+    *_retval = (XPTParamDescriptor*) 
+        XPT_MALLOC(GetArena(), sizeof(XPTParamDescriptor) * aCount);
+    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+/* XPTTypeDescriptorPtr allocateAdditionalType (out PRUint16 aIndex); */
+NS_IMETHODIMP 
+nsGenericInterfaceInfoSet::AllocateAdditionalType(PRUint16 *aIndex, XPTTypeDescriptor * *_retval)
+{
+    *_retval = (XPTTypeDescriptor*) 
+        XPT_MALLOC(GetArena(), sizeof(XPTTypeDescriptor));
+    if(!*_retval || !mAdditionalTypes.AppendElement(*_retval))
+        return NS_ERROR_OUT_OF_MEMORY;
+    *aIndex = (PRUint16) mAdditionalTypes.Count()-1;
+    return NS_OK;
+}
 
 /* PRUint16 createAndAppendInterface (in string aName, in nsIIDRef aIID, in PRUint16 aParent, in PRUint8 aFlags, out nsIGenericInterfaceInfo aInfo); */
 NS_IMETHODIMP 
@@ -163,6 +175,12 @@ NS_IMETHODIMP
 nsGenericInterfaceInfoSet::IndexOf(const nsIID & aIID, PRUint16 *_retval)
 {
     return IndexOfIID(aIID, _retval);
+}
+
+/* PRUint16 indexOfByName (in string aName); */
+NS_IMETHODIMP nsGenericInterfaceInfoSet::IndexOfByName(const char *aName, PRUint16 *_retval)
+{
+    return IndexOfName(aName, _retval);
 }
 
 /* nsIInterfaceInfo interfaceInfoAt (in PRUint16 aIndex); */
@@ -311,37 +329,26 @@ nsGenericInterfaceInfo::nsGenericInterfaceInfo(nsGenericInterfaceInfoSet* aSet,
     {
         mMethodBaseIndex = mConstantBaseIndex = 0;
     }
+
+    int len = PL_strlen(aName);
+    mName = (char*) XPT_MALLOC(mSet->GetArena(), len+1);
+    if(mName)
+        memcpy(mName, aName, len);
 }
 
 /************************************************/
 // nsIGenericInterfaceInfo methods...
 
-/* nsXPTParamInfoPtr allocateParamArray (in PRUint16 aCount); */
+/* PRUint16 appendMethod (in XPTMethodDescriptorPtr aMethod); */
 NS_IMETHODIMP 
-nsGenericInterfaceInfo::AllocateParamArray(PRUint16 aCount, nsXPTParamInfo * *_retval)
+nsGenericInterfaceInfo::AppendMethod(XPTMethodDescriptor * aMethod, PRUint16 *_retval)
 {
-    *_retval = (nsXPTParamInfo*) 
-        XPT_MALLOC(mSet->GetArena(), sizeof(nsXPTParamInfo) * aCount);
-    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-/* nsXPTTypePtr allocateAdditionalType (out PRUint16 aIndex); */
-NS_IMETHODIMP 
-nsGenericInterfaceInfo::AllocateAdditionalType(PRUint16 *aIndex, nsXPTType * *_retval)
-{
-    return mSet->AllocateAdditionalType(aIndex, _retval);
-}
-
-/* PRUint16 appendMethod (in nsXPTMethodInfoPtr aMethod); */
-NS_IMETHODIMP 
-nsGenericInterfaceInfo::AppendMethod(nsXPTMethodInfo * aMethod, PRUint16 *_retval)
-{
-    nsXPTMethodInfo* desc = (nsXPTMethodInfo*) 
-        XPT_MALLOC(mSet->GetArena(), sizeof(nsXPTMethodInfo));
+    XPTMethodDescriptor* desc = (XPTMethodDescriptor*) 
+        XPT_MALLOC(mSet->GetArena(), sizeof(XPTMethodDescriptor));
     if(!desc)
         return NS_ERROR_OUT_OF_MEMORY;
     
-    memcpy(desc, aMethod, sizeof(nsXPTMethodInfo));
+    memcpy(desc, aMethod, sizeof(XPTMethodDescriptor));
     
     int len = PL_strlen(aMethod->name);
     desc->name = (char*) XPT_MALLOC(mSet->GetArena(), len+1);
@@ -353,8 +360,8 @@ nsGenericInterfaceInfo::AppendMethod(nsXPTMethodInfo * aMethod, PRUint16 *_retva
     return mMethods.AppendElement(desc) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-/* PRUint16 appendConst (in nsXPTConstantPtr aConst); */
-NS_IMETHODIMP nsGenericInterfaceInfo::AppendConst(nsXPTConstant * aConst, PRUint16 *_retval)
+/* PRUint16 appendConst (in XPTConstDescriptorPtr aConst); */
+NS_IMETHODIMP nsGenericInterfaceInfo::AppendConst(XPTConstDescriptor * aConst, PRUint16 *_retval)
 
 {
     NS_ASSERTION(aConst->type.prefix.flags == TD_INT16  ||

@@ -101,13 +101,11 @@ interface nsIScriptableInterfaceInfo : nsISupports
     [noscript] attribute nsIInterfaceInfo info;
     
     void init(in nsIIDPtr aIID);
+    void initWithName(in string name);
 
     readonly attribute string   name;
     
-     /** 
-     * Setting interfaceID will set what interface info this object wraps.
-     */
-             attribute nsIIDPtr interfaceID;
+    readonly attribute nsIIDPtr interfaceID;
 
      /** 
      * True if this object has been sucessfully set to wrap an interface info.
