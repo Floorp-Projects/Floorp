@@ -24,6 +24,7 @@
 #define nsPrimitiveHelpers_h___
 
 #include "prtypes.h"
+#include "nsError.h"
 
 class nsISupports;
 
@@ -45,6 +46,22 @@ public:
                                          void** aDataBuff, PRUint32 aDataLen ) ;
 
 }; // class nsPrimitiveHelpers
+
+
+
+class nsLinebreakHelpers
+{
+public:
+
+    // Given some data, convert from the platform linebreaks into the LF expected by the
+    // DOM. This will attempt to convert the data in place, but the buffer may still need to
+    // be reallocated regardless (disposing the old buffer is taken care of internally, see
+    // the note below).
+    //
+    // NOTE: this assumes that it can use nsAllocator to dispose of the old buffer.
+  static nsresult ConvertPlatformToDOMLinebreaks ( const char* inFlavor, void** ioData, PRInt32* ioLengthInBytes ) ;
+
+}; // class nsLinebreakHelpers
 
 
 #endif // nsPrimitiveHelpers_h___
