@@ -485,7 +485,8 @@ nsPop3Protocol::nsPop3Protocol(nsIURI* aURL)
   m_totalDownloadSize(0),
   m_totalBytesReceived(0),
   m_lineStreamBuffer(nsnull),
-  m_pop3ConData(nsnull)
+  m_pop3ConData(nsnull),
+  m_password_already_sent(PR_FALSE)
 {
   SetLookingForCRLF(MSG_LINEBREAK_LEN == 2);
 }
