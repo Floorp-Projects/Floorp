@@ -10831,7 +10831,7 @@ if test -n "$SUNCTL"; then
   MOZ_EXTENSIONS_DEFAULT="$MOZ_EXTENSIONS_DEFAULT ctl"
 fi
 
-MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT irc xmlterm access-builtin ctl" 
+MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT irc xmlterm access-builtin ctl p3p" 
 
 # Check whether --enable-extensions or --disable-extensions was given.
 if test "${enable_extensions+set}" = set; then
