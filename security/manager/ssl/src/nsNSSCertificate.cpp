@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.19 2001/05/02 17:51:16 mcgreer%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.20 2001/05/02 22:27:47 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -1045,9 +1045,15 @@ ProcessVersion(SECItem         *versionItem,
   // Now to figure out what version this certificate is.
   unsigned long version;
 
-  rv = GetIntValue(versionItem, &version);
-  if (NS_FAILED(rv))
-    return rv;
+  if (versionItem->data) {
+    rv = GetIntValue(versionItem, &version);
+    if (NS_FAILED(rv))
+      return rv;
+  } else {
+    // If there is no version present in the cert, then rfc2459
+    // says we default to v1 (0)
+    version = 0;
+  }
 
   switch (version){
   case 0:
