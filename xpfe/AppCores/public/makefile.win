@@ -29,7 +29,6 @@ EXPORTS=  \
 		nsIDOMRDFCore.h			\
 		nsIDOMToolkitCore.h		\
 		nsIDOMBrowserAppCore.h		\
-		nsIDOMEditorAppCore.h		\
 		nsAppCoresCIDs.h       
 
 include <$(DEPTH)\config\rules.mak>
