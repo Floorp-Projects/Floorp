@@ -1,0 +1,196 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="xul.css" type="text/css"?> 
+
+<!DOCTYPE window> 
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onConstruction="StartUp()"> 
+  
+<html:style>
+	#toolbar {
+		position: fixed;
+		width: 100%;
+		height: 75px;
+		top: 0;
+		right: 0;
+		bottom: auto;
+		left: 0;
+	}
+	#body {
+		position: fixed;
+		width: 100%;
+		height: 200px;
+		top: auto;
+		right: 0;
+		bottom: auto;
+		left: auto;
+	}
+	#footer {
+		position: fixed;
+		width: 100%;
+		height: 34px;
+		top: auto;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		margin-top: auto;
+	}
+</html:style>
+
+<html:script>
+	var appCore = null;
+
+	function StartUp()
+	{
+		dump("Compose: StartUp\n");
+		appCore = XPAppCoresManager.Find("ComposeAppCore");  
+		if (appCore==null) {
+			appCore = new ComposeAppCore();
+			if (appCore != null) {
+				dump("ComposeAppCore was created!\n");
+				appCore.Init("ComposeAppCore");
+				appCore.SetWindow(window);
+				appCore.CompleteCallback("MessageSent();");
+			}
+		}
+	}
+
+	function SendMessage()
+	{
+		dump("SendMessage!\n");
+		if (appCore != null) {
+			appCore.SendMessage(document.getElementByID('msgFrom').value, 
+					   document.getElementByID('msgSmtp').value, 
+					   document.getElementByID('msgTo').value, 
+					   document.getElementByID('msgCc').value, 
+					   document.getElementByID('msgBcc').value, 
+					   document.getElementByID('msgSubject').value, 
+					   window.parent.frames[0].document.forms["fbody"].elements["body"].value);
+		}
+	}
+
+	function MessageSent()
+	{
+		dump("MessageSent Callback!\n");
+
+		// Clear Them
+		document.getElementByID('msgTo').value = "";
+		document.getElementByID('msgCc').value = "";
+		document.getElementByID('msgBcc').value = "";
+		document.getElementByID('msgSubject').value = "";
+		window.parent.frames[0].document.forms["fbody"].elements["body"].value = "";
+	}
+</html:script>
+
+<menubar>
+	<menu name="File">
+		<menuitem name="New" cmd="nsCmd:ComposeNew"/>
+		<menuitem name="Save" cmd="nsCmd:ComposeSave"/>
+		<menuitem name="Save As" cmd="nsCmd:ComposeSaveAs"/>
+		<menuitem name="Attach" cmd="nsCmd:ComposeAttach"/>
+		<separator/>
+		<menuitem name="Send Now" cmd="nsCmd:ComposeSend"/>
+		<menuitem name="Send Later" cmd="nsCmd:ComposeSendLater"/>
+		<menuitem name="Quote Original Message" cmd="nsCmd:ComposeQuote"/>
+		<menuitem name="Select Addresses..." cmd="nsCmd:ComposeAddress"/>
+		<separator/>
+		<menuitem name="Print Setup" cmd="nsCmd:BrowserPrintSetup"/>
+		<menuitem name="Print Preview" cmd="nsCmd:BrowserPrintPreview"/>
+		<menuitem name="Print" cmd="nsCmd:BrowserPrint"/>
+		<separator/>
+		<menuitem name="Close" cmd="nsCmd:BrowserClose"/>
+		<menuitem name="Exit" cmd="nsCmd:BrowserExit"/>
+	</menu>
+    <menu name="Edit">
+		<menuitem name="Undo" cmd="nsCmd:ComposeNYI"/>
+		<separator/>
+		<menuitem name="Cut" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="Copy" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="Paste" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="Paste as Quotation" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="Delete" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="Select All" cmd="nsCmd:ComposeNYI"/>
+		<separator/>
+		<menuitem name="Find" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="FInd Again" cmd="nsCmd:ComposeNYI"/>
+		<separator/>
+		<menuitem name="Do Not Complete Address" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="Show Matching Addresses" cmd="nsCmd:ComposeNYI"/>
+		<separator/>
+		<menuitem name="Preferences..." cmd="nsCmd:ComposeNYI"/>
+    </menu>
+    <menu name="View">
+		<menuitem name="Show" cmd="nsCmd:ComposeNYI"/>
+		<separator/>
+		<menuitem name="Address" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="Attachments" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="Options" cmd="nsCmd:ComposeNYI"/>
+		<separator/>
+		<menuitem name="Wrap Long Lines" cmd="nsCmd:ComposeNYI"/>
+		<separator/>
+		<menuitem name="Character Set" cmd="nsCmd:ComposeNYI"/>
+    </menu>
+    <menu name="Tools">
+		<menuitem name="Check Spelling..." cmd="nsCmd:ComposeSpelling"/>
+    </menu>
+</menubar>
+
+<html:div html:id="toolbar">
+<toolbox>
+	<toolbar>
+ 		<titledbutton src="resource:/res/toolbar/Mail_SendMsg.gif" align="bottom" value="Send" onClick="SendMessage()">	
+		</titledbutton>
+
+ 		<titledbutton src="resource:/res/toolbar/Mail_QuoteMsg.gif" align="bottom" value="Quote" onClick="QuoteMessage()">	
+		</titledbutton>
+
+ 		<titledbutton src="resource:/res/toolbar/Mail_SelectAddress.gif" align="bottom" value="Address" onClick="SelectAddress()">	
+		</titledbutton>
+
+ 		<titledbutton src="resource:/res/toolbar/Mail_Attach.gif" align="bottom" value="Attach" onClick="AttachFile()">	
+		</titledbutton>
+
+ 		<titledbutton src="resource:/res/toolbar/Mail_Options.gif" align="bottom" value="Option" onClick="Options()">	
+		</titledbutton>
+
+ 		<titledbutton src="resource:/res/toolbar/TB_Spelling.gif" align="bottom" value="Spelling" onClick="Spelling()">	
+		</titledbutton>
+
+ 		<titledbutton src="resource:/res/toolbar/TB_Save.gif" align="bottom" value="Save" onClick="SaveMessage()">	
+		</titledbutton>
+
+ 		<titledbutton src="resource:/res/toolbar/TB_Stop.gif" align="bottom" value="Stop" onClick="Stop()">	
+		</titledbutton>
+	</toolbar>
+	<toolbar>
+		From:<html:input html:id="msgFrom" html:style="vertical-align: center" html:type="text" 
+		html:style="width:200px;" html:value="qatest02@netscape.com" /> 
+		Smtp:<html:input html:id="msgSmtp" html:style="vertical-align: center" html:type="text" 
+		html:style="width:200px;" html:value="nsmail-1.mcom.com" />
+		<html:br/>
+		To:<html:input html:id="msgTo" html:style="vertical-align: center" html:type="text" 
+		html:style="width:200px;" />   
+		<html:br/>
+		Cc:<html:input html:id="msgCc" html:style="vertical-align: center" html:type="text" 
+		html:style="width:200px;" />   
+		Bcc:<html:input html:id="msgBcc" html:style="vertical-align: center" html:type="text" 
+		html:style="width:200px;" />   
+	</toolbar>
+	<toolbar>
+		Subject:<html:input html:id="msgSubject" html:style="vertical-align: center" html:type="text" 
+		html:style="width:500px;" /> 
+	</toolbar>
+</toolbox>
+</html:div>
+
+<html:div html:id="body">
+<html:iframe html:src="resource:/res/samples/composeframe.html" name="browser.message.body" width="100%" height="300px"></html:iframe>
+</html:div>
+
+<html:div html:id="footer">
+<html:iframe html:src="status.html" html:name="browser.status" html:width="100%" html:height="34px" > </html:iframe>
+</html:div>
+
+</window>
+
