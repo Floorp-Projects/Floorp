@@ -3,6 +3,8 @@
 #
 # Usage: perl getlines.pl < timline.log > file.log
 
+# dlls loaded
+my @dlls = ();
 # Files of a particular extensions
 my %ext = ();
 # Number of files in a paticular extension. Used to sort them output by order of extension
@@ -22,6 +24,11 @@ my %extnumdups = ();
 while (<>)
 {
     chomp;
+    if (/PR_LoadLibrary/) {
+        my $dll = getdll($_);
+        push @dlls, $dll;
+        next;
+    }
     if (/file:/) {
         $url = getfileurl($_);
         $e = getext($url);
@@ -65,6 +72,7 @@ while (<>)
 # print results
 print "SUMMARY\n";
 print "----------------------------------------------------------------------\n";
+print "dlls loaded : ", $#dlls+1, "\n";
 print "Total unique: ", $#allurls+1, " [jar $njarurl, file $nfileurl]\n";
 # print the # of files by extensions sorted
 my @extsorted = sort { $extnum{$b} <=> $extnum{$a} } keys %extnum;
@@ -87,11 +95,20 @@ print "\n";
 print "Total non existent files : ", $#nonexistentfiles+1, "\n";
 
 print "\n";
-print "List of existing unique files and jar urls by extension:\n";
+printf "[%d] List of dlls loaded:\n", $#dlls+1;
+print "----------------------------------------------------------------------\n";
+my $n = 1;
+foreach $e (@dlls)
+{
+    printf "%2d. %s\n", $n++, $e;
+}
+
+print "\n";
+printf "[%d] List of existing unique files and jar urls by extension:\n", $#allurls+1;
 print "----------------------------------------------------------------------\n";
 foreach $e (@extsorted)
 {
-    my $n = 1;
+    $n = 1;
     print "[$extnum{$e}] .$e\n";
     foreach $i (split("---", $ext{$e})) {
         printf "%2d. %s", $n++,  $i;
@@ -108,7 +125,7 @@ foreach $e (@extsorted)
 #}
 
 print "\n";
-print "List of non existent file urls:\n";
+printf "[%d] List of non existent file urls:\n", $#nonexistentfiles+1;
 print "----------------------------------------------------------------------\n";
 my $n = 1;
 foreach $i (@nonexistentfiles)
@@ -129,6 +146,12 @@ sub getfileurl() {
 sub getjarurl() {
     my $f = shift;
     $f =~ s/^.*(jar:.*)\).*$/\1/;
+    return $f;
+}
+
+sub getdll() {
+    my $f = shift;
+    $f =~ s/^.*\((.*)\).*$/\1/;
     return $f;
 }
 
