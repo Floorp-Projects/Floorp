@@ -1137,12 +1137,12 @@ var attachmentAreaDNDObserver = {
       aAttachmentData.data = new TransferData();
       if (attachmentUrl && attachmentDisplayName)
       {
+        aAttachmentData.data.addDataForFlavour("text/x-moz-url", tmpurl + "\n" + attachmentDisplayName);
         aAttachmentData.data.addDataForFlavour("text/x-moz-url-data", tmpurl);
         aAttachmentData.data.addDataForFlavour("text/x-moz-url-desc", attachmentDisplayName);
         
         aAttachmentData.data.addDataForFlavour("application/x-moz-file-promise-url", tmpurl);   
         aAttachmentData.data.addDataForFlavour("application/x-moz-file-promise", new nsFlavorDataProvider(), 0, Components.interfaces.nsISupports);     
-        aAttachmentData.data.addDataForFlavour("text/x-moz-url", tmpurl + "\n" + attachmentDisplayName);
       }
     }
   }
