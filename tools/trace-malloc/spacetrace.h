@@ -113,6 +113,7 @@
 ** Allocations fall to this boundry size by default.
 */
 #define ST_DEFAULT_ALIGNMENT_SIZE 16
+#define ST_DEFAULT_OVERHEAD_SIZE 8
 
 /*
 ** Set the desired resolution of the timevals.
@@ -332,8 +333,13 @@ typedef struct __struct_STOptions
 
         /*
         ** Memory alignment size.
+        ** Overhead, taken after alignment.
+        **
+        ** The msvcrt malloc has an alignment of 16 with an overhead of 8.
+        ** The win32 HeapAlloc has an alignment of 8 with an overhead of 8.
         */
         PRUint32 mAlignBy;
+        PRUint32 mOverhead;
 
         /*
         ** Timeval control.
