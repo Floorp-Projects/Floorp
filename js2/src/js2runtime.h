@@ -916,33 +916,35 @@ XXX ...couldn't get this to work...
     public:
 
         Activation() 
-                    : JSType(NULL), 
-                        mLocals(NULL), 
-                        mStack(NULL),
-                        mStackTop(0),
-                        mPC(0), 
-                        mModule(NULL),
-                        mNamespaceList(NULL),
-                        mContainer(NULL)       { }
+            :	JSType(NULL), 
+                mLocals(NULL), 
+                mStack(NULL),
+                mStackTop(0),
+                mPC(0), 
+                mModule(NULL),
+                mContainer(NULL),
+                mNamespaceList(NULL)
+        {}
 
         Activation(JSValue *locals, 
-                        JSValue *stack, uint32 stackTop,
-                        ScopeChain *scopeChain,
-                        JSValue *argBase, JSValue curThis,
-                        uint8 *pc, 
-                        ByteCodeModule *module,
-                        NamespaceList *namespaceList )
-                    : JSType(NULL), 
-                        mLocals(locals), 
-                        mStack(stack), 
-                        mStackTop(stackTop),
-                        mScopeChain(scopeChain),
-                        mArgumentBase(argBase), 
-                        mThis(curThis), 
-                        mPC(pc), 
-                        mModule(module),
-                        mNamespaceList(namespaceList),
-                        mContainer(NULL)       { }
+                   JSValue *stack, uint32 stackTop,
+                   ScopeChain *scopeChain,
+                   JSValue *argBase, JSValue curThis,
+                   uint8 *pc, 
+                   ByteCodeModule *module,
+                   NamespaceList *namespaceList )
+            : 	JSType(NULL), 
+                mLocals(locals), 
+                mStack(stack), 
+                mStackTop(stackTop),
+                mScopeChain(scopeChain),
+                mArgumentBase(argBase), 
+                mThis(curThis), 
+                mPC(pc), 
+                mModule(module),
+                mContainer(NULL),
+                mNamespaceList(namespaceList)
+        {}
 
         virtual ~Activation() { } // keeping gcc happy
 
