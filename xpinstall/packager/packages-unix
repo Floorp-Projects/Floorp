@@ -353,6 +353,7 @@ bin/components/smime-service.js
 bin/components/libmsgmdn.so
 bin/components/msgmdn.xpt
 bin/components/mdn-service.js
+bin/components/libbayesfilt.so
 bin/components/msgmailviews.xpt
 bin/components/msgmailviews.so
 
