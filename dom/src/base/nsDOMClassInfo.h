@@ -434,12 +434,36 @@ public:
 };
 
 
-// NodeList scriptable helper
+// Generic array scriptable helper
 
-class nsArraySH : public nsDOMClassInfo
+class nsGenericArraySH : public nsDOMClassInfo
 {
 protected:
-  nsArraySH(nsDOMClassInfoData* aData) : nsDOMClassInfo(aData)
+  nsGenericArraySH(nsDOMClassInfoData* aData) : nsDOMClassInfo(aData)
+  {
+  }
+
+  virtual ~nsGenericArraySH()
+  {
+  }
+  
+public:
+  NS_IMETHOD Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                       JSObject *obj, PRBool *_retval);
+  
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsGenericArraySH(aData);
+  }
+};
+
+
+// NodeList scriptable helper
+
+class nsArraySH : public nsGenericArraySH
+{
+protected:
+  nsArraySH(nsDOMClassInfoData* aData) : nsGenericArraySH(aData)
   {
   }
 
@@ -453,8 +477,6 @@ protected:
 public:
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
-  NS_IMETHOD Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                       JSObject *obj, PRBool *_retval);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
@@ -959,12 +981,12 @@ public:
 };
 
 
-// History helper
+// String array helper
 
-class nsStringArraySH : public nsDOMClassInfo
+class nsStringArraySH : public nsGenericArraySH
 {
 protected:
-  nsStringArraySH(nsDOMClassInfoData* aData) : nsDOMClassInfo(aData)
+  nsStringArraySH(nsDOMClassInfoData* aData) : nsGenericArraySH(aData)
   {
   }
 
@@ -1004,6 +1026,31 @@ public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
     return new nsHistorySH(aData);
+  }
+};
+
+// StringList scriptable helper
+
+class nsStringListSH : public nsStringArraySH
+{
+protected:
+  nsStringListSH(nsDOMClassInfoData* aData) : nsStringArraySH(aData)
+  {
+  }
+
+  virtual ~nsStringListSH()
+  {
+  }
+
+  virtual nsresult GetStringAt(nsISupports *aNative, PRInt32 aIndex,
+                               nsAString& aResult);
+
+public:
+  // Inherit GetProperty, Enumerate from nsStringArraySH
+  
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsStringListSH(aData);
   }
 };
 

@@ -51,12 +51,14 @@ SDK_XPIDLSRCS =                                 \
 	nsIDOMText.idl				\
 	$(NULL)
 XPIDLSRCS =                                     \
+	nsIDOM3Document.idl			\
 	nsIDOM3Node.idl				\
-	nsIDOM3Document.idl				\
+	nsIDOMDOMStringList.idl			\
+	nsIDOMNameList.idl			\
 	nsIDOMNSDocument.idl			\
 	nsIDOMXMLDocument.idl			\
-	nsIDOMUserDataHandler.idl				\
-	nsIDOMDOMConfiguration.idl				\
+	nsIDOMUserDataHandler.idl		\
+	nsIDOMDOMConfiguration.idl		\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
