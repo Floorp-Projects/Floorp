@@ -102,8 +102,8 @@ JSConsole* JSConsole::CreateConsole()
                                 WS_OVERLAPPEDWINDOW,
                                 CW_USEDEFAULT,
                                 CW_USEDEFAULT,
-                                CW_USEDEFAULT,
-                                CW_USEDEFAULT,
+                                450,
+                                500,
                                 NULL,
                                 NULL,
                                 JSConsole::sAppInstance,
@@ -783,26 +783,51 @@ void JSConsole::InitCommandMenu(HMENU aMenu)
 //
 LPSTR NormalizeBuffer(LPSTR aBuffer)
 {
-    int offset = 0;
-    LPSTR walkingPointer = aBuffer;
-
     // trim all the 0x0D at the beginning (should be 1 at most, but hey...)
-    while (*walkingPointer++ == 0x0D) {
+    while (*aBuffer == 0x0D) {
         aBuffer++;
     }
+
+    LPSTR readPointer = aBuffer;
+    LPSTR writePointer = aBuffer;
     
     do {
         // compact the buffer if needed
-        *(walkingPointer - offset) = *walkingPointer;
+        *writePointer = *readPointer;
 
         // skip the 0x0D
-        if (*walkingPointer == 0x0D) {
-            offset++;
+        if (*readPointer != 0x0D) {
+            writePointer++;
         }
 
-    } while (*walkingPointer++ != '\0');
+    } while (*readPointer++ != '\0');
 
     return aBuffer;
+}
+
+LPSTR PrepareForTextArea(LPSTR aBuffer, PRInt32 aSize)
+{
+  PRInt32 count = 0;
+  LPSTR newBuffer = aBuffer;
+  LPSTR readPointer = aBuffer;
+
+  // count the '\n'
+  while (*readPointer != '\0' && (*readPointer++ != '\n' || ++count));
+
+  if (0 != count) {
+    readPointer = aBuffer;
+    newBuffer = new CHAR[aSize + count + 1];
+    LPSTR writePointer = newBuffer;
+    while (*readPointer != '\0') {
+      if (*readPointer == '\n') {
+        *writePointer++ = 0x0D;
+      }
+      *writePointer++ = *readPointer++;
+    }
+    *writePointer = '\0';
+  }
+
+  return newBuffer;
 }
 
 //
@@ -843,7 +868,10 @@ void JSConsole::EvaluateText(UINT aStartSel, UINT aEndSel)
                                          strlen(cleanBuffer),
                                          &returnValue)) {
                 // output the result on the console and on the edit area
-                CHAR result[512];
+                CHAR result[128];
+                LPSTR res = result;
+                int bDelete = 0;
+
                 ::printf("The return value is ");
                 if (JSVAL_IS_OBJECT(returnValue)) {
                     ::printf("an object\n");
@@ -859,8 +887,11 @@ void JSConsole::EvaluateText(UINT aStartSel, UINT aEndSel)
                 }
                 else if (JSVAL_IS_STRING(returnValue)) {
                     ::printf("a string [%s]\n", JS_GetStringBytes(JSVAL_TO_STRING(returnValue)));
-                    if (JS_GetStringLength(JSVAL_TO_STRING(returnValue)) < 512) {
-                      ::sprintf(result, " %s ", JS_GetStringBytes(JSVAL_TO_STRING(returnValue)));
+                    char *jsRes = JS_GetStringBytes(JSVAL_TO_STRING(returnValue));
+                    // make a string with 0xA changed to 0xD0xA
+                    res = PrepareForTextArea(jsRes, JS_GetStringLength(JSVAL_TO_STRING(returnValue)));
+                    if (res != jsRes) {
+                      bDelete = 1; // if the buffer was new'ed
                     }
                 }
                 else if (JSVAL_IS_BOOLEAN(returnValue)) {
@@ -888,9 +919,17 @@ void JSConsole::EvaluateText(UINT aStartSel, UINT aEndSel)
                 // set the position at the end of the selection
                 ::SendMessage(mEditWindow, EM_SETSEL, (WPARAM)aEndSel, (LPARAM)aEndSel);
                 // write the result
-                ::SendMessage(mEditWindow, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)result);
+                ::SendMessage(mEditWindow, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)res);
                 // highlight the result
-                ::SendMessage(mEditWindow, EM_SETSEL, (WPARAM)aEndSel, (LPARAM)(aEndSel + strlen(result)));
+                ::SendMessage(mEditWindow, EM_SETSEL, (WPARAM)aEndSel - 1, (LPARAM)(aEndSel + strlen(res)));
+
+                // deal with the "big string" case
+                if (bDelete > 0) {
+                  delete[] res;
+                }
+
+                // clean up a bit
+                JS_GC(mContext->GetContext());
             }
             else {
                 ::MessageBox(mMainWindow, 
@@ -900,7 +939,6 @@ void JSConsole::EvaluateText(UINT aStartSel, UINT aEndSel)
             }
 
             delete[] buffer;
-            JS_GC(mContext->GetContext());
         }
         else {
             ::MessageBox(mMainWindow, 
