@@ -368,7 +368,14 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetRelativePath(const char *i_RelativePath)
 
 NS_IMETHODIMP nsMsgMailNewsUrl::Resolve(const char *relativePath, char **result) 
 {
-	return m_baseURL->Resolve(relativePath, result);
+  // mailnews urls aren't like http or file urls...
+  // we don't have relative urls you can resolve against other urls.
+  // in fact, trying to do so leads to very bad things!! so instead
+  // of trying to resolve the url, return about:blank as a dummy place holder
+  // I tried returning just an error code but too many callers always
+  // assume they get back a url =(
+  *result = nsCRT::strdup("about:blank");
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetDirectory(char * *aDirectory)
