@@ -33,11 +33,12 @@ interface nsIOutlinerStore : nsISupports
 
   // An atomized list of properties for a given row.  Each property, x, that
   // the store gives back will cause the pseudoclass :moz-outliner-row-x
-  // to be matched on the pseudoelement ::moz-outliner-row pseudoelement.
+  // to be matched on the pseudoelement ::moz-outliner-row.
   // 
   // The special property "separator" can be returned to supply the outliner
   // with the hint that there are no cells in this row and that it should draw
-  // a separator.  It used the border properties to draw the separator.
+  // a separator.  It uses the border properties on the separator pseudoclass
+  // to draw the separator.
   nsISupportsArray getRowProperties(in long index);
 
   // An atomized list of properties for a given cell.  Each property, x, that
