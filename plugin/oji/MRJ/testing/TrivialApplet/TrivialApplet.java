@@ -103,6 +103,8 @@ public class TrivialApplet extends Applet {
 					try {
 						URL location = new URL(urlField.getText());
 						System.out.println("going to URL: " + location);
+						JSObject window = JSObject.getWindow(TrivialApplet.this);
+						window.eval("alert('going to location " + location + "');");
 						getAppletContext().showDocument(location, "_new");
 					} catch (MalformedURLException mfue) {
 					}
