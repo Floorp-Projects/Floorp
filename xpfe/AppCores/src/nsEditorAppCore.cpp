@@ -1325,7 +1325,7 @@ nsEditorAppCore::Exit()
     nsITransferable * trans = nsnull;			// XXX this needs fixin
     clipboard->GetData(trans);
     if (nsnull != trans) {
-      if (NS_OK == trans->IsLargeDataSet()) {
+      if (PR_TRUE == trans->IsLargeDataSet()) {
         // XXX A Dialog goes here to see if they want to "force" a copy 
         // of the data to the clipboard 
 

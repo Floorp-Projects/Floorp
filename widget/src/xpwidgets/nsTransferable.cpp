@@ -212,6 +212,7 @@ NS_IMETHODIMP nsTransferable::AddDataFlavor(nsIDataFlavor * aDataFlavor)
   nsAutoString  mimeInQuestion;
   aDataFlavor->GetMimeType(mimeInQuestion);
 
+  // Do we have the data flavor already?
   PRInt32 i;
   for (i=0;i<mDataArray->Count();i++) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
@@ -239,9 +240,9 @@ NS_IMETHODIMP nsTransferable::AddDataFlavor(nsIDataFlavor * aDataFlavor)
   * 
   *
   */
-NS_IMETHODIMP nsTransferable::IsLargeDataSet()
+NS_IMETHODIMP_(PRBool) nsTransferable::IsLargeDataSet()
 {
-  return NS_ERROR_FAILURE;
+  return PR_FALSE;
 }
 
 /**
