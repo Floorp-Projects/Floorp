@@ -81,7 +81,8 @@ print "<p><strong>Initial Machine Config:</strong><br>";
 print "(Empty a line to delete it)<br>";
 print "<table><tr><th>Var</th><th>Value</th></tr>\n";
 my $config_num = 1;
-while (my ($var, $value) = each %initial_machine_config) {
+foreach my $var (sort keys %initial_machine_config) {
+  my $value = $initial_machine_config{$var};
   if ($var ne "mozconfig") {
     print "<tr><td>", $p->textfield(-name=>"initial_machine_config$config_num", -default=>$var, -override=>1), "</td>";
     print "<td>", $p->textfield(-name=>"initial_machine_config${config_num}_val", -default=>$value, -override=>1), "</td></tr>\n";
@@ -109,7 +110,7 @@ EOM
 if ($tree) {
   # Patch list
   print "<table class=editlist><tr><th>Patches</th></tr>\n";
-  my $sth = $dbh->prepare('SELECT patch_id, patch_name, in_use FROM tbox_patch WHERE tree_name = ?');
+  my $sth = $dbh->prepare('SELECT patch_id, patch_name, in_use FROM tbox_patch WHERE tree_name = ? ORDER BY patch_name');
   $sth->execute($tree);
   while (my $patch_info = $sth->fetchrow_arrayref) {
     my ($patch_class, $action, $action_name);
@@ -129,7 +130,7 @@ if ($tree) {
 
   # Machine list
   print "<table class=editlist><tr><th>Machines</th></tr>\n";
-  $sth = $dbh->prepare('SELECT machine_id, machine_name FROM tbox_machine WHERE tree_name = ?');
+  $sth = $dbh->prepare('SELECT machine_id, machine_name FROM tbox_machine WHERE tree_name = ? ORDER BY machine_name');
   $sth->execute($tree);
   while (my $machine_info = $sth->fetchrow_arrayref) {
     print "<tr><td><a href='adminmachine.pl?tree=$tree&machine_id=$machine_info->[0]'>$machine_info->[1]</a></td>\n";
@@ -141,7 +142,7 @@ if ($tree) {
 
   # Machine list
   print "<table class=editlist><tr><th>Bonsai Monitors</th></tr>\n";
-  $sth = $dbh->prepare('SELECT bonsai_id, display_name FROM tbox_bonsai WHERE tree_name = ?');
+  $sth = $dbh->prepare('SELECT bonsai_id, display_name FROM tbox_bonsai WHERE tree_name = ? ORDER BY display_name');
   $sth->execute($tree);
   while (my $bonsai_info = $sth->fetchrow_arrayref) {
     print "<tr><td><a href='adminbonsai.pl?tree=$tree&bonsai_id=$bonsai_info->[0]'>$bonsai_info->[1]</a> (<a href='admintree.pl?tree=$tree&action=delete_bonsai&bonsai_id=$bonsai_info->[0]'>Del</a>)</td>\n";

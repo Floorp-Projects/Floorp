@@ -27,7 +27,7 @@ my ($machine_name, $os, $os_version, $compiler, $clobber, $commands, $visible);
 ($tree, $machine_name, $os, $os_version, $compiler, $clobber, $commands, $visible) = @{$machine_info};
 
 my %machine_config;
-my $sth = $dbh->prepare("SELECT name, value FROM tbox_machine_config WHERE machine_id = ?");
+my $sth = $dbh->prepare("SELECT name, value FROM tbox_machine_config WHERE machine_id = ? ORDER BY name");
 $sth->execute($machine_id);
 while (my $row = $sth->fetchrow_arrayref) {
   $machine_config{$row->[0]} = $row->[1];
@@ -63,7 +63,8 @@ print "<p><strong>Machine Config:</strong><br>";
 print "(Empty a line to use default for tree)<br>";
 print "<table><tr><th>Var</th><th>Value</th></tr>\n";
 my $config_num = 1;
-while (my ($var, $value) = each %machine_config) {
+foreach my $var (sort keys %machine_config) {
+  my $value = $machine_config{$var};
   if ($var ne "mozconfig") {
     print "<tr><td>", $p->textfield(-name=>"machine_config$config_num", -default=>$var, -override=>1), "</td>";
     print "<td>", $p->textfield(-name=>"machine_config${config_num}_val", -default=>$value, -override=>1), "</td></tr>\n";
