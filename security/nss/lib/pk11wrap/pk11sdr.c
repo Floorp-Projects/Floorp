@@ -62,21 +62,6 @@ static SEC_ASN1Template template[] = {
   { 0 }
 };
 
-/*
- * Temporary fixed DES3 key for testing
- */
-static unsigned char keyValue[] = {
-  0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-  0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-  0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17
-};
-
-static SECItem keyItem = {
-  0,
-  keyValue,
-  sizeof keyValue
-};
-
 static unsigned char keyID[] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
@@ -159,6 +144,7 @@ PK11SDR_Encrypt(SECItem *keyid, SECItem *data, SECItem *result, void *cx)
   CK_MECHANISM_TYPE type;
   SDRResult sdrResult;
   SECItem paddedData;
+  SECItem *pKeyID;
   PLArenaPool *arena = 0;
 
   /* Initialize */
@@ -180,8 +166,11 @@ PK11SDR_Encrypt(SECItem *keyid, SECItem *data, SECItem *result, void *cx)
   /* Use triple-DES */
   type = CKM_DES3_CBC;
 
-  /* Keyid value 16*0 (16 bytes of 0) is special, it uses a fixed DES3 key */
-  key = PK11_ImportSymKey(slot, type, 0, CKA_ENCRYPT, &keyItem, cx);
+  /* Find the key to use */
+  pKeyID = keyid;
+  if (pKeyID->len == 0) pKeyID = &keyIDItem;  /* Use default value */
+
+  key = PK11_FindFixedKey(slot, type, pKeyID, cx);
   if (!key) { rv = SECFailure; goto loser; }
 
   params = PK11_GenerateNewParam(type, key);
@@ -202,7 +191,7 @@ PK11SDR_Encrypt(SECItem *keyid, SECItem *data, SECItem *result, void *cx)
 
   PK11_Finalize(ctx);
 
-  sdrResult.keyid = keyIDItem;
+  sdrResult.keyid = *pKeyID;
 
   rv = PK11_ParamToAlgid(SEC_OID_DES_EDE3_CBC, params, arena, &sdrResult.alg);
   if (rv != SECSuccess) goto loser;
@@ -211,11 +200,11 @@ PK11SDR_Encrypt(SECItem *keyid, SECItem *data, SECItem *result, void *cx)
 
 loser:
   SECITEM_ZfreeItem(&paddedData, PR_FALSE);
-  PORT_FreeArena(arena, PR_TRUE);
-  PK11_DestroyContext(ctx, PR_TRUE);
-  SECITEM_ZfreeItem(params, PR_TRUE);
-  PK11_FreeSymKey(key);
-  PK11_FreeSlot(slot);
+  if (arena) PORT_FreeArena(arena, PR_TRUE);
+  if (ctx) PK11_DestroyContext(ctx, PR_TRUE);
+  if (params) SECITEM_ZfreeItem(params, PR_TRUE);
+  if (key) PK11_FreeSymKey(key);
+  if (slot) PK11_FreeSlot(slot);
 
   return rv;
 }
@@ -255,16 +244,14 @@ PK11SDR_Decrypt(SECItem *data, SECItem *result, void *cx)
 
   /* Use triple-DES (Should look up the algorithm) */
   type = CKM_DES3_CBC;
-
-  /* Keyid value 16*0 (16 bytes of 0) is special, it uses a fixed DES3 key */
-  key = PK11_ImportSymKey(slot, type, 0, CKA_DECRYPT, &keyItem, cx);
+  key = PK11_FindFixedKey(slot, type, &sdrResult.keyid, cx);
   if (!key) { rv = SECFailure; goto loser; }
 
   /* Get the parameter values from the data */
   params = PK11_ParamFromAlgid(&sdrResult.alg);
   if (!params) { rv = SECFailure; goto loser; }
 
-  ctx = PK11_CreateContextBySymKey(type, CKA_ENCRYPT, key, params);
+  ctx = PK11_CreateContextBySymKey(type, CKA_DECRYPT, key, params);
   if (!ctx) { rv = SECFailure; goto loser; }
 
   paddedResult.len = sdrResult.data.len;
