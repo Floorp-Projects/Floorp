@@ -297,6 +297,10 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 
     JSObject* parent = Scope->GetGlobalJSObject();
 
+    jsval newParentVal = JSVAL_NULL;
+    XPCMarkableJSVal newParentVal_markable(&newParentVal);
+    AutoMarkingJSVal newParentVal_automarker(ccx, &newParentVal_markable);
+
     if(sciWrapper.GetFlags().WantPreCreate())
     {
         JSObject* plannedParent = parent;
@@ -312,6 +316,8 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
             if(betterScope != Scope)
                 return GetNewOrUsed(ccx, identity, betterScope, Interface,
                                     resultWrapper);
+
+            newParentVal = OBJECT_TO_JSVAL(parent);
         }
 
         // Take the performance hit of checking the hashtable again in case
