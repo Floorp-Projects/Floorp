@@ -106,6 +106,9 @@ JSBool pref_InitInitialObjects()
 // appropriate TEXT resources
 //----------------------------------------------------------------------------------------
 {
+#if 1
+    return JS_TRUE; // for now.
+#else
 	if (gPrefResources <= 0)
 	    return JS_FALSE;
 	    
@@ -129,6 +132,7 @@ JSBool pref_InitInitialObjects()
 	::UseResFile(savedResFile);
 	gPrefResources = -1;
 	return ok;
+#endif
 }
 
 //----------------------------------------------------------------------------------------
