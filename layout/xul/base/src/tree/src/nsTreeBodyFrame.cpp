@@ -1065,12 +1065,10 @@ nsresult nsTreeBodyFrame::CheckVerticalOverflow()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeBodyFrame::InvalidateScrollbar()
+void nsTreeBodyFrame::InvalidateScrollbar()
 {
-  if (mUpdateBatchNest)
-    return NS_OK;
-  if (!EnsureScrollbar() || !mView || mRowCount <= mPageCount)
-    return NS_OK;
+  if (mUpdateBatchNest || !mView || mRowCount <= mPageCount || !EnsureScrollbar())
+    return;
 
   nsIContent* scrollbar = mScrollbar->GetContent();
 
@@ -1089,8 +1087,6 @@ NS_IMETHODIMP nsTreeBodyFrame::InvalidateScrollbar()
   nsAutoString pageStr;
   pageStr.AppendInt(pageincrement);
   scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::pageincrement, pageStr, PR_TRUE);
-
-  return NS_OK;
 }
 
 

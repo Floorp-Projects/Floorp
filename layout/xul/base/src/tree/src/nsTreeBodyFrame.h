@@ -408,6 +408,9 @@ protected:
   // Update the curpos of the scrollbar.
   void UpdateScrollbar();
 
+  // Update the maxpos of the scrollbar.
+  void InvalidateScrollbar();
+
   // Check vertical overflow.
   nsresult CheckVerticalOverflow();
 

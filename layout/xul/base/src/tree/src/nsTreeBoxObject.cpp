@@ -375,14 +375,6 @@ NS_IMETHODIMP nsTreeBoxObject::InvalidateRange(PRInt32 aStart, PRInt32 aEnd)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeBoxObject::InvalidateScrollbar()
-{
-  nsITreeBoxObject* body = GetTreeBody();
-  if (body)
-    return body->InvalidateScrollbar();
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsTreeBoxObject::GetRowAt(PRInt32 x, PRInt32 y, PRInt32 *_retval)
 {
   nsITreeBoxObject* body = GetTreeBody();
