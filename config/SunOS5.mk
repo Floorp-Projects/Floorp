@@ -82,9 +82,11 @@ ifeq ($(OS_VERSION),.3)
 MOTIF			= /usr/local/Motif/opt/ICS/Motif/usr
 MOTIFLIB		= $(MOTIF)/lib/libXm.a
 EMACS			= /bin/true
+PORT_FLAGS		+= -DHAVE_BOOLEAN
 endif
 ifeq ($(OS_VERSION),.4)
 PLATFORM_FLAGS		+= -DSOLARIS_24
+RESOLV_LIB		= -lresolv
 endif
 ifeq ($(OS_VERSION),.5)
 PLATFORM_FLAGS		+= -DSOLARIS2_5 -DSOLARIS_55_OR_GREATER
