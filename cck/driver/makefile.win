@@ -74,7 +74,7 @@ LLIBS = $(LLIBS) \
 #
 # ----- Add your extension libraries here -----
 #
-!if "$(MAKEFLAGS)" == "install"
+!if "$(MAKEFLAGS)" == "libs"
 LLIBS = $(LLIBS) \
 	..\lib\ibengine.lib \
 	$(NULL)
@@ -107,7 +107,7 @@ export::
 	$(MAKE_INSTALL) cck.che $(CCKDIST)\CCKTool
 	$(MAKE_INSTALL) WizardMachine.ini $(CCKDIST)\CCKTool
 
-install::$(PROGRAM)
+libs::$(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(CCKDIST)\CCKTool
 
 $(PROGRAM):: $(OBJDIR) $(OBJS) $(RESFILE)
