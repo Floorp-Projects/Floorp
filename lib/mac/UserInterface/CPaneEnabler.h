@@ -36,10 +36,13 @@ class CPaneEnabler : public LAttachment
 public:
 	enum { class_ID = 'BtEn' }; // It used to be CButtonEnabler (thus the class_ID 'BtEn')
 					CPaneEnabler(LStream* inStream);
+					CPaneEnabler() ;					
 	virtual			~CPaneEnabler();
 	virtual	void	ExecuteSelf(MessageT inMessage, void *ioParam);
 	static void		UpdatePanes();
 protected:
+	void			CommonInit ( ) ;
+	
 	LPane*			mPane;
 }; // class CPaneEnabler
 

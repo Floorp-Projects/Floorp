@@ -66,10 +66,26 @@ CPaneMaster::~CPaneMaster()
 //======================================
 
 //-----------------------------------
+CPaneEnabler::CPaneEnabler( )
+//-----------------------------------
+:	LAttachment()
+,	mPane(nil)
+{
+	CommonInit();
+} // CPaneEnabler::CPaneEnabler
+
+//-----------------------------------
 CPaneEnabler::CPaneEnabler(LStream* inStream)
 //-----------------------------------
 :	LAttachment(inStream)
 ,	mPane(nil)
+{
+	CommonInit();
+} // CPaneEnabler::CPaneEnabler
+
+
+void
+CPaneEnabler :: CommonInit ( )
 {
 	SetMessage(msg_Event); // execute me only for event messages.
 	LAttachable	*host = LAttachable::GetDefaultAttachable();
@@ -89,7 +105,8 @@ CPaneEnabler::CPaneEnabler(LStream* inStream)
 	LAttachable::SetDefaultAttachable(host);
 		// Restore, because LAttachable's constructor (called when we made
 		// the new pane master) clobbers the default attachable
-} // CPaneEnabler::CPaneEnabler
+} // CommonInit
+
 
 //-----------------------------------
 CPaneEnabler::~CPaneEnabler()
