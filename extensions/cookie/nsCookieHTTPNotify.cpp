@@ -235,7 +235,8 @@ nsCookieHTTPNotify::OnExamineResponse(nsIHttpChannel *aHttpChannel)
     // Get the expires
     nsXPIDLCString dateHeader;
     rv = aHttpChannel->GetResponseHeader("Date", getter_Copies(dateHeader));
-    if (NS_FAILED(rv)) return rv;
+    // NS_ERROR_NOT_AVAILABLE is not a fatal error, other errors are
+    if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE) return rv;
 
     // Ensure that we have the cookie service
     rv = SetupCookieService();
