@@ -1836,13 +1836,7 @@ function getTabForObject (source, create)
         tb.setAttribute ("id", id);
         tb.setAttribute ("state", "normal");
 
-        var spacer = document.createElement ("box");
-        spacer.setAttribute ("id", id + "-spacer");
-        spacer.setAttribute ("class", "tabs-bottom view-button-spacer");
-        spacer.setAttribute ("index", client.viewsArray.length);
-        views.appendChild (spacer);
-
-        client.viewsArray.push ({source: source, tb: tb, spacer: spacer});
+        client.viewsArray.push ({source: source, tb: tb});
         tb.setAttribute ("viewKey", client.viewsArray.length - 1);
         if (matches > 1)
             tb.setAttribute("label", name + "<" + matches + ">");
@@ -1958,13 +1952,10 @@ function deleteTab (tb)
             for (i = key + 1; i < client.viewsArray.length; i++)
             {
                 client.viewsArray[i].tb.setAttribute ("viewKey", i - 1);
-                client.viewsArray[i].spacer.setAttribute ("index", i - 1);
             }
-            var spacer = client.viewsArray[key].spacer;
             arrayRemoveAt(client.viewsArray, key);
             var tbinner = document.getElementById("views-tbar-inner");
             tbinner.removeChild(tb);
-            tbinner.removeChild(spacer);
         }
     }
     else

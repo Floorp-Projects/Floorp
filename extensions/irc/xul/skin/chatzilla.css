@@ -76,8 +76,8 @@ window {
 
 /* spaces after the 4th and 8th tab, so you can line them up with your Fn
  * keys */
-.view-button-spacer[index="4"],
-.view-button-spacer[index="8"] {
+.view-button[viewKey="4"],
+.view-button[viewKey="8"] {
     margin-left: 5px;
 }
 
