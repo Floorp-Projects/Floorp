@@ -173,7 +173,11 @@ printf("\n****Inside ShowOSAlert ***\n");
 #elif defined (MOZ_WIDGET_GTK)
     NS_gtk_alert(aMessage, NULL, "OK");
 #elif defined (XP_OS2)
+    HAB hab = WinInitialize(0);
+    HMQ hmq = WinCreateMsgQueue(hmq,0);
     WinMessageBox( HWND_DESKTOP, HWND_DESKTOP, aMessage, "", 0, MB_OK);
+    WinDestroyMsgQueue(hmq);
+    WinTerminate(hab);
 #else
     printf(stdout, "%s\n", aMessage);
 #endif
