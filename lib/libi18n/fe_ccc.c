@@ -1415,7 +1415,17 @@ void INTL_SetCCCCvtflag_SendHankakuKana(CCCDataObject obj, XP_Bool flag)
 #endif  /* MOZ_MAIL_NEWS */
 
 
+static int16 xp_res_csid = CS_DEFAULT;
 INTLCharSetID INTL_GetCharSetID(INTL_CharSetID_Selector selector) 
 { 
- return FE_GetCharSetID(selector); 
+	if( INTL_XPResourcesCsidSel == selector)
+	{
+		if(CS_DEFAULT == xp_res_csid)
+		{
+			xp_res_csid = INTL_CharSetNameToID(
+				INTL_ResourceCharSet());
+		}
+		return xp_res_csid;
+	}
+	return FE_GetCharSetID(selector); 
 } 
