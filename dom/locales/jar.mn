@@ -8,4 +8,5 @@
   locale/@AB_CD@/global/xul.properties                         (%chrome/layout/xul.properties)
   locale/@AB_CD@/global/printing.properties                    (%chrome/layout/printing.properties)
   locale/@AB_CD@/global/layout_errors.properties               (%chrome/layout/layout_errors.properties)
+  locale/@AB_CD@/global/xslt/xslt.properties                   (%chrome/xslt/xslt.properties)
   locale/@AB_CD@/communicator/layout/HtmlForm.properties       (%chrome/layout/HtmlForm.properties)
