@@ -62,12 +62,15 @@ sub row {
         return $self->handle->fetchrow_array();
     } else {
         my $array = $self->handle->fetchrow_arrayref();
-        if ($#$array) {
-            # more than one data point
-            return $array;
-        } else {
+        if ((not defined($array)) or @$array == 0) {
+            # no data
+            return undef;
+        } elsif (@$array == 1) {
             # only one data point
             return $array->[0];
+        } else {
+            # more than one data point
+            return $array;
         }
     }
 }
