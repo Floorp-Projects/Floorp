@@ -871,8 +871,8 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 	if (! mVisible)
 		return NS_OK;
 
-#if 0	//¥REVISIT
-	// scroll the rect
+	//--------
+	// Scroll this widget
 	nsRect scrollRect;
 	if (aClipRect)
 		scrollRect = *aClipRect;
@@ -890,15 +890,20 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 		return NS_ERROR_OUT_OF_MEMORY;
 
 	StartDraw();
+
+		// Clip to the windowRegion instead of the visRegion (note: the visRegion
+		// is equal to the windowRegion minus the children). The result is that
+		// ScrollRect() scrolls the visible bits of this widget as well as its children.
+		::SetClip(mWindowRegion);
+
+		// Scroll the bits now
 		::ScrollRect(&macRect, aDx, aDy, updateRgn);
 		::InvalRgn(updateRgn);
 		::DisposeRgn(updateRgn);
 	EndDraw();
-#else
-	Invalidate(PR_FALSE);
-#endif
 
-	// scroll the children
+	//--------
+	// Scroll the children
 	nsCOMPtr<nsIEnumerator> children(dont_AddRef(GetChildren()));
 	if (children)
 	{
@@ -916,7 +921,6 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 				bounds.x += aDx;
 				bounds.y += aDy;
 				childWindow->SetBounds(bounds);
-				childWindow->Scroll(aDx, aDy, &bounds);
   		}
 		} while (NS_SUCCEEDED(children->Next()));			
 	}
@@ -1134,6 +1138,21 @@ void nsWindow::CalcWindowRegions()
 	}
  	::SetRectRgn(mWindowRegion, 0, 0, mBounds.width, mBounds.height);
 
+	// intersect with all the parents
+	nsWindow* parent = (nsWindow*)mParent;
+	nsPoint origin(-mBounds.x, -mBounds.y);
+	while (parent)
+	{
+		if (parent->mWindowRegion)
+		{
+			::OffsetRgn(parent->mWindowRegion, origin.x, origin.y);
+			::SectRgn(mWindowRegion, parent->mWindowRegion, mWindowRegion);
+			::OffsetRgn(parent->mWindowRegion, -origin.x, -origin.y);
+		}
+		origin.x -= parent->mBounds.x;
+		origin.y -= parent->mBounds.y;
+		parent = (nsWindow*)parent->mParent;
+	}
 
 	//------
 	// calculate the visible region
@@ -1145,23 +1164,7 @@ void nsWindow::CalcWindowRegions()
 	}
 	::CopyRgn(mWindowRegion, mVisRegion);
 
-	// intersect with all the parents
-	nsWindow* parent = (nsWindow*)mParent;
-	nsPoint origin(-mBounds.x, -mBounds.y);
-	while (parent)
-	{
-		if (parent->mWindowRegion)
-		{
-			::OffsetRgn(parent->mWindowRegion, origin.x, origin.y);
-			::SectRgn(mVisRegion, parent->mWindowRegion, mVisRegion);
-			::OffsetRgn(parent->mWindowRegion, -origin.x, -origin.y);
-		}
-		origin.x -= parent->mBounds.x;
-		origin.y -= parent->mBounds.y;
-		parent = (nsWindow*)parent->mParent;
-	}
-
-	// clip the children out of the visRgn
+	// clip the children out of the visRegion
 	RgnHandle childRgn = ::NewRgn();
 	if (!childRgn) return;
 
