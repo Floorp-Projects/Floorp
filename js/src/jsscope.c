@@ -889,8 +889,15 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
 
         /*
          * If all property members match, this is a redundant add and we can
-         * return early.
+         * return early.  If the caller wants to allocate a slot, but doesn't
+         * care which slot, copy sprop->slot into slot so we can match sprop,
+         * if all other members match.
          */
+        if (!(attrs & JSPROP_SHARED) &&
+            slot == SPROP_INVALID_SLOT &&
+            SPROP_HAS_VALID_SLOT(sprop, scope)) {
+            slot = sprop->slot;
+        }
         if (SPROP_MATCH_PARAMS_AFTER_ID(sprop, getter, setter, slot, attrs,
                                         flags, shortid)) {
             METER(redundantAdds);
@@ -1073,10 +1080,21 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
          * a JS_ClearScope call.
          */
         if (!(flags & SPROP_IS_ALIAS)) {
-            if (attrs & JSPROP_SHARED)
+            if (attrs & JSPROP_SHARED) {
                 slot = SPROP_INVALID_SLOT;
-            else if (!js_AllocSlot(cx, scope->object, &slot))
-                goto fail_overwrite;
+            } else {
+                /*
+                 * We may have set slot from a nearly-matching sprop, above.
+                 * If so, we're overwriting that nearly-matching sprop, so we
+                 * can reuse its slot -- we don't need to allocate a new one.
+                 * Callers should therefore pass SPROP_INVALID_SLOT for all
+                 * non-alias, unshared property adds.
+                 */
+                if (slot != SPROP_INVALID_SLOT)
+                    JS_ASSERT(overwriting);
+                else if (!js_AllocSlot(cx, scope->object, &slot))
+                    goto fail_overwrite;
+            }
         }
 
         /*
@@ -1223,8 +1241,10 @@ js_ChangeScopePropertyAttrs(JSContext *cx, JSScope *scope,
         }
     }
 
+#ifdef DEBUG_brendan
     if (!newsprop)
         METER(changeFailures);
+#endif
     return newsprop;
 }
 
