@@ -651,5 +651,8 @@ stringbundle
     visibility            : collapse;
   }
 
-  
-
+stringbundleset
+  {
+    -moz-binding          : url("chrome://global/content/stringbundleBindings.xml#stringbundleset");
+    visibility            : collapse;
+  }

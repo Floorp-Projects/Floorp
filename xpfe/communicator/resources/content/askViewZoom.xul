@@ -1,4 +1,4 @@
-<?xml version="1.0"?> <!-- -*- Mode: HTML -*- -->
+<?xml version="1.0"?>
 
 <!--
    - The contents of this file are subject to the Mozilla Public
@@ -38,20 +38,17 @@
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://navigator/locale/askViewZoom.dtd">
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/askViewZoom.dtd">
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   id="askViewZoom"
-  onload="onLoad();"
   title="&askViewZoom.title;"
-  debug="false"
+  onload="onLoad();"
   class="dialog"
-  align="vertical"
-  persist="screenX screenY"
-  screenX="24" screenY="24">
+  align="vertical">
 
-  <script type="text/javascript" src="chrome://navigator/content/askViewZoom.js"/>
+  <script type="text/javascript" src="chrome://communicator/content/askViewZoom.js"/>
 
   <box orient="horizontal">
     <text class="label" value="&selectZoom.label;"/>
