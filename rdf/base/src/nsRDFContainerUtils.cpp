@@ -530,7 +530,7 @@ RDFContainerUtilsImpl::IndexOf(nsIRDFDataSource* aDataSource, nsIRDFResource* aC
             PRBool hasMoreSources = PR_FALSE;
             sources->HasMoreElements(&hasMoreSources);
             if (! hasMoreSources)
-                continue;
+                break;
 
             nsCOMPtr<nsISupports> isupports2;
             sources->GetNext(getter_AddRefs(isupports2));
