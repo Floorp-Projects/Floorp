@@ -1926,7 +1926,11 @@ JS_dtoa(double d, int mode, JSBool biasUp, int ndigits,
         }
         return JS_TRUE;
     }
+    
     b = NULL;                           /* initialize for abort protection */
+    S = NULL;
+    mlo = mhi = NULL;
+    
     if (!d) {
       no_digits:
         *decpt = 1;
@@ -1939,8 +1943,13 @@ JS_dtoa(double d, int mode, JSBool biasUp, int ndigits,
         if (rve)
             *rve = buf + 1;
         /* We might have jumped to "no_digits" from below, so we need
-         * to be sure to free "b" to avoid memory leaks. */
+         * to be sure to free the potentially allocated Bigints to avoid
+         * memory leaks. */
         Bfree(b);
+        Bfree(S);
+        if (mlo != mhi)
+            Bfree(mlo);
+        Bfree(mhi);
         return JS_TRUE;
     }
 
@@ -2220,7 +2229,6 @@ JS_dtoa(double d, int mode, JSBool biasUp, int ndigits,
 
     m2 = b2;
     m5 = b5;
-    mhi = mlo = 0;
     if (leftright) {
         if (mode < 2) {
             i =
