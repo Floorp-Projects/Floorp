@@ -534,12 +534,14 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     
     // XXXbz this code is repeated from nsDocument::Reset; we
     // really need to refactor this part better.
+    PRBool isAbout = PR_FALSE;
     PRBool isChrome = PR_FALSE;
     PRBool isRes = PR_FALSE;
     rv = mDocumentURI->SchemeIs("chrome", &isChrome);
     rv |= mDocumentURI->SchemeIs("resource", &isRes);
+    rv |= mDocumentURI->SchemeIs("about", &isAbout);
 
-    if (NS_SUCCEEDED(rv) && !isChrome && !isRes) {
+    if (NS_SUCCEEDED(rv) && !isChrome && !isRes && !isAbout) {
         rv = aChannel->GetURI(getter_AddRefs(mDocumentURI));
         NS_ENSURE_SUCCESS(rv, rv);
     }
