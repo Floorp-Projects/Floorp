@@ -54,7 +54,7 @@
         this.ifSetAttribute("showPopup", true);
         this.ifSetAttribute("flexPopup", true);
         this.ifSetAttribute("alwaysOpenPopup", false);
-        this.ifSetAttribute("disableAutoComplete", false);
+        this.ifSetAttribute("disableAutocomplete", false);
         
         // initialize the search sessions
         this.searchSessions = this.getAttribute("searchSessions");
@@ -481,7 +481,7 @@
         ]]></body>
       </method>
 
-      <!-- does some stuff after a search is done (success of faiure) -->
+      <!-- does some stuff after a search is done (success or failure) -->
       <method name="postSearchCleanup">
         <body><![CDATA[
           this.isSearching = false;
@@ -507,7 +507,7 @@
         <body><![CDATA[
           this.mFinishAfterSearch = false;
           this.mFireAfterSearch = false;
-          if (this.mNeedToFinish) {
+          if (this.mNeedToFinish && !this.disableAutocomplete) {
             // if a search is happening at this juncture, bail out of this function
             // and let the search finish, and tell it to come back here when it's done
             if (this.isSearching || this.isWaiting) {
@@ -627,11 +627,6 @@
       <method name="processKeyPress">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          if (this.disableAutocomplete) {
-            this.closeResultPopup();
-            return;
-          }
-
           this.mLastKeyCode = aEvent.keyCode;
           
           var killEvent = false;
