@@ -174,10 +174,10 @@ pref("font.size.fixed.x-unicode", 13);
 pref("font.size.variable.x-western", 16);
 pref("font.size.fixed.x-western", 13);
 
-pref("font.size.variable.zh-CN", 16);
+pref("font.size.variable.zh-CN", 15);
 pref("font.size.fixed.zh-CN", 16);
 
-pref("font.size.variable.zh-TW", 16);
+pref("font.size.variable.zh-TW", 15);
 pref("font.size.fixed.zh-TW", 16);
 
 // Override the Windows settings: no menu key, meta accelerator key. ctrl for general access key in HTML/XUL
