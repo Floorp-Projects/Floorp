@@ -770,8 +770,8 @@ nsresult nsRange::PopRanges(nsCOMPtr<nsIDOMNode> aDestNode, PRInt32 aOffset, nsC
   nsCOMPtr<nsIContent> cN;
   nsVoidArray* theRangeList;
   
-  res = iter->CurrentNode(getter_AddRefs(cN));
-  while (NS_COMFALSE == iter->IsDone())
+  iter->CurrentNode(getter_AddRefs(cN));
+  while (cN && (NS_COMFALSE == iter->IsDone()))
   {
     cN->GetRangeList(theRangeList);
     if (theRangeList)
@@ -816,12 +816,7 @@ nsresult nsRange::PopRanges(nsCOMPtr<nsIDOMNode> aDestNode, PRInt32 aOffset, nsC
       NS_NOTREACHED("nsRange::PopRanges() : iterator failed to advance");
       return res;
     }
-    res = iter->CurrentNode(getter_AddRefs(cN));
-    if (NS_FAILED(res)) // a little noise here to catch bugs
-    {
-      NS_NOTREACHED("nsRange::PopRanges() : iterator failed to position");
-      return res;
-    }
+    iter->CurrentNode(getter_AddRefs(cN));
   }
   
   return NS_OK;
@@ -1148,8 +1143,8 @@ nsresult nsRange::DeleteContents()
   // loop through the content iterator, which returns nodes in the range in 
   // close tag order, and mark for deletion any node that is not an ancestor
   // of the start node.
-  res = iter->CurrentNode(getter_AddRefs(cN));
-  while (NS_COMFALSE == iter->IsDone())
+  iter->CurrentNode(getter_AddRefs(cN));
+  while (cN && (NS_COMFALSE == iter->IsDone()))
   {
     // if node is not an ancestor of start node, delete it
     if (mStartAncestors->IndexOf(NS_STATIC_CAST(void*,cN)) == -1)
@@ -1162,7 +1157,7 @@ nsresult nsRange::DeleteContents()
       NS_NOTREACHED("nsRange::DeleteContents() : iterator failed to advance");
       return res;
     }
-    res = iter->CurrentNode(getter_AddRefs(cN));
+    iter->CurrentNode(getter_AddRefs(cN));
   }
   
   // remove the nodes on the delete list
@@ -1481,9 +1476,8 @@ nsresult nsRange::ToString(nsString& aReturn)
  
   // loop through the content iterator, which returns nodes in the range in 
   // close tag order, and grab the text from any text node
-  nsresult res = iter->CurrentNode(getter_AddRefs(cN));
-  if (NS_FAILED(res))  return res;
-  while (NS_COMFALSE == iter->IsDone())
+  iter->CurrentNode(getter_AddRefs(cN));
+  while (cN && (NS_COMFALSE == iter->IsDone()))
   {
     nsCOMPtr<nsIDOMText> textNode( do_QueryInterface(cN) );
     if (textNode) // if it's a text node, get the text
@@ -1506,14 +1500,13 @@ nsresult nsRange::ToString(nsString& aReturn)
         aReturn += tempString;
       }
     }
-    res = iter->Next();
+    nsresult res = iter->Next();
     if (NS_FAILED(res)) // a little noise here to catch bugs
     {
       NS_NOTREACHED("nsRange::ToString() : iterator failed to advance");
       return res;
     }
-    res = iter->CurrentNode(getter_AddRefs(cN));
-    if (NS_FAILED(res))  return res;
+    iter->CurrentNode(getter_AddRefs(cN));
   }
   return NS_OK;
 }
