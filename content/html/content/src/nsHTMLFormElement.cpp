@@ -504,7 +504,7 @@ nsHTMLFormElement::RemoveElement(nsIFormControl* aChild, PRBool aChildIsRef)
 NS_IMETHODIMP
 nsHTMLFormElement::GetEncoding(nsString& aEncoding)
 {
-  return mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::encoding, aEncoding);
+  return mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::enctype, aEncoding);
 }
  
 NS_IMETHODIMP    
