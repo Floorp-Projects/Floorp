@@ -186,7 +186,7 @@ PRBool CSSStyleSheetImpl::SelectorMatches(nsCSSSelector* aSelector, nsIContent* 
   PRBool  result = PR_FALSE;
 
   if ((nsnull == aSelector->mTag) || (aSelector->mTag == aContent->GetTag())) {
-    if ((nsnull != aSelector->mClass) || (nsnull != aSelector->mTag)) {
+    if ((nsnull != aSelector->mClass) || (nsnull != aSelector->mID)) {
       nsIHTMLContentPtr htmlContent;
       if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, htmlContent.Query())) {
         if ((nsnull == aSelector->mClass) || (aSelector->mClass == htmlContent->GetClass())) {
