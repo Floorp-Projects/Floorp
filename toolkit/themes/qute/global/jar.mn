@@ -1,130 +1,128 @@
 classic.jar:
-  skin/classic/global/arrow.css
-  skin/classic/global/autocomplete.css
-  skin/classic/global/browser.css
-  skin/classic/global/button.css
-  skin/classic/global/checkbox.css
-  skin/classic/global/colorpicker.css
-  skin/classic/global/console.css
-  skin/classic/global/contents.rdf
-  skin/classic/global/customizeToolbar.css
-  skin/classic/global/dialog.css
-  skin/classic/global/expander.css
-  skin/classic/global/filepicker.css
-  skin/classic/global/Filepicker.png
-  skin/classic/global/formatting.css
-  skin/classic/global/global.css
-  skin/classic/global/globalBindings.xml
-  skin/classic/global/groupbox.css
-  skin/classic/global/Landscape.png
-  skin/classic/global/Landscape-small.png
-  skin/classic/global/linkTree.css
-  skin/classic/global/listbox.css
-  skin/classic/global/menu.css
-  skin/classic/global/menulist.css
-  skin/classic/global/plugins.css
-  skin/classic/global/popup.css
-  skin/classic/global/Portrait.png
-  skin/classic/global/Portrait-small.png
-  skin/classic/global/preview.gif
-  skin/classic/global/Preview.png
-  skin/classic/global/printing.css
-  skin/classic/global/printPageSetup.css
-  skin/classic/global/printPreview.css
-  skin/classic/global/progressmeter.css
-  skin/classic/global/radio.css
-  skin/classic/global/scrollbars.css
-  skin/classic/global/scrollbox.css
-  skin/classic/global/spinbuttons.css
-  skin/classic/global/splitter.css
-  skin/classic/global/tabbox.css
-  skin/classic/global/textbox.css
-  skin/classic/global/toolbar.css
-  skin/classic/global/toolbarbutton.css
-  skin/classic/global/tree.css
-  skin/classic/global/wizard.css
-  skin/classic/global/arrow/arrow-dn.gif                (arrow/arrow-dn.gif)
-  skin/classic/global/arrow/arrow-dn-dis.gif            (arrow/arrow-dn-dis.gif)
-  skin/classic/global/arrow/arrow-dn-hov.gif            (arrow/arrow-dn-hov.gif)
-  skin/classic/global/arrow/arrow-dn-sharp.gif          (arrow/arrow-dn-sharp.gif)
-  skin/classic/global/arrow/arrow-lft.gif               (arrow/arrow-lft.gif)
-  skin/classic/global/arrow/arrow-lft-dis.gif           (arrow/arrow-lft-dis.gif)
-  skin/classic/global/arrow/arrow-lft-hov.gif           (arrow/arrow-lft-hov.gif)
-  skin/classic/global/arrow/arrow-lft-sharp.gif         (arrow/arrow-lft-sharp.gif)
-  skin/classic/global/arrow/arrow-lft-sharp-end.gif     (arrow/arrow-lft-sharp-end.gif)
-  skin/classic/global/arrow/arrow-rit.gif               (arrow/arrow-rit.gif)
-  skin/classic/global/arrow/arrow-rit-dis.gif           (arrow/arrow-rit-dis.gif)
-  skin/classic/global/arrow/arrow-rit-hov.gif           (arrow/arrow-rit-hov.gif)
-  skin/classic/global/arrow/arrow-rit-sharp.gif         (arrow/arrow-rit-sharp.gif)
-  skin/classic/global/arrow/arrow-rit-sharp-end.gif     (arrow/arrow-rit-sharp-end.gif)
-  skin/classic/global/arrow/arrow-up.gif                (arrow/arrow-up.gif)
-  skin/classic/global/arrow/arrow-up-dis.gif            (arrow/arrow-up-dis.gif)
-  skin/classic/global/arrow/arrow-up-hov.gif            (arrow/arrow-up-hov.gif)
-  skin/classic/global/arrow/arrow-up-sharp.gif          (arrow/arrow-up-sharp.gif)
-  skin/classic/global/checkbox/cbox-check.gif           (checkbox/cbox-check.gif)
-  skin/classic/global/checkbox/cbox-check-dis.gif       (checkbox/cbox-check-dis.gif)
-  skin/classic/global/console/console.css               (console/console.css)
-  skin/classic/global/console/console-error-caret.gif   (console/console-error-caret.gif)
-  skin/classic/global/console/console-error-dash.gif    (console/console-error-dash.gif)
-  skin/classic/global/console/Console-toolbar.png       (console/Console-toolbar.png)
-  skin/classic/global/filepicker/blank.gif              (filepicker/blank.gif)
-  skin/classic/global/filepicker/dir-closed.gif         (filepicker/dir-closed.gif)
-  skin/classic/global/filepicker/dir-open.gif           (filepicker/dir-open.gif)
-  skin/classic/global/filepicker/folder-home.gif        (filepicker/folder-home.gif)
-  skin/classic/global/filepicker/folder-new.gif         (filepicker/folder-new.gif)
-  skin/classic/global/filepicker/folder-up.gif          (filepicker/folder-up.gif)
-  skin/classic/global/icons/alert-error.gif             (icons/alert-error.gif)
-  skin/classic/global/icons/alert-exclam.gif            (icons/alert-exclam.gif)
-  skin/classic/global/icons/alert-message.gif           (icons/alert-message.gif)
-  skin/classic/global/icons/alert-question.gif          (icons/alert-question.gif)
-  skin/classic/global/icons/Close.gif                   (icons/Close.gif)
-  skin/classic/global/icons/close-button.gif            (icons/close-button.gif)
-  skin/classic/global/icons/Error.png                   (icons/Error.png)
-  skin/classic/global/icons/folder-item.png             (icons/folder-item.png)
-  skin/classic/global/icons/Loading.gif                 (icons/Loading.gif)
-  skin/classic/global/icons/Message.png                 (icons/Message.png)
-  skin/classic/global/icons/Minimize.gif                (icons/Minimize.gif)
-  skin/classic/global/icons/pg-landscape.gif            (icons/pg-landscape.gif)
-  skin/classic/global/icons/pg-landscape-small.gif      (icons/pg-landscape-small.gif)
-  skin/classic/global/icons/pg-portrait.gif             (icons/pg-portrait.gif)
-  skin/classic/global/icons/pg-portrait-small.gif       (icons/pg-portrait-small.gif)
-  skin/classic/global/icons/Question.png                (icons/Question.png)
-  skin/classic/global/icons/Restore.gif                 (icons/Restore.gif)
-  skin/classic/global/icons/tab-new.gif                 (icons/tab-new.gif)
-  skin/classic/global/icons/Warning.png                 (icons/Warning.png)
-  skin/classic/global/menu/menu-arrow.gif               (menu/menu-arrow.gif)
-  skin/classic/global/menu/Menu-arrow.png               (menu/Menu-arrow.png)
-  skin/classic/global/menu/menu-arrow-disabled.gif      (menu/menu-arrow-disabled.gif)
-  skin/classic/global/menu/Menu-arrow-disabled.png      (menu/Menu-arrow-disabled.png)
-  skin/classic/global/menu/menu-arrow-hover.gif         (menu/menu-arrow-hover.gif)
-  skin/classic/global/menu/Menu-arrow-hover.png         (menu/Menu-arrow-hover.png)
-  skin/classic/global/menu/menu-check.gif               (menu/menu-check.gif)
-  skin/classic/global/menu/menu-check-disabled.gif      (menu/menu-check-disabled.gif)
-  skin/classic/global/menu/menu-check-hover.gif         (menu/menu-check-hover.gif)
-  skin/classic/global/menu/menu-radio.gif               (menu/menu-radio.gif)
-  skin/classic/global/menu/menu-radio-disabled.gif      (menu/menu-radio-disabled.gif)
-  skin/classic/global/menu/menu-radio-hover.gif         (menu/menu-radio-hover.gif)
-  skin/classic/global/progressmeter/progressmeter-busy.gif (progressmeter/progressmeter-busy.gif)
-  skin/classic/global/radio/radio-check.gif             (radio/radio-check.gif)
-  skin/classic/global/radio/radio-check-dis.gif         (radio/radio-check-dis.gif)
-  skin/classic/global/scrollbar/slider.gif              (scrollbar/slider.gif)
-  skin/classic/global/splitter/drag-bg.gif              (splitter/drag-bg.gif)
-  skin/classic/global/splitter/grip-hrz-after.gif       (splitter/grip-hrz-after.gif)
-  skin/classic/global/splitter/grip-hrz-before.gif      (splitter/grip-hrz-before.gif)
-  skin/classic/global/splitter/grip-vrt-after.gif       (splitter/grip-vrt-after.gif)
-  skin/classic/global/splitter/grip-vrt-before.gif      (splitter/grip-vrt-before.gif)
-  skin/classic/global/toolbar/chevron.gif               (toolbar/chevron.gif)
-  skin/classic/global/toolbar/Flex.png                  (toolbar/Flex.png)
-  skin/classic/global/toolbar/Lighten.png               (toolbar/Lighten.png)
-  skin/classic/global/toolbar/spacer-lft.gif            (toolbar/spacer-lft.gif)
-  skin/classic/global/toolbar/spacer-rit.gif            (toolbar/spacer-rit.gif)
-  skin/classic/global/toolbar/tbgrip-arrow.gif          (toolbar/tbgrip-arrow.gif)
-  skin/classic/global/toolbar/tbgrip-arrow-clps.gif     (toolbar/tbgrip-arrow-clps.gif)
-  skin/classic/global/toolbar/tbgrip-texture.gif        (toolbar/tbgrip-texture.gif)
-  skin/classic/global/tree/columnpicker.gif             (tree/columnpicker.gif)
-  skin/classic/global/tree/sort-asc.gif                 (tree/sort-asc.gif)
-  skin/classic/global/tree/sort-dsc.gif                 (tree/sort-dsc.gif)
-  skin/classic/global/tree/twisty-clsd.gif              (tree/twisty-clsd.gif)
-  skin/classic/global/tree/twisty-open.gif              (tree/twisty-open.gif)
-  
-  
++  skin/classic/global/arrow.css
++  skin/classic/global/autocomplete.css
++  skin/classic/global/browser.css
++  skin/classic/global/button.css
++  skin/classic/global/checkbox.css
++  skin/classic/global/colorpicker.css
++  skin/classic/global/console.css
++  skin/classic/global/contents.rdf
++  skin/classic/global/customizeToolbar.css
++  skin/classic/global/dialog.css
++  skin/classic/global/expander.css
++  skin/classic/global/filepicker.css
++  skin/classic/global/Filepicker.png
++  skin/classic/global/formatting.css
++  skin/classic/global/global.css
++  skin/classic/global/globalBindings.xml
++  skin/classic/global/groupbox.css
++  skin/classic/global/Landscape.png
++  skin/classic/global/Landscape-small.png
++  skin/classic/global/linkTree.css
++  skin/classic/global/listbox.css
++  skin/classic/global/menu.css
++  skin/classic/global/menulist.css
++  skin/classic/global/plugins.css
++  skin/classic/global/popup.css
++  skin/classic/global/Portrait.png
++  skin/classic/global/Portrait-small.png
++  skin/classic/global/preview.gif
++  skin/classic/global/Preview.png
++  skin/classic/global/printing.css
++  skin/classic/global/printPageSetup.css
++  skin/classic/global/printPreview.css
++  skin/classic/global/progressmeter.css
++  skin/classic/global/radio.css
++  skin/classic/global/scrollbars.css
++  skin/classic/global/scrollbox.css
++  skin/classic/global/spinbuttons.css
++  skin/classic/global/splitter.css
++  skin/classic/global/tabbox.css
++  skin/classic/global/textbox.css
++  skin/classic/global/toolbar.css
++  skin/classic/global/toolbarbutton.css
++  skin/classic/global/tree.css
++  skin/classic/global/wizard.css
++  skin/classic/global/arrow/arrow-dn.gif                (arrow/arrow-dn.gif)
++  skin/classic/global/arrow/arrow-dn-dis.gif            (arrow/arrow-dn-dis.gif)
++  skin/classic/global/arrow/arrow-dn-hov.gif            (arrow/arrow-dn-hov.gif)
++  skin/classic/global/arrow/arrow-dn-sharp.gif          (arrow/arrow-dn-sharp.gif)
++  skin/classic/global/arrow/arrow-lft.gif               (arrow/arrow-lft.gif)
++  skin/classic/global/arrow/arrow-lft-dis.gif           (arrow/arrow-lft-dis.gif)
++  skin/classic/global/arrow/arrow-lft-hov.gif           (arrow/arrow-lft-hov.gif)
++  skin/classic/global/arrow/arrow-lft-sharp.gif         (arrow/arrow-lft-sharp.gif)
++  skin/classic/global/arrow/arrow-lft-sharp-end.gif     (arrow/arrow-lft-sharp-end.gif)
++  skin/classic/global/arrow/arrow-rit.gif               (arrow/arrow-rit.gif)
++  skin/classic/global/arrow/arrow-rit-dis.gif           (arrow/arrow-rit-dis.gif)
++  skin/classic/global/arrow/arrow-rit-hov.gif           (arrow/arrow-rit-hov.gif)
++  skin/classic/global/arrow/arrow-rit-sharp.gif         (arrow/arrow-rit-sharp.gif)
++  skin/classic/global/arrow/arrow-rit-sharp-end.gif     (arrow/arrow-rit-sharp-end.gif)
++  skin/classic/global/arrow/arrow-up.gif                (arrow/arrow-up.gif)
++  skin/classic/global/arrow/arrow-up-dis.gif            (arrow/arrow-up-dis.gif)
++  skin/classic/global/arrow/arrow-up-hov.gif            (arrow/arrow-up-hov.gif)
++  skin/classic/global/arrow/arrow-up-sharp.gif          (arrow/arrow-up-sharp.gif)
++  skin/classic/global/checkbox/cbox-check.gif           (checkbox/cbox-check.gif)
++  skin/classic/global/checkbox/cbox-check-dis.gif       (checkbox/cbox-check-dis.gif)
++  skin/classic/global/console/console.css               (console/console.css)
++  skin/classic/global/console/console-error-caret.gif   (console/console-error-caret.gif)
++  skin/classic/global/console/console-error-dash.gif    (console/console-error-dash.gif)
++  skin/classic/global/console/Console-toolbar.png       (console/Console-toolbar.png)
++  skin/classic/global/filepicker/blank.gif              (filepicker/blank.gif)
++  skin/classic/global/filepicker/dir-closed.gif         (filepicker/dir-closed.gif)
++  skin/classic/global/filepicker/dir-open.gif           (filepicker/dir-open.gif)
++  skin/classic/global/filepicker/folder-home.gif        (filepicker/folder-home.gif)
++  skin/classic/global/filepicker/folder-new.gif         (filepicker/folder-new.gif)
++  skin/classic/global/filepicker/folder-up.gif          (filepicker/folder-up.gif)
++  skin/classic/global/icons/alert-error.gif             (icons/alert-error.gif)
++  skin/classic/global/icons/alert-exclam.gif            (icons/alert-exclam.gif)
++  skin/classic/global/icons/alert-message.gif           (icons/alert-message.gif)
++  skin/classic/global/icons/alert-question.gif          (icons/alert-question.gif)
++  skin/classic/global/icons/Close.gif                   (icons/Close.gif)
++  skin/classic/global/icons/close-button.gif            (icons/close-button.gif)
++  skin/classic/global/icons/Error.png                   (icons/Error.png)
++  skin/classic/global/icons/folder-item.png             (icons/folder-item.png)
++  skin/classic/global/icons/Loading.gif                 (icons/Loading.gif)
++  skin/classic/global/icons/Message.png                 (icons/Message.png)
++  skin/classic/global/icons/Minimize.gif                (icons/Minimize.gif)
++  skin/classic/global/icons/pg-landscape.gif            (icons/pg-landscape.gif)
++  skin/classic/global/icons/pg-landscape-small.gif      (icons/pg-landscape-small.gif)
++  skin/classic/global/icons/pg-portrait.gif             (icons/pg-portrait.gif)
++  skin/classic/global/icons/pg-portrait-small.gif       (icons/pg-portrait-small.gif)
++  skin/classic/global/icons/Question.png                (icons/Question.png)
++  skin/classic/global/icons/Restore.gif                 (icons/Restore.gif)
++  skin/classic/global/icons/tab-new.gif                 (icons/tab-new.gif)
++  skin/classic/global/icons/Warning.png                 (icons/Warning.png)
++  skin/classic/global/menu/menu-arrow.gif               (menu/menu-arrow.gif)
++  skin/classic/global/menu/Menu-arrow.png               (menu/Menu-arrow.png)
++  skin/classic/global/menu/menu-arrow-disabled.gif      (menu/menu-arrow-disabled.gif)
++  skin/classic/global/menu/Menu-arrow-disabled.png      (menu/Menu-arrow-disabled.png)
++  skin/classic/global/menu/menu-arrow-hover.gif         (menu/menu-arrow-hover.gif)
++  skin/classic/global/menu/Menu-arrow-hover.png         (menu/Menu-arrow-hover.png)
++  skin/classic/global/menu/menu-check.gif               (menu/menu-check.gif)
++  skin/classic/global/menu/menu-check-disabled.gif      (menu/menu-check-disabled.gif)
++  skin/classic/global/menu/menu-check-hover.gif         (menu/menu-check-hover.gif)
++  skin/classic/global/menu/menu-radio.gif               (menu/menu-radio.gif)
++  skin/classic/global/menu/menu-radio-disabled.gif      (menu/menu-radio-disabled.gif)
++  skin/classic/global/menu/menu-radio-hover.gif         (menu/menu-radio-hover.gif)
++  skin/classic/global/progressmeter/progressmeter-busy.gif (progressmeter/progressmeter-busy.gif)
++  skin/classic/global/radio/radio-check.gif             (radio/radio-check.gif)
++  skin/classic/global/radio/radio-check-dis.gif         (radio/radio-check-dis.gif)
++  skin/classic/global/scrollbar/slider.gif              (scrollbar/slider.gif)
++  skin/classic/global/splitter/drag-bg.gif              (splitter/drag-bg.gif)
++  skin/classic/global/splitter/grip-hrz-after.gif       (splitter/grip-hrz-after.gif)
++  skin/classic/global/splitter/grip-hrz-before.gif      (splitter/grip-hrz-before.gif)
++  skin/classic/global/splitter/grip-vrt-after.gif       (splitter/grip-vrt-after.gif)
++  skin/classic/global/splitter/grip-vrt-before.gif      (splitter/grip-vrt-before.gif)
++  skin/classic/global/toolbar/chevron.gif               (toolbar/chevron.gif)
++  skin/classic/global/toolbar/Flex.png                  (toolbar/Flex.png)
++  skin/classic/global/toolbar/Lighten.png               (toolbar/Lighten.png)
++  skin/classic/global/toolbar/spacer-lft.gif            (toolbar/spacer-lft.gif)
++  skin/classic/global/toolbar/spacer-rit.gif            (toolbar/spacer-rit.gif)
++  skin/classic/global/toolbar/tbgrip-arrow.gif          (toolbar/tbgrip-arrow.gif)
++  skin/classic/global/toolbar/tbgrip-arrow-clps.gif     (toolbar/tbgrip-arrow-clps.gif)
++  skin/classic/global/toolbar/tbgrip-texture.gif        (toolbar/tbgrip-texture.gif)
++  skin/classic/global/tree/columnpicker.gif             (tree/columnpicker.gif)
++  skin/classic/global/tree/sort-asc.gif                 (tree/sort-asc.gif)
++  skin/classic/global/tree/sort-dsc.gif                 (tree/sort-dsc.gif)
++  skin/classic/global/tree/twisty-clsd.gif              (tree/twisty-clsd.gif)
++  skin/classic/global/tree/twisty-open.gif              (tree/twisty-open.gif)
