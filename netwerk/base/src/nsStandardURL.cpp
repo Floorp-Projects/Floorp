@@ -805,9 +805,7 @@ NS_INTERFACE_MAP_BEGIN(nsStandardURL)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStandardURL)
     NS_INTERFACE_MAP_ENTRY(nsIURI)
     NS_INTERFACE_MAP_ENTRY(nsIURL)
-    if (mSupportsFileURL && aIID.Equals(NS_GET_IID(nsIFileURL)))
-        foundInterface = NS_STATIC_CAST(nsIFileURL *, this);
-    else
+    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIFileURL, mSupportsFileURL)
     NS_INTERFACE_MAP_ENTRY(nsIStandardURL)
     NS_INTERFACE_MAP_ENTRY(nsISerializable)
     NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
