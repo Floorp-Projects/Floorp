@@ -18,8 +18,8 @@ PRIVATE_EXPORTS = \
 MODULE = xpfc
 
 CPPSRCS = \
-	nsVectorIterator.cpp \
-	nsVector.cpp \
+	nsArrayIterator.cpp \
+	nsArray.cpp \
 	nsStack.cpp \
     nsUrlParser.cpp \
 	$(NULL)

@@ -20,7 +20,7 @@
 #define nsMenuManager_h___
 
 #include "nsIMenuManager.h"
-#include "nsIVector.h"
+#include "nsIArray.h"
 #include "nsIIterator.h"
 
 class nsMenuManager : public nsIMenuManager
@@ -45,7 +45,7 @@ protected:
 
 private:
   nsIXPFCMenuBar * mMenuBar;
-  nsIVector * mMenuContainers;
+  nsIArray * mMenuContainers;
   PRUint32    mValidMenuID;
   nsIXPFCCommandReceiver * mDefaultReceiver;
 

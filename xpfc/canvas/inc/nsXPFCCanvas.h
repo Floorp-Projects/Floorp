@@ -22,7 +22,7 @@
 #include "nsxpfc.h"
 #include "nsAgg.h"
 #include "nsxpfcCIID.h"
-#include "nsIVector.h"
+#include "nsIArray.h"
 #include "nsIIterator.h"
 #include "nsString.h"
 #include "nsFont.h"
@@ -282,7 +282,7 @@ public:
 private:
   
   nsILayout *     mLayout;
-  nsIVector *     mChildWidgets ;
+  nsIArray *     mChildWidgets ;
   nscolor         mBackgroundColor;
   nscolor         mForegroundColor;
   nscolor         mBorderColor;

@@ -16,21 +16,21 @@
  * Reserved.
  */
 
-#ifndef nsVectorIterator_h___
-#define nsVectorIterator_h___
+#ifndef nsArrayIterator_h___
+#define nsArrayIterator_h___
 
 #include "nsIIterator.h"
-#include "nsIVector.h"
+#include "nsIArray.h"
 
-class nsVectorIterator : public nsIIterator
+class nsArrayIterator : public nsIIterator
 {
 public:
-  nsVectorIterator();
+  nsArrayIterator();
 
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD                  Init() ;
-  NS_IMETHOD                  Init(nsIVector * aVector) ;
+  NS_IMETHOD                  Init(nsIArray * aVector) ;
 
   NS_IMETHOD                  First() ;
   NS_IMETHOD                  Last() ;
@@ -42,12 +42,12 @@ public:
   NS_IMETHOD_(PRUint32)       Count() ;
 
 protected:
-  ~nsVectorIterator();
+  ~nsArrayIterator();
 
 private:
-  nsIVector * mVector;
+  nsIArray * mVector;
   PRUint32  mCurrentElement;
 
 };
 
-#endif /* nsVectorIterator_h___ */
+#endif /* nsArrayIterator_h___ */

@@ -16,18 +16,18 @@
  * Reserved.
  */
 
-#ifndef nsVector_h___
-#define nsVector_h___
+#ifndef nsArray_h___
+#define nsArray_h___
 
-#include "nsIVector.h"
+#include "nsIArray.h"
 
 #include "nsVoidArray.h"
 
-class nsVector : public nsIVector
+class nsArray : public nsIArray
 {
 
 public:
-  nsVector();
+  nsArray();
 
   NS_DECL_ISUPPORTS
 
@@ -38,7 +38,7 @@ public:
   NS_IMETHOD_(PRBool)         Contains(nsComponent aComponent) ;
   NS_IMETHOD_(PRUint32)       IndexOf(nsComponent aComponent) ;
   NS_IMETHOD_(nsComponent)    ElementAt(PRUint32 aIndex) ;
-  NS_IMETHOD_(PRInt32)        InsertBinary(nsComponent aComponent, nsVectorCompareProc aCompFn, PRBool bAllowDups);
+  NS_IMETHOD_(PRInt32)        InsertBinary(nsComponent aComponent, nsArrayCompareProc aCompFn, PRBool bAllowDups);
 
   NS_IMETHOD                  Insert(PRUint32 aIndex, nsComponent aComponent) ;
   NS_IMETHOD                  Append(nsComponent aComponent) ;
@@ -49,11 +49,11 @@ public:
   NS_IMETHOD                  CreateIterator(nsIIterator ** aIterator) ;
 
 protected:
-  ~nsVector();
+  ~nsArray();
 
 private:
   nsVoidArray * mVoidArray ;
 
 };
 
-#endif /* nsVector_h___ */
+#endif /* nsArray_h___ */

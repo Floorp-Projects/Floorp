@@ -127,8 +127,8 @@ nsresult nsXPFCObserverManager::Init()
 {
   if (mList == nsnull) {
 
-    static NS_DEFINE_IID(kCVectorIteratorCID, NS_VECTOR_ITERATOR_CID);
-    static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
+    static NS_DEFINE_IID(kCVectorIteratorCID, NS_ARRAY_ITERATOR_CID);
+    static NS_DEFINE_IID(kCVectorCID, NS_ARRAY_CID);
 
     nsresult res = nsRepository::CreateInstance(kCVectorCID, 
                                        nsnull, 
@@ -143,8 +143,8 @@ nsresult nsXPFCObserverManager::Init()
 
   if (mState == nsnull) {
 
-    static NS_DEFINE_IID(kCVectorIteratorCID, NS_VECTOR_ITERATOR_CID);
-    static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
+    static NS_DEFINE_IID(kCVectorIteratorCID, NS_ARRAY_ITERATOR_CID);
+    static NS_DEFINE_IID(kCVectorCID, NS_ARRAY_CID);
 
     nsresult res = nsRepository::CreateInstance(kCVectorCID, 
                                        nsnull, 

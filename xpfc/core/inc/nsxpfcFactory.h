@@ -44,8 +44,8 @@
 #include "nsXPFCDataCollectionManager.h"
 #include "nsStreamManager.h"
 #include "nsStreamObject.h"
-#include "nsVector.h"
-#include "nsVectorIterator.h"
+#include "nsArray.h"
+#include "nsArrayIterator.h"
 #include "nsStack.h"
 #include "nsLayout.h"
 #include "nsBoxLayout.h"
@@ -91,8 +91,8 @@ static NS_DEFINE_IID(kCXPButton,                  NS_XP_BUTTON_CID);
 static NS_DEFINE_IID(kCXPItem,                    NS_XP_ITEM_CID);
 static NS_DEFINE_IID(kCXPFCTabWidget,             NS_XPFC_TABWIDGET_CID);
 static NS_DEFINE_IID(kCXPFCTextWidget,            NS_XPFC_TEXTWIDGET_CID);
-static NS_DEFINE_IID(kCVector,                    NS_VECTOR_CID);
-static NS_DEFINE_IID(kCVectorIterator,            NS_VECTOR_ITERATOR_CID);
+static NS_DEFINE_IID(kCVector,                    NS_ARRAY_CID);
+static NS_DEFINE_IID(kCVectorIterator,            NS_ARRAY_ITERATOR_CID);
 static NS_DEFINE_IID(kCLayout,                    NS_LAYOUT_CID);
 static NS_DEFINE_IID(kILayout,                    NS_ILAYOUT_IID);
 static NS_DEFINE_IID(kCBoxLayout,                 NS_BOXLAYOUT_CID);

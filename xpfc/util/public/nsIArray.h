@@ -16,21 +16,21 @@
  * Reserved.
  */
 
-#ifndef nsIVector_h___
-#define nsIVector_h___
+#ifndef nsIArray_h___
+#define nsIArray_h___
 
 #include "nsISupports.h"
 #include "nsIIterator.h"
 
 //9d149d10-eb7f-11d1-9244-00805f8a7ab6
-#define NS_IVECTOR_IID   \
+#define NS_IARRAY_IID   \
 { 0x9d149d10, 0xeb7c, 0x11d1,    \
 { 0x92, 0x44, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6 } }
 
 
-typedef PRInt32 (*nsVectorCompareProc)(const nsComponent elem1, const nsComponent elem2 );
+typedef PRInt32 (*nsArrayCompareProc)(const nsComponent elem1, const nsComponent elem2 );
 
-class nsIVector : public nsISupports
+class nsIArray : public nsISupports
 {
 
 public:
@@ -41,7 +41,7 @@ public:
   NS_IMETHOD_(PRBool)         Empty() = 0 ;
   NS_IMETHOD_(PRBool)         Contains(nsComponent aComponent) = 0;
   NS_IMETHOD_(PRUint32)       IndexOf(nsComponent aComponent) = 0;
-  NS_IMETHOD_(PRInt32)        InsertBinary(nsComponent aComponent, nsVectorCompareProc aCompFn, PRBool bAllowDups) = 0;
+  NS_IMETHOD_(PRInt32)        InsertBinary(nsComponent aComponent, nsArrayCompareProc aCompFn, PRBool bAllowDups) = 0;
   NS_IMETHOD_(nsComponent)    ElementAt(PRUint32 aIndex) = 0 ;
 
   NS_IMETHOD                  Insert(PRUint32 aIndex, nsComponent aComponent) = 0 ;
@@ -54,4 +54,4 @@ public:
 
 };
 
-#endif /* nsIVector_h___ */
+#endif /* nsIArray_h___ */

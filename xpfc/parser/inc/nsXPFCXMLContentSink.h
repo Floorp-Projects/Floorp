@@ -25,7 +25,7 @@
 #include "nsIHTMLContentSink.h"
 #include "nsIWebViewerContainer.h"
 #include "nsxpfcCIID.h"
-#include "nsIVector.h"
+#include "nsIArray.h"
 #include "nsIIterator.h"
 #include "nsIStack.h"
 #include "nsHTMLTokens.h"
@@ -88,8 +88,8 @@ private:
 private:
     nsIWebViewerContainer * mViewerContainer ;
     nsIStack *  mXPFCStack;
-    nsIVector * mOrphanMenuList;
-    nsIVector * mContainerList ;
+    nsIArray * mOrphanMenuList;
+    nsIArray * mContainerList ;
     PRUint32    mState;
 
 };

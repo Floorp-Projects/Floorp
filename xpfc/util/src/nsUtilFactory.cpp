@@ -21,14 +21,14 @@
 #include "nsISupports.h"
 #include "nsCalUtilCIID.h"
 
-#include "nsVector.h"
-#include "nsVectorIterator.h"
+#include "nsArray.h"
+#include "nsArrayIterator.h"
 #include "nsDateTime.h"
 #include "nsDuration.h"
 #include "nsStack.h"
 
-static NS_DEFINE_IID(kCVector,          NS_VECTOR_CID);
-static NS_DEFINE_IID(kCVectorIterator,  NS_VECTOR_ITERATOR_CID);
+static NS_DEFINE_IID(kCVector,          NS_ARRAY_CID);
+static NS_DEFINE_IID(kCVectorIterator,  NS_ARRAY_ITERATOR_CID);
 static NS_DEFINE_IID(kCDateTime,        NS_DATETIME_CID);
 static NS_DEFINE_IID(kCDuration,        NS_DURATION_CID);
 static NS_DEFINE_IID(kCStack,           NS_STACK_CID);
@@ -122,10 +122,10 @@ nsresult nsUtilFactory::CreateInstance(nsISupports *aOuter,
   nsISupports *inst = nsnull;
 
   if (mClassID.Equals(kCVector)) {
-    inst = (nsISupports *)new nsVector();
+    inst = (nsISupports *)new nsArray();
   }
   else if (mClassID.Equals(kCVectorIterator)) {
-    inst = (nsISupports *)new nsVectorIterator();
+    inst = (nsISupports *)new nsArrayIterator();
   }
   else if (mClassID.Equals(kCStack)) {
     inst = (nsISupports *)new nsStack();

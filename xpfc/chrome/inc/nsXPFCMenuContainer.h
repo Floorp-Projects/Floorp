@@ -22,7 +22,7 @@
 #include "nsIXPFCMenuContainer.h"
 #include "nsIXPFCMenuBar.h"
 #include "nsXPFCMenuItem.h"
-#include "nsIVector.h"
+#include "nsIArray.h"
 #include "nsIIterator.h"
 #include "nsIXPFCCommandReceiver.h"
 
@@ -68,7 +68,7 @@ private:
   NS_IMETHOD ProcessActionCommand(nsString& aAction);
 
 protected:
-  nsIVector *     mChildMenus ;
+  nsIArray *     mChildMenus ;
   nsIShellInstance * mShellInstance;
   nsIWebViewerContainer * mWebViewerContainer;
 };

@@ -25,7 +25,7 @@
 #include "prmon.h"
 #include "plstr.h"
 #include "nsCom.h"
-#include "nsIVector.h"
+#include "nsIArray.h"
 #include "nsIIterator.h"
 #include "nsIXPFCCanvasManager.h"
 #include "nsIView.h"
@@ -92,8 +92,8 @@ public:
   PRMonitor * monitor;
 
 public:
-  nsIVector * mViewList ;
-  nsIVector * mWidgetList ;
+  nsIArray * mViewList ;
+  nsIArray * mWidgetList ;
 
 private:
   nsIXPFCCanvas * mRootCanvas;

@@ -18,7 +18,7 @@
 
 #include "nscore.h"
 #include "nsIFactory.h"
-#include "nsIVector.h"
+#include "nsIArray.h"
 #include "nsIIterator.h"
 #include "nsIStreamManager.h"
 #include "nsIXPFCCanvas.h"
@@ -53,7 +53,7 @@ public:
                      nsIID *aSinkIID = nsnull);
 
 private:
-  nsIVector * mStreamObjects;
+  nsIArray * mStreamObjects;
 
 };
 

@@ -86,7 +86,7 @@ nsXPFCXMLContentSink::nsXPFCXMLContentSink() : nsIHTMLContentSink()
 
   mState = XPFC_PARSING_STATE_UNKNOWN;
 
-  static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
+  static NS_DEFINE_IID(kCVectorCID, NS_ARRAY_CID);
   nsresult res = nsRepository::CreateInstance(kCVectorCID, 
                                               nsnull, 
                                               kCVectorCID, 
@@ -111,8 +111,8 @@ nsXPFCXMLContentSink::nsXPFCXMLContentSink() : nsIHTMLContentSink()
 
   if (mContainerList == nsnull) {
 
-    static NS_DEFINE_IID(kCVectorIteratorCID, NS_VECTOR_ITERATOR_CID);
-    static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
+    static NS_DEFINE_IID(kCVectorIteratorCID, NS_ARRAY_ITERATOR_CID);
+    static NS_DEFINE_IID(kCVectorCID, NS_ARRAY_CID);
 
     nsresult res = nsRepository::CreateInstance(kCVectorCID, 
                                        nsnull, 

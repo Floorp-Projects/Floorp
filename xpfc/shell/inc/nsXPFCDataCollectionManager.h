@@ -20,7 +20,7 @@
 #define nsXPFCDataCollectionManager_h___
 
 #include "nsIXPFCDataCollectionManager.h"
-#include "nsIVector.h"
+#include "nsIArray.h"
 #include "nsIIterator.h"
 
 class nsCollectedData : public nsICollectedData
@@ -58,7 +58,7 @@ protected:
   ~nsXPFCDataCollectionManager();
 
 private:
-  nsIVector * mDataHands;
+  nsIArray * mDataHands;
 
 };
 
