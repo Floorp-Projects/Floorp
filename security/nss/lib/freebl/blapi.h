@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapi.h,v 1.11 2002/11/02 01:51:40 nelsonb%netscape.com Exp $
+ * $Id: blapi.h,v 1.12 2002/11/16 06:09:57 nelsonb%netscape.com Exp $
  */
 
 #ifndef _BLAPI_H_
@@ -197,7 +197,7 @@ extern PRBool KEA_Verify(SECItem *Y, SECItem *prime, SECItem *subPrime);
 **	"key" raw key data
 **	"len" the number of bytes of key data
 */
-extern RC4Context *RC4_CreateContext(unsigned char *key, int len);
+extern RC4Context *RC4_CreateContext(const unsigned char *key, int len);
 
 /*
 ** Destroy an RC4 encryption/decryption context.
@@ -253,8 +253,9 @@ extern SECStatus RC4_Decrypt(RC4Context *cx, unsigned char *output,
 ** When mode is set to NSS_RC2_CBC the RC2 cipher is run in "cipher block
 ** chaining" mode.
 */
-extern RC2Context *RC2_CreateContext(unsigned char *key, unsigned int len,
-		     unsigned char *iv, int mode, unsigned effectiveKeyLen);
+extern RC2Context *RC2_CreateContext(const unsigned char *key, unsigned int len,
+				     const unsigned char *iv, int mode, 
+				     unsigned effectiveKeyLen);
 
 /*
 ** Destroy an RC2 encryption/decryption context.
@@ -308,8 +309,8 @@ extern SECStatus RC2_Decrypt(RC2Context *cx, unsigned char *output,
 ** When mode is set to NSS_RC5_CBC the RC5 cipher is run in "cipher block
 ** chaining" mode.
 */
-extern RC5Context *RC5_CreateContext(SECItem *key, unsigned int rounds,
-                     unsigned int wordSize, unsigned char *iv, int mode);
+extern RC5Context *RC5_CreateContext(const SECItem *key, unsigned int rounds,
+                     unsigned int wordSize, const unsigned char *iv, int mode);
 
 /*
 ** Destroy an RC5 encryption/decryption context.
@@ -368,7 +369,8 @@ extern SECStatus RC5_Decrypt(RC5Context *cx, unsigned char *output,
 ** When mode is set to NSS_DES_CBC or NSS_DES_EDE3_CBC then the DES
 ** cipher is run in "cipher block chaining" mode.
 */
-extern DESContext *DES_CreateContext(unsigned char *key, unsigned char *iv,
+extern DESContext *DES_CreateContext(const unsigned char *key, 
+                                     const unsigned char *iv,
 				     int mode, PRBool encrypt);
 
 /*
@@ -425,7 +427,8 @@ extern SECStatus DES_Decrypt(DESContext *cx, unsigned char *output,
 **                        XXX currently only blocksize==16 has been tested!
 */
 extern AESContext *
-AES_CreateContext(unsigned char *key, unsigned char *iv, int mode, int encrypt,
+AES_CreateContext(const unsigned char *key, const unsigned char *iv, 
+                  int mode, int encrypt,
                   unsigned int keylen, unsigned int blocklen);
 
 /*

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: loader.c,v 1.8 2002/11/02 01:51:44 nelsonb%netscape.com Exp $
+ * $Id: loader.c,v 1.9 2002/11/16 06:09:58 nelsonb%netscape.com Exp $
  */
 
 #include "loader.h"
@@ -428,7 +428,7 @@ KEA_Verify(SECItem *Y, SECItem *prime, SECItem *subPrime)
 }
 
 RC4Context *
-RC4_CreateContext(unsigned char *key, int len)
+RC4_CreateContext(const unsigned char *key, int len)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return NULL;
@@ -466,8 +466,8 @@ RC4_Decrypt(RC4Context *cx, unsigned char *output, unsigned int *outputLen,
 }
 
 RC2Context *
-RC2_CreateContext(unsigned char *key, unsigned int len,
-		  unsigned char *iv, int mode, unsigned effectiveKeyLen)
+RC2_CreateContext(const unsigned char *key, unsigned int len,
+		  const unsigned char *iv, int mode, unsigned effectiveKeyLen)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return NULL;
@@ -505,8 +505,8 @@ RC2_Decrypt(RC2Context *cx, unsigned char *output, unsigned int *outputLen,
 }
 
 RC5Context *
-RC5_CreateContext(SECItem *key, unsigned int rounds,
-                     unsigned int wordSize, unsigned char *iv, int mode)
+RC5_CreateContext(const SECItem *key, unsigned int rounds,
+		  unsigned int wordSize, const unsigned char *iv, int mode)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return NULL;
@@ -544,8 +544,8 @@ RC5_Decrypt(RC5Context *cx, unsigned char *output, unsigned int *outputLen,
 }
 
 DESContext *
-DES_CreateContext(unsigned char *key, unsigned char *iv,
-				     int mode, PRBool encrypt)
+DES_CreateContext(const unsigned char *key, const unsigned char *iv,
+		  int mode, PRBool encrypt)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return NULL;
@@ -583,7 +583,8 @@ DES_Decrypt(DESContext *cx, unsigned char *output, unsigned int *outputLen,
 }
 
 AESContext *
-AES_CreateContext(unsigned char *key, unsigned char *iv, int mode, int encrypt,
+AES_CreateContext(const unsigned char *key, const unsigned char *iv, 
+                  int mode, int encrypt,
                   unsigned int keylen, unsigned int blocklen)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())

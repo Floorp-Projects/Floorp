@@ -128,7 +128,7 @@ static const Stype Kinit[256] = {
  * Initialize a new generator.
  */
 RC4Context *
-RC4_CreateContext(unsigned char *key, int len)
+RC4_CreateContext(const unsigned char *key, int len)
 {
 	int i;
 	PRUint8 j, tmp;

@@ -173,7 +173,7 @@ DES_EDE3CBCDe(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
 }
 
 DESContext *
-DES_CreateContext(BYTE * key, BYTE *iv, int mode, PRBool encrypt)
+DES_CreateContext(const BYTE * key, const BYTE *iv, int mode, PRBool encrypt)
 {
     DESContext *cx = PORT_ZNew(DESContext);
     DESDirection opposite;
