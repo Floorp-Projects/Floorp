@@ -140,10 +140,26 @@ PREF_Cleanup();
 PR_EXTERN(PrefResult)
 PREF_ReadLockFile(const char *filename);
 
+#if 0 /* OBSOLETE */
+PR_EXTERN(JSBool) PREF_EvaluateJSBuffer(const char * js_buffer, size_t length);
+PR_EXTERN(JSBool) PREF_QuietEvaluateJSBuffer(const char * js_buffer, size_t length);
+    /* Like the above but does not generate callbacks. */
+PR_EXTERN(JSBool) PREF_QuietEvaluateJSBufferWithGlobalScope(const char * js_buffer, size_t length);
+    /* Like the above but does not generate callbacks and executes in scope of global config object */
+#endif /* OBSOLETE */
+
+PR_EXTERN(JSBool)
+PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
+	const char* filename, PRBool bGlobalContext, PRBool bCallbacks,
+	PRBool skipFirstLine);
 /*
+// This routine is newer than the above which are not being called externally,
+// as far as I know.  The following is used from mkautocf to evaluate a 
+// config URL file with callbacks.
+
 // <font color=blue>
 // Pass an arbitrary JS buffer to be evaluated in the Preference context.
-// On startup modules will want to setup their preferences with reasonable
+// On startup modules will want to set up their preferences with reasonable
 // defaults.  For example netlib might call with a buffer of:
 //
 // pref("network.tcpbufsize",4096);
@@ -156,30 +172,6 @@ PREF_ReadLockFile(const char *filename);
 // PREF_RegisterCallback() for any user values that have changed.
 // </font>
 */
-PR_EXTERN(JSBool)
-PREF_EvaluateJSBuffer(const char * js_buffer, size_t length);
-
-/*
-// Like the above but does not generate callbacks.
-*/
-PR_EXTERN(JSBool)
-PREF_QuietEvaluateJSBuffer(const char * js_buffer, size_t length);
-
-/*
-// Like the above but does not generate callbacks and executes in scope of global config object
-*/
-PR_EXTERN(JSBool)
-PREF_QuietEvaluateJSBufferWithGlobalScope(const char * js_buffer, size_t length);
-
-/*
-// This routine is newer than the above which are not being called externally,
-// as far as I know.  The following is used from mkautocf to evaluate a 
-// config URL file with callbacks.
-*/
-PR_EXTERN(JSBool)
-PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
-	const char* filename, PRBool bGlobalContext, PRBool bCallbacks,
-	PRBool skipFirstLine);
 
 
 /*
