@@ -102,16 +102,19 @@ function RenameFolder(name,uri)
     {
 	if (uri && (uri != "") && name && (name != "")) {
                 var selectedFolder = GetResourceFromUri(uri);
-                folderTree.clearItemSelection();
                 try
                 {
                     messenger.RenameFolder(GetFolderDatasource(), selectedFolder, name);
                 }
                 catch(e)
                 {
+                    throw(e); // so that the dialog does not automatically close
                     dump ("Exception : RenameFolder \n");
                 }
 
+                ClearThreadPane();
+                ClearMessagePane();
+                folderTree.clearItemSelection();
         }
         else {
                 dump("no name or nothing selected\n");
