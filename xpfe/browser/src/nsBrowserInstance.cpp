@@ -1551,8 +1551,6 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
                             NS_SUCCEEDED(aStatus) ? kEndDocumentLoad.GetUnicode() : kFailDocumentLoad.GetUnicode(),
                             urlStr.GetUnicode());
 
-
-
       // XXX Ignore rv for now. They are using nsIEnumerator instead of
       // nsISimpleEnumerator.
     /*
@@ -2070,6 +2068,13 @@ nsBrowserAppCore::SelectAll()
 }
 
 // nsIURIContentListener support
+
+NS_IMETHODIMP nsBrowserInstance::OnStartURIOpen(nsIURI* aURI, 
+   const char* aWindowTarget, PRBool* aAbortOpen)
+{
+   return NS_OK;
+}
+
 
 NS_IMETHODIMP 
 nsBrowserInstance::GetProtocolHandler(nsIURI * /* aURI */, nsIProtocolHandler **aProtocolHandler)
