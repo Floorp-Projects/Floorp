@@ -31,7 +31,6 @@
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsIRDFContentModelBuilder.h"
-#include "nsIRDFCursor.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"

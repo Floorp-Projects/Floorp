@@ -29,7 +29,6 @@
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsIRDFContentModelBuilder.h"
-#include "nsIRDFCursor.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
@@ -260,25 +259,27 @@ RDFMenuBuilderImpl::AddWidgetItem(nsIContent* aElement,
 
     // Add miscellaneous attributes by iterating _all_ of the
     // properties out of the resource.
-    nsCOMPtr<nsIRDFArcsOutCursor> arcs;
-    if (NS_FAILED(rv = mDB->ArcLabelsOut(aValue, getter_AddRefs(arcs)))) {
-        NS_ERROR("unable to get arcs out");
-        return rv;
-    }
+
+    // XXX Per Bug 3367, this'll have to be fixed.
+    nsCOMPtr<nsISimpleEnumerator> arcs;
+    rv = mDB->ArcLabelsOut(aValue, getter_AddRefs(arcs));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get arcs out");
+    if (NS_FAILED(rv)) return rv;
 
     while (1) {
-        rv = arcs->Advance();
-        if (NS_FAILED(rv))
-            return rv;
+        PRBool hasMore;
+        rv = arcs->HasMoreElements(&hasMore);
+        if (NS_FAILED(rv)) return rv;
 
-        if (rv == NS_RDF_CURSOR_EMPTY)
+        if (! hasMore)
             break;
 
-        nsCOMPtr<nsIRDFResource> property;
-        if (NS_FAILED(rv = arcs->GetLabel(getter_AddRefs(property)))) {
-            NS_ERROR("unable to get cursor value");
-            return rv;
-        }
+        nsCOMPtr<nsISupports> isupports;
+        rv = arcs->GetNext(getter_AddRefs(isupports));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get cursor value");
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
 
         // Ignore properties that are used to indicate containment
         if (IsContainmentProperty(aElement, property))

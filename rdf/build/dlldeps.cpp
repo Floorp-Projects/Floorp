@@ -46,13 +46,11 @@ void XXXNeverCalled()
     rdf_MakeSeq(nsnull, nsnull);
     rdf_MakeAlt(nsnull, nsnull);
     rdf_ContainerAppendElement(nsnull, nsnull, nsnull);
-    rdf_ContainerRemoveElement(nsnull, nsnull, nsnull);
-    rdf_ContainerInsertElementAt(nsnull, nsnull, nsnull, 0);
+    rdf_ContainerRemoveElement(nsnull, nsnull, nsnull, PR_FALSE);
+    rdf_ContainerInsertElementAt(nsnull, nsnull, nsnull, 0, PR_FALSE);
     rdf_ContainerIndexOf(nsnull, nsnull, nsnull, nsnull);
-    NS_NewContainerCursor(nsnull, nsnull, nsnull);
-    NS_NewEmptyRDFAssertionCursor(nsnull);
-    NS_NewEmptyRDFArcsInCursor(nsnull);
-    NS_NewEmptyRDFArcsOutCursor(nsnull);
+    NS_NewContainerEnumerator(nsnull, nsnull, nsnull);
+    NS_NewEmptyEnumerator(nsnull);
 
     // nsRDFResource
     nsRDFResource r();

@@ -25,6 +25,7 @@
  */
 
 #include "nsIEnumerator.idl"
+#include "nsISimpleEnumerator.idl"
 #include "nsISupports.idl"
 #include "nsISupportsArray.idl"
 
@@ -96,75 +97,6 @@ interface nsIRDFInt : nsIRDFNode {
 
 interface nsIRDFDataSource;
 
-// An enumeration interface
-[scriptable, uuid(1C2ABDB0-4CEF-11D2-BC16-00805F912FE7)]
-interface nsIRDFCursor : nsISupports {
-    // Advance the cursor to the next element.
-    //
-    // @return NS_ERROR_RDF_CURSOR_EMPTY if the cursor has reached the
-    // end and there are no more elements to enumerate; otherwise,
-    // NS_OK unless a catastrophic error occurs.
-    void Advance();
-
-    // The data source from which the current item was obtained.
-    readonly attribute nsIRDFDataSource DataSource;
-
-    // Irrespective of the query, a cursor is an interator over a set;
-    // this member is the current value of the cursor.
-    readonly attribute nsIRDFNode Value;
-};
-
-// An nsIRDFAssertionCursor is an iterator over a set of assertions,
-// each of which has a source node, a target node, an arc label, and a
-// truth value.
-[scriptable, uuid(1ED57100-9904-11d2-8EBA-00805F29F370)]
-interface nsIRDFAssertionCursor : nsIRDFCursor {
-
-    // The source node of the current assertion.
-    readonly attribute nsIRDFResource Source;
-
-    // The label of the current assertion
-    readonly attribute nsIRDFResource Label;
-
-    // The target node of the current assertion
-    readonly attribute nsIRDFNode     Target;
-
-    // The truth value of the current assertion
-    readonly attribute boolean TruthValue;
-};
-
-
-// An nsIRDFArcsInCursor enumerates the unique labels of 
-// the arcs that terminate ("point in to") a node.
-[scriptable, uuid(1ED57102-9904-11d2-8EBA-00805F29F370)]
-interface nsIRDFArcsInCursor : nsIRDFCursor {
-    // The label of the current arc
-    readonly attribute nsIRDFResource Label;
-
-    // The target of the current arc (always the same for a given
-    // arcs-in cursor).
-    readonly attribute nsIRDFNode     Target;
-};
-
-// An nsIRDFArcsOutCursor enumerates the unique labels of
-// arcs that original ("point out of") a resource.
-[scriptable, uuid(1ED57101-9904-11d2-8EBA-00805F29F370)]
-interface nsIRDFArcsOutCursor : nsIRDFCursor {
-    // The source of the current arc (always the same for a give
-    // arcs-out cursor).
-    readonly attribute nsIRDFResource Source;
-
-    // The label of the current arc
-    readonly attribute nsIRDFResource Label;
-};
-
-// An nsIRDFResourceCursor enumerats a set of resources
-[scriptable, uuid(C2850C10-B0CF-11d2-A684-00104BDE6048)]
-interface nsIRDFResourceCursor : nsIRDFCursor {
-    // The current resource
-    readonly attribute nsIRDFResource Resource;
-};
-
 // An nsIRDFObserver object is an observer that will be notified
 // when assertions are made or removed from a datasource
 [scriptable, uuid(3CC75360-484A-11D2-BC16-00805F912FE7)]
@@ -206,11 +138,11 @@ interface nsIRDFDataSource : nsISupports {
     // specified arc & truth value
     //
     // @return NS_OK unless a catastrophic error occurs. If the
-    // method returns NS_OK, you may assume that nsIRDFCursor points
+    // method returns NS_OK, you may assume that nsISimpleEnumerator points
     // to a valid (but possibly empty) cursor.
-    nsIRDFAssertionCursor GetSources(in nsIRDFResource aProperty,
-                                     in nsIRDFNode     aTarget,
-                                     in boolean        aTruthValue);
+    nsISimpleEnumerator GetSources(in nsIRDFResource aProperty,
+                                in nsIRDFNode     aTarget,
+                                in boolean        aTruthValue);
 
     // Find a child of that is related to the source by the given arc
     // arc and truth value
@@ -225,11 +157,11 @@ interface nsIRDFDataSource : nsISupports {
     // arc and truth value.
     //
     // @return NS_OK unless a catastrophic error occurs. If the
-    // method returns NS_OK, you may assume that nsIRDFCursor points
+    // method returns NS_OK, you may assume that nsISimpleEnumerator points
     // to a valid (but possibly empty) cursor.
-    nsIRDFAssertionCursor GetTargets(in nsIRDFResource aSource,
-                                     in nsIRDFResource aProperty,
-                                     in boolean aTruthValue);
+    nsISimpleEnumerator GetTargets(in nsIRDFResource aSource,
+                                in nsIRDFResource aProperty,
+                                in boolean aTruthValue);
 
     // Add an assertion to the graph.
     void Assert(in nsIRDFResource aSource, 
@@ -258,20 +190,20 @@ interface nsIRDFDataSource : nsISupports {
     //
     // @return NS_OK unless a catastrophic error occurs. If the method
     // returns NS_OK, you may assume that labels points to a valid (but
-    // possible empty) nsIRDFCursor object.
-    nsIRDFArcsInCursor ArcLabelsIn(in nsIRDFNode aNode);
+    // possible empty) nsISimpleEnumerator object.
+    nsISimpleEnumerator ArcLabelsIn(in nsIRDFNode aNode);
 
     // Get a cursor to iterate over all the arcs that originate in
     // a resource.
     //
     // @return NS_OK unless a catastrophic error occurs. If the method
     // returns NS_OK, you may assume that labels points to a valid (but
-    // possible empty) nsIRDFCursor object.
-    nsIRDFArcsOutCursor ArcLabelsOut(in nsIRDFResource aSource);
+    // possible empty) nsISimpleEnumerator object.
+    nsISimpleEnumerator ArcLabelsOut(in nsIRDFResource aSource);
 
     // Retrieve all of the resources that the data source currently
     // refers to.
-    nsIRDFResourceCursor GetAllResources();
+    nsISimpleEnumerator GetAllResources();
 
     // Request that a data source write it's contents out to 
     // permanent storage if applicable.

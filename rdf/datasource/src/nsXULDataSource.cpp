@@ -36,7 +36,6 @@
 #include "nsIOutputStream.h"
 #include "nsIParser.h"
 #include "nsIRDFContentSink.h"
-#include "nsIRDFCursor.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
 #include "nsIRDFDataSource.h"
@@ -135,7 +134,7 @@ public:
     NS_IMETHOD GetSources(nsIRDFResource* property,
                           nsIRDFNode* target,
                           PRBool tv,
-                          nsIRDFAssertionCursor** sources) {
+                          nsISimpleEnumerator** sources) {
         return mInner->GetSources(property, target, tv, sources);
     }
 
@@ -149,7 +148,7 @@ public:
     NS_IMETHOD GetTargets(nsIRDFResource* source,
                           nsIRDFResource* property,
                           PRBool tv,
-                          nsIRDFAssertionCursor** targets) {
+                          nsISimpleEnumerator** targets) {
         return mInner->GetTargets(source, property, tv, targets);
     }
 
@@ -183,17 +182,17 @@ public:
     }
 
     NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
-                           nsIRDFArcsInCursor** labels) {
+                           nsISimpleEnumerator** labels) {
         return mInner->ArcLabelsIn(node, labels);
     }
 
     NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
-                            nsIRDFArcsOutCursor** labels) {
+                            nsISimpleEnumerator** labels) {
         return mInner->ArcLabelsOut(source, labels);
     }
 
-    NS_IMETHOD GetAllResources(nsIRDFResourceCursor** aCursor) {
-        return mInner->GetAllResources(aCursor);
+    NS_IMETHOD GetAllResources(nsISimpleEnumerator** aResult) {
+        return mInner->GetAllResources(aResult);
     }
 
     NS_IMETHOD Flush(void);

@@ -49,7 +49,6 @@
 #include "nsIOutputStream.h"
 #include "nsIParser.h"
 #include "nsIRDFContentSink.h"
-#include "nsIRDFCursor.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
 #include "nsIRDFXMLDataSource.h"
@@ -202,7 +201,7 @@ public:
     NS_IMETHOD GetSources(nsIRDFResource* property,
                           nsIRDFNode* target,
                           PRBool tv,
-                          nsIRDFAssertionCursor** sources) {
+                          nsISimpleEnumerator** sources) {
         return mInner->GetSources(property, target, tv, sources);
     }
 
@@ -216,7 +215,7 @@ public:
     NS_IMETHOD GetTargets(nsIRDFResource* source,
                           nsIRDFResource* property,
                           PRBool tv,
-                          nsIRDFAssertionCursor** targets) {
+                          nsISimpleEnumerator** targets) {
         return mInner->GetTargets(source, property, tv, targets);
     }
 
@@ -246,17 +245,17 @@ public:
     }
 
     NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
-                           nsIRDFArcsInCursor** labels) {
+                           nsISimpleEnumerator** labels) {
         return mInner->ArcLabelsIn(node, labels);
     }
 
     NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
-                            nsIRDFArcsOutCursor** labels) {
+                            nsISimpleEnumerator** labels) {
         return mInner->ArcLabelsOut(source, labels);
     }
 
-    NS_IMETHOD GetAllResources(nsIRDFResourceCursor** aCursor) {
-        return mInner->GetAllResources(aCursor);
+    NS_IMETHOD GetAllResources(nsISimpleEnumerator** aResult) {
+        return mInner->GetAllResources(aResult);
     }
 
     NS_IMETHOD Flush(void);
@@ -1125,21 +1124,21 @@ RDFXMLDataSourceImpl::SerializeProperty(nsIOutputStream* aStream,
 {
     nsresult rv;
 
-    nsCOMPtr<nsIRDFAssertionCursor> assertions;
+    nsCOMPtr<nsISimpleEnumerator> assertions;
     if (NS_FAILED(rv = mInner->GetTargets(aResource, aProperty, PR_TRUE, getter_AddRefs(assertions))))
         return rv;
 
     while (1) {
-        rv = assertions->Advance();
-        if (NS_FAILED(rv))
-            return rv;
+        PRBool hasMore;
+        rv = assertions->HasMoreElements(&hasMore);
+        if (NS_FAILED(rv)) return rv;
 
-        if (rv == NS_RDF_CURSOR_EMPTY)
+        if (! hasMore)
             break;
 
         nsIRDFNode* value;
-        if (NS_FAILED(rv = assertions->GetValue(&value)))
-            break;
+        rv = assertions->GetNext((nsISupports**) &value);
+        if (NS_FAILED(rv)) return rv;
 
         rv = SerializeAssertion(aStream, aResource, aProperty, value);
         NS_RELEASE(value);
@@ -1182,21 +1181,21 @@ static const char kRDFDescription3[] = "  </RDF:Description>\n";
     rdf_BlockingWrite(aStream, uri);
     rdf_BlockingWrite(aStream, kRDFDescription2, sizeof(kRDFDescription2) - 1);
 
-    nsCOMPtr<nsIRDFArcsOutCursor> arcs;
-    if (NS_FAILED(rv = mInner->ArcLabelsOut(aResource, getter_AddRefs(arcs))))
-        return rv;
+    nsCOMPtr<nsISimpleEnumerator> arcs;
+    rv = mInner->ArcLabelsOut(aResource, getter_AddRefs(arcs));
+    if (NS_FAILED(rv)) return rv;
 
     while (1) {
-        rv = arcs->Advance();
-        if (NS_FAILED(rv))
-            return rv;
+        PRBool hasMore;
+        rv = arcs->HasMoreElements(&hasMore);
+        if (NS_FAILED(rv)) return rv;
 
-        if (rv == NS_RDF_CURSOR_EMPTY)
+        if (! hasMore)
             break;
 
         nsIRDFResource* property;
-        if (NS_FAILED(rv = arcs->GetLabel(&property)))
-            break;
+        rv = arcs->GetNext((nsISupports**) &property);
+        if (NS_FAILED(rv)) return rv;
 
         rv = SerializeProperty(aStream, aResource, property);
         NS_RELEASE(property);
@@ -1220,29 +1219,24 @@ RDFXMLDataSourceImpl::SerializeMember(nsIOutputStream* aStream,
     // there may for some random reason be two or more elements with
     // the same ordinal value. Okay, I'm paranoid.
 
-    nsCOMPtr<nsIRDFAssertionCursor> cursor;
-    if (NS_FAILED(rv = mInner->GetTargets(aContainer, aProperty, PR_TRUE, getter_AddRefs(cursor))))
-        return rv;
+    nsCOMPtr<nsISimpleEnumerator> cursor;
+    rv = mInner->GetTargets(aContainer, aProperty, PR_TRUE, getter_AddRefs(cursor));
+    if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString docURI;
     mInner->GetURI(getter_Copies(docURI));
 
     while (1) {
-        rv = cursor->Advance();
-        if (NS_FAILED(rv))
-            return rv;
+        PRBool hasMore;
+        rv = cursor->HasMoreElements(&hasMore);
+        if (NS_FAILED(rv)) return rv;
 
-        if (rv == NS_RDF_CURSOR_EMPTY)
+        if (! hasMore)
             break;
 
         nsIRDFNode* node;
-
-        if (NS_FAILED(rv = cursor->GetTarget(&node)))
-            break;
-
-        NS_ASSERTION(rv != NS_RDF_NO_VALUE, "null item in cursor");
-        if (rv == NS_RDF_NO_VALUE)
-            continue;
+        rv = cursor->GetNext((nsISupports**) &node);
+        if (NS_FAILED(rv)) return rv;
 
         // If it's a resource, then output a "<RDF:li resource=... />"
         // tag, because we'll be dumping the resource separately. (We
@@ -1348,22 +1342,21 @@ static const char kRDFAlt[] = "RDF:Alt";
     // We iterate through all of the arcs, in case someone has applied
     // properties to the bag itself.
 
-    nsCOMPtr<nsIRDFArcsOutCursor> arcs;
-    if (NS_FAILED(rv = mInner->ArcLabelsOut(aContainer, getter_AddRefs(arcs))))
-        return rv;
+    nsCOMPtr<nsISimpleEnumerator> arcs;
+    rv = mInner->ArcLabelsOut(aContainer, getter_AddRefs(arcs));
+    if (NS_FAILED(rv)) return rv;
 
     while (1) {
-        rv = arcs->Advance();
-        if (NS_FAILED(rv))
-            return rv;
+        PRBool hasMore;
+        rv = arcs->HasMoreElements(&hasMore);
+        if (NS_FAILED(rv)) return rv;
 
-        if (rv == NS_RDF_CURSOR_EMPTY)
+        if (! hasMore)
             break;
 
         nsIRDFResource* property;
-
-        if (NS_FAILED(rv = arcs->GetLabel(&property)))
-            break;
+        rv = arcs->GetNext((nsISupports**) &property);
+        if (NS_FAILED(rv)) return rv;
 
         // If it's a membership property, then output a "LI"
         // tag. Otherwise, output a property.
@@ -1461,26 +1454,26 @@ NS_IMETHODIMP
 RDFXMLDataSourceImpl::Serialize(nsIOutputStream* aStream)
 {
     nsresult rv;
-    nsCOMPtr<nsIRDFResourceCursor> resources;
+    nsCOMPtr<nsISimpleEnumerator> resources;
 
     rv = mInner->GetAllResources(getter_AddRefs(resources));
-    if (NS_FAILED(rv))
-        return rv;
+    if (NS_FAILED(rv)) return rv;
 
     rv = SerializePrologue(aStream);
     if (NS_FAILED(rv))
         return rv;
 
     while (1) {
-        rv = resources->Advance();
-        if (NS_FAILED(rv))
-            return rv;
+        PRBool hasMore;
+        rv = resources->HasMoreElements(&hasMore);
+        if (NS_FAILED(rv)) return rv;
 
-        if (rv == NS_RDF_CURSOR_EMPTY)
+        if (! hasMore)
             break;
 
         nsIRDFResource* resource;
-        if (NS_FAILED(rv = resources->GetResource(&resource)))
+        rv = resources->GetNext((nsISupports**) &resource);
+        if (NS_FAILED(rv))
             break;
 
         if (rdf_IsContainer(mInner, resource)) {

@@ -69,6 +69,7 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+        $(MAKE_INSTALL) nsRDFInterfaces.xpt $(DIST)\bin\components
 	$(MAKE_INSTALL) ..\resources\sidebar.xul $(DIST)\bin\res\rdf
 	$(MAKE_INSTALL) ..\resources\sidebar.css $(DIST)\bin\res\rdf
 	$(MAKE_INSTALL) ..\resources\bm-props.xul $(DIST)\bin\res\rdf

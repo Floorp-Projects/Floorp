@@ -23,7 +23,6 @@ MODULE=rdfutil
 LIBRARY_NAME=rdfutil_s
 
 CPP_OBJS=\
-        .\$(OBJDIR)\nsRDFCursorUtils.obj          \
         .\$(OBJDIR)\nsRDFResource.obj             \
 	$(NULL)
 

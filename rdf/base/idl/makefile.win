@@ -33,11 +33,11 @@ nsRDFInterfaces.h: nsRDFInterfaces.idl
         @echo +++ make: generating XPIDL headers
         $(XPIDL) -m header $(XPIDL_INCLUDES) $**
 
-nsRDFInterfaces.cpp: nsRDFInterfaces.idl
-        @echo +++ make: generating XPIDL stubs
-        $(XPIDL) -m stub $(XPIDL_INCLUDES) $**
+nsRDFInterfaces.xpt: nsRDFInterfaces.idl
+        @echo +++ make: generating XPIDL typelib
+        $(XPIDL) -m typelib $(XPIDL_INCLUDES) $**
 
-export:: nsRDFInterfaces.h nsRDFInterfaces.cpp
+export:: nsRDFInterfaces.h nsRDFInterfaces.xpt
         $(MAKE_INSTALL) nsRDFInterfaces.h   $(DEPTH)\rdf\base\public
-        $(MAKE_INSTALL) nsRDFInterfaces.cpp $(DEPTH)\rdf\base\src
+        $(MAKE_INSTALL) nsRDFInterfaces.xpt $(DEPTH)\rdf\build
 

@@ -41,11 +41,8 @@
 
 #include "prtypes.h"
 
-class nsIRDFArcsInCursor;
-class nsIRDFArcsOutCursor;
-class nsIRDFAssertionCursor;
-class nsIRDFCursor;
 class nsIRDFDataSource;
+class nsISimpleEnumerator;
 class nsIRDFResource;
 class nsIRDFNode;
 class nsIRDFResource;
@@ -139,6 +136,13 @@ PR_EXTERN(nsresult)
 rdf_MakeAlt(nsIRDFDataSource* ds,
             nsIRDFResource* resource);
 
+/**
+ * Get the current upper bound of the container
+ */
+PR_EXTERN(nsresult)
+rdf_ContainerGetCount(nsIRDFDataSource* aDataSource,
+                      nsIRDFResource* aContainer,
+                      PRInt32* aCount);
 
 /**
  * Add an element to the end of container.
@@ -155,7 +159,8 @@ rdf_ContainerAppendElement(nsIRDFDataSource* ds,
 PR_EXTERN(nsresult)
 rdf_ContainerRemoveElement(nsIRDFDataSource* aDataSource,
                            nsIRDFResource* aContainer,
-                           nsIRDFNode* aElement);
+                           nsIRDFNode* aElement,
+                           PRBool aRenumber);
 
 
 /**
@@ -165,7 +170,8 @@ PR_EXTERN(nsresult)
 rdf_ContainerInsertElementAt(nsIRDFDataSource* aDataSource,
                              nsIRDFResource* aContainer,
                              nsIRDFNode* aElement,
-                             PRInt32 aIndex);
+                             PRInt32 aIndex,
+                             PRBool aRenumber);
 
 /**
  * Determine the index of an element in a container.
@@ -182,26 +188,12 @@ rdf_ContainerIndexOf(nsIRDFDataSource* aDataSource,
  * order
  */
 PR_EXTERN(nsresult)
-NS_NewContainerCursor(nsIRDFDataSource* ds,
-                      nsIRDFResource* container,
-                      nsIRDFAssertionCursor** cursor);
+NS_NewContainerEnumerator(nsIRDFDataSource* aDataSource,
+                          nsIRDFResource* aContainer,
+                          nsISimpleEnumerator** aResult);
 
-
-/**
- * Create an empty nsIRDFCursor. This will *never* fail, and will *always*
- * return the same object.
- */
-PR_EXTERN(nsresult)
-NS_NewEmptyRDFAssertionCursor(nsIRDFAssertionCursor** result);
-
-PR_EXTERN(nsresult)
-NS_NewEmptyRDFArcsInCursor(nsIRDFArcsInCursor** result);
-
-PR_EXTERN(nsresult)
-NS_NewEmptyRDFArcsOutCursor(nsIRDFArcsOutCursor** result);
 
 PR_EXTERN(void) SHTtest ();
-// XXX need to move nsEmptyCursor stuff here.
                        
 #endif // rdfutil_h__
 

@@ -25,7 +25,6 @@
 #include <ctype.h> // for toupper()
 #include <stdio.h>
 #include "nscore.h"
-#include "nsIRDFCursor.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
 #include "nsIRDFResourceFactory.h"
@@ -63,15 +62,6 @@
 ////////////////////////////////////////////////////////////////////////
 // Interface IDs
 
-static NS_DEFINE_IID(kIRDFArcsInCursorIID,         NS_IRDFARCSINCURSOR_IID);
-static NS_DEFINE_IID(kIRDFArcsOutCursorIID,        NS_IRDFARCSOUTCURSOR_IID);
-static NS_DEFINE_IID(kIRDFAssertionCursorIID,      NS_IRDFASSERTIONCURSOR_IID);
-static NS_DEFINE_IID(kIRDFCursorIID,               NS_IRDFCURSOR_IID);
-static NS_DEFINE_IID(kIRDFDataSourceIID,           NS_IRDFDATASOURCE_IID);
-static NS_DEFINE_IID(kIRDFLiteralIID,              NS_IRDFLITERAL_IID);
-static NS_DEFINE_IID(kIRDFNodeIID,                 NS_IRDFNODE_IID);
-static NS_DEFINE_IID(kIRDFResourceIID,             NS_IRDFRESOURCE_IID);
-static NS_DEFINE_IID(kIRDFServiceIID,              NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFServiceCID,               NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,    NS_RDFINMEMORYDATASOURCE_CID);
@@ -189,7 +179,7 @@ public:
 
     NS_IMETHOD GetSources(nsIRDFResource* property,
                           nsIRDFNode* target,  PRBool tv,
-                          nsIRDFAssertionCursor** sources) {
+                          nsISimpleEnumerator** sources) {
         return mInner->GetSources(property, target, tv, sources);
     }
 
@@ -225,7 +215,7 @@ public:
     NS_IMETHOD GetTargets(nsIRDFResource* source,
                           nsIRDFResource* property,
                           PRBool tv,
-                          nsIRDFAssertionCursor** targets) {
+                          nsISimpleEnumerator** targets) {
         return mInner->GetTargets(source, property, tv, targets);
     }
 
@@ -260,12 +250,12 @@ public:
     }
 
     NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
-                           nsIRDFArcsInCursor** labels) {
+                           nsISimpleEnumerator** labels) {
         return mInner->ArcLabelsIn(node, labels);
     }
 
     NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
-                            nsIRDFArcsOutCursor** labels) {
+                            nsISimpleEnumerator** labels) {
         return mInner->ArcLabelsOut(source, labels);
     }
 
@@ -293,8 +283,8 @@ public:
         return mInner->DoCommand(aSources, aCommand, aArguments);
     }
 
-    NS_IMETHOD GetAllResources(nsIRDFResourceCursor** aCursor) {
-        return mInner->GetAllResources(aCursor);
+    NS_IMETHOD GetAllResources(nsISimpleEnumerator** aResult) {
+        return mInner->GetAllResources(aResult);
     }
 
     NS_IMETHOD AddPage (const char* aURI, const char* aRefererURI, PRTime aTime);
@@ -355,7 +345,8 @@ nsHistoryDataSource::nsHistoryDataSource(void)
 	{
 		nsresult	rv;
 		rv = nsServiceManager::GetService(kRDFServiceCID,
-			kIRDFServiceIID, (nsISupports**) &gRDFService);
+                                          nsIRDFService::GetIID(),
+                                          (nsISupports**) &gRDFService);
 
 		PR_ASSERT(NS_SUCCEEDED(rv));
 
@@ -440,7 +431,7 @@ nsHistoryDataSource::Init(const char* uri)
 {
 	nsresult rv;
 	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-			nsnull, kIRDFDataSourceIID, (void**) &mInner)))
+			nsnull, nsIRDFDataSource::GetIID(), (void**) &mInner)))
 		return rv;
 
 	if (NS_FAILED(rv = mInner->Init(uri)))

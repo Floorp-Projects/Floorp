@@ -1,7 +1,6 @@
 rdf.h
 nsIRDFCompositeDataSource.h
 nsIRDFContentSink.h
-nsIRDFCursor.h
 nsIRDFDataSource.h
 nsIRDFNode.h
 nsIRDFObserver.h
@@ -11,4 +10,3 @@ nsIRDFService.h
 nsIRDFXMLDataSource.h
 nsIRDFXMLSource.h
 nsRDFInterfaces.h
-rdf_qsort.h

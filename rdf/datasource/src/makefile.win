@@ -19,7 +19,7 @@ DEPTH=..\..\..
 MODULE=rdf
 LIBRARY_NAME=rdfdatasource_s
 
-LCFLAGS=-DXPIDL_JS_STUBS -DMOZ_BRPROF
+LCFLAGS=-DMOZ_BRPROF
 
 CPP_OBJS=\
         .\$(OBJDIR)\nsBookmarkDataSource.obj    \
@@ -38,6 +38,7 @@ CPP_OBJS=\
 # "real live" XPCOM interface.
 
 LINCS=  -I$(PUBLIC)\rdf         \
+        -I$(PUBLIC)\rdfutil     \
         -I$(PUBLIC)\xpcom       \
         -I$(PUBLIC)\netlib      \
         -I$(PUBLIC)\raptor      \

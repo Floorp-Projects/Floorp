@@ -28,15 +28,13 @@ LIBRARY_NAME = rdfbase_s
 
 CPPSRCS =				\
 	nsCompositeDataSource.cpp       \
-	nsContainerCursor.cpp		\
+	nsContainerEnumerator.cpp	\
 	nsDefaultResourceFactory.cpp	\
-	nsEmptyCursor.cpp               \
 	nsInMemoryDataSource.cpp        \
 	nsRDFContentSink.cpp		\
 	nsRDFParserUtils.cpp		\
 	nsRDFService.cpp                \
 	nsRDFXMLDataSource.cpp		\
-	nsRDFInterfaces.cpp		\
 	rdfutil.cpp			\
 	$(NULL)
 
@@ -50,8 +48,6 @@ MODULE = rdfbase
 REQUIRES = netlib rdf rdfutil raptor xpcom
 
 MKSHLIB :=
-
-DEFINES += -DXPIDL_JS_STUBS
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -24,12 +24,12 @@
 #include <ctype.h> // for toupper()
 #include <stdio.h>
 #include "nscore.h"
-#include "nsIRDFCursor.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
 #include "nsIRDFResourceFactory.h"
 #include "nsIServiceManager.h"
+#include "nsEnumeratorUtils.h"
 #include "nsString.h"
 #include "nsVoidArray.h"  // XXX introduces dependency on raptorbase
 #include "nsXPIDLString.h"
@@ -48,34 +48,135 @@
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 #include "nsIRelatedLinksDataSource.h"
-#include "nsRelatedLinksDataSource.h"
-
-
 
 static NS_DEFINE_CID(kRDFServiceCID,                           NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,                NS_RDFINMEMORYDATASOURCE_CID);
-static NS_DEFINE_IID(kIRDFServiceIID,                          NS_IRDFSERVICE_IID);
-static NS_DEFINE_IID(kIRDFDataSourceIID,                       NS_IRDFDATASOURCE_IID);
-static NS_DEFINE_IID(kIRDFRelatedLinksDataSourceIID,           NS_IRDFRELATEDLINKSDATAOURCE_IID);
-static NS_DEFINE_IID(kIRDFAssertionCursorIID,                  NS_IRDFASSERTIONCURSOR_IID);
-static NS_DEFINE_IID(kIRDFCursorIID,                           NS_IRDFCURSOR_IID);
-static NS_DEFINE_IID(kIRDFArcsOutCursorIID,                    NS_IRDFARCSOUTCURSOR_IID);
 static NS_DEFINE_IID(kISupportsIID,                            NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIRDFResourceIID,                         NS_IRDFRESOURCE_IID);
-static NS_DEFINE_IID(kIRDFNodeIID,                             NS_IRDFNODE_IID);
-static NS_DEFINE_IID(kIRDFLiteralIID,                          NS_IRDFLITERAL_IID);
-static NS_DEFINE_IID(kIRDFRelatedLinksDataSourceCallbackIID,   NS_IRDFRELATEDLINKSDATASOURCECALLBACK_IID);
 
 static const char kURINC_RelatedLinksRoot[] = "NC:RelatedLinks";
 
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, URL);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, pulse);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, FTPObject);
-DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, instanceOf);
-DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, type);
-DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, Seq);
+class RelatedLinksDataSourceCallback : public nsIStreamListener
+{
+private:
+	nsIRDFDataSource	*mDataSource;
+	nsIRDFResource		*mParent;
+	static PRInt32		gRefCnt;
+	nsVoidArray		*mParentArray;
+
+    // pseudo-constants
+	static nsIRDFResource	*kNC_Child;
+	static nsIRDFResource	*kNC_Name;
+	static nsIRDFResource	*kNC_RelatedLinksRoot;
+
+	char			*mLine;
+
+public:
+
+	NS_DECL_ISUPPORTS
+
+			RelatedLinksDataSourceCallback(nsIRDFDataSource *ds, nsIRDFResource *parent);
+	virtual		~RelatedLinksDataSourceCallback(void);
+
+	// stream observer
+
+	NS_IMETHOD	OnStartBinding(nsIURL *aURL, const char *aContentType);
+	NS_IMETHOD	OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
+	NS_IMETHOD	OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
+	NS_IMETHOD	OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
+
+	// stream listener
+	NS_IMETHOD	GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo);
+	NS_IMETHOD	OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, 
+                               PRUint32 aLength);
+};
+
+
+
+class RelatedLinksDataSource : public nsIRDFRelatedLinksDataSource
+{
+private:
+	char			*mURI;
+	char			*mRelatedLinksURL;
+	PRBool			mPerformQuery;
+	static PRInt32		gRefCnt;
+
+    // pseudo-constants
+	static nsIRDFResource	*kNC_RelatedLinksRoot;
+	static nsIRDFResource	*kNC_Child;
+	static nsIRDFResource	*kNC_Name;
+	static nsIRDFResource	*kNC_URL;
+	static nsIRDFResource	*kNC_pulse;
+	static nsIRDFResource	*kNC_FTPObject;
+	static nsIRDFResource	*kRDF_InstanceOf;
+	static nsIRDFResource	*kRDF_type;
+
+	NS_METHOD	SetRelatedLinksURL(const char *url);
+	NS_METHOD	GetRelatedLinksListing(nsIRDFResource *source);
+//	NS_METHOD	GetURL(nsIRDFResource *source, nsVoidArray **array);
+//	NS_METHOD	GetName(nsIRDFResource *source, nsVoidArray **array);
+
+protected:
+	nsIRDFDataSource	*mInner;
+	nsVoidArray		*mObservers;
+
+public:
+
+	NS_DECL_ISUPPORTS
+
+			RelatedLinksDataSource(void);
+	virtual		~RelatedLinksDataSource(void);
+
+	// nsIRDFDataSource methods
+
+	NS_IMETHOD	Init(const char *uri);
+	NS_IMETHOD	GetURI(char **uri);
+	NS_IMETHOD	GetSource(nsIRDFResource *property,
+				nsIRDFNode *target,
+				PRBool tv,
+				nsIRDFResource **source /* out */);
+	NS_IMETHOD	GetSources(nsIRDFResource *property,
+				nsIRDFNode *target,
+				PRBool tv,
+				nsISimpleEnumerator **sources /* out */);
+	NS_IMETHOD	GetTarget(nsIRDFResource *source,
+				nsIRDFResource *property,
+				PRBool tv,
+				nsIRDFNode **target /* out */);
+	NS_IMETHOD	GetTargets(nsIRDFResource *source,
+				nsIRDFResource *property,
+				PRBool tv,
+				nsISimpleEnumerator **targets /* out */);
+	NS_IMETHOD	Assert(nsIRDFResource *source,
+				nsIRDFResource *property,
+				nsIRDFNode *target,
+				PRBool tv);
+	NS_IMETHOD	Unassert(nsIRDFResource *source,
+				nsIRDFResource *property,
+				nsIRDFNode *target);
+	NS_IMETHOD	HasAssertion(nsIRDFResource *source,
+				nsIRDFResource *property,
+				nsIRDFNode *target,
+				PRBool tv,
+				PRBool *hasAssertion /* out */);
+	NS_IMETHOD	ArcLabelsIn(nsIRDFNode *node,
+				nsISimpleEnumerator **labels /* out */);
+	NS_IMETHOD	ArcLabelsOut(nsIRDFResource *source,
+				nsISimpleEnumerator **labels /* out */);
+	NS_IMETHOD	GetAllResources(nsISimpleEnumerator** aCursor);
+	NS_IMETHOD	AddObserver(nsIRDFObserver *n);
+	NS_IMETHOD	RemoveObserver(nsIRDFObserver *n);
+	NS_IMETHOD	Flush();
+	NS_IMETHOD	GetAllCommands(nsIRDFResource* source,
+				nsIEnumerator/*<nsIRDFResource>*/** commands);
+	NS_IMETHOD	IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+				nsIRDFResource*   aCommand,
+				nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+                PRBool* aResult);
+	NS_IMETHOD	DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+				nsIRDFResource*   aCommand,
+				nsISupportsArray/*<nsIRDFResource>*/* aArguments);
+};
+
 
 
 static	nsIRDFService		*gRDFService = nsnull;
@@ -98,23 +199,6 @@ nsIRDFResource		*RelatedLinksDataSourceCallback::kNC_RelatedLinksRoot;
 
 
 
-static PRBool
-peq(nsIRDFResource* r1, nsIRDFResource* r2)
-{
-	PRBool		retVal=PR_FALSE, result;
-
-	if (NS_SUCCEEDED(r1->EqualsResource(r2, &result)))
-	{
-		if (result)
-		{
-			retVal = PR_TRUE;
-		}
-	}
-	return(retVal);
-}
-
-
-
 RelatedLinksDataSource::RelatedLinksDataSource(void)
 	: mURI(nsnull),
 	  mRelatedLinksURL(nsnull),
@@ -127,18 +211,18 @@ RelatedLinksDataSource::RelatedLinksDataSource(void)
 	if (gRefCnt++ == 0)
 	{
 		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-                                                   kIRDFServiceIID,
+                                                   nsIRDFService::GetIID(),
                                                    (nsISupports**) &gRDFService);
 		PR_ASSERT(NS_SUCCEEDED(rv));
 
-		gRDFService->GetResource(kURINC_RelatedLinksRoot, &kNC_RelatedLinksRoot);
-		gRDFService->GetResource(kURINC_child, &kNC_Child);
-		gRDFService->GetResource(kURINC_Name, &kNC_Name);
-		gRDFService->GetResource(kURINC_URL, &kNC_URL);
-		gRDFService->GetResource(kURINC_pulse, &kNC_pulse);
-		gRDFService->GetResource(kURINC_FTPObject, &kNC_FTPObject);
-		gRDFService->GetResource(kURIRDF_instanceOf, &kRDF_InstanceOf);
-		gRDFService->GetResource(kURIRDF_type, &kRDF_type);
+		gRDFService->GetResource(NC_NAMESPACE_URI "RelatedLinksRoot", &kNC_RelatedLinksRoot);
+		gRDFService->GetResource(NC_NAMESPACE_URI "child", &kNC_Child);
+		gRDFService->GetResource(NC_NAMESPACE_URI "Name", &kNC_Name);
+		gRDFService->GetResource(NC_NAMESPACE_URI "URL", &kNC_URL);
+		gRDFService->GetResource(NC_NAMESPACE_URI "pulse", &kNC_pulse);
+		gRDFService->GetResource(NC_NAMESPACE_URI "FTPObject", &kNC_FTPObject);
+		gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf", &kRDF_InstanceOf);
+		gRDFService->GetResource(RDF_NAMESPACE_URI "type", &kRDF_type);
 	}
 }
 
@@ -231,7 +315,7 @@ RelatedLinksDataSource::Init(const char *uri)
 		return(rv);
 
 	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-			nsnull, kIRDFDataSourceIID, (void **)&mInner)))
+			nsnull, nsIRDFDataSource::GetIID(), (void **)&mInner)))
 		return(rv);
 	if (NS_FAILED(rv = mInner->Init(mURI)))
 		return(rv);
@@ -274,7 +358,7 @@ NS_IMETHODIMP
 RelatedLinksDataSource::GetSources(nsIRDFResource *property,
                            nsIRDFNode *target,
 			   PRBool tv,
-                           nsIRDFAssertionCursor **sources /* out */)
+                           nsISimpleEnumerator **sources /* out */)
 {
 	nsresult	result = NS_RDF_NO_VALUE;
 	if (mInner)	result = mInner->GetSources(property, target, tv, sources);
@@ -296,9 +380,9 @@ RelatedLinksDataSource::GetTarget(nsIRDFResource *source,
 		return rv;
 
 	nsVoidArray		*array = nsnull;
-	if (peq(source, kNC_RelatedLinksRoot))
+	if (source == kNC_RelatedLinksRoot)
 	{
-		if (peq(property, kNC_pulse))
+		if (property == kNC_pulse)
 		{
 			nsAutoString	pulse("15");
 			nsIRDFLiteral	*pulseLiteral;
@@ -310,7 +394,7 @@ RelatedLinksDataSource::GetTarget(nsIRDFResource *source,
 				rv = NS_OK;
 			}
 		}
-		else if (peq(property, kRDF_type))
+		else if (property == kRDF_type)
 		{
 			nsXPIDLCString	uri;
 			kNC_FTPObject->GetValue( getter_Copies(uri) );
@@ -359,14 +443,14 @@ RelatedLinksDataSourceCallback::RelatedLinksDataSourceCallback(nsIRDFDataSource 
 	if (gRefCnt++ == 0)
 	{
 		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-                                                   kIRDFServiceIID,
+                                                   nsIRDFService::GetIID(),
                                                    (nsISupports**) &gRDFService);
 
 		PR_ASSERT(NS_SUCCEEDED(rv));
 
-		gRDFService->GetResource(kURINC_child, &kNC_Child);
-		gRDFService->GetResource(kURINC_Name,  &kNC_Name);
-		gRDFService->GetResource(kURINC_RelatedLinksRoot, &kNC_RelatedLinksRoot);
+		gRDFService->GetResource(NC_NAMESPACE_URI "child", &kNC_Child);
+		gRDFService->GetResource(NC_NAMESPACE_URI "Name",  &kNC_Name);
+		gRDFService->GetResource(NC_NAMESPACE_URI "RelatedLinksRoot", &kNC_RelatedLinksRoot);
 		
 		if (nsnull != (mParentArray = new nsVoidArray()))
 		{
@@ -544,7 +628,7 @@ RelatedLinksDataSourceCallback::OnDataAvailable(nsIURL* aURL, nsIInputStream *aI
 					}
 
 					nsCOMPtr<nsIRDFResource>	newTopic;
-					nsAutoString			rlRoot(kURINC_RelatedLinksRoot);
+					nsAutoString			rlRoot(NC_NAMESPACE_URI "RelatedLinksRoot");
 					if (NS_SUCCEEDED(rv = rdf_CreateAnonymousResource(rlRoot, getter_AddRefs(newTopic))))
 					{
 						if (title.Length() > 0)
@@ -602,7 +686,7 @@ RelatedLinksDataSourceCallback::OnDataAvailable(nsIURL* aURL, nsIInputStream *aI
 					PRInt32		numParents = mParentArray->Count();
 					if (numParents > 1)
 					{
-						nsAutoString	rlRoot(kURINC_RelatedLinksRoot);
+						nsAutoString	rlRoot(NC_NAMESPACE_URI "RelatedLinksRoot");
 						rv = rdf_CreateAnonymousResource(rlRoot, getter_AddRefs(relatedLinksChild));
 					}
 					else
@@ -645,7 +729,7 @@ RelatedLinksDataSourceCallback::OnDataAvailable(nsIURL* aURL, nsIInputStream *aI
 
 
 
-NS_IMPL_ISUPPORTS(RelatedLinksDataSourceCallback, kIRDFRelatedLinksDataSourceCallbackIID);
+NS_IMPL_ISUPPORTS(RelatedLinksDataSourceCallback, nsIRDFRelatedLinksDataSourceCallback::GetIID());
 
 
 
@@ -687,61 +771,66 @@ NS_IMETHODIMP
 RelatedLinksDataSource::GetTargets(nsIRDFResource *source,
                            nsIRDFResource *property,
                            PRBool tv,
-                           nsIRDFAssertionCursor **targets /* out */)
+                           nsISimpleEnumerator **targets /* out */)
 {
-	nsVoidArray		*array = nsnull;
 	nsresult		rv = NS_ERROR_FAILURE;
 
 	// we only have positive assertions in the Related Links data source.
 
 	*targets = nsnull;
-	if ((tv) && peq(source, kNC_RelatedLinksRoot))
+	if ((tv) && (source == kNC_RelatedLinksRoot))
 	{
-		if (peq(property, kNC_Child))
+		if (property == kNC_Child)
 		{
 			rv = GetRelatedLinksListing(source);
+            if (NS_FAILED(rv)) return rv;
+
+            return NS_NewEmptyEnumerator(targets);
 		}
-		else if (peq(property, kNC_pulse))
+		else if (property == kNC_pulse)
 		{
 			nsAutoString	pulse("15");
 			nsIRDFLiteral	*pulseLiteral;
-			gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
-			array = new nsVoidArray();
-			if (array)
-			{
-				array->AppendElement(pulseLiteral);
-				rv = NS_OK;
-			}
+			rv = gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
+            if (NS_FAILED(rv)) return rv;
+
+            nsISimpleEnumerator* result = new nsSingletonEnumerator(pulseLiteral);
+            NS_RELEASE(pulseLiteral);
+            if (! result)
+                return NS_ERROR_OUT_OF_MEMORY;
+
+            NS_ADDREF(result);
+            *targets = result;
+            return NS_OK;
 		}
-		else if (peq(property, kRDF_type))
+		else if (property == kRDF_type)
 		{
 			nsXPIDLCString	uri;
-			kNC_FTPObject->GetValue( getter_Copies(uri) );
-			if (uri)
-			{
-				nsAutoString	url(uri);
-				nsIRDFLiteral	*literal;
-				gRDFService->GetLiteral(url.GetUnicode(), &literal);
-				array = new nsVoidArray();
-				if (array)
-				{
-					array->AppendElement(literal);
-					rv = NS_OK;
-				}
-			}
-		}
-		if ((rv == NS_OK) && (nsnull != array))
-		{
-			*targets = new RelatedLinksCursor(this, source, property, PR_FALSE, array);
-			NS_ADDREF(*targets);
+			rv = kNC_FTPObject->GetValue( getter_Copies(uri) );
+            if (NS_FAILED(rv)) return rv;
+
+            nsAutoString	url(uri);
+            nsIRDFLiteral	*literal;
+            rv = gRDFService->GetLiteral(url.GetUnicode(), &literal);
+            if (NS_FAILED(rv)) return rv;
+
+            nsISimpleEnumerator* result = new nsSingletonEnumerator(literal);
+            NS_RELEASE(literal);
+            if (! result)
+                return NS_ERROR_OUT_OF_MEMORY;
+
+            NS_ADDREF(result);
+            *targets = result;
+            return NS_OK;
 		}
 	}
-	if (nsnull == *targets)
-	{
-		rv = NS_RDF_NO_VALUE;
-		if (mInner)	rv = mInner->GetTargets(source, property, tv, targets);
+
+    if (mInner)	{
+        return mInner->GetTargets(source, property, tv, targets);
 	}
-	return(rv);
+    else {
+        return NS_NewEmptyEnumerator(targets);
+    }
 }
 
 
@@ -783,11 +872,11 @@ RelatedLinksDataSource::HasAssertion(nsIRDFResource *source,
 
 	// we only have positive assertions in the Related Links data source.
 
-	if ((tv) && peq(source, kNC_RelatedLinksRoot))
+	if ((tv) && (source == kNC_RelatedLinksRoot))
 	{
-		if (peq(property, kRDF_type))
+		if (property == kRDF_type)
 		{
-			if (peq((nsIRDFResource *)target, kRDF_type))
+			if ((nsIRDFResource *)target == kRDF_type)
 			{
 				*hasAssertion = PR_TRUE;
 			}
@@ -804,7 +893,7 @@ RelatedLinksDataSource::HasAssertion(nsIRDFResource *source,
 
 NS_IMETHODIMP
 RelatedLinksDataSource::ArcLabelsIn(nsIRDFNode *node,
-                            nsIRDFArcsInCursor ** labels /* out */)
+                            nsISimpleEnumerator ** labels /* out */)
 {
 	nsresult	result = NS_RDF_NO_VALUE;
 	if (mInner)	result = mInner->ArcLabelsIn(node, labels);
@@ -815,38 +904,41 @@ RelatedLinksDataSource::ArcLabelsIn(nsIRDFNode *node,
 
 NS_IMETHODIMP
 RelatedLinksDataSource::ArcLabelsOut(nsIRDFResource *source,
-                             nsIRDFArcsOutCursor **labels /* out */)
+                             nsISimpleEnumerator **labels /* out */)
 {
 	nsresult		rv = NS_RDF_NO_VALUE;
 
 	*labels = nsnull;
 
-	if (peq(source, kNC_RelatedLinksRoot))
+	if (source == kNC_RelatedLinksRoot)
 	{
-		nsVoidArray *temp = new nsVoidArray();
-		if (nsnull == temp)
-			return NS_ERROR_OUT_OF_MEMORY;
-		temp->AppendElement(kNC_Child);
-		temp->AppendElement(kNC_pulse);
-		*labels = new RelatedLinksCursor(this, source, kNC_Child, PR_TRUE, temp);
-		if (nsnull != *labels)
-		{
-			NS_ADDREF(*labels);
-			rv = NS_OK;
-		}
-	}
-	else
-	{
-		if (mInner)	rv = mInner->ArcLabelsOut(source, labels);
-	}
-	return(rv);
+        nsCOMPtr<nsISupportsArray> array;
+        rv = NS_NewISupportsArray(getter_AddRefs(array));
+        if (NS_FAILED(rv)) return rv;
 
+		array->AppendElement(kNC_Child);
+		array->AppendElement(kNC_pulse);
+
+        nsISimpleEnumerator* result = new nsArrayEnumerator(array);
+        if (! result)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        NS_ADDREF(result);
+        *labels = result;
+        return NS_OK;
+	}
+	else if (mInner) {
+        return mInner->ArcLabelsOut(source, labels);
+	}
+    else {
+        return NS_NewEmptyEnumerator(labels);
+    }
 }
 
 
 
 NS_IMETHODIMP
-RelatedLinksDataSource::GetAllResources(nsIRDFResourceCursor** aCursor)
+RelatedLinksDataSource::GetAllResources(nsISimpleEnumerator** aCursor)
 {
 	nsresult	result;
 	if (mInner)	result = mInner->GetAllResources(aCursor);
@@ -960,7 +1052,7 @@ RelatedLinksDataSource::SetRelatedLinksURL(const char *url)
 		// now, create a new in-memory data source
 		nsresult	rv;
 		if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-			nsnull, kIRDFDataSourceIID, (void **)&mInner)))
+			nsnull, nsIRDFDataSource::GetIID(), (void **)&mInner)))
 		{
 			return(rv);
 		}
@@ -1004,151 +1096,3 @@ NS_NewRDFRelatedLinksDataSource(nsIRDFDataSource **result)
 
 
 
-RelatedLinksCursor::RelatedLinksCursor(nsIRDFDataSource *ds,
-				nsIRDFResource *source,
-				nsIRDFResource *property,
-				PRBool isArcsOut,
-				nsVoidArray *array)
-	: mDataSource(ds),
-	  mSource(source),
-	  mProperty(property),
-	  mArcsOut(isArcsOut),
-	  mArray(array),
-	  mCount(0),
-	  mTarget(nsnull),
-	  mValue(nsnull)
-{
-	NS_INIT_REFCNT();
-	NS_ADDREF(mDataSource);
-	NS_ADDREF(mSource);
-	NS_ADDREF(mProperty);
-}
-
-
-
-RelatedLinksCursor::~RelatedLinksCursor(void)
-{
-	NS_IF_RELEASE(mDataSource);
-	NS_IF_RELEASE(mSource);
-	NS_IF_RELEASE(mValue);
-	NS_IF_RELEASE(mProperty);
-	NS_IF_RELEASE(mTarget);
-	if (nsnull != mArray)
-	{
-		delete mArray;
-	}
-}
-
-
-
-NS_IMETHODIMP
-RelatedLinksCursor::Advance(void)
-{
-	if (!mArray)
-		return NS_ERROR_NULL_POINTER;
-	if (mArray->Count() <= mCount)
-		return NS_RDF_CURSOR_EMPTY;
-	NS_IF_RELEASE(mValue);
-	mTarget = mValue = (nsIRDFNode *)mArray->ElementAt(mCount++);
-	NS_ADDREF(mValue);
-	NS_ADDREF(mTarget);
-	return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-RelatedLinksCursor::GetValue(nsIRDFNode **aValue)
-{
-	if (nsnull == mValue)
-		return NS_ERROR_NULL_POINTER;
-	NS_ADDREF(mValue);
-	*aValue = mValue;
-	return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-RelatedLinksCursor::GetDataSource(nsIRDFDataSource **aDataSource)
-{
-	NS_ADDREF(mDataSource);
-	*aDataSource = mDataSource;
-	return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-RelatedLinksCursor::GetSource(nsIRDFResource **aResource)
-{
-	NS_ADDREF(mSource);
-	*aResource = mSource;
-	return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-RelatedLinksCursor::GetLabel(nsIRDFResource **aPredicate)
-{
-	if (mArcsOut == PR_FALSE)
-	{
-		NS_ADDREF(mProperty);
-		*aPredicate = mProperty;
-	}
-	else
-	{
-		if (nsnull == mValue)
-			return NS_ERROR_NULL_POINTER;
-		NS_ADDREF(mValue);
-		*(nsIRDFNode **)aPredicate = mValue;
-	}
-	return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-RelatedLinksCursor::GetTarget(nsIRDFNode **aObject)
-{
-	if (nsnull != mTarget)
-		NS_ADDREF(mTarget);
-	*aObject = mTarget;
-	return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-RelatedLinksCursor::GetTruthValue(PRBool *aTruthValue)
-{
-	*aTruthValue = 1;
-	return NS_OK;
-}
-
-
-
-NS_IMPL_ADDREF(RelatedLinksCursor);
-NS_IMPL_RELEASE(RelatedLinksCursor);
-
-
-
-NS_IMETHODIMP
-RelatedLinksCursor::QueryInterface(REFNSIID iid, void **result)
-{
-	if (! result)
-		return NS_ERROR_NULL_POINTER;
-
-	*result = nsnull;
-	if (iid.Equals(kIRDFAssertionCursorIID) ||
-		iid.Equals(kIRDFCursorIID) ||
-		iid.Equals(kIRDFArcsOutCursorIID) ||
-		iid.Equals(kISupportsIID))
-	{
-		*result = NS_STATIC_CAST(nsIRDFAssertionCursor *, this);
-		AddRef();
-		return NS_OK;
-	}
-	return(NS_NOINTERFACE);
-}

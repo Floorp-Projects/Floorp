@@ -28,27 +28,24 @@
 
 #include "nsError.h"
 
-/*
- * The following macros are to aid in vocabulary definition.
- * They creates const char*'s for "kURI[prefix]_[name]" and
- * "kTag[prefix]_[name]", with appropriate complete namespace
- * qualification on the URI, e.g.,
+/**
+ * The following macros are to aid in vocabulary definition.  They
+ * creates const char*'s for "kURI[prefix]_[name]", appropriate
+ * complete namespace qualification on the URI, e.g.,
  *
  * #define RDF_NAMESPACE_URI "http://www.w3.org/TR/WD-rdf-syntax#"
  * DEFINE_RDF_ELEMENT(RDF_NAMESPACE_URI, RDF, ID);
  *
  * will define:
  *
- * kURIRDF_ID to be "http://www.w3.org/TR/WD-rdf-syntax#ID", and
- * kTagRDF_ID to be "ID"
+ * kURIRDF_ID to be "http://www.w3.org/TR/WD-rdf-syntax#ID"
  */
 
 #define DEFINE_RDF_VOCAB(ns, prefix, name) \
-static const char* kURI##prefix##_##name = ns #name ;\
-static const char* kTag##prefix##_##name = #name
+static const char* kURI##prefix##_##name = ns #name
 
 /**
- * Core RDF vocabularies that we use to infer semantic actions
+ * Core RDF vocabularies that we use to define semantics
  */
 
 #define RDF_NAMESPACE_URI  "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
