@@ -27,7 +27,10 @@
 */
 /* Most should be moved to global files */
 
+/* The defaults are WAY to big! */
 titledbox {
+  margin:         2px 5px; 4px; 5px;
+  padding-top:    2px;
   padding-bottom: 4px;
 }
 
@@ -128,6 +131,22 @@ tree.list {
   min-width: 10em;
 }
 
+#PreviousButton {
+  list-style-image: url(chrome://global/skin/arrow-left.gif);
+}
+
+#NextButton {
+  list-style-image: url(chrome://global/skin/arrow-right.gif);
+}
+
+#PreviousButton[type="row"] {
+  list-style-image: url(chrome://global/skin/arrow-up.gif);
+}
+
+#NextButton[type="row"] {
+  list-style-image: url(chrome://global/skin/arrow-down.gif);
+}
+
 #MisspelledWord {
   font-weight: bold;
 }
@@ -143,6 +162,8 @@ tree.list {
 /* use outset shape for a button look */
 .colorpicker {
   border: 1px outset #CCCCCC;
+  /* This should be the same as for textfield */
+  margin-left: 4px;
   /* For a little extra space between buttons */
   margin-bottom: 2px;
 }
