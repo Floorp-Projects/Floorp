@@ -297,7 +297,7 @@ protected:
   PRPackedBool mGeneratingReset;
   /** Whether we are submitting currently */
   PRPackedBool mIsSubmitting;
-  /** Whether the submission is to be deferred in case a script triggers it*/
+  /** Whether the submission is to be deferred in case a script triggers it */
   PRPackedBool mDeferSubmission;
 
   /** The pending submission object */
