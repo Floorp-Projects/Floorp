@@ -29,7 +29,13 @@ $perlbin = "/tools/ns/bin/perl5.004";
 #$cvs = "/usr/bin/cvs";
 #$whoami = "/usr/bin/whoami";
 #$perlbin = "/usr/bin/perl";
+
+#$curdir = `pwd`;
+#chop($curdir);
+#$ENV{"CVS_PASSFILE"} = "$curdir/.cvspass";
     
+$ENV{"CVS_PASSFILE"} = "/usr/local/etc/despot-cvspass";
+
 $dontcommit = 0;
 $usertoblame = "";
 
@@ -69,10 +75,6 @@ if (open(HOST, "/bin/hostname|")) {
 
 
 $ENV{"HOME"} = glob("~$mylogin"); # CVS wants this.
-
-$curdir = `pwd`;
-chop($curdir);
-$ENV{"CVS_PASSFILE"} = "$curdir/.cvspass";
 
 if ($usertoblame eq "") {
     $usertoblame = $mylogin;
