@@ -72,12 +72,12 @@
       <vbox id="MoreSection">
         <spacer class="spacer"/>
         <label value="&NamedAnchorMsg.label;"/>
-        <tree rows="4" class="list" id="NamedAnchorList" onselect="SelectNamedAnchor()">
+        <tree rows="4" class="list" id="NamedAnchorList" onselect="SelectNamedAnchor()" style="min-height: 4em">
           <treecolgroup><treecol flex="1"/></treecolgroup>
         </tree>
         <spacer class="spacer"/>
         <label value="&HeadingMsg.label;"/>
-        <tree rows="4" class="list" id="HeadingsList" onselect="SelectHeading()">
+        <tree rows="4" class="list" id="HeadingsList" onselect="SelectHeading()" style="min-height: 4em">
           <treecolgroup><treecol flex="1"/></treecolgroup>
         </tree>
         <label value="&HeadingMsg2.label;"/>
