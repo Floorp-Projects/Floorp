@@ -82,7 +82,7 @@ function executeUrlBarHistoryCommand( aTarget )
     var value = aTarget.getAttribute("value");
     if (index != "nothing_available" && value)
       {
-        loadShortcutOrURI(value);
+        loadURI(getShortcutOrURI(value));
       }
   }
 

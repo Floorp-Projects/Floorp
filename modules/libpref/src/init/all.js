@@ -28,7 +28,7 @@ pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search
 pref("keyword.URL", "http://keyword.netscape.com/keyword/");
 pref("keyword.enabled", true);
 pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties");
-pref("general.useragent.misc", "0.8");
+pref("general.useragent.misc", "0.9");
 
 pref("general.startup.browser",             true);
 pref("general.startup.mail",                false);
@@ -38,6 +38,7 @@ pref("general.startup.compose",             false);
 pref("general.startup.addressbook",         false);
 
 pref("general.open_location.last_url",      "");
+pref("general.open_location.last_window_choice", 0);
 
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last
 pref("browser.startup.page",                1);
