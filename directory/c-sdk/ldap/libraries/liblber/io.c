@@ -1094,6 +1094,9 @@ ber_special_free(void* buf, BerElement *ber)
 	NSLBERI_FREE( buf );
 }
 
+/* Copy up to bytes_to_read bytes from b into return_buffer.
+ * Returns a count of bytes copied (always >= 0).
+ */
 static int
 read_bytes(byte_buffer *b, unsigned char *return_buffer, int bytes_to_read)
 {
@@ -1107,11 +1110,9 @@ read_bytes(byte_buffer *b, unsigned char *return_buffer, int bytes_to_read)
 	}
 	if (1 == bytes_to_copy) {
 		*return_buffer = *(b->p+b->offset++);
-	} else 
-	if (0 == bytes_to_copy) {
-		;
-	} else
-	{
+	} else if (bytes_to_copy <= 0) {
+		bytes_to_copy = 0;	/* never return a negative result */
+	} else {
 		memcpy(return_buffer,b->p+b->offset,bytes_to_copy);
 		b->offset += bytes_to_copy;
 	}
@@ -1204,7 +1205,7 @@ ber_get_next_buffer_ext( void *buffer, size_t buffer_size, unsigned long *len,
 	sb.length = buffer_size;
 	*len = netlen = 0;
 
-	if ( ber->ber_rwptr == NULL ) {
+	if ( ber->ber_rwptr == NULL || ber->ber_tag == LBER_DEFAULT ) {
 		/*
 		 * First, we read the tag.
 		 */
@@ -1252,7 +1253,11 @@ ber_get_next_buffer_ext( void *buffer, size_t buffer_size, unsigned long *len,
 				}
 				ber->ber_ptr = ber->ber_buf;
 				ber->ber_buf[0] = lc;
-				SAFEMEMCPY( &ber->ber_buf[1], (const char *)&netlen + diff, rcnt );
+				if ( rcnt > 0 ) {
+					SAFEMEMCPY( &ber->ber_buf[1],
+								(const char *)&netlen + diff, rcnt );
+				}
+
 				/* The way how ber_rwptr is used here is exceptional.
 				 * Here, ber_rwptr is set after the buffer contents,
 				 * not to the next byte to be read.
@@ -1275,6 +1280,13 @@ ber_get_next_buffer_ext( void *buffer, size_t buffer_size, unsigned long *len,
 		lc = ber->ber_buf[0];
 		if ( lc & 0x80 ) {
 			int prevcnt = ber->ber_rwptr - ber->ber_buf - 1/* lc */;
+
+			if ( prevcnt < 0 ) { /* This is unexpected */
+				ber_reset( ber, 0 );
+				ber->ber_tag = LBER_DEFAULT;
+				goto premature_exit;
+			}
+
 			noctets = (lc & 0x7f);
 			diff = sizeof(unsigned long) - noctets;
 			SAFEMEMCPY( (char *)&netlen + diff, &ber->ber_buf[1], prevcnt );
