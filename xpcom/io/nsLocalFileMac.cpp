@@ -1459,7 +1459,7 @@ nsLocalFile::GetLastModificationDate(PRInt64 *aLastModificationDate)
 	else
 		timestamp = 0;
 	
-  return ConvertMacTimeToUnixTime( aLastModificationDate, timestamp );
+  return ConvertMacTimeToMilliseconds( aLastModificationDate, timestamp );
 }
 
 NS_IMETHODIMP  
@@ -1475,7 +1475,7 @@ nsLocalFile::SetLastModificationDate(PRInt64 aLastModificationDate)
 	OSErr err = noErr;
 	PRBool bIsDir = PR_FALSE;
 	
-	ConvertUnixTimeToMacTime(aLastModificationDate, &macTime);
+	ConvertMillisecondsToMacTime(aLastModificationDate, &macTime);
 	rv = IsDirectory(&bIsDir);
 	if ( NS_FAILED(rv) )
 		return rv;
