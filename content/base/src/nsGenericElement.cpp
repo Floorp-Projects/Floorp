@@ -875,9 +875,7 @@ nsGenericElement::GetLocalName(nsAWritableString& aLocalName)
 NS_IMETHODIMP
 nsGenericElement::GetNodeValue(nsAWritableString& aNodeValue)
 {
-  // XXX: Null string
-
-  aNodeValue.Truncate();
+  SetDOMStringToNull(aNodeValue);
 
   return NS_OK;
 }
