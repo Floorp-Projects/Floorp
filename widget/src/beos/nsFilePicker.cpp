@@ -117,10 +117,10 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   }
 
   // set initial directory
-  char * initialDir;
-  mDisplayDirectory->GetPath(&initialDir);
-  if (initialDir)
-    ppanel->SetPanelDirectory(initialDir);
+  nsCAutoString initialDir;
+  mDisplayDirectory->GetNativePath(initialDir);
+  if(initialDir.IsEmpty()) {
+    ppanel->SetPanelDirectory(initialDir.get());
 
   // set modal feel
   if (ppanel->LockLooper()) {
@@ -171,7 +171,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   BEntry dir_entry(&dir_ref);
   BPath dir_path;
   dir_entry.GetPath(&dir_path);
-  mDisplayDirectory->InitWithPath(dir_path.Path());
+  mDisplayDirectory->InitWithNativePath(nsDependentCString(dir_path.Path()));
 
   if (ppanel->Lock()) {
     ppanel->Quit();
@@ -187,7 +187,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
       NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
 
-      file->InitWithPath(mFile.get());
+      file->InitWithNativePath(mFile);
 
       PRBool exists = PR_FALSE;
       file->Exists(&exists);
@@ -217,7 +217,7 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
     
   NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
 
-  file->InitWithPath(mFile.get());
+  file->InitWithNativePath(mFile);
 
   NS_ADDREF(*aFile = file);
 
@@ -229,7 +229,7 @@ NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
 {
   nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
   NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
-  file->InitWithPath(mFile.get());
+  file->InitWithNativePath(mFile);
 
   nsCOMPtr<nsIURI> uri;
   NS_NewFileURI(getter_AddRefs(uri), file);
