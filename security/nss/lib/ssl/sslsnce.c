@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsnce.c,v 1.7 2001/01/30 21:02:25 wtc%netscape.com Exp $
+ * $Id: sslsnce.c,v 1.8 2001/01/31 23:43:47 wtc%netscape.com Exp $
  */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
@@ -1898,13 +1898,40 @@ ssl_SetWrappingKey(SSLWrappedSymWrappingKey *wswk)
 #include "ssl.h"
 #include "sslimpl.h"
 
+int
+SSL_ConfigServerSessionIDCache(	int      maxCacheEntries, 
+				PRUint32 timeout,
+			       	PRUint32 ssl3_timeout, 
+			  const char *   directory)
+{
+    PR_ASSERT(!"SSL servers are not supported on the platform. (SSL_ConfigServerSessionIDCache)");    
+    return SECFailure;
+}
+
+int
+SSL_ConfigMPServerSIDCache(	int      maxCacheEntries, 
+				PRUint32 timeout,
+			       	PRUint32 ssl3_timeout, 
+		          const char *   directory)
+{
+    PR_ASSERT(!"SSL servers are not supported on the platform. (SSL_ConfigMPServerSIDCache)");    
+    return SECFailure;
+}
+
+SECStatus
+SSL_InheritMPServerSIDCache(const char * envString)
+{
+    PR_ASSERT(!"SSL servers are not supported on the platform. (SSL_InheritMPServerSIDCache)");    
+    return SECFailure;
+}
+
 PRBool
 ssl_GetWrappingKey( PRInt32                   symWrapMechIndex,
                     SSL3KEAType               exchKeyType, 
 		    SSLWrappedSymWrappingKey *wswk)
 {
     PRBool rv = PR_FALSE;
-    PR_ASSERT(!"SSL servers are not supported on the Mac. (ssl_GetWrappingKey)");    
+    PR_ASSERT(!"SSL servers are not supported on the platform. (ssl_GetWrappingKey)");    
     return rv;
 }
 
@@ -1921,7 +1948,7 @@ PRBool
 ssl_SetWrappingKey(SSLWrappedSymWrappingKey *wswk)
 {
     PRBool        rv = PR_FALSE;
-    PR_ASSERT(!"SSL servers are not supported on the Mac. (ssl_SetWrappingKey)");
+    PR_ASSERT(!"SSL servers are not supported on the platform. (ssl_SetWrappingKey)");
     return rv;
 }
 
