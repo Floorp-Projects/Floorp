@@ -36,7 +36,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>      /* XXX push error reporting out to clients? */
+#ifndef XP_WIN
 #include <unistd.h>
+#else
+#include <stddef.h>
+#endif
 #include "prlog.h"
 #include "plhash.h"
 #include "nsTraceMalloc.h"
