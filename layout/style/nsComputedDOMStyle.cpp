@@ -2012,43 +2012,53 @@ nsresult
 nsComputedDOMStyle::GetCursor(nsIFrame *aFrame,
                               nsIDOMCSSValue** aValue)
 {
-  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
-  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
+  NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
 
   const nsStyleUserInterface *ui = nsnull;
   GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)ui, aFrame);
 
   if (ui) {
-    PRBool found = PR_FALSE;
     PRInt32 count = ui->mCursorArray.Count();
     for (PRInt32 i = 0; i < count; i++) {
-      PRUint32 status;
-      nsresult rv = ui->mCursorArray[i]->GetImageStatus(&status);
-      if (NS_SUCCEEDED(rv) && (status & imgIRequest::STATUS_FRAME_COMPLETE)) {
-        // This is the one we want
-        nsCOMPtr<nsIURI> uri;
-        ui->mCursorArray[i]->GetURI(getter_AddRefs(uri));
-        if (uri) {
-          val->SetURI(uri);
-          found = PR_TRUE;
-          break;
-        }
+      nsCOMPtr<nsIURI> uri;
+      ui->mCursorArray[i]->GetURI(getter_AddRefs(uri));
+
+      nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+      if (!val) {
+        delete valueList;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      val->SetURI(uri);
+      if (!valueList->AppendCSSValue(val)) {
+        delete valueList;
+        delete val;
+        return NS_ERROR_OUT_OF_MEMORY;
       }
     }
 
-    if (!found) {
-      if (ui->mCursor == NS_STYLE_CURSOR_AUTO) {
-        val->SetIdent(nsLayoutAtoms::autoAtom);
-      } else {
-        const nsAFlatCString& cursor =
-          nsCSSProps::ValueToKeyword(ui->mCursor,
-                                     nsCSSProps::kCursorKTable);
-        val->SetIdent(cursor);
-      }
+    nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+    if (!val) {
+      delete valueList;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    if (ui->mCursor == NS_STYLE_CURSOR_AUTO) {
+      val->SetIdent(nsLayoutAtoms::autoAtom);
+    } else {
+      const nsAFlatCString& cursor =
+        nsCSSProps::ValueToKeyword(ui->mCursor,
+                                   nsCSSProps::kCursorKTable);
+      val->SetIdent(cursor);
+    }
+    if (!valueList->AppendCSSValue(val)) {
+      delete valueList;
+      delete val;
+      return NS_ERROR_OUT_OF_MEMORY;
     }
   }
 
-  return CallQueryInterface(val, aValue);
+  return CallQueryInterface(valueList, aValue);
 }
 
 nsresult
