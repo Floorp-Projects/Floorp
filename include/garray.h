@@ -99,13 +99,22 @@ public:
     }
 
     int Insert(void* newElement, int nIndex){
+        intn iLowerLimit;
         GuaranteeSize(m_iSize+1);
+
+        if( nIndex < 0 )
+            nIndex = 0;
+
         if( nIndex < m_iSize )
         {
-            /* Shuffle pointers at and above insert index up */
-            for( int i = m_iSize; i > nIndex; i-- )
+            if( m_iSize > 0 )
             {
-               m_pData[i] = m_pData[i-1];
+                iLowerLimit = max(1, nIndex);
+                /* Shuffle pointers at and above insert index up */
+                for( int i = m_iSize; i >= iLowerLimit; i-- )
+                {
+                    m_pData[i] = m_pData[i-1];
+                }
             }
             /* Overwrite pointer at designated location */
             m_pData[nIndex] = newElement;        
