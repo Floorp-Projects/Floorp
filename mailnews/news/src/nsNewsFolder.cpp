@@ -347,6 +347,8 @@ nsMsgNewsFolder::GetSubFolders(nsIEnumerator* *result)
     rv = pathSpec->GetFileSpec(&path);
     if (NS_FAILED(rv)) return rv;
     
+    nsFileSpec tempPath(path.GetNativePathCString(), PR_TRUE);
+    
     rv = CreateSubFolders(path);
     if (NS_FAILED(rv)) return rv;
 
@@ -871,13 +873,13 @@ NS_IMETHODIMP nsMsgNewsFolder::GetExpungedBytesCount(PRUint32 *count)
 
 NS_IMETHODIMP nsMsgNewsFolder::GetDeletable(PRBool *deletable)
 {
-  NS_ASSERTION(0,"GetDeletable() not implemented");
+//  NS_ASSERTION(0,"GetDeletable() not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
  
 NS_IMETHODIMP nsMsgNewsFolder::GetRequiresCleanup(PRBool *requiresCleanup)
 {
-  NS_ASSERTION(0,"GetRequiresCleanup not implemented");
+//  NS_ASSERTION(0,"GetRequiresCleanup not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
