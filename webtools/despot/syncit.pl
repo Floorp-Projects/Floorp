@@ -183,8 +183,8 @@ while (@reprow = $repquery->fetchrow()) {
     
     chdir "CVSROOT";
     if ($dontcommit) {
-        system "cvs diff -c passwd";
-        system "cvs diff -c commitcheck.pl";
+        system "$cvs diff -c passwd";
+        system "$cvs diff -c commitcheck.pl";
         # system "$cvs commit -m 'Pseudo-automatic update of changes made by $usertoblame.' commitcheck.pl";
     } else {
         system "$cvs commit -m 'Pseudo-automatic update of changes made by $usertoblame.'";
