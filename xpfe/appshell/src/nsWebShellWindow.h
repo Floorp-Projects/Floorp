@@ -62,6 +62,7 @@ public:
   // nsISupports interface...
   NS_DECL_ISUPPORTS
 
+
   // nsIWebShellContainer interface...
   NS_IMETHOD WillLoadURL(nsIWebShell* aShell,
                          const PRUnichar* aURL,
@@ -78,6 +79,7 @@ public:
   NS_IMETHOD EndLoadURL(nsIWebShell* aShell,
                         const PRUnichar* aURL,
                         PRInt32 aStatus);
+
 
   NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
                          PRBool aVisible,
@@ -106,14 +108,14 @@ public:
   // nsIDocumentLoaderObserver
   NS_IMETHOD OnStartDocumentLoad(nsIURL* aURL, const char* aCommand);
   NS_IMETHOD OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus);
-  NS_IMETHOD OnStartURLLoad(nsIURL* aURL, const char* aContentType, nsIContentViewer* aViewer);
+  NS_IMETHOD OnStartURLLoad(nsIURL* aURL, const char* aContentType, 
+                                nsIContentViewer* aViewer);
   NS_IMETHOD OnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress, 
                                PRUint32 aProgressMax);
   NS_IMETHOD OnStatusURLLoad(nsIURL* aURL, nsString& aMsg);
   NS_IMETHOD OnEndURLLoad(nsIURL* aURL, PRInt32 aStatus);
 
-  NS_IMETHOD OnConnectionsComplete();
-
+  
   // nsIDocumentObserver
   NS_IMETHOD BeginUpdate(nsIDocument *aDocument);
   NS_IMETHOD EndUpdate(nsIDocument *aDocument);
@@ -196,6 +198,7 @@ protected:
   nsIWidgetController*    mController;
   nsIXULWindowCallbacks*  mCallbacks;
   PRBool                  mContinueModalLoop;
+  PRBool                  mChromeInitialized;
 
   nsVoidArray mMenuDelegates;
 

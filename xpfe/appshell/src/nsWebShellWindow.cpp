@@ -132,6 +132,7 @@ nsWebShellWindow::nsWebShellWindow()
   mController = nsnull;
   mCallbacks = nsnull;
   mContinueModalLoop = PR_FALSE;
+  mChromeInitialized = PR_FALSE;
 }
 
 
@@ -252,12 +253,7 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
                        PR_TRUE);
   mWebShell->SetContainer(this);
   mWebShell->SetObserver((nsIStreamObserver*)anObserver);
-
-  nsIDocumentLoader * docLoader;
-  mWebShell->GetDocumentLoader(docLoader);
-  if (nsnull != docLoader) {
-    docLoader->AddObserver((nsIDocumentLoaderObserver *)this);
-  }
+  mWebShell->SetDocLoaderObserver(this);
 
   /*
    * XXX:  How should preferences be supplied to the nsWebShellWindow?
@@ -400,6 +396,8 @@ nsWebShellWindow::EndLoadURL(nsIWebShell* aWebShell, const PRUnichar* aURL,
 {
   return NS_OK;
 }
+
+
 
 //----------------------------------------
 nsCOMPtr<nsIDOMNode> nsWebShellWindow::FindNamedParentFromDoc(nsIDOMDocument * aDomDoc, const nsString &aName) 
@@ -805,9 +803,7 @@ nsWebShellWindow::DestroyModalDialogEvent(PLEvent *aEvent)
 }
 
 
-//----------------------------------------
-//----------------------------------------
-//----------------------------------------
+
 //----------------------------------------
 // nsIDocumentLoaderObserver implementation
 //----------------------------------------
@@ -820,6 +816,88 @@ nsWebShellWindow::OnStartDocumentLoad(nsIURL* aURL, const char* aCommand)
 NS_IMETHODIMP
 nsWebShellWindow::OnEndDocumentLoad(nsIURL* aURL, PRInt32 aStatus)
 {
+#ifdef DEBUG_MENUSDEL
+  printf("OnEndDocumentLoad\n");
+#endif
+
+  /* We get notified every time a page/Frame is loaded. But we need to
+   * Load the menus, run the startup script etc.. only once. So, Use
+   * the mChrome Initialized  member to check whether chrome should be 
+   * initialized or not - Radha
+   */
+  if (mChromeInitialized)
+    return NS_OK;
+
+  mChromeInitialized = PR_TRUE;
+
+  // register as document listener
+  // this is needed for menus
+  nsCOMPtr<nsIContentViewer> cv;
+  mWebShell->GetContentViewer(getter_AddRefs(cv));
+  if (cv) {
+   
+    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
+    if (!docv)
+      return NS_OK;
+
+    nsCOMPtr<nsIDocument> doc;
+    docv->GetDocument(*getter_AddRefs(doc));
+    if (!doc)
+      return NS_OK;
+
+    doc->AddObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));
+  }
+
+  ExecuteStartupCode();
+
+  ///////////////////////////////
+  // Find the Menubar DOM  and Load the menus, hooking them up to the loaded commands
+  ///////////////////////////////
+  nsCOMPtr<nsIDOMDocument> menubarDOMDoc(GetNamedDOMDoc(nsAutoString("this"))); // XXX "this" is a small kludge for code reused
+  if (menubarDOMDoc)
+    LoadMenus(menubarDOMDoc, mWindow);
+
+  SetSizeFromXUL();
+  SetTitleFromXUL();
+
+#if 0
+  nsCOMPtr<nsIDOMDocument> toolbarDOMDoc(GetNamedDOMDoc(nsAutoString("browser.toolbar")));
+  nsCOMPtr<nsIDOMDocument> contentDOMDoc(GetNamedDOMDoc(nsAutoString("browser.webwindow")));
+  nsCOMPtr<nsIDocument> contentDoc(do_QueryInterface(contentDOMDoc));
+  nsCOMPtr<nsIDocument> statusDoc(do_QueryInterface(statusDOMDoc));
+  nsCOMPtr<nsIDocument> toolbarDoc(do_QueryInterface(toolbarDOMDoc));
+
+  nsIWebShell* statusWebShell = nsnull;
+  mWebShell->FindChildWithName(nsAutoString("browser.status"), statusWebShell);
+
+  PRInt32 actualStatusHeight  = GetDocHeight(statusDoc);
+  PRInt32 actualToolbarHeight = GetDocHeight(toolbarDoc);
+
+
+  PRInt32 height = 0;
+  PRInt32 x,y,w,h;
+  PRInt32 contentHeight;
+  PRInt32 toolbarHeight;
+  PRInt32 statusHeight;
+
+  mWebShell->GetBounds(x, y, w, h);
+  toolbarWebShell->GetBounds(x, y, w, toolbarHeight);
+  contentWebShell->GetBounds(x, y, w, contentHeight);
+  statusWebShell->GetBounds(x, y, w, statusHeight); 
+
+  //h = toolbarHeight + contentHeight + statusHeight;
+  contentHeight = h - actualStatusHeight - actualToolbarHeight;
+
+  toolbarWebShell->GetBounds(x, y, w, h);
+  toolbarWebShell->SetBounds(x, y, w, actualToolbarHeight);
+
+  contentWebShell->GetBounds(x, y, w, h);
+  contentWebShell->SetBounds(x, y, w, contentHeight);
+
+  statusWebShell->GetBounds(x, y, w, h);
+  statusWebShell->SetBounds(x, y, w, actualStatusHeight);
+#endif
+
   return NS_OK;
 }
 
@@ -957,6 +1035,7 @@ PRInt32 nsWebShellWindow::GetDocHeight(nsIDocument * aDoc)
 }
 
 //----------------------------------------
+#if 0
 NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
 {
 #ifdef DEBUG_MENUSDEL
@@ -1033,6 +1112,8 @@ NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
 
   return NS_OK;
 } // nsWebShellWindow::OnConnectionsComplete 
+#endif  /* 0 */
+
 
 
 /**
