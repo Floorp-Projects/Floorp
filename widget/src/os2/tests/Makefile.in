@@ -29,7 +29,7 @@ SIMPLE_PROGRAMS = dirpicker$(BIN_SUFFIX)
 
 CPPSRCS		= dirpicker.cpp
 
-LIBS		= $(DIST)/lib/libraptorwidget_s.lib
+LIBS		= $(DIST)/lib/libwdgtos2.lib
 
 include $(topsrcdir)/config/rules.mk
 

@@ -26,7 +26,7 @@ include $(DEPTH)/config/autoconf.mk
 OS2_LIBRARYNAME	= wdgtres
 DLL		= wdgtres.dll
 
-RCOPTS		= -n -x2 -i . -i $(RCDEFS)
+RCOPTS		= -n -x2 -i .
 
 ifneq ($(MOZ_OS2_TOOLS),VACPP)
 OMF_FLAG	= -Zomf
@@ -39,21 +39,25 @@ install: $(DLL)
 
 # XXX Have to copy files because rc and link386 are too stupid for a mirror tree build
 $(DLL): wdgtres.obj wdgtres.res
+ifeq ($(MOZ_OS2_TOOLS),VACPP) # link386 dies on fatal error L1104: R:\IBMCXXO\LIB\cpprss36.lib : not valid library
+	ilink /nol wdgtres.obj /O:$@ wdgtres.def
+else
+	link386 /nol wdgtres,$@,nul,,wdgtres.def
+endif
+	rc $(RCOPTS) wdgtres.res $@
+
+wdgtres.res: wdgtres.rc
 	cp $(topsrcdir)/widget/src/os2/resID.h ./resID.h
 	cp $(srcdir)/frame.ico ./frame.ico
 	cp $(srcdir)/folder.ico ./folder.ico
 	cp $(srcdir)/dragitem.ico ./dragitem.ico
 	cp $(srcdir)/select.ptr ./select.ptr
 	cp $(srcdir)/wdgtres.def ./wdgtres.def
-	link386 /nol wdgtres,$@,nul,,wdgtres.def
-	rc $(RCOPTS) wdgtres.res $@
-
-wdgtres.res: wdgtres.rc
 	rc $(RCOPTS) -r $(srcdir)/wdgtres.rc $@
 
 wdgtres.obj: wdgtres.C
 	$(CC) -o $@ -s -c $(CFLAGS) $(OMF_FLAG) $<
 
 realclean clean:
-	rm -rf $(DLL) *.res *.obj
+	rm -rf $(DLL) *.res *.obj *.ico *.h *.def
 
