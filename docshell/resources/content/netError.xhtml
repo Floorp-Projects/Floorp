@@ -33,49 +33,118 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
-  <title> </title>
+  <title>&loadError.label;</title>
   <script src="chrome://global/content/netError.js"></script>
+  <style><![CDATA[
+    body {
+      font: message-box;
+    }
+    div.invisible {
+      display: none;
+    }
+    div.et_visible {
+      margin-top: 2em;
+      margin-bottom: 1em;
+      font-size: large;
+      text-align: left;
+      font-weight: bold;
+      color: #5D616E;
+    }
+    div#shortDesc {
+      width: 90%;
+      text-align: justify;
+      margin-left: 5%;
+      margin-right: 5%;
+    }
+    div#longDesc {
+      width: 90%;
+      text-align: justify;
+      margin-left: 5%;
+      margin-right: 5%;
+    }
+    div.ld_visible {
+      display: block;
+      background-color: #CEE0FF;
+    }
+  ]]></style>
 </head>
 
-<body onload="fillIn();">
-  <div id="title">
-   <p> </p>
+<body style="font: message-box;" onload="fillIn();">
+
+  <!-- ERROR TITLE -->
+  <div id="errorTitle">
+    <div id="et_malformedURI" class="invisible">
+      <p>&malformedURI.title;</p>
+    </div>
+    <div id="et_fileNotFound" class="invisible">
+      <p>&fileNotFound.title;</p>
+    </div>
+    <div id="et_dnsNotFound" class="invisible">
+      <p>&dnsNotFound.title;</p>
+    </div>
+    <div id="et_dnsNotFound" class="invisible">
+      <p>&dnsNotFound.title;</p>
+    </div>
+    <div id="et_protocolNotFound" class="invisible">
+      <p>&protocolNotFound.title;</p>
+    </div>
+    <div id="et_connectionFailure" class="invisible">
+      <p>&connectionFailure.title;</p>
+    </div>
+    <div id="et_netTimeout" class="invisible">
+      <p>&netTimeout.title;</p>
+    </div>
+    <div id="et_redirectLoop" class="invisible">
+      <p>&redirectLoop.title;</p>
+    </div>
+    <div id="et_unknownSocketType" class="invisible">
+      <p>&unknownSocketType.title;</p>
+    </div>
+    <div id="et_netOffline" class="invisible">
+      <p>&netOffline.title;</p>
+    </div>
   </div>
+
   <!-- SHORT DESCRIPTION -->
-  <p id="shortDesc"> </p>
+  <div id="shortDesc">
+    <p id="sd"> </p>
+  </div>
+
   <!-- LONG DESCRIPTION -->
-  <div id="malformedURI" style="display:none;">
-    <p>&malformedURI.longDesc;</p>
+  <div id="longDesc">
+    <div id="ld_malformedURI" class="invisible">
+      <p>&malformedURI.longDesc;</p>
+    </div>
+    <div id="ld_fileNotFound" class="invisible">
+      <p>&fileNotFound.longDesc;</p>
+    </div>
+    <div id="ld_dnsNotFound" class="invisible">
+      <p>&dnsNotFound.longDesc;</p>
+    </div>
+    <div id="ld_dnsNotFound" class="invisible">
+      <p>&dnsNotFound.longDesc;</p>
+    </div>
+    <div id="ld_protocolNotFound" class="invisible">
+      <p>&protocolNotFound.longDesc;</p>
+    </div>
+    <div id="ld_connectionFailure" class="invisible">
+      <p>&connectionFailure.longDesc;</p>
+    </div>
+    <div id="ld_netTimeout" class="invisible">
+      <p>&netTimeout.longDesc;</p>
+    </div>
+    <div id="ld_redirectLoop" class="invisible">
+      <p>&redirectLoop.longDesc;</p>
+    </div>
+    <div id="ld_unknownSocketType" class="invisible">
+      <p>&unknownSocketType.longDesc;</p>
+    </div>
+    <div id="ld_netOffline" class="invisible">
+      <p>&netOffline.longDesc;</p>
+    </div>
   </div>
-  <div id="fileNotFound" style="display:none;">
-    <p>&fileNotFound.longDesc;</p>
-  </div>
-  <div id="dnsNotFound" style="display:none;">
-    <p>&dnsNotFound.longDesc;</p>
-  </div>
-  <div id="dnsNotFound" style="display:none;">
-    <p>&dnsNotFound.longDesc;</p>
-  </div>
-  <div id="protocolNotFound" style="display:none;">
-    <p>&protocolNotFound.longDesc;</p>
-  </div>
-  <div id="connectionFailure" style="display:none;">
-    <p>&connectionFailure.longDesc;</p>
-  </div>
-  <div id="netTimeout" style="display:none;">
-    <p>&netTimeout.longDesc;</p>
-  </div>
-  <div id="redirectLoop" style="display:none;">
-    <p>&redirectLoop.longDesc;</p>
-  </div>
-  <div id="unknownSocketType" style="display:none;">
-    <p>&unknownSocketType.longDesc;</p>
-  </div>
-  <div id="netOffline" style="display:none;">
-    <p>&netOffline.longDesc;</p>
-  </div>
+
   <p><a id="retry" href="#" onclick="retryThis();">&retry.label;</a></p>
-  <p><a id="search" href="#" onclick="searchThis();">&search.label;</a></p>
 </body>
 
 </html>
