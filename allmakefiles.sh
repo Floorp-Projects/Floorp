@@ -151,6 +151,7 @@ gfx/src/rhapsody/Makefile
 gfx/src/mac/Makefile
 gfx/src/qt/Makefile
 gfx/src/xlib/Makefile
+gfx/src/os2/Makefile
 gfx/src/xlibrgb/Makefile
 gfx/tests/Makefile
 "
@@ -188,6 +189,7 @@ intl/locale/public/Makefile
 intl/locale/idl/Makefile
 intl/locale/src/Makefile
 intl/locale/src/unix/Makefile
+intl/locale/src/os2/Makefile
 intl/locale/tests/Makefile
 intl/lwbrk/Makefile
 intl/lwbrk/src/Makefile
@@ -498,6 +500,9 @@ widget/src/photon/Makefile
 widget/src/rhapsody/Makefile
 widget/src/mac/Makefile
 widget/src/xlib/Makefile
+widget/src/os2/Makefile
+widget/src/os2/res/Makefile
+widget/src/os2/tests/Makefile
 widget/src/qt/Makefile
 widget/src/xlib/window_service/Makefile
 widget/src/xpwidgets/Makefile
@@ -537,6 +542,7 @@ xpcom/reflect/xptcall/Makefile
 xpcom/reflect/xptcall/public/Makefile
 xpcom/reflect/xptcall/src/Makefile
 xpcom/reflect/xptcall/src/md/Makefile
+xpcom/reflect/xptcall/src/md/os2/Makefile
 xpcom/reflect/xptcall/src/md/test/Makefile
 xpcom/reflect/xptcall/src/md/unix/Makefile
 xpcom/reflect/xptcall/tests/Makefile
@@ -664,12 +670,15 @@ xpfe/browser/resources/locale/Makefile
 xpfe/browser/resources/locale/en-US/Makefile
 xpfe/global/Makefile
 xpfe/global/resources/Makefile
+xpfe/global/resources/skin/os2/Makefile
 xpfe/global/resources/skin/unix/Makefile
 xpfe/global/resources/content/Makefile
+xpfe/global/resources/content/os2/Makefile
 xpfe/global/resources/content/unix/Makefile
 xpfe/global/resources/skin/Makefile
 xpfe/global/resources/locale/Makefile
 xpfe/global/resources/locale/en-US/Makefile
+xpfe/global/resources/locale/en-US/os2/Makefile
 xpfe/global/resources/locale/en-US/unix/Makefile
 xpfe/communicator/Makefile
 xpfe/communicator/resources/Makefile
