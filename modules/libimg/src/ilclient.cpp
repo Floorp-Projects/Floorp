@@ -20,7 +20,7 @@
  *   ilclient.c --- Management of imagelib client data structures,
  *                  including image cache.
  *
- *   $Id: ilclient.cpp,v 3.15 1999/10/29 02:17:55 kipp%netscape.com Exp $
+ *   $Id: ilclient.cpp,v 3.16 1999/10/29 18:53:03 pnunn%netscape.com Exp $
  */
 
 
@@ -54,11 +54,8 @@ NS_DEFINE_IID(kIImgDCallbkIID, NS_IIMGDCALLBK_IID);
 
 ImgDCallbk::~ImgDCallbk()
 {
-#if 0
-    /* XXX kipp sez: this is never right to do! instead
-       il_delete_container should be used */
-    if(ilContainer) delete ilContainer;
-#endif
+    if(ilContainer) 
+        il_delete_container(ilContainer);
 }
 
 NS_IMPL_ISUPPORTS(ImgDCallbk, kIImgDCallbkIID)
