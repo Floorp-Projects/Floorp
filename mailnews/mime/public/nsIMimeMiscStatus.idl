@@ -39,3 +39,17 @@ interface nsIMimeMiscStatus : nsISupports{
     string  GetImageURL(in long aStatus);
 };
 
+// this is a simple interface which allows someone to listen to all the headers 
+// that are discovered by mime. We can use this when displaying a message to update
+// the msg header in JS. I'm keeping it simple right now although eventually I'll 
+// set the headers in bulk.
+
+[scriptable, uuid(756DBE17-B59A-11d3-98A9-001083010E9B)] 
+interface nsIMsgHeaderSink : nsISupports{
+	void handleHeader(in string aHeaderName, in string aHeaderValue);
+
+	// make a sandwhich around header processing.....
+	void onStartHeaders();
+	void onEndHeaders();
+	void handleAttachment(in string url, in string displayName, in string uri);
+};
