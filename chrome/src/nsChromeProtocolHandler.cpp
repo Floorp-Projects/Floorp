@@ -380,10 +380,10 @@ nsCachedChromeChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
 }
 
 NS_IMETHODIMP
-nsCachedChromeChannel::GetShouldCache(PRBool *aShouldCache)
+nsCachedChromeChannel::GetLocalFile(nsIFile* *file)
 {
-    NS_NOTREACHED("GetShouldCache");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *file = nsnull;
+    return NS_OK;
 }
 
 NS_IMETHODIMP

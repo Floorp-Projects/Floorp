@@ -33,6 +33,12 @@
 #include "nsIAggregatePrincipal.h"
 #include "nsXPIDLString.h"
 
+#ifdef NS_USE_CACHE_MANAGER_FOR_JAR
+#include "nsINetDataCacheManager.h"
+#include "nsICachedNetData.h"
+#include "nsIStreamAsFile.h"
+#endif
+
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
@@ -379,6 +385,14 @@ nsJARChannel::EnsureJARFileAvailable(OnJARFileAvailableFun onJARFileAvailable,
     nsCOMPtr<nsIChannel> jarCacheTransport;
     nsCOMPtr<nsIInputStream> jarBaseIn;
 
+#ifdef NS_USE_CACHE_MANAGER_FOR_JAR
+    nsCOMPtr<nsINetDataCacheManager> cacheMgr;
+    nsXPIDLCString jarBaseSpec;
+    nsCOMPtr<nsICachedNetData> cachedData;
+    nsCOMPtr<nsIStreamAsFile> streamAsFile;
+    nsCOMPtr<nsIFile> file;
+#endif
+
 #ifdef PR_LOGGING
     nsXPIDLCString jarURLStr;
     mURI->GetSpec(getter_Copies(jarURLStr));
@@ -412,17 +426,45 @@ nsJARChannel::EnsureJARFileAvailable(OnJARFileAvailableFun onJARFileAvailable,
     rv = mURI->GetJAREntry(&mJAREntry);
     if (NS_FAILED(rv)) goto error;
 
+#ifdef NS_USE_CACHE_MANAGER_FOR_JAR
+
+    cacheMgr = do_GetService(NS_NETWORK_CACHE_MANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) goto error;
+
+    rv = mJARBaseURI->GetSpec(getter_Copies(jarBaseSpec));
+    if (NS_FAILED(rv)) goto error;
+
+    rv = cacheMgr->GetCachedNetData(jarBaseSpec, nsnull, 0, nsINetDataCacheManager::CACHE_AS_FILE,
+                                    getter_AddRefs(cachedData));
+    if (NS_SUCCEEDED(rv)) {
+        streamAsFile = do_QueryInterface(cachedData, &rv);
+        if (NS_FAILED(rv)) goto error;
+
+        rv = streamAsFile->GetFile(getter_AddRefs(file));
+        if (NS_FAILED(rv)) goto error;
+    }
+#endif
+
     rv = NS_OpenURI(getter_AddRefs(jarBaseChannel), mJARBaseURI, nsnull);
     if (NS_FAILED(rv)) goto error;
 
-    PRBool shouldCache;
-    rv = jarBaseChannel->GetShouldCache(&shouldCache);
-
-    if (NS_SUCCEEDED(rv) && !shouldCache) {
+    rv = jarBaseChannel->GetLocalFile(getter_AddRefs(jarCacheFile));
+    if (NS_SUCCEEDED(rv)) {
         // Case 1: Local file
         // we've already got a local jar file -- no need to download it
-        mJARBaseFile = do_QueryInterface(jarBaseChannel, &rv);  // XXX fails for resource:
-        if (NS_FAILED(rv)) goto error;
+
+        rv = NS_NewLocalFileChannel(getter_AddRefs(mJARBaseFile),
+                                    jarCacheFile, PR_RDONLY, 0);
+        if (NS_FAILED(rv)) return rv;
+        rv = mJARBaseFile->SetBufferSegmentSize(mBufferSegmentSize);
+        if (NS_FAILED(rv)) return rv;
+        rv = mJARBaseFile->SetBufferMaxSize(mBufferMaxSize);
+        if (NS_FAILED(rv)) return rv;
+        rv = mJARBaseFile->SetLoadAttributes(mLoadAttributes);
+        if (NS_FAILED(rv)) return rv;
+        rv = mJARBaseFile->SetNotificationCallbacks(mCallbacks);
+        if (NS_FAILED(rv)) return rv;
+
         PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
                ("nsJarProtocol: extracting local jar file %s", (const char*)jarURLStr));
         rv = onJARFileAvailable(this, closure);
@@ -747,12 +789,9 @@ nsJARChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
 }
 
 NS_IMETHODIMP
-nsJARChannel::GetShouldCache(PRBool *aShouldCache)
+nsJARChannel::GetLocalFile(nsIFile* *file)
 {
-    // Jar files report that you shouldn't cache them because this is really
-    // a question about the jar entry, and the jar entry is always in a jar
-    // file on disk.
-    *aShouldCache = PR_FALSE;
+    *file = nsnull;
     return NS_OK;
 }
 

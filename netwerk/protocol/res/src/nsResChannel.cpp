@@ -639,12 +639,30 @@ nsResChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
 }
 
 NS_IMETHODIMP
-nsResChannel::GetShouldCache(PRBool *aShouldCache)
+nsResChannel::GetLocalFile(nsIFile* *result)
 {
-    if (mResolvedChannel) {
-        mResolvedChannel->GetShouldCache(aShouldCache);
-    }
-    *aShouldCache = PR_TRUE;
+    nsresult rv;
+    rv = mSubstitutions.Init();
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIFile> file;
+    do {
+        rv = EnsureNextResolvedChannel();
+        if (NS_FAILED(rv)) break;
+
+        if (mResolvedChannel) {
+            rv = mResolvedChannel->GetLocalFile(getter_AddRefs(file));
+            PRBool exists;
+            rv = file->Exists(&exists);
+            if (NS_SUCCEEDED(rv) && exists) {
+                *result = file;
+                NS_ADDREF(*result);
+                return NS_OK;
+            }
+        }
+    } while (NS_FAILED(rv));
+
+    *result = nsnull;
     return NS_OK;
 }
 
