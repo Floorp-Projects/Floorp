@@ -264,7 +264,7 @@ nsHttpTransaction::ParseLineSegment(char *segment, PRUint32 len)
 
     if (!mLineBuf.IsEmpty() && mLineBuf.Last() == '\n') {
         // if this segment is a continuation of the previous...
-        if (*segment == ' ' || *segment == '\t') {
+        if (mHaveStatusLine && (*segment == ' ' || *segment == '\t')) {
             // trim off the new line char
             mLineBuf.Truncate(mLineBuf.Length() - 1);
             mLineBuf.Append(segment, len);
@@ -279,11 +279,6 @@ nsHttpTransaction::ParseLineSegment(char *segment, PRUint32 len)
     }
     else
         mLineBuf.Append(segment, len);
-    
-    if (!mHaveStatusLine && mLineBuf.Last() == '\n') {
-        // status lines aren't foldable, so don't try. See bug 89365
-        ParseLine(NS_CONST_CAST(char*,mLineBuf.get()));
-    }
     
     // a line buf with only a new line char signifies the end of headers.
     if (mLineBuf.First() == '\n') {
