@@ -176,11 +176,11 @@
 <!ENTITY calendar.flat.topbar.gototoday        "Ir a hoy" >
 <!ENTITY calendar.flat.topbar.choosedate       "Ir a fecha" >
 <!ENTITY calendar.flat.topbar.dayview          "Ver día" >
-<!ENTITY calendar.dayview.accesskey            "d" >
+<!ENTITY calendar.dayview.accesskey            "D" >
 <!ENTITY calendar.flat.topbar.weekview         "Ver semana" >
 <!ENTITY calendar.weekview.accesskey           "s" >
 <!ENTITY calendar.flat.topbar.monthview        "Ver mes" >
-<!ENTITY calendar.monthview.accesskey          "m" >
+<!ENTITY calendar.monthview.accesskey          "M" >
 <!ENTITY calendar.flat.topbar.multiweekview   "Multisemana" >
 <!ENTITY calendar.multiweekview.accesskey     "u" >
 
@@ -251,7 +251,7 @@
 <!ENTITY calendar.monthview.button.label        "Ver mes" >
 <!ENTITY calendar.multiweekview.button.label        "Multisemana" >
 <!ENTITY calendar.onlyworkday.checkbox.label    "De lunes a viernes sólo" >
-<!ENTITY calendar.onlyworkday.checkbox.accesskey  "F" >
+<!ENTITY calendar.onlyworkday.checkbox.accesskey  "l" >
 <!ENTITY calendar.displaytodos.checkbox.label   "Tareas en la vista" >
 <!ENTITY calendar.displaytodos.checkbox.accesskey "V" >
 
@@ -291,37 +291,37 @@
 
 <!-- Context Menu -->
 <!ENTITY calendar.context.newevent.label              "Nuevo evento">
-<!ENTITY calendar.context.newevent.accesskey          "n">
+<!ENTITY calendar.context.newevent.accesskey          "N">
 <!ENTITY calendar.context.newtodo.label               "Nueva tarea">
 <!ENTITY calendar.context.newtodo.accesskey           "r">
 <!ENTITY calendar.context.modifyevent.label           "Editar evento seleccionado">
-<!ENTITY calendar.context.modifyevent.accesskey       "e">
+<!ENTITY calendar.context.modifyevent.accesskey       "E">
 <!ENTITY calendar.context.modifytask.label            "Editar tarea">
-<!ENTITY calendar.context.modifytask.accesskey        "e">
+<!ENTITY calendar.context.modifytask.accesskey        "E">
 <!ENTITY calendar.context.deleteevent.label           "Borrar evento seleccioando">
 <!ENTITY calendar.context.deleteevent.accesskey       "l">
 <!ENTITY calendar.context.deletetask.label            "Borrar tarea">
-<!ENTITY calendar.context.deletetask.accesskey        "l">
+<!ENTITY calendar.context.deletetask.accesskey        "B">
 <!ENTITY calendar.context.cutevent.label              "Cortar">
 <!ENTITY calendar.context.cutevent.accesskey          "t">
 <!ENTITY calendar.context.copyevent.label             "Copiar">
-<!ENTITY calendar.context.copyevent.accesskey         "c">
+<!ENTITY calendar.context.copyevent.accesskey         "C">
 <!ENTITY calendar.context.pasteevent.label            "Pegar">
-<!ENTITY calendar.context.pasteevent.accesskey        "p">
+<!ENTITY calendar.context.pasteevent.accesskey        "P">
 <!ENTITY calendar.context.selectall.label             "Seleccionar todo">
-<!ENTITY calendar.context.selectall.accesskey         "a">
+<!ENTITY calendar.context.selectall.accesskey         "A">
 <!ENTITY calendar.context.gototoday.label             "Ir a hoy">
 <!ENTITY calendar.context.gototoday.accesskey         "h">
-<!ENTITY calendar.context.dayview.label               "Cambiar a ver día">
-<!ENTITY calendar.context.dayview.accesskey           "d">
+<!ENTITY calendar.context.dayview.label               "Cambiar a vista de día">
+<!ENTITY calendar.context.dayview.accesskey           "D">
 <!ENTITY calendar.context.weekview.label              "Cambiar a ver semana">
 <!ENTITY calendar.context.weekview.accesskey          "s">
 <!ENTITY calendar.context.monthview.label             "Cambiar a ver mes">
-<!ENTITY calendar.context.monthview.accesskey         "m">
+<!ENTITY calendar.context.monthview.accesskey         "M">
 <!ENTITY calendar.context.multiweekview.label        "Cambiar a ver multisemana">
 <!ENTITY calendar.context.multiweekview.accesskey    "u">
 <!ENTITY calendar.context.reload.label                "Recargar">
-<!ENTITY calendar.context.reload.accesskey            "r">
+<!ENTITY calendar.context.reload.accesskey            "R">
 <!ENTITY calendar.context.emailevent.label            "Enviar eventos seleccionados">
 <!ENTITY calendar.context.emailevent.accesskey        "i">
 <!ENTITY calendar.context.emailtask.label             "Enviar tarea">
@@ -329,11 +329,11 @@
 
 <!-- Task Context Menu -->
 <!ENTITY calendar.context.progress.label              "Progreso">
-<!ENTITY calendar.context.progress.accesskey          "p">
+<!ENTITY calendar.context.progress.accesskey          "P">
 <!ENTITY calendar.context.priority.label              "Prioridad">
 <!ENTITY calendar.context.priority.accesskey          "r">
 
-<!ENTITY percnt "&#38;#37;" ><!--=percent sign-->
+<!ENTITY percnt "&#37;" ><!--=percent sign-->
 
 <!ENTITY progress.level.0             "0&percnt;">
 <!ENTITY progress.level.0.accesskey   "0">

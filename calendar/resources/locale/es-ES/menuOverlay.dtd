@@ -39,28 +39,28 @@
 <!ENTITY eventMenuCmd.accesskey     "v">
 
 <!ENTITY event.new.event           "Nuevo evento">
-<!ENTITY event.new.event.accesskey "n">
+<!ENTITY event.new.event.accesskey "N">
 
 <!ENTITY event.new.todo     "Nueva tarea">
-<!ENTITY event.new.todo.accesskey "t">
+<!ENTITY event.new.todo.accesskey "T">
 
-<!ENTITY calendar.new.server.label "New Calendar">
+<!ENTITY calendar.new.server.label "Nuevo calendario">
 <!ENTITY calendar.new.server.accesskey "l">
 
 <!ENTITY event.edit.event   "Editar">
-<!ENTITY event.edit.event.accesskey "e">
+<!ENTITY event.edit.event.accesskey "E">
 
 <!ENTITY event.delete.event "Borrar eventos seleccionados">
-<!ENTITY event.delete.event.accesskey   "d">
+<!ENTITY event.delete.event.accesskey   "D">
 
 <!ENTITY event.delete.tasks "Borrar tareas seleccionadas">
-<!ENTITY event.delete.tasks.accesskey   "t">
+<!ENTITY event.delete.tasks.accesskey   "T">
 
 <!ENTITY event.mail.event   "Enviar eventos seleccionados">
-<!ENTITY event.mail.event.accesskey "m">
+<!ENTITY event.mail.event.accesskey "v">
 
 <!ENTITY calendar.print.label   "Imprimir calendarios activos...">
-<!ENTITY calendar.print.accesskey   "r">
+<!ENTITY calendar.print.accesskey   "P">
 
 <!ENTITY calendar.printpreview.label    "Vista preliminar">
 <!ENTITY calendar.printpreview.accesskey    "v">
@@ -69,40 +69,40 @@
 <!ENTITY calendar.pagesetup.accesskey   "u">
 
 <!ENTITY calendar.import.label  "Importar de fichero...">
-<!ENTITY calendar.import.accesskey  "i">
+<!ENTITY calendar.import.accesskey  "I">
 
 <!ENTITY calendar.wizard.label  "Cargar asistente">
-<!ENTITY calendar.wizard.accesskey  "w">
+<!ENTITY calendar.wizard.accesskey  "W">
 
 <!ENTITY calendar.export.label  "Exportar eventos seleccionados...">
-<!ENTITY calendar.export.accesskey  "e">
+<!ENTITY calendar.export.accesskey  "E">
 
-<!ENTITY calendar.subscribe.label "Subscribir a calendario remoto...">
-<!ENTITY calendar.subscribe.accesskey "s">
+<!ENTITY calendar.subscribe.label "Suscribir a calendario remoto...">
+<!ENTITY calendar.subscribe.accesskey "R">
 
 <!ENTITY calendar.publish.label "Publicar eventos seleccionados...">
-<!ENTITY calendar.publish.accesskey "p">
+<!ENTITY calendar.publish.accesskey "S">
 
 <!ENTITY calendar.about.label   "Acerca del calendario">
-<!ENTITY calendar.about.accesskey   "a">
+<!ENTITY calendar.about.accesskey   "C">
 
 <!ENTITY calendar.cut.label "Cortar">
 <!ENTITY calendar.cut.accesskey "t">
 
 <!ENTITY calendar.copy.label    "Copiar">
-<!ENTITY calendar.copy.accesskey    "c">
+<!ENTITY calendar.copy.accesskey    "C">
 
 <!ENTITY calendar.paste.label   "Pegar">
-<!ENTITY calendar.paste.accesskey   "p">
+<!ENTITY calendar.paste.accesskey   "P">
 
 <!ENTITY calendar.selectall.label   "Seleccionar todo">
-<!ENTITY calendar.selectall.accesskey   "a">
+<!ENTITY calendar.selectall.accesskey   "A">
 
 <!ENTITY calendar.preferences.label "Preferencias...">
-<!ENTITY calendar.preferences.accesskey "p">
+<!ENTITY calendar.preferences.accesskey "e">
 
 <!ENTITY goMenu.label                   "Ir">
-<!ENTITY goMenu.accesskey               "g">
+<!ENTITY goMenu.accesskey               "I">
 
 <!ENTITY goTodayCmd.label               "Ir a hoy">
 <!ENTITY goTodayCmd.accesskey           "h">
@@ -111,13 +111,13 @@
 <!ENTITY goPreviousCmd.accesskey        "A">
 
 <!ENTITY goNextCmd.label                "Siguiente">
-<!ENTITY goNextCmd.accesskey            "n">
+<!ENTITY goNextCmd.accesskey            "N">
 
-<!ENTITY taskMenu.label                "Tasks">
+<!ENTITY taskMenu.label                "Tareas">
 <!ENTITY taskMenu.accesskey            "T">
 
-<!ENTITY toolsMenu.label                "Tools">
-<!ENTITY toolsMenu.accesskey            "o">
+<!ENTITY toolsMenu.label                "Herramientas">
+<!ENTITY toolsMenu.accesskey            "H">
 
 <!ENTITY javaScriptConsoleCmd.label     "JavaScript Console">
 <!ENTITY javaScriptConsoleCmd.accesskey "S">
@@ -128,7 +128,7 @@
 <!ENTITY messengerCmd.label     "Mail">
 <!ENTITY messengerCmd.accesskey "M">
 
-<!ENTITY addressBookCmd.label     "Address Book">
+<!ENTITY addressBookCmd.label     "Libreta de direcciones">
 <!ENTITY addressBookCmd.accesskey "A">
 
 <!ENTITY helpMenu.accesskey            "H">

@@ -36,16 +36,16 @@
 
 <!ENTITY calendar.label             "Calendario" >
 <!ENTITY calendarPanel.label        "Calendario" >
-<!ENTITY calendar.accesskey         "c" >
+<!ENTITY calendar.accesskey         "C" >
 <!ENTITY calendar.publish.label     "Publicar">
 <!ENTITY calendar.general.label     "General">
 <!ENTITY calendar.alarms.label      "Alarmas">
 <!ENTITY calendar.views.label       "Vistas">
 <!ENTITY calendar.timezone.label    "Mi zona horaria">
 
-<!ENTITY prefWindow.title            "Calendar Options">
+<!ENTITY prefWindow.title            "Opciones del calendario">
 <!ENTITY prefWindow.size             "width: 52.3em; height: 41em;">
-<!ENTITY prefWindow.category         "Category">
+<!ENTITY prefWindow.category         "Categoría">
 
 <!ENTITY pref.mainbox.label         "Configuración general" >
 <!ENTITY pref.alarmgoesoff.label "Cuando se apague la alarma:">
