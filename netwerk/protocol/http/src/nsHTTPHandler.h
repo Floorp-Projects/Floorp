@@ -61,6 +61,9 @@ class nsHTTPChannel;
 // because of HTTP/1.1 is default now
 #define DEFAULT_ALLOWED_CAPABILITIES    (DEFAULT_PROXY_CAPABILITIES|DEFAULT_SERVER_CAPABILITIES)
 
+class   nsHTTPPipelinedRequest;
+class   nsIHTTPChannel;
+
 class nsHTTPHandler : public nsIHTTPProtocolHandler
 {
 public:
@@ -79,7 +82,7 @@ public:
                                       nsHTTPChannel* i_Channel, 
                                       PRUint32 bufferSegmentSize,
                                       PRUint32 bufferMaxSize,
-                                      nsIChannel** o_pTrans, PRUint32 *capabilities, PRUint32 flags = TRANSPORT_REUSE_ALIVE);
+                                      nsIChannel** o_pTrans, PRUint32 flags = TRANSPORT_REUSE_ALIVE);
     
     /**
     *    Called to create a transport from RequestTransport to accually
@@ -103,6 +106,9 @@ public:
 
     PRUint32 ReferrerLevel(void) { return mReferrerLevel; } ;
 
+    nsresult    AddPipelinedRequest (nsHTTPPipelinedRequest *pReq);
+    nsresult    GetPipelinedRequest (nsIHTTPChannel* i_Channel, nsHTTPPipelinedRequest ** o_Req, PRBool checkExists = PR_FALSE);
+
 protected:
     virtual ~nsHTTPHandler();
     nsresult InitUserAgentComponents();
@@ -112,6 +118,7 @@ protected:
     nsCOMPtr<nsISupportsArray> mConnections;
     nsCOMPtr<nsISupportsArray> mPendingChannelList;
     nsCOMPtr<nsISupportsArray> mTransportList;
+    nsCOMPtr<nsISupportsArray> mPipelinedRequests;
     // Transports that are idle (ready to be used again)
     nsCOMPtr<nsISupportsArray> mIdleTransports;
 
@@ -142,6 +149,8 @@ protected:
     nsCString mProduct;
     nsCString mProductSub;
     nsCString mProductComment;
+
+
 private:
 
     nsHashtable mCapTable;

@@ -33,6 +33,8 @@
 #include "nsHTTPHeaderArray.h"
 #include "nsHTTPEnums.h"
 #include "nsHTTPHandler.h"
+#include "nsISupportsArray.h"
+#include "nsXPIDLString.h"
 
 class nsIInputStream;
 class nsHTTPChannel;
@@ -58,8 +60,10 @@ class nsHTTPChannel;
 
     -Gagan Saksena 03/29/99
 */
-class nsHTTPRequest : public nsIStreamObserver,
-                      public nsIRequest
+
+class nsHTTPPipelinedRequest;
+
+class nsHTTPRequest : public nsIRequest
 {
 
 public:
@@ -68,7 +72,6 @@ public:
     nsHTTPRequest(nsIURI* i_URL, nsHTTPHandler* i_Handler, PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize, HTTPMethod i_Method=HM_GET);
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSISTREAMOBSERVER
     NS_DECL_NSIREQUEST
 
     // Finally our own methods...
@@ -103,19 +106,31 @@ public:
 
     nsresult            GetHeaderEnumerator(nsISimpleEnumerator** aResult);
         
-    nsresult            SetConnection(nsHTTPChannel* i_Connection);
+    nsresult            GetConnection(nsHTTPChannel** o_Connection);
+    nsresult            SetConnection(nsHTTPChannel*  i_Connection);
 
     nsresult            SetTransport (nsIChannel * aTransport);
     nsresult            GetTransport (nsIChannel **aTransport);
 
     // Build the actual request string based on the settings. 
-    nsresult            WriteRequest();
 
     nsresult            GetPostDataStream(nsIInputStream* *aResult);
     nsresult            SetPostDataStream(nsIInputStream* aStream);
 
     nsresult            SetOverrideRequestSpec(const char* i_Spec);
     nsresult            GetOverrideRequestSpec(char** o_Spec);
+
+    PRUint32            mBufferSegmentSize;
+    PRUint32            mBufferMaxSize;
+
+    nsCOMPtr<nsIInputStream>    mPostDataStream;
+
+    nsresult formHeaders (PRUint32 capabilities);
+    nsresult formBuffer  (nsCString * reqBuffer);
+
+    nsHTTPPipelinedRequest*     mPipelinedRequest;
+    nsHTTPChannel*              mConnection;
+    nsCOMPtr<nsIURL>            mURI;
 
 protected:
     virtual ~nsHTTPRequest();
@@ -142,27 +157,69 @@ protected:
     }
 
     HTTPMethod                  mMethod;
-    nsCOMPtr<nsIURL>            mURI;
     PRUint32                    mVersion;
     PRUint32                    mKeepAliveTimeout;
-    PRUint32                    mAttempts;
-    PRUint32                    mCapabilities;
-    nsCOMPtr<nsIChannel>        mTransport;
-    nsHTTPChannel*              mConnection;
 
     nsHTTPHeaderArray           mHeaders;
 
-    nsCString                   mRequestBuffer;
-    nsCOMPtr<nsIInputStream>    mPostDataStream;
     char*                       mRequestSpec; 
 
     nsHTTPHandler*              mHandler;
-
-    PRUint32                    mBufferSegmentSize;
-    PRUint32                    mBufferMaxSize;
     nsresult                    mAbortStatus;
+};
 
-    nsresult formHeaders ();
+class nsHTTPPipelinedRequest : public nsIStreamObserver
+{
+
+public:
+    // Constructor
+    nsHTTPPipelinedRequest (nsHTTPHandler* i_Handler, const char *host, PRInt32 port, PRUint32 capabilities);
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISTREAMOBSERVER
+
+    nsresult    SetTransport (nsIChannel * aTransport);
+    nsresult    GetTransport (nsIChannel **aTransport);
+
+    // Build the actual request string based on the settings. 
+    nsresult    WriteRequest ();
+
+    nsresult    AddToPipeline(nsHTTPRequest *aRequest);
+    nsresult    GetRequestCount (PRUint32 * aReqCount);
+
+    nsresult    GetMustCommit (PRBool * aMustCommit);
+    nsresult    GetSameRequest(const char *host, PRInt32 port, PRBool * aSame);
+
+    nsresult    GetCurrentRequest (nsHTTPRequest ** o_Req);
+    nsresult    AdvanceToNextRequest ();
+
+    nsresult    IsPending (PRBool *result);
+    nsresult    Cancel  (nsresult status );
+    nsresult    Suspend ();
+    nsresult    Resume  ();
+
+protected:
+    virtual ~nsHTTPPipelinedRequest ();
+
+    PRUint32                mCapabilities;
+    PRUint32                mAttempts;
+    nsCOMPtr<nsIChannel>    mTransport;
+
+    PRUint32                mBufferSegmentSize;
+    PRUint32                mBufferMaxSize;
+    PRBool                  mMustCommit;   
+
+private:
+    nsCOMPtr<nsISupportsArray> mRequests;
+
+    nsHTTPRequest*          mCurReq;
+    nsHTTPHandler*          mHandler;
+    nsCString               mRequestBuffer;
+
+    nsCOMPtr<nsIInputStream>    mPostDataStream;
+
+    nsXPIDLCString  mHost;
+    PRInt32         mPort;
 };
 
 #endif /* _nsHTTPRequest_h_ */

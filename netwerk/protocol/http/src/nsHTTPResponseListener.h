@@ -31,6 +31,7 @@
 #include "nsIInputStream.h"
 #include "nsXPIDLString.h" 
 #include "nsHTTPHandler.h"
+#include "nsHTTPRequest.h"
 
 class nsIBufferInputStream;
 class nsHTTPResponse;
@@ -85,7 +86,7 @@ class nsHTTPServerListener : public nsHTTPResponseListener
 
 public:
 
-    nsHTTPServerListener(nsHTTPChannel* aConnection, nsHTTPHandler *handler);
+    nsHTTPServerListener (nsHTTPChannel* aConnection, nsHTTPHandler *handler, nsHTTPPipelinedRequest * request);
     virtual ~nsHTTPServerListener();
 
     NS_DECL_NSISTREAMOBSERVER
@@ -121,6 +122,7 @@ protected:
 
     PRBool                      mCompressHeaderChecked;
     PRBool                      mChunkHeaderChecked;
+    nsHTTPPipelinedRequest*     mPipelinedRequest;
 };
 
 

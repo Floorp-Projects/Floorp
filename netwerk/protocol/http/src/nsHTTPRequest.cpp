@@ -56,14 +56,13 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, nsHTTPHandler* i_Handler, PRUint32 b
     :
     mMethod(i_Method),
     mVersion(HTTP_ONE_ZERO),
-    mCapabilities (0),
     mKeepAliveTimeout (0),
-    mAttempts (0),
     mRequestSpec(0),
     mHandler (i_Handler),
     mBufferSegmentSize(bufferSegmentSize),
     mBufferMaxSize(bufferMaxSize),
-    mAbortStatus(NS_OK)
+    mAbortStatus(NS_OK),
+    mPipelinedRequest (nsnull)
 {   
     NS_INIT_REFCNT();
 
@@ -89,14 +88,13 @@ nsHTTPRequest::~nsHTTPRequest()
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Deleting nsHTTPRequest [this=%x].\n", this));
 
-    mTransport = 0;
-    CRTFREEIF(mRequestSpec);
+    CRTFREEIF (mRequestSpec);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports methods:
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsHTTPRequest, nsIStreamObserver, nsIRequest)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsHTTPRequest, nsIRequest)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:
@@ -104,15 +102,14 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsHTTPRequest, nsIStreamObserver, nsIRequest)
 NS_IMETHODIMP
 nsHTTPRequest::IsPending(PRBool *result)
 {
-  nsresult rv = NS_OK;
+    nsresult rv = NS_OK;
 
-  if (mTransport) {
-    rv = mTransport->IsPending(result);
-  } else {
-    *result = PR_FALSE; 
-  }
+    if (mPipelinedRequest)
+        rv = mPipelinedRequest -> IsPending (result);
+    else
+        *result = PR_FALSE; 
 
-  return rv;
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -123,202 +120,34 @@ nsHTTPRequest::GetStatus(nsresult *status)
 }
 
 NS_IMETHODIMP
-nsHTTPRequest::Cancel(nsresult status)
+nsHTTPRequest::Cancel (nsresult status)
 {
-  nsresult rv = NS_ERROR_FAILURE;
+    nsresult rv = NS_OK;
 
-  mAbortStatus = status;
-  if (mTransport) {
-    rv = mTransport->Cancel(status);
-  }
-  return rv;
+    mAbortStatus = status;
+    if (mPipelinedRequest)
+        rv = mPipelinedRequest -> Cancel (status);
+
+    return rv;
 }
 
 NS_IMETHODIMP
-nsHTTPRequest::Suspend(void)
+nsHTTPRequest::Suspend ()
 {
-  nsresult rv = NS_ERROR_FAILURE;
+    nsresult rv = NS_ERROR_FAILURE;
 
-  if (mTransport) {
-    rv = mTransport->Suspend();
-  }
-  return rv;
+    if (mPipelinedRequest)
+        rv = mPipelinedRequest -> Suspend ();
+    return rv;
 }
 
 NS_IMETHODIMP
-nsHTTPRequest::Resume(void)
+nsHTTPRequest::Resume ()
 {
-  nsresult rv = NS_ERROR_FAILURE;
+    nsresult rv = NS_ERROR_FAILURE;
 
-  if (mTransport) {
-    rv = mTransport->Resume();
-  }
-  return rv;
-}
-
-
-// Finally our own methods...
-
-nsresult nsHTTPRequest::WriteRequest ()
-{
-    nsresult rv;
-    if (!mURI) {
-        NS_ERROR("No URL to build request for!");
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    if (mAttempts > 2)
-        return NS_ERROR_FAILURE;
-
-    if (!mTransport)
-    {
-        rv = mHandler -> RequestTransport (mURI, mConnection, mBufferSegmentSize, mBufferMaxSize, 
-                                           getter_AddRefs (mTransport),
-                                           &mCapabilities,
-                                           mAttempts ? TRANSPORT_OPEN_ALWAYS : TRANSPORT_REUSE_ALIVE);
-
-        if (NS_FAILED (rv))
-            return rv;
-        rv = mTransport -> SetNotificationCallbacks (mConnection);
-    }    
-
-    if (NS_FAILED (rv))
-        return rv;
-
-    if (mAttempts++ == 0)
-        formHeaders ();
-
-    //
-    // Build up the request into mRequestBuffer...
-    //
-    nsXPIDLCString autoBuffer;
-    nsAutoString   autoString;
-
-    mRequestBuffer.Truncate();
-
-    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("nsHTTPRequest::Build() [this=%x].  Building Request string.\n",
-            this));
-    //
-    // Build the request line...
-    //
-    // ie. Method SP Request-URI SP HTTP-Version CRLF
-    //
-    mRequestBuffer.Append (MethodToString (mMethod));
-
-    // Request spec gets set for proxied cases-
-    if (!mRequestSpec)
-    {
-        rv = mURI->GetPath(getter_Copies(autoBuffer));
-        mRequestBuffer.Append(autoBuffer);
-    }
-    else
-        mRequestBuffer.Append(mRequestSpec);
-    
-    //if (mRequestSpec) 
-    /*
-    else
-    {
-        if (aIsProxied) {
-            rv = mURI->GetSpec(getter_Copies(autoBuffer));
-        } else {
-            rv = mURI->GetPath(getter_Copies(autoBuffer));
-        }
-        mRequestBuffer.Append(autoBuffer);
-    }
-    */
-    
-    //Trim off the # portion if any...
-    int refLocation = mRequestBuffer.RFind("#");
-    if (-1 != refLocation)
-        mRequestBuffer.Truncate(refLocation);
-
-    char * httpVersion = " HTTP/1.0" CRLF;
-
-    switch (mVersion)
-    {
-        case HTTP_ZERO_NINE:
-            httpVersion = " HTTP/0.9"CRLF;
-            break;
-        case HTTP_ONE_ONE:
-            httpVersion = " HTTP/1.1"CRLF;
-    }
-
-    mRequestBuffer.Append (httpVersion);
-
-    //
-    // Write the request headers, if any...
-    //
-    // ie. field-name ":" [field-value] CRLF
-    //
-    nsCOMPtr<nsISimpleEnumerator> enumerator;
-    rv = mHeaders.GetEnumerator (getter_AddRefs (enumerator));
-
-    if (NS_SUCCEEDED(rv)) {
-        PRBool bMoreHeaders;
-        nsCOMPtr<nsISupports>   item;
-        nsCOMPtr<nsIHTTPHeader> header;
-        nsCOMPtr<nsIAtom>       headerAtom;
-
-        enumerator->HasMoreElements(&bMoreHeaders);
-        while (bMoreHeaders) {
-            enumerator->GetNext(getter_AddRefs(item));
-            header = do_QueryInterface(item);
-
-            NS_ASSERTION(header, "Bad HTTP header.");
-            if (header) {
-                header->GetField(getter_AddRefs(headerAtom));
-                nsXPIDLCString fieldName;
-                header->GetFieldName(getter_Copies(fieldName));
-                NS_ASSERTION(fieldName, "field name not returned!, \
-                        out of memory?");
-                mRequestBuffer.Append(fieldName);
-                header->GetValue(getter_Copies(autoBuffer));
-
-                mRequestBuffer.Append(": ");
-                mRequestBuffer.Append(autoBuffer);
-                mRequestBuffer.Append(CRLF);
-            }
-            enumerator->HasMoreElements(&bMoreHeaders);
-        }
-    }
-
-    NS_ASSERTION(mConnection, "Connection disappeared!");
-
-    // Currently nsIPostStreamData contains the header info and the data.
-    // So we are forced to putting this here in the end. 
-    // This needs to change! since its possible for someone to modify it
-    // TODO- Gagan
-    if (!mPostDataStream) {
-        mRequestBuffer.Append(CRLF);
-    }
-
-    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("\nnsHTTPRequest::Build() [this=%x].\tWriting Request:\n"
-            "=== Start\n%s=== End\n",
-            this, mRequestBuffer.GetBuffer()));
-
-    //
-    // Create a string stream to feed to the socket transport.  This stream
-    // contains only the request.  Any POST data will be sent in a second
-    // AsyncWrite to the server..
-    //
-    nsCOMPtr<nsISupports> result;
-    nsCOMPtr<nsIInputStream> stream;
-
-    rv = NS_NewCharInputStream(getter_AddRefs(result), 
-                               mRequestBuffer.GetBuffer());
-    if (NS_FAILED(rv)) return rv;
-
-    stream = do_QueryInterface(result, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    //
-    // Write the request to the server.  
-    //
-    rv = mTransport->SetTransferCount(mRequestBuffer.Length());
-    if (NS_FAILED(rv)) return rv;
-    rv = mTransport->AsyncWrite(stream, this, (nsISupports*)(nsIRequest*)mConnection);
+    if (mPipelinedRequest)
+        rv = mPipelinedRequest -> Resume ();
     return rv;
 }
 
@@ -373,157 +202,58 @@ nsresult nsHTTPRequest::GetHTTPVersion (PRUint32 * o_Version)
 }
 
 
-nsresult nsHTTPRequest::SetPostDataStream(nsIInputStream* aStream)
+nsresult nsHTTPRequest::SetPostDataStream (nsIInputStream* aStream)
 {
-  mPostDataStream = aStream;
-
-  return NS_OK;
-}
-
-nsresult nsHTTPRequest::GetPostDataStream(nsIInputStream* *aResult)
-{ 
-  nsresult rv = NS_OK;
-
-  if (aResult) {
-    *aResult = mPostDataStream;
-    NS_IF_ADDREF(*aResult);
-  } else {
-    rv = NS_ERROR_NULL_POINTER;
-  }
-
-  return rv;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIStreamObserver methods:
-
-NS_IMETHODIMP
-nsHTTPRequest::OnStartRequest(nsIChannel* channel, nsISupports* i_Context)
-{
-    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("nsHTTPRequest [this=%x]. Starting to write data to the server.\n",
-            this));
+    mPostDataStream = aStream;
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTTPRequest::OnStopRequest (nsIChannel* channel, nsISupports* i_Context,
-                              nsresult iStatus,
-                              const PRUnichar* i_Msg)
-{
-    nsresult rv;
-    nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (mTransport, &rv);
-    
-    rv = iStatus;
+nsresult nsHTTPRequest::GetPostDataStream (nsIInputStream* *aResult)
+{ 
+    nsresult rv = NS_OK;
 
-    if (NS_SUCCEEDED (rv))
+    if (aResult)
     {
-        PRBool isAlive = PR_TRUE;
-        if (trans)
-            trans -> IsAlive (0, &isAlive);
-
-        if (isAlive)
-        {
-            //
-            // Write the POST data out to the server...
-            //
-            if (mPostDataStream)
-            {
-                NS_ASSERTION(mMethod == HM_POST, "Post data without a POST method?");
-
-                PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-                    ("nsHTTPRequest [this=%x]. Writing POST data to the server.\n", this));
-
-                rv = mTransport -> AsyncWrite (mPostDataStream, this, (nsISupports*)(nsIRequest*)mConnection);
-
-                /* the mPostDataStream is released below... */
-            }
-            //
-            // Prepare to receive the response...
-            //
-            else
-            {
-                PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-                       ("nsHTTPRequest [this=%x]. Finished writing request to server." "\tStatus: %x\n", this, iStatus));
-
-                nsHTTPResponseListener* pListener = new nsHTTPServerListener (mConnection, mHandler);
-                if (pListener)
-                {
-                    NS_ADDREF  (pListener);
-                    rv = mTransport -> AsyncRead (pListener, i_Context);
-                    NS_RELEASE (pListener);
-                }
-                else
-                    rv = NS_ERROR_OUT_OF_MEMORY;
-            }
-        }
-        else
-            rv = NS_ERROR_FAILURE; /* isAlive */
-    } /* NS_SUCCEEDED */
-
-    //
-    // An error occurred when trying to write the request to the server!
-    //
+        *aResult = mPostDataStream;
+        NS_IF_ADDREF (*aResult);
+    } 
     else
-    {
-        PR_LOG (gHTTPLog, PR_LOG_ERROR, ("nsHTTPRequest [this=%x]. Error writing request to server." "\tStatus: %x\n", this, iStatus));
-        rv = iStatus;
-    }
-
-    //
-    // An error occurred...  Finish the transaction and notify the consumer
-    // of the failure...
-    //
-    if (NS_FAILED (rv))
-    {
-        PRUint32 wasKeptAlive = 0;
-
-        if (trans)
-            trans  -> GetReuseCount (&wasKeptAlive);
-
-        mHandler   -> ReleaseTransport (mTransport, 0);
-        mTransport = null_nsCOMPtr ();
-
-        if (wasKeptAlive)
-        {
-            rv = WriteRequest ();
-            
-            if (NS_SUCCEEDED (rv))
-                return rv;
-        }
-
-        // Notify the HTTPChannel that the request has finished
-        nsCOMPtr<nsIStreamListener> consumer;
-
-        mConnection -> GetResponseDataListener (getter_AddRefs (consumer));
-        mConnection -> ResponseCompleted (consumer, rv, i_Msg);
-    }
- 
-    //
-    // These resouces are no longer needed...
-    //
-    mRequestBuffer.Truncate ();
-    mPostDataStream = null_nsCOMPtr ();
+        rv = NS_ERROR_NULL_POINTER;
 
     return rv;
 }
 
 
-nsresult nsHTTPRequest::SetConnection(nsHTTPChannel* i_Connection)
+nsresult nsHTTPRequest::SetConnection (nsHTTPChannel*  i_Connection)
 {
     mConnection = i_Connection;
     return NS_OK;
 }
 
+nsresult nsHTTPRequest::GetConnection (nsHTTPChannel** o_Connection)
+{
+    nsresult rv = NS_OK;
+
+    if (o_Connection)
+        *o_Connection = mConnection;
+    else
+        rv = NS_ERROR_NULL_POINTER;
+
+    return rv;
+}
+
 nsresult nsHTTPRequest::SetTransport (nsIChannel * aTransport)
 {
-    mTransport = aTransport;
     return NS_OK;
 }
 
 nsresult nsHTTPRequest::GetTransport (nsIChannel **aTransport)
 {
-    *aTransport = mTransport;
+    if (mPipelinedRequest)
+        return mPipelinedRequest -> GetTransport (aTransport);
+    else
+        *aTransport = nsnull;
+
     return NS_OK;
 }
 
@@ -546,7 +276,7 @@ nsHTTPRequest::GetOverrideRequestSpec(char** o_Spec)
 }
 
 nsresult
-nsHTTPRequest::formHeaders ()
+nsHTTPRequest::formHeaders (PRUint32 capabilities)
 {
     nsXPIDLCString host;
     mURI -> GetHost (getter_Copies (host));
@@ -635,7 +365,7 @@ nsHTTPRequest::formHeaders ()
             SetHeader (nsHTTPAtoms::Accept_Encoding, acceptEncodings);
     }
 
-    if (mCapabilities & (nsIHTTPProtocolHandler::ALLOW_KEEPALIVE|nsIHTTPProtocolHandler::ALLOW_PROXY_KEEPALIVE))
+    if (capabilities & (nsIHTTPProtocolHandler::ALLOW_KEEPALIVE|nsIHTTPProtocolHandler::ALLOW_PROXY_KEEPALIVE))
     {
         char *p = PR_smprintf ("%d", mKeepAliveTimeout);
         
@@ -650,3 +380,543 @@ nsHTTPRequest::formHeaders ()
     return NS_OK;
 }
 
+
+nsresult
+nsHTTPRequest::formBuffer (nsCString * requestBuffer)
+{
+    nsXPIDLCString autoBuffer;
+    nsresult rv;
+
+    requestBuffer -> Append (MethodToString (mMethod));
+
+    // Request spec gets set for proxied cases-
+    if (!mRequestSpec)
+    {
+        rv = mURI -> GetPath  (getter_Copies (autoBuffer));
+        requestBuffer -> Append (autoBuffer);
+    }
+    else
+        requestBuffer -> Append (mRequestSpec);
+    
+    //if (mRequestSpec) 
+    /*
+    else
+    {
+        if (aIsProxied) {
+            rv = mURI->GetSpec(getter_Copies(autoBuffer));
+        } else {
+            rv = mURI->GetPath(getter_Copies(autoBuffer));
+        }
+        mRequestBuffer.Append(autoBuffer);
+    }
+    */
+    
+    //Trim off the # portion if any...
+    int refLocation = requestBuffer -> RFind ("#");
+    
+    if (-1 != refLocation)
+        requestBuffer -> Truncate (refLocation);
+
+    char * httpVersion = " HTTP/1.0" CRLF;
+
+    switch (mVersion)
+    {
+        case HTTP_ZERO_NINE:
+            httpVersion = " HTTP/0.9"CRLF;
+            break;
+        case HTTP_ONE_ONE:
+            httpVersion = " HTTP/1.1"CRLF;
+    }
+
+    requestBuffer -> Append (httpVersion);
+
+    //
+    // Write the request headers, if any...
+    //
+    // ie. field-name ":" [field-value] CRLF
+    //
+    nsCOMPtr<nsISimpleEnumerator> enumerator;
+    rv = mHeaders.GetEnumerator (getter_AddRefs (enumerator));
+
+    if (NS_SUCCEEDED(rv))
+    {
+        PRBool bMoreHeaders;
+        nsCOMPtr<nsISupports>   item;
+        nsCOMPtr<nsIHTTPHeader> header;
+        nsCOMPtr<nsIAtom>       headerAtom;
+
+        enumerator->HasMoreElements(&bMoreHeaders);
+        while (bMoreHeaders)
+        {
+            enumerator -> GetNext (getter_AddRefs (item));
+            header = do_QueryInterface (item);
+
+            NS_ASSERTION (header, "Bad HTTP header.");
+            
+            if (header)
+            {
+                header -> GetField (getter_AddRefs (headerAtom));
+                nsXPIDLCString fieldName;
+                header -> GetFieldName (getter_Copies (fieldName));
+                NS_ASSERTION (fieldName, "field name not returned!, \
+                        out of memory?");
+                requestBuffer -> Append (fieldName);
+                header -> GetValue (getter_Copies (autoBuffer));
+
+                requestBuffer -> Append (": ");
+                requestBuffer -> Append (autoBuffer);
+                requestBuffer -> Append (CRLF);
+            }
+            enumerator -> HasMoreElements (&bMoreHeaders);
+        }
+    }
+
+    if (!mPostDataStream)
+        requestBuffer -> Append (CRLF);
+
+    return NS_OK;
+}
+
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsHTTPPipelinedRequest, nsIStreamObserver)
+
+nsHTTPPipelinedRequest::nsHTTPPipelinedRequest (nsHTTPHandler* i_Handler, const char *host, PRInt32 port, PRUint32 capabilities)
+    :   mHandler (i_Handler),
+        mBufferSegmentSize (0),
+        mBufferMaxSize (0),
+        mMustCommit (PR_FALSE),
+        mAttempts (0),
+        mCapabilities (capabilities),
+        mPort (port)
+{   
+    NS_INIT_REFCNT ();
+
+    mHost = host;
+    
+    NS_NewISupportsArray (getter_AddRefs (mRequests));
+}
+    
+
+nsHTTPPipelinedRequest::~nsHTTPPipelinedRequest ()
+{
+    PRUint32 count = 0;
+    PRInt32  index;
+
+    if (mRequests)
+    {
+        mRequests -> Count (&count);
+
+        if (count > 0)
+        {
+            for (index = (PRInt32) count - 1; index >= 0; --index)
+            {
+                nsHTTPRequest * req = (nsHTTPRequest *) mRequests -> ElementAt (index);
+                if (req != NULL)
+                {
+                    req -> mPipelinedRequest = nsnull;
+                    mRequests -> RemoveElement (req);
+                    NS_RELEASE (req);
+                }
+            }
+        }
+    } /* mRequests */
+}
+
+nsresult
+nsHTTPPipelinedRequest::SetTransport (nsIChannel * aTransport)
+{
+    mTransport = aTransport;
+    return NS_OK;
+}
+
+nsresult
+nsHTTPPipelinedRequest::GetTransport (nsIChannel **aTransport)
+{
+    if (aTransport == NULL)
+        return NS_ERROR_NULL_POINTER;
+
+    *aTransport = mTransport;
+    NS_IF_ADDREF ( *aTransport);
+
+    return NS_OK;
+}
+
+// Finally our own methods...
+
+nsresult
+nsHTTPPipelinedRequest::WriteRequest ()
+{
+    nsresult rv;
+
+    PRUint32 count = 0;
+    PRUint32 index;
+
+    if (!mRequests)
+        return NS_ERROR_FAILURE;
+
+    mRequests -> Count (&count);
+
+    if (count == 0)
+        return NS_ERROR_FAILURE;
+
+    if (mAttempts > 2)
+        return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsHTTPRequest> req = dont_AddRef ((nsHTTPRequest *) mRequests -> ElementAt (0));
+
+    if (!mTransport)
+    {
+        rv = mHandler -> RequestTransport (req -> mURI, req -> mConnection, mBufferSegmentSize, mBufferMaxSize, 
+                                           getter_AddRefs (mTransport),
+                                           mAttempts ? TRANSPORT_OPEN_ALWAYS : TRANSPORT_REUSE_ALIVE);
+
+        if (NS_FAILED (rv))
+            return rv;
+    }
+
+    if (NS_FAILED (rv))
+        return rv;
+
+    if (mAttempts++ == 0)
+    {
+        for (index = 0; index < count; index++)
+        {
+            req = dont_AddRef ((nsHTTPRequest *) mRequests -> ElementAt (index));
+            req -> formHeaders (mCapabilities);
+        }
+    }
+
+    mRequestBuffer.Truncate ();
+
+    for (index = 0; index < count; index++)
+    {
+        req = dont_AddRef ((nsHTTPRequest *) mRequests -> ElementAt (index));
+        req -> formBuffer (&mRequestBuffer);
+        if (index == 0)
+            mTransport -> SetNotificationCallbacks (req -> mConnection);
+    }
+
+    //
+    // Build up the request into mRequestBuffer...
+    //
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+           ("\nnsHTTPRequest::Build() [this=%x].\tWriting Request:\n"
+            "=== Start\n%s=== End\n",
+            this, mRequestBuffer.GetBuffer()));
+
+    //
+    // Create a string stream to feed to the socket transport.  This stream
+    // contains only the request.  Any POST data will be sent in a second
+    // AsyncWrite to the server..
+    //
+    nsCOMPtr<nsISupports>    result;
+    nsCOMPtr<nsIInputStream> stream;
+
+    rv = NS_NewCharInputStream (getter_AddRefs (result), mRequestBuffer.GetBuffer());
+    if (NS_FAILED(rv)) return rv;
+
+    stream = do_QueryInterface(result, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    //
+    // Write the request to the server.  
+    //
+    rv = mTransport->SetTransferCount(mRequestBuffer.Length());
+    
+    if (NS_FAILED(rv)) return rv;
+    req = dont_AddRef ((nsHTTPRequest *) mRequests -> ElementAt (0));
+
+    rv = mTransport->AsyncWrite(stream, this, (nsISupports*)(nsIRequest*)req -> mConnection);
+    return rv;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIStreamObserver methods:
+
+NS_IMETHODIMP
+nsHTTPPipelinedRequest::OnStartRequest (nsIChannel* channel, nsISupports* i_Context)
+{
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+           ("nsHTTPRequest [this=%x]. Starting to write data to the server.\n",
+            this));
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPPipelinedRequest::OnStopRequest (nsIChannel* channel, nsISupports* i_Context,
+                              nsresult iStatus,
+                              const PRUnichar* i_Msg)
+{
+    nsresult rv;
+    nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (mTransport, &rv);
+    
+    nsCOMPtr<nsHTTPRequest> req = dont_AddRef ((nsHTTPRequest *) mRequests -> ElementAt (0));
+    
+    rv = iStatus;
+
+    if (NS_SUCCEEDED (rv))
+    {
+        PRBool isAlive = PR_TRUE;
+        if (trans)
+            trans -> IsAlive (0, &isAlive);
+
+        if (isAlive)
+        {
+            //
+            // Write the POST data out to the server...
+            //
+            if (mPostDataStream)
+            {
+                PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+                    ("nsHTTPRequest [this=%x]. Writing POST data to the server.\n", this));
+
+                rv = mTransport -> AsyncWrite (mPostDataStream, this, (nsISupports*)(nsIRequest*)req -> mConnection);
+
+                /* the mPostDataStream is released below... */
+            }
+            //
+            // Prepare to receive the response...
+            //
+            else
+            {
+                PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+                       ("nsHTTPRequest [this=%x]. Finished writing request to server." "\tStatus: %x\n", this, iStatus));
+
+                nsHTTPResponseListener* pListener = new nsHTTPServerListener (req -> mConnection, mHandler, this);
+                if (pListener)
+                {
+                    NS_ADDREF  (pListener);
+                    rv = mTransport -> AsyncRead (pListener, i_Context);
+                    NS_RELEASE (pListener);
+                }
+                else
+                    rv = NS_ERROR_OUT_OF_MEMORY;
+            }
+        }
+        else
+            rv = NS_ERROR_FAILURE; /* isAlive */
+    } /* NS_SUCCEEDED */
+
+    //
+    // An error occurred when trying to write the request to the server!
+    //
+    else
+    {
+        PR_LOG (gHTTPLog, PR_LOG_ERROR, ("nsHTTPRequest [this=%x]. Error writing request to server." "\tStatus: %x\n", this, iStatus));
+        rv = iStatus;
+    }
+
+    //
+    // An error occurred...  Finish the transaction and notify the consumer
+    // of the failure...
+    //
+    if (NS_FAILED (rv))
+    {
+        PRUint32 wasKeptAlive = 0;
+
+        if (trans)
+            trans  -> GetReuseCount (&wasKeptAlive);
+
+        mHandler   -> ReleaseTransport (mTransport, 0);
+        mTransport = null_nsCOMPtr ();
+
+        if (wasKeptAlive)
+        {
+            rv = WriteRequest ();
+            
+            if (NS_SUCCEEDED (rv))
+                return rv;
+        }
+
+        // Notify the HTTPChannel that the request has finished
+        nsCOMPtr<nsIStreamListener> consumer;
+
+        req -> mConnection -> GetResponseDataListener (getter_AddRefs (consumer));
+        req -> mConnection -> ResponseCompleted (consumer, rv, i_Msg);
+    }
+ 
+    //
+    // These resouces are no longer needed...
+    //
+    mRequestBuffer.Truncate ();
+    mPostDataStream = null_nsCOMPtr ();
+
+    return rv;
+}
+
+nsresult
+nsHTTPPipelinedRequest::IsPending (PRBool *result)
+{
+    nsresult rv = NS_OK;
+
+    if (mTransport)
+        rv = mTransport -> IsPending (result);
+    else
+        *result = PR_FALSE; 
+
+  return rv;
+}
+
+nsresult
+nsHTTPPipelinedRequest::Cancel (nsresult status)
+{
+    nsresult rv = NS_OK;
+
+    if (mTransport)
+        rv = mTransport -> Cancel (status);
+
+    return rv;
+}
+
+nsresult
+nsHTTPPipelinedRequest::Suspend (void)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+
+    if (mTransport)
+        rv = mTransport -> Suspend ();
+    return rv;
+}
+
+nsresult
+nsHTTPPipelinedRequest::Resume ()
+{
+    nsresult rv = NS_ERROR_FAILURE;
+
+    if (mTransport)
+        rv = mTransport -> Resume ();
+    return rv;
+}
+
+nsresult
+nsHTTPPipelinedRequest::AddToPipeline (nsHTTPRequest *aRequest)
+{
+    if (!mRequests )
+        return NS_ERROR_FAILURE;
+
+    if (mMustCommit)
+        return NS_ERROR_FAILURE;
+
+    PRUint32 count = 0;
+
+    mRequests -> Count (&count);
+
+    if (count > 0 && aRequest -> mPostDataStream)
+        return NS_ERROR_FAILURE;
+
+    if (aRequest -> mPostDataStream)
+    {
+        if (count > 0)
+            return NS_ERROR_FAILURE;
+        else
+        {
+            mPostDataStream = aRequest -> mPostDataStream;
+            mMustCommit = PR_TRUE;
+        }
+    }
+
+    if (! ( mCapabilities & (nsIHTTPProtocolHandler::ALLOW_PROXY_PIPELINING|nsIHTTPProtocolHandler::ALLOW_PIPELINING) ))
+        mMustCommit = PR_TRUE;
+
+    mRequests -> AppendElement (aRequest);
+    aRequest  -> mPipelinedRequest = this;
+
+    if (count == 0)
+        mCurReq = aRequest;
+
+    if (mBufferSegmentSize < aRequest -> mBufferSegmentSize)
+        mBufferSegmentSize = aRequest -> mBufferSegmentSize;
+
+    if (mBufferMaxSize < aRequest -> mBufferMaxSize)
+        mBufferMaxSize = aRequest -> mBufferMaxSize;
+
+    return NS_OK;
+}
+
+nsresult
+nsHTTPPipelinedRequest::GetCurrentRequest (nsHTTPRequest ** o_Req)
+{
+    PRUint32 count = 0;
+    mRequests -> Count (&count);
+
+    if (o_Req == NULL)
+        return NS_ERROR_NULL_POINTER;
+
+    *o_Req = nsnull;
+
+    if (count == 0)
+        return NS_ERROR_FAILURE;
+
+    *o_Req = (nsHTTPRequest * )mRequests -> ElementAt (0);
+    return NS_OK;
+}
+
+nsresult
+nsHTTPPipelinedRequest::GetRequestCount (PRUint32 * o_Count)
+{
+    PRUint32 count = 0;
+    mRequests -> Count (&count);
+
+    if (o_Count == NULL)
+        return NS_ERROR_NULL_POINTER;
+
+    *o_Count = count;
+    return NS_OK;
+}
+
+nsresult
+nsHTTPPipelinedRequest::GetMustCommit (PRBool * o_Val)
+{
+    if (o_Val == NULL)
+        return NS_ERROR_NULL_POINTER;
+
+    *o_Val = mMustCommit;
+    return NS_OK;
+}
+
+nsresult
+nsHTTPPipelinedRequest::AdvanceToNextRequest ()
+{
+    PRUint32 count = 0;
+    nsCOMPtr<nsHTTPRequest> req;
+
+    mRequests -> Count (&count);
+
+    if (count == 0)
+        return NS_ERROR_FAILURE;
+
+    req = dont_AddRef ((nsHTTPRequest *) mRequests -> ElementAt (0));
+    if (req != NULL)
+    {
+        mTransport -> SetNotificationCallbacks (nsnull);
+        req -> mPipelinedRequest = nsnull;
+
+        mRequests -> RemoveElement  (req);
+    }
+
+    mRequests -> Count (&count);
+
+    if (count == 0)
+        return NS_ERROR_FAILURE;
+
+    req = dont_AddRef ((nsHTTPRequest *) mRequests -> ElementAt (0));
+
+    if (req != NULL)
+        mTransport -> SetNotificationCallbacks (req -> mConnection);
+
+    return NS_OK;
+}
+
+nsresult
+nsHTTPPipelinedRequest::GetSameRequest (const char *host, PRInt32 port, PRBool * aSame)
+{
+    if (host == NULL || aSame == NULL)
+        return NS_ERROR_NULL_POINTER;
+
+    if (port == mPort && !PL_strcasecmp (host, mHost))
+        *aSame = PR_TRUE;
+    else
+        *aSame = PR_FALSE;
+
+    return NS_OK;
+}

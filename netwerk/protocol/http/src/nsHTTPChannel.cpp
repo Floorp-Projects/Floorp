@@ -77,6 +77,7 @@ static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler): 
     mResponse(nsnull),
+    mRequest (nsnull),
     mHandler(dont_QueryInterface(i_Handler)),
     mHTTPServerListener(nsnull),
     mResponseContext(nsnull),
@@ -95,7 +96,8 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler):
     mProxyPort(-1),
     mBufferSegmentSize(0),
     mBufferMaxSize(0),
-    mStatus(NS_OK)
+    mStatus(NS_OK),
+    mPipeliningAllowed (PR_FALSE)
 {
     NS_INIT_REFCNT();
 
@@ -466,15 +468,18 @@ nsHTTPChannel::GetShouldCache(PRBool *aShouldCache)
 NS_IMETHODIMP
 nsHTTPChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
 {
-    *aPipeliningAllowed = PR_FALSE;
+    if (aPipeliningAllowed == NULL)
+        return NS_ERROR_NULL_POINTER;
+
+    *aPipeliningAllowed = mPipeliningAllowed;
     return NS_OK;
 }
  
 NS_IMETHODIMP
 nsHTTPChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
 {
-    NS_NOTREACHED("SetPipeliningAllowed");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mPipeliningAllowed = aPipeliningAllowed;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1303,17 +1308,42 @@ nsHTTPChannel::Open(void)
         }
     } /* WAITING_FOR_OPEN */
 
-    rv = mRequest -> WriteRequest ();
+    nsCOMPtr<nsHTTPPipelinedRequest> pReq = mPipelinedRequest;
 
-    if (NS_ERROR_BUSY == rv)
+    if (!pReq)
     {
-        mState = HS_WAITING_FOR_OPEN;
-        return NS_OK;
+        mHandler -> GetPipelinedRequest (this, getter_AddRefs (pReq));
+        pReq -> AddToPipeline (mRequest);
     }
-    if (NS_FAILED(rv)) 
+
+    PRBool commit = PR_FALSE;
+    pReq -> GetMustCommit ( &commit);
+
+    if (!commit && !mPipeliningAllowed)
+        commit = PR_TRUE;
+
+    if (commit)
     {
-        ResponseCompleted (mResponseDataListener, rv, nsnull);
-        return rv;
+        if (!mPipelinedRequest)
+            mPipelinedRequest = pReq;
+        
+        rv = pReq -> WriteRequest ();
+
+        if (NS_ERROR_BUSY == rv)
+        {
+            mState = HS_WAITING_FOR_OPEN;
+            return NS_OK;
+        }
+        
+        if (NS_FAILED (rv)) 
+        {
+            ResponseCompleted (mResponseDataListener, rv, nsnull);
+            return rv;
+        }
+    }
+    else
+    {
+        mHandler -> AddPipelinedRequest (pReq);
     }
     
     mState = HS_WAITING_FOR_RESPONSE;
@@ -2104,10 +2134,11 @@ nsHTTPChannel::GetSecurityInfo (nsISupports * *aSecurityInfo)
     if (!aSecurityInfo)
         return NS_ERROR_NULL_POINTER;
 
-    nsIChannel * trans;
+    nsCOMPtr<nsIChannel> trans;
+
     if (mRequest)
     {
-        mRequest -> GetTransport (&trans);
+        mRequest -> GetTransport (getter_AddRefs (trans));
         if (trans)
             return trans -> GetSecurityInfo (aSecurityInfo);
     }
