@@ -3568,8 +3568,8 @@ GlobalWindowImpl::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
     return err;
   }
 
-  err = timeout->timer->Init(nsGlobalWindow_RunTimeout, timeout,
-                             (PRInt32) interval, NS_PRIORITY_LOWEST);
+  err = timeout->timer->Init(TimerCallback, timeout, (PRInt32)interval,
+                             NS_PRIORITY_LOWEST);
   if (NS_OK != err) {
     DropTimeout(timeout);
     return err;
@@ -3590,7 +3590,7 @@ void GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
   nsTimeoutImpl *last_expired_timeout, **last_insertion_point;
   nsTimeoutImpl dummy_timeout;
   JSContext *cx;
-  PRInt64 now;
+  PRInt64 now, deadline;
   nsresult rv;
   PRUint32 firingDepth = mTimeoutFiringDepth + 1;
 
@@ -3598,16 +3598,28 @@ void GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
     return;
   }
 
-  /* Make sure that the window or the script context don't go away as 
-     a result of running timeouts */
+  // Make sure that the window or the script context don't go away as
+  // a result of running timeouts
   nsCOMPtr<nsIScriptGlobalObject> windowKungFuDeathGrip(this);
   nsCOMPtr<nsIScriptContext> contextKungFuDeathGrip(mContext);
 
   cx = (JSContext *)mContext->GetNativeContext();
 
-  /* A native timer has gone off.  See which of our timeouts need
-     servicing */
+  // A native timer has gone off.  See which of our timeouts need
+  // servicing
   LL_I2L(now, PR_IntervalNow());
+
+  if (LL_CMP(aTimeout->when, >, now)) {
+    // The OS timer fired early (yikes!), and possibly out of order
+    // too. Set |deadline| to be the time when the OS timer *should*
+    // have fired so that any timers that *should* have fired before
+    // aTimeout *will* be fired now. This happens most of the time on
+    // Win2k.
+
+    deadline = aTimeout->when;
+  } else {
+    deadline = now;
+  }
 
   /* The timeout list is kept in deadline order.  Discover the
      latest timeout whose deadline has expired. On some platforms,
@@ -3615,8 +3627,8 @@ void GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
      timer as well as the deadline. */
   last_expired_timeout = nsnull;
   for (timeout = mTimeouts; timeout; timeout = timeout->next) {
-    if (((timeout == aTimeout) || !LL_CMP(timeout->when, >, now)) &&
-        (0 == timeout->firingDepth)) {
+    if (((timeout == aTimeout) || !LL_CMP(timeout->when, >, deadline)) &&
+        (timeout->firingDepth == 0)) {
       /*
        * Mark any timeouts that are on the list to be fired with the
        * firing depth so that we can reentrantly run timeouts
@@ -3688,12 +3700,12 @@ void GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
           NS_REINTERPRET_CAST(const PRUnichar *,
                               ::JS_GetStringChars(timeout->expr));
 
-        nsAutoString blank;
-        PRBool isUndefined;
+        nsAutoString retval;
+        PRBool is_undefined;
         rv = mContext->EvaluateString(nsDependentString(script), mJSObject,
                                       timeout->principal, timeout->filename,
-                                      timeout->lineno, timeout->version, blank,
-                                      &isUndefined);
+                                      timeout->lineno, timeout->version,
+                                      retval, &is_undefined);
       } else {
         PRInt64 lateness64;
         PRInt32 lateness;
@@ -3704,10 +3716,11 @@ void GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
         LL_L2I(lateness, lateness64);
         lateness = PR_IntervalToMilliseconds(lateness);
         timeout->argv[timeout->argc] = INT_TO_JSVAL((jsint) lateness);
-        PRBool aBoolResult;
+
+        PRBool bool_result;
         rv = mContext->CallEventHandler(mJSObject, timeout->funobj,
                                         timeout->argc + 1, timeout->argv,
-                                        &aBoolResult, PR_FALSE);
+                                        &bool_result, PR_FALSE);
       }
 
       --mTimeoutFiringDepth;
@@ -3752,7 +3765,7 @@ void GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
         LL_L2I(delay32, delay);
 
         /* If the next interval timeout is already supposed to
-         *  have happened then run the timeout immediately.
+         * have happened then run the timeout immediately.
          */
         if (delay32 < 0)
           delay32 = 0;
@@ -3775,8 +3788,8 @@ void GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
         // no big deal.
 
         if (timeout->timer) {
-          rv = timeout->timer->Init(nsGlobalWindow_RunTimeout, timeout,
-                                    delay32, NS_PRIORITY_LOWEST);
+          rv = timeout->timer->Init(TimerCallback, timeout, delay32,
+                                    NS_PRIORITY_LOWEST);
 
           // Likewise, don't return early even if we fail to
           // initialize the new OS timer.
@@ -4000,11 +4013,14 @@ void GlobalWindowImpl::InsertTimeoutIntoList(nsTimeoutImpl **aList,
   aTimeout->firingDepth = 0;
   aTimeout->next = to;
   *aList = aTimeout;
+
   // Increment the ref_count since we're in the list
   HoldTimeout(aTimeout);
 }
 
-void nsGlobalWindow_RunTimeout(nsITimer *aTimer, void *aClosure)
+// static
+void
+GlobalWindowImpl::TimerCallback(nsITimer *aTimer, void *aClosure)
 {
   nsTimeoutImpl *timeout = (nsTimeoutImpl *)aClosure;
 
@@ -4898,11 +4914,6 @@ nsDOMWindowController::SupportsCommand(const nsAReadableString& aCommand,
 NS_IMETHODIMP
 nsDOMWindowController::DoCommand(const nsAReadableString & aCommand)
 {
-#ifdef DEBUG_dr
-  printf("dr :: nsDOMWindowController::DoCommand: %s\n",
-         NS_ConvertUCS2toUTF8(aCommand).get());
-#endif
-
   nsresult rv = NS_ERROR_FAILURE;
   nsCAutoString commandName;
   commandName.AssignWithConversion(aCommand);
