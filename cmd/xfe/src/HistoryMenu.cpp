@@ -27,8 +27,11 @@
 #include "felocale.h"
 #include "intl_csi.h"
 
+#include <Xfe/MenuUtil.h> // for XfeDestroyMenuWidgetTree()
+
 #include "xpgetstr.h"			// for XP_GetString()
 extern int XFE_UNTITLED;
+
 
 #define MAX_ITEM_WIDTH 40
 
@@ -186,7 +189,7 @@ XFE_HistoryMenu::update()
         { 
           XtUnmanageChildren (kids, nkids);
       
-          fe_DestroyWidgetTree(kids, nkids);
+          XfeDestroyMenuWidgetTree(kids, nkids,False);
         }
     }
 

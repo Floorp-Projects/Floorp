@@ -26,6 +26,8 @@
 #include "MsgView.h"
 #include "felocale.h"
 
+#include <Xfe/MenuUtil.h> // for XfeDestroyMenuWidgetTree()
+
 XFE_AttachmentMenu::XFE_AttachmentMenu(Widget w, XFE_Frame *frame)
 {
   m_cascade = w;
@@ -140,7 +142,7 @@ XFE_AttachmentMenu::update()
       nkids -= m_firstslot;
 
       XtUnmanageChildren (kids, nkids);
-      fe_DestroyWidgetTree(kids, nkids);
+	  XfeDestroyMenuWidgetTree(kids,nkids,False);
     }
 
   add_attachment_menu_items(m_submenu);

@@ -149,7 +149,7 @@ XFE_EditRecentMenu::destroyItems()
 		if (nkids) { 
 			XtUnmanageChildren (kids, nkids);
 					
-			fe_DestroyWidgetTree(kids, nkids);
+			XfeDestroyMenuWidgetTree(kids,nkids,False);
 #ifdef DEBUG_rhess2
 			fprintf(stderr, "destroyItems::[ %d ]\n", nkids);
 #endif			

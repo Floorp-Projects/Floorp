@@ -73,26 +73,3 @@ fe_AddBookmarkCallback (Widget widget, XtPointer closure, XtPointer call_data)
   bmcontext = fe_getBookmarkContext();
   BM_AppendToHeader (bmcontext, BM_GetAddHeader(bmcontext), bm);
 }
-
-void
-fe_DestroyWidgetTree(Widget *widgets, int n)
-{
-    int i;
-    Widget *morekids = NULL;
-    int nmorekids = 0;
-    Widget submenu = 0;
-
-    if (n <= 0) return;
-
-    for (i = n-1; i >= 0; i--) {
-		XtVaGetValues (widgets[i], XmNsubMenuId, &submenu, 0);
-		if (submenu) {
-			XtVaGetValues (widgets[i], XmNchildren, &morekids,
-						   XmNnumChildren, &nmorekids, 0);
-			if(nmorekids > 0) {
-				fe_DestroyWidgetTree (morekids, nmorekids);
-			}
-		}
-		XtDestroyWidget (widgets[i]);
-    }
-}

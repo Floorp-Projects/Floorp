@@ -178,7 +178,7 @@ XFE_BookmarkMenu::reallyUpdateRoot()
 		{
  			XtUnmanageChildren(children,numChildren);
       
- 			fe_DestroyWidgetTree(children,numChildren);
+ 			XfeDestroyMenuWidgetTree(children,numChildren,False);
 		}
 	}
 

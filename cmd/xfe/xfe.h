@@ -574,7 +574,6 @@ extern int fe_RemoteCommands (Display *dpy, Window window, char **commands);
 extern XtActionsRec fe_CommandActions [], fe_MailNewsActions [];
 extern int fe_CommandActionsSize, fe_MailNewsActionsSize;
 extern void fe_UnmanageChild_safe (Widget w);
-extern void fe_DestroyWidgetTree(Widget *kids, int nkids);
 
 /*
  * Context protection/destruction releated routines

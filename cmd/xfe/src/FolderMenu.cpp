@@ -275,7 +275,7 @@ XFE_FolderMenu::update()
       nkids -= m_firstslot;
 
       XtUnmanageChildren (kids, nkids);
-      fe_DestroyWidgetTree(kids, nkids);
+      XfeDestroyMenuWidgetTree(kids, nkids,False);
     }
 
   {
