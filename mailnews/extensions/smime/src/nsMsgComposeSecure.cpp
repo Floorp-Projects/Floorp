@@ -867,6 +867,9 @@ nsresult nsMsgComposeSecure::MimeFinishEncryption (PRBool aSign, nsIMsgSendRepor
   rv = MIME_EncoderDestroy(mCryptoEncoderData, PR_FALSE);
   mCryptoEncoderData = 0;
 
+  if (PRInt32(mStream->write(CRLF, 2)) < 2)
+    rv = NS_ERROR_FAILURE;
+
  FAIL:
   return rv;
 }
