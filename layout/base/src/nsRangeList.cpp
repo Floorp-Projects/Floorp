@@ -62,7 +62,6 @@
 
 #define STATUS_CHECK_RETURN_MACRO() {if (!mTracker) return NS_ERROR_FAILURE;}
 
-static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kCSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 
@@ -1440,10 +1439,7 @@ nsRangeList::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset,
 
     if (aMultipleSelection){
       nsCOMPtr<nsIDOMRange> newRange;
-      nsresult result;
-      result = nsComponentManager::CreateInstance(kRangeCID, nsnull,
-                                       nsIDOMRange::GetIID(),
-                                       getter_AddRefs(newRange));
+      NS_NewRange(getter_AddRefs(newRange));
       newRange->SetStart(domNode,aContentOffset);
       newRange->SetEnd(domNode,aContentOffset);
       mDomSelections[SELECTION_NORMAL]->AddRange(newRange);
@@ -2900,14 +2896,9 @@ nsDOMSelection::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
   Clear(presContext);
 
   nsCOMPtr<nsIDOMRange> range;
-  result = nsComponentManager::CreateInstance(kRangeCID, nsnull,
-                                     nsIDOMRange::GetIID(),
-                                     getter_AddRefs(range));
-  if (NS_FAILED(result))
-    return result;
-
+  NS_NewRange(getter_AddRefs(range));
   if (! range){
-    NS_ASSERTION(PR_FALSE,"Create Instance Failed nsRangeList::Collapse");
+    NS_ASSERTION(PR_FALSE,"Couldn't make a range - nsRangeList::Collapse");
     return NS_ERROR_UNEXPECTED;
   }
   result = range->SetEnd(aParentNode, aOffset);
@@ -3159,12 +3150,7 @@ nsDOMSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PR
   //get common parent
   nsCOMPtr<nsIDOMNode> parent;
   nsCOMPtr<nsIDOMRange> subRange;
-  res = nsComponentManager::CreateInstance(kRangeCID, nsnull,
-                                     nsIDOMRange::GetIID(),
-                                     getter_AddRefs(subRange));
-  if (NS_FAILED(res) || !subRange)
-    return NS_ERROR_FAILURE;
-
+  NS_NewRange(getter_AddRefs(subRange));
   result = subRange->SetStart(startNode,startOffset);
   if (NS_FAILED(result))
     return result;
@@ -3356,9 +3342,7 @@ nsDOMSelection::SetOriginalAnchorPoint(nsIDOMNode *aNode, PRInt32 aOffset)
   }
   nsCOMPtr<nsIDOMRange> newRange;
   nsresult result;
-  result = nsComponentManager::CreateInstance(kRangeCID, nsnull,
-                                     nsIDOMRange::GetIID(),
-                                     getter_AddRefs(newRange));
+  NS_NewRange(getter_AddRefs(newRange));
   result = newRange->SetStart(aNode,aOffset);
   if (NS_FAILED(result))
     return result;
@@ -3453,13 +3437,7 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   //mRangeList->InvalidateDesiredX();
   nsCOMPtr<nsIDOMRange> difRange;
   nsresult res;
-  res = nsComponentManager::CreateInstance(kRangeCID, nsnull,
-                                     nsIDOMRange::GetIID(),
-                                     getter_AddRefs(difRange));
-
-
-  if (NS_FAILED(res)) 
-    return res;
+  NS_NewRange(getter_AddRefs(difRange));
   nsCOMPtr<nsIDOMRange> range;
   res = mAnchorFocusRange->Clone(getter_AddRefs(range));
   //range = mAnchorFocusRange;
@@ -3480,12 +3458,7 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   if (NS_FAILED(res))
     return res;
 
-  res = nsComponentManager::CreateInstance(kRangeCID, nsnull,
-                                     nsIDOMRange::GetIID(),
-                                     getter_AddRefs(difRange));
-
-  if (NS_FAILED(res))
-    return res;
+  NS_NewRange(getter_AddRefs(difRange));
   //compare anchor to old cursor.
 
   if (NS_FAILED(res))
