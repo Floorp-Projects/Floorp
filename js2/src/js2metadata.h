@@ -40,22 +40,25 @@
 #include "parser.h"
 
 #include <map>
+#include <time.h>
+
 
 namespace JavaScript {
 namespace MetaData {
 
 
 // forward definitions:
+class JS2Object;
 class JS2Metadata;
 class JS2Class;
 class StaticBinding;
 class Environment;
-class Context;
+class Context;  
 typedef jsval js2val;
 
 typedef void (Invokable)();
 typedef Invokable Callor;
-typedef Invokable Constructor;
+typedef JS2Object *(Constructor)();
 
 
 enum Phase  { CompilePhase, RunPhase };
@@ -285,6 +288,8 @@ public:
 class JS2Class : public Frame {
 public:
     JS2Class() : Frame(Class) { }
+
+    StringAtom &getName();
         
     InstanceBindingMap instanceReadBindings;    // Map of qualified names to readable instance members defined in this class    
     InstanceBindingMap instanceWriteBindings;   // Map of qualified names to writable instance members defined in this class    
@@ -302,8 +307,8 @@ public:
     bool primitive;                             // true if this class was defined with the primitive attribute
     bool final;                                 // true if this class cannot be subclassed
 
-    Callor call;                                // A procedure to call when this class is used in a call expression
-    Constructor construct;                      // A procedure to call when this class is used in a new expression
+    Callor *call;                               // A procedure to call when this class is used in a call expression
+    Constructor *construct;                     // A procedure to call when this class is used in a new expression
 
 };
 
@@ -337,6 +342,8 @@ public:
 // Instances of dynamic classes are represented as DYNAMICINSTANCE records. These instances can contain fixed and dynamic properties.
 class DynamicInstance {
 public:
+    DynamicInstance(JS2Class *type) : type(type), call(NULL), construct(NULL), env(NULL), typeofString(type->getName())  { }
+
     JS2Class    *type;          // This instance's type
     Invokable   *call;          // A procedure to call when this instance is used in a call expression
     Invokable   *construct;     // A procedure to call when this instance is used in a new expression
@@ -561,6 +568,7 @@ public:
     JS2Class *numberClass;
     JS2Class *characterClass;
     JS2Class *stringClass;
+    JS2Class *objectClass;
 
     
     Parser *mParser;                // used for error reporting

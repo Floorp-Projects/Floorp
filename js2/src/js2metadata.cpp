@@ -527,6 +527,9 @@ namespace MetaData {
             else 
                 s += "false";
             break;
+        case ExprNode::objectLiteral:
+            s += "new JS2Object()";
+            break;
         default:
             NOT_REACHED("Not Yet Implemented");
         }

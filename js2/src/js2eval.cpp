@@ -77,6 +77,7 @@ namespace MetaData {
     static void Multiname_finalize(JSContext *cx, JSObject *obj);
     static void LexicalReference_finalize(JSContext *cx, JSObject *obj);
     static void Namespace_finalize(JSContext *cx, JSObject *obj);
+    static void JS2Object_finalize(JSContext *cx, JSObject *obj);
 
     JSClass gMonkeyMultinameClass = 
             { "Multiname", JSCLASS_HAS_PRIVATE, 
@@ -96,6 +97,12 @@ namespace MetaData {
                JS_PropertyStub, JS_PropertyStub,
                JS_PropertyStub, JS_PropertyStub, JS_EnumerateStub,
                JS_ResolveStub, JS_ConvertStub, Namespace_finalize };
+
+    JSClass gMonkeyJS2ObjectClass =
+            { "JS2Object", JSCLASS_HAS_PRIVATE, 
+               JS_PropertyStub, JS_PropertyStub,
+               JS_PropertyStub, JS_PropertyStub, JS_EnumerateStub,
+               JS_ResolveStub, JS_ConvertStub, JS2Object_finalize };
 
     // member functions at global scope
     JSFunctionSpec jsfGlobal [] =
@@ -243,6 +250,29 @@ namespace MetaData {
     }
 
 
+   /******************************************************************************
+     JS2Object
+    ******************************************************************************/
+
+    // finish constructing a JS2Object
+    static JSBool
+    JS2Object_constructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+    {
+        JS2Metadata *meta = static_cast<JS2Metadata *>(JS_GetContextPrivate(cx));
+        if (!JS_SetPrivate(cx, obj, meta->objectClass->construct()))
+            return JS_FALSE;
+        return JS_TRUE;
+    }
+
+    // finalize a Namespace - called by Monkey gc
+    static void
+    JS2Object_finalize(JSContext *cx, JSObject *obj)
+    {
+        ASSERT(OBJ_GET_CLASS(cx, obj) == &gMonkeyJS2ObjectClass);
+        DynamicInstance *di = static_cast<DynamicInstance *>(JS_GetPrivate(cx, obj));
+        if (di) delete di;
+    }
+
 
 
 
@@ -278,6 +308,10 @@ namespace MetaData {
 
         JS_InitClass(monkeyContext, monkeyGlobalObject, NULL,
                      &gMonkeyNamespaceClass, Namespace_constructor, 0,
+                     NULL, NULL, NULL, NULL);
+
+        JS_InitClass(monkeyContext, monkeyGlobalObject, NULL,
+                     &gMonkeyJS2ObjectClass, JS2Object_constructor, 0,
                      NULL, NULL, NULL, NULL);
 
         if (!JS_DefineFunctions(monkeyContext, monkeyGlobalObject, jsfGlobal))
