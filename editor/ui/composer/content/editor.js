@@ -455,7 +455,7 @@ function EditorSharedStartup()
   // Set up the mime type and register the commands.
   // We don't have an editor yet -- in fact, this is the listener which
   // will tell us when it's time to create the editor.
-  // So we can't use gEditor.AddDocumentStateListener here.
+  // So we can't use gEditor.addDocumentStateListener here.
   if (gIsHTMLEditor)
   {
     //XXX this is replaced by nsIEditor::contentsMIMEType
@@ -732,7 +732,7 @@ function EditorSetDocumentCharacterSet(aCharset)
     {
       // reloading the document will reverse any changes to the META charset, 
       // we need to put them back in, which is achieved by a dedicated listener
-      gEditor.AddDocumentStateListener( DocumentReloadListener );
+      gEditor.addDocumentStateListener( DocumentReloadListener );
       editorShell.LoadUrl(docUrl);
     }
   }
