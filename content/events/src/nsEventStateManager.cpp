@@ -2031,8 +2031,8 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
       PRInt32 numLines = 0;
       PRBool useSysNumLines;
 
-      mPrefBranch->GetIntPref(PromiseFlatCString(actionKey).get(), &action);
-      mPrefBranch->GetBoolPref(PromiseFlatCString(sysNumLinesKey).get(),
+      mPrefBranch->GetIntPref(actionKey.get(), &action);
+      mPrefBranch->GetBoolPref(sysNumLinesKey.get(),
                                &useSysNumLines);
       if (useSysNumLines) {
         numLines = msEvent->delta;
@@ -2044,7 +2044,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
           nsCAutoString numLinesKey(baseKey);
           numLinesKey.Append(numlinesslot);
 
-          mPrefBranch->GetIntPref(PromiseFlatCString(numLinesKey).get(),
+          mPrefBranch->GetIntPref(numLinesKey.get(),
                                   &numLines);
         }
 
