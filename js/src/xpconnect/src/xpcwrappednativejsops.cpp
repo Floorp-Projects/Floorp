@@ -208,7 +208,7 @@ XPC_WN_DoubleWrappedGetter(JSContext *cx, JSObject *obj,
             jsval idval = ccx.GetRuntime()->
                         GetStringJSVal(XPCJSRuntime::IDX_WRAPPED_JSOBJECT);
 
-            ccx.SetCallInfo(iface, iface->GetMemberAt(3), JS_FALSE);
+            ccx.SetCallInfo(iface, iface->GetMemberAt(1), JS_FALSE);
             if(NS_FAILED(sm->
                     CanAccess(nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
                               &ccx, ccx,
