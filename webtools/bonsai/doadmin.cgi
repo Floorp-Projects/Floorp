@@ -103,7 +103,7 @@ The two passwords you typed didn't match.  Click <b>Back</b> and try again."
             exit
         }
         if {$FORM(doglobal)} {
-            CheckGlobalPassword
+            CheckGlobalPassword $FORM(password)
             set outfile data/passwd
         } else {
             set outfile "[DataDir]/treepasswd"
