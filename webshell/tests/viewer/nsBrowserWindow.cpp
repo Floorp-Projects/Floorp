@@ -1051,6 +1051,12 @@ nsBrowserWindow::DoFind()
 	    NS_RELEASE(widget);
     }  
   }
+  else {
+		nsIWidget* dialogWidget = nsnull;               
+		if (NS_OK ==  mDialog->QueryInterface(kIWidgetIID,(void**)&dialogWidget)) {
+	    dialogWidget->Show(PR_TRUE);
+	  }
+  }
   mTextField->SelectAll();
 
 }
