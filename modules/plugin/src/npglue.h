@@ -34,6 +34,7 @@ extern "C" {
 #include "gui.h"			/* For XP_AppCodeName */
 #include "merrors.h"
 #include "xpgetstr.h"
+#include "nsICapsManager.h"
 #ifdef JAVA
 #include "java.h"
 #endif
@@ -379,7 +380,9 @@ protected:
     // aggregated interfaces:
     nsIJVMManager* GetJVMMgr(const nsIID& aIID);
     nsICapsManager* GetCapsManager(const nsIID& aIID);
+#ifdef OJI
     nsILiveconnect* GetLiveconnect(const nsIID& aIID);
+#endif /* OJI */
 
     nsISupports*        fJVMMgr;
     nsISupports*        fMalloc;
