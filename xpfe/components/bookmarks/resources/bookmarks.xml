@@ -93,7 +93,7 @@
         var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
         var bundleURL = "chrome://communicator/locale/bookmarks/bookmark.properties";
         this._bundle = stringBundleService.createBundle(bundleURL, localeService.GetApplicationLocale());
-        setTimeout(this.refreshSort, 0, this);
+        // setTimeout(this.refreshSort, 0, this);
       ]]></constructor>
       <destructor><![CDATA[
         this.outlinerBuilder.removeObserver(this.builderObserver);
