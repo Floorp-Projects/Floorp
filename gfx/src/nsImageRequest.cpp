@@ -45,7 +45,7 @@ nsresult
 ImageRequestImpl::Init(IL_GroupContext *aGroupContext, 
 		       const char* aUrl, 
 		       nsIImageRequestObserver *aObserver,
-		       nscolor* aBackgroundColor,
+		       const nscolor* aBackgroundColor,
 		       PRUint32 aWidth, PRUint32 aHeight,
 		       PRUint32 aFlags)
 {

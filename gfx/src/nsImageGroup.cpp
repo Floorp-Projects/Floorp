@@ -57,7 +57,7 @@ public:
 
   virtual nsIImageRequest* GetImage(const char* aUrl, 
                                     nsIImageRequestObserver *aObserver,
-                                    nscolor* aBackgroundColor,
+                                    const nscolor* aBackgroundColor,
                                     PRUint32 aWidth, PRUint32 aHeight,
                                     PRUint32 aFlags);
   
@@ -202,7 +202,7 @@ ImageGroupImpl::RemoveObserver(nsIImageGroupObserver *aObserver)
 nsIImageRequest* 
 ImageGroupImpl::GetImage(const char* aUrl, 
                          nsIImageRequestObserver *aObserver,
-                         nscolor* aBackgroundColor,
+                         const nscolor* aBackgroundColor,
                          PRUint32 aWidth, PRUint32 aHeight,
                          PRUint32 aFlags)
 {
