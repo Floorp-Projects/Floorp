@@ -904,15 +904,17 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
         if (textLength != selectionEnd) {
           PRInt32 thirdLen = textLength - selectionEnd;
 
-          NS_ASSERTION(thirdLen >= 0, "Text length is negative");
+          if (thirdLen > 0) //Text length is not negative or zero
+          {
           
-          // Render third (unselected) section
-          aRenderingContext.GetWidth(text + selectionEnd, PRUint32(thirdLen),
-                                     textWidth);
-          aRenderingContext.DrawString(text + selectionEnd,
-                                       PRUint32(thirdLen), x, dy);
-          PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
-                               x, dy, textWidth);
+            // Render third (unselected) section
+            aRenderingContext.GetWidth(text + selectionEnd, PRUint32(thirdLen),
+                                       textWidth);
+            aRenderingContext.DrawString(text + selectionEnd,
+                                         PRUint32(thirdLen), x, dy);
+            PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
+                                 x, dy, textWidth);
+          }
         }
       }
     }
@@ -1773,11 +1775,11 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
   nsresult result(NS_OK);
   switch (aAmount){
   case eSelectNoAmount : {
-          *aResultFrame = this;
-          if (aStartOffset > mContentLength)
-            aStartOffset = mContentLength; //not ok normaly, but eNone means dont leave this frame
-          *aFrameOffset = aStartOffset;
-               }
+      *aResultFrame = this;
+      if (aStartOffset > mContentLength)
+        aStartOffset = mContentLength; //not ok normaly, but eNone means dont leave this frame
+      *aFrameOffset = aStartOffset;
+    }
     break;
   case eSelectCharacter : {
     if (aDirection == eDirPrevious){
@@ -1792,11 +1794,11 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
       if (i <0){
         nsIFrame *prev = GetPrevInFlow();
         if (prev){
-          return prev->PeekOffset(eSelectNoAmount, aDirection,  -1, aResultFrame, 
+          return prev->PeekOffset(eSelectCharacter, aDirection,  -1, aResultFrame, 
                   aFrameOffset, aContentOffset);
         }
         else {//reached end ask the frame for help
-          return nsFrame::PeekOffset(eSelectNoAmount, aDirection, -1, aResultFrame,
+          return nsFrame::PeekOffset(eSelectCharacter, aDirection, -1, aResultFrame,
                       aFrameOffset, aContentOffset);
         }
       }
@@ -1816,11 +1818,11 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
         if (i > mContentLength){
           nsIFrame *next = GetNextInFlow();
           if (next){
-            return next->PeekOffset(eSelectNoAmount, aDirection,  0, aResultFrame, 
+            return next->PeekOffset(eSelectCharacter, aDirection,  0, aResultFrame, 
                         aFrameOffset, aContentOffset);
           }
           else {//reached end ask the frame for help
-            return nsFrame::PeekOffset(eSelectNoAmount, aDirection, 0, aResultFrame,
+            return nsFrame::PeekOffset(eSelectCharacter, aDirection, 0, aResultFrame,
                         aFrameOffset, aContentOffset);
           }
         }

@@ -323,19 +323,6 @@ protected:
   nsFrame();
   virtual ~nsFrame();
 
-  virtual void NewContentIsBefore(nsIPresContext& aPresContext,
-                          nsIRenderingContext * aRendContext,
-                          nsGUIEvent * aEvent,
-                          nsIContent * aNewContent,
-                          nsIContent * aCurrentContent,
-                          nsIFrame   * aNewFrame);
-
-  virtual void NewContentIsAfter(nsIPresContext& aPresContext,
-                         nsIRenderingContext * aRendContext,
-                         nsGUIEvent * aEvent,
-                         nsIContent * aNewContent,
-                         nsIContent * aCurrentContent,
-                         nsIFrame   * aNewFrame);
 
   virtual void AdjustPointsInNewContent(nsIPresContext& aPresContext,
                                 nsIRenderingContext * aRendContext,
