@@ -67,7 +67,6 @@
       background-repeat   : no-repeat;
       background-color    : transparent;
       background-position : 0px 0px;
-      background-image    : url("chrome://global/skin/button32-bg.gif");
       color               : #CCFFFF;
       width               : 36px;
       height              : 36px;
@@ -78,21 +77,20 @@
     
   .button-toolbar-1:hover 
     {
-      background-image    : url("chrome://global/skin/button32-bg-hover.gif");
-      border              : none;
-    } 
+      border              : 1px solid black
+    }
 
   .button-toolbar-1:hover:active
     {
       margin              : 3px 5px 0px 2px;
-      border              : none;
+      border              : 1px solid black;
+      background-color    : #666666;
     }
 
   .button-toolbar-1[disabled="true"],
   .button-toolbar-1[disabled="true"]:hover,
   .button-toolbar-1[disabled="true"]:hover:active
     {
-      background-image    : url("chrome://global/skin/button32-bg-disabled.gif");
       margin              : 2px 6px 1px 1px;
       border              : none;
     }
@@ -105,14 +103,28 @@
       border              : none;
     }
       
-  .button-toolbar-1 > .button-internal-box,
-  .button-toolbar-1:hover > .button-internal-box,
-  .button-toolbar-1:hover:active > .button-internal-box
+  .button-toolbar-1 > .button-internal-box
     {
       border              : none;
       vertical-align      : middle;
     }
-    
+
+  .button-toolbar-1:hover > .button-internal-box
+  {
+      border-left           : 1px solid #FFFFFF;
+      border-top            : 1px solid #FFFFFF;
+      border-right          : 1px solid #999999;
+      border-bottom         : 1px solid #999999;
+  }
+
+  .button-toolbar-1:hover:active > .button-internal-box    
+  {
+      border-left           : 1px solid #444444;
+      border-top            : 1px solid #444444;
+      border-right          : 1px solid #CCCCCC;
+      border-bottom         : 1px solid #CCCCCC;
+  }
+
   .button-toolbar-1 > .button-internal-box > .button-text-container 
     {
       display             : none;
@@ -128,33 +140,30 @@
       background-repeat   : no-repeat;
       background-position : 50% 0px;
       background-color    : transparent;
-      background-image    : url("chrome://global/skin/button28-bg.gif");
       color               : #CCFFFF;
       min-width           : 28px;
       min-height          : 28px;
-      margin              : 4px 7px 1px 1px;
-      padding             : 3px 0px 0px 1px;
+      margin              : 2px 6px 1px 1px;
+/*      padding             : 3px 0px 0px 1px;*/
       font-size           : smaller;
       border              : none;
     }
     
-  .button-toolbar-2:hover 
+  .button-toolbar-2:hover
     {
-      background-image    : url("chrome://global/skin/button28-bg-hover.gif");
-      border              : none;
+      border              : 1px solid black;
     } 
 
   .button-toolbar-2:hover:active
     {
-      margin              : 5px 6px 0px 2px;
-      border              : none;
+      border              : 1px solid black;
+      background-color    : #666666
     }
 
   .button-toolbar-2[disabled="true"],
   .button-toolbar-2[disabled="true"]:hover,
   .button-toolbar-2[disabled="true"]:hover:active
     {
-      background-image    : url("chrome://global/skin/button28-bg-disabled.gif");
       margin              : 3px 7px 1px 1px;
       border              : none;
     }
@@ -168,11 +177,26 @@
       vertical-align      : middle;
     }
       
-  .button-toolbar-2 > .button-internal-box,
-  .button-toolbar-2:hover > .button-internal-box,
-  .button-toolbar-2:hover:active > .button-internal-box
+  .button-toolbar-2 > .button-internal-box
     {
       border              : none;
+      vertical-align      : middle;
+    }
+  
+  .button-toolbar-2:hover > .button-internal-box
+    {
+      border-left           : 1px solid #FFFFFF;
+      border-top            : 1px solid #FFFFFF;
+      border-right          : 1px solid #999999;
+      border-bottom         : 1px solid #999999;
+    }
+  
+  .button-toolbar-2:hover:active > .button-internal-box
+    {
+      border-left           : 1px solid #444444;
+      border-top            : 1px solid #444444;
+      border-right          : 1px solid #CCCCCC;
+      border-bottom         : 1px solid #CCCCCC;
     }
   
 /* text wrapper frame */
