@@ -75,6 +75,11 @@ StrBlockCopy(const nsACString &aSource1,
  * creation helper
  ******************************************************************************/
 
+// This is a counter that is incremented each time we allocate a new nsCookie.
+// The value of the counter is stored with each nsCookie so that we can sort
+// cookies by creation time (within the current browser session).
+static PRUint32 gLastCreationTime;
+
 nsCookie *
 nsCookie::Create(const nsACString &aName,
                  const nsACString &aValue,
@@ -105,8 +110,8 @@ nsCookie::Create(const nsACString &aName,
 
   // construct the cookie. placement new, oh yeah!
   return new (place) nsCookie(name, value, host, path, end,
-                              aExpiry, aLastAccessed, aIsSession,
-                              aIsSecure, aStatus, aPolicy);
+                              aExpiry, aLastAccessed, ++gLastCreationTime,
+                              aIsSession, aIsSecure, aStatus, aPolicy);
 }
 
 /******************************************************************************

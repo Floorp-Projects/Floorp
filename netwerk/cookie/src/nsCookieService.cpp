@@ -292,31 +292,40 @@ LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieStr
 /******************************************************************************
  * nsCookieService impl:
  * private list sorting callbacks
+ *
+ * these functions return:
+ *   < 0 if the first element should come before the second element,
+ *     0 if the first element may come before or after the second element,
+ *   > 0 if the first element should come after the second element.
  ******************************************************************************/
 
-// comparison function for sorting cookies by path length:
-// returns < 0 if the first element has a greater path length than the second element,
-//           0 if they both have the same path length,
-//         > 0 if the second element has a greater path length than the first element.
+// comparison function for sorting cookies before sending to a server.
 PR_STATIC_CALLBACK(int)
-compareCookiesByPath(const void *aElement1,
-                     const void *aElement2,
-                     void       *aData)
+compareCookiesForSending(const void *aElement1,
+                         const void *aElement2,
+                         void       *aData)
 {
   const nsCookie *cookie1 = NS_STATIC_CAST(const nsCookie*, aElement1);
   const nsCookie *cookie2 = NS_STATIC_CAST(const nsCookie*, aElement2);
 
-  return cookie2->Path().Length() - cookie1->Path().Length();
+  // compare by cookie path length in accordance with RFC2109
+  int rv = cookie2->Path().Length() - cookie1->Path().Length();
+  if (rv == 0) {
+    // when path lengths match, older cookies should be listed first.  this is
+    // required for backwards compatibility since some websites erroneously
+    // depend on receiving cookies in the order in which they were sent to the
+    // browser!  see bug 236772.
+    rv = cookie1->CreationTime() - cookie2->CreationTime();
+  }
+  return rv;
 }
 
-// comparison function for sorting cookies by lastAccessed time:
-// returns < 0 if the first element was used more recently than the second element,
-//           0 if they both have the same last-use time,
-//         > 0 if the second element was used more recently than the first element.
+// comparison function for sorting cookies by lastAccessed time, with most-
+// recently-used cookies listed first.
 PR_STATIC_CALLBACK(int)
-compareCookiesByLRU(const void *aElement1,
-                    const void *aElement2,
-                    void       *aData)
+compareCookiesForWriting(const void *aElement1,
+                         const void *aElement2,
+                         void       *aData)
 {
   const nsCookie *cookie1 = NS_STATIC_CAST(const nsCookie*, aElement1);
   const nsCookie *cookie2 = NS_STATIC_CAST(const nsCookie*, aElement2);
@@ -600,8 +609,9 @@ nsCookieService::GetCookieStringFromHttp(nsIURI     *aHostURI,
   } while (currentDot);
 
   // return cookies in order of path length; longest to shortest.
-  // this is required per RFC2109.
-  foundCookieList.Sort(compareCookiesByPath, nsnull);
+  // this is required per RFC2109.  if cookies match in length,
+  // then sort by creation time (see bug 236772).
+  foundCookieList.Sort(compareCookiesForSending, nsnull);
 
   nsCAutoString cookieData;
   PRInt32 count = foundCookieList.Count();
@@ -1058,7 +1068,7 @@ nsCookieService::Write()
   // such that least-recently-used cookies come last
   nsVoidArray sortedCookieList(mCookieCount);
   mHostTable.EnumerateEntries(cookieListCallback, &sortedCookieList);
-  sortedCookieList.Sort(compareCookiesByLRU, nsnull);
+  sortedCookieList.Sort(compareCookiesForWriting, nsnull);
 
   bufferedOutputStream->Write(kHeader, sizeof(kHeader) - 1, &rv);
 
@@ -1232,6 +1242,11 @@ nsCookieService::AddInternal(nsCookie   *aCookie,
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "previously stored cookie was deleted");
       NotifyChanged(oldCookie, NS_LITERAL_STRING("deleted").get());
       return;
+    }
+
+    // preserve creation time of cookie
+    if (oldCookie) {
+      aCookie->SetCreationTime(oldCookie->CreationTime());
     }
 
   } else {
