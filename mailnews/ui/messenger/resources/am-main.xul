@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="am.css" type="text/css"?>
+
+<!DOCTYPE window>
+
+<xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
+     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+     onload = ""> 
+    <box align="vertical" flex="100%">
+    <html:div>Account Settings</html:div>
+
+    <box align="vertical" flex="100%" style="border: 2px groove">
+    <box align="horizontal">
+      <spring flex="100%"/>
+      <html:div>AccountName:</html:div>
+      <spring style="width:5px"/>
+      <html:input type="text" style="width: 180px"/>
+    </box>
+    <html:div>The account name identifies each account</html:div>
+    </box>
+
+    <html:div>Identity</html:div>
+    <box align="vertical" flex="100%" style="border: 2px groove">
+    <html:div>
+      Each account can have its own identity, which is the information that
+        other people see when they read your messages.
+    </html:div>
+    <box align="horizonal" style="border: 2px groove">
+      <spring flex="100%"/>
+      <html:div>Your Name</html:div>
+      <spring style="width: 5px"/>
+      <html:input name="username" type="text"/>
+    </box>
+    <box align="horizonal">
+      <spring flex="100%"/>
+      <html:div>Email Address</html:div>
+      <spring style="width: 5px"/>
+      <html:input name="email" type="text"/>
+    </box>
+    <box align="horizonal">
+      <spring flex="100%"/>
+      <html:div>Reply-to Address</html:div>
+      <spring style="width: 5px"/>
+      <html:input name="replyto" type="text"/>
+    </box>
+    <box align="horizonal">
+      <spring flex="100%"/>
+      <html:div>Organization</html:div>
+      <spring style="width: 5px"/>
+      <html:input name="organization" type="text"/>
+    </box>
+    <html:div><html:input type="checkbox"/>Compose messages using html</html:div>
+    <html:div><html:input type="checkbox"/>Attach my vCard to messages</html:div>
+    <html:div>
+      <html:input type="checkbox"/>Attach this signature
+         <html:select id="pref">
+           <html:option>sample sig 1</html:option>
+           <html:option>sample sig 2</html:option>
+           <html:option>sample sig 3</html:option>
+         </html:select>
+    </html:div>
+    </box>
+  </box>
+</xul:window>

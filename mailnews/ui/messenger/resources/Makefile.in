@@ -54,6 +54,20 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/forward.gif \
 	$(srcdir)/trash.gif \
 	$(srcdir)/newsHost.gif \
+	$(srcdir)/AccountManager.xul	\
+	$(srcdir)/AccountManager.js		\
+	$(srcdir)/accounttree.xul	\
+	$(srcdir)/am-main.xul		\
+	$(srcdir)/am-server.xul		\
+	$(srcdir)/am-server-top.xul	\
+	$(srcdir)/am-server-pop3.xul	\
+	$(srcdir)/am-server-imap.xul	\
+	$(srcdir)/am-server-news.xul	\
+	$(srcdir)/am-server-webmail.xul	\
+	$(srcdir)/am-copies.xul		\
+	$(srcdir)/am-advanced.xul	\
+	$(srcdir)/am.css			\
+	$(srcdir)/SearchDialog.xul	\
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))

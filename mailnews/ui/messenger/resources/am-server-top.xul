@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="am.css" type="text/css"?>
+
+<!DOCTYPE window>
+
+<xul:window xmlns="http://www.w3.org/TR/REC-html40"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload = "">
+
+<form>
+<h2>Server Settings</h2>
+  <table>
+    <tr>
+      <td>Account Type</td>
+      <td>
+        <select>
+          <option name="pop3">POP Mail Server</option>
+          <option name="imap">IMAP Mail Server</option>
+          <option name="news">News Server</option>
+          <option name="webmail">Web mail account</option>
+        </select>
+      </td>
+    </tr>
+  </table>
+
+</form>
+</xul:window>
