@@ -125,12 +125,12 @@ NS_IMETHODIMP ChangeAttributeTxn::Merge(nsITransaction *aTransaction, PRBool *aD
 
 NS_IMETHODIMP ChangeAttributeTxn::GetTxnDescription(nsAString& aString)
 {
-  aString.Assign(NS_LITERAL_STRING("ChangeAttributeTxn: "));
+  aString.Assign(NS_LITERAL_STRING("ChangeAttributeTxn: [mRemoveAttribute == "));
 
-  if (PR_FALSE==mRemoveAttribute)
-    aString += NS_LITERAL_STRING("[mRemoveAttribute == false] ");
+  if (!mRemoveAttribute)
+    aString += NS_LITERAL_STRING("false] ");
   else
-    aString += NS_LITERAL_STRING("[mRemoveAttribute == true] ");
+    aString += NS_LITERAL_STRING("true] ");
   aString += mAttribute;
   return NS_OK;
 }
