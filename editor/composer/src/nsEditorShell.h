@@ -39,6 +39,7 @@
 #include "nsTextServicesCID.h"
 #include "nsIEditorSpellCheck.h"
 #include "nsISpellChecker.h"
+#include "nsInterfaceState.h"
 
 class nsIBrowserWindow;
 class nsIWebShell;
@@ -87,7 +88,7 @@ class nsEditorShell :   public nsIEditorShell,
 	  NS_IMETHOD GetEditorDocument(nsIDOMDocument * *aEditorDocument);
 	  NS_IMETHOD GetEditorSelection(nsIDOMSelection * *aEditorSelection);
 
-    NS_IMETHOD GetDocumentStatus(PRInt32 *aDocumentStatus);
+    NS_IMETHOD GetDocumentModified(PRBool *aDocumentModified);
 
 	  NS_IMETHOD GetWrapColumn(PRInt32 *aWrapColumn);
 	  NS_IMETHOD SetWrapColumn(PRInt32 aWrapColumn);
@@ -297,9 +298,7 @@ class nsEditorShell :   public nsIEditorShell,
 
     nsCOMPtr<nsISupports>   mSearchContext;		// context used for search and replace. Owned by the appshell.
     
-#if 0
-    nsCOMPtr<nsIDOMSelectionListener> mStateMaintainer;
-#endif    
+    nsInterfaceState*    mStateMaintainer;    // we hold the owning ref to this.
 
     PRInt32 mWrapColumn;      // can't actually set this 'til the editor is created, so we may have to hold on to it for a while
 
