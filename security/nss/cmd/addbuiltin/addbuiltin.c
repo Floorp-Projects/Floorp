@@ -34,11 +34,12 @@
 /*
  * Tool for converting builtin CA certs.
  *
- * $Id: addbuiltin.c,v 1.2 2001/01/26 16:45:45 mcgreer%netscape.com Exp $
+ * $Id: addbuiltin.c,v 1.3 2001/06/29 14:09:25 mcgreer%netscape.com Exp $
  */
 
 #include "nss.h"
 #include "cert.h"
+#include "certdb.h"
 #include "secutil.h"
 #include "pk11func.h"
 
@@ -71,7 +72,7 @@ char *getTrustString(unsigned int trust)
     }
     return "CKT_NETSCAPE_VALID"; /* not reached */
 }
-	
+
 static SECStatus
 ConvertCertificate(SECItem *sdder, char *nickname, CERTCertTrust *trust)
 {
@@ -176,7 +177,7 @@ printheader() {
      "# may use your version of this file under either the MPL or the\n"
      "# GPL.\n"
      "#\n"
-     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.2 $ $Date: 2001/01/26 16:45:45 $ $Name:  $\"\n"
+     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.3 $ $Date: 2001/06/29 14:09:25 $ $Name:  $\"\n"
      "\n"
      "#\n"
      "# certdata.txt\n"
