@@ -154,6 +154,28 @@ SECStatus
 SEC_CrlReplaceUrl(PCERTSignedCrl *crl,char *url);
 #endif
 
+/*
+ * These functions are used to map subjectKeyID extension values to certs.
+ */
+SECStatus
+CERT_CreateSubjKeyIDHashTable(void);
+
+SECStatus
+CERT_AddSubjKeyIDMapping(SECItem *subjKeyID, CERTCertificate *cert);
+
+
+/*
+ * Call this function to remove an entry from the mapping table.
+ */
+SECStatus
+CERT_RemoveSubjKeyIDMapping(SECItem *subjKeyID);
+
+SECStatus
+CERT_DestroySubjKeyIDHashTable(void);
+
+SECItem*
+CERT_FindDERCertBySubjKeyID(SECItem *subjKeyID);
+
 SEC_END_PROTOS
 
 #endif /* _CERTDB_H_ */

@@ -66,7 +66,6 @@ PK11SlotListElement *PK11_FindSlotElement(PK11SlotList *list,
  * Generic Slot Management
  ************************************************************/
 PK11SlotInfo *PK11_ReferenceSlot(PK11SlotInfo *slot);
-PK11SlotInfo *PK11_FindSlotByID(SECMODModuleID modID,CK_SLOT_ID slotID);
 void PK11_FreeSlot(PK11SlotInfo *slot);
 SECStatus PK11_DestroyObject(PK11SlotInfo *slot,CK_OBJECT_HANDLE object);
 SECStatus PK11_DestroyTokenObject(PK11SlotInfo *slot,CK_OBJECT_HANDLE object);
@@ -461,6 +460,8 @@ SECStatus PK11_TraverseCertsForSubjectInSlot(CERTCertificate *cert,
 	void *arg);
 CERTCertificate *PK11_FindCertFromDERCert(PK11SlotInfo *slot, 
 					  CERTCertificate *cert, void *wincx);
+CERTCertificate *PK11_FindCertFromDERCertItem(PK11SlotInfo *slot, 
+					  SECItem *derCert, void *wincx);
 CERTCertificate *PK11_FindCertFromDERSubjectAndNickname(
 					PK11SlotInfo *slot, 
 					CERTCertificate *cert, char *nickname,

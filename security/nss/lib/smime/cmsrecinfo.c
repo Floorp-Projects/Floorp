@@ -34,7 +34,7 @@
 /*
  * CMS recipientInfo methods.
  *
- * $Id: cmsrecinfo.c,v 1.7 2002/12/12 06:05:38 nelsonb%netscape.com Exp $
+ * $Id: cmsrecinfo.c,v 1.8 2002/12/17 01:39:46 wtc%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -47,14 +47,24 @@
 #include "pk11func.h"
 #include "secerr.h"
 
-/*
- * NSS_CMSRecipientInfo_Create - create a recipientinfo
- *
- * we currently do not create KeyAgreement recipientinfos with multiple recipientEncryptedKeys
- * the certificate is supposed to have been verified by the caller
- */
+PRBool
+nss_cmsrecipientinfo_usessubjectkeyid(NSSCMSRecipientInfo *ri)
+{
+    if (ri->recipientInfoType == NSSCMSRecipientInfoID_KeyTrans) {
+	NSSCMSRecipientIdentifier *rid;
+	rid = &ri->ri.keyTransRecipientInfo.recipientIdentifier;
+	if (rid->identifierType == NSSCMSRecipientID_SubjectKeyID) {
+	    return PR_TRUE;
+	}
+    }
+    return PR_FALSE;
+}
+
+
 NSSCMSRecipientInfo *
-NSS_CMSRecipientInfo_Create(NSSCMSMessage *cmsg, CERTCertificate *cert)
+nss_cmsrecipientinfo_create(NSSCMSMessage *cmsg, NSSCMSRecipientIDSelector type,
+                            CERTCertificate *cert, SECKEYPublicKey *pubKey, 
+                            SECItem *subjKeyID)
 {
     NSSCMSRecipientInfo *ri;
     void *mark;
@@ -65,6 +75,8 @@ NSS_CMSRecipientInfo_Create(NSSCMSMessage *cmsg, CERTCertificate *cert)
     unsigned long version;
     SECItem *dummy;
     PLArenaPool *poolp;
+    CERTSubjectPublicKeyInfo *spki, *freeSpki = NULL;
+    NSSCMSRecipientIdentifier *rid;
 
     poolp = cmsg->poolp;
 
@@ -75,26 +87,64 @@ NSS_CMSRecipientInfo_Create(NSSCMSMessage *cmsg, CERTCertificate *cert)
 	goto loser;
 
     ri->cmsg = cmsg;
-    ri->cert = CERT_DupCertificate(cert);
-    if (ri->cert == NULL)
-	goto loser;
+    if (type == NSSCMSRecipientID_IssuerSN) {
+	ri->cert = CERT_DupCertificate(cert);
+	if (ri->cert == NULL)
+	    goto loser;
+	spki = &(cert->subjectPublicKeyInfo);
+    } else {
+	PORT_Assert(pubKey);
+	spki = freeSpki = SECKEY_CreateSubjectPublicKeyInfo(pubKey);
+    }
 
-    certalgtag = SECOID_GetAlgorithmTag(&(cert->subjectPublicKeyInfo.algorithm));
+    certalgtag = SECOID_GetAlgorithmTag(&(spki->algorithm));
 
+    rid = &ri->ri.keyTransRecipientInfo.recipientIdentifier;
     switch (certalgtag) {
     case SEC_OID_PKCS1_RSA_ENCRYPTION:
 	ri->recipientInfoType = NSSCMSRecipientInfoID_KeyTrans;
-	/* hardcoded issuerSN choice for now */
-	ri->ri.keyTransRecipientInfo.recipientIdentifier.identifierType = NSSCMSRecipientID_IssuerSN;
-	ri->ri.keyTransRecipientInfo.recipientIdentifier.id.issuerAndSN = CERT_GetCertIssuerAndSN(poolp, cert);
-	if (ri->ri.keyTransRecipientInfo.recipientIdentifier.id.issuerAndSN == NULL) {
+	rid->identifierType = type;
+	if (type == NSSCMSRecipientID_IssuerSN) {
+	    rid->id.issuerAndSN = CERT_GetCertIssuerAndSN(poolp, cert);
+	    if (rid->id.issuerAndSN == NULL) {
+	      break;
+	    }
+	} else if (type == NSSCMSRecipientID_SubjectKeyID){
+	    NSSCMSKeyTransRecipientInfoEx *riExtra;
+
+	    rid->id.subjectKeyID = PORT_ArenaNew(poolp, SECItem);
+	    if (rid->id.subjectKeyID == NULL) {
+		rv = SECFailure;
+		PORT_SetError(SEC_ERROR_NO_MEMORY);
+		break;
+	    } 
+	    SECITEM_CopyItem(poolp, rid->id.subjectKeyID, subjKeyID);
+	    if (rid->id.subjectKeyID->data == NULL) {
+		rv = SECFailure;
+		PORT_SetError(SEC_ERROR_NO_MEMORY);
+		break;
+	    }
+	    riExtra = &ri->ri.keyTransRecipientInfoEx;
+	    riExtra->version = 0;
+	    riExtra->pubKey = SECKEY_CopyPublicKey(pubKey);
+	    if (riExtra->pubKey == NULL) {
+		rv = SECFailure;
+		PORT_SetError(SEC_ERROR_NO_MEMORY);
+		break;
+	    }
+	} else {
+	    PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	    rv = SECFailure;
-	    break;
 	}
 	break;
     case SEC_OID_MISSI_KEA_DSS_OLD:
     case SEC_OID_MISSI_KEA_DSS:
     case SEC_OID_MISSI_KEA:
+        PORT_Assert(type != NSSCMSRecipientID_SubjectKeyID);
+	if (type == NSSCMSRecipientID_SubjectKeyID) {
+	    rv = SECFailure;
+	    break;
+	}
 	/* backward compatibility - this is not really a keytrans operation */
 	ri->recipientInfoType = NSSCMSRecipientInfoID_KeyTrans;
 	/* hardcoded issuerSN choice for now */
@@ -106,6 +156,11 @@ NSS_CMSRecipientInfo_Create(NSSCMSMessage *cmsg, CERTCertificate *cert)
 	}
 	break;
     case SEC_OID_X942_DIFFIE_HELMAN_KEY: /* dh-public-number */
+        PORT_Assert(type != NSSCMSRecipientID_SubjectKeyID);
+	if (type == NSSCMSRecipientID_SubjectKeyID) {
+	    rv = SECFailure;
+	    break;
+	}
 	/* a key agreement op */
 	ri->recipientInfoType = NSSCMSRecipientInfoID_KeyAgree;
 
@@ -184,11 +239,68 @@ NSS_CMSRecipientInfo_Create(NSSCMSMessage *cmsg, CERTCertificate *cert)
     }
 
     PORT_ArenaUnmark (poolp, mark);
+    if (freeSpki)
+      SECKEY_DestroySubjectPublicKeyInfo(freeSpki);
     return ri;
 
 loser:
+    if (freeSpki)
+      SECKEY_DestroySubjectPublicKeyInfo(freeSpki);
     PORT_ArenaRelease (poolp, mark);
     return NULL;
+}
+
+/*
+ * NSS_CMSRecipientInfo_Create - create a recipientinfo
+ *
+ * we currently do not create KeyAgreement recipientinfos with multiple 
+ * recipientEncryptedKeys the certificate is supposed to have been 
+ * verified by the caller
+ */
+NSSCMSRecipientInfo *
+NSS_CMSRecipientInfo_Create(NSSCMSMessage *cmsg, CERTCertificate *cert)
+{
+    return nss_cmsrecipientinfo_create(cmsg, NSSCMSRecipientID_IssuerSN, cert, 
+                                       NULL, NULL);
+}
+
+NSSCMSRecipientInfo *
+NSS_CMSRecipientInfo_CreateWithSubjKeyID(NSSCMSMessage   *cmsg, 
+                                     SECItem         *subjKeyID,
+                                     SECKEYPublicKey *pubKey)
+{
+    return nss_cmsrecipientinfo_create(cmsg, NSSCMSRecipientID_SubjectKeyID, 
+                                       NULL, pubKey, subjKeyID);
+}
+
+NSSCMSRecipientInfo *
+NSS_CMSRecipientInfo_CreateWithSubjKeyIDFromCert(NSSCMSMessage *cmsg,
+                                             CERTCertificate *cert)
+{
+    SECKEYPublicKey *pubKey = NULL;
+    SECItem subjKeyID = {siBuffer, NULL, 0};
+    NSSCMSRecipientInfo *retVal = NULL;
+
+    if (!cmsg || !cert) {
+	return NULL;
+    }
+    pubKey = CERT_ExtractPublicKey(cert);
+    if (!pubKey) {
+	goto done;
+    }
+    if (CERT_FindSubjectKeyIDExtension(cert, &subjKeyID) != SECSuccess ||
+        subjKeyID.data == NULL) {
+	goto done;
+    }
+    retVal = NSS_CMSRecipientInfo_CreateWithSubjKeyID(cmsg, &subjKeyID, pubKey);
+done:
+    if (pubKey)
+	SECKEY_DestroyPublicKey(pubKey);
+
+    if (subjKeyID.data)
+	SECITEM_FreeItem(&subjKeyID, PR_FALSE);
+
+    return retVal;
 }
 
 void
@@ -198,6 +310,14 @@ NSS_CMSRecipientInfo_Destroy(NSSCMSRecipientInfo *ri)
     /* issuerAndSN was allocated on the pool, so no need to destroy it */
     if (ri->cert != NULL)
 	CERT_DestroyCertificate(ri->cert);
+
+    if (nss_cmsrecipientinfo_usessubjectkeyid(ri)) {
+	NSSCMSKeyTransRecipientInfoEx *extra;
+	extra = &ri->ri.keyTransRecipientInfoEx;
+	if (extra->pubKey)
+	    SECKEY_DestroyPublicKey(extra->pubKey);
+    }
+
     /* recipientInfo structure itself was allocated on the pool, so no need to destroy it */
     /* we're done. */
 }
@@ -275,7 +395,8 @@ NSS_CMSRecipientInfo_GetKeyEncryptionAlgorithmTag(NSSCMSRecipientInfo *ri)
 }
 
 SECStatus
-NSS_CMSRecipientInfo_WrapBulkKey(NSSCMSRecipientInfo *ri, PK11SymKey *bulkkey, SECOidTag bulkalgtag)
+NSS_CMSRecipientInfo_WrapBulkKey(NSSCMSRecipientInfo *ri, PK11SymKey *bulkkey, 
+                                 SECOidTag bulkalgtag)
 {
     CERTCertificate *cert;
     SECOidTag certalgtag;
@@ -283,22 +404,46 @@ NSS_CMSRecipientInfo_WrapBulkKey(NSSCMSRecipientInfo *ri, PK11SymKey *bulkkey, S
     SECItem *params = NULL;
     NSSCMSRecipientEncryptedKey *rek;
     NSSCMSOriginatorIdentifierOrKey *oiok;
+    CERTSubjectPublicKeyInfo *spki, *freeSpki = NULL;
     PLArenaPool *poolp;
+    NSSCMSKeyTransRecipientInfoEx *extra;
+    PRBool usesSubjKeyID;
 
     poolp = ri->cmsg->poolp;
     cert = ri->cert;
-    PORT_Assert (cert != NULL);
-    if (cert == NULL)
+    usesSubjKeyID = nss_cmsrecipientinfo_usessubjectkeyid(ri);
+    if (cert) {
+	spki = &cert->subjectPublicKeyInfo;
+	certalgtag = SECOID_GetAlgorithmTag(&(spki->algorithm));
+    } else if (usesSubjKeyID) {
+	extra = &ri->ri.keyTransRecipientInfoEx;
+	/* sanity check */
+	PORT_Assert(extra->pubKey);
+	if (!extra->pubKey) {
+	    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	    return SECFailure;
+	}
+	spki = freeSpki = SECKEY_CreateSubjectPublicKeyInfo(extra->pubKey);
+	certalgtag = SECOID_GetAlgorithmTag(&spki->algorithm);
+    } else {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
+    }
 
     /* XXX set ri->recipientInfoType to the proper value here */
     /* or should we look if it's been set already ? */
 
-    certalgtag = SECOID_GetAlgorithmTag(&(cert->subjectPublicKeyInfo.algorithm));
+    certalgtag = SECOID_GetAlgorithmTag(&spki->algorithm);
     switch (certalgtag) {
     case SEC_OID_PKCS1_RSA_ENCRYPTION:
 	/* wrap the symkey */
-	if (NSS_CMSUtil_EncryptSymKey_RSA(poolp, cert, bulkkey, &ri->ri.keyTransRecipientInfo.encKey) != SECSuccess) {
+	if (usesSubjKeyID) {
+	    rv = NSS_CMSUtil_EncryptSymKey_RSAPubKey(poolp, extra->pubKey,
+	                         bulkkey, &ri->ri.keyTransRecipientInfo.encKey);
+ 	    if (rv != SECSuccess)
+		break;
+	} else if (NSS_CMSUtil_EncryptSymKey_RSA(poolp, cert, bulkkey, 
+	                 &ri->ri.keyTransRecipientInfo.encKey) != SECSuccess) {
 	    rv = SECFailure;
 	    break;
 	}
@@ -353,6 +498,9 @@ NSS_CMSRecipientInfo_WrapBulkKey(NSSCMSRecipientInfo *ri, PK11SymKey *bulkkey, S
 	rv = SECFailure;
 	break;
     }
+    if (freeSpki)
+	SECKEY_DestroySubjectPublicKeyInfo(freeSpki);
+
     return rv;
 }
 

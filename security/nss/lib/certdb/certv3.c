@@ -34,7 +34,7 @@
 /*
  * Code for dealing with X509.V3 extensions.
  *
- * $Id: certv3.c,v 1.3 2002/09/07 01:24:27 jpierre%netscape.com Exp $
+ * $Id: certv3.c,v 1.4 2002/12/17 01:39:36 wtc%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -291,7 +291,7 @@ CERT_FindKeyUsageExtension(CERTCertificate *cert, SECItem *retItem)
  * get the value of the X.509 v3 Key Usage Extension
  */
 SECStatus
-CERT_FindSubjectKeyIDExten(CERTCertificate *cert, SECItem *retItem)
+CERT_FindSubjectKeyIDExtension(CERTCertificate *cert, SECItem *retItem)
 {
 
     SECItem encodedValue;

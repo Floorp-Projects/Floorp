@@ -34,7 +34,7 @@
 /*
  * Interfaces of the CMS implementation.
  *
- * $Id: cms.h,v 1.14 2002/10/30 01:31:01 wtc%netscape.com Exp $
+ * $Id: cms.h,v 1.15 2002/12/17 01:39:45 wtc%netscape.com Exp $
  */
 
 #ifndef _CMS_H_
@@ -858,6 +858,15 @@ NSS_CMSEnvelopedData_Decode_AfterEnd(NSSCMSEnvelopedData *envd);
  */
 extern NSSCMSRecipientInfo *
 NSS_CMSRecipientInfo_Create(NSSCMSMessage *cmsg, CERTCertificate *cert);
+
+extern NSSCMSRecipientInfo *
+NSS_CMSRecipientInfo_CreateWithSubjKeyID(NSSCMSMessage   *cmsg, 
+                                         SECItem         *subjKeyID,
+                                         SECKEYPublicKey *pubKey);
+
+extern NSSCMSRecipientInfo *
+NSS_CMSRecipientInfo_CreateWithSubjKeyIDFromCert(NSSCMSMessage *cmsg, 
+                                                 CERTCertificate *cert);
 
 extern void
 NSS_CMSRecipientInfo_Destroy(NSSCMSRecipientInfo *ri);

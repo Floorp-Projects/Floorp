@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.57 2002/10/05 02:24:25 jpierre%netscape.com Exp $
+ # $Id: nssinit.c,v 1.58 2002/12/17 01:39:38 wtc%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -41,6 +41,7 @@
 #include "prprf.h"
 #include "prmem.h"
 #include "cert.h"
+#include "certdb.h"
 #include "key.h"
 #include "ssl.h"
 #include "sslproto.h"
@@ -476,6 +477,8 @@ loser:
 	}
 #endif
 	pk11sdr_Init();
+	CERT_CreateSubjKeyIDHashTable();
+	SECMOD_InitCallOnce();
 	nss_IsInitted = PR_TRUE;
     }
     return rv;
@@ -545,6 +548,8 @@ NSS_Shutdown(void)
     ShutdownCRLCache();
     SECOID_Shutdown();
     STAN_Shutdown();
+    CERT_DestroySubjKeyIDHashTable();
+    SECMOD_CleanupCallOnce();
     rv = SECMOD_Shutdown();
     pk11sdr_Shutdown();
     nss_IsInitted = PR_FALSE;
