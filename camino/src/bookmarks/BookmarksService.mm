@@ -927,9 +927,6 @@ static void AddImportedBookmarks(nsIDOMElement* aSrc, nsIDOMElement* aDst, nsIDO
 }
 
 
-#define SAFE_BOOKMARKS_IMPORT
-//static NS_DEFINE_IID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
-
 void
 BookmarksService::ImportBookmarks(nsIDOMHTMLDocument* aHTMLDoc)
 {
