@@ -216,6 +216,7 @@ nsMenuPopupFrame::GetViewOffset(nsIViewManager* aManager, nsIView* aView,
       aPoint.x += bounds.x;
       aPoint.y += bounds.y;
     }
+
     parent->GetParent(parent);
   }
 }
@@ -484,6 +485,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
 {
   NS_ENSURE_ARG(aPresContext);
   NS_ENSURE_ARG(aFrame);
+
   nsPoint parentPos;
   nsCOMPtr<nsIViewManager> viewManager;
 
@@ -494,6 +496,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   nsIView* parentView = nsnull;
   nsIFrame* parentFrame = nsnull;
   aFrame->GetParent(&parentFrame);
+
   GetNearestEnclosingView(aPresContext, parentFrame, &parentView);
   if (!parentView)
     return NS_OK;
@@ -507,15 +510,49 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   nsPoint offset;
   aFrame->GetOffsetFromView(aPresContext, offset, &containingView);
 
-  // We add the bounds of the containing view to the offset as 
-  // in the case of a scrolled view (autoscrolling menus), the offset
-  // y dimension includes matter that is not onscreen and should not
-  // be taken into account when positioning submenus. The y dimension
-  // on the bounds of the containing view is negative if any content
-  // is offscreen. For most menus it is 0 so this is a no-op. 
-  nsRect bounds;
-  containingView->GetBounds(bounds);
-  offset += nsPoint(bounds.x, bounds.y);
+  ///////////////////////////////////////////////////////////////////////////////
+  //
+  //  (0,-y)    +- - - - - - - - - - - - - - - - - - - - - -+  _            _
+  //            |   (part of canvas scrolled off the top)   |  |  bounds.y  |
+  //  (0, 0) -> +-------------------------------------------+  +            |
+  //            |                                           |  |            | offset
+  //            |  (part of canvas visible through parent   |  |  dY        |
+  //            |   nsIScrollableView (nsScrollPortView) )  |  |            |
+  //            |                                           |  |            |
+  //            |===========================================|  -            -
+  //            | aFrame                                  > |
+  //            |===========================================|
+  //            |                                           |
+  //            +-------------------------------------------+
+  //            |                                           |
+  //            +- - - - - - - - - - - - - - - - - - - - - -+
+  //
+  // Explanation: 
+  //
+  // If the frame we're trying to align this popup to is on a canvas inside
+  // a scrolled viewport (that is, the containing view of the frame is
+  // the child of a scrolling view, nsIScrollableView) the offset y 
+  // dimension of that view contains matter that is not onscreen (scrolled 
+  // up out of view) and must be adjusted when positioning the popup. 
+  // The y dimension on the bounds of the containing view is negative if 
+  // any content is offscreen, and the size of this dimension represents 
+  // the amount we must adjust the offset by. For most submenus this is 0, and
+  // so the offset is unchanged. For toplevel menus whose containing view is 
+  // a window or other view, whose bounds should not be taken into account. 
+  //
+  if (containingView) {
+    nsIView* scrollportView = nsnull;
+    containingView->GetParent(scrollportView);
+    if (scrollportView) {
+      nsIScrollableView* scrollableView = nsnull;
+      scrollportView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**) &scrollableView);
+      if (scrollableView) {
+        nsRect bounds;
+        containingView->GetBounds(bounds);
+        offset += nsPoint(bounds.x, bounds.y);
+      }
+    }
+  }
   
   nsRect parentRect;
   aFrame->GetRect(parentRect);
