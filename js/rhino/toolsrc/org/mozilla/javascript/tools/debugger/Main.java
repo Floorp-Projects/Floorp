@@ -196,6 +196,11 @@ public class Main implements ContextListener
         return debugGui.isVisible();
     }
 
+    public void dispose()
+    {
+        debugGui.dispose();
+    }
+
     public void attachTo(ContextFactory factory)
     {
         dim.attachTo(factory);
