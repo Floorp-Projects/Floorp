@@ -21,8 +21,14 @@
    -   Terry Hayes <thayes@netscape.com>
   -->
 
-<!ENTITY  masterpass.label             "Master Passwords">
-<!ENTITY  security.label               "Privacy and Security">
-<!ENTITY  ssl.label                    "SSL">
-<!ENTITY  certs.label                  "Certificates">
-<!ENTITY  validation.label             "Validation">
+<!ENTITY  lheader    "Master Passwords">
+<!ENTITY  managepassword.label    "Master Password Timeout">
+<!ENTITY  managepassword.text     "&brandShortName; will ask for your master password:">
+<!ENTITY  managepassword.askfirsttime "The first time your personal certificate is requested">
+<!ENTITY  managepassword.askeverytime "Every time your personal certificate is requested">
+<!ENTITY  managepassword.asktimeout   "After inactivity on an encrypted site for ">
+<!ENTITY  managepassword.timeout.unit   "minutes">
+
+<!ENTITY  changepassword.label    "Change Master Password">
+<!ENTITY  changepassword.text     "Your master password protects sensitive information such as web passwords and certificates.">
+<!ENTITY  changepassword.button   "Change Password">
