@@ -1558,7 +1558,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
       if (aProperty == kNC_Name)
         return GetFindUriName(uri, aTarget);
 		
-		  if (aProperty == kNC_NameSort) {
+      if (aProperty == kNC_NameSort) {
         // parse out the 'text' token
         nsVoidArray tokenList;
         FindUrlToTokenList(uri, tokenList);
