@@ -96,9 +96,6 @@ public:
 	
 	NS_DECL_ISUPPORTS
 
-	/* string GetNextXUL (in nsIDOMWindow wizardWindow, in nsIDOMWindow currentPage, in long currentPageId, out long newPageId); */
-	NS_IMETHOD GetNextXUL(nsIDOMWindow *wizardWindow, nsIDOMWindow *currentPage, PRInt32 currentPageId, PRInt32 *newPageId, char **_retval);
-
 	/* nsISupports GetData (in string dataId); */
 	NS_IMETHOD GetData(const char *dataId, nsISupports **_retval);
 
@@ -236,30 +233,6 @@ nsImportGenericMail::~nsImportGenericMail()
 
 
 NS_IMPL_ISUPPORTS(nsImportGenericMail, nsIImportGeneric::GetIID());
-
-
-NS_IMETHODIMP nsImportGenericMail::GetNextXUL(nsIDOMWindow *wizardWindow, nsIDOMWindow *currentPage, PRInt32 currentPageId, PRInt32 *newPageId, char **_retval)
-{
-    NS_PRECONDITION(newPageId != nsnull, "null ptr");
-    NS_PRECONDITION(_retval != nsnull, "null ptr");
-    if (!newPageId || !_retval)
-        return NS_ERROR_NULL_POINTER;
-
-	/*
-		Only 1 page required, the list of mailboxes!
-	*/
-	if (currentPageId == 0) {
-		// return the simple mail interface...
-		*_retval = nsCRT::strdup( "iw-simplemail.xul");
-		*newPageId = 1;
-		return( NS_OK);
-	}
-	else {
-		*_retval = nsnull;
-		*newPageId = 0;
-		return( NS_OK);
-	}
-}
 
 
 NS_IMETHODIMP nsImportGenericMail::GetData(const char *dataId, nsISupports **_retval)

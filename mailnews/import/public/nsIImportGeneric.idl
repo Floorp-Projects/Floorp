@@ -35,12 +35,6 @@ interface nsISupportsWString;
 [scriptable, uuid(9b5c20c0-2348-11d3-a206-00a0cc26da63)]
 interface nsIImportGeneric : nsISupports
 {	
-	/* Use this when you are using the UI */
-	string GetNextXUL(	in nsIDOMWindow wizardWindow,
-						in nsIDOMWindow	currentPage,
-						in long			currentPageId,
-						out long		newPageId);
-	
 	/* Use these to prepare for the import */
 		/*
 			"mailInterface" - nsIImportMail interface

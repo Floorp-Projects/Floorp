@@ -29,7 +29,7 @@
 
 interface nsIFileSpec;
 
-[scriptable, uuid(455ca0a0-8de2-11d3-a206-00a0cc26da63)]
+[noscript, uuid(455ca0a0-8de2-11d3-a206-00a0cc26da63)]
 interface nsIImportMimeEncode : nsISupports
 {	
 	
