@@ -1808,13 +1808,16 @@ done:
     PR_FREEIF(unicode);
     PR_FREEIF(fontName);
   }
+  // if nothing has been written then write out just "<div>" to match with "</div>"
+  if (status == -1)
+    status = MimeObject_write(obj, "<div>\n", 6, PR_FALSE);
   
   return status;
 }
 
 int EndMailNewsFont(MimeObject *obj)
 {
-  char buf[] = "</div>";
+  char buf[] = "</div>\n";
   return MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
 }
 

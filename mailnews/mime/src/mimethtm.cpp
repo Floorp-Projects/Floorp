@@ -26,6 +26,7 @@
 #include "prlog.h"
 #include "msgCore.h"
 #include "nsMimeStringResources.h"
+#include "mimemoz2.h"
 
 #define MIME_SUPERCLASS mimeInlineTextClass
 MimeDefClass(MimeInlineTextHTML, MimeInlineTextHTMLClass,
@@ -55,6 +56,10 @@ MimeInlineTextHTML_parse_begin (MimeObject *obj)
   
   if (!obj->output_p) return 0;
   
+  if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
+      nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
+    status = BeginMailNewsFont(obj, "mailnews.font.name.serif", "mailnews.size.variable");  
+
   MimeInlineTextHTML  *textHTML = (MimeInlineTextHTML *) obj;
   
   textHTML->charset = nsnull;
@@ -205,6 +210,10 @@ MimeInlineTextHTML_parse_eof (MimeObject *obj, PRBool abort_p)
   /* Run parent method first, to flush out any buffered data. */
   status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_eof(obj, abort_p);
   if (status < 0) return status;
+
+  if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
+      nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
+    status = EndMailNewsFont(obj);
 
   if (obj->output_p &&
 	  obj->options &&

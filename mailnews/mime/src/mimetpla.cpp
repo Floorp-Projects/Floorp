@@ -119,6 +119,10 @@ MimeInlineTextPlain_parse_begin (MimeObject *obj)
 
   if (!obj->output_p) return 0;
 
+  if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
+      nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
+    status = BeginMailNewsFont(obj, "mailnews.font.name.mono", "mailnews.size.fixed");  
+
   if (obj->options &&
 	  obj->options->write_html_p &&
 	  obj->options->output_fn)
@@ -212,6 +216,10 @@ MimeInlineTextPlain_parse_eof (MimeObject *obj, PRBool abort_p)
 	  status = MimeObject_write_separator(obj);
 	  if (status < 0) return status;
 	}
+
+  if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
+      nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
+    status = EndMailNewsFont(obj);
 
   return 0;
 }

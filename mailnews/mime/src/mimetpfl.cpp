@@ -73,6 +73,10 @@ MimeInlineTextPlainFlowed_parse_begin (MimeObject *obj)
   status =  MimeObject_write(obj, s, 0, PR_TRUE); /* force out any separators... */
   if(status<0) return status;
 
+  if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
+      nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
+    status = BeginMailNewsFont(obj, "mailnews.font.name.mono", "mailnews.size.fixed");  
+
   // Setup the data structure that is connected to the actual document
   // Saved in a linked list in case this is called with several documents
   // at the same time.
@@ -193,6 +197,10 @@ MimeInlineTextPlainFlowed_parse_eof (MimeObject *obj, PRBool abort_p)
     printf("propbredd");
 #endif
   }
+
+  if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
+      nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
+    status = EndMailNewsFont(obj);
 
   return 0;
 }
