@@ -83,7 +83,7 @@ MSG_SMARTUPDATE_START=Preparing Install, please wait...
 MSG_CONFIGURING=Configuring %s, please wait...
 ERROR_XPI_INSTALL=Error occurred during installation
 ERROR_SETUP_REQUIREMENT=Windows95 or greater Operating System is required!  Exiting setup...
-DLG_EXTRACTING_TITLE=Install Progress
+DLG_EXTRACTING_TITLE=$ProductName$ Setup - Install Progress
 STR_PROCESSINGFILE=Preparing file: %s
 STR_INSTALLING=Currently installing %s
 STR_COPYINGFILE=Copying file: %s
@@ -106,6 +106,7 @@ STR_SAVE_INSTALLER_FILES=Save downloaded and Setup program files to:
 MSG_INIT_SETUP=Initializing Setup, please wait...
 STR_MESSAGEBOX_TITLE=%s Setup
 ERROR_GETVERSION=GetVersionEx() failed!
+TITLE_USAGE=Usage
 
 STATUS_EXTRACTING=Extracting %s
 STATUS_LAUNCHING_SETUP=Launching Setup...
