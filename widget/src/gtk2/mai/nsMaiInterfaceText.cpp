@@ -432,8 +432,10 @@ getTextCB(AtkText *aText, gint aStartOffset, gint aEndOffset)
     MaiInterfaceText *maiIfaceText = getText(aText);
     if (!maiIfaceText)
         return NULL;
-    return NS_CONST_CAST(gchar*,
-                         maiIfaceText->GetText(aStartOffset, aEndOffset));
+
+    const gchar *retText = maiIfaceText->GetText(aStartOffset, aEndOffset);
+    //copy and return, libspi will free it.
+    return (retText) ? g_strdup(retText) : NULL;
 }
 
 gchar *
@@ -444,11 +446,12 @@ getTextAfterOffsetCB(AtkText *aText, gint aOffset,
     MaiInterfaceText *maiIfaceText = getText(aText);
     if (!maiIfaceText)
         return NULL;
-    return NS_CONST_CAST(gchar*,
-                         maiIfaceText->GetTextAfterOffset(aOffset,
-                                                          aBoundaryType,
-                                                          aStartOffset,
-                                                          aEndOffset));
+
+    const gchar *retText = maiIfaceText->GetTextAfterOffset(aOffset,
+                                                            aBoundaryType,
+                                                            aStartOffset,
+                                                            aEndOffset);
+    return (retText) ? g_strdup(retText) : NULL;
 }
 
 gchar *
@@ -459,11 +462,11 @@ getTextAtOffsetCB(AtkText *aText, gint aOffset,
     MaiInterfaceText *maiIfaceText = getText(aText);
     if (!maiIfaceText)
         return NULL;
-    return NS_CONST_CAST(gchar*,
-                         maiIfaceText->GetTextAtOffset(aOffset,
-                                                       aBoundaryType,
-                                                       aStartOffset,
-                                                       aEndOffset));
+    const gchar *retText = maiIfaceText->GetTextAtOffset(aOffset,
+                                                         aBoundaryType,
+                                                         aStartOffset,
+                                                         aEndOffset);
+    return (retText) ? g_strdup(retText) : NULL;
 }
 
 gunichar
@@ -483,11 +486,12 @@ getTextBeforeOffsetCB(AtkText *aText, gint aOffset,
     MaiInterfaceText *maiIfaceText = getText(aText);
     if (!maiIfaceText)
         return NULL;
-    return NS_CONST_CAST(gchar*,
-                         maiIfaceText->GetTextBeforeOffset(aOffset,
-                                                           aBoundaryType,
-                                                           aStartOffset,
-                                                           aEndOffset));
+
+    const gchar *retText = maiIfaceText->GetTextBeforeOffset(aOffset,
+                                                             aBoundaryType,
+                                                             aStartOffset,
+                                                             aEndOffset);
+    return (retText) ? g_strdup(retText) : NULL;
 }
 
 gint
@@ -572,6 +576,10 @@ getSelectionCB(AtkText *aText, gint aSelectionNum,
                          maiIfaceText->GetSelection(aSelectionNum,
                                                     aStartOffset,
                                                     aEndOffset));
+    const gchar *retText = maiIfaceText->GetSelection(aSelectionNum,
+                                                      aStartOffset,
+                                                      aEndOffset);
+    return (retText) ? g_strdup(retText) : NULL;
 }
 
 // set methods
