@@ -75,7 +75,8 @@
 #include "nsIProxyObjectManager.h"
 #include "nsIMsgComposeService.h"
 #include "nsProxiedService.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsIDirectoryService.h"
 #include "nsMsgI18N.h"
 
 #include "msgMapi.h"
@@ -526,21 +527,17 @@ nsresult nsMapiHook::HandleAttachments (nsIMsgCompFields * aCompFields, PRInt32 
 
             // create MsgCompose attachment object
             nsCOMPtr<nsIMsgAttachment> attachment = do_CreateInstance(NS_MSGATTACHMENT_CONTRACTID, &rv);
-            if (NS_FAILED(rv) || (!attachment) ) return rv ;
+            NS_ENSURE_SUCCESS(rv, rv);
 
-            // we do this since MS Office apps create a temp file when sending  
-            // the currently open document in that app 
-            if (aFiles[i].lpszFileName)
-            {
                 // Win temp Path
-                nsSpecialSystemDirectory tmpDir(nsSpecialSystemDirectory::OS_TemporaryDirectory) ;
-                // get nsIFile for nsFileSpec, why use a obsolete class if not required!
-                nsCOMPtr<nsILocalFile> pTempPath ;
-                rv = NS_FileSpecToIFile(&tmpDir, getter_AddRefs(pTempPath)) ;
-                if(NS_FAILED(rv) || !pTempPath) return rv ;
+            //Temp Directory
+            nsCOMPtr <nsIFile> pTempFileDir;
+            NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(pTempFileDir));
+            nsCOMPtr <nsILocalFile> pTempDir = do_QueryInterface(pTempFileDir);
+
                 // temp dir path
                 nsAutoString tempPath ;
-                rv = pTempPath->GetPath (tempPath) ;
+            rv = pTempDir->GetPath (tempPath) ;
                 if(NS_FAILED(rv) || tempPath.IsEmpty()) return rv ;
 
                 // filename of the file attachment
@@ -557,8 +554,8 @@ nsresult nsMapiHook::HandleAttachments (nsIMsgCompFields * aCompFields, PRInt32 
                 PRInt32 offset = dirPath.Find (leafName.get()) ;
                 if (offset != kNotFound && offset > 1)
                     dirPath.SetLength(offset-1) ;
-                // see if the attachment dir path (only) is same as temp path
-                if (!Compare(tempPath, dirPath, nsCaseInsensitiveStringComparator()))
+
+            if (dirPath.Find(tempPath, PR_TRUE) == 0 || aFiles[i].lpszFileName)
                 {
                     // if not already existing, create another temp dir for mapi within Win temp dir
                     nsAutoString strTempDir ;
@@ -580,55 +577,48 @@ nsresult nsMapiHook::HandleAttachments (nsIMsgCompFields * aCompFields, PRInt32 
                     // rename or copy the existing temp file with the real file name
                     if (aIsUnicode)
                     {
-                        nsDependentString fileNameUCS2(aFiles[i].lpszFileName);
-                        // check if the user is sending a temporary unsaved file, in this case
-                        // the leaf name of the PathName and the FileName (real filename) would be same
-                        // if so copy the file (this will create a copy file) and then send else move would do nothing
-                        // and the calling app would delete the file and then send will fail.
-                        if (!Compare(fileNameUCS2, leafName, nsCaseInsensitiveStringComparator()))
+                nsAutoString fileName;
+                if (aFiles[i].lpszFileName)
+                  fileName.Assign(aFiles[i].lpszFileName);
+
+                if (fileName.IsEmpty()) 
                         {
+                  nsDependentString fileNameUCS2(leafName.get());
                             rv = pFile->CopyTo(pTempDir, fileNameUCS2);
                             pFile->InitWithPath(strTempDir) ;
                             pFile->Append(fileNameUCS2);
                         }
                         else
                         {
-                            // else if user is sending an already existing file open in the application
-                            // just move the file to one with real file name, better performance
-                            rv = pFile->MoveTo(nsnull, fileNameUCS2);
-                            // now create an empty file with the temp filename so that
-                            // the calling apps donot crash if they dont find their temp file
-                            if (NS_SUCCEEDED(rv))
-                                rv = pTempFile->Create(nsIFile::NORMAL_FILE_TYPE, 777);
+                  nsDependentString fileNameUCS2(aFiles[i].lpszFileName);
+                  rv = pFile->CopyTo(pTempDir, fileNameUCS2);
+                  pFile->InitWithPath(strTempDir) ;
+                  pFile->Append(fileNameUCS2);
                         }
                     }
                     else
                     {
-                        // check if the user is sending a temporary unsaved file, in this case
-                        // the leaf name of the PathName and the FileName (real filename) would be same
-                        // if so copy the file (this will create a copy file) and then send else move would do nothing
-                        // and the calling app would delete the file and then send will fail.
                         nsAutoString fileName;
                         // convert to Unicode using Platform charset
+                if (aFiles[i].lpszFileName) 
+                {
                         rv = ConvertToUnicode(nsMsgI18NFileSystemCharset(), (char *) aFiles[i].lpszFileName, fileName);
                         if (NS_FAILED(rv)) return rv ;
-                        nsDependentCString fileNameNative((char *) aFiles[i].lpszFileName);
-                        // now compare the unicode filename string
-                        if (!Compare(fileName, leafName, nsCaseInsensitiveStringComparator()))
+                } 
+
+                if (fileName.IsEmpty()) 
                         {
-                            rv = pFile->CopyToNative(pTempDir, fileNameNative);
+                  nsDependentString fileNameNative(leafName.get());
+                  rv = pFile->CopyTo(pTempDir, fileNameNative);
                             pFile->InitWithPath(strTempDir) ;
-                            pFile->AppendNative (fileNameNative);
+                  pFile->Append(fileNameNative);
                         }
                         else
                         {
-                            // else if user is sending an already existing file open in the application
-                            // just move the file to one with real file name, better performance
-                            rv = pFile->MoveToNative(nsnull, fileNameNative);
-                            // now create an empty file with the temp filename so that
-                            // the calling apps donot crash if they dont find their temp file
-                            if (NS_SUCCEEDED(rv))
-                                rv = pTempFile->Create(nsIFile::NORMAL_FILE_TYPE, 777);
+                  nsDependentCString fileNameNative((char *) aFiles[i].lpszFileName);
+                  rv = pFile->CopyToNative(pTempDir, fileNameNative);
+                  pFile->InitWithPath(strTempDir) ;
+                  pFile->AppendNative (fileNameNative);
                         }
                     }
                     // this takes care of all cases in if(aIsUnicode) above
@@ -637,7 +627,6 @@ nsresult nsMapiHook::HandleAttachments (nsIMsgCompFields * aCompFields, PRInt32 
                     // this one is a temp file so set the flag for MsgCompose
                     attachment->SetTemporary(PR_TRUE) ;
                 }
-            }
             // now set the attachment object
             nsCAutoString pURL ;
             NS_GetURLSpecFromFile(pFile, pURL);
@@ -749,6 +738,7 @@ nsresult nsMapiHook::PopulateCompFieldsForSendDocs(nsIMsgCompFields * aCompField
     nsAutoString strDelimChars ;
     nsString strFilePaths;
     nsresult rv = NS_OK ;
+    PRBool bExist ;
 
     if (aFlags & MAPI_UNICODE)
     {
@@ -775,33 +765,34 @@ nsresult nsMapiHook::PopulateCompFieldsForSendDocs(nsIMsgCompFields * aCompField
     nsCString Attachments ;
 
     // only 1 file is to be sent, no delim specified
-    if (strDelimChars.IsEmpty() && !strFilePaths.IsEmpty())
-    {
-        nsCOMPtr <nsILocalFile> pFile = do_CreateInstance (NS_LOCAL_FILE_CONTRACTID, &rv) ;
-        if (NS_FAILED(rv) || (!pFile) ) return rv ;        
-        pFile->InitWithPath (strFilePaths) ;
+    if (strDelimChars.IsEmpty())
+        strDelimChars.Assign(NS_LITERAL_STRING(";"));
 
-        PRBool bExist ;
-        rv = pFile->Exists(&bExist) ;
-        if (NS_FAILED(rv) || (!bExist) ) return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ;
-
-        nsCAutoString pURL ;
-        NS_GetURLSpecFromFile(pFile, pURL);
-        if (!pURL.IsEmpty())
-            Attachments.Assign(pURL) ;
-
-        // set attachments for comp field and return
-        rv = aCompFields->SetAttachments (Attachments.get());
-        return rv ;
-    }
-
-    // multiple files to be sent, delim specified
-    nsCOMPtr <nsILocalFile> pFile = do_CreateInstance (NS_LOCAL_FILE_CONTRACTID, &rv) ;
-    if (NS_FAILED(rv) || (!pFile) ) return rv ;        
     PRInt32 offset = 0 ;
     PRInt32 FilePathsLen = strFilePaths.Length() ;
     if (FilePathsLen)
     {
+        nsAutoString Subject ;
+
+        // multiple files to be sent, delim specified
+        nsCOMPtr <nsILocalFile> pFile = do_CreateInstance (NS_LOCAL_FILE_CONTRACTID, &rv) ;
+        if (NS_FAILED(rv) || (!pFile) ) return rv ;        
+
+        //Temp Directory
+        nsCOMPtr <nsIFile> pTempFileDir;
+        NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(pTempFileDir));
+        nsCOMPtr <nsILocalFile> pTempDir = do_QueryInterface(pTempFileDir);
+
+        // if not already existing, create another temp dir for mapi within Win temp dir
+        // this is windows only so we can do "\\"
+        pTempDir->AppendRelativePath (NS_LITERAL_STRING("moz_mapi"));
+        pTempDir->Exists(&bExist) ;
+        if (!bExist)
+        {
+            rv = pTempDir->Create(nsIFile::DIRECTORY_TYPE, 777) ;
+            if (NS_FAILED(rv)) return rv ;
+    }
+
         PRUnichar * newFilePaths = (PRUnichar *) strFilePaths.get() ;
         while (offset != kNotFound)
         {
@@ -816,24 +807,43 @@ nsresult nsMapiHook::PopulateCompFieldsForSendDocs(nsIMsgCompFields * aCompField
             }
 
             pFile->InitWithPath (RemainingPaths) ;
-
-    #ifdef RAJIV_DEBUG
-            printf ("File : %S \n", RemainingPaths.get()) ; 
-    #endif 
-            PRBool bExist ;
             rv = pFile->Exists(&bExist) ;
             if (NS_FAILED(rv) || (!bExist) ) return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ;
 
+            // filename of the file attachment
+            nsAutoString leafName ;
+            pFile->GetLeafName (leafName) ;
+            if(NS_FAILED(rv) || leafName.IsEmpty()) return rv ;
+
+            if (!Subject.IsEmpty()) 
+                Subject.Append(NS_LITERAL_STRING(", "));
+            Subject += leafName;
+
+            // create MsgCompose attachment object
+            nsCOMPtr<nsIMsgAttachment> attachment = do_CreateInstance(NS_MSGATTACHMENT_CONTRACTID, &rv);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            nsDependentString fileNameNative(leafName.get());
+            rv = pFile->CopyTo(pTempDir, fileNameNative);
+            if (NS_FAILED(rv)) return rv ;
+
+            // now turn pTempDir into a full file path to the temp file
+            pTempDir->Append(fileNameNative);
+
+            // this one is a temp file so set the flag for MsgCompose
+            attachment->SetTemporary(PR_TRUE) ;
+
+            // now set the attachment object
             nsCAutoString pURL ;
-            NS_GetURLSpecFromFile(pFile, pURL);
-            if (!pURL.IsEmpty())
-            {
-                if (!Attachments.IsEmpty())
-                    Attachments.Append(",") ;
-                Attachments.Append(pURL) ;
-            }
+            NS_GetURLSpecFromFile(pTempDir, pURL);
+            attachment->SetUrl(pURL.get()) ;
+
+            // add the attachment
+            rv = aCompFields->AddAttachment (attachment);
+            if (NS_FAILED(rv)) return rv ;
         }
-        rv = aCompFields->SetAttachments (Attachments.get());
+
+        rv = aCompFields->SetBody(Subject) ;
     }
 
     return rv ;
