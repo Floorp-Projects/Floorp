@@ -21,6 +21,8 @@
 
 #include "nsDeviceContext.h"
 
+#include <X11/Xlib.h>
+
 class nsDeviceContextXlib : public DeviceContextImpl
 {
 public:
@@ -50,13 +52,25 @@ public:
   NS_IMETHOD BeginPage(void);
   NS_IMETHOD EndPage(void);
 
+  Display * GetDisplay() { return mDisplay; }
+  Screen * GetScreen() { return mScreen; }
+  Visual * GetVisual() { return mVisual; }
+  int      GetDepth() { return mDepth; }
+
+protected:
+
+  virtual ~nsDeviceContextXlib();
+
 private:
-  virtual             ~nsDeviceContextXlib();
   void                 CommonInit(void);
   nsPaletteInfo        mPaletteInfo;
   PRBool               mWriteable;
   PRUint32             mNumCells;
   nsDrawingSurface     mSurface;
+  Display *            mDisplay;
+  Screen *             mScreen;
+  Visual *             mVisual;
+  int                  mDepth;
 };
 
 #endif

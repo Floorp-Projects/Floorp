@@ -73,6 +73,11 @@ nsRenderingContextXlib::nsRenderingContextXlib()
   mCurrentLineStyle = nsLineStyle_kSolid;
   mCurrentColor = NS_RGB(0, 0, 0);
 
+  mDisplay = nsnull;
+  mScreen = nsnull;
+  mVisual = nsnull;
+  mDepth = 0;
+
   PushState();
 }
 
@@ -149,12 +154,26 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsIWidget *aWindow)
   mContext = aContext;
   NS_IF_ADDREF(mContext);
 
+  NS_ASSERTION(nsnull != mContext,"Device context is null.");
+
+  mDisplay = ((nsDeviceContextXlib *) mContext)->GetDisplay();
+  mScreen = ((nsDeviceContextXlib *) mContext)->GetScreen();
+  mVisual = ((nsDeviceContextXlib *) mContext)->GetVisual();
+  mDepth = ((nsDeviceContextXlib *) mContext)->GetDepth();
+
   mRenderingSurface = (nsDrawingSurfaceXlib *)new nsDrawingSurfaceXlib();
 
   if (mRenderingSurface) {
     Drawable win = (Drawable)aWindow->GetNativeData(NS_NATIVE_WINDOW);
     GC gc        = (GC)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
-    mRenderingSurface->Init(win, gc);
+
+    mRenderingSurface->Init(mDisplay, 
+                            mScreen, 
+                            mVisual,
+                            mDepth,
+                            win, 
+                            gc);
+
     mOffscreenSurface = mRenderingSurface;
     NS_ADDREF(mRenderingSurface);
   }
@@ -168,6 +187,13 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurfa
 
   mContext = aContext;
   NS_IF_ADDREF(mContext);
+
+  NS_ASSERTION(nsnull != mContext,"Device context is null.");
+
+  mDisplay = ((nsDeviceContextXlib *) mContext)->GetDisplay();
+  mScreen = ((nsDeviceContextXlib *) mContext)->GetScreen();
+  mVisual = ((nsDeviceContextXlib *) mContext)->GetVisual();
+  mDepth = ((nsDeviceContextXlib *) mContext)->GetDepth();
 
   mRenderingSurface = (nsDrawingSurfaceXlib *)aSurface;
 
@@ -185,7 +211,7 @@ nsresult nsRenderingContextXlib::CommonInit(void)
   unsigned int width, height, border, depth;
   Window root_win;
 
-  XGetGeometry(gDisplay, mRenderingSurface->GetDrawable(), &root_win,
+  XGetGeometry(mDisplay, mRenderingSurface->GetDrawable(), &root_win,
                &x, &y, &width, &height, &border, &depth);
   mClipRegion = new nsRegionXlib();
   mClipRegion->Init();
@@ -325,7 +351,7 @@ nsRenderingContextXlib::PopState(PRBool &aClipState)
     if (mRenderingSurface && mClipRegion) {
       Region region;
       mClipRegion->GetNativeRegion((void *&)region);
-      XSetRegion(gDisplay, mRenderingSurface->GetGC(), region);
+      XSetRegion(mDisplay, mRenderingSurface->GetGC(), region);
     }
 
     if (state->mColor != mCurrentColor)
@@ -377,7 +403,7 @@ nsRenderingContextXlib::SetClipRect(const nsRect& aRect, nsClipCombine aCombine,
   aClipState = mClipRegion->IsEmpty();
 
   mClipRegion->GetNativeRegion((void*&)rgn);
-  XSetRegion(gDisplay, mRenderingSurface->GetGC(), rgn);
+  XSetRegion(mDisplay, mRenderingSurface->GetGC(), rgn);
 
   return NS_OK;
 }
@@ -421,7 +447,7 @@ nsRenderingContextXlib::SetClipRegion(const nsIRegion& aRegion, nsClipCombine aC
 
   aClipState = mClipRegion->IsEmpty();
   mClipRegion->GetNativeRegion((void*&)rgn);
-  XSetRegion(gDisplay, mRenderingSurface->GetGC(),rgn);
+  XSetRegion(mDisplay, mRenderingSurface->GetGC(),rgn);
 
   return NS_OK;
 }
@@ -465,7 +491,7 @@ nsRenderingContextXlib::SetLineStyle(nsLineStyle aLineStyle)
     switch(aLineStyle)
       { 
       case nsLineStyle_kSolid:
-        XSetLineAttributes(gDisplay, mRenderingSurface->GetGC(),
+        XSetLineAttributes(mDisplay, mRenderingSurface->GetGC(),
                            1, // width
                            LineSolid, // line style
                            CapNotLast,// cap style
@@ -474,7 +500,7 @@ nsRenderingContextXlib::SetLineStyle(nsLineStyle aLineStyle)
       case nsLineStyle_kDashed:
         {
           static char dashed[2] = {4,4};
-          XSetDashes(gDisplay, mRenderingSurface->GetGC(),
+          XSetDashes(mDisplay, mRenderingSurface->GetGC(),
                      0, dashed, 2);
         }
         break;
@@ -482,7 +508,7 @@ nsRenderingContextXlib::SetLineStyle(nsLineStyle aLineStyle)
       case nsLineStyle_kDotted:
         {
           static char dotted[2] = {3,1};
-          XSetDashes(gDisplay, mRenderingSurface->GetGC(),
+          XSetDashes(mDisplay, mRenderingSurface->GetGC(),
                      0, dotted, 2);
         }
         break;
@@ -577,7 +603,7 @@ nsRenderingContextXlib::SetFont(nsIFontMetrics *aFontMetrics)
     nsFontHandle  fontHandle;
     mFontMetrics->GetFontHandle(fontHandle);
     mCurrentFont = (XFontStruct *)fontHandle;
-    XSetFont(gDisplay, mRenderingSurface->GetGC(), mCurrentFont->fid);
+    XSetFont(mDisplay, mRenderingSurface->GetGC(), mCurrentFont->fid);
   }
   return NS_OK;
 }
@@ -628,8 +654,15 @@ nsRenderingContextXlib::CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlag
 
   if (surf) {
     NS_ADDREF(surf);
-    surf->Init(mRenderingSurface->GetGC(),
-               aBounds->width, aBounds->height, aSurfFlags);
+
+    surf->Init(mDisplay, 
+               mScreen, 
+               mVisual,
+               mDepth,
+               mRenderingSurface->GetGC(),
+               aBounds->width, 
+               aBounds->height, 
+               aSurfFlags);
   }
   
   aSurface = (nsDrawingSurface)surf;
@@ -658,7 +691,7 @@ nsRenderingContextXlib::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord 
   mTMatrix->TransformCoord(&aX0,&aY0);
   mTMatrix->TransformCoord(&aX1,&aY1);
   
-  ::XDrawLine(gDisplay, mRenderingSurface->GetDrawable(),
+  ::XDrawLine(mDisplay, mRenderingSurface->GetDrawable(),
               mRenderingSurface->GetGC(), aX0, aY0, aX1, aY1);
 
   return NS_OK;
@@ -694,7 +727,7 @@ nsRenderingContextXlib::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints
     mTMatrix->TransformCoord((PRInt32*)&thispoint->x,(PRInt32*)&thispoint->y);
   }
 
-  ::XDrawLines(gDisplay,
+  ::XDrawLines(mDisplay,
                mRenderingSurface->GetDrawable(),
                mRenderingSurface->GetGC(),
                xpoints, aNumPoints, CoordModeOrigin);
@@ -728,7 +761,7 @@ nsRenderingContextXlib::DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
     
   mTMatrix->TransformCoord(&x,&y,&w,&h);
     
-  ::XDrawRectangle(gDisplay,
+  ::XDrawRectangle(mDisplay,
                    mRenderingSurface->GetDrawable(),
                    mRenderingSurface->GetGC(),
                    x,y,w,h);
@@ -759,7 +792,7 @@ nsRenderingContextXlib::FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
   mTMatrix->TransformCoord(&x,&y,&w,&h);
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("About to fill window 0x%lxd with rect %d %d %d %d\n",
                                                 mRenderingSurface->GetDrawable(), x, y, w, h));
-  ::XFillRectangle(gDisplay,
+  ::XFillRectangle(mDisplay,
                    mRenderingSurface->GetDrawable(),
                    mRenderingSurface->GetGC(),
                    x,y,w,h);
@@ -787,7 +820,7 @@ nsRenderingContextXlib::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
     mTMatrix->TransformCoord((PRInt32*)&thispoint->x,(PRInt32*)&thispoint->y);
   }
   
-  ::XDrawLines(gDisplay,
+  ::XDrawLines(mDisplay,
                mRenderingSurface->GetDrawable(),
                mRenderingSurface->GetGC(),
                xpoints, aNumPoints, CoordModeOrigin);
@@ -820,7 +853,7 @@ nsRenderingContextXlib::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
     thispoint->y = y;
   } 
     
-  ::XFillPolygon(gDisplay,
+  ::XFillPolygon(mDisplay,
                  mRenderingSurface->GetDrawable(),
                  mRenderingSurface->GetGC(),
                  xpoints, aNumPoints, Convex, CoordModeOrigin);
@@ -853,7 +886,7 @@ nsRenderingContextXlib::DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nsco
     
   mTMatrix->TransformCoord(&x,&y,&w,&h);
     
-  ::XDrawArc(gDisplay,
+  ::XDrawArc(mDisplay,
              mRenderingSurface->GetDrawable(),
              mRenderingSurface->GetGC(),
              x,y,w,h, 0, 360 * 64);
@@ -884,7 +917,7 @@ nsRenderingContextXlib::FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nsco
     
   mTMatrix->TransformCoord(&x,&y,&w,&h);
     
-  ::XFillArc(gDisplay,
+  ::XFillArc(mDisplay,
              mRenderingSurface->GetDrawable(),
              mRenderingSurface->GetGC(),
              x,y,w,h, 0, 360 * 64);
@@ -917,7 +950,7 @@ nsRenderingContextXlib::DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord 
     
   mTMatrix->TransformCoord(&x,&y,&w,&h);
     
-  ::XDrawArc(gDisplay,
+  ::XDrawArc(mDisplay,
              mRenderingSurface->GetDrawable(),
              mRenderingSurface->GetGC(),
              x,y,w,h, NSToIntRound(aStartAngle * 64.0f),
@@ -951,7 +984,7 @@ nsRenderingContextXlib::FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord 
     
   mTMatrix->TransformCoord(&x,&y,&w,&h);
     
-  ::XFillArc(gDisplay,
+  ::XFillArc(mDisplay,
              mRenderingSurface->GetDrawable(),
              mRenderingSurface->GetGC(),
              x,y,w,h, NSToIntRound(aStartAngle * 64.0f),
@@ -1098,7 +1131,7 @@ nsRenderingContextXlib::DrawString(const char *aString, PRUint32 aLength,
         nscoord xx = x;
         nscoord yy = y;
         mTMatrix->TransformCoord(&xx, &yy);
-        XDrawString(gDisplay,
+        XDrawString(mDisplay,
                     mRenderingSurface->GetDrawable(),
                     mRenderingSurface->GetGC(),
                     xx, yy, &ch, 1);
@@ -1107,7 +1140,7 @@ nsRenderingContextXlib::DrawString(const char *aString, PRUint32 aLength,
     }
     else {
       mTMatrix->TransformCoord(&x, &y);
-      XDrawString(gDisplay,
+      XDrawString(mDisplay,
                   mRenderingSurface->GetDrawable(),
                   mRenderingSurface->GetGC(),
                   x, y, aString, aLength);
@@ -1352,7 +1385,7 @@ nsRenderingContextXlib::CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSr
   //XXX flags are unused. that would seem to mean that there is
   //inefficiency somewhere... MMP
 
-  XCopyArea(gDisplay,
+  XCopyArea(mDisplay,
             ((nsDrawingSurfaceXlib *)aSrcSurf)->GetDrawable(),
             destsurf->GetDrawable(),
             ((nsDrawingSurfaceXlib *)aSrcSurf)->GetGC(),

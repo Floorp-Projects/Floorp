@@ -135,6 +135,7 @@ protected:
   char *PickAppropriateSize(char **names, XFontStruct *fonts, int cnt, nscoord desired);
   void RealizeFont();
 
+  Display             *mDisplay;
   nsIDeviceContext    *mDeviceContext;
   nsFont              *mFont;
   XFontStruct         *mFontHandle;

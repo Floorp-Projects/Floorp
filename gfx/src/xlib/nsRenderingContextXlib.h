@@ -46,7 +46,7 @@ class nsRenderingContextXlib : public nsIRenderingContext,
 {
  public:
   nsRenderingContextXlib();
-  ~nsRenderingContextXlib();
+  virtual ~nsRenderingContextXlib();
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -173,6 +173,10 @@ private:
   float                    mP2T;
   void                    *mScriptObject;
   nscolor                  mCurrentColor;
+  Display *                mDisplay;
+  Screen *                 mScreen;
+  Visual *                 mVisual;
+  int                      mDepth;
 
   // graphics state stuff
   nsVoidArray             *mStateCache;
