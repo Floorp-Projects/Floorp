@@ -180,7 +180,7 @@
                  tabscrolling="true"
                  showcommentcolumn="true"
                  enablehistory="true"
-                 oninput="window.XULBrowserWindow.userTyped.value=true;"
+                 oninput="gBrowser.userTypedValue = this.value"
                  ontextentered="return handleURLBarCommand(param);"
                  ontextreverted="return handleURLBarRevert();"
                  onfocus="URLBarFocusHandler(event, this);"

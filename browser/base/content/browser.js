@@ -1203,6 +1203,8 @@ function handleURLBarRevert()
       gURLBar.value = "";
     }
   }
+  
+  gBrowser.userTypedValue = null;
 
   // tell widget to revert to last typed text only if the user
   // was scrolling when they hit escape
@@ -1373,12 +1375,12 @@ function updateToolbarStates(toolbarMenuElt)
       // Start i at 1, since we skip the menubar.
       for (i = 1; i < toolbars.length; ++i) {
         if (toolbars[i].getAttribute("class").indexOf("chromeclass") != -1)
-          toolbars[i].setAttribute("hidden", "true");
+          toolbars[i].setAttribute("collapsed", "true");
       }
       var statusbars = document.getElementsByTagName("statusbar");
       for (i = 1; i < statusbars.length; ++i) {
         if (statusbars[i].getAttribute("class").indexOf("chromeclass") != -1)
-          statusbars[i].setAttribute("hidden", "true");
+          statusbars[i].setAttribute("collapsed", "true");
       }
       mainWindow.removeAttribute("chromehidden");
     }
@@ -1989,28 +1991,6 @@ function nsBrowserStatusHandler()
 
 nsBrowserStatusHandler.prototype =
 {
-  userTyped :
-  {
-    _value : false,
-    browser : null,
-
-    get value() {
-      if (this.browser != gBrowser.mCurrentBrowser)
-        this._value = false;
-      
-      return this._value;
-    },
-
-    set value(aValue) {
-      if (this._value != aValue) {
-        this._value = aValue;
-        this.browser = aValue ? gBrowser.mCurrentBrowser : null;
-      }
-
-      return aValue;
-    }
-  },
-
   // Stored Status, Link and Loading values
   status : "",
   defaultStatus : "",
@@ -2021,8 +2001,6 @@ nsBrowserStatusHandler.prototype =
   statusText: "",
 
   statusTimeoutInEffect : false,
-
-  hideAboutBlank : true,
 
   QueryInterface : function(aIID)
   {
@@ -2055,7 +2033,6 @@ nsBrowserStatusHandler.prototype =
     this.stopCommand     = null;
     this.statusTextField = null;
     this.securityButton  = null;
-    this.userTyped       = null;
     this.statusText      = null;
   },
 
@@ -2095,11 +2072,12 @@ nsBrowserStatusHandler.prototype =
     }
   },
 
-  onLinkIconAvailable : function(aHref) {
+  onLinkIconAvailable : function(aHref) 
+  {
+    var browser = getBrowser()
     if (gProxyFavIcon) {
-      
-      // XXXBlake gPrefService.getBoolPref("browser.chrome.site_icons"))
-      gProxyFavIcon.setAttribute("src", aHref);
+      if (browser.userTypedValue === null)
+        gProxyFavIcon.setAttribute("src", aHref);
     }
   },
 
@@ -2169,8 +2147,8 @@ nsBrowserStatusHandler.prototype =
           if (channel) {
             var location = channel.URI.spec;
             if (location != "about:blank") {
-              const kErrorBindingAborted = 2152398850;
-              const kErrorNetTimeout = 2152398862;
+              const kErrorBindingAborted = 0x804B0002;
+              const kErrorNetTimeout = 0x804B000E;
               switch (aStatus) {
                 case kErrorBindingAborted:
                   msg = gNavigatorBundle.getString("nv_stopped");
@@ -2207,29 +2185,34 @@ nsBrowserStatusHandler.prototype =
 
     var location = aLocation.spec;
 
-    if (this.hideAboutBlank) {
-      this.hideAboutBlank = false;
-      if (location == "about:blank")
-        location = "";
-    }
+    if (location == "about:blank")
+      location = "";
 
     // We should probably not do this if the value has changed since the user
     // searched
     // Update urlbar only if a new page was loaded on the primary content area
     // Do not update urlbar if there was a subframe navigation
 
+    var browser = getBrowser().selectedBrowser;
     if (aWebProgress.DOMWindow == content) {
       //XXXBlake don't we have to reinit this.urlBar, etc.
       //         when the toolbar changes?
-      if (gURLBar && !this.userTyped.value) {
+      var userTypedValue = browser.userTypedValue;
+      if (gURLBar && !userTypedValue) {
         // If the url has "wyciwyg://" as the protocol, strip it off.
         // Nobody wants to see it on the urlbar for dynamically generated
         // pages. 
         if (/^\s*wyciwyg:\/\/\d+\//.test(location))
           location = RegExp.rightContext;
+        
         setTimeout(function(loc, aloc) { gURLBar.value = loc; SetPageProxyState("valid", aloc);}, 0, location, aLocation);
-        // the above causes userTyped.value to become true, reset it
-        this.userTyped.value = false;
+        
+        // Setting the urlBar value in some cases causes userTypedValue to
+        // become set because of oninput, so reset it to its old value.
+        browser.userTypedValue = userTypedValue;
+      } else {
+        gURLBar.value = userTypedValue;
+        SetPageProxyState("invalid", null);
       }
     }
     UpdateBackForwardButtons();
@@ -2272,9 +2255,9 @@ nsBrowserStatusHandler.prototype =
 
   startDocumentLoad : function(aRequest)
   {
-    // Reset so we can see if the user typed after the document load
+    // Reset so we can see if the user typed between the document load
     // starting and the location changing.
-    this.userTyped.value = false;
+    getBrowser().userTypedValue = null;
 
     const nsIChannel = Components.interfaces.nsIChannel;
     var urlStr = aRequest.QueryInterface(nsIChannel).URI.spec;
