@@ -51,6 +51,10 @@
 #include "prtime.h"
 #include "prthread.h"
 
+// For manipulation of the X event queue
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
 #ifdef POLL_WITH_XCONNECTIONNUMBER
 #include <poll.h>
 #endif
