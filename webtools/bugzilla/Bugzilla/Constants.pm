@@ -46,6 +46,10 @@ use base qw(Exporter);
     LOGIN_OPTIONAL
     LOGIN_NORMAL
     LOGIN_REQUIRED
+
+    LOGOUT_ALL
+    LOGOUT_CURRENT
+    LOGOUT_KEEP_CURRENT
 );
 
 @Bugzilla::Constants::EXPORT_OK = qw(contenttypes);
@@ -83,7 +87,7 @@ use constant CONTROLMAPSHOWN => 1;
 use constant CONTROLMAPDEFAULT => 2;
 use constant CONTROLMAPMANDATORY => 3;
 
-# See Bugzilla::Auth for docs for these
+# See Bugzilla::Auth for docs on AUTH_*, LOGIN_* and LOGOUT_*
 
 use constant AUTH_OK => 0;
 use constant AUTH_NODATA => 1;
@@ -94,6 +98,10 @@ use constant AUTH_DISABLED => 4;
 use constant LOGIN_OPTIONAL => 0;
 use constant LOGIN_NORMAL => 1;
 use constant LOGIN_REQUIRED => 2;
+
+use constant LOGOUT_ALL => 0;
+use constant LOGOUT_CURRENT => 1;
+use constant LOGOUT_KEEP_CURRENT => 2;
 
 use constant contenttypes =>
   {

@@ -92,10 +92,6 @@ sub login {
                               -value => $logincookie);
 
         }
-
-        # compat code. The cookie value is used for logouts, and that
-        # isn't generic yet.
-        $::COOKIE{'Bugzilla_logincookie'} = $logincookie;
     }
     elsif ($authres == AUTH_NODATA) {
         # No data from the form, so try to login via cookies
@@ -184,29 +180,46 @@ sub login {
     }
 
     # If we get here, then we've run out of options, which shouldn't happen
-    ThrowCodeError("authres_unhandled",
-                   { authres => $authres,
-                     type => $type,
-                   }
-                  );
-
+    ThrowCodeError("authres_unhandled", { authres => $authres, 
+                                          type => $type, });
 }
 
+# Logs user out, according to the option provided; this consists of
+# removing entries from logincookies for the specified $user.
 sub logout {
-    my ($class, $user) = @_;
+    my ($class, $user, $option) = @_;
+    my $dbh = Bugzilla->dbh;
+    $option = LOGOUT_ALL unless defined $option;
 
-    if ($user) {
-        # Even though we know the userid must match, we still check it in the
-        # SQL as a sanity check, since there is no locking here, and if
-        # the user logged out from two machines simulataniously, while someone
-        # else logged in and got the same cookie, we could be logging the
-        # other user out here. Yes, this is very very very unlikely, but why
-        # take chances? - bbaetz
-        my $dbh = Bugzilla->dbh;
-        $dbh->do("DELETE FROM logincookies WHERE cookie = ? AND userid = ?",
-                 undef, $::COOKIE{"Bugzilla_logincookie"}, $user->id);
+    if ($option == LOGOUT_ALL) {
+            $dbh->do("DELETE FROM logincookies WHERE userid = ?",
+                     undef, $user->id);
+            return;
     }
 
+    # The LOGOUT_*_CURRENT options require a cookie 
+    my $cookie = Bugzilla->cgi->cookie("Bugzilla_logincookie");
+    detaint_natural($cookie);
+
+    # These queries use both the cookie ID and the user ID as keys. Even
+    # though we know the userid must match, we still check it in the SQL
+    # as a sanity check, since there is no locking here, and if the user
+    # logged out from two machines simultaneously, while someone else
+    # logged in and got the same cookie, we could be logging the other
+    # user out here. Yes, this is very very very unlikely, but why take
+    # chances? - bbaetz
+    if ($option == LOGOUT_KEEP_CURRENT) {
+        $dbh->do("DELETE FROM logincookies WHERE cookie != ? AND userid = ?",
+                 undef, $cookie, $user->id);
+    } elsif ($option == LOGOUT_CURRENT) {
+        $dbh->do("DELETE FROM logincookies WHERE cookie = ? AND userid = ?",
+                 undef, $cookie, $user->id);
+    } else {
+        die("Invalid option $option supplied to logout()");
+  }
+}
+
+sub clear_browser_cookies {
     my $cgi = Bugzilla->cgi;
     $cgi->send_cookie(-name => "Bugzilla_login",
                       -expires => "Tue, 15-Sep-1998 21:49:00 GMT");
@@ -234,9 +247,6 @@ using the CGI parameters I<Bugzilla_login> and I<Bugzilla_password>.
 
 If no data is present for that, then cookies are tried, using
 L<Bugzilla::Auth::Cookie>.
-
-When a logout is performed, we take care of removing the relevant
-logincookie database entry and effectively deleting the client cookie.
 
 =head1 SEE ALSO
 

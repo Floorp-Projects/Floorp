@@ -80,10 +80,6 @@ sub authenticate {
                  undef,
                  $login_cookie);
 
-        # compat code. The cookie value is used for logouts, and that
-        # isn't generic yet. Detaint it so that its usable
-        detaint_natural($::COOKIE{'Bugzilla_logincookie'});
-
         return (AUTH_OK, $userid);
     }
 
