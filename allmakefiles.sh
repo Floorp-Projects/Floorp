@@ -291,8 +291,8 @@ modules/libimg/public_com/Makefile
 modules/libimg/src/Makefile
 modules/libimg/gifcom/Makefile
 modules/libimg/jpgcom/Makefile
-modules/libimg/pngcom/Makefile  
-modules/libimg/mngcom/Makefile  
+modules/libimg/pngcom/Makefile
+modules/libimg/mngcom/Makefile
 "
 
 MAKEFILES_libjar="
@@ -331,6 +331,11 @@ modules/plugin/public/Makefile
 modules/plugin/test/Makefile
 modules/plugin/SanePlugin/Makefile
 modules/plugin/default/unix/Makefile
+"
+
+MAKEFILES_access_builtin="
+extensions/access-builtin/Makefile
+extensions/access-builtin/accessproxy/Makefile
 "
 
 MAKEFILES_netwerk="
@@ -912,6 +917,10 @@ for extension in $MOZ_EXTENSIONS; do
 	    extensions/wallet/walletpreview/Makefile
 	    extensions/wallet/build/Makefile
             " ;;
+        access-builtin ) MAKEFILES_access_builtin="$MAKEFILES_extensions
+	    extensions/access-builtin/Makefile
+	    extensions/access-builtin/accessproxy/Makefile
+            " ;;
         xmlextras ) MAKEFILES_extensions="$MAKEFILES_extensions
 	    extensions/xmlextras/Makefile
 	    extensions/xmlextras/base/Makefile
@@ -1015,7 +1024,9 @@ else
 		;;
 	    transformiix) add_makefiles "$MAKEFILES_transformiix"
 		;;
-	    xpcom) add_makefiles "$MAKEFILES_xpcom" 
+	    access-builtin) add_makefiles "$MAKEFILES_access_builtin"
+		;;
+	    xpcom) add_makefiles "$MAKEFILES_xpcom"
 
 		;;
 	    xpconnect) add_makefiles "
