@@ -26,7 +26,6 @@ VPATH		= @srcdir@
 
 EXPORTS         = \
 		xp_path.h \
-		xp_str.h \
                 $(NULL)
 
 include $(topsrcdir)/config/rules.mk

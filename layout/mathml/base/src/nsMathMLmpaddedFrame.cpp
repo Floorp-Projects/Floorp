@@ -22,6 +22,7 @@
 
 
 #include "nsCOMPtr.h"
+#include "nsCRT.h"  // to get NS_IS_SPACE
 #include "nsFrame.h"
 #include "nsIPresContext.h"
 #include "nsUnitConversion.h"
@@ -31,8 +32,6 @@
 #include "nsIFontMetrics.h"
 
 #include "nsMathMLmpaddedFrame.h"
-
-#include "xp_str.h"  // to get XP_IS_SPACE
 
 //
 // <mpadded> -- adjust space around content - implementation
@@ -174,7 +173,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
     aSign = NS_MATHML_SIGN_UNSPECIFIED;
 
   // skip any space after the sign
-  if (i < stringLength && XP_IS_SPACE(aString[i]))
+  if (i < stringLength && NS_IS_SPACE(aString[i]))
     i++;
 
   // get the number
@@ -215,7 +214,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
   }
 
   // skip any space after the number
-  if (i < stringLength && XP_IS_SPACE(aString[i]))
+  if (i < stringLength && NS_IS_SPACE(aString[i]))
     i++;
 
   // see if this is a percentage-based value
@@ -224,7 +223,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
     gotPercent = PR_TRUE;
 
     // skip any space after the '%' sign
-    if (i < stringLength && XP_IS_SPACE(aString[i]))
+    if (i < stringLength && NS_IS_SPACE(aString[i]))
       i++;
   }
 
