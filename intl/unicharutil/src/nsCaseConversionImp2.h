@@ -24,6 +24,8 @@
 
 #include "nsICaseConversion.h"
 
+nsresult NS_NewCaseConversion(nsISupports** oResult);
+
 class nsCaseConversionImp2 : public nsICaseConversion { 
   NS_DECL_ISUPPORTS 
 

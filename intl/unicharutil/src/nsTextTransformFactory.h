@@ -23,8 +23,6 @@
 
 #include "nsIFactory.h"
 
-nsIFactory* NEW_HANKAKU_TO_ZENKAKU_FACTORY();
-nsIFactory* NEW_TO_LOWERCASE_FACTORY();
-nsIFactory* NEW_TO_UPPERCASE_FACTORY();
+nsresult NS_NewHankakuToZenkaku(nsISupports** oResult);
 
 #endif /* nsTextTransformFactory_h__ */

@@ -31,7 +31,7 @@ CSRCS= \
 CPPSRCS= \
 	nsCategoryImp.cpp	\
 	nsCaseConversionImp2.cpp	\
-	nsUnicharUtilFactory.cpp	\
+	nsUcharUtilModule.cpp	\
 	nsHankakuToZenkaku.cpp	\
 	nsEntityConverter.cpp	\
 	$(NULL)
@@ -39,7 +39,7 @@ CPPSRCS= \
 CPP_OBJS= \
 	.\$(OBJDIR)\nsCategoryImp.obj \
 	.\$(OBJDIR)\nsCaseConversionImp2.obj \
-	.\$(OBJDIR)\nsUnicharUtilFactory.obj \
+	.\$(OBJDIR)\nsUcharUtilModule.obj \
 	.\$(OBJDIR)\nsHankakuToZenkaku.obj \
 	.\$(OBJDIR)\nsEntityConverter.obj \
 	$(NULL)

@@ -30,7 +30,7 @@ REQUIRES	= libxpcom
 
 CPPSRCS		= \
 		nsCaseConversionImp2.cpp \
-		nsUnicharUtilFactory.cpp \
+                nsUcharUtilModule.cpp \
 		nsCategoryImp.cpp \
 		nsHankakuToZenkaku.cpp \
 		nsEntityConverter.cpp \
