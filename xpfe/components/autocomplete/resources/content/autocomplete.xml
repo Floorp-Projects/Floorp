@@ -20,7 +20,12 @@
 
     <interface>
         <property name="value"
-            onset="return document.getAnonymousNodes(this)[0].firstChild.value = val;"
+            onset="
+              if (this.ignoreInputEventTimer)
+                clearTimeout(this.ignoreInputEventTimer);
+              this.ignoreInputEvent = true;
+              this.ignoreInputEventTimer = setTimeout(this.privatefunc.resetInput, 250, this);
+              return document.getAnonymousNodes(this)[0].firstChild.value = val;"
             onget="this.privatefunc.cleanupInputField(this); return document.getAnonymousNodes(this)[0].firstChild.value;"
 		/>
 
@@ -54,6 +59,12 @@
         />
 
         <property name="autoCompleteTimer">
+        <![CDATA[
+            0;
+        ]]>
+        </property>
+
+        <property name="ignoreInputEventTimer">
         <![CDATA[
             0;
         ]]>
@@ -296,10 +307,12 @@
 				}
 			},
 
+      resetInput: function(me) {
+        me.ignoreInputEventTimer = null;
+        me.ignoreInputEvent = false;
+      },
+      
    		processInput: function(me) {
-        if (me.ignoreInputEvent)
-          return;
-
 				//Stop current lookup in case it's async.
 				me.privatefunc.callListener(me, 'stopLookup');
 				if (me.autoCompleteTimer) {
@@ -308,6 +321,9 @@
 				}
         me.privatefunc.closePopupMenu(me);
 
+   		  if (me.ignoreInputEvent)
+   		    return;
+   		  
 				if (me.disableAutocomplete == "true")
 					return;
 
@@ -407,7 +423,7 @@
 		<handler type="dblclick" value="this.privatefunc.cleanupInputField(this);"/>
         <handler type="input" value="this.privatefunc.processInput(this);"/>
         <handler type="keypress" value="this.privatefunc.processKeyPress(this, event);"/>
-        <handler type="focus" value="this.needToAutocomplete = false; this.lastResults.searchString=''"/>
+        <handler type="focus" value="this.needToAutocomplete = false; this.lastResults.searchString=''; this.ignoreInputEvent = false"/>
         <handler type="blur" value="
 			this.privatefunc.closePopupMenu(this);
             if (this.needToAutocomplete)
