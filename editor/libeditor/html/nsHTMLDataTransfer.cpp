@@ -698,7 +698,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
 #ifdef DEBUG_clipboard
     printf("Got flavor [%s]\n", bestFlavor);
 #endif
-    if (flavor.EqualsWithConversion(kHTMLMime))
+    if (flavor.Equals(NS_LITERAL_STRING(kHTMLMime)))
     {
       nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
       if (textDataObj && len > 0)
@@ -714,7 +714,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
           nsMemory::Free(text);
       }
     }
-    else if (flavor.EqualsWithConversion(kUnicodeMime))
+    else if (flavor.Equals(NS_LITERAL_STRING(kUnicodeMime)))
     {
       nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
       if (textDataObj && len > 0)
@@ -730,7 +730,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
           nsMemory::Free(text);
       }
     }
-    else if (flavor.EqualsWithConversion(kFileMime))
+    else if (flavor.Equals(NS_LITERAL_STRING(kFileMime)))
     {
       nsCOMPtr<nsIFile> fileObj ( do_QueryInterface(genericDataObj) );
       if (fileObj && len > 0)
@@ -766,17 +766,17 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
             len = strlen(urltext);
             if ( insertAsImage )
             {
-              stuffToPaste.AssignWithConversion ( "<IMG src=\"", 10);
+              stuffToPaste.Assign(NS_LITERAL_STRING("<IMG src=\""));
               stuffToPaste.AppendWithConversion ( urltext, len );
-              stuffToPaste.AppendWithConversion ( "\" alt=\"\" >" );
+              stuffToPaste.Append(NS_LITERAL_STRING("\" alt=\"\" >"));
             }
             else /* insert as link */
             {
-              stuffToPaste.AssignWithConversion ( "<A href=\"" );
+              stuffToPaste.Assign(NS_LITERAL_STRING("<A href=\""));
               stuffToPaste.AppendWithConversion ( urltext, len );
-              stuffToPaste.AppendWithConversion ( "\">" );
+              stuffToPaste.Append(NS_LITERAL_STRING("\">"));
               stuffToPaste.AppendWithConversion ( urltext, len );
-              stuffToPaste.AppendWithConversion ( "</A>" );
+              stuffToPaste.Append(NS_LITERAL_STRING("</A>"));
             }
             nsAutoEditBatch beginBatching(this);
             rv = InsertHTML(stuffToPaste);
@@ -785,7 +785,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
         }
       }
     }
-    else if (flavor.EqualsWithConversion(kJPEGImageMime))
+    else if (flavor.Equals(NS_LITERAL_STRING(kJPEGImageMime)))
     {
       // Insert Image code here
       printf("Don't know how to insert an image yet!\n");
@@ -1409,7 +1409,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsAReadableString & aCit
   if (!handled)
   {
     nsCOMPtr<nsIDOMNode> newNode;
-    nsAutoString tag; tag.AssignWithConversion("blockquote");
+    nsAutoString tag(NS_LITERAL_STRING("blockquote"));
     res = DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
     if (NS_FAILED(res)) return res;
     if (!newNode) return NS_ERROR_NULL_POINTER;
@@ -1418,8 +1418,8 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsAReadableString & aCit
     nsCOMPtr<nsIDOMElement> newElement (do_QueryInterface(newNode));
     if (newElement)
     {
-      nsAutoString type; type.AssignWithConversion("type");
-      nsAutoString cite; cite.AssignWithConversion("cite");
+      nsAutoString type(NS_LITERAL_STRING("type"));
+      nsAutoString cite(NS_LITERAL_STRING("cite"));
       newElement->SetAttribute(type, cite);
     }
 
@@ -1481,7 +1481,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation(PRInt32 aSelectionType)
 #endif
     nsAutoString flavor; flavor.AssignWithConversion(flav);
     nsAutoString stuffToPaste;
-    if (flavor.EqualsWithConversion(kUnicodeMime))
+    if (flavor.Equals(NS_LITERAL_STRING(kUnicodeMime)))
     {
       nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
       if (textDataObj && len > 0)
@@ -1630,7 +1630,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAReadableString & aQuotedText,
     if (cancel) return NS_OK; // rules canceled the operation
     if (!handled)
     {
-      nsAutoString tag; tag.AssignWithConversion("blockquote");
+      nsAutoString tag(NS_LITERAL_STRING("blockquote"));
       res = DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
       if (NS_FAILED(res)) return res;
       if (!newNode) return NS_ERROR_NULL_POINTER;
@@ -1639,8 +1639,8 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAReadableString & aQuotedText,
       nsCOMPtr<nsIDOMElement> newElement (do_QueryInterface(newNode));
       if (newElement)
       {
-        nsAutoString type; type.AssignWithConversion("type");
-        nsAutoString cite; cite.AssignWithConversion("cite");
+        nsAutoString type(NS_LITERAL_STRING("type"));
+        nsAutoString cite(NS_LITERAL_STRING("cite"));
         newElement->SetAttribute(type, cite);
 
         if (aCitation.Length() > 0)

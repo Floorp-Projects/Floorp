@@ -168,7 +168,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertTextFromTransferable(nsITransferable *tra
     nsAutoTxnsConserveSelection dontSpazMySelection(this);
     nsAutoString flavor, stuffToPaste;
     flavor.AssignWithConversion( bestFlavor );   // just so we can use flavor.Equals()
-    if (flavor.EqualsWithConversion(kUnicodeMime))
+    if (flavor.Equals(NS_LITERAL_STRING(kUnicodeMime)))
     {
       nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
       if (textDataObj && len > 0)

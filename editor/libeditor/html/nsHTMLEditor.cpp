@@ -1306,7 +1306,7 @@ NS_IMETHODIMP nsHTMLEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent,
   nsCOMPtr<nsIDOMNode> node = *aInOutParent;
   PRInt32 theOffset = *aInOutOffset;
   nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(node);
-  nsAutoString brType; brType.Assign(NS_LITERAL_STRING("br"));
+  nsAutoString brType(NS_LITERAL_STRING("br"));
   nsCOMPtr<nsIDOMNode> brNode;
   if (nodeAsText)  
   {
@@ -1542,7 +1542,7 @@ nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsAReadableString& aSourceToInse
   // Do not use nsAutoRules -- rules code won't let us insert in <head>
   // Use the head node as a parent and delete/insert directly
   nsCOMPtr<nsIDOMNodeList>nodeList; 
-  nsAutoString headTag; headTag.Assign(NS_LITERAL_STRING("head")); 
+  nsAutoString headTag(NS_LITERAL_STRING("head")); 
 
   nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
   if (!doc) return NS_ERROR_NOT_INITIALIZED;
@@ -2116,7 +2116,7 @@ nsHTMLEditor::GetBackgroundColorState(PRBool *aMixed, nsAWritableString &aOutCol
   nsresult res = GetSelectedOrParentTableElement(*getter_AddRefs(element), tagName, selectedCount);
   if (NS_FAILED(res)) return res;
 
-  nsAutoString styleName; styleName.Assign(NS_LITERAL_STRING("bgcolor"));
+  nsAutoString styleName(NS_LITERAL_STRING("bgcolor"));
 
   while (element)
   {
@@ -2258,7 +2258,7 @@ nsHTMLEditor::MakeOrChangeList(const nsAReadableString& aListType, PRBool entire
       res = CreateNode(aListType, parent, offset, getter_AddRefs(newList));
       if (NS_FAILED(res)) return res;
       // make a list item
-      nsAutoString tag; tag.Assign(NS_LITERAL_STRING("li"));
+      nsAutoString tag(NS_LITERAL_STRING("li"));
       nsCOMPtr<nsIDOMNode> newItem;
       res = CreateNode(tag, newList, 0, getter_AddRefs(newItem));
       if (NS_FAILED(res)) return res;
@@ -2444,7 +2444,7 @@ nsHTMLEditor::Indent(const nsAReadableString& aIndent)
     if (!node) res = NS_ERROR_FAILURE;
     if (NS_FAILED(res)) return res;
   
-    nsAutoString inward; inward.Assign(NS_LITERAL_STRING("indent"));
+    nsAutoString inward(NS_LITERAL_STRING("indent"));
     if (aIndent == inward)
     {
       if (isCollapsed)
@@ -3426,7 +3426,7 @@ static nsresult SetSelectionAroundHeadChildren(nsCOMPtr<nsISelection> aSelection
   nsresult res = NS_OK;
   // Set selection around <head> node
   nsCOMPtr<nsIDOMNodeList>nodeList; 
-  nsAutoString headTag; headTag.Assign(NS_LITERAL_STRING("head")); 
+  nsAutoString headTag(NS_LITERAL_STRING("head")); 
 
   nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(aDocWeak);
   if (!doc) return NS_ERROR_NOT_INITIALIZED;

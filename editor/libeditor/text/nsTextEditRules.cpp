@@ -596,7 +596,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   if (NS_FAILED(res)) return res;
 
   // dont put text in places that cant have it
-  nsAutoString textTag; textTag.AssignWithConversion("__moz_text");
+  nsAutoString textTag(NS_LITERAL_STRING("__moz_text"));
   if (!mEditor->IsTextNode(selNode) && !mEditor->CanContainTag(selNode, textTag))
     return NS_ERROR_FAILURE;
 
@@ -707,7 +707,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
       NS_NAMED_LITERAL_STRING(tabStr, "\t");
       NS_NAMED_LITERAL_STRING(newlineStr, "\n");
       char specialChars[] = {'\t','\n',0};
-      nsAutoString tabString; tabString.AssignWithConversion("    ");
+      nsAutoString tabString(NS_LITERAL_STRING("    "));
       while (unicodeBuf && (pos != -1) && ((PRUint32)pos < tString.Length()))
       {
         PRInt32 oldPos = pos;
@@ -1038,7 +1038,7 @@ nsTextEditRules::DidRedo(nsISelection *aSelection, nsresult aResult)
       if (NS_FAILED(res)) return res;
       if (!theBody) return NS_ERROR_FAILURE;
       
-      nsAutoString tagName; tagName.AssignWithConversion("div");
+      nsAutoString tagName(NS_LITERAL_STRING("div"));
       nsCOMPtr<nsIDOMNodeList> nodeList;
       res = theBody->GetElementsByTagName(tagName, getter_AddRefs(nodeList));
       if (NS_FAILED(res)) return res;
@@ -1231,8 +1231,7 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsISelection *aSelection)
     nsCOMPtr<nsIDOMElement>brElement;
     nsCOMPtr<nsIContent> newContent;
     
-    nsString qualifiedTag;
-    qualifiedTag.AssignWithConversion("br");
+    nsString qualifiedTag(NS_LITERAL_STRING("br"));
 
     res = mEditor->CreateHTMLContent(qualifiedTag, getter_AddRefs(newContent));
     brElement = do_QueryInterface(newContent);

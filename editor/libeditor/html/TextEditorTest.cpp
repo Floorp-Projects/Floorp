@@ -157,7 +157,7 @@ nsresult TextEditorTest::TestTextProperties()
   TEST_RESULT(result);
   TEST_POINTER(doc.get());
   nsCOMPtr<nsIDOMNodeList>nodeList;
-  nsAutoString textTag; textTag.AssignWithConversion("__moz_text");
+  nsAutoString textTag(NS_LITERAL_STRING("__moz_text"));
   result = doc->GetElementsByTagName(textTag, getter_AddRefs(nodeList));
   TEST_RESULT(result);
   TEST_POINTER(nodeList.get());

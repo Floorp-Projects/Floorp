@@ -336,7 +336,7 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsAReadableString & characterSe
                 // not undoable, undo should undo CreateNode 
                 result = metaElement->SetAttribute(NS_LITERAL_STRING("http-equiv"), NS_LITERAL_STRING("Content-Type")); 
                 if (NS_SUCCEEDED(result)) { 
-                  newMetaString.AssignWithConversion("text/html;charset="); 
+                  newMetaString.Assign(NS_LITERAL_STRING("text/html;charset=")); 
                   newMetaString.Append(characterSet); 
                   // not undoable, undo should undo CreateNode 
                   result = metaElement->SetAttribute(NS_LITERAL_STRING("content"), newMetaString); 
@@ -576,7 +576,7 @@ NS_IMETHODIMP nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent
   nsCOMPtr<nsIDOMNode> node = *aInOutParent;
   PRInt32 theOffset = *aInOutOffset;
   nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(node);
-  nsAutoString brType; brType.AssignWithConversion("br");
+  nsAutoString brType(NS_LITERAL_STRING("br"));
   nsCOMPtr<nsIDOMNode> brNode;
   if (nodeAsText)  
   {
@@ -1024,7 +1024,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
   {
     // create the new BR node
     nsCOMPtr<nsIDOMNode> newNode;
-    nsAutoString tag; tag.AssignWithConversion("BR");
+    nsAutoString tag(NS_LITERAL_STRING("BR"));
     res = DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
     if (!newNode) res = NS_ERROR_NULL_POINTER; // don't return here, so DidDoAction is called
     if (NS_SUCCEEDED(res))
@@ -1274,7 +1274,7 @@ nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
   if (!bodyElement) return NS_ERROR_NULL_POINTER;
 
   // Get the current style for this body element:
-  nsAutoString styleName; styleName.AssignWithConversion("style");
+  nsAutoString styleName(NS_LITERAL_STRING("style"));
   nsAutoString styleValue;
   res = bodyElement->GetAttribute(styleName, styleValue);
   if (NS_FAILED(res)) return res;
@@ -1289,7 +1289,7 @@ nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
   if (styleValue.Length() > 0)
   {
     styleValue.Trim("; \t", PR_FALSE, PR_TRUE);
-    styleValue.AppendWithConversion("; ");
+    styleValue.Append(NS_LITERAL_STRING("; "));
   }
 
   // Make sure we have fixed-width font.  This should be done for us,
@@ -1298,19 +1298,19 @@ nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
   PRUint32 flags = 0;
   GetFlags(&flags);
   if ((flags & eEditorEnableWrapHackMask) && aWrapColumn >= 0)
-    styleValue.AppendWithConversion("font-family: -moz-fixed; ");
+    styleValue.Append(NS_LITERAL_STRING("font-family: -moz-fixed; "));
 
   // and now we're ready to set the new whitespace/wrapping style.
   if (aWrapColumn > 0)        // Wrap to a fixed column
   {
-    styleValue.AppendWithConversion("white-space: -moz-pre-wrap; width: ");
+    styleValue.Append(NS_LITERAL_STRING("white-space: -moz-pre-wrap; width: "));
     styleValue.AppendInt(aWrapColumn);
-    styleValue.AppendWithConversion("ch;");
+    styleValue.Append(NS_LITERAL_STRING("ch;"));
   }
   else if (aWrapColumn == 0)
-    styleValue.AppendWithConversion("white-space: -moz-pre-wrap;");
+    styleValue.Append(NS_LITERAL_STRING("white-space: -moz-pre-wrap;"));
   else
-    styleValue.AppendWithConversion("white-space: pre;");
+    styleValue.Append(NS_LITERAL_STRING("white-space: pre;"));
 
   res = bodyElement->SetAttribute(styleName, styleValue);
   return res;
@@ -1637,7 +1637,7 @@ nsPlaintextEditor::PasteAsQuotation(PRInt32 aSelectionType)
 #endif
     nsAutoString flavor; flavor.AssignWithConversion(flav);
     nsAutoString stuffToPaste;
-    if (flavor.EqualsWithConversion(kUnicodeMime))
+    if (flavor.Equals(NS_LITERAL_STRING(kUnicodeMime)))
     {
       nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
       if (textDataObj && len > 0)
@@ -1776,7 +1776,7 @@ nsPlaintextEditor::Rewrap(PRBool aRespectNewlines)
   if (NS_FAILED(rv)) return rv;
 
   // Variables we'll need either way
-  nsAutoString format; format.AssignWithConversion("text/plain");
+  nsAutoString format(NS_LITERAL_STRING("text/plain"));
   nsAutoString current;
   nsString wrapped;
 
@@ -1839,7 +1839,7 @@ nsPlaintextEditor::StripCites()
   if (NS_FAILED(rv)) return rv;
 
   // Variables we'll need either way
-  nsAutoString format; format.AssignWithConversion("text/plain");
+  nsAutoString format(NS_LITERAL_STRING("text/plain"));
   nsAutoString current;
   nsString stripped;
 
