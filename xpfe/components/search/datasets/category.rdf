@@ -107,7 +107,7 @@
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:6">
-	<NC:Name>Music - Artist</NC:Name>
+	<NC:Name>Music - Artist by Rolling Stone</NC:Name>
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:7">
@@ -115,7 +115,7 @@
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:8">
-	<NC:Name>Tech News</NC:Name>
+	<NC:Name>Tech News by CNET</NC:Name>
 </RDF:Description>
 
 </RDF:RDF>
