@@ -1725,9 +1725,7 @@ public class Context {
     }
     
     private Interpreter getCompiler() {
-        if (codegenClass == null) {
-            return new Interpreter();
-        } else {
+        if (codegenClass != null) {
             try {
                 return (Interpreter) codegenClass.newInstance();
             }
@@ -1739,8 +1737,9 @@ public class Context {
             }
             catch (IllegalAccessException x) {
             }
-            throw new RuntimeException("Malformed optimizer package");
+            // fall through
         }
+        return new Interpreter();
     }
     
     private Object compile(Scriptable scope, TokenStream ts, 
