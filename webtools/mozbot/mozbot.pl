@@ -193,6 +193,7 @@ my $variablepattern = '[-_:a-zA-Z0-9]+';
 my %users = ('admin' => &newPassword('password')); # default password for admin
 my %userFlags = ('admin' => 3); # bitmask; 0x1 = admin, 0x2 = delete user a soon as other admin authenticates
 my $helpline = 'see http://www.mozilla.org/projects/mozbot/'; # used in IRC name and in help
+my $serverRestrictsIRCNames = '';
 my @modulenames = ('General', 'Greeting', 'Infobot', 'Parrot');
 
 # - which variables can be saved.
@@ -215,6 +216,7 @@ my @modulenames = ('General', 'Greeting', 'Infobot', 'Parrot');
     [\%userFlags, 'userFlags'], # usernames => bits
     [\$variablepattern, 'variablepattern'],
     [\$helpline, 'helpline'],
+    [\$serverRestrictsIRCNames, 'simpleIRCNameServer'],
     [\$Mails::smtphost, 'smtphost'],
 );
 
@@ -288,11 +290,16 @@ sub connect {
 
     my ($bot, $mailed);
 
+    my $ircname = 'mozbot';
+    if ($serverRestrictsIRCNames ne $server) {
+        $ircname = "[$ircname] $helpline";
+    }
+
     until ($bot = $irc->newconn(
              Server => $server,
              Port => $port,
              Nick => $nicks[$nick],
-             Ircname => "[mozbot] $helpline",
+             Ircname => $ircname,
              Username => $USERNAME,
              LocalAddr => $localAddr,
            )) {
@@ -583,10 +590,18 @@ sub on_check_connect {
 
 # if something nasty happens
 sub on_disconnected {
-    my $self = shift;
+    my ($self, $event) = @_;
     return if defined($self->{'__mozbot__shutdown'}); # HACK HACK HACK
     $self->{'__mozbot__shutdown'} = 1; # HACK HACK HACK
-    &debug("eek! disconnected from network");
+    my($reason) = $event->args;
+    if ($reason eq 'Bad user info' and $serverRestrictsIRCNames ne $server) {
+        # change our IRC name to something simpler by setting the flag
+        $serverRestrictsIRCNames = $server;
+        &Configuration::Save($cfgfile, &configStructure(\$serverRestrictsIRCNames));
+        &debug('Hrm, $server didn\'t like our IRC name. Trying again with a simpler one.');
+    } else {
+        &debug("eek! disconnected from network: '$reason'");
+    }
     foreach (@modules) { $_->unload(); }
     @modules = ();
     &connect();

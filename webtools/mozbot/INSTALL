@@ -349,6 +349,14 @@ are prompted for during initial startup. The interesting ones are:
       <foobot> user: green is good.
       * user patpats mozbot
 
+   simpleIRCNameServer -- If the value of this variable equals the
+   name of the server, then the IRC Name sent to the server will be
+   simplified so that it doesn't include the URI of the mozbot help
+   files. This is usually dealt with automatically, but if you are
+   having troubles connecting, you could try setting it. (It is set to
+   the name of the server so that if you change servers, by default
+   mozbot will use a complete IRC Name again.)
+
 Changes to variables are usually immediately recorded in the
 configuration file and will be saved for the next time the bot is
 loaded.
