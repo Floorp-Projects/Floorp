@@ -534,7 +534,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
             nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
             commandDispatcher->GetFocusedWindow(getter_AddRefs(focusedWindow));
             if (focusedWindow) {
-              commandDispatcher->SetSuppressFocus(PR_TRUE);
+              //commandDispatcher->SetSuppressFocus(PR_TRUE);
               domWindow->Focus(); // This sets focus, but we'll ignore it.  
                                   // A subsequent activate will cause us to stop suppressing.
               break;
