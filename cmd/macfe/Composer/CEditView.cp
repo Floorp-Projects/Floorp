@@ -63,8 +63,14 @@
 
 #include <LGAPopup.h>
 
+//#define PROFILE	// clu
 #ifdef PROFILE
 #include <profiler.h>
+extern void ProfileStart();
+extern void ProfileStop();
+extern void	ProfileSuspend();
+extern void ProfileResume();
+extern Boolean ProfileInProgress();
 #endif
 
 #include <Script.h>
@@ -906,7 +912,7 @@ void CEditView::EraseBackground(
 }
 
 
-void CEditView::DocumentChanged( int32 iStartY, int32 iHeight )
+void CEditView::DocumentChanged( int32 iStartY, int32 iHeight )	// clu - need to look at this
 {
 	SPoint32		frameLocation, imageLocation, updateUL, updateLR;
 	SDimension16	frameSize;
@@ -923,7 +929,6 @@ void CEditView::DocumentChanged( int32 iStartY, int32 iHeight )
 		
 	// Make sure we're all talking about the same thing.
 	FocusDraw();
-
 	// Get the frame rectangle in port coordinates
 	GetFrameLocation( frameLocation );			// wimpy 16 bit coordinates
 	GetFrameSize( frameSize );
@@ -950,13 +955,13 @@ void CEditView::DocumentChanged( int32 iStartY, int32 iHeight )
 	else
 		updateLR.v = iStartY + iHeight;
 
-	// Intersect the update rectangle with the frame rectangle and make sure they overlap (in image coordinates)
+	// Intersect the updated rectangle with the frame rectangle and make sure they overlap (in image coordinates)
 	if ( sect_rect_long( frameLocation, frameSize, &updateUL, &updateLR ) )
 	{
 		Rect	updateRect;
 		Point	ul, lr;
 		
-		// get the frame rectange in port coordinates again.
+		// get the frame rectangle in port coordinates again.
 		CalcPortFrameRect( updateRect );
 		
 		// Convert from image to local to port coordinates... we don't have to worry about the conversion because we've already been clipped to the frame
@@ -1118,10 +1123,6 @@ Boolean CEditView::HandleKeyPress( const EventRecord& inKeyEvent )
 	if ( !IsDoneLoading() )
 		return true;
 	
-#ifdef PROFILE
-//	ProfilerSetStatus( true );
-#endif
-	
 	::ObscureCursor();
 				
 	Char16		theChar = inKeyEvent.message & charCodeMask;
@@ -1200,7 +1201,7 @@ Boolean CEditView::HandleKeyPress( const EventRecord& inKeyEvent )
 						&& !((cmdKey | optionKey | controlKey) & currEvent.modifiers) // with no modKeys except maybe shift
 						&& ( (static_cast<Uchar>(currEvent.message & charCodeMask)) == char_Backspace ) )
 							++count;
-						else if ( currEvent.what != keyUp ) // its _not_ a keyup; bail
+						else if ( currEvent.what != keyUp ) // it's _not_ a keyup; bail
 							break; 							// keyups don't stop us, everything else does
 						
 						foundAndClearedEvent = ::GetNextEvent( keyDownMask | keyUpMask, &eventToRemove );
@@ -1220,7 +1221,7 @@ Boolean CEditView::HandleKeyPress( const EventRecord& inKeyEvent )
 				}
 
 				EDT_DeletePreviousChar( *GetContext() );
-				handled = true;
+				handled = true;				
 				break;
 
 			case char_FwdDelete:
@@ -1372,10 +1373,6 @@ Boolean CEditView::HandleKeyPress( const EventRecord& inKeyEvent )
 	
 	if ( !handled )
 		handled = CHTMLView::HandleKeyPress(inKeyEvent);
-	
-#ifdef PROFILE
-//	ProfilerSetStatus( false );
-#endif
 
 	return handled;
 }
@@ -1710,7 +1707,8 @@ void CEditView::FindCommandStatus( CommandT inCommand, Boolean& outEnabled,
 				|| EDT_IsInsertPointInTable( *GetContext() ) );
 			break;
 		
-		case cmd_Insert_Row:
+		case cmd_Insert_Row_Above:
+		case cmd_Insert_Row_Below:
 		case cmd_Insert_Cell:
 		case cmd_Format_Row:
 		case cmd_Delete_Row:
@@ -1720,7 +1718,8 @@ void CEditView::FindCommandStatus( CommandT inCommand, Boolean& outEnabled,
 			outEnabled = EDT_IsInsertPointInTableRow( *GetContext() );
 			break;
 		
-		case cmd_Insert_Col:
+		case cmd_Insert_Col_Before:
+		case cmd_Insert_Col_After:
 		case cmd_Delete_Col:
 		case cmd_Delete_Cell:
 		case cmd_Format_Cell:
@@ -2350,9 +2349,11 @@ Boolean CEditView::FindCommandStatusForContextMenu(
 		}
 		
 		case cmd_Format_Table:
-		case cmd_Insert_Row:
+		case cmd_Insert_Row_Above:
+		case cmd_Insert_Row_Below:
 		case cmd_Delete_Row:
-		case cmd_Insert_Col:
+		case cmd_Insert_Col_Before:
+		case cmd_Insert_Col_After:
 		case cmd_Delete_Col:
 		case cmd_Insert_Cell:
 		case cmd_Delete_Cell:
@@ -3290,7 +3291,7 @@ void CEditView::DisplayLineFeed( int inLocation, LO_LinefeedStruct* lineFeed, Bo
 
 
 void CEditView::DisplayTable( int inLocation, LO_TableStruct *inTableStruct )
-{
+{	
 	Boolean	hasZeroBorderWidth;
 	int32 savedBorderStyle;
 	LO_Color savedBorderColor;
@@ -4743,7 +4744,21 @@ Boolean CEditView::ObeyCommand( CommandT inCommand, void *ioParam )
 				CEditDialog::Start( EDITDLG_TABLE_INFO, *GetContext(), 1 );
 			break;
 		
-		case cmd_Insert_Row:
+		case cmd_Insert_Row_Above:
+			FLUSH_JAPANESE_TEXT
+			{
+			EDT_TableRowData *pData = EDT_NewTableRowData();
+			if ( pData )
+			{
+				pData->align = ED_ALIGN_DEFAULT;
+				pData->valign = ED_ALIGN_DEFAULT;
+				EDT_InsertTableRows( *GetContext(), pData, false, 1 );
+				EDT_FreeTableRowData( pData );
+			}
+			}
+			break;
+		
+		case cmd_Insert_Row_Below:
 			FLUSH_JAPANESE_TEXT
 			{
 			EDT_TableRowData *pData = EDT_NewTableRowData();
@@ -4766,7 +4781,19 @@ Boolean CEditView::ObeyCommand( CommandT inCommand, void *ioParam )
 			CEditDialog::Start( EDITDLG_TABLE_INFO, *GetContext(), 2 );
 			break;
 		
-		case cmd_Insert_Col:
+		case cmd_Insert_Col_Before:
+			FLUSH_JAPANESE_TEXT
+			{
+			EDT_TableCellData* pData = EDT_GetTableCellData( *GetContext() );
+			if ( pData )
+			{
+				EDT_InsertTableColumns( *GetContext(), pData, false, 1 );
+				EDT_FreeTableCellData( pData );
+			}
+			}
+			break;
+		
+		case cmd_Insert_Col_After:
 			FLUSH_JAPANESE_TEXT
 			{
 			EDT_TableCellData* pData = EDT_GetTableCellData( *GetContext() );

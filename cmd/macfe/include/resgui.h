@@ -408,9 +408,11 @@
 #define cmd_Insert_Table					1285
 #define cmd_Delete_Table					1286
 #define cmd_Format_Table					1287
-#define cmd_Insert_Row						1288
+#define cmd_Insert_Row_Above				1288
+#define cmd_Insert_Row_Below				2288
 #define cmd_Delete_Row						1289
-#define cmd_Insert_Col						1290
+#define cmd_Insert_Col_Before				1290
+#define cmd_Insert_Col_After				2290
 #define cmd_Delete_Col						1291
 #define cmd_Insert_Cell						1316
 #define cmd_Delete_Cell						1317
