@@ -52,7 +52,7 @@ import org.mozilla.jss.provider.java.security.JSSMessageDigestSpi;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.9 $ $Date: 2002/07/04 00:36:51 $
+ * @version $Revision: 1.10 $ $Date: 2002/07/19 00:20:21 $
  */
 public final class CryptoManager implements TokenSupplier
 {
@@ -1047,9 +1047,6 @@ public final class CryptoManager implements TokenSupplier
             throw new InvalidNicknameException("Nickname must be non-null");
         }
 
-        if (cert instanceof InternalCertificate) {
-            return (InternalCertificate) cert;
-        }
         else {
             return importCertToPermNative(cert,nickname);
         }

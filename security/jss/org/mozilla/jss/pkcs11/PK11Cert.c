@@ -438,8 +438,8 @@ Java_org_mozilla_jss_pkcs11_PK11Cert_setTrust
     }
 
     if( CERT_GetCertTrust( cert, &trust ) != SECSuccess) {
-        PR_ASSERT(PR_FALSE);
-        return;
+        /* cert doesn't have any trust yet, so initialize to 0 */
+        memset(&trust, 0, sizeof(trust));
     }
 
     switch(type) {
