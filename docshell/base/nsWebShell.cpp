@@ -305,6 +305,8 @@ nsWebShell::~nsWebShell()
   // Stop any pending document loads and destroy the loader...
   if (nsnull != mDocLoader) {
     mDocLoader->Stop();
+    // Cancel any timers that were set for this loader.
+    mDocLoader->CancelLoadURLTimer();
     mDocLoader->RemoveObserver((nsIDocumentLoaderObserver*)this);
     NS_RELEASE(mDocLoader);
   }
@@ -543,6 +545,9 @@ nsWebShell::Destroy()
 
   // Stop any URLs that are currently being loaded...
   mDocLoader->Stop();
+
+  // Cancel any timers that were set for this loader.
+  mDocLoader->CancelLoadURLTimer();
 
   SetContainer(nsnull);
   SetObserver(nsnull);
@@ -933,6 +938,10 @@ nsWebShell::LoadURL(const nsString& aURLSpec,
   // Stop any documents that are currently being loaded...
   mDocLoader->Stop();
 
+  // Cancel any timers that were set for this loader.
+  mDocLoader->CancelLoadURLTimer();
+
+
   rv = mDocLoader->LoadURL(urlSpec,       // URL string
                            nsnull,         // Command
                            this,           // Container
@@ -985,6 +994,9 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
 
     // Stop any documents that are currently being loaded...
     mDocLoader->Stop();
+
+    // Cancel any timers that were set for this loader.
+    mDocLoader->CancelLoadURLTimer();
 
     rv = mDocLoader->LoadURL(urlSpec,        // URL string
                              nsnull,         // Command

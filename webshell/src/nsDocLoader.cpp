@@ -33,6 +33,8 @@
 #include "nsIPostToServer.h"
 #include "nsIFactory.h"
 #include "nsIContentViewerContainer.h"
+#include "nsIRefreshUrl.h"
+#include "nsITimer.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsVoidArray.h"
 
@@ -62,6 +64,7 @@ NS_DEFINE_IID(kIDocumentLoaderIID,        NS_IDOCUMENTLOADER_IID);
 NS_DEFINE_IID(kIDocumentLoaderFactoryIID, NS_IDOCUMENTLOADERFACTORY_IID);
 NS_DEFINE_IID(kDocLoaderImplIID,          NS_DOCLOADERIMPL_IID);
 NS_DEFINE_IID(kDocumentBindInfoIID,       NS_DOCUMENTBINDINFO_IID);
+NS_DEFINE_IID(kRefreshURLIID,       NS_IREFRESHURL_IID);
 
 
 /* 
@@ -72,7 +75,9 @@ NS_DEFINE_IID(kDocumentBindInfoIID,       NS_DOCUMENTBINDINFO_IID);
  * The Document Loader maintains a list of nsDocumentBindInfo instances which 
  * represents the set of documents actively being loaded...
  */
-class nsDocumentBindInfo : public nsIStreamListener, public nsINetSupport
+class nsDocumentBindInfo : public nsIStreamListener, 
+                           public nsINetSupport,
+                           public nsIRefreshUrl
 {
 public:
     nsDocumentBindInfo(nsDocLoaderImpl* aDocLoader,
@@ -107,6 +112,9 @@ public:
                                               nsString &aPassword);
     NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
                                        nsString &aPassword);
+
+    /* nsIRefreshURL interface methods... */
+    NS_IMETHOD RefreshURL(nsIURL* aURL, PRInt32 millis, PRBool repeat);
 
     nsresult GetStatus(void) { return mStatus; }
 
@@ -371,12 +379,25 @@ public:
     NS_IMETHOD LoadURL(const nsString& aURLSpec,
                        nsIStreamListener* aListener);
 
+    NS_IMETHOD LoadURLOnTimer(const nsString& aURLSpec,
+                              const char* aCommand,
+                              nsIContentViewerContainer* aContainer,
+                              nsIPostData* aPostData = nsnull,
+                              nsISupports* aExtraInfo = nsnull,
+                              nsIStreamObserver* anObserver = nsnull,
+                              PRInt32 millis = 0,
+                              PRBool repeat = 0);
+
+    NS_IMETHOD CancelLoadURLTimer(void);
+
     NS_IMETHOD Stop(void);
 
     NS_IMETHOD CreateDocumentLoader(nsIDocumentLoader** anInstance);
     NS_IMETHOD SetDocumentFactory(nsIDocumentLoaderFactory* aFactory);
 
     void LoadURLComplete(nsISupports* loader);
+
+    static void RefreshURLCallback(nsITimer* aTimer, void* aClosure);
 
     NS_IMETHOD AddObserver(nsIDocumentLoaderObserver *aObserver);
     NS_IMETHOD RemoveObserver(nsIDocumentLoaderObserver *aObserver);
@@ -390,6 +411,7 @@ private:
 
 public:
     nsIDocumentLoaderFactory* m_DocFactory;
+    nsVoidArray* mRefreshments;
 
 protected:
     nsISupportsArray* m_LoadingDocsList;
@@ -412,6 +434,8 @@ nsDocLoaderImpl::nsDocLoaderImpl(nsDocLoaderImpl* aParent)
 
     m_DocFactory = new nsDocFactoryImpl();
     NS_ADDREF(m_DocFactory);
+
+    mRefreshments = new nsVoidArray();
 }
 
 
@@ -558,6 +582,91 @@ done:
     return rv;
 }
 
+class refreshData {
+    public:
+    nsIDocumentLoader* aLoader;
+    nsString* aURLSpec;
+    char* aCommand;
+    nsIContentViewerContainer* aContainer;
+    nsIPostData* aPostData;
+    nsISupports* aExtraInfo;
+    nsIStreamObserver* anObserver;
+};
+
+void nsDocLoaderImpl::RefreshURLCallback(nsITimer* aTimer, void* aClosure) {
+
+    refreshData *data=(refreshData*)aClosure;
+    nsIDocumentLoader* aLoader=(nsIDocumentLoader*)data->aLoader;
+
+    NS_PRECONDITION((data != nsnull), "Null pointer...");
+
+    /* make sure the url should still be loaded. */
+    /* set the timer again */
+    /* load the url */
+    aLoader->LoadURL(*data->aURLSpec,
+                     data->aCommand,
+                     data->aContainer,
+                     data->aPostData,
+                     data->aExtraInfo,
+                     data->anObserver);
+}
+
+NS_IMETHODIMP
+nsDocLoaderImpl::LoadURLOnTimer(const nsString& aURLSpec,
+                              const char* aCommand,
+                              nsIContentViewerContainer* aContainer,
+                              nsIPostData* aPostData,
+                              nsISupports* aExtraInfo,
+                              nsIStreamObserver* anObserver,
+                              PRInt32 millis,
+                              PRBool repeat) {
+
+    refreshData *data= new refreshData();
+    nsITimer *timer=nsnull;
+    nsString com(aCommand);
+    nsString spec(aURLSpec);
+
+    NS_PRECONDITION((nsnull != data), "Null pointer");
+    
+    data->aLoader=this;
+    data->aURLSpec = new nsString(aURLSpec);
+    data->aCommand=com.ToNewCString();
+    data->aContainer=aContainer;
+    data->aPostData=aPostData;
+    data->aExtraInfo=aExtraInfo;
+    data->anObserver=anObserver;
+
+    /* Create the timer. */
+    if (NS_OK == NS_NewTimer(&timer)) {
+        timer->Init(nsDocLoaderImpl::RefreshURLCallback, data, millis);
+    }
+
+    /* Add the timer to our array. */
+    mRefreshments->AppendElement(timer);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocLoaderImpl::CancelLoadURLTimer(void) {
+    PRInt32 count = mRefreshments->Count();
+    PRInt32 tmp=0;
+    nsITimer* timer;
+
+    /* Right now all we can do is cancel all the timers for this loader.
+     * We don't have access to the data to find a particular url to cancel. */
+    while (tmp < count) {
+        timer=(nsITimer*)mRefreshments->ElementAt(tmp);
+        mRefreshments->RemoveElementAt(tmp);
+        if (timer) {
+            timer->Cancel();
+            timer->Release();
+        }
+        tmp++;
+    }
+
+    return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsDocLoaderImpl::Stop(void)
@@ -680,7 +789,7 @@ nsDocumentBindInfo::nsDocumentBindInfo(nsDocLoaderImpl* aDocLoader,
     m_Url        = nsnull;
     m_NextStream = nsnull;
     m_Command    = (nsnull != aCommand) ? PL_strdup(aCommand) : nsnull;
-    m_ExtraInfo  = nsnull;
+    m_ExtraInfo  = aExtraInfo;
 
     m_DocLoader = aDocLoader;
     NS_ADDREF(m_DocLoader);
@@ -751,6 +860,11 @@ nsDocumentBindInfo::QueryInterface(const nsIID& aIID,
   }
   if (aIID.Equals(kINetSupportIID)) {
     *aInstancePtrResult = (void*) ((nsINetSupport*)this);
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kRefreshURLIID)) {
+    *aInstancePtrResult = (void*) ((nsIRefreshUrl*)this);
     AddRef();
     return NS_OK;
   }
@@ -1015,6 +1129,22 @@ nsDocumentBindInfo::PromptPassword(const nsString &aText,
 {
     if (nsnull != m_NetSupport) {
         return m_NetSupport->PromptPassword(aText, aPassword);
+    }
+    return PR_FALSE;
+}
+
+NS_METHOD
+nsDocumentBindInfo::RefreshURL(nsIURL* aURL, PRInt32 millis, PRBool repeat)
+{
+    if (nsnull != m_DocLoader) {
+        return m_DocLoader->LoadURLOnTimer(aURL->GetSpec(),
+                                m_Command,
+                                m_Container,
+                                nsnull,
+                                m_ExtraInfo,
+                                m_Observer,
+                                millis,
+                                repeat);
     }
     return PR_FALSE;
 }
