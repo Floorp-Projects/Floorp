@@ -75,7 +75,7 @@ MimeHeaders_convert_header_value(MimeDisplayOptions *opt, nsAFlatCString &value)
 
     if (converted)
     {
-      value = converted;
+      value.Adopt(converted);
     }
   }
   else
