@@ -859,6 +859,8 @@ nsTableFrame::CreateAnonymousColFrames(nsIPresContext&       aPresContext,
     if ((aColType == eColAnonymousCol) && aPrevFrameIn) {
       // a col due to a span in a previous col uses the style context of the col
       aPrevFrameIn->GetStyleContext(getter_AddRefs(styleContext)); 
+      // fix for bugzilla bug 54454: get the content from the prevFrame 
+      aPrevFrameIn->GetContent(getter_AddRefs(iContent));
     }
     else {
       // all other anonymous cols use a pseudo style context of the col group
@@ -867,6 +869,9 @@ nsTableFrame::CreateAnonymousColFrames(nsIPresContext&       aPresContext,
       aPresContext.ResolvePseudoStyleContextFor(iContent, nsHTMLAtoms::tableColPseudo,
                                                 parentStyleContext, PR_FALSE, getter_AddRefs(styleContext));
     }
+    // ASSERTION to check for bug 54454 sneaking back in...
+    NS_ASSERTION(iContent, "null content in CreateAnonymousColFrames");
+
     // create the new col frame
     nsIFrame* colFrame;
     nsCOMPtr<nsIPresShell> presShell;
