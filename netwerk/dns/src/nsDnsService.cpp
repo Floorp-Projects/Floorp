@@ -74,6 +74,10 @@ typedef struct nsLookupElement {
 } nsLookupElement;
 #endif /* XP_MAC */
 
+#if defined(XP_BEOS) && defined(BONE_VERSION)
+#include <arpa/inet.h>
+#endif
+
 // UNIX
 // XXX needs implementation
 
