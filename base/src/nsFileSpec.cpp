@@ -779,7 +779,7 @@ PRBool nsFileSpec::operator == (const nsFileSpec& inOther) const
         return PR_TRUE;
 #else
    if (!mPath)
-       return inOther.mPath == nsNull;
+       return inOther.mPath == nsnull;
    if (!inOther.mPath)
        return PR_FALSE;
 	#if defined(XP_PC)
