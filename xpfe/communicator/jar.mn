@@ -53,6 +53,7 @@ en-US.jar:
     locale/en-US/communicator/printPageSetup.properties         (resources/locale/en-US/printPageSetup.properties)
     locale/en-US/communicator/popupManager.dtd                  (resources/locale/en-US/popupManager.dtd)
     locale/en-US/communicator/popupManager.properties           (resources/locale/en-US/popupManager.properties)
+    locale/en-US/communicator/plugins.properties                (resources/locale/en-US/plugins.properties)
 
 US.jar:
     locale/US/communicator-region/contents.rdf   	      (resources/locale/en-US/contents-region.rdf)

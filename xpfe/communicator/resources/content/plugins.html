@@ -27,22 +27,11 @@
 <html>
 <head>
 <script type="application/x-javascript">
-  var title_label = "About Plug-ins";
-  var installedplugins_label = "Installed plug-ins";
-  var nopluginsareinstalled_label = "No plug-ins are installed";
-  var findmore_label = "Find more information about browser plug-ins at";
-  var installhelp_label = "Help for installing plug-ins is available from";
-  var plugindoc_label = "plugindoc.mozdev.org";
-  var netcenter_label = "Netscape.com";
-  var filename_label = "File name:";
-  var mimetype_label = "MIME Type";
-  var description_label  = "Description";
-  var suffixes_label  = "Suffixes";
-  var enabled_label = "Enabled";
-  var yes_label = "Yes";
-  var no_label = "No";
+  var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
+  var pluginsbundle = strBundleService.createBundle("chrome://communicator/locale/plugins.properties");
+  var regionbundle = strBundleService.createBundle("chrome://communicator-region/locale/region.properties");
 
-  document.writeln("<title>" + title_label + "</title>");
+  document.writeln("<title>" + pluginsbundle.GetStringFromName("title_label") + "<\/title>");
 </script>
 <link rel="stylesheet" type="text/css" href="chrome://communicator/skin/plugins.css">
 </head>
@@ -63,16 +52,16 @@
   var numPlugins = navigator.plugins.length;
 
   if (numPlugins > 0)
-    document.writeln("<div id=\"plugs\">" + installedplugins_label + "<\/div>");
+    document.writeln("<div id=\"plugs\">" + pluginsbundle.GetStringFromName("installedplugins_label") + "<\/div>");
   else
-    document.writeln("<div id=\"noplugs\">" + nopluginsareinstalled_label + "<\/div>");
+    document.writeln("<div id=\"noplugs\">" + pluginsbundle.GetStringFromName("nopluginsareinstalled_label") + "<\/div>");
 
-  document.writeln("<div id=\"findmore\">" + findmore_label + " ");
-  document.writeln("<a href=\"http://home.netscape.com/plugins/index.html\">" + netcenter_label + "<\/a>.");
+  document.writeln("<div id=\"findmore\">" + pluginsbundle.GetStringFromName("findmore_label") + " ");
+  document.writeln("<a href=\"" + regionbundle.GetStringFromName("more_plugins_url") + "\">" + regionbundle.GetStringFromName("more_plugins_label") + "<\/a>.");
   document.writeln("<\/div>");
 
-  document.writeln("<div id=\"installhelp\">" + installhelp_label + " ");
-  document.writeln("<a href=\"http://plugindoc.mozdev.org\">" + plugindoc_label + "<\/a>.");
+  document.writeln("<div id=\"installhelp\">" + pluginsbundle.GetStringFromName("installhelp_label") + " ");
+  document.writeln("<a href=\"" + regionbundle.GetStringFromName("plugindoc_url") + "\">" + regionbundle.GetStringFromName("plugindoc_label") + "<\/a>.");
   document.writeln("<\/div><hr>");
 
   for (var i = 0; i < numPlugins; i++)
@@ -85,7 +74,7 @@
       document.write(plugin.name);
       document.writeln("<\/div>");
 
-      document.writeln("<dl><dd><span class=\"label\">" + filename_label + "<\/span> ");
+      document.writeln("<dl><dd><span class=\"label\">" + pluginsbundle.GetStringFromName("filename_label") + "<\/span> ");
       document.write(plugin.filename);
       document.writeln("<\/dd><dd>");
       document.write(plugin.description);
@@ -93,10 +82,10 @@
 
       document.writeln("<table class=\"contenttable\">");
       document.writeln("<thead>");
-      document.writeln("<tr><th class=\"type\">" + mimetype_label + "<\/th>");
-      document.writeln("<th class=\"desc\">" + description_label + "<\/th>");
-      document.writeln("<th class=\"suff\">" + suffixes_label + "<\/th>");
-      document.writeln("<th class=\"enabled\">" + enabled_label + "<\/th><\/tr>");
+      document.writeln("<tr><th class=\"type\">" + pluginsbundle.GetStringFromName("mimetype_label") + "<\/th>");
+      document.writeln("<th class=\"desc\">" + pluginsbundle.GetStringFromName("description_label") + "<\/th>");
+      document.writeln("<th class=\"suff\">" + pluginsbundle.GetStringFromName("suffixes_label") + "<\/th>");
+      document.writeln("<th class=\"enabled\">" + pluginsbundle.GetStringFromName("enabled_label") + "<\/th><\/tr>");
       document.writeln("<\/thead>");
       document.writeln("<tbody>");
 
@@ -110,10 +99,10 @@
 
         if (mimetype)
         {
-          enabled = no_label;
+          enabled = pluginsbundle.GetStringFromName("no_label");
           enabledPlugin = mimetype.enabledPlugin;
           if (enabledPlugin && (enabledPlugin.filename == plugin.filename))
-            enabled = yes_label;
+            enabled = pluginsbundle.GetStringFromName("yes_label");
 
           document.writeln("<tr>");
           document.writeln("<td>" + mimetype.type + "<\/td>");
