@@ -946,16 +946,16 @@ public:
 
 private:
 
-	char* mContentType;
-	char* mURL;
-	char* mFilePath;
-    PRBool mSeekable;
-	PRUint32 mLength;
-	PRUint32 mModified;
-    nsIPluginInstance * mPluginInstance;
-    nsPluginStreamListenerPeer * mPluginStreamListenerPeer;
-
-    nsCOMPtr<nsIOutputStream> mFileCacheOutputStream;
+  char* mContentType;
+  char* mURL;
+  char* mFilePath;
+  PRBool mSeekable;
+  PRUint32 mLength;
+  PRUint32 mModified;
+  nsIPluginInstance * mPluginInstance;
+  nsPluginStreamListenerPeer * mPluginStreamListenerPeer;
+  nsCOMPtr<nsIOutputStream> mFileCacheOutputStream;
+  PRBool mLocallyCached;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1033,36 +1033,41 @@ public:
 
 nsPluginStreamInfo::nsPluginStreamInfo()
 {
-	NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
 
-    mPluginInstance = nsnull;
-    mPluginStreamListenerPeer = nsnull;
+  mPluginInstance = nsnull;
+  mPluginStreamListenerPeer = nsnull;
 
-	mContentType = nsnull;
-	mURL = nsnull;
-	mFilePath = nsnull;
-    mSeekable = PR_FALSE;
-	mLength = 0;
-	mModified = 0;
+  mContentType = nsnull;
+  mURL = nsnull;
+  mFilePath = nsnull;
+  mSeekable = PR_FALSE;
+  mLength = 0;
+  mModified = 0;
+  mLocallyCached = PR_FALSE;
 }
 
 nsPluginStreamInfo::~nsPluginStreamInfo()
 {
-	if(mContentType != nsnull)
-		PL_strfree(mContentType);
-    if(mURL != nsnull)
-		PL_strfree(mURL);
-    if(mFilePath != nsnull) {
-        nsCOMPtr<nsILocalFile> localFile;
-        nsresult res = NS_NewLocalFile(mFilePath, 
-                                       PR_FALSE, 
-                                       getter_AddRefs(localFile));
-        if(NS_SUCCEEDED(res))
-            localFile->Delete(PR_FALSE);
-		PL_strfree(mFilePath);
-    }
+  if(mContentType != nsnull)
+  PL_strfree(mContentType);
+  if(mURL != nsnull)
+    PL_strfree(mURL);
 
-    NS_IF_RELEASE(mPluginInstance);
+  // ONLY delete our cached file if we created it
+  if(mLocallyCached && mFilePath)
+  {
+     nsCOMPtr<nsILocalFile> localFile;
+     nsresult res = NS_NewLocalFile(mFilePath, 
+                                    PR_FALSE, 
+                                    getter_AddRefs(localFile));
+     if(NS_SUCCEEDED(res))
+       localFile->Delete(PR_FALSE);
+  }
+  if (mFilePath)
+    PL_strfree(mFilePath);
+
+  NS_IF_RELEASE(mPluginInstance);
 }
 
 NS_IMPL_ADDREF(nsPluginStreamInfo)
@@ -1283,6 +1288,7 @@ void
 nsPluginStreamInfo::SetLocalCachedFileStream(nsIOutputStream *stream) 
 {
      mFileCacheOutputStream = stream;
+     mLocallyCached = PR_TRUE;
 }
 
 void
