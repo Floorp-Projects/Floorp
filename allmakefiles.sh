@@ -90,7 +90,10 @@ extensions/Makefile
 extensions/wallet/Makefile
 extensions/wallet/public/Makefile
 extensions/wallet/src/Makefile
-# extensions/wallet/module/Makefile
+extensions/wallet/editor/Makefile
+extensions/wallet/cookieviewer/Makefile
+extensions/wallet/signonviewer/Makefile
+extensions/wallet/walletpreview/Makefile
 extensions/pics/Makefile
 extensions/pics/public/Makefile
 extensions/pics/src/Makefile
