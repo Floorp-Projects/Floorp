@@ -40,7 +40,7 @@ use diagnostics;
 use strict;
 
 eval "use GD";
-my $use_gd = @ ? 0 : 1;
+my $use_gd = $@ ? 0 : 1;
 eval "use Chart::Lines";
 $use_gd = 0 if $@;
 
