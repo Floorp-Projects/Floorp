@@ -274,7 +274,9 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
             CalcBitShift();
         }
         // BMPs with negative width are invalid
-        if (mBIH.width < 0)
+        // Reject extremely wide images to keep the math sane
+        const PRInt32 k64KWidth = 0x0000FFFF;
+        if (mBIH.width < 0 || mBIH.width > k64KWidth)
             return NS_ERROR_FAILURE;
 
         PRUint32 real_height = (mBIH.height > 0) ? mBIH.height : -mBIH.height;
