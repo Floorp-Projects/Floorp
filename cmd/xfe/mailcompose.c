@@ -170,7 +170,7 @@ createManagedCompose(MWContext *context, Widget pane)
   Widget optionW;
   Widget subjectTextW;
   Widget subjectLabelW;
-  XmFontList fontList;
+  /* XmFontList fontList; */
   Arg av[20];
   Widget composeform;
   
@@ -332,8 +332,8 @@ fe_MailComposeContainer_CreateManaged(MWContext* context)
   Widget container;
   Widget address;
   Widget attach;
-  Arg av[10];
-  int ac = 0;
+  /* Arg av[10]; */
+  /* int ac = 0; */
 
   data->container = container = 
 		XtVaCreateManagedWidget("mailcompose_container",
