@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: pcertt.h,v 1.6 2002/06/24 21:54:40 relyea%netscape.com Exp $
+ * $Id: pcertt.h,v 1.7 2002/07/13 02:45:04 relyea%netscape.com Exp $
  */
 #ifndef _PCERTT_H_
 #define _PCERTT_H_
@@ -154,7 +154,7 @@ struct NSSLOWCERTCertificateStr {
     int referenceCount;
 
     char nicknameSpace[200];
-    char certKeySpace[512];
+    unsigned char certKeySpace[512];
 };
 
 #define SEC_CERTIFICATE_VERSION_1		0	/* default created */
