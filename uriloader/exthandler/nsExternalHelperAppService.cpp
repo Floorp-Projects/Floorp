@@ -108,6 +108,11 @@ static const char NEVER_ASK_FOR_OPEN_FILE_PREF[]    = "openFile";
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 
+/**
+ * Contains a pointer to the helper app service, set in its constructor
+ */
+static nsExternalHelperAppService* sSrv;
+
 // Helper functions for Content-Disposition headers
 
 /** Gets the content-disposition header from a channel, using nsIHttpChannel
@@ -398,6 +403,7 @@ NS_IMPL_ISUPPORTS6(
 nsExternalHelperAppService::nsExternalHelperAppService()
 : mDataSourceInitialized(PR_FALSE)
 {
+  sSrv = this;
 }
 nsresult nsExternalHelperAppService::Init()
 {
@@ -419,6 +425,7 @@ nsresult nsExternalHelperAppService::Init()
 
 nsExternalHelperAppService::~nsExternalHelperAppService()
 {
+  sSrv = nsnull;
 }
 
 nsresult nsExternalHelperAppService::InitDataSource()
@@ -620,7 +627,7 @@ nsExternalAppHandler * nsExternalHelperAppService::CreateNewExternalHandler(nsIM
   // add any XP intialization code for an external handler that we may need here...
   // right now we don't have any but i bet we will before we are done.
 
-  handler->Init(aMIMEInfo, aTempFileExtension, aWindowContext, aFileName, aIsAttachment, this);
+  handler->Init(aMIMEInfo, aTempFileExtension, aWindowContext, aFileName, aIsAttachment);
   return handler;
 }
 
@@ -988,6 +995,11 @@ NS_IMETHODIMP nsExternalHelperAppService::DeleteTemporaryFileOnExit(nsIFile * aT
   return NS_OK;
 }
 
+void nsExternalHelperAppService::FixFilePermissions(nsILocalFile* aFile)
+{
+  // This space intentionally left blank
+}
+
 nsresult nsExternalHelperAppService::ExpungeTemporaryFiles()
 {
   PRInt32 numEntries = mTemporaryFilesList.Count();
@@ -1043,13 +1055,11 @@ nsExternalAppHandler::nsExternalAppHandler()
   mProgressListenerInitialized = PR_FALSE;
   mContentLength = -1;
   mProgress      = 0;
-  mHelperAppService = nsnull;
   mRequest = nsnull;
 }
 
 nsExternalAppHandler::~nsExternalAppHandler()
 {
-  NS_IF_RELEASE(mHelperAppService);
 }
 
 NS_IMETHODIMP nsExternalAppHandler::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData )
@@ -1334,10 +1344,10 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
             rv = encEnum->GetNext(encType);
             if (NS_SUCCEEDED(rv) && !encType.IsEmpty())
             {
-              NS_ASSERTION(mHelperAppService, "Not initialized");
-              mHelperAppService->ApplyDecodingForExtension(extension.get(),
-                                                           encType.get(),
-                                                           &applyConversion);
+              NS_ASSERTION(sSrv, "Where did the service go?");
+              sSrv->ApplyDecodingForExtension(extension.get(),
+                                              encType.get(),
+                                              &applyConversion);
             }
           }
         }
@@ -1366,8 +1376,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     // at some point in the distant past that they don't
     // want to be asked.  The latter fact would have been
     // stored in pref strings back in the old days.
-    NS_ASSERTION(mHelperAppService, "Not initialized properly");
-    if (!mHelperAppService->MIMETypeIsInDataSource(MIMEType.get()))
+    NS_ASSERTION(sSrv, "Service gone away!?");
+    if (!sSrv->MIMETypeIsInDataSource(MIMEType.get()))
     {
       if (!GetNeverAskFlagFromPref(NEVER_ASK_FOR_SAVE_TO_DISK_PREF, MIMEType.get()))
       {
@@ -1727,8 +1737,7 @@ nsresult nsExternalAppHandler::Init(nsIMIMEInfo * aMIMEInfo,
                                     const char * aTempFileExtension,
                                     nsISupports * aWindowContext,
                                     const nsAString& aSuggestedFilename,
-                                    PRBool aIsAttachment,
-                                    nsExternalHelperAppService *aHelperAppService)
+                                    PRBool aIsAttachment)
 {
   mWindowContext = aWindowContext;
   mMimeInfo = aMIMEInfo;
@@ -1747,9 +1756,6 @@ nsresult nsExternalAppHandler::Init(nsIMIMEInfo * aMIMEInfo,
   
   // Make sure extension is correct.
   EnsureSuggestedFileName();
-
-  mHelperAppService = aHelperAppService;
-  NS_IF_ADDREF(mHelperAppService);
 
   return NS_OK;
 }
@@ -1873,6 +1879,7 @@ nsresult nsExternalAppHandler::MoveFile(nsIFile * aNewFileLocation)
      if (directoryLocation)
      {
        rv = mTempFile->MoveToNative(directoryLocation, fileName);
+       sSrv->FixFilePermissions(fileToUse);
      }
      if (NS_FAILED(rv))
      {
@@ -2004,10 +2011,11 @@ nsresult nsExternalAppHandler::OpenWithApplication()
     else
     {
 #if !defined(XP_MAC) && !defined (XP_MACOSX)
-      NS_ASSERTION(mHelperAppService, "Not initialized");
+      NS_ASSERTION(sSrv, "Service gone away!?");
       // Mac users have been very verbal about temp files being deleted on app exit - they
       // don't like it - but we'll continue to do this on other platforms for now
       mHelperAppService->DeleteTemporaryFileOnExit(mFinalFileDestination);
+      rv = sSrv->LaunchAppWithTempFile(mMimeInfo, mFinalFileDestination);
 #endif
     }
   }
