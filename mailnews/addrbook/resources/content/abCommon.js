@@ -202,7 +202,7 @@ function AbEditCard()
     var card = rdf.GetResource(uri);
     card = card.QueryInterface(Components.interfaces.nsIAbCard);
     if (card.isMailList) {
-      listUri = card.mailListURI;
+      var listUri = card.mailListURI;
       goEditListDialog(resultsTree.getAttribute("ref"), listUri);
     }
     else {

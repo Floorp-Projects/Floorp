@@ -578,7 +578,8 @@ function DragOverTree(event)
   {
     //XXX this is really slow and likes to refresh N times per second.
     var rowGroup = event.target.parentNode.parentNode;
-    rowGroup.setAttribute ( "dd-triggerrepaint", 0 );
+    if (rowGroup)
+      rowGroup.setAttribute ( "dd-triggerrepaint", 0 );
     dragSession.canDrop = true;
     // necessary??
     retVal = false; // do not propagate message
