@@ -2203,6 +2203,14 @@ net_ProcessNuCache (ActiveEntry * cur_entry)
 #endif
         /* Get the buffer size that the stream is ready to receive */
         buffer_size = (*con_data->stream->is_write_ready)(con_data->stream);
+        
+        /* if the stream doesn't want any data, continue */
+        if (0 == buffer_size)
+        {
+            cur_entry->status = 1;
+            return cur_entry->status;
+        }
+        
         /* Use the minimum from these factors. 
          * Not sure why we are doing this part. Will look into this later- Gagan
          */
