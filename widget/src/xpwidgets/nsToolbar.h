@@ -22,7 +22,6 @@
 #include "nsIToolbar.h" //*** not for long
 #include "nsIContentConnector.h"
 #include "nsWindow.h"
-#include "nsIImageButton.h"
 #include "nsIToolbarItem.h"
 #include "nsDataModelWidget.h"
 
@@ -71,10 +70,6 @@ public:
     NS_IMETHOD SetMargin(PRInt32 aMargin);
     NS_IMETHOD SetLastItemIsRightJustified(const PRBool & aState);
     NS_IMETHOD SetNextLastItemIsStretchy(const PRBool & aState);
-#if GRIPPYS_NOT_WIDGETS
-    NS_IMETHOD SetToolbarManager(nsIToolbarManager * aToolbarManager);
-    NS_IMETHOD GetToolbarManager(nsIToolbarManager *& aToolbarManager);
-#endif
     NS_IMETHOD SetBorderType(nsToolbarBorderType aBorderType);
     NS_IMETHOD_(nsEventStatus) OnPaint(nsIRenderingContext& aRenderingContext,
                                        const nsRect& aDirtyRect);
@@ -117,10 +112,6 @@ public:
 
   NS_IMETHOD GetPreferredConstrainedSize(PRInt32& aSuggestedWidth, PRInt32& aSuggestedHeight, 
                                          PRInt32& aWidth,          PRInt32& aHeight);
-#if GRIPPYS_NOT_WIDGETS
-  NS_IMETHOD CreateTab(nsIWidget *& aTab);
-#endif
-
   // Override the widget creation method
   NS_IMETHOD Create(nsIWidget *aParent,
                             const nsRect &aRect,
@@ -159,10 +150,6 @@ protected:
 
   PRBool  mWrapItems;
   PRBool  mDoHorizontalLayout;
-
-#if GRIPPYS_NOT_WIDGETS
-  nsIToolbarManager * mToolbarMgr;
-#endif
 
 };
 
