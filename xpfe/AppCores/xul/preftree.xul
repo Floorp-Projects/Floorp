@@ -43,11 +43,11 @@
   
     <treeitem>
        
-      <treecell name="resource:/res/samples/pref-appearance.html"><treeindentation/>Appearance</treecell>
+      <treecell name="resource://res/samples/pref-appearance.html"><treeindentation/>Appearance</treecell>
        
 	  <treechildren>
         <treeitem>
-          <treecell name="resource:/res/samples/pref-fonts.html"><treeindentation/>Fonts</treecell>
+          <treecell name="resource://res/samples/pref-fonts.html"><treeindentation/>Fonts</treecell>
 	    </treeitem>
         <treeitem>
           <treecell><treeindentation/>Colors</treecell>
@@ -58,7 +58,7 @@
  
     <treeitem>
 
-      <treecell name="resource:/res/samples/pref-navigator.html"><treeindentation/>Navigator</treecell>
+      <treecell name="resource://res/samples/pref-navigator.html"><treeindentation/>Navigator</treecell>
        
 	  <treechildren>
         <treeitem>
