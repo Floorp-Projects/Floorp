@@ -2111,6 +2111,7 @@ function AttachFile()
     var attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"].createInstance(Components.interfaces.nsIMsgAttachment);
     attachment.url = currentAttachment;
     AddAttachment(attachment);
+    gContentChanged = true;
   }
   else
   {
@@ -2250,6 +2251,8 @@ function RemoveSelectedAttachment()
     {
       for ( var item = bucketTree.selectedItems.length - 1; item >= 0; item-- )
         body.removeChild(bucketTree.selectedItems[item]);
+
+      gContentChanged = true;
     }
   }
 
@@ -2527,6 +2530,7 @@ var attachmentBucketObserver = {
         attachment.url = rawData;
         attachment.name = prettyName;
         AddAttachment(attachment);
+        gContentChanged = true;
       }
       else {
         var errorTitle = sComposeMsgsBundle.getString("DuplicateFileErrorDlogTitle");

@@ -45,8 +45,8 @@ Rights Reserved.
         <treerow>
           <treecell class="treecell-addressingWidget" allowevents="true" align="stretch">
             <menulist id="msgRecipientType#1" class="aw-menulist menulist-compact" flex="1"
-                      onclick="awNotAnEmptyArea(event)" disableonsend="true"
-                      oncommand="awSetAutoComplete(this.id.slice(this.id.lastIndexOf('#') + 1));">
+                      disableonsend="true"
+                      oncommand="gContentChanged=true; awSetAutoComplete(this.id.slice(this.id.lastIndexOf('#') + 1));">
               <menupopup>
                 <menuitem value="addr_to" label="&toAddr.label;"/>
                 <menuitem value="addr_cc" label="&ccAddr.label;"/>
@@ -65,10 +65,10 @@ Rights Reserved.
                      minResultsForPopup="3" 
                      ontextcommand="awRecipientTextCommand(eventParam, this)"
                      onerrorcommand="awRecipientErrorCommand(eventParam, this)"
-                     oninput="setupAutocomplete();" disableonsend="true"
+                     oninput="gContentChanged=true; setupAutocomplete();" disableonsend="true"
                      onkeypress="awRecipientKeyPress(event, this)"
                      onkeydown="awRecipientKeyDown(event, this)">
-              <image onclick="awNotAnEmptyArea(event)" class="person-icon"/>
+              <image class="person-icon"/>
             </textbox>
           </treecell>
         </treerow>

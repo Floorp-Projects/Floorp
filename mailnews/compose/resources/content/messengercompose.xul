@@ -405,8 +405,8 @@
           <tree id="addressingWidgetTree" flex="1"/>
           <hbox align="center">
             <label value="&subject.label;" accesskey="&subject.accesskey;"/>
-            <textbox id="msgSubject" flex="1" class="toolbar" onkeyup="SetComposeWindowTitle(event.which);" disableonsend="true"
-                       onkeypress="subjectKeyPress(event);" onchange="gContentChanged=true;"/>
+            <textbox id="msgSubject" flex="1" class="toolbar" onkeyup="SetComposeWindowTitle(event.which);"
+                        oninput="gContentChanged=true;" disableonsend="true" onkeypress="subjectKeyPress(event);"/>
           </hbox>
         </vbox>
         <splitter id="attachmentbucket-sizer" collapse="after"/>
@@ -416,7 +416,6 @@
           <tree id="attachmentBucket" class="inset toolbar" flex="1" style="height: 0px; width: 0px;"
                 dragdroptree="true"
                 onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveSelectedAttachment();"
-                onchange="gContentChanged=true;"
                 onclick="AttachmentBucketClicked(event);"
                 ondragover="nsDragAndDrop.dragOver(event, attachmentBucketObserver);"
                 ondragdrop="nsDragAndDrop.drop(event, attachmentBucketObserver);"
