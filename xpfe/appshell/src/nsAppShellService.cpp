@@ -48,7 +48,6 @@
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
-#include "nsXPComFactory.h"    /* template implementation of a XPCOM factory */
 #include "nsIXPConnect.h"
 #include "nsIJSContextStack.h"
 

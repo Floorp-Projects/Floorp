@@ -39,7 +39,6 @@
 #include "nsPromptService.h"
 
 #include "nsDialogParamBlock.h"
-#include "nsXPComFactory.h"
 #include "nsIComponentManager.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIDOMWindow.h"
