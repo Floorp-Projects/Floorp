@@ -65,6 +65,14 @@ interface nsIWebNavigation : nsISupports
 	void goForward();
 
 	/*
+	Tells the object to navigate to the session history item at index.
+	@return	NS_OK - Gotoindex was successfull
+				NS_ERROR_UNEXPECTED - This call was unexpected at this time.  Most
+				likely you can't goto that index
+	*/
+	void gotoIndex(in long index);
+
+	/*
 	Loads a given URI.  This will give priority to loading the requested URI
 	in the object implementing	this interface.  If it can't be loaded here
 	however, the URL dispatcher will go through its normal process of content

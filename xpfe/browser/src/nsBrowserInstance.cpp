@@ -450,50 +450,81 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP    
 nsBrowserInstance::Back()
 {
+#ifdef SH_IN_FRAMES
+	  NS_ENSURE_TRUE(mSessionHistory, NS_ERROR_UNEXPECTED);
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mSessionHistory));
+  webNav->GoBack();
+#else
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
 
   webNav->GoBack();
+#endif 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBrowserInstance::Forward()
 {
+#ifdef SH_IN_FRAMES
+	  NS_ENSURE_TRUE(mSessionHistory, NS_ERROR_UNEXPECTED);
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mSessionHistory));
+  webNav->GoForward();
+#else
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
 
   webNav->GoForward();
+#endif 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBrowserInstance::GetCanGoBack(PRBool* aCan)
 {
+#ifdef SH_IN_FRAMES
+	  NS_ENSURE_TRUE(mSessionHistory, NS_ERROR_UNEXPECTED);
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mSessionHistory));
+  webNav->GetCanGoBack(aCan);
+#else
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
 
   webNav->GetCanGoBack(aCan);
+#endif 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBrowserInstance::GetCanGoForward(PRBool* aCan)
 {
+#ifdef SH_IN_FRAMES
+	  NS_ENSURE_TRUE(mSessionHistory, NS_ERROR_UNEXPECTED);
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mSessionHistory));
+  webNav->GetCanGoForward(aCan);
+#else
+
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
 
   webNav->GetCanGoForward(aCan);
+#endif 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBrowserInstance::Reload(nsLoadFlags flags)
 {
+#ifdef SH_IN_FRAMES
+	  NS_ENSURE_TRUE(mSessionHistory, NS_ERROR_UNEXPECTED);
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mSessionHistory));
+  webNav->Reload(flags);
+#else
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
 
   webNav->Reload(nsIWebNavigation::reloadNormal);
+#endif
   return NS_OK;
 }   
 
@@ -763,8 +794,15 @@ nsBrowserInstance::ForwardButtonPopup(nsIDOMNode * aParent)
 NS_IMETHODIMP
 nsBrowserInstance::GotoHistoryIndex(PRInt32 aIndex)
 {
+#ifdef SH_IN_FRAMES
+	  NS_ENSURE_TRUE(mSessionHistory, NS_ERROR_UNEXPECTED);
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mSessionHistory));
+  webNav->GotoIndex(aIndex);
+#else
+
    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(GetContentAreaDocShell()));
    webShell->GoTo(aIndex);
+#endif
   return NS_OK;
 
 }
@@ -944,9 +982,17 @@ nsBrowserInstance::SetContentWindow(nsIDOMWindow* aWin)
   nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(docShell));
   webProgress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*, this));
   nsCOMPtr<nsISHistory> sessionHistory(do_CreateInstance(NS_SHISTORY_PROGID));
+#ifdef SH_IN_FRAMES
+  mSessionHistory = sessionHistory;
+  if (!mSessionHistory) {
+	  printf("#### Error initialising Session History ####\n");
+	  return NS_ERROR_FAILURE;
+  }
+  mSessionHistory->SetRootDocShell(docShell);
+#endif
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
   webNav->SetSessionHistory(sessionHistory);
- 
+
 
     // Cache the Document Loader for the content area webshell.  This is a 
     // weak reference that is *not* reference counted...
