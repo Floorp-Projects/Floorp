@@ -368,32 +368,6 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
 #endif
 #endif
 
-  if (mFlags & NS_AREA_WRAP_SIZE) {
-    // When the area frame is supposed to wrap around all in-flow
-    // children, make sure its big enough to include those that stick
-    // outside the box.
-    if (NS_FRAME_OUTSIDE_CHILDREN & mState) {
-      nscoord xMost = aDesiredSize.mCombinedArea.XMost();
-      if (xMost > aDesiredSize.width) {
-#ifdef NOISY_FINAL_SIZE
-        ListTag(stdout);
-        printf(": changing desired width from %d to %d\n",
-               aDesiredSize.width, xMost);
-#endif
-        aDesiredSize.width = xMost;
-      }
-      nscoord yMost = aDesiredSize.mCombinedArea.YMost();
-      if (yMost > aDesiredSize.height) {
-#ifdef NOISY_FINAL_SIZE
-        ListTag(stdout);
-        printf(": changing desired height from %d to %d\n",
-               aDesiredSize.height, yMost);
-#endif
-        aDesiredSize.height = yMost;
-      }
-    }
-  }
-
   // Let the absolutely positioned container reflow any absolutely positioned
   // child frames that need to be reflowed, e.g., elements with a percentage
   // based width/height

@@ -246,7 +246,11 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult,
 #define NS_BLOCK_MARGIN_ROOT     0x4
 #define NS_BLOCK_DOCUMENT_ROOT   0x8
 #define NS_BLOCK_SPACE_MGR       0x10
-#define NS_AREA_WRAP_SIZE        0x20
+#define NS_BLOCK_WRAP_SIZE       0x20
+
+// Create a frame that supports "display: block" layout behavior
+extern nsresult NS_NewBlockFrame(nsIFrame** aNewFrame,
+                                 PRUint32   aFlags = 0);
 
 // Special Generated Content Frame
 extern nsresult
@@ -257,23 +261,23 @@ NS_NewAttributeContent(nsIContent ** aResult);
 // By default, area frames will extend
 // their height to cover any children that "stick out".
 extern nsresult NS_NewSelectsAreaFrame(nsIFrame** aNewFrame,
-                                PRUint32 aFlags = NS_AREA_WRAP_SIZE);
+                                PRUint32 aFlags = NS_BLOCK_WRAP_SIZE);
 
 // Create a basic area frame. By default, area frames will extend
 // their height to cover any children that "stick out".
 extern nsresult NS_NewAreaFrame(nsIFrame** aNewFrame,
-                                PRUint32 aFlags = NS_AREA_WRAP_SIZE);
+                                PRUint32 aFlags = NS_BLOCK_SPACE_MGR|NS_BLOCK_WRAP_SIZE);
 
 // These AreaFrame's shrink wrap around their contents
 inline nsresult NS_NewTableCellInnerFrame(nsIFrame** aNewFrame) {
-  return NS_NewAreaFrame(aNewFrame, NS_BLOCK_SPACE_MGR|NS_AREA_WRAP_SIZE);
+  return NS_NewBlockFrame(aNewFrame, NS_BLOCK_SPACE_MGR|NS_BLOCK_WRAP_SIZE);
 }
 inline nsresult NS_NewTableCaptionFrame(nsIFrame** aNewFrame) {
-  return NS_NewAreaFrame(aNewFrame, NS_BLOCK_SPACE_MGR|NS_AREA_WRAP_SIZE);
+  return NS_NewBlockFrame(aNewFrame, NS_BLOCK_SPACE_MGR|NS_BLOCK_WRAP_SIZE);
 }
 
-// This type of AreaFrame is the document root and is a margin root for
-// margin collapsing.
+// This type of AreaFrame is the document root, a margin root, and the
+// initial containing block for absolutely positioned elements
 inline nsresult NS_NewDocumentElementFrame(nsIFrame** aNewFrame) {
   return NS_NewAreaFrame(aNewFrame, NS_BLOCK_SPACE_MGR|NS_BLOCK_DOCUMENT_ROOT|NS_BLOCK_MARGIN_ROOT);
 }
@@ -295,9 +299,6 @@ inline nsresult NS_NewRelativeItemWrapperFrame(nsIFrame** aNewFrame) {
 }
 
 extern nsresult NS_NewBRFrame(nsIFrame** aNewFrame);
-
-// Create a frame that supports "display: block" layout behavior
-extern nsresult NS_NewBlockFrame(nsIFrame** aNewFrame);
 
 extern nsresult NS_NewCommentFrame(nsIFrame** aFrameResult);
 extern nsresult NS_NewHRFrame(nsIFrame** aNewFrame);
