@@ -693,6 +693,7 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
                 rv = reader(this, closure, writeBuf, *writeCount, writeBufLen, &readCount);
                 if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
                     NS_ASSERTION(readCount <= writeBufLen, "reader returned bad readCount");
+                    // XXX should not update counters if reader returned WOULD_BLOCK!!
                     writeBuf += readCount;
                     writeBufLen -= readCount;
                     *writeCount += readCount;
@@ -703,8 +704,11 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
                     // call flush to notify the guy downstream, hoping that he'll somehow
                     // wake up the guy upstream to eventually produce more data for us.
                     nsresult rv2 = Flush();
-                    if (/*rv2 == NS_BASE_STREAM_WOULD_BLOCK || */NS_FAILED(rv2))
+                    if (NS_FAILED(rv2)) {
+                        if (rv2 == NS_BASE_STREAM_WOULD_BLOCK)
+                            rv = pipe->mCondition;
                         goto done;
+                    }
                     // else we flushed, so go around again
                     continue;
                 }

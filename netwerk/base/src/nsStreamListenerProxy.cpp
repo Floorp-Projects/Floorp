@@ -286,7 +286,7 @@ nsStreamListenerProxy::OnDataAvailable(nsIChannel *aChannel,
         }
         else if (bytesWritten == 0) {
             LOG(("nsStreamListenerProxy: Copied zero bytes; not posting an event [chan=%x]\n", aChannel));
-            return NS_BASE_STREAM_CLOSED; // there was no more data to read!
+            return NS_OK;
         }
     }
 
