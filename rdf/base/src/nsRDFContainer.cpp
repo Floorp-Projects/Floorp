@@ -723,7 +723,7 @@ RDFContainerImpl::GetNextValue(nsIRDFResource** aResult)
     nextValStr.Append("_");
     nextValStr.AppendInt(nextVal, 10);
 
-    rv = gRDFService->GetResource((const char*) nextValStr, aResult);
+    rv = gRDFService->GetResource(nextValStr.get(), aResult);
     if (NS_FAILED(rv)) return rv;
 
     // Now increment the RDF:nextVal property.

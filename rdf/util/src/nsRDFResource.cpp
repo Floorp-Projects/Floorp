@@ -198,11 +198,8 @@ nsRDFResource::GetDelegate(const char* aKey, REFNSIID aIID, void** aResult)
     for (const char* p = mURI; *p && *p != ':'; ++p)
         contractID.Append(*p);
 
-    nsCOMPtr<nsIRDFDelegateFactory> delegateFactory;
-    rv = nsComponentManager::CreateInstance(contractID,
-                                            nsnull,
-                                            NS_GET_IID(nsIRDFDelegateFactory),
-                                            getter_AddRefs(delegateFactory));
+    nsCOMPtr<nsIRDFDelegateFactory> delegateFactory =
+             do_CreateInstance(contractID.get());
     if (NS_FAILED(rv)) return rv;
 
     rv = delegateFactory->CreateDelegate(this, aKey, aIID, aResult);

@@ -222,8 +222,7 @@ NS_IMETHODIMP nsOverlayEnumerator::GetNext(nsISupports **aResult)
     return rv;
 
   nsCOMPtr<nsIURI> url;
-  nsCAutoString str; str.AssignWithConversion(valueStr);
-  rv = NS_NewURI(getter_AddRefs(url), str);
+  rv = NS_NewURI(getter_AddRefs(url), NS_LossyConvertUCS2toASCII(valueStr).get());
 
   if (NS_FAILED(rv))
     return NS_OK;
@@ -446,7 +445,7 @@ SplitURL(nsIURI *aChromeURI, nsCString& aPackage, nsCString& aProvider, nsCStrin
     // chrome directory to grant chrome privileges to non-chrome files.
     int depth = 0;
     PRBool sawSlash = PR_TRUE;  // .. at the beginning is suspect as well as /..
-    for (const char* p=aFile; *p; p++) {
+    for (const char* p=aFile.get(); *p; p++) {
       if (sawSlash) {
         if (p[0] == '.' && p[1] == '.'){
           depth--;    // we have /.., decrement depth.
@@ -498,7 +497,7 @@ nsChromeRegistry::Canonify(nsIURI* aChromeURI)
   canonical += "/";
   canonical += file;
 
-  return aChromeURI->SetSpec(canonical);
+  return aChromeURI->SetSpec(canonical.get());
 }
 
 NS_IMETHODIMP
@@ -542,7 +541,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
       msg += (const char*)url;
     }
     msg += " -- using wacky default";
-    NS_WARNING((const char*)msg);
+    NS_WARNING(msg.get());
   }
 #endif
   if (finalURL.IsEmpty()) {
@@ -789,16 +788,14 @@ nsChromeRegistry::SelectPackageInProvider(nsIRDFResource *aPackageList,
         continue;       // don't fail if package has not yet been installed
 
       if (packageName.Equals(aPackage)) {
-        nsAutoString providerNameUC;
-        nsAutoString packageNameUC;
-        providerNameUC.AssignWithConversion(aProviderName);
-        packageNameUC.AssignWithConversion(packageName);
         PRBool useProfile = !mProfileRoot.IsEmpty();
         if (packageName.Equals("global") || packageName.Equals("communicator"))
           useProfile = PR_FALSE; // Always force the auto-selection to be in the
                                  // install dir for the packages required to bring up the profile UI.
-        rv = SelectProviderForPackage(aProvider, providerNameUC.get(),
-                                      packageNameUC.get(), aArc, useProfile, PR_TRUE);
+        rv = SelectProviderForPackage(aProvider,
+                                      NS_ConvertASCIItoUCS2(aProviderName).get(),
+                                      NS_ConvertASCIItoUCS2(packageName).get(),
+                                      aArc, useProfile, PR_TRUE);
         if (NS_FAILED(rv))
           return NS_ERROR_FAILURE;
 
@@ -1010,7 +1007,7 @@ NS_IMETHODIMP nsChromeRegistry::LoadDataSource(const nsCString &aFileName,
     mDataSourceTable = new nsSupportsHashtable;
 
   // We need to read this synchronously.
-  rv = remote->Init(key);
+  rv = remote->Init(key.get());
   if (NS_SUCCEEDED(rv))
     rv = remote->Refresh(PR_TRUE);
 
@@ -1028,7 +1025,7 @@ nsChromeRegistry::GetResource(const nsCString& aURL,
                               nsIRDFResource** aResult)
 {
   nsresult rv = NS_OK;
-  if (NS_FAILED(rv = mRDFService->GetResource(aURL, aResult))) {
+  if (NS_FAILED(rv = mRDFService->GetResource(aURL.get(), aResult))) {
     NS_ERROR("Unable to retrieve a resource for this URL.");
     *aResult = nsnull;
     return rv;
@@ -1333,7 +1330,7 @@ NS_IMETHODIMP nsChromeRegistry::WriteInfoToDataSource(const char *aDocURI,
   nsresult rv;
   nsCOMPtr<nsIURI> uri;
   nsCAutoString str(aDocURI);
-  rv = NS_NewURI(getter_AddRefs(uri), str);
+  rv = NS_NewURI(getter_AddRefs(uri), str.get());
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIRDFDataSource> dataSource;
@@ -1998,7 +1995,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
 {
   // XXX don't allow local chrome overrides of install chrome!
 #ifdef DEBUG
-  printf("*** Chrome Registration of %s: Checking for contents.rdf at %s\n", (const char*)aProviderType, (const char*)aBaseURL);
+  printf("*** Chrome Registration of %s: Checking for contents.rdf at %s\n", aProviderType.get(), aBaseURL.get());
 #endif
 
   // Load the data source found at the base URL.
@@ -2015,7 +2012,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
   // We need to read this synchronously.
   nsCAutoString key(aBaseURL);
   key += "contents.rdf";
-  remote->Init(key);
+  remote->Init(key.get());
   remote->Refresh(PR_TRUE);
 
   PRBool skinCount = GetProviderCount(nsCAutoString("skin"), dataSource);
@@ -2030,7 +2027,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
     // Try the old-style manifest.rdf instead
     key = aBaseURL;
     key += "manifest.rdf";
-    (void)remote->Init(key);      // ignore failure here
+    (void)remote->Init(key.get());      // ignore failure here
     rv = remote->Refresh(PR_TRUE);
     if (NS_FAILED(rv)) return rv;
     appendPackage = PR_TRUE;
@@ -2146,9 +2143,8 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
           baseURL += "content/";
         }
 
-        nsAutoString unistr;unistr.AssignWithConversion(baseURL);
         nsCOMPtr<nsIRDFLiteral> baseLiteral;
-        mRDFService->GetLiteral(unistr.get(), getter_AddRefs(baseLiteral));
+        mRDFService->GetLiteral(NS_ConvertASCIItoUCS2(baseURL).get(), getter_AddRefs(baseLiteral));
 
         rv = nsChromeRegistry::UpdateArc(installSource, resource, mBaseURL, baseLiteral, aRemove);
         if (NS_FAILED(rv)) return rv;
@@ -2264,9 +2260,8 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
                 baseURL += "/";
               }
 
-              nsAutoString unistr;unistr.AssignWithConversion(baseURL);
               nsCOMPtr<nsIRDFLiteral> baseLiteral;
-              mRDFService->GetLiteral(unistr.get(), getter_AddRefs(baseLiteral));
+              mRDFService->GetLiteral(NS_ConvertASCIItoUCS2(baseURL).get(), getter_AddRefs(baseLiteral));
 
               rv = nsChromeRegistry::UpdateArc(installSource, entry, mBaseURL, baseLiteral, aRemove);
               if (NS_FAILED(rv)) return rv;
@@ -2331,7 +2326,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
               nsAutoString imageURL(valueStr);
               if (imageURL.FindChar(':') == -1) {
                 // We're relative. Prepend the base URL of the package.
-                nsAutoString fullURL; fullURL.AssignWithConversion(aBaseURL);
+                nsAutoString fullURL; fullURL.AssignWithConversion(aBaseURL.get());
                 fullURL += imageURL;
                 mRDFService->GetLiteral(fullURL.get(), getter_AddRefs(literal));
                 newTarget = do_QueryInterface(literal);
@@ -2833,7 +2828,7 @@ nsChromeRegistry::GetUserSheets(PRBool aIsChrome, nsISupportsArray **aResult)
 nsresult nsChromeRegistry::LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsCString& aURL)
 {
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL.get());
   if (NS_FAILED(rv)) return rv;
 
   rv = LoadStyleSheetWithURL(uri, aSheet);
@@ -3180,10 +3175,10 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
 #endif
       }
       else
-        rv = InstallSkin(chromeURL, isProfile, PR_FALSE);
+        rv = InstallSkin(chromeURL.get(), isProfile, PR_FALSE);
     }
     else if (content.Equals(chromeType))
-      rv = InstallPackage(chromeURL, isProfile);
+      rv = InstallPackage(chromeURL.get(), isProfile);
     else if (locale.Equals(chromeType)) {
       if (isSelection) {
         nsAutoString name; name.AssignWithConversion(chromeLocation);
@@ -3193,7 +3188,7 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
 #endif
       }
       else
-        rv = InstallLocale(chromeURL, isProfile);
+        rv = InstallLocale(chromeURL.get(), isProfile);
     }
     if (NS_FAILED(rv)) return rv;
 
