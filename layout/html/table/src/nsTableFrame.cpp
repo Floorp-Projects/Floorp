@@ -574,6 +574,9 @@ PRInt32 nsTableFrame::GetEffectiveColSpan (PRInt32 aColIndex, nsTableCellFrame *
   NS_PRECONDITION (0<=aColIndex && aColIndex<colCount, "bad col index arg");
 
   PRInt32 result;
+  /*  XXX: it kind of makes sense to ignore colspans when there's only one row, but it doesn't quite work that way  :(
+           it would be good to find out why
+   */
   /*
   if (cellMap->GetRowCount()==1)
     return 1;
@@ -1448,19 +1451,14 @@ nsresult nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext&         aPresCo
 }
 
 // SEC: TODO need to worry about continuing frames prev/next in flow for splitting across pages.
-// SEC: TODO need to keep "first pass done" state, update it when ContentChanged notifications come in
 
 /* overview:
   if mFirstPassValid is false, this is our first time through since content was last changed
-    set pass to 1
     do pass 1
       get min/max info for all cells in an infinite space
-      do column balancing
-    set mFirstPassValid to true
-    do pass 2
-  if pass is 1,
-    set pass to 2
-    use column widths to ResizeReflow cells
+  do column balancing
+  do pass 2
+  use column widths to size table and ResizeReflow rowgroups (and therefore rows and cells)
 */
 
 /* Layout the entire inner table. */
@@ -2799,15 +2797,20 @@ void nsTableFrame::AdjustColumnsForCOLSAttribute()
   }
 }
 
+/*
+  The rule is:  use whatever width is greatest among those specified widths
+  that span a column.  It doesn't matter what comes first, just what is biggest.
+  Specified widths (when colspan==1) and span widths need to be stored separately, 
+  because specified widths tell us what proportion of the span width to give to each column 
+  (in their absence, we use the desired width of the cell.)                                                                  
+*/
 NS_METHOD
 nsTableFrame::SetColumnStyleFromCell(nsIPresContext &  aPresContext,
                                      nsTableCellFrame* aCellFrame,
                                      nsTableRowFrame * aRowFrame)
 {
-  // if this cell is the first non-col-spanning cell to have a width attribute, 
-  // then the width attribute also acts as the width attribute for the entire column
   // if the cell has a colspan, the width is used provisionally, divided equally among 
-  // the spanned columns
+  // the spanned columns until the table layout strategy computes the real column width.
   if (PR_TRUE==gsDebug) printf("TIF SetCSFromCell: cell %p in row %p\n", aCellFrame, aRowFrame); 
   if ((nsnull!=aCellFrame) && (nsnull!=aRowFrame))
   {
@@ -2826,51 +2829,71 @@ nsTableFrame::SetColumnStyleFromCell(nsIPresContext &  aPresContext,
         nsTableColFrame *colFrame;
         GetColumnFrame(i+aCellFrame->GetColIndex(), colFrame);
         if (PR_TRUE==gsDebug)
-          printf("TIF SetCSFromCell: for col %d\n",i+aCellFrame->GetColIndex()); 
-        if (nsTableColFrame::eWIDTH_SOURCE_CELL != colFrame->GetWidthSource()) 
+          printf("TIF SetCSFromCell: for col %d\n",i+aCellFrame->GetColIndex());
+        // if the colspan is 1 and we already have a cell that set this column's width
+        // then ignore this width attribute
+        if ((1==colSpan) && (nsTableColFrame::eWIDTH_SOURCE_CELL == colFrame->GetWidthSource()))
         {
           if (PR_TRUE==gsDebug)
-            printf("TIF SetCSFromCell: width not yet set from a cell...\n");
-          if ((1==colSpan) ||
-              (nsTableColFrame::eWIDTH_SOURCE_CELL_WITH_SPAN != colFrame->GetWidthSource()))
-          {
-            if (PR_TRUE==gsDebug)
-              printf("TIF SetCSFromCell: colspan was 1 or width was not set from a span\n");
-            // get the column style and set the width attribute
-            nsIStyleContext *colSC;
-            colFrame->GetStyleContext(colSC);
-            nsStylePosition* colPosition = (nsStylePosition*) colSC->GetMutableStyleData(eStyleStruct_Position);
-            NS_RELEASE(colSC);
-            // set the column width attribute
-            if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit())
-            {
-              nscoord width = cellPosition->mWidth.GetCoordValue();
-              colPosition->mWidth.SetCoordValue(width/colSpan);
-              if (PR_TRUE==gsDebug)
-                printf("TIF SetCSFromCell: col fixed width set to %d ", (width/colSpan));
-            }
-            else
-            {
-              float width = cellPosition->mWidth.GetPercentValue();
-              colPosition->mWidth.SetPercentValue(width/colSpan);
-              if (PR_TRUE==gsDebug)
-                printf("TIF SetCSFromCell: col percent width set to %d ", (width/colSpan));
-            }
-            // set the column width-set-type
-            if (1==colSpan)
-            {
-              colFrame->SetWidthSource(nsTableColFrame::eWIDTH_SOURCE_CELL);
-              if (PR_TRUE==gsDebug)
-                printf("  source = CELL\n");
-            }
-            else
-            {
-              colFrame->SetWidthSource(nsTableColFrame::eWIDTH_SOURCE_CELL_WITH_SPAN);
-              if (PR_TRUE==gsDebug)
-                printf("  source = SPAN\n");
-            }
-          }
+            printf("TIF SetCSFromCell: width already set from a cell with colspan=1, no-op this cell's width attr\n");
+          break;
         }
+        // get the column style
+        nsIStyleContext *colSC;
+        colFrame->GetStyleContext(colSC);
+        nsStylePosition* colPosition = (nsStylePosition*) colSC->GetMutableStyleData(eStyleStruct_Position);
+        // if colSpan==1, then we can just set the column width
+        if (1==colSpan)
+        { // set the column width attribute
+          if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit())
+          {
+            nscoord width = cellPosition->mWidth.GetCoordValue();
+            colPosition->mWidth.SetCoordValue(width);
+            if (PR_TRUE==gsDebug)
+              printf("TIF SetCSFromCell: col fixed width set to %d from cell", width);
+          }
+          else
+          {
+            float width = cellPosition->mWidth.GetPercentValue();
+            colPosition->mWidth.SetPercentValue(width);
+            if (PR_TRUE==gsDebug)
+              printf("TIF SetCSFromCell: col percent width set to %d from cell", width);
+          }
+          colFrame->SetWidthSource(nsTableColFrame::eWIDTH_SOURCE_CELL);
+        }
+        else  // we have a colspan > 1. so we need to set the column table style spanWidth
+        { // if the cell is a coord width...
+          nsStyleTable* colTableStyle = (nsStyleTable*) colSC->GetMutableStyleData(eStyleStruct_Table);
+          if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit())
+          {
+            // set the column width attribute iff this span's contribution to this column
+            // is greater than any previous information
+            nscoord cellWidth = cellPosition->mWidth.GetCoordValue();
+            nscoord widthPerColumn = cellWidth/colSpan;
+            nscoord widthForThisColumn = widthPerColumn;
+            if (eStyleUnit_Coord == colTableStyle->mSpanWidth.GetUnit())
+              widthForThisColumn = PR_MAX(widthForThisColumn, colTableStyle->mSpanWidth.GetCoordValue());
+            colTableStyle->mSpanWidth.SetCoordValue(widthForThisColumn);
+            if (PR_TRUE==gsDebug)
+              printf("TIF SetCSFromCell: col span width set to %d from spanning cell", widthForThisColumn);
+          }
+          // else if the cell has a percent width...
+          else if (eStyleUnit_Percent == cellPosition->mWidth.GetUnit())
+          {
+            // set the column width attribute iff this span's contribution to this column
+            // is greater than any previous information
+            float cellWidth = cellPosition->mWidth.GetPercentValue();
+            float percentPerColumn = cellWidth/(float)colSpan;
+            float percentForThisColumn = percentPerColumn;
+            if (eStyleUnit_Percent == colTableStyle->mSpanWidth.GetUnit())
+              percentForThisColumn = PR_MAX(percentForThisColumn, colTableStyle->mSpanWidth.GetPercentValue());
+            colTableStyle->mSpanWidth.SetPercentValue(percentForThisColumn);
+            if (PR_TRUE==gsDebug)
+              printf("TIF SetCSFromCell: col span width set to %d from spanning cell", (nscoord)percentForThisColumn);
+          }
+          colFrame->SetWidthSource(nsTableColFrame::eWIDTH_SOURCE_CELL_WITH_SPAN);
+        }
+        NS_RELEASE(colSC);
       }
     }
   }
@@ -3425,44 +3448,29 @@ NS_NewTableFrame(nsIContent* aContent,
 
 NS_METHOD nsTableFrame::GetTableFrame(nsIFrame *aSourceFrame, nsTableFrame *& aTableFrame)
 {
-  nsresult result = NS_OK;
-  aTableFrame = nsnull;   // initialize out-param
+  nsresult rv = NS_ERROR_UNEXPECTED;  // the value returned
+  aTableFrame = nsnull;               // initialize out-param
+  nsIFrame *parentFrame=nsnull;
   if (nsnull!=aSourceFrame)
   {
-    nsresult result = aSourceFrame->GetContentParent((nsIFrame *&)aTableFrame);
-    while ((NS_OK==result) && (nsnull!=aTableFrame))
+    // "result" is the result of intermediate calls, not the result we return from this method
+    nsresult result = aSourceFrame->GetContentParent((nsIFrame *&)parentFrame); 
+    while ((NS_OK==result) && (nsnull!=parentFrame))
     {
       const nsStyleDisplay *display;
-      aTableFrame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+      parentFrame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
       if (NS_STYLE_DISPLAY_TABLE == display->mDisplay)
       {
-        // at this point, aTableFrame could be an outer frame, 
-        // to find out, scan it's children for another frame with a table display type
-        // if found, the childFrame must be the inner frame
-        nsresult rv;
-        nsIFrame *childFrame=nsnull;
-        rv = aTableFrame->FirstChild(nsnull, childFrame);
-        while ((NS_OK==rv) && (nsnull!=childFrame))
-        {
-          const nsStyleDisplay *childDisplay;
-          childFrame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)childDisplay);
-          if (NS_STYLE_DISPLAY_TABLE == childDisplay->mDisplay)
-          {
-            aTableFrame = (nsTableFrame *)childFrame;
-            break;
-          }
-          rv = childFrame->GetNextSibling(childFrame);
-        }
+        aTableFrame = (nsTableFrame *)parentFrame;
+        rv = NS_OK; // only set if we found the table frame
         break;
       }
-      result = aTableFrame->GetContentParent((nsIFrame *&)aTableFrame);
+      result = parentFrame->GetContentParent((nsIFrame *&)parentFrame);
     }
   }
-  else
-    result = NS_ERROR_UNEXPECTED; // bad source param
   NS_POSTCONDITION(nsnull!=aTableFrame, "unable to find table parent. aTableFrame null.");
-  NS_POSTCONDITION(NS_OK==result, "unable to find table parent. result!=NS_OK");
-  return result;
+  NS_POSTCONDITION(NS_OK==rv, "unable to find table parent. result!=NS_OK");
+  return rv;
 }
 
 /* helper method for determining if this is a nested table or not */
@@ -3641,11 +3649,6 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowSta
                 PRInt32 colSpan = ((nsTableFrame*)rs->frame)->GetEffectiveColSpan(colIndex, ((nsTableCellFrame *)greatgrandchildFrame));
                 for (PRInt32 i = 0; i<colSpan; i++)
                   parentWidth += ((nsTableFrame*)rs->frame)->GetColumnWidth(i+colIndex);
-                if (eStyleUnit_Percent == tablePosition->mWidth.GetUnit())
-                {
-                  float percent = tablePosition->mWidth.GetPercentValue();
-                  parentWidth = (nscoord)(percent*((float)parentWidth));
-                }
               }
               else
               {

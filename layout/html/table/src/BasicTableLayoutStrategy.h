@@ -26,6 +26,7 @@
 class nsVoidArray;
 class nsTableFrame;
 struct nsStylePosition;
+struct nsStyleTable;
 
 /* ----------- SpanInfo ---------- */
 
@@ -245,7 +246,8 @@ protected:
     * for the purposes of column width determination.
     * return false if the width changes based on content, parent size, etc.
     */
-  virtual PRBool IsFixedWidth(const nsStylePosition* aStylePosition);
+  static PRBool IsFixedWidth(const nsStylePosition* aStylePosition,
+                              const nsStyleTable* aStyleTable);
 
   /** return true if the colIndex is in the list of colIndexes */
   virtual PRBool IsColumnInList(const PRInt32 colIndex, 
