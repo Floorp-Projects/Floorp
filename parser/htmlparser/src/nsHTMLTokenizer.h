@@ -68,7 +68,7 @@
 #pragma warning( disable : 4275 )
 #endif
 
-CLASS_EXPORT_HTMLPARS nsHTMLTokenizer : public nsITokenizer {
+class nsHTMLTokenizer : public nsITokenizer {
 public:
           nsHTMLTokenizer( PRInt32 aParseMode=eDTDMode_quirks,
                            eParserDocType aDocType=eHTML3_Quirks,
@@ -120,7 +120,7 @@ protected:
   PRBool             mIsFinalChunk;
 };
 
-extern NS_HTMLPARS nsresult NS_NewHTMLTokenizer(  nsITokenizer** aInstancePtrResult,
+extern nsresult NS_NewHTMLTokenizer(  nsITokenizer** aInstancePtrResult,
                                                   PRInt32 aMode,
                                                   eParserDocType aDocType,
                                                   eParserCommands aCommand);

@@ -51,18 +51,18 @@ class nsIScriptGlobalObject;
 
 class nsWWJSUtils {
 public:
-  static NS_EXPORT nsresult nsGetStaticScriptGlobal(JSContext* aContext,
+  static nsresult nsGetStaticScriptGlobal(JSContext* aContext,
                                     JSObject* aObj,
                                     nsIScriptGlobalObject** aNativeGlobal);
 
-  static NS_EXPORT nsresult nsGetStaticScriptContext(JSContext* aContext,
+  static nsresult nsGetStaticScriptContext(JSContext* aContext,
                                     JSObject* aObj,
                                     nsIScriptContext** aScriptContext);
 
-  static NS_EXPORT nsresult nsGetDynamicScriptGlobal(JSContext *aContext,
+  static nsresult nsGetDynamicScriptGlobal(JSContext *aContext,
                                     nsIScriptGlobalObject** aNativeGlobal);
 
-  static NS_EXPORT nsresult nsGetDynamicScriptContext(JSContext *aContext,
+  static nsresult nsGetDynamicScriptContext(JSContext *aContext,
                                     nsIScriptContext** aScriptContext);
 };
 

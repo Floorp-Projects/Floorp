@@ -113,7 +113,7 @@ nsresult CWellFormedDTD::QueryInterface(const nsIID& aIID, void** aInstancePtr)
  *  @param   nsIParser** ptr to newly instantiated parser
  *  @return  NS_xxx error result
  */
-NS_HTMLPARS nsresult NS_NewWellFormed_DTD(nsIDTD** aInstancePtrResult)
+nsresult NS_NewWellFormed_DTD(nsIDTD** aInstancePtrResult)
 {
   CWellFormedDTD* it = new CWellFormedDTD();
 

@@ -275,8 +275,7 @@ public:
 
 #ifdef NS_DEBUG
 
-#include "nshtmlpars.h"
-extern NS_HTMLPARS nsresult NS_NewHTMLNullSink(nsIContentSink** aInstancePtrResult);
+extern nsresult NS_NewHTMLNullSink(nsIContentSink** aInstancePtrResult);
 
 #endif
 

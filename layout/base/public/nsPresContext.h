@@ -37,7 +37,6 @@
 #ifndef nsIPresContext_h___
 #define nsIPresContext_h___
 
-#include "nslayout.h"
 #include "nsISupports.h"
 #include "nsColor.h"
 #include "nsCoord.h"
@@ -506,12 +505,12 @@ public:
 
 // Factory method to create a "galley" presentation context (galley is
 // a kind of view that has no limit to the size of a page)
-extern NS_LAYOUT nsresult
+extern NS_EXPORT nsresult
   NS_NewGalleyContext(nsIPresContext** aInstancePtrResult);
 
 // Factory method to create a "paginated" presentation context for
 // the screen.
-extern NS_LAYOUT nsresult
+extern NS_EXPORT nsresult
   NS_NewPrintPreviewContext(nsIPresContext** aInstancePtrResult);
 
 

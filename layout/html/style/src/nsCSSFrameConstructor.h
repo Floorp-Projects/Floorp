@@ -39,7 +39,6 @@
 
 #include "nsICSSFrameConstructor.h"
 #include "nsIStyleFrameConstruction.h"
-#include "nslayout.h"
 #include "nsIPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsIStyleContext.h"

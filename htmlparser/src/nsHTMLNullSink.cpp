@@ -113,7 +113,7 @@ protected:
  *  @param   
  *  @return  
  */
-NS_HTMLPARS nsresult
+nsresult
 NS_NewHTMLNullSink(nsIContentSink** aInstancePtrResult)
 {
   nsHTMLNullSink *it = new nsHTMLNullSink();

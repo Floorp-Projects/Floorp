@@ -37,7 +37,6 @@
 #ifndef nsImageMap_h___
 #define nsImageMap_h___
 
-#include "nslayout.h"
 #include "nsISupports.h"
 #include "nsCoord.h"
 #include "nsVoidArray.h"

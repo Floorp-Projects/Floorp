@@ -37,7 +37,6 @@
 #ifndef nsILayoutDebugger_h___
 #define nsILayoutDebugger_h___
 
-#include "nslayout.h"
 #include "nsISupports.h"
 
 class nsIDocument;

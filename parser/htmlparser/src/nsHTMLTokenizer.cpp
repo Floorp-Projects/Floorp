@@ -100,7 +100,6 @@ nsresult nsHTMLTokenizer::QueryInterface(const nsIID& aIID, void** aInstancePtr)
  *  @return  NS_xxx error result
  */
 
-NS_HTMLPARS 
 nsresult NS_NewHTMLTokenizer(nsITokenizer** aInstancePtrResult,
                                          PRInt32 aFlag,
                                          eParserDocType aDocType, 

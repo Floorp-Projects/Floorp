@@ -38,10 +38,9 @@
 #ifndef nsHTMLEntites_h___
 #define nsHTMLEntities_h___
 
-#include "nshtmlpars.h"
 #include "nsString.h"
 
-class NS_HTMLPARS nsHTMLEntities {
+class nsHTMLEntities {
 public:
 
   static void AddRefTable(void);

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #define PL_ARENA_CONST_ALIGN_MASK 3
-#include "nslayout.h"
 #include "nsDST.h"
 #include "nsISupportsUtils.h"
 #ifdef NS_DEBUG

@@ -16,7 +16,6 @@ nsIParserService.h
 nsHTMLTags.h
 nsHTMLTagList.h
 nsHTMLTokens.h
-nshtmlpars.h
 nsParserCIID.h
 nsParserError.h
 nsToken.h

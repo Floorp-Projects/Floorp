@@ -140,7 +140,7 @@ MyPrefChangedCallback(const char*aPrefName, void* instance_data)
 	return 0;
 }
 
-NS_LAYOUT nsresult
+NS_EXPORT nsresult
 NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
                   const nsAReadableString& aNamespaceURI, 
                   const nsAReadableString& aQualifiedName, 
@@ -188,7 +188,7 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
 }
 
 
-NS_LAYOUT nsresult
+NS_EXPORT nsresult
 NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
 {
   nsXMLDocument* doc = new nsXMLDocument();

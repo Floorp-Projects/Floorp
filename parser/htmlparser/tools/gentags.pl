@@ -196,7 +196,6 @@ open(HEADER_FILE, ">$file_base.h");
 print HEADER_FILE $copyright;
 print HEADER_FILE "#ifndef " . $file_base . "_h___\n";
 print HEADER_FILE "#define " . $file_base . "_h___\n";
-print HEADER_FILE "#include \"nshtmlpars.h\"\n";
 
 # Print out enum's for the tag symbols
 print HEADER_FILE "enum nsHTMLTag {\n";
@@ -240,9 +239,9 @@ for ($k = 0; $k < $extra; $k++) {
 
 print HEADER_FILE "\n};\n#define NS_HTML_TAG_MAX " . $j . "\n\n";
 print HEADER_FILE
-    "extern NS_HTMLPARS nsHTMLTag NS_TagToEnum(const char* aTag);\n";
+    "extern nsHTMLTag NS_TagToEnum(const char* aTag);\n";
 print HEADER_FILE
-    "extern NS_HTMLPARS const char* NS_EnumToTag(nsHTMLTag aEnum);\n\n";
+    "extern const char* NS_EnumToTag(nsHTMLTag aEnum);\n\n";
 print HEADER_FILE "#endif /* " . $file_base . "_h___ */\n";
 close(HEADER_FILE);
 

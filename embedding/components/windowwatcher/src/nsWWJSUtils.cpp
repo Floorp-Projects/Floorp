@@ -46,7 +46,7 @@
 #include "nsWWJSUtils.h"
 #include "nsIXPConnect.h"
 
-NS_EXPORT nsresult 
+nsresult 
 nsWWJSUtils::nsGetStaticScriptGlobal(JSContext* aContext,
                                      JSObject* aObj,
                                      nsIScriptGlobalObject** aNativeGlobal)
@@ -84,7 +84,7 @@ nsWWJSUtils::nsGetStaticScriptGlobal(JSContext* aContext,
   return CallQueryInterface(native, aNativeGlobal);
 }
 
-NS_EXPORT nsresult 
+nsresult 
 nsWWJSUtils::nsGetDynamicScriptContext(JSContext *aContext,
                                        nsIScriptContext** aScriptContext)
 {
@@ -97,7 +97,7 @@ nsWWJSUtils::nsGetDynamicScriptContext(JSContext *aContext,
                                   (void**)aScriptContext);
 }
 
-NS_EXPORT nsresult 
+nsresult 
 nsWWJSUtils::nsGetStaticScriptContext(JSContext* aContext,
                                       JSObject* aObj,
                                       nsIScriptContext** aScriptContext)

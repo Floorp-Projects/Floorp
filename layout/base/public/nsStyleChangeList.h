@@ -37,7 +37,6 @@
 #ifndef nsStyleChangeList_h___
 #define nsStyleChangeList_h___
 
-#include "nslayout.h"
 #include "nsError.h"
 class nsIFrame;
 class nsIContent;
@@ -51,7 +50,7 @@ struct nsStyleChangeData {
 
 static const PRUint32 kStyleChangeBufferSize = 10;
 
-class NS_LAYOUT nsStyleChangeList {
+class nsStyleChangeList {
 public:
   nsStyleChangeList(void);
   ~nsStyleChangeList(void);

@@ -26,7 +26,7 @@
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
 
-nsresult
+nsresult NS_EXPORT
 nsQueryReferent::operator()( const nsIID& aIID, void** answer ) const
   {
     nsresult status;

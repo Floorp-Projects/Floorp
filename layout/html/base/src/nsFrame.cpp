@@ -113,24 +113,24 @@ static void RefreshContentFrames(nsIPresContext* aPresContext, nsIContent * aSta
 #ifdef NS_DEBUG
 static PRBool gShowFrameBorders = PR_FALSE;
 
-NS_LAYOUT void nsIFrameDebug::ShowFrameBorders(PRBool aEnable)
+void nsIFrameDebug::ShowFrameBorders(PRBool aEnable)
 {
   gShowFrameBorders = aEnable;
 }
 
-NS_LAYOUT PRBool nsIFrameDebug::GetShowFrameBorders()
+PRBool nsIFrameDebug::GetShowFrameBorders()
 {
   return gShowFrameBorders;
 }
 
 static PRBool gShowEventTargetFrameBorder = PR_FALSE;
 
-NS_LAYOUT void nsIFrameDebug::ShowEventTargetFrameBorder(PRBool aEnable)
+void nsIFrameDebug::ShowEventTargetFrameBorder(PRBool aEnable)
 {
   gShowEventTargetFrameBorder = aEnable;
 }
 
-NS_LAYOUT PRBool nsIFrameDebug::GetShowEventTargetFrameBorder()
+PRBool nsIFrameDebug::GetShowEventTargetFrameBorder()
 {
   return gShowEventTargetFrameBorder;
 }
@@ -145,7 +145,7 @@ static PRLogModuleInfo* gFrameVerifyTreeLogModuleInfo;
 
 static PRBool gFrameVerifyTreeEnable = PRBool(0x55);
 
-NS_LAYOUT PRBool
+PRBool
 nsIFrameDebug::GetVerifyTreeEnable()
 {
   if (gFrameVerifyTreeEnable == PRBool(0x55)) {
@@ -159,7 +159,7 @@ nsIFrameDebug::GetVerifyTreeEnable()
   return gFrameVerifyTreeEnable;
 }
 
-NS_LAYOUT void
+void
 nsIFrameDebug::SetVerifyTreeEnable(PRBool aEnabled)
 {
   gFrameVerifyTreeEnable = aEnabled;
@@ -169,7 +169,7 @@ static PRLogModuleInfo* gStyleVerifyTreeLogModuleInfo;
 
 static PRBool gStyleVerifyTreeEnable = PRBool(0x55);
 
-NS_LAYOUT PRBool
+PRBool
 nsIFrameDebug::GetVerifyStyleTreeEnable()
 {
   if (gStyleVerifyTreeEnable == PRBool(0x55)) {
@@ -183,13 +183,13 @@ nsIFrameDebug::GetVerifyStyleTreeEnable()
   return gStyleVerifyTreeEnable;
 }
 
-NS_LAYOUT void
+void
 nsIFrameDebug::SetVerifyStyleTreeEnable(PRBool aEnabled)
 {
   gStyleVerifyTreeEnable = aEnabled;
 }
 
-NS_LAYOUT PRLogModuleInfo*
+PRLogModuleInfo*
 nsIFrameDebug::GetLogModuleInfo()
 {
   if (nsnull == gLogModule) {
@@ -198,7 +198,7 @@ nsIFrameDebug::GetLogModuleInfo()
   return gLogModule;
 }
 
-NS_LAYOUT void
+void
 nsIFrameDebug::RootFrameList(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
 {
   if((nsnull == aPresContext) || (nsnull == out))

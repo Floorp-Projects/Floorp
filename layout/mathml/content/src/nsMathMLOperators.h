@@ -22,7 +22,6 @@
 #ifndef nsMathMLOperators_h___
 #define nsMathMLOperators_h___
 
-#include "nslayout.h"
 #include "nsCoord.h"
 
 typedef PRUint32 nsOperatorFlags;

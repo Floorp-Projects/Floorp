@@ -116,7 +116,7 @@ class nsNodeAllocator;
 #pragma warning( disable : 4275 )
 #endif
 
-CLASS_EXPORT_HTMLPARS COtherDTD : public nsIDTD {
+class COtherDTD : public nsIDTD {
 
 #if defined(XP_PC)
 #pragma warning( default : 4275 )
@@ -335,10 +335,10 @@ protected:
 
 };
 
-extern NS_HTMLPARS nsresult NS_NewOtherHTMLDTD(nsIDTD** aInstancePtrResult);
+extern nsresult NS_NewOtherHTMLDTD(nsIDTD** aInstancePtrResult);
 
 
-CLASS_EXPORT_HTMLPARS CTransitionalDTD : public COtherDTD
+class CTransitionalDTD : public COtherDTD
 {
   public:
     CTransitionalDTD();

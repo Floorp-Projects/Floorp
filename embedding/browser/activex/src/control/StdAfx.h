@@ -48,6 +48,11 @@
 #pragma once
 #endif // _MSC_VER >= 1000
 
+  // under MSVC shut off copious warnings about debug symbol too long
+#ifdef _MSC_VER
+  #pragma warning( disable: 4786 )
+#endif
+
 #include "jstypes.h"
 #include "prtypes.h"
 

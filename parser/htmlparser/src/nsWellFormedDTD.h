@@ -246,7 +246,7 @@ protected:
     nsresult            mDTDState;
 };
 
-extern NS_HTMLPARS nsresult NS_NewWellFormed_DTD(nsIDTD** aInstancePtrResult);
+extern nsresult NS_NewWellFormed_DTD(nsIDTD** aInstancePtrResult);
 
 #endif 
 

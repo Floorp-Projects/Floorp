@@ -106,9 +106,10 @@ CallQueryReferent( T* aSource, DestinationType** aDestination )
   }
 
 
-class NS_EXPORT nsQueryReferent : public nsCOMPtr_helper
+class nsQueryReferent : public nsCOMPtr_helper
   {
     public:
+    inline
       nsQueryReferent( nsIWeakReference* aWeakPtr, nsresult* error )
           : mWeakPtr(aWeakPtr),
             mErrorPtr(error)
@@ -116,7 +117,7 @@ class NS_EXPORT nsQueryReferent : public nsCOMPtr_helper
           // nothing else to do here
         }
 
-      virtual nsresult operator()( const nsIID& aIID, void** ) const;
+      virtual nsresult NS_EXPORT operator()( const nsIID& aIID, void** ) const;
 
     private:
       nsIWeakReference*  mWeakPtr;
@@ -132,9 +133,10 @@ do_QueryReferent( nsIWeakReference* aRawPtr, nsresult* error = 0 )
 
 
 
-class NS_COM nsGetWeakReference : public nsCOMPtr_helper
+class nsGetWeakReference : public nsCOMPtr_helper
   {
     public:
+      inline
       nsGetWeakReference( nsISupports* aRawPtr, nsresult* error )
           : mRawPtr(aRawPtr),
             mErrorPtr(error)
@@ -142,7 +144,7 @@ class NS_COM nsGetWeakReference : public nsCOMPtr_helper
           // nothing else to do here
         }
 
-      virtual nsresult operator()( const nsIID&, void** ) const;
+      virtual nsresult NS_COM operator()( const nsIID&, void** ) const;
 
     private:
       nsISupports*  mRawPtr;

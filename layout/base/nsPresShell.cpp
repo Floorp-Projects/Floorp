@@ -1323,7 +1323,7 @@ ShowVerifyReflowFlags()
 
 static PRBool gVerifyReflowEnabled;
 
-NS_LAYOUT PRBool
+PRBool
 nsIPresShell::GetVerifyReflowEnable()
 {
 #ifdef NS_DEBUG
@@ -1391,13 +1391,13 @@ nsIPresShell::GetVerifyReflowEnable()
   return gVerifyReflowEnabled;
 }
 
-NS_LAYOUT void
+void
 nsIPresShell::SetVerifyReflowEnable(PRBool aEnabled)
 {
   gVerifyReflowEnabled = aEnabled;
 }
 
-NS_LAYOUT PRInt32
+PRInt32
 nsIPresShell::GetVerifyReflowFlags()
 {
 #ifdef NS_DEBUG
@@ -1409,7 +1409,7 @@ nsIPresShell::GetVerifyReflowFlags()
 
 //----------------------------------------------------------------------
 
-NS_LAYOUT nsresult
+nsresult
 NS_NewPresShell(nsIPresShell** aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");

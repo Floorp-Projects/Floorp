@@ -48,7 +48,6 @@
 #define nsXULElement_h__
 
 // XXX because nsIEventListenerManager has broken includes
-#include "nslayout.h" 
 #include "nsIDOMEvent.h"
 #include "nsIServiceManager.h"
 #include "nsHTMLValue.h"

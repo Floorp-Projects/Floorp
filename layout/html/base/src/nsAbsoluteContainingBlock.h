@@ -37,7 +37,6 @@
 #ifndef nsAbsoluteContainingBlock_h___
 #define nsAbsoluteContainingBlock_h___
 
-#include "nslayout.h"
 #include "nsFrameList.h"
 #include "nsHTMLReflowState.h"
 

@@ -50,7 +50,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRINTCONTEXT_IID)
 
 // Factory method to create a "paginated" presentation context for
 // printing
-extern NS_LAYOUT nsresult
+extern NS_EXPORT nsresult
   NS_NewPrintContext(nsIPrintContext** aInstancePtrResult);
 
 #endif

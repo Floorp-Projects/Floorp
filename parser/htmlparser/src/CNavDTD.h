@@ -118,7 +118,7 @@ class nsTokenAllocator;
 #pragma warning( disable : 4275 )
 #endif
 
-CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
+class CNavDTD : public nsIDTD {
 
 #if defined(XP_PC)
 #pragma warning( default : 4275 )

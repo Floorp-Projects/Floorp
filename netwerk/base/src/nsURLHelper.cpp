@@ -30,7 +30,7 @@
 #endif
 
 /* helper call function */
-NS_NET nsresult
+nsresult
 nsAppendURLEscapedString(nsCString& originalStr, const char* str, PRInt16 mask)
 {
     nsCAutoString result;
@@ -40,7 +40,7 @@ nsAppendURLEscapedString(nsCString& originalStr, const char* str, PRInt16 mask)
 }
 
 /* extracts first number from a string and assumes that this is the port number*/
-NS_NET PRInt32 
+PRInt32 
 ExtractPortFrom(const char* src)
 {
     // search for digits up to a slash or the string ends
@@ -63,7 +63,7 @@ ExtractPortFrom(const char* src)
 }
 
 /* extract string from other string */
-NS_NET nsresult 
+nsresult 
 ExtractString(char* i_Src, char* *o_Dest, PRUint32 length)
 {
     NS_PRECONDITION( (nsnull != i_Src), "Extract called on empty string!");
@@ -73,7 +73,7 @@ ExtractString(char* i_Src, char* *o_Dest, PRUint32 length)
 }
 
 /* duplicate string */
-NS_NET nsresult 
+nsresult 
 DupString(char* *o_Dest, const char* i_Src)
 {
     if (!o_Dest)
@@ -92,7 +92,7 @@ DupString(char* *o_Dest, const char* i_Src)
 
 // Replace all /./ with a /
 // But only till #? 
-NS_NET void 
+void 
 CoaleseDirs(char* io_Path)
 {
     /* Stolen from the old netlib's mkparse.c.
@@ -164,7 +164,7 @@ CoaleseDirs(char* io_Path)
         *(urlPtr-1) = '\0';
 }
 
-NS_NET void 
+void 
 ToLowerCase(char* str)
 {
     if (str) {
@@ -180,7 +180,7 @@ ToLowerCase(char* str)
 }
 
 /* Extract URI-Scheme if possible */
-NS_NET nsresult ExtractURLScheme(const char* inURI, PRUint32 *startPos, 
+nsresult ExtractURLScheme(const char* inURI, PRUint32 *startPos, 
                                  PRUint32 *endPos, char* *scheme)
 {
     // search for something up to a colon, and call it the scheme

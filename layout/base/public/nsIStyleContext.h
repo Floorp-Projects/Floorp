@@ -37,7 +37,6 @@
 #ifndef nsIStyleContext_h___
 #define nsIStyleContext_h___
 
-#include "nslayout.h"
 #include "nsISupports.h"
 #include "nsColor.h"
 #include "nsCoord.h"
@@ -126,7 +125,7 @@ public:
 
 
 // this is private to nsStyleSet, don't call it
-extern NS_LAYOUT nsresult
+extern NS_EXPORT nsresult
   NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
                      nsIStyleContext* aParentContext,
                      nsIAtom* aPseudoType,
