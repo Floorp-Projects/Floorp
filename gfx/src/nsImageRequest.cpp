@@ -332,6 +332,17 @@ static void ns_observer_proc (XP_Observable aSource,
       }
     }
   }
+
+  /* 
+   * If the IL_ImageReq is being destroyed, clear the reference held by
+   * the nsImageRequestImpl...  
+   * 
+   * This will prevent a dangling reference in cases where the image group 
+   * is destroyed before the image request...
+   */
+  if ((IL_IMAGE_DESTROYED == aMsg) && (nsnull != image_request)) {
+    image_request->SetImageRequest(nsnull);
+  }
 }
 
 
