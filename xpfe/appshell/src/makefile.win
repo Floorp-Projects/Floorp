@@ -42,6 +42,7 @@ CPP_OBJS=                               \
      .\$(OBJDIR)\nsWindowMediator.obj        \
 	.\$(OBJDIR)\nsAbout.obj \
 	.\$(OBJDIR)\nsUserInfoWin.obj \
+	.\$(OBJDIR)\nsTimingService.obj \
  $(NULL)
 
 LINCS=-I$(PUBLIC)\raptor                \
