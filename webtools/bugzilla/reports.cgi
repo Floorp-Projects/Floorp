@@ -124,6 +124,10 @@ if (! defined $FORM{'product'}) {
       || DisplayError("You entered an invalid output type.") 
       && exit;
 
+    # We've checked that the product exists, and that the user can see it
+    # This means that is OK to detaint
+    trick_taint($FORM{'product'});
+
     # Output appropriate HTTP response headers
     print "Content-type: text/html\n";
     # Changing attachment to inline to resolve 46897 - zach@zachlipton.com
@@ -515,6 +519,19 @@ sub chart_image_type {
 
 sub chart_image_name {
     my ($data_file, $type) = @_;
+
+    # This routine generates a filename from the requested fields. The problem
+    # is that we have to check the safety of doing this. We can't just require
+    # that the fields exist, because what stats were collected could change
+    # over time (eg by changing the resolutions available)
+    # Instead, just require that each field name consists only of letters
+    # and number
+
+    if ($FORM{'datasets'} !~ m/[A-Za-z0-9:]/) {
+        die "Invalid datasets $FORM{'datasets'}";
+    }
+    # Since we pass the tests, consider it OK
+    trick_taint($FORM{'datasets'});
 
     # Cache charts by generating a unique filename based on what they
     # show. Charts should be deleted by collectstats.pl nightly.
