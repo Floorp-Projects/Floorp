@@ -225,7 +225,7 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
                     // Row finished. Set Data.
                     mFrame->SetAlphaData(mAlphaRow, abpr, mCurRow * abpr);
                     mFrame->SetImageData(mRow, bpr, mCurRow * bpr);
-                    nsRect r(0, (mCurRow + 1), mWidth, 1);
+                    nsRect r(0, mCurRow, mWidth, 1);
                     mObserver->OnDataAvailable(nsnull, mFrame, &r);
 
                     if ((mCurRow + 1) == mHeight) {
