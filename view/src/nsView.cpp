@@ -34,6 +34,9 @@
 
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 
+#define SHOW_VIEW_BORDERS
+//#define HIDE_ALL_WIDGETS
+
 //
 // Main events handler
 //
@@ -140,34 +143,6 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
   }
 
   return result;
-}
-
-// this should be added to nsView. maybe
-
-nsIWidget * GetWindowTemp(nsIView *aView, nscoord *aDx, nscoord *aDy)
-{
-  nsIWidget *window = nsnull;
-  nsIView   *ancestor = aView;
-
-  while (nsnull != ancestor)
-  {
-	  if (nsnull != (window = ancestor->GetWidget()))
-	    return window;
-
-	  ancestor = ancestor->GetParent();
-
-    if ((nsnull != aDx) && (nsnull != aDy))
-    {
-      nscoord offx, offy;
-
-      ancestor->GetPosition(&offx, &offy);
-
-      *aDx += offx;
-      *aDy += offy;
-    }
-  }
-
-  return nsnull;
 }
 
 nsView :: nsView()
@@ -353,7 +328,7 @@ nsresult nsView :: Init(nsIViewManager* aManager,
         mWindow->Create(aNative, trect, ::HandleEvent, dx, nsnull, aWidgetInitData);
       else
       {
-        nsIWidget *parent = GetWindowTemp(aParent, nsnull, nsnull); 
+        nsIWidget *parent = GetOffsetFromWidget(nsnull, nsnull); 
         mWindow->Create(parent, trect, ::HandleEvent, dx, nsnull, aWidgetInitData);
         NS_IF_RELEASE(parent);
       }
@@ -390,34 +365,41 @@ PRBool nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 {
   nsIView *pRoot = mViewManager->GetRootView();
   PRBool  clipres = PR_FALSE;
+  PRBool  clipwasset = PR_FALSE;
 
   rc.PushState();
 
-  if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom))
+  if (aPaintFlags & NS_VIEW_FLAG_CLIP_SET)
   {
-    nsRect  crect;
-
-    crect.x = mClip.mLeft + mBounds.x;
-    crect.y = mClip.mTop + mBounds.y;
-    crect.width = mClip.mRight - mClip.mLeft;
-    crect.height = mClip.mBottom - mClip.mTop;
-
-    clipres = rc.SetClipRect(crect, nsClipCombine_kIntersect);
+    clipwasset = PR_TRUE;
+    aPaintFlags &= ~NS_VIEW_FLAG_CLIP_SET;
   }
-  else if (this != pRoot)
-    clipres = rc.SetClipRect(mBounds, nsClipCombine_kIntersect);
+  else if (mVis == nsViewVisibility_kShow)
+  {
+    if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom))
+    {
+      nsRect  crect;
+
+      crect.x = mClip.mLeft + mBounds.x;
+      crect.y = mClip.mTop + mBounds.y;
+      crect.width = mClip.mRight - mClip.mLeft;
+      crect.height = mClip.mBottom - mClip.mTop;
+
+      clipres = rc.SetClipRect(crect, nsClipCombine_kIntersect);
+    }
+    else if (this != pRoot)
+      clipres = rc.SetClipRect(mBounds, nsClipCombine_kIntersect);
+  }
+
+  if (nsnull != mXForm)
+  {
+    nsTransform2D *pXForm = rc.GetCurrentTransform();
+    pXForm->Concatenate(mXForm);
+  }
 
   if (clipres == PR_FALSE)
   {
     rc.Translate(mBounds.x, mBounds.y);
-
-    //XXX maybe we should set this before we set the clip? MMP
-
-    if (nsnull != mXForm)
-    {
-      nsTransform2D *pXForm = rc.GetCurrentTransform();
-      pXForm->Concatenate(mXForm);
-    }
 
     PRInt32 numkids = GetChildCount();
 
@@ -430,6 +412,10 @@ PRBool nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
         nsRect kidRect;
         kid->GetBounds(kidRect);
         nsRect damageArea;
+//        nsRect damageArea = rect;
+//        damageArea.x -= mBounds.x;
+//        damageArea.y -= mBounds.y;
+//        PRBool overlap = damageArea.IntersectRect(damageArea, kidRect);
         PRBool overlap = damageArea.IntersectRect(rect, kidRect);
 
         if (overlap == PR_TRUE)
@@ -445,13 +431,64 @@ PRBool nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
       }
     }
 
-    if ((clipres == PR_FALSE) && (mVis == nsViewVisibility_kShow) && (nsnull != mFrame))
+    if ((clipres == PR_FALSE) && (mVis == nsViewVisibility_kShow))
     {
-      nsIPresContext  *cx = mViewManager->GetPresContext();
-      rc.PushState();
-      mFrame->Paint(*cx, rc, rect);
-      rc.PopState();
-      NS_RELEASE(cx);
+      float opacity = GetOpacity();
+
+      if (opacity > 0.0f)
+      {
+        rc.PushState();
+
+#if 0
+        if (HasTransparency() || (opacity < 1.0f))
+        {
+          nsRect  crect;
+          PRBool  goodclip = rc.GetClipRect(crect);
+
+          //walk down rendering only views within this clip
+
+          rc.SetClipRect(crect, nsClipCombine_kReplace);
+        }
+#endif
+
+        if (nsnull != mFrame)
+        {
+          nsIPresContext  *cx = mViewManager->GetPresContext();
+          mFrame->Paint(*cx, rc, rect);
+          NS_RELEASE(cx);
+        }
+
+#ifdef SHOW_VIEW_BORDERS
+        {
+          nscoord x, y, w, h;
+
+          if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom))
+          {
+            x = mClip.mLeft;
+            y = mClip.mTop;
+            w = mClip.mRight - mClip.mLeft;
+            h = mClip.mBottom - mClip.mTop;
+
+            rc.SetColor(NS_RGB(255, 255, 0));
+          }
+          else
+          {
+            x = y = 0;
+            w = mBounds.width;
+            h = mBounds.height;
+
+            if (nsnull != mWindow)
+              rc.SetColor(NS_RGB(0, 255, 0));
+            else
+              rc.SetColor(NS_RGB(0, 0, 255));
+          }
+
+          rc.DrawRect(x, y, w, h);
+        }
+#endif
+
+        rc.PopState();
+      }
     }
   }
 
@@ -459,13 +496,14 @@ PRBool nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
   //state from the stack but doesn't change the state of the underlying graphics
   //context. MMP
 
-  rc.PopState();
+  clipres = rc.PopState();
 
   //now we need to exclude this view from the rest of the
   //paint process. only do this if this view is actually
   //visible and if there is no widget (like a scrollbar) here.
 
-  if ((clipres == PR_FALSE) && (mVis == nsViewVisibility_kShow) && (nsnull == mWindow))
+//  if ((clipres == PR_FALSE) && (mVis == nsViewVisibility_kShow))
+  if (!clipwasset && (clipres == PR_FALSE) && (mVis == nsViewVisibility_kShow) && (nsnull == mWindow))
   {
     if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom))
     {
@@ -524,7 +562,7 @@ nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags)
     nsIPresContext  *cx = mViewManager->GetPresContext();
     nscoord         xoff, yoff;
 
-    mViewManager->GetWindowOffsets(&xoff, &yoff);
+    GetScrollOffset(&xoff, &yoff);
 
     event->point.x += xoff;
     event->point.y += yoff;
@@ -629,17 +667,12 @@ void nsView :: SetPosition(nscoord x, nscoord y)
     nsIPresContext  *px = mViewManager->GetPresContext();
     nscoord         offx, offy, parx = 0, pary = 0;
     float           scale = px->GetTwipsToPixels();
-    nsIView         *par = GetParent();
+    nsIWidget       *pwidget = nsnull;
   
-    mViewManager->GetWindowOffsets(&offx, &offy);
+    GetScrollOffset(&offx, &offy);
 
-    if (nsnull != par)
-    {
-      nsIWidget *pwidget = nsnull;
-  
-      pwidget = GetWindowTemp(par, &parx, &pary);
-      NS_IF_RELEASE(pwidget);
-    }
+    pwidget = GetOffsetFromWidget(&parx, &pary);
+    NS_IF_RELEASE(pwidget);
     
     mWindow->Move(NS_TO_INT_ROUND((x + parx + offx) * scale),
                   NS_TO_INT_ROUND((y + pary + offy) * scale));
@@ -735,9 +768,11 @@ void nsView :: SetVisibility(nsViewVisibility aVisibility)
 
   if (nsnull != mWindow)
   {
+#ifndef HIDE_ALL_WIDGETS
     if (mVis == nsViewVisibility_kShow)
       mWindow->Show(PR_TRUE);
     else
+#endif
       mWindow->Show(PR_FALSE);
   }
 }
@@ -947,30 +982,52 @@ void nsView :: List(FILE* out, PRInt32 aIndent) const
   fputs(">\n", out);
 }
 
-void nsView :: AdjustChildWidgets(nscoord aDx, nscoord aDy)
+nsIWidget * nsView :: GetOffsetFromWidget(nscoord *aDx, nscoord *aDy)
 {
-  PRInt32 numkids = GetChildCount();
+  nsIWidget *window = nsnull;
+  nsIView   *ancestor = GetParent();
 
-  for (PRInt32 cnt = 0; cnt < numkids; cnt++)
+  while (nsnull != ancestor)
   {
-    nsIView   *kid = GetChild(cnt);
-    nsIWidget *win = kid->GetWidget();
+	  if (nsnull != (window = ancestor->GetWidget()))
+	    return window;
 
-    if (nsnull != win)
+    if ((nsnull != aDx) && (nsnull != aDy))
     {
-      nsRect  bounds;
+      nscoord offx, offy;
 
-      win->BeginResizingChildren();
-      win->GetBounds(bounds);
-      win->Move(bounds.x + aDx, bounds.y + aDy);
+      ancestor->GetPosition(&offx, &offy);
+
+      *aDx += offx;
+      *aDy += offy;
     }
 
-    kid->AdjustChildWidgets(aDx, aDy);
-
-    if (nsnull != win)
-    {
-      win->EndResizingChildren();
-      NS_RELEASE(win);
-    }
+	  ancestor = ancestor->GetParent();
   }
+
+  return nsnull;
+}
+
+void nsView :: GetScrollOffset(nscoord *aDx, nscoord *aDy)
+{
+  nsIWidget *window = nsnull;
+  nsIView   *ancestor = GetParent();
+
+  while (nsnull != ancestor)
+  {
+    nsIScrollableView *sview;
+
+    static NS_DEFINE_IID(kscroller, NS_ISCROLLABLEVIEW_IID);
+
+    if (NS_OK == ancestor->QueryInterface(kscroller, (void **)&sview))
+    {
+      sview->GetVisibleOffset(aDx, aDy);
+      NS_RELEASE(sview);
+      return;
+    }
+
+    ancestor = ancestor->GetParent();
+  }
+
+  *aDx = *aDy = 0;
 }
