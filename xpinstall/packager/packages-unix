@@ -116,7 +116,6 @@ bin/components/libnslocale.so
 bin/components/libnsmng.so
 bin/components/libnspng.so
 bin/components/liboji.so
-bin/components/libpsmglue.so
 bin/components/libpref.so
 bin/components/libprofile.so
 bin/components/libgkcontent.so
@@ -173,7 +172,6 @@ bin/components/xpinstall.xpt
 bin/components/oji.xpt
 bin/components/pref.xpt
 bin/components/proxyObjInst.xpt
-bin/components/psmglue.xpt
 bin/components/rdf.xpt
 bin/components/shistory.xpt
 bin/components/sidebar.xpt
@@ -319,7 +317,10 @@ bin/chrome/chatzilla.jar
 bin/components/nsSample.js
 
 [psm]
-bin/psm
-bin/start-psm
-bin/psmdata/*
 bin/libnssckbi.so
+bin/components/libpipnss.so
+bin/components/pipnss.xpt
+bin/components/libpippki.so
+bin/components/pippki.xpt
+bin/chrome/pipnss.jar
+bin/chrome/pippki.jar
