@@ -27,7 +27,6 @@
 #define XPathProcessor_h__
 
 #include "nsIXPathNodeSelector.h"
-#include "nsISecurityCheckedComponent.h"
 
 /* e4172588-1dd1-11b2-bf09-ec309437245a */
 #define TRANSFORMIIX_XPATH_PROCESSOR_CID   \
@@ -39,8 +38,7 @@
 /**
  * A class for processing an XPath query
 **/
-class XPathProcessor : public nsIXPathNodeSelector,
-                       public nsISecurityCheckedComponent
+class XPathProcessor : public nsIXPathNodeSelector
 {
 public:
     /**
@@ -58,10 +56,6 @@ public:
 
     // nsIXPathNodeSelector interface
     NS_DECL_NSIXPATHNODESELECTOR
-
-    // nsISecurityCheckedComponent
-    NS_DECL_NSISECURITYCHECKEDCOMPONENT
-
-}; //-- XPathProcessor
+};
 
 #endif

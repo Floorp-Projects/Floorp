@@ -24,14 +24,27 @@
  */
 
 #include "nsNodeSet.h"
-#include "nsDOMCID.h"
-#include "nsIDOMScriptObjectFactory.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIServiceManager.h"
+#include "nsIDOMClassInfo.h"
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,  NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
-NS_IMPL_ISUPPORTS1(nsNodeSet, nsIDOMNodeList)
+
+// XPConnect interface list for NodeSet
+NS_CLASSINFO_MAP_BEGIN(NodeSet)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsNodeSet
+NS_INTERFACE_MAP_BEGIN(nsNodeSet)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNodeList)
+  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(NodeSet)
+NS_INTERFACE_MAP_END
+
+
+NS_IMPL_ADDREF(nsNodeSet)
+NS_IMPL_RELEASE(nsNodeSet)
+
 
 nsNodeSet::nsNodeSet(NodeSet* aNodeSet) {
     NS_INIT_ISUPPORTS();

@@ -28,28 +28,48 @@
 #include "ProcessorState.h"
 #include "Expr.h"
 #include "nsNodeSet.h"
+#include "nsIDOMClassInfo.h"
 
-NS_IMPL_ISUPPORTS2(XPathProcessor,
-                   nsIXPathNodeSelector,
-                   nsISecurityCheckedComponent)
 
-/**
+// XPConnect interface list for XPathProcessor
+NS_CLASSINFO_MAP_BEGIN(XPathProcessor)
+  NS_CLASSINFO_MAP_ENTRY(nsIXPathNodeSelector)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for XPathProcessor
+NS_INTERFACE_MAP_BEGIN(XPathProcessor)
+  NS_INTERFACE_MAP_ENTRY(nsIXPathNodeSelector)
+  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(XPathProcessor)
+NS_INTERFACE_MAP_END
+
+
+NS_IMPL_ADDREF(XPathProcessor)
+NS_IMPL_RELEASE(XPathProcessor)
+
+
+/*
  * Creates a new XPathProcessor
-**/
-XPathProcessor::XPathProcessor() {
-
-    NS_INIT_ISUPPORTS();
-} //-- XPathProcessor
-
-/**
- * Default destructor
-**/
-XPathProcessor::~XPathProcessor() {
-} //-- ~XPathProcessor
-
-/* nsIDOMNodeList selectNodes (in nsIDOMNode aContextNode, in string aPattern); */
-NS_IMETHODIMP XPathProcessor::SelectNodes(nsIDOMNode *aContextNode, const char *aPattern, nsIDOMNodeList **_retval)
+ */
+XPathProcessor::XPathProcessor()
 {
+    NS_INIT_ISUPPORTS();
+}
+
+/*
+ * Default destructor
+ */
+XPathProcessor::~XPathProcessor()
+{
+}
+
+/* nsIDOMNodeList selectNodes (in nsIDOMNode aContextNode, in DOMString aPattern); */
+NS_IMETHODIMP XPathProcessor::SelectNodes(nsIDOMNode *aContextNode,
+                                          const nsAReadableString & aPattern,
+                                          nsIDOMNodeList **_retval)
+{
+    String pattern(PromiseFlatString(aPattern).get());
+
     nsCOMPtr<nsIDOMDocument> aOwnerDOMDocument;
     aContextNode->GetOwnerDocument(getter_AddRefs(aOwnerDOMDocument));
     nsCOMPtr<nsIDocument> aOwnerDocument = do_QueryInterface(aOwnerDOMDocument);
@@ -59,10 +79,10 @@ NS_IMETHODIMP XPathProcessor::SelectNodes(nsIDOMNode *aContextNode, const char *
     ProcessorState*  aProcessorState = new ProcessorState();
     ExprParser aParser;
 
-    Expr* aExpression = aParser.createExpr(aPattern);
+    Expr* aExpression = aParser.createExpr(pattern);
     ExprResult* exprResult = aExpression->evaluate(aNode, aProcessorState);
     nsNodeSet* resultSet;
-    if ( exprResult->getResultType() == ExprResult::NODESET ) {
+    if (exprResult->getResultType() == ExprResult::NODESET) {
         resultSet = new nsNodeSet((NodeSet*)exprResult);
     }
     else {
@@ -76,56 +96,6 @@ NS_IMETHODIMP XPathProcessor::SelectNodes(nsIDOMNode *aContextNode, const char *
     delete exprResult;
     delete aExpression;
     delete aDocument;
-
-    return NS_OK;
-}
-
-/* 
- * nsISecurityCheckedComponent
- */
-
-static const char* kAllAccess = "AllAccess";
-
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP 
-XPathProcessor::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-    if (iid->Equals(NS_GET_IID(nsIXPathNodeSelector))) {
-        *_retval = nsCRT::strdup(kAllAccess);
-    }
-
-    return NS_OK;
-}
-
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP 
-XPathProcessor::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
-{
-    if (iid->Equals(NS_GET_IID(nsIXPathNodeSelector))) {
-        *_retval = nsCRT::strdup(kAllAccess);
-    }
-
-    return NS_OK;
-}
-
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-XPathProcessor::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-    if (iid->Equals(NS_GET_IID(nsIXPathNodeSelector))) {
-        *_retval = nsCRT::strdup(kAllAccess);
-    }
-
-    return NS_OK;
-}
-
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-XPathProcessor::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-    if (iid->Equals(NS_GET_IID(nsIXPathNodeSelector))) {
-        *_retval = nsCRT::strdup(kAllAccess);
-    }
 
     return NS_OK;
 }

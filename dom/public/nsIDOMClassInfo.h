@@ -173,6 +173,11 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_DOMSerializer_id,
   eDOMClassInfo_DOMParser_id,
 
+  // Transformiix classes
+  eDOMClassInfo_XSLTProcessor_id,
+  eDOMClassInfo_XPathProcessor_id,
+  eDOMClassInfo_NodeSet_id,
+
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };
