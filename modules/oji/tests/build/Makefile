@@ -26,18 +26,21 @@ DIRS= \
 
 TOP_DIR = ..
 
-all: check_env $(DIRS)
+all: createdir check_env $(DIRS)
 
 $(DIRS)::
 	@echo "############## Building $@ ####################"
 	@cd $(TOP_DIR)/src/$@; \
 		if test ! -f depend.mak; then >depend.mak; fi; \
-		make make_depends; \
-		make all;
+		$(MAKE) make_depends; \
+		$(MAKE) all;
 
 check_env:
 	@if test ! -d $(MOZILLA_HOME)/dist/include; then echo "WARNING: MOZILLA_HOME variable is incorrect !"; exit 1; fi
 
+createdir:
+	@mkdir -p bin
+	@mkdir -p classes
 
 clean:
 	@for d in $(DIRS); do \

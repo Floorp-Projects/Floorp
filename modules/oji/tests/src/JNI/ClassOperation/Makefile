@@ -27,6 +27,7 @@ CPP = \
 	FindClass_5.cpp \
 	FindClass_6.cpp \
 	FindClass_7.cpp \
+	FindClass_8.cpp \
 	GetSuperclass_1.cpp \
 	GetSuperclass_2.cpp \
 	GetSuperclass_3.cpp \
@@ -45,6 +46,7 @@ OBJS = \
 	$(OBJ_DIR)/FindClass_5.o \
 	$(OBJ_DIR)/FindClass_6.o \
 	$(OBJ_DIR)/FindClass_7.o \
+	$(OBJ_DIR)/FindClass_8.o \
 	$(OBJ_DIR)/GetSuperclass_1.o \
 	$(OBJ_DIR)/GetSuperclass_2.o \
 	$(OBJ_DIR)/GetSuperclass_3.o \

@@ -62,7 +62,7 @@ single_objdir:
 
 $(TOP_DIR)/build/classes/test.jar: $(JAVA)
 	@javac $? -d $(TOP_DIR)/build/classes
-	@jar cvf $(TOP_DIR)/build/classes/test.jar $(TOP_DIR)/build/classes/*.class
+	@cd $(TOP_DIR)/build/classes; jar cvf $(TOP_DIR)/build/classes/test.jar *.class; cd $(TOP_DIR)/build
 
 classes: $(TOP_DIR)/build/classes/test.jar
 
@@ -71,5 +71,5 @@ all: single_objdir $(DIRS) classes link
 $(DIRS)::
 	@cd $@; \
 		if test ! -f depend.mak; then >depend.mak; fi; \
-		make make_depends; \
-		make all;
+		$(MAKE) make_depends; \
+		$(MAKE) all;
