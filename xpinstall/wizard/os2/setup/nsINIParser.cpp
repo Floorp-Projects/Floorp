@@ -43,6 +43,18 @@ unsigned long GetPrivateProfileString(const char* szAppName,
    }
    return strlen(szReturnedString);
 }
+
+unsigned long WritePrivateProfileString(const char* szAppName,
+                                        const char* szKeyName,
+                                        const char* szValue,
+                                        const char* szFileName)
+{
+   nsINIParser parser((char*)szFileName);
+   if (parser.WriteString((char*)szAppName, (char*)szKeyName, (char*)szValue) != nsINIParser::OK) {
+      return 0;
+   }
+   return 1;
+}
 #ifdef __cplusplus
 }
 #endif
@@ -53,10 +65,12 @@ nsINIParser::nsINIParser(char *aFilename)
     long    eofpos = 0;
     int     rd = 0;
 
+    mfWrite = 0;
     mFileBuf = NULL;
+    mFilename = (char*)malloc(strlen(aFilename));
+    strcpy(mFilename, aFilename);
     mFileBufSize = 0;
     mError = OK;
-    DUMP("nsINIParser");
 
     /* param check */
     if (!aFilename)
@@ -78,7 +92,7 @@ nsINIParser::nsINIParser(char *aFilename)
         goto bail;
 
     /* malloc an internal buf the size of the file */
-    mFileBuf = (char *) malloc(eofpos * sizeof(char));
+    mFileBuf = (char *) calloc(1, eofpos * sizeof(char));
     if (!mFileBuf)
     {
         mError = E_MEM;
@@ -93,6 +107,14 @@ nsINIParser::nsINIParser(char *aFilename)
     if (!rd)
         goto bail;
 
+    /* actual number of bytes read is less than the size of the file */
+    /* due to /r/n -> /n conversion */
+    if (rd < eofpos) {
+      mFileBufSize = rd;
+    } else {
+      mFileBufSize = eofpos;
+    }
+
     /* close file */
     fclose(fd);
 
@@ -105,7 +127,13 @@ bail:
 
 nsINIParser::~nsINIParser()
 {
-    DUMP("~nsINIParser");
+    if (mfWrite) {
+      FILE* hFile = fopen(mFilename, "w+");
+      fwrite(mFileBuf, mFileBufSize, 1, (FILE *)hFile);
+      fclose(hFile);
+    }
+    free(mFileBuf);
+    free(mFilename);
 }
 
 int
@@ -127,7 +155,7 @@ nsINIParser::GetString( char *aSection, char *aKey,
         return mError;
 
     /* find the key if it exists in the valid section we found */
-    mError = FindKey(secPtr, aKey, aValBuf, aIOValBufSize);
+    mError = GetValue(secPtr, aKey, aValBuf, aIOValBufSize);
 
     return mError;
 }
@@ -195,6 +223,88 @@ nsINIParser::ResolveName(char *aINIRoot)
 }
 
 int
+nsINIParser::WriteString(char *aSection, char *aKey, char *aValBuf)
+{
+    mfWrite = 1;
+    char *secPtr = NULL;
+    char *keyPtr = NULL;
+    mError = OK;
+    DUMP("GetString");
+
+    /* param check */
+    if ( !aSection || !aKey || !aValBuf )
+        return E_PARAM;
+
+    /* find the section if it exists */
+    mError = FindSection(aSection, &secPtr);
+    if (mError != OK) {
+      /* if the seciont doesn't exist, add it to the END of the buffer */
+      char szNewSection[MAX_VAL_SIZE];
+      strcpy(szNewSection, "[");
+      strcat(szNewSection, aSection);
+      strcat(szNewSection, "]");
+      strcat(szNewSection, NLSTRING);
+      mFileBuf = (char*)realloc(mFileBuf, mFileBufSize+strlen(szNewSection));
+      memcpy(&mFileBuf[mFileBufSize], szNewSection, strlen(szNewSection));
+      secPtr = &mFileBuf[mFileBufSize];
+      mFileBufSize+= strlen(szNewSection);
+      mError = OK;
+    }
+
+    /* find the key if it exists in the valid section we found */
+    mError = FindKey(secPtr, aKey, &keyPtr);
+    if (mError != OK) {
+      char szNewKeyValue[MAX_VAL_SIZE];
+      strcpy(szNewKeyValue, aKey);
+      strcat(szNewKeyValue, "=");
+      strcat(szNewKeyValue, aValBuf);
+      strcat(szNewKeyValue, NLSTRING);
+      char *mNewFileBuf = (char*)calloc(1, mFileBufSize+strlen(szNewKeyValue));
+      memcpy(mNewFileBuf, mFileBuf, mFileBufSize);
+      /* Set the section pointer to the location of the rest of the buffer */
+      while (*secPtr != NL) {
+         secPtr++;
+      }
+      secPtr++;
+      /* Use sectionptr to compte where in the new buf we are going to insert */
+      memcpy(mNewFileBuf+(secPtr-mFileBuf), szNewKeyValue, strlen(szNewKeyValue));
+      memcpy(mNewFileBuf+(secPtr-mFileBuf)+strlen(szNewKeyValue), secPtr, mFileBufSize-(secPtr-mFileBuf));
+      mFileBufSize += strlen(szNewKeyValue);
+      free(mFileBuf);
+      mFileBuf = mNewFileBuf;
+      mError = OK;
+    } else {
+      while (*keyPtr != '=') {
+         keyPtr++;
+      }
+      keyPtr++;
+      int length = 0;
+      char* lenPtr = keyPtr;
+      while (*lenPtr != NL) {
+         lenPtr++;
+         length++;
+      }
+      int difference;
+      difference = strlen(aValBuf)- length;
+      char *mNewFileBuf = (char*)calloc(1, mFileBufSize+difference);
+      memcpy(mNewFileBuf, mFileBuf, mFileBufSize);
+      /* Use keyptr to compte where in the new buf we are going to insert */
+      memcpy(mNewFileBuf+(keyPtr-mFileBuf), aValBuf, strlen(aValBuf));
+
+
+      memcpy(mNewFileBuf+(keyPtr-mFileBuf)+strlen(aValBuf), lenPtr, mFileBufSize-(lenPtr-mFileBuf));
+      mFileBufSize += difference;
+      free(mFileBuf);
+      mFileBuf = mNewFileBuf;
+      mError = OK;
+
+
+    }
+
+    return mError;
+}
+
+int
 nsINIParser::FindSection(char *aSection, char **aOutSecPtr)
 {
     char *currChar = mFileBuf;
@@ -244,7 +354,7 @@ nsINIParser::FindSection(char *aSection, char **aOutSecPtr)
 }
 
 int
-nsINIParser::FindKey(char *aSecPtr, char *aKey, char *aVal, int *aIOValSize)
+nsINIParser::GetValue(char *aSecPtr, char *aKey, char *aVal, int *aIOValSize)
 {
     char *nextNL = NULL;
     char *secEnd = NULL;
@@ -320,6 +430,84 @@ find_end:
             *aIOValSize = nextNL - (nextEq + 1); 
             strncpy(aVal, (nextEq + 1), *aIOValSize);
             *(aVal + *aIOValSize) = 0; // null terminate
+            mError = OK;
+            return mError;
+        }
+        else
+        {
+            currLine = nextNL + 1;
+        }
+    }
+
+    return mError;
+}
+
+int
+nsINIParser::FindKey(char *aSecPtr, char *aKey, char **aOutKeyPtr)
+{
+    char *nextNL = NULL;
+    char *secEnd = NULL;
+    char *currLine = aSecPtr;
+    char *nextEq = NULL;
+    mError = E_NO_KEY;
+    DUMP("FindKey");
+
+    // param check
+    if (!aSecPtr || !aKey || !aOutKeyPtr)
+    {
+        mError = E_PARAM;
+        return mError;
+    }
+
+    // determine the section end
+    secEnd = aSecPtr;
+find_end:
+    if (secEnd)
+        secEnd = strchr(secEnd, '['); // search for next sec start
+    if (!secEnd)
+    {
+        secEnd = strchr(aSecPtr, '\0'); // else search for file end
+        if (!secEnd)
+        {
+            mError = E_SEC_CORRUPT; // else this data is corrupt
+            return mError;
+        }
+    }
+
+    // handle start section token ('[') in values for i18n
+    if (*secEnd == '[' && !(secEnd == aSecPtr || *(secEnd-1) == NL))
+    {
+        secEnd++;
+        goto find_end;
+    }
+
+    while (currLine < secEnd)
+    {
+        nextNL = NULL;
+        nextNL = strchr(currLine, NL);
+        if (!nextNL)
+            nextNL = mFileBuf + mFileBufSize;
+
+        // ignore commented lines (starting with ;)
+        if (currLine == strchr(currLine, ';'))
+        {
+            currLine = nextNL + 1;
+            continue;
+        }
+
+        // extract key before '='
+        nextEq = NULL;
+        nextEq = strchr(currLine, '=');
+        if (!nextEq || nextEq > nextNL) 
+        {
+            currLine = nextNL + 1;
+            continue;
+        }
+
+        // if key matches we succeeded
+        if (strnicmp(currLine, aKey, strlen(aKey)) == 0)
+        {
+            *aOutKeyPtr = currLine;
             mError = OK;
             return mError;
         }

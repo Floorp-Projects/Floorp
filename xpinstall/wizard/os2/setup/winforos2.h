@@ -36,4 +36,5 @@ typedef CHAR TCHAR;
 #define MAX_PATH CCHMAXPATH
 #define KEY_CREATE_FOLDER 1
 
-#include "pplib.h"
+
+#include "nsINIParser.h"
