@@ -61,17 +61,12 @@ ifeq ($(USE_CPLUS), 1)
 	DIRS += cplus
 endif
 
-ifndef USE_AUTOCONF
-
 #
 # Define platform-dependent OS_LIBS
 #
 
-# Disable optimization of the nspr on SunOS4.1.3
 ifeq ($(OS_ARCH),SunOS)
 ifeq ($(OS_RELEASE),4.1.3_U1)
-OPTIMIZER =
-export OPTIMIZER
 OS_LIBS			= -lm
 else	# 4.1.3_U1
 ifdef USE_PTHREADS
@@ -162,17 +157,15 @@ ifeq ($(OS_ARCH),NEWS-OS)
 OS_LIBS		= -lsocket -lnsl -lgen -lresolv
 endif
 
-ifdef GC_LEAK_DETECTOR
-OS_LIBS		+= -L$(libdir) -lboehm
-endif
-
-endif # USE_AUTOCONF
-
 ifeq ($(OS_ARCH),WINNT)
-ifneq ($(OS_TARGET),WIN16)
 OS_LIBS		= advapi32.lib wsock32.lib
 endif
+
+ifdef GC_LEAK_DETECTOR
+EXTRA_LIBS	= -L$(dist_libdir) -lboehm
 endif
+
+EXTRA_LIBS += $(OS_LIBS)
 
 #
 # Define platform-dependent OBJS
@@ -276,118 +269,22 @@ OBJS += memory/$(OBJDIR)/prgcleak.$(OBJ_SUFFIX)
 endif
 
 ifeq ($(OS_ARCH), WINNT)
-ifneq ($(OS_TARGET),WIN16)
 DLLBASE=/BASE:0x30000000
 RES=$(OBJDIR)/nspr.res
 RESNAME=nspr.rc
-ifdef MOZ_DEBUG
-ifdef GLOWCODE
-EXTRA_LIBS += $(GLOWDIR)/glowcode.lib
-endif
-endif
-endif
 endif # WINNT
-
-ifdef USE_AUTOCONF
 
 include $(srcdir)/md/$(PR_MD_ARCH_DIR)/objs.mk
 ifdef USE_BTHREADS
 include $(srcdir)/bthreads/objs.mk
 endif
 
-else
-
-ifeq ($(OS_ARCH), WINNT)
-ifeq ($(OS_TARGET), WIN16)
-OBJS +=	md/windows/$(OBJDIR)/w16null.$(OBJ_SUFFIX) \
-	md/windows/$(OBJDIR)/w16proc.$(OBJ_SUFFIX)      \
-	md/windows/$(OBJDIR)/w16thred.$(OBJ_SUFFIX)      \
-	md/windows/$(OBJDIR)/w16fmem.$(OBJ_SUFFIX)      \
-	md/windows/$(OBJDIR)/w16sock.$(OBJ_SUFFIX)      \
-	md/windows/$(OBJDIR)/w16mem.$(OBJ_SUFFIX)      \
-    md/windows/$(OBJDIR)/w16io.$(OBJ_SUFFIX)       \
-    md/windows/$(OBJDIR)/w16gc.$(OBJ_SUFFIX)       \
-    md/windows/$(OBJDIR)/w16error.$(OBJ_SUFFIX)       \
-    md/windows/$(OBJDIR)/w16callb.$(OBJ_SUFFIX)       \
-	md/windows/$(OBJDIR)/ntinrval.$(OBJ_SUFFIX)
-EXTRA_LIBS += $(MOD_DEPTH)/tools/winsock.lib
-W16_EXPORTS = EXPORT _malloc.2=_PR_MD_malloc RESIDENT, \
-	_realloc.3=_PR_MD_realloc RESIDENT, \
-	_calloc.4=_PR_MD_calloc RESIDENT, \
-	_free.5=_PR_MD_free RESIDENT, \
-	_getenv.9=_PR_MD_getenv RESIDENT, \
-	_printf.11=_PR_MD_printf RESIDENT, \
-	_strftime.13=_PR_MD_strftime RESIDENT, \
-	_sscanf.33=_PR_MD_sscanf RESIDENT, \
-    _putenv.10=_PR_MD_putenv RESIDENT, \
-    _fprintf.12=_PR_MD_fprintf RESIDENT
-else
-ifeq ($(OS_TARGET), WIN95)
-OBJS +=	md/windows/$(OBJDIR)/w95io.$(OBJ_SUFFIX) \
-	md/windows/$(OBJDIR)/w95sock.$(OBJ_SUFFIX) \
-	md/windows/$(OBJDIR)/w95thred.$(OBJ_SUFFIX) \
-	md/windows/$(OBJDIR)/w95cv.$(OBJ_SUFFIX) \
-	md/windows/$(OBJDIR)/ntgc.$(OBJ_SUFFIX) \
-	md/windows/$(OBJDIR)/ntmisc.$(OBJ_SUFFIX) \
-	md/windows/$(OBJDIR)/ntinrval.$(OBJ_SUFFIX) \
-	md/windows/$(OBJDIR)/ntsec.$(OBJ_SUFFIX)	\
-	md/windows/$(OBJDIR)/ntsem.$(OBJ_SUFFIX)	\
-	md/windows/$(OBJDIR)/win32_errors.$(OBJ_SUFFIX) \
-	md/windows/$(OBJDIR)/w32ipcsem.$(OBJ_SUFFIX)	\
-	md/windows/$(OBJDIR)/w32poll.$(OBJ_SUFFIX)	\
-	md/windows/$(OBJDIR)/w32rng.$(OBJ_SUFFIX)	\
-	md/windows/$(OBJDIR)/w32shm.$(OBJ_SUFFIX)	\
-	md/windows/$(OBJDIR)/w95dllmain.$(OBJ_SUFFIX)
-else
-OBJS +=	md/windows/$(OBJDIR)/ntdllmn.$(OBJ_SUFFIX) \
-	md/windows/$(OBJDIR)/ntio.$(OBJ_SUFFIX) \
-	md/windows/$(OBJDIR)/ntgc.$(OBJ_SUFFIX) \
-	md/windows/$(OBJDIR)/ntthread.$(OBJ_SUFFIX) \
-	md/windows/$(OBJDIR)/ntmisc.$(OBJ_SUFFIX) \
-	md/windows/$(OBJDIR)/ntinrval.$(OBJ_SUFFIX) \
-	md/windows/$(OBJDIR)/ntsec.$(OBJ_SUFFIX)	\
-	md/windows/$(OBJDIR)/ntsem.$(OBJ_SUFFIX)	\
-	md/windows/$(OBJDIR)/win32_errors.$(OBJ_SUFFIX) \
-	md/windows/$(OBJDIR)/w32ipcsem.$(OBJ_SUFFIX) \
-	md/windows/$(OBJDIR)/w32rng.$(OBJ_SUFFIX)	\
-	md/windows/$(OBJDIR)/w32shm.$(OBJ_SUFFIX)	\
-	md/windows/$(OBJDIR)/w32poll.$(OBJ_SUFFIX)
-endif
-endif
-
-ifeq ($(OS_ARCH),OS2)
-OBJS +=	md/os2/$(OBJDIR)/os2io.$(OBJ_SUFFIX) \
-	md/os2/$(OBJDIR)/os2sock.$(OBJ_SUFFIX) \
-	md/os2/$(OBJDIR)/os2thred.$(OBJ_SUFFIX) \
-	md/os2/$(OBJDIR)/os2cv.$(OBJ_SUFFIX) \
-	md/os2/$(OBJDIR)/os2gc.$(OBJ_SUFFIX) \
-	md/os2/$(OBJDIR)/os2misc.$(OBJ_SUFFIX) \
-	md/os2/$(OBJDIR)/os2inrval.$(OBJ_SUFFIX) \
-	md/os2/$(OBJDIR)/os2sem.$(OBJ_SUFFIX)	\
-	md/os2/$(OBJDIR)/os2_errors.$(OBJ_SUFFIX) \
-	md/os2/$(OBJDIR)/os2poll.$(OBJ_SUFFIX) \
-	md/os2/$(OBJDIR)/os2rng.$(OBJ_SUFFIX)
-else
-
-ifeq ($(OS_ARCH), BeOS)
-	include $(srcdir)/md/beos/objs.mk
-	include $(srcdir)/bthreads/objs.mk
-else
-	# Unix
-	include $(srcdir)/md/unix/objs.mk
-endif # BeOS
-endif # OS2
-endif # WINNT
-endif # !USE_AUTOCONF
-
 LIBRARY_NAME = nspr
-LIBRARY_VERSION = $(MOD_VERSION)
+LIBRARY_VERSION = $(MOD_MAJOR_VERSION)
 
 RELEASE_LIBS = $(TARGETS)
 
 include $(topsrcdir)/config/rules.mk
-
-EXTRA_LIBS = $(OS_LIBS)
 
 ifeq ($(BUILD_AIX_RTL_LIBC),1)
 TARGETS		+= $(AIX_RTL_LIBC)
@@ -398,11 +295,11 @@ endif
 # Version information generation (begin)
 #
 ECHO = echo
-INCLUDES = -I$(includedir) -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
+INCLUDES = -I$(dist_includedir) -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
 TINC = $(OBJDIR)/_pr_bld.h
 
 ifeq ($(OS_TARGET),OS2)
-PROD = nspr$(MOD_VERSION).$(DLL_SUFFIX)
+PROD = nspr$(MOD_MAJOR_VERSION).$(DLL_SUFFIX)
 else
 PROD = $(notdir $(SHARED_LIBRARY))
 endif
@@ -448,22 +345,22 @@ endif
 
 
 #
-# The Client build wants the shared libraries in $(bindir)
+# The Client build wants the shared libraries in $(dist_bindir)
 # so we also install them there.
 #
 
 export:: $(TARGETS)
-	$(INSTALL) -m 444 $(TARGETS) $(libdir)
+	$(INSTALL) -m 444 $(TARGETS) $(dist_libdir)
 ifdef SHARED_LIBRARY
 ifeq ($(OS_ARCH),HP-UX)
-	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(libdir)
-	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(bindir)
+	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(dist_libdir)
+	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(dist_bindir)
 else
-	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(bindir)
+	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(dist_bindir)
 endif
 ifeq ($(OS_ARCH), OpenVMS)
-	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(libdir)
-	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(bindir)
+	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(dist_libdir)
+	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(dist_bindir)
 endif
 endif
 ifeq ($(MOZ_BITS),16)
