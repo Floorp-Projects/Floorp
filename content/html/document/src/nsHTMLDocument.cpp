@@ -459,59 +459,23 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     }
 
     if(kCharsetFromHTTPHeader > charsetSource) {
-      nsXPIDLCString contenttypeheader;
-      rv = httpChannel->GetResponseHeader("content-type",
-                                          getter_Copies(contenttypeheader));
-
+      nsXPIDLCString charsetheader;
+      rv = httpChannel->GetCharset(getter_Copies(charsetheader));
       if (NS_SUCCEEDED(rv)) {
-        nsAutoString contentType;
-        contentType.AssignWithConversion(NS_STATIC_CAST(const char*,
-                                                        contenttypeheader));
-
-        PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
-
-        if(start != kNotFound) {
-          start += 8; // 8 = "charset=".length
-          PRInt32 end = 0;
-          if (contentType.Length() >= (PRUint32)start &&
-              contentType.CharAt(start) == PRUnichar('"')) {
-          	start++;
-          	end = contentType.FindCharInSet("\"", start);
-
-	          if (kNotFound == end) {
-	            end = contentType.Length();
-            }
-          } else {
-          	end = contentType.FindCharInSet(";\n\r ", start);
-
-	          if(kNotFound == end) {
-	            end = contentType.Length();
-            }
-          }
-
-          nsCOMPtr<nsICharsetAlias> calias =
-            do_CreateInstance(kCharsetAliasCID);
-
-          if (calias) {
-            nsAutoString theCharset;
-            contentType.Mid(theCharset, start, end - start);
-
-            nsAutoString preferred;
-            rv = calias->GetPreferred(theCharset, preferred);
-
-            if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsICharsetAlias> calias(do_CreateInstance(kCharsetAliasCID, &rv));
+        if(calias) {
+          nsAutoString preferred;
+          rv = calias->GetPreferred(NS_ConvertASCIItoUCS2(charsetheader), preferred);
+          if(NS_SUCCEEDED(rv)) {
 #ifdef DEBUG_charset
- 							char* cCharset = ToNewCString(charset);
-							printf("From HTTP Header, charset = %s\n", cCharset);
- 							Recycle(cCharset);
- #endif
-              charset = preferred;
-              charsetSource = kCharsetFromHTTPHeader;
-            }
+            printf("From HTTP Header, charset = %s\n", NS_ConvertUCS2toUTF8(charset).get());
+#endif
+            charset = preferred;
+            charsetSource = kCharsetFromHTTPHeader;
           }
-        }
+        }  
       }
-    }
+    } 
 
     nsCOMPtr<nsICachingChannel> cachingChan = do_QueryInterface(httpChannel);
     if (cachingChan) {

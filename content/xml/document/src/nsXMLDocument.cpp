@@ -401,45 +401,19 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   if(httpChannel) {
-    nsXPIDLCString contenttypeheader;
-    rv = httpChannel->GetResponseHeader("content-type", getter_Copies(contenttypeheader));
-
+    nsXPIDLCString charsetheader;
+    rv = httpChannel->GetCharset(getter_Copies(charsetheader));
     if (NS_SUCCEEDED(rv)) {
-      nsAutoString contentType;
-      contentType.AssignWithConversion( NS_STATIC_CAST(const char*, contenttypeheader) );
-      PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
-      if(kNotFound != start)
-      {
-        start += 8; // 8 = "charset=".length
-        PRInt32 end = 0;
-        if(PRUnichar('"') == contentType.CharAt(start)) {
-          start++;
-          end = contentType.FindCharInSet("\"", start  );
-          if(kNotFound == end )
-            end = contentType.Length();
-        } else {
-          end = contentType.FindCharInSet(";\n\r ", start  );
-          if(kNotFound == end )
-            end = contentType.Length();
+      nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID,&rv));
+
+      if(NS_SUCCEEDED(rv) && (nsnull != calias) ) {
+        nsAutoString preferred;
+        rv = calias->GetPreferred(NS_ConvertASCIItoUCS2(charsetheader), preferred);
+        if(NS_SUCCEEDED(rv)){            
+          charset = preferred;
+          charsetSource = kCharsetFromHTTPHeader;
         }
-        nsAutoString theCharset;
-        contentType.Mid(theCharset, start, end - start);
-        nsICharsetAlias* calias = nsnull;
-        rv = nsServiceManager::GetService(
-                kCharsetAliasCID,
-                NS_GET_IID(nsICharsetAlias),
-                (nsISupports**) &calias);
-        if(NS_SUCCEEDED(rv) && (nsnull != calias) )
-        {
-          nsAutoString preferred;
-          rv = calias->GetPreferred(theCharset, preferred);
-          if(NS_SUCCEEDED(rv))
-          {
-            charset = preferred;
-            charsetSource = kCharsetFromHTTPHeader;
-          }
-          nsServiceManager::ReleaseService(kCharsetAliasCID, calias);
-        }
+        nsServiceManager::ReleaseService(kCharsetAliasCID, calias);
       }
     }
   } //end of checking http channel
