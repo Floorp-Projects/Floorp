@@ -179,7 +179,7 @@ void InstallUnixSignalHandlers(const char *ProgramName)
 
 		if (setrlimit(RLIMIT_NOFILE, &rl) < 0) {
 		    perror("setrlimit(RLIMIT_NOFILE)");
-		    FPRINTF(stderr, "Cannot exceed hard limit for open files");
+		    PRINTF("Cannot exceed hard limit for open files");
 		}
 #if defined(DEBUG)
 	    	if (getrlimit(RLIMIT_NOFILE, &rl) == 0)
