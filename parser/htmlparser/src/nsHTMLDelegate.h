@@ -67,13 +67,9 @@ class CHTMLTokenizerDelegate : public ITokenizerDelegate {
 					    void		    ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
 					    CToken* 	  ConsumeText(const nsString& aString,CScanner& aScanner,PRInt32& anErrorCode);
 					    CToken* 	  ConsumeEntity(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
-#ifdef TOKENIZE_WHITESPACE
 					    CToken* 	  ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
-#endif
 					    CToken* 	  ConsumeComment(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
-#ifdef TOKENIZE_CRLF
 					    CToken* 	  ConsumeNewline(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
-#endif
 
                     //the only special case method...
       virtual CToken*     ConsumeContentToEndTag(const nsString& aString,PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
