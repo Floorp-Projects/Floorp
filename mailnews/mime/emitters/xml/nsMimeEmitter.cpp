@@ -170,11 +170,11 @@ nsMimeEmitter::WriteXMLHeader(const char *msgID)
   UtilityWrite("<?xml version=\"1.0\"?>");
 
   if (mHeaderDisplayType == MicroHeaders)
-    UtilityWrite("<?xml-stylesheet href=\"resource:/res/mailheader-micro.css\" type=\"text/css\"?>");
+    UtilityWrite("<?xml-stylesheet href=\"resource:/res/mailnews/messenger/mailheader-micro.css\" type=\"text/css\"?>");
   else if (mHeaderDisplayType == NormalHeaders)
-    UtilityWrite("<?xml-stylesheet href=\"resource:/res/mailheader-normal.css\" type=\"text/css\"?>");
+    UtilityWrite("<?xml-stylesheet href=\"resource:/res/mailnews/messenger/mailheader-normal.css\" type=\"text/css\"?>");
   else /* AllHeaders */
-    UtilityWrite("<?xml-stylesheet href=\"resource:/res/mailheader-all.css\" type=\"text/css\"?>");
+    UtilityWrite("<?xml-stylesheet href=\"resource:/res/mailnews/messenger/mailheader-all.css\" type=\"text/css\"?>");
 
   UtilityWrite("<message id=\"");
   UtilityWrite(msgID);
