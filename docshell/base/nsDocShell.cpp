@@ -613,6 +613,17 @@ nsDocShell::LoadURI(nsIURI * aURI,
                 }
             } // parent
         } //parentDS
+        else {  // This is the root docshell
+            PRUint32 selfBusy = BUSY_FLAGS_NONE;
+            GetBusyFlags(&selfBusy);
+            // If we are still busy loading the previous page, then this load was
+            // probably initiated by a onLoadhandler. Let the new page replace 
+            // previous one. 
+            if (mLSHE && (selfBusy & BUSY_FLAGS_BUSY)) {
+                loadType = LOAD_NORMAL_REPLACE;
+            }
+
+        }
     } // !shEntry
 
     if (shEntry) {
