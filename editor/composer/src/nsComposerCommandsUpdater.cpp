@@ -359,19 +359,14 @@ nsComposerCommandsUpdater::SelectionIsCollapsed()
 {
   if (!mDOMWindow) return PR_TRUE;
 
-  nsresult rv;
-  // we don't care too much about failures here.
-  if (NS_SUCCEEDED(rv))
-  {
-    nsCOMPtr<nsISelection> domSelection;
-    rv = mDOMWindow->GetSelection(getter_AddRefs(domSelection));
-    if (NS_SUCCEEDED(rv))
-    {    
-      PRBool selectionCollapsed = PR_FALSE;
-      rv = domSelection->GetIsCollapsed(&selectionCollapsed);
-      return selectionCollapsed;
-    }
+  nsCOMPtr<nsISelection> domSelection;
+  if (NS_SUCCEEDED(mDOMWindow->GetSelection(getter_AddRefs(domSelection))))
+  {    
+    PRBool selectionCollapsed = PR_FALSE;
+    domSelection->GetIsCollapsed(&selectionCollapsed);
+    return selectionCollapsed;
   }
+
   return PR_FALSE;
 }
 
