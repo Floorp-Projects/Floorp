@@ -42,29 +42,35 @@
 
 #define BASE_INDENT 3
 
-static char *type_array[23] = 
-            {"int8",        "int16",        "int32",        "int64",
-             "uint8",       "uint16",       "uint32",       "uint64",
-             "float",       "double",       "boolean",      "char",
-             "wchar_t",     "void",         "reserved",     "reserved",
-             "reserved",    "reserved",     "reserved",     "reserved",
-             "reserved",    "reserved",     "reserved"};
+static char *type_array[32] = 
+            {"int8",        "int16",       "int32",       "int64",
+             "uint8",       "uint16",      "uint32",      "uint64",
+             "float",       "double",      "boolean",     "char",
+             "wchar_t",     "void",        "reserved",    "reserved",
+             "reserved",    "reserved",    "reserved",    "reserved",
+             "reserved",    "reserved",    "reserved",    "reserved",
+             "reserved",    "reserved",    "reserved",    "reserved",
+             "reserved",    "reserved",    "reserved",    "reserved"};
 
-static char *ptype_array[23] = 
-            {"int8 *",      "int16 *",      "int32 *",      "int64 *",
-             "uint8 *",     "uint16 *",     "uint32 *",     "uint64 *",
-             "float *",     "double *",     "boolean *",    "char *",
-             "wchar_t *",   "void *",       "nsIID *",      "bstr",
-             "string",      "wstring",      "Interface *",  "InterfaceIs *",
-             "array",       "string_s",     "wstring_s"};
+static char *ptype_array[32] = 
+            {"int8 *",      "int16 *",     "int32 *",     "int64 *",
+             "uint8 *",     "uint16 *",    "uint32 *",    "uint64 *",
+             "float *",     "double *",    "boolean *",   "char *",
+             "wchar_t *",   "void *",      "nsIID *",     "DOMString *",
+             "string",      "wstring",     "Interface *", "InterfaceIs *",
+             "array",       "string_s",    "wstring_s",   "reserved",
+             "reserved",    "reserved",    "reserved",    "reserved",
+             "reserved",    "reserved",    "reserved",    "reserved"};
 
-static char *rtype_array[23] = 
-            {"int8 &",      "int16 &",      "int32 &",      "int64 &",
-             "uint8 &",     "uint16 &",     "uint32 &",     "uint64 &",
-             "float &",     "double &",     "boolean &",    "char &",
-             "wchar_t &",   "void &",       "nsIID &",      "bstr",
-             "string &",    "wstring &",    "Interface &",  "InterfaceIs &",
-             "array &",     "string_s &",   "wstring_s &"};
+static char *rtype_array[32] = 
+            {"int8 &",      "int16 &",     "int32 &",     "int64 &",
+             "uint8 &",     "uint16 &",    "uint32 &",    "uint64 &",
+             "float &",     "double &",    "boolean &",   "char &",
+             "wchar_t &",   "void &",      "nsIID &",     "DOMString &",
+             "string &",    "wstring &",   "Interface &", "InterfaceIs &",
+             "array &",     "string_s &",  "wstring_s &", "reserved",
+             "reserved",    "reserved",    "reserved",    "reserved",
+             "reserved",    "reserved",    "reserved",    "reserved"};
 
 PRBool param_problems = PR_FALSE;
 
@@ -592,6 +598,12 @@ XPT_DumpMethodDescriptor(XPTHeader *header, XPTMethodDescriptor *md,
                     }
                 } else {
                     fprintf(stdout, " ");
+                    if (XPT_PD_IS_DIPPER(pd->flags)) {
+                        fprintf(stdout, "dipper ");
+                    }
+                    if (XPT_PD_IS_RETVAL(pd->flags)) {
+                        fprintf(stdout, "retval ");
+                    }
                 }
             } else {
                 if (XPT_PD_IS_OUT(pd->flags)) {
@@ -718,6 +730,13 @@ XPT_DumpParamDescriptor(XPTHeader *header, XPTParamDescriptor *pd,
         fprintf(stdout, "TRUE\n");
     else 
         fprintf(stdout, "FALSE\n");
+
+    fprintf(stdout, "%*sDipper?     ", indent, " ");
+    if (XPT_PD_IS_DIPPER(pd->flags))
+        fprintf(stdout, "TRUE\n");
+    else 
+        fprintf(stdout, "FALSE\n");
+
 
     fprintf(stdout, "%*sType Descriptor:\n", indent, " ");
     if (!XPT_DumpTypeDescriptor(&pd->type, id, new_indent, verbose_mode))
@@ -872,13 +891,6 @@ XPT_DumpConstDescriptor(XPTHeader *header, XPTConstDescriptor *cd,
         } else 
             return PR_FALSE;
         break;
-    case TD_PBSTR:
-        if (XPT_TDP_IS_POINTER(cd->type.prefix.flags)) {
-            if (!XPT_DumpXPTString(cd->value.string))
-                return PR_FALSE;
-        } else 
-            return PR_FALSE;
-        break;            
     case TD_PSTRING:
         if (XPT_TDP_IS_POINTER(cd->type.prefix.flags)) {
             fprintf(stdout, "%s", cd->value.str);

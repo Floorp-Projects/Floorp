@@ -101,7 +101,7 @@ struct XPTHeader {
 /* For error messages. */
 #define XPT_MAGIC_STRING "XPCOM\\nTypeLib\\r\\n\\032"
 #define XPT_MAJOR_VERSION 0x01
-#define XPT_MINOR_VERSION 0x00
+#define XPT_MINOR_VERSION 0x01
 
 /* Any file with a major version number of XPT_MAJOR_INCOMPATIBLE_VERSION 
  * or higher is to be considered incompatible by this version of xpt and
@@ -291,7 +291,7 @@ enum XPTTypeDescriptorTags {
     TD_WCHAR             = 12, 
     TD_VOID              = 13,  
     TD_PNSIID            = 14,
-    TD_PBSTR             = 15,
+    TD_DOMSTRING         = 15,
     TD_PSTRING           = 16,
     TD_PWSTRING          = 17,
     TD_INTERFACE_TYPE    = 18,
@@ -374,12 +374,14 @@ struct XPTParamDescriptor {
 #define XPT_PD_OUT      0x40
 #define XPT_PD_RETVAL   0x20
 #define XPT_PD_SHARED   0x10
-#define XPT_PD_FLAGMASK 0xf0
+#define XPT_PD_DIPPER   0x08
+#define XPT_PD_FLAGMASK 0xf8
 
 #define XPT_PD_IS_IN(flags)     (flags & XPT_PD_IN)
 #define XPT_PD_IS_OUT(flags)    (flags & XPT_PD_OUT)
 #define XPT_PD_IS_RETVAL(flags) (flags & XPT_PD_RETVAL)
 #define XPT_PD_IS_SHARED(flags) (flags & XPT_PD_SHARED)
+#define XPT_PD_IS_DIPPER(flags) (flags & XPT_PD_DIPPER)
 
 /* this is bogus
 #define XPT_PARAMDESCRIPTOR_SIZE (XPT_TYPEDESCRIPTOR_SIZE + 1)

@@ -528,7 +528,6 @@ SizeOfConstDescriptor(XPTConstDescriptor *cd, XPTInterfaceDescriptor *id)
         break;
       case TD_INT32:
       case TD_UINT32:
-      case TD_PBSTR:            /* XXX check for pointer! */
       case TD_PSTRING:
         size += 4;
         break;
@@ -675,11 +674,6 @@ DoConstDescriptor(XPTArena *arena, XPTCursor *cursor, XPTConstDescriptor *cd,
       case TD_WCHAR:
         ok = XPT_Do16(cursor, &cd->value.wch);
         break;
-      case TD_PBSTR:
-        if (cd->type.prefix.flags & XPT_TDP_POINTER) {
-            ok = XPT_DoString(arena, cursor, &cd->value.string);
-            break;
-        }
         /* fall-through */
       default:
         fprintf(stderr, "illegal type!\n");
