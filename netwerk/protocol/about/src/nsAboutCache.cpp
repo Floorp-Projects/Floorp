@@ -202,27 +202,23 @@ nsAboutCache::VisitDevice(const char *deviceID,
 
         // Write out cache info
 
-        mBuffer.Append("<table>\n<tr><td><b>Usage report:</b></td>\n");
-        deviceInfo->GetUsageReport(getter_Copies(str));
-        mBuffer.Append("<td>");
-        mBuffer.Append(str);
-        mBuffer.Append("</td>\n</tr>\n");
+        mBuffer.Append("<table>\n");
 
-        mBuffer.Append("\n<tr><td><b>Number of entries:</b></td>\n");
+        mBuffer.Append("\n<tr><td><b>Number of entries: </b></td>\n");
         value = 0;
         deviceInfo->GetEntryCount(&value);
         mBuffer.Append("<td><tt>");
         mBuffer.AppendInt(value);
         mBuffer.Append("</tt></td>\n</tr>\n");
 
-        mBuffer.Append("\n<tr><td><b>Maximum storage size:</b></td>\n");
+        mBuffer.Append("\n<tr><td><b>Maximum storage size: </b></td>\n");
         value = 0;
         deviceInfo->GetMaximumSize(&value);
         mBuffer.Append("<td><tt>");
         mBuffer.AppendInt(value);
-        mBuffer.Append("</tt></td>\n</tr>\n");
+        mBuffer.Append(" Bytes</tt></td>\n</tr>\n");
 
-        mBuffer.Append("\n<tr><td><b>Storage in use:</b></td>\n");
+        mBuffer.Append("\n<tr><td><b>Storage in use: </b></td>\n");
         mBuffer.Append("<td><tt>");
         value = 0;
         deviceInfo->GetTotalSize(&value);
@@ -230,6 +226,10 @@ nsAboutCache::VisitDevice(const char *deviceID,
         mBuffer.Append(" Bytes</tt></td>\n</tr>\n");
 
         mBuffer.Append("</table>\n");
+        
+        deviceInfo->GetUsageReport(getter_Copies(str));
+        mBuffer.Append(str);
+        mBuffer.Append("\n<br>");
 
         if (mDeviceID.IsEmpty()) {
             mBuffer.Append("\n<a href=\"about:cache?device=");
