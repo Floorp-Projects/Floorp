@@ -558,7 +558,7 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
   // do text insertion
   PRBool bCancel;
   char newlineChar[] = {'\n',0};
-  nsString theString(*aInString);  // copy instring for now
+  nsString theString(*aOutString);  // copy instring for now
 
   while (theString.Length())
   {
