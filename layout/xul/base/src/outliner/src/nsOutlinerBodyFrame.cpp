@@ -86,12 +86,17 @@
 #include "nsChildIterator.h"
 #include "nsIScrollableView.h"
 #include "nsITheme.h"
+#include "nsITimelineService.h"
 
 #ifdef USE_IMG2
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "imgIContainerObserver.h"
 #include "imgILoader.h"
+#endif
+
+#ifdef IBMBIDI
+#include "nsBidiPresUtils.h"
 #endif
 
 #define ELLIPSIS "..."
@@ -2713,9 +2718,34 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintText(int aRowIndex,
       fontMet->GetStrikeout(offset, size);
       aRenderingContext.FillRect(textRect.x, textRect.y + baseline - offset, width, size);
     }
-
+#ifdef MOZ_TIMELINE
+    NS_TIMELINE_START_TIMER("Render Outline Text");
+#endif
+#ifdef IBMBIDI
+    nsresult rv = NS_ERROR_FAILURE;
+    nsBidiPresUtils* bidiUtils;
+    aPresContext->GetBidiUtils(&bidiUtils);
+    
+    if (bidiUtils) {
+      const nsStyleVisibility* vis;
+      GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&) vis);
+      nsBidiDirection direction = 
+        (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
+        NSBIDI_RTL : NSBIDI_LTR;
+      PRUnichar* buffer = (PRUnichar*) text.get();
+      rv = bidiUtils->RenderText(buffer, text.Length(), direction,
+                                 aPresContext, aRenderingContext,
+                                 textRect.x, textRect.y + baseline);
+    }
+    if (NS_FAILED(rv))
+#endif // IBMBIDI
     aRenderingContext.DrawString(text, textRect.x, textRect.y + baseline);
   }
+#ifdef MOZ_TIMELINE
+    NS_TIMELINE_STOP_TIMER("Render Outline Text");
+    NS_TIMELINE_MARK_TIMER("Render Outline Text");
+#endif
+ 
 
   return NS_OK;
 }
