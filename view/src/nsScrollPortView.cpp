@@ -232,21 +232,6 @@ NS_IMETHODIMP nsScrollPortView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdat
     nsIDeviceContext  *dev;
 	float             t2p;
 	float             p2t;
- 
-	// notify the listeners.
-	PRUint32 listenerCount;
-        const nsIID& kScrollPositionListenerIID = NS_GET_IID(nsIScrollPositionListener);
-	nsIScrollPositionListener* listener;
-	if (nsnull != mListeners) {
-		if (NS_SUCCEEDED(mListeners->Count(&listenerCount))) {
-			for (PRUint32 i = 0; i < listenerCount; i++) {
-				if (NS_SUCCEEDED(mListeners->QueryElementAt(i, kScrollPositionListenerIID, (void**)&listener))) {
-					listener->ScrollPositionWillChange(this, aX, aY);
-					NS_RELEASE(listener);
-				}
-			}
-		}
-	}
 
     mViewManager->GetDeviceContext(dev);
 	dev->GetAppUnitsToDevUnits(t2p); 
@@ -282,10 +267,34 @@ NS_IMETHODIMP nsScrollPortView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdat
     nscoord aXpx = NSTwipsToIntPixels(aX, t2p);
     nscoord aYpx = NSTwipsToIntPixels(aY, t2p);
 
+    aX = NSIntPixelsToTwips(aXpx,p2t);
+    aY = NSIntPixelsToTwips(aYpx,p2t);
+
+    // do nothing if the we aren't scrolling.
+    // this needs to be rechecked because of the clamping and
+    // rounding
+    if (aX == mOffsetX && aY == mOffsetY)
+        return NS_OK;
+
     // figure out the diff by comparing old pos to new
     dxPx = mOffsetXpx - aXpx;
     dyPx = mOffsetYpx - aYpx;
-    
+ 
+	// notify the listeners.
+	PRUint32 listenerCount;
+        const nsIID& kScrollPositionListenerIID = NS_GET_IID(nsIScrollPositionListener);
+	nsIScrollPositionListener* listener;
+	if (nsnull != mListeners) {
+		if (NS_SUCCEEDED(mListeners->Count(&listenerCount))) {
+			for (PRUint32 i = 0; i < listenerCount; i++) {
+				if (NS_SUCCEEDED(mListeners->QueryElementAt(i, kScrollPositionListenerIID, (void**)&listener))) {
+					listener->ScrollPositionWillChange(this, aX, aY);
+					NS_RELEASE(listener);
+				}
+			}
+		}
+	}
+
 	if (nsnull != scrolledView)
 	{
         // move the scrolled view to the new location
