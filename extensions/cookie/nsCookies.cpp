@@ -715,7 +715,7 @@ COOKIE_GetCookie(char * address, nsIIOService* ioService) {
   if(cookie_GetBehaviorPref() == PERMISSION_DontUse) {
     return nsnull;
   }
-  if (!PL_strncasecmp(address, "https", 5)) {
+  if (!PL_strncasecmp(address, "https:", 6)) {
      isSecure = PR_TRUE;
   }
 
