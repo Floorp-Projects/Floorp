@@ -628,6 +628,9 @@ nsHTMLDocument::TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,
     aDocInfo->GetParentCharsetSource(&parentSource);
     if (kCharsetFromParentForced <= parentSource)
       source = kCharsetFromParentForced;
+    else if (kCharsetFromHintPrevDoc == parentSource)
+      // if parent is posted doc, set this prevent autodections
+      source = kCharsetFromHintPrevDoc;
     else if (kCharsetFromCache <= parentSource)
       source = kCharsetFromParentFrame;
     else 
