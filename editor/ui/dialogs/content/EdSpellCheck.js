@@ -134,31 +134,17 @@ function InitLanguageMenu(curLang)
   // Load the string bundles that will help us map
   // RFC 1766 strings to UI strings.
 
-  var languageBundle;
+  // Load the language string bundle.
+  var languageBundle = document.getElementById("languageBundle");
   var regionBundle;
+  // If we have a language string bundle, load the region string bundle.
+  if (languageBundle)
+    regionBundle = document.getElementById("regionBundle");
+  
   var menuStr2;
   var isoStrArray;
   var defaultIndex = 0;
   var langId;
-
-  // Try to load the language string bundle.
-
-  try {
-    languageBundle = srGetStrBundle("chrome://global/locale/languageNames.properties");
-  } catch(ex) {
-    languageBundle = null;
-  }
-
-  // If we have a language string bundle, try to load the region string bundle.
-
-  if (languageBundle)
-  {
-    try {
-      regionBundle = srGetStrBundle("chrome://global/locale/regionNames.properties");
-    } catch(ex) {
-      regionBundle = null;
-    }
-  }
   var i;
   for (i = 0; i < dictList.length; i++)
   {
@@ -170,11 +156,11 @@ function InitLanguageMenu(curLang)
       dictList[i][1] = langId;    // second subarray element - language ID
 
       if (languageBundle && isoStrArray[0])
-        dictList[i][0] = languageBundle.GetStringFromName(isoStrArray[0].toLowerCase());
+        dictList[i][0] = languageBundle.getString(isoStrArray[0].toLowerCase());
 
       if (regionBundle && dictList[i][0] && isoStrArray.length > 1 && isoStrArray[1])
       {
-        menuStr2 = regionBundle.GetStringFromName(isoStrArray[1].toLowerCase());
+        menuStr2 = regionBundle.getString(isoStrArray[1].toLowerCase());
         if (menuStr2)
           dictList[i][0] = dictList[i][0] + "/" + menuStr2;
       }
@@ -182,7 +168,7 @@ function InitLanguageMenu(curLang)
       if (!dictList[i][0])
         dictList[i][0] = dictList[i][1];
     } catch (ex) {
-      // GetStringFromName throws an exception when
+      // GetString throws an exception when
       // a key is not found in the bundle. In that
       // case, just use the original dictList string.
 
@@ -196,7 +182,7 @@ function InitLanguageMenu(curLang)
 
   for (i = 0; i < dictList.length; i++)
   {
-    AppendLabelAndValueToMenulist(gDialog.LanguageMenulist, dictList[i][0], dictList[i][1]);
+    gDialog.LanguageMenulist.appendItem(dictList[i][0], dictList[i][1]);
     if (curLang && dictList[i][1] == curLang)
       defaultIndex = i+2; //first two items are pre-populated and fixed
   }

@@ -24,8 +24,8 @@
 
 // Variables used across all the links being checked:
 var gNumLinksToCheck = 0;     // The number of nsILinkCheckers
-var gLinksBeingChecked = {};  // Array of nsIURICheckers
-var gURIRefObjects = {};      // Array of nsIURIRefObjects
+var gLinksBeingChecked = [];  // Array of nsIURICheckers
+var gURIRefObjects = [];      // Array of nsIURIRefObjects
 var gNumLinksCalledBack = 0;
 var gStartedAllChecks = false;
 var gLinkCheckTimerID = 0;
@@ -64,8 +64,12 @@ function Startup()
   if (!InitEditorShell())
     return;
 
+  gDialog.LinksList = document.getElementById("LinksList");
+  gDialog.Close     = document.documentElement.getButton("cancel");
+
   // Set window location relative to parent window (based on persisted attributes)
   SetWindowLocation();
+
   // Get all objects that refer to other locations
   var objects = editorShell.GetLinkedObjects();
 
@@ -89,16 +93,17 @@ function Startup()
             = Components.classes["@mozilla.org/network/urichecker;1"]
                 .createInstance()
                   .QueryInterface(Components.interfaces.nsIURIChecker);
-
-          // XXX Calling this is related to crash deleting gLinksBeingChecked when dialog is closed
-          //     (if this isn't called, no crash)
           gLinksBeingChecked[gNumLinksToCheck].asyncCheckURI(uri, gRequestObserver, null,
 							     Components.interfaces.nsIRequest.LOAD_NORMAL);
+
+          // Add item  
+          var linkChecker = gLinksBeingChecked[gNumLinksToCheck].QueryInterface(Components.interfaces.nsIURIChecker);
+          SetItemStatus(linkChecker.name, "busy");
+dump(" *** Linkcount = "+gNumLinksToCheck+"\n");
           gNumLinksToCheck++;
+
         };
-      } catch (e) {
-dump(" Exception ERROR in Link checker. e.result="+e.result+", gNumLinksToCheck="+gNumLinksToCheck+"\n");
-      }
+      } catch (e) { dump (" *** EXCEPTION\n");}
     }
   }
   // Done with the loop, now we can be prepared for the finish:
@@ -106,6 +111,7 @@ dump(" Exception ERROR in Link checker. e.result="+e.result+", gNumLinksToCheck=
 
   // Start timer to limit how long we wait for link checking
   gLinkCheckTimerID = setTimeout("LinkCheckTimeOut()", 5000);
+  window.sizeToContent();
 }
 
 function LinkCheckTimeOut()
@@ -115,40 +121,70 @@ function LinkCheckTimeOut()
     return;
   gLinkCheckTimerID = 0;
 
-dump("*** LinkCheckTimeout: Heard from " + gNumLinksCalledBack + " of "+gNumLinksToCheck + "\n");
-
   gNumLinksToCheck = 0;
   gStartedAllChecks = false;
-  if ("length" in gLinksBeingChecked)
+  for (var i=0; i < gLinksBeingChecked.length; i++)
   {
-    for (var i=0; i < gLinksBeingChecked.length; i++)
+    var linkChecker = gLinksBeingChecked[i].QueryInterface(Components.interfaces.nsIURIChecker);
+    // nsIURIChecker status values:
+    // NS_BINDING_SUCCEEDED     link is valid
+    // NS_BINDING_FAILED        link is invalid (gave an error)
+    // NS_BINDING_ABORTED       timed out, or cancelled
+    switch (linkChecker.status)
     {
-      var linkChecker = gLinksBeingChecked[i].QueryInterface(Components.interfaces.nsIURIChecker);
-      // nsIURIChecker status values:
-      // NS_BINDING_SUCCEEDED     link is valid
-      // NS_BINDING_FAILED        link is invalid (gave an error)
-      // NS_BINDING_ABORTED       timed out, or cancelled
-      switch (linkChecker.status)
+      case 0:           // NS_BINDING_SUCCEEDED
+        SetItemStatus(linkChecker.name, "done");
+        break;
+      case 0x804b0001:  // NS_BINDING_FAILED
+        dump(">> " + linkChecker.name + " is broken\n");
+      case 0x804b0002:   // NS_BINDING_ABORTED
+//        dump(">> " + linkChecker.name + " timed out\n");
+      default:
+//        dump(">> " + linkChecker.name + " not checked\n");
+        SetItemStatus(linkChecker.name, "failed");
+        break;
+    }
+  }
+  gDialog.Close.setAttribute("label", GetString("Close"));
+}
+
+// Add url to list of links to check
+// or set status for file already in the list
+// Returns true if url was in the list
+function SetItemStatus(url, status)
+{
+  if (!url)
+    return false;
+
+  if (!status)
+    status = "busy";
+
+  // Just set attribute for status icon 
+  // if we already have this url 
+  var listitems = document.getElementsByTagName("listitem");
+  if (listitems)
+  {
+    for (var i=0; i < listitems.length; i++)
+    {
+      if (listitems[i].getAttribute("label") == url)
       {
-        case 0:           // NS_BINDING_SUCCEEDED
-          dump("   " + linkChecker.name + " OK!\n");
-          break;
-        case 0x804b0001:  // NS_BINDING_FAILED
-          dump(">> " + linkChecker.name + " is broken\n");
-          break;
-        case 0x804b0002:   // NS_BINDING_ABORTED
-          dump(">> " + linkChecker.name + " timed out\n");
-          break;
-        default:
-          dump(">> " + linkChecker.name + " not checked\n");
-          break;
+        listitems[i].setAttribute("progress", status);
+        return true;
       }
     }
   }
-}
 
-function ChangeUrl()
-{
+  // We're adding a new item to list
+  var listitem = document.createElementNS(XUL_NS, "listitem");
+  if (listitem)
+  {
+    listitem.setAttribute("class", "listitem-iconic progressitem");
+    // This triggers CSS to show icon for each status state
+    listitem.setAttribute("progress", status);
+    listitem.setAttribute("label", url);
+    gDialog.LinksList.appendChild(listitem);
+  }
+  return false;
 }
 
 function onAccept()
