@@ -29,6 +29,7 @@
 #include "prprf.h"
 #include "prmem.h"      // for PR_Malloc
 #include <ctype.h>      // for isalpha
+#include "nsIFileProtocolHandler.h"     // for NewChannelFromNativePath
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
@@ -290,6 +291,29 @@ nsIOService::NewSyncStreamListener(nsIBufferInputStream **inStream,
 {
     return NS_NewSyncStreamListener(inStream, outStream, listener);
 
+}
+
+NS_IMETHODIMP
+nsIOService::NewChannelFromNativePath(const char *nativePath, nsIFileChannel **result)
+{
+    nsresult rv;
+    nsIProtocolHandler* handler;
+    rv = GetProtocolHandler("file", &handler);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIFileProtocolHandler* fileHandler = nsnull;
+    rv = handler->QueryInterface(nsIFileProtocolHandler::GetIID(), 
+                                 (void**)&fileHandler);
+    NS_RELEASE(handler);
+    if (NS_FAILED(rv)) return rv;
+    
+    nsIFileChannel* channel;
+    rv = fileHandler->NewChannelFromNativePath(nativePath, &channel);
+    NS_RELEASE(fileHandler);
+    if (NS_FAILED(rv)) return rv;
+    
+    *result = channel;
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

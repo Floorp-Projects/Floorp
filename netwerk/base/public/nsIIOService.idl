@@ -18,10 +18,6 @@
 
 #include "nsISupports.idl"
 
-%{C++
-#include "nscore.h"     // for PRUnichar
-%}
-
 interface nsIProtocolHandler;
 interface nsIURI;
 interface nsIEventSinkGetter;
@@ -31,6 +27,7 @@ interface nsIStreamListener;
 interface nsIEventQueue;
 interface nsIBufferInputStream;
 interface nsIBufferOutputStream;
+interface nsIFileChannel;
 
 [scriptable, uuid(01f0a170-1881-11d3-9337-00104ba0fd40)]
 interface nsIIOService : nsISupports
@@ -128,6 +125,11 @@ interface nsIIOService : nsISupports
     nsIStreamListener NewSyncStreamListener(out nsIBufferInputStream inStream,
                                             out nsIBufferOutputStream outStream);
 
+    /**
+     * This convenience routine first looks up the file protocol handler, and
+     * then uses it to construct a file channel from a native path string.
+     */
+    nsIFileChannel NewChannelFromNativePath(in string nativePath);
 };
 
 %{C++
