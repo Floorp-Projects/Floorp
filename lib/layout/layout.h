@@ -1465,9 +1465,11 @@ extern void
 lo_ReflectNamedAnchor(MWContext *context, lo_DocState *state, PA_Tag *tag,
                       lo_NameList *name_rec, int32 layer_id);
 
+#ifdef DOM
 extern void
 lo_ReflectSpan(MWContext *context, lo_DocState *doc_state, PA_Tag *tag,
                       lo_NameList *name_rec, int32 layer_id);
+#endif
 
 extern void
 lo_ReflectLink(MWContext *context, lo_DocState *state, PA_Tag *tag,

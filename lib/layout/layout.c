@@ -3715,10 +3715,8 @@ lo_FinishLayout(MWContext *context, lo_DocState *state, int32 mocha_event)
 #endif /* OLD_MSGS */
 
         /* Flush out layer callbacks so that document dimensions are correct. */
-		/*
         if (context->compositor)
             CL_CompositeNow(context->compositor);
-		*/
 
 		FE_FinishedLayout(context);
 		return;
@@ -3759,10 +3757,9 @@ lo_FinishLayout(MWContext *context, lo_DocState *state, int32 mocha_event)
 #endif /* OLD_MSGS */
 
         /* Flush out layer callbacks so that document dimensions are correct. */
-		/*
         if (context->compositor)
             CL_CompositeNow(context->compositor);
-		*/
+
 		FE_FinishedLayout(context);
 		return;
 	}
@@ -3832,10 +3829,8 @@ lo_FinishLayout(MWContext *context, lo_DocState *state, int32 mocha_event)
 #endif /* OLD_MSGS */
 
     /* Flush out layer callbacks so that document dimensions are correct. */
-	/* 
     if (context->compositor)
         CL_CompositeNow(context->compositor);
-	*/
 
 	if (state->is_a_subdoc == SUBDOC_NOT && state->top_state && !state->top_state->have_title)
 	{
