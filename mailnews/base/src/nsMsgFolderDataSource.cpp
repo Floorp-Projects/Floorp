@@ -1056,22 +1056,9 @@ nsMsgFolderDataSource::createFolderNameNode(nsIMsgFolder *folder,
   if (NS_FAILED(rv)) return rv;
 
   if (sort) {
-    // to create the sort string, we get the sort order
-    // append the name, and make the whole thing lower case
-    // because we want AAA to be next to aaa.
-    PRInt32 order;
-    rv = folder->GetSortOrder(&order);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    nsAutoString orderString;
-    orderString.AppendInt(order);
-
-    orderString.Append(name.get());
-
-    // make sort insensitive to case
-    orderString.ToLowerCase();
-
-    createNode(orderString.get(), target, getRDFService());
+    nsXPIDLString sortKey;
+    folder->GetSortKey(getter_Copies(sortKey));
+    createNode(sortKey.get(), target, getRDFService());
   }
   else {
     createNode(name.get(), target, getRDFService());

@@ -56,7 +56,9 @@
 #include "nsIMsgFilterList.h"
 #include "nsIUrlListener.h"
 #include "nsIFileSpec.h"
+
 class nsIStringBundle;
+class nsICollation;
 
  /* 
   * MsgFolder
@@ -197,7 +199,7 @@ public:
   NS_IMETHOD ThrowAlertMsg(const char* msgName, nsIMsgWindow *msgWindow);
   NS_IMETHOD GetStringWithFolderNameFromBundle(const char* msgName, PRUnichar **aResult);
   NS_IMETHOD GetPersistElided(PRBool *aPersistElided);
-
+  NS_IMETHOD GetSortKey(PRUnichar **aSortKey);
   // end NS_DECL_NSIMSGFOLDER
   
   // nsRDFResource overrides
@@ -218,7 +220,7 @@ public:
   void			ChangeNumPendingUnread(PRInt32 delta);
   void			ChangeNumPendingTotalMessages(PRInt32 delta);
 
-
+  
 
 
 #ifdef HAVE_ADMINURL
@@ -244,7 +246,6 @@ public:
         NS_IMETHOD GetSortOrder(PRInt32 *order);
         NS_IMETHOD SetSortOrder(PRInt32 order);
 
-
 protected:
   
 	// this is a little helper function that is not part of the public interface. 
@@ -263,6 +264,7 @@ protected:
   nsresult ThrowConfirmationPrompt(nsIMsgWindow *msgWindow, const PRUnichar *confirmString, PRBool *confirmed);
   nsresult GetWarnFilterChanged(PRBool *aVal);
   nsresult SetWarnFilterChanged(PRBool aVal);
+  nsresult CreateCollationKey(const PRUnichar *aSource, PRUnichar **aSortKey);
 protected:
   PRUint32 mFlags;
   nsWeakPtr mParent;     //This won't be refcounted for ownership reasons.
@@ -289,7 +291,6 @@ protected:
   PRInt32 mNumPendingTotalMessages;
 
   PRInt32	mNumNewBiffMessages;
-
   PRBool mIsCachable;
   //
   // stuff from the uri
@@ -306,6 +307,7 @@ protected:
   static nsrefcnt gInstanceCount;
 
   static nsresult initializeStrings();
+  static nsresult createCollationKeyGenerator();
 
   static PRUnichar *kInboxName;
   static PRUnichar *kTrashName;
@@ -324,6 +326,7 @@ protected:
   static nsIAtom* kNameAtom;
   static nsIAtom* kSynchronizeAtom;
   static nsIAtom* kOpenAtom;
+  static nsICollation* kCollationKeyGenerator;
 
 #ifdef MSG_FASTER_URI_PARSING
   // cached parsing URL object

@@ -75,6 +75,9 @@
 #include "nsIPrompt.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsILocale.h"
+#include "nsILocaleService.h"
+#include "nsCollationCID.h"
 
 #define PREF_MAIL_WARN_FILTER_CHANGED "mail.warn_filter_changed"
 
@@ -83,6 +86,7 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgFolderListenerManagerCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 
 nsrefcnt nsMsgFolder::gInstanceCount	= 0;
 
@@ -103,6 +107,7 @@ nsIAtom * nsMsgFolder::kStatusAtom	= nsnull;
 nsIAtom * nsMsgFolder::kNameAtom	= nsnull;
 nsIAtom * nsMsgFolder::kSynchronizeAtom = nsnull;
 nsIAtom * nsMsgFolder::kOpenAtom = nsnull;
+nsICollation * nsMsgFolder::kCollationKeyGenerator = nsnull;
 
 #ifdef MSG_FASTER_URI_PARSING
 nsCOMPtr<nsIURL> nsMsgFolder::mParsingURL;
@@ -149,7 +154,7 @@ nsMsgFolder::nsMsgFolder(void)
     kOpenAtom                = NS_NewAtom("open");
 
     initializeStrings();
-
+    createCollationKeyGenerator();
 #ifdef MSG_FASTER_URI_PARSING
     mParsingURL = do_CreateInstance(kStandardUrlCID);
 #endif
@@ -189,14 +194,13 @@ nsMsgFolder::~nsMsgFolder(void)
       NS_IF_RELEASE(kNameAtom);
       NS_IF_RELEASE(kSynchronizeAtom);
 	  NS_IF_RELEASE(kOpenAtom);
-
+    NS_IF_RELEASE(kCollationKeyGenerator);
       CRTFREEIF(kInboxName);
       CRTFREEIF(kTrashName);
       CRTFREEIF(kSentName);
       CRTFREEIF(kDraftsName);
       CRTFREEIF(kTemplatesName);
       CRTFREEIF(kUnsentName);
-
 #ifdef MSG_FASTER_URI_PARSING
       mParsingURL = nsnull;
 #endif
@@ -235,7 +239,26 @@ nsMsgFolder::initializeStrings()
                               &kUnsentName);
     return NS_OK;
 }
-  
+
+nsresult
+nsMsgFolder::createCollationKeyGenerator()
+{
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsILocaleService> localeSvc = do_GetService(NS_LOCALESERVICE_CONTRACTID,&rv); 
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsILocale> locale; 
+  rv = localeSvc->GetApplicationLocale(getter_AddRefs(locale));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr <nsICollationFactory> factory = do_CreateInstance(kCollationFactoryCID, &rv); 
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = factory->CreateCollation(locale, &kCollationKeyGenerator);
+  return NS_OK;
+
+}  
 NS_IMETHODIMP
 nsMsgFolder::Init(const char* aURI)
 {
@@ -1596,9 +1619,9 @@ NS_IMETHODIMP nsMsgFolder::OnFlagChange(PRUint32 flag)
   if (NS_SUCCEEDED(rv) && folderInfo)
   {
 #ifdef DEBUG_bienvenu
-      nsXPIDLString name;
-      rv = GetName(getter_Copies(name));
-      NS_ASSERTION(Compare(name, NS_LITERAL_STRING("Trash")) || (mFlags & MSG_FOLDER_FLAG_TRASH), "lost trash flag");
+       nsXPIDLString name;
+       rv = GetName(getter_Copies(name));
+       NS_ASSERTION(Compare(name, NS_LITERAL_STRING("Trash")) || (mFlags & MSG_FOLDER_FLAG_TRASH), "lost trash flag");
 #endif
       folderInfo->SetFlags((PRInt32) mFlags);
       if (db)
@@ -1624,7 +1647,7 @@ NS_IMETHODIMP nsMsgFolder::SetFlags(PRUint32 aFlags)
   if (mFlags != aFlags)
   {
     mFlags = aFlags;
-	OnFlagChange(mFlags);
+	  OnFlagChange(mFlags);
   }
   return NS_OK;
 }
@@ -1713,7 +1736,6 @@ NS_IMETHODIMP nsMsgFolder::GetExpansionArray(nsISupportsArray *expansionArray)
 	return NS_OK;
 }
 
-
 #ifdef HAVE_PANE
 NS_IMETHODIMP nsMsgFolder::SetFlagInAllFolderPanes(PRUInt32 which)
 {
@@ -1750,16 +1772,15 @@ NS_IMETHODIMP nsMsgFolder::GetDeletable(PRBool *deletable)
 
 NS_IMETHODIMP nsMsgFolder::GetRequiresCleanup(PRBool *requiredCleanup)
 {
-	if(!requiredCleanup)
-		return NS_ERROR_NULL_POINTER;
-
-	*requiredCleanup = PR_FALSE;
-	return NS_OK;
+  if(!requiredCleanup)
+    return NS_ERROR_NULL_POINTER;
+  *requiredCleanup = PR_FALSE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFolder::ClearRequiresCleanup()
 {
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFolder::GetManyHeadersToDownload(PRBool *_retval)
@@ -2808,9 +2829,61 @@ NS_IMETHODIMP nsMsgFolder::GetSortOrder(PRInt32 *order)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgFolder::GetSortKey(PRUnichar **aSortKey)
+{
+  nsresult rv=NS_OK;
+  NS_ENSURE_ARG(aSortKey);
+  nsAutoString orderString;
+  PRInt32 order;
+  rv = GetSortOrder(&order);
+  NS_ENSURE_SUCCESS(rv,rv);
+  orderString.AppendInt(order);
+
+  nsXPIDLString folderName;
+  rv = GetName(getter_Copies(folderName));
+  NS_ENSURE_SUCCESS(rv,rv);
+  orderString.Append(folderName);
+  rv = CreateCollationKey(orderString.get(), aSortKey);
+  return rv;
+}
+
 NS_IMETHODIMP nsMsgFolder::GetPersistElided(PRBool *aPersistElided)
 {
   // by default, we should always persist the open / closed state of folders & servers
   *aPersistElided = PR_TRUE;
   return NS_OK;
 }
+
+nsresult
+nsMsgFolder::CreateCollationKey(const PRUnichar *aSource,  PRUnichar **aSortKey)
+{
+  nsresult rv =NS_OK;
+  if (kCollationKeyGenerator)
+  {
+    nsAutoString sourceString(aSource);
+    PRUint8 *key=nsnull;
+    PRUint32 length;
+
+    rv = kCollationKeyGenerator->GetSortKeyLen(kCollationCaseInSensitive, sourceString, &length);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    key = (PRUint8 *) PR_Malloc(length+3);
+    if (!key) return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = kCollationKeyGenerator->CreateRawSortKey(kCollationCaseInSensitive, sourceString, key, &length);
+
+    if (NS_SUCCEEDED(rv))
+    {
+      key[length] = 0;
+      key[length+1] = 0;
+      key[length+2] = 0;
+      *aSortKey =(PRUnichar *) key;
+    }
+    else
+      PR_Free(key);
+  }
+  return rv;
+}
+
+
+

@@ -246,8 +246,9 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    */
 	readonly attribute boolean manyHeadersToDownload;
 
-	readonly attribute boolean requiresCleanup;
-	void clearRequiresCleanup();
+    readonly attribute boolean requiresCleanup;
+    void clearRequiresCleanup();
+
 
   /**
    * this should go into a news-specific interface
@@ -396,6 +397,8 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    * used for order in the folder pane, folder pickers, etc.
    */
   attribute long sortOrder;
+
+  readonly attribute wstring sortKey;
 
   /** 
    * used to determine if we persist the close / open state of this folder or not
