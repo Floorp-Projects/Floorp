@@ -102,6 +102,12 @@
 #include "nsILocalFile.h"
 #include "nsIFileChannel.h"
 
+#ifdef XP_WIN
+#include "nsIDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsIFile.h"
+#endif
+
 #ifdef XP_UNIX
 #if defined(MOZ_WIDGET_GTK)
 #include <gdk/gdkx.h> // for GDK_DISPLAY()
@@ -226,7 +232,6 @@ void DisplayNoDefaultPluginDialog(const char *mimeType)
   nsCOMPtr<nsIStringBundle> bundle;
   nsCOMPtr<nsIStringBundle> regionalBundle;
   nsCOMPtr<nsIURI> uri;
-  char *spec = nsnull;
   PRBool displayDialogPrefValue = PR_FALSE, checkboxState = PR_FALSE;
 
   if (!prefs || !prompt || !io || !strings) {
@@ -2790,7 +2795,6 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
 {
   nsresult  rv;
   nsIURI    *url;
-  PRBool isJavaEnabled = PR_TRUE;
 
 #ifdef NS_DEBUG
   printf("InstantiateFullPagePlugin for %s\n",aMimeType);
@@ -3022,13 +3026,52 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
                                                 nsIPluginInstance::GetIID(),
                                                 (void**)&instance);
 
+#ifdef XP_WIN
+    PRBool isJavaPlugin = PR_FALSE;
+    if (aMimeType && 
+        (PL_strcasecmp(aMimeType, "application/x-java-vm") == 0 ||
+         PL_strcasecmp(aMimeType, "application/x-java-applet") == 0))
+    {
+      isJavaPlugin = PR_TRUE;
+    }
+#endif
 
     // couldn't create an XPCOM plugin, try to create wrapper for a legacy plugin
     if (NS_FAILED(result)) 
     {
       if(plugin)
+      { 
+#ifdef XP_WIN
+        static BOOL firstJavaPlugin = FALSE;
+        BOOL restoreOrigDir = FALSE;
+        char origDir[_MAX_PATH];
+        if (isJavaPlugin && !firstJavaPlugin)
+        {
+          DWORD dw = ::GetCurrentDirectory(_MAX_PATH, origDir);
+          NS_ASSERTION(dw <= _MAX_PATH, "Falied to obtain the current directory, which may leads to incorrect class laoding");
+          nsCOMPtr<nsIFile> binDirectory;
+          result = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, 
+                                          getter_AddRefs(binDirectory));
+
+          if (NS_SUCCEEDED(result))
+          {
+              nsXPIDLCString path;
+              binDirectory->GetPath(getter_Copies(path));
+              restoreOrigDir = ::SetCurrentDirectory(path);
+          }
+        }
+#endif
         result = plugin->CreateInstance(NULL, kIPluginInstanceIID, (void **)&instance);
 
+#ifdef XP_WIN
+        if (!firstJavaPlugin && restoreOrigDir)
+        {
+          BOOL bCheck = :: SetCurrentDirectory(origDir);
+          NS_ASSERTION(bCheck, " Error restoring driectoy");
+          firstJavaPlugin = TRUE;
+        }
+#endif
+      }
       if (NS_FAILED(result)) 
       {
         NS_WITH_SERVICE(nsIPlugin, bwPlugin, "@mozilla.org/blackwood/pluglet-engine;1",&result);
