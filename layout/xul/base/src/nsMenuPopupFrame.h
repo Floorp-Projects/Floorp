@@ -34,7 +34,8 @@ nsresult NS_NewMenuPopupFrame(nsIFrame** aResult) ;
 
 class nsIViewManager;
 class nsIView;
-class nsMenuPopupEntryListener;
+class nsIMenuParent;
+class nsIMenuFrame;
 
 class nsMenuPopupFrame : public nsBoxFrame, public nsIMenuParent
 {
@@ -44,18 +45,23 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIMenuParentInterface
-  NS_IMETHOD SetCurrentMenuItem(nsIFrame* aMenuItem);
-  NS_IMETHOD GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult);
-  NS_IMETHOD GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult);
+  NS_IMETHOD SetCurrentMenuItem(nsIMenuFrame* aMenuItem);
+  NS_IMETHOD GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult);
+  NS_IMETHOD GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult);
   NS_IMETHOD SetActive(PRBool aActiveFlag) { return NS_OK; }; // We don't care.
   NS_IMETHOD GetIsActive(PRBool& isActive) { isActive = PR_FALSE; return NS_OK; };
   NS_IMETHOD IsMenuBar(PRBool& isMenuBar) { isMenuBar = PR_FALSE; return NS_OK; };
   
+  NS_IMETHOD GetParentPopup(nsIMenuParent** aResult);
+
   // Closes up the chain of open cascaded menus.
   NS_IMETHOD DismissChain();
 
   // Hides the chain of cascaded menus without closing them up.
   NS_IMETHOD HideChain();
+
+  // The dismissal listener gets created and attached to the window.
+  NS_IMETHOD CreateDismissalListener();
 
   // Overridden methods
   NS_IMETHOD Init(nsIPresContext&  aPresContext,
@@ -73,6 +79,8 @@ public:
 
   NS_IMETHOD Destroy(nsIPresContext& aPresContext);
 
+  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
+
   void GetViewOffset(nsIViewManager* aManager, nsIView* aView, nsPoint& aPoint);
   void GetNearestEnclosingView(nsIFrame* aStartFrame, nsIView** aResult);
 
@@ -84,7 +92,7 @@ public:
   void KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
   
   void ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag);
-  nsIFrame* FindMenuWithShortcut(PRUint32 aLetter);
+  nsIMenuFrame* FindMenuWithShortcut(PRUint32 aLetter);
 
   void Escape(PRBool& aHandledFlag);
   void Enter();
@@ -93,9 +101,8 @@ public:
   PRBool IsDisabled(nsIContent* aContent);
 
 protected:
-  nsIFrame* mCurrentMenu; // The current menu that is active.
+  nsIMenuFrame* mCurrentMenu; // The current menu that is active.
   PRBool mIsCapturingMouseEvents; // Whether or not we're grabbing the mouse events.
-  nsMenuPopupEntryListener* mMenuPopupEntryListener;
 }; // class nsMenuPopupFrame
 
 #endif

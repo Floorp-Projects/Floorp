@@ -25,15 +25,16 @@
 #define NS_IMENUPARENT_IID \
 { 0xd407bf61, 0x3efa, 0x11d3, { 0x97, 0xfa, 0x0, 0x40, 0x5, 0x53, 0xee, 0xf0 } }
 
+class nsIMenuFrame;
 
 class nsIMenuParent : public nsISupports {
 
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IMENUPARENT_IID; return iid; }
 
-  NS_IMETHOD SetCurrentMenuItem(nsIFrame* aMenuItem) = 0;
-  NS_IMETHOD GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult) = 0;
-  NS_IMETHOD GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult) = 0;
+  NS_IMETHOD SetCurrentMenuItem(nsIMenuFrame* aMenuItem) = 0;
+  NS_IMETHOD GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult) = 0;
+  NS_IMETHOD GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult) = 0;
 
   NS_IMETHOD SetActive(PRBool aActiveFlag) = 0;
   NS_IMETHOD GetIsActive(PRBool& isActive) = 0;
@@ -42,6 +43,8 @@ public:
 
   NS_IMETHOD DismissChain() = 0;
   NS_IMETHOD HideChain() = 0;
+
+  NS_IMETHOD CreateDismissalListener() = 0;
 };
 
 #endif

@@ -55,7 +55,7 @@ CPPSRCS=					\
 	nsMenuFrame.cpp \
 	nsMenuBarFrame.cpp \
 	nsMenuBarListener.cpp \
-	nsMenuPopupEntryListener.cpp \
+	nsMenuDismissalListener.cpp \
 	nsPopupSetFrame.cpp \
 	$(NULL)
 
@@ -91,7 +91,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsMenuFrame.obj \
 	.\$(OBJDIR)\nsMenuBarFrame.obj \
 	.\$(OBJDIR)\nsMenuBarListener.obj \
-	.\$(OBJDIR)\nsMenuPopupEntryListener.obj \
+	.\$(OBJDIR)\nsMenuDismissalListener.obj \
 	.\$(OBJDIR)\nsPopupSetFrame.obj \
 	$(NULL)
 

@@ -395,6 +395,20 @@ nsPopupSetFrame::CreatePopup(nsIFrame* aElementFrame, nsIContent* aPopupContent,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPopupSetFrame::HidePopup()
+{
+  ActivatePopup(PR_FALSE);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPopupSetFrame::DestroyPopup()
+{
+  OpenPopup(PR_FALSE);
+  return NS_OK;
+}
+
 void
 nsPopupSetFrame::MarkAsGenerated(nsIContent* aPopupContent)
 {

@@ -817,18 +817,24 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
         mWebShell->SetWebShellType(parentType);
       }
 
-      // Make sure all shells have links back to the nearest enclosing chrome
-      // shell.
+      // Make sure all shells have links back to the content element in the
+      // nearest enclosing chrome shell.
       
-      nsCOMPtr<nsIWebShell> chromeShell;
+      nsCOMPtr<nsIContent> chromeElement;
       nsWebShellType chromeShellType;
       outerShell->GetWebShellType(chromeShellType);
-      if (chromeShellType == nsWebShellChrome)
-        chromeShell = dont_QueryInterface(outerShell);
-      else
-        outerShell->GetContainingChromeShell(getter_AddRefs(chromeShell));
+      if (chromeShellType == nsWebShellChrome) {
+        // Our parent shell is a chrome shell. It is therefore our nearest
+        // enclosing chrome shell. 
+        chromeElement = dont_QueryInterface(mContent);
+      }
+      else {
+        // Our parent shell is a content shell. Get the chrome info from
+        // it and use that for our shell as well.
+        outerShell->GetContainingChromeElement(getter_AddRefs(chromeElement));
+      }
 
-      mWebShell->SetContainingChromeShell(chromeShell);
+      mWebShell->SetContainingChromeElement(chromeElement);
       
 #endif // INCLUDE_XUL 
 

@@ -94,6 +94,9 @@ public:
                          const nsString& aPopupType, const nsString& anAnchorAlignment,
                          const nsString& aPopupAlignment);
 
+  NS_IMETHOD HidePopup();
+  NS_IMETHOD DestroyPopup();
+
   PRBool OnCreate(nsIContent* aPopupContent);
   PRBool OnDestroy();
 
