@@ -251,8 +251,7 @@ nsHTMLInputElement::Release()
 	if (mRefCnt <= 0) {
     delete this;                                       
     return 0;                                          
-  } else if ((1 == mRefCnt) && mForm) { 
-    mRefCnt = 0;
+  } else if ((1 == mRefCnt) && mForm) {         
     NS_LOG_RELEASE(this, mRefCnt, "nsHTMLInputElement");
     delete this;
     return 0;
