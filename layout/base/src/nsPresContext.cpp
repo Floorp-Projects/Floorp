@@ -186,6 +186,7 @@ nsPresContext::GetUserPreferences()
   }
 
   if (NS_OK == mPrefs->GetIntPref("nglayout.compatibility.mode", &prefInt)) {
+    // XXX this should really be a state on the webshell instead of using prefs
     switch (prefInt) {
       case 1: 
         mCompatibilityLocked = PR_TRUE;  
