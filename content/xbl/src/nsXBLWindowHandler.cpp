@@ -277,10 +277,11 @@ nsXBLWindowHandler::WalkHandlersInternal(nsIDOMEvent* aEvent,
 {
   nsresult rv;
   nsXBLPrototypeHandler* currHandler = aHandler;
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aEvent));
+  
   while (currHandler) {
 
     PRBool stopped;
-    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aEvent));
     privateEvent->IsDispatchStopped(&stopped);
     if (stopped)
       return NS_OK;
@@ -291,7 +292,7 @@ nsXBLWindowHandler::WalkHandlersInternal(nsIDOMEvent* aEvent,
       nsAutoString disabled;
       
       nsCOMPtr<nsIContent> elt = currHandler->GetHandlerElement();
-      nsCOMPtr<nsIDOMElement> commandElt(do_QueryInterface(elt));
+      nsCOMPtr<nsIDOMElement> commandElt;
 
       // See if we're in a XUL doc.
       if (mElement) {
@@ -305,10 +306,14 @@ nsXBLWindowHandler::WalkHandlersInternal(nsIDOMEvent* aEvent,
             domDoc->GetElementById(command, getter_AddRefs(commandElt));
 
           if (!commandElt) {
-            NS_ASSERTION(PR_FALSE, "A XUL <key> is observing a command that doesn't exist. Unable to execute key binding!\n");
+            NS_ERROR("A XUL <key> is observing a command that doesn't exist. Unable to execute key binding!\n");
             return NS_OK;
           }
         }
+      }
+
+      if (!commandElt) {
+        commandElt = do_QueryInterface(elt);
       }
 
       if (commandElt)
