@@ -1326,7 +1326,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
           NotifyItemAdded(parentSupports, newFolderSupports, "folderView");
         }
       }
-      folderRenameAtom = getter_AddRefs(NS_NewAtom("RenameCompleted"));
+      folderRenameAtom = do_GetAtom("RenameCompleted");
       newFolder->NotifyFolderEvent(folderRenameAtom);
     }
   }
@@ -3446,7 +3446,7 @@ nsMsgLocalMailFolder::NotifyCompactCompleted()
 {
   (void) RefreshSizeOnDisk();
   nsCOMPtr <nsIAtom> compactCompletedAtom;
-  compactCompletedAtom = getter_AddRefs(NS_NewAtom("CompactCompleted"));
+  compactCompletedAtom = do_GetAtom("CompactCompleted");
   NotifyFolderEvent(compactCompletedAtom);
   return NS_OK;
 }

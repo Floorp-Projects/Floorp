@@ -264,8 +264,8 @@ private:
 
 nsMessengerWinIntegration::nsMessengerWinIntegration()
 {
-  mDefaultServerAtom = getter_AddRefs(NS_NewAtom("DefaultServer"));
-  mTotalUnreadMessagesAtom = getter_AddRefs(NS_NewAtom("TotalUnreadMessages"));
+  mDefaultServerAtom = do_GetAtom("DefaultServer");
+  mTotalUnreadMessagesAtom = do_GetAtom("TotalUnreadMessages");
 
   mFirstTimeFolderUnreadCountChanged = PR_TRUE;
   mInboxURI = nsnull;
@@ -273,7 +273,7 @@ nsMessengerWinIntegration::nsMessengerWinIntegration()
   mStoreUnreadCounts = PR_FALSE; 
   mIntervalTime = 0;
 
-  mBiffStateAtom = getter_AddRefs(NS_NewAtom("BiffState"));
+  mBiffStateAtom = do_GetAtom("BiffState");
   mBiffIconVisible = PR_FALSE;
   mSuppressBiffIcon = PR_FALSE;
   mAlertInProgress = PR_FALSE;

@@ -634,7 +634,7 @@ void txMozillaXMLOutput::endHTMLElement(nsIDOMElement* aElement,
             return;
         
         TX_ToLowerCase(httpEquiv);
-        nsCOMPtr<nsIAtom> header = dont_AddRef(NS_NewAtom(httpEquiv));
+        nsCOMPtr<nsIAtom> header = do_GetAtom(httpEquiv);
         processHTTPEquiv(header, value);
     }
 

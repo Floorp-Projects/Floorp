@@ -167,11 +167,11 @@ nsHTMLEditor::nsHTMLEditor()
 , mSnapToGridEnabled(PR_FALSE)
 , mGridSize(0)
 {
-  mBoldAtom = getter_AddRefs(NS_NewAtom("b"));
-  mItalicAtom = getter_AddRefs(NS_NewAtom("i"));
-  mUnderlineAtom = getter_AddRefs(NS_NewAtom("u"));
-  mFontAtom = getter_AddRefs(NS_NewAtom("font"));
-  mLinkAtom = getter_AddRefs(NS_NewAtom("a"));
+  mBoldAtom = do_GetAtom("b");
+  mItalicAtom = do_GetAtom("i");
+  mUnderlineAtom = do_GetAtom("u");
+  mFontAtom = do_GetAtom("font");
+  mLinkAtom = do_GetAtom("a");
   ++sInstanceCount;
 } 
 
@@ -664,7 +664,7 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
     if (NS_SUCCEEDED(result))
     {
       ToLowerCase(tagName);
-      nsIAtom *tagAtom = NS_NewAtom(tagName);
+      nsCOMPtr<nsIAtom> tagAtom = do_GetAtom(tagName);
       if (!tagAtom) { return NS_ERROR_NULL_POINTER; }
 
       if (tagAtom==nsEditProperty::p          ||
@@ -703,7 +703,6 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
       {
         *aIsBlock = PR_TRUE;
       }
-      NS_RELEASE(tagAtom);
       result = NS_OK;
     }
   } else {
@@ -4856,7 +4855,7 @@ nsHTMLEditor::GetNextElementByTagName(nsIDOMElement    *aCurrentElement,
   if (!aCurrentElement || !aTagName || !aReturn)
     return NS_ERROR_NULL_POINTER;
 
-  nsIAtom *tagAtom = NS_NewAtom(*aTagName);
+  nsCOMPtr<nsIAtom> tagAtom = do_GetAtom(*aTagName);
   if (!tagAtom) { return NS_ERROR_NULL_POINTER; }
   if (tagAtom==nsEditProperty::th)
     tagAtom=nsEditProperty::td;
@@ -4877,7 +4876,7 @@ nsHTMLEditor::GetNextElementByTagName(nsIDOMElement    *aCurrentElement,
 
     nsCOMPtr<nsIAtom> atom = GetTag(currentNode);
 
-    if (tagAtom==atom.get())
+    if (tagAtom == atom)
     {
       nsCOMPtr<nsIDOMElement> element = do_QueryInterface(currentNode);
       if (!element) return NS_ERROR_NULL_POINTER;

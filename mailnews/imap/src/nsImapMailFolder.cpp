@@ -914,13 +914,13 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
       if(childSupports && NS_SUCCEEDED(rv))
       {
         NotifyItemAdded(folderSupports, childSupports, "folderView");
-        folderCreateAtom = getter_AddRefs(NS_NewAtom("FolderCreateCompleted"));
+        folderCreateAtom = do_GetAtom("FolderCreateCompleted");
         child->NotifyFolderEvent(folderCreateAtom);
       }
     }
     else
     {
-      folderCreateAtom = getter_AddRefs(NS_NewAtom("FolderCreateFailed"));
+      folderCreateAtom = do_GetAtom("FolderCreateFailed");
       NotifyFolderEvent(folderCreateAtom);
     }
   }
@@ -4441,7 +4441,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
           if (NS_FAILED(aExitCode))
           {
             nsCOMPtr <nsIAtom> folderRenameAtom;
-            folderRenameAtom = getter_AddRefs(NS_NewAtom("RenameCompleted"));
+            folderRenameAtom = do_GetAtom("RenameCompleted");
             NotifyFolderEvent(folderRenameAtom);
           }
           break;
@@ -4467,7 +4467,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
           if (NS_FAILED(aExitCode))  //if success notification already done
           {
             nsCOMPtr <nsIAtom> folderCreateAtom;
-            folderCreateAtom = getter_AddRefs(NS_NewAtom("FolderCreateFailed"));
+            folderCreateAtom = do_GetAtom("FolderCreateFailed");
             NotifyFolderEvent(folderCreateAtom);
           }
           break;

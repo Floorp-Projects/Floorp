@@ -108,7 +108,7 @@ mozSqlService::Init()
   if (NS_FAILED(rv)) return rv;
   nsCOMPtr<nsIRDFXMLSink> sink = do_QueryInterface(mInner);
   if (sink) {
-    nsCOMPtr<nsIAtom> prefix = getter_AddRefs(NS_NewAtom("SQL"));
+    nsCOMPtr<nsIAtom> prefix = do_GetAtom("SQL");
     sink->AddNameSpace(prefix, NS_ConvertASCIItoUCS2(SQL_NAMESPACE_URI));
   }
 

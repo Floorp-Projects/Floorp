@@ -493,7 +493,7 @@ nsBuiltinSchemaCollection::GetBuiltinType(const nsAString& aName,
     rv = CallQueryInterface(sup, aType);
   }
   else {
-    nsCOMPtr<nsIAtom> typeName = dont_AddRef(NS_NewAtom(aName));
+    nsCOMPtr<nsIAtom> typeName = do_GetAtom(aName);
     PRUint16 typeVal;
     if (typeName == nsSchemaAtoms::sAnyType_atom) {
       typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_ANYTYPE;

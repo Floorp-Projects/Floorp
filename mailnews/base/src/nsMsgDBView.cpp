@@ -451,7 +451,7 @@ nsresult nsMsgDBView::GetLabelPrefStringAndAtom(const char *aPrefName, nsString&
    * later in AppendLabelProperties() */
   NS_IF_RELEASE(*aColorAtom);
   prefColorTree.AppendWithConversion(aColor.get() + 1);
-  *aColorAtom = NS_NewAtom(prefColorTree.get());
+  *aColorAtom = NS_NewAtom(prefColorTree);
   NS_ENSURE_TRUE(*aColorAtom, NS_ERROR_FAILURE);
 
   return rv;
@@ -1721,7 +1721,7 @@ NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sor
     if (redirectorType.IsEmpty())
       mRedirectorTypeAtom = nsnull;
     else
-      mRedirectorTypeAtom = getter_AddRefs(NS_NewAtom(redirectorType.get()));
+      mRedirectorTypeAtom = do_GetAtom(redirectorType.get());
 
     mIsNews = !strcmp("nntp",type.get());
     GetImapDeleteModel(nsnull);

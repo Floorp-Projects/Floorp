@@ -310,7 +310,7 @@ DeviceContextImpl::GetLocaleLangGroup(void)
       langService->GetLocaleLanguageGroup(getter_AddRefs(mLocaleLangGroup));
     }
     if (!mLocaleLangGroup) {
-      mLocaleLangGroup = getter_AddRefs(NS_NewAtom("x-western"));
+      mLocaleLangGroup = do_GetAtom("x-western");
     }
   }
 }

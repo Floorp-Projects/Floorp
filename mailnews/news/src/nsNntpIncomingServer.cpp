@@ -114,8 +114,8 @@ nsNntpIncomingServer::nsNntpIncomingServer() : nsMsgLineBuffer(nsnull, PR_FALSE)
   mLastUpdatedTime = 0;
 
   // these atoms are used for subscribe search
-  mSubscribedAtom = getter_AddRefs(NS_NewAtom("subscribed"));
-  mNntpAtom = getter_AddRefs(NS_NewAtom("nntp"));
+  mSubscribedAtom = do_GetAtom("subscribed");
+  mNntpAtom = do_GetAtom("nntp");
 
   // our filters are on the server, they are on a per newsgroup basis
   // but this will make the filter UI enable for news accounts

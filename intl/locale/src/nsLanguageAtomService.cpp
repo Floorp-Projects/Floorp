@@ -209,7 +209,7 @@ nsLanguageAtomService::LookupLanguage(const PRUnichar* aLanguage,
         }
       }
     }
-    nsCOMPtr<nsIAtom> langGroup = getter_AddRefs(NS_NewAtom(langGroupStr));
+    nsCOMPtr<nsIAtom> langGroup = do_GetAtom(langGroupStr);
     language->Init(lowered, langGroup);
     lang = language;
     mLangs->AppendElement(lang);
@@ -237,7 +237,7 @@ nsLanguageAtomService::LookupCharSet(const char* aCharSet,
     NS_ENSURE_TRUE(mCharSets, NS_ERROR_FAILURE);
   }
   if (!mUnicode) {
-    mUnicode = getter_AddRefs(NS_NewAtom("x-unicode"));
+    mUnicode = do_GetAtom("x-unicode");
   }
 
   nsCOMPtr<nsIAtom> langGroup;

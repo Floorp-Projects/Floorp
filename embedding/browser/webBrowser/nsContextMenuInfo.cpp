@@ -354,8 +354,8 @@ nsresult nsContextMenuInfo::GetFrameForBackgroundUpdate(nsIPresContext *aPresCon
        // make sure that this is the HTML or BODY element
       nsCOMPtr<nsIAtom> tag;
       pContent->GetTag(getter_AddRefs(tag));
-      nsCOMPtr<nsIAtom> mTag_html = getter_AddRefs(NS_NewAtom("html"));
-      nsCOMPtr<nsIAtom> mTag_body = getter_AddRefs(NS_NewAtom("body"));
+      nsCOMPtr<nsIAtom> mTag_html = do_GetAtom("html");
+      nsCOMPtr<nsIAtom> mTag_body = do_GetAtom("body");
       if (tag && 
           tag.get() == mTag_html ||
           tag.get() == mTag_body) {
@@ -365,7 +365,7 @@ nsresult nsContextMenuInfo::GetFrameForBackgroundUpdate(nsIPresContext *aPresCon
         while (pCanvasFrame) {
           nsCOMPtr<nsIAtom>  parentType;
           pCanvasFrame->GetFrameType(getter_AddRefs(parentType));
-          nsCOMPtr<nsIAtom> mTag_canvasFrame = getter_AddRefs(NS_NewAtom("CanvasFrame"));   
+          nsCOMPtr<nsIAtom> mTag_canvasFrame = do_GetAtom("CanvasFrame");   
           if (parentType.get() == mTag_canvasFrame) {
             *aBGFrame = pCanvasFrame;
             break;

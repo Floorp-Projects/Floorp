@@ -1203,7 +1203,7 @@ nsXMLContentSink::ProcessMETATag(nsIContent* aContent)
     aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::content, result);
     if (!result.IsEmpty()) {
       ToLowerCase(header);
-      nsCOMPtr<nsIAtom> fieldAtom(dont_AddRef(NS_NewAtom(header)));
+      nsCOMPtr<nsIAtom> fieldAtom(do_GetAtom(header));
       rv = ProcessHeaderData(fieldAtom, result, aContent); 
     }//if (!result.IsEmpty()) 
   }//if (!header.IsEmpty()) 
