@@ -15,68 +15,24 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=../../..
+DEPTH = ../../..
 topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
 VPATH		= @srcdir@
+srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM	= nntpTest
+MODULE=nntp
+LIBRARY_NAME=nntpTest
 
-CPPSRCS = \
-	nntpTest.cpp		   \
-	nsNNTPCategoryContainerStub.cpp \
-	nsNNTPHostStub.cpp	    \
-	nsNNTPNewsgroupListStub.cpp \
-	nsNNTPNewsgroupStub.cpp	    \
+EXPORTS = \
 	$(NULL)
 
-ifdef MOZ_OJI
-	JSJ_LIB = -ljsj
-endif
-
-LIBS = \
-	-labouturl \
-	-lfileurl \
-	-lftpurl \
-	-lgophurl \
-	-lremoturl \
-	-lhttpurl \
-	-lsockstuburl \
-	-lnetcache \
-	-lmimetype \
-	-lnetcnvts \
-	-lnetwork \
-	-lnetlib \
-	-lnetutil \
-	-lnntp	\
-	-lrdf \
-	-lmailnewsbase \
-	-lreg	\
-	-lxpcom	\
-	-lpwcac \
-	-lmozdbm	\
-	-lxp	\
-	-lpref	\
-	-ljs	\
-	-lraptorbase \
-	-lgmbase$(MOZ_TOOLKIT) \
-	-lsecfree \
-	-lraptorhtml \
-	-lraptorhtmlpars	\
-	-lraptorgfx	\
-	-ljsdom	\
-	-ljsurl	\
-	-limg	\
-	-lpng	\
-	-ljpeg	\
-	-lmozutil	\
-	-lgfxgtk	\
-	-lz \
-	$(DIST)/lib/librdfbase_s.a \
-	$(NSPR_LIBS) \
-	$(TK_LIBS) \
+CPPSRCS = \
+	nsNNTPHostStub.cpp \
+	nsNNTPNewsgroupListStub.cpp \
+	nsNNTPNewsgroupStub.cpp \
+	nsNNTPCategoryContainerStub.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
