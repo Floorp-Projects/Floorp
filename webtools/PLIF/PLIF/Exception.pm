@@ -120,7 +120,6 @@ sub create {
 sub raise {
     my($exception, @data) = @_;
     my($filename, $line, $stacktrace) = stacktrace;
-    PLIF->warn(7, "Exception raised: $exception");
     if (ref($exception) and $exception->isa('PLIF::Exception')) {
         # if the exception is an object, raise it
         # this is for people doing things like:
