@@ -82,7 +82,8 @@ protected:
                          nsIRenderingContext& aContext,
                          PRIntn whichSide,
                          const nsRect& inside, const nsRect& outside,
-                         PRIntn borderPart, float borderFrac);
+                         PRIntn borderPart, float borderFrac,
+                         nscoord twipsPerPixel);
 
   static void DrawSide(nsIRenderingContext& aContext,
                        PRIntn whichSide,
@@ -90,7 +91,8 @@ protected:
                        const nscolor borderColors[],
                        const nsRect& borderOutside,
                        const nsRect& borderInside,
-                       PRBool printing);
+                       PRBool printing,
+                       nscoord twipsPerPixel);
 
   static void DrawDashedSides(PRIntn startSide,
                               nsIRenderingContext& aContext,
