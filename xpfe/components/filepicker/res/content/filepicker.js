@@ -17,7 +17,8 @@ function onLoad() {
     retvals = o.retvals; /* set this to a global var so we can set return values */
     const title = o.title;
     filePickerMode = o.mode;
-    const directory = o.displayDirectory.path;
+    if (o.displayDirectory)
+      const directory = o.displayDirectory.path;
     const initialText = o.defaultString;
     const filterTitles = o.filters.titles;
     const filterTypes = o.filters.types;
