@@ -255,7 +255,7 @@ PrefResult pref_OpenFile(
 		{
 			fileLength = fread(readBuf, sizeof(char), fileLength, fp);
 
-			if ( verifyHash && !pref_VerifyLockFile(readBuf, fileLength))
+			if ( verifyHash && !pref_VerifyLockFile(readBuf, (long) fileLength))
 			{
 				ok = PREF_BAD_LOCKFILE;
 			}
@@ -312,7 +312,7 @@ PRBool pref_VerifyLockFile(char* buf, long buflen)
 		/* start with the magic key */
 		MD5_Update(md5_cxt, magic_key, sizeof(magic_key));
 
-		MD5_Update(md5_cxt, pStart, buflen - hash_length);
+		MD5_Update(md5_cxt, pStart, (unsigned int)(buflen - hash_length));
 		
 		MD5_End(md5_cxt, digest, &len, 16);
 		
@@ -324,7 +324,7 @@ PRBool pref_VerifyLockFile(char* buf, long buflen)
 	        (int)digest[8],(int)digest[9],(int)digest[10],(int)digest[11],
 	        (int)digest[12],(int)digest[13],(int)digest[14],(int)digest[15]);
 
-		success = ( PL_strncmp((const char*) buf + 3, szHash, hash_length - 4) == 0 );
+		success = ( PL_strncmp((const char*) buf + 3, szHash, (PRUint32)(hash_length - 4)) == 0 );
 	}
     return success;
 #else	
@@ -671,7 +671,7 @@ static char * str_escape(const char * original)
 	if (original == NULL)
 		return NULL;
 	
-	ret_str = malloc(2 * strlen(original) + 1);
+	ret_str = malloc(2 * PL_strlen(original) + 1);
 	/* Paranoid worst case all slashes will free quickly */
 	p = original;
 	q = ret_str;
@@ -726,7 +726,7 @@ PREF_SetBoolPref(const char *pref_name, PRBool value)
 PR_IMPLEMENT(PrefResult)
 PREF_SetBinaryPref(const char *pref_name, void * value, long size)
 {
-	char* buf = PL_Base64Encode(value, size, NULL);
+	char* buf = PL_Base64Encode(value, (PRUint32)size, NULL);
 
 	if (buf) {
 		PrefValue pref;
@@ -813,7 +813,7 @@ PREF_SetDefaultBoolPref(const char *pref_name,PRBool value)
 PR_IMPLEMENT(PrefResult)
 PREF_SetDefaultBinaryPref(const char *pref_name,void * value,long size)
 {
-	char* buf = PL_Base64Encode(value, size, NULL);
+	char* buf = PL_Base64Encode(value, (PRUint32)size, NULL);
 	if (buf) {
 		PrefValue pref;
 		pref.stringVal = buf;
@@ -1222,10 +1222,10 @@ PrefResult pref_GetCharPref(const char *pref_name, char * return_buffer, int * l
 		if (stringVal)
 		{
 			if (*length == 0)
-				*length = strlen(stringVal) + 1;
+				*length = PL_strlen(stringVal) + 1;
 			else
 			{
-				PL_strncpy(return_buffer, stringVal, PR_MIN(*length - 1, (int)strlen(stringVal) + 1));
+				PL_strncpy(return_buffer, stringVal, PR_MIN(*length - 1, (PRUint32)(PL_strlen(stringVal) + 1)));
 				return_buffer[*length - 1] = '\0';
 			}
 			result = PREF_OK;
@@ -1387,13 +1387,13 @@ PREF_GetBinaryPref(const char *pref_name, void * return_value, int *size)
 
 	if (result == PREF_NOERROR)
 	{
-		if (strlen(buf) == 0)
+		if (PL_strlen(buf) == 0)
 		{		/* don't decode empty string ? */
 			PR_Free(buf);
 			return PREF_ERROR;
 		}
 	
-		PL_Base64Decode(buf, *size, return_value);
+		PL_Base64Decode(buf, (PRUint32)(*size), return_value);
 		
 		PR_Free(buf);
 	}
@@ -1416,14 +1416,14 @@ ReadCharPrefUsing(const char *pref_name, void** return_value, int *size, CharPre
 
 	if (result == PREF_NOERROR)
 	{
-		if (strlen(buf) == 0)
+		if (PL_strlen(buf) == 0)
 		{		/* do not decode empty string? */
 			PR_Free(buf);
 			return PREF_ERROR;
 		}
 	
 		*return_value = PL_Base64Decode(buf, 0, NULL);
-		*size = strlen(buf);
+		*size = PL_strlen(buf);
 		
 		PR_Free(buf);
 	}
@@ -1541,12 +1541,12 @@ PR_IMPLEMENT(int)
 pref_DeleteItem(PLHashEntry *he, int i, void *arg)
 {
 	const char *to_delete = (const char *) arg;
-	int len = strlen(to_delete);
+	int len = PL_strlen(to_delete);
 	
 	/* note if we're deleting "ldap" then we want to delete "ldap.xxx"
 		and "ldap" (if such a leaf node exists) but not "ldap_1.xxx" */
-	if (to_delete && (PL_strncmp(he->key, to_delete, len) == 0 ||
-		(len-1 == (int)strlen(he->key) && PL_strncmp(he->key, to_delete, len-1) == 0)))
+	if (to_delete && (PL_strncmp(he->key, to_delete, (PRUint32) len) == 0 ||
+		(len-1 == (int)PL_strlen(he->key) && PL_strncmp(he->key, to_delete, (PRUint32)(len-1)) == 0)))
 		return HT_ENUMERATE_REMOVE;
 	else
 		return HT_ENUMERATE_NEXT;
@@ -1615,7 +1615,7 @@ PREF_ClearUserPref(const char *pref_name)
 /* Prototype Admin Kit support */
 PR_IMPLEMENT(PrefResult)
 PREF_GetConfigString(const char *obj_name, char * return_buffer, int size,
-	int index, const char *field)
+	int indx, const char *field)
 {
 	PR_ASSERT( PR_FALSE );
 	return PREF_ERROR;
@@ -1641,11 +1641,11 @@ PREF_CopyConfigString(const char *obj_name, char **return_buffer)
 
 PR_IMPLEMENT(PrefResult)
 PREF_CopyIndexConfigString(const char *obj_name,
-	int index, const char *field, char **return_buffer)
+	int indx, const char *field, char **return_buffer)
 {
 	PrefResult success = PREF_ERROR;
 	PrefNode* pref;
-	char* setup_buf = PR_smprintf("%s_%d.%s", obj_name, index, field);
+	char* setup_buf = PR_smprintf("%s_%d.%s", obj_name, indx, field);
 
 	pref = (PrefNode*) PR_HashTableLookup(gHashTable, setup_buf);
 	
@@ -1957,9 +1957,9 @@ JSBool PR_CALLBACK pref_NativeSetConfig
 JSBool PR_CALLBACK pref_NativeGetPref
 	(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)
 {
-	void* value = NULL;
+    //void* value = NULL;
 	PrefNode* pref;
-	PRBool prefExists = PR_TRUE;
+	//PRBool prefExists = PR_TRUE;
 	
     if (argc >= 1 && JSVAL_IS_STRING(argv[0]))
     {
@@ -2019,15 +2019,15 @@ PR_IMPLEMENT(int)
 pref_addChild(PLHashEntry *he, int i, void *arg)
 {
 	PrefChildIter* pcs = (PrefChildIter*) arg;
-	if ( PL_strncmp(he->key, pcs->parent, strlen(pcs->parent)) == 0 )
+	if ( PL_strncmp(he->key, pcs->parent, PL_strlen(pcs->parent)) == 0 )
 	{
 		char buf[512];
 		char* nextdelim;
-		PRUint32 parentlen = strlen(pcs->parent);
+		PRUint32 parentlen = PL_strlen(pcs->parent);
 		char* substring;
 		PRBool substringBordersSeparator = PR_FALSE;
 
-		strncpy(buf, he->key, PR_MIN(512, strlen(he->key) + 1));
+		strncpy(buf, he->key, PR_MIN(512, PL_strlen(he->key) + 1));
 		nextdelim = buf + parentlen;
 		if (parentlen < PL_strlen(buf))
 		{
@@ -2040,14 +2040,14 @@ pref_addChild(PLHashEntry *he, int i, void *arg)
 		substring = strstr(pcs->childList, buf);
 		if (substring)
 		{
-			int buflen = strlen(buf);
+			int buflen = PL_strlen(buf);
 			PR_ASSERT(substring[buflen] > 0);
 			substringBordersSeparator = (substring[buflen] == '\0' || substring[buflen] == ';');
 		}
 
 		if (!substring || !substringBordersSeparator)
 		{
-			int newsize = strlen(pcs->childList) + strlen(buf) + 2;
+			int newsize = PL_strlen(pcs->childList) + PL_strlen(buf) + 2;
 #ifdef XP_WIN16
 			return HT_ENUMERATE_STOP;
 #else
@@ -2095,11 +2095,11 @@ PREF_CreateChildList(const char* parent_node, char **child_list)
 }
 
 PR_IMPLEMENT(char*)
-PREF_NextChild(char *child_list, int *index)
+PREF_NextChild(char *child_list, int *indx)
 {
-	char* child = strtok(&child_list[*index], ";");
+	char* child = strtok(&child_list[*indx], ";");
 	if (child)
-		*index += strlen(child) + 1;
+		*indx += PL_strlen(child) + 1;
 	return child;
 }
 
@@ -2126,17 +2126,17 @@ PrefResult pref_copyTree(const char *srcPrefix, const char *destPrefix, const ch
 	
 	if ( PREF_CreateChildList(curSrcBranch, &children) == PREF_NOERROR )
 	{	
-		int 	index = 0;
+		int 	indx = 0;
 		int		srcPrefixLen = PL_strlen(srcPrefix);
 		char* 	child = NULL;
 		
-		while ( (child = PREF_NextChild(children, &index)) != NULL)
+		while ( (child = PREF_NextChild(children, &indx)) != NULL)
 		{
 			PrefType prefType;
 			char	*destPrefName = NULL;
 			char	*childStart = (srcPrefixLen > 0) ? (child + srcPrefixLen + 1) : child;
 			
-			PR_ASSERT( PL_strncmp(child, curSrcBranch, srcPrefixLen) == 0 );
+			PR_ASSERT( PL_strncmp(child, curSrcBranch, (PRUint32)srcPrefixLen) == 0 );
 							
 			if (*destPrefix > 0)
 				destPrefName = PR_smprintf("%s.%s", destPrefix, childStart);
@@ -2286,7 +2286,7 @@ PrefResult pref_DoCallback(const char* changed_pref)
 	struct CallbackNode* node;
 	for (node = gCallbacks; node != NULL; node = node->next)
 	{
-		if ( PL_strncmp(changed_pref, node->domain, strlen(node->domain)) == 0 )
+		if ( PL_strncmp(changed_pref, node->domain, PL_strlen(node->domain)) == 0 )
 		{
 			int result2 = (*node->func) (changed_pref, node->data);
 			if (result2 != 0)
@@ -2525,7 +2525,7 @@ void pref_Alert(char* msg)
 {
 	Str255 pmsg;
 	SInt16 itemHit;
-	pmsg[0] = strlen(msg);
+	pmsg[0] = PL_strlen(msg);
 	BlockMoveData(msg, pmsg + 1, pmsg[0]);
 	StandardAlert(kAlertPlainAlert, "\pNetscape -- JS Preference Warning", pmsg, NULL, &itemHit);
 }
@@ -2743,7 +2743,7 @@ PR_IMPLEMENT(PrefResult) PREF_SetListPref(const char* pref, char** list)
 	for ( len = 0, p = list; p != NULL && *p != NULL; p++ )
 		len+= (PL_strlen(*p)+1); /* The '+1' is for a comma or '\0' */
 
-	if ( len <= 0 || (value = PR_MALLOC(len)) == NULL )
+	if ( len <= 0 || (value = PR_MALLOC((PRUint32)len)) == NULL )
 		return PREF_ERROR;
 
 	(void) PL_strcpy(value, *list);
