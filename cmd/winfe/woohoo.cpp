@@ -206,9 +206,11 @@ BOOL CNetscapeApp::ExistComponentArguments(char * pszCommandLine)
     m_bAlwaysDockTaskBar= TRUE;
     m_bAccountSetupStartupJava = TRUE;
 
+  } else if (strcasestr(pszCommandLine,"-REG_MODE" )) {
+    // This operation is not allowed here
+
   } else if (strcasestr(pszCommandLine,"-START_JAVA" )) {
     m_bAccountSetupStartupJava = TRUE;
-
 
   } else if (strcasestr(pszCommandLine,"-BROWSER" )){
     m_bCreateBrowser = TRUE;

@@ -35,6 +35,9 @@
 #include "libevent.h"
 #include "wfemsg.h"
 
+// Registration Mode Flag APIs
+#include "nsCaps.h"
+
 // Misc Includes
 #include "res\appicon.h"
 #include "custom.h"
@@ -451,6 +454,9 @@ void CNetscapeApp::parseCommandLine(char * commandLine)
 		m_bAccountSetupStartupJava = TRUE;
 	}
 
+	if(IsRuntimeSwitch("-reg_mode",TRUE)){
+		nsCapsEnableRegistrationModeFlag();
+	}
 
 	if(IsRuntimeSwitch("-start_java",TRUE))
 		m_bAccountSetupStartupJava = TRUE;
