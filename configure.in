@@ -448,11 +448,11 @@ AC_SUBST(MACOS_SDK_DIR)
 
 if test "$MACOS_SDK_DIR"; then
   export NEXT_ROOT=$MACOS_SDK_DIR
-  CFLAGS="-I${MACOS_SDK_DIR}/usr/include $CFLAGS"
-  CXXFLAGS="-I${MACOS_SDK_DIR}/usr/include $CXXFLAGS"
   changequote(,)
-  GCC_VERSION=`echo $CXX_VERSION | perl -pe "s/gcc version ([^ ]*).*/\1/"`
+  GCC_VERSION=`echo $CXX_VERSION | perl -pe "s/^.*gcc version ([^ ]*).*/\1/"`
   changequote([,])
+  CFLAGS="-I${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION} -I${MACOS_SDK_DIR}/usr/include $CFLAGS"
+  CXXFLAGS="-I${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION} -I${MACOS_SDK_DIR}/usr/include $CXXFLAGS"
   LIBS="-L${MACOS_SDK_DIR}/usr/lib/gcc/darwin/${GCC_VERSION} -L${MACOS_SDK_DIR}/usr/lib $LIBS"
 fi
 
