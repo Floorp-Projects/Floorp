@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<project name="xmlimplsrc" basedir=".." default="compile">
+
+  <property file="build.properties"/>
+
+  <path id="xmlimpl.classpath">
+     <pathelement location="${xbean.jar}"/>
+  </path>
+
+
+  <target name="compile" unless="without-xmlimpl">
+
+    <available property="xbean-present?" file="${xbean.jar}" /> 
+    <antcall target="xbean-get" />
+
+    <condition property="xmlimpl-compile?">
+      <and>
+      	<available file="${xbean.jar}" /> 
+<!--
+  Does not work under JDK 1.3 due to incompatible classes
+   
+	<available classname="javax.xml.namespace.QName" 
+	           classpathref="xmlimpl.classpath"/>
+	<available classname="org.apache.xmlbeans.XmlCursor" 
+	           classpathref="xmlimpl.classpath"/>
+	<available classname="org.apache.xmlbeans.XmlException" 
+	           classpathref="xmlimpl.classpath"/>
+	<available classname="org.apache.xmlbeans.XmlObject" 
+	           classpathref="xmlimpl.classpath"/>
+	<available classname="org.apache.xmlbeans.XmlOptions" 
+	           classpathref="xmlimpl.classpath"/>
+-->
+      </and>
+    </condition>
+
+    <antcall target="do-compile" />
+    <antcall target="do-not-compile" />
+  
+  </target>
+    
+  <target name="do-compile" if="xmlimpl-compile?">
+
+    <echo>Compiling E4X implementation using ${xbean.jar}</echo>
+    <javac srcdir="xmlimplsrc"
+           destdir="${classes}"
+           includes="org/**/*.java"
+           deprecation="on"
+           debug="${debug}"
+	   target="${target-jvm}"
+	   classpathref="xmlimpl.classpath"
+	   failonerror="${xmlimpl.compile.failonerror}"
+	   >
+    </javac>
+
+  </target>
+
+  <target name="do-not-compile" unless="xmlimpl-compile?">
+
+<echo>
+Skipping compilation of E4X implementation due to lack of 
+javax.xml.namespace.*, org.apache.xmlbeans.*  classes
+</echo>
+
+  </target>
+
+  <target name="copy-source">
+    <mkdir dir="${dist.dir}/xmlimplsrc"/>
+    <copy todir="${dist.dir}/xmlimplsrc">
+      <fileset dir="xmlimplsrc"
+               includes="**/*.java,**/*.properties,**/*.xml"
+               />
+    </copy>
+  </target>
+
+  <target name="clean">
+    <delete includeEmptyDirs="true">
+      <fileset dir="${classes}"
+               includes="org/mozilla/javascript/xmlimpl/**"/>
+    </delete>
+  </target>
+
+
+  <target name="xbean-get" unless="xbean-present?">
+  
+    <property 
+     name="xbean.url" 
+     value="http://www.apache.org/dist/xml/xmlbeans/xmlbeans-current.zip"
+     />
+
+    <property name="xbean.tmp" location="${build.dir}/tmp-xbean" /> 
+    <property name="xbean.zip" location="${xbean.tmp}/xbean.zip" /> 
+
+    <mkdir dir="${xbean.tmp}"/>
+    <get src="${xbean.url}" dest="${xbean.zip}" ignoreerrors="true" />
+
+    <available property="xbean-zip-present?" file="${xbean.zip}" /> 
+    
+    <antcall target="xbean-unzip" />
+  </target>
+
+  <target name="xbean-unzip" if="xbean-zip-present?">
+    
+    <unzip src="${xbean.zip}" dest="${xbean.tmp}">
+      <patternset includes="xmlbeans-*/lib/xbean.jar" />
+    </unzip>
+    <mkdir dir="${jarlib}" />
+    <copy tofile="${xbean.jar}">
+      <fileset dir="${xbean.tmp}" includes="xmlbeans-*/lib/xbean.jar" />
+    </copy>
+
+    <delete dir="${xbean.tmp}" />
+  </target>
+
+
+
+</project>
