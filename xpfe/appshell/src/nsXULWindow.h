@@ -69,7 +69,7 @@ protected:
    void OnChromeLoaded();
    NS_IMETHOD LoadPositionAndSizeFromXUL(PRBool aPosition, PRBool aSize);
    NS_IMETHOD LoadTitleFromXUL();
-   NS_IMETHOD PersistPositionAndSize(PRBool aPosition, PRBool aSize);
+   NS_IMETHOD PersistPositionAndSize(PRBool aPosition, PRBool aSize, PRBool aSizeMode);
 
    NS_IMETHOD GetDOMElementFromDocShell(nsIDocShell* aDocShell, 
       nsIDOMElement** aDOMElement);

@@ -177,7 +177,8 @@ NS_IMETHODIMP nsXULWindow::GetContentShellById(const PRUnichar* aID,
 }
 
 NS_IMETHODIMP nsXULWindow::SetPersistence(PRBool aPersistX, PRBool aPersistY,
-   PRBool aPersistCX, PRBool aPersistCY)
+   PRBool aPersistCX, PRBool aPersistCY,
+   PRBool aPersistSizeMode)
 
 {
    nsCOMPtr<nsIDOMElement> docShellElement;
@@ -240,6 +241,15 @@ NS_IMETHODIMP nsXULWindow::SetPersistence(PRBool aPersistX, PRBool aPersistY,
       saveString = PR_TRUE;
       }
 
+   index = persistString.Find("sizemode");
+   if (!aPersistSizeMode && index >= 0) {
+      persistString.Append(" sizemode");
+      saveString = PR_TRUE;
+   } else if (aPersistSizeMode && index < 0) {
+      persistString.Cut(index, 8);
+      saveString = PR_TRUE;
+   }
+
    if(saveString) 
       docShellElement->SetAttribute("persist", persistString);
 
@@ -247,7 +257,8 @@ NS_IMETHODIMP nsXULWindow::SetPersistence(PRBool aPersistX, PRBool aPersistY,
 }
 
 NS_IMETHODIMP nsXULWindow::GetPersistence(PRBool* aPersistX, PRBool* aPersistY,
-   PRBool* aPersistCX, PRBool* aPersistCY)
+   PRBool* aPersistCX, PRBool* aPersistCY,
+   PRBool* aPersistSizeMode)
 {
    nsCOMPtr<nsIDOMElement> docShellElement;
    GetDOMElementFromDocShell(mDocShell, getter_AddRefs(docShellElement));
@@ -265,6 +276,8 @@ NS_IMETHODIMP nsXULWindow::GetPersistence(PRBool* aPersistX, PRBool* aPersistY,
       *aPersistCX = persistString.Find("width") >= 0 ? PR_TRUE : PR_FALSE;
    if(aPersistCY)
       *aPersistCY = persistString.Find("height") >= 0 ? PR_TRUE : PR_FALSE;
+   if(aPersistSizeMode)
+      *aPersistSizeMode = persistString.Find("sizemode") >= 0 ? PR_TRUE : PR_FALSE;
 
    return NS_OK;
 }
@@ -418,7 +431,7 @@ NS_IMETHODIMP nsXULWindow::Destroy()
 NS_IMETHODIMP nsXULWindow::SetPosition(PRInt32 aX, PRInt32 aY)
 {
    NS_ENSURE_SUCCESS(mWindow->Move(aX, aY), NS_ERROR_FAILURE);
-   PersistPositionAndSize(PR_TRUE, PR_FALSE);
+   PersistPositionAndSize(PR_TRUE, PR_FALSE, PR_FALSE);
    return NS_OK;
 }
 
@@ -431,7 +444,7 @@ NS_IMETHODIMP nsXULWindow::SetSize(PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
 {
    mIntrinsicallySized = PR_FALSE;
    NS_ENSURE_SUCCESS(mWindow->Resize(aCX, aCY, aRepaint), NS_ERROR_FAILURE);
-   PersistPositionAndSize(PR_FALSE, PR_TRUE);
+   PersistPositionAndSize(PR_FALSE, PR_TRUE, PR_FALSE);
    return NS_OK;
 }
 
@@ -445,7 +458,7 @@ NS_IMETHODIMP nsXULWindow::SetPositionAndSize(PRInt32 aX, PRInt32 aY,
 {
    mIntrinsicallySized = PR_FALSE;
    NS_ENSURE_SUCCESS(mWindow->Resize(aX, aY, aCX, aCY, aRepaint), NS_ERROR_FAILURE);
-   PersistPositionAndSize(PR_TRUE, PR_TRUE);
+   PersistPositionAndSize(PR_TRUE, PR_TRUE, PR_FALSE);
    return NS_OK;
 }
 
@@ -677,6 +690,10 @@ void nsXULWindow::OnChromeLoaded()
 NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition, 
    PRBool aSize)
 {
+/* NB: we'll want to pay attention to the "sizemode" attribute (maximizing
+   the window if it asks) someday after the widget implementations know how
+   to do that.
+*/
    nsCOMPtr<nsIDOMElement> docShellElement;
    GetDOMElementFromDocShell(mDocShell, getter_AddRefs(docShellElement));
    NS_ENSURE_TRUE(docShellElement, NS_ERROR_FAILURE);
@@ -763,7 +780,7 @@ NS_IMETHODIMP nsXULWindow::LoadTitleFromXUL()
    return NS_OK;
 }
 
-NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize)
+NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize, PRBool aSizeMode)
 {
    // can happen when the persistence timer fires at an inopportune time
    // during window shutdown
@@ -776,7 +793,10 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
       return NS_ERROR_FAILURE;
 
    PRInt32 x, y, cx, cy;
+   PRInt32 sizeMode;
+
    NS_ENSURE_SUCCESS(GetPositionAndSize(&x, &y, &cx, &cy), NS_ERROR_FAILURE);
+   mWindow->GetSizeMode(&sizeMode);
 
    // (But only for size elements which are persisted.)
    /* Note we use the same cheesy way to determine that as in
@@ -790,7 +810,7 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
 
    char           sizeBuf[10];
    nsAutoString   sizeString;
-   if(aPosition)
+   if(aPosition && sizeMode == nsSizeMode_Normal)
       {
       if(persistString.Find("screenX") >= 0)
          {
@@ -806,7 +826,7 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
          }
       }
 
-   if(aSize)
+   if(aSize && sizeMode == nsSizeMode_Normal)
       {
       if(persistString.Find("width") >= 0)
          {
@@ -821,6 +841,18 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
          docShellElement->SetAttribute("height", sizeString);
          }
       }
+
+   if (aSizeMode && persistString.Find("sizemode") >= 0) {
+      PRInt32 sizemode;
+      if (NS_FAILED(mWindow->GetSizeMode(&sizemode)))
+        sizemode = nsSizeMode_Normal;
+      sizeString = "n";
+      if (sizemode == nsSizeMode_Minimized)
+        sizeString = "m";
+      else if (sizemode == nsSizeMode_Maximized)
+        sizeString = "M";
+      docShellElement->SetAttribute("sizemode", sizeString);
+   }
 
    return NS_OK;
 }
@@ -910,7 +942,7 @@ NS_IMETHODIMP nsXULWindow::SizeShellTo(nsIDocShellTreeItem* aShellItem,
 
       GetSize(&winCX, &winCY);
       SetSize(winCX + widthDelta, winCY + heightDelta, PR_TRUE);
-      PersistPositionAndSize(PR_FALSE, PR_TRUE);
+      PersistPositionAndSize(PR_FALSE, PR_TRUE, PR_FALSE);
       }
 
    return NS_OK;

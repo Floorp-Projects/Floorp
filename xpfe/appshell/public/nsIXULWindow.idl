@@ -63,16 +63,18 @@ interface nsIXULWindow : nsISupports
 	nsIDocShellTreeItem getContentShellById(in wstring ID);
 
 	/*
-	Sets the persistence of different dimentions of the window.
+	Sets the persistence of different dimensions of the window.
 	*/
 	void setPersistence(in boolean persistX, in boolean persistY, 
-		in boolean persistCX, in boolean persistCY);
+		in boolean persistCX, in boolean persistCY,
+		in boolean persistSizeMode);
 
 	/*
 	Gets the current persistence states of the window.
 	*/
 	void getPersistence(out boolean persistX, out boolean persistY, 
-		out boolean persistCX, out boolean persistCY);
+		out boolean persistCX, out boolean persistCY,
+		out boolean persistSizeMode);
 
    /*
 	Shows the window as a modal window
