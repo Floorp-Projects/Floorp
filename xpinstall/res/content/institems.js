@@ -99,9 +99,26 @@ function onLoad()
   // Move default+focus from |accept| to |cancel| button.
   var aButton = document.documentElement.getButton("accept");
   aButton.setAttribute("default", false);
+  aButton.setAttribute("label", gBundle.getString("OK"));
+  aButton.setAttribute("disabled", true);
+
   aButton = document.documentElement.getButton("cancel");
   aButton.focus();
   aButton.setAttribute("default", true);
+
+  // start timer to re-enable buttons
+  var delayInterval = 2000;
+  try {
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                .getService(Components.interfaces.nsIPrefBranch);
+    delayInterval = prefs.getIntPref("security.dialog_enable_delay");
+  } catch (e) {}
+  setTimeout(reenableInstallButtons, delayInterval);
+}
+
+function reenableInstallButtons()
+{
+    document.documentElement.getButton("accept").setAttribute("disabled", false);
 }
 
 function onAccept()

@@ -52,7 +52,8 @@ interface nsPIPromptService : nsISupports
         eButton0Text=8, eButton1Text=9, eButton2Text=10, eButton3Text=11,
         eDialogTitle=12};
   enum {eButtonPressed=0, eCheckboxState=1, eNumberButtons=2,
-        eNumberEditfields=3, eEditField1Password=4, eDefaultButton=5};
+        eNumberEditfields=3, eEditField1Password=4, eDefaultButton=5,
+        eDelayButtonEnable=6};
 %}
 
    void doDialog(in nsIDOMWindow aParent, in nsIDialogParamBlock aParamBlock, in string aChromeURL);
