@@ -172,7 +172,7 @@ PR_BEGIN_MACRO                                                                \
 if (node->prev_sibling)                                                       \
     node->prev_sibling->sibling = node->sibling;                              \
 if (node->sibling)                                                            \
-    node->sibling->prev_sibling = newNode->prev_sibling;                      \
+    node->sibling->prev_sibling = node->prev_sibling;                         \
 node->sibling = node->prev_sibling = node->parent = NULL;                     \
 PR_END_MACRO
 
@@ -257,7 +257,7 @@ node_removeChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 		 jsval *vp)
 {
     JSObject *deadChild;
-    DOM_Node *deadNode, *iter, *node;
+    DOM_Node *deadNode, *node;
 
     if (!JS_ConvertArguments(cx, argc, argv, "o", &deadChild))
         return JS_FALSE;
