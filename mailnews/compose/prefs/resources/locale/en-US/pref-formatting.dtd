@@ -30,7 +30,7 @@ Rights Reserved.
 <!ENTITY sendHTML.accesskey           "s">
 <!ENTITY sendBoth.label               "Send the message in both plain text and HTML (larger message size)">
 <!ENTITY sendBoth.accesskey           "e">
-<!ENTITY override.label               "You can override these settings for individual messages by using the Options menu in the Mail Compose window.">
+<!ENTITY override.label               "You can override these settings for individual messages by using the Options menu while composing a message.">
 <!ENTITY receiveHTML.label            "If you know a particular recipient can receive HTML mail, uncheck the 'Send email as plain text (no HTML)' checkbox on the recipient's Address Book card.">
 
 <!-- Html and Plain Text Domains  -->
