@@ -23,6 +23,8 @@
      Ben Goodger <ben@netscape.com>
   -->
 
+<?xul-overlay href="chrome://communicator/content/pref/platformPrefOverlay.xul"?>
+
 <!DOCTYPE window SYSTEM "chrome://browser/locale/pref/preftree.dtd" >
 
 <overlay id="prefTreeOverlay"
