@@ -29,6 +29,7 @@ contractid = "Python.TestComponent"
 
 really_big_string = "This is really repetitive!" * 10000
 really_big_wstring = u"This is really repetitive!" * 10000
+extended_unicode_string = u"The Euro Symbol is '\u20ac'"
 
 # Exception raised when a -ve integer is converted to an unsigned C integer
 # (via an extension module).  This changed in Python 2.2
@@ -61,6 +62,28 @@ def test_attribute(ob, attr_name, expected_init, new_value, new_value_really = N
     # And set it back to the expected init.
     setattr(ob, attr_name, expected_init)
     _test_value( "getting back initial attribute value after change (%s)" % (attr_name,), getattr(ob, attr_name), expected_init)
+
+def test_string_attribute(ob, attr_name, expected_init, is_dumb_sz = False, ascii_only = False):
+    test_attribute(ob, attr_name, expected_init, "normal value")
+    val = "a null >\0<"
+    if is_dumb_sz:
+        expected = "a null >" # dumb strings are \0 terminated.
+    else:
+        expected = val
+    test_attribute(ob, attr_name, expected_init, val, expected)
+    test_attribute(ob, attr_name, expected_init, "")
+    test_attribute(ob, attr_name, expected_init, really_big_string)
+    test_attribute(ob, attr_name, expected_init, u"normal unicode value")
+    val = u"a null >\0<"
+    if is_dumb_sz:
+        expected = "a null >" # dumb strings are \0 terminated.
+    else:
+        expected = val
+    test_attribute(ob, attr_name, expected_init, val, expected)
+    test_attribute(ob, attr_name, expected_init, u"")
+    test_attribute(ob, attr_name, expected_init, really_big_wstring)
+    if not ascii_only:
+        test_attribute(ob, attr_name, expected_init, extended_unicode_string)
 
 def test_attribute_failure(ob, attr_name, new_value, expected_exception):
     try:
@@ -184,21 +207,15 @@ def test_base_interface(c):
     test_attribute(c, "wchar_value", "b", u"\0")
     test_attribute_failure(c, "wchar_value", u"hi", ValueError)
     
-    test_attribute(c, "string_value", "cee", "dee")
-    test_attribute(c, "string_value", "cee", "a null >\0<", "a null >") # strings are NULL terminated!!
-    test_attribute(c, "string_value", "cee", "")
-    test_attribute(c, "string_value", "cee", u"dee")
-    test_attribute(c, "string_value", "cee", u"a null >\0<", "a null >") # strings are NULL terminated!!
-    test_attribute(c, "string_value", "cee", u"")
+    test_string_attribute(c, "string_value", "cee", is_dumb_sz = True, ascii_only = True)
+    test_string_attribute(c, "wstring_value", "dee", is_dumb_sz = True)
+    test_string_attribute(c, "astring_value", "astring")
+    test_string_attribute(c, "acstring_value", "acstring", ascii_only = True)
 
-    test_attribute(c, "wstring_value", "dee", "cee")
-    test_attribute(c, "wstring_value", "dee", "a null >\0<", "a null >") # strings are NULL terminated!!
-    test_attribute(c, "wstring_value", "dee", "")
-    test_attribute(c, "wstring_value", "dee", really_big_string)
-    test_attribute(c, "wstring_value", "dee", u"cee")
-    test_attribute(c, "wstring_value", "dee", u"a null >\0<", "a null >") # strings are NULL terminated!!
-    test_attribute(c, "wstring_value", "dee", u"")
-    test_attribute(c, "wstring_value", "dee", really_big_wstring)
+    test_string_attribute(c, "utf8string_value", "utf8string")
+    # Test a string already encoded gets through correctly.
+    test_attribute(c, "utf8string_value", "utf8string", extended_unicode_string.encode("utf8"), extended_unicode_string)
+
     # This will fail internal string representation :(  Test we don't crash
     try:
         c.wstring_value = "a big char >" + chr(129) + "<"
@@ -292,7 +309,7 @@ def test_derived_interface(c, test_flat = 0):
     test_method(c.UpWideString, (val,), val.upper())
     test_method(c.UpWideString2, (val,), val.upper())
     test_method(c.GetFixedWideString, (20,), u"A"*20)
-    val = u"The Euro Symbol is '\u20ac'"
+    val = extended_unicode_string
     test_method(c.CopyUTF8String, ("foo",), "foo")
     test_method(c.CopyUTF8String, (u"foo",), "foo")
     test_method(c.CopyUTF8String, (val,), val)
@@ -382,7 +399,7 @@ def test_derived_interface(c, test_flat = 0):
     test_method(c.ConcatDOMStrings, (val,val), val+val)
     test_attribute(c, "domstring_value", "dom", "new dom")
     if c.domstring_value_ro != "dom":
-        print "Read-only DOMString not currect - got", c.domstring_ro
+        print "Read-only DOMString not correct - got", c.domstring_ro
     try:
         c.dom_string_ro = "new dom"
         print "Managed to set a readonly attribute - eek!"
