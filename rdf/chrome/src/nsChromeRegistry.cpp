@@ -69,6 +69,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIIOService.h"
 #include "nsIResProtocolHandler.h"
+#include "nsLayoutCID.h"
 
 static char kChromePrefix[] = "chrome://";
 
@@ -76,6 +77,7 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,      NS_RDFCONTAINERUTILS_CID);
+static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
 
 class nsChromeRegistry;
 
@@ -381,6 +383,9 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     if (NS_SUCCEEDED(rv)) {
       mInstallInitialized = PR_TRUE;
       AddToCompositeDataSource(PR_FALSE);
+
+      LoadStyleSheet(getter_AddRefs(mScrollbarSheet), "chrome://global/skin/scrollbars.css"); 
+      // This must always be the last line of install initialization!
     }
   }
 
@@ -393,6 +398,15 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
       mProfileInitialized = PR_TRUE;
       mChromeDataSource = nsnull;
       AddToCompositeDataSource(PR_TRUE);
+
+      LoadStyleSheet(getter_AddRefs(mScrollbarSheet), "chrome://global/skin/scrollbars.css"); 
+      // This must always be the last line of profile initialization!
+
+      nsCAutoString userSheetURL;
+      GetUserSheetURL(userSheetURL);
+      if(!userSheetURL.IsEmpty()) {
+        LoadStyleSheet(getter_AddRefs(mUserSheet), userSheetURL);
+      }
     }
   }
  
@@ -1030,6 +1044,9 @@ NS_IMETHODIMP nsChromeRegistry::SetProvider(const nsCAutoString& aProvider,
     arcs->HasMoreElements(&more);
   }
 
+  if(aProvider.Equals("skin")){
+    LoadStyleSheet(getter_AddRefs(mScrollbarSheet), "chrome://global/skin/scrollbars.css"); 
+  }
   return NS_OK;
 }
 
@@ -1583,6 +1600,51 @@ nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
   LoadDataSource(name, getter_AddRefs(dataSource), PR_FALSE);
   mChromeDataSource->AddDataSource(dataSource);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsChromeRegistry::GetBackstopSheets(nsISupportsArray **aResult)
+{
+  if(mScrollbarSheet || mUserSheet)
+  {
+    NS_NewISupportsArray(aResult);
+    if(mScrollbarSheet)
+      (*aResult)->AppendElement(mScrollbarSheet);
+     
+    if(mUserSheet)
+      (*aResult)->AppendElement(mUserSheet);
+  }
+  return NS_OK;
+}
+                                    
+void nsChromeRegistry::LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsCString& aURL)
+{
+  // Load scrollbar style sheet
+  nsresult rv; 
+
+  nsCOMPtr<nsICSSLoader> loader;
+  rv = nsComponentManager::CreateInstance(kCSSLoaderCID,
+                                    nsnull,
+                                    NS_GET_IID(nsICSSLoader),
+                                    getter_AddRefs(loader));
+  if(loader) {
+    nsCOMPtr<nsIURL> url;
+    rv = nsComponentManager::CreateInstance("component://netscape/network/standard-url",
+                                    nsnull,
+                                    NS_GET_IID(nsIURL),
+                                    getter_AddRefs(url));
+    if(url) {
+      url->SetSpec(aURL);
+      PRBool complete;
+      rv = loader->LoadAgentSheet(url, *aSheet, complete,
+                                 nsnull);
+    }
+  }
+}
+
+void nsChromeRegistry::GetUserSheetURL(nsCString & aURL)
+{
+  aURL = mProfileRoot + "user.css";
 }
 
 //////////////////////////////////////////////////////////////////////

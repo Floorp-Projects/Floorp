@@ -6,8 +6,6 @@
    CHANGES REVIEWED BY hyatt@netscape.com.
 **/
 
-@import url(chrome://global/skin/scrollbars.css);
-
 @namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul); /* set default namespace to XUL */
 @namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for HTML elements */
 

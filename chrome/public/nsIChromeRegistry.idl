@@ -86,6 +86,8 @@ interface nsIChromeRegistry : nsISupports
 
   void installPackage(in string baseURL, in boolean useProfile);
   void uninstallPackage(in wstring packageName, in boolean useProfile);
+
+  void getBackstopSheets(out nsISupportsArray styleSheets);
 };
 
 
