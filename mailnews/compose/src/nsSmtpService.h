@@ -50,7 +50,8 @@ public:
 	// the returned URL.
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	NS_IMETHOD SendMailMessage(const nsFilePath& aFilePath,  const nsString& aHostName, const nsString& aSender, const nsString& aRecipients, nsIURL ** aURL);
+	NS_IMETHOD SendMailMessage(const nsFilePath& aFilePath,  const nsString& aHostName, const nsString& aSender, 
+								const nsString& aRecipients, nsIUrlListener * aUrlListener, nsIURL ** aURL);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End support of nsISmtpService interface 
