@@ -103,8 +103,9 @@ nsresult imgRequest::AddObserver(imgIDecoderObserver *observer)
     observer->OnStartContainer(nsnull, nsnull, mImage);
 
   // Send frame messages (OnStartFrame, OnDataAvailable, OnStopFrame)
-  PRUint32 nframes;
-  mImage->GetNumFrames(&nframes);
+  PRUint32 nframes = 0;
+  if (mImage)
+    mImage->GetNumFrames(&nframes);
 
   if (nframes > 0) {
     nsCOMPtr<gfxIImageFrame> frame;
