@@ -315,7 +315,7 @@ nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAReadableString& aDecl,
                                       getter_AddRefs(cssParser));
 
     if (NS_SUCCEEDED(result)) {
-      PRInt32 hint;
+      PRInt32 hint = NS_STYLE_HINT_NONE;
       if (doc) {
         doc->BeginUpdate();
 
@@ -325,6 +325,7 @@ nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAReadableString& aDecl,
       nsCSSDeclaration* declClone = decl->Clone();
 
       if (aClearOldDecl) {
+        hint = decl->GetStyleImpact();
         // This should be done with decl->Clear() once such a method exists.
         nsAutoString propName;
         PRUint32 count, i;
@@ -341,8 +342,11 @@ nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAReadableString& aDecl,
         }
       }
   
+      PRInt32 newHint = NS_STYLE_HINT_NONE;
       result = cssParser->ParseAndAppendDeclaration(aDecl, baseURI, decl,
-                                                    aParseOnlyOneDecl, &hint);
+                                                    aParseOnlyOneDecl, &newHint);
+      hint = PR_MAX(hint, newHint);
+      
       if (result == NS_CSS_PARSER_DROP_DECLARATION) {
         SetCSSDeclaration(declClone);
         result = NS_OK;
