@@ -222,7 +222,8 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
     }
 
     // width: pixel, percent
-    float p2t = aPresContext->GetPixelsToTwips();
+    float p2t;
+    aPresContext->GetScaledPixelsToTwips(p2t);
     nsStylePosition* pos = (nsStylePosition*)
       aContext->GetMutableStyleData(eStyleStruct_Position);
     aAttributes->GetAttribute(nsHTMLAtoms::width, value);

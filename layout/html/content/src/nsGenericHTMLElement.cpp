@@ -1462,7 +1462,8 @@ nsGenericHTMLElement::MapImageAttributesInto(nsIHTMLAttributes* aAttributes,
   if (nsnull != aAttributes) {
     nsHTMLValue value;
 
-    float p2t = aPresContext->GetPixelsToTwips();
+    float p2t;
+    aPresContext->GetScaledPixelsToTwips(p2t);
     nsStylePosition* pos = (nsStylePosition*)
       aContext->GetMutableStyleData(eStyleStruct_Position);
     nsStyleSpacing* spacing = (nsStyleSpacing*)
@@ -1534,7 +1535,8 @@ nsGenericHTMLElement::MapImageAlignAttributeInto(nsIHTMLAttributes* aAttributes,
         aContext->GetMutableStyleData(eStyleStruct_Text);
       nsStyleSpacing* spacing = (nsStyleSpacing*)
         aContext->GetMutableStyleData(eStyleStruct_Spacing);
-      float p2t = aPresContext->GetPixelsToTwips();
+      float p2t;
+      aPresContext->GetScaledPixelsToTwips(p2t);
       nsStyleCoord three(NSIntPixelsToTwips(3, p2t));
       switch (align) {
       case NS_STYLE_TEXT_ALIGN_LEFT:
@@ -1575,7 +1577,8 @@ nsGenericHTMLElement::MapImageBorderAttributesInto(nsIHTMLAttributes* aAttribute
       value.SetPixelValue(2);
     }
 
-    float p2t = aPresContext->GetPixelsToTwips();
+    float p2t;
+    aPresContext->GetScaledPixelsToTwips(p2t);
     nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
 
     // Fixup border-padding sums: subtract out the old size and then

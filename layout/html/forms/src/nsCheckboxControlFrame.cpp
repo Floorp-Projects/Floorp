@@ -113,7 +113,8 @@ nsCheckboxControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                             nsHTMLReflowMetrics& aDesiredLayoutSize,
                                             nsSize& aDesiredWidgetSize)
 {
-  float p2t = aPresContext->GetPixelsToTwips();
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(p2t);
 #ifdef XP_PC
   aDesiredWidgetSize.width  = NSIntPixelsToTwips(12, p2t);
   aDesiredWidgetSize.height = NSIntPixelsToTwips(12, p2t);

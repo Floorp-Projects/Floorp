@@ -245,7 +245,8 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
         aDesiredSize.height = 1;
       }
       else {
-        float p2t = aPresContext->GetPixelsToTwips();
+        float p2t;
+        aPresContext->GetScaledPixelsToTwips(p2t);
         nsSize imageSize;
         mImageLoader->GetSize(imageSize);
         float imageWidth = imageSize.width * p2t;
@@ -283,7 +284,8 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
       aDesiredSize.width = 1;
       aDesiredSize.height = 1;
     } else {
-      float p2t = aPresContext->GetPixelsToTwips();
+      float p2t;
+      aPresContext->GetScaledPixelsToTwips(p2t);
       nsSize imageSize;
       mImageLoader->GetSize(imageSize);
       aDesiredSize.width = NSIntPixelsToTwips(imageSize.width, p2t);
@@ -570,7 +572,8 @@ ImageFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
   nsRect  inner;
   GetInnerArea(&aPresContext, inner);
 
-  float p2t = aPresContext.GetPixelsToTwips();
+  float p2t;
+  aPresContext.GetScaledPixelsToTwips(p2t);
   nsRecessedBorder recessedBorder(NSIntPixelsToTwips(1, p2t));
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this, inner,
                               inner, recessedBorder, 0);
@@ -652,7 +655,8 @@ ImageFrame::Paint(nsIPresContext& aPresContext,
     nsRect inner;
     GetInnerArea(&aPresContext, inner);
     if (mImageLoader.GetLoadImageFailed()) {
-      float p2t = aPresContext.GetPixelsToTwips();
+      float p2t;
+      aPresContext.GetScaledPixelsToTwips(p2t);
       inner.width = NSIntPixelsToTwips(image->GetWidth(), p2t);
       inner.height = NSIntPixelsToTwips(image->GetHeight(), p2t);
     }

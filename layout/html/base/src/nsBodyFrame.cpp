@@ -556,7 +556,8 @@ nsBodyFrame::DidSetStyleContext(nsIPresContext* aPresContext)
   }
 
   nsHTMLValue value;
-  float p2t = aPresContext->GetPixelsToTwips();
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(p2t);
   nsIHTMLContent* hc;
   if (NS_OK == mContent->QueryInterface(kIHTMLContentIID, (void**) &hc)) {
     hc->GetAttribute(nsHTMLAtoms::marginwidth, value);

@@ -405,7 +405,7 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
     // marginwidth/marginheight
     // XXX: see ua.css for related code in the BODY rule
     float p2t;
-    p2t = aPresContext->GetPixelsToTwips();
+    aPresContext->GetScaledPixelsToTwips(p2t);
     nsStyleSpacing* spacing = (nsStyleSpacing*)
       aContext->GetMutableStyleData(eStyleStruct_Spacing);
     aAttributes->GetAttribute(nsHTMLAtoms::marginwidth, value);

@@ -241,7 +241,8 @@ nsFieldSetFrame::Reflow(nsIPresContext& aPresContext,
                         nsReflowStatus& aStatus)
 {
   nsSize availSize(aReflowState.maxSize);
-  float p2t = aPresContext.GetPixelsToTwips();
+  float p2t;
+  aPresContext.GetScaledPixelsToTwips(p2t);
   const PRInt32 minTopBorder = NSIntPixelsToTwips(MIN_TOP_BORDER, p2t);
 
   const nsStyleSpacing* spacing =

@@ -237,7 +237,8 @@ nsHTMLFrameOuterFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                       nsHTMLReflowMetrics& aDesiredSize)
 {
   // <frame> processing does not use this routine, only <iframe>
-  float p2t = aPresContext->GetPixelsToTwips();
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(p2t);
 
   // XXX this needs to be changed from (200,200) to a better default for inline frames
   if (aReflowState.HaveFixedContentWidth()) {
@@ -532,7 +533,8 @@ PRInt32 nsHTMLFrameInnerFrame::GetMarginWidth(nsIPresContext* aPresContext, nsIC
   nsIHTMLContent* content = nsnull;
   mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
   if (nsnull != content) {
-    float p2t = aPresContext->GetPixelsToTwips();
+    float p2t;
+    aPresContext->GetScaledPixelsToTwips(p2t);
     nsHTMLValue value;
     content->GetAttribute(nsHTMLAtoms::marginwidth, value);
     if (eHTMLUnit_Pixel == value.GetUnit()) { 
@@ -552,7 +554,8 @@ PRInt32 nsHTMLFrameInnerFrame::GetMarginHeight(nsIPresContext* aPresContext, nsI
   nsIHTMLContent* content = nsnull;
   mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
   if (nsnull != content) {
-    float p2t = aPresContext->GetPixelsToTwips();
+    float p2t;
+    aPresContext->GetScaledPixelsToTwips(p2t);
     nsHTMLValue value;
     content->GetAttribute(nsHTMLAtoms::marginheight, value);
     if (eHTMLUnit_Pixel == value.GetUnit()) { 

@@ -74,6 +74,7 @@ public:
   virtual void SetVisibleArea(const nsRect& r);
   virtual float GetPixelsToTwips() const;
   virtual float GetTwipsToPixels() const;
+  NS_IMETHOD GetScaledPixelsToTwips(float &aScale) const;
   virtual nsIDeviceContext* GetDeviceContext() const;
   NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager);
 

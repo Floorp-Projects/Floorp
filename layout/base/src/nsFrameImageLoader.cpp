@@ -29,6 +29,7 @@
 #include "prlog.h"
 #include "nsISizeOfHandler.h"
 #include "nsIStyleContext.h"
+#include "nsIDeviceContext.h"
 
 static NS_DEFINE_IID(kIFrameImageLoaderIID, NS_IFRAME_IMAGE_LOADER_IID);
 static NS_DEFINE_IID(kIImageRequestObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
@@ -206,7 +207,7 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
     mImageLoadStatus |= NS_IMAGE_LOAD_STATUS_IMAGE_READY;
 
     // Convert the rect from pixels to twips
-    p2t = mPresContext->GetPixelsToTwips();
+    mPresContext->GetScaledPixelsToTwips(p2t);
     changeRect = (const nsRect*)aParam3;
     damageRect.x = NSIntPixelsToTwips(changeRect->x, p2t);
     damageRect.y = NSIntPixelsToTwips(changeRect->y, p2t);
@@ -283,6 +284,8 @@ nsFrameImageLoader::DamageRepairFrame(const nsRect* aDamageRect)
          ("nsFrameImageLoader::DamageRepairFrame frame=%p status=%x",
           mTargetFrame, mImageLoadStatus));
 
+#if 0
+  // XXX I #if 0'd this per troy's instruction... MMP
   // XXX this should be done somewhere else, like when the window
   // is created or something???
   // XXX maybe there should be a seperate notification service for
@@ -297,6 +300,7 @@ nsFrameImageLoader::DamageRepairFrame(const nsRect* aDamageRect)
     gXXXInstalledColorMap = PR_TRUE;
   }
   NS_RELEASE(window);
+#endif
 
   // Determine damaged area and tell view manager to redraw it
   nsPoint offset;

@@ -245,7 +245,8 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
       nsStyleSpacing* spacing = (nsStyleSpacing*)
         aContext->GetMutableStyleData(eStyleStruct_Spacing);
 
-      float p2t = aPresContext->GetPixelsToTwips();
+      float p2t;
+      aPresContext->GetScaledPixelsToTwips(p2t);
       nsStyleCoord three(NSIntPixelsToTwips(3, p2t));
       switch (align) {
       case NS_STYLE_TEXT_ALIGN_LEFT:

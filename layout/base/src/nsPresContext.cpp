@@ -447,6 +447,21 @@ nsPresContext::GetTwipsToPixels() const
   return 1.0f;
 }
 
+NS_IMETHODIMP nsPresContext :: GetScaledPixelsToTwips(float &aScale) const
+{
+  if (nsnull != mDeviceContext)
+  {
+    float p2t, scale;
+    mDeviceContext->GetDevUnitsToAppUnits(p2t);
+    mDeviceContext->GetCanonicalPixelScale(scale);
+    aScale = p2t * scale;
+  }
+  else
+    aScale = 1.0f;
+  
+  return NS_OK;
+}
+
 nsIDeviceContext*
 nsPresContext::GetDeviceContext() const
 {

@@ -798,7 +798,8 @@ nsFormControlFrame::CalculateSize (nsIPresContext* aPresContext, nsFormControlFr
   if (nsnull != aSpec.mColSizeAttr) {
     colStatus = hContent->GetAttribute(aSpec.mColSizeAttr, colAttr);
   }
-  float p2t = aPresContext->GetPixelsToTwips();
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(p2t);
 
   // determine the width
   nscoord adjSize;

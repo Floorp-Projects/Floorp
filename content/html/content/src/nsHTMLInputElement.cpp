@@ -567,7 +567,8 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
       case NS_FORM_INPUT_CHECKBOX:
       case NS_FORM_INPUT_RADIO: 
       {
-        float p2t = aPresContext->GetPixelsToTwips();
+        float p2t;
+        aPresContext->GetScaledPixelsToTwips(p2t);
         nscoord pad = NSIntPixelsToTwips(3, p2t);
 
         // add left and right padding around the radio button via css

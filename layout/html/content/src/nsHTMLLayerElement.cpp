@@ -207,7 +207,8 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
   // Note: ua.css specifies that the 'position' is absolute
   if (nsnull != aAttributes) {
     nsHTMLValue      value;
-    float            p2t = aPresContext->GetPixelsToTwips();
+    float            p2t;
+    aPresContext->GetScaledPixelsToTwips(p2t);
     nsStylePosition* position = (nsStylePosition*)
       aContext->GetMutableStyleData(eStyleStruct_Position);
 

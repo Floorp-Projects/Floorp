@@ -115,7 +115,8 @@ SpacerFrame::Reflow(nsIPresContext&          aPresContext,
     NS_RELEASE(hc);
   }
 
-  float p2t = aPresContext.GetPixelsToTwips();
+  float p2t;
+  aPresContext.GetScaledPixelsToTwips(p2t);
   switch (type) {
   case TYPE_WORD:
     if (0 != width) {
