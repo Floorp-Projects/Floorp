@@ -227,7 +227,7 @@ CRDFOutliner::~CRDFOutliner ()
             m_pUnkUserImage->Release();
     }
 
-	delete m_pAncestor;
+	delete []m_pAncestor;
 }
 
 int CRDFOutliner::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -436,6 +436,7 @@ void * CRDFOutliner::AcquireLineData ( int iLine )
 			if (m_bPaintingFirstObject)
 			{
 				m_nSizeOfAncestorArray = indent;
+				delete []oldInfo;
 				oldInfo = NULL;
 			}
 

@@ -209,7 +209,7 @@ void CRDFToolbarButton::OnAction(void)
 			UINT nCommand = theApp.m_pBrowserCommandMap->GetFEResource(url);
 			WFE_GetOwnerFrame(this)->PostMessage(WM_COMMAND, MAKEWPARAM(nCommand, nCommand), 0);
 		}
-		else if (!HT_IsContainer(m_Node))
+		else if (!HT_IsContainer(m_Node) && !HT_IsSeparator(m_Node))
 		{
 			CAbstractCX * pCX = FEU_GetLastActiveFrameContext();
 			ASSERT(pCX != NULL);
