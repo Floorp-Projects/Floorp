@@ -1,0 +1,26 @@
+#!dest global:skin
+box.css
+button.css
+buttonBindings.xml
+checkbox.css
+classicBindings.xml
+commonDialog.css
+console.css
+dialogOverlay.css
+filepicker.css
+formatting.css
+global.css
+menu.css
+menubutton.css
+menulist.css
+menulistBindings.xml
+radio.css
+scrollbars.css
+splitter.css
+tabcontrol.css
+tasksOverlay.css
+textfield.css
+toolbar.css
+tree.css
+treeBindings.xml
+wizardOverlay.css
