@@ -4825,7 +4825,8 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 				LO_TextAttr *attr;
 				PA_Block buff;
 
-				lo_SetSoftLineBreakState(context, state, FALSE, 2);
+                lo_SetLineBreakState(context, state, FALSE, LO_LINEFEED_BREAK_HARD,
+                                     2, FALSE);
 
 				if ((tag->type == P_PLAIN_PIECE)||
 					(tag->type == P_PLAIN_TEXT))
@@ -4942,7 +4943,8 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 				state->preformat_cols = 0;
 				state->preformatted = PRE_TEXT_NO;
 				state->allow_amp_escapes = TRUE;
-				lo_SetSoftLineBreakState(context, state, FALSE, 2);
+                lo_SetLineBreakState(context, state, FALSE, LO_LINEFEED_BREAK_HARD,
+                                     2, FALSE);
 				FE_EndPreSection(context);
 			}
 			break;
