@@ -915,7 +915,7 @@ function onDateTimePick(dateTimePicker)
     if (pickedDateTime.getTime() > now.getTime() &&
         !getElementValue("repeat-checkbox", "checked") ) 
     {
-        setElementValue("repeat-end-date-picker") = pickedDateTime;
+        setElementValue("repeat-end-date-picker", pickedDateTime);
     }
     updateAdvancedWeekRepeat();
     updateAdvancedRepeatDayOfMonth();
