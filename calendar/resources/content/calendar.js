@@ -22,6 +22,7 @@
  *                 Mike Potter <mikep@oeone.com>
  *                 Colin Phillips <colinp@oeone.com>
  *                 Karl Guertin <grayrest@grayrest.com> 
+ *                 Mike Norton <xor@ivwnet.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -502,10 +503,13 @@ function getPreviewText( calendarEventDisplay )
 {
 	var HolderBox = document.createElement( "vbox" );
 
-   var TitleHtml = document.createElement( "description" );
-   var TitleText = document.createTextNode( "Title: "+calendarEventDisplay.event.title );
-   TitleHtml.appendChild( TitleText );
-   HolderBox.appendChild( TitleHtml );
+   if (calendarEventDisplay.event.title)
+   {
+      var TitleHtml = document.createElement( "description" );
+      var TitleText = document.createTextNode( "Title: "+calendarEventDisplay.event.title );
+      TitleHtml.appendChild( TitleText );
+      HolderBox.appendChild( TitleHtml );
+   }
 
    var DateHtml = document.createElement( "description" );
    var DateText = document.createTextNode( "Start: "+calendarEventDisplay.event.start.toString() );
@@ -517,10 +521,13 @@ function getPreviewText( calendarEventDisplay )
    TimeHtml.appendChild( TimeText );
    HolderBox.appendChild( TimeHtml );
    */
-   var DescriptionHtml = document.createElement( "description" );
-   var DescriptionText = document.createTextNode( "Description: "+calendarEventDisplay.event.description );
-   DescriptionHtml.appendChild( DescriptionText );
-   HolderBox.appendChild( DescriptionHtml );
+   if (calendarEventDisplay.event.description)
+   {
+      var DescriptionHtml = document.createElement( "description" );
+      var DescriptionText = document.createTextNode( "Description: "+calendarEventDisplay.event.description );
+      DescriptionHtml.appendChild( DescriptionText );
+      HolderBox.appendChild( DescriptionHtml );
+   }
 
    return ( HolderBox );
 }
