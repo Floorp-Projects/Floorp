@@ -252,10 +252,8 @@ nsresult
 nsGetServiceByCID::operator()( const nsIID& aIID, void** aInstancePtr ) const
 {
     nsresult status = CallGetService(mCID, aIID, aInstancePtr);
-    if ( NS_FAILED(status) ) {
-    error:
+    if ( NS_FAILED(status) )
         *aInstancePtr = 0;
-    }
 
     return status;
 }
@@ -264,10 +262,8 @@ nsresult
 nsGetServiceByCIDWithError::operator()( const nsIID& aIID, void** aInstancePtr ) const
 {
     nsresult status = CallGetService(mCID, aIID, aInstancePtr);
-    if ( NS_FAILED(status) ) {
-    error:
+    if ( NS_FAILED(status) )
         *aInstancePtr = 0;
-    }
 
     if ( mErrorPtr )
         *mErrorPtr = status;
@@ -278,10 +274,8 @@ nsresult
 nsGetServiceByContractID::operator()( const nsIID& aIID, void** aInstancePtr ) const
 {
     nsresult status = CallGetService(mContractID, aIID, aInstancePtr);
-    if ( NS_FAILED(status) ) {
-    error:
+    if ( NS_FAILED(status) )
         *aInstancePtr = 0;
-    }
     
     return status;
 }
@@ -290,10 +284,8 @@ nsresult
 nsGetServiceByContractIDWithError::operator()( const nsIID& aIID, void** aInstancePtr ) const
 {
     nsresult status = CallGetService(mContractID, aIID, aInstancePtr);
-    if ( NS_FAILED(status) ) {
-    error:
+    if ( NS_FAILED(status) )
         *aInstancePtr = 0;
-    }
     
     if ( mErrorPtr )
         *mErrorPtr = status;
