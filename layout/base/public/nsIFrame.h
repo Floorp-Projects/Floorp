@@ -115,7 +115,7 @@ typedef PRUint32 nsFrameState;
 enum nsFramePaintLayer {
   eFramePaintLayer_Underlay = 0,
   eFramePaintLayer_Content = 1,
-  eFramePaintLayer_Overlay = 2,
+  eFramePaintLayer_Overlay = 2
 };
 
 //----------------------------------------------------------------------
