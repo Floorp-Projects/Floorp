@@ -92,7 +92,10 @@ public:
 
 // MEMBER VARIABLES
   nsXBLPrototypeBinding* mBinding; // A pointer back to our binding.
-  nsXBLPrototypeResources* mResources; // A pointer back to our resources information.
+  nsXBLPrototypeResources* mResources; // A pointer back to our resources
+                                       // information.  May be null if the
+                                       // resources have already been
+                                       // destroyed.
   
   nsXBLResource* mResourceList; // The list of resources we need to load.
   nsXBLResource* mLastResource;

@@ -67,7 +67,10 @@ nsXBLPrototypeResources::nsXBLPrototypeResources(nsXBLPrototypeBinding* aBinding
 nsXBLPrototypeResources::~nsXBLPrototypeResources()
 {
   MOZ_COUNT_DTOR(nsXBLPrototypeResources);
-  NS_IF_RELEASE(mLoader);
+  if (mLoader) {
+    mLoader->mResources = nsnull;
+    NS_RELEASE(mLoader);
+  }
 }
 
 void 
