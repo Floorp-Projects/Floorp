@@ -213,6 +213,98 @@ function doStop()
 	{
 		searchButtonNode.removeAttribute("style", "display: none;");
 	}
+
+	// get various services
+	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+
+//	var internetSearch = Components.classes["component://netscape/browser/internetsearch-service"].getService();
+	var internetSearch = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
+	if (internetSearch)	internetSearch = internetSearch.QueryInterface(Components.interfaces.nsIRDFDataSource);
+
+	var colNode;
+	var sortSetFlag = false;
+
+	// show appropriate column(s)
+	if ((rdf) && (internetSearch))
+	{
+		var resultsTree = parent.frames[1].document.getElementById("internetresultstree");
+		if (!resultsTree)	return(false);
+		var searchURL = resultsTree.getAttribute("ref");
+		if (!searchURL || searchURL == "")	return(false);
+
+		var searchResource       = rdf.GetResource(searchURL, true);
+
+		var priceProperty        = rdf.GetResource("http://home.netscape.com/NC-rdf#Price", true);
+		var availabilityProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#Availability", true);
+		var relevanceProperty    = rdf.GetResource("http://home.netscape.com/NC-rdf#Relevance", true);
+		var trueProperty         = rdf.GetLiteral("true");
+
+		var hasPriceFlag         = internetSearch.HasAssertion(searchResource, priceProperty, trueProperty, true);
+		var hasAvailabilityFlag  = internetSearch.HasAssertion(searchResource, availabilityProperty, trueProperty, true);
+		var hasRelevanceFlag     = internetSearch.HasAssertion(searchResource, relevanceProperty, trueProperty, true);
+
+		if (hasPriceFlag == true)
+		{
+			colNode = parent.frames[1].document.getElementById("PriceColumn");
+			if (colNode)
+			{
+				colNode.removeAttribute("style", "width: 0; visibility: collapse;");
+				if (sortSetFlag == false)
+				{
+					setInitialSort(colNode, "ascending");
+					sortSetFlag = true;
+				}
+			}
+		}
+		if (hasAvailabilityFlag == true)
+		{
+			colNode = parent.frames[1].document.getElementById("AvailabilityColumn");
+			if (colNode)
+			{
+				colNode.removeAttribute("style", "width: 0; visibility: collapse;");
+			}
+		}
+		if (hasRelevanceFlag == true)
+		{
+			colNode = parent.frames[1].document.getElementById("RelevanceColumn");
+			if (colNode)
+			{
+				colNode.removeAttribute("style", "width: 0; visibility: collapse;");
+				if (sortSetFlag == false)
+				{
+					setInitialSort(colNode, "descending");
+					sortSetFlag = true;
+				}
+			}
+		}
+	}
+
+	if (sortSetFlag == false)
+	{
+		colNode = parent.frames[1].document.getElementById("NameColumn");
+		if (colNode)
+		{
+			setInitialSort(colNode, "ascending");
+		}
+	}
+}
+
+
+
+function setInitialSort(node, sortDirection)
+{
+	// determine column resource to sort on
+	var sortResource = node.getAttribute('resource');
+	if (!sortResource) return(false);
+
+	var isupports = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
+	if (!isupports)    return(false);
+	var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
+	if (!xulSortService)    return(false);
+	xulSortService.Sort(node, sortResource, sortDirection);
+
+	return(true);
 }
 
 
@@ -279,6 +371,14 @@ function doSearch()
 	{
 		progressNode.removeAttribute("style", "display: none;");
 	}
+
+	// hide various columns
+	colNode = parent.frames[1].document.getElementById("RelevanceColumn");
+	if (colNode)	colNode.setAttribute("style", "width: 0; visibility: collapse;");
+	colNode = parent.frames[1].document.getElementById("PriceColumn");
+	if (colNode)	colNode.setAttribute("style", "width: 0; visibility: collapse;");
+	colNode = parent.frames[1].document.getElementById("AvailabilityColumn");
+	if (colNode)	colNode.setAttribute("style", "width: 0; visibility: collapse;");
 
 	setTimeout("checkSearchProgress()", 1000);
 

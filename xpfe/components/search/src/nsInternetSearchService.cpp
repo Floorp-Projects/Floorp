@@ -244,6 +244,10 @@ private:
 	static nsIRDFResource		*kNC_RelevanceSort;
 	static nsIRDFResource		*kNC_Engine;
 
+	static nsIRDFResource		*kNC_Price;
+	static nsIRDFResource		*kNC_PriceSort;
+	static nsIRDFResource		*kNC_Availability;
+
 protected:
 	static nsIRDFDataSource		*mInner;
 
@@ -268,6 +272,7 @@ static	nsresult	GetData(nsString &data, const char *sectionToFind, const char *a
 	nsresult	GetInputs(const nsString &data, nsString &userVar, const nsString &text, nsString &input);
 	nsresult	GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult);
 	nsresult	ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRDFResource *engine, const nsString &htmlPage, PRBool useAllHREFsFlag, PRUint32 &numResults);
+	nsresult	SetHint(nsIRDFResource *mParent, nsIRDFResource *hintRes);
 
 			InternetSearchDataSource(void);
 	virtual		~InternetSearchDataSource(void);
@@ -319,7 +324,9 @@ nsIRDFResource			*InternetSearchDataSource::kNC_Site;
 nsIRDFResource			*InternetSearchDataSource::kNC_Relevance;
 nsIRDFResource			*InternetSearchDataSource::kNC_RelevanceSort;
 nsIRDFResource			*InternetSearchDataSource::kNC_Engine;
-
+nsIRDFResource			*InternetSearchDataSource::kNC_Price;
+nsIRDFResource			*InternetSearchDataSource::kNC_PriceSort;
+nsIRDFResource			*InternetSearchDataSource::kNC_Availability;
 
 
 static const char		kEngineProtocol[] = "engine://";
@@ -361,6 +368,9 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 		gRDFService->GetResource(NC_NAMESPACE_URI "Relevance",           &kNC_Relevance);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Relevance?sort=true", &kNC_RelevanceSort);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Engine",              &kNC_Engine);
+		gRDFService->GetResource(NC_NAMESPACE_URI "Price",               &kNC_Price);
+		gRDFService->GetResource(NC_NAMESPACE_URI "Price?sort=true",     &kNC_PriceSort);
+		gRDFService->GetResource(NC_NAMESPACE_URI "Availability",        &kNC_Availability);
 	}
 }
 
@@ -391,6 +401,9 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 		NS_IF_RELEASE(kNC_Relevance);
 		NS_IF_RELEASE(kNC_RelevanceSort);
 		NS_IF_RELEASE(kNC_Engine);
+		NS_IF_RELEASE(kNC_Price);
+		NS_IF_RELEASE(kNC_PriceSort);
+		NS_IF_RELEASE(kNC_Availability);
 
 		NS_IF_RELEASE(mInner);
 
@@ -2302,25 +2315,6 @@ InternetSearchDataSource::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 	rv = channel->GetURI(getter_AddRefs(aURL));
 	if (NS_FAILED(rv)) return rv;
 
-	nsCOMPtr<nsIRDFLiteral>	trueLiteral;
-	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(nsAutoString("true").GetUnicode(), getter_AddRefs(trueLiteral))))
-	{
-		mInner->Unassert(mEngine, kNC_loading, trueLiteral);
-
-		if (mConnections)
-		{
-			PRUint32	count=0;
-			mConnections->Count(&count);
-			if (count <= 1)
-			{
-				if (mParent)
-				{
-					mInner->Unassert(mParent, kNC_loading, trueLiteral);
-				}
-			}
-		}
-	}
-
 	// copy the engine's icon reference (if it has one) onto the result node
 	nsCOMPtr<nsIRDFNode>		engineIconStatusNode = nsnull;
 	mInner->GetTarget(mEngine, kNC_Icon, PR_TRUE, getter_AddRefs(engineIconStatusNode));
@@ -2330,40 +2324,62 @@ InternetSearchDataSource::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 	}
 
 	PRUnichar	*uniBuf = nsnull;
-	if (NS_FAILED(rv = context->GetBuffer(&uniBuf)))	return(rv);
-	if (!uniBuf)	return(NS_ERROR_UNEXPECTED);
-
-	nsAutoString	htmlResults(uniBuf);
-
-	if (htmlResults.Length() < 1)
+	if (NS_SUCCEEDED(rv = context->GetBuffer(&uniBuf)) && (uniBuf))
 	{
-#ifdef	DEBUG_SEARCH_OUTPUT
-		printf(" *** InternetSearchDataSourceCallback::OnStopRequest:  no data.\n\n");
-#endif
-		return(NS_OK);
-	}
+		// Note: don't free uniBuf, its really a const *
 
-	if (NS_FAILED(rv = context->Truncate()))	return(rv);
-
-	if (mParent)
-	{
-		// save HTML result page for this engine
-		const PRUnichar	*htmlUni = htmlResults.GetUnicode();
-		if (htmlUni)
+		nsAutoString	htmlResults(uniBuf);
+		context->Truncate();
+		if (htmlResults.Length() > 0)
 		{
-			nsCOMPtr<nsIRDFLiteral>	htmlLiteral;
-			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(htmlUni, getter_AddRefs(htmlLiteral))))
+			if (mParent)
 			{
-				rv = mInner->Assert(mEngine, kNC_HTML, htmlLiteral, PR_TRUE);
+				// save HTML result page for this engine
+				const PRUnichar	*htmlUni = htmlResults.GetUnicode();
+				if (htmlUni)
+				{
+					nsCOMPtr<nsIRDFLiteral>	htmlLiteral;
+					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(htmlUni, getter_AddRefs(htmlLiteral))))
+					{
+						rv = mInner->Assert(mEngine, kNC_HTML, htmlLiteral, PR_TRUE);
+					}
+				}
 			}
+
+			// parse up HTML results
+			PRUint32	numResults = 0;
+			rv = ParseHTML(aURL, mParent, mEngine, htmlResults, PR_FALSE, numResults);
+			if (NS_SUCCEEDED(rv) && (!mParent) && (numResults == 0))
+			{
+				rv = ParseHTML(aURL, mParent, mEngine, htmlResults, PR_TRUE, numResults);
+			}
+		}
+		else
+		{
+#ifdef	DEBUG_SEARCH_OUTPUT
+			printf(" *** InternetSearchDataSourceCallback::OnStopRequest:  no data.\n\n");
+#endif
 		}
 	}
 
-	PRUint32	numResults = 0;
-	rv = ParseHTML(aURL, mParent, mEngine, htmlResults, PR_FALSE, numResults);
-	if (NS_SUCCEEDED(rv) && (!mParent) && (numResults == 0))
+	// (do this last) potentially remove the loading attribute
+	nsCOMPtr<nsIRDFLiteral>	trueLiteral;
+	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(nsAutoString("true").GetUnicode(), getter_AddRefs(trueLiteral))))
 	{
-		rv = ParseHTML(aURL, mParent, mEngine, htmlResults, PR_TRUE, numResults);
+		mInner->Unassert(mEngine, kNC_loading, trueLiteral);
+
+		if (mConnections)
+		{
+			PRUint32	count=0;
+			mConnections->Count(&count);
+			if (count < 1)
+			{
+				if (mParent)
+				{
+					mInner->Unassert(mParent, kNC_loading, trueLiteral);
+				}
+			}
+		}
 	}
 
 	return(NS_OK);
@@ -2381,6 +2397,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 	nsAutoString	resultItemStartStr, resultItemEndStr;
 	nsAutoString	relevanceStartStr, relevanceEndStr;
 	nsAutoString	bannerStartStr, bannerEndStr, skiplocalStr;
+	nsAutoString	priceStartStr, priceEndStr, availStartStr, availEndStr;
 	PRBool		skipLocalFlag = PR_FALSE;
 	nsresult	rv;
 
@@ -2424,6 +2441,11 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 		}
 
 		GetData(data, "search", "name", engineStr);
+
+		GetData(data, "interpret", "priceStart", priceStartStr);
+		GetData(data, "interpret", "priceEnd", priceEndStr);
+		GetData(data, "interpret", "availStart", availStartStr);
+		GetData(data, "interpret", "availEnd", availEndStr);
 
 #ifdef	DEBUG_SEARCH_OUTPUT
 		char *cStr;
@@ -2558,6 +2580,8 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 		trimItemEnd = PR_FALSE;
 	}
 
+	PRBool	hasPriceFlag = PR_FALSE, hasAvailabilityFlag = PR_FALSE, hasRelevanceFlag = PR_FALSE;
+
 	while(PR_TRUE)
 	{
 		PRInt32	resultItemStart;
@@ -2679,10 +2703,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			}
 		}
 
-		char	*href = hrefStr.ToNewCString();
-		if (!href)	continue;
-
-		nsAutoString	site(href);
+		nsAutoString	site(hrefStr);
 
 #ifdef	DEBUG_SEARCH_OUTPUT
 		printf("HREF: '%s'\n", href);
@@ -2692,7 +2713,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 
 // #define	OLDWAY
 #ifdef	OLDWAY
-		rv = gRDFService->GetResource(href, getter_AddRefs(res));
+		rv = gRDFService->GetResource(nsCAutoString(hrefStr), getter_AddRefs(res));
 #else		
 		// save HREF attribute as URL
 		if (NS_SUCCEEDED(rv = gRDFService->GetAnonymousResource(getter_AddRefs(res))))
@@ -2708,9 +2729,6 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			}
 		}
 #endif
-
-		nsCRT::free(href);
-		href = nsnull;
 		if (NS_FAILED(rv))	continue;
 		
 		// set HTML response chunk
@@ -2873,6 +2891,106 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			}
 		}
 
+		// look for price
+		nsAutoString	priceItem;
+		PRInt32		priceStart;
+		if ((priceStart = resultItem.Find(priceStartStr, PR_TRUE)) >= 0)
+		{
+			PRInt32	priceEnd = resultItem.Find(priceEndStr, PR_TRUE, priceStart + priceStartStr.Length());
+			if (priceEnd > priceStart)
+			{
+				resultItem.Mid(priceItem, priceStart + priceStartStr.Length(),
+					priceEnd - priceStart - priceStartStr.Length());
+
+				// munge out anything inside of HTML "<" / ">" tags
+				PRInt32 priceTagStartOffset;
+				while ((priceTagStartOffset = priceItem.FindCharInSet("<", 0)) >= 0)
+				{
+					PRInt32	priceTagEndOffset = priceItem.FindCharInSet(">", priceTagStartOffset);
+					if (priceTagEndOffset <= priceTagStartOffset)	break;
+					priceItem.Cut(priceTagStartOffset, priceTagEndOffset - priceTagStartOffset + 1);
+				}
+				// cut out any CRs or LFs
+				PRInt32	priceEOLOffset;
+				while ((priceEOLOffset = priceItem.FindCharInSet("\n\r", 0)) >= 0)
+				{
+					priceItem.Cut(priceEOLOffset, 1);
+				}
+			}
+		}
+		if (priceItem.Length() > 0)
+		{
+			const PRUnichar		*priceUni = priceItem.GetUnicode();
+			nsCOMPtr<nsIRDFLiteral>	priceLiteral;
+			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(priceUni, getter_AddRefs(priceLiteral))))
+			{
+				if (priceLiteral)
+				{
+					mInner->Assert(res, kNC_Price, priceLiteral, PR_TRUE);
+					hasPriceFlag = PR_TRUE;
+				}
+			}
+
+			PRInt32	priceCharStartOffset = priceItem.FindCharInSet("1234567890");
+			if (priceCharStartOffset >= 0)
+			{
+				priceItem.Cut(0, priceCharStartOffset);
+				PRInt32	priceErr;
+				float	val = priceItem.ToFloat(&priceErr);
+				if (priceItem.FindChar(PRUnichar('.')) >= 0)	val *= 100;
+
+				nsCOMPtr<nsIRDFInt>	priceSortLiteral;
+				if (NS_SUCCEEDED(rv = gRDFService->GetIntLiteral((PRInt32)val, getter_AddRefs(priceSortLiteral))))
+				{
+					if (priceSortLiteral)
+					{
+						mInner->Assert(res, kNC_PriceSort, priceSortLiteral, PR_TRUE);
+					}
+				}
+			}
+			
+		}
+
+		// look for availability
+		nsAutoString	availItem;
+		PRInt32		availStart;
+		if ((availStart = resultItem.Find(availStartStr, PR_TRUE)) >= 0)
+		{
+			PRInt32	availEnd = resultItem.Find(availEndStr, PR_TRUE, availStart + availStartStr.Length());
+			if (availEnd > availStart)
+			{
+				resultItem.Mid(availItem, availStart + availStartStr.Length(),
+					availEnd - availStart - availStartStr.Length());
+				// munge out anything inside of HTML "<" / ">" tags
+				PRInt32 availTagStartOffset;
+				while ((availTagStartOffset = availItem.FindCharInSet("<", 0)) >= 0)
+				{
+					PRInt32	availTagEndOffset = availItem.FindCharInSet(">", availTagStartOffset);
+					if (availTagEndOffset <= availTagStartOffset)	break;
+					availItem.Cut(availTagStartOffset, availTagEndOffset - availTagStartOffset + 1);
+				}
+				// cut out any CRs or LFs
+				PRInt32	availEOLOffset;
+				while ((availEOLOffset = availItem.FindCharInSet("\n\r", 0)) >= 0)
+				{
+					availItem.Cut(availEOLOffset, 1);
+				}
+			}
+		}
+		if (availItem.Length() > 0)
+		{
+			const PRUnichar		*availUni = availItem.GetUnicode();
+			nsCOMPtr<nsIRDFLiteral>	availLiteral;
+			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(availUni, getter_AddRefs(availLiteral))))
+			{
+				if (availLiteral)
+				{
+					mInner->Assert(res, kNC_Availability, availLiteral, PR_TRUE);
+					hasAvailabilityFlag = PR_TRUE;
+				}
+			}
+		}
+
 		// look for relevance
 		nsAutoString	relItem;
 		PRInt32		relStart;
@@ -2923,6 +3041,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 							relStr += PRUnichar('%');
 						}
 						relItem = relStr;
+						hasRelevanceFlag = PR_TRUE;
 					}
 					else
 					{
@@ -3033,5 +3152,32 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 		++numResults;
 
 	}
+
+	// set hints so that the appropriate columns can be displayed
+	if (hasPriceFlag == PR_TRUE)		SetHint(mParent, kNC_Price);
+	if (hasAvailabilityFlag == PR_TRUE)	SetHint(mParent, kNC_Availability);
+	if (hasRelevanceFlag == PR_TRUE)	SetHint(mParent, kNC_Relevance);
+
 	return(NS_OK);
+}
+
+
+
+nsresult
+InternetSearchDataSource::SetHint(nsIRDFResource *mParent, nsIRDFResource *hintRes)
+{
+	if (!mInner)	return(NS_OK);
+
+	nsresult		rv;
+	nsCOMPtr<nsIRDFLiteral>	trueLiteral;
+	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(nsAutoString("true").GetUnicode(), getter_AddRefs(trueLiteral))))
+	{
+		PRBool		hasAssertionFlag = PR_FALSE;
+		if (NS_SUCCEEDED(rv = mInner->HasAssertion(mParent, hintRes, trueLiteral, PR_TRUE, &hasAssertionFlag))
+			&& (hasAssertionFlag == PR_FALSE))
+		{
+			rv = mInner->Assert(mParent, hintRes, trueLiteral, PR_TRUE);
+		}
+	}
+	return(rv);
 }
