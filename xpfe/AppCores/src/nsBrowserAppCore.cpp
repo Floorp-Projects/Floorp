@@ -508,7 +508,8 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
   if (nsnull != webShell) {
     mContentAreaWebShell = webShell;
     NS_ADDREF(webShell);
-    webShell->SetObserver(this);
+    webShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
+
     const PRUnichar * name;
     webShell->GetName( &name);
     nsAutoString str(name);
@@ -516,7 +517,7 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
     if (APP_DEBUG) {
       printf("Attaching to Content WebShell [%s]\n", nsAutoCString(str));
     }
-    mContentAreaWebShell->SetURLListener(this);
+//    mContentAreaWebShell->SetURLListener(this);
     // Break link to chrome.
     mContentAreaWebShell->SetParent(0);
   }
@@ -563,23 +564,15 @@ nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
   return NS_OK;
 }
 
-// nsIURLListener methods
 
-NS_IMETHODIMP 
-nsBrowserAppCore::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
-                              nsLoadType aReason)
-{
-
-  // Notify the AppCore
-    return NS_OK;
-}
 
 static nsresult setAttribute( nsIWebShell *shell,
                               const char *id,
                               const char *name,
                               const nsString &value ) {
     nsresult rv = NS_OK;
-  
+
+    printf("In SetAttribute name = %s value = %s\n", name, value);  
     nsCOMPtr<nsIContentViewer> cv;
     rv = shell->GetContentViewer(getter_AddRefs(cv));
     if ( cv ) {
@@ -598,32 +591,125 @@ static nsresult setAttribute( nsIWebShell *shell,
                     rv = xulDoc->GetElementById( id, getter_AddRefs(elem) );
                     if ( elem ) {
                         // Set the text attribute.
+			printf("Set attribute %s, value %s\n", name, value);
                         rv = elem->SetAttribute( name, value );
                         if ( APP_DEBUG ) {
                             char *p = value.ToNewCString();
                             delete [] p;
                         }
                         if ( rv != NS_OK ) {
-                            if (APP_DEBUG) printf("SetAttribute failed, rv=0x%X\n",(int)rv);
+                             printf("SetAttribute failed, rv=0x%X\n",(int)rv);
                         }
                     } else {
-                        if (APP_DEBUG) printf("GetElementByID failed, rv=0x%X\n",(int)rv);
+                        printf("GetElementByID failed, rv=0x%X\n",(int)rv);
                     }
                 } else {
-                    if (APP_DEBUG) printf("Upcast to nsIDOMXULDocument failed\n");
+                    printf("Upcast to nsIDOMXULDocument failed\n");
                 }
             } else {
-                if (APP_DEBUG) printf("GetDocument failed, rv=0x%X\n",(int)rv);
+                printf("GetDocument failed, rv=0x%X\n",(int)rv);
             }
         } else {
-            if (APP_DEBUG) printf("Upcast to nsIDocumentViewer failed\n");
+             printf("Upcast to nsIDocumentViewer failed\n");
         }
     } else {
-        if (APP_DEBUG) printf("GetContentViewer failed, rv=0x%X\n",(int)rv);
+        printf("GetContentViewer failed, rv=0x%X\n",(int)rv);
     }
     return rv;
 }
 
+// nsIDocumentLoaderObserver methods
+
+NS_IMETHODIMP
+nsBrowserAppCore::OnStartDocumentLoad(nsIURL* aURL, const char* aCommand)
+{
+  // Kick start the throbber
+   printf("Setting throbber to busy\n");
+   setAttribute( mWebShell, "Browser:Throbber", "busy", "true" );
+   return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsBrowserAppCore::OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus)
+{
+
+    const char* spec =nsnull;
+    
+    aUrl->GetSpec(&spec);
+
+    // Update global history.
+    NS_ASSERTION(mGHistory != nsnull, "history not initialized");
+    if (mGHistory) {
+        nsresult rv;
+
+        nsAutoString url(spec);
+        char* urlSpec = url.ToNewCString();
+        do {
+            if (NS_FAILED(rv = mGHistory->AddPage(urlSpec, /* XXX referrer? */ nsnull, PR_Now()))) {
+                NS_ERROR("unable to add page to history");
+                break;
+            }
+
+            const PRUnichar* title;
+            if (NS_FAILED(rv = mWebShell->GetTitle(&title))) {
+                NS_ERROR("unable to get doc title");
+                break;
+            }
+
+            if (NS_FAILED(rv = mGHistory->SetPageTitle(urlSpec, title))) {
+                NS_ERROR("unable to set doc title");
+                break;
+            }
+        } while (0);
+        delete[] urlSpec;
+    }
+    
+    // Stop the throbber
+    printf("Setting throbber to unbusy\n");
+    setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserAppCore::OnStartURLLoad(nsIURL* aURL, const char* aContentType, 
+                            nsIContentViewer* aViewer)
+{
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserAppCore::OnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress, 
+                              PRUint32 aProgressMax)
+{
+  nsresult rv = NS_OK;
+  PRUint32 progress = aProgressMax ? ( aProgress * 100 ) / aProgressMax : 0;
+  const char *urlString = 0;
+  aURL->GetSpec( &urlString );
+  return rv;
+   return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsBrowserAppCore::OnStatusURLLoad(nsIURL* aURL, nsString& aMsg)
+{
+  nsresult rv = setAttribute( mWebShell, "Browser:Status", "text", aMsg );
+   return rv;
+}
+
+
+NS_IMETHODIMP
+nsBrowserAppCore::OnEndURLLoad(nsIURL* aURL, PRInt32 aStatus)
+{
+
+   return NS_OK;
+}
+
+
+#if 0
 NS_IMETHODIMP 
 nsBrowserAppCore::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 {
@@ -635,7 +721,8 @@ NS_IMETHODIMP
 nsBrowserAppCore::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
                                   PRInt32 aProgress, PRInt32 aProgressMax)
 {
-  return NS_OK;
+
+  return rv;
 }
 
 NS_IMETHODIMP 
@@ -672,6 +759,7 @@ nsBrowserAppCore::EndLoadURL(nsIWebShell* aWebShell, const PRUnichar* aURL,
     setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
     return NS_OK;
 }
+#endif  /* 0 */
 
 NS_IMETHODIMP    
 nsBrowserAppCore::NewWindow()
@@ -927,6 +1015,7 @@ nsBrowserAppCore::DoDialog()
   return rv;
 }
 
+#if 0
 NS_IMETHODIMP
 nsBrowserAppCore::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
@@ -944,11 +1033,7 @@ nsBrowserAppCore::OnStartBinding(nsIURL* aURL, const char *aContentType)
 NS_IMETHODIMP
 nsBrowserAppCore::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 {
-  nsresult rv = NS_OK;
-  PRUint32 progress = aProgressMax ? ( aProgress * 100 ) / aProgressMax : 0;
-  const char *urlString = 0;
-  aURL->GetSpec( &urlString );
-  return rv;
+return NS_OK;
 }
 
 
@@ -976,6 +1061,7 @@ nsBrowserAppCore::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar*
   return rv;
 }
 
+#endif /* 0 */
 //----------------------------------------------------------------------
 
 NS_IMETHODIMP_(void)

@@ -29,6 +29,7 @@
 #include "nsINetSupport.h"
 #include "nsIStreamObserver.h"
 #include "nsIURLListener.h"
+#include "nsIDocumentLoaderObserver.h"
 
 class nsIBrowserWindow;
 class nsIWebShell;
@@ -46,8 +47,8 @@ class nsIGlobalHistory;
 class nsBrowserAppCore : public nsBaseAppCore, 
                          public nsIDOMBrowserAppCore,
                          public nsINetSupport,
-                         public nsIStreamObserver,
-                         public nsIURLListener
+                         //     public nsIStreamObserver,
+                         public nsIDocumentLoaderObserver
 {
   public:
 
@@ -83,29 +84,24 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD    Exit();
     NS_IMETHOD    SetDocumentCharset(const nsString& aCharset); 
 
+#if 0
     // nsIStreamObserver
     NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
     NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
     NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
     NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
+#endif /* 0 */
 
+    // nsIDocumentLoaderObserver
+    NS_IMETHOD OnStartDocumentLoad(nsIURL* aURL, const char* aCommand);
+    NS_IMETHOD OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus);
+    NS_IMETHOD OnStartURLLoad(nsIURL* aURL, const char* aContentType, 
+                            nsIContentViewer* aViewer);
+    NS_IMETHOD OnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress, 
+                               PRUint32 aProgressMax);
+    NS_IMETHOD OnStatusURLLoad(nsIURL* aURL, nsString& aMsg);
+    NS_IMETHOD OnEndURLLoad(nsIURL* aURL, PRInt32 aStatus);
 
-    // nsIURlListener methods
-  NS_IMETHOD WillLoadURL(nsIWebShell* aShell,
-                         const PRUnichar* aURL,
-                         nsLoadType aReason);
-
-  NS_IMETHOD BeginLoadURL(nsIWebShell* aShell,
-                          const PRUnichar* aURL);
-
-  NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell,
-                             const PRUnichar* aURL,
-                             PRInt32 aProgress,
-                             PRInt32 aProgressMax);
-
-  NS_IMETHOD EndLoadURL(nsIWebShell* aShell,
-                        const PRUnichar* aURL,
-                        PRInt32 aStatus);
 
     // nsINetSupport
     NS_IMETHOD_(void) Alert(const nsString &aText);
