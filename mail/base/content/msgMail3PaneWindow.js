@@ -112,7 +112,6 @@ function ScrollToMessageAfterFolderLoad (folder)
     // if we failed to scroll to a new message,
     // reselect the last selected message
     var lastMessageLoaded = folder.lastMessageLoaded;
-         
     if (lastMessageLoaded != nsMsgKey_None)
       scrolled = SelectAndScrollToKey(lastMessageLoaded);
   }
@@ -168,13 +167,13 @@ var folderListener = {
        var eventType = event.toString();
        if (eventType == "FolderLoaded") {
          if (folder) {
+           var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
            var uri = folder.URI;
            var rerootingFolder = (uri == gCurrentFolderToReroot);
            if (rerootingFolder) {
              viewDebug("uri = gCurrentFolderToReroot, setting gQSViewIsDirty\n");
              gQSViewIsDirty = true;
              gCurrentFolderToReroot = null;
-             var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
              if(msgFolder) {
                msgFolder.endFolderLoading();
                // suppress command updating when rerooting the folder
@@ -266,7 +265,6 @@ var folderListener = {
              else
              {               
                // get the view value from the folder
-               var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
                if (msgFolder)
                {
                  var msgDatabase = msgFolder.getMsgDatabase(msgWindow);
@@ -1323,14 +1321,13 @@ function FolderPaneOnClick(event)
 
     if (elt.value == "twisty")
     {
-        var folderResource = GetFolderResource(folderTree, row.value);
-        var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-
         if (!(folderTree.treeBoxObject.view.isContainerOpen(row.value)))
         {
+            var folderResource = GetFolderResource(folderTree, row.value);
             var isServer = GetFolderAttribute(folderTree, folderResource, "IsServer");
             if (isServer == "true")
             {
+                var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
                 var server = msgFolder.server;
                 server.performExpand(msgWindow);
             }
@@ -1359,13 +1356,13 @@ function FolderPaneDoubleClick(folderIndex, event)
 {
     var folderTree = GetFolderTree();
     var folderResource = GetFolderResource(folderTree, folderIndex);
-    var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-    var isServer = GetFolderAttribute(folderTree, folderResource, "IsServer");
 
+    var isServer = GetFolderAttribute(folderTree, folderResource, "IsServer");
     if (isServer == "true")
     {
       if (!(folderTree.treeBoxObject.view.isContainerOpen(folderIndex)))
       {
+        var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
         var server = msgFolder.server;
         server.performExpand(msgWindow);
       }
@@ -1431,7 +1428,6 @@ function GetSelectedMsgFolders()
           var folderResource = GetFolderResource(folderTree, j); 
           if (folderResource.Value != "http://home.netscape.com/NC-rdf#PageTitleFakeAccount") {
             var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-
             if(msgFolder)
               folderArray[k++] = msgFolder;
           }
