@@ -134,7 +134,7 @@ struct nsUnknownContentDialog : public nsIXULWindowCallbacks,
           mDocLoader( aDocLoader ) {
         NS_INIT_REFCNT();
     }
-    ~nsUnknownContentDialog() {
+    virtual ~nsUnknownContentDialog() {
     }
     void SetWindow( nsIWebShellWindow *aWindow ) {
         mWindow = aWindow;

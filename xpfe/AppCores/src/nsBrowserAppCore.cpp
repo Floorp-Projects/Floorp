@@ -315,7 +315,7 @@ nsBrowserAppCore::SetDocumentCharset(const nsString& aCharset)
 NS_IMETHODIMP    
 nsBrowserAppCore::Back()
 {
-  Back(mContentAreaWebShell);
+  GoBack(mContentAreaWebShell);
 	return NS_OK;
 }
 
@@ -330,7 +330,7 @@ nsBrowserAppCore::Reload(nsURLReloadType aType)
 NS_IMETHODIMP    
 nsBrowserAppCore::Forward()
 {
-  Forward(mContentAreaWebShell);
+  GoForward(mContentAreaWebShell);
 	return NS_OK;
 }
 
@@ -872,7 +872,7 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
     nsAutoString str(name);
 
     if (APP_DEBUG) {
-      printf("Attaching to Content WebShell [%s]\n", nsAutoCString(str));
+      printf("Attaching to Content WebShell [%s]\n", (const char *)nsAutoCString(str));
     }
   }
 
@@ -904,7 +904,7 @@ nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
     nsAutoString str(name);
 
     if (APP_DEBUG) {
-      printf("Attaching to WebShellWindow[%s]\n", nsAutoCString(str));
+      printf("Attaching to WebShellWindow[%s]\n", (const char *)nsAutoCString(str));
     }
 
     nsIWebShellContainer * webShellContainer;
@@ -1211,19 +1211,19 @@ nsBrowserAppCore::OnEndURLLoad(nsIDocumentLoader* loader,
 
 
 NS_IMETHODIMP    
-nsBrowserAppCore::Back(nsIWebShell * aPrev)
+nsBrowserAppCore::GoBack(nsIWebShell * aPrev)
 {
   if (mSHistory) {
-    mSHistory->Back(aPrev);
+    mSHistory->GoBack(aPrev);
   }
 	return NS_OK;
 }
 
 NS_IMETHODIMP    
-nsBrowserAppCore::Forward(nsIWebShell * aPrev)
+nsBrowserAppCore::GoForward(nsIWebShell * aPrev)
 {
   if (mSHistory) {
-    mSHistory->Forward(aPrev);
+    mSHistory->GoForward(aPrev);
   }
 	return NS_OK;
 }
@@ -1379,7 +1379,6 @@ done:
   }
     return NS_OK;
 }
-
 
 //----------------------------------------------------------
 static void BuildFileURL(const char * aFileName, nsString & aFileURL) 
@@ -1594,7 +1593,7 @@ nsBrowserAppCore::ExecuteScript(nsIScriptContext * aContext, const nsString& aSc
     PRBool isUndefined = PR_FALSE;
     nsString rVal;
     if (APP_DEBUG) {
-      printf("Executing [%s]\n", nsAutoCString(aScript));
+      printf("Executing [%s]\n", (const char *)nsAutoCString(aScript));
     }
     aContext->EvaluateString(aScript, url, 0, rVal, &isUndefined);
   } 

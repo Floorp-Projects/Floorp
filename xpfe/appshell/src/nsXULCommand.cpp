@@ -63,7 +63,7 @@ NS_IMPL_RELEASE(nsXULCommand)
 nsresult
 nsXULCommand::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  nsresult rv = NS_NOINTERFACE;
+  //nsresult rv = NS_NOINTERFACE;
 
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;

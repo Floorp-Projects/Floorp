@@ -685,7 +685,7 @@ nsFindComponent::FindNext(nsISupports *aContext, PRBool *aDidFind)
 		// For now, just record request to console.
 		Context *context = (Context*)aContext;
 #ifdef DEBUG_FIND
-		printf( "nsFindComponent::FindNext\n\tkey=%s\n\tcaseSensitive=%ld\tsearchBackward=%ld\n",
+		printf( "nsFindComponent::FindNext\n\tkey=%s\n\tcaseSensitive=%d\tsearchBackward=%d\n",
 			      (const char *)nsAutoCString( context->mSearchString ),
 			      context->mCaseSensitive, context->mSearchBackwards);
 #endif

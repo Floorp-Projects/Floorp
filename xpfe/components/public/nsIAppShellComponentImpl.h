@@ -70,8 +70,8 @@ public:
         return mInstanceCount == 0 && mLockCount == 0;
     }
     // Lock/unlock (a factory).
-    static nsresult LockFactory( PRBool lock ) {
-        if (lock)
+    static nsresult LockFactory( PRBool aLock ) {
+        if (aLock)
             PR_AtomicIncrement( &mLockCount ); 
         else
             PR_AtomicDecrement( &mLockCount );

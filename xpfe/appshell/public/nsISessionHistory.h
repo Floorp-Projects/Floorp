@@ -52,12 +52,12 @@ public:
   /**
    * Go forward in history 
    */
-  NS_IMETHOD Forward(nsIWebShell * aPrev) = 0;
+  NS_IMETHOD GoForward(nsIWebShell * aPrev) = 0;
 
   /**
    * Go Back in History
    */
-  NS_IMETHOD Back(nsIWebShell * aPrev) = 0;
+  NS_IMETHOD GoBack(nsIWebShell * aPrev) = 0;
 
   /**
    * Reload the current history entry

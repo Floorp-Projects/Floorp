@@ -229,13 +229,13 @@ nsDownloadProgressDialog::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream
 
 NS_IMETHODIMP
 nsDownloadProgressDialog::OnStartBinding(nsIURL* aURL, const char *aContentType) {
-    nsresult rv = NS_OK;
+  //nsresult rv = NS_OK;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDownloadProgressDialog::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax) {
-    nsresult rv = NS_OK;
+  //nsresult rv = NS_OK;
     char buf[16];
     PR_snprintf( buf, sizeof buf, "%lu", aProgressMax );
     setAttribute( mDocument, "data.progress", "max", buf );
@@ -246,7 +246,7 @@ nsDownloadProgressDialog::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 
 
 NS_IMETHODIMP
 nsDownloadProgressDialog::OnStatus(nsIURL* aURL, const PRUnichar* aMsg) {
-    nsresult rv = NS_OK;
+  //nsresult rv = NS_OK;
     nsString msg = aMsg;
     setAttribute( mDocument, "data.status", "value", aMsg );
     return NS_OK;
