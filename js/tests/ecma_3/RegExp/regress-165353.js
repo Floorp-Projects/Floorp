@@ -79,14 +79,14 @@ string = 'www.netscape.com';
   status = inSection(4);
   pattern = /^(([a-z]+)*[a-z]\.)+[a-z]{2,}$/;
   actualmatch = string.match(pattern);
-  expectedmatch = Array('www.netscape.com','netscape.','netscap');
+  expectedmatch = Array('www.netscape.com', 'netscape.', 'netscap');
   addThis();
 
   // add one more capturing parens to the previous regexp -
   status = inSection(5);
   pattern = /^(([a-z]+)*([a-z])\.)+[a-z]{2,}$/;
   actualmatch = string.match(pattern);
-  expectedmatch = Array('www.netscape.com','netscape.','netscap', 'e');
+  expectedmatch = Array('www.netscape.com', 'netscape.', 'netscap', 'e');
   addThis();
 
 
