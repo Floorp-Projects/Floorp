@@ -698,6 +698,59 @@ SECU_PrintAsHex(FILE *out, SECItem *data, char *m, int level)
     }
 }
 
+static const char *hex = "0123456789abcdef";
+
+static const char printable[257] = {
+	"................"	/* 0x */
+	"................"	/* 1x */
+	" !\"#$%&'()*+,-./"	/* 2x */
+	"0123456789:;<=>?"	/* 3x */
+	"@ABCDEFGHIJKLMNO"	/* 4x */
+	"PQRSTUVWXYZ[\\]^_"	/* 5x */
+	"`abcdefghijklmno"	/* 6x */
+	"pqrstuvwxyz{|}~."	/* 7x */
+	"................"	/* 8x */
+	"................"	/* 9x */
+	"................"	/* ax */
+	"................"	/* bx */
+	"................"	/* cx */
+	"................"	/* dx */
+	"................"	/* ex */
+	"................"	/* fx */
+};
+
+void 
+SECU_PrintBuf(FILE *out, const char *msg, const void *vp, int len)
+{
+    const unsigned char *cp = (const unsigned char *)vp;
+    char buf[80];
+    char *bp;
+    char *ap;
+
+    fprintf(out, "%s [Len: %d]\n", msg, len);
+    memset(buf, ' ', sizeof buf);
+    bp = buf;
+    ap = buf + 50;
+    while (--len >= 0) {
+	unsigned char ch = *cp++;
+	*bp++ = hex[(ch >> 4) & 0xf];
+	*bp++ = hex[ch & 0xf];
+	*bp++ = ' ';
+	*ap++ = printable[ch];
+	if (ap - buf >= 66) {
+	    *ap = 0;
+	    fprintf(out, "   %s\n", buf);
+	    memset(buf, ' ', sizeof buf);
+	    bp = buf;
+	    ap = buf + 50;
+	}
+    }
+    if (bp > buf) {
+	*ap = 0;
+	fprintf(out, "   %s\n", buf);
+    }
+}
+
 void
 SECU_PrintInteger(FILE *out, SECItem *i, char *m, int level)
 {

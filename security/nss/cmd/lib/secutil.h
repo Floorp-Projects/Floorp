@@ -215,6 +215,9 @@ extern void SECU_PrintAlgorithmID(FILE *out, SECAlgorithmID *a, char *m,
 /* Print SECItem as hex */
 extern void SECU_PrintAsHex(FILE *out, SECItem *i, char *m, int level);
 
+/* dump a buffer in hex and ASCII */
+extern void SECU_PrintBuf(FILE *out, const char *msg, const void *vp, int len);
+
 /*
  * Format and print the UTC Time "t".  If the tag message "m" is not NULL,
  * do indent formatting based on "level" and add a newline afterward;
