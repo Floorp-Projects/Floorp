@@ -625,13 +625,12 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
             height = NSToCoordRound(mBounds.height * t2p);
 
             blender->Init(dx);
-            blender->Blend(0, 0, width, height,surf,redsurf, 0, 0, opacity, PR_FALSE);
+            blender->Blend(0, 0, width, height,redsurf,surf, 0, 0, opacity);
 
             NS_RELEASE(blender);
             NS_RELEASE(dx);
 
-//            rc.CopyOffScreenBits(surf, 0, 0, brect, NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
-            rc.CopyOffScreenBits(redsurf, 0, 0, brect, NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
+            rc.CopyOffScreenBits(surf, 0, 0, brect, NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
           }
 
           rc.DestroyDrawingSurface(surf);
