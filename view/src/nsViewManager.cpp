@@ -413,9 +413,6 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
     NS_RELEASE(widget);
 
     ds = GetDrawingSurface(*localcx, wrect);
-
-    if (ds)
-      localcx->SelectOffScreenDrawingSurface(ds);
   }
 
   PRBool  result;
@@ -506,9 +503,6 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
     NS_RELEASE(widget);
 
     ds = GetDrawingSurface(*localcx, wrect);
-
-    if (ds)
-      localcx->SelectOffScreenDrawingSurface(ds);
   }
 
   nsRect trect = *rect;
@@ -2214,11 +2208,27 @@ nsDrawingSurface nsViewManager :: GetDrawingSurface(nsIRenderingContext &aContex
 
 		if (NS_SUCCEEDED(rv)) {
 	    mDSBounds = newBounds;
+			aContext.SelectOffScreenDrawingSurface(mDrawingSurface);
 	  }
 	  else {
 	  	mDSBounds.SetRect(0,0,0,0);
 	  	mDrawingSurface = nsnull;
 	  }
+  }
+  else {
+		aContext.SelectOffScreenDrawingSurface(mDrawingSurface);
+
+		float p2t;
+	  mContext->GetDevUnitsToAppUnits(p2t);
+	  nsRect bounds = aBounds;
+	  bounds *= p2t;
+
+		PRBool clipEmpty;
+		aContext.SetClipRect(bounds, nsClipCombine_kReplace, clipEmpty);
+
+		nscolor col = NS_RGB(255,255,255);
+		aContext.SetColor(col);
+		aContext.FillRect(bounds);
   }
 
   return mDrawingSurface;
