@@ -246,9 +246,6 @@ protected:
   // state is the state needed to post-process the line after reflow
   // has completed (vertical alignment, horizontal alignment,
   // justification and relative positioning).
-#ifdef AIX
-public:
-#endif /* AIX */
   struct PerSpanData;
   struct PerFrameData {
     // link to next/prev frame in same span
@@ -279,16 +276,9 @@ public:
     // Other state we use
     PRUint8 mVerticalAlign;
   };
-#ifdef AIX
-protected:
-#endif /* AIX */
-
   PerFrameData mFrameDataBuf[10];
   PerFrameData* mFrameFreeList;
 
-#ifdef AIX
-public:
-#endif /* AIX */
   struct PerSpanData {
     PerSpanData* mNext;
     PerSpanData* mPrev;
@@ -320,10 +310,6 @@ public:
       mLastFrame = pfd;
     }
   };
-#ifdef AIX
-protected:
-#endif /* AIX */
-
   PerSpanData mSpanDataBuf[4];
   PerSpanData* mSpanFreeList;
   PerSpanData* mRootSpan;
