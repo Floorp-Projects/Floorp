@@ -535,10 +535,9 @@ class Dim {
         }
     }
 
-    void enableForAllNewContexts()
+    void attachTo(ContextFactory factory)
     {
-        DimIProxy listener = new DimIProxy(this, IPROXY_LISTEN);
-        ContextFactory.getGlobal().addListener(listener);
+        factory.addListener(new DimIProxy(this, IPROXY_LISTEN));
     }
 
     FunctionSource getFunctionSource(DebuggableScript fnOrScript)

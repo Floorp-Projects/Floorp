@@ -43,11 +43,39 @@ import org.mozilla.javascript.*;
 import org.mozilla.javascript.debug.*;
 import java.io.*;
 
-public class Main {
-
-
+public class Main
+{
     Dim dim;
     DebugGui debugGui;
+
+    /**
+     * Class to consolidate all internal implementations of interfaces
+     * to avoid class generation bloat.
+     */
+    private static class IProxy implements Runnable, ScopeProvider
+    {
+        static final int EXIT_ACTION = 1;
+        static final int SCOPE_PROVIDER = 2;
+
+        private final int type;
+
+        IProxy(int type)
+        {
+            this.type = type;
+        }
+
+        public void run()
+        {
+            if (type != EXIT_ACTION) Kit.codeBug();
+            System.exit(0);
+        }
+
+        public Scriptable getScope()
+        {
+            if (type != SCOPE_PROVIDER) Kit.codeBug();
+            return org.mozilla.javascript.tools.shell.Main.getScope();
+        }
+    }
 
     //
     // public interface
@@ -55,11 +83,6 @@ public class Main {
 
     public Main(String title)
     {
-        if (!ContextFactory.hasExplicitGlobal()) {
-            ContextFactory.initGlobal(
-                org.mozilla.javascript.tools.shell.Main.shellContextFactory);
-        }
-
         dim = new Dim();
         debugGui = new DebugGui(dim, title);
         dim.callback = debugGui;
@@ -163,9 +186,9 @@ public class Main {
         return debugGui.isVisible();
     }
 
-    public void enableForAllNewContexts()
+    public void attachTo(ContextFactory factory)
     {
-        dim.enableForAllNewContexts();
+        dim.attachTo(factory);
     }
 
     public static void main(String[] args)
@@ -173,20 +196,15 @@ public class Main {
     {
         Main main = new Main("Rhino JavaScript Debugger");
         main.doBreak();
-        main.setExitAction(new Runnable() {
-                public void run() {
-                    System.exit(0);
-                }
-            });
+        main.setExitAction(new IProxy(IProxy.EXIT_ACTION));
         System.setIn(main.getIn());
         System.setOut(main.getOut());
         System.setErr(main.getErr());
-        main.enableForAllNewContexts();
-        main.setScopeProvider(new ScopeProvider() {
-                public Scriptable getScope() {
-                    return org.mozilla.javascript.tools.shell.Main.getScope();
-                }
-            });
+
+        main.attachTo(
+            org.mozilla.javascript.tools.shell.Main.shellContextFactory);
+
+        main.setScopeProvider(new IProxy(IProxy.SCOPE_PROVIDER));
 
         main.pack();
         main.setSize(600, 460);
@@ -195,26 +213,27 @@ public class Main {
         org.mozilla.javascript.tools.shell.Main.exec(args);
     }
 
-    // same as plain main(), stdin/out/err redirection removed
     public static void mainEmbedded(String title)
+    {
+        IProxy scopeProvider = new IProxy(IProxy.SCOPE_PROVIDER);
+        mainEmbedded(ContextFactory.getGlobal(), scopeProvider, title);
+    }
+
+    // same as plain main(), stdin/out/err redirection removed and
+    // explicit ContextFactory and ScopeProvider
+    public static void mainEmbedded(ContextFactory factory,
+                                    ScopeProvider scopeProvider,
+                                    String title)
     {
         if (title == null) {
             title = "Rhino JavaScript Debugger (embedded usage)";
         }
         Main main = new Main(title);
         main.doBreak();
-        main.setExitAction(new Runnable() {
-                public void run() {
-                    System.exit(0);
-                }
-            });
+        main.setExitAction(new IProxy(IProxy.EXIT_ACTION));
 
-        main.enableForAllNewContexts();
-        main.setScopeProvider(new ScopeProvider() {
-                public Scriptable getScope() {
-                    return org.mozilla.javascript.tools.shell.Main.getScope();
-                }
-            });
+        main.attachTo(factory);
+        main.setScopeProvider(scopeProvider);
 
         main.pack();
         main.setSize(600, 460);
