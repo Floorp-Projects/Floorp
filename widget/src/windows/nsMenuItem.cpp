@@ -54,16 +54,16 @@ nsresult nsMenuItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
   }                                                                      
-  if (aIID.Equals(kISupportsIID)) {                                      
-    *aInstancePtr = (void*)(nsISupports*)(nsIMenuItem*)this;                     
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }
   if (aIID.Equals(kIMenuListenerIID)) {                                      
     *aInstancePtr = (void*)(nsIMenuListener*)this;                        
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
   }                                                     
+  if (aIID.Equals(kISupportsIID)) {                                      
+    *aInstancePtr = (void*)(nsISupports*)(nsIMenuItem*)this;                     
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }
   return NS_NOINTERFACE;                                                 
 }
 
@@ -94,6 +94,7 @@ nsMenuItem::~nsMenuItem()
 {
   NS_IF_RELEASE(mMenu);
   NS_IF_RELEASE(mTarget);
+  NS_IF_RELEASE(mListener);
 }
 
 //-------------------------------------------------------------------------
@@ -145,6 +146,7 @@ NS_METHOD nsMenuItem::Create(nsIMenu * aParent, const nsString &aLabel, PRUint32
   mCommand = aCommand;
   mLabel   = aLabel;
   mMenu    = aParent;
+  NS_ADDREF(mMenu);
 
   nsISupports * sups;
   if (NS_OK == aParent->QueryInterface(kISupportsIID,(void**)&sups)) {
@@ -214,6 +216,7 @@ NS_METHOD nsMenuItem::GetCommand(PRUint32 & aCommand)
 NS_METHOD nsMenuItem::GetTarget(nsIWidget *& aTarget)
 {
   aTarget = mTarget;
+  NS_ADDREF(mTarget);
   return NS_OK;
 }
 
@@ -227,12 +230,16 @@ NS_METHOD nsMenuItem::GetNativeData(void *& aData)
 NS_METHOD nsMenuItem::AddMenuListener(nsIMenuListener * aMenuListener)
 {
   mListener = aMenuListener;
+  NS_ADDREF(mListener);
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::RemoveMenuListener(nsIMenuListener * aMenuListener)
 {
+  if (mListener == aMenuListener) {
+    NS_IF_RELEASE(mListener);
+  }
   return NS_OK;
 }
 
