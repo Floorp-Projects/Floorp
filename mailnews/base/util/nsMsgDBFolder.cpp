@@ -326,7 +326,7 @@ NS_IMETHODIMP nsMsgDBFolder::OnKeyAdded(nsMsgKey aKeyChanged, nsMsgKey /* aParen
 			{
 				NotifyItemAdded(msgSupports);
 			}
-		//	UpdateSummaryTotals(PR_TRUE);
+			UpdateSummaryTotals(PR_TRUE);
 		}
 	}
 	return NS_OK;
