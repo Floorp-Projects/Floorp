@@ -134,6 +134,21 @@ BEGIN
     IDS_HELLO               "Embedding Mozilla is so much fun!!"
     IDS_ABOUT               "winEmbed - Gecko embedding sample"
     IDS_ABOUT_TITLE         "About winEmbed"
+    IDS_HIST_BACK           "Going Back to: "
+    IDS_HIST_FORWARD        "Going Forward to: "
+    IDS_HIST_RELOAD_NORMAL  "Reloading url, (normal) :"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_HIST_RELOAD_BYPASSPROXY "Reloading url, (bypassing Proxy) :"
+    IDS_HIST_RELOAD_BYPASSCACHE "Reloading url, (bypassing cache) :"
+    IDS_HIST_ADDURL         " added to Session History"
+    IDS_HIST_RELOAD_BYPASSPROXYANDCACHE 
+                            "Reloading url, (bypassing Proxy and cache) :"
+    IDS_HIST_PURGE          "purged from session history"
+    IDS_HIST_GOTO           "Going to history index : "
+    IDS_HIST_URL            " URL : "
 END
 
 #endif    // English (U.S.) resources

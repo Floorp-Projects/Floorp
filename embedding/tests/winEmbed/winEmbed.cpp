@@ -1005,5 +1005,22 @@ void Win32ChromeUI::UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aCurren
     SendMessage(hwndProgress, PBM_SETPOS, aCurrent, 0);
 }
 
+//
+//  FUNCTION: GetResourceStringByID()
+//
+//  PURPOSE: Get the resource string for the ID
+//
+void Win32ChromeUI::GetResourceStringById(PRInt32 aID, char ** aReturn)
+{
 
-
+  char resBuf[MAX_LOADSTRING];
+  int retval = LoadString( ghInstanceResources, aID, (LPTSTR)resBuf, sizeof(resBuf) );
+  if (retval != 0)
+  {
+    int resLen = strlen(resBuf);
+    *aReturn = (char *)calloc(resLen+1, sizeof(char *));
+    if (!*aReturn) return;
+    PL_strncpy(*aReturn, (char *) resBuf, resLen);
+  }
+  return;
+}
