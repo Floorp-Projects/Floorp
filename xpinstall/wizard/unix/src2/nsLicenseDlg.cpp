@@ -132,6 +132,12 @@ int
 nsLicenseDlg::Show()
 {
     int err = OK;
+    if (!mShowDlg)
+    {
+       gCtx->sdlg->Show();
+       return err;
+    }
+    
     char *licenseContents = NULL;
 
     XI_VERIFY(gCtx);

@@ -194,17 +194,6 @@ nsSetupTypeDlg::Parse(nsINIParser *aParser)
     err = aParser->GetStringAlloc(DLG_SETUP_TYPE, MSG0, &mMsg0, &bufsize);
     if (err != OK && err != nsINIParser::E_NO_KEY) goto BAIL; else err = OK;
 
-    bufsize = 5;
-    err = aParser->GetStringAlloc(DLG_SETUP_TYPE, SHOW_DLG, &showDlg, &bufsize);
-    if (err != OK && err != nsINIParser::E_NO_KEY) goto BAIL; else err = OK;
-    if (bufsize != 0 && showDlg)
-    {
-        if (0 == strncmp(showDlg, "TRUE", 4))
-            mShowDlg = nsXInstallerDlg::SHOW_DIALOG;
-        else if (0 == strncmp(showDlg, "FALSE", 5))
-            mShowDlg = nsXInstallerDlg::SKIP_DIALOG;
-    }
-
     bufsize = 0;
     err = aParser->GetStringAlloc(DLG_SETUP_TYPE, TITLE, &mTitle, &bufsize);
     if (err != OK && err != nsINIParser::E_NO_KEY) goto BAIL; else err = OK;
