@@ -30,7 +30,6 @@ if ($#ARGV != 0) {
 
 $DATAFILE = $ARGV[0];
 
-#my $resultsdir = "results";
 my $ngdir	= "http://geckoqa.mcom.com/ngdriver/"; #$input->url(-base=>1) . "/ngdriver/";
 my $ngsuites = $ngdir . "suites/";
 my $conffile = "ngdriver.conf";
@@ -47,33 +46,10 @@ $File{'SuiteList'} = \@suiteArray;
 
 $File{'Project'} = "Buffy";
 
-#$File{'Name'} =~ /(.*)\./i;
-#if(!open(OUTFILE,">$resultsdir/sum-$1.html"))
-#  {
-#	print "Cant create file!\n"; 
-#	return -1;
-#  }
-
-#print OUTFILE $HTMLreport;
-
-
 print $HTMLreport;
-
-#close OUTFILE;
-#
-#  ShowHTML();
-#}
-#else{
-# print "<H1>Wrong Results Version...</H1>\n\n";
-#}
-
-
-
 
 sub generateResults
   {
-  
-  
 	if (!open(INFILE,$DATAFILE)) {
 	  print "DATAFILE = $DATAFILE\n";
 	  print "<H3> Cannot open $?, $!</H3>\n";
@@ -105,37 +81,22 @@ sub generateResults
 
       my $name = $1;
       my $title =$2;
-      #if(!$name){
-      #	$Suite{'Name'} = $input->param('suite');
-      #	$Suite{'Title'}= $input->param('suite');
-      #}
-      #else{
+
       $Suite{'Name'} = $name; 
       $Suite{'Title'} = $title;
-      #}
 
       $Suite{'tcsPass'} = 0;
       $Suite{'tcsFail'} = 0;
       $Suite{'tcsDied'} = 0;
       $Suite{'tcsTotal'} = 0;
 
-      my $i = 0;
-      
       do
 		{
-          $i++; print "i = $i ";
-
           while ($line && !($line =~ /<TC>/i) && !($line =~ /<A name=".*?">/i)) {
             $line = <INFILE>;
           }
 
-          if (!$line) {
-            print "no line\n";
-          }
-
           if ($line && ($line =~ /<A name=\"(.*?)\">/i) && ($1 eq $Suite{'Name'})) {
-            print "XXX \$line = $line\n";
-            print "XXX \$1 = $1\n";
             $line = <INFILE>;  
           }
 
@@ -212,64 +173,32 @@ sub generateHTML
 <UL>
 END_PRINT
 
-    if (!open(CONFFILE,$conffile)) {
+    my %Matrices;
+    
+    # Hard-coded from ngdriver.conf, I didn't want extra files in tree.
+    
+    $extList{"mb"}  = "http://cemicrobrowser.web.aol.com/bugReportDetail.php?RID=%";
+    $extList{"bs"}  = "http://bugscape.nscp.aoltw.net/show_bug.cgi?id=%";
+    $extList{"bz"}  = "http://bugzilla.mozilla.org/show_bug.cgi?id=%";
+    $extList{"bzx"} = "http://bugzilla.mozilla.org/show_bug.cgi?id=%";
+      
+    $prjExtension = "bz";       # Buffy hard-coded here.
+      
+    $Matricies{"dom-core"} = "http://geckoqa.mcom.com/browser/standards/dom1/tcmatrix/index.html";
+    $Matricies{"dom-html"} = "http://geckoqa.mcom.com/browser/standards/dom1/tcmatrix/index.html";
+    $Matricies{"domevents"} = "http://geckoqa.mcom.com/browser/standards/dom1/tcmatrix/index.html";
+    $Matricies{"javascript"} = "http://geckoqa.mcom.com/browser/standards/javascript/tcmatrix/index.html";
+    $Matricies{"forms"} = "http://geckoqa.mcom.com/browser/standards/form_submission/tcmatrix/index.html";
+    $Matricies{"formsec"} = "http://geckoqa.mcom.com/browser/standards/form_submission/tcmatrix/index.html";
 
-      $HTMLreport .= "<H1>ERROR - Could not read in the configuration!</H1>";
-      $var = 0;
-      while ($File{'SuiteList'}->[$var]->{'Name'}) {
-        if ($File{'SuiteList'}->[$var]->{'Name'} eq "forms") {
-   
-          $HTMLreport .= "<li><a href=\"#$File{'SuiteList'}->[$var]->{'Name'}\">$File{'SuiteList'}->[$var]->{'Title'}</a></li>\n";
-          $var++;
-        }
-      }
-    } else {
-      my %Matrices;
-
-#      while (<CONFFILE>) {
-#        if ($_ =~ /addTCMatrix\("(.*?)","(.*?)"\);/i) { 
-#          $Matrices{$1} = $2;
-#        }
-#        if ($_ =~ /addProject\("(.*?)","(.*?)"\);/i) {
-#          print "XXX \$_ = $_";
-#          if ($File{'Project'} eq $1) {
-#           $prjExtension = $2;
-#            $prjExtension =~ s/,/\|/ig;
-#          }
-#        }
-#        if ($_ =~ /addExtension\("(.*?)","(.*?)"\);/i) {
-#          $extList{$1} = $2;
-#        }
-#      }
-
-
-$extList{"mb"}  = "http://cemicrobrowser.web.aol.com/bugReportDetail.php?RID=%";
-$extList{"bs"}  = "http://bugscape.nscp.aoltw.net/show_bug.cgi?id=%";
-$extList{"bz"}  = "http://bugzilla.mozilla.org/show_bug.cgi?id=%";
-$extList{"bzx"} = "http://bugzilla.mozilla.org/show_bug.cgi?id=%";
-
-
-$prjExtension = "bz";  # Buffy hard-coded here.
-
-$Matricies{"dom-core"} = "http://geckoqa.mcom.com/browser/standards/dom1/tcmatrix/index.html";
-$Matricies{"dom-html"} = "http://geckoqa.mcom.com/browser/standards/dom1/tcmatrix/index.html";
-$Matricies{"domevents"} = "http://geckoqa.mcom.com/browser/standards/dom1/tcmatrix/index.html";
-$Matricies{"javascript"} = "http://geckoqa.mcom.com/browser/standards/javascript/tcmatrix/index.html";
-$Matricies{"forms"} = "http://geckoqa.mcom.com/browser/standards/form_submission/tcmatrix/index.html";
-$Matricies{"formsec"} = "http://geckoqa.mcom.com/browser/standards/form_submission/tcmatrix/index.html";
-
-
-
-
-      close(CONFFILE);
-      for (my $var = 0;$File{'SuiteList'}->[$var]->{'Name'};$var++) {
-        if (my $href = $Matrices{$File{'SuiteList'}->[$var]->{'Name'}}) {
-          $HTMLreport .= "<li><a href=\"$href\">$File{'SuiteList'}->[$var]->{'Title'}</a></li>\n";
-        } else {
-          $HTMLreport .= "<li><a href=\"$ngsuites$File{'SuiteList'}->[$var]->{'Name'}\">$File{'SuiteList'}->[$var]->{'Title'}</a></li>\n";
-        }
+    for (my $var = 0;$File{'SuiteList'}->[$var]->{'Name'};$var++) {
+      if (my $href = $Matrices{$File{'SuiteList'}->[$var]->{'Name'}}) {
+        $HTMLreport .= "<li><a href=\"$href\">$File{'SuiteList'}->[$var]->{'Title'}</a></li>\n";
+      } else {
+        $HTMLreport .= "<li><a href=\"$ngsuites$File{'SuiteList'}->[$var]->{'Name'}\">$File{'SuiteList'}->[$var]->{'Title'}</a></li>\n";
       }
     }
+    
     $HTMLreport .= <<END_PRINT;
 	</UL>
 
@@ -401,17 +330,5 @@ sub makelink
 
 	return $bugLnk;
   }
-###########################################################
-# Parameters: none
-# Return: 0 if failed, 1 if passed
-# Purpose: Show the report summary to the user.
-###########################################################
-#sub ShowHTML
-#{
-#	$File{'Name'} =~ /(.*)?\./i;
-#	open(INFILE,"$resultsdir/sum-$1.html") || return 0;
-#	print "<SCRIPT>document.location = \"$ngdir$resultsdir/sum-$1.html\"</SCRIPT>";
-#	close(INFILE);
-#	1;
-#} 
+
 1;
