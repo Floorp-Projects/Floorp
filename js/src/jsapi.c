@@ -2058,6 +2058,13 @@ JS_GetConstructor(JSContext *cx, JSObject *proto)
     return JSVAL_TO_OBJECT(cval);
 }
 
+JS_PUBLIC_API(JSBool)
+JS_GetObjectId(JSContext *cx, JSObject *obj, jsid *idp)
+{
+    *idp = (jsid) obj;
+    return JS_TRUE;
+}
+
 JS_PUBLIC_API(JSObject *)
 JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
 {
@@ -4048,6 +4055,7 @@ JS_ClearPendingException(JSContext *cx)
 {
 #if JS_HAS_EXCEPTIONS
     cx->throwing = JS_FALSE;
+    cx->exception = JSVAL_VOID;
 #endif
 }
 
