@@ -583,7 +583,6 @@ nsScriptSecurityManager::GetSecurityLevel(JSContext *cx, char *prop_name,
         return SCRIPT_SECURITY_NO_ACCESS;
     PRInt32 secLevel;
     char *secLevelString;
-    nsIPref *mPrefs;
 	nsresult rv;
 	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
 	if (NS_FAILED(rv))
