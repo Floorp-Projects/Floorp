@@ -20,6 +20,7 @@ IGNORE_MANIFEST=1
 
 IDLSRCS =							\
 			nsIMsgCompose.idl		\
+			nsIMsgPost.idl			\
 			$(NULL)
 
 EXPORTS =	 						\
@@ -29,6 +30,8 @@ EXPORTS =	 						\
 			nsMsgCompFieldsFact.h	\
 			nsIMsgSend.h			\
 			nsMsgSendFact.h			\
+			nsIMsgPost.h			\
+			nsIMsgPostFact.h		\
 			nsISmtpUrl.h			\
 			nsISmtpService.h		\
 			MsgCompGlue.h			\
