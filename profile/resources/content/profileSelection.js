@@ -46,6 +46,17 @@ function StartUp()
 
   loadElements();
   highlightCurrentProfile();
+
+  // set the checkbox to reflect the current state.
+  var offlineState = document.getElementById("offlineState");
+  try {
+    var ioService = nsJSComponentManager.getServiceByID("{9ac9e770-18bc-11d3-9337-00104ba0fd40}",
+                                                    "nsIIOService");
+    offlineState.checked = ioService.offline;
+  }
+  catch(e) {
+  }
+  
   DoEnabling();
 }
 
@@ -149,8 +160,16 @@ function onStart()
     else
       return false;
   }
+  
+  // start in online or offline mode
+  var offlineState = document.getElementById("offlineState");
+  var ioService = nsJSComponentManager.getServiceByID("{9ac9e770-18bc-11d3-9337-00104ba0fd40}",
+                                                  "nsIIOService");
+  ioService.offline = offlineState.checked;  
+  
   try {
     dump("start with profile: " + profilename + "\n");
+                                                        
     profile.startApprunner(profilename);
     ExitApp();
   }

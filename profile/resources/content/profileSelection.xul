@@ -51,6 +51,7 @@
   <!-- note: wtf is with the 'onclose' above. Is that a real, actual, valid event?! -->      
       
 	<script language="javascript" src="chrome://global/content/strres.js"></script>
+	<script language="javascript" src="chrome://global/content/nsJSComponentManager.js"></script>
   <script language="javascript" src="chrome://communicator/content/profile/profileSelection.js"></script>
   <script language="javascript" src="chrome://communicator/content/profile/profileManager.js"></script>
 
@@ -81,17 +82,22 @@
       
     <separator class="thin" orient="vertical"/>
     
-    <tree id="profiles" class="inset" flex="1"
-          onclick="HandleClickEvent( event );"
-          onkeypress="HandleKeyEvent( event );">
-      <treecol/>
-      <treehead>
-        <treerow>
-          <treecell class="treecell-header outset" value="&availprofiles.label;"/>
-        </treerow>
-      </treehead>
-      <treechildren id="profilekids"/>
-    </tree>    
+    <box orient="vertical" flex="1">
+      <tree id="profiles" class="inset" flex="1"
+            onclick="HandleClickEvent( event );"
+            onkeypress="HandleKeyEvent( event );">
+        <treecol/>
+        <treehead>
+          <treerow>
+            <treecell class="treecell-header outset" value="&availprofiles.label;"/>
+          </treerow>
+        </treehead>
+        <treechildren id="profilekids"/>
+      </tree>    
+      <box autostretch="never">
+        <checkbox id="offlineState" value="&offlineState.label;" accesskey="&offlineState.accesskey;"/> 
+      </box>
+    </box>
   </box>
   
   <box class="selection">
