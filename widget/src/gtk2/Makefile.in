@@ -25,11 +25,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# build our subdirs, too
-ifdef ACCESSIBILITY
-DIRS		= mai
-endif
-
 MODULE		= widget
 LIBRARY_NAME	= widget_gtk2
 EXPORT_LIBRARY	= 1
@@ -40,7 +35,6 @@ REQUIRES	= xpcom \
 		  gfx \
 		  pref \
 		  dom \
-		  accessibility \
 		  necko \
 		  xremoteservice
 
@@ -64,9 +58,15 @@ CPPSRCS		= \
 		nsClipboard.cpp \
 		nsDragService.cpp \
 		nsSound.cpp \
-		nsAccessibilityInterface.cpp \
 		nsGConfInterface.cpp \
 		$(NULL)
+
+# build our subdirs, too
+ifdef ACCESSIBILITY
+DIRS		 = mai
+REQUIRES	+= accessibility
+CPPSRCS		+= nsAccessibilityInterface.cpp
+endif
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 
