@@ -138,6 +138,10 @@ PRBool nsDiskModule::AddObject(nsCacheObject* io_pObject)
     if (io_pObject->Address())
     {
         MonitorLocker ml(this);
+        
+        //Remove the earliar copy- silently handles if not found
+        Remove(io_pObject->Address());
+
         // TODO optimize these further- make static - Gagan
         DBT* key = PR_NEW(DBT);
         DBT* data = PR_NEW(DBT);
@@ -415,6 +419,11 @@ PRBool nsDiskModule::Remove(nsCacheObject* pObject)
     {
         --m_Entries;
         m_SizeInUse -= pObject->Size();
+		if (-1 == (*m_pDB->sync)(m_pDB, 0))
+		{
+			//Failed to sync database
+			PR_ASSERT(0);
+		}
     }
     
     //Remove it from the recently used list

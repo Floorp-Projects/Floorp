@@ -40,10 +40,12 @@ static const PRUint32 BKG_THREAD_SLEEP = 15*60; /*in seconds, 15 minutes */
 static const PRUint16 BUGS_FOUND_SO_FAR = 0;
 
 //Preferences
-static const char const* MEM_CACHE_PREF   = "browser.cache.memory_cache_size";
-static const char const* DISK_CACHE_PREF  = "browser.cache.disk_cache_size";
-static const char const* CACHE_DIR_PREF   = "browser.cache.directory";
-static const char const* FREQ_PREF        = "browser.cache.check_doc_frequency";
+static const char * const MEM_CACHE_PREF   = "browser.cache.memory_cache_size";
+static const char * const DISK_CACHE_PREF  = "browser.cache.disk_cache_size";
+static const char * const CACHE_DIR_PREF   = "browser.cache.directory";
+static const char * const FREQ_PREF        = "browser.cache.check_doc_frequency";
+//Not implemented as yet...
+static const char * const BKG_CLEANUP      = "browser.cache.cleanup_period"; //Default for BKG_THREAD_SLEEP	
 
 /* Find a bug in NU_CACHE, get these many chocolates */
 static const PRUint16 CHOCOLATES_PER_BUG_FOUND = 2^BUGS_FOUND_SO_FAR; 
@@ -174,7 +176,8 @@ nsCachePref::SetupPrefs(const char* i_Pref)
                 // Create the dir.
                 status = PR_MkDir(cacheDir, 0600);
                 if (PR_SUCCESS != status) {
-                    m_DiskCacheFolder = 0;
+                    m_DiskCacheFolder = new char[1];
+					*m_DiskCacheFolder = '\0';
                     return;
                 }
             }
