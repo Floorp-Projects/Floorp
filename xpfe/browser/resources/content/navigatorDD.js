@@ -418,7 +418,7 @@ var personalToolbarDNDObserver = {
   DROP_AFTER : 1,
   springLoadedMenuDelay: 350, // milliseconds
   isPlatformNotSupported: navigator.platform.indexOf("Linux") != -1,
-  isTimerSupported: navigator.platform.indexOf("Win") == -1 && navigator.platform.indexOf("Mac") == -1,
+  isTimerSupported: navigator.platform.indexOf("Win") > -1 || navigator.platform.indexOf("Mac") > -1,
 
   mCurrentDragOverTarget: null,
   loadTimer  : null,
