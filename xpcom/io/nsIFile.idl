@@ -336,7 +336,7 @@ NS_GetSpecialDirectory(const char* specialDirName, nsIFile* *result)
     rv = serv->Get(specialDirName, NS_GET_IID(nsIFile), getter_AddRefs(dir));
     if (NS_FAILED(rv)) return rv;
 
-    *result = (nsIFile*)dir.get();
+    *result = NS_STATIC_CAST(nsIFile*, NS_STATIC_CAST(nsISupports*, dir));
     if (*result)
         NS_ADDREF(*result);
     return NS_OK;
