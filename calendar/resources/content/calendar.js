@@ -208,16 +208,22 @@ function calendarInit()
        gCalendarStyleSheet.insertRule("." + containerName + " { background-color:" + calendarColor + "!important;}", 1);
 
        var calcColor = calendarColor.replace(/#/g, "");
-       var red = calcColor.substring(0, 2);
-       var green = calcColor.substring(2, 4);
-       var blue = calcColor.substring(4, 6);
+       var red = parseInt(calcColor.substring(0, 2), 16);
+       var green = parseInt(calcColor.substring(2, 4), 16);
+       var blue = parseInt(calcColor.substring(4, 6), 16);
 
-       // sum is between 3 * 255 = 765 and 0.
-       var sum = parseInt(red, 16) + parseInt(green, 16) + parseInt(blue, 16);
+       // Calculate the L(ightness) value of the HSL color system.
+       // L = (max(R, G, B) + min(R, G, B)) / 2
+       var max = Math.max(Math.max(red, green), blue);
+       var min = Math.min(Math.min(red, green), blue);
+       var lightness = (max + min) / 2;
 
-       // Consider all colors with a sum lower than 256 as dark backgrounds
+       // Consider all colors with less than 50% Lightness as dark colors
        // and use white as the foreground color.
-       if (sum < 256)
+       // Actually we use a treshold a bit below 50%, so colors like
+       // #FF0000, #00FF00 and #0000FF still get black text which looked
+       // better when we tested this.
+       if (lightness < 120)
          gCalendarStyleSheet.insertRule("." + containerName + " { color:" + " white" + "!important;}", 1);
 
        var calListItem = calListItems[i+1];
