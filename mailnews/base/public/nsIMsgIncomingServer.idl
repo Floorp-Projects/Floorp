@@ -35,4 +35,6 @@ interface nsIMsgIncomingServer : nsISupports {
   attribute boolean doBiff;
   attribute long biffMinutes;
 
+  attribute string localPath;
+  readonly attribute string serverURI;
 };

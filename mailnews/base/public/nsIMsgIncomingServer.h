@@ -60,6 +60,13 @@ class nsIMsgIncomingServer : public nsISupports {
   NS_IMETHOD GetBiffMinutes(PRInt32 *aBiffMinutes) = 0;
   NS_IMETHOD SetBiffMinutes(PRInt32 aBiffMinutes) = 0;
 
+  /* attribute string localPath; */
+  NS_IMETHOD GetLocalPath(char * *aLocalPath) = 0;
+  NS_IMETHOD SetLocalPath(char * aLocalPath) = 0;
+
+  /* readonly attribute string serverURI; */
+  NS_IMETHOD GetServerURI(char * *aServerURI) = 0;
+
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
   static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgIncomingServer *priv);
