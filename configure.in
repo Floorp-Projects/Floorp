@@ -1706,6 +1706,11 @@ else
    MOZ_NATIVE_NSPR=1
 fi
 
+USE_NSPR_AUTOCONF=
+MOZ_ARG_ENABLE_BOOL(nspr-autoconf,
+    [  --enable-nspr-autoconf  Use autoconf when building nspr],
+    USE_NSPR_AUTOCONF=1)
+
 dnl See if mmap sees writes
 dnl ========================================================
 dnl For cross compiling, just define it as no, which is a safe default
@@ -3075,6 +3080,7 @@ AC_SUBST(NSPR_INCLUDE_DIR)
 AC_SUBST(NSPR_CFLAGS)
 AC_SUBST(NSPR_LIBS)
 AC_SUBST(MOZ_NATIVE_NSPR)
+AC_SUBST(USE_NSPR_AUTOCONF)
 
 AC_SUBST(CFLAGS)
 AC_SUBST(CXXFLAGS)
@@ -3219,7 +3225,7 @@ dnl =
 dnl = DIST
 dnl = 
 dnl ========================================================
-if test ! "$MOZ_NATIVE_NSPR"
+if test -z "$MOZ_NATIVE_NSPR" && test -z "$USE_NSPR_AUTOCONF"
 then
 dnl 
 dnl USE_PTHREADS
@@ -3396,7 +3402,7 @@ dnl = the NSPR environment config and override files get copied
 dnl = to the right place.
 dnl = 
 dnl ========================================================
-if test ! "$MOZ_NATIVE_NSPR"
+if test ! "$MOZ_NATIVE_NSPR" && test -z "$USE_NSPR_AUTOCONF"
 then
   rm -f ${srcdir}/nsprpub/config/my_config.mk
   rm -f ${srcdir}/nsprpub/config/my_overrides.mk
@@ -3423,7 +3429,7 @@ DLLTOOL=
 unset MAKEFILES
 unset CONFIG_FILES
 
-if test -z "$MOZ_NATIVE_NSPR" && test -n "$have_autoconfed_nspr"; then
+if test -z "$MOZ_NATIVE_NSPR" && test -n "$USE_NSPR_AUTOCONF"; then
   ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist"
   AC_OUTPUT_SUBDIRS(nsprpub)
 fi
