@@ -69,9 +69,8 @@ DATA    SEGMENT DWORD USE32 PUBLIC 'DATA'
 
 DATA    ENDS
 
-CODE32  SEGMENT DWORD USE32 PUBLIC 'CODE'
+CODE32  SEGMENT USE32 PUBLIC 'CODE'
 
-        PUBLIC  SemRequest386
         PUBLIC  SemRequest486
         PUBLIC  SemReleasex86
 
@@ -79,8 +78,6 @@ CODE32  SEGMENT DWORD USE32 PUBLIC 'CODE'
         PUBLIC  _PR_MD_ATOMIC_ADD
         PUBLIC  _PR_MD_ATOMIC_INCREMENT
         PUBLIC  _PR_MD_ATOMIC_DECREMENT
-
-;;; RAM Semaphores
 
 ;;;---------------------------------------------------------------------------
 ;;; APIRET _Optlink SemRequest(PRAMSEM pramsem, ULONG ulTimeout);
@@ -91,69 +88,7 @@ CODE32  SEGMENT DWORD USE32 PUBLIC 'CODE'
 ;;;   EDX - length of timeout in milli-seconds
 ;;;---------------------------------------------------------------------------
 
-        ALIGN   04H
-SemRequest386     PROC
-        mov     ecx, eax                             ; For consistency use ecx
-                                                     ; for PRAMSEM (see 486 imp)
-
-        push    ebx                                  ; Save ebx (volatile)
-        mov     ebx, dword ptr [plisCurrent]
-        mov     eax, dword ptr [ebx+4]               ; Place thread id in high
-                                                     ; word, process id in low
-        mov     ax,  word ptr [ebx]                  ; word
-        pop     ebx                                  ; Restore ebx
-
-req386_test:
-        push    eax
-        sub     eax, (ramsem PTR [ecx]).ramsem_ulTIDPID ; This thread the owner?
-        shl     eax,1                                ; Don't compare top bit
-        pop     eax
-        jz      req386_inc_exit                      ; increment the use count
-
-   lock inc     (ramsem PTR [ecx]).ramsem_cWaiting       ; inc waiting flag
-
-;       lock                                         ; Uncomment for SMP
-   lock bts     (ramsem PTR [ecx]).ramsem_ulTIDPID, 31  ; Use the high bit as the
-        jc      req386_sleep                         ; semaphore
-        or      (ramsem PTR [ecx]).ramsem_ulTIDPID, eax ; Copy the rest of the bits
-
-req386_inc_exit:
-   lock inc     (ramsem PTR [ecx]).ramsem_cLocks
-        xor     eax,eax
-
-req386_exit:
-        ret
-
-req386_sleep:
-        push    eax                                  ; Save eax (volatile)
-        push    ecx                                  ; Save ecx (volatile)
-        push    edx                                  ; Save edx (volatile)
-        push    edx                                  ; timeout
-        push    (ramsem PTR [ecx]).ramsem_hevSem
-        call    Dos32WaitEventSem
-        add     esp, 8
-        pop     edx                                  ; restore edx
-        pop     ecx                                  ; restore ecx
-        or      eax, eax
-        je      req386_reset                         ; If no error, reset
-        pop     edx                                  ; junk stored eax
-        jmp     req386_exit                          ; Exit, timed out
-
-req386_reset:
-        push    ecx                                  ; Save ecx (volatile)
-        push    edx                                  ; Save edx (volatile)
-        sub     esp, 4                               ; Use stack space for
-        push    esp                                  ;  dummy pulPostCt
-        push    (ramsem PTR [ecx]).ramsem_hevSem
-        call    Dos32ResetEventSem
-        add     esp, 12
-        pop     edx                                  ; restore edx
-        pop     ecx                                  ; restore ecx
-        pop     eax                                  ; restore eax
-        jmp     req386_test                          ; Retry the semaphore
-SemRequest386     ENDP
-
-        ALIGN   04H
+        ALIGN   10H
 SemRequest486     PROC
         push    ebx                                  ; Save ebx (volatile)
         mov     ecx, eax                             ; PRAMSEM must be in ecx,
@@ -168,9 +103,9 @@ SemRequest486     PROC
 req486_test:
         xor     eax,eax
         cmp     (ramsem PTR [ecx]).ramsem_ulTIDPID, ebx ; If we own the sem, just
-        jz      req486_inc_exit                      ; increment the use count
+        jz short req486_inc_exit                      ; increment the use count
 
-   lock inc     (ramsem PTR [ecx]).ramsem_cWaiting       ; inc waiting flag
+        lock inc     (ramsem PTR [ecx]).ramsem_cWaiting ; inc waiting flag
 
 ;       lock                                         ; Uncomment for SMP
         DB      0F0h
@@ -179,7 +114,7 @@ req486_test:
         DB      00Fh
         DB      0B1h
         DB      019h
-        jnz     req486_sleep
+        jnz short req486_sleep
 
 req486_inc_exit:
    lock inc     (ramsem PTR [ecx]).ramsem_cLocks
@@ -222,10 +157,10 @@ SemRequest486     ENDP
 ;;;   EDX - flags
 ;;;---------------------------------------------------------------------
 
-        ALIGN   04H
+        ALIGN   10H
 SemReleasex86     PROC
         test    edx, SEM_RELEASE_UNOWNED             ; If set, don't bother
-        jnz     rel_ownerok                          ; getting/checking PID/TID
+        jnz short rel_ownerok                        ; getting/checking PID/TID
 
         push    ebx                                  ; Save ebx (volatile)
         mov     ebx, dword ptr [plisCurrent]
@@ -236,14 +171,14 @@ SemReleasex86     PROC
 
         sub     ecx, (ramsem PTR [eax]).ramsem_ulTIDPID ; This thread the owner?
         shl     ecx,1                                ; Don't compare top bit
-        jnz     rel_notowner
+        jnz short rel_notowner
 
 rel_ownerok:
         test    edx, SEM_RELEASE_ALL
-        jnz     rel_clear
+        jnz short rel_clear
 
    lock dec     (ramsem PTR [eax]).ramsem_cLocks
-        jnz     rel_exit
+        jnz short rel_exit
 
 rel_disown:
         mov     (ramsem PTR [eax]).ramsem_ulTIDPID, 0
@@ -251,7 +186,7 @@ rel_disown:
    lock inc     (ramsem PTR [eax]).ramsem_cPosts
         mov     cx, (ramsem PTR [eax]).ramsem_cWaiting
         cmp     (ramsem PTR [eax]).ramsem_cPosts, cx
-        jne     rel_post
+        jne short rel_post
 
 rel_exit:
         xor     eax, eax
@@ -272,54 +207,51 @@ rel_post:
         add     esp,4
         xor     eax,eax
         ret
-
 SemReleasex86     ENDP
-
-;;; Atomic functions
 
 ;;;---------------------------------------------------------------------
 ;;; PRInt32 _Optlink _PR_MD_ATOMIC_SET(PRInt32* val, PRInt32 newval)
 ;;;---------------------------------------------------------------------
+        ALIGN   10H
 _PR_MD_ATOMIC_SET     proc
    lock xchg    dword ptr [eax],edx
         mov eax, edx;
-
         ret
 _PR_MD_ATOMIC_SET     endp
 
 ;;;---------------------------------------------------------------------
 ;;; PRInt32 _Optlink _PR_MD_ATOMIC_ADD(PRInt32* ptr, PRInt32 val)
 ;;;---------------------------------------------------------------------
+        ALIGN   10H
 _PR_MD_ATOMIC_ADD     proc
         mov ecx, edx
         lock xadd dword ptr [eax], edx
         mov eax, edx
         add eax, ecx
-
         ret
 _PR_MD_ATOMIC_ADD     endp
 
 ;;;---------------------------------------------------------------------
 ;;; PRInt32 _Optlink _PR_MD_ATOMIC_INCREMENT(PRInt32* val)
 ;;;---------------------------------------------------------------------
+        ALIGN   10H
 _PR_MD_ATOMIC_INCREMENT     proc
         mov edx, 1
         lock xadd dword ptr [eax], edx
         mov eax, edx
         inc eax
-
         ret
 _PR_MD_ATOMIC_INCREMENT     endp
 
 ;;;---------------------------------------------------------------------
 ;;; PRInt32 _Optlink _PR_MD_ATOMIC_DECREMENT(PRInt32* val)
 ;;;---------------------------------------------------------------------
+        ALIGN   10H
 _PR_MD_ATOMIC_DECREMENT     proc
         mov edx, 0ffffffffh
         lock xadd dword ptr [eax], edx
         mov eax, edx
         dec eax
-
         ret
 _PR_MD_ATOMIC_DECREMENT     endp
 

@@ -50,8 +50,6 @@
 
 #ifdef USE_RAMSEM
 ULONG _Far16 _Pascal Dos16GetInfoSeg(PSEL pselGlobal, PSEL pselLocal);
-APIRET _Optlink SemRequest486(PRAMSEM, ULONG);
-APIRET _Optlink SemReleasex86(PRAMSEM, ULONG);
 
 typedef struct _LINFOSEG
 {
@@ -116,7 +114,7 @@ AddThreadToCVWaitQueueInternal(PRThread *thred, struct _MDCVar *cv)
  * This function is called by _PR_MD_WAIT_CV and _PR_MD_UNLOCK,
  * the two places where a lock is unlocked.
  */
-static void
+void
 md_UnlockAndPostNotifies(
     _MDLock *lock,
     PRThread *waitThred,
@@ -420,53 +418,8 @@ _PR_MD_NEW_LOCK(_MDLock *lock)
 }
 
 void
-_PR_MD_FREE_LOCK(_MDLock *lock)
-{
-#ifdef USE_RAMSEM
-    DosCloseEventSem(((PRAMSEM)(&(lock->mutex)))->hevSem);
-#else
-    DosCloseMutexSem(lock->mutex);
-#endif
-}
-
-void _PR_MD_LOCK(_MDLock *lock)
-{
-#ifdef USE_RAMSEM
-    SemRequest486(&(lock->mutex), -1);
-#else
-    DosRequestMutexSem(lock->mutex, SEM_INDEFINITE_WAIT);
-#endif
-}
-
-PRIntn
-_PR_MD_TEST_AND_LOCK(_MDLock *lock)
-{
-#ifdef USE_RAMSEM
-    SemRequest486(&(lock->mutex), -1);
-#else
-    DosRequestMutexSem(lock->mutex, SEM_INDEFINITE_WAIT);
-#endif
-    return 0;
-}
-
-void
 _PR_MD_NOTIFYALL_CV(_MDCVar *cv, _MDLock *lock)
 {
     md_PostNotifyToCvar(cv, lock, PR_TRUE);
-    return;
-}
-
-void
-_PR_MD_UNLOCK(_MDLock *lock)
-{
-    if (0 != lock->notified.length) {
-        md_UnlockAndPostNotifies(lock, NULL, NULL);
-    } else {
-#ifdef USE_RAMSEM
-        SemReleasex86( &lock->mutex, 0 );
-#else
-        DosReleaseMutexSem(lock->mutex);
-#endif
-    }
     return;
 }
