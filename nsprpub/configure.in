@@ -1164,6 +1164,8 @@ mips-sony-newsos*)
     CXXFLAGS="$CXXFLAGS -ansi -Wall -pipe"
     DLL_SUFFIX=so.1.0
     DSO_CFLAGS=-fPIC
+    MDCPUCFG_H=_openbsd.cfg
+    PR_MD_CSRCS=openbsd.c
     case "$OS_TEST" in
     alpha|mips|pmax)
         DSO_LDOPTS=-shared ;;
