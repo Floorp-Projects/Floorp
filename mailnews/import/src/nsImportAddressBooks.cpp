@@ -643,6 +643,8 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 		// For now, assume we didn't find anything with that name
 	}
 	
+	IMPORT_LOG0( "In GetAddressBook\n");
+
 	nsIAddrDatabase *	pDatabase = nsnull;
 
 	/* Get the profile directory */
@@ -656,10 +658,21 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 		// name is, as long as it's unique
 		(*dbPath) += "impab.mab";
 		(*dbPath).MakeUnique();
+		
+		IMPORT_LOG0( "Getting the address database factory\n");
+
 		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
-		if (NS_SUCCEEDED(rv) && addrDBFactory)
+		if (NS_SUCCEEDED(rv) && addrDBFactory) {
+			
+			IMPORT_LOG0( "Opening the new address book\n");
+
 			rv = addrDBFactory->Open( dbPath, PR_TRUE, &pDatabase, PR_TRUE);
+		}
 	}
+	else {
+		IMPORT_LOG0( "Failed to get the user profile directory from the address book session\n");
+	}
+
 	
 	if (pDatabase) {
 		// We made a database, add it to the UI?!?!?!?!?!?!
@@ -679,8 +692,11 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 				parentDir->CreateNewDirectory( name, fileName);
 				nsCRT::free( fileName);
 			}
+
+			IMPORT_LOG0( "Added new address book to the UI\n");
 		}
 	}
+	
 
 	return( pDatabase);
 	
@@ -832,6 +848,10 @@ PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)
 					pData->currentSize = 0;
 					pData->currentTotal += size;
 					
+					if (!destDB) {
+						pDestDB->Close( PR_TRUE);
+					}
+
 					NS_IF_RELEASE( pDestDB);
 
 					if (fatalError) {
@@ -840,6 +860,10 @@ PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)
 					}
 				}
 			}
+		}
+
+		if (destDB) {
+			destDB->Close( PR_TRUE);
 		}
 	}
 

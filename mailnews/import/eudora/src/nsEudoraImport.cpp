@@ -351,14 +351,22 @@ NS_IMETHODIMP ImportMailImpl::GetDefaultLocation( nsIFileSpec **ppLoc, PRBool *f
     if (!ppLoc || !found || !userVerify)
         return NS_ERROR_NULL_POINTER;
 	
+	*ppLoc = nsnull;
+
 	nsresult	rv;
 	nsIFileSpec *	spec;
 	if (NS_FAILED( rv = NS_NewFileSpec( &spec)))
 		return( rv);
 	
 	*found = m_eudora.FindMailFolder( spec);
+	
+	if (!*found) {
+		NS_RELEASE( spec);
+	}
+	else {
+		*ppLoc = spec;
+	}
 
-	*ppLoc = spec;
 	*userVerify = PR_TRUE;
 
 	return( NS_OK);
@@ -372,8 +380,12 @@ NS_IMETHODIMP ImportMailImpl::FindMailboxes( nsIFileSpec *pLoc, nsISupportsArray
     if (!pLoc || !ppArray)
         return NS_ERROR_NULL_POINTER;
 	
-	
-	nsresult rv = m_eudora.FindMailboxes( pLoc, ppArray);
+	PRBool exists = PR_FALSE;
+	nsresult rv = pLoc->Exists( &exists);
+	if (NS_FAILED( rv) || !exists)
+		return( NS_ERROR_FAILURE);
+
+	rv = m_eudora.FindMailboxes( pLoc, ppArray);
 	if (NS_FAILED( rv) && *ppArray) {
 		NS_RELEASE( *ppArray);
 		*ppArray = nsnull;
@@ -569,14 +581,19 @@ NS_IMETHODIMP ImportAddressImpl::GetDefaultLocation(nsIFileSpec **ppLoc, PRBool 
     if (! found || !userVerify || !ppLoc)
         return NS_ERROR_NULL_POINTER;
     
+	*ppLoc = nsnull;
 	nsresult		rv;
 	nsIFileSpec *	spec;
 	if (NS_FAILED( rv = NS_NewFileSpec( &spec)))
 		return( rv);
 	
 	*found = m_eudora.FindAddressFolder( spec);
-	
-	*ppLoc = spec;
+	if (!*found) {
+		NS_IF_RELEASE( spec);
+	}
+	else {
+		*ppLoc = spec;
+	}
 	*userVerify = PR_TRUE;
 	
 	return( NS_OK);    
@@ -591,7 +608,12 @@ NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *pLoc, nsISupports
     if (!pLoc || !ppArray)
         return NS_ERROR_NULL_POINTER;
 	
-	nsresult rv = m_eudora.FindAddressBooks( pLoc, ppArray);
+	PRBool exists = PR_FALSE;
+	nsresult rv = pLoc->Exists( &exists);
+	if (NS_FAILED( rv) || !exists)
+		return( NS_ERROR_FAILURE);
+
+	rv = m_eudora.FindAddressBooks( pLoc, ppArray);
 	if (NS_FAILED( rv) && *ppArray) {
 		NS_RELEASE( *ppArray);
 		*ppArray = nsnull;

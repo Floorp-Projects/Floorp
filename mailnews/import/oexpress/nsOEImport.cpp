@@ -357,6 +357,11 @@ NS_IMETHODIMP ImportMailImpl::FindMailboxes( nsIFileSpec *pLoc, nsISupportsArray
     if (!pLoc || !ppArray)
         return NS_ERROR_NULL_POINTER;
 	
+	PRBool exists = PR_FALSE;
+	nsresult rv = pLoc->Exists( &exists);
+	if (NS_FAILED( rv) || !exists)
+		return( NS_ERROR_FAILURE);
+
 	nsOEScanBoxes	scan;
 	
 	if (!scan.GetMailboxes( pLoc, ppArray))

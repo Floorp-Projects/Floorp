@@ -83,6 +83,9 @@ PRBool nsOEScanBoxes::Find50Mail( nsIFileSpec *pWhere)
 				pBytes = nsOERegUtil::GetValueBytes( sKey, "Store Root");
 				if (pBytes) {
 					pWhere->SetNativePath((char *)pBytes);
+					
+					IMPORT_LOG1( "Setting native path: %s\n", pBytes);
+
 					nsOERegUtil::FreeValueBytes( pBytes);
 					PRBool	isDir = PR_FALSE;
 					rv = pWhere->IsDirectory( &isDir);

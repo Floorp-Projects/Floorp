@@ -4,13 +4,52 @@
 <script language="javascript">
 var intervalState = null;
 var	importMailInterface = null;
+var importAddressInterface = null;
+var importSuccess = false;
+
+function LoadImportService() {
+	var module = Components.classes["component://mozilla/import/import-service"].createInstance();
+	module = module.QueryInterface(Components.interfaces.nsIImportService);
+	return( module);
+}
+
+function ListModules( service, filter) {
+	if (service == null)
+		return;
+	var count = service.GetModuleCount( filter);
+	for (i = 0; i < count; i++) {
+		dump( "\tModule available: " + service.GetModuleName( filter, i) + "\n");
+	}
+}
+
+function ListUpgradeModules( service) {
+	if (service == null)
+		return;
+	var count = service.GetModuleCount( "");
+	var module;
+	for (i = 0; i < count; i++) {
+		module = service.GetModule( "", i);
+		if ( module.supportsUpgrade) {
+			dump( "\tUpgrade Module available: " + service.GetModuleName( "", i) + "\n");
+		}
+	}
+}
+
 
 function ContinueMailImport() {
 	clear = true;
 	if (importMailInterface) {
-		if (importMailInterface.ContinueImport() && (importMailInterface.GetProgress() < 100)) {
+		if (!importMailInterface.ContinueImport()) {
+			importSuccess = false;
+			dump( "Import mail failed, ContinueImport returned false\n");
+		}
+		else if (importMailInterface.GetProgress() < 100) {
 			clear = false;
 			dump( ".");
+		}
+		else {
+			importSuccess = true;
+			dump( "Mail import successful\n");
 		}
 	}
 	if (clear == true) {
@@ -21,258 +60,396 @@ function ContinueMailImport() {
 	}
 }
 
-function test1() {
-	if (importMailInterface || intervalState) {
-		dump( "Already importing mail, wait till this one is done!\n");
-		return;
+function ContinueAddressImport() {
+	clear = true;
+	if (importAddressInterface) {
+		if (!importAddressInterface.ContinueImport()) {
+			importSuccess = false;
+			dump( "Import address failed, ContinueImport returned false\n");
+		}
+		else if (importAddressInterface.GetProgress() < 100) {
+			clear = false;
+			dump( ".");
+		}
+		else {
+			importSuccess = true;
+			dump( "Address import successful\n");
+		}
 	}
+	if (clear == true) {
+		dump( "Address import finished\n");
+		clearInterval( intervalState);
+		intervalState = null;
+		importAddressInterface = null;		
+	}
+}
 
-	dump( "test1\n");
-	dump( "Loading outlook express component\n");
-	var module = Components.classes["component://mozilla/import/import-oe"].createInstance();
-	module = module.QueryInterface(Components.interfaces.nsIImportModule);
+function ImportMail( module) {
+	if (importMailInterface || intervalState) {
+		dump( "Already importing something, wait till this one is done!\n");
+		return( false);
+	}
 	
-	dump( "Loaded outlook express import module\n");
-	dump( "Getting the mail interface\n");
+	importSuccess = false;
 
 	var mailInterface = module.GetImportInterface( "mail");
 	mailInterface = mailInterface.QueryInterface( Components.interfaces.nsIImportGeneric);
-
-	dump( "Got the mail interface\n");
 	
 	var loc = mailInterface.GetData( "mailLocation");
-
-	dump( "Mail location: " + loc + "\n");
+	
+	if (loc == null) {
+		// No location found, check to see if we can ask the user.
+		if (mailInterface.GetStatus( "canUserSetLocation") != 0) {
+			var filePicker = Components.classes["component://netscape/filespecwithui"].createInstance();
+			if (filePicker != null) {
+				filePicker = filePicker.QueryInterface( Components.interfaces.nsIFileSpecWithUI);
+				if (filePicker != null) {
+					try {
+						filePicker.chooseDirectory( "Select mail directory");
+						mailInterface.SetLocation( filePicker.QueryInterface( Components.interfaces.nsIFileSpec));
+					} catch( ex) {
+						dump( "file picker failed to pick a directory\n");
+						// don't show an error when we return!
+						return( true);
+					}					
+				}
+				else {
+					dump( "QueryInterface failed on the file picker\n");
+					return( false);
+				}
+			}
+			else {
+				dump( "Unable to obtain file picker class\n");
+				return( false);
+			}
+		}
+		else {
+			dump( "Unable to find mail to import\n");
+			return( false);
+		}
+	}
 
 	if (mailInterface.WantsProgress()) {
 		dump( "Beginning import with progress\n");
 		if (mailInterface.BeginImport( null, null)) {
-			var count = 0;
 			dump( "Importing ");
 			importMailInterface = mailInterface;
 			intervalState = setInterval( "ContinueMailImport()", 100);
 	
 			dump( "\nWaiting for import to finish.....\n");
+			return( true);
 		}
 		else {
 			dump( "BeginImport returned failure\n");
+			return( false);
 		}
 	}
 	else {
 		if (mailInterface.BeginImport( null, null)) {
 			dump( "BeginImport successful without progress\n");
+			return( true);
 		}
 		else {
 			dump( "BeginImport FAILED without progress\n");
+			return( false);
+		}
+	}
+	
+
+}
+
+function ImportAddresses( module) {
+	if (importAddressInterface || intervalState) {
+		dump( "Already importing something, wait till this one is done!\n");
+		return( false);
+	}
+
+	importSuccess = false;
+
+	var addInterface = module.GetImportInterface( "addressbook");
+	if (addInterface == null) {
+		dump( "Unable to obtain address book interface\n");
+		return( false);
+	}
+	
+	addInterface = addInterface.QueryInterface( Components.interfaces.nsIImportGeneric);
+	if (addInterface == null) {
+		dump( "Unable to obtain address book generic import interface\n");
+		return( false);
+	}
+	
+	
+	var loc = addInterface.GetStatus( "autoFind");
+	if (loc == false) {
+		loc = addInterface.GetData( "addressLocation");
+		if (loc != null) {
+			if (!loc.exists)
+				loc = null;
 		}
 	}
 
+	if (loc == null) {
+		// Couldn't find the address book, see if we can
+		// as the user for the location or not?
+		if (addInterface.GetStatus( "canUserSetLocation") == 0) {
+			// an autofind address book that could not be found!
+			dump( "Unable to locate address book for importing\n");
+			return( false);
+		}
 
+		var filePicker = Components.classes["component://netscape/filespecwithui"].createInstance();
+		if (filePicker != null) {
+			filePicker = filePicker.QueryInterface( Components.interfaces.nsIFileSpecWithUI);
+			if (filePicker == null) {
+				dump( "Error getting file picker interface\n");
+				return( false);
+			}
+		}
+		else {
+			dump( "Error getting file picker component\n");
+			return( false);
+		}
+
+		// The address book location was not found.
+		// Determine if we need to ask for a directory
+		// or a single file.
+		var file = null;
+		if (addInterface.GetStatus( "supportsMultiple") != 0) {
+			// ask for dir
+			try {
+				filePicker.chooseDirectory( "Select address book directory");
+				file = filePicker.QueryInterface( Components.interfaces.nsIFileSpec);
+			} catch( ex) {
+				file = null;
+			}
+		}
+		else {
+			// ask for file
+			try {
+				filePicker.chooseInputFile( "Select address book file", filePicker.eAllFiles, null, null);
+				file = filePicker.QueryInterface( Components.interfaces.nsIFileSpec);
+			} catch( ex) {
+				file = null;
+			}
+		}
+
+		if (file == null) {
+			dump( "They didn't pick a file or dir!\n");
+			return( true);
+		}
+
+		addInterface.SetData( "addressLocation", file);
+	}
+
+
+	if (addInterface.WantsProgress()) {
+		dump( "Beginning address import with progress\n");
+		if (addInterface.BeginImport( null, null)) {
+			dump( "Importing ");
+			importAddressInterface = addInterface;
+			intervalState = setInterval( "ContinueAddressImport()", 100);
+	
+			dump( "\nWaiting for address import to finish.....\n");
+			return( true);
+		}
+		else {
+			dump( "BeginImport address returned failure\n");
+			return( false);
+		}
+	}
+	else {
+		if (addInterface.BeginImport( null, null)) {
+			dump( "BeginImport address successful without progress\n");
+			return( true);
+		}
+		else {
+			dump( "BeginImport address FAILED without progress\n");
+			return( false);
+		}
+	}
+}
+
+
+function ImportSettings( module) {
+	var setIntf = module.GetImportInterface( "settings");
+	if (setIntf != null)
+		setIntf = setIntf.QueryInterface( Components.interfaces.nsIImportSettings);
+	if (setIntf == null) {
+		dump( "Unable to obtain settings interface.\n");
+		return( false);
+	}
+	
+	// determine if we can auto find the settings or if we need to ask the user
+	var location = new Object();
+	var description = new Object();
+	var result = setIntf.AutoLocate( description, location);
+	if (result == false) {
+		// In this case, we couldn't not find the settings
+		if (location.value != null) {
+			// Settings were not found, however, they are specified
+			// in a file, so ask the user for the settings file.
+			var filePicker = Components.classes["component://netscape/filespecwithui"].createInstance();
+			if (filePicker != null) {
+				filePicker = filePicker.QueryInterface( Components.interfaces.nsIFileSpecWithUI);
+				if (filePicker != null) {
+					// filePicker.create( window.top, "Select settings file", filePicker.modeLoad);
+					try {
+						filePicker.chooseInputFile( "Select settings file", filePicker.eAllFiles, null, null);
+						setIntf.SetLocation( filePicker.QueryInterface( Components.interfaces.nsIFileSpec));
+					} catch( ex) {
+						dump( "file picker failed to pick a file\n");
+						// don't show an error when we return!
+						return( true);
+					}					
+				}
+				else {
+					dump( "QueryInterface failed on the file picker\n");
+					return( false);
+				}
+			}
+			else {
+				dump( "Unable to obtain file picker class\n");
+				return( false);
+			}
+		}
+		else {
+			// Settings are not specified in a file and were not found,
+			// this means they cannot be imported.
+			dump( "Unable to find settings to import\n");
+			return( false);
+		}
+	}
+
+	// interesting, we need to return the account that new
+	// mail should be imported into?
+	// that's really only useful for "Upgrade"
+	var newAccount = new Object();
+	return( setIntf.Import( newAccount));
+}
+
+
+function importOEMail() {
+
+	dump( "Loading outlook express component\n");
+	var module = Components.classes["component://mozilla/import/import-oe"].createInstance();
+	module = module.QueryInterface(Components.interfaces.nsIImportModule);
+	
+	dump( "Loaded outlook express import module\n");
+	
+	ImportMail( module);
 }
 
 function eudoraMail() {
-	if (importMailInterface || intervalState) {
-		dump( "Already importing mail, wait till this one is done!\n");
-		return;
-	}
-
-	dump( "test1\n");
-	dump( "Loading outlook express component\n");
-	var module = Components.classes["component://mozilla/import/import-eudora"].createInstance();
-	module = module.QueryInterface(Components.interfaces.nsIImportModule);
-	
-	dump( "Loaded outlook express import module\n");
-	dump( "Getting the mail interface\n");
-
-	var mailInterface = module.GetImportInterface( "mail");
-	mailInterface = mailInterface.QueryInterface( Components.interfaces.nsIImportGeneric);
-
-	dump( "Got the mail interface\n");
-	
-	var loc = mailInterface.GetData( "mailLocation");
-
-	dump( "Mail location: " + loc + "\n");
-
-	if (mailInterface.WantsProgress()) {
-		dump( "Beginning import with progress\n");
-		if (mailInterface.BeginImport( null, null)) {
-			var count = 0;
-			dump( "Importing ");
-			importMailInterface = mailInterface;
-			intervalState = setInterval( "ContinueMailImport()", 100);
-	
-			dump( "\nWaiting for import to finish.....\n");
-		}
-		else {
-			dump( "BeginImport returned failure\n");
-		}
-	}
-	else {
-		if (mailInterface.BeginImport( null, null)) {
-			dump( "BeginImport successful without progress\n");
-		}
-		else {
-			dump( "BeginImport FAILED without progress\n");
-		}
-	}
-}
-
-
-function test2() {
-	dump( "test2\n");
-
-	dump( "Loading outlook express component\n");
-	var module = Components.classes["component://mozilla/import/import-oe"].createInstance();
-	module = module.QueryInterface(Components.interfaces.nsIImportModule);
-	
-	dump( "Loaded outlook express import module\n");
-
-	dump( "Getting address book interface\n");
-
-	var addInterface = module.GetImportInterface( "addressbook");
-	addInterface = addInterface.QueryInterface( Components.interfaces.nsIImportGeneric);
-
-	dump( "Got the address book interface\n");
-	
-	var loc = addInterface.GetData( "addressLocation");
-
-	dump( "Address location: " + loc + "\n");
-
-	if (addInterface.WantsProgress()) {
-		dump( "Beginning address import with progress\n");
-		if (addInterface.BeginImport( null, null)) {
-			var count = 0;
-			dump( "Importing ");
-			while (addInterface.ContinueImport() && (addInterface.GetProgress() < 100)) {
-				count = count + 1;
-				if (count > 100) {
-					dump( ".");
-					count = 0;
-				}
-			}
-			dump( "\nImport address finished\n");
-		}
-		else {
-			dump( "BeginImport address returned failure\n");
-		}
-	}
-	else {
-		if (addInterface.BeginImport( null, null)) {
-			dump( "BeginImport address successful without progress\n");
-		}
-		else {
-			dump( "BeginImport address FAILED without progress\n");
-		}
-	}
-}
-
-function eudoraAddress() {
-	dump( "eudora addresses\n");
-
-	dump( "Loading outlook express component\n");
-	var module = Components.classes["component://mozilla/import/import-eudora"].createInstance();
-	module = module.QueryInterface(Components.interfaces.nsIImportModule);
-	
-	dump( "Loaded eudora import module\n");
-
-	dump( "Getting address book interface\n");
-
-	var addInterface = module.GetImportInterface( "addressbook");
-	addInterface = addInterface.QueryInterface( Components.interfaces.nsIImportGeneric);
-
-	dump( "Got the address book interface\n");
-	
-	var loc = addInterface.GetData( "addressLocation");
-
-	dump( "Address location: " + loc + "\n");
-
-	if (addInterface.WantsProgress()) {
-		dump( "Beginning address import with progress\n");
-		if (addInterface.BeginImport( null, null)) {
-			var count = 0;
-			dump( "Importing ");
-			while (addInterface.ContinueImport() && (addInterface.GetProgress() < 100)) {
-				count = count + 1;
-				if (count > 100) {
-					dump( ".");
-					count = 0;
-				}
-			}
-			dump( "\nImport address finished\n");
-		}
-		else {
-			dump( "BeginImport address returned failure\n");
-		}
-	}
-	else {
-		if (addInterface.BeginImport( null, null)) {
-			dump( "BeginImport address successful without progress\n");
-		}
-		else {
-			dump( "BeginImport address FAILED without progress\n");
-		}
-	}
-}
-
-function test3() {
-	dump( "test3\n");
-	dump( "Loading outlook express component\n");
-	var module = Components.classes["component://mozilla/import/import-oe"].createInstance();
-	module = module.QueryInterface(Components.interfaces.nsIImportModule);
-	
-	dump( "Loaded outlook express import module\n");
-	dump( "Getting the settings interface\n");
-
-	var setInterface = module.GetImportInterface( "settings");
-	setInterface = setInterface.QueryInterface( Components.interfaces.nsIImportSettings);
-
-	dump( "Got the settings interface\n");
-
-	var location = new Object();
-	if (setInterface.Import( location)) {
-		dump( "Settings import returned success\n");
-		dump( "Location: " + location + "\n");
-	}
-	else {
-		dump( "Settings import returned failure\n");
-	}
-}
-
-function eudoraSettings() {
-	dump( "test3\n");
 	dump( "Loading eudora component\n");
 	var module = Components.classes["component://mozilla/import/import-eudora"].createInstance();
 	module = module.QueryInterface(Components.interfaces.nsIImportModule);
 	
 	dump( "Loaded eudora import module\n");
-	dump( "Getting the settings interface\n");
-
-	var setInterface = module.GetImportInterface( "settings");
-	setInterface = setInterface.QueryInterface( Components.interfaces.nsIImportSettings);
-
-	dump( "Got the settings interface\n");
-
-	var location = new Object();
-	if (setInterface.Import( location)) {
-		dump( "Settings import returned success\n");
-		dump( "Location: " + location + "\n");
-	}
-	else {
-		dump( "Settings import returned failure\n");
-	}
+	
+	ImportMail( module);
 }
 
+
+function importOEAddress() {
+
+	dump( "Loading outlook express component\n");
+	var module = Components.classes["component://mozilla/import/import-oe"].createInstance();
+	module = module.QueryInterface(Components.interfaces.nsIImportModule);
+	
+	ImportAddresses( module);	
+}
+
+function eudoraAddress() {
+
+	dump( "Loading eudora component\n");
+	var module = Components.classes["component://mozilla/import/import-eudora"].createInstance();
+	module = module.QueryInterface(Components.interfaces.nsIImportModule);
+	
+	dump( "Loaded eudora import module\n");
+	
+	ImportAddresses( module);
+}
+
+
+function importOESettings() {
+	dump( "Loading outlook express component\n");
+	var module = Components.classes["component://mozilla/import/import-oe"].createInstance();
+	module = module.QueryInterface(Components.interfaces.nsIImportModule);
+	
+	dump( "Loaded outlook express import module\n");
+	
+	ImportSettings( module);
+}
+
+function eudoraSettings() {
+	dump( "Loading eudora component\n");
+	var module = Components.classes["component://mozilla/import/import-eudora"].createInstance();
+	module = module.QueryInterface(Components.interfaces.nsIImportModule);
+	
+	dump( "Loaded eudora import module\n");
+	
+	ImportSettings( module);
+}
+
+
+
+
+function GetModule( service, index, filter) {
+	var module = service.GetModule( filter, index);
+	return( module);
+}
+
+function testLists() {
+	var service = LoadImportService();
+	dump( "Mail modules:\n");
+	ListModules( service, "mail");
+	
+	dump( "Addressbook modules:\n");
+	ListModules( service, "addressbook");
+
+	dump( "Settings modules:\n");
+	ListModules( service, "settings");
+
+	dump( "Upgrade modules:\n");
+	ListUpgradeModules( service);
+
+	service = null;
+}
+
+function trySettings( index) {
+	var service = LoadImportService();
+	if (service == null) {
+		dump( "Unable to get import service\n");
+		return( false);
+	}
+	var module = GetModule( service, index, "settings");
+	if (module == null) {
+		dump( "Unable to obtain settings module #" + index + "\n");
+		return( false);
+	}
+
+	if (ImportSettings( module) == true) {
+		dump( "Import Settings success\n");
+		return( true);
+	}
+	else {
+		dump( "Import Settings failed\n");
+		return( false);
+	}
+}
 
 </script>
 
 <p>
 <form name="form">
-<input type="button" value="Import Outlook Express Mail" onclick="test1();"><br>
-<input type="button" value="Import Outlook Express Address Book" onclick="test2();"><br>
-<input type="button" value="Import Outlook Express Settings" onclick="test3();"><br>
+<input type="button" value="Import Outlook Express Mail" onclick="importOEMail();"><br>
+<input type="button" value="Import Outlook Express Address Book" onclick="importOEAddress();"><br>
+<input type="button" value="Import Outlook Express Settings" onclick="importOESettings();"><br>
 <input type="button" value="Import Eudora Mail" onclick="eudoraMail();"><br>
 <input type="button" value="Import Eudora Address" onclick="eudoraAddress();"><br>
-<input type="button" value="Import Eudora Settings" onclick="eudoraSettings();">
+<input type="button" value="Import Eudora Settings" onclick="eudoraSettings();"><br>
+<input type="button" value="Test Listings" onclick="testLists();"><br>
+<input type="button" value="Import Settings from module #2" onclick="trySettings( 2);"><br>
 <form> 
 
 </body>

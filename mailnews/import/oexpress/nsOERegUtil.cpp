@@ -28,14 +28,34 @@ BYTE * nsOERegUtil::GetValueBytes( HKEY hKey, const char *pValueName)
 	LONG	err;
 	DWORD	bufSz;
 	LPBYTE	pBytes = NULL;
+	DWORD	type = 0;
 
-	err = ::RegQueryValueEx( hKey, pValueName, NULL, NULL, NULL, &bufSz); 
+	err = ::RegQueryValueEx( hKey, pValueName, NULL, &type, NULL, &bufSz); 
 	if (err == ERROR_SUCCESS) {
 		pBytes = new BYTE[bufSz];
 		err = ::RegQueryValueEx( hKey, pValueName, NULL, NULL, pBytes, &bufSz);
 		if (err != ERROR_SUCCESS) {
 			delete [] pBytes;
 			pBytes = NULL;
+		}
+		else {
+			if (type == REG_EXPAND_SZ) {
+				DWORD sz = bufSz;
+				LPBYTE pExpand = NULL;
+				DWORD	rSz;
+				
+				do {
+					if (pExpand)
+						delete [] pExpand;
+					sz += 1024;
+					pExpand = new BYTE[sz];
+					rSz = ::ExpandEnvironmentStrings( (LPCSTR) pBytes, (LPSTR) pExpand, sz);
+				} while (rSz > sz);
+
+				delete [] pBytes;
+
+				return( pExpand);
+			}
 		}
 	}
 
