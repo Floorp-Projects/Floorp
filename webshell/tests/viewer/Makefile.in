@@ -90,7 +90,6 @@ endif
 
 BASE_LIBS		= \
 			-lpref \
-			$(ZLIB_LIBS) \
 			-lmozreg \
 			-lmozjs \
 			-lxpcom \

@@ -83,7 +83,6 @@ LIBS		+= \
 		-limg \
 		-lmozutil \
 		-lxpcom \
-		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \
 		$(UN_EXORCISED_TK_FLAGS) \
 		$(NULL)
