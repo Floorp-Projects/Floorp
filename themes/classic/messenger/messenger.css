@@ -441,15 +441,15 @@ box#messagepanebox
  * this belongs in the mail filter window
  */
 
-treeitem[Enabled="true"] > treerow > treecell.enabledcol > .tree-button {
-  list-style-image: url("chrome://messenger/skin/unreadmail.gif");
-}
-
-treecell.enabledcol > .tree-button {
+.enabledcol {
   list-style-image: url("chrome://messenger/skin/readmail.gif");
 }
 
-dummy {
+.enabledcol[enabled="true"] {
+  list-style-image: url("chrome://messenger/skin/unreadmail.gif");
+}
+
+dummy.usesMailWidgets {
   behavior: url(chrome://messenger/content/mailWidgets.xml#dummy);
 }
 

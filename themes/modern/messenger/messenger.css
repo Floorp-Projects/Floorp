@@ -28,6 +28,10 @@
  display: none;
 } 
 
+dummy.usesMailWidgets {
+ behavior: url(chrome://messenger/content/mailWidgets.xml#dummy);
+}
+
 spring.spacer {
     width: 5px;
     height: 5px;
