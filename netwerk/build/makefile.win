@@ -35,6 +35,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  uconv \
 		  zlib \
+		  caps \
 		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
