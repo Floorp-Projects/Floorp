@@ -87,6 +87,7 @@ private:
     static nsIAtom *sDocumentsDirectory;
     static nsIAtom *sInternetSearchDirectory;
     static nsIAtom *sHomeDirectory;
+    static nsIAtom *sDefaultDownloadDirectory;
 #elif defined (XP_OS2)
     static nsIAtom *sSystemDirectory;
     static nsIAtom *sOS2Directory;
