@@ -33,6 +33,7 @@
 #include "nsINetModuleMgr.h" 
 #include "nsILoadGroup.h"
 #include "nsICategoryManager.h"
+#include "nsIHTTPProtocolHandler.h"		// for NS_HTTP_STARTUP_CATEGORY
 
 static NS_DEFINE_CID(kINetModuleMgrCID, NS_NETMODULEMGR_CID);
 
@@ -64,7 +65,7 @@ NS_METHOD nsCookieHTTPNotify::RegisterProc(nsIComponentManager *aCompMgr,
     nsCID cid = NS_COOKIEHTTPNOTIFY_CID;
     char *cidString = cid.ToString();
     nsXPIDLCString prevEntry;
-    rv = catman->AddCategoryEntry("http-startup-category", cidString, "Http Cookie Notify",
+    rv = catman->AddCategoryEntry(NS_HTTP_STARTUP_CATEGORY, cidString, "Http Cookie Notify",
                                   PR_TRUE, PR_TRUE, getter_Copies(prevEntry));
     nsAllocator::Free(cidString);
 
@@ -118,6 +119,9 @@ nsCookieHTTPNotify::nsCookieHTTPNotify()
 {
     NS_INIT_REFCNT();
     mCookieService = nsnull;
+#ifdef DEBUG_dp
+    printf("CookieHTTPNotify Created.\n");
+#endif /* DEBUG_dp */
 }
 
 nsCookieHTTPNotify::~nsCookieHTTPNotify()
