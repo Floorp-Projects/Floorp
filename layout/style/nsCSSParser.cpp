@@ -3979,7 +3979,9 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
     return ParseVariant(aErrorCode, aValue, VARIANT_AHK,
                         nsCSSProps::kTableLayoutKTable);
   case eCSSProperty_text_align:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HK | VARIANT_STRING,
+    // When we support aligning on a string, we can parse text-align
+    // as a string....
+    return ParseVariant(aErrorCode, aValue, VARIANT_HK /* | VARIANT_STRING */,
                         nsCSSProps::kTextAlignKTable);
   case eCSSProperty_text_decoration:
     return ParseTextDecoration(aErrorCode, aValue);
