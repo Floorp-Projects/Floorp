@@ -26,6 +26,14 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef MOZ_PHOENIX
+FILES		= \
+	dmoz.gif            \
+	dmoz.src            \
+	google.gif          \
+	google.src          \
+	$(NULL)
+else
 FILES		= \
 	bugzilla.gif        \
 	bugzilla.src        \
@@ -40,6 +48,7 @@ FILES		= \
 	NetscapeSearch.gif  \
 	NetscapeSearch.src  \
 	$(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk
 
