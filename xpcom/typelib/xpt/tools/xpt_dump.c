@@ -54,33 +54,35 @@ XPT_DumpAnnotations(XPTAnnotation *ann, const int indent, PRBool verbose_mode);
 PRBool
 XPT_DumpInterfaceDirectoryEntry(XPTCursor *cursor,
                                 XPTInterfaceDirectoryEntry *ide, 
-                                const int indent, PRBool verbose_mode);
+                                XPTHeader *header, const int indent,
+                                PRBool verbose_mode);
 
 PRBool
-XPT_DumpInterfaceDescriptor(XPTCursor *cursor,
-                            XPTInterfaceDescriptor *id, 
-                            const int indent, PRBool verbose_mode);
+XPT_DumpInterfaceDescriptor(XPTCursor *cursor, XPTInterfaceDescriptor *id, 
+                            XPTHeader *header, const int indent,
+                            PRBool verbose_mode);
 
 PRBool
-XPT_DumpMethodDescriptor(XPTMethodDescriptor *md, const int indent, 
-                         PRBool verbose_mode);
+XPT_DumpMethodDescriptor(XPTHeader *header, XPTMethodDescriptor *md,
+                         const int indent, PRBool verbose_mode);
 PRBool
-XPT_GetStringForType(XPTTypeDescriptor *td, char **type_string);
+XPT_GetStringForType(XPTHeader *header, XPTTypeDescriptor *td,
+                     char **type_string);
 
 PRBool
 XPT_DumpXPTString(XPTString *str);
 
 PRBool
-XPT_DumpParamDescriptor(XPTParamDescriptor *pd, const int indent, 
-                        PRBool verbose_mode);
+XPT_DumpParamDescriptor(XPTHeader *header, XPTParamDescriptor *pd,
+                        const int indent, PRBool verbose_mode);
 
 PRBool
 XPT_DumpTypeDescriptor(XPTTypeDescriptor *td, int indent, 
                        PRBool verbose_mode);
 
 PRBool
-XPT_DumpConstDescriptor(XPTConstDescriptor *cd, const int indent, 
-                        PRBool verbose_mode);
+XPT_DumpConstDescriptor(XPTHeader *header, XPTConstDescriptor *cd,
+                        const int indent, PRBool verbose_mode);
 
 static void
 xpt_dump_usage(char *argv[]) {
@@ -229,11 +231,17 @@ XPT_DumpHeader(XPTCursor *cursor, XPTHeader *header,
     for (i=0; i<header->num_interfaces; i++) {
         if (verbose_mode) {
             fprintf(stdout, "%*sInterface #%d:\n", indent, " ", i);
-            if (!XPT_DumpInterfaceDirectoryEntry(cursor, &header->interface_directory[i], indent*2, verbose_mode)) {
+            if (!XPT_DumpInterfaceDirectoryEntry(cursor,
+                                                 &header->interface_directory[i],
+                                                 header, indent*2,
+                                                 verbose_mode)) {
                 return PR_FALSE;
             }
         } else {
-            if (!XPT_DumpInterfaceDirectoryEntry(cursor, &header->interface_directory[i], indent, verbose_mode)) {
+            if (!XPT_DumpInterfaceDirectoryEntry(cursor,
+                                                 &header->interface_directory[i],
+                                                 header, indent,
+                                                 verbose_mode)) {
                 return PR_FALSE;
             }
         }
@@ -298,7 +306,8 @@ print_IID(struct nsID *iid, FILE *file)
 PRBool
 XPT_DumpInterfaceDirectoryEntry(XPTCursor *cursor, 
                                 XPTInterfaceDirectoryEntry *ide, 
-                                const int indent, PRBool verbose_mode)
+                                XPTHeader *header, const int indent,
+                                PRBool verbose_mode)
 {
     int new_indent = indent + BASE_INDENT;
 
@@ -317,7 +326,7 @@ XPT_DumpInterfaceDirectoryEntry(XPTCursor *cursor,
         fprintf(stdout, "%*sDescriptor:\n", indent, " ");
     
         if (!XPT_DumpInterfaceDescriptor(cursor, ide->interface_descriptor, 
-                                         new_indent, verbose_mode)) {
+                                         header, new_indent, verbose_mode)) {
             return PR_FALSE;
         }
     } else {
@@ -326,7 +335,7 @@ XPT_DumpInterfaceDirectoryEntry(XPTCursor *cursor,
         print_IID(&ide->iid, stdout);
         fprintf(stdout, "):\n");
         if (!XPT_DumpInterfaceDescriptor(cursor, ide->interface_descriptor, 
-                                         new_indent, verbose_mode)) {
+                                         header, new_indent, verbose_mode)) {
             return PR_FALSE;
         }
     }
@@ -335,8 +344,9 @@ XPT_DumpInterfaceDirectoryEntry(XPTCursor *cursor,
 }    
 
 PRBool
-XPT_DumpInterfaceDescriptor(XPTCursor *cursor, XPTInterfaceDescriptor *id, 
-                            const int indent, PRBool verbose_mode)
+XPT_DumpInterfaceDescriptor(XPTCursor *cursor, XPTInterfaceDescriptor *id,
+                            XPTHeader *header, const int indent,
+                            PRBool verbose_mode)
 {
     XPTInterfaceDirectoryEntry *ide;
     int i;
@@ -380,11 +390,13 @@ XPT_DumpInterfaceDescriptor(XPTCursor *cursor, XPTInterfaceDescriptor *id,
         for (i=0; i<id->num_methods; i++) {
             if (verbose_mode) {
                 fprintf(stdout, "%*sMethod #%d:\n", new_indent, " ", i);
-                if (!XPT_DumpMethodDescriptor(&id->method_descriptors[i], 
+                if (!XPT_DumpMethodDescriptor(header,
+                                              &id->method_descriptors[i], 
                                               more_indent, verbose_mode))
                     return PR_FALSE;
             } else {
-                if (!XPT_DumpMethodDescriptor(&id->method_descriptors[i], 
+                if (!XPT_DumpMethodDescriptor(header,
+                                              &id->method_descriptors[i], 
                                               new_indent, verbose_mode))
                     return PR_FALSE;
             }            
@@ -396,14 +408,14 @@ XPT_DumpInterfaceDescriptor(XPTCursor *cursor, XPTInterfaceDescriptor *id,
                 indent, " ", id->num_constants);
         for (i=0; i<id->num_constants; i++) {
             fprintf(stdout, "%*sConstant #%d:\n", new_indent, " ", i);
-            if (!XPT_DumpConstDescriptor(&id->const_descriptors[i], 
+            if (!XPT_DumpConstDescriptor(header, &id->const_descriptors[i], 
                                          more_indent, verbose_mode))
                 return PR_FALSE;
         }
     } else {
         fprintf(stdout, "%*sConstants:\n", indent, " ");
         for (i=0; i<id->num_constants; i++) {
-            if (!XPT_DumpConstDescriptor(&id->const_descriptors[i], 
+            if (!XPT_DumpConstDescriptor(header, &id->const_descriptors[i], 
                                          new_indent, verbose_mode))
                 return PR_FALSE;
         }
@@ -413,8 +425,8 @@ XPT_DumpInterfaceDescriptor(XPTCursor *cursor, XPTInterfaceDescriptor *id,
 }
 
 PRBool
-XPT_DumpMethodDescriptor(XPTMethodDescriptor *md, const int indent, 
-                         PRBool verbose_mode)
+XPT_DumpMethodDescriptor(XPTHeader *header, XPTMethodDescriptor *md,
+                         const int indent, PRBool verbose_mode)
 {
     int i;
     int new_indent = indent + BASE_INDENT;
@@ -458,20 +470,21 @@ XPT_DumpMethodDescriptor(XPTMethodDescriptor *md, const int indent,
         for (i=0; i<md->num_args; i++) {
             fprintf(stdout, "%*sParameter #%d:\n", new_indent, " ", i);
             
-            if (!XPT_DumpParamDescriptor(&md->params[i], more_indent, 
+            if (!XPT_DumpParamDescriptor(header, &md->params[i], more_indent, 
                                          verbose_mode))
                 return PR_FALSE;
         }
    
         fprintf(stdout, "%*sResult:\n", indent, " ");
-        if (!XPT_DumpParamDescriptor(md->result, new_indent, verbose_mode)) {
+        if (!XPT_DumpParamDescriptor(header, md->result, new_indent,
+                                     verbose_mode)) {
             return PR_FALSE;
         }
     } else {
         char *param_type;
         XPTParamDescriptor *pd;
 
-        if (!XPT_GetStringForType(&md->result->type, &param_type)) {
+        if (!XPT_GetStringForType(header, &md->result->type, &param_type)) {
             return PR_FALSE;
         }
         fprintf(stdout, "%*s%s %s(", indent, " ", param_type, md->name);
@@ -501,7 +514,7 @@ XPT_DumpMethodDescriptor(XPTMethodDescriptor *md, const int indent,
                     fprintf(stdout, "XXX ");
                 }
             }
-            if (!XPT_GetStringForType(&pd->type, &param_type)) {
+            if (!XPT_GetStringForType(header, &pd->type, &param_type)) {
                 return PR_FALSE;
             }
             fprintf(stdout, "%s", param_type);
@@ -512,14 +525,20 @@ XPT_DumpMethodDescriptor(XPTMethodDescriptor *md, const int indent,
 }
     
 PRBool
-XPT_GetStringForType(XPTTypeDescriptor *td, char **type_string)
+XPT_GetStringForType(XPTHeader *header, XPTTypeDescriptor *td,
+                     char **type_string)
 {
     int tag = XPT_TDP_TAG(td->prefix);
     
     if (XPT_TDP_IS_POINTER(td->prefix.flags)) {
         *type_string = ptype_array[tag];
     } else {
-        *type_string = type_array[tag];
+        if (tag == TD_INTERFACE_TYPE) {
+            int index = td->type.interface;
+            *type_string = header->interface_directory[index].name;
+        } else {
+            *type_string = type_array[tag];
+        }
     }
 
     return PR_TRUE;
@@ -536,8 +555,8 @@ XPT_DumpXPTString(XPTString *str)
 }
 
 PRBool
-XPT_DumpParamDescriptor(XPTParamDescriptor *pd, const int indent, 
-                        PRBool verbose_mode)
+XPT_DumpParamDescriptor(XPTHeader *header, XPTParamDescriptor *pd,
+                        const int indent, PRBool verbose_mode)
 {
     int new_indent = indent + BASE_INDENT;
     
@@ -613,7 +632,8 @@ XPT_DumpTypeDescriptor(XPTTypeDescriptor *td, int indent, PRBool verbose_mode)
 }
 
 PRBool
-XPT_DumpConstDescriptor(XPTConstDescriptor *cd, const int indent, PRBool verbose_mode)
+XPT_DumpConstDescriptor(XPTHeader *header, XPTConstDescriptor *cd,
+                        const int indent, PRBool verbose_mode)
 {
     int new_indent = indent + BASE_INDENT;
     char *out, *const_type;
@@ -625,7 +645,7 @@ XPT_DumpConstDescriptor(XPTConstDescriptor *cd, const int indent, PRBool verbose
             return PR_FALSE;
         fprintf(stdout, "%*sValue:  ", indent, " ");
     } else {
-        if (!XPT_GetStringForType(&cd->type, &const_type)) {
+        if (!XPT_GetStringForType(header, &cd->type, &const_type)) {
             return PR_FALSE;
         }
         fprintf(stdout, "%*s%s %s = ", indent, " ", const_type, cd->name);
