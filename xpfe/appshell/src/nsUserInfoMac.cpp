@@ -18,33 +18,39 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- * Seth Spitzer <sspitzer@netscape.com>
  */
 
-#include "nsISupports.idl"
+#include "nsUserInfo.h"
 
-[scriptable, uuid(6c1034f0-1dd2-11b2-aa14-e6657ed7bb0b)]
-interface nsIUserInfo : nsISupports
+nsUserInfo::nsUserInfo()
 {
-    /* these are things the system may know about the current user */
+  NS_INIT_REFCNT();
+}
 
-    readonly attribute wstring fullname;
+nsUserInfo::~nsUserInfo()
+{
+}
 
-    readonly attribute string emailAddress;
+NS_IMPL_ISUPPORTS1(nsUserInfo,nsIUserInfo);
 
-    /* should this be a wstring? */
-    readonly attribute string username;
+NS_IMETHODIMP
+nsUserInfo::GetFullname(PRUnichar **aFullname)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
-    readonly attribute string domain;
-};
+NS_IMETHODIMP GetEmailAddress(char * *aEmailAddress)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
-%{C++
+NS_IMETHODIMP GetUsername(char * *aUsername)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
-// 14c13684-1dd2-11b2-9463-bb10ba742554
-#define NS_USERINFO_CID \
-{  0x14c13684, 0x1dd2, 0x11b2, \
-  {0x94, 0x63, 0xbb, 0x10, 0xba, 0x74, 0x25, 0x54}}
+NS_IMETHODIMP GetDomain(char * *aDomain)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
-#define NS_USERINFO_PROGID "component://netscape/userinfo"
-
-%}
