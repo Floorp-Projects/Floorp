@@ -219,9 +219,6 @@ window.addEventListener("load", registerZoomManager, false);
 
 function registerZoomManager()
 {
-  if (navigator.platform.indexOf("Mac") != -1)
-    return; // Macs suck ;-)
-
   var textZoomMenu = document.getElementById("menu_textZoom");
   if (textZoomMenu) {
     var zoom = ZoomManager.prototype.getInstance();
