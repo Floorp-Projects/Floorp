@@ -3622,8 +3622,7 @@ dnl
 dnl --enable-ldap
 dnl
 MOZ_ARG_ENABLE_BOOL(ldap,
-[  --enable-ldap           Enable LDAP (default=no); will fail w/o prereqs at
-                            http://www.mozilla.org/directory/xpcom.html ],
+[  --enable-ldap           Enable LDAP (default=no)],
   MOZ_LDAP_XPCOM=1
     )
 
