@@ -313,6 +313,7 @@
 
 #status-bar {
   border-top: none;
+  min-width: 1px;
 }
 
 #security-button {

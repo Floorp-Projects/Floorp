@@ -555,6 +555,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #status-bar {
   border-top: none;
+  min-width: 1px;
 }
 
 #security-button {
