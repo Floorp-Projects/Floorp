@@ -76,7 +76,7 @@
   {
     // Find buttons in the UI and disable them
     dump("Browser disabling buttons\n");
-    document.getElementByID('urlbar')
+    document.getElementById('urlbar')
   }
 
   function DoEnableButtons()
@@ -230,7 +230,7 @@
       </titledbutton>
 
 	  <html:input html:id="urlbar" html:style="vertical-align: center" html:type="text" 
-		  html:onkeyup="if (event.which == 13) { window.frames[0].location.href=document.getElementByID('urlbar').value; }" style="width:325px;"/>   
+		  html:onkeyup="if (event.which == 13) { window.frames[0].location.href=document.getElementById('urlbar').value; }" style="width:325px;"/>   
 	  
       <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onClick="window.frames[0].home()"/>
          
