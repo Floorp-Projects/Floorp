@@ -310,9 +310,10 @@ nsresult ConvertToUnicode(const char* aCharset,
     outString.Truncate();
     return NS_OK;
   }
-  else if (!*aCharset ||
-           !nsCRT::strcasecmp("us-ascii", aCharset) ||
-           !nsCRT::strcasecmp("ISO-8859-1", aCharset)) {
+  else if ((!*aCharset ||
+            !nsCRT::strcasecmp("us-ascii", aCharset) ||
+            !nsCRT::strcasecmp("ISO-8859-1", aCharset)) &&
+           nsCRT::IsAscii(inCString)) {
     outString.AssignWithConversion(inCString);
     return NS_OK;
   }
