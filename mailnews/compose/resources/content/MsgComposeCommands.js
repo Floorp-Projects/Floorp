@@ -995,7 +995,7 @@ function setupLdapAutocompleteSession()
                 var autoCompleteWidget;
                 for (i=1; i <= awGetMaxRecipients(); i++)
                 {
-                    autoCompleteWidget = document.getElementById("msgRecipient#" + i);
+                    autoCompleteWidget = document.getElementById("addressCol2#" + i);
                     if (autoCompleteWidget)
                     {
                       autoCompleteWidget.addSession(LDAPSession);
@@ -1017,7 +1017,7 @@ function setupLdapAutocompleteSession()
       }
       if (gLDAPSession && gSessionAdded) {
         for (i=1; i <= awGetMaxRecipients(); i++) 
-          document.getElementById("msgRecipient#" + i).
+          document.getElementById("addressCol2#" + i).
               removeSession(gLDAPSession);
         gSessionAdded = false;
       }
@@ -1316,7 +1316,8 @@ function ComposeStartup(recycled, aParams)
         window.editorShell.contentWindow = window._content;
 
         // Do setup common to Message Composer and Web Composer
-        EditorSharedStartup();
+        EditorSharedStartup();   
+   
       }
 
       var msgCompFields = gMsgCompose.compFields;
@@ -1348,10 +1349,11 @@ function ComposeStartup(recycled, aParams)
         }
 
       gMsgCompose.RegisterStateListener(stateListener);
-      gMsgCompose.editor = window.editorShell;
+      gMsgCompose.editor = window.editorShell;      
     }
   }
 }
+
 function WizCallback(state)
 {
   if (state){
@@ -1399,7 +1401,7 @@ function ComposeLoad()
     var state = verifyAccounts(wizardcallback); // this will do migration, or create a new account if we need to.
 
     if (sOther_header != "") {
-      var selectNode = document.getElementById('msgRecipientType#1');
+      var selectNode = document.getElementById('addressCol1#1');
       selectNode = selectNode.childNodes[0];
       var opt = document.createElement('menuitem');
       opt.setAttribute("value", "addr_other");
@@ -1931,7 +1933,7 @@ function AdjustFocus()
   //dump("XXX adjusting focus\n");
   SuppressComposeCommandUpdating(true);
 
-  var element = document.getElementById("msgRecipient#" + awGetNumberOfRecipients());
+  var element = document.getElementById("addressCol2#" + awGetNumberOfRecipients());
   if (element.value == "") {
       //dump("XXX focus on address\n");
       awSetFocus(awGetNumberOfRecipients(), element);
@@ -2478,7 +2480,7 @@ function setupAutocomplete()
       //
       try {
           if (sPrefs.getIntPref("mail.autoComplete.commentColumn")) {
-              document.getElementById('msgRecipient#1').showCommentColumn =
+              document.getElementById('addressCol2#1').showCommentColumn =
                   true;
           }
       } catch (ex) {
@@ -2625,6 +2627,8 @@ function DisplaySaveFolderDlg(folderURI)
   }//if
   return;
 }
+
+
 
 function SetMsgAddressingWidgetTreeElementFocus()
 {

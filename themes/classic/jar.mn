@@ -144,6 +144,7 @@ classic.jar:
   skin/classic/messenger/contents.rdf                                   (messenger/contents.rdf)
   skin/classic/messenger/mailWindow1.css                                (messenger/mailWindow1.css)
   skin/classic/messenger/accountCentral.css                             (messenger/accountCentral.css)
+  skin/classic/messenger/addressingWidget.css                           (messenger/addressingWidget.css)
   skin/classic/messenger/messageHeader.css                              (messenger/messageHeader.css)
   skin/classic/messenger/messageWindow.css                              (messenger/messageWindow.css)
   skin/classic/messenger/messenger.css                                  (messenger/messenger.css)

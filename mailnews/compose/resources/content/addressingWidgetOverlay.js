@@ -54,11 +54,11 @@ gDragService = gDragService.QueryInterface(Components.interfaces.nsIDragService)
  */
 
 var test_addresses_sequence = false;
-if (sPrefs)
-  try {
+try {
+  if (sPrefs)
     test_addresses_sequence = sPrefs.getBoolPref("mail.debug.test_addresses_sequence");
-  }
-  catch (ex) {}
+}
+catch (ex) {}
 
 function awGetMaxRecipients()
 {
@@ -68,14 +68,14 @@ function awGetMaxRecipients()
 function awInputElementName()
 {
     if (inputElementType == "")
-        inputElementType = document.getElementById("msgRecipient#1").localName;
+        inputElementType = document.getElementById("addressCol2#1").localName;
     return inputElementType;
 }
 
 function awSelectElementName()
 {
     if (selectElementType == "")
-        selectElementType = document.getElementById("msgRecipientType#1").localName;
+        selectElementType = document.getElementById("addressCol1#1").localName;
     return selectElementType;
 }
 
@@ -84,7 +84,7 @@ function awGetSelectItemIndex(itemData)
     if (selectElementIndexTable == null)
     {
       selectElementIndexTable = new Object();
-      var selectElem = document.getElementById("msgRecipientType#1");
+      var selectElem = document.getElementById("addressCol1#1");
         for (var i = 0; i < selectElem.childNodes[0].childNodes.length; i ++)
     {
             var aData = selectElem.childNodes[0].childNodes[i].getAttribute("value");
@@ -186,7 +186,7 @@ function CompFields2Recipients(msgCompFields, msgType)
       // dump("replacing child in comp fields 2 recips \n");
       var parent = treeChildren.parentNode;
       parent.replaceChild(newTreeChildrenNode, treeChildren);
-      awFitDummyRows();
+      awFitDummyRows(2);
         setTimeout("awFinishCopyNodes();", 0);
   }
 }
@@ -204,8 +204,8 @@ function awSetInputAndPopupValue(inputElem, inputValue, popupElem, popupValue, r
 
   if (rowNumber >= 0)
   {
-    inputElem.setAttribute("id", "msgRecipient#" + rowNumber);
-    popupElem.setAttribute("id", "msgRecipientType#" + rowNumber);
+    inputElem.setAttribute("id", "addressCol2#" + rowNumber);
+    popupElem.setAttribute("id", "addressCol1#" + rowNumber);
   }
 
   _awSetAutoComplete(popupElem, inputElem);
@@ -359,11 +359,11 @@ function awCleanupRows()
   {
     var inputElem = awGetInputElement(row);
     if (inputElem.value == "" && row < maxRecipients)
-      awRemoveRow(row);
+      awRemoveRow(row, 1);
     else
     {
-      inputElem.setAttribute("id", "msgRecipient#" + rowID);
-      awGetPopupElement(row).setAttribute("id", "msgRecipientType#" + rowID);
+      inputElem.setAttribute("id", "addressCol2#" + rowID);
+      awGetPopupElement(row).setAttribute("id", "addressCol1#" + rowID);
       rowID ++;
     }
   }
@@ -371,19 +371,18 @@ function awCleanupRows()
   awTestRowSequence();
 }
 
-function awDeleteRow(rowToDelete)
+function awDeleteRow(rowToDelete, cols)
 {
   /* When we delete a row, we must reset the id of others row in order to not break the sequence */
   var maxRecipients = top.MAX_RECIPIENTS;
-  var rowID = rowToDelete;
 
-  awRemoveRow(rowToDelete);
+  awRemoveRow(rowToDelete, cols);
 
   for (var row = rowToDelete + 1; row <= maxRecipients; row ++)
   {
-    awGetInputElement(row).setAttribute("id", "msgRecipient#" + rowID);
-    awGetPopupElement(row).setAttribute("id", "msgRecipientType#" + rowID);
-    rowID ++;
+    for (var col = 0; col < cols; col++) {
+      awGetElementByCol(row, col+1).setAttribute("id", "addressCol" + (col+1) + "#" + (row-1));
+    }
   }
 
   awTestRowSequence();
@@ -413,7 +412,7 @@ function awReturnHit(inputElement)
   {
     if ( inputElement.value )
       awAppendNewRow(true);
-    else // No adress entered, switch to Subject field
+    else // No address entered, switch to Subject field
     {
       var subjectField = document.getElementById( 'msgSubject' );
       subjectField.select();
@@ -427,7 +426,7 @@ function awReturnHit(inputElement)
   }
 }
 
-function awDeleteHit(inputElement)
+function awDeleteHit(inputElement, cols)
 {
   var row = awGetRowByInputElement(inputElement);
 
@@ -447,7 +446,7 @@ function awDeleteHit(inputElement)
                                           /* therefore the row number still the same! */
 
   /* 3. Delete the row */
-  awDeleteRow(row);
+  awDeleteRow(row, cols);
 }
 
 function awInputChanged(inputElement)
@@ -484,15 +483,15 @@ function awAppendNewRow(setFocus)
         if ( input && input.length == 1 )
         {
           input[0].setAttribute("value", "");
-          input[0].setAttribute("id", "msgRecipient#" + top.MAX_RECIPIENTS);
+          input[0].setAttribute("id", "addressCol2#" + top.MAX_RECIPIENTS);
 
           //this copies the autocomplete sessions list from recipient#1 
-          input[0].syncSessions(document.getElementById('msgRecipient#1'));
+          input[0].syncSessions(document.getElementById('addressCol2#1'));
 
 	  // also clone the showCommentColumn setting
 	  //
 	  input[0].showCommentColumn = 
-	      document.getElementById("msgRecipient#1").showCommentColumn;
+	      document.getElementById("addressCol2#1").showCommentColumn;
 
           // We always clone the first row.  The problem is that the first row
           // could be focused.  When we clone that row, we end up with a cloned
@@ -510,7 +509,7 @@ function awAppendNewRow(setFocus)
         if ( select && select.length == 1 )
         {
             select[0].selectedItem = select[0].childNodes[0].childNodes[awGetSelectItemIndex(lastRecipientType)];
-          select[0].setAttribute("id", "msgRecipientType#" + top.MAX_RECIPIENTS);
+          select[0].setAttribute("id", "addressCol1#" + top.MAX_RECIPIENTS);
           if (input)
             _awSetAutoComplete(select[0], input[0]);
       }
@@ -526,12 +525,18 @@ function awAppendNewRow(setFocus)
 
 function awGetPopupElement(row)
 {
-    return document.getElementById("msgRecipientType#" + row);
+    return document.getElementById("addressCol1#" + row);
 }
 
 function awGetInputElement(row)
 {
-    return document.getElementById("msgRecipient#" + row);
+    return document.getElementById("addressCol2#" + row);
+}
+
+function awGetElementByCol(row, col)
+{
+  var colID = "addressCol" + col + "#" + row;
+  return document.getElementById(colID);
 }
 
 function awGetTreeRow(row)
@@ -595,12 +600,12 @@ function awCopyNode(node, parentNode, beforeNode)
 
 // remove row
 
-function awRemoveRow(row)
+function awRemoveRow(row, cols)
 {
   var body = document.getElementById('addressWidgetBody');
 
   awRemoveNodeAndChildren(body, awGetTreeItem(row));
-  awFitDummyRows();
+  awFitDummyRows(cols);
 
   top.MAX_RECIPIENTS --;
 }
@@ -616,7 +621,7 @@ function awRemoveNodeAndChildren(parent, nodeToRemove)
 
     awRemoveNodeAndChildren(nodeToRemove, childNode);
   }
-
+  
   parent.removeChild(nodeToRemove);
 }
 
@@ -822,7 +827,7 @@ function awRecipientKeyPress(event, element)
   }
 }
 
-function awRecipientKeyDown(event, element)
+function awRecipientKeyDown(event, element, cols)
 {
   switch(event.keyCode) {
   case 46:
@@ -831,7 +836,7 @@ function awRecipientKeyDown(event, element)
        alter it value while doing some internal cleanup, instead, query the value through the first child
     */
     if (!element.value)
-      awDeleteHit(element);
+      awDeleteHit(element, cols);
     event.preventBubble();  //We need to stop the event else the tree will receive it and the function
                             //awKeyDown will be executed!
     break;
@@ -849,7 +854,7 @@ function awKeyDown(event, treeElement)
     for (var i = 1; i <= length; i++) {
       var inputs = treeElement.selectedItems[0].getElementsByTagName(awInputElementName());
       if (inputs && inputs.length == 1)
-        awDeleteHit(inputs[0]);
+        awDeleteHit(inputs[0], 2);
     }
     break;
   }
@@ -860,13 +865,13 @@ function awKeyDown(event, treeElement)
 var gAWContentHeight = 0;
 var gAWRowHeight = 0;
 
-function awFitDummyRows()
+function awFitDummyRows(cols)
 {
   awCalcContentHeight();
-  awCreateOrRemoveDummyRows();
+  awCreateOrRemoveDummyRows(cols);
 }
 
-function awCreateOrRemoveDummyRows()
+function awCreateOrRemoveDummyRows(cols)
 {
   var body = document.getElementById("addressWidgetBody");
   var bodyHeight = body.boxObject.height;
@@ -883,7 +888,7 @@ function awCreateOrRemoveDummyRows()
   // add rows to fill space
   if (gAWRowHeight) {
     while (gAWContentHeight+gAWRowHeight < bodyHeight) {
-      awCreateDummyItem(body);
+      awCreateDummyItem(body, cols);
       gAWContentHeight += gAWRowHeight;
     }
   }
@@ -907,7 +912,7 @@ function awCalcContentHeight()
   }
 }
 
-function awCreateDummyItem(aParent)
+function awCreateDummyItem(aParent, cols)
 {
   var titem = document.createElement("treeitem");
   titem.setAttribute("_isDummyRow", "true");
@@ -917,8 +922,9 @@ function awCreateDummyItem(aParent)
   trow.setAttribute("onclick", "awDummyRow_onclick()");
   titem.appendChild(trow);
 
-  awCreateDummyCell(trow);
-  awCreateDummyCell(trow);
+  for (var i = 0; i < cols; i++) {
+    awCreateDummyCell(trow);
+  }
 
   if (aParent)
     aParent.appendChild(titem);
@@ -963,7 +969,7 @@ function awSizerListen()
 
 function awSizerMouseMove()
 {
-  awCreateOrRemoveDummyRows();
+  awCreateOrRemoveDummyRows(2);
 }
 
 function awSizerMouseUp()

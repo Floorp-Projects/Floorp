@@ -145,48 +145,6 @@
   margin-bottom: 4px;
 }
 
-/* ::::: addressing widget ::::: */
-  
-#addressingWidgetTree {
-  height: 80px;
-  width: 0px;
-  -moz-user-focus: none;
-  background-color: -moz-field;
-}  
-
-#listcol-addressingWidget {
-  width: 9em;
-  border-right: 1px solid #CACAFF;
-}
-
-#addressingWidgetTree > treechildren > treeitem > treerow,
-#addressingWidgetTree > treechildren > treeitem[selected="true"] > treerow {
-  border: none;
-  background-color: inherit;
-  color: inherit;
-}
-
-.treecell-addressingWidget {
-  border-bottom: 1px solid #CACAFF;
-  padding: 0px !important;
-}
-
-.treecell-addressingWidget:first-child {
-  border-bottom: none;
-}
-
-.textbox-addressingWidget {
-  -moz-box-align: center;
-}
-
-.dummy-row-cell:first-child {
-  border-bottom: 1px solid #CACAFF;
-}
-
-.person-icon {
-  list-style-image: url("chrome://messenger/skin/addressbook/icons/abcard.gif");
-  margin: 0px 3px 0px 3px;
-}
 
 /* ::::: autocomplete icons ::::: */
 
@@ -217,5 +175,4 @@ outlinerchildren:-moz-outliner-image(remote-err) {
 {                                                                               
   -moz-binding: url(chrome://messenger/content/messengercompose/mailComposeBindings.xml#fromMenuitem);
 }     
-
 

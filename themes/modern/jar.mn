@@ -247,6 +247,7 @@ modern.jar:
   skin/modern/messenger/accountCentral.css                         (messenger/accountCentral.css)
   skin/modern/messenger/accountManage.css                          (messenger/accountManage.css)
   skin/modern/messenger/accountWizard.css                          (messenger/accountWizard.css)
+  skin/modern/messenger/addressingWidget.css                       (messenger/addressingWidget.css)
   skin/modern/messenger/dialogs.css                                (messenger/dialogs.css)
   skin/modern/messenger/filterDialog.css                           (messenger/filterDialog.css)
   skin/modern/messenger/folderMenus.css                            (messenger/folderMenus.css)

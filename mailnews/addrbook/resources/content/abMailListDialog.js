@@ -87,7 +87,7 @@ function GetListValue(mailList, doAdd)
     var listname = mailList.dirName;
     listname = listname.toLowerCase();
     oldListName = oldListName.toLowerCase();
-    if (doAdd == true)
+    if (doAdd)
     {
       if (mailingListExists(listname))
         return false;
@@ -108,15 +108,17 @@ function GetListValue(mailList, doAdd)
   var inputField, fieldValue, cardproperty;
   while ((inputField = awGetInputElement(i)))
   {
-          fieldValue = inputField.value;
-    if (doAdd || (doAdd == false && pos >= oldTotal))
+
+    fieldValue = inputField.value;
+    
+    if (doAdd || (!doAdd && pos >= oldTotal))
       cardproperty = Components.classes["@mozilla.org/addressbook/cardproperty;1"].createInstance();
     else
       cardproperty = mailList.addressLists.GetElementAt(pos);
 
     if (fieldValue == "")
     {
-      if (doAdd == false && cardproperty)
+      if (!doAdd && cardproperty)
       try
       {
         mailList.addressLists.DeleteElementAt(pos);
@@ -148,8 +150,13 @@ function GetListValue(mailList, doAdd)
         pos++;
       }
     }
-      i++;
+    i++;
   }
+
+  // if the last field was empty, don't count it
+  if (fieldValue == "")
+    --i;
+    
   if (doAdd == false && i < oldTotal)
   {
     for (var j = i; j < oldTotal; j++)
@@ -239,7 +246,8 @@ function OnLoadNewMailList()
     }
   }
 
-  AppendnewRowAndSetFocus();
+  AppendNewRowAndSetFocus();
+  awFitDummyRows(1);
 
   // focus on first name
   var listName = document.getElementById('ListName');
@@ -299,7 +307,7 @@ function OnLoadEditList()
     var total = gEditList.addressLists.Count();
     if (total)
     {
-      var treeChildren = document.getElementById('addressList');
+      var treeChildren = document.getElementById('addressWidgetBody');
       var newTreeChildrenNode = treeChildren.cloneNode(false);
       var templateNode = treeChildren.firstChild;
 
@@ -320,7 +328,8 @@ function OnLoadEditList()
     }
   }
 
-  AppendnewRowAndSetFocus();
+  AppendNewRowAndSetFocus();
+  awFitDummyRows(1);
 
   // focus on first name
   var listName = document.getElementById('ListName');
@@ -330,7 +339,7 @@ function OnLoadEditList()
   moveToAlertPosition();
 }
 
-function AppendnewRowAndSetFocus()
+function AppendNewRowAndSetFocus()
 {
   var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
   if ( lastInput && lastInput.value )
@@ -350,10 +359,10 @@ function SetInputValue(inputValue, parentNode, templateNode)
     if ( input && input.length == 1 )
     {
     //We need to set the value using both setAttribute and .value else we will
-    // loose the content when the field is not visible. See bug 37435
+    // lose the content when the field is not visible. See bug 37435
       input[0].setAttribute("value", inputValue);
       input[0].value = inputValue;
-      input[0].setAttribute("id", "address#" + top.MAX_RECIPIENTS);
+      input[0].setAttribute("id", "addressCol1#" + top.MAX_RECIPIENTS);
   }
 }
 
@@ -410,26 +419,36 @@ function awInputChanged(inputElement)
 function awInputElementName()
 {
     if (inputElementType == "")
-        inputElementType = document.getElementById("address#1").localName;
+        inputElementType = document.getElementById("addressCol1#1").localName;
     return inputElementType;
 }
 
 function awAppendNewRow(setFocus)
 {
-  var body = document.getElementById('addressList');
+  var body = document.getElementById('addressWidgetBody');
   var treeitem1 = awGetTreeItem(1);
 
   if ( body && treeitem1 )
-  {
-    var newNode = awCopyNode(treeitem1, body, 0);
+  {  
+    var nextDummy = awGetNextDummyRow();
+    if (nextDummy)  {
+      body.removeChild(nextDummy);
+      nextDummy = awGetNextDummyRow();
+    }
+    
+    var newNode = awCopyNode(treeitem1, body, nextDummy);
+    
     top.MAX_RECIPIENTS++;
 
-        var input = newNode.getElementsByTagName(awInputElementName());
-        if ( input && input.length == 1 )
-        {
-          input[0].setAttribute("value", "");
-          input[0].setAttribute("id", "address#" + top.MAX_RECIPIENTS);
-      }
+    var input = newNode.getElementsByTagName(awInputElementName());
+    if ( input && input.length == 1 )
+    {
+      input[0].setAttribute("value", "");
+      input[0].setAttribute("id", "addressCol1#" + top.MAX_RECIPIENTS);
+      
+      if (input[0].getAttribute('focused') != '')
+        input[0].removeAttribute('focused');
+    }
     // focus on new input widget
     if (setFocus && input )
       awSetFocus(top.MAX_RECIPIENTS, input[0]);
@@ -441,108 +460,13 @@ function awAppendNewRow(setFocus)
 
 function awGetInputElement(row)
 {
-    return document.getElementById("address#" + row);
+    return document.getElementById("addressCol1#" + row);
 }
 
-function awGetTreeRow(row)
-{
-  var body = document.getElementById('addressList');
-
-  if ( body && row > 0)
-  {
-    var treerows = body.getElementsByTagName('treerow');
-    if ( treerows && treerows.length >= row )
-      return treerows[row-1];
-  }
-  return 0;
-}
-
-function awGetTreeItem(row)
-{
-  var body = document.getElementById('addressList');
-
-  if ( body && row > 0)
-  {
-    var treeitems = body.getElementsByTagName('treeitem');
-    if ( treeitems && treeitems.length >= row )
-      return treeitems[row-1];
-  }
-  return 0;
-}
-
-function awGetRowByInputElement(inputElement)
-{
-  if ( inputElement )
-  {
-    var treerow;
-    var inputElementTreerow = inputElement.parentNode.parentNode;
-
-    if ( inputElementTreerow )
-    {
-      for ( var row = 1;  (treerow = awGetTreeRow(row)); row++ )
-      {
-        if ( treerow == inputElementTreerow )
-        {
-          return row;
-        }
-      }
-    }
-  }
-  return 0;
-}
-
-
-// Copy Node - copy this node and insert ahead of the (before) node.  Append to end if before=0
-function awCopyNode(node, parentNode, beforeNode)
-{
-  var newNode = node.cloneNode(true);
-
-  if ( beforeNode )
-    parentNode.insertBefore(newNode, beforeNode);
-  else
-    parentNode.appendChild(newNode);
-
-    return newNode;
-}
-
-// remove row
-
-function awRemoveRow(row)
-{
-  var body = document.getElementById('addressList');
-
-  awRemoveNodeAndChildren(body, awGetTreeItem(row));
-
-  top.MAX_RECIPIENTS--;
-}
-
-function awRemoveNodeAndChildren(parent, nodeToRemove)
-{
-  // children of nodes
-  var childNode;
-
-  while ( nodeToRemove.childNodes && nodeToRemove.childNodes.length )
-  {
-    childNode = nodeToRemove.childNodes[0];
-
-    awRemoveNodeAndChildren(nodeToRemove, childNode);
-  }
-
-  parent.removeChild(nodeToRemove);
-
-}
-
-function awSetFocus(row, inputElement)
-{
-  top.awRow = row;
-  top.awInputElement = inputElement;
-  top.awFocusRetry = 0;
-  setTimeout("_awSetFocus();", 0);
-}
 
 function _awSetFocus()
 {
-  var tree = document.getElementById('addressListTree');
+  var tree = document.getElementById('addressingWidgetTree');
   try
   {
     var theNewRow = awGetTreeRow(top.awRow);
@@ -573,24 +497,11 @@ function awFinishCopyNode(node)
     return;
 }
 
-
-function awFinishCopyNodes()
-{
-  var treeChildren = document.getElementById('addressList');
-    awFinishCopyNode(treeChildren);
-}
-
-
 function awTabFromRecipient(element, event)
 {
   //If we are the last element in the tree, we don't want to create a new row.
   if (element == awGetInputElement(top.MAX_RECIPIENTS))
     top.doNotCreateANewRow = true;
-}
-
-function awGetNumberOfRecipients()
-{
-    return top.MAX_RECIPIENTS;
 }
 
 function DragOverAddressListTree(event)

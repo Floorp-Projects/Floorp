@@ -18,7 +18,8 @@ Communications Corporation. Portions created by Netscape are
  Copyright (C) 1998-1999 Netscape Communications Corporation. All
 Rights Reserved.
 --> 
-
+ 
+<?xml-stylesheet href="chrome://messenger/skin/addressingWidget.css" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/addressbook/cardDialog.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abMailListDialog.dtd">
@@ -29,6 +30,7 @@ Rights Reserved.
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
   </stringbundleset>
+  <script type="application/x-javascript" src="chrome://messenger/content/messengercompose/addressingWidgetOverlay.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCommon.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abMailListDialog.js"/>
   <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js"/>
@@ -65,28 +67,32 @@ Rights Reserved.
 	<spacer style="height:0.1em"/>
 	<hbox  flex="100%">
 		<vbox flex="80%">
-			<tree id="addressListTree"
-				  rows="8"
+    
+			<tree id="addressingWidgetTree" rows="8"
 				  onclick="awClickEmptySpace(event.target, true)">
 
 				<treecolgroup>
 				<treecol flex="1"/>
 				</treecolgroup>
 
-				<treechildren flex="1" id="addressList">
+				<treechildren flex="1" id="addressWidgetBody">
 					<treeitem>
 						<treerow>
-							<treecell allowevents="true">
-                <textbox id="address#1" flex="1"
+							<treecell class="treecell-addressingWidget" allowevents="true">
+                <textbox id="addressCol1#1" class="plain textbox-addressList" flex="1"
                          type="autocomplete" searchSessions="addrbook"
                          timeout="300" autoFill="true"
                          onkeypress="handleKeyPress(this, event);"
-                         onclick="awNotAnEmptyArea(event);"/>
+                         onkeydown="awRecipientKeyDown(event, this, 1);"
+                         onclick="awNotAnEmptyArea(event);">
+                <image onclick="awNotAnEmptyArea(event)" class="person-icon"/>
+              </textbox>                         
               </treecell>
 						</treerow>
 					</treeitem>
 				</treechildren>
-			</tree>
+			</tree> 
+      
 		</vbox>
 	</hbox>
 </vbox>
