@@ -3299,28 +3299,28 @@ EOF
 
     # Add Mac OS X support for loading CFM & CFBundle plugins
     if test -f /System/Library/Frameworks/Carbon.framework/Carbon; then
-       cat >> confdefs.h <<\EOF
+        cat >> confdefs.h <<\EOF
 #define XP_MACOSX 1
 EOF
 
-       OS_TARGET=MacOSX
-    fi
+        OS_TARGET=MacOSX
 
-            
-    MACOS_VERSION_MAJOR=`echo $MACOS_DEPLOYMENT_TARGET_STR | cut -d . -f 1`
-    MACOS_VERSION_MINOR=`echo $MACOS_DEPLOYMENT_TARGET_STR | cut -d . -f 2`
-    MACOS_VERSION_MICRO=`echo $MACOS_DEPLOYMENT_TARGET_STR | cut -d . -f 3`
-    if test -z "$MACOS_VERSION_MINOR"; then
-        MACOS_VERSION_MINOR=0
-    fi
-    if test -z "$MACOS_VERSION_MICRO"; then
-        MACOS_VERSION_MICRO=0
-    fi
-    MACOS_DEPLOYMENT_TARGET=`printf "%02d%02d%02d" "$MACOS_VERSION_MAJOR" "$MACOS_VERSION_MINOR" "$MACOS_VERSION_MICRO"`
-    cat >> confdefs.h <<EOF
+                        
+        MACOS_VERSION_MAJOR=`echo $MACOS_DEPLOYMENT_TARGET_STR | cut -d . -f 1`
+        MACOS_VERSION_MINOR=`echo $MACOS_DEPLOYMENT_TARGET_STR | cut -d . -f 2`
+        MACOS_VERSION_MICRO=`echo $MACOS_DEPLOYMENT_TARGET_STR | cut -d . -f 3`
+        if test -z "$MACOS_VERSION_MINOR"; then
+            MACOS_VERSION_MINOR=0
+        fi
+        if test -z "$MACOS_VERSION_MICRO"; then
+            MACOS_VERSION_MICRO=0
+        fi
+        MACOS_DEPLOYMENT_TARGET=`printf "%02d%02d%02d" "$MACOS_VERSION_MAJOR" "$MACOS_VERSION_MINOR" "$MACOS_VERSION_MICRO"`
+        cat >> confdefs.h <<EOF
 #define MACOS_DEPLOYMENT_TARGET $MACOS_DEPLOYMENT_TARGET
 EOF
 
+    fi
     ;;
 
 *-dgux*)
