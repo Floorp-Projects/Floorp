@@ -171,6 +171,8 @@ nsAutoCompleteController::HandleText()
   // Stop the queued up search on a timer
   ClearSearchTimer();
   
+  NS_ENSURE_TRUE(mInput, NS_ERROR_NULL_POINTER);
+
   PRBool disabled;
   mInput->GetDisableAutoComplete(&disabled);
   NS_ENSURE_TRUE(!disabled, NS_OK;);
