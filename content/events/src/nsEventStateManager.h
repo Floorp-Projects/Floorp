@@ -54,13 +54,17 @@ public:
   NS_IMETHOD SetActiveLink(nsIContent *aLink);
   NS_IMETHOD SetHoverLink(nsIContent *aLink);
 
+  NS_IMETHOD SetFocusedContent(nsIContent *aContent);
+
 protected:
   void UpdateCursor(nsIPresContext& aPresContext, nsPoint& aPoint, nsIFrame* aTargetFrame, nsEventStatus& aStatus);
   void GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIEvent* aEvent);
   NS_IMETHOD DispatchKeyPressEvent(nsIPresContext& aPresContext, nsKeyEvent *aEvent, nsEventStatus& aStatus);  
   NS_IMETHOD CheckForAndDispatchClick(nsIPresContext& aPresContext, nsMouseEvent *aEvent, nsEventStatus& aStatus);  
-  void ShiftFocus();
-  nsIContent* GetNextTabbableContent(nsIContent* aParent, nsIContent* aChild, nsIContent* aTop);
+  PRBool ChangeFocus(nsIContent* aFocus, PRBool aSetFocus);
+  void ShiftFocus(PRBool foward);
+  nsIContent* GetNextTabbableContent(nsIContent* aParent, nsIContent* aChild, nsIContent* aTop, PRBool foward);
+  PRInt32 GetNextTabIndex(nsIContent* aParent, PRBool foward);
 
   //Any frames here must be checked for validity in ClearFrameRefs
   nsIFrame* mCurrentTarget;
@@ -72,6 +76,7 @@ protected:
   nsIContent* mActiveLink;
   nsIContent* mHoverLink;
   nsIContent* mCurrentFocus;
+  PRInt32 mCurrentTabIndex;
 
   //Not refcnted
   nsIPresContext* mPresContext;

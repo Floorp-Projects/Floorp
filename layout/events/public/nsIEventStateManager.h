@@ -64,6 +64,8 @@ public:
   NS_IMETHOD GetLinkState(nsIContent *aLink, nsLinkEventState& aState) = 0;
   NS_IMETHOD SetActiveLink(nsIContent *aLink) = 0;
   NS_IMETHOD SetHoverLink(nsIContent *aLink) = 0;
+
+  NS_IMETHOD SetFocusedContent(nsIContent *aContent) = 0;
 };
 
 #endif // nsIEventStateManager_h__

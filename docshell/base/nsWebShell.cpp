@@ -1638,7 +1638,32 @@ nsWebShell::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult)
 NS_IMETHODIMP
 nsWebShell::FocusAvailable(nsIWebShell* aFocusedWebShell)
 {
-  //XXX Move focus to next child, or if on last child, call focus available on next container
+  //If the WebShell with focus is us, pass this up to container
+  if (this == aFocusedWebShell && nsnull != mContainer) {
+    mContainer->FocusAvailable(this);
+  }
+
+  nsIWebShell* shell = nsnull;
+
+  //Other wise, check children and move focus to next one
+  PRInt32 i, n = mChildren.Count();
+  for (i = 0; i < n; i++) {
+    shell = (nsIWebShell*)mChildren.ElementAt(i);
+    if (shell == aFocusedWebShell) {
+      if (++i < n) {
+        NS_RELEASE(shell);
+        shell = (nsIWebShell*)mChildren.ElementAt(i);
+        shell->SetFocus();
+        break;
+      }
+      else if (nsnull != mContainer) {
+        mContainer->FocusAvailable(this);
+        break;
+      }
+    }
+  }
+  NS_IF_RELEASE(shell);
+ 
   return NS_OK;
 }
 //----------------------------------------------------------------------

@@ -749,7 +749,7 @@ nsGenericElement::HandleDOMEvent(nsIPresContext& aPresContext,
   }
 
   //Bubbling stage
-  if ((DOM_EVENT_CAPTURE != aFlags) && (mParent != nsnull)) {
+  if ((DOM_EVENT_CAPTURE != aFlags) && (mParent != nsnull) && (mDocument != nsnull)) {
     ret = mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                   DOM_EVENT_BUBBLE, aEventStatus);
   }

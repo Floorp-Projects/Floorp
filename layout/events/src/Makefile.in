@@ -44,7 +44,7 @@ EXPORTS = \
 
 EXPORTS :=  $(addprefix $(srcdir)/, $(EXPORTS))
 
-REQUIRES = xpcom raptor dom js
+REQUIRES = xpcom raptor dom js netlib
 
 include $(topsrcdir)/config/config.mk
 

@@ -33,18 +33,22 @@
 #include "nsITextAreaWidget.h"
 #include "nsIHTMLAttributes.h"
 #include "nsIFormControlFrame.h"
+#include "nsIFocusableContent.h"
+#include "nsIEventStateManager.h"
 
 static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
 static NS_DEFINE_IID(kITextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
+static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
 
 class nsHTMLTextAreaElement : public nsIDOMHTMLTextAreaElement,
                               public nsIScriptObjectOwner,
                               public nsIDOMEventReceiver,
                               public nsIHTMLContent,
-                              public nsIFormControl
+                              public nsIFormControl,
+                              public nsIFocusableContent
 {
 public:
   nsHTMLTextAreaElement(nsIAtom* aTag);
@@ -105,6 +109,10 @@ public:
   NS_IMETHOD SetWidget(nsIWidget* aWidget);
   NS_IMETHOD Init() { return NS_OK; }
 
+  // nsIFocusableContent
+  NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
+  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
+
 protected:
   nsGenericHTMLContainerElement mInner;
   nsIWidget* mWidget; // XXX this needs to go away when FindFrameWithContent is efficient
@@ -161,6 +169,11 @@ nsHTMLTextAreaElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   else if (aIID.Equals(kIFormControlIID)) {
     *aInstancePtr = (void*)(nsIFormControl*) this;
     mRefCnt++;
+    return NS_OK;
+  }
+  else if (aIID.Equals(kIFocusableContentIID)) {
+    *aInstancePtr = (void*)(nsIFocusableContent*) this;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;
@@ -230,6 +243,29 @@ nsHTMLTextAreaElement::Focus() // XXX not tested
   if (nsnull != mWidget) {
     mWidget->SetFocus();
   }
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::SetFocus(nsIPresContext* aPresContext)
+{
+  nsIEventStateManager* esm;
+  if (NS_OK == aPresContext->GetEventStateManager(&esm)) {
+    esm->SetFocusedContent(this);
+    NS_RELEASE(esm);
+  }
+
+  // XXX Should focus only this presContext
+  Focus();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::RemoveFocus(nsIPresContext* aPresContext)
+{
+  // XXX Should focus only this presContext
+  Blur();
   return NS_OK;
 }
 

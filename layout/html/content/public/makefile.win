@@ -17,7 +17,7 @@
 
 DEPTH=..\..\..\.. 
 
-EXPORTS=nsIFormControl.h nsIForm.h 
+EXPORTS=nsIFormControl.h nsIForm.h nsIFocusableContent.h
 
 MODULE=raptor 
 

@@ -28,6 +28,7 @@
 #include "nsIPresContext.h"
 #include "nsINameSpaceManager.h"
 #include "nsIURL.h"
+#include "nsIFocusableContent.h"
 
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
@@ -38,11 +39,13 @@
 // custom frame
 
 static NS_DEFINE_IID(kIDOMHTMLAnchorElementIID, NS_IDOMHTMLANCHORELEMENT_IID);
+static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
 
 class nsHTMLAnchorElement : public nsIDOMHTMLAnchorElement,
                             public nsIScriptObjectOwner,
                             public nsIDOMEventReceiver,
-                            public nsIHTMLContent
+                            public nsIHTMLContent,
+                            public nsIFocusableContent
 {
 public:
   nsHTMLAnchorElement(nsIAtom* aTag);
@@ -100,6 +103,10 @@ public:
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
+  // nsIFocusableContent
+  NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
+  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
+
 protected:
   nsGenericHTMLContainerElement mInner;
 };
@@ -142,6 +149,11 @@ nsHTMLAnchorElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     mRefCnt++;
     return NS_OK;
   }
+  else if (aIID.Equals(kIFocusableContentIID)) {
+    *aInstancePtr = (void*)(nsIFocusableContent*) this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   return NS_NOINTERFACE;
 }
 
@@ -178,6 +190,26 @@ nsHTMLAnchorElement::Blur()
 
 NS_IMETHODIMP
 nsHTMLAnchorElement::Focus()
+{
+  // XXX write me
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLAnchorElement::SetFocus(nsIPresContext* aPresContext)
+{
+  nsIEventStateManager* esm;
+  if (NS_OK == aPresContext->GetEventStateManager(&esm)) {
+    esm->SetFocusedContent(this);
+    NS_RELEASE(esm);
+  }
+
+  // XXX write me
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLAnchorElement::RemoveFocus(nsIPresContext* aPresContext)
 {
   // XXX write me
   return NS_OK;
@@ -261,7 +293,7 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
       }
       break;
 
-      case NS_MOUSE_LEFT_BUTTON_UP:
+      case NS_MOUSE_LEFT_CLICK:
       {
         nsIEventStateManager *stateManager;
         nsLinkEventState linkState;

@@ -26,13 +26,17 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIFocusableContent.h"
+#include "nsIEventStateManager.h"
 
 static NS_DEFINE_IID(kIDOMHTMLAreaElementIID, NS_IDOMHTMLAREAELEMENT_IID);
+static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
 
 class nsHTMLAreaElement : public nsIDOMHTMLAreaElement,
                           public nsIScriptObjectOwner,
                           public nsIDOMEventReceiver,
-                          public nsIHTMLContent
+                          public nsIHTMLContent,
+                          public nsIFocusableContent
 {
 public:
   nsHTMLAreaElement(nsIAtom* aTag);
@@ -80,6 +84,10 @@ public:
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
+  // nsIFocusableContent
+  NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
+  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
+
 protected:
   nsGenericHTMLLeafElement mInner;
 };
@@ -119,6 +127,11 @@ nsHTMLAreaElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIDOMHTMLAreaElementIID)) {
     nsIDOMHTMLAreaElement* tmp = this;
     *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  else if (aIID.Equals(kIFocusableContentIID)) {
+    *aInstancePtr = (void*)(nsIFocusableContent*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -191,6 +204,7 @@ nsHTMLAreaElement::HandleDOMEvent(nsIPresContext& aPresContext,
 NS_IMETHODIMP
 nsHTMLAreaElement::GetStyleHintForAttributeChange(const nsIAtom* aAttribute,
                                                   PRInt32 *aHint) const
+
 {
   if ((aAttribute == nsHTMLAtoms::alt) ||
       (aAttribute == nsHTMLAtoms::coords) ||
@@ -208,5 +222,27 @@ nsHTMLAreaElement::GetStyleHintForAttributeChange(const nsIAtom* aAttribute,
   else {
     nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
   }
+
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsHTMLAreaElement::SetFocus(nsIPresContext* aPresContext)
+{
+  nsIEventStateManager* esm;
+  if (NS_OK == aPresContext->GetEventStateManager(&esm)) {
+    esm->SetFocusedContent(this);
+    NS_RELEASE(esm);
+  }
+
+  // XXX write me
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLAreaElement::RemoveFocus(nsIPresContext* aPresContext)
+{
+  // XXX write me
+  return NS_OK;
+}
+

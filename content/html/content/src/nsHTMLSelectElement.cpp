@@ -33,6 +33,8 @@
 #include "nsIWidget.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLOptionElement.h"
+#include "nsIFocusableContent.h"
+#include "nsIEventStateManager.h"
 
 // Notify/query select frame for selectedIndex
 #include "nsIDocument.h"
@@ -46,6 +48,7 @@ static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID); 
+static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
 
 class nsHTMLSelectElement;
 
@@ -77,7 +80,8 @@ class nsHTMLSelectElement : public nsIDOMHTMLSelectElement,
                             public nsIScriptObjectOwner,
                             public nsIDOMEventReceiver,
                             public nsIHTMLContent,
-                            public nsIFormControl
+                            public nsIFormControl,
+                            public nsIFocusableContent
 {
 public:
   nsHTMLSelectElement(nsIAtom* aTag);
@@ -136,6 +140,9 @@ public:
   NS_IMETHOD GetType(PRInt32* aType);
   NS_IMETHOD SetWidget(nsIWidget* aWidget);
   NS_IMETHOD Init();
+
+  NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
+  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
 
 protected:
   nsGenericHTMLContainerElement mInner;
@@ -203,6 +210,11 @@ nsHTMLSelectElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   else if (aIID.Equals(kIFormControlIID)) {
     *aInstancePtr = (void*)(nsIFormControl*)this;
     mRefCnt++;
+    return NS_OK;
+  }
+  else if (aIID.Equals(kIFocusableContentIID)) {
+    *aInstancePtr = (void*)(nsIFocusableContent*) this;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;
@@ -395,6 +407,28 @@ nsHTMLSelectElement::Focus()
   if (nsnull != mWidget) { // XXX not tested
     mWidget->SetFocus();
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLSelectElement::SetFocus(nsIPresContext* aPresContext)
+{
+  nsIEventStateManager* esm;
+  if (NS_OK == aPresContext->GetEventStateManager(&esm)) {
+    esm->SetFocusedContent(this);
+    NS_RELEASE(esm);
+  }
+
+  // XXX Should focus only this presContext
+  Focus();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLSelectElement::RemoveFocus(nsIPresContext* aPresContext)
+{
+  // XXX Should focus only this presContext
+  Blur();
   return NS_OK;
 }
 
