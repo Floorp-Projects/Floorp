@@ -687,6 +687,9 @@ NS_IMETHODIMP nsMacWindow::GetScreenBounds(nsRect &aRect) {
    nsRect localBounds;
 
    GetBounds(localBounds);
+   // nsMacWindow local bounds are always supposed to be local (0,0) but in the middle of a move
+   // can be global. This next adjustment assures they are in local coordinates, even then.
+   localBounds.MoveBy(-localBounds.x, -localBounds.y);
    WidgetToScreen(localBounds, aRect);
    if (mIsDialog)
      aRect.MoveBy(-kDialogMarginWidth-screenRect.left, -kDialogTitleBarHeight-screenRect.top);
