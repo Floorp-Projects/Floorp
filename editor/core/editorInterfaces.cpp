@@ -294,7 +294,7 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
           nsString attribute("src");
           nsString value("resource:/res/samples/raptor.jpg");
 
-          nsString imgTag("IMG");
+          nsString imgTag("HR");
           nsString bodyTag("BODY");
           nsCOMPtr<nsIDOMNode> currentNode;
           result = mEditor->GetFirstNodeOfType(nsnull, bodyTag, getter_AddRefs(currentNode));
@@ -309,8 +309,8 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
               mEditor->ExecuteTransaction(txn);
             }
           }
-
-          /* for building a composite transaction */
+/*
+          //for building a composite transaction... 
           nsCOMPtr<nsIDOMElement> element;
           if (NS_SUCCEEDED(mEditor->GetFirstNodeOfType(nsnull, imgTag, getter_AddRefs(currentNode))))
           {
@@ -321,6 +321,7 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
               mEditor->ExecuteTransaction(txn);        
             }
           }
+*/
         }
         aProcessed=PR_TRUE;
         break;
