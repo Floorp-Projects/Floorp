@@ -65,6 +65,7 @@ EX_LIBS=\
 
 
 CPPSRCS= \
+	nsXULCommand.cpp	\
 	nsAppShellService.cpp	\
 	nsWebShellWindow.cpp	\
 	nsAppShellFactory.cpp	\
@@ -72,6 +73,7 @@ CPPSRCS= \
 	$(NULL)
 
 CPP_OBJS=				\
+ ./$(OBJDIR)/nsXULCommand.o	\
  ./$(OBJDIR)/nsAppShellService.o	\
  ./$(OBJDIR)/nsWebShellWindow.o		\
  ./$(OBJDIR)/nsAppShellFactory.o	\
