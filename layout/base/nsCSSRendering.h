@@ -108,6 +108,40 @@ public:
                                  nsRect* aGap);
 
 protected:
+  /**
+   * Render the border for an element using css rendering rules
+   * for borders. aSkipSides is a bitmask of the sides to skip
+   * when rendering. If 0 then no sides are skipped.
+   * Both aDirtyRect and aBorderArea are in the local coordinate space
+   * of aForFrame
+   */
+  static void PaintRoundedBorder(nsIPresContext& aPresContext,
+                          nsIRenderingContext& aRenderingContext,
+                          nsIFrame* aForFrame,
+                          const nsRect& aDirtyRect,
+                          const nsRect& aBorderArea,
+                          const nsStyleSpacing& aBorderStyle,
+                          nsIStyleContext* aStyleContext,
+                          PRIntn aSkipSides,
+                          PRInt16 aBorderRadius,nsRect* aGap = 0);
+
+
+  static void RenderSide(nsPoint aPoints[],nsIRenderingContext& aRenderingContext,
+                        const nsStyleSpacing& aBorderStyle,nsIStyleContext* aStyleContext,
+                        PRUint8 aSide,nsMargin  &aBorThick,nscoord aTwipsPerPixel);
+
+  static void PaintRoundedBackground(nsIPresContext& aPresContext,
+                              nsIRenderingContext& aRenderingContext,
+                              nsIFrame* aForFrame,
+                              const nsRect& aDirtyRect,
+                              const nsRect& aBorderArea,
+                              const nsStyleColor& aColor,
+                              const nsStyleSpacing& aStyle,
+                              nscoord aDX,
+                              nscoord aDY,
+                              PRInt16 aTheRadius);
+
+
   static nscolor MakeBevelColor(PRIntn whichSide, PRUint8 style,
                                 nscolor aBackgroundColor,
                                 nscolor aBorderColor,
@@ -140,5 +174,87 @@ protected:
                            PRInt32 aNumPoints,
                            nsRect* aGap);
 };
+
+
+
+/** ---------------------------------------------------
+ *  Class QBCurve, a quadratic bezier curve, used to implement the rounded rectangles
+ *	@update 3/26/99 dwc
+ */
+class QBCurve
+{
+
+public:
+	nsPoint	mAnc1;
+	nsPoint	mCon;
+	nsPoint mAnc2;
+
+  QBCurve() {mAnc1.x=0;mAnc1.y=0;mCon=mAnc2=mAnc1;}
+  void SetControls(nsPoint &aAnc1,nsPoint &aCon,nsPoint &aAnc2) { mAnc1 = aAnc1; mCon = aCon; mAnc2 = aAnc2;}
+  void SetPoints(nscoord a1x,nscoord a1y,nscoord acx,nscoord acy,nscoord a2x,nscoord a2y) {mAnc1.MoveTo(a1x,a1y),mCon.MoveTo(acx,acy),mAnc2.MoveTo(a2x,a2y);}
+  void SubDivide(nsIRenderingContext *aRenderingContext,nsPoint  aPointArray[],PRInt32 *aCurIndex);
+  void MidPointDivide(QBCurve *A,QBCurve *B);
+};
+
+
+/** ---------------------------------------------------
+ *  Class RoundedRect, A class to encapsulate all the rounded rect functionality, 
+ *  which are based on the QBCurve
+ *	@update 4/13/99 dwc
+ */
+class RoundedRect
+{
+
+public:
+  PRInt32 mRoundness;
+
+  PRInt16 mOuterLeft;
+  PRInt16 mOuterRight;
+  PRInt16 mOuterTop;
+  PRInt16 mOuterBottom;
+  PRInt16 mInnerLeft;
+  PRInt16 mInnerRight;
+  PRInt16 mInnerTop;
+  PRInt16 mInnerBottom;
+
+  //QBCurve mULCurve;
+  //QBCurve mURCurve;
+  //QBCurve mLLCurve;
+  //QBCurve mLRCurve;
+
+  void  RoundRect() {mRoundness=0;}
+  /**
+   *  Set the curves boundaries and then break it up into the curve pieces for rendering
+   *  @update 4/13/99 dwc
+   *  @param aLeft -- Left side of bounding box
+   *  @param aTop -- Top side of bounding box
+   *  @param aWidth -- Width of bounding box
+   *  @param aHeight -- Height of bounding box
+   *  @param aRadius -- radius for the rounding
+   */
+  void  Set(nscoord aLeft,nscoord aTop,PRInt32  aWidth,PRInt32 aHeight,PRInt16 aRadius);
+
+
+  /**
+   *  CalculateInsetCurves
+   *  @update 4/13/99 dwc
+   *  @param aLeft -- Left side of bounding box
+   *  @param aTop -- Top side of bounding box
+   */
+  void  CalcInsetCurves(QBCurve &aULCurve,QBCurve &aURCurve,QBCurve &aLLCurve,QBCurve &aLRCurve,nsMargin &aBorder);
+
+  /** ---------------------------------------------------
+   *  set the passed in curves to the rounded borders of the rectangle
+   *	@update 4/13/99 dwc
+   *  @param aULCurve -- upperleft curve
+   *  @param aURCurve -- upperright curve
+   *  @param aLRCurve -- lowerright curve
+   *  @param aLLCurve -- lowerleft curve
+   */
+  void 
+  RoundedRect::GetRoundedBorders(QBCurve &aULCurve,QBCurve &aURCurve,QBCurve &aLLCurve,QBCurve &aLRCurve);
+
+};
+
 
 #endif /* nsCSSRendering_h___ */
