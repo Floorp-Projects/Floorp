@@ -2822,24 +2822,30 @@ NS_IMETHODIMP nsLocalFile::SetFileTypeFromSuffix(const char *suffix)
     return SetOSTypeAndCreatorFromExtension(suffix);
 }
 
-NS_IMETHODIMP nsLocalFile::SetFileTypeFromMIMEType(const char *mimetype)
+NS_IMETHODIMP nsLocalFile::SetFileTypeAndCreatorFromMIMEType(const char *aMIMEType)
 {
-    NS_ENSURE_ARG(mimetype);
+    NS_ENSURE_ARG(aMIMEType);
 
     nsresult rv;
-    NS_WITH_SERVICE(nsIInternetConfigService, icService, NS_INTERNETCONFIGSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIInternetConfigService> icService(do_GetService
+        (NS_INTERNETCONFIGSERVICE_CONTRACTID, &rv));
+        
     if (NS_SUCCEEDED(rv))
     {
         nsCOMPtr<nsIMIMEInfo> mimeInfo;
-        rv = icService->FillInMIMEInfo(mimetype, nsnull, getter_AddRefs(mimeInfo));
+        PRUint32 fileType = 'TEXT';
+        PRUint32 fileCreator = nsILocalFileMac::CURRENT_PROCESS_CREATOR;
+    
+        rv = icService->FillInMIMEInfo(aMIMEType, 
+                nsnull, getter_AddRefs(mimeInfo));
         if (NS_SUCCEEDED(rv))
-        {
-            PRUint32 osType;
-            rv = mimeInfo->GetMacType(&osType);
-            if (NS_SUCCEEDED(rv))
-                mType = osType;
-        }
+            rv = mimeInfo->GetMacType(&fileType);
+        if (NS_SUCCEEDED(rv))
+            rv = mimeInfo->GetMacCreator(&fileCreator);
+        if (NS_SUCCEEDED(rv))
+            rv = SetFileTypeAndCreator(fileType, fileCreator);
     }
+    
     return rv;
 }
 

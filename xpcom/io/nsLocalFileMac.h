@@ -72,7 +72,7 @@ public:
 	NS_IMETHOD SetFileTypeAndCreator(OSType type, OSType creator);
 
 	NS_IMETHOD SetFileTypeFromSuffix(const char *suffix);
-	NS_IMETHOD SetFileTypeFromMIMEType(const char *mimetype);
+	NS_IMETHOD SetFileTypeAndCreatorFromMIMEType(const char *aMIMEType);
 
 	NS_IMETHOD GetFileSizeWithResFork(PRInt64 *aFileSize);
 
