@@ -41,7 +41,6 @@ bin\components\appshell.xpt
 bin\components\appshell.dll
 bin\components\bookmark.dll
 bin\components\bookmarks.xpt
-bin\components\brprof.dll
 bin\components\caps.dll
 bin\components\caps.xpt
 bin\components\chardet.dll
