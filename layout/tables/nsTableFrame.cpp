@@ -267,7 +267,7 @@ void ColumnInfoCache::GetColumnsByType(const nsStyleUnit aType,
 /* --------------------- nsTableFrame -------------------- */
 
 nsTableFrame::nsTableFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsContainerFrame(aContent, aParentFrame),
+  : nsHTMLContainerFrame(aContent, aParentFrame),
     mCellMap(nsnull),
     mColCache(nsnull),
     mTableLayoutStrategy(nsnull),
@@ -1453,6 +1453,7 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
     nsRect  rect(0, 0, mRect.width, mRect.height);
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                     aDirtyRect, rect, *color, 0, 0);
+    // XXX: use GetSkipSides?
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                 aDirtyRect, rect, *spacing, 0);
   }
@@ -1465,6 +1466,19 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
   return NS_OK;
+}
+
+PRIntn
+nsTableFrame::GetSkipSides() const
+{
+  PRIntn skip = 0;
+  if (nsnull != mPrevInFlow) {
+    skip |= 1 << NS_SIDE_TOP;
+  }
+  if (nsnull != mNextInFlow) {
+    skip |= 1 << NS_SIDE_BOTTOM;
+  }
+  return skip;
 }
 
 PRBool nsTableFrame::NeedsReflow(const nsHTMLReflowState& aReflowState, const nsSize& aMaxSize)
@@ -1922,8 +1936,7 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
     }
     else
     {
-      rv = IR_UnknownFrameInserted(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                                   objectFrame, PR_FALSE);
+      rv = AddFrame(aReflowState.reflowState, objectFrame);
     }
     break;
   
@@ -1940,8 +1953,7 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
     }
     else
     { // no optimization to be done for Unknown frame types, so just reuse the Inserted method
-      rv = IR_UnknownFrameInserted(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                                   objectFrame, PR_FALSE);
+      rv = AddFrame(aReflowState.reflowState, objectFrame);
     }
     break;
 
@@ -1963,9 +1975,7 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
     }
     else
     {
-
-      rv = IR_UnknownFrameRemoved(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                                  objectFrame);
+      rv = RemoveFrame(objectFrame);
     }
     break;
 
@@ -2193,8 +2203,7 @@ NS_METHOD nsTableFrame::IR_RowGroupInserted(nsIPresContext&        aPresContext,
                                             nsTableRowGroupFrame * aInsertedFrame,
                                             PRBool                 aReplace)
 {
-  nsresult rv = IR_UnknownFrameInserted(aPresContext, aDesiredSize, aReflowState,
-                                        aStatus, (nsIFrame*)aInsertedFrame, aReplace);
+  nsresult rv = AddFrame(aReflowState.reflowState, aInsertedFrame);
   if (NS_FAILED(rv))
     return rv;
   
@@ -2218,8 +2227,7 @@ NS_METHOD nsTableFrame::IR_RowGroupAppended(nsIPresContext&        aPresContext,
                                             nsTableRowGroupFrame * aAppendedFrame)
 {
   // hook aAppendedFrame into the child list
-  nsresult rv = IR_UnknownFrameInserted(aPresContext, aDesiredSize, aReflowState,
-                                        aStatus, (nsIFrame*)aAppendedFrame, PR_FALSE);
+  nsresult rv = AddFrame(aReflowState.reflowState, aAppendedFrame);
   if (NS_FAILED(rv))
     return rv;
 
@@ -2248,8 +2256,7 @@ NS_METHOD nsTableFrame::IR_RowGroupRemoved(nsIPresContext&        aPresContext,
                                            nsReflowStatus&        aStatus,
                                            nsTableRowGroupFrame * aDeletedFrame)
 {
-  nsresult rv = IR_UnknownFrameRemoved(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                                       aDeletedFrame);
+  nsresult rv = RemoveFrame(aDeletedFrame);
   InvalidateCellMap();
   InvalidateColumnCache();
 
@@ -2260,82 +2267,6 @@ NS_METHOD nsTableFrame::IR_RowGroupRemoved(nsIPresContext&        aPresContext,
   return rv;
 }
 
-//XXX: handle aReplace
-NS_METHOD nsTableFrame::IR_UnknownFrameInserted(nsIPresContext&        aPresContext,
-                                                nsHTMLReflowMetrics&   aDesiredSize,
-                                                InnerTableReflowState& aReflowState,
-                                                nsReflowStatus&        aStatus,
-                                                nsIFrame *             aInsertedFrame,
-                                                PRBool                 aReplace)
-{
-  nsIReflowCommand::ReflowType type;
-  aReflowState.reflowState.reflowCommand->GetType(type);
-  // we have a generic frame that gets inserted but doesn't effect reflow
-  // hook it up then ignore it
-  if (nsIReflowCommand::FrameAppended==type)
-  { // frameAppended reflow -- find the last child and make aInsertedFrame its next sibling
-    if (PR_TRUE==gsDebugIR) printf("TIF IR: FrameAppended adding unknown frame type.\n");
-    nsIFrame *lastChild=mFirstChild;
-    nsIFrame *nextChild=mFirstChild;
-    while (nsnull!=nextChild)
-    {
-      lastChild=nextChild;
-      nextChild->GetNextSibling(nextChild);
-    }
-    if (nsnull==lastChild)
-      mFirstChild = aInsertedFrame;
-    else
-      lastChild->SetNextSibling(aInsertedFrame);
-  }
-  else
-  { // frameInserted reflow -- hook up aInsertedFrame as prevSibling's next sibling, 
-    // and be sure to hook in aInsertedFrame's nextSibling (from prevSibling)
-    if (PR_TRUE==gsDebugIR) printf("TIF IR: FrameInserted adding unknown frame type.\n");
-    nsIFrame *prevSibling=nsnull;
-    nsresult rv = aReflowState.reflowState.reflowCommand->GetPrevSiblingFrame(prevSibling);
-    if (NS_SUCCEEDED(rv) && (nsnull!=prevSibling))
-    {
-      nsIFrame *nextSibling=nsnull;
-      prevSibling->GetNextSibling(nextSibling);
-      prevSibling->SetNextSibling(aInsertedFrame);
-      aInsertedFrame->SetNextSibling(nextSibling);
-    }
-    else
-    {
-      nsIFrame *nextSibling = mFirstChild;
-      mFirstChild = aInsertedFrame;
-      aInsertedFrame->SetNextSibling(nextSibling);
-    }
-  }
-  aStatus = NS_FRAME_COMPLETE;
-  return NS_OK;
-}
-
-NS_METHOD nsTableFrame::IR_UnknownFrameRemoved(nsIPresContext&        aPresContext,
-                                               nsHTMLReflowMetrics&   aDesiredSize,
-                                               InnerTableReflowState& aReflowState,
-                                               nsReflowStatus&        aStatus,
-                                               nsIFrame *             aRemovedFrame)
-{
-  // we have a generic frame that gets removed but doesn't effect reflow
-  // unhook it then ignore it
-  if (PR_TRUE==gsDebugIR) printf("TIF IR: FrameRemoved removing unknown frame type.\n");
-  nsIFrame *prevChild=nsnull;
-  nsIFrame *nextChild=mFirstChild;
-  while (nextChild!=aRemovedFrame)
-  {
-    prevChild=nextChild;
-    nextChild->GetNextSibling(nextChild);
-  }  
-  nextChild=nsnull;
-  aRemovedFrame->GetNextSibling(nextChild);
-  if (nsnull==prevChild)  // objectFrame was first child
-    mFirstChild = nextChild;
-  else
-    prevChild->SetNextSibling(nextChild);
-  aStatus = NS_FRAME_COMPLETE;
-  return NS_OK;;
-}
 
 NS_METHOD nsTableFrame::IR_TargetIsChild(nsIPresContext&        aPresContext,
                                          nsHTMLReflowMetrics&   aDesiredSize,

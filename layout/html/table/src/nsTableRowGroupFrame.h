@@ -19,7 +19,7 @@
 #define nsTableRowGroupFrame_h__
 
 #include "nscore.h"
-#include "nsContainerFrame.h"
+#include "nsHTMLContainerFrame.h"
 #include "nsIAtom.h"
 
 class nsTableRowFrame;
@@ -36,7 +36,7 @@ struct RowGroupReflowState;
  *
  * @author  sclark
  */
-class nsTableRowGroupFrame : public nsContainerFrame
+class nsTableRowGroupFrame : public nsHTMLContainerFrame
 {
 public:
 
@@ -80,6 +80,49 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
 
+  /** returns the type of the mapped row group content in aType.
+    * caller MUST call release on the returned object if it is not null.
+    *
+    * @param  aType out param filled with the type of the mapped content, or null if none.
+    *
+    * @return NS_OK
+    */ 
+  NS_IMETHOD GetRowGroupType(nsIAtom *& aType);
+
+  /** set aCount to the number of child rows (not necessarily == number of child frames) */
+  NS_METHOD GetRowCount(PRInt32 &aCount);
+
+  NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const;
+
+
+protected:
+
+  /** protected constructor.
+    * @see NewFrame
+    */
+  nsTableRowGroupFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+
+  /** protected destructor */
+  ~nsTableRowGroupFrame();
+
+  /** implement abstract method on nsHTMLContainerFrame */
+  virtual PRIntn GetSkipSides() const;
+
+  nscoord GetTopMarginFor(nsIPresContext*      aCX,
+                          RowGroupReflowState& aReflowState,
+                          const nsMargin&      aKidMargin);
+
+  void          PlaceChild( nsIPresContext&      aPresContext,
+                            RowGroupReflowState& aReflowState,
+                            nsIFrame*            aKidFrame,
+                            const nsRect&        aKidRect,
+                            nsSize*              aMaxElementSize,
+                            nsSize&              aKidMaxElementSize);
+
+  void ShrinkWrapChildren(nsIPresContext* aPresContext, 
+                          nsHTMLReflowMetrics& aDesiredSize);
+
+
   /** Incremental Reflow attempts to do column balancing with the minimum number of reflow
     * commands to child elements.  This is done by processing the reflow command,
     * rebalancing column widths (if necessary), then comparing the resulting column widths
@@ -121,20 +164,6 @@ public:
                            RowGroupReflowState& aReflowState,
                            nsReflowStatus&      aStatus,
                            nsTableRowFrame *    aDeletedFrame);
-  
-  NS_IMETHOD IR_UnknownFrameInserted(nsIPresContext&      aPresContext,
-                                     nsHTMLReflowMetrics& aDesiredSize,
-                                     RowGroupReflowState& aReflowState,
-                                     nsReflowStatus&      aStatus,
-                                     nsIFrame *           aInsertedFrame,
-                                     PRBool               aReplace);
-
-  NS_IMETHOD IR_UnknownFrameRemoved(nsIPresContext&      aPresContext,
-                                    nsHTMLReflowMetrics& aDesiredSize,
-                                    RowGroupReflowState& aReflowState,
-                                    nsReflowStatus&      aStatus,
-                                    nsIFrame *           aDeletedFrame);
-
 
   NS_IMETHOD DidAppendRow(nsTableRowFrame *aRowFrame);
 
@@ -145,45 +174,6 @@ public:
                                    nsIFrame*        aParent,
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame);
-
-  /** returns the type of the mapped row group content in aType.
-    * caller MUST call release on the returned object if it is not null.
-    *
-    * @param  aType out param filled with the type of the mapped content, or null if none.
-    *
-    * @return NS_OK
-    */ 
-  NS_IMETHOD GetRowGroupType(nsIAtom *& aType);
-
-  /** set aCount to the number of child rows (not necessarily == number of child frames) */
-  NS_METHOD GetRowCount(PRInt32 &aCount);
-
-  NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const;
-
-
-protected:
-
-  /** protected constructor.
-    * @see NewFrame
-    */
-  nsTableRowGroupFrame(nsIContent* aContent, nsIFrame* aParentFrame);
-
-  /** protected destructor */
-  ~nsTableRowGroupFrame();
-
-  nscoord GetTopMarginFor(nsIPresContext*      aCX,
-                          RowGroupReflowState& aReflowState,
-                          const nsMargin&      aKidMargin);
-
-  void          PlaceChild( nsIPresContext&      aPresContext,
-                            RowGroupReflowState& aReflowState,
-                            nsIFrame*            aKidFrame,
-                            const nsRect&        aKidRect,
-                            nsSize*              aMaxElementSize,
-                            nsSize&              aKidMaxElementSize);
-
-  void ShrinkWrapChildren(nsIPresContext* aPresContext, 
-                          nsHTMLReflowMetrics& aDesiredSize);
 
   nsresult AdjustSiblingsAfterReflow(nsIPresContext&      aPresContext,
                                      RowGroupReflowState& aReflowState,

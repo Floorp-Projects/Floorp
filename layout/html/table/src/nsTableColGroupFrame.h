@@ -19,7 +19,7 @@
 #define nsTableColGroupFrame_h__
 
 #include "nscore.h"
-#include "nsContainerFrame.h"
+#include "nsHTMLContainerFrame.h"
 
 class nsTableColFrame;
 
@@ -30,7 +30,7 @@ class nsTableColFrame;
  *
  * @author  sclark
  */
-class nsTableColGroupFrame : public nsContainerFrame
+class nsTableColGroupFrame : public nsHTMLContainerFrame
 {
 public:
   /** instantiate a new instance of nsTableColGroupFrame.
@@ -98,6 +98,9 @@ protected:
 
   ~nsTableColGroupFrame();
 
+  /** implement abstract method on nsHTMLContainerFrame */
+  virtual PRIntn GetSkipSides() const;
+
   /** Hook for style post processing.  
     * Since we need to know the full column structure before the COLS attribute
     * can be interpreted, we can't just use DidSetStyleContext
@@ -136,19 +139,6 @@ protected:
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus,
                            nsTableColFrame *        aDeletedFrame);
-
-  NS_IMETHOD IR_UnknownFrameInserted(nsIPresContext&          aPresContext,
-                                     nsHTMLReflowMetrics&     aDesiredSize,
-                                     const nsHTMLReflowState& aReflowState,
-                                     nsReflowStatus&          aStatus,
-                                     nsIFrame *               aInsertedFrame,
-                                     PRBool                   aReplace);
-
-  NS_IMETHOD IR_UnknownFrameRemoved(nsIPresContext&          aPresContext,
-                                    nsHTMLReflowMetrics&     aDesiredSize,
-                                    const nsHTMLReflowState& aReflowState,
-                                    nsReflowStatus&          aStatus,
-                                    nsIFrame *               aRemovedFrame);
 
   NS_IMETHOD IR_TargetIsChild(nsIPresContext&          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,

@@ -52,7 +52,7 @@ static const PRBool gsDebugNT = PR_FALSE;
   */
 nsTableCellFrame::nsTableCellFrame(nsIContent* aContent,
                                    nsIFrame*   aParentFrame)
-  : nsContainerFrame(aContent, aParentFrame)
+  : nsHTMLContainerFrame(aContent, aParentFrame)
 {
   mColIndex=0;
   mPriorAvailWidth=0;
@@ -130,12 +130,24 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-/**
-*
-* Align the cell's child frame within the cell
-*
-**/
+PRIntn
+nsTableCellFrame::GetSkipSides() const
+{
+  PRIntn skip = 0;
+  if (nsnull != mPrevInFlow) {
+    skip |= 1 << NS_SIDE_TOP;
+  }
+  if (nsnull != mNextInFlow) {
+    skip |= 1 << NS_SIDE_BOTTOM;
+  }
+  return skip;
+}
 
+/**
+  *
+  * Align the cell's child frame within the cell
+  *
+  */
 void  nsTableCellFrame::VerticallyAlignChild(nsIPresContext* aPresContext)
 {
   const nsStyleSpacing* spacing =

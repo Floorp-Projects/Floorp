@@ -19,7 +19,7 @@
 #define nsTableFrame_h__
 
 #include "nscore.h"
-#include "nsContainerFrame.h"
+#include "nsHTMLContainerFrame.h"
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
 #include "nsIFrameReflow.h"   // for nsReflowReason enum
@@ -56,7 +56,7 @@ extern const nsIID kTableFrameCID;
   *
   * TODO: make methods virtual so nsTableFrame can be used as a base class in the future.
   */
-class nsTableFrame : public nsContainerFrame
+class nsTableFrame : public nsHTMLContainerFrame
 {
 public:
 
@@ -265,6 +265,9 @@ protected:
   /** destructor, responsible for mColumnLayoutData and mColumnWidths */
   virtual ~nsTableFrame();
 
+  /** implement abstract method on nsHTMLContainerFrame */
+  virtual PRIntn GetSkipSides() const;
+
   /** first pass of ResizeReflow.  
     * lays out all table content with aMaxSize(NS_UNCONSTRAINEDSIZE,NS_UNCONSTRAINEDSIZE) and
     * a non-null aMaxElementSize so we get all the metrics we need to do column balancing.
@@ -359,19 +362,6 @@ protected:
                                 nsReflowStatus&        aStatus,
                                 nsTableRowGroupFrame * aDeletedFrame);
   
-  NS_IMETHOD IR_UnknownFrameInserted(nsIPresContext&        aPresContext,
-                                                   nsHTMLReflowMetrics&   aDesiredSize,
-                                                   InnerTableReflowState& aReflowState,
-                                                   nsReflowStatus&        aStatus,
-                                                   nsIFrame *             aInsertedFrame,
-                                                   PRBool                 aReplace);
-
-  NS_IMETHOD IR_UnknownFrameRemoved(nsIPresContext&        aPresContext,
-                                    nsHTMLReflowMetrics&   aDesiredSize,
-                                    InnerTableReflowState& aReflowState,
-                                    nsReflowStatus&        aStatus,
-                                    nsIFrame *             aDeletedFrame);
-
   NS_IMETHOD AdjustSiblingsAfterReflow(nsIPresContext&        aPresContext,
                                        InnerTableReflowState& aState,
                                        nsIFrame*              aKidFrame,
