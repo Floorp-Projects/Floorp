@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://editordlgs/skin/EditorDialog.css" type="text/css"?>
+<!DOCTYPE window>
+<!-- dialog containing a control requiring initial setup -->
+<xul:window width="280" height="305" title="Horizontal Line Properties"
+    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns="http://www.w3.org/TR/REC-html40"
+    onload = "Startup()">
+
+  <!-- Methods common to all editor dialogs -->
+  <script language="JavaScript" src="chrome://editordlgs/content/EdDialogCommon.js">
+  </script>
+  <script language="JavaScript" src="chrome://editordlgs/content/EdHLineProps.js">
+  </script>
+  <table width="95%">
+    <tr>
+      <td colspan="2">
+        <fieldset><legend align="left">Dimensions</legend>
+          <table>
+            <tr>
+              <td align="right">
+                Height:
+              </td>
+              <td colspan="2">
+                <input type="text" id="width" size="4" maxlength="4"/>
+              </td>
+            </tr>
+            <tr>              
+              <td>
+                Width:
+              </td>
+              <td>
+                <input type="text" id="width" size="4" maxlength="4"/>
+              </td>
+              <td>
+                <xul:titledbutton class="push popup" id="PixelOrPercent" value="pixels" align="left" />
+              </td>
+            </tr>
+          </table>
+        </fieldset>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2">
+        <fieldset><legend align="left">Alignment</legend>
+          <label><input type="radio" name="HRuleAlign" id="leftAlign"/>Left</label>
+          <label><input type="radio" name="HRuleAlign" id="centerAlign"/>Center</label>
+          <label><input type="radio" name="HRuleAlign" id="rightAlign"/>Right</label>
+        </fieldset>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label><input type="checkbox" id="3dShading"/>3-D Shading</label>
+      </td>
+      <td align="right">
+        <button id="SaveDefault">Save settings as default</button>
+      </td>
+    </tr>
+    <tr>
+    <td colspan="2" align="right">
+      <button class="spaced" id="OK" onclick="onOK()">OK</button>  
+      <button class="spaced" id="Cancel" onclick="onCancel()" width="50">Cancel</button>
+    </td>
+  </tr>
+</table>
+</xul:window>

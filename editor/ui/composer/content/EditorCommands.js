@@ -5,11 +5,12 @@
 var editorName = "EditorAppCore" + ( new Date() ).getTime().toString();
 var appCore = null;  
 var toolbar;
+var contentWindow;
 
 function EditorStartup(editorType)
 {
   dump("Doing Startup...\n");
-
+  contentWindow = window.frames[0];
   /* Get the global Editor AppCore and the XPFE toolkit core into globals here */
   appCore = XPAppCoresManager.Find(editorName);  
   dump("Looking up EditorAppCore...\n");
@@ -25,7 +26,7 @@ function EditorStartup(editorType)
       appCore.setToolbarWindow(window)
 
       appCore.setEditorType(editorType);
-      appCore.setContentWindow( window.frames[0] );
+      appCore.setContentWindow(contentWindow);
 
       // Get url for editor content
       var url = document.getElementById("args").getAttribute("value");
@@ -39,8 +40,9 @@ function EditorStartup(editorType)
   }
   EditorSetup(editorName, appCore);
 
-  // Set focus to the edit window
-  window.focus();
+  // Set focus to the editor content window
+  dump("Setting focus to content window\n");
+  contentWindow.focus();
 }
 
 function EditorSetup(p_editorName, p_appCore)
@@ -87,6 +89,7 @@ function EditorOpen()
   {
     appCore.open();
   }
+  contentWindow.focus();
 }
 
 function EditorNewPlaintext()
@@ -134,6 +137,7 @@ function EditorSave()
   {
     appCore.save();
   }
+  contentWindow.focus();
 }
 
 function EditorSaveAs()
@@ -145,6 +149,7 @@ function EditorSaveAs()
   {
     appCore.saveAs();
   }
+  contentWindow.focus();
 }
 
 
@@ -157,6 +162,7 @@ function EditorPrint()
   {
     appCore.print();
   }
+  contentWindow.focus();
 }
 
 function EditorClose()
@@ -236,6 +242,7 @@ function EditorFind()
   if (appCore) {
     appCore.find();
   }
+  contentWindow.focus();
 }
 
 function EditorFindNext()
@@ -243,6 +250,7 @@ function EditorFindNext()
   if (appCore) {
     appCore.findNext();
   }
+  contentWindow.focus();
 }
 
 function EditorShowClipboard()
@@ -262,9 +270,8 @@ function EditorSetTextProperty(property, attribute, value)
 {
   if (appCore) {
     appCore.setTextProperty(property, attribute, value);
-  }        
-  dump("Set text property -- calling focus()\n");
-  window.focus();
+  }
+  contentWindow.focus();
 }
 
 function EditorSetParagraphFormat(paraFormat)
@@ -272,15 +279,22 @@ function EditorSetParagraphFormat(paraFormat)
   if (appCore) {
     appCore.setParagraphFormat(paraFormat);
   }        
-  window.focus();
+  contentWindow.focus();
 }
 
 function EditorSetFontSize(size)
 {
   if (appCore) {
-    appCore.setTextProperty("font", "size", size);
+    if( size == "0" || size == "normal" || 
+        size === "+0" )
+    {
+      appCore.removeTextProperty("font", size);
+      dump("Removing font size\n");
+    } else {
+      dump("Setting font size\n");
+      appCore.setTextProperty("font", "size", size);
+    }
   }        
-  window.focus();
 }
 
 function EditorSetFontFace(fontFace)
@@ -294,7 +308,7 @@ function EditorSetFontFace(fontFace)
     }
     appCore.setTextProperty("font", "face", fontFace);
   }        
-  window.focus();
+  contentWindow.focus();
 }
 
 function EditorSetFontColor(color)
@@ -302,13 +316,13 @@ function EditorSetFontColor(color)
   if (appCore) {
     appCore.setTextProperty("font", "color", color);
   }        
-  window.focus();
+  contentWindow.focus();
 }
 
 function EditorSetBackgroundColor(color)
 {
   appCore.setBackgroundColor(color);
-  window.focus();
+  contentWindow.focus();
 }
 
 function EditorApplyStyle(styleName)
@@ -316,8 +330,9 @@ function EditorApplyStyle(styleName)
   if (appCore) {
     dump("Applying Style\n");
     appCore.setTextProperty(styleName, null, null);
+    dump("Restore focus to editor window: "+window.frames[0]+"\n");
   }
-  window.focus();
+  contentWindow.focus();
 }
 
 function EditorRemoveStyle(styleName)
@@ -326,7 +341,11 @@ function EditorRemoveStyle(styleName)
     dump("Removing Style\n");
     appCore.removeTextProperty(styleName, null);
   }
-  window.focus();
+  contentWindow.focus();
+}
+function EditorRemoveLinks()
+{
+  dump("NOT IMPLEMENTED YET\n");
 }
 
 // --------------------------- Output ---------------------------
@@ -359,11 +378,43 @@ function EditorInsertText()
 
 function EditorInsertLink()
 {
-  dump("Starting Insert Link...\n");
   if (appCore) {
-    dump("Link Properties Dialog starting...\n");
     window.openDialog("chrome://editordlgs/content/EdLinkProps.xul", "LinkDlg", "chrome", editorName);
   }
+  contentWindow.focus();
+}
+
+function EditorInsertImage()
+{
+  if (appCore) {
+    window.openDialog("chrome://editordlgs/content/EdImageProps.xul", "dlg", "chrome", editorName);
+  }
+  contentWindow.focus();
+}
+
+function EditorInsertHLine()
+{
+  if (appCore) {
+    window.openDialog("chrome://editordlgs/content/EdHLineProps.xul", "dlg", "chrome", editorName);
+  }
+  contentWindow.focus();
+}
+
+function EditorInsertNamedAnchor()
+{
+  if (appCore) {
+    window.openDialog("chrome://editordlgs/content/EdNamedAnchorProps.xul", "dlg", "chrome", editorName);
+  }
+  contentWindow.focus();
+}
+
+function EditorIndent(indent)
+{
+  dump("indenting\n");
+  if (appCore) {
+    appCore.indent(indent);
+  }
+  contentWindow.focus();
 }
 
 
@@ -374,22 +425,7 @@ function EditorInsertList(listType)
     appCore.insertList(listType);
     dump("\n");
   }
-}
-
-function EditorInsertImage()
-{
-  if (appCore) {
-    dump("Image Properties Dialog starting. Editor Name="+editorName+"\n");
-    window.openDialog("chrome://editordlgs/content/EdImageProps.xul", "dlg", "chrome", editorName);
-  }
-}
-
-function EditorIndent(indent)
-{
-  dump("indenting\n");
-  if (appCore) {
-    appCore.indent(indent);
-  }
+  contentWindow.focus();
 }
 
 function EditorAlign(align)
@@ -398,6 +434,7 @@ function EditorAlign(align)
   if (appCore) {
     appCore.align(align);
   }
+  contentWindow.focus();
 }
 
 
@@ -506,7 +543,6 @@ function OpenFile(url)
   } else {
       dump("Error; can't create toolkitCore\n");
   }
-  window.focus();
 }
 
 // --------------------------- Status calls ---------------------------

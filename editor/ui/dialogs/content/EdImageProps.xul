@@ -22,11 +22,11 @@
       <td colspan="2">
         <fieldset><legend align="left">Image Information </legend>
           <p class="smallmargin">Enter a remote URL or local file: </p>
-          <input type="text" size="20" length="20" id="image.srcInput" />
+          <input type="text" size="20" length="20" id="image.srcInput" onchange="OnChangeSrc()"/>
           <button class="ChooseFile" id="ChooseFile" onclick="chooseFile()">Choose File...</button>
           <br/>
           <p class="smallmargin">Alternative Text</p>
-          <input type="text" size="30" length="30" id="image.altTextInput" />
+          <input type="text" size="30" id="image.altTextInput" />
         </fieldset>
       </td>
       <td/>
@@ -40,19 +40,24 @@
     <tr id="AdvancedRow">
       <td height="60">
         <fieldset><legend align="left">Dimensions </legend>
-          Put size controls here
+          <select id="WidthUnits" size="1"  onchange="SelectWidthUnits()">
+            <option>pixels</option>
+            <option>percent</option>
+          </select>
         </fieldset>
       </td>
       <td height="60">
         <fieldset><legend align="left">Spacing </legend>
-          Put spacing controls here
+          Put spacing controls here<br/>
+          <button>Button</button>  
+          <input type="radio">Radio button</input>
+          <input type="Checkbox">Checkbox</input>
         </fieldset>
       </td>
     </tr>
     <tr>
     <td colspan="2" align = "right">
       <button class="spaced" id="OK" onclick="onOK()" width="50">OK</button>  
-      <button class="spaced" id="Preview" onclick="applyChanges()" width="50">Preview</button>
       <button class="spaced" id="Cancel" onclick="onCancel()" width="50">Cancel</button>
     </td>
     <td/>

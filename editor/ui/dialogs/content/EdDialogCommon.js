@@ -21,3 +21,9 @@ function AppendStringToList(list, string)
     dump("Failed to create OPTION node. String content="+string+"\n");
   }
 }
+
+// All dialogs share this simple method
+function onCancel()
+{
+  window.close();
+}

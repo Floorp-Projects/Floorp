@@ -18,6 +18,8 @@
 
 
 #include "nsIDOMDocument.h"
+#include "nsIPref.h"
+#include "nsILocale.h"
 #include "nsEditor.h"
 #include "nsIEditProperty.h"  // to be removed  XXX
 #include "nsIDOMText.h"
@@ -46,7 +48,6 @@
 #include "nsISupportsArray.h"
 #include "nsICaret.h"
 #include "nsIStyleContext.h"
-
 #include "nsIEditActionListener.h"
 
 #include "nsIContent.h"
@@ -111,12 +112,13 @@ static NS_DEFINE_IID(kJoinElementTxnIID,    JOIN_ELEMENT_TXN_IID);
 
 static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kCDOMRangeCID, NS_RANGE_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 // factory classes
 static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
 static NS_DEFINE_IID(kIHTMLEditFactoryIID, NS_IHTMLEDITORFACTORY_IID);
 static NS_DEFINE_IID(kITextEditFactoryIID, NS_ITEXTEDITORFACTORY_IID);
-
 
 #ifdef XP_PC
 #define TRANSACTION_MANAGER_DLL "txmgr.dll"
@@ -130,6 +132,8 @@ static NS_DEFINE_IID(kITextEditFactoryIID, NS_ITEXTEDITORFACTORY_IID);
 
 #define NS_ERROR_EDITOR_NO_SELECTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,1)
 #define NS_ERROR_EDITOR_NO_TEXTNODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,2)
+
+#define EDITOR_BUNDLE_URL "resource:/res/editor.properties"
 
 const char* nsEditor::kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
 const char* nsEditor::kMOZEditorBogusNodeValue="TRUE";
@@ -294,7 +298,7 @@ nsEditor::nsEditor()
   gInstanceCount++;
   mActionListeners = 0;
   PR_ExitMonitor(getEditorMonitor());
-
+  mPrefs = 0;
 }
 
 
@@ -315,6 +319,10 @@ nsEditor::~nsEditor()
     delete mActionListeners;
     mActionListeners = 0;
   }
+
+  // Release service pointers
+  if (mPrefs)
+    nsServiceManager::ReleaseService(kPrefCID, mPrefs);
 }
 
 
@@ -456,6 +464,51 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
   	caret->SetCaretVisible(PR_TRUE);
   	caret->SetCaretReadOnly(PR_FALSE);
   }
+  // NOTE: We don't fail if we can't get prefs or string bundles
+  //  since we could still be used as the text edit widget without prefs
+
+  // Get the prefs service (Note: can't use nsCOMPtr for service pointers)
+  nsresult result = nsServiceManager::GetService(kPrefCID, 
+                                                 nsIPref::GetIID(), 
+                                                 (nsISupports**)&mPrefs);
+  if (NS_FAILED(result) || !mPrefs)
+  {
+    printf("ERROR: Failed to get Prefs Service instance.\n");
+  }
+  // TODO: Cache basic preferences?
+  //       Register callbacks for preferences that we need to 
+  //       respond to while running
+
+  nsIStringBundleService* service;
+  result = nsServiceManager::GetService(kStringBundleServiceCID,
+                                        nsIStringBundleService::GetIID(), 
+                                        (nsISupports**)&service);
+
+  if (NS_SUCCEEDED(result) && service)
+  {
+    nsCOMPtr<nsIURL> url;
+    result = NS_NewURL(getter_AddRefs(url), nsString(EDITOR_BUNDLE_URL));
+
+    if (NS_SUCCEEDED(result) && url)
+    {
+      nsILocale* locale = nsnull;
+      result = service->CreateBundle(url, locale, getter_AddRefs(mStringBundle));
+      if (NS_FAILED(result))
+        printf("ERROR: Failed to get Create StringBundle\n");
+
+    } else {
+      printf("ERROR: Failed to get create URL for StringBundle\n");
+    }
+    // We don't need to keep service around once we created the bundle
+    nsServiceManager::ReleaseService(kStringBundleServiceCID, service);
+  } else {
+    printf("ERROR: Failed to get StringBundle Service instance.\n");
+  }
+/*
+ Example of getting a string:
+  nsString value;
+  ret = mStringBundle->GetStringFromName("editor.foo", value);
+*/
 
 	mPresShell->SetCaretEnabled(PR_TRUE);
 
@@ -3748,6 +3801,18 @@ nsEditor::JoinNodeDeep(nsIDOMNode *aLeftNode,
   return res;
 }
 
+// Get a string from the localized string resources
+nsresult nsEditor::GetString(const nsString& name, nsString& value)
+{
+  nsresult result = NS_ERROR_NOT_INITIALIZED;
+  value = "";
+  if (mStringBundle && (name != ""))
+  {
+    result = mStringBundle->GetStringFromName(name, value);
+  }
+  return result;
+}
+
 /******************************************************************************
  * nsAutoSelectionReset
  *****************************************************************************/
@@ -3775,7 +3840,4 @@ nsAutoSelectionReset::~nsAutoSelectionReset()
     mSel->Extend(mEndNode, mEndOffset);
   }
 }
-
-
-
 

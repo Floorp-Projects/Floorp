@@ -1809,13 +1809,13 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
 
   if (aTagName == "" || !aReturn)
     return NS_ERROR_NULL_POINTER;
-    
+
   nsAutoString TagName = aTagName;
   TagName.ToLowerCase();
   nsAutoString realTagName;
 
-  PRBool isHREF = (TagName == "href");
-  PRBool isAnchor = (TagName == "anchor");
+  PRBool isHREF = (TagName.Equals("href"));
+  PRBool isAnchor = (TagName.Equals("anchor"));
   if (isHREF || isAnchor)
   {
     realTagName = "a";
@@ -1836,16 +1836,20 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
   //  ATTRIBUTES SAVED IN PREFS?
   if (isAnchor)
   {
+
     // TODO: Get the text of the selection and build a suggested Name
     //  Replace spaces with "_" 
+  } else if (TagName.Equals("hr"))
+  {
+    
   }
+  
   // ADD OTHER DEFAULT ATTRIBUTES HERE
 
   if (NS_SUCCEEDED(res))
   {
     *aReturn = newElement;
   }
-
   return res;
 }
 
@@ -1876,15 +1880,12 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, ns
     }
   }
 
-  DeleteSelectionAndPrepareToCreateNode(parentSelectedNode, offsetOfNewNode);
+  res = DeleteSelectionAndPrepareToCreateNode(parentSelectedNode, offsetOfNewNode);
   if (NS_SUCCEEDED(res))
   {
     nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(aElement);
-
     res = InsertNode(aElement, parentSelectedNode, offsetOfNewNode);
-
   }
-  
   return res;
 }
 
@@ -2164,8 +2165,19 @@ NS_IMETHODIMP nsHTMLEditor::GetLocalFileURL(nsIDOMWindow* aParent, const nsStrin
 
 
   nsCOMPtr<nsIFileWidget>  fileWidget;
-  // TODO: WHERE TO WE PUT GLOBAL STRINGS TO BE LOCALIZED?
-  nsString title(htmlFilter ? "Open HTML file" : "Select Image File");
+  nsAutoString title("");
+
+  // Get strings from editor resource bundle
+  nsString name;
+  if (htmlFilter)
+  {
+    name = "OpenHTMLFile";
+  } else if (imgFilter)
+  {
+    name = "SelectImageFile";
+  }
+  GetString(name, title);
+    
   nsFileSpec fileSpec;
   // TODO: GET THE DEFAULT DIRECTORY FOR DIFFERENT TYPES FROM PREFERENCES
   nsFileSpec aDisplayDirectory;

@@ -27,10 +27,10 @@
 #include "nsIDOMEventListener.h"
 #include "nsIDOMRange.h"
 #include "nsCOMPtr.h"
+#include "nsIStringBundle.h"
 #include "nsITransactionManager.h"
 #include "TransactionFactory.h"
 #include "nsIComponentManager.h"
-#include "nsCOMPtr.h"
 
 class nsIEditActionListener;
 class nsIDOMCharacterData;
@@ -48,6 +48,10 @@ class JoinElementTxn;
 class EditAggregateTxn;
 class nsVoidArray;
 class nsISupportsArray;
+class nsIPref;
+class nsIStringBundleService;
+class nsIStringBundle;
+class nsILocale;
 
 //This is the monitor for the editor.
 PRMonitor *getEditorMonitor();
@@ -72,9 +76,12 @@ private:
   static PRInt32 gInstanceCount;
 
   nsVoidArray *mActionListeners;
+  nsCOMPtr<nsIStringBundle> mStringBundle;
 
 protected:
   nsIDOMDocument * mDoc;
+  // Services are not nsCOMPtr friendly
+  nsIPref* mPrefs;
 
 public:
 
@@ -494,7 +501,7 @@ public:
   static nsCOMPtr<nsIDOMNode> NextNodeInBlock(nsIDOMNode *aNode, IterDirection aDir);
   static nsresult GetStartNodeAndOffset(nsIDOMSelection *aSelection, nsCOMPtr<nsIDOMNode> *outStartNode, PRInt32 *outStartOffset);
   static nsresult GetEndNodeAndOffset(nsIDOMSelection *aSelection, nsCOMPtr<nsIDOMNode> *outEndNode, PRInt32 *outEndOffset);
-  
+
   nsresult IsPreformatted(nsIDOMNode *aNode, PRBool *aResult);
   nsresult IsNextCharWhitespace(nsIDOMNode *aParentNode, PRInt32 aOffset, PRBool *aResult);
   nsresult IsPrevCharWhitespace(nsIDOMNode *aParentNode, PRInt32 aOffset, PRBool *aResult);
@@ -502,6 +509,7 @@ public:
   nsresult SplitNodeDeep(nsIDOMNode *aNode, nsIDOMNode *aSplitPointParent, PRInt32 aSplitPointOffset);
   nsresult JoinNodeDeep(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, nsIDOMSelection *aSelection); 
 
+  nsresult GetString(const nsString& name, nsString& value);
 };
 
 

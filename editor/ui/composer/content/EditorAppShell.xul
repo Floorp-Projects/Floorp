@@ -73,7 +73,7 @@
       <menuitem name="Link..." onclick="EditorInsertLink()"/>
       <menuitem name=".Target..." onclick=""/>
       <menuitem name="Image..." onclick="EditorInsertImage()"/>
-      <menuitem name=".Horizontal Line" onclick=""/>
+      <menuitem name="Horizontal Line" onclick="EditorInsertHLine()"/>
       <menuitem name=".Table" onclick=""/>
       <menuitem name=".HTML Tag..." onclick=""/>
       <separator />
@@ -90,10 +90,12 @@
         <menuitem name="Courier" onclick="EditorSetFontFace('Courier New, Courier, mono')"/>
       </menu>
       <menu name="Size">
+        <menuitem name="-4" onclick="EditorSetFontSize('-4')"/>
+        <menuitem name="-3" onclick="EditorSetFontSize('-3')"/>
         <menuitem name="-2" onclick="EditorSetFontSize('-2')"/>
-        <menuitem name="-1" onclick="EditorSetFontSize('-1')"/>
-        <menuitem name=" 0" onclick="EditorSetFontSize(' 0')"/>
-        <menuitem name="+1" onclick="EditorSetFontSize('+1')"/>
+        <menuitem name="-1 (smaller)" onclick="EditorSetFontSize('-1')"/>
+        <menuitem name="Normal" onclick="EditorSetFontSize('0')"/>
+        <menuitem name="+1 (bigger)" onclick="EditorSetFontSize('+1')"/>
         <menuitem name="+2" onclick="EditorSetFontSize('+2')"/>
         <menuitem name="+3" onclick="EditorSetFontSize('+3')"/>
         <menuitem name="+4" onclick="EditorSetFontSize('+4')"/>
@@ -108,10 +110,34 @@
         <menuitem name="Blink" onclick="EditorApplyStyle('blink')"/>
         <menuitem name="Nonbreaking" onclick="EditorApplyStyle('nobr')"/>
       </menu>
-      <menuitem name=".Color..." onclick=""/>
+      <menu name="Text Color">
+        <menuitem name="Black" onclick="EditorSetFontColor('black')"/>
+        <menuitem name="Gray" onclick="EditorSetFontColor('gray')"/>
+        <menuitem name="Silver" onclick="EditorSetFontColor('silver')"/>
+        <menuitem name="White" onclick="EditorSetFontColor('white')"/>
+        <menuitem name="Red" onclick="EditorSetFontColor('red')"/>
+        <menuitem name="Blue" onclick="EditorSetFontColor('blue')"/>
+        <menuitem name="Green" onclick="EditorSetFontColor('green')"/>
+        <menuitem name="Cyan" onclick="EditorSetFontColor('cyan')"/>
+        <menuitem name="Yellow" onclick="EditorSetFontColor('yellow')"/>
+        <menuitem name="Magenta" onclick="EditorSetFontColor('magenta')"/>
+      </menu>
+      <menu name="Background Color">
+        <menuitem name="Black" onclick="EditorSetBackgroundColor('black')"/>
+        <menuitem name="Gray" onclick="EditorSetBackgroundColor('gray')"/>
+        <menuitem name="Silver" onclick="EditorSetBackgroundColor('silver')"/>
+        <menuitem name="White" onclick="EditorSetBackgroundColor('white')"/>
+        <menuitem name="Red" onclick="EditorSetBackgroundColor('red')"/>
+        <menuitem name="Blue" onclick="EditorSetBackgroundColor('blue')"/>
+        <menuitem name="Green" onclick="EditorSetBackgroundColor('green')"/>
+        <menuitem name="Cyan" onclick="EditorSetBackgroundColor('cyan')"/>
+        <menuitem name="Yellow" onclick="EditorSetBackgroundColor('yellow')"/>
+        <menuitem name="Magenta" onclick="EditorSetBackgroundColor('magenta')"/>
+      </menu>
       <menuitem name="Remove All Style(s)" onclick="EditorRemoveStyle('all')"/>
+      <menuitem name="Remove Link(s)" onclick="EditorRemoveLinks()"/>
       <separator />
-      <menu name="Paragraph / Heading">
+      <menu name="Heading">
         <menuitem name="Normal"    onclick="EditorSetParagraphFormat('normal')"/>
         <menuitem name="Heading 1" onclick="EditorSetParagraphFormat('h1')"/>
         <menuitem name="Heading 2" onclick="EditorSetParagraphFormat('h2')"/>
@@ -119,10 +145,14 @@
         <menuitem name="Heading 4" onclick="EditorSetParagraphFormat('h4')"/>
         <menuitem name="Heading 5" onclick="EditorSetParagraphFormat('h5')"/>
         <menuitem name="Heading 6" onclick="EditorSetParagraphFormat('h6')"/>
-        <menuitem name="Address"   onclick="EditorSetParagraphFormat('address')"/>
-        <menuitem name="Preformat" onclick="EditorSetParagraphFormat('pre')"/>
-        <menuitem name="List item" onclick="EditorSetParagraphFormat('li')"/>
-        <menuitem name="Definition term" onclick="EditorSetParagraphFormat('dt')"/>
+      </menu>
+      <menu name="Paragraph">
+        <menuitem name="Normal"                 onclick="EditorSetParagraphFormat('normal')"/>
+        <menuitem name="Blockquote"             onclick="EditorSetParagraphFormat('blockquote')"/>
+        <menuitem name="Address"                onclick="EditorSetParagraphFormat('address')"/>
+        <menuitem name="Preformat"              onclick="EditorSetParagraphFormat('pre')"/>
+        <menuitem name="List item"              onclick="EditorSetParagraphFormat('li')"/>
+        <menuitem name="Definition term"        onclick="EditorSetParagraphFormat('dt')"/>
         <menuitem name="Definition description" onclick="EditorSetParagraphFormat('dd')"/>
       </menu>
     </menu>
@@ -168,11 +198,12 @@
 	      <titledbutton src="chrome://editor/skin/images/ED_ClearStyle.gif" align="bottom" onclick="EditorRemoveStyle('all')"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Bullets.gif" align="bottom" onclick="EditorInsertList('ul')"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Numbers.gif" align="bottom" onclick="EditorInsertList('ol')"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_Indent.gif" align="bottom" onclick="EditorIndent('indent')"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Outdent.gif" align="bottom" onclick="EditorIndent('outdent')"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Indent.gif" align="bottom" onclick="EditorIndent('indent')"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Align.gif" align="bottom" class="popup" popup="AlignmentMenu"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Link.gif" align="bottom" onclick="EditorInsertLink()"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Image.gif" align="bottom" onclick= "EditorInsertImage()"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_HLine.gif" align="bottom" onclick= "EditorInsertHLine()"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Spell.gif" align="bottom" class="popup" onclick="CheckSpelling()"/>
       </toolbar>
     </toolbox>
@@ -224,13 +255,15 @@
 
 <popup id="FontSizeMenu">
   <menu>
-    <menuitem name="-2"           onclick="EditorSetFontSize('-2')"/>
-    <menuitem name="-1"           onclick="EditorSetFontSize('-1')"/>
-    <menuitem name=" 0 (normal)"  onclick="EditorSetFontSize(' 0')"/>
-    <menuitem name="+1"           onclick="EditorSetFontSize('+1')"/>
-    <menuitem name="+2"           onclick="EditorSetFontSize('+2')"/>
-    <menuitem name="+3"           onclick="EditorSetFontSize('+3')"/>
-    <menuitem name="+4"           onclick="EditorSetFontSize('+4')"/>
+    <menuitem name="-4" onclick="EditorSetFontSize('-4')"/>
+    <menuitem name="-3" onclick="EditorSetFontSize('-3')"/>
+    <menuitem name="-2" onclick="EditorSetFontSize('-2')"/>
+    <menuitem name="-1 (smaller)" onclick="EditorSetFontSize('-1')"/>
+    <menuitem name="Normal" onclick="EditorSetFontSize('0')"/>
+    <menuitem name="+1 (bigger)" onclick="EditorSetFontSize('+1')"/>
+    <menuitem name="+2" onclick="EditorSetFontSize('+2')"/>
+    <menuitem name="+3" onclick="EditorSetFontSize('+3')"/>
+    <menuitem name="+4" onclick="EditorSetFontSize('+4')"/>
   </menu>
 </popup>
 
