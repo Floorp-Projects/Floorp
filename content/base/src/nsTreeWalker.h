@@ -184,3 +184,4 @@ nsresult NS_NewTreeWalker(nsIDOMNode *aRoot,
                           nsIDOMTreeWalker **aInstancePtrResult);
 
 #endif
+
