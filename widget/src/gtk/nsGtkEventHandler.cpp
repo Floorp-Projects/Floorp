@@ -392,7 +392,7 @@ gint handle_expose_event(GtkWidget *w, GdkEventExpose *event, gpointer p)
 
   win->OnPaint(pevent);
 
-  return PR_FALSE;
+  return PR_TRUE;
 }
 
 //==============================================================
@@ -421,7 +421,7 @@ gint handle_button_press_event(GtkWidget *w, GdkEventButton * event, gpointer p)
   nsWindow *win = (nsWindow *)p;
   win->DispatchMouseEvent(mevent);
 
-  return PR_FALSE;
+  return PR_TRUE;
 }
 
 //==============================================================
@@ -450,7 +450,7 @@ gint handle_button_release_event(GtkWidget *w, GdkEventButton * event, gpointer 
   nsWindow *win = (nsWindow *)p;
   win->DispatchMouseEvent(mevent);
 
-  return PR_FALSE;
+  return PR_TRUE;
 }
 
 //==============================================================
@@ -462,7 +462,7 @@ gint handle_motion_notify_event(GtkWidget *w, GdkEventMotion * event, gpointer p
   nsWindow *win = (nsWindow *)p;
   win->DispatchMouseEvent(mevent);
 
-  return PR_FALSE;
+  return PR_TRUE;
 }
 
 //==============================================================
@@ -474,7 +474,7 @@ gint handle_enter_notify_event(GtkWidget *w, GdkEventCrossing * event, gpointer 
   nsWindow *win = (nsWindow *)p;
   win->DispatchMouseEvent(mevent);
 
-  return PR_FALSE;
+  return PR_TRUE;
 }
 
 //==============================================================
@@ -486,7 +486,7 @@ gint handle_leave_notify_event(GtkWidget *w, GdkEventCrossing * event, gpointer 
   nsWindow *win = (nsWindow *)p;
   win->DispatchMouseEvent(mevent);
 
-  return PR_FALSE;
+  return PR_TRUE;
 }
 
 //==============================================================
@@ -498,7 +498,7 @@ gint handle_focus_in_event(GtkWidget *w, GdkEventFocus * event, gpointer p)
   nsWindow *win = (nsWindow *)p;
   win->DispatchFocus(gevent);
 
-  return PR_FALSE;
+  return PR_TRUE;
 }
 
 //==============================================================
@@ -510,7 +510,7 @@ gint handle_focus_out_event(GtkWidget *w, GdkEventFocus * event, gpointer p)
   nsWindow *win = (nsWindow *)p;
   win->DispatchFocus(gevent);
 
-  return PR_FALSE;
+  return PR_TRUE;
 }
 
 #if 0
@@ -658,7 +658,7 @@ gint handle_key_release_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   nsWindow * win = (nsWindow *) p;
   win->OnKey(kevent);
 
-  return PR_FALSE;
+  return PR_TRUE;
 }
 
 //==============================================================
@@ -670,7 +670,7 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   nsWindow * win = (nsWindow *) p;
   win->OnKey(kevent);
 
-  return PR_FALSE;
+  return PR_TRUE;
 }
 
 //==============================================================
@@ -719,5 +719,5 @@ gint nsGtkWidget_Menu_Callback(GtkWidget *w, gpointer p)
     mevent.widget->DispatchEvent((nsGUIEvent *)&mevent, status);
   }
 
-  return PR_FALSE;
+  return PR_TRUE;
 }
