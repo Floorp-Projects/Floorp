@@ -116,13 +116,13 @@ private:
 //----------------------------------------------------------------------
 
 nsresult
-NS_NewViewportFrame(nsIFrame** aNewFrame)
+NS_NewViewportFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  ViewportFrame* it = new ViewportFrame;
+  ViewportFrame* it = new (aPresShell) ViewportFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

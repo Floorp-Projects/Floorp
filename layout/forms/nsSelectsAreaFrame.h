@@ -34,7 +34,7 @@ class nsIContent;
 class nsSelectsAreaFrame : public nsAreaFrame
 {
 public:
-  friend nsresult NS_NewSelectsAreaFrame(nsIFrame** aResult, PRUint32 aFlags);
+  friend nsresult NS_NewSelectsAreaFrame(nsIPresShell* aShell, nsIFrame** aResult, PRUint32 aFlags);
 
   // nsISupports
   //NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);

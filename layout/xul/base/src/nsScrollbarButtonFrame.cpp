@@ -47,13 +47,13 @@
 // Creates a new Toolbar frame and returns it in |aNewFrame|
 //
 nsresult
-NS_NewScrollbarButtonFrame ( nsIFrame** aNewFrame )
+NS_NewScrollbarButtonFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsScrollbarButtonFrame* it = new nsScrollbarButtonFrame;
+  nsScrollbarButtonFrame* it = new (aPresShell) nsScrollbarButtonFrame;
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 

@@ -637,13 +637,13 @@ nsContinuingTextFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) con
 //----------------------------------------------------------------------
 
 nsresult
-NS_NewTextFrame(nsIFrame** aNewFrame)
+NS_NewTextFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsTextFrame* it = new nsTextFrame;
+  nsTextFrame* it = new (aPresShell) nsTextFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -652,13 +652,13 @@ NS_NewTextFrame(nsIFrame** aNewFrame)
 }
 
 nsresult
-NS_NewContinuingTextFrame(nsIFrame** aNewFrame)
+NS_NewContinuingTextFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsContinuingTextFrame* it = new nsContinuingTextFrame;
+  nsContinuingTextFrame* it = new (aPresShell) nsContinuingTextFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

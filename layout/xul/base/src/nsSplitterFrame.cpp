@@ -207,13 +207,13 @@ nsSplitterFrameImpl::GetState()
 // Creates a new Toolbar frame and returns it in |aNewFrame|
 //
 nsresult
-NS_NewSplitterFrame ( nsIFrame** aNewFrame )
+NS_NewSplitterFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsSplitterFrame* it = new nsSplitterFrame;
+  nsSplitterFrame* it = new (aPresShell) nsSplitterFrame;
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 

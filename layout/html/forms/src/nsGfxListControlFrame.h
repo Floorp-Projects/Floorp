@@ -53,7 +53,7 @@ class nsGfxListControlFrame : public nsHTMLContainerFrame,
 			                        public nsIStatefulFrame
 {
 public:
-  friend nsresult NS_NewGfxListControlFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewGfxListControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
    // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);

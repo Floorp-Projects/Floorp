@@ -29,13 +29,13 @@
 #include "nsLayoutAtoms.h"
 
 nsresult
-NS_NewPlaceholderFrame(nsIFrame** aNewFrame)
+NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsPlaceholderFrame* it = new nsPlaceholderFrame;
+  nsPlaceholderFrame* it = new (aPresShell) nsPlaceholderFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

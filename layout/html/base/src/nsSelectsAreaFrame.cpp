@@ -28,13 +28,13 @@
 static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
 
 nsresult
-NS_NewSelectsAreaFrame(nsIFrame** aNewFrame, PRUint32 aFlags)
+NS_NewSelectsAreaFrame(nsIPresShell* aShell, nsIFrame** aNewFrame, PRUint32 aFlags)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsSelectsAreaFrame* it = new nsSelectsAreaFrame;
+  nsSelectsAreaFrame* it = new (aShell) nsSelectsAreaFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

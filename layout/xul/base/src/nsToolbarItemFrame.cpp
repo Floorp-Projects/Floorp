@@ -37,13 +37,13 @@ static NS_DEFINE_IID(kCDataFlavorCID,          NS_DATAFLAVOR_CID);
 // Creates a new toolbar item frame and returns it in |aNewFrame|
 //
 nsresult
-NS_NewToolbarItemFrame ( nsIFrame** aNewFrame )
+NS_NewToolbarItemFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if ( !aNewFrame )
     return NS_ERROR_NULL_POINTER;
 
-  nsToolbarItemFrame* it = new nsToolbarItemFrame;
+  nsToolbarItemFrame* it = new (aPresShell) nsToolbarItemFrame;
   if ( !it )
     return NS_ERROR_OUT_OF_MEMORY;
 

@@ -59,13 +59,13 @@ static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
 nsresult
-NS_NewNativeTextControlFrame(nsIFrame** aNewFrame)
+NS_NewNativeTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsNativeTextControlFrame* it = new nsNativeTextControlFrame;
+  nsNativeTextControlFrame* it = new (aPresShell) nsNativeTextControlFrame;
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -35,7 +35,7 @@
 #include "nsIMenuParent.h"
 #include "nsIWidget.h"
 
-nsresult NS_NewMenuPopupFrame(nsIFrame** aResult) ;
+nsresult NS_NewMenuPopupFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
 class nsIViewManager;
 class nsIView;

@@ -68,7 +68,7 @@ class nsBoxFrame : public nsHTMLContainerFrame, public nsIBox
 {
 public:
 
-  friend nsresult NS_NewBoxFrame(nsIFrame** aNewFrame, PRUint32 aFlags = 0);
+  friend nsresult NS_NewBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags = 0);
   // gets the rect inside our border and debug border. If you wish to paint inside a box
   // call this method to get the rect so you don't draw on the debug border or outer border.
   virtual void GetInnerRect(nsRect& aInner);

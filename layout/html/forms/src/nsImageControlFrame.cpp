@@ -167,13 +167,13 @@ nsImageControlFrame::~nsImageControlFrame()
 }
 
 nsresult
-NS_NewImageControlFrame(nsIFrame** aNewFrame)
+NS_NewImageControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsImageControlFrame* it = new nsImageControlFrame;
+  nsImageControlFrame* it = new (aPresShell) nsImageControlFrame;
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

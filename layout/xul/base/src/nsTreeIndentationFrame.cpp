@@ -42,13 +42,13 @@ nsTreeIndentationFrame::nsTreeIndentationFrame()
 }
 
 nsresult
-NS_NewTreeIndentationFrame(nsIFrame** aNewFrame)
+NS_NewTreeIndentationFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsTreeIndentationFrame* it = new nsTreeIndentationFrame();
+  nsTreeIndentationFrame* it = new (aPresShell) nsTreeIndentationFrame();
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

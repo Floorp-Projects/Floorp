@@ -332,7 +332,9 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
 
   nsIFrame* firstChild = mFrames.FirstChild();
   if (nsnull == firstChild) {
-    firstChild = new nsHTMLFrameInnerFrame;
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    firstChild = new (shell.get()) nsHTMLFrameInnerFrame;
     mFrames.SetFrames(firstChild);
     // XXX temporary! use style system to get correct style!
     firstChild->Init(aPresContext, mContent, this, mStyleContext, nsnull);
@@ -410,13 +412,13 @@ nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 nsresult
-NS_NewHTMLFrameOuterFrame(nsIFrame** aNewFrame)
+NS_NewHTMLFrameOuterFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsHTMLFrameOuterFrame* it = new nsHTMLFrameOuterFrame;
+  nsHTMLFrameOuterFrame* it = new (aPresShell) nsHTMLFrameOuterFrame;
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -61,13 +61,13 @@ static NS_DEFINE_IID(kIDOMMouseListenerIID,     NS_IDOMMOUSELISTENER_IID);
 static NS_DEFINE_IID(kIAnonymousContentCreatorIID,     NS_IANONYMOUS_CONTENT_CREATOR_IID);
 
 nsresult
-NS_NewFileControlFrame(nsIFrame** aNewFrame)
+NS_NewFileControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsFileControlFrame* it = new nsFileControlFrame();
+  nsFileControlFrame* it = new (aPresShell) nsFileControlFrame();
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

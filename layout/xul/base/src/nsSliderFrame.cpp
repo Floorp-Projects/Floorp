@@ -66,13 +66,13 @@ static NS_DEFINE_IID(kIAnonymousContentCreatorIID,     NS_IANONYMOUS_CONTENT_CRE
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
 nsresult
-NS_NewSliderFrame ( nsIFrame** aNewFrame)
+NS_NewSliderFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsSliderFrame* it = new nsSliderFrame();
+  nsSliderFrame* it = new (aPresShell) nsSliderFrame();
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1003,13 +1003,13 @@ public:
 
 
 nsresult
-NS_NewThumbFrame ( nsIFrame** aNewFrame)
+NS_NewThumbFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsThumbFrame* it = new nsThumbFrame();
+  nsThumbFrame* it = new (aPresShell) nsThumbFrame();
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 

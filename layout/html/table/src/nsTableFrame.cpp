@@ -646,6 +646,9 @@ void nsTableFrame::EnsureColumns(nsIPresContext* aPresContext,
   }
 
   // if we have fewer column frames than we need, create some implicit column frames
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+
   PRInt32 colCount = mCellMap->GetColCount();
   if (actualColumns < colCount) {
     nsIContent *lastColGroupElement = nsnull;
@@ -669,7 +672,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext* aPresContext,
                                                  &colGroupStyleContext);        // colGroupStyleContext: REFCNT++
       // Create a col group frame
       nsIFrame* newFrame;
-      NS_NewTableColGroupFrame(&newFrame);
+      NS_NewTableColGroupFrame(shell, &newFrame);
       newFrame->Init(aPresContext, lastColGroupElement, this, colGroupStyleContext,
                      nsnull);
       lastColGroupFrame = (nsTableColGroupFrame*)newFrame;
@@ -702,7 +705,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext* aPresContext,
                                                  PR_TRUE,
                                                  &colStyleContext);             // colStyleContext: REFCNT++
       aCreatedColFrames = PR_TRUE;  // remember that we're creating implicit col frames
-      NS_NewTableColFrame(&colFrame);
+      NS_NewTableColFrame(shell, &colFrame);
       colFrame->Init(aPresContext, lastColGroupElement, lastColGroupFrame,
                      colStyleContext, nsnull);
       NS_RELEASE(colStyleContext);
@@ -3785,13 +3788,13 @@ nscoord nsTableFrame::GetCellPadding()
 /* ----- global methods ----- */
 
 nsresult 
-NS_NewTableFrame(nsIFrame** aNewFrame)
+NS_NewTableFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsTableFrame* it = new nsTableFrame;
+  nsTableFrame* it = new (aPresShell) nsTableFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

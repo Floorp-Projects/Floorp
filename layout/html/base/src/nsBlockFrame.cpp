@@ -1080,13 +1080,13 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
 const nsIID kBlockFrameCID = NS_BLOCK_FRAME_CID;
 
 nsresult
-NS_NewBlockFrame(nsIFrame** aNewFrame, PRUint32 aFlags)
+NS_NewBlockFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsBlockFrame* it = new nsBlockFrame;
+  nsBlockFrame* it = new (aPresShell) nsBlockFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -5934,7 +5934,10 @@ nsBlockFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                              mStyleContext, PR_FALSE, &kidSC);
 
       // Create bullet frame
-      mBullet = new nsBulletFrame;
+      nsCOMPtr<nsIPresShell> shell;
+      aPresContext->GetShell(getter_AddRefs(shell));
+      mBullet = new (shell.get()) nsBulletFrame;
+
       if (nsnull == mBullet) {
         NS_RELEASE(kidSC);
         return NS_ERROR_OUT_OF_MEMORY;

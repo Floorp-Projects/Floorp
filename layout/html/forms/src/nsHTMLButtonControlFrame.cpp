@@ -60,13 +60,13 @@ static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 
 nsresult
-NS_NewHTMLButtonControlFrame(nsIFrame** aNewFrame)
+NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsHTMLButtonControlFrame* it = new nsHTMLButtonControlFrame;
+  nsHTMLButtonControlFrame* it = new (aPresShell) nsHTMLButtonControlFrame;
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -110,8 +110,11 @@ nsHTMLButtonControlFrame::Init(nsIPresContext*  aPresContext,
   if (mInline) {
     flags |= NS_BLOCK_SHRINK_WRAP;
   }
+
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
   nsIFrame* areaFrame;
-  NS_NewAreaFrame(&areaFrame, flags);
+  NS_NewAreaFrame(shell, &areaFrame, flags);
   mFrames.SetFrames(areaFrame);
 
   // Resolve style and initialize the frame

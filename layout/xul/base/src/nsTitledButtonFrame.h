@@ -35,7 +35,7 @@ public:
 
   enum CroppingStyle { CropNone, CropLeft, CropRight, CropCenter };
 
-  friend nsresult NS_NewTitledButtonFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewTitledButtonFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   // nsIBox frame interface
   NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);

@@ -38,7 +38,7 @@ class nsTabFrame : public nsHTMLButtonControlFrame
 {
 public:
 
-  friend nsresult NS_NewTabFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewTabFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
  
   virtual void MouseClicked(nsIPresContext* aPresContext);

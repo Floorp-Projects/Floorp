@@ -248,13 +248,13 @@ nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNam
 // Creates a new Toolbar frame and returns it in |aNewFrame|
 //
 nsresult
-NS_NewScrollbarFrame ( nsIFrame** aNewFrame )
+NS_NewScrollbarFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsScrollbarFrame* it = new nsScrollbarFrame;
+  nsScrollbarFrame* it = new (aPresShell) nsScrollbarFrame;
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 

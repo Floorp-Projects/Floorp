@@ -442,13 +442,13 @@ nsFormFrame::OnRadioChecked(nsIPresContext* aPresContext, nsRadioControlFrame& a
 
 
 nsresult
-NS_NewFormFrame(nsIFrame** aNewFrame)
+NS_NewFormFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsFormFrame* it = new nsFormFrame;
+  nsFormFrame* it = new (aPresShell) nsFormFrame;
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

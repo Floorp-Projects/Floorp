@@ -24,6 +24,7 @@
 // the dll that are located in the .lib files we link with
 
 #include "nsString.h"
+#include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIStyleSet.h"
 #include "nsIDocument.h"
@@ -32,6 +33,8 @@
 
 void XXXNeverCalled()
 {
+  nsIPresShell* ps;
+  NS_NewPresShell(&ps);
   nsIPresContext* cx;
   NS_NewGalleyContext(&cx);
   NS_NewPrintPreviewContext(&cx);
@@ -42,17 +45,17 @@ void XXXNeverCalled()
   NS_NewHTMLDocument(&doc);
   NS_NewImageDocument(&doc);
   nsIFrame* f;
-  NS_NewTextFrame(&f);
-  NS_NewInlineFrame(&f);
-  NS_NewBRFrame(&f);
-  NS_NewWBRFrame(&f);
-  NS_NewHRFrame(&f);
-  NS_NewObjectFrame(&f);
-  NS_NewSpacerFrame(&f);
-  NS_NewHTMLFramesetFrame(&f);
-  NS_NewRootFrame(&f);
-  NS_NewScrollFrame(&f);
-  NS_NewSimplePageSequenceFrame(&f);
+  NS_NewTextFrame(ps, &f);
+  NS_NewInlineFrame(ps, &f);
+  NS_NewBRFrame(ps, &f);
+  NS_NewWBRFrame(ps, &f);
+  NS_NewHRFrame(ps, &f);
+  NS_NewObjectFrame(ps, &f);
+  NS_NewSpacerFrame(ps, &f);
+  NS_NewHTMLFramesetFrame(ps, &f);
+  NS_NewRootFrame(ps, &f);
+  NS_NewScrollFrame(ps, &f);
+  NS_NewSimplePageSequenceFrame(ps, &f);
   nsINameSpaceManager* nsm;
   NS_NewNameSpaceManager(&nsm);
   NS_CreateHTMLElement(nsnull, "");

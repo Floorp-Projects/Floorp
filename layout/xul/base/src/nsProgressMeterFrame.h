@@ -59,7 +59,7 @@ class nsIStyleContext;
 class nsProgressMeterFrame : public nsLeafFrame
 {
 public:
-  friend nsresult NS_NewProgressMeterFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewProgressMeterFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,

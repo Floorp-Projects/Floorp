@@ -64,13 +64,13 @@ protected:
 };
 
 nsresult
-NS_NewFirstLetterFrame(nsIFrame** aNewFrame)
+NS_NewFirstLetterFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsFirstLetterFrame* it = new nsFirstLetterFrame;
+  nsFirstLetterFrame* it = new (aPresShell) nsFirstLetterFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

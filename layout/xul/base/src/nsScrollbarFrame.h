@@ -33,7 +33,7 @@
 
 class nsISupportsArray;
 
-nsresult NS_NewScrollbarFrame(nsIFrame** aResult) ;
+nsresult NS_NewScrollbarFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
 class nsScrollbarFrame : public nsBoxFrame,
                          public nsIAnonymousContentCreator

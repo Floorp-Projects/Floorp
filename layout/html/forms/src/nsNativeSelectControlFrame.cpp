@@ -213,13 +213,13 @@ private:
 };
 
 nsresult
-NS_NewNativeSelectControlFrame(nsIFrame** aNewFrame)
+NS_NewNativeSelectControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsNativeSelectControlFrame* it = new nsNativeSelectControlFrame;
+  nsNativeSelectControlFrame* it = new (aPresShell) nsNativeSelectControlFrame;
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

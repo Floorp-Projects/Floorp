@@ -1019,13 +1019,13 @@ nsTableCellFrame::GetCellIndexes(PRInt32 &aRowIndex, PRInt32 &aColIndex)
 }
 
 nsresult 
-NS_NewTableCellFrame(nsIFrame** aNewFrame)
+NS_NewTableCellFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsTableCellFrame* it = new nsTableCellFrame;
+  nsTableCellFrame* it = new (aPresShell) nsTableCellFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

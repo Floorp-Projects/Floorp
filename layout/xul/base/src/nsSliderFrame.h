@@ -44,7 +44,7 @@ class nsITimer;
 #define INITAL_REPEAT_DELAY 500
 #define REPEAT_DELAY        50
 
-nsresult NS_NewSliderFrame(nsIFrame** aResult) ;
+nsresult NS_NewSliderFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
 
 class nsSliderFrame : public nsHTMLContainerFrame, 

@@ -30,13 +30,13 @@
 static NS_DEFINE_IID(kIButtonIID,      NS_IBUTTON_IID);
 
 nsresult
-NS_NewNativeButtonControlFrame(nsIFrame** aNewFrame)
+NS_NewNativeButtonControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsNativeButtonControlFrame* it = new nsNativeButtonControlFrame;
+  nsNativeButtonControlFrame* it = new (aPresShell) nsNativeButtonControlFrame;
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

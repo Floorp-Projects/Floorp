@@ -46,13 +46,13 @@
 // Creates a new Toolbar frame and returns it in |aNewFrame|
 //
 nsresult
-NS_NewTabFrame ( nsIFrame** aNewFrame )
+NS_NewTabFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsTabFrame* it = new nsTabFrame;
+  nsTabFrame* it = new (aPresShell) nsTabFrame;
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 

@@ -78,13 +78,13 @@ static NS_DEFINE_IID(kIPrivateDOMEventIID,       NS_IPRIVATEDOMEVENT_IID);
 const char * kMozDropdownActive = "-moz-dropdown-active";
 
 nsresult
-NS_NewComboboxControlFrame(nsIFrame** aNewFrame)
+NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsComboboxControlFrame* it = new nsComboboxControlFrame;
+  nsComboboxControlFrame* it = new (aPresShell) nsComboboxControlFrame;
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

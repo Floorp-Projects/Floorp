@@ -33,13 +33,13 @@
 #include "nsIStyleSet.h"
 
 nsresult
-NS_NewSimplePageSequenceFrame(nsIFrame** aNewFrame)
+NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsSimplePageSequenceFrame*  it = new nsSimplePageSequenceFrame;
+  nsSimplePageSequenceFrame*  it = new (aPresShell) nsSimplePageSequenceFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -42,7 +42,8 @@ class nsGfxScrollFrame : public nsHTMLContainerFrame,
                          public nsIAnonymousContentCreator,
                          public nsIBox {
 public:
-  friend nsresult NS_NewGfxScrollFrame(nsIFrame** aNewFrame, nsIDocument* aDocument);
+  friend nsresult NS_NewGfxScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, 
+                                       nsIDocument* aDocument);
 
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,

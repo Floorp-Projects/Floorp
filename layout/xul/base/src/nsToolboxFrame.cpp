@@ -96,13 +96,13 @@ nsToolboxFrame::DragListenerDelegate::QueryInterface(REFNSIID aIID, void** aResu
 // Creates a new toolbox frame and returns it in |aNewFrame|
 //
 nsresult
-NS_NewToolboxFrame ( nsIFrame** aNewFrame )
+NS_NewToolboxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsToolboxFrame* it = new nsToolboxFrame;
+  nsToolboxFrame* it = new (aPresShell) nsToolboxFrame;
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 

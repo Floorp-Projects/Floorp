@@ -36,7 +36,7 @@
  */
 class nsScrollPortFrame : public nsHTMLContainerFrame, public nsIBox {
 public:
-  friend nsresult NS_NewScrollPortFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewScrollPortFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,

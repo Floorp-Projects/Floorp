@@ -110,13 +110,13 @@ private:
 //----------------------------------------------------------------------
 
 nsresult
-NS_NewRootFrame(nsIFrame** aNewFrame)
+NS_NewRootFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  RootFrame* it = new RootFrame;
+  RootFrame* it = new (aPresShell) RootFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

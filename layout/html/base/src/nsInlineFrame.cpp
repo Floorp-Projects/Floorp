@@ -41,13 +41,13 @@ nsIID nsInlineFrame::kInlineFrameCID = NS_INLINE_FRAME_CID;
 // Basic nsInlineFrame methods
 
 nsresult
-NS_NewInlineFrame(nsIFrame** aNewFrame)
+NS_NewInlineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsInlineFrame* it = new nsInlineFrame;
+  nsInlineFrame* it = new (aPresShell) nsInlineFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -647,13 +647,13 @@ ReParentChildListStyle(nsIPresContext* aPresContext,
 }
 
 nsresult
-NS_NewFirstLineFrame(nsIFrame** aNewFrame)
+NS_NewFirstLineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(nsnull != aNewFrame, "null ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsInlineFrame* it = new nsFirstLineFrame;
+  nsInlineFrame* it = new (aPresShell) nsFirstLineFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -835,13 +835,13 @@ nsFirstLineFrame::Reflow(nsIPresContext* aPresContext,
 //////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewPositionedInlineFrame(nsIFrame** aNewFrame)
+NS_NewPositionedInlineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsPositionedInlineFrame* it = new nsPositionedInlineFrame;
+  nsPositionedInlineFrame* it = new (aPresShell) nsPositionedInlineFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -163,13 +163,13 @@ void nsTableColFrame::Dump(PRInt32 aIndent)
 /* ----- global methods ----- */
 
 nsresult 
-NS_NewTableColFrame(nsIFrame** aNewFrame)
+NS_NewTableColFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsTableColFrame* it = new nsTableColFrame;
+  nsTableColFrame* it = new (aPresShell) nsTableColFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -163,13 +163,13 @@ public:
 nsIFrame* nsBoxDebugInner::mDebugChild = nsnull;
 
 nsresult
-NS_NewBoxFrame ( nsIFrame** aNewFrame, PRUint32 aFlags )
+NS_NewBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags )
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsBoxFrame* it = new nsBoxFrame(aFlags);
+  nsBoxFrame* it = new (aPresShell) nsBoxFrame(aFlags);
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 

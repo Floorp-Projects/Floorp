@@ -38,13 +38,13 @@
 // Wrapper for creating a new spinner
 //
 nsresult
-NS_NewSpinnerFrame(nsIFrame** aNewFrame)
+NS_NewSpinnerFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsSpinnerFrame* it = new nsSpinnerFrame;
+  nsSpinnerFrame* it = new (aPresShell) nsSpinnerFrame;
   if ( !it )
     return NS_ERROR_OUT_OF_MEMORY;
   *aNewFrame = it;

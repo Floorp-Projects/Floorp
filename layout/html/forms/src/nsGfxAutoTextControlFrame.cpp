@@ -40,24 +40,25 @@ static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectDataIID, NS_ISCRIPTGLOBALOBJECTDATA_IID);
 
-extern nsresult NS_NewNativeTextControlFrame(nsIFrame** aNewFrame);
+extern nsresult NS_NewNativeTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 
-nsresult NS_NewGfxAutoTextControlFrame(nsIFrame** aNewFrame)
+nsresult NS_NewGfxAutoTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
 	NS_PRECONDITION(aNewFrame, "null OUT ptr");
 	if (nsnull == aNewFrame)
 		return NS_ERROR_NULL_POINTER;
 
-	*aNewFrame = new nsGfxAutoTextControlFrame;
+	*aNewFrame = new (aPresShell) nsGfxAutoTextControlFrame;
 	if (nsnull == aNewFrame)
 		return NS_ERROR_OUT_OF_MEMORY;
 
 	nsresult result = ((nsGfxAutoTextControlFrame*)(*aNewFrame))->CreateEditor();
 	if (NS_FAILED(result))
 	{ // can't properly initialized ender, probably it isn't installed
-		delete *aNewFrame;
-		result = NS_NewNativeTextControlFrame(aNewFrame);
+		//delete *aNewFrame; XXX Very bad. You cannot be deleting frames, since they are recycled.
+
+		result = NS_NewNativeTextControlFrame(aPresShell, aNewFrame);
 	}
 
 	return result;

@@ -31,13 +31,13 @@
 #include "nsIComponentManager.h"
 
 nsresult
-NS_NewGfxCheckboxControlFrame(nsIFrame** aNewFrame)
+NS_NewGfxCheckboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsGfxCheckboxControlFrame* it = new nsGfxCheckboxControlFrame;
+  nsGfxCheckboxControlFrame* it = new (aPresShell) nsGfxCheckboxControlFrame;
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

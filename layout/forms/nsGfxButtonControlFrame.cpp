@@ -91,13 +91,13 @@ nsGfxButtonControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValu
 }
 
 nsresult
-NS_NewGfxButtonControlFrame(nsIFrame** aNewFrame)
+NS_NewGfxButtonControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsGfxButtonControlFrame* it = new nsGfxButtonControlFrame;
+  nsGfxButtonControlFrame* it = new (aPresShell) nsGfxButtonControlFrame;
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

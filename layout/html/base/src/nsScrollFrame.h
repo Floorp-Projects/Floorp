@@ -35,7 +35,7 @@
  */
 class nsScrollFrame : public nsHTMLContainerFrame {
 public:
-  friend nsresult NS_NewScrollFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
