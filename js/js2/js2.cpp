@@ -60,7 +60,6 @@ namespace Shell {
     
     using namespace ICG;
     using namespace JSTypes;
- //   using namespace VMTypes;
     
     // Interactively read a line from the input stream in and put it into
     // s Return false if reached the end of input before reading anything.
