@@ -4,6 +4,7 @@
 
 nsIDragSessionMac.h
 nsIWidget.h
+nsIKBStateControl.h
 nsIButton.h
 nsICheckButton.h
 nsIListWidget.h
