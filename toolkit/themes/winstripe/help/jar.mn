@@ -1,0 +1,12 @@
+help.jar:
+  skin/classic/help/help.css
+  skin/classic/help/Toolbar.png
+* skin/classic/help/helpFileLayout.css
+  skin/classic/help/sbtab-twisty.gif
+  skin/classic/help/sbtab-twisty-open.gif
+* skin/classic/help/sidebar.css
+* skin/classic/help/sidebarBindings.xml
+  skin/classic/help/Weblink.png
+* skin/classic/help/contents.rdf
+  skin/classic/help/throbber.png
+  skin/classic/help/throbber-busy.gif
