@@ -50,7 +50,6 @@
 #include "nsNetUtil.h"
 
 #include "nsIScriptGlobalObject.h"
-#include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsIWebNavigation.h"
 #include "nsCOMPtr.h"
@@ -83,6 +82,7 @@
 #include "nsIControllers.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeOwner.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsITransactionManager.h"
 
@@ -140,12 +140,12 @@ static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
 /////////////////////////////////////////////////////////////////////////
 // Utility to extract document from a webshell object.
 static nsresult
-GetDocument(nsIWebShell *aWebShell, nsIDocument **aDoc ) 
+GetDocument(nsIDocShell *aDocShell, nsIDocument **aDoc ) 
 {
-   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aWebShell));
   // Get content viewer from the web shell.
   nsCOMPtr<nsIContentViewer> contentViewer;
-  nsresult res = (docShell && aDoc)? docShell->GetContentViewer(getter_AddRefs(contentViewer))
+  nsresult res = (aDocShell && aDoc) ? 
+   aDocShell->GetContentViewer(getter_AddRefs(contentViewer))
                    : NS_ERROR_NULL_POINTER;
 
   if ( NS_SUCCEEDED(res) && contentViewer )
@@ -163,7 +163,7 @@ GetDocument(nsIWebShell *aWebShell, nsIDocument **aDoc )
 
 // Utility to set and attribute of an element (used for throbber)
 static nsresult 
-SetChromeAttribute( nsIWebShell *shell, const char *id, 
+SetChromeAttribute( nsIDocShell *shell, const char *id, 
                     const char *name,  const nsString &value )
 {
   nsCOMPtr<nsIDocument> doc;
@@ -185,6 +185,23 @@ SetChromeAttribute( nsIWebShell *shell, const char *id,
   return rv;
 }
 
+// Utility to get the treeOwner for a docShell
+static nsresult
+GetTreeOwner(nsIDocShell* aDocShell, nsIBaseWindow** aBaseWindow)
+{
+   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(aDocShell));
+   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+   docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
+   NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(CallQueryInterface(treeOwner, aBaseWindow), 
+      NS_ERROR_FAILURE);
+
+   return NS_OK;
+}
+
 /////////////////////////////////////////////////////////////////////////
 // nsEditorShell
 /////////////////////////////////////////////////////////////////////////
@@ -192,9 +209,8 @@ SetChromeAttribute( nsIWebShell *shell, const char *id,
 nsEditorShell::nsEditorShell()
 :  mToolbarWindow(nsnull)
 ,  mContentWindow(nsnull)
-,  mWebShellWin(nsnull)
-,  mWebShell(nsnull)
-,  mContentAreaWebShell(nsnull)
+,  mDocShell(nsnull)
+,  mContentAreaDocShell(nsnull)
 ,  mEditorType(eUninitializedEditorType)
 ,  mStateMaintainer(nsnull)
 ,  mWrapColumn(0)
@@ -277,7 +293,7 @@ nsEditorShell::Init()
 nsresult    
 nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUrl)
 {
-  if (!mContentAreaWebShell)
+  if (!mContentAreaDocShell)
     return NS_ERROR_NOT_INITIALIZED;
 
   if (mEditor)
@@ -307,18 +323,18 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
     // URL load, they don't get transferred to the new editor.
   }
    
-  // get the webshell for this loader. Need this, not mContentAreaWebShell, in
+  // get the webshell for this loader. Need this, not mContentAreaDocShell, in
   // case we are editing a frameset
   nsCOMPtr<nsISupports> loaderContainer;
   aLoader->GetContainer(getter_AddRefs(loaderContainer));
-  nsCOMPtr<nsIWebShell> containerAsWebShell = do_QueryInterface(loaderContainer);
-  if (!containerAsWebShell)
+  nsCOMPtr<nsIDocShell> containerAsDocShell = do_QueryInterface(loaderContainer);
+  if (!containerAsDocShell)
   {
     NS_ASSERTION(0, "Failed to get loader container as web shell");
     return NS_ERROR_UNEXPECTED;
   }
   
-  nsresult rv = DoEditorMode(containerAsWebShell);
+  nsresult rv = DoEditorMode(containerAsDocShell);
   if (NS_FAILED(rv)) return rv;
   
   // transfer the doc state listeners to the editor
@@ -331,9 +347,8 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
   mStateMaintainer->AddRef();      // the owning reference
 
   // get the XULDoc from the webshell
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
   nsCOMPtr<nsIContentViewer> cv;
-  rv = docShell->GetContentViewer(getter_AddRefs(cv));
+  rv = mDocShell->GetContentViewer(getter_AddRefs(cv));
   if (NS_FAILED(rv)) return rv;
     
   nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(cv, &rv);
@@ -493,11 +508,10 @@ nsEditorShell::SetContentWindow(nsIDOMWindow* aWin)
 
   nsCOMPtr<nsIDocShell> docShell;
   globalObj->GetDocShell(getter_AddRefs(docShell));
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
-  if (!webShell)
+  if (!docShell)
     return NS_ERROR_FAILURE;
     
-  mContentAreaWebShell = webShell;      // dont AddRef
+  mContentAreaDocShell = docShell;      // dont AddRef
   return docShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
 }
 
@@ -518,11 +532,10 @@ nsEditorShell::SetWebShellWindow(nsIDOMWindow* aWin)
   
   nsCOMPtr<nsIDocShell> docShell;
   globalObj->GetDocShell(getter_AddRefs(docShell));
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
-  if (!webShell)
+  if (!docShell)
     return NS_ERROR_NOT_INITIALIZED;
 
-  mWebShell = webShell;
+  mDocShell = docShell;
   //NS_ADDREF(mWebShell);
 
 /*
@@ -537,14 +550,6 @@ nsEditorShell::SetWebShellWindow(nsIDOMWindow* aWin)
   nsCRT::free(cstr);
 #endif
 */
-
-  nsCOMPtr<nsIWebShellContainer> webShellContainer;
-  mWebShell->GetTopLevelWindow(getter_AddRefs(webShellContainer));
-  if (!webShellContainer)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  nsCOMPtr<nsIWebShellWindow> webShellWin = do_QueryInterface(webShellContainer, &rv);
-  mWebShellWin = webShellWin;
     
   return rv;
 }
@@ -631,16 +636,16 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
 
 
 nsresult
-nsEditorShell::DoEditorMode(nsIWebShell *aWebShell)
+nsEditorShell::DoEditorMode(nsIDocShell *aDocShell)
 {
   nsresult  err = NS_OK;
   
-  NS_PRECONDITION(aWebShell, "Need a webshell here");
-  if (!aWebShell)
+  NS_PRECONDITION(aDocShell, "Need a webshell here");
+  if (!aDocShell)
       return NS_ERROR_NULL_POINTER;
 
   nsCOMPtr<nsIDocument> doc;
-  err = GetDocument(aWebShell, getter_AddRefs(doc));
+  err = GetDocument(aDocShell, getter_AddRefs(doc));
   if (NS_FAILED(err)) return err;
   if (!doc) return NS_ERROR_FAILURE;
 
@@ -648,11 +653,8 @@ nsEditorShell::DoEditorMode(nsIWebShell *aWebShell)
   if (NS_FAILED(err)) return err;
   if (!domDoc) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(aWebShell, &err);
-  if (!docShell) return err;
-  
   nsCOMPtr<nsIPresShell> presShell;
-  err = docShell->GetPresShell(getter_AddRefs(presShell));
+  err = aDocShell->GetPresShell(getter_AddRefs(presShell));
   if (NS_FAILED(err)) return err;
   if (!presShell) return NS_ERROR_FAILURE;
   
@@ -1061,10 +1063,10 @@ nsEditorShell::SetBodyAttribute(const PRUnichar *attr, const PRUnichar *value)
 NS_IMETHODIMP    
 nsEditorShell::LoadUrl(const PRUnichar *url)
 {
-   if(!mContentAreaWebShell)
+   if(!mContentAreaDocShell)
       return NS_ERROR_NOT_INITIALIZED;
 
-   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mContentAreaWebShell));
+   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mContentAreaDocShell));
    NS_ENSURE_SUCCESS(webNav->LoadURI(url), NS_ERROR_FAILURE);
 
    return NS_OK;
@@ -1465,14 +1467,15 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
 //#endif end replace with nsIFilePicker block
 
           // Set the new URL for the webshell
-          if (mContentAreaWebShell)
+          nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mContentAreaDocShell));
+          if (webShell)
           {
             nsFileURL fileURL(docFileSpec);
             nsAutoString fileURLString(fileURL.GetURLString());
             PRUnichar *fileURLUnicode = fileURLString.ToNewUnicode();
             if (fileURLUnicode)
             {
-              mContentAreaWebShell->SetURL(fileURLUnicode);
+              webShell->SetURL(fileURLUnicode);
         			Recycle(fileURLUnicode);
             }
           }
@@ -1517,7 +1520,12 @@ nsEditorShell::CloseWindow( PRBool *_retval )
   // Don't close the window if there was an error saving file or 
   //   user canceled an action along the way
   if (NS_SUCCEEDED(rv) && *_retval)
-    mWebShellWin->Close();
+    {
+    nsCOMPtr<nsIBaseWindow> baseWindow;
+    GetTreeOwner(mDocShell, getter_AddRefs(baseWindow));
+    NS_ENSURE_TRUE(baseWindow, NS_ERROR_FAILURE);
+    baseWindow->Destroy();
+    }
 
   return rv;
 }
@@ -1525,12 +1533,11 @@ nsEditorShell::CloseWindow( PRBool *_retval )
 NS_IMETHODIMP    
 nsEditorShell::Print()
 { 
-  if (!mContentAreaWebShell)
+  if (!mContentAreaDocShell)
     return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIContentViewer> viewer;
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mContentAreaWebShell));    
-  docShell->GetContentViewer(getter_AddRefs(viewer));    
+  mContentAreaDocShell->GetContentViewer(getter_AddRefs(viewer));    
   if (nsnull != viewer) 
   {
     nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
@@ -1651,7 +1658,7 @@ nsEditorShell::UpdateWindowTitle()
 {
   nsresult res = NS_ERROR_NOT_INITIALIZED;
 
-  if (!mContentAreaWebShell || !mEditor)
+  if (!mContentAreaDocShell || !mEditor)
     return res;
 
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
@@ -1686,7 +1693,7 @@ nsEditorShell::UpdateWindowTitle()
         }
       }
     }
-    nsCOMPtr<nsIBaseWindow> contentAreaAsWin(do_QueryInterface(mContentAreaWebShell));
+    nsCOMPtr<nsIBaseWindow> contentAreaAsWin(do_QueryInterface(mContentAreaDocShell));
     NS_ASSERTION(contentAreaAsWin, "This object should implement nsIBaseWindow");
     res = contentAreaAsWin->SetTitle(windowCaption.GetUnicode());
   }
@@ -1743,7 +1750,7 @@ nsEditorShell::SetDocumentTitle(const PRUnichar *title)
 {
   nsresult res = NS_ERROR_NOT_INITIALIZED;
 
-  if (!mEditor && !mContentAreaWebShell)
+  if (!mEditor && !mContentAreaDocShell)
     return res;
 
   // This should only be allowed for HTML documents
@@ -2293,7 +2300,7 @@ nsEditorShell::InsertBreak()
 nsresult
 nsEditorShell::DoFind(PRBool aFindNext)
 {
-  if (!mContentAreaWebShell)
+  if (!mContentAreaDocShell)
     return NS_ERROR_NOT_INITIALIZED;
 
   PRBool foundIt = PR_FALSE;
@@ -2307,7 +2314,8 @@ nsEditorShell::DoFind(PRBool aFindNext)
   // make the search context if we need to
   if (!mSearchContext)
   {
-    rv = findComponent->CreateContext( mContentAreaWebShell, nsnull, getter_AddRefs(mSearchContext));
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mContentAreaDocShell));
+    rv = findComponent->CreateContext( webShell, nsnull, getter_AddRefs(mSearchContext));
   }
   
   if (NS_SUCCEEDED(rv))
@@ -3976,10 +3984,10 @@ nsEditorShell::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, cons
 {
   // Start the throbber
   // TODO: We should also start/stop it for saving and publishing?
-  SetChromeAttribute( mWebShell, "Editor:Throbber", "busy", "true" );
+  SetChromeAttribute( mDocShell, "Editor:Throbber", "busy", "true" );
 
   // Disable JavaScript in this document:
-  nsCOMPtr<nsIScriptGlobalObjectOwner> sgoo (do_QueryInterface(mContentAreaWebShell));
+  nsCOMPtr<nsIScriptGlobalObjectOwner> sgoo (do_QueryInterface(mContentAreaDocShell));
   if (sgoo)
   {
     nsCOMPtr<nsIScriptGlobalObject> sgo;
@@ -4029,7 +4037,7 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* aChanne
     if (cancelEdit)
     {
       NS_RELEASE(mParserObserver);
-      if (mWebShellWin)
+      if (mDocShell)
       {
         // where do we pop up a dialog telling the user they can't edit this doc?
         // this next call will close the window, but do we want to do that?  or tell the .js UI to do it?
@@ -4049,7 +4057,11 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* aChanne
     GetBundleString("CantEditFramesetMsg", alertMessage);
     Alert(alertLabel, alertMessage);
 
-    mWebShellWin->Close();
+    nsCOMPtr<nsIBaseWindow> baseWindow;
+    GetTreeOwner(mDocShell, getter_AddRefs(baseWindow));
+    NS_ENSURE_TRUE(baseWindow, NS_ERROR_ABORT);
+    baseWindow->Destroy();
+
     return NS_ERROR_ABORT;
   }
 
@@ -4061,12 +4073,12 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* aChanne
     nsCOMPtr<nsIURI>  aUrl;
     aChannel->GetURI(getter_AddRefs(aUrl));
     res = PrepareDocumentForEditing(aLoader, aUrl);
-    SetChromeAttribute( mWebShell, "Editor:Throbber", "busy", "false" );
+    SetChromeAttribute( mDocShell, "Editor:Throbber", "busy", "false" );
   }
 
   nsAutoString doneText;
   GetBundleString("LoadingDone", doneText);
-  SetChromeAttribute(mWebShell, "statusText", "value", doneText);
+  SetChromeAttribute(mDocShell, "statusText", "value", doneText);
 
   return res;
 }
@@ -4098,7 +4110,7 @@ nsEditorShell::OnProgressURLLoad(nsIDocumentLoader* aLoader,
       mParserObserver->End();
       NS_RELEASE(mParserObserver);
 
-      if (mWebShellWin) 
+      if (mDocShell) 
       {
         // where do we pop up a dialog telling the user they can't edit this doc?
         // this next call will close the window, but do we want to do that?  or tell the .js UI to do it?
@@ -4114,7 +4126,7 @@ nsEditorShell::OnStatusURLLoad(nsIDocumentLoader* loader,
                                   nsIChannel* channel, nsString& aMsg)
 {
 
-  SetChromeAttribute(mWebShell, "statusText", "value", aMsg);
+  SetChromeAttribute(mDocShell, "statusText", "value", aMsg);
 
   return NS_OK;
 }
