@@ -35,6 +35,8 @@
 #include "nsIContentSink.h"
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLTokenizer.h"
+#include "nsHTMLEntities.h"
+
 
 #include "prenv.h"  //this is here for debug reasons...
 #include "prtypes.h"  //this is here for debug reasons...
@@ -566,17 +568,20 @@ PRBool CViewSourceHTML::CanContain(PRInt32 aParent,PRInt32 aChild) const{
  */
 NS_IMETHODIMP CViewSourceHTML::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aIntTag = nsHTMLTags::LookupTag(aTag);
+  return NS_OK;
 }
 
 NS_IMETHODIMP CViewSourceHTML::IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aTag = nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag);
+  return NS_OK;
 }
 
 NS_IMETHODIMP CViewSourceHTML::ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aUnicode = nsHTMLEntities::EntityToUnicode(aEntity);
+  return NS_OK;
 }
 
 /**
