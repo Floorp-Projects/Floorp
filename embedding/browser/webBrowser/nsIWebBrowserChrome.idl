@@ -95,9 +95,9 @@ interface nsIWebBrowserChrome : nsISupports
 		setWebBrowser will be called with the new widget to instantiate in this 
 		new window.	
 	*/
-	void getNewBrowser(in unsigned long chromeMask, out nsIWebBrowser webBrowser);
+	nsIWebBrowser getNewBrowser(in unsigned long chromeMask);
 
-	void findNamedBrowserChrome(in wstring aName, out nsIWebBrowserChrome webBrowserChrome);
+	nsIWebBrowser findNamedBrowser(in wstring aName);
 
 	/*
 		Tells the chrome to size itself such that the browser will be the 
