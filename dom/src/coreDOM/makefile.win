@@ -39,7 +39,7 @@ CPPSRCS =				\
 	nsJSProcessingInstruction.cpp	\
 	nsJSText.cpp			\
 	nsJSStyleSheet.cpp		\
-	nsJSStyleCollection.cpp		\
+	nsJSStyleSheetCollection.cpp	\
 	$(NULL)
 
 CPP_OBJS=						\
