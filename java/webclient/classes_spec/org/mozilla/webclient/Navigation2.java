@@ -52,13 +52,5 @@ public void post(String  absoluteUrl,
                  String  target,
                  String  postData,
                  String  postHeaders);
-
-public void loadURLBlocking(String absoluteURL);
-
-public void loadFromStreamBlocking(InputStream stream, String uri,
-                                   String contentType, int contentLength,
-                                   Properties loadInfo);
-
-
 } 
 // end of interface Navigation2

@@ -44,8 +44,6 @@
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativeLoadURL
 (JNIEnv *env, jobject obj, jint nativeBCPtr, jstring urlString)
 {
-    jobject			jobj = obj;
-
 #if DEBUG_RAPTOR_CANVAS
     const char	*	urlChars = (char *) ::util_GetStringUTFChars(env, 
                                                                  urlString);
@@ -299,26 +297,26 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
 	return;
 }
 
+*********************/
+
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativeStop
 (JNIEnv *env, jobject obj, jint nativeBCPtr)
 {
-	JNIEnv	*	pEnv = env;
-	jobject		jobj = obj;
-	
     NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
-
-	if (nativeBrowserControl == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to raptorWebShellStop");
-		return;
-	}
-
-	if (nativeBrowserControl->initComplete) {
-		wsStopEvent		* actionEvent = new wsStopEvent(nativeBrowserControl->webNavigation);
-        PLEvent			* event       = (PLEvent*) *actionEvent;
-
-        ::util_PostEvent(nativeBrowserControl, event);
-	}
+    
+    if (nativeBrowserControl == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null passed to nativeLoadURL");
+        return;
+    }
+    
+    nsresult rv = 
+        nativeBrowserControl->mNavigation->Stop(nsIWebNavigation::STOP_ALL);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't stop load");
+    }
 }
+
+/***********************
 
 JNIEXPORT void JNICALL 
 Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativeSetPrompt

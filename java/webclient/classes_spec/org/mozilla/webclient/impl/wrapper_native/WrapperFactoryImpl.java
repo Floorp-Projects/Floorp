@@ -86,6 +86,7 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
     
     protected String platformCanvasClassName = null;
     protected boolean initialized = false;
+    protected boolean terminated = false;
     
     
     // Relationship Instance Variables
@@ -136,6 +137,10 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 
     public BrowserControl newBrowserControl() throws InstantiationException, IllegalAccessException, IllegalStateException {
 	verifyInitialized();
+
+	if (terminated) {
+	    throw new IllegalStateException("Already terminated");
+	}
 	
 	BrowserControl result = new BrowserControlImpl(this);
 	final int nativeBrowserControl = nativeCreateBrowserControl();
@@ -333,6 +338,10 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 
 public void terminate() throws Exception
 {
+    if (terminated) {
+	throw new IllegalStateException("Already terminated");
+    }
+
     eventThread.pushBlockingWCRunnable(new WCRunnable() {
 	    public Object run() {
 		Assert.assert_it(null != bookmarks);
@@ -350,6 +359,7 @@ public void terminate() throws Exception
 		((ImplObject)profileManager).delete();
 		profileManager = null;
 		nativeTerminate(nativeWrapperFactory);
+		WrapperFactoryImpl.this.terminated = true;
 		return null;
 	    }
 	});

@@ -1,5 +1,5 @@
 /*
- * $Id: NavigationTest.java,v 1.12 2004/06/14 15:34:42 edburns%acm.org Exp $
+ * $Id: NavigationTest.java,v 1.13 2004/06/16 14:37:34 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -27,6 +27,7 @@
 package org.mozilla.webclient;
 
 import junit.framework.TestSuite;
+import junit.framework.TestResult;
 import junit.framework.Test;
 
 import java.util.Enumeration;
@@ -42,11 +43,29 @@ import java.io.FileInputStream;
 public class NavigationTest extends WebclientTestCase {
 
     public NavigationTest(String name) {
-	super(name);
+ 	super(name);
+	try {
+	    BrowserControlFactory.setAppData(getBrowserBinDir());
+	}
+	catch (Exception e) {
+	    fail();
+	}
     }
 
     public static Test suite() {
-	return (new TestSuite(NavigationTest.class));
+	TestSuite result = new TestSuite() {
+		public void run(TestResult result) {
+		    super.run(result);
+		    try {
+			BrowserControlFactory.appTerminate();
+		    }
+		    catch (Exception e) {
+			fail();
+		    }
+		}
+	    };
+	result.addTestSuite(NavigationTest.class);
+	return (result);
     }
 
     static EventRegistration2 eventRegistration;
@@ -61,11 +80,12 @@ public class NavigationTest extends WebclientTestCase {
     // Testcases
     // 
 
-    public void testNavigation() throws Exception {
+    /*************
+
+    public void testLoad() throws Exception {
 	BrowserControl firstBrowserControl = null;
-	EndDocumentSelectionVerifier listener = null;
+	DocumentListener listener = null;
 	Selection selection = null;
-	BrowserControlFactory.setAppData(getBrowserBinDir());
 	firstBrowserControl = BrowserControlFactory.newBrowserControl();
 	assertNotNull(firstBrowserControl);
 	BrowserControlCanvas canvas = (BrowserControlCanvas)
@@ -99,7 +119,7 @@ public class NavigationTest extends WebclientTestCase {
 	NavigationTest.keepWaiting = true;
 	
 	System.out.println("Loading url: " + testPage.toURL().toString());
-	eventRegistration.addDocumentLoadListener(listener = new EndDocumentSelectionVerifier() {
+	eventRegistration.addDocumentLoadListener(listener = new DocumentListener() {
 		public void doEndCheck() {
 		    currentPage.selectAll();
 		    Selection selection = currentPage.getSelection();
@@ -123,7 +143,7 @@ public class NavigationTest extends WebclientTestCase {
 	//
 	RandomHTMLInputStream rhis = new RandomHTMLInputStream(10, false);
 	
-	eventRegistration.addDocumentLoadListener(listener = new EndDocumentSelectionVerifier() {
+	eventRegistration.addDocumentLoadListener(listener = new DocumentListener() {
 		public void doEndCheck() {
 		    currentPage.selectAll();
 		    Selection selection = currentPage.getSelection();
@@ -148,7 +168,7 @@ public class NavigationTest extends WebclientTestCase {
 	NavigationTest.keepWaiting = true;
 
 	FileInputStream fis = new FileInputStream(testPage);
-	eventRegistration.addDocumentLoadListener(listener = new EndDocumentSelectionVerifier() {
+	eventRegistration.addDocumentLoadListener(listener = new DocumentListener() {
 		public void doEndCheck() {
 		    currentPage.selectAll();
 		    Selection selection = currentPage.getSelection();
@@ -168,10 +188,69 @@ public class NavigationTest extends WebclientTestCase {
 
 	frame.setVisible(false);
 	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
-	BrowserControlFactory.appTerminate();
     }
 
-    public static abstract class EndDocumentSelectionVerifier implements DocumentLoadListener {
+    ****************/
+
+    public void testStop() throws Exception {
+	DocumentListener listener = null;
+	BrowserControl firstBrowserControl = BrowserControlFactory.newBrowserControl();
+	assertNotNull(firstBrowserControl);
+	BrowserControlCanvas canvas = (BrowserControlCanvas)
+	    firstBrowserControl.queryInterface(BrowserControl.BROWSER_CONTROL_CANVAS_NAME);
+	eventRegistration = (EventRegistration2)
+	    firstBrowserControl.queryInterface(BrowserControl.EVENT_REGISTRATION_NAME);
+
+	assertNotNull(canvas);
+	Frame frame = new Frame();
+	frame.setUndecorated(true);
+	frame.setBounds(0, 0, 640, 480);
+	frame.add(canvas, BorderLayout.CENTER);
+	frame.setVisible(true);
+	canvas.setVisible(true);
+	
+	final Navigation2 nav = (Navigation2) 
+	    firstBrowserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
+	assertNotNull(nav);
+	final CurrentPage2 currentPage = (CurrentPage2) 
+          firstBrowserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
+
+	NavigationTest.keepWaiting = true;
+	//
+	// try loading from the dreaded RandomHTMLInputStream
+	//
+	RandomHTMLInputStream rhis = new RandomHTMLInputStream(10, false);
+	
+	eventRegistration.addDocumentLoadListener(listener = new DocumentListener() {
+		private int progressCalls = 0;
+
+		public void doProgressCheck() {
+		    if (5 == ++progressCalls) {
+			nav.stop();
+			NavigationTest.keepWaiting = false; 
+		    }
+		}
+	    });
+	nav.loadFromStream(rhis, "http://randomstream.com/",
+			   "text/html", -1, null);
+	
+	// keep waiting until the previous load completes
+	while (NavigationTest.keepWaiting) {
+	    Thread.currentThread().sleep(1000);
+	}
+	eventRegistration.removeDocumentLoadListener(listener);
+
+	currentPage.selectAll();
+	Selection selection = currentPage.getSelection();
+	assertTrue(-1 != selection.toString().indexOf("START Random Data"));
+	assertTrue(-1 == selection.toString().indexOf("END Random Data"));
+	System.out.println("Selection is: " + selection.toString());
+
+	frame.setVisible(false);
+	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
+    }
+
+    public static abstract class DocumentListener implements DocumentLoadListener {
 
 	public void eventDispatched(WebclientEvent event) {
 	    if (event instanceof DocumentLoadEvent) {
@@ -179,11 +258,16 @@ public class NavigationTest extends WebclientTestCase {
 		case ((int) DocumentLoadEvent.END_DOCUMENT_LOAD_EVENT_MASK):
 		    doEndCheck();
 		    break;
+		case ((int) DocumentLoadEvent.PROGRESS_URL_LOAD_EVENT_MASK):
+		    doProgressCheck();
+		    break;
 		}
 	    }
 	}	
 	
-	public abstract void doEndCheck();
+	public void doEndCheck() {}
+
+	public void doProgressCheck() {}
     }
 
 }
