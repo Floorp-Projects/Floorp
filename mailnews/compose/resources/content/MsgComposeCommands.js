@@ -1100,12 +1100,12 @@ function GenericSendMessage( msgType )
 			try {
 			  windowLocked = true;
 			  CommandUpdate_MsgCompose();
-				msgCompose.SendMsg(msgType, getCurrentIdentity(), null);
+				msgCompose.SendMsg(msgType, getCurrentIdentity());
 				contentChanged = false;
 				msgCompose.bodyModified = false;
 			}
 			catch (ex) {
-				dump("failed to SendMsg\n");
+				dump("failed to SendMsg: " + ex + "\n");
 			  windowLocked = false;
 			  CommandUpdate_MsgCompose();
 			}
