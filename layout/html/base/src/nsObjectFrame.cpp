@@ -1822,7 +1822,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
           rv = GetDocument(getter_AddRefs(doc));
           if (NS_SUCCEEDED(rv) && doc)
           {
-            baseURL = doc->GetDocumentURL(); // gets the document's url
+            rv = doc->GetBaseURL(baseURL);  // gets the document's url
           }
           else
           {
