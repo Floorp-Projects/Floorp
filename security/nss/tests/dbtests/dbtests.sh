@@ -114,7 +114,7 @@ dbtest_main()
 
     
     Echo "test opening the database readonly in a nonexisting directory"
-    certutil -L -d ./non_existant_dir
+    certutil -L -X -d ./non_existant_dir
     ret=$?
     if [ $ret -ne 255 ]; then
       html_failed "<TR><TD> Certutil succeeded in a nonexisting directory $ret"
