@@ -152,12 +152,12 @@ nsInspectorCSSUtils::GetStyleContextForContent(nsIContent* aContent,
     if (frame)
         return GetStyleContextForFrame(frame, aStyleContext);
 
-    // No frame has been created, so resolve the style ourself.
+    // No frame has been created, so resolve the style ourselves
     nsCOMPtr<nsIStyleContext> parentContext;
     nsCOMPtr<nsIContent> parent;
     aContent->GetParent(*getter_AddRefs(parent));
     if (parent) {
-        nsresult rv = GetStyleContextForContent(aContent, aPresShell,
+        nsresult rv = GetStyleContextForContent(parent, aPresShell,
                                                 getter_AddRefs(parentContext));
         NS_ENSURE_SUCCESS(rv, rv);
     }
