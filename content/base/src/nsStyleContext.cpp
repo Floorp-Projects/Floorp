@@ -1353,6 +1353,33 @@ StyleContextImpl::~StyleContextImpl()
 #endif
 }
 
+#ifdef LOG_ADDREF_RELEASE
+extern "C" {
+  void __log_addref(void* p, int oldrc, int newrc);
+  void __log_release(void* p, int oldrc, int newrc);
+}
+
+NS_IMPL_QUERY_INTERFACE(StyleContextImpl, kIStyleContextIID)
+
+nsrefcnt StyleContextImpl::AddRef(void)
+{
+  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
+  __log_addref((void*) this, mRefCnt, mRefCnt + 1);
+  return ++mRefCnt;
+}
+
+nsrefcnt StyleContextImpl::Release(void)
+{
+  __log_release((void*) this, mRefCnt, mRefCnt - 1);
+  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  if (--mRefCnt == 0) {
+    NS_DELETEXPCOM(this);
+    return 0;
+  }
+  return mRefCnt;
+}
+#else
+
 #ifdef DEBUG_REFS
 NS_IMPL_QUERY_INTERFACE(StyleContextImpl, kIStyleContextIID)
 
@@ -1377,6 +1404,7 @@ nsrefcnt StyleContextImpl::Release(void)
 }
 #else
 NS_IMPL_ISUPPORTS(StyleContextImpl, kIStyleContextIID)
+#endif
 #endif
 
 
@@ -1935,6 +1963,7 @@ void StyleContextImpl::List(FILE* out, PRInt32 aIndent)
   // Indent
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
+  fprintf(out, "%p(%d) ", this, mRefCnt);
   if (nsnull != mPseudoTag) {
     nsAutoString  buffer;
     mPseudoTag->ToString(buffer);
