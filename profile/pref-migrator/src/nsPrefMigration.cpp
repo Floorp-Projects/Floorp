@@ -74,7 +74,7 @@
 #define POP_MAIL_FILTER_FILE_NAME_IN_4x "rules.dat"
 #define SUMMARY_SUFFIX_IN_4x ".snm"
 #define COOKIES_FILE_NAME_IN_4x "cookies.txt"
-#define BOOKMARKS_FILE_NAME_IN_4x "bookmarks.htm"
+#define BOOKMARKS_FILE_NAME_IN_4x "bookmark.htm"
 #define HISTORY_FILE_NAME_IN_4x "history.dat"
 #endif /* XP_UNIX */
 
