@@ -2289,8 +2289,8 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 				const PRUnichar	*relUni = relItem.GetUnicode();
 				if (relUni)
 				{
-					// take out any characters that aren't numeric or "%"
 					nsAutoString	relStr(relUni);
+					// take out any characters that aren't numeric or "%"
 					PRInt32	len = relStr.Length();
 					for (PRInt32 x=len-1; x>=0; x--)
 					{
@@ -2312,24 +2312,31 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 						{
 							relStr += PRUnichar('%');
 						}
+						relItem = relStr;
 					}
 					else
 					{
-						relStr = "-";
-					}
-					
-					relUni = relStr.GetUnicode();
-
-					nsCOMPtr<nsIRDFLiteral>	relLiteral;
-					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(relUni, getter_AddRefs(relLiteral))))
-					{
-						if (relLiteral)
-						{
-							mDataSource->Assert(res, kNC_Relevance, relLiteral, PR_TRUE);
-						}
+						relItem.Truncate();
 					}
 				}
+			}
+			if (relItem.Length() < 1)
+			{
+				relItem = "-";
+			}
 
+			const PRUnichar *relItemUni = relItem.GetUnicode();
+			nsCOMPtr<nsIRDFLiteral>	relLiteral;
+			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(relItemUni, getter_AddRefs(relLiteral))))
+			{
+				if (relLiteral)
+				{
+					mDataSource->Assert(res, kNC_Relevance, relLiteral, PR_TRUE);
+				}
+			}
+
+			if ((relItem.Length() > 0) && (!relItem.Equals("-")))
+			{
 				// If its a percentage, remove "%"
 				if (relItem[relItem.Length()-1] == PRUnichar('%'))
 				{
@@ -2340,19 +2347,23 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 				nsAutoString	zero("000");
 				if (relItem.Length() < 3)
 				{
-					relItem.Insert(zero, 0, 3-relItem.Length()); 
+					relItem.Insert(zero, 0, zero.Length() - relItem.Length()); 
 				}
+			}
+			else
+			{
+				relItem = "000";
+			}
 
-				const PRUnichar	*relSortUni = relItem.GetUnicode();
-				if (relSortUni)
+			const PRUnichar	*relSortUni = relItem.GetUnicode();
+			if (relSortUni)
+			{
+				nsCOMPtr<nsIRDFLiteral>	relSortLiteral;
+				if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(relSortUni, getter_AddRefs(relSortLiteral))))
 				{
-					nsCOMPtr<nsIRDFLiteral>	relSortLiteral;
-					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(relSortUni, getter_AddRefs(relSortLiteral))))
+					if (relSortLiteral)
 					{
-						if (relSortLiteral)
-						{
-							mDataSource->Assert(res, kNC_RelevanceSort, relSortLiteral, PR_TRUE);
-						}
+						mDataSource->Assert(res, kNC_RelevanceSort, relSortLiteral, PR_TRUE);
 					}
 				}
 			}
