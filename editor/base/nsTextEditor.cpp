@@ -64,12 +64,9 @@ class nsIFrame;
 #include <strstrea.h>
 #endif
 
-#include "CreateElementTxn.h"
-
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
-// until there is a rules factory...
 #include "nsTextEditRules.h"
 
 
@@ -91,6 +88,7 @@ nsTextEditor::nsTextEditor()
 {
 // Done in nsEditor
 //  NS_INIT_REFCNT();
+  mRules = nsnull;
 }
 
 nsTextEditor::~nsTextEditor()
@@ -114,6 +112,9 @@ nsTextEditor::~nsTextEditor()
     }
     else
       NS_NOTREACHED("~nsTextEditor");
+  }
+  if (mRules) {
+    delete mRules;
   }
 }
 
@@ -180,11 +181,9 @@ NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     //erP->AddEventListener(mMouseListenerP, kIDOMMouseListenerIID);
 
     // instantiate the rules for this text editor
-    // XXX: we should get the rules from a factory
     // XXX: we should be told which set of rules to instantiate
-    nsIEditRules *rules = (nsIEditRules *) new nsTextEditRules();
-    rules->Init((nsIEditor *)this, nsnull);
-    mRules = do_QueryInterface(rules);
+    mRules =  new nsTextEditRules();
+    mRules->Init(this);
 
     result = NS_OK;
 
@@ -380,7 +379,28 @@ NS_IMETHODIMP nsTextEditor::RemoveTextProperty(nsIAtom *aProperty)
 
 NS_IMETHODIMP nsTextEditor::DeleteSelection(nsIEditor::Direction aDir)
 {
-  return nsEditor::DeleteSelection(aDir);
+  if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+
+  nsCOMPtr<nsIDOMSelection> selection;
+  PRBool cancel= PR_FALSE;
+
+  nsresult result = nsEditor::BeginTransaction();
+  if (NS_FAILED(result)) { return result; }
+
+  // pre-process
+  nsEditor::GetSelection(getter_AddRefs(selection));
+  result = mRules->WillDeleteSelection(selection, &cancel);
+  if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
+  {
+    result = nsEditor::DeleteSelection(aDir);
+    // post-process 
+    result = mRules->DidDeleteSelection(selection, result);
+  }
+
+  nsresult endTxnResult = nsEditor::EndTransaction();  // don't return this result!
+  NS_ASSERTION ((NS_SUCCEEDED(endTxnResult)), "bad end transaction result");
+
+  return result;
 }
 
 NS_IMETHODIMP nsTextEditor::InsertText(const nsString& aStringToInsert)
@@ -431,7 +451,7 @@ NS_IMETHODIMP nsTextEditor::InsertBreak()
     }
   }
   nsresult endTxnResult = nsEditor::EndTransaction();  // don't return this result!
-  NS_ASSERTION ((NS_SUCCEEDED(result)), "bad end transaction result");
+  NS_ASSERTION ((NS_SUCCEEDED(endTxnResult)), "bad end transaction result");
   return result;
 }
 
@@ -705,10 +725,10 @@ NS_IMETHODIMP nsTextEditor::OutputHTML(nsString& aOutputString)
 
 
 NS_IMETHODIMP nsTextEditor::SetTextPropertiesForNode(nsIDOMNode *aNode, 
-                                                nsIDOMNode *aParent,
-                                                PRInt32 aStartOffset,
-                                                PRInt32 aEndOffset,
-                                                nsIAtom *aPropName)
+                                                     nsIDOMNode *aParent,
+                                                     PRInt32 aStartOffset,
+                                                     PRInt32 aEndOffset,
+                                                     nsIAtom *aPropName)
 {
   nsresult result=NS_OK;
   nsCOMPtr<nsIDOMCharacterData>nodeAsChar;

@@ -19,9 +19,10 @@
 #ifndef nsTextEditRules_h__
 #define nsTextEditRules_h__
 
-#include "nsIEditRules.h"
 #include "nsIEditor.h"
 #include "nsCOMPtr.h"
+
+class nsTextEditor;
 
 
 /** Object that encapsulates HTML text-specific editing rules.
@@ -35,25 +36,25 @@
   * 2. Selection must not be explicitly set by the rule method.  
   *    Any manipulation of Selection must be done by the editor.
   */
-class nsTextEditRules  : public nsIEditRules
+class nsTextEditRules
 {
 public:
-
-  NS_DECL_ISUPPORTS
 
   nsTextEditRules();
   virtual ~nsTextEditRules();
 
-  NS_IMETHOD Init(nsIEditor *aEditor, nsIEditRules *aNextRule);
+  NS_IMETHOD Init(nsTextEditor *aEditor);
 
   NS_IMETHOD WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel);
   NS_IMETHOD DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult);
   NS_IMETHOD GetInsertBreakTag(nsIAtom **aTag);
 
+  NS_IMETHOD WillDeleteSelection(nsIDOMSelection *aSelection, PRBool *aCancel);
+  NS_IMETHOD DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResult);
+
 protected:
 
-  nsCOMPtr<nsIEditor> mEditor;
-  nsCOMPtr<nsIEditRules> mNextRule;  
+  nsTextEditor *mEditor;  // note that we do not refcount the editor
 
 };
 
