@@ -25,7 +25,6 @@ MODULE=intl
 REQUIRES	= xpcom \
 		  string \
 		  necko \
-		  locale \
 		  $(NULL)
 include <$(DEPTH)\config\config.mak>
 
@@ -33,12 +32,10 @@ LIBRARY_NAME=strres
 
 CPPSRCS =				\
 	nsStringBundle.cpp		\
-	nsAcceptLang.cpp \
 	$(NULL)
 
 CPP_OBJS =					\
 	.\$(OBJDIR)\nsStringBundle.obj		\
-	.\$(OBJDIR)\nsAcceptLang.obj		\
 	$(NULL)
 
 LIBRARY_NAME=strres

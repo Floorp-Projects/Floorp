@@ -34,10 +34,9 @@ MODULE_NAME	= nsStringBundleModule
 REQUIRES	= xpcom \
 		  string \
 		  necko \
-		  locale \
 		  $(NULL)
 
-CPPSRCS		= nsStringBundle.cpp nsAcceptLang.cpp
+CPPSRCS		= nsStringBundle.cpp
 
 EXTRA_DSO_LDOPTS =\
 		$(MOZ_NECKO_UTIL_LIBS) \

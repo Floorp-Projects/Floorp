@@ -44,24 +44,12 @@
 #include "nsIServiceManager.h"
 #include "nsID.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIStringBundle.h"
 #include "nsAcceptLang.h"
 
 /* define CID & IID */
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-/* util func */
-static PRUnichar *copyUnicode(const nsString str) {
-
-  PRInt32   len =  str.Length()+1;
-  PRUnichar *retval = (PRUnichar *) PR_Calloc(len, sizeof(PRUnichar));
-  retval = (PRUnichar *) memcpy(retval, str.get(), sizeof(PRUnichar)*len);
-  retval[len-1] = '\0';
-
-  return retval;
-}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -80,11 +68,11 @@ nsAcceptLang::~nsAcceptLang()
 
 // NS_IMPL_THREADSAFE_ISUPPORTS1(nsAcceptLang, nsIAcceptLang)
 
-/* wstring getAcceptLangFromLocale ([const] in wstring aLocale); */
+/* wstring getAcceptLangFromLocale (in wstring aLocale); */
 NS_IMETHODIMP
 nsAcceptLang::GetAcceptLangFromLocale(const PRUnichar *aLocale, PRUnichar **_retval)
 {
-  nsString lc_name(aLocale);
+  nsDependentString lc_name(aLocale);
   if (lc_name.Length() <=0) {
 #ifdef DEBUG
     printf("nsAcceptLang::GetAcceptLangFromLocale: aLocale is empty!");
@@ -101,26 +89,25 @@ nsAcceptLang::GetAcceptLangFromLocale(const PRUnichar *aLocale, PRUnichar **_ret
     return NS_ERROR_FAILURE;
   }
 
-  nsIStringBundle *bundle = nsnull;
+  nsCOMPtr<nsIStringBundle> bundle;
 #if 1
   res = sBundleService->CreateBundle("resource:/res/language.properties",
-                              &bundle);
+                                     getter_AddRefs(bundle));
 #else
   res = sBundleService->CreateBundle("chrome://global/locale/languageNames.properties",
-                              &bundle);
+                                     getter_AddRefs(bundle));
 #endif
   PRUnichar *ptrv = nsnull;
-  nsString  lc_tmp(aLocale);
+  nsAutoString  lc_tmp(aLocale);
   NS_NAMED_LITERAL_STRING(sAccept, ".accept");
   NS_NAMED_LITERAL_STRING(sTrue, "true");
 
   lc_tmp.ToLowerCase();
   lc_tmp.Append(sAccept);
   if (NS_OK == (res = bundle->GetStringFromName(lc_tmp.get(), &ptrv))) {
-    nsString tmp(ptrv);
-    if (tmp.Equals(sTrue)) {
+    if (sTrue.Equals(ptrv)) {
       // valid name already
-      *_retval = copyUnicode(lc_name);
+      *_retval = ToNewUnicode(lc_name);
       return res;
     }
   }
@@ -128,8 +115,8 @@ nsAcceptLang::GetAcceptLangFromLocale(const PRUnichar *aLocale, PRUnichar **_ret
   /* not in languageNames.properties; lang only?
    */
   PRInt32  dash = lc_tmp.FindCharInSet("-");
-  nsString lang;
-  nsString country;
+  nsAutoString lang;
+  nsAutoString country;
   if (dash > 0) {
     /* lang-country
      */
@@ -147,12 +134,11 @@ nsAcceptLang::GetAcceptLangFromLocale(const PRUnichar *aLocale, PRUnichar **_ret
   }
   
   // lang always in lower case; don't convert
-  *_retval = copyUnicode(lang);
+  *_retval = ToNewUnicode(lang);
   lang.Append(sAccept);
   if (NS_OK == (res = bundle->GetStringFromName(lang.get(), &ptrv))) {
 
-    nsString tmp(ptrv);
-    if (tmp.Equals(sTrue)) {
+    if (sTrue.Equals(ptrv)) {
       /* lang is accepted */
       return res;
     }
@@ -163,7 +149,7 @@ nsAcceptLang::GetAcceptLangFromLocale(const PRUnichar *aLocale, PRUnichar **_ret
   return NS_ERROR_FAILURE;
 }
 
-/* wstring getLocaleFromAcceptLang ([const] in wstring aName); */
+/* wstring getLocaleFromAcceptLang (in wstring aName); */
 NS_IMETHODIMP
 nsAcceptLang::GetLocaleFromAcceptLang(const PRUnichar *aName, PRUnichar **_retval)
 {
@@ -175,7 +161,7 @@ nsAcceptLang::GetLocaleFromAcceptLang(const PRUnichar *aName, PRUnichar **_retva
     return NS_ERROR_FAILURE;
   }
   
-  nsString acceptLang(aName);
+  nsAutoString acceptLang(aName);
 
   /* TODO: need to parse accept lang since "en; q=0.3, ja,... 
    */
@@ -185,7 +171,7 @@ nsAcceptLang::GetLocaleFromAcceptLang(const PRUnichar *aName, PRUnichar **_retva
   PRInt32   dash = acceptLang.FindCharInSet("-");
   if (dash > 0) {
     /* lang-country already */
-    *_retval = copyUnicode(acceptLang);
+    *_retval = ToNewUnicode(acceptLang);
     return res;
   }
   /* lang only 
@@ -208,8 +194,7 @@ nsAcceptLang::GetLocaleFromAcceptLang(const PRUnichar *aName, PRUnichar **_retva
   if (NS_OK == (res = bundle->GetStringFromName(acceptLang.get(), &ptrv))) {
     
     // valid name already
-    nsString lc_name(ptrv);
-    *_retval = copyUnicode(lc_name);
+    *_retval = ToNewUnicode(nsDependentString(ptrv));
   }
   else {
     /* shall we use system locale instead ? */
@@ -222,7 +207,7 @@ nsAcceptLang::GetLocaleFromAcceptLang(const PRUnichar *aName, PRUnichar **_retva
   return res;
 }
 
-/* wstring acceptLang2List ([const] in wstring aName, [const] in wstring aList); */
+/* wstring acceptLang2List (in wstring aName, in wstring aList); */
 NS_IMETHODIMP 
 nsAcceptLang::AcceptLang2List(const PRUnichar *aName, const PRUnichar *aList, PRUnichar **_retval)
 {
