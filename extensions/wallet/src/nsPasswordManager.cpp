@@ -263,3 +263,18 @@ NS_IMETHODIMP nsPasswordManager::AddReject(const nsACString& host)
   return ::SINGSIGN_AddReject(PromiseFlatCString(host).get());
 }
 
+NS_IMETHODIMP
+nsPasswordManager::AddUserFull(const nsACString& aKey,
+                               const nsAString& aUser,
+                               const nsAString& aPassword,
+                               const nsAString& aUserFieldName,
+                               const nsAString& aPassFieldName)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsPasswordManager::ReadPasswords(nsIFile* aPasswordFile)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
