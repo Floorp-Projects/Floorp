@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.41 2003/11/13 16:10:45 wchang0222%aol.com Exp $
+ * $Id: cert.h,v 1.42 2003/11/13 16:21:46 wchang0222%aol.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -248,7 +248,7 @@ CERT_CreateCertificateRequest (CERTName *name, CERTSubjectPublicKeyInfo *spki,
 extern void CERT_DestroyCertificateRequest(CERTCertificateRequest *r);
 
 /*
-** Extract a public key object from a SubjectPublicKeyInfo
+** Extract a public key object from a certificate
 */
 extern SECKEYPublicKey *CERT_ExtractPublicKey(CERTCertificate *cert);
 
