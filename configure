@@ -13854,19 +13854,19 @@ fi
 fi
 
 if test -z "$MOZ_NATIVE_NSPR"; then
+    # Hack to deal with the fact that we use NSPR_CFLAGS everywhere
+    echo "configure: warning: Recreating autoconf.mk with updated nspr-config output" 1>&2
     case "$target" in
     *-*-os2_vacpp)
         ;;
     *)
-        # Hack to deal with the fact that we use NSPR_CFLAGS everywhere
-        NSPR_CFLAGS=`./nsprpub/config/nspr-config --prefix=$MOZ_BUILD_ROOT/dist --exec-prefix=$MOZ_BUILD_ROOT/dist --cflags`
         NSPR_LIBS=`./nsprpub/config/nspr-config --prefix=$MOZ_BUILD_ROOT/dist --exec-prefix=$MOZ_BUILD_ROOT/dist --libs`
-        echo "configure: warning: Recreating autoconf.mk with updated nspr-config output" 1>&2
         $PERL -pi.bak -e "s {^NSPR_LIBS\s*=.*} {NSPR_LIBS = $NSPR_LIBS }" config/autoconf.mk
-        $PERL -pi.bak -e "s {^NSPR_CFLAGS\s*=.*} {NSPR_CFLAGS = $NSPR_CFLAGS }" config/autoconf.mk
-        rm -f config/autoconf.mk.bak
         ;;
     esac
+    NSPR_CFLAGS=`./nsprpub/config/nspr-config --prefix=$MOZ_BUILD_ROOT/dist --exec-prefix=$MOZ_BUILD_ROOT/dist --cflags`
+    $PERL -pi.bak -e "s {^NSPR_CFLAGS\s*=.*} {NSPR_CFLAGS = $NSPR_CFLAGS }" config/autoconf.mk
+    rm -f config/autoconf.mk.bak
 fi
 
 # if we're building the LDAP XPCOM component, we need to build 
