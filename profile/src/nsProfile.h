@@ -21,6 +21,7 @@
  */
 
 #include "nsIProfile.h"
+#include "nsIProfileStartupListener.h"
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsIRegistry.h"
@@ -54,17 +55,10 @@
 #define REGISTRY_VERSION_STRING	  "Version"
 #define REGISTRY_VERSION_1_0      "1.0"		
 
-class nsProfile: public nsIProfile, 
-                 public nsIURIContentListener, 
-                 public nsIInterfaceRequestor
+class nsProfile: public nsIProfile 
 {
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROFILE
-
-    // these are necessary if the profile manager is going to load urls for
-    // the registration stuff....
-    NS_DECL_NSIURICONTENTLISTENER
-    NS_DECL_NSIINTERFACEREQUESTOR
 
 private:
     nsresult ProcessArgs(nsICmdLineService *service,
@@ -72,7 +66,6 @@ private:
                             nsCString & profileURLStr);
     nsresult LoadDefaultProfileDir(nsCString & profileURLStr);
     PRBool mAutomigrate;
-    nsCOMPtr<nsIXULWindow> mPregWindow;
 
 public:
     nsProfile();
@@ -92,8 +85,5 @@ public:
     nsresult AutoMigrate();
 
     nsresult CreateDefaultProfile(void);
-    nsresult TriggerActivation(const PRUnichar *profileName);
-    nsresult CleanUp();
-    nsresult CheckDomain(PRBool *valid, const char *domainName);
 };
 

@@ -114,7 +114,7 @@ public:
     nsresult Get4xProfileInfo(const char *registryName);
     nsresult UpdateProfileArray();
     void SetPREGInfo(const char* pregInfo);
-    void GetPREGInfo(const PRUnichar *profileName, char** pregInfo);
+    void CheckRegString(const PRUnichar *profileName, char** regString);
     void FreeProfileMembers(nsVoidArray *aProfile, PRInt32 numElems);
 };
 
