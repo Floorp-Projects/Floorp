@@ -307,7 +307,7 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* ch
                           rv = inputElement->SetValue(value);
                           // warning! don't delete valueString
                         }
-                        delete[] nameString;
+                        Recycle(nameString);
                       }
                     }
                   }
