@@ -239,11 +239,7 @@ endif
 # This variable is used to get OS_CONFIG.mk.
 #
 
-ifeq ($(OS_ARCH),OS2)
-OS_CONFIG = $(OS_TARGET)
-else
 OS_CONFIG = $(OS_TARGET)$(OS_RELEASE)
-endif
 
 #
 # OBJDIR_TAG depends on the predefined variable BUILD_OPT,
