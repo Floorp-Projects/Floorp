@@ -14,7 +14,7 @@ Product Name=Mozilla Seamonkey
 ;   WINDISK
 ;   WINDIR
 ;   WINSYSDIR
-Path=[PROGRAMFILESDIR]\Netscape\Seamonkey
+Path=[PROGRAMFILESDIR]\Mozilla\Seamonkey
 
 ; Program Folder Path values:
 ;   COMMON_STARTUP
@@ -99,7 +99,7 @@ Show Dialog=TRUE
 Title=Welcome
 Message0=Welcome to %s Setup.
 Message1=It is strongly recommended that you exit all Windows programs before running this Setup program.
-Message2=Click Cancel to quit Setup and then close any programs you have running.  Click Next to continue the Setup Program.
+Message2=Click Cancel to quit Setup and then close any programs you have running.  Click Next to continue the Setup program.
 
 [Dialog License]
 Show Dialog=FALSE
@@ -111,7 +111,7 @@ Message1=Click Accept if you accept the terms of the preceeding license agreemen
 [Dialog Setup Type]
 Show Dialog=TRUE
 Title=Setup Type
-Message0=Click the type of Setup you prefer, then click Next.
+Message0=Click the type of setup you prefer, then click Next.
 Readme Filename=readme.txt
 Readme App=notepad.exe
 
@@ -140,7 +140,7 @@ C2=Component2
 
 [Setup Type2]
 Description Short=C&ustom
-Description Long=You may choose the options you want to install.  Recommended for advanced users.
+Description Long=You may choose the options you want to install.  Recommended for advanced users only.
 ;Description Short=&Pro
 ;Description Long=Program will be installed with all the options available.
 
@@ -193,11 +193,11 @@ Archive=
 
 [Dialog Program Folder]
 Show Dialog=TRUE
-Title=Program Folder
-Message0=Setup will add program icons to the Program Folder listed below.  You may type a new folder name, or select one from the existing folder list.  Click Next to continue.
+Title=Select Program Folder
+Message0=Setup will add program icons to the Program Folder listed below.  You may type a new folder name, or select one from the Existing Folder list.  Click Next to continue.
 
 [Dialog Start Install]
-Show Dialog=TRUE
+Show Dialog=FALSE
 Title=Start Install
 Message0=Setup has enough information to start copying the program files.  If you want to review or change settings, click Back.  If you are satisfied with the current settings, click Install to begin copying files.
 
@@ -278,7 +278,7 @@ url0=$URLPath$
 
 [Component2]
 Description Short=Mail & News
-Description Long=Seamonkey Mail & News
+Description Long=Seamonkey Mail && News
 Archive=mail.xpi
 $InstallSize$:mail
 $InstallSizeSystem$
