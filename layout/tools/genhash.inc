@@ -36,13 +36,12 @@
 @begin LENGTH_TABLE /static unsigned char lengthtable/ /};/
 @begin TAG_TABLE /static struct StaticNameTable *wordlist/ /};/
 @!
-
 /*
 ** This is a generated file, do not edit it. This file is created by
 ** genhash.pl
 */
 
-#include "plhash.h"
+#include "plstr.h"
 @classincl
 @include MACROS
 
