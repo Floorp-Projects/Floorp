@@ -386,15 +386,16 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 				        }
 				        content->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
 
-                // Also execute the oncommand handler on a key down.
-                // Execute the oncommand event handler.
-                nsEventStatus stat = nsEventStatus_eIgnore;
-                nsMouseEvent evt;
-                evt.eventStructType = NS_EVENT;
-                evt.message = NS_MENU_ACTION;
-                content->HandleDOMEvent(*aPresContext, &evt, nsnull, NS_EVENT_FLAG_INIT, stat);
-				    }
-    
+                if (aEventType == eKeyPress) {
+                  // Also execute the oncommand handler on a key press.
+                  // Execute the oncommand event handler.
+                  nsEventStatus stat = nsEventStatus_eIgnore;
+                  nsMouseEvent evt;
+                  evt.eventStructType = NS_EVENT;
+                  evt.message = NS_MENU_ACTION;
+                  content->HandleDOMEvent(*aPresContext, &evt, nsnull, NS_EVENT_FLAG_INIT, stat);
+				        }
+              }
 		          } while (PR_FALSE);
 		        } // end if (theChar == keyName)
 		      } // end if (disabled == "false")
