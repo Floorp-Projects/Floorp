@@ -176,8 +176,8 @@
 <!ENTITY aboutCmd.accesskey                     "O">
 
 <!-- Mac OS X "Window" menu items -->
-<!ENTITY windowMenu.label                       "Window">
-<!ENTITY minimizeWindow.label                   "Minimize">
-<!ENTITY zoomWindow.label                       "Zoom">
+<!ENTITY windowMenu.label                       "Okno">
+<!ENTITY minimizeWindow.label                   "Minimalizovať">
+<!ENTITY zoomWindow.label                       "Lupa">
 <!ENTITY minimizeWindow.key                     "M">
-<!ENTITY bringAllToFront.label                  "Bring All to Front">
+<!ENTITY bringAllToFront.label                  "Preniesť všetko do popredia">

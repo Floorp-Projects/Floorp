@@ -68,12 +68,12 @@
 <!ENTITY pref.dateformat.label      "Formát dátumu:" >
 <!ENTITY pref.dateformat.long       "Dlhý" >
 <!ENTITY pref.dateformat.short      "Krátky"  >
-<!ENTITY pref.dateformat.storeingmt "Store dates in Universal Time" >
+<!ENTITY pref.dateformat.storeingmt "Ukladať dátumy v Univerzálnom čase" >
 <!ENTITY pref.defaultlength.label   "Východzia dĺžka udalosti:" >
 <!ENTITY pref.defaultsnoozelength.label   "Východzia dĺžka periódy:" >
 
 <!ENTITY pref.weekstarts.label     "Prvý deň týždňa:" >
-<!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
+<!ENTITY pref.daysoff.label     "Neaktívne dni v každom týždni:" >
 
 <!ENTITY pref.numberofweeks.label     "Východzí počet týždňov:" >
 <!ENTITY pref.numberofweeks.0      "Žiadny" >
