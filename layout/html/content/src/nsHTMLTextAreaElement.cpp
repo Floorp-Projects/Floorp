@@ -319,12 +319,7 @@ nsHTMLTextAreaElement::StringToAttribute(nsIAtom* aAttribute,
                                          const nsString& aValue,
                                          nsHTMLValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::align) {
-    if (nsGenericHTMLElement::ParseFormAlignValue(aValue, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::disabled) {
+  if (aAttribute == nsHTMLAtoms::disabled) {
     aResult.SetEmptyValue();
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
@@ -352,12 +347,6 @@ nsHTMLTextAreaElement::AttributeToString(nsIAtom* aAttribute,
                                          nsHTMLValue& aValue,
                                          nsString& aResult) const
 {
-  if (aAttribute == nsHTMLAtoms::align) {
-    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      nsGenericHTMLElement::FormAlignValueToString(aValue, aResult);
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 

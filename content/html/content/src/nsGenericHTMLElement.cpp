@@ -1246,15 +1246,16 @@ nsGenericHTMLElement::ColorToString(const nsHTMLValue& aValue,
 static nsGenericHTMLElement::EnumTable kAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
+
   { "texttop", NS_STYLE_VERTICAL_ALIGN_TEXT_TOP },
   { "baseline", NS_STYLE_VERTICAL_ALIGN_BASELINE },
-  { "center", NS_STYLE_TEXT_ALIGN_CENTER },
+  { "center", NS_STYLE_VERTICAL_ALIGN_MIDDLE },
   { "bottom", NS_STYLE_VERTICAL_ALIGN_BOTTOM },
   { "top", NS_STYLE_VERTICAL_ALIGN_TOP },
   { "middle", NS_STYLE_VERTICAL_ALIGN_MIDDLE },
   { "absbottom", NS_STYLE_VERTICAL_ALIGN_BOTTOM },
-  { "abscenter", NS_STYLE_VERTICAL_ALIGN_MIDDLE },
-  { "absmiddle", NS_STYLE_VERTICAL_ALIGN_MIDDLE },
+  { "abscenter", NS_STYLE_VERTICAL_ALIGN_MIDDLE },/* XXX not the same as ebina */
+  { "absmiddle", NS_STYLE_VERTICAL_ALIGN_MIDDLE },/* XXX ditto */
   { 0 }
 };
 
@@ -1264,15 +1265,6 @@ static nsGenericHTMLElement::EnumTable kDivAlignTable[] = {
   { "center", NS_STYLE_TEXT_ALIGN_CENTER },
   { "middle", NS_STYLE_TEXT_ALIGN_CENTER },
   { "justify", NS_STYLE_TEXT_ALIGN_JUSTIFY },
-  { 0 }
-};
-
-static nsGenericHTMLElement::EnumTable kFormAlignTable[] = {
-  { "left", NS_STYLE_TEXT_ALIGN_LEFT },
-  { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
-  { "bottom", NS_STYLE_VERTICAL_ALIGN_BOTTOM },
-  { "top", NS_STYLE_VERTICAL_ALIGN_TOP },
-  { "middle", NS_STYLE_VERTICAL_ALIGN_MIDDLE },
   { 0 }
 };
 
@@ -1352,20 +1344,6 @@ nsGenericHTMLElement::AlignValueToString(const nsHTMLValue& aValue,
                                          nsString& aResult)
 {
   return EnumValueToString(aValue, kAlignTable, aResult);
-}
-
-PRBool
-nsGenericHTMLElement::ParseFormAlignValue(const nsString& aString,
-                                          nsHTMLValue& aResult)
-{
-  return ParseEnumValue(aString, kFormAlignTable, aResult);
-}
-
-PRBool
-nsGenericHTMLElement::FormAlignValueToString(const nsHTMLValue& aValue,
-                                             nsString& aResult)
-{
-  return EnumValueToString(aValue, kFormAlignTable, aResult);
 }
 
 PRBool

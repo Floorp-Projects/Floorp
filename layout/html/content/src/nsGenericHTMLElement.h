@@ -145,9 +145,6 @@ public:
 
   static PRBool ParseAlignValue(const nsString& aString, nsHTMLValue& aResult);
 
-  static PRBool ParseFormAlignValue(const nsString& aString,
-                                    nsHTMLValue& aResult);
-
   static PRBool ParseDivAlignValue(const nsString& aString,
                                    nsHTMLValue& aResult);
 
@@ -166,8 +163,6 @@ public:
   static PRBool AlignValueToString(const nsHTMLValue& aValue,
                                    nsString& aResult);
 
-  static PRBool FormAlignValueToString(const nsHTMLValue& aValue,
-                                       nsString& aResult);
   static PRBool DivAlignValueToString(const nsHTMLValue& aValue,
                                       nsString& aResult);
 

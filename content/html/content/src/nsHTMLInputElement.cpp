@@ -130,6 +130,12 @@ protected:
   nsIWidget*               mWidget; // XXX this needs to go away when FindFrameWithContent is efficient
   nsIForm*                 mForm;
   PRInt32                  mType;
+
+  PRBool IsImage() const {
+    nsAutoString tmp;
+    mInner.GetAttribute(nsHTMLAtoms::type, tmp);
+    return tmp.EqualsIgnoreCase("image");
+  }
 };
 
 // construction, destruction
@@ -455,8 +461,8 @@ static nsGenericHTMLElement::EnumTable kInputTypeTable[] = {
 
 NS_IMETHODIMP
 nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
-                               const nsString& aValue,
-                               nsHTMLValue& aResult)
+                                      const nsString& aValue,
+                                      nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::type) {
     nsGenericHTMLElement::EnumTable *table = kInputTypeTable;
@@ -503,8 +509,9 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
     nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
-  else if (aAttribute == nsHTMLAtoms::align) {
-    if (nsGenericHTMLElement::ParseFormAlignValue(aValue, aResult)) {
+  else if (IsImage()) {
+    if (nsGenericHTMLElement::ParseImageAttribute(aAttribute,
+                                                  aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -517,8 +524,8 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLInputElement::AttributeToString(nsIAtom* aAttribute,
-                               nsHTMLValue& aValue,
-                               nsString& aResult) const
+                                      nsHTMLValue& aValue,
+                                      nsString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::type) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
@@ -526,11 +533,10 @@ nsHTMLInputElement::AttributeToString(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  else if (aAttribute == nsHTMLAtoms::align) {
-    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      nsGenericHTMLElement::FormAlignValueToString(aValue, aResult);
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  else if (IsImage() &&
+           nsGenericHTMLElement::ImageAttributeToString(aAttribute,
+                                                        aValue, aResult)) {
+    return NS_CONTENT_ATTR_HAS_VALUE;
   }
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
