@@ -71,7 +71,8 @@ public:
 
 // MEMBER VARIABLES
 protected: 
-  nsSupportsHashtable* mBindingTable; 
+  nsSupportsHashtable* mBindingTable;
+  nsSupportsHashtable* mDocumentTable;
 };
 
 
@@ -87,12 +88,14 @@ nsBindingManager::nsBindingManager(void)
 {
   NS_INIT_REFCNT();
 
-  mBindingTable = nsnull;  
+  mBindingTable = nsnull;
+  mDocumentTable = nsnull;
 }
 
 nsBindingManager::~nsBindingManager(void)
 {
   delete mBindingTable;
+  delete mDocumentTable;
 }
 
 NS_IMETHODIMP

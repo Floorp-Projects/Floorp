@@ -2252,19 +2252,7 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
         aContext->AddNamedReference((void*) &mScriptObject, mScriptObject, rootname);
     }
 
-    void* object = nsnull;
-    if (mDocument) {
-      nsCOMPtr<nsIBindingManager> bindingManager;
-      mDocument->GetBindingManager(getter_AddRefs(bindingManager));
-      nsCOMPtr<nsIXBLBinding> binding;
-      bindingManager->GetBinding(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(binding));
-      if (binding) {
-        nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(binding));
-        owner->GetScriptObject(aContext, &object);
-      }
-    }
-
-    *aScriptObject = object ? object : mScriptObject;
+    *aScriptObject = mScriptObject;
     
     return rv;
 }

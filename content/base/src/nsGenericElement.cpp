@@ -1598,18 +1598,7 @@ nsGenericElement::GetScriptObject(nsIScriptContext* aContext,
     }
   }
   
-  void* object = nsnull;
-  if (mDocument) {
-    nsCOMPtr<nsIBindingManager> bindingManager;
-    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
-    nsCOMPtr<nsIXBLBinding> binding;
-    bindingManager->GetBinding(mContent, getter_AddRefs(binding));
-    if (binding) {
-      nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(binding));
-      owner->GetScriptObject(aContext, &object);
-    }
-  }
-  *aScriptObject = object ? object : slots->mScriptObject;
+  *aScriptObject = slots->mScriptObject;
   return res;
 }
 

@@ -47,6 +47,7 @@
 
 #include "nsIXBLBinding.h"
 #include "nsIChromeRegistry.h"
+#include "nsIPref.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
@@ -163,6 +164,8 @@ protected:
 
   static PRUint32 gRefCnt;                   // A count of XBLservice instances.
 
+  static PRBool gDisableChromeCache;
+
   // XBL Atoms
   static nsIAtom* kExtendsAtom; 
   static nsIAtom* kHasChildrenAtom;
@@ -182,6 +185,10 @@ nsINameSpaceManager* nsXBLService::gNameSpaceManager = nsnull;
 nsIAtom* nsXBLService::kExtendsAtom = nsnull;
 nsIAtom* nsXBLService::kHasChildrenAtom = nsnull;
 nsIAtom* nsXBLService::kURIAtom = nsnull;
+
+// Enabled by default. Must be over-ridden to disable
+PRBool nsXBLService::gDisableChromeCache = PR_FALSE;
+static const char kDisableChromeCachePref[] = "nglayout.debug.disable_xul_cache";
 
 PRInt32 nsXBLService::kNameSpaceID_XBL;
 
@@ -218,6 +225,11 @@ nsXBLService::nsXBLService(void)
     kExtendsAtom = NS_NewAtom("extends");
     kHasChildrenAtom = NS_NewAtom("haschildren");
     kURIAtom = NS_NewAtom("uri");
+
+    // Find out if the XUL cache is on or off
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    if (NS_SUCCEEDED(rv))
+      prefs->GetBoolPref(kDisableChromeCachePref, &gDisableChromeCache);
   }
 }
 
