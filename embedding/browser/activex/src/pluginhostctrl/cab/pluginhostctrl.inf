@@ -1,0 +1,20 @@
+; pluginhostctrl.inf
+[version]
+signature="$CHICAGO$"
+AdvancedINF=2.0
+
+[Add.Code]
+pluginhostctrl.dll=pluginhostctrl.dll
+atl.dll=atl.dll
+
+; Required DLLs
+
+[atl.dll]
+file-win32-x86=thiscab
+DestDir=11
+RegisterServer=yes
+
+[pluginhostctrl.dll]
+file-win32-x86=thiscab
+clsid={DBB2DE32-61F1-4F7F-BEB8-A37F5BC24EE2}
+RegisterServer=yes
