@@ -80,7 +80,5 @@ MOZ_POST_DSO_LIB_COMMAND = rc $(RES_FILE)
 $(SHARED_LIBRARY): $(OBJS) $(RES_FILE)
 
 $(RES_FILE): $(srcdir)/libprint.rc
-	cp $(srcdir)/libprint.ico ./libprint.ico
-	cp $(srcdir)/libprres.h ./libprres.h
-	rc -r $(srcdir)/libprint.rc
+	rc -r -I $(srcdir) $(srcdir)/libprint.rc
 
