@@ -44,3 +44,7 @@
   padding-top: 8px;
   padding-bottom: 8px;
 }
+
+#palette-box > hbox {
+  min-height: 8em;
+}
