@@ -47,19 +47,23 @@ pairs associated with each key. Each key also keeps a default value.
 <br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CLSID</tt>
 <br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 "<i>CLSID-string"</i>&nbsp;&nbsp;&nbsp; "<i>class name"</i></tt>
-<br><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<br><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
 </i>ProgID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "<i>component.class.version"</i></tt>
-<br><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<br><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
 </i>InprocServer&nbsp; "<i>full-path-name"</i></tt>
 <br><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</i>&nbsp;&nbsp;&nbsp;
 LastModTimeStamp<sup><font color="#990000">*</font></sup>&nbsp;&nbsp; <i>time-value</i></tt>
-<br><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</i>FileSize<sup><font color="#990000">*</font></sup>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<br><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+</i>FileSize<sup><font color="#990000">*</font></sup>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
 <i>nbytes</i></tt>
-<br><tt>&nbsp;&nbsp;&nbsp; "<i>component.class.version"&nbsp;&nbsp;&nbsp;
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "<i>component.class.version"&nbsp;&nbsp;&nbsp;
 "class name"</i></tt>
-<br><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </i>CLSID<i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-"CLSID-string"</i></tt></blockquote>
+<br><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</i>CLSID<i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "CLSID-string"</i></tt></blockquote>
 
 <p><br><tt><sup><font color="#990000">*</font> </sup></tt>Automatically
 added by the Repository
@@ -192,11 +196,11 @@ Need support for questions like:</li>
 Enumerate all CLSIDs that implement a particular interface.</li>
 
 <li>
-Let a particular CLSID be the preferable implementation for an interface.<br>
-I dont know how this a XPCOM component user could use it unless there could
-be a call like:<br>
-<tt>nsIRepository::CreateInstance(<b>NULL</b>, NULL, nsWidgetIID, &amp;result);</tt></li>
+Let a particular CLSID be the preferable implementation for an interface.</li>
 
+<br>I dont know how this a XPCOM component user could use it unless there
+could be a call like:
+<br><tt>nsIRepository::CreateInstance(<b>NULL</b>, NULL, nsWidgetIID, &amp;result);</tt>
 <li>
 Enumerate all interfaces supported by a CLSID</li>
 </ol>
@@ -208,8 +212,8 @@ Resolving naming conflicts between ProgID</li>
 Store component specific name-values under <tt>ROOTKEY_COMMON\\<i>component.class.version\\</i></tt></li>
 
 <li>
-Add a registry entry under <tt>ROOTKEY_COMMON\\<i>component.class.version\\</i></tt><i>
-</i>to indicate the willingness for a CLSID to behave as a Service.</li>
+Add a registry entry under <tt>ROOTKEY_COMMON\\<i>component.class.version\\</i></tt>to
+indicate the willingness for a CLSID to behave as a Service.</li>
 
 <li>
 Add quick registration support functions in <tt>nsIRepository</tt> for
