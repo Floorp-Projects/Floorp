@@ -41,15 +41,23 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: baseutils.h,v 1.2 1999/11/15 07:12:43 nisheeth%netscape.com Exp $
+ * $Id: baseutils.h,v 1.3 2000/02/02 18:17:30 tomk%mitre.org Exp $
  */
 
 // Basic Definitions used throughout many of these classes
+
+//
+// Modification History:
+// Who  When        What
+// TK   01/31/2000  Added UInt32 to provide a common unsigned integer.
+//
+
 
 #ifndef MITRE_BASEUTILS_H
 #define MITRE_BASEUTILS_H
 
 typedef int Int32;
+typedef unsigned int UInt32;
 
 typedef Int32 MBool;
 

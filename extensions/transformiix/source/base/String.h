@@ -66,7 +66,44 @@
 //                 since 0, is a valid character, and this makes my code more compatible
 //                 with Java
 // KV  08/11/1999  removed PRBool, uses baseutils.h (MBool)
-
+// TK  12/03/1999  Made some of the interface functions virtual, to support
+//                 wrapping Mozilla nsStrings in a String interface
+// TK  12/09/1999  Since "String" can be extended, we can not be certin of its
+//                 implementation, therefore any function accepting a String
+//                 object as an argument must only deal with its public
+//                 interface.  The following member functions have been
+//                 modified: append, insert, replace, indexOf, isEqual,
+//                           lastIndexOf, and subString
+//
+//                 Modified subString(Int32 start, String& dest) to simmply
+//                 call subString(Int32 start, Int32 end, String& dest).  This
+//                 helps with code reuse.
+//
+//                 Made ConvetInt a protected member function so it is
+//                 available to classes derrived from String.  This is possible
+//                 since the implementation of ConvertInt only uses the public
+//                 interface of String
+//
+//                 Made UnicodeLength a protected member function since it
+//                 only calculates the length of a null terminated UNICODE_CHAR
+//                 array.
+// TK  12/17/1999  To support non-null terminated UNICODE_CHAR* arrays, an
+//                 additional insert function has been added that accepts a
+//                 length parameter.
+//
+//                 Modified append(const UNICODE_CHAR* source) to simply
+//                 calculate the length of the UNICODE_CHAR array, and then
+//                 defer its processing to
+//                 append(const UNICODE_CHAR* source, Int32 sourceLength)
+// TK  12/21/1999  To support non-null terminated UNICODE_CHAR* arrays, an
+//                 additional replace function has been added that accepts a
+//                 length parameter.
+//
+//                 Modified replace(Int32 offset, const UNICODE_CHAR* source)
+//                 to simply call the new replace function passing the computed
+//                 length of the null terminated UNICODE_CHAR array.
+// TK  12/22/1999  Enhanced Trim() to to remove additional "white space"
+//                 characters (added \n, \t, and \r).
 
 #ifndef MITRE_STRING
 #define MITRE_STRING
@@ -99,64 +136,70 @@ class String : public MITREObject
 
 
     //Assign source to this string
-    String& operator=(const String& source);
-    String& operator=(const char* source);
-    String& operator=(const UNICODE_CHAR* source);
-    String& operator=(Int32 source);
+    virtual String& operator=(const String& source);
+    virtual String& operator=(const char* source);
+    virtual String& operator=(const UNICODE_CHAR* source);
+    virtual String& operator=(Int32 source);
 
     //Grow buffer if necessary and append the source
-    void append(UNICODE_CHAR source);
-    void append(char source);
-    void append(const String& source);
-    void append(const char* source);
-    void append(const UNICODE_CHAR* source);
-    void append(const UNICODE_CHAR* source, Int32 length);
-    void append(Int32 source);
+    virtual void append(UNICODE_CHAR source);
+    virtual void append(char source);
+    virtual void append(const String& source);
+    virtual void append(const char* source);
+    virtual void append(const UNICODE_CHAR* source);
+    virtual void append(const UNICODE_CHAR* source, Int32 length);
+    virtual void append(Int32 source);
 
     //Provide the ability to insert data into the middle of a string
-    void insert(Int32 offset, const UNICODE_CHAR source);
-    void insert(Int32 offset, const char source);
-    void insert(Int32 offset, const String& source);
-    void insert(Int32 offset, const char* source);
-    void insert(Int32 offset, const UNICODE_CHAR* source);
-    void insert(Int32 offset, Int32 source);
+    virtual void insert(Int32 offset, const UNICODE_CHAR source);
+    virtual void insert(Int32 offset, const char source);
+    virtual void insert(Int32 offset, const String& source);
+    virtual void insert(Int32 offset, const char* source);
+    virtual void insert(Int32 offset, const UNICODE_CHAR* source);
+    virtual void insert(Int32 offset, const UNICODE_CHAR* source,
+                        Int32 sourceLength);
+    virtual void insert(Int32 offset, Int32 source);
 
     //Provide the ability to replace one or more characters
-    void replace(Int32 offset, const UNICODE_CHAR source);
-    void replace(Int32 offset, const char source);
-    void replace(Int32 offset, const String& source);
-    void replace(Int32 offset, const char* source);
-    void replace(Int32 offset, const UNICODE_CHAR* source);
-    void replace(Int32 offset, Int32 source);
+    virtual void replace(Int32 offset, const UNICODE_CHAR source);
+    virtual void replace(Int32 offset, const char source);
+    virtual void replace(Int32 offset, const String& source);
+    virtual void replace(Int32 offset, const char* source);
+    virtual void replace(Int32 offset, const UNICODE_CHAR* source);
+    virtual void replace(Int32 offset, const UNICODE_CHAR* source,
+                         Int32 srcLength);
+    virtual void replace(Int32 offset, Int32 source);
 
     //Provide the ability to delete a range of charactes
-    void deleteChars(Int32 offset, Int32 count);
+    virtual void deleteChars(Int32 offset, Int32 count);
 
     /**
      * Returns the character at index.
      * If the index is out of bounds, -1 will be returned.
     **/
-    UNICODE_CHAR charAt(Int32 index) const;
+    virtual UNICODE_CHAR charAt(Int32 index) const;
 
-    void clear();                 //Clear string
+    virtual void clear();                 //Clear string
 
-    void ensureCapacity(Int32 capacity); //Make sure buffer is at least 'size'
+    virtual void ensureCapacity(Int32 capacity); //Make sure buffer is at least
+                                                 //'size'
 
     //Returns index of first occurrence of data
-    Int32 indexOf(UNICODE_CHAR data) const;
-    Int32 indexOf(UNICODE_CHAR data, Int32 offset) const;
-    Int32 indexOf(const String& data) const;
-    Int32 indexOf(const String& data, Int32 offset) const;
+    virtual Int32 indexOf(UNICODE_CHAR data) const;
+    virtual Int32 indexOf(UNICODE_CHAR data, Int32 offset) const;
+    virtual Int32 indexOf(const String& data) const;
+    virtual Int32 indexOf(const String& data, Int32 offset) const;
 
-    MBool isEqual(const String& data) const; //Check equality between strings
+    virtual MBool isEqual(const String& data) const; //Check equality between
+                                                     //strings
 
     //Returns index of last occurrence of data
-    Int32 lastIndexOf(UNICODE_CHAR data) const;
-    Int32 lastIndexOf(UNICODE_CHAR data, Int32 offset) const;
-    Int32 lastIndexOf(const String& data) const;
-    Int32 lastIndexOf(const String& data, Int32 offset) const;
+    virtual Int32 lastIndexOf(UNICODE_CHAR data) const;
+    virtual Int32 lastIndexOf(UNICODE_CHAR data, Int32 offset) const;
+    virtual Int32 lastIndexOf(const String& data) const;
+    virtual Int32 lastIndexOf(const String& data, Int32 offset) const;
 
-    Int32 length() const;               //Returns the length of the string
+    virtual Int32 length() const;               //Returns the length
 
     /**
      * Sets the Length of this String, if length is less than 0, it will
@@ -164,7 +207,7 @@ class String : public MITREObject
      * and padded with '\0' null characters. Otherwise the String
      * will be truncated
     **/
-    void setLength(Int32 length);
+    virtual void setLength(Int32 length);
 
     /**
      * Sets the Length of this String, if length is less than 0, it will
@@ -172,29 +215,38 @@ class String : public MITREObject
      * and padded with given pad character. Otherwise the String
      * will be truncated
     **/
-    void setLength(Int32 length, UNICODE_CHAR padChar);
+    virtual void setLength(Int32 length, UNICODE_CHAR padChar);
 
     /**
      * Returns a substring starting at start
      * Note: the dest String is cleared before use
     **/
-    String& subString(Int32 start, String& dest) const;
+    virtual String& subString(Int32 start, String& dest) const;
 
     /**
      * Returns the subString starting at start and ending at end
      * Note: the dest String is cleared before use
     **/
-    String& subString(Int32 start, Int32 end, String& dest) const;
+    virtual String& subString(Int32 start, Int32 end, String& dest) const;
 
     //Convert the internal rep. to a char buffer
-    char* toChar(char* dest) const;
-    UNICODE_CHAR* toUnicode(UNICODE_CHAR* dest) const;
+    virtual char* toChar(char* dest) const;
+    virtual UNICODE_CHAR* toUnicode(UNICODE_CHAR* dest) const;
+    virtual const UNICODE_CHAR* toUnicode() const;
 
-    void toLowerCase();           //Convert string to lowercase
-    void toUpperCase();           //Convert string to uppercase
-    void trim();                  //Trim whitespace from both ends of string
+    virtual void toLowerCase();           //Convert string to lowercase
+    virtual void toUpperCase();           //Convert string to uppercase
+    virtual void trim();                  //Trim whitespace from both ends
 
-    void reverse();               //Reverse the string
+    virtual void reverse();               //Reverse the string
+
+  protected:
+    //Convert an Int into a String
+    //TK 12/09/1999 - Make this function available to Derrived classes
+    String& ConvertInt(Int32 value, String& target);
+
+    //Calculates the length of a null terminated UNICODE_CHAR array
+    Int32 UnicodeLength(const UNICODE_CHAR* data);
 
   private:
     Int32     strLength;
@@ -208,11 +260,7 @@ class String : public MITREObject
     MBool isEqual(const UNICODE_CHAR* data, const UNICODE_CHAR* search,
                    Int32 length) const;
 
-    //Convert an Int into a String
-    String& ConvertInt(Int32 value, String& target);
 
-    //Calculates the length of a null terminated UNICODE_CHAR array
-    Int32 UnicodeLength(const UNICODE_CHAR* data);
 };
 
 ostream& operator<<(ostream& output, const String& source);
