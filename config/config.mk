@@ -168,9 +168,9 @@ FINAL_LINK_COMP_NAMES = $(DEPTH)/config/final-link-comp-names
 # 
 NSS_LIBS	= \
 	$(DIST)/lib/libcrmf.$(LIB_SUFFIX) \
-	$(DIST)/lib/libssl3.$(LIB_SUFFIX) \
-	$(DIST)/lib/libnss3.$(LIB_SUFFIX) \
-	$(DIST)/lib/libssl3.$(LIB_SUFFIX) \
+	$(DIST)/lib/libssl.$(LIB_SUFFIX) \
+	$(DIST)/lib/libnss.$(LIB_SUFFIX) \
+	$(DIST)/lib/libssl.$(LIB_SUFFIX) \
 	$(DIST)/lib/libpkcs12.$(LIB_SUFFIX) \
 	$(DIST)/lib/libpkcs7.$(LIB_SUFFIX) \
 	$(DIST)/lib/libcerthi.$(LIB_SUFFIX) \
@@ -180,7 +180,7 @@ NSS_LIBS	= \
 	$(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
 	$(DIST)/lib/libsoftoken.$(LIB_SUFFIX) \
 	$(DIST)/lib/libcertdb.$(LIB_SUFFIX) \
-	$(DIST)/lib/libfreebl_3.$(LIB_SUFFIX) \
+	$(DIST)/lib/libfreebl.$(LIB_SUFFIX) \
 	$(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
 	$(DIST)/lib/libdbm.$(LIB_SUFFIX) \
 	$(NULL)
