@@ -25,6 +25,7 @@
 #include "nsIViewManager.h"
 #include "nsIPresShell.h"
 #include "nsIFrameImageLoader.h"
+#include "nsIStyleContext.h"
 #include "nsGlobalVariables.h"
 
 #define BORDER_FULL    0        //entire side
@@ -913,6 +914,7 @@ void nsCSSRendering::DrawDashedSides(PRIntn startSide,
     skippedSide = PR_FALSE;
   }
 }
+
 // XXX improve this to constrain rendering to the damaged area
 void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
                                  nsIRenderingContext& aRenderingContext,
@@ -982,6 +984,104 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
              inside, outside, printing, twipsPerPixel, aGap);
   }
 }
+
+// XXX improve this to constrain rendering to the damaged area
+void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
+                                      nsIRenderingContext& aRenderingContext,
+                                      nsIFrame* aForFrame,
+                                      const nsRect& aDirtyRect,
+                                      const nsRect& aBounds,
+                                      nsBorderEdges * aBorderEdges,
+                                      PRIntn aSkipSides,
+                                      nsRect* aGap)
+{
+  //PRIntn    cnt;
+  PRBool    printing = nsGlobalVariables::Instance()->GetPrinting(&aPresContext);
+  if (nsnull==aBorderEdges) {  // Empty border segments
+    return;
+  }
+
+  // Turn off rendering for all of the zero sized sides
+  if (0 == aBorderEdges->mMaxBorderWidth.top) 
+    aSkipSides |= (1 << NS_SIDE_TOP);
+  if (0 == aBorderEdges->mMaxBorderWidth.right) 
+    aSkipSides |= (1 << NS_SIDE_RIGHT);
+  if (0 == aBorderEdges->mMaxBorderWidth.bottom) 
+    aSkipSides |= (1 << NS_SIDE_BOTTOM);
+  if (0 == aBorderEdges->mMaxBorderWidth.left) 
+    aSkipSides |= (1 << NS_SIDE_LEFT);
+
+  nsRect inside(aBounds);
+  nsRect outside(inside);
+  outside.Deflate(aBorderEdges->mMaxBorderWidth);
+
+/* XXX ignoring dotted and dashed for now */
+#if 0
+  //see if any sides are dotted or dashed
+  for (cnt = 0; cnt < 4; cnt++) {
+    if ((aStyle.GetBorderStyle(cnt) == NS_STYLE_BORDER_STYLE_DOTTED) || 
+        (aStyle.GetBorderStyle(cnt) == NS_STYLE_BORDER_STYLE_DASHED))  {
+      break;
+    }
+  }
+  if (cnt < 4) {
+    DrawDashedSides(cnt, aRenderingContext,aStyle,
+                    inside, outside, aSkipSides, aGap);
+  }
+#endif    //XXX
+
+  // Draw all the other sides
+  nscoord twipsPerPixel = (nscoord)aPresContext.GetPixelsToTwips();
+  if (0 == (aSkipSides & (1<<NS_SIDE_TOP))) {
+    PRInt32 segmentCount = aBorderEdges->mEdges[NS_SIDE_TOP].Count();
+    PRInt32 i;
+    for (i=0; i<segmentCount; i++)
+    {
+      nsBorderEdge * borderEdge =  (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_TOP].ElementAt(i));
+      DrawSide(aRenderingContext, NS_SIDE_TOP,
+               borderEdge->mStyle,
+               borderEdge->mColor,
+               inside, outside, printing, twipsPerPixel, aGap);
+    }
+  }
+  if (0 == (aSkipSides & (1<<NS_SIDE_LEFT))) {
+    PRInt32 segmentCount = aBorderEdges->mEdges[NS_SIDE_LEFT].Count();
+    PRInt32 i;
+    for (i=0; i<segmentCount; i++)
+    {
+      nsBorderEdge * borderEdge =  (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_LEFT].ElementAt(i));
+      DrawSide(aRenderingContext, NS_SIDE_LEFT,
+               borderEdge->mStyle,
+               borderEdge->mColor,
+               inside, outside, printing, twipsPerPixel, aGap);
+    }
+  }
+  if (0 == (aSkipSides & (1<<NS_SIDE_BOTTOM))) {
+    PRInt32 segmentCount = aBorderEdges->mEdges[NS_SIDE_BOTTOM].Count();
+    PRInt32 i;
+    for (i=0; i<segmentCount; i++)
+    {
+      nsBorderEdge * borderEdge =  (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_BOTTOM].ElementAt(i));
+      DrawSide(aRenderingContext, NS_SIDE_LEFT,
+               borderEdge->mStyle,
+               borderEdge->mColor,
+               inside, outside, printing, twipsPerPixel, aGap);
+    }
+  }
+  if (0 == (aSkipSides & (1<<NS_SIDE_RIGHT))) {
+    PRInt32 segmentCount = aBorderEdges->mEdges[NS_SIDE_RIGHT].Count();
+    PRInt32 i;
+    for (i=0; i<segmentCount; i++)
+    {
+      nsBorderEdge * borderEdge =  (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_RIGHT].ElementAt(i));
+      DrawSide(aRenderingContext, NS_SIDE_LEFT,
+               borderEdge->mStyle,
+               borderEdge->mColor,
+               inside, outside, printing, twipsPerPixel, aGap);
+    }
+  }
+}
+
 
 //----------------------------------------------------------------------
 

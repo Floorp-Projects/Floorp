@@ -42,6 +42,27 @@ public:
                           nsRect* aGap = 0);
 
   /**
+   * Just like PaintBorder, but takes as input a list of border segments
+   * rather than a single border style.  Useful for any object that needs to
+   * draw a border where an edge is not necessarily homogenous.
+   * Render the border for an element using css rendering rules
+   * for borders. aSkipSides is a bitmask of the sides to skip
+   * when rendering. If 0 then no sides are skipped.
+   *
+   * Both aDirtyRect and aBounds are in the local coordinate space
+   * of aForFrame
+   */
+  static void PaintBorderEdges(nsIPresContext& aPresContext,
+                               nsIRenderingContext& aRenderingContext,
+                               nsIFrame* aForFrame,
+                               const nsRect& aDirtyRect,
+                               const nsRect& aBounds,
+                               nsBorderEdges * aBorderEdges,
+                               PRIntn aSkipSides,
+                               nsRect* aGap = 0);
+
+
+  /**
    * Render the background for an element using css rendering rules
    * for backgrounds.
    *
