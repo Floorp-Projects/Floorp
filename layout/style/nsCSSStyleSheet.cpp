@@ -1801,7 +1801,7 @@ CSSStyleSheetImpl::Init(nsIURI* aURL)
 NS_IMETHODIMP
 CSSStyleSheetImpl::GetURL(nsIURI*& aURL) const
 {
-  NS_IF_ADDREF(aURL = (mInner ? mInner->mURL : nsnull));
+  NS_IF_ADDREF(aURL = (mInner ? mInner->mURL.get() : nsnull));
   return NS_OK;
 }
 
