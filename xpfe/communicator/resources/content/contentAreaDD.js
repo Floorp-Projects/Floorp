@@ -29,130 +29,112 @@
 var gSourceDocument, wasDrag;
 var contentAreaDNDObserver = {
   onDragStart: function (aEvent)
-    {  
-      dump("dragstart\n");
-      var htmlstring = null;
+    {
+      if (aEvent.target != aEvent.originalTarget) {
+        // the node is inside an XBL widget,
+        // which means it's likely the scrollbar
+        
+        // throw an exception to avoid the drag
+        if (aEvent.originalTarget.localName == "thumb")
+            throw Components.results.NS_ERROR_FAILURE;
+
+        dump("Hrm..not sure if I should be dragging this " + aEvent.originalTarget.localName + ".. but I'll try.\n");
+      }
+
+      var draggedNode = aEvent.target;
+
+      // the resulting strings from the beginning of the drag
       var textstring = null;
-      var isLink = false;
+      var urlstring = null;
+      // htmlstring will be filled automatically if you fill urlstring
+      var htmlstring = null;
+
       var domselection = window._content.getSelection();
       if (domselection && !domselection.isCollapsed && 
-          domselection.containsNode(aEvent.target,false))
+          domselection.containsNode(draggedNode,false))
         {
+          dump("Dragging the selection..\n");
           var privateSelection = domselection.QueryInterface(Components.interfaces.nsISelectionPrivate);
           if (privateSelection)
           {
-            // the window has a selection so we should grab that rather than looking for specific elements
+            // the window has a selection so we should grab that rather
+            // than looking for specific elements
             htmlstring = privateSelection.toStringWithFormat("text/html", 128+256, 0);
             textstring = privateSelection.toStringWithFormat("text/plain", 0, 0);
-            dump("we cool?\n");
+            // how are we going to get the URL, if any? Scan the selection
+            // for the first anchor? See bug #58315
           }
+          dump("we cool?");
         }
       else 
         {
-          if (aEvent.altKey && this.findEnclosingLink(aEvent.target))
+          dump("Dragging DOM node: <" + draggedNode.localName + ">\n");
+          if (aEvent.altKey && findParentNode(draggedNode, 'a'))
             return false;
-          switch (aEvent.originalTarget.localName) 
+          switch (draggedNode.localName.toUpperCase())
             {
-              case '#text':
-                var node = this.findEnclosingLink(aEvent.target);
-                textstring = "";
-                //select node now!
-                if (node)
-                  textstring = node.href;
-                if (textstring != "")
-                {
-                  htmlstring = "<a href=\"" + textstring + "\">" + textstring + "</a>";
-                  var parent = node.parentNode;
-                  if (parent)
-                  {
-                    var nodelist = parent.childNodes;
-                    var index;
-                    for (index = 0; index<nodelist.length; index++)
-                    {
-                      if (nodelist.item(index) == node)
-                        break;
-                    }
-                    if (index >= nodelist.length)
-                        throw Components.results.NS_ERROR_FAILURE;
-                    if (domselection)
-                    {
-                      domselection.collapse(parent,index);
-                      domselection.extend(parent,index+1);
-                    }
-                  }
-                }
-                else
-                  throw Components.results.NS_ERROR_FAILURE;
-                break;
               case 'AREA':
               case 'IMG':
-                var imgsrc = aEvent.target.getAttribute("src");
+                var imgsrc = draggedNode.getAttribute("src");
                 var baseurl = window._content.location.href;
-                // need to do some stuff with the window._content.location (path?) 
-                // to get base URL for image.
+                // need to do some stuff with the window._content.location
+                // (path?) to get base URL for image.
 
-                textstring = imgsrc;
-                htmlstring = "<img src=\"" + textstring + "\">";
-                if ((linkNode = this.findEnclosingLink(aEvent.target))) {
-                  htmlstring = '<a href="' + linkNode.href + '">' + htmlstring + '</a>';
-                  textstring = linkNode.href;
+                // use alt text as the title of the image, if  it's there
+                textstring = draggedNode.getAttribute("alt");
+                urlstring = imgsrc;
+                htmlstring = "<img src=\"" + urlstring + "\">";
+
+                // if the image is also a link, then re-wrap htmlstring in
+                // an anchor tag
+                linkNode = findParentNode(draggedNode, 'a');
+                if (linkNode) {
+                  urlstring = this.getAnchorUrl(linkNode);
+                  htmlstring = this.createLinkText(urlstring, htmlstring);
                 }
                 break;
               case 'A':
-                isLink = true;
-                if (aEvent.target.href)
-                  {
-                    textstring = aEvent.target.getAttribute("href");
-                    htmlstring = "<a href=\"" + textstring + "\">" + textstring + "</a>";
-                  }
-                else if (aEvent.target.name)
-                  {
-                    textstring = aEvent.target.getAttribute("name");
-                    htmlstring = "<a name=\"" + textstring + "\">" + textstring + "</a>"
-                  }
+                urlstring = this.getAnchorUrl(draggedNode);
+                textstring = this.getNodeString(draggedNode);
                 break;
-              case 'LI':
-              case 'OL':
-              case 'DD':
+                
               default:
-                var node = this.findEnclosingLink(aEvent.target);
-                textstring = "";
-                //select node now!
-                if (node)
-                  textstring = node.href;
-                if (textstring != "")
-                {
-                  htmlstring = "<a href=\"" + textstring + "\">" + textstring + "</a>";
-                  var parent = node.parentNode;
-                  if (parent)
-                  {
-                    var nodelist = parent.childNodes;
-                    var index;
-                    for (index = 0; index<nodelist.length; index++)
-                    {
-                      if (nodelist.item(index) == node)
-                        break;
-                    }
-                    if (index >= nodelist.length)
-                        throw Components.results.NS_ERROR_FAILURE;
-                    if (domselection)
-                    {
-                      domselection.collapse(parent,index);
-                      domselection.extend(parent,index+1);
-                    }
+                var linkNode = findParentNode(draggedNode, 'a');
+                
+                if (linkNode) {
+                  urlstring = this.getAnchorUrl(linkNode);
+                  textstring = this.getNodeString(linkNode);
+                  
+                  // select node now!
+                  // this shouldn't be fatal, and
+                  // we should still do the drag if this fails
+                  try {
+                    this.normalizeSelection(linkNode, domselection);
+                  } catch (ex) {
+                    // non-fatal, so catch & ignore
+                    dump("Couldn't normalize selection: " + ex + "\n");
                   }
                 }
-                else
-                  throw Components.results.NS_ERROR_FAILURE;
                 break;
             }
         }
-  
+
+      // default text value is the URL
+      if (!textstring) textstring = urlstring;
+
+      // if we haven't constructed a html version, make one now
+      if (!htmlstring && urlstring)
+          htmlstring = this.createLinkText(urlstring, urlstring);
+
+      // now create the flavour lists
       var flavourList = { };
-      flavourList["text/html"] = { width: 2, data: htmlstring };
-      if (isLink) 
-        flavourList["text/x-moz-url"] = { width: 2, data: textstring };
-      flavourList["text/unicode"] = { width: 2, data: textstring };
+      if (htmlstring)
+        flavourList["text/html"] = { width: 2, data: htmlstring };
+      if (urlstring) 
+        flavourList["text/x-moz-url"] = { width: 2,
+                                          data: urlstring + "\n" + textstring };
+      if (textstring)
+        flavourList["text/unicode"] = { width: 2, data: textstring };
       return flavourList;
     },
 
@@ -168,7 +150,7 @@ var contentAreaDNDObserver = {
 
   onDrop: function (aEvent, aData, aDragSession)
     {
-      var data = aData.length ? aData[0] : aData;
+      var data = (('length' in aData) && aData.length) ? aData[0] : aData;
       var url = retrieveURLFromData(data);
       if (url.length == 0)
         return true;
@@ -187,6 +169,7 @@ var contentAreaDNDObserver = {
           break;
         default:
       }
+      return true;
     },
 
   getSupportedFlavours: function ()
@@ -198,32 +181,64 @@ var contentAreaDNDObserver = {
       return flavourList;
     },
 
-  findEnclosingLink: function (aNode)  
-    {  
-      while (aNode) {
-        var nodeName = aNode.localName;
-        if (!nodeName) return null;
-        nodeName = nodeName.toLowerCase();
-        if (!nodeName || nodeName == "body" || 
-            nodeName == "html" || nodeName == "#document")
-          return null;
-        if (nodeName == "a")
-          return aNode;
-        aNode = aNode.parentNode;
-      }
-      return null;
+  createLinkText: function(url, text)
+  {
+    return "<a href=\"" + url + "\">" + text + "</a>";
+  },
+
+  normalizeSelection: function(baseNode, domselection)
+  {
+    var parent = baseNode.parentNode;
+    if (!parent) return;
+    if (!domselection) return;
+
+    var nodelist = parent.childNodes;
+    var index;
+    for (index = 0; index<nodelist.length; index++)
+    {
+      if (nodelist.item(index) == baseNode)
+        break;
     }
+
+    if (index >= nodelist.length) {
+      dump("BAD: Could not find our position in the parent\n");
+      throw Components.results.NS_ERROR_FAILURE;
+    }
+
+    // now make the selection contain all of the parent's children up to
+    // the selected one
+    domselection.collapse(parent,index);
+    domselection.extend(parent,index+1);
+  },
+
+  getAnchorUrl: function(linkNode)
+  {
+    if (linkNode.href)
+      return linkNode.href;
+    else if (linkNode.name)
+      return linkNode.name
+    return null;
+  },
+
+  getNodeString: function(node)
+  {
+    // use a range to get the text-equivalent of the node
+    var range = document.createRange();
+    range.selectNode(node);
+    return range.toString();
+  }
+  
 };
 
 
 function retrieveURLFromData (aData)
 {
   switch (aData.flavour) {
-    case "text/unicode":
-    case "text/x-moz-url":
-      return aData.data.data; // XXX this is busted. 
-      break;
-    case "application/x-moz-file":
+  case "text/unicode":
+  case "text/x-moz-url":
+    return aData.data.data; // XXX this is busted. 
+    break;
+  case "application/x-moz-file":
       var dataObj = aData.data.data.QueryInterface(Components.interfaces.nsIFile);
       if (dataObj) {
         var fileURL = nsJSComponentManager.createInstance("@mozilla.org/network/standard-url;1",

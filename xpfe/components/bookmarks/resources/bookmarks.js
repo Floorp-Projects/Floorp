@@ -957,9 +957,9 @@ function fillContextMenu(name)
     var lastWasSep = false;
     for (var commandIndex = 0; commandIndex < cmdArray.length; commandIndex++)
     {
-        var cmd = cmdArray[commandIndex];
+        cmd = cmdArray[commandIndex];
         if (!cmd) continue;
-        var cmdResource = cmd.QueryInterface(Components.interfaces.nsIRDFResource);
+        cmdResource = cmd.QueryInterface(Components.interfaces.nsIRDFResource);
         if (!cmdResource) break;
 
         // handle separators

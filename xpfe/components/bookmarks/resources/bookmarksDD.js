@@ -320,7 +320,7 @@ function DropOnTree ( event )
     else if (bestFlavor.value == "text/x-moz-url")
     {
 	    // pull the URL out of the data object
-	    var data = dataObj.data.substring(0, len.value / 2);
+	    data = dataObj.data.substring(0, len.value / 2);
 	    sourceID = data;
 
     	// we may need to synthesize a name (just use the URL)
@@ -340,11 +340,11 @@ function DropOnTree ( event )
     }
 
     // pull the (optional) name out of the URL
-    var space = sourceID.indexOf(" ");
-    if (space >= 0)
+    var separator = sourceID.indexOf("\n");
+    if (separator >= 0)
     {
-        name = sourceID.substr(space+1);
-        sourceID = sourceID.substr(0, space);
+        name = sourceID.substr(separator+1);
+        sourceID = sourceID.substr(0, separator);
     }
 
     dump("    Node #" + i + ": drop '" + sourceID + "'\n");
@@ -450,7 +450,7 @@ function DropOnTree ( event )
 	    try
 	    {
     		RDFC.Init(Bookmarks, parentNode);
-    		var nodeIndex = RDFC.IndexOf(sourceNode);
+    		nodeIndex = RDFC.IndexOf(sourceNode);
 
     		if (nodeIndex >= 1)
     		{
