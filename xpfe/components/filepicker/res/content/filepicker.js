@@ -3,6 +3,8 @@
 const nsILocalFile        = Components.interfaces.nsILocalFile;
 const nsILocalFile_PROGID = "component://mozilla/file/local";
 const nsIFilePicker       = Components.interfaces.nsIFilePicker;
+const nsIDirectoryServiceProvider = Components.interfaces.nsIDirectoryServiceProvider;
+const nsIDirectoryServiceProvider_PROGID = "component://netscape/file/directory_service";
 
 var sfile = Components.classes[nsILocalFile_PROGID].createInstance(nsILocalFile);
 var retvals;
@@ -51,7 +53,11 @@ function onLoad() {
   if (directory) {
     sfile.initWithPath(directory);
   } else {
-    sfile.initWithPath("/");
+    // Start in the user's home directory
+    var dirServiceProvider = Components.classes[nsIDirectoryServiceProvider_PROGID].getService().QueryInterface(nsIDirectoryServiceProvider);
+    var persistent = new Object();
+    var homeDir = dirServiceProvider.getFile("system.HomeDirectory", persistent);
+    sfile.initWithPath(homeDir.path);
   }
 
   retvals.buttonStatus = nsIFilePicker.returnCancel;
