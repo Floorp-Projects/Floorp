@@ -365,6 +365,9 @@ public:
 
     nsresult
     SerializeEpilogue(nsIOutputStream* aStream);
+
+    PRBool
+    IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource, nsIRDFResource* aType);
 };
 
 PRInt32         RDFXMLDataSourceImpl::gRefCnt = 0;
@@ -1401,13 +1404,13 @@ static const char kRDFAlt[] = "RDF:Alt";
     // Decide if it's a sequence, bag, or alternation, and print the
     // appropriate tag-open sequence
 
-    if (rdf_IsA(mInner, aContainer, kRDF_Bag)) {
+    if (IsA(mInner, aContainer, kRDF_Bag)) {
         tag = kRDFBag;
     }
-    else if (rdf_IsA(mInner, aContainer, kRDF_Seq)) {
+    else if (IsA(mInner, aContainer, kRDF_Seq)) {
         tag = kRDFSeq;
     }
-    else if (rdf_IsA(mInner, aContainer, kRDF_Alt)) {
+    else if (IsA(mInner, aContainer, kRDF_Alt)) {
         tag = kRDFAlt;
     }
     else {
@@ -1588,9 +1591,9 @@ RDFXMLDataSourceImpl::Serialize(nsIOutputStream* aStream)
         if (NS_FAILED(rv))
             break;
 
-        if (rdf_IsA(mInner, resource, kRDF_Bag) ||
-            rdf_IsA(mInner, resource, kRDF_Seq) ||
-            rdf_IsA(mInner, resource, kRDF_Alt)) {
+        if (IsA(mInner, resource, kRDF_Bag) ||
+            IsA(mInner, resource, kRDF_Seq) ||
+            IsA(mInner, resource, kRDF_Alt)) {
             rv = SerializeContainer(aStream, resource);
         }
         else {
@@ -1607,3 +1610,14 @@ RDFXMLDataSourceImpl::Serialize(nsIOutputStream* aStream)
 }
 
 
+PRBool
+RDFXMLDataSourceImpl::IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource, nsIRDFResource* aType)
+{
+    nsresult rv;
+
+    PRBool result;
+    rv = aDataSource->HasAssertion(aResource, kRDF_instanceOf, aType, PR_TRUE, &result);
+    if (NS_FAILED(rv)) return PR_FALSE;
+
+    return result;
+}
