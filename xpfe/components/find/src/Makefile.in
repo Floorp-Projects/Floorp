@@ -28,7 +28,6 @@ IS_COMPONENT	= 1
 
 CPPSRCS		= \
 		nsFindComponent.cpp \
-		nsFindDialog.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
@@ -38,6 +37,7 @@ EXTRA_DSO_LDOPTS = \
 		-lreg			\
 		$(ZLIB_LIBS)	\
 		$(NSPR_LIBS)	\
+		-l$(MOZ_LIB_JS_PREFIX)js	\
 		$(NULL)
 
 ifndef NECKO

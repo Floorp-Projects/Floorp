@@ -45,8 +45,9 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIServiceManager.h"
 
 #include "nsFindComponent.h"
-#include "nsFindDialog.h"
 
+#include "nsIDOMWindow.h"
+#include "nsIScriptGlobalObject.h"
 
 #ifdef DEBUG
 #define DEBUG_FIND
@@ -62,6 +63,14 @@ nsFindComponent::Context::Context()
 
 nsFindComponent::Context::~Context()
 {
+    // Close the dialog (if there is one).
+    if ( mFindDialog ) {
+        // Bump refcnt so cleanup of the bogus owning reference in JS doesn't
+        // cause re-entry.
+        this->AddRef();
+        mFindDialog->Close();
+        mFindDialog = 0;
+    }
 }
 
 NS_IMETHODIMP
@@ -83,6 +92,7 @@ nsFindComponent::Context::Init( nsIWebShell *aWebShell,
 	mCaseSensitive   = lastCaseSensitive;
 	mSearchBackwards = lastSearchBackward;
 	mWrapSearch      = lastWrapSearch;
+    mFindDialog      = 0;
 	
 	return NS_OK;
 }
@@ -567,6 +577,150 @@ nsFindComponent::Context::Reset( nsIWebShell *aNewWebShell )
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFindComponent::Context::GetSearchString(PRUnichar * *aSearchString) {
+    nsresult rv = NS_OK;
+    if ( aSearchString ) {
+        *aSearchString = mSearchString.ToNewUnicode();
+        if ( !*aSearchString ) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+        }
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFindComponent::Context::SetSearchString(PRUnichar *aSearchString) {
+    nsresult rv = NS_OK;
+    mSearchString = aSearchString ? nsString( aSearchString ) : nsString();
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFindComponent::Context::GetReplaceString(PRUnichar * *aReplaceString) {
+    nsresult rv = NS_OK;
+    if ( aReplaceString ) {
+        *aReplaceString = mReplaceString.ToNewUnicode();
+        if ( !*aReplaceString ) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+        }
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFindComponent::Context::SetReplaceString(PRUnichar *aReplaceString) {
+    nsresult rv = NS_OK;
+    mReplaceString = aReplaceString ? nsString( aReplaceString ) : nsString();
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFindComponent::Context::GetSearchBackwards(PRBool *aBool) {
+    nsresult rv = NS_OK;
+    if ( aBool ) {
+        *aBool = mSearchBackwards;
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFindComponent::Context::SetSearchBackwards(PRBool aBool) {
+    nsresult rv = NS_OK;
+    mSearchBackwards = aBool;
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFindComponent::Context::GetCaseSensitive(PRBool *aBool) {
+    nsresult rv = NS_OK;
+    if ( aBool ) {
+        *aBool = mCaseSensitive;
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFindComponent::Context::SetCaseSensitive(PRBool aBool) {
+    nsresult rv = NS_OK;
+    mCaseSensitive = aBool;
+    return rv;
+}
+
+NS_IMETHODIMP 
+nsFindComponent::Context::GetWrapSearch(PRBool *aBool) {
+    nsresult rv = NS_OK;
+    if ( aBool ) {
+        *aBool = mWrapSearch;
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFindComponent::Context::SetWrapSearch(PRBool aBool) {
+    nsresult rv = NS_OK;
+    mWrapSearch = aBool;
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFindComponent::Context::GetTargetWebShell( nsIWebShell  * *aWebShell) {
+    nsresult rv = NS_OK;
+    if ( aWebShell ) {
+        *aWebShell = mTargetWebShell;
+        if ( mTargetWebShell ) {
+            mTargetWebShell->AddRef();
+        }
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFindComponent::Context::GetFindDialog( nsIDOMWindow  * *aDialog) {
+    nsresult rv = NS_OK;
+    if ( aDialog ) {
+        *aDialog = mFindDialog;
+        if ( mFindDialog ) {
+            mFindDialog->AddRef();
+        }
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFindComponent::Context::SetFindDialog( nsIDOMWindow *aDialog ) {
+    nsresult rv = NS_OK;
+    mFindDialog = aDialog;
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFindComponent::Context::ConvertToWeakReference() {
+    NS_ASSERTION( mRefCnt >= 1, "Can't convert last reference to a weak one!" );
+    this->Release();
+    return NS_OK;
+};
+
+NS_IMETHODIMP
+nsFindComponent::Context::ConvertToOwningReference() {
+    this->AddRef();
+    return NS_OK;
+};
+
 #ifdef XP_MAC
 #pragma mark -
 #endif
@@ -621,6 +775,64 @@ nsFindComponent::CreateContext( nsIWebShell *aWebShell, nsIEditor* aEditor,
     return NS_OK;
 }
 
+static nsresult OpenDialogWithArg( nsIDOMWindow     *parent,
+                                   nsISearchContext *arg, 
+                                   const char       *url ) {
+    nsresult rv = NS_OK;
+
+    if ( parent && arg && url ) {
+        // Get JS context from parent window.
+        nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface( parent, &rv );
+        if ( NS_SUCCEEDED( rv ) && sgo ) {
+            nsCOMPtr<nsIScriptContext> context;
+            sgo->GetContext( getter_AddRefs( context ) );
+            if ( context ) {
+                JSContext *jsContext = (JSContext*)context->GetNativeContext();
+                if ( jsContext ) {
+                    void *stackPtr;
+                    jsval *argv = JS_PushArguments( jsContext,
+                                                    &stackPtr,
+                                                    "svs%ip",
+                                                    url,
+                                                    JSVAL_NULL,
+                                                    "chrome",
+                                                    (const nsIID*)(&nsISearchContext::GetIID()),
+                                                    (nsISupports*)arg );
+                    if ( argv ) {
+                        nsIDOMWindow *newWindow;
+                        rv = parent->OpenDialog( jsContext, argv, 4, &newWindow );
+                        if ( NS_SUCCEEDED( rv ) ) {
+                            newWindow->Release();
+                        } else {
+                        }
+                        JS_PopArguments( jsContext, stackPtr );
+                    } else {
+                        DEBUG_PRINTF( PR_STDOUT, "%s %d: JS_PushArguments failed\n",
+                                      (char*)__FILE__, (int)__LINE__ );
+                        rv = NS_ERROR_FAILURE;
+                    }
+                } else {
+                    DEBUG_PRINTF( PR_STDOUT, "%s %d: GetNativeContext failed\n",
+                                  (char*)__FILE__, (int)__LINE__ );
+                    rv = NS_ERROR_FAILURE;
+                }
+            } else {
+                DEBUG_PRINTF( PR_STDOUT, "%s %d: GetContext failed\n",
+                              (char*)__FILE__, (int)__LINE__ );
+                rv = NS_ERROR_FAILURE;
+            }
+        } else {
+            DEBUG_PRINTF( PR_STDOUT, "%s %d: QueryInterface (for nsIScriptGlobalObject) failed, rv=0x%08X\n",
+                          (char*)__FILE__, (int)__LINE__, (int)rv );
+        }
+    } else {
+        DEBUG_PRINTF( PR_STDOUT, "%s %d: OpenDialogWithArg was passed a null pointer!\n",
+                      __FILE__, (int)__LINE__ );
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    return rv;
+}
+
 NS_IMETHODIMP
 nsFindComponent::Find(nsISupports *aContext, PRBool *aDidFind)
 {
@@ -628,51 +840,58 @@ nsFindComponent::Find(nsISupports *aContext, PRBool *aDidFind)
 
     if ( aContext && GetAppShell() )
     {
-        Context *context = (Context*)aContext;
-
-        // Open Find dialog and prompt for search parameters.
-
-        // Make url for dialog xul.
-        nsIURI *url;
-        char * urlStr = "resource:/res/samples/finddialog.xul";
-
-        // this should be a chrome URI
-        // chrome://navigator/dialogs/content/default/finddialog.xul or something.
-#ifndef NECKO
-        rv = NS_NewURL( &url, urlStr );
-#else
-        NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        nsIURI *uri = nsnull;
-        rv = service->NewURI(urlStr, nsnull, &uri);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-        NS_RELEASE(uri);
-        if (NS_FAILED(rv)) return rv;
-#endif // NECKO
-
-        // Create callbacks object for the find dialog.
-        nsFindDialog *dialog = new nsFindDialog( this, context );
-
-        nsCOMPtr<nsIWebShellWindow> newWindow;
-        rv = GetAppShell()->CreateDialogWindow( nsnull,
-                                                url,
-                                                PR_TRUE,
-                                                getter_AddRefs(newWindow),
-                                                nsnull,
-                                                dialog,
-                                                NS_SIZETOCONTENT,
-                                                NS_SIZETOCONTENT );
-
-        if ( NS_SUCCEEDED( rv ) ) {
-            // Tell the dialog its nsIWebShellWindow.
-            dialog->SetWindow( newWindow );
+        nsCOMPtr<nsISearchContext> context = do_QueryInterface( aContext, &rv );
+        if ( NS_FAILED( rv ) ) {
+            return rv;
         }
 
-        // Release the url for the xul file.
-        NS_RELEASE( url );
+        // Open Find dialog and prompt for search parameters.
+        char * urlStr = "resource:/res/samples/finddialog.xul";
+
+        // We need the parent's nsIDOMWindow...
+        // 1. Get root nsIWebShell (chrome included).
+        nsCOMPtr<nsIWebShell> ws;
+        rv = context->GetTargetWebShell( getter_AddRefs( ws ) );
+        if ( NS_SUCCEEDED( rv ) && ws ) {
+            nsCOMPtr<nsIWebShell> rootws;
+            rv = ws->GetRootWebShellEvenIfChrome( *getter_AddRefs( rootws ) );
+            if ( NS_SUCCEEDED( rv ) && rootws ) {
+                // 2. Get container for the root web shell.
+                nsCOMPtr<nsIWebShellContainer> rootwsContainer;
+                rv = rootws->GetContainer( *getter_AddRefs( rootwsContainer ) );
+                if ( NS_SUCCEEDED( rv ) && rootwsContainer ) {
+                    // 3. Convert that to an nsIWebShellWindow.
+                    nsCOMPtr<nsIWebShellWindow> rootWindow;
+                    rv = rootwsContainer->QueryInterface( nsIWebShellWindow::GetIID(),
+                                                          getter_AddRefs( rootWindow ) );
+                    if ( NS_SUCCEEDED( rv ) && rootWindow ) {
+                        // 4. Convert window to nsIDOMWindow.
+                        nsCOMPtr<nsIDOMWindow> domWindow;
+                        rv = rootWindow->ConvertWebShellToDOMWindow( rootws,
+                                                                     getter_AddRefs( domWindow ) );
+                        if ( NS_SUCCEEDED( rv ) && domWindow ) {
+                            // Whew.  Now open dialog with search context as argument.
+                            rv = OpenDialogWithArg( domWindow, context, urlStr );
+                        } else {
+                            DEBUG_PRINTF( PR_STDOUT, "%s %d:  Error getting DOM window from web shell, rv=0x%08X\n",
+                                          (char*)__FILE__, (int)__LINE__, (int)rv );
+                        }
+                    } else {
+                        DEBUG_PRINTF( PR_STDOUT, "%s %d:  QueryInterface (for nsIWebShellWindow) failed, rv=0x%08X\n",
+                                      (char*)__FILE__, (int)__LINE__, (int)rv );
+                    }
+                } else {
+                    DEBUG_PRINTF( PR_STDOUT, "%s %d:  GetContainer failed, rv=0x%08X\n",
+                                  (char*)__FILE__, (int)__LINE__, (int)rv );
+                }
+            } else {
+                DEBUG_PRINTF( PR_STDOUT, "%s %d:  GetRootWebShellEvenIfChrome failed, rv=0x%08X\n",
+                              (char*)__FILE__, (int)__LINE__, (int)rv );
+            }
+        } else {
+            DEBUG_PRINTF( PR_STDOUT, "%s %d: GetTargetWebShell failed, rv=0x%08X\n",
+                          __FILE__, (int)__LINE__, (int)rv );
+        }
     } else {
         rv = NS_ERROR_NULL_POINTER;
     }
@@ -688,7 +907,6 @@ nsFindComponent::Replace( nsISupports *aContext )
 		if (!aContext)
 			return NS_ERROR_NULL_POINTER;
 			
-		// For now, just record request to console.
 		Context *context = (Context*)aContext;
 
 	return NS_ERROR_NOT_IMPLEMENTED;
@@ -738,6 +956,6 @@ nsFindComponent::ResetContext( nsISupports *aContext,
 }
 
 // nsFindComponent::Context implementation...
-NS_IMPL_ISUPPORTS( nsFindComponent::Context, nsCOMTypeInfo<nsISupports>::GetIID() )
+NS_IMPL_ISUPPORTS( nsFindComponent::Context, nsCOMTypeInfo<nsISearchContext>::GetIID() )
 
 NS_IMPL_IAPPSHELLCOMPONENT( nsFindComponent, nsIFindComponent, NS_IFINDCOMPONENT_PROGID, 0 )

@@ -16,6 +16,8 @@
  * Reserved.
  */
 #include "nsIAppShellComponentImpl.h"
+#include "nsIFindComponent.h"
+#include "nsISearchContext.h"
 
 class nsITextServicesDocument;
 
@@ -42,10 +44,11 @@ public:
     NS_DECL_IFINDCOMPONENT
 
     // "Context" for this implementation.
-    class Context : public nsISupports
+    class Context : public nsISearchContext
     {
     	public:
         NS_DECL_ISUPPORTS
+        NS_DECL_ISEARCHCONTEXT
         
 										Context();
 				virtual 		~Context();
@@ -73,6 +76,7 @@ public:
         PRBool       mCaseSensitive;
         PRBool       mSearchBackwards;
         PRBool       mWrapSearch;
+        nsIDOMWindow *mFindDialog;
 
     }; // nsFindComponent::Context
 

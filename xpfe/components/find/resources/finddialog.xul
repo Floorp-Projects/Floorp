@@ -14,18 +14,10 @@
 
 <xul:window xmlns="http://www.w3.org/TR/REC-html40"
 		xmlns.xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="onLoad()"
+        onunload="onUnload()"
         style="padding:5px;"
         title="&findDialog.title;">
-
-    <xul:data>
-        <xul:broadcaster id="data.findKey" type="string" value=""/>
-        <xul:broadcaster id="data.caseSensitive" type="boolean" value="false"/>
-        <xul:broadcaster id="data.searchBackwards" type="boolean" value="false"/>
-        <xul:broadcaster id="data.wrap" type="boolean" value="false"/>
-        <xul:broadcaster id="data.execute" command="" findKey="" caseSensitive="" searchBackwards="" wrap=""/>
-        <xul:broadcaster id="dialog.start" ready="false"/>
-        <xul:observes element="dialog.start" attribute="ready" onchange="onLoad()"/>
-    </xul:data>
 
   <!-- This should be using a chrome URL -->
   <script language="JavaScript" src="resource:/res/samples/finddialog.js">
