@@ -70,7 +70,7 @@
     </script>
   </box>
 
-  <separator class="groove"/>
+  <separator/>
 
   <box id="okCancelButtonsRight" />
 
