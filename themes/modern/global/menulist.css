@@ -19,6 +19,10 @@
     padding-right     : 2px;
   }
 
+  .menulist-icon-mid {
+    padding-right     : 2px;
+  }
+
   .menulist-dropmarker {
     list-style-image  : url("chrome://global/skin/menulist-arrow.gif");
     width				      : 9px;
@@ -176,9 +180,14 @@
 
   menulist:hover:active > .menulist-stack > .menulist-text-box > .menulist-text-mid[disabled="true"],
   .menulist-text-mid[disabled="true"] {
-    background-color  : #84969C;
+    color              : #7F8997;
   }
-  
+
+  menulist:hover:active > .menulist-stack > .menulist-box-mid[disabled="true"],
+  .menulist-box-mid[disabled="true"] {
+    background-color    : #ADBEC6;
+  }
+
   menulist:hover:active > .menulist-stack > .menulist-box-mid > .menulist-mid-top[disabled="true"],
   .menulist-mid-top[disabled="true"] {
   	background-image  : url("chrome://global/skin/menulist-dis-mid-top.gif");
@@ -207,6 +216,10 @@
   menulist:hover:active > .menulist-box-right > .menulist-right-btm[disabled="true"],
   .menulist-right-btm[disabled="true"] {
     background-image  : url("chrome://global/skin/menulist-dis-right-btm.gif");
+  }
+
+  .menulist-dropmarker[disabled="true"] {
+    list-style-image  : url("chrome://global/skin/menulist-dis-arrow.gif");
   }
 
 /** rules for EDITABLE menulists (aka 'comboboxes'). 
