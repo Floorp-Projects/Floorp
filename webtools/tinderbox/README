@@ -110,7 +110,7 @@ These modes do not show on my browser:
         static=1 
 
 These are self explanatory:
-        nocrap=1;  
+        legend=0;  
         hours=n; 
 
 

@@ -120,7 +120,7 @@ sub show_tree_selector {
 sub do_static {
   local *OUT;
 
-  $form{nocrap}=1;
+  $form{legend}=0;
 
   my @pages = ( ['index.html', 'do_tinderbox'],
                 ['flash.rdf',  'do_flash'],
@@ -183,7 +183,7 @@ sub print_page_head {
 
   # Quote and Lengend
   #
-  unless ($form{nocrap}) {
+  if ($form{legend}) {
     my ($imageurl,$imagewidth,$imageheight,$quote) = &get_image;
     print qq{
       <table width="100%" cellpadding=0 cellspacing=0>
@@ -405,7 +405,7 @@ sub print_table_header {
 
     my $last_status = tb_last_status($ii);
     if ($last_status eq 'busted') {
-      if ($form{nocrap}) {
+      unless ($form{legend}) {
         print "<td rowspan=2 bgcolor=$colormap{busted}>$bn</td>";
       } else {
         print "<td rowspan=2 bgcolor=000000 background='$images{flames}'>";
@@ -430,12 +430,12 @@ sub print_table_footer {
   print "</table>\n";
 
   my $nextdate = $maxdate - $hours*60*60;
-  print &open_showbuilds_href(maxdate=>"$nextdate", nocrap=>'1')
+  print &open_showbuilds_href(maxdate=>"$nextdate", legend=>'0')
        ."Show previous $hours hours</a><br>";
   if ($hours != 24) {
     my $save_hours = $hours;
     $hours = 24;
-    print &open_showbuilds_href(maxdate=>"$nextdate", nocrap=>'1')
+    print &open_showbuilds_href(maxdate=>"$nextdate", legend=>'0')
       ."Show previous 24 hours</a>";
     $hours = $save_hours;
   }
@@ -445,7 +445,7 @@ sub print_table_footer {
 
 sub open_showbuilds_url {
   my %args = (
-        nocrap => "$form{nocrap}",
+        legend => "$form{legend}",
         @_
   );
 
