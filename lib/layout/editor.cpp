@@ -1462,7 +1462,7 @@ XP_Bool EDT_GetToggleListState(MWContext *pContext, intn iTagType)
     // Description list is a special case - it doesn't (and shouldn't)
     //   have <LI> items. It should contain <DT> (Desc.Title) and 
     //   <DD> (Desc. text) items.
-    if ( nParagraphFormat == P_LIST_ITEM || iTagType == P_DESC_LIST ) {
+    if ( nParagraphFormat == P_LIST_ITEM || iTagType == P_DESC_LIST || iTagType == P_BLOCKQUOTE ) {
         pData = EDT_GetListData(pContext);
         bIsMyList = ( pData && pData->iTagType == iTagType );
     }

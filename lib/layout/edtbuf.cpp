@@ -4405,7 +4405,6 @@ void CEditBuffer::MorphListContainer( TagType t )
 
 void CEditBuffer::MorphListContainer2( TagType t, CEditSelection& /*selection*/ )
 {
-    //TODO: HANDLE LISTS IN SELECTION
     EDT_ListData * pListData = GetListData();
     if( !pListData ){
         // We don't have container -- start one
@@ -4444,60 +4443,77 @@ void CEditBuffer::ToggleList(intn iTagType)
             EndBatchChanges();
         }
     } else {
+        GetSelection(selection);
         ToggleList2(iTagType, selection);
     }
 }
 
+// TODO: HANDLE SELECTION -- SEE MorphContainerSelection
 // This doesn't seem to pay attention to selection - probably source of some bugs
 void CEditBuffer::ToggleList2(intn iTagType, CEditSelection& /*selection*/)
 {
-    EDT_ListData * pData = NULL;
+    EDT_ListData * pListData = NULL;
 	TagType nParagraphFormat = GetParagraphFormatting();
     XP_Bool bIsMyList = FALSE;
-    XP_Bool bIsDescList = FALSE;
 
-    if ( nParagraphFormat == P_LIST_ITEM || iTagType == P_DESC_LIST )
+    if ( nParagraphFormat == P_LIST_ITEM || iTagType == P_DESC_LIST || iTagType == P_BLOCKQUOTE )
     {
-        pData = GetListData();
-        bIsMyList = ( pData && pData->iTagType == iTagType );
+        pListData = GetListData();
+        bIsMyList = ( pListData && pListData->iTagType == iTagType );
     }
-    bIsDescList = bIsMyList && (iTagType == P_DESC_LIST);
 
-    if ( (nParagraphFormat == P_LIST_ITEM || bIsDescList)
-         && bIsMyList )
+    if ( bIsMyList && 
+         (nParagraphFormat == P_LIST_ITEM || 
+          iTagType == P_DESC_LIST) )
     {
         // This will remove any list container
         MorphContainer(P_NSDT);
     } 
+    else if( bIsMyList && iTagType == P_BLOCKQUOTE )
+    {
+        // Remove all indent levels
+        if( m_pCurrent )
+        {
+            CEditContainerElement *pContainer;
+            CEditListElement *pList;
+            m_pCurrent->FindList(pContainer, pList);
+            TerminateList(pContainer);
+            Relayout( pContainer, 0, pContainer );
+        }
+    }
     else 
     {
-        if ( !pData )
+        if ( !pListData )
         {
-            // Create a numbered list item ONLY if not Description list
+            if( iTagType == P_BLOCKQUOTE )
+            {
+                Indent();
+            }
+            // Create a numbered list item ONLY if not Description list or BlockQuote
             // (This will automatically indent, i.e., create the list container)
-            if (nParagraphFormat != P_LIST_ITEM && iTagType != P_DESC_LIST) {
+            else if (nParagraphFormat != P_LIST_ITEM && iTagType != P_DESC_LIST ) 
+            {
                 MorphContainer(P_LIST_ITEM);
             }
-            pData = GetListData();
+            pListData = GetListData();
         } 
         else if (nParagraphFormat == P_LIST_ITEM && iTagType == P_DESC_LIST )
         {
             // We are converting an existing list item into
             //   a description, so remove the list item
             MorphContainer(P_DESC_TITLE);
-            pData = GetListData();
+            pListData = GetListData();
         }
 
-
-        if ( pData && (pData->iTagType != iTagType) )
+        if ( pListData && (pListData->iTagType != iTagType) )
         {
-            pData->iTagType = iTagType;
-            pData->eType = ED_LIST_TYPE_DEFAULT;
-            SetListData(pData);
+            pListData->iTagType = iTagType;
+            pListData->eType = ED_LIST_TYPE_DEFAULT;
+            SetListData(pListData);
         }
     }
-    if ( pData )
-        EDT_FreeListData(pData);
+    if ( pListData )
+        EDT_FreeListData(pListData);
 }
 
 void CEditBuffer::SetParagraphAlign( ED_Alignment eAlign ){
