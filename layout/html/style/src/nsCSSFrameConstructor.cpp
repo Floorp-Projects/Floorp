@@ -10570,6 +10570,9 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
   nsStyleContext*            styleContext = aFrame->GetStyleContext();
   nsIFrame*                  newFrame = nsnull;
   nsresult                   rv = NS_OK;
+  nsIFrame*                  nextInFlow = nsnull;
+
+  aFrame->GetNextInFlow(&nextInFlow);
 
   // Use the frame type to determine what type of frame to create
   nsIAtom* frameType = aFrame->GetType();
@@ -10750,6 +10753,10 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
   }
 
   if (aParentFrame->GetType() != nsLayoutAtoms::pageContentFrame) {
+    if (nextInFlow) {
+      nextInFlow->SetPrevInFlow(newFrame);
+      newFrame->SetNextInFlow(nextInFlow);
+    }
     return NS_OK;
   }
 
