@@ -5986,21 +5986,21 @@ HT_ToggleSelection(HT_Resource node)
  
 
 
-PR_PUBLIC_API(void)
-HT_Launch(HT_Resource node)
+PR_PUBLIC_API(PRBool)
+HT_Launch(HT_Resource node, MWContext *context)
 {
 	char		*filename =  resourceID(node->node);
 
 	XP_ASSERT(node != NULL);
 
-#ifdef	XP_PC
-
-	if (startsWith("lfs:",filename) && endsWith(".exe",filename))
+	if (node != NULL)
 	{
-		/* XXX could launch the .exe */
+		if ( (!HT_IsContainer(node)) && (!HT_IsSeparator(node)) )
+		{
+			/* XXX to do: determine if data source wants to handle launch */
+		}
 	}
-#endif
-
+	return(PR_FALSE);
 }
 
 

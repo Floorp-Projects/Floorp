@@ -393,7 +393,7 @@ PR_PUBLIC_API(HT_Error)	HT_SetSelectionRange (HT_Resource node1, HT_Resource nod
 PR_PUBLIC_API(HT_Resource)	HT_GetNextSelection(HT_View view, HT_Resource startingNode);
 PR_PUBLIC_API(void)	HT_ToggleSelection(HT_Resource node);
 
-PR_PUBLIC_API(void) HT_Launch(HT_Resource node);
+PR_PUBLIC_API(PRBool)	HT_Launch(HT_Resource node, MWContext *context);
 
 /*
  * HT_NewCursor, HT_GetNextItem, HT_DeleteCursor
