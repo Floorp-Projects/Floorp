@@ -28,4 +28,6 @@ Rights Reserved.
 <!ENTITY addresses.heading "Addresses">
 <!-- For Map It! -->
 <!ENTITY mapItButton.label "Get Map">
+<!ENTITY mapIt.tooltip "Display a map of this address from the Web">
+
 

@@ -61,7 +61,7 @@ Rights Reserved.
               <description class="CardViewText" id="cvHomeCountry"/>
             </vbox>
             <vbox id="cvbHomeMapItBox" pack="end">
-              <button id="cvHomeMapIt" url="" label="&mapItButton.label;" onclick="MapIt('cvHomeMapIt');"/>
+              <button id="cvHomeMapIt" url="" label="&mapItButton.label;" onclick="MapIt('cvHomeMapIt');" tooltiptext="&mapIt.tooltip;"/>
             </vbox>
           </hbox>
           <description class="CardViewLink" id="cvHomeWebPageBox">
@@ -115,7 +115,7 @@ Rights Reserved.
                                             <description class="CardViewText" id="cvWorkCountry"/>
                                           </vbox>
                                           <vbox id="cvbWorkMapItBox" pack="end">
-                                            <button id="cvWorkMapIt" url="" label="&mapItButton.label;" onclick="MapIt('cvWorkMapIt');"/>
+                                            <button id="cvWorkMapIt" url="" label="&mapItButton.label;" onclick="MapIt('cvWorkMapIt');" tooltiptext="&mapIt.tooltip;"/>
                                           </vbox>
                                         </hbox>
                                         <description class="CardViewLink" id="cvWorkWebPageBox">
