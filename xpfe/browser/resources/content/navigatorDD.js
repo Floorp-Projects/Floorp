@@ -246,7 +246,7 @@ var personalToolbarObserver = {
       if (aEvent.target.parentNode != inner && aEvent.target != inner) 
         {
           aDragSession.canDrop = false;
-          return;
+          return false;
         }
       
       if (this.mCurrentDragOverButton != aEvent.target ||

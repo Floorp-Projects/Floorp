@@ -165,6 +165,7 @@ var contentAreaDNDObserver = {
 
       // we use the url for text/unicode data if an anchor is being dragged, rather than
       // the title text of the link or the alt text for an anchor image. 
+      return true;
     },
 
   onDragOver: function (aEvent, aFlavour, aDragSession)
