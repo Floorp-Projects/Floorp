@@ -472,9 +472,11 @@ sub MakeResourceAliases()
 		_InstallResources(":mozilla:mailnews:addrbook:prefs:resources:locale:en-US:MANIFEST", "$addressbook_chrome_dir:locale:en-US:", 0);
 
     	_InstallResources(":mozilla:mailnews:import:resources:content:MANIFEST", 		"$messenger_chrome_dir:content:default:", 0);
+    	_InstallResources(":mozilla:mailnews:import:resources:skin:MANIFEST", 			"$messenger_chrome_dir:skin:default:", 0);
     	_InstallResources(":mozilla:mailnews:import:resources:locale:en-US:MANIFEST",	"$messenger_chrome_dir:locale:en-US:", 0);
     	_InstallResources(":mozilla:mailnews:import:eudora:resources:locale:en-US:MANIFEST",	"$messenger_chrome_dir:locale:en-US:", 0);
     	_InstallResources(":mozilla:mailnews:import:text:resources:locale:en-US:MANIFEST",	"$messenger_chrome_dir:locale:en-US:", 0);
+	
 	}
 	
 	# copy the chrome registry. We want an actual copy so that changes for custom UI's
