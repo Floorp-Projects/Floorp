@@ -25,7 +25,14 @@
 
 
 #include "nsISupports.idl"
-#include "nsINNTPNewsgroupList.idl"
+
+%{ C++
+#include "nsINNTPNewsgroupList.h"
+#include "nsMsgKeySet.h"
+%}
+
+interface nsMsgKeySet;
+interface nsINNTPNewsgroupList;
 
 [scriptable, uuid(1A39CD90-ACAF-11d2-B7EE-00805F05FFA5)]
 interface nsINNTPNewsgroup : nsISupports {
@@ -40,7 +47,6 @@ interface nsINNTPNewsgroup : nsISupports {
   
   boolean IsOfflineArticle(in long num);
 
-
   attribute boolean category;
 
   attribute boolean subscribed;
@@ -51,6 +57,9 @@ interface nsINNTPNewsgroup : nsISupports {
                                  in long youngest,
                                  in long total_messages);
 
+  void Initialize(in string line,
+                  in nsMsgKeySet set,
+                  in boolean subscribed);
 };
 
 

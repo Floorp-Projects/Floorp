@@ -22,61 +22,17 @@
 #include "nsINNTPHost.h"
 #include "nsINNTPArticleList.h"
 #include "nsMsgKeySet.h"
-
-/* XXX - temporary hack so this will compile */
-typedef PRUint32 nsMsgKey;
-
-class nsNNTPArticleList : public nsINNTPArticleList
-#ifdef HAVE_CHANGELISTENER
- : public ChangeListener
-#endif
-{
-public:
-	nsNNTPArticleList(nsINNTPHost * newshost,
-                      nsINNTPNewsgroup* newsgroup);
-                                  /* , MSG_Pane *pane); */
-    virtual ~nsNNTPArticleList();
-    NS_DECL_ISUPPORTS
-  
-    // nsINNTPArticleKeysState
-    NS_METHOD Init(nsINNTPHost *newsHost,
-                   nsINNTPNewsgroup *newsgroup);
-	NS_IMETHOD AddArticleKey(PRInt32 key);
-	NS_IMETHOD FinishAddingArticleKeys();
-
-    // other stuff
-protected:
-	struct MSG_NewsKnown	m_idsOnServer;
-#ifdef HAVE_PANES
-	MSG_Pane				*m_pane;
-#endif
-  /* formerly m_groupName */
-	nsINNTPNewsgroup		*m_newsgroup;
-	const nsINNTPHost			*m_host;
-#ifdef HAVE_NEWSDB
-	NewsGroupDB				*m_newsDB;
-#endif
-#ifdef HAVE_IDARRAY
-	IDArray					m_idsInDB;
-#ifdef DEBUG_bienvenu
-	IDArray					m_idsDeleted;
-#endif
-#endif
-	PRInt32					m_dbIndex;
-	nsMsgKey				m_highwater;
-};
+#include "nsNNTPArticleList.h"
 
 NS_IMPL_ISUPPORTS(nsNNTPArticleList, GetIID())
 
-nsNNTPArticleList::nsNNTPArticleList(nsINNTPHost* newsHost,
-                                     nsINNTPNewsgroup* newsgroup)
+nsNNTPArticleList::nsNNTPArticleList()
 {
     NS_INIT_REFCNT();
-    Init(newsHost, newsgroup);
 }
 
 nsresult
-nsNNTPArticleList::Init(nsINNTPHost * newsHost,
+nsNNTPArticleList::Initialize(nsINNTPHost * newsHost,
                               nsINNTPNewsgroup* newsgroup)
 {
 	m_host = newsHost;
@@ -164,29 +120,3 @@ nsNNTPArticleList::FinishAddingArticleKeys()
 #endif
 	return 0;
 }
-
-NS_BEGIN_EXTERN_C
-
-nsresult
-NS_NewArticleList(nsINNTPArticleList **articleList,
-                  nsINNTPHost* newsHost,
-                  nsINNTPNewsgroup* newsgroup)
-{
-    nsresult rv = NS_OK;
-
-    nsNNTPArticleList* aArticleList =
-        new nsNNTPArticleList(newsHost, newsgroup);
-
-    if (aArticleList) 
-        rv = aArticleList->QueryInterface(nsINNTPArticleList::GetIID(),
-                                          (void **)articleList);
-    else 
-        rv = NS_ERROR_OUT_OF_MEMORY;
-    
-    if (NS_FAILED(rv) && aArticleList)  
-      delete aArticleList;
-
-    return rv;
-}
-
-NS_END_EXTERN_C

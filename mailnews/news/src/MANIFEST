@@ -25,3 +25,4 @@ nsNNTPNewsgroupPost.h
 nsNewsFolder.h
 nsNntpIncomingServer.h
 nsNewsUtils.h
+nsNNTPArticleList.h

@@ -28,3 +28,4 @@
 
 nsINNTPNewsgroupPost.h
 nsINntpUrl.h
+nsINNTPProtocol.h

@@ -30,17 +30,18 @@ XPIDLSRCS= \
 	$(NULL)
 
 EXPORTS =							\
-		nsINNTPNewsgroupList.h		\
+		nsIMsgOfflineNewsState.h 	\
+		nsINNTPArticleList.h 		\
 		nsINNTPCategory.h			\
 		nsINNTPCategoryContainer.h	\
 		nsINNTPHost.h				\
 		nsINNTPNewsgroup.h 			\
-		nsIMsgOfflineNewsState.h 	\
-		nsINNTPArticleList.h 		\
-		nsINntpUrl.h				\
 		nsINNTPNewsgroupPost.h		\
-		nsINntpService.h			\
+		nsINNTPNewsgroupList.h		\
+		nsINNTPProtocol.h \
 		nsINntpIncomingServer.h			\
+		nsINntpService.h			\
+		nsINntpUrl.h				\
         $(NULL)
 
 MODULE=news

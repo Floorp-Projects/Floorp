@@ -7,7 +7,11 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsrootidl.h" /* interface nsrootidl */
-#include "nsINNTPNewsgroupList.h" /* interface nsINNTPNewsgroupList */
+#include "nsINNTPNewsgroupList.h"
+#include "nsMsgKeySet.h"
+
+class nsMsgKeySet; /* forward decl */
+class nsINNTPNewsgroupList; /* forward decl */
 
 /* starting interface:    nsINNTPNewsgroup */
 
@@ -62,6 +66,9 @@ class nsINNTPNewsgroup : public nsISupports {
 
   /* void UpdateSummaryFromNNTPInfo (in long oldest, in long youngest, in long total_messages); */
   NS_IMETHOD UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRInt32 total_messages) = 0;
+
+  /* void Initialize (in string line, in nsMsgKeySet set, in boolean subscribed); */
+  NS_IMETHOD Initialize(const char *line, nsMsgKeySet *set, PRBool subscribed) = 0;
 };
 
 #endif /* __gen_nsINNTPNewsgroup_h__ */

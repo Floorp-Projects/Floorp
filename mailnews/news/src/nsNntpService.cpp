@@ -48,6 +48,7 @@
 #include "nsNNTPNewsgroup.h"
 #include "nsCOMPtr.h"
 #include "nsMsgBaseCID.h"
+#include "nsMsgNewsCID.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -57,6 +58,8 @@ static NS_DEFINE_CID(kNntpUrlCID, NS_NNTPURL_CID);
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
+static NS_DEFINE_CID(kNNTPNewsgroupCID, NS_NNTPNEWSGROUP_CID);
+static NS_DEFINE_CID(kNNTPNewsgroupPostCID, NS_NNTPNEWSGROUPPOST_CID);
 
 nsNntpService::nsNntpService()
 {
@@ -259,10 +262,11 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject,
 			PR_FREEIF(urlstr);
 			
             nsCOMPtr <nsINNTPNewsgroup> newsgroup;
-            rv = NS_NewNewsgroup(getter_AddRefs(newsgroup), nsnull /* line */, nsnull /* set */, PR_FALSE /* subscribed */, nsnull /* host*/, 1 /* depth */);
+            rv = nsComponentManager::CreateInstance(kNNTPNewsgroupCID, nsnull, nsINNTPNewsgroup::GetIID(), getter_AddRefs(newsgroup));
             
             if (NS_SUCCEEDED(rv) && newsgroup) {
-				newsgroup->SetName((char *)newsgroupName);
+              newsgroup->Initialize(nsnull /* line */, nsnull /* set */, PR_FALSE /* subscribed */);
+              newsgroup->SetName((char *)newsgroupName);
             }
             else {
 				return rv;
@@ -292,8 +296,10 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject,
 			if (NS_SUCCEEDED(rv) && transport)
 			{
 				// almost there...now create a nntp protocol instance to run the url in...
-				nntpProtocol = new nsNNTPProtocol(nntpUrl, transport);
+				nntpProtocol = new nsNNTPProtocol();
 				if (nntpProtocol) {
+                    rv = nntpProtocol->Initialize(nntpUrl, transport);
+                    if (NS_FAILED(rv)) return rv;
 					// get the current identity from the news session....
 					NS_WITH_SERVICE(nsIMsgMailSession,newsSession,kCMsgMailSessionCID,&rv);
 
@@ -313,8 +319,8 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject,
 							printf("post message as: %s,%s,%s\n",fullname,from,org);
 #endif
 							
-							nsCOMPtr<nsINNTPNewsgroupPost> post;
-							rv = NS_NewNewsgroupPost(getter_AddRefs(post));
+							nsCOMPtr <nsINNTPNewsgroupPost> post;
+                            rv = nsComponentManager::CreateInstance(kNNTPNewsgroupPostCID, nsnull, nsINNTPNewsgroupPost::GetIID(), getter_AddRefs(post));
 							
 							if (NS_SUCCEEDED(rv)) {
 								post->AddNewsgroup(newsgroupName);
@@ -345,7 +351,8 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject,
 					}
 
 					if (NS_SUCCEEDED(rv)) {
-						nntpProtocol->LoadURL(nntpUrl, /* aConsumer */ nsnull);
+                      PRInt32 status = 0;
+                      rv = nntpProtocol->LoadURL(nntpUrl, /* aConsumer */ nsnull, &status);
 					}
 				}
                 //delete nntpProtocol?
@@ -381,8 +388,7 @@ nsNntpService::RunNewsUrl(nsString& urlString, nsISupports * aConsumer, nsIUrlLi
 
 	if (NS_SUCCEEDED(rv) && pNetService)
 	{
-		rv = nsComponentManager::CreateInstance(kNntpUrlCID, nsnull, nsINntpUrl::GetIID(), (void **)
-												&nntpUrl);
+		rv = nsComponentManager::CreateInstance(kNntpUrlCID, nsnull, nsINntpUrl::GetIID(), (void **) &nntpUrl);
 
 		if (NS_SUCCEEDED(rv) && nntpUrl) {
 			nntpUrl->SetSpec(nsAutoCString(urlString));
@@ -391,12 +397,11 @@ nsNntpService::RunNewsUrl(nsString& urlString, nsISupports * aConsumer, nsIUrlLi
 			nsNewsURI2Name(kNewsRootURI, nsAutoCString(urlString), newsgroupName);
 			
             nsCOMPtr <nsINNTPNewsgroup> newsgroup;
-            rv = NS_NewNewsgroup(getter_AddRefs(newsgroup), nsnull /* line */, nsnull /* set */, PR_FALSE /* subscribed */, nsnull /* host*/, 1 /* depth */);
-            
-            if (NS_SUCCEEDED(rv) && newsgroup) {
-			  char *str = newsgroupName.ToNewCString();
-              		  newsgroup->SetName(str);
-			  delete [] str;
+            rv = nsComponentManager::CreateInstance(kNNTPNewsgroupCID, nsnull, nsINNTPNewsgroup::GetIID(), getter_AddRefs(newsgroup));
+                         
+            if (NS_SUCCEEDED(rv)) {
+              rv = newsgroup->Initialize(nsnull /* line */, nsnull /* set */, PR_FALSE /* subscribed */);
+              newsgroup->SetName((char *)((const char *)nsAutoCString(newsgroupName)));
             }
             else {
               return rv;
@@ -421,9 +426,14 @@ nsNntpService::RunNewsUrl(nsString& urlString, nsISupports * aConsumer, nsIUrlLi
 			//PR_FREEIF(hostname);
 			if (NS_SUCCEEDED(rv) && transport) {
 				// almost there...now create a nntp protocol instance to run the url in...
-				nntpProtocol = new nsNNTPProtocol(nntpUrl, transport);
-				if (nntpProtocol)
-					nntpProtocol->LoadURL(nntpUrl, aConsumer);
+				nntpProtocol = new nsNNTPProtocol();
+				if (nntpProtocol) {
+                  PRInt32 status = 0;
+                  rv = nntpProtocol->Initialize(nntpUrl, transport);
+                  if (NS_FAILED(rv)) return rv;
+                  rv = nntpProtocol->LoadURL(nntpUrl, aConsumer, &status);
+                  if (NS_FAILED(rv)) return rv;
+                }
 
                 //delete nntpProtocol;
 			}

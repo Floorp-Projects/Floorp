@@ -9,7 +9,6 @@
 #include "nsINNTPNewsgroup.h" /* interface nsINNTPNewsgroup */
 #include "nsrootidl.h" /* interface nsrootidl */
 #include "nsIMsgGroupRecord.h" /* interface nsIMsgGroupRecord */
-#include "nsINNTPNewsgroupList.h" /* interface nsINNTPNewsgroupList */
 
 /* starting interface:    nsINNTPCategory */
 

@@ -23,8 +23,8 @@ class nsINNTPArticleList : public nsISupports {
  public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_INNTPARTICLELIST_IID)
 
-  /* void Init (in nsINNTPHost newsHost, in nsINNTPNewsgroup newsgroup); */
-  NS_IMETHOD Init(nsINNTPHost *newsHost, nsINNTPNewsgroup *newsgroup) = 0;
+  /* void Initialize (in nsINNTPHost newsHost, in nsINNTPNewsgroup newsgroup); */
+  NS_IMETHOD Initialize(nsINNTPHost *newsHost, nsINNTPNewsgroup *newsgroup) = 0;
 
   /* void AddArticleKey (in long key); */
   NS_IMETHOD AddArticleKey(PRInt32 key) = 0;

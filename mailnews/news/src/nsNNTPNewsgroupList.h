@@ -28,8 +28,9 @@
 #include "nsINNTPHost.h"
 #include "nsINNTPNewsgroupList.h"
 #include "nsINNTPNewsgroup.h"
-
+#include "nsIMsgDatabase.h"
 #include "nsMsgKeySet.h"
+
 
 /* The below is all stuff that we remember for netlib about which
    articles we've already seen in the current newsgroup. */
@@ -53,12 +54,90 @@ typedef struct MSG_NewsKnown {
 	PRBool shouldGetOldest;
 } MSG_NewsKnown;
 
+// This class should ultimately be part of a news group listing
+// state machine - either by inheritance or delegation.
+// Currently, a folder pane owns one and libnet news group listing
+// related messages get passed to this object.
+class nsNNTPNewsgroupList : public nsINNTPNewsgroupList
+#ifdef HAVE_CHANGELISTENER
+/* ,public ChangeListener */
+#endif
+{
+public:
+  nsNNTPNewsgroupList(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const char *name, const char *hostname);
+  nsNNTPNewsgroupList();
+  virtual  ~nsNNTPNewsgroupList();
+  NS_DECL_ISUPPORTS
 
-extern "C" nsresult
-NS_NewNewsgroupList(nsINNTPNewsgroupList **aInstancePtrResult,
-                    nsINNTPHost *newsHost,
-                    nsINNTPNewsgroup *newsgroup,
-					const char *name,
-					const char *url);
+    
+  NS_IMETHOD GetRangeOfArtsToDownload(PRInt32 first_possible,
+                                      PRInt32 last_possible,
+                                      PRInt32 maxextra,
+                                      PRInt32* first,
+                                      PRInt32* lastprotected,
+                                      PRInt32 *status);
+  NS_IMETHOD AddToKnownArticles(PRInt32 first, PRInt32 last);
+
+  // XOVER parser to populate this class
+  NS_IMETHOD InitXOVER(PRInt32 first_msg, PRInt32 last_msg);
+  NS_IMETHOD ProcessXOVERLINE(const char *line, PRUint32 * status);
+  NS_IMETHOD ResetXOVER();
+  NS_IMETHOD ProcessNonXOVER(const char *line);
+  NS_IMETHOD FinishXOVERLINE(int status, int *newstatus);
+  NS_IMETHOD ClearXOVERState();
+  NS_IMETHOD GetGroupName(char **_retval);
+    
+  NS_IMETHOD Initialize(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const char *name, const char *url);
+private:
+  NS_METHOD CleanUp();
+    
+#ifdef HAVE_MASTER
+  MSG_Master		*GetMaster() {return m_master;}
+  void			SetMaster(MSG_Master *master) {m_master = master;}
+#endif
+  
+#ifdef HAVE_PANES
+  void			SetPane(MSG_Pane *pane) {m_pane = pane;}
+#endif
+  PRBool          m_finishingXover;
+  nsINNTPHost*	GetHost() {return m_host;}
+  const char *	GetURL() {return m_url;}
+  
+#ifdef HAVE_CHANGELISTENER
+  virtual void	OnAnnouncerGoingAway (ChangeAnnouncer *instigator);
+#endif
+  void				SetGetOldMessages(PRBool getOldMessages) {m_getOldMessages = getOldMessages;}
+  PRBool			GetGetOldMessages() {return m_getOldMessages;}
+  nsresult			ParseLine(char *line, PRUint32 *message_number);
+  PRBool			msg_StripRE(const char **stringP, PRUint32 *lengthP);
+  nsresult			GetDatabase(const char *uri, nsIMsgDatabase **db);
+
+protected:
+  nsIMsgDatabase	*m_newsDB;
+#ifdef HAVE_PANES
+  MSG_Pane		*m_pane;
+#endif
+  PRBool			m_startedUpdate;
+  PRBool			m_getOldMessages;
+  PRBool			m_promptedAlready;
+  PRBool			m_downloadAll;
+  PRInt32			m_maxArticles;
+  char			*m_groupName;
+  nsINNTPHost	*m_host;
+  nsINNTPNewsgroup *m_newsgroup;
+  char			*m_url;			// url we're retrieving
+#ifdef HAVE_MASTER
+  MSG_Master		*m_master;
+#endif
+  
+  nsMsgKey		m_lastProcessedNumber;
+  nsMsgKey		m_firstMsgNumber;
+  nsMsgKey		m_lastMsgNumber;
+  PRInt32			m_firstMsgToDownload;
+  PRInt32			m_lastMsgToDownload;
+  
+  struct MSG_NewsKnown	m_knownArts;
+  nsMsgKeySet		*m_set;
+};
     
 #endif /* nsNNTPNewsgroupListState_h___ */

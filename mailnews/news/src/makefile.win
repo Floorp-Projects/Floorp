@@ -59,6 +59,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsNNTPProtocol.obj				\
 EXPORTS=	nsNNTPProtocol.h				\
 			nsNntpUrl.h						\
 			nsNNTPNewsgroupList.h			\
+			nsNNTPArticleList.h			\
 			nsNNTPNewsgroup.h				\
 			nntpCore.h						\
 			nsNNTPNewsgroupPost.h			\

@@ -8,7 +8,6 @@
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsINNTPNewsgroup.h" /* interface nsINNTPNewsgroup */
 #include "nsrootidl.h" /* interface nsrootidl */
-#include "nsINNTPNewsgroupList.h" /* interface nsINNTPNewsgroupList */
 
 /* starting interface:    nsINNTPCategoryContainer */
 

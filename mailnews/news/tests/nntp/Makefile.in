@@ -68,7 +68,6 @@ LIBS = \
 	-lmsgbaseutil \
 	$(ZLIB_LIBS) \
 	$(DIST)/lib/librdfbase_s.a \
-	$(DIST)/lib/libnntp.a	\
 	$(NSPR_LIBS) \
 	$(TK_LIBS) \
 	$(NULL)

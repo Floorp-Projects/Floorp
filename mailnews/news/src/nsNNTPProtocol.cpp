@@ -35,6 +35,7 @@
 #include "nsINetService.h"
 
 #include "nsMsgBaseCID.h"
+#include "nsMsgNewsCID.h"
 
 #include "nsINntpUrl.h"
 
@@ -80,6 +81,8 @@ char * NET_SACat (char **destination, const char *source);
 
 static NS_DEFINE_IID(kIWebShell, NS_IWEB_SHELL_IID);  
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kCHeaderParserCID, NS_MSGHEADERPARSER_CID);
+static NS_DEFINE_CID(kNNTPArticleListCID, NS_NNTPARTICLELIST_CID);
 
 // quiet compiler warnings by defining these function prototypes
 char *NET_ExplainErrorDetails (int code, ...);
@@ -233,12 +236,6 @@ PRIVATE PRBool net_news_last_username_probably_valid=PR_FALSE;
 PRInt32 net_NewsChunkSize=DEFAULT_NEWS_CHUNK_SIZE; 
 /* PRIVATE PRInt32 net_news_timeout = 170; */
 /* seconds that an idle NNTP conn can live */
-extern "C"
-{
-nsresult NS_NewArticleList(nsINNTPArticleList **articleList, const nsINNTPHost* newsHost, nsINNTPNewsgroup* newsgroup);
-nsresult NS_NewNewsgroup(nsINNTPNewsgroup **info, char *line, nsMsgKeySet *set, PRBool subscribed, nsINNTPHost *host, int depth);
-nsresult NS_NewNewsgroupList(nsINNTPNewsgroupList **aInstancePtrResult, nsINNTPHost *newsHost, nsINNTPNewsgroup *newsgroup);
-}
 
 static char * last_password = 0;
 static char * last_password_hostname = 0;
@@ -357,20 +354,10 @@ char *MSG_UnEscapeSearchUrl (const char *commandSpecificData)
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-nsNNTPProtocol::nsNNTPProtocol(nsIURL * aURL, nsITransport * transportLayer) : m_tempArticleFile(ARTICLE_PATH)
+nsNNTPProtocol::nsNNTPProtocol() : m_tempArticleFile(ARTICLE_PATH)
 {
   /* the following macro is used to initialize the ref counting data */
   NS_INIT_REFCNT();
-  Initialize(aURL, transportLayer);
-  
-  nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-  if (NS_SUCCEEDED(rv) && (prefs)) {
-      rv = prefs->GetIntPref(PREF_NEWS_MAX_ARTICLES, &net_NewsChunkSize);
-      if (NS_FAILED(rv)) {
-          net_NewsChunkSize = DEFAULT_NEWS_CHUNK_SIZE;
-      }
-  }
 }
 
 nsNNTPProtocol::~nsNNTPProtocol()
@@ -378,8 +365,6 @@ nsNNTPProtocol::~nsNNTPProtocol()
 	// release all of our event sinks
 	if (m_newsgroupList)
 		NS_RELEASE(m_newsgroupList);
-	if (m_articleList)
-		NS_RELEASE(m_articleList);
 	if (m_newsHost)
 		NS_RELEASE(m_newsHost);
 	if (m_newsgroup)
@@ -396,8 +381,21 @@ nsNNTPProtocol::~nsNNTPProtocol()
 		delete m_lineStreamBuffer;
 }
 
-void nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
+nsresult nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
 {
+    nsresult rv = NS_OK;
+    
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+    if (NS_SUCCEEDED(rv) && prefs) {
+        rv = prefs->GetIntPref(PREF_NEWS_MAX_ARTICLES, &net_NewsChunkSize);
+        if (NS_FAILED(rv)) {
+            net_NewsChunkSize = DEFAULT_NEWS_CHUNK_SIZE;
+        }
+    }
+    else {
+        return rv;
+    }
+
 	NS_PRECONDITION(aURL, "invalid URL passed into NNTP Protocol");
 
 	m_flags = 0;
@@ -414,7 +412,6 @@ void nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
 	// query the URL for a nsINNTPUrl
 	m_runningURL = nsnull; // initialize to NULL
     m_newsgroupList = nsnull;
-	m_articleList = nsnull;
 	m_newsHost	  = nsnull;
 	m_newsgroup	  = nsnull;
 	m_offlineNewsState = nsnull; 
@@ -422,30 +419,36 @@ void nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
 
 	if (aURL)
 	{
-		nsresult rv = aURL->QueryInterface(nsINntpUrl::GetIID(), (void **)&m_runningURL);
+		rv = aURL->QueryInterface(nsINntpUrl::GetIID(), (void **)&m_runningURL);
 		if (NS_SUCCEEDED(rv) && m_runningURL)
 		{
 			// okay, now fill in our event sinks...Note that each getter ref counts before
 			// it returns the interface to us...we'll release when we are done
 			m_runningURL->GetNewsgroupList(&m_newsgroupList);
-			m_runningURL->GetNntpArticleList(&m_articleList);
+			m_runningURL->GetNntpArticleList(getter_AddRefs(m_articleList));
 			m_runningURL->GetNntpHost(&m_newsHost);
 			m_runningURL->GetNewsgroup(&m_newsgroup);
 			m_runningURL->GetOfflineNewsState(&m_offlineNewsState);
 		}
+        else {
+            return rv;
+        }
 	}
 	
 	m_outputStream = NULL;
 	m_outputConsumer = NULL;
 
-	nsresult rv = m_transport->GetOutputStream(&m_outputStream);
+	rv = m_transport->GetOutputStream(&m_outputStream);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "ooops, transport layer unable to create an output stream");
+    if (NS_FAILED(rv)) return rv;
 	rv = m_transport->GetOutputStreamConsumer(&m_outputConsumer);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "ooops, transport layer unable to provide us with an output consumer!");
+    if (NS_FAILED(rv)) return rv;
 
 	// register self as the consumer for the socket...
 	rv = m_transport->SetInputStreamConsumer((nsIStreamListener *) this);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register NNTP instance as a consumer on the socket");
+    if (NS_FAILED(rv)) return rv;
 
 	const char * hostName = NULL;
 	aURL->GetHost(&hostName);
@@ -482,11 +485,12 @@ void nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
 	m_articleNumber = 0;
 	m_originalContentLength = 0;
 	m_urlInProgress = PR_FALSE;
+
+    return NS_OK;
 }
 
-PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
+nsresult nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer, PRInt32 *status)
 {
-  PRInt32 status = 0;
   PRBool bVal = FALSE;
   char * hostAndPort = 0;
   char *group = 0;
@@ -496,6 +500,8 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
   nsCOMPtr <nsINNTPNewsgroupPost> message;
   //char *message_id = 0;
 
+  *status = 0;
+  
   nsresult rv = NS_OK;
 
   m_articleNumber = -1;
@@ -520,7 +526,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
 		  // okay, now fill in our event sinks...Note that each getter ref counts before
 		  // it returns the interface to us...we'll release when we are done
 		  m_runningURL->GetNewsgroupList(&m_newsgroupList);
-		  m_runningURL->GetNntpArticleList(&m_articleList);
+		  m_runningURL->GetNntpArticleList(getter_AddRefs(m_articleList));
 		  m_runningURL->GetNntpHost(&m_newsHost);
 		  m_runningURL->GetNewsgroup(&m_newsgroup);
 		  m_runningURL->GetOfflineNewsState(&m_offlineNewsState);
@@ -533,12 +539,12 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
 
   if (NS_FAILED(rv))
   {
-	  status = -1;
+	  *status = -1;
 	  goto FAIL;
   }
 
-  status = ParseURL(aURL, &hostAndPort, &bVal, &group, &messageID, &commandSpecificData);
-  if (status < 0)
+  *status = ParseURL(aURL, &hostAndPort, &bVal, &group, &messageID, &commandSpecificData);
+  if (*status < 0)
 	goto FAIL;
 
   // if we don't have a news host already, go get one...
@@ -558,7 +564,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
 	  rv = NS_NewNNTPHost(&m_newsHost, hostAndPort /* really just hostname */, port ? port : NEWS_PORT);
 
 	  if (NS_FAILED(rv) || (m_newsHost == nsnull)) {
-			status = -1;
+			*status = -1;
 			goto FAIL;
 	  }
 
@@ -571,7 +577,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
       PR_FREEIF(newshosturi);
 
 	  if (NS_FAILED(rv)) {
-			status = -1;
+			*status = -1;
 			goto FAIL;
 	  }
   }
@@ -579,7 +585,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
   PR_ASSERT(NS_SUCCEEDED(rv));
   if (!NS_SUCCEEDED(rv)) 
   {
-	status = -1;
+	*status = -1;
 	goto FAIL;
   }
 
@@ -593,7 +599,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
   if (cancel /* && !ce->URL_s->internal_url */)
   {
 	  /* Don't allow manual "news:ID?cancel" URLs, only internal ones. */
-	  status = -1;
+	  *status = -1;
 	  goto FAIL;
   }
   else
@@ -612,7 +618,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
 	   */
 	  if (!ce->URL_s->internal_url)
 		{
-		  status = -1;
+		  *status = -1;
 		  goto FAIL;
 		}
 #endif
@@ -677,7 +683,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
 		  && ce->window_id->type != MWContextMailMsg
 		  && ce->window_id->type != MWContextMail && ce->window_id->type != MWContextMailNewsProgress)
 		{
-		  status = -1;
+		  *status = -1;
 		  goto FAIL;
 		}
 #endif
@@ -784,12 +790,12 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
   PR_FREEIF (messageID);
   PR_FREEIF (commandSpecificData);
 
-  if (status < 0)
+  if (*status < 0)
   {
 #ifdef UNREADY_CODE
-	  ce->URL_s->error_msg = NET_ExplainErrorDetails(status);
+	  ce->URL_s->error_msg = NET_ExplainErrorDetails(*status);
 #endif
-	  return status;
+      return NS_ERROR_FAILURE;
   }
   else 
   {
@@ -804,8 +810,8 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
 		  m_transport->Open(m_runningURL);  // opening the url will cause to get notified when the connection is established
 	  }
 	  else  // the connection is already open so we should begin processing our new url...
-		 status = ProcessNewsState(m_runningURL, nsnull, 0); 
-	  return status;
+		 *status = ProcessNewsState(m_runningURL, nsnull, 0); 
+	  return NS_OK;
   }
 
 }
@@ -3626,11 +3632,10 @@ PRInt32 nsNNTPProtocol::Cancel()
   {
     nsCOMPtr<nsIMsgHeaderParser> parser;
     PRBool ok = PR_FALSE;
-    NS_DEFINE_CID(kCHeaderParser, NS_MSGHEADERPARSER_CID);
                   
-    rv = nsComponentManager::CreateInstance(kCHeaderParser,
+    rv = nsComponentManager::CreateInstance(kCHeaderParserCID,
                                             nsnull,
-                                            nsIMsgHeaderParser::IID(),
+                                            nsIMsgHeaderParser::GetIID(),
                                             getter_AddRefs(parser));
     if (NS_SUCCEEDED(rv)) 
 	{
@@ -4092,8 +4097,14 @@ PRInt32 nsNNTPProtocol::ListGroup()
 			OUTPUT_BUFFER_SIZE, 
 			"listgroup %.512s" CRLF,
                 group_name);
-    rv = NS_NewArticleList(&m_articleList,
-                               m_newsHost, m_newsgroup);
+    
+    rv = nsComponentManager::CreateInstance(kNNTPArticleListCID,
+                                            nsnull,
+                                            nsINNTPArticleList::GetIID(),
+                                            getter_AddRefs(m_articleList));
+    if (NS_FAILED(rv)) return -1;  // ???
+
+    m_articleList->Initialize(m_newsHost, m_newsgroup);
 	
 	status = SendData(outputBuffer); 
 

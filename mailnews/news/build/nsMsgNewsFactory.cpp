@@ -34,6 +34,11 @@
 #include "nsNntpService.h"
 #include "nsNntpIncomingServer.h"
 #include "nsNewsMessage.h"
+#include "nsNNTPProtocol.h"
+#include "nsNNTPNewsgroup.h"
+#include "nsNNTPNewsgroupPost.h"
+#include "nsNNTPNewsgroupList.h"
+#include "nsNNTPArticleList.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kNntpUrlCID, NS_NNTPURL_CID);
@@ -41,6 +46,11 @@ static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kNewsFolderResourceCID, NS_NEWSFOLDERRESOURCE_CID);
 static NS_DEFINE_CID(kNntpIncomingServerCID, NS_NNTPINCOMINGSERVER_CID);
 static NS_DEFINE_CID(kNewsMessageResourceCID, NS_NEWSMESSAGERESOURCE_CID);
+static NS_DEFINE_CID(kNNTPProtocolCID, NS_NNTPPROTOCOL_CID);
+static NS_DEFINE_CID(kNNTPNewsgroupCID, NS_NNTPNEWSGROUP_CID);
+static NS_DEFINE_CID(kNNTPNewsgroupPostCID, NS_NNTPNEWSGROUPPOST_CID);
+static NS_DEFINE_CID(kNNTPNewsgroupListCID, NS_NNTPNEWSGROUPLIST_CID);
+static NS_DEFINE_CID(kNNTPArticleListCID, NS_NNTPARTICLELIST_CID);
 
 static PRInt32 g_InstanceCount = 0;
 static PRInt32 g_LockCount = 0;
@@ -123,8 +133,7 @@ nsresult nsMsgNewsFactory::CreateInstance(nsISupports * /* aOuter */,
   
 	// ClassID check happens here
 	// Whenever you add a new class that supports an interface, plug it in here!!!
-
-	// do they want a news datasource ?
+  
 	if (mClassID.Equals(kNntpUrlCID)) 
 	{		
     nsNntpUrl *url = new nsNntpUrl(nsnull, nsnull);
@@ -136,7 +145,7 @@ nsresult nsMsgNewsFactory::CreateInstance(nsISupports * /* aOuter */,
     if (NS_FAILED(rv) && url) 
       delete url;
 	}
-	else if (mClassID.Equals(kNntpServiceCID))
+  else if (mClassID.Equals(kNntpServiceCID))
 	{
     nsNntpService *service = new nsNntpService();
     if (service)
@@ -146,6 +155,61 @@ nsresult nsMsgNewsFactory::CreateInstance(nsISupports * /* aOuter */,
     
     if (NS_FAILED(rv) && service) 
       delete service;
+	}
+	else if (mClassID.Equals(kNNTPProtocolCID))
+	{
+    nsNNTPProtocol *protocol = new nsNNTPProtocol();
+    if (protocol)
+      rv = protocol->QueryInterface(aIID, aResult);
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    
+    if (NS_FAILED(rv) && protocol) 
+      delete protocol;
+	}
+  else if (mClassID.Equals(kNNTPNewsgroupPostCID))
+	{
+    nsNNTPNewsgroupPost *newsgroupPost = new nsNNTPNewsgroupPost();
+    if (newsgroupPost)
+      rv = newsgroupPost->QueryInterface(aIID, aResult);
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    
+    if (NS_FAILED(rv) && newsgroupPost) 
+      delete newsgroupPost;
+	}
+  else if (mClassID.Equals(kNNTPArticleListCID))
+	{
+    nsNNTPArticleList *articleList = new nsNNTPArticleList();
+    if (articleList)
+      rv = articleList->QueryInterface(aIID, aResult);
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    
+    if (NS_FAILED(rv) && articleList) 
+      delete articleList;
+	}
+  else if (mClassID.Equals(kNNTPNewsgroupListCID))
+	{
+    nsNNTPNewsgroupList *newsgroupList = new nsNNTPNewsgroupList();
+    if (newsgroupList)
+      rv = newsgroupList->QueryInterface(aIID, aResult);
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    
+    if (NS_FAILED(rv) && newsgroupList) 
+      delete newsgroupList;
+	}
+  else if (mClassID.Equals(kNNTPNewsgroupCID))
+	{
+    nsNNTPNewsgroup *newsgroup = new nsNNTPNewsgroup();
+    if (newsgroup)
+      rv = newsgroup->QueryInterface(aIID, aResult);
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    
+    if (NS_FAILED(rv) && newsgroup) 
+      delete newsgroup;
 	}
  	else if (mClassID.Equals(kNewsFolderResourceCID)) 
 	{
@@ -252,6 +316,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "news",
                                   path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) goto done;
+  
 
 	rv = compMgr->RegisterComponent(kNewsMessageResourceCID,
 									"News Resource Factory",
@@ -269,6 +334,38 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 									path, PR_TRUE, PR_TRUE);
                                   
 	if (NS_FAILED(rv)) goto done;
+  
+	rv = compMgr->RegisterComponent(kNNTPProtocolCID,
+                                  "NNTP Protocol",
+                                  "component://netscape/messeneger/nntpprotocol",
+                                  path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->RegisterComponent(kNNTPNewsgroupCID,
+                                  "NNTP Newsgroup",
+                                  "component://netscape/messeneger/nntpnewsgroup",
+                                  path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) goto done;
+
+  rv = compMgr->RegisterComponent(kNNTPNewsgroupPostCID,
+                                  "NNTP Newsgroup Post",
+                                  "component://netscape/messeneger/nntpnewsgrouppost",
+                                  path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) goto done;
+
+  rv = compMgr->RegisterComponent(kNNTPNewsgroupListCID,
+                                  "NNTP Newsgroup List",
+                                  "component://netscape/messeneger/nntpnewsgrouplist",
+                                  path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) goto done;
+
+  rv = compMgr->RegisterComponent(kNNTPArticleListCID,
+                                  "NNTP Article List",
+                                  "component://netscape/messeneger/nntparticlelist",
+                                  path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) goto done;
+
+
 
 done:
 	(void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
@@ -300,6 +397,18 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 	if (NS_FAILED(rv)) goto done;
 
 	rv = compMgr->UnregisterComponent(kNewsMessageResourceCID, path);
+	if (NS_FAILED(rv)) goto done;
+
+  rv = compMgr->UnregisterComponent(kNNTPProtocolCID, path);
+	if (NS_FAILED(rv)) goto done;
+  
+  rv = compMgr->UnregisterComponent(kNNTPNewsgroupCID, path);
+	if (NS_FAILED(rv)) goto done;
+
+  rv = compMgr->UnregisterComponent(kNNTPNewsgroupPostCID, path);
+	if (NS_FAILED(rv)) goto done;
+
+  rv = compMgr->UnregisterComponent(kNNTPNewsgroupListCID, path);
 	if (NS_FAILED(rv)) goto done;
 
 done:

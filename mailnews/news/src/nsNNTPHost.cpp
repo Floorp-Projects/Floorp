@@ -52,6 +52,13 @@
 #include "plhash.h"
 #include "prio.h"
 
+#include "nsCOMPtr.h"
+
+#include "nsMsgNewsCID.h"
+
+static NS_DEFINE_CID(kNNTPNewsgroupCID, NS_NNTPNEWSGROUP_CID);
+static NS_DEFINE_CID(kNNTPNewsgroupListCID, NS_NNTPNEWSGROUPLIST_CID);
+
 /* temporary hacks to test if this compiles */
 typedef void MSG_GroupName;
 
@@ -911,8 +918,8 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
 		return NS_OK;
 	}
 
-	nsINNTPNewsgroup* info=nsnull;
-    nsresult rv=NS_ERROR_NOT_INITIALIZED;
+	nsCOMPtr <nsINNTPNewsgroup> newsgroup;
+    nsresult rv= NS_ERROR_NOT_INITIALIZED;
     
 	if (subscribed && IsCategoryContainer(line))
 	{
@@ -934,7 +941,7 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
 			char* fullname = child->GetFullName();
 			if (!fullname) break;
 
-            rv = FindGroup(fullname, &info);
+            rv = FindGroup(fullname, getter_AddRefs(newsgroup));
 
 			if (NS_FAILED(rv)) {
                 // autosubscribe, if we haven't seen this one.
@@ -943,43 +950,43 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
                     rv = ProcessLine(groupLine, PL_strlen(groupLine));
                     PR_Free(groupLine);
                 }
-            } else {
-                    NS_RELEASE(info);
-			}
+            }
 			delete [] fullname;
 		}
 	}
 	else {
-        PRUint32 depth = 1;
 		rv = NS_OK;
-        /* rv = m_hostinfo->GetDepth(&depth); */
 
         if (NS_SUCCEEDED(rv)) {
-            rv = NS_NewNewsgroup(&info, line, set, subscribed, this,
-                                 depth+1);
-
+            rv = nsComponentManager::CreateInstance(kNNTPNewsgroupCID, nsnull, nsINNTPNewsgroup::GetIID(), getter_AddRefs(newsgroup));
+            if (NS_FAILED(rv)) {
+                return rv;
+            }
+            rv = newsgroup->Initialize(line, set, subscribed);
 			if (NS_SUCCEEDED(rv)) {
-				nsINNTPNewsgroupList *newsgroupList = nsnull;
-
-				rv = NS_NewNewsgroupList(&newsgroupList, this, info, line, m_hostname);
-				if (NS_SUCCEEDED(rv) && (newsgroupList != nsnull)) {
+				nsCOMPtr<nsINNTPNewsgroupList> newsgroupList;
+                
+                rv = nsComponentManager::CreateInstance(kNNTPNewsgroupListCID, nsnull, nsINNTPNewsgroupList::GetIID(), getter_AddRefs(newsgroupList));
+           
+				if (NS_SUCCEEDED(rv)) {
+                    rv = newsgroupList->Initialize(this, newsgroup, line, m_hostname);
 					//add newsgroupList to host's list of newsgroups
-					if (m_newsgrouplists != nsnull) 
+					if (m_newsgrouplists) 
 						m_newsgrouplists->AppendElement(newsgroupList);
 				}
 			}
 		}
     }
 
-	if (NS_FAILED(rv) || !info) return NS_ERROR_OUT_OF_MEMORY;
+	if (NS_FAILED(rv) || !newsgroup) return NS_ERROR_OUT_OF_MEMORY;
 
 	// for now, you can't subscribe to category by itself.
     nsINNTPCategory *category;
     
-	if (NS_SUCCEEDED(info->QueryInterface(nsINNTPCategory::GetIID(),
+	if (NS_SUCCEEDED(newsgroup->QueryInterface(nsINNTPCategory::GetIID(),
                                           (void **)&category))) {
         
-        nsIMsgFolder *folder = getFolderFor(info);
+        nsIMsgFolder *folder = getFolderFor(newsgroup);
         if (folder) {
             //            m_hostinfo->AddSubFolder(folder);
             m_hostinfo->AppendElement(folder);
@@ -990,7 +997,7 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
 	}
 
 	if (m_groups != nsnull) {
-		m_groups->AppendElement(info);
+		m_groups->AppendElement(newsgroup);
 	}
 	else {
 		printf("m_groups is null.\n");
@@ -999,7 +1006,7 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
 	// prime the folder info from the folder cache while it's still around.
 	// Except this might disable the update of new counts - check it out...
 #ifdef HAVE_MASTER
-	m_master->InitFolderFromCache (info);
+	m_master->InitFolderFromCache(newsgroup);
 #endif
 
 	return NS_OK;

@@ -7,6 +7,11 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsrootidl.h" /* interface nsrootidl */
+#include "nsINNTPHost.h"
+#include "nsINNTPNewsgroupList.h"
+
+class nsINNTPHost; /* forward decl */
+class nsINNTPNewsgroup; /* forward decl */
 
 /* starting interface:    nsINNTPNewsgroupList */
 
@@ -46,6 +51,9 @@ class nsINNTPNewsgroupList : public nsISupports {
 
   /* string GetGroupName (); */
   NS_IMETHOD GetGroupName(char **_retval) = 0;
+
+  /* void Initialize (in nsINNTPHost host, in nsINNTPNewsgroup newsgroup, in string name, in string url); */
+  NS_IMETHOD Initialize(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const char *name, const char *url) = 0;
 };
 
 #endif /* __gen_nsINNTPNewsgroupList_h__ */

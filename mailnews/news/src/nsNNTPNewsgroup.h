@@ -19,21 +19,64 @@
 #ifndef __nsNNTPNewsgroup_h
 #define __nsNNTPNewsgroup_h
 
-#include "nsINNTPNewsgroup.h"
 #include "nsMsgKeySet.h"
 #include "nsINNTPHost.h"
+#include "nsINNTPNewsgroup.h"
+#include "nsCOMPtr.h"
 
-NS_BEGIN_EXTERN_C
+class nsNNTPNewsgroup : public nsINNTPNewsgroup 
+{
+public: 
+	 nsNNTPNewsgroup();
+	 virtual ~nsNNTPNewsgroup();
+	 
+	 NS_DECL_ISUPPORTS
+  
+	 NS_IMETHOD GetName(char * *aName);
+	 NS_IMETHOD SetName(char * aName);
+  
+	 NS_IMETHOD GetPrettyName(char * *aPrettyName);
+	 NS_IMETHOD SetPrettyName(char * aPrettyName);
+ 
+	 NS_IMETHOD GetPassword(char * *aPassword);
+	 NS_IMETHOD SetPassword(char * aPassword);
+ 
+	 NS_IMETHOD GetUsername(char * *aUsername);
+	 NS_IMETHOD SetUsername(char * aUsername);
+  
+	 NS_IMETHOD GetNeedsExtraInfo(PRBool *aNeedsExtraInfo);
+	 NS_IMETHOD SetNeedsExtraInfo(PRBool aNeedsExtraInfo);
+ 
+	 NS_IMETHOD IsOfflineArticle(PRInt32 num, PRBool *_retval);
 
-nsresult
-NS_NewNewsgroup(nsINNTPNewsgroup **info,
-                char *line,
-                nsMsgKeySet *set,
-                PRBool subscribed,
-                nsINNTPHost *host,
-                int depth);
+	 NS_IMETHOD GetCategory(PRBool *aCategory);
+	 NS_IMETHOD SetCategory(PRBool aCategory);
+  
+	 NS_IMETHOD GetSubscribed(PRBool *aSubscribed);
+	 NS_IMETHOD SetSubscribed(PRBool aSubscribed);
+  
+	 NS_IMETHOD GetWantNewTotals(PRBool *aWantNewTotals);
+	 NS_IMETHOD SetWantNewTotals(PRBool aWantNewTotals);
+  
+	 NS_IMETHOD GetNewsgroupList(nsINNTPNewsgroupList * *aNewsgroupList);
+	 NS_IMETHOD SetNewsgroupList(nsINNTPNewsgroupList * aNewsgroupList);
 
-NS_END_EXTERN_C
+	 NS_IMETHOD UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRInt32 total_messages);
 
-#endif
+     NS_IMETHOD Initialize(const char *line, nsMsgKeySet *set, PRBool subscribed);
 
+protected:
+	 char * m_groupName;
+	 char * m_prettyName;
+	 char * m_password;
+	 char * m_userName;
+	 
+	 PRBool	m_isSubscribed;
+	 PRBool m_wantsNewTotals;
+	 PRBool m_needsExtraInfo;
+	 PRBool m_category;
+
+	 nsCOMPtr<nsINNTPNewsgroupList> m_newsgroupList;
+};
+
+#endif /* __nsNNTPNewsgroup_h */

@@ -151,15 +151,18 @@ class nsNNTPProtocol : public nsIStreamListener
 {
 public:
 	// Creating a protocol instance requires the URL which needs to be run AND it requires
-	// a transport layer. 
-	nsNNTPProtocol(nsIURL * aURL, nsITransport * transportLayer);
+	// a transport layer.  need to call Initialize after we do a new of nsNNTPProtocol
+	nsNNTPProtocol();
 	
 	virtual ~nsNNTPProtocol();
 
-	// aConsumer is typically a display stream you may want the results to be displayed into...
+	// initialization function given a new url and transport layer
+	NS_IMETHOD Initialize(nsIURL * aURL, nsITransport * transportLayer);
 
-	PRInt32 LoadURL(nsIURL * aURL, nsISupports * aConsumer /* consumer of the url */ = nsnull);
-	PRBool  IsRunningUrl() { return m_urlInProgress;} // returns true if we are currently running a url and false otherwise...
+	// aConsumer is typically a display stream you may want the results to be displayed into...
+	NS_IMETHOD LoadURL(nsIURL * aURL, nsISupports * aConsumer /* consumer of the url */, PRInt32 * status);
+    
+	NS_IMETHOD IsRunningUrl(PRBool * _retval) { *_retval = m_urlInProgress; return NS_OK;} // returns true if we are currently running a url and false otherwise...
 
 	NS_DECL_ISUPPORTS
 
@@ -209,7 +212,7 @@ private:
 
 	// News Event Sinks
     nsINNTPNewsgroupList	* m_newsgroupList;
-    nsINNTPArticleList		* m_articleList;
+    nsCOMPtr <nsINNTPArticleList> m_articleList;
 
 	nsINNTPHost				* m_newsHost;
 	nsINNTPNewsgroup		* m_newsgroup;
@@ -277,9 +280,6 @@ private:
 	
 	PRInt32	  ProcessNewsState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length);
 	PRInt32	  CloseConnection(); // releases and closes down this protocol instance...
-
-	// initialization function given a new url and transport layer
-	void Initialize(nsIURL * aURL, nsITransport * transportLayer);
 
     PRInt32 PostMessageInFile(const nsFilePath &filePath);
 

@@ -39,7 +39,7 @@
 #include "nsNNTPNewsgroup.h"
 
 #include "nntpCore.h"
-#include "nsNNTPProtocol.h"
+#include "nsINNTPProtocol.h"
 #include "nsINntpUrl.h"
 
 // include the event sinks for the protocol you are testing
@@ -53,6 +53,8 @@
 
 #include "nsIPref.h"
 #include "nsIFileLocator.h"
+
+#include "nsMsgNewsCID.h"
 
 #ifdef XP_PC
 #define NETLIB_DLL	"netlib.dll"
@@ -79,6 +81,9 @@
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kNntpUrlCID, NS_NNTPURL_CID);
+static NS_DEFINE_CID(kNNTPProtocolCID, NS_NNTPPROTOCOL_CID);
+static NS_DEFINE_CID(kNNTPNewsgroupPostCID, NS_NNTPNEWSGROUPPOST_CID);
+static NS_DEFINE_CID(kNNTPNewsgroupCID, NS_NNTPNEWSGROUP_CID);
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kFileLocatorCID, NS_FILELOCATOR_CID);
@@ -203,7 +208,7 @@ protected:
 	char		m_host[200];		
 
 	nsCOMPtr <nsINntpUrl> m_url; 
-	nsNNTPProtocol * m_nntpProtocol; // running protocol instance
+	nsCOMPtr <nsINNTPProtocol> m_nntpProtocol; // running protocol instance
 	nsCOMPtr <nsITransport> m_transport; // a handle on the current transport object being used with the protocol binding...
 
 	PRBool		m_runningURL;
@@ -241,10 +246,9 @@ nsNntpTestDriver::InitializeProtocol(const char * urlString)
     nsresult rv = NS_OK;
 
 	// this is called when we don't have a url nor a protocol instance yet...
-	rv = nsComponentManager::CreateInstance(kNntpUrlCID, nsnull, nsINntpUrl::GetIID(), (void **) &m_url);
+	rv = nsComponentManager::CreateInstance(kNntpUrlCID, nsnull, nsINntpUrl::GetIID(), getter_AddRefs(m_url));
 
-	if (NS_FAILED(rv) || (m_url == nsnull)) 
-	{ 
+	if (NS_FAILED(rv)) { 
         printf("InitializeProtocol failed\n");
         m_protocolInitialized = PR_FALSE;
         return rv;
@@ -255,13 +259,19 @@ nsNntpTestDriver::InitializeProtocol(const char * urlString)
 	m_url->RegisterListener(this);
 
 	// now create a protocol instance...
-	m_nntpProtocol = new nsNNTPProtocol(m_url, m_transport);
-    if (m_nntpProtocol == nsnull) {
+    rv = nsComponentManager::CreateInstance(kNNTPProtocolCID, nsnull, nsINNTPProtocol::GetIID(), getter_AddRefs(m_nntpProtocol));
+    if (NS_FAILED(rv)) {
         m_protocolInitialized = PR_FALSE;
         return NS_ERROR_OUT_OF_MEMORY;
     }
     else {
-        m_protocolInitialized = PR_TRUE;
+        rv = m_nntpProtocol->Initialize(m_url, m_transport);
+        if (NS_FAILED(rv)) {
+            m_protocolInitialized = PR_FALSE;
+        }
+        else {
+            m_protocolInitialized = PR_TRUE;
+        }
         return rv;
     }
 }
@@ -270,8 +280,6 @@ nsNntpTestDriver::~nsNntpTestDriver()
 {
 	if (m_url)
 		m_url->UnRegisterListener(this);
-
-	if (m_nntpProtocol) delete m_nntpProtocol;
 }
 
 NS_IMPL_ISUPPORTS(nsNntpTestDriver, nsIUrlListener::GetIID())
@@ -460,7 +468,8 @@ nsresult nsNntpTestDriver::OnExit()
 
 nsresult nsNntpTestDriver::OnListAllGroups()
 {
-	nsresult rv = NS_OK; 
+	nsresult rv = NS_OK;
+    PRInt32 status = 0;
     printf("Listing all groups..\n");
 	// no prompt for url data....just append a '*' to the url data and run it...
 	m_urlString[0] = '\0';
@@ -477,7 +486,7 @@ nsresult nsNntpTestDriver::OnListAllGroups()
 
 	m_url->SetSpec(m_urlString); // reset spec
     printf("Running %s\n", m_urlString);
-	rv = m_nntpProtocol->LoadURL(m_url, nsnull /* display stream */);
+	rv = m_nntpProtocol->LoadURL(m_url, nsnull /* display stream */, &status);
 	return rv;
 }
 
@@ -499,7 +508,8 @@ nsresult nsNntpTestDriver::OnListIDs()
     if (NS_SUCCEEDED(rv)) {
         SetupUrl(m_userData);
         printf("Running %s\n", m_urlString);
-        rv = m_nntpProtocol->LoadURL(m_url, nsnull /* display stream */);
+        PRInt32 status = 0;
+        rv = m_nntpProtocol->LoadURL(m_url, nsnull /* display stream */, &status);
     }
 
 	return rv;
@@ -521,9 +531,10 @@ nsresult nsNntpTestDriver::OnListArticle()
 	PL_strcat(m_urlString, m_userData);
 
 	if (NS_SUCCEEDED(rv)) {
+        PRInt32 status = 0;
         SetupUrl(m_userData);
         printf("Running %s\n", m_urlString);
-        rv = m_nntpProtocol->LoadURL(m_url);
+        rv = m_nntpProtocol->LoadURL(m_url, nsnull, &status);
     }
     
 	return rv;
@@ -551,9 +562,10 @@ nsresult nsNntpTestDriver::OnSearch()
 
 	
 	if (NS_SUCCEEDED(rv)) {
+        PRInt32 status = 0 ;
         SetupUrl(m_userData);
         printf("Running %s\n", m_urlString);
-        rv = m_nntpProtocol->LoadURL(m_url, nsnull /* display stream */);
+        rv = m_nntpProtocol->LoadURL(m_url, nsnull /* display stream */, &status);
     }
     
 	return rv;
@@ -564,13 +576,14 @@ nsresult nsNntpTestDriver::OnSearch()
 nsresult
 nsNntpTestDriver::OnPostMessage()
 {
+    PRInt32 status = 0;
     nsresult rv = NS_OK;
     char *subject;
     char *message;
     char *newsgroup;
     
     rv = PromptForUserDataAndBuildUrl("Newsgroup: ");
-    newsgroup =PL_strdup(m_userData);
+    newsgroup = PL_strdup(m_userData);
     
     m_urlString[0] = '\0';
     PL_strcpy(m_urlString, m_urlSpec);
@@ -610,8 +623,8 @@ nsNntpTestDriver::OnPostMessage()
     
     SetupUrl(m_userData);
 
-    nsINNTPNewsgroupPost *post;
-    rv = NS_NewNewsgroupPost(&post);
+    nsCOMPtr<nsINNTPNewsgroupPost> post;
+    rv = nsComponentManager::CreateInstance(kNNTPNewsgroupPostCID, nsnull, nsINNTPNewsgroupPost::GetIID(), getter_AddRefs(post));
     
     if (NS_SUCCEEDED(rv)) {
         post->AddNewsgroup(newsgroup);
@@ -626,7 +639,7 @@ nsNntpTestDriver::OnPostMessage()
     m_url->SetMessageToPost(post);
     
     printf("Running %s\n", m_urlString);
-    rv = m_nntpProtocol->LoadURL(m_url, nsnull /* display stream */);
+    rv = m_nntpProtocol->LoadURL(m_url, nsnull /* display stream */, &status);
 
 	return rv;
 }
@@ -634,7 +647,8 @@ nsNntpTestDriver::OnPostMessage()
 nsresult nsNntpTestDriver::OnGetGroup()
 {
 	nsresult rv = NS_OK;
-
+    PRInt32 status = 0;
+    
 	// first, prompt the user for the name of the group to fetch
 	rv = PromptForUserDataAndBuildUrl("Group to fetch: ");
 	// no prompt for url data....just append a '*' to the url data and run it...
@@ -653,9 +667,10 @@ nsresult nsNntpTestDriver::OnGetGroup()
 		m_url->SetSpec(m_urlString); // reset spec
 
 	nsCOMPtr<nsINNTPNewsgroup> newsgroup;
-    rv = NS_NewNewsgroup(getter_AddRefs(newsgroup), nsnull /* line */, nsnull /* set */, PR_FALSE /* subscribed */, nsnull /* host*/, 1 /* depth */);
-               
+    rv = nsComponentManager::CreateInstance(kNNTPNewsgroupCID, nsnull, nsINNTPNewsgroup::GetIID(), getter_AddRefs(newsgroup));
+    
     if (NS_SUCCEEDED(rv)) {
+        newsgroup->Initialize(nsnull /* line */, nsnull /* set */, PR_FALSE /* subscribed */);
         newsgroup->SetName(m_userData);
     }
 	else {
@@ -667,7 +682,7 @@ nsresult nsNntpTestDriver::OnGetGroup()
     if (NS_SUCCEEDED(rv)) {
         SetupUrl(m_userData);
         printf("Running %s\n", m_urlString);
-		rv = m_nntpProtocol->LoadURL(m_url, nsnull /* displayStream */);
+		rv = m_nntpProtocol->LoadURL(m_url, nsnull /* displayStream */, &status);
 	} // if user provided the data...
 
 	return rv;
@@ -676,6 +691,7 @@ nsresult nsNntpTestDriver::OnGetGroup()
 
 nsresult nsNntpTestDriver::OnReadNewsRC()
 {
+    PRInt32 status = 0;
 	nsresult rv = NS_OK;
 	m_urlString[0] = '\0';
 	PL_strcpy(m_urlString, m_urlSpec);
@@ -693,7 +709,7 @@ nsresult nsNntpTestDriver::OnReadNewsRC()
 	// a read newsrc url is of the form: news://
 	// or news://HOST
     printf("Running %s\n", m_urlString);
-	rv = m_nntpProtocol->LoadURL(m_url);
+	rv = m_nntpProtocol->LoadURL(m_url, nsnull, &status);
 	return rv;
 }
 
@@ -769,6 +785,7 @@ int main()
     nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kEventQueueCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kNntpUrlCID, NULL, NULL, NEWS_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kNNTPProtocolCID, NULL, NULL, NEWS_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 	// make sure prefs get initialized and loaded..

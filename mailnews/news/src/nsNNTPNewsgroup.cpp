@@ -23,65 +23,9 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 
-#include "nsINNTPNewsgroup.h"
-#include "nsINNTPHost.h"
-#include "nsMsgKeySet.h"
+#include "nsNNTPNewsgroup.h"
 
 #include "nsCOMPtr.h"
-
-class nsNNTPNewsgroup : public nsINNTPNewsgroup 
-{
-
- public: 
-	 nsNNTPNewsgroup();
-	 virtual ~nsNNTPNewsgroup();
-	 
-	 NS_DECL_ISUPPORTS
-  
-	 NS_IMETHOD GetName(char * *aName);
-	 NS_IMETHOD SetName(char * aName);
-  
-	 NS_IMETHOD GetPrettyName(char * *aPrettyName);
-	 NS_IMETHOD SetPrettyName(char * aPrettyName);
- 
-	 NS_IMETHOD GetPassword(char * *aPassword);
-	 NS_IMETHOD SetPassword(char * aPassword);
- 
-	 NS_IMETHOD GetUsername(char * *aUsername);
-	 NS_IMETHOD SetUsername(char * aUsername);
-  
-	 NS_IMETHOD GetNeedsExtraInfo(PRBool *aNeedsExtraInfo);
-	 NS_IMETHOD SetNeedsExtraInfo(PRBool aNeedsExtraInfo);
- 
-	 NS_IMETHOD IsOfflineArticle(PRInt32 num, PRBool *_retval);
-
-	 NS_IMETHOD GetCategory(PRBool *aCategory);
-	 NS_IMETHOD SetCategory(PRBool aCategory);
-  
-	 NS_IMETHOD GetSubscribed(PRBool *aSubscribed);
-	 NS_IMETHOD SetSubscribed(PRBool aSubscribed);
-  
-	 NS_IMETHOD GetWantNewTotals(PRBool *aWantNewTotals);
-	 NS_IMETHOD SetWantNewTotals(PRBool aWantNewTotals);
-  
-	 NS_IMETHOD GetNewsgroupList(nsINNTPNewsgroupList * *aNewsgroupList);
-	 NS_IMETHOD SetNewsgroupList(nsINNTPNewsgroupList * aNewsgroupList);
-
-	 NS_IMETHOD UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRInt32 total_messages);
-
- protected:
-	 char * m_groupName;
-	 char * m_prettyName;
-	 char * m_password;
-	 char * m_userName;
-	 
-	 PRBool	m_isSubscribed;
-	 PRBool m_wantsNewTotals;
-	 PRBool m_needsExtraInfo;
-	 PRBool m_category;
-
-	 nsCOMPtr<nsINNTPNewsgroupList> m_newsgroupList;
-};
 
 nsNNTPNewsgroup::nsNNTPNewsgroup()
 {
@@ -332,31 +276,23 @@ nsresult nsNNTPNewsgroup::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youn
 	return NS_OK;
 }
 
-extern "C" {
-
-nsresult NS_NewNewsgroup(nsINNTPNewsgroup **info,
-                char *line,
-		nsMsgKeySet *set,
-                PRBool subscribed,
-                nsINNTPHost *host,
-                int depth)
+nsresult nsNNTPNewsgroup::Initialize(const char *line,
+                                     nsMsgKeySet *set,
+                                     PRBool subscribed)
 {
-	nsresult rv = NS_OK;
-	nsNNTPNewsgroup * group = new nsNNTPNewsgroup();
-	if (group) {
-		group->SetSubscribed(subscribed);
-		rv = group->QueryInterface(nsINNTPNewsgroup::GetIID(), (void **) info);
-	}
-
 #ifdef DEBUG_NEWS
-	printf("NS_NewNewsgroup(%s)\n",line?line:"(null)");
+	printf("nsNNTPNewsgroup::Intialize(line = %s, subscribed = %s)\n",line?line:"(null)", subscribed?"TRUE":"FALSE");
 #endif
+	nsresult rv = NS_OK;
 
+    rv = SetSubscribed(subscribed);
+    if (NS_FAILED(rv)) return rv;
+    
 	if (line) {
-		group->SetName(line);
+        rv = SetName((char *)line);
+        if (NS_FAILED(rv)) return rv;
 	}
 
 	return rv;
 }
 
-} /* extern "C" */

@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-MODULE=mailnews
+MODULE=news
 LIBRARY_NAME=msgnews
 IS_COMPONENT=1
 CPPSRCS= \

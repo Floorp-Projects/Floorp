@@ -19,10 +19,6 @@
 class nsINntpIncomingServer : public nsISupports {
  public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_INNTPINCOMINGSERVER_IID)
-
-  /* attribute string rootFolderPath; */
-  NS_IMETHOD GetRootFolderPath(char * *aRootFolderPath) = 0;
-  NS_IMETHOD SetRootFolderPath(char * aRootFolderPath) = 0;
 };
 
 #endif /* __gen_nsINntpIncomingServer_h__ */

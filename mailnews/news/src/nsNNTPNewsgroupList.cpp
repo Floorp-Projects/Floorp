@@ -77,103 +77,9 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 extern PRInt32 net_NewsChunkSize;
 
-// This class should ultimately be part of a news group listing
-// state machine - either by inheritance or delegation.
-// Currently, a folder pane owns one and libnet news group listing
-// related messages get passed to this object.
-class nsNNTPNewsgroupList : public nsINNTPNewsgroupList
-#ifdef HAVE_CHANGELISTENER
-/* ,public ChangeListener */
-#endif
-{
-public:
-  nsNNTPNewsgroupList(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const char *name, const char *hostname);
-  nsNNTPNewsgroupList();
-  virtual  ~nsNNTPNewsgroupList();
-  NS_DECL_ISUPPORTS
-
-    
-  NS_IMETHOD GetRangeOfArtsToDownload(PRInt32 first_possible,
-                                      PRInt32 last_possible,
-                                      PRInt32 maxextra,
-                                      PRInt32* first,
-                                      PRInt32* lastprotected,
-                                      PRInt32 *status);
-  NS_IMETHOD AddToKnownArticles(PRInt32 first, PRInt32 last);
-
-  // XOVER parser to populate this class
-  NS_IMETHOD InitXOVER(PRInt32 first_msg, PRInt32 last_msg);
-  NS_IMETHOD ProcessXOVERLINE(const char *line, PRUint32 * status);
-  NS_IMETHOD ResetXOVER();
-  NS_IMETHOD ProcessNonXOVER(const char *line);
-  NS_IMETHOD FinishXOVERLINE(int status, int *newstatus);
-  NS_IMETHOD ClearXOVERState();
-  NS_IMETHOD GetGroupName(char **_retval);
-
-    
-private:
-  void Init(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const char *name, const char *url);
-
-  NS_METHOD CleanUp();
-    
-#ifdef HAVE_MASTER
-  MSG_Master		*GetMaster() {return m_master;}
-  void			SetMaster(MSG_Master *master) {m_master = master;}
-#endif
-  
-#ifdef HAVE_PANES
-  void			SetPane(MSG_Pane *pane) {m_pane = pane;}
-#endif
-  PRBool          m_finishingXover;
-  nsINNTPHost*	GetHost() {return m_host;}
-  const char *	GetURL() {return m_url;}
-  
-#ifdef HAVE_CHANGELISTENER
-  virtual void	OnAnnouncerGoingAway (ChangeAnnouncer *instigator);
-#endif
-  void				SetGetOldMessages(PRBool getOldMessages) {m_getOldMessages = getOldMessages;}
-  PRBool			GetGetOldMessages() {return m_getOldMessages;}
-  nsresult			ParseLine(char *line, PRUint32 *message_number);
-  PRBool			msg_StripRE(const char **stringP, PRUint32 *lengthP);
-  nsresult			GetDatabase(const char *uri, nsIMsgDatabase **db);
-
-protected:
-  nsIMsgDatabase	*m_newsDB;
-#ifdef HAVE_PANES
-  MSG_Pane		*m_pane;
-#endif
-  PRBool			m_startedUpdate;
-  PRBool			m_getOldMessages;
-  PRBool			m_promptedAlready;
-  PRBool			m_downloadAll;
-  PRInt32			m_maxArticles;
-  char			*m_groupName;
-  nsINNTPHost	*m_host;
-  nsINNTPNewsgroup *m_newsgroup;
-  char			*m_url;			// url we're retrieving
-#ifdef HAVE_MASTER
-  MSG_Master		*m_master;
-#endif
-  
-  nsMsgKey		m_lastProcessedNumber;
-  nsMsgKey		m_firstMsgNumber;
-  nsMsgKey		m_lastMsgNumber;
-  PRInt32			m_firstMsgToDownload;
-  PRInt32			m_lastMsgToDownload;
-  
-  struct MSG_NewsKnown	m_knownArts;
-  nsMsgKeySet		*m_set;
-};
-
-
-
-nsNNTPNewsgroupList::nsNNTPNewsgroupList(nsINNTPHost* host,
-                                         nsINNTPNewsgroup *newsgroup,
-										 const char *name,
-										 const char *hostname)
+nsNNTPNewsgroupList::nsNNTPNewsgroupList()
 {
     NS_INIT_REFCNT();
-    Init(host, newsgroup, name, hostname);
 }
 
 
@@ -184,12 +90,11 @@ nsNNTPNewsgroupList::~nsNNTPNewsgroupList()
 NS_IMPL_ISUPPORTS(nsNNTPNewsgroupList, nsINNTPNewsgroupList::GetIID());
 
 
-void 
-nsNNTPNewsgroupList::Init(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const char *name, const char *hostname)
+nsresult
+nsNNTPNewsgroupList::Initialize(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const char *name, const char *hostname)
 {
 	m_newsDB = nsnull;
 	m_groupName = PL_strdup(name);
-	m_host = NULL;
 	m_url = PR_smprintf("%s/%s/%s",kNewsRootURI,hostname,name);
 	m_lastProcessedNumber = 0;
 	m_lastMsgNumber = 0;
@@ -214,6 +119,8 @@ nsNNTPNewsgroupList::Init(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const 
 	m_maxArticles = 0;
 	m_firstMsgToDownload = 0;
 	m_lastMsgToDownload = 0;
+
+    return NS_OK;
 }
 
 nsresult
@@ -1020,19 +927,3 @@ nsNNTPNewsgroupList::GetGroupName(char **_retval)
 		return NS_ERROR_NULL_POINTER;
 	}
 }
-
-extern "C" nsresult NS_NewNewsgroupList(nsINNTPNewsgroupList **aInstancePtrResult,
-                    nsINNTPHost *newsHost,
-                    nsINNTPNewsgroup *newsgroup,
-					const char *name,
-					const char *hostname)
-{
-	nsNNTPNewsgroupList *list = nsnull;
-	list = new nsNNTPNewsgroupList(newsHost, newsgroup, name, hostname);
-	if (list == nsnull) {
-			return NS_ERROR_OUT_OF_MEMORY;
-	}
-	nsresult rv = list->QueryInterface(nsINNTPNewsgroupList::GetIID(), (void **) aInstancePtrResult);
-	return rv;
-}
-
