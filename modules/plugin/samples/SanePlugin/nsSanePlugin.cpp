@@ -2534,12 +2534,11 @@ void PR_CALLBACK scanimage_thread_routine( void * arg )
                  (PLHandleEventProc)  ThreadedHandleEvent,
                  (PLDestroyEventProc) ThreadedDestroyEvent);
 
-    if (eventQ->PostEvent(event) != PR_SUCCESS) {
+    if (NS_FAILED(eventQ->PostEvent(event))) {
         NS_ERROR("Error trying to post event!\n");
+        PL_DestroyEvent(event);
         return;
     }
-
-    return;
 }
 
 void PR_CALLBACK ThreadedHandleEvent(PLEvent * event)

@@ -98,12 +98,4 @@ interface nsIStreamTransportService : nsISupports
                                        in long aStartOffset,
                                        in long aWriteLimit,
                                        in boolean aCloseWhenDone);
-
-    /**
-     * init/shutdown routines.
-     *
-     * XXX these should move to some necko internal interface instead.
-     */
-    void init();
-    void shutdown();
 };

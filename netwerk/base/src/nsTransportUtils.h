@@ -13,13 +13,12 @@
  *
  * The Original Code is Mozilla.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * The Initial Developer of the Original Code is IBM, Corp.
+ * Portions created by the Initial Developer are Copyright (C) 2003
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Darin Fisher <darin@netscape.com>
+ *   Darin Fisher <darinf@us.ibm.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,53 +34,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAsyncStreamCopier_h__
-#define nsAsyncStreamCopier_h__
+#ifndef nsTransportUtils_h__
+#define nsTransportUtils_h__
 
-#include "nsIAsyncStreamCopier.h"
-#include "nsIAsyncInputStream.h"
-#include "nsIAsyncOutputStream.h"
-#include "nsIRequestObserver.h"
-#include "nsStreamUtils.h"
-#include "nsCOMPtr.h"
-#include "prlock.h"
+#include "nsITransport.h"
 
-//-----------------------------------------------------------------------------
+/**
+ * This function returns a proxy object for a transport event sink instance.
+ * The transport event sink will be called on the thread indicated by the
+ * given event target.  Like events are automatically coalesced.  This means
+ * that for example if the status value is the same from event to event, and
+ * the previous event has not yet been delivered, then only one event will
+ * be delivered.  The progress reported will be that from the second event.
+ * If aCoalesceAllEvents is true, then any undelivered event will be replaced
+ * with the next event if it arrives early enough.  This option should be used
+ * cautiously since it can cause states to be effectively skipped.  Coalescing
+ * events can help prevent a backlog of unprocessed transport events in the
+ * case that the target thread is overworked.
+ */
+nsresult
+net_NewTransportEventSinkProxy(nsITransportEventSink **aResult,
+                               nsITransportEventSink *aSink,
+                               nsIEventTarget *aTarget,
+                               PRBool aCoalesceAllEvents = PR_FALSE);
 
-class nsAsyncStreamCopier : public nsIAsyncStreamCopier
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIREQUEST
-    NS_DECL_NSIASYNCSTREAMCOPIER
-
-    nsAsyncStreamCopier();
-    virtual ~nsAsyncStreamCopier();
-
-    //-------------------------------------------------------------------------
-    // these methods may be called on any thread
-
-    PRBool IsComplete(nsresult *status = nsnull);
-    void   Complete(nsresult status);
-
-private:
-
-    static void OnAsyncCopyComplete(void *, nsresult);
-
-    nsCOMPtr<nsIInputStream>       mSource;
-    nsCOMPtr<nsIOutputStream>      mSink;
-
-    nsCOMPtr<nsIRequestObserver>   mObserver;
-    nsCOMPtr<nsISupports>          mObserverContext;
-
-    nsCOMPtr<nsIEventTarget>       mTarget;
-
-    PRLock                        *mLock;
-
-    nsAsyncCopyMode                mMode;
-    PRUint32                       mChunkSize;
-    nsresult                       mStatus;
-    PRPackedBool                   mIsPending;
-};
-
-#endif // !nsAsyncStreamCopier_h__
+#endif // nsTransportUtils_h__

@@ -55,6 +55,7 @@
 #include "nsMIMEInputStream.h"
 #include "nsSOCKSSocketProvider.h"
 #include "nsCacheService.h"
+#include "nsIOThreadPool.h"
 
 #include "nsNetCID.h"
 
@@ -78,7 +79,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDNSService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsProtocolProxyService, Init)
 
 #include "nsStreamTransportService.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStreamTransportService, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamTransportService)
 
 #include "nsSocketTransportService2.h"
 #undef LOG
@@ -567,6 +568,10 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_IOSERVICE_CID,
       NS_IOSERVICE_CONTRACTID,
       nsIOServiceConstructor },
+    { NS_IOTHREADPOOL_CLASSNAME,
+      NS_IOTHREADPOOL_CID,
+      NS_IOTHREADPOOL_CONTRACTID,
+      net_NewIOThreadPool },
     { NS_STREAMTRANSPORTSERVICE_CLASSNAME,
       NS_STREAMTRANSPORTSERVICE_CID,
       NS_STREAMTRANSPORTSERVICE_CONTRACTID,

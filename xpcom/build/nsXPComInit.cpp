@@ -307,7 +307,6 @@ static const nsModuleComponentInfo components[] = {
     COMPONENT(EVENTQUEUESERVICE, nsEventQueueServiceImplConstructor),
     COMPONENT(EVENTQUEUE, nsEventQueueImpl::Create),
     COMPONENT(THREAD, nsThread::Create),
-    COMPONENT(THREADPOOL, nsThreadPool::Create),
 
 #define NS_XPCOMPROXY_CID NS_PROXYEVENT_MANAGER_CID
     COMPONENT(XPCOMPROXY, nsProxyObjectManager::Create),

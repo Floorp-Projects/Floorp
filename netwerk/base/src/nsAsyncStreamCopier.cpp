@@ -53,9 +53,8 @@ static PRLogModuleInfo *gStreamCopierLog = nsnull;
 //-----------------------------------------------------------------------------
 
 nsAsyncStreamCopier::nsAsyncStreamCopier()
-    : mInput(this)
-    , mOutput(this)
-    , mLock(PR_NewLock())
+    : mLock(nsnull)
+    , mMode(NS_ASYNCCOPY_VIA_READSEGMENTS)
     , mChunkSize(NET_DEFAULT_SEGMENT_SIZE)
     , mStatus(NS_OK)
     , mIsPending(PR_FALSE)
@@ -70,7 +69,8 @@ nsAsyncStreamCopier::nsAsyncStreamCopier()
 nsAsyncStreamCopier::~nsAsyncStreamCopier()
 {
     LOG(("Destroying nsAsyncStreamCopier @%x\n", this));
-    PR_DestroyLock(mLock);
+    if (mLock)
+        PR_DestroyLock(mLock);
 }
 
 PRBool
@@ -83,9 +83,9 @@ nsAsyncStreamCopier::IsComplete(nsresult *status)
 }
 
 void
-nsAsyncStreamCopier::Complete(nsresult reason)
+nsAsyncStreamCopier::Complete(nsresult status)
 {
-    LOG(("nsAsyncStreamCopier::Complete [this=%x reason=%x]\n", this, reason));
+    LOG(("nsAsyncStreamCopier::Complete [this=%x status=%x]\n", this, status));
 
     nsCOMPtr<nsIRequestObserver> observer;
     nsCOMPtr<nsISupports> ctx;
@@ -93,7 +93,7 @@ nsAsyncStreamCopier::Complete(nsresult reason)
         nsAutoLock lock(mLock);
         if (mIsPending) {
             mIsPending = PR_FALSE;
-            mStatus = reason;
+            mStatus = status;
 
             // setup OnStopRequest callback and release references...
             observer = mObserver;
@@ -104,11 +104,17 @@ nsAsyncStreamCopier::Complete(nsresult reason)
     }
 
     if (observer) {
-        if (reason == NS_BASE_STREAM_CLOSED)
-            reason = NS_OK;
-        LOG(("  calling OnStopRequest [status=%x]\n", reason));
-        observer->OnStopRequest(this, ctx, reason);
+        LOG(("  calling OnStopRequest [status=%x]\n", status));
+        observer->OnStopRequest(this, ctx, status);
     }
+}
+
+void
+nsAsyncStreamCopier::OnAsyncCopyComplete(void *closure, nsresult status)
+{
+    nsAsyncStreamCopier *self = (nsAsyncStreamCopier *) closure;
+    self->Complete(status);
+    NS_RELEASE(self); // addref'd in AsyncCopy
 }
 
 //-----------------------------------------------------------------------------
@@ -124,7 +130,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsAsyncStreamCopier,
 NS_IMETHODIMP
 nsAsyncStreamCopier::GetName(nsACString &name)
 {
-    name = NS_LITERAL_CSTRING("nsAsyncStreamCopier");
+    name.Truncate();
     return NS_OK;
 }
 
@@ -139,11 +145,6 @@ NS_IMETHODIMP
 nsAsyncStreamCopier::GetStatus(nsresult *status)
 {
     IsComplete(status);
-
-    // mask successful "error" code.
-    if (*status == NS_BASE_STREAM_CLOSED)
-        *status = NS_OK;
-
     return NS_OK;
 }
 
@@ -158,22 +159,32 @@ nsAsyncStreamCopier::Cancel(nsresult status)
         status = NS_BASE_STREAM_CLOSED;
     }
 
-    mInput.CloseEx(status);
-    mOutput.CloseEx(status);
+    nsCOMPtr<nsIAsyncInputStream> asyncSource = do_QueryInterface(mSource);
+    if (asyncSource)
+        asyncSource->CloseWithStatus(status);
+    else
+        mSource->Close();
+
+    nsCOMPtr<nsIAsyncOutputStream> asyncSink = do_QueryInterface(mSink);
+    if (asyncSink)
+        asyncSink->CloseWithStatus(status);
+    else
+        mSink->Close();
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsAsyncStreamCopier::Suspend()
 {
-    // this could be fairly easily implemented by making Read/ReadSegments
-    // return NS_BASE_STREAM_WOULD_BLOCK.
+    NS_NOTREACHED("nsAsyncStreamCopier::Suspend");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsAsyncStreamCopier::Resume()
 {
+    NS_NOTREACHED("nsAsyncStreamCopier::Resume");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -187,7 +198,7 @@ nsAsyncStreamCopier::GetLoadFlags(nsLoadFlags *aLoadFlags)
 NS_IMETHODIMP
 nsAsyncStreamCopier::SetLoadFlags(nsLoadFlags aLoadFlags)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -200,7 +211,7 @@ nsAsyncStreamCopier::GetLoadGroup(nsILoadGroup **aLoadGroup)
 NS_IMETHODIMP
 nsAsyncStreamCopier::SetLoadGroup(nsILoadGroup *aLoadGroup)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -209,21 +220,34 @@ nsAsyncStreamCopier::SetLoadGroup(nsILoadGroup *aLoadGroup)
 NS_IMETHODIMP
 nsAsyncStreamCopier::Init(nsIInputStream *source,
                           nsIOutputStream *sink,
+                          nsIEventTarget *target,
                           PRBool sourceBuffered,
                           PRBool sinkBuffered,
                           PRUint32 chunkSize)
 {
+    NS_ASSERTION(sourceBuffered || sinkBuffered, "at least one stream must be buffered");
+
+    NS_ASSERTION(!mLock, "already initialized");
+    mLock = PR_NewLock();
+    if (!mLock)
+        return NS_ERROR_OUT_OF_MEMORY;
+
     if (chunkSize == 0)
         chunkSize = NET_DEFAULT_SEGMENT_SIZE;
     mChunkSize = chunkSize;
 
-    mInput.mSource = source;
-    mInput.mAsyncSource = do_QueryInterface(source);
-    mInput.mBuffered = sourceBuffered;
+    mSource = source;
+    mSink = sink;
 
-    mOutput.mSink = sink;
-    mOutput.mAsyncSink = do_QueryInterface(sink);
-    mOutput.mBuffered = sinkBuffered;
+    mMode = sourceBuffered ? NS_ASYNCCOPY_VIA_READSEGMENTS
+                           : NS_ASYNCCOPY_VIA_WRITESEGMENTS;
+    if (target)
+        mTarget = target;
+    else {
+        nsresult rv;
+        mTarget = do_GetService(NS_IOTHREADPOOL_CONTRACTID, &rv);
+        if (NS_FAILED(rv)) return rv;
+    }
     return NS_OK;
 }
 
@@ -232,319 +256,35 @@ nsAsyncStreamCopier::AsyncCopy(nsIRequestObserver *observer, nsISupports *ctx)
 {
     LOG(("nsAsyncStreamCopier::AsyncCopy [this=%x observer=%x]\n", this, observer));
 
-    NS_ENSURE_ARG_POINTER(observer);
-    NS_ENSURE_TRUE(mInput.mSource, NS_ERROR_NOT_INITIALIZED);
-    NS_ENSURE_TRUE(mOutput.mSink, NS_ERROR_NOT_INITIALIZED);
-
+    NS_ASSERTION(mSource && mSink, "not initialized");
     nsresult rv;
 
-    // we could perhaps work around this requirement by automatically using
-    // the stream transport service, but then we are left having to make a
-    // rather arbitrary selection between opening an asynchronous input 
-    // stream or an asynchronous output stream.  that choice is probably
-    // best left up to the consumer of this async stream copier.
-    if (!mInput.mAsyncSource && !mOutput.mAsyncSink) {
-        NS_ERROR("at least one stream must be asynchronous");
-        return NS_ERROR_UNEXPECTED;
+    if (observer) {
+        // build proxy for observer events
+        rv = NS_NewRequestObserverProxy(getter_AddRefs(mObserver), observer);
+        if (NS_FAILED(rv)) return rv;
     }
-
-    // build proxy for observer events
-    rv = NS_NewRequestObserverProxy(getter_AddRefs(mObserver), observer);
-    if (NS_FAILED(rv)) return rv;
 
     // from this point forward, AsyncCopy is going to return NS_OK.  any errors
     // will be reported via OnStopRequest.
     mIsPending = PR_TRUE;
 
     mObserverContext = ctx;
-    rv = mObserver->OnStartRequest(this, mObserverContext);
-    if (NS_FAILED(rv))
-        Cancel(rv);
-
-    rv = NS_AsyncCopy(&mInput, &mOutput, mInput.mBuffered, mOutput.mBuffered, mChunkSize);
-    if (NS_FAILED(rv))
-        Cancel(rv);
-
-    return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// nsInputWrapper
-//
-// NOTE: the input stream methods may be accessed on any thread; however, we
-//       assume that Read/ReadSegments will not be called simultaneously on 
-//       more than one thread.
-
-NS_IMETHODIMP_(nsrefcnt) nsAsyncStreamCopier::
-nsInputWrapper::AddRef()
-{
-    return mCopier->AddRef();
-}
-
-NS_IMETHODIMP_(nsrefcnt) nsAsyncStreamCopier::
-nsInputWrapper::Release()
-{
-    return mCopier->Release();
-}
-
-NS_IMPL_QUERY_INTERFACE3(nsAsyncStreamCopier::nsInputWrapper,
-                         nsIAsyncInputStream,
-                         nsIInputStream,
-                         nsIInputStreamNotify)
-
-NS_IMETHODIMP nsAsyncStreamCopier::
-nsInputWrapper::Close()
-{
-    return CloseEx(NS_BASE_STREAM_CLOSED);
-}
-
-NS_IMETHODIMP nsAsyncStreamCopier::
-nsInputWrapper::Available(PRUint32 *avail)
-{
-    nsresult status;
-    if (mCopier->IsComplete(&status))
-        return status;
-
-    NS_ENSURE_TRUE(mSource, NS_ERROR_NOT_INITIALIZED);
-
-    nsresult rv = mSource->Available(avail);
-    if (NS_FAILED(rv))
-        CloseEx(rv);
-    return rv;
-}
-
-NS_IMETHODIMP nsAsyncStreamCopier::
-nsInputWrapper::Read(char *buf, PRUint32 count, PRUint32 *countRead)
-{
-    nsresult status;
-    if (mCopier->IsComplete(&status)) {
-        *countRead = 0;
-        return status == NS_BASE_STREAM_CLOSED ? NS_OK : status;
-    }
-
-    NS_ENSURE_TRUE(mSource, NS_ERROR_NOT_INITIALIZED);
-
-    return mSource->Read(buf, count, countRead);
-}
-
-NS_METHOD nsAsyncStreamCopier::
-nsInputWrapper::ReadSegmentsThunk(nsIInputStream *stream,
-                                  void *closure,
-                                  const char *segment,
-                                  PRUint32 offset,
-                                  PRUint32 count,
-                                  PRUint32 *countRead)
-{
-    nsInputWrapper *self = (nsInputWrapper *) closure;
-    return self->mWriter(self, self->mClosure, segment, offset, count, countRead);
-}
-
-NS_IMETHODIMP nsAsyncStreamCopier::
-nsInputWrapper::ReadSegments(nsWriteSegmentFun writer, void *closure,
-                             PRUint32 count, PRUint32 *countRead)
-{
-    nsresult status;
-    if (mCopier->IsComplete(&status)) {
-        *countRead = 0;
-        return status == NS_BASE_STREAM_CLOSED ? NS_OK : status;
-    }
-
-    NS_ENSURE_TRUE(mSource, NS_ERROR_NOT_INITIALIZED);
-
-    if (!mBuffered)
-        return NS_ERROR_NOT_IMPLEMENTED;
-
-    mWriter = writer;
-    mClosure = closure;
-
-    return mSource->ReadSegments(ReadSegmentsThunk, this, count, countRead);
-}
-
-NS_IMETHODIMP nsAsyncStreamCopier::
-nsInputWrapper::IsNonBlocking(PRBool *result)
-{
-    nsresult status;
-    if (mCopier->IsComplete(&status))
-        return status;
-
-    NS_ENSURE_TRUE(mSource, NS_ERROR_NOT_INITIALIZED);
-    return mSource->IsNonBlocking(result);
-}
-
-NS_IMETHODIMP nsAsyncStreamCopier::
-nsInputWrapper::CloseEx(nsresult reason)
-{
-    LOG(("nsAsyncStreamCopier::nsInputWrapper::CloseEx [this=%x]\n", this));
-
-    mCopier->Complete(reason);
-
-    if (mAsyncSource)
-        mAsyncSource->CloseEx(reason);
-    else
-        mSource->Close();
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsAsyncStreamCopier::
-nsInputWrapper::AsyncWait(nsIInputStreamNotify *notify, PRUint32 amount, nsIEventQueue *eventQ)
-{
-    // we'll cheat a little bit here since we know that NS_AsyncCopy does not
-    // pass a non-null event queue.
-    NS_ASSERTION(eventQ == nsnull, "unexpected");
-
-    if (mAsyncSource) {
-        mNotify = notify;
-        return mAsyncSource->AsyncWait(this, amount, eventQ);
-    }
-
-    // else, stream is ready
-    notify->OnInputStreamReady(this);
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsAsyncStreamCopier::
-nsInputWrapper::OnInputStreamReady(nsIAsyncInputStream *stream)
-{
-    // simple thunk
-    return mNotify->OnInputStreamReady(this);
-}
-
-//-----------------------------------------------------------------------------
-// nsOutputWrapper
-//
-// NOTE: the output stream methods may be accessed on any thread; however, we
-//       assume that Write/WriteSegments will not be called simultaneously on 
-//       more than one thread.
-
-NS_IMETHODIMP_(nsrefcnt) nsAsyncStreamCopier::
-nsOutputWrapper::AddRef()
-{
-    return mCopier->AddRef();
-}
-
-NS_IMETHODIMP_(nsrefcnt) nsAsyncStreamCopier::
-nsOutputWrapper::Release()
-{
-    return mCopier->Release();
-}
-
-NS_IMPL_QUERY_INTERFACE3(nsAsyncStreamCopier::nsOutputWrapper,
-                         nsIAsyncOutputStream,
-                         nsIOutputStream,
-                         nsIOutputStreamNotify)
-
-NS_IMETHODIMP nsAsyncStreamCopier::
-nsOutputWrapper::Close()
-{
-    return CloseEx(NS_BASE_STREAM_CLOSED);
-}
-
-NS_IMETHODIMP nsAsyncStreamCopier::
-nsOutputWrapper::Flush()
-{
-    NS_NOTREACHED("nsOutputWrapper::Flush");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsAsyncStreamCopier::
-nsOutputWrapper::Write(const char *buf, PRUint32 count, PRUint32 *countWritten)
-{
-    nsresult status;
-    if (mCopier->IsComplete(&status)) {
-        *countWritten = 0;
-        return status;
-    }
-
-    NS_ENSURE_TRUE(mSink, NS_ERROR_NOT_INITIALIZED);
-
-    return mSink->Write(buf, count, countWritten);
-}
-
-NS_METHOD nsAsyncStreamCopier::
-nsOutputWrapper::WriteSegmentsThunk(nsIOutputStream *stream,
-                                    void *closure,
-                                    char *segment,
-                                    PRUint32 offset,
-                                    PRUint32 count,
-                                    PRUint32 *countWritten)
-{
-    nsOutputWrapper *self = (nsOutputWrapper *) closure;
-    return self->mReader(self, self->mClosure, segment, offset, count, countWritten);
-}
-
-NS_IMETHODIMP nsAsyncStreamCopier::
-nsOutputWrapper::WriteSegments(nsReadSegmentFun reader, void *closure,
-                               PRUint32 count, PRUint32 *countWritten)
-{
-    nsresult status;
-    if (mCopier->IsComplete(&status)) {
-        *countWritten = 0;
-        return status;
-    }
-
-    NS_ENSURE_TRUE(mSink, NS_ERROR_NOT_INITIALIZED);
-
-    if (!mBuffered)
-        return NS_ERROR_NOT_IMPLEMENTED;
-
-    mReader = reader;
-    mClosure = closure;
-
-    return mSink->WriteSegments(WriteSegmentsThunk, this, count, countWritten);
-}
-
-NS_IMETHODIMP nsAsyncStreamCopier::
-nsOutputWrapper::WriteFrom(nsIInputStream *stream, PRUint32 count, PRUint32 *countWritten)
-{
-    NS_NOTREACHED("nsOutputWrapper::WriteFrom");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsAsyncStreamCopier::
-nsOutputWrapper::IsNonBlocking(PRBool *result)
-{
-    nsresult status;
-    if (mCopier->IsComplete(&status))
-        return status;
-
-    NS_ENSURE_TRUE(mSink, NS_ERROR_NOT_INITIALIZED);
-    return mSink->IsNonBlocking(result);
-}
-
-NS_IMETHODIMP nsAsyncStreamCopier::
-nsOutputWrapper::CloseEx(nsresult reason)
-{
-    LOG(("nsAsyncStreamCopier::nsOutputWrapper::CloseEx [this=%x]\n", this));
-
-    mCopier->Complete(reason);
-
-    if (mAsyncSink)
-        mAsyncSink->CloseEx(reason);
-    else
-        mSink->Close();
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsAsyncStreamCopier::
-nsOutputWrapper::AsyncWait(nsIOutputStreamNotify *notify, PRUint32 amount, nsIEventQueue *eventQ)
-{
-    // we'll cheat a little bit here since we know that NS_AsyncCopy does not
-    // pass a non-null event queue.
-    NS_ASSERTION(eventQ == nsnull, "unexpected");
-
-    if (mAsyncSink) {
-        mNotify = notify;
-        return mAsyncSink->AsyncWait(this, amount, eventQ);
+    if (mObserver) {
+        rv = mObserver->OnStartRequest(this, mObserverContext);
+        if (NS_FAILED(rv))
+            Cancel(rv);
     }
     
-    // else, stream is ready
-    notify->OnOutputStreamReady(this);
-    return NS_OK;
-}
+    // we want to receive progress notifications; release happens in
+    // OnAsyncCopyComplete.
+    NS_ADDREF_THIS();
+    rv = NS_AsyncCopy(mSource, mSink, mTarget, mMode, mChunkSize,
+                      OnAsyncCopyComplete, this);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE_THIS();
+        Cancel(rv);
+    }
 
-NS_IMETHODIMP nsAsyncStreamCopier::
-nsOutputWrapper::OnOutputStreamReady(nsIAsyncOutputStream *stream)
-{
-    // simple thunk
-    return mNotify->OnOutputStreamReady(this);
+    return NS_OK;
 }

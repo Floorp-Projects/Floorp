@@ -13,13 +13,12 @@
  *
  * The Original Code is Mozilla.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by IBM Corporation are Copyright (C) 2003
+ * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
- *   Darin Fisher <darin@netscape.com>
+ *   IBM Corp.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,14 +34,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIStreamTransportService.h"
+#ifndef nsIOThreadPool_h__
+#define nsIOThreadPool_h__
 
-class nsStreamTransportService : public nsIStreamTransportService
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSISTREAMTRANSPORTSERVICE
+/**
+ * XPCOM constructor for nsIOThreadPool
+ */
+nsresult net_NewIOThreadPool(nsISupports *outer, REFNSIID iid, void **result);
 
-    nsStreamTransportService() {}
-    virtual ~nsStreamTransportService() {}
-};
+#endif // nsIOThreadPool_h__

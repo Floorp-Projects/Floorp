@@ -85,7 +85,7 @@ nsresult
 nsInputStreamPump::EnsureWaiting()
 {
     if (!mWaiting) {
-        nsresult rv = mAsyncStream->AsyncWait(this, 0, mEventQ);
+        nsresult rv = mAsyncStream->AsyncWait(this, 0, 0, mEventQ);
         if (NS_FAILED(rv)) {
             NS_ERROR("AsyncWait failed");
             return rv;
@@ -104,7 +104,7 @@ nsInputStreamPump::EnsureWaiting()
 // understands the limitations of this.
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsInputStreamPump,
                               nsIRequest,
-                              nsIInputStreamNotify,
+                              nsIInputStreamCallback,
                               nsIInputStreamPump)
 
 //-----------------------------------------------------------------------------
@@ -148,7 +148,7 @@ nsInputStreamPump::Cancel(nsresult status)
 
     // close input stream
     if (mAsyncStream) {
-        mAsyncStream->CloseEx(status);
+        mAsyncStream->CloseWithStatus(status);
         mSuspendCount = 0; // un-suspend
         EnsureWaiting();
     }
@@ -295,7 +295,7 @@ nsInputStreamPump::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 }
 
 //-----------------------------------------------------------------------------
-// nsInputStreamPump::nsIInputStreamNotify implementation
+// nsInputStreamPump::nsIInputStreamCallback implementation
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
@@ -472,7 +472,7 @@ nsInputStreamPump::OnStateStop()
     // this is OK.  otherwise, be sure to honor the "close-when-done" option.
 
     if (NS_FAILED(mStatus))
-        mAsyncStream->CloseEx(mStatus);
+        mAsyncStream->CloseWithStatus(mStatus);
     else if (mCloseWhenDone)
         mAsyncStream->Close();
 

@@ -39,6 +39,7 @@
 #define nsSocketTransportService2_h__
 
 #include "nsISocketTransportService.h"
+#include "nsIEventTarget.h"
 #include "nsIRunnable.h"
 #include "nsIThread.h"
 #include "nsCOMPtr.h"
@@ -107,11 +108,13 @@ public:
 //-----------------------------------------------------------------------------
 
 class nsSocketTransportService : public nsISocketTransportService
+                               , public nsIEventTarget
                                , public nsIRunnable
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISOCKETTRANSPORTSERVICE
+    NS_DECL_NSIEVENTTARGET
     NS_DECL_NSIRUNNABLE
 
     nsSocketTransportService();
@@ -128,11 +131,10 @@ public:
     //
     // if the number of sockets is at the limit, then consumers can be notified
     // when the number of sockets becomes less than the limit.  the notification
-    // is asynchronous, delivered via the nsISocketEventHandler interface.  the
-    // consumer can specify the message parameter passed to its OnSocketEvent
-    // method.  the uparam and vparam args will be zero and null respectively.
+    // is asynchronous, delivered via the given PLEvent instance on the socket
+    // transport thread.
     //
-    nsresult NotifyWhenCanAttachSocket(nsISocketEventHandler *, PRUint32 msg);
+    nsresult NotifyWhenCanAttachSocket(PLEvent *);
 
     //
     // add a new socket to the list of controlled sockets.  returns a socket
@@ -163,26 +165,8 @@ private:
     // event queue (any thread)
     //-------------------------------------------------------------------------
 
-    struct SocketEvent
-    {
-        SocketEvent(nsISocketEventHandler *handler,
-                    PRUint32 type, PRUint32 uparam, void *vparam)
-            : mHandler(handler)
-            , mType(type)
-            , mUparam(uparam)
-            , mVparam(vparam)
-            , mNext(nsnull)
-            { }
-
-        nsCOMPtr<nsISocketEventHandler> mHandler;
-        PRUint32                        mType;
-        PRUint32                        mUparam;
-        void                           *mVparam;
-        struct SocketEvent             *mNext;
-    };
-    SocketEvent  *mEventQHead;
-    SocketEvent  *mEventQTail;
-    PRLock       *mEventQLock;
+    PRCList  mEventQ; // list of PLEvent objects
+    PRLock  *mEventQLock;
 
     //-------------------------------------------------------------------------
     // socket lists (socket thread only)
@@ -230,23 +214,10 @@ private:
     PRInt32 Poll(); // calls PR_Poll
 
     //-------------------------------------------------------------------------
-    // pending socket handler queue - see NotifyWhenCanAttachSocket
+    // pending socket queue - see NotifyWhenCanAttachSocket
     //-------------------------------------------------------------------------
 
-    struct PendingSocket
-    {
-        PendingSocket(nsISocketEventHandler *handler, PRUint32 msg)
-            : mHandler(handler)
-            , mMsg(msg)
-            , mNext(nsnull)
-            { }
-
-        nsCOMPtr<nsISocketEventHandler> mHandler;
-        PRUint32                        mMsg;
-        struct PendingSocket           *mNext;
-    };
-    PendingSocket *mPendingQHead;
-    PendingSocket *mPendingQTail;
+    PRCList mPendingSocketQ; // list of PLEvent objects
 };
 
 extern nsSocketTransportService *gSocketTransportService;

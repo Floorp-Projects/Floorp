@@ -56,6 +56,22 @@ PRLogModuleInfo *gSocketTransportLog = nsnull;
 nsSocketTransportService *gSocketTransportService = nsnull;
 PRThread                 *gSocketThread           = nsnull;
 
+#define PLEVENT_FROM_LINK(_link)                                     \
+    NS_REINTERPRET_CAST(PLEvent *,                                   \
+        NS_REINTERPRET_CAST(char *, _link) - offsetof(PLEvent, link))
+
+static inline void
+MoveCList(PRCList &from, PRCList &to)
+{
+    if (!PR_CLIST_IS_EMPTY(&from)) {
+        to.next = from.next;
+        to.prev = from.prev;
+        to.next->prev = &to;
+        to.prev->next = &to;
+        PR_INIT_CLIST(&from);
+    }             
+}
+
 //-----------------------------------------------------------------------------
 // ctor/dtor (called on the main/UI thread by the service manager)
 
@@ -64,19 +80,18 @@ nsSocketTransportService::nsSocketTransportService()
     , mThread(nsnull)
     , mThreadEvent(nsnull)
     , mAutodialEnabled(PR_FALSE)
-    , mEventQHead(nsnull)
-    , mEventQTail(nsnull)
     , mEventQLock(PR_NewLock())
     , mActiveCount(0)
     , mIdleCount(0)
-    , mPendingQHead(nsnull)
-    , mPendingQTail(nsnull)
 {
 #if defined(PR_LOGGING)
     gSocketTransportLog = PR_NewLogModule("nsSocketTransport");
 #endif
 
     NS_ASSERTION(nsIThread::IsMainThread(), "wrong thread");
+
+    PR_INIT_CLIST(&mEventQ);
+    PR_INIT_CLIST(&mPendingSocketQ);
 
     gSocketTransportService = this;
 }
@@ -98,29 +113,17 @@ nsSocketTransportService::~nsSocketTransportService()
 // event queue (any thread)
 
 NS_IMETHODIMP
-nsSocketTransportService::PostEvent(nsISocketEventHandler *handler,
-                                    PRUint32 type, PRUint32 uparam,
-                                    void *vparam)
+nsSocketTransportService::PostEvent(PLEvent *event)
 {
-    LOG(("nsSocketTransportService::PostEvent [handler=%x type=%u u=%x v=%x]\n",
-        handler, type, uparam, vparam));
+    LOG(("nsSocketTransportService::PostEvent [event=%p]\n", event));
 
-    NS_ASSERTION(handler, "null handler");
+    NS_ASSERTION(event, "null event");
 
     nsAutoLock lock(mEventQLock);
     if (!mInitialized)
         return NS_ERROR_OFFLINE;
 
-    SocketEvent *event = new SocketEvent(handler, type, uparam, vparam);
-    if (!event)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    // XXX generalize this into some kind of template class
-    if (mEventQTail)
-        mEventQTail->mNext = event;
-    mEventQTail = event;
-    if (!mEventQHead)
-        mEventQHead = event;
+    PR_APPEND_LINK(&event->link, &mEventQ);
 
     if (mThreadEvent)
         PR_SetPollableEvent(mThreadEvent);
@@ -128,31 +131,27 @@ nsSocketTransportService::PostEvent(nsISocketEventHandler *handler,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSocketTransportService::IsOnCurrentThread(PRBool *result)
+{
+    *result = (PR_GetCurrentThread() == gSocketThread);
+    return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // socket api (socket thread only)
 
 nsresult
-nsSocketTransportService::NotifyWhenCanAttachSocket(nsISocketEventHandler *handler,
-                                                    PRUint32 msg)
+nsSocketTransportService::NotifyWhenCanAttachSocket(PLEvent *event)
 {
     LOG(("nsSocketTransportService::NotifyWhenCanAttachSocket\n"));
 
     if (CanAttachSocket()) {
         NS_WARNING("should have called CanAttachSocket");
-        return PostEvent(handler, msg, 0, nsnull);
+        return PostEvent(event);
     }
 
-    PendingSocket *ps = new PendingSocket(handler, msg);
-    if (!ps)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    // XXX generalize this into some kind of template class
-    if (mPendingQTail)
-        mPendingQTail->mNext = ps;
-    mPendingQTail = ps;
-    if (!mPendingQHead)
-        mPendingQHead = ps;
-
+    PR_APPEND_LINK(&event->link, &mPendingSocketQ);
     return NS_OK;
 }
 
@@ -193,15 +192,13 @@ nsSocketTransportService::DetachSocket(SocketContext *sock)
     // NOTE: sock is now an invalid pointer
     
     //
-    // notify the first element on the pending socket handler queue...
+    // notify the first element on the pending socket queue...
     //
-    if (mPendingQHead) {
-        PendingSocket *ps = mPendingQHead;
-        mPendingQHead = ps->mNext;
-        if (!mPendingQHead)
-            mPendingQTail = nsnull;
-        PostEvent(ps->mHandler, ps->mMsg, 0, nsnull);
-        delete ps;
+    if (!PR_CLIST_IS_EMPTY(&mPendingSocketQ)) {
+        // move event from pending queue to event queue
+        PLEvent *event = PLEVENT_FROM_LINK(PR_LIST_HEAD(&mPendingSocketQ));
+        PR_REMOVE_AND_INIT_LINK(&event->link);
+        PostEvent(event);
     }
     return NS_OK;
 }
@@ -330,26 +327,23 @@ nsSocketTransportService::ServiceEventQ()
     PRBool keepGoing;
 
     // grab the event queue
-    SocketEvent *head = nsnull, *event;
+    PRCList eq;
+    PR_INIT_CLIST(&eq);
     {
         nsAutoLock lock(mEventQLock);
 
-        head = mEventQHead;
-        mEventQHead = nsnull;
-        mEventQTail = nsnull;
+        MoveCList(mEventQ, eq);
 
         // check to see if we're supposed to shutdown
         keepGoing = mInitialized;
     }
     // service the event queue
-    while (head) {
-        head->mHandler->OnSocketEvent(head->mType,
-                                      head->mUparam,
-                                      head->mVparam);
-        // delete head of queue
-        event = head->mNext;
-        delete head;
-        head = event;
+    PLEvent *event;
+    while (!PR_CLIST_IS_EMPTY(&eq)) {
+        event = PLEVENT_FROM_LINK(PR_LIST_HEAD(&eq));
+        PR_REMOVE_AND_INIT_LINK(&event->link);
+
+        PL_HandleEvent(event);
     }
     return keepGoing;
 }
@@ -358,8 +352,9 @@ nsSocketTransportService::ServiceEventQ()
 //-----------------------------------------------------------------------------
 // xpcom api
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsSocketTransportService,
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsSocketTransportService,
                               nsISocketTransportService,
+                              nsIEventTarget,
                               nsIRunnable)
 
 // called from main thread only

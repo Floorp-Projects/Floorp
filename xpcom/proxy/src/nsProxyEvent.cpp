@@ -309,7 +309,7 @@ nsProxyObject::Release(void)
        mRefCnt = 1; /* stabilize */
 
         PRBool callDirectly;
-        mDestQueue->IsQueueOnCurrentThread(&callDirectly);
+        mDestQueue->IsOnCurrentThread(&callDirectly);
 
         if (callDirectly)
         {
@@ -466,7 +466,7 @@ nsProxyObject::Post( PRUint32 methodIndex,
     // as the destination event queue. 
     if ( (methodIndex == 0) ||
          (mProxyType & PROXY_SYNC && 
-          NS_SUCCEEDED(mDestQueue->IsQueueOnCurrentThread(&callDirectly)) &&
+          NS_SUCCEEDED(mDestQueue->IsOnCurrentThread(&callDirectly)) &&
           callDirectly))
     {
 

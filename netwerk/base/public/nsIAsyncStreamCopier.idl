@@ -40,17 +40,22 @@
 interface nsIInputStream;
 interface nsIOutputStream;
 interface nsIRequestObserver;
+interface nsIEventTarget;
 
 [scriptable, uuid(eaa49141-c21c-4fe8-a79b-77860a3910aa)]
 interface nsIAsyncStreamCopier : nsIRequest
 {
     /**
-     * Initialize the input stream copier.
+     * Initialize the stream copier.
      *
      * @param aSource
      *        contains the data to be copied.
      * @param aSink
      *        specifies the destination for the data.
+     * @param aTarget
+     *        specifies the thread on which the copy will occur.  a null value
+     *        is permitted and will cause the copy to occur on an unspecified
+     *        background thread.
      * @param aSourceBuffered
      *        true if aSource implements ReadSegments.
      * @param aSinkBuffered
@@ -59,20 +64,23 @@ interface nsIAsyncStreamCopier : nsIRequest
      *        specifies how many bytes to read/write at a time.  this controls
      *        the granularity of the copying.  it should match the segment size
      *        of the "buffered" streams involved.
+     *
+     * NOTE: at least one of the streams must be buffered.
      */
     void init(in nsIInputStream  aSource,
               in nsIOutputStream aSink,
+              in nsIEventTarget  aTarget,
               in boolean         aSourceBuffered,
               in boolean         aSinkBuffered,
               in unsigned long   aChunkSize);
 
     /**
-     * asyncRead causes the input stream to be read in chunks and delivered
-     * asynchronously to the listener via OnDataAvailable.
+     * asyncCopy triggers the start of the copy.  The observer will be notified
+     * when the copy completes.
      *
-     * @param aListener
+     * @param aObserver
      *        receives notifications.
-     * @param aListenerContext
+     * @param aObserverContext
      *        passed to listener methods.
      */
     void asyncCopy(in nsIRequestObserver   aObserver,

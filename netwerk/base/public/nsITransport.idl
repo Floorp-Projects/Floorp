@@ -40,7 +40,7 @@
 interface nsIInputStream;
 interface nsIOutputStream;
 interface nsITransportEventSink;
-interface nsIEventQueue;
+interface nsIEventTarget;
 
 [scriptable, uuid(cbb0baeb-5fcb-408b-a2be-9f8fc98d0af1)]
 interface nsITransport : nsISupports
@@ -96,13 +96,13 @@ interface nsITransport : nsISupports
      *
      * @param aSink
      *        receives transport layer notifications
-     * @param aEventQ
-     *        indicates the event queue to which the notifications should
+     * @param aEventTarget
+     *        indicates the event target to which the notifications should
      *        be delivered.  if NULL, then the notifications may occur on
-     *        any thread.  (NOTE: the event queue must be resolved.)
+     *        any thread.
      */
     void setEventSink(in nsITransportEventSink aSink,
-                      in nsIEventQueue aEventQ); 
+                      in nsIEventTarget aEventTarget); 
     
     /**
      * Generic nsITransportEventSink status codes.  nsITransport

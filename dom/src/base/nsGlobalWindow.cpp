@@ -3421,7 +3421,7 @@ GlobalWindowImpl::Close()
       rv = ev->PostCloseEvent();
 
       if (NS_FAILED(rv)) {
-        delete ev;
+        PL_DestroyEvent(ev);
       }
     } else rv = NS_ERROR_OUT_OF_MEMORY;
   }

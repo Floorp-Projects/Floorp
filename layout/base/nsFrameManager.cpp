@@ -1262,12 +1262,17 @@ FrameManager::CantRenderReplacedElement(nsIFrame*       aFrame)
       // Create a new event
       ev = new CantRenderReplacedElementEvent(this, aFrame, mPresShell);
 
-      // Add the event to our linked list of posted events
-      ev->mNext = mPostedEvents;
-      mPostedEvents = ev;
-
       // Post the event
-      eventQueue->PostEvent(ev);
+      rv = eventQueue->PostEvent(ev);
+      if (NS_FAILED(rv)) {
+        NS_ERROR("failed to post event");
+        PL_DestroyEvent(ev);
+      }
+      else {
+        // Add the event to our linked list of posted events
+        ev->mNext = mPostedEvents;
+        mPostedEvents = ev;
+      }
     }
   }
 

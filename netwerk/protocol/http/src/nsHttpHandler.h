@@ -140,11 +140,15 @@ public:
         return mConnMgr->ProcessPendingQ(cinfo);
     }
 
+    nsresult GetSocketThreadEventTarget(nsIEventTarget **target)
+    {
+        return mConnMgr->GetSocketThreadEventTarget(target);
+    }
+
     //
     // The HTTP handler caches pointers to specific XPCOM services, and
     // provides the following helper routines for accessing those services:
     //
-    nsresult GetProxyObjectManager(nsIProxyObjectManager **);
     nsresult GetEventQueueService(nsIEventQueueService **);
     nsresult GetStreamConverterService(nsIStreamConverterService **);
     nsresult GetMimeService(nsIMIMEService **);
@@ -183,7 +187,6 @@ private:
 
     // cached services
     nsCOMPtr<nsIIOService>              mIOService;
-    nsCOMPtr<nsIProxyObjectManager>     mProxyMgr;
     nsCOMPtr<nsIEventQueueService>      mEventQueueService;
     nsCOMPtr<nsIStreamConverterService> mStreamConvSvc;
     nsCOMPtr<nsIObserverService>        mObserverService;

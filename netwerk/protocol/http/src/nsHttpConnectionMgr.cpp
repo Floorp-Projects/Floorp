@@ -53,7 +53,8 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 //-----------------------------------------------------------------------------
 
 nsHttpConnectionMgr::nsHttpConnectionMgr()
-    : mMonitor(nsAutoMonitor::NewMonitor("nsHttpConnectionMgr"))
+    : mRef(0)
+    , mMonitor(nsAutoMonitor::NewMonitor("nsHttpConnectionMgr"))
     , mMaxConns(0)
     , mMaxConnsPerHost(0)
     , mMaxConnsPerProxy(0)
@@ -87,7 +88,7 @@ nsHttpConnectionMgr::Init(PRUint16 maxConns,
     nsAutoMonitor mon(mMonitor);
 
     // do nothing if already initialized
-    if (mSTS)
+    if (mSTEventTarget)
         return NS_OK;
 
     // no need to do any special synchronization here since there cannot be
@@ -101,7 +102,7 @@ nsHttpConnectionMgr::Init(PRUint16 maxConns,
     mMaxPipelinedRequests = maxPipelinedRequests;
 
     nsresult rv;
-    mSTS = do_GetService(kSocketTransportServiceCID, &rv);
+    mSTEventTarget = do_GetService(kSocketTransportServiceCID, &rv);
     return rv;
 }
 
@@ -113,15 +114,15 @@ nsHttpConnectionMgr::Shutdown()
     nsAutoMonitor mon(mMonitor);
 
     // do nothing if already shutdown
-    if (!mSTS)
+    if (!mSTEventTarget)
         return NS_OK;
 
-    nsresult rv = mSTS->PostEvent(this, MSG_SHUTDOWN, 0, nsnull);
+    nsresult rv = PostEvent(&nsHttpConnectionMgr::OnMsgShutdown);
 
     // release our reference to the STS to prevent further events
     // from being posted.  this is how we indicate that we are
     // shutting down.
-    mSTS = 0;
+    mSTEventTarget = 0;
 
     if (NS_FAILED(rv)) {
         NS_WARNING("unable to post SHUTDOWN message\n");
@@ -134,13 +135,26 @@ nsHttpConnectionMgr::Shutdown()
 }
 
 nsresult
-nsHttpConnectionMgr::PostEvent(PRUint32 type, PRUint32 uparam, void *vparam)
+nsHttpConnectionMgr::PostEvent(nsConnEventHandler handler, nsresult status, void *param)
 {
     nsAutoMonitor mon(mMonitor);
 
-    NS_ENSURE_TRUE(mSTS, NS_ERROR_NOT_INITIALIZED);
-
-    return mSTS->PostEvent(this, type, uparam, vparam);
+    nsresult rv;
+    if (!mSTEventTarget) {
+        NS_WARNING("cannot post event if not initialized");
+        rv = NS_ERROR_NOT_INITIALIZED;
+    }
+    else {
+        PLEvent *event = new nsConnEvent(this, handler, status, param);
+        if (!event)
+            rv = NS_ERROR_OUT_OF_MEMORY;
+        else {
+            rv = mSTEventTarget->PostEvent(event);
+            if (NS_FAILED(rv))
+                PL_DestroyEvent(event);
+        }
+    }
+    return rv;
 }
 
 //-----------------------------------------------------------------------------
@@ -151,12 +165,9 @@ nsHttpConnectionMgr::AddTransaction(nsHttpTransaction *trans)
     LOG(("nsHttpConnectionMgr::AddTransaction [trans=%x]\n", trans));
 
     NS_ADDREF(trans);
-
-    nsresult rv = PostEvent(MSG_NEW_TRANSACTION, 0, trans);
+    nsresult rv = PostEvent(&nsHttpConnectionMgr::OnMsgNewTransaction, NS_OK, trans);
     if (NS_FAILED(rv))
         NS_RELEASE(trans);
-
-    // if successful, then OnSocketEvent will be called
     return rv;
 }
 
@@ -166,27 +177,23 @@ nsHttpConnectionMgr::CancelTransaction(nsHttpTransaction *trans, nsresult reason
     LOG(("nsHttpConnectionMgr::CancelTransaction [trans=%x reason=%x]\n", trans, reason));
 
     NS_ADDREF(trans);
-
-    nsresult rv = PostEvent(MSG_CANCEL_TRANSACTION, reason, trans);
+    nsresult rv = PostEvent(&nsHttpConnectionMgr::OnMsgCancelTransaction, reason, trans);
     if (NS_FAILED(rv))
         NS_RELEASE(trans);
-
-    // if successful, then OnSocketEvent will be called
     return rv;
 }
 
 nsresult
 nsHttpConnectionMgr::PruneDeadConnections()
 {
-    return PostEvent(MSG_PRUNE_DEAD_CONNECTIONS, 0, nsnull);
-    // if successful, then OnSocketEvent will be called
+    return PostEvent(&nsHttpConnectionMgr::OnMsgPruneDeadConnections);
 }
 
 nsresult
-nsHttpConnectionMgr::GetSTS(nsISocketTransportService **sts)
+nsHttpConnectionMgr::GetSocketThreadEventTarget(nsIEventTarget **target)
 {
     nsAutoMonitor mon(mMonitor);
-    NS_IF_ADDREF(*sts = mSTS);
+    NS_IF_ADDREF(*target = mSTEventTarget);
     return NS_OK;
 }
 
@@ -226,7 +233,7 @@ nsHttpConnectionMgr::ReclaimConnection(nsHttpConnection *conn)
     LOG(("nsHttpConnectionMgr::ReclaimConnection [conn=%x]\n", conn));
 
     NS_ADDREF(conn);
-    nsresult rv = PostEvent(MSG_RECLAIM_CONNECTION, 0, conn);
+    nsresult rv = PostEvent(&nsHttpConnectionMgr::OnMsgReclaimConnection, NS_OK, conn);
     if (NS_FAILED(rv))
         NS_RELEASE(conn);
     return rv;
@@ -238,7 +245,7 @@ nsHttpConnectionMgr::ProcessPendingQ(nsHttpConnectionInfo *ci)
     LOG(("nsHttpConnectionMgr::ProcessPendingQ [ci=%s]\n", ci->HashKey().get()));
 
     NS_ADDREF(ci);
-    nsresult rv = PostEvent(MSG_PROCESS_PENDING_Q, 0, ci);
+    nsresult rv = PostEvent(&nsHttpConnectionMgr::OnMsgProcessPendingQ, NS_OK, ci);
     if (NS_FAILED(rv))
         NS_RELEASE(ci);
     return rv;
@@ -615,25 +622,9 @@ nsHttpConnectionMgr::BuildPipeline(nsConnectionEntry *ent,
     return PR_TRUE;
 }
 
-//-----------------------------------------------------------------------------
-
-void
-nsHttpConnectionMgr::OnMsgShutdown()
-{
-    LOG(("nsHttpConnectionMgr::OnMsgShutdown\n"));
-
-    mCT.Reset(ShutdownPassCB, this);
-
-    // signal shutdown complete
-    nsAutoMonitor mon(mMonitor);
-    mon.Notify();
-}
-
 nsresult
-nsHttpConnectionMgr::OnMsgNewTransaction(nsHttpTransaction *trans)
+nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
 {
-    LOG(("nsHttpConnectionMgr::OnMsgNewTransaction [trans=%x]\n", trans));
-
     // since "adds" and "cancels" are processed asynchronously and because
     // various events might trigger an "add" directly on the socket thread,
     // we must take care to avoid dispatching a transaction that has already
@@ -703,11 +694,38 @@ nsHttpConnectionMgr::OnMsgNewTransaction(nsHttpTransaction *trans)
     return rv;
 }
 
+//-----------------------------------------------------------------------------
+
 void
-nsHttpConnectionMgr::OnMsgCancelTransaction(nsHttpTransaction *trans,
-                                            nsresult reason)
+nsHttpConnectionMgr::OnMsgShutdown(nsresult, void *)
 {
-    LOG(("nsHttpConnectionMgr::OnMsgCancelTransaction [trans=%x]\n", trans));
+    LOG(("nsHttpConnectionMgr::OnMsgShutdown\n"));
+
+    mCT.Reset(ShutdownPassCB, this);
+
+    // signal shutdown complete
+    nsAutoMonitor mon(mMonitor);
+    mon.Notify();
+}
+
+void
+nsHttpConnectionMgr::OnMsgNewTransaction(nsresult, void *param)
+{
+    LOG(("nsHttpConnectionMgr::OnMsgNewTransaction [trans=%p]\n", param));
+
+    nsHttpTransaction *trans = (nsHttpTransaction *) param;
+    nsresult rv = ProcessNewTransaction(trans);
+    if (NS_FAILED(rv))
+        trans->Close(rv); // for whatever its worth
+    NS_RELEASE(trans);
+}
+
+void
+nsHttpConnectionMgr::OnMsgCancelTransaction(nsresult reason, void *param)
+{
+    LOG(("nsHttpConnectionMgr::OnMsgCancelTransaction [trans=%p]\n", param));
+
+    nsHttpTransaction *trans = (nsHttpTransaction *) param;
     //
     // if the transaction owns a connection and the transaction is not done,
     // then ask the connection to close the transaction.  otherwise, close the
@@ -730,27 +748,30 @@ nsHttpConnectionMgr::OnMsgCancelTransaction(nsHttpTransaction *trans,
         }
         trans->Close(reason);
     }
+    NS_RELEASE(trans);
 }
 
 void
-nsHttpConnectionMgr::OnMsgProcessPendingQ(nsHttpConnectionInfo *ci)
+nsHttpConnectionMgr::OnMsgProcessPendingQ(nsresult, void *param)
 {
+    nsHttpConnectionInfo *ci = (nsHttpConnectionInfo *) param;
+
     LOG(("nsHttpConnectionMgr::OnMsgProcessPendingQ [ci=%s]\n", ci->HashKey().get()));
 
     // start by processing the queue identified by the given connection info.
     nsCStringKey key(ci->HashKey());
     nsConnectionEntry *ent = (nsConnectionEntry *) mCT.Get(&key);
-    if (ent && ProcessPendingQForEntry(ent))
-        return;
+    if (!(ent && ProcessPendingQForEntry(ent))) {
+        // if we reach here, it means that we couldn't dispatch a transaction
+        // for the specified connection info.  walk the connection table...
+        mCT.Enumerate(ProcessOneTransactionCB, this);
+    }
 
-    // if we reach here, it means that we couldn't dispatch a transaction
-    // for the specified connection info.  walk the connection table...
-
-    mCT.Enumerate(ProcessOneTransactionCB, this);
+    NS_RELEASE(ci);
 }
 
 void
-nsHttpConnectionMgr::OnMsgPruneDeadConnections()
+nsHttpConnectionMgr::OnMsgPruneDeadConnections(nsresult, void *)
 {
     LOG(("nsHttpConnectionMgr::OnMsgPruneDeadConnections\n"));
 
@@ -759,9 +780,11 @@ nsHttpConnectionMgr::OnMsgPruneDeadConnections()
 }
 
 void
-nsHttpConnectionMgr::OnMsgReclaimConnection(nsHttpConnection *conn)
+nsHttpConnectionMgr::OnMsgReclaimConnection(nsresult, void *param)
 {
-    LOG(("nsHttpConnectionMgr::OnMsgReclaimConnection [conn=%x]\n", conn));
+    LOG(("nsHttpConnectionMgr::OnMsgReclaimConnection [conn=%p]\n", param));
+
+    nsHttpConnection *conn = (nsHttpConnection *) param;
 
     // 
     // 1) remove the connection from the active list
@@ -791,63 +814,13 @@ nsHttpConnectionMgr::OnMsgReclaimConnection(nsHttpConnection *conn)
             LOG(("  connection cannot be reused; closing connection\n"));
             // make sure the connection is closed and release our reference.
             conn->Close(NS_ERROR_ABORT);
-            NS_RELEASE(conn);
+            nsHttpConnection *temp = conn;
+            NS_RELEASE(temp);
         }
     }
  
-    OnMsgProcessPendingQ(ci);
-    NS_RELEASE(ci);
-}
-
-//-----------------------------------------------------------------------------
-
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsHttpConnectionMgr, nsISocketEventHandler)
-
-// called on the socket thread
-NS_IMETHODIMP
-nsHttpConnectionMgr::OnSocketEvent(PRUint32 type, PRUint32 uparam, void *vparam)
-{
-    switch (type) {
-    case MSG_SHUTDOWN:
-        OnMsgShutdown();
-        break;
-    case MSG_NEW_TRANSACTION:
-        {
-            nsHttpTransaction *trans = (nsHttpTransaction *) vparam;
-
-            nsresult rv = OnMsgNewTransaction(trans);
-            if (NS_FAILED(rv))
-                trans->Close(rv); // for whatever its worth
-
-            NS_RELEASE(trans);
-        }
-        break;
-    case MSG_CANCEL_TRANSACTION:
-        {
-            nsHttpTransaction *trans = (nsHttpTransaction *) vparam;
-            OnMsgCancelTransaction(trans, (nsresult) uparam);
-            NS_RELEASE(trans);
-        }
-        break;
-    case MSG_PROCESS_PENDING_Q:
-        {
-            nsHttpConnectionInfo *ci = (nsHttpConnectionInfo *) vparam;
-            OnMsgProcessPendingQ(ci);
-            NS_RELEASE(ci);
-        }
-        break;
-    case MSG_PRUNE_DEAD_CONNECTIONS:
-        OnMsgPruneDeadConnections();
-        break;
-    case MSG_RECLAIM_CONNECTION:
-        {
-            nsHttpConnection *conn = (nsHttpConnection *) vparam;
-            OnMsgReclaimConnection(conn);
-            NS_RELEASE(conn);
-        }
-        break;
-    }
-    return NS_OK;
+    OnMsgProcessPendingQ(NS_OK, ci); // releases |ci|
+    NS_RELEASE(conn);
 }
 
 //-----------------------------------------------------------------------------

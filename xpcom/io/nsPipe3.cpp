@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIPipe.h"
-#include "nsIEventQueue.h"
+#include "nsIEventTarget.h"
 #include "nsISeekableStream.h"
 #include "nsSegmentedBuffer.h"
 #include "nsStreamUtils.h"
@@ -65,6 +65,9 @@ class nsPipeOutputStream;
 
 //-----------------------------------------------------------------------------
 
+// this class is used to delay notifications until the end of a particular
+// scope.  it helps avoid the complexity of issuing callbacks while inside
+// a critical section.
 class nsPipeEvents
 {
 public:
@@ -72,36 +75,43 @@ public:
    ~nsPipeEvents();
 
     inline void NotifyInputReady(nsIAsyncInputStream *stream,
-                                 nsIInputStreamNotify *notify)
+                                 nsIInputStreamCallback *callback)
     {
-        NS_ASSERTION(!mInputNotify, "already have an input event");
+        NS_ASSERTION(!mInputCallback, "already have an input event");
         mInputStream = stream;
-        mInputNotify = notify;
+        mInputCallback = callback;
     }
 
     inline void NotifyOutputReady(nsIAsyncOutputStream *stream,
-                                  nsIOutputStreamNotify *notify)
+                                  nsIOutputStreamCallback *callback)
     {
-        NS_ASSERTION(!mOutputNotify, "already have an output event");
+        NS_ASSERTION(!mOutputCallback, "already have an output event");
         mOutputStream = stream;
-        mOutputNotify = notify;
+        mOutputCallback = callback;
     }
 
 private:
-    nsCOMPtr<nsIAsyncInputStream>   mInputStream;
-    nsCOMPtr<nsIInputStreamNotify>  mInputNotify;
-    nsCOMPtr<nsIAsyncOutputStream>  mOutputStream;
-    nsCOMPtr<nsIOutputStreamNotify> mOutputNotify;
+    nsCOMPtr<nsIAsyncInputStream>     mInputStream;
+    nsCOMPtr<nsIInputStreamCallback>  mInputCallback;
+    nsCOMPtr<nsIAsyncOutputStream>    mOutputStream;
+    nsCOMPtr<nsIOutputStreamCallback> mOutputCallback;
 };
 
 //-----------------------------------------------------------------------------
 
+// the input end of a pipe (allocated as a member of the pipe).
 class nsPipeInputStream : public nsIAsyncInputStream
                         , public nsISeekableStream
                         , public nsISearchableInputStream
 {
 public:
+    // since this class will be allocated as a member of the pipe, we do not
+    // need our own ref count.  instead, we share the lifetime (the ref count)
+    // of the entire pipe.  this macro is just convenience since it does not
+    // declare a mRefCount variable; however, don't let the name fool you...
+    // we are not inheriting from nsPipe ;-)
     NS_DECL_ISUPPORTS_INHERITED
+
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSIASYNCINPUTSTREAM
     NS_DECL_NSISEEKABLESTREAM
@@ -114,6 +124,7 @@ public:
         , mBlocking(PR_TRUE)
         , mBlocked(PR_FALSE)
         , mAvailable(0)
+        , mCallbackFlags(0)
         { }
     virtual ~nsPipeInputStream() { }
 
@@ -123,7 +134,11 @@ public:
     PRUint32 Available() { return mAvailable; }
     void     ReduceAvailable(PRUint32 avail) { mAvailable -= avail; }
 
+    // synchronously wait for the pipe to become readable.
     nsresult Wait();
+
+    // these functions return true to indicate that the pipe's monitor should
+    // be notified, to wake up a blocked reader if any.
     PRBool   OnInputReadable(PRUint32 bytesWritten, nsPipeEvents &);
     PRBool   OnInputException(nsresult, nsPipeEvents &);
 
@@ -138,16 +153,24 @@ private:
     // these variables can only be accessed while inside the pipe's monitor
     PRPackedBool                   mBlocked;
     PRUint32                       mAvailable;
-    nsCOMPtr<nsIInputStreamNotify> mNotify;
+    nsCOMPtr<nsIInputStreamCallback> mCallback;
+    PRUint32                       mCallbackFlags;
 };
 
 //-----------------------------------------------------------------------------
 
+// the output end of a pipe (allocated as a member of the pipe).
 class nsPipeOutputStream : public nsIAsyncOutputStream
                          , public nsISeekableStream
 {
 public:
+    // since this class will be allocated as a member of the pipe, we do not
+    // need our own ref count.  instead, we share the lifetime (the ref count)
+    // of the entire pipe.  this macro is just convenience since it does not
+    // declare a mRefCount variable; however, don't let the name fool you...
+    // we are not inheriting from nsPipe ;-)
     NS_DECL_ISUPPORTS_INHERITED
+
     NS_DECL_NSIOUTPUTSTREAM
     NS_DECL_NSIASYNCOUTPUTSTREAM
     NS_DECL_NSISEEKABLESTREAM
@@ -159,13 +182,18 @@ public:
         , mBlocking(PR_TRUE)
         , mBlocked(PR_FALSE)
         , mWritable(PR_TRUE)
+        , mCallbackFlags(0)
         { }
     virtual ~nsPipeOutputStream() { }
 
     void SetNonBlocking(PRBool aNonBlocking) { mBlocking = !aNonBlocking; }
     void SetWritable(PRBool writable) { mWritable = writable; }
 
+    // synchronously wait for the pipe to become writable.
     nsresult Wait();
+
+    // these functions return true to indicate that the pipe's monitor should
+    // be notified, to wake up a blocked writer if any.
     PRBool   OnOutputWritable(nsPipeEvents &);
     PRBool   OnOutputException(nsresult, nsPipeEvents &);
 
@@ -180,7 +208,8 @@ private:
     // these variables can only be accessed while inside the pipe's monitor
     PRPackedBool                    mBlocked;
     PRPackedBool                    mWritable;
-    nsCOMPtr<nsIOutputStreamNotify> mNotify;
+    nsCOMPtr<nsIOutputStreamCallback> mCallback;
+    PRUint32                        mCallbackFlags;
 };
 
 //-----------------------------------------------------------------------------
@@ -197,10 +226,6 @@ public:
     // nsPipe methods:
     nsPipe();
     virtual ~nsPipe();
-
-    PRMonitor *Monitor() { return mMonitor; }
-    nsPipeInputStream* InputStream() { return &mInput; }
-    nsPipeOutputStream* OutputStream() { return &mOutput; }
 
     //
     // methods below may only be called while inside the pipe's monitor
@@ -330,8 +355,8 @@ nsPipe::Init(PRBool nonBlockingIn,
     if (NS_FAILED(rv))
         return rv;
 
-    InputStream()->SetNonBlocking(nonBlockingIn);
-    OutputStream()->SetNonBlocking(nonBlockingOut);
+    mInput.SetNonBlocking(nonBlockingIn);
+    mOutput.SetNonBlocking(nonBlockingOut);
     return NS_OK;
 }
 
@@ -399,7 +424,7 @@ nsPipe::AdvanceReadCursor(PRUint32 bytesRead)
         mReadCursor += bytesRead;
         NS_ASSERTION(mReadCursor <= mReadLimit, "read cursor exceeds limit");
 
-        InputStream()->ReduceAvailable(bytesRead);
+        mInput.ReduceAvailable(bytesRead);
 
         if (mReadCursor == mReadLimit) {
             // we've reached the limit of how much we can read from this segment.
@@ -437,7 +462,7 @@ nsPipe::AdvanceReadCursor(PRUint32 bytesRead)
 
             // we've free'd up a segment, so notify output stream that pipe has
             // room for a new segment.
-            if (OutputStream()->OnOutputWritable(events))
+            if (mOutput.OnOutputWritable(events))
                 mon.Notify();
         }
     }
@@ -507,11 +532,11 @@ nsPipe::AdvanceWriteCursor(PRUint32 bytesWritten)
         // update the writable flag on the output stream
         if (mWriteCursor == mWriteLimit) {
             if (mBuffer.GetSize() >= mBuffer.GetMaxSize())
-                OutputStream()->SetWritable(PR_FALSE);
+                mOutput.SetWritable(PR_FALSE);
         }
 
         // notify input stream that pipe now contains additional data
-        if (InputStream()->OnInputReadable(bytesWritten, events))
+        if (mInput.OnInputReadable(bytesWritten, events))
             mon.Notify();
     }
 }
@@ -534,14 +559,14 @@ nsPipe::OnPipeException(nsresult reason, PRBool outputOnly)
 
         // an output-only exception applies to the input end if the pipe has
         // zero bytes available.
-        if (outputOnly && !InputStream()->Available())
+        if (outputOnly && !mInput.Available())
             outputOnly = PR_FALSE;
 
         if (!outputOnly)
-            if (InputStream()->OnInputException(reason, events))
+            if (mInput.OnInputException(reason, events))
                 mon.Notify();
 
-        if (OutputStream()->OnOutputException(reason, events))
+        if (mOutput.OnOutputException(reason, events))
             mon.Notify();
     }
 }
@@ -554,14 +579,14 @@ nsPipeEvents::~nsPipeEvents()
 {
     // dispatch any pending events
 
-    if (mInputNotify) {
-        mInputNotify->OnInputStreamReady(mInputStream);
-        mInputNotify = 0;
+    if (mInputCallback) {
+        mInputCallback->OnInputStreamReady(mInputStream);
+        mInputCallback = 0;
         mInputStream = 0;
     }
-    if (mOutputNotify) {
-        mOutputNotify->OnOutputStreamReady(mOutputStream);
-        mOutputNotify = 0;
+    if (mOutputCallback) {
+        mOutputCallback->OnOutputStreamReady(mOutputStream);
+        mOutputCallback = 0;
         mOutputStream = 0;
     }
 }
@@ -575,7 +600,7 @@ nsPipeInputStream::Wait()
 {
     NS_ASSERTION(mBlocking, "wait on non-blocking pipe input stream");
 
-    nsAutoMonitor mon(mPipe->Monitor());
+    nsAutoMonitor mon(mPipe->mMonitor);
 
     while (NS_SUCCEEDED(mPipe->mStatus) && (mAvailable == 0)) {
         LOG(("III pipe input: waiting for data\n"));
@@ -598,9 +623,10 @@ nsPipeInputStream::OnInputReadable(PRUint32 bytesWritten, nsPipeEvents &events)
 
     mAvailable += bytesWritten;
 
-    if (mNotify) {
-        events.NotifyInputReady(this, mNotify);
-        mNotify = 0;
+    if (mCallback && !(mCallbackFlags & WAIT_CLOSURE_ONLY)) {
+        events.NotifyInputReady(this, mCallback);
+        mCallback = 0;
+        mCallbackFlags = 0;
     }
     else if (mBlocked)
         result = PR_TRUE;
@@ -618,9 +644,13 @@ nsPipeInputStream::OnInputException(nsresult reason, nsPipeEvents &events)
 
     NS_ASSERTION(NS_FAILED(reason), "huh? successful exception");
 
-    if (mNotify) {
-        events.NotifyInputReady(this, mNotify);
-        mNotify = 0;
+    // force count of available bytes to zero.
+    mAvailable = 0;
+
+    if (mCallback) {
+        events.NotifyInputReady(this, mCallback);
+        mCallback = 0;
+        mCallbackFlags = 0;
     }
     else if (mBlocked)
         result = PR_TRUE;
@@ -650,9 +680,9 @@ NS_IMPL_QUERY_INTERFACE4(nsPipeInputStream,
                          nsISearchableInputStream)
 
 NS_IMETHODIMP
-nsPipeInputStream::CloseEx(nsresult reason)
+nsPipeInputStream::CloseWithStatus(nsresult reason)
 {
-    LOG(("III CloseEx [this=%x reason=%x]\n", this, reason));
+    LOG(("III CloseWithStatus [this=%x reason=%x]\n", this, reason));
 
     if (NS_SUCCEEDED(reason))
         reason = NS_BASE_STREAM_CLOSED;
@@ -664,13 +694,13 @@ nsPipeInputStream::CloseEx(nsresult reason)
 NS_IMETHODIMP
 nsPipeInputStream::Close()
 {
-    return CloseEx(NS_BASE_STREAM_CLOSED);
+    return CloseWithStatus(NS_BASE_STREAM_CLOSED);
 }
 
 NS_IMETHODIMP
 nsPipeInputStream::Available(PRUint32 *result)
 {
-    nsAutoMonitor mon(mPipe->Monitor());
+    nsAutoMonitor mon(mPipe->mMonitor);
 
     // return error if pipe closed
     if (!mAvailable && NS_FAILED(mPipe->mStatus))
@@ -780,34 +810,38 @@ nsPipeInputStream::IsNonBlocking(PRBool *aNonBlocking)
 }
 
 NS_IMETHODIMP
-nsPipeInputStream::AsyncWait(nsIInputStreamNotify *notify,
-                             PRUint32 aRequestedCount,
-                             nsIEventQueue *eventQ)
+nsPipeInputStream::AsyncWait(nsIInputStreamCallback *callback,
+                             PRUint32 flags,
+                             PRUint32 requestedCount,
+                             nsIEventTarget *target)
 {
     LOG(("III AsyncWait [this=%x]\n", this));
 
     nsPipeEvents pipeEvents;
     {
-        nsAutoMonitor mon(mPipe->Monitor());
+        nsAutoMonitor mon(mPipe->mMonitor);
 
-        // replace a pending notify
-        mNotify = 0;
+        // replace a pending callback
+        mCallback = 0;
+        mCallbackFlags = 0;
 
-        nsCOMPtr<nsIInputStreamNotify> proxy;
-        if (eventQ) {
+        nsCOMPtr<nsIInputStreamCallback> proxy;
+        if (target) {
             nsresult rv = NS_NewInputStreamReadyEvent(getter_AddRefs(proxy),
-                                                      notify, eventQ);
+                                                      callback, target);
             if (NS_FAILED(rv)) return rv;
-            notify = proxy;
+            callback = proxy;
         }
 
-        if (NS_FAILED(mPipe->mStatus) || mAvailable) {
+        if (NS_FAILED(mPipe->mStatus) ||
+                (mAvailable && !(flags & WAIT_CLOSURE_ONLY))) {
             // stream is already closed or readable; post event.
-            pipeEvents.NotifyInputReady(this, notify);
+            pipeEvents.NotifyInputReady(this, callback);
         }
         else {
-            // queue up notify object to be notified when data becomes available
-            mNotify = notify;
+            // queue up callback object to be notified when data becomes available
+            mCallback = callback;
+            mCallbackFlags = flags;
         }
     }
     return NS_OK;
@@ -847,7 +881,7 @@ nsPipeInputStream::Search(const char *forString,
 {
     LOG(("III Search [for=%s ic=%u]\n", forString, ignoreCase));
 
-    nsAutoMonitor mon(mPipe->Monitor());
+    nsAutoMonitor mon(mPipe->mMonitor);
 
     char *cursor1, *limit1;
     PRUint32 index = 0, offset = 0;
@@ -924,7 +958,7 @@ nsPipeOutputStream::Wait()
 {
     NS_ASSERTION(mBlocking, "wait on non-blocking pipe output stream");
 
-    nsAutoMonitor mon(mPipe->Monitor());
+    nsAutoMonitor mon(mPipe->mMonitor);
 
     if (NS_SUCCEEDED(mPipe->mStatus) && !mWritable) {
         LOG(("OOO pipe output: waiting for space\n"));
@@ -945,9 +979,10 @@ nsPipeOutputStream::OnOutputWritable(nsPipeEvents &events)
 
     mWritable = PR_TRUE;
 
-    if (mNotify) {
-        events.NotifyOutputReady(this, mNotify);
-        mNotify = 0;
+    if (mCallback && !(mCallbackFlags & WAIT_CLOSURE_ONLY)) {
+        events.NotifyOutputReady(this, mCallback);
+        mCallback = 0;
+        mCallbackFlags = 0;
     }
     else if (mBlocked)
         result = PR_TRUE;
@@ -966,9 +1001,10 @@ nsPipeOutputStream::OnOutputException(nsresult reason, nsPipeEvents &events)
     NS_ASSERTION(NS_FAILED(reason), "huh? successful exception");
     mWritable = PR_FALSE;
 
-    if (mNotify) {
-        events.NotifyOutputReady(this, mNotify);
-        mNotify = 0;
+    if (mCallback) {
+        events.NotifyOutputReady(this, mCallback);
+        mCallback = 0;
+        mCallbackFlags = 0;
     }
     else if (mBlocked)
         result = PR_TRUE;
@@ -997,9 +1033,9 @@ NS_IMPL_QUERY_INTERFACE2(nsPipeOutputStream,
                          nsIAsyncOutputStream)
 
 NS_IMETHODIMP
-nsPipeOutputStream::CloseEx(nsresult reason)
+nsPipeOutputStream::CloseWithStatus(nsresult reason)
 {
-    LOG(("OOO CloseEx [this=%x reason=%x]\n", this, reason));
+    LOG(("OOO CloseWithStatus [this=%x reason=%x]\n", this, reason));
 
     if (NS_SUCCEEDED(reason))
         reason = NS_BASE_STREAM_CLOSED;
@@ -1012,7 +1048,7 @@ nsPipeOutputStream::CloseEx(nsresult reason)
 NS_IMETHODIMP
 nsPipeOutputStream::Close()
 {
-    return CloseEx(NS_BASE_STREAM_CLOSED);
+    return CloseWithStatus(NS_BASE_STREAM_CLOSED);
 }
 
 NS_IMETHODIMP
@@ -1124,8 +1160,8 @@ nsReadFromInputStream(nsIOutputStream* outStr,
 
 NS_IMETHODIMP
 nsPipeOutputStream::WriteFrom(nsIInputStream* fromStream,
-                                      PRUint32 count,
-                                      PRUint32 *writeCount)
+                              PRUint32 count,
+                              PRUint32 *writeCount)
 {
     return WriteSegments(nsReadFromInputStream, fromStream, count, writeCount);
 }
@@ -1138,34 +1174,38 @@ nsPipeOutputStream::IsNonBlocking(PRBool *aNonBlocking)
 }
 
 NS_IMETHODIMP
-nsPipeOutputStream::AsyncWait(nsIOutputStreamNotify *notify,
-                              PRUint32 aRequestedCount,
-                              nsIEventQueue *eventQ)
+nsPipeOutputStream::AsyncWait(nsIOutputStreamCallback *callback,
+                              PRUint32 flags,
+                              PRUint32 requestedCount,
+                              nsIEventTarget *target)
 {
     LOG(("OOO AsyncWait [this=%x]\n", this));
 
     nsPipeEvents pipeEvents;
     {
-        nsAutoMonitor mon(mPipe->Monitor());
+        nsAutoMonitor mon(mPipe->mMonitor);
 
-        // replace a pending notify
-        mNotify = 0;
+        // replace a pending callback
+        mCallback = 0;
+        mCallbackFlags = 0;
 
-        nsCOMPtr<nsIOutputStreamNotify> proxy;
-        if (eventQ) {
+        nsCOMPtr<nsIOutputStreamCallback> proxy;
+        if (target) {
             nsresult rv = NS_NewOutputStreamReadyEvent(getter_AddRefs(proxy),
-                                                       notify, eventQ);
+                                                       callback, target);
             if (NS_FAILED(rv)) return rv;
-            notify = proxy;
+            callback = proxy;
         }
 
-        if (NS_FAILED(mPipe->mStatus) || mWritable) {
+        if (NS_FAILED(mPipe->mStatus) ||
+                (mWritable && !(flags & WAIT_CLOSURE_ONLY))) {
             // stream is already closed or writable; post event.
-            pipeEvents.NotifyOutputReady(this, notify);
+            pipeEvents.NotifyOutputReady(this, callback);
         }
         else {
-            // queue up notify object to be notified when data becomes available
-            mNotify = notify;
+            // queue up callback object to be notified when data becomes available
+            mCallback = callback;
+            mCallbackFlags = flags;
         }
     }
     return NS_OK;

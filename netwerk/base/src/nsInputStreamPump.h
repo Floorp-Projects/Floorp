@@ -50,13 +50,13 @@
 #include "nsCOMPtr.h"
 
 class nsInputStreamPump : public nsIInputStreamPump
-                        , public nsIInputStreamNotify
+                        , public nsIInputStreamCallback
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSIINPUTSTREAMPUMP
-    NS_DECL_NSIINPUTSTREAMNOTIFY
+    NS_DECL_NSIINPUTSTREAMCALLBACK
 
     nsInputStreamPump(); 
     virtual ~nsInputStreamPump();

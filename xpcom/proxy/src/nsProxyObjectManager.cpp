@@ -209,7 +209,7 @@ nsProxyObjectManager::GetProxyForObject(nsIEventQueue *destQueue,
     if (postQ && !(proxyType & PROXY_ASYNC) && !(proxyType & PROXY_ALWAYS))
     {
         PRBool aResult;
-        postQ->IsQueueOnCurrentThread(&aResult);
+        postQ->IsOnCurrentThread(&aResult);
      
         if (aResult)
         {

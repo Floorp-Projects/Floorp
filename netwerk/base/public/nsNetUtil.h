@@ -327,16 +327,16 @@ NS_NewInputStreamPump(nsIInputStreamPump **result,
     return rv;
 }
 
-// NOTE: you can optimize the copy by specifying whether or not your streams
-// are buffered (i.e., do they implement ReadSegments/WriteSegments).  the
-// default assumption of FALSE for both streams is OK, but the copy is much
-// more efficient if one of the streams is buffered.
+// NOTE: you will need to specify whether or not your streams are buffered
+// (i.e., do they implement ReadSegments/WriteSegments).  the default
+// assumption of TRUE for both streams might not be right for you!
 inline nsresult
 NS_NewAsyncStreamCopier(nsIAsyncStreamCopier **result,
                         nsIInputStream        *source,
                         nsIOutputStream       *sink,
-                        PRBool                 sourceBuffered = PR_FALSE,
-                        PRBool                 sinkBuffered = PR_FALSE,
+                        nsIEventTarget        *target,
+                        PRBool                 sourceBuffered = PR_TRUE,
+                        PRBool                 sinkBuffered = PR_TRUE,
                         PRUint32               chunkSize = 0)
 {
     nsresult rv;
@@ -344,7 +344,7 @@ NS_NewAsyncStreamCopier(nsIAsyncStreamCopier **result,
     nsCOMPtr<nsIAsyncStreamCopier> copier =
         do_CreateInstance(kAsyncStreamCopierCID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = copier->Init(source, sink, sourceBuffered, sinkBuffered, chunkSize);
+        rv = copier->Init(source, sink, target, sourceBuffered, sinkBuffered, chunkSize);
         if (NS_SUCCEEDED(rv))
             NS_ADDREF(*result = copier);
     }

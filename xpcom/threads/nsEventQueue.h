@@ -47,9 +47,8 @@ public:
     nsEventQueueImpl();
     virtual ~nsEventQueueImpl();
 
-  // nsISupports interface...
     NS_DECL_ISUPPORTS
-  // nsIEventQueue interface...
+    NS_DECL_NSIEVENTTARGET
     NS_DECL_NSIEVENTQUEUE
 
     // Helpers

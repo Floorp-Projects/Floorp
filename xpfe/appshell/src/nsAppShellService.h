@@ -90,13 +90,8 @@ protected:
   PRPackedBool mAttemptingQuit; // Quit(eAttemptQuit) still trying
 
   // A "last event" that is used to flush the appshell's event queue.
-  struct ExitEvent {
-    PLEvent            mEvent;
-    nsAppShellService* mService;
-  };
-
-  static void* PR_CALLBACK HandleExitEvent(PLEvent* aEvent);
-  static void PR_CALLBACK DestroyExitEvent(PLEvent* aEvent);
+  PR_STATIC_CALLBACK(void*) HandleExitEvent(PLEvent* aEvent);
+  PR_STATIC_CALLBACK(void) DestroyExitEvent(PLEvent* aEvent);
 
 private:
   nsresult CheckAndRemigrateDefunctProfile();
