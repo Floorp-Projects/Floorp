@@ -211,14 +211,14 @@ XPCOM_LIBS = \
 	$(NULL)
 
 ifeq ($(OS_ARCH), SunOS)
-NSPR_LINK_LIBS = -L$(DIST)/lib -Bdynamic -lnspr3 -lplc3 -lplds3
+NSPR_LINK_LIBS = -L$(DIST)/lib -Bdynamic -lnspr4 -lplc4 -lplds4
 else
 NSPR_LINK_LIBS = $(NSPR_LIBS)
 endif
 
 # Adding HP-UX Specific Fixes
 ifeq ($(OS_ARCH), HP-UX)
-NSPR_LINK_LIBS = -L$(DIST)/lib -shared -lnspr3 -lplc3 -lplds3
+NSPR_LINK_LIBS = -L$(DIST)/lib -shared -lnspr4 -lplc4 -lplds4
 endif
 
 EXTRA_LIBS += \
