@@ -82,7 +82,17 @@ nsAOLCiter::GetCiteString(const nsString& aInString, nsString& aOutString)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsAOLCiter::StripCites(const nsString& aInString, nsString& aOutString)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
-
-
+NS_IMETHODIMP
+nsAOLCiter::Rewrap(const nsString& aInString,
+                        PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
+                        nsString& aOutString)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 

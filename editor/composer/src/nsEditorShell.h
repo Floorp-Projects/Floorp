@@ -157,11 +157,11 @@ class nsEditorShell :   public nsIEditorShell,
     nsCOMPtr<nsICSSStyleSheet>  mAllTagsModeStyleSheet;
     nsCOMPtr<nsICSSStyleSheet>  mParagraphMarksStyleSheet;
     
-    nsEditorParserObserver*     mParserObserver;      // we hold the owning ref to this.
-    nsInterfaceState*           mStateMaintainer;     // we hold the owning ref to this.
-
     nsIDOMWindow        *mToolbarWindow;				// weak reference
     nsIDOMWindow        *mContentWindow;				// weak reference
+
+    nsEditorParserObserver*     mParserObserver;      // we hold the owning ref to this.
+    nsInterfaceState*           mStateMaintainer;     // we hold the owning ref to this.
 
     nsIDocShell         *mDocShell;						  // weak reference
 

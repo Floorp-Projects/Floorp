@@ -39,6 +39,12 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetCiteString(const nsString& aInString, nsString& aOutString);
+
+  NS_IMETHOD StripCites(const nsString& aInString, nsString& aOutString);
+
+  NS_IMETHOD Rewrap(const nsString& aInString,
+                    PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
+                    nsString& aOutString);
 };
 
 #endif //nsAOLCiter_h__

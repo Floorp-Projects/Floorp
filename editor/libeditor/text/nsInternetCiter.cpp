@@ -64,7 +64,7 @@ nsInternetCiter::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsInternetCiter::GetCiteString(const nsString& aInString, nsString& aOutString)
 {
-  PRUnichar newline ('\n');
+  PRUnichar newline ('\n');      // Not XP!
   PRInt32 i = 0;
   PRInt32 length = aInString.Length();
   aOutString.SetLength(0);
@@ -86,7 +86,37 @@ nsInternetCiter::GetCiteString(const nsString& aInString, nsString& aOutString)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsInternetCiter::StripCites(const nsString& aInString, nsString& aOutString)
+{
+  aOutString.SetLength(0);
 
+  PRInt32 length = aInString.Length();
+  PRInt32 i = 0;
+  PRUnichar gt ('>');
+  while (i < length)  // loop over lines
+  {
+    while (aInString[i] == gt || nsCRT::IsAsciiSpace(aInString[i]))
+      ++i;
+    PRInt32 nextNewline = aInString.FindCharInSet("\r\n", i);
+    if (nextNewline > i)
+    {
+      while (i < nextNewline)
+        aOutString += aInString[i++];
+      aOutString += NS_LINEBREAK;
+      while (aOutString[i] == '\r' || aOutString[i] == '\n')
+        ++i;
+    }
+  }
+  return NS_OK;
+}
 
-
+NS_IMETHODIMP
+nsInternetCiter::Rewrap(const nsString& aInString,
+                        PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
+                        nsString& aOutString)
+{
+  printf("nsInternetCiter::Rewrap not yet implemented\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 

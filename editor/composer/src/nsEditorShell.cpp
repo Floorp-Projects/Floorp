@@ -85,8 +85,10 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsITransactionManager.h"
+#include "nsIDocumentEncoder.h"
 
 #include "nsIRefreshURI.h"
+#include "nsIPref.h"
 
 ///////////////////////////////////////
 // Editor Includes
@@ -114,6 +116,9 @@
 #include "nsISpellChecker.h"
 #include "nsInterfaceState.h"
 
+#include "nsAOLCiter.h"
+#include "nsInternetCiter.h"
+
 ///////////////////////////////////////
 
 // Drag & Drop, Clipboard
@@ -131,6 +136,7 @@ static NS_DEFINE_IID(kCFileWidgetCID,           NS_FILEWIDGET_CID);
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kCommonDialogsCID,         NS_CommonDialog_CID );
 static NS_DEFINE_CID(kDialogParamBlockCID,      NS_DialogParamBlock_CID);
+static NS_DEFINE_CID(kPrefServiceCID,           NS_PREF_CID);
 
 /* Define Interface IDs */
 static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
@@ -211,15 +217,15 @@ GetTreeOwner(nsIDocShell* aDocShell, nsIBaseWindow** aBaseWindow)
 nsEditorShell::nsEditorShell()
 :  mToolbarWindow(nsnull)
 ,  mContentWindow(nsnull)
+,  mParserObserver(nsnull)
+,  mStateMaintainer(nsnull)
 ,  mDocShell(nsnull)
 ,  mContentAreaDocShell(nsnull)
+,  mCloseWindowWhenLoaded(PR_FALSE)
 ,  mEditorType(eUninitializedEditorType)
-,  mStateMaintainer(nsnull)
 ,  mWrapColumn(0)
 ,  mSuggestedWordIndex(0)
 ,  mDictionaryIndex(0)
-,  mCloseWindowWhenLoaded(PR_FALSE)
-,  mParserObserver(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -2148,6 +2154,163 @@ nsEditorShell::InsertAsCitedQuotation(const PRUnichar *quotedText,
   return err;
 }
 
+// Utility routine to make a new citer.  This addrefs, of course.
+static nsICiter* MakeACiter()
+{
+  // Make a citer of an appropriate type
+  nsICiter* citer = 0;
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  if (NS_FAILED(rv)) return 0;
+
+  char *citationType = 0;
+  rv = prefs->CopyCharPref("mail.compose.citationType", &citationType);
+                          
+  if (NS_SUCCEEDED(rv) && citationType[0])
+  {
+    if (!strncmp(citationType, "aol", 3))
+      citer = new nsAOLCiter;
+    else
+      citer = new nsInternetCiter;
+    PL_strfree(citationType);
+  }
+  else
+    citer = new nsInternetCiter;
+
+  if (citer)
+    NS_ADDREF(citer);
+  return citer;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::Rewrap()
+{
+  PRInt32 wrapCol;
+  nsresult rv = GetWrapColumn(&wrapCol);
+  if (NS_FAILED(rv))
+    return NS_OK;
+#ifdef DEBUG_akkana
+  printf("nsEditorShell::Rewrap to %ld columns\n", (long)wrapCol);
+#endif
+
+  nsCOMPtr<nsIDOMSelection> selection;
+  rv = GetEditorSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv)) return rv;
+
+  if (!selection)
+    return NS_ERROR_NOT_INITIALIZED;
+  PRBool isCollapsed;
+  rv = selection->GetIsCollapsed(&isCollapsed);
+  if (NS_FAILED(rv)) return rv;
+
+  // Variables we'll need either way
+  nsAutoString format("text/plain");
+  nsAutoString current;
+  nsString wrapped;
+  nsCOMPtr<nsIEditor> nsied (do_QueryInterface(mEditor));
+  if (!nsied)
+    return NS_ERROR_UNEXPECTED;
+
+  if (isCollapsed)    // rewrap the whole document
+  {
+    rv = nsied->OutputToString(current, format,
+                               nsIDocumentEncoder::OutputFormatted);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsICiter> citer = dont_AddRef(MakeACiter());
+    if (NS_FAILED(rv)) return rv;
+    if (!citer) return NS_ERROR_UNEXPECTED;
+
+    rv = citer->Rewrap(current, wrapCol, 0, wrapped);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SelectAll();
+    if (NS_FAILED(rv)) return rv;
+
+    return mEditor->InsertText(wrapped);
+  }
+  else                // rewrap only the selection
+  {
+    rv = nsied->OutputToString(current, format,
+                               nsIDocumentEncoder::OutputFormatted
+                                | nsIDocumentEncoder::OutputSelectionOnly);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsICiter> citer = dont_AddRef(MakeACiter());
+    if (NS_FAILED(rv)) return rv;
+    if (!citer) return NS_ERROR_UNEXPECTED;
+
+    PRUint32 firstLineOffset = 0;   // XXX need to get this
+    rv = citer->Rewrap(current, wrapCol, firstLineOffset, wrapped);
+    if (NS_FAILED(rv)) return rv;
+
+    return mEditor->InsertText(wrapped);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::StripCites()
+{
+#ifdef DEBUG_akkana
+  printf("nsEditorShell::StripCites()\n");
+#endif
+
+  nsCOMPtr<nsIDOMSelection> selection;
+  nsresult rv = GetEditorSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv)) return rv;
+
+  if (!selection)
+    return NS_ERROR_NOT_INITIALIZED;
+  PRBool isCollapsed;
+  rv = selection->GetIsCollapsed(&isCollapsed);
+  if (NS_FAILED(rv)) return rv;
+
+  // Variables we'll need either way
+  nsAutoString format("text/plain");
+  nsAutoString current;
+  nsString stripped;
+  nsCOMPtr<nsIEditor> nsied (do_QueryInterface(mEditor));
+  if (!nsied)
+    return NS_ERROR_UNEXPECTED;
+
+  if (isCollapsed)    // rewrap the whole document
+  {
+    rv = nsied->OutputToString(current, format,
+                               nsIDocumentEncoder::OutputFormatted);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsICiter> citer = dont_AddRef(MakeACiter());
+    if (NS_FAILED(rv)) return rv;
+    if (!citer) return NS_ERROR_UNEXPECTED;
+
+    rv = citer->StripCites(current, stripped);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SelectAll();
+    if (NS_FAILED(rv)) return rv;
+
+    return mEditor->InsertText(stripped);
+  }
+  else                // rewrap only the selection
+  {
+    rv = nsied->OutputToString(current, format,
+                               nsIDocumentEncoder::OutputFormatted
+                                | nsIDocumentEncoder::OutputSelectionOnly);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsICiter> citer = dont_AddRef(MakeACiter());
+    if (NS_FAILED(rv)) return rv;
+    if (!citer) return NS_ERROR_UNEXPECTED;
+
+    rv = citer->StripCites(current, stripped);
+    if (NS_FAILED(rv)) return rv;
+
+    return mEditor->InsertText(stripped);
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP    
 nsEditorShell::SelectAll()
 {  
@@ -4018,11 +4181,6 @@ nsEditorShell::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, cons
     }
   }
 
-  // Disable meta-refresh
-  nsCOMPtr<nsIRefreshURI> refreshURI = do_QueryInterface(mDocShell);
-  if (refreshURI)
-    refreshURI->CancelRefreshURITimers();
-
   // set up a parser observer
   if (!mParserObserver)
   {
@@ -4048,6 +4206,11 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* aChanne
 	if (NS_FAILED(aStatus))
 	  return NS_OK;
 	  
+  // Disable meta-refresh
+  nsCOMPtr<nsIRefreshURI> refreshURI = do_QueryInterface(mContentAreaDocShell);
+  if (refreshURI)
+    refreshURI->CancelRefreshURITimers();
+
   // can we handle this document?
   if (mParserObserver)
   {
