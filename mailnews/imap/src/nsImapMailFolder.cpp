@@ -69,6 +69,9 @@
 #include "nsIMsgWindow.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 
+#include "nsIMsgAccountManager.h"
+
+static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
@@ -867,6 +870,30 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
     rv = GetTrashFolder(getter_AddRefs(trashFolder));
     if (NS_SUCCEEDED(rv))
     {
+       NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
+       if (accountManager)
+       {
+         // if we are emptying trash on exit and we are an aol server then don't perform
+         // this operation because it's causing a hang that we haven't been able to figure out yet
+         // this is an rtm fix and we'll look for the right solution post rtm. 
+
+         PRBool empytingOnExit = PR_FALSE;
+         accountManager->GetEmptyTrashInProgress(&empytingOnExit);
+         if (empytingOnExit)
+         {
+            nsCOMPtr<nsIImapIncomingServer> imapServer;
+            nsresult rv = GetImapIncomingServer(getter_AddRefs(imapServer));
+
+            if (NS_SUCCEEDED(rv) && imapServer) 
+            {
+              PRBool isAOLServer = PR_FALSE;
+              imapServer->GetIsAOLServer(&isAOLServer);
+              if (isAOLServer)
+                return NS_ERROR_FAILURE;  // we will not be performing an empty trash....
+            } // if we fetched an imap server
+         } // if emptying trash on exit which is done through the account manager.
+       }
+
         nsCOMPtr<nsIMsgDatabase> trashDB;
 
         rv = trashFolder->Delete(); // delete summary spec

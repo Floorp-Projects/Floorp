@@ -895,8 +895,8 @@ PRBool PR_CALLBACK nsMsgAccountManager::emptyTrashOnExit(nsHashKey *aKey, void *
                         accountManager->SetFolderDoingEmptyTrash(folder);
                         urlListener = do_QueryInterface(accountManager, &rv);
                     }
-                    folder->EmptyTrash(nsnull, urlListener);
-                    if (isImap && urlListener)
+                    rv = folder->EmptyTrash(nsnull, urlListener);
+                    if (NS_SUCCEEDED(rv) && isImap && urlListener)
                     {
                       PRBool inProgress = PR_FALSE;
                       accountManager->GetEmptyTrashInProgress(&inProgress);
