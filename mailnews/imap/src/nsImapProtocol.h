@@ -88,6 +88,14 @@ public:
 	void   ClearFlag (PRUint32 flag) { m_flags &= ~flag; }
 
 	// used to start fetching a message.
+    PRBool GetShouldDownloadArbitraryHeaders();
+    char *GetArbitraryHeadersToDownload();
+    virtual void AdjustChunkSize();
+    virtual void FetchMessage(const char *messageIds, 
+                              nsIMAPeFetchFields whatToFetch,
+                              XP_Bool idAreUid,
+							  uint32 startByte = 0, uint32 endByte = 0,
+							  char *part = 0);
 	void FetchTryChunking(const char *messageIds,
                                             nsIMAPeFetchFields whatToFetch,
                                             PRBool idIsUid,
@@ -229,6 +237,7 @@ private:
     nsImapServerResponseParser& GetServerStateParser() { return m_parser; };
 
     virtual void ProcessCurrentURL();
+    virtual void ParseIMAPandCheckForNewMail(char* commandString = nsnull);
 
 	// initialization function given a new url and transport layer
 	void SetupWithUrl(nsIURL * aURL);
@@ -236,8 +245,6 @@ private:
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Communication methods --> Reading and writing protocol
 	////////////////////////////////////////////////////////////////////////////////////////
-
-	PRInt32 ReadLine(nsIInputStream * inputStream, PRUint32 length, char ** line);
 
 	// SendData not only writes the NULL terminated data in dataBuffer to our output stream
 	// but it also informs the consumer that the data has been written to the stream.
@@ -254,6 +261,17 @@ private:
     void IncrementCommandTagNumber();
     char *GetServerCommandTag();  
 
+    PRBool m_trackingTime;
+    PRTime m_startTime;
+    PRTime m_endTime;
+    PRInt32 m_tooFastTime;
+    PRInt32 m_idealTime;
+    PRInt32 m_chunkAddSize;
+    PRInt32 m_chunkStartSize;
+    PRInt32 m_maxChunkSize;
+    PRBool m_fetchByChunks;
+    PRInt32 m_chunkSize;
+    PRInt32 m_chunkThreshold;
 };
 
 #endif  // nsImapProtocol_h___

@@ -2530,31 +2530,18 @@ GetArbitraryHeadersProxyEvent::GetArbitraryHeadersProxyEvent(
     nsImapMiscellaneousProxyEvent(aProxy)
 {
     NS_ASSERTION (aInfo, "Oops... a null info");
-    if (aInfo)
-    {
-        m_info.c = PL_strdup(aInfo->c);
-        m_info.hostName = PL_strdup(aInfo->hostName);
-        m_info.rv = aInfo->rv;
-    }
-    else
-    {
-        memset(&m_info, 0, sizeof(GenericInfo));
-    }
+    m_info = aInfo;
 }
 
 GetArbitraryHeadersProxyEvent::~GetArbitraryHeadersProxyEvent()
 {
-    if (m_info.c)
-        PL_strfree(m_info.c);
-    if (m_info.hostName)
-        PL_strfree(m_info.hostName);
 }
 
 NS_IMETHODIMP
 GetArbitraryHeadersProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->GetArbitraryHeaders(m_proxy->m_protocol,
-                                                &m_info);
+                                                m_info);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2564,31 +2551,18 @@ GetShouldDownloadArbitraryHeadersProxyEvent::GetShouldDownloadArbitraryHeadersPr
     nsImapMiscellaneousProxyEvent(aProxy)
 {
     NS_ASSERTION (aInfo, "Oops... a null info");
-    if (aInfo)
-    {
-        m_info.c = PL_strdup(aInfo->c);
-        m_info.hostName = PL_strdup(aInfo->hostName);
-        m_info.rv = aInfo->rv;
-    }
-    else
-    {
-        memset(&m_info, 0, sizeof(GenericInfo));
-    }
+    m_info = aInfo;
 }
 
 GetShouldDownloadArbitraryHeadersProxyEvent::~GetShouldDownloadArbitraryHeadersProxyEvent()
 {
-    if (m_info.c)
-        PL_strfree(m_info.c);
-    if (m_info.hostName)
-        PL_strfree(m_info.hostName);
 }
 
 NS_IMETHODIMP
 GetShouldDownloadArbitraryHeadersProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->GetShouldDownloadArbitraryHeaders(m_proxy->m_protocol,
-                                                &m_info);
+                                                m_info);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }

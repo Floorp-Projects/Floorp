@@ -545,7 +545,7 @@ struct GetArbitraryHeadersProxyEvent : public nsImapMiscellaneousProxyEvent
                                   GenericInfo* aInfo);
     virtual ~GetArbitraryHeadersProxyEvent();
     NS_IMETHOD HandleEvent();
-    GenericInfo m_info;
+    GenericInfo *m_info;        // pass in handle we don't own it
 };
 
 struct GetShouldDownloadArbitraryHeadersProxyEvent : 
@@ -555,7 +555,7 @@ struct GetShouldDownloadArbitraryHeadersProxyEvent :
         nsImapMiscellaneousProxy* aProxy, GenericInfo* aInfo);
     virtual ~GetShouldDownloadArbitraryHeadersProxyEvent();
     NS_IMETHOD HandleEvent();
-    GenericInfo m_info;
+    GenericInfo *m_info;        // pass in handle we don't own it
 };
 
 struct HeaderFetchCompletedProxyEvent : public nsImapMiscellaneousProxyEvent

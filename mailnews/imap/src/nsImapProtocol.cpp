@@ -48,13 +48,7 @@ static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 
 #define OUTPUT_BUFFER_SIZE (4096*2) // mscott - i should be able to remove this if I can use nsMsgLineBuffer???
 
-// **************?????***********????*************????***********************
-// ***** IMPORTANT **** jefft -- this is a temporary implementation for the
-// testing purpose. Eventually, we will have a host service object in
-// controlling the host session list.
-// Remove the following when the host service object is in place.
-// **************************************************************************
-extern nsIMAPHostSessionList*gImapHostSessionList;
+#define IMAP_DB_HEADERS "From To Cc Subject Date Priority X-Priority Message-ID References Newsgroups"
 
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_THREADSAFE_ADDREF(nsImapProtocol)
@@ -132,6 +126,18 @@ nsImapProtocol::nsImapProtocol() :
     m_imapMessage = nsnull;
     m_imapExtension = nsnull;
     m_imapMiscellaneous = nsnull;
+    
+    m_trackingTime = PR_FALSE;
+    m_startTime = 0;
+    m_endTime = 0;
+    m_tooFastTime = 0;
+    m_idealTime = 0;
+    m_chunkAddSize = 0;
+    m_chunkStartSize = 0;
+    m_maxChunkSize = 0;
+    m_fetchByChunks = PR_FALSE;
+    m_chunkSize = 0;
+    m_chunkThreshold = 0;
 
 	// where should we do this? Perhaps in the factory object?
 	if (!IMAP)
@@ -140,7 +146,8 @@ nsImapProtocol::nsImapProtocol() :
 
 nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, PLEventQueue * aSinkEventQueue)
 {
-	NS_PRECONDITION(aSinkEventQueue, "oops...trying to initalize with a null sink event queue!");
+	NS_PRECONDITION(aSinkEventQueue, 
+             "oops...trying to initalize with a null sink event queue!");
 	if (!aSinkEventQueue)
         return NS_ERROR_NULL_POINTER;
 
@@ -373,10 +380,10 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
                                    this, PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
                                    PR_UNJOINABLE_THREAD, 0);
         NS_ASSERTION(m_thread, "Unable to create imap thread.\n");
-    }
 
-    // *** setting up the sink proxy if needed
-    SetupSinkProxy();
+        // *** setting up the sink proxy if needed
+        SetupSinkProxy();
+    }
 }
 
 void
@@ -516,6 +523,17 @@ nsImapProtocol::ProcessCurrentURL()
     }
 }
 
+void
+nsImapProtocol::ParseIMAPandCheckForNewMail(char* commandString)
+{
+    if (commandString)
+        GetServerStateParser().ParseIMAPServerResponse(commandString);
+    else
+        GetServerStateParser().ParseIMAPServerResponse(
+            m_currentCommand.GetBuffer());
+    // **** fix me for new mail biff state *****
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // we suppport the nsIStreamListener interface 
@@ -578,55 +596,6 @@ NS_IMETHODIMP nsImapProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, cons
 /////////////////////////////////////////////////////////////////////////////////////////////
 // End of nsIStreamListenerSupport
 //////////////////////////////////////////////////////////////////////////////////////////////
-
-PRInt32 nsImapProtocol::ReadLine(nsIInputStream * inputStream, PRUint32 length, char ** line)
-{
-	// I haven't looked into writing this yet. We have a couple of possibilities:
-	// (1) insert ReadLine *yuck* into here or better yet into the nsIInputStream
-	// then we can just turn around and call it here. 
-	// OR
-	// (2) we write "protocol" specific code for news which looks for a CRLF in the incoming
-	// stream. If it finds it, that's our new line that we put into @param line. We'd
-	// need a buffer (m_dataBuf) to store extra info read in from the stream.....
-
-	// read out everything we've gotten back and return it in line...this won't work for much but it does
-	// get us going...
-
-	// XXX: please don't hold this quick "algorithm" against me. I just want to read just one
-	// line for the stream. I promise this is ONLY temporary to test out NNTP. We need a generic
-	// way to read one line from a stream. For now I'm going to read out one character at a time.
-	// (I said it was only temporary =)) and test for newline...
-
-	PRUint32 numBytesToRead = 0;  // MAX # bytes to read from the stream
-	PRUint32 numBytesRead = 0;	  // total number bytes we have read from the stream during this call
-	inputStream->GetLength(&length); // refresh the length in case it has changed...
-
-	if (length > OUTPUT_BUFFER_SIZE)
-		numBytesToRead = OUTPUT_BUFFER_SIZE;
-	else
-		numBytesToRead = length;
-
-	m_dataBuf[0] = '\0';
-	PRUint32 numBytesLastRead = 0;  // total number of bytes read in the last cycle...
-	do
-	{
-		inputStream->Read(m_dataBuf + numBytesRead /* offset into m_dataBuf */, 1 /* read just one byte */, &numBytesLastRead);
-		numBytesRead += numBytesLastRead;
-	} while (numBytesRead <= numBytesToRead && numBytesLastRead > 0 && m_dataBuf[numBytesRead-1] != '\n');
-
-	m_dataBuf[numBytesRead] = '\0'; // null terminate the string.
-
-	// oops....we also want to eat up the '\n' and the \r'...
-	if (numBytesRead > 1 && m_dataBuf[numBytesRead-2] == '\r')
-		m_dataBuf[numBytesRead-2] = '\0'; // hit both cr and lf...
-	else
-		if (numBytesRead > 0 && (m_dataBuf[numBytesRead-1] == '\r' || m_dataBuf[numBytesRead-1] == '\n'))
-			m_dataBuf[numBytesRead-1] = '\0';
-
-	if (line)
-		*line = m_dataBuf;
-	return numBytesRead;
-}
 
 /*
  * Writes the data contained in dataBuffer into the current output stream. It also informs
@@ -738,14 +707,14 @@ char *nsImapProtocol::GetServerCommandTag()
 }
 
 void nsImapProtocol::BeginMessageDownLoad(
-                                      PRUint32 total_message_size, // for user, headers and body
-                                      const char *content_type)
+    PRUint32 total_message_size, // for user, headers and body
+    const char *content_type)
 {
 	char *sizeString = PR_smprintf("OPEN Size: %ld", total_message_size);
 	Log("STREAM",sizeString,"Begin Message Download Stream");
 	PR_FREEIF(sizeString);
-#if 0 // here's the old code ...
-	//PR_LOG(IMAP, out, ("STREAM: Begin Message Download Stream.  Size: %ld", total_message_size));
+	//PR_LOG(IMAP, out, ("STREAM: Begin Message Download Stream.  Size: %ld",
+    //total_message_size)); 
 	StreamInfo *si = (StreamInfo *) PR_Malloc (sizeof (StreamInfo));		// This will be freed in the event
 	if (si)
 	{
@@ -753,42 +722,312 @@ void nsImapProtocol::BeginMessageDownLoad(
 		si->content_type = PL_strdup(content_type);
 		if (si->content_type)
 		{
-			TImapFEEvent *setupStreamEvent = 
-				new TImapFEEvent(SetupMsgWriteStream,   // function to call
-								this,                                   // access to current entry
-								(void *) si,
-								PR_TRUE);		// ok to run when interrupted because si is FREE'd in the event
-
-			if (setupStreamEvent)
-			{
-				fFEEventQueue->AdoptEventToEnd(setupStreamEvent);
+            if (m_imapMessage) 
+            {
+                m_imapMessage->SetupMsgWriteStream(this, si);
 				WaitForFEEventCompletion();
 			}
-			else
-				HandleMemoryFailure();
-			fFromHeaderSeen = PR_FALSE;
-		}
+            PL_strfree(si->content_type);
+        }
 		else
 			HandleMemoryFailure();
+        PR_Free(si);
 	}
 	else
 		HandleMemoryFailure();
-#endif
 }
 
+PRBool
+nsImapProtocol::GetShouldDownloadArbitraryHeaders()
+{
+    // *** allocate instead of using local variable to be thread save ***
+    GenericInfo *aInfo = (GenericInfo*) PR_CALLOC(sizeof(GenericInfo));
+    const char *hostName = nsnull;
+    PRBool rv;
+    aInfo->rv = PR_TRUE;         // default
+    m_runningUrl->GetHost(&hostName);
+    aInfo->hostName = PL_strdup (hostName);
+    if (m_imapMiscellaneous)
+    {
+        m_imapMiscellaneous->GetShouldDownloadArbitraryHeaders(this, aInfo);
+        WaitForFEEventCompletion();
+    }
+    rv = aInfo->rv;
+    if (aInfo->hostName)
+        PL_strfree(aInfo->hostName);
+    if (aInfo->c)
+        PL_strfree(aInfo->c);
+    PR_Free(aInfo);
+    return rv;
+}
 
+char*
+nsImapProtocol::GetArbitraryHeadersToDownload()
+{
+    // *** allocate instead of using local variable to be thread save ***
+    GenericInfo *aInfo = (GenericInfo*) PR_CALLOC(sizeof(GenericInfo));
+    const char *hostName = nsnull;
+    char *rv = nsnull;
+    aInfo->rv = PR_TRUE;         // default
+    m_runningUrl->GetHost(&hostName);
+    aInfo->hostName = PL_strdup (hostName);
+    if (m_imapMiscellaneous)
+    {
+        m_imapMiscellaneous->GetShouldDownloadArbitraryHeaders(this, aInfo);
+        WaitForFEEventCompletion();
+    }
+    if (aInfo->hostName)
+        PL_strfree(aInfo->hostName);
+    rv = aInfo->c;
+    PR_Free(aInfo);
+    return rv;
+}
 
-// this routine is used to fetch a message or messages, or headers for a message...
+void
+nsImapProtocol::AdjustChunkSize()
+{
+	m_endTime = PR_Now();
+	m_trackingTime = FALSE;
+	PRTime t = m_endTime - m_startTime;
+	if (t < 0)
+		return;							// bogus for some reason
+	if (t <= m_tooFastTime) {
+		m_chunkSize += m_chunkAddSize;
+		m_chunkThreshold = m_chunkSize + (m_chunkSize / 2);
+		if (m_chunkSize > m_maxChunkSize)
+			m_chunkSize = m_maxChunkSize;
+	}
+	else if (t <= m_idealTime)
+		return;
+	else {
+		if (m_chunkSize > m_chunkStartSize)
+			m_chunkSize = m_chunkStartSize;
+		else if (m_chunkSize > (m_chunkAddSize * 2))
+			m_chunkSize -= m_chunkAddSize;
+		m_chunkThreshold = m_chunkSize + (m_chunkSize / 2);
+	}
+}
+
+// this routine is used to fetch a message or messages, or headers for a
+// message...
+
+void
+nsImapProtocol::FetchMessage(const char *messageIds, 
+                             nsIMAPeFetchFields whatToFetch,
+                             PRBool idIsUid,
+                             uint32 startByte, uint32 endByte,
+                             char *part)
+{
+    IncrementCommandTagNumber();
+    
+    char commandString[350];
+    if (idIsUid)
+    	PL_strcpy(commandString, "%s UID fetch");
+    else
+    	PL_strcpy(commandString, "%s fetch");
+    
+    switch (whatToFetch) {
+        case kEveryThingRFC822:
+			if (m_trackingTime)
+				AdjustChunkSize();			// we started another segment
+			m_startTime = PR_Now();			// save start of download time
+			m_trackingTime = TRUE;
+			if (GetServerStateParser().ServerHasIMAP4Rev1Capability())
+			{
+				if (GetServerStateParser().GetCapabilityFlag() & kHasXSenderCapability)
+					PL_strcat(commandString, " %s (XSENDER UID RFC822.SIZE BODY[]");
+				else
+					PL_strcat(commandString, " %s (UID RFC822.SIZE BODY[]");
+			}
+			else
+			{
+				if (GetServerStateParser().GetCapabilityFlag() & kHasXSenderCapability)
+					PL_strcat(commandString, " %s (XSENDER UID RFC822.SIZE RFC822");
+				else
+					PL_strcat(commandString, " %s (UID RFC822.SIZE RFC822");
+			}
+			if (endByte > 0)
+			{
+				// if we are retrieving chunks
+				char *byterangeString = PR_smprintf("<%ld.%ld>",startByte,endByte);
+				if (byterangeString)
+				{
+					PL_strcat(commandString, byterangeString);
+					PR_Free(byterangeString);
+				}
+			}
+			PL_strcat(commandString, ")");
+            break;
+
+        case kEveryThingRFC822Peek:
+        	{
+	        	char *formatString = "";
+	        	uint32 server_capabilityFlags = GetServerStateParser().GetCapabilityFlag();
+	        	
+	        	if (server_capabilityFlags & kIMAP4rev1Capability)
+	        	{
+	        		// use body[].peek since rfc822.peek is not in IMAP4rev1
+	        		if (server_capabilityFlags & kHasXSenderCapability)
+	        			formatString = " %s (XSENDER UID RFC822.SIZE BODY.PEEK[])";
+	        		else
+	        			formatString = " %s (UID RFC822.SIZE BODY.PEEK[])";
+	        	}
+	        	else
+	        	{
+	        		if (server_capabilityFlags & kHasXSenderCapability)
+	        			formatString = " %s (XSENDER UID RFC822.SIZE RFC822.peek)";
+	        		else
+	        			formatString = " %s (UID RFC822.SIZE RFC822.peek)";
+	        	}
+	        
+				PL_strcat(commandString, formatString);
+			}
+            break;
+        case kHeadersRFC822andUid:
+			if (GetServerStateParser().ServerHasIMAP4Rev1Capability())
+			{
+				PRBool useArbitraryHeaders = GetShouldDownloadArbitraryHeaders();	// checks filter headers, etc.
+				if (/***** Fix me *** gOptimizedHeaders &&	*/// preference -- able to turn it off
+					useArbitraryHeaders)	// if it's ok -- no filters on any header, etc.
+				{
+					char *headersToDL = NULL;
+					char *arbitraryHeaders = GetArbitraryHeadersToDownload();
+					if (arbitraryHeaders)
+					{
+						headersToDL = PR_smprintf("%s %s",IMAP_DB_HEADERS,arbitraryHeaders);
+						PR_Free(arbitraryHeaders);
+					}
+					else
+					{
+						headersToDL = PR_smprintf("%s",IMAP_DB_HEADERS);
+					}
+					if (headersToDL)
+					{
+						char *what = PR_smprintf(" BODY.PEEK[HEADER.FIELDS (%s)])", headersToDL);
+						if (what)
+						{
+							PL_strcat(commandString, " %s (UID RFC822.SIZE FLAGS");
+							PL_strcat(commandString, what);
+							PR_Free(what);
+						}
+						else
+						{
+							PL_strcat(commandString, " %s (UID RFC822.SIZE BODY.PEEK[HEADER] FLAGS)");
+						}
+						PR_Free(headersToDL);
+					}
+					else
+					{
+						PL_strcat(commandString, " %s (UID RFC822.SIZE BODY.PEEK[HEADER] FLAGS)");
+					}
+				}
+				else
+					PL_strcat(commandString, " %s (UID RFC822.SIZE BODY.PEEK[HEADER] FLAGS)");
+			}
+			else
+				PL_strcat(commandString, " %s (UID RFC822.SIZE RFC822.HEADER FLAGS)");
+            break;
+        case kUid:
+			PL_strcat(commandString, " %s (UID)");
+            break;
+        case kFlags:
+			PL_strcat(commandString, " %s (FLAGS)");
+            break;
+        case kRFC822Size:
+			PL_strcat(commandString, " %s (RFC822.SIZE)");
+			break;
+		case kRFC822HeadersOnly:
+			if (GetServerStateParser().ServerHasIMAP4Rev1Capability())
+			{
+				if (part)
+				{
+					PL_strcat(commandString, " %s (BODY[");
+					char *what = PR_smprintf("%s.HEADER])", part);
+					if (what)
+					{
+						PL_strcat(commandString, what);
+						PR_Free(what);
+					}
+					else
+						HandleMemoryFailure();
+				}
+				else
+				{
+					// headers for the top-level message
+					PL_strcat(commandString, " %s (BODY[HEADER])");
+				}
+			}
+			else
+				PL_strcat(commandString, " %s (RFC822.HEADER)");
+			break;
+		case kMIMEPart:
+			PL_strcat(commandString, " %s (BODY[%s]");
+			if (endByte > 0)
+			{
+				// if we are retrieving chunks
+				char *byterangeString = PR_smprintf("<%ld.%ld>",startByte,endByte);
+				if (byterangeString)
+				{
+					PL_strcat(commandString, byterangeString);
+					PR_Free(byterangeString);
+				}
+			}
+			PL_strcat(commandString, ")");
+			break;
+		case kMIMEHeader:
+			PL_strcat(commandString, " %s (BODY[%s.MIME])");
+    		break;
+	};
+
+	PL_strcat(commandString,CRLF);
+
+		// since messageIds can be infinitely long, use a dynamic buffer rather than the fixed one
+	const char *commandTag = GetServerCommandTag();
+	int protocolStringSize = PL_strlen(commandString) + PL_strlen(messageIds) + PL_strlen(commandTag) + 1 +
+		(part ? PL_strlen(part) : 0);
+	char *protocolString = (char *) PR_Malloc( protocolStringSize );
+    
+    if (protocolString)
+    {
+		if ((whatToFetch == kMIMEPart) ||
+			(whatToFetch == kMIMEHeader))
+		{
+			PR_snprintf(protocolString,                                      // string to create
+					protocolStringSize,                                      // max size
+					commandString,                                   // format string
+					commandTag,                          // command tag
+					messageIds,
+					part);
+		}
+		else
+		{
+			PR_snprintf(protocolString,                                      // string to create
+					protocolStringSize,                                      // max size
+					commandString,                                   // format string
+					commandTag,                          // command tag
+					messageIds);
+		}
+	            
+	    int                 ioStatus = SendData(protocolString);
+	    
+
+		ParseIMAPandCheckForNewMail(protocolString);
+	    PR_Free(protocolString);
+   	}
+    else
+        HandleMemoryFailure();
+}
+
 void nsImapProtocol::FetchTryChunking(const char *messageIds,
                                             nsIMAPeFetchFields whatToFetch,
                                             PRBool idIsUid,
 											char *part,
 											PRUint32 downloadSize)
 {
-#if 0
 	GetServerStateParser().SetTotalDownloadSize(downloadSize);
-	if (fFetchByChunks && GetServerStateParser().ServerHasIMAP4Rev1Capability() &&
-		(downloadSize > (PRUint32) fChunkThreshold))
+	if (m_fetchByChunks &&
+        GetServerStateParser().ServerHasIMAP4Rev1Capability() &&
+		(downloadSize > (PRUint32) m_chunkThreshold))
 	{
 		PRUint32 startByte = 0;
 		GetServerStateParser().ClearLastFetchChunkReceived();
@@ -796,8 +1035,8 @@ void nsImapProtocol::FetchTryChunking(const char *messageIds,
 			!GetServerStateParser().GetLastFetchChunkReceived() &&
 			GetServerStateParser().ContinueParse())
 		{
-			PRUint32 sizeToFetch = startByte + fChunkSize > downloadSize ?
-				downloadSize - startByte : fChunkSize;
+			PRUint32 sizeToFetch = startByte + m_chunkSize > downloadSize ?
+				downloadSize - startByte : m_chunkSize;
 			FetchMessage(messageIds, 
 						 whatToFetch,
 						 idIsUid,
@@ -825,7 +1064,6 @@ void nsImapProtocol::FetchTryChunking(const char *messageIds,
 		// Just fetch the whole thing.
 		FetchMessage(messageIds, whatToFetch,idIsUid, 0, 0, part);
 	}
-#endif
 }
 
 
@@ -884,17 +1122,19 @@ void nsImapProtocol::PipelinedFetchMessageParts(const char *uid, nsIMAPMessagePa
 	{
 	    IncrementCommandTagNumber();
 
-		char *commandString = PR_smprintf("%s UID fetch %s (%s)%s", GetServerCommandTag(), uid, stringToFetch, CRLF);
-#if 0	// ### DMB - hook up writing commands and parsing response.
+		char *commandString = PR_smprintf("%s UID fetch %s (%s)%s",
+                                          GetServerCommandTag(), uid,
+                                          stringToFetch, CRLF);
+
 		if (commandString)
 		{
-			int ioStatus = WriteLineToSocket(commandString);
+			int ioStatus = SendData(commandString);
 			ParseIMAPandCheckForNewMail(commandString);
 			PR_Free(commandString);
 		}
 		else
 			HandleMemoryFailure();
-#endif // 0
+
 		PR_Free(stringToFetch);
 	}
 }
@@ -1020,7 +1260,7 @@ void nsImapProtocol::NormalMessageEndDownload()
 {
 	Log("STREAM", "CLOSE", "Normal Message End Download Stream");
 #if 0
-	if (fTrackingTime)
+	if (m_trackingTime)
 		AdjustChunkSize();
 	if (!fDownLoadLineCache.CacheEmpty())
 	{
@@ -1029,16 +1269,8 @@ void nsImapProtocol::NormalMessageEndDownload()
 	    fDownLoadLineCache.ResetCache();
     }
 
-    TImapFEEvent *endEvent = 
-        new TImapFEEvent(NormalEndMsgWriteStream,	// function to call
-                        this,						// access to current entry
-                        nil,						// unused
-						TRUE);
-
-    if (endEvent)
-        fFEEventQueue->AdoptEventToEnd(endEvent);
-    else
-        HandleMemoryFailure();
+    if (m_imapMessage)
+        m_imapMessage->NormalEndMsgWriteStream(this);
 #endif // 0
 }
 
@@ -1047,7 +1279,7 @@ void nsImapProtocol::AbortMessageDownLoad()
 	Log("STREAM", "CLOSE", "Abort Message  Download Stream");
 #if 0
 	//PR_LOG(IMAP, out, ("STREAM: Abort Message Download Stream"));
-	if (fTrackingTime)
+	if (m_trackingTime)
 		AdjustChunkSize();
 	if (!fDownLoadLineCache.CacheEmpty())
 	{
@@ -1056,16 +1288,8 @@ void nsImapProtocol::AbortMessageDownLoad()
 	    fDownLoadLineCache.ResetCache();
     }
 
-    TImapFEEvent *endEvent = 
-        new TImapFEEvent(AbortMsgWriteStream,	// function to call
-                        this,					// access to current entry
-                        nil,					// unused
-						TRUE);
-
-    if (endEvent)
-        fFEEventQueue->AdoptEventToEnd(endEvent);
-    else
-        HandleMemoryFailure();
+    if (m_imapMessage)
+        m_imapMessage->AbortMsgWriteStream(this);
 #endif // 0
 }
 
