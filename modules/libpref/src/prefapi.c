@@ -140,7 +140,7 @@ pref_FreeEntry(void *pool, PRHashEntry *he, uint flag)
 	}
 
     if (flag == HT_FREE_ENTRY) {
-		PR_FREEIF((void*)he->key);
+		PR_FREEIF(*(void**)&he->key);
         PR_Free(he);
 	}
 }
