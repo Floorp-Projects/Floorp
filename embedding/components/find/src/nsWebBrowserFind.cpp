@@ -98,10 +98,15 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
     rv = GetDocShellFromWindow(rootFrame, getter_AddRefs(rootDocShell));
     if (NS_FAILED(rv)) return rv;
     
+    PRInt32 enumDirection;
+    if (mFindBackwards)
+        enumDirection = nsIDocShell::ENUMERATE_BACKWARDS;
+    else
+        enumDirection = nsIDocShell::ENUMERATE_FORWARDS;
+        
     nsCOMPtr<nsISimpleEnumerator> docShellEnumerator;
     rv = rootDocShell->GetDocShellEnumerator(nsIDocShellTreeItem::typeContent,
-        mFindBackwards ? nsIDocShell::ENUMERATE_BACKWARDS : nsIDocShell::ENUMERATE_FORWARDS,
-        getter_AddRefs(docShellEnumerator));    
+            enumDirection, getter_AddRefs(docShellEnumerator));    
     if (NS_FAILED(rv)) return rv;
         
     // remember where we started
@@ -148,8 +153,7 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
     // have to make a new one
     docShellEnumerator = nsnull;
     rv = rootDocShell->GetDocShellEnumerator(nsIDocShellTreeItem::typeContent,
-        mFindBackwards ? nsIDocShell::ENUMERATE_BACKWARDS : nsIDocShell::ENUMERATE_FORWARDS,
-        getter_AddRefs(docShellEnumerator));    
+            enumDirection, getter_AddRefs(docShellEnumerator));    
     if (NS_FAILED(rv)) return rv;
     
     while (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMore)) && hasMore)
