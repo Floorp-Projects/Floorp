@@ -199,6 +199,7 @@
           function _filterRadioGroup(aNode) {
             switch (aNode.localName) {
               case "radio": return NodeFilter.FILTER_ACCEPT;
+              case "template":
               case "radiogroup": return NodeFilter.FILTER_REJECT;
               default: return NodeFilter.FILTER_SKIP;
             }
