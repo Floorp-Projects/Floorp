@@ -63,6 +63,12 @@ class nsIntervalSet;
 #define NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX      4
 #define NS_BLOCK_FRAME_LAST_LIST_INDEX      NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX
 
+// see nsHTMLParts.h for the public block state bits
+#define NS_BLOCK_HAS_LINE_CURSOR            0x01000000
+#define NS_BLOCK_HAS_OVERFLOW_LINES         0x02000000
+#define NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS  0x04000000
+#define NS_BLOCK_HAS_OVERFLOW_PLACEHOLDERS  0x08000000
+
 #define nsBlockFrameSuper nsHTMLContainerFrame
 
 #define NS_BLOCK_FRAME_CID \
@@ -532,15 +538,15 @@ protected:
   //----------------------------------------
 
   nsLineList* GetOverflowLines() const;
-  nsLineList* RemoveOverflowLines() const;
+  nsLineList* RemoveOverflowLines();
   nsresult SetOverflowLines(nsLineList* aOverflowLines);
 
   nsFrameList* GetOverflowPlaceholders() const;
-  nsFrameList* RemoveOverflowPlaceholders() const;
+  nsFrameList* RemoveOverflowPlaceholders();
   nsresult SetOverflowPlaceholders(nsFrameList* aOverflowPlaceholders);
 
   nsFrameList* GetOverflowOutOfFlows() const;
-  nsFrameList* RemoveOverflowOutOfFlows() const;
+  nsFrameList* RemoveOverflowOutOfFlows();
   nsresult SetOverflowOutOfFlows(nsFrameList* aFloaters);
 
   nsIFrame* LastChild();

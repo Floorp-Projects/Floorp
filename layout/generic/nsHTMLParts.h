@@ -62,14 +62,15 @@ class nsIChannel;
  * Additional frame-state bits used by nsBlockFrame
  * See the meanings at http://www.mozilla.org/newlayout/doc/block-and-line.html
  */
-#define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET   0x40000000
-#define NS_BLOCK_HAS_FIRST_LETTER_STYLE     0x20000000
 #define NS_BLOCK_SHRINK_WRAP                0x00100000
 #define NS_BLOCK_NO_AUTO_MARGINS            0x00200000
 #define NS_BLOCK_MARGIN_ROOT                0x00400000
 #define NS_BLOCK_SPACE_MGR                  0x00800000
-#define NS_BLOCK_HAS_LINE_CURSOR            0x01000000
-#define NS_BLOCK_FLAGS_MASK                 0xFFF00000
+#define NS_BLOCK_HAS_FIRST_LETTER_STYLE     0x20000000
+#define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET   0x40000000
+// These are the bits that get inherited from a block frame to its
+// next-in-flows and are not private to blocks
+#define NS_BLOCK_FLAGS_MASK                 0xF0F00000
 
 // Factory method for creating a content iterator for generated
 // content
