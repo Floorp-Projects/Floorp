@@ -57,6 +57,7 @@
 #include "nsXPComCIID.h"
 #include "plevent.h"
 #include "plstr.h"
+#include "rdf.h"
 
 #if defined(XP_PC)
 #define DOM_DLL    "jsdom.dll"
