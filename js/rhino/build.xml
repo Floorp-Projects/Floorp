@@ -38,10 +38,15 @@ Requires Ant version 1.2 or later
     <antcall target="xmlimplsrc-compile" />
   </target>
 
+  <target name="compile-all" depends="compile">
+    <ant antfile="deprecatedsrc/build.xml" target="compile"/>
+  </target>
+
   <target name="copy-source" depends="init">
     <ant antfile="src/build.xml" target="copy-source"/>
     <ant antfile="toolsrc/build.xml" target="copy-source"/>
     <antcall target="xmlimplsrc-copy-source" />
+    <ant antfile="deprecatedsrc/build.xml" target="copy-source"/>
     <copy todir="${dist.dir}" file="build.xml"/>
     <copy todir="${dist.dir}" file="build.properties"/>
     <copy todir="${dist.dir}" file="apiClasses.properties"/>
@@ -59,7 +64,7 @@ Requires Ant version 1.2 or later
     <ant antfile="${xmlimplsrc-build-file}" target="copy-source"/>
   </target>
 
-  <target name="jar" depends="compile">
+  <target name="jar" depends="compile-all">
     <jar jarfile="${dist.dir}/${rhino.jar}"
          basedir="${classes}"
          manifest="src/manifest"
@@ -84,12 +89,6 @@ Requires Ant version 1.2 or later
       <!-- exclude classes that uses class generation library -->
       <exclude name="org/mozilla/javascript/JavaAdapter*.class"/>
       <exclude name="org/mozilla/javascript/InterfaceAdapter*.class"/>
-
-      <!-- exclude deprecated classes -->
-      <exclude name="org/mozilla/javascript/NotAFunctionException.class"/>
-      <exclude name="org/mozilla/javascript/PropertyException.class"/>
-      <exclude name="org/mozilla/javascript/ClassDefinitionException.class"/>
-
 
       <include name="org/mozilla/javascript/regexp/*.class"
                unless="no-regexp"/>
@@ -179,8 +178,13 @@ Requires Ant version 1.2 or later
 
  clean       remove all compiled classes and copied property files
 
- compile     compile all classes and copy all property files
+ compile     compile classes and copy all property files
+             into ${classes} directory 
+             excluding deprecated code
+
+ compile-all compile all classes and copy all property files
              into ${classes} directory
+             including deprecated code
 
  deepclean   remove all generated files and directories
 
