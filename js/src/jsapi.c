@@ -331,16 +331,14 @@ JS_TypeOfValue(JSContext *cx, jsval v)
 	type = JSTYPE_VOID;
     } else if (JSVAL_IS_OBJECT(v)) {
 	obj = JSVAL_TO_OBJECT(v);
-	if (obj &&
-	    (OBJ_GET_CLASS(cx, obj) == &js_FunctionClass
-#if JS_HAS_LEXICAL_CLOSURE
-	     || OBJ_GET_CLASS(cx, obj) == &js_ClosureClass
-#endif
-	     )) {
-	    type = JSTYPE_FUNCTION;
-	} else {
-	    type = JSTYPE_OBJECT;
-	}
+        if (obj &&
+            (OBJ_IS_NATIVE(obj)
+             ? OBJ_GET_CLASS(cx, obj)->call || OBJ_GET_CLASS(cx, obj) == &js_FunctionClass
+             : obj->map->ops->call != 0)) {
+            type = JSTYPE_FUNCTION;
+        } else {
+            type = JSTYPE_OBJECT;
+        }
     } else if (JSVAL_IS_NUMBER(v)) {
 	type = JSTYPE_NUMBER;
     } else if (JSVAL_IS_STRING(v)) {
@@ -1179,11 +1177,19 @@ JS_DefineConstDoubles(JSContext *cx, JSObject *obj, JSConstDoubleSpec *cds)
 	 * so we don't need to GC-alloc constant doubles.
 	 */
 	jsdouble d = cds->dval;
-	jsint i = (jsint)d;
 
-	value = (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i))
+        /* We can't do a (jsint) cast to check against JSDOUBLE_IS_INT until we
+         * know that d is not NaN, or we risk a FPE on some platforms.
+         */
+        if (JSDOUBLE_IS_NaN(d)) {
+            value = DOUBLE_TO_JSVAL(&cds->dval);
+        } else {
+            jsint i = (jsint)d;
+            
+            value = (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i))
 		? INT_TO_JSVAL(i)
 		: DOUBLE_TO_JSVAL(&cds->dval);
+        }
 #else
 	ok = js_NewNumberValue(cx, cds->dval, &value);
 	if (!ok)

@@ -1169,11 +1169,19 @@ JS_DefineConstDoubles(JSContext *cx, JSObject *obj, JSConstDoubleSpec *cds)
 	 * so we don't need to GC-alloc constant doubles.
 	 */
 	jsdouble d = cds->dval;
-	jsint i = (jsint)d;
 
-	value = (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i))
+        /* We can't do a (jsint) cast to check against JSDOUBLE_IS_INT until we
+         * know that d is not NaN, or we risk a FPE on some platforms.
+         */
+        if (JSDOUBLE_IS_NaN(d)) {
+            value = DOUBLE_TO_JSVAL(&cds->dval);
+        } else {
+            jsint i = (jsint)d;
+            
+            value = (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i))
 		? INT_TO_JSVAL(i)
 		: DOUBLE_TO_JSVAL(&cds->dval);
+        }
 #else
 	ok = js_NewNumberValue(cx, cds->dval, &value);
 	if (!ok)
