@@ -258,7 +258,9 @@ class nsPositionedInlineFrame : public nsInlineFrame
 {
 public:
   NS_IMETHOD Destroy(nsIPresContext& aPresContext);
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+#endif
 
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,

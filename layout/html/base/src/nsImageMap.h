@@ -62,7 +62,9 @@ public:
 
   void Draw(nsIPresContext& aCX, nsIRenderingContext& aRC);
 
+#ifdef DEBUG
   void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+#endif
 
   // nsISupports
   NS_DECL_ISUPPORTS

@@ -78,7 +78,9 @@ public:
   const nsString& GetAltText() const { return mAltText; }
   PRBool GetSuppress() const { return mSuppressFeedback; }
 
+#ifdef DEBUG
   virtual void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+#endif
 
   nsString mBase;
   nsString mHREF;
@@ -105,6 +107,7 @@ Area::~Area()
   delete [] mCoords;
 }
 
+#ifdef DEBUG
 void
 Area::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
@@ -119,6 +122,7 @@ Area::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
     *aResult = sum;
   }
 }
+#endif
 
 #include <stdlib.h>
 #define XP_ATOI(_s) ::atoi(_s)
@@ -1136,6 +1140,7 @@ nsImageMap::DocumentWillBeDestroyed(nsIDocument *aDocument)
   return NS_OK;
 }
 
+#ifdef DEBUG
 void
 nsImageMap::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
@@ -1151,3 +1156,4 @@ nsImageMap::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
     *aResult = sum;
   }
 }
+#endif

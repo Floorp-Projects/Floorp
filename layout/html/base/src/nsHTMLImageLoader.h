@@ -26,6 +26,7 @@ class nsIFrame;
 class nsImageMap;
 class nsIImage;
 class nsIURI;
+class nsISizeOfHandler;
 struct nsHTMLReflowState;
 struct nsHTMLReflowMetrics;
 struct nsSize;
@@ -82,7 +83,9 @@ public:
     return mFlags.mHaveComputedSize;
   }
 
-  PRUint32 GetDataSize() const;
+#ifdef DEBUG
+  void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+#endif
 
 protected:
   static nsresult ImageLoadCB(nsIPresContext* aPresContext,

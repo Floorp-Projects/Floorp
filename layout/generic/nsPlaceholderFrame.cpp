@@ -114,6 +114,7 @@ nsPlaceholderFrame::List(FILE* out, PRInt32 aIndent) const
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsPlaceholderFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
@@ -123,3 +124,4 @@ nsPlaceholderFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
   *aResult = sizeof(*this);
   return NS_OK;
 }
+#endif

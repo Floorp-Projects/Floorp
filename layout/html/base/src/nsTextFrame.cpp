@@ -227,7 +227,9 @@ public:
   
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+#endif
 
   NS_IMETHOD GetPosition(nsIPresContext& aCX,
                          nscoord         aXCoord,
@@ -440,33 +442,33 @@ public:
 protected:
   virtual ~nsTextFrame();
 
-  // XXX pack this tighter
   PRInt32 mContentOffset;
   PRInt32 mContentLength;
-  PRUint32 mFlags;
   PRInt32 mColumn;
   nscoord mComputedWidth;
-
 };
 
 // Flag information used by rendering code. This information is
-// computed by the ResizeReflow code. Remaining bits are used by the
-// tab count.
+// computed by the ResizeReflow code. The flags are stored in the
+// mState variable in the frame class private section.
 
 // Flag indicating that whitespace was skipped
-#define TEXT_SKIP_LEADING_WS 0x01
+#define TEXT_SKIP_LEADING_WS 0x01000000
 
-#define TEXT_HAS_MULTIBYTE   0x02
+#define TEXT_HAS_MULTIBYTE   0x02000000
 
-#define TEXT_BLINK_ON        0x04
+#define TEXT_IN_WORD         0x04000000
 
-#define TEXT_IN_WORD         0x08
-
-#define TEXT_TRIMMED_WS      0x10
+#define TEXT_TRIMMED_WS      0x08000000
 
 // This bit is set on the first frame in a continuation indicating
-// that it was choppsed short because of :first-letter style.
-#define TEXT_FIRST_LETTER    0x20
+// that it was chopped short because of :first-letter style.
+#define TEXT_FIRST_LETTER    0x10000000
+
+// Bits in mState used for reflow flags
+#define TEXT_REFLOW_FLAGS    0x7F000000
+
+#define TEXT_BLINK_ON        0x80000000
 
 //----------------------------------------------------------------------
 
@@ -497,7 +499,7 @@ nsTextFrame::nsTextFrame()
 
 nsTextFrame::~nsTextFrame()
 {
-  if (0 != (mFlags & TEXT_BLINK_ON)) {
+  if (0 != (mState & TEXT_BLINK_ON)) {
     NS_ASSERTION(nsnull != gTextBlinker, "corrupted blinker");
     gTextBlinker->RemoveFrame(this);
   }
@@ -574,7 +576,7 @@ nsTextFrame::Paint(nsIPresContext& aPresContext,
   if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer) {
     return NS_OK;
   }
-  if ((0 != (mFlags & TEXT_BLINK_ON)) && gBlinkTextOff) {
+  if ((0 != (mState & TEXT_BLINK_ON)) && gBlinkTextOff) {
     return NS_OK;
   }
   nsIStyleContext* sc = mStyleContext;
@@ -592,7 +594,7 @@ nsTextFrame::Paint(nsIPresContext& aPresContext,
       // performance hint.
       PRUint32 hints = 0;
       aRenderingContext.GetHints(hints);
-      if ((TEXT_HAS_MULTIBYTE & mFlags) ||
+      if ((TEXT_HAS_MULTIBYTE & mState) ||
           (0 == (hints & NS_RENDERING_HINT_FAST_8BIT_TEXT))) {
         // Use PRUnichar rendering routine
         PaintUnicodeText(&aPresContext, aRenderingContext, sc, ts, 0, 0);
@@ -629,11 +631,11 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
 
   // Skip over the leading whitespace
   PRInt32 n = mContentLength;
-  if (0 != (mFlags & TEXT_SKIP_LEADING_WS)) {
+  if (0 != (mState & TEXT_SKIP_LEADING_WS)) {
     PRBool isWhitespace;
     PRInt32 wordLen, contentLen;
     aTX.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace);
-    NS_ASSERTION(isWhitespace, "mFlags and content are out of sync");
+    NS_ASSERTION(isWhitespace, "mState and content are out of sync");
     if (isWhitespace) {
       if (nsnull != aIndexes) {
         // Point mapping indicies at the same content index since
@@ -651,7 +653,7 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
 
   // Rescan the content and transform it. Stop when we have consumed
   // mContentLength characters.
-  PRBool inWord = (TEXT_IN_WORD & mFlags) ? PR_TRUE : PR_FALSE;
+  PRBool inWord = (TEXT_IN_WORD & mState) ? PR_TRUE : PR_FALSE;
   PRInt32 column = mColumn;
   PRInt32 textLength = 0;
   while (0 != n) {
@@ -719,7 +721,7 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
   }
 
   // Remove trailing whitespace if it was trimmed after reflow
-  if (TEXT_TRIMMED_WS & mFlags) {
+  if (TEXT_TRIMMED_WS & mState) {
     if (--dst >= aBuffer) {
       PRUnichar ch = *dst;
       if (XP_IS_SPACE(ch)) {
@@ -971,7 +973,6 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
       SelectionDetails *details = nsnull;
       nsCOMPtr<nsIPresShell> shell;
       nsCOMPtr<nsIFrameSelection> frameSelection;
-      PRBool drawSelected = PR_FALSE;
 
       nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
       if (NS_SUCCEEDED(rv) && shell){
@@ -1066,12 +1067,12 @@ nsTextFrame::GetPositionSlowly(nsIPresContext& aPresContext,
   GetOffsetFromView(origin, &view);
 
   nscoord charWidth,widthsofar = 0;
-  PRInt32 index = 0;
+  PRInt32 indx = 0;
   PRBool found = PR_FALSE;
   PRUnichar* startBuf = paintBuf;
   nsIFontMetrics* lastFont = ts.mLastFont;
 
-  for (; --textLength >= 0; paintBuf++,index++) {
+  for (; --textLength >= 0; paintBuf++,indx++) {
     nsIFontMetrics* nextFont;
     nscoord glyphWidth;
     PRUnichar ch = *paintBuf;
@@ -1104,12 +1105,12 @@ nsTextFrame::GetPositionSlowly(nsIPresContext& aPresContext,
     }
     if ((aXCoord - origin.x) >= widthsofar && (aXCoord - origin.x) <= (widthsofar + glyphWidth)){
       if ( ((aXCoord - origin.x) - widthsofar) <= (glyphWidth /2)){
-        aOffset = index;
+        aOffset = indx;
         found = PR_TRUE;
         break;
       }
       else{
-        aOffset = index+1;
+        aOffset = indx+1;
         found = PR_TRUE;
         break;
       }
@@ -1423,11 +1424,8 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
         //must set up last one for selection beyond edge if in boundary
         ip[mContentLength]++;
       }
-      PRInt32 selectionStartOffset = 0;//frame coordinates
-      PRInt32 selectionEndOffset = 0;//frame coordinates
       nsCOMPtr<nsIPresShell> shell;
       nsCOMPtr<nsIFrameSelection> frameSelection;
-      PRBool drawSelected = PR_FALSE;
       nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
       if (NS_SUCCEEDED(rv) && shell){
         rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
@@ -1537,11 +1535,8 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
         //must set up last one for selection beyond edge if in boundary
         ip[mContentLength]++;
       }
-      PRInt32 selectionStartOffset = 0;//frame coordinates
-      PRInt32 selectionEndOffset = 0;//frame coordinates
       nsCOMPtr<nsIPresShell> shell;
       nsCOMPtr<nsIFrameSelection> frameSelection;
-      PRBool drawSelected = PR_FALSE;
       nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
       if (NS_SUCCEEDED(rv) && shell){
         rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
@@ -1715,7 +1710,7 @@ nsTextFrame::GetPosition(nsIPresContext& aCX,
         ip[mContentLength]++;
       }
 
-      PRInt32 index;
+      PRInt32 indx;
       PRInt32 textWidth = 0;
       PRUnichar* text = paintBuf;
       nsPoint origin;
@@ -1724,14 +1719,14 @@ nsTextFrame::GetPosition(nsIPresContext& aCX,
       PRBool found = BinarySearchForPosition(acx, text, origin.x, 0, 0,
                                              PRInt32(textLength),
                                              PRInt32(aXCoord) , //go to local coordinates
-                                             index, textWidth);
+                                             indx, textWidth);
       if (found) {
         PRInt32 charWidth;
-        acx->GetWidth(text[index], charWidth);
+        acx->GetWidth(text[indx], charWidth);
         charWidth /= 2;
 
         if (PRInt32(aXCoord) - origin.x > textWidth+charWidth) {
-          index++;
+          indx++;
         }
       }
 
@@ -1742,7 +1737,7 @@ nsTextFrame::GetPosition(nsIPresContext& aCX,
         delete [] paintBuf;
       }
 
-      aContentOffset = index + mContentOffset;
+      aContentOffset = indx + mContentOffset;
       //reusing wordBufMem
       PRInt32 i;
       for (i = 0;i <= mContentLength; i ++){
@@ -2063,7 +2058,7 @@ nsTextFrame::PeekOffset(nsIFocusTracker *aTracker,
           break;
         }
       }
-/*      if (aStartOffset == 0 && (mFlags & TEXT_SKIP_LEADING_WS))
+/*      if (aStartOffset == 0 && (mState & TEXT_SKIP_LEADING_WS))
         i--; //back up because we just skipped over some white space. why skip over the char also?
         */
       if (i > mContentLength){
@@ -2347,18 +2342,18 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   nsLineLayout& lineLayout = *aReflowState.mLineLayout;
   TextStyle ts(&aPresContext, *aReflowState.rendContext, mStyleContext);
 
-  // Initialize mFlags (without destroying the TEXT_BLINK_ON bit) bits
-  // that are filled in by the reflow routines.
-  mFlags &= TEXT_BLINK_ON;
+  // Clear out the reflow state flags in mState (without destroying
+  // the TEXT_BLINK_ON bit).
+  mState &= ~TEXT_REFLOW_FLAGS;
   if (ts.mFont->mFont.decorations & NS_STYLE_TEXT_DECORATION_BLINK) {
-    if (0 == (mFlags & TEXT_BLINK_ON)) {
-      mFlags |= TEXT_BLINK_ON;
+    if (0 == (mState & TEXT_BLINK_ON)) {
+      mState |= TEXT_BLINK_ON;
       gTextBlinker->AddFrame(this);
     }
   }
   else {
-    if (0 != (mFlags & TEXT_BLINK_ON)) {
-      mFlags &= ~TEXT_BLINK_ON;
+    if (0 != (mState & TEXT_BLINK_ON)) {
+      mState &= ~TEXT_BLINK_ON;
       gTextBlinker->RemoveFrame(this);
     }
   }
@@ -2410,11 +2405,11 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   // is only valid for one pass through the measuring loop.
   PRBool inWord = lineLayout.InWord() ||
     ((nsnull != mPrevInFlow) &&
-     (((nsTextFrame*)mPrevInFlow)->mFlags & TEXT_FIRST_LETTER));
+     (((nsTextFrame*)mPrevInFlow)->mState & TEXT_FIRST_LETTER));
   if (inWord) {
-    mFlags |= TEXT_IN_WORD;
+    mState |= TEXT_IN_WORD;
   }
-  mFlags &= ~TEXT_FIRST_LETTER;
+  mState &= ~TEXT_FIRST_LETTER;
 
   PRInt32 column = lineLayout.GetColumn();
   PRInt32 prevColumn = column;
@@ -2451,7 +2446,7 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
         skipWhitespace = PR_FALSE;
 
         // Only set flag when we actually do skip whitespace
-        mFlags |= TEXT_SKIP_LEADING_WS;
+        mState |= TEXT_SKIP_LEADING_WS;
         continue;
       }
       if ('\t' == bp[0]) {
@@ -2512,7 +2507,7 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
     }
   }
   if (tx.HasMultibyte()) {
-    mFlags |= TEXT_HAS_MULTIBYTE;
+    mState |= TEXT_HAS_MULTIBYTE;
   }
 
   // Post processing logic to deal with word-breaking that spans
@@ -2617,7 +2612,7 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   if (justDidFirstLetter) {
     lineLayout.SetFirstLetterFrame(this);
     lineLayout.SetFirstLetterStyleOK(PR_FALSE);
-    mFlags |= TEXT_FIRST_LETTER;
+    mState |= TEXT_FIRST_LETTER;
   }
 
   // Setup metrics for caller; store final max-element-size information
@@ -2803,10 +2798,10 @@ nsTextFrame::TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
     mComputedWidth -= dw;
   }
   if (0 != dw) {
-    mFlags |= TEXT_TRIMMED_WS;
+    mState |= TEXT_TRIMMED_WS;
   }
   else {
-    mFlags &= ~TEXT_TRIMMED_WS;
+    mState &= ~TEXT_TRIMMED_WS;
   }
   aDeltaWidth = dw;
   return NS_OK;
@@ -3074,6 +3069,7 @@ nsTextFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsTextFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
@@ -3083,6 +3079,7 @@ nsTextFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
   *aResult = sizeof(*this);
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
 nsTextFrame::GetFrameName(nsString& aResult) const
@@ -3108,10 +3105,9 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
 
   // Output the first/last content offset and prev/next in flow info
   PRBool isComplete = (mContentOffset + mContentLength) == contentLength;
-  fprintf(out, "[%d,%d,%c][%x] ", 
+  fprintf(out, "[%d,%d,%c] ", 
           mContentOffset, mContentOffset+mContentLength-1,
-          isComplete ? 'T':'F',
-          mFlags);
+          isComplete ? 'T':'F');
   
   if (nsnull != mNextSibling) {
     fprintf(out, " next=%p", mNextSibling);

@@ -60,7 +60,9 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
   NS_IMETHOD GetFrameType(nsIAtom** aResult) const;
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+#endif
 
 protected:
   virtual ~nsImageFrame();

@@ -92,7 +92,9 @@ public:
   /** @see nsIFrame::GetFrameName */
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 
   /** SetSelected needs to be overridden to talk to inner tableframe
    */

@@ -63,10 +63,10 @@ nsresult NS_NewGfxAutoTextControlFrame(nsIFrame** aNewFrame)
 char* nsGfxAutoTextControlFrame::eventName[] = {"onstartlookup", "onautocomplete"};
 
 
-nsGfxAutoTextControlFrame::nsGfxAutoTextControlFrame() :
-	mLookupInterval(300),
-	mLookupTimer(nsnull),
-	mUseBlurr(PR_FALSE)
+nsGfxAutoTextControlFrame::nsGfxAutoTextControlFrame()
+  :	mUseBlurr(PR_FALSE),
+    mLookupTimer(nsnull),
+    mLookupInterval(300)
 {
 	PRInt32 i;
 	for (i = 0; i < LAST_ID; i ++)

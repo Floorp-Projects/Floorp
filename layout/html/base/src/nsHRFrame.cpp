@@ -266,6 +266,7 @@ HRuleFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 HRuleFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
@@ -275,3 +276,4 @@ HRuleFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
   *aResult = sizeof(*this);
   return NS_OK;
 }
+#endif
