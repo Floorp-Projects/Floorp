@@ -436,6 +436,12 @@ class CBrowserContext : public CNSContext
 											int 					width, 
 											int 					height);
 
+		virtual void				FreeBuiltinElement( 
+											LO_BuiltinStruct *		inBuiltinStruct) ;
+		virtual void				DisplayBuiltin( 
+											int						inLocation,
+											LO_BuiltinStruct*		inBuiltinStruct) ;
+
 		virtual	char* 				Prompt(
 											const char* 			inMessage,
 											const char*				inDefaultText);

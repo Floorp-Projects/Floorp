@@ -1316,4 +1316,9 @@ void CNSContext::HandleClippingView(
 	int /*y*/, 
 	int /*width*/, 
 	int /*height*/) {}
+void CNSContext::FreeBuiltinElement( 
+	LO_BuiltinStruct * /*inBuiltinStruct*/) {}
+void CNSContext::DisplayBuiltin( 
+	int /*inLocation*/, 
+	LO_BuiltinStruct* /*inBuiltinStruct*/) {}
 	

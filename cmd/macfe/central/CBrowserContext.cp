@@ -2006,3 +2006,33 @@ char* CBrowserContext::Prompt(
 
 	return result;	
 }
+
+
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥	FreeBuiltinElement
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+// Dispose of an embedded SHACK widget
+void
+CBrowserContext :: FreeBuiltinElement ( LO_BuiltinStruct* inBuiltinStruct )
+{
+	CHTMLView* theCurrentView = ExtractHyperView(*this);
+	Assert_(theCurrentView != NULL);
+	if (theCurrentView != NULL)
+		theCurrentView->FreeBuiltinElement(inBuiltinStruct);	
+
+} // FreeBuiltinElement
+
+
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥	DisplayBuiltin
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+// Create and display a SHACK tree widget in HTML area
+void
+CBrowserContext :: DisplayBuiltin ( int inLocation, LO_BuiltinStruct* inBuiltinStruct )
+{
+	CHTMLView* theCurrentView = ExtractHyperView(*this);
+	Assert_(theCurrentView != NULL);
+	if (theCurrentView != NULL)
+		theCurrentView->DisplayBuiltin(inLocation, inBuiltinStruct);
+
+} // DisplayBuiltin

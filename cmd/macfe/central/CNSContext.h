@@ -484,6 +484,12 @@ protected:
 											int 					width, 
 											int 					height);
 
+		virtual void				FreeBuiltinElement( 
+											LO_BuiltinStruct *		inBuiltinStruct) ;
+		virtual void				DisplayBuiltin( 
+											int						inLocation,
+											LO_BuiltinStruct*		inBuiltinStruct) ;
+
 public:
 
 		static	UInt32	sNSCWindowID;		// Unique ID, incremented for each context
