@@ -9228,8 +9228,17 @@ else
   MOZ_NSPRENV_NS_USE_GCC=
 fi
 
-MOZ_NSPRENV_MOZILLA_CLIENT=
 MOZ_NSPRENV_NO_MDUPDATE=1
+
+MOZ_NSPRENV_MOZILLA_CLIENT=
+case "$target" in
+	*-linux*)
+		if test ! -x /lib/libc.so.6
+		then
+			MOZ_NSPRENV_MOZILLA_CLIENT=1
+		fi
+	;;
+esac
 
 MOZ_NSPRENV_DIST=`pwd`/dist
 
