@@ -80,7 +80,7 @@ sub domakefile {
   my $srcdir;
   open MAKE, "<$dir/Makefile" or die "Couldn't find file 'Makefile' in $dir";
   while ( <MAKE> ) {
-    if ( m#^\s*srcdir\s*=\s*(\S*\/(mozilla|ns)\/\S*)# ) {
+    if ( m#^\s*srcdir\s*=\s*(\S+)\s*# ) {
       $srcdir = $1;
       last;
     }
