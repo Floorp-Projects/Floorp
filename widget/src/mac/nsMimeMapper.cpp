@@ -87,6 +87,8 @@ nsMimeMapperMac :: MapMimeTypeToMacOSType ( const char* aMimeStr, PRBool inAddIf
       format = 'PICT';
     else if ( PL_strcmp(aMimeStr, kGIFImageMime) == 0 )
       format = 'PICT';
+    else if ( PL_strcmp(aMimeStr, kUnicodeMime) == 0 )
+      format = 'utxt';
 
     else if ( inAddIfNotPresent ) {
       // create the flavor based on the unique id in the lower two bytes and 'MZ' in the
