@@ -63,6 +63,8 @@ typedef struct AB_Row AB_Row;
 #define AB_Row_typedef 1
 #endif
 
+
+#ifndef XP_MAC
 /* ===== ===== ===== ===== misc temp kludge defines ===== ===== ===== ===== */
 
 // artifacts of supporting an experimental file format with the old format:
@@ -70,6 +72,7 @@ typedef struct AB_Row AB_Row;
 //#define AB_CONFIG_USE_GROMIT_FILE_FORMAT 1
 
 /* ===== ===== ===== ===== forwards ===== ===== ===== ===== */
+#endif /* XP_MAC */
 
 class ab_Change;
 class ab_ColumnSet;
