@@ -76,6 +76,8 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD    SetEnableCallback(const nsString& aScript);
     NS_IMETHOD    NewWindow();
     NS_IMETHOD    PrintPreview();
+    NS_IMETHOD    Print();
+    NS_IMETHOD    Copy();
     NS_IMETHOD    Close();
     NS_IMETHOD    Exit();
     NS_IMETHOD    SetDocumentCharset(const nsString& aCharset); 

@@ -26,7 +26,7 @@
 #include "nsIComponentManager.h"
 #include "nsAppCores.h"
 #include "nsAppCoresCIDs.h"
-#include "nsAppCoresManager.h"
+#include "nsIDOMAppCoresManager.h"
 
 #include "nsIScriptContext.h"
 #include "nsIScriptContextOwner.h"
@@ -52,6 +52,9 @@
 
 #include "nsIDocumentViewer.h"
 #include "nsIDOMHTMLImageElement.h"
+#include "nsIPresContext.h"
+#include "nsIPresShell.h"
+#include "nsFileSpec.h"  // needed for nsAutoCString
 
 #ifdef ClientWallet
 #include "nsIWalletService.h"
@@ -65,6 +68,7 @@ static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #include "nsIRDFService.h"
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
+static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 
 #include "nsICmdLineService.h"
 
@@ -181,6 +185,32 @@ nsBrowserAppCore::GetScriptObject(nsIScriptContext *aContext, void** aScriptObje
   return res;
 }
 
+static
+nsIPresShell*
+GetPresShellFor(nsIWebShell* aWebShell)
+{
+  nsIPresShell* shell = nsnull;
+  if (nsnull != aWebShell) {
+    nsIContentViewer* cv = nsnull;
+    aWebShell->GetContentViewer(&cv);
+    if (nsnull != cv) {
+      nsIDocumentViewer* docv = nsnull;
+      cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+      if (nsnull != docv) {
+        nsIPresContext* cx;
+        docv->GetPresContext(cx);
+	      if (nsnull != cx) {
+	        cx->GetShell(&shell);
+	        NS_RELEASE(cx);
+	      }
+        NS_RELEASE(docv);
+      }
+      NS_RELEASE(cv);
+    }
+  }
+  return shell;
+}
+
 NS_IMETHODIMP    
 nsBrowserAppCore::Init(const nsString& aId)
 {
@@ -202,10 +232,18 @@ nsBrowserAppCore::Init(const nsString& aId)
     nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
   }
 
-  // XXX This is lame and needs to be changed
-	nsAppCoresManager* sdm = new nsAppCoresManager();
-	sdm->Add((nsIDOMBaseAppCore *)(nsBaseAppCore *)this);
-	delete sdm;
+  // register object into Service Manager
+  static NS_DEFINE_IID(kIDOMAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
+  static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
+
+  nsIDOMAppCoresManager * appCoreManager;
+  nsresult rv = nsServiceManager::GetService(kAppCoresManagerCID,
+                                             kIDOMAppCoresManagerIID,
+                                             (nsISupports**)&appCoreManager);
+  if (NS_OK == rv) {
+	  appCoreManager->Add((nsIDOMBaseAppCore *)(nsBaseAppCore *)this);
+  }
+	return rv;
 
 	return NS_OK;
 }
@@ -313,35 +351,6 @@ done:
 
   return NS_OK;
 }
-
-static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
-#include "nsIPresContext.h"
-static
-nsIPresShell*
-GetPresShellFor(nsIWebShell* aWebShell)
-{
-  nsIPresShell* shell = nsnull;
-  if (nsnull != aWebShell) {
-    nsIContentViewer* cv = nsnull;
-    aWebShell->GetContentViewer(&cv);
-    if (nsnull != cv) {
-      nsIDocumentViewer* docv = nsnull;
-      cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
-      if (nsnull != docv) {
-        nsIPresContext* cx;
-        docv->GetPresContext(cx);
-	      if (nsnull != cx) {
-	        cx->GetShell(&shell);
-	        NS_RELEASE(cx);
-	      }
-        NS_RELEASE(docv);
-      }
-      NS_RELEASE(cv);
-    }
-  }
-  return shell;
-}
-
 
 NS_IMETHODIMP    
 nsBrowserAppCore::WalletEditor()
@@ -505,9 +514,7 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
     nsAutoString str(name);
 
     if (APP_DEBUG) {
-        char *name = str.ToNewCString();
-        printf("Attaching to Content WebShell [%s]\n", name);
-        delete [] name;
+      printf("Attaching to Content WebShell [%s]\n", nsAutoCString(str));
     }
     mContentAreaWebShell->SetURLListener(this);
     // Break link to chrome.
@@ -541,9 +548,7 @@ nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
     nsAutoString str(name);
 
     if (APP_DEBUG) {
-        char* cstr = str.ToNewCString();
-        printf("Attaching to WebShellWindow[%s]\n", cstr);
-        delete[] cstr;
+      printf("Attaching to WebShellWindow[%s]\n", nsAutoCString(str));
     }
 
     nsIWebShellContainer * webShellContainer;
@@ -738,9 +743,7 @@ void nsBrowserAppCore::SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum,
   nsCOMPtr<nsIDOMNode> img(FindNamedDOMNode(nsAutoString("img"), button, count, 1)); 
   nsCOMPtr<nsIDOMHTMLImageElement> imgElement(do_QueryInterface(img));
   if (imgElement) {
-    char * str = aResName.ToNewCString();
-    imgElement->SetSrc(str);
-    delete [] str;
+    imgElement->SetSrc(aResName);
   }
 
 }
@@ -785,6 +788,36 @@ nsBrowserAppCore::PrintPreview()
 }
 
 NS_IMETHODIMP    
+nsBrowserAppCore::Copy()
+{ 
+  
+#define NEW_CLIPBOARD_SUPPORT
+
+#ifdef NEW_CLIPBOARD_SUPPORT
+  nsIPresShell * presShell = GetPresShellFor(mWebShell);
+  if (nsnull != nsnull) {
+    presShell->DoCopy(nsnull);
+  }
+#endif
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsBrowserAppCore::Print()
+{  
+  nsIContentViewer *viewer = nsnull;
+
+  mWebShell->GetContentViewer(&viewer);
+
+  if (nsnull != viewer) {
+    viewer->Print();
+    NS_RELEASE(viewer);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
 nsBrowserAppCore::Close()
 {  
   return NS_OK;
@@ -817,9 +850,7 @@ nsBrowserAppCore::ExecuteScript(nsIScriptContext * aContext, const nsString& aSc
     PRBool isUndefined = PR_FALSE;
     nsString rVal;
     if (APP_DEBUG) {
-        char* script_str = aScript.ToNewCString();
-        printf("Executing [%s]\n", script_str);
-        delete[] script_str;
+      printf("Executing [%s]\n", nsAutoCString(aScript));
     }
     aContext->EvaluateString(aScript, url, 0, rVal, &isUndefined);
   } 

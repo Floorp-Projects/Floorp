@@ -557,6 +557,72 @@ BrowserAppCorePrintPreview(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
 
 //
+// Native method Copy
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreCopy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Copy()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function copy requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Print
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCorePrint(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Print()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function print requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method Close
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -738,6 +804,8 @@ static JSFunctionSpec BrowserAppCoreMethods[] =
   {"setWebShellWindow",          BrowserAppCoreSetWebShellWindow,     1},
   {"newWindow",          BrowserAppCoreNewWindow,     0},
   {"printPreview",          BrowserAppCorePrintPreview,     0},
+  {"copy",          BrowserAppCoreCopy,     0},
+  {"print",          BrowserAppCorePrint,     0},
   {"close",          BrowserAppCoreClose,     0},
   {"exit",          BrowserAppCoreExit,     0},
   {"setDisableCallback",          BrowserAppCoreSetDisableCallback,     1},
