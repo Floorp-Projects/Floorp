@@ -80,8 +80,8 @@ function outer(N)
 
 
 status = inSection(1);
-actual = outer(5);
-expect = 6;
+actual = outer(-5);
+expect = 1;
 addThis();
 
 status = inSection(2);
@@ -90,8 +90,8 @@ expect = 1;
 addThis();
 
 status = inSection(3);
-actual = outer(-5);
-expect = 1;
+actual = outer(5);
+expect = 6;
 addThis();
 
 
