@@ -2811,6 +2811,7 @@ GdkRegionSetXftClip(GdkRegion *aGdkRegion, XftDraw *aDraw)
 
     XftDrawSetClipRectangles(aDraw, 0, 0, xrects, n_rects);
 
+    g_free(xrects);
     g_free(rects);
 }
 #endif /* MOZ_WIDGET_GTK2 */
