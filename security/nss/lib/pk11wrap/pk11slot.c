@@ -1135,7 +1135,11 @@ pk11_freeSlotList(PK11SlotList *list)
 	next = le->next;
 	pk11_FreeListElement(list,le);
     }
-    PK11_USE_THREADS(PZ_DestroyLock((PZLock *)(list->lock));)
+#ifdef PK11_USE_THREADS
+    if (list->lock) {
+    	PZ_DestroyLock((PZLock *)(list->lock));
+    }
+#endif
     list->lock = NULL;
     list->head = NULL;
 }
