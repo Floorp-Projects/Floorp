@@ -50,9 +50,7 @@
     <!-- File Menu -->
     <key id="key_newNavigator"/>
     <key id="key_newNavigatorTab" key="&tabCmd.commandkey;" modifiers="accel" command="cmd_newNavigatorTab"/>
-    <key id="focusURLBar"      key="&openCmd.commandkey;" oncommand="ShowAndSelectContentsOfURLBar();"
-         modifiers="accel"/>
-    <key id="openLocationKb"   key="&openCmd.commandkey;" command="Browser:Open" modifiers="accel,shift"/>
+    <key id="openLocationKb"   key="&openCmd.commandkey;" command="Browser:Open" modifiers="accel"/>
     <key id="openFileKb"         key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
     <key id="key_savePage"       key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>
     <key id="printKb"            key="&printCmd.commandkey;" command="Browser:Print"  modifiers="accel"/>
@@ -99,7 +97,7 @@
 
     <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
     <command id="Browser:SavePage" oncommand="saveDocument(window._content.document);"/>
-    <command id="Browser:Open" oncommand="BrowserOpenWindow();"/>
+    <command id="Browser:Open" oncommand="ShowAndSelectContentsOfURLBar();"/>
     <command id="Browser:PrintSetup" oncommand="BrowserPrintSetup();"/>
     <command id="Browser:Print" oncommand="BrowserPrint();"/>
     <command id="Browser:PrintPreview" oncommand="BrowserPrintPreview();"/>
