@@ -68,6 +68,7 @@ const calICalendar = Components.interfaces.calICalendar;
 const nsISupportsCString = Components.interfaces.nsISupportsCString;
 const calIEvent = Components.interfaces.calIEvent;
 const calEventClass = Components.classes["@mozilla.org/calendar/event;1"];
+const calIItemOccurrence = Components.interfaces.calIItemOccurrence;
 
 function makeOccurrence(item, start, end)
 {
@@ -388,7 +389,6 @@ calDavCalendar.prototype = {
         function searchItemsLocally(calendarToReturn, aAllItems){
             const calIItemBase = Components.interfaces.calIItemBase;
             const calITodo = Components.interfaces.calITodo;
-            const calIItemOccurrence = Components.interfaces.calIItemOccurrence;
             const calIRecurrenceInfo = Components.interfaces.calIRecurrenceInfo;
 
             var itemsFound = Array();
