@@ -33,7 +33,9 @@ nsAFlatString::GetReadableFragment( const_fragment_type& aFragment, nsFragmentRe
         case kFragmentAt:
           {
             const buffer_handle_type* buffer = GetBufferHandle();
-            NS_ASSERTION(buffer, "trouble: no buffer!");
+
+            if ( !buffer )
+              return 0;
 
             aFragment.mEnd = buffer->DataEnd();
             return (aFragment.mStart = buffer->DataStart()) + aOffset;
