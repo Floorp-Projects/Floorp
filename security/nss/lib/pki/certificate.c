@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.36 $ $Date: 2002/05/20 18:05:10 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.37 $ $Date: 2002/06/24 22:36:59 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -669,8 +669,20 @@ NSSCertificate_IsPrivateKeyAvailable
   PRStatus *statusOpt
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return PR_FALSE;
+    PRBool isUser = PR_FALSE;
+    nssCryptokiObject **ip;
+    nssCryptokiObject **instances = nssPKIObject_GetInstances(&c->object);
+    if (!instances) {
+	return PR_FALSE;
+    }
+    for (ip = instances; *ip; ip++) {
+	nssCryptokiObject *instance = *ip;
+	if (nssToken_IsPrivateKeyAvailable(instance->token, c, instance)) {
+	    isUser = PR_TRUE;
+	}
+    }
+    nssCryptokiObjectArray_Destroy(instances);
+    return isUser;
 }
 
 NSS_IMPLEMENT PRBool
@@ -1112,4 +1124,3 @@ nssCRL_GetEncoding
 	return (NSSDER *)NULL;
     }
 }
-

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.55 $ $Date: 2002/05/21 21:22:55 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.56 $ $Date: 2002/06/24 22:36:59 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -446,10 +446,6 @@ nssDecodedPKIXCertificate_Destroy
     return PR_SUCCESS;
 }
 
-/* From pk11cert.c */
-extern PRBool
-PK11_IsUserCert(PK11SlotInfo *, CERTCertificate *, CK_OBJECT_HANDLE);
-
 /* see pk11cert.c:pk11_HandleTrustObject */
 static unsigned int
 get_nss3trust_from_nss4trust(CK_TRUST t)
@@ -492,25 +488,6 @@ cert_trust_from_stan_trust(NSSTrust *t, PRArenaPool *arena)
     return rvTrust;
 }
 
-/* check all cert instances for private key */
-static PRBool is_user_cert(NSSCertificate *c, CERTCertificate *cc)
-{
-    PRBool isUser = PR_FALSE;
-    nssCryptokiObject **ip;
-    nssCryptokiObject **instances = nssPKIObject_GetInstances(&c->object);
-    if (!instances) {
-	return PR_FALSE;
-    }
-    for (ip = instances; *ip; ip++) {
-	nssCryptokiObject *instance = *ip;
-	if (PK11_IsUserCert(instance->token->pk11slot, cc, instance->handle)) {
-	    isUser = PR_TRUE;
-	}
-    }
-    nssCryptokiObjectArray_Destroy(instances);
-    return isUser;
-}
-
 CERTCertTrust * 
 nssTrust_GetCERTCertTrustForCert(NSSCertificate *c, CERTCertificate *cc)
 {
@@ -532,7 +509,7 @@ nssTrust_GetCERTCertTrustForCert(NSSCertificate *c, CERTCertificate *cc)
 	}
 	memset(rvTrust, 0, sizeof(*rvTrust));
     }
-    if (is_user_cert(c, cc)) {
+    if (NSSCertificate_IsPrivateKeyAvailable(c, NULL, NULL)) {
 	if (!rvTrust) {
 	}
 	rvTrust->sslFlags |= CERTDB_USER;

@@ -560,6 +560,11 @@ char * PK11_GetObjectNickname(PK11SlotInfo *slot, CK_OBJECT_HANDLE id) ;
 SECStatus PK11_SetObjectNickname(PK11SlotInfo *slot, CK_OBJECT_HANDLE id, 
 						const char *nickname) ;
 
+
+/* private */
+SECStatus pk11_TraverseAllSlots( SECStatus (*callback)(PK11SlotInfo *,void *),
+	void *cbArg, void *pwArg);
+
 SEC_END_PROTOS
 
 #endif

@@ -41,7 +41,7 @@
  */
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.28 $ $Date: 2002/05/21 21:23:33 $ $Name:  $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.29 $ $Date: 2002/06/24 22:36:53 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKT_H
@@ -962,6 +962,15 @@ nssToken_TraverseCertificates
   PRStatus (* callback)(nssCryptokiObject *instance, void *arg),
   void *arg
 );
+
+NSS_EXTERN PRBool
+nssToken_IsPrivateKeyAvailable
+(
+  NSSToken *token,
+  NSSCertificate *c,
+  nssCryptokiObject *instance
+);
+
 
 #endif
 

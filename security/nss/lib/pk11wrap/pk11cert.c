@@ -951,7 +951,7 @@ typedef struct pk11CertCallbackStr {
 /*
  * Extract all the certs on a card from a slot.
  */
-static SECStatus
+SECStatus
 pk11_TraverseAllSlots( SECStatus (*callback)(PK11SlotInfo *,void *),
 						void *arg,void *wincx) {
     PK11SlotList *list;
