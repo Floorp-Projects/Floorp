@@ -116,7 +116,7 @@ nsrefcnt nsWindow::AddRef(void)
  */
 nsrefcnt nsWindow::Release(void)
 {
-    return NS_RELEASE(mOuter);
+    return mOuter->Release();
 }
 
 
@@ -791,42 +791,27 @@ void nsWindow::Invalidate(PRBool aIsSynchronous)
 //-------------------------------------------------------------------------
 void* nsWindow::GetNativeData(PRUint32 aDataType)
 {
-    switch(aDataType) {
+  switch(aDataType) {
 
-        case NS_NATIVE_WINDOW:
-	  {
-              return (void*)XtWindow(mWidget);
-	  }
-	break;
-        case NS_NATIVE_DISPLAY:
-	  {
-            return (void*)XtDisplay(mWidget);
-	  }
-	break;
-        case NS_NATIVE_WIDGET:
-	  {
-            return (void*)(mWidget);
-	  }
-	break;
-        case NS_NATIVE_GRAPHIC:
-	  {
-	    // We Cache a Read-Only Shared GC in the Toolkit.  If we don't
-	    // have one ourselves (because it needs to be writeable) grab the
-	    // the shared GC
-	    
-	    if (nsnull == mGC)
-	      return (((nsToolkit *)mToolkit)->GetSharedGC());
+    case NS_NATIVE_WINDOW:
+      return (void*)XtWindow(mWidget);
+    case NS_NATIVE_DISPLAY:
+      return (void*)XtDisplay(mWidget);
+    case NS_NATIVE_WIDGET:
+      return (void*)(mWidget);
+    case NS_NATIVE_GRAPHIC:
+      // We Cache a Read-Only Shared GC in the Toolkit.  If we don't
+      // have one ourselves (because it needs to be writeable) grab the
+      // the shared GC
+      if (nsnull == mGC)
+        return (((nsToolkit *)mToolkit)->GetSharedGC());
+      return ((void*)mGC);
+    case NS_NATIVE_COLORMAP:
+    default:
+      break;
+  }
 
-	    return ((void*)mGC);
-	  }
-	break;
-        case NS_NATIVE_COLORMAP:
-        default:
-            break;
-    }
-
-    return NULL;
-
+  return NULL;
 }
 
 
@@ -968,18 +953,15 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
   switch(aStatus) {
     case nsEventStatus_eIgnore:
       return(PR_FALSE);
-    break;
     case nsEventStatus_eConsumeNoDefault:
       return(PR_TRUE);
-    break;
     case nsEventStatus_eConsumeDoDefault:
       return(PR_FALSE);
-    break;
     default:
       NS_ASSERTION(0, "Illegal nsEventStatus enumeration value");
-      return(PR_FALSE);
-    break;
+      break;
   }
+  return(PR_FALSE);
 }
 
 //-------------------------------------------------------------------------

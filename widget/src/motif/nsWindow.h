@@ -489,7 +489,7 @@ public: \
     } \
     PRBool _classname::_aggname::OnResize(nsSizeEvent &aEvent) \
     { \
-      GET_OUTER()->OnResize(aEvent); \
+      return GET_OUTER()->OnResize(aEvent); \
     } \
     PRBool _classname::_aggname::OnKey(PRUint32 aEventType, PRUint32 aKeyCode) \
     { \

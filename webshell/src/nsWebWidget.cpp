@@ -149,8 +149,6 @@ private:
   //static nsIWebWidget* gRootWebWidget;
   nsString* mName;
   nsIDeviceContext *mDeviceContext;
-
-  friend class WebWidgetImpl;
 };
 
 //----------------------------------------------------------------------
@@ -1136,8 +1134,8 @@ nsresult WebWidgetImpl::GetDOMDocument(nsIDOMDocument** aDocument)
 }
 
 /*******************************************
-/*  nsWebWidgetFactory
-/*******************************************/
+ *  nsWebWidgetFactory
+ *******************************************/
 
 //static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);

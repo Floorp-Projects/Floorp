@@ -41,7 +41,7 @@
 #define _PRSTR_DELBUF_C(c, x)	/* as nothing */
 #else
 #define _PRSTR_BP bp
-// Unix compilers don't believe in encapsulation
+// Unix compilers do not believe in encapsulation
 // At least on Solaris this is also ignored
 #define _PRSTR_DELBUF(x)	delbuf = x
 #define _PRSTR_DELBUF_C(c, x)	c::_PRSTR_DELBUF(x)

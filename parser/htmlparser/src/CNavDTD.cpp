@@ -1268,8 +1268,6 @@ PRBool CNavDTD::CanContainIndirect(eHTMLTags aParent,eHTMLTags aChild) const {
       }
       break;
 
-      result=PR_TRUE; break;
-
     default:
       break;
   }
@@ -2720,8 +2718,7 @@ PRInt32 CNavDTD::ConsumeToken(CToken*& aToken){
               nsAutoString temp(aChar);
               return ConsumeText(temp,*theScanner,aToken);
             }
-            else return ConsumeWhitespace(aChar,*theScanner,aToken);
-            break;
+            return ConsumeWhitespace(aChar,*theScanner,aToken);
         } //switch
         break; 
     } //switch
