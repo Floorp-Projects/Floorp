@@ -1061,19 +1061,17 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 			goto FAIL;
 		}
 
-		/* If we don't do this check...ZERO length files can be sent */
-                // comment out for now - nsIFileSpec returns 0 for non-zero length files
-                // if they're new, it seems - some sort of race condition.
-//		if (mTempFileSpec->GetFileSize() == 0)
-//		{
-//			status = NS_MSG_ERROR_WRITING_FILE;
-//			goto FAIL;
-//		}
-
     mOutputFile->close();
 		delete mOutputFile;
+	  mOutputFile = nsnull;
+
+		/* If we don't do this check...ZERO length files can be sent */
+		if (mTempFileSpec->GetFileSize() == 0)
+		{
+		 status = NS_MSG_ERROR_WRITING_FILE;
+			goto FAIL;
+		}
 	}
-	mOutputFile = nsnull;
 
   mComposeBundle->GetStringByID(NS_MSG_ASSEMB_DONE_MSG, getter_Copies(msg));
   SetStatusMessage( msg );
