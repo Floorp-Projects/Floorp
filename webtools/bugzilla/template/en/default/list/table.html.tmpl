@@ -72,7 +72,7 @@
       [% IF splitheader %]
 
         [% FOREACH id = displaycolumns %]
-          [% NEXT IF loop.count() % 2 == 0 %]
+          [% NEXT UNLESS loop.count() % 2 == 0 %]
           [% column = columns.$id %]
           [% PROCESS columnheader %]
         [% END %]
@@ -80,7 +80,7 @@
         </tr><tr align="left"><th>&nbsp;</th>
 
         [% FOREACH id = displaycolumns %]
-          [% NEXT UNLESS loop.count() % 2 == 0 %]
+          [% NEXT IF loop.count() % 2 == 0 %]
           [% column = columns.$id %]
           [% PROCESS columnheader %]
         [% END %]
