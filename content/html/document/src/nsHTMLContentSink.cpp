@@ -662,11 +662,12 @@ PRBool HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   case eToken_entity:
     {
       nsAutoString tmp;
-      PRInt32 unicode = aNode.TranslateToUnicode();
+      nsAutoString tmp2("");
+      PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp2);
       if (unicode < 0) {
         tmp.Append(aNode.GetText());
       } else {
-        tmp.Append(PRUnichar(unicode));
+        tmp+=tmp2;
       }
       rv = NS_NewHTMLText(&leaf, tmp.GetUnicode(), tmp.Length());
     }
