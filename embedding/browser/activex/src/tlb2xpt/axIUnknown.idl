@@ -1,8 +1,4 @@
-// Probably the nsISupports impl will do us, just change the IID to match IUnknown
-
 #include "nsISupports.idl"
 
-[scriptable, uuid(00000000-0000-0000-C000-000000000046)]
-interface axIUnknown : nsISupports
-{
-};
+#define axIUnknown nsISupports
+
