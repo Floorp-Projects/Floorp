@@ -31,7 +31,7 @@ LIBRARY_NAME	= profile_s
 REQUIRES	= xpcom \
 		  xpcom_obsolete \
 		  string \
-		  chrome \
+		  content \
 		  docshell \
 		  webbrwsr \
 		  dom \
