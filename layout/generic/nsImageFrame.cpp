@@ -1253,147 +1253,148 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
       PaintSelf(aPresContext, aRenderingContext, aDirtyRect);
     }
 
-    nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
-    NS_ASSERTION(mContent, "Not an image loading content?");
+    if (mComputedSize.width != 0 && mComputedSize.height != 0) {
+      nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
+      NS_ASSERTION(mContent, "Not an image loading content?");
 
-    nsCOMPtr<imgIRequest> currentRequest;
-    if (imageLoader) {
-      imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
-                              getter_AddRefs(currentRequest));
-    }
-      
-    nsCOMPtr<imgIContainer> imgCon;
-
-    PRUint32 loadStatus = imgIRequest::STATUS_ERROR;
-
-    if (currentRequest) {
-      currentRequest->GetImage(getter_AddRefs(imgCon));
-      currentRequest->GetImageStatus(&loadStatus);
-    }
-
-    if (loadStatus & imgIRequest::STATUS_ERROR || !imgCon) {
-      // No image yet, or image load failed. Draw the alt-text and an icon
-      // indicating the status (unless image is blocked, in which case we show nothing)
-
-      PRBool imageBlocked = PR_FALSE;
+      nsCOMPtr<imgIRequest> currentRequest;
       if (imageLoader) {
-        imageLoader->GetImageBlocked(&imageBlocked);
+        imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                                getter_AddRefs(currentRequest));
       }
       
-      if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer &&
-          (!imageBlocked || mIconLoad->mPrefAllImagesBlocked)) {
-        DisplayAltFeedback(aPresContext, aRenderingContext, 
-                           (loadStatus & imgIRequest::STATUS_ERROR)
-                           ? NS_ICON_BROKEN_IMAGE
-                           : NS_ICON_LOADING_IMAGE);
+      nsCOMPtr<imgIContainer> imgCon;
+
+      PRUint32 loadStatus = imgIRequest::STATUS_ERROR;
+
+      if (currentRequest) {
+        currentRequest->GetImage(getter_AddRefs(imgCon));
+        currentRequest->GetImageStatus(&loadStatus);
       }
-    }
-    else {
-      PRBool paintOutline   = PR_FALSE;
-      if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer && imgCon) {
-        // Render the image into our content area (the area inside
-        // the borders and padding)
-        nsRect inner;
-        GetInnerArea(aPresContext, inner);
-        nsRect paintArea(inner);
 
-        nscoord offsetY = 0; 
+      if (loadStatus & imgIRequest::STATUS_ERROR || !imgCon) {
+        // No image yet, or image load failed. Draw the alt-text and an icon
+        // indicating the status (unless image is blocked, in which case we show nothing)
 
-        // if the image is split account for y-offset
-        if (mPrevInFlow) {
-          offsetY = GetContinuationOffset();
+        PRBool imageBlocked = PR_FALSE;
+        if (imageLoader) {
+          imageLoader->GetImageBlocked(&imageBlocked);
+        }
+      
+        if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer &&
+            (!imageBlocked || mIconLoad->mPrefAllImagesBlocked)) {
+          DisplayAltFeedback(aPresContext, aRenderingContext, 
+                             (loadStatus & imgIRequest::STATUS_ERROR)
+                             ? NS_ICON_BROKEN_IMAGE
+                             : NS_ICON_LOADING_IMAGE);
+        }
+      }
+      else {
+        PRBool paintOutline   = PR_FALSE;
+        if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer && imgCon) {
+          // Render the image into our content area (the area inside
+          // the borders and padding)
+          nsRect inner;
+          GetInnerArea(aPresContext, inner);
+          nsRect paintArea(inner);
+
+          nscoord offsetY = 0; 
+
+          // if the image is split account for y-offset
+          if (mPrevInFlow) {
+            offsetY = GetContinuationOffset();
+          }
+
+          if (mIntrinsicSize == mComputedSize) {
+            // Find the actual rect to be painted to in the rendering context
+            paintArea.IntersectRect(paintArea, aDirtyRect);
+
+            // Point to paint to
+            nsPoint p(paintArea.x, paintArea.y);
+          
+            // Rect in the image to paint
+            nsRect r(paintArea.x - inner.x,
+                     paintArea.y - inner.y + offsetY,
+                     paintArea.width,
+                     paintArea.height);
+          
+            aRenderingContext.DrawImage(imgCon, &r, &p);
+          } else {
+            // The computed size is the total size of all the continuations,
+            // including ourselves.  Note that we're basically inverting
+            // mTransform here (would it too much to ask for
+            // nsTransform2D::Invert?), since we need to convert from
+            // rendering context coords to image coords...
+            nsTransform2D trans;
+            trans.SetToScale((float(mIntrinsicSize.width) / float(mComputedSize.width)),
+                             (float(mIntrinsicSize.height) / float(mComputedSize.height)));
+          
+            // XXXbz it looks like we should take
+            // IntersectRect(paintArea, aDirtyRect) here too, but things
+            // get very weird if I do that ....
+            //   paintArea.IntersectRect(paintArea, aDirtyRect);
+          
+            // dirty rect in image our coord size...
+            nsRect r(paintArea.x - inner.x,
+                     paintArea.y - inner.y + offsetY,
+                     paintArea.width,
+                     paintArea.height);
+
+            // Transform that to image coords
+            trans.TransformCoord(&r.x, &r.y, &r.width, &r.height);
+          
+            // dest rect in our coords
+            nsRect d(paintArea.x, paintArea.y,
+                     paintArea.width, paintArea.height);
+          
+            aRenderingContext.DrawScaledImage(imgCon, &r, &d);
+          }
+          paintOutline = PR_TRUE;
         }
 
-        if (mIntrinsicSize == mComputedSize) {
-          // Find the actual rect to be painted to in the rendering context
-          paintArea.IntersectRect(paintArea, aDirtyRect);
-
-          // Point to paint to
-          nsPoint p(paintArea.x, paintArea.y);
-          
-          // Rect in the image to paint
-          nsRect r(paintArea.x - inner.x,
-                   paintArea.y - inner.y + offsetY,
-                   paintArea.width,
-                   paintArea.height);
-          
-          aRenderingContext.DrawImage(imgCon, &r, &p);
-        } else {
-          // The computed size is the total size of all the continuations,
-          // including ourselves.  Note that we're basically inverting
-          // mTransform here (would it too much to ask for
-          // nsTransform2D::Invert?), since we need to convert from
-          // rendering context coords to image coords...
-          nsTransform2D trans;
-          trans.SetToScale((float(mIntrinsicSize.width) / float(mComputedSize.width)),
-                           (float(mIntrinsicSize.height) / float(mComputedSize.height)));
-          
-          // XXXbz it looks like we should take
-          // IntersectRect(paintArea, aDirtyRect) here too, but things
-          // get very weird if I do that ....
-          //   paintArea.IntersectRect(paintArea, aDirtyRect);
-          
-          // dirty rect in image our coord size...
-          nsRect r(paintArea.x - inner.x,
-                   paintArea.y - inner.y + offsetY,
-                   paintArea.width,
-                   paintArea.height);
-
-          // Transform that to image coords
-          trans.TransformCoord(&r.x, &r.y, &r.width, &r.height);
-          
-          // dest rect in our coords
-          nsRect d(paintArea.x, paintArea.y,
-                   paintArea.width, paintArea.height);
-          
-          aRenderingContext.DrawScaledImage(imgCon, &r, &d);
-        }
-        paintOutline = PR_TRUE;
-      }
-
-      nsImageMap* map = GetImageMap(aPresContext);
-      if (nsnull != map) {
-        nsRect inner;
-        GetInnerArea(aPresContext, inner);
-        PRBool clipState;
-        aRenderingContext.SetColor(NS_RGB(0, 0, 0));
-        aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
-        aRenderingContext.PushState();
-        aRenderingContext.Translate(inner.x, inner.y);
-        map->Draw(aPresContext, aRenderingContext);
-        aRenderingContext.PopState(clipState);
-        paintOutline = PR_TRUE;
-      }
-
-      // paint the outline in the overlay layer (or if there is an image map) until the 
-      // general problem of painting it outside the border box is solved.
-      if (paintOutline) {
-        const nsStyleBorder* myBorder = GetStyleBorder();
-        const nsStyleOutline* myOutline = GetStyleOutline();
-        nsRect rect(0, 0, mRect.width, mRect.height);
-        nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                                     aDirtyRect, rect, *myBorder,
-                                     *myOutline, mStyleContext, 0);
-      }
-
-#ifdef DEBUG
-      if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) &&
-          GetShowFrameBorders()) {
         nsImageMap* map = GetImageMap(aPresContext);
         if (nsnull != map) {
           nsRect inner;
           GetInnerArea(aPresContext, inner);
           PRBool clipState;
           aRenderingContext.SetColor(NS_RGB(0, 0, 0));
+          aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
           aRenderingContext.PushState();
           aRenderingContext.Translate(inner.x, inner.y);
           map->Draw(aPresContext, aRenderingContext);
           aRenderingContext.PopState(clipState);
+          paintOutline = PR_TRUE;
         }
-      }
-#endif
-    }
 
+        // paint the outline in the overlay layer (or if there is an image map) until the 
+        // general problem of painting it outside the border box is solved.
+        if (paintOutline) {
+          const nsStyleBorder* myBorder = GetStyleBorder();
+          const nsStyleOutline* myOutline = GetStyleOutline();
+          nsRect rect(0, 0, mRect.width, mRect.height);
+          nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
+                                       aDirtyRect, rect, *myBorder,
+                                       *myOutline, mStyleContext, 0);
+        }
+
+#ifdef DEBUG
+        if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) &&
+            GetShowFrameBorders()) {
+          nsImageMap* map = GetImageMap(aPresContext);
+          if (nsnull != map) {
+            nsRect inner;
+            GetInnerArea(aPresContext, inner);
+            PRBool clipState;
+            aRenderingContext.SetColor(NS_RGB(0, 0, 0));
+            aRenderingContext.PushState();
+            aRenderingContext.Translate(inner.x, inner.y);
+            map->Draw(aPresContext, aRenderingContext);
+            aRenderingContext.PopState(clipState);
+          }
+        }
+#endif
+      }
+    }
   }
   PRInt16 displaySelection = 0;
 
