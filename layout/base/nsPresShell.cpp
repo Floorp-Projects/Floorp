@@ -2412,10 +2412,8 @@ static void CheckForFocus(nsPIDOMWindow* aOurWindow, nsIFocusController* aFocusC
     if (domWindow == focusedWindow) {
       PRBool active;
       aFocusController->GetActive(&active);
-      aFocusController->SetFocusedElement(nsnull);
       if(active) {
-        // We need to restore focus and make sure we null
-        // out the focused element.
+        // We need to restore focus to the window.
         domWindow->Focus();
       }
     }
