@@ -87,6 +87,9 @@ public:
   static nsISupports *
   GetClassInfoInstance(nsDOMClassInfoID aID);
 
+  static const nsDependentSubstring TrimCharsInSet(const char* aSet,
+                                                   const nsAString& aValue);
+
   static void Shutdown();
 
 private:

@@ -348,8 +348,7 @@ public:
 
   PRBool IsTimeToNotify();
   PRBool IsInScript();
-  const nsDependentSubstring GetAttributeValueAt(const nsIParserNode& aNode,
-                                                 PRInt32 aIndex);
+
   nsresult AddAttributes(const nsIParserNode& aNode, nsIHTMLContent* aContent,
                          PRBool aNotify = PR_FALSE);
   nsresult CreateContentObject(const nsIParserNode& aNode,
@@ -703,53 +702,6 @@ HTMLContentSink::SinkTraceNode(PRUint32 aBit,
 }
 #endif
 
-// Temporary factory code to create content objects
-
-/**
- * This method retrieves the value of an attribute and returns
- * it as a string. Whitespace in the end and beginning are stripped from
- * the string. 
- */
-const nsDependentSubstring
-HTMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
-                                     PRInt32 aIndex)
-{
-  // Copy value
-  const nsAString& value = aNode.GetValueAt(aIndex);
-  nsString::const_iterator iter, end_iter;
-  value.BeginReading(iter);
-  value.EndReading(end_iter);
-  PRUnichar the_char;
-
-  // Skip whitespace in the beginning
-  while ((iter != end_iter) &&
-         (((the_char = *iter) == '\n') ||
-          (the_char == '\t') ||
-          (the_char == '\r') ||
-          (the_char == '\b'))) {
-    ++iter;
-  }
-
-  if (iter != end_iter) {
-    --end_iter; // To make it point to a char
-
-    // There has to be a char between the whitespace,
-    // otherwise iter would be equal to end_iter, so
-    // we can just go until we find that char.
-    while (((the_char = *end_iter)== '\n') ||
-           (the_char == '\t') ||
-           (the_char == '\r') ||
-           (the_char == '\b')) {
-      --end_iter;
-    }
-
-    ++end_iter; // Step beond the last character we want in the value.
-  }
-
-  // end_iter should point to the char after the last to copy
-  return Substring(iter, end_iter);
-}
-
 nsresult
 HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
                                nsIHTMLContent* aContent, PRBool aNotify)
@@ -778,7 +730,8 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
 
     if (!aContent->HasAttr(kNameSpaceID_None, keyAtom)) {
       // Get value and remove mandatory quotes
-      const nsAString& v = GetAttributeValueAt(aNode, i);
+      static const char* kWhitespace ="\n\r\t\b";
+      const nsAString& v = nsContentUtils::TrimCharsInSet(kWhitespace, aNode.GetValueAt(i));
 
       if (nodeType == eHTMLTag_a && keyAtom == nsHTMLAtoms::name) {
         NS_ConvertUCS2toUTF8 cname(v);

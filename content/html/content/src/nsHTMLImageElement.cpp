@@ -555,7 +555,8 @@ nsHTMLImageElement::StringToAttribute(nsIAtom* aAttribute,
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::src) {
-    aResult.SetStringValue(aValue);
+    static const char* kWhitespace = " \n\r\t\b";
+    aResult.SetStringValue(nsContentUtils::TrimCharsInSet(kWhitespace, aValue));
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (ParseImageAttribute(aAttribute, aValue, aResult)) {
