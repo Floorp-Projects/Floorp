@@ -266,8 +266,8 @@ void Node::setNodeValue(const String& aNewNodeValue)
 Node* Node::insertBefore(Node* aNewChild, Node* aRefChild)
 {
     NSI_FROM_TX_NULL_CHECK(Node)
-    nsCOMPtr<nsIDOMNode> newChild(do_QueryInterface(aNewChild->getNSObj()));
-    nsCOMPtr<nsIDOMNode> refChild(do_QueryInterface(aRefChild->getNSObj()));
+    nsCOMPtr<nsIDOMNode> newChild(do_QueryInterface(GET_NSOBJ(aNewChild)));
+    nsCOMPtr<nsIDOMNode> refChild(do_QueryInterface(GET_NSOBJ(aRefChild)));
     nsCOMPtr<nsIDOMNode> returnValue;
 
     if (NS_SUCCEEDED(nsNode->InsertBefore(newChild, refChild,
@@ -288,8 +288,8 @@ Node* Node::insertBefore(Node* aNewChild, Node* aRefChild)
 Node* Node::replaceChild(Node* aNewChild, Node* aOldChild)
 {
     NSI_FROM_TX_NULL_CHECK(Node)
-    nsCOMPtr<nsIDOMNode> newChild(do_QueryInterface(aNewChild->getNSObj()));
-    nsCOMPtr<nsIDOMNode> oldChild(do_QueryInterface(aOldChild->getNSObj()));
+    nsCOMPtr<nsIDOMNode> newChild(do_QueryInterface(GET_NSOBJ(aNewChild)));
+    nsCOMPtr<nsIDOMNode> oldChild(do_QueryInterface(GET_NSOBJ(aOldChild)));
     nsCOMPtr<nsIDOMNode> returnValue;
 
     if (NS_SUCCEEDED(nsNode->ReplaceChild(newChild,
@@ -309,7 +309,7 @@ Node* Node::replaceChild(Node* aNewChild, Node* aOldChild)
 Node* Node::removeChild(Node* aOldChild)
 {
     NSI_FROM_TX_NULL_CHECK(Node)
-    nsCOMPtr<nsIDOMNode> oldChild(do_QueryInterface(aOldChild->getNSObj()));
+    nsCOMPtr<nsIDOMNode> oldChild(do_QueryInterface(GET_NSOBJ(aOldChild)));
     nsCOMPtr<nsIDOMNode> returnValue;
 
     if (NS_SUCCEEDED(nsNode->RemoveChild(oldChild,
@@ -329,7 +329,7 @@ Node* Node::removeChild(Node* aOldChild)
 Node* Node::appendChild(Node* aNewChild)
 {
     NSI_FROM_TX_NULL_CHECK(Node)
-    nsCOMPtr<nsIDOMNode> newChild(do_QueryInterface(aNewChild->getNSObj()));
+    nsCOMPtr<nsIDOMNode> newChild(do_QueryInterface(GET_NSOBJ(aNewChild)));
     nsCOMPtr<nsIDOMNode> returnValue;
 
     if (NS_SUCCEEDED(nsNode->AppendChild(newChild,
