@@ -30,6 +30,14 @@ embed_chrome: embed-jar.mn
 install:: embed_chrome
  $(PERL) $(DEPTH)\xpinstall\packager\pkgcp.pl -s $(DIST)\bin -d $(DIST) --f basebrowser-win -o dos -v
  $(MAKE_INSTALL) installed-chrome.txt $(DIST)\Embed\chrome
+!IF  "$(APP)" == "mfcembed"
+ $(MAKE_INSTALL) $(DIST)\bin\mfcembed.exe $(DIST)\Embed
+!ELSEIF  "$(APP)" == "winembed" 
+ $(MAKE_INSTALL) $(DIST)\bin\winembed.exe $(DIST)\Embed
+!ELSE
+ $(MAKE_INSTALL) $(DIST)\bin\mfcembed.exe $(DIST)\Embed
+ $(MAKE_INSTALL) $(DIST)\bin\winembed.exe $(DIST)\Embed
+!ENDIF
 
 clobber::
  rm -f $(DIST)\Embed\chrome\installed-chrome.txt
