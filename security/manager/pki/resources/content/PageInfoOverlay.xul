@@ -33,12 +33,12 @@
     onLoadRegistry.push(securityOnLoad);
   ]]>
   </script>
-  <tabbox id="tabbox">
+  <tabs id="tabs">
     <tab id="securityTab" label="&pageInfo.securityTab;" />
-  </tabbox>
-  <tabpanel id="tabpanel">
+  </tabs>
+  <tabpanels id="tabpanels">
     <box id="securityPanel" flex="1">
       <text class="header label" value="&pageInfo.securityHeader;" />
     </box>
-  </tabpanel>
+  </tabpanels>
 </overlay>

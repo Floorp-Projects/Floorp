@@ -50,20 +50,20 @@
     <column flex="1"/>
     <rows>
       <row flex="1">
-        <tabcontrol flex="0" orient="vertical">
-          <tabbox orient="horizontal">
+        <tabbox flex="0" orient="vertical">
+          <tabs orient="horizontal">
             <tab id="mine_tab" label="&certmgr.tab.mine;" />
             <tab id="others_tab" label="&certmgr.tab.others;" />
             <tab id="websites_tab" label="&certmgr.tab.websites;" />
             <tab id="ca_tab" label="&certmgr.tab.ca;" selected="true"/>
-          </tabbox>
-          <tabpanel flex="1">
+          </tabs>
+          <tabpanels flex="1">
             <box id="myCerts" flex="1"/>
             <box id="othersCerts" flex="1"/>
             <box id="webCerts" flex="1"/>
             <box id="CACerts" flex="1"/>
-          </tabpanel>
-        </tabcontrol>
+          </tabpanels>
+        </tabbox>
       </row>
       <row>
         <box orient="horizontal" flex="1">
