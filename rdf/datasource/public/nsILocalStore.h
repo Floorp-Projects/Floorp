@@ -23,6 +23,7 @@
 #ifndef nsILocalStore_h__
 #define nsILocalStore_h__
 
+#include "rdf.h"
 #include "nsISupports.h"
 
 // {DF71C6F1-EC53-11d2-BDCA-000064657374}
