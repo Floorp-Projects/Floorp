@@ -43,8 +43,6 @@ PRBool registrationModeFlag = PR_FALSE;
 
 PR_BEGIN_EXTERN_C
 
-static PRBool bNSCapsInitialized_g = PR_FALSE;
-
 /* 
  *             C  API  FOR  JS
  *

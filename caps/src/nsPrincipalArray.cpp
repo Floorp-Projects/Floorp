@@ -23,14 +23,22 @@ static NS_DEFINE_IID(kIPrincipalArrayIID, NS_IPRINCIPALARRAY_IID);
 NS_IMPL_ISUPPORTS(nsPrincipalArray, kIPrincipalArrayIID);
 nsPrincipalArray::nsPrincipalArray(void)
 {
-	nsPrincipalArray(0);
+	this->Init(0);
 }
 
 nsPrincipalArray::nsPrincipalArray(PRUint32 count)
 {
-	itsArray = new nsVector();
-	if(itsArray)
-		itsArray->SetSize(count, 1);
+	this->Init(count);
+}
+
+void
+nsPrincipalArray::Init(PRUint32 count)
+{
+	NS_INIT_REFCNT();
+	NS_ADDREF(this);
+	this->itsArray = new nsVector();
+	if(this->itsArray)
+		this->itsArray->SetSize(count, 1);
 }
 nsPrincipalArray::~nsPrincipalArray(void)
 {
@@ -38,25 +46,25 @@ nsPrincipalArray::~nsPrincipalArray(void)
 }
 
 NS_IMETHODIMP
-nsPrincipalArray::SetPrincipalArrayElement(PRUint32 index, nsIPrincipal * principal)
+nsPrincipalArray::SetPrincipalArrayElement(PRUint32 itsIndex, nsIPrincipal * principal)
 {
-	if (itsArray != NULL) this->itsArray->Set(index, principal);
+	if (this->itsArray != NULL) this->itsArray->Set(itsIndex, principal);
 	return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPrincipalArray::GetPrincipalArraySize(PRUint32 * size)
 {
-	* size = (itsArray == NULL) ? 0 : itsArray->GetSize();
+	* size = (this->itsArray == NULL) ? 0 : this->itsArray->GetSize();
 	return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPrincipalArray::FreePrincipalArray()
 {
-	if (itsArray) {
-		itsArray->RemoveAll();
-		delete itsArray;
+	if (this->itsArray) {
+		this->itsArray->RemoveAll();
+		delete this->itsArray;
 	}
 	return NS_OK;
 }
@@ -64,15 +72,15 @@ nsPrincipalArray::FreePrincipalArray()
 NS_IMETHODIMP
 nsPrincipalArray::AddPrincipalArrayElement(nsIPrincipal * principal)
 {
-	if(!itsArray) itsArray = new nsVector();
+	if(!this->itsArray) this->itsArray = new nsVector();
 	itsArray->Add(principal);
 	return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrincipalArray::GetPrincipalArrayElement(PRUint32 index, nsIPrincipal * * result)
+nsPrincipalArray::GetPrincipalArrayElement(PRUint32 itsIndex, nsIPrincipal * * result)
 {
-	* result = (itsArray == NULL) ? NULL : (nsIPrincipal *) itsArray->Get(index);
+	* result = (this->itsArray) ? (nsIPrincipal *) this->itsArray->Get(itsIndex) : NULL;
 	return NS_OK;
 }
 
@@ -99,7 +107,7 @@ nsPrincipalArray::ComparePrincipalArray(nsIPrincipalArray * other, PRInt16 * com
 			* comparisonType = nsPrincipalArray::SetComparisonType_NoSubset;
 			return NS_OK;
 		}
-		if (value == PR_TRUE) p2Hashtable->Put(&prinKey, (void *)PR_FALSE);
+		if (value == PR_TRUE) p2Hashtable->Put(& prinKey, (void *)PR_FALSE);
 	}
 	other->GetPrincipalArraySize(& i);
 	while(i-- > 0) {

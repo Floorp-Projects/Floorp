@@ -32,6 +32,10 @@ NS_DECL_ISUPPORTS
 
 nsPrincipalArray(void);
 nsPrincipalArray(PRUint32 count);
+
+void
+Init(PRUint32 count);
+
 virtual ~nsPrincipalArray();
 
 NS_IMETHOD

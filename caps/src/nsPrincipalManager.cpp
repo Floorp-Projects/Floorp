@@ -72,7 +72,7 @@ nsPrincipalManager::HasSystemPrincipal(nsIPrincipalArray * prinArray)
 	if (sysPrin == NULL) return PR_FALSE;
 	PRUint32 i;
 	prinArray->GetPrincipalArraySize(& i);
-	for (i; i-- > 0;) {
+	while(i-- > 0) {
 		prinArray->GetPrincipalArrayElement(i,& prin);
 		PRBool result;
 		sysPrin->Equals(prin, & result);

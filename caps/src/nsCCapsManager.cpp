@@ -78,7 +78,6 @@ nsCCapsManager::GetPermission(nsIPrincipal * prin, nsITarget * ignoreTarget, PRI
 {
 	* privilegeState = nsIPrivilege::PrivilegeState_Blank;
 	nsITarget * target = nsTarget::FindTarget(ALL_JAVA_PERMISSION);
-	nsresult result = NS_OK;
 	if( target == NULL ) return NS_OK;
 	if (nsPrivilegeManager::GetPrivilegeManager() != NULL) {
 		nsIPrivilege * privilege;
