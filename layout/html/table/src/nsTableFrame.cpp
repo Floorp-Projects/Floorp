@@ -764,7 +764,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
   if (nsnull != mFirstChild) {
     reflowMappedOK = ReflowMappedChildren(aPresContext, state, aMaxElementSize);
     if (PR_FALSE == reflowMappedOK) {
-      status = 0;  // not complete
+      status = NS_FRAME_NOT_COMPLETE;
     }
   }
 
@@ -774,7 +774,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
     if (state.availSize.height <= 0) {
       // No space left. Don't try to pull-up children or reflow unmapped
       if (NextChildOffset() < mContent->ChildCount()) {
-        status = 0;  // not complete
+        status = NS_FRAME_NOT_COMPLETE;
       }
     } else if (NextChildOffset() < mContent->ChildCount()) {
       // Try and pull-up some children from a next-in-flow
@@ -786,7 +786,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
       } else {
         // We were unable to pull-up all the existing frames from the
         // next in flow
-        status = 0;  // not complete
+        status = NS_FRAME_NOT_COMPLETE;
       }
     }
   }
@@ -1373,7 +1373,7 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
   VerifyLastIsComplete();
 #endif
   nsIFrame*    kidPrevInFlow = nsnull;
-  nsReflowStatus result = 0;  // not complete
+  nsReflowStatus result = NS_FRAME_NOT_COMPLETE;
 
   // If we have no children and we have a prev-in-flow then we need to pick
   // up where it left off. If we have children, e.g. we're being resized, then

@@ -967,7 +967,7 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
     aMaxElementSize->height = fm->GetHeight();
   }
   NS_RELEASE(fm);
-  return (cp == end) ? NS_FRAME_COMPLETE : 0;
+  return (cp == end) ? NS_FRAME_COMPLETE : NS_FRAME_NOT_COMPLETE;
 }
 
 nsReflowStatus
@@ -1044,7 +1044,7 @@ TextFrame::ReflowPre(nsIPresContext* aCX,
     aMaxElementSize->height = aDesiredSize.height;
   }
   NS_RELEASE(fm);
-  return (cp == end) ? NS_FRAME_COMPLETE : 0;
+  return (cp == end) ? NS_FRAME_COMPLETE : NS_FRAME_NOT_COMPLETE;
 }
 
 #define NUM_WORDS 20
