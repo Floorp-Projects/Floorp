@@ -70,14 +70,14 @@ my $userid = $user ? $user->id : 0;
 # and nuke the cookie. This is required for Bugzilla 2.8 and earlier.
 if ($user) {
     my @oldquerycookies;
-    foreach my $i (keys %::COOKIE) {
+    foreach my $i ($cgi->cookie()) {
         if ($i =~ /^QUERY_(.*)$/) {
-            push(@oldquerycookies, [$1, $i, $::COOKIE{$i}]);
+            push(@oldquerycookies, [$1, $i, $cgi->cookie($i)]);
         }
     }
-    if (defined $::COOKIE{'DEFAULTQUERY'}) {
+    if (defined $cgi->cookie('DEFAULTQUERY')) {
         push(@oldquerycookies, [$::defaultqueryname, 'DEFAULTQUERY',
-                                $::COOKIE{'DEFAULTQUERY'}]);
+                                $cgi->cookie('DEFAULTQUERY')]);
     }
     if (@oldquerycookies) {
         foreach my $ref (@oldquerycookies) {
@@ -379,7 +379,7 @@ if ($user) {
 my $deforder;
 my @orders = ('Bug Number', 'Importance', 'Assignee', 'Last Changed');
 
-if ($::COOKIE{'LASTORDER'}) {
+if ($cgi->cookie('LASTORDER')) {
     $deforder = "Reuse same sort as last time";
     unshift(@orders, $deforder);
 }
