@@ -1286,7 +1286,7 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*          aPr
          nsCOMPtr<nsIAtom> tag;
          aContent->GetTag(*getter_AddRefs(tag));
          
-         if (tag == nsXULAtoms::treechildren) {
+         if (tag.get() == nsXULAtoms::treechildren) {
             // See if our parent is a tree.
             nsCOMPtr<nsIContent> grandPappy;
             aContent->GetParent(*getter_AddRefs(grandPappy));
