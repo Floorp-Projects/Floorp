@@ -451,6 +451,19 @@ gtk_xtbin_set_position (GtkXtBin *xtbin,
     gdk_window_move (GTK_WIDGET (xtbin)->window, x, y);
 }
 
+void
+gtk_xtbin_resize (GtkWidget *widget,
+                  gint       width,
+                  gint       height)
+{
+  Arg args[2];
+  GtkXtBin *xtbin = GTK_XTBIN (widget);
+  Widget xtwidget = XtWindowToWidget(xtbin->xtdisplay, xtbin->xtwindow);
+
+  XtSetArg(args[0], XtNheight, height);
+  XtSetArg(args[1], XtNwidth,  width);
+  XtSetValues(XtParent(xtwidget), args, 2);
+}
 
 static void
 gtk_xtbin_shutdown (GtkObject *object)

@@ -998,6 +998,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
   // to the actual X window
   window->window = (nsPluginPort *)GTK_XTBIN(mXtBin)->xtwindow;
   
+  gtk_xtbin_resize(mXtBin, window->width, window->height);
   
 #elif defined(MOZ_WIDGET_XLIB)
 

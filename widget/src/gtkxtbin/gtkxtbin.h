@@ -66,6 +66,9 @@ GtkWidget *gtk_xtbin_new (GdkWindow *parent_window, String *f);
 void       gtk_xtbin_set_position (GtkXtBin *xtbin,
                                    gint       x,
                                    gint       y);
+void       gtk_xtbin_resize (GtkWidget *widget,
+                             gint       width,
+                             gint       height);
 
 typedef struct _XtTMRec {
     XtTranslations  translations;       /* private to Translation Manager    */
