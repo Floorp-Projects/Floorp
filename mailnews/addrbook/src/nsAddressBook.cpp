@@ -414,12 +414,11 @@ nsresult AddressBookParser::ParseFile()
     return ParseLDIFFile();
   }
  
+  // We are migrating 4.x profile
     /* Get database file name */
     char *leafName = nsnull;
-    nsAutoString fileString;
     if (mFileSpec) {
         mFileSpec->GetLeafName(&leafName);
-        fileString.AssignWithConversion(leafName);
 
         PRInt32 i = 0;
         while (leafName[i] != '\0')
@@ -469,19 +468,25 @@ nsresult AddressBookParser::ParseFile()
     if (!parentDir)
         return NS_ERROR_NULL_POINTER;
 
-    if (PL_strcmp(fileName, kPersonalAddressbook) == 0)
-    {
-        // This is the personal address book, get name from prefs
-        nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
-        if (NS_FAILED(rv) || !pPref) 
-            return nsnull;
-        
-            nsXPIDLString dirName;
+    // Get Pretty name from prefs.
+    nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
+    if (NS_FAILED(rv) || !pPref) 
+        return nsnull;
+
+    nsXPIDLString dirName;
+    if (strcmp(fileName, kPersonalAddressbook) == 0)
         rv = pPref->GetLocalizedUnicharPref("ldap_2.servers.pab.description", getter_Copies(dirName));
-        parentDir->CreateDirectoryByURI(dirName, mDbUri, mMigrating);
-    }
     else
-        parentDir->CreateDirectoryByURI(fileString.get(), mDbUri, mMigrating);
+    {
+      nsCAutoString prefName;
+      prefName = NS_LITERAL_CSTRING("ldap_2.servers.") + nsDependentCString(leafName) + NS_LITERAL_CSTRING(".description");
+      rv = pPref->GetLocalizedUnicharPref(prefName.get(), getter_Copies(dirName));
+    }
+
+    // If a name is found then use it, otherwise use the filename as last resort.
+    if (NS_FAILED(rv) || dirName.IsEmpty())
+      dirName = NS_ConvertASCIItoUCS2(leafName);
+    parentDir->CreateDirectoryByURI(dirName, mDbUri, mMigrating);
         
     rv = ParseLDIFFile();
 

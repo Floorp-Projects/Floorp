@@ -150,6 +150,7 @@
 #endif /* XP_UNIX */
 
 #define PREMIGRATION_PREFIX "premigration."
+#define ADDRBOOK_FILE_EXTENSION_IN_4X  ".na2"
 
 // this is for the hidden preference setting in mozilla/modules/libpref/src/init/mailnews.js
 // pref("mail.migration.copyMailFiles", true);
@@ -1140,6 +1141,10 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   if (NS_FAILED(rv)) return rv;
 #endif /* XP_MAC */
 
+  // Copy the addrbook files.
+  rv = CopyFilesByExtension(oldProfilePath, newProfilePath, ADDRBOOK_FILE_EXTENSION_IN_4X);
+  NS_ENSURE_SUCCESS(rv,rv);
+
   rv = DoTheCopy(oldNewsPath, newNewsPath, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
 
@@ -1693,6 +1698,36 @@ nsPrefMigration::DoTheCopyAndRename(nsIFileSpec * aPathSpec, PRBool aReadSubdirs
   nsAutoString newName = NS_ConvertUTF8toUCS2(aNewName);
   localFileOld->CopyTo(localFileDirectory, newName);
 
+  return NS_OK;
+}
+
+nsresult
+nsPrefMigration::CopyFilesByExtension(nsIFileSpec * oldPathSpec, nsIFileSpec * newPathSpec, const char *fileExtension)
+{
+  nsFileSpec oldPath;
+  nsFileSpec newPath;
+  
+  nsresult rv = oldPathSpec->GetFileSpec(&oldPath);
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = newPathSpec->GetFileSpec(&newPath);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  for (nsDirectoryIterator dir(oldPath, PR_FALSE); dir.Exists(); dir++)
+  {
+    nsFileSpec fileOrDirName = dir.Spec();    //set first file or dir to a nsFileSpec
+
+    if (fileOrDirName.IsDirectory())
+      continue;
+
+    nsCAutoString fileOrDirNameStr(fileOrDirName.GetLeafName());
+    if (!nsCStringEndsWith(fileOrDirNameStr, fileExtension))
+      continue;
+
+    // copy the file
+    rv = fileOrDirName.CopyToDir(newPath);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }  
+  
   return NS_OK;
 }
 
