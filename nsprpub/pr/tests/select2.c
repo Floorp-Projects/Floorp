@@ -41,7 +41,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if defined(OS2)
 #include <sys/time.h>
+#endif
 
 #define PORT 8000
 #define DEFAULT_COUNT 10
