@@ -47,6 +47,8 @@ var hideDetails = "";
 function onload()
 {
   var dialog = document.documentElement;
+  dialog.getButton("accept").label = dialog.getAttribute("acceptLabel");
+  dialog.getButton("cancel").label = dialog.getAttribute("cancelLabel");
 
   if (!gDateService) {
     const nsScriptableDateFormat_CONTRACTID = "@mozilla.org/intl/scriptabledateformat;1";
