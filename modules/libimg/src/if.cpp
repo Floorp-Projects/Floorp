@@ -1016,9 +1016,23 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
  
 	/* Grab the URL's expiration date */
 
-	if (ic->url)
+  if (ic->url)
 	  ic->expires = ic->url->GetExpires();
 
+  /* if our mime sniffer can recognize what's in the
+    data stream and it is one of our std vanilla types.
+    Check to see if it matches the mimetype sent by creator.
+  */
+  char contenttype[50];
+  if(sniffout_mimetype((const char*) str, len, contenttype)){
+      // data type understood by mime sniffer
+        if(int ret = nsCRT::strcmp(contenttype, ic->type) != 0){
+            //what the sniff saw and what the mime header said is
+            //different. We'll believe the data from the sniffer
+            nsCRT::free(ic->type);
+            ic->type = nsCRT::strdup(contenttype);
+        }
+  }
 
   nsIImgDecoder *imgdec ;	
   char imgtypestr[200];
@@ -1031,28 +1045,10 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
                                           kIImgDecoderIID, 
                                           (void **)&imgdec);
 
-  /* If no mimetype to decoder mapping, try to sniff out
-  the mime-type */
+  /* we did our best. Gotta give up. */
   if (NS_FAILED(rv)){
-      char contenttype[50];
-      if(sniffout_mimetype((const char*) str, len, contenttype)){
-
-        /* try again with the guessed mimetype */
-        PR_snprintf(imgtypestr, sizeof(imgtypestr), "component://netscape/image/decoder&type=%s"
-            , contenttype );
-  
-        rv = nsComponentManager::CreateInstance(imgtypestr, NULL,    
-                                kIImgDecoderIID, (void **)&imgdec);  
-      }
-      if (NS_FAILED(rv))
-          /* we did our best. Gotta give up. */
           return MK_IMAGE_LOSSAGE; 
       
-      /*we found it*/
-      nsCRT::free(ic->type);
-      ic->type = NULL;
-      ic->type = nsCRT::strdup(contenttype);
-
   }
   
   imgdec->SetContainer(ic);
@@ -1062,7 +1058,7 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
 
   if(NS_FAILED(rv)){
      NS_RELEASE(ic->imgdec);
-     ic->imgdec = nsnull;
+     ic->imgdec = nsnull; //ptn add il_delete_container()
     ILTRACE(0,("il: image init failed"));
     return MK_OUT_OF_MEMORY;
   }
