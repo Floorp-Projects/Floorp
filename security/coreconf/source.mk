@@ -40,7 +40,11 @@
 #
 
 ifndef SOURCE_PREFIX
+ifndef BUILD_TREE
 SOURCE_PREFIX = $(CORE_DEPTH)/../dist
+else
+SOURCE_PREFIX = $(BUILD_TREE)/dist
+endif
 endif
 
 #
