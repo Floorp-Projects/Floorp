@@ -584,7 +584,7 @@ public:
   virtual PRBool    Equals(const nsIStyleContext* aOther) const;
   virtual PRUint32  HashValue(void) const;
 
-  virtual void RemapStyle(nsIPresContext* aPresContext);
+  NS_IMETHOD RemapStyle(nsIPresContext* aPresContext);
 
   virtual const nsStyleStruct* GetStyleData(nsStyleStructID aSID);
   virtual nsStyleStruct* GetMutableStyleData(nsStyleStructID aSID);
@@ -981,7 +981,8 @@ PRBool MapStyleRule(nsISupports* aRule, void* aData)
   return PR_TRUE;
 }
 
-void StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
+NS_IMETHODIMP
+StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
 {
   mDataCode = -1;
   if (nsnull != mParent) {
@@ -1028,6 +1029,7 @@ void StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
       mRules->EnumerateForwards(MapStyleRule, &data);
     }
   }
+  return NS_OK;
 }
 
 void StyleContextImpl::ForceUnique(void)
