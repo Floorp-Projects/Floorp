@@ -1047,18 +1047,8 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 		return 0;
 	}
 
-    /* if TCP error of if there is not a full line yet return */
-    if(status < 0)
-	{
-		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-		if (mailnewsurl)
-			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
-        /* return TCP error
-         */
-        return MK_TCP_READ_ERROR;
-	}
-	else if(!line)
-         return status;
+	if(!line)
+		return status;
 
     ClearFlag(NNTP_PAUSE_FOR_READ);  /* don't pause if we got a line */
 	HG43574
@@ -1238,15 +1228,6 @@ PRInt32 nsNNTPProtocol::SendListExtensionsResponse(nsIInputStream * inputStream,
 		}
 		if (!line)
 			return status;  /* no line yet */
-		if (status < 0)
-		{
-			nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-			if (mailnewsurl)
-				mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
-
-			/* return TCP error */
-			return MK_TCP_READ_ERROR;
-		}
 
 		if ('.' != line[0])
             m_newsHost->AddExtension(line);
@@ -1318,14 +1299,6 @@ PRInt32 nsNNTPProtocol::SendListSearchesResponse(nsIInputStream * inputStream, P
 	}
 	if (!line)
 		return status;  /* no line yet */
-	if (status < 0)
-	{
-		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-		if (mailnewsurl)
-			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
-		/* return TCP error */
-		return MK_TCP_READ_ERROR;
-	}
 
 	if ('.' != line[0])
 	{
@@ -1373,15 +1346,6 @@ PRInt32 nsNNTPProtocol::SendListSearchHeadersResponse(nsIInputStream * inputStre
 	}
 	if (!line)
 		return status;  /* no line yet */
-	if (status < 0)
-	{
-		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-		if (mailnewsurl)
-			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
-
-		/* return TCP error */
-		return MK_TCP_READ_ERROR;
-	}
 
 	if ('.' != line[0])
         m_newsHost->AddSearchableHeader(line);
@@ -1435,15 +1399,6 @@ PRInt32 nsNNTPProtocol::GetPropertiesResponse(nsIInputStream * inputStream, PRUi
 	}
 	if (!line)
 		return status;  /* no line yet */
-	if (status < 0)
-	{
-		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-		if (mailnewsurl)
-			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
-
-		/* return TCP error */
-		return MK_TCP_READ_ERROR;
-	}
 
 	if ('.' != line[0])
 	{
@@ -1515,14 +1470,6 @@ PRInt32 nsNNTPProtocol::SendListSubscriptionsResponse(nsIInputStream * inputStre
 	}
 	if (!line)
 		return status;  /* no line yet */
-	if (status < 0)
-	{
-		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-		if (mailnewsurl)
-			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
-		/* return TCP error */
-		return MK_TCP_READ_ERROR;
-	}
 
 	if ('.' != line[0])
 	{
@@ -2670,17 +2617,6 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
     if(!line)
         return(status);  /* no line yet */
 
-    if(status<0)
-    {
-		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-		if (mailnewsurl)
-			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
-
-        /* return TCP error
-         */
-        return MK_TCP_READ_ERROR;
-    }
-
     /* End of list? 
 	 */
     if (line[0]=='.' && line[1]=='\0')
@@ -2813,16 +2749,6 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 
     if(!line)
         return(status);  /* no line yet */
-
-    if(status<0)
-	{
-		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-		if (mailnewsurl)
-			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
-        /* return TCP error
-         */
-        return MK_TCP_READ_ERROR;
-	}
 
             /* End of list? */
     if (line[0]=='.' && line[1]=='\0')
@@ -3100,17 +3026,6 @@ PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
     if(!line)
 		return(status);  /* no line yet or TCP error */
 
-	if(status<0) 
-	{
-		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-		if (mailnewsurl)
-			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
-
-        /* return TCP error
-         */
-        return MK_TCP_READ_ERROR;
-	}
-
     if(line[0] == '.' && line[1] == '\0')
     {
 		m_nextState = NNTP_FIGURE_NEXT_CHUNK;
@@ -3244,16 +3159,6 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32
    */
   if(!line)
 	return status;
-
-  if(status < 0)
-  {
-	  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-	  if (mailnewsurl)
-		mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
-	  /* return TCP error
-	   */
-	  return MK_TCP_READ_ERROR;
-  }
 
   NNTP_LOG_NOTE(("read_group_body: got line: %s|",line));
 
@@ -4461,15 +4366,6 @@ PRInt32 nsNNTPProtocol::SearchResults(nsIInputStream *inputStream, PRUint32 leng
 	}
 	if (!line)
 		return status;  /* no line yet */
-	if (status < 0)
-	{
-		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-		if (mailnewsurl)
-			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
-
-		/* return TCP error */
-		return MK_TCP_READ_ERROR;
-	}
 
 	if ('.' != line[0])
 	{
