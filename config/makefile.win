@@ -41,7 +41,7 @@ include <$(DEPTH)/config/rules.mak>
 #// Rule to set the timebomb on official mozilla builds
 !ifdef MOZILLA_OFFICIAL
 export:: 
-    perl set-timebomb.pl 0 30
+    $(PERL) set-timebomb.pl 0 30
 !endif
 
 #//
