@@ -34,6 +34,8 @@
 #include "nsIPresShell.h"
 #include "nsGUIEvent.h"
 #include "nsIEventStateManager.h"
+#include "nsXULAtoms.h"
+#include "nsIDOMElement.h"
 
 //
 // NS_NewXULButtonFrame
@@ -160,6 +162,21 @@ nsButtonBoxFrame::MouseClicked (nsIPresContext* aPresContext, nsGUIEvent* aEvent
   nsCOMPtr<nsIPresShell> shell;
   rv = aPresContext->GetShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv) && shell) {
-    shell->HandleDOMEventWithTarget(mContent, &event, &status); 
+    // See if we have a command elt.  If so, we execute on the command instead
+    // of on our content element.
+    nsAutoString command;
+    mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::command, command);
+    if (!command.IsEmpty()) {
+      nsCOMPtr<nsIDocument> doc;
+      mContent->GetDocument(*getter_AddRefs(doc));
+      nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
+      nsCOMPtr<nsIDOMElement> commandElt;
+      domDoc->GetElementById(command, getter_AddRefs(commandElt));
+      nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
+      if (commandContent)
+        shell->HandleDOMEventWithTarget(commandContent, &event, &status);
+    }
+    else
+      shell->HandleDOMEventWithTarget(mContent, &event, &status);
   }
 }
