@@ -896,7 +896,7 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   if (!firstCandidate)
   {
     // then firstCandidate is next node after cN
-    if (NS_FAILED(GetNextSibling(cN,  &firstCandidate)))
+    if (NS_FAILED(GetNextSibling(cN,  &firstCandidate)) || !firstCandidate)
     {
       MakeEmpty();
       return NS_OK;
