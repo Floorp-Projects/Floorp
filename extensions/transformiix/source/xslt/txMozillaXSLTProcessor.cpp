@@ -243,17 +243,23 @@ NS_INTERFACE_MAP_BEGIN(txMozillaXSLTProcessor)
     NS_INTERFACE_MAP_ENTRY(nsIXSLTProcessor)
     NS_INTERFACE_MAP_ENTRY(nsIXSLTProcessorObsolete)
     NS_INTERFACE_MAP_ENTRY(nsIDocumentTransformer)
+    NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXSLTProcessor)
     NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XSLTProcessor)
 NS_INTERFACE_MAP_END
 
-txMozillaXSLTProcessor::txMozillaXSLTProcessor() : mTransformResult(NS_OK),
+txMozillaXSLTProcessor::txMozillaXSLTProcessor() : mStylesheetDocument(nsnull),
+                                                   mTransformResult(NS_OK),
+                                                   mCompileResult(NS_OK),
                                                    mVariables(PR_TRUE)
 {
 }
 
 txMozillaXSLTProcessor::~txMozillaXSLTProcessor()
 {
+    if (mStylesheetDocument) {
+        mStylesheetDocument->RemoveObserver(this);
+    }
 }
 
 NS_IMETHODIMP
@@ -374,6 +380,12 @@ txMozillaXSLTProcessor::DoTransform()
 NS_IMETHODIMP
 txMozillaXSLTProcessor::ImportStylesheet(nsIDOMNode *aStyle)
 {
+    NS_ENSURE_TRUE(aStyle, NS_ERROR_NULL_POINTER);
+    
+    // We don't support importing multiple stylesheets yet.
+    NS_ENSURE_TRUE(!mStylesheetDocument && !mStylesheet,
+                   NS_ERROR_NOT_IMPLEMENTED);
+
     if (!URIUtils::CanCallerAccess(aStyle)) {
         return NS_ERROR_DOM_SECURITY_ERR;
     }
@@ -386,7 +398,25 @@ txMozillaXSLTProcessor::ImportStylesheet(nsIDOMNode *aStyle)
 
     nsresult rv = TX_CompileStylesheet(aStyle, getter_AddRefs(mStylesheet));
     // XXX set up exception context, bug 204658
-    return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (type == nsIDOMNode::ELEMENT_NODE) {
+        nsCOMPtr<nsIDOMDocument> domDoc;
+        aStyle->GetOwnerDocument(getter_AddRefs(domDoc));
+        NS_ENSURE_TRUE(domDoc, NS_ERROR_UNEXPECTED);
+
+        nsCOMPtr<nsIDocument> styleDoc = do_QueryInterface(domDoc);
+        mStylesheetDocument = styleDoc;
+        mEmbeddedStylesheetRoot = do_QueryInterface(aStyle);
+    }
+    else {
+        nsCOMPtr<nsIDocument> styleDoc = do_QueryInterface(aStyle);
+        mStylesheetDocument = styleDoc;
+    }
+
+    mStylesheetDocument->AddObserver(this);
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -395,11 +425,14 @@ txMozillaXSLTProcessor::TransformToDocument(nsIDOMNode *aSource,
 {
     NS_ENSURE_ARG(aSource);
     NS_ENSURE_ARG_POINTER(aResult);
-    NS_ENSURE_TRUE(mStylesheet, NS_ERROR_NOT_INITIALIZED);
+    NS_ENSURE_SUCCESS(mCompileResult, mCompileResult);
 
     if (!URIUtils::CanCallerAccess(aSource)) {
         return NS_ERROR_DOM_SECURITY_ERR;
     }
+
+    nsresult rv = ensureStylesheet();
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Create wrapper for the source document.
     nsCOMPtr<nsIDOMDocument> sourceDOMDocument;
@@ -423,7 +456,7 @@ txMozillaXSLTProcessor::TransformToDocument(nsIDOMNode *aSource,
     es.init(sourceNode, &mVariables);
 
     // Process root of XML source document
-    nsresult rv = txXSLTProcessor::execute(es);
+    rv = txXSLTProcessor::execute(es);
     // XXX setup exception context, bug 204658
     es.end();
 
@@ -444,12 +477,15 @@ txMozillaXSLTProcessor::TransformToFragment(nsIDOMNode *aSource,
     NS_ENSURE_ARG(aSource);
     NS_ENSURE_ARG(aOutput);
     NS_ENSURE_ARG_POINTER(aResult);
-    NS_ENSURE_TRUE(mStylesheet, NS_ERROR_NOT_INITIALIZED);
+    NS_ENSURE_SUCCESS(mCompileResult, mCompileResult);
 
     if (!URIUtils::CanCallerAccess(aSource) ||
         !URIUtils::CanCallerAccess(aOutput)) {
         return NS_ERROR_DOM_SECURITY_ERR;
     }
+
+    nsresult rv = ensureStylesheet();
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Create wrapper for the source document.
     nsCOMPtr<nsIDOMDocument> sourceDOMDocument;
@@ -466,7 +502,7 @@ txMozillaXSLTProcessor::TransformToFragment(nsIDOMNode *aSource,
 
     // XXX Need to add error observers
 
-    nsresult rv = aOutput->CreateDocumentFragment(aResult);
+    rv = aOutput->CreateDocumentFragment(aResult);
     NS_ENSURE_SUCCESS(rv, rv);
     txToFragmentHandlerFactory handlerFactory(*aResult);
     es.mOutputHandlerFactory = &handlerFactory;
@@ -594,7 +630,13 @@ txMozillaXSLTProcessor::ClearParameters()
 NS_IMETHODIMP
 txMozillaXSLTProcessor::Reset()
 {
+    if (mStylesheetDocument) {
+        mStylesheetDocument->RemoveObserver(this);
+    }
     mStylesheet = nsnull;
+    mStylesheetDocument = nsnull;
+    mEmbeddedStylesheetRoot = nsnull;
+    mCompileResult = NS_OK;
     mVariables.clear();
 
     return NS_OK;
@@ -776,6 +818,119 @@ txMozillaXSLTProcessor::notifyError()
     }
 
     mObserver->OnTransformDone(mTransformResult, errorDocument);
+}
+
+nsresult
+txMozillaXSLTProcessor::ensureStylesheet()
+{
+    if (mStylesheet) {
+        return NS_OK;
+    }
+
+    NS_ENSURE_TRUE(mStylesheetDocument, NS_ERROR_NOT_INITIALIZED);
+
+    nsCOMPtr<nsIDOMNode> style = do_QueryInterface(mEmbeddedStylesheetRoot);
+    if (!style) {
+        style = do_QueryInterface(mStylesheetDocument);
+    }
+    return TX_CompileStylesheet(style, getter_AddRefs(mStylesheet));
+}
+
+NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(txMozillaXSLTProcessor)
+NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(txMozillaXSLTProcessor)
+NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(txMozillaXSLTProcessor)
+NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(txMozillaXSLTProcessor)
+
+NS_IMETHODIMP
+txMozillaXSLTProcessor::BeginUpdate(nsIDocument* aDocument)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+txMozillaXSLTProcessor::EndUpdate(nsIDocument* aDocument)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+txMozillaXSLTProcessor::DocumentWillBeDestroyed(nsIDocument* aDocument)
+{
+    if (NS_FAILED(mCompileResult)) {
+        return NS_OK;
+    }
+
+    mCompileResult = ensureStylesheet();
+    mStylesheetDocument = nsnull;
+    mEmbeddedStylesheetRoot = nsnull;
+
+    // This might not be neccesary, but just in case some element ends up
+    // causing a notification as the document goes away we don't want to
+    // invalidate the stylesheet.
+    aDocument->RemoveObserver(this);
+    
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+txMozillaXSLTProcessor::ContentChanged(nsIDocument* aDocument,
+                                       nsIContent *aContent,
+                                       nsISupports *aSubContent)
+{
+    mStylesheet = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+txMozillaXSLTProcessor::AttributeChanged(nsIDocument* aDocument,
+                                         nsIContent* aContent,
+                                         PRInt32 aNameSpaceID,
+                                         nsIAtom* aAttribute,
+                                         PRInt32 aModType,
+                                         nsChangeHint aHint)
+{
+    mStylesheet = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+txMozillaXSLTProcessor::ContentAppended(nsIDocument* aDocument,
+                                        nsIContent* aContainer,
+                                        PRInt32 aNewIndexInContainer)
+{
+    mStylesheet = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+txMozillaXSLTProcessor::ContentInserted(nsIDocument* aDocument,
+                                        nsIContent* aContainer,
+                                        nsIContent* aChild,
+                                        PRInt32 aIndexInContainer)
+{
+    mStylesheet = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+txMozillaXSLTProcessor::ContentReplaced(nsIDocument* aDocument,
+                                        nsIContent* aContainer,
+                                        nsIContent* aOldChild,
+                                        nsIContent* aNewChild,
+                                        PRInt32 aIndexInContainer)
+{
+    mStylesheet = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+txMozillaXSLTProcessor::ContentRemoved(nsIDocument* aDocument,
+                                       nsIContent* aContainer,
+                                       nsIContent* aChild,
+                                       PRInt32 aIndexInContainer)
+{
+    mStylesheet = nsnull;
+    return NS_OK;
 }
 
 /* static*/
