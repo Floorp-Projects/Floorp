@@ -85,6 +85,8 @@ static PRBool              gRollupConsumeRollupEvent = PR_FALSE;
 ////////////////////////////////////////////////////
 static PRBool 			  gJustGotActivate = PR_FALSE;
 static PRBool 			  gJustGotDeactivate = PR_FALSE;
+// Preserve Mozilla's shortcut for closing 
+static PRBool 			  gGotQuitShortcut = PR_FALSE;
 ////////////////////////////////////////////////////
 // Tracking last activated BWindow
 ////////////////////////////////////////////////////
@@ -1712,6 +1714,11 @@ bool nsWindow::CallMethod(MethodInfo *info)
 		break;
 
 	case nsWindow::CLOSEWINDOW :
+		if(gGotQuitShortcut == PR_TRUE)
+		{
+			gGotQuitShortcut = PR_FALSE;
+			return false;
+		}
 		NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
 		DispatchStandardEvent(NS_DESTROY);
 		break;
@@ -2116,6 +2123,10 @@ PRBool nsWindow::OnKeyDown(PRUint32 aEventType, const char *bytes,
 	mIsAltDown     = ((mod & B_COMMAND_KEY) && !(mod & B_RIGHT_OPTION_KEY))? PR_TRUE : PR_FALSE;
 	mIsMetaDown    = (mod & B_OPTION_KEY) ? PR_TRUE : PR_FALSE;	
 	bool IsNumLocked = ((mod & B_NUM_LOCK) != 0);
+	if(B_COMMAND_KEY && (rawcode == 'w' || rawcode == 'W'))
+		gGotQuitShortcut = PR_TRUE;
+	else
+		gGotQuitShortcut = PR_FALSE;
 
 	aTranslatedKeyCode = TranslateBeOSKeyCode(bekeycode, IsNumLocked);
 
