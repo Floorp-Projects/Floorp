@@ -53,9 +53,12 @@
 
   <description>&privacyDescription.label;</description>
 
-  <vbox id="privacyCategories" class="listBox settingsBox" flex="1" style="overflow: auto;">
+  <vbox id="privacyCategories" class="listBox settingsBox" flex="1" style="overflow: auto;"
+        oncommand="if (event.originalTarget.getAttribute('anonid') == 'disclosure') unexpandOld(event);"
+        onclick="if (event.originalTarget.getAttribute('anonid') == 'label') unexpandOld(event);">
     <!-- History -->
-    <expander id="history" label="&history.label;" clearlabel="&clearHistory.label;" onclear="clearHistory();" persist="open">
+    <expander id="history" label="&history.label;" clearlabel="&clearHistory.label;" onclear="clearHistory();"
+              open="true" persist="open">
       <hbox align="center">
         <label value="&pageHis.label;" accesskey="&pageHis.accesskey;" control="histDay"/>
         <textbox id="histDay" size="3"

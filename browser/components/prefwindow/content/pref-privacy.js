@@ -344,3 +344,13 @@ function onPrefsOK()
     }
   }
 }
+
+function unexpandOld(event)
+{
+  var box = document.getElementById("privacyCategories");
+  var newExpander = event.originalTarget.parentNode.parentNode;
+  for (var i = 0; i < box.childNodes.length; ++i) {
+    if (box.childNodes[i] != newExpander && box.childNodes[i].getAttribute("open"))
+      box.childNodes[i].open = false;
+  }
+}
