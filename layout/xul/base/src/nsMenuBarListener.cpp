@@ -46,6 +46,7 @@
 #include "nsIDOMNSUIEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsGUIEvent.h"
+#include "nsIPrivateDOMEvent.h"                                                 
 
 // Drag & Drop, Clipboard
 #include "nsIServiceManager.h"
@@ -138,6 +139,17 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
 {  
   InitAccessKey();
 
+  //handlers shouldn't be triggered by non-trusted events.
+  if (aKeyEvent) {
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(aKeyEvent);
+    if (privateEvent) {
+      PRBool trustedEvent;
+      privateEvent->IsTrustedEvent(&trustedEvent);
+      if (!trustedEvent)
+        return NS_OK;
+    }
+  }
+
   if (mAccessKey && mAccessKeyFocuses)
   {
     // On a press of the ALT key by itself, we toggle the menu's 
@@ -183,6 +195,17 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
     uiEvent->GetPreventDefault ( &eventHandled );
     if ( eventHandled )
       return NS_OK;       // don't consume event
+  }
+
+  //handlers shouldn't be triggered by non-trusted events.
+  if (aKeyEvent) {
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(aKeyEvent);
+    if (privateEvent) {
+      PRBool trustedEvent;
+      privateEvent->IsTrustedEvent(&trustedEvent);
+      if (!trustedEvent)
+        return NS_OK;
+    }
   }
 
   nsresult retVal = NS_OK;  // default is to not consume event
@@ -278,6 +301,17 @@ nsresult
 nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
   InitAccessKey();
+
+  //handlers shouldn't be triggered by non-trusted events.
+  if (aKeyEvent) {
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(aKeyEvent);
+    if (privateEvent) {
+      PRBool trustedEvent;
+      privateEvent->IsTrustedEvent(&trustedEvent);
+      if (!trustedEvent)
+        return NS_OK;
+    }
+  }
 
   if (mAccessKey && mAccessKeyFocuses)
   {
