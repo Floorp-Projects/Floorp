@@ -459,10 +459,6 @@ nsHTMLFrameInnerFrame::Paint(nsIPresContext& aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect& aDirtyRect)
 {
-  //printf("inner paint %d (%d,%d,%d,%d) ", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
-  if (nsnull != mWebShell) {
-    //mWebShell->Show();
-  }
   return NS_OK;
 }
 
@@ -621,6 +617,7 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&      aPresContext,
   // resize the sub document
   float t2p = aPresContext.GetTwipsToPixels();
   nsRect subBounds;
+
   mWebShell->GetBounds(subBounds);
   subBounds.width  = NSToCoordRound(aDesiredSize.width * t2p);
   subBounds.height = NSToCoordRound(aDesiredSize.height * t2p);
