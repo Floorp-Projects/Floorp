@@ -108,7 +108,7 @@ nsButtonPrefListener.prototype =
       var htmlEditor = editorShell.editor.QueryInterface(Components.interfaces.nsIHTMLEditor);
       if (useCSS && htmlEditor) {
         button.removeAttribute("disabled");
-        var state = htmlEditor.GetHighlightColor(mixedObj);
+        var state = htmlEditor.getHighlightColorState(mixedObj);
         button.setAttribute("state", state);
       }      
       else {
@@ -127,7 +127,7 @@ function AfterHighlightColorChange()
   var button = document.getElementById("cmd_highlight");
   var mixedObj = new Object();
   if (button) {
-    var state = editorShell.editor.QueryInterface(Components.interfaces.nsIHTMLEditor).GetHighlightColor(mixedObj);
+    var state = editorShell.editor.QueryInterface(Components.interfaces.nsIHTMLEditor).getHighlightColorState(mixedObj);
     button.setAttribute("state", state);
     onHighlightColorChange();
   }      
