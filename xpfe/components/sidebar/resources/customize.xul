@@ -68,6 +68,8 @@
               </treeitem>
             </treechildren>
           </template>
+
+          <treecol />
         </tree>
       </html:div>
 
