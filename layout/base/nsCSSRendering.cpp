@@ -2249,6 +2249,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
       }
     }
 
+
     // Compute the anchor point. If it's a fixed background attachment, then
     // the image is placed relative to the viewport; otherwise, it's placed
     // relative to the element's padding area.
@@ -2261,7 +2262,8 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
                                  tileWidth, tileHeight, anchor);
 
     // If it's a fixed background attachment, then convert the anchor point
-    // to aForFrame's coordinate space
+    // to aForFrame's coordinate space, and move the padding area so that
+    // we can use the same logic for both the fixed and scrolling cases.
     if (NS_STYLE_BG_ATTACHMENT_FIXED == aColor.mBackgroundAttachment) {
       nsIView*  view;
 
@@ -2274,7 +2276,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
       NS_ASSERTION(view, "expected a view");
       while (view && (view != viewportView)) {
         nscoord x, y;
-  
+
         view->GetPosition(&x, &y);
         anchor.x -= x;
         anchor.y -= y;
@@ -2282,6 +2284,8 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
         // Get the parent view
         view->GetParent(view);
       }
+      paddingArea.x = 0;
+      paddingArea.y = 0;
     }
 
 #if !defined(XP_UNIX) && !defined(XP_BEOS)
@@ -2294,76 +2298,138 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
 #endif
 
     // Compute the x and y starting points and limits for tiling
+
+    /* An Overview Of The Following Logic
+                     
+          A........ . . . . . . . . . . . . . .
+          :   +---:-------.-------.-------.----  /|\
+          :   |   :       .       .       .       |  nh 
+          :.......: . . . x . . . . . . . . . .  \|/   
+          .   |   .       .       .       .        
+          .   |   .       .  ###########  .        
+          . . . . . . . . . .#. . . . .#. . . .     
+          .   |   .       .  ###########  .      /|\
+          .   |   .       .       .       .       |  h
+          . . | . . . . . . . . . . . . . z . .  \|/
+          .   |   .       .       .       .    
+          |<-----nw------>|       |<--w-->|
+
+       ---- = the paddingArea edge. The padding is done relative to this
+              area. Outside the padding is the border. If the background
+              is positioned relative to the viewport ('fixed') then this
+              is the viewport edge.
+
+       .... = the primary tile.
+
+       . .  = the other tiles.
+
+       #### = the dirtyRect. This is the minimum region we want to cover.
+
+          A = The anchor point. This is the point at which the tile should
+              start. Always negative or zero.
+
+          x = x0 and y0 in the code. The point at which tiling must start
+              so that the fewest tiles are laid out while completly
+              covering the dirtyRect area.
+
+          z = x1 and y1 in the code. The point at which tiling must end so
+              that the fewest tiles are laid out while completly covering
+              the dirtyRect area.
+
+          w = the width of the tile (tileWidth).
+
+          h = the height of the tile (tileHeight).
+
+          n = the number of whole tiles that fit between 'A' and 'x'.
+              (the vertical n and the horizontal n are different)
+
+
+       Therefore, 
+
+          x0 = paddingArea.x + anchor.x + n * tileWidth;
+
+       ...where n is an integer greater or equal to 0 fitting:
+
+          n * tileWidth <= 
+                      dirtyRect.x - (paddingArea.x + anchor.x) <= 
+                                                             (n+1) * tileWidth
+
+       ...i.e.,
+
+          n <= (dirtyRect.x - (paddingArea.x + anchor.x)) / tileWidth < n + 1
+
+       ...which, treating the division as an integer divide rounding down, gives:
+
+          n = (dirtyRect.x - (paddingArea.x + anchor.x)) / tileWidth
+
+       Substituting into the original expression for x0:
+
+          x0 = paddingArea.x + anchor.x +
+               ((dirtyRect.x - (paddingArea.x + anchor.x)) / tileWidth) *
+               tileWidth;
+
+       From this x1 is determined,
+
+          x1 = x0 + m * tileWidth;
+
+       ...where m is an integer greater than 0 fitting:
+
+          (m - 1) * tileWidth <
+                            dirtyRect.x + dirtyRect.width - x0 <=
+                                                               m * tileWidth
+
+       ...i.e.,
+
+          m - 1 < (dirtyRect.x + dirtyRect.width - x0) / tileWidth <= m
+
+       ...which, treating the division as an integer divide, and making it
+          round up, gives:
+
+          m = (dirtyRect.x + dirtyRect.width - x0 + tileWidth - 1) / tileWidth
+
+       Substituting into the original expression for x1:
+
+          x1 = x0 + ((dirtyRect.x + dirtyRect.width - x0 + tileWidth - 1) /
+                     tileWidth) * tileWidth
+
+       The vertical case is analogous. If the background is fixed, then 
+       paddingArea.x and paddingArea.y are set to zero when finding the parent
+       viewport, above.
+
+    */
+
+    // first do the horizontal case
     nscoord x0, x1;
-    if (NS_STYLE_BG_ATTACHMENT_FIXED == aColor.mBackgroundAttachment) {
-      if (NS_STYLE_BG_REPEAT_X & repeat) {
-        x0 = ((dirtyRect.x - anchor.x) / tileWidth) * tileWidth + anchor.x;
-        x1 = x0 + xDistance + tileWidth;
-        if (0 != anchor.x) {
-          x1 += tileWidth;
-        }
-      }
-      else {
-        // For fixed attachment, the anchor is relative to the nearest scrolling
-        // ancestor (or the viewport)
-        x0 = anchor.x;
-        x1 = x0 + tileWidth;
-      }
+    if (repeat & NS_STYLE_BG_REPEAT_X) {
+      // When tiling in the x direction, adjust the starting position of the
+      // tile to account for dirtyRect.x. When tiling in x, the anchor.x value
+      // will be a negative value used to adjust the starting coordinate.
+      x0 = paddingArea.x + anchor.x + ((dirtyRect.x - (paddingArea.x + anchor.x)) / tileWidth) * tileWidth;
+      x1 = x0 + ((dirtyRect.x + dirtyRect.width - x0 + tileWidth - 1) / tileWidth) * tileWidth;
     }
     else {
-      if (NS_STYLE_BG_REPEAT_X & repeat) {
-        // When tiling in the x direction, adjust the starting position of the
-        // tile to account for dirtyRect.x. When tiling in x, the anchor.x value
-        // will be a negative value used to adjust the starting coordinate.
-        x0 = (dirtyRect.x / tileWidth) * tileWidth + anchor.x;
-        if(x0+tileWidth<dirtyRect.x)
-          x0+=tileWidth;
-        x1 = x0 + xDistance + tileWidth;
-        if (0 != anchor.x) {
-          x1 += tileWidth;
-        }
-      }
-      else {
-        // For scrolling attachment, the anchor is relative to the padding area
-        x0 = paddingArea.x + anchor.x;
-        x1 = x0 + tileWidth;
-      }
+      // For scrolling attachment, the anchor is relative to the padding area.
+      // For fixed attachment, paddingArea.x is set to zero and the anchor is 
+      // relative to the nearest scrolling ancestor (or the viewport).
+      x0 = paddingArea.x + anchor.x;
+      x1 = x0 + tileWidth;
     }
 
+    // now do all that again with the vertical case
     nscoord y0, y1;
-    if (NS_STYLE_BG_ATTACHMENT_FIXED == aColor.mBackgroundAttachment) {
-      if (NS_STYLE_BG_REPEAT_Y & repeat) {
-        y0 = ((dirtyRect.y - anchor.y) / tileHeight) * tileHeight + anchor.y;
-        y1 = y0 + yDistance + tileHeight;
-        if (0 != anchor.y) {
-          y1 += tileHeight;
-        }
-      }
-      else {
-        // For fixed attachment, the anchor is relative to the nearest scrolling
-        // ancestor (or the viewport)
-        y0 = anchor.y;
-        y1 = y0 + tileHeight;
-      }
+    if (repeat & NS_STYLE_BG_REPEAT_Y) {
+      // When tiling in the y direction, adjust the starting position of the
+      // tile to account for dirtyRect.y. When tiling in y, the anchor.y value
+      // will be a negative value used to adjust the starting coordinate.
+      y0 = paddingArea.y + anchor.y + ((dirtyRect.y - (paddingArea.y + anchor.y)) / tileHeight) * tileHeight;
+      y1 = y0 + ((dirtyRect.y + dirtyRect.height - y0 + tileHeight - 1) / tileHeight) * tileHeight;
     }
     else {
-      if (NS_STYLE_BG_REPEAT_Y & repeat) {
-        // When tiling in the y direction, adjust the starting position of the
-        // tile to account for dirtyRect.y. When tiling in y, the anchor.y value
-        // will be a negative value used to adjust the starting coordinate.
-        y0 = (dirtyRect.y / tileHeight) * tileHeight + anchor.y;
-        if(y0+tileHeight<dirtyRect.y)
-          y0+=tileHeight;
-        y1 = y0 + yDistance + tileHeight;
-        if (0 != anchor.y) {
-          y1 += tileHeight;
-        }
-      }
-      else {
-        // For scrolling attachment, the anchor is relative to the padding area
-        y0 = paddingArea.y + anchor.y;
-        y1 = y0 + tileHeight;
-      }
+      // For scrolling attachment, the anchor is relative to the padding area.
+      // For fixed attachment, paddingArea.y is set to zero and the anchor is 
+      // relative to the nearest scrolling ancestor (or the viewport).
+      y0 = paddingArea.y + anchor.y;
+      y1 = y0 + tileHeight;
     }
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
