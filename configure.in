@@ -3163,7 +3163,7 @@ dnl =
 dnl = Function reordering is off by default.
 dnl = 
 dnl ========================================================
-MOZ_REORDER=0
+MOZ_REORDER=
 MOZ_ARG_ENABLE_STRING(reorder,
 [  --enable-reorder        Enable function reordering ],
     [ if test "$enableval" != "no"; then
@@ -3180,7 +3180,7 @@ dnl =
 dnl = Timeline is off by default.
 dnl = 
 dnl ========================================================
-MOZ_TIMELINE=0
+MOZ_TIMELINE=
 MOZ_ARG_ENABLE_STRING(timeline,
 [  --enable-timeline Enable timeline ],
     [ if test "$enableval" != "no"; then
