@@ -184,16 +184,21 @@ unix/xlib/libviewer_xlib_s.a:
 
 $(PROGRAM)_gtk: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in unix/gtk/libviewer_gtk_s.a
 	$(CCC) $(CXXFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(GTK_LIBS) $(OS_LIBS) $(PROFILER_LIBS)
-
-	$(MOZ_POST_PROGRAM_COMMAND) $@
+ifdef ENABLE_STRIP
+	$(STRIP) $@
+endif
 
 $(PROGRAM)_qt: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in unix/qt/libviewer_qt_s.a
 	$(CCC) $(CXXFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(QT_LIBS) $(OS_LIBS) $(PROFILER_LIBS)
-	$(MOZ_POST_PROGRAM_COMMAND) $@
+ifdef ENABLE_STRIP
+	$(STRIP) $@
+endif
 
 $(PROGRAM)_xlib: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in unix/xlib/libviewer_xlib_s.a
 	$(CCC) $(CXXFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(XLIB_LIBS) $(OS_LIBS) $(PROFILER_LIBS)
-	$(MOZ_POST_PROGRAM_COMMAND) $@
+ifdef ENABLE_STRIP
+	$(STRIP) $@
+endif
 
 ifdef MOZ_ENABLE_GTK
 install:: $(PROGRAM)_gtk
