@@ -198,7 +198,7 @@ Usage(const char *progName)
 {
     fprintf(stderr, 
 
-"Usage: %s -n rsa_nickname -p port [-3DRTbmrvx] [-w password] [-t threads]\n"
+"Usage: %s -n rsa_nickname -p port [-3DNRTbmrvx] [-w password] [-t threads]\n"
 #ifdef NSS_ENABLE_ECC
 "         [-i pid_file] [-c ciphers] [-d dbdir] [-e ec_nickname] \n"
 "         [-f fortezza_nickname] [-L [seconds]] [-M maxProcs] [-l]\n"
@@ -221,6 +221,7 @@ Usage(const char *progName)
 "-x means use export policy.\n"
 "-L seconds means log statistics every 'seconds' seconds (default=30).\n"
 "-M maxProcs tells how many processes to run in a multi-process server\n"
+"-N means do NOT use the server session cache.  Incompatible with -M.\n"
 "-t threads -- specify the number of threads to use for connections.\n"
 "-i pid_file file to write the process id of selfserve\n"
 "-c ciphers   Letter(s) chosen from the following list\n"
@@ -635,6 +636,8 @@ PRBool useModelSocket  = PR_FALSE;
 PRBool disableSSL3     = PR_FALSE;
 PRBool disableTLS      = PR_FALSE;
 PRBool disableRollBack  = PR_FALSE;
+PRBool NoReuse         = PR_FALSE;
+PRBool hasSidCache     = PR_FALSE;
 
 static const char stopCmd[] = { "GET /stop " };
 static const char getCmd[]  = { "GET " };
@@ -1268,6 +1271,13 @@ server_main(
 	}
     }
 
+    if (NoReuse) {
+        rv = SSL_OptionSet(model_sock, SSL_NO_CACHE, 1);
+        if (rv < 0) {
+            errExit("SSL_OptionSet SSL_NO_CACHE");
+        }
+    }
+
     /* This cipher is not on by default. The Acceptance test
      * would like it to be. Turn this cipher on.
      */
@@ -1481,7 +1491,7 @@ main(int argc, char **argv)
     ** numbers, then capital letters, then lower case, alphabetical. 
     */
     optstate = PL_CreateOptState(argc, argv, 
-    	"2:3DL:M:RTbc:d:e:f:hi:lmn:op:rt:vw:xy");
+    	"2:3DL:M:NRTbc:d:e:f:hi:lmn:op:rt:vw:xy");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	++optionsFound;
 	switch(optstate->option) {
@@ -1506,6 +1516,8 @@ main(int argc, char **argv)
 	    if (maxProcs < 1)         maxProcs = 1;
 	    if (maxProcs > MAX_PROCS) maxProcs = MAX_PROCS;
 	    break;
+
+	case 'N': NoReuse = PR_TRUE; break;
 
 	case 'R': disableRollBack = PR_TRUE; break;
 
@@ -1596,6 +1608,11 @@ main(int argc, char **argv)
 	exit(7);
     }
 
+    if (NoReuse && maxProcs > 1) {
+	fprintf(stderr, "-M and -N options are mutually exclusive.\n");
+	exit(14);
+    }
+
     if (pidFile) {
 	FILE *tmpfile=fopen(pidFile,"w+");
 
@@ -1635,12 +1652,14 @@ main(int argc, char **argv)
 	rv = SSL_InheritMPServerSIDCache(envString);
 	if (rv != SECSuccess)
 	    errExit("SSL_InheritMPServerSIDCache");
+    	hasSidCache = PR_TRUE;
     } else if (maxProcs > 1) {
 	/* we're going to be the parent in a multi-process server.  */
 	listen_sock = getBoundListenSocket(port);
 	rv = SSL_ConfigMPServerSIDCache(NUM_SID_CACHE_ENTRIES, 0, 0, tmp);
 	if (rv != SECSuccess)
 	    errExit("SSL_ConfigMPServerSIDCache");
+    	hasSidCache = PR_TRUE;
 	beAGoodParent(argc, argv, maxProcs, listen_sock);
 	exit(99); /* should never get here */
     } else {
@@ -1649,9 +1668,13 @@ main(int argc, char **argv)
 	prStatus = PR_SetFDInheritable(listen_sock, PR_FALSE);
 	if (prStatus != PR_SUCCESS)
 	    errExit("PR_SetFDInheritable");
-	rv = SSL_ConfigServerSessionIDCache(NUM_SID_CACHE_ENTRIES, 0, 0, tmp);
-	if (rv != SECSuccess)
-	    errExit("SSL_ConfigServerSessionIDCache");
+	if (!NoReuse) {
+	    rv = SSL_ConfigServerSessionIDCache(NUM_SID_CACHE_ENTRIES, 
+	                                        0, 0, tmp);
+	    if (rv != SECSuccess)
+		errExit("SSL_ConfigServerSessionIDCache");
+	    hasSidCache = PR_TRUE;
+	}
     }
 
     lm = PR_NewLogModule("TestCase");
@@ -1775,8 +1798,9 @@ main(int argc, char **argv)
     free(nickName);
     free(passwd);
 
-    SSL_ShutdownServerSessionIDCache();
-
+    if (hasSidCache) {
+	SSL_ShutdownServerSessionIDCache();
+    }
     if (NSS_Shutdown() != SECSuccess) {
 	SECU_PrintError(progName, "NSS_Shutdown");
 	PR_Cleanup();
