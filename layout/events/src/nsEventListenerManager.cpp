@@ -809,6 +809,10 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
   if (aFlags & NS_EVENT_FLAG_INIT) {
     aFlags |= (NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_CAPTURE);
   }
+  //Set the value of the internal PreventDefault flag properly based on aEventStatus
+  if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
+    aEvent->flags |= NS_EVENT_FLAG_NO_DEFAULT;
+  }
 
   /* Without this addref, certain events, notably ones bound to
      keys which cause window deletion, can destroy this object
