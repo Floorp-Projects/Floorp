@@ -49,7 +49,7 @@ nsUNIXCharset::nsUNIXCharset()
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
 
-  char* locale = setlocale(LC_ALL, "");
+  char* locale = setlocale(LC_CTYPE, NULL);
   if(locale) 
   {
       nsAutoString propertyURL("resource://res/unixcharset.properties");
@@ -62,7 +62,7 @@ nsUNIXCharset::nsUNIXCharset()
 
           nsresult res = info->Get(platformLocaleKey, mCharset);
           if(NS_FAILED(res)) {
-              nsAutoString localeKey("locale.");
+              nsAutoString localeKey("locale.all.");
               localeKey.Append(locale);
               nsresult res = info->Get(localeKey, mCharset);
               if(NS_SUCCEEDED(res))  {
