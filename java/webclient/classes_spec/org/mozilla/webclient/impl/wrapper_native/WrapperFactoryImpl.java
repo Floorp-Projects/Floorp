@@ -138,27 +138,13 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 	
 	BrowserControl result = new BrowserControlImpl(this);
 	final int nativeBrowserControl = nativeCreateBrowserControl();
-	Runnable runnable = new Runnable() {
-		public void run() {
+	eventThread.pushBlockingWCRunnable(new WCRunnable() {
+		public Object run() {
 		    WrapperFactoryImpl.this.nativeInitBrowserControl(nativeWrapperFactory, nativeBrowserControl);
+		    return null;
 		}
-	    };
-	eventThread.pushNotifyRunnable(runnable);
+	    });
 
-	synchronized (this) {
-	    try {
-		wait();
-	    }
-	    catch (Exception e) {
-		System.out.println("WrapperFactoryImpl.initialize(): interrupted while waiting\n\t for NativeEventThread to notify(): " + e + 
-				   " " + e.getMessage());
-	    }
-	}
-	Exception e = eventThread.getAndClearException();
-	if (null != e) {
-	    throw new IllegalStateException(e.getMessage());
-	}
-	
 	browserControls.put(result, new Integer(nativeBrowserControl));
 	return result;
     }
@@ -169,27 +155,12 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 
 	if (null != (nativeBc = (Integer) browserControls.get(toDelete))) {
 	    final int nativeBrowserControl = nativeBc.intValue();
-	
-	    Runnable runnable = new Runnable() {
-		    public void run() {
+	    eventThread.pushBlockingWCRunnable(new WCRunnable() {
+		    public Object run() {
 			WrapperFactoryImpl.this.nativeDestroyBrowserControl(nativeBrowserControl);
+			return null;
 		    }
-		};
-	    eventThread.pushNotifyRunnable(runnable);
-	    
-	    synchronized (this) {
-		try {
-		    wait();
-		}
-		catch (Exception e) {
-		    System.out.println("WrapperFactoryImpl.deleteBrowserControl(): interrupted while waiting\n\t for NativeEventThread to notify(): " + e + 
-				       " " + e.getMessage());
-		}
-	    }
-	    Exception e = eventThread.getAndClearException();
-	    if (null != e) {
-		throw new RuntimeException(e);
-	    }
+		});
 	}
     }
     
@@ -288,16 +259,15 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 					    nativeWrapperFactory);
 	
 	final String finalStr = new String(verifiedBinDirAbsolutePath);
-	Runnable runnable = new Runnable() {
+	
+	eventThread.pushRunnable(new Runnable() {
 		public void run() {
 		    WrapperFactoryImpl.this.nativeAppInitialize(finalStr,
 								nativeWrapperFactory,
 								eventThread);
 		}
-	    };
+	    });
 	
-	eventThread.pushNotifyRunnable(runnable);
-
 	eventThread.start();
 	synchronized (this) {
 	    try {
@@ -306,11 +276,8 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 	    catch (Exception e) {
 		System.out.println("WrapperFactoryImpl.initialize(): interrupted while waiting\n\t for NativeEventThread to notify(): " + e + 
 				   " " + e.getMessage());
+		throw new UnsatisfiedLinkError(e.getMessage());
 	    }
-	}
-	Exception e = eventThread.getAndClearException();
-	if (null != e) {
-	    throw new UnsatisfiedLinkError(e.getMessage());
 	}
 	
 	//
@@ -323,34 +290,24 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 	bookmarks = new BookmarksImpl(this);
 	Assert.assert_it(null != bookmarks);
 
-	runnable = new Runnable() {
-		public void run() {
-		    
-		    ((Service)WrapperFactoryImpl.this.profileManager).startup();
-		    ((Service)WrapperFactoryImpl.this.prefs).startup();
-		    
-		    ((Service)WrapperFactoryImpl.this.bookmarks).startup();
-		    
-		    WrapperFactoryImpl.this.nativeAppSetup(nativeWrapperFactory);
-		}
-	    };
-	eventThread.pushNotifyRunnable(runnable);
-
-	synchronized (this) {
-	    // This causes the above Runnable to be executed.
-	    try {
-		wait();
-	    }
-	    catch (Exception exp) {
-		System.out.println("WrapperFactoryImpl.initialize(): interrupted while waiting\n\t for NativeEventThread to notify(): " + exp + 
-				   " " + exp.getMessage());
-	    }
-	}
-	e = eventThread.getAndClearException();
-	if (null != e) {
-	    throw new UnsatisfiedLinkError(e.getMessage());
-	}
 	initialized = true;
+	try {
+	    eventThread.pushBlockingWCRunnable(new WCRunnable() {
+		    public Object run() {
+			
+			((Service)WrapperFactoryImpl.this.profileManager).startup();
+			((Service)WrapperFactoryImpl.this.prefs).startup();
+			((Service)WrapperFactoryImpl.this.bookmarks).startup();
+			
+			WrapperFactoryImpl.this.nativeAppSetup(nativeWrapperFactory);
+			return null;
+		    }
+		});
+	}
+	catch (RuntimeException e) {
+	    initialized = false;
+	    System.out.println("WrapperFactoryImpl.initialize: Can't start up singleton services: " + e + " " + e.getMessage());
+	}
     }
     
     public void verifyInitialized() throws IllegalStateException
@@ -362,8 +319,8 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 
 public void terminate() throws Exception
 {
-    eventThread.pushNotifyRunnable(new Runnable() {
-	    public void run() {
+    eventThread.pushBlockingWCRunnable(new WCRunnable() {
+	    public Object run() {
 		Assert.assert_it(null != bookmarks);
 		((Service)bookmarks).shutdown();
 		((ImplObject)bookmarks).delete();
@@ -379,32 +336,14 @@ public void terminate() throws Exception
 		((ImplObject)profileManager).delete();
 		profileManager = null;
 		nativeTerminate(nativeWrapperFactory);
+		return null;
 	    }
 	});
-
-    synchronized (this) {
-	try {
-	    wait();
-	}
-	catch (Exception e) {
-	    System.out.println("WrapperFactoryImpl.initialize(): interrupted while waiting\n\t for NativeEventThread to notify(): " + e + 
-			       " " + e.getMessage());
-	}
-    }
-    Exception e = eventThread.getAndClearException();
-    if (null != e) {
-	throw new IllegalStateException(e.getMessage());
-    }
+    
     eventThread.delete();
     eventThread = null;
-
 }
 
-    public Object getNativeEventThread() {
-	verifyInitialized();
-	return eventThread;
-    }
-    
     public int getNativeWrapperFactory() {
 	return nativeWrapperFactory;
     }

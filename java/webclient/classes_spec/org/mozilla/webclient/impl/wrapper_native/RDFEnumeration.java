@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * 
+/* 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -103,7 +102,12 @@ public RDFEnumeration(int yourNativeContext,
 
 protected void finalize() throws Throwable
 {
-  nativeFinalize(nativeContext);
+    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	    public Object run() {
+		nativeFinalize(RDFEnumeration.this.nativeContext);
+		return null;
+	    }
+	});
     super.finalize();
 }
 
@@ -114,19 +118,35 @@ protected void finalize() throws Throwable
 public boolean hasMoreElements()
 {
     Assert.assert_it(-1 != nativeRDFNode);
-    return nativeHasMoreElements(nativeContext, nativeRDFNode);
+    Boolean result = (Boolean)
+	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+		public Object run() {
+		    Boolean result = 
+			new Boolean(nativeHasMoreElements(RDFEnumeration.this.nativeContext, 
+							  RDFEnumeration.this.nativeRDFNode));
+		    return result;
+		}
+	    });
+    return result.booleanValue();
 }
 
 public Object nextElement()
 {
     Assert.assert_it(null != parent);
     Object result = null;
-    int nextNativeRDFNode;
-
-    if (-1 != (nextNativeRDFNode = nativeNextElement(nativeContext,
-						     nativeRDFNode))) {
-      result = parent.newRDFTreeNode(nativeContext,
-				     nextNativeRDFNode, parent);
+    Integer nextNativeRDFNode = (Integer)
+	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+		public Object run() {
+		    Integer result = 
+			new Integer(nativeNextElement(RDFEnumeration.this.nativeContext,
+						      RDFEnumeration.this.nativeRDFNode));
+		    return result;
+		}
+	    });
+    
+    if (-1 != nextNativeRDFNode.intValue()) {
+	result = parent.newRDFTreeNode(nativeContext,
+				       nextNativeRDFNode.intValue(), parent);
     }
 
     return result;

@@ -47,7 +47,7 @@ import org.mozilla.webclient.impl.WrapperFactory;
 
 /**
  * <p>This is a singleton class.  All native events pass thru this class
- * by virtue of the {@link #pushRunnable} or {@link pushNotifyRunnable}
+ * by virtue of the {@link #pushRunnable} or {@link pushBlockingWCRunnable}
  * methods.</p>
  */
 
@@ -56,18 +56,17 @@ public class NativeEventThread extends Thread {
     //
     // Class variables
     //
+
+    static NativeEventThread instance = null;
     
     //
     // Attribute ivars
     //
 
-    /**
-     * store the exception property, set when running a Runnable causes
-     * an exception.
-     */
+    private Object blockingResult;
 
-    private Exception exception;
-    
+    private Exception blockingException;
+
     //
     // Relationship ivars
     //
@@ -77,7 +76,7 @@ public class NativeEventThread extends Thread {
     
     private BrowserControlCanvas browserControlCanvas;
     
-    private Stack runnablesWithNotify;
+    private Stack blockingRunnables;
     private Stack runnables;
     
     
@@ -93,12 +92,14 @@ public class NativeEventThread extends Thread {
 			     WrapperFactory yourFactory,
 			     int yourNativeWrapperFactory) {
 	super(threadName);
+	Assert.assert_it(null == instance);
+	instance = this;
 	ParameterCheck.nonNull(yourFactory);
 	
 	wrapperFactory = yourFactory;
 	nativeWrapperFactory = yourNativeWrapperFactory;
 	
-	runnablesWithNotify = new Stack();
+	blockingRunnables = new Stack();
 	runnables = new Stack();
     }
     
@@ -127,33 +128,18 @@ public class NativeEventThread extends Thread {
 	wrapperFactory = null;
     }
 
-    public Exception getAndClearException() {
-	synchronized (this) {
-	    Exception result = exception;
-	    exception = null;
-	}
-	return exception;
-    }
-
-    public void setException(Exception e) {
-	synchronized (this) {
-	    exception = e;
-	}
-    }
-    
     //
     // Methods from Thread
     //
     
 /**
 
- * This method is the heart of webclient.  It is called from
- * {@link WrapperFactoryImpl#getNativeEventThread}.  It calls
- * nativeStartup, which does the per-window initialization, including
- * creating the native event queue which corresponds to this instance,
- * then enters into an infinite loop where processes native events, then
- * checks to see if there are any listeners to add, and adds them if
- * necessary.
+ * This method is the heart of webclient.  It is called indirectly from
+ * {@link WrapperFactoryImpl#initialize}.  It calls nativeStartup, which
+ * does the per-window initialization, including creating the native
+ * event queue which corresponds to this instance, then enters into an
+ * infinite loop where processes native events, then checks to see if
+ * there are any listeners to add, and adds them if necessary.
 
  * @see nativeProcessEvents
 
@@ -164,7 +150,16 @@ public class NativeEventThread extends Thread {
 public void run()
 {
     // our owner must have put an event in the queue 
-    Assert.assert_it(!runnablesWithNotify.empty());
+    Assert.assert_it(!runnables.empty());
+    ((Runnable)runnables.pop()).run();
+    synchronized (wrapperFactory) {
+	try {
+	    wrapperFactory.notify();
+	}
+	catch (Exception e) {
+	    System.out.println("NativeEventThread.run: exception trying to send notify() to WrapperFactoryImpl on startup:" + e + " " + e.getMessage());
+	}
+    }
 
     //
     // Execute the event-loop.
@@ -193,16 +188,32 @@ public void run()
 	    if (!runnables.empty()) {
 		((Runnable)runnables.pop()).run();
 	    }
-	    if (!runnablesWithNotify.empty()) {
-		((Runnable)runnablesWithNotify.pop()).run();
-		synchronized(wrapperFactory) {
-		    try {
-			wrapperFactory.notify();
-		    }
-		    catch (Exception e) {
-			System.out.println("NativeEventThread.run: Exception: trying to send notify() to wrapperFactory: " + e + " " + e.getMessage());
-		    }
+	    if (!blockingRunnables.empty()) {
+		try {
+		    blockingException = null;
+		    blockingResult = 
+			((WCRunnable)blockingRunnables.pop()).run();
 		}
+		catch (RuntimeException e) {
+		    blockingException = e;
+		}
+		// notify the pushBlockingWCRunnable() method.
+		try {
+		    notify();
+		}
+		catch (Exception e) {
+		    System.out.println("NativeEventThread.run: Exception: trying to notify for blocking result:" + e + " " + e.getMessage());
+		}
+		// wait for the result to be grabbed.  This prevents the
+		// results from getting mixed up.
+		try {
+		    wait();
+		}
+		catch (Exception e) {
+		    System.out.println("NativeEventThread.run: Exception: trying to waiting for pushBlockingWCRunnable:" + e + " " + e.getMessage());
+		}
+
+		
 	    }
 	    nativeProcessEvents(nativeWrapperFactory);
         }
@@ -223,10 +234,32 @@ public void run()
 	}
     }
     
-    void pushNotifyRunnable(Runnable toInvoke) {
+    Object pushBlockingWCRunnable(WCRunnable toInvoke) {
+	Object result = null;
+	RuntimeException e = null;
 	synchronized (this) {
-	    runnablesWithNotify.push(toInvoke);
+	    blockingRunnables.push(toInvoke);
+	    try {
+		wait();
+	    }
+	    catch (Exception se) {
+		System.out.println("NativeEventThread.pushBlockingWCRunnable: Exception: while waiting for blocking result: " + se + "  " + se.getMessage());
+	    }
+	    result = blockingResult;
+	    if (null != blockingException) {
+		e = new RuntimeException(blockingException);
+	    }
+	    try {
+		notify();
+	    }
+	    catch (Exception se) {
+		System.out.println("NativeEventThread.pushBlockingWCRunnable: Exception: trying to send notify() to NativeEventThread: " + se + "  " + se.getMessage());
+	    }
 	}
+	if (null != e) {
+	    throw e;
+	}
+	return result;
     }
 
 /**

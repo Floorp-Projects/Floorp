@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * 
+/* 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -85,13 +84,12 @@ public void loadURL(String absoluteURL)
     final int bc = getNativeBrowserControl();
     final String url = new String(absoluteURL);
     Assert.assert_it(-1 != bc);
-
-    Runnable loadURL = new Runnable() {
-      public void run() {
-          NavigationImpl.this.nativeLoadURL(bc, url);
-      }
-    };
-    getNativeEventThread().pushRunnable(loadURL);
+    
+    NativeEventThread.instance.pushRunnable(new Runnable() {
+	    public void run() {
+		NavigationImpl.this.nativeLoadURL(bc, url);
+	    }
+	});
 }
 
 public void loadFromStream(InputStream stream, String uri,
@@ -228,7 +226,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("NavigationImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: NavigationImpl.java,v 1.4 2004/04/15 22:58:06 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: NavigationImpl.java,v 1.5 2004/04/17 21:25:11 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

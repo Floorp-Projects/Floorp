@@ -452,7 +452,6 @@ static int PR_CALLBACK prefChanged(const char *name, void *closure)
     if (nsnull == name || nsnull == closure) {
         return NS_ERROR_NULL_POINTER;
     }
-    nsresult rv;
     int result;
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
     peStruct *pes = (peStruct *) closure;

@@ -81,7 +81,7 @@ public EventRegistrationImpl(WrapperFactory yourFactory,
     super(yourFactory, yourBrowserControl);
     
     // pull out the NativeEventThread from the WrapperFactory
-    nativeEventThread = getNativeEventThread();
+    nativeEventThread = NativeEventThread.instance;
 }
 
 public void delete()
@@ -265,7 +265,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("EventRegistrationImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.4 2004/04/15 22:58:06 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.5 2004/04/17 21:25:11 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* 
  * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -46,45 +46,76 @@ public ProfileManagerImpl(WrapperFactory yourFactory)
 }
 
 public void startup() {
+    Assert.assert_it(isNativeEventThread());
     nativeStartup(getWrapperFactory().getNativeWrapperFactory(), null, null);
 }
 
 public void shutdown() {
+    Assert.assert_it(isNativeEventThread());
     nativeShutdown(getWrapperFactory().getNativeWrapperFactory());
 }
 
 public int getProfileCount()
 {
-    return nativeGetProfileCount(getWrapperFactory().getNativeWrapperFactory());
+    Integer result = (Integer)
+	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+		public Object run() {
+		    Integer count = new Integer(nativeGetProfileCount(getWrapperFactory().getNativeWrapperFactory()));
+		    return count;
+		}
+	    });
+    return result.intValue();
 }
 
 public String [] getProfileList()
 {
-    String [] list = null;
-    list = nativeGetProfileList(getWrapperFactory().getNativeWrapperFactory());
+    String [] list = 
+	(String []) NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+		public Object run() {
+		    Object result = nativeGetProfileList(getWrapperFactory().getNativeWrapperFactory());
+		    return result;
+		}
+	    });
     return list;
 }
 
 public boolean profileExists(String profileName)
 {
-    boolean exists = false;
-    exists = nativeProfileExists(getWrapperFactory().getNativeWrapperFactory(),
-                                 profileName);
-    return exists;
+    ParameterCheck.nonNull(profileName);
+    final String finalStr = new String(profileName);
+    Boolean exists = (Boolean) NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	    public Object run() {
+		Boolean result = new Boolean(nativeProfileExists(getWrapperFactory().getNativeWrapperFactory(),
+								 finalStr));
+		return result;
+	    }
+	});
+    return exists.booleanValue();
 }
 
 public String getCurrentProfile()
 {
-    String currProfile = null;
-    currProfile = 
-        nativeGetCurrentProfile(getWrapperFactory().getNativeWrapperFactory());
+    String currProfile = (String)
+	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	    public Object run() {
+		Object result = nativeGetCurrentProfile(getWrapperFactory().getNativeWrapperFactory());
+		return result;
+	    }
+	});
     return currProfile;
 }
 
 public void setCurrentProfile(String profileName)
 {
-    nativeSetCurrentProfile(getWrapperFactory().getNativeWrapperFactory(),
-                            profileName);
+    ParameterCheck.nonNull(profileName);
+    final String finalStr = new String(profileName);
+    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	    public Object run() {
+		nativeSetCurrentProfile(getWrapperFactory().getNativeWrapperFactory(),
+					finalStr);
+		return null;
+	    }
+	});
 }
 
 public void createNewProfile(String profileName, 
@@ -92,21 +123,50 @@ public void createNewProfile(String profileName,
                              String langcode, 
                              boolean useExistingDir)
 {
-    nativeCreateNewProfile(getWrapperFactory().getNativeWrapperFactory(),
-                           profileName, nativeProfileDir, langcode, 
-                           useExistingDir);
+    ParameterCheck.nonNull(profileName);
+    final String finalProfileName = new String(profileName);
+    final String finalProfileDir = (null != nativeProfileDir) ?
+	new String(nativeProfileDir) : null;
+    final String finalLangcode = (null != langcode) ? 
+	new String(langcode) : null;
+    final boolean finalExistingDir = useExistingDir;
+    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	    public Object run() {
+		nativeCreateNewProfile(getWrapperFactory().getNativeWrapperFactory(),
+				       finalProfileName, finalProfileDir, 
+				       finalLangcode, finalExistingDir);
+		return null;
+	    }
+	});
 }
 
 public void renameProfile(String currName, String newName)
 {
-    nativeRenameProfile(getWrapperFactory().getNativeWrapperFactory(),
-                        currName, newName);
+    ParameterCheck.nonNull(currName);
+    ParameterCheck.nonNull(newName);
+    final String finalCurrName = new String(currName);
+    final String finalNewName = new String(newName);
+    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	    public Object run() {
+		nativeRenameProfile(getWrapperFactory().getNativeWrapperFactory(),
+				    finalCurrName, finalNewName);
+		return null;
+	    }
+	});
 }
 
 public void deleteProfile(String profileName, boolean canDeleteFiles)
 {
-    nativeDeleteProfile(getWrapperFactory().getNativeWrapperFactory(),
-                        profileName, canDeleteFiles);
+    ParameterCheck.nonNull(profileName);
+    final String finalProfileName = new String(profileName);
+    final boolean finalCanDeleteFiles = canDeleteFiles;
+    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	    public Object run() {
+		nativeDeleteProfile(getWrapperFactory().getNativeWrapperFactory(),
+				    finalProfileName, finalCanDeleteFiles);
+		return null;
+	    }
+	});
 }
 
 public void cloneProfile(String currName)

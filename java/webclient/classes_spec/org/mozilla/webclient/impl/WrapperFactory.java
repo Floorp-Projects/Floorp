@@ -77,6 +77,4 @@ public interface WrapperFactory {
      */
     
     public int getNativeBrowserControl(BrowserControl bc);
-
-    public Object getNativeEventThread();
 } 

@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * 
+/* 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -106,31 +105,55 @@ public void setPref(String prefName, String prefValue)
     if (null == prefName) {
         return;
     }
+    final String finalName = new String(prefName);
     // determine the type of pref value: String, boolean, integer
     try {
-        Integer intVal = Integer.valueOf(prefValue);
-        nativeSetIntPref(getWrapperFactory().getNativeWrapperFactory(), prefName, intVal.intValue());
+        final Integer intVal = Integer.valueOf(prefValue);
+        NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+		public Object run() {
+		    nativeSetIntPref(getWrapperFactory().getNativeWrapperFactory(), finalName, intVal.intValue());
+		    return null;
+		}
+	    });
     }
     catch (NumberFormatException e) {
         // it's not an integer
         if (null != prefValue &&
             (prefValue.equals("true") || prefValue.equals("false"))) {
-            Boolean boolVal = Boolean.valueOf(prefValue);
-            nativeSetBoolPref(getWrapperFactory().getNativeWrapperFactory(), prefName, 
-                              boolVal.booleanValue());
+            final Boolean boolVal = Boolean.valueOf(prefValue);
+	    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable(){
+		    public Object run() {
+			nativeSetBoolPref(getWrapperFactory().getNativeWrapperFactory(), 
+					  finalName, boolVal.booleanValue());
+			return null;
+		    }
+		});
         }
         else {
             // it must be a string
-            nativeSetUnicharPref(getWrapperFactory().getNativeWrapperFactory(), prefName, prefValue);
-        }
+	    final String finalValue = (null != prefValue) ? 
+		new String(prefValue) : null;
+	    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable(){
+		    public Object run() {
+			nativeSetUnicharPref(getWrapperFactory().getNativeWrapperFactory(), finalName, finalValue);
+			return null;
+		    }
+		});
+	}
     }
 }
  
 public Properties getPrefs()
 {
-    props = nativeGetPrefs(getWrapperFactory().getNativeWrapperFactory(), props);
-    //Properties result = new Properties();
-    //	result.put("webclientpref", "webclient_value");
+    props = (Properties)
+	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+		public Object run() {
+		    Properties result = 
+			nativeGetPrefs(getWrapperFactory().getNativeWrapperFactory(), 
+				       PreferencesImpl.this.props);
+		    return result;
+		}
+	    });
     
     return props;
 }

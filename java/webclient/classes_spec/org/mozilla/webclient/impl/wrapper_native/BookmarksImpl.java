@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * 
+/* 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -77,10 +76,12 @@ public BookmarksImpl(WrapperFactory yourFactory)
 }
 
 public void startup() {
+    Assert.assert_it(isNativeEventThread());
     nativeStartup(getWrapperFactory().getNativeWrapperFactory());
 }
 
 public void shutdown() {
+    Assert.assert_it(isNativeEventThread());
     nativeShutdown(getWrapperFactory().getNativeWrapperFactory());
 }
 
@@ -152,16 +153,24 @@ public TreeModel getBookmarks() throws IllegalStateException
     getWrapperFactory().verifyInitialized();
 
     if (null == bookmarksTree) {
-        int nativeBookmarks;
         TreeNode root;
-        if (-1 == 
-            (nativeBookmarks = 
-             nativeGetBookmarks(getWrapperFactory().getNativeWrapperFactory()))) {
+        Integer nativeBookmarks = (Integer)
+            NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+		    public Object run() {
+			Integer result = 
+			    new Integer(nativeGetBookmarks(getWrapperFactory().
+							   getNativeWrapperFactory()));
+			return result;
+		    }
+		});
+	
+        if (-1 == nativeBookmarks.intValue()) {
             throw new IllegalStateException("BookmarksImpl.getBookmarks(): Can't get bookmarks from native browser.");
         }
         // if we can't create a root, or we can't create a tree
         if ((null == (root = new BookmarkEntryImpl(getWrapperFactory().getNativeWrapperFactory(), 
-                                                   nativeBookmarks, null))) || 
+                                                   nativeBookmarks.intValue(),
+						   null))) || 
             (null == (bookmarksTree = new DefaultTreeModel(root)))) {
             throw new IllegalStateException("BookmarksImpl.getBookmarks(): Can't create RDFTreeModel.");
         }
@@ -181,13 +190,23 @@ public void removeBookmark(BookmarkEntry bookmark)
 
 public BookmarkEntry newBookmarkEntry(String url)
 {
+    ParameterCheck.nonNull(url);
     BookmarkEntry result = null;
+    final String finalUrl = new String(url);
     getBookmarks();
-    int newNode;
-
-    if (-1 != (newNode = nativeNewRDFNode(getNativeBrowserControl(), url, false))) {
+    Integer newNode = (Integer)
+	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+		public Object run() {
+		    Integer result = 
+			new Integer(nativeNewRDFNode(getNativeBrowserControl(),
+						     finalUrl, false));
+		    return result;
+		}
+	    });
+    
+    if (-1 != newNode.intValue()) {
         result = new BookmarkEntryImpl(getNativeBrowserControl(),
-                                       newNode, null);
+                                       newNode.intValue(), null);
         // use put instead of setProperty for jdk1.1.x compatibility.
         result.getProperties().put(BookmarkEntry.NAME, url);
         result.getProperties().put(BookmarkEntry.URL, url);

@@ -99,9 +99,9 @@ protected int getNativeBrowserControl() {
     return nativeWebShell;
 }
 
-protected NativeEventThread getNativeEventThread() {
-    return (NativeEventThread) 
-        getWrapperFactory().getNativeEventThread();
+protected boolean isNativeEventThread() {
+    return (Thread.currentThread() == NativeEventThread.instance);
 }
+    
 
 } // end of class ImplObject
