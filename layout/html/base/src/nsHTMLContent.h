@@ -112,6 +112,10 @@ public:
 
   virtual nsIContentDelegate* GetDelegate(nsIPresContext* aCX);
 
+  virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
+                                          nsHTMLValue& aValue,
+                                          nsString& aResult) const = 0;
+
   static void NewGlobalAtom(const char* aString, nsIAtom** aAtomResult);
 
   static void ReleaseGlobalAtom(nsIAtom** aAtomResult);
