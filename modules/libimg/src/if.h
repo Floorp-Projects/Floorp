@@ -22,7 +22,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if.h,v 3.17 1999/12/03 01:07:49 pnunn%netscape.com Exp $
+ * $Id: if.h,v 3.18 2000/02/12 01:49:35 pnunn%netscape.com Exp $
  */
 
 #ifndef _if_h
@@ -162,7 +162,7 @@ enum icstate {
 
 /* Force memory cache to be flushed ? */
 #define FORCE_RELOAD(reload_method)                                           \
- (((reload_method)==NET_NORMAL_RELOAD) || ((reload_method)==NET_SUPER_RELOAD))
+    (reload_method > IMG_NTWK_SERVER)
 
 /* Simple list of image contexts. */
 struct il_context_list {

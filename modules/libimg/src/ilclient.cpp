@@ -429,10 +429,9 @@ il_get_container(IL_GroupContext *img_cx,
     ic = il_find_in_cache(img_cx->display_type, hash, image_url,
                           background_color, req_depth, req_width, req_height);
     
-    if (ic) {
+    if (ic) { 
        
-        /* We already started to discard this image container.
-           Make a new one.*/
+        /* This ic is being destroyed. Need a new one */
         if ((ic->state == IC_ABORT_PENDING))
             ic = NULL;
 
@@ -444,14 +443,9 @@ il_get_container(IL_GroupContext *img_cx,
         /* 2) Their namespace crosses document boundaries, so caching    */
         /*    could result in incorrect behavior.                        */
 
-        else if((cache_reload_policy == NET_SUPER_RELOAD) ||
-        ((cache_reload_policy == NET_NORMAL_RELOAD) && (!ic->forced)) ||
-                 (cache_reload_policy != NET_CACHE_ONLY_RELOAD &&
-                  ic->expires && (time(NULL) > ic->expires))
-        ) {
-            /* Get rid of the old copy of the image that we're replacing. */
-            if (!ic->is_in_use) 
-            {
+            else if(cache_reload_policy > IMG_NTWK_SERVER){
+            /* Don't use old copy and purge it from cache.*/
+            if (!ic->is_in_use) {
                 il_removefromcache(ic);
                 il_delete_container(ic);
             }

@@ -1482,7 +1482,7 @@ il_image_complete(il_container *ic)
                     ILTRACE(1,("il: loop %s", ic->url_address));
 
                     if(ic->net_cx){ //ptn test
-                    netRequest = ic->net_cx->CreateURL(ic->fetch_url, NET_DONT_RELOAD);
+                    netRequest = ic->net_cx->CreateURL(ic->fetch_url, IMG_NTWK_SERVER);
                     if (!netRequest) {   /* OOM */
                         il_container_complete(ic);
                         break;
@@ -1542,8 +1542,7 @@ il_image_complete(il_container *ic)
                         /* Call to netlib for net cache data happens here. */
                                   netRequest->SetBackgroundLoad(PR_TRUE);
                                   reader = IL_NewNetReader(ic);
-                        (void) ic->net_cx->GetURL(ic->url, NET_CACHE_ONLY_RELOAD /*NET_DONT_RELOAD*/, 
-                                                  reader);
+                        (void) ic->net_cx->GetURL(ic->url, IMG_NTWK_SERVER, reader);
                         /* Release reader, GetURL will keep a ref to it. */
                         NS_RELEASE(reader);
                     } else {
