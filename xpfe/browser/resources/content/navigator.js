@@ -254,7 +254,7 @@ function Shutdown()
 /* START OF UNNECESSARY CODE */
         if ( !explicitURL ) {
             try {
-                var handler = Components.classes['component://netscape/appshell/component/browser/cmdhandler'];
+                var handler = Components.classes['component://netscape/commandlinehander/general-startup-browser'];
                 handler = handler.getService();
                 handler = handler.QueryInterface(Components.interfaces.nsICmdLineHandler);
                 if (handler) {
