@@ -342,23 +342,6 @@ void nsWindow::InitCallbacks(char * aName)
                            GTK_SIGNAL_FUNC(handle_size_allocate),
                            this);
 
-  InstallButtonPressSignal(mWidget);
-  InstallButtonReleaseSignal(mWidget);
-
-  InstallMotionNotifySignal(mWidget);
-
-  InstallEnterNotifySignal(mWidget);
-  InstallLeaveNotifySignal(mWidget);
-
-  // Drag & Drop events.
-  InstallDragBeginSignal(mWidget);
-  InstallDragMotionSignal(mWidget);
-  InstallDragDropSignal(mWidget);
-
-  // Focus
-  InstallFocusInSignal(mWidget);
-  InstallFocusOutSignal(mWidget);
-
   // realize on toplevel
   if (mIsToplevel && mShell)
     InstallRealizeSignal(mShell);
@@ -511,18 +494,18 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
 #endif
     static NS_DEFINE_CID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID,
-					      nsnull,
-					      nsIRenderingContext::GetIID(),
-					      (void **)&event.renderingContext))
-      {
-        event.renderingContext->Init(mContext, this);
-        result = DispatchWindowEvent(&event);
-        NS_RELEASE(event.renderingContext);
-      }
+                                                    nsnull,
+                                                    nsCOMTypeInfo<nsIRenderingContext>::GetIID(),
+                                                    (void **)&event.renderingContext))
+    {
+      event.renderingContext->Init(mContext, this);
+      result = DispatchWindowEvent(&event);
+      NS_RELEASE(event.renderingContext);
+    }
     else
-      {
-        result = PR_FALSE;
-      }
+    {
+      result = PR_FALSE;
+    }
     
     //NS_RELEASE(event.widget);
   }
@@ -762,6 +745,10 @@ NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
 
 NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 {
+#ifdef DEBUG_pavlov
+  g_print("     nsWindow::Invalidate(nr)  (this=%p , aIsSynchronous=%i)\n",
+          this, aIsSynchronous);
+#endif
   if (mWidget == nsnull) {
     return NS_OK; // mWidget will be null during printing. 
   }
@@ -796,6 +783,10 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 
 NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
+#ifdef DEBUG_pavlov
+  g_print("     nsWindow::Invalidate(wr)  (this=%p, x=%i , y=%i , width=%i , height = %i , aIsSynchronous=%i)\n",
+          this, aRect.x, aRect.y, aRect.width, aRect.height, aIsSynchronous);
+#endif
   if (mWidget == nsnull) {
     return NS_OK;  // mWidget is null during printing
   }
