@@ -419,11 +419,19 @@ sub parse_args {
             
         } elsif ($option eq "p") {
             $opt_suite_path = $value;
-            if (!($opt_suite_path =~ /[\/\\]$/)) {
-                $opt_suite_path .= "/";
+
+            if ($os_type eq "MAC") {
+                if (!($opt_suite_path =~ /\:$/)) {
+                    $opt_suite_path .= ":";
+                }
+            } else {
+                if (!($opt_suite_path =~ /[\/\\]$/)) {
+                    $opt_suite_path .= "/";
+                }
             }
+
             &dd ("opt: setting suite path to '$opt_suite_path'.");
-            
+
         } elsif ($option eq "s") {
             $opt_shell_path = $value;
             &dd ("opt: setting shell path to '$opt_shell_path'.");
