@@ -28,6 +28,7 @@
 #include "nsHTMLIIDs.h"
 #include "nsHTMLValue.h"
 #include "nsReflowCommand.h"
+#include "nsCSSLayout.h"
 
 // XXX what do we do with catastrophic errors (rv < 0)? What is the
 // state of the reflow world after such an error?
@@ -35,6 +36,7 @@
 #undef NOISY_REFLOW
 
 static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
+static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
 static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 
 static NS_DEFINE_IID(kIAnchoredItemsIID, NS_IANCHOREDITEMS_IID);
@@ -905,18 +907,44 @@ nsBlockFrame::InitializeState(nsIPresContext*     aPresContext,
   rv = aState.Initialize(aPresContext, aSpaceManager,
                          aMaxSize, aMaxElementSize, this);
 
-  nsStyleSpacing* mySpacing = (nsStyleSpacing*)
-    mStyleContext->GetData(kStyleSpacingSID);
-
   // Apply border and padding adjustments for regular frames only
   if (!aState.mBlockIsPseudo) {
+    nsStyleSpacing* mySpacing = (nsStyleSpacing*)
+      mStyleContext->GetData(kStyleSpacingSID);
+    nsStylePosition* myPosition = (nsStylePosition*)
+      mStyleContext->GetData(kStylePositionSID);
+
     aState.mY = mySpacing->mBorderPadding.top;
     aState.mX = mySpacing->mBorderPadding.left;
-    aState.mAvailSize.width -=
-      (mySpacing->mBorderPadding.left + mySpacing->mBorderPadding.right);
-    aState.mAvailSize.height -=
-      (mySpacing->mBorderPadding.top + mySpacing->mBorderPadding.bottom);
     aState.mBorderPadding = mySpacing->mBorderPadding;
+
+    if (aState.mUnconstrainedWidth) {
+      // If our width is unconstrained don't bother futzing with the
+      // available width/height because they don't matter - we are
+      // going to get reflowed again.
+    }
+    else {
+      // When we are constrained we need to apply the width/height
+      // style properties. When we have a width/height it applies to
+      // the content width/height of our box. The content width/height
+      // doesn't include the border+padding so we have to add that in
+      // instead of subtracting it out of our maxsize.
+      nscoord lr =
+        mySpacing->mBorderPadding.left + mySpacing->mBorderPadding.right;
+      nscoord tb =
+        mySpacing->mBorderPadding.top + mySpacing->mBorderPadding.bottom;
+
+      // Get and apply the stylistic size. Note: do not limit the
+      // height until we are done reflowing.
+      PRIntn ss = aState.mStyleSizeFlags =
+        nsCSSLayout::GetStyleSize(aPresContext, this, aState.mStyleSize);
+      if (0 != (ss & NS_SIZE_HAS_WIDTH)) {
+        aState.mAvailSize.width = aState.mStyleSize.width + lr;
+      }
+      else {
+        aState.mAvailSize.width -= lr;
+      }
+    }
   }
   else {
     aState.mBorderPadding.SizeTo(0, 0, 0, 0);
@@ -1317,6 +1345,15 @@ void nsBlockFrame::ComputeDesiredRect(nsBlockReflowState& aState,
     aState.mY += lastBottomMargin;
   }
   aDesiredRect.height = aState.mY;
+
+  if (!aState.mBlockIsPseudo) {
+    // Clamp the desired rect height when style height applies
+    PRIntn ss = aState.mStyleSizeFlags;
+    if (0 != (ss & NS_SIZE_HAS_HEIGHT)) {
+      aDesiredRect.height = aState.mBorderPadding.top +
+        aState.mStyleSize.height + aState.mBorderPadding.bottom;
+    }
+  }
 }
 
 //----------------------------------------------------------------------

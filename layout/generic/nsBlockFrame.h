@@ -78,6 +78,8 @@ struct nsBlockReflowState {
   nscoord mX;
   nscoord mY;
   nsSize mAvailSize;
+  nsSize mStyleSize;
+  PRIntn mStyleSizeFlags;
   PRPackedBool mUnconstrainedWidth;
   PRPackedBool mUnconstrainedHeight;
   nsSize* mMaxElementSizePointer;
