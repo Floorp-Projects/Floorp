@@ -323,19 +323,6 @@ protected:
                                InnerTableReflowState& aState,
                                nsSize*                aMaxElementSize);
 
-  /**
-   * Create new frames for content we haven't yet mapped
-   *
-   * @param   aPresContext presentation context to use
-   * @param   aState current inline state
-   * @return  frComplete if all content has been mapped and frNotComplete
-   *            if we should be continued
-   */
-  nsReflowStatus  ReflowUnmappedChildren(nsIPresContext*        aPresContext,
-                                         InnerTableReflowState& aState,
-                                         nsSize*                aMaxElementSize);
-
-
   /** assign widths for each column, taking into account the table content, the effective style, 
     * the layout constraints, and the compatibility mode.  Sets mColumnWidths as a side effect.
     * @param aPresContext     the presentation context
