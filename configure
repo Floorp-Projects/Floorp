@@ -11884,8 +11884,7 @@ done
     fi
     if test -n "$_LIBIDL_NOT_FOUND"; then
         { echo "configure: error: libIDL not found.
-        libIDL $LIBIDL_VERSION or higher is required.
-        See http://andrewtv.org/libIDL/ for more information." 1>&2; exit 1; }
+        libIDL $LIBIDL_VERSION or higher is required." 1>&2; exit 1; }
     fi
 fi
 
@@ -11962,7 +11961,7 @@ fi
   # Extract the first word of "glib-config", so it can be a program name with args.
 set dummy glib-config; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:11966: checking for $ac_word" >&5
+echo "configure:11965: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_GLIB_CONFIG'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -11997,7 +11996,7 @@ fi
 
   min_glib_version=${GLIB_VERSION}
   echo $ac_n "checking for GLIB - version >= $min_glib_version""... $ac_c" 1>&6
-echo "configure:12001: checking for GLIB - version >= $min_glib_version" >&5
+echo "configure:12000: checking for GLIB - version >= $min_glib_version" >&5
   no_glib=""
   if test "$GLIB_CONFIG" = "no" ; then
     no_glib=yes
@@ -12020,7 +12019,7 @@ echo "configure:12001: checking for GLIB - version >= $min_glib_version" >&5
   echo $ac_n "cross compiling; assumed OK... $ac_c"
 else
   cat > conftest.$ac_ext <<EOF
-#line 12024 "configure"
+#line 12023 "configure"
 #include "confdefs.h"
 
 #include <glib.h>
@@ -12096,7 +12095,7 @@ main ()
 }
 
 EOF
-if { (eval echo configure:12100: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:12099: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   :
 else
@@ -12130,7 +12129,7 @@ fi
           CFLAGS="$CFLAGS $GLIB_CFLAGS"
           LIBS="$LIBS $GLIB_LIBS"
           cat > conftest.$ac_ext <<EOF
-#line 12134 "configure"
+#line 12133 "configure"
 #include "confdefs.h"
 
 #include <glib.h>
@@ -12140,7 +12139,7 @@ int main() {
  return ((glib_major_version) || (glib_minor_version) || (glib_micro_version)); 
 ; return 0; }
 EOF
-if { (eval echo configure:12144: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:12143: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
    echo "*** The test program compiled, but did not run. This usually means"
           echo "*** that the run-time linker is not finding GLIB or finding the wrong"
