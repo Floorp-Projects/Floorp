@@ -38,7 +38,9 @@ class nsString;
 class nsStringArray;
 class nsICaret;
 class nsIStyleContext;
+#ifndef NEW_CLIPBOARD_SUPPORT
 class nsISelectionMgr;
+#endif
 
 #define NS_IPRESSHELL_IID     \
 { 0x76e79c60, 0x944e, 0x11d1, \
@@ -261,7 +263,11 @@ public:
   /**
    * Notify the SelectionMgr that we have something to copy.
    */
+#ifndef NEW_CLIPBOARD_SUPPORT
   NS_IMETHOD DoCopy(nsISelectionMgr* aSelectionMgr) = 0;
+#else
+  NS_IMETHOD DoCopy() = 0;
+#endif
 
   /**
    * Get the caret, if it exists. AddRefs it.
