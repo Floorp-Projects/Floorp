@@ -82,7 +82,8 @@ if ($NEWFILE =~ /all\-(\d+)\-(\d+)\-(\d+)\-(\d{2})(\d{2})(\d{2}).txt/) {
 }
 else {
     local ($sec,$min,$hour,$mday,$mon,$year) = localtime(time);
-    $summary = sprintf "delta-%s-%02d-%02d-%02d%02d%02d", ($year, $mon+1, $mday, $hour, $min, $sec);
+    $summary = sprintf "delta-%s-%02d-%02d-%02d%02d%02d.txt",
+                       ($year, $mon+1, $mday, $hour, $min, $sec);
 }
 
 open(SF, ">$summary");
