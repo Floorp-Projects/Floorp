@@ -248,6 +248,18 @@ void WebProgDOMWindowTest(nsIWebProgress *progress, const char *inString,
 		RvTestResult(rv, totalStr2.get(), displayMethod);
 }
 
+nsIDOMWindow * GetTheDOMWindow(nsIWebBrowser *webBrowser)
+{
+	nsCOMPtr<nsIDOMWindow> theDOMWindow;
+
+    webBrowser->GetContentDOMWindow(getter_AddRefs(theDOMWindow));
+    if (!theDOMWindow) {
+        QAOutput("Didn't get a DOM Window.");
+		return nsnull;
+	}
+	return (theDOMWindow);
+}
+
 void GetTheUri(nsIURI *theUri, int displayMethod)
 {
 	nsresult rv;

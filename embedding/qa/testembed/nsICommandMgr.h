@@ -20,8 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David Epstein <depstein@netscape.com>
- *	 Ashish Bhatt <ashishbhatt@netscape.com>
+ *   David Epstein <depstein@netscape.com> 
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -38,71 +37,67 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// QAUtils.h : Global function declarations
+// File Overview....
 //
-/////////////////////////////////////////////////////////////////////////////
-
-#ifndef _QAUTILS_H
-#define _QAUTILS_H
+// header file for nsIEditingSession interface tests
+//
+#if !defined(AFX_NSICOMMANDMGR_H__574F7B4A_B175_11D6_9BE0_00C04FA02BE6__INCLUDED_)
+#define AFX_NSICOMMANDMGR_H__574F7B4A_B175_11D6_9BE0_00C04FA02BE6__INCLUDED_
 
 #if _MSC_VER > 1000
-	#pragma once
-#endif
+#pragma once
+#endif // _MSC_VER > 1000
+// nsICommandMgr.h : header file
+//
 
 #include "BrowserView.h"
-#include "resource.h"
-#include "stdafx.h"
+#include "BrowserImpl.h"
+#include "StdAfx.h"
+#include "Tests.h"
 
-extern void RvTestResultDlg(nsresult rv, CString pLine,BOOL bClearList = false);
-extern void RvTestResult(nsresult, const char *, int displayMethod=1);
-extern void WriteToOutputFile(const char *);
-extern void QAOutput(const char *pLine, int displayMethod=1);
-extern void FormatAndPrintOutput(const char *, const char *, int);
-extern void FormatAndPrintOutput(const char *, nsCAutoString, int);
-extern void FormatAndPrintOutput(const char *, int, int);
-extern void RequestName(nsIRequest *, nsCString &, int displayMethod=1);
-extern void WebProgDOMWindowTest(nsIWebProgress *, const char *,int displayMethod=1);
-extern nsIDOMWindow * GetTheDOMWindow(nsIWebBrowser *);
-extern void GetTheUri(nsIURI *theUri, int displayMethod=1);
-extern void onStateChangeString(char *, char *, nsCString, PRUint32, int displayMethod=1);
-extern nsresult rv;
+/////////////////////////////////////////////////////////////////////////////
+// nsICommandMgr window
 
-#endif //_QAUTILS_H/////////////////////////////////////////////////////////////////////////////
-
-
-
-// CShowTestResults dialog
-class CShowTestResults : public CDialog
+class CnsICommandMgr// : public nsIObserver, public nsSupportsWeakReference
 {
 // Construction
 public:
-	CShowTestResults(CWnd* pParent = NULL);   // standard constructor
-	void AddItemToList(LPCTSTR szTestCaseName, BOOL bResult);
+	CnsICommandMgr(nsIWebBrowser *mWebBrowser);
 
-// Dialog Data
-	//{{AFX_DATA(CShowTestResults)
-	enum { IDD = IDD_RUNTESTSDLG };
-	CListCtrl	m_ListResults;
-	//}}AFX_DATA
-
+	nsCOMPtr<nsIWebBrowser> qaWebBrowser;
+	nsCOMPtr<nsICommandManager> cmdMgrObj;
+	nsCOMPtr<nsICommandParams> cmdParamObj;
+	// test methods
+public:
+	nsICommandManager * GetCommandMgrObject();
+	nsICommandManager * GetCommandMgrWithContractIDObject();
+	nsICommandParams * GetCommandParamsObject();
+	void IsCommandSupportedTest(const char *);
+	void IsCommandEnabledTest(const char *);
+	void GetCommandStateTest(const char *, const char *);
+	void DoCommandTest(const char *, const char *);
+	void OnStartTests(UINT nMenuID);
+	void RunAllTests();
+// Operations
+public:
 
 // Overrides
 	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CShowTestResults)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	//{{AFX_VIRTUAL(CnsICommandMgr)
 	//}}AFX_VIRTUAL
 
 // Implementation
-private:
-	LPCTSTR m_TitleString ;
-protected:
+public:
+	virtual ~CnsICommandMgr();
 
 	// Generated message map functions
-	//{{AFX_MSG(CShowTestResults)
-	virtual BOOL OnInitDialog();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
+protected:
+
 };
 
+/////////////////////////////////////////////////////////////////////////////
 
+//{{AFX_INSERT_LOCATION}}
+// Microsoft Visual C++ will insert additional declarations immediately before the previous line.
+
+#endif // !defined(AFX_NSICOMMANDMGR_H__574F7B4A_B175_11D6_9BE0_00C04FA02BE6__INCLUDED_)

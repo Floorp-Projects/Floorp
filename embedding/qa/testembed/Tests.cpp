@@ -65,6 +65,8 @@
 #include "nsIWebBrow.h"
 #include "nsIWebProg.h"
 #include "nsIWebBrowFind.h"
+#include "nsIEditSession.h"
+#include "nsICommandMgr.h"
 #include "QaUtils.h"
 #include <stdio.h>
 
@@ -245,6 +247,21 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSERFIND_SETSEARCHFRAMES, OnInterfacesNsiwebbrowfind)
 	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSERFIND_GETSEARCHFRAMES, OnInterfacesNsiwebbrowfind)
 
+	ON_COMMAND(ID_INTERFACES_NSIEDITINGSESSION_RUNALLTESTS, OnInterfacesNsieditingsession)
+	ON_COMMAND(ID_INTERFACES_NSIEDITINGSESSION_INIT, OnInterfacesNsieditingsession)
+	ON_COMMAND(ID_INTERFACES_NSIEDITINGSESSION_MAKEWINDOWEDITABLE, OnInterfacesNsieditingsession)
+	ON_COMMAND(ID_INTERFACES_NSIEDITINGSESSION_WINDOWISEDITABLE, OnInterfacesNsieditingsession)
+	ON_COMMAND(ID_INTERFACES_NSIEDITINGSESSION_GETEDITORFORWINDOW, OnInterfacesNsieditingsession)
+	ON_COMMAND(ID_INTERFACES_NSIEDITINGSESSION_SETUPEDITORONWINDOW, OnInterfacesNsieditingsession)
+	ON_COMMAND(ID_INTERFACES_NSIEDITINGSESSION_TEARDOWNEDITORONWINDOW, OnInterfacesNsieditingsession)
+
+	ON_COMMAND(ID_INTERFACES_NSICOMMANDMANAGER_RUNALLTESTS, OnInterfacesNsicommandmgr)
+	ON_COMMAND(ID_INTERFACES_NSICOMMANDMANAGER_ADDCOMMANDOBSERVER, OnInterfacesNsicommandmgr)
+	ON_COMMAND(ID_INTERFACES_NSICOMMANDMANAGER_REMOVECOMMANDOBSERVER, OnInterfacesNsicommandmgr)
+	ON_COMMAND(ID_INTERFACES_NSICOMMANDMANAGER_ISCOMMANDESUPPORTED, OnInterfacesNsicommandmgr)
+	ON_COMMAND(ID_INTERFACES_NSICOMMANDMANAGER_ISCOMMANDENABLED, OnInterfacesNsicommandmgr)
+	ON_COMMAND(ID_INTERFACES_NSICOMMANDMANAGER_GETCOMMANDSTATE, OnInterfacesNsicommandmgr)
+	ON_COMMAND(ID_INTERFACES_NSICOMMANDMANAGER_DOCOMMAND, OnInterfacesNsicommandmgr)
 	//}}AFX_MSG_MAP
 
 END_MESSAGE_MAP()
@@ -632,14 +649,14 @@ void CTests::OnInterfacesNsiwebnav()
 
 void CTests::OnInterfacesNsiclipboardcommands()
 {
-	CNsIClipBoardCmd  oClipCmd(qaWebBrowser) ;
+	CNsIClipBoardCmd  oClipCmd(qaWebBrowser);
 	oClipCmd.OnStartTests(nCommandID);
 }
 
 
 void CTests::OnInterfacesNsiobserverservice()
 {
-	CnsIObserServ oObserv  ;
+	CnsIObserServ oObserv;
 	oObserv.OnStartTests(nCommandID);
 }
 
@@ -666,4 +683,16 @@ void CTests::OnInterfacesNsiwebbrowfind()
 {
 	CNsIWebBrowFind oWebBrowFind(qaWebBrowser, qaBrowserImpl);
 	oWebBrowFind.OnStartTests(nCommandID);
+}
+
+void CTests::OnInterfacesNsieditingsession()
+{
+	CnsIEditSession oEditSession(qaWebBrowser);
+	oEditSession.OnStartTests(nCommandID);
+}
+
+void CTests::OnInterfacesNsicommandmgr()
+{
+	CnsICommandMgr oCommandMgr(qaWebBrowser);
+	oCommandMgr.OnStartTests(nCommandID);
 }

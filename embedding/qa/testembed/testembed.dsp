@@ -126,6 +126,10 @@ SOURCE=.\DomWindow.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\EditingSession.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\MostRecentUrls.cpp
 # End Source File
 # Begin Source File
@@ -135,6 +139,10 @@ SOURCE=.\nsIClipboardCmd.cpp
 # Begin Source File
 
 SOURCE=.\nsiDirServ.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\nsIEditSession.cpp
 # End Source File
 # Begin Source File
 
@@ -242,6 +250,10 @@ SOURCE=.\DomWindow.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\EditingSession.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\IBrowserFrameGlue.h
 # End Source File
 # Begin Source File
@@ -255,6 +267,10 @@ SOURCE=.\nsIClipboardCmd.h
 # Begin Source File
 
 SOURCE=.\nsiDirServ.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\nsIEditSession.h
 # End Source File
 # Begin Source File
 

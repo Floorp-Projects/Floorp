@@ -20,8 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David Epstein <depstein@netscape.com>
- *	 Ashish Bhatt <ashishbhatt@netscape.com>
+ *   David Epstein <depstein@netscape.com> 
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -38,71 +37,71 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// QAUtils.h : Global function declarations
+// File Overview....
 //
-/////////////////////////////////////////////////////////////////////////////
+// header file for nsIEditingSession interface tests
+//
 
-#ifndef _QAUTILS_H
-#define _QAUTILS_H
+#if !defined(AFX_NSIEDITSESSION_H__4C854323_B0B8_11D6_9BE0_00C04FA02BE6__INCLUDED_)
+#define AFX_NSIEDITSESSION_H__4C854323_B0B8_11D6_9BE0_00C04FA02BE6__INCLUDED_
 
 #if _MSC_VER > 1000
-	#pragma once
-#endif
+#pragma once
+#endif // _MSC_VER > 1000
+// nsIEditSession.h : header file
+//
 
 #include "BrowserView.h"
-#include "resource.h"
-#include "stdafx.h"
+#include "BrowserImpl.h"
+#include "StdAfx.h"
+#include "Tests.h"
 
-extern void RvTestResultDlg(nsresult rv, CString pLine,BOOL bClearList = false);
-extern void RvTestResult(nsresult, const char *, int displayMethod=1);
-extern void WriteToOutputFile(const char *);
-extern void QAOutput(const char *pLine, int displayMethod=1);
-extern void FormatAndPrintOutput(const char *, const char *, int);
-extern void FormatAndPrintOutput(const char *, nsCAutoString, int);
-extern void FormatAndPrintOutput(const char *, int, int);
-extern void RequestName(nsIRequest *, nsCString &, int displayMethod=1);
-extern void WebProgDOMWindowTest(nsIWebProgress *, const char *,int displayMethod=1);
-extern nsIDOMWindow * GetTheDOMWindow(nsIWebBrowser *);
-extern void GetTheUri(nsIURI *theUri, int displayMethod=1);
-extern void onStateChangeString(char *, char *, nsCString, PRUint32, int displayMethod=1);
-extern nsresult rv;
+/////////////////////////////////////////////////////////////////////////////
+// nsIEditSession window
 
-#endif //_QAUTILS_H/////////////////////////////////////////////////////////////////////////////
-
-
-
-// CShowTestResults dialog
-class CShowTestResults : public CDialog
+class CnsIEditSession
 {
 // Construction
 public:
-	CShowTestResults(CWnd* pParent = NULL);   // standard constructor
-	void AddItemToList(LPCTSTR szTestCaseName, BOOL bResult);
+	CnsIEditSession(nsIWebBrowser *mWebBrowser);
 
-// Dialog Data
-	//{{AFX_DATA(CShowTestResults)
-	enum { IDD = IDD_RUNTESTSDLG };
-	CListCtrl	m_ListResults;
-	//}}AFX_DATA
+	nsCOMPtr<nsIWebBrowser> qaWebBrowser;
+// Attributes
+public:
 
+// Operations
+public:
 
 // Overrides
 	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CShowTestResults)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	//{{AFX_VIRTUAL(CnsIEditSession)
 	//}}AFX_VIRTUAL
 
 // Implementation
-private:
-	LPCTSTR m_TitleString ;
+public:
+	virtual ~CnsIEditSession();
+
+	// local methods for nsIEditingSession tests
+	nsIEditingSession * GetEditSessionObject();
+	void InitTest(void);
+	void MakeWinEditTest(PRBool);
+	void WinIsEditTest(PRBool);
+	void SetEditorWinTest(void);
+	void GetEditorWinTest(void);
+	void TearEditorWinTest(void);
+	void OnStartTests(UINT nMenuID);
+	void RunAllTests(void);
+
+	nsCOMPtr<nsIEditingSession> editingSession;
+	nsCOMPtr<nsIDOMWindow> domWindow;
+	// Generated message map functions
 protected:
 
-	// Generated message map functions
-	//{{AFX_MSG(CShowTestResults)
-	virtual BOOL OnInitDialog();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
 };
 
+/////////////////////////////////////////////////////////////////////////////
 
+//{{AFX_INSERT_LOCATION}}
+// Microsoft Visual C++ will insert additional declarations immediately before the previous line.
+
+#endif // !defined(AFX_NSIEDITSESSION_H__4C854323_B0B8_11D6_9BE0_00C04FA02BE6__INCLUDED_)

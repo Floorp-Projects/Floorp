@@ -39,6 +39,7 @@ PROGRAM		= testembed$(BIN_SUFFIX)
 RESFILE		= testembed.res
 
 MODULE = testEmbed
+
 REQUIRES = \
 	xpcom \
 	string \
@@ -66,6 +67,7 @@ REQUIRES = \
 	xpinstall \
 	composer \
 	commandhandler \
+	editor \
 	$(NULL)
 
 CPPSRCS		= \
@@ -103,6 +105,8 @@ CPPSRCS		= \
 		nsIWebBrowFind.cpp \
 		QaFindDlg.cpp \
 		WebProgDlg.cpp \
+		nsIEditSession.cpp \
+		nsICommandMgr.cpp \
 		$(NULL)
 
 EXTRA_DSO_LIBS	= embed_base_s gkgfx testEmbedComponents
@@ -132,6 +136,7 @@ LOCAL_INCLUDES	= -I$(srcdir)/components
 #
 # Set it to 256k.  See bug 127069.
 #
+
 LDFLAGS += /HEAP:0x40000
 
 include $(topsrcdir)/config/rules.mk
@@ -144,4 +149,6 @@ libs:: testembed.htm
 
 install:: testembed.htm
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)
+
+
 
