@@ -1087,8 +1087,7 @@ sub MakeResourceAliases()
 	_MakeAlias(":mozilla:intl:uconv:src:charsetalias.properties",						"$resource_dir");
 	_MakeAlias(":mozilla:intl:uconv:src:maccharset.properties",							"$resource_dir");
 
-	_MakeAlias(":mozilla:extensions:wallet:src:cookie.properties",						"$resource_dir");
-	_MakeAlias(":mozilla:extensions:wallet:src:wallet.properties",						"$resource_dir");
+	_InstallResources(":mozilla:extensions:wallet:src:MANIFEST",						"$resource_dir");
 
 	my($html_dir) = "$resource_dir" . "html:";
     _InstallResources(":mozilla:layout:html:base:src:MANIFEST_RES",						"$html_dir");
