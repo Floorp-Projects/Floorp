@@ -69,7 +69,7 @@ public:
 	
 	void idle(UInt32 milliseconds = kDefaultJMTime);
 
-	void sendMessage(NativeMessage* message);
+	void sendMessage(NativeMessage* message, Boolean async = false);
 	
 	/**
 	 * Used to prevent reentering the VM.
