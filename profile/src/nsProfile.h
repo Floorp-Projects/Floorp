@@ -54,8 +54,10 @@ private:
   char mOldProfLocations[_MAX_NUM_PROFILES][_MAX_LENGTH];
     
 public:
-    nsProfile();
-    virtual ~nsProfile();
+	nsProfile();
+	virtual ~nsProfile();
+
+	nsresult RenameProfileDir(const char *newProfileName);
 
 	// Creates associated user directories on the creation of a new profile
     	nsresult CreateUserDirectories(const nsFileSpec& profileDir);

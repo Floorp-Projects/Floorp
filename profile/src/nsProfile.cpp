@@ -1155,9 +1155,9 @@ NS_IMETHODIMP nsProfile::RenameProfile(const char* oldName, const char* newName)
     printf("ProfileManager : Renaming profile %s to %s \n", oldName, newName);
 #endif
 
-    PRBool exists;
+	PRBool exists;
 	rv = ProfileExists(newName, &exists);
-    if (NS_FAILED(rv)) return rv;
+	if (NS_FAILED(rv)) return rv;
     
 	// That profile already exists...
 	if (exists) {
@@ -1169,23 +1169,23 @@ NS_IMETHODIMP nsProfile::RenameProfile(const char* oldName, const char* newName)
 
 	// Copy reg keys
 	rv = CopyRegKey(oldName, newName);
-    if (NS_FAILED(rv)) return rv;
- 
-    // CloneProfile will remove the newName profile from the registry if it fails
-    rv = CloneProfile(newName);
-    if (NS_FAILED(rv)) {
-    	rv = DeleteProfile(newName, PR_FALSE);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "failed to delete the aborted profile in rename");
-	return NS_ERROR_FAILURE;
-    }
+	if (NS_FAILED(rv)) return rv;
+	 
+	rv = RenameProfileDir(newName);
+	if (NS_FAILED(rv)) {
+		rv = DeleteProfile(newName, PR_FALSE /* don't delete files */);
+		NS_ASSERTION(NS_SUCCEEDED(rv), "failed to delete the aborted profile in rename");
+		return NS_ERROR_FAILURE;
+	}
 
-    // Delete old profile entry
-    rv = DeleteProfile(oldName, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
- 
-    rv = ForgetCurrentProfile();
-    if (NS_FAILED(rv)) return rv;
-   	return rv;
+	// Delete old profile entry
+	rv = DeleteProfile(oldName, PR_FALSE /* don't delete files */);
+	if (NS_FAILED(rv)) return rv;
+		 
+	rv = ForgetCurrentProfile();
+	if (NS_FAILED(rv)) return rv;
+
+	return NS_OK;
 }
 
 // Copy old profile entries to the new profile
@@ -2206,6 +2206,29 @@ NS_IMETHODIMP nsProfile::MigrateAllProfiles()
 	return NS_OK;
 }
 
+
+nsresult nsProfile::RenameProfileDir(const char* newProfileName) 
+{
+	nsresult rv = NS_OK;
+	nsFileSpec dirSpec;
+
+        rv = GetProfileDir(newProfileName, &dirSpec);
+	if (NS_FAILED(rv)) return rv;
+	
+	nsFileSpec renamedDirSpec = dirSpec;
+	renamedDirSpec.SetLeafName(newProfileName);
+	renamedDirSpec.MakeUnique();
+
+	// rename the directory
+	rv = dirSpec.Rename(renamedDirSpec.GetLeafName());
+	if (NS_FAILED(rv)) return rv;
+
+	// update the registry
+        rv = SetProfileDir(newProfileName, dirSpec);
+	if (NS_FAILED(rv)) return rv;
+
+	return NS_OK;
+}
 
 NS_IMETHODIMP nsProfile::CloneProfile(const char* newProfile)
 {
