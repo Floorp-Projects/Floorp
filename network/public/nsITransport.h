@@ -47,9 +47,6 @@ public:
    */
   NS_IMETHOD GetURL(nsIURL* *result) = 0;
 
-  NS_IMETHOD LoadURL(nsIURL* url) = 0;
-
-
   /**
    * Sets up the InputStreamListener. Transport layer will notify this 
    * consumer when it writes data from the socket into its input stream.
@@ -91,6 +88,26 @@ public:
 
   NS_IMETHOD GetOutputStream(nsIOutputStream ** aOutputStream) = 0; 
 
+  /**
+  * Returns true if the transport has been opened already and FALSE otherwise.
+  * If a transport has not been opened yet, then you should open it using
+  * Open(nsIURL *).
+  **/
+  
+  NS_IMETHOD IsTransportOpen(PRBool * aSocketOpen) = 0;
+
+  /** 
+  * This replaces LoadUrl. Before using a transport, you should open the transport.
+  * This functionality may go away after we remove the reliance on sock stub. You
+  * should always call open the first time you want to use the transport in order to
+  * open its underlying object (file, socket, etc.). You can later issue a ::StopBinding
+  * call on the transport which should cause the underlying object (file, socket, etc.) to
+  * be closed. You could then open the transport again with another URL. Note, for sockets,
+  * if you wish to re-use a connection, you shouldn't call StopBinding on it as this would
+  * cause the connection to be closed...
+  **/ 
+  
+  NS_IMETHOD Open(nsIURL * aUrl) = 0;
 };
 
 
