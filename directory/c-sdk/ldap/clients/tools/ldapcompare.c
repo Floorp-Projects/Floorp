@@ -114,7 +114,7 @@ main( int argc, char **argv )
 	    }
 	}
     } else {
-	while ( contoper || !LDAPTOOL_RESULT_IS_AN_ERROR( rc ) &&
+	while (( contoper || !LDAPTOOL_RESULT_IS_AN_ERROR( rc )) &&
 		fgets(buf, sizeof(buf), ldaptool_fp) != NULL) {
 	    buf[ strlen( buf ) - 1 ] = '\0';	/* remove trailing newline */
 	    if ( *buf != '\0' ) {

@@ -63,6 +63,10 @@ extern int getopt (int argc, char *const *argv, const char *optstring);
 #define LDAPTOOL_MKTEMP( p )	mktemp( p )
 #endif
 
+#ifdef LINUX
+#include <getopt.h>	/* not always included from unistd.h */
+#endif
+
 #include <ctype.h>
 
 #ifndef SCOOS
