@@ -524,7 +524,7 @@ nsHTMLContentSerializer::EscapeURI(const nsAString& aURI, nsAString& aEscapedURI
   // Loop and escape parts by avoiding escaping reserved characters (and '%', '#' ).
   while ((end = uri.FindCharInSet("%#;/?:@&=+$,", start)) != -1) {
     part = Substring(aURI, start, (end-start));
-    if (textToSubURI && !part.IsASCII()) {
+    if (textToSubURI && !IsASCII(part)) {
       rv = textToSubURI->ConvertAndEscape(mCharSet.get(), part.get(), getter_Copies(escapedURI));
       NS_ENSURE_SUCCESS(rv, rv);
     }
