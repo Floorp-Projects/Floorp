@@ -110,7 +110,7 @@ sub AppendComment {
     SendSQL("select long_desc from bugs where bug_id = $bugid");
     
     my $desc = FetchOneColumn();
-    my $now = time2str("%D %H:%M", time());
+    my $now = time2str("%Y-%m-%d %H:%M", time());
     $desc .= "\n\n------- Additional Comments From $who  $now -------\n";
     $desc .= $comment;
     SendSQL("update bugs set long_desc=" . SqlQuote($desc) .

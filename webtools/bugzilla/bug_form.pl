@@ -145,7 +145,7 @@ select
 	target_milestone,
 	qa_contact,
 	status_whiteboard,
-        date_format(creation_ts,'Y-m-d'),
+        date_format(creation_ts,'%Y-%m-%d %H:%i'),
         groupset,
 	delta_ts,
 	sum(votes.count)
@@ -486,8 +486,8 @@ print "
  <A HREF=\"long_list.cgi?buglist=$id\">Format For Printing</A>
 </B></FONT><BR>
 </FORM>
-<table><tr><td align=left><B>Description:</B></td><td width=\"100%\">&nbsp;</td>
-<td align=right>Opened:&nbsp;$bug{'creation_ts'}</td></tr></table>
+<table><tr><td align=left><B>Description:</B></td>
+<td align=right width=100%>Opened: $bug{'creation_ts'}</td></tr></table>
 <HR>
 <PRE>
 ";
