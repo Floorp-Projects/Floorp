@@ -59,6 +59,17 @@
 #include "SplitElementTxn.h"
 #include "JoinElementTxn.h"
 
+
+#define HACK_FORCE_REDRAW 1
+
+
+#ifdef HACK_FORCE_REDRAW
+// INCLUDES FOR EVIL HACK TO FOR REDRAW
+// BEGIN
+#include "nsIViewManager.h"
+#include "nsIView.h"
+// END
+#endif
 static NS_DEFINE_IID(kIContentIID,          NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID,          NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMElementIID,       NS_IDOMELEMENT_IID);
@@ -1129,6 +1140,7 @@ NS_IMETHODIMP nsEditor::DeleteText(nsIDOMCharacterData *aElement,
   nsresult result = CreateTxnForDeleteText(aElement, aOffset, aLength, &txn);
   if (NS_SUCCEEDED(result))  {
     result = Do(txn);  
+    HACKForceRedraw();
   }
   return result;
 }
@@ -1831,6 +1843,35 @@ nsresult nsIEditorSupport::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParen
 
 
 //END nsEditor Private methods
+
+void nsEditor::HACKForceRedraw()
+{
+#ifdef HACK_FORCE_REDRAW
+// XXXX: Horrible hack! We are doing this because
+// of an error in Gecko which is not rendering the
+// document after a change via the DOM - gpk 2/11/99
+  // BEGIN HACK!!!
+  nsIPresShell* shell = nsnull;
+  
+ 	GetPresShell(&shell);
+  if (nsnull != shell) {
+    nsIViewManager* viewmgr = nsnull;;
+    nsIView* view = nsnull;
+
+    shell->GetViewManager(&viewmgr);
+    if (nsnull != viewmgr) {
+      viewmgr->GetRootView(view);
+      if (nsnull != view) {
+        viewmgr->UpdateView(view,nsnull,NS_VMREFRESH_IMMEDIATE);
+      }
+      NS_RELEASE(viewmgr);
+    }
+  }
+  // END HACK
+#endif
+
+}
+
 
 NS_IMETHODIMP nsEditor::GetLayoutObject(nsIDOMNode *aNode, nsISupports **aLayoutObject)
 {

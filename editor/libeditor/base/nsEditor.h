@@ -291,6 +291,13 @@ protected:
    */
   NS_IMETHOD CreateAggregateTxnForDeleteSelection(nsIAtom *aTxnName, EditAggregateTxn **aAggTxn);
 
+protected:
+// XXXX: Horrible hack! We are doing this because
+// of an error in Gecko which is not rendering the
+// document after a change via the DOM - gpk 2/13/99
+  void HACKForceRedraw(void);
+
+
 };
 
 
