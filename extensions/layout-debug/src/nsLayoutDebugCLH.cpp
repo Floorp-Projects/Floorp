@@ -40,6 +40,14 @@
 #include "nsLayoutDebugCLH.h"
 #include "nsString.h"
 #include "plstr.h"
+#include "nsCOMPtr.h"
+#include "nsIWindowWatcher.h"
+#include "nsIServiceManager.h"
+#include "nsIDOMWindow.h"
+
+#ifdef MOZ_XUL_APP
+#include "nsICommandLine.h"
+#endif
 
 nsLayoutDebugCLH::nsLayoutDebugCLH()
 {
@@ -49,7 +57,41 @@ nsLayoutDebugCLH::~nsLayoutDebugCLH()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsLayoutDebugCLH, nsICmdLineHandler)
+NS_IMPL_ISUPPORTS1(nsLayoutDebugCLH, ICOMMANDLINEHANDLER)
+
+#ifdef MOZ_XUL_APP
+
+NS_IMETHODIMP
+nsLayoutDebugCLH::Handle(nsICommandLine* aCmdLine)
+{
+    nsresult rv;
+    PRBool found;
+
+    rv = aCmdLine->HandleFlag(NS_LITERAL_STRING("layoutdebug"),
+                              PR_FALSE, &found);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIWindowWatcher> wwatch (do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+    NS_ENSURE_TRUE(wwatch, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDOMWindow> opened;
+    // XXX passing |aCmdLine| here to work around inconsistent
+    // window watcher behavior (see bug 277798)
+    wwatch->OpenWindow(nsnull, "chrome://layoutdebug/content/",
+                       "_blank", "chrome,dialog=no,all", aCmdLine,
+                       getter_AddRefs(opened));
+    aCmdLine->SetPreventDefault(PR_TRUE);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLayoutDebugCLH::GetHelpInfo(nsACString& aResult)
+{
+    aResult.Assign(NS_LITERAL_CSTRING("  -layoutdebug         Start with Layout Debugger\n"));
+    return NS_OK;
+}
+
+#else // !MOZ_XUL_APP
 
 CMDLINEHANDLER_IMPL(nsLayoutDebugCLH, "-layoutdebug",
                     "general.startup.layoutdebug",
@@ -60,3 +102,5 @@ CMDLINEHANDLER_IMPL(nsLayoutDebugCLH, "-layoutdebug",
                     PR_TRUE,
                     "",
                     PR_TRUE)
+
+#endif
