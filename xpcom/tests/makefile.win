@@ -45,11 +45,9 @@ RESFILE = timer.res
 
 PROGRAMS = $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) \
         $(PROG6) $(PROG7) \
-!ifdef MODULAR_NETLIB
         $(PROG8) \
 	$(PROG9) \
 	$(PROG10) \
-!endif
 	$(PROG11) \
         $(PROG12) \
         $(PROG13) \
@@ -68,9 +66,7 @@ LINCS=                     \
 !ifdef NECKO
         -I$(PUBLIC)\necko  \
 !else
-!ifdef MODULAR_NETLIB
         -I$(PUBLIC)\netlib \
-!endif
 !endif
         -I$(PUBLIC)\xpcom
 
@@ -79,9 +75,7 @@ LLIBS=                         \
 !ifdef NECKO
         $(DIST)\lib\neckoutil_s.lib \
 !else
-!ifdef MODULAR_NETLIB
         $(DIST)\lib\netlib.lib \
-!endif
 !endif
         $(LIBNSPR)
 
@@ -109,13 +103,11 @@ $(PROG7): $(OBJDIR) TestAtoms.cpp
 
 $(PROG8): $(OBJDIR) FilesTest.cpp
 
-!ifdef MODULAR_NETLIB
 $(PROG9): $(OBJDIR) CvtURL.cpp
 
 $(PROG10): $(OBJDIR) TestCRT.cpp
 
 $(PROG11): $(OBJDIR) PropertiesTest.cpp
-!endif
 
 $(PROG12): $(OBJDIR) TestAutoLock.cpp
 
