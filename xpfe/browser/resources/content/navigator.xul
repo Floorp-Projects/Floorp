@@ -95,7 +95,7 @@ Contributor(s): ______________________________________. -->
          the user has clicked-on.
     -->
     <popup id="context"
-        oncreate="contextMenu = new nsContextMenu( this ); contextMenu.checkForImageBlocker()"
+        oncreate="contextMenu = new nsContextMenu( this );"
         ondestroy="contextMenu.onDestroy(); contextMenu = null;">
 
         <!-- Open ==================================== -->
@@ -154,7 +154,6 @@ Contributor(s): ______________________________________. -->
         <menuitem id="context-blockimage"
                   value="&blockImageCmd.label;"
                   accesskey=""
-                  style="display: none"
                   oncommand="contextMenu.blockImage();"/>
         <menuseparator/>
         <!-- Misc ==================================== -->
