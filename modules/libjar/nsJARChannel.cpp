@@ -27,6 +27,7 @@
 #include "nsIFileTransportService.h"
 #include "nsIURL.h"
 #include "nsIMIMEService.h"
+#include "nsAutoLock.h"
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
@@ -50,7 +51,11 @@ public:
                              nsresult status, 
                              const PRUnichar* aMsg) {
         nsresult rv = NS_OK;
-        if (NS_SUCCEEDED(status)) {
+        nsAutoLock lock(mJARChannel->mLock);
+
+        if (NS_SUCCEEDED(status) && mJARChannel->mJarCacheTransport) {
+            NS_ASSERTION(jarCacheTransport == mJARChannel->mJarCacheTransport,
+                         "wrong transport");
             // after successfully downloading the jar file to the cache,
             // start the extraction process:
             NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
@@ -69,6 +74,7 @@ public:
 
             rv = mJARChannel->ExtractJARElement(jarCacheFile);
         }
+        mJARChannel->mJarCacheTransport = nsnull;
         return rv;
     }
 
@@ -166,6 +172,10 @@ nsJARChannel::Init(nsIJARProtocolHandler* aHandler,
     rv = SetNotificationCallbacks(notificationCallbacks);
     if (NS_FAILED(rv)) return rv;
 
+    mLock = PR_NewLock();
+    if (mLock == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+
 	return NS_OK;
 }
 
@@ -181,19 +191,57 @@ nsJARChannel::IsPending(PRBool* result)
 NS_IMETHODIMP
 nsJARChannel::Cancel()
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+    nsAutoLock lock(mLock);
+
+    if (mJarCacheTransport) {
+        rv = mJarCacheTransport->Cancel();
+        if (NS_FAILED(rv)) return rv;
+        mJarCacheTransport = nsnull;
+    }
+    if (mJarExtractionTransport) {
+        rv = mJarExtractionTransport->Cancel();
+        if (NS_FAILED(rv)) return rv;
+        mJarExtractionTransport = nsnull;
+    }
+
+	return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJARChannel::Suspend()
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+    nsAutoLock lock(mLock);
+
+    if (mJarCacheTransport) {
+        rv = mJarCacheTransport->Suspend();
+        if (NS_FAILED(rv)) return rv;
+    }
+    if (mJarExtractionTransport) {
+        rv = mJarExtractionTransport->Suspend();
+        if (NS_FAILED(rv)) return rv;
+    }
+
+	return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJARChannel::Resume()
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+    nsAutoLock lock(mLock);
+
+    if (mJarCacheTransport) {
+        rv = mJarCacheTransport->Resume();
+        if (NS_FAILED(rv)) return rv;
+    }
+    if (mJarExtractionTransport) {
+        rv = mJarExtractionTransport->Resume();
+        if (NS_FAILED(rv)) return rv;
+    }
+
+	return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -295,15 +343,16 @@ nsJARChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
 
+        nsAutoLock lock(mLock);
+
         // use a file transport to serve as a data pump for the download (done
         // on some other thread)
-        nsCOMPtr<nsIChannel> jarCacheTransport;
         rv = fts->CreateTransport(jarCacheFile, mCommand,
                                   mBufferSegmentSize, mBufferMaxSize,
-                                  getter_AddRefs(jarCacheTransport));
+                                  getter_AddRefs(mJarCacheTransport));
         if (NS_FAILED(rv)) return rv;
 
-        rv = jarCacheTransport->SetNotificationCallbacks(mCallbacks);
+        rv = mJarCacheTransport->SetNotificationCallbacks(mCallbacks);
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIStreamObserver> downloadObserver = new nsJARDownloadObserver(jarCacheFile, this);
@@ -314,7 +363,7 @@ nsJARChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         rv = jarBaseChannel->OpenInputStream(0, -1, getter_AddRefs(jarBaseIn));
         if (NS_FAILED(rv)) return rv;
 
-        rv = jarCacheTransport->AsyncWrite(jarBaseIn, 0, -1, nsnull, downloadObserver);
+        rv = mJarCacheTransport->AsyncWrite(jarBaseIn, 0, -1, nsnull, downloadObserver);
     }
     return rv;
 }
@@ -349,21 +398,22 @@ nsJARChannel::ExtractJARElement(nsIFileChannel* jarBaseFile)
 {
     nsresult rv;
 
+    nsAutoLock lock(mLock);
+
     mJARBaseFile = jarBaseFile;
 
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIChannel> jarTransport;
     rv = fts->CreateTransportFromFileSystem(this, mCommand,
                                             mBufferSegmentSize, mBufferMaxSize,
-                                            getter_AddRefs(jarTransport));
+                                            getter_AddRefs(mJarExtractionTransport));
     if (NS_FAILED(rv)) return rv;
 
-    rv = jarTransport->SetNotificationCallbacks(mCallbacks);
+    rv = mJarExtractionTransport->SetNotificationCallbacks(mCallbacks);
     if (NS_FAILED(rv)) return rv;
 
-    rv = jarTransport->AsyncRead(mStartPosition, mReadCount, nsnull, this);
+    rv = mJarExtractionTransport->AsyncRead(mStartPosition, mReadCount, nsnull, this);
     return rv;
 }
 
@@ -511,19 +561,22 @@ nsJARChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallb
 // nsIStreamObserver methods:
 
 NS_IMETHODIMP
-nsJARChannel::OnStartRequest(nsIChannel* jarCacheTransport,
+nsJARChannel::OnStartRequest(nsIChannel* jarExtractionTransport,
                              nsISupports* context)
 {
     return mUserListener->OnStartRequest(this, mUserContext);
 }
 
 NS_IMETHODIMP
-nsJARChannel::OnStopRequest(nsIChannel* jarCacheTransport, 
+nsJARChannel::OnStopRequest(nsIChannel* jarExtractionTransport,
                             nsISupports* context, 
                             nsresult status, 
                             const PRUnichar* aMsg)
 {
-    return mUserListener->OnStopRequest(this, mUserContext, status, aMsg);
+    nsresult rv;
+    rv = mUserListener->OnStopRequest(this, mUserContext, status, aMsg);
+    mJarExtractionTransport = nsnull;
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -601,56 +654,5 @@ nsJARChannel::EnumerateEntries(const char *aRoot, nsISimpleEnumerator **_retval)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-#if 0
-NS_IMETHODIMP
-nsJARChannel::GetName(char * *aName)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsJARChannel::GetCompression(PRUint16 *aCompression)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsJARChannel::GetSize(PRUint32 *aSize)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsJARChannel::GetRealsize(PRUint32 *aRealsize)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsJARChannel::GetCrc32(PRUint32 *aCrc32)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-//nsZip methods
-NS_IMETHODIMP
-nsJARChannel::Open(const char *aZipFileName, PRInt32 *_retval)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsJARChannel::Extract(const char *aFilename, const char *aOutname, PRInt32 *_retval)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsJARChannel::Find(const char *aPattern, nsISimpleEnumerator **_retval)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
