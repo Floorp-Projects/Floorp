@@ -299,6 +299,7 @@ main(int argc, char **argv)
 	    exit(1);
 	}
     }
+#if defined(SECU_GetPassword)
     if (doPub) {
 	if (!strcmp(nickname, "none")) {
 	    pubKey = getDefaultRSAPublicKey();
@@ -346,6 +347,18 @@ main(int argc, char **argv)
 	fn = (RSAOp)RSA_PrivateKeyOp;
 	rsaKey = (void *)(&privKey->u.rsa);
     }
+#else
+    if (doPub) {
+	pubKey = getDefaultRSAPublicKey();
+	fn = (RSAOp)RSA_PublicKeyOp;
+	rsaKey = (void *)(&pubKey->u.rsa);
+    }
+    if (doPriv) {
+	privKey = getDefaultRSAPrivateKey();
+	fn = (RSAOp)RSA_PrivateKeyOp;
+	rsaKey = (void *)(&privKey->u.rsa);
+    }
+#endif
 
     memset(buf, 1, sizeof buf);
     rv = fn(rsaKey, buf2, buf);
