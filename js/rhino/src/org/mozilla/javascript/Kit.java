@@ -364,6 +364,19 @@ public class Kit
     }
 
     /**
+     * Throws RuntimeException to indicate that x does not have a valid JS type.
+     *
+     * The function never returns and its return type is RuntimeException
+     * to allow to indicate unrechable code via
+     * <tt>throw Kit.badTypeJS(x)</tt>.
+     */
+    public static RuntimeException badTypeJS(Object x)
+        throws RuntimeException
+    {
+        throw new IllegalArgumentException("Type "+x.getClass().getName()+" of "+x+" is not valid JS type");
+    }
+
+    /**
      * Convinient way to throw IllegalArgumentException to indicate bad
      * argument.
      */

@@ -120,7 +120,7 @@ public class ScriptRuntime {
             double d = ((Number) val).doubleValue();
             return (d == d && d != 0.0);
         }
-        throw errorWithClassName("msg.invalid.type", val);
+        throw Kit.badTypeJS(val);
     }
 
     public static boolean toBoolean(Object[] args, int index) {
@@ -131,11 +131,12 @@ public class ScriptRuntime {
      *
      * See ECMA 9.3.
      */
-    public static double toNumber(Object val) {
-        if (val == null)
-            return +0.0;
+    public static double toNumber(Object val)
+    {
         if (val instanceof Number)
             return ((Number) val).doubleValue();
+        if (val == null)
+            return +0.0;
         if (val instanceof Scriptable) {
             val = ((Scriptable) val).getDefaultValue(NumberClass);
             if (val != null && val instanceof Scriptable)
@@ -148,7 +149,7 @@ public class ScriptRuntime {
             return toNumber((String) val);
         if (val instanceof Boolean)
             return ((Boolean) val).booleanValue() ? 1 : +0.0;
-        throw errorWithClassName("msg.invalid.type", val);
+        throw Kit.badTypeJS(val);
     }
 
     public static double toNumber(Object[] args, int index) {
@@ -605,7 +606,7 @@ public class ScriptRuntime {
             }
             return toString(value);
         }
-        throw errorWithClassName("msg.invalid.type", value);
+        throw Kit.badTypeJS(value);
     }
 
     public static Scriptable toObject(Scriptable scope, Object val)
@@ -1563,7 +1564,7 @@ public class ScriptRuntime {
             return "number";
         if (value instanceof Boolean)
             return "boolean";
-        throw errorWithClassName("msg.invalid.type", value);
+        throw Kit.badTypeJS(value);
     }
 
     /**
@@ -1762,127 +1763,137 @@ public class ScriptRuntime {
         return result;
     }
 
-    private static Class getTypeOfValue(Object obj) {
-        if (obj == null)
-            return ScriptableClass;
-        if (obj == Undefined.instance)
-            return UndefinedClass;
-        if (obj instanceof Number)
-            return NumberClass;
-        if (obj instanceof Scriptable)
-            return ScriptableClass;
-        return obj.getClass();
-    }
-
     /**
      * Equality
      *
      * See ECMA 11.9
      */
-    public static boolean eq(Object x, Object y) {
-        Object xCopy = x;                                       // !!! JIT bug in Cafe 2.1
-        Object yCopy = y;                                       // need local copies, otherwise their values get blown below
-        for (;;) {
-            Class typeX = getTypeOfValue(x);
-            Class typeY = getTypeOfValue(y);
-            if (typeX == typeY) {
-                if (typeX == UndefinedClass)
+    public static boolean eq(Object x, Object y)
+    {
+        if (x == null || x == Undefined.instance) {
+            return y == null || y == Undefined.instance;
+        } else if (x instanceof Number) {
+            return eqNumber(((Number)x).doubleValue(), y);
+        } else if (x instanceof String) {
+            return eqString((String)x, y);
+        } else if (x instanceof Boolean) {
+            boolean b = ((Boolean)x).booleanValue();
+            if (y instanceof Boolean) {
+                return b == ((Boolean)y).booleanValue();
+            }
+            return eqNumber(b ? 1.0 : 0.0, y);
+        } else if (x instanceof Scriptable) {
+            if (y instanceof Scriptable) {
+                // Generic test also works for y == Undefined.instance
+                if (x == y)
                     return true;
-                if (typeX == NumberClass)
-                    return ((Number) x).doubleValue() ==
-                           ((Number) y).doubleValue();
-                if (typeX == StringClass || typeX == BooleanClass)
-                    return xCopy.equals(yCopy);                                 // !!! JIT bug in Cafe 2.1
-                if (typeX == ScriptableClass) {
-                    if (x == y)
-                        return true;
-                    if (x instanceof Wrapper &&
-                        y instanceof Wrapper)
-                    {
-                        return ((Wrapper) x).unwrap() ==
-                               ((Wrapper) y).unwrap();
-                    }
-                    return false;
+                if (x instanceof Wrapper && y instanceof Wrapper) {
+                    return ((Wrapper)x).unwrap() == ((Wrapper)y).unwrap();
                 }
-                throw new RuntimeException(); // shouldn't get here
+                return false;
+            } else if (y instanceof Boolean) {
+                double d = ((Boolean)y).booleanValue() ? 1.0 : 0.0;
+                return eqNumber(d, x);
+            } else if (y instanceof Number) {
+                return eqNumber(((Number)y).doubleValue(), x);
+            } else if (y instanceof String) {
+                return eqString((String)y, x);
             }
-            if (x == null && y == Undefined.instance)
-                return true;
-            if (x == Undefined.instance && y == null)
-                return true;
-            if (typeX == NumberClass &&
-                typeY == StringClass)
-            {
-                return ((Number) x).doubleValue() == toNumber(y);
-            }
-            if (typeX == StringClass &&
-                typeY == NumberClass)
-            {
-                return toNumber(x) == ((Number) y).doubleValue();
-            }
-            if (typeX == BooleanClass) {
-                x = new Double(toNumber(x));
-                xCopy = x;                                 // !!! JIT bug in Cafe 2.1
-                continue;
-            }
-            if (typeY == BooleanClass) {
-                y = new Double(toNumber(y));
-                yCopy = y;                                 // !!! JIT bug in Cafe 2.1
-                continue;
-            }
-            if ((typeX == StringClass ||
-                 typeX == NumberClass) &&
-                typeY == ScriptableClass && y != null)
-            {
+            return false;
+        } else {
+            throw Kit.badTypeJS(x);
+        }
+    }
+
+    static boolean eqNumber(double x, Object y)
+    {
+        for (;;) {
+            if (y == null) {
+                return false;
+            } else if (y instanceof Number) {
+                return x == ((Number)y).doubleValue();
+            } else if (y instanceof String) {
+                return x == toNumber(y);
+            } else if (y instanceof Boolean) {
+                return x == (((Boolean)y).booleanValue() ? 1.0 : +0.0);
+            } else if (y instanceof Scriptable) {
+                if (y == Undefined.instance) { return false; }
                 y = toPrimitive(y);
-                yCopy = y;                                 // !!! JIT bug in Cafe 2.1
-                continue;
+            } else {
+                throw Kit.badTypeJS(y);
             }
-            if (typeX == ScriptableClass && x != null &&
-                (typeY == StringClass ||
-                 typeY == NumberClass))
-            {
-                x = toPrimitive(x);
-                xCopy = x;                                 // !!! JIT bug in Cafe 2.1
-                continue;
+        }
+    }
+
+    private static boolean eqString(String x, Object y)
+    {
+        for (;;) {
+            if (y == null) {
+                return false;
+            } else if (y instanceof String) {
+                return x.equals(y);
+            } else if (y instanceof Number) {
+                return toNumber(x) == ((Number)y).doubleValue();
+            } else if (y instanceof Boolean) {
+                return toNumber(x) == (((Boolean)y).booleanValue() ? 1.0 : 0.0);
+            } else if (y instanceof Scriptable) {
+                if (y == Undefined.instance) { return false; }
+                y = toPrimitive(y);
+            } else {
+                throw Kit.badTypeJS(y);
             }
             return false;
         }
     }
 
-    public static Boolean eqB(Object x, Object y) {
+    public static Boolean eqB(Object x, Object y)
+    {
         if (eq(x,y))
             return Boolean.TRUE;
         else
             return Boolean.FALSE;
     }
 
-    public static Boolean neB(Object x, Object y) {
+    public static Boolean neB(Object x, Object y)
+    {
         if (eq(x,y))
             return Boolean.FALSE;
         else
             return Boolean.TRUE;
     }
 
-    public static boolean shallowEq(Object x, Object y) {
-        Class type = getTypeOfValue(x);
-        if (type != getTypeOfValue(y))
-            return false;
-        if (type == StringClass || type == BooleanClass)
-            return x.equals(y);
-        if (type == NumberClass)
-            return ((Number) x).doubleValue() ==
-                   ((Number) y).doubleValue();
-        if (type == ScriptableClass) {
-            if (x == y)
+    public static boolean shallowEq(Object x, Object y)
+    {
+        if (x == y) {
+            if (!(x instanceof Number)) {
                 return true;
-            if (x instanceof Wrapper && y instanceof Wrapper)
-                return ((Wrapper) x).unwrap() ==
-                       ((Wrapper) y).unwrap();
-            return false;
+            }
+            // NaN check
+            double d = ((Number)x).doubleValue();
+            return d == d;
         }
-        if (type == UndefinedClass)
-            return true;
+        if (x == null) {
+            return false;
+        } else if (x instanceof Number) {
+            if (y instanceof Number) {
+                return ((Number)x).doubleValue() == ((Number)y).doubleValue();
+            }
+        } else if (x instanceof String) {
+            if (y instanceof String) {
+                return x.equals(y);
+            }
+        } else if (x instanceof Boolean) {
+            if (y instanceof Boolean) {
+                return x.equals(y);
+            }
+        } else if (x instanceof Scriptable) {
+            // x == Undefined.instance goes here as well
+            if (x instanceof Wrapper && y instanceof Wrapper) {
+                return ((Wrapper)x).unwrap() == ((Wrapper)y).unwrap();
+            }
+        } else {
+            throw Kit.badTypeJS(x);
+        }
         return false;
     }
 

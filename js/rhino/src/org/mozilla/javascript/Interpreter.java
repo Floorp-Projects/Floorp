@@ -3020,11 +3020,16 @@ public class Interpreter
         return new Double(x);
     }
 
-    private static int stack_int32(Object[] stack, double[] stackDbl, int i) {
+    private static int stack_int32(Object[] stack, double[] stackDbl, int i)
+    {
         Object x = stack[i];
-        return (x != DBL_MRK)
-            ? ScriptRuntime.toInt32(x)
-            : ScriptRuntime.toInt32(stackDbl[i]);
+        double value;
+        if (x == DBL_MRK) {
+            value = stackDbl[i];
+        } else {
+            value = ScriptRuntime.toNumber(x);
+        }
+        return ScriptRuntime.toInt32(value);
     }
 
     private static double stack_double(Object[] stack, double[] stackDbl,
@@ -3129,11 +3134,11 @@ public class Interpreter
             if (lhs == DBL_MRK) {
                 result = (stackDbl[stackTop] == stackDbl[stackTop + 1]);
             } else {
-                result = do_eq(stackDbl[stackTop + 1], lhs);
+                result = ScriptRuntime.eqNumber(stackDbl[stackTop + 1], lhs);
             }
         } else {
             if (lhs == DBL_MRK) {
-                result = do_eq(stackDbl[stackTop], rhs);
+                result = ScriptRuntime.eqNumber(stackDbl[stackTop], rhs);
             } else {
                 result = ScriptRuntime.eq(lhs, rhs);
             }
@@ -3141,58 +3146,34 @@ public class Interpreter
         return result;
     }
 
-// Optimized version of ScriptRuntime.eq if x is a Number
-    private static boolean do_eq(double x, Object y)
-    {
-        for (;;) {
-            if (y instanceof Number) {
-                return x == ((Number) y).doubleValue();
-            }
-            if (y instanceof String) {
-                return x == ScriptRuntime.toNumber((String)y);
-            }
-            if (y instanceof Boolean) {
-                return x == (((Boolean)y).booleanValue() ? 1 : 0);
-            }
-            if (y instanceof Scriptable) {
-                if (y == Undefined.instance) { return false; }
-                y = ScriptRuntime.toPrimitive(y);
-                continue;
-            }
-            return false;
-        }
-    }
-
     private static boolean do_sheq(Object[] stack, double[] stackDbl,
                                    int stackTop)
     {
-        boolean result;
         Object rhs = stack[stackTop + 1];
         Object lhs = stack[stackTop];
+        double rdbl, ldbl;
         if (rhs == DBL_MRK) {
-            double rDbl = stackDbl[stackTop + 1];
+            rdbl = stackDbl[stackTop + 1];
             if (lhs == DBL_MRK) {
-                result = (stackDbl[stackTop] == rDbl);
+                ldbl = stackDbl[stackTop];
+            } else if (lhs instanceof Number) {
+                ldbl = ((Number)lhs).doubleValue();
             } else {
-                result = (lhs instanceof Number);
-                if (result) {
-                    result = (((Number)lhs).doubleValue() == rDbl);
-                }
+                return false;
             }
-        } else if (rhs instanceof Number) {
-            double rDbl = ((Number)rhs).doubleValue();
-            if (lhs == DBL_MRK) {
-                result = (stackDbl[stackTop] == rDbl);
+        } else if (lhs == DBL_MRK) {
+            ldbl = stackDbl[stackTop];
+            if (rhs == DBL_MRK) {
+                rdbl = stackDbl[stackTop + 1];
+            } else if (rhs instanceof Number) {
+                rdbl = ((Number)rhs).doubleValue();
             } else {
-                result = (lhs instanceof Number);
-                if (result) {
-                    result = (((Number)lhs).doubleValue() == rDbl);
-                }
+                return false;
             }
         } else {
-            result = ScriptRuntime.shallowEq(lhs, rhs);
+            return ScriptRuntime.shallowEq(lhs, rhs);
         }
-        return result;
+        return ldbl == rdbl;
     }
 
     private static void do_getElem(Context cx,
