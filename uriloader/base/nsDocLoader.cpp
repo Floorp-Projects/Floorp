@@ -38,6 +38,25 @@
 class nsDocLoaderImpl;
 
 
+  /* Private IIDs... */
+/* eb001fa0-214f-11d2-bec0-00805f8a66dc */
+#define NS_DOCUMENTBINDINFO_IID   \
+{ 0xeb001fa0, 0x214f, 0x11d2, \
+  {0xbe, 0xc0, 0x00, 0x80, 0x5f, 0x8a, 0x66, 0xdc} }
+
+/* 28475a80-2150-11d2-bec0-00805f8a66dc */
+#define NS_DOCLOADERIMPL_IID   \
+{ 0x28475a80, 0x2150, 0x11d2, \
+  {0xbe, 0xc0, 0x00, 0x80, 0x5f, 0x8a, 0x66, 0xdc} }
+
+/* Define IIDs... */
+NS_DEFINE_IID(kIStreamObserverIID,        NS_ISTREAMOBSERVER_IID);
+NS_DEFINE_IID(kIDocumentLoaderIID,        NS_IDOCUMENTLOADER_IID);
+NS_DEFINE_IID(kIDocumentLoaderFactoryIID, NS_IDOCUMENTLOADERFACTORY_IID);
+NS_DEFINE_IID(kDocLoaderImplIID,          NS_DOCLOADERIMPL_IID);
+NS_DEFINE_IID(kDocumentBindInfoIID,       NS_DOCUMENTBINDINFO_IID);
+
+
 /* 
  * The nsDocumentBindInfo contains the state required when a single document
  * is being loaded...  Each instance remains alive until its target URL has 
@@ -57,7 +76,10 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    nsresult Bind(const nsString& aURLSpec, nsIPostData* aPostData);
+    nsresult Bind(const nsString& aURLSpec, 
+                  nsIPostData* aPostData, 
+                  nsIStreamListener* aListener);
+    nsresult Stop(void);
 
     /* nsIStreamListener interface methods... */
     NS_IMETHOD GetBindInfo(nsIURL* aURL);
@@ -79,6 +101,8 @@ public:
     NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
                                        nsString &aPassword);
 
+    PRInt32 GetStatus(void) { return mStatus; }
+
 protected:
     virtual ~nsDocumentBindInfo();
 
@@ -91,8 +115,16 @@ protected:
     nsINetSupport*      m_NetSupport;
     nsIStreamListener*  m_NextStream;
     nsDocLoaderImpl*    m_DocLoader;
+
+    PRInt32             mStatus;
 };
 
+
+
+
+/****************************************************************************
+ * nsDocFactoryImpl implementation...
+ ****************************************************************************/
 
 class nsDocFactoryImpl : public nsIDocumentLoaderFactory
 {
@@ -121,7 +153,6 @@ nsDocFactoryImpl::nsDocFactoryImpl()
 /*
  * Implementation of ISupports methods...
  */
-NS_DEFINE_IID(kIDocumentLoaderFactoryIID, NS_IDOCUMENTLOADERFACTORY_IID);
 NS_IMPL_ISUPPORTS(nsDocFactoryImpl,kIDocumentLoaderFactoryIID);
 
 static char* gValidTypes[] = {"text/html","text/xml","application/rtf",0};
@@ -236,42 +267,62 @@ nsresult nsDocFactoryImpl::InitUAStyleSheet()
 }
 
 
+/****************************************************************************
+ * nsDocLoaderImpl implementation...
+ ****************************************************************************/
 
 class nsDocLoaderImpl : public nsIDocumentLoader
 {
 public:
 
-    nsDocLoaderImpl();
+    nsDocLoaderImpl(nsDocLoaderImpl* aParent);
 
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD SetDocumentFactory(nsIDocumentLoaderFactory* aFactory);
 
     NS_IMETHOD LoadURL(const nsString& aURLSpec, 
                        const char *aCommand,
                        nsIContentViewerContainer* aContainer,
                        nsIPostData* aPostData = nsnull,
-                       nsISupports* aExtraInfo = nsnull, 
-                       nsIStreamObserver *anObserver = nsnull);
+                       nsISupports* aExtraInfo = nsnull,
+                       nsIStreamObserver* anObserver = nsnull);
+
+    NS_IMETHOD LoadURL(const nsString& aURLSpec,
+                       nsIStreamListener* aListener);
+
+    NS_IMETHOD Stop(void);
+
+    NS_IMETHOD CreateDocumentLoader(nsIDocumentLoader** anInstance);
+    NS_IMETHOD SetDocumentFactory(nsIDocumentLoaderFactory* aFactory);
 
     void LoadURLComplete(nsISupports* loader);
 
 protected:
     virtual ~nsDocLoaderImpl();
 
+private:
+    static PRBool StopBindInfoEnumerator (nsISupports* aElement, void* aData);
+    static PRBool StopDocLoaderEnumerator(nsISupports* aElement, void* aData);
+
 public:
     nsIDocumentLoaderFactory* m_DocFactory;
 
 protected:
     nsISupportsArray* m_LoadingDocsList;
+
+    nsDocLoaderImpl* mParent;
+    nsISupportsArray* mChildDocLoaderList;
 };
 
 
-nsDocLoaderImpl::nsDocLoaderImpl()
+nsDocLoaderImpl::nsDocLoaderImpl(nsDocLoaderImpl* aParent)
 {
     NS_INIT_REFCNT();
 
     NS_NewISupportsArray(&m_LoadingDocsList);
+    NS_NewISupportsArray(&mChildDocLoaderList);
+
+    mParent = aParent;
+    NS_IF_ADDREF(mParent);
 
     m_DocFactory = new nsDocFactoryImpl();
     NS_ADDREF(m_DocFactory);
@@ -280,6 +331,10 @@ nsDocLoaderImpl::nsDocLoaderImpl()
 
 nsDocLoaderImpl::~nsDocLoaderImpl()
 {
+    Stop();
+
+    NS_IF_RELEASE(mParent);
+    NS_IF_RELEASE(mChildDocLoaderList);
     NS_IF_RELEASE(m_LoadingDocsList);
     NS_IF_RELEASE(m_DocFactory);
 }
@@ -288,8 +343,55 @@ nsDocLoaderImpl::~nsDocLoaderImpl()
 /*
  * Implementation of ISupports methods...
  */
-NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
-NS_IMPL_ISUPPORTS(nsDocLoaderImpl,kIDocumentLoaderIID);
+NS_IMPL_ADDREF(nsDocLoaderImpl);
+NS_IMPL_RELEASE(nsDocLoaderImpl);
+
+NS_IMETHODIMP
+nsDocLoaderImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kIDocumentLoaderIID)) {
+    *aInstancePtr = (void*)(nsIDocumentLoader*)this;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kDocLoaderImplIID)) {
+    *aInstancePtr = (void*)this;
+    AddRef();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+
+
+NS_IMETHODIMP
+nsDocLoaderImpl::CreateDocumentLoader(nsIDocumentLoader** anInstance)
+{
+    nsDocLoaderImpl* newLoader = nsnull;
+    nsresult rv = NS_OK;
+
+    /* Check for initial error conditions... */
+    if (nsnull == anInstance) {
+        rv = NS_ERROR_NULL_POINTER;
+        goto done;
+    }
+
+    newLoader = new nsDocLoaderImpl(this);
+    if (nsnull == newLoader) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        goto done;
+    }
+    rv = newLoader->QueryInterface(kIDocumentLoaderIID, (void**)anInstance);
+
+    mChildDocLoaderList->AppendElement(newLoader);
+
+done:
+    return rv;
+}
+
 
 
 NS_IMETHODIMP
@@ -305,11 +407,11 @@ nsDocLoaderImpl::SetDocumentFactory(nsIDocumentLoaderFactory* aFactory)
 
 NS_IMETHODIMP
 nsDocLoaderImpl::LoadURL(const nsString& aURLSpec, 
-                            const char* aCommand,
-                            nsIContentViewerContainer* aContainer,
-                            nsIPostData* aPostData,
-                            nsISupports* aExtraInfo,
-                            nsIStreamObserver* anObserver)
+                         const char* aCommand,
+                         nsIContentViewerContainer* aContainer,
+                         nsIPostData* aPostData,
+                         nsISupports* aExtraInfo,
+                         nsIStreamObserver* anObserver)
 {
     nsresult rv;
     nsDocumentBindInfo* loader = nsnull;
@@ -320,8 +422,11 @@ nsDocLoaderImpl::LoadURL(const nsString& aURLSpec,
         goto done;
     }
 
-    loader = new nsDocumentBindInfo(this, aCommand, aContainer, 
-                                    aExtraInfo, anObserver);
+    loader = new nsDocumentBindInfo(this,           // DocLoader
+                                    aCommand,       // Command
+                                    aContainer,     // Viewer Container
+                                    aExtraInfo,     // Extra Info
+                                    anObserver);    // Observer
     if (nsnull == loader) {
         rv = NS_ERROR_OUT_OF_MEMORY;
         goto done;
@@ -329,24 +434,122 @@ nsDocLoaderImpl::LoadURL(const nsString& aURLSpec,
     /* The DocumentBindInfo reference is only held by the Array... */
     m_LoadingDocsList->AppendElement((nsIStreamListener *)loader);
 
-    rv = loader->Bind(aURLSpec, aPostData);
+    rv = loader->Bind(aURLSpec, aPostData, nsnull);
 
 done:
     return rv;
 }
 
 
-void nsDocLoaderImpl::LoadURLComplete(nsISupports* docInfo)
+NS_IMETHODIMP
+nsDocLoaderImpl::LoadURL(const nsString& aURLSpec,
+                         nsIStreamListener* aListener)
+{
+    nsresult rv;
+    nsDocumentBindInfo* loader = nsnull;
+
+    /* Check for initial error conditions... */
+    if (nsnull == aListener) {
+        rv = NS_ERROR_NULL_POINTER;
+        goto done;
+    }
+
+    loader = new nsDocumentBindInfo(this,           // DocLoader
+                                    nsnull,         // Command
+                                    nsnull,         // Viewer Container
+                                    nsnull,         // Extra Info
+                                    nsnull);        // Observer
+    if (nsnull == loader) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        goto done;
+    }
+
+    /* The DocumentBindInfo reference is only held by the Array... */
+    m_LoadingDocsList->AppendElement(((nsISupports*)(nsIStreamObserver*)loader));
+
+    rv = loader->Bind(aURLSpec, nsnull, aListener);
+done:
+    return rv;
+}
+
+
+NS_IMETHODIMP
+nsDocLoaderImpl::Stop(void)
+{
+    m_LoadingDocsList->EnumerateForwards(nsDocLoaderImpl::StopBindInfoEnumerator, nsnull);
+
+    /* 
+     * Now the only reference to each nsDocumentBindInfo instance is held by 
+     * Netlib via the nsIStreamListener interface...
+     * 
+     * When each connection is aborted, Netlib will release its reference to 
+     * the StreamListener and the DocumentBindInfo object will be deleted...
+     */
+    m_LoadingDocsList->Clear();
+
+    /*
+     * Now Stop() all documents being loaded by child DocumentLoaders...
+     */
+    mChildDocLoaderList->EnumerateForwards(nsDocLoaderImpl::StopDocLoaderEnumerator, nsnull);
+
+    return NS_OK;
+}       
+
+
+void nsDocLoaderImpl::LoadURLComplete(nsISupports* aBindInfo)
 {
     PRBool rv;
 
-    rv = m_LoadingDocsList->RemoveElement(docInfo);
-    NS_POSTCONDITION(PR_TRUE == rv, "DocLoader: Unable to remove completed document");
+    rv = m_LoadingDocsList->RemoveElement(aBindInfo);
+
+    /*
+     * If the entry was not found in the list, then it must have been cancelled
+     * via Stop(...).  
+     */
+#if defined(NS_DEBUG)
+    if (PR_TRUE != rv) {
+        nsDocumentBindInfo* docInfo;
+
+        docInfo->QueryInterface(kDocumentBindInfoIID, (void**)&docInfo);
+        NS_ASSERTION((docInfo->GetStatus() == NS_BINDING_ABORTED), 
+                     "Entry was not Aborted!");
+    }
+#endif /* NS_DEBUG */
+}
+
+
+PRBool nsDocLoaderImpl::StopBindInfoEnumerator(nsISupports* aElement, void* aData)
+{
+    nsresult rv;
+    nsDocumentBindInfo* bindInfo;
+
+    rv = aElement->QueryInterface(kDocumentBindInfoIID, (void**)&bindInfo);
+    if (NS_OK == rv) {
+        bindInfo->Stop();
+    }
+
+    return PR_TRUE;
+}
+
+
+PRBool nsDocLoaderImpl::StopDocLoaderEnumerator(nsISupports* aElement, void* aData)
+{
+    nsresult rv;
+    nsDocLoaderImpl* docLoader;
+    
+    rv = aElement->QueryInterface(kDocLoaderImplIID, (void**)&docLoader);
+    if (NS_OK == rv) {
+        docLoader->Stop();
+    }
+
+    return PR_TRUE;
 }
 
 
 
-
+/****************************************************************************
+ * nsDocumentBindInfo implementation...
+ ****************************************************************************/
 
 nsDocumentBindInfo::nsDocumentBindInfo(nsDocLoaderImpl* aDocLoader,
                                        const char *aCommand, 
@@ -398,8 +601,6 @@ nsDocumentBindInfo::~nsDocumentBindInfo()
 /*
  * Implementation of ISupports methods...
  */
-NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
-
 NS_IMPL_ADDREF(nsDocumentBindInfo);
 NS_IMPL_RELEASE(nsDocumentBindInfo);
 
@@ -424,6 +625,11 @@ nsDocumentBindInfo::QueryInterface(const nsIID& aIID,
     AddRef();
     return NS_OK;
   }
+  if (aIID.Equals(kDocumentBindInfoIID)) {
+    *aInstancePtrResult = (void*) this;
+    AddRef();
+    return NS_OK;
+  }
   if (aIID.Equals(kINetSupportIID)) {
     *aInstancePtrResult = (void*) ((nsINetSupport*)this);
     AddRef();
@@ -433,7 +639,8 @@ nsDocumentBindInfo::QueryInterface(const nsIID& aIID,
 }
 
 nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec, 
-                                  nsIPostData* aPostData)
+                                  nsIPostData* aPostData,
+                                  nsIStreamListener* aListener)
 {
     nsresult rv;
 
@@ -460,10 +667,24 @@ nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec,
         }
     }
 
+    /* Set up the stream listener (if provided)... */
+    if (nsnull != aListener) {
+        m_NextStream = aListener;
+        NS_ADDREF(m_NextStream);
+    }
+
     /* Start the URL binding process... */
     rv = m_Url->Open(this);
 
     return rv;
+}
+
+
+nsresult nsDocumentBindInfo::Stop(void)
+{
+    mStatus = NS_BINDING_ABORTED;
+
+    return NS_OK;
 }
 
 
@@ -507,33 +728,42 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentT
     nsresult rv = NS_OK;
     nsIContentViewer* viewer = nsnull;
 
-    /*
-     * Now that the content type is available, create a document (and viewer)
-     * of the appropriate type...
-     */
-    if (m_DocLoader->m_DocFactory) {
-        rv = m_DocLoader->m_DocFactory->CreateInstance(m_Url,
-                                                       aContentType, 
-                                                       m_Command, 
-                                                       m_Container,
-                                                       &m_NextStream, 
-                                                       &viewer);
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-
-    if (NS_OK != rv) {
+    /* If the binding has been canceled via Stop() then abort the load... */
+    if (NS_BINDING_ABORTED == mStatus) {
+        rv = NS_BINDING_ABORTED;
         goto done;
     }
 
-    /*
-     * Give the document container the new viewer...
-     */
-    viewer->SetContainer(m_Container);
+    if (nsnull == m_NextStream) {
 
-    rv = m_Container->Embed(viewer, m_Command, m_ExtraInfo);
-    if (NS_OK != rv) {
-        goto done;
+        /*
+         * Now that the content type is available, create a document (and viewer)
+         * of the appropriate type...
+         */
+        if (m_DocLoader->m_DocFactory) {
+            rv = m_DocLoader->m_DocFactory->CreateInstance(m_Url,
+                                                           aContentType, 
+                                                           m_Command, 
+                                                           m_Container,
+                                                           &m_NextStream, 
+                                                           &viewer);
+        } else {
+            rv = NS_ERROR_NULL_POINTER;
+        }
+
+        if (NS_OK != rv) {
+            goto done;
+        }
+
+        /*
+         * Give the document container the new viewer...
+         */
+        viewer->SetContainer(m_Container);
+
+        rv = m_Container->Embed(viewer, m_Command, m_ExtraInfo);
+        if (NS_OK != rv) {
+            goto done;
+        }
     }
 
     /*
@@ -564,12 +794,18 @@ NS_METHOD nsDocumentBindInfo::OnDataAvailable(nsIURL* aURL,
 {
     nsresult rv = NS_OK;
 
-    NS_PRECONDITION(nsnull !=m_NextStream, "DocLoader: No stream for document");
+    /* If the binding has been canceled via Stop() then abort the load... */
+    if (NS_BINDING_ABORTED == mStatus) {
+        rv = NS_BINDING_ABORTED;
+        goto done;
+    }
 
+    NS_PRECONDITION(nsnull !=m_NextStream, "DocLoader: No stream for document");
     if (nsnull != m_NextStream) {
         rv = m_NextStream->OnDataAvailable(aURL, aStream, aLength);
     }
 
+done:
     return rv;
 }
 
@@ -697,7 +933,9 @@ nsDocumentLoaderFactory::CreateInstance(nsISupports* aOuter,
                                         void** aResult)
 {
     nsresult rv;
-    nsDocLoaderImpl* inst;
+    nsIDocumentLoader* inst;
+    static nsDocLoaderImpl* gGlobalDocLoader = nsnull;
+
 
     if (nsnull == aResult) {
         rv = NS_ERROR_NULL_POINTER;
@@ -710,15 +948,22 @@ nsDocumentLoaderFactory::CreateInstance(nsISupports* aOuter,
         goto done;
     }
 
-    inst = new nsDocLoaderImpl();
-    if (nsnull == inst) {
+    if (nsnull == gGlobalDocLoader) {
+        gGlobalDocLoader = new nsDocLoaderImpl(nsnull);
+        if (nsnull == gGlobalDocLoader) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            goto done;
+        }
+
+        NS_ADDREF(gGlobalDocLoader);    // RefCount = 1
+    }
+
+    rv = gGlobalDocLoader->CreateDocumentLoader(&inst);
+    if (NS_OK != rv) {
         rv = NS_ERROR_OUT_OF_MEMORY;
         goto done;
     }
-
-    NS_ADDREF(inst);    // RefCount = 1
-    rv = inst->QueryInterface(aIID, aResult);
-    NS_RELEASE(inst);
+    *aResult = inst;
 
 done:
     return rv;
