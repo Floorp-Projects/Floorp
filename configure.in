@@ -2964,6 +2964,15 @@ if test "$IBMBIDI"; then
   AC_DEFINE(IBMBIDI)
 fi
 
+dnl complex text support off by default
+SUNCTL=
+MOZ_ARG_ENABLE_BOOL(ctl,
+[  --enable-ctl           Enable Thai Complex Script support],
+  SUNCTL=1 )
+if test "$SUNCTL"; then
+  AC_DEFINE(SUNCTL)
+fi
+
 dnl accessibility support on by default
 ACCESSIBILITY=1
 MOZ_ARG_DISABLE_BOOL(accessibility,
@@ -3405,7 +3414,12 @@ dnl Need cookie and wallet to build mozilla, this should
 dnl not be the case, 18352 has been filed.
 dnl http://bugzilla.mozilla.org/show_bug.cgi?id=18352
 MOZ_EXTENSIONS_DEFAULT="cookie wallet content-packs xml-rpc xmlextras help transformiix"
-MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT irc xmlterm inspector access-builtin venkman" 
+MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT irc xmlterm inspector access-builtin venkman ctl" 
+
+dnl Check if Thai Rendering Extension needs to be enabled
+if test -n "$SUNCTL"; then
+  MOZ_EXTENSIONS_DEFAULT = "$MOZ_EXTENSIONS_DEFAULT ctl"
+fi
 
 MOZ_ARG_WITH_STRING(extensions,
 [  --with-extensions       Enable extensions (dirs in extensions/)],
@@ -3431,6 +3445,11 @@ fi
 if test -z "$MOZ_JSDEBUGGER" && test `echo "$MOZ_EXTENSIONS" | grep -c venkman` -ne 0; then
     AC_MSG_WARN([Cannot build venkman without JavaScript debug library. Removing venkman from MOZ_EXTENSIONS.])
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|venkman||'`
+fi
+
+if test -z "$MOZ_ENABLE_GTK" && test `echo "$MOZ_EXTENSIONS" | grep -c ctl` -ne 0; then
+    AC_MSG_WARN([Cannot build ctl without glib. Removing ctl from MOZ_EXTENSIONS.])
+    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|ctl||'`
 fi
 
 dnl Disable jar packaging
@@ -4075,6 +4094,7 @@ AC_SUBST(MOZ_STATIC_COMPONENTS)
 AC_SUBST(MOZ_META_COMPONENTS)
 AC_SUBST(ENABLE_TESTS)
 AC_SUBST(IBMBIDI)
+AC_SUBST(SUNCTL)
 AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(BUILD_IDLC)
