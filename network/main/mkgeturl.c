@@ -109,13 +109,11 @@
 
 #include "np.h"
 #include "prefapi.h"
-#ifdef NSPR20
 #ifdef XP_MAC
 #include "prpriv.h"             /* for NewNamedMonitor */
 #else
 #include "private/prpriv.h"
 #endif
-#endif /* NSPR20 */
 
 #include "sslerr.h"
 #include "merrors.h"
@@ -766,7 +764,7 @@ NET_InitNetLib(int socket_buffer_size, int max_number_of_connections)
 {
     int status;
 
-#if defined(NSPR20) && defined(DEBUG)
+#if defined(DEBUG)
         if (NETLIB==NULL)
            NETLIB = PR_NewLogModule("NETLIB");
 #endif
@@ -1296,12 +1294,7 @@ NET_PrintNetlibStatus()
 #if defined(DEBUG) && defined(JAVA)
 	{
 		static int loggingOn = 0;
-#ifndef NSPR20
-		NETLIBLog.level = (loggingOn ? PRLogLevel_none : PRLogLevel_debug);
-		NETLIBLog.depth = 0;    /* keep it from auto-initializing */
-#else
 		NETLIB->level = (loggingOn ? PR_LOG_NONE : PR_LOG_DEBUG);
-#endif /* NSPR20 */
 		loggingOn = !loggingOn;
 	}
 #endif /*  defined(DEBUG) && defined(JAVA) */
@@ -1503,15 +1496,10 @@ net_IsHostResolvable (CONST char *hostname, MWContext *context)
 	int rv;
 	PRHostEnt hpbuf;
 	char dbbuf[PR_NETDB_BUF_SIZE];
-#ifndef NSPR20
-	rv = (PR_gethostbyname(hostname, &hpbuf, dbbuf, sizeof(dbbuf), 0)
-		  ? TRUE : FALSE);
-#else
-        if (PR_GetHostByName(hostname, dbbuf, sizeof(dbbuf), &hpbuf) == PR_FAILURE)
+    if (PR_GetHostByName(hostname, dbbuf, sizeof(dbbuf), &hpbuf) == PR_FAILURE)
 	    rv = FALSE;
 	else
 	    rv = TRUE;
-#endif
 	return rv;
 #else
 	return(FALSE);
@@ -1620,14 +1608,6 @@ NET_SanityCheckDNS (MWContext *context)
 
 	  /* gethostname() and gethostbyname() often return different data -
 	     on many systems, the former is basename, the latter is FQDN. */
-#ifndef NSPR20
-	  if (local &&
-	      (hent = PR_gethostbyname (local, &hpbuf, dbbuf, sizeof(dbbuf), 0)) &&
-	      PL_strcmp (local, hent->h_name))
-	    local2 = PL_strdup (hent->h_name);
-	  else
-	    local2 = 0;
-#else
           local2 = 0;
 	  if (local &&
 	      (PR_GetHostByName (local, dbbuf, sizeof(dbbuf), &hpbuf) == PR_SUCCESS)) { 
@@ -1635,7 +1615,6 @@ NET_SanityCheckDNS (MWContext *context)
 	  if (PL_strcmp (local, hent->h_name))
 	    local2 = PL_strdup (hent->h_name);
       }
-#endif
 	  if (local && *local && !net_IsHostResolvable (local, context))
 	    losers [loser_count++] = local;
 	  if (local2 && *local2 && !net_IsHostResolvable (local2, context))
@@ -2857,7 +2836,7 @@ NET_GetURL (URL_Struct *URL_s,
      * have submitted a network request.
      * BUG #123826
      */
-#if !defined(NSPR20_DISABLED) && defined(XP_UNIX)
+#if defined(XP_UNIX)
 	/* temporarily use busy poll to ease transition */
 	NET_SetCallNetlibAllTheTime(window_id, "mkgeturl");
 #endif
@@ -3303,9 +3282,7 @@ PUBLIC int NET_ProcessNet (PRFileDesc *ready_fd,  int fd_type)
 			int count=0;
 			int ret;
 			
-#ifndef NSPR20_DISABLED
 			PR_Sleep(PR_INTERVAL_NO_WAIT); /* thread yeild */
-#endif
 
 			ret = PR_Poll(poll_desc_array,
 							 fd_set_size,

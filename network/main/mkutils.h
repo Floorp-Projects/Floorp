@@ -42,12 +42,6 @@
 #endif /* XP_UNIX */
 /*#include "version.h"*/
 
-#ifndef NSPR20
-#if defined(__sun)
-# include "sunos4.h"
-#endif /* __sun */
-#endif /* NSPR20 */
-
 #define FREE_AND_CLEAR(x) NET_f_a_c(&x) 
 
 PR_BEGIN_EXTERN_C

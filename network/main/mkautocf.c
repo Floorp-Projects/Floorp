@@ -48,15 +48,7 @@
 #undef WANT_ENUM_STRING_IDS
 #include "mkreg.h"
 
-#ifndef NSPR20
-#if defined(XP_UNIX) || defined(XP_WIN32)
 #include "prnetdb.h"
-#else
-#define PRHostEnt struct hostent
-#endif
-#else
-#include "prnetdb.h"
-#endif
 
 #include "net.h"
 #include "libmocha.h"
@@ -160,7 +152,6 @@ extern XP_Bool NET_GlobalAcLoaded;
 extern PRBool NET_ProxyAcLoaded;
 
 /* Private proxy auto-config variables */
-#ifdef MOCHA
 PRIVATE Bool    pacf_do_failover  = TRUE;
 PRIVATE Bool    pacf_loading      = FALSE;
 PRIVATE Bool    pacf_ok           = FALSE;
@@ -392,28 +383,14 @@ PRIVATE Bool fill_return_values(PACF_Type   type,
 	    node->socks_addr = inet_addr(host);
 	}
 	else {
-#ifdef NSPR20
 		PRStatus rv;
 	    PRHostEnt  *hp;
 	    PRHostEnt  hpbuf;
 	    char dbbuf[PR_NETDB_BUF_SIZE];
-#else
-	    struct hostent  *hp;
-#if defined(XP_UNIX) || defined(XP_WIN32) 
-	    struct hostent hpbuf;
-	    char dbbuf[PR_NETDB_BUF_SIZE];
-#endif
-#endif /* NSPR20 */
 
 	    NET_InGetHostByName++; /* global semaphore */
-#ifdef NSPR20
 	    rv = PR_GetHostByName(host, dbbuf, sizeof(dbbuf),  &hpbuf);
 	    hp = (rv == PR_SUCCESS ? &hpbuf : NULL);
-#elif defined(XP_UNIX) || defined(XP_WIN32)
-	    hp = PR_gethostbyname(host, &hpbuf, dbbuf, sizeof(dbbuf), 0); 
-#else
-	    hp = gethostbyname(host); 
-#endif
 	    NET_InGetHostByName--; /* global semaphore */
 
 	    if (!hp)
@@ -428,8 +405,6 @@ PRIVATE Bool fill_return_values(PACF_Type   type,
     return TRUE;
 }
 
-#endif /* MOCHA */
-
 /* NET_SetNoProxyFailover
  * Sets a flag that indicates that proxy failover should not
  * be done.  This is used by the Enterprise Kit code, where
@@ -438,9 +413,7 @@ PRIVATE Bool fill_return_values(PACF_Type   type,
  * proxies, or no proxies to be used. */
 PUBLIC void
 NET_SetNoProxyFailover(void) {
-#ifdef MOCHA
   pacf_do_failover = FALSE;
-#endif
 }
 
 PUBLIC PRBool
@@ -475,7 +448,6 @@ NET_GetNoProxyFailover(void) {
 MODULE_PRIVATE Bool
 pacf_get_proxy_addr(MWContext *context, char *list, char **ret_proxy_addr,
 		    u_long *ret_socks_addr, short *ret_socks_port) {
-#ifdef MOCHA
     Bool rv = FALSE;
     char *my_copy, *cur, *p, *addr;
     PACF_Type type = PACF_TYPE_INVALID;
@@ -676,12 +648,8 @@ pacf_get_proxy_addr(MWContext *context, char *list, char **ret_proxy_addr,
       {
 	  return FALSE;
       }
-#else
-	return FALSE;
-#endif /* MOCHA */
 }
 
-#ifdef MOCHA
 
 
 /* Saves out the proxy autoconfig file to disk, in case the server
@@ -902,7 +870,6 @@ PRIVATE void pacf_abort(NET_StreamClass *stream, int status) {
     PR_Free(obj);
 }
 
-#endif /* MOCHA */
 
 /* A stream constructor function for application/x-ns-proxy-autoconfig. 
  * This is used by cvmime.c; it's registered as the stream converter for
@@ -910,7 +877,6 @@ PRIVATE void pacf_abort(NET_StreamClass *stream, int status) {
 MODULE_PRIVATE NET_StreamClass *
 NET_ProxyAutoConfig(int fmt, void *data_obj, URL_Struct *URL_s, 
 					MWContext *w) {
-#ifdef MOCHA
     PACF_Object         *obj;
     NET_StreamClass     *stream;
 
@@ -953,12 +919,8 @@ NET_ProxyAutoConfig(int fmt, void *data_obj, URL_Struct *URL_s,
     stream->window_id           = w;
 
     return stream;
-#else   /* ! MOCHA */
-    return NULL;
-#endif  /* ! MOCHA */
 }
 
-#ifdef MOCHA
 
 
 /* calls NET_GetURL() to get the url that had been queued up behind the 
@@ -1022,7 +984,6 @@ static void pacf_restart_queued(URL_Struct *URL_s, int status,
 	queued_state = NULL;
 }
 
-#endif /* MOCHA */
 
 
 /* Called by mkgeturl.c to originally retrieve, and re-retrieve
@@ -1087,11 +1048,9 @@ MODULE_PRIVATE int NET_LoadProxyConfig(char *autoconf_url,
 /* Returns a pointer to a NULL-terminted buffer which contains
  * the text of the proxy autoconfig file. */
 PUBLIC char * NET_GetProxyConfigSource(void) {
-#ifdef MOCHA
+
     return pacf_src_buf;
-#else
-    return 0;
-#endif
+
 }
 
 
@@ -1100,7 +1059,6 @@ PUBLIC char * NET_GetProxyConfigSource(void) {
  * which is a JavaScript routine. */
 MODULE_PRIVATE char *pacf_find_proxies_for_url(MWContext *context, 
 											   URL_Struct *URL_s ) {
-#ifdef MOCHA
     jsval rv;
     char *buf = NULL;
     char *host = NULL;
@@ -1235,13 +1193,8 @@ out:
     FREEIF(bad_url);
     return result;
 
-#else   /* ! MOCHA */
-
-    return NULL;
-#endif  /* ! MOCHA */
 }
 
-#ifdef MOCHA
 
 /* Utility functions to be called from Javascript (aka Mocha).
  * These are the actual implementations of the javascript fucntions that
@@ -1402,14 +1355,8 @@ proxy_isResolvable(JSContext *mc, JSObject *obj, unsigned int argc,
 	    char *safe = PL_strdup(h);
 	    if (PL_strlen(safe) > 64)
 		safe[64] = '\0';
-#ifdef NSPR20
 	    rv = PR_GetHostByName(safe, dbbuf, sizeof(dbbuf),  &hpbuf);
 	    hp = (rv == PR_SUCCESS ? &hpbuf : NULL);
-#elif defined(XP_UNIX) || defined(XP_WIN32)
-	    hp = PR_gethostbyname(safe, &hpbuf, dbbuf, sizeof(dbbuf), 0);
-#else
-	    hp = gethostbyname(safe);
-#endif
 	    PR_Free(safe);
 	}
 
@@ -1434,18 +1381,10 @@ proxy_isResolvable(JSContext *mc, JSObject *obj, unsigned int argc,
 PRIVATE char *proxy_dns_resolve(const char *host) {
     static char *cache_host = NULL;
     static char *cache_ip = NULL;
-#ifdef NSPR20
 	PRStatus rv;
     PRHostEnt *hp = NULL;
     PRHostEnt hpbuf;
     char dbbuf[PR_NETDB_BUF_SIZE];
-#else
-    struct hostent *hp = NULL;
-#if defined(XP_UNIX) || defined(XP_WIN32)
-    struct hostent hpbuf;
-    char dbbuf[PR_NETDB_BUF_SIZE];
-#endif
-#endif /* xNSPR20 */
 
     if (host) {
 	const char *p;
@@ -1470,14 +1409,9 @@ PRIVATE char *proxy_dns_resolve(const char *host) {
 	    if (PL_strlen(safe) > 64)
 		safe[64] = '\0';
 
-#ifdef NSPR20
 	    rv = PR_GetHostByName(safe, dbbuf, sizeof(dbbuf),  &hpbuf);
 	    hp = (rv == PR_SUCCESS ? &hpbuf : NULL);
-#elif defined(XP_UNIX) || defined(XP_WIN32)
-	    hp = PR_gethostbyname(safe, &hpbuf, dbbuf, sizeof(dbbuf), 0);
-#else
-	    hp = gethostbyname(safe);
-#endif
+
 	    PR_Free(safe);
 	}
 	if (hp) {
@@ -1532,15 +1466,9 @@ proxy_myIpAddress(JSContext *mc, JSObject *obj, unsigned int argc,
 	char name[100];
 
 	initialized = TRUE;
-#ifndef NSPR20
-	if (gethostname(name, sizeof(name)) == 0) {
-	    my_address = proxy_dns_resolve(name);
-	}
-#else
 	if (PR_GetSystemInfo(PR_SI_HOSTNAME, name, sizeof(name)) == PR_SUCCESS) {
 	    my_address = proxy_dns_resolve(name);
 	}
-#endif
     }
 
     TRACEMSG(("~~~~~~~~~~~~~~~~~~ myIpAddress() returns %s\n", my_address ? my_address : "(null)"));
@@ -1801,4 +1729,3 @@ proxy_timeRange(JSContext *mc, JSObject *obj, unsigned int argc,
 	return JS_TRUE;
 }
 
-#endif /* MOCHA */
