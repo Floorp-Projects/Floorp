@@ -38,6 +38,7 @@
 #define __nsCommandLineService_h
 
 #include "nsISupports.h"
+#include "nsICmdLineService.h"
 #include "nsVoidArray.h"
 
 class nsCmdLineService : public nsICmdLineService
