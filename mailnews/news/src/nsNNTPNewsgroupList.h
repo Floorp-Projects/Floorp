@@ -61,4 +61,4 @@ NS_NewNewsgroupList(nsINNTPNewsgroupList **aInstancePtrResult,
 					const char *name,
 					const char *url);
     
-#endif
+#endif /* nsNNTPNewsgroupListState_h___ */
