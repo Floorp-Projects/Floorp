@@ -23,6 +23,7 @@
 #include "nsIDOMNSUIEvent.h"
 #include "nsISupports.h"
 #include "nsIPrivateDOMEvent.h"
+#include "nsIPrivateCompositionEvent.h"
 #include "nsIPrivateTextEvent.h"
 #include "nsIPrivateTextRange.h"
 
@@ -33,7 +34,7 @@ class nsIContent;
 
 class nsIDOMRenderingContext;
 
-class nsDOMEvent : public nsIDOMUIEvent, public nsIDOMNSUIEvent, public nsIPrivateDOMEvent, public nsIPrivateTextEvent {
+class nsDOMEvent : public nsIDOMUIEvent, public nsIDOMNSUIEvent, public nsIPrivateDOMEvent, public nsIPrivateTextEvent, public nsIPrivateCompositionEvent {
 
 public:
   // Note: this enum must be kept in sync with mEventNames in nsDOMEvent.cpp
@@ -135,6 +136,8 @@ public:
 	NS_IMETHOD GetInputRange(nsIPrivateTextRangeList** aInputRange);
 	NS_IMETHOD GetEventReply(nsTextEventReply** aReply);
 
+  // nsIPrivateCompositionEvent interface
+  NS_IMETHOD GetCompositionReply(nsTextEventReply** aReply);
 
 protected:
 

@@ -193,7 +193,7 @@ protected:
 
     void GetNonClientBounds(nsRect &aRect);
 	void HandleTextEvent(HIMC hIMEContext);
-	void HandleStartComposition(void);
+	void HandleStartComposition(HIMC hIMEContext);
 	void HandleEndComposition(void);
 	void MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthResult, nsTextRangeArray* textRangeListResult);
 

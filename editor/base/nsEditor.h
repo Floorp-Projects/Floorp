@@ -193,7 +193,7 @@ public:
 
   /* ------------ nsIEditorIMESupport methods -------------- */
   
-  NS_IMETHOD BeginComposition(void);
+  NS_IMETHOD BeginComposition(nsTextEventReply* aReply);
   NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply);
   NS_IMETHOD EndComposition(void);
 

@@ -32,6 +32,7 @@
 #include "nsIDOMUIEvent.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsIPrivateTextEvent.h"
+#include "nsIPrivateCompositionEvent.h"
 #include "nsIEditorMailSupport.h"
 #include "nsIDocumentEncoder.h"
 
@@ -1489,7 +1490,15 @@ void nsTextEditorCompositionListener::SetEditor(nsIEditor *aEditor)
 nsresult
 nsTextEditorCompositionListener::HandleStartComposition(nsIDOMEvent* aCompositionEvent)
 {
-   return mEditor->BeginComposition();
+  nsCOMPtr<nsIPrivateCompositionEvent> pCompositionEvent = do_QueryInterface(aCompositionEvent);
+  nsTextEventReply* eventReply;
+
+  if (!pCompositionEvent) return NS_ERROR_FAILURE;
+  
+  nsresult rv = pCompositionEvent->GetCompositionReply(&eventReply);
+  if (NS_FAILED(rv)) return rv;
+
+  return mEditor->BeginComposition(eventReply);
 }
 
 nsresult

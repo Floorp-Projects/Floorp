@@ -30,6 +30,7 @@ EXPORTS =			    \
 	nsIPrivateDOMEvent.h	    \
 	nsIPrivateTextEvent.h		\
 	nsIPrivateTextRange.h		\
+	nsIPrivateCompositionEvent.h \
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

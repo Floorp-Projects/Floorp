@@ -1104,7 +1104,7 @@ nsEditor::DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)
 // created of IMETextTxn's.
 //
 NS_IMETHODIMP
-nsEditor::BeginComposition(void)
+nsEditor::BeginComposition(nsTextEventReply* aReply)
 {
 #ifdef DEBUG_tague
   printf("nsEditor::StartComposition\n");
@@ -1113,10 +1113,16 @@ nsEditor::BeginComposition(void)
   PRInt32 offset;
   nsCOMPtr<nsIDOMSelection> selection;
   nsCOMPtr<nsIDOMCharacterData> nodeAsText;
-  
+  nsCOMPtr<nsICaret> caretP; 
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  result = ps->GetCaret(getter_AddRefs(caretP));
+  if (NS_SUCCEEDED(result) && caretP) {
+    if (aReply) {
+      caretP->GetWindowRelativeCoordinates(aReply->mCursorPosition,aReply->mCursorIsCollapsed);
+    }
+  }
   result = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
   if ((NS_SUCCEEDED(result)) && selection)
   {
@@ -3879,7 +3885,7 @@ nsEditor::CreateTxnForIMEText(const nsString & aStringToInsert,
   nsresult  result;
 
   if (mIMETextNode==nsnull) 
-    BeginComposition();
+    BeginComposition(nsnull);
 
   result = TransactionFactory::GetNewTransaction(IMETextTxn::GetCID(), (EditTxn **)aTxn);
   if (nsnull!=*aTxn) {

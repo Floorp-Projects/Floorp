@@ -36,10 +36,10 @@ public:
 
 
   /**
-   * BeginComposition() Handles the start of inline input composition.
+   * BeginComposition(nsTextEventReply* aReply) Handles the start of inline input composition.
    */
 
-  NS_IMETHOD BeginComposition(void) = 0;
+  NS_IMETHOD BeginComposition(nsTextEventReply *aReply) = 0;
 
   /**
    * SetCompositionString() Sets the inline input composition string.

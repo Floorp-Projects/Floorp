@@ -2680,16 +2680,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			if (hIMEContext==NULL) {
 				return PR_TRUE;
 			}
-
-			compForm.dwStyle = CFS_POINT;
-			compForm.ptCurrentPos.x = 100;
-			compForm.ptCurrentPos.y = 100;
-
-//			::ImmSetCompositionWindow(hIMEContext,&compForm);	don't do this! it's bad.
-			::ImmReleaseContext(mWnd,hIMEContext);
-
-			HandleStartComposition();
+			HandleStartComposition(hIMEContext);
 			result = PR_TRUE;
+			::ImmReleaseContext(mWnd,hIMEContext);
 			}
 			break;
 
@@ -2779,7 +2772,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 				result = PR_TRUE;
 				HandleTextEvent(hIMEContext);
 				HandleEndComposition();
-				HandleStartComposition();
+				HandleStartComposition(hIMEContext);
 			}
 			
 			::ImmReleaseContext(mWnd,hIMEContext);
@@ -3533,10 +3526,11 @@ nsWindow::HandleTextEvent(HIMC hIMEContext)
 }
 
 void
-nsWindow::HandleStartComposition(void)
+nsWindow::HandleStartComposition(HIMC hIMEContext)
 {
 	nsCompositionEvent	event;
 	nsPoint				point;
+	CANDIDATEFORM		candForm;
 
 	point.x	= 0;
 	point.y = 0;
@@ -3545,6 +3539,18 @@ nsWindow::HandleStartComposition(void)
 	event.eventStructType = NS_COMPOSITION_START;
 	event.compositionMessage = NS_COMPOSITION_START;
 	(void)DispatchWindowEvent(&event);
+
+	//
+	// Post process event
+	//
+	candForm.dwIndex = 0;
+	candForm.dwStyle = CFS_CANDIDATEPOS;
+	candForm.ptCurrentPos.x = event.theReply.mCursorPosition.x + IME_X_OFFSET;
+	candForm.ptCurrentPos.y = event.theReply.mCursorPosition.y + IME_Y_OFFSET;
+#ifdef DEBUG_tague
+	printf("Candidate window position: x=%d, y=%d\n",candForm.ptCurrentPos.x,candForm.ptCurrentPos.y);
+#endif
+	::ImmSetCandidateWindow(hIMEContext,&candForm);
 	NS_RELEASE(event.widget);
 }
 
