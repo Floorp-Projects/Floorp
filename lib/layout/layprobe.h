@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+/* Created by: Nisheeth Ranjan (nisheeth@netscape.com), March 1998 */
 
 /* 
  * Defines the abstraction of a layout probe object that gives information about 
@@ -25,6 +26,24 @@
  */
 
 #include "structs.h"
+
+/* The different types of layout elements */
+#define LO_TEXT         1
+#define LO_HRULE        3
+#define LO_IMAGE        4
+#define LO_BULLET       5
+#define LO_FORM_ELE     6
+#define LO_TABLE        8
+#define LO_CELL         9
+#define LO_EMBED        10
+#define LO_JAVA         12
+#define LO_OBJECT       14
+
+typedef enum _ColorType {
+LO_QA_BACKGROUND_COLOR,
+LO_QA_FOREGROUND_COLOR,
+LO_QA_BORDER_COLOR
+} ColorType;
 
 /* 
  * Constructor/Destructor for probe 
@@ -105,7 +124,17 @@ Bool LO_QA_HasColor( long probeID, Bool *hasColor );
 Bool LO_QA_HasChild( long probeID, Bool *hasChild );
 Bool LO_QA_HasParent( long probeID, Bool *hasParent );
 
-Bool LO_QA_GetText( long probeID, char **text );
-Bool LO_QA_GetURL( long probeID, char **url );
+Bool LO_QA_GetTextLength( long probeID, long *length);
+Bool LO_QA_GetText( long probeID, char *text, long length);
 
+/*   Color Type                       Elements containing the color type 
+     ----------                       ----------------------------------
+	 LO_QA_BACKGROUND_COLOR           LO_TEXT, LO_BULLET, LO_CELL
+	 LO_QA_FOREGROUND_COLOR           LO_TEXT, LO_BULLET
+	 LO_QA_BORDER_COLOR               LO_TABLE
 
+     Based on the element type and the color type, gets the color of the element
+	 at which the probe is currently positioned.  Returns TRUE if successful,
+	 FALSE if not.
+*/
+Bool LO_QA_GetColor( long probeID, long *color, ColorType type);
