@@ -971,11 +971,25 @@ nsInlineFrame::ReflowFrame(nsInlineReflowState& aState,
                            nsIFrame* aFrame,
                            nsReflowStatus& aReflowStatus)
 {
+#if XXX
+  PRBool firstLetterOK = aState.lineLayout->GetFirstLetterStyleOK();
+#else
+  // XXX Until the CSS2 spec lawyers wrangle this out, we don't allow
+  // for first letter style to apply anywhere except for text which is
+  // a direct descendant of a block frame.
+  aState.lineLayout->SetFirstLetterStyleOK(PR_FALSE);
+#endif
+  PRBool justDidFirstLetter = PR_FALSE;
   aInlineReflow.SetIsFirstChild(aFrame == mFirstChild);
   aReflowStatus = aInlineReflow.ReflowFrame(aFrame);
   if (NS_IS_REFLOW_ERROR(aReflowStatus)) {
     return PR_FALSE;
   }
+#if XXX
+  if (!aState.lineLayout->GetFirstLetterStyleOK() && firstLetterOK) {
+    justDidFirstLetter = PR_TRUE;
+  }
+#endif
 
   // XXX temporary code until blocks can return break-after naturally
   if (aInlineReflow.GetIsBlock()) {
@@ -1039,13 +1053,15 @@ nsInlineFrame::ReflowFrame(nsInlineReflowState& aState,
     aState.mLastChild = aFrame;
     aFrame->GetNextSibling(aFrame);
 
-    // Push remaining frames, if any. There may be no more frames if
-    // the continuation frame already existed and it belongs to
-    // <b>our</b> next-in-flow.
-    if (nsnull != aFrame) {
-      PushKids(aState, aInlineReflow, aFrame);
+    if (!justDidFirstLetter) {
+      // Push remaining frames, if any. There may be no more frames if
+      // the continuation frame already existed and it belongs to
+      // <b>our</b> next-in-flow.
+      if (nsnull != aFrame) {
+        PushKids(aState, aInlineReflow, aFrame);
+      }
+      return PR_FALSE;
     }
-    return PR_FALSE;
   }
 
   if (NS_INLINE_IS_BREAK_AFTER(aReflowStatus)) {

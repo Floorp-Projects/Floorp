@@ -1630,6 +1630,7 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
 
   PRBool wrapping = NS_STYLE_WHITESPACE_NORMAL == ts.mText->mWhiteSpace;
   PRBool firstLetterOK = lineLayout.GetFirstLetterStyleOK();
+  PRBool justDidFirstLetter = PR_FALSE;
 
   // Set whitespace skip flag
   PRBool skipWhitespace = PR_FALSE;
@@ -1716,8 +1717,15 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
       if (firstLetterOK) {
         // XXX need a lookup function here; plus look ahead using the
         // text-runs
-        wordLen = 1;
-        contentLen = 1;
+        if ((bp[0] == '\'') || (bp[0] == '"')) {
+          wordLen = 2;
+          contentLen = 2;
+        }
+        else {
+          wordLen = 1;
+          contentLen = 1;
+        }
+        justDidFirstLetter = PR_TRUE;
       }
       if (ts.mSmallCaps) {
         MeasureSmallCapsText(aReflowState, ts, bp, wordLen, width);
@@ -1747,7 +1755,7 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
     endsInWhitespace = isWhitespace;
     prevOffset = offset;
     offset += contentLen;
-    if (!isWhitespace && firstLetterOK) {
+    if (!isWhitespace && justDidFirstLetter) {
       // Time to stop
       break;
     }
@@ -1840,6 +1848,9 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   lineLayout.SetUnderstandsWhiteSpace(PR_TRUE);
   if (0 != x) {
     lineLayout.SetEndsInWhiteSpace(endsInWhitespace);
+  }
+  if (justDidFirstLetter) {
+    lineLayout.SetFirstLetterStyleOK(PR_FALSE);
   }
 
   // Setup metrics for caller; store final max-element-size information
