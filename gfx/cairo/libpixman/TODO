@@ -1,0 +1,10 @@
+Need to finish up libpixman to the point where there X server can use
+it in place of its original copy of all this code (eg. in fb).  This
+means merging features that have happened in either tree since the
+birth of libpixman. Off-hand I can think of the following things that
+have happened:
+
+	* libpixman has fix for transform + repeat
+	* X server has some (MMX? SSE?) optimized compositing code
+
+But see the logs for more details.

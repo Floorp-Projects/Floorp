@@ -1,0 +1,465 @@
+Snapshot 0.3.0 (2005-01-21 Carl Worth <cworth@cworth.org>)
+==========================================================
+Major API changes
+-----------------
+1) The public header files will no longer be directly installed into
+   the system include directory. They will now be installed in a
+   subdirectory named "cairo", (eg. in /usr/include/cairo rather than
+   in /usr/include).
+
+   As always, the easiest way for applications to discover the
+   location of the header file is to let pkg-config generate the
+   necessary -I CFLAGS and -L/-l LDFLAGS. For example:
+
+	cc `pkg-config --cflags --libs cairo` -o foo foo.c
+
+   IMPORTANT: Users with old versions of cairo installed will need to
+              manually remove cairo.h and cairo-features.h from the
+              system include directories in order to prevent the old
+              headers from being used in preference to the new ones.
+
+2) The backend-specific portions of the old monolithic cairo.h have
+   been split out into individual public header files. The new files
+   are:
+
+	cairo-atsui.h
+        cairo-ft.h
+        cairo-glitz.h
+        cairo-pdf.h
+        cairo-png.h
+        cairo-ps.h
+	cairo-quartz.h
+        cairo-xcb.h
+        cairo-xlib.h
+
+   Applications will need to be modified to explicitly include the new
+   header files where appropriate.
+
+3) There are two new graphics backends in this snapshot, a PDF
+   backend, and a Quartz backend. There is also one new font backend,
+   ATSUI.
+
+PDF backend
+-----------
+Kristian Høgsberg has contributed a new backend to allow cairo-based
+applications to generate PDF output. The interface for creating a PDF
+surface is similar to that of the PS backend, as can be seen in
+cairo-pdf.h:
+
+	void
+	cairo_set_target_pdf (cairo_t	*cr,
+			      FILE	*file,
+			      double	width_inches,
+			      double	height_inches,
+			      double	x_pixels_per_inch,
+			      double	y_pixels_per_inch);
+
+	cairo_surface_t *
+	cairo_pdf_surface_create (FILE		*file,
+				  double	width_inches,
+				  double	height_inches,
+				  double	x_pixels_per_inch,
+				  double	y_pixels_per_inch);
+
+Once a PDF surface has been created, applications can draw to it as
+any other cairo surface.
+
+This code is still a bit rough around the edges, and does not yet
+support clipping, surface patterns, or transparent gradients.  Text
+only works with TrueType fonts at this point and only black text is
+supported.  Also, the size of the generated PDF files is currently
+quite big.
+
+Kristian is still actively developing this backend, so watch this
+space for future progress.
+
+Quartz backend
+--------------
+Calum Robinson has contributed a new backend to allow cairo
+applications to target native Mac OS X windows through the Quartz
+API. Geoff Norton integrated this backend into the current
+configure-based build system, while Calum also provided Xcode build
+support in the separate "macosx" module available in CVS.
+
+The new interface, available in cairo-quartz.h, is as follows:
+
+	void
+	cairo_set_target_quartz_context (cairo_t	*cr,
+					 CGContextRef	context,
+					 int		width,
+					 int		height);
+
+	cairo_surface_t *
+	cairo_quartz_surface_create (CGContextRef context,
+				     int	  width,
+				     int	  height);
+
+There is an example program available in CVS in cairo-demo/quartz. It
+is a port of Keith Packard's fdclock program originally written for
+the xlib backend. A screenshot of this program running on Mac OS X is
+available here:
+
+	http://cairographics.org/~cworth/images/fdclock-quartz.png
+
+ATSUI font backend
+------------------
+This new font backend complements the Quartz backend by allowing
+applications to use native font selection on Mac OS X. The interface
+is a single new function:
+
+	cairo_font_t *
+	cairo_atsui_font_create (ATSUStyle style);
+
+Minor API changes
+-----------------
+Prototype for non-existent function "cairo_ft_font_destroy" removed.
+
+Now depends on libpixman 0.1.2 or newer, (0.1.3 is being released
+concurrently and has some useful performance improvements).
+
+Default paint color is now opaque black, (was opaque white). Default
+background color is transparent (as before).
+
+Renamed "struct cairo" to "struct _cairo" to free up the word "cairo"
+from the C++ identifier name space.
+
+Functions returning multiple return values through provided pointers,
+(cairo_matrix_get_affine, cairo_current_point, and
+cairo_current_color_rgb), will now accept NULL for values the user
+wants to ignore.
+
+CAIRO_HAS_FREETYPE_FONT has now been renamed to CAIRO_HAS_FT_FONT.
+
+Performance improvements
+------------------------
+Alexander Larsson provided some fantastic performance improvements
+yielding a 10000% performance improvement in his application, (when
+also including his performance work in libpixman-0.1.3). These include
+
+ * Fixed handling of cache misses.
+
+ * Creating intermediate clip surfaces at the minimal size required.
+
+ * Eliminating roundtrips when creating intermediate Xlib surfaces.
+
+Implementation
+--------------
+Major re-work of font metrics system by Keith Packard. Font metrics
+should now be much more reliable.
+
+Glitz backend
+-------------
+Updated for glitz-0.3.0.
+Bug fixes in reference counting.
+
+Test suite
+----------
+New tests for cache crashing, rotating text, improper filling of
+complex polygons, and leaky rasterization.
+
+Bug fixes
+---------
+Fixed assertion failure when selecting the same font multiple times in
+sequence.
+
+Fixed reference counting so cache_destroy functions work.
+
+Remove unintended copyright statement from files generated with
+PostScript backend.
+
+Fixed to eliminate new warnings from gcc 3.4 and gcc 4.
+
+Snapshot 0.2.0 (2004-10-27 Carl Worth <cworth@cworth.org>)
+===========================================================
+New license: LGPL/MPL
+---------------------
+The most significant news with this release is that the license of
+cairo has changed. It is now dual-licensed under the LGPL and the
+MPL. For details see the COPYING file as well as COPYING-LGPL-2.1 and
+COPYING-MPL-1.1.
+
+I express my thanks to everyone involved in the license change process
+for their patience and support!
+
+New font and glyph internals
+----------------------------
+Graydon Hoare has put a tremendous amount of work into new internals
+for handling fonts and glyphs, including caches where appropriate.
+This work has no impact on the user-level API, but should result in
+great performance improvements for applications using text.
+
+New test suite
+--------------
+This snapshot of cairo includes a (small) test suite in
+cairo/test. The tests can be run with "make check". The test suite was
+designed to make it very easy to add new tests, and we hope to see
+many contributions here. As you find bugs, please try adding a minimal
+test case to the suite, and submit it with the bug report to the
+cairo@cairographics.org mailing list. This will make it much easier
+for us to track progress in fixing bugs.
+
+New name for glitz backend
+--------------------------
+The gl backend has now been renamed to the glitz backend. This means
+that the following names have changed:
+
+	CAIRO_HAS_GL_SURFACE    -> CAIRO_HAS_GLITZ_SURFACE
+	cairo_set_target_gl     -> cairo_set_target_glitz
+	cairo_gl_surface_create -> cairo_glitz_surface_create
+
+This change obviously breaks backwards compatibility for applications
+using the old gl backend.
+
+Up-to-date with latest glitz snapshots
+--------------------------------------
+This snapshot of cairo is now up to date with the latest glitz
+snapshot, (currently 0.2.3). We know that the latest cairo and glitz
+snapshots have been incompatible for a very long time. We've finally
+fixed that now and we're determined to not let that happen again.
+
+Revert some tessellation regression bugs
+----------------------------------------
+People that have been seeing some tessellation bugs, (eg. leaked
+fills), in the CVS version of cairo may have better luck with this
+release. A change since the last snapshot was identified to trigger
+some of these bugs and was reverted before making the snapshot. The
+behavior should be the same as the previous (0.1.23) snapshot.
+
+Miscellaneous changes
+---------------------
+Changed CAIRO_FILTER_DEFAULT to CAIRO_FILTER_BEST to make gradients
+easier.
+
+Track XCB API change regarding iterators.
+
+Various bug fixes
+-----------------
+Fix calculation of required number of vertices for pen.
+
+Fix to avoid zero-dimensioned pixmaps.
+
+Fix broken sort of pen vertices.
+
+Fix bug when cairo_show_text called with a NULL string.
+
+Fix clipping bugs.
+
+Fix bug in computing image length with XCB.
+
+Fix infinite loop bug in cairo_arc.
+
+Fix memory management interactions with libpixman.
+
+Snapshot 0.1.23 (2004-05-11 Carl Worth <cworth@isi.edu>)
+========================================================
+Fixes for gcc 3.4
+-----------------
+Fix prototype mismatches so that cairo can be built by gcc 3.4.
+
+Updates to track glitz
+----------------------
+Various fixes to support the latest glitz snapshot (0.1.2).
+
+Gradient updates
+----------------
+Radial gradients now support both inner and outer circles.
+Transformed linear gradients are now properly handled.
+Fixes for extend type reflect.
+
+Glitz updates
+-------------
+Converted shading routines to use fixed point values and introduced a
+shading operator structure for more efficient shading calculations.
+Support compositing with mask surface when mask is solid or
+multi-texturing is available.
+
+PNG backend cleanups
+--------------------
+Fix output to properly compensate for pre-multiplied alpha format in cairo.
+Add support for A8 and A1 image formats.
+
+Bug fixes
+---------
+Avoid crash or infinite loop on null strings and degeneratively short
+splines.
+
+New? bugs in cairo_clip
+-----------------------
+There are some fairly serious bugs in cairo_clip. It is sometimes
+causing an incorrect result. And even when it does work, it is
+sometimes so slow as to be unusable. Some of these bugs may not be
+new, (indeed cairo_clip has only ever had a braindead-slow
+implementation), but I think they're worth mentioning here.
+
+Snapshot 0.1.22 (2004-04-16 Carl Worth <cworth@isi.edu>)
+========================================================
+Cairo was updated to track the changes in libpixman, and now depends
+on libpixman version 0.1.1.
+
+Snapshot 0.1.21 (2004-04-09 David Reveman <c99drn@cs.umu.se>)
+=============================================================
+New OpenGL backend
+------------------
+The OpenGL backend provides hardware accelerated output for
+X11 and OS X. The significant new functions are:
+
+	cairo_set_target_gl
+	cairo_gl_surface_create
+
+Automatic detection of available backends
+-----------------------------------------
+The configure script now automatically detect what backends are
+available, (use ./configure --disable-`backend' to prevent
+compilation of specific backends).
+
+Snapshot 0.1.20 (2004-04-06 Carl Worth <cworth@isi.edu>)
+========================================================
+New pattern API
+---------------
+David Reveman has contributed a new pattern API which enable linear
+and radial gradient patterns in addition to the original surface-based
+patterns. The significant new top-level functions are:
+
+	cairo_pattern_create_linear
+	cairo_pattern_create_radial
+	cairo_pattern_create_for_surface
+	cairo_pattern_add_color_stop
+	cairo_set_pattern
+
+Any code using the old cairo_set_pattern, (which accepted a
+cairo_surface_t rather than a cairo_pattern_t), will need to be
+updated.
+
+Update to XCB backend
+---------------------
+The XCB backend is now enabled by default, (use ./configure
+--disable-xcb to turn it off).
+
+Faster clipping
+---------------
+Graydon Hoare has added optimizations that make cairo_clip much faster
+when the path is a pixel-aligned, rectangular region.
+
+Bug fixes.
+
+Snapshot 0.1.19 (2004-02-24 Carl Worth <cworth@isi.edu>)
+========================================================
+New PNG backend
+---------------
+Olivier Andrieu contributed a new PNG backend. It builds on the
+existing image backend to make it easy to render "directly" to a
+.png file. The user never needs to deal with the actual image
+buffer. The significant new functions are:
+
+	cairo_set_target_png
+	cairo_png_surface_create
+
+The PNG backend is not enabled by default so that by default there is
+not a new dependency on libpng. Use ./configure --enable-png to enable
+this backend.
+
+Snapshot 0.1.18 (2004-02-17 Carl Worth <cworth@isi.edu>)
+========================================================
+Path query functionality
+------------------------
+It's now possible to query the current path. The two new functions
+are:
+
+	cairo_current_path
+	cairo_current_path_flat
+
+Each function accepts a number of callback functions that will be
+called for each element in the path (move_to, line_to, curve_to,
+close_path). The cairo_current_path_flat function does not accept a
+curve_to callback. Instead, all curved portions of the path will be
+converted to line segments, (within the current tolerance value). This
+can be handy for doing things like text-on-path without having to
+manually interpolate bezier splines.
+
+New XCB backend
+---------------
+Jamey Sharp has contributed a second X backend that uses the new, lean
+XCB library rather than Xlib. It cannot currently be compiled at the
+same time as the Xlib backend. See ./configure --enable-xcb.
+
+Build fixes for cygwin.
+
+Bug fixes.
+
+Snapshot 0.1.17 (2003-12-16 Carl Worth <cworth@isi.edu>)
+========================================================
+
+Better text support
+-------------------
+This snapshot provides much better text support by implementing the
+following four functions:
+
+        cairo_text_extents
+        cairo_glyph_extents
+        cairo_text_path
+        cairo_glyph_path
+
+The text/glyph_extents functions can be used to determine the bounding
+box (and advance) for text as if drawn by show_text/glyphs.
+
+The text/glyph_path objects functions place text shapes on the current
+path, where they can be subsequently manipulated. For example,
+following these functions with cairo_stroke allows outline text to be
+drawn. Calling cairo_clip allows clipping to a text-shaped region.
+
+Combined dependencies
+---------------------
+The cairo core now depends only on the libpixman library. This single
+library replaces the three previous libraries libic, libpixregion, and
+slim. Thanks to Dave Beckett <dave.beckett@bristol.ac.uk> for all of
+the heavy lifting with this renaming effort.
+
+Conditional compilation of backends
+-----------------------------------
+Cairo now allows optional backends to be disabled at compile time. The
+following options may now be passed to the configure script:
+
+	--disable-xlib
+	--disable-ps
+
+Note that the first option is a change from the old --without-x option
+which will no longer have any effect.
+
+OS X supported - several byte-order issues resolved
+---------------------------------------------------
+Cairo has now been successfully compiled under OS X. Testing revealed
+that there were some byte-order problems in the PostScript backend and
+the PNG generation in the demos. These have now been resolved.
+
+2003-10
+=======
+Graydon Hoare <graydon@redhat.com> implemented the first real text
+support using Freetype/fontconfig, (previous versions of cairo used
+Xft and could only draw text when using an X backend).
+
+2003-09
+=======
+Graydon Hoare <graydon@redhat.com> added the first real support for
+running cairo with a non-render-aware X server.
+
+Jamey Sharp <jamey@minilop.net> virtualized the backend font and
+surface interfaces in September, 2003.
+
+2003-06
+=======
+Xr is renamed cairo to avoid confusion since it no longer had a strict
+dependence on X.
+
+2003-05
+=======
+A new image surface backend is added to Xr. Keith Packard
+<keithp@keithp.com> wrote the image compositing code in libic that is
+used for the image_surface backend. This code was originally written
+as the software fallback for the render extension within the X
+server.
+
+2002-06
+=======
+Carl Worth <cworth@isi.edu> wrote the first lines of Xr, after Keith
+Packard <keithp@keithp.com> proposed the plan for a stateful drawing
+library in C providing a PostScript-like rendering model.
