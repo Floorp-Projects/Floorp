@@ -122,6 +122,8 @@ protected:
 
   void PostAppendRow(nsIFrame* aRowFrame, nsIPresContext& aPresContext);
 
+  void MarkTreeAsDirty(nsIPresContext& aPresContext, nsTreeFrame* aTreeFrame);
+
 public:
   // Helpers that allow access to info. The tree is the primary consumer of this
   // info.

@@ -1105,31 +1105,7 @@ void nsTreeRowGroupFrame::OnContentAdded(nsIPresContext& aPresContext)
   nsTableFrame::GetTableFrame(this, tableFrame);
 
   nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
-
-  if (IsLazy() && !treeFrame->IsSlatedForReflow()) {
-    treeFrame->SlateForReflow();
-
-    // Mark the table frame as dirty
-    nsFrameState      frameState;
-    
-    treeFrame->GetFrameState(&frameState);
-    frameState |= NS_FRAME_IS_DIRTY;
-    treeFrame->SetFrameState(frameState);
-     
-    // Schedule a reflow for us
-    nsCOMPtr<nsIReflowCommand> reflowCmd;
-    nsIFrame*                  outerTableFrame;
-    nsresult                   rv;
-
-    treeFrame->GetParent(&outerTableFrame);
-    rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), outerTableFrame,
-                                 nsIReflowCommand::ReflowDirty);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIPresShell> presShell;
-      aPresContext.GetShell(getter_AddRefs(presShell));
-      presShell->AppendReflowCommand(reflowCmd);
-    }
-  }
+  MarkTreeAsDirty(aPresContext, treeFrame);
 }
 
 void nsTreeRowGroupFrame::OnContentInserted(nsIPresContext& aPresContext, nsIFrame* aNextSibling)
@@ -1171,30 +1147,7 @@ void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext& aPresContext,
     treeFrame->InvalidateColumnCache();
   }
 
-  if (IsLazy() && !treeFrame->IsSlatedForReflow()) {
-    treeFrame->SlateForReflow();
-
-    // Mark the table frame as dirty
-    nsFrameState      frameState;
-    
-    treeFrame->GetFrameState(&frameState);
-    frameState |= NS_FRAME_IS_DIRTY;
-    treeFrame->SetFrameState(frameState);
-     
-    // Schedule a reflow for us.
-    nsCOMPtr<nsIReflowCommand> reflowCmd;
-    nsIFrame*                  outerTableFrame;
-    nsresult                   rv;
-
-    treeFrame->GetParent(&outerTableFrame);
-    rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), treeFrame,
-                                 nsIReflowCommand::ReflowDirty);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIPresShell> presShell;
-      aPresContext.GetShell(getter_AddRefs(presShell));
-      presShell->AppendReflowCommand(reflowCmd);
-    }
-  }
+  MarkTreeAsDirty(aPresContext, treeFrame);
 }
 
 void nsTreeRowGroupFrame::SetContentChain(nsISupportsArray* aContentChain)
@@ -1343,6 +1296,37 @@ void nsTreeRowGroupFrame::PostAppendRow(nsIFrame* aRowFrame, nsIPresContext& aPr
     // We need to rebuild the column cache
     // XXX It would be nice if this could be done incrementally
     tableFrame->InvalidateColumnCache();
-  }
 
+    MarkTreeAsDirty(aPresContext, (nsTreeFrame*) tableFrame);
+  }
+}
+
+
+void
+nsTreeRowGroupFrame::MarkTreeAsDirty(nsIPresContext& aPresContext, nsTreeFrame* aTreeFrame)
+{
+  if (IsLazy() && !aTreeFrame->IsSlatedForReflow()) {
+    aTreeFrame->SlateForReflow();
+
+    // Mark the table frame as dirty
+    nsFrameState      frameState;
+    
+    aTreeFrame->GetFrameState(&frameState);
+    frameState |= NS_FRAME_IS_DIRTY;
+    aTreeFrame->SetFrameState(frameState);
+     
+    // Schedule a reflow for us.
+    nsCOMPtr<nsIReflowCommand> reflowCmd;
+    nsIFrame*                  outerTableFrame;
+    nsresult                   rv;
+
+    aTreeFrame->GetParent(&outerTableFrame);
+    rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), aTreeFrame,
+                                 nsIReflowCommand::ReflowDirty);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIPresShell> presShell;
+      aPresContext.GetShell(getter_AddRefs(presShell));
+      presShell->AppendReflowCommand(reflowCmd);
+    }
+  }
 }
