@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Utils.pm,v 1.4 1998/07/29 08:29:07 leif Exp $
+# $Id: Utils.pm,v 1.5 1998/07/30 08:43:06 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -40,7 +40,9 @@ require Exporter;
 			   encodeBase64
 			   decodeBase64
 			   str2Scope
-			   ldapArgs)]
+			   askPassword
+			   ldapArgs
+			   unixCrypt)]
 		);
 
 
@@ -225,4 +227,19 @@ sub ldapArgs
     }
 
   return %ld;
+}
+
+
+#################################################################################
+# Create a Unix-type password, using the "crypt" function. A random salt
+# is always generated, perhaps it should be an optional argument?
+#
+sub unixCrypt
+{
+   my $ascii =
+      "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+   my $salt = substr($ascii, rand(62), 1) . substr($ascii, rand(62), 1);
+
+   srand(time ^ $$);
+   crypt($_[0], $salt);
 }
