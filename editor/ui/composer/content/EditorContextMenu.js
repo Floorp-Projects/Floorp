@@ -25,6 +25,13 @@ function EditorFillContextMenu(event, contextMenuNode)
   if ( event.target != contextMenuNode )
     return;
 
+  goUpdateCommand("cmd_undo");
+  goUpdateCommand("cmd_redo");
+  goUpdateCommand("cmd_cut");
+  goUpdateCommand("cmd_copy");
+  goUpdateCommand("cmd_paste");
+  goUpdateCommand("cmd_delete");
+
   // Setup object property menuitem
   var objectName = InitObjectPropertiesMenuitem("objectProperties_cm");
   InitRemoveStylesMenuitems("removeStylesMenuitem_cm", "removeLinksMenuitem_cm");
@@ -56,7 +63,7 @@ function EditorFillContextMenu(event, contextMenuNode)
     IsMenuItemShowing("menu_cut_cm")   ||
 		IsMenuItemShowing("menu_copy_cm")  ||
 		IsMenuItemShowing("menu_paste_cm") ||
-		IsMenuItemShowing("menu_delete_cm");
+		IsMenuItemShowing("menu_clear_cm");
 
   var haveStyle = 
     IsMenuItemShowing("removeStylesMenuitem_cm") ||
@@ -67,7 +74,7 @@ function EditorFillContextMenu(event, contextMenuNode)
 
   ShowMenuItem("undoredo-separator", haveUndo && haveEdit);
 
-  ShowMenuItem("edit-separator", haveEdit || !haveUndo);
+  ShowMenuItem("edit-separator", haveEdit || haveUndo);
 	             
   // Note: Item "menu_selectAll_cm" and 
   // folowing separator are ALWAYS enabled,
@@ -101,24 +108,21 @@ function HideDisabledItem( item )
 {
   if (!item) return false;
 
-  var enabled = (item.getAttribute('disabled') !='true');
-  if (!enabled)
-  {
-    item.setAttribute('hidden', 'true');
-    item.setAttribute('contexthidden', 'true');
-    return true;
-  }
-  return false;
+
+  var enabled = (item.getAttribute('disabled') !="true");
+  item.setAttribute("collapsed", enabled ? "" : "true");
+  item.setAttribute('contexthidden', enabled ? "" : "true");
+  return enabled;
 }
 
 function ShowHiddenItemOnCleanup( item )
 {
   if (!item) return false;
 
-  var isHidden = (item.getAttribute('contexthidden') == 'true');
+  var isHidden = (item.getAttribute('contexthidden') == "true");
   if (isHidden)
   {
-    item.removeAttribute('hidden');
+    item.removeAttribute("collapsed");
     item.removeAttribute('contexthidden');
     return true;
   }
@@ -130,9 +134,9 @@ function ShowMenuItem(id, showItem)
   var item = document.getElementById(id);
   if (item)
   {
-	  var showing = (item.getAttribute('hidden') !='true');
-	  if(showItem != showing)
-		  item.setAttribute('hidden', showItem ? '' : 'true');
+    //var showing = (item.getAttribute("collapsed") !="true");
+    //if(showItem != showing ? "true" : "")
+		  item.setAttribute("collapsed", showItem ? "" : "true");
   }
   else
     dump("ShowMenuItem: item id="+id+" not found\n");
@@ -143,7 +147,8 @@ function IsMenuItemShowing(menuID)
 	var item = document.getElementById(menuID);
 	if(item)
 	{
-		return(item.getAttribute('hidden') !='true');
+    var show = item.getAttribute("collapsed") != "true";
+		return(item.getAttribute("collapsed") !="true");
 	}
 	return false;
 }

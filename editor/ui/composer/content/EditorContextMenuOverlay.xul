@@ -35,23 +35,24 @@
  <popup id="editorContentContext"   
    oncreate="EditorFillContextMenu(event, this);" 
 	 ondestroy="EditorCleanupContextMenu(event, this);">
-		<menuitem id="menu_undo" observes="cmd_undo"/>
-		<menuitem id="menu_redo" observes="cmd_redo"/>
+		<menuitem id="menu_undo_cm"   value="&undoCmd.label;" accesskey="&undo.accesskey;"  observes="cmd_undo"/>
+		<menuitem id="menu_redo_cm"   value="&redoCmd.label;" accesskey="&redo.accesskey;"  observes="cmd_redo"/>
     <menuseparator id="undoredo-separator"/>
 		
-    <menuitem id="menu_cut" observes="cmd_cut"/>
-		<menuitem id="menu_copy" observes="cmd_copy"/>
-		<menuitem id="menu_paste" observes="cmd_paste"/>
-		<menuitem id="menu_delete" observes="cmd_delete"/>
+    <menuitem id="menu_cut_cm"    value="&cutCmd.label;"   accesskey="&cut.accesskey;"   observes="cmd_cut"/>
+		<menuitem id="menu_copy_cm"   value="&copyCmd.label;"  accesskey="&copy.accesskey;"  observes="cmd_copy"/>
+		<menuitem id="menu_paste_cm"  value="&pasteCmd.label;" accesskey="&paste.accesskey;" observes="cmd_paste"/>
+		<menuitem id="menu_clear_cm"  value="&clearCmd.label;" accesskey="&clear.accesskey;" observes="cmd_delete"/>
 		<menuseparator id="edit-separator"/>
     
-    <menuitem id="menu_selectAll_cm" observes="cmd_selectAll"/>
+    <menuitem id="menu_selectAll_cm" value="&selectAllCmd.label;" accesskey="&selectall.accesskey;" 
+          observes="cmd_selectAll"/>
 		<menuseparator id="selectAll-separator"/>
     
     <!-- Value and accesskey set at runtime from strings -->
     <menuitem id="removeStylesMenuitem_cm"
           observes="cmd_removeStyles"/>
-    <menuitem id="createLink_cm" value="&createLinkCmd.label;" accesskey="&insertlink.accesskey;"
+    <menuitem id="createLink_cm" value="&createLinkCmd.label;" accesskey="&createlink.accesskey;"
           observes="cmd_link" />
     <!-- Value and accesskey set at runtime from strings -->
     <menuitem id="removeLinksMenuitem_cm"

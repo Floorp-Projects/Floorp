@@ -42,14 +42,10 @@ table {
   empty-cells: show;
 }
 
-table[empty-cells], table[border="0"] {
-  border: 1px dotted red;
-}
-
-/* Also force border for cell children 
-   Problem: what if children have a border?
-*/
-table[border="0"] * td, table[border="0"] * th {
+table[empty-cells],
+  table[border="0"], 
+  table[border="0"] td, table[border="0"] th
+{
   border: 1px dotted red;
 }
 
