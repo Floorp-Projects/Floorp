@@ -50,9 +50,9 @@
 #elif defined(JAVA)
 #include "java.h"
 #endif
-//ifdef PRIVACY_POLICIES
+#ifdef PRIVACY_POLICIES
 #include "privacy.h"
-//#endif
+#endif
 
 // for whitebox testing
 //#define DEBUG_WHITEBOX
@@ -2375,8 +2375,13 @@ void CGenericFrame::OnDisplayPrivacyReceipts()
 
 void CGenericFrame::OnDisplayPrivacyTutorial()
 {
-    // GetMainContext()->NormalGetUrl("file:///c|/My Documents");
+#ifdef PRIVACY_POLICIES
     GetMainContext()->NormalGetUrl(PRVCY_TutorialURL());
+#else
+    GetMainContext()->NormalGetUrl(
+        "http://people.netscape.com/morse/privacy/index.html");
+#endif
+    
 }
 //////////////////////////////////////////////////////////////////////////////
 
