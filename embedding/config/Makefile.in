@@ -28,7 +28,6 @@ include $(topsrcdir)/config/rules.mk
 
 embed_chrome: embed-jar.mn
 ifneq (jar,$(MOZ_CHROME_FILE_FORMAT))
-	$(PERL) $(MOZILLA_DIR)/embedding/config/gen_mn.pl -mozpath $(MOZILLA_DIR) -chrome $(DIST)/Embed/tmpchrome > embed-jar.mn
 	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl -v -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(DIST)/bin/chrome < $(MOZILLA_DIR)/embedding/config/embed-jar.mn
 else
 	$(RM) -rf $(DIST)/Embed/tmpchrome
@@ -38,10 +37,14 @@ else
 		$(NSINSTALL) -D $(DIST)/Embed/tmpchrome/$$b ;\
 		unzip -o -d $(DIST)/Embed/tmpchrome/$$b $$f ; \
 	done
-	$(PERL) $(MOZILLA_DIR)/embedding/config/gen_mn.pl -mozpath $(MOZILLA_DIR) -chrome $(DIST)/Embed/tmpchrome > embed-jar.mn
 	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl -v -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(DIST)/Embed/tmpchrome < $(MOZILLA_DIR)/embedding/config/embed-jar.mn
 endif
 
+#
+# Run this by hand and check changes in, if necessary.
+# 
+create-jar:
+	$(PERL) $(MOZILLA_DIR)/embedding/config/gen_mn.pl -mozpath $(MOZILLA_DIR) -chrome $(DIST)/Embed/tmpchrome > embed-jar.mn
 
 install:: embed_chrome
 	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/basebrowser-unix -o unix -v
