@@ -26,8 +26,9 @@ CHROME_CONTENT_DIR = global\content
 
 CHROME_CONTENT = \
 	.\filepicker.xul \
-        .\filepicker.js \
-        $(NULL)
+	.\filepicker.js \
+	.\filepicker.css \
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 

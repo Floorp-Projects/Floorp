@@ -22,13 +22,19 @@
    -  Stuart Parmenter <pavlov@netscape.com>
    -  Brian Ryner <bryner@netscape.com>
    -  Jan Varga <varga@utcru.sk>
+   -  Peter Annema <disttsc@bart.nl>
    -->
 
 <?xml-stylesheet href="chrome://global/skin/filepicker.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xml-stylesheet href="chrome://global/content/filepicker.css" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://global/locale/filepicker.dtd" >
 
 <window id="main-window"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   orient="vertical"
   onload="onLoad();"
@@ -38,44 +44,64 @@
 
 <script src="chrome://global/content/strres.js"/>
 <script src="chrome://global/content/filepicker.js"/>
+<keyset id="keyset"/>
 
 <box autostretch="never">
-<!-- History list needs hooked up
-  <text value="Look in:"/>
-  <menulist id="lookInMenuList" flex="1">
+  <text value="&lookInMenuList.label;"/>
+  <menulist id="lookInMenuList" flex="1" oncommand="onDirectoryChanged(event.target);">
     <menupopup id="lookInMenu"/>
   </menulist>
--->
-  <text value="Current directory:"/>
-  <textfield id="curLocation" readonly="" flex="1"/>
   <button value=".." onclick="goUp();"/>
 </box>
 
 <box flex="1">
-  <tree id="directoryTree" flex="1"
-    onkeyup="onKeyup(event)" onselect="onSelect(event)">
+  <tree id="directoryTree" flex="1" onkeypress="onKeypress(event)"
+  onselect="onSelect(event)" datasources="rdf:files">
+    <template id="fileFilter">
+      <!-- This is the rule for files matching the filter -->
+      <rule id="matchRule.0">
+        <treechildren flex="1">
+          <treeitem uri="..." empty="true"
+                    type="rdf:http://home.netscape.com/NC-rdf#File-Type" 
+                    loading="rdf:http://home.netscape.com/NC-rdf#loading" >
+            <treerow path="rdf:http://home.netscape.com/NC-rdf#URL">
+              <treecell class="treecell-filename treecell-indent"
+                        indent="true" type="rdf:http://home.netscape.com/NC-rdf#File-Type"
+                        value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+              <treecell value="rdf:http://home.netscape.com/NC-rdf#Content-Length" />
+              <treecell value="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate" />
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </rule>
+
+    </template>
+            
     <treecolgroup>
-      <treecol flex="1"/>
-      <treecol flex="1"/>
-      <treecol flex="1"/>
+      <treecol flex="1" id="FilenameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending"/>
+            <splitter class="tree-splitter"/>
+      <treecol flex="1" id="ContentLengthColumn" rdf:resource="http://home.netscape.com/NC-rdf#ContentLength"/>
+            <splitter class="tree-splitter"/>
+      <treecol flex="1" id="LastModifiedDateColumn" rdf:resource="http//home.netscape.com/WEB-rdf#LastModifiedDate"/>
     </treecolgroup>
     <treehead>
       <treerow>
-        <treecell class="treecell-header" value="Name"/>
-        <treecell class="treecell-header" value="Size"/>
-        <treecell class="treecell-header" value="Permissions"/>
+        <treecell class="treecell-header" value="&name.label;"/>
+        <treecell class="treecell-header" value="&size.label;"/>
+        <treecell class="treecell-header" value="&lastModified.label;"/>
       </treerow>
     </treehead>
+    <treechildren flex="1" onclick="onClick(event)"/>
   </tree>
 </box>
 
 <box autostretch="never" style="margin-top: 5px">
-  <text value="File name:"/>
-  <textfield id="textInput" onkeypress="if (event.keyCode == 13) { onOK(); }" flex="1"/>
+  <text value="&textInput.label;"/>
+  <textfield id="textInput" flex="1"/>
 </box>
 
 <box autostretch="never">
-  <text value="Files of type:"/>
+  <text value="&filterMenuList.label;"/>
   <menulist id="filterMenuList" flex="1" oncommand="onFilterChanged(event.target);"/>
 </box>
 

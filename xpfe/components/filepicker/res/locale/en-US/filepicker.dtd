@@ -1,0 +1,8 @@
+<!ENTITY lookInMenuList.label   "Look in:">
+<!ENTITY textInput.label        "File name:">
+<!ENTITY filterMenuList.label   "Files of type:">
+<!ENTITY name.label             "Name">
+<!ENTITY size.label             "Size">
+<!ENTITY lastModified.label     "Last Modified">
+<!ENTITY permissions.label      "Permissions">
+

@@ -21,6 +21,7 @@
  *  Stuart Parmenter <pavlov@netscape.com>
  *  Brian Ryner <bryner@netscape.com>
  *  Jan Varga <varga@utcru.sk>
+ *  Peter Annema <disttsc@bart.nl>
  */
 
 const nsILocalFile        = Components.interfaces.nsILocalFile;
@@ -28,12 +29,17 @@ const nsILocalFile_PROGID = "component://mozilla/file/local";
 const nsIFilePicker       = Components.interfaces.nsIFilePicker;
 const nsIDirectoryServiceProvider = Components.interfaces.nsIDirectoryServiceProvider;
 const nsIDirectoryServiceProvider_PROGID = "component://netscape/file/directory_service";
+const nsStdURL_PROGID     = "component://netscape/network/standard-url";
+const nsIFileURL          = Components.interfaces.nsIFileURL;
+const NC_NAMESPACE_URI = "http://home.netscape.com/NC-rdf#";
 
 var sfile = Components.classes[nsILocalFile_PROGID].createInstance(nsILocalFile);
 var retvals;
 var filePickerMode;
 var currentFilter;
 var lastClicked;
+var dirHistory;
+var homeDir;
 
 var directoryTree;
 var textInput;
@@ -41,6 +47,7 @@ var textInput;
 var bundle = srGetStrBundle("chrome://global/locale/filepicker.properties");   
 
 function onLoad() {
+  dirHistory = new Array();
 
   directoryTree = document.getElementById("directoryTree");
   textInput = document.getElementById("textInput");
@@ -66,6 +73,7 @@ function onLoad() {
     var filterPopup = document.createElement("menupopup");
 
     currentFilter = filterTypes[0];
+    applyFilter();
     for (var i = 0; i < numFilters; i++) {
       var menuItem = document.createElement("menuitem");
       menuItem.setAttribute("value", filterTitles[i] + " (" + filterTypes[i] + ")");
@@ -80,21 +88,21 @@ function onLoad() {
   // setup the dialogOverlay.xul button handlers
   doSetOKCancel(onOK, onCancel);
 
+  // get the home dir
+  var dirServiceProvider = Components.classes[nsIDirectoryServiceProvider_PROGID].getService().QueryInterface(nsIDirectoryServiceProvider);
+  var persistent = new Object();
+  homeDir = dirServiceProvider.getFile("Home", persistent);
+
   if (directory)
     sfile.initWithPath(directory);
   if (!directory || !(sfile.exists() && sfile.isDirectory())) {
     // Start in the user's home directory
-    var dirServiceProvider = Components.classes[nsIDirectoryServiceProvider_PROGID].getService().QueryInterface(nsIDirectoryServiceProvider);
-    var persistent = new Object();
-    var homeDir = dirServiceProvider.getFile("Home", persistent);
     sfile.initWithPath(homeDir.path);
   }
 
   retvals.buttonStatus = nsIFilePicker.returnCancel;
-  addToHistory(sfile.path);
 
-  getDirectoryContents(directoryTree, sfile.directoryEntries);
-
+  gotoDirectory(sfile);
   textInput.focus();
 }
 
@@ -102,51 +110,95 @@ function onFilterChanged(target)
 {
   var filterTypes = target.getAttribute("filters");
   currentFilter = filterTypes;
+  applyFilter();
+}
 
-  loadDirectory();
+function applyFilter()
+{
+  /* This is where we manipulate the DOM to create new <rule>s */
+  var splitFilters = currentFilter.split("; ");
+  var matchAllFiles = false;
+
+  /* get just the extensions for each of the filters */
+  var extensions = new Array(splitFilters.length);
+  for (var j = 0; j < splitFilters.length; j++) {
+    var tmpStr = splitFilters[j];
+    if (tmpStr == "*") {
+      matchAllFiles = true;
+      break;
+    } else
+      extensions[j] = tmpStr.substring(1); /* chop off the '*' */
+  }
+
+  /* delete all rules except the first one */
+  for (var j = 1;; j++) {
+    var ruleNode = document.getElementById("matchRule."+j);
+    if (ruleNode) {
+      ruleNode.parentNode.removeChild(ruleNode);
+    } else {
+      break;
+    }
+  }
+
+  /* if we are matching all files, just clear the extension attribute
+     on the first match rule and we're done */
+  var rule0 = document.getElementById("matchRule.0");
+  if (matchAllFiles) {
+    rule0.removeAttributeNS(NC_NAMESPACE_URI, "extension");
+    directoryTree.builder.rebuild();
+    return;
+  }
+
+  /* rule 0 is special */
+  rule0.setAttributeNS(NC_NAMESPACE_URI, "extension" , extensions[0]);
+
+  /* iterate through the remaining extensions, creating new rules */
+  var ruleNode = document.getElementById("fileFilter");
+
+  for (var k=1; k < extensions.length; k++) {
+    var newRule = rule0.cloneNode(true);
+    newRule.setAttribute("id", "matchRule."+k);
+    newRule.setAttributeNS(NC_NAMESPACE_URI, "extension", extensions[k]);
+    ruleNode.appendChild(newRule);
+  }
+
+  directoryTree.builder.rebuild();
 }
 
 function onOK()
 {
   var ret = nsIFilePicker.returnCancel;
-  textInput = document.getElementById("textInput");
-
-  var file = Components.classes[nsILocalFile_PROGID].createInstance(nsILocalFile);
-  file.initWithPath(textInput.value);
 
   var isDir = false;
   var isFile = false;
 
-  if (file.exists()) {
-    isDir = file.isDirectory();
-    isFile = file.isFile();
-  } else {
-    /* look for something in our current directory */
-    var nfile = sfile.clone().QueryInterface(nsILocalFile);
-    if (file.path[0] == '/')   /* an absolute path was entered */
-      nfile.initWithPath(file.path)
-    else
-      nfile.appendRelativePath(file.path);
-    /*    dump(nfile.path); */
-    if (nfile.exists()) {
-      file = nfile;
-    } else {
-      if (filePickerMode == nsIFilePicker.modeSave)
-        file = nfile;
-      else
-        file = null;
+  var input = textInput.value;
+  if (input[0] == '~') // XXX XP?
+    input  = homeDir.path + input.substring(1);
+
+  var file = sfile.clone().QueryInterface(nsILocalFile);
+  if (!file)
+    return false;
+
+  /* XXX we need an XP way to test for an absolute path! */
+  if (input[0] == '/')   /* an absolute path was entered */
+    file.initWithPath(input);
+  else {
+    try {
+      file.appendRelativePath(input);
+    } catch (e) {
+      dump("Can't append relative path '"+input+"':\n");
+      return false;
     }
   }
 
-  if (!file)
+  if (!file.exists() && (filePickerMode != nsIFilePicker.modeSave)) {
     return false;
+  }
 
   if (file.exists()) {
     var isDir = file.isDirectory();
     var isFile = file.isFile();
-  } else { /* we are saving a new file */
-    isDir = false;
-    isFile = false;
   }
 
   switch(filePickerMode) {
@@ -156,8 +208,9 @@ function onOK()
       ret = nsIFilePicker.returnOK;
     } else if (isDir) {
       if (!sfile.equals(file)) {
-        gotoDirectory(file.path);
+        gotoDirectory(file);
       }
+      textInput.value = "";
       ret = nsIFilePicker.returnCancel;
     }
     break;
@@ -184,7 +237,6 @@ function onOK()
   }
 
   retvals.file = file;
-
   retvals.buttonStatus = ret;
 
   if (ret == nsIFilePicker.returnCancel)
@@ -200,238 +252,79 @@ function onCancel()
   return true;
 }
 
-// node corresponds to treerow
-function doConfirm(node) {
-  var file = Components.classes[nsILocalFile_PROGID].createInstance(nsILocalFile);
-  file.initWithPath(node.getAttribute("path"));
-
-  if (file.isDirectory()) {
-    gotoDirectory(file.path);
-  }
-  else if (file.isFile()) {
-    /* what about symlinks? what if they symlink to a directory? */
-    return doOKButton();
-  }
-}
-
 function onClick(e) {
-  if ( e.detail == 2 )
-    doConfirm(e.target.parentNode);
+  if ( e.detail == 2 ) {
+    var file = URLpathToFile(e.target.parentNode.getAttribute("path"));
+
+    if (file.isDirectory()) {
+      gotoDirectory(file);
+    }
+    else if (file.isFile()) {
+      /* what about symlinks? what if they symlink to a directory? */
+      return doOKButton();
+    }
+  }
 }
 
-function onKeyup(e) {
-  if (directoryTree.selectedItems.length == 0 ) {
-    directoryTree.selectItem(directoryTree.getItemAtIndex(0)); 
-    return;
-  }
-  
-  if (e.keyCode == 13) {
-    doConfirm(e.target.selectedItems[0].firstChild);
-  }
-  else if (e.keyCode == 8)
+function onKeypress(e) {
+  if (e.keyCode == 8) /* backspace */
     goUp();
 }
 
 function onSelect(e) {
   if (e.target.selectedItems.length != 1)
     return;
-  var file = Components.classes[nsILocalFile_PROGID].createInstance(nsILocalFile);
-  var path = e.target.selectedItems[0].firstChild.getAttribute("path");
-  file.initWithPath(path);
+  var file = URLpathToFile(e.target.selectedItems[0].firstChild.getAttribute("path"));
+
   if (file.isFile()) {
-    textInput = document.getElementById("textInput");
     textInput.value = file.leafName;
     lastClicked = file.leafName;
   }
 }
 
-function dirSort(e1, e2)
+function onDirectoryChanged(target)
 {
-  if (e1.leafName == e2.leafName)
-    return 0;
+  var path = target.getAttribute("value");
 
-  if (e1.leafName > e2.leafName)
-    return 1;
+  var file = Components.classes[nsILocalFile_PROGID].createInstance(nsILocalFile);
+  file.initWithPath(path);
 
-  if (e1.leafName < e2.leafName)
-    return -1;
+  gotoDirectory(file);
 }
-
-function createTree(parentElement, dirArray)
-{
-  var treeChildren = document.createElement("treechildren");
-  treeChildren.setAttribute("flex", "1");
-
-  var len = dirArray.length;
-  var file;
-
-  /* create the elements in the tree */
-  for (var i=0; i < len; i++)
-  {
-    file = dirArray[i];
-
-    var styleClass = "";
-
-    var isSymlink = false;
-    var isHidden = false;
-    var isDirectory = false;
-    var isFile = false;
-
-    try {
-      if (file.isSymlink()) {
-        isSymlink = true;
-      }
-      if (file.isHidden()) {
-        isHidden = true;
-      }
-      if (file.isDirectory()) {
-        isDirectory = true;
-      }
-      if (file.isHidden()) {
-        isHidden = true;
-      }
-      if (file.isFile()) {
-        isFile = true;
-      }
-    } catch(ex) { dump("couldn't stat one of the files\n"); }
-
-    /* treeItem */
-    var treeItem = document.createElement("treeitem");
-    /* set hidden on the tree item so that we use grey text for the entire row */
-    if (isHidden)
-      treeItem.setAttribute("class", "hidden");
-
-    /* treeRow */
-    var treeRow = document.createElement("treerow");
-    treeRow.setAttribute("path", file.path);
-    treeRow.setAttribute("onclick", "onClick(event)");
-
-    /* treeCell -- name */
-    var treeCell = document.createElement("treecell");
-    /*    treeCell.setAttribute("indent", "true");*/
-    treeCell.setAttribute("value", file.leafName);
-    if (isDirectory)
-      treeCell.setAttribute("class", "directory treecell-iconic");
-    else if (isFile)
-      treeCell.setAttribute("class", "file treecell-iconic");
-    treeRow.appendChild(treeCell);
-
-    /* treeCell -- size */
-    treeCell = document.createElement("treecell");
-    try {
-      if (file.fileSize != 0) {
-        treeCell.setAttribute("value", file.fileSize);
-      }
-    } catch(ex) { }
-    treeRow.appendChild(treeCell);
-
-    /* treeCell -- permissions */
-    treeCell = document.createElement("treecell");
-    try {
-      const p = file.permissions;
-      var perms = "";
-      /*      dump(p + " "); */
-      if (isSymlink) {
-        perms += "lrwxrwxrwx";
-      } else {
-        perms += (isDirectory) ? "d" : "-";
-        perms += (p & 00400) ? "r" : "-";
-        perms += (p & 00200) ? "w" : "-";
-        perms += (p & 00100) ? "x" : "-";
-        perms += (p & 00040) ? "r" : "-";
-        perms += (p & 00020) ? "w" : "-";
-        perms += (p & 00010) ? "x" : "-";
-        perms += (p & 00004) ? "r" : "-";
-        perms += (p & 00002) ? "w" : "-";
-        perms += (p & 00001) ? "x" : "-";
-        /*        dump(perms + "\n"); */
-      }
-      treeCell.setAttribute("value", perms);
-    } catch(ex) { }
-    treeRow.appendChild(treeCell);
-
-    /* append treeRow to treeItem */
-    treeItem.appendChild(treeRow);
-
-    /* append treeItem to treeChildren */
-    treeChildren.appendChild(treeItem);
-  }
-
-  /* append treeChildren to parent (tree) */
-  parentElement.appendChild(treeChildren);
-}
-
-function getDirectoryContents(parentElement, dirContents)
-{
-  /* split up the current filter since there might be more than one thing in it */
-  var splitFilters = currentFilter.split("; ");
-  var matchAllFiles = false;
-
-  /* get just the extensions for each of the filters */
-  var extensions = new Array(splitFilters.length);
-  for (var j = 0; j < splitFilters.length; j++) {
-    var tmpStr = splitFilters[j];
-    if (tmpStr == "*") {
-      matchAllFiles = true;
-      break;
-    } else
-      extensions[j] = tmpStr.substring(1); /* chop off the '*' */
-  }
-    
-  var i = 0;
-  var array = new Array();
-
-  while (dirContents.hasMoreElements()) {
-    var file = dirContents.getNext().QueryInterface(nsILocalFile);
-
-    try {
-      /* always add directories */
-      if (file.isDirectory() || matchAllFiles)
-        array[i++] = file;
-      else {
-        for (var k = 0; k < extensions.length; k++) {
-          /* index where the match should take place */
-          var matchIndex = file.leafName.length - extensions[k].length;
-
-          if ((matchIndex >=0 ) &&
-              file.leafName.lastIndexOf(extensions[k]) == matchIndex) {
-            array[i++] = file;
-            break;
-          }
-        }
-      }
-    } catch(ex) { }
-  }
-
-  if (array.length > 0) {
-    /* sort the array */
-    array.sort(dirSort);
-    
-    createTree(parentElement, array);
-  }
-}
-
-function clearTree() {
-  /* lets make an assumption that the tree children are at the end of the tree... */
-  if (directoryTree.lastChild)
-    directoryTree.removeChild(directoryTree.lastChild);
-}
-
 
 function addToHistory(directoryName) {
-  /* The history list is not hooked up yet, so we'll just use
-     a text element for the current directory */
-/*
-  var menuList = document.getElementById("lookInMenuList");
+  var found = false;
+  var i = 0;
+  while (!found && i<dirHistory.length) {
+    if (dirHistory[i] == directoryName)
+      found = true;
+    else
+      i++;
+  }
+
+  if (found) {
+    if (i!=0) {
+      dirHistory.splice(i, 1);
+      dirHistory.splice(0, 0, directoryName);
+    }
+  } else {
+    dirHistory.splice(0, 0, directoryName);
+  }
+
   var menu = document.getElementById("lookInMenu");
-  var menuItem = document.createElement("menuitem");
-  menuItem.setAttribute("value", directoryName);
-  menu.appendChild(menuItem);
 
-  menuList.selectedItem = menuItem; */
+  var children = menu.childNodes;
+  for (var i=0; i < children.length; i++)
+    menu.removeChild(children[i]);
 
-  var dirText = document.getElementById("curLocation");
-  dirText.setAttribute("value", directoryName);
+  for (var i=0; i < dirHistory.length; i++) {
+    var menuItem = document.createElement("menuitem");
+    menuItem.setAttribute("value", dirHistory[i]);
+    menu.appendChild(menuItem);
+  }
+
+  var menuList = document.getElementById("lookInMenuList");
+  menuList.selectedIndex = 0;
 }
 
 function goUp() {
@@ -440,30 +333,25 @@ function goUp() {
   } catch(ex) { dump("can't get parent directory\n"); }
 
   if (parent) {
-    sfile = parent.QueryInterface(Components.interfaces.nsILocalFile);
-    loadDirectory();
+    gotoDirectory(parent);
   }
 }
 
-function loadDirectory() {
-  try {
-    if (sfile.isDirectory()) {
-      clearTree();
-      try {
-        getDirectoryContents(directoryTree, sfile.directoryEntries);
-      } catch(ex) { dump("getDirectoryContents() failed\n"); }
-      addToHistory(sfile.path);
-      textInput = document.getElementById("textInput");
-      if (lastClicked == textInput.value) {
-        textInput.value = "";
-      }
-      lastClicked = "";
-    }
-  } catch(ex) { dump("isDirectory failed\n"); }
+function gotoDirectory(directory) {
+  var newURL = fileToURL(directory);
+  addToHistory(directory.path);
+  directoryTree.setAttribute("ref", fileToURL(directory).spec);
+  sfile = directory;
 }
 
-function gotoDirectory(directoryName) {
-  sfile.initWithPath(directoryName);
-  sfile.normalize();
-  loadDirectory();
+function fileToURL(aFile) {
+  var newDirectoryURL = Components.classes[nsStdURL_PROGID].createInstance().QueryInterface(nsIFileURL);
+  newDirectoryURL.file = aFile;
+  return newDirectoryURL;
+}
+
+function URLpathToFile(aURLstr) {
+  var fileURL = Components.classes[nsStdURL_PROGID].createInstance().QueryInterface(nsIFileURL);
+  fileURL.spec = aURLstr;
+  return fileURL.file;
 }
