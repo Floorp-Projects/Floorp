@@ -98,6 +98,10 @@ nsRenderingContextGTK::~nsRenderingContextGTK()
   if (nsnull != mDrawStringBuf) {
     delete [] mDrawStringBuf;
   }
+
+  if (nsnull != mGC) {
+    gdk_gc_unref(mGC);
+  }
 }
 
 
