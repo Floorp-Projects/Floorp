@@ -31,6 +31,7 @@ messenger.jar:
     content/messenger/AccountManager.js                                        (base/prefs/resources/content/AccountManager.js)
     content/messenger/am-main.xul                                              (base/prefs/resources/content/am-main.xul)
     content/messenger/am-main.js                                               (base/prefs/resources/content/am-main.js)
+    content/messenger/am-help.js                                               (base/prefs/resources/content/am-help.js)
     content/messenger/am-identity-advanced.xul                                 (base/prefs/resources/content/am-identity-advanced.xul)
     content/messenger/am-identity-advanced.js                                  (base/prefs/resources/content/am-identity-advanced.js)
     content/messenger/am-server.xul                                            (base/prefs/resources/content/am-server.xul)
