@@ -281,15 +281,23 @@ function SavePublishSiteDataToPrefs(siteArray, defaultName)
     return false;
 
   try {
-    // Clear existing names and data -- rebuild all site prefs
-    publishBranch.deleteBranch("site_name.");
-    publishBranch.deleteBranch("site_data.");
-
-    var i;
     if (siteArray)
     {
-      for (i = 0; i < siteArray.length; i++)
+      var defaultFound = false;
+
+      // Clear existing names and data -- rebuild all site prefs
+      publishBranch.deleteBranch("site_name.");
+      publishBranch.deleteBranch("site_data.");
+
+      for (var i = 0; i < siteArray.length; i++)
+      {
         SavePublishData_Internal(publishBranch, siteArray[i], i);
+        if (!defaultFound)
+          defaultFound = defaultName == siteArray[i].siteName;
+      }
+      // Assure that we have a default name
+      if (siteArray.length && !defaultFound)
+        defaultName == siteArray[0].siteName;
     }
 
     // Save default site name
@@ -396,9 +404,6 @@ function SavePublishData_Internal(publishPrefsBranch, publishData, siteIndex)
   return true;
 }
 
-// This doesn't force saving prefs file
-// Call "SavePublishSiteDataToPrefs(null, defaultName)" to force saving file 
-//    with just a new default site name
 function SetDefaultSiteName(name)
 {
   if (name)
@@ -406,6 +411,8 @@ function SetDefaultSiteName(name)
     var publishBranch = GetPublishPrefsBranch();
     if (publishBranch)
       SetPublishStringPref(publishBranch, "default_site", name);
+
+    SavePrefFile();
   }
 }
 
