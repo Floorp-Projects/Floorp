@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nss.h,v 1.4 2001/01/06 01:57:47 relyea%netscape.com Exp $
+ * $Id: nss.h,v 1.5 2001/01/18 20:28:59 wtc%netscape.com Exp $
  */
 
 #ifndef __nss_h_
@@ -41,6 +41,32 @@
 #include "seccomon.h"
 
 SEC_BEGIN_PROTOS
+
+/*
+ * NSS's major version, minor version, patch level, and whether
+ * this is a beta release.
+ *
+ * The format of the version string should be
+ *     "<major version>.<minor version>[.<patch level>] [<Beta>]"
+ */
+#define NSS_VERSION  "3.2 Beta"
+#define NSS_VMAJOR   3
+#define NSS_VMINOR   2
+#define NSS_VPATCH   0
+#define NSS_BETA     PR_TRUE
+
+/*
+ * Return a boolean that indicates whether the underlying library
+ * will perform as the caller expects.
+ *
+ * The only argument is a string, which should be the verson
+ * identifier of the NSS library. That string will be compared
+ * against a string that represents the actual build version of
+ * the NSS library.  It also invokes the version checking functions
+ * of the dependent libraries such as NSPR.
+ */
+extern PRBool NSS_VersionCheck(const char *importedVersion);
+
 /*
  * Open the Cert, Key, and Security Module databases, read only.
  * Initialize the Random Number Generator.

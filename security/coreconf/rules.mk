@@ -362,7 +362,8 @@ endif
 ifeq ($(OS_ARCH), WINNT)
 $(RES): $(RESNAME)
 	@$(MAKE_OBJDIR)
-	$(RC) -Fo$(RES) $(RESNAME)
+# The resource compiler does not understand the -U option.
+	$(RC) $(filter-out -U%,$(DEFINES)) $(INCLUDES) -Fo$@ $<
 	@echo $(RES) finished
 endif
 

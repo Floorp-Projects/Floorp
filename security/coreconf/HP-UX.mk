@@ -64,7 +64,7 @@ LDFLAGS			= -z -Wl,+s
 
 MKSHLIB			= $(LD) $(DSO_LDOPTS)
 
-DSO_LDOPTS		= -b
+DSO_LDOPTS		= -b +h $(notdir $@)
 DSO_LDFLAGS		=
 
 # +Z generates position independent code for use in shared libraries.

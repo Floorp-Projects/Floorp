@@ -67,6 +67,7 @@ CSRCS = \
 	cmsutil.c \
 	smimemessage.c \
 	smimeutil.c \
+	smimever.c \
 	$(NULL)
 
 REQUIRES = security dbm
