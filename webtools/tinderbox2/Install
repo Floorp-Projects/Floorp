@@ -140,6 +140,11 @@ It is currently assumed that the bin directory of your installation
 will be where the webserver will run the tinderbox cgi's from.  You
 can copy the *.cgi files to another directory if this is not the case.
 
+*) There are some gifs located in the gif directory which have
+historically been used by tinderbox.  The installation via 'make
+install' does not install these images.  Put them somewhere in your
+webservers html directory if you wish to use them.  Samples of their
+use are in the configuration files.
 
 *) set up a cron job to run $cgi-bin/bin/tinder.cgi --daemon-mode 
 	every five minutes.  This generates the static tinderbox pages
