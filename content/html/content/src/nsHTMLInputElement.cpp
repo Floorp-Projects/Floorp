@@ -1445,7 +1445,7 @@ nsHTMLInputElement::AttributeToString(nsIAtom* aAttribute,
   }
   else if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      AlignValueToString(aValue, aResult);
+      VAlignValueToString(aValue, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

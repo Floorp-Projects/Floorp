@@ -2892,6 +2892,23 @@ static nsGenericHTMLElement::EnumTable kAlignTable[] = {
   { 0 }
 };
 
+// Elements that should return vertical align values "middle", "bottom", and "top" 
+//  instead of "center", "baseline", and "texttop" from GetAttribute() should use this
+static nsGenericHTMLElement::EnumTable kVAlignTable[] = {
+  { "left", NS_STYLE_TEXT_ALIGN_LEFT },
+  { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
+  { "top", NS_STYLE_VERTICAL_ALIGN_TOP },//verified
+  { "texttop", NS_STYLE_VERTICAL_ALIGN_TEXT_TOP },// verified
+  { "bottom", NS_STYLE_VERTICAL_ALIGN_BASELINE },//verified
+  { "baseline", NS_STYLE_VERTICAL_ALIGN_BASELINE },// verified
+  { "middle", NS_STYLE_VERTICAL_ALIGN_MIDDLE },//verified
+  { "center", NS_STYLE_VERTICAL_ALIGN_MIDDLE },
+  { "absbottom", NS_STYLE_VERTICAL_ALIGN_BOTTOM },//verified
+  { "abscenter", NS_STYLE_VERTICAL_ALIGN_MIDDLE },/* XXX not the same as ebina */
+  { "absmiddle", NS_STYLE_VERTICAL_ALIGN_MIDDLE },/* XXX ditto */
+  { 0 }
+};
+
 static nsGenericHTMLElement::EnumTable kDivAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_MOZ_RIGHT },
@@ -3058,6 +3075,13 @@ nsGenericHTMLElement::AlignValueToString(const nsHTMLValue& aValue,
                                          nsAWritableString& aResult)
 {
   return EnumValueToString(aValue, kAlignTable, aResult);
+}
+
+PRBool
+nsGenericHTMLElement::VAlignValueToString(const nsHTMLValue& aValue,
+                                         nsAWritableString& aResult)
+{
+  return EnumValueToString(aValue, kVAlignTable, aResult);
 }
 
 PRBool
