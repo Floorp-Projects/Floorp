@@ -22,18 +22,20 @@
 #define PostMessage   WinPostMsg
 #define DefWindowProc WinDefWindowProc
 typedef MPARAM WPARAM,LPARAM;
-#endif
+#endif /* XP_OS2 */
+
 #include "plevent.h"
 #include "prmem.h"
 #include "prcmon.h"
 #include "prlog.h"
+
 #if !defined(WIN32)
 #include <errno.h>
 #include <stddef.h>
 #if !defined(XP_OS2)
 #include <unistd.h>
-#endif
-#endif
+#endif /* !XP_OS2 */
+#endif /* !Win32 */
 
 #if defined(XP_MAC)
 #include <AppleEvents.h>
@@ -42,7 +44,8 @@ typedef MPARAM WPARAM,LPARAM;
 #else
 #include "private/pprthred.h"
 #include "private/primpl.h"
-#endif
+#endif /* XP_MAC */
+
 
 static PRLogModuleInfo *event_lm = NULL;
 
@@ -50,46 +53,71 @@ static PRLogModuleInfo *event_lm = NULL;
  * Private Stuff
  ******************************************************************************/
 
+/*
+** EventQueueType -- Defines notification type for an event queue
+**
+*/
+typedef enum 
+{
+    EventQueueIsNative = 1,
+    EventQueueIsMonitored = 2
+} EventQueueType;
+
+
 struct PLEventQueue {
     char*        name;
-    PRCList        queue;
-    PRMonitor*        monitor;
-    PRThread*        handlerThread;
-#ifdef XP_UNIX
-    PRInt32        eventPipe[2];
-    PRPackedBool    nativeNotifier;
-	int notifyCount;
+    PRCList      queue;
+    PRMonitor*   monitor;
+    PRThread*    handlerThread;
+    EventQueueType type;
+    PRBool       processingEvents;
+#if defined(XP_UNIX)
+    PRInt32      eventPipe[2];
+	int          notifyCount;
+#elif defined(_WIN32) || defined(WIN16)
+    HWND         eventReceiverWindow;
+#elif defined(XP_OS2)
+    HWND         eventReceiverWindow;
 #endif
-    PRBool      processingEvents;
 };
 
 #define PR_EVENT_PTR(_qp) \
     ((PLEvent*) ((char*) (_qp) - offsetof(PLEvent, link)))
 
 static PRStatus    _pl_SetupNativeNotifier(PLEventQueue* self);
-static void    _pl_CleanupNativeNotifier(PLEventQueue* self);
+static void        _pl_CleanupNativeNotifier(PLEventQueue* self);
 static PRStatus    _pl_NativeNotify(PLEventQueue* self);
 static PRStatus    _pl_AcknowledgeNativeNotify(PLEventQueue* self);
+static void        _md_CreateEventQueue( PLEventQueue *eventQueue );
 
 
 #if defined(_WIN32) || defined(WIN16) || defined(XP_OS2)
-PLEventQueue * _pr_main_event_queue;
-HWND _pr_eventReceiverWindow;
+PLEventQueue * _pr_MainEventQueue;
+
 #if defined(OS2)
 BOOL rc;
 ULONG _pr_PostEventMsgId;
 #else
 UINT _pr_PostEventMsgId;
 static char *_pr_eventWindowClass = "NSPR:EventWindow";
-#endif
-#endif
+#endif /* OS2 */
+#endif /* Win32, Win16, OS2 */
 
 /*******************************************************************************
  * Event Queue Operations
  ******************************************************************************/
 
-PR_IMPLEMENT(PLEventQueue*)
-PL_CreateEventQueue(char* name, PRThread* handlerThread)
+/*
+** _pl_CreateEventQueue() -- Create the event queue
+**
+**
+*/
+static PLEventQueue *
+    _pl_CreateEventQueue(
+        char *name,
+        PRThread *handlerThread,
+        EventQueueType  qtype
+)
 {
     PRStatus err;
     PLEventQueue* self = NULL;
@@ -108,10 +136,14 @@ PL_CreateEventQueue(char* name, PRThread* handlerThread)
     self->monitor = mon;
     self->handlerThread = handlerThread;
     self->processingEvents = PR_FALSE;
+    self->type = qtype;
     PR_INIT_CLIST(&self->queue);
-    err = _pl_SetupNativeNotifier(self);
-    if (err) goto error;
-
+    if ( qtype == EventQueueIsNative )
+    {
+        err = _pl_SetupNativeNotifier(self);
+        if (err) goto error;
+    }
+    _md_CreateEventQueue( self );
     return self;
 
   error:
@@ -119,7 +151,34 @@ PL_CreateEventQueue(char* name, PRThread* handlerThread)
     PR_DestroyMonitor(mon);
     PR_DELETE(self);
     return NULL;
+} /* end _pl_CreateEventQueue() */
+
+
+PR_IMPLEMENT(PLEventQueue*)
+PL_CreateEventQueue(char* name, PRThread* handlerThread)
+{
+    return( _pl_CreateEventQueue( name, handlerThread, EventQueueIsNative ));
 }
+
+PR_EXTERN(PLEventQueue *) 
+    PL_CreateNativeEventQueue(
+        char *name, 
+        PRThread *handlerThread
+    )
+{
+    return( _pl_CreateEventQueue( name, handlerThread, EventQueueIsNative ));
+} /* --- end PL_CreateNativeEventQueue() --- */
+
+PR_EXTERN(PLEventQueue *) 
+    PL_CreateMonitoredEventQueue(
+        char *name,
+        PRThread *handlerThread
+    )
+{
+    return( _pl_CreateEventQueue( name, handlerThread, EventQueueIsMonitored ));
+} /* --- end PL_CreateMonitoredEventQueue() --- */
+
+
 
 PR_IMPLEMENT(PRMonitor*)
 PL_GetEventQueueMonitor(PLEventQueue* self)
@@ -145,7 +204,8 @@ PL_DestroyEventQueue(PLEventQueue* self)
     /* destroy undelivered events */
     PL_MapEvents(self, _pl_destroyEvent, NULL);
 
-    _pl_CleanupNativeNotifier(self);
+    if ( self->type == EventQueueIsNative )
+        _pl_CleanupNativeNotifier(self);
 
     /* destroying the monitor also destroys the name */
     PR_ExitMonitor(self->monitor);
@@ -157,7 +217,7 @@ PL_DestroyEventQueue(PLEventQueue* self)
 PR_IMPLEMENT(PRStatus)
 PL_PostEvent(PLEventQueue* self, PLEvent* event)
 {
-    PRStatus err;
+    PRStatus err = PR_SUCCESS;
     PRMonitor* mon;
 
     if (self == NULL)
@@ -172,16 +232,14 @@ PL_PostEvent(PLEventQueue* self, PLEvent* event)
     }
 
     /* notify even if event is NULL */
-    err = _pl_NativeNotify(self);
-    if (err != PR_SUCCESS) goto done;
+    if ( self->type == EventQueueIsNative )
+        err = _pl_NativeNotify(self);
 
     /*
      * This may fall on deaf ears if we're really notifying the native 
      * thread, and no one has called PL_WaitForEvent (or PL_EventLoop):
      */
     err = PR_Notify(mon);
-
-  done:
     PR_ExitMonitor(mon);
     return err;
 }
@@ -221,7 +279,7 @@ PL_PostSynchronousEvent(PLEventQueue* self, PLEvent* event)
 	    for (i = 0; i < entryCount; i++)
 		PR_EnterMonitor(self->monitor);
 	}
-	result = event->synchronousResult;
+    	result = event->synchronousResult;
 	event->synchronousResult = NULL;
     }
 
@@ -238,7 +296,7 @@ PR_IMPLEMENT(PLEvent*)
 PL_GetEvent(PLEventQueue* self)
 {
     PLEvent* event = NULL;
-    PRStatus err;
+    PRStatus err = PR_SUCCESS;
     PRMonitor* mon;
 
     if (self == NULL)
@@ -247,7 +305,9 @@ PL_GetEvent(PLEventQueue* self)
     mon = self->monitor;
     PR_EnterMonitor(mon);
 
-    err = _pl_AcknowledgeNativeNotify(self);
+    if ( self->type == EventQueueIsNative )
+        err = _pl_AcknowledgeNativeNotify(self);
+
     if (err) goto done;
 
     if (!PR_CLIST_IS_EMPTY(&self->queue)) {
@@ -543,47 +603,59 @@ _pl_CleanupNativeNotifier(PLEventQueue* self)
 #endif
 }
 
+#if defined(_WIN32) || defined(WIN16)
 static PRStatus
 _pl_NativeNotify(PLEventQueue* self)
 {
-#if defined(XP_UNIX)
+    /*
+    ** Post a message to the NSPR window on the main thread requesting 
+    ** it to process the pending events. This is only necessary for the
+    ** main event queue, since the main thread is waiting for OS events.
+    */
+    if (self == _pr_MainEventQueue ) {
+       PostMessage( self->eventReceiverWindow, _pr_PostEventMsgId,
+                      (WPARAM)0, (LPARAM)self);
+    }
+    return PR_SUCCESS;
+}/* --- end _pl_NativeNotify() --- */
+#endif
 
-#   define NOTIFY_TOKEN    0xFA
+#if defined(XP_OS2)
+static PRStatus
+_pl_NativeNotify(PLEventQueue* self)
+{
+    BOOL rc;
+
+    if (self == _pr_main_event_queue) {
+       rc = WinPostMsg( self->eventReceiverWindow, _pr_PostEventMsgId,
+                       0, MPFROMP(self));
+    }
+    return (rc == TRUE) ? PR_SUCCESS : PR_FAILURE;
+}/* --- end _pl_NativeNotify() --- */
+#endif /* Winxx */
+
+#if defined(XP_UNIX)
+static PRStatus
+_pl_NativeNotify(PLEventQueue* self)
+{
+#define NOTIFY_TOKEN    0xFA
     PRInt32 count;
     unsigned char buf[] = { NOTIFY_TOKEN };
 
     count = write(self->eventPipe[1], buf, 1);
 	self->notifyCount++;
     return (count == 1) ? PR_SUCCESS : PR_FAILURE;
+}/* --- end _pl_NativeNotify() --- */
+#endif /* XP_UNIX */
 
-#elif defined(XP_PC)
-    /*
-    ** Post a message to the NSPR window on the main thread requesting 
-    ** it to process the pending events. This is only necessary for the
-    ** main event queue, since the main thread is waiting for OS events.
-    */
-#ifndef XP_OS2
-    if (self == _pr_main_event_queue) {
-       PostMessage( _pr_eventReceiverWindow, _pr_PostEventMsgId,
-                      (WPARAM)0, (LPARAM)self);
-    }
-    return PR_SUCCESS;
-#else
-    if (self == _pr_main_event_queue) {
-       rc = WinPostMsg(_pr_eventReceiverWindow, _pr_PostEventMsgId,
-                       0, MPFROMP(self));
-    }
-    return (rc == TRUE) ? PR_SUCCESS : PR_FAILURE;
-#endif
-#else
 #if defined(XP_MAC)
-
+static PRStatus
+_pl_NativeNotify(PLEventQueue* self)
+{
 #pragma unused (self)
     return PR_SUCCESS;    /* XXX can fail? */
-
-#endif
-#endif
 }
+#endif /* XP_MAC */
 
 static PRStatus
 _pl_AcknowledgeNativeNotify(PLEventQueue* self)
@@ -625,14 +697,13 @@ PL_GetEventQueueSelectFD(PLEventQueue* self)
 }
 
 
-
 #if defined(WIN16) || defined(_WIN32)
 /*
 ** Global Instance handle...
 ** In Win32 this is the module handle of the DLL.
 **
 */
-HINSTANCE _pr_hInstance;
+static HINSTANCE _pr_hInstance;
 #endif
 
 #if defined(WIN16)
@@ -680,11 +751,11 @@ BOOL WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 
 #if defined(WIN16) || defined(_WIN32) || defined(XP_OS2)
 PR_IMPLEMENT(PLEventQueue *)
-PL_GetMainEventQueue()
+    PL_GetMainEventQueue( void )
 {
-   PR_ASSERT(_pr_main_event_queue);
+   PR_ASSERT( _pr_MainEventQueue );
 
-   return _pr_main_event_queue;
+   return _pr_MainEventQueue;
 }
 #ifdef XP_OS2
 MRESULT EXPENTRY
@@ -728,7 +799,7 @@ static PRLock   *initLock;
 ** InitWinEventLib() -- Create the Windows initialization lock
 **
 */
-static PRStatus InitWinEventLib( void )
+static PRStatus InitEventLib( void )
 {
     PR_ASSERT( initLock == NULL );
     
@@ -741,31 +812,47 @@ static PRStatus InitWinEventLib( void )
 
 
 PR_IMPLEMENT(void)
-PL_InitializeEventsLib(char *name)
+    PL_InitializeEventsLib( char *name )
 {
-#ifdef XP_OS2
-    PSZ _pr_eventWindowClass;
+    PLEventQueue    *eventQueue;
 
-    _pr_main_event_queue = PL_CreateEventQueue(name, PR_GetCurrentThread());
+    PR_CallOnce( &once, InitEventLib );
 
-    WinRegisterClass( WinQueryAnchorBlock( HWND_DESKTOP),
-                      _pr_eventWindowClass,
-                      _md_EventReceiverProc,
-                      0, 0);
+    PR_Lock( initLock );
+    if ( isInitialized == PR_FALSE )
+    {
+        isInitialized = PR_TRUE;
 
-    _pr_eventReceiverWindow = WinCreateWindow( HWND_DESKTOP,
-                                               _pr_eventWindowClass,
-                                               "", 0,
-                                               0, 0, 0, 0,
-                                               HWND_DESKTOP,
-                                               HWND_TOP,
-                                               0,
-                                               NULL,
-                                               NULL);
+        eventQueue = PL_CreateEventQueue( name, PR_GetCurrentThread() );
+        _pr_MainEventQueue = eventQueue;
+    }
+    PR_Unlock( initLock );
 
-    _pr_PostEventMsgId = WinAddAtom(WinQuerySystemAtomTable(),
-                                    "NSPR_PostEvent");
-#else
+    PR_LOG(event_lm, PR_LOG_DEBUG,("PL_InitializeeventsLib(). Done!\n"));
+    return;
+}
+#endif /* Win16, Win32, OS2 */
+
+#if defined(_WIN32) || defined(WIN16) || defined(XP_OS2)
+
+PR_IMPLEMENT(HWND)
+    PR_GetEventReceiverWindow( void )
+{
+    HWND    eventReceiver = _pr_MainEventQueue->eventReceiverWindow;
+
+    if( eventReceiver != 0 )
+    	return eventReceiver;
+    else
+        return 0;
+}
+#endif
+
+#if defined(_WIN32) || defined(WIN16)
+/*
+** _md_CreateEventQueue() -- ModelDependent initializer
+*/
+static void _md_CreateEventQueue( PLEventQueue *eventQueue )
+{
     WNDCLASS wc;
     
     /*
@@ -776,61 +863,78 @@ PL_InitializeEventsLib(char *name)
     ** we have exclusive control over the initialization sequence.
     **
     */
-    PR_CallOnce( &once, InitWinEventLib );
 
-    PR_Lock( initLock );
-    if ( isInitialized == PR_FALSE )
-    {
-        isInitialized = PR_TRUE;
 
-        _pr_main_event_queue = PL_CreateEventQueue(name, PR_GetCurrentThread());
+    /* Register the windows message for NSPR Event notification */
+    _pr_PostEventMsgId = RegisterWindowMessage("NSPR_PostEvent");
 
-        /* Register the windows message for NSPR Event notification */
-        _pr_PostEventMsgId = RegisterWindowMessage("NSPR_PostEvent");
-
-        /* Register the class for the event receiver window */
-        if (!GetClassInfo(_pr_hInstance, _pr_eventWindowClass, &wc)) {
-            wc.style         = 0;
-            wc.lpfnWndProc   = _md_EventReceiverProc;
-            wc.cbClsExtra    = 0;
-            wc.cbWndExtra    = 0;
-            wc.hInstance     = _pr_hInstance;
-            wc.hIcon         = NULL;
-            wc.hCursor       = NULL;
-            wc.hbrBackground = (HBRUSH) NULL;
-            wc.lpszMenuName  = (LPCSTR) NULL;
-            wc.lpszClassName = _pr_eventWindowClass;
-            RegisterClass(&wc);
-            }
+    /* Register the class for the event receiver window */
+    if (!GetClassInfo(_pr_hInstance, _pr_eventWindowClass, &wc)) {
+        wc.style         = 0;
+        wc.lpfnWndProc   = _md_EventReceiverProc;
+        wc.cbClsExtra    = 0;
+        wc.cbWndExtra    = 0;
+        wc.hInstance     = _pr_hInstance;
+        wc.hIcon         = NULL;
+        wc.hCursor       = NULL;
+        wc.hbrBackground = (HBRUSH) NULL;
+        wc.lpszMenuName  = (LPCSTR) NULL;
+        wc.lpszClassName = _pr_eventWindowClass;
+        RegisterClass(&wc);
+        }
         
-        /* Create the event receiver window */
-        _pr_eventReceiverWindow = CreateWindow(_pr_eventWindowClass,
-                                            "NSPR:EventReceiver",
-                                                0, 0, 0, 10, 10,
-                                                NULL, NULL, _pr_hInstance,
-                                                NULL);
-        PR_ASSERT(_pr_eventReceiverWindow);
+    /* Create the event receiver window */
+    eventQueue->eventReceiverWindow = CreateWindow(_pr_eventWindowClass,
+                                        "NSPR:EventReceiver",
+                                            0, 0, 0, 10, 10,
+                                            NULL, NULL, _pr_hInstance,
+                                            NULL);
+    PR_ASSERT(eventQueue->eventReceiverWindow);
 
-        PR_LOG(event_lm, PR_LOG_DEBUG,("PL_InitializeeventsLib(). Done!\n"));
-    }
-    PR_Unlock( initLock );
-#endif
-    return;
-}
-#endif
+    return;    
+} /* end _md_CreateEventQueue() */
+#endif /* Winxx */
 
-#if defined(_WIN32) || defined(WIN16) || defined(XP_OS2)
-PR_IMPLEMENT(HWND)
-PR_GetEventReceiverWindow()
+#if defined(XP_OS2)
+/*
+** _md_CreateEventQueue() -- ModelDependent initializer
+*/
+static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 {
-    if(_pr_eventReceiverWindow != 0)
-    {
-	return _pr_eventReceiverWindow;
-    }
+    PSZ _pr_eventWindowClass;
 
-    return 0;
+    WinRegisterClass( WinQueryAnchorBlock( HWND_DESKTOP),
+                      _pr_eventWindowClass,
+                      _md_EventReceiverProc,
+                      0, 0);
 
-}
-#endif
+    eventQueue->eventReceiverWindow = WinCreateWindow( HWND_DESKTOP,
+                     _pr_eventWindowClass,
+                     "", 0,
+                     0, 0, 0, 0,
+                     HWND_DESKTOP,
+                     HWND_TOP,
+                     0,
+                     NULL,
+                     NULL);
 
+    eventQueue->postEventMsgId = WinAddAtom(WinQuerySystemAtomTable(),
+                     "NSPR_PostEvent");
+    return;    
+} /* end _md_CreateEventQueue() */
+#endif /* XP_OS2 */
+
+#if defined(XP_UNIX)
+/*
+** _md_CreateEventQueue() -- ModelDependent initializer
+*/
+static void _md_CreateEventQueue( PLEventQueue *eventQueue )
+{
+    /* there's really nothing special to do here,
+    ** the guts of the unix stuff is in the setupnativenotify
+    ** and related functions.
+    */
+    return;    
+} /* end _md_CreateEventQueue() */
+#endif /* XP_UNIX */
 /* --- end plevent.c --- */
