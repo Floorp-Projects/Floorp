@@ -461,7 +461,8 @@ pk11_password_hardcode(PK11SlotInfo *slot, PRBool retry, void *arg)
 {
   char *pw;
   pw = password ? PORT_Strdup (password) : NULL;
-  password = NULL;
+  /* XXX don't do this, or FIPS won't work */
+  /*password = NULL;*/
   return pw;
 }
 
