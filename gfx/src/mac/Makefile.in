@@ -44,6 +44,8 @@ CPPSRCS = \
 		nsUnicodeFontMappingMac.cpp \
 		nsUnicodeMappingUtil.cpp \
 		nsUnicodeRenderingToolkit.cpp \
+		nsScreenMac.cpp \
+		nsScreenManagerMac.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

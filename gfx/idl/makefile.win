@@ -29,6 +29,8 @@ XPIDL_MODULE=gfx
 XPIDLSRCS =               \
   .\nsIFontEnumerator.idl          \
   .\nsIScriptableRegion.idl          \
+  .\nsIScreen.idl          \
+  .\nsIScreenManager.idl          \
   $(NULL)
 
 EXPORTS=                  \
