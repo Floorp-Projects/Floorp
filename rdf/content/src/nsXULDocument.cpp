@@ -29,23 +29,29 @@
 
  */
 
+// Note the ALPHABETICAL ORDERING
 #include "nsCOMPtr.h"
+#include "nsDOMCID.h"
 #include "nsIArena.h"
-#include "nsIContent.h"
 #include "nsICSSParser.h"
 #include "nsICSSStyleSheet.h"
+#include "nsIContent.h"
 #include "nsIDOMElementObserver.h"
 #include "nsIDOMNodeObserver.h"
 #include "nsIDOMScriptObjectFactory.h"
+#include "nsIDOMSelection.h"
 #include "nsIDOMStyleSheetCollection.h"
+#include "nsIDOMText.h"
 #include "nsIDOMXULDocument.h"
+#include "nsIDOMXULElement.h"
 #include "nsIDTD.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
-#include "nsIHTMLContentContainer.h"
 #include "nsIHTMLCSSStyleSheet.h"
+#include "nsIHTMLContentContainer.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsIJSScriptObject.h"
+#include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsIParser.h"
 #include "nsIPresContext.h"
@@ -60,32 +66,32 @@
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectOwner.h"
-#include "nsIDOMSelection.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
+#include "nsIStyleContext.h"
 #include "nsIStyleSet.h"
 #include "nsIStyleSheet.h"
 #include "nsISupportsArray.h"
+#include "nsITextContent.h"
 #include "nsIURL.h"
 #include "nsIURLGroup.h"
 #include "nsIWebShell.h"
-#include "nsIStyleContext.h"
-#include "nsIXULContentSink.h"
-#include "nsIDOMXULElement.h"
-#include "nsIXULParentDocument.h"
-#include "nsIXULChildDocument.h"
 #include "nsIXMLContent.h"
-#include "nsDOMCID.h"
+#include "nsIXULChildDocument.h"
+#include "nsIXULContentSink.h"
+#include "nsIXULParentDocument.h"
 #include "nsLayoutCID.h"
 #include "nsParserCIID.h"
 #include "nsRDFCID.h"
+#include "nsRDFContentUtils.h"
 #include "nsRDFDOMNodeList.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h" // XXX should go away
 #include "plhash.h"
 #include "plstr.h"
-#include "rdfutil.h"
 #include "prlog.h"
+#include "rdfutil.h"
+#include "rdf.h"
 
 #include "nsILineBreakerFactory.h"
 #include "nsIWordBreakerFactory.h"
@@ -93,57 +99,66 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-static NS_DEFINE_IID(kICSSParserIID,          NS_ICSS_PARSER_IID); // XXX grr..
-static NS_DEFINE_IID(kIContentIID,            NS_ICONTENT_IID);
-static NS_DEFINE_IID(kIDTDIID,                NS_IDTD_IID);
+static NS_DEFINE_IID(kICSSParserIID,              NS_ICSS_PARSER_IID); // XXX grr..
+static NS_DEFINE_IID(kIContentIID,                NS_ICONTENT_IID);
+static NS_DEFINE_IID(kIDTDIID,                    NS_IDTD_IID);
 static NS_DEFINE_IID(kIDOMScriptObjectFactoryIID, NS_IDOM_SCRIPT_OBJECT_FACTORY_IID);
-static NS_DEFINE_IID(kIDocumentIID,           NS_IDOCUMENT_IID);
-static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
-static NS_DEFINE_IID(kIHTMLStyleSheetIID,     NS_IHTML_STYLE_SHEET_IID);
-static NS_DEFINE_IID(kIHTMLCSSStyleSheetIID,  NS_IHTML_CSS_STYLE_SHEET_IID);
-static NS_DEFINE_IID(kIJSScriptObjectIID,     NS_IJSSCRIPTOBJECT_IID);
-static NS_DEFINE_IID(kINameSpaceManagerIID,   NS_INAMESPACEMANAGER_IID);
-static NS_DEFINE_IID(kIParserIID,             NS_IPARSER_IID);
-static NS_DEFINE_IID(kIPresShellIID,          NS_IPRESSHELL_IID);
+static NS_DEFINE_IID(kIDocumentIID,               NS_IDOCUMENT_IID);
+static NS_DEFINE_IID(kIHTMLContentContainerIID,   NS_IHTMLCONTENTCONTAINER_IID);
+static NS_DEFINE_IID(kIHTMLStyleSheetIID,         NS_IHTML_STYLE_SHEET_IID);
+static NS_DEFINE_IID(kIHTMLCSSStyleSheetIID,      NS_IHTML_CSS_STYLE_SHEET_IID);
+static NS_DEFINE_IID(kIJSScriptObjectIID,         NS_IJSSCRIPTOBJECT_IID);
+static NS_DEFINE_IID(kINameSpaceManagerIID,       NS_INAMESPACEMANAGER_IID);
+static NS_DEFINE_IID(kIParserIID,                 NS_IPARSER_IID);
+static NS_DEFINE_IID(kIPresShellIID,              NS_IPRESSHELL_IID);
 static NS_DEFINE_IID(kIRDFCompositeDataSourceIID, NS_IRDFCOMPOSITEDATASOURCE_IID);
 static NS_DEFINE_IID(kIRDFContentModelBuilderIID, NS_IRDFCONTENTMODELBUILDER_IID);
-static NS_DEFINE_IID(kIRDFDataSourceIID,      NS_IRDFDATASOURCE_IID);
-static NS_DEFINE_IID(kIRDFDocumentIID,        NS_IRDFDOCUMENT_IID);
-static NS_DEFINE_IID(kIRDFLiteralIID,         NS_IRDFLITERAL_IID);
-static NS_DEFINE_IID(kIRDFResourceIID,        NS_IRDFRESOURCE_IID);
-static NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
-static NS_DEFINE_IID(kIScriptObjectOwnerIID,  NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_IID(kIDOMSelectionIID,       NS_IDOMSELECTION_IID);
-static NS_DEFINE_IID(kIStreamListenerIID,     NS_ISTREAMLISTENER_IID);
-static NS_DEFINE_IID(kIStreamObserverIID,     NS_ISTREAMOBSERVER_IID);
-static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIWebShellIID,           NS_IWEB_SHELL_IID);
-static NS_DEFINE_IID(kIXMLDocumentIID,        NS_IXMLDOCUMENT_IID);
-static NS_DEFINE_IID(kIXULContentSinkIID,     NS_IXULCONTENTSINK_IID);
+static NS_DEFINE_IID(kIRDFDataSourceIID,          NS_IRDFDATASOURCE_IID);
+static NS_DEFINE_IID(kIRDFDocumentIID,            NS_IRDFDOCUMENT_IID);
+static NS_DEFINE_IID(kIRDFLiteralIID,             NS_IRDFLITERAL_IID);
+static NS_DEFINE_IID(kIRDFResourceIID,            NS_IRDFRESOURCE_IID);
+static NS_DEFINE_IID(kIRDFServiceIID,             NS_IRDFSERVICE_IID);
+static NS_DEFINE_IID(kIScriptObjectOwnerIID,      NS_ISCRIPTOBJECTOWNER_IID);
+static NS_DEFINE_IID(kIDOMSelectionIID,           NS_IDOMSELECTION_IID);
+static NS_DEFINE_IID(kIStreamListenerIID,         NS_ISTREAMLISTENER_IID);
+static NS_DEFINE_IID(kIStreamObserverIID,         NS_ISTREAMOBSERVER_IID);
+static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIWebShellIID,               NS_IWEB_SHELL_IID);
+static NS_DEFINE_IID(kIXMLDocumentIID,            NS_IXMLDOCUMENT_IID);
+static NS_DEFINE_IID(kIXULContentSinkIID,         NS_IXULCONTENTSINK_IID);
 
-static NS_DEFINE_CID(kCSSParserCID,             NS_CSSPARSER_CID);
+static NS_DEFINE_CID(kCSSParserCID,              NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
-static NS_DEFINE_CID(kHTMLStyleSheetCID,        NS_HTMLSTYLESHEET_CID);
-static NS_DEFINE_CID(kHTMLCSSStyleSheetCID,     NS_HTML_CSS_STYLESHEET_CID);
-static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
-static NS_DEFINE_CID(kParserCID,                NS_PARSER_IID); // XXX
-static NS_DEFINE_CID(kPresShellCID,             NS_PRESSHELL_CID);
+static NS_DEFINE_CID(kHTMLStyleSheetCID,         NS_HTMLSTYLESHEET_CID);
+static NS_DEFINE_CID(kHTMLCSSStyleSheetCID,      NS_HTML_CSS_STYLESHEET_CID);
+static NS_DEFINE_CID(kNameSpaceManagerCID,       NS_NAMESPACEMANAGER_CID);
+static NS_DEFINE_CID(kParserCID,                 NS_PARSER_IID); // XXX
+static NS_DEFINE_CID(kPresShellCID,              NS_PRESSHELL_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
-static NS_DEFINE_CID(kLocalStoreCID,            NS_LOCALSTORE_CID);
-static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kRDFXMLDataSourceCID,      NS_RDFXMLDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFXULBuilderCID,         NS_RDFXULBUILDER_CID);
-static NS_DEFINE_CID(kRangeListCID,             NS_RANGELIST_CID);
-static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
-static NS_DEFINE_CID(kXULContentSinkCID,        NS_XULCONTENTSINK_CID);
-static NS_DEFINE_CID(kXULDataSourceCID,			NS_XULDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,  NS_RDFINMEMORYDATASOURCE_CID);
+static NS_DEFINE_CID(kLocalStoreCID,             NS_LOCALSTORE_CID);
+static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFXMLDataSourceCID,       NS_RDFXMLDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFXULBuilderCID,          NS_RDFXULBUILDER_CID);
+static NS_DEFINE_CID(kRangeListCID,              NS_RANGELIST_CID);
+static NS_DEFINE_CID(kTextNodeCID,               NS_TEXTNODE_CID);
+static NS_DEFINE_CID(kWellFormedDTDCID,          NS_WELLFORMEDDTD_CID);
+static NS_DEFINE_CID(kXULContentSinkCID,         NS_XULCONTENTSINK_CID);
+static NS_DEFINE_CID(kXULDataSourceCID,		     NS_XULDATASOURCE_CID);
 
 static NS_DEFINE_IID(kLWBrkCID, NS_LWBRK_CID);
 static NS_DEFINE_IID(kILineBreakerFactoryIID, NS_ILINEBREAKERFACTORY_IID);
 static NS_DEFINE_IID(kIWordBreakerFactoryIID, NS_IWORDBREAKERFACTORY_IID);
 
 ////////////////////////////////////////////////////////////////////////
+// Standard vocabulary items
+
+DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, instanceOf);
+DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, type);
+
+#define XUL_NAMESPACE_URI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+#define XUL_NAMESPACE_URI_PREFIX XUL_NAMESPACE_URI "#"
+DEFINE_RDF_VOCAB(XUL_NAMESPACE_URI_PREFIX, XUL, element);
 
 static PRLogModuleInfo* gMapLog;
 
@@ -592,11 +607,22 @@ public:
                            const nsString& aValue,
                            nsRDFDOMNodeList* aElements);
 
+    nsresult
+    ParseTagString(const nsString& aTagName, nsIAtom*& aName, PRInt32& aNameSpaceID);
+
+    nsresult
+    MakeProperty(PRInt32 aNameSpaceID, nsIAtom* aTag, nsIRDFResource** aResult);
+
 protected:
     // pseudo constants
     static PRInt32 gRefCnt;
     static nsIAtom* kIdAtom;
     static nsIAtom* kObservesAtom;
+
+    static nsIRDFService* gRDFService;
+    static nsIRDFResource* kRDF_instanceOf;
+    static nsIRDFResource* kRDF_type;
+    static nsIRDFResource* kXUL_element;
 
     nsIContent*
     FindContent(const nsIContent* aStartNode,
@@ -627,7 +653,6 @@ protected:
     nsINameSpaceManager*       mNameSpaceManager;
     nsIHTMLStyleSheet*         mAttrStyleSheet;
     nsIHTMLCSSStyleSheet*      mInlineStyleSheet;
-    nsIRDFService*             mRDFService;
     nsElementMap               mResources;
     nsISupportsArray*          mBuilders;
     nsIRDFContentModelBuilder* mXULBuilder;
@@ -641,9 +666,14 @@ protected:
     nsVoidArray                mSubDocuments;
 };
 
-PRInt32 XULDocumentImpl::gRefCnt;
+PRInt32 XULDocumentImpl::gRefCnt = 0;
 nsIAtom* XULDocumentImpl::kIdAtom;
 nsIAtom* XULDocumentImpl::kObservesAtom;
+
+nsIRDFService* XULDocumentImpl::gRDFService;
+nsIRDFResource* XULDocumentImpl::kRDF_instanceOf;
+nsIRDFResource* XULDocumentImpl::kRDF_type;
+nsIRDFResource* XULDocumentImpl::kXUL_element;
 
 ////////////////////////////////////////////////////////////////////////
 // ctors & dtors
@@ -660,7 +690,6 @@ XULDocumentImpl::XULDocumentImpl(void)
       mDisplaySelection(PR_FALSE),
       mNameSpaceManager(nsnull),
       mAttrStyleSheet(nsnull),
-      mRDFService(nsnull),
       mBuilders(nsnull),
       mXULBuilder(nsnull),
       mLocalDataSource(nsnull),
@@ -686,6 +715,20 @@ XULDocumentImpl::XULDocumentImpl(void)
     if (gRefCnt++ == 0) {
         kIdAtom        = NS_NewAtom("id");
         kObservesAtom  = NS_NewAtom("observes");
+
+        // Keep the RDF service cached in a member variable to make using
+        // it a bit less painful
+        rv = nsServiceManager::GetService(kRDFServiceCID,
+                                          kIRDFServiceIID,
+                                          (nsISupports**) &gRDFService);
+
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF Service");
+
+        if (gRDFService) {
+            gRDFService->GetResource(kURIRDF_instanceOf, &kRDF_instanceOf);
+            gRDFService->GetResource(kURIRDF_type,       &kRDF_type);
+            gRDFService->GetResource(kURIXUL_element,    &kXUL_element);
+        }
     }
 
 #ifdef PR_LOGGING
@@ -698,11 +741,6 @@ XULDocumentImpl::~XULDocumentImpl()
 {
     NS_IF_RELEASE(mDocumentDataSource);
     NS_IF_RELEASE(mLocalDataSource);
-
-    if (mRDFService) {
-        nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService);
-        mRDFService = nsnull;
-    }
 
     // mParentDocument is never refcounted
     // Delete references to sub-documents
@@ -756,6 +794,15 @@ XULDocumentImpl::~XULDocumentImpl()
     if (--gRefCnt == 0) {
         NS_IF_RELEASE(kIdAtom);
         NS_IF_RELEASE(kObservesAtom);
+
+        if (gRDFService) {
+            nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+            gRDFService = nsnull;
+        }
+
+        NS_IF_RELEASE(kRDF_instanceOf);
+        NS_IF_RELEASE(kRDF_type);
+        NS_IF_RELEASE(kXUL_element);
     }
 }
 
@@ -972,7 +1019,7 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
         // XXX This needs to be cloned across windows, and the final
         // instance needs to be flushed to disk. It may be that this is
         // really an RDFXML data source...
-        rv = mRDFService->GetDataSource("rdf:local-store", &mLocalDataSource);
+        rv = gRDFService->GetDataSource("rdf:local-store", &mLocalDataSource);
 
         if (NS_FAILED(rv)) {
             NS_ERROR("couldn't create local data source");
@@ -2230,8 +2277,77 @@ XULDocumentImpl::GetDocumentElement(nsIDOMElement** aDocumentElement)
 NS_IMETHODIMP
 XULDocumentImpl::CreateElement(const nsString& aTagName, nsIDOMElement** aReturn)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_PRECONDITION(aReturn != nsnull, "null ptr");
+    if (! aReturn)
+        return NS_ERROR_NULL_POINTER;
+
+    // we need this so that we can create a resource URI
+    NS_PRECONDITION(mDocumentURL != nsnull, "not initialized");
+    if (! mDocumentURL)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    nsresult rv;
+
+    nsCOMPtr<nsIAtom> name;
+    PRInt32 nameSpaceID;
+
+    // parse the user-provided string into a tag name and a namespace ID
+    rv = ParseTagString(aTagName, *getter_AddRefs(name), nameSpaceID);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to parse tag name");
+    if (NS_FAILED(rv)) return rv;
+
+    // construct an element
+    nsCOMPtr<nsIContent> result;
+    rv = NS_NewRDFElement(nameSpaceID, name, getter_AddRefs(result));
+    if (NS_FAILED(rv)) return rv;
+
+    // assign it an "anonymous" identifier so that it can be referred
+    // to in the graph.
+    nsCOMPtr<nsIRDFResource> resource;
+    const char* context;
+    rv = mDocumentURL->GetSpec(&context);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = rdf_CreateAnonymousResource(context, getter_AddRefs(resource));
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString uri;
+    rv = resource->GetValue(getter_Copies(uri));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, (const char*) uri, PR_FALSE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set element's ID");
+    if (NS_FAILED(rv)) return rv;
+
+    // Set it's RDF:type in the graph s.t. the element's tag can be
+    // constructed from it.
+    nsCOMPtr<nsIRDFResource> type;
+    rv = MakeProperty(nameSpaceID, name, getter_AddRefs(type));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mDocumentDataSource->Assert(resource, kRDF_type, type, PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set element's tag info in graph");
+    if (NS_FAILED(rv)) return rv;
+
+    // Mark it as a XUL element
+    rv = mDocumentDataSource->Assert(resource, kRDF_instanceOf, kXUL_element, PR_TRUE);
+    NS_ASSERTION(rv == NS_OK, "unable to mark as XUL element");
+    if (NS_FAILED(rv)) return rv;
+
+    rv = rdf_MakeSeq(mDocumentDataSource, resource);
+    NS_ASSERTION(rv == NS_OK, "unable to mark as XUL element");
+    if (NS_FAILED(rv)) return rv;
+
+    // `this' will be its document
+    rv = result->SetDocument(this, PR_FALSE);
+    if (NS_FAILED(rv)) return rv;
+
+    // get the DOM interface
+    rv = result->QueryInterface(nsIDOMElement::GetIID(), (void**) aReturn);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOM element");
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
 }
 
 
@@ -2246,8 +2362,24 @@ XULDocumentImpl::CreateDocumentFragment(nsIDOMDocumentFragment** aReturn)
 NS_IMETHODIMP
 XULDocumentImpl::CreateTextNode(const nsString& aData, nsIDOMText** aReturn)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_PRECONDITION(aReturn != nsnull, "null ptr");
+    if (! aReturn)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+
+    nsCOMPtr<nsITextContent> text;
+    rv = nsComponentManager::CreateInstance(kTextNodeCID, nsnull, nsITextContent::GetIID(), getter_AddRefs(text));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = text->SetText(aData.GetUnicode(), aData.Length(), PR_FALSE);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = text->QueryInterface(nsIDOMText::GetIID(), (void**) aReturn);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOMText");
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
 }
 
 
@@ -2383,7 +2515,7 @@ XULDocumentImpl::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
     rdf_PossiblyMakeAbsolute(documentURL, uri);
 
     nsCOMPtr<nsIRDFResource> resource;
-    if (NS_FAILED(rv = mRDFService->GetUnicodeResource(uri, getter_AddRefs(resource)))) {
+    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(uri, getter_AddRefs(resource)))) {
         NS_ERROR("unable to get resource");
         return rv;
     }
@@ -2514,32 +2646,31 @@ XULDocumentImpl::GetFragmentRoot(nsIRDFResource** aFragmentRoot)
 NS_IMETHODIMP
 XULDocumentImpl::GetNodeName(nsString& aNodeName)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    aNodeName.SetString("#document");
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 XULDocumentImpl::GetNodeValue(nsString& aNodeValue)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    aNodeValue.Truncate();
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 XULDocumentImpl::SetNodeValue(const nsString& aNodeValue)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 XULDocumentImpl::GetNodeType(PRUint16* aNodeType)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aNodeType = nsIDOMNode::DOCUMENT_NODE;
+    return NS_OK;
 }
 
 
@@ -2554,64 +2685,139 @@ XULDocumentImpl::GetParentNode(nsIDOMNode** aParentNode)
 NS_IMETHODIMP
 XULDocumentImpl::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_PRECONDITION(aChildNodes != nsnull, "null ptr");
+    if (! aChildNodes)
+        return NS_ERROR_NULL_POINTER;
+
+    if (mRootContent) {
+        nsresult rv;
+
+        *aChildNodes = nsnull;
+
+        nsRDFDOMNodeList* children;
+        rv = nsRDFDOMNodeList::Create(&children);
+
+        if (NS_SUCCEEDED(rv)) {
+            nsIDOMNode* domNode;
+            rv = mRootContent->QueryInterface(nsIDOMNode::GetIID(), (void**) domNode);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "root content is not a DOM node");
+
+            if (NS_SUCCEEDED(rv)) {
+                rv = children->AppendNode(domNode);
+                NS_RELEASE(domNode);
+
+                *aChildNodes = children;
+                return NS_OK;
+            }
+        }
+
+        // If we get here, something bad happened.
+        NS_RELEASE(children);
+        return rv;
+    }
+    else {
+        *aChildNodes = nsnull;
+        return NS_OK;
+    }
 }
 
 
 NS_IMETHODIMP
 XULDocumentImpl::HasChildNodes(PRBool* aHasChildNodes)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_PRECONDITION(aHasChildNodes != nsnull, "null ptr");
+    if (! aHasChildNodes)
+        return NS_ERROR_NULL_POINTER;
+
+    if (mRootContent) {
+        *aHasChildNodes = PR_TRUE;
+    }
+    else {
+        *aHasChildNodes = PR_FALSE;
+    }
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 XULDocumentImpl::GetFirstChild(nsIDOMNode** aFirstChild)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_PRECONDITION(aFirstChild != nsnull, "null ptr");
+    if (! aFirstChild)
+        return NS_ERROR_NULL_POINTER;
+
+    if (mRootContent) {
+        return mRootContent->QueryInterface(nsIDOMNode::GetIID(), (void**) aFirstChild);
+    }
+    else {
+        *aFirstChild = nsnull;
+        return NS_OK;
+    }
 }
 
 
 NS_IMETHODIMP
 XULDocumentImpl::GetLastChild(nsIDOMNode** aLastChild)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_PRECONDITION(aLastChild != nsnull, "null ptr");
+    if (! aLastChild)
+        return NS_ERROR_NULL_POINTER;
+
+    if (mRootContent) {
+        return mRootContent->QueryInterface(nsIDOMNode::GetIID(), (void**) aLastChild);
+    }
+    else {
+        *aLastChild = nsnull;
+        return NS_OK;
+    }
 }
 
 
 NS_IMETHODIMP
 XULDocumentImpl::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_PRECONDITION(aPreviousSibling != nsnull, "null ptr");
+    if (! aPreviousSibling)
+        return NS_ERROR_NULL_POINTER;
+
+    *aPreviousSibling = nsnull;
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 XULDocumentImpl::GetNextSibling(nsIDOMNode** aNextSibling)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_PRECONDITION(aNextSibling != nsnull, "null ptr");
+    if (! aNextSibling)
+        return NS_ERROR_NULL_POINTER;
+
+    *aNextSibling = nsnull;
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 XULDocumentImpl::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_PRECONDITION(aAttributes != nsnull, "null ptr");
+    if (! aAttributes)
+        return NS_ERROR_NULL_POINTER;
+
+    *aAttributes = nsnull;
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 XULDocumentImpl::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_PRECONDITION(aOwnerDocument != nsnull, "null ptr");
+    if (! aOwnerDocument)
+        return NS_ERROR_NULL_POINTER;
+
+    *aOwnerDocument = nsnull;
+    return NS_OK;
 }
 
 
@@ -2650,8 +2856,9 @@ XULDocumentImpl::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 XULDocumentImpl::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // We don't allow cloning of a document
+    *aReturn = nsnull;
+    return NS_OK;
 }
 
 
@@ -3093,7 +3300,7 @@ XULDocumentImpl::AddNamedDataSource(const char* uri)
     nsresult rv;
     nsCOMPtr<nsIRDFDataSource> ds;
 
-    if (NS_FAILED(rv = mRDFService->GetDataSource(uri, getter_AddRefs(ds)))) {
+    if (NS_FAILED(rv = gRDFService->GetDataSource(uri, getter_AddRefs(ds)))) {
         NS_ERROR("unable to get named datasource");
         return rv;
     }
@@ -3126,13 +3333,6 @@ XULDocumentImpl::Init(void)
                                                     nsnull,
                                                     kINameSpaceManagerIID,
                                                     (void**) &mNameSpaceManager)))
-        return rv;
-
-    // Keep the RDF service cached in a member variable to make using
-    // it a bit less painful
-    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
-                                                    kIRDFServiceIID,
-                                                    (nsISupports**) &mRDFService)))
         return rv;
 
     return NS_OK;
@@ -3324,3 +3524,80 @@ XULDocumentImpl::GetElementsByAttribute(nsIDOMNode* aNode,
 
 
 
+nsresult
+XULDocumentImpl::ParseTagString(const nsString& aTagName, nsIAtom*& aName, PRInt32& aNameSpaceID)
+{
+    // Parse the tag into a name and a namespace ID. This is slightly
+    // different than nsIContent::ParseAttributeString() because we
+    // take the default namespace into account (rather than just
+    // assigning "no namespace") in the case that there is no
+    // namespace prefix present.
+
+static char kNameSpaceSeparator[] = ":";
+
+    // XXX this is a gross hack, but it'll carry us for now. We parse
+    // the tag name using the root content, which presumably has all
+    // the namespace info we need.
+    NS_PRECONDITION(mRootContent != nsnull, "not initialized");
+    if (! mRootContent)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    nsCOMPtr<nsIXMLContent> xml( do_QueryInterface(mRootContent) );
+    if (! xml) return NS_ERROR_UNEXPECTED;
+    
+    nsresult rv;
+    nsCOMPtr<nsINameSpace> ns;
+    rv = xml->GetContainingNameSpace(*getter_AddRefs(ns));
+    if (NS_FAILED(rv)) return rv;
+
+    NS_ASSERTION(ns != nsnull, "expected xml namespace info to be available");
+    if (! ns)
+        return NS_ERROR_UNEXPECTED;
+
+    nsAutoString prefix;
+    nsAutoString name(aTagName);
+    PRInt32 nsoffset = name.Find(kNameSpaceSeparator);
+    if (-1 != nsoffset) {
+        name.Left(prefix, nsoffset);
+        name.Cut(0, nsoffset+1);
+    }
+
+    // Figure out the namespace ID
+    nsCOMPtr<nsIAtom> nameSpaceAtom;
+    if (0 < prefix.Length())
+        nameSpaceAtom = getter_AddRefs(NS_NewAtom(prefix));
+
+    rv = ns->FindNameSpaceID(nameSpaceAtom, aNameSpaceID);
+    if (NS_FAILED(rv))
+        aNameSpaceID = kNameSpaceID_None;
+
+    aName = NS_NewAtom(name);
+    return NS_OK;
+}
+
+
+nsresult
+XULDocumentImpl::MakeProperty(PRInt32 aNameSpaceID, nsIAtom* aTag, nsIRDFResource** aResult)
+{
+    // Using the namespace ID and the tag, construct a fully-qualified
+    // URI and turn it into an RDF property.
+
+    NS_PRECONDITION(mNameSpaceManager != nsnull, "not initialized");
+    if (! mNameSpaceManager)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    nsresult rv;
+
+    nsAutoString uri;
+    rv = mNameSpaceManager->GetNameSpaceURI(aNameSpaceID, uri);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get URI for namespace");
+    if (NS_FAILED(rv)) return rv;
+
+    if (uri.Last() != PRUnichar('#') && uri.Last() != PRUnichar('/'))
+        uri.Append('#');
+
+    uri.Append(aTag->GetUnicode());
+
+    rv = gRDFService->GetUnicodeResource(uri, aResult);
+    return rv;
+}

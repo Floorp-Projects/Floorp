@@ -43,10 +43,29 @@ public:
     AttachTextNode(nsIContent* parent, nsIRDFNode* value);
     
     static nsresult
-    FindTreeBodyElement(nsIContent *tree, nsIContent **treeBody);
+    FindChildByTag(nsIContent *aElement,
+                   PRInt32 aNameSpaceID,
+                   nsIAtom* aTag,
+                   nsIContent **aResult);
+
+    static nsresult
+    FindChildByTagAndResource(nsIContent* aElement,
+                              PRInt32 aNameSpaceID,
+                              nsIAtom* aTag,
+                              nsIRDFResource* aResource,
+                              nsIContent** aResult);
+
+    static nsresult
+    GetElementResource(nsIContent* aElement, nsIRDFResource** aResult);
 
     static nsresult
     GetTextForNode(nsIRDFNode* aNode, nsString& aResult);
+
+    static nsresult
+    GetElementLogString(nsIContent* aElement, nsString& aResult);
+
+    static nsresult
+    GetAttributeLogString(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aTag, nsString& aResult);
 };
 
 

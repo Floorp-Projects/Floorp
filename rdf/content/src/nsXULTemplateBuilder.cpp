@@ -464,7 +464,7 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
     // via the nsIContent interface allows us to support generic nodes
     // that might get added in by DOM calls.
     nsCOMPtr<nsIRDFResource> resource;
-    if (NS_FAILED(rv = GetElementResource(aElement, getter_AddRefs(resource)))) {
+    if (NS_FAILED(rv = nsRDFContentUtils::GetElementResource(aElement, getter_AddRefs(resource)))) {
         NS_ERROR("unable to get element resource");
         return rv;
     }
@@ -1105,101 +1105,6 @@ RDFGenericBuilderImpl::OnRemoveAttributeNode(nsIDOMElement* aElement, nsIDOMAttr
 // Implementation methods
 
 nsresult
-RDFGenericBuilderImpl::FindChildByTag(nsIContent* aElement,
-                                   PRInt32 aNameSpaceID,
-                                   nsIAtom* aTag,
-                                   nsIContent** aChild)
-{
-    nsresult rv;
-
-    PRInt32 count;
-    if (NS_FAILED(rv = aElement->ChildCount(count)))
-        return rv;
-
-    for (PRInt32 i = 0; i < count; ++i) {
-        nsCOMPtr<nsIContent> kid;
-        if (NS_FAILED(rv = aElement->ChildAt(i, *getter_AddRefs(kid))))
-            return rv; // XXX fatal
-
-        PRInt32 nameSpaceID;
-        if (NS_FAILED(rv = kid->GetNameSpaceID(nameSpaceID)))
-            return rv; // XXX fatal
-
-        if (nameSpaceID != aNameSpaceID)
-            continue; // wrong namespace
-
-        nsCOMPtr<nsIAtom> kidTag;
-        if (NS_FAILED(rv = kid->GetTag(*getter_AddRefs(kidTag))))
-            return rv; // XXX fatal
-
-        if (kidTag.get() != aTag)
-            continue;
-
-        *aChild = kid;
-        NS_ADDREF(*aChild);
-        return NS_OK;
-    }
-
-    return NS_RDF_NO_VALUE; // not found
-}
-
-
-nsresult
-RDFGenericBuilderImpl::FindChildByTagAndResource(nsIContent* aElement,
-                                              PRInt32 aNameSpaceID,
-                                              nsIAtom* aTag,
-                                              nsIRDFResource* aResource,
-                                              nsIContent** aChild)
-{
-    nsresult rv;
-
-    PRInt32 count;
-    if (NS_FAILED(rv = aElement->ChildCount(count)))
-        return rv;
-
-    for (PRInt32 i = 0; i < count; ++i) {
-        nsCOMPtr<nsIContent> kid;
-        if (NS_FAILED(rv = aElement->ChildAt(i, *getter_AddRefs(kid))))
-            return rv; // XXX fatal
-
-        // Make sure it's a <xul:treecell>
-        PRInt32 nameSpaceID;
-        if (NS_FAILED(rv = kid->GetNameSpaceID(nameSpaceID)))
-            return rv; // XXX fatal
-
-        if (nameSpaceID != aNameSpaceID)
-            continue; // wrong namespace
-
-        nsCOMPtr<nsIAtom> tag;
-        if (NS_FAILED(rv = kid->GetTag(*getter_AddRefs(tag))))
-            return rv; // XXX fatal
-
-        if (tag.get() != aTag)
-            continue; // wrong tag
-
-        // Now get the resource ID from the RDF:ID attribute. We do it
-        // via the content model, because you're never sure who
-        // might've added this stuff in...
-        nsCOMPtr<nsIRDFResource> resource;
-        if (NS_FAILED(rv = GetElementResource(kid, getter_AddRefs(resource)))) {
-            NS_ERROR("severe error retrieving resource");
-            return rv;
-        }
-
-        if (resource.get() != aResource)
-            continue; // not the resource we want
-
-        // Fount it!
-        *aChild = kid;
-        NS_ADDREF(*aChild);
-        return NS_OK;
-    }
-
-    return NS_RDF_NO_VALUE; // not found
-}
-
-
-nsresult
 RDFGenericBuilderImpl::EnsureElementHasGenericChild(nsIContent* parent,
                                                  PRInt32 nameSpaceID,
                                                  nsIAtom* tag,
@@ -1207,7 +1112,7 @@ RDFGenericBuilderImpl::EnsureElementHasGenericChild(nsIContent* parent,
 {
     nsresult rv;
 
-    rv = FindChildByTag(parent, nameSpaceID, tag, result);
+    rv = nsRDFContentUtils::FindChildByTag(parent, nameSpaceID, tag, result);
     if (NS_FAILED(rv))
         return rv;
 
@@ -1519,7 +1424,7 @@ RDFGenericBuilderImpl::GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aR
         return rv;
     }
 
-    return GetElementResource(element, aResource);
+    return nsRDFContentUtils::GetElementResource(element, aResource);
 }
 
 nsresult
@@ -1531,15 +1436,23 @@ RDFGenericBuilderImpl::CreateResourceElement(PRInt32 aNameSpaceID,
     nsresult rv;
 
     nsCOMPtr<nsIContent> result;
-    if (NS_FAILED(rv = NS_NewRDFElement(aNameSpaceID, aTag, getter_AddRefs(result))))
-        return rv;
+    rv = NS_NewRDFElement(aNameSpaceID, aTag, getter_AddRefs(result));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create new RDFElement");
+    if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString uri;
-    if (NS_FAILED(rv = aResource->GetValue( getter_Copies(uri) )))
-        return rv;
+    rv = aResource->GetValue( getter_Copies(uri) );
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource URI");
+    if (NS_FAILED(rv)) return rv;
 
-    if (NS_FAILED(rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, (const char*) uri, PR_FALSE)))
-        return rv;
+    rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, (const char*) uri, PR_FALSE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set id attribute");
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIDocument> doc( do_QueryInterface(mDocument) );
+    rv = result->SetDocument(doc, PR_FALSE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set element's document");
+    if (NS_FAILED(rv)) return rv;
 
     *aResult = result;
     NS_ADDREF(*aResult);
@@ -1607,7 +1520,9 @@ RDFGenericBuilderImpl::CloseWidgetItem(nsIContent* aElement)
         parentNode = dont_QueryInterface(aElement);
         rv = NS_OK;
     }
-    else rv = FindChildByTag(aElement, kNameSpaceID_XUL, parentAtom, getter_AddRefs(parentNode));
+    else {
+        rv = nsRDFContentUtils::FindChildByTag(aElement, kNameSpaceID_XUL, parentAtom, getter_AddRefs(parentNode));
+    }
 
     if (rv == NS_RDF_NO_VALUE) {
         // No tag; must've already been closed
@@ -1651,47 +1566,3 @@ RDFGenericBuilderImpl::CloseWidgetItem(nsIContent* aElement)
 }
 
 
-nsresult
-RDFGenericBuilderImpl::GetElementResource(nsIContent* aElement, nsIRDFResource** aResult)
-{
-    // Perform a reverse mapping from an element in the content model
-    // to an RDF resource.
-    nsresult rv;
-    nsAutoString uri;
-    if (NS_FAILED(rv = aElement->GetAttribute(kNameSpaceID_None,
-                                              kIdAtom,
-                                              uri))) {
-        NS_ERROR("severe error retrieving attribute");
-        return rv;
-    }
-
-    if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
-        NS_ERROR("widget element has no ID");
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    // Since the element will store its ID attribute as a document-relative value,
-    // we may need to qualify it first...
-    NS_ASSERTION(mDocument != nsnull, "builder has no document -- can't fully qualify URI");
-    if (nsnull != mDocument) {
-        nsCOMPtr<nsIDocument> doc( do_QueryInterface(mDocument) );
-        NS_ASSERTION(doc, "doesn't support nsIDocument");
-        if (doc) {
-          nsIURL* docURL = nsnull;
-          doc->GetBaseURL(docURL);
-          if (docURL) {
-              const char* url;
-              docURL->GetSpec(&url);
-              rdf_PossiblyMakeAbsolute(url, uri);
-              NS_RELEASE(docURL);
-          }
-        }
-    }
-
-    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(uri, aResult))) {
-        NS_ERROR("unable to create resource");
-        return rv;
-    }
-
-    return NS_OK;
-}
