@@ -267,24 +267,21 @@ public class InvokerImpl extends Invoker {
         byte[] bytes = cfw.toByteArray();
 
         // Add class to our classloader.
-        classLoader.defineClass(className, bytes);
+        Class c = classLoader.defineClass(className, bytes);
+        classLoader.linkClass(c);
         try {
-            Class c = classLoader.loadClass(className, true);
             result = (Invoker)c.newInstance();
-
-            if (false) {
-                System.out.println("Generated method delegate for: " + method.getName()
-                                   + " on " + method.getDeclaringClass().getName() + " :: " + params.toString()
-                                   + " :: " + types);
-            }
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException("unexpected " + e.toString());
         } catch (InstantiationException e) {
             throw new RuntimeException("unexpected " + e.toString());
         } catch (IllegalAccessException e) {
             throw new RuntimeException("unexpected " + e.toString());
         }
-
+        if (false) {
+            System.out.println
+                ("Generated method delegate for: "+method.getName()
+                 +" on "+method.getDeclaringClass().getName()+" :: "
+                 +params.toString()+" :: "+types);
+        }
         invokersCache.put(method, result);
         return result;
     }
