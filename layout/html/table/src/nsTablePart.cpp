@@ -729,6 +729,8 @@ void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
       tableStyle->mCols = NS_STYLE_TABLE_COLS_ALL;
   }
 
+  //background: color
+  MapBackgroundAttributesInto(aContext, aPresContext);
 }
 
 void nsTablePart::GetTableBorder(nsIHTMLContent* aContent,
