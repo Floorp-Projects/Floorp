@@ -271,7 +271,7 @@ PRBool nsXPInstallManager::ConfirmInstall(nsIDialogParamBlock* ioParamBlock)
                                         "sss%ip",
                                         "chrome://communicator/content/xpinstall/institems.xul",
                                         "_blank",
-                                        "chrome,modal",
+                                        "chrome,modal,titlebar",
                                         (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)),
                                         (nsISupports*)ioParamBlock);
 
