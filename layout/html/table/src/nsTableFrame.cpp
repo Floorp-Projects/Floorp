@@ -1209,10 +1209,23 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
   if (nsDebugTable::gRflTable) nsTableFrame::DebugReflow("T::Rfl en", this, &aReflowState, nsnull);
 
   // this is a temporary fix to prevent a recent crash due to incremental content 
-  // sink changes. this will go away when the col cache and cell map are synchronized
+  // sink changes. XXX remove this when the col cache and cell map are synchronized
   if (!IsColumnCacheValid()) {
     CacheColFrames(aPresContext, PR_TRUE);
   }
+
+  PRBool needsRecalc=PR_FALSE;
+  // this is necessary here because the cell map can change even before the first reflow.
+  // XXX remove this when the incremental cell map is finished
+  if (!IsCellMapValid()) {
+    if (mCellMap) {
+      delete mCellMap;
+      mCellMap = new nsCellMap(0,0);
+      ReBuildCellMap();
+      needsRecalc = PR_TRUE;
+    }
+  }
+
 
   // Initialize out parameter
   if (nsnull != aDesiredSize.maxElementSize) {
@@ -1235,15 +1248,6 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
   // NeedsReflow and IsFirstPassValid take into account reflow type = Initial_Reflow
   if (PR_TRUE==NeedsReflow(aReflowState))
   {
-    PRBool needsRecalc=PR_FALSE;
-    if (eReflowReason_Initial!=aReflowState.reason && PR_FALSE==IsCellMapValid())
-    {
-      if (nsnull!=mCellMap)
-        delete mCellMap;
-      mCellMap = new nsCellMap(0,0);
-      ReBuildCellMap();
-      needsRecalc=PR_TRUE;
-    }
     if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) || 
         (PR_FALSE==IsFirstPassValid()))
     {
