@@ -247,10 +247,11 @@ InspectorApp.prototype =
     this.mClipboardHelper.copyString(text);
   },
 
+  // XXX what is this?  It doesn't seem to get called from anywhere?
   copySearchItemAll: function()
   {
     var text = this.getAllSearchItemText();
-    this.mClipboardHelper.writeStringToClipboard(text, kGlobalClipboard);
+    this.mClipboardHelper.copyString(text);
   },
 
   saveSearchItemText: function()
