@@ -54,6 +54,7 @@ ifdef MOZ_PHOENIX
 # that lives parallel to this Makefile. The jar.mn is responsible for the 
 # packaging of a large number of chrome files Firefox does not need. 
 NO_DIST_INSTALL=1
+NO_INSTALL=1
 endif
 
 ifdef MOZ_HAVE_BROWSER
