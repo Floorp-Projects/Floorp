@@ -20,9 +20,9 @@
 // the dll that are located in the .lib files we link with
 
 #include "nscore.h"
-#include <gtk/gtk.h>
+#include <Pt.h>
 
-GtkWidget *gAppContext;
+PtWidget_t *gAppContext;
 
 void XXXNeverCalled()
 {
