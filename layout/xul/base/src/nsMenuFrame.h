@@ -136,6 +136,7 @@ public:
   NS_IMETHOD KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
 
   NS_IMETHOD GetMenuParent(nsIMenuParent** aResult) { NS_IF_ADDREF(mMenuParent); *aResult = mMenuParent; return NS_OK; };
+  NS_IMETHOD GetMenuChild(nsIFrame** aResult) { *aResult = mPopupFrames.FirstChild(); return NS_OK; }
   NS_IMETHOD GetRadioGroupName(nsString &aName) { aName = mGroupName; return NS_OK; };
   NS_IMETHOD GetMenuType(nsMenuType &aType) { aType = mType; return NS_OK; };
 

@@ -50,6 +50,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIMenuParentInterface
+  NS_IMETHOD GetCurrentMenuItem(nsIMenuFrame** aResult);
   NS_IMETHOD SetCurrentMenuItem(nsIMenuFrame* aMenuItem);
   NS_IMETHOD GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult);
   NS_IMETHOD GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult);

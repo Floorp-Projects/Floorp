@@ -37,6 +37,9 @@
 #include "nsIMenuParent.h"
 #include "nsIWidget.h"
 
+#include "nsITimer.h"
+#include "nsITimerCallback.h"
+
 nsresult NS_NewMenuPopupFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
 class nsIViewManager;
@@ -46,14 +49,18 @@ class nsIMenuFrame;
 class nsIDOMXULDocument;
 
 
-class nsMenuPopupFrame : public nsBoxFrame, public nsIMenuParent
+class nsMenuPopupFrame : public nsBoxFrame, public nsIMenuParent, public nsITimerCallback
 {
 public:
   nsMenuPopupFrame();
 
   NS_DECL_ISUPPORTS
 
+  // The nsITimerCallback interface
+  NS_IMETHOD_(void) Notify(nsITimer *aTimer);
+
   // nsIMenuParentInterface
+  NS_IMETHOD GetCurrentMenuItem(nsIMenuFrame** aResult);
   NS_IMETHOD SetCurrentMenuItem(nsIMenuFrame* aMenuItem);
   NS_IMETHOD GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult);
   NS_IMETHOD GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult);
@@ -112,6 +119,8 @@ public:
   PRBool IsValidItem(nsIContent* aContent);
   PRBool IsDisabled(nsIContent* aContent);
 
+  NS_IMETHOD KillCloseTimer();
+
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
       aResult = "MenuPopup";
@@ -135,6 +144,9 @@ protected:
 
   nsMenuListener* mKeyboardNavigator; // The listener that tells us about key events.
   nsIDOMEventReceiver* mTarget;
+
+  nsIMenuFrame* mTimerMenu; // A menu awaiting closure.
+  nsCOMPtr<nsITimer> mCloseTimer; // Close timer.
 
 }; // class nsMenuPopupFrame
 

@@ -56,6 +56,8 @@ public:
   NS_IMETHOD KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag) = 0;
 
   NS_IMETHOD GetMenuParent(nsIMenuParent** aMenuParent) = 0;
+  NS_IMETHOD GetMenuChild(nsIFrame** aResult) = 0;
+ 
   NS_IMETHOD GetRadioGroupName(nsString &aName) = 0;
   NS_IMETHOD GetMenuType(nsMenuType &aType) = 0;
 
