@@ -815,18 +815,18 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   nsAppFileLocationProvider* appFileLocProvider;
   appFileLocProvider = new nsAppFileLocationProvider;
   if (!appFileLocProvider) {
-    NS_ASSERTION(FALSE, "Could not create nsAppFileLocationProvider\n");
+    NS_ASSERTION(PR_FALSE, "Could not create nsAppFileLocationProvider\n");
     return NS_ERROR_OUT_OF_MEMORY;
   }
   NS_WITH_SERVICE(nsIDirectoryService, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
   if (!directoryService) {
-    NS_ASSERTION(FALSE, "failed to get directory service");
+    NS_ASSERTION(PR_FALSE, "failed to get directory service");
     return rv;
   }
   // RegisterProvider will AddRef it and own it - notice we have not AddRef'd it
   rv = directoryService->RegisterProvider(appFileLocProvider);
   if (NS_FAILED(rv)) {
-    NS_ASSERTION(FALSE, "Could not register directory service provider\n");
+    NS_ASSERTION(PR_FALSE, "Could not register directory service provider\n");
     return rv;
   }
   
@@ -835,7 +835,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get command line service");
 
   if (NS_FAILED(rv)) {
-    NS_ASSERTION(FALSE, "Could not obtain CmdLine processing service\n");
+    NS_ASSERTION(PR_FALSE, "Could not obtain CmdLine processing service\n");
     return rv;
   }
 
