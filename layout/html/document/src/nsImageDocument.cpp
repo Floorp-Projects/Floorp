@@ -84,7 +84,7 @@ public:
   NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_OK; } 
   NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) { return NS_OK; } 
   // nsIStreamListener methods:
-  NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+  NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
 #else
   NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
   NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
@@ -192,7 +192,7 @@ ImageListener::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
 
 NS_IMETHODIMP
 #ifdef NECKO
-ImageListener::OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr,
+ImageListener::OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr,
                                PRUint32 sourceOffset, PRUint32 count)
 #else
 ImageListener::OnDataAvailable(nsIURI* aURL, nsIInputStream* aStream,

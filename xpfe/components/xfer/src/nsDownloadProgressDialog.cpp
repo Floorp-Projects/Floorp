@@ -217,7 +217,7 @@ nsDownloadProgressDialog::ConstructBeforeJavaScript(nsIWebShell *aWebShell) {
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsDownloadProgressDialog::OnDataAvailable(nsISupports* aContext, nsIBufferInputStream *aIStream,
+nsDownloadProgressDialog::OnDataAvailable(nsISupports* aContext, nsIInputStream *aIStream,
                                           PRUint32 offset, PRUint32 aLength)
 #else
 nsDownloadProgressDialog::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)

@@ -108,7 +108,7 @@ public:
 							 const PRUnichar *errorMsg) { return NS_OK; }
 
 	// nsIStreamListener
-	NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+	NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
 
 #else
 	// stream observer
@@ -315,7 +315,7 @@ RelatedLinksStreamListener::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo
 NS_IMETHODIMP
 #ifdef NECKO
 RelatedLinksStreamListener::OnDataAvailable(nsISupports *ctxt,
-											nsIBufferInputStream *aIStream,
+											nsIInputStream *aIStream,
 											PRUint32 sourceOffset,
 											PRUint32 aLength)
 #else

@@ -72,7 +72,7 @@ class nsXPInstallManager : public nsIXPINotifier, public nsIStreamListener
                                  const PRUnichar *errorMsg) { return NS_OK; }
         // nsIStreamListener
         NS_IMETHOD OnDataAvailable(nsISupports *ctxt, 
-                                   nsIBufferInputStream *inStr,
+                                   nsIInputStream *inStr,
                                    PRUint32 sourceOffset, 
                                    PRUint32 count);
 #else
