@@ -1139,7 +1139,7 @@ nsTextConverter = { /* a6cf9109-15b3-11d2-932e-00805f8add32 */
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf910a-15b3-11d2-932e-00805f8add32 */
+nsIDOMDOMException = { /* a6cf910a-15b3-11d2-932e-00805f8add32 */
     0xa6cf910a,
     0x15b3,
     0x11d2,
