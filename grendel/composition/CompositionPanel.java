@@ -17,7 +17,11 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>, 20 Oct 1997.
- * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
+ *
+ * Contributors: Jeff Galyan <jeffrey.galyan@sun.com>
+ *               Giao Nguyen <grail@cafebabe.org>
+ *               Edwin Woudt <edwin@woudt.nl>
+ *               Thomas Down <thomas.down@tri.ox.ac.uk>
  */
 
 package grendel.composition;
@@ -40,7 +44,9 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileOutputStream;
@@ -75,6 +81,8 @@ import javax.mail.Message;
 import javax.mail.Transport;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.InternetAddress;
 
 import grendel.storage.MessageExtra;
@@ -124,6 +132,7 @@ public class CompositionPanel extends GeneralPanel {
     fToolBar = createToolbar();
     mAddressBar = new AddressBar();
     mAddressList = mAddressBar.getAddressList();
+    mAttachmentsList = mAddressBar.getAttachmentsList();
 
     //the splitPane holds collapseble panels and message panels.
 //         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, false, collapsePanel, messagePanel);
@@ -424,7 +433,7 @@ public class CompositionPanel extends GeneralPanel {
 
         if (userName != null) {
           //create a mime message
-          Message msg = new PatchedMimeMessage(mSession);
+          MimeMessage msg = new MimeMessage(mSession); // TD
 
           try {
             //set who's sending this message.
@@ -455,8 +464,46 @@ public class CompositionPanel extends GeneralPanel {
 
             msg.setSubject(mSubject.getText());        //set subject from text
                                                        //field.
+            msg.setHeader("X-Mailer", "Grendel [development version]");
+                                                       //and proud of it! 
             msg.setSentDate(new java.util.Date());     //set date to now.
-            msg.setContent(messageText, "text/plain"); //contents.
+
+            String [] attachments = mAttachmentsList.getAttachments();
+            if (attachments.length == 0) {
+              msg.setContent(messageText, "text/plain"); //contents.
+            } else {
+              MimeMultipart multi = new MimeMultipart();
+              
+              MimeBodyPart mainText = new MimeBodyPart();
+              mainText.setText(messageText);
+              multi.addBodyPart(mainText);
+
+              for (int i = 0; i < attachments.length; ++i) {
+                try {
+                  File f = new File(attachments[i]);
+                  int len = (int) f.length();
+                  byte [] bs = new byte[len];
+                  FileInputStream fis = new FileInputStream(attachments[i]);
+                  DataInputStream dis = new DataInputStream(fis);
+                  dis.readFully(bs);
+                  dis.close();
+                  fis.close();
+                  
+                  MimeBodyPart att = new MimeBodyPart();
+                  att.setContent(new String(bs), "text/plain");
+
+                  att.setFileName(attachments[i]);
+                  att.setDisposition("Attachment");
+                  multi.addBodyPart(att);
+                } catch (Exception e) {
+                  // Could be IOException or MessagingException.  For now...
+                  e.printStackTrace();
+                }
+              }
+
+              msg.setContent(multi);
+            }
+
             try {
               mSession.getTransport("smtp").send(msg);       // send the message.
             } catch (MessagingException exc) {

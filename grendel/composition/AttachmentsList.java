@@ -15,6 +15,11 @@
  * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are Copyright (C) 1997
  * Netscape Communications Corporation.  All Rights Reserved.
+ *
+ * Contributors: Jeff Galyan <jeffrey.galyan@sun.com>
+ *               Giao Nguyen <grail@cafebabe.org>
+ *               Edwin Woudt <edwin@woudt.nl>
+ *               Thomas Down <thomas.down@tri.ox.ac.uk>
  */
 
 package grendel.composition;
@@ -52,6 +57,22 @@ public class AttachmentsList extends JScrollPane implements Serializable {
 
         setBackground (Color.white);
     }
+
+    /**
+     * Get the current set of attachments, or a zero-length array if none
+     * @return attachment list
+     */
+
+    public String[] getAttachments() {
+      Vector temp = mAP.mAttachments;
+      String [] files = new String[temp.size()];
+      for (int i = 0; i < temp.size(); ++i) {
+        files[i] = ((AttachmentLabel) temp.elementAt(i)).getText();
+      }
+
+      return files;
+    }
+      
 
     /**
      * Sets this gadgets enabled state.
@@ -115,10 +136,14 @@ public class AttachmentsList extends JScrollPane implements Serializable {
      *
      */
     class AttachmentsPanel extends JPanel implements MouseListener, KeyListener {
+        Vector mAttachments;
         private AttachmentLabel mCurrentSelection;
 
         public AttachmentsPanel () {
             super ();
+
+            // Vector for an attachment list
+            mAttachments = new Vector();
 
             //do your own layout.
             this.setLayout (null);
@@ -167,6 +192,7 @@ public class AttachmentsList extends JScrollPane implements Serializable {
          */
         protected void addAttachment (String aFilePath) {
             AttachmentLabel fileLabel = new AttachmentLabel (aFilePath);
+            mAttachments.addElement(fileLabel);
             add (fileLabel);
 
             //mouse listener for selection via mouse (click on the line).
@@ -182,6 +208,7 @@ public class AttachmentsList extends JScrollPane implements Serializable {
          */
         private void removeAttachment (AttachmentLabel aAttLabel) {
             if (null != aAttLabel) {
+                mAttachments.removeElement(aAttLabel);
                 remove (aAttLabel);
 
                 //if the AttachmentLabel that's being removed is also the currently
