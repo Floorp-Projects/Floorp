@@ -567,6 +567,7 @@
             }
 
             // Focus the previously focused element or window
+            document.commandDispatcher.suppressFocusScroll = true;
             if (newBrowser.focusedElement) {
               try {
                 setFocus(newBrowser.focusedElement);
@@ -578,6 +579,7 @@
               setFocus(newBrowser.focusedWindow);
             else // new tab, focus our new content area
               setTimeout(setFocus, 0, window.content);
+            document.commandDispatcher.suppressFocusScroll = false;
           ]]>
         </body>
       </method>
