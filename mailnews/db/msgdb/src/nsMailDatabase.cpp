@@ -220,14 +220,17 @@ nsresult nsMailDatabase::OnNewPath (nsFileSpec &newPath)
 NS_IMETHODIMP nsMailDatabase::StartBatch()
 {
   if (!m_folderStream)
-	  m_folderStream = new nsIOFileStream(nsFileSpec(m_dbName));
+	  m_folderStream = new nsIOFileStream(nsFileSpec(*m_folderSpec));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsMailDatabase::EndBatch()
 {
 	if (m_folderStream)
+    {
+        m_folderStream->close();
 		delete m_folderStream;
+    }
 	m_folderStream = NULL;
   return NS_OK;
 }
@@ -237,10 +240,13 @@ NS_IMETHODIMP nsMailDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChan
 {
 	nsresult ret = NS_OK;
   if (!m_folderStream)
-	  m_folderStream = new nsIOFileStream(nsFileSpec(m_dbName));
+	  m_folderStream = new nsIOFileStream(nsFileSpec(*m_folderSpec));
 	ret = nsMsgDatabase::DeleteMessages(nsMsgKeys, instigator);
 	if (m_folderStream)
+    {
+        m_folderStream->close();
 		delete m_folderStream;
+    }
 	m_folderStream = NULL;
 	SetFolderInfoValid(m_folderSpec, 0, 0);
 	return ret;
@@ -258,6 +264,7 @@ PRBool nsMailDatabase::SetHdrFlag(nsIMsgDBHdr *msgHdr, PRBool bSet, MsgFlags fla
 		UpdateFolderFlag(msgHdr, bSet, flag, &fileStream);
 		if (fileStream != NULL)
 		{
+            fileStream->close();
 			delete fileStream;
 			SetFolderInfoValid(m_folderSpec, 0, 0);
 		}
