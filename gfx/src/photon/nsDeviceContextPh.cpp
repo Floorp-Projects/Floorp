@@ -184,6 +184,9 @@ void nsDeviceContextPh :: CommonInit( nsNativeDeviceContext aDC ) {
   PRInt32           aWidth, aHeight;
   static int        initialized = 0;
 
+
+	if( !mScreenManager ) mScreenManager = do_GetService("@mozilla.org/gfx/screenmanager;1");
+
   if( !initialized ) {
     initialized = 1;
     // Set prefVal the value of the preference "browser.display.screen_resolution"
@@ -438,19 +441,29 @@ NS_IMETHODIMP nsDeviceContextPh :: GetDeviceSurfaceDimensions( PRInt32 &aWidth, 
 
   aWidth = mWidth;
   aHeight = mHeight;
-  
+
   return NS_OK;
 	}
 
 NS_IMETHODIMP nsDeviceContextPh::GetRect( nsRect &aRect ) {
-  PRInt32 width, height;
-  nsresult rv;
-  rv = GetDeviceSurfaceDimensions(width, height);
-  aRect.x = 0;
-  aRect.y = 0;
-  aRect.width = width;
-  aRect.height = height;
-  return rv;
+	if( mScreenManager ) {
+    nsCOMPtr<nsIScreen> screen;
+    mScreenManager->GetPrimaryScreen( getter_AddRefs( screen ) );
+    screen->GetRect(&aRect.x, &aRect.y, &aRect.width, &aRect.height);
+    aRect.x = NSToIntRound(mDevUnitsToAppUnits * aRect.x);
+    aRect.y = NSToIntRound(mDevUnitsToAppUnits * aRect.y);
+    aRect.width = NSToIntRound(mDevUnitsToAppUnits * aRect.width);
+    aRect.height = NSToIntRound(mDevUnitsToAppUnits * aRect.height);
+		}
+	else {
+  	PRInt32 width, height;
+  	GetDeviceSurfaceDimensions( width, height );
+  	aRect.x = 0;
+  	aRect.y = 0;
+  	aRect.width = width;
+  	aRect.height = height;
+		}
+  return NS_OK;
 	}
 
 NS_IMETHODIMP nsDeviceContextPh :: GetDeviceContextFor( nsIDeviceContextSpec *aDevice, nsIDeviceContext *&aContext ) {
@@ -503,7 +516,7 @@ int nsDeviceContextPh::prefChanged( const char *aPref, void *aClosure ) {
   return 0;
 	}
 
-NS_IMETHODIMP nsDeviceContextPh :: BeginDocument(PRUnichar * aTitle ) {
+NS_IMETHODIMP nsDeviceContextPh :: BeginDocument( PRUnichar *t ) {
   nsresult    ret_code = NS_ERROR_FAILURE;
   int         err;
   PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();

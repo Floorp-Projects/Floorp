@@ -28,9 +28,9 @@
 #include "nsIWidget.h"
 #include "nsIView.h"
 #include "nsIRenderingContext.h"
+#include "nsIScreenManager.h"
 
 #include "nsRenderingContextPh.h"
-//#include "nsIClientPrintContext.h"
 #include <Pt.h>
 
 class nsDeviceContextPh : public DeviceContextImpl
@@ -70,7 +70,7 @@ public:
   NS_IMETHOD  GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                   nsIDeviceContext *&aContext);
 
-  NS_IMETHOD  BeginDocument(PRUnichar * aTitle);
+  NS_IMETHOD  BeginDocument(PRUnichar *t);
   NS_IMETHOD  EndDocument(void);
 
   NS_IMETHOD  BeginPage(void);
@@ -108,6 +108,8 @@ protected:
 
   int mIsPrinting;
 
+private:
+	nsCOMPtr<nsIScreenManager> mScreenManager;
 };
 
 #endif /* nsDeviceContextPh_h___ */

@@ -34,9 +34,9 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init(void);
-  NS_IMETHOD CreateDeviceContextSpec(nsIWidget *aWidget,
-                                     nsIDeviceContextSpec *&aNewSpec,
-                                     PRBool aQuiet);
+  NS_IMETHOD CreateDeviceContextSpec( nsIWidget *aWidget,
+  								nsIDeviceContextSpec *&aNewSpec,
+  								PRBool aQuiet);
 
 protected:
   virtual ~nsDeviceContextSpecFactoryPh();

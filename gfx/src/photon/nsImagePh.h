@@ -58,8 +58,12 @@ public:
 
   virtual nsColorMap* GetColorMap();
   NS_IMETHOD          Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-  NS_IMETHOD          Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
-                      PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
+  NS_IMETHOD          Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth,  \
+  						PRInt32 aSHeight, PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
+#ifdef USE_IMG2
+  NS_IMETHOD DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord aDY,
+             nscoord aDWidth, nscoord aDHeight);
+#endif
   NS_IMETHOD 		DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface, 
   						nsRect &aSrcRect, nsRect &aTileRect);
 
@@ -88,6 +92,9 @@ public:
 
 private:
   void ComputePaletteSize(PRIntn nBitCount);
+  PRUint8 * CreateSRamImage(PRUint32 size);
+  PRBool DestroySRamImage(PRUint8 *ptr);
+  
 
 private:
   PRInt32             mWidth;
@@ -98,6 +105,7 @@ private:
   PRUint8           *mConvertedBits;      // NEW
   PRInt32             mSizeImage;         // number of bytes
   PRBool              mIsTopToBottom;  
+  PRBool			  mIsOptimized;
   PRInt8              mNumBytesPixel;     // number of bytes per pixel
   PRInt16             mNumPaletteColors;  // either 8 or 0
 
@@ -115,6 +123,7 @@ private:
   PRInt8              mImageCache;        // place to save off the old image for fast animation
   PRInt16             mAlphaLevel;        // an alpha level every pixel uses
   PhImage_t           mPhImage;
+  PdOffscreenContext_t *mPhImageCache;	  // Cache for the image offscreen
 
   PRUint8             mFlags;             // flags set by ImageUpdated
   PRUint8             mImageFlags;             // flags set by ImageUpdated
