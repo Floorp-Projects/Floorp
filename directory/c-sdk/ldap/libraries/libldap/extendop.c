@@ -61,7 +61,7 @@ ldap_extended_operation(
 )
 {
 	BerElement	*ber;
-	int		rc, msgid;
+	int		rc, berrc, msgid;
 
 	/*
 	 * the ldapv3 extended operation request looks like this:
@@ -117,9 +117,15 @@ ldap_extended_operation(
 	}
 
 	/* fill it in */
-	if ( ber_printf( ber, "{it{tsto}", msgid, LDAP_REQ_EXTENDED,
-	    LDAP_TAG_EXOP_REQ_OID, exoid, LDAP_TAG_EXOP_REQ_VALUE,
-	    exdata->bv_val, (int)exdata->bv_len /* XXX lossy cast */ ) == -1 ) {
+	if (NULL == exdata) {
+	    berrc = ber_printf( ber, "{it{ts}", msgid, LDAP_REQ_EXTENDED,
+		LDAP_TAG_EXOP_REQ_OID, exoid, LDAP_TAG_EXOP_REQ_VALUE);
+	} else
+	    berrc = ber_printf( ber, "{it{tsto}", msgid, LDAP_REQ_EXTENDED,
+		LDAP_TAG_EXOP_REQ_OID, exoid, LDAP_TAG_EXOP_REQ_VALUE,
+		exdata->bv_val, (int)exdata->bv_len /* XXX lossy cast */ );
+
+	if (-1 == berrc) {
 		rc = LDAP_ENCODING_ERROR;
 		LDAP_SET_LDERRNO( ld, rc, NULL, NULL );
 		ber_free( ber, 1 );
