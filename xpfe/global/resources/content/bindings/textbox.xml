@@ -76,18 +76,7 @@
                                          if (val) this.setAttribute('disabled', 'true');
                                          else this.removeAttribute('disabled'); return val;"
                                   onget="return this.inputField.readonly;"/>
-                            
-      <method name="setAttribute">
-        <parameter name="attrName"/>
-        <parameter name="attrValue"/>
-        <body>
-          <![CDATA[
-            if (attrName == 'value')
-              this.value = attrValue;
-            baseBinding.setAttribute(attrName, attrValue);
-          ]]>
-        </body>
-      </method>
+                                  
 
       <method name="select">
         <body>
