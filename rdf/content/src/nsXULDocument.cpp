@@ -450,10 +450,10 @@ public:
     NS_IMETHOD GetHeaderData(nsIAtom* aHeaderField, nsString& aData) const;
     NS_IMETHOD SetHeaderData(nsIAtom* aheaderField, const nsString& aData);
 
-    virtual nsresult CreateShell(nsIPresContext* aContext,
-                                 nsIViewManager* aViewManager,
-                                 nsIStyleSet* aStyleSet,
-                                 nsIPresShell** aInstancePtrResult);
+    NS_IMETHOD CreateShell(nsIPresContext* aContext,
+                           nsIViewManager* aViewManager,
+                           nsIStyleSet* aStyleSet,
+                           nsIPresShell** aInstancePtrResult);
 
     virtual PRBool DeleteShell(nsIPresShell* aShell);
 
@@ -741,9 +741,6 @@ protected:
     FindContent(const nsIContent* aStartNode,
                 const nsIContent* aTest1,
                 const nsIContent* aTest2) const;
-
-    nsresult
-    LoadCSSStyleSheet(nsIURI* url);
 
     nsresult
     AddNamedDataSource(const char* uri);
@@ -1487,7 +1484,7 @@ XULDocumentImpl:: SetHeaderData(nsIAtom* aheaderField, const nsString& aData)
 }
 
 
-nsresult 
+NS_IMETHODIMP
 XULDocumentImpl::CreateShell(nsIPresContext* aContext,
                              nsIViewManager* aViewManager,
                              nsIStyleSet* aStyleSet,
@@ -1787,6 +1784,7 @@ XULDocumentImpl::GetCSSLoader(nsICSSLoader*& aLoader)
     if (NS_SUCCEEDED(result)) {
       result = mCSSLoader->Init(this);
       mCSSLoader->SetCaseSensitive(PR_TRUE);
+      mCSSLoader->SetQuirkMode(PR_FALSE); // no quirks in XUL
     }
   }
   aLoader = mCSSLoader;
@@ -3821,57 +3819,6 @@ XULDocumentImpl::FindContent(const nsIContent* aStartNode,
         NS_IF_RELEASE(content);
     }
     return nsnull;
-}
-
-
-nsresult
-XULDocumentImpl::LoadCSSStyleSheet(nsIURI* url)
-{
-    nsresult rv;
-    nsIInputStream* iin;
-#ifdef NECKO
-    rv = NS_OpenURI(&iin, url);
-#else
-    rv = NS_OpenURL(url, &iin);
-#endif
-    if (NS_OK != rv) {
-        NS_RELEASE(url);
-        return rv;
-    }
-
-    nsIUnicharInputStream* uin = nsnull;
-    rv = NS_NewConverterStream(&uin, nsnull, iin);
-    NS_RELEASE(iin);
-    if (NS_OK != rv) {
-        NS_RELEASE(url);
-        return rv;
-    }
-      
-    nsICSSParser* parser;
-    rv = nsComponentManager::CreateInstance(kCSSParserCID,
-                                      nsnull,
-                                      kICSSParserIID,
-                                      (void**) &parser);
-
-    if (NS_SUCCEEDED(rv)) {
-        nsICSSStyleSheet* sheet = nsnull;
-        // XXX note: we are ignoring rv until the error code stuff in the
-        // input routines is converted to use nsresult's
-        parser->SetCaseSensitive(PR_TRUE);
-        parser->Parse(uin, url, sheet);
-        if (nsnull != sheet) {
-            AddStyleSheet(sheet);
-            NS_RELEASE(sheet);
-            rv = NS_OK;
-        } else {
-            rv = NS_ERROR_OUT_OF_MEMORY;/* XXX */
-        }
-        NS_RELEASE(parser);
-    }
-
-    NS_RELEASE(uin);
-    NS_RELEASE(url);
-    return rv;
 }
 
 
