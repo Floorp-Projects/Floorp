@@ -1,6 +1,7 @@
 <?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?> 
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
                    
 <window id="actest"
