@@ -32,6 +32,10 @@
 #include "nsUUDll.h"
 #include "nsFileSpec.h"
 #include "nsIFile.h"
+#ifdef IBMBIDI
+#include "nsBidiUtilsImp.h"
+#include "nsBidiImp.h"
+#endif // IBMBIDI
 
 // Functions used to create new instances of a given object by the
 // generic factory.
@@ -67,6 +71,10 @@ MAKE_CTOR(HankakuToZenkaku)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCaseConversionImp2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEntityConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSaveAsCharset)
+#ifdef IBMBIDI
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiUtilsImp)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidi)
+#endif // IBMBIDI
 
 //----------------------------------------------------------------------
 // Since our class still refer to this two per dll global  leave it here untill
@@ -85,6 +93,12 @@ static nsModuleComponentInfo components[] =
       NS_SAVEASCHARSET_CONTRACTID, nsSaveAsCharsetConstructor},
   { "Japanese Hankaku To Zenkaku", NS_HANKAKUTOZENKAKU_CID, 
       NS_HANKAKUTOZENKAKU_CONTRACTID, CreateNewHankakuToZenkaku},
+#ifdef IBMBIDI
+  { "Unichar Bidi Utility", NS_UNICHARBIDIUTIL_CID,
+      NS_UNICHARBIDIUTIL_CONTRACTID, nsBidiUtilsImpConstructor},
+  { "Bidi Reordering Engine", NS_BIDI_CID,
+      NS_BIDI_CONTRACTID, nsBidiConstructor}
+#endif // IBMBIDI
 };
 
 NS_IMPL_NSGETMODULE("UcharUtil", components)
