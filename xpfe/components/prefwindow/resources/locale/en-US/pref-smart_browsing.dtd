@@ -23,7 +23,7 @@
 
 <!--LOCALIZATION NOTE (internetKeywordsHeader.label): DONT_TRANSLATE -->
 <!ENTITY  internetKeywordsHeader.label          "Internet Keywords">
-<!ENTITY  internetKeywordsDescription.label     "&brandShortName; Internet Keywords give you fast access to services such as stock quotes, search and other information from the location bar.">
+<!ENTITY  internetKeywordsDescription.label     "&brandShortName; Internet Keywords enables fast access to services such as stock quotes, search and other information from the location bar.">
 <!ENTITY  moreInformation.label                 "More Information...">
 <!ENTITY  moreInformation.accesskey             "m">
 <!--LOCALIZATION NOTE (enableKeyCheck.label): Do not translate 'Internet Keywords' -->
