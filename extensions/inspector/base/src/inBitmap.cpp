@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "inBitmap.h"
-
+#include "nsTextFormatter.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -59,6 +59,7 @@ NS_IMPL_ISUPPORTS1(inBitmap, inIBitmap);
 ///////////////////////////////////////////////////////////////////////////////
 // inIBitmap
 
+// XXX this api currently takes bits per pixel
 NS_IMETHODIMP
 inBitmap::Init(PRUint32 aWidth, PRUint32 aHeight, PRUint8 aBytesPerPixel)
 {
@@ -71,6 +72,13 @@ inBitmap::Init(PRUint32 aWidth, PRUint32 aHeight, PRUint8 aBytesPerPixel)
     mBits = new PRUint8[aWidth*aHeight*2];
   } else if (aBytesPerPixel == 32 || aBytesPerPixel == 24) {
     mBits = new PRUint8[aWidth*aHeight*3];
+  } else {
+    NS_ERROR("Expected 8, 16, 24 or 32 bits per pixel");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (!mBits) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   return NS_OK;
@@ -100,28 +108,26 @@ inBitmap::GetBits(PRUint8** aBits)
 NS_IMETHODIMP
 inBitmap::GetPixelHex(PRUint32 aX, PRUint32 aY, PRUnichar **_retval)
 {
-  if (aX < 0 || aX > mWidth || aY < 0 || aY > mHeight)
+  if (aX < 0 || aX >= mWidth || aY < 0 || aY >= mHeight)
     return NS_ERROR_FAILURE;
-    
+
   PRUint8* c = mBits + ((aX+(mWidth*aY))*3);
   PRUint8 b = c[0];
   PRUint8 g = c[1];
   PRUint8 r = c[2];
 
-  char* s = new char[7];
-  sprintf(s, "#%2X%2X%2X", r, g, b);
-  // sprintf won't 0-pad my hex values, so I have to space-pad it
-  // and then replace space characters with zero characters
-  for (PRUint8 i = 0; i < 6; ++i)
-    if (s[i] == 32)
-      s[i] = 48;
-      
-  nsAutoString str;
-  str.AssignWithConversion(s);
-  delete s;
-  
-  *_retval = ToNewUnicode(str);
 
+  // smprintf won't 0-pad my hex values, so I have to space-pad it
+  // and then replace space characters with zero characters
+  PRUnichar *out = nsTextFormatter::smprintf(NS_LITERAL_STRING("#%2X%2X%2X").get(), r, g, b);
+  if (!out)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  for (PRUintn i = 1; i <= 6; ++i)
+    if (out[i] == ' ')
+      out[i] = '0';
+
+  *_retval = out;
   return NS_OK;
 }
 

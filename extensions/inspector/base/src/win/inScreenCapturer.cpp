@@ -61,7 +61,6 @@ static NS_DEFINE_CID(kInspectorCSSUtilsCID, NS_INSPECTORCSSUTILS_CID);
 
 inScreenCapturer::inScreenCapturer()
 {
-  mCSSUtils = do_GetService(kInspectorCSSUtilsCID);
 }
 
 inScreenCapturer::~inScreenCapturer()
@@ -77,6 +76,12 @@ NS_IMETHODIMP
 inScreenCapturer::CaptureElement(nsIDOMElement *aElement, inIBitmap **_retval)
 {
   if (!aElement) return NS_ERROR_FAILURE;
+
+  if (!mCSSUtils) {
+    nsresult rv;
+    mCSSUtils = do_GetService(kInspectorCSSUtilsCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+  }
   
   nsCOMPtr<nsIDOMWindowInternal> window = inLayoutUtils::GetWindowFor(aElement);
   if (!window) return NS_ERROR_FAILURE;
@@ -91,10 +96,10 @@ inScreenCapturer::CaptureElement(nsIDOMElement *aElement, inIBitmap **_retval)
   nsRect screenpos = inLayoutUtils::GetScreenOrigin(aElement);
   rect.x = screenpos.x;
   rect.y = screenpos.y;
-  
+
   // adjust rect for margins
   mCSSUtils->AdjustRectForMargins(frame, rect);
-  
+
   // get scale for converting frame dimensions to pixels
   nsCOMPtr<nsIPresContext> pcontext;
   presShell->GetPresContext(getter_AddRefs(pcontext));
@@ -125,20 +130,25 @@ inScreenCapturer::CaptureRegion(nsIDOMWindowInternal *aWindow,
   // determine pixel bit depth
   PRUint32 depth = ::GetDeviceCaps(hdc, COLORRES);
 
-  nsCOMPtr<inIBitmap> bitmap(do_CreateInstance("@mozilla.org/inspector/bitmap;1"));
-  if (!bitmap) return NS_ERROR_OUT_OF_MEMORY;
-  
-  bitmap->Init(aWidth, aHeight, depth);
+  nsresult rv;
+  nsCOMPtr<inIBitmap> bitmap(do_CreateInstance("@mozilla.org/inspector/bitmap;1", &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = bitmap->Init(aWidth, aHeight, depth);
+  if (NS_FAILED(rv)) return rv;
+
   PRUint8* bits;
-  bitmap->GetBits(&bits);
+  rv = bitmap->GetBits(&bits);
+  if (NS_FAILED(rv)) return rv;
   
   if (depth == 8) {
-    DoCopy8(bits, hdc, aX, aY, aWidth, aHeight);
+    rv = DoCopy8(bits, hdc, aX, aY, aWidth, aHeight);
   } else if (depth == 16) {
-    DoCopy16(bits, hdc, aX, aY, aWidth, aHeight);
+    rv = DoCopy16(bits, hdc, aX, aY, aWidth, aHeight);
   } else if (depth == 32 || depth == 24) {
-    DoCopy32(bits, hdc, aX, aY, aWidth, aHeight);
+    rv = DoCopy32(bits, hdc, aX, aY, aWidth, aHeight);
   }
+  if (NS_FAILED(rv)) return rv;
 
   *_retval = bitmap;
   NS_ADDREF(*_retval);
