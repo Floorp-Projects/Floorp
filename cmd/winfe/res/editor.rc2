@@ -131,6 +131,8 @@ BEGIN
             MENUITEM "Cyrillic (ISO-8859-5)",         ID_OPTIONS_ENCODING_13
             MENUITEM "Cyrillic (Windows-1251)",           ID_OPTIONS_ENCODING_12
             MENUITEM SEPARATOR
+            MENUITEM "Armenian (ArmSCII-8)",	ID_OPTIONS_ENCODING_21
+            MENUITEM SEPARATOR
 	    MENUITEM "Greek (Windows-1253)",              ID_OPTIONS_ENCODING_16
             MENUITEM "Greek (ISO-8859-7)",            ID_OPTIONS_ENCODING_15
             MENUITEM SEPARATOR
@@ -400,6 +402,8 @@ BEGIN
 	        MENUITEM "Cyrillic (KOI8-R)",            ID_OPTIONS_ENCODING_14
 	        MENUITEM "Cyrillic (ISO-8859-5)",         ID_OPTIONS_ENCODING_13
 	        MENUITEM "Cyrillic (Windows-1251)",           ID_OPTIONS_ENCODING_12
+            MENUITEM SEPARATOR
+            MENUITEM "Armenian (ArmSCII-8)",	ID_OPTIONS_ENCODING_21
 	        MENUITEM SEPARATOR
 	        MENUITEM "Greek (Windows-1253)",              ID_OPTIONS_ENCODING_16
 	        MENUITEM "Greek (ISO-8859-7)",            ID_OPTIONS_ENCODING_15

@@ -314,7 +314,8 @@ int16 nIDToCsid(UINT nID)
        CS_8859_9,                  // ID_OPTIONS_ENCODING_17
        CS_UTF8,                    // ID_OPTIONS_ENCODING_18
        CS_UCS2,                    // ID_OPTIONS_ENCODING_19
-       CS_UTF7                     // ID_OPTIONS_ENCODING_20
+       CS_UTF7,                    // ID_OPTIONS_ENCODING_20
+       CS_ARMSCII8		   // ID_OPTIONS_ENCODING_21
      };
 
      if( nID >= ID_OPTIONS_ENCODING_1 && nID <= ID_OPTIONS_ENCODING_70)

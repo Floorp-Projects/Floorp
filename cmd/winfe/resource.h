@@ -3382,6 +3382,7 @@
 #define IDS_LANGUAGE_TAIWANESE          62133
 #define IDS_LANGUAGE_KOREAN             62134
 #define IDS_LANGUAGE_CHINESE            62135
+#define IDS_LANGUAGE_ARMENIAN           62136
 #define IDS_ACCEPTLANG_EN               62137
 #define IDS_ACCEPTLANG_ENUS             62138
 #define IDS_ACCEPTLANG_ENGB             62139

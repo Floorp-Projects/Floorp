@@ -3039,6 +3039,7 @@ BEGIN
     IDS_LANGUAGE_TAIWANESE  "Traditional Chinese"
     IDS_LANGUAGE_KOREAN     "Korean"
     IDS_LANGUAGE_CHINESE    "Simplified Chinese"
+    IDS_LANGUAGE_ARMENIAN   "Armenian"
 END
 
 STRINGTABLE DISCARDABLE 
