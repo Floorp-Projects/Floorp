@@ -1113,15 +1113,17 @@ NS_IMETHODIMP nsTextEditor::InsertAsQuotation(const nsString& aQuotedText)
   nsresult rv = nsServiceManager::GetService(kPrefServiceCID,
                                              nsIPref::GetIID(),
                                              (nsISupports**)&prefs);
-  char citationType[6] = "\0";
-  int len = sizeof citationType / sizeof *citationType;
-  rv = prefs->GetCharPref("mail.compose.citationType", citationType, &len);
+  char *citationType;
+  rv = prefs->CopyCharPref("mail.compose.citationType", &citationType);
                           
-  if (NS_SUCCEEDED(rv) && citationType[0] && len > 0
+  if (NS_SUCCEEDED(rv) && citationType[0]
       && !strncmp(citationType, "aol", 3))
     citer = new nsAOLCiter;
   else
     citer = new nsInternetCiter;
+  
+  if (citationType) PL_strfree(citationType);
+  
   nsServiceManager::ReleaseService(kPrefServiceCID, prefs);
 
   // Let the citer quote it for us:
