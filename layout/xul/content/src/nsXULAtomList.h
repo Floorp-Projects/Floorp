@@ -74,6 +74,7 @@ XUL_ATOM(outer, "outer") // indicates that a treechildren is the outermost rowgr
 XUL_ATOM(sizemode, "sizemode") // when set, measure strings to determine preferred width
 
 XUL_ATOM(open, "open") // Whether or not a menu, tree, etc. is open
+XUL_ATOM(focus, "focus")
 
 XUL_ATOM(outliner, "outliner")
 XUL_ATOM(outlinerbody, "outlinerbody")
