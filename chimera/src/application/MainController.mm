@@ -541,7 +541,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
   // save prefs here
   NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-  [defaults setObject: [NSNumber numberWithInt: ((showToolbar) ? 1 : 0)] forKey: @"Personal TB Is Shown"];
+  [defaults setObject: [NSNumber numberWithInt: ((showToolbar) ? 0 : 1)] forKey: @"Hide Personal Toolbar"];
 }
 
 + (NSImage*)createImageForDragging:(NSImage*)aIcon title:(NSString*)aTitle
