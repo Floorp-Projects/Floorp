@@ -58,6 +58,13 @@ void PR_CALLBACK il_error_exit (j_common_ptr cinfo);
 /* Normal JFIF markers can't have more bytes than this. */
 #define MAX_JPEG_MARKER_LENGTH  (((PRUint32)1 << 16) - 1)
 
+
+/* Possible states for JPEG source manager */
+enum data_source_state {
+    READING_BACK = 0, /* Must be zero for init purposes */
+    READING_NEW
+};
+
 /*
  *  Implementation of a JPEG src object that understands our state machine
  */
@@ -75,8 +82,7 @@ nsJPEGDecoder::nsJPEGDecoder()
   NS_INIT_ISUPPORTS();
 
   mState = JPEG_HEADER;
-
-  mDataLen = 0;
+  mFillState = READING_BACK;
 
   mSamples = nsnull;
   mSamples3 = nsnull;
@@ -87,11 +93,21 @@ nsJPEGDecoder::nsJPEGDecoder()
   mRGBPadRow = nsnull;
 
   mCompletedPasses = 0;
+
+  mBuffer = nsnull;
+  mBufferLen = mBufferSize = 0;
+
+  mBackBuffer = nsnull;
+  mBackBufferLen = mBackBufferSize = mBackBufferUnreadLen = 0;
+
 }
 
 nsJPEGDecoder::~nsJPEGDecoder()
 {
-
+  if (mBuffer)
+    PR_Free(mBuffer);
+  if (mBackBuffer)
+    PR_Free(mBackBuffer);
 }
 
 
@@ -104,11 +120,6 @@ NS_IMETHODIMP nsJPEGDecoder::Init(imgIRequest *aRequest)
   mObserver = do_QueryInterface(mRequest);
 
   aRequest->GetImage(getter_AddRefs(mImage));
-
-
-  NS_NewPipe(getter_AddRefs(mInStream),
-             getter_AddRefs(mOutStream),
-             10240); // this could be a lot smaller (like 3-6k?)
 
   /* Step 1: allocate and initialize JPEG decompression object */
   mInfo.err = jpeg_std_error(&mErr.pub);
@@ -135,7 +146,6 @@ NS_IMETHODIMP nsJPEGDecoder::Init(imgIRequest *aRequest)
   src->pub.term_source = term_source;
 
   src->decoder = this;
-
 
 #if 0
   /* We set up the normal JPEG error routines, then override error_exit. */
@@ -192,11 +202,11 @@ NS_IMETHODIMP nsJPEGDecoder::Close()
 /* void flush (); */
 NS_IMETHODIMP nsJPEGDecoder::Flush()
 {
-  PR_LOG(gJPEGlog, PR_LOG_DEBUG,
-         ("[this=%p] nsJPEGDecoder::Flush\n", this));
+  LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::Flush");
 
   PRUint32 ret;
-  this->WriteFrom(nsnull, 0, &ret);
+  if (mState != JPEG_DONE && mState != JPEG_SINK_NON_JPEG_TRAILER)
+    return this->WriteFrom(nsnull, 0, &ret);
 
   return NS_OK;
 }
@@ -218,16 +228,31 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
    */
   // XXX above what is this?
 
-  if (inStr) {
-    mOutStream->WriteFrom(inStr, count, _retval);
-    mDataLen += *_retval;
-  }
 
-  /* Register new buffer contents with data source manager. */
+  if (inStr) {
+    if (!mBuffer) {
+      mBuffer = (JOCTET *)PR_Malloc(count);
+      mBufferSize = count;
+    } else if (count > mBufferSize) {
+      mBuffer = (JOCTET *)PR_Realloc(mBuffer, count);
+      mBufferSize = count;
+    }
+
+    nsresult rv = inStr->Read((char*)mBuffer, count, &mBufferLen);
+    *_retval = mBufferLen;
+
+    //nsresult rv = mOutStream->WriteFrom(inStr, count, _retval);
+
+    NS_ASSERTION(NS_SUCCEEDED(rv), "nsJPEGDecoder::WriteFrom -- mOutStream->WriteFrom failed");
+  }
+  // else no input stream.. Flush() ?
+
+
+  PR_LOG(gJPEGlog, PR_LOG_DEBUG,
+         ("[this=%p] nsJPEGDecoder::WriteFrom -- processing JPEG data\n", this));
 
   decoder_source_mgr *src = NS_REINTERPRET_CAST(decoder_source_mgr *, mInfo.src);
 
-  int status;
   switch (mState) {
   case JPEG_HEADER:
   {
@@ -269,11 +294,11 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     mSamples = (*mInfo.mem->alloc_sarray)((j_common_ptr) &mInfo,
                                            JPOOL_IMAGE,
                                            row_stride, 1);
-                                           
+                                         
     mRGBPadRow = (PRUint8*) PR_MALLOC(mInfo.output_width * 4);                                       
     memset(mRGBPadRow, 0, mInfo.output_width * 4);
-    
-    
+  
+  
 
     /* Allocate RGB buffer for conversion from greyscale. */
     if (mInfo.output_components != 3) {
@@ -299,48 +324,75 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     mInfo.enable_2pass_quant = FALSE;
     mInfo.do_block_smoothing = TRUE;
 
-    /* In this example, we don't need to change any of the defaults set by
-     * jpeg_read_header(), so we do nothing here.
-     */
-
     /* Step 5: Start decompressor */
     if (jpeg_start_decompress(&mInfo) == FALSE)
       return NS_OK; /* I/O suspension */
 
-    mState = JPEG_DECOMPRESS_PROGRESSIVE;
+    /* If this is a progressive JPEG ... */
+    if (mInfo.buffered_image) {
+      mState = JPEG_DECOMPRESS_PROGRESSIVE;
+    } else {
+      mState = JPEG_DECOMPRESS_SEQUENTIAL;
+    }
+
   }
-  case JPEG_DECOMPRESS_PROGRESSIVE:
+
+  case JPEG_DECOMPRESS_SEQUENTIAL:
   {
-    LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- JPEG_DECOMPRESS_PROGRESSIVE case");
+    if (mState == JPEG_DECOMPRESS_SEQUENTIAL)
+    {
+      LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- JPEG_DECOMPRESS_SEQUENTIAL case");
 
-    do {
-      status = jpeg_consume_input(&mInfo);
-    } while (!((status == JPEG_SUSPENDED) ||
-               (status == JPEG_REACHED_EOI)));
+      OutputScanlines(-1);
 
-    switch (status) {
-      case JPEG_REACHED_EOI:
-        // End of image
-        mState = JPEG_FINAL_PROGRESSIVE_SCAN_OUTPUT;
-        break;
-      case JPEG_SUSPENDED:
-      default:
-        PR_LOG(gJPEGlog, PR_LOG_DEBUG,
-               ("[this=%p] nsJPEGDecoder::WriteFrom -- suspending\n", this));
-
-        return NS_OK;
+      /* If we've completed image output ... */
+      if (mInfo.output_scanline == mInfo.output_height)
+        mState = JPEG_DONE;
     }
   }
+
+
+  case JPEG_DECOMPRESS_PROGRESSIVE:
+  {
+    if (mState == JPEG_DECOMPRESS_PROGRESSIVE)
+    {
+      LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- JPEG_DECOMPRESS_PROGRESSIVE case");
+
+      int status;
+      do {
+        status = jpeg_consume_input(&mInfo);
+      } while (!((status == JPEG_SUSPENDED) ||
+                 (status == JPEG_REACHED_EOI)));
+
+      switch (status) {
+        case JPEG_REACHED_EOI:
+          // End of image
+          mState = JPEG_FINAL_PROGRESSIVE_SCAN_OUTPUT;
+          break;
+        case JPEG_SUSPENDED:
+          PR_LOG(gJPEGlog, PR_LOG_DEBUG,
+                 ("[this=%p] nsJPEGDecoder::WriteFrom -- suspending\n", this));
+
+          return NS_OK; /* I/O suspension */
+        default:
+          printf("got someo other state!?\n");
+      }
+    }
+  }
+
   case JPEG_FINAL_PROGRESSIVE_SCAN_OUTPUT:
   {
-    LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- entering JPEG_FINAL_PROGRESSIVE_SCAN_OUTPUT case");
+    if (mState == JPEG_FINAL_PROGRESSIVE_SCAN_OUTPUT)
+    {
+      LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- entering JPEG_FINAL_PROGRESSIVE_SCAN_OUTPUT case");
 
-    // XXX progressive? ;)
-    // not really progressive according to the state machine... -saari
-    jpeg_start_output(&mInfo, mInfo.input_scan_number);
-    OutputScanlines(-1);
-    jpeg_finish_output(&mInfo);
-    mState = JPEG_DONE;
+      // XXX progressive? ;)
+      // not really progressive according to the state machine... -saari
+      jpeg_start_output(&mInfo, mInfo.input_scan_number);
+      OutputScanlines(-1);
+      jpeg_finish_output(&mInfo);
+      mState = JPEG_DONE;
+    }
   }
 
   case JPEG_DONE:
@@ -592,40 +644,6 @@ il_error_exit (j_common_ptr cinfo)
  *  TRUE if additional data is available, FALSE if no data present and
  *   the JPEG library should therefore suspend processing of input stream
  *---------------------------------------------------------------------------*/
-static NS_METHOD ReadDataOut(nsIInputStream* in,
-                             void* closure,
-                             const char* fromRawSegment,
-                             PRUint32 toOffset,
-                             PRUint32 count,
-                             PRUint32 *writeCount)
-{
-  j_decompress_ptr jd = NS_STATIC_CAST(j_decompress_ptr, closure);
-  decoder_source_mgr *src = NS_REINTERPRET_CAST(decoder_source_mgr *, jd->src);
-
-  src->pub.next_input_byte = NS_REINTERPRET_CAST(const unsigned char *, fromRawSegment);
-  src->pub.bytes_in_buffer = count;
-
-  *writeCount = 0; // pretend we didn't really read anything
-
-  return NS_ERROR_FAILURE; // return error so that we can point to this buffer and exit the ReadSegments loop
-}
-
-/******************************************************************************/
-static NS_METHOD DiscardData(nsIInputStream* in,
-                             void* closure,
-                             const char* fromRawSegment,
-                             PRUint32 toOffset,
-                             PRUint32 count,
-                             PRUint32 *writeCount)
-{
-  j_decompress_ptr jd = NS_STATIC_CAST(j_decompress_ptr, closure);
-  decoder_source_mgr *src = NS_REINTERPRET_CAST(decoder_source_mgr *, jd->src);
-
-  *writeCount = count;
-
-  return NS_OK;
-}
-
 
 /******************************************************************************/
 /* data source manager method 
@@ -666,12 +684,6 @@ skip_input_data (j_decompress_ptr jd, long num_bytes)
      * network stream. Set things up so that fill_input_buffer
      * will skip remaining amount.
      */
-
-    PRUint32 _retval;
-    src->decoder->mInStream->ReadSegments(DiscardData, NS_STATIC_CAST(void*, jd), 
-                                          src->pub.bytes_in_buffer, &_retval);
-    src->decoder->mDataLen -= _retval;
-
     src->decoder->mBytesToSkip = (size_t)num_bytes - src->pub.bytes_in_buffer;
     src->pub.next_input_byte += src->pub.bytes_in_buffer;
     src->pub.bytes_in_buffer = 0;
@@ -679,13 +691,6 @@ skip_input_data (j_decompress_ptr jd, long num_bytes)
   } else {
     /* Simple case. Just advance buffer pointer */
 
-    PRUint32 _retval;
-    src->decoder->mInStream->ReadSegments(DiscardData, NS_STATIC_CAST(void*, jd), 
-                                          num_bytes, &_retval);
-    // XXX not sure we should be managing this buffer here
-    //src->decoder->mDataLen -= _retval;
-    //src->decoder->mBytesToSkip = 0;
-    
     src->pub.bytes_in_buffer -= (size_t)num_bytes;
     src->pub.next_input_byte += num_bytes;
   }
@@ -709,39 +714,106 @@ fill_input_buffer (j_decompress_ptr jd)
 {
   decoder_source_mgr *src = (decoder_source_mgr *)jd->src;
 
-  PRUint32 _retval;
+  unsigned char *new_buffer = (unsigned char *)src->decoder->mBuffer;
+  PRUint32 new_buflen = src->decoder->mBufferLen;
+  PRUint32 bytesToSkip = src->decoder->mBytesToSkip;
 
-  if (src->decoder->mBytesToSkip != 0) {
-    if (src->decoder->mBytesToSkip > src->decoder->mDataLen){
-      src->decoder->mInStream->ReadSegments(DiscardData, NS_STATIC_CAST(void*, jd), 
-                                            src->decoder->mDataLen, &_retval);
+  switch(src->decoder->mFillState) {
+  case READING_BACK:
+    {
+      if (!new_buffer || new_buflen == 0)
+        return PR_FALSE; /* suspend */
 
-      src->decoder->mBytesToSkip -= _retval;
-      src->decoder->mDataLen -= _retval;
+      src->decoder->mBufferLen = 0;
 
-      if (src->decoder->mDataLen > 0)
-        return PR_FALSE;
+      if (bytesToSkip != 0) {
+        if (bytesToSkip < new_buflen) {
+          /* All done skipping bytes; Return what's left. */
+          new_buffer += bytesToSkip;
+          new_buflen -= bytesToSkip;
+          src->decoder->mBytesToSkip = 0;
+        } else {
+          /* Still need to skip some more data in the future */
+          src->decoder->mBytesToSkip -= (size_t)new_buflen;
+          return PR_FALSE; /* suspend */
+        }
+      }
 
-    } else {
-      src->decoder->mInStream->ReadSegments(DiscardData, NS_STATIC_CAST(void*, jd), 
-                                            src->decoder->mBytesToSkip, &_retval);
+      src->decoder->mBackBufferUnreadLen = src->pub.bytes_in_buffer;
 
-      src->decoder->mBytesToSkip -= _retval;
-      src->decoder->mDataLen -= _retval;
+      src->pub.next_input_byte = new_buffer;
+      src->pub.bytes_in_buffer = (size_t)new_buflen;
+      src->decoder->mFillState = READING_NEW;
 
+      return PR_TRUE;
     }
+    break;
 
+  case READING_NEW:
+    {
+      if (src->pub.next_input_byte != src->decoder->mBuffer) {
+        /* Backtrack data has been permanently consumed. */
+        src->decoder->mBackBufferUnreadLen = 0;
+        src->decoder->mBackBufferLen = 0;
+      }
+
+      /* Save remainder of netlib buffer in backtrack buffer */
+      PRUint32 new_backtrack_buflen = src->pub.bytes_in_buffer + src->decoder->mBackBufferLen;
+
+
+      /* Make sure backtrack buffer is big enough to hold new data. */
+      if (src->decoder->mBackBufferSize < new_backtrack_buflen) {
+
+        /* Round up to multiple of 16 bytes. */
+        PRUint32 roundup_buflen = ((new_backtrack_buflen + 15) >> 4) << 4;
+        if (src->decoder->mBackBufferSize) {
+            src->decoder->mBackBuffer =
+          (JOCTET *)PR_REALLOC(src->decoder->mBackBuffer, roundup_buflen);
+        } else {
+          src->decoder->mBackBuffer = (JOCTET*)PR_MALLOC(roundup_buflen);
+        }
+
+        /* Check for OOM */
+        if (!src->decoder->mBackBuffer) {
+#if 0
+          j_common_ptr cinfo = (j_common_ptr)(&src->js->jd);
+          cinfo->err->msg_code = JERR_OUT_OF_MEMORY;
+          il_error_exit(cinfo);
+#endif
+        }
+          
+        src->decoder->mBackBufferSize = (size_t)roundup_buflen;
+
+        /* Check for malformed MARKER segment lengths. */
+        if (new_backtrack_buflen > MAX_JPEG_MARKER_LENGTH) {
+          //  il_error_exit((j_common_ptr)(&src->js->jd));
+        }
+      }
+
+
+      /* Copy remainder of netlib buffer into backtrack buffer. */
+      nsCRT::memmove(src->decoder->mBackBuffer + src->decoder->mBackBufferLen,
+                     src->pub.next_input_byte,
+                     src->pub.bytes_in_buffer);
+
+
+      /* Point to start of data to be rescanned. */
+      src->pub.next_input_byte = src->decoder->mBackBuffer + src->decoder->mBackBufferLen - src->decoder->mBackBufferUnreadLen;
+      src->pub.bytes_in_buffer += src->decoder->mBackBufferUnreadLen;
+      src->decoder->mBackBufferLen = (size_t)new_backtrack_buflen;
+    
+      src->decoder->mFillState = READING_BACK;
+#if 0
+      if (src->pub.bytes_in_buffer != 0)
+        return PR_TRUE;
+      else
+#endif
+        return PR_FALSE;
+    }
+    break;
   }
 
-  if (src->decoder->mDataLen != 0) {
-    src->decoder->mInStream->ReadSegments(ReadDataOut, NS_STATIC_CAST(void*, jd), 
-                                          src->decoder->mDataLen, &_retval);
-    src->decoder->mDataLen -= src->pub.bytes_in_buffer;
-    return PR_TRUE;
-  } else {
-    return PR_FALSE;
-  }
-
+  return PR_FALSE;
 }
 
 /******************************************************************************/
