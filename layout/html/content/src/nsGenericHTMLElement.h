@@ -173,6 +173,10 @@ public:
   nsresult SetAttr(nsIAtom* aAttribute, const nsHTMLValue& aValue,
                    nsSetAttrNotify aNotify);
 
+  nsresult UnsetAttr(nsIAtom* aAttribute, nsSetAttrNotify aNotify);
+
+  nsresult RenderFrame();
+
   nsresult AddScriptEventListener(nsIAtom* aAttribute,
                                   nsHTMLValue& aValue,
                                   REFNSIID aIID);
@@ -905,7 +909,7 @@ public:
       return mInner.SetAttr(nsHTMLAtoms::_atom, empty, _notify); \
     }                                                            \
     else {                                                       \
-      mInner.UnsetAttribute(nsHTMLAtoms::_atom);                 \
+      mInner.UnsetAttr(nsHTMLAtoms::_atom, _notify);             \
       return NS_OK;                                              \
     }                                                            \
   }

@@ -45,6 +45,9 @@
 #include "nsStyleConsts.h"
 #include "nsXIFConverter.h"
 #include "nsFrame.h"
+#include "nsIPresShell.h"
+#include "nsIView.h"
+#include "nsIViewManager.h"
 
 #include "nsHTMLParts.h"
 #include "nsString.h"
@@ -1316,24 +1319,6 @@ nsGenericHTMLElement::MapCommonAttributesInto(nsIHTMLAttributes* aAttributes,
 }
 
 nsresult
-nsGenericHTMLElement::SetAttr(nsIAtom* aAttribute,
-                              const nsString& aValue,
-                              nsSetAttrNotify aNotify)
-{
-  // XXX cheesy code for now
-  return SetAttribute(aAttribute, aValue, PR_TRUE);
-}
-
-nsresult
-nsGenericHTMLElement::SetAttr(nsIAtom* aAttribute,
-                              const nsHTMLValue& aValue,
-                              nsSetAttrNotify aNotify)
-{
-  // XXX cheesy code for now
-  return SetAttribute(aAttribute, aValue, PR_TRUE);
-}
-
-nsresult
 nsGenericHTMLElement::UnsetAttribute(nsIAtom* aAttribute)
 {
   nsresult result = NS_OK;
@@ -1685,6 +1670,118 @@ nsGenericHTMLElement::ToHTMLString(nsString& aBuf) const
   }
 
   aBuf.Append('>');
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+
+nsresult
+nsGenericHTMLElement::SetAttr(nsIAtom* aAttribute,
+                              const nsString& aValue,
+                              nsSetAttrNotify aNotify)
+{
+  nsresult rv = SetAttribute(aAttribute, aValue, PR_FALSE);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  switch (aNotify) {
+  case eSetAttrNotify_None:
+    break;
+  case eSetAttrNotify_Reflow:
+    break;
+  case eSetAttrNotify_Render:
+    RenderFrame();
+    break;
+  case eSetAttrNotify_Restart:
+    break;
+  }
+  return rv;
+}
+
+nsresult
+nsGenericHTMLElement::SetAttr(nsIAtom* aAttribute,
+                              const nsHTMLValue& aValue,
+                              nsSetAttrNotify aNotify)
+{
+  nsresult rv = SetAttribute(aAttribute, aValue, PR_FALSE);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  switch (aNotify) {
+  case eSetAttrNotify_None:
+    break;
+  case eSetAttrNotify_Reflow:
+    break;
+  case eSetAttrNotify_Render:
+    RenderFrame();
+    break;
+  case eSetAttrNotify_Restart:
+    break;
+  }
+  return rv;
+}
+
+nsresult
+nsGenericHTMLElement::UnsetAttr(nsIAtom* aAttribute,
+                                nsSetAttrNotify aNotify)
+{
+  nsresult rv = UnsetAttribute(aAttribute);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  switch (aNotify) {
+  case eSetAttrNotify_None:
+    break;
+  case eSetAttrNotify_Reflow:
+    break;
+  case eSetAttrNotify_Render:
+    RenderFrame();
+    break;
+  case eSetAttrNotify_Restart:
+    break;
+  }
+  return rv;
+}
+
+nsresult
+nsGenericHTMLElement::RenderFrame()
+{
+  nsPoint offset;
+  nsRect bounds;
+
+  // Trigger damage repairs for each frame that maps the given content
+  PRInt32 i, n;
+  n = mDocument->GetNumberOfShells();
+  for (i = 0; i < n; i++) {
+    nsIPresShell* shell;
+    shell = mDocument->GetShellAt(i);
+    nsIFrame* frame;
+    frame = shell->FindFrameWithContent(mContent);
+    while (nsnull != frame) {
+      nsIViewManager* vm;
+      nsIView* view;
+
+      // Determine damaged area and tell view manager to redraw it
+      frame->GetRect(bounds);
+      bounds.x = bounds.y = 0;
+
+      // XXX We should tell the frame the damage area and let it invalidate
+      // itself. Add some API calls to nsIFrame to allow a caller to invalidate
+      // parts of the frame...
+      frame->GetOffsetFromView(offset, view);
+      view->GetViewManager(vm);
+      bounds.x += offset.x;
+      bounds.y += offset.y;
+
+      vm->UpdateView(view, bounds, NS_VMREFRESH_IMMEDIATE);
+      NS_RELEASE(vm);
+
+      // If frame has a next-in-flow, repaint it too
+      frame->GetNextInFlow(frame);
+    }
+    NS_RELEASE(shell);
+  }
+
   return NS_OK;
 }
 
