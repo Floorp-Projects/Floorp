@@ -162,7 +162,7 @@ static struct keyword {
 #elif defined(RESERVE_ECMA_KEYWORDS)
     {"debugger",       TOK_RESERVED,            JSOP_NOP,   JSVERSION_1_3},
 #endif
-    {0,0,0,0}
+    {0,                TOK_EOF,                 JSOP_NOP,   JSVERSION_DEFAULT}
 };
 
 JSBool
