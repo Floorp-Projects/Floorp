@@ -31,6 +31,9 @@ public:
     /* void GetStringB (out string s); */
     NS_IMETHOD GetStringB(char **s);
 
+    /* void GetStringC ([shared, retval] out string s); */
+    NS_IMETHOD GetStringC(const char **s);
+
     xpcstringtest();
     virtual ~xpcstringtest();
 };
@@ -57,10 +60,10 @@ xpcstringtest::GetStringA(char **_retval)
     if(!_retval)
         return NS_ERROR_NULL_POINTER;
 
-    *_retval = (char*) nsAllocator::Clone(myResult, 
+    *_retval = (char*) nsAllocator::Clone(myResult,
                                           sizeof(char)*(strlen(myResult)+1));
     return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}        
+}
 
 /* void GetStringB (out string s); */
 NS_IMETHODIMP
@@ -71,11 +74,23 @@ xpcstringtest::GetStringB(char **s)
     if(!s)
         return NS_ERROR_NULL_POINTER;
 
-    *s = (char*) nsAllocator::Clone(myResult, 
+    *s = (char*) nsAllocator::Clone(myResult,
                                     sizeof(char)*(strlen(myResult)+1));
 
     return *s ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}        
+}
+
+
+/* void GetStringC ([shared, retval] out string s); */
+NS_IMETHODIMP
+xpcstringtest::GetStringC(const char **s)
+{
+    static const char myResult[] = "result of xpcstringtest::GetStringC";
+    if(!s)
+        return NS_ERROR_NULL_POINTER;
+    *s = myResult;
+    return NS_OK;
+}
 
 /***************************************************************************/
 
