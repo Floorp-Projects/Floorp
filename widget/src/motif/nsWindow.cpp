@@ -1226,7 +1226,7 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 
 NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus)
 {
-  NS_ADDREF(event.widget);
+  NS_ADDREF(event->widget);
 
   aStatus = nsEventStatus_eIgnore;
   if (nsnull != mEventCallback) {
@@ -1237,7 +1237,7 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
   if ((aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener)) {
     aStatus = mEventListener->ProcessEvent(*event);
   }
-  NS_RELEASE(event.widget);
+  NS_RELEASE(event->widget);
 
   return NS_OK;
 
