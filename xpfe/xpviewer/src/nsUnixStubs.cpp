@@ -39,6 +39,17 @@ extern "C" void XP_Trace( const char *, ... )
 } 
 
 extern "C" char *fe_GetConfigDir(void) {
-  printf("fe_GetConfigDir() not implemented, stubbed in xpfe/xpviewer/src/nsUnixStubs.cpp\n"); 
+  char *home = getenv("HOME");
+  if (home) {
+    int len = strlen(home);
+    len += strlen("/.netscape") + 1;
+
+    char* config_dir = (char *)XP_CALLOC(len, sizeof(char));
+    // we really should use XP_STRN*_SAFE but this is MODULAR_NETLIB
+    XP_STRCPY(config_dir, home);
+    XP_STRCAT(config_dir, "/.netscape");
+    return config_dir;
+  }
+  
   return strdup("/tmp");
 }
