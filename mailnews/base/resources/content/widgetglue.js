@@ -168,7 +168,7 @@ function MsgEmptyTrash()
     }
 }
 
-function MsgCompactFolder() 
+function MsgCompactFolder(isAll) 
 {
 	//get the selected elements
 	var tree = GetFolderTree();
@@ -209,7 +209,7 @@ function MsgCompactFolder()
                     dump("folder = " + folder.localName + "\n"); 
                     try
                     {
-                      messenger.CompactFolder(tree.database, folder.resource);
+                      messenger.CompactFolder(tree.database, folder.resource, isAll);
                     }
                     catch(e)
                     {

@@ -454,6 +454,15 @@ nsMsgNewsFolder::GetCanRename(PRBool *aResult)
 }
 
 NS_IMETHODIMP
+nsMsgNewsFolder::GetCanCompact(PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = PR_FALSE;
+  // you can't compact a news server or a news group
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMsgNewsFolder::GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result)
 {
   nsresult rv = NS_OK;

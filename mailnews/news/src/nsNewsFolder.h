@@ -92,6 +92,7 @@ public:
 	NS_IMETHOD GetCanFileMessages(PRBool *aResult);
 	NS_IMETHOD GetCanCreateSubfolders(PRBool *aResult);
 	NS_IMETHOD GetCanRename(PRBool *aResult);
+    NS_IMETHOD GetCanCompact(PRBool *aResult);
     NS_IMETHOD OnReadChanged(nsIDBChangeListener * aInstigator);
 
   NS_IMETHOD Compact(nsIUrlListener *aListener);

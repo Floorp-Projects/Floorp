@@ -70,7 +70,8 @@ interface nsIMessenger : nsISupports {
     void RenameFolder(in nsIRDFCompositeDataSource db, 
                       in nsIRDFResource folder, in wstring name);
     void CompactFolder(in nsIRDFCompositeDataSource db,
-                       in nsIRDFResource folder);
+                       in nsIRDFResource folder, 
+                       in boolean forAll);
     void EmptyTrash(in nsIRDFCompositeDataSource db,
                     in nsIRDFResource folder);
 

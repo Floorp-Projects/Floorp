@@ -490,7 +490,7 @@ var DefaultController =
 				MsgEmptyTrash();
 				return;
 			case "cmd_compactFolder":
-				MsgCompactFolder();
+				MsgCompactFolder(true);
 				return;
 		}
 	},

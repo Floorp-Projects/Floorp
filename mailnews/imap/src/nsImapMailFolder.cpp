@@ -1013,6 +1013,11 @@ NS_IMETHODIMP nsImapMailFolder::Compact(nsIUrlListener *aListener)
   return rv;
 }
 
+NS_IMETHODIMP nsImapMailFolder::CompactAll(nsIUrlListener *aListener)
+{
+return Compact(aListener);  //for now
+}
+
 NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
                                            nsIUrlListener *aListener)
 {

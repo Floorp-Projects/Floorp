@@ -940,7 +940,18 @@ function IsEmptyTrashEnabled()
 
 function IsCompactFolderEnabled()
 {
-    return IsMailFolderSelected();
+    var folderTree = GetFolderTree();
+    var selectedFolders = folderTree.selectedItems;
+    var numFolders = selectedFolders.length;
+
+    if (numFolders <= 0 )
+        return false;
+
+	var folder = selectedFolders[0];
+    if (!folder) 
+        return false;
+
+    return (folder.getAttribute('CanCompact') == "true");
 }
 
 var gDeleteButton = null;

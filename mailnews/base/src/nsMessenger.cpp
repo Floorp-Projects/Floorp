@@ -1164,7 +1164,7 @@ nsMessenger::RenameFolder(nsIRDFCompositeDataSource* db,
 
 NS_IMETHODIMP
 nsMessenger::CompactFolder(nsIRDFCompositeDataSource* db,
-                           nsIRDFResource* folderResource)
+                           nsIRDFResource* folderResource, PRBool forAll)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
   
@@ -1174,7 +1174,7 @@ nsMessenger::CompactFolder(nsIRDFCompositeDataSource* db,
   rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
   if (NS_FAILED(rv)) return rv;
   folderArray->AppendElement(folderResource);
-  rv = DoCommand(db, NC_RDF_COMPACT, folderArray, nsnull);
+  rv = DoCommand(db, forAll ? NC_RDF_COMPACTALL : NC_RDF_COMPACT,  folderArray, nsnull);
   if (NS_SUCCEEDED(rv) && mTxnMgr)
       mTxnMgr->Clear();
   return rv;

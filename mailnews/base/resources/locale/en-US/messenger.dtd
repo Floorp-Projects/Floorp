@@ -58,7 +58,7 @@ Rights Reserved.
 <!ENTITY subscribeCmd.accesskey			"b">  
 <!ENTITY renameFolder.label				"Rename Folder...">
 <!ENTITY renameFolder.accesskey			"r">
-<!ENTITY compactFolder.label			"Compact This Folder">
+<!ENTITY compactFolders.label       	"Compact Folders">
 <!ENTITY compactFolder.accesskey		"t">
 <!ENTITY emptyTrashCmd.label			"Empty Trash">  
 <!ENTITY emptyTrashCmd.accesskey		"y">
@@ -428,6 +428,8 @@ Rights Reserved.
 <!ENTITY folderContextRename.accesskey "r">
 <!ENTITY folderContextRemove.label "Delete">
 <!ENTITY folderContextRemove.accesskey "d">
+<!ENTITY folderContextCompact.label "Compact This Folder">
+<!ENTITY folderContextCompact.accesskey "t">
 <!ENTITY folderContextEmptyTrash.label "Empty Trash Can">
 <!ENTITY folderContextEmptyTrash.accesskey "y">
 <!ENTITY folderContextSendUnsentMessages.label "Send Unsent Messages...">

@@ -191,6 +191,7 @@ function fillFolderPaneContextMenu()
 
 	SetupRenameMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder);
 	SetupRemoveMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder);
+    SetupCompactMenuItem(targetFolder, numSelected, isServer, serverType);
 
 	ShowMenuItem("folderPaneContext-emptyTrash", (numSelected <= 1) && (specialFolder == 'Trash'));
 	EnableMenuItem("folderPaneContext-emptyTrash", true);
@@ -249,6 +250,18 @@ function SetupRemoveMenuItem(targetFolder, numSelected, isServer, serverType, sp
 	if(isMail && !isSpecialFolder)
 	{
 		SetMenuItemValue("folderPaneContext-remove", Bundle.GetStringFromName("removeFolder"));
+	}
+}
+
+function SetupCompactMenuItem(targetFolder, numSelected)
+{
+    var canCompact = (targetFolder.getAttribute('CanCompact') == "true");
+	ShowMenuItem("folderPaneContext-compact", (numSelected <=1) && canCompact);
+	EnableMenuItem("folderPaneContext-compact", true );
+
+	if(canCompact)
+	{
+		SetMenuItemValue("folderPaneContext-compact", Bundle.GetStringFromName("compactFolder"));
 	}
 }
 

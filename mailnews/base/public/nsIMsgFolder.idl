@@ -126,6 +126,8 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    */
   readonly attribute boolean canRename;
 
+  readonly attribute boolean canCompact;
+
   /**
    * the phantom server folder
    */
@@ -151,6 +153,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 	void createStorageIfMissing(in nsIUrlListener urlListener);
   
   void compact(in nsIUrlListener aListener);
+  void compactAll(in nsIUrlListener aListener);
   void emptyTrash(in nsIMsgWindow aMsgWindow, in nsIUrlListener aListener);
 
   /**
@@ -330,6 +333,8 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    * local path of this folder
    */
 	attribute nsIFileSpec path;
+
+	readonly attribute string baseMessageURI;
 
 	const nsMsgDispositionState nsMsgDispositionState_Replied = 0;
 	const nsMsgDispositionState nsMsgDispositionState_Forwarded = 1;	

@@ -807,6 +807,17 @@ nsMsgFolder::GetCanRename(PRBool *aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgFolder::GetCanCompact(PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  PRBool isServer = PR_FALSE;
+  nsresult rv = GetIsServer(&isServer);
+  NS_ENSURE_SUCCESS(rv,rv);
+  *aResult = !isServer;   //servers cannot be compacted --> 4.x
+  return NS_OK;
+}
 
 
 NS_IMETHODIMP nsMsgFolder::GetPrettyName(PRUnichar ** name)
@@ -1175,6 +1186,12 @@ nsresult nsMsgFolder::AddSubfolder(nsAutoString *folderName,
 
 NS_IMETHODIMP nsMsgFolder::Compact(nsIUrlListener *aListener)
 {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgFolder::CompactAll(nsIUrlListener *aListener)
+{
+  NS_ASSERTION(PR_FALSE, "should be overridden by child class");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -2489,4 +2506,41 @@ NS_IMETHODIMP nsMsgFolder::GetMessageHeader(nsMsgKey msgKey, nsIMsgDBHdr **aMsgH
   return rv;
 }
 
+// this gets the deep sub-folders too, e.g., the children of the children
+NS_IMETHODIMP nsMsgFolder::ListDescendents(nsISupportsArray *descendents)
+{
+  NS_ENSURE_ARG(descendents);
+  PRUint32 cnt;
+  nsresult rv = mSubFolders->Count(&cnt);
+  NS_ENSURE_SUCCESS(rv,rv);
+  for (PRUint32 index = 0; index < cnt; index++)
+  {
+    nsresult rv;
+	nsCOMPtr<nsISupports> supports = getter_AddRefs(mSubFolders->ElementAt(index));
+	nsCOMPtr<nsIMsgFolder> child(do_QueryInterface(supports, &rv));
+
+    if (NS_SUCCEEDED(rv))
+    {
+      rv = descendents->AppendElement(supports);
+	  if(NS_SUCCEEDED(rv))
+	  {
+		  rv = child->ListDescendents(descendents);  // recurse
+	  }
+    }
+  }
+  return rv;
+} 
+
+NS_IMETHODIMP nsMsgFolder::GetBaseMessageURI(char **baseMessageURI)
+{
+    NS_ENSURE_ARG_POINTER(baseMessageURI);
+
+    if (mBaseMessageURI)
+    {
+      *baseMessageURI = nsCRT::strdup(mBaseMessageURI);
+      return NS_OK;
+    }
+    else
+      return NS_ERROR_FAILURE;
+}
 

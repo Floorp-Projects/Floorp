@@ -128,6 +128,8 @@ protected:
                                       nsIRDFNode **target);
   nsresult createFolderCanRenameNode(nsIMsgFolder *folder,
                                       nsIRDFNode **target);
+  nsresult createFolderCanCompactNode(nsIMsgFolder *folder,
+                                     nsIRDFNode **target);
 	nsresult createTotalMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createCharsetNode(nsIMsgFolder *folder, nsIRDFNode **target);
@@ -196,6 +198,7 @@ protected:
   static nsIRDFResource* kNC_CanFileMessages;
   static nsIRDFResource* kNC_CanCreateSubfolders;
   static nsIRDFResource* kNC_CanRename;
+  static nsIRDFResource* kNC_CanCompact;
   static nsIRDFResource* kNC_TotalMessages;
   static nsIRDFResource* kNC_TotalUnreadMessages;
   static nsIRDFResource* kNC_Charset;
@@ -216,6 +219,7 @@ protected:
   static nsIRDFResource* kNC_MoveFolder;
   static nsIRDFResource* kNC_MarkAllMessagesRead;
   static nsIRDFResource* kNC_Compact;
+  static nsIRDFResource* kNC_CompactAll;
   static nsIRDFResource* kNC_Rename;
   static nsIRDFResource* kNC_EmptyTrash;
   static nsIRDFResource* kNC_DownloadFlagged;

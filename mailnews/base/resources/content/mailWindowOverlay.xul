@@ -122,7 +122,7 @@ Rights Reserved.
 	<broadcaster id="cmd_markAsFlagged" oncommand="goDoCommand('cmd_markAsFlagged'); event.preventBubble()" disabled="true"/>
 	<broadcaster id="cmd_file" disabled="true"/>
 	<broadcaster id="cmd_emptyTrash" oncommand="goDoCommand('cmd_emptyTrash')" disabled="true"/>
-	<broadcaster id="cmd_compactFolder" oncommand="goDoCommand('cmd_compactFolder')" disabled="true"/>
+    <broadcaster id="cmd_compactFolder" oncommand="goDoCommand('cmd_compactFolder')" disabled="true"/>
 	<broadcaster id="cmd_workOffline" oncommand="goDoCommand('cmd_workOffline')" disabled="true"/>
 	<broadcaster id="cmd_synchronizeOffline" oncommand="goDoCommand('cmd_synchronizeOffline')" disabled="true"/>
 	<broadcaster id="cmd_downloadFlagged" oncommand="goDoCommand('cmd_downloadFlagged')" disabled="true"/>
@@ -387,6 +387,10 @@ Rights Reserved.
 			  value="&folderContextRename.label;"
 			  accesskey="&folderContextRename.accesskey;"
 			  oncommand="MsgRenameFolder();"/>
+        <menuitem id="folderPaneContext-compact"
+              value="&folderContextCompact.label;"
+              accesskey="&folderContextCompact.accesskey;"
+			  oncommand="MsgCompactFolder(false);"/>          //for one folder only
 		<menuitem id="folderPaneContext-remove"
 			  value="&folderContextRemove.label;"
 			  accesskey="&folderContextRemove.accesskey;"
@@ -629,7 +633,7 @@ Rights Reserved.
 
 <menubar id="mailMenubar">
 	<menu id="menu_File">
-		<menupopup id="menu_FilePopup" oncreate="file_init();">
+        <menupopup id="menu_FilePopup" oncreate="file_init();">
 			<menuitem value="&newMsgCmd.label;"
 			accesskey="&newMsgCmd.accesskey;"
 			key="key_newMessage"
@@ -709,7 +713,7 @@ Rights Reserved.
 			<menuitem id="menu_emptyTrash" value="&emptyTrashCmd.label;"
              accesskey="&emptyTrashCmd.accesskey;"
              observes="cmd_emptyTrash"/>
-			<menuitem id="menu_compactFolder" value="&compactFolder.label;" accesskey="&compactFolder.accesskey;" observes="cmd_compactFolder"/>
+            <menuitem id="menu_compactFolder" value="&compactFolders.label;" accesskey="&compactFolder.accesskey;" observes="cmd_compactFolder"/>
 			<menuseparator id="trashMenuSeparator"/>
 			<menuitem value="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport();"/>
 			<menuseparator/>

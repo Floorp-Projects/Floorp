@@ -54,6 +54,8 @@ nsFolderCompactState::nsFolderCompactState()
   m_curIndex = -1;
   m_status = NS_OK;
   m_messageService = nsnull;
+  m_compactAll = PR_FALSE;
+  m_folderIndex =0;
 }
 
 nsFolderCompactState::~nsFolderCompactState()
@@ -128,6 +130,85 @@ nsFolderCompactState::InitDB(nsIMsgDatabase *db)
   return rv;
 }
 
+NS_IMETHODIMP nsFolderCompactState::InitCompactAll(nsIMsgFolder *folder)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIMsgFolder> rootFolder;
+  nsCOMPtr<nsISupportsArray> allDescendents;
+  folder->GetRootFolder(getter_AddRefs(rootFolder));
+  NS_NewISupportsArray(getter_AddRefs(allDescendents));
+  rootFolder->ListDescendents(allDescendents);
+  PRUint32 cnt =0;
+  rv = allDescendents->Count(&cnt);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  NS_NewISupportsArray(getter_AddRefs(m_folderArray));
+  PRUint32 expungedBytes=0;
+  for (PRUint32 i=0; i< cnt;i++)
+  {
+    nsCOMPtr<nsISupports> supports = getter_AddRefs(allDescendents->ElementAt(i));
+    nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    expungedBytes=0;
+    if (folder)
+      rv = folder->GetExpungedBytes(&expungedBytes);
+    
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    if (expungedBytes > 0)
+      rv = m_folderArray->AppendElement(supports);
+
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  
+  rv = m_folderArray->Count(&cnt);
+  NS_ENSURE_SUCCESS(rv,rv);
+  if ( cnt == 0)
+    return rv;   //no folders to compact
+  else
+    m_compactAll = PR_TRUE;
+  
+  m_folderIndex = 0;
+  nsCOMPtr<nsISupports> supports = getter_AddRefs(m_folderArray->ElementAt(m_folderIndex));
+  nsCOMPtr<nsIMsgFolder> firstFolder = do_QueryInterface(supports, &rv);
+
+  if (NS_SUCCEEDED(rv) && firstFolder)
+    CompactHelper(firstFolder);   //start with first folder from here.
+  
+  return rv;
+}
+
+nsresult 
+nsFolderCompactState::CompactHelper(nsIMsgFolder *folder)
+{
+   nsresult rv = NS_ERROR_FAILURE;
+   nsCOMPtr<nsIMsgDatabase> db;
+   nsCOMPtr<nsIDBFolderInfo> folderInfo;
+   nsCOMPtr<nsIMsgDatabase> mailDBFactory;
+   nsresult folderOpen = NS_OK;
+   nsCOMPtr<nsIFileSpec> pathSpec;
+   char *baseMessageURI;
+
+   rv = folder->GetMsgDatabase(nsnull, getter_AddRefs(db));
+   NS_ENSURE_SUCCESS(rv,rv);
+
+   rv = folder->GetPath(getter_AddRefs(pathSpec));
+   NS_ENSURE_SUCCESS(rv,rv);
+
+   rv = folder->GetBaseMessageURI(&baseMessageURI);
+   NS_ENSURE_SUCCESS(rv,rv);
+    
+   rv = Init(folder, baseMessageURI, db, pathSpec);
+   if (NS_SUCCEEDED(rv))
+      rv = StartCompacting();
+
+   if (baseMessageURI)
+     nsCRT::free(baseMessageURI);
+     
+   return rv;
+}
+
 nsresult
 nsFolderCompactState::Init(nsIMsgFolder *folder, const char *baseMsgUri, nsIMsgDatabase *db,
                            nsIFileSpec *pathSpec)
@@ -197,10 +278,8 @@ nsFolderCompactState::FinishCompact()
   nsCOMPtr<nsIMsgFolder> parentFolder;
   nsCOMPtr<nsIDBFolderInfo> folderInfo;
   nsFileSpec fileSpec;
-  PRUint32 flags;
 
     // get leaf name and database name of the folder
-  m_folder->GetFlags(&flags);
   rv = m_folder->GetPath(getter_AddRefs(pathSpec));
   pathSpec->GetFileSpec(&fileSpec);
 
@@ -229,7 +308,6 @@ nsFolderCompactState::FinishCompact()
     // close down database of the original folder and remove the folder node
     // and all it's message node from the tree
   m_folder->ForceDBClosed();
-
     // remove the old folder and database
   fileSpec.Delete(PR_FALSE);
   summarySpec.Delete(PR_FALSE);
@@ -237,6 +315,22 @@ nsFolderCompactState::FinishCompact()
     // database 
   m_fileSpec.Rename((const char*) idlName);
   newSummarySpec.Rename(dbName);
+
+  if (m_compactAll)
+  {
+    m_folderIndex++;
+    PRUint32 cnt=0;
+    rv = m_folderArray->Count(&cnt);
+    NS_ENSURE_SUCCESS(rv,rv);
+    if (m_folderIndex == cnt) 
+      return rv;
+    
+    nsCOMPtr<nsISupports> supports = getter_AddRefs(m_folderArray->ElementAt(m_folderIndex));
+    nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
+
+    if (NS_SUCCEEDED(rv) && folder)
+      CompactHelper(folder);                    
+  }
 
   return rv;
 }

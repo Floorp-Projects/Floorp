@@ -67,6 +67,7 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_CanSubscribe = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_CanFileMessages = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_CanCreateSubfolders = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_CanRename = nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_CanCompact = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_TotalMessages= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_TotalUnreadMessages= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Charset = nsnull;
@@ -87,6 +88,7 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_CopyFolder= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_MoveFolder= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_MarkAllMessagesRead= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Compact= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_CompactAll= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Rename= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_EmptyTrash= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_DownloadFlagged= nsnull;
@@ -120,6 +122,7 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
     rdf->GetResource(NC_RDF_CANFILEMESSAGES, &kNC_CanFileMessages);
     rdf->GetResource(NC_RDF_CANCREATESUBFOLDERS, &kNC_CanCreateSubfolders);
     rdf->GetResource(NC_RDF_CANRENAME, &kNC_CanRename);
+    rdf->GetResource(NC_RDF_CANCOMPACT, &kNC_CanCompact);
     rdf->GetResource(NC_RDF_TOTALMESSAGES, &kNC_TotalMessages);
     rdf->GetResource(NC_RDF_TOTALUNREADMESSAGES, &kNC_TotalUnreadMessages);
     rdf->GetResource(NC_RDF_CHARSET, &kNC_Charset);
@@ -140,6 +143,7 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
     rdf->GetResource(NC_RDF_MARKALLMESSAGESREAD,
                              &kNC_MarkAllMessagesRead);
     rdf->GetResource(NC_RDF_COMPACT, &kNC_Compact);
+    rdf->GetResource(NC_RDF_COMPACTALL, &kNC_CompactAll);
     rdf->GetResource(NC_RDF_RENAME, &kNC_Rename);
     rdf->GetResource(NC_RDF_EMPTYTRASH, &kNC_EmptyTrash);
     rdf->GetResource(NC_RDF_DOWNLOADFLAGGED, &kNC_DownloadFlagged);
@@ -176,6 +180,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 		NS_RELEASE2(kNC_CanFileMessages, refcnt);
 		NS_RELEASE2(kNC_CanCreateSubfolders, refcnt);
 		NS_RELEASE2(kNC_CanRename, refcnt);
+        NS_RELEASE2(kNC_CanCompact, refcnt);
 		NS_RELEASE2(kNC_TotalMessages, refcnt);
 		NS_RELEASE2(kNC_TotalUnreadMessages, refcnt);
 		NS_RELEASE2(kNC_Charset, refcnt);
@@ -195,6 +200,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 		NS_RELEASE2(kNC_MoveFolder, refcnt);
 		NS_RELEASE2(kNC_MarkAllMessagesRead, refcnt);
 		NS_RELEASE2(kNC_Compact, refcnt);
+		NS_RELEASE2(kNC_CompactAll, refcnt);
 		NS_RELEASE2(kNC_Rename, refcnt);
 		NS_RELEASE2(kNC_EmptyTrash, refcnt);
 		NS_RELEASE2(kNC_DownloadFlagged, refcnt);
@@ -392,6 +398,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
              (kNC_CanFileMessages == property) ||
              (kNC_CanCreateSubfolders == property) ||
              (kNC_CanRename == property) ||
+             (kNC_CanCompact == property) ||
              (kNC_ServerType == property) ||
              (kNC_NoSelect == property) )
     {
@@ -477,6 +484,7 @@ nsMsgFolderDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, 
                aArc == kNC_CanFileMessages ||
                aArc == kNC_CanCreateSubfolders ||
                aArc == kNC_CanRename ||
+               aArc == kNC_CanCompact ||
                aArc == kNC_TotalMessages ||
                aArc == kNC_TotalUnreadMessages ||
                aArc == kNC_Charset ||
@@ -533,6 +541,7 @@ nsMsgFolderDataSource::getFolderArcLabelsOut(nsISupportsArray **arcs)
   (*arcs)->AppendElement(kNC_CanFileMessages);
   (*arcs)->AppendElement(kNC_CanCreateSubfolders);
   (*arcs)->AppendElement(kNC_CanRename);
+  (*arcs)->AppendElement(kNC_CanCompact);
   (*arcs)->AppendElement(kNC_TotalMessages);
   (*arcs)->AppendElement(kNC_TotalUnreadMessages);
   (*arcs)->AppendElement(kNC_Charset);
@@ -572,6 +581,7 @@ nsMsgFolderDataSource::GetAllCommands(nsIRDFResource* source,
     cmds->AppendElement(kNC_MoveFolder);
     cmds->AppendElement(kNC_MarkAllMessagesRead);
     cmds->AppendElement(kNC_Compact);
+    cmds->AppendElement(kNC_CompactAll);
     cmds->AppendElement(kNC_Rename);
     cmds->AppendElement(kNC_EmptyTrash);
     cmds->AppendElement(kNC_DownloadFlagged);
@@ -617,6 +627,7 @@ nsMsgFolderDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aS
             (aCommand == kNC_GetNewMessages) ||
             (aCommand == kNC_MarkAllMessagesRead) ||
             (aCommand == kNC_Compact) || 
+            (aCommand == kNC_CompactAll) || 
             (aCommand == kNC_Rename) ||
             (aCommand == kNC_EmptyTrash) ||
             (aCommand == kNC_DownloadFlagged) )) 
@@ -689,6 +700,10 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
       else if ((aCommand == kNC_Compact))
       {
         rv = folder->Compact(nsnull);
+      }
+      else if ((aCommand == kNC_CompactAll))
+      {
+        rv = folder->CompactAll(nsnull);
       }
       else if ((aCommand == kNC_EmptyTrash))
       {
@@ -908,6 +923,8 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
     rv = createFolderCanCreateSubfoldersNode(folder, target);
   else if ((kNC_CanRename == property))
     rv = createFolderCanRenameNode(folder, target);
+  else if ((kNC_CanCompact == property))
+    rv = createFolderCanCompactNode(folder, target);
 	else if ((kNC_TotalMessages == property))
 		rv = createTotalMessagesNode(folder, target);
 	else if ((kNC_TotalUnreadMessages == property))
@@ -1185,6 +1202,25 @@ nsMsgFolderDataSource::createFolderCanRenameNode(nsIMsgFolder* folder,
   *target = nsnull;
 
   if (canRename)
+        *target = kTrueLiteral;
+  else
+    *target = kFalseLiteral;
+  NS_IF_ADDREF(*target);
+  return NS_OK;
+}
+
+nsresult
+nsMsgFolderDataSource::createFolderCanCompactNode(nsIMsgFolder* folder,
+                                                  nsIRDFNode **target)
+{
+  nsresult rv;
+  PRBool canCompact;
+  rv = folder->GetCanCompact(&canCompact);
+  if (NS_FAILED(rv)) return rv;
+
+  *target = nsnull;
+
+  if (canCompact)
         *target = kTrueLiteral;
   else
     *target = kFalseLiteral;
@@ -1724,6 +1760,7 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder,
            (kNC_CanFileMessages == property) ||
            (kNC_CanCreateSubfolders == property) ||
            (kNC_CanRename == property) ||
+           (kNC_CanCompact == property) ||
            (kNC_TotalMessages == property) ||
            (kNC_TotalUnreadMessages == property) ||
            (kNC_Charset == property) ||

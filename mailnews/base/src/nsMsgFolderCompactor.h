@@ -45,6 +45,7 @@ public:
 //                           nsIFileSpec *pathSpec);
   // virtual nsresult FinishCompact();
   virtual nsresult InitDB(nsIMsgDatabase *db);
+  nsresult CompactHelper(nsIMsgFolder *folder);
 
   nsresult GetMessage(nsIMessage **message);
   nsresult BuildMessageURI(const char *baseURI, PRUint32 key, nsCString& uri);  
@@ -62,6 +63,10 @@ public:
   nsresult m_status; // the status of the copying operation
   nsIMsgMessageService* m_messageService; // message service for copying
                                           // message 
+  nsCOMPtr<nsISupportsArray> m_folderArray; // to store all the folders in case of compact all
+  PRUint32 m_folderIndex; // tells which folder to compact in case of compact all
+  PRBool m_compactAll;  //flag for compact all
+
 };
 
 class nsOfflineStoreCompactState : public nsFolderCompactState

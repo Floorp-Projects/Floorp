@@ -35,6 +35,7 @@ interface nsIMsgFolderCompactor :  nsISupports
 {
   void Init(in nsIMsgFolder folder, in string baseMsgUri, in nsIMsgDatabase db,
                            in nsIFileSpec pathSpec);
+  void InitCompactAll(in nsIMsgFolder folder);
   // we probably want to add the ability to set an enumerator to determine which
   // messages to copy over in the compaction process.
   void StartCompacting();
