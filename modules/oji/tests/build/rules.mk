@@ -47,18 +47,22 @@ del_cmd:
 		rm cmd.mak; \
 	fi
 
+ifndef MOZ_DEBUG
+include $(MOZILLA_HOME)/config/autoconf.mk
+endif 
+
 compile: objdir del_cmd $(OBJS)
 	@-mv *.o $(OBJ_DIR) 2> /dev/null
 	@$(MAKE_MAK) cmd.mak CC_OBJ $(TOP_DIR) $(OBJ_DIR) $(INCLUDES)
-	@make -f cmd.mak all
+	@export MOZ_DEBUG; MOZ_DEBUG=$(MOZ_DEBUG); $(MAKE) -f cmd.mak all
 	@-mv *.o $(OBJ_DIR) 2> /dev/null
 
 
 link: 
 	@if test 'x$(USE_SUN_WS)' = 'x1'; then \
-		$(CC) $(LD_FLAGS_WS) $(LIBS) $(OBJS) $(LD_PATH) -o $(OBJ_DIR)/lib$(DLL).so; \
+		$(CC) $(LD_FLAGS_WS) $(OBJS) $(LD_PATH) $(LIBS) -o $(OBJ_DIR)/lib$(DLL).so; \
 	else \
-		$(CC) $(LD_FLAGS_GCC) $(LIBS) $(OBJS) $(LD_PATH) -o $(OBJ_DIR)/lib$(DLL).so; \
+		$(CC) $(LD_FLAGS_GCC) $(OBJS) $(LD_PATH) $(LIBS) -o $(OBJ_DIR)/lib$(DLL).so; \
 	fi;
 	@cp obj/lib$(DLL).so $(TOP_DIR)/build/bin/.
 	@cp obj/lib$(DLL).so $(TOP_DIR)/../../../dist/bin/components/.

@@ -26,6 +26,9 @@ INCLUDES += -I. \
 	-I$(MOZILLA_HOME)/dist/include
 
 DEFINES=-DXP_UNIX
+ifeq ($(MOZ_DEBUG),1)
+DEFINES+=-DDEBUG
+endif
 
 CC_OBJ=$(CC) $(C_FLAGS) $(DEFINES) $(INCLUDES)
 

@@ -63,7 +63,9 @@ single_objdir:
 $(TOP_DIR)/build/classes/test.jar: $(JAVA)
 	@javac $? -d $(TOP_DIR)/build/classes
 # The current version of OJI plugin doesn't work with JAR archives
-	@jar cvf $(TOP_DIR)/build/classes/test.jar $(TOP_DIR)/build/classes/*.class
+	@cd  $(TOP_DIR)/build/classes
+	@jar cvf $(TOP_DIR)/build/classes/test.jar *.class
+	@cd  $(TOP_DIR)/build
 
 
 classes: $(TOP_DIR)/build/classes/test.jar

@@ -28,6 +28,12 @@ TOP_DIR = ..
 
 
 all:
+!if !exist(bin)
+ 	@mkdir bin
+!endif
+!if !exist(classes)
+ 	@mkdir classes
+!endif
 	@set MAKE_TARGET=make_depends
 	@nmake -nologo -f Makefile.win $(DIRS)
 	@set MAKE_TARGET=all
