@@ -592,7 +592,7 @@ nsFindComponent::Context::GetSearchString(PRUnichar * *aSearchString) {
 }
 
 NS_IMETHODIMP
-nsFindComponent::Context::SetSearchString(PRUnichar *aSearchString) {
+nsFindComponent::Context::SetSearchString(const PRUnichar *aSearchString) {
     nsresult rv = NS_OK;
     mSearchString = aSearchString ? nsString( aSearchString ) : nsString();
     return rv;
@@ -613,7 +613,7 @@ nsFindComponent::Context::GetReplaceString(PRUnichar * *aReplaceString) {
 }
 
 NS_IMETHODIMP
-nsFindComponent::Context::SetReplaceString(PRUnichar *aReplaceString) {
+nsFindComponent::Context::SetReplaceString(const PRUnichar *aReplaceString) {
     nsresult rv = NS_OK;
     mReplaceString = aReplaceString ? nsString( aReplaceString ) : nsString();
     return rv;

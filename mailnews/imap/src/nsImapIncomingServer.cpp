@@ -67,7 +67,7 @@ public:
     virtual ~nsImapIncomingServer();
 
     // overriding nsMsgIncomingServer methods
-	NS_IMETHOD SetKey(char * aKey);  // override nsMsgIncomingServer's implementation...
+	NS_IMETHOD SetKey(const char * aKey);  // override nsMsgIncomingServer's implementation...
 	NS_IMETHOD GetServerURI(char * *aServerURI);
 
 	NS_DECL_NSIIMAPINCOMINGSERVER
@@ -136,7 +136,7 @@ nsImapIncomingServer::~nsImapIncomingServer()
 {
 }
 
-NS_IMETHODIMP nsImapIncomingServer::SetKey(char * aKey)  // override nsMsgIncomingServer's implementation...
+NS_IMETHODIMP nsImapIncomingServer::SetKey(const char * aKey)  // override nsMsgIncomingServer's implementation...
 {
 	nsMsgIncomingServer::SetKey(aKey);
 
@@ -1419,7 +1419,7 @@ NS_IMETHODIMP  nsImapIncomingServer::SetMailServerUrls(const char *manageMailAcc
 	return SetManageMailAccountUrl((char *) manageMailAccount);
 }
 
-NS_IMETHODIMP nsImapIncomingServer::SetManageMailAccountUrl(char *manageMailAccountUrl)
+NS_IMETHODIMP nsImapIncomingServer::SetManageMailAccountUrl(const char *manageMailAccountUrl)
 {
 	m_manageMailAccountUrl = manageMailAccountUrl;
 	return NS_OK;

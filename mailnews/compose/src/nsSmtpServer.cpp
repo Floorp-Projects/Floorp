@@ -45,7 +45,7 @@ nsSmtpServer::GetKey(char * *aKey)
 }
 
 NS_IMETHODIMP
-nsSmtpServer::SetKey(char * aKey)
+nsSmtpServer::SetKey(const char * aKey)
 {
     mKey = aKey;
     return NS_OK;
@@ -64,7 +64,7 @@ nsSmtpServer::GetHostname(char * *aHostname)
 }
 
 NS_IMETHODIMP
-nsSmtpServer::SetHostname(char * aHostname)
+nsSmtpServer::SetHostname(const char * aHostname)
 {
     nsresult rv;
     nsCAutoString pref;
@@ -86,7 +86,7 @@ nsSmtpServer::GetUsername(char * *aUsername)
 }
 
 NS_IMETHODIMP
-nsSmtpServer::SetUsername(char * aUsername)
+nsSmtpServer::SetUsername(const char * aUsername)
 {
     nsresult rv;
     nsCAutoString pref;
@@ -108,7 +108,7 @@ nsSmtpServer::GetPassword(char * *aPassword)
 }
 
 NS_IMETHODIMP
-nsSmtpServer::SetPassword(char * aPassword)
+nsSmtpServer::SetPassword(const char * aPassword)
 {
     nsresult rv;
     nsCAutoString pref;

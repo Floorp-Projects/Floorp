@@ -1252,7 +1252,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetUnreadSetStr(char * *aUnreadSetStr)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::SetUnreadSetStr(char * aUnreadSetStr)
+NS_IMETHODIMP nsMsgNewsFolder::SetUnreadSetStr(const char * aUnreadSetStr)
 {
   if (!aUnreadSetStr) return NS_ERROR_NULL_POINTER;
 

@@ -40,19 +40,19 @@ public:
 
     /* attribute string Spec; */
     NS_IMETHOD GetSpec(char * *aSpec);
-    NS_IMETHOD SetSpec(char * aSpec);
+    NS_IMETHOD SetSpec(const char * aSpec);
 
     /* attribute string Scheme; */
     NS_IMETHOD GetScheme(char * *aScheme);
-    NS_IMETHOD SetScheme(char * aScheme);
+    NS_IMETHOD SetScheme(const char * aScheme);
 
     /* attribute string PreHost; */
     NS_IMETHOD GetPreHost(char * *aPreHost);
-    NS_IMETHOD SetPreHost(char * aPreHost);
+    NS_IMETHOD SetPreHost(const char * aPreHost);
 
     /* attribute string Host; */
     NS_IMETHOD GetHost(char * *aHost);
-    NS_IMETHOD SetHost(char * aHost);
+    NS_IMETHOD SetHost(const char * aHost);
 
     /* attribute long Port; */
     NS_IMETHOD GetPort(PRInt32 *aPort);
@@ -60,7 +60,7 @@ public:
 
     /* attribute string Path; */
     NS_IMETHOD GetPath(char * *aPath);
-    NS_IMETHOD SetPath(char * aPath);
+    NS_IMETHOD SetPath(const char * aPath);
 
     /* boolean Equals (in nsIURI other); */
     NS_IMETHOD Equals(nsIURI *other, PRBool *_retval);

@@ -64,7 +64,7 @@ NS_IMPL_GETTER_STR(nsMsgIncomingServer::GetKey, m_serverKey)
 
 
 NS_IMETHODIMP
-nsMsgIncomingServer::SetKey(char * serverKey)
+nsMsgIncomingServer::SetKey(const char * serverKey)
 {
     nsresult rv = NS_OK;
     // in order to actually make use of the key, we need the prefs
@@ -385,7 +385,7 @@ nsMsgIncomingServer::GetPrettyName(PRUnichar **retval) {
 }
 
 NS_IMETHODIMP
-nsMsgIncomingServer::SetPrettyName(PRUnichar *value) {
+nsMsgIncomingServer::SetPrettyName(const PRUnichar *value) {
   // this is lossy. Not sure what to do.
   nsCString str(value);
   return SetCharValue("name", str.GetBuffer());

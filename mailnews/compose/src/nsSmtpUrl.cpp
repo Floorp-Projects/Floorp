@@ -262,7 +262,7 @@ nsresult nsSmtpUrl::ParseMessageToPost(char * searchPart)
 }
 
 
-NS_IMETHODIMP nsSmtpUrl::SetSpec(char * aSpec)
+NS_IMETHODIMP nsSmtpUrl::SetSpec(const char * aSpec)
 {
 	nsresult rv = nsMsgMailNewsUrl::SetSpec(aSpec);
 	if (NS_SUCCEEDED(rv))
@@ -304,7 +304,7 @@ nsresult nsSmtpUrl::GetUserEmailAddress(char ** aUserName)
 	return rv;
 }
 
-nsresult nsSmtpUrl::SetUserEmailAddress(char * aUserName)
+nsresult nsSmtpUrl::SetUserEmailAddress(const char * aUserName)
 {
 	nsresult rv = NS_OK;
 	if (aUserName)

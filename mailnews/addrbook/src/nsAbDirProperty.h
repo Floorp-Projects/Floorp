@@ -31,7 +31,7 @@
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 #include "nsDirPrefs.h"
-
+#include "nsIAbBase.h"
  /* 
   * Address Book Directory
   */ 
@@ -43,27 +43,7 @@ public:
 	virtual ~nsAbDirProperty(void);
 
 	NS_DECL_ISUPPORTS
-
-	// nsIAbDirectory methods:
-	NS_IMETHOD GetDirName(PRUnichar **aDirName);
-	NS_IMETHOD SetDirName(PRUnichar * aDirName);
-	NS_IMETHOD GetLastModifiedDate(PRUint32 *aLastModifiedDate);
-	NS_IMETHOD SetLastModifiedDate(PRUint32 aLastModifiedDate);
-	NS_IMETHOD GetServer(DIR_Server * *aServer);
-	NS_IMETHOD SetServer(DIR_Server * aServer);
-	NS_IMETHOD GetDirFilePath(char **dbPath);
-
-	NS_IMETHOD GetChildNodes(nsIEnumerator **childList) { return NS_OK; }
-	NS_IMETHOD GetChildCards(nsIEnumerator **childCards) { return NS_OK; }
-	NS_IMETHOD AddChildCards(const char *uriName, nsIAbCard **childCard) { return NS_OK; }
-	NS_IMETHOD AddDirectory(const char *uriName, nsIAbDirectory **childDir) { return NS_OK; }
-	NS_IMETHOD DeleteDirectories(nsISupportsArray *dierctories) { return NS_OK; }
-	NS_IMETHOD DeleteCards(nsISupportsArray *cards) { return NS_OK; }
-	NS_IMETHOD HasCard(nsIAbCard *cards, PRBool *hasCard) { return NS_OK; }
-	NS_IMETHOD HasDirectory(nsIAbDirectory *dir, PRBool *hasDir) { return NS_OK; }
-	NS_IMETHOD GetMailingList(nsIEnumerator **mailingList) { return NS_OK; }
-	NS_IMETHOD CreateNewDirectory(const PRUnichar *dirName, const char *fileName) { return NS_OK; }
-	NS_IMETHOD GetDirUri(char **uri) { return NS_OK; }
+  NS_DECL_NSIABDIRECTORY
 
 protected:
 

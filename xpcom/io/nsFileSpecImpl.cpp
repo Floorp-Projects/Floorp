@@ -104,7 +104,7 @@ NS_IMETHODIMP nsFileSpecImpl::GetURLString(char * *aURLString)
 } // nsFileSpecImpl::GetURLString
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::SetURLString(char * aURLString)
+NS_IMETHODIMP nsFileSpecImpl::SetURLString(const char * aURLString)
 //----------------------------------------------------------------------------------------
 {
 	mFileSpec = nsFileURL(aURLString);
@@ -126,7 +126,7 @@ NS_IMETHODIMP nsFileSpecImpl::GetUnixStyleFilePath(char * *aUnixStyleFilePath)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::SetUnixStyleFilePath(char * aUnixStyleFilePath)
+NS_IMETHODIMP nsFileSpecImpl::SetUnixStyleFilePath(const char * aUnixStyleFilePath)
 //----------------------------------------------------------------------------------------
 {
 	mFileSpec = nsFilePath(aUnixStyleFilePath);
@@ -150,7 +150,7 @@ NS_IMETHODIMP nsFileSpecImpl::GetPersistentDescriptorString(char * *aPersistentD
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::SetPersistentDescriptorString(char * aPersistentDescriptorString)
+NS_IMETHODIMP nsFileSpecImpl::SetPersistentDescriptorString(const char * aPersistentDescriptorString)
 //----------------------------------------------------------------------------------------
 {
 	nsPersistentFileDescriptor desc(mFileSpec);
@@ -173,7 +173,7 @@ NS_IMETHODIMP nsFileSpecImpl::GetNativePath(char * *aNativePath)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::SetNativePath(char * aNativePath)
+NS_IMETHODIMP nsFileSpecImpl::SetNativePath(const char * aNativePath)
 //----------------------------------------------------------------------------------------
 {
 	mFileSpec = aNativePath;
@@ -228,7 +228,7 @@ NS_IMETHODIMP nsFileSpecImpl::GetLeafName(char * *aLeafName)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::SetLeafName(char * aLeafName)
+NS_IMETHODIMP nsFileSpecImpl::SetLeafName(const char * aLeafName)
 //----------------------------------------------------------------------------------------
 {
 	mFileSpec.SetLeafName(aLeafName);
@@ -485,7 +485,7 @@ NS_IMETHODIMP nsFileSpecImpl::GetOutputStream(nsIOutputStream** _retval)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::SetFileContents(char* inString)
+NS_IMETHODIMP nsFileSpecImpl::SetFileContents(const char* inString)
 //----------------------------------------------------------------------------------------
 {
 	nsresult rv = OpenStreamForWriting();

@@ -30,7 +30,7 @@ class nsMailboxUrl : public nsIMailboxUrl, public nsMsgMailNewsUrl, public nsIMs
 {
 public:
 	// nsIURI over-ride...
-	NS_IMETHOD SetSpec(char * aSpec);
+	NS_IMETHOD SetSpec(const char * aSpec);
 
 	// from nsIMailboxUrl:
 	NS_IMETHOD GetMessageHeader(nsIMsgDBHdr ** aMsgHdr);

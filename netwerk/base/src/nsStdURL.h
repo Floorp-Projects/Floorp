@@ -67,7 +67,7 @@ protected:
     nsresult ReconstructSpec(void);
 
     // Some handy functions 
-    nsresult DupString(char* *o_Destination, char* i_Source);
+    nsresult DupString(char* *o_Destination, const char* i_Source);
     nsresult ExtractString(char* i_Source, char* *o_Destination, PRUint32 start, PRUint32 length);
 protected:
 
@@ -148,7 +148,7 @@ nsStdURL::GetQuery(char* *o_Query)
 }
 
 inline NS_METHOD
-nsStdURL::SetScheme(char* i_Scheme)
+nsStdURL::SetScheme(const char* i_Scheme)
 {
     if (mScheme) nsCRT::free(mScheme);
     nsresult status = DupString(&mScheme, i_Scheme);
@@ -157,7 +157,7 @@ nsStdURL::SetScheme(char* i_Scheme)
 }
 
 inline NS_METHOD
-nsStdURL::SetPreHost(char* i_PreHost)
+nsStdURL::SetPreHost(const char* i_PreHost)
 {
     if (mPreHost) nsCRT::free(mPreHost);
     nsresult status = DupString(&mPreHost, i_PreHost);
@@ -166,7 +166,7 @@ nsStdURL::SetPreHost(char* i_PreHost)
 }
 
 inline NS_METHOD
-nsStdURL::SetHost(char* i_Host)
+nsStdURL::SetHost(const char* i_Host)
 {
     if (mHost) nsCRT::free(mHost);
     nsresult status = DupString(&mHost, i_Host);

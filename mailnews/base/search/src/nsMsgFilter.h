@@ -46,42 +46,7 @@ public:
 	nsMsgFilter();
 	virtual ~nsMsgFilter ();
 
-	NS_IMETHOD GetFilterType(nsMsgFilterTypeType *filterType);
-	NS_IMETHOD GetEnabled(PRBool *enabled);
-	NS_IMETHOD SetEnabled(PRBool enabled) {m_enabled = enabled; return NS_OK;}
-	NS_IMETHOD GetFilterName(char **name);	
-	NS_IMETHOD SetFilterName(char *name);
-	NS_IMETHOD GetFilterDesc(char **description);
-	NS_IMETHOD SetFilterDesc(char *description);
-
-	NS_IMETHOD AddTerm(     
-		nsMsgSearchAttribute attrib,    /* attribute for this term                */
-		nsMsgSearchOperator op,         /* operator e.g. opContains               */
-		nsMsgSearchValue *value,        /* value e.g. "Dogbert"                   */
-		PRBool BooleanAND, 	       /* PR_TRUE if AND is the boolean operator. PR_FALSE if OR is the boolean operators */
-		const char * arbitraryHeader);       /* arbitrary header specified by user. ignored unless attrib = attribOtherHeader */
-
-	NS_IMETHOD GetNumTerms(PRInt32 *numTerms);
-
-	NS_IMETHOD GetTerm(PRInt32 termIndex, 
-		nsMsgSearchAttribute *attrib,    /* attribute for this term                */
-		nsMsgSearchOperator *op,         /* operator e.g. opContains               */
-		nsMsgSearchValue *value,         /* value e.g. "Dogbert"                   */
-		PRBool *BooleanAnd,				/* PR_TRUE if AND is the boolean operator. PR_FALSE if OR is the boolean operator */
-		char ** arbitraryHeader);        /* arbitrary header specified by user. ignore unless attrib = attribOtherHeader */
-
-	NS_IMETHOD SetScope(nsMsgSearchScopeTerm *scope);
-	NS_IMETHOD GetScope(nsMsgSearchScopeTerm **scope);
-
-	/* if type is acChangePriority, value is a pointer to priority.
-	   If type is acMoveToFolder, value is pointer to folder name.
-	   Otherwise, value is ignored.
-	*/
-	NS_IMETHOD SetAction(nsMsgRuleActionType type, void *value);
-	NS_IMETHOD GetAction(nsMsgRuleActionType *type, void **value) ;
-	NS_IMETHOD MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, nsIMsgDatabase *db, const char *headers, PRUint32 headersSize, PRBool *pResult) ;
-	NS_IMETHOD LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *header);
-
+  NS_DECL_NSIMSGFILTER
 
 	nsMsgFilterTypeType	GetType() {return m_type;}
 	void			SetType(nsMsgFilterTypeType	type) {m_type = type;}

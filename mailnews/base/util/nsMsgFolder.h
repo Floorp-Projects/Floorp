@@ -79,7 +79,7 @@ public:
   // nsIFolder methods:
   NS_IMETHOD GetURI(char* *name) { return nsRDFResource::GetValue(name); }
   NS_IMETHOD GetName(PRUnichar **name);
-  NS_IMETHOD SetName(PRUnichar *name);
+  NS_IMETHOD SetName(const PRUnichar *name);
   NS_IMETHOD GetChildNamed(const char *name, nsISupports* *result);
   NS_IMETHOD GetSubFolders(nsIEnumerator* *result);
   NS_IMETHOD GetHasSubFolders(PRBool *_retval);
@@ -109,7 +109,7 @@ public:
 
 
   NS_IMETHOD GetPrettyName(PRUnichar ** name);
-  NS_IMETHOD SetPrettyName(PRUnichar * name);
+  NS_IMETHOD SetPrettyName(const PRUnichar * name);
 #if 0
   static nsresult GetRoot(nsIMsgFolder* *result);
 #endif
@@ -282,7 +282,7 @@ public:
 	NS_IMETHOD GetNewMessages();
 
 	NS_IMETHOD GetCharset(PRUnichar * *aCharset) = 0;
-	NS_IMETHOD SetCharset(PRUnichar * aCharset) = 0;
+	NS_IMETHOD SetCharset(const PRUnichar * aCharset) = 0;
 
 	NS_IMETHOD GetBiffState(PRUint32 *aBiffState);
 	NS_IMETHOD SetBiffState(PRUint32 aBiffState);

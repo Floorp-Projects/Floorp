@@ -47,7 +47,7 @@ public:
 	NS_IMETHOD GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread);
 	NS_IMETHOD HasMessage(nsIMessage *message, PRBool *hasMessage);
 	NS_IMETHOD GetCharset(PRUnichar * *aCharset);
-	NS_IMETHOD SetCharset(PRUnichar * aCharset);
+	NS_IMETHOD SetCharset(const PRUnichar * aCharset);
 
   NS_IMETHOD GetMsgDatabase(nsIMsgDatabase** aMsgDatabase);
 

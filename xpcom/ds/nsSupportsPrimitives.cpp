@@ -56,7 +56,7 @@ NS_IMETHODIMP nsSupportsIDImpl::GetData(nsID **aData)
     }
 }
 
-NS_IMETHODIMP nsSupportsIDImpl::SetData(nsID *aData)
+NS_IMETHODIMP nsSupportsIDImpl::SetData(const nsID *aData)
 {
     if(mData)
       nsAllocator::Free(mData);
@@ -132,7 +132,7 @@ NS_IMETHODIMP nsSupportsStringImpl::GetData(char **aData)
     }
 }
 
-NS_IMETHODIMP nsSupportsStringImpl::SetData(char *aData)
+NS_IMETHODIMP nsSupportsStringImpl::SetData(const char *aData)
 {
     if(mData)
       nsAllocator::Free(mData);
@@ -185,7 +185,7 @@ NS_IMETHODIMP nsSupportsWStringImpl::GetData(PRUnichar **aData)
     }
 }
 
-NS_IMETHODIMP nsSupportsWStringImpl::SetData(PRUnichar *aData)
+NS_IMETHODIMP nsSupportsWStringImpl::SetData(const PRUnichar *aData)
 {
     if(mData)
       nsAllocator::Free(mData);

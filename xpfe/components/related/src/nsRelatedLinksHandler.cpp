@@ -551,8 +551,7 @@ public:
 	NS_DECL_ISUPPORTS
 
 	// nsIRelatedLinksHandler methods
-	NS_IMETHOD GetURL(char * *aURL);
-	NS_IMETHOD SetURL(char * aURL);
+	NS_DECL_NSIRELATEDLINKSHANDLER
 
 	// nsIRDFDataSource methods
 
@@ -779,7 +778,7 @@ RelatedLinksHandlerImpl::GetURL(char** aURL)
 
 
 NS_IMETHODIMP
-RelatedLinksHandlerImpl::SetURL(char* aURL)
+RelatedLinksHandlerImpl::SetURL(const char* aURL)
 {
 	NS_PRECONDITION(aURL != nsnull, "null ptr");
 	if (! aURL)

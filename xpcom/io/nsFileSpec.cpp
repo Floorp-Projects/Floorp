@@ -528,6 +528,9 @@ nsFileURL::~nsFileURL()
 void nsFileURL::operator = (const char* inString)
 //----------------------------------------------------------------------------------------
 {
+    // XXX is this called by nsFileSpecImpl.cpp::SetURLString?
+    // if so, there's a bug...
+
     mURL = inString;
     NS_ASSERTION(strstr(inString, kFileURLPrefix) == inString, "Not a URL!");
 } // nsFileURL::operator =
@@ -688,6 +691,8 @@ nsFilePath::~nsFilePath()
 void nsFilePath::operator = (const nsFileSpec& inOther)
 //----------------------------------------------------------------------------------------
 {
+    // XXX bug here, again if.
+
     mPath = inOther.mPath;
 }
 #endif // XP_UNIX

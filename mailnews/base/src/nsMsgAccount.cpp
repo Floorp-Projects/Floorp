@@ -380,7 +380,7 @@ nsMsgAccount::RemoveIdentity(nsIMsgIdentity *identity)
 NS_IMPL_GETTER_STR(nsMsgAccount::GetKey, m_accountKey);
 
 nsresult
-nsMsgAccount::SetKey(char *accountKey)
+nsMsgAccount::SetKey(const char *accountKey)
 {
   if (!accountKey) return NS_ERROR_NULL_POINTER;
 

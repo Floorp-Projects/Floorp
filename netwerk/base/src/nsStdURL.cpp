@@ -668,7 +668,7 @@ PRInt32 ExtractPortFrom(char* src, int start, int length)
 }
 
 nsresult 
-nsStdURL::DupString(char* *o_Destination, char* i_Source)
+nsStdURL::DupString(char* *o_Destination, const char* i_Source)
 {
     if (!o_Destination)
         return NS_ERROR_NULL_POINTER;
@@ -685,7 +685,7 @@ nsStdURL::DupString(char* *o_Destination, char* i_Source)
 }
 
 NS_IMETHODIMP
-nsStdURL::SetDirectory(char* i_Directory)
+nsStdURL::SetDirectory(const char* i_Directory)
 {
     if (!i_Directory)
         return NS_ERROR_NULL_POINTER;
@@ -706,7 +706,7 @@ nsStdURL::SetDirectory(char* i_Directory)
 }
 
 NS_IMETHODIMP
-nsStdURL::SetFileName(char* i_FileName)
+nsStdURL::SetFileName(const char* i_FileName)
 {
     nsParsePath pp(this); // Someone mayhave set .. in the name
     if (!i_FileName)
@@ -727,7 +727,7 @@ nsStdURL::SetFileName(char* i_FileName)
 }
 
 NS_IMETHODIMP
-nsStdURL::SetRef(char* i_Ref)
+nsStdURL::SetRef(const char* i_Ref)
 {
     nsresult status;
     if (i_Ref && (*i_Ref == '#'))
@@ -738,7 +738,7 @@ nsStdURL::SetRef(char* i_Ref)
 }
 
 NS_IMETHODIMP
-nsStdURL::SetParam(char* i_Param)
+nsStdURL::SetParam(const char* i_Param)
 {
     nsresult status;
     if (i_Param && (*i_Param == ';'))
@@ -749,7 +749,7 @@ nsStdURL::SetParam(char* i_Param)
 }
 
 NS_IMETHODIMP
-nsStdURL::SetQuery(char* i_Query)
+nsStdURL::SetQuery(const char* i_Query)
 {
     nsresult status;
     if (i_Query && (*i_Query == '?'))
@@ -955,7 +955,7 @@ nsStdURL::ParsePath(void)
 }
 
 NS_METHOD
-nsStdURL::SetSpec(char* i_Spec)
+nsStdURL::SetSpec(const char* i_Spec)
 {
     CRTFREEIF(mSpec);
     nsresult status = DupString(&mSpec, i_Spec);
@@ -974,7 +974,7 @@ nsStdURL::SetSpec(char* i_Spec)
 }
 
 NS_METHOD
-nsStdURL::SetPath(char* i_Path)
+nsStdURL::SetPath(const char* i_Path)
 {
     if (mPath) nsCRT::free(mPath);
     nsresult status = DupString(&mPath, i_Path);

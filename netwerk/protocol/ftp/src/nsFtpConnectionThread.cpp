@@ -63,7 +63,7 @@ public:
         return NS_OK;
     };
 
-    NS_IMETHOD SetContentType(char *aContentType) {
+    NS_IMETHOD SetContentType(const char *aContentType) {
         mContentType = aContentType;
         return NS_OK;
     };

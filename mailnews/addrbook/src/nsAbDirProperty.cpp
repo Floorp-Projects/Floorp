@@ -108,7 +108,7 @@ NS_IMETHODIMP nsAbDirProperty::GetDirName(PRUnichar **aDirName)
 		return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsAbDirProperty::SetDirName(PRUnichar * aDirName)
+NS_IMETHODIMP nsAbDirProperty::SetDirName(const PRUnichar * aDirName)
 {
 	if (aDirName)
 		m_DirName = aDirName;
@@ -151,3 +151,48 @@ NS_IMETHODIMP nsAbDirProperty::SetServer(DIR_Server * aServer)
 	m_Server = aServer;
 	return NS_OK;
 }
+
+NS_IMETHODIMP
+nsAbDirProperty::GetChildNodes(nsIEnumerator **childList)
+{ return NS_OK; }
+
+NS_IMETHODIMP
+nsAbDirProperty::GetChildCards(nsIEnumerator **childCards)
+{ return NS_OK; }
+
+NS_IMETHODIMP
+nsAbDirProperty::AddChildCards(const char *uriName, nsIAbCard **childCard)
+{ return NS_OK; }
+
+NS_IMETHODIMP
+nsAbDirProperty::AddDirectory(const char *uriName, nsIAbDirectory **childDir)
+{ return NS_OK; }
+
+NS_IMETHODIMP
+nsAbDirProperty::DeleteDirectories(nsISupportsArray *dierctories)
+{ return NS_OK; }
+
+NS_IMETHODIMP
+nsAbDirProperty::DeleteCards(nsISupportsArray *cards)
+{ return NS_OK; }
+
+NS_IMETHODIMP
+nsAbDirProperty::HasCard(nsIAbCard *cards, PRBool *hasCard)
+{ return NS_OK; }
+
+NS_IMETHODIMP
+nsAbDirProperty::HasDirectory(nsIAbDirectory *dir, PRBool *hasDir)
+{ return NS_OK; }
+
+NS_IMETHODIMP
+nsAbDirProperty::GetMailingList(nsIEnumerator **mailingList)
+{ return NS_OK; }
+
+NS_IMETHODIMP
+nsAbDirProperty::CreateNewDirectory(const PRUnichar *dirName, const char *fileName)
+{ return NS_OK; }
+
+NS_IMETHODIMP
+nsAbDirProperty::GetDirUri(char **uri)
+{ return NS_OK; }
+

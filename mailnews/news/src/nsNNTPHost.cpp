@@ -354,7 +354,7 @@ nsNNTPHost::WriteTimer(void* closure)
 
 
 nsresult
-nsNNTPHost::SetNewsRCFilename(char* name)
+nsNNTPHost::SetNewsRCFilename(const char* name)
 {
 	delete [] m_filename;
 	m_filename = new char [PL_strlen(name) + 1];

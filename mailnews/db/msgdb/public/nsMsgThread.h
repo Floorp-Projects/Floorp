@@ -37,24 +37,7 @@ public:
 	friend class nsMsgThreadEnumerator;
 
     NS_DECL_ISUPPORTS
-
-	NS_IMETHOD		SetThreadKey(nsMsgKey threadKey);
-	NS_IMETHOD		GetThreadKey(nsMsgKey *result);
-    NS_IMETHOD		GetFlags(PRUint32 *result);
-    NS_IMETHOD		SetFlags(PRUint32 flags);
-	NS_IMETHOD		SetSubject(char *subject);
-	NS_IMETHOD		GetSubject(char **result);
-	NS_IMETHOD		GetNumChildren(PRUint32 *result);
-	NS_IMETHOD		GetNumUnreadChildren (PRUint32 *result);
-	NS_IMETHOD		AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, PRBool threadInThread, nsIDBChangeAnnouncer *announcer);
-	NS_IMETHOD		GetChildAt(PRInt32 index, nsIMsgDBHdr **result);
-	NS_IMETHOD		GetChild(nsMsgKey msgKey, nsIMsgDBHdr **result);
-	NS_IMETHOD		GetChildHdrAt(PRInt32 index, nsIMsgDBHdr **result);
-	NS_IMETHOD 		RemoveChildAt(PRInt32 index);
-	NS_IMETHOD		RemoveChildHdr(nsIMsgDBHdr *child, nsIDBChangeAnnouncer *announcer);
-	NS_IMETHOD		MarkChildRead(PRBool bRead);
-	NS_IMETHOD		EnumerateMessages(nsMsgKey parent, nsISimpleEnumerator* *result);
-	NS_IMETHOD		GetRootHdr(PRInt32 *resultIndex, nsIMsgDBHdr **result);
+    NS_DECL_NSIMSGTHREAD
 
 	// non-interface methods
 	PRBool TryReferenceThreading(nsIMsgDBHdr *newHeader);

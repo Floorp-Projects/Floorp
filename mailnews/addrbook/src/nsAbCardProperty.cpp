@@ -219,7 +219,7 @@ nsresult nsAbCardProperty::GetAttributeName(PRUnichar **aName, nsString& value)
 
 }
 
-nsresult nsAbCardProperty::SetAttributeName(PRUnichar *aName, nsString& arrtibute)
+nsresult nsAbCardProperty::SetAttributeName(const PRUnichar *aName, nsString& arrtibute)
 {
 	if (aName)
 		arrtibute = aName;
@@ -842,3 +842,301 @@ NS_IMETHODIMP nsAbCardProperty::GetCollationKey(const PRUnichar *str, PRUnichar 
 
 	return rv;
 }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetFirstName(PRUnichar * *aFirstName)
+{ return GetAttributeName(aFirstName, m_FirstName); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetLastName(PRUnichar * *aLastName)
+{ return GetAttributeName(aLastName, m_LastName); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetDisplayName(PRUnichar * *aDisplayName)
+{ return GetAttributeName(aDisplayName, m_DisplayName); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetNickName(PRUnichar * *aNickName)
+{ return GetAttributeName(aNickName, m_NickName); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetPrimaryEmail(PRUnichar * *aPrimaryEmail)
+{ return GetAttributeName(aPrimaryEmail, m_PrimaryEmail); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetSecondEmail(PRUnichar * *aSecondEmail)
+{ return GetAttributeName(aSecondEmail, m_SecondEmail); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetWorkPhone(PRUnichar * *aWorkPhone)
+{ return GetAttributeName(aWorkPhone, m_WorkPhone); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetHomePhone(PRUnichar * *aHomePhone)
+{ return GetAttributeName(aHomePhone, m_HomePhone); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetFaxNumber(PRUnichar * *aFaxNumber)
+{ return GetAttributeName(aFaxNumber, m_FaxNumber); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetPagerNumber(PRUnichar * *aPagerNumber)
+{ return GetAttributeName(aPagerNumber, m_PagerNumber); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetCellularNumber(PRUnichar * *aCellularNumber)
+{ return GetAttributeName(aCellularNumber, m_CellularNumber); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetHomeAddress(PRUnichar * *aHomeAddress)
+{ return GetAttributeName(aHomeAddress, m_HomeAddress); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetHomeAddress2(PRUnichar * *aHomeAddress2)
+{ return GetAttributeName(aHomeAddress2, m_HomeAddress2); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetHomeCity(PRUnichar * *aHomeCity)
+{ return GetAttributeName(aHomeCity, m_HomeCity); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetHomeState(PRUnichar * *aHomeState)
+{ return GetAttributeName(aHomeState, m_HomeState); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetHomeZipCode(PRUnichar * *aHomeZipCode)
+{ return GetAttributeName(aHomeZipCode, m_HomeZipCode); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetHomeCountry(PRUnichar * *aHomecountry)
+{ return GetAttributeName(aHomecountry, m_HomeCountry); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetWorkAddress(PRUnichar * *aWorkAddress)
+{ return GetAttributeName(aWorkAddress, m_WorkAddress); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetWorkAddress2(PRUnichar * *aWorkAddress2)
+{ return GetAttributeName(aWorkAddress2, m_WorkAddress2); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetWorkCity(PRUnichar * *aWorkCity)
+{ return GetAttributeName(aWorkCity, m_WorkCity); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetWorkState(PRUnichar * *aWorkState)
+{ return GetAttributeName(aWorkState, m_WorkState); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetWorkZipCode(PRUnichar * *aWorkZipCode)
+{ return GetAttributeName(aWorkZipCode, m_WorkZipCode); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetWorkCountry(PRUnichar * *aWorkCountry)
+{ return GetAttributeName(aWorkCountry, m_WorkCountry); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetJobTitle(PRUnichar * *aJobTitle)
+{ return GetAttributeName(aJobTitle, m_JobTitle); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetDepartment(PRUnichar * *aDepartment)
+{ return GetAttributeName(aDepartment, m_Department); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetCompany(PRUnichar * *aCompany)
+{ return GetAttributeName(aCompany, m_Company); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetWebPage1(PRUnichar * *aWebPage1)
+{ return GetAttributeName(aWebPage1, m_WebPage1); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetWebPage2(PRUnichar * *aWebPage2)
+{ return GetAttributeName(aWebPage2, m_WebPage2); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetBirthYear(PRUnichar * *aBirthYear)
+{ return GetAttributeName(aBirthYear, m_BirthYear); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetBirthMonth(PRUnichar * *aBirthMonth)
+{ return GetAttributeName(aBirthMonth, m_BirthMonth); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetBirthDay(PRUnichar * *aBirthDay)
+{ return GetAttributeName(aBirthDay, m_BirthDay); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetCustom1(PRUnichar * *aCustom1)
+{ return GetAttributeName(aCustom1, m_Custom1); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetCustom2(PRUnichar * *aCustom2)
+{ return GetAttributeName(aCustom2, m_Custom2); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetCustom3(PRUnichar * *aCustom3)
+{ return GetAttributeName(aCustom3, m_Custom3); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetCustom4(PRUnichar * *aCustom4)
+{ return GetAttributeName(aCustom4, m_Custom4); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetNotes(PRUnichar * *aNotes)
+{ return GetAttributeName(aNotes, m_Note); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetLastModifiedDate(PRUint32 *aLastModifiedDate)
+{ return *aLastModifiedDate = m_LastModDate; }
+
+
+NS_IMETHODIMP
+nsAbCardProperty::SetFirstName(const PRUnichar * aFirstName)
+{ return SetAttributeName(aFirstName, m_FirstName); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetLastName(const PRUnichar * aLastName)
+{ return SetAttributeName(aLastName, m_LastName); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetDisplayName(const PRUnichar * aDisplayName)
+{ return SetAttributeName(aDisplayName, m_DisplayName); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetNickName(const PRUnichar * aNickName)
+{ return SetAttributeName(aNickName, m_NickName); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetPrimaryEmail(const PRUnichar * aPrimaryEmail)
+{ return SetAttributeName(aPrimaryEmail, m_PrimaryEmail); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetSecondEmail(const PRUnichar * aSecondEmail)
+{ return SetAttributeName(aSecondEmail, m_SecondEmail); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetWorkPhone(const PRUnichar * aWorkPhone)
+{ return SetAttributeName(aWorkPhone, m_WorkPhone); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetHomePhone(const PRUnichar * aHomePhone)
+{ return SetAttributeName(aHomePhone, m_HomePhone); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetFaxNumber(const PRUnichar * aFaxNumber)
+{ return SetAttributeName(aFaxNumber, m_FaxNumber); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetPagerNumber(const PRUnichar * aPagerNumber)
+{ return SetAttributeName(aPagerNumber, m_PagerNumber); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetCellularNumber(const PRUnichar * aCellularNumber)
+{ return SetAttributeName(aCellularNumber, m_CellularNumber); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetHomeAddress(const PRUnichar * aHomeAddress)
+{ return SetAttributeName(aHomeAddress, m_HomeAddress); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetHomeAddress2(const PRUnichar * aHomeAddress2)
+{ return SetAttributeName(aHomeAddress2, m_HomeAddress2); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetHomeCity(const PRUnichar * aHomeCity)
+{ return SetAttributeName(aHomeCity, m_HomeCity); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetHomeState(const PRUnichar * aHomeState)
+{ return SetAttributeName(aHomeState, m_HomeState); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetHomeZipCode(const PRUnichar * aHomeZipCode)
+{ return SetAttributeName(aHomeZipCode, m_HomeZipCode); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetHomeCountry(const PRUnichar * aHomecountry)
+{ return SetAttributeName(aHomecountry, m_HomeCountry); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetWorkAddress(const PRUnichar * aWorkAddress)
+{ return SetAttributeName(aWorkAddress, m_WorkAddress); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetWorkAddress2(const PRUnichar * aWorkAddress2)
+{ return SetAttributeName(aWorkAddress2, m_WorkAddress2); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetWorkCity(const PRUnichar * aWorkCity)
+{ return SetAttributeName(aWorkCity, m_WorkCity); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetWorkState(const PRUnichar * aWorkState)
+{ return SetAttributeName(aWorkState, m_WorkState); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetWorkZipCode(const PRUnichar * aWorkZipCode)
+{ return SetAttributeName(aWorkZipCode, m_WorkZipCode); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetWorkCountry(const PRUnichar * aWorkCountry)
+{ return SetAttributeName(aWorkCountry, m_WorkCountry); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetJobTitle(const PRUnichar * aJobTitle)
+{ return SetAttributeName(aJobTitle, m_JobTitle); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetDepartment(const PRUnichar * aDepartment)
+{ return SetAttributeName(aDepartment, m_Department); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetCompany(const PRUnichar * aCompany)
+{ return SetAttributeName(aCompany, m_Company); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetWebPage1(const PRUnichar * aWebPage1)
+{ return SetAttributeName(aWebPage1, m_WebPage1); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetWebPage2(const PRUnichar * aWebPage2)
+{ return SetAttributeName(aWebPage2, m_WebPage2); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetBirthYear(const PRUnichar * aBirthYear)
+{ return SetAttributeName(aBirthYear, m_BirthYear); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetBirthMonth(const PRUnichar * aBirthMonth)
+{ return SetAttributeName(aBirthMonth, m_BirthMonth); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetBirthDay(const PRUnichar * aBirthDay)
+{ return SetAttributeName(aBirthDay, m_BirthDay); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetCustom1(const PRUnichar * aCustom1)
+{ return SetAttributeName(aCustom1, m_Custom1); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetCustom2(const PRUnichar * aCustom2)
+{ return SetAttributeName(aCustom2, m_Custom2); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetCustom3(const PRUnichar * aCustom3)
+{ return SetAttributeName(aCustom3, m_Custom3); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetCustom4(const PRUnichar * aCustom4)
+{ return SetAttributeName(aCustom4, m_Custom4); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetNotes(const PRUnichar * aNotes)
+{ return SetAttributeName(aNotes, m_Note); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetLastModifiedDate(PRUint32 aLastModifiedDate)
+{ return m_LastModDate = aLastModifiedDate; }
+

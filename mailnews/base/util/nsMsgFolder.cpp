@@ -407,7 +407,7 @@ NS_IMETHODIMP nsMsgFolder::GetPrettyName(PRUnichar ** name)
 	return (*name) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-NS_IMETHODIMP nsMsgFolder::SetPrettyName(PRUnichar *name)
+NS_IMETHODIMP nsMsgFolder::SetPrettyName(const PRUnichar *name)
 {
   mName = name;
   return NS_OK;
@@ -439,7 +439,7 @@ NS_IMETHODIMP nsMsgFolder::GetName(PRUnichar **name)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::SetName(PRUnichar * name)
+NS_IMETHODIMP nsMsgFolder::SetName(const PRUnichar * name)
 {
   // override the URI-generated name
 	mName = name;

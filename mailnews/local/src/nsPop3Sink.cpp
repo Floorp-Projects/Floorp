@@ -96,7 +96,7 @@ nsPop3Sink::SetSenderAuthedFlag(void* closure, PRBool authed)
 }
 
 nsresult 
-nsPop3Sink::SetMailAccountURL(char* urlString)
+nsPop3Sink::SetMailAccountURL(const char* urlString)
 {
     if (urlString)
     {

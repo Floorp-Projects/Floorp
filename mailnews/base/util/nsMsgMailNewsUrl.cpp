@@ -244,7 +244,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetSpec(char * *aSpec)
 	return m_baseURL->GetSpec(aSpec);
 }
 
-NS_IMETHODIMP nsMsgMailNewsUrl::SetSpec(char * aSpec)
+NS_IMETHODIMP nsMsgMailNewsUrl::SetSpec(const char * aSpec)
 {
 	return m_baseURL->SetSpec(aSpec);
 }
@@ -254,7 +254,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetScheme(char * *aScheme)
 	return m_baseURL->GetScheme(aScheme);
 }
 
-NS_IMETHODIMP nsMsgMailNewsUrl::SetScheme(char * aScheme)
+NS_IMETHODIMP nsMsgMailNewsUrl::SetScheme(const char * aScheme)
 {
 	return m_baseURL->SetScheme(aScheme);
 }
@@ -265,7 +265,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetPreHost(char * *aPreHost)
 	return m_baseURL->GetPreHost(aPreHost);
 }
 
-NS_IMETHODIMP nsMsgMailNewsUrl::SetPreHost(char * aPreHost)
+NS_IMETHODIMP nsMsgMailNewsUrl::SetPreHost(const char * aPreHost)
 {
 	return m_baseURL->SetPreHost(aPreHost);
 }
@@ -275,7 +275,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetHost(char * *aHost)
 	return m_baseURL->GetHost(aHost);
 }
 
-NS_IMETHODIMP nsMsgMailNewsUrl::SetHost(char * aHost)
+NS_IMETHODIMP nsMsgMailNewsUrl::SetHost(const char * aHost)
 {
 	return m_baseURL->SetHost(aHost);
 }
@@ -295,7 +295,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetPath(char * *aPath)
 	return m_baseURL->GetPath(aPath);
 }
 
-NS_IMETHODIMP nsMsgMailNewsUrl::SetPath(char * aPath)
+NS_IMETHODIMP nsMsgMailNewsUrl::SetPath(const char * aPath)
 {
 	return m_baseURL->SetPath(aPath);
 }
@@ -321,7 +321,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetDirectory(char * *aDirectory)
 	return m_baseURL->GetDirectory(aDirectory);
 }
 
-NS_IMETHODIMP nsMsgMailNewsUrl::SetDirectory(char *aDirectory)
+NS_IMETHODIMP nsMsgMailNewsUrl::SetDirectory(const char *aDirectory)
 {
 
 	return m_baseURL->SetDirectory(aDirectory);
@@ -332,7 +332,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetFileName(char * *aFileName)
 	return m_baseURL->GetFileName(aFileName);
 }
 
-NS_IMETHODIMP nsMsgMailNewsUrl::SetFileName(char * aFileName)
+NS_IMETHODIMP nsMsgMailNewsUrl::SetFileName(const char * aFileName)
 {
 	return m_baseURL->SetFileName(aFileName);
 }
@@ -342,7 +342,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetParam(char * *aParam)
 	return m_baseURL->GetParam(aParam);
 }
 
-NS_IMETHODIMP nsMsgMailNewsUrl::SetParam(char *aParam)
+NS_IMETHODIMP nsMsgMailNewsUrl::SetParam(const char *aParam)
 {
 	return m_baseURL->SetParam(aParam);
 }
@@ -352,7 +352,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetQuery(char * *aQuery)
 	return m_baseURL->GetQuery(aQuery);
 }
 
-NS_IMETHODIMP nsMsgMailNewsUrl::SetQuery(char *aQuery)
+NS_IMETHODIMP nsMsgMailNewsUrl::SetQuery(const char *aQuery)
 {
 	return m_baseURL->SetQuery(aQuery);
 }
@@ -362,7 +362,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetRef(char * *aRef)
 	return m_baseURL->GetRef(aRef);
 }
 
-NS_IMETHODIMP nsMsgMailNewsUrl::SetRef(char *aRef)
+NS_IMETHODIMP nsMsgMailNewsUrl::SetRef(const char *aRef)
 {
 	return m_baseURL->SetRef(aRef);
 }

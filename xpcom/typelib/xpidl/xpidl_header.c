@@ -446,6 +446,15 @@ write_attr_accessor(IDL_tree attr_tree, FILE * outfile,
             getter ? 'G' : 'S',
             toupper(*attrname), attrname + 1);
     if (!as_call) {
+        /* Setters for string, wstring and nsid get const. */
+        if (!getter &&
+            (IDL_NODE_TYPE(ATTR_TYPE_DECL(attr_tree)) == IDLN_TYPE_STRING ||
+             IDL_NODE_TYPE(ATTR_TYPE_DECL(attr_tree)) == IDLN_TYPE_WIDE_STRING ||
+             IDL_tree_property_get(ATTR_TYPE_DECL(attr_tree), "nsid")))
+        {
+            fputs("const ", outfile);
+        }
+
         if (!write_type(ATTR_TYPE_DECL(attr_tree), outfile))
             return FALSE;
         fprintf(outfile, "%s%s",
@@ -532,9 +541,9 @@ do_const_dcl(TreeState *state)
         fprintf(state->file, "\n  enum { %s = %d };\n",
                              name, (int) IDL_INTEGER(dcl->const_exp).value);
     } else {
-        XPIDL_WARNING((state->tree, IDL_WARNING1,
-                       "const decl \'%s\' was not of type "
-                       "short or long, ignored", name));
+        IDL_tree_error(state->tree,
+                       "const decl \'%s\' must be of type short or long",
+                       name);
     }
     return TRUE;
 }
@@ -667,7 +676,7 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, gboolean as_call)
         fputc(' ', outfile);
     }
     name = IDL_IDENT(op->ident).str;
-    fprintf(outfile, " %c%s(", toupper(*name), name + 1);
+    fprintf(outfile, "%c%s(", toupper(*name), name + 1);
     for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
         if (!as_call) {
             if (!write_param(IDL_LIST(iter).data, outfile))

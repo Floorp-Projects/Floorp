@@ -2002,7 +2002,7 @@ nsEditorShell::GetParagraphFormat(PRUnichar * *paragraphFormat)
 }
 
 NS_IMETHODIMP
-nsEditorShell::SetParagraphFormat(PRUnichar * paragraphFormat)
+nsEditorShell::SetParagraphFormat(const PRUnichar * paragraphFormat)
 {
   nsresult  err = NS_NOINTERFACE;
   

@@ -175,7 +175,7 @@ NS_IMETHODIMP nsMsgDBFolder::GetCharset(PRUnichar * *aCharset)
 	return rv;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::SetCharset(PRUnichar * aCharset)
+NS_IMETHODIMP nsMsgDBFolder::SetCharset(const PRUnichar * aCharset)
 {
 	nsresult rv;
 

@@ -55,7 +55,7 @@ interface nsIMsgIncomingServer : nsISupports {
 	  in false, we will return an empty password if we don't know 
 	  it already and we will NOT ask the user */
   string getPassword(in boolean aWithUI);
-  void setPassword(in string aPassword);
+  void setPassword([const] in  string aPassword);
 
   /* should we download whole messages when biff goes off? */
   attribute boolean downloadOnBiff;
@@ -113,7 +113,7 @@ _class::Get##_postfix(char **retval)   			\
   return GetCharValue(_prefname, retval);		\
 }												\
 NS_IMETHODIMP	   								\
-_class::Set##_postfix(char *chvalue)			\
+_class::Set##_postfix(const char *chvalue)			\
 {												\
   return SetCharValue(_prefname, chvalue);		\
 }

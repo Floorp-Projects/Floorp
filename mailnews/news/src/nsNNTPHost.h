@@ -128,7 +128,7 @@ public:
 
     /* the Setter implementation is a little more complex */
     NS_IMPL_CLASS_GETTER(GetNewsRCFilename, char *, m_filename);
-    NS_IMETHOD SetNewsRCFilename(char *);
+    NS_IMETHOD SetNewsRCFilename(const char *);
     
 
     // helper for accessing the above accessors from within this class

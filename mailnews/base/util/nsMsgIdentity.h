@@ -57,7 +57,7 @@ protected:
   char *getDefaultPrefName(const char *pref);
   nsresult getCharPref(const char *pref, char **);
   nsresult getDefaultCharPref(const char *pref, char **);
-  nsresult setCharPref(const char *pref, char *);
+  nsresult setCharPref(const char *pref, const char *);
 
   nsresult getBoolPref(const char *pref, PRBool *);
   nsresult getDefaultBoolPref(const char *pref, PRBool *);
@@ -77,7 +77,7 @@ nsMsgIdentity::Get##_postfix(char **retval)   	\
   return getCharPref(_prefname, retval);		\
 }												\
 NS_IMETHODIMP	   								\
-nsMsgIdentity::Set##_postfix(char *value)		\
+nsMsgIdentity::Set##_postfix(const char *value)		\
 {												\
   return setCharPref(_prefname, value);\
 }

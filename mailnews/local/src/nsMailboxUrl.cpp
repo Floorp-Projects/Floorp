@@ -353,7 +353,7 @@ nsresult nsMailboxUrl::ParseUrl(const nsString& aSpec)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsMailboxUrl::SetSpec(char * aSpec)
+NS_IMETHODIMP nsMailboxUrl::SetSpec(const char * aSpec)
 {
 	nsresult rv = nsMsgMailNewsUrl::SetSpec(aSpec);
 	if (NS_SUCCEEDED(rv))

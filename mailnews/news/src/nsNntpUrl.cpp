@@ -363,7 +363,7 @@ NS_IMETHODIMP nsNntpUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsNntpUrl::SetNewsgroupName(char * aNewsgroupName)
+NS_IMETHODIMP nsNntpUrl::SetNewsgroupName(const char * aNewsgroupName)
 {
     if (!aNewsgroupName) return NS_ERROR_NULL_POINTER;
 

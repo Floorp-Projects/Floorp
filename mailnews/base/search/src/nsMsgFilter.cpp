@@ -84,12 +84,18 @@ NS_IMETHODIMP nsMsgFilter::GetEnabled(PRBool *aResult)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgFilter::SetEnabled(PRBool enabled)
+{
+    m_enabled=enabled;
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgFilter::GetFilterName(char **name)
 {
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFilter::SetFilterName(char *name)
+NS_IMETHODIMP nsMsgFilter::SetFilterName(const char *name)
 {
 	return NS_OK;
 }
@@ -99,7 +105,7 @@ NS_IMETHODIMP nsMsgFilter::GetFilterDesc(char **description)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFilter::SetFilterDesc(char *description)
+NS_IMETHODIMP nsMsgFilter::SetFilterDesc(const char *description)
 {
 	return NS_OK;
 }

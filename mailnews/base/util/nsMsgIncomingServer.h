@@ -53,7 +53,7 @@ protected:
   // these are private pref getters and setters for the password
   // field. Callers should be using Get/Set Password
   NS_IMETHOD GetPrefPassword(char * *aPassword);
-  NS_IMETHOD SetPrefPassword(char * aPassword);
+  NS_IMETHOD SetPrefPassword(const char * aPassword);
   
   nsCOMPtr <nsIFolder> m_rootFolder;
   nsresult getDefaultCharPref(const char *pref, char **);

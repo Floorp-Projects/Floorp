@@ -202,7 +202,7 @@ nsMsgIdentity::getDefaultCharPref(const char *prefname,
 
 nsresult
 nsMsgIdentity::setCharPref(const char *prefname,
-                           char *val)
+                           const char *val)
 {
   nsresult rv = getPrefService();
   if (NS_FAILED(rv)) return rv;
@@ -267,7 +267,7 @@ nsMsgIdentity::setIntPref(const char *prefname,
 }
 
 nsresult
-nsMsgIdentity::SetKey(char* identityKey)
+nsMsgIdentity::SetKey(const char* identityKey)
 {
   PR_FREEIF(m_identityKey);
   m_identityKey = PL_strdup(identityKey);
@@ -301,7 +301,7 @@ nsMsgIdentity::GetIdentityName(char **idName) {
   return rv;
 }
 
-nsresult nsMsgIdentity::SetIdentityName(char *idName) {
+nsresult nsMsgIdentity::SetIdentityName(const char *idName) {
   return setCharPref("identityName", idName);
 }
 

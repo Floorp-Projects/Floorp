@@ -133,7 +133,7 @@ NS_IMETHODIMP nsMsgThread::SetFlags(PRUint32 flags)
 	return ret;
 }
 
-NS_IMETHODIMP nsMsgThread::SetSubject(char *subject)
+NS_IMETHODIMP nsMsgThread::SetSubject(const char *subject)
 {
 	return m_mdbDB->CharPtrToRowCellColumn(m_metaRow, m_mdbDB->m_threadSubjectColumnToken, subject);
 }

@@ -61,7 +61,7 @@ nsresult nsNNTPNewsgroup::GetName(char ** aName)
 	return NS_OK;
 }
 
-nsresult nsNNTPNewsgroup::SetName(char *aName)
+nsresult nsNNTPNewsgroup::SetName(const char *aName)
 {
 	if (aName)
 	{
@@ -84,7 +84,7 @@ nsresult nsNNTPNewsgroup::GetPrettyName(char ** aName)
 	return NS_OK;
 }
 
-nsresult nsNNTPNewsgroup::SetPrettyName(char *aName)
+nsresult nsNNTPNewsgroup::SetPrettyName(const char *aName)
 {
 	if (aName)
 	{
@@ -107,7 +107,7 @@ nsresult nsNNTPNewsgroup::GetPassword(char ** aName)
 	return NS_OK;
 }
 
-nsresult nsNNTPNewsgroup::SetPassword(char *aName)
+nsresult nsNNTPNewsgroup::SetPassword(const char *aName)
 {
 	if (aName)
 	{
@@ -130,7 +130,7 @@ nsresult nsNNTPNewsgroup::GetUsername(char ** aUsername)
 	return NS_OK;
 }
 
-nsresult nsNNTPNewsgroup::SetUsername(char *aUsername)
+nsresult nsNNTPNewsgroup::SetUsername(const char *aUsername)
 {
 	if (aUsername)
 	{
