@@ -2505,7 +2505,7 @@ nsXULElement::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
     }
     PRUint32 sum = 0;
 #ifdef DEBUG
-    sum += (PRUint32) sizeof(this);
+    sum += (PRUint32) sizeof(*this);
 #endif
     *aResult = sum;
     return NS_OK;
