@@ -1220,12 +1220,19 @@ void nsImapServerResponseParser::msg_fetch()
 			envelope_data(); 
 		}
 		else if (!PL_strcasecmp(fNextToken, "INTERNALDATE"))
+                {
+                  fDownloadingHeaders = PR_TRUE; // we only request internal date while downloading headers
+                  if (!bNeedEndMessageDownload)
+                    BeginMessageDownload(MESSAGE_RFC822);
+         	  bNeedEndMessageDownload = PR_TRUE;
 			internal_date(); 
+                }
 		else if (!PL_strcasecmp(fNextToken, "XAOL-ENVELOPE"))
 		{
 			fDownloadingHeaders = PR_TRUE;
-			bNeedEndMessageDownload = PR_TRUE;
+                        if (!bNeedEndMessageDownload)
       BeginMessageDownload(MESSAGE_RFC822);
+			bNeedEndMessageDownload = PR_TRUE;
 			xaolenvelope_data();
 		}
 		else

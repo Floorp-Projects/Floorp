@@ -89,6 +89,7 @@
 #include "nsIWindowMediator.h"
 #include "nsIWindowWatcher.h"
 #include "nsCOMPtr.h"
+#include "nsMimeTypes.h"
 PRLogModuleInfo *IMAP;
 
 // netlib required files
@@ -3171,6 +3172,8 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
   
   if (GetServerStateParser().GetDownloadingHeaders())
   {
+    if (!m_curHdrInfo)
+      BeginMessageDownLoad(GetServerStateParser().SizeOfMostRecentMessage(), MESSAGE_RFC822);
     m_curHdrInfo->CacheLine(localMessageLine, GetServerStateParser().CurrentResponseUID());
     PR_Free( localMessageLine);
     return;
@@ -3225,6 +3228,7 @@ void nsImapProtocol::NormalMessageEndDownload()
     AdjustChunkSize();
   if (m_imapMailFolderSink && GetServerStateParser().GetDownloadingHeaders())
   {
+    m_curHdrInfo->SetMsgSize(GetServerStateParser().SizeOfMostRecentMessage());
     m_hdrDownloadCache.FinishCurrentHdr();
     PRUint32 numHdrsCached;
     m_hdrDownloadCache.GetNumHeaders(&numHdrsCached);
