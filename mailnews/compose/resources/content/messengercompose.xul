@@ -114,6 +114,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 			<menupopup>
 			<menuitem value="&attachFileCmd.label;" oncommand="AttachFile()"/>
 			<menuitem value="&attachPageCmd.label;" oncommand="AttachPage()"/>
+			<menuitem value="&removeLastAttachmentCmd.label;" oncommand="RemoveSelectedAttachment()"/>
 			<menuseparator/>
 			<menuitem value="&attachVCardCmd.label;" oncommand="AttachVCard()"/>
 			</menupopup>
@@ -318,7 +319,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 				</box>
 				<spring style="height:0.5em"/>
 				<box align="vertical" style="height:8.5em; background-color:white; border-top:solid black 1px">
-					<tree id="attachmentBucket" flex="100%" onkeypress="RemoveSelectedAtachment();">
+					<tree id="attachmentBucket" flex="100%" onkeypress="if (event.which == 8) RemoveSelectedAttachment();">
 						<treecol style="width:100%"/>
 
 						<treechildren id="bucketBody">
