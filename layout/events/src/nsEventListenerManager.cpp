@@ -68,18 +68,18 @@ nsEventListenerManager::nsEventListenerManager()
 
 nsEventListenerManager::~nsEventListenerManager() 
 {
-  ReleaseListeners(&mEventListeners);
-  ReleaseListeners(&mMouseListeners);
-  ReleaseListeners(&mMouseMotionListeners);
-  ReleaseListeners(&mKeyListeners);
-  ReleaseListeners(&mLoadListeners);
-  ReleaseListeners(&mFocusListeners);
-  ReleaseListeners(&mFormListeners);
-  ReleaseListeners(&mDragListeners);
-  ReleaseListeners(&mPaintListeners);
-  ReleaseListeners(&mTextListeners);
-  ReleaseListeners(&mCompositionListeners);
-  ReleaseListeners(&mMenuListeners);
+  ReleaseListeners(&mEventListeners, PR_FALSE);
+  ReleaseListeners(&mMouseListeners, PR_FALSE);
+  ReleaseListeners(&mMouseMotionListeners, PR_FALSE);
+  ReleaseListeners(&mKeyListeners, PR_FALSE);
+  ReleaseListeners(&mLoadListeners, PR_FALSE);
+  ReleaseListeners(&mFocusListeners, PR_FALSE);
+  ReleaseListeners(&mFormListeners, PR_FALSE);
+  ReleaseListeners(&mDragListeners, PR_FALSE);
+  ReleaseListeners(&mPaintListeners, PR_FALSE);
+  ReleaseListeners(&mTextListeners, PR_FALSE);
+  ReleaseListeners(&mCompositionListeners, PR_FALSE);
+  ReleaseListeners(&mMenuListeners, PR_FALSE);
 }
 
 NS_IMPL_ADDREF(nsEventListenerManager)
@@ -138,7 +138,7 @@ nsVoidArray** nsEventListenerManager::GetListenersByIID(const nsIID& aIID)
   return nsnull;
 }
 
-void nsEventListenerManager::ReleaseListeners(nsVoidArray** aListeners)
+void nsEventListenerManager::ReleaseListeners(nsVoidArray** aListeners, PRBool aScriptOnly)
 {
   if (nsnull != *aListeners) {
     PRInt32 i, count = (*aListeners)->Count();
@@ -146,13 +146,26 @@ void nsEventListenerManager::ReleaseListeners(nsVoidArray** aListeners)
     for (i = 0; i < count; i++) {
       ls = (nsListenerStruct*)(*aListeners)->ElementAt(i);
       if (ls != nsnull) {
-        NS_IF_RELEASE(ls->mListener);
-        PR_DELETE(ls);
+        if (aScriptOnly) {
+          if (ls->mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) {
+            NS_RELEASE(ls->mListener);
+            (*aListeners)->RemoveElement((void*)ls);
+            PR_DELETE(ls);
+          }
+        }
+        else {
+          NS_IF_RELEASE(ls->mListener);
+          PR_DELETE(ls);
+        }
       }
     }
-    delete *aListeners;
+    //Only delete if we were removing all listeners or if the script
+    //listener removal brought the count to 0.
+    if (!aScriptOnly || (*aListeners)->Count() == 0) {
+      delete *aListeners;
+      *aListeners = nsnull;
+    }
   }
-  *aListeners = nsnull;
 }
 
 nsresult nsEventListenerManager::GetEventListeners(nsVoidArray **aListeners, const nsIID& aIID)
@@ -206,9 +219,12 @@ nsresult nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener
             break;
           }
         }
+        NS_RELEASE(regSel);
       }
     }
   }
+
+  NS_IF_RELEASE(sel);
 
   if (!found) {
     ls = PR_NEW(nsListenerStruct);
@@ -1228,19 +1244,19 @@ nsresult nsEventListenerManager::ReleaseEvent(nsIDOMEventListener *aListener)
   return NS_OK;
 }
 
-nsresult nsEventListenerManager::RemoveAllListeners()
+nsresult nsEventListenerManager::RemoveAllListeners(PRBool aScriptOnly)
 {
-  ReleaseListeners(&mEventListeners);
-  ReleaseListeners(&mMouseListeners);
-  ReleaseListeners(&mMouseMotionListeners);
-  ReleaseListeners(&mKeyListeners);
-  ReleaseListeners(&mLoadListeners);
-  ReleaseListeners(&mFocusListeners);
-  ReleaseListeners(&mFormListeners);
-  ReleaseListeners(&mDragListeners);
-  ReleaseListeners(&mPaintListeners);
-  ReleaseListeners(&mTextListeners);
-  ReleaseListeners(&mCompositionListeners);
+  ReleaseListeners(&mEventListeners, aScriptOnly);
+  ReleaseListeners(&mMouseListeners, aScriptOnly);
+  ReleaseListeners(&mMouseMotionListeners, aScriptOnly);
+  ReleaseListeners(&mKeyListeners, aScriptOnly);
+  ReleaseListeners(&mLoadListeners, aScriptOnly);
+  ReleaseListeners(&mFocusListeners, aScriptOnly);
+  ReleaseListeners(&mFormListeners, aScriptOnly);
+  ReleaseListeners(&mDragListeners, aScriptOnly);
+  ReleaseListeners(&mPaintListeners, aScriptOnly);
+  ReleaseListeners(&mTextListeners, aScriptOnly);
+  ReleaseListeners(&mCompositionListeners, aScriptOnly);
 
   return NS_OK;
 }

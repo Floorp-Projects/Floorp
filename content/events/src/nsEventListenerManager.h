@@ -47,8 +47,6 @@ public:
 
   nsVoidArray** GetListenersByIID(const nsIID& aIID);
   
-  void ReleaseListeners(nsVoidArray** aListeners);
-
   /**
   * Retrieves events listeners of all types. 
   * @param
@@ -89,13 +87,14 @@ public:
                                nsEvent* aEvent, 
                                nsIDOMEvent** aDOMEvent);
 
-  virtual nsresult RemoveAllListeners();
+  virtual nsresult RemoveAllListeners(PRBool aScriptOnly);
 
 protected:
   nsresult SetJSEventListener(nsIScriptContext *aContext, JSObject *aObject, REFNSIID aIID);
   nsresult GetIdentifiersForType(const nsString& aType, nsIID& aIID, PRInt32* aSubType);
   nsresult AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID, PRInt32 aFlags, PRInt32 aSubType);
   nsresult RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID, PRInt32 aFlags, PRInt32 aSubType);
+  void ReleaseListeners(nsVoidArray** aListeners, PRBool aScriptOnly);
 
   nsVoidArray* mEventListeners;
   nsVoidArray* mMouseListeners;

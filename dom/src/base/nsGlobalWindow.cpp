@@ -294,7 +294,7 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
         ClearAllTimeouts();
   
         if (mListenerManager) {
-          mListenerManager->RemoveAllListeners();
+          mListenerManager->RemoveAllListeners(PR_FALSE);
         }
 
         if ((nsnull != mScriptObject) && 
