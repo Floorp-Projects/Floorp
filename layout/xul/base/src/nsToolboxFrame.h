@@ -67,17 +67,23 @@ public:
                               nsIFrame**     aFrame);
 
 protected:
-  enum { kGrippyWidthInPixels = 10 } ;
+  enum { kGrippyWidthInPixels = 10, kCollapsedGrippyHeightInPixels = 10, kCollapsedGrippyWidthInPixels = 50 } ;
   enum { kNoGrippyHilighted = -1 } ;
 
   struct TabInfo {
-    TabInfo ( ) : mCollapsed(PR_TRUE), mToolbarHeight(0), mToolbar(nsnull) { };
+    TabInfo ( ) : mCollapsed(PR_TRUE), mToolbar(nsnull) { };
   
-//    nsCOMPtr<nsIContent>  mToolbar;
-    nsIFrame*             mToolbar;
+    void SetProperties ( const nsRect & inBounds, const nsCOMPtr<nsIContent> & inContent, 
+                            PRBool inCollapsed )
+    {
+      mToolbar = inContent;
+      mBoundingRect = inBounds;
+      mCollapsed = inCollapsed;
+    }
+    
+    nsCOMPtr<nsIContent>  mToolbar;       // content object associated w/ toolbar frame
     nsRect                mBoundingRect;
     PRBool                mCollapsed;
-    unsigned int          mToolbarHeight;
   };
   
   nsToolboxFrame();
@@ -104,7 +110,7 @@ protected:
     // style context for the normal state and rollover state of grippies
   nsCOMPtr<nsIStyleContext>    mGrippyNormalStyle;
   nsCOMPtr<nsIStyleContext>    mGrippyRolloverStyle;
-
+  
   PRUint32 mSumOfToolbarHeights;
   TabInfo  mGrippies[10];          //*** make this a list or something!!!!!!
   PRUint32 mNumToolbars;

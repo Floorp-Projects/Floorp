@@ -34,7 +34,7 @@
 #include "nsIWidget.h"
 #include "nsXULAtoms.h"
 
-
+#if 0
 //
 // class StRenderingContext
 //
@@ -55,6 +55,7 @@ private:
   nsCOMPtr<nsIRenderingContext> mContext;
 
 }; // class StRenderingContextSaver
+#endif
 
 
 //
@@ -202,8 +203,6 @@ void
 nsToolboxFrame :: DrawGrippy (  nsIPresContext& aPresContext, nsIRenderingContext & aRenderingContext,
                                   const nsRect & aBoundingRect, PRBool aDrawHilighted ) const
 {
-  StRenderingContextSaver saved(aRenderingContext);
-  
   nsCOMPtr<nsIStyleContext> style ( aDrawHilighted ? mGrippyRolloverStyle : mGrippyNormalStyle ) ;
   if ( !mGrippyRolloverStyle ) {
     #ifdef NS_DEBUG
@@ -282,50 +281,92 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
   float p2t;
   aPresContext.GetScaledPixelsToTwips(p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+  nsPoint offset ( kGrippyWidthInPixels * onePixel, 0 );   // remember to leave room for the grippy on the right
 
-  // Resize our frame based on our children (remember to leave room for the grippy on the right)
+  // Get the first child of the toolbox content node and the first child frame of the toolbox
+  nsCOMPtr<nsIContent> toolboxContent;
+  GetContent ( *getter_AddRefs(toolboxContent) );
+  nsCOMPtr<nsIContent> childContent;
+  toolboxContent->ChildAt(0, *getter_AddRefs(childContent));
+  unsigned int contentCounter = 0;
   nsIFrame* childFrame = mFrames.FirstChild();
-  nsPoint offset ( kGrippyWidthInPixels * onePixel, 0 );
-  PRUint32 grippyIndex = 0;
+  
+  // iterate over the content nodes and the frames at the same time. If there is a content node for which there
+  // is no frame (we assume because the display is set to none), then we probably have a collapsed toolbar.
+  // There are several cases we need to look for:
+  //   -- the current frame's content node is the current content node: We have a match, and the toolbar is
+  //        visible. Layout like normal, and keep track of this in the grippy list. Advance both at the
+  //        end of the loop body.
+  //   -- the current content node and the frame's content node don't match: We have a toolbar which is
+  //        not visible. There are two cases here:
+  //        -- collapsed attribute set: Flip the flag that we have collapsed toolbars. Keep track of 
+  //             this in the grippy list, and advance the content node. Do not process the frame yet.
+  //        -- hidden attribute set: This toolbar shouldn't have a grippy cuz it's hidden. Advance the
+  //             content node. Do not process the frame yet.
+  unsigned int grippyIndex = 0;
   PRBool anyCollapsedToolbars = PR_FALSE;
-  while ( childFrame ) {
-      
-    nsSize maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
-		
-    nsHTMLReflowState reflowState(aPresContext, childFrame, aReflowState, maxSize);
-    nsIHTMLReflow* htmlReflow;
-    if (NS_OK == childFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-      htmlReflow->WillReflow(aPresContext);
-      nsresult result = htmlReflow->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
-      NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");       
-      htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);  // XXX Should we be sending the DidReflow?
-    }
-
-    // set the toolbar to be the width/height desired, then set it's corresponding grippy to match
-    nsRect rect(offset.x, offset.y, aDesiredSize.width, aDesiredSize.height);
-    childFrame->SetRect(rect);
-
-    nsRect grippyBounds(0, offset.y, kGrippyWidthInPixels * onePixel, aDesiredSize.height);
-    TabInfo & grippy = mGrippies[grippyIndex];
-    grippy.mToolbar = childFrame;
-    grippy.mBoundingRect = nsRect(0, offset.y, kGrippyWidthInPixels * onePixel, aDesiredSize.height);
-    grippy.mCollapsed = PR_FALSE;
-    grippy.mToolbarHeight = aDesiredSize.height;
-
-    offset.y += aDesiredSize.height;
+  while ( childContent ) {
     
-    // advance to the next child
-    childFrame->GetNextSibling(childFrame);
+    // true if we should advance to the next frame. Will be false if the frame doesn't match the content node
+    PRBool canAdvanceFrame = PR_FALSE;
+    
+    // first determine if the current content node matches the current frame
+    nsCOMPtr<nsIContent> currentFrameContent;
+    childFrame->GetContent(*getter_AddRefs(currentFrameContent));
+    if ( childContent == currentFrameContent ) {
+      // they are the same, so find the width/height desired by the toolbar frame.
+      nsSize maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
+		
+      nsHTMLReflowState reflowState(aPresContext, childFrame, aReflowState, maxSize);
+      nsIHTMLReflow* htmlReflow = nsnull;                               // can't use nsCOMPtr because of bad COM
+      if ( childFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow) == NS_OK ) {
+        htmlReflow->WillReflow(aPresContext);
+        nsresult result = htmlReflow->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
+        NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");       
+        htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);  // XXX Should we be sending the DidReflow?
+      }
+    
+      // set toolbar to desired width/height
+      nsRect rect(offset.x, offset.y, aDesiredSize.width, aDesiredSize.height);
+      childFrame->SetRect(rect);
+
+      // set the grippy
+      nsRect grippyRect(0, offset.y, kGrippyWidthInPixels * onePixel, aDesiredSize.height);
+      mGrippies[grippyIndex].SetProperties (grippyRect, childContent, PR_FALSE );
+      offset.y += aDesiredSize.height;
+     
+      canAdvanceFrame = PR_TRUE;
+    }
+    else {
+      // they are not the same, so we probably have a collapsed or hidden toolbar.
+      printf("Found a collapsed toolbar\n");
+      
+      //*** check for collapsed or hidden tag. What do we do if neither? ignore it i guess.
+      
+      // set the grippy
+      nsRect grippyRect(0, 0, kCollapsedGrippyWidthInPixels * onePixel, kCollapsedGrippyHeightInPixels * onePixel);
+      mGrippies[grippyIndex].SetProperties ( grippyRect, childContent, PR_TRUE );
+      
+      anyCollapsedToolbars = PR_TRUE;
+      canAdvanceFrame = PR_FALSE;
+    }
+    
+    // advance to the next child frame, if appropriate, and advance child content
+    if ( canAdvanceFrame )
+      childFrame->GetNextSibling(childFrame);
+    ++contentCounter;
+    toolboxContent->ChildAt(contentCounter, *getter_AddRefs(childContent));
     ++grippyIndex;
     
-  } // for each child
+  } // for each child content node
+
+  mSumOfToolbarHeights = offset.y;
 
   // If there are any collapsed toolbars, we need to fix up the positions of the
-  // tabs associated with them to lie horizontally (make them as wide as their
-  // corresponding toolbar is tall).
+  // tabs associated with them to lie horizontally
   if ( anyCollapsedToolbars ) {
   
-    //*** fix mBoundingRect to lie sideways
+    printf("There are collapsed toolbars!\n");
   
   }
   
@@ -408,7 +449,7 @@ nsToolboxFrame :: HandleEvent ( nsIPresContext& aPresContext,
 void
 nsToolboxFrame :: OnMouseMove ( nsPoint & aMouseLoc )
 {
-	for ( PRUint32 i = 0; i < mNumToolbars; ++i ) {
+	for ( int i = 0; i < mNumToolbars; ++i ) {
 		if ( mGrippies[i].mBoundingRect.Contains(aMouseLoc) ) {
 			if ( i != mGrippyHilighted ) {
 				// unhilight the old one
@@ -433,7 +474,7 @@ nsToolboxFrame :: OnMouseMove ( nsPoint & aMouseLoc )
 void
 nsToolboxFrame :: OnMouseLeftClick ( nsPoint & aMouseLoc )
 {
-	for ( PRUint32 i = 0; i < mNumToolbars; ++i ) {
+	for ( int i = 0; i < mNumToolbars; ++i ) {
 		if ( mGrippies[i].mBoundingRect.Contains(aMouseLoc) ) {
 			TabInfo & clickedTab = mGrippies[i];			
 			if ( clickedTab.mCollapsed )
@@ -480,12 +521,11 @@ nsToolboxFrame :: CollapseToolbar ( TabInfo & inTab )
 {
   const nsCOMPtr<nsIAtom> kSelectedAtom ( dont_AddRef( NS_NewAtom("collapsed")) );
    
-  nsIContent* toolbar = nsnull;
-  inTab.mToolbar->GetContent ( toolbar );
-  if ( toolbar )
-    toolbar->SetAttribute ( nsXULAtoms::nameSpaceID, kSelectedAtom, "true", PR_TRUE );
-  NS_IF_RELEASE(toolbar);
-  
+  if ( inTab.mToolbar ) {
+//    inTab.mToolbar->SetAttribute ( nsXULAtoms::nameSpaceID, kSelectedAtom, "true", PR_TRUE );
+    inTab.mToolbar->SetAttribute ( nsnull, kSelectedAtom, "true", PR_TRUE );
+  }
+   
 } // CollapseToolbar
 
 
