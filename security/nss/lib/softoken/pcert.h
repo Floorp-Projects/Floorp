@@ -70,9 +70,9 @@ nsslowcert_TraversePermCerts(NSSLOWCERTCertDBHandle *handle,
 PRBool
 nsslowcert_CertDBKeyConflict(SECItem *derCert, NSSLOWCERTCertDBHandle *handle);
 
-SECItem *
-nsslowcert_FindCrlByKey(NSSLOWCERTCertDBHandle *handle, SECItem *crlKey,
-				 		char **urlp, PRBool isKRL);
+certDBEntryRevocation *
+nsslowcert_FindCrlByKey(NSSLOWCERTCertDBHandle *handle,
+					 SECItem *crlKey, PRBool isKRL);
 
 SECStatus
 nsslowcert_DeletePermCRL(NSSLOWCERTCertDBHandle *handle,SECItem *derName,

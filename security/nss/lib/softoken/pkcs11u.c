@@ -344,48 +344,25 @@ pk11_getSMime(PK11TokenObject *object)
     return entry;
 }
 
-static SECItem *
+static certDBEntryRevocation *
 pk11_getCrl(PK11TokenObject *object)
 {
-    SECItem *crl;
+    certDBEntryRevocation *crl;
     PRBool isKrl;
 
     if (object->obj.objclass != CKO_NETSCAPE_CRL) {
 	return NULL;
     }
     if (object->obj.objectInfo) {
-	return (SECItem *)object->obj.objectInfo;
+	return (certDBEntryRevocation *)object->obj.objectInfo;
     }
 
     isKrl = (PRBool) object->obj.handle == PK11_TOKEN_KRL_HANDLE;
-    crl = nsslowcert_FindCrlByKey(object->obj.slot->certDB,&object->dbKey,
-								NULL,isKrl);
+    crl = nsslowcert_FindCrlByKey(object->obj.slot->certDB,
+							&object->dbKey, isKrl);
     object->obj.objectInfo = (void *)crl;
-    object->obj.infoFree = (PK11Free) pk11_FreeItem;
+    object->obj.infoFree = (PK11Free) nsslowcert_DestroyDBEntry;
     return crl;
-}
-
-static char *
-pk11_getUrl(PK11TokenObject *object)
-{
-    SECItem *crl;
-    PRBool isKrl;
-    char *url = NULL;
-
-    if (object->obj.objclass != CKO_NETSCAPE_CRL) {
-	return NULL;
-    }
-
-    isKrl = (PRBool) object->obj.handle == PK11_TOKEN_KRL_HANDLE;
-    crl = nsslowcert_FindCrlByKey(object->obj.slot->certDB,&object->dbKey,
-								&url,isKrl);
-    if (object->obj.objectInfo == NULL) {
-	object->obj.objectInfo = (void *)crl;
-	object->obj.infoFree = (PK11Free) pk11_FreeItem;
-    } else {
-	if (crl) SECITEM_FreeItem(crl,PR_TRUE);
-    }
-    return url;
 }
 
 static NSSLOWCERTCertificate *
@@ -991,7 +968,7 @@ trust:
 static PK11Attribute *
 pk11_FindCrlAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 {
-    SECItem *crl;
+    certDBEntryRevocation *crl;
     char *url;
 
     switch (type) {
@@ -1001,19 +978,23 @@ pk11_FindCrlAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
     case CKA_NETSCAPE_KRL:
 	return (PK11Attribute *) ((object->obj.handle == PK11_TOKEN_KRL_HANDLE) 
 			? &pk11_StaticTrueAttr : &pk11_StaticFalseAttr);
+    case CKA_SUBJECT:
+	return pk11_NewTokenAttribute(type,object->dbKey.data,
+						object->dbKey.len, PR_FALSE);	
+    default:
+	break;
+    }
+    crl =  pk11_getCrl(object);
+    switch (type) {
     case CKA_NETSCAPE_URL:
-	url = pk11_getUrl(object);
 	if (url == NULL) {
 	    return (PK11Attribute *) &pk11_StaticNullAttr;
 	}
-	return pk11_NewTokenAttribute(type, url, PORT_Strlen(url)+1, PR_TRUE);
+	return pk11_NewTokenAttribute(type, crl->url, 
+					PORT_Strlen(crl->url)+1, PR_TRUE);
     case CKA_VALUE:
-	crl = pk11_getCrl(object);
-	if (crl == NULL) break;
-	return pk11_NewTokenAttribute(type, crl->data, crl->len, PR_FALSE);
-    case CKA_SUBJECT:
-	return pk11_NewTokenAttribute(type,object->dbKey.data,
-						object->dbKey.len, PR_FALSE);
+	return pk11_NewTokenAttribute(type, crl->derCrl.data, 
+						crl->derCrl.len, PR_FALSE);
     default:
 	break;
     }
