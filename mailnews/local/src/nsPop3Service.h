@@ -56,9 +56,10 @@ public:
 protected:
 	// convience function to make constructing of the pop3 url easier...
 	nsresult BuildPop3Url(const char * urlSpec, nsIMsgFolder *inbox,
-                          nsIPop3IncomingServer *,
-                          nsIPop3URL ** aUrl);
+                          nsIPop3IncomingServer *, nsIUrlListener * aUrlListener,
+                          nsIURL ** aUrl);
 
+	nsresult RunPopUrl(nsIMsgIncomingServer * aServer, nsIURL * aUrlToRun);
 };
 
 #endif /* nsPop3Service_h___ */

@@ -39,62 +39,45 @@ nsPop3Service::~nsPop3Service()
 
 NS_IMPL_THREADSAFE_ISUPPORTS(nsPop3Service, nsIPop3Service::GetIID());
 
-NS_IMETHODIMP
-nsPop3Service::CheckForNewMail(nsIUrlListener * aUrlListener,
+NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIUrlListener * aUrlListener,
 							   nsIMsgFolder *inbox, 
                                nsIPop3IncomingServer *popServer,
                                nsIURL ** aURL)
 {
 	NS_LOCK_INSTANCE();
 	nsresult rv = NS_OK;
-	char * userName = nsnull;
-	char * popPassword = nsnull;
 	char * hostname = nsnull;
 
     nsCOMPtr<nsIMsgIncomingServer> server;
-	nsCOMPtr<nsIPop3URL> pop3Url;
+	nsCOMPtr<nsIURL> url;
 
 	server = do_QueryInterface(popServer);
     if (server) 
-	{
-		// load up required server information
-		server->GetUsername(&userName);
-        server->GetPassword(&popPassword);
 		server->GetHostName(&hostname);
-    }
     
-	if (NS_SUCCEEDED(rv) && popServer)
+	if (NS_SUCCEEDED(rv) && popServer && hostname)
 	{
         // now construct a pop3 url...
         char * urlSpec = PR_smprintf("pop3://%s?check", hostname);
-        rv = BuildPop3Url(urlSpec, inbox, popServer, getter_AddRefs(pop3Url));
+        rv = BuildPop3Url(urlSpec, inbox, popServer, aUrlListener, getter_AddRefs(url));
         PR_FREEIF(urlSpec);
+		if (hostname) PL_strfree(hostname);
     }
+
     
-	if (NS_SUCCEEDED(rv) && pop3Url) 
-	{
-		// does the caller want to listen to the url?
-		if (aUrlListener)
-			pop3Url->RegisterListener(aUrlListener);
+	if (NS_SUCCEEDED(rv) && url) 
+		rv = RunPopUrl(server, url);
 
-		nsPop3Protocol * protocol = new nsPop3Protocol(pop3Url);
-		if (protocol)
-		{
-			protocol->SetUsername(userName);
-			protocol->SetPassword(popPassword);
-			protocol->LoadUrl(pop3Url);
-		} // if pop server 
-	}
-
-	if (aURL && pop3Url) // we already have a ref count on pop3url...
+	if (aURL && url) // we already have a ref count on pop3url...
 	{
-		*aURL = pop3Url; // transfer ref count to the caller...
+		*aURL = url; // transfer ref count to the caller...
 		NS_IF_ADDREF(*aURL);
 	}
 	
 	NS_UNLOCK_INSTANCE();
 	return rv;
 }
+
 
 nsresult nsPop3Service::GetNewMail(nsIUrlListener * aUrlListener,
                                    nsIPop3IncomingServer *popServer,
@@ -105,52 +88,31 @@ nsresult nsPop3Service::GetNewMail(nsIUrlListener * aUrlListener,
     char * userName = nsnull;
     char * popPassword = nsnull;
 	char * popHost = nsnull;
+	nsCOMPtr<nsIURL> url;
 
 	nsCOMPtr<nsIMsgIncomingServer> server;
-	nsCOMPtr<nsIPop3URL> pop3Url;
+	server = do_QueryInterface(popServer);    
 
-	server = do_QueryInterface(popServer);
-    
-	// convert normal host to POP host.
-    // XXX - this doesn't handle QI failing very well
     if (server) 
-	{
-		// load up required server information
-        server->GetUsername(&userName);
-		server->GetPassword(&popPassword);
 		server->GetHostName(&popHost);
-    }
     
     
 	if (NS_SUCCEEDED(rv) && popServer)
 	{
         // now construct a pop3 url...
         char * urlSpec = PR_smprintf("pop3://%s", popHost);
-        rv = BuildPop3Url(urlSpec, nsnull, popServer, getter_AddRefs(pop3Url));
+        rv = BuildPop3Url(urlSpec, nsnull, popServer, aUrlListener, getter_AddRefs(url));
         PR_FREEIF(urlSpec);
 	}
     
-	if (NS_SUCCEEDED(rv) && pop3Url) 
-	{
-		// does the caller want to listen to the url?
-		if (aUrlListener)
-			pop3Url->RegisterListener(aUrlListener);
+	if (NS_SUCCEEDED(rv) && url) 
+		RunPopUrl(server, url);
 
-		nsPop3Protocol * protocol = new nsPop3Protocol(pop3Url);
-		if (protocol)
-		{
-			protocol->SetUsername(userName);
-			protocol->SetPassword(popPassword);
-			protocol->LoadUrl(pop3Url);
-		} // if pop server 
-	}
-    if (popPassword) PL_strfree(popPassword);
-    if (userName) PL_strfree(userName);
     if (popHost) PL_strfree(popHost);
 
-	if (aURL && pop3Url) // we already have a ref count on pop3url...
+	if (aURL && url) // we already have a ref count on pop3url...
 	{
-		*aURL = pop3Url; // transfer ref count to the caller...
+		*aURL = url; // transfer ref count to the caller...
 		NS_IF_ADDREF(*aURL);
 	}
 	
@@ -161,7 +123,8 @@ nsresult nsPop3Service::GetNewMail(nsIUrlListener * aUrlListener,
 nsresult nsPop3Service::BuildPop3Url(const char * urlSpec,
 									 nsIMsgFolder *inbox,
                                      nsIPop3IncomingServer *server,
-                                     nsIPop3URL ** aUrl)
+									 nsIUrlListener * aUrlListener,
+                                     nsIURL ** aUrl)
 {
 	nsresult rv = NS_OK;
 	// create a sink to run the url with
@@ -173,17 +136,48 @@ nsresult nsPop3Service::BuildPop3Url(const char * urlSpec,
 	}
 
 	// now create a pop3 url and a protocol instance to run the url....
-	nsPop3URL * pop3Url = new nsPop3URL(nsnull, nsnull);
+	nsPop3URL * pop3Url = new nsPop3URL();
 	if (pop3Url)
 	{
 		pop3Url->SetPop3Sink(pop3Sink);
-		pop3Url->ParseURL(urlSpec);
+		pop3Url->SetSpec(urlSpec);
 	}
 
+	// does the caller want to listen to the url?
+	if (aUrlListener)
+		pop3Url->RegisterListener(aUrlListener);
+
 	if (aUrl)
-		rv = pop3Url->QueryInterface(nsIPop3URL::GetIID(), (void **) aUrl);
+		rv = pop3Url->QueryInterface(nsIURL::GetIID(), (void **) aUrl);
 	else  // hmmm delete is protected...what can we do here? no one has a ref cnt on the object...
 		NS_IF_RELEASE(pop3Url);
+
+	return rv;
+}
+
+nsresult nsPop3Service::RunPopUrl(nsIMsgIncomingServer * aServer, nsIURL * aUrlToRun)
+{
+	nsresult rv = NS_OK;
+	if (aServer && aUrlToRun)
+	{
+		char * userName = nsnull;
+		char * popPassword = nsnull;
+
+		// load up required server information
+		rv = aServer->GetUsername(&userName);
+        rv = aServer->GetPassword(&popPassword);
+
+		nsPop3Protocol * protocol = new nsPop3Protocol(aUrlToRun);
+		if (protocol)
+		{
+			protocol->SetUsername(userName);
+			protocol->SetPassword(popPassword);
+			rv = protocol->LoadUrl(aUrlToRun);
+		}
+
+		if (popPassword) PL_strfree(popPassword);
+		if (userName) PL_strfree(userName);
+	} // if server
 
 	return rv;
 }
