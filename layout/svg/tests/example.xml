@@ -10,7 +10,7 @@
 <![CDATA[
 function moveit(node)
 {
-  var elementName = "rect";
+  /*var elementName = "rect";
   var node = findNode(document.documentElement, elementName);
   dump("Node: "+node+"\n");
 
@@ -18,7 +18,14 @@ function moveit(node)
   dump("-----------\n"+node.x);
   node.x = 10;
   //node.y = "10";
-  //node.points = "10 10";
+  //node.points = "10 10";*/
+
+  var node = findNode(document.documentElement, "rect"); 
+  dump("Node: "+node+"\n");
+  attr = document.createAttribute("points"); 
+  attr.value = "100 100 50 10 50 50"; 
+  node.attributes.setNamedItem(attr); 
+  dump("Node: "+node+"\n");
 }
 
 function findNode(node, nodename)
@@ -126,5 +133,6 @@ function findNode(node, nodename)
   <foreignobject>
     <html:div style="position:absolute;top:5px;left:385px;">Simple Polygons</html:div>
     <html:div style="position:absolute;top:250px;left:165px;">A Simple Graph</html:div>
+    <html:input type="button" value="Move It" onclick="moveit();"/>
   </foreignobject>
 </svg> 

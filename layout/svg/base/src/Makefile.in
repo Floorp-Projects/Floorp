@@ -33,6 +33,7 @@ CPPSRCS		= \
   nsSVGContainerFrame.cpp \
   nsPolygonFrame.cpp \
   nsPolylineFrame.cpp \
+  nsSVGPathFrame.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
