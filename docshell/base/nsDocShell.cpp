@@ -85,6 +85,10 @@
 
 #include "nsITextToSubURI.h"
 
+// this is going away - see
+// http://bugzilla.mozilla.org/show_bug.cgi?id=71482
+#include "nsIBrowserHistory.h"
+
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kDocumentCharsetInfoCID, NS_DOCUMENTCHARSETINFO_CID);
@@ -2030,7 +2034,9 @@ NS_IMETHODIMP nsDocShell::SetTitle(const PRUnichar* aTitle)
       {
       nsXPIDLCString url;
       mCurrentURI->GetSpec(getter_Copies(url));
-      mGlobalHistory->SetPageTitle(url, aTitle);
+      nsCOMPtr<nsIBrowserHistory> browserHistory =
+          do_QueryInterface(mGlobalHistory);
+      browserHistory->SetPageTitle(url, aTitle);
       }
 
 
@@ -4214,8 +4220,7 @@ NS_IMETHODIMP nsDocShell::AddToGlobalHistory(nsIURI* aURI)
    nsXPIDLCString spec;
    NS_ENSURE_SUCCESS(aURI->GetSpec(getter_Copies(spec)), NS_ERROR_FAILURE);
 
-   NS_ENSURE_SUCCESS(mGlobalHistory->AddPage(spec, nsnull, PR_Now()), 
-      NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(mGlobalHistory->AddPage(spec), NS_ERROR_FAILURE);
 
    return NS_OK;
 }

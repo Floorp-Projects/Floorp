@@ -853,14 +853,11 @@ nsWebShell::GetLinkState(const char* aLinkURI, nsLinkState& aState)
 
    if(mGlobalHistory)
       {
-      PRInt64 lastVisitDate;
-      NS_ENSURE_SUCCESS(mGlobalHistory->GetLastVisitDate(aLinkURI,
-         &lastVisitDate), NS_ERROR_FAILURE);
-
-      // a last-visit-date of zero means we've never seen it before; so
-      // if it's not zero, we must've seen it.
-      if(!LL_IS_ZERO(lastVisitDate))
-         aState = eLinkState_Visited;
+        PRBool isVisited;
+        NS_ENSURE_SUCCESS(mGlobalHistory->IsVisited(aLinkURI, &isVisited),
+                          NS_ERROR_FAILURE);
+        if (isVisited)
+          aState = eLinkState_Visited;
 
       // XXX how to tell if eLinkState_OutOfDate?
       }
