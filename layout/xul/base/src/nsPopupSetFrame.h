@@ -128,9 +128,10 @@ protected:
 
   nsIFrame* mElementFrame; // The frame that is having something popped up over it.
 
-  PRInt32 mXPos; // Active child's x position
-  PRInt32 mYPos; // Active child's y position
+  PRInt32 mXPos;                // Active child's x position
+  PRInt32 mYPos;                // Active child's y position
   nsAutoString mPopupType;
+  PRBool mCreateHandlerSucceeded;  // Did the create handler succeed?
 
 }; // class nsPopupSetFrame
 

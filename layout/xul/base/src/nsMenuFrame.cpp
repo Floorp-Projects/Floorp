@@ -603,8 +603,8 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
   }
   else {
     // Close the menu. 
-    // Execute the ondestroy handler
-    if (!OnDestroy())
+    // Execute the ondestroy handler, but only if we're actually open
+    if ( !mMenuOpen || !OnDestroy() )
       return;
 
     // Set the focus back to our view's widget.
