@@ -1153,7 +1153,14 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
 
     nsRect rr ;
 
+    /* 
+     * Maybe  ... some day ... somone will pull the invalid rect
+     * out of the paint message rather than drawing the whole thing...
+     */
     GetBounds(rr);
+
+    rr.x = 0;
+    rr.y = 0;
     
     event.rect = &rr;
 
