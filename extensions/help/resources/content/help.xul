@@ -22,7 +22,7 @@
    windowtype="mozilla:help"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    width="640"
-   height="650"
+   height="550"
    persist="width height screenX screenY"
    onload="init();" >
 
@@ -118,8 +118,109 @@
     <!-- the two help panes (sidebar & content) -->
     <hbox flex="1">
       <vbox id="helpsidebar-box" persist="width">
+
+         <!-- glossary panel -->
+         <button id="help-glossary-btn" class="box-texttab texttab-sidebar"
+            label="&glossarytab.label;" oncommand="showPanel('help-glossary-tree')"/>
+         <tree id="help-glossary-tree" flex="1" hidecolumnpicker="true" hidden="true"
+               datasources="rdf:null"
+               containment="http://home.netscape.com/NC-rdf#subheadings"
+               ref="urn:root"
+               flags="dont-build-content"
+               onselect="onselect_loadURI(this, 'GlossaryNameColumn')">
+        <template>
+          <rule>
+          <conditions>
+            <treeitem uri="?uri"/>
+            <triple subject="?uri"
+              predicate="http://home.netscape.com/NC-rdf#subheadings"
+              object="?subheadings" />
+            <member container="?subheadings" child="?subheading"/>
+          </conditions>
+          <bindings>
+            <binding subject="?subheading"
+              predicate="http://home.netscape.com/NC-rdf#name"
+              object="?name" />
+
+            <binding subject="?subheading"
+              predicate="http://home.netscape.com/NC-rdf#link"
+              object="?link" />
+          </bindings>
+
+          <action>
+            <treechildren>
+              <treeitem uri="?subheading">
+                <treerow>
+                  <treecell label="?name"
+                    properties="link-?link"/>
+                </treerow>
+              </treeitem>
+            </treechildren>
+          </action>
+          </rule>
+        </template>
+            <treecols>
+               <treecol id="GlossaryNameColumn" flex="1"
+                  hideheader="true"
+                  primary="true"/>
+            </treecols>
+         </tree>
+
+	 <!-- index panel -->
+         <button id="help-index-btn" class="box-texttab texttab-sidebar"
+            label="&indextab.label;"  oncommand="showPanel('help-index-tree');displayIndex();"/>
+
+         <tree id="help-index-tree" flex="1"
+               datasources="rdf:null" hidecolumnpicker="true" hidden="true"
+               containment="http://home.netscape.com/NC-rdf#subheadings"
+               ref="urn:root"
+               flags="dont-build-content dont-test-empty"
+               onselect="onselect_loadURI(this, 'IndexNameColumn')">
+        <template>
+          <rule>
+          <conditions>
+            <treeitem uri="?uri"/>
+            <triple subject="?uri"
+              predicate="http://home.netscape.com/NC-rdf#subheadings"
+              object="?subheadings" />
+            <member container="?subheadings" child="?subheading"/>
+          </conditions>
+          <bindings>
+            <binding subject="?subheading"
+              predicate="http://home.netscape.com/NC-rdf#name"
+              object="?name" />
+
+            <binding subject="?subheading"
+              predicate="http://home.netscape.com/NC-rdf#link"
+              object="?link" />
+          </bindings>
+
+          <action>
+            <treechildren>
+              <treeitem uri="?subheading">
+                <treerow>
+                  <treecell ref="IndexNameColumn" label="?name"
+                      properties="link-?link"/>
+                </treerow>
+              </treeitem>
+            </treechildren>
+          </action>
+          </rule>
+        </template>
+            <treecols>
+               <treecol id="IndexNameColumn" flex="1"
+                  hideheader="true"
+                  primary="true"
+                  sortActive="true"
+                  sortDirection="ascending"
+                  sort="?name"/>
+            </treecols>
+         </tree>
+
+     <!-- search panel -->
      <button id="help-search-btn" class="box-texttab texttab-sidebar"
              label="&searchtab.label;" oncommand="showPanel('help-search-panel')"/>
+
              <vbox id="help-search-panel" hidden="true" flex="1">
                 <hbox align="center">
                   <textbox id="findText" 
@@ -174,6 +275,7 @@
           </tree>
        </vbox>
 
+       <!-- table of contents panel -->
        <button id="help-toc-btn" class="box-texttab texttab-sidebar"
           label="&toctab.label;" oncommand="showPanel('help-toc-tree')"/>
           <tree id="help-toc-tree" flex="1"  hidecolumnpicker="true"
@@ -219,101 +321,7 @@
             </treecols>
          </tree>
 
-         <button id="help-index-btn" class="box-texttab texttab-sidebar"
-            label="&indextab.label;"  oncommand="showPanel('help-index-tree');displayIndex();"/>
 
-         <tree id="help-index-tree" flex="1"
-               datasources="rdf:null" hidecolumnpicker="true" hidden="true"
-               containment="http://home.netscape.com/NC-rdf#subheadings"
-               ref="urn:root"
-               flags="dont-build-content dont-test-empty"
-               onselect="onselect_loadURI(this, 'IndexNameColumn')">
-        <template>
-          <rule>
-          <conditions>
-            <treeitem uri="?uri"/>
-            <triple subject="?uri"
-              predicate="http://home.netscape.com/NC-rdf#subheadings"
-              object="?subheadings" />
-            <member container="?subheadings" child="?subheading"/>
-          </conditions>
-          <bindings>
-            <binding subject="?subheading"
-              predicate="http://home.netscape.com/NC-rdf#name"
-              object="?name" />
-
-            <binding subject="?subheading"
-              predicate="http://home.netscape.com/NC-rdf#link"
-              object="?link" />
-          </bindings>
-
-          <action>
-            <treechildren>
-              <treeitem uri="?subheading">
-                <treerow>
-                  <treecell ref="IndexNameColumn" label="?name"
-                      properties="link-?link"/>
-                </treerow>
-              </treeitem>
-            </treechildren>
-          </action>
-          </rule>
-        </template>
-            <treecols>
-               <treecol id="IndexNameColumn" flex="1"
-                  hideheader="true"
-                  primary="true"
-                  sortActive="true"
-                  sortDirection="ascending"
-                  sort="?name"/>
-            </treecols>
-         </tree>
-
-         <button id="help-glossary-btn" class="box-texttab texttab-sidebar"
-            label="&glossarytab.label;" oncommand="showPanel('help-glossary-tree')"/>
-         <tree id="help-glossary-tree" flex="1" hidecolumnpicker="true" hidden="true"
-               datasources="rdf:null"
-               containment="http://home.netscape.com/NC-rdf#subheadings"
-               ref="urn:root"
-               flags="dont-build-content"
-               onselect="onselect_loadURI(this, 'GlossaryNameColumn')">
-        <template>
-          <rule>
-          <conditions>
-            <treeitem uri="?uri"/>
-            <triple subject="?uri"
-              predicate="http://home.netscape.com/NC-rdf#subheadings"
-              object="?subheadings" />
-            <member container="?subheadings" child="?subheading"/>
-          </conditions>
-          <bindings>
-            <binding subject="?subheading"
-              predicate="http://home.netscape.com/NC-rdf#name"
-              object="?name" />
-
-            <binding subject="?subheading"
-              predicate="http://home.netscape.com/NC-rdf#link"
-              object="?link" />
-          </bindings>
-
-          <action>
-            <treechildren>
-              <treeitem uri="?subheading">
-                <treerow>
-                  <treecell label="?name"
-                    properties="link-?link"/>
-                </treerow>
-              </treeitem>
-            </treechildren>
-          </action>
-          </rule>
-        </template>
-            <treecols>
-               <treecol id="GlossaryNameColumn" flex="1"
-                  hideheader="true"
-                  primary="true"/>
-            </treecols>
-         </tree>
 
       </vbox>
 
