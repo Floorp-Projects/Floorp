@@ -647,7 +647,6 @@ sub BuildClientDist()
 
     #EMBEDDING
     InstallFromManifest(":mozilla:embedding:browser:webbrowser:MANIFEST_IDL",      "$distdirectory:idl:");
-    # InstallFromManifest(":mozilla:embedding:browser:setup:MANIFEST_IDL",           "$distdirectory:idl:");
 
     #WIDGET
     InstallFromManifest(":mozilla:widget:public:MANIFEST",                         "$distdirectory:widget:");
@@ -1433,9 +1432,44 @@ sub BuildViewerProjects()
     StartBuildModule("viewer");
 
     BuildOneProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",            "viewer$D",  0, 0, 0);
-    BuildOneProject(":mozilla:embedding:browser:macbuild:webBrowser.mcp",       "webBrowser$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
     EndBuildModule("viewer");
+}
+
+
+#//--------------------------------------------------------------------------------------------------
+#// Build Embedding Projects
+#//--------------------------------------------------------------------------------------------------
+
+sub BuildEmbeddingProjects()
+{
+    unless( $main::build{embedding} ) { return; }
+    assertRightDirectory();
+    
+    # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
+    my($D) = $main::DEBUG ? "Debug" : "";
+    my($dist_dir) = GetBinDirectory();
+
+    StartBuildModule("embedding");
+
+    BuildOneProject(":mozilla:embedding:browser:macbuild:webBrowser.mcp",       "webBrowser$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+
+    BuildOneProject(":mozilla:embedding:base:macbuild:EmbedAPI.mcp", "EmbedAPI$D.o", 0, 0, 0);
+    MakeAlias(":mozilla:embedding:base:macbuild:EmbedAPI$D.o", ":mozilla:dist:embedding:");
+
+    if ($main::options{embedding_test})
+    {
+        if (-e GetCodeWarriorRelativePath("MacOS Support:PowerPlant"))
+        {
+            BuildOneProject(":mozilla:embedding:browser:powerplant:PPBrowser.mcp",            "PPEmbed$D",  0, 0, 0);
+        }
+        else
+        {
+            print("MacOS Support:PowerPlant does not exist - embedding sample will not be built\n");
+        }
+    }
+    
+    EndBuildModule("embedding");
 }
 
 
@@ -1610,6 +1644,7 @@ sub BuildMailNewsProjects()
     EndBuildModule("mailnews");
 }
 
+
 #//--------------------------------------------------------------------------------------------------
 #// Build Mozilla
 #//--------------------------------------------------------------------------------------------------
@@ -1716,6 +1751,7 @@ sub BuildProjects()
     BuildInternationalProjects();
     BuildLayoutProjects();
     BuildEditorProjects();
+    BuildEmbeddingProjects();
     BuildViewerProjects();
     BuildXPAppProjects();
     BuildExtensionsProjects();
