@@ -3466,7 +3466,8 @@ InternetSearchDataSource::GetData(const nsString &data, const char *sectionToFin
 		if (attrib.EqualsIgnoreCase(attribToFind))
 		{
 			line.Cut(0, equal+1);
-			value = line.Trim(" \t");
+			line.Trim(" \t");
+			value = line;
 
 			// strip of any enclosing quotes
 			PRUnichar	quoteChar;
@@ -3494,7 +3495,7 @@ InternetSearchDataSource::GetData(const nsString &data, const char *sectionToFin
 				{
 					value.Truncate(commentOffset);
 				}
-				value = value.Trim(" \t");
+				value.Trim(" \t");
 			}
 			rv = NS_OK;
 			break;
@@ -4718,7 +4719,7 @@ InternetSearchDataSource::ConvertEntities(nsString &nameStr, PRBool removeHTMLFl
 	if (trimWhiteSpaceFlag == PR_TRUE)
 	{
 		// trim name
-		nameStr = nameStr.Trim(" \t");
+		nameStr.Trim(" \t");
 	}
 
 	return(NS_OK);
