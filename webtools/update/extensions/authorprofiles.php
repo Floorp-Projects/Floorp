@@ -58,7 +58,7 @@ exit;
   $row = mysql_fetch_array($sql_result);
 ?>
 
-<TITLE>Mozilla Update :: Extensions - Author Profile: <?php echo"$row[UserName]"; ?></TITLE>
+<TITLE>Mozilla Update :: Themes - Author Profile: <?php echo"$row[UserName]"; ?></TITLE>
 
 <LINK REL="STYLESHEET" TYPE="text/css" HREF="/core/update.css">
 </HEAD>
@@ -66,7 +66,7 @@ exit;
 <?php
 include"$page_header";
 
-$type = "E";
+$type = "T";
 $category = $_GET["category"];
 include"inc_sidebar.php";
 ?>
@@ -112,6 +112,7 @@ ORDER  BY  `Type` , `Name` ";
   $numresults = mysql_num_rows($sql_result);
   while ($row = mysql_fetch_array($sql_result)) {
 
+   unset($downloadcount);
 
 $sql2 = "SELECT `vID`, `Version` FROM `t_version` WHERE `ID` = '$row[ID]' AND `approved` = 'YES' ORDER BY `Version` ASC LIMIT 1";
  $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
