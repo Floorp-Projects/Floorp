@@ -668,6 +668,9 @@ if ($count == 0) {
     # So, when you query for a list of bugs, and it gets no results, you
     # can think of this as a friendly reminder.  Of *course* there are bugs
     # matching your query, they just aren't in the bugsystem yet...
+
+    print qq{<p><A HREF="query.cgi">Query Page</A>\n};
+    print qq{&nbsp;&nbsp;<A HREF="enter_bug.cgi">Enter New Bug</A>\n};
 } elsif ($count == 1) {
     print "One bug found.\n";
 } else {
