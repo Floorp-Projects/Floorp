@@ -29,6 +29,7 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsISelectControlFrame.h"
 #include "nsIStatefulFrame.h"
+#include "nsIRollupListener.h"
 
 class nsButtonControlFrame;
 class nsTextControlFrame;
@@ -51,7 +52,8 @@ class nsComboboxControlFrame : public nsAreaFrame,
                                public nsIDOMFocusListener,
                                public nsIAnonymousContentCreator,
                                public nsISelectControlFrame,
-			       public nsIStatefulFrame
+			                         public nsIStatefulFrame,
+                               public nsIRollupListener
 {
 public:
   nsComboboxControlFrame();
@@ -160,6 +162,10 @@ public:
   NS_IMETHOD GetStateType(StateType* aStateType);
   NS_IMETHOD SaveState(nsISupports** aState);
   NS_IMETHOD RestoreState(nsISupports* aState);
+
+  //nsIRollupListener
+  NS_IMETHOD Rollup();
+
 
 protected:
 
