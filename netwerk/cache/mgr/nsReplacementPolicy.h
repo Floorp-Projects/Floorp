@@ -84,6 +84,7 @@ private:
 
     nsresult AddAllRecordsInCache(nsINetDataCache *aCache);
     nsresult CheckForTooManyCacheEntries();
+    nsresult LoadAllRecordsInAllCacheDatabases();
 
     class CacheInfo;
 
@@ -130,6 +131,12 @@ private:
 
     // Time at which cache entries were last ranked by profitability
     PRUint32            mLastRankTime;
+    
+    // When true, all cache database records have been loaded into the
+    // mRankedEntries array.  Until this occurs, it is not possible to rank
+    // cache entries against each other to determine which is the best
+    // candidate for eviction from the cache.
+    PRBool              mLoadedAllDatabaseRecords;
 };
 
 
