@@ -254,7 +254,7 @@ nsMathMLmunderoverFrame::SetInitialChildList(nsIPresContext* aPresContext,
        NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED);
   }
 
-  // disable the strecth-all flag if we are going to act like an subscript-superscript pair
+  // disable the stretch-all flag if we are going to act like a subscript-superscript pair
   if ( NS_MATHML_IS_MOVABLELIMITS(mPresentationData.flags) &&
       !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
     mEmbellishData.flags &= ~NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;

@@ -202,7 +202,7 @@ XXX The winner is the outermost setting in conflicting settings like these:
        NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED);
   }
 
-  // disable the strecth-all flag if we are going to act like an subscript
+  // disable the stretch-all flag if we are going to act like a subscript
   if ( NS_MATHML_IS_MOVABLELIMITS(mPresentationData.flags) &&
       !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
     mEmbellishData.flags &= ~NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
