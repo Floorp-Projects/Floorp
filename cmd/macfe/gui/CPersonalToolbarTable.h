@@ -158,7 +158,8 @@ class CPersonalToolbarTable : public LSmallIconTable, public LDragAndDrop,
 
 		HT_View		mToolbarView;
 		HT_Resource	mToolbarRoot;
-
+		HT_Pane		mToolbarPane;
+		
 		ButtonList*	mButtonList;		// list of buttons pulled from HT
 		bool		mIsInitialized;		// is this class ready for prime time?
 		

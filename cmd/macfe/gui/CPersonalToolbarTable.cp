@@ -63,10 +63,10 @@ CPersonalToolbarTable :: CPersonalToolbarTable ( LStream* inStream )
 	// setup our window into the RDF world and register this class as the one to be notified
 	// when the personal toolbar changes.
 	HT_Notification notifyStruct = CreateNotificationStruct();
-	HT_Pane toolbarPane = HT_NewPersonalToolbarPane(notifyStruct);
-	if ( !toolbarPane )
+	mToolbarPane = HT_NewPersonalToolbarPane(notifyStruct);
+	if ( !mToolbarPane )
 		throw SomethingBadInHTException();
-	mToolbarView = HT_GetSelectedView ( toolbarPane );
+	mToolbarView = HT_GetSelectedView ( mToolbarPane );
 	if ( !mToolbarView )
 		throw SomethingBadInHTException();
 	mToolbarRoot = HT_TopNode ( mToolbarView );
@@ -109,6 +109,12 @@ CPersonalToolbarTable :: ~CPersonalToolbarTable ( )
 {
 	delete mButtonList;
 
+	if ( mToolbarPane ) {
+		// we don't want to know about any events while we're being deleted!
+		HT_SetNotificationMask ( mToolbarPane, HT_EVENT_NO_NOTIFICATION_MASK );
+		HT_DeletePane ( mToolbarPane );
+	}
+	
 } // destructor
 
 
