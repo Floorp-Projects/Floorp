@@ -918,7 +918,7 @@ public:
     ConflictSet();
     ~ConflictSet();
 
-    nsresult Add(const Instantiation& aInstantiation, const Rule* aRule);
+    nsresult Add(const Instantiation& aInstantiation, const Rule* aRule, PRBool* aDidAddKey);
 
     void GetMatches(const Key& aKey, const MatchSet** aMatchSet) const;
 
@@ -1097,8 +1097,10 @@ ConflictSet::Destroy()
 }
 
 nsresult
-ConflictSet::Add(const Instantiation& aInstantiation, const Rule* aRule)
+ConflictSet::Add(const Instantiation& aInstantiation, const Rule* aRule, PRBool* aDidAddKey)
 {
+    *aDidAddKey = PR_FALSE;
+
     // add the match to a table indexed by instantiation key
     {
         Key key(aInstantiation, aRule);
@@ -1130,6 +1132,7 @@ ConflictSet::Add(const Instantiation& aInstantiation, const Rule* aRule)
 
         if (! set->Contains(aRule, aInstantiation)) {
             set->Add(aRule, aInstantiation);
+            *aDidAddKey = PR_TRUE;
         }
     }
 
@@ -1315,12 +1318,16 @@ InstantiationNode::Propogate(const InstantiationSet& aInstantiations, void* aClo
     // If we get here, we've matched the rule associated with this
     // node. Add it to the conflict set, and the set of new <content,
     // member> pairs.
-    KeySet* keyset = NS_STATIC_CAST(KeySet*, aClosure);
+    KeySet* newkeys = NS_STATIC_CAST(KeySet*, aClosure);
 
     InstantiationSet::ConstIterator last = aInstantiations.Last();
     for (InstantiationSet::ConstIterator inst = aInstantiations.First(); inst != last; ++inst) {
-        mConflictSet->Add(*inst, mRule);
-        keyset->Add(Key(*inst, mRule));
+        PRBool didAddKey;
+        mConflictSet->Add(*inst, mRule, &didAddKey);
+
+        if (didAddKey) {
+            newkeys->Add(Key(*inst, mRule));
+        }
     }
     
     return NS_OK;
