@@ -96,7 +96,11 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char * aFileExt, nsIM
 {
   // first, ask our base class. We may already have this information cached....
   nsresult rv = nsExternalHelperAppService::GetFromExtension(aFileExt, aMIMEInfo);
-  if (NS_SUCCEEDED(rv) && *aMIMEInfo) return rv;
+  if (NS_SUCCEEDED(rv) && *aMIMEInfo) 
+  {
+    UpdateCreatorInfo(*aMIMEInfo);
+    return rv;
+  }
   
   // oops, we didn't find an entry....ask the internet config service to look it up for us...
   nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
@@ -117,7 +121,11 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char * aMIMEType, nsIM
 {
   // first, ask our base class. We may already have this information cached....
   nsresult rv = nsExternalHelperAppService::GetFromMIMEType(aMIMEType, aMIMEInfo);
-  if (NS_SUCCEEDED(rv) && *aMIMEInfo) return rv;
+  if (NS_SUCCEEDED(rv) && *aMIMEInfo) 
+  {
+    UpdateCreatorInfo(*aMIMEInfo);
+    return rv;
+  }
   
   // oops, we didn't find an entry....ask the internet config service to look it up for us...
   nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
@@ -133,3 +141,33 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char * aMIMEType, nsIM
   if (!*aMIMEInfo) rv = NS_ERROR_FAILURE;
   return rv;
 }
+
+// we never want to use a hard coded value for the creator and file type for the mac. always look these values up
+// from internet config.
+void nsOSHelperAppService::UpdateCreatorInfo(nsIMIMEInfo * aMIMEInfo)
+{
+  PRUint32 macCreatorType;
+  PRUint32 macFileType;
+  aMIMEInfo->GetMacType(&macFileType);
+  aMIMEInfo->GetMacCreator(&macCreatorType);
+  
+  if (macFileType == 0 || macCreatorType == 0)
+  {
+    // okay these values haven't been initialized yet so fetch a mime object from internet config.
+    nsXPIDLCString mimeType;
+    aMIMEInfo->GetMIMEType(getter_Copies(mimeType));
+    nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
+    if (icService)
+    {
+      nsCOMPtr<nsIMIMEInfo> osMimeObject;
+      icService->FillInMIMEInfo(mimeType, nsnull, getter_AddRefs(osMimeObject));
+      if (osMimeObject)
+      {
+        osMimeObject->GetMacType(&macFileType);
+        osMimeObject->GetMacCreator(&macCreatorType);
+        aMIMEInfo->SetMacCreator(macCreatorType);
+        aMIMEInfo->SetMacType(macFileType);
+      } // if we got an os object
+    } // if we got the ic service
+  } // if the creator or file type hasn't been initialized yet
+} 
