@@ -564,10 +564,17 @@ init_dirs()
         RESULTDIR=${UX_MASTERDIR}/mozilla/tests_results/security
     fi
 
-    TESTSCRIPTDIR=${MOZILLA_ROOT}/security/nss/tests
+    if [ -n "$PRODUCT_TO_TEST" -a "$PRODUCT_TO_TEST" = "JSS" ] ; then
 
-    if [ ! -d $TESTSCRIPTDIR ]
-    then
+        if [ "$O_WIN" = "ON" ] ; then
+            JSS_NSS_SRC_DIR=$JSS_NSS_NT_SRC_DIR
+        fi
+        TESTSCRIPTDIR=${NSS_VER_DIR}/../${JSS_NSS_SRC_DIR}/mozilla/security/nss/tests
+    else
+        TESTSCRIPTDIR=${MOZILLA_ROOT}/security/nss/tests
+    fi
+
+    if [ ! -d $TESTSCRIPTDIR ] ; then
         if [ "$O_WIN" = "ON" -a "$WIN_WAIT_FOREVER" = "ON" ]
         then
             WaitForever $TESTSCRIPTDIR/all.sh 1
@@ -1072,6 +1079,12 @@ set_objdir()
 ########################################################################
 bc()
 {
+  if [ -n "$PRODUCT_TO_TEST" -a "$PRODUCT_TO_TEST" = "JSS" ] ; then
+      TESTDIR=${RESULTDIR}
+      BC_ACTION=""
+      DON_T_SET_PATHS="FALSE" #let init.sh override - FIXME - check if necessary
+      return
+  fi
   DON_T_SET_PATHS="TRUE"
   case $1 in
     0)

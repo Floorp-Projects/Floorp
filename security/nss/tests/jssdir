@@ -1,0 +1,28 @@
+if ( "$2" == ""  ) then
+	setenv BUILDDATE `date +%m%d`
+else
+	setenv BUILDDATE $2
+endif
+
+if ( "$1" == ""  ) then
+	setenv JSSVER tip
+else
+	setenv JSSVER $1
+endif
+
+if ( ! ${?QAYEAR} ) then 
+        setenv QAYEAR `date +%Y`
+else if ( "$QAYEAR" == ""  ) then
+	setenv QAYEAR `date +%Y`
+	
+endif
+
+setenv JSS_VER_DIR /share/builds/mccrel/jss/jss$JSSVER
+setenv NTDIST ${JSS_VER_DIR}/builds/${QAYEAR}${BUILDDATE}.1/blowfish_NT4.0_Win95/mozilla/dist
+setenv UXDIST ${JSS_VER_DIR}/builds/${QAYEAR}${BUILDDATE}.1/booboo_Solaris8/mozilla/dist
+setenv TESTSCRIPTDIR ${JSS_VER_DIR}/builds/${QAYEAR}${BUILDDATE}.1/booboo_Solaris8/mozilla/security/jss/tests
+setenv RESULTDIR ${JSS_VER_DIR}/builds/${QAYEAR}${BUILDDATE}.1/booboo_Solaris8/mozilla/tests_results/security
+
+cd ${JSS_VER_DIR}/builds/${QAYEAR}${BUILDDATE}.1/booboo_Solaris8
+pwd
+ls
