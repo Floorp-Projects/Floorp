@@ -20,6 +20,13 @@ function Startup()
   doSetOKCancel(onOK, onCancel);
 }
 
+function DownloadNow()
+{
+  var args = {dirName: gCurrentDirectory, prefName: gCurrentDirectoryString};
+
+  window.opener.openDialog("chrome://messenger/content/addressbook/replicationProgress.xul", "", "chrome,resizable,status,centerscreen,dialog=no", args);
+
+}
 function fillSettings()
 {
   try {
@@ -303,7 +310,7 @@ function onOK()
 }
 
 function onCancel()
-{
+{	  
   window.opener.gUpdate = false;
   window.close();
 }

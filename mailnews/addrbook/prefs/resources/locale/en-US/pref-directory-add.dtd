@@ -44,3 +44,7 @@ Rights Reserved.
 <!ENTITY return.label                      "Don't return more than">
 <!ENTITY return.accesskey                  "r">
 <!ENTITY results.label                     "results">
+<!ENTITY offlineText.label                 "You can download a local copy of this directory so that it is available for use when you are working offline.">
+<!ENTITY downloadNowButton.label           "Download Now">
+<!ENTITY downloadNowButton.accesskey       "D">
+
