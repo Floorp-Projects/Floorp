@@ -634,6 +634,7 @@ nsPasswordManager::ReadPasswords(nsIFile* aPasswordFile)
 
   // Read the header
   nsAutoString buffer;
+  nsCAutoString utf8Buffer;
   PRBool moreData = PR_FALSE;
   nsresult rv = lineStream->ReadLine(buffer, &moreData);
   if (NS_FAILED(rv))
@@ -656,17 +657,23 @@ nsPasswordManager::ReadPasswords(nsIFile* aPasswordFile)
     if (NS_FAILED(rv))
       return NS_OK;
 
+    // |buffer| will contain UTF-8 encoded characters, so move it into
+    // a narrow string so we can manipulate it.  If NS_ReadLine is ever
+    // fixed to handle character encoding, this code should be cleaned up.
+
+    utf8Buffer.AssignWithConversion(buffer);
+
     switch (state) {
     case STATE_REJECT:
-      if (buffer.Equals(NS_LITERAL_STRING(".")))
+      if (utf8Buffer.Equals(NS_LITERAL_CSTRING(".")))
         state = STATE_REALM;
       else
-        mRejectTable.Put(NS_ConvertUCS2toUTF8(buffer), 1);
+        mRejectTable.Put(utf8Buffer, 1);
 
       break;
 
     case STATE_REALM:
-      realm.Assign(NS_ConvertUCS2toUTF8(buffer));
+      realm.Assign(utf8Buffer);
       state = STATE_USERFIELD;
       break;
 
@@ -685,12 +692,12 @@ nsPasswordManager::ReadPasswords(nsIFile* aPasswordFile)
       }
 
       // If the line is a ., we've reached the end of this realm's entries.
-      if (buffer.Equals(NS_LITERAL_STRING("."))) {
+      if (utf8Buffer.Equals(NS_LITERAL_CSTRING("."))) {
         entry = nsnull;
         state = STATE_REALM;
       } else {
         entry = new SignonDataEntry();
-        entry->userField.Assign(buffer);
+        CopyUTF8toUTF16(utf8Buffer, entry->userField);
         state = STATE_USERVALUE;
       }
 
@@ -699,7 +706,7 @@ nsPasswordManager::ReadPasswords(nsIFile* aPasswordFile)
     case STATE_USERVALUE:
       NS_ASSERTION(entry, "bad state");
 
-      entry->userValue.Assign(buffer);
+      CopyUTF8toUTF16(utf8Buffer, entry->userValue);
 
       state = STATE_PASSFIELD;
       break;
@@ -708,7 +715,8 @@ nsPasswordManager::ReadPasswords(nsIFile* aPasswordFile)
       NS_ASSERTION(entry, "bad state");
 
       // Strip off the leading "*" character
-      entry->passField.Assign(Substring(buffer, 1, buffer.Length() - 1));
+      CopyUTF8toUTF16(Substring(utf8Buffer, 1, utf8Buffer.Length() - 1),
+                      entry->passField);
 
       state = STATE_PASSVALUE;
       break;
@@ -716,7 +724,7 @@ nsPasswordManager::ReadPasswords(nsIFile* aPasswordFile)
     case STATE_PASSVALUE:
       NS_ASSERTION(entry, "bad state");
 
-      entry->passValue.Assign(buffer);
+      CopyUTF8toUTF16(utf8Buffer, entry->passValue);
 
       state = STATE_USERFIELD;
       break;
