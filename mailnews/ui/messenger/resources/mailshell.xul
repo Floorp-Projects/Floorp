@@ -55,7 +55,8 @@
 <!ENTITY searchCmd.label ".Search Messages">  
 <!ENTITY filtersCmd.label ".Message Filters...">  
 <!ENTITY folderPropsCmd.label ".Folder Properties">  
-<!ENTITY prefsCmd.label ".Preferences">  
+<!ENTITY prefsCmd.label ".Preferences">
+<!ENTITY accountManagerCmd.label "Account Manager">
 <!ENTITY viewMenu.label "View"> 
 <!ENTITY showMenu.label ".Show"> 
 <!ENTITY showMessageToolbarCmd.label ".Message Toolbar">  
@@ -271,6 +272,7 @@
       <menuitem name="&folderPropsCmd.label;" onclick="MsgFolderProperties();"/>
       <separator/>
       <menuitem name="&prefsCmd.label;" onclick="MsgPreferences();"/>
+      <menuitem name="&accountManagerCmd.label;" onclick="MsgAccountManager();"/>
     </menu>
     <menu name="&viewMenu.label;">
       <menu name="&showMenu.label;">
@@ -359,10 +361,10 @@
       </menu>
       <menuitem name="&editMsgAsNewCmd.label;" onclick="MsgEditMessageAsNew();"/>
       <separator/>
-      <menu name="&moveMsgMenu.label;" datasources="rdf:mailnewsfolders" id="mailbox:/" open="true"
+      <menu name="&moveMsgMenu.label;" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" id="msgaccounts:/" open="true"
 			onclick="MsgMoveMessage(event.target)">
       </menu>
-      <menu name="&copyMsgMenu.label;" datasources="rdf:mailnewsfolders" id="mailbox:/" open="true"
+      <menu name="&copyMsgMenu.label;" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" id="msgaccounts:/" open="true"
 			onclick="MsgCopyMessage(event.target)">
       </menu>
       <separator/>
