@@ -34,7 +34,7 @@
 /*
  * Interfaces of the CMS implementation.
  *
- * $Id: cms.h,v 1.2 2000/06/13 21:56:26 chrisk%netscape.com Exp $
+ * $Id: cms.h,v 1.3 2000/06/14 23:16:41 chrisk%netscape.com Exp $
  */
 
 #ifndef _CMS_H_
@@ -705,6 +705,16 @@ NSS_CMSSignerInfo_AddUnauthAttr(NSSCMSSignerInfo *signerinfo, NSSCMSAttribute *a
  */
 extern SECStatus
 NSS_CMSSignerInfo_AddSigningTime(NSSCMSSignerInfo *signerinfo, PRTime t);
+
+/*
+ * NSS_CMSSignerInfo_AddSMIMECaps - add a SMIMECapabilities attribute to the
+ * authenticated (i.e. signed) attributes of "signerinfo".
+ *
+ * This is expected to be included in outgoing signed
+ * messages for email (S/MIME).
+ */
+extern SECStatus
+NSS_CMSSignerInfo_AddSMIMECaps(NSSCMSSignerInfo *signerinfo);
 
 /* 
  * NSS_CMSSignerInfo_AddCounterSignature - countersign a signerinfo
