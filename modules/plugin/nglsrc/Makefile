@@ -34,6 +34,7 @@ CPPSRCS =                              \
     ns4xPluginInstance.cpp  \
     ns4xPluginStream.cpp  \
     nsPluginInstancePeer.cpp  \
+    nsPluginStreamPeer.cpp  \
     $(NULL)
 
 REQUIRES = raptor plugin java xpcom

@@ -21,12 +21,13 @@
 
 #include "xp_core.h"
 #include "nsplugindefs.h"
+#include "nsIFactory.h"
 
 #define NS_IPLUGINHOST_IID \
 { 0x264c0640, 0x1c31, 0x11d2, \
 { 0xa8, 0x2e, 0x00, 0x40, 0x95, 0x9a, 0x28, 0xc9 } }
 
-struct nsIPluginHost : public nsISupports
+struct nsIPluginHost : public nsIFactory
 {
 public:
 
