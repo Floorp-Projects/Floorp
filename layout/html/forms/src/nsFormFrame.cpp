@@ -1087,7 +1087,7 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
               LL_L2UI(fileSize32, fileSize);
               contentLen += fileSize32;
               NS_RELEASE(tempFile);
-            } while (false);
+            } while (PR_FALSE);
 
             // Add CRLF after file
             contentLen += crlfLen;
