@@ -65,6 +65,25 @@
 #include "nsXIFDTD.h"
 #include "nsIFrameSelection.h"
 
+#include "nsIDataFlavor.h"
+
+// XXX This is just a temporary thing until 
+//the new Clipboard support comes on line
+//#define NEW_CLIPBOARD_SUPPORT
+
+#ifdef NEW_CLIPBOARD_SUPPORT
+// Drag & Drop, Clipboard
+#include "nsWidgetsCID.h"
+#include "nsIClipboard.h"
+#include "nsITransferable.h"
+
+// Drag & Drop, Clipboard Support
+static NS_DEFINE_IID(kIClipboardIID,    NS_ICLIPBOARD_IID);
+static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
+
+static NS_DEFINE_IID(kITransferableIID, NS_ITRANSFERABLE_IID);
+static NS_DEFINE_CID(kCTransferableCID, NS_TRANSFERABLE_CID);
+#endif
 
 static PRBool gsNoisyRefs = PR_FALSE;
 #undef NOISY
@@ -1513,9 +1532,9 @@ PresShell::DoCopy(nsISelectionMgr* aSelectionMgr)
 //  rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
 //  Changed to do plain text only for Dogfood -- gpk 3/14/99
     rv = NS_New_HTMLToTXT_SinkStream(&sink);
+
+#ifndef NEW_CLIPBOARD_SUPPORT
     
-
-
     ostream* copyStream;
     rv = aSelectionMgr->GetCopyOStream(&copyStream);
     if (!NS_SUCCEEDED(rv))
@@ -1527,6 +1546,7 @@ PresShell::DoCopy(nsISelectionMgr* aSelectionMgr)
 //  Changed to do plain text only for Dogfood -- gpk 3/14/99
 //  ((nsHTMLContentSinkStream*)sink)->SetOutputStream(*copyStream);
     ((nsHTMLToTXTSinkStream*)sink)->SetOutputStream(*copyStream);
+#endif
 
     if (NS_OK == rv) {
       parser->SetContentSink(sink);
@@ -1542,7 +1562,32 @@ PresShell::DoCopy(nsISelectionMgr* aSelectionMgr)
       }
       NS_IF_RELEASE(dtd);
 
+#ifdef NEW_CLIPBOARD_SUPPORT
+      nsAutoString strBuf;
+      ((nsHTMLToTXTSinkStream*)sink)->GetStringBuffer(strBuf);
+
+      nsIClipboard* clipboard;
+      nsresult rv = nsServiceManager::GetService(kCClipboardCID,
+                                                 kIClipboardIID,
+                                                 (nsISupports **)&clipboard);
+      nsITransferable * trans;
+      rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, kITransferableIID, (void**) &trans);
+      if (nsnull != trans) {
+        //trans->AddDataFlavor("text/xif", "XIF Format");
+        trans->AddDataFlavor(kTextMime, "Text Format");
+      }
+
+      trans->SetTransferString(strBuf);
+      clipboard->SetTransferable(trans, nsnull);
+      clipboard->SetClipboard();
+
+      NS_IF_RELEASE(clipboard);
+      NS_IF_RELEASE(trans);
+
+#else
       aSelectionMgr->CopyToClipboard();
+#endif
+
     }
     NS_IF_RELEASE(sink);
     NS_RELEASE(parser);
