@@ -22,7 +22,6 @@
 
 #include "mkutils.h"
 #include "msgcom.h"
-#include "xp_reg.h"
 #include "xp_qsort.h"
 
 /* UNIX doesn't need this stuff since it uses the file system
