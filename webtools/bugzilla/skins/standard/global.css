@@ -33,41 +33,26 @@ body
         text-align: center;        
 
         width: 100%;
-        background: #000;
-
-        /* for Netscape 4 only */
-        border: 1px solid #fff;
-        border-bottom-width: 0.65em;
-    }
-
-    /* hide from NN4 */
-    div#banner
-    {
-        border-bottom-width: 0.2em;
+        background: #fff;
     }
 
     #banner p
     {
         margin: 0;
+        margin-bottom: 1px;
         padding: 0;
     }
 
     #banner-name
     {
-        font-family: serif;
-        font-size: 255%;
-
-        color: #fff;
-    }
-
-    /* hide from NN4 */
-    p#banner-name
-    {
-        font-size: 300%;
+        font-size: 0px;
+        height: 48px;
+        background: transparent no-repeat url(global/header.png);
     }
 
     #banner-version
     {
+        font-family: sans-serif;
         font-size: 75%;
         background: #fff;
     }
@@ -83,12 +68,16 @@ body
     #footer
     {
         float: left;
+        margin-top: 5px;
+        width: 100%;
+        font-family: sans-serif;
     }
 
     #footer form
     {
-        background: #FFFFE0;
-        border: 1px solid #000;
+        background: #edf2f2;
+        border-top: 1px solid #ddd;
+        border-bottom: 1px solid #ddd;
     }
 
     #footer span
@@ -170,6 +159,29 @@ body
     }
 /* footer (end) */
 
+/* generic (begin) */
+    body
+    {
+        background: #fff url("global/body_back.gif") repeat-x;
+    }
+
+    :link {
+        color: #039;
+    }
+
+    :visited {
+        color: #636;
+    }
+
+    :link:hover, :visited:hover {
+        color: #333;
+    }
+
+    :link:active, :link:active {
+        color: #000;
+    }
+/* generic (end) */
+
 .bz_obsolete { text-decoration: line-through; }
 .bz_inactive { text-decoration: line-through; }
 .bz_closed { text-decoration: line-through; }
@@ -182,6 +194,23 @@ body
     background-color: lightgreen;
     margin: 0;
     padding: 1em 0;
+}
+
+.selected_tab
+{
+    background: #fff;
+    border: 1px solid black;
+}
+
+.unselected_tab
+{
+    background: #eee;
+    border: 1px solid black;
+}
+
+.spacer
+{
+    border: 1px solid black;
 }
 
 table#flags th, table#flags td { vertical-align: baseline; text-align: left; }

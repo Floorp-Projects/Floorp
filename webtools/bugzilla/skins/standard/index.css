@@ -40,14 +40,14 @@
     /* Hide from NN4 */
     div#page-index .intro
     {
-        width: 329px;
-        height: 220px;
+        width: 250px;
+        height: 200px;
 
         margin-top: 2.3em;
+        margin-right: 2.3em;
         float: right;
 
-        border: 2px solid #000;
-        background: transparent no-repeat url(index/front.jpg);
+        background: transparent no-repeat url(index/front.png);
     }
 
     #page-index #report
@@ -66,4 +66,4 @@
         padding: 1em 0;
     }
 
-/* index page (end) */
+/* index page (end) *
