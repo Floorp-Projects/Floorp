@@ -1305,6 +1305,12 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree
     if (itemEl) {
       rv = itemEl->GetLabel(label);
     }
+    else {
+      nsCOMPtr<nsIDOMXULElement> xulEl(do_QueryInterface(mDOMNode));
+      if (xulEl) {
+        rv = xulEl->GetAttribute(NS_LITERAL_STRING("label"), label);
+      }
+    }
   }
 
   // CASES #2 and #3 ------ label as a child or <label control="id" ... > </label>

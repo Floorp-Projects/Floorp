@@ -582,3 +582,47 @@ NS_IMETHODIMP nsXULComboboxAccessible::GetValue(nsAString& _retval)
   }
   return NS_ERROR_FAILURE;
 }
+
+NS_IMETHODIMP nsXULComboboxAccessible::GetChildCount(PRInt32 *aAccChildCount)
+{
+  // Set menugenerated="true" on the menupopup node to generate the
+  // sub-menu items if they have not been generated
+  PRUint32 childIndex, numChildren = 0;
+  nsCOMPtr<nsIDOMNode> childNode;
+  nsCOMPtr<nsIDOMNodeList> nodeList;
+  mDOMNode->GetChildNodes(getter_AddRefs(nodeList));
+  if (nodeList && NS_OK == nodeList->GetLength(&numChildren)) {
+    for (childIndex = 0; childIndex < numChildren; childIndex++) {
+      nodeList->Item(childIndex, getter_AddRefs(childNode));
+      nsAutoString nodeName;
+      childNode->GetNodeName(nodeName);
+      if (nodeName.Equals(NS_LITERAL_STRING("menupopup"))) {
+        break;
+      }
+    }
+
+    if (childIndex < numChildren) {
+      nsCOMPtr<nsIDOMElement> element(do_QueryInterface(childNode));
+      if (element) {
+        nsAutoString attr;
+        element->GetAttribute(NS_LITERAL_STRING("menugenerated"), attr);
+        if (!attr.Equals(NS_LITERAL_STRING("true"))) {
+          element->SetAttribute(NS_LITERAL_STRING("menugenerated"), NS_LITERAL_STRING("true"));
+        }
+      }
+    }
+  }
+
+  nsAutoString boxName;
+  mDOMNode->GetNodeName(boxName);
+  if (boxName.Equals(NS_LITERAL_STRING("textbox"))) {
+    // autocomplete textbox also uses nsXULComboboxAccessible and we need walk anonymous children
+    CacheChildren(PR_TRUE);
+  }
+  else {
+    // Argument of PR_FALSE indicates we don't walk anonymous children for menuitems
+    CacheChildren(PR_FALSE);
+  }
+  *aAccChildCount = mAccChildCount;
+  return NS_OK;
+}
