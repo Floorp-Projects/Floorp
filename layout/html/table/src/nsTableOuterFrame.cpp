@@ -2211,3 +2211,4 @@ nsTableOuterFrame::GetFrameName(nsAString& aResult) const
   return MakeFrameName(NS_LITERAL_STRING("TableOuter"), aResult);
 }
 #endif
+
