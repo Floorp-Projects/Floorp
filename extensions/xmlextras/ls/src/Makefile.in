@@ -19,13 +19,39 @@
 # Contributor(s): 
 #
 
-DEPTH           = ../../..
-topsrcdir       = @top_srcdir@
-srcdir          = @srcdir@
-VPATH           = @srcdir@
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS            = src
+MODULE		= xmlextras
+LIBRARY_NAME	= xmlextrasls_s
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  content \
+		  caps \
+		  uconv \
+		  necko \
+		  xpconnect \
+		  js \
+		  widget \
+		  $(NULL)
+
+CPPSRCS	= 				\
+		nsLSParser.cpp		\
+		nsLSSerializer.cpp	\
+		nsLSEvent.cpp		\
+		$(NULL)
+
+LOCAL_INCLUDES	= \
+		-I$(srcdir)/../../base/src \
+		$(NULL)
+
+# we don't want the shared lib, but we want to force the creation of a
+# static lib.
+FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
