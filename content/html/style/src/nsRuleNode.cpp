@@ -1472,9 +1472,14 @@ nsRuleNode::ComputeFontData(nsStyleFont* aStartFont, const nsCSSFont& aFontData,
     }
 
     if ((NS_STYLE_FONT_SIZE_XXSMALL <= value) && 
-        (value <= NS_STYLE_FONT_SIZE_XXXLARGE)) {
+        (value <= NS_STYLE_FONT_SIZE_XXLARGE)) {
       font->mFont.size = nsStyleUtil::CalcFontPointSize(value, (PRInt32)defaultFont.size, scaleFactor, mPresContext, eFontSize_CSS);
       font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(value, (PRInt32)defaultFixedFont.size, scaleFactor, mPresContext, eFontSize_CSS);
+    }
+    else if (NS_STYLE_FONT_SIZE_XXXLARGE == value) {
+      // <font size="7"> is not specified in CSS, so we don't use eFontSize_CSS.
+      font->mFont.size = nsStyleUtil::CalcFontPointSize(value, (PRInt32)defaultFont.size, scaleFactor, mPresContext);
+      font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(value, (PRInt32)defaultFixedFont.size, scaleFactor, mPresContext);
     }
     else if (NS_STYLE_FONT_SIZE_LARGER == value) {
       PRInt32 index = nsStyleUtil::FindNextLargerFontSize(parentFont->mFont.size, (PRInt32)defaultFont.size, scaleFactor, mPresContext, eFontSize_CSS);
