@@ -112,8 +112,8 @@ public:
    * @param aNameSpaceID identifier of the namespace
    * @param aPrefix out parameter representing the prefix for the namespace
    */
-  NS_IMETHOD GetNameSpacePrefix(PRInt32 aNameSpaceID,
-                                nsIAtom*& aPrefix) = 0;
+  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
+                                      nsIAtom*& aPrefix) = 0;
 
   /**
    * Set attribute values. All attribute values are assumed to have a

@@ -101,6 +101,8 @@ public:
   NS_IMETHOD EpilogCount(PRUint32* aCount);
   NS_IMETHOD AppendToEpilog(nsIContent* aContent);
 
+  NS_IMETHOD GetContentById(const nsString& aName, nsIContent** aContent);
+
   // nsIHTMLContentContainer
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult);
   NS_IMETHOD GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult);

@@ -473,8 +473,8 @@ nsGenericHTMLElement::ParseAttributeString(const nsString& aStr,
 }
 
 nsresult 
-nsGenericHTMLElement::GetNameSpacePrefix(PRInt32 aNameSpaceID,
-                                         nsIAtom*& aPrefix)
+nsGenericHTMLElement::GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
+                                               nsIAtom*& aPrefix)
 {
   aPrefix = nsnull;
   return NS_OK;

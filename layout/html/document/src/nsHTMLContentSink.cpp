@@ -1654,20 +1654,28 @@ HTMLContentSink::OpenHead(const nsIParserNode& aNode)
 {
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::OpenHead", aNode);
+  nsresult rv = NS_OK;
   if (nsnull == mHeadContext) {
     mHeadContext = new SinkContext(this);
     if (nsnull == mHeadContext) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     mHeadContext->SetPreAppend(PR_TRUE);
-    nsresult rv = mHeadContext->Begin(eHTMLTag_head, mHead);
+    rv = mHeadContext->Begin(eHTMLTag_head, mHead);
     if (NS_OK != rv) {
       return rv;
     }
   }
   mContextStack.AppendElement(mCurrentContext);
   mCurrentContext = mHeadContext;
-  return NS_OK;
+
+  if (nsnull != mHead) {
+    nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
+    rv = AddAttributes(aNode, mHead, sco);
+    NS_IF_RELEASE(sco);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP

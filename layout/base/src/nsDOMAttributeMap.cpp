@@ -214,7 +214,7 @@ nsDOMAttributeMap::GetNormalizedName(PRInt32 aNameSpaceID,
 {
   nsIAtom* prefix;
   aAttrName.Truncate();
-  mContent->GetNameSpacePrefix(aNameSpaceID, prefix);
+  mContent->GetNameSpacePrefixFromId(aNameSpaceID, prefix);
 
   if (nsnull != prefix) {
     prefix->ToString(aAttrName);
