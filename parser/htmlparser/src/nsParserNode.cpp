@@ -78,11 +78,20 @@ static void RecycleTokens(nsITokenRecycler* aRecycler,nsDeque& aDeque) {
  *  @return  
  */
 nsCParserNode::~nsCParserNode() {
-  if(mRecycler && mAttributes) {
-    RecycleTokens(mRecycler,*mAttributes);
+  if(mAttributes) {
+
+    //fixed a bug that patrick found, where the attributes deque existed
+    //but was empty. In that case, the attributes deque itself was leaked.
+    //THANKS PATRICK!
+
+    if(mRecycler) {
+      RecycleTokens(mRecycler,*mAttributes);
+    }
     delete mAttributes;
+    mAttributes=0;
   }
 }
+
 
 NS_IMPL_ADDREF(nsCParserNode)
 NS_IMPL_RELEASE(nsCParserNode)
