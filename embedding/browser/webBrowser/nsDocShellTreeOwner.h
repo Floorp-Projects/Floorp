@@ -35,6 +35,8 @@
 #include "nsIWebProgressListener.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMDocument.h"
+#include "nsIChromeEventHandler.h"
+#include "nsIDOMEventReceiver.h"
 
 #include "nsCommandHandler.h"
 
@@ -89,11 +91,12 @@ protected:
     virtual ~nsDocShellTreeOwner();
 
     void WebBrowser(nsWebBrowser* aWebBrowser);
+    
     nsWebBrowser* WebBrowser();
     NS_IMETHOD SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner);
     NS_IMETHOD SetWebBrowserChrome(nsIWebBrowserChrome* aWebBrowserChrome);
 
-    nsCOMPtr<nsIDOMDocument> mLastDOMDocument;
+    nsCOMPtr<nsIDOMEventReceiver> mEventReceiver;
     NS_IMETHOD AddMouseListener();
     NS_IMETHOD RemoveMouseListener();
 
