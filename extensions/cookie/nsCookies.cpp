@@ -1379,7 +1379,7 @@ COOKIE_Write() {
         strm.write("\tFALSE\t", 7);
       }
 
-      PR_snprintf(date_string, sizeof(date_string), "%lu", cookie_s->expires);
+      PR_snprintf(date_string, sizeof(date_string), "%lu", NS_STATIC_CAST(unsigned long, cookie_s->expires));
 
       strm.write(date_string, nsCRT::strlen(date_string));
       strm.write("\t", 1);
