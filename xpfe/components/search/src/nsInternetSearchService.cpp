@@ -18,7 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Robert John Churchill	<rjc@netscape.com>
+ *   Pierre Phaneuf		<pp@ludusdesign.com>
  */
 
 /*
@@ -229,6 +230,7 @@ private:
 	static nsIRDFResource		*kNC_Data;
 	static nsIRDFResource		*kNC_Name;
 	static nsIRDFResource		*kNC_Description;
+	static nsIRDFResource		*kNC_LastText;
 	static nsIRDFResource		*kNC_URL;
 	static nsIRDFResource		*kRDF_InstanceOf;
 	static nsIRDFResource		*kRDF_type;
@@ -310,6 +312,7 @@ nsIRDFResource			*InternetSearchDataSource::kNC_Child;
 nsIRDFResource			*InternetSearchDataSource::kNC_Data;
 nsIRDFResource			*InternetSearchDataSource::kNC_Name;
 nsIRDFResource			*InternetSearchDataSource::kNC_Description;
+nsIRDFResource			*InternetSearchDataSource::kNC_LastText;
 nsIRDFResource			*InternetSearchDataSource::kNC_URL;
 nsIRDFResource			*InternetSearchDataSource::kRDF_InstanceOf;
 nsIRDFResource			*InternetSearchDataSource::kRDF_type;
@@ -354,6 +357,7 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 		gRDFService->GetResource(NC_NAMESPACE_URI "data",                &kNC_Data);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Name",                &kNC_Name);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Description",         &kNC_Description);
+		gRDFService->GetResource(NC_NAMESPACE_URI "LastText",            &kNC_LastText);
 		gRDFService->GetResource(NC_NAMESPACE_URI "URL",                 &kNC_URL);
 		gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf",         &kRDF_InstanceOf);
 		gRDFService->GetResource(RDF_NAMESPACE_URI "type",               &kRDF_type);
@@ -387,6 +391,7 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 		NS_IF_RELEASE(kNC_Data);
 		NS_IF_RELEASE(kNC_Name);
 		NS_IF_RELEASE(kNC_Description);
+		NS_IF_RELEASE(kNC_LastText);
 		NS_IF_RELEASE(kNC_URL);
 		NS_IF_RELEASE(kRDF_InstanceOf);
 		NS_IF_RELEASE(kRDF_type);
@@ -1162,10 +1167,35 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 	action += "?";
 	action += input;
 
+	// remember the text of the last search operation
+	RememberLastSearchText(searchStr);
+
 	// return a copy of the resulting search URL
 	*resultURL = action.ToNewCString();
-
 	return(NS_OK);
+}
+
+
+
+NS_IMETHODIMP
+InternetSearchDataSource::RememberLastSearchText(const PRUnichar *searchStr)
+{
+	nsresult		rv;
+	nsCOMPtr<nsIRDFLiteral>	textLiteral;
+	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(searchStr, getter_AddRefs(textLiteral))))
+	{
+		nsCOMPtr<nsIRDFNode>	textNode;
+		if (NS_SUCCEEDED(rv = mInner->GetTarget(kNC_LastSearchRoot, kNC_LastText, PR_TRUE,
+			getter_AddRefs(textNode))) && (rv != NS_RDF_NO_VALUE))
+		{
+			Change(kNC_LastSearchRoot, kNC_LastText, textNode, textLiteral);
+		}
+		else
+		{
+			Assert(kNC_LastSearchRoot, kNC_LastText, textLiteral, PR_TRUE);
+		}
+	}
+	return(rv);
 }
 
 
@@ -1261,6 +1291,9 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 			searchText.Truncate(andOffset);
 		}
 		if (searchText.Length() < 1)	return(NS_RDF_NO_VALUE);
+
+		// remember the text of the last search operation
+		RememberLastSearchText(searchText.GetUnicode());
 
 #ifdef	DEBUG_SEARCH_OUTPUT
 		char	*engineMatch = searchText.ToNewCString();

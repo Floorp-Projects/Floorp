@@ -19,3 +19,5 @@
    - Contributor(s):
   --> 
 
+<!ENTITY search.text.label        "Text:">
+<!ENTITY search.button.label      "Search">
