@@ -260,7 +260,7 @@ FindDataSource::GetTarget(nsIRDFResource *source,
 //			rv = GetURL(source, &array);
 			nsAutoString	url("");
 			nsIRDFLiteral	*literal;
-			gRDFService->GetLiteral(url, &literal);
+			gRDFService->GetLiteral(url.GetUnicode(), &literal);
 			*target = literal;
 			rv = NS_OK;
 		}
@@ -272,7 +272,7 @@ FindDataSource::GetTarget(nsIRDFResource *source,
 			{
 				nsAutoString	url(uri);
 				nsIRDFLiteral	*literal;
-				gRDFService->GetLiteral(url, &literal);
+				gRDFService->GetLiteral(url.GetUnicode(), &literal);
 				*target = literal;
 				rv = NS_OK;
 			}
@@ -282,7 +282,7 @@ FindDataSource::GetTarget(nsIRDFResource *source,
 		{
 			nsAutoString	pulse("15");
 			nsIRDFLiteral	*pulseLiteral;
-			gRDFService->GetLiteral(pulse, &pulseLiteral);
+			gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
 			array = new nsVoidArray();
 			if (array)
 			{
@@ -549,7 +549,7 @@ FindDataSource::GetTargets(nsIRDFResource *source,
 			{
 				nsAutoString	url(uri);
 				nsIRDFLiteral	*literal;
-				gRDFService->GetLiteral(url, &literal);
+				gRDFService->GetLiteral(url.GetUnicode(), &literal);
 				array = new nsVoidArray();
 				if (array)
 				{
@@ -562,7 +562,7 @@ FindDataSource::GetTargets(nsIRDFResource *source,
 		{
 			nsAutoString	pulse("15");
 			nsIRDFLiteral	*pulseLiteral;
-			gRDFService->GetLiteral(pulse, &pulseLiteral);
+			gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
 			array = new nsVoidArray();
 			if (array)
 			{
