@@ -130,14 +130,6 @@ nsHttpTransaction::TakeResponseHead()
     return head;
 }
 
-nsresult
-nsHttpTransaction::GetSecurityInfo(nsISupports **result)
-{
-    if (mConnection)
-        mConnection->GetSecurityInfo(result);
-    return NS_OK;
-}
-
 // called on the socket transport thread
 nsresult
 nsHttpTransaction::OnDataWritable(nsIOutputStream *os)
@@ -221,8 +213,6 @@ nsHttpTransaction::OnStopTransaction(nsresult status)
     LOG(("nsHttpTransaction::OnStopTransaction [this=%x status=%x]\n",
         this, status));
 
-    // make sure that this flag is set.
-    mTransactionDone = PR_TRUE;
     mStatus = status;
 
     NS_IF_RELEASE(mConnection);
@@ -354,6 +344,7 @@ nsHttpTransaction::ParseHead(char *buf,
     return NS_OK;
 }
 
+// called on the socket thread
 nsresult
 nsHttpTransaction::HandleContentStart()
 {
@@ -444,6 +435,7 @@ nsHttpTransaction::HandleContentStart()
     return rv;
 }
 
+// called on the socket thread
 nsresult
 nsHttpTransaction::HandleContent(char *buf,
                                  PRUint32 count,
@@ -480,9 +472,8 @@ nsHttpTransaction::HandleContent(char *buf,
         *countRead = count;
 
     if (*countRead) {
-        // update count of content bytes read..
+        // update count of content bytes read and report progress...
         mContentRead += *countRead;
-        // and report progress
         mConnection->ReportProgress(mContentRead, mContentLength);
     }
 
@@ -495,15 +486,10 @@ nsHttpTransaction::HandleContent(char *buf,
         // atomically mark the transaction as complete to ensure that
         // OnTransactionComplete is fired only once!
         PRInt32 priorVal = PR_AtomicSet(&mTransactionDone, 1);
-        if (priorVal == 0 && mConnection) {
+        if (priorVal == 0) {
             // let the connection know that we are done with it; this should
             // result in OnStopTransaction being fired.
-            rv = mConnection->OnTransactionComplete(NS_OK);
-            
-            // at this point, we no longer need the connection
-            NS_RELEASE(mConnection);
-
-            return rv;
+            return mConnection->OnTransactionComplete(NS_OK);
         }
         return NS_OK;
     }
@@ -622,32 +608,17 @@ nsHttpTransaction::Cancel(nsresult status)
 
     // if the transaction is already "done" then there is nothing more to do.
     // ie., our consumer _will_ eventually receive their OnStopRequest.
-    if (mTransactionDone) {
+    PRInt32 priorVal = PR_AtomicSet(&mTransactionDone, 1);
+    if (priorVal == 1) {
         LOG(("ignoring cancel since transaction is already done [this=%x]\n", this));
         return NS_OK;
     }
 
-    // the status must be set immediately as the following routines may
-    // take action asynchronously.
+    // the status must be set immediately as the cancelation may only take
+    // action asynchronously.
     mStatus = status;
 
-    if (!mConnection) {
-        // the connection is not assigned to a connection yet, so we must
-        // notify the HTTP handler, so it can process the cancelation. 
-        return nsHttpHandler::get()->CancelPendingTransaction(this, status);
-    }
-
-    // atomically cancel the connection.  it's important to consider that
-    // the socket thread could already be in the middle of processing
-    // completion, in which case we should ignore this cancelation request.
-
-    PRInt32 priorVal = PR_AtomicSet(&mTransactionDone, 1);
-    if (priorVal == 0) {
-        mConnection->OnTransactionComplete(status);
-        NS_RELEASE(mConnection);
-    }
-
-    return NS_OK;
+    return nsHttpHandler::get()->CancelTransaction(this, status);
 }
 
 NS_IMETHODIMP
@@ -656,6 +627,7 @@ nsHttpTransaction::Suspend()
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+// called from the consumer thread, while nothing is happening on the socket thread.
 NS_IMETHODIMP
 nsHttpTransaction::Resume()
 {

@@ -112,13 +112,13 @@ public:
                                  nsHttpConnectionInfo *,
                                  PRBool failIfBusy = PR_FALSE);
 
+    // Called to cancel a transaction, which may or may not be assigned to
+    // a connection.  Callable from any thread.
+    nsresult CancelTransaction(nsHttpTransaction *, nsresult status);
+
     // Called when a connection is done processing a transaction.  Callable
     // from any thread.
     nsresult ReclaimConnection(nsHttpConnection *);
-
-    // Called when a transaction, which is not assigned to a connection,
-    // is canceled.  Callable from any thread.
-    nsresult CancelPendingTransaction(nsHttpTransaction *, nsresult status);
 
     //
     // The HTTP handler caches pointers to specific XPCOM services, and
@@ -167,6 +167,8 @@ private:
     nsresult InitiateTransaction_Locked(nsHttpTransaction *,
                                         nsHttpConnectionInfo *,
                                         PRBool failIfBusy = PR_FALSE);
+
+    nsresult CancelPendingTransaction(nsHttpTransaction *, nsresult status);
 
     PRUint32 CountActiveConnections(nsHttpConnectionInfo *);
     PRUint32 CountIdleConnections(nsHttpConnectionInfo *);
