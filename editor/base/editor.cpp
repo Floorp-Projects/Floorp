@@ -718,7 +718,7 @@ nsresult nsEditor::InsertText(const nsString& aStringToInsert)
           result = range->GetStartParent(getter_AddRefs(node));
           if ((NS_SUCCEEDED(result)) && (node))
           {
-            nsCOMPtr<nsIDOMCharacterData> nodeAsText = node;
+            nsCOMPtr<nsIDOMCharacterData> nodeAsText = (nsCOMPtr<nsIDOMCharacterData>)node;
             if (nodeAsText)
             {
               PRInt32 offset;
