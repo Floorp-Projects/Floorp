@@ -70,6 +70,7 @@ static NS_DEFINE_CID(kMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
 static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
 
 #ifdef XP_MAC
+#include "xp.h"                 // mac only 
 #include "errors.h"
 #include "m_cvstrm.h"
 

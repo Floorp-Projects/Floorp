@@ -38,8 +38,8 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 ///////////////////////////////////////////////////////////////////////////
 // AT SOME POINT, WE NEED TO FIGURE OUT A SOLUTION FOR THIS MAC ONLY STUFF
 ///////////////////////////////////////////////////////////////////////////
-
 #ifdef XP_MAC
+#include "xp.h"                 // mac only
 #include "errors.h"
 #include "m_cvstrm.h"
 //
