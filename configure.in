@@ -505,8 +505,14 @@ case "$target" in
 		AC_MSG_ERROR([SUNWspro4.2 is too old.  Use a newer version or gcc.])
 	fi
     ;;
+*-irix6*)
+	USE_N32=1
+    ;;
 esac
 
+MOZ_ARG_DISABLE_BOOL(n32,
+[  --disable-n32           Disable use of N32 ABI (IRIX only)],
+  USE_N32=)
 
 dnl ========================================================
 dnl System overrides of the defaults for target
@@ -589,6 +595,7 @@ case "$target" in
     ;;
 
 *-irix5*)
+    AC_DEFINE(IRIX)
     DSO_LDOPTS='-elf -shared'
     if test "$GNU_CC"; then
        MKSHLIB_FORCE_ALL='-Wl,-all'
@@ -600,8 +607,7 @@ case "$target" in
     ;;
 
 *-irix6*)
-    dnl What about IRIX 6.2?
-    AC_DEFINE(IRIX6_3)
+    AC_DEFINE(IRIX)
     DSO_LDOPTS='-elf -shared'
     MKSHLIB='$(CCC) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
@@ -615,6 +621,11 @@ case "$target" in
        MKSHLIB_UNFORCE_ALL='-none'
        CFLAGS="$CFLAGS -woff 3262"
        CXXFLAGS="$CXXFLAGS -woff 3262"
+       if test -n "$USE_N32"; then
+	   CFLAGS="$CFLAGS -n32"
+	   CXXFLAGS="$CXXFLAGS -n32"
+	   LDFLAGS="$LDFLAGS -n32"
+       fi
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     fi
     ;;
@@ -3839,6 +3850,7 @@ AC_DEFINE_UNQUOTED(MOZ_DLL_SUFFIX, "$DLL_SUFFIX")
 AC_SUBST(LIB_SUFFIX)
 AC_SUBST(OBJ_SUFFIX)
 AC_SUBST(BIN_SUFFIX)
+AC_SUBST(USE_N32)
 
 if test "$USING_HCC"; then
    CC='${topsrcdir}/build/hcc'
