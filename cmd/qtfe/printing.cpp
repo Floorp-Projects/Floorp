@@ -1,4 +1,4 @@
-/* $Id: printing.cpp,v 1.1 1998/09/25 18:01:37 ramiro%netscape.com Exp $
+/* $Id: printing.cpp,v 1.2 1998/09/25 18:06:15 ramiro%netscape.com Exp $
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -139,6 +139,13 @@ void QtBrowserContext::print( URL_Struct* url, bool print_to_file,
     INTL_CharSetIDToName( INTL_GetCSIWinCSID( c ), mimecharset );
 	
     //#warning We might have to do something with the resources here (see fe_Print). Kalle.
+
+
+//
+// I commented this out cause I could not build with gcc 2.7.2 -ramiro
+//
+// FIXME
+	assert( 0 );
 
 //    p.otherFontName = 0;
 
