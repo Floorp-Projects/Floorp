@@ -49,9 +49,10 @@ static void
 Usage(char *progName)
 {
 #define FPS PR_fprintf(PR_STDERR,
-    FPS "Usage:	 %s -i importfile [-d certdir] [-h tokenname]\n", progName);
+    FPS "Usage:	 %s -i importfile [-d certdir] [-p dbprefix] [-h tokenname]\n",
+				 progName);
     FPS "\t\t [-k slotpwfile | -K slotpw] [-w p12filepwfile | -W p12filepw]\n");
-    FPS "Usage:	 %s -o exportfile -n certname [-d certdir] [-h tokenname]\n", progName);
+    FPS "Usage:	 %s -o exportfile -n certname [-d certdir] [-p dbprefix]\n", progName);
     FPS "\t\t [-k slotpwfile | -K slotpw] [-w p12filepwfile | -W p12filepw]\n");
     exit(PK12UERR_USAGE);
 }
@@ -98,7 +99,7 @@ p12u_DestroyExportFileInfo(p12uContext **exp_ptr, PRBool removeFile)
 
     if((*exp_ptr)->filename != NULL) {
 	if(removeFile) {
-	    PR_Free((*exp_ptr)->filename);
+	    PR_Delete((*exp_ptr)->filename);
 	}
 	PR_Free((*exp_ptr)->filename);
     }
@@ -147,9 +148,33 @@ p12u_CreateTemporaryDigestFile(void)
 	PR_SetError(SEC_ERROR_NO_MEMORY, 0);
 	return NULL;
     }
+#if defined(_WIN32) || defined(_WINDOWS) || defined(XP_OS2)
+    tmpdir = getenv("TMP");
+    if (!tmpdir)
+	tmpdir = getenv("TMPDIR");
+    if (!tmpdir)
+	tmpdir = getenv("TEMP");
+    if (!tmpdir)
+	tmpdir = ".";
+    len = strlen(tmpdir);
+    filename = PORT_Alloc(len+sizeof(TEMPFILE)+2);
+    if (filename == NULL) {
+	PR_SetError(SEC_ERROR_NO_MEMORY, 0);
+	p12u_DestroyExportFileInfo(&p12cxt, PR_FALSE);
+	return NULL;
+    }
+    strcpy(filename, tmpdir);
+    len = strlen(filename);
+    last = tmpdir[len - 1];
+    if ((last != '/') && (last != '\\')) {
+	strcat(filename,"\\");
+    }
+    strcat(filename,TEMPFILE);
+#else
+    p12cxt->filename = strdup("/tmp/Pk12uTemp");
+#endif
 
-    p12cxt->filename = strdup("Pk12uTemp");
-    if(!p12cxt->filename) {
+    if (!p12cxt->filename) {
 	PR_SetError(SEC_ERROR_NO_MEMORY, 0);
 	p12u_DestroyExportFileInfo(&p12cxt, PR_FALSE);
 	return NULL;
@@ -203,6 +228,7 @@ p12u_DigestClose(void *arg, PRBool removeFile)
     p12cxt->file = NULL;
 
     if(removeFile) {
+	PR_Delete(p12cxt->filename);
 	PR_Free(p12cxt->filename);
 	p12cxt->filename = NULL;
     }
@@ -620,6 +646,7 @@ loser:
 	SECITEM_ZfreeItem(pwitem, PR_TRUE);
     }
 
+
     return rv;
 }
 
@@ -803,13 +830,13 @@ p12u_EnableAllCiphers()
 }
 
 static PRUintn
-P12U_Init(char *dir)
+P12U_Init(char *dir, char *dbprefix)
 {
     SECStatus rv;
     PK11_SetPasswordFunc(SECU_GetModulePassword);
 
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    rv = NSS_InitReadWrite(dir);
+    rv = NSS_Initialize(dir,dbprefix,dbprefix,"secmod.db",0);
     if (rv != SECSuccess) {
     	SECU_PrintPRandOSError(progName);
         exit(-1);
@@ -834,7 +861,8 @@ enum {
     opt_Nickname,
     opt_Export,
     opt_P12FilePWFile,
-    opt_P12FilePW
+    opt_P12FilePW,
+    opt_DBPrefix
 };
 
 static secuCommandFlag pk12util_options[] =
@@ -848,7 +876,8 @@ static secuCommandFlag pk12util_options[] =
     { /* opt_Nickname	       */ 'n', PR_TRUE,	 0, PR_FALSE },
     { /* opt_Export	       */ 'o', PR_TRUE,	 0, PR_FALSE },
     { /* opt_P12FilePWFile     */ 'w', PR_TRUE,	 0, PR_FALSE },
-    { /* opt_P12FilePW	       */ 'W', PR_TRUE,	 0, PR_FALSE }
+    { /* opt_P12FilePW	       */ 'W', PR_TRUE,	 0, PR_FALSE },
+    { /* opt_DBPrefix	       */ 'p', PR_TRUE,	 0, PR_FALSE }
 };
 
 int
@@ -861,6 +890,7 @@ main(int argc, char **argv)
     char *slotname = NULL;
     char *import_file = NULL;
     char *export_file = NULL;
+    char *dbprefix = "";
     SECStatus rv;
 
     secuCommand pk12util;
@@ -911,7 +941,13 @@ main(int argc, char **argv)
 	slotPw.data = PL_strdup(pk12util.options[opt_SlotPW].arg);
     }
 
-    P12U_Init(pk12util.options[opt_CertDir].arg);
+    if (pk12util.options[opt_CertDir].activated) {
+	SECU_ConfigDirectory(pk12util.options[opt_CertDir].arg);
+    }
+    if (pk12util.options[opt_DBPrefix].activated) {
+    	dbprefix = pk12util.options[opt_DBPrefix].arg;
+    }
+    P12U_Init(SECU_ConfigDirectory(NULL),dbprefix);
 
     if (pk12util.options[opt_Import].activated) {
 
