@@ -359,38 +359,49 @@ public class NativeGlobal implements IdFunctionMaster {
             }
         }
 
-        StringBuffer R = new StringBuffer();
-        for (int k = 0; k < s.length(); k++) {
-            int c = s.charAt(k), d;
-            if (mask != 0 && ((c >= '0' && c <= '9') ||
-                (c >= 'A' && c <= 'Z') ||
-                (c >= 'a' && c <= 'z') ||
-                c == '@' || c == '*' || c == '_' ||
-                c == '-' || c == '.' ||
-                ((c == '/' || c == '+') && mask > 3)))
-                R.append((char)c);
-            else if (c < 256) {
-                if (c == ' ' && mask == URL_XPALPHAS) {
-                    R.append('+');
-                } else {
-                    R.append('%');
-                    R.append(hex_digit_to_char(c >>> 4));
-                    R.append(hex_digit_to_char(c & 0xF));
+        StringBuffer sb = null;
+        for (int k = 0, L = s.length(); k != L; ++k) {
+            int c = s.charAt(k);
+            if (mask != 0
+                && ((c >= '0' && c <= '9')
+                    || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')
+                    || c == '@' || c == '*' || c == '_' || c == '-' || c == '.'
+                    || (0 != (mask & URL_PATH) && (c == '/' || c == '+'))))
+            {
+                if (sb != null) {
+                    sb.append((char)c);
                 }
             } else {
-                R.append('%');
-                R.append('u');
-                R.append(hex_digit_to_char(c >>> 12));
-                R.append(hex_digit_to_char((c & 0xF00) >>> 8));
-                R.append(hex_digit_to_char((c & 0xF0) >>> 4));
-                R.append(hex_digit_to_char(c & 0xF));
+                if (sb == null) {
+                    sb = new StringBuffer(L + 3);
+                    sb.append(s);
+                    sb.setLength(k);
+                }
+
+                int hexSize;
+                if (c < 256) {
+                    if (c == ' ' && mask == URL_XPALPHAS) {
+                        sb.append('+');
+                        continue;
+                    }
+                    sb.append('%');
+                    hexSize = 2;
+                } else {
+                    sb.append('%');
+                    sb.append('u');
+                    hexSize = 4;
+                }
+
+                // append hexadecimal form of c left-padded with 0
+                for (int shift = (hexSize - 1) * 4; shift >= 0; shift -= 4) {
+                    int digit = 0xf & (c >> shift);
+                    int hc = (digit < 10) ? '0' + digit : 'A' - 10 + digit;
+                    sb.append((char)hc);
+                }
             }
         }
-        return R.toString();
-    }
 
-    private static char hex_digit_to_char(int x) {
-        return (char)(x <= 9 ? x + '0' : x + ('A' - 10));
+        return (sb == null) ? s : sb.toString();
     }
 
     /**

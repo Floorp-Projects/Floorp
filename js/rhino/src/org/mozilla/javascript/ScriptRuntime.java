@@ -83,18 +83,10 @@ public class ScriptRuntime {
     public final static Class FunctionClass = Function.class;
     public final static Class ClassClass = Class.class;
     public final static Class SerializableClass = java.io.Serializable.class;
-    public final static Class ComparableClass;
 
-    static {
-        // Comparable is only since JDK 1.2
-        Class c;
-        try {
-            c = Class.forName("java.lang.Comparable");
-        } catch (ClassNotFoundException e) {
-            c = null;
-        }
-        ComparableClass = c;
-    }
+    // Can not use .class as Comparable is only since JDK 1.2
+    public final static Class
+        ComparableClass = getClassOrNull("java.lang.Comparable");
 
     /**
      * Convert the value to a boolean.
@@ -370,54 +362,63 @@ public class ScriptRuntime {
      * the same as 'escape.'
      */
     public static String escapeString(String s) {
-        // ack!  Java lacks \v.
-        String escapeMap = "\bb\ff\nn\rr\tt\u000bv\"\"''";
-        StringBuffer result = new StringBuffer(s.length());
 
-        for(int i=0; i < s.length(); i++) {
-            char c = s.charAt(i);
+        StringBuffer sb = null;
 
-            // an ordinary print character
-            if (c >= ' ' && c <= '~'     // string.h isprint()
-                && c != '"')
-            {
-                result.append(c);
-                continue;
-            }
+        for(int i = 0, L = s.length(); i != L; ++i) {
+            int c = s.charAt(i);
 
-            // an \escaped sort of character
-            int index;
-            if ((index = escapeMap.indexOf(c)) >= 0) {
-                result.append("\\");
-                result.append(escapeMap.charAt(index + 1));
-                continue;
-            }
-
-            // 2-digit hex?
-            if (c < 256) {
-                String hex = Integer.toHexString((int) c);
-                if (hex.length() == 1) {
-                    result.append("\\x0");
-                    result.append(hex);
-                } else {
-                    result.append("\\x");
-                    result.append(hex);
+            if (' ' <= c && c <= '~' && c != '"') {
+                // an ordinary print character (like C isprint()) and not "
+                if (sb != null) {
+                    sb.append((char)c);
                 }
                 continue;
             }
+            if (sb == null) {
+                sb = new StringBuffer(L + 3);
+                sb.append(s);
+                sb.setLength(i);
+            }
 
-            // nope.  Unicode.
-            String hex = Integer.toHexString((int) c);
-            // cool idiom courtesy Shaver.
-            result.append("\\u");
-            for (int l = hex.length(); l < 4; l++)
-                result.append('0');
-            result.append(hex);
+            int escape = -1;
+            switch (c) {
+                case '\b':  escape = 'b';  break;
+                case '\f':  escape = 'f';  break;
+                case '\n':  escape = 'n';  break;
+                case '\r':  escape = 'r';  break;
+                case '\t':  escape = 't';  break;
+                case 0xb:   escape = 'v';  break; // Java lacks \v.
+                case '"':   escape = '"';  break;
+                case ' ':   escape = ' ';  break;
+                case '\'':  escape = '\''; break;
+            }
+            if (escape >= 0) {
+                // an \escaped sort of character
+                sb.append('\\');
+                sb.append((char)escape);
+            } else {
+                int hexSize;
+                if (c < 256) {
+                    // 2-digit hex
+                    sb.append("\\x");
+                    hexSize = 2;
+                } else {
+                    // Unicode.
+                    sb.append("\\u");
+                    hexSize = 4;
+                }
+                // append hexadecimal form of c left-padded with 0
+                for (int shift = (hexSize - 1) * 4; shift >= 0; shift -= 4) {
+                    int digit = 0xf & (c >> shift);
+                    int hc = (digit < 10) ? '0' + digit : 'a' - 10 + digit;
+                    sb.append((char)hc);
+                }
+            }
         }
 
-        return result.toString();
+        return (sb == null) ? s : sb.toString();
     }
-
 
     /**
      * Convert the value to a string.
@@ -2027,6 +2028,14 @@ public class ScriptRuntime {
                                             NativeCall activation)
     {
         cx.currentActivation = activation;
+    }
+
+    private static Class getClassOrNull(String className) {
+        try {
+            return loadClassName(className);
+        } catch  (ClassNotFoundException ex) {
+            return null;
+        }
     }
 
     public static Class loadClassName(String className)
