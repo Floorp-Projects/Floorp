@@ -2335,8 +2335,7 @@ nsHTMLDocument::SetCookie(const nsAString& aCookie)
 
 // static
 nsresult
-nsHTMLDocument::GetSourceDocumentURL(JSContext* cx,
-                                     nsIURI** sourceURL)
+nsHTMLDocument::GetSourceDocumentURL(nsIURI** sourceURL)
 {
   // XXX Tom said this reminded him of the "Six Degrees of
   // Kevin Bacon" game. We try to get from here to there using
@@ -2345,29 +2344,11 @@ nsHTMLDocument::GetSourceDocumentURL(JSContext* cx,
   // I wish there were a better way.
   *sourceURL = nsnull;
 
-  if (!cx) {
-    return NS_OK;
-  }
-
-  // We need to use the dynamically scoped global and assume that the 
-  // current JSContext is a DOM context with a nsIScriptGlobalObject so
-  // that we can get the url of the caller.
   // XXX This will fail on non-DOM contexts :(
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  nsContentUtils::GetDocumentFromCaller(getter_AddRefs(domDoc));
 
-  nsCOMPtr<nsIScriptGlobalObject> global;
-  nsContentUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(global));
-
-  nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(global));
-
-  if (!window) {
-    return NS_OK; // Can't get the source URI if we can't get the window.
-  }
-
-  nsCOMPtr<nsIDOMDocument> dom_doc;
-  window->GetDocument(getter_AddRefs(dom_doc));
-
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(dom_doc));
-
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
   if (!doc) {
     return NS_OK; // No document in the window
   }
@@ -2549,35 +2530,24 @@ nsHTMLDocument::Open()
 NS_IMETHODIMP    
 nsHTMLDocument::Open(nsIDOMDocument** aReturn)
 {
-  nsresult result = NS_OK;
-  nsCOMPtr<nsIURI> sourceURL;
-
   // XXX The URL of the newly created document will match
   // that of the source document. Is this right?
 
-  // XXX: This service should be cached.
-  nsCOMPtr<nsIJSContextStack>
-    stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1", &result));
+  // XXX This will fail on non-DOM contexts :(
+  nsCOMPtr<nsIURI> sourceURL;
+  nsresult result = GetSourceDocumentURL(getter_AddRefs(sourceURL));
 
-  if (NS_FAILED(result))
-    return NS_ERROR_FAILURE;
-
-  JSContext *cx;
-
-  if (NS_FAILED(stack->Peek(&cx)))
-    return NS_ERROR_FAILURE;
-
-  result = GetSourceDocumentURL(cx, getter_AddRefs(sourceURL));
   // Recover if we had a problem obtaining the source URL
   if (!sourceURL) {
-    result = NS_NewURI(getter_AddRefs(sourceURL), NS_LITERAL_CSTRING("about:blank"));
+    result = NS_NewURI(getter_AddRefs(sourceURL),
+                       NS_LITERAL_CSTRING("about:blank"));
   }
 
   if (NS_SUCCEEDED(result)) {
     result = OpenCommon(sourceURL);
   }
 
-  QueryInterface(NS_GET_IID(nsIDOMDocument), (void **)aReturn);
+  CallQueryInterface(this, aReturn);
 
   return result;
 }

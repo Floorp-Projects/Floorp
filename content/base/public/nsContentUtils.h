@@ -184,7 +184,21 @@ public:
   // Check if the (JS) caller can access aNode.
   static PRBool CanCallerAccess(nsIDOMNode *aNode);
 
+  /**
+   * Get the docshell through the JS context that's currently on the stack.
+   * If there's no JS context currently on the stack aDocShell will be null.
+   *
+   * @param aDocShell The docshell or null if no JS context
+   */
   static void GetDocShellFromCaller(nsIDocShell** aDocShell);
+
+  /**
+   * Get the document through the JS context that's currently on the stack.
+   * If there's no JS context currently on the stack aDocument will be null.
+   *
+   * @param aDocument The document or null if no JS context
+   */
+  static void GetDocumentFromCaller(nsIDOMDocument** aDocument);
 
   // Check if a node is in the document prolog, i.e. before the document
   // element.

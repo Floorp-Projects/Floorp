@@ -140,7 +140,6 @@ public:
 
 protected:
   nsresult SetSrcInner(nsIURI* aBaseURL, const nsAString& aSrc);
-  static nsresult GetCallerSourceURL(nsIURI** sourceURL);
 
   nsresult GetImageFrame(nsIImageFrame** aImageFrame);
   nsresult GetXY(PRInt32* aX, PRInt32* aY);
@@ -158,31 +157,13 @@ NS_NewHTMLImageElement(nsIHTMLContent** aInstancePtrResult,
   /*
    * nsHTMLImageElement's will be created without a nsINodeInfo passed in
    * if someone says "var img = new Image();" in JavaScript, in a case like
-   * that we request the nsINodeInfo from the anonymous nodeinfo list.
+   * that we request the nsINodeInfo from the document's nodeinfo list.
    */
+  nsresult rv;
   nsCOMPtr<nsINodeInfo> nodeInfo(aNodeInfo);
   if (!nodeInfo) {
-    nsCOMPtr<nsIJSContextStack> stack =
-      do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-
-    NS_ENSURE_TRUE(stack, NS_ERROR_NOT_AVAILABLE);
-
-    JSContext *cx = nsnull;
-
-    nsresult rv = stack->Peek(&cx);
-
-    if (NS_FAILED(rv) || !cx)
-      return NS_ERROR_UNEXPECTED;
-
-    nsCOMPtr<nsIScriptGlobalObject> globalObject;
-    nsContentUtils::GetStaticScriptGlobal(cx, ::JS_GetGlobalObject(cx),
-                                          getter_AddRefs(globalObject));;
-
-    nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(globalObject));
-    NS_ENSURE_TRUE(win, NS_ERROR_UNEXPECTED);
-
     nsCOMPtr<nsIDOMDocument> dom_doc;
-    win->GetDocument(getter_AddRefs(dom_doc));
+    nsContentUtils::GetDocumentFromCaller(getter_AddRefs(dom_doc));
 
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(dom_doc));
     NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
@@ -203,7 +184,7 @@ NS_NewHTMLImageElement(nsIHTMLContent** aInstancePtrResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsresult rv = it->Init(nodeInfo);
+  rv = it->Init(nodeInfo);
 
   if (NS_FAILED(rv)) {
     delete it;
@@ -610,60 +591,6 @@ nsHTMLImageElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                                   aEventStatus);
 }
 
-nsresult
-nsHTMLImageElement::GetCallerSourceURL(nsIURI** sourceURL)
-{
-  // XXX Code duplicated from nsHTMLDocument
-  // XXX Question, why does this return NS_OK on failure?
-  nsresult result = NS_OK;
-
-  // We need to use the dynamically scoped global and assume that the
-  // current JSContext is a DOM context with a nsIScriptGlobalObject so
-  // that we can get the url of the caller.
-  // XXX This will fail on non-DOM contexts :(
-
-  // Get JSContext from stack.
-
-
-
-
-  // XXX: This service should be cached.
-  nsCOMPtr<nsIJSContextStack>
-    stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1", &result));
-
-  if (NS_FAILED(result))
-    return NS_ERROR_FAILURE;
-
-  JSContext *cx = nsnull;
-
-  // it's possible that there is not a JSContext on the stack.
-  // specifically this can happen when the DOM is being manipulated
-  // from native (non-JS) code.
-  if (NS_FAILED(stack->Peek(&cx)) || !cx)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIScriptGlobalObject> global;
-  nsContentUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(global));
-
-  nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(global));
-
-  if (window) {
-    nsCOMPtr<nsIDOMDocument> domDoc;
-
-    result = window->GetDocument(getter_AddRefs(domDoc));
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-
-    if (doc) {
-      result = doc->GetBaseURL(*sourceURL);
-      if (!*sourceURL) {
-        doc->GetDocumentURL(sourceURL);
-      }
-    }
-  }
-
-  return result;
-}
-
 NS_IMETHODIMP
 nsHTMLImageElement::Initialize(JSContext* aContext, JSObject *aObj,
                                PRUint32 argc, jsval *argv)
@@ -926,13 +853,23 @@ nsHTMLImageElement::SetSrc(const nsAString& aSrc)
   nsCOMPtr<nsIURI> baseURL;
   nsresult rv = NS_OK;
 
-  (void) GetCallerSourceURL(getter_AddRefs(baseURL));
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  nsContentUtils::GetDocumentFromCaller(getter_AddRefs(domDoc));
 
-  nsCOMPtr<nsIDocument> doc;
-  mNodeInfo->GetDocument(*getter_AddRefs(doc));
-
-  if (doc && !baseURL) {
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  if (doc) {
+    // XXX GetBaseURL should do the GetDocumentURL for us
     rv = doc->GetBaseURL(*getter_AddRefs(baseURL));
+    if (!baseURL) {
+      rv = doc->GetDocumentURL(getter_AddRefs(baseURL));
+    }
+  }
+
+  if (!baseURL) {
+    mNodeInfo->GetDocument(*getter_AddRefs(doc));
+    if (doc) {
+      rv = doc->GetBaseURL(*getter_AddRefs(baseURL));
+    }
   }
 
   if (NS_SUCCEEDED(rv)) {
