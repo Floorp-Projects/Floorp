@@ -26,6 +26,13 @@
 # This means that tinderbox needs to run as a user which has Perforce
 # 'list' privileges.
 
+# Tinderbox works on the notion of "tree" which is a set of
+# directories.  Perforce has no easily identifiable analog.  We create
+# this notion using the variables
+# $TreeData::VC_TREE{$tree}{'dir_pattern'} which define regular
+# expressions of file names.  There must be at least one file in the
+# change set which matches the dir pattern for us to assume that this
+# change set applies to this tree.  If not we ignore the change set.
 
 
 # The contents of this file are subject to the Mozilla Public
@@ -125,7 +132,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.2 $ )[1];
+$VERSION = ( qw $Revision: 1.3 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -391,28 +398,32 @@ sub status_table_row {
                         Revision, Action, Comment);
       $table .= list2table_header($header);
 
+      foreach $time (sort {$b <=> $a} keys %{ $affected_files{$author} }) {
       foreach $row (@{ $affected_files{$author}{$time} }) {
           
           $num_rows++;
-          $table .= list2table_row($time,$changenum,@row);
+          $table .= list2table_row($time,$changenum,$row);
           $max_length = main::max(
                                   $max_length, 
-                                  length("@row"),
+                                  length("$row"),
                                   );
-        }
+      }
+      }
 
       my ($header) = qw(Time, ChangeNumber, JobName, 
                         Author, Status, Comment);
       $table .= list2table_header($header);
 
+      foreach $time (sort {$b <=> $a} keys %{ $jobs_fixed{$author} }) {
       foreach $row (@{ $jobs_fixed{$author}{$time} }) {
           
           $num_rows++;
-          $table .= list2table_row($time,$changenum,@row);
+          $table .= list2table_row($time,$changenum,$row);
           $max_length = main::max(
                                   $max_length, 
-                                  length("@row"),
+                                  length("$row"),
                                   );
+        }
         }
 
       $table .= "</table>";
@@ -586,6 +597,8 @@ sub apply_db_updates {
       ($METADATA{$tree}{'next_change_num'} = 1);
 
   while (1) {
+      # p4 changes @date1,@date2 
+      # p4 changes @date1,@now 
 
         my $change_num = $METADATA{$tree}{'next_change_num'};
         $ENV{'PATH'}=$ENV{'PATH'}.':/usr/src/perforce';
@@ -593,8 +606,36 @@ sub apply_db_updates {
 
         store_cmd_output(@cmd);        
 
-        if (does_cmd_nextline_match("^Change ")) {
+        (does_cmd_nextline_match("^Change ")) ||
+            last;
 
+      # Ignore directories which are not in our module.  Since we are not
+      # CVS we can only guess what these might be based on patterns.
+      
+      # This is to correct a bug (lack of feature) in CVS history command.
+
+#      if ($TreeData::VC_TREE{$tree}{'dir_pattern'}) {
+#
+#
+#        # There must be at least one file in the change set which
+#        # matches the dir pattern for us to assume that this change
+#        # set applies to this tree.  If not we ignore the change set.
+#
+#        my $pattern = $TreeData::VC_TREE{$tree}{'dir_pattern'};
+#        my $count = ( 
+#                   grep {/$pattern/} 
+#                   map { @{ $_ }[0] } 
+#                   @affected_files
+#                   );
+#       ($count) ||   
+#            next;
+#      }
+
+        # We can not ignore changes which are not on our branch without
+        # using bonsai CVS does not really support any analysis of
+        # branches.  This is what bonsai was designed for.
+
+      
             $METADATA{$tree}{'next_change_num'}++;
             $num_updates++;
 
@@ -607,10 +648,6 @@ sub apply_db_updates {
 
             $DATABASE{$tree}{$time}{'author'}{$author} = 
             [\@affected_files, \@jobs_fixed, $change_num];
-
-        } else {
-            last;
-        }
 
     }
 
