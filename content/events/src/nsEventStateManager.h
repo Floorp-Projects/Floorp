@@ -79,6 +79,12 @@ class nsEventStateManager : public nsSupportsWeakReference,
     eTabFocus_linksMask = (1<<2)          // links
   };
 
+  enum nsTextfieldSelectModel {
+    eTextfieldSelect_unset = -1,
+    eTextfieldSelect_manual = 0,
+    eTextfieldSelect_auto = 1,   // select textfields when focused with keyboard
+  };
+
 public:
   nsEventStateManager();
   virtual ~nsEventStateManager();
@@ -283,6 +289,7 @@ protected:
   // Tab focus policy (static, constant across the app):
   // Which types of elements are in the tab order?
   static PRInt32 sTabFocusModel;
+  static PRInt8  sTextfieldSelectModel;
 
   // Recursion guard for tabbing
   PRBool mTabbedThroughDocument;

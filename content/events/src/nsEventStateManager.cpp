@@ -141,6 +141,7 @@ nsIDocument * gLastFocusedDocument = 0; // Strong reference
 nsIPresContext* gLastFocusedPresContext = 0; // Weak reference
 
 PRInt32 nsEventStateManager::sTabFocusModel = eTabFocus_unset;
+PRInt8 nsEventStateManager::sTextfieldSelectModel = eTextfieldSelect_unset;
 
 PRUint32 nsEventStateManager::mInstanceCount = 0;
 PRInt32 nsEventStateManager::gGeneralAccesskeyModifier = -1; // magic value of -1 means uninitialized
@@ -217,6 +218,15 @@ nsEventStateManager::Init()
     mPrefService->GetBoolPref("nglayout.events.dispatchLeftClickOnly", &mLeftClickOnly);
     if (nsEventStateManager::gGeneralAccesskeyModifier == -1)  // magic value of -1 means uninitialized
       mPrefService->GetIntPref("ui.key.generalAccessKey", &nsEventStateManager::gGeneralAccesskeyModifier);
+  }
+
+  if (nsEventStateManager::sTextfieldSelectModel == eTextfieldSelect_unset) {
+    nsCOMPtr<nsILookAndFeel> lookNFeel(do_GetService(kLookAndFeelCID));
+    PRInt32 selectTextfieldsOnKeyFocus = 0;
+    lookNFeel->GetMetric(nsILookAndFeel::eMetric_SelectTextfieldsOnKeyFocus,
+                         selectTextfieldsOnKeyFocus);
+    sTextfieldSelectModel = selectTextfieldsOnKeyFocus ? eTextfieldSelect_auto:
+                                                         eTextfieldSelect_manual;
   }
 
   return rv;
@@ -4797,6 +4807,23 @@ NS_IMETHODIMP nsEventStateManager::MoveFocusToCaret(PRBool aCanFocusDoc, PRBool 
 
 NS_IMETHODIMP nsEventStateManager::MoveCaretToFocus()
 {
+  // First, select text fields when focused via keyboard (tab or accesskey)
+  if (sTextfieldSelectModel == eTextfieldSelect_auto && 
+      mCurrentFocus && 
+      mCurrentFocus->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
+    nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(mCurrentFocus));
+    PRInt32 controlType;
+    formControl->GetType(&controlType);
+    if (controlType == NS_FORM_INPUT_TEXT ||
+        controlType == NS_FORM_INPUT_PASSWORD) {
+      nsCOMPtr<nsIDOMHTMLInputElement> inputElement = 
+        do_QueryInterface(mCurrentFocus);
+      if (inputElement) {
+        inputElement->Select();
+      }
+    }
+  }
+
   // If in HTML content and the pref accessibility.browsewithcaret is TRUE,
   // then always move the caret to beginning of a new focus
 
