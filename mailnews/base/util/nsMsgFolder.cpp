@@ -129,8 +129,6 @@ nsMsgFolder::nsMsgFolder(void)
     mIsServer(PR_FALSE),
     mBaseMessageURI(nsnull)
 {
-//  NS_INIT_ISUPPORTS(); done by superclass
-
   mSemaphoreHolder = NULL;
 
   mNumPendingUnreadMessages = 0;

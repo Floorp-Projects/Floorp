@@ -83,7 +83,6 @@ nsMsgWindow::nsMsgWindow()
 {
   mCharsetOverride = PR_FALSE;
   m_stopped = PR_FALSE;
-  NS_INIT_ISUPPORTS();
 }
 
 nsMsgWindow::~nsMsgWindow()

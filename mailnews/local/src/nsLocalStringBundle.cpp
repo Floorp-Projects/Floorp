@@ -47,7 +47,6 @@
 
 nsLocalStringService::nsLocalStringService()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsLocalStringService::~nsLocalStringService()

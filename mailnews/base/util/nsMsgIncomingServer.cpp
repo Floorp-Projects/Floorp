@@ -96,7 +96,6 @@ nsMsgIncomingServer::nsMsgIncomingServer():
     m_displayStartupPage(PR_TRUE),
     mPerformingBiff(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsMsgIncomingServer::~nsMsgIncomingServer()

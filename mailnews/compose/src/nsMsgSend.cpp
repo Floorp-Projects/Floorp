@@ -310,8 +310,6 @@ nsMsgComposeAndSend::nsMsgComposeAndSend() :
   mMessageWarningSize = 0;
   
   NS_NEWXPCOM(mSendReport, nsMsgSendReport);
-
-  NS_INIT_ISUPPORTS();
 }
 
 nsMsgComposeAndSend::~nsMsgComposeAndSend()

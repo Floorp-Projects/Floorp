@@ -95,7 +95,6 @@ class OutlookSendListener : public nsIMsgSendListener
 {
 public:
 	OutlookSendListener() {
-		NS_INIT_ISUPPORTS(); 
 		m_done = PR_FALSE;
 		m_location = nsnull;
 	}

@@ -43,7 +43,6 @@ NS_IMPL_ISUPPORTS1(nsEncryptedSMIMEURIsService, nsIEncryptedSMIMEURIsService)
 
 nsEncryptedSMIMEURIsService::nsEncryptedSMIMEURIsService()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsEncryptedSMIMEURIsService::~nsEncryptedSMIMEURIsService()

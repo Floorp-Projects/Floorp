@@ -184,7 +184,6 @@ nsresult NS_NewGenericAddressBooks(nsIImportGeneric** aImportGeneric)
 
 nsImportGenericAddressBooks::nsImportGenericAddressBooks()
 {
-    NS_INIT_ISUPPORTS();
 	m_pInterface = nsnull;
 	m_pBooks = nsnull;
 	m_pSuccessLog = nsnull;

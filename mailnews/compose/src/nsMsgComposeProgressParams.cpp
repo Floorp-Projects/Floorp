@@ -45,7 +45,6 @@ NS_IMPL_ISUPPORTS1(nsMsgComposeProgressParams, nsIMsgComposeProgressParams)
 nsMsgComposeProgressParams::nsMsgComposeProgressParams() :
   m_deliveryMode(nsIMsgCompDeliverMode::Now)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsMsgComposeProgressParams::~nsMsgComposeProgressParams()

@@ -91,7 +91,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  nsFolderCharsetObserver() { NS_INIT_ISUPPORTS(); }
+  nsFolderCharsetObserver() { }
   virtual ~nsFolderCharsetObserver() {}
 };
 
@@ -169,7 +169,6 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
           m_numVisibleMessagesColumnToken(0),
           m_expiredMarkColumnToken(0)
 {
-  NS_INIT_ISUPPORTS();
   m_mdbTable = NULL;
   m_mdbRow = NULL;
   m_version = 1;			// for upgrading...

@@ -743,7 +743,6 @@ nsMsgDatabase::nsMsgDatabase()
     m_cacheSize(kMaxHdrsInCache)
 
 {
-	NS_INIT_ISUPPORTS();
 }
 
 nsMsgDatabase::~nsMsgDatabase()
@@ -2328,7 +2327,6 @@ nsMsgDBEnumerator::nsMsgDBEnumerator(nsMsgDatabase* db,
     : mDB(db), mRowCursor(nsnull), mResultHdr(nsnull), mDone(PR_FALSE),
       mFilter(filter), mClosure(closure)
 {
-    NS_INIT_ISUPPORTS();
     NS_ADDREF(mDB);
 	mNextPrefetched = PR_FALSE;
 }
@@ -2511,7 +2509,6 @@ nsMsgDBThreadEnumerator::nsMsgDBThreadEnumerator(nsMsgDatabase* db,
     : mDB(db), mTableCursor(nsnull), mResultThread(nsnull), mDone(PR_FALSE),
       mFilter(filter)
 {
-    NS_INIT_ISUPPORTS();
     NS_ADDREF(mDB);
 	mNextPrefetched = PR_FALSE;
 }
@@ -4238,7 +4235,6 @@ NS_IMPL_ISUPPORTS1(nsMsgRetentionSettings, nsIMsgRetentionSettings)
 
 nsMsgRetentionSettings::nsMsgRetentionSettings()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsMsgRetentionSettings::~nsMsgRetentionSettings()
@@ -4343,7 +4339,6 @@ NS_IMPL_ISUPPORTS1(nsMsgDownloadSettings, nsIMsgDownloadSettings)
 
 nsMsgDownloadSettings::nsMsgDownloadSettings()
 {
-  NS_INIT_ISUPPORTS();
   m_useServerDefaults = PR_FALSE;
 	m_downloadUnreadOnly = PR_FALSE;
 	m_downloadByDate = PR_FALSE;

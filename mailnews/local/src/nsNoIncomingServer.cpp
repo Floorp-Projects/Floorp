@@ -62,7 +62,6 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsNoIncomingServer,
 
 nsNoIncomingServer::nsNoIncomingServer()
 {    
-    NS_INIT_ISUPPORTS();
 }
 
 nsNoIncomingServer::~nsNoIncomingServer()

@@ -70,7 +70,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsImportFieldMap, nsIImportFieldMap)
 
 nsImportFieldMap::nsImportFieldMap() 
 { 
-	NS_INIT_ISUPPORTS(); 
 	m_numFields = 0;
 	m_pFields = nsnull;
 	m_pActive = nsnull;

@@ -61,7 +61,6 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsNoneService::nsNoneService()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsNoneService::~nsNoneService()

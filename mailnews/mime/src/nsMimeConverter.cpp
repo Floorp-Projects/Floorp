@@ -62,8 +62,6 @@ NS_INTERFACE_MAP_END
  */
 nsMimeConverter::nsMimeConverter()
 {
-  /* the following macro is used to initialize the ref counting data */
-  NS_INIT_ISUPPORTS();
 }
 
 nsMimeConverter::~nsMimeConverter()

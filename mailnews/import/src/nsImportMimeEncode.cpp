@@ -390,8 +390,6 @@ nsIImportMimeEncodeImpl::nsIImportMimeEncodeImpl()
 {
 	m_pOut = nsnull;
 	m_pEncode = nsnull;
-
-	NS_INIT_ISUPPORTS(); 
 }
 
 nsIImportMimeEncodeImpl::~nsIImportMimeEncodeImpl()

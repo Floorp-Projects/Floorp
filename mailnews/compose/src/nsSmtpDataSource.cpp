@@ -71,7 +71,6 @@ NS_IMPL_ISUPPORTS1(nsSmtpDataSource, nsIRDFDataSource)
 
 nsSmtpDataSource::nsSmtpDataSource()
 {
-    NS_INIT_ISUPPORTS();
     gRefCount++;
     if (gRefCount == 1)
         initGlobalObjects();

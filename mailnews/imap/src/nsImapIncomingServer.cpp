@@ -120,7 +120,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsMsgIncomingServer)
 
 nsImapIncomingServer::nsImapIncomingServer()
 {    
-  NS_INIT_ISUPPORTS();
   nsresult rv;
   rv = NS_NewISupportsArray(getter_AddRefs(m_connectionCache));
   rv = NS_NewISupportsArray(getter_AddRefs(m_urlQueue));

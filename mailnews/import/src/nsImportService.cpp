@@ -191,8 +191,6 @@ NS_IMETHODIMP NS_NewImportService( nsISupports* aOuter, REFNSIID aIID, void **aR
 
 nsImportService::nsImportService() : m_pModules( nsnull)
 {
-    NS_INIT_ISUPPORTS();
-
 	// Init logging module.
   if (!IMPORTLOGMODULE)
     IMPORTLOGMODULE = PR_NewLogModule("IMPORT");

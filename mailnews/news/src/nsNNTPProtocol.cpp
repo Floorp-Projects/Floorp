@@ -165,7 +165,7 @@ public:
 
     // nsDummyBufferStream methods:
     nsDummyBufferStream(const char* buffer, PRUint32 length)
-        : mBuffer(buffer), mLength(length) {NS_INIT_ISUPPORTS();}
+        : mBuffer(buffer), mLength(length) {}
     virtual ~nsDummyBufferStream() {}
 
 protected:
@@ -690,7 +690,6 @@ NS_INTERFACE_MAP_END
 
 nsNntpCacheStreamListener::nsNntpCacheStreamListener()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsNntpCacheStreamListener::~nsNntpCacheStreamListener()

@@ -71,7 +71,6 @@ NS_IMPL_ISUPPORTS1(nsMsgCompUtils, nsIMsgCompUtils)
 
 nsMsgCompUtils::nsMsgCompUtils()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsMsgCompUtils::~nsMsgCompUtils()

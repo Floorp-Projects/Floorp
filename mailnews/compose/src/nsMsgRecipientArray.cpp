@@ -41,7 +41,6 @@
 
 nsMsgRecipientArray::nsMsgRecipientArray()
 {
-	NS_INIT_ISUPPORTS();
 	m_array = new nsStringArray;
 }
 

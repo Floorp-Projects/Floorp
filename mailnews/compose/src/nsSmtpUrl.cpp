@@ -55,7 +55,6 @@ static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 /////////////////////////////////////////////////////////////////////////////////////
 nsMailtoUrl::nsMailtoUrl()
 {
-  NS_INIT_ISUPPORTS();
   m_htmlBody = PR_FALSE;
   nsComponentManager::CreateInstance(kSimpleURICID, nsnull, 
                                      NS_GET_IID(nsIURI), 

@@ -42,7 +42,6 @@
 nsUrlListenerManager::nsUrlListenerManager() :
     m_listeners(nsnull)
 {
-	NS_INIT_ISUPPORTS();
 	// create a new isupports array to store our listeners in...
   NS_NewISupportsArray(getter_AddRefs(m_listeners));
 }

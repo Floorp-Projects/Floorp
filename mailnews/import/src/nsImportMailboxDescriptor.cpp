@@ -63,7 +63,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsImportMailboxDescriptor, nsIImportMailboxDescrip
 
 nsImportMailboxDescriptor::nsImportMailboxDescriptor() 
 { 
-	NS_INIT_ISUPPORTS(); 
 	m_import = PR_TRUE;
 	m_pFileSpec = nsnull;
 	m_size = 0;

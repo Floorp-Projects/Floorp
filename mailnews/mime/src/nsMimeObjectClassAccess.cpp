@@ -54,8 +54,6 @@ NS_IMPL_ISUPPORTS1(nsMimeObjectClassAccess, nsIMimeObjectClassAccess)
  */
 nsMimeObjectClassAccess::nsMimeObjectClassAccess()
 {
-  /* the following macro is used to initialize the ref counting data */
-  NS_INIT_ISUPPORTS();
 }
 
 nsMimeObjectClassAccess::~nsMimeObjectClassAccess()

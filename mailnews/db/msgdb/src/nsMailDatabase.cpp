@@ -865,7 +865,6 @@ protected:
 nsMsgOfflineOpEnumerator::nsMsgOfflineOpEnumerator(nsMailDatabase* db)
     : mDB(db), mRowCursor(nsnull), mDone(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
   NS_ADDREF(mDB);
   mNextPrefetched = PR_FALSE;
 }

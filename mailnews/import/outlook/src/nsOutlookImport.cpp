@@ -184,8 +184,6 @@ private:
 
 nsOutlookImport::nsOutlookImport()
 {
-  NS_INIT_ISUPPORTS();
-
   // Init logging module.
   if (!OUTLOOKLOGMODULE)
     OUTLOOKLOGMODULE = PR_NewLogModule("IMPORT");
@@ -342,7 +340,6 @@ nsresult ImportOutlookMailImpl::Create(nsIImportMail** aImport)
 
 ImportOutlookMailImpl::ImportOutlookMailImpl()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 
@@ -538,7 +535,6 @@ nsresult ImportOutlookAddressImpl::Create(nsIImportAddressBooks** aImport)
 
 ImportOutlookAddressImpl::ImportOutlookAddressImpl()
 {
-    NS_INIT_ISUPPORTS();
 	m_msgCount = 0;
 	m_msgTotal = 0;
 }

@@ -128,8 +128,6 @@ private:
 
 nsTextImport::nsTextImport()
 {
-    NS_INIT_ISUPPORTS();
-
   // Init logging module.
   if (!TEXTIMPORTLOGMODULE)
     TEXTIMPORTLOGMODULE = PR_NewLogModule("IMPORT");
@@ -250,8 +248,6 @@ nsresult ImportAddressImpl::Create(nsIImportAddressBooks** aImport)
 
 ImportAddressImpl::ImportAddressImpl()
 {
-    NS_INIT_ISUPPORTS();
-
 	m_fileLoc = nsnull;
 	m_haveDelim = PR_FALSE;
 }

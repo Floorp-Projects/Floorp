@@ -85,8 +85,6 @@ nsPrefService::nsPrefService()
 {
   nsPrefBranch *rootBranch;
 
-  NS_INIT_ISUPPORTS();
-
   rootBranch = new nsPrefBranch("", PR_FALSE); 
   mRootBranch = (nsIPrefBranch *)rootBranch;
 

@@ -6430,7 +6430,6 @@ nsImapMailCopyState::nsImapMailCopyState() :
     m_totalCount(0), m_streamCopy(PR_FALSE), m_dataBuffer(nsnull),
     m_dataBufferSize(0), m_leftOver(0), m_allowUndo(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsImapMailCopyState::~nsImapMailCopyState()

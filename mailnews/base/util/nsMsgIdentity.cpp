@@ -67,7 +67,6 @@ nsMsgIdentity::nsMsgIdentity():
   m_identityKey(0),
   m_prefBranch(0)
 {
-	NS_INIT_ISUPPORTS();
 }
 
 nsMsgIdentity::~nsMsgIdentity()

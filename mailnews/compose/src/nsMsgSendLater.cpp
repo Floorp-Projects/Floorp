@@ -115,8 +115,6 @@ nsMsgSendLater::nsMsgSendLater()
   mRequestReturnReceipt = PR_FALSE;
 
   NS_NewISupportsArray(getter_AddRefs(mMessagesToSend));
-
-  NS_INIT_ISUPPORTS();
 }
 
 nsMsgSendLater::~nsMsgSendLater()
@@ -330,7 +328,6 @@ NS_IMPL_ISUPPORTS2(SendOperationListener, nsIMsgSendListener,
 SendOperationListener::SendOperationListener(void) 
 { 
   mSendLater = nsnull;
-  NS_INIT_ISUPPORTS(); 
 }
 
 SendOperationListener::~SendOperationListener(void) 

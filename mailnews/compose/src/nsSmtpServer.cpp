@@ -59,7 +59,6 @@ NS_INTERFACE_MAP_END
 
 nsSmtpServer::nsSmtpServer()
 {
-    NS_INIT_ISUPPORTS();    
 }
 
 nsSmtpServer::~nsSmtpServer()

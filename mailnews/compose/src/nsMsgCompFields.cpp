@@ -81,9 +81,6 @@ nsMsgCompFields::nsMsgCompFields()
     SetCharacterSet(m_DefaultCharacterSet.get());
   }
   m_internalCharSet.Assign(msgCompHeaderInternalCharset());
-
-
-  NS_INIT_ISUPPORTS();
 }
 
 nsMsgCompFields::~nsMsgCompFields()

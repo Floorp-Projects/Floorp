@@ -105,7 +105,6 @@ nsMapiSupport::nsMapiSupport()
 : m_dwRegister(0),
   m_nsMapiFactory(nsnull)
 {
-   NS_INIT_ISUPPORTS();
 }
 
 nsMapiSupport::~nsMapiSupport()

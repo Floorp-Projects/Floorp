@@ -46,7 +46,6 @@ NS_IMPL_THREADSAFE_QUERY_INTERFACE1(nsMsgTxn, nsITransaction)
 // note that aEditor is not refcounted
 nsMsgTxn::nsMsgTxn() 
 {
-  NS_INIT_ISUPPORTS();
   m_txnType = 0;
 }
 

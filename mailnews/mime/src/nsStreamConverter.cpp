@@ -532,9 +532,6 @@ nsStreamConverter::InternalCleanup(void)
  */
 nsStreamConverter::nsStreamConverter()
 {
-  /* the following macro is used to initialize the ref counting data */
-  NS_INIT_ISUPPORTS();
-
   // Init member variables...
   mOverrideFormat = nsnull;
 

@@ -100,7 +100,6 @@ nsresult nsOutlookSettings::Create(nsIImportSettings** aImport)
 
 nsOutlookSettings::nsOutlookSettings()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsOutlookSettings::~nsOutlookSettings()

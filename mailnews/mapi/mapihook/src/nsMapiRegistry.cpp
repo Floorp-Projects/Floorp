@@ -54,8 +54,6 @@
 NS_IMPL_ISUPPORTS1(nsMapiRegistry, nsIMapiRegistry);
 
 nsMapiRegistry::nsMapiRegistry() {
-    NS_INIT_ISUPPORTS();
-
     m_DefaultMailClient = m_registryUtils.IsDefaultMailClient();
     // m_ShowDialog should be initialized to false 
     // if we are the default mail client.

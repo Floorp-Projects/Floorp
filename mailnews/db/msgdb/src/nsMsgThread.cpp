@@ -78,7 +78,6 @@ void nsMsgThread::Init()
   m_mdbDB = nsnull;
   m_metaRow = nsnull;
   m_cachedValuesInitialized = PR_FALSE;
-  NS_INIT_ISUPPORTS();
 }
 
 
@@ -646,7 +645,6 @@ nsMsgThreadEnumerator::nsMsgThreadEnumerator(nsMsgThread *thread, nsMsgKey start
                                              : mRowCursor(nsnull), mDone(PR_FALSE),
                                              mFilter(filter), mClosure(closure), mFoundChildren(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
   mThreadParentKey = startKey;
   mChildIndex = 0;
   mThread = thread;

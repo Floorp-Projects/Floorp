@@ -160,7 +160,6 @@ nsresult NS_MsgLoadSmtpUrl(nsIURI * aUrl, nsISupports * aConsumer, nsIRequest **
 nsSmtpService::nsSmtpService() :
     mSmtpServersLoaded(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
     NS_NewISupportsArray(getter_AddRefs(mSmtpServers));
 }
 
@@ -384,7 +383,6 @@ protected:
 nsMailtoChannel::nsMailtoChannel(nsIURI * aURI)
     : m_url(aURI), mStatus(NS_OK)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsMailtoChannel::~nsMailtoChannel()

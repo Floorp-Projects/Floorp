@@ -113,8 +113,6 @@ static nsresult _convertRes(int res)
 nsPrefBranch::nsPrefBranch(const char *aPrefRoot, PRBool aDefaultBranch)
   : mObservers(nsnull)
 {
-  NS_INIT_ISUPPORTS();
-
   mPrefRoot = aPrefRoot;
   mPrefRootLength = mPrefRoot.Length();
   mIsDefault = aDefaultBranch;
@@ -977,9 +975,6 @@ nsPrefLocalizedString::nsPrefLocalizedString()
 : mUnicodeString(nsnull)
 {
   nsresult rv;
-
-  NS_INIT_ISUPPORTS();
-
   mUnicodeString = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
 }
 
@@ -1046,7 +1041,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsRelativeFilePref, nsIRelativeFilePref);
 
 nsRelativeFilePref::nsRelativeFilePref()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsRelativeFilePref::~nsRelativeFilePref()

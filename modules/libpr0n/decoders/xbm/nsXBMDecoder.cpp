@@ -60,7 +60,6 @@ NS_IMPL_ISUPPORTS1(nsXBMDecoder, imgIDecoder)
 
 nsXBMDecoder::nsXBMDecoder() : mBuf(nsnull), mPos(nsnull), mRow(nsnull), mAlphaRow(nsnull)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsXBMDecoder::~nsXBMDecoder()

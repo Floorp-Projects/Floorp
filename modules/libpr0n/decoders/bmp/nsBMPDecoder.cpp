@@ -58,7 +58,6 @@ NS_IMPL_ISUPPORTS1(nsBMPDecoder, imgIDecoder)
 
 nsBMPDecoder::nsBMPDecoder()
 {
-    NS_INIT_ISUPPORTS();
     mColors = nsnull;
     mRow = nsnull;
     mPos = mNumColors = mRowBytes = 0;

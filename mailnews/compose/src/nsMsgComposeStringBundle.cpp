@@ -46,7 +46,6 @@
 
 nsComposeStringService::nsComposeStringService()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsComposeStringService::~nsComposeStringService()

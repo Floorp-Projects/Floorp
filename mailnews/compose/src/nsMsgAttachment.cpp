@@ -44,7 +44,6 @@ NS_IMPL_ISUPPORTS1(nsMsgAttachment, nsIMsgAttachment)
 
 nsMsgAttachment::nsMsgAttachment()
 {
-  NS_INIT_ISUPPORTS();
   mTemporary = PR_FALSE;
 }
 

@@ -54,7 +54,6 @@ NS_IMPL_ISUPPORTS1(nsMsgHdr, nsIMsgDBHdr)
 
 nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow)
 {
-  NS_INIT_ISUPPORTS();
   m_mdb = db;
   Init();
   m_mdbRow = dbRow;

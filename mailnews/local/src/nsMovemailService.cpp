@@ -76,7 +76,6 @@ static NS_DEFINE_CID(kPrefCID,           NS_PREF_CID);
 
 nsMovemailService::nsMovemailService()
 {
-    NS_INIT_ISUPPORTS();
 #ifdef MOVEMAIL_DEBUG
     fprintf(stderr, "*** MURRR, new nsMovemailService\n");
 #endif

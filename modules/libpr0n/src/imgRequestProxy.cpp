@@ -47,7 +47,6 @@ imgRequestProxy::imgRequestProxy() :
   mIsInLoadGroup(PR_FALSE),
   mLock(nsnull)
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 
   mLock = PR_NewLock();

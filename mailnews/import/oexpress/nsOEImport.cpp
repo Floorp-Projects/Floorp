@@ -183,8 +183,6 @@ private:
 
 nsOEImport::nsOEImport()
 {
-    NS_INIT_ISUPPORTS();
-
   // Init logging module.
   if (!OELOGMODULE)
     OELOGMODULE = PR_NewLogModule("IMPORT");
@@ -341,7 +339,6 @@ nsresult ImportOEMailImpl::Create(nsIImportMail** aImport)
 
 ImportOEMailImpl::ImportOEMailImpl()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 
@@ -553,7 +550,6 @@ nsresult ImportOEAddressImpl::Create(nsIImportAddressBooks** aImport)
 
 ImportOEAddressImpl::ImportOEAddressImpl()
 {
-    NS_INIT_ISUPPORTS();
 	m_pWab = nsnull;
 }
 

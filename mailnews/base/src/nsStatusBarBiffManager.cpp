@@ -68,7 +68,6 @@ nsIAtom * nsStatusBarBiffManager::kBiffStateAtom = nsnull;
 nsStatusBarBiffManager::nsStatusBarBiffManager()
 : mInitialized(PR_FALSE), mCurrentBiffState(nsIMsgFolder::nsMsgBiffState_NoMail)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsStatusBarBiffManager::~nsStatusBarBiffManager()

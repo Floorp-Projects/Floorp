@@ -56,7 +56,6 @@ NS_IMPL_ISUPPORTS2(nsImapOfflineSync, nsIUrlListener, nsIMsgCopyServiceListener)
 
 nsImapOfflineSync::nsImapOfflineSync(nsIMsgWindow *window, nsIUrlListener *listener, nsIMsgFolder *singleFolderOnly)
 {
-  NS_INIT_ISUPPORTS();
   m_singleFolderToUpdate = singleFolderOnly;
   m_window = window;
   // not the perfect place for this, but I think it will work.

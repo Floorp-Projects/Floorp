@@ -397,7 +397,6 @@ TokenStreamListener::TokenStreamListener(TokenAnalyzer* analyzer)
     :   mAnalyzer(analyzer),
         mBuffer(NULL), mBufferSize(kBufferSize), mLeftOverCount(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 TokenStreamListener::~TokenStreamListener()
@@ -511,8 +510,6 @@ nsBayesianFilter::nsBayesianFilter()
     :   mGoodCount(0), mBadCount(0),
         mBatchLevel(0), mTrainingDataDirty(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
-    
     PRBool ok = (mGoodTokens && mBadTokens);
     NS_ASSERTION(ok, "error allocating tokenizers");
     if (ok)

@@ -102,7 +102,6 @@ nsresult nsOESettings::Create(nsIImportSettings** aImport)
 
 nsOESettings::nsOESettings()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsOESettings::~nsOESettings()

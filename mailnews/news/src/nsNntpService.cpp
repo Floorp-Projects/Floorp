@@ -98,7 +98,6 @@ static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
                     
 nsNntpService::nsNntpService()
 {
-  NS_INIT_ISUPPORTS();
   mPrintingOperation = PR_FALSE;
 	mOpenAttachmentOperation = PR_FALSE;
 }

@@ -105,7 +105,6 @@ nsPalmSyncSupport::nsPalmSyncSupport()
 : m_dwRegister(0),
   m_nsPalmSyncFactory(nsnull)
 {
-   NS_INIT_ISUPPORTS();
 }
 
 nsPalmSyncSupport::~nsPalmSyncSupport()

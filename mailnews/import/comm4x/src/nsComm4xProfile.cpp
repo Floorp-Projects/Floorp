@@ -46,7 +46,6 @@
 
 nsComm4xProfile::nsComm4xProfile()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsComm4xProfile::~nsComm4xProfile()

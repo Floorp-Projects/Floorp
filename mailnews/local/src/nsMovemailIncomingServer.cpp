@@ -70,7 +70,6 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsMovemailIncomingServer,
 
 nsMovemailIncomingServer::nsMovemailIncomingServer()
 {    
-  NS_INIT_ISUPPORTS();
   m_canHaveFilters = PR_TRUE;
 }
 

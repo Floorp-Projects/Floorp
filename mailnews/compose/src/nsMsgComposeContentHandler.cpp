@@ -46,7 +46,6 @@ static NS_DEFINE_CID(kMsgComposeServiceCID, NS_MSGCOMPOSESERVICE_CID);
 
 nsMsgComposeContentHandler::nsMsgComposeContentHandler()
 {
-	NS_INIT_ISUPPORTS();
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */

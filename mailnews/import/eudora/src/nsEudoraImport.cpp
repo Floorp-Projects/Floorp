@@ -203,8 +203,6 @@ void ConvertToUnicode(const char *pStr, nsString &dist)
 
 nsEudoraImport::nsEudoraImport()
 {
-    NS_INIT_ISUPPORTS();
-
   // Init logging module.
   if (!EUDORALOGMODULE)
     EUDORALOGMODULE = PR_NewLogModule("IMPORT");
@@ -361,7 +359,6 @@ nsresult ImportEudoraMailImpl::Create(nsIImportMail** aImport)
 
 ImportEudoraMailImpl::ImportEudoraMailImpl()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 
@@ -579,7 +576,6 @@ nsresult ImportEudoraAddressImpl::Create(nsIImportAddressBooks** aImport)
 
 ImportEudoraAddressImpl::ImportEudoraAddressImpl()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 

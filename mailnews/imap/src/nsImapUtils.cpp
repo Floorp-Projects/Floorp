@@ -288,7 +288,6 @@ nsImapMailboxSpec::nsImapMailboxSpec()
 
 	onlineVerified = PR_FALSE;
 	namespaceForFolder = nsnull;
-	NS_INIT_ISUPPORTS ();
 }
 
 nsImapMailboxSpec::~nsImapMailboxSpec()

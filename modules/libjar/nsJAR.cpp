@@ -154,7 +154,6 @@ nsJAR::nsJAR(): mManifestData(nsnull, nsnull, DeleteManifestEntry, nsnull, 10),
                 mReleaseTime(PR_INTERVAL_NO_TIMEOUT), mCache(nsnull), mLock(nsnull),
                 mTotalItemsInManifest(0)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsJAR::~nsJAR()
@@ -954,7 +953,6 @@ nsJAREnumerator::nsJAREnumerator(nsZipFind *aFind)
   mIsCurrStale(PR_TRUE)
 {
     mArchive = mFind->GetArchive();
-    NS_INIT_ISUPPORTS();
 }
 
 nsJAREnumerator::~nsJAREnumerator()
@@ -1035,7 +1033,6 @@ nsJAREnumerator::GetNext(nsISupports** aResult)
 //-------------------------------------------------
 nsJARItem::nsJARItem()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsJARItem::~nsJARItem()
@@ -1146,7 +1143,6 @@ nsZipReaderCache::nsZipReaderCache()
     mZipSyncMisses(0)
 #endif
 {
-  NS_INIT_ISUPPORTS();
 }
 
 NS_IMETHODIMP

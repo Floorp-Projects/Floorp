@@ -50,7 +50,6 @@ NS_IMPL_ISUPPORTS1(nsMsgProcessReport, nsIMsgProcessReport)
 
 nsMsgProcessReport::nsMsgProcessReport()
 {
-  NS_INIT_ISUPPORTS();
   Reset();
 }
 
@@ -112,8 +111,6 @@ NS_IMPL_ISUPPORTS1(nsMsgSendReport, nsIMsgSendReport)
 
 nsMsgSendReport::nsMsgSendReport()
 {
-  NS_INIT_ISUPPORTS();
-
   PRUint32 i;
   for (i = 0; i <= SEND_LAST_PROCESS; i ++)
     NS_NEWXPCOM(mProcessReport[i], nsMsgProcessReport);

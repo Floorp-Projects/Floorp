@@ -68,7 +68,6 @@ static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 nsMailboxService::nsMailboxService()
 {
     mPrintingOperation = PR_FALSE;
-    NS_INIT_ISUPPORTS();
 }
 
 nsMailboxService::~nsMailboxService()

@@ -90,8 +90,6 @@ static char *msg_make_full_address(const char* name, const char* addr);
 
 nsMsgHeaderParser::nsMsgHeaderParser()
 {
-  /* the following macro is used to initialize the ref counting data */
-  NS_INIT_ISUPPORTS();
 }
 
 nsMsgHeaderParser::~nsMsgHeaderParser()

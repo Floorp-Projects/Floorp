@@ -59,7 +59,6 @@ nsMsgOfflineImapOperation::nsMsgOfflineImapOperation(nsMsgDatabase *db, nsIMdbRo
 {
   NS_ASSERTION(db, "can't have null db");
   NS_ASSERTION(row, "can't have null row");
-  NS_INIT_ISUPPORTS();
   m_operation = 0;
   m_operationFlags = 0;
   m_messageKey = nsMsgKey_None;

@@ -49,7 +49,6 @@
 
 nsMsgMailView::nsMsgMailView()
 {
-    NS_INIT_ISUPPORTS();
     NS_NewISupportsArray(getter_AddRefs(mViewSearchTerms));
 }
 
@@ -108,7 +107,6 @@ NS_IMETHODIMP nsMsgMailView::CreateTerm(nsIMsgSearchTerm **aResult)
 /////////////////////////////////////////////////////////////////////////////
 nsMsgMailViewList::nsMsgMailViewList()
 {
-    NS_INIT_ISUPPORTS();
     LoadMailViews();
 }
 

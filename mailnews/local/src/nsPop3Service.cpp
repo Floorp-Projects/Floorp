@@ -73,7 +73,6 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 nsPop3Service::nsPop3Service()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsPop3Service::~nsPop3Service()

@@ -36,7 +36,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(imgThread, nsIRunnable)
 
 imgThread::imgThread()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
   mLock = PR_NewLock();
   mMonitor = PR_NewMonitor(); 

@@ -63,7 +63,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsImportABDescriptor, nsIImportABDescriptor)
 
 nsImportABDescriptor::nsImportABDescriptor() 
 { 
-	NS_INIT_ISUPPORTS(); 
 	m_ref = 0;
 	m_id = 0;
 	m_size = 0;

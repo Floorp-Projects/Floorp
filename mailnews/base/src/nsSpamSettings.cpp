@@ -12,8 +12,6 @@
 
 nsSpamSettings::nsSpamSettings()
 {
-  NS_INIT_ISUPPORTS();
-
   mLevel = 0;
   mMoveOnSpam = PR_FALSE;
   mMoveTargetMode = MOVE_TARGET_MODE_JUNK_ON_ACCOUNT;

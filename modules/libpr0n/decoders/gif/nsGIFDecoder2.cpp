@@ -86,7 +86,6 @@ NS_IMPL_ISUPPORTS1(nsGIFDecoder2, imgIDecoder);
 
 nsGIFDecoder2::nsGIFDecoder2()
 {
-  NS_INIT_ISUPPORTS();
   mImageFrame = nsnull;
   
   mGIFStruct = nsnull;

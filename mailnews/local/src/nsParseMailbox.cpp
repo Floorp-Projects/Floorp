@@ -266,8 +266,6 @@ nsMsgMailboxParser::~nsMsgMailboxParser()
 
 void nsMsgMailboxParser::Init()
 {
-  /* the following macro is used to initialize the ref counting data */
-	NS_INIT_ISUPPORTS();
 	m_obuffer = nsnull;
 	m_obuffer_size = 0;
 	m_graph_progress_total = 0;
@@ -501,7 +499,6 @@ NS_IMPL_ISUPPORTS1(nsParseMailMessageState, nsIMsgParseMailMsgState)
 
 nsParseMailMessageState::nsParseMailMessageState()
 {
-	NS_INIT_ISUPPORTS();
 	m_position = 0;
 	m_IgnoreXMozillaStatus = PR_FALSE;
 	m_state = nsIMsgParseMailMsgState::ParseBodyState;

@@ -31,7 +31,6 @@ NS_IMPL_ISUPPORTS1(nsMNGDecoder, imgIDecoder);
 
 nsMNGDecoder::nsMNGDecoder()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsMNGDecoder::~nsMNGDecoder()

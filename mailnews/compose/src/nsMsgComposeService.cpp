@@ -136,8 +136,6 @@ nsMsgComposeService::nsMsgComposeService()
   NS_ASSERTION(!_just_to_be_sure_we_create_only_one_compose_service_, "You cannot create several message compose service!");
   _just_to_be_sure_we_create_only_one_compose_service_ = PR_TRUE;
 #endif
-  
-  NS_INIT_ISUPPORTS();
 
 // Defaulting the value of mLogComposePerformance to FALSE to prevent logging.
   mLogComposePerformance = PR_FALSE;

@@ -53,7 +53,6 @@ nsImapMoveCoalescer::nsImapMoveCoalescer(nsIMsgFolder *sourceFolder, nsIMsgWindo
 {
   m_sourceFolder = sourceFolder; 
   m_msgWindow = msgWindow;
-  NS_INIT_ISUPPORTS();
 }
 
 nsImapMoveCoalescer::~nsImapMoveCoalescer()

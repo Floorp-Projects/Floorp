@@ -65,7 +65,6 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsPop3IncomingServer,
 
 nsPop3IncomingServer::nsPop3IncomingServer()
 {    
-    NS_INIT_ISUPPORTS();
     m_capabilityFlags = 
         POP3_AUTH_LOGIN_UNDEFINED |
         POP3_XSENDER_UNDEFINED |

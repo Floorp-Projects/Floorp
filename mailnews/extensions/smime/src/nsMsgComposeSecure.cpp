@@ -193,7 +193,6 @@ NS_IMPL_ISUPPORTS1(nsMsgSMIMEComposeFields, nsIMsgSMIMECompFields)
 nsMsgSMIMEComposeFields::nsMsgSMIMEComposeFields()
 :mSignMessage(PR_FALSE), mAlwaysEncryptMessage(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsMsgSMIMEComposeFields::~nsMsgSMIMEComposeFields()
@@ -232,7 +231,6 @@ NS_IMPL_ISUPPORTS1(nsMsgComposeSecure, nsIMsgComposeSecure)
 
 nsMsgComposeSecure::nsMsgComposeSecure()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
   mStream = 0;
   mDataHash = 0;

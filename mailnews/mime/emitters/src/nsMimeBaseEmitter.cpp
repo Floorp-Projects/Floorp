@@ -85,8 +85,6 @@ NS_INTERFACE_MAP_END
 
 nsMimeBaseEmitter::nsMimeBaseEmitter()
 {
-  NS_INIT_ISUPPORTS(); 
-
   // Initialize data output vars...
   mFirstHeaders = PR_TRUE;
 

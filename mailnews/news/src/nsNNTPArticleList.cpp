@@ -45,7 +45,6 @@ NS_IMPL_ISUPPORTS1(nsNNTPArticleList, nsINNTPArticleList)
 
 nsNNTPArticleList::nsNNTPArticleList()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsNNTPArticleList::~nsNNTPArticleList()

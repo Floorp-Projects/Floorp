@@ -76,8 +76,6 @@ static NS_DEFINE_CID(kPrefCID,            NS_PREF_CID);
 //
 nsMsgDraft::nsMsgDraft()
 {
-	NS_INIT_ISUPPORTS();
-
   mURI = nsnull;
   mMessageService = nsnull;
   mOutType = nsMimeOutput::nsMimeMessageDraftOrTemplate;

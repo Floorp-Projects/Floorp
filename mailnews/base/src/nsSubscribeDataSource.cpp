@@ -62,7 +62,6 @@ typedef struct _nsSubscribeNotification {
 
 nsSubscribeDataSource::nsSubscribeDataSource()
 {
-	NS_INIT_ISUPPORTS();
 }
 
 nsSubscribeDataSource::~nsSubscribeDataSource()

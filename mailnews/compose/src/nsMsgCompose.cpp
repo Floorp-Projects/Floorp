@@ -240,8 +240,6 @@ nsMsgCompose::nsMsgCompose()
   printf("CREATE nsMsgCompose: %x\n", this);
 #endif
 
-  NS_INIT_ISUPPORTS();
-
   mQuotingToFollow = PR_FALSE;
   mWhatHolder = 1;
   m_window = nsnull;
@@ -1922,8 +1920,6 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
       mCitePrefix.Append(NS_LITERAL_STRING("<br><html>"));
     }
   }
-  
-  NS_INIT_ISUPPORTS(); 
 }
 
 /**
@@ -2604,8 +2600,6 @@ nsMsgComposeSendListener::nsMsgComposeSendListener(void)
   printf("CREATE nsMsgComposeSendListener: %x\n", this);
 #endif
   mDeliverMode = 0;
-
-  NS_INIT_ISUPPORTS(); 
 }
 
 nsMsgComposeSendListener::~nsMsgComposeSendListener(void) 
@@ -4743,7 +4737,6 @@ nsMsgRecipient::nsMsgRecipient() :
   mPreferFormat(nsIAbPreferMailFormat::unknown),
   mProcessed(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
 }
  
 nsMsgRecipient::nsMsgRecipient(nsString fullAddress, nsString email, PRUint32 preferFormat, PRBool processed) :
@@ -4752,7 +4745,6 @@ nsMsgRecipient::nsMsgRecipient(nsString fullAddress, nsString email, PRUint32 pr
   mPreferFormat(preferFormat),
   mProcessed(processed)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsMsgRecipient::~nsMsgRecipient()
@@ -4769,14 +4761,11 @@ NS_INTERFACE_MAP_END
 
 nsMsgMailList::nsMsgMailList()
 {
-    NS_INIT_ISUPPORTS();
 }
  
 nsMsgMailList::nsMsgMailList(nsString listName, nsString listDescription, nsIAbDirectory* directory) :
   mDirectory(directory)
 {
-  NS_INIT_ISUPPORTS();
- 
   nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID));
 
   if (parser)

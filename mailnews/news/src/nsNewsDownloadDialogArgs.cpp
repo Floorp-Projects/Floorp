@@ -42,8 +42,6 @@
 
 nsNewsDownloadDialogArgs::nsNewsDownloadDialogArgs()
 {
-    NS_INIT_ISUPPORTS();
-    
     mGroupName = "";
     mArticleCount = 0;
     mServerKey = "";

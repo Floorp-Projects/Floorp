@@ -63,7 +63,6 @@ MOZ_DECL_CTOR_COUNTER(nsSubscribableServer)
 
 nsSubscribableServer::nsSubscribableServer(void)
 {
-    NS_INIT_ISUPPORTS();
     mDelimiter = '.';
     mShowFullName = PR_TRUE;
     mTreeRoot = nsnull;

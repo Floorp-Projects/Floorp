@@ -118,7 +118,6 @@ nsImapFlagAndUidState::nsImapFlagAndUidState(PRInt32 numberOfMessages, PRUint16 
   fSupportedUserFlags = flags;
   fNumberDeleted = 0;
   m_customFlagsHash = nsnull;
-  NS_INIT_ISUPPORTS();
 }
 
 nsImapFlagAndUidState::nsImapFlagAndUidState(const nsImapFlagAndUidState& state, 
@@ -134,7 +133,6 @@ nsImapFlagAndUidState::nsImapFlagAndUidState(const nsImapFlagAndUidState& state,
   fSupportedUserFlags = flags;
   fNumberDeleted = 0;
   m_customFlagsHash = nsnull;
-  NS_INIT_ISUPPORTS();
 }
 
 /* static */PRBool PR_CALLBACK nsImapFlagAndUidState::FreeCustomFlags(nsHashKey *aKey, void *aData,

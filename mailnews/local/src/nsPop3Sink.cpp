@@ -57,7 +57,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsPop3Sink, nsIPop3Sink)
 
 nsPop3Sink::nsPop3Sink()
 {
-    NS_INIT_ISUPPORTS();
     m_authed = PR_FALSE;
     m_accountUrl = nsnull;
     m_biffState = 0;

@@ -72,8 +72,6 @@ nsURLFetcher::nsURLFetcher()
 #if defined(DEBUG_ducarroz)
   printf("CREATE nsURLFetcher: %x\n", this);
 #endif
-  /* the following macro is used to initialize the ref counting data */
-  NS_INIT_ISUPPORTS();
 
   // Init member variables...
   mTotalWritten = 0;
@@ -460,7 +458,6 @@ nsURLFetcherStreamConsumer::nsURLFetcherStreamConsumer(nsURLFetcher* urlFetcher)
 #if defined(DEBUG_ducarroz)
   printf("CREATE nsURLFetcherStreamConsumer: %x\n", this);
 #endif
-  NS_INIT_ISUPPORTS();
 }
 
 nsURLFetcherStreamConsumer::~nsURLFetcherStreamConsumer()

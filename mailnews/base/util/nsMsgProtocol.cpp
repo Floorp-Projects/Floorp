@@ -80,7 +80,6 @@ static PRUnichar *FormatStringWithHostNameByID(PRInt32 stringID, nsIMsgMailNewsU
 
 nsMsgProtocol::nsMsgProtocol(nsIURI * aURL)
 {
-	NS_INIT_ISUPPORTS();
 	m_flags = 0;
 	m_startPosition = 0;
 	m_readCount = 0;
@@ -786,7 +785,7 @@ class nsMsgProtocolStreamProvider : public nsIStreamProvider
 public:
     NS_DECL_ISUPPORTS
 
-    nsMsgProtocolStreamProvider() { NS_INIT_ISUPPORTS(); }
+    nsMsgProtocolStreamProvider() { }
     virtual ~nsMsgProtocolStreamProvider() {}
 
     void Init(nsMsgAsyncWriteProtocol *aProtInstance, nsIInputStream *aInputStream) { mMsgProtocol = aProtInstance; mInStream = aInputStream;}
@@ -850,7 +849,7 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
-  nsMsgFilePostHelper() { NS_INIT_ISUPPORTS(); mSuspendedPostFileRead = PR_FALSE;}
+  nsMsgFilePostHelper() { mSuspendedPostFileRead = PR_FALSE;}
   nsresult Init(nsIOutputStream * aOutStream, nsMsgAsyncWriteProtocol * aProtInstance, nsIFile *aFileToPost);
   virtual ~nsMsgFilePostHelper() {}
   nsCOMPtr<nsIRequest> mPostFileRequest;

@@ -86,8 +86,6 @@ PRLogModuleInfo *COMM4XLOGMODULE = nsnull;
 
 nsComm4xMailImport::nsComm4xMailImport()
 {
-    NS_INIT_ISUPPORTS();
-
     // Init logging module.
     if (!COMM4XLOGMODULE)
       COMM4XLOGMODULE = PR_NewLogModule("IMPORT");
@@ -188,7 +186,6 @@ NS_IMETHODIMP nsComm4xMailImport::GetImportInterface(const char *pImportType, ns
 
 ImportComm4xMailImpl::ImportComm4xMailImpl()
 {
-    NS_INIT_ISUPPORTS();
     m_pBundleProxy = nsnull;
 }
 

@@ -72,7 +72,6 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 nsSoundDatasource::nsSoundDatasource()
 {
-	NS_INIT_ISUPPORTS();
 }
 
 nsSoundDatasource::~nsSoundDatasource()

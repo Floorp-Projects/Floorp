@@ -127,8 +127,6 @@ nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
   if (PL_strcmp(MSG_LINEBREAK, CRLF)) {
     SetLookingForCRLF(PR_FALSE);
   }
-
-//  NS_INIT_ISUPPORTS(); done by superclass
 }
 
 nsMsgNewsFolder::~nsMsgNewsFolder(void)

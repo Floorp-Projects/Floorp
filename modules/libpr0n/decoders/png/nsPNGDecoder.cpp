@@ -56,7 +56,6 @@ nsPNGDecoder::nsPNGDecoder() :
   interlacebuf(nsnull), ibpr(0),
   mError(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsPNGDecoder::~nsPNGDecoder()

@@ -135,7 +135,6 @@ static const PRInt32 kNumHdrsToXfer=10;
 
 nsMsgImapHdrXferInfo::nsMsgImapHdrXferInfo()
 {
-  NS_INIT_ISUPPORTS();
   NS_NewISupportsArray(getter_AddRefs(m_hdrInfos));
   m_nextFreeHdrInfo = 0;
 }
@@ -214,7 +213,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsMsgImapLineDownloadCache, nsIImapHeaderInfo)
 // **** helper class for downloading line ****
 nsMsgImapLineDownloadCache::nsMsgImapLineDownloadCache()
 {
-  NS_INIT_ISUPPORTS();
     fLineInfo = (msg_line_info *) PR_CALLOC(sizeof( msg_line_info));
     fLineInfo->uidOfMessage = nsMsgKey_None;
     m_msgSize = 0;
@@ -351,7 +349,6 @@ nsresult nsImapProtocol::GlobalInitialization()
 nsImapProtocol::nsImapProtocol() : 
     m_parser(*this)
 {
-  NS_INIT_ISUPPORTS();
   m_flags = 0;
   m_urlInProgress = PR_FALSE;
   m_socketIsOpen = PR_FALSE;
@@ -7325,7 +7322,6 @@ NS_INTERFACE_MAP_END
 
 nsImapCacheStreamListener::nsImapCacheStreamListener()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsImapCacheStreamListener::~nsImapCacheStreamListener()
@@ -7389,7 +7385,6 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 nsImapMockChannel::nsImapMockChannel()
 {
-  NS_INIT_ISUPPORTS();
   m_channelContext = nsnull;
   m_cancelStatus = NS_OK;
   mLoadFlags = 0;

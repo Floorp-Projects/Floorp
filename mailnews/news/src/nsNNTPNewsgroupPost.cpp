@@ -50,8 +50,6 @@ NS_IMPL_ISUPPORTS1(nsNNTPNewsgroupPost, nsINNTPNewsgroupPost)
 
 nsNNTPNewsgroupPost::nsNNTPNewsgroupPost()
 {
-	NS_INIT_ISUPPORTS();
-
     int i;
     for (i=0; i <= HEADER_LAST; i++)
         m_header[i]=nsnull;

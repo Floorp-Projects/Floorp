@@ -112,8 +112,6 @@ NS_IMPL_ISUPPORTS2(nsMsgMdnGenerator, nsIMsgMdnGenerator, nsIUrlListener)
 
 nsMsgMdnGenerator::nsMsgMdnGenerator()
 {
-    NS_INIT_ISUPPORTS();
-
     m_disposeType = eDisplayed;
     m_outputStream = nsnull;
     m_reallySendMdn = PR_FALSE;

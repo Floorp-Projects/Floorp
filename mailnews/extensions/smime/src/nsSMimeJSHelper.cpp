@@ -52,7 +52,6 @@ NS_IMPL_ISUPPORTS1(nsSMimeJSHelper, nsISMimeJSHelper)
 
 nsSMimeJSHelper::nsSMimeJSHelper()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSMimeJSHelper::~nsSMimeJSHelper()
