@@ -20,6 +20,11 @@ DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
 MODULE=raptor 
+XPIDL_MODULE=appshell 
+
+XPIDLSRCS =                       \
+        nsIFileLocator.idl          \
+        $(NULL)
 
 EXPORTS =                         \
         nsIWebShellWindow.h       \
@@ -30,7 +35,6 @@ EXPORTS =                         \
         nsIXULWindowCallbacks.h   \
         nsIDOMXPConnectFactory.h  \
         nsFileLocations.h         \
-        nsIFileLocator.h          \
         nsINetSupportDialogService.h	\
         nsIWindowMediator.h \
         nsISessionHistory.h \
