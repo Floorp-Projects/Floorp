@@ -38,33 +38,32 @@
 
 static NS_DEFINE_CID(kMenuCID,             NS_MENU_CID);
 static NS_DEFINE_CID(kMenuItemCID,         NS_MENUITEM_CID);
-   
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kISupportsIID,        NS_ISUPPORTS_IID);
 
-nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
-{                                                                        
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-                                                                         
-  *aInstancePtr = NULL;                                                  
-                                                                                        
-  if (aIID.Equals(nsIMenu::GetIID())) {                                         
-    *aInstancePtr = (void*)(nsIMenu*) this;                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(kISupportsIID)) {                                      
-    *aInstancePtr = (void*)(nsISupports*)(nsIMenu*)this;                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
+nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIMenuListenerIID)) {                                      
-    *aInstancePtr = (void*)(nsIMenuListener*)this;                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                     
-  return NS_NOINTERFACE;                                                 
+
+  *aInstancePtr = NULL;
+
+  if (aIID.Equals(nsIMenu::GetIID())) {
+    *aInstancePtr = (void*)(nsIMenu*) this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void*)(nsISupports*)(nsIMenu*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIMenuListenerIID)) {
+    *aInstancePtr = (void*)(nsIMenuListener*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
 }
 
 NS_IMPL_ADDREF(nsMenu)
@@ -96,40 +95,6 @@ nsMenu::~nsMenu()
 }
 
 //-------------------------------------------------------------------------
-//
-// Create the proper widget
-//
-//-------------------------------------------------------------------------
-void nsMenu::Create(Widget aParent, const nsString &aLabel)
-{
-  if (NULL == aParent) {
-    return;
-  }
-  mLabel = aLabel;
-
-  char * labelStr = mLabel.ToNewCString();
-
-  char wName[512];
-
-  sprintf(wName, "__pulldown_%s", labelStr);
-  mMenu = XmCreatePulldownMenu(aParent, wName, NULL, 0);
-
-  Widget casBtn;
-  XmString str;
-
-  str = XmStringCreateLocalized(labelStr);
-  casBtn = XtVaCreateManagedWidget(labelStr,
-                                   xmCascadeButtonGadgetClass, aParent,
-                                   XmNsubMenuId, mMenu,
-                                   XmNlabelString, str,
-                                   NULL);
-  XmStringFree(str);
-
-
-  delete[] labelStr;
-}
-
-//-------------------------------------------------------------------------
 Widget nsMenu::GetNativeParent()
 {
 
@@ -145,22 +110,54 @@ Widget nsMenu::GetNativeParent()
 
 }
 
-
 //-------------------------------------------------------------------------
-//
-// Create the proper widget
-//
-//-------------------------------------------------------------------------
-//NS_METHOD nsMenu::Create(nsIMenuBar * aParent, const nsString &aLabel)
 NS_METHOD nsMenu::Create(nsISupports * aParent, const nsString &aLabel)
 {
-//  FIXME: This needs to be fixed. This doesn't work at all.  --ZuperDee
+  printf("nsMenu::Create called\n");
+  if(aParent)
+  {
+    nsIMenuBar * menubar = nsnull;
+    aParent->QueryInterface(nsIMenuBar::GetIID(), (void**) &menubar);
+    if(menubar)
+    {
+      mMenuBarParent = menubar;
+      NS_RELEASE(menubar);
+    }
+    else
+    {
+      nsIMenu * menu = nsnull;
+      aParent->QueryInterface(nsIMenu::GetIID(), (void**) &menu);
+      if(menu)
+      {
+        mMenuParent = menu;
+        NS_RELEASE(menu);
+      }
+    }
+  }
 
-//  mMenuBarParent = aParent;
-//  NS_ADDREF(mMenuBarParent);
-//  Create(GetNativeParent(), aLabel);
-//  NS_ASSERTION(0, "nsIMenu has changed.  fix me!");
-  //aParent->AddMenu(this);
+  mLabel = aLabel;
+
+  char * labelStr = mLabel.ToNewCString();
+
+  char wName[512];
+
+  sprintf(wName, "__pulldown_%s", labelStr);
+  NS_ADDREF(mMenuBarParent);
+  mMenu = XmCreatePulldownMenu(GetNativeParent(), wName, NULL, 0);
+
+  Widget casBtn;
+  XmString str;
+
+  str = XmStringCreateLocalized(labelStr);
+  casBtn = XtVaCreateManagedWidget(labelStr,
+                                   xmCascadeButtonGadgetClass, GetNativeParent(),
+                                   XmNsubMenuId, mMenu,
+                                   XmNlabelString, str,
+                                   NULL);
+  XmStringFree(str);
+
+  delete[] labelStr;
+
   return NS_OK;
 }
 
@@ -187,8 +184,7 @@ NS_METHOD nsMenu::GetLabel(nsString &aText)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::SetLabel(const nsString &aText)
 {
-   mLabel = aText;
-  
+  mLabel = aText;
   return NS_OK;
 }
 
@@ -243,12 +239,6 @@ NS_METHOD nsMenu::GetItemAt(const PRUint32 aPos, nsISupports *& aMenuItem)
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::InsertItemAt(const PRUint32 aPos, nsISupports * aMenuItem)
-{
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsMenu::InsertSeparator(const PRUint32 aCount)
 {
   return NS_OK;
 }
