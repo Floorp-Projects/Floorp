@@ -1126,6 +1126,15 @@ nsMsgAttachmentHandler::GetMimeDeliveryState(nsIMsgSend** _retval)
 nsresult
 nsMsgAttachmentHandler::SetMimeDeliveryState(nsIMsgSend* mime_delivery_state)
 {
+  /*
+    Because setting m_mime_delivery_state to null could destroy ourself as
+    m_mime_delivery_state it's our parent, we need to protect ourself against
+    that!
+
+    This extra comptr is necessary,
+    see bug http://bugzilla.mozilla.org/show_bug.cgi?id=78967
+  */
+  nsCOMPtr<nsIMsgSend> temp = m_mime_delivery_state; /* Should lock our parent until the end of the function */
   m_mime_delivery_state = mime_delivery_state;
   return NS_OK;
 }
