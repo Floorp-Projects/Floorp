@@ -62,6 +62,7 @@ Rights Reserved.
 <script type="text/javascript" src="chrome://messenger/content/mailContextMenus.js"/>
 <script type="text/javascript" src="chrome://messenger/content/messengerdnd.js"/>
 <script type="text/javascript" src="chrome://messenger/content/accountUtils.js"/>
+<script type="text/javascript" src="chrome://messenger/content/msgAccountCentral.js"/>
 <script type="text/javascript" src="chrome://communicator/content/contentAreaClick.js"/>
 <script type="text/javascript" src="chrome://communicator/content/contentAreaDD.js"/>
 <script type="text/javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
@@ -134,6 +135,12 @@ Rights Reserved.
 		<splitter id="sidebar-splitter"/>
 
 		<box orient="vertical" flex="1">
+
+		  <box id="accountCentralBox" orient="vertical" flex="1">
+                     <iframe name="accountCentralPane" flex="1" src="about:blank"/>
+                  </box>
+
+		  <box id="messagesBox" orient="vertical" flex="1">
      
 			<tree id="threadTree" flex="2" persist="height" style="height:0px" context="threadPaneContext"  focusring="false"/>
 
@@ -152,7 +159,8 @@ Rights Reserved.
 				<statusbarpanel id="unreadMessageCount" style="min-width: 5px"/>
 				<statusbarpanel id="totalMessageCount" style="min-width: 5px"/>
 			</statusbar>
-		</box>
+		  </box>
+                </box>
 
 	</box>
 

@@ -235,6 +235,7 @@ function OnLoadMessenger()
   Create3PaneGlobals();
   verifyAccounts();
     
+  HideAccountCentral();
   loadStartPage();
 	InitMsgWindow();
 
@@ -368,53 +369,115 @@ function PerformExpandForAllOpenServers(tree)
 	}
 }
 
-function loadStartFolder(startFolderUri)
+function loadStartFolder(initialUri)
 {
-	//First get default account
-	try
-	{
-		if(!startFolderUri)
-		{
-			var defaultAccount = accountManager.defaultAccount;
+    var defaultServer = null;
+    var startFolderUri = initialUri;
 
-			var server = defaultAccount.incomingServer;
-			var rootFolder = server.RootFolder;
-			var rootMsgFolder = rootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
+    //First get default account
+    try
+    {
+        if(!startFolderUri)
+        {
+            var defaultAccount = accountManager.defaultAccount;
 
-			//now find Inbox
-			var outNumFolders = new Object();
-			var inboxFolder = rootMsgFolder.getFoldersWithFlag(0x1000, 1, outNumFolders); 
-			if(!inboxFolder) return;
+            defaultServer = defaultAccount.incomingServer;
+            var rootFolder = defaultServer.RootFolder;
+            var rootMsgFolder = rootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
 
-			var resource = inboxFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-			startFolderUri = resource.Value;
+            //now find Inbox
+            var outNumFolders = new Object();
+            var inboxFolder = rootMsgFolder.getFoldersWithFlag(0x1000, 1, outNumFolders); 
+            if(!inboxFolder) return;
 
-			//first, let's see if it's already in the dom.  This will make life easier.
-			//We need to make sure content is built by this time
-		}
-		msgNavigationService.EnsureDocumentIsLoaded(document);
+            var resource = inboxFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+            startFolderUri = resource.Value;
 
-		var startFolder = document.getElementById(startFolderUri);
+            //first, let's see if it's already in the dom.  This will make life easier.
+            //We need to make sure content is built by this time
+        }
+        msgNavigationService.EnsureDocumentIsLoaded(document);
 
-		//if it's not here we will have to make sure it's open.
-		if(!startFolder)
-		{
+        var startFolder = document.getElementById(startFolderUri);
 
-		}
+        //if it's not here we will have to make sure it's open.
+        if(!startFolder && startFolderUri && defaultServer)
+        {
+            // Opens the twisty for the default account 
+            OpenTwistyForServer(defaultServer);
+            startFolder = document.getElementById(startFolderUri);
+        }
 
-		var folderTree= GetFolderTree();
-		ChangeSelection(folderTree, startFolder);
+        var folderTree= GetFolderTree();
+        ChangeSelection(folderTree, startFolder);
+                
+        // only do this on startup, when we pass in null
+        if (!initialUri && defaultServer)
+        {
+            // Start downloading messages for the INBOX of the default server
+            TriggerGetMessages(defaultServer);
+        } 
 
-		// because the "open" state persists, we'll call
-		// PerformExpand() for all servers that are open at startup.
-		PerformExpandForAllOpenServers(folderTree);
-	}
-	catch(ex)
-	{
-		dump(ex);
-		dump('Exception in LoadStartFolder caused by no default account.  We know about this\n');
-	}
+        // because the "open" state persists, we'll call
+        // PerformExpand() for all servers that are open at startup.
+        PerformExpandForAllOpenServers(folderTree);
+    }
+    catch(ex)
+    {
+        dump(ex);
+        dump('Exception in LoadStartFolder caused by no default account.  We know about this\n');
+    }
 
+    if (!initialUri) 
+    {
+        MsgGetMessagesForAllServers(defaultServer);
+    }
+
+}
+
+function OpenTwistyForServer(server)
+{
+    var treeNode = GetTreeNodeForServerURI(server.serverURI); 
+
+    if (treeNode)
+        treeNode.setAttribute('open', 'true');
+}
+
+
+function GetTreeNodeForServerURI(serverURI)
+{
+    var treeNode = null;
+
+    var tree = GetFolderTree();     
+
+    // Iterate through folder tree to find the node associated with given serverURI
+    if ( tree && tree.childNodes ) {
+        for ( var i = tree.childNodes.length - 1; i >= 0; i-- ) {
+            var treechild = tree.childNodes[i];
+            if (treechild.localName == 'treechildren') {
+                var treeitems = treechild.childNodes;
+                for ( var j = treeitems.length - 1; j >= 0; j--) {
+                    var isServer = treeitems[j].getAttribute('IsServer');
+                    if (isServer == "true") {
+                        var uri = treeitems[j].getAttribute('id');
+                        if (uri == serverURI) {
+                            treeNode = treeitems[j];
+                            break; 
+                        }
+                    }
+                }
+            } 
+        }
+    }
+    return treeNode;
+}
+
+function TriggerGetMessages(server)
+{
+    // downloadMessagesAtStartup for a given server type indicates whether 
+    // or not there is a need to Trigger GetMessages action
+    if (server.downloadMessagesAtStartup)
+        MsgGetMessage();
 }
 
 function AddToSession()

@@ -20,28 +20,104 @@
 
 function onInit() {
     var pageData = parent.wizardManager.WSM.PageData;
+    var showMailServerDetails = true; 
+
+    var currentAccountData = parent.gCurrentAccountData;
+    if (currentAccountData) {
+        // find out if we need to hide server details
+        showMailServerDetails = currentAccountData.showServerDetailsOnWizardSummary; 
+  
+        // Change the username field description to email field label in aw-identity
+        setUserNameDescField(currentAccountData.emailIDFieldTitle);
+    }
+
+    var accountName="";
+    if (pageData.accname && pageData.accname.prettyName) {
+        accountName = pageData.accname.prettyName.value;
+        if (!accountName        && 
+             currentAccountData && 
+             currentAccountData.prettyName)
+            accountName = currentAccountData.prettyName;
+    }
+    setDivTextFromForm("account.name", accountName);
 
     var email = "";
     if (pageData.identity && pageData.identity.email) {
         // fixup the email
         email = pageData.identity.email.value;
-        if (email.split('@').length < 2 && parent.gCurrentAccountData.domain)
-            email += "@" + parent.gCurrentAccountData.domain;
+        if (email.split('@').length < 2 && 
+                     currentAccountData && 
+                     currentAccountData.domain)
+            email += "@" + currentAccountData.domain;
     }
     setDivTextFromForm("identity.email", email);
 
-    var username="";
-    if (pageData.login && pageData.login.username)
-        username = pageData.login.username.value;
-    setDivTextFromForm("server.username", username);
+    var userName="";
+    if (pageData.login && pageData.login.username) {
+        userName = pageData.login.username.value;
+    }
+    if (!userName && email) {
+        var emailData = email.split('@');
+        userName = emailData[0];
+    }
+    setDivTextFromForm("server.username", userName);
+
+    // Show mail servers (incoming&outgoing) detials
+    // based on current account data. ISP can set 
+    // rdf value of literal showServerDetailsOnWizardSummary
+    // to false to hide server details
+    if (showMailServerDetails) {
+        var incomingServerName="";
+        if (pageData.server && pageData.server.hostname) {
+            incomingServerName = pageData.server.hostname.value;
+            if (!incomingServerName && 
+                 currentAccountData && 
+                 currentAccountData.incomingServer.hostname)
+                incomingServerName = currentAccountData.incomingServer.hostName;
+        }
+        setDivTextFromForm("server.name", incomingServerName);
+
+        var incomingServerType="";
+        if (pageData.server && pageData.server.servertype) {
+            incomingServerType = pageData.server.servertype.value;
+            if (!incomingServerType && 
+                 currentAccountData && 
+                 currentAccountData.incomingServer.type)
+                incomingServerType = currentAccountData.incomingServer.type;
+        }
+        setDivTextFromForm("server.type", incomingServerType.toUpperCase());
+
+        var smtpServerName="";
+        if (pageData.server && pageData.server.smtphostname) {
+            var smtpServer = parent.smtpService.defaultServer;
+            smtpServerName = pageData.server.smtphostname.value;
+            if (!smtpServerName && smtpServer.hostname)
+                smtpServerName = smtpServer.hostname;
+        }
+        setDivTextFromForm("smtpServer.name", smtpServerName);
+    }
+    else {
+        setDivTextFromForm("server.name", null);
+        setDivTextFromForm("server.type", null);
+        setDivTextFromForm("smtpServer.name", null);
+    }
+
+    var newsServerName="";
+    if (pageData.newsserver && pageData.newsserver.hostname)
+        newsServerName = pageData.newsserver.hostname.value;
+    if (newsServerName) {
+        // No need to show username for news account
+        setDivTextFromForm("server.username", null);
+    }
+    setDivTextFromForm("newsServer.name", newsServerName);
 }
 
 function setDivTextFromForm(divid, value) {
 
-    // hide the .label if the div has no value
-    if (!value || value =="") {
-        var div = document.getElementById(divid + ".label");
-        div.setAttribute("hidden","true");
+    // collapse the row if the div has no value
+    if (!value) {
+        var div = document.getElementById(divid);
+        div.setAttribute("collapsed","true");
         return;
     }
 
@@ -50,6 +126,14 @@ function setDivTextFromForm(divid, value) {
     if (!div) return;
 
     div.setAttribute("value", value);
+}
+
+function setUserNameDescField(name)
+{
+   if (name) {
+       var userNameField = document.getElementById("server.username.label");
+       userNameField.setAttribute("value", name);
+   }
 }
 
 function setupAnother(event)

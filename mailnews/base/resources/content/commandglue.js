@@ -25,7 +25,6 @@
 
 //The eventual goal is for this file to go away and for the functions to either be brought into
 //mailCommands.js or into 3pane specific code.
-
 var gFolderJustSwitched = false;
 var gBeforeFolderLoadTime;
 var gRDFNamespace = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
@@ -180,8 +179,18 @@ function ChangeFolderByURI(uri, isThreaded, sortID, sortDirection, viewType)
   //if it's a server, clear the threadpane and don't bother trying to load.
   if(msgfolder.isServer)
   {
-	ClearThreadPane();
+        ClearThreadPane();
+
+        // Load AccountCentral page here.
+        ShowAccountCentral(); 
 	return;
+  }
+
+  // If the user clicks on msgfolder, time to display thread pane and message pane.
+  // Hide AccountCentral page
+  if (gAccountCentralLoaded)
+  {
+      HideAccountCentral();
   }
    
   if (showPerformance) { 
@@ -777,7 +786,8 @@ function FolderPaneSelectionChange()
 			ClearThreadPane();
 		}
 	}
-	ClearMessagePane();
+        if (!gAccountCentralLoaded)
+            ClearMessagePane();
 
 }
 

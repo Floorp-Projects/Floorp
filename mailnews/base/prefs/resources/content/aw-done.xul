@@ -44,17 +44,37 @@ Rights Reserved.
 
     <grid>
       <columns>
-        <column style="width: 8em;"/>
+        <column/>
         <column flex="1"/>
       </columns>
       <rows>
-        <row autostretch="never">
-          <text class="label" id="server.username.label" value="&userNamePrefix.label;"/>
+        <row autostretch="never" id="account.name">
+          <text class="label" flex="1" id="account.name.label" value="&accountNamePrefix.label;"/>
+          <text class="label" id="account.name.text"/>
+        </row>
+        <row autostretch="never" id="server.username">
+          <text class="label" flex="1" id="server.username.label" value="&userNamePrefix.label;"/>
           <text class="label" id="server.username.text"/>
         </row>
-        <row autostretch="never">
-          <text class="label" id="identity.email.label" value="&emailPrefix.label;"/>
+        <row autostretch="never" id="identity.email">
+          <text class="label" flex="1" id="identity.email.label" value="&emailPrefix.label;"/>
           <text class="label" id="identity.email.text"/>
+        </row>
+        <row autostretch="never" id="server.name">
+          <text class="label" flex="1" id="server.name.label" value="&serverNamePrefix.label;"/>
+          <text class="label" id="server.name.text"/>
+        </row>
+        <row autostretch="never" id="server.type">
+          <text class="label" flex="1" id="server.type.label" value="&serverTypePrefix.label;"/>
+          <text class="label" id="server.type.text"/>
+        </row>
+        <row autostretch="never" id="newsServer.name">
+          <text class="label" flex="1" id="newsServer.name.label" value="&newsServerNamePrefix.label;"/>
+          <text class="label" id="newsServer.name.text"/>
+        </row>
+        <row autostretch="never" id="smtpServer.name">
+          <text class="label" flex="1" id="smtpServer.name.label" value="&smtpServerNamePrefix.label;"/>
+          <text class="label" id="smtpServer.name.text"/>
         </row>
       </rows>
     </grid>

@@ -3,6 +3,11 @@
 <!ENTITY completionText.label "You have entered all the information required to set up this account.">
 <!ENTITY userNamePrefix.label "User Name:">
 <!ENTITY emailPrefix.label "Email Address:">
+<!ENTITY serverTypePrefix.label "Incoming Server Type:">
+<!ENTITY serverNamePrefix.label "Incoming Server Name:">
+<!ENTITY smtpServerNamePrefix.label "SMTP Server Name:">
+<!ENTITY newsServerNamePrefix.label "News Server Name:">
+<!ENTITY accountNamePrefix.label "Account Name:">
 <!ENTITY setupAnother.label "Click Set up Another to save these settings and set up another account.">
 <!ENTITY clickFinish.label "Click Finish to save these settings and exit the Account Wizard.">
 <!ENTITY setupAnotherButton.label "Set up Another...">

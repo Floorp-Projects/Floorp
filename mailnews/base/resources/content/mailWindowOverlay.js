@@ -208,11 +208,72 @@ function GetFirstSelectedMsgFolder()
     return result;
 }
 
+function GetInboxFolder(server)
+{
+    try {
+        var rootFolder = server.RootFolder;
+        var rootMsgFolder = rootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
+
+        //now find Inbox
+        var outNumFolders = new Object();
+        var inboxFolder = rootMsgFolder.getFoldersWithFlag(0x1000, 1, outNumFolders);
+
+        return inboxFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
+    }
+    catch (ex) {
+        dump(ex + "\n");
+    }
+    return null;
+}
+
+function GetMessagesForInboxOnServer(server)
+{
+    var inboxFolder = GetInboxFolder(server);
+    if (!inboxFolder) return;
+
+    var folders = new Array(1);
+    folders[0] = inboxFolder;
+
+    var compositeDataSource = GetCompositeDataSource("GetNewMessages");
+    GetNewMessages(folders, compositeDataSource);
+}
+
 function MsgGetMessage() 
 {
     var folders = GetSelectedMsgFolders();
     var compositeDataSource = GetCompositeDataSource("GetNewMessages");
     GetNewMessages(folders, compositeDataSource);
+}
+
+function MsgGetMessagesForAllServers(defaultServer)
+{
+    // now log into any server
+    try 
+    {
+        var allServers = accountManager.allServers;
+     
+        for (var i=0;i<accountManager.allServers.Count();i++) 
+        {
+            var currentServer = accountManager.allServers.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
+            var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + currentServer.type].getService(Components.interfaces.nsIMsgProtocolInfo);
+            if (protocolinfo.canLoginAtStartUp && currentServer.loginAtStartUp) 
+            {
+                if (defaultServer && defaultServer.equals(currentServer)) 
+                {
+                    dump(currentServer.serverURI + "...skipping, already opened\n");
+                }
+                else 
+                {
+                    // this assumes "logging is" means getting message on the inbox...is that always true?
+                    GetMessagesForInboxOnServer(currentServer);
+                }
+            }
+        }
+    }
+    catch(ex) 
+    {
+        dump(ex + "\n");
+    }
 }
 
 function MsgGetNextNMessages()

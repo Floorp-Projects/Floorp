@@ -177,6 +177,14 @@ nsMsgIncomingServer::CloseCachedConnections()
 	return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgIncomingServer::GetDownloadMessagesAtStartup(PRBool *getMessagesAtStartup)
+{
+    // derived class should override if they need to do this.
+    *getMessagesAtStartup = PR_FALSE;
+    return NS_OK;
+}
+
 // construct <localStoreType>://[<username>@]<hostname
 NS_IMETHODIMP
 nsMsgIncomingServer::GetServerURI(char* *aResult)

@@ -38,24 +38,34 @@ Rights Reserved.
   <box class="box-header" title="&identityTitle.label;"/>
   
   <separator/>
-  
   <box class="box-wizardcontent" orient="vertical" flex="1">
     <html>&identityDesc.label;</html>
     <separator/>
     <html>&fullnameDesc.label; &fullnameExample.label;</html>
     <separator class="thin"/>
     <box autostretch="never">
-      <text class="label" for="fullName" value="&fullnameLabel.label;" style="width: 8em;"/>
+      <text class="awIdentityLabel" for="fullName" value="&fullnameLabel.label;"/>
       <textfield mailtype="identity" wsm_persist="true" name="fullName" id="fullName" flex="6"/>
     </box>
     <separator/>  
-    <html>&emailDesc.label; &emailExample.label;</html>
-    <separator class="thin"/>
-    <box autostretch="never">
-      <text class="label" for="email" value="&emailLabel.label;" style="width: 8em;"/>
-      <textfield wsm_persist="true" mailtype="identity" name="email" id="email" flex="6"/>
-      <text id="postEmailText"/>
-    </box>
+    <grid>
+      <columns>
+        <column flex="1"/>
+      </columns>
+      <rows>
+        <row>
+          <html id="emailDescText"/> 
+        </row>
+        <separator class="thin"/>
+        <row>
+          <box autostretch="never">
+            <text class="awIdentityLabel" id="emailFieldLabel" value="&emailLabel.label;"/>
+            <textfield wsm_persist="true" mailtype="identity" name="email" id="email" flex="6"/>
+            <text id="postEmailText"/>
+          </box>
+        </row>
+      </rows>
+    </grid>
   </box>
   
 </window>

@@ -85,9 +85,72 @@ function validateEmail() {
 
 function onInit()
 {
+  setEmailDescriptionText();
   checkForDomain();
   checkForFullName(); 
   checkForEmail(); 
+}
+
+// Use email example data that ISP has provided. ISP data, if avaialble
+// for the choice user has made, will be read into CurrentAccountData. 
+// Default example data from properties will be used when the info is missing. 
+function setEmailDescriptionText()
+{
+    var emailDescText = document.getElementById("emailDescText");
+    var emailFieldLabel = document.getElementById("emailFieldLabel");
+    var currentAccountData = parent.gCurrentAccountData;
+   
+    var displayText =  null;
+    var emailFieldLabelData =  null;
+    var setDefaultEmailDescStrings = true; 
+
+    // Get values for customized data from current account 
+    if (currentAccountData)
+    {
+        var emailProvider  = currentAccountData.emailProviderName;
+        var sampleEmail    = currentAccountData.sampleEmail;
+        var sampleUserName = currentAccountData.sampleUserName;
+        var emailIDDesc    = currentAccountData.emailIDDescription;
+        var emailIDTitle   = currentAccountData.emailIDFieldTitle;
+
+        if (emailProvider  &&
+            sampleEmail    &&
+            sampleUserName &&
+            emailIDDesc    &&
+            emailIDTitle)
+        {
+            // Get email description data
+            displayText = Bundle.GetStringFromName("customizedEmailText")
+                                .replace(/%emailProvider%/g, emailProvider)
+                                .replace(/%mailIDDesc%/g, emailIDDesc)
+                                .replace(/%sampleEmail%/, sampleEmail)
+                                .replace(/%sampleUserName%/, sampleUserName);
+
+            // Set emailfield label
+            emailFieldLabelData =  emailIDTitle;
+            emailFieldLabel.setAttribute("value", emailFieldLabelData);
+
+            // Need to display customized data. Turn off default settings.
+            setDefaultEmailDescStrings = false; 
+        }
+    }
+
+    if (setDefaultEmailDescStrings)
+    {
+        // Check for obtained values and set with default values if needed
+        var username        = Bundle.GetStringFromName("exampleEmailUserName"); 
+        var domain          = Bundle.GetStringFromName("exampleEmailDomain"); 
+
+        displayText = Bundle.GetStringFromName("defaultEmailText")
+                            .replace(/%username%/, username)
+                            .replace(/%domain%/, domain);
+    }
+
+    // Create a text nodes with text to be displayed
+    var emailDescTextNode       =  document.createTextNode(displayText);
+
+    // Display the dynamically generated text for email description 
+    emailDescText.appendChild(emailDescTextNode);
 }
 
 // retrieve the current domain from the parent wizard window,

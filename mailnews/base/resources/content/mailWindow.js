@@ -54,7 +54,10 @@ var messageDSContractID        = datasourceContractIDPrefix + "mailnewsmessages"
 var accountManagerDataSource;
 var folderDataSource;
 var messageDataSource;
-
+ 
+var messagesBox = null;
+var accountCentralBox = null;
+var gAccountCentralLoaded = false;
 //End progress and Status variables
 
 function OnMailWindowUnload()
@@ -153,6 +156,8 @@ function CreateMailWindowGlobals()
 	folderDataSource         = Components.classes[folderDSContractID].createInstance();
 	messageDataSource        = Components.classes[messageDSContractID].createInstance();
 
+        messagesBox       = document.getElementById("messagesBox");
+        accountCentralBox = document.getElementById("accountCentralBox");
 }
 
 function InitMsgWindow()
@@ -391,3 +396,55 @@ function loadStartPage() {
     }
 }
 
+// Display AccountCentral page when users clicks on the Account Folder.
+// When AccountCentral page need to be shown, we need to hide
+// the box containing threadPane, splitter and messagePane.
+// Load iframe in the AccountCentral box with corresponding page 
+function ShowAccountCentral()
+{
+    try {
+        var acctCentralPage = pref.getLocalizedUnicharPref("mailnews.account_central_page.url");
+        messagesBox.setAttribute("hidden", "true");
+        accountCentralBox.removeAttribute("hidden");
+        window.frames["accountCentralPane"].location = acctCentralPage;
+        gAccountCentralLoaded = true;
+    }
+    catch (ex) {
+        dump("Error loading AccountCentral page -> " + ex + "\n");
+        return;
+    }
+}
+
+// Display thread and message panes with splitter when user tries
+// to read messages by clicking on msgfolders. Hide AccountCentral
+// box and display message box. 
+function HideAccountCentral()
+{
+    try {
+        accountCentralBox.setAttribute("hidden", "true");
+        messagesBox.removeAttribute("hidden");
+        gAccountCentralLoaded = false;
+    }
+    catch (ex) {
+        dump("Error hiding AccountCentral page -> " + ex + "\n");
+        return;
+    }
+}
+
+// Given the server, open the twisty and the set the selection
+// on inbox of that server 
+function OpenInboxForServer(server)
+{
+    try {
+        HideAccountCentral();
+        OpenTwistyForServer(server);
+        var inboxFolder    = GetInboxFolder(server);
+        var folderTree     = GetFolderTree();
+        var inboxFolderUri = document.getElementById(inboxFolder.URI);
+        ChangeSelection(folderTree, inboxFolderUri); 
+    } 
+    catch (ex) {
+        dump("Error opening inbox for server -> " + ex + "\n");
+        return;
+    }
+}
