@@ -84,6 +84,14 @@ public:
                         PRInt32 aSXOffset, PRInt32 aSYOffset,
                         const nsRect &aTileRect);
 #ifdef USE_IMG2
+	
+   /**
+    * Get the alpha depth for the image mask
+    * @update - lordpixel 2001/05/16
+    * @return  the alpha mask depth for the image, ie, 0, 1 or 8
+    */
+    virtual PRInt8 GetAlphaDepth() {return(mAlphaDepth);}
+	
   NS_IMETHOD          DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord aDY,
                                   nscoord aDWidth, nscoord aDHeight);
 #endif

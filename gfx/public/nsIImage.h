@@ -258,6 +258,13 @@ public:
   virtual PRInt32 GetAlphaLevel() = 0;
 
   /**
+   * Get the alpha depth for the image mask
+   * @update - lordpixel 2001/05/16
+   * @return  the alpha mask depth for the image, ie, 0, 1 or 8
+   */
+  virtual PRInt8 GetAlphaDepth() = 0;
+
+  /**
    * Return information about the bits for this structure
    * @update - dwc 2/1/99
    * @return a bitmap info structure for the Device Dependent Bits

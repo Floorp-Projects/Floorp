@@ -102,6 +102,12 @@ public:
 
   virtual void  SetAlphaLevel(PRInt32 aAlphaLevel);
   virtual PRInt32 GetAlphaLevel();
+  /**
+   * Get the alpha depth for the image mask
+   * @update - lordpixel 2001/05/16
+   * @return  the alpha mask depth for the image, ie, 0, 1 or 8
+   */
+  virtual PRInt8 GetAlphaDepth() {return(mAlphaDepth);}  
   virtual void  MoveAlphaMask(PRInt32 aX, PRInt32 aY);
 
   NS_IMETHOD   LockImagePixels(PRBool aMaskPixels);
