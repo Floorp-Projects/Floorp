@@ -112,6 +112,9 @@ nsresult	GetBookmarkToPing(nsIRDFResource **theBookmark);
                            nsIRDFResource* aNewURL);
 
 	nsresult getLocaleString(const char *key, nsString &str);
+	
+	nsresult LoadBookmarks();
+	nsresult initDatasource();
 
 	// nsIStreamObserver methods:
 	NS_DECL_NSIREQUESTOBSERVER
