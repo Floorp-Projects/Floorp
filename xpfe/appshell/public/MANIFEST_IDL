@@ -5,3 +5,5 @@
 nsIFileLocator.idl
 nsIWindowMediator.idl
 nsIAppShellService.idl
+nsICommonDialogs.idl
+nsIDialogParamBlock.idl
