@@ -22,3 +22,4 @@
 <!ENTITY useHtml.label "Compose messages using html">
 <!-- LOCALIZATION NOTE (attachVCard.label) : do not translate "vCard" in below line -->
 <!ENTITY attachVCard.label "Attach my vCard to messages">
+<!ENTITY advancedButton.label "Advanced...">
