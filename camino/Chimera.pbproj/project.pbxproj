@@ -479,6 +479,8 @@
 				F5D33CBF02EF61AA01A967F3,
 				F566BD1402EFA9AD01A967F3,
 				F558099F02F22169015DF512,
+				F549ACE50302DEBB01026D5D,
+				F549ACE80302DEF001026D5D,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -601,6 +603,8 @@
 				F5D33CC102EF61AA01A967F3,
 				F566BD1502EFA9AD01A967F3,
 				F55809A002F22169015DF512,
+				F549ACE00302DE6101026D5D,
+				F549ACE10302DE6101026D5D,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -1313,6 +1317,7 @@
 				F57074BE026D80DF01A80166,
 				2E2939FF027F33604B000102,
 				2E748B73029A448D4B000102,
+				F549ACDE0302DE6001026D5D,
 			);
 			isa = PBXGroup;
 			name = "UI elements";
@@ -1507,6 +1512,7 @@
 				F55C4DD302D2864D0130B065,
 				F5D33CBC02EF61A901A967F3,
 				F566BD1202EFA9AD01A967F3,
+				F549ACE70302DEF001026D5D,
 			);
 			isa = PBXGroup;
 			name = Headers;
@@ -2811,6 +2817,74 @@
 			settings = {
 			};
 		};
+		F549ACDE0302DE6001026D5D = {
+			isa = PBXFileReference;
+			path = ToolTip.mm;
+			refType = 4;
+		};
+		F549ACDF0302DE6001026D5D = {
+			isa = PBXFileReference;
+			path = "NSScreen+Utils.m";
+			refType = 4;
+		};
+		F549ACE00302DE6101026D5D = {
+			fileRef = F549ACDE0302DE6001026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F549ACE10302DE6101026D5D = {
+			fileRef = F549ACDF0302DE6001026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F549ACE20302DE6101026D5D = {
+			fileRef = F549ACDE0302DE6001026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F549ACE30302DE6101026D5D = {
+			fileRef = F549ACDF0302DE6001026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F549ACE40302DEBB01026D5D = {
+			isa = PBXFileReference;
+			path = "NSScreen+Utils.h";
+			refType = 4;
+		};
+		F549ACE50302DEBB01026D5D = {
+			fileRef = F549ACE40302DEBB01026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F549ACE60302DEBB01026D5D = {
+			fileRef = F549ACE40302DEBB01026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F549ACE70302DEF001026D5D = {
+			isa = PBXFileReference;
+			path = ToolTip.h;
+			refType = 4;
+		};
+		F549ACE80302DEF001026D5D = {
+			fileRef = F549ACE70302DEF001026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F549ACE90302DEF001026D5D = {
+			fileRef = F549ACE70302DEF001026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F54AD84402C115D901A967F3 = {
 			isa = PBXFileReference;
 			name = liboji.a;
@@ -2972,6 +3046,8 @@
 			children = (
 				F558099D02F22168015DF512,
 				F558099E02F22168015DF512,
+				F549ACE40302DEBB01026D5D,
+				F549ACDF0302DE6001026D5D,
 				F5BF71450231B8BC010001CA,
 				F5BF71460231B8BC010001CA,
 				F5648739023C3857010001CA,
@@ -5259,6 +5335,8 @@
 				F5D33CC202EF61AA01A967F3,
 				F566BD1602EFA9AD01A967F3,
 				F55809A102F22169015DF512,
+				F549ACE60302DEBB01026D5D,
+				F549ACE90302DEF001026D5D,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -5382,6 +5460,8 @@
 				F5D33CC402EF61AA01A967F3,
 				F566BD1702EFA9AD01A967F3,
 				F55809A202F22169015DF512,
+				F549ACE20302DE6101026D5D,
+				F549ACE30302DE6101026D5D,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;

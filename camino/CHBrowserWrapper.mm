@@ -40,6 +40,7 @@
 #import "CHBrowserWrapper.h"
 #import "BrowserWindowController.h"
 #import "BookmarksService.h"
+#import "ToolTip.h"
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
@@ -87,6 +88,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     
   [defaultStatus release];
   [loadingStatus release];
+  [toolTip release];
 
   [super dealloc];
 }
@@ -131,6 +133,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     mIsBusy = NO;
     mListenersAttached = NO;
     mSecureState = nsIWebProgressListener::STATE_IS_INSECURE;
+    toolTip = [[ToolTip alloc] init];
   }
   return self;
 }
@@ -414,38 +417,13 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 //
 - (void)onShowTooltip:(NSPoint)where withText:(NSString*)text
 {
-#if NOT_YET
-  HMHelpContentRec info;
-  info.version = kMacHelpVersion;
-  
-  // convert to global QD coordinates, which is what HMDisplayTag expects. Only
-  // the main device is important in this calculation since that's where the
-  // coordinate systems differ.
-  NSPoint p = {where.x, where.y};
-  p = [[self window] convertBaseToScreen:[self convertPoint:p toView:nil]];
-  GDHandle screenDevice = ::GetMainDevice();
-  Rect screenRect  = (**screenDevice).gdRect;
-  short screenHeight = screenRect.bottom - screenRect.top;
-  p.y = screenRect.top + (screenHeight - p.y);
-  
-  Rect r = {p.y, p.x, p.y + 15, p.x + 15};			// center it under the mouse cursorsure
-  info.absHotRect = r;
-  info.tagSide = kHMOutsideBottomCenterAligned;
-  
-  // setup the content of the tooltip. recall that a NSString is really just a CFString under the hood
-  info.content[0].contentType = kHMCFStringContent;
-  info.content[0].u.tagCFString = (CFStringRef) text;
-  info.content[1] = info.content[0];
-  
-  ::HMDisplayTag(&info);
-#endif
+  NSPoint point = [[self window] convertBaseToScreen:[self convertPoint: where toView:nil]];
+  [toolTip showToolTipAtPoint: point withString: text];
 }
 
 - (void)onHideTooltip
 {
-#if NOT_YET
-  ::HMHideTag();
-#endif
+  [toolTip closeToolTip];
 }
 
 // Called when a context menu should be shown.
