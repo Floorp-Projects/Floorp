@@ -286,7 +286,8 @@ PRBool
 nsDragService :: BuildDragRegion ( nsIScriptableRegion* inRegion, nsIDOMNode* inNode, RgnHandle ioDragRgn )
 {
   PRBool retVal = PR_TRUE;
-  nsCOMPtr<nsIRegion> geckoRegion ( do_QueryInterface(inRegion) );
+  nsCOMPtr<nsIRegion> geckoRegion;
+  inRegion->GetRegion(getter_AddRefs(geckoRegion));
     
   // create the drag region. Pull out the native mac region from the nsIRegion we're
   // given, copy it, inset it one pixel, and subtract them so we're left with just an
