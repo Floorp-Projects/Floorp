@@ -19,6 +19,8 @@
 #ifndef __nsIID_h
 #define __nsIID_h
 
+#include "nsID.h"
+
 /**
  * An "interface id" which can be used to uniquely identify a given
  * interface.
