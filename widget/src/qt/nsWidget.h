@@ -113,7 +113,12 @@ public:
     NS_IMETHOD CaptureMouse(PRBool aCapture) { return NS_ERROR_FAILURE; }
     virtual PRBool OnPaint(nsPaintEvent &event) { return PR_FALSE; };
     virtual PRBool OnKey(nsKeyEvent &aEvent) { return PR_FALSE; };
+    virtual PRBool OnText(nsTextEvent &aEvent) { return PR_FALSE; };
+    virtual PRBool OnComposition(nsCompositionEvent &aEvent) { return PR_FALSE; };
     virtual PRBool DispatchFocus(nsGUIEvent &aEvent) { return PR_FALSE; };
+    virtual PRBool DispatchFocusInEvent() { return PR_FALSE; };
+    virtual PRBool DispatchFocusOutEvent() { return PR_FALSE; };
+    virtual PRBool DispatchActivateEvent() { return PR_FALSE; };
 
     NS_IMETHOD Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD Invalidate(const nsRect &aRect, PRBool aIsSynchronous);

@@ -29,6 +29,7 @@
 #include "nsIRenderingContext.h"
 #include "nsRect.h"
 #include "nsGfxCIID.h"
+#include "nsIPref.h"
 
 #include <qapplication.h>
 
@@ -41,9 +42,12 @@ static PRInt32 gChildCount = 0;
 static PRInt32 gChildID = 0;
 #endif
 
-// are we grabbing?
-PRBool   nsWindow::mIsGrabbing = PR_FALSE;
-nsWindow *nsWindow::mGrabWindow = NULL;
+PRBool   nsWindow::mIsGrabbing        = PR_FALSE;
+nsWindow *nsWindow::mGrabWindow       = NULL;
+nsQBaseWidget *nsWindow::mFocusWidget = NULL;
+PRBool nsWindow::mGlobalsInitialized  = PR_FALSE;
+PRBool nsWindow::mRaiseWindows        = PR_TRUE;
+PRBool nsWindow::mGotActivate         = PR_FALSE;
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsWidget)
 
@@ -59,9 +63,24 @@ nsWindow::nsWindow()
 #endif
   mIsDialog = PR_FALSE;
   mIsPopup = PR_FALSE;
+  mBlockFocusEvents = PR_FALSE;
   mWindowType = eWindowType_child;
   mBorderStyle = eBorderStyle_default;
-  mBlockFocusEvents = PR_FALSE;
+  // initialize globals
+  if (!mGlobalsInitialized) {
+    mGlobalsInitialized = PR_TRUE;
+ 
+    // check to see if we should set our raise pref
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+    if (prefs) {
+      PRBool val = PR_TRUE;
+      nsresult rv;
+      rv = prefs->GetBoolPref("mozilla.widget.raise-on-setfocus",
+                              &val);
+      if (NS_SUCCEEDED(rv))
+        mRaiseWindows = val;
+    }
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -118,27 +137,36 @@ NS_METHOD nsWindow::RemoveTooltips()
 
 NS_METHOD nsWindow::SetFocus(PRBool aRaise)
 {
-  if (mWidget) {
-    mWidget->SetFocus();
-  }
-  // don't recurse  
   if (mBlockFocusEvents) {
     return NS_OK;
   }
-  mBlockFocusEvents = PR_TRUE;
+  PRBool sendActivate = mGotActivate;
 
-  nsGUIEvent event;
-
-  event.message = NS_GOTFOCUS;
-  event.widget  = this;
-  event.eventStructType = NS_GUI_EVENT;
-  event.time = 0;
-  event.point.x = 0;
-  event.point.y = 0;
-
-  DispatchFocus(event);
- 
-  mBlockFocusEvents = PR_FALSE;
+  mGotActivate = PR_FALSE;
+  if (mWidget) {
+    if (!mWidget->IsTopLevelActive()) {
+      if (aRaise && mRaiseWindows) {
+        mWidget->RaiseTopLevel(); 
+      }
+      mBlockFocusEvents = PR_TRUE;
+      mWidget->SetTopLevelFocus();
+      mBlockFocusEvents = PR_FALSE;
+      mGotActivate = PR_TRUE;
+    }
+    else {
+      if (mWidget == mFocusWidget) {
+        return NS_OK;
+      }
+      else {
+        mFocusWidget = mWidget;
+      }
+    }
+  }
+  DispatchFocusInEvent();
+  if (sendActivate) {
+    mGotActivate = PR_FALSE;
+    DispatchActivateEvent();
+  }
   return NS_OK;
 }
 
@@ -299,6 +327,74 @@ PRBool nsWindow::OnKey(nsKeyEvent &aEvent)
     return DispatchWindowEvent(&aEvent);
   }
   return PR_FALSE;
+}
+
+PRBool nsWindow::OnText(nsTextEvent &aEvent)
+{
+  if (mEventCallback) {
+    return DispatchWindowEvent(&aEvent);
+  }
+  return PR_FALSE;
+}
+
+PRBool nsWindow::OnComposition(nsCompositionEvent &aEvent)
+{
+  if (mEventCallback) {
+    return DispatchWindowEvent(&aEvent);
+  }
+  return PR_FALSE;
+}
+
+PRBool nsWindow::DispatchActivateEvent()
+{
+  nsGUIEvent nsEvent;
+
+  nsEvent.message         = NS_ACTIVATE;
+  nsEvent.eventStructType = NS_GUI_EVENT;
+  nsEvent.widget          = this;
+  nsEvent.time            = 0;
+  nsEvent.point.x         = 0;
+  nsEvent.point.y         = 0;
+ 
+  return DispatchFocus(nsEvent);
+}
+
+PRBool nsWindow::DispatchFocusOutEvent()
+{
+  nsGUIEvent nsEvent;
+
+  if (mFocusWidget == mWidget)
+    mFocusWidget = nsnull;
+
+  nsEvent.message         = NS_LOSTFOCUS;
+  nsEvent.eventStructType = NS_GUI_EVENT;
+  nsEvent.widget          = this;
+  nsEvent.time            = 0;
+  nsEvent.point.x         = 0;
+  nsEvent.point.y         = 0;
+ 
+  return DispatchFocus(nsEvent);
+}
+
+PRBool nsWindow::DispatchFocusInEvent()
+{
+  if (mBlockFocusEvents) {
+    return PR_TRUE;
+  }
+  PRBool ret;
+  nsGUIEvent nsEvent;
+
+  nsEvent.message         = NS_GOTFOCUS;
+  nsEvent.eventStructType = NS_GUI_EVENT;
+  nsEvent.widget          = this;
+  nsEvent.time            = 0;
+  nsEvent.point.x         = 0;
+  nsEvent.point.y         = 0;
+ 
+  mBlockFocusEvents = PR_TRUE;
+  ret = DispatchFocus(nsEvent);
+  mBlockFocusEvents = PR_FALSE;
+  return ret;
 }
 
 PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
