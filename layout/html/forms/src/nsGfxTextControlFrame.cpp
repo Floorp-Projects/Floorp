@@ -612,6 +612,9 @@ nsGfxTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
                                              aStyleContext, skipSides, nsnull, borderTwips, PR_TRUE);
 
     } else {
+    const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+	  nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                     aDirtyRect, rect,  *color, *mySpacing, 0, 0);
       //PaintTextControl(aPresContext, aRenderingContext, text, mStyleContext, rect);
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                   aDirtyRect, rect, *mySpacing, aStyleContext, skipSides);
@@ -957,7 +960,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
       // Get the CSS border
       const nsStyleSpacing* spacing;
       GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
-      spacing->CalcBorderFor(this, border);
+      spacing->CalcBorderPaddingFor(this, border);
     }
 
     float t2p;
