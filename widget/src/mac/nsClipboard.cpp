@@ -354,19 +354,23 @@ nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt3
   if (err != noErr) return NS_ERROR_FAILURE;
   err = ::GetScrapFlavorSize(scrap, inMacFlavor, &dataSize);
   if (err != noErr) return NS_ERROR_FAILURE;
-  // check err??
   if (dataSize > 0) {
     char* dataBuff = (char*) nsMemory::Alloc(dataSize);
     if ( !dataBuff )
       return NS_ERROR_OUT_OF_MEMORY;
+      
+    // ::GetScrapFlavorData can be very expensive when a conversion
+    // is required (say the OS does the conversion from TEXT to utxt). Be
+    // sure to only call this when pasting. We no longer use it in 
+    // CheckIfFlavorPresent() for this very reason.
     err = ::GetScrapFlavorData(scrap, inMacFlavor, &dataSize, dataBuff);
-    if (err != noErr) return NS_ERROR_FAILURE;
+    NS_ASSERTION(err == noErr, "nsClipboard:: Error getting data off clipboard");
+    if ( err ) {
+      nsMemory::Free(dataBuff);
+      return NS_ERROR_FAILURE;
+    }
 
     // put it into the transferable
-#ifdef NS_DEBUG
-    if ( err != NS_OK ) printf("nsClipboard:: Error setting data into transferable\n");
-#endif
-
     if ( outDataSize )
       *outDataSize = dataSize;
     *outData = dataBuff;
@@ -378,6 +382,7 @@ nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt3
     if ( !dataHand )
       return NS_ERROR_OUT_OF_MEMORY;
     long dataSize = ::GetScrap ( dataHand, inMacFlavor, &offsetUnused );
+    NS_ASSERTION(dataSize > 0, "nsClipboard:: Error getting data off the clipboard, size negative");
     if ( dataSize > 0 ) {
       char* dataBuff = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(dataSize));
       if ( !dataBuff )
@@ -392,12 +397,8 @@ nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt3
         *outDataSize = dataSize;
       *outData = dataBuff;
     } 
-    else {
-#ifdef NS_DEBUG
-         printf("nsClipboard: Error getting data off the clipboard, #%d\n", dataSize);
-#endif
-       return NS_ERROR_FAILURE;
-    }
+    else
+      return NS_ERROR_FAILURE;
   }
 #endif /* TARGET_CARBON */
   return NS_OK;
@@ -453,14 +454,14 @@ nsClipboard :: HasDataMatchingFlavors ( nsISupportsArray* aFlavorList, PRInt32 a
           *outResult = PR_TRUE;   // we found one!
           break;
         }
-      }
-      else {
-        // if the client asked for unicode and it wasn't present, check if we have TEXT.
-        // We'll handle the actual data substitution in GetNativeClipboardData().
-        if ( strcmp(flavor, kUnicodeMime) == 0 ) {
-          if ( CheckIfFlavorPresent('TEXT') ) {
-            *outResult = PR_TRUE;
-            break;
+        else {
+          // if the client asked for unicode and it wasn't present, check if we have TEXT.
+          // We'll handle the actual data substitution in GetNativeClipboardData().
+          if ( strcmp(flavor, kUnicodeMime) == 0 ) {
+            if ( CheckIfFlavorPresent('TEXT') ) {
+              *outResult = PR_TRUE;
+              break;
+            }
           }
         }
       }
@@ -480,20 +481,33 @@ PRBool
 nsClipboard :: CheckIfFlavorPresent ( ResType inMacFlavor )
 {
   PRBool retval = PR_FALSE;
-  long offsetUnused = 0;
 
 #if TARGET_CARBON
-  ScrapRef scrap;
-  long dataSize;
-  OSStatus err;
+  ScrapRef scrap = nsnull;
+  OSStatus err = ::GetCurrentScrap(&scrap);
+  if ( scrap ) {
+  
+    // the OS clipboard may contain promises and require conversions. Instead
+    // of calling in those promises, we can use ::GetScrapFlavorInfoList() to
+    // see the list of what could be there if we asked for it. This is really
+    // fast. Iterate over the list, and if we find it, we're good to go.
+    UInt32 flavorCount = 0;
+    ::GetScrapFlavorCount ( scrap, &flavorCount );    
+    ScrapFlavorInfo* flavorList = new ScrapFlavorInfo[flavorCount];
+    if ( flavorList ) {
+      err = ::GetScrapFlavorInfoList ( scrap, &flavorCount, flavorList );
+      if ( !err && flavorList ) {
+        for ( int i = 0; i < flavorCount; ++i ) {
+          if ( flavorList[i].flavorType == inMacFlavor )
+            retval = PR_TRUE;
+        }
+        delete flavorList;
+      }
+    }
 
-  err = ::GetCurrentScrap(&scrap);
-  if (err != noErr) return NS_ERROR_FAILURE;
-  err = ::GetScrapFlavorSize(scrap, inMacFlavor, &dataSize);
-  // XXX ?
-  if ( dataSize > 0 )
-    retval = PR_TRUE;
+  }
 #else
+  long offsetUnused = 0;
   long clipResult = ::GetScrap(NULL, inMacFlavor, &offsetUnused);
   if ( clipResult > 0 )   
     retval = PR_TRUE;   // we found one!
