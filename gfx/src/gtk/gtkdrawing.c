@@ -44,6 +44,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkprivate.h>
 #include <string.h>
+#include "prlink.h"
 #include "gtkdrawing.h"
 
 extern GtkWidget* gButtonWidget;
@@ -59,6 +60,13 @@ extern GtkWidget* gProtoWindow;
 extern GtkWidget* gProgressWidget;
 extern GtkWidget* gTabWidget;
 extern GtkTooltips* gTooltipWidget;
+
+/* types for dynamically located functions (in gtk+ 1.2.9 and higher) */
+typedef void (*checkbutton_props_t)(GtkCheckButton*, gint*, gint*);
+typedef gint (*style_prop_t)(GtkStyle*, const gchar*, gint);
+static const char CHECK_BUTTON_GET_PROPS[] = "_gtk_check_button_get_props";
+static const char STYLE_GET_PROP_EXPERIMENTAL[] = "gtk_style_get_prop_experimental";
+static PRLibrary* gtkLibrary;
 
 GtkStateType
 ConvertGtkState(GtkWidgetState* state)
@@ -157,21 +165,32 @@ moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
 void
 moz_gtk_checkbox_get_metrics(gint* indicator_size, gint* indicator_spacing)
 {
-#if ((GTK_MINOR_VERSION == 2) && (GTK_MICRO_VERSION > 8)) || (GTK_MINOR_VERSION > 2)
-  /*
-   * This API is only supported in GTK+ >= 1.2.9, and gives per-theme values.
-   */
-  
-  _gtk_check_button_get_props(GTK_CHECK_BUTTON(gCheckboxWidget),
-                              indicator_size, indicator_spacing);
-#else
-  GtkCheckButtonClass* klass = GTK_CHECK_BUTTON_CLASS(GTK_OBJECT(gCheckboxWidget)->klass);
+  static checkbutton_props_t checkbutton_props_func;
+  static PRBool checkedCheckbuttonProps = PR_FALSE;
 
-  if (indicator_size)
-    *indicator_size = klass->indicator_size;
-  if (indicator_spacing)
-    *indicator_spacing = klass->indicator_spacing;
-#endif
+  if (!checkedCheckbuttonProps) {
+    checkedCheckbuttonProps = PR_TRUE;
+    if (gtkLibrary)
+      checkbutton_props_func = (checkbutton_props_t) PR_FindSymbol(gtkLibrary, CHECK_BUTTON_GET_PROPS);
+    else
+      checkbutton_props_func = (checkbutton_props_t) PR_FindSymbolAndLibrary(CHECK_BUTTON_GET_PROPS, &gtkLibrary);
+  }
+
+  if (checkbutton_props_func) {
+    /*
+     * This API is supported only in GTK+ >= 1.2.9, and gives per-theme values.
+     */
+
+    checkbutton_props_func(GTK_CHECK_BUTTON(gCheckboxWidget),
+                           indicator_size, indicator_spacing);
+  } else {
+    GtkCheckButtonClass* klass = GTK_CHECK_BUTTON_CLASS(GTK_OBJECT(gCheckboxWidget)->klass);
+
+    if (indicator_size)
+      *indicator_size = klass->indicator_size;
+    if (indicator_spacing)
+      *indicator_spacing = klass->indicator_spacing;
+  }
 }
 
 void
@@ -282,53 +301,61 @@ moz_gtk_get_scrollbar_metrics(gint* slider_width, gint* trough_border,
                               gint* stepper_size, gint* stepper_spacing,
                               gint* min_slider_size)
 {
-#if ((GTK_MINOR_VERSION == 2) && (GTK_MICRO_VERSION > 8)) || (GTK_MINOR_VERSION > 2)
-  /*
-   * This API is only supported in GTK+ >= 1.2.9, and gives per-theme values.
-   */
+  static style_prop_t style_prop_func;
+  static PRBool checkedStyleProp = PR_FALSE;
 
-  if (slider_width)
-    *slider_width = gtk_style_get_prop_experimental(gScrollbarWidget->style,
-                                                    "GtkRange::slider_width",
-                                                    RANGE_CLASS(gScrollbarWidget)->slider_width);
+  if (!checkedStyleProp) {
+    checkedStyleProp = PR_TRUE;
+    if (gtkLibrary)
+      style_prop_func = (style_prop_t) PR_FindSymbol(gtkLibrary, STYLE_GET_PROP_EXPERIMENTAL);
+    else
+      style_prop_func = (style_prop_t) PR_FindSymbolAndLibrary(STYLE_GET_PROP_EXPERIMENTAL, &gtkLibrary);
+  }
 
-  if (trough_border)
-    *trough_border = gtk_style_get_prop_experimental(gScrollbarWidget->style,
-                                                     "GtkRange::trough_border",
-                                                     gScrollbarWidget->style->klass->xthickness);
+  if (style_prop_func) {
+    /*
+     * This API is supported only in GTK+ >= 1.2.9, and gives per-theme values.
+     */
 
-  if (stepper_size)
-    *stepper_size = gtk_style_get_prop_experimental(gScrollbarWidget->style,
-                                                    "GtkRange::stepper_size",
-                                                    RANGE_CLASS(gScrollbarWidget)->stepper_size);
+    if (slider_width)
+      *slider_width = style_prop_func(gScrollbarWidget->style,
+                                      "GtkRange::slider_width",
+                                      RANGE_CLASS(gScrollbarWidget)->slider_width);
 
-  if (stepper_spacing)
-    *stepper_spacing = gtk_style_get_prop_experimental(gScrollbarWidget->style,
-                                                       "GtkRange::stepper_spacing",
-                                                       RANGE_CLASS(gScrollbarWidget)->stepper_slider_spacing);
+    if (trough_border)
+      *trough_border = style_prop_func(gScrollbarWidget->style,
+                                       "GtkRange::trough_border",
+                                       gScrollbarWidget->style->klass->xthickness);
+
+    if (stepper_size)
+      *stepper_size = style_prop_func(gScrollbarWidget->style,
+                                      "GtkRange::stepper_size",
+                                      RANGE_CLASS(gScrollbarWidget)->stepper_size);
+
+    if (stepper_spacing)
+      *stepper_spacing = style_prop_func(gScrollbarWidget->style,
+                                         "GtkRange::stepper_spacing",
+                                         RANGE_CLASS(gScrollbarWidget)->stepper_slider_spacing);
+  } else {
+    /*
+     * This is the older method, which gives per-engine values.
+     */
+
+    if (slider_width)
+      *slider_width = RANGE_CLASS(gScrollbarWidget)->slider_width;
+
+    if (trough_border)
+      *trough_border = gScrollbarWidget->style->klass->xthickness;
+
+    if (stepper_size)
+      *stepper_size = RANGE_CLASS(gScrollbarWidget)->stepper_size;
+
+    if (stepper_spacing)
+      *stepper_spacing = RANGE_CLASS(gScrollbarWidget)->stepper_slider_spacing;
+  }
 
   if (min_slider_size)
     *min_slider_size = RANGE_CLASS(gScrollbarWidget)->min_slider_size;
-#else
-  /*
-   * This is the older method, which gives per-engine values.
-   */
-
-  if (slider_width)
-    *slider_width = RANGE_CLASS(gScrollbarWidget)->slider_width;
-
-  if (trough_border)
-    *trough_border = gScrollbarWidget->style->klass->xthickness;
-
-  if (stepper_size)
-    *stepper_size = RANGE_CLASS(gScrollbarWidget)->stepper_size;
-
-  if (stepper_spacing)
-    *stepper_spacing = RANGE_CLASS(gScrollbarWidget)->stepper_slider_spacing;
-
-  if (min_slider_size)
-    *min_slider_size = RANGE_CLASS(gScrollbarWidget)->min_slider_size;
-#endif
 }
 
 void
@@ -548,3 +575,9 @@ moz_gtk_tabpanels_paint(GdkWindow* window, GtkStyle* style,
                 rect->width, rect->height);
 }
 
+void
+moz_gtk_shutdown()
+{
+  if (gtkLibrary)
+    PR_UnloadLibrary(gtkLibrary);
+}
