@@ -326,7 +326,8 @@ nsCSSCompressedDataBlock::Clone() const
             case eCSSType_Value: {
                 const nsCSSValue* val = ValueAtCursor(cursor);
                 NS_ASSERTION(val->GetUnit() != eCSSUnit_Null, "oops");
-                *ValueAtCursor(result_cursor) = *val;
+                nsCSSValue *result_val = ValueAtCursor(result_cursor);
+                new (result_val) nsCSSValue(*val);
                 cursor += CDBValueStorage_advance;
                 result_cursor +=  CDBValueStorage_advance;
             } break;
@@ -337,7 +338,8 @@ nsCSSCompressedDataBlock::Clone() const
                              val->mRight.GetUnit() != eCSSUnit_Null ||
                              val->mBottom.GetUnit() != eCSSUnit_Null ||
                              val->mLeft.GetUnit() != eCSSUnit_Null, "oops");
-                *RectAtCursor(result_cursor) = *val;
+                nsCSSRect* result_val = RectAtCursor(result_cursor);
+                new (result_val) nsCSSRect(*val);
                 cursor += CDBRectStorage_advance;
                 result_cursor += CDBRectStorage_advance;
             } break;
@@ -349,6 +351,10 @@ nsCSSCompressedDataBlock::Clone() const
                 void *copy;
                 NS_ASSERTION(PointerAtCursor(cursor), "oops");
                 switch (nsCSSProps::kTypeTable[iProp]) {
+                    default:
+                        NS_NOTREACHED("unreachable");
+                        // fall through to keep gcc's uninitialized
+                        // variable warning quiet
                     case eCSSType_ValueList:
                         copy = new nsCSSValueList(*ValueListAtCursor(cursor));
                         break;
@@ -361,9 +367,6 @@ nsCSSCompressedDataBlock::Clone() const
                         break;
                     case eCSSType_Shadow:
                         copy = new nsCSSShadow(*ShadowAtCursor(cursor));
-                        break;
-                    default:
-                        NS_NOTREACHED("unreachable");
                         break;
                 }
                 if (!copy) {
@@ -380,6 +383,8 @@ nsCSSCompressedDataBlock::Clone() const
     NS_ASSERTION(cursor == cursor_end, "inconsistent data");
 
     result->mBlockEnd = result_cursor;
+    result->mStyleBits = mStyleBits;
+    NS_ASSERTION(result->DataSize() == DataSize(), "wrong size");
     return result;
 }
 
