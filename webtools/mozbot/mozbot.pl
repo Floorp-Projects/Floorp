@@ -55,7 +55,7 @@ use Chatbot::Eliza;
 
 $|++;
 
-my $VERSION = "1.19"; # keep me in sync with the mozilla.org cvs repository
+my $VERSION = "1.21"; # keep me in sync with the mozilla.org cvs repository
 my $debug = 1; # debug output also includes warnings, errors
 
 my %msgcmds = (
@@ -72,6 +72,7 @@ my %pubcmds = (
                "(mozillazine|zine|mz)" => \&bot_mozillazine,
                "(mozillaorg|mozilla|mo)" => \&bot_mozillaorg,
                "debug" => \&bot_debug,
+               "stocks" => \&bot_stocks,
                );
 
 my %admincmds = (
@@ -88,6 +89,13 @@ my $server = shift;
 my $port = shift;
 my $nick = shift;
 my $channel = shift;
+
+my $stockf = "stocklist";
+my %stocklist = ();
+my %stockvals = ();
+my %stockhist;
+
+LoadStockList();
 
 $server = $server               || "irc.mozilla.org";
 $port = $port                   || "6667";
@@ -180,6 +188,7 @@ $bot->schedule (0, \&checksourcechange);
 $bot->schedule (0, \&mozillazine);
 $bot->schedule (0, \&mozillaorg);
 $bot->schedule (0, \&slashdot);
+$bot->schedule (0, \&stocks);
 
 &debug ("connecting to $server $port as $nick on $channel");
 $irc->start;
@@ -833,7 +842,6 @@ sub mozillazine
 
 	foreach (@mz)
 		{
-            print $_;
 		if (m@<!--head-->([^<>]+)<!--head-end-->@)
 			{
 			my $h = $1;
@@ -946,4 +954,117 @@ sub checksourcechange {
         exec "$0 @::origargv";
     }
     $bot->schedule (60, \&checksourcechange);
+}
+
+
+sub stocks {
+    $bot->schedule(15 * 60, \&stocks);
+
+    my $url = "http://quote.yahoo.com/d/quotes.csv?f=sl1d1t1c1ohgv&e=.csv&s=" .
+        join("+", sort(keys %stocklist));
+    &debug ("fetching stock quotes");
+    my $output = get $url;
+    return if (!$output);
+    %stockvals = ();
+    foreach my $line (split(/\n/, $output)) {
+        my @list = split(/,/, $line);
+        my $name = shift(@list);
+        $name =~ s/"(.*)"/$1/;
+        &debug ("parsing stock quote $name ($list[0])");
+        $stockvals{$name} = \@list;
+        foreach my $ref (@{$stockhist{$name}}) {
+            my $oldval = $ref->[0];
+            my $newval = $list[0];
+            my $ratio = $newval / $oldval;
+            if ($ratio > 1.05 || $ratio < 0.95) {
+                foreach my $who ($stocklist{$name}) {
+                    ReportStock($who, $name, "Large Stock Change");
+                }
+                $stockhist{$name} = [];
+                last;
+            }
+        }
+        if (!exists $stockhist{$name}) {
+            $stockhist{$name} = [];
+        }
+        push (@{$stockhist{$name}}, \@list);
+        while (30 < @{$stockhist{$name}}) {
+            shift @{$stockhist{$name}};
+        }
+    }
+}
+
+
+sub LoadStockList {
+     %stocklist = ("NSCP" => [$channel],
+                   "AOL" => [$channel]);
+
+     if (open(LIST, $stockf)) {
+         %stocklist = ();
+         while (<LIST>) {
+             my @list = split(/\|/, $_);
+             my $name = shift(@list);
+             $stocklist{$name} = \@list;
+         }
+     }
+ }
+
+
+sub FracStr {
+    my ($num, $needplus) = (@_);
+    my $sign;
+    if ($num < 0) {
+        $sign = "-";
+        $num = - $num;
+    } else {
+         $sign = $needplus ? "+" : "";
+     }
+    
+    my $bdot = int($num);
+    my $adot = $num - $bdot;
+
+    if ($adot == 0) {
+        return "$sign$bdot";
+    }
+
+    my $base = 64;
+    $num = int($adot * $base);
+
+    while ($num % 2 == 0 && $base > 1) {
+        $base /= 2;
+        $num /= 2;
+    }
+
+    if ($adot == $num / $base) {
+        if ($bdot == 0) {
+            $bdot = "";
+        } else {
+            $bdot .= " ";
+        }
+        return "$sign$bdot$num/$base";
+    }
+}
+
+
+
+sub ReportStock {
+    my ($nick, $name, $title) = (@_);
+    if ($title ne "") {
+        $title .= ": ";
+    }
+    my $ref = $stockvals{$name};
+    my $a = FracStr($ref->[0], 0);
+    my $b = FracStr($ref->[3], 1);
+    $bot->privmsg($nick, "$title$name at $a ($b)");
+}
+
+sub bot_stocks {
+    my ($nick, $cmd, $rest) = (@_);
+    foreach my $name (sort(keys %stocklist)) {
+        foreach my $who (@{$stocklist{$name}}) {
+            if ($who eq $nick || $who eq $channel) {
+                ReportStock($nick, $name, "");
+            }
+        }
+    }
 }
