@@ -25,12 +25,7 @@ MODULE	= 	xpcom
 
 LIBRARY_NAME=xpcomxptinfo_s
 
-LCFLAGS = -DWIN32_LEAN_AND_MEAN -DEXPORT_XPTI_API -DEXPORT_XPT_API \
-# -DXPT_INFO_STATS
-
-NEW_XPTINFO=1
-
-!if defined(NEW_XPTINFO)
+LCFLAGS = -DWIN32_LEAN_AND_MEAN -DEXPORT_XPTI_API -DEXPORT_XPT_API
 
 CPP_OBJS =	\
 	.\$(OBJDIR)\xptiFile.obj	\
@@ -43,17 +38,6 @@ CPP_OBJS =	\
 	.\$(OBJDIR)\xptiZipItem.obj	\
 	.\$(OBJDIR)\xptiZipLoader.obj	\
 	$(NULL)
-
-!else
-
-CPP_OBJS =	\
-	.\$(OBJDIR)\nsInterfaceInfoManager.obj	\
-	.\$(OBJDIR)\nsInterfaceInfo.obj		\
-	.\$(OBJDIR)\nsInterfaceRecord.obj	\
-	.\$(OBJDIR)\nsTypelibRecord.obj		\
-	$(NULL)
-
-!endif
 
 LINCS = 	\
 	-I$(PUBLIC)\xpcom \
