@@ -691,8 +691,8 @@
          <![CDATA[
            var scrollCursor  = new Array("move", "n-resize", "e-resize");
            var docBox = this._clientFrameDoc.getBoxObjectFor(this._clientFrameDoc.documentElement);
-           var left = evt.screenX - docBox.screenX;
-           var top = evt.screenY - docBox.screenY;
+           var left = evt.clientX;
+           var top = evt.clientY;
            
            
            var documentWidth = docBox.width;
