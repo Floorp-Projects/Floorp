@@ -149,10 +149,6 @@
 #define NS_STYLE_PITCH_X_HIGH             5
 
 // See nsStyleAural
-#define NS_STYLE_PLAY_DURING_MIX          0x01  // bit field
-#define NS_STYLE_PLAY_DURING_REPEAT       0x02
-
-// See nsStyleAural
 #define NS_STYLE_SPEAK_NONE               0
 #define NS_STYLE_SPEAK_NORMAL             1
 #define NS_STYLE_SPEAK_SPELL_OUT          2

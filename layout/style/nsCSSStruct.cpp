@@ -1084,7 +1084,6 @@ nsCSSAural::nsCSSAural(const nsCSSAural& aCopy)
     mPauseBefore(aCopy.mPauseBefore),
     mPitch(aCopy.mPitch),
     mPitchRange(aCopy.mPitchRange),
-    mPlayDuring(aCopy.mPlayDuring),
     mRichness(aCopy.mRichness),
     mSpeak(aCopy.mSpeak),
     mSpeakHeader(aCopy.mSpeakHeader),
@@ -1118,7 +1117,6 @@ void nsCSSAural::List(FILE* out, PRInt32 aIndent) const
   mPauseBefore.AppendToString(buffer, eCSSProperty_pause_before);
   mPitch.AppendToString(buffer, eCSSProperty_pitch);
   mPitchRange.AppendToString(buffer, eCSSProperty_pitch_range);
-  mPlayDuring.AppendToString(buffer, eCSSProperty_play_during);
   mRichness.AppendToString(buffer, eCSSProperty_richness);
   mSpeak.AppendToString(buffer, eCSSProperty_speak);
   mSpeakHeader.AppendToString(buffer, eCSSProperty_speak_header);
