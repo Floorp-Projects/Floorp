@@ -33,7 +33,6 @@
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
 
-#include "nsIAnonymousContentCreator.h"
 #include "nsBoxFrame.h"
 #include "nsFrameList.h"
 #include "nsIMenuParent.h"
@@ -64,9 +63,6 @@ public:
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
 
-  // The nsIAnonymousContentCreator interface
-  NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext, nsISupportsArray& aAnonymousItems);
-  
   // The nsITimerCallback interface
   NS_IMETHOD_(void) Notify(nsITimer *timer);
 

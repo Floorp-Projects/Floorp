@@ -32,7 +32,6 @@
 #include "nsCOMPtr.h"
 
 #include "nsIPopupSetFrame.h"
-#include "nsIAnonymousContentCreator.h"
 #include "nsBoxFrame.h"
 #include "nsFrameList.h"
 #include "nsIMenuParent.h"

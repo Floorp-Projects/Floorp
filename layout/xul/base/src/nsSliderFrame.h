@@ -32,7 +32,6 @@
 #include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
-#include "nsIAnonymousContentCreator.h"
 #include "nsITimerCallback.h"
 #include "nsIDOMMouseListener.h"
 
