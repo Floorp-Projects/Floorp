@@ -176,7 +176,12 @@ ForkAndExec(
             }
         }
 
-        (void)execve(path, argv, envp);
+        if (envp) {
+            (void)execve(path, argv, envp);
+        } else {
+            /* Inherit the environment of the parent. */
+            (void)execv(path, argv);
+        }
         /* Whoops! It returned. That's a bad sign. */
         _exit(1);
     }
