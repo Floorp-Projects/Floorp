@@ -722,12 +722,17 @@ JS_BeginRequest(JSContext *cx)
 {
     JSRuntime *rt;
 
+    JS_ASSERT(cx->thread);
     if (!cx->requestDepth) {
 	/* Wait until the GC is finished. */
 	rt = cx->runtime;
 	JS_LOCK_GC(rt);
-	while (rt->gcLevel > 0)
-	    JS_AWAIT_GC_DONE(rt);
+
+        /* NB: we use cx->thread here, not js_CurrentThreadId(). */
+        if (rt->gcThread != cx->thread) {
+            while (rt->gcLevel > 0)
+                JS_AWAIT_GC_DONE(rt);
+        }
 
 	/* Indicate that a request is running. */
 	rt->requestCount++;
@@ -760,7 +765,9 @@ JS_YieldRequest(JSContext *cx)
 {
     JSRuntime *rt;
 
+    JS_ASSERT(cx->thread);
     CHECK_REQUEST(cx);
+
     rt = cx->runtime;
     JS_LOCK_GC(rt);
     JS_ASSERT(rt->requestCount > 0);
