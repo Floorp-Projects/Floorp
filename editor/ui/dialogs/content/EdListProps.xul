@@ -43,29 +43,35 @@
   <broadcaster id="args" value=""/>
   <spring id="location" offsetY="50" persist="offsetX offsetY"/>
 
-  <text class="label" value="&ListType.label;"/>
-  <menulist flex="1" id="ListType" oncommand="SelectListType()">
-    <menupopup>
-      <menuitem value="&none.value;"/>
-      <menuitem value="&bulletList.value;"/>
-      <menuitem value="&numberList.value;"/>
-      <menuitem value="&definitionList.value;"/>
-    </menupopup>
-  </menulist>
+  <titledbox orient="vertical" flex="1"><title value="&ListType.label;"/>
+    <menulist flex="1" id="ListType" oncommand="SelectListType()">
+      <menupopup>
+        <menuitem value="&none.value;"/>
+        <menuitem value="&bulletList.value;"/>
+        <menuitem value="&numberList.value;"/>
+        <menuitem value="&definitionList.value;"/>
+      </menupopup>
+    </menulist>
+    <radiogroup id="RadioGroup" orient="vertical" index="0" persist="index">
+      <radio group="RadioGroup" id="ChangeAll"      value="&changeEntireListRadio.label;"/>
+      <radio group="RadioGroup" id="ChangeSelected" value="&changeSelectedRadio.label;"/>
+    </radiogroup>
+  </titledbox>
   <spring class="spacer"/>
 
   <!-- message text and list items are set in JS 
        text value should be identical to string with id=BulletStyle in editor.properties 
   -->
-  <text class="label" id="BulletStyleLabel" value="&bulletStyle.label;"/>
-  <menulist flex="1" class="MinWidth10em" id="BulletStyle" oncommand="SelectBulletStyle()"/>
-  <spring class="spacer"/>
-  <box>
-    <text class="label" id="StartingNumberLabel" value="&startingNumber.label;"/>
+  <titledbox orient="vertical" flex="1"><title id="BulletStyleLabel" value="&bulletStyle.label;"/>
+    <menulist flex="1" class="MinWidth10em" id="BulletStyle" oncommand="SelectBulletStyle()"/>
     <spring class="spacer"/>
-    <textfield class="narrow" id="StartingNumber" onkeyup="FilterStartNumber()"/>
-    <spring/>
-  </box>
+    <box>
+      <text class="label" id="StartingNumberLabel" value="&startingNumber.label;"/>
+      <textfield class="narrow" id="StartingNumber" onkeyup="forceInteger(this.id)"/>
+      <spring/>
+    </box>
+    <html id="StartExample" class="wrap" flex="1" style="width: 1em">&startingHelp.label;</html>
+  </titledbox>
   <!-- from EdDialogOverlay -->
   <box id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->

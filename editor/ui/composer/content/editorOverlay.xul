@@ -21,9 +21,11 @@
    - Contributor(s):
    -   Ryan Cassin (rcassin@supernova.org)
   -->
-
+<!-- Submenus shared between main window and context window -->
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
+<!-- items shared between editorOverlay menus and context popups -->
+<!-- Contains submenus shared by both window and popup menus -->
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editorOverlay.dtd">
 
@@ -436,13 +438,12 @@
           position="4"/>
     <menuseparator position="5"/>
 
-    <menuitem id="removeAllStylesMenuitem" value="&removeAllStylesCmd.label;"
-          accesskey="&formatremovestyles.accesskey;" key="removestyleskb"
-          oncommand="goDoCommand('cmd_removeStyles')"
+    <!-- Value and accesskey set at runtime from strings -->
+    <menuitem id="removeStylesMenuitem" key="removestyleskb"
+          observes="cmd_removeStyles"
           position="6"/>
-    <menuitem id="removeLinksMenuitem" value="&removeLinksCmd.label;"
-          accesskey="&formatremovelinks.accesskey;" key="removelinkskb"
-          oncommand="goDoCommand('cmd_removeLinks')"
+    <menuitem id="removeLinksMenuitem" key="removelinkskb"
+          observes="cmd_removeLinks"
           position="7"/>
     <menuseparator position="8"/>
 
@@ -506,9 +507,11 @@
     <!-- Merge property items here -->
   </menupopup>
 
-  <!-- Items to append at the bottom of the formatMenuPopup -->
-  <menuitem id="objectProperties" value="&properties.label;" accesskey="&properties.accesskey;"
-            observes="cmd_objectProperties"/>
+  <!-- Next 3 are items to append at the bottom of the formatMenuPopup -->
+  <!-- Value and accesskey filled in during menu creation -->
+  <menuitem id="objectProperties" 
+            oncommand="goDoCommand('cmd_objectProperties')"/>
+  <!-- Dont use 'observes', must call command correctly -->
   <menuitem id="pageProperties" value="&pageProperties.label;"
             accesskey="&pageproperties.accesskey;"
             oncommand="goDoCommand('cmd_pageProperties')"/>
@@ -518,50 +521,23 @@
 
   <menu id="tableMenu" value="&tableMenu.label;" accesskey="&tablemenu.accesskey;">
     <menupopup  oncreate="EditorInitTableMenu()">
+      <!-- From EditorCommandOverlay.xul (shared with context popup) -->
       <menu id="tableInsertMenu" value="&tableInsertMenu.label;" accesskey="&tableinsertmenu.accesskey;">
-        <menupopup>
-          <menuitem value="&insertTableCmd.label;"    accesskey="&tabletable.accesskey;"        observes="cmd_InsertTable"/>
-          <menuseparator />
-          <menuitem value="&tableRowAbove.label;"     accesskey="&tablerow.accesskey;"          observes="cmd_InsertRowAbove"/>
-          <menuitem value="&tableRowBelow.label;"     accesskey="&tablerowbelow.accesskey;"     observes="cmd_InsertRowBelow"/>
-          <menuseparator />
-          <menuitem value="&tableColumnBefore.label;" accesskey="&tablecolumn.accesskey;"       observes="cmd_InsertColumnBefore"/>
-          <menuitem value="&tableColumnAfter.label;"  accesskey="&tablecolumnafter.accesskey;"  observes="cmd_InsertColumnAfter"/>
-          <menuseparator />
-          <menuitem value="&tableCellBefore.label;"   accesskey="&tablecell.accesskey;"         observes="cmd_InsertCellBefore"/>
-          <menuitem value="&tableCellAfter.label;"    accesskey="&tablecellafter.accesskey;"    observes="cmd_InsertCellAfter"/>
-        </menupopup>
+        <menupopup id="tableInsertPopup"/>
       </menu>
-      <menu id="tableSelectMenu" value="&tableSelectMenu.label;"
-              accesskey="&tableselectmenu.accesskey;">
-        <menupopup>
-            <menuitem id="menu_SelectTable"    value="&tableTable.label;"    accesskey="&tabletable.accesskey;"    observes="cmd_SelectTable"    />
-            <menuitem id="menu_SelectRow"      value="&tableRow.label;"      accesskey="&tablerow.accesskey;"      observes="cmd_SelectRow"      />
-            <menuitem id="menu_SelectColumn"   value="&tableColumn.label;"   accesskey="&tablecolumn.accesskey;"   observes="cmd_SelectColumn"   />
-            <menuitem id="menu_SelectCell"     value="&tableCell.label;"     accesskey="&tablecell.accesskey;"     observes="cmd_SelectCell"     />
-            <menuitem id="menu_SelectAllCells" value="&tableAllCells.label;" accesskey="&tableallcells.accesskey;" observes="cmd_SelectAllCells" />
-        </menupopup>
+      <menu id="tableSelectMenu" value="&tableInsertMenu.label;" accesskey="&tableselectmenu.accesskey;">
+        <menupopup id="tableSelectPopup"/>
       </menu>
       <menu id="tableDeleteMenu" value="&tableDeleteMenu.label;" accesskey="&tabledeletemenu.accesskey;">
-        <menupopup>
-          <menuitem id="menu_DeleteTable"         value="&tableTable.label;"        accesskey="&tabletable.accesskey;"          observes="cmd_DeleteTable"/>
-          <menuitem id="menu_DeleteRow"           value="&tableRows.label;"         accesskey="&tablerow.accesskey;"            observes="cmd_DeleteRow"/>
-          <menuitem id="menu_DeleteColumn"        value="&tableColumns.label;"      accesskey="&tablecolumn.accesskey;"         observes="cmd_DeleteColumn"/>
-          <menuitem id="menu_DeleteCell"          value="&tableCells.label;"        accesskey="&tablecell.accesskey;"           observes="cmd_DeleteCell"/>
-          <menuitem id="menu_DeleteCellContents"  value="&tableCellContents.label;" accesskey="&tablecellcontents.accesskey;"   observes="cmd_DeleteCellContents"/>
-        </menupopup>
+        <menupopup id="tableDeletePopup"/>
       </menu>
       <menuseparator />
-<!--
-      <menuitem id="menu_NormalizeTable"  value="&tableFix.label;"        accesskey="&tablefix.accesskey;"       observes="cmd_NormalizeTable"/>
--->
       <!-- menu value is set in InitTableMenu -->
       <menuitem id="menu_JoinTableCells"   value="&tableJoinCells.label;"   accesskey="&tablejoincells.accesskey;"   observes="cmd_JoinTableCells"/>
       <menuitem id="menu_SlitTableCell"    value="&tableSplitCell.label;"   accesskey="&tablesplitcell.accesskey;"   observes="cmd_SplitTableCell"/>
       <menuseparator />
       <menuitem id="menu_TableOrCellColor" value="&tableOrCellColor.label;" accesskey="&tableOrCellColor.accesskey;" observes="cmd_TableOrCellColor"/>
-      <!-- this is shared with Format Menu -->
-      <menuitem id="menu_tableProperties"  value="&tableProperties.label;"  accesskey="&properties.accesskey;"     observes="cmd_editTable"/>
+      <menuitem id="menu_tableProperties"  value="&tableProperties.label;"  accesskey="&tableProperties.accesskey;"  observes="cmd_editTable"/>
     </menupopup>
   </menu>
 
@@ -615,7 +591,7 @@
           value="&previewToolbarCmd.label;" observes="cmd_preview"
           tooltip="aTooltip"              tooltiptext="&previewToolbarCmd.tooltip;"/>
 
-  <menubutton class="menubutton-dual toolbar" id="printButton" value="&printToolbarCmd.label;" 
+  <menubutton class="menubutton-dual toolbar top" id="printButton" value="&printToolbarCmd.label;" 
               observes="cmd_print" tooltip="aTooltip" tooltiptext="&printToolbarCmd.tooltip;"
               crop="right">  
  	  <menupopup id="printMenu">

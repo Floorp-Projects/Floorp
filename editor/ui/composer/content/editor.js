@@ -66,10 +66,11 @@ var gIsWindows;
 var gIsMac;
 var gIsUNIX;
 var gIsHTMLEditor = false;
-var gColorObj;
+var gColorObj = new Object();
 var gPrefs;
 var gDefaultTextColor = "";
 var gDefaultBackgroundColor = "";
+
 // These must be kept in synch with the XUL <options> lists
 var gFontSizeNames = new Array("xx-small","x-small","small","medium","large","x-large","xx-large");
 
@@ -124,7 +125,6 @@ var DocumentStateListener =
 
     // udpate menu items now that we have an editor to play with
     // Note: This must be AFTER window._content.focus();
-    //dump("Updating 'create' commands\n");
     window.updateCommands("create");
   },
   
@@ -167,7 +167,6 @@ function EditorStartup(editorType, editorElement)
 
   // store the editor shell in the window, so that child windows can get to it.
   editorShell = editorElement.editorShell;        // this pattern exposes a JS/XBL bug that causes leaks
-//  editorShell = editorElement.boxObject.QueryInterface(Components.interfaces.nsIEditorBoxObject).editorShell;
   
   editorShell.Init();
   editorShell.editorType = editorType;
@@ -232,42 +231,49 @@ function EditorSharedStartup()
   // hide UI that we don't have components for
   RemoveInapplicableUIElements();
 
-  // Use global prefs if exists, else get service for other editor users
-  var prefs = gPrefs ? gPrefs : GetPrefsService();
-
-  // If not set before, set text and background colors from browser prefs
-  if (gDefaultTextColor == "" || gDefaultBackgroundColor == "")
+  // Use global prefs if EditorStartup already run, 
+  //   else get service for other editor users
+  if (!gPrefs) GetPrefsService();
+  
+  // Use browser colors as initial values for editor's default colors
+  var BrowserColors = GetDefaultBrowserColors();
+  if (BrowserColors)
   {
-    var useWinColors = false;
-    if (gIsWindows)
-    {
-      // What a pain! In Windows, there's a pref to use system colors
-      //   instead of pref colors
-      try { useWinColors = prefs.GetBoolPref("browser.display.wfe.use_windows_colors"); } catch (e) {}
-      // dump("Using Windows colors = "+useWinColors+"\n");
-    }
-
-    if (useWinColors)
-    {
-      // TODO: Get system text and windows colors HOW!
-      // Alternative: Can we get the actual text and background colors used by layout?
-    }
-    else
-    {
-      if (gDefaultTextColor == "")
-        try { gDefaultTextColor = prefs.CopyCharPref("browser.display.foreground_color"); } catch (e) {}
-
-      if (gDefaultBackgroundColor == "")
-        try { gDefaultBackgroundColor = prefs.CopyCharPref("browser.display.background_color"); } catch (e) {}
-    }
-
-    // Last resort is to assume black for text, white for background
-    if (gDefaultTextColor == "")
-      gDefaultTextColor = "#000000";
-    if (gDefaultBackgroundColor == "")
-      gDefaultBackgroundColor = "#FFFFFF";
+    gDefaultTextColor = BrowserColors.TextColor;
+    gDefaultBackgroundColor = BrowserColors.BackgroundColor;
   }
-dump(" *** EditorSharedStartup: gDefaultTextColor="+gDefaultTextColor+", gDefaultBackgroundColor="+gDefaultBackgroundColor+"\n");
+//dump(" *** EditorShared startup: gDefaultTextColor="+gDefaultTextColor+", gDefaultBackgroundColor="+gDefaultBackgroundColor+"\n");
+}
+
+// Get these to use for initial default text and background,
+//  and also pass to prefs and color dialogs
+function GetDefaultBrowserColors()
+{
+  var colors = new Object();
+  var useWinColors = false;
+  if (gIsWindows)
+  {
+    // In Windows only, there's a pref to use system colors instead of pref colors
+    try { useWinColors = gPrefs.GetBoolPref("browser.display.wfe.use_windows_colors"); } catch (e) {}
+  }
+
+  if (!useWinColors)
+  {
+    try { colors.TextColor = gPrefs.CopyCharPref("browser.display.foreground_color"); } catch (e) {}
+
+    try { colors.BackgroundColor = gPrefs.CopyCharPref("browser.display.background_color"); } catch (e) {}
+  }
+  // Use OS colors for text and background if explicitly asked or pref is not set
+  if (!colors.TextColor)
+    colors.TextColor = "windowtext";
+  
+  if (!colors.BackgroundColor)
+    colors.BackgroundColor = "window";
+
+  colors.LinkColor = gPrefs.CopyCharPref("browser.anchor_color");
+  colors.VisitedLinkColor = gPrefs.CopyCharPref("browser.visited_color");
+
+  return colors;
 }
 
 function _EditorNotImplemented()
@@ -372,7 +378,7 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
   
   var title = window.editorShell.editorDocument.title;
   if (!title)
-    var title = GetString("untitled");
+    title = GetString("untitled");
       
   var dialogTitle = window.editorShell.GetString("SaveDocument");
   var dialogMsg = window.editorShell.GetString("SaveFilePrompt");
@@ -408,11 +414,11 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
      return success;
    }
    
-   if (result.value == 1) // "Cancel"
-     return false;
-
    if (result.value == 2) // "Don't Save"
      return true;
+
+  // Default or result.value == 1 (Cancel)
+  return false;
 }
 
 // --------------------------- File menu ---------------------------
@@ -440,7 +446,6 @@ function EditorNewPlaintext()
 function EditorCanClose()
 {
   // Returns FALSE only if user cancels save action
-  //dump("Calling EditorCanClose\n");
 
   // "true" means allow "Don't Save" button
   var canClose = CheckAndSaveDocument(GetString("BeforeClosing"), true);
@@ -498,8 +503,6 @@ function onParagraphFormatChange(paraMenuList, commandID)
   var menuList = document.getElementById("ParagraphSelect");
   if (!menuList) return;
 
-  //dump("Updating paragraph format with " + state + "\n");
-  
   // force match with "normal"
   if (state == "body")
     state = "";
@@ -514,7 +517,7 @@ function onParagraphFormatChange(paraMenuList, commandID)
   {
     var menuPopup = document.getElementById("ParagraphPopup");
     var menuItems = menuPopup.childNodes;
-    for (i=0; i < menuItems.length; i++)
+    for (var i=0; i < menuItems.length; i++)
     {
       var menuItem = menuItems.item(i);
       if (menuItem.data == state)
@@ -540,8 +543,6 @@ function onFontFaceChange(fontFaceMenuList, commandID)
   var commandNode = document.getElementById(commandID);
   var state = commandNode.getAttribute("state");
 
-  //dump("Updating font face with " + state + "\n");
-  
   if (state == "mixed")
   {
     //Selection is the "mixed" ( > 1 style) state
@@ -552,7 +553,7 @@ function onFontFaceChange(fontFaceMenuList, commandID)
   {
     var menuPopup = document.getElementById("FontFacePopup");
     var menuItems = menuPopup.childNodes;
-    for (i=0; i < menuItems.length; i++)
+    for (var i=0; i < menuItems.length; i++)
     {
       var menuItem = menuItems.item(i);
       if (menuItem.getAttribute("value") && (menuItem.data.toLowerCase() == state.toLowerCase()))
@@ -567,7 +568,6 @@ function onFontFaceChange(fontFaceMenuList, commandID)
 function EditorSelectFontSize()
 {
   var select = document.getElementById("FontSizeSelect");
-//dump("EditorSelectFontSize: "+gFontSizeNames[select.selectedIndex]+"\n");
   if (select)
   { 
     if (select.selectedIndex == -1)
@@ -589,7 +589,7 @@ function onFontSizeChange(fontSizeMenulist, commandID)
   }
   else 
   {
-    for( var i = 0; i < gFontSizeNames.length; i++)
+    for (var i = 0; i < gFontSizeNames.length; i++)
     {
       if( gFontSizeNames[i] == size )
       {
@@ -663,6 +663,7 @@ function onBackgroundColorChange()
     {
       if (!color)
         color = gDefaultBackgroundColor;
+
       button.setAttribute("style", "background-color:"+color); 
     }
   }
@@ -670,9 +671,6 @@ function onBackgroundColorChange()
 
 function GetBackgroundElementWithColor()
 {
-  if (!gColorObj)
-   gColorObj = new Object;
-
   gColorObj.Type = "";
   gColorObj.PageColor = "";
   gColorObj.TableColor = "";
@@ -721,7 +719,8 @@ function EditorSelectColor(colorType)
   var element;
   var table;
   var currentColor = "";
-
+  var commandNode;
+  
   if (!colorType)
     colorType = "";
 
@@ -730,7 +729,7 @@ function EditorSelectColor(colorType)
     gColorObj.Type = colorType;
 
     // Get color from command node state
-    var commandNode = document.getElementById("cmd_fontColor");
+    commandNode = document.getElementById("cmd_fontColor");
     currentColor = commandNode.getAttribute("state");
     gColorObj.TextColor = currentColor;
   }
@@ -777,8 +776,6 @@ function EditorSelectColor(colorType)
   if (gColorObj.Cancel)
     return;
 
-  var commandNode;
-  
   if (colorType == "Text")
   {
     if (currentColor != gColorObj.TextColor)
@@ -828,16 +825,18 @@ function GetParentTable(element)
 
 /*TODO: We need an oncreate hook to do enabling/disabling for the 
         Format menu. There should be code like this for the 
-        object-specific "Properties..." item
+        object-specific "Properties" item
 */
 
 // For property dialogs, we want the selected element,
-//  but will accept a parent table cell or link if inside one
-function GetSelectedElementOrParentCellOrLink()
+//  but will accept a parent link, list, or table cell if inside one
+function GetObjectForProperties()
 {
   var element = editorShell.GetSelectedElement("");
   if (!element)
     element = editorShell.GetElementOrParentByTagName("href",null);
+  if (!element)
+    element = editorShell.GetElementOrParentByTagName("list",null);
   if (!element)
     element = editorShell.GetElementOrParentByTagName("td",null);
 
@@ -896,7 +895,6 @@ function SetEditMode(mode)
         if (titleEnd > titleStart)
         {
           var title = source.slice(titleStart, titleEnd);
-          dump("Title="+title+"|\n");
           editorShell.SetDocumentTitle(title);
         }
       }
@@ -935,8 +933,6 @@ function CollapseItem(id, collapse)
 	  if(collapse != (item.getAttribute("collapsed") == "true"))
 		  item.setAttribute("collapsed", collapse ? "true" : "");
   }
-  else
-    dump("CollapseItem: item id="+id+" not found\n");
 }
 
 function DisableItem(id, disable)
@@ -947,8 +943,6 @@ function DisableItem(id, disable)
 	  if(disable != (item.getAttribute("disabled") == "true"))
 		  item.setAttribute("disabled", disable ? "true" : "");
   }
-  else
-    dump("DisableItem: item id="+id+" not found\n");
 }
 
 function SetDisplayMode(mode)
@@ -1035,6 +1029,7 @@ function SetDisplayMode(mode)
     
     return true;
   }
+  return false;
 }
 
 // We disable all items in View menu except Edit mode and sidebar items
@@ -1162,7 +1157,7 @@ function ShuffleRecentMenu(curUrl)
   try { historyCount = gPrefs.CopyUnicharPref("editor.history.url_maximum"); } catch(e) {} // Number of items in recent files menu
   var titleArray = new Array(historyCount);
   var urlArray = new Array(historyCount);
-  
+  var i;
   for (i = 0; i < historyCount; i++)
   {
     titleArray[i] = getUnicharPref("editor.history_title_"+i);
@@ -1211,7 +1206,7 @@ function BuildRecentMenu()
   try { historyCount = gPrefs.CopyUnicharPref("editor.history.url_maximum"); } catch(e) {}
 
   var a=1; // Keeps track of which access key to use in the menuitem
-  for(i = 0; i < historyCount; i++)
+  for (var i = 0; i < historyCount; i++)
   {
     var title = getUnicharPref("editor.history_title_"+i);
     var url = getUnicharPref("editor.history_url_"+i);
@@ -1263,7 +1258,7 @@ function AppendRecentMenuitem(accessKey, menupopup, title, url)
 
 function setUnicharPref(aPrefName, aPrefValue)
 {
-  if (!gPrefs) return "";
+  if (!gPrefs) return;
   try
   {
     gPrefs.SetUnicharPref(aPrefName, aPrefValue);
@@ -1282,15 +1277,14 @@ function  getUnicharPref(aPrefName, aDefVal)
   }
   catch(e)
   {
-    return "";
   }
+  return "";
 }
 
 function EditorInitFormatMenu()
 {
   InitObjectPropertiesMenuitem("objectProperties");
-  // Change text on the "Remove styles" and "Remove links"
-  //  for better wording when 
+  InitRemoveStylesMenuitems("removeStylesMenuitem", "removeLinksMenuitem");
 }
 
 function InitObjectPropertiesMenuitem(id)
@@ -1299,49 +1293,64 @@ function InitObjectPropertiesMenuitem(id)
   // Note that we directly do the enabling instead of
   //  using goSetCommandEnabled since we already have the menuitem
   var menuItem = document.getElementById(id);
-  if (menuItem)
-  {
-    var element = GetSelectedElementOrParentCellOrLink();
-    var menuStr = GetString("ObjectProperties");
-    if (element && element.nodeName)
-    {
-      var objStr = "";
-      menuItem.setAttribute("disabled", "");
-      var name = element.nodeName.toLowerCase();
-      switch (name)
-      {
-        case "img":
-          objStr = GetString("Image");
-          break;
-        case "hr":
-          objStr = GetString("HLine");
-          break;
-        case "table":
-          objStr = GetString("Table");
-          break;
-        case "td":
-          objStr = GetString("TableCell");
-          break;
-        case "a":
-          if (element.name)
-            objStr = GetString("NamedAnchor");
-          else if(element.href)
-            objStr = GetString("Link");
-          break;
-      }
-      menuStr = menuStr.replace(/%obj%/,objStr);        
-    }
-    else
-    {
-      // We show generic "Properties" string, but disable menu item
-      menuItem.setAttribute("disabled","true");
-      // Replace placeholder with "", then remaining space on left side
-      menuStr = menuStr.replace(/%obj%/,"").replace(/^\s+/, "");
+  if (!menuItem) return null;
 
+  var element = GetObjectForProperties();
+  var menuStr = GetString("ObjectProperties");
+  var name;
+
+  if (element && element.nodeName)
+  {
+    var objStr = "";
+    menuItem.setAttribute("disabled", "");
+    name = element.nodeName.toLowerCase();
+    switch (name)
+    {
+      case "img":
+        objStr = GetString("Image");
+        break;
+      case "hr":
+        objStr = GetString("HLine");
+        break;
+      case "table":
+        objStr = GetString("Table");
+        break;
+      case "th":
+        name = "td";
+      case "td":
+        objStr = GetString("TableCell");
+        break;
+      case "ol":
+      case "ul":
+      case "dl":
+        objStr = GetString("List");
+        break;
+      case "a":
+        if (element.name)
+        {
+          objStr = GetString("NamedAnchor");
+          name = "anchor";
+        }
+        else if(element.href)
+        {
+          objStr = GetString("Link");
+          name = "href";
+        }
+        break;
     }
-    menuItem.setAttribute("value", menuStr);
-    menuItem.setAttribute("accesskey",GetString("ObjectPropertiesAccessKey"));
+    menuStr = menuStr.replace(/%obj%/,objStr);        
   }
+  else
+  {
+    // We show generic "Properties" string, but disable menu item
+    menuItem.setAttribute("disabled","true");
+    // Replace placeholder with "", then remaining space on left side
+    menuStr = menuStr.replace(/%obj%/,"").replace(/^\s+/, "");
+
+  }
+  menuItem.setAttribute("value", menuStr);
+  menuItem.setAttribute("accesskey",GetString("ObjectPropertiesAccessKey"));
+  return name;
 }
 
 function InitParagraphMenu()
@@ -1359,7 +1368,13 @@ function InitParagraphMenu()
   else
     IDSuffix = state;
   
-  document.getElementById("menu_"+IDSuffix).setAttribute("checked", "true");
+  // Set "radio" check on one item, but...
+  var menuItem = document.getElementById("menu_"+IDSuffix);
+  menuItem.setAttribute("checked", "true");
+
+  // ..."bodyText" is returned if mixed selection, so remove checkmark
+  if (mixedObj.value)
+    menuItem.setAttribute("checked", "false");
 }
 
 function InitListMenu()
@@ -1367,7 +1382,7 @@ function InitListMenu()
   var mixedObj = new Object();
   var state = editorShell.GetListState(mixedObj);
   var IDSuffix = "noList";
-  
+
   if (state)
   {
     if (state == "dl")
@@ -1376,8 +1391,13 @@ function InitListMenu()
     if (state)
       IDSuffix = state;
   }
+  // Set "radio" check on one item, but...
+  var menuItem = document.getElementById("menu_"+IDSuffix);
+  menuItem.setAttribute("checked", "true");
 
-  document.getElementById("menu_"+IDSuffix).setAttribute("checked", "true");
+  // ..."noList" is returned if mixed selection, so remove checkmark
+  if (mixedObj.value)
+    menuItem.setAttribute("checked", "false");
 }
 
 function EditorInitToolbars()
@@ -1392,6 +1412,7 @@ function EditorSetDefaultPrefs()
   if ( url != "about:blank" )
     return;
 
+  var element;
   var domdoc;
   try { domdoc = window.editorShell.editorDocument; } catch (e) { dump( e + "\n"); }
   if ( !domdoc )
@@ -1442,7 +1463,7 @@ function EditorSetDefaultPrefs()
     catch (ex) {}
     if ( prefCharsetString && prefCharsetString != 0)
     {
-        var element = domdoc.createElement("meta");
+        element = domdoc.createElement("meta");
         if ( element )
         {
           AddAttrToElem(domdoc, "http-equiv", "content-type", element);
@@ -1480,7 +1501,7 @@ function EditorSetDefaultPrefs()
       if ( !authorFound && headelement)
       {
         /* create meta tag with 2 attributes */
-        var element = domdoc.createElement("meta");
+        element = domdoc.createElement("meta");
         if ( element )
         {
           AddAttrToElem(domdoc, "name", "author", element);
@@ -1492,12 +1513,15 @@ function EditorSetDefaultPrefs()
     
   }
 
-  // color prefs
+  // Get editor color prefs
   var use_custom_colors = false;
   try {
     use_custom_colors = gPrefs.GetBoolPref("editor.use_custom_colors");
   }
   catch (ex) {}
+
+// XXX BUG: this is always comming up TRUE even when pref panel is used to set false
+dump(" *** editor.use_custom_colors="+use_custom_colors+"\n");
 
   if ( use_custom_colors )
   {
@@ -1505,7 +1529,11 @@ function EditorSetDefaultPrefs()
     var bodyelement = GetBodyElement();
 
     // try to get the default color values.  ignore them if we don't have them.
-    var text_color = link_color = active_link_color = followed_link_color = background_color = "";
+    var text_color;
+    var link_color;
+    var active_link_color;
+    var followed_link_color;
+    var background_color;
     
     try { text_color = gPrefs.CopyCharPref("editor.text_color"); } catch (e) {}
     try { link_color = gPrefs.CopyCharPref("editor.link_color"); } catch (e) {}
@@ -1515,25 +1543,23 @@ function EditorSetDefaultPrefs()
 
     // add the color attributes to the body tag.
     // and use them for the default text and background colors if not empty
-    if (text_color != "")
+    if (text_color)
     {
       AddAttrToElem(domdoc, "text", text_color, bodyelement);
       gDefaultTextColor = text_color;
     }
-    if (link_color != "")
-      AddAttrToElem(domdoc, "link", link_color, bodyelement);
-    if (active_link_color != "") 
-      AddAttrToElem(domdoc, "alink", active_link_color, bodyelement);
-    if (followed_link_color != "")
-      AddAttrToElem(domdoc, "vlink", followed_link_color, bodyelement);
-
-    if (background_color != "")
+    if (background_color)
     {
       AddAttrToElem(domdoc, "bgcolor", background_color, bodyelement);
       gDefaultBackgroundColor = background_color
     }
 
-dump(" *** SetDefaultPrefs: gDefaultTextColor="+gDefaultTextColor+", gDefaultBackgroundColor="+gDefaultBackgroundColor+"\n");
+    if (link_color)
+      AddAttrToElem(domdoc, "link", link_color, bodyelement);
+    if (active_link_color) 
+      AddAttrToElem(domdoc, "alink", active_link_color, bodyelement);
+    if (followed_link_color)
+      AddAttrToElem(domdoc, "vlink", followed_link_color, bodyelement);
   }
 
 
@@ -1574,17 +1600,7 @@ function UpdateSaveButton(modified)
     } else {
       saveButton.setAttribute("src", "chrome://editor/skin/images/ED_SaveFile.gif");
     }
-    dump("updating button\n");
   }
-  else
-  {
-    dump("could not find button\n");
-  }
-}
-
-function EditorDoDoubleClick()
-{
-  dump("doing double click\n");
 }
 
 function EditorReflectDocState()
@@ -1604,8 +1620,6 @@ function EditorReflectDocState()
   if (oldModified != documentModified)
     UpdateSaveButton(documentModified);
   
-  //dump("Updating save state " + stateString + "\n");
-  
   return true;
 }
 
@@ -1614,11 +1628,9 @@ function EditorReflectDocState()
 function EditorGetNodeFromOffsets(offsets)
 {
   var node = null;
-  var i;
-
   node = editorShell.editorDocument;
 
-  for (i = 0; i < offsets.length; i++)
+  for (var i = 0; i < offsets.length; i++)
   {
     node = node.childNodes[offsets[i]];
   }
@@ -1628,12 +1640,12 @@ function EditorGetNodeFromOffsets(offsets)
 
 function EditorSetSelectionFromOffsets(selRanges)
 {
-  var rangeArr, start, end, i, node, offset;
+  var rangeArr, start, end, node, offset;
   var selection = editorShell.editorSelection;
 
   selection.clearSelection();
 
-  for (i = 0; i < selRanges.length; i++)
+  for (var i = 0; i < selRanges.length; i++)
   {
     rangeArr = selRanges[i];
     start    = rangeArr[0];
@@ -1672,7 +1684,6 @@ function initFontStyleMenu(menuPopup)
 //--------------------------------------------------------------------
 function onButtonUpdate(button, commmandID)
 {
-// dump(" === onButtonUpdate called\n");
   var commandNode = document.getElementById(commmandID);
   var state = commandNode.getAttribute("state");
 
@@ -1682,7 +1693,6 @@ function onButtonUpdate(button, commmandID)
 //--------------------------------------------------------------------
 function onStateButtonUpdate(button, commmandID, onState)
 {
-// dump(" === onButtonUpdate called\n");
   var commandNode = document.getElementById(commmandID);
   var state = commandNode.getAttribute("state");
 
@@ -1693,7 +1703,7 @@ function onStateButtonUpdate(button, commmandID, onState)
 // --------------------------- Status calls ---------------------------
 function onStyleChange(theStyle)
 {
-  dump("in onStyleChange with " + theStyle + "\n");
+  //dump("in onStyleChange with " + theStyle + "\n");
   
   var broadcaster = document.getElementById("cmd_" + theStyle);
   var isOn = broadcaster.getAttribute("state");
@@ -1703,14 +1713,12 @@ function onStyleChange(theStyle)
   var theButton = document.getElementById(theStyle + "Button");
   if (theButton)
   {
-    // dump("setting button to " + isOn + "\n");
     theButton.setAttribute("toggled", (isOn == "true") ? 1 : 0);
   }
 
   var theMenuItem = document.getElementById(theStyle + "MenuItem");
   if (theMenuItem)
   {
-    // dump("setting menuitem to " + isOn + "\n");
     theMenuItem.setAttribute("checked", isOn);
   }
 }
@@ -1742,7 +1750,6 @@ function getColorAndSetColorWell(ColorPickerID, ColorWellID)
   {
     // Extract color from colorPicker and assign to colorWell.
     var color = colorPicker.getAttribute("color");
-    dump("setColor to: "+color+"\n");
 
     if (colorWell && color)
     {
@@ -1794,8 +1801,6 @@ function RemoveInapplicableUIElements()
    // if no find, remove find ui
   if (!IsFindInstalled())
   {
-    dump("Hiding find items\n");
-    
     var findMenuItem = document.getElementById("menu_find");
     if (findMenuItem)
       findMenuItem.setAttribute("hidden", "true");
@@ -1812,8 +1817,6 @@ function RemoveInapplicableUIElements()
    // if no spell checker, remove spell checker ui
   if (!IsSpellCheckerInstalled())
   {
-    dump("Hiding spell checker items\n");
-    
     var spellingButton = document.getElementById("spellingButton");
     if (spellingButton)
       spellingButton.setAttribute("hidden", "true");
@@ -1826,11 +1829,6 @@ function RemoveInapplicableUIElements()
     if (spellingSepItem)
       spellingSepItem.parentNode.removeChild(spellingSepItem);
   }
-}
-
-function onEditorFocus()
-{
-dump("onEditorFocus called\n");
 }
 
 function GetPrefsService()
@@ -1857,12 +1855,22 @@ function GetPrefsService()
 //   with this "oncreate" hander:
 function EditorInitTableMenu()
 {
+  InitJoinCellMenuitem("menu_JoinTableCells");
+
+  // Set enable states for all table commands
+  goUpdateTableMenuItems(document.getElementById("composerTableMenuItems"));
+}
+
+function InitJoinCellMenuitem(id)
+{
   // Change text on the "Join..." item depending if we
   //   are joining selected cells or just cell to right
   // TODO: What to do about normal selection that crosses
   //       table border? Try to figure out all cells
   //       included in the selection?
   var menuText;
+  var menuItem = document.getElementById(id);
+  if (!menuItem) return;
 
   // Use "Join selected cells if there's more than 1 cell selected
   var tagNameObj = new Object;
@@ -1872,11 +1880,33 @@ function EditorInitTableMenu()
   else
     menuText = GetString("JoinCellToRight");
 
-  document.getElementById("menu_JoinTableCells").setAttribute("value",menuText);
-  document.getElementById("menu_JoinTableCells").setAttribute("accesskey","j");
+  menuItem.setAttribute("value",menuText);
+  menuItem.setAttribute("accesskey",GetString("JoinCellAccesskey"));
+}
 
-  // Set enable states for all table commands
-  goUpdateTableMenuItems(document.getElementById("composerTableMenuItems"));
+function InitRemoveStylesMenuitems(removeStylesId, removeLinksId)
+{
+  // Change wording of menuitems depending on selection
+  var stylesItem = document.getElementById(removeStylesId);
+  var linkItem = document.getElementById(removeLinksId);
+  
+  var isCollapsed = editorShell.editorSelection.isCollapsed;
+  if (stylesItem)
+  {
+    stylesItem.setAttribute("value", isCollapsed ? GetString("StopTextStyles") : GetString("RemoveTextStyles"));
+    stylesItem.setAttribute("accesskey", GetString("RemoveTextStylesAccesskey"));
+  }
+  if (linkItem)
+  {
+    linkItem.setAttribute("value", isCollapsed ? GetString("StopLinks") : GetString("RemoveLinks"));
+    linkItem.setAttribute("accesskey", GetString("RemoveLinksAccesskey"));
+    // Note: disabling text style is a pain since there are so many - forget it!
+
+    // Disable if not in a link, but always allow "Remove" 
+    //  if selection isn't collapsed since we only look at anchor node 
+    DisableItem(removeLinksId, 
+                isCollapsed && !window.editorShell.GetElementOrParentByTagName("href", null));
+  }
 }
 
 function goUpdateTableMenuItems(commandset)
@@ -2040,6 +2070,7 @@ function FindEditorWithInsertCharDialog()
       return tempWindow;
 		}
 	}
+  return null;
 }
 
 function EditorFindOrCreateInsertCharWindow()

@@ -62,7 +62,7 @@
             <columns><column/><column/></columns>
             <rows>
               <row>
-                <text class="label" value="&normalText.label;&colon.character;" />
+                <text class="label" id="Text" value="&normalText.label;&colon.character;" />
                 <stack>
     	            <box autostretch="never" valign="middle">
                     <spring id="textCW" class="color-well"/>
@@ -73,7 +73,7 @@
                 </stack>
               </row>
               <row>
-                <text class="label" value="&linkText.label;&colon.character;" />
+                <text class="label" id="Link" value="&linkText.label;&colon.character;" />
                 <stack>
     	            <box autostretch="never" valign="middle">
                     <spring id="linkCW" class="color-well"/>
@@ -83,7 +83,7 @@
                 </stack>
               </row>
               <row>
-                <text class="label" value="&activeLinkText.label;&colon.character;" />
+                <text class="label" id="Active" value="&activeLinkText.label;&colon.character;" />
                 <stack>
     	            <box autostretch="never" valign="middle">
                     <spring id="activeCW" class="color-well"/>
@@ -93,7 +93,7 @@
                 </stack>
               </row>
               <row>
-                <text class="label" value ="&visitedLinkText.label;&colon.character;" />
+                <text class="label" id="Visited" value ="&visitedLinkText.label;&colon.character;" />
                 <stack>
     	            <box autostretch="never" valign="middle">
                     <spring id="visitedCW" class="color-well"/>
@@ -103,7 +103,7 @@
                 </stack>
               </row>
               <row>
-                <text class="label" value="&background.label;" />
+                <text class="label" id="Background" value="&background.label;" />
                 <stack>
     	            <box autostretch="never" valign="middle">
                     <spring id="backgroundCW" class="color-well"/>
