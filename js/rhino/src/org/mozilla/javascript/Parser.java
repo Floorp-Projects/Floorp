@@ -131,9 +131,11 @@ class Parser {
             return null;
         }
 
+        String source = sourceToString(0);
+        sourceBuffer = null; // To help GC
         Object pn = nf.createScript(tempBlock, ts.getSourceName(),
                                     baseLineno, ts.getLineno(),
-                                    sourceToString(0));
+                                    source);
         return pn;
     }
 
