@@ -35,26 +35,20 @@
 # Config stuff for WINNT 3.51
 #
 # This makefile defines the following variables:
-# CPU_ARCH, OS_CFLAGS, and OS_DLLFLAGS.
+# OS_CFLAGS and OS_DLLFLAGS.
 # It has the following internal variables:
 # OS_PROC_CFLAGS and OS_WIN_CFLAGS.
 
 include $(CORE_DEPTH)/coreconf/WIN32.mk
 
-PROCESSOR := $(shell uname -p)
-ifeq ($(PROCESSOR), I386)
-	CPU_ARCH        = x386
+ifeq ($(CPU_ARCH), x386)
 	OS_PROC_CFLAGS += -D_X86_
 else 
-	ifeq ($(PROCESSOR), MIPS)
-		CPU_ARCH        = MIPS
+	ifeq ($(CPU_ARCH), MIPS)
 		OS_PROC_CFLAGS += -D_MIPS_
 	else 
-		ifeq ($(PROCESSOR), ALPHA)
-			CPU_ARCH        = ALPHA
+		ifeq ($(CPU_ARCH), ALPHA)
 			OS_PROC_CFLAGS += -D_ALPHA_
-		else 
-			CPU_ARCH  = processor_is_undefined
 		endif
 	endif
 endif

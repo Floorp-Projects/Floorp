@@ -252,7 +252,7 @@ ifeq (CYGWIN_NT,$(findstring CYGWIN_NT,$(OS_ARCH)))
 	# Cygwin's uname -m returns "i686" on a Pentium Pro machine.
 	#
 	ifneq (,$(findstring 86,$(CPU_ARCH)))
-	    CPU_ARCH = x86
+	    CPU_ARCH = x386
 	endif
     endif
 endif
