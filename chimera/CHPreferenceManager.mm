@@ -13,6 +13,12 @@
 
 extern const char *prefContractID;
 
+#ifdef _BUILD_STATIC_BIN
+#include "nsStaticComponent.h"
+nsresult PR_CALLBACK
+app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
+#endif
+
 @implementation CHPreferenceManager
 
 
@@ -65,6 +71,12 @@ extern const char *prefContractID;
     setenv("MOZILLA_FIVE_HOME", [path fileSystemRepresentation], 1);
 
     nsresult rv;
+
+#ifdef _BUILD_STATIC_BIN
+    // Initialize XPCOM's module info table
+    NSGetStaticModuleInfo = app_getModuleInfo;
+#endif
+
     rv = NS_InitEmbedding(nsnull, nsnull);
     if (NS_FAILED(rv)) {
       printf("Embedding init failed.\n");
