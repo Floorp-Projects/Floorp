@@ -33,6 +33,7 @@
 ## may use your version of this file under either the MPL or the GPL.
 
 ECHO=/bin/echo
+MAKE=gmake
 
 $ECHO "\n** Running unit tests for MPI library\n"
 
@@ -40,7 +41,7 @@ $ECHO "\n** Running unit tests for MPI library\n"
 # the MPI library...
 
 $ECHO "Bringing mpi-test up to date ... "
-if make mpi-test ; then
+if $MAKE mpi-test ; then
   :
 else
   $ECHO " "
@@ -84,7 +85,7 @@ fi
 $ECHO "\n** Running other tests\n"
 
 $ECHO "Bringing 'pi' up to date ... "
-if make pi ; then
+if $MAKE pi ; then
     :
 else
     $ECHO "\nMake failed to build pi.\n"
