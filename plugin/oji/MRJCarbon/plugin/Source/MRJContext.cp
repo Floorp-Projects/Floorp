@@ -1249,12 +1249,15 @@ void ShowDocumentMessage::execute()
 
 static void showDocumentCallback(jobject applet, CFURLRef url, CFStringRef windowName, void *inUserData)
 {
-    // use a timer on the main event loop to handle this?
-    MRJContext* context = reinterpret_cast<MRJContext*>(inUserData);
-    ShowDocumentMessage* message = new ShowDocumentMessage(context->getInstance(), url, windowName);
-    if (message) {
-        OSStatus status = message->send();
-        if (status != noErr) delete message;
+    // workaround for bug #108054, sometimes url parameter is NULL.
+    if (url) {
+        // use a timer on the main event loop to handle this?
+        MRJContext* context = reinterpret_cast<MRJContext*>(inUserData);
+        ShowDocumentMessage* message = new ShowDocumentMessage(context->getInstance(), url, windowName);
+        if (message) {
+            OSStatus status = message->send();
+            if (status != noErr) delete message;
+        }
     }
 }
 
