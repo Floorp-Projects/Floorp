@@ -279,41 +279,33 @@ NS_IMETHODIMP nsXULWindow::Destroy()
 
 NS_IMETHODIMP nsXULWindow::SetPosition(PRInt32 aX, PRInt32 aY)
 {
-   mWindow->Move(aX, aY);
+   NS_ENSURE_SUCCESS(mWindow->Move(aX, aY), NS_ERROR_FAILURE);
    PersistPositionAndSize(PR_TRUE, PR_FALSE);
    return NS_OK;
 }
 
-NS_IMETHODIMP nsXULWindow::GetPosition(PRInt32* x, PRInt32* y)
+NS_IMETHODIMP nsXULWindow::GetPosition(PRInt32* aX, PRInt32* aY)
 {
-   NS_ENSURE_ARG_POINTER(x && y);
+   return GetPositionAndSize(aX, aY, nsnull, nsnull);
+}
 
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+NS_IMETHODIMP nsXULWindow::SetSize(PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
+{
+   NS_ENSURE_SUCCESS(mWindow->Resize(aCX, aCY, aRepaint), NS_ERROR_FAILURE);
+   PersistPositionAndSize(PR_FALSE, PR_TRUE);
    return NS_OK;
 }
 
-NS_IMETHODIMP nsXULWindow::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
+NS_IMETHODIMP nsXULWindow::GetSize(PRInt32* aCX, PRInt32* aCY)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+   return GetPositionAndSize(nsnull, nsnull, aCX, aCY);
 }
 
-NS_IMETHODIMP nsXULWindow::GetSize(PRInt32* cx, PRInt32* cy)
+NS_IMETHODIMP nsXULWindow::SetPositionAndSize(PRInt32 aX, PRInt32 aY, 
+   PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
 {
-   NS_ENSURE_ARG_POINTER(cx && cy);
-
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsXULWindow::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
-   PRInt32 cy, PRBool fRepaint)
-{
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   NS_ENSURE_SUCCESS(mWindow->Resize(aX, aY, aCX, aCY, aRepaint), NS_ERROR_FAILURE);
+   PersistPositionAndSize(PR_TRUE, PR_TRUE);
    return NS_OK;
 }
 
@@ -607,6 +599,40 @@ NS_IMETHODIMP nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
 
    return NS_OK;
 }
+
+NS_IMETHODIMP nsXULWindow::SizeShellTo(nsIDocShellTreeItem* aShellItem,
+   PRInt32 aCX, PRInt32 aCY)
+{
+   // XXXTAB
+   NS_ERROR("Not Yet Implemented");
+   return NS_ERROR_FAILURE;
+}
+NS_IMETHODIMP nsXULWindow::ShowModal()
+{
+   //XXXTAB
+   NS_ERROR("Not Yet Implemented");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsXULWindow::GetNewBrowserChrome(PRInt32 aChromeFlags,
+   nsIWebBrowserChrome** aWebBrowserChrome)
+{
+	/*
+		Tells the implementer of this interface to create a new webBrowserChrome
+		object for it.  Typically this means the implemetor will create a new 
+		top level window that is represented by nsIWebBrowserChrome.  This
+		most often will be called when for instance there is a need for a new
+		JS window, etc.  Soon after this new object is returned, the webBrowser
+		attribute will checked, if one does not exist, one will be created and
+		setWebBrowser will be called with the new widget to instantiate in this 
+		new window.	
+	*/
+
+   //XXX First Check In
+   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   return NS_OK;
+}
+
 
 //*****************************************************************************
 // nsXULWindow: Accessors
