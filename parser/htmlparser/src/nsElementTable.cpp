@@ -107,7 +107,7 @@ DECL_TAG_LIST(gDLRootTags,{eHTMLTag_body COMMA eHTMLTag_td COMMA eHTMLTag_table 
 DECL_TAG_LIST(gDLKids,{eHTMLTag_dd COMMA eHTMLTag_dt})
 DECL_TAG_LIST(gDTKids,{eHTMLTag_dt})
 DECL_TAG_LIST(gFieldsetKids,{eHTMLTag_legend COMMA eHTMLTag_text})
-DECL_TAG_LIST(gFontKids,{eHTMLTag_legend COMMA eHTMLTag_table COMMA eHTMLTag_text}) // Added table to fix bug 93365
+DECL_TAG_LIST(gFontKids,{eHTMLTag_legend COMMA eHTMLTag_table COMMA eHTMLTag_text COMMA eHTMLTag_li}) // Added table to fix bug 93365, li to fix bug 96031
 DECL_TAG_LIST(gFormKids,{eHTMLTag_keygen})
 DECL_TAG_LIST(gFramesetKids,{eHTMLTag_frame COMMA eHTMLTag_frameset COMMA eHTMLTag_noframes})
 
@@ -784,7 +784,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gLIRootTags,&gLIRootTags,	
       /*autoclose starttags and endtags*/ &gLIAutoClose,0,0,0,
-      /*parent,incl,exclgroups*/          kFlowEntity, kFlowEntity, kSelf, // For compat. sake LI's parent model should be flow - Ref. bug 96031
+      /*parent,incl,exclgroups*/          kBlockEntity, kFlowEntity, kSelf, // changed this back to kBlockEntity so we enable RS handling for phrasals. ref bug 181697
       /*special props, prop-range*/       kNoPropagate|kVerifyHierarchy, kDefaultPropRange,
       /*special parents,kids,skip*/       0,&gLIKids,eHTMLTag_unknown);
 
