@@ -71,8 +71,21 @@ BEGIN
 END
 
 #ifdef MOZ_STATIC_BUILD
+
+// XXX This code is copied from resource.h and widget.rc.  It's a work-around
+// for the limitation that only one resource file can be used in an .exe.  We
+// should develop a method, for static builds only, to combine multiple .rc
+// files into a single .rc file, and then use that to build the single .res
+// file for the .exe.
+
 // We need this cursor for versions of Windows that don't support IDC_HAND,
-// namely Win95 and NT4.  This code is copied from resource.h and widget.rc.
+// namely Win95 and NT4.
 #define IDC_SELECTANCHOR 4100
 IDC_SELECTANCHOR CURSOR DISCARDABLE "..\\..\\widget\\src\\build\\res\\select.cur"
+
+#define IDC_ZOOMIN       4114
+IDC_ZOOMIN       CURSOR DISCARDABLE "..\\..\\widget\\src\\build\\res\\zoom_in.cur"
+#define IDC_ZOOMOUT      4115
+IDC_ZOOMOUT      CURSOR DISCARDABLE "..\\..\\widget\\src\\build\\res\\zoom_out.cur"
+
 #endif
