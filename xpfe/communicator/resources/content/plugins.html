@@ -21,13 +21,7 @@
 
 <html lang="en" dir="ltr">
 <head>
-<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-<script type="application/x-javascript">
-
-var bundle = srGetStrBundle("chrome://global/locale/plugins.properties");
-var title_label = bundle.GetStringFromName("title_label");
-document.write("<title>" + title_label + "</title>");
-</script>
+<title>About Plug-ins</title>
 <style type="text/css">
   span#plugs {
     font-size: xx-large;
@@ -78,34 +72,18 @@ document.write("<title>" + title_label + "</title>");
  * any plug-ins that would be active otherwise.  In contrast, one would
  * use "true" in the case of ASD instead of restarting)
  */
-
-
-var bundle = srGetStrBundle("chrome://global/locale/plugins.properties");
-var installedplugins_label = bundle.GetStringFromName("installedplugins_label");
-var nopluginsareinstalled_label = bundle.GetStringFromName("nopluginsareinstalled_label");
-var findmore_label = bundle.GetStringFromName("findmore_label");
-var netcenter_label = bundle.GetStringFromName("netcenter_label");
-var filename_label = bundle.GetStringFromName("filename_label");
-var mimetype_label = bundle.GetStringFromName("mimetype_label");
-var description_label = bundle.GetStringFromName("description_label");
-var suffixes_label = bundle.GetStringFromName("suffixes_label");
-var enabled_label = bundle.GetStringFromName("enabled_label");
-var yes_label = bundle.GetStringFromName("yes_label");
-var no_label = bundle.GetStringFromName("no_label");
-
 navigator.plugins.refresh(false);
 
 
 var numPlugins = navigator.plugins.length;
 
 if (numPlugins > 0)
-  document.writeln("<span id=\"plugs\">" + installedplugins_label + "<\/span><br>");
+  document.writeln("<span id=\"plugs\">Installed plug-ins<\/span><br>");
 else
-  document.writeln("<span id=\"noplugs\">" + nopluginsareinstalled_label + "<\/span><br>");
+  document.writeln("<span id=\"noplugs\">No plug-ins are installed.<\/span><br>");
 
-document.writeln(findmore_label);
-document.writeln("<a href=\"http://home.netscape.com/plugins/index.html\">"
-        + netcenter_label + "<\/a>.");
+document.writeln("Find more information about browser plug-ins at ");
+document.writeln("<a href=\"http://home.netscape.com/plugins/index.html\">Netscape Netcenter<\/a>.");
 document.writeln("<p><\/p><hr>");
 
 for (var i = 0; i < numPlugins; i++)
@@ -117,17 +95,17 @@ for (var i = 0; i < numPlugins; i++)
     document.write(plugin.name);
     document.writeln("<\/div><br>");
 
-    document.writeln("<dl><dd>"+filename_label);
+    document.writeln("<dl><dd>File name:");
     document.write(plugin.filename);
     document.write("<\/dd><dd><br>");
     document.write(plugin.description);
     document.writeln("<\/dd><\/dl><p><\/p>");
 
     document.writeln("<table>");
-    document.writeln("<tr><th class=\"type\">" + mimetype_label + "<\/th>");
-    document.writeln("<th class=\"desc\">" + description_label + "<\/th>");
-    document.writeln("<th class=\"suff\">" + suffixes_label + "<\/th>");
-    document.writeln("<th>" + enabled_label + "<\/th><\/tr>");
+    document.writeln("<tr><th class=\"type\">Mime Type<\/th>");
+    document.writeln("<th class=\"desc\">Description<\/th>");
+    document.writeln("<th class=\"suff\">Suffixes<\/th>");
+    document.writeln("<th>Enabled<\/th><\/tr>");
 
     var numTypes = plugin.length;
     var mimetype;
@@ -139,10 +117,10 @@ for (var i = 0; i < numPlugins; i++)
 
       if (mimetype)
       {
-        enabled = no_label;
+        enabled = "No";
         enabledPlugin = mimetype.enabledPlugin;
         if (enabledPlugin && (enabledPlugin.name == plugin.name))
-          enabled = yes_label;
+          enabled = "Yes";
 
         document.writeln("<tr>");
         document.writeln("<td>" + mimetype.type + "<\/td>");
