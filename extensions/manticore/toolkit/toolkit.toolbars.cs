@@ -44,95 +44,79 @@ namespace Silverstone.Manticore.Toolkit.Toolbars
   using System.IO;
   using System.Xml;
 
-  public class MToolbox : ContainerControl
-  {
-    
-  }
-
-  public class MToolstrip : ContainerControl
-  {
-
-  }
-
-  public class MToolbar : ContainerControl
-  {
-
-  }
-
-  public class MToolbarButton : ToolbarButton
-  {
-
-  }
-
+  // We want to replace use of Coolbar with our own widget, just
+  // not right now.
+  using stdole;
+  using AxComCtl3;
+  using MSDATASRC;
+  using StdFormat;
+  using VBRUN;
+  //using ComCtl3;
+  
   public class ToolbarBuilder
   {
-    protected internal String toolbarDefinitionFile;
+    private String mToolbarFile;
 
-    public MToolbox toolbox;
-    public Hashtable items;
+    public AxCoolBar mToolbar;
+    public Hashtable mItems;
 
     public ToolbarBuilder(String file)
     {
-      toolbarDefinitionFile = file;
-      toolbox = new MToolbox();
-      items = new Hashtable();
+      mToolbarFile = file;
+      mToolbar = new AxCoolBar();
+      mItems = new Hashtable();
     }
 
     public void Build()
     {
       XmlTextReader reader;
-      reader = new XmlTextReader(toolbarDefinitionFile);
-      
+      reader = new XmlTextReader(mToolbarFile);
       reader.WhitespaceHandling = WhitespaceHandling.None;
       reader.MoveToContent();
 
-      Recurse(reader, toolbox);
-    }
+//      NameTable nt = new NameTable();
+//      XmlNamespaceManager nsmgr = new XmlNamespaceManager(nt);
+//      XmlParserContext ctxt = new XmlParserContext(null, nsmgr, null, XmlSpace.None);
+//      XmlTextReader reader = new XmlTextReader(inner, XmlNodeType.Element, ctxt);
 
-    protected void Recurse(XmlTextReader reader, Menu root)
-    {
-      String inner = reader.ReadInnerXml();
-    
-      NameTable nt = new NameTable();
-      XmlNamespaceManager nsmgr = new XmlNamespaceManager(nt);
-      XmlParserContext ctxt = new XmlParserContext(null, nsmgr, null, XmlSpace.None);
-      XmlTextReader reader2 = new XmlTextReader(inner, XmlNodeType.Element, ctxt);
-
-      MenuItem menuitem;
-
-      while (reader2.Read()) {
-        if (reader2.NodeType == XmlNodeType.Element) {
-          switch (reader2.LocalName) {
-          case "menu":
-            // Menuitem. Find the name, accesskey, command and id strings
-            String[] values = new String[3] {"", "", ""};
-            String[] names = new String[3] {"label", "accesskey", "command"};
-            for (Byte i = 0; i < names.Length; ++i) {
-              if (reader2.MoveToAttribute(names[i]) &&
-                  reader2.ReadAttributeValue())
-                values[i] = reader2.Value; // XXX need to handle entities
-              reader2.MoveToElement();
+      int bandIndex = 0;
+      Boolean needNewRow = true;
+      while (reader.Read()) {
+        if (reader.NodeType == XmlNodeType.Element) {
+          switch (reader.LocalName) {
+          case "toolstrip":
+            // The next <toolbar/> we encounter should be created on a new row. 
+            needNewRow = true;
+            break;
+          case "toolbar":
+            // 
+            String[] tbvalues = new String[4] {"", "", "",  ""};
+            String[] tbnames = new String[4] {"id", "label", "description", "visible"};
+            for (Byte i = 0; i < tbnames.Length; ++i) {
+              if (reader.MoveToAttribute(tbnames[i]) &&
+                  reader.ReadAttributeValue())
+                tbvalues[i] = reader.Value; // XXX need to handle entities
+              reader.MoveToElement();
             }
 
-            // Handle Accesskey
-            int idx = values[0].ToLower().IndexOf(values[1].ToLower());
-            if (idx != -1)
-              values[0] = values[0].Insert(idx, "&");
-            else 
-              values[0] += " (&" + values[1].ToUpper() + ")";
-
-            // Create menu item and attach an event handler
-            menuitem = new CommandMenuItem(values[0], 
-                                           new EventHandler(OnCommand),
-                                           values[2]);
-            if (values[2] != "")
-              items.Add(values[2], menuitem);
-            root.MenuItems.Add(menuitem);
-            Recurse(reader2, menuitem);
+            String key = tbvalues[0];
+            String label = tbvalues[1];
+            String visible = tbvalues[3];
+            Console.WriteLine(mToolbar.Bands);
+            mToolbar.Bands.Add(bandIndex++, key, label, null, needNewRow, null, visible != "false");
+            needNewRow = false;
             break;
-          case "menuseparator":
-            menuitem = new MenuItem("-");
-            root.MenuItems.Add(menuitem);
+          case "toolbarbutton":
+
+            String[] tbbvalues = new String[2] {"", ""};
+            String[] tbbnames = new String[2] {"label", "command"};
+            for (Byte i = 0; i < tbbnames.Length; ++i) {
+              if (reader.MoveToAttribute(tbbnames[i]) &&
+                  reader.ReadAttributeValue())
+                tbbvalues[i] = reader.Value; // XXX need to handle entities
+              reader.MoveToElement();
+            }
+            Console.WriteLine(tbbvalues[0]);
             break;
           }
         }

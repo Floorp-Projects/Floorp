@@ -45,8 +45,9 @@ _CS_WINFORMS_IMPORTS=/R:System.DLL /R:System.Windows.Forms.DLL \
 	/R:System.Drawing.DLL
 _CS_XML_IMPORTS=/R:System.DLL /R:System.Data.DLL /R:System.XML.DLL
 _CS_LAYOUT_IMPORTS=/R:AxSHDocVw.DLL /R:MSHTML.DLL /R:AxMOZILLACONTROLLib.DLL /R:MOZILLACONTROLLib.dll
+_CS_CTL_IMPORTS=/R:StdFormat.dll /R:MSDATASRC.dll /R:stdole.dll /R:AxComCtl3.dll /R:ComCtl3.dll /R:VBRUN.dll
 
-_IMPORTS=$(_CS_WINFORMS_IMPORTS) $(_CS_XMLIMPORTS) $(_CS_LAYOUT_IMPORTS)
+_IMPORTS=$(_CS_WINFORMS_IMPORTS) $(_CS_XMLIMPORTS) $(_CS_LAYOUT_IMPORTS) $(_CS_CTL_IMPORTS)
 
 _DEBUG_FLAGS=/optimize+
 !if defined(MOZ_DEBUG)
@@ -59,10 +60,11 @@ _COMPILE_CMD=csc /nologo /t:exe /out:$(_OUT_FILE) $(_DEBUG_FLAGS) $(_IMPORTS)
 
 FILES =	app.cs \
 	browser\browserwindow.cs \
-	toolkit\toolkit.menus.cs \
 	browser\aboutdialog.cs \
-	layout\layoutabstraction.cs \
-	browser\opendialog.cs 
+	browser\opendialog.cs \
+	toolkit\toolkit.menus.cs \
+	toolkit\toolkit.toolbars.cs \
+	layout\layoutabstraction.cs
 
 SUBDIR = WIN32_O.OBJ
 !if defined(MOZ_DEBUG)
@@ -72,9 +74,12 @@ SUBDIR = WIN32_D.OBJ
 app:
 	$(_COMPILE_CMD) $(FILES)
 
+# this stuff sucks. need to make paths less hard coded
 bindings:
 	aximp c:\WINNT\system32\shdocvw.dll 
 	tlbimp mshtml.tlb 
+	aximp c:\WINNT\system32\mscomctl.ocx
+	tlbimp c:\WINNT\system32\mscomctl.ocx
 	aximp $(MOZ_SRC)\mozilla\dist\$(SUBDIR)\bin\mozctl.dll 
 	tlbimp $(MOZ_SRC)\mozilla\dist\$(SUBDIR)\bin\mozctl.dll
 

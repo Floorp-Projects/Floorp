@@ -41,6 +41,7 @@ namespace Silverstone.Manticore.BrowserWindow
 
   using Silverstone.Manticore.App;
   using Silverstone.Manticore.Toolkit.Menus;
+  using Silverstone.Manticore.Toolkit.Toolbars;
   using Silverstone.Manticore.AboutDialog;
   using Silverstone.Manticore.OpenDialog;
 
@@ -50,7 +51,9 @@ namespace Silverstone.Manticore.BrowserWindow
   {
     private System.ComponentModel.Container components;
 
-    protected internal BrowserMenuBuilder menuBuilder;
+    private BrowserMenuBuilder mMenuBuilder;
+    private BrowserToolbarBuilder mToolbarBuilder;
+
     protected internal WebBrowser webBrowser;
 
     protected internal StatusBar statusBar;
@@ -61,6 +64,7 @@ namespace Silverstone.Manticore.BrowserWindow
     {
       application = app;
 
+      Console.WriteLine("init component");
       // Set up UI
       InitializeComponent();
     }
@@ -81,10 +85,16 @@ namespace Silverstone.Manticore.BrowserWindow
       
       this.Text = "Manticore"; // XXX localize
 
-      menuBuilder = new BrowserMenuBuilder("browser\\browser-menu.xml", this);
-      menuBuilder.Build();
-      this.Menu = menuBuilder.mainMenu;
+      mMenuBuilder = new BrowserMenuBuilder("browser\\browser-menu.xml", this);
+      mMenuBuilder.Build();
+      this.Menu = mMenuBuilder.mainMenu;
+      Console.WriteLine("foopy");
 
+      mToolbarBuilder = new BrowserToolbarBuilder("browser\\browser-toolbar.xml", this);
+//      mToolbarBuilder.Build();
+//      this.Controls.Add(mToolbarBuilder.mToolbar);
+//    mToolbarBuilder.mToolbar.Dock = DockStyle.Fill;
+      
       // Show the resize handle
       this.SizeGripStyle = SizeGripStyle.Auto;
 
@@ -100,7 +110,7 @@ namespace Silverstone.Manticore.BrowserWindow
       StatusBarPanel zonePanel = new StatusBarPanel();
 
       docStatePanel.Text = "X";
-      progressPanel.Text = "[|||||     ]";
+      progressPanel.Text = "[|||||         ]";
       zonePanel.Text = "Internet Region";
       statusPanel.Text = "Document Done";
       statusPanel.AutoSize = StatusBarPanelAutoSize.Spring;
@@ -167,6 +177,20 @@ namespace Silverstone.Manticore.BrowserWindow
         AboutDialog dlg = new AboutDialog(browserWindow);
         break;
       }
+    }
+  }
+
+  public class BrowserToolbarBuilder : ToolbarBuilder
+  {
+    private BrowserWindow mBrowserWindow;
+
+    public BrowserToolbarBuilder(String file, BrowserWindow window) : base(file)
+    {
+      mBrowserWindow = window;
+    }
+
+    public override void OnCommand(Object sender, EventArgs e)
+    {
     }
   }
 }
