@@ -843,6 +843,7 @@ NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResu
     NS_PRECONDITION(aResult != nsnull, "null ptr");
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
+    *aResult = nsnull;
 
     if (aOuter && !aIID.Equals(NS_GET_IID(nsISupports))) {
         NS_ERROR("aggregation requires nsISupports");
@@ -852,21 +853,16 @@ NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResu
     InMemoryDataSource* datasource = new InMemoryDataSource(aOuter);
     if (! datasource)
         return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(datasource);
 
-    nsresult rv;
-
-    rv = datasource->Init();
+    nsresult rv = datasource->Init();
     if (NS_SUCCEEDED(rv)) {
         datasource->fAggregated.AddRef();
         rv = datasource->AggregatedQueryInterface(aIID, aResult); // This'll AddRef()
         datasource->fAggregated.Release();
-
-        if (NS_SUCCEEDED(rv))
-            return rv;
     }
 
-    delete datasource;
-    *aResult = nsnull;
+    NS_RELEASE(datasource);
     return rv;
 }
 
