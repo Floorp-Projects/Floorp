@@ -23,7 +23,7 @@
 # of the generic macros.
 #
 ifndef topsrcdir
-topsrcdir = $(DEPTH)
+topsrcdir	= $(DEPTH)
 endif
 
 # This wastes time.
@@ -220,7 +220,7 @@ endif
 
 ifdef USE_AUTOCONF
 OPTIMIZER	= $(ACCFLAGS)
-DEFINES		=  -UDEBUG -DNDEBUG -DTRIMMED
+DEFINES		= -UDEBUG -DNDEBUG -DTRIMMED
 XBCFLAGS	=
 else
 
@@ -449,13 +449,15 @@ ifdef MOZ_LITE
 NO_EDITOR	= 1
 NO_UNIX_LDAP	= 1
 MOZ_JSD		= 1
-MOZ_NAV_BUILD_PREFIX = 1
+MOZ_NAV_BUILD_PREFIX	= 1
 endif
 
 ifdef MOZ_MEDIUM
 DEFINES		+= -DMOZ_COMMUNICATOR_IIDS
 ifndef NO_EDITOR
 DEFINES		+= -DEDITOR 
+MOZ_EDITOR	= 1
+# This should go away as soon as MOZ_EDITOR is adopted everywhere.
 EDITOR		= 1
 endif
 MOZ_JSD		= 1
@@ -472,23 +474,24 @@ endif
 endif
 
 ifdef MOZ_DARK
-DEFINES += -DMOZ_COMMUNICATOR_IIDS -DMOZ_MAIL_NEWS -DMOZ_OFFLINE \
-                   -DMOZ_TASKBAR -DMOZ_LDAP -DMOZ_NEO 
+DEFINES		+= -DMOZ_COMMUNICATOR_IIDS -DMOZ_MAIL_NEWS -DMOZ_OFFLINE -DMOZ_TASKBAR -DMOZ_LDAP -DMOZ_NEO 
 #-DMOZ_CALENDAR
 ifndef NO_EDITOR
-DEFINES	+= -DEDITOR 
+DEFINES		+= -DEDITOR 
+MOZ_EDITOR	= 1
+# This should go away as soon as MOZ_EDITOR is adopted everywhere.
 EDITOR		= 1
 endif
 MOZ_JSD		= 1
 MOZ_COMMUNICATOR_IIDS	= 1
 MOZ_COMMUNICATOR_CONFIG_JS	= 1
 MOZ_COPY_ALL_JARS	= 1
-MOZ_OFFLINE=1
-MOZ_TASKBAR=1
-MOZ_LDAP=1
-MOZ_MAIL_NEWS=1
-#MOZ_CALENDAR=1
-MOZ_NEO=1
+MOZ_OFFLINE	= 1
+MOZ_TASKBAR	= 1
+MOZ_LDAP	= 1
+MOZ_MAIL_NEWS	= 1
+#MOZ_CALENDAR	= 1
+MOZ_NEO		= 1
 
 else
 ifdef MOZ_MAIL_COMPOSE
@@ -504,7 +507,7 @@ ifdef MOZ_COOKIEMANAGE
 DEFINES		+= -DCookieManagement
 endif
 
-ifdef EDITOR
+ifdef MOZ_EDITOR
 #
 # Enable HTMLArea form element support.
 #
@@ -525,7 +528,7 @@ ifdef MOZ_FULLCIRCLE
 DEFINES		+= -DMOZ_FULLCIRCLE
 endif
 
-ifdef EDITOR
+ifdef MOZ_EDITOR
 DEFINES		+= -DEDITOR -DEDITOR_UI
 BUILD_EDITOR	= 1
 BUILD_EDITOR_UI	= 1
@@ -560,7 +563,7 @@ endif
 
 ifndef MOZ_JAVA
 ifndef USE_AUTOCONF
-MOZ_OJI = 1             # on by default now
+MOZ_OJI		= 1	# on by default now
 endif
 endif
 
@@ -583,7 +586,7 @@ JAVA_OR_OJI	= 1
 endif
 
 ifdef JAVA_OR_NSJVM	# XXX fix -- su can't depend on java
-MOZ_SMARTUPDATE = 1
+MOZ_SMARTUPDATE	= 1
 endif
 
 ifndef NO_MOCHA
@@ -635,11 +638,11 @@ DEFINES 	+= -DMODULAR_NETLIB
 endif
 
 ifndef MOZ_FE
-MOZ_FE = x
+MOZ_FE		= x
 endif
 
 ifndef MOZ_USER_DIR
-MOZ_USER_DIR = \".netscape\"
+MOZ_USER_DIR	= \".netscape\"
 endif
 
 DEFINES 	+= -DMOZ_USER_DIR=$(MOZ_USER_DIR)
@@ -730,12 +733,12 @@ endif
 
 JAVA_DEFINES	+= -DAWTSDLL=\"$(AWTSDLL)\" -DCONDLL=\"$(CONDLL)\" -DJBNDLL=\"$(JBNDLL)\" -DJDBDLL=\"$(JDBDLL)\" \
 		   -DJSJDLL=\"$(JSJDLL)\" -DNETDLL=\"$(NETDLL)\" -DNSCDLL=\"$(NSCDLL)\" -DZPWDLL=\"$(ZPWDLL)\" \
-                   -DJAR_NAME=\"$(JAR_NAME)\"
+		   -DJAR_NAME=\"$(JAR_NAME)\"
 
 ifeq ($(AWT_11),1)
-JAVA_DEFINES    += -DAWT_11
+JAVA_DEFINES	+= -DAWT_11
 else
-JAVA_DEFINES    += -DAWT_102
+JAVA_DEFINES	+= -DAWT_102
 endif
 
 # From nsprpub/config/config.mk, mozilla/jpeg needs to know
