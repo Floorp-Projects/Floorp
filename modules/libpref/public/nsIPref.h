@@ -58,7 +58,7 @@ typedef int (*PrefChangedFunc) (const char *, void *);
 class nsIPref: public nsISupports {
 public:
 
-  static const nsIID& GetIID(void) { static nsIID iid = NS_IPREF_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPREF_IID)
 
   // Initialize/shutdown
   NS_IMETHOD Startup(char *filename) = 0;
