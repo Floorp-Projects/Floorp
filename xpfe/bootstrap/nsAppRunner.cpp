@@ -279,7 +279,7 @@ static char *sWatcherServiceContractID = "@mozilla.org/embedcomp/window-watcher;
 /*********************************************/
 // Default implemenations for nativeAppSupport
 // If your platform implements these functions if def out this code.
-#if !defined (XP_MAC ) && !defined(XP_MACOSX) && !defined(NTO) && !defined( XP_PC ) && !defined( XP_BEOS )
+#if !defined (XP_MAC ) && !defined(NTO) && !defined( XP_PC ) && !defined( XP_BEOS )
 
 nsresult NS_CreateSplashScreen( nsISplashScreen **aResult )
 {
@@ -1504,7 +1504,7 @@ static PRBool GetWantSplashScreen(int argc, char* argv[])
   int i;
   PRBool dosplash;
   // We can't use the command line service here because it isn't running yet
-#if defined(XP_UNIX) && !defined(NTO) && !defined(XP_MACOSX)
+#if defined(XP_UNIX) && !defined(NTO) 
   dosplash = PR_FALSE;
   for (i=1; i<argc; i++)
     if ((PL_strcasecmp(argv[i], "-splash") == 0)
