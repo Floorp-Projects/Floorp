@@ -176,10 +176,15 @@ nsComboboxControlFrame::InitTextStr(PRBool aUpdate)
      // No selection so use the first item in the list box
  
     if ((NS_OK == result) && (nsnull != fcFrame)) {
-       // Set listbox selection to first item in the list box
-      fcFrame->SetProperty(nsHTMLAtoms::selectedindex, "0");
-       // Get the listbox selection as a string
-      mListControlFrame->GetSelectedItem(mTextStr);
+      // Find out if there are any options in the list to select
+      PRInt32 length = 0;
+      mListControlFrame->GetNumberOfOptions(&length);
+      if (length > 0) {
+         // Set listbox selection to first item in the list box
+        fcFrame->SetProperty(nsHTMLAtoms::selectedindex, "0");
+         // Get the listbox selection as a string
+        mListControlFrame->GetSelectedItem(mTextStr);
+      }
     }
   }
 
@@ -722,6 +727,7 @@ nsComboboxControlFrame::GetMaxNumValues()
   return 1;
 }
   
+/*XXX-REMOVE
 PRBool
 nsComboboxControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                    nsString* aValues, nsString* aNames)
@@ -739,6 +745,21 @@ nsComboboxControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValue
   nsresult status = PR_TRUE;
   return status;
 }
+*/
+
+PRBool
+nsComboboxControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                                     nsString* aValues, nsString* aNames)
+{
+  nsIFormControlFrame* fcFrame = nsnull;
+  nsIFrame* dropdownFrame = GetDropdownFrame();
+  nsresult result = dropdownFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
+  if ((NS_SUCCEEDED(result)) && (nsnull != fcFrame)) {
+    return fcFrame->GetNamesValues(aMaxNumValues, aNumValues, aValues, aNames);
+  }
+  return PR_FALSE;
+}
+
 
 //--------------------------------------------------------------
 NS_IMETHODIMP

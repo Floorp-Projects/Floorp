@@ -710,19 +710,6 @@ button:focus:-moz-focus-inner {
    border : 1px dotted black;
 }
 
-:-moz-file-button {
-  border: 2px outset rgb(204, 204, 204);
-  color:black;
-  background-color: rgb(204, 204, 204);
-}
-
-:-moz-file-text {
-  border: 2px inset rgb(204, 204, 204);
-  margin-right: 10px; 
-  background-color: white;
-  color: black;
-}
-
 input[type=text] {
   border: 2px inset rgb(204, 204, 204);
   background-color: white;
@@ -759,6 +746,16 @@ select, select[size="1"] {
 
 /* Listbox style */
 select[size] {
+  background-color: white;
+  border: 1px inset rgb(153, 153, 153);
+}
+
+select[multiple] {
+  background-color: white;
+  border: 1px inset rgb(153, 153, 153);
+}
+
+select[multiple][size="1"] {
   background-color: white;
   border: 1px inset rgb(153, 153, 153);
 }
@@ -832,6 +829,17 @@ select[size="1"] option[-moz-option-selected] {
   color:black;
   background-color:white;
 }
+
+select[multiple] option[-moz-option-selected] {
+  color:white;
+  background-color:rgb(51,51,102); 
+}
+
+select[multiple][size="1"] option[-moz-option-selected] {
+  color:white;
+  background-color:rgb(51,51,102); 
+}
+
 
 option.selectedfocus {
   border:   1px dotted white;
