@@ -79,6 +79,9 @@ public:
 												nsIUrlListener * aUrlListener, nsIURL ** aURL,
 												const char *messageIdentifierList,
 												PRBool messageIdsAreUID) = 0;
+	NS_IMETHOD Noop(PLEventQueue * aClientEventQueue, 
+												nsIImapMailFolderSink * aImapMailFolder,
+												nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
 };
 
 

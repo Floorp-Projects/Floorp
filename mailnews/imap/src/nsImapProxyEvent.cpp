@@ -2116,7 +2116,8 @@ ParseAdoptedHeaderLineProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMailFolderSink->ParseAdoptedHeaderLine(
         m_proxy->m_protocol, &m_msgLineInfo);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+//    m_proxy->m_protocol->NotifyFEEventCompletion();
+	// imap thread is NOT waiting for FEEvent completion, so don't send it.
     return res;
 }
     
@@ -2135,7 +2136,8 @@ NormalEndHeaderParseStreamProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMailFolderSink->NormalEndHeaderParseStream(
         m_proxy->m_protocol);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+	// IMAP thread is NOT waiting for FEEvent Completion.
+//    m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
     
@@ -2301,7 +2303,8 @@ AbortMsgWriteStreamProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMessageSink->AbortMsgWriteStream(
         m_proxy->m_protocol);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+	// IMAP thread is NOT waiting for FEEvent Completion.
+//    m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 

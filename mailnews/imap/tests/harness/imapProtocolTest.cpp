@@ -960,7 +960,21 @@ nsIMAP4TestDriver::GetMessageSizeFromDB(nsIImapProtocol* aProtocol,
                                     MessageSizeInfo* sizeInfo)
 {
     printf("**** nsIMAP4TestDriver::GetMessageSizeFromDB\r\n");
-    return NS_OK;
+	nsresult rv = NS_ERROR_FAILURE;
+	if (sizeInfo && sizeInfo->id)
+	{
+		PRUint32 key = atoi(sizeInfo->id);
+		nsIMessage *mailHdr = nsnull;
+		NS_ASSERTION(sizeInfo->idIsUid, "ids must be uids to get message size");
+		if (sizeInfo->idIsUid)
+			rv = m_mailDB->GetMsgHdrForKey(key, &mailHdr);
+		if (NS_SUCCEEDED(rv) && mailHdr)
+		{
+			rv = mailHdr->GetMessageSize(&sizeInfo->size);
+			NS_RELEASE(mailHdr);
+		}
+	}
+    return rv;
 }
 
 
@@ -1313,6 +1327,7 @@ nsresult nsIMAP4TestDriver::ListCommands()
 	printf("2) Check identity information.\n");
 	printf("3) Test url parsing. \n");
 	printf("4) Select Folder. \n");
+	printf("5) Download a message. \n");
 	printf("9) Exit the test application. \n");
 	return NS_OK;
 }

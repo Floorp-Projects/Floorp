@@ -49,6 +49,9 @@ public:
 												nsIUrlListener * aUrlListener, nsIURL ** aURL,
 												const char *messageIdentifierList,
 												PRBool messageIdsAreUID);
+	NS_IMETHOD Noop(PLEventQueue * aClientEventQueue, 
+												nsIImapMailFolderSink * aImapMailFolder,
+												nsIUrlListener * aUrlListener, nsIURL ** aURL);
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End support of nsIImapService interface 
 	////////////////////////////////////////////////////////////////////////////////////////

@@ -1605,7 +1605,10 @@ void nsImapProtocol::BeginMessageDownLoad(
 			if (GetServerStateParser().GetDownloadingHeaders())
 			{
 				if (m_imapMailFolderSink)
+				{
 					m_imapMailFolderSink->SetupHeaderParseStream(this, si);
+					WaitForFEEventCompletion();
+				}
 			}
 			else if (m_imapMessageSink) 
             {
@@ -2185,10 +2188,14 @@ nsImapProtocol::PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete)
 	if (GetServerStateParser().GetDownloadingHeaders())
 	{
 		if (m_imapMailFolderSink && downloadLineDontDelete)
+		{
 			m_imapMailFolderSink->ParseAdoptedHeaderLine(this, downloadLineDontDelete);
+		}
 	}
     else if (m_imapMessageSink && downloadLineDontDelete)
+	{
         m_imapMessageSink->ParseAdoptedMsgLine(this, downloadLineDontDelete);
+	}
 
     // ***** We need to handle the psuedo interrupt here *****
 }
