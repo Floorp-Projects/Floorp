@@ -76,8 +76,8 @@ typedef enum _FTP_STATE {
 ///////////////////////
     FTP_S_PASV,     // send passsive
     FTP_R_PASV,
-    FTP_S_PORT,     // send port
-    FTP_R_PORT
+//    FTP_S_PORT,     // send port
+//    FTP_R_PORT
 
 } FTP_STATE;
 
