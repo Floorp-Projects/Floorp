@@ -120,11 +120,13 @@ protected:
 
 // Prefs
 
-static const char *c_szDefaultPage   = "data:text/html,<html><body bgcolor=\"#00FF00\"><p>Mozilla Control</p></body></html>";
+static OLECHAR *kDesignModeURL =
+    L"data:text/html,<html><body bgcolor=\"#00FF00\"><p>Mozilla Control</p></body></html>";
 
 // Registry keys and values
 
-static const TCHAR *c_szIEHelperObjectKey = _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Browser Helper Objects");
+static const TCHAR *kBrowserHelperObjectRegKey =
+    _T("Software\\Mozilla\\ActiveX Control\\Browser Helper Objects");
 
 
 // Some recent SDKs define these IOleCommandTarget groups, so they're
@@ -422,8 +424,7 @@ LRESULT CMozillaBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
     {
         if (!bUserMode)
         {
-            USES_CONVERSION;
-            Navigate(A2OLE(c_szDefaultPage), NULL, NULL, NULL, NULL);
+            Navigate(const_cast<BSTR>(kDesignModeURL), NULL, NULL, NULL, NULL);
         }
     }
 
@@ -1330,7 +1331,7 @@ HRESULT CMozillaBrowser::LoadBrowserHelpers()
     // Search the branch looking for objects to load with the control.
 
     CRegKey cKey;
-    if (cKey.Open(HKEY_LOCAL_MACHINE, c_szIEHelperObjectKey, KEY_ENUMERATE_SUB_KEYS) != ERROR_SUCCESS)
+    if (cKey.Open(HKEY_LOCAL_MACHINE, kBrowserHelperObjectRegKey, KEY_ENUMERATE_SUB_KEYS) != ERROR_SUCCESS)
     {
         NG_TRACE(_T("No browser helper key found\n"));
         return S_FALSE;
@@ -1377,7 +1378,7 @@ HRESULT CMozillaBrowser::LoadBrowserHelpers()
             break;
         }
 
-        NG_TRACE(_T("Reading helper object \"%s\"\n"), szCLSID);
+        NG_TRACE(_T("Reading helper object entry \"%s\"\n"), szCLSID);
 
         // Turn the key into a CLSID
         USES_CONVERSION;
