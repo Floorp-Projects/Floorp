@@ -107,7 +107,6 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
@@ -198,7 +197,7 @@ static PRBool gUseEnvelopeCmd = PR_FALSE;
 nsresult nsImapProtocol::GlobalInitialization()
 {
   nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv)); 
   if (NS_SUCCEEDED(rv) && prefs) 
   {
     prefs->GetIntPref("mail.imap.chunk_fast", &gTooFastTime);   // secs we read too little too fast
@@ -5626,7 +5625,13 @@ void nsImapProtocol::FindMailboxesIfNecessary()
   // so compare against it. A better solution would be to have the wizard set a special pref property on the
   // server and perhaps we should do that for RTM
   if (GetServerStateParser().ServerIsAOLServer() && GetImapHostName() && !nsCRT::strcmp(GetImapHostName(), "imap.mail.aol.com"))
-    XAOL_Option("+READMBOX");
+  {
+    PRBool suppressPsuedoView = PR_FALSE;
+    nsCOMPtr<nsIMsgIncomingServer> server = do_QueryReferent(m_server);
+    server->GetBoolAttribute("suppresspsuedoview", &suppressPsuedoView); 
+    if (!suppressPsuedoView)
+      XAOL_Option("+READMBOX");
+  }
 #endif
 
   rv = m_runningUrl->GetImapAction(&imapAction);
@@ -6641,7 +6646,7 @@ PRBool nsImapProtocol::TryToLogon()
 
       PRBool lastReportingErrors = GetServerStateParser().GetReportingErrors();
       GetServerStateParser().SetReportingErrors(PR_FALSE);  // turn off errors - we'll put up our own.
-        nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
+        nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv)); 
         if (NS_SUCCEEDED(rv) && prefs) 
         prefs->GetBoolPref("mail.auth_login", &prefBool);
 
