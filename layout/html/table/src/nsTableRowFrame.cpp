@@ -768,9 +768,6 @@ nsTableRowFrame::InitialReflow(nsIPresContext&      aPresContext,
         kidSize.width = kidMaxElementSize.width;
       if (kidMaxElementSize.height>kidSize.height)
         kidSize.height = kidMaxElementSize.height;
-      kidSize.width += borderPadding.left+borderPadding.right;
-      kidSize.height += borderPadding.top+borderPadding.bottom;
-      kidMaxElementSize.SizeBy(borderPadding.left+borderPadding.right, borderPadding.top+borderPadding.bottom);
       ((nsTableCellFrame *)kidFrame)->SetPass1DesiredSize(kidSize);
       ((nsTableCellFrame *)kidFrame)->SetPass1MaxElementSize(kidMaxElementSize);
       NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "unexpected child reflow status");

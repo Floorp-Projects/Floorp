@@ -261,11 +261,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
     maxColWidthArray = new PRInt32[mNumCols];
   }
 
-  const nsStyleTable* tableStyle;
-  mTableFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct*&)tableStyle);
-  nscoord cellPadding=0;
-  if (eStyleUnit_Coord==tableStyle->mCellPadding.GetUnit())
-    cellPadding=tableStyle->mCellPadding.GetCoordValue();
+  nscoord cellPadding=mTableFrame->GetCellPadding();
   if (gsDebug) printf ("table cell padding = %d\n", cellPadding);
 
   PRInt32 numRows = mTableFrame->GetRowCount();
