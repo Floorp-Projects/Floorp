@@ -113,9 +113,6 @@ ifdef LIBRARY
 	$(INSTALL) -m 664 $(LIBRARY) $(SOURCE_LIB_DIR)
 endif
 ifdef SHARED_LIBRARY
-ifeq ($(OS_TARGET),OS2)
-	rm -f $(SOURCE_LIB_DIR)/$(notdir $(SHARED_LIBRARY))
-endif
 	$(INSTALL) -m 775 $(SHARED_LIBRARY) $(SOURCE_LIB_DIR)
 endif
 ifdef IMPORT_LIBRARY
