@@ -343,6 +343,9 @@ bin\components\mozldap.xpt
 bin\nsldap32v40.dll
 bin\chrome\messenger.jar
 bin\chrome\messenger\*
+bin\components\msgsmime.dll
+bin\components\msgsmime.xpt
+bin\components\smime-service.js
 
 [chatzilla]
 bin\components\chatzilla-service.js
