@@ -36,4 +36,5 @@ EditorTableProperties.dtd
 EdNamedAnchorProperties.dtd
 EdDialogOverlay.dtd
 EdAdvancedEdit.dtd
-
+EditorImageMap.dtd
+EditorImageMapHotSpot.dtd
