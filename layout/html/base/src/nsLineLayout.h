@@ -116,9 +116,9 @@ public:
     PushFrame(aFrame);
   }
 
-  void VerticalAlignFrames(nsLineBox* aLineBox,
-                           nsSize& aMaxElementSizeResult,
-                           nscoord& aLineBoxAscent);
+  void VerticalAlignLine(nsLineBox* aLineBox,
+                         nsSize& aMaxElementSizeResult,
+                         nscoord& aLineBoxAscent);
 
   PRBool TrimTrailingWhiteSpace();
 

@@ -369,20 +369,18 @@ protected:
                      nsLineBox* aLine,
                      nsIFrame* aFrame);
 
-  nsBlockFrame* FindFollowingBlockFrame(nsIFrame* aFrame);
-
   nsresult PullFrame(nsBlockReflowState& aState,
                      nsLineBox* aLine,
                      PRBool     aDamageDeletedLine,
                      nsIFrame*& aFrameResult);
 
-  nsresult PullFrame(nsBlockReflowState& aState,
-                     nsLineBox* aToLine,
-                     nsLineBox** aFromList,
-                     PRBool aUpdateGeometricParent,
-                     PRBool aDamageDeletedLines,
-                     nsIFrame*& aFrameResult,
-                     PRBool& aStopPulling);
+  nsresult PullFrameFrom(nsBlockReflowState& aState,
+                         nsLineBox* aToLine,
+                         nsLineBox** aFromList,
+                         PRBool aUpdateGeometricParent,
+                         PRBool aDamageDeletedLines,
+                         nsIFrame*& aFrameResult,
+                         PRBool& aStopPulling);
 
   void PushLines(nsBlockReflowState& aState);
 
@@ -408,11 +406,6 @@ protected:
   // List handling kludge
 
   void RenumberLists(nsIPresContext* aPresContext);
-
-  PRBool RenumberListsIn(nsIPresContext* aPresContext,
-                         nsIFrame* aContainerFrame,
-                         PRInt32* aOrdinal,
-                         PRInt32 aDepth);
 
   PRBool RenumberListsInBlock(nsIPresContext* aPresContext,
                               nsBlockFrame* aContainerFrame,

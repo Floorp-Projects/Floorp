@@ -1745,9 +1745,9 @@ PRBool IsPercentageAwareFrame(nsIPresContext *aPresContext, nsIFrame *aFrame)
 
 
 void
-nsLineLayout::VerticalAlignFrames(nsLineBox* aLineBox,
-                                  nsSize& aMaxElementSizeResult,
-                                  nscoord& aLineBoxAscent)
+nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
+                                nsSize& aMaxElementSizeResult,
+                                nscoord& aLineBoxAscent)
 {
   // Synthesize a PerFrameData for the block frame
   PerFrameData rootPFD;
@@ -1817,7 +1817,7 @@ nsLineLayout::VerticalAlignFrames(nsLineBox* aLineBox,
   // recurse over the child spans and place any top/bottom aligned
   // frames we find.
   // XXX PERFORMANCE: set a bit per-span to avoid the extra work
-  // (propogate it upward too)
+  // (propagate it upward too)
   PerFrameData* pfd = psd->mFirstFrame;
   nscoord maxElementWidth = 0;
   nscoord maxElementHeight = 0;
@@ -1900,6 +1900,14 @@ nsLineLayout::VerticalAlignFrames(nsLineBox* aLineBox,
   aMaxElementSizeResult.width = maxElementWidth;
   aMaxElementSizeResult.height = maxElementHeight;
   aLineBoxAscent = baselineY;
+#ifdef NOISY_VERTICAL_ALIGN
+  printf(
+    "  [line]==> bounds{x,y,w,h}={%d,%d,%d,%d} lh=%d a=%d mes{w,h}={%d,%d}\n",
+    aLineBox->mBounds.x, aLineBox->mBounds.y,
+    aLineBox->mBounds.width, aLineBox->mBounds.height,
+    mFinalLineHeight, aLineBoxAscent,
+    aMaxElementSizeResult.width, aMaxElementSizeResult.height);
+#endif
 
   // Undo root-span mFrame pointer to prevent brane damage later on...
   mRootSpan->mFrame = nsnull;
