@@ -2680,7 +2680,7 @@ PresShell::DoCopy()
           }
           
           // put the transferable on the clipboard
-          clipboard->SetData(trans, nsnull);
+          clipboard->SetData(trans, nsnull, nsIClipboard::kGlobalClipboard);
         }
       }
     }

@@ -73,8 +73,11 @@ nsClipboard::~nsClipboard()
 // do it on an app switch.
 //
 NS_IMETHODIMP
-nsClipboard :: SetNativeClipboardData()
+nsClipboard :: SetNativeClipboardData ( PRInt32 aWhichClipboard )
 {
+  if ( aWhichClipboard != kGlobalClipboard )
+    return NS_ERROR_FAILURE;
+
   nsresult errCode = NS_OK;
   
   mIgnoreEmptyNotification = PR_TRUE;
@@ -189,8 +192,11 @@ nsClipboard :: SetNativeClipboardData()
 // Take data off the native clip and put it on the transferable.
 //
 NS_IMETHODIMP
-nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
+nsClipboard :: GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32 aWhichClipboard )
 {
+  if ( aWhichClipboard != kGlobalClipboard )
+    return NS_ERROR_FAILURE;
+
   nsresult errCode = NS_OK;
 
   // make sure we have a good transferable
@@ -362,9 +368,11 @@ nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt3
 // pull the data off the clipboard.
 //
 NS_IMETHODIMP
-nsClipboard :: HasDataMatchingFlavors ( nsISupportsArray* aFlavorList, PRBool * outResult ) 
+nsClipboard :: HasDataMatchingFlavors ( nsISupportsArray* aFlavorList, PRInt32 aWhichClipboard, PRBool * outResult ) 
 {
   *outResult = PR_FALSE;  // assume there is nothing there we want.
+  if ( aWhichClipboard != kGlobalClipboard )
+    return NS_OK;
   
   // create a mime mapper. It's ok for this to fail because the data may come from
   // another app which obviously wouldn't put our mime mapping data on the clipboard.
