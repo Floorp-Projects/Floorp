@@ -74,6 +74,7 @@ static PRStatus PrintAddress(const PRNetAddr* address)
     PRNetAddr translation;
     char buffer[ADDR_BUFFER];
     PRStatus rv = PR_NetAddrToString(address, buffer, sizeof(buffer));
+    memset(&translation, 0, sizeof(PRNetAddr));
     if (PR_FAILURE == rv) PL_FPrintError(err, "PR_NetAddrToString");
     else
     {

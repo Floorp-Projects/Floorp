@@ -164,7 +164,7 @@ ifeq ($(OS_ARCH),CYGWIN_95-4.0)
 	OS_TARGET := WIN95
 endif
 ifeq ($(OS_ARCH),OS2)
-	OS_ARCH   := WINNT
+	OS_ARCH   := OS2
 	OS_TARGET := OS2
 endif
 

@@ -175,7 +175,7 @@ CSRCS +=            \
 	$(NULL)
 endif
 
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
 PROG_SUFFIX = .exe
 else
 PROG_SUFFIX =
@@ -198,15 +198,6 @@ ifeq ($(OS_TARGET), WIN16)
   LIBPR = $(DIST)/lib/nspr$(MOD_VERSION).lib
   LIBPLC= $(DIST)/lib/plc$(MOD_VERSION).lib
 else
-ifeq ($(OS_TARGET), OS2)
-ifdef XP_OS2_VACPP
-  LDOPTS =
-  LIBPR = $(DIST)/lib/nspr$(MOD_VERSION).lib
-  LIBPLC= $(DIST)/lib/plc$(MOD_VERSION).lib
-else
-  LDOPTS = -Zlinker /PM:VIO
-endif
-else
   LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
   ifeq ($(OS_TARGET), WIN95)
     LIBPR = $(DIST)/lib/nspr$(MOD_VERSION).$(LIB_SUFFIX)
@@ -218,6 +209,17 @@ else
   ifdef PROFILE                                                                              
     LDOPTS += -PROFILE -MAP                                                                  
   endif # profile
+endif
+endif
+
+ifeq ($(OS_ARCH),OS2)
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+  LDOPTS = -NOE -DEBUG -nologo -PMTYPE:VIO
+  LIBPR  = $(DIST)/lib/nspr$(MOD_VERSION).lib
+  LIBPLC = $(DIST)/lib/plc$(MOD_VERSION).lib
+else
+ifeq ($(MOZ_OS2_EMX_OBJECTFORMAT),OMF)
+  LDOPTS = -Zlinker /PM:VIO
 endif
 endif
 endif
@@ -479,16 +481,15 @@ ifeq ($(OS_TARGET),WIN16)
 	echo winsock.lib     >>w16link
 	wlink @w16link.
 else
-ifeq ($(OS_TARGET),OS2)
-	$(LINK) $(EXEFLAGS) $(LDOPTS) $< $(LIBPLC) $(LIBPR) $(OS_LIBS) $(EXTRA_LIBS)
-else
 	link $(LDOPTS) $(EXTRA_LDOPTS) $< $(LIBPLC) $(LIBPR) $(EXTRA_LIBS) wsock32.lib -out:$@
 endif
-endif
+else
+ifeq ($(OS_ARCH),OS2)
+	$(LINK) $(EXEFLAGS) $(LDOPTS) $< $(LIBPLC) $(LIBPR) $(OS_LIBS) $(EXTRA_LIBS)
 else
 	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(EXTRA_LIBS) -o $@
 endif
-
+endif
 endif
 
 export:: $(TARGETS)
@@ -529,7 +530,7 @@ PROGRAMS = $(notdir $(PROGS))
 ifdef NSPR_TEST_LOGFILE
 LOGFILE = $(NSPR_TEST_LOGFILE)
 else
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
 LOGFILE = nul
 else
 LOGFILE = /dev/null

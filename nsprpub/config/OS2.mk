@@ -38,6 +38,10 @@ XP_OS2_EMX   = 1
 endif
 endif
 
+ifeq ($(XP_OS2_EMX),1)
+MOZ_EMXTAG = $(subst .,,$(MOZ_OS2_EMX_OBJECTFORMAT))
+endif
+
 #
 # On OS/2 we proudly support gbash...
 #
@@ -46,7 +50,7 @@ SHELL = GBASH.EXE
 CC			= icc -q -DXP_OS2 -N10
 CCC			= icc -q -DXP_OS2 -DOS2=4 -N10
 LINK			= ilink
-AR			= ilib /noignorecase /nologo $(subst /,\\,$@)
+AR			= ilib /noignorecase /nologo /Out:$(subst /,\\,$@)
 RANLIB 			= @echo RANLIB
 BSDECHO 		= @echo BSDECHO
 NSINSTALL 		= nsinstall
@@ -65,7 +69,7 @@ OBJ_SUFFIX		= obj
 
 OS_CFLAGS     		= -W3 -Wcnd- -gm -gd+ -sd- -su4 -ge-
 OS_EXE_CFLAGS 		= -W3 -Wcnd- -gm -gd+ -sd- -su4 
-AR_EXTRA_ARGS 		= ,,
+AR_EXTRA_ARGS 		= 
 
 ifdef BUILD_OPT
 OPTIMIZER		= -O+ -Oi 
@@ -88,9 +92,9 @@ DEFINES += -D_PR_GLOBAL_THREADS_ONLY -DBSD_SELECT
 
 # Name of the binary code directories
 ifdef MOZ_LITE
-OBJDIR_NAME 		= $(subst OS2,NAV,$(OS_CONFIG))_$(MOZ_OS2_TOOLS)$(OBJDIR_TAG).OBJ
+OBJDIR_NAME 		= $(subst OS2,NAV,$(OS_CONFIG))_$(MOZ_OS2_TOOLS)$(MOZ_EMXTAG)$(OBJDIR_TAG).OBJ
 else
-OBJDIR_NAME 		= $(OS_CONFIG)_$(MOZ_OS2_TOOLS)$(OBJDIR_TAG).OBJ
+OBJDIR_NAME 		= $(OS_CONFIG)_$(MOZ_OS2_TOOLS)$(MOZ_EMXTAG)$(OBJDIR_TAG).OBJ
 endif
 
 OS_DLLFLAGS 		= -nologo -DLL -FREE -NOE
@@ -99,7 +103,7 @@ ifdef XP_OS2_VACPP
 
 OS_LIBS 		= so32dll.lib tcp32dll.lib
 
-DEFINES += -DXP_OS2_VACPP
+DEFINES += -DXP_OS2_VACPP -DTCPV40HDRS
 
 else
 CC			= gcc
@@ -122,20 +126,26 @@ endif
 
 OS_LIBS     		= -lsocket -lemxio
 
-DEFINES += -DXP_OS2 -DXP_OS2_EMX -DHAVE_SIGNED_CHAR
+DEFINES += -DXP_OS2 -DXP_OS2_EMX -DOS2EMX_PLAIN_CHAR
 
 OS_CFLAGS     		= $(OMF_FLAG) -Wall -Wno-unused -Zmtd
 OS_EXE_CFLAGS 		= $(OMF_FLAG) -Wall -Wno-unused -Zmtd
 OS_DLLFLAGS 		= $(OMF_FLAG) -Zmt -Zdll -Zcrtdll -o $@
+ifeq ($(MOZ_OS2_EMX_OBJECTFORMAT),OMF)
+EXEFLAGS                += -Zlinker /DE
+endif
 
 ifdef BUILD_OPT
 OPTIMIZER		= -O3
 DLLFLAGS		= 
 EXEFLAGS    		= -Zmtd -o $@
 else
-OPTIMIZER		= -g
-DLLFLAGS		= -g
-EXEFLAGS		= -g $(OMF_FLAG) -Zmtd -L$(DIST)/lib -o $@
+OPTIMIZER		= -g #-s
+DLLFLAGS		= -g #-s
+EXEFLAGS		= -g $(OMF_FLAG) -Zmtd -L$(DIST)/lib -o $@   # -s
+ifeq ($(MOZ_OS2_EMX_OBJECTFORMAT),OMF)
+EXEFLAGS                += -Zlinker /DE
+endif
 endif
 
 AR_EXTRA_ARGS 		=

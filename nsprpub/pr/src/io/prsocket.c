@@ -190,7 +190,7 @@ PRFileDesc *fd;
 }
 
 
-static const PRIOMethods* PR_GetSocketPollFdMethods();
+static const PRIOMethods* PR_GetSocketPollFdMethods(void);
 
 PR_IMPLEMENT(PRFileDesc*) PR_CreateSocketPollFd(PRInt32 osfd)
 {

@@ -87,14 +87,17 @@ PR_IMPLEMENT(PRStatus) PR_GetSystemInfo(PRSysInfo cmd, char *buf, PRUint32 bufle
             ULONG os2ver[2] = {0};
             DosQuerySysInfo(QSV_VERSION_MINOR, QSV_VERSION_REVISION,
                             &os2ver, sizeof(os2ver));
-            /* Formatting for normal usage (2.11, 3.0, 4.0); officially,
-               Warp 4 is version 2.40.00 */
+            /* Formatting for normal usage (2.11, 3.0, 4.0, 4.5); officially,
+               Warp 4 is version 2.40.00, WSeB 2.45.00 */
             if (os2ver[0] < 30)
               (void)PR_snprintf(buf, buflen, "%s%lu",
                                 "2.", os2ver[0]);
-            else
+            else if (os2ver[0] < 45)
               (void)PR_snprintf(buf, buflen, "%lu%s%lu",
                                 os2ver[0]/10, ".", os2ver[1]);
+            else
+              (void)PR_snprintf(buf, buflen, "%.1f",
+                                os2ver[0]/10.0);
         }
 #endif /* OS2 */
         break;

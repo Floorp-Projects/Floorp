@@ -24,11 +24,16 @@ INTERNAL_TOOLS	= 1
 
 include $(MOD_DEPTH)/config/config.mk
 
-CSRCS	= nsinstall.c now.c
+CSRCS	= now.c
 
+# This version hasn't been ported for us; the one in mozilla/config has
+ifneq ($(OS_ARCH),OS2)
+CSRCS  += nsinstall.c
+ 
 PLSRCS	= nfspwd.pl
+endif
 
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
 PROG_SUFFIX = .exe
 else
 PROG_SUFFIX =
@@ -64,7 +69,14 @@ ifeq ($(OS_ARCH), HP-UX)
     endif
 endif
 
-ifdef XP_OS2_EMX
+ifeq ($(MOZ_OS2_TOOLS),EMX)
+XCFLAGS = $(OS_EXE_CFLAGS)
+ifeq ($(MOZ_OS2_EMX_OBJECTFORMAT),OMF)
+XLDOPTS = -Zlinker /PM:VIO
+endif
+endif
+
+ifeq ($(MOZ_OS2_TOOLS),PGCC)
 XCFLAGS = $(OS_EXE_CFLAGS)
 XLDOPTS = -Zlinker /PM:VIO
 endif
@@ -77,7 +89,7 @@ include $(MOD_DEPTH)/config/rules.mk
 
 PROGS	= $(OBJDIR)/now$(PROG_SUFFIX)
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 TARGETS = $(PROGS)
 else
 PROGS	+= $(OBJDIR)/nsinstall$(PROG_SUFFIX)

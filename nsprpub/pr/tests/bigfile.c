@@ -190,24 +190,24 @@ PRIntn main(PRIntn argc, char **argv)
     if (!LL_IS_ZERO(big_answer)) return Error("empty available64()", filename);
 
 	LL_SUB(big_size, filesize64, one_meg);
-    VERBOSE(v_whisper, "Creating sparce big file by seeking to end");
+    VERBOSE(v_whisper, "Creating sparse big file by seeking to end");
 	big_answer = file->methods->seek64(file, big_size, PR_SEEK_SET);
     if (!LL_EQ(big_answer, big_size)) return Error("seek", filename);
 
-    VERBOSE(v_whisper, "Writing block at end of sparce file");
+    VERBOSE(v_whisper, "Writing block at end of sparse file");
 	bytes = file->methods->write(file, buffer, BUFFER_SIZE);
     if (bytes != BUFFER_SIZE) return Error("write", filename);
 
-    VERBOSE(v_whisper, "Testing available space at end of sparce file");
+    VERBOSE(v_whisper, "Testing available space at end of sparse file");
     big_answer = file->methods->available64(file);
     if (!LL_IS_ZERO(big_answer)) return Error("eof available64()", filename);
 
-    VERBOSE(v_whisper, "Getting big info on sparce big file");
+    VERBOSE(v_whisper, "Getting big info on sparse big file");
     rv = file->methods->fileInfo64(file, &big_info);
     if (PR_FAILURE == rv) return Error("fileInfo64()", filename);
     if (v_shout <= verbose) PrintInfo(&big_info, filename);
 
-    VERBOSE(v_whisper, "Getting small info on sparce big file");
+    VERBOSE(v_whisper, "Getting small info on sparse big file");
     rv = file->methods->fileInfo(file, &small_info);
     if (LL_CMP(sevenFox, <, filesize64) && (PR_SUCCESS == rv))
     {

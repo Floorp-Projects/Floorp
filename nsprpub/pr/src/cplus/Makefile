@@ -44,7 +44,7 @@ DEFINES     += -D_NSPR_BUILD_
 
 include $(MOD_DEPTH)/config/rules.mk
 
-HEADERS = *.h
+HEADERS = $(wildcard *.h)
 
 export:: $(TARGETS)
 

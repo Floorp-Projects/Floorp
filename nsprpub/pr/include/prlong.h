@@ -97,7 +97,7 @@ NSPR_API(PRInt64) LL_Zero(void);
 **  LL_OR             Logical or
 **  LL_XOR            Logical exclusion
 **  LL_OR2            A disgusting deviation
-**  LL_NOT            Negation (one's compliment)
+**  LL_NOT            Negation (one's complement)
 ***********************************************************************/
 #define LL_AND(r, a, b)        ((r) = (a) & (b))
 #define LL_OR(r, a, b)        ((r) = (a) | (b))
@@ -108,9 +108,9 @@ NSPR_API(PRInt64) LL_Zero(void);
 /***********************************************************************
 ** MACROS:      LL_<mathematical operators>
 **
-**  LL_NEG            Negation (two's compliment)
-**  LL_ADD            Summation (two's compliment)
-**  LL_SUB            Difference (two's compliment)
+**  LL_NEG            Negation (two's complement)
+**  LL_ADD            Summation (two's complement)
+**  LL_SUB            Difference (two's complement)
 ***********************************************************************/
 #define LL_NEG(r, a)        ((r) = -(a))
 #define LL_ADD(r, a, b)     ((r) = (a) + (b))
@@ -119,9 +119,9 @@ NSPR_API(PRInt64) LL_Zero(void);
 /***********************************************************************
 ** MACROS:      LL_<mathematical operators>
 **
-**  LL_MUL            Product (two's compliment)
-**  LL_DIV            Quotient (two's compliment)
-**  LL_MOD            Modulus (two's compliment)
+**  LL_MUL            Product (two's complement)
+**  LL_DIV            Quotient (two's complement)
+**  LL_MOD            Modulus (two's complement)
 ***********************************************************************/
 #define LL_MUL(r, a, b)        ((r) = (a) * (b))
 #define LL_DIV(r, a, b)        ((r) = (a) / (b))

@@ -980,10 +980,6 @@ static PRStatus InitEventLib( void )
 
 #endif /* Win16, Win32, OS2 */
 
-#if defined(_WIN32) || defined(WIN16) || defined(XP_OS2)
-
-#endif
-
 #if defined(_WIN32) || defined(WIN16)
 /*
 ** _md_CreateEventQueue() -- ModelDependent initializer

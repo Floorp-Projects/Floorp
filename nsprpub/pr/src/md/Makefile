@@ -22,16 +22,16 @@ MOD_DEPTH = ../../..
 include $(MOD_DEPTH)/config/config.mk
 
 ifeq ($(OS_ARCH),WINNT)
-  ifeq ($(OS_TARGET),OS2)
+    DIRS = windows
+else
+  ifeq ($(OS_ARCH),OS2)
     DIRS = os2
   else
-    DIRS = windows
-  endif
-else
   ifeq ($(OS_ARCH),BeOS)
     DIRS = beos
   else
     DIRS = unix
+    endif
   endif
 endif
 

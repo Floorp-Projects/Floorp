@@ -50,7 +50,7 @@ endif
 
 INCLUDES = -I$(DIST)/include
 
-HEADERS = *.h
+HEADERS = $(wildcard *.h)
 
 CSRCS = \
 	plvrsion.c \
@@ -63,7 +63,7 @@ CXXSRCS = \
 OBJS = $(addprefix $(OBJDIR)/,$(CSRCS:.c=.$(OBJ_SUFFIX)) $(CXXSRCS:.cpp=.$(OBJ_SUFFIX)))
 
 ifeq ($(OS_ARCH), WINNT)
-    ifeq (,$(filter-out WIN16 OS2,$(OS_TARGET)))
+    ifeq ($(OS_TARGET), WIN16)
         EXTRA_LIBS = $(DIST)/lib/nspr$(MOD_VERSION).lib
     else
         DLLBASE=/BASE:0x30000000
@@ -77,6 +77,13 @@ ifeq ($(OS_ARCH), WINNT)
         endif
     endif
 else
+    ifeq ($(OS_ARCH),OS2)
+      ifeq ($(MOZ_OS2_TOOLS),VACPP)
+         EXTRA_LIBS = $(DIST)/lib/nspr$(MOD_VERSION).$(LIB_SUFFIX)
+      else
+         EXTRA_LIBS = -L$(DIST)/lib -lnspr$(MOD_VERSION) -lstdcpp
+      endif
+    else
     ifeq ($(OS_ARCH), AIX)
       ifeq ($(OS_RELEASE), 4.1)
         ifeq ($(CLASSIC_NSPR),1)
@@ -100,6 +107,7 @@ else
     else
         EXTRA_LIBS = -L$(DIST)/lib -lnspr$(MOD_VERSION)
     endif
+endif
 endif
 
 # On NCR and SCOOS, we can't link with extra libraries when
@@ -140,11 +148,7 @@ SH_DATE = $(shell date)
 SH_NOW = $(shell $(NOW))
 
 ifeq ($(OS_ARCH), WINNT)
-ifeq ($(OS_TARGET),OS2)
-	SUF =
-else
 	SUF = i64
-endif
 else
 	SUF = LL
 endif
@@ -162,13 +166,13 @@ $(TINC):
 
 $(OBJDIR)/plvrsion.$(OBJ_SUFFIX): plvrsion.c $(TINC)
 ifeq ($(OS_ARCH), WINNT)
-ifdef XP_OS2_EMX
-	$(CC) -o $@ -c $(CFLAGS) -I$(OBJDIR) plvrsion.c
-else
 	$(CC) -Fo$@ -c $(CFLAGS) -I$(OBJDIR) plvrsion.c
-endif
+else
+ifeq ($(MOZ_OS2_TOOLS), VACPP)
+	$(CC) -Fo$@ -c $(CFLAGS) -I$(OBJDIR) plvrsion.c
 else
 	$(CC) -o $@ -c $(CFLAGS) -I$(OBJDIR) plvrsion.c
+endif
 endif
 #
 # Version information generation (end)
@@ -177,6 +181,9 @@ endif
 export:: $(TARGETS) $(HEADERS)
 	$(INSTALL) -m 444 $(HEADERS) $(DIST)/include
 	$(INSTALL) -m 444 $(TARGETS) $(DIST)/lib
+ifeq ($(OS_ARCH),OS2)
+	$(INSTALL) -m 444 $(TARGETS) $(DIST)/bin
+endif
 ifeq ($(OS_ARCH),HP-UX)
 ifdef SHARED_LIBRARY
 	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(DIST)/lib

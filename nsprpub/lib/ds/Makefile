@@ -45,13 +45,9 @@ HEADERS = \
 	$(NULL)
 
 ifeq ($(OS_ARCH), WINNT)
-ifeq (,$(filter-out WIN16 OS2,$(OS_TARGET)))
+ifeq ($(OS_TARGET), WIN16)
 # OS_CFLAGS = $(OS_EXE_CFLAGS)
-ifdef XP_OS2_EMX
-EXTRA_LIBS = -L$(DIST)/lib -lnspr$(MOD_VERSION)
-else
 EXTRA_LIBS = $(DIST)/lib/nspr$(MOD_VERSION).$(LIB_SUFFIX)
-endif
 else
 DLLBASE=/BASE:0x30000000
 RES=$(OBJDIR)/plds.res
@@ -68,8 +64,12 @@ ifdef GLOWCODE
 EXTRA_LIBS += $(GLOWDIR)/glowcode.lib
 endif
 endif
-
 endif
+
+else
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+EXTRA_LIBS = $(DIST)/lib/nspr$(MOD_VERSION).$(LIB_SUFFIX)
+
 else
 ifeq ($(OS_ARCH), AIX)
 ifeq ($(CLASSIC_NSPR),1)
@@ -82,6 +82,7 @@ ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
 EXTRA_LIBS = -L$(DIST)/lib -lnspr$(MOD_VERSION)_shr
 else
 EXTRA_LIBS = -L$(DIST)/lib -lnspr$(MOD_VERSION)
+endif
 endif
 endif
 
@@ -116,11 +117,7 @@ SH_DATE = $(shell date)
 SH_NOW = $(shell $(NOW))
 
 ifeq ($(OS_ARCH), WINNT)
-ifeq ($(OS_TARGET),OS2)
-	SUF =
-else
 	SUF = i64
-endif
 else
 	SUF = LL
 endif
@@ -138,13 +135,13 @@ $(TINC):
 
 $(OBJDIR)/plvrsion.$(OBJ_SUFFIX): plvrsion.c $(TINC)
 ifeq ($(OS_ARCH), WINNT)
-ifdef XP_OS2_EMX
-	$(CC) -o $@ -c $(CFLAGS) -I$(OBJDIR) plvrsion.c
-else
 	$(CC) -Fo$@ -c $(CFLAGS) -I$(OBJDIR) plvrsion.c
-endif
+else
+ifeq ($(MOZ_OS2_TOOLS), VACPP)
+	$(CC) -Fo$@ -c $(CFLAGS) -I$(OBJDIR) plvrsion.c
 else
 	$(CC) -o $@ -c $(CFLAGS) -I$(OBJDIR) plvrsion.c
+endif
 endif
 #
 # Version information generation (end)

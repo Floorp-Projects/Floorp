@@ -20,9 +20,9 @@
 #define INCL_DOS
 #define INCL_DOSERRORS
 #include <os2.h>
-#include <secrng.h>
 #include <stdlib.h>
-#include <primpl.h>
+#include <time.h>
+#include "primpl.h"
 
 static BOOL clockTickTime(unsigned long *phigh, unsigned long *plow)
 {
@@ -39,7 +39,7 @@ static BOOL clockTickTime(unsigned long *phigh, unsigned long *plow)
     return TRUE;
 }
 
-extern PRSize _PR_MD_GetRandomNoise( buf, size )
+extern PRSize _PR_MD_GetRandomNoise(void *buf, PRSize size )
 {
     unsigned long high = 0;
     unsigned long low  = 0;
