@@ -362,11 +362,11 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
 
 NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
 {
-    PRBool isServer;
-    nsresult rv = GetIsServer(&isServer);
+  PRBool isServer;
+  nsresult rv = GetIsServer(&isServer);
 
-    if (!m_initialized)
-    {
+  if (!m_initialized)
+  {
     nsCOMPtr<nsIFileSpec> pathSpec;
     rv = GetPath(getter_AddRefs(pathSpec));
     if (NS_FAILED(rv)) return rv;
@@ -379,30 +379,37 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
     if (NS_SUCCEEDED(rv) && !isServer)
       rv = AddDirectorySeparator(path);
 
-        if(NS_FAILED(rv)) return rv;
-        
-        // we have to treat the root folder specially, because it's name
-        // doesn't end with .sbd
+    if(NS_FAILED(rv)) return rv;
+    
+    // we have to treat the root folder specially, because it's name
+    // doesn't end with .sbd
 
-        PRInt32 newFlags = MSG_FOLDER_FLAG_MAIL;
-        if (path.IsDirectory()) {
-            newFlags |= (MSG_FOLDER_FLAG_DIRECTORY | MSG_FOLDER_FLAG_ELIDED);
-            SetFlag(newFlags);
-            rv = CreateSubFolders(path);
-        }
-    PRUint32 count;
-    if (isServer && NS_SUCCEEDED(mSubFolders->Count(&count)) && count == 0)
+    PRInt32 newFlags = MSG_FOLDER_FLAG_MAIL;
+    if (path.IsDirectory()) 
     {
-      // create an inbox...
-      CreateClientSubfolderInfo("INBOX", kOnlineHierarchySeparatorUnknown);
+        newFlags |= (MSG_FOLDER_FLAG_DIRECTORY | MSG_FOLDER_FLAG_ELIDED);
+        SetFlag(newFlags);
+        rv = CreateSubFolders(path);
     }
-        UpdateSummaryTotals(PR_FALSE);
+    if (isServer)
+    {
+      PRUint32 numFolders = 0;
+      nsCOMPtr <nsIMsgFolder> inboxFolder;
 
-        if (NS_FAILED(rv)) return rv;
-        m_initialized = PR_TRUE;      // XXX do this on failure too?
+      rv = GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inboxFolder));
+      if (!NS_SUCCEEDED(rv) || numFolders == 0 || !inboxFolder)
+      {
+        // create an inbox if we don't have one.
+        CreateClientSubfolderInfo("INBOX", kOnlineHierarchySeparatorUnknown);
+      }
     }
-    rv = mSubFolders->Enumerate(result);
-    return rv;
+    UpdateSummaryTotals(PR_FALSE);
+
+    if (NS_FAILED(rv)) return rv;
+    m_initialized = PR_TRUE;      // XXX do this on failure too?
+  }
+  rv = mSubFolders->Enumerate(result);
+  return rv;
 }
 
 NS_IMETHODIMP nsImapMailFolder::AddUnique(nsISupports* element)
