@@ -78,6 +78,7 @@ EXTRA_DSO_LDOPTS = \
         $(MKSHLIB_FORCE_ALL) \
         $(DIST)/lib/libmozutil_s.a \
         -lgkgfx \
+	-lgfxshared_s \
         $(MKSHLIB_UNFORCE_ALL) \
         $(TK_LIBS) \
         $(MOZ_COMPONENT_LIBS) \
