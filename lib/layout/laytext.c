@@ -6155,7 +6155,7 @@ lo_SetupBreakState ( LO_TextBlock * block )
 		block->buffer_read_index++;
 		}
 		
-	block->last_line_break = block->buffer_read_index;
+    block->last_line_break = block->buffer_read_index;
 }
 
 void lo_LayoutTextBlock ( MWContext * context, lo_DocState * state, Bool flushLastLine )
@@ -6539,7 +6539,7 @@ void lo_LayoutTextBlock ( MWContext * context, lo_DocState * state, Bool flushLa
 				 * as if the space was non-breaking, we would not have
 				 * broken the line here */
 
-				if ( XP_IS_SPACE ( *text ) && !allTextFits )
+				if ( !allTextFits && XP_IS_SPACE ( *text ) )
 					{
 					/* BRAIN DAMAGE: We should be able to do this at
                        the start of the line */
