@@ -729,10 +729,6 @@ nsSubDocumentFrame::CreateViewAndWidget(nsContentType aContentType)
   mInnerView = innerView;
   viewMan->InsertChild(outerView, innerView, nsnull, PR_TRUE);
 
-  nsWidgetInitData initData;
-  initData.clipChildren = PR_TRUE;
-  initData.clipSiblings = PR_TRUE;
-
   return innerView->CreateWidget(kCChildCID, nsnull, nsnull, PR_TRUE, PR_TRUE,
                                  aContentType);
 }
