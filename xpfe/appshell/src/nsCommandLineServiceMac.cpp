@@ -528,6 +528,7 @@ OSErr nsAppleEventHandler::HandleAppleEvent(
 	{	
 	
 		case ae_OpenApp:
+			err = noErr;
 			break;
 			
 		case ae_Quit:
@@ -2625,17 +2626,29 @@ void InitializeMacCommandLine(int& argc, char**& argv)
     //    parameters or -print parameters, with file URLs.
     
     EventRecord anEvent;
+	for (int i = 1; i < 5; i++)
+		::WaitNextEvent(0, &anEvent, 0, nsnull);
+		
     while (::EventAvail(highLevelEventMask, &anEvent))
     {
-    	::WaitNextEvent(highLevelEventMask, &anEvent, 0, 0);
+    	::WaitNextEvent(highLevelEventMask, &anEvent, 0, nsnull);
 		if (anEvent.what == kHighLevelEvent)
 		    OSErr err = ::AEProcessAppleEvent(&anEvent);
     }
 
+	// Now we've grabbed all the initial high-level events, and written them into
+	// the command-line buffer as url commands, parse the buffer.
+	
 	handler->SetStartedUp(PR_TRUE);
 	if (!argBuffer)
 		return;
 		
+    // Release some unneeded memory
+    char* oldBuffer = argBuffer;
+    argBuffer = new char[PL_strlen(argBuffer) + 1];
+    PL_strcpy(argBuffer, oldBuffer);
+    delete [] oldBuffer;
+    
     // Parse the buffer.
 	int	rowNumber = 0;
 	char* strtokFirstParam = argBuffer;
@@ -2650,5 +2663,16 @@ void InitializeMacCommandLine(int& argc, char**& argv)
 		// Loop
 		argc++;
 		strtokFirstParam = nsnull;
+	}
+
+    // Release the unneeded memory.
+	if (argc < MAX_TOKENS)
+	{
+	    charP* oldArgs = args;
+	    int arraySize = 1 + argc;
+	    args = new charP[arraySize];
+	    memcpy(args, oldArgs, arraySize * sizeof(charP));
+	    delete [] oldArgs;
+	    argv = args;
 	}
 } // InitializeMac
