@@ -587,10 +587,10 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
 
-    //jsrefcount saveDepth;
-    //saveDepth = JS_SuspendRequest(cx);//Need to suspend use of thread or deadlock occurs
+    jsrefcount saveDepth;
+    saveDepth = JS_SuspendRequest(cx);//Need to suspend use of thread or deadlock occurs
     rv= nativeThis->AddSubcomponent(b0, b1, b2, folder, b4, flags, &nativeRet);
-    //JS_ResumeRequest(cx, saveDepth);
+    JS_ResumeRequest(cx, saveDepth);
     if (NS_FAILED(rv))
       return JS_FALSE;
 
@@ -627,10 +627,10 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
 
-    //jsrefcount saveDepth;
-    //saveDepth = JS_SuspendRequest(cx);//Need to suspend use of thread or deadlock occurs
+    jsrefcount saveDepth;
+    saveDepth = JS_SuspendRequest(cx);//Need to suspend use of thread or deadlock occurs
     rv = nativeThis->AddSubcomponent(b0, b1, b2, folder, b4, &nativeRet);
-    //JS_ResumeRequest(cx, saveDepth);
+    JS_ResumeRequest(cx, saveDepth);
     if (NS_FAILED(rv))
         return JS_FALSE;
     
