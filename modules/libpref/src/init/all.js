@@ -212,6 +212,7 @@ pref("javascript.enabled",                  true);
 pref("javascript.allow.mailnews",           false);
 pref("javascript.allow.signing",            true);
 pref("javascript.reflect_preferences",      false);     // for PE
+//pref("javascript.options.strict",           true);
 
 // advanced prefs
 pref("advanced.always_load_images",         true);

@@ -289,17 +289,24 @@ PrefResult pref_OpenFile(
         if (readBuf)
         {
             fileLength = fread(readBuf, sizeof(char), fileLength, fp);
+            if (fileLength == 0)
+            {
+                ok = PREF_ERROR;
+            }
+            else
+            {
 
-            if ( verifyHash && !pref_VerifyLockFile(readBuf, (long) fileLength))
-            {
-                ok = PREF_BAD_LOCKFILE;
+                if ( verifyHash && !pref_VerifyLockFile(readBuf, (long) fileLength))
+                {
+                    ok = PREF_BAD_LOCKFILE;
+                }
+                else if (PREF_EvaluateConfigScript(readBuf, fileLength,
+                             filename, bGlobalContext, PR_FALSE, skipFirstLine ))
+                {
+                    ok = PREF_NOERROR;
+                }
+                free(readBuf);
             }
-            else if (PREF_EvaluateConfigScript(readBuf, fileLength,
-                        filename, bGlobalContext, PR_FALSE, skipFirstLine ))
-            {
-                ok = PREF_NOERROR;
-            }
-            free(readBuf);
         }
         fclose(fp);
         
