@@ -1830,6 +1830,10 @@ nsXULElement::RemoveEventListener(const nsAReadableString& aType,
 NS_IMETHODIMP
 nsXULElement::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
 {
+  // Do nothing if element isn't in the document
+  if (!mDocument)
+    return NS_OK;
+
   // Obtain a presentation context
   PRInt32 count = mDocument->GetNumberOfShells();
   if (count == 0)
