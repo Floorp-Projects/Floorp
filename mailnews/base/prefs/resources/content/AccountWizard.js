@@ -272,7 +272,9 @@ function finishAccount(account, accountData) {
     }
 
     if (accountData.smtp) {
-        smtpService.defaultServer.hostname = accountData.smtp.hostname;
+        if (accountData.smtp.hostname &&
+            accountData.smtp.hostname != "")
+            smtpService.defaultServer.hostname = accountData.smtp.hostname;
     }
 }
 
