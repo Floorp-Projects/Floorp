@@ -37,10 +37,12 @@ nsStyleChangeList::~nsStyleChangeList(void)
 }
 
 nsresult 
-nsStyleChangeList::ChangeAt(PRInt32 aIndex, nsIFrame*& aFrame, PRInt32& aHint) const
+nsStyleChangeList::ChangeAt(PRInt32 aIndex, nsIFrame*& aFrame, nsIContent*& aContent, 
+                            PRInt32& aHint) const
 {
   if ((0 <= aIndex) && (aIndex < mCount)) {
     aFrame = mArray[aIndex].mFrame;
+    aContent = mArray[aIndex].mContent;
     aHint = mArray[aIndex].mHint;
     return NS_OK;
   }
@@ -48,29 +50,22 @@ nsStyleChangeList::ChangeAt(PRInt32 aIndex, nsIFrame*& aFrame, PRInt32& aHint) c
 }
 
 nsresult 
-nsStyleChangeList::AppendChange(nsIFrame* aFrame, PRInt32 aHint)
+nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, PRInt32 aHint)
 {
-  NS_ASSERTION(aFrame, "must have frame");
+  NS_ASSERTION(aFrame || (aHint >= NS_STYLE_HINT_FRAMECHANGE), "must have frame");
 
   if ((0 < mCount) && (NS_STYLE_HINT_FRAMECHANGE == aHint)) { // filter out all other changes for same content
-    nsIContent* changeContent;
-    aFrame->GetContent(&changeContent);
-    if (changeContent) {
+    if (aContent) {
       PRInt32 index = mCount;
       while (0 < index--) {
-        nsIContent* content;
-        mArray[index].mFrame->GetContent(&content);
-        if (content == changeContent) { // remove this change
+        if (aContent == mArray[index].mContent) { // remove this change
           mCount--;
           if (index < mCount) { // move later changes down
             nsCRT::memcpy(&(mArray[index]), &(mArray[index + 1]), 
                           (mCount - index) * sizeof(nsStyleChangeData));
           }
         }
-        NS_IF_RELEASE(content);
       }
-
-      NS_RELEASE(changeContent);
     }
   }
 
@@ -97,6 +92,7 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, PRInt32 aHint)
       }
     }
     mArray[mCount].mFrame = aFrame;
+    mArray[mCount].mContent = aContent;
     mArray[mCount].mHint = aHint;
     mCount++;
   }
