@@ -147,7 +147,7 @@ void AESpyglassSuiteHandler::HandleOpenURLEvent(const AppleEvent *appleEvent, Ap
 	char*	urlString = (char *)nsMemory::Alloc(dataSize + 1);
 	ThrowIfNil(urlString);
 	
-	directParameter.GetCString(urlString, dataSize);
+	directParameter.GetCString(urlString, dataSize + 1);
 	
 	nsMacCommandLine&  cmdLine = nsMacCommandLine::GetMacCommandLine();
 	cmdLine.DispatchURLToNewBrowser(urlString);
