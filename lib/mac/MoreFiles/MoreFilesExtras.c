@@ -292,6 +292,8 @@ pascal	OSErr	HGetVInfo(short volReference,
 		
 		/* Find the volume's VCB */
 		vcbFound = false;
+#if !TARGET_CARBON
+// pinkerton - GetVCBQHdr does not exist under Carbon. Not sure the best way to fix this
 		theVCB = (VCB *)(GetVCBQHdr()->qHead);
 		while ( (theVCB != NULL) && !vcbFound )
 		{
@@ -310,7 +312,9 @@ pascal	OSErr	HGetVInfo(short volReference,
 				theVCB = (VCB *)(theVCB->qLink);
 			}
 		}
-		
+#else
+		theVCB = NULL;
+#endif		
 		if ( theVCB != NULL )
 		{
 			/* Found a VCB we can use. Get the un-pinned number of allocation blocks */
@@ -346,9 +350,13 @@ pascal	OSErr	HGetVInfo(short volReference,
 **	Non-CFM 68K programs don't needs this glue (and won't get it) because
 **	they instead use the inline assembly glue found in the Files.h interface
 **	file.
+**
+**  NSCP - pinkerton
+**  This code does not work under Carbon since NGetTrapAddress is not supported
+**  Luckily, i don't think we use this routine at all.
 */
 
-#if GENERATINGCFM
+#if GENERATINGCFM && !TARGET_CARBON
 pascal OSErr PBXGetVolInfoSync(XVolumeParamPtr paramBlock)
 {
 	enum
@@ -362,7 +370,7 @@ pascal OSErr PBXGetVolInfoSync(XVolumeParamPtr paramBlock)
 			 | REGISTER_ROUTINE_PARAMETER(3, kRegisterA0, SIZE_CODE(sizeof(XVolumeParamPtr)))
 	};
 	
-	return ( CallOSTrapUniversalProc(NGetTrapAddress(_FSDispatch, OSTrap),
+	return ( CallOSTrapUniversalProc(NGetTrapAddress(_FSDispatch, kOSTrapType),
 										uppFSDispatchProcInfo,
 										_FSDispatch,
 										kXGetVolInfoSelector,
