@@ -43,6 +43,7 @@
 #include "nsIJSRuntimeService.h"
 #include "nsIAllocator.h"
 #include "nsIXPCSecurityManager.h"
+#include "nsICategoryManager.h"
 
 #include "jsapi.h"
 #include "jsgc.h"   // for js_ForceGC
@@ -591,6 +592,101 @@ TestThreadJSContextStack(JSContext* jscontext)
 }
 
 /***************************************************************************/
+
+static void ShowXPCException()
+{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+    if(NS_SUCCEEDED(rv) && xpc)
+    {
+        nsCOMPtr<nsIXPCException> e;
+        xpc->GetPendingException(getter_AddRefs(e));
+        if(e)
+        {
+            char* str;
+            rv = e->ToString(&str);
+            if(NS_SUCCEEDED(rv) && str)
+            {
+                printf(str);
+                printf("\n");
+                nsAllocator::Free(str);
+
+                nsresult res;
+                e->GetResult(&res);
+                if(res == NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS)
+                {
+                    nsCOMPtr<nsISupports> data;
+                    e->GetData(getter_AddRefs(data));
+                    if(data)
+                    {
+                        nsCOMPtr<nsIJSErrorReport> report = do_QueryInterface(data);
+                        if(report)
+                        {
+                            char* str;
+                            rv = report->ToString(&str);
+                            if(NS_SUCCEEDED(rv) && str)
+                            {
+                                printf(str);
+                                printf("\n");
+                                nsAllocator::Free(str);
+                            }                            
+                        }                            
+                    }                            
+                    else        
+                        printf("can't get data for pending XPC exception\n");    
+                }
+            }
+            else        
+                printf("can't get string for pending XPC exception\n");    
+        }
+        else        
+            printf("no pending XPC exception\n");    
+    }
+    else
+        printf("can't get xpconnect\n");    
+}
+
+static void TestCategoryManmager()
+{
+    printf("\n");    
+
+    nsresult rv;
+    NS_WITH_SERVICE(nsICategoryManager, catman, "mozilla.categorymanager.1", &rv);
+    if(NS_SUCCEEDED(rv) && catman)
+    {
+        printf("got category manager\n");    
+ 
+        nsCOMPtr<nsISimpleEnumerator> e;
+        rv = catman->EnumerateCategory("foo", getter_AddRefs(e));
+        if(NS_SUCCEEDED(rv) && e)
+        {
+            printf("got enumerator\n");
+
+            nsCOMPtr<nsISupports> el;
+            rv = e->GetNext(getter_AddRefs(el));
+            if(NS_SUCCEEDED(rv) && el)
+            {
+                printf("e.GetNext() succeeded\n");
+            }
+            else
+            {
+                printf("e.GetNext() failed with result %0x\n", (int)rv);        
+                ShowXPCException();
+            }
+                        
+        }
+        else
+            printf("get of enumerator failed with result %0x\n", (int)rv);        
+    }
+    else
+        printf("!!! can't get category manager\n");    
+
+
+    printf("\n");    
+}
+
+
+/***************************************************************************/
 /***************************************************************************/
 // our main...
 
@@ -652,11 +748,10 @@ int main()
     /**********************************************/
     // run the tests...
 
+    TestCategoryManmager();
     TestSecurityManager(jscontext, glob, xpc);
     TestArgFormatter(jscontext, glob, xpc);
     TestThreadJSContextStack(jscontext);
-
-
 
     /**********************************************/
     JS_ClearScope(jscontext, glob);

@@ -317,7 +317,8 @@ xpcWrappedJSErrorReporter(JSContext *cx, const char *message,
 {
     nsIXPCException* e;
     XPCContext* xpcc;
-    if(nsnull != (e = XPCConvert::JSErrorToXPCException(cx, message, report))&&
+    if(nsnull != (e = XPCConvert::JSErrorToXPCException(cx, message, 
+                                        nsnull, nsnull, report)) &&
        nsnull != (xpcc = nsXPConnect::GetContext(cx)))
         xpcc->SetException(e);
 }
@@ -468,6 +469,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     uint8 outConversionFailedIndex;
     JSObject* obj = wrapper->GetJSObject();
     const char* name = info->GetName();
+    jsval fval;
     nsIXPCException* xpc_exception;
     jsval js_exception;
     void* mark;
@@ -521,8 +523,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     // if this is a function call, then push function and 'this'
     if(!info->IsGetter() && !info->IsSetter())
     {
-        jsval fval;
-
+        // later we will check if this might really be callable
         if(!JS_GetProperty(cx, obj, name, &fval))
             goto pre_call_clean_up;
         *sp++ = fval;
@@ -718,24 +719,48 @@ pre_call_clean_up:
         success = JS_SetProperty(cx, obj, name, sp-1);
     else
     {
-        // Lift current frame (or make new one) to include the args
-        // and do the call.
-        JSStackFrame *fp, *oldfp, frame;
-        jsval *oldsp;
-
-        fp = oldfp = cx->fp;
-        if(!fp)
+        if(!JSVAL_IS_PRIMITIVE(fval))
         {
-            memset(&frame, 0, sizeof frame);
-            cx->fp = fp = &frame;
+            // Lift current frame (or make new one) to include the args
+            // and do the call.
+            JSStackFrame *fp, *oldfp, frame;
+            jsval *oldsp;
+       
+            fp = oldfp = cx->fp;
+            if(!fp)
+            {
+                memset(&frame, 0, sizeof frame);
+                cx->fp = fp = &frame;
+            }
+            oldsp = fp->sp;
+            fp->sp = sp;
+            success = js_Invoke(cx, argc, JSINVOKE_INTERNAL);
+            result = fp->sp[-1];
+            fp->sp = oldsp;
+            if(oldfp != fp)
+                cx->fp = oldfp;
         }
-        oldsp = fp->sp;
-        fp->sp = sp;
-        success = js_Invoke(cx, argc, JSINVOKE_INTERNAL);
-        result = fp->sp[-1];
-        fp->sp = oldsp;
-        if(oldfp != fp)
-            cx->fp = oldfp;
+        else
+        {
+            // The property was not an object so can't be a function.
+            // Let's build and 'throw' an exception.
+        
+            static const nsresult code = 
+                    NS_ERROR_XPC_JSOBJECT_HAS_NO_FUNCTION_NAMED;
+            static const char format[] = "%s \"%s\"";
+            const char * msg;
+            char* sz = nsnull;
+
+            if(nsXPCException::NameAndFormatForNSResult(code, nsnull, &msg) && msg)
+                sz = JS_smprintf(format, msg, name);
+
+            nsCOMPtr<nsIXPCException> e =
+               dont_AddRef(XPCConvert::ConstructException(code, sz,
+                                            GetInterfaceName(), name, nsnull));
+            xpcc->SetException(e);
+            if(sz)
+                JS_smprintf_free(sz);
+        }
     }
 
     /* this one would be set by our error reporter */
