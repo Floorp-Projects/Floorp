@@ -29,9 +29,12 @@
   <head>
     <title>[% title %]</title>
     <link rel="stylesheet" href="hendrix.css">
+    <script language="JavaScript" type="text/javascript">
+      [% script %]
+    </script>
   </head>
   
-  <body>
+  <body onload="[% onload %]">
   <img id="header-img" src="hendrix.jpg">
   [% IF NOT h1 AND title %]
     [% h1 = title %]

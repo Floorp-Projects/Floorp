@@ -22,8 +22,42 @@
   #
   # ***** END LICENSE BLOCK ***** %]
   
+[% script = BLOCK %]
+var ids = ["name", "subject", "comments", "product"];
+
+function checkSubmitEnable() {
+  /* To enable the button, all fields must have a value */
+  var enable = true;
+  
+  for (var i = 0; i < ids.length; i++) {
+    if (document.getElementById(ids[i]).value == "") {
+      enable = false;
+      break;
+    }  
+  }
+  
+  if (enable) {
+    document.getElementById("send-feedback").removeAttribute("disabled");  
+  }
+  else {  
+    document.getElementById("send-feedback").setAttribute("disabled", "true");
+  }
+}
+
+function onLoad() {
+  /* Add the event listeners, and disable the button initially */
+  for (var i = 0; i < ids.length; i++) {
+    document.getElementById(ids[i]).setAttribute("onkeyup",  
+                                                 "checkSubmitEnable()");
+  }
+  
+  checkSubmitEnable();
+}  
+[% END %]
+  
 [% PROCESS header.html.tmpl 
-   title = "Hendrix - mozilla.org Feedback System" 
+   title = "Hendrix - mozilla.org Feedback System"
+   onload = "onLoad()"
 %]
 
 <p>This is Hendrix - the mozilla.org system for leaving quick and general feedback. If you have a specific and detailed bug report, please file it in 
