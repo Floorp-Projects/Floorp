@@ -6,7 +6,7 @@
 # Updated 3-6-99 by endico. Combine src, xref and source files 
 #    together into one script.
 
-CVSROOT=/cvsroot
+CVSROOT=:pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
 export CVSROOT
 
 PATH=/opt/local/bin:/opt/cvs-tools/bin:/usr/ucb:$PATH
@@ -83,15 +83,25 @@ case "$1" in
     time cvs -Q -d $CVSROOT checkout -P SeaMonkeyAll
     ;;
 'gnome')
-    CVSROOT=/cvs/gnome
+    CVSROOT=:pserver:anonymous@cvs-mirror.mozilla.org:/cvs/gnome
     export CVSROOT
     time cvs -Q -d $CVSROOT checkout -P gnome
     ;;
 esac
 
-
 date
 uptime
+
+if [ -f $db_dir/update.log ]
+  then
+  ERROR=`grep [server aborted] $db_dir/update.log`
+  if [ "$ERROR"  != "" ]
+    then
+    echo $ERROR | mail -s "lxr: cvs server aborted" root
+    exit
+    fi
+  fi
+
 
 #
 # generate cross reference database
