@@ -45,9 +45,6 @@ public:
   nsXBLEventHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
   virtual ~nsXBLEventHandler();
   
-  NS_IMETHOD BindingAttached();
-  NS_IMETHOD BindingDetached();
-  
   NS_DECL_ISUPPORTS
 
 public:
@@ -72,8 +69,6 @@ protected:
   static nsIAtom* kCommandAtom;
   static nsIAtom* kClickCountAtom;
   static nsIAtom* kButtonAtom;
-  static nsIAtom* kBindingAttachedAtom;
-  static nsIAtom* kBindingDetachedAtom;
   static nsIAtom* kModifiersAtom;
 
 protected:

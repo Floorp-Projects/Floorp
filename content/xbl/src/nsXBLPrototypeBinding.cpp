@@ -281,6 +281,22 @@ nsXBLPrototypeBinding::GetAllowScripts(PRBool* aResult)
 }
 
 NS_IMETHODIMP
+nsXBLPrototypeBinding::BindingAttached(nsIDOMEventReceiver* aReceiver)
+{
+  if (mSpecialHandler)
+    return mSpecialHandler->BindingAttached(aReceiver);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLPrototypeBinding::BindingDetached(nsIDOMEventReceiver* aReceiver)
+{
+  if (mSpecialHandler)
+    return mSpecialHandler->BindingDetached(aReceiver);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXBLPrototypeBinding::InheritsStyle(PRBool* aResult)
 {
   *aResult = mInheritStyle;
@@ -315,17 +331,22 @@ nsXBLPrototypeBinding::SetHasBasePrototype(PRBool aHasBase)
 }
 
 NS_IMETHODIMP
-nsXBLPrototypeBinding::GetPrototypeHandler(nsIXBLPrototypeHandler** aResult)
+nsXBLPrototypeBinding::GetPrototypeHandlers(nsIXBLPrototypeHandler** aResult,
+                                            nsIXBLPrototypeHandler** aSpecialResult)
 {
   *aResult = mPrototypeHandler;
+  *aSpecialResult = mSpecialHandler;
   NS_IF_ADDREF(*aResult);
+  NS_IF_ADDREF(*aSpecialResult);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXBLPrototypeBinding::SetPrototypeHandler(nsIXBLPrototypeHandler* aHandler)
+nsXBLPrototypeBinding::SetPrototypeHandlers(nsIXBLPrototypeHandler* aHandler,
+                                            nsIXBLPrototypeHandler* aSpecialHandler)
 {
   mPrototypeHandler = aHandler;
+  mSpecialHandler = aSpecialHandler;
   return NS_OK;
 }
 
@@ -510,11 +531,8 @@ nsXBLPrototypeBinding::ConstructHandlers()
   // See if this binding has a handler elt.
   nsCOMPtr<nsIContent> handlers;
   GetImmediateChild(kHandlersAtom, getter_AddRefs(handlers));
-  if (handlers) {
-    nsCOMPtr<nsIXBLPrototypeHandler> firstHandler;
-    nsXBLService::BuildHandlerChain(handlers, getter_AddRefs(firstHandler));
-    SetPrototypeHandler(firstHandler);
-  }
+  if (handlers)
+    nsXBLService::BuildHandlerChain(handlers, getter_AddRefs(mPrototypeHandler), getter_AddRefs(mSpecialHandler));
 }
 
 void

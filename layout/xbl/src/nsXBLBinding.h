@@ -131,9 +131,7 @@ public:
   static nsIAtom* kNameAtom;
   static nsIAtom* kReadOnlyAtom;
   static nsIAtom* kAttachToAtom;
-  static nsIAtom* kBindingAttachedAtom;
-  static nsIAtom* kBindingDetachedAtom;
- 
+  
   // Used to easily obtain the correct IID for an event.
   struct EventHandlerMapEntry {
     const char*  mAttributeName;

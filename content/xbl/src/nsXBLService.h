@@ -103,7 +103,8 @@ public:
   // This method walks a binding document and removes any text nodes
   // that contain only whitespace.
   static nsresult StripWhitespaceNodes(nsIContent* aContent);
-  static nsresult BuildHandlerChain(nsIContent* aContent, nsIXBLPrototypeHandler** aResult);
+  static nsresult BuildHandlerChain(nsIContent* aContent, nsIXBLPrototypeHandler** aResult,
+                                    nsIXBLPrototypeHandler** aSpecialResult);
 
 // MEMBER VARIABLES
 public:
@@ -125,6 +126,7 @@ public:
 
   // XBL Atoms
   static nsIAtom* kExtendsAtom;
+  static nsIAtom* kEventAtom;
   static nsIAtom* kScrollbarAtom;
   static nsIAtom* kInputAtom;
 

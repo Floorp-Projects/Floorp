@@ -56,6 +56,9 @@
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 PRUint32 nsXBLPrototypeHandler::gRefCnt = 0;
+
+nsIAtom* nsXBLPrototypeHandler::kBindingAttachedAtom = nsnull;
+nsIAtom* nsXBLPrototypeHandler::kBindingDetachedAtom = nsnull;
 nsIAtom* nsXBLPrototypeHandler::kKeyCodeAtom = nsnull;
 nsIAtom* nsXBLPrototypeHandler::kCharCodeAtom = nsnull;
 nsIAtom* nsXBLPrototypeHandler::kKeyAtom = nsnull;
@@ -82,6 +85,8 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(nsIContent* aHandlerElement)
   mHandlerElement = aHandlerElement;
   gRefCnt++;
   if (gRefCnt == 1) {
+    kBindingAttachedAtom = NS_NewAtom("bindingattached");
+    kBindingDetachedAtom = NS_NewAtom("bindingdetached");
     kKeyCodeAtom = NS_NewAtom("keycode");
     kKeyAtom = NS_NewAtom("key");
     kCharCodeAtom = NS_NewAtom("charcode");
@@ -106,6 +111,8 @@ nsXBLPrototypeHandler::~nsXBLPrototypeHandler()
 {
   gRefCnt--;
   if (gRefCnt == 0) {
+    NS_RELEASE(kBindingAttachedAtom);
+    NS_RELEASE(kBindingDetachedAtom);
     NS_RELEASE(kKeyAtom);
     NS_RELEASE(kKeyCodeAtom);
     NS_RELEASE(kCharCodeAtom);
@@ -312,6 +319,96 @@ nsXBLPrototypeHandler::GetEventName(nsIAtom** aResult)
 {
   *aResult = mEventName;
   NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLPrototypeHandler::BindingAttached(nsIDOMEventReceiver* aReceiver)
+{
+  nsresult ret;
+  if (mEventName.get() == kBindingAttachedAtom) {
+    nsMouseEvent event;
+    event.eventStructType = NS_EVENT;
+    event.message = NS_MENU_ACTION;
+    event.isShift = PR_FALSE;
+    event.isControl = PR_FALSE;
+    event.isAlt = PR_FALSE;
+    event.isMeta = PR_FALSE;
+    event.clickCount = 0;
+    event.widget = nsnull;
+
+    nsCOMPtr<nsIEventListenerManager> listenerManager;
+    if (NS_FAILED(ret = aReceiver->GetListenerManager(getter_AddRefs(listenerManager)))) {
+      NS_ERROR("Unable to instantiate a listener manager on this event.");
+      return ret;
+    }
+    nsAutoString empty;
+
+    nsCOMPtr<nsIDOMEvent> domEvent;
+    if (NS_FAILED(ret = listenerManager->CreateEvent(nsnull, &event, empty, getter_AddRefs(domEvent)))) {
+      NS_ERROR("The binding attach handler will fail without the ability to create the event early.");
+      return ret;
+    }
+  
+    // We need to explicitly set the target here, because the
+    // DOM implementation will try to compute the target from
+    // the frame. If we don't have a frame then that breaks.
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(domEvent);
+    if (privateEvent) {
+      privateEvent->SetTarget(aReceiver);
+    }
+
+    ExecuteHandler(aReceiver, domEvent);
+  }
+
+  if (mNextHandler)
+    return mNextHandler->BindingAttached(aReceiver);
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLPrototypeHandler::BindingDetached(nsIDOMEventReceiver* aReceiver)
+{
+  nsresult ret;
+  if (mEventName.get() == kBindingDetachedAtom) {
+    nsMouseEvent event;
+    event.eventStructType = NS_EVENT;
+    event.message = NS_MENU_ACTION;
+    event.isShift = PR_FALSE;
+    event.isControl = PR_FALSE;
+    event.isAlt = PR_FALSE;
+    event.isMeta = PR_FALSE;
+    event.clickCount = 0;
+    event.widget = nsnull;
+
+    nsCOMPtr<nsIEventListenerManager> listenerManager;
+    if (NS_FAILED(ret = aReceiver->GetListenerManager(getter_AddRefs(listenerManager)))) {
+      NS_ERROR("Unable to instantiate a listener manager on this event.");
+      return ret;
+    }
+    nsAutoString empty;
+
+    nsCOMPtr<nsIDOMEvent> domEvent;
+    if (NS_FAILED(ret = listenerManager->CreateEvent(nsnull, &event, empty, getter_AddRefs(domEvent)))) {
+      NS_ERROR("The binding attach handler will fail without the ability to create the event early.");
+      return ret;
+    }
+  
+    // We need to explicitly set the target here, because the
+    // DOM implementation will try to compute the target from
+    // the frame. If we don't have a frame then that breaks.
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(domEvent);
+    if (privateEvent) {
+      privateEvent->SetTarget(aReceiver);
+    }
+
+    ExecuteHandler(aReceiver, domEvent);
+  }
+
+  if (mNextHandler)
+    return mNextHandler->BindingDetached(aReceiver);
+  
   return NS_OK;
 }
 

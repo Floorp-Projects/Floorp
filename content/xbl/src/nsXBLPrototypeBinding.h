@@ -52,10 +52,13 @@ class nsXBLPrototypeBinding: public nsIXBLPrototypeBinding
 
   NS_IMETHOD GetAllowScripts(PRBool* aResult);
 
+  NS_IMETHOD BindingAttached(nsIDOMEventReceiver* aRec);
+  NS_IMETHOD BindingDetached(nsIDOMEventReceiver* aRec);
+
   NS_IMETHOD InheritsStyle(PRBool* aResult);
 
-  NS_IMETHOD GetPrototypeHandler(nsIXBLPrototypeHandler** aHandler);
-  NS_IMETHOD SetPrototypeHandler(nsIXBLPrototypeHandler* aHandler);
+  NS_IMETHOD GetPrototypeHandlers(nsIXBLPrototypeHandler** aHandler, nsIXBLPrototypeHandler** aSpecialHandler);
+  NS_IMETHOD SetPrototypeHandlers(nsIXBLPrototypeHandler* aHandler, nsIXBLPrototypeHandler* aSpecialHandler);
   
   NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag, 
                               nsIContent* aChangedElement, nsIContent* aAnonymousContent);
@@ -117,6 +120,8 @@ protected:
 
   nsCOMPtr<nsIContent> mBinding; // Strong. We own a ref to our content element in the binding doc.
   nsCOMPtr<nsIXBLPrototypeHandler> mPrototypeHandler; // Strong. DocInfo owns us, and we own the handlers.
+  nsCOMPtr<nsIXBLPrototypeHandler> mSpecialHandler; // Strong.  Our bindingattached/detached handlers.
+
   nsCOMPtr<nsIXBLPrototypeBinding> mBaseBinding; // Strong. We own the base binding in our explicit inheritance chain.
   PRPackedBool mInheritStyle;
   PRPackedBool mHasBaseProto;

@@ -143,7 +143,8 @@ static void GetHandlers(nsIXBLDocumentInfo* aInfo, const nsCString& aDocURI,
     }
   }
 
-  binding->GetPrototypeHandler(aResult); // Addref happens here.
+  nsCOMPtr<nsIXBLPrototypeHandler> dummy;
+  binding->GetPrototypeHandlers(aResult, getter_AddRefs(dummy)); // Addref happens here.
 }
 
 NS_IMETHODIMP
@@ -154,7 +155,8 @@ nsXBLWindowKeyHandler::EnsureHandlers()
       return NS_OK;
     // Call into the XBL service.
     nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
-    nsXBLService::BuildHandlerChain(content, getter_AddRefs(mHandler));
+    nsCOMPtr<nsIXBLPrototypeHandler> dummy;
+    nsXBLService::BuildHandlerChain(content, getter_AddRefs(mHandler), getter_AddRefs(dummy));
   }
   else {
     if (!mXBLSpecialDocInfo)
