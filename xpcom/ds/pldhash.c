@@ -184,9 +184,9 @@ PL_DHashTableInit(PLDHashTable *table, PLDHashTableOps *ops, void *data,
     capacity = PR_BIT(log2);
     table->hashShift = PL_DHASH_BITS - log2;
     table->sizeLog2 = log2;
-    table->sizeMask = PR_BITMASK(log2);
     table->entrySize = entrySize;
     table->entryCount = table->removedCount = 0;
+    table->generation = 0;
     nbytes = capacity * entrySize;
 
     table->entryStore = ops->allocTable(table, nbytes);
@@ -245,9 +245,10 @@ static PLDHashEntryHdr *
 SearchTable(PLDHashTable *table, const void *key, PLDHashNumber keyHash)
 {
     PLDHashNumber hash1, hash2;
-    int hashShift;
+    int hashShift, sizeLog2;
     PLDHashEntryHdr *entry;
     PLDHashMatchEntry matchEntry;
+    PRUint32 sizeMask;
 
     METER(table->stats.searches++);
 
@@ -270,11 +271,13 @@ SearchTable(PLDHashTable *table, const void *key, PLDHashNumber keyHash)
     }
 
     /* Collision: double hash. */
-    hash2 = HASH2(keyHash, table->sizeLog2, hashShift);
+    sizeLog2 = table->sizeLog2;
+    hash2 = HASH2(keyHash, sizeLog2, hashShift);
+    sizeMask = PR_BITMASK(sizeLog2);
     do {
         METER(table->stats.steps++);
         hash1 -= hash2;
-        hash1 &= table->sizeMask;
+        hash1 &= sizeMask;
         entry = ADDRESS_ENTRY(table, hash1);
         if (PL_DHASH_ENTRY_IS_FREE(entry)) {
             METER(table->stats.misses++);
@@ -312,8 +315,8 @@ ChangeTable(PLDHashTable *table, int deltaLog2)
     /* We can't fail from here on, so update table parameters. */
     table->hashShift = PL_DHASH_BITS - newLog2;
     table->sizeLog2 = newLog2;
-    table->sizeMask = PR_BITMASK(newLog2);
     table->removedCount = 0;
+    table->generation++;
 
     /* Assign the new entry store to table. */
     memset(newEntryStore, 0, nbytes);
@@ -483,7 +486,7 @@ PL_DHashTableDumpMeter(PLDHashTable *table, PLDHashEnumerator dump, FILE *fp)
 {
     char *entryAddr;
     PRUint32 entrySize, entryCount;
-    PRUint32 i, tableSize, chainLen, maxChainLen, chainCount;
+    PRUint32 i, tableSize, sizeMask, chainLen, maxChainLen, chainCount;
     PLDHashNumber hash1, hash2, saveHash1, maxChainHash1, maxChainHash2;
     double sqsum, mean, variance, sigma;
     PLDHashEntryHdr *entry, *probe;
@@ -491,6 +494,7 @@ PL_DHashTableDumpMeter(PLDHashTable *table, PLDHashEnumerator dump, FILE *fp)
     entryAddr = table->entryStore;
     entrySize = table->entrySize;
     tableSize = PR_BIT(table->sizeLog2);
+    sizeMask = PR_BITMASK(table->sizeLog2);
     chainCount = maxChainLen = 0;
     hash2 = 0;
     sqsum = 0;
@@ -511,7 +515,7 @@ PL_DHashTableDumpMeter(PLDHashTable *table, PLDHashEnumerator dump, FILE *fp)
             do {
                 chainLen++;
                 hash1 -= hash2;
-                hash1 &= table->sizeMask;
+                hash1 &= sizeMask;
                 probe = ADDRESS_ENTRY(table, hash1);
             } while (probe != entry);
         }
@@ -566,7 +570,7 @@ PL_DHashTableDumpMeter(PLDHashTable *table, PLDHashEnumerator dump, FILE *fp)
             if (dump(table, entry, i++, fp) != PL_DHASH_NEXT)
                 break;
             hash1 -= hash2;
-            hash1 &= table->sizeMask;
+            hash1 &= sizeMask;
             entry = ADDRESS_ENTRY(table, hash1);
         } while (PL_DHASH_ENTRY_IS_BUSY(entry));
     }

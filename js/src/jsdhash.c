@@ -183,9 +183,9 @@ JS_DHashTableInit(JSDHashTable *table, JSDHashTableOps *ops, void *data,
     capacity = JS_BIT(log2);
     table->hashShift = JS_DHASH_BITS - log2;
     table->sizeLog2 = log2;
-    table->sizeMask = JS_BITMASK(log2);
     table->entrySize = entrySize;
     table->entryCount = table->removedCount = 0;
+    table->generation = 0;
     nbytes = capacity * entrySize;
 
     table->entryStore = ops->allocTable(table, nbytes);
@@ -244,9 +244,10 @@ static JSDHashEntryHdr *
 SearchTable(JSDHashTable *table, const void *key, JSDHashNumber keyHash)
 {
     JSDHashNumber hash1, hash2;
-    int hashShift;
+    int hashShift, sizeLog2;
     JSDHashEntryHdr *entry;
     JSDHashMatchEntry matchEntry;
+    uint32 sizeMask;
 
     METER(table->stats.searches++);
 
@@ -269,11 +270,13 @@ SearchTable(JSDHashTable *table, const void *key, JSDHashNumber keyHash)
     }
 
     /* Collision: double hash. */
-    hash2 = HASH2(keyHash, table->sizeLog2, hashShift);
+    sizeLog2 = table->sizeLog2;
+    hash2 = HASH2(keyHash, sizeLog2, hashShift);
+    sizeMask = JS_BITMASK(sizeLog2);
     do {
         METER(table->stats.steps++);
         hash1 -= hash2;
-        hash1 &= table->sizeMask;
+        hash1 &= sizeMask;
         entry = ADDRESS_ENTRY(table, hash1);
         if (JS_DHASH_ENTRY_IS_FREE(entry)) {
             METER(table->stats.misses++);
@@ -311,8 +314,8 @@ ChangeTable(JSDHashTable *table, int deltaLog2)
     /* We can't fail from here on, so update table parameters. */
     table->hashShift = JS_DHASH_BITS - newLog2;
     table->sizeLog2 = newLog2;
-    table->sizeMask = JS_BITMASK(newLog2);
     table->removedCount = 0;
+    table->generation++;
 
     /* Assign the new entry store to table. */
     memset(newEntryStore, 0, nbytes);
@@ -482,7 +485,7 @@ JS_DHashTableDumpMeter(JSDHashTable *table, JSDHashEnumerator dump, FILE *fp)
 {
     char *entryAddr;
     uint32 entrySize, entryCount;
-    uint32 i, tableSize, chainLen, maxChainLen, chainCount;
+    uint32 i, tableSize, sizeMask, chainLen, maxChainLen, chainCount;
     JSDHashNumber hash1, hash2, saveHash1, maxChainHash1, maxChainHash2;
     double sqsum, mean, variance, sigma;
     JSDHashEntryHdr *entry, *probe;
@@ -490,6 +493,7 @@ JS_DHashTableDumpMeter(JSDHashTable *table, JSDHashEnumerator dump, FILE *fp)
     entryAddr = table->entryStore;
     entrySize = table->entrySize;
     tableSize = JS_BIT(table->sizeLog2);
+    sizeMask = JS_BITMASK(table->sizeLog2);
     chainCount = maxChainLen = 0;
     hash2 = 0;
     sqsum = 0;
@@ -510,7 +514,7 @@ JS_DHashTableDumpMeter(JSDHashTable *table, JSDHashEnumerator dump, FILE *fp)
             do {
                 chainLen++;
                 hash1 -= hash2;
-                hash1 &= table->sizeMask;
+                hash1 &= sizeMask;
                 probe = ADDRESS_ENTRY(table, hash1);
             } while (probe != entry);
         }
@@ -565,7 +569,7 @@ JS_DHashTableDumpMeter(JSDHashTable *table, JSDHashEnumerator dump, FILE *fp)
             if (dump(table, entry, i++, fp) != JS_DHASH_NEXT)
                 break;
             hash1 -= hash2;
-            hash1 &= table->sizeMask;
+            hash1 &= sizeMask;
             entry = ADDRESS_ENTRY(table, hash1);
         } while (JS_DHASH_ENTRY_IS_BUSY(entry));
     }
