@@ -28,11 +28,6 @@
 #include "prtypes.h"
 #include "nsIMimeHeaderConverter.h"
 
-// {866A1E11-D0B9-11d2-B373-525400E2D63A}
-#define NS_MIME_HEADER_CONVERTER_CID   \
-        { 0x866a1e11, 0xd0b9, 0x11d2,         \
-        { 0xb3, 0x73, 0x52, 0x54, 0x0, 0xe2, 0xd6, 0x3a } };
-
 class nsMimeHeaderConverter : public nsIMimeHeaderConverter {
 public: 
   nsMimeHeaderConverter();
