@@ -88,7 +88,7 @@ _PR_MD_GET_INTERVAL()
 #elif defined(WIN16)
         return clock();        /* milliseconds since application start */
 #else
-        return timeGetTime();  /* milliseconds since system start */
+        return GetTickCount();  /* milliseconds since system start */
 #endif
 }
 

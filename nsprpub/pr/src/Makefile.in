@@ -162,7 +162,7 @@ ifeq ($(OS_TARGET),OS2)
 # We define this in os2.mk.
 else
 ifneq ($(OS_TARGET),WIN16)
-OS_LIBS		= wsock32.lib winmm.lib
+OS_LIBS		= advapi32.lib wsock32.lib
 endif
 endif
 endif
