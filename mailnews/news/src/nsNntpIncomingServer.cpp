@@ -1047,9 +1047,8 @@ nsNntpIncomingServer::HandleLine(char* line, PRUint32 line_size)
 			if (PL_strcmp(line, "lastgroupdate") == 0) {
 				mLastGroupDate = strtol(equalPos, nsnull, 16);
 			} else if (PL_strcmp(line, "firstnewdate") == 0) {
-#if 0
-				mFirstNewDate = strtol(equalPos, nsnull, 16);
-#endif
+				PRInt32 firstnewdate = strtol(equalPos, nsnull, 16);
+				LL_I2L(mFirstNewDate, firstnewdate);
 			} else if (PL_strcmp(line, "uniqueid") == 0) {
 				mUniqueId = strtol(equalPos, nsnull, 16);
 			} else if (PL_strcmp(line, "pushauth") == 0) {
