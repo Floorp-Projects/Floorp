@@ -70,6 +70,8 @@ NS_IMETHODIMP
 nsIOService::GetURLSpecFromFile(nsIFile *aFile, nsACString &aURL)
 {
     nsresult rv;
+    NS_ENSURE_ARG(aFile);
+
     nsXPIDLCString ePath;
 
     rv = aFile->GetPath(getter_Copies(ePath));
@@ -112,6 +114,7 @@ NS_IMETHODIMP
 nsIOService::InitFileFromURLSpec(nsIFile *aFile, const nsACString &aURL)
 {
     nsresult rv;
+    NS_ENSURE_ARG(aFile);
        
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(aFile, &rv);
     if (NS_FAILED(rv)) {
