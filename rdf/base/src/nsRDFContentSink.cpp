@@ -202,6 +202,7 @@ public:
     static nsIAtom* kSeqAtom;
     static nsIAtom* kAltAtom;
     static nsIAtom* kLiAtom;
+    static nsIAtom* kXMLNSAtom;
 
 protected:
     // Text management
@@ -290,6 +291,7 @@ nsIAtom* RDFContentSinkImpl::kBagAtom;
 nsIAtom* RDFContentSinkImpl::kSeqAtom;
 nsIAtom* RDFContentSinkImpl::kAltAtom;
 nsIAtom* RDFContentSinkImpl::kLiAtom;
+nsIAtom* RDFContentSinkImpl::kXMLNSAtom;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -339,6 +341,7 @@ RDFContentSinkImpl::RDFContentSinkImpl()
         kSeqAtom         = NS_NewAtom("Seq");
         kAltAtom         = NS_NewAtom("Alt");
         kLiAtom          = NS_NewAtom("li");
+        kXMLNSAtom       = NS_NewAtom("xmlns");
     }
 
 #ifdef PR_LOGGING
@@ -429,6 +432,7 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
         NS_IF_RELEASE(kSeqAtom);
         NS_IF_RELEASE(kAltAtom);
         NS_IF_RELEASE(kLiAtom);
+        NS_IF_RELEASE(kXMLNSAtom);
     }
 }
 
@@ -1138,6 +1142,11 @@ RDFContentSinkImpl::AddProperties(const nsIParserNode& aNode,
             (attr.get() == kAboutAtom ||
              attr.get() == kIdAtom ||
              attr.get() == kResourceAtom))
+            continue;
+
+        // skip 'xmlns' directives, these are "meta" information
+        if ((nameSpaceID == kNameSpaceID_XMLNS) ||
+            (attr.get() == kXMLNSAtom))
             continue;
 
         nsAutoString v(aNode.GetValueAt(i));
