@@ -2698,7 +2698,7 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
         if (js_MatchToken(cx, ts, TOK_LP) && !ArgumentList(cx, ts, tc, pn))
             return NULL;
-        if (pn->pn_count - 1 >= ARGC_LIMIT) {
+        if (pn->pn_count > ARGC_LIMIT) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_TOO_MANY_CON_ARGS);
             return NULL;
@@ -2763,7 +2763,7 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
             if (!ArgumentList(cx, ts, tc, pn2))
                 return NULL;
-            if (pn2->pn_count - 1 >= ARGC_LIMIT) {
+            if (pn2->pn_count > ARGC_LIMIT) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_TOO_MANY_FUN_ARGS);
                 return NULL;
