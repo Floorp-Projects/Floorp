@@ -130,7 +130,7 @@ nsTimerGtk::Cancel()
 {
   //printf("nsTimerGtk::Cancel called for %p\n", this);
 
-  nsTimerGtk *me = this;
+  //nsTimerGtk *me = this;
 
   if (mTimerId)
     gtk_timeout_remove(mTimerId);
