@@ -48,6 +48,7 @@ if ($inConfigFiles eq "") {
 
 $DIST  = "$inObjDir/dist";
 $MSRC  = "$inSrcDir/browser/installer/windows/msi";
+$MMH   = "$inSrcDir/toolkit/mozapps/installer/windows/msi";
 $MDIST = "$DIST/msi";
 $STAGE = "$DIST/install";
 
@@ -96,8 +97,8 @@ Print("Placing MSI files in $MDIST/...\n");
 system("cp \"$MSRC/firefox.mm\" \"$MDIST/\"");
 system("cp \"$MSRC/firefox.mmh\" \"$MDIST/\"");
 system("cp \"$MSRC/firefox.ver\" \"$MDIST/\"");
-system("cp \"$MSRC/dept.mmh\" \"$MDIST/\"");
-system("cp \"$MSRC/mozilla.mmh\" \"$MDIST/\"");
+system("cp \"$MMH/mozilla-dept.mmh\" \"$MDIST/\"");
+system("cp \"$MMH/mozilla-company.mmh\" \"$MDIST/\"");
 
 #--------------------------------------------------------------------------
 # Generate MSI file.
