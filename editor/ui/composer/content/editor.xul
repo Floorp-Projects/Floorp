@@ -248,6 +248,7 @@
        -->
       <stack>
         <editor editortype="html" type="content-primary" id="content-frame"
+                onkeypress="if (event.keyCode == KeyEvent.DOM_VK_TAB) event.preventDefault();"
                 context="editorContentContext" flex="1" tooltip="aHTMLTooltip"/>
       </stack>
       <vbox>

@@ -2703,7 +2703,7 @@ function subjectKeyPress(event)
 function editorKeyPress(event)
 {
   if (event.keyCode == 9) {
-    if (event.shiftKey) {
+    if (event.shiftKey && !event.getPreventDefault()) {
       document.getElementById('msgSubject').focus();
       event.preventDefault();
     }
