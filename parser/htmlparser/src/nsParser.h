@@ -423,7 +423,7 @@ public:
 // -----------------------------------------------------------------
 
 class nsParserBundle : public nsISupportsParserBundle {
-public:;
+public:
 
   NS_DECL_ISUPPORTS
 
