@@ -44,6 +44,7 @@
 #include "nsITimer.h"
 
 class nsISupportsArray;
+class SmoothScroll;
 
 //this is a class that acts as a container for other views and provides
 //automatic management of scrolling of the views it contains.
@@ -103,28 +104,13 @@ private:
   NS_IMETHOD_(nsrefcnt) Release(void);
   NS_IMETHOD  ScrollToImpl(nscoord aX, nscoord aY, PRUint32 aUpdateFlags);
 
-  class SmoothScroll {
-  public:
-    SmoothScroll() { mVelocities = nsnull; }
-    ~SmoothScroll() {
-      if (mScrollAnimationTimer) mScrollAnimationTimer->Cancel();
-       delete[] mVelocities;
-     }
+  // data members
+  SmoothScroll* mSmoothScroll;
 
-     nsCOMPtr<nsITimer> mScrollAnimationTimer;
-     PRInt32            mFrameIndex;
-     PRInt32*           mVelocities;
-     nscoord            mDestinationX;
-     nscoord            mDestinationY;
-   };
-
-   // data members
-   SmoothScroll*        mSmoothScroll;
-
-   // methods
-   void        IncrementalScroll();
-   PRBool      IsSmoothScrollingEnabled();
-   static void SmoothScrollAnimationCallback(nsITimer *aTimer, void* aESM);
+  // methods
+  void        IncrementalScroll();
+  PRBool      IsSmoothScrollingEnabled();
+  static void SmoothScrollAnimationCallback(nsITimer *aTimer, void* aESM);
 
 protected:
   virtual ~nsScrollPortView();
