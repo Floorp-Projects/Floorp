@@ -43,4 +43,10 @@ interface nsIDocShellLoadInfo : nsISupports
 		adding it to session history.
 	*/
 	attribute boolean replaceSessionHistorySlot;
+
+	/*
+		an indication that the load will occur as result of Refresh header or
+		directive
+	*/
+	attribute boolean refresh;
 };

@@ -205,15 +205,17 @@ NS_IMETHODIMP nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
 
    nsCOMPtr<nsIURI> referrer;
    PRBool replace = PR_FALSE;
+   PRBool refresh = PR_FALSE;
    if(aLoadInfo)
       {
       aLoadInfo->GetReferrer(getter_AddRefs(referrer));
       aLoadInfo->GetReplaceSessionHistorySlot(&replace);
+      aLoadInfo->GetRefresh(&refresh);
       }
       
 
    NS_ENSURE_SUCCESS(InternalLoad(aURI, referrer, nsnull, nsnull, 
-      replace ? loadNormalReplace : loadNormal), NS_ERROR_FAILURE);
+       replace ? loadNormalReplace : (refresh ? loadRefresh : loadNormal)), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
@@ -2643,7 +2645,10 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
   	 case loadReloadBypassProxyAndCache:
   	 		loadAttribs |= nsIChannel::FORCE_RELOAD;
   	 		break;
-	   case loadNormal:
+  	 case loadRefresh:
+  	 		loadAttribs |= nsIChannel::FORCE_RELOAD;
+  	 		break;
+     case loadNormal:
 		   // Set cache checking flags
 		   if ( mPrefs )
 		   {
@@ -2839,6 +2844,7 @@ void nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, loadType aLoadType
         break;
 
     case loadNormal:
+    case loadRefresh:
     case loadNormalReplace:
     case loadLink:
         break;
@@ -3686,13 +3692,20 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 NS_IMETHODIMP_(void) nsRefreshTimer::Notify(nsITimer *aTimer)
 {
-   NS_ASSERTION(mDocShell, "DocShell is somehow null");
+    NS_ASSERTION(mDocShell, "DocShell is somehow null");
 
-   if(mDocShell)
-      mDocShell->LoadURI(mURI, nsnull);
-  /*
-   * LoadURL(...) will cancel all refresh timers... This causes the Timer and
-   * its refreshData instance to be released...
-   */
+    if(mDocShell)
+    {
+        nsCOMPtr<nsIDocShellLoadInfo> loadInfo;        
+        mDocShell -> CreateLoadInfo (getter_AddRefs (loadInfo));
+
+        loadInfo  -> SetRefresh (PR_TRUE);
+        mDocShell -> LoadURI(mURI, loadInfo);
+    }
+
+   /*
+    * LoadURL(...) will cancel all refresh timers... This causes the Timer and
+    * its refreshData instance to be released...
+    */
 }
 
