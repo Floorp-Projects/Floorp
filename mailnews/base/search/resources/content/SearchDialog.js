@@ -521,8 +521,8 @@ function setupDatasource() {
     // attributes about each message)
     gSearchSession = Components.classes[searchSessionContractID].createInstance(Components.interfaces.nsIMsgSearchSession);
 
-    gSearchSessionFolderListener = gSearchSession.QueryInterface(Components.interfaces.nsIFolderListener);
     gMailSession = Components.classes[mailSessionContractID].getService(Components.interfaces.nsIMsgMailSession);
+    gSearchSessionFolderListener = gMailSession.QueryInterface(Components.interfaces.nsIFolderListener);
     var nsIFolderListener = Components.interfaces.nsIFolderListener;
     var notifyFlags = nsIFolderListener.event;
     gMailSession.AddFolderListener(gFolderListener, notifyFlags);
