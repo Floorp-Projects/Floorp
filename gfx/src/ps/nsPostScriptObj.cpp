@@ -1586,7 +1586,7 @@ nsPostScriptObj::setlanggroup(nsIAtom * aLangGroup)
 
   if (linfo) {
     nsCAutoString str; str.AssignWithConversion(langstr);
-    fprintf(f, "%s_ls\n", (const char*) str);
+    fprintf(f, "%s_ls\n", str.get());
     gEncoder = linfo->mEncoder;
     gU2Ntable = linfo->mU2Ntable;
     return;
@@ -1788,17 +1788,17 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
 
     nsCAutoString langstrC; langstrC.AssignWithConversion(lang);
     if (psnativefont && linfo->mEncoder) {
-      fprintf(f, "/Unicode2NativeDict%s 0 dict def\n", (const char *) langstrC);
+      fprintf(f, "/Unicode2NativeDict%s 0 dict def\n", langstrC.get());
     }
 
-    fprintf(f, "/%s_ls {\n", (const char *) langstrC);
+    fprintf(f, "/%s_ls {\n", langstrC.get());
     fprintf(f, "  /NativeFont /%s def\n",
       (psnativefont && linfo->mEncoder) ? psnativefont.get() : "Courier");
     fprintf(f, "  /UCS2Font /%s def\n",
 		  psunicodefont ? psunicodefont.get() : "Courier");
     if (psnativefont && linfo->mEncoder) {
       fprintf(f, "  /Unicode2NativeDict Unicode2NativeDict%s def\n",
-		    (const char *) langstrC);
+		    langstrC.get());
     }
 
     if (psfontorder) {
