@@ -849,6 +849,23 @@ LocationImpl::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 PRBool    
 LocationImpl::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
 {
+  if (JSVAL_IS_STRING(aID)) {
+    JSString *str;
+
+    str = JSVAL_TO_STRING(aID);
+
+    const jschar *chars = ::JS_GetStringChars(str);
+    const PRUnichar *unichars = NS_REINTERPRET_CAST(const PRUnichar*, chars);
+
+    if (!nsCRT::strcmp(unichars, NS_LITERAL_STRING("href").get())) {
+      // properties defined as 'noscript' in the IDL needs to be defined
+      // lazily here so that unqualified lookups of such properties work
+      ::JS_DefineUCProperty(aContext, (JSObject *)mScriptObject,
+                            chars, ::JS_GetStringLength(str),
+                            JSVAL_VOID, nsnull, nsnull, 0);
+    }
+  }
+
   return JS_TRUE;
 }
 
