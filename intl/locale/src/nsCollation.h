@@ -26,6 +26,9 @@
 
 #include "nsICollation.h"
 #include "nsICaseConversion.h"
+#include "nsICharsetConverterManager.h"
+#include "nsICharsetConverterManager2.h"
+#include "nsCOMPtr.h"
 
 
 // Create a collation interface for an input locale.
@@ -75,6 +78,9 @@ public:
 
 protected:
   nsICaseConversion*  mCaseConversion;
+  nsCOMPtr <nsIUnicodeEncoder>            mEncoder;
+  nsCOMPtr <nsIAtom>                      mEncoderCharsetAtom;
+  nsCOMPtr <nsICharsetConverterManager2>  mCharsetConverterManager;
 };
 
 #endif  /* nsCollation_h__ */
