@@ -112,7 +112,7 @@
 #define	ID_CE_OID X500, 0x1d
 
 #define RFC1274_ATTR_TYPE  0x09, 0x92, 0x26, 0x89, 0x93, 0xf2, 0x2c, 0x64, 0x1
-#define RFC2247_ATTR_TYPE  0x09, 0x92, 0x26, 0xf5, 0x98, 0x1e, 0x64, 0x1
+/* #define RFC2247_ATTR_TYPE  0x09, 0x92, 0x26, 0xf5, 0x98, 0x1e, 0x64, 0x1 this is WRONG! */
 
 /* PKCS #12 name spaces */
 #define PKCS12_MODE_IDS		PKCS12, 0x01
@@ -220,7 +220,7 @@ static unsigned char x500RSAEncryption[] = { X500_ALG_ENCRYPTION, 0x01 };
 /* added for alg 1485 */
 static unsigned char rfc1274Uid[] = { RFC1274_ATTR_TYPE, 1 };
 static unsigned char rfc1274Mail[] = { RFC1274_ATTR_TYPE, 3 };
-static unsigned char rfc2247DomainComponent[] = { RFC2247_ATTR_TYPE, 25 };
+static unsigned char rfc2247DomainComponent[] = { RFC1274_ATTR_TYPE, 25 };
 
 /* Netscape private certificate extensions */
 static unsigned char nsCertExtNetscapeOK[] = { NS_CERT_EXT, 1 };
