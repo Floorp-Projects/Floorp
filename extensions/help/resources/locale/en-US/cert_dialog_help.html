@@ -18,8 +18,8 @@
 <td class="inthissection">
 <p>In this section:</p>
 <p><a href="#Certificate_Details">Certificate Details</a></p>
-<p><a href="#Enrollment_Information">Enrollment Information</a></p>
-<p><a href="#Certificate_Renewal">Certificate Renewal</a></p>
+<p><a href="cert_dialog_help.html#Choose_Security_Device">Choose Security Device</a>
+<p><a href="cert_dialog_help.html#Certificate_Backup">Certificate Backup</a>
 <p><a href="#User_Identification_Request">User Identification Request</a></p>
 <p><a href="#New_Certificate_Authority">New Certificate Authority</a></p>
 <p><a href="#Web_Site_Certificates">Web Site Certificates</a></p>
@@ -103,35 +103,11 @@
 
 
 
-<p>&nbsp;</p>
-<a NAME="Enrollment_Information"></a>
-<h2>Enrollment Information</h2>
 
-
-<p>The following windows may appear while you are attempting to obtain a certificate from a certificate authority (a process sometimes called <I>certificate enrollment</I>): </P>
-
-
-<ul><LI><a href="cert_dialog_help.html#Encryption_Key_Copy">Encryption Key Copy</a></LI>
-
-<LI><a href="cert_dialog_help.html#Certificate_Backup">Certificate_Backup</a>
-</LI></A><BR></ul>
-
-
-<p>&nbsp;</p>
-<a NAME="Encryption_Key_Copy"></a>
-<h3>Encryption Key Copy</h3>
-
-<p><a href="glossary.html#certificate_authority_(CA)">Certificate authorities (CAs)</a> that issue separate signing and encryption email certificates typically make backup copies of your private encryption key during the certificate enrollment process. Separate signing and encryption certificates require email software that supports <a href="glossary.html#dual_key_pairs">dual key pairs</a> for use in signing and encrypting email.</P>
-
-<p>It's important to understand that a CA that has archived a backup copy of your encryption key has the potential capability of decrypting any messages encrypted with your public key. If you trust your CA with this capability, click OK. After your CA makes a backup copy of the encryption key, you will be able to use that key to access your encrypted mail even if you lose your password or lose your own copy of the key. If no backup copy of your encryption key exists and you lose your password or the key, you will have no way of reading any of your encrypted email messages.</P></A>
-
-<p>If you don't trust the CA that is requesting the backup copy, don't request a certificate from it. Click Cancel to stop both the backup procedure and the request for a certificate.</P>
-
-<p>If you are not sure whether to trust the CA that is requesting the backup copy, talk to your system administrator.</P></A>
 
 <p>&nbsp;</p>
 <a NAME="Certificate_Backup"></a>
-<h3>Certificate Backup</h3>
+<h2>Certificate Backup</h2>
 
 <p>When you receive a certificate, make a backup copy of the certificate and its private key, then store the copy in a safe place. For example, you can put the copy on a floppy disk and store it with other valuable items under lock and key. That way, even if you have hard disk or file corruption problems, you can easily restore the certificate.</P>
 
@@ -146,23 +122,6 @@
 <p>Like any other valuable data, certificates should be backed up to avoid future trouble and expense. Do it now so you don't forget.</P>
 
 <p>&nbsp;</p>
-<a NAME="Certificate_Renewal"></a>
-<h2>Certificate Renewal</h2>
-
-<p>Like a credit card, a driver's license, and many other forms of identification, a certificate is valid for a specified period of time. When a certificate expires, you need to get a new one&#151;unless you have decided that you don't need that certificate anymore. </P>
-
-<p>Certifocate Manager displays the Certificate Renewal window when it detects that one of your certificates is about to expire. Information about the certificate is displayed at the top of the window. The information provided includes the name of the CA that issued the certificate (labeled "Issued Under").</P>
-
-<p>The Certificate Renewal window allows you to make one of two decisions:</P>
-
-<ul>
-
-	<LI><B>Renew this certificate now.</B> If you select this option, Certificate Manager initiates the renewal process.</LI>
-
-	<LI><B>Remind me to renew this certificate later.</B> If you select this option, Certificate Manager will not initiate the renewal process, but will remind you again later.</LI></A></ul>
-
-
-<p>&nbsp;</p>
 <a NAME="User_Identification_Request"></a>
 <h2>User Identification Request</h2>
 
@@ -174,12 +133,6 @@
 <p>Web sites can also use certificates to identify themselves. The certificate presented by the web site you want to visit is displayed in the top part of this window. The information provided includes the name of the CA that issued the certificate (labeled "Issued Under").</P>
 
 <p>The certificates you have available for the purposes of identifying yourself to a web site are listed in the drop-down menu in the bottom part of the window. Choose the certificate that seems most likely to be recognized by the web site you want to visit.</P></A>
-
-<p>&nbsp;</p>
-<a NAME="No_Acceptable_Identification"></a>
-<h2>No Acceptable Identification</h2>
-
-<p>The web site you are attempting to visit requires that your browser present an appropriate certificate for identification purposes. Your browser does not have a certificat available that this web site will accept.
 
 
 <p>&nbsp;</p>
@@ -205,16 +158,20 @@
 <h2>Web Site Certificates</h2>
 
 
-<p>One of the following windows may appear when you attempt to go to a web site that supports <a href="glossary.html#authentication">authentication</a> and <a href="glossary.html#9encryption">encryption</a>:</P>
+<p>One of the windows listed here may appear when you attempt to go to a web site that supports the use of <a href="glossary.html#Secure_Sockets_Layer_(SSL)">SSL</a> for <a href="glossary.html#authentication">authentication</a> and <a href="glossary.html#9encryption">encryption</a>.</P>
 
 
-<ul>
-	<LI><a href="#New_Web_Site_Certificate">New Web Site Certificate</a></LI>
-	<LI><a href="#Expired_Web_Site_Certificate">Expired Web Site Certificate</a></LI>
-	<LI><a href="#Web_Site_Certificate_Not_Yet_Valid">Web Site Certificate Not Yet Valid</a></LI>
-	<LI><a href="#Unexpected_Certificate_Name">Unexpected Certificate Name</a></LI>
-</ul>
-
+<table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
+<tr>
+<td class="inthissection">
+<p>In this section:</p>
+<p><a href="#New_Web_Site_Certificate">New Web Site Certificate</a>
+<p><a href="#Expired_Web_Site_Certificate">Expired Web Site Certificate</a>
+<p><a href="#Web_Site_Certificate_Not_Yet_Valid">Web Site Certificate Not Yet Valid</a></LI>
+<p><a href="#Unexpected_Certificate_Name">Unexpected Certificate Name</a>
+</td>
+</tr>
+</table>
 
 
 <p>&nbsp;</p>
@@ -281,7 +238,7 @@
 
 
 <hr>
-<p><i>6/27/2001</i></p>
+<p><i>7/3/2001</i></p>
 <p>Copyright &copy; 1994-2001 Netscape Communications Corporation.</p>
 
 </body>
