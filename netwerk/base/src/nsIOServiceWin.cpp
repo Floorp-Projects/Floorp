@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Alec Flett <alecf@netscape.com>
+ *   Darin Fisher <darin@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -37,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* Windows-specific local file uri parsing */
-
 #include "nsIOService.h"
 #include "nsEscape.h"
 #include "nsPrintfCString.h"
@@ -49,110 +49,101 @@ nsIOService::GetURLSpecFromFile(nsIFile *aFile, char * *aURL)
     NS_ENSURE_ARG_POINTER(aURL);
     *aURL = nsnull;
 
-      nsresult rv;
-    char* ePath = nsnull;
+    nsresult rv;
+    nsXPIDLCString ePath;
+  
+    rv = aFile->GetPath(getter_Copies(ePath));
+    if (NS_FAILED(rv)) return rv;
+  
+    // Replace \ with / to convert to an url
+    for (char *s = (char *) ePath.get(); *s; ++s) {
+        // We need to call IsDBCSLeadByte because
+        // Japanese windows can have 0x5C in the second byte 
+        // of a Japanese character, for example 0x8F 0x5C is
+        // one Japanese character
+        if(::IsDBCSLeadByte(*s) && *(s+1))
+            ++s;
+        else if (*s == '\\')
+            *s = '/';
+    }
+
     nsCAutoString escPath;
+    NS_NAMED_LITERAL_CSTRING(prefix, "file://");
+  
+    // Escape the path with the directory mask
+    if (NS_EscapeURLPart(ePath.get(), ePath.Length(), esc_Directory+esc_Forced, escPath))
+        escPath.Insert(prefix, 0);
+    else
+        escPath.Assign(prefix + ePath);
 
-    rv = aFile->GetPath(&ePath);
-    if (NS_SUCCEEDED(rv)) {
-
-        // Replace \ with / to convert to an url
-        char* s = ePath;
-	    while (*s)
-	    {
-            // We need to call IsDBCSLeadByte because
-            // Japanese windows can have 0x5C in the sencond byte 
-            // of a Japanese character, for example 0x8F 0x5C is
-            // one Japanese character
-            if(::IsDBCSLeadByte(*s) && *(s+1) != nsnull) {
-                s++;
-		    }
-		    else if (*s == '\\')
-                  *s = '/';
-		    
-		    s++;
-	    }
-
-        // Escape the path with the directory mask
-        rv = nsStdEscape(ePath, esc_Directory+esc_Forced, escPath);
-        if (NS_SUCCEEDED(rv)) {
-            if (escPath[escPath.Length() -1] != '/') {
-                PRBool dir;
-                rv = aFile->IsDirectory(&dir);
-                
-                if (NS_FAILED(rv))
-                    NS_WARNING(nsPrintfCString("Cannot tell if %s is a directory or file", escPath.get()).get());
-                
-                if (NS_SUCCEEDED(rv) && dir)
-                    // make sure we have a trailing slash
-                    escPath += "/";
-            }
-            
-            escPath.Insert("file:///", 0);
-            *aURL = ToNewCString(escPath);
-            rv = *aURL ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-        }    
-      }
-    CRTFREEIF(ePath);
-      return rv;
-
+    // XXX this should be unnecessary
+    if (escPath[escPath.Length() -1] != '/') {
+        PRBool dir;
+        rv = aFile->IsDirectory(&dir);
+        if (NS_FAILED(rv))
+            NS_WARNING(nsPrintfCString("Cannot tell if %s is a directory or file", escPath.get()).get());
+        else if (dir) {
+            // make sure we have a trailing slash
+            escPath += "/";
+        }
+    }
+    
+    *aURL = ToNewCString(escPath);
+    return *aURL ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
-nsIOService::InitFileFromURLSpec(nsIFile *aFile, const char * aURL)
+nsIOService::InitFileFromURLSpec(nsIFile *aFile, const char *aURL)
 {
     NS_ENSURE_ARG(aURL);
     nsresult rv;
     
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(aFile, &rv);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Only nsILocalFile supported right now");
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+        NS_ERROR("Only nsILocalFile supported right now");
+        return rv;
+    }
     
     nsXPIDLCString host, directory, fileBaseName, fileExtension;
     
-    rv = ParseFileURL(aURL, getter_Copies(host), getter_Copies(directory),
-                      getter_Copies(fileBaseName), getter_Copies(fileExtension));
+    rv = ParseFileURL(aURL, getter_Copies(host),
+                      getter_Copies(directory),
+                      getter_Copies(fileBaseName),
+                      getter_Copies(fileExtension));
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString path;
-    nsCAutoString component;
 
-    if (host)
-    {
+    if (host) {
         // We can end up with a host when given: file://C|/ instead of file:///
-        if (strlen((const char *)host) == 2 && ((const char *)host)[1] == '|')
-        {
+        if (strlen((const char *)host) == 2 && ((const char *)host)[1] == '|') {
             path += host;
             path.SetCharAt(':', 1);
         }
+        // Otherwise, ignore the host part...
     }
-    if (directory)
-    {
-        nsStdEscape(directory, esc_Directory, component);
-		if (!host && component.Length() > 2 && component.CharAt(2) == '|')
-			component.SetCharAt(':', 2);
-		component.ReplaceChar('/', '\\');
-        path += component;
+    if (directory) {
+        if (!NS_EscapeURLPart(directory.get(), directory.Length(), esc_Directory, path))
+            path += directory;
+		if (!host && path.Length() > 2 && path.CharAt(2) == '|')
+			path.SetCharAt(':', 2);
+		path.ReplaceChar('/', '\\');
     }    
-    if (fileBaseName)
-    {
-        nsStdEscape(fileBaseName, esc_FileBaseName, component);
-        path += component;
+    if (fileBaseName) {
+        if (!NS_EscapeURLPart(fileBaseName.get(), fileBaseName.Length(), esc_FileBaseName, path))
+            path += fileBaseName;
     }
-    if (fileExtension)
-    {
-        nsStdEscape(fileExtension, esc_FileExtension, component);
+    if (fileExtension) {
         path += '.';
-        path += component;
+        if (!NS_EscapeURLPart(fileExtension.get(), fileExtension.Length(), esc_FileExtension, path))
+            path += fileExtension;
     }
     
-    nsUnescape((char*)path.get());
+    NS_UnescapeURL((char *) path.get());
 
     // remove leading '\'
     if (path.CharAt(0) == '\\')
         path.Cut(0, 1);
 
-    rv = localFile->InitWithPath(path.get());
-    
-    return rv;
+    return localFile->InitWithPath(path.get());
 }
