@@ -68,7 +68,7 @@ endif
 
 INCLUDES 	+= -I./
 
-DEFINES += -DMOZILLA_30
+DEFINES += -DMOZILLA_30 -DNO_SECURITY
 
 #
 # Building the "mimefilt" executable, which reads a message from stdin and
