@@ -16,53 +16,24 @@
  * Reserved.
  */
 
-#undef OLDROUTINENAMES
-#define OLDROUTINENAMES 1
+#include <string.h>
 
 #include <Files.h>
 #include <Errors.h>
 #include <Folders.h>
 #include <CodeFragments.h>
 #include <Aliases.h>
+#include <Resources.h>
+
+#include "IterateDirectory.h"		/* MoreFiles */
 
 #include "MacErrorHandling.h"
+#include "macdll.h"
+#include "mdmac.h"
+#include "macio.h"
+
 #include "primpl.h"
 #include "plstr.h"
-
-typedef struct CfrgItem CfrgItem, *CfrgItemPtr;
-struct CfrgItem 
-{
-        OSType          fArchType;
-        UInt32          fUpdateLevel;
-        UInt32     		fCurVersion;
-        UInt32     		fOldDefVersion;
-        UInt32          fAppStackSize;
-        UInt16          fAppSubFolder;
-        UInt8       	fUsage;
-        UInt8           fLocation;
-        UInt32          fCodeOffset;
-        UInt32          fCodeLength;
-        UInt32          fReserved1;
-        UInt32          fReserved2;
-        UInt16          fItemSize; // %4 == 0
-        Str255          fName;
-        // Only make the final p-string as long as needed, then align to
-        // a longword boundary
-};
-
-typedef struct CfrgHeader CfrgHeader, *CfrgHeaderPtr, **CfrgHeaderHandle;
-struct CfrgHeader 
-{
-        UInt32          fReserved1;
-        UInt32          fReserved2;
-        UInt32          fVersion;
-        UInt32          fReserved3;
-        UInt32          fReserved4;
-        UInt32          fFiller1;
-        UInt32          fFiller2;
-        UInt32          fItemCount;
-        CfrgItem        fCfrgItemArray[1];
-};
 
 /*
 	turds used to iterate through the directories looking
@@ -93,7 +64,7 @@ GetSharedLibraryFilterProc(const CInfoPBRec* const inCpb, Boolean* inWantQuit, v
 	where the loader path is user defined.
 */
 
-extern OSErr
+OSErr
 NSGetSharedLibrary(Str255 inLibName, CFragConnectionID* outID, Ptr* outMainAddr)
 {
 	char*		curLibPath;
@@ -113,9 +84,9 @@ NSGetSharedLibrary(Str255 inLibName, CFragConnectionID* outID, Ptr* outMainAddr)
 	freeCurLibPath = curLibPath = PR_GetLibraryPath();
 	
 	if (curLibPath == NULL)
-		return (fragLibNotFound);
+		return (cfragNoLibraryErr);
 	
-	tempErr = fragLibNotFound;
+	tempErr = cfragNoLibraryErr;
 	
 	do
 	{
@@ -161,7 +132,7 @@ NSGetSharedLibrary(Str255 inLibName, CFragConnectionID* outID, Ptr* outMainAddr)
 			}
 			else 
 			{
-				tempErr = fragLibNotFound;
+				tempErr = cfragNoLibraryErr;
 			}
 		}
 		
@@ -231,7 +202,7 @@ GetSharedLibraryFilterProc(const CInfoPBRec* const inCpb, Boolean* inWantQuit, v
 	
 		// see if this symbol is in this fragment
 		if (LibInPefContainer(&fragSpec, pFilterData->inName, &codeOffset, &codeLength))
-			tempErr = GetDiskFragment(&fragSpec, codeOffset, codeLength, pFilterData->inName, kLoadLib, &pFilterData->outID, &pFilterData->outAddress, errName);
+			tempErr = GetDiskFragment(&fragSpec, codeOffset, codeLength, pFilterData->inName, kLoadCFrag, &pFilterData->outID, &pFilterData->outAddress, errName);
 		else
 			return;
 				
@@ -258,11 +229,11 @@ GetSharedLibraryFilterProc(const CInfoPBRec* const inCpb, Boolean* inWantQuit, v
 static Boolean
 LibInPefContainer(const FSSpec* inSpec, StringPtr inName, UInt32* outCodeOffset, UInt32* outCodeLength)
 {
-	short				refNum;
-	CfrgHeaderHandle	hCfrg;
-	CfrgItem*			pCurItem;
-	UInt32				curLibIndex;
-	Boolean				found;
+	short					refNum;
+	CFragResourceHandle		hCfrg;
+	CFragResourceMember*	pCurItem;
+	UInt32					curLibIndex;
+	Boolean					found;
 	
 	// asume we didn't find it
 	found = false;
@@ -272,26 +243,26 @@ LibInPefContainer(const FSSpec* inSpec, StringPtr inName, UInt32* outCodeOffset,
 	require(-1 != refNum, Exit);
 	
 	// grab out the alias record, if it's not there bail
-	hCfrg = (CfrgHeaderHandle) Get1Resource(kCFragResourceType, kCFragResourceID);
+	hCfrg = (CFragResourceHandle) Get1Resource(kCFragResourceType, kCFragResourceID);
 	require(NULL != hCfrg, CloseResourceAndExit);
 	
 	HLock((Handle)hCfrg);
 	
 	// get ptr to first item
-	pCurItem = &(*hCfrg)->fCfrgItemArray[0];
-	for (curLibIndex = 0; curLibIndex < (*hCfrg)->fItemCount; curLibIndex++)
+	pCurItem = &(*hCfrg)->firstMember;
+	for (curLibIndex = 0; curLibIndex < (*hCfrg)->memberCount; curLibIndex++)
 	{
 		// is this our library?
-		if ((pCurItem->fName[0] == inName[0]) &&
-			(strncmp((char*) inName + 1, (char*) pCurItem->fName + 1, PR_MIN(pCurItem->fName[0], inName[0])) == 0))
+		if ((pCurItem->name[0] == inName[0]) &&
+			(strncmp((char*) inName + 1, (char*) pCurItem->name + 1, PR_MIN(pCurItem->name[0], inName[0])) == 0))
 		{
-			*outCodeOffset = pCurItem->fCodeOffset;
-			*outCodeLength = pCurItem->fCodeLength;
+			*outCodeOffset = pCurItem->offset;
+			*outCodeLength = pCurItem->length;
 			found = true;
 		}
 		
 		// skip to next one
-		pCurItem = (CfrgItem*) ((char*) pCurItem + pCurItem->fItemSize);						
+		pCurItem = (CFragResourceMember*) ((char*) pCurItem + pCurItem->memberSize);						
 	}
 	
 	HUnlock((Handle)hCfrg);
@@ -312,8 +283,8 @@ Exit:
 	in the library to find the desired symbol.
 */
 
-extern OSErr
-NSFindSymbol(CFragConnectionID inID, Str255 inSymName, Ptr*	outMainAddr, SymClass *outSymClass)
+OSErr
+NSFindSymbol(CFragConnectionID inID, Str255 inSymName, Ptr*	outMainAddr, CFragSymbolClass *outSymClass)
 {
 	OSErr	err;
 	
@@ -348,7 +319,7 @@ NSFindSymbol(CFragConnectionID inID, Str255 inSymName, Ptr*	outMainAddr, SymClas
 			
 			/* if we didn't find it set the error code so below it won't take this symbol */
 			if (!found)
-				err = fragSymbolNotFound;
+				err = cfragNoSymbolErr;
 		}	
 	}
 	else
@@ -358,4 +329,217 @@ NSFindSymbol(CFragConnectionID inID, Str255 inSymName, Ptr*	outMainAddr, SymClas
 	
 	return (err);
 }
+
+
+#pragma mark -
+
+
+/*-----------------------------------------------------------------
+
+	GetNamedFragmentOffsets
+
+	Get the offsets into the data fork of the named fragment,
+	by reading the 'cfrg' resoruce.
+
+-----------------------------------------------------------------*/
+static OSErr GetNamedFragmentOffsets(const FSSpec *fileSpec, const char* fragmentName,
+							UInt32 *outOffset, UInt32 *outLength)
+{
+	CFragResourceHandle		cFragHandle;
+	short									fileRefNum;
+	OSErr									err = noErr;
+	
+	fileRefNum = FSpOpenResFile(fileSpec, fsRdPerm);
+	err = ResError();
+	if (err != noErr) return err;
+
+	cFragHandle = (CFragResourceHandle)Get1Resource(kCFragResourceType, kCFragResourceID);	
+	if (!cFragHandle)
+	{
+		err = resNotFound;
+		goto done;
+	}
+	
+	/* nothing here moves memory, so no need to lock the handle */
+	
+	err = cfragNoLibraryErr;			/* in case of failure */
+	*outOffset = 0;
+	*outLength = 0;
+	
+	/* Now look for the named fragment */
+	if ((**cFragHandle).memberCount > 0)
+	{
+		CFragResourceMemberPtr	memberPtr;
+		UInt16									i;
+		
+		for (	i = 0, memberPtr = &(**cFragHandle).firstMember;
+					i < (**cFragHandle).memberCount;
+					i ++, memberPtr = (CFragResourceMemberPtr)((char *)memberPtr + memberPtr->memberSize))
+		{
+			char		memberName[256];
+			UInt16	nameLen = PR_MIN(memberPtr->name[0], 255);
+		
+			// avoid malloc here for speed
+			strncpy(memberName, (char *)&memberPtr->name[1], nameLen);
+			memberName[nameLen] = '\0';
+		
+			// fragment names are case insensitive, so act like the system
+			if (PL_strcasecmp(memberName, fragmentName) == 0)
+			{
+				*outOffset = memberPtr->offset;
+				*outLength = memberPtr->length;
+				err = noErr;
+				break;
+			}
+		}
+	}
+	
+	/* Resource handle will go away when the res fork is closed */
+	
+done:
+	CloseResFile(fileRefNum);
+	return err;
+}
+
+
+/*-----------------------------------------------------------------
+
+	GetIndexedFragmentOffsets
+	
+	Get the offsets into the data fork of the indexed fragment,
+	by reading the 'cfrg' resoruce.
+
+-----------------------------------------------------------------*/
+static OSErr GetIndexedFragmentOffsets(const FSSpec *fileSpec, UInt32 fragmentIndex,
+							UInt32 *outOffset, UInt32 *outLength, char **outFragmentName)
+{
+	CFragResourceHandle		cFragHandle;
+	short									fileRefNum;
+	OSErr									err = noErr;
+	
+	fileRefNum = FSpOpenResFile(fileSpec, fsRdPerm);
+	err = ResError();
+	if (err != noErr) return err;
+
+	cFragHandle = (CFragResourceHandle)Get1Resource(kCFragResourceType, kCFragResourceID);	
+	if (!cFragHandle)
+	{
+		err = resNotFound;
+		goto done;
+	}
+		
+	err = cfragNoLibraryErr;			/* in case of failure */
+	*outOffset = 0;
+	*outLength = 0;
+	*outFragmentName = NULL;
+	
+	/* the CStrFromPStr mallocs, so might move memory */
+	HLock((Handle)cFragHandle);
+	
+	/* Now look for the named fragment */
+	if ((**cFragHandle).memberCount > 0)
+	{
+		CFragResourceMemberPtr	memberPtr;
+		UInt16									i;
+		
+		for (	i = 0, memberPtr = &(**cFragHandle).firstMember;
+					i < (**cFragHandle).memberCount;
+					i ++, memberPtr = (CFragResourceMemberPtr)((char *)memberPtr + memberPtr->memberSize))
+		{
+			
+			if (i == fragmentIndex)
+			{
+				char	*fragmentStr;
+				CStrFromPStr(memberPtr->name, &fragmentStr);
+				if (!fragmentStr)		/* test for allocation failure */
+				{
+					err = memFullErr;
+					break;
+				}
+				
+				*outFragmentName = fragmentStr;
+				*outOffset = memberPtr->offset;
+				*outLength = memberPtr->length;
+				err = noErr;
+				break;
+			}
+		}
+	}
+	
+	HUnlock((Handle)cFragHandle);
+	
+	/* Resource handle will go away when the res fork is closed */
+	
+done:
+	CloseResFile(fileRefNum);
+	return err;
+}
+
+
+/*-----------------------------------------------------------------
+
+	NSLoadNamedFragment
+	
+	Load the named fragment from the specified file. Aliases must
+	have been resolved by this point.
+
+-----------------------------------------------------------------*/
+
+OSErr NSLoadNamedFragment(const FSSpec *fileSpec, const char* fragmentName, CFragConnectionID *outConnectionID)
+{
+	UInt32		fragOffset, fragLength;
+	Ptr				main;
+	Str255		fragName = "\p";
+	Str255		errName;
+	OSErr			err;
+	
+	err = GetNamedFragmentOffsets(fileSpec, fragmentName, &fragOffset, &fragLength);
+	if (err != noErr) return err;
+				
+	err = GetDiskFragment(fileSpec, fragOffset, fragLength, fragName, 
+					kLoadCFrag, outConnectionID, &main, errName);
+
+	return err;
+}
+
+
+/*-----------------------------------------------------------------
+
+	NSLoadIndexedFragment
+	
+	Load the indexed fragment from the specified file. Aliases must
+	have been resolved by this point.
+	
+	*outFragName is a malloc'd block containing the fragment name,
+	if returning noErr.
+
+-----------------------------------------------------------------*/
+
+OSErr NSLoadIndexedFragment(const FSSpec *fileSpec, PRUint32 fragmentIndex,
+							char** outFragName, CFragConnectionID *outConnectionID)
+{
+	UInt32		fragOffset, fragLength;
+	char			*fragNameBlock = NULL;
+	Ptr				main;
+	Str255		fragName = "\p";
+	Str255		errName;
+	OSErr			err;
+
+	*outFragName = NULL;
+	
+	err = GetIndexedFragmentOffsets(fileSpec, fragmentIndex, &fragOffset, &fragLength, &fragNameBlock);
+	if (err != noErr) return err;
+				
+	err = GetDiskFragment(fileSpec, fragOffset, fragLength, fragName, 
+					kLoadCFrag, outConnectionID, &main, errName);
+	if (err != noErr)
+	{
+		free(fragNameBlock);
+		return err;
+	}
+
+	*outFragName = fragNameBlock;
+	return noErr;
+}
+
 
