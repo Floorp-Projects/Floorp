@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devslot.c,v $ $Revision: 1.7 $ $Date: 2002/04/23 17:22:13 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devslot.c,v $ $Revision: 1.8 $ $Date: 2002/05/21 21:23:33 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -298,7 +298,7 @@ nssSlot_IsTokenPresent
 	if (slot->token->base.name[0] != 0) {
 	    /* notify the high-level cache that the token is removed */
 	    slot->token->base.name[0] = 0; /* XXX */
-	    nssToken_NofifyCertsNotVisible(slot->token);
+	    nssToken_NotifyCertsNotVisible(slot->token);
 	}
 #endif
 	slot->token->base.name[0] = 0; /* XXX */
