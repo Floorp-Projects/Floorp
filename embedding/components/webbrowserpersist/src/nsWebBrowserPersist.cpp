@@ -379,7 +379,7 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(
 
     // Now save the URIs that have been gathered
 
-    if (datapathAsURI)
+    if (NS_SUCCEEDED(rv) && datapathAsURI)
     {
         // Count how many URIs in the URI map require persisting
         PRUint32 urisToPersist = 0;
@@ -1367,7 +1367,7 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
 
 nsresult nsWebBrowserPersist::SaveDocuments()
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
 
     // Iterate through all queued documents, saving them to file and fixing
     // them up on the way.
@@ -1376,7 +1376,11 @@ nsresult nsWebBrowserPersist::SaveDocuments()
     for (i = 0; i < mDocList.Count(); i++)
     {
         DocData *docData = (DocData *) mDocList.ElementAt(i);
-        NS_ENSURE_TRUE(docData, NS_ERROR_FAILURE);
+        if (!docData)
+        {
+            rv = NS_ERROR_FAILURE;
+            break;
+        }
 
         mCurrentBaseURI = docData->mBaseURI;
 
@@ -1384,7 +1388,8 @@ nsresult nsWebBrowserPersist::SaveDocuments()
         
         nsEncoderNodeFixup *nodeFixup;
         nodeFixup = new nsEncoderNodeFixup;
-        nodeFixup->mWebBrowserPersist = this;
+        if (nodeFixup)
+            nodeFixup->mWebBrowserPersist = this;
 
         // Remove document base so relative links work on the persisted version
         SetDocumentBase(docData->mDocument, nsnull);
@@ -1413,15 +1418,19 @@ nsresult nsWebBrowserPersist::SaveDocuments()
         // Restore the document's BASE URL
         SetDocumentBase(docData->mDocument, docData->mBaseURI);
 
-        delete docData;
-
-        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+        if (NS_FAILED(rv))
+            break;
     }
 
-    // Empty list
+    // delete, cleanup regardless of errors (bug 132417)
+    for (i = 0; i < mDocList.Count(); i++)
+    {
+        DocData *docData = (DocData *) mDocList.ElementAt(i);
+        delete docData;
+    }
     mDocList.Clear();
 
-    return NS_OK;
+    return rv;
 }
 
 void nsWebBrowserPersist::CleanUp()
@@ -2379,7 +2388,8 @@ nsWebBrowserPersist::SaveDocumentWithFixup(
             charsetStr.Assign(NS_LITERAL_STRING("ISO-8859-1")); 
         }
     }
-    encoder->SetCharset(charsetStr);
+    rv = encoder->SetCharset(charsetStr);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     rv = encoder->EncodeToStream(outputStream);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
