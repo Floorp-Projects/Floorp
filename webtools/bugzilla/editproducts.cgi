@@ -397,6 +397,11 @@ if ($action eq 'new') {
         # Insert default charting queries for this product.
         # If they aren't using charting, this won't do any harm.
         GetVersionTable();
+
+        # $::FORM{'open_name'} and $product are sqlquoted by the series
+        # code and never used again here, so we can trick_taint them.
+        trick_taint($::FORM{'open_name'});
+        trick_taint($product);
     
         my @series;
     
