@@ -70,7 +70,7 @@ function errorReporterHook(msg, filename, lineno, lineBuf, tokenOffset)
 
     var answer = -1
     while(-1 == answer) {
-        switch(prompt("[E]at [i]gnore [p]ass along [d]ebug ? ")) {
+        switch(prompt("[E]at [i]gnore [p]ass along [d]ebug ?").substr(0,1)) {
             case "I":
             case "i":
                 answer = jsd.JSD_ERROR_REPORTER_RETURN;
