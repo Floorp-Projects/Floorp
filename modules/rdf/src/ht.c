@@ -2634,7 +2634,7 @@ addContainerItem (HT_Resource container, RDF_Resource item)
 		}
 
 		sb = SBProviderOfNode(nc);
-		if (sb && sb->openp)
+		if (sb /* && sb->openp */) /*related links is always open ... */
 		{
 			nc->flags |= HT_OPEN_FLAG;
 		}
@@ -4481,11 +4481,12 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 				}
 				if (HT_IsContainer(node))
 				{
-					destroyViewInt(node, PR_TRUE);
+                                  /*	destroyViewInt(node, PR_TRUE);
 					RDF_Assert(node->view->pane->db, node->node,
 						gNavCenter->RDF_Command, gNavCenter->RDF_Command_Refresh,
 						RDF_RESOURCE_TYPE);
-					refreshItemList (node, HT_EVENT_VIEW_REFRESH);
+					refreshItemList (node, HT_EVENT_VIEW_REFRESH); */
+                                  RDF_Update(node->view->pane->db, node->node);
 				}
 				break;
 
@@ -9581,7 +9582,7 @@ HT_AddSitemapFor(HT_Pane htPane, char *pUrl, char *pSitemapUrl, char* name)
     nsmp->origin =  FROM_PAGE;
     nsmp->onDisplayp = 1;
     HTADD(htPane, nu, gCoreVocab->RDF_name, nm);
-    nsmp->db = HTADD(htPane, nu, gCoreVocab->RDF_parent, gNavCenter->RDF_Top);
+    nsmp->db = HTADD(htPane, nu, gCoreVocab->RDF_parent, gNavCenter->RDF_Sitemaps);
 	 
 
 }
@@ -9608,11 +9609,11 @@ RetainOldSitemaps (HT_Pane htPane, char *pUrl)
             nsmp->origin =  GUESS_FROM_PREVIOUS_PAGE;
             nsmp->onDisplayp = 1;
             HTADD(htPane, nu, gCoreVocab->RDF_name, copyString(nsmp->name));
-            nsmp->db = HTADD(htPane, nu, gCoreVocab->RDF_parent, gNavCenter->RDF_Top);
+            nsmp->db = HTADD(htPane, nu, gCoreVocab->RDF_parent, gNavCenter->RDF_Sitemaps);
           }
         } else if (nsmp->onDisplayp) {
           HTDEL(sp, nsmp->sitemap, gCoreVocab->RDF_parent,
-                        gNavCenter->RDF_Top, RDF_RESOURCE_TYPE);
+                        gNavCenter->RDF_Sitemaps, RDF_RESOURCE_TYPE);
           if (nsmp->db) {
 			  RDF_ReleaseDataSource(htPane->db, nsmp->db);
 			nsmp->db = NULL;
@@ -9651,7 +9652,7 @@ void
 PaneDeleteSBPCleanup (HT_Pane htPane)
 {
   cleanupInt(htPane, htPane->sbp, gNavCenter->RDF_Sitemaps);
-  cleanupInt(htPane, htPane->smp, gNavCenter->RDF_Top);  
+  cleanupInt(htPane, htPane->smp, gNavCenter->RDF_Sitemaps);  
   freeMem(htPane->windowURL);
   htPane->windowURL = NULL;
   htPane->sbp = NULL;

@@ -71,6 +71,9 @@ rdf_complete(NET_StreamClass *stream)
     freeMem(f->currentSlot);
     freeMem(f->holdOver);
     freeNamespaces(f) ;
+	f->line = NULL;
+	f->currentSlot = NULL;
+	f->holdOver = NULL;
   }
 }
 
@@ -201,8 +204,13 @@ int
 rdf_GetURL (MWContext *cx,  int method, Net_GetUrlExitFunc *exit_routine, RDFFile rdfFile)
 {
 	URL_Struct      *urls = NULL;
-        char* url  = rdfFile->url;                
+        char* url  ;
 	if (cx == NULL)  return 0;
+        if (rdfFile->refreshingp && rdfFile->updateURL) {
+          url = rdfFile->updateURL;
+        } else {
+          url = rdfFile->url;
+        }
         if (strcmp(url, gNavCntrUrl) == 0) {
           urls = NET_CreateURLStruct(url,  NET_CACHE_ONLY_RELOAD);
           if (NET_IsURLInDiskCache(urls) || NET_IsURLInMemCache(urls)) {
@@ -212,7 +220,8 @@ rdf_GetURL (MWContext *cx,  int method, Net_GetUrlExitFunc *exit_routine, RDFFil
           }
         }
 	if (!urls) 
-          urls = NET_CreateURLStruct(url, NET_NORMAL_RELOAD);
+          urls = NET_CreateURLStruct(url, (rdfFile->refreshingp ? 
+                                           NET_SUPER_RELOAD : NET_NORMAL_RELOAD));
 	if (urls == NULL) return 0;
 	urls->fe_data = rdfFile;
 	if (method) urls->method = method;

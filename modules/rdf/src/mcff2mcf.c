@@ -119,7 +119,7 @@ resourceTransition (RDFFile f)
 {
   if ((f->currentResource)  && (!f->genlAdded))
     addSlotValue(f, f->currentResource, gCoreVocab->RDF_parent, f->rtop, 
-		 RDF_RESOURCE_TYPE, true); 
+		 RDF_RESOURCE_TYPE, NULL); 
   f->genlAdded = false;
 }
 
@@ -225,71 +225,42 @@ getFirstToken (char* line, char* nextToken, int16* l)
   return ans;
 }	
 
-
-void
-addSlotValue (RDFFile f, RDF_Resource u, RDF_Resource s, void* v,
-		RDF_ValueType type, PRBool tv)
-{
-   XP_ASSERT( (RDF_STRING_TYPE != type) || ( IsUTF8String((const char* )v)));
-   if (f == NULL || u == NULL || s == NULL || v == NULL)	return;
-   if (s == gCoreVocab->RDF_child) {
-     RDF_Resource temp = (RDF_Resource)v;
-     if (type != RDF_RESOURCE_TYPE) return;
-     s = gCoreVocab->RDF_parent;
-     v = u;
-     u = temp;
-   }
-   if ((s == gCoreVocab->RDF_parent) && (type == RDF_RESOURCE_TYPE)) {
-     f->genlAdded = true; 
-     if (strstr(resourceID(u), ".rdf") && startsWith("http", resourceID(u))) {
-       RDFL rl = f->db->rdf;
-       char* dburl = getBaseURL(resourceID(u));
-       if (!startsWith(dburl, resourceID((RDF_Resource)v))) {
-         while (rl) {
-           RDF_AddDataSource(rl->rdf, dburl);
-           rl = rl->next;
-         }
-         freeMem(dburl);
-       }
-     }
-   }
-   (*f->assert)(f, f->db, u, s, v, type, tv);
-   if (s == gCoreVocab->RDF_parent) setContainerp((RDF_Resource)v, 1);
-#ifndef MOZILLA_CLIENT
-   notifySlotValueAdded(u, s, v, type);
-#endif
-}
-
 void
 assignSlot (RDF_Resource u, char* slot, char* value, RDFFile f)
 {
   PRBool tv = true;
+  char* tvstr;
   if (value[0] == '(') {
     tv = false;
     value = &value[1];
     value[strlen(value)-1] = '\0';
   } 
+
+  if (tv) {
+    tvstr = "true";
+  } else tvstr = "false";
+
   if (startsWith("default_genl", slot)) return;
   
   if (startsWith("name", slot) || (startsWith("local-name", slot))) { 
     value[strlen(value)-1] = '\0';
-    addSlotValue(f, u, gCoreVocab->RDF_name, copyString(&value[1]), RDF_STRING_TYPE, tv);  
+    addSlotValue(f, u, gCoreVocab->RDF_name, copyString(&value[1]), RDF_STRING_TYPE, tvstr);  
   }  else if (startsWith("specs", slot) || (startsWith("child", slot))) {
     RDF_Resource spec = resolveReference(value, f);  
-    if (!nullp(spec)) addSlotValue(f, spec, gCoreVocab->RDF_parent, u, RDF_RESOURCE_TYPE, tv); 
+    if (!nullp(spec)) addSlotValue(f, spec, gCoreVocab->RDF_parent, u, RDF_RESOURCE_TYPE, tvstr); 
   }  else if (startsWith("genls_pos", slot)) {
     RDF_Resource genl = resolveGenlPosReference(value, f);  
-    if (!nullp(genl)) addSlotValue(f, u, gCoreVocab->RDF_parent, genl, RDF_RESOURCE_TYPE, tv);
+    if (!nullp(genl)) addSlotValue(f, u, gCoreVocab->RDF_parent, genl, RDF_RESOURCE_TYPE, tvstr);
   }  else if ((startsWith("genls", slot)) || (startsWith("parent", slot))) {
     RDF_Resource genl = resolveReference(value, f);
-    if (!nullp(genl)) addSlotValue(f, u, gCoreVocab->RDF_parent, genl, RDF_RESOURCE_TYPE, tv);
+    if (!nullp(genl)) addSlotValue(f, u, gCoreVocab->RDF_parent, genl, RDF_RESOURCE_TYPE, tvstr);
   } else {
     void* parsed_value;
     RDF_ValueType data_type;
     RDF_Resource s = RDF_GetResource(NULL, slot, true);
     RDF_Error err = parseSlotValue(f, s, value, &parsed_value, &data_type); 
     if ((err == noRDFErr) && (!nullp(parsed_value)))   
-      addSlotValue(f, u, s, parsed_value, data_type, tv);
+      addSlotValue(f, u, s, parsed_value, data_type, tvstr);
   } 
 }
 

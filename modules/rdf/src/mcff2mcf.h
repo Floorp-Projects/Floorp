@@ -47,7 +47,7 @@ void			finishMCFParse (RDFFile f);
 void			resourceTransition (RDFFile f);
 void			assignHeaderSlot (RDFFile f, char* slot, char* value);
 RDF_Error		getFirstToken (char* line, char* nextToken, int16* l);
-void			addSlotValue (RDFFile f, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv);
+
 void			assignSlot (RDF_Resource u, char* slot, char* value, RDFFile f);
 RDF_Error		parseSlotValue (RDFFile f, RDF_Resource s, char* value, void** parsed_value, RDF_ValueType* data_type);
 void			derelativizeURL (char* tok, char* url, RDFFile f);

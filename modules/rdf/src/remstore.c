@@ -514,12 +514,9 @@ gcRDFFileInt (RDFFile f)
   }
   n = 0;
   while (n < f->resourceCount) {
-    RDF_Resource u = *(f->resourceList + n);
-    possiblyGCResource(u);
+    *(f->resourceList + n) = NULL;
     n++;
   }
-  freeMem(f->assertionList);
-  freeMem(f->resourceList);	
 }
 
 
@@ -532,13 +529,43 @@ DeleteRemStore (RDFT db)
   while (f) {
     next = f->next;
     gcRDFFileInt(f);
+    freeMem(f->assertionList);
+    freeMem(f->resourceList);	
     f = next;
   }
   freeMem(db);
   return 0;
 }
 
+RDF_Error 
+remStoreUpdate (RDFT db, RDF_Resource u) {
+  RDFFile f = db->pdata;
+  if (f != NULL) {
+    int32 n = 0;
+    PRBool proceedp = 0;
+    while (n < f->resourceCount) {
+      if (*(f->resourceList + n++) == u) {
+        proceedp = 1;
+        break;
+      }
+    }
 
+    if (proceedp) {
+      RDF_Resource top = f->top;
+      char* url = db->url;
+      PRBool localp = f->localp;    
+      gcRDFFileInt(f);
+      freeMem(f->assertionList);
+      freeMem(f->resourceList);	
+      f->assertionList = NULL;
+      f->resourceList = NULL;
+      initRDFFile(f);
+      f->refreshingp = 1;
+      beginReadingRDFFile(f);
+    } else return -1;
+  } else return -1;
+}
+    
 
 void
 gcRDFFile (RDFFile f)
@@ -561,6 +588,9 @@ gcRDFFile (RDFFile f)
     }
   }
   gcRDFFileInt(f);
+  freeMem(f->assertionList);
+  freeMem(f->resourceList);	
+  
 }
 
 
@@ -583,6 +613,14 @@ freeSomeRDFSpace (RDF mcf)
 RDFFile
 readRDFFile (char* url, RDF_Resource top, PRBool localp, RDFT db)
 {
+  RDFFile f = makeNewRDFFile(url, top, localp, db);
+  if (!f) return NULL;
+  beginReadingRDFFile(f);
+  return f;
+}
+
+RDFFile 
+makeNewRDFFile (char* url, RDF_Resource top, PRBool localp, RDFT db) {  
   if ((!strstr(url, ":/")) ||
       (fileReadp(db, url, true))) {
     return NULL;
@@ -594,14 +632,6 @@ readRDFFile (char* url, RDF_Resource top, PRBool localp, RDFT db)
     } else {
       db->pdata = (RDFFile) newFile;
   }
-#ifdef DEBUG_guha
-    {
-      char* traceLine = getMem(500);
-      sprintf(traceLine, "Accessing %s", url);
-      FE_Trace(traceLine);
-      freeMem(traceLine);
-    }
-#endif
     newFile->assert = remoteAssert3;
     if (top) {
       if (resourceType(top) == RDF_RT) {
@@ -615,7 +645,6 @@ readRDFFile (char* url, RDF_Resource top, PRBool localp, RDFT db)
       }
     }
     newFile->db = db;
-    beginReadingRDFFile(newFile);
     return newFile;
   }
 }
@@ -645,7 +674,6 @@ possiblyRefreshRDFFiles ()
     }
 	f = f->next;
   }
-
 }
 
 
@@ -679,6 +707,7 @@ NewRemoteStore (char* url)
         ntr->destroy =  DeleteRemStore;
 		ntr->arcLabelsIn = remoteStoreArcLabelsIn;
 		ntr->arcLabelsOut = remoteStoreArcLabelsOut;
+        ntr->update = remStoreUpdate;
 	}
 	return(ntr);
 }

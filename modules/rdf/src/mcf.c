@@ -282,6 +282,7 @@ RDF_ReleaseDB(RDF rdf)
     }
     gAllDBs = deleteFromRDFList(gAllDBs, rdf);
   }
+  
   freeMem(rdf->translators);
   freeMem(rdf);
   return noRDFErr;
@@ -334,6 +335,7 @@ rdfassert(RDF rdf, RDF_Resource u, RDF_Resource  s, void* value,
 }
 
 
+  
 
 PR_PUBLIC_API(PRBool)
 RDF_Assert (RDF rdf, RDF_Resource u, RDF_Resource  s, void* value, RDF_ValueType type)
@@ -583,6 +585,16 @@ RDF_DeleteAllArcs (RDF rdf, RDF_Resource u)
   return 0;
 }
 
+PR_PUBLIC_API(RDF_Error) 
+RDF_Update(RDF rdf, RDF_Resource u) {
+  int32 size = rdf->numTranslators;
+  int32 n = 0;
+  while (n < size) {
+    callUpdateRoutine(n, rdf, u, );
+    n++;
+  }
+  return 0; 
+}
 
 
 PR_PUBLIC_API(PRBool)

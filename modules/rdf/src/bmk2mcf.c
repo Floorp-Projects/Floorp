@@ -167,7 +167,7 @@ parseNextBkToken (RDFFile f, char* token)
 	newFolder = createContainer(url);
 	XP_FREE(url);
 	addSlotValue(f,newFolder, gCoreVocab->RDF_parent, f->stack[f->depth-1], 
-		     RDF_RESOURCE_TYPE, true);
+		     RDF_RESOURCE_TYPE, NULL);
 	freeMem(gBkFolderDate);
 	gBkFolderDate = NULL;
 	f->lastItem = newFolder;
@@ -175,7 +175,7 @@ parseNextBkToken (RDFFile f, char* token)
       if ((f->db == gLocalStore) || (f->status != IN_TITLE))
 	{
 	      addSlotValue(f, f->lastItem, gCoreVocab->RDF_name, 
-			   copyString(token), RDF_STRING_TYPE, true);
+			   copyString(token), RDF_STRING_TYPE, NULL);
 	}
 /*
       if (startsWith("Personal Toolbar", token) && (containerp(f->lastItem)))
@@ -198,10 +198,10 @@ addDescription (RDFFile f, RDF_Resource r, char* token)
 				       RDF_STRING_TYPE, false, true);
   if (desc == NULL) {
     addSlotValue(f, f->lastItem, gWebData->RDF_description, copyString(token),
-		 RDF_STRING_TYPE, true);
+		 RDF_STRING_TYPE, NULL);
   } else {
    addSlotValue(f, f->lastItem, gWebData->RDF_description, 
-		 append2Strings(desc, token), RDF_STRING_TYPE, true); 
+		 append2Strings(desc, token), RDF_STRING_TYPE, NULL); 
     nlocalStoreUnassert(gLocalStore, f->lastItem, gWebData->RDF_description, desc, RDF_STRING_TYPE);
   }
 }
@@ -231,7 +231,7 @@ bkStateTransition (RDFFile f, char* token)
     f->depth--;
   } else if (startsWith("<HR>", token)) {
     addSlotValue(f, createSeparator(), gCoreVocab->RDF_parent, f->stack[f->depth-1], 
-		 RDF_RESOURCE_TYPE, true);
+		 RDF_RESOURCE_TYPE, NULL);
     f->status = 0;
   } else if ((f->status == IN_ITEM_DESCRIPTION) && (startsWith("<BR>", token))) {
     addDescription(f, f->lastItem, token);
@@ -293,7 +293,7 @@ newLeafBkItem (RDFFile f, char* token)
   if (url == NULL) return;
   newR = RDF_GetResource(NULL, url, true);
   addSlotValue(f, newR, gCoreVocab->RDF_parent, f->stack[f->depth-1],  
-	       RDF_RESOURCE_TYPE, true);
+	       RDF_RESOURCE_TYPE, NULL);
   /* addSlotValue(f, newR, gWebData->RDF_URL, (void*)copyString(url), 
 	       RDF_STRING_TYPE, true); */
   if (addDate != NULL)
@@ -310,7 +310,7 @@ newLeafBkItem (RDFFile f, char* token)
 		strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_WINDATE),time);
 #endif
 		addSlotValue(f, newR, gNavCenter->RDF_bookmarkAddDate,
-			(void*)copyString(buffer), RDF_STRING_TYPE, true);
+			(void*)copyString(buffer), RDF_STRING_TYPE, NULL);
 	}
     }
   if (lastVisit != NULL)
@@ -327,7 +327,7 @@ newLeafBkItem (RDFFile f, char* token)
 		strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_WINDATE),time);
 #endif
 		addSlotValue(f, newR, gWebData->RDF_lastVisitDate,
-			(void*)copyString(buffer), RDF_STRING_TYPE, true);
+			(void*)copyString(buffer), RDF_STRING_TYPE, NULL);
 	}
     }
   if (lastModified != NULL)
@@ -344,7 +344,7 @@ newLeafBkItem (RDFFile f, char* token)
 		strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_WINDATE),time);
 #endif
 		addSlotValue(f, newR, gWebData->RDF_lastModifiedDate,
-			(void*)copyString(buffer), RDF_STRING_TYPE, true);
+			(void*)copyString(buffer), RDF_STRING_TYPE, NULL);
 	}
     }
   f->lastItem = newR;

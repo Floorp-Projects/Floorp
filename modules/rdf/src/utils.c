@@ -92,6 +92,8 @@ initRDFFile (RDFFile ans)
   ans->locked = ans->localp;
   ans->lineSize = LINE_SIZE;
   ans->tv = true;
+  ans->resourceCount = 0;
+  ans->assertionCount = 0;
 }
 
 

@@ -67,7 +67,6 @@ void *		arcLabelsOutNextValue (RDFT mcf, RDF_Cursor c);
 void *		arcLabelsInNextValue (RDFT mcf, RDF_Cursor c);
 void *		remoteStoreNextValue (RDFT mcf, RDF_Cursor c);
 RDF_Error	remoteStoreDisposeCursor (RDFT mcf, RDF_Cursor c);
-void		gcRDFFileInt (RDFFile f);
 RDF_Error	DeleteRemStore (RDFT db);
 void		gcRDFFile (RDFFile f);
 void		RDFFilePossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep);
@@ -76,11 +75,12 @@ void		SCookPossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool 
 RDFT		MakeSCookDB (char* url);
 void		addToRDFTOut (RDFTOut out);
 PRIntn		RDFSerializerEnumerator (PLHashEntry *he, PRIntn i, void *arg);
-
+RDFFile makeNewRDFFile (char* url, RDF_Resource top, PRBool localp, RDFT db) ;
 static PRBool	fileReadp (RDFT rdf, char* url, PRBool mark);
 static void	possiblyAccessFile (RDFT mcf, RDF_Resource u, RDF_Resource s, PRBool inversep);
 static RDFFile	leastRecentlyUsedRDFFile (RDF mcf);
 static PRBool	freeSomeRDFSpace (RDF mcf);
+RDFFile  reReadRDFFile (char* url, RDF_Resource top, PRBool localp, RDFT db);
 
 XP_END_PROTOS
 

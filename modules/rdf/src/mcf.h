@@ -48,6 +48,7 @@ struct RDF_NotificationStruct {
 #define callArcLabelsIn(n, r, u) (ntrn(r, n) || (ntr(r, n)->arcLabelsIn == NULL) ? 0 : (*(ntr(r, n)->arcLabelsIn))(ntr(r, n), u))
 #define callDisposeResource(n, r, u) (ntrn(r, n) || (ntr(r, n)->disposeResource == NULL) ? 1 : (*(ntr(r, n)->disposeResource))(ntr(r, n), u))
 #define callExitRoutine(n, r) (ntrn(r, n) || (ntr(r, n)->destroy == NULL) ? 0 : (*(ntr(r, n)->destroy))(ntr(r, n)))
+#define callUpdateRoutine(n, r, u) (ntrn(r, n) || (ntr(r, n)->update == NULL) ? 0 : (*(ntr(r, n)->update))(ntr(r, n), u))
 
 #define ID_BUF_SIZE	20
 

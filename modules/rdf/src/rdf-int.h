@@ -154,11 +154,12 @@ typedef PRBool (*unassertProc)(RDFT r, RDF_Resource u, RDF_Resource s, void* val
 typedef void* (*nextItemProc)(RDFT r, RDF_Cursor c) ;
 typedef RDF_Error (*disposeCursorProc)(RDFT r, RDF_Cursor c);
 typedef RDF_Error (*disposeResourceProc)(RDFT r, RDF_Resource u);
-typedef RDF_Error (*updateProc)(RDFT r);
+typedef RDF_Error (*updateProc)(RDFT r, RDF_Resource u);
 typedef RDF_Error (*destroyProc)(struct RDF_TranslatorStruct*);
 typedef RDF_Cursor (*arcLabelsOutProc)(RDFT r, RDF_Resource u);
 typedef RDF_Cursor (*arcLabelsInProc)(RDFT r, RDF_Resource u);
 typedef PRBool (*fAssert1Proc) (RDFFile  file, RDFT mcf,  RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv) ;
+typedef PRBool (*fUnAssert1Proc) (RDFFile  file, RDFT mcf,  RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type) ;
 typedef void (*accessFileProc) (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep) ;
 
 struct RDF_ListStruct {
@@ -233,6 +234,7 @@ struct	RDF_FileStructTokens {
 
 struct RDF_FileStruct {
   char* url;
+
   RDF_Resource currentResource;
   RDF_Resource top;
   RDF_Resource rtop;
@@ -241,30 +243,41 @@ struct RDF_FileStruct {
   PRBool localp;
   char* storeAway;
   char* line;
+  XMLNameSpace namespaces;
   uint16   status;
+  char* holdOver;
+  int32   lineSize;
+  RDF_Resource stack[16];
+  uint16   depth ;
+
+
   uint16   resourceCount;
   uint16   resourceListSize;
   uint16   assertionCount;
   uint16   assertionListSize;
   RDF_Resource* resourceList;
   Assertion* assertionList;
-  char* holdOver;
+  char*    updateURL;
+  char*    postURL;
+
   PRTime lastReadTime;
   PRTime *expiryTime;
-  RDF_Resource stack[16];
-  uint16   depth ;
   uint8   fileType;
   PRBool  locked;
   RDF_Resource lastItem;
-  int32   lineSize;
-  struct RDF_FileStruct* next;
+
+
   PRBool tv;
   fAssert1Proc assert;
+  fUnAssert1Proc unassert;
   RDFT     db;
+  PRBool refreshingp;
+
   void* pdata;
-  XMLNameSpace namespaces;
+
   int16	numFileTokens;
   struct RDF_FileStructTokens tokens[RDF_MAX_NUM_FILE_TOKENS];
+  struct RDF_FileStruct* next;
 };
 
 RDF	newNavCenterDB();
@@ -277,6 +290,7 @@ RDFFile readRDFFile (char* url, RDF_Resource top, PRBool localp, RDFT rdf);
 void sendNotifications (RDF rdf, RDF_EventType opType, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv, char* ds);
 void sendNotifications2 (RDFT rdf, RDF_EventType opType, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv) ;
 RDF_Error exitRDF (RDF rdf);
+void		gcRDFFileInt (RDFFile f);
 void parseNextBkBlob(RDFFile f, char* blob, int32 blobSize);
 void printAssertion(Assertion as);
 RDF_Error addChildAfter (RDFT rdf, RDF_Resource parent, RDF_Resource child, RDF_Resource afterWhat);
@@ -324,7 +338,7 @@ void abortRDFParse (RDFFile f);
 void unitTransition (RDFFile f) ;	
 void assignHeaderSlot (RDFFile f, char* slot, char* value);			
 RDF_Error getFirstToken (char* line, char* nextToken, int16* l) ;
-void addSlotValue (RDFFile f, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv);
+void addSlotValue (RDFFile f, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, char* op);
 void assignSlot (RDF_Resource u, char* slot, char* value, RDFFile f);
 RDF_Error parseSlotValue (RDFFile f, RDF_Resource s, char* value, void** parsed_value, RDF_ValueType* data_type) ;
 RDF_Resource resolveReference (char *tok, RDFFile f) ;

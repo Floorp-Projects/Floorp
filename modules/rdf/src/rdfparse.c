@@ -182,6 +182,7 @@ freeNamespaces (RDFFile f)
     freeMem(ns1);
     ns1 = next;
   }
+  f->namespaces = NULL;
 }
 
 
@@ -216,10 +217,11 @@ addElementProps (char** attlist, char* elementName, RDFFile f, RDF_Resource obj)
     char* attName = attlist[count++];
     char* attValue = attlist[count++];
     if ((attName == NULL) || (attValue == NULL)) break;
-    if (!tagEquals(f, attName, "href") && !tagEquals(f, attName, "rdf:href")  && !tagEquals(f, attName, "RDF:href") 
+    if (!tagEquals(f, attName, "href") && !tagEquals(f, attName, "rdf:href")  && 
+        !tagEquals(f, attName, "RDF:href") && !tagEquals(f, attName, "tv") 
         && !tagEquals(f, attName, "id")) {
       addSlotValue(f, obj, ResourceFromElementName(f, attName), copyStringIgnoreWhiteSpace(attValue), 
-		   RDF_STRING_TYPE, 1);
+		   RDF_STRING_TYPE, "true");
     }
   }
 }
@@ -294,11 +296,13 @@ ResourceFromElementName (RDFFile f, char* elementName)
 void
 parseNextRDFToken (RDFFile f, char* token)
 {
+  char* attlist[2*MAX_ATTRIBUTES+1];
+  char* elementName;
   if (token[0] != '<')   {
     if ((f->status == EXPECTING_OBJECT) && (f->depth > 1)) {
       RDF_Resource u = f->stack[f->depth-2];
       RDF_Resource s = f->stack[f->depth-1];
-      addSlotValue(f, u, s, copyStringIgnoreWhiteSpace(token), RDF_STRING_TYPE, 1);
+      addSlotValue(f, u, s, copyStringIgnoreWhiteSpace(token), RDF_STRING_TYPE, NULL);
     } 
   } else if  (startsWith("<!--", token)) {
     return;
@@ -308,15 +312,23 @@ parseNextRDFToken (RDFFile f, char* token)
     if ((f->status != EXPECTING_OBJECT) && (f->status != EXPECTING_PROPERTY)) return;
     if (f->depth > 0) f->depth--;
     f->status = (f->status == EXPECTING_OBJECT ? EXPECTING_PROPERTY : EXPECTING_OBJECT);
-  } else if ((f->status == 0) && startsWith("<RDF:RDF>", token)) {
-      f->status = EXPECTING_OBJECT;
+  } else if ((f->status == 0) && startsWith("<RDF:RDF", token)) {
+    char* status = NULL;
+    char* update;
+    char* post;
+    f->status = EXPECTING_OBJECT;
+    tokenizeElement(token, attlist, &elementName);
+    update = getAttributeValue(attlist, "updateURL");
+	post = getAttributeValue(attlist, "postURL");
+    if (update) f->updateURL = copyString(update);
+    if (post) f->postURL = copyString(post);
+    status = getAttributeValue(attlist, "status");
+    if (status && (strcmp(status, "replace"))) gcRDFFileInt(f);
   } else if (startsWith("<RelatedLinks", token)) {
 	f->stack[f->depth++] = f->top;
 	f->status = EXPECTING_PROPERTY;
   } else {
-    PRBool emptyElementp = (token[strlen(token)-2] == '/');
-    char* attlist[2*MAX_ATTRIBUTES+1];
-    char* elementName;
+    PRBool emptyElementp = (token[strlen(token)-2] == '/');  
     if ((f->status != EXPECTING_OBJECT) && (f->status != EXPECTING_PROPERTY)) return;
     tokenizeElement(token, attlist, &elementName);
     if ((f->status == EXPECTING_PROPERTY) && (knownObjectElement(elementName))) return;
@@ -336,12 +348,12 @@ parseNextRDFToken (RDFFile f, char* token)
           setContainerp(obj, 1);
         } else {
           RDF_Resource eln = ResourceFromElementName(f, elementName);
-          addSlotValue(f, obj, gCoreVocab->RDF_instanceOf, eln, RDF_RESOURCE_TYPE, 1);
+          addSlotValue(f, obj, gCoreVocab->RDF_instanceOf, eln, RDF_RESOURCE_TYPE, getAttributeValue(attlist, "tv"));
         }
       }
       if (f->depth > 1) {
         addSlotValue(f, f->stack[f->depth-2], f->stack[f->depth-1], obj, 
-                     RDF_RESOURCE_TYPE, 1);
+                     RDF_RESOURCE_TYPE, getAttributeValue(attlist, "tv"));
       }
       if (!emptyElementp) {
         f->stack[f->depth++] = obj;
@@ -354,14 +366,23 @@ parseNextRDFToken (RDFFile f, char* token)
       url = getHref(attlist) ;      
       if (url) {
         RDF_Resource eln = ResourceFromElementName(f, elementName);
+        char* tvAtt = getAttributeValue(attlist, "tv");
         url = possiblyMakeAbsolute(f, url);
-        obj =  ResourceFromElementName(f, url);
+        obj =  ResourceFromElementName(f, url);        
         freeMem(url);
         addElementProps (attlist, elementName, f, obj) ;
         addToResourceList(f, obj);
-        addSlotValue(f, f->stack[f->depth-1], eln,obj,RDF_RESOURCE_TYPE, 1);
-
+        addSlotValue(f, f->stack[f->depth-1], eln,obj,RDF_RESOURCE_TYPE,  
+                     getAttributeValue(attlist, "tv"));
+      } else if ((strcmp(elementName, "child") == 0) && attlist[0] && 
+                 (strcmp(attlist[0], "instanceOf") == 0) &&
+                 attlist[1] && startsWith("Separator", attlist[1])) {
+        RDF_Resource sep = createSeparator();
+        RDF_Resource eln = ResourceFromElementName(f, elementName);
+        addSlotValue(f, f->stack[f->depth-1], eln,sep,RDF_RESOURCE_TYPE, 
+                     getAttributeValue(attlist, "tv"));
       }
+
       if (!emptyElementp) {
         f->stack[f->depth++] = ResourceFromElementName(f, elementName);
         f->status = EXPECTING_OBJECT;
@@ -494,3 +515,52 @@ outputRDFTree (RDF rdf, PRFileDesc *fp, RDF_Resource node)
   outputRDFTreeInt(rdf, fp, node, 0, (node==gNavCenter->RDF_Top) ? PR_TRUE:PR_FALSE);
   ht_fprintf(fp, "\n</RDF:RDF>\n");
 }
+
+
+
+
+void
+addSlotValue (RDFFile f, RDF_Resource u, RDF_Resource s, void* v,
+		RDF_ValueType type, char* op)
+{
+  PRBool tv;
+   if (f == NULL || u == NULL || s == NULL || v == NULL)	return;
+   if (s == gCoreVocab->RDF_child) {
+     RDF_Resource temp = (RDF_Resource)v;
+     if (type != RDF_RESOURCE_TYPE) return;
+     s = gCoreVocab->RDF_parent;
+     v = u;
+     u = temp;
+   }
+   if (op == NULL) {
+     tv = 1;
+   } else if (strcmp(op, "true") == 0) {
+     tv = 1;
+   } else if (strcmp(op, "false") == 0) {
+     tv = 0;
+   } else if (strcmp(op, "delete") == 0) {
+      if (f->unassert)  (*f->unassert)(f, f->db, u, s, v, type);
+      return;
+   }
+
+   if ((s == gCoreVocab->RDF_parent) && (type == RDF_RESOURCE_TYPE)) {
+     f->genlAdded = true; 
+     if (strstr(resourceID(u), ".rdf") && startsWith("http", resourceID(u))) {
+       RDFL rl = f->db->rdf;
+       char* dburl = getBaseURL(resourceID(u));
+       if (!startsWith(dburl, resourceID((RDF_Resource)v))) {
+         while (rl) {
+           RDF_AddDataSource(rl->rdf, dburl);
+           rl = rl->next;
+         }
+         freeMem(dburl);
+       }
+     }
+   }
+   (*f->assert)(f, f->db, u, s, v, type, tv);
+   if (s == gCoreVocab->RDF_parent) setContainerp((RDF_Resource)v, 1);
+#ifndef MOZILLA_CLIENT
+   notifySlotValueAdded(u, s, v, type);
+#endif
+}
+

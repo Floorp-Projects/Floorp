@@ -424,7 +424,7 @@ parseNextESFTPLine (RDFFile f, char* line)
 						case	RDF_STRING_TYPE:
 						addSlotValue(f, ru, f->tokens[loop].token,
 							unescapeURL(f->tokens[loop].data),
-							f->tokens[loop].type, 1);
+							f->tokens[loop].type, NULL);
 						break;
 	
 						case	RDF_INT_TYPE:
@@ -434,14 +434,14 @@ parseNextESFTPLine (RDFFile f, char* line)
 							if (val != 0)
 							{
 								addSlotValue(f, ru, f->tokens[loop].token,
-									(void *)val, f->tokens[loop].type, 1);
+									(void *)val, f->tokens[loop].type, NULL);
 							}
 						}
 						break;
 					}
 				}
 			}
-			addSlotValue(f, ru, gCoreVocab->RDF_parent, f->top, RDF_RESOURCE_TYPE, 1);
+			addSlotValue(f, ru, gCoreVocab->RDF_parent, f->top, RDF_RESOURCE_TYPE, NULL);
 		}
 		
 	}

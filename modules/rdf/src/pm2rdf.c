@@ -224,8 +224,10 @@ setMessageFlag (RDFT rdf, RDF_Resource r, char* newFlag)
 {
   MF folder = (MF) rdf->pdata;
   MM msg    = (MM)r->pdata;
-  fseek(folder->sfile, msg->summOffset+9, SEEK_SET);
+  fseek(folder->sfile, msg->summOffset+8, SEEK_SET);
   fputs(newFlag, folder->sfile);
+  freeMem(msg->flags);
+  msg->flags = copyString(newFlag);
   /* need to mark the flag in the message file */
   fflush(folder->sfile);
 }
@@ -259,7 +261,7 @@ MoveMessage (char* to, char* from, MM message) {
   fseek(tom->mfile, 0L, SEEK_END);
   fseek(fom->mfile, message->offset, SEEK_SET);
   fputs("From -\n", tom->mfile);
-  sprintf(buffer, "%s?%d", to, ftell(tom->mfile));
+  sprintf(buffer, "mailbox://%s?%d", &to[17], ftell(tom->mfile));
   r = RDF_GetResource(NULL, buffer, 1);
   newMsg->subject = copyString(message->subject);
   newMsg->from = copyString(message->from);
@@ -277,7 +279,7 @@ MoveMessage (char* to, char* from, MM message) {
   }
   sendNotifications2(todb, RDF_ASSERT_NOTIFY, r, gCoreVocab->RDF_parent, tom->top, 
                      RDF_RESOURCE_TYPE, 1);       
-  sendNotifications2(fromdb, RDF_DELETE_NOTIFY, r, gCoreVocab->RDF_parent, tom->top, 
+  sendNotifications2(fromdb, RDF_DELETE_NOTIFY, message->r, gCoreVocab->RDF_parent, fom->top, 
                      RDF_RESOURCE_TYPE, 1);       
   freeMem(buffer);
   return 1;
