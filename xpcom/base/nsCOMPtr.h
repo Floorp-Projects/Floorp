@@ -956,7 +956,7 @@ operator==( const nsCOMPtr<T>& lhs, const nsCOMPtr<U>& rhs )
     return NS_STATIC_CAST(const void*, lhs.get()) == NS_STATIC_CAST(const void*, rhs.get());
   }
 
-#ifdef HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL
+
 template <class T, class U>
 inline
 NSCAP_BOOL
@@ -964,8 +964,6 @@ operator!=( const nsCOMPtr<T>& lhs, const nsCOMPtr<U>& rhs )
   {
     return NS_STATIC_CAST(const void*, lhs.get()) != NS_STATIC_CAST(const void*, rhs.get());
   }
-#endif
-
 
 
 #ifndef NSCAP_NSCOMPTR_TO_RAW_COMPARISONS_ARE_AMBIGUOUS
