@@ -23,7 +23,6 @@
 #include "nsISupports.h"
 #include "nsIWebShellWindow.h"
 #include "nsIBrowserWindow.h"
-#include "nsIModalWindowSupport.h"
 #include "nsGUIEvent.h"
 #include "nsIWebShell.h"  
 #include "nsIDocumentLoaderObserver.h"
@@ -65,7 +64,6 @@ class nsWebShellWindow : public nsIWebShellWindow,
                          public nsIDocumentObserver,
                          public nsIUrlDispatcher,
                          public nsIPrompt,
-                         public nsIModalWindowSupport,
                          public nsSupportsWeakReference
 
 {
@@ -267,10 +265,6 @@ public:
 
   // nsIPrompt
   NS_DECL_NSIPROMPT
-
-  // nsIModalWindowSupport
-  NS_IMETHOD PrepareModality();
-  NS_IMETHOD FinishModality();
 
 protected:
   

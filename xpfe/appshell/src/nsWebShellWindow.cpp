@@ -211,6 +211,39 @@ struct nsWebShellInfo {
   }
 };
 
+// a little utility object to push an event queue and pop it when it
+// goes out of scope. should probably be in a file of utility functions.
+class stEventQueueStack {
+public:
+  stEventQueueStack();
+  ~stEventQueueStack();
+  nsresult Success() const { return mPushedStack; }
+private:
+  nsIEventQueueService *mService;
+  nsIEventQueue        *mQueue;
+  nsresult             mGotService,
+                       mPushedStack;
+};
+stEventQueueStack::stEventQueueStack() {
+
+  // ick! this makes bad assumptions about the structure of the service, but
+  // the service manager seems to need to work this way...
+  mGotService = nsServiceManager::GetService(kEventQueueServiceCID,
+                                  nsIEventQueueService::GetIID(),
+                                  (nsISupports **) &mService);
+  mPushedStack = mGotService;
+  if (NS_SUCCEEDED(mGotService))
+    mService->PushThreadEventQueue(&mQueue);
+}
+stEventQueueStack::~stEventQueueStack() {
+  if (NS_SUCCEEDED(mPushedStack))
+    mService->PopThreadEventQueue(mQueue);
+    // more ick!
+  if (NS_SUCCEEDED(mGotService))
+    nsServiceManager::ReleaseService(kEventQueueServiceCID,
+                        NS_STATIC_CAST(nsISupports *, mService));
+}
+
 nsWebShellWindow::nsWebShellWindow()
 {
   NS_INIT_REFCNT();
@@ -293,11 +326,6 @@ nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     *aInstancePtr = (void*)(nsIPrompt*)this;
     NS_ADDREF_THIS();
     return NS_OK;
-  }
-  if (aIID.Equals(nsIModalWindowSupport::GetIID())) {
-     *aInstancePtr = (void*)NS_STATIC_CAST(nsIModalWindowSupport*, this);
-     NS_ADDREF_THIS();
-     return NS_OK;
   }
   if (aIID.Equals(nsISupportsWeakReference::GetIID())) {
     *aInstancePtr = (void*)NS_STATIC_CAST(nsISupportsWeakReference *, this);
@@ -1551,7 +1579,9 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
 
   // First push a nested event queue for event processing from netlib
   // onto our UI thread queue stack.
-  appShell->PushThreadEventQueue();
+  stEventQueueStack queuePusher;
+  rv = queuePusher.Success();
+  if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIURI> urlObj;
   char * urlStr = "chrome://navigator/content/";
@@ -1605,9 +1635,6 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
 
       newWindow->GetLockedState(locked);
     }
-
-    // Get rid of the nested UI thread queue used for netlib
-    appShell->PopThreadEventQueue();
 
     subshell->Spindown();
     NS_RELEASE(subshell);
@@ -1789,14 +1816,16 @@ NS_IMETHODIMP
 nsWebShellWindow::ShowModally(PRBool aPrepare)
 {
   nsresult            rv;
+  nsIEventQueue       *eventQ;
   nsCOMPtr<nsIWidget> parentWidget;
 
-  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
   if (NS_FAILED(rv))
     return rv;
 
-  if (aPrepare && NS_FAILED(appShell->PushThreadEventQueue()))
-    aPrepare = PR_FALSE;
+  eventQ = NULL;
+  if (aPrepare)
+    eventQService->PushThreadEventQueue(&eventQ);
 
   parentWidget = do_QueryReferent(mParentWindow);
   if (parentWidget)
@@ -1805,8 +1834,8 @@ nsWebShellWindow::ShowModally(PRBool aPrepare)
   if (parentWidget)
     parentWidget->Enable(PR_TRUE);
 
-  if (aPrepare)
-    appShell->PopThreadEventQueue();
+  if (eventQ)
+    eventQService->PopThreadEventQueue(eventQ);
 
   return rv;
 }
@@ -3047,24 +3076,5 @@ NS_IMETHODIMP nsWebShellWindow::ConfirmYN(const PRUnichar *text, PRBool *_retval
 NS_IMETHODIMP nsWebShellWindow::ConfirmCheckYN(const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-// nsIModalWindowSupport interface
-nsresult nsWebShellWindow::PrepareModality()
-{
-  nsresult rv;
-  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-  return appShell->PushThreadEventQueue();
-}
-
-nsresult nsWebShellWindow::FinishModality()
-{
-  nsresult rv;
-  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-  return appShell->PopThreadEventQueue();
 }
 
