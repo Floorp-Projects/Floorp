@@ -111,7 +111,7 @@ nsFolderCompactState::InitDB(nsIMsgDatabase *db)
                                           getter_AddRefs(mailDBFactory));
   if (NS_SUCCEEDED(rv)) 
   {
-    PRBool folderOpen = mailDBFactory->Open(newPathSpec, PR_TRUE,
+    nsresult folderOpen = mailDBFactory->Open(newPathSpec, PR_TRUE,
                                      PR_FALSE,
                                      getter_AddRefs(m_db));
 
