@@ -58,17 +58,17 @@ namespace Silverstone.Manticore.Browser
 		/// </summary>
 		private void InitializeComponent()
 		{
-      this.groupBox1 = new System.Windows.Forms.GroupBox();
-      this.button2 = new System.Windows.Forms.Button();
-      this.label2 = new System.Windows.Forms.Label();
-      this.button1 = new System.Windows.Forms.Button();
-      this.textBox1 = new System.Windows.Forms.TextBox();
-      this.label1 = new System.Windows.Forms.Label();
-      this.groupBox2 = new System.Windows.Forms.GroupBox();
-      this.restoreSessionSettingsButton = new System.Windows.Forms.Button();
-      this.radioButton3 = new System.Windows.Forms.RadioButton();
-      this.radioButton2 = new System.Windows.Forms.RadioButton();
-      this.radioButton1 = new System.Windows.Forms.RadioButton();
+      this.groupBox1 = new GroupBox();
+      this.button2 = new Button();
+      this.label2 = new Label();
+      this.button1 = new Button();
+      this.textBox1 = new TextBox();
+      this.label1 = new Label();
+      this.groupBox2 = new GroupBox();
+      this.restoreSessionSettingsButton = new Button();
+      this.radioButton3 = new RadioButton();
+      this.radioButton2 = new RadioButton();
+      this.radioButton1 = new RadioButton();
       this.groupBox1.SuspendLayout();
       this.groupBox2.SuspendLayout();
       this.SuspendLayout();
@@ -143,7 +143,7 @@ namespace Silverstone.Manticore.Browser
       // 
       // restoreSessionSettingsButton
       // 
-      this.restoreSessionSettingsButton.Location = new System.Drawing.Point(224, 72);
+      this.restoreSessionSettingsButton.Location = new Point(224, 72);
       this.restoreSessionSettingsButton.Name = "restoreSessionSettingsButton";
       this.restoreSessionSettingsButton.TabIndex = 3;
       this.restoreSessionSettingsButton.Text = "Settings...";

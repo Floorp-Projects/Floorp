@@ -90,6 +90,10 @@
                     Name = "System.Drawing"
                     AssemblyName = "System.Drawing"
                 />
+                <Reference
+                    Name = "System.XML"
+                    AssemblyName = "System.Xml"
+                />
             </References>
         </Build>
         <Files>
@@ -196,7 +200,7 @@
                 />
                 <File
                     RelPath = "layout\layoutabstraction.cs"
-                    SubType = "Code"
+                    SubType = "Component"
                     BuildAction = "Compile"
                 />
                 <File
@@ -213,6 +217,11 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "toolkit\ProgressMeter.cs"
+                    SubType = "Component"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "toolkit\toolkit.menus.cs"
                     SubType = "Component"
                     BuildAction = "Compile"
@@ -224,7 +233,7 @@
                 />
                 <File
                     RelPath = "toolkit\toolkit.toolbars.cs"
-                    SubType = "Code"
+                    SubType = "Component"
                     BuildAction = "Compile"
                 />
             </Include>

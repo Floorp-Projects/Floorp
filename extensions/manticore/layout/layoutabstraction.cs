@@ -82,7 +82,7 @@ namespace Silverstone.Manticore.Layout
       switch (id) {
       case "trident":
         if (gecko != null) {
-		  url = gecko.LocationURL;
+          url = gecko.LocationURL;
           this.Controls.Remove(gecko as AxHost);
           gecko = null;
         }
@@ -95,7 +95,7 @@ namespace Silverstone.Manticore.Layout
         break;
       default:
         if (trident != null) {
-		  url = trident.LocationURL;
+          url = trident.LocationURL;
           this.Controls.Remove(trident as AxHost);
           trident = null;
         }
@@ -115,6 +115,9 @@ namespace Silverstone.Manticore.Layout
         host.EndInit();
         this.Controls.Add(host);
       }
+      
+      // Add appropriate content area listeners
+      AddListeners();
 
       mBrowserWindow.mApplication.Prefs.SetStringPref("browser.layoutengine", id);
 
@@ -177,9 +180,59 @@ namespace Silverstone.Manticore.Layout
     public void GoHome()
     {
       // XXX - need to implement "Home" preference
-      LoadURL("http://www.mozilla.org/", false);
+      String homepageURL = mBrowserWindow.mApplication.Prefs.GetStringPref("browser.homepage");
+      LoadURL(homepageURL, false);
+    }
+
+    private void AddListeners()
+    {
+      AddProgressListener();
+      AddTitleChangeListener();
+    }
+
+    private bool mProgressChangeGecko = false;
+    private bool mProgressChangeTrident = false;
+    private void AddProgressListener() 
+    {
+      if (gecko != null && !mProgressChangeGecko) {
+        gecko.ProgressChange += new AxMOZILLACONTROLLib.DWebBrowserEvents2_ProgressChangeEventHandler(OnProgressGecko);
+        mProgressChangeGecko = true;
+      }
+      else if (trident != null && !mProgressChangeTrident) {
+        trident.ProgressChange += new AxSHDocVw.DWebBrowserEvents2_ProgressChangeEventHandler(OnProgressTrident);
+        mProgressChangeTrident = true;
+      }
+    }
+    public void OnProgressGecko(Object sender, AxMOZILLACONTROLLib.DWebBrowserEvents2_ProgressChangeEvent e) 
+    {
+      mBrowserWindow.OnProgress(e.progress, e.progressMax);
+    }
+    public void OnProgressTrident(Object sender, AxSHDocVw.DWebBrowserEvents2_ProgressChangeEvent e) 
+    {
+      mBrowserWindow.OnProgress(e.progress, e.progressMax);
+    }
+
+    private bool mTitleChangeGecko = false;
+    private bool mTitleChangeTrident = false;
+    private void AddTitleChangeListener()
+    {
+      if (gecko != null && !mTitleChangeGecko) {
+        gecko.TitleChange += new AxMOZILLACONTROLLib.DWebBrowserEvents2_TitleChangeEventHandler(OnTitleChangeGecko);
+        mTitleChangeGecko = true;
+      }
+      else if (trident != null && !mTitleChangeTrident) {
+        trident.TitleChange += new AxSHDocVw.DWebBrowserEvents2_TitleChangeEventHandler(OnTitleChangeTrident);
+        mTitleChangeTrident = true;
+      }
+    }
+    public void OnTitleChangeGecko(Object sender, AxMOZILLACONTROLLib.DWebBrowserEvents2_TitleChangeEvent e)
+    {
+      mBrowserWindow.OnTitleChange(e.text);
+    }
+    public void OnTitleChangeTrident(Object sender, AxSHDocVw.DWebBrowserEvents2_TitleChangeEvent e)
+    {
+      mBrowserWindow.OnTitleChange(e.text);
     }
   }
-  
-
 }
+

@@ -47,13 +47,14 @@ namespace Silverstone.Manticore.Toolkit
   public abstract class ToolbarBuilder
   {
     private String mToolbarFile;
-    private Form mForm;
     private ToolBar mCurrentToolbar;
+
+    protected Form mForm;
 
     public Hashtable mItems;
    
     public ToolbarBuilder(String file, Form form)
-	{
+  	{
       mToolbarFile = file;
 	    mForm = form;
       mItems = new Hashtable();

@@ -69,6 +69,7 @@ FILES =	app.cs \
 	toolkit\toolkit.menus.cs \
 	toolkit\toolkit.toolbars.cs \
 	toolkit\ManticoreDialog.cs \
+	toolkit\ProgressMeter.cs \
 	core\preferences.cs \
 	bookmarks\bookmarks.cs
 

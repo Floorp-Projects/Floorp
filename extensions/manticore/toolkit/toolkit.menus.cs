@@ -46,27 +46,29 @@ namespace Silverstone.Manticore.Toolkit
 
   public abstract class MenuBuilder
   {
-    protected internal String menuDefinitionFile;
+    protected internal String mMenuFile;
+    protected internal Form mForm;
 
-    public MainMenu mainMenu;
-    public Hashtable items;
+    public Hashtable mItems;
 
-    public MenuBuilder(String file)
+    public MenuBuilder(String aFile, Form aForm)
     {
-      menuDefinitionFile = file;
-      mainMenu = new MainMenu();
-      items = new Hashtable();
+      mMenuFile = aFile;
+      mForm = aForm;
+      mItems = new Hashtable();
     }
 
     public void Build()
     {
       XmlTextReader reader;
-      reader = new XmlTextReader(menuDefinitionFile);
+      reader = new XmlTextReader(mMenuFile);
       
       reader.WhitespaceHandling = WhitespaceHandling.None;
       reader.MoveToContent();
 
+      MainMenu mainMenu = new MainMenu();
       Recurse(reader, mainMenu);
+      mForm.Menu = mainMenu;
     }
 
     protected void Recurse(XmlTextReader reader, Menu root)
@@ -106,7 +108,7 @@ namespace Silverstone.Manticore.Toolkit
                                            new EventHandler(OnCommand),
                                            values[2]);
             if (values[2] != "")
-              items.Add(values[2], menuitem);
+              mItems.Add(values[2], menuitem);
             root.MenuItems.Add(menuitem);
             Recurse(reader2, menuitem);
             break;
