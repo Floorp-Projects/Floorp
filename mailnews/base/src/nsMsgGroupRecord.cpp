@@ -36,7 +36,7 @@ extern "C" {
 const PRUint32 F_ISGROUP			 = 0x00000001;
 const PRUint32 F_EXPANDED			 = 0x00000002;
 const PRUint32 F_CATCONT			 = 0x00000004;
-const PRUint32 F_PROFILE			 = 0x00000008;
+const PRUint32 F_VIRTUAL			 = 0x00000008;
 const PRUint32 F_DIRTY			 = 0x00000010;
 const PRUint32 F_DESCENDENTSLOADED = 0x00000020;
 const PRUint32 F_HTMLOKGROUP		 = 0x00000040;
@@ -321,16 +321,18 @@ nsMsgGroupRecord::GetCategoryContainer()
 }
 
 
-PRBool
-nsMsgGroupRecord::IsProfile()
+nsresult
+nsMsgGroupRecord::IsVirtual(PRBool *retval)
 {
-	return (m_flags & F_PROFILE) != 0;
+	*retval =( (m_flags & F_VIRTUAL) != 0);
+    return NS_OK;
 }
 
-int
-nsMsgGroupRecord::SetIsProfile(PRBool value)
+nsresult
+nsMsgGroupRecord::SetIsVirtual(PRBool value)
 {
-	return TweakFlag(F_PROFILE, value);
+	TweakFlag(F_VIRTUAL, value);
+    return NS_OK;
 }
 
 

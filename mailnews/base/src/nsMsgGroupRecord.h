@@ -24,6 +24,7 @@
 #define _nsMsgGroupRecord_h__
 
 #include "prtypes.h"
+#include "nsISupports.h"
 
 class nsIMAPGroupRecord;
 
@@ -83,8 +84,8 @@ public:
 	nsMsgGroupRecord* GetCategoryContainer();
 
 	// Get/Set whether this is a virtual newsgroup.
-	PRBool IsProfile();
-	int SetIsProfile(PRBool value);
+	nsresult IsVirtual(PRBool *retval);
+    nsresult SetIsVirtual(PRBool value);
 
 	// Get/Set whether this is really a newsgroup (and not just a container
 	// for newsgroups).
