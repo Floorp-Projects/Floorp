@@ -816,7 +816,7 @@ nsresult nsFileSpec::Copy(const nsFileSpec& newParentDir) const
 } // nsFileSpec::Copy
 
 //----------------------------------------------------------------------------------------
-nsresult nsFileSpec::Move(const nsFileSpec& newParentDir) const
+nsresult nsFileSpec::Move(const nsFileSpec& newParentDir) 
 //----------------------------------------------------------------------------------------
 {
     // We can only move into a directory
@@ -827,6 +827,9 @@ nsresult nsFileSpec::Move(const nsFileSpec& newParentDir) const
     nsresult result = NS_FILE_RESULT(::FSpMoveRenameCompat(&mSpec,
                                     &newParentDir.mSpec,
                                     const_cast<StringPtr>(GetLeafPName())));
+
+    if ( NS_SUCCEEDED(result) )
+        *this = newParentDir + GetLeafName();
     
     return result;
 } // nsFileSpec::Move
