@@ -27,7 +27,7 @@
 
 #include "nsIDataChannel.h"
 #include "nsIURI.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsIEventQueue.h"
 #include "nsILoadGroup.h"
 #include "nsIStreamListener.h"

@@ -59,14 +59,14 @@ public:
         nsresult rv = aFromStream->Read(buf, 1024, &read);
         if (NS_FAILED(rv) || read == 0) return rv;
 
-        nsString2 to(aToType);
+        nsString to(aToType);
         char *toMIME = to.ToNewCString();
         char toChar = *toMIME;
 
         for (PRUint32 i = 0; i < read; i++) 
             buf[i] = toChar;
 
-        nsString2 convDataStr(buf);
+        nsString convDataStr(buf);
         nsIInputStream *inputData = nsnull;
         nsISupports *inputDataSup = nsnull;
 
@@ -312,7 +312,7 @@ main(int argc, char* argv[])
     if (NS_FAILED(rv)) return rv;
 
     // use a dummy string as a stream to convert.
-    nsString2 dummyData("aaaaaaaaaaaaaaa");
+    nsString dummyData("aaaaaaaaaaaaaaa");
     nsIInputStream *inputData = nsnull;
     nsISupports *inputDataSup = nsnull;
     nsIInputStream *convertedData = nsnull;
@@ -321,9 +321,9 @@ main(int argc, char* argv[])
     if (NS_FAILED(rv)) return rv;
 
     PRUnichar *from, *to;
-    nsString2 fromStr("a/foo");
+    nsString fromStr("a/foo");
     from = fromStr.ToNewUnicode();
-    nsString2 toStr  ("e/foo");
+    nsString toStr  ("e/foo");
     to = toStr.ToNewUnicode();
 
     rv = inputDataSup->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&inputData);

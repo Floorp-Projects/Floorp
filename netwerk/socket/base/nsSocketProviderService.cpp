@@ -20,7 +20,7 @@
  * Contributor(s): 
  */
 
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsIServiceManager.h"
 
 #include "nsSocketProviderService.h"
