@@ -36,7 +36,7 @@
   <html:script src="chrome://global/content/strres.js"/>
   <html:script src="chrome://search/content/search-panel.js" />
 
-      <box align="vertical" flex="100%">
+      <box align="vertical">
         <box align="horizontal" class="spaced">
         	<html:input id="sidebar-search-text" flex="1" onkeyup="if (event.which == 13) { return doSearch(); }" />
           <titledbutton id="searchbutton" value="&search.button.label;" onclick="return doSearch();" class="dialog toolbar-non-iconic"/>
