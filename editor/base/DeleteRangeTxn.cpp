@@ -257,7 +257,7 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent
       children->GetLength(&childCount);
       NS_ASSERTION(aEndOffset<=childCount, "bad aEndOffset");
       PRUint32 i;
-      for (i=aStartOffset; i<=aEndOffset; i++)
+      for (i=aStartOffset; i<aEndOffset; i++)
       {
         nsCOMPtr<nsIDOMNode> child;
         result = children->Item(i, getter_AddRefs(child));
