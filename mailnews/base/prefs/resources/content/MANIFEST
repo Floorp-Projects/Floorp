@@ -35,13 +35,9 @@ custreceipt.html
 pref-diskspace.html
 AccountWizard.xul
 AccountWizard.js
-aw-intro.xul
+aw-accounttype.xul
 aw-identity.xul
 aw-server.xul
-aw-smtp.xul
-aw-done.xul
-aw-accounttype.xul
-aw-mailtype.xul
-aw-fullname.xul
-aw-email.xul
 aw-login.xul
+aw-accname.xul
+aw-done.xul

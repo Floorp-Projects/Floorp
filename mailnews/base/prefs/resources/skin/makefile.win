@@ -21,11 +21,13 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: 
 	$(MAKE_INSTALL) accounttree.css		$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) wizard.css		$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) winclassic.gif	$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) winwide.gif	$(DIST)\bin\chrome\messenger\skin\default
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\skin\default\accounttree.css
+	rm -f $(DIST)\chrome\messenger\skin\default\wizard.css
 	rm -f $(DIST)\chrome\messenger\skin\default\winclassic.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\winwide.gif
 

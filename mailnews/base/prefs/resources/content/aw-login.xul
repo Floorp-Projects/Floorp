@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/wizard.css" type="text/css"?>
 
 <!--
 The contents of this file are subject to the Netscape Public
@@ -24,34 +25,53 @@ Rights Reserved.
 
 <!DOCTYPE window
 [
-<!ENTITY loginTitle.label "Your Email Account Name and Password:">
-<!ENTITY loginDesc.label "Enter your server login name and password given to you by your email provider:">
-<!ENTITY loginExample.label "For example: elmer">
+<!ENTITY loginTitle.label "Name and Password">
+<!ENTITY usernameDesc.label "Enter your user name given to you by your email provider.">
+<!ENTITY usernameExample.label "For example: jsmith">
+<!ENTITY usernameLabel.label "User Name:">
 
-<!ENTITY passwordTitle.label "Password:">
+<!ENTITY passwordTitle.label "Password Storage">
+<!ENTITY savePasswordDesc.label "Netscape Mail can save your password so that you are not asked for it each time you access this account. Your password is automatically sent to the server to which you are connecting. This is not recommended if other people have access to your computer.">
+<!ENTITY savePasswordLabel.label "If you want Netscape Mail to save your password, check the box below.">
+<!ENTITY savePasswordCheckbox.label "Save my password">
+
+<!ENTITY passwordDesc.label "Enter the password given to you by your email provider">
+<!ENTITY passwordLabel.label "Password:">
 ]>
 
 <window id="loginpage" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="parent.wizardPageLoaded('login');">
 <box align="vertical" style="width: 100%; height: 100%">
-  <html:div>
-    <html:div>&loginTitle.label;</html:div>
-    <html:div>&loginDesc.label;</html:div>
-  </html:div>
-  <box align="horizontal">
-    <html:input type="text" name="login" id="login"/>
+  <box class="title" align="horizontal">
+    <html:div class="title">&loginTitle.label;</html:div>
     <spring flex="100%"/>
+    <titledbutton class="plain" src="resource:/res/throbber/anims00.gif"/>
   </box>
-  <html:div>&loginExample.label;</html:div>
 
+  <box align="vertical" class="padded">
+    <html:div>&usernameDesc.label;</html:div>
+    <html:div>
+      &usernameLabel.label;
+      <html:input type="text" name="username" id="username"/>
+    </html:div>
+  </box>
 
-  <html:div>
-    <html:div>&passwordTitle.label;</html:div>
-  </html:div>
-  <box align="horizontal">
-    <html:input type="text" name="password" id="password"/>
-    <spring flex="100%"/>
+  <box align="vertical" class="padded">
+    <html:div class="title">&passwordTitle.label;</html:div>
+    <html:div>&savePasswordDesc.label;</html:div>
+    <html:div>&savePasswordLabel.label;</html:div>
+    <html:div>
+      <html:input type="checkbox" value="savepassword" name="savepassword" id="savepassword"/>
+      &savePasswordCheckbox.label;
+    </html:div>
+    <html:div style="padding-left: 15px">
+      <html:div>&passwordDesc.label;</html:div>
+      <html:div>
+        &passwordLabel.label;
+        <html:input type="password" name="password" id="password"/>
+      </html:div>
+    </html:div>
   </box>
 </box>
 </window>

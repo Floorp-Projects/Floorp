@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/wizard.css" type="text/css"?>
 
 <!--
 The contents of this file are subject to the Netscape Public
@@ -24,10 +25,13 @@ Rights Reserved.
 
 <!DOCTYPE window
 [
-<!ENTITY accountTypeTitle.label "Mail or news:">
-<!ENTITY accountTypeDesc.label "Select the type of account to set up:">
+<!ENTITY accountTypeTitle.label "Welcome to the Account Setup Wizard">
+<!ENTITY accountTypeDesc.label "This wizard will collect the necessary information needed before you can use your new account. If you do not know the information requested, please contact your Internet Service Provider or System Administrator.">
 <!ENTITY accountTypeMail.label "Mail">
 <!ENTITY accountTypeNews.label "News">
+<!ENTITY accountTypeWebMail.label "Netscape WebMail">
+<!ENTITY webMailNew.label "New Account">
+<!ENTITY webMailExisting.label "Existing Account">
 ]>
 
 <window id="accounttype" xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -35,10 +39,14 @@ Rights Reserved.
     onload="parent.wizardPageLoaded('accounttype');">
 
 <box align="vertical" style="width: 100%; height: 100%">
-<html:div>
-  <html:div>&accountTypeTitle.label;</html:div>
-  <html:div>&accountTypeDesc.label;</html:div>
-</html:div>
+
+  <box class="title" align="horizontal">
+    <html:div class="title">&accountTypeTitle.label;</html:div>
+    <spring flex="100%"/>
+    <titledbutton class="plain" src="resource:/res/throbber/anims00.gif"/>
+  </box>
+
+  <html:div class="desc">&accountTypeDesc.label;</html:div>
 <box align="vertical">
   <html:div>
     <html:input type="radio" name="acctyperadio" id="mailaccount" value="mail" checked="1"/>
@@ -48,6 +56,21 @@ Rights Reserved.
     <html:input type="radio" name="acctyperadio" id="newsaccount" value="news"/>
     &accountTypeNews.label;
   </html:div>
+  <html:div>
+    <html:input type="radio" name="acctyperadio" id="webmailaccount" value="webmail"/>
+    &accountTypeWebMail.label;
+  </html:div>
+  <html:div style="padding-left: 15px">
+    <html:div>
+      <html:input type="radio" name="webmailradio" id="newwebmail" value="webmail" checked="1"/>
+      &webMailNew.label;
+    </html:div>
+    <html:div>
+      <html:input type="radio" name="webmailradio" id="existwebmail" value="webmail"/>
+      &webMailExisting.label;
+    </html:div>
+  </html:div>
+    
 </box>
 </box>
 </window>

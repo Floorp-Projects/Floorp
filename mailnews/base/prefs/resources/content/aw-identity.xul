@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/wizard.css" type="text/css"?>
 
 <!--
 The contents of this file are subject to the Netscape Public
@@ -22,27 +23,51 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
-<!DOCTYPE window>
+<!DOCTYPE window
+[
+<!ENTITY identityTitle.label "Identity">
+<!ENTITY identityDesc.label "Each account can have its own identity, which is the ifnormation that other people see when they read your messages.">
 
-<window id="identity" xmlns:html="http://www.w3.org/TR/REC-html40"
+<!ENTITY fullnameDesc.label "Enter the name you would like to appear in the From field of your outgoing messages.">
+<!ENTITY fullnameExample.label "For example, John Smith">
+<!ENTITY fullnameLabel.label "Your Name:">
+
+<!ENTITY emailDesc.label "Enter your email address. This is the address otherws will use to send email to you.">
+<!ENTITY emailExample.label "For example, test@netscape.net">
+<!ENTITY emailLabel.label "Email Address:">
+]>
+
+<window id="identitypage" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="parent.wizardPageLoaded('identity');">
+<box align="vertical" style="width: 100%; height: 100%">
 
-<box align="vertical" style="width: 100%; height: 100%; margin: 10px">
-  <html:div>Please enter your name and email address.</html:div>
-  <html:div>This information will be saved in your preferences</html:div>
-
-  <html:div>Full name:</html:div>
-  <box align="horizontal">
-    <html:input id="name" type="text"/>
-    <html:div>(e.g. John Smith)</html:div>
+  <box class="title" align="horizontal">
+    <html:div class="title">&identityTitle.label;</html:div>
+    <spring flex="100%"/>
+    <titledbutton class="plain" src="resource:/res/throbber/anims00.gif"/>
   </box>
+  <html:div>&identityDesc.label;</html:div>
 
-  <html:div>Email Address:</html:div>
-  <box align="horizontal">
-    <html:input id="email" type="text"/>
-    <html:div>(e.g. jsmith@company.com)</html:div>
-  </box>
- 
+
+  <html:div>
+    <html:div>&fullnameDesc.label;</html:div>
+    <html:div>&fullnameExample.label;</html:div>
+    <box align="horizontal">
+      <html:div>&fullnameLabel.label;</html:div>
+      <html:input type="text" name="fullname" id="fullname"/>
+      <spring flex="100%"/>
+    </box>
+  </html:div>
+
+  <html:div>
+    <html:div>&emailDesc.label;</html:div>
+    <html:div>&emailExample.label;</html:div>
+    <box align="horizontal">
+      <html:div>&emailLabel.label;</html:div>
+      <html:input type="text" name="email" id="email"/>
+      <spring flex="100%"/>
+    </box>
+  </html:div>
 </box>
 </window>

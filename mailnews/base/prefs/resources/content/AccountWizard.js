@@ -19,14 +19,12 @@
  */
 
 var wizardMap = {
-    intro:    { next: "identity" },
-    accounttype: { next: "mailtype" },
-    mailtype: { next: "fullname", previous: "accounttype" },
-    fullname: { next: "email", previous: "mailtype" },
-    email:    { next: "server", previous: "fullname" },
-    server:   { next: "smtp", previous: "email", validate: validateServer},
-    smtp:     { next: "done", previous: "server", validate: validateSmtp},
-    done:     { previous: "smtp" }
+    accounttype: { next: "identity" },
+    identity: { next: "server", previous: "accounttype" },
+    server:   { next: "login", previous: "identity"},
+    login:    { next: "accname", previous: "server"},
+    accname:  { next: "done", previous: "login" },
+    done:     { previous: "accname" }
 }
 
 var pagePrefix="aw-";
@@ -55,6 +53,12 @@ function wizardPageLoaded(tag) {
 
 function onNext(event) {
 
+    if (!wizardMap[currentPageTag]) {
+        dump("Error, could not find entry for current page: " +
+             currentPageTag + "\n");
+        return;
+    }
+    
     // only run validation routine if it's there
     var validate = wizardMap[currentPageTag].validate;
     if (validate)
@@ -116,8 +120,10 @@ function saveContents(win, hash) {
     var inputs = win.document.getElementsByTagName("FORM")[0].elements;
     dump("There are " + inputs.length + " input tags\n");
     for (var i=0 ; i<inputs.length; i++) {
-        dump("Saving: ID=" + inputs[i].id + " Value=" + inputs[i].value + "\n");
-        hash[inputs[i].id] = inputs[i].value;
+        dump("Saving: ");
+        dump("ID=" + inputs[i].name + " Value=" + inputs[i].value + "..");
+        hash[inputs[i].name] = inputs[i].value;
+        dump("done.\n");
     }
 
 }

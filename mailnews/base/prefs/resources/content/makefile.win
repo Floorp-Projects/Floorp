@@ -39,16 +39,12 @@ install::
 	$(MAKE_INSTALL) pref-diskspace.html	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) AccountWizard.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) AccountWizard.js	$(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) aw-intro.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) aw-accounttype.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-identity.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-server.xul		$(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) aw-smtp.xul			$(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) aw-done.xul			$(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) aw-accounttype.xul	$(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) aw-mailtype.xul		$(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) aw-fullname.xul		$(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) aw-email.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-login.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) aw-accname.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) aw-done.xul			$(DIST)\bin\chrome\messenger\content\default
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\AccountManager.xul
@@ -62,16 +58,13 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\am-advanced.xul
 	rm -f $(DIST)\chrome\messenger\content\default\AccountWizard.xul
 	rm -f $(DIST)\chrome\messenger\content\default\AccountWizard.js
-	rm -f $(DIST)\chrome\messenger\content\default\aw-intro.xul
+	rm -f $(DIST)\chrome\messenger\content\default\aw-accounttype.xul
 	rm -f $(DIST)\chrome\messenger\content\default\aw-identity.xul
 	rm -f $(DIST)\chrome\messenger\content\default\aw-server.xul
 	rm -f $(DIST)\chrome\messenger\content\default\aw-smtp.xul
-	rm -f $(DIST)\chrome\messenger\content\default\aw-done.xul
-	rm -f $(DIST)\chrome\messenger\content\default\aw-accounttype.xul
-	rm -f $(DIST)\chrome\messenger\content\default\aw-mailtype.xul
-	rm -f $(DIST)\chrome\messenger\content\default\aw-fullname.xul
-	rm -f $(DIST)\chrome\messenger\content\default\aw-email.xul
 	rm -f $(DIST)\chrome\messenger\content\default\aw-login.xul
+	rm -f $(DIST)\chrome\messenger\content\default\aw-accname.xul
+	rm -f $(DIST)\chrome\messenger\content\default\aw-done.xul
 	rm -f $(DIST)\chrome\messenger\content\default\pref-mailnews.html
 	rm -f $(DIST)\chrome\messenger\content\default\pref-identity.html
 	rm -f $(DIST)\chrome\messenger\content\default\pref-mailservers.html
