@@ -216,7 +216,7 @@ if {[info exists people]} {
 <td>$fullname($p)</a></td>
 <td><a href=\"http://phonebook/ds/dosearch/phonebook/uid=[url_quote "$namepart,ou=People,o= Netscape Communications Corp.,c=US"]\">
 $uname</td>
-<td><a href=\"showcheckins.cgi?person=$uname[BatchIdPart]\">[llength $people($p)]
+<td><a href=\"showcheckins.cgi?person=[url_quote $uname][BatchIdPart]\">[llength $people($p)]
 [Pluralize change [llength $people($p)]]</a>$extra</td>"
         puts "
 <td>$curcontact($p)
