@@ -5,7 +5,7 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <menupopup id="helpPopup">
-    <menuitem label="Help Contents" position="1" 
+    <menuitem label="Help Contents" position="1" id="help"
   	oncommand="toOpenWindowByType('mozilla:help', 'chrome://help/content/help.xul');" />   
   
   </menupopup>
