@@ -498,15 +498,13 @@ nsresult nsImageDocument::UpdateTitle( void )
         rv = bundle->FormatStringFromName(key.GetUnicode(), formatStrings, 2, getter_Copies(valUni));
       }
     }
-    if (!valUni[0]) {
+    if (!valUni || !valUni[0]) {
       key.AssignWithConversion("ImageTitleWithoutDimensions");
       rv = bundle->GetStringFromName(key.GetUnicode(), getter_Copies(valUni));
     }
     if (NS_SUCCEEDED(rv) && valUni) {
-      nsString titleStr;
-      titleStr.Assign(valUni);
       // set it on the document
-      SetTitle(titleStr);
+      SetTitle(nsDependentString(valUni));
     }
   }
   return NS_OK;
