@@ -46,6 +46,8 @@
 #include <setjmp.h>
 #include <Errors.h>
 
+#define _PR_EMULATE_MSG_PEEK
+
 struct _MDProcess {
     PRInt8 notused;
 };

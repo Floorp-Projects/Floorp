@@ -50,6 +50,7 @@
 #define _PR_HAVE_ATOMIC_OPS
 #define _PR_HAVE_ATOMIC_CAS
 #define PR_HAVE_WIN32_NAMED_SHARED_MEMORY
+#define _PR_EMULATE_MSG_PEEK
 
 /* --- Common User-Thread/Native-Thread Definitions --------------------- */
 
