@@ -23,6 +23,7 @@
 #ifndef __nsFtpState__h_
 #define __nsFtpState__h_
 
+#include "ftpCore.h"
 #include "nsIThread.h"
 #include "nsIRunnable.h"
 #include "nsISocketTransportService.h"

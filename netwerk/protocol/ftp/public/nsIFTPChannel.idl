@@ -38,9 +38,3 @@ interface nsIFTPEventSink : nsISupports
     void OnFTPControlLog(in boolean server, in string msg);
 };
 
-
-%{C++
-#include "ftpCore.h"
-%}
-
-
