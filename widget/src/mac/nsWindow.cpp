@@ -16,6 +16,19 @@
  * Reserved.
  */
 
+// *** pinkerton -- 02/23/99 ***
+//
+// Here is what is happening right now, we are assuming in places w/in this file that the
+// implementation of |nsIWidget| is really |nsWindow| and then calling methods
+// specific to nsWindow to finish the job. These should be |dyanmic_cast|s,
+// but that doesn't work because of changes to |nsISupports| by beard. The
+// only way to get it working in the short term is to use a |reinterpret_cast|,
+// which is very dangerous, and guaranteed to crash if anyone writes their
+// own widget (and doesn't inherit from |nsWindow|).
+//
+// In the future, we need to do something to either a) get rid of the RTTI usage, or b) fix
+// |nsISupports|
+
 #include "nsWindow.h"
 #include "nsIFontMetrics.h"
 #include "nsIDeviceContext.h"
@@ -777,9 +790,10 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 					nsRect intersection;
 					if (intersection.IntersectRect(aRect, childBounds))
 					{
-						intersection.MoveBy(-childBounds.x, -childBounds.y);
-						
-						nsWindow* window = dynamic_cast<nsWindow*> ( childWidget.get() );
+						intersection.MoveBy(-childBounds.x, -childBounds.y);					
+						// pinkerton -- THIS IS A SERIOUS, BUT TEMPORARY HACK
+						// See (***) comment at top of this file.
+						nsWindow* window = reinterpret_cast<nsWindow*> ( childWidget.get() );
 						if ( window )
 							window->UpdateWidget(intersection, aContext);
 					}
@@ -832,7 +846,9 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 			if ( NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child))) ) {
 				nsCOMPtr<nsIWidget> childWidget ( do_QueryInterface(child) );
 				if ( childWidget ) {	
-					nsWindow* window = dynamic_cast<nsWindow*> ( childWidget.get() );
+					// pinkerton -- THIS IS A SERIOUS, BUT TEMPORARY HACK
+					// See (***) comment at top of this file.
+					nsWindow* window = reinterpret_cast<nsWindow*> ( childWidget.get() );
 					if ( window ) {
 						nsRect bounds;
 						window->GetBounds(bounds);
@@ -1127,8 +1143,10 @@ nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 				if ( NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child))) )
 				{
 					nsCOMPtr<nsIWidget> childWidget ( do_QueryInterface(child) );
-					if ( childWidget ) {	
-						nsWindow* window = dynamic_cast<nsWindow*> ( childWidget.get() );
+					if ( childWidget ) {
+						// pinkerton -- THIS IS A SERIOUS, BUT TEMPORARY HACK
+						// See (***) comment at top of this file.
+						nsWindow* window = reinterpret_cast<nsWindow*> ( childWidget.get() );
 						if ( window ) {
 							nsWindow* deeperHit = window->FindWidgetHit(aThePoint);
 							if (deeperHit)
