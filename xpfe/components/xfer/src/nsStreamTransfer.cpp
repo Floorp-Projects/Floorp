@@ -84,6 +84,26 @@ nsStreamTransfer::SelectFileAndTransferLocation( nsIURI *aURL ) {
 }
 
 NS_IMETHODIMP
+nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL ) {
+    nsresult rv = NS_OK;
+
+    // Construct URI from spec.
+    nsIURI *uri;
+#ifndef NECKO
+    rv = NS_NewURL( &uri, aURL );
+#else  // NECKO
+    rv = NS_NewURI( &uri, aURL );
+#endif // NECKO
+
+    if ( NS_SUCCEEDED( rv ) && uri ) {
+        rv = this->SelectFileAndTransferLocation( uri );
+        NS_RELEASE( uri );
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP
 nsStreamTransfer::SelectFile( nsFileSpec &aResult ) {
     nsresult rv = NS_OK;
 
