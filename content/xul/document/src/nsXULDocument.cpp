@@ -1996,8 +1996,14 @@ nsXULDocument::CreateFromPrototype(const char* aCommand,
                                                 getter_AddRefs(loadgroup));
         if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsIStreamObserver> loader;
-        rv = nsXULDocument::CachedChromeLoader::Create(this, getter_AddRefs(loader));
+        CachedChromeLoader* loader = new CachedChromeLoader(this);
+        if (! loader)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        NS_ADDREF(loader);
+        nsCOMPtr<nsIStreamObserver> anchor = do_QueryInterface(loader, &rv);
+        NS_RELEASE(loader);
+
         if (NS_FAILED(rv)) return rv;
 
         rv = loadgroup->Init(loader);
@@ -5557,18 +5563,6 @@ nsXULDocument::CachedChromeLoader::CachedChromeLoader(nsXULDocument* aDocument)
 nsXULDocument::CachedChromeLoader::~CachedChromeLoader()
 {
     NS_RELEASE(mDocument);
-}
-
-nsresult
-nsXULDocument::CachedChromeLoader::Create(nsXULDocument* aDocument, nsIStreamObserver** aResult)
-{
-    CachedChromeLoader* loader = new CachedChromeLoader(aDocument);
-    if (! loader)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    *aResult = loader;
-    NS_ADDREF(*aResult);
-    return NS_OK;
 }
 
 NS_IMPL_ADDREF(nsXULDocument::CachedChromeLoader);
