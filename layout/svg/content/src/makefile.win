@@ -23,6 +23,11 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=layoutsvgcontent_s 
 MODULE=layout 
+REQUIRES = \
+	string \
+	xpcom \
+	content \
+	$(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 

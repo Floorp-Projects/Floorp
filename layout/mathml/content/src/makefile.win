@@ -25,6 +25,12 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=layoutmathmlcontent_s 
 MODULE=layout 
+REQUIRES    = string \
+              xpcom \
+			  content \
+			  necko \
+			  gfx \
+              $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
