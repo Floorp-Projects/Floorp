@@ -90,7 +90,54 @@ public:
   NS_IMETHOD Reset();
 };
 
+class nsContentListKey
+{
+public:
+  nsContentListKey(nsIDocument *aDocument,
+                   nsIAtom* aMatchAtom, 
+                   PRInt32 aMatchNameSpaceId,
+                   nsIContent* aRootContent)
+    : mMatchAtom(aMatchAtom),
+      mMatchNameSpaceId(aMatchNameSpaceId),
+      mDocument(aDocument),
+      mRootContent(aRootContent)
+  {
+  }
+  
+  nsContentListKey(const nsContentListKey& aContentListKey)
+    : mMatchAtom(aContentListKey.mMatchAtom),
+      mMatchNameSpaceId(aContentListKey.mMatchNameSpaceId),
+      mDocument(aContentListKey.mDocument),
+      mRootContent(aContentListKey.mRootContent)
+  {
+  }
+
+  PRBool Equals(const nsContentListKey& aContentListKey) const
+  {
+    return
+      mMatchAtom == aContentListKey.mMatchAtom &&
+      mMatchNameSpaceId == aContentListKey.mMatchNameSpaceId &&
+      mDocument == aContentListKey.mDocument &&
+      mRootContent == aContentListKey.mRootContent;
+  }
+  inline PRUint32 GetHash(void) const
+  {
+    return
+      NS_PTR_TO_INT32(mMatchAtom.get()) ^
+      (NS_PTR_TO_INT32(mRootContent) << 8) ^
+      (NS_PTR_TO_INT32(mDocument) << 16) ^
+      (mMatchNameSpaceId << 24);
+  }
+  
+protected:
+  nsCOMPtr<nsIAtom> mMatchAtom;
+  PRInt32 mMatchNameSpaceId;
+  nsIDocument* mDocument;   // Weak ref
+  nsIContent* mRootContent; // Weak ref
+};
+
 class nsContentList : public nsBaseContentList,
+                      protected nsContentListKey,
                       public nsIDOMHTMLCollection,
                       public nsIDocumentObserver,
                       public nsIContentList
@@ -181,6 +228,11 @@ public:
                               nsIStyleRule* aStyleRule) { return NS_OK; }
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
 
+  // Other public methods
+  nsContentListKey* GetKey() {
+    return NS_STATIC_CAST(nsContentListKey*, this);
+  }
+  
 protected:
   nsresult Match(nsIContent *aContent, PRBool *aMatch);
   void Init(nsIDocument *aDocument);
@@ -191,14 +243,16 @@ protected:
   PRBool IsDescendantOfRoot(nsIContent* aContainer);
   PRBool ContainsRoot(nsIContent* aContent);
   nsresult CheckDocumentExistence();
+  void RemoveFromHashtable();
 
-  nsIAtom* mMatchAtom;
-  PRInt32 mMatchNameSpaceId;
   nsContentListMatchFunc mFunc;
   nsString* mData;
-  nsIDocument* mDocument;
-  nsIContent* mRootContent;
   PRBool mMatchAll;
 };
+
+extern nsresult
+NS_GetContentList(nsIDocument* aDocument, nsIAtom* aMatchAtom,
+                  PRInt32 aMatchNameSpaceId, nsIContent* aRootContent,
+                  nsIContentList** aInstancePtrResult);
 
 #endif // nsContentList_h___
