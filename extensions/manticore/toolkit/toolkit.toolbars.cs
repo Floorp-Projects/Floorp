@@ -32,6 +32,7 @@
  *
  */
 
+
 namespace Silverstone.Manticore.Toolkit
 {
   using System;
@@ -54,6 +55,16 @@ namespace Silverstone.Manticore.Toolkit
     protected Form mForm;
 
     public Hashtable mItems;
+
+    // XXX band-set hack 
+    protected ToolBar mToolBar;
+    public Rectangle Bounds
+    {
+      get 
+      {
+        return mToolBar.Bounds;
+      }
+    }
    
     public ToolbarBuilder(String aToolbarFile, Form aForm)
     {
@@ -61,6 +72,12 @@ namespace Silverstone.Manticore.Toolkit
       mForm = aForm;
       mItems = new Hashtable();
 
+
+      // XXX band-set hack 
+      mToolBar = new ToolBar();
+      mForm.Controls.Add(mToolBar);
+
+      /*
       // Initialize CoolBar
       mCoolBar = new AxCoolBar();
       AxHost host = mCoolBar as AxHost;
@@ -68,6 +85,7 @@ namespace Silverstone.Manticore.Toolkit
       host.Dock = DockStyle.Top;
       host.EndInit();
       mForm.Controls.Add(host);
+      */
 
       // We can't build the CoolBar until after the window is visible
       mForm.VisibleChanged += new EventHandler(Build);
@@ -81,8 +99,6 @@ namespace Silverstone.Manticore.Toolkit
       reader.MoveToContent();
 
       bool shouldBuildNewRow = true;
-
-      ToolBar currToolbar = null;
 
       while (reader.Read()) 
       {
@@ -110,28 +126,27 @@ namespace Silverstone.Manticore.Toolkit
               bool visible = tbvalues[3] == "true";
       
               // Create and add a new toolbar.
-              currToolbar = new ToolBar();
-              currToolbar.Appearance = ToolBarAppearance.Flat;
-              currToolbar.ButtonClick += new ToolBarButtonClickEventHandler(this.OnCommand);
-              mForm.Controls.Add(currToolbar);
+              mToolBar.Appearance = ToolBarAppearance.Flat;
+              mToolBar.ButtonClick += new ToolBarButtonClickEventHandler(this.OnCommand);
+              mForm.Controls.Add(mToolBar);
 
-              //mCoolBar.Bands.Add(-1, key, label, new Object(), true, currToolbar, true);
+              //mCoolBar.Bands.Add(-1, key, label, new Object(), true, mToolBar, true);
 
               shouldBuildNewRow = false;
               break;
             case "toolbarseparator": 
             {
-              if (currToolbar != null) 
+              if (mToolBar != null) 
               {
                 ToolBarButton button = new ToolBarButton();
                 button.Style = ToolBarButtonStyle.Separator;
-                currToolbar.Buttons.Add(button);
+                mToolBar.Buttons.Add(button);
               }
               break;
             }
             case "toolbarbutton":
             {
-              if (currToolbar != null) 
+              if (mToolBar != null) 
               {
                 String[] tbbvalues = new String[3] {"", "", ""};
                 String[] tbbnames = new String[3] {"label", "icon", "command"};
@@ -145,7 +160,7 @@ namespace Silverstone.Manticore.Toolkit
          
                 ToolBarButton button = new CommandButtonItem(tbbvalues[1]);
                 button.Text = tbbvalues[0];
-                currToolbar.Buttons.Add(button);
+                mToolBar.Buttons.Add(button);
               }
               break;
             }

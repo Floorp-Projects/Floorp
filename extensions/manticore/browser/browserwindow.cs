@@ -51,7 +51,16 @@ namespace Silverstone.Manticore.Browser
     private MenuBuilder mMenuBuilder;
     private BrowserToolbarBuilder mToolbarBuilder;
 
+    private LocationBar mLocationBar;
+
     private WebBrowser mWebBrowser;
+    public WebBrowser WebBrowser
+    {
+      get 
+      {
+        return mWebBrowser;
+      }
+    }
 
     private StatusBar mStatusBar;
     private StatusBarPanel mProgressMeter;
@@ -118,21 +127,39 @@ namespace Silverstone.Manticore.Browser
       mStatusBar.Panels.AddRange(new StatusBarPanel[] {docStatePanel, mStatusPanel, mProgressMeter, zonePanel});
       mStatusBar.ShowPanels = true;
       
-      mWebBrowser = new WebBrowser(this);
-      this.Controls.Add(mWebBrowser);
-
       this.Controls.Add(mStatusBar);
 
       mToolbarBuilder = new BrowserToolbarBuilder("browser\\browser-toolbar.xml", this);
+
+      mLocationBar = new LocationBar();
+      mLocationBar.Top = mToolbarBuilder.Bounds.Top + mToolbarBuilder.Bounds.Height;
+      mLocationBar.Left = 0;
+      mLocationBar.Width = ClientRectangle.Width;
+      mLocationBar.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top;
+      mLocationBar.LocationBarCommit += new LocationBar.LocationBarEventHandler(OnLocationCommit);
+      mLocationBar.LocationBarModified += new LocationBar.LocationBarEventHandler(OnLocationModified);
+      this.Controls.Add(mLocationBar);
+
+      mWebBrowser = new WebBrowser(this);
+      mWebBrowser.Dock = DockStyle.Bottom;
+      mWebBrowser.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+      mWebBrowser.Top = mLocationBar.Top + mLocationBar.Height;
+      mWebBrowser.Width = ClientRectangle.Width;
+      mWebBrowser.Height = ClientRectangle.Height - mWebBrowser.Top - mStatusBar.Height;
+      this.Controls.Add(mWebBrowser);
 
       // Start Page handler
       this.VisibleChanged += new EventHandler(LoadStartPage);
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // URL Loading
+
     /// <summary>
     /// The currently loaded document's URL.
     /// </summary>
-    public String URL {
+    public String URL 
+    {
       get {
         return mWebBrowser.URL;
       }
@@ -140,11 +167,29 @@ namespace Silverstone.Manticore.Browser
 
     public void LoadURL(String aURL)
     {
+      mUpdatedURLBar = false;
       mWebBrowser.LoadURL(aURL, false);
+    }
+
+    protected bool mShouldLoadHomePage = true;
+    public bool ShouldLoadHomePage
+    {
+      get 
+      {
+        return mShouldLoadHomePage;
+      }
+      set 
+      {
+        if (value != mShouldLoadHomePage)
+          mShouldLoadHomePage = value;
+      }
     }
     
     private void LoadStartPage(object sender, EventArgs e)
     {
+      if (!mShouldLoadHomePage)
+        return;
+
       int startMode = ServiceManager.Preferences.GetIntPref("browser.homepage.mode");
       switch (startMode) {
       case 0:
@@ -159,6 +204,25 @@ namespace Silverstone.Manticore.Browser
         mWebBrowser.LoadURL(mSessionURL, false);
         break;
       }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Location Bar
+    protected void OnLocationCommit(Object aSender, LocationBarEventArgs aLbea)
+    {
+      string url = ServiceManager.Bookmarks.ResolveKeyword(aLbea.Text);
+      if (url == "") 
+        url = aLbea.Text;
+
+      mUserTyped = false;
+      LoadURL(url);
+    }
+
+    protected bool mUserTyped = false;
+    protected bool mUpdatedURLBar = false;
+    protected void OnLocationModified(Object aSender, LocationBarEventArgs aLbea)
+    {
+      mUserTyped = true;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -263,6 +327,21 @@ namespace Silverstone.Manticore.Browser
         String text = percentage + "% complete";
         mProgressMeter.Text = text;
       }
+      // XXX we really would rather set this in BeforeNavigate2, but we
+      //     can't get that event to fire for some reason. 
+      if (mUpdatedURLBar) 
+        mUpdatedURLBar = false;
+    }
+
+    // XXX we probably will need to extend this to take as a parameter
+    //     more data from the NavigateComplete event
+    public void OnNavigateComplete2(string aURL)
+    {
+      if (!mUpdatedURLBar && !mUserTyped) 
+      {
+        mLocationBar.Text = aURL;
+        mUpdatedURLBar = true;
+      }
     }
 
     public void OnTitleChange(String aTitle)
@@ -274,12 +353,6 @@ namespace Silverstone.Manticore.Browser
     public void OnStatusTextChange(String aStatusText)
     {
       mStatusPanel.Text = aStatusText;
-    }
-
-    public Object OnNewWindow()
-    {
-      // XXX figure out what this does.
-      return new Object();
     }
 
     /// <summary>

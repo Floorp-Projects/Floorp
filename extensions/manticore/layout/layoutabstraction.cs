@@ -53,8 +53,23 @@ namespace Silverstone.Manticore.Layout
 
   public class WebBrowser : UserControl
   {
-    private AxWebBrowser trident;
-    private AxMozillaBrowser gecko;
+    protected AxWebBrowser trident;
+    public AxWebBrowser Trident
+    {
+      get 
+      {
+        return trident;
+      }
+    }
+
+    protected AxMozillaBrowser gecko;
+    public AxMozillaBrowser Gecko
+    {
+      get 
+      {
+        return gecko;
+      }
+    }
 
     private BrowserWindow mBrowserWindow;
 
@@ -63,7 +78,6 @@ namespace Silverstone.Manticore.Layout
     public WebBrowser(BrowserWindow aBrowserWindow)
     {
       mBrowserWindow = aBrowserWindow;
-      this.Dock = DockStyle.Fill;
     }
 
     protected override void OnPaint(PaintEventArgs e)
@@ -261,6 +275,7 @@ namespace Silverstone.Manticore.Layout
     private void AddListeners()
     {
       AddProgressListener();
+      AddNavigateComplete2Listener();
       AddTitleChangeListener();
       AddStatusChangeListener();
       AddNewWindowListener();
@@ -286,6 +301,30 @@ namespace Silverstone.Manticore.Layout
     public void OnProgressTrident(Object sender, AxSHDocVw.DWebBrowserEvents2_ProgressChangeEvent e) 
     {
       mBrowserWindow.OnProgress(e.progress, e.progressMax);
+    }
+
+    private bool mNavigateComplete2Gecko = false;
+    private bool mNavigateComplete2Trident = false;
+    private void AddNavigateComplete2Listener() 
+    {
+      if (gecko != null && !mNavigateComplete2Gecko) 
+      {
+        gecko.NavigateComplete2 += new AxMOZILLACONTROLLib.DWebBrowserEvents2_NavigateComplete2EventHandler(OnNavigateComplete2Gecko);
+        mNavigateComplete2Gecko = true;
+      }
+      else if (trident != null && !mNavigateComplete2Trident) 
+      {
+        trident.NavigateComplete2 += new AxSHDocVw.DWebBrowserEvents2_NavigateComplete2EventHandler(OnNavigateComplete2Trident);
+        mNavigateComplete2Trident = true;
+      }
+    }
+    public void OnNavigateComplete2Gecko(Object sender, AxMOZILLACONTROLLib.DWebBrowserEvents2_NavigateComplete2Event e) 
+    {
+      mBrowserWindow.OnNavigateComplete2(e.uRL as string);
+    }
+    public void OnNavigateComplete2Trident(Object sender, AxSHDocVw.DWebBrowserEvents2_NavigateComplete2Event e) 
+    {
+      mBrowserWindow.OnNavigateComplete2(e.uRL as string);
     }
 
     private bool mTitleChangeGecko = false;
@@ -347,17 +386,30 @@ namespace Silverstone.Manticore.Layout
     }
     public void OnNewWindowGecko(Object sender, AxMOZILLACONTROLLib.DWebBrowserEvents2_NewWindow2Event e)
     {
-      Object browser = mBrowserWindow.OnNewWindow();
-      AxMozillaBrowser webBrowser = browser as AxMozillaBrowser;
-      if (webBrowser != null)
-        e.ppDisp = webBrowser;
+      bool allowPopups = ServiceManager.Preferences.GetBoolPref("browser.allowpopups");
+      if (allowPopups) 
+      {
+        BrowserWindow window = new BrowserWindow();
+        window.WebBrowser.RealizeLayoutEngine();
+        window.Show();
+        e.ppDisp = window.WebBrowser.Gecko;
+      }
+      else 
+        e.cancel = true;
     }
     public void OnNewWindowTrident(Object sender, AxSHDocVw.DWebBrowserEvents2_NewWindow2Event e)
     {
-      Object browser = mBrowserWindow.OnNewWindow();
-      AxWebBrowser webBrowser = browser as AxWebBrowser;
-      if (webBrowser != null)
-        e.ppDisp = webBrowser;
+      bool allowPopups = ServiceManager.Preferences.GetBoolPref("browser.allowpopups");
+      if (allowPopups) 
+      {
+        BrowserWindow window = new BrowserWindow();
+//        window.ShouldLoadHomePage = false;
+        window.WebBrowser.RealizeLayoutEngine();
+        window.Show();
+        e.ppDisp = window.WebBrowser.Trident;
+      }
+      else 
+        e.cancel = true;
     }
     
     private bool mFileDownloadGecko = false;

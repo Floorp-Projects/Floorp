@@ -64,6 +64,9 @@ namespace Silverstone.Manticore.Toolkit
       mForm = aForm;
       mItems = new Hashtable();
       mBuilders = new Hashtable();
+
+      mMainMenu = new MainMenu();
+      mForm.Menu = mMainMenu;
     }
 
     public void Build()
@@ -74,9 +77,7 @@ namespace Silverstone.Manticore.Toolkit
       reader.WhitespaceHandling = WhitespaceHandling.None;
       reader.MoveToContent();
 
-      mMainMenu = new MainMenu();
       Recurse(reader, mMainMenu);
-      mForm.Menu = mMainMenu;
     }
 
     protected MenuItem mCurrentMenuItem;

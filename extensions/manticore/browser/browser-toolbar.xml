@@ -12,11 +12,13 @@
 	    <toolbarbutton label="Home" command="view-go-home"/>
 	  </toolbar>
   </toolstrip>
+<!-- This awaits a decent toolbar implementation
   <toolstrip>
     <toolbar id="navigation-toolbar" label="Location:" visible="true" description="Navigation Toolbar">
       <locationbar/>
 	    <toolbarbutton label="Go" command="go-to-url"/>
 	  </toolbar>
   </toolstrip>
+  -->
 </toolbox>
 

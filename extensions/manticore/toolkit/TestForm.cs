@@ -45,6 +45,10 @@ namespace Silverstone.Manticore.Toolkit
 	/// </summary>
 	public class TestForm : System.Windows.Forms.Form
 	{
+    private System.Windows.Forms.StatusBar statusBar1;
+    private System.Windows.Forms.ToolBar toolBar1;
+    private System.Windows.Forms.TreeView treeView1;
+    private System.Windows.Forms.TextBox textBox1;
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
@@ -57,26 +61,18 @@ namespace Silverstone.Manticore.Toolkit
 			//
 			InitializeComponent();
 
+      /*
       StripBar bar = new StripBar();
-//      bar.BackImage = Image.FromFile("resources\\manticore.png");
-      this.Controls.Add(bar);
-      bar.Location = new Point(0, 0);
-      bar.Size = new Size(500, 75);
-      
+      bar.Dock = DockStyle.Top;
+      // bar.BackImage = Image.FromFile("resources\\manticore.png");
+      this.Controls.Add(bar);      
 
-      Band bnd = new Band();
-//      bnd.BackColor = SystemColors.ControlDarkDark;
-      bar.Bands.Add(bnd);
+      StripBand bnd = new StripBand();
+      bar.AddBand(bnd);
 
-      bnd = new Band();
-//      bnd.BackColor = SystemColors.ControlLight;
-      bnd.NewRow = true;
-      bar.Bands.Add(bnd);
-
-
-			//
-			// TODO: Add any constructor code after InitializeComponent call
-			//
+      bnd = new StripBand();
+      bar.AddBand(bnd);
+*/
 		}
 
 		/// <summary>
@@ -101,10 +97,69 @@ namespace Silverstone.Manticore.Toolkit
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.components = new System.ComponentModel.Container();
-			this.Size = new System.Drawing.Size(300,300);
-			this.Text = "TestForm";
-		}
+      this.statusBar1 = new System.Windows.Forms.StatusBar();
+      this.toolBar1 = new System.Windows.Forms.ToolBar();
+      this.treeView1 = new System.Windows.Forms.TreeView();
+      this.textBox1 = new System.Windows.Forms.TextBox();
+      this.SuspendLayout();
+      // 
+      // statusBar1
+      // 
+      this.statusBar1.Location = new System.Drawing.Point(0, 312);
+      this.statusBar1.Name = "statusBar1";
+      this.statusBar1.Size = new System.Drawing.Size(416, 22);
+      this.statusBar1.TabIndex = 0;
+      this.statusBar1.Text = "statusBar1";
+      // 
+      // toolBar1
+      // 
+      this.toolBar1.DropDownArrows = true;
+      this.toolBar1.Name = "toolBar1";
+      this.toolBar1.ShowToolTips = true;
+      this.toolBar1.Size = new System.Drawing.Size(416, 39);
+      this.toolBar1.TabIndex = 1;
+      // 
+      // treeView1
+      // 
+      this.treeView1.Anchor = (((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+        | System.Windows.Forms.AnchorStyles.Left) 
+        | System.Windows.Forms.AnchorStyles.Right);
+      this.treeView1.ImageIndex = -1;
+      this.treeView1.Location = new System.Drawing.Point(0, 64);
+      this.treeView1.Name = "treeView1";
+      this.treeView1.SelectedImageIndex = -1;
+      this.treeView1.Size = new System.Drawing.Size(416, 248);
+      this.treeView1.TabIndex = 3;
+      // 
+      // textBox1
+      // 
+      this.textBox1.Dock = System.Windows.Forms.DockStyle.Top;
+      this.textBox1.Location = new System.Drawing.Point(0, 39);
+      this.textBox1.Name = "textBox1";
+      this.textBox1.Size = new System.Drawing.Size(416, 20);
+      this.textBox1.TabIndex = 4;
+      this.textBox1.Text = "textBox1";
+      // 
+      // TestForm
+      // 
+      this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
+      this.ClientSize = new System.Drawing.Size(416, 334);
+      this.Controls.AddRange(new System.Windows.Forms.Control[] {
+                                                                  this.textBox1,
+                                                                  this.treeView1,
+                                                                  this.toolBar1,
+                                                                  this.statusBar1});
+      this.Name = "TestForm";
+      this.Text = "TestForm";
+      this.Load += new System.EventHandler(this.TestForm_Load);
+      this.ResumeLayout(false);
+
+    }
 		#endregion
+
+    private void TestForm_Load(object sender, System.EventArgs e)
+    {
+    
+    }
 	}
 }

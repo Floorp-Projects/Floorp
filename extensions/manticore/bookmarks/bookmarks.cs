@@ -103,6 +103,12 @@ namespace Silverstone.Manticore.Bookmarks
       // Import a Netscape bookmarks file.
     }
 
+    public string ResolveKeyword(string aURL)
+    {
+      // XXX implement me
+      return "";
+    }
+
     public String CreateBookmark(String aLabel, String aParentID, int aPosition)
     {
       XmlElement parentElt = GetElementById(aParentID);

@@ -197,6 +197,16 @@
                     BuildAction = "EmbeddedResource"
                 />
                 <File
+                    RelPath = "browser\LocationBar.cs"
+                    SubType = "UserControl"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "browser\LocationBar.resx"
+                    DependentUpon = "LocationBar.cs"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
                     RelPath = "browser\OpenLocDialog.cs"
                     SubType = "Form"
                     BuildAction = "Compile"
