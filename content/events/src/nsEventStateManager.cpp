@@ -815,141 +815,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       }
 
       //This is to prevent keyboard scrolling while alt or other accesskey modifier in use.
-      if (isSpecialAccessKeyDown) {
-        //Alt or other accesskey modifier is down, we may need to do an accesskey
-        if (mAccessKeys) {
-          //Someone registered an accesskey.  Find and activate it.
-          PRUnichar accKey = nsCRT::ToLower((char)keyEvent->charCode);
-
-          nsVoidKey key(NS_INT32_TO_PTR(accKey));
-          if (mAccessKeys->Exists(&key)) {
-            nsCOMPtr<nsIContent> content = dont_AddRef(NS_STATIC_CAST(nsIContent*, mAccessKeys->Get(&key)));
-
-            PRBool isXUL = content->IsContentOfType(nsIContent::eXUL);
-
-            // if it's a XUL element...
-            if (isXUL) {
-
-              // find out what type of content node this is
-              nsCOMPtr<nsIAtom> atom;
-              nsresult rv = content->GetTag(*getter_AddRefs(atom));
-              if (NS_SUCCEEDED(rv) && atom) {
-                if (atom == nsXULAtoms::label) {
-                  // If anything fails, this will be null ...
-                  nsCOMPtr<nsIDOMElement> element;
-
-                  nsAutoString control;
-                  content->GetAttr(kNameSpaceID_None, nsXULAtoms::control, control);
-                  if (!control.IsEmpty()) {
-                    nsCOMPtr<nsIDocument> document;
-                    content->GetDocument(*getter_AddRefs(document));
-                    nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(document);
-                    if (domDocument)
-                      domDocument->GetElementById(control, getter_AddRefs(element));
-                  }
-                  // ... that here we'll either change |content| to the element
-                  // referenced by |element|, or clear it.
-                  content = do_QueryInterface(element);
-                }
-              }
-
-              if (!content)
-                break;
-
-              nsCOMPtr<nsIPresShell> presShell;
-              aPresContext->GetShell(getter_AddRefs(presShell));
-
-              nsIFrame* frame = nsnull;
-              presShell->GetPrimaryFrameFor(content, &frame);
-
-              if (frame) {
-                const nsStyleVisibility* vis;
-                frame->GetStyleData(eStyleStruct_Visibility,
-                                    ((const nsStyleStruct *&)vis));
-                PRBool viewShown = PR_TRUE;
-
-                nsIView* frameView = nsnull;
-                frame->GetView(mPresContext, &frameView);
-
-                if (!frameView) {
-                  nsIFrame* parentWithView = nsnull;
-                  frame->GetParentWithView(mPresContext, &parentWithView);
-
-                  if (parentWithView)
-                    parentWithView->GetView(mPresContext, &frameView);
-                }
-
-                while (frameView) {
-                  nsViewVisibility visib;
-                  frameView->GetVisibility(visib);
-
-                  if (visib == nsViewVisibility_kHide) {
-                    viewShown = PR_FALSE;
-                    break;
-                  }
-
-                  frameView->GetParent(frameView);
-                }
-
-                // get the XUL element
-                nsCOMPtr<nsIDOMXULElement> element = do_QueryInterface(content);
-
-                // if collapsed or hidden, we don't get tabbed into.
-                if (viewShown &&
-                    vis->mVisible != NS_STYLE_VISIBILITY_COLLAPSE &&
-                    vis->mVisible != NS_STYLE_VISIBILITY_HIDDEN && 
-                    element) {
-
-                  // find out what type of content node this is
-                  nsCOMPtr<nsIAtom> atom;
-                  nsresult rv = content->GetTag(*getter_AddRefs(atom));
-
-                  if (NS_SUCCEEDED(rv) && atom) {
-                    // define behavior for each type of XUL element:
-                    if (atom == nsXULAtoms::textbox || atom == nsXULAtoms::menulist) {
-                      // if it's a text box or menulist, give it focus
-                      element->Focus();
-                    } else {
-                      // otherwise, focus and click in it
-                      element->Focus();
-                      element->Click();
-                    }
-                  }
-                }
-              }
-            } else { // otherwise, it must be HTML
-              // It's hard to say what HTML4 wants us to do in all cases.
-              // So for now we'll settle for A) Set focus
-              ChangeFocus(content, eEventFocusedByKey);
-
-              nsresult rv = getPrefService();
-              PRBool activate = PR_TRUE;
-
-              if (NS_SUCCEEDED(rv)) {
-                mPrefService->GetBoolPref("accessibility.accesskeycausesactivation", &activate);
-              }
-
-              if (activate) {
-                //B) Click on it if the users prefs indicate to do so.
-                nsEventStatus status = nsEventStatus_eIgnore;
-                nsMouseEvent event;
-                event.eventStructType = NS_MOUSE_EVENT;
-                event.message = NS_MOUSE_LEFT_CLICK;
-                event.isShift = PR_FALSE;
-                event.isControl = PR_FALSE;
-                event.isAlt = PR_FALSE;
-                event.isMeta = PR_FALSE;
-                event.clickCount = 0;
-                event.widget = nsnull;
-                content->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-              }
-
-            }
-
-            *aStatus = nsEventStatus_eConsumeNoDefault;
-          }
-        }
-      }
+      if (isSpecialAccessKeyDown)
+        HandleAccessKey(aPresContext, keyEvent, aStatus, -1, eAccessKeyProcessingNormal);
     }
   case NS_KEY_DOWN:
   case NS_KEY_UP:
@@ -964,6 +831,227 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
   }
   return NS_OK;
 }
+
+// Note: for the in parameter aChildOffset,
+// -1 stands for not bubbling from the child docShell
+// 0 -- childCount - 1 stands for the child docShell's offset
+// which bubbles up the access key handling
+void
+nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
+                                     nsKeyEvent *aEvent,
+                                     nsEventStatus* aStatus,
+                                     PRInt32 aChildOffset,
+                                     ProcessingAccessKeyState aAccessKeyState)
+{
+
+  // Alt or other accesskey modifier is down, we may need to do an accesskey
+  if (mAccessKeys) {
+    // Someone registered an accesskey.  Find and activate it.
+    PRUnichar accKey = nsCRT::ToLower((char)aEvent->charCode);
+
+    nsVoidKey key(NS_INT32_TO_PTR(accKey));
+    if (mAccessKeys->Exists(&key)) {
+      nsCOMPtr<nsIContent> content = dont_AddRef(NS_STATIC_CAST(nsIContent*, mAccessKeys->Get(&key)));
+
+      PRBool isXUL = content->IsContentOfType(nsIContent::eXUL);
+
+      // if it's a XUL element...
+      if (isXUL) {
+
+        // find out what type of content node this is
+        nsCOMPtr<nsIAtom> atom;
+        nsresult rv = content->GetTag(*getter_AddRefs(atom));
+        if (NS_SUCCEEDED(rv) && atom) {
+          if (atom == nsXULAtoms::label) {
+            // If anything fails, this will be null ...
+            nsCOMPtr<nsIDOMElement> element;
+
+            nsAutoString control;
+            content->GetAttr(kNameSpaceID_None, nsXULAtoms::control, control);
+            if (!control.IsEmpty()) {
+              nsCOMPtr<nsIDocument> document;
+              content->GetDocument(*getter_AddRefs(document));
+              nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(document);
+              if (domDocument)
+                domDocument->GetElementById(control, getter_AddRefs(element));
+            }
+            // ... that here we'll either change |content| to the element
+            // referenced by |element|, or clear it.
+            content = do_QueryInterface(element);
+          }
+        }
+
+        if (!content)
+          return;
+
+        nsCOMPtr<nsIPresShell> presShell;
+        aPresContext->GetShell(getter_AddRefs(presShell));
+
+        nsIFrame* frame = nsnull;
+        presShell->GetPrimaryFrameFor(content, &frame);
+
+        if (frame) {
+          const nsStyleVisibility* vis;
+          frame->GetStyleData(eStyleStruct_Visibility,
+            ((const nsStyleStruct *&)vis));
+          PRBool viewShown = PR_TRUE;
+
+          nsIView* frameView = nsnull;
+          frame->GetView(mPresContext, &frameView);
+
+          if (!frameView) {
+            nsIFrame* parentWithView = nsnull;
+            frame->GetParentWithView(mPresContext, &parentWithView);
+
+            if (parentWithView)
+              parentWithView->GetView(mPresContext, &frameView);
+          }
+
+          while (frameView) {
+            nsViewVisibility visib;
+            frameView->GetVisibility(visib);
+
+            if (visib == nsViewVisibility_kHide) {
+              viewShown = PR_FALSE;
+              break;
+            }
+
+            frameView->GetParent(frameView);
+          }
+
+          // get the XUL element
+          nsCOMPtr<nsIDOMXULElement> element = do_QueryInterface(content);
+
+          // if collapsed or hidden, we don't get tabbed into.
+          if (viewShown &&
+            vis->mVisible != NS_STYLE_VISIBILITY_COLLAPSE &&
+            vis->mVisible != NS_STYLE_VISIBILITY_HIDDEN &&
+            element) {
+
+            // find out what type of content node this is
+            nsCOMPtr<nsIAtom> atom;
+            nsresult rv = content->GetTag(*getter_AddRefs(atom));
+
+            if (NS_SUCCEEDED(rv) && atom) {
+              // define behavior for each type of XUL element:
+              if (atom == nsXULAtoms::textbox || atom == nsXULAtoms::menulist) {
+                // if it's a text box or menulist, give it focus
+                element->Focus();
+              } else {
+                // otherwise, focus and click in it
+                element->Focus();
+                element->Click();
+              }
+            }
+          }
+        }
+      } else { // otherwise, it must be HTML
+        // It's hard to say what HTML4 wants us to do in all cases.
+        // So for now we'll settle for A) Set focus
+        ChangeFocus(content, eEventFocusedByKey);
+
+        nsresult rv = getPrefService();
+        PRBool activate = PR_TRUE;
+
+        if (NS_SUCCEEDED(rv)) {
+          mPrefService->GetBoolPref("accessibility.accesskeycausesactivation", &activate);
+        }
+
+        if (activate) {
+          // B) Click on it if the users prefs indicate to do so.
+          nsEventStatus status = nsEventStatus_eIgnore;
+          nsMouseEvent event;
+          event.eventStructType = NS_MOUSE_EVENT;
+          event.message = NS_MOUSE_LEFT_CLICK;
+          event.isShift = PR_FALSE;
+          event.isControl = PR_FALSE;
+          event.isAlt = PR_FALSE;
+          event.isMeta = PR_FALSE;
+          event.clickCount = 0;
+          event.widget = nsnull;
+          content->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+        }
+
+      }
+
+      *aStatus = nsEventStatus_eConsumeNoDefault;
+    }
+  }
+  // after the local accesskey handling
+  if (nsEventStatus_eConsumeNoDefault != *aStatus) {
+    // checking all sub docshells
+
+    nsCOMPtr<nsISupports> pcContainer;
+    aPresContext->GetContainer(getter_AddRefs(pcContainer));
+    NS_ASSERTION(pcContainer, "no container for presContext");
+
+    nsCOMPtr<nsIDocShellTreeNode> docShell(do_QueryInterface(pcContainer));
+    NS_ASSERTION(docShell, "no docShellTreeNode for presContext");
+
+    PRInt32 childCount;
+    docShell->GetChildCount(&childCount);
+    for (PRInt32 counter = 0; counter < childCount; counter++) {
+      // Not processing the child which bubbles up the handling
+      if (aAccessKeyState == eAccessKeyProcessingUp && counter == aChildOffset)
+        continue;
+
+      nsCOMPtr<nsIDocShellTreeItem> subShellItem;
+      nsCOMPtr<nsIPresShell> subPS;
+      nsCOMPtr<nsIPresContext> subPC;
+      nsCOMPtr<nsIEventStateManager> subESM;
+
+
+      docShell->GetChildAt(counter, getter_AddRefs(subShellItem));
+      nsCOMPtr<nsIDocShell> subDS = do_QueryInterface(subShellItem);
+      if (subDS && IsShellVisible(subDS)) {
+        subDS->GetPresShell(getter_AddRefs(subPS));
+
+        subPS->GetPresContext(getter_AddRefs(subPC));
+
+        subPC->GetEventStateManager(getter_AddRefs(subESM));
+
+        nsEventStateManager* esm = NS_STATIC_CAST(nsEventStateManager *, NS_STATIC_CAST(nsIEventStateManager *, subESM.get()));
+        if (esm)
+          esm->HandleAccessKey(subPC, aEvent, aStatus, -1, eAccessKeyProcessingDown);
+
+        if (nsEventStatus_eConsumeNoDefault == *aStatus)
+          break;
+      }
+    }
+  }// if end . checking all sub docshell ends here.
+
+  // bubble up the process to the parent docShell if necesary
+  if (eAccessKeyProcessingDown != aAccessKeyState && nsEventStatus_eConsumeNoDefault != *aStatus) {
+    nsCOMPtr<nsISupports> pcContainer;
+    aPresContext->GetContainer(getter_AddRefs(pcContainer));
+    NS_ASSERTION(pcContainer, "no container for presContext");
+
+    nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(pcContainer));
+    NS_ASSERTION(docShell, "no docShellTreeItem for presContext");
+    
+    nsCOMPtr<nsIDocShellTreeItem> parentShellItem;
+    docShell->GetParent(getter_AddRefs(parentShellItem));
+    nsCOMPtr<nsIDocShell> parentDS = do_QueryInterface(parentShellItem);
+    if (parentDS) {
+      PRInt32 myOffset;
+      docShell->GetChildOffset(&myOffset);
+
+      nsCOMPtr<nsIPresShell> parentPS;
+      nsCOMPtr<nsIPresContext> parentPC;
+      nsCOMPtr<nsIEventStateManager> parentESM;
+
+      parentDS->GetPresShell(getter_AddRefs(parentPS));
+
+      parentPS->GetPresContext(getter_AddRefs(parentPC));
+
+      parentPC->GetEventStateManager(getter_AddRefs(parentESM));
+
+      nsEventStateManager* esm = NS_STATIC_CAST(nsEventStateManager *, NS_STATIC_CAST(nsIEventStateManager *, parentESM.get()));
+      if (esm)
+        esm->HandleAccessKey(parentPC, aEvent, aStatus, myOffset, eAccessKeyProcessingUp);
+    }
+  }// if end. bubble up process
+}// end of HandleAccessKey
 
 
 #ifdef CLICK_HOLD_CONTEXT_MENUS

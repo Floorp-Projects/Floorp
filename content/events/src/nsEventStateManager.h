@@ -155,6 +155,13 @@ protected:
   void EnsureDocument(nsIPresContext* aPresContext);
   void FlushPendingEvents(nsIPresContext* aPresContext);
 
+  typedef enum {
+    eAccessKeyProcessingNormal = 0,
+    eAccessKeyProcessingUp,
+    eAccessKeyProcessingDown
+  } ProcessingAccessKeyState;
+  void HandleAccessKey(nsIPresContext* aPresContext, nsKeyEvent* aEvent, nsEventStatus* aStatus, PRInt32 aChildOffset, ProcessingAccessKeyState aAccessKeyState);
+
   //---------------------------------------------
   // DocShell Focus Traversal Methods
   //---------------------------------------------
