@@ -55,7 +55,7 @@ Rights Reserved.
     <html:div>&savePasswordLabel.label;</html:div>
     <html:div>
       <html:input type="checkbox" name="server.rememberPassword"
-                  onclick="onSavePassword(event.target);"
+                  onchange="onSavePassword(event.target);"
                   id="server.rememberPassword"/>
       &savePasswordCheckbox.label;
     </html:div>
@@ -63,7 +63,7 @@ Rights Reserved.
       <html:div>&passwordDesc.label;</html:div>
       <html:div>
         &passwordLabel.label;
-        <html:input type="password" disabled="true"
+        <html:input type="password" 
                     name="server.password" id="server.password"/>
       </html:div>
     </html:div>
