@@ -327,7 +327,7 @@ sub init {
 
                  push(@supptables, "LEFT JOIN profiles map_cc_$chartseq ON cc_$chartseq.who = map_cc_$chartseq.userid");
                  $ff = $f = "map_cc_$chartseq.login_name";
-                 my $ref = $funcsbykey{",anyexact"};
+                 my $ref = $funcsbykey{",$t"};
                  &$ref;
              }
          },
