@@ -1230,8 +1230,15 @@ function loadOneOrMoreURIs(aURIString)
 {
   var urls = aURIString.split("|");
   loadURI(urls[0]);
-  for (var i = 1; i < urls.length; ++i)
-    gBrowser.addTab(urls[i]);
+  for (var i = 1; i < urls.length; ++i) {
+    // addTab throws for certain malformed URIs  
+    // catch this so we don't hork startup.
+    try {
+      gBrowser.addTab(urls[i]);
+    } catch (ex) {
+      // do nothing
+    }
+  }
 }
 
 function constructGoMenuItem(goMenu, beforeItem, url, title)
