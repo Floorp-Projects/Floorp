@@ -32,35 +32,8 @@ class nsIUrlListener;
 class nsNntpService : public nsINntpService, public nsIMsgMessageService, public nsIProtocolHandler
 {
 public:
-  ////////////////////////////////////////////////////////////////////////////////////////
-  // we suppport the nsINntpService Interface 
-  ////////////////////////////////////////////////////////////////////////////////////////
-  NS_IMETHOD ConvertNewsgroupsString(const char *newsgroupsStr, char **_retval);
-
-  NS_IMETHOD PostMessage(nsFilePath &pathToFile, const char *newsgroup, nsIUrlListener * aUrlListener, nsIURI **_retval);
-
-  NS_IMETHOD RunNewsUrl (const char * urlString, const char* newsgroupName, nsMsgKey aKey, nsISupports * aConsumer, nsIUrlListener * aUrlListener, nsIURI **_retval);
-
-  NS_IMETHOD GetNewNews(nsINntpIncomingServer *nntpServer, const char *uri, nsIUrlListener * aUrlListener, nsIURI **_retval);
-
-  NS_IMETHOD CancelMessages(const char *hostname, const char *newsgroupname, nsISupportsArray *messages, nsISupports * aDisplayConsumer, nsIUrlListener * aUrlListener, nsIURI ** aURL);
-
-  ////////////////////////////////////////////////////////////////////////////////////////
-  // we suppport the nsIMsgMessageService Interface 
-  ////////////////////////////////////////////////////////////////////////////////////////
-
-  NS_IMETHOD SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, PRBool aAppendToFile, nsIUrlListener *aUrlListener, nsIURI **aURL);
-
-  NS_IMETHOD CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopy, 
-						   PRBool moveMessage,nsIUrlListener * aUrlListener, nsIURI **aURL);
-  
-  NS_IMETHOD DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
-                            nsIUrlListener * aUrlListener, nsIURI ** aURL);
-
-
-  ////////////////////////////////////////////////////////////////////////////////////////
-  // we suppport the nsIProtocolHandler Interface 
-  ////////////////////////////////////////////////////////////////////////////////////////
+  NS_DECL_NSINNTPSERVICE
+  NS_DECL_NSIMSGMESSAGESERVICE
   NS_DECL_NSIPROTOCOLHANDLER
   
   // nsNntpService

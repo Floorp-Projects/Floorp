@@ -34,11 +34,7 @@ public:
 	virtual ~nsNNTPArticleList();
 	
     NS_DECL_ISUPPORTS
-  
-    // nsINNTPArticleKeysState
-    NS_METHOD Initialize(nsINNTPHost *newsHost, nsINNTPNewsgroup *newsgroup);
-	NS_IMETHOD AddArticleKey(PRInt32 key);
-	NS_IMETHOD FinishAddingArticleKeys();
+    NS_DECL_NSINNTPARTICLELIST
 
     // other stuff
 protected:

@@ -32,40 +32,7 @@ public:
 	 virtual ~nsNNTPNewsgroup();
 	 
 	 NS_DECL_ISUPPORTS
-  
-	 NS_IMETHOD GetName(char * *aName);
-	 NS_IMETHOD SetName(char * aName);
-  
-	 NS_IMETHOD GetPrettyName(char * *aPrettyName);
-	 NS_IMETHOD SetPrettyName(char * aPrettyName);
- 
-	 NS_IMETHOD GetPassword(char * *aPassword);
-	 NS_IMETHOD SetPassword(char * aPassword);
- 
-	 NS_IMETHOD GetUsername(char * *aUsername);
-	 NS_IMETHOD SetUsername(char * aUsername);
-  
-	 NS_IMETHOD GetNeedsExtraInfo(PRBool *aNeedsExtraInfo);
-	 NS_IMETHOD SetNeedsExtraInfo(PRBool aNeedsExtraInfo);
- 
-	 NS_IMETHOD IsOfflineArticle(PRInt32 num, PRBool *_retval);
-
-	 NS_IMETHOD GetCategory(PRBool *aCategory);
-	 NS_IMETHOD SetCategory(PRBool aCategory);
-  
-	 NS_IMETHOD GetSubscribed(PRBool *aSubscribed);
-	 NS_IMETHOD SetSubscribed(PRBool aSubscribed);
-  
-	 NS_IMETHOD GetWantNewTotals(PRBool *aWantNewTotals);
-	 NS_IMETHOD SetWantNewTotals(PRBool aWantNewTotals);
-  
-	 NS_IMETHOD GetNewsgroupList(nsINNTPNewsgroupList * *aNewsgroupList);
-	 NS_IMETHOD SetNewsgroupList(nsINNTPNewsgroupList * aNewsgroupList);
-
-	 NS_IMETHOD UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRInt32 total_messages);
-
-     NS_IMETHOD Initialize(const char *name, nsMsgKeySet *set, PRBool subscribed);
-
+     NS_DECL_NSINNTPNEWSGROUP
 protected:
 	 char * m_groupName;
 	 char * m_prettyName;

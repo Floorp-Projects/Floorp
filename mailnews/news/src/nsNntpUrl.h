@@ -27,40 +27,8 @@
 class nsNntpUrl : public nsINntpUrl, public nsMsgMailNewsUrl, public nsIMsgUriUrl
 {
 public:
-	// From nsINntpUrl
-	NS_IMETHOD SetNntpHost (nsINNTPHost * newsHost);
-	NS_IMETHOD GetNntpHost (nsINNTPHost ** newsHost);
-
-	NS_IMETHOD SetNntpArticleList (nsINNTPArticleList * articleList);
-	NS_IMETHOD GetNntpArticleList (nsINNTPArticleList ** articleList);
-
-	NS_IMETHOD SetNewsgroup (nsINNTPNewsgroup * newsgroup);
-	NS_IMETHOD GetNewsgroup (nsINNTPNewsgroup ** newsgroup);
-
-	NS_IMETHOD SetOfflineNewsState (nsIMsgOfflineNewsState * offlineNews);
-	NS_IMETHOD GetOfflineNewsState (nsIMsgOfflineNewsState ** offlineNews);
-
-	NS_IMETHOD SetNewsgroupList (nsINNTPNewsgroupList * newsgroupList);
-	NS_IMETHOD GetNewsgroupList (nsINNTPNewsgroupList ** newsgroupList);
-
-    NS_IMETHOD SetMessageToPost(nsINNTPNewsgroupPost *post);
-    NS_IMETHOD GetMessageToPost(nsINNTPNewsgroupPost **post);
-    
-    NS_IMETHOD GetMessageHeader(nsIMsgDBHdr ** aMsgHdr);
-    
-    // this should be an IDL attribute
-    NS_IMETHOD SetMessageKey(nsMsgKey aKey);
-    NS_IMETHOD GetMessageKey(nsMsgKey * aKey);
-
-    // this should be an IDL attribute
-    NS_IMETHOD SetNewsgroupName(char * aNewsgroupName);
-    NS_IMETHOD GetNewsgroupName(char ** aNewsgroupName);
-
-	NS_IMETHOD SetUsername(const char *aUserName);
-     
-	// from nsIMsgUriUrl
-	NS_IMETHOD GetURI(char ** aURI); 
-
+    NS_DECL_NSINNTPURL
+    NS_DECL_NSIMSGURIURL
     // nsNntpUrl
     nsNntpUrl();
     virtual ~nsNntpUrl();

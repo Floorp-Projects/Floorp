@@ -40,6 +40,7 @@ public:
 	virtual ~nsMsgNewsFolder(void);
 
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIMSGNEWSFOLDER
 #if 0
   static nsresult GetRoot(nsIMsgFolder* *result);
 #endif
@@ -90,9 +91,6 @@ public:
   NS_IMETHOD GetNewMessages();
 
   NS_IMETHOD GetPath(nsIFileSpec** aPathName);
-  
-  NS_IMETHOD GetUnreadSetStr(char * *aUnreadSetStr);
-  NS_IMETHOD SetUnreadSetStr(char * aUnreadSetStr);
 
 protected:
   nsresult AbbreviatePrettyName(PRUnichar ** prettyName, PRInt32 fullwords);

@@ -68,27 +68,7 @@ public:
   nsNNTPNewsgroupList();
   virtual  ~nsNNTPNewsgroupList();
   NS_DECL_ISUPPORTS
-
-    
-  NS_IMETHOD GetRangeOfArtsToDownload(PRInt32 first_possible,
-                                      PRInt32 last_possible,
-                                      PRInt32 maxextra,
-                                      PRInt32* first,
-                                      PRInt32* lastprotected,
-                                      PRInt32 *status);
-  NS_IMETHOD AddToKnownArticles(PRInt32 first, PRInt32 last);
-
-  // XOVER parser to populate this class
-  NS_IMETHOD InitXOVER(PRInt32 first_msg, PRInt32 last_msg);
-  NS_IMETHOD ProcessXOVERLINE(const char *line, PRUint32 * status);
-  NS_IMETHOD ResetXOVER();
-  NS_IMETHOD ProcessNonXOVER(const char *line);
-  NS_IMETHOD FinishXOVERLINE(int status, int *newstatus);
-  NS_IMETHOD ClearXOVERState();
-  NS_IMETHOD GetGroupName(char **_retval);
-    
-  NS_IMETHOD Initialize(nsINNTPHost *host, nsINntpUrl *runningURL, nsINNTPNewsgroup *newsgroup, const char *username, const char *hostname, const char *groupname);
-
+  NS_DECL_NSINNTPNEWSGROUPLIST
 private:
   NS_METHOD CleanUp();
     
@@ -145,3 +125,10 @@ protected:
 };
     
 #endif /* nsNNTPNewsgroupListState_h___ */
+
+
+
+
+
+
+

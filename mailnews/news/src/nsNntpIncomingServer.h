@@ -37,15 +37,12 @@ class nsNntpIncomingServer : public nsMsgIncomingServer,
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
-
+    NS_DECL_NSINNTPINCOMINGSERVER
     nsNntpIncomingServer();
     virtual ~nsNntpIncomingServer();
     
     NS_IMETHOD GetRootFolderPath(char **);
     NS_IMETHOD SetRootFolderPath(char *);
-
-    NS_IMETHOD GetNewsrcFilePath(char **);
-    NS_IMETHOD SetNewsrcFilePath(char *);
     
     NS_IMETHOD GetServerURI(char * *uri);
 };
