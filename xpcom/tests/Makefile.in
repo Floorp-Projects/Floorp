@@ -30,13 +30,10 @@ MODULE		= xpcom
 DIRS		= dynamic services
 REQUIRES	= necko string
 
-TESTS_NOT_COMPILING = \
-		TestArray.cpp \
-		$(NULL)
-
 CPPSRCS		= \
 		nsIFileTest.cpp \
 		nsIFileEnumerator.cpp \
+		TestArray.cpp \
 		TestServMgr.cpp \
 		TestFactory.cpp \
 		TestCallTemplates.cpp \

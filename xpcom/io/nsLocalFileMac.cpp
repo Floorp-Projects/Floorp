@@ -800,7 +800,7 @@ class nsDirEnumerator : public nsISimpleEnumerator
 		nsCOMPtr<nsILocalFile>	mNext;
 };
 
-NS_IMPL_ISUPPORTS(nsDirEnumerator, NS_GET_IID(nsISimpleEnumerator));
+NS_IMPL_ISUPPORTS1(nsDirEnumerator, nsISimpleEnumerator)
 
 #pragma mark -
 

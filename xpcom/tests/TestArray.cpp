@@ -34,34 +34,47 @@ static const PRBool kExitOnError = PR_TRUE;
 
 class IFoo : public nsISupports {
 public:
+
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFOO_IID)
+
+  NS_IMETHOD_(nsrefcnt) RefCnt() = 0;
+  NS_IMETHOD_(PRInt32) ID() = 0;
+};
+
+class Foo : public IFoo {
+public:
+
+  Foo(PRInt32 aID);
+  virtual ~Foo();
+
+  // nsISupports implementation
   NS_DECL_ISUPPORTS
 
-  IFoo(PRInt32 aID);
-  ~IFoo();
-
-  nsrefcnt RefCnt() { return mRefCnt; }
+  // IFoo implementation
+  NS_IMETHOD_(nsrefcnt) RefCnt() { return mRefCnt; }
+  NS_IMETHOD_(PRInt32) ID() { return mID; }
 
   PRInt32 mID;
   static PRInt32 gCount;
 };
 
-PRInt32 IFoo::gCount;
+PRInt32 Foo::gCount;
 
-IFoo::IFoo(PRInt32 aID)
+Foo::Foo(PRInt32 aID)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mID = aID;
-  gCount++;
-  fprintf(stdout, "init: %d (%x), %d total)\n", mID, this, gCount);
+  ++gCount;
+  fprintf(stdout, "init: %d (%p), %d total)\n", mID, this, gCount);
 }
 
-IFoo::~IFoo()
+Foo::~Foo()
 {
-  gCount--;
-  fprintf(stdout, "destruct: %d (%x), %d remain)\n", mID, this, gCount);
+  --gCount;
+  fprintf(stdout, "destruct: %d (%p), %d remain)\n", mID, this, gCount);
 }
 
-NS_IMPL_ISUPPORTS(IFoo, NS_IFOO_IID);
+NS_IMPL_ISUPPORTS1(Foo, IFoo)
 
 const char* AssertEqual(PRInt32 aValue1, PRInt32 aValue2)
 {
@@ -82,16 +95,16 @@ void DumpArray(nsISupportsArray* aArray, PRInt32 aExpectedCount, PRInt32 aElemen
   PRInt32 count = cnt;
   PRInt32 index;
 
-  fprintf(stdout, "object count %d = %d %s\n", IFoo::gCount, aExpectedTotal, 
-          AssertEqual(IFoo::gCount, aExpectedTotal));
+  fprintf(stdout, "object count %d = %d %s\n", Foo::gCount, aExpectedTotal, 
+          AssertEqual(Foo::gCount, aExpectedTotal));
   fprintf(stdout, "array count %d = %d %s\n", count, aExpectedCount,
           AssertEqual(count, aExpectedCount));
   
   for (index = 0; (index < count) && (index < aExpectedCount); index++) {
     IFoo* foo = (IFoo*)(aArray->ElementAt(index));
-    fprintf(stdout, "%2d: %d=%d (%x) c: %d %s\n", 
-            index, aElementIDs[index], foo->mID, foo, foo->RefCnt() - 1,
-            AssertEqual(foo->mID, aElementIDs[index]));
+    fprintf(stdout, "%2d: %d=%d (%p) c: %d %s\n", 
+            index, aElementIDs[index], foo->ID(), foo, foo->RefCnt() - 1,
+            AssertEqual(foo->ID(), aElementIDs[index]));
     foo->Release();
   }
 }
@@ -100,10 +113,8 @@ void FillArray(nsISupportsArray* aArray, PRInt32 aCount)
 {
   PRInt32 index;
   for (index = 0; index < aCount; index++) {
-    IFoo* foo = new IFoo(index);
-    foo->AddRef();
+    nsCOMPtr<IFoo> foo = new Foo(index);
     aArray->AppendElement(foo);
-    foo->Release();
   }
 }
 

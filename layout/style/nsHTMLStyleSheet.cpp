@@ -307,7 +307,7 @@ GenericTableRule::~GenericTableRule()
 {
 }
 
-NS_IMPL_ISUPPORTS(GenericTableRule, NS_GET_IID(nsIStyleRule));
+NS_IMPL_ISUPPORTS1(GenericTableRule, nsIStyleRule)
 
 NS_IMETHODIMP
 GenericTableRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const

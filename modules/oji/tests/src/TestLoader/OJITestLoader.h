@@ -52,6 +52,8 @@ typedef TestResult* (*OJI_TESTPROC)(void);
 class OJITestLoader : nsISupports {
 public:
 
+    NS_DEFINE_STATIC_IID_ACCESSOR(OJITESTLOADER_IID)
+
     NS_DECL_ISUPPORTS
 
     OJITestLoader();
