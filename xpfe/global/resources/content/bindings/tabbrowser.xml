@@ -64,12 +64,8 @@
             <xul:menuitem label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;" oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode; tabbrowser.removeAllTabsBut(document.popupNode);"/>
           </xul:menupopup>
           <xul:tabs style="padding-left:1px; padding-top: 1px;" flex="1">
-            <xul:tab flex="1" width="100" class="tabbrowser-tab" label="(Untitled)" crop="end"/>
+            <xul:tab maxwidth="250" width="0" minwidth="30" flex="100000" class="tabbrowser-tab" label="(Untitled)" crop="end"/>
           </xul:tabs>
-          <xul:hbox mousethrough="always" align="center">
-            <spacer flex="1"/>
-            <xul:image mousethrough="never" class="tabbrowser-closebox" label="Close Tab" onclick="this.parentNode.parentNode.parentNode.parentNode.removeCurrentTab();"/>
-          </xul:hbox>
         </xul:stack>
         <xul:tabpanels flex="1" style="margin:0px; padding:0px; border:0px;">
           <xul:browser type="content-primary" inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu"/>
@@ -113,16 +109,18 @@
       <method name="mTabProgressListener">
         <parameter name="aTabBrowser"/>
         <parameter name="aTab"/>
+        <parameter name="aStartsBlank"/>
         <body>
         <![CDATA[
           return ({
             mTabBrowser: aTabBrowser,
             mTab: aTab,
+            mBlank: aStartsBlank,
 
             onProgressChange : function (aWebProgress, aRequest,
                       aCurSelfProgress, aMaxSelfProgress,
                       aCurTotalProgress, aMaxTotalProgress) {
-              if (this.mTabBrowser.mCurrentTab == this.mTab) {
+              if (!this.mBlank && this.mTabBrowser.mCurrentTab == this.mTab) {
                 for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
                   var p = this.mTabBrowser.mProgressListeners[i];
                   if (p)
@@ -142,9 +140,11 @@
               if (aStatus == NS_NET_STATUS_READ_FROM || aStatus == NS_NET_STATUS_WROTE_TO)
                 return;
 
+              var oldBlank = this.mBlank;
+
               const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
               const nsIChannel = Components.interfaces.nsIChannel;
-              if (aStateFlags & nsIWebProgressListener.STATE_START && 
+              if (!this.mBlank && aStateFlags & nsIWebProgressListener.STATE_START && 
                   aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
                 this.mTab.setAttribute("busy", "true"); 
                 this.mTab.label = "Loading...";
@@ -154,15 +154,19 @@
               }
               else if (aStateFlags & nsIWebProgressListener.STATE_STOP &&
                        aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
-                this.mTab.removeAttribute("busy");
-                if (this.mTab.label == "Loading...")
-                  this.mTab.label = "(Untitled)";
+                if (this.mBlank)
+                  this.mBlank = false;
+                else {
+                  this.mTab.removeAttribute("busy");
+                  if (this.mTab.label == "Loading...")
+                    this.mTab.label = "(Untitled)";
                 
-                if (this.mTabBrowser.mCurrentTab == this.mTab)
-                  this.mTabBrowser.mIsBusy = false;
+                  if (this.mTabBrowser.mCurrentTab == this.mTab)
+                    this.mTabBrowser.mIsBusy = false;
+                }
               }
 
-              if (this.mTabBrowser.mCurrentTab == this.mTab) {
+              if (!oldBlank && this.mTabBrowser.mCurrentTab == this.mTab) {
                 for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
                   var p = this.mTabBrowser.mProgressListeners[i];
                   if (p)
@@ -173,7 +177,7 @@
             ,
 
             onLocationChange : function(aWebProgress, aRequest, aLocation) {
-              if (this.mTabBrowser.mCurrentTab == this.mTab) {
+              if (!this.mBlank && this.mTabBrowser.mCurrentTab == this.mTab) {
                 for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
                   var p = this.mTabBrowser.mProgressListeners[i];
                   if (p)
@@ -184,7 +188,7 @@
 
             onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage) {
               //ignore local/resource:/chrome: files
-              if (aStatus == NS_NET_STATUS_READ_FROM || aStatus == NS_NET_STATUS_WROTE_TO)
+              if (this.mBlank || aStatus == NS_NET_STATUS_READ_FROM || aStatus == NS_NET_STATUS_WROTE_TO)
                 return;
               
               if (this.mTabBrowser.mCurrentTab == this.mTab) {
@@ -197,7 +201,7 @@
             },
 
             onSecurityChange : function(aWebProgress, aRequest, aState) { 
-              if (this.mTabBrowser.mCurrentTab == this.mTab) {
+              if (!mBlank && this.mTabBrowser.mCurrentTab == this.mTab) {
                 for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
                   var p = this.mTabBrowser.mProgressListeners[i];
                   if (p)
@@ -252,6 +256,9 @@
 
             // Update the URL bar.
             var loc = ({ spec: this.mCurrentBrowser.contentWindow.location.href });
+            if (loc.spec == "about:blank")
+              loc.spec = "";
+
             var webProgress = this.mCurrentBrowser.webProgress;
             var i, p;
             for (i = 0; i < this.mProgressListeners.length; i++) {
@@ -324,6 +331,8 @@
         <parameter name="aURI"/>
         <body>
           <![CDATA[
+            var blank = (aURI == "about:blank");
+            
             if (!this.mTabbedMode) {
               this.mTabbedMode = true; // Welcome to multi-tabbed mode.
 
@@ -342,7 +351,7 @@
               }
 
               // Wire up a progress listener to our tab.
-              var listener = (this.mTabProgressListener)(this, this.mCurrentTab);
+              var listener = (this.mTabProgressListener)(this, this.mCurrentTab, false);
               this.webProgress.addProgressListener(listener);
               this.mTabListeners[0] = listener;
             }
@@ -352,14 +361,16 @@
             var t = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                              "tab");
 
-            if (aURI == "about:blank")
-              t.setAttribute("label", "Blank");
+            if (blank)
+              t.setAttribute("label", "(Untitled)");
             else
               t.setAttribute("label", aURI);
             
             t.setAttribute("crop", "end");
-            t.width = 100;
-            t.setAttribute("flex", "1");
+            t.maxWidth = 250;
+            t.minWidth = 30;
+            t.width = 0;
+            t.setAttribute("flex", "100000");
 
             this.mTabContainer.appendChild(t);
 
@@ -376,11 +387,12 @@
 
             // wire up a progress listener for the new browser object.
             var position = this.mTabContainer.childNodes.length-1;
-            var tabListener = (this.mTabProgressListener)(this, t);
+            var tabListener = (this.mTabProgressListener)(this, t, blank);
             b.webProgress.addProgressListener(tabListener);
             this.mTabListeners[position] = tabListener;
             
-            b.loadURI(aURI, nsIWebNavigation.LOAD_FLAGS_NONE);
+            if (!blank)
+              b.loadURI(aURI, nsIWebNavigation.LOAD_FLAGS_NONE);
 
             return t;
           ]]>
@@ -429,8 +441,12 @@
             if (l == 1)
               return; // Don't allow the last tab to close.
 
-            if (l == 2)
-              this.mStrip.collapsed = true; // Go ahead and collapse, since we're going back to 1 tab.
+            if (l == 2) {
+              var pref = Components.classes['@mozilla.org/preferences;1'].getService(Components.interfaces.nsIPrefService).getBranch(null);
+              var autohide = pref.getBoolPref("browser.tabs.autoHide");
+              if (autohide)
+                this.mStrip.collapsed = true; // Go ahead and collapse, since we're going back to 1 tab.
+            }
 
             var index = -1;
             if (this.mCurrentTab == aTab)
@@ -508,9 +524,22 @@
         <parameter name="aListener"/>
         <body>
           <![CDATA[
-            if (!this.mProgressListeners)
+            if (!this.mProgressListeners) {
               this.mProgressListeners = new Array();
-            
+              var pref = Components.classes['@mozilla.org/preferences;1'].getService(Components.interfaces.nsIPrefService).getBranch(null);
+              var autohide = pref.getBoolPref("browser.tabs.autoHide");
+              if (!autohide) {
+                this.mStrip.collapsed = false;
+                this.mTabbedMode = true;
+                this.mCurrentBrowser.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
+             
+                // Wire up a progress listener to our tab.
+                var listener = (this.mTabProgressListener)(this, this.mCurrentTab);
+                this.webProgress.addProgressListener(listener);
+                this.mTabListeners[0] = listener;
+              }
+            }
+
             this.mProgressListeners.push(aListener);
 
             if (!this.mTabbedMode)
@@ -704,9 +733,11 @@
                 readonly="true"/>
 
       <constructor>
+        <![CDATA[
         this.mCurrentBrowser = this.mPanelContainer.firstChild;
         this.mCurrentTab = this.mTabContainer.firstChild;
         this.mTabBox.setAttribute("handleCtrlTab", "false");
+        ]]>
       </constructor>
 
       <destructor>
