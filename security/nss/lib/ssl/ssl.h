@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl.h,v 1.3 2001/01/05 01:38:25 nelsonb%netscape.com Exp $
+ * $Id: ssl.h,v 1.4 2001/01/05 23:53:38 nelsonb%netscape.com Exp $
  */
 
 #ifndef __ssl_h_
@@ -45,7 +45,7 @@
 #include "cert.h"
 #include "keyt.h"
 
-#if defined(_WINDOWS) && !defined(IN_LIBSSL) && !defined(NSS_USE_STATIC_LIBS)
+#if defined(_WIN32) && !defined(IN_LIBSSL) && !defined(NSS_USE_STATIC_LIBS)
 #define SSL_IMPORT extern __declspec(dllimport)
 #else
 #define SSL_IMPORT extern
