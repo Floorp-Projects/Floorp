@@ -8,8 +8,8 @@
 # VCDisplay module for CVSWeb.
 
 
-# $Revision: 1.2 $ 
-# $Date: 2000/08/11 00:27:27 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/11/09 19:28:42 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay.pm,v $ 
 # $Name:  $ 
@@ -40,6 +40,14 @@
 
 
 package VCDisplay;
+
+
+# Load standard perl libraries
+
+
+# Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
 
 use Utils;
 

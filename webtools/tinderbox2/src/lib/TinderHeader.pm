@@ -8,8 +8,8 @@
 #	 TreeState, Build, IgnoreBuilds, MOTD, Images, 
 
 
-# $Revision: 1.4 $ 
-# $Date: 2000/09/01 18:39:19 $ 
+# $Revision: 1.5 $ 
+# $Date: 2000/11/09 19:29:08 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader.pm,v $ 
 # $Name:  $ 
@@ -51,6 +51,8 @@ use File::Basename;
 
 
 # Tinderbox Specific Libraries
+
+use lib '#tinder_libdir#';
 
 use Utils;
 

@@ -5,9 +5,9 @@
 # information into the top of the status page outside of the main
 # table. 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:17:18 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/11/09 19:28:00 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader/Build.pm,v $ 
 # $Name:  $ 
 
@@ -38,11 +38,19 @@
 
 package TinderHeader::Build;
 
+
+# Load standard perl libraries
+
+
+# Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
+
 use TinderDB::Build;
 
 @ISA = qw(TinderDB::Build);
 
-$VERSION = ( qw $Revision: 1.1 $ )[1];
+$VERSION = ( qw $Revision: 1.2 $ )[1];
 
 $TinderHeader::NAMES2OBJS{ 'Build' } = 
   TinderHeader::Build->new();

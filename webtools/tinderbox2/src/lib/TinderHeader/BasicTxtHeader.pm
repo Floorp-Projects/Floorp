@@ -6,8 +6,8 @@
 # gettree_header(), ).
 
 
-# $Revision: 1.3 $ 
-# $Date: 2000/08/24 14:50:19 $ 
+# $Revision: 1.4 $ 
+# $Date: 2000/11/09 19:28:10 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader/BasicTxtHeader.pm,v $ 
 # $Name:  $ 
@@ -43,10 +43,12 @@ package TinderHeader::BasicTxtHeader;
 
 # Tinderbox libraries
 
+use lib '#tinder_libdir#';
+
 use FileStructure;
 use Persistence;
 
-$VERSION = ( qw $Revision: 1.3 $ )[1];
+$VERSION = ( qw $Revision: 1.4 $ )[1];
 
 
 sub new {

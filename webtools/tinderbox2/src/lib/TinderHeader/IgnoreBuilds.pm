@@ -9,9 +9,9 @@
 # the display.
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:17:18 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/11/09 19:27:48 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader/IgnoreBuilds.pm,v $ 
 # $Name:  $ 
 
@@ -45,11 +45,18 @@ package TinderHeader::IgnoreBuilds;
 # this file is only used by TreeState_Basic.pm the package
 # TreeState_Bonsai.pm uses something hard coded.
 
+# Load standard perl libraries
+
+
+# Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
+
 use TinderHeader::BasicTxtHeader;
 
 @ISA = qw(TinderHeader::BasicTxtHeader);
 
-$VERSION = ( qw $Revision: 1.1 $ )[1];
+$VERSION = ( qw $Revision: 1.2 $ )[1];
 
 # load the simple name of this module into TinderHeader so we can
 # track the implementations provided.
