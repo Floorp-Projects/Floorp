@@ -41,7 +41,6 @@ class nsAppShell : public nsIAppShell
 {
   private:
     nsDispatchListener             *mDispatchListener;    // note: we don't own this, but it can be NULL
-    nsISelectionMgr                *mSelectionMgr;
     auto_ptr<nsToolkit>            mToolKit;
     auto_ptr<nsMacMessagePump>     mMacPump;
     nsMacMessageSink               *mMacSink;             //еее this will be COM, so use scc's COM_auto_ptr
@@ -66,8 +65,6 @@ class nsAppShell : public nsIAppShell
     NS_IMETHOD            	SetDispatchListener(nsDispatchListener* aDispatchListener);
 
     virtual void* GetNativeData(PRUint32 aDataType);
-
-    NS_IMETHOD GetSelectionMgr(nsISelectionMgr** aSelectionMgr);
 
     // XXX temporary for Dialog investigation
     NS_IMETHOD GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &aIsInWindow, PRBool &aIsMouseEvent);
