@@ -36,7 +36,7 @@
 ## GPL.
 ## 
 ##
-## $Id: Makefile,v 1.15 2000/12/15 05:38:09 nelsonb%netscape.com Exp $
+## $Id: Makefile,v 1.16 2000/12/27 02:08:54 nelsonb%netscape.com Exp $
 ##
 
 ## Define CC to be the C compiler you wish to use.  The GNU cc
@@ -132,37 +132,28 @@ CFLAGS=-O -KPIC -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS -D_REENTRANT \
  -DSOLARIS2_6 -D_SVID_GETTOD -xarch=v8 -DXP_UNIX $(MPICMN)
 endif
 
-#ifeq ($(TARGET),PA2.0WHPUX)
-##HPUX64 (HP PA 2.0 Wide) using MAXPY and 64-bit digits
-#MPICMN += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
-#AS_OBJS = mpi_hp.o hppa20.o
-#CFLAGS= -O -DHPUX10 -D_POSIX_C_SOURCE=199506L -Ae +Z -DHPUX -Dhppa \
- -D_HPUX_SOURCE -Aa +e -z +DA2.0W +DS2.0 +O3 +DChpux -DHPUX11  -DXP_UNIX \
- $(MPICMN)
-#endif
-
 ifeq ($(TARGET),PA2.0WHPUX)
-#HPUX64 (HP PA 2.0 Wide) using 32-bit digits and FPU code
-# This one is for DA2.0W which is the LP64 ABI.
-AS_OBJS += montmulf.o
-MPICMN += -DMP_USING_MONT_MULF -DMP_USE_UINT_DIGIT
-MPICMN += -DMP_USE_LONG_LONG_MULTIPLY -DMP_NO_MP_WORD
+#HPUX64 (HP PA 2.0 Wide) using MAXPY and 64-bit digits
+MPICMN += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
+AS_OBJS = mpi_hp.o hpma512.o hppa20.o 
 CFLAGS= -O -DHPUX10 -D_POSIX_C_SOURCE=199506L -Ae +Z -DHPUX -Dhppa \
  -D_HPUX_SOURCE -Aa +e -z +DA2.0W +DS2.0 +O3 +DChpux -DHPUX11  -DXP_UNIX \
  $(MPICMN)
+AS = $(CC) $(CFLAGS) -c
 endif
 
 ifeq ($(TARGET),PA2.0NHPUX)
 #HPUX32 (HP PA 2.0 Narrow) hybrid model, using 32-bit digits
 # This one is for DA2.0 (N) which is the 32-bit ABI with 64-bit registers.
-AS_OBJS += montmulf.o
-MPICMN += -DMP_USING_MONT_MULF -DMP_USE_UINT_DIGIT
-MPICMN += -DMP_USE_LONG_LONG_MULTIPLY -DMP_NO_MP_WORD
+MPICMN += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
+AS_OBJS = mpi_hp.o hpma512.o hppa20.o 
 CFLAGS= -O -DHPUX10 -D_POSIX_C_SOURCE=199506L -Ae +Z -DHPUX -Dhppa \
  -D_HPUX_SOURCE -Aa +e -z +DA2.0 +DS2.0 +O3 +DChpux -DHPUX11  -DXP_UNIX \
- $(MPICMN)
-#CFLAGS += -DMP_ASSEMBLY_MULTIPLY
-#AS_OBJS = mpi_hp.o mpv_sparc.o
+ -Wl,+k $(MPICMN)
+#CFLAGS= -g -DHPUX10 -D_POSIX_C_SOURCE=199506L -Ae +Z -DHPUX -Dhppa \
+ -D_HPUX_SOURCE -Aa +e -z +DA2.0 +DS2.0 +DChpux -DHPUX11  -DXP_UNIX \
+ -Wl,+k $(MPICMN)
+AS = $(CC) $(CFLAGS) -c
 endif
 
 ifeq ($(TARGET),PA1.1HPUX)
@@ -222,7 +213,6 @@ endif
 ## left alone, unless your system has other peculiar requirements.
 ##
 LIBS=#-lmalloc#-lefence#-lm
-#LIBS=-lm
 
 ## 
 ## Define RANLIB to be the library header randomizer; you might not
@@ -342,8 +332,8 @@ MPTESTS = $(MPTESTOBJS:.o=)
 $(MPTESTOBJS): mptest%.o: tests/mptest-%.c $(LIBHDRS)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-$(MPTESTS): mptest%: mptest%.o libmpi.a $(LIBS)
-	$(CC) $(CFLAGS) -o $@ $^ 
+$(MPTESTS): mptest%: mptest%.o libmpi.a
+	$(CC) $(CFLAGS) -o $@ $^  $(LIBS)
 
 tests: mptest1 mptest2 mptest3 mptest3a mptest4 mptest4a mptest4b mptest6 \
 	bbsrand
@@ -354,21 +344,21 @@ utests: mptest7 mptest8 mptest9
 
 EXTRAOBJS = bbsrand.o bbs_rand.o prng.o
 UTILOBJS = primegen.o metime.o identest.o basecvt.o fact.o exptmod.o pi.o \
-	makeprime.o karatsuba.o gcd.o invmod.o lap.o isprime.o \
+	makeprime.o gcd.o invmod.o lap.o isprime.o \
 	dec2hex.o hex2dec.o
 UTILS = $(UTILOBJS:.o=) 
 
-$(UTILS): % : %.o libmpi.a $(LIBS)
-	$(CC) $(CFLAGS) -o $@ $^ 
+$(UTILS): % : %.o libmpi.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 $(UTILOBJS) $(EXTRAOBJS): %.o : utils/%.c $(LIBHDRS)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-prng: prng.o bbs_rand.o libmpi.a $(LIBS)
-	$(CC) $(CFLAGS) -o $@ $^
+prng: prng.o bbs_rand.o libmpi.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
-bbsrand: bbsrand.o bbs_rand.o libmpi.a $(LIBS)
-	$(CC) $(CFLAGS) -o $@ $^
+bbsrand: bbsrand.o bbs_rand.o libmpi.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 utils: $(UTILS) prng bbsrand
 
@@ -380,19 +370,19 @@ test-info.c: test-arrays.txt
 mpi-test.o: mpi-test.c test-info.c $(LIBHDRS)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-mpi-test: mpi-test.o libmpi.a $(LIBS)
-	$(CC) $(CFLAGS) -o $@ $^
+mpi-test: mpi-test.o libmpi.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 mdxptest.o: mdxptest.c $(LIBHDRS) mpi-priv.h
 
-mdxptest: mdxptest.o libmpi.a $(LIBS)
-	$(CC) $(CFLAGS) -o $@ $^
+mdxptest: mdxptest.o libmpi.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 mulsqr.o: mulsqr.c logtab.h mpi.h mpi-config.h mpprime.h 
 	$(CC) $(CFLAGS) -DMP_SQUARE=1 -o $@ -c mulsqr.c 
 
-mulsqr: mulsqr.o libmpi.a $(LIBS)
-	$(CC) $(CFLAGS) -o $@ $^
+mulsqr: mulsqr.o libmpi.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 #---------------------------------------
 
