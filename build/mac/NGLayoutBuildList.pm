@@ -435,6 +435,10 @@ sub BuildClientDist()
     _InstallFromManifest(":mozilla:modules:plugin:src:MANIFEST",						"$distdirectory:plugin:");
     _InstallFromManifest(":mozilla:modules:oji:src:MANIFEST",						"$distdirectory:oji:");
     _InstallFromManifest(":mozilla:modules:oji:public:MANIFEST",						"$distdirectory:oji:");
+    
+    #DB
+    _InstallFromManifest(":mozilla:db:mdb:public:MANIFEST",					"$distdirectory:db:");
+    _InstallFromManifest(":mozilla:db:mork:build:MANIFEST",					"$distdirectory:db:");
 
 	#DBM
     _InstallFromManifest(":mozilla:dbm:include:MANIFEST",							"$distdirectory:dbm:");
@@ -624,8 +628,6 @@ sub BuildClientDist()
    _InstallFromManifest(":mozilla:mailnews:compose:public:MANIFEST",					"$distdirectory:mailnews:");
    _InstallFromManifest(":mozilla:mailnews:compose:public:MANIFEST_IDL",				"$distdirectory:idl:");
    _InstallFromManifest(":mozilla:mailnews:compose:build:MANIFEST",					"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:db:mdb:public:MANIFEST",					"$distdirectory:mailnews:");
-   _InstallFromManifest(":mozilla:mailnews:db:mork:build:MANIFEST",					"$distdirectory:mailnews:");
    _InstallFromManifest(":mozilla:mailnews:db:msgdb:public:MANIFEST",				"$distdirectory:mailnews:");
    _InstallFromManifest(":mozilla:mailnews:db:msgdb:build:MANIFEST",					"$distdirectory:mailnews:");
    _InstallFromManifest(":mozilla:mailnews:local:public:MANIFEST",					"$distdirectory:mailnews:");
@@ -1041,6 +1043,7 @@ sub BuildCommonProjects()
 	BuildOneProject(":mozilla:rdf:brprof:build:brprof.mcp",						"BrowsingProfile$D.shlb", "brprof.toc", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:rdf:chrome:build:chrome.mcp",                     "ChomeRegistry$D.shlb", "chrome.toc", 1, $main::ALIAS_SYM_FILES, 1);
     
+    BuildOneProject(":mozilla:db:mork:macbuild:mork.mcp",						"Mork$D.shlb", "Mork.toc", 1, $main::ALIAS_SYM_FILES, 1);
 #// XXX moved this TEMPORARILY to layout while we sort out a dependency
 #	BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",							"rdf$D.shlb", "rdf.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
@@ -1498,8 +1501,6 @@ sub BuildMailNewsProjects()
 	BuildOneProject(":mozilla:mailnews:compose:macbuild:msgCompose.mcp",				"MsgCompose$D.shlb", "MsgCompose.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 	BuildOneProject(":mozilla:mailnews:db:macbuild:msgDB.mcp",							"MsgDB$D.shlb", "MsgDB.toc", 1, $main::ALIAS_SYM_FILES, 1);
-
-	BuildOneProject(":mozilla:mailnews:db:mork:macbuild:mork.mcp",						"Mork$D.shlb", "Mork.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 	BuildOneProject(":mozilla:mailnews:local:macbuild:msglocal.mcp",					"MsgLocal$D.shlb", "MsgLocal.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
