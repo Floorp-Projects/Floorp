@@ -225,6 +225,22 @@ pref("font.size.fixed.zh-TW", 16);
 // below a certian pixel size outline scaled fonts produce poor results
 pref("font.scale.outline.min",      6);
 
+// TrueType
+pref("font.FreeType2.enable", false);
+// if libfreetype was built without hinting compiled in
+// it is best to leave hinting off
+pref("font.FreeType2.autohinted", false);
+pref("font.FreeType2.unhinted", true);
+// below a certian pixel size anti-aliased fonts produce poor results
+pref("font.antialias.min",        10);
+pref("font.embedded_bitmaps.max", 1000000);
+pref("font.scale.tt_bitmap.dark_text.min", 64);
+pref("font.scale.tt_bitmap.dark_text.gain", "0.8");
+// sample prefs for TrueType font dirs
+//pref("font.directory.truetype.1", "/u/sam/tt_font");
+//pref("font.directory.truetype.2", "/u/sam/tt_font2");
+//pref("font.directory.truetype.3", "/u/sam/tt_font3");
+
 // below a certian pixel size anti-aliased bitmat scaled fonts 
 // produce poor results
 pref("font.scale.aa_bitmap.enable", true);
