@@ -26,20 +26,6 @@
 // XXX put a copy in nsHTMLIIDs
 static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
 
-// XXX these need I18N spankage
-#define XP_IS_SPACE(_ch) \
-  (((_ch) == ' ') || ((_ch) == '\t') || ((_ch) == '\n'))
-
-#define XP_IS_UPPERCASE(_ch) \
-  (((_ch) >= 'A') && ((_ch) <= 'Z'))
-
-#define XP_IS_LOWERCASE(_ch) \
-  (((_ch) >= 'a') && ((_ch) <= 'z'))
-
-#define XP_TO_LOWER(_ch) ((_ch) | 32)
-
-#define XP_TO_UPPER(_ch) ((_ch) & ~32)
-
 // XXX I'm sure there are other special characters
 #define CH_NBSP 160
 
