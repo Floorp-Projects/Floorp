@@ -17,39 +17,41 @@
  */
 
 #include "nsHTTPEncodeStream.h"
+#include "nsIHTTPProtocolHandler.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTTPEncodeStream methods:
 
 nsHTTPEncodeStream::nsHTTPEncodeStream()
-    : mInput(nsnull)
+    : mInput(nsnull), mFlags(nsIHTTPProtocolHandler::ENCODE_NORMAL),
+      mLastLineComplete(PR_TRUE)
 {
     NS_INIT_REFCNT();
 }
 
 nsresult
-nsHTTPEncodeStream::Init(nsIInputStream* in)
+nsHTTPEncodeStream::Init(nsIInputStream* in, PRUint32 flags)
 {
+    mFlags = flags;
     mInput = in;
-    NS_ADDREF(mInput);
     return NS_OK;
 }
 
 nsHTTPEncodeStream::~nsHTTPEncodeStream()
 {
-    NS_IF_RELEASE(mInput);
 }
 
 NS_IMPL_ISUPPORTS(nsHTTPEncodeStream, nsIInputStream::GetIID());
 
 NS_METHOD
-nsHTTPEncodeStream::Create(nsIInputStream *rawStream, nsIInputStream **result)
+nsHTTPEncodeStream::Create(nsIInputStream *rawStream, PRUint32 flags,
+                           nsIInputStream **result)
 {
     nsHTTPEncodeStream* str = new nsHTTPEncodeStream();
     if (str == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv = str->Init(rawStream);
+    nsresult rv = str->Init(rawStream, flags);
     if (NS_FAILED(rv)) {
         NS_RELEASE(str);
         return rv;
@@ -78,21 +80,72 @@ nsHTTPEncodeStream::GetLength(PRUint32 *result)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsHTTPEncodeStream::Read(char * buf, PRUint32 count, PRUint32 *result)
+nsresult
+nsHTTPEncodeStream::GetData(char* buf, PRUint32 bufLen, PRUint32 *readCount)
 {
-#define BUF_SIZE        1024
-    char buffer[BUF_SIZE];
+    *readCount = 0;
+    PRInt32 len = mPushBackBuffer.Length();
+    PRUint32 amt = PR_MIN((PRUint32)len, bufLen);
+    if (amt > 0) {
+        nsCRT::memcpy(buf, mPushBackBuffer.GetBuffer(), amt);
+        buf += amt;
+        bufLen -= amt;
+        *readCount += amt;
+        mPushBackBuffer.Cut(0, amt);
+    }
+
+    nsresult rv = NS_OK;
+    if (bufLen > 0) {
+        // get more from the input stream
+        rv = mInput->Read(buf, bufLen, &amt);
+    }
+    return rv;
+}
+
+nsresult
+nsHTTPEncodeStream::PushBack(nsString& data)
+{
+    mPushBackBuffer.Insert(data, 0);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPEncodeStream::Read(char* outBuf, PRUint32 outBufCnt, PRUint32 *result)
+{
     nsresult rv;
+#define BUF_SIZE 1024
+    char readBuf[BUF_SIZE];
+    PRUint32 amt = 0;
 
-    PRUint32 amt;
-    rv = mInput->Read(buffer, BUF_SIZE, &amt);
-    if (NS_FAILED(rv)) return rv;
-    if (rv == NS_BASE_STREAM_WOULD_BLOCK)
-        return rv;
+    while (outBufCnt > 0) {
+        PRUint32 readCnt = PR_MIN(outBufCnt, BUF_SIZE);
+        rv = GetData(readBuf, readCnt, &amt);
+        if (NS_FAILED(rv)) return rv;
+        if (rv == NS_BASE_STREAM_WOULD_BLOCK || amt == 0)
+            return rv;
+        
+        if (mFlags & nsIHTTPProtocolHandler::ENCODE_QUOTE_LINES) {
+            // If this line begins with "." so we need to quote it
+            // by adding another "." to the beginning of the line.
+            nsCAutoString str(readBuf);
+            while (PR_TRUE) {
+                PRInt32 pos = str.Find("\012."); // LF .
+                if (pos == -1)
+                    break;
 
-    
+                PRUint32 cnt = PR_MIN((PRUint32)pos + 2, // +2 for LF and dot
+                                      outBufCnt - 1);    // -1 for extra dot
+                nsCRT::memcpy(outBuf, readBuf, cnt);
+                outBuf += cnt;
+                outBufCnt -= cnt;
+                str.Cut(0, cnt);
+            }
+        }
 
+        nsCRT::memcpy(outBuf, readBuf, amt);
+        outBuf += amt;
+        outBufCnt -= amt;
+    }
     return NS_OK;
 }
 

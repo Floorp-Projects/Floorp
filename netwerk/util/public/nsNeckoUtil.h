@@ -57,7 +57,7 @@ NS_NewLoadGroup(nsISupports* outer, nsIStreamObserver* observer,
                 nsILoadGroup* parent, nsILoadGroup* *result);
 
 extern nsresult
-NS_NewPostDataStream(PRBool isFile, const char *data,
+NS_NewPostDataStream(PRBool isFile, const char *data, PRUint32 encodeFlags,
                      nsIInputStream **result);
 
 #endif // nsNeckoUtil_h__

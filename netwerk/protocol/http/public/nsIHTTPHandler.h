@@ -65,6 +65,6 @@ protected:
 #define NS_ERROR_BAD_REQUEST    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 200);
 
 // Create (or get) HTTP Handler
-extern NS_METHOD CreateOrGetHTTPHandler(nsIHTTPHandler* *o_HTTPHandler);
+extern NS_METHOD NS_CreateOrGetHTTPHandler(nsIHTTPHandler* *o_HTTPHandler);
 
 #endif /* _nsIHTTPHandler_h_ */
