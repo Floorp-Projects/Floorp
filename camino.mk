@@ -100,7 +100,7 @@ checkout::
 	cd $(ROOTDIR) && \
 	$(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/client.mk
 	@cd $(ROOTDIR) && $(MAKE) -f mozilla/client.mk checkout
-	$(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/camino.mk
+	cd $(ROOTDIR) && $(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/camino.mk
 	@cd $(ROOTDIR) && $(MAKE) -f mozilla/camino.mk real_checkout
 
 real_checkout:
