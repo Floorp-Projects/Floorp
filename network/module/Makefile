@@ -32,7 +32,7 @@ CPPSRCS			= \
 
 REQUIRES		= raptor js dbm nspr security pref xpcom util img \
 			  layer network netcache fileurl ftpurl abouturl \
-			  httpurl gophurl remoturl
+			  httpurl gophurl remoturl netcnvts
 
 EXPORTS = nsIStreamListener.h           \
           nsINetService.h               \
