@@ -104,6 +104,9 @@ nsHttpProtocolHandler::NewUrl(const char* aSpec,
 
     rv = url->Init(aSpec, aBaseUrl);
 
+    *result = NS_STATIC_CAST(nsIUrl*, url);
+    NS_ADDREF(*result);
+
     return rv;
 }
 
