@@ -1877,7 +1877,7 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk, PRBo
             DidBuildModel(mStreamStatus);
             mInternalState = result;
           }
-          break;
+          return NS_OK;
         }
                   
         else if(((NS_OK==result) && (theTokenizerResult==kEOF)) || (result==NS_ERROR_HTMLPARSER_INTERRUPTED)){
