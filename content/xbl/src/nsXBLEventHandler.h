@@ -62,7 +62,7 @@ protected:
   inline PRBool IsMatchingKeyCode(const PRUint32 aChar, const nsString& aKeyName);
   inline PRBool IsMatchingCharCode(const PRUint32 aChar, const nsString& aKeyName);
 
-  NS_IMETHOD ExecuteHandler();
+  NS_IMETHOD ExecuteHandler(const nsString& aEventName, nsIDOMEvent* aEvent);
 
   static PRUint32 gRefCnt;
   static nsIAtom* kKeyAtom;
@@ -73,6 +73,7 @@ protected:
   static nsIAtom* kControlAtom;
   static nsIAtom* kAltAtom;
   static nsIAtom* kMetaAtom;
+  static nsIAtom* kValueAtom;
 
 protected:
   nsIContent* mBoundElement; // Both of these refs are weak.
