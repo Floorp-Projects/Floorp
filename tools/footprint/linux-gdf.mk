@@ -67,7 +67,7 @@ LINEAR_REGRESSION=awk -f linear-regression.awk
 WATCH=./watch.sh
 
 MOZILLA_DIR=../../dist/bin
-PROGRAM=mozilla-bin
+PROGRAM=gtkEmbed
 BUSTER_URL=http://localhost/cgi-bin/buster.cgi?refresh=10
 
 #----------------------------------------------------------------------
