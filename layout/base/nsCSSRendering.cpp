@@ -3084,10 +3084,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
 #if (!defined(XP_UNIX) && !defined(XP_BEOS)) || defined(XP_MACOSX)
   // Setup clipping so that rendering doesn't leak out of the computed
   // dirty rect
-  PRBool clipState;
   aRenderingContext.PushState();
-  aRenderingContext.SetClipRect(dirtyRect, nsClipCombine_kIntersect,
-                                clipState);
+  aRenderingContext.SetClipRect(dirtyRect, nsClipCombine_kIntersect);
 #endif
 
   // Compute the x and y starting points and limits for tiling
