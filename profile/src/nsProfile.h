@@ -34,6 +34,7 @@
 #include "nsIXULWindow.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIURIContentListener.h"
+#include "nsIDirectoryService.h"
 
 #define _MAX_LENGTH   256
 
@@ -55,10 +56,12 @@
 #define REGISTRY_VERSION_STRING	  "Version"
 #define REGISTRY_VERSION_1_0      "1.0"		
 
-class nsProfile: public nsIProfile 
+class nsProfile: public nsIProfile,
+                 public nsIDirectoryServiceProvider 
 {
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROFILE
+    NS_DECL_NSIDIRECTORYSERVICEPROVIDER
 
 private:
     nsresult ProcessArgs(nsICmdLineService *service,
@@ -68,6 +71,9 @@ private:
 	nsresult CopyDefaultFile(nsIFileSpec *profDefaultsDir, 
 								nsFileSpec& newProfDir,
 								const char *fileName);
+								
+	nsresult CloneProfileDirectorySpec(nsILocalFile **aLocalFile);
+	
     PRBool mAutomigrate;
     PRBool mOutofDiskSpace;
     PRBool mDiskSpaceErrorQuitCalled;

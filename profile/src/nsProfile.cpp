@@ -59,6 +59,7 @@
 #include "nsICookieService.h"
 #include "nsICategoryManager.h"
 #include "nsISupportsPrimitives.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 #include "nsIChromeRegistry.h" // chromeReg
 
@@ -119,8 +120,24 @@
 // gDataAccessInstCount is used to keep track of instance count to activate
 // destructor at the right time (count == 0)
 static nsProfileAccess*    gProfileDataAccess = nsnull;
-static PRInt32          gDataAccessInstCount = 0;
+static PRInt32          gInstanceCount = 0;
 static PRBool           mCurrentProfileAvailable = PR_FALSE;
+
+// Atoms for file locations
+static nsIAtom* sApp_PrefsDirectory50         = nsnull;
+static nsIAtom* sApp_PreferencesFile50        = nsnull;
+static nsIAtom* sApp_UserProfileDirectory50   = nsnull;
+static nsIAtom* sApp_UserChromeDirectory      = nsnull;
+static nsIAtom* sApp_LocalStore50             = nsnull;
+static nsIAtom* sApp_History50                = nsnull;
+static nsIAtom* sApp_UsersPanels50            = nsnull;
+static nsIAtom* sApp_UsersMimeTypes50         = nsnull;
+static nsIAtom* sApp_BookmarksFile50          = nsnull;
+static nsIAtom* sApp_SearchFile50             = nsnull;
+static nsIAtom* sApp_MailDirectory50          = nsnull;
+static nsIAtom* sApp_ImapMailDirectory50      = nsnull;
+static nsIAtom* sApp_NewsDirectory50          = nsnull;
+static nsIAtom* sApp_MessengerFolderCache50   = nsnull;
 
 // IID and CIDs of all the services needed
 static NS_DEFINE_CID(kIProfileIID, NS_IPROFILE_IID);
@@ -169,16 +186,50 @@ nsresult GetStringFromSpec(nsFileSpec inSpec, char **string)
  */
 nsProfile::nsProfile()
 {
+    NS_INIT_REFCNT();
     mAutomigrate = PR_FALSE;
     mOutofDiskSpace = PR_FALSE;
     mDiskSpaceErrorQuitCalled = PR_FALSE;
 
-    if(!gProfileDataAccess)
+    if (gInstanceCount++ == 0) {
+        
         gProfileDataAccess = new nsProfileAccess();
-
-    gDataAccessInstCount++;
-
-    NS_INIT_REFCNT();
+        
+       // Make our directory atoms
+        
+       // Preferences:
+         sApp_PrefsDirectory50         = NS_NewAtom(NS_APP_PREFS_50_DIR);
+         sApp_PreferencesFile50        = NS_NewAtom(NS_APP_PREFS_50_FILE);
+        
+       // Profile:
+         sApp_UserProfileDirectory50   = NS_NewAtom(NS_APP_USER_PROFILE_50_DIR);
+        
+       // Application Directories:
+         sApp_UserChromeDirectory      = NS_NewAtom(NS_APP_USER_CHROME_DIR);
+         
+       // Aplication Files:
+         sApp_LocalStore50             = NS_NewAtom(NS_APP_LOCALSTORE_50_FILE);
+         sApp_History50                = NS_NewAtom(NS_APP_HISTORY_50_FILE);
+         sApp_UsersPanels50            = NS_NewAtom(NS_APP_USER_PANELS_50_FILE);
+         sApp_UsersMimeTypes50         = NS_NewAtom(NS_APP_USER_MIMETYPES_50_FILE);
+         
+       // Bookmarks:
+         sApp_BookmarksFile50          = NS_NewAtom(NS_APP_BOOKMARKS_50_FILE);
+         
+       // Search
+         sApp_SearchFile50             = NS_NewAtom(NS_APP_SEARCH_50_FILE);
+         
+       // MailNews
+         sApp_MailDirectory50          = NS_NewAtom(NS_APP_MAIL_50_DIR);
+         sApp_ImapMailDirectory50      = NS_NewAtom(NS_APP_IMAP_MAIL_50_DIR);
+         sApp_NewsDirectory50          = NS_NewAtom(NS_APP_NEWS_50_DIR);
+         sApp_MessengerFolderCache50   = NS_NewAtom(NS_APP_MESSENGER_FOLDER_CACHE_50_DIR);
+         
+         nsresult rv;
+         NS_WITH_SERVICE(nsIDirectoryService, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+         if (NS_SUCCEEDED(rv))
+            directoryService->RegisterProvider(this);
+    }
 }
 
 nsProfile::~nsProfile() 
@@ -190,9 +241,25 @@ nsProfile::~nsProfile()
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
     gProfileDataAccess->UpdateRegistry();
     
-    gDataAccessInstCount--;
-    if (gDataAccessInstCount == 0)
-        delete gProfileDataAccess;
+   if (--gInstanceCount == 0) {
+        
+      delete gProfileDataAccess;
+
+      NS_IF_RELEASE(sApp_PrefsDirectory50);
+      NS_IF_RELEASE(sApp_PreferencesFile50);
+      NS_IF_RELEASE(sApp_UserProfileDirectory50);
+      NS_IF_RELEASE(sApp_UserChromeDirectory);
+      NS_IF_RELEASE(sApp_LocalStore50);
+      NS_IF_RELEASE(sApp_History50);
+      NS_IF_RELEASE(sApp_UsersPanels50);
+      NS_IF_RELEASE(sApp_UsersMimeTypes50);
+      NS_IF_RELEASE(sApp_BookmarksFile50);
+      NS_IF_RELEASE(sApp_SearchFile50);
+      NS_IF_RELEASE(sApp_MailDirectory50);
+      NS_IF_RELEASE(sApp_ImapMailDirectory50);
+      NS_IF_RELEASE(sApp_NewsDirectory50);
+      NS_IF_RELEASE(sApp_MessengerFolderCache50);
+    }
 }
 
 /*
@@ -204,6 +271,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsProfile)
 NS_INTERFACE_MAP_BEGIN(nsProfile)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIProfile)
     NS_INTERFACE_MAP_ENTRY(nsIProfile)
+    NS_INTERFACE_MAP_ENTRY(nsIDirectoryServiceProvider)
 NS_INTERFACE_MAP_END
 
 /*
@@ -1861,3 +1929,168 @@ nsProfile::IsRegStringSet(const PRUnichar *profileName, char **regString)
     return NS_OK;
 }
 
+/*
+ * nsIDirectoryServiceProvider Implementation
+ */
+ 
+// File Name Defines
+#if defined(XP_MAC)
+
+#else
+
+#endif
+
+#define PREFS_FILE_50_NAME          "prefs.js"
+#define USER_CHROME_DIR_50_NAME     "Chrome"
+#define LOCAL_STORE_FILE_50_NAME    "localstore.rdf"
+#define HISTORY_FILE_50_NAME        "history.dat"
+#define PANELS_FILE_50_NAME         "panels.rdf"
+#define MIME_TYPES_FILE_50_NAME     "mimeTypes.rdf"
+#define BOOKMARKS_FILE_50_NAME      "bookmarks.html"
+#define SEARCH_FILE_50_NAME         "search.rdf" 
+#define MAIL_DIR_50_NAME            "Mail"
+#define IMAP_MAIL_DIR_50_NAME       "ImapMail"
+#define NEWS_DIR_50_NAME            "News"
+#define MSG_FOLDER_CACHE_DIR_50_NAME "panacea.dat"
+
+NS_IMETHODIMP
+nsProfile::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
+{
+    nsCOMPtr<nsILocalFile>  localFile;
+    nsresult rv = NS_ERROR_FAILURE;
+
+    *_retval = nsnull;
+    
+    // Set persistant to TRUE - When the day comes when we switch profiles, we'll just
+    // Undefine our properties. This is more efficent because these files are accessed
+    // a lot more frequently than the profile will change.
+    
+    *persistant = PR_TRUE;
+
+    nsIAtom* inAtom = NS_NewAtom(prop);
+    NS_ENSURE_TRUE(inAtom, NS_ERROR_OUT_OF_MEMORY);
+
+    if (inAtom == sApp_PrefsDirectory50)
+    {
+        rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
+    }
+    else if (inAtom == sApp_PreferencesFile50)
+    {
+        rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
+        if (NS_SUCCEEDED(rv))
+            rv = localFile->Append(PREFS_FILE_50_NAME); // AppendRelativePath
+    }
+    else if (inAtom == sApp_UserProfileDirectory50)
+    {
+        rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
+    }
+    else if (inAtom == sApp_UserChromeDirectory)
+    {
+        rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
+        if (NS_SUCCEEDED(rv))
+            rv = localFile->Append(USER_CHROME_DIR_50_NAME);
+    }
+    else if (inAtom == sApp_LocalStore50)
+    {
+        rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
+        if (NS_SUCCEEDED(rv))
+            rv = localFile->Append(LOCAL_STORE_FILE_50_NAME);
+    }
+    else if (inAtom == sApp_History50)
+    {
+        rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
+        if (NS_SUCCEEDED(rv))
+            rv = localFile->Append(HISTORY_FILE_50_NAME);
+    }
+    else if (inAtom == sApp_UsersPanels50)
+    {
+        // Here we differ from nsFileLocator - It checks for the
+        // existance of this file and if it does not exist, copies
+        // it from the defaults folder to the profile folder. Since
+        // WE set up any profile folder, we'll make sure it's copied then.
+        
+        rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
+        if (NS_SUCCEEDED(rv))
+            rv = localFile->Append(PANELS_FILE_50_NAME);
+    }
+    else if (inAtom == sApp_UsersMimeTypes50)
+    {
+        // Here we differ from nsFileLocator - It checks for the
+        // existance of this file and if it does not exist, copies
+        // it from the defaults folder to the profile folder. Since
+        // WE set up any profile folder, we'll make sure it's copied then.
+        
+        rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
+        if (NS_SUCCEEDED(rv))
+            rv = localFile->Append(MIME_TYPES_FILE_50_NAME);
+    }
+    else if (inAtom == sApp_BookmarksFile50)
+    {
+        rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
+        if (NS_SUCCEEDED(rv))
+            rv = localFile->Append(BOOKMARKS_FILE_50_NAME);
+    }
+    else if (inAtom == sApp_SearchFile50)
+    {
+        // Here we differ from nsFileLocator - It checks for the
+        // existance of this file and if it does not exist, copies
+        // it from the defaults folder to the profile folder. Since
+        // WE set up any profile folder, we'll make sure it's copied then.
+        
+        rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
+        if (NS_SUCCEEDED(rv))
+            rv = localFile->Append(SEARCH_FILE_50_NAME);
+    }
+    else if (inAtom == sApp_MailDirectory50)
+    {
+        rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
+        if (NS_SUCCEEDED(rv))
+            rv = localFile->Append(MAIL_DIR_50_NAME);
+    }
+    else if (inAtom == sApp_ImapMailDirectory50)
+    {
+        rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
+        if (NS_SUCCEEDED(rv))
+            rv = localFile->Append(IMAP_MAIL_DIR_50_NAME);
+    }
+    else if (inAtom == sApp_NewsDirectory50)
+    {
+        rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
+        if (NS_SUCCEEDED(rv))
+            rv = localFile->Append(NEWS_DIR_50_NAME);
+    }
+    else if (inAtom == sApp_MessengerFolderCache50)
+    {
+        rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
+        if (NS_SUCCEEDED(rv))
+            rv = localFile->Append(MSG_FOLDER_CACHE_DIR_50_NAME);
+    }
+
+    NS_RELEASE(inAtom);
+
+    if (localFile && NS_SUCCEEDED(rv))
+    	return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
+    	
+    return rv;
+}
+
+nsresult nsProfile::CloneProfileDirectorySpec(nsILocalFile **aLocalFile)
+{
+    nsresult rv;    
+    nsFileSpec currentDir;
+    
+    rv = GetCurrentProfileDir(&currentDir); // This should probably be cached...
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+#if defined(XP_MAC)
+    nsCOMPtr<nsILocalFileMac> localFileMac;
+    FSSpec  tempSpec = currentDir.GetFSSpec();
+    rv = NS_NewLocalFileWithFSSpec(&tempSpec, PR_TRUE, getter_AddRefs(localFileMac));
+    if (NS_SUCCEEDED(rv))
+        rv = localFileMac->QueryInterface(NS_GET_IID(nsILocalFile), aLocalFile);
+#else
+    rv = NS_NewLocalFile(currentDir.GetNativePathCString(), PR_TRUE, aLocalFile);
+#endif
+    
+    return rv;
+}
