@@ -599,8 +599,11 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 
   PtWidget_t *parentWidget = nsnull;
 
-  nsIWidget *baseParent = aInitData && (aInitData->mWindowType == eWindowType_dialog ||
-    	aInitData->mWindowType == eWindowType_toplevel ) ?  nsnull : aParent;
+  nsIWidget *baseParent = aInitData &&
+                            (aInitData->mWindowType == eWindowType_dialog ||
+                             aInitData->mWindowType == eWindowType_toplevel ||
+                             aInitData->mWindowType == eWindowType_invisible) ?
+                          nsnull : aParent;
 
   BaseCreate( baseParent, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData );
 

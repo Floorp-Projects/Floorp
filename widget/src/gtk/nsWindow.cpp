@@ -1966,6 +1966,7 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
     break;
 
   case eWindowType_toplevel:
+  case eWindowType_invisible:
     mIsToplevel = PR_TRUE;
     mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     //    gtk_widget_set_app_paintable(mShell, PR_TRUE);

@@ -1980,7 +1980,8 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
     // toplevel
     nsIWidget *baseParent = aInitData &&
         (aInitData->mWindowType == eWindowType_dialog ||
-         aInitData->mWindowType == eWindowType_toplevel) ?
+         aInitData->mWindowType == eWindowType_toplevel ||
+         aInitData->mWindowType == eWindowType_invisible) ?
         nsnull : aParent;
 
     // initialize all the common bits of this class
@@ -2047,7 +2048,8 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
     switch (mWindowType) {
     case eWindowType_dialog:
     case eWindowType_popup:
-    case eWindowType_toplevel: {
+    case eWindowType_toplevel:
+    case eWindowType_invisible: {
         mIsTopLevel = PR_TRUE;
         if (mWindowType == eWindowType_dialog) {
             mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);

@@ -496,7 +496,8 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 {
 	nsIWidget *baseParent = aInitData &&
 	                        (aInitData->mWindowType == eWindowType_dialog ||
-	                         aInitData->mWindowType == eWindowType_toplevel) ?
+	                         aInitData->mWindowType == eWindowType_toplevel ||
+	                         aInitData->mWindowType == eWindowType_invisible) ?
 	                        nsnull : aParent;
 
 	mIsTopWidgetWindow = (nsnull == baseParent);
@@ -621,6 +622,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 					// don't break here
 				}
 				case eWindowType_toplevel:
+				case eWindowType_invisible:
 				{
 					// This was never documented, so I'm not sure why we do it, yet
 					winrect.OffsetBy( 10, 30 );
