@@ -54,29 +54,6 @@ nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
     mHaveReadNameFromDB(PR_FALSE), mGettingMail(PR_FALSE),
     mInitialized(PR_FALSE), mMailDatabase(nsnull)
 {
-		//XXXX This is a hack for the moment.  I'm assuming the only listener is our rdf:mailnews datasource.
-		//In reality anyone should be able to listen to folder changes. 
-
-		nsIRDFService* rdfService = nsnull;
-		nsIRDFDataSource* datasource = nsnull;
-
-		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-												nsIRDFService::GetIID(),
-												(nsISupports**) &rdfService);
-		if(NS_SUCCEEDED(rv))
-		{
-			if(NS_SUCCEEDED(rv = rdfService->GetDataSource("rdf:mailnewsfolders", &datasource)))
-			{
-				nsIFolderListener *folderListener;
-				if(NS_SUCCEEDED(datasource->QueryInterface(nsIFolderListener::GetIID(), (void**)&folderListener)))
-				{
-					AddFolderListener(folderListener);
-					NS_RELEASE(folderListener);
-				}
-				NS_RELEASE(datasource);
-			}
-			nsServiceManager::ReleaseService(kRDFServiceCID, rdfService);
-		}
 
 //  NS_INIT_REFCNT(); done by superclass
 }
@@ -1076,39 +1053,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteMessage(nsIMessage *message)
 	return NS_OK;
 }
 
-nsresult nsMsgLocalMailFolder::NotifyPropertyChanged(char *property, char *oldValue, char* newValue)
-{
-	nsISupports *supports;
-	if(NS_SUCCEEDED(QueryInterface(kISupportsIID, (void**)&supports)))
-	{
-		PRUint32 i;
-		for(i = 0; i < mListeners->Count(); i++)
-		{
-			nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
-			listener->OnItemPropertyChanged(supports, property, oldValue, newValue);
-			NS_RELEASE(listener);
-		}
-		NS_RELEASE(supports);
-	}
 
-	return NS_OK;
-
-}
-
-nsresult nsMsgLocalMailFolder::NotifyItemAdded(nsISupports *item)
-{
-
-	PRUint32 i;
-	for(i = 0; i < mListeners->Count(); i++)
-	{
-		nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
-		listener->OnItemAdded(this, item);
-		NS_RELEASE(listener);
-	}
-
-	return NS_OK;
-
-}
 
 NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyChange(nsMsgKey aKeyChanged, int32 aFlags, 
                          nsIDBChangeListener * aInstigator)

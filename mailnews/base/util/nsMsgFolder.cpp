@@ -69,6 +69,26 @@ nsMsgFolder::nsMsgFolder(void)
 	NS_NewISupportsArray(&mSubFolders);
 
 	mIsCachable = TRUE;
+
+	//The rdf:mailnewsfolders datasource is going to be a listener to all nsIMsgFolders, so add
+	//it as a listener
+    nsresult rv; 
+    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
+    if (NS_SUCCEEDED(rv))
+	{
+		nsIRDFDataSource* datasource = nsnull;
+
+		if(NS_SUCCEEDED(rv = rdfService->GetDataSource("rdf:mailnewsfolders", &datasource)))
+		{
+			nsIFolderListener *folderListener;
+			if(NS_SUCCEEDED(datasource->QueryInterface(nsIFolderListener::GetIID(), (void**)&folderListener)))
+			{
+				AddFolderListener(folderListener);
+				NS_RELEASE(folderListener);
+			}
+			NS_RELEASE(datasource);
+		}
+	}
 }
 
 nsMsgFolder::~nsMsgFolder(void)
@@ -1403,6 +1423,55 @@ NS_IMETHODIMP nsMsgFolder::GetHostName(char **hostName)
 
 	*hostName = "";
 	return NS_OK;
+}
+
+nsresult nsMsgFolder::NotifyPropertyChanged(char *property, char *oldValue, char* newValue)
+{
+	nsISupports *supports;
+	if(NS_SUCCEEDED(QueryInterface(kISupportsIID, (void**)&supports)))
+	{
+		PRUint32 i;
+		for(i = 0; i < mListeners->Count(); i++)
+		{
+			nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
+			listener->OnItemPropertyChanged(supports, property, oldValue, newValue);
+			NS_RELEASE(listener);
+		}
+		NS_RELEASE(supports);
+	}
+
+	return NS_OK;
+
+}
+
+nsresult nsMsgFolder::NotifyItemAdded(nsISupports *item)
+{
+
+	PRUint32 i;
+	for(i = 0; i < mListeners->Count(); i++)
+	{
+		nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
+		listener->OnItemAdded(this, item);
+		NS_RELEASE(listener);
+	}
+
+	return NS_OK;
+
+}
+
+nsresult nsMsgFolder::NotifyItemDeleted(nsISupports *item)
+{
+
+	PRUint32 i;
+	for(i = 0; i < mListeners->Count(); i++)
+	{
+		nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
+		listener->OnItemRemoved(this, item);
+		NS_RELEASE(listener);
+	}
+
+	return NS_OK;
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

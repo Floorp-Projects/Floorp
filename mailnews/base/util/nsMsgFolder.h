@@ -280,6 +280,10 @@ public:
  virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db) = 0;
  	NS_IMETHOD DeleteMessage(nsIMessage *message) = 0;
 
+protected:
+	nsresult NotifyPropertyChanged(char *property, char* oldValue, char* newValue);
+	nsresult NotifyItemAdded(nsISupports *item);
+	nsresult NotifyItemDeleted(nsISupports *item);
 
 protected:
   nsString mName;
