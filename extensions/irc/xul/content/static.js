@@ -1235,9 +1235,7 @@ function getTBForObject (source, create)
         var views = document.getElementById ("views-tbar-inner");
         tb = document.createElement ("tab");
         tb.setAttribute ("onclick", "onTBIClick('" + id + "');");
-        tb.setAttribute ("autostretch", "never");
         tb.setAttribute ("crop", "right");
-        tb.setAttribute ("flex", "1");
         
         //tb.addEventListener("command", onTBIClickTempHandler, false);
         
@@ -1248,9 +1246,9 @@ function getTBForObject (source, create)
         client.viewsArray.push ({source: source, tb: tb});
         tb.setAttribute ("viewKey", client.viewsArray.length - 1);
         if (matches > 1)
-            tb.setAttribute ("value", name + "<" + matches + ">");
+            tb.setAttribute ("label", name + "<" + matches + ">");
         else
-            tb.setAttribute ("value", name);
+            tb.setAttribute ("label", name);
 
         views.appendChild (tb);
     }
