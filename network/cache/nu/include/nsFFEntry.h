@@ -16,13 +16,18 @@
  * Reserved.
  */
 
+/* This is part of the Flat-file cache architecture. The nsFFEntry class 
+ * represents a single entry in the TOC. All io operations take place 
+ * through the FFEntry's read and write functions. An entry may comprise
+ * of one or more objects which are blocks of data spread across the flat 
+ * file.  - Gagan Saksena 09/15/98 */
+
 #ifndef nsFFEntry_h__
 #define nsFFEntry_h__
 
+
 #include "nsFFObject.h"
 //#include "nsISupports.h"
-/** An FFEntry consists of several objects, all io takes place 
-  * through the FFEntry's read and write functions */
 
 class nsFFEntry//: public nsISupports
 {
