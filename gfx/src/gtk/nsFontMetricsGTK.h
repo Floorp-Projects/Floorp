@@ -56,11 +56,28 @@ typedef gint (*nsFontCharSetConverter)(nsFontCharSetInfo* aSelf,
 struct nsFontCharSet;
 class nsFontMetricsGTK;
 
-struct nsFontGTK
+class nsFontGTK
 {
+public:
+  nsFontGTK();
+  virtual ~nsFontGTK();
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   void LoadFont(nsFontCharSet* aCharSet, nsFontMetricsGTK* aMetrics);
+  virtual gint GetWidth(const PRUnichar* aString, PRUint32 aLength) = 0;
+  virtual gint DrawString(nsRenderingContextGTK* aContext,
+                          nsDrawingSurfaceGTK* aSurface, nscoord aX,
+                          nscoord aY, const PRUnichar* aString,
+                          PRUint32 aLength) = 0;
+#ifdef MOZ_MATHML
+  // bounding metrics for a string 
+  // remember returned values are not in app units 
+  // - to emulate GetWidth () above
+  virtual nsresult
+  GetBoundingMetrics(const PRUnichar*   aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics) = 0;
+#endif
 
   GdkFont*               mFont;
   PRUint32*              mMap;
@@ -108,21 +125,7 @@ public:
 
   nsFontGTK*  FindFont(PRUnichar aChar);
   void        FindGenericFont(nsFontSearch* aSearch);
-  static gint GetWidth(nsFontGTK* aFont, const PRUnichar* aString,
-                       PRUint32 aLength);
-#ifdef MOZ_MATHML
-  // bounding metrics for a string 
-  // remember returned values are not in app units 
-  // - to emulate GetWidth () above
-  static nsresult
-  GetBoundingMetrics(nsFontGTK*         aFont,
-                     const PRUnichar*   aString,
-                     PRUint32           aLength,
-                     nsBoundingMetrics& aBoundingMetrics);
-#endif
-  static void DrawString(nsRenderingContextGTK* aContext, nsDrawingSurfaceGTK* aSurface, nsFontGTK* aFont,
-                         nscoord aX, nscoord aY, const PRUnichar* aString,
-                         PRUint32 aLength);
+  void        FindSubstituteFont(nsFontSearch* aSearch);
   static void InitFonts(void);
 
   friend void PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
@@ -134,6 +137,9 @@ public:
   nsFontGTK   **mLoadedFonts;
   PRUint16    mLoadedFontsAlloc;
   PRUint16    mLoadedFontsCount;
+
+  int         mInFindSubstituteFont;
+  nsFontGTK   *mSubstituteFont;
 
   nsString    *mFonts;
   PRUint16    mFontsAlloc;
