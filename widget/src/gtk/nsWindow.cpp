@@ -71,12 +71,22 @@ extern "C" int usleep(unsigned int);
 #define WANT_PAINT_FLASHING \
 (CAPS_LOCK_IS_ON && debug_WantPaintFlashing())
 
-gint handle_toplevel_focus_in(
+gint handle_toplevel_focus_in (
+    GtkWidget *      aWidget, 
+    GdkEventFocus *  aGdkFocusEvent, 
+    gpointer         aData);
+
+gint handle_toplevel_focus_out (
+    GtkWidget *      aWidget, 
+    GdkEventFocus *  aGdkFocusEvent, 
+    gpointer         aData);
+
+gint handle_mozarea_focus_in (
     GtkWidget *      aWidget, 
     GdkEventFocus *  aGdkFocusEvent, 
     gpointer         aData);
     
-gint handle_toplevel_focus_out(
+gint handle_mozarea_focus_out (
     GtkWidget *      aWidget, 
     GdkEventFocus *  aGdkFocusEvent, 
     gpointer         aData);
@@ -197,7 +207,7 @@ NS_IMETHODIMP nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 
   aNewRect.width = aOldRect.width;
   aNewRect.height = aOldRect.height;
-  if (mIsToplevel && mShell)
+  if (mMozArea)
   {
     if (mMozArea->window)
     {
@@ -247,6 +257,13 @@ nsWindow::DestroyNative(void)
     gtk_widget_destroy(mShell);
     mShell = nsnull;
     // the moz area and superwin will have been destroyed when we destroyed the shell
+    mMozArea = nsnull;
+    mSuperWin = nsnull;
+  }
+  else if(mMozArea) {
+    // We will get here if the widget was created as the child of a
+    // GtkContainer.
+    gtk_widget_destroy(mMozArea);
     mMozArea = nsnull;
     mSuperWin = nsnull;
   }
@@ -889,6 +906,9 @@ PRBool gJustGotDeactivate = PR_TRUE;
 NS_IMETHODIMP
 nsWindow::SetFocus(void)
 {
+#ifdef DEBUG_blizzard
+  printf("nsWindow::SetFocus\n");
+#endif
 
   GtkWidget *top_mozarea = GetMozArea();
   
@@ -1564,14 +1584,20 @@ gint nsWindow::ConvertBorderStyles(nsBorderStyle bs)
 
 NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
 {
-  GdkSuperWin *superwin = 0;
-  GdkEventMask mask;
+  GdkSuperWin  *superwin = 0;
+  GdkEventMask  mask;
+  PRBool        parentIsContainer = PR_FALSE;
+  GtkContainer *parentContainer = NULL;
 
   if (parentWidget) {
     if (GDK_IS_SUPERWIN(parentWidget))
       superwin = GDK_SUPERWIN(parentWidget);
+    else if (GTK_IS_CONTAINER(parentWidget)) {
+      parentContainer = GTK_CONTAINER(parentWidget);
+      parentIsContainer = PR_TRUE;
+    }
     else
-      g_print("warning: attempted to CreateNative() width a non-superwin parent\n");
+      g_print("warning: attempted to CreateNative() width a non-superwin and non gtk container parent\n");
   }
 
   switch(mWindowType)
@@ -1627,7 +1653,41 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
                              "size_allocate",
                              GTK_SIGNAL_FUNC(handle_size_allocate),
                              this);
-    // track focus in and focus out events for the shell
+    break;
+
+  case eWindowType_child:
+    // check to see if we need to create a mozarea for this widget
+    
+    if (parentIsContainer) {
+      // check to make sure that the widget is realized
+      if (!GTK_WIDGET_REALIZED(parentContainer))
+        g_print("Warning: The parent container of this widget is not realized.  I'm going to crash very, very soon.\n");
+      else {
+        //  create a containg mozarea for the superwin since we've got
+        //  play nice with the gtk widget system.
+        mMozArea = gtk_mozarea_new();
+        gtk_container_add(parentContainer, mMozArea);
+        gtk_widget_realize(GTK_WIDGET(mMozArea));
+        mSuperWin = GTK_MOZAREA(mMozArea)->superwin;
+      }
+    }
+    else {
+      if (superwin)
+        mSuperWin = gdk_superwin_new(superwin->bin_window,
+                                     mBounds.x, mBounds.y,
+                                     mBounds.width, mBounds.height);
+    }
+    break;
+
+  default:
+    break;
+  }
+
+  // set up all the focus handling
+
+  if (mShell) {
+    // Track focus in event for the shell.  We only need the focus in
+    // event so that we can dispatch it to the mMozArea
     gtk_signal_connect(GTK_OBJECT(mShell),
                        "focus_in_event",
                        GTK_SIGNAL_FUNC(handle_toplevel_focus_in),
@@ -1636,21 +1696,21 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
                        "focus_out_event",
                        GTK_SIGNAL_FUNC(handle_toplevel_focus_out),
                        this);
-    break;
-
-  case eWindowType_child:
-    if (superwin) {
-      mSuperWin = gdk_superwin_new(superwin->bin_window,
-                                   mBounds.x, mBounds.y,
-                                   mBounds.width, mBounds.height);
-    }
-    else
-      g_print("warning: attempted to CreateNative() without a superwin parent\n");
-    break;
-
-  default:
-    break;
   }
+
+  if (mMozArea) {
+    // track focus events for the moz area, too
+    gtk_signal_connect(GTK_OBJECT(mMozArea),
+                       "focus_in_event",
+                       GTK_SIGNAL_FUNC(handle_mozarea_focus_in),
+                       this);
+    gtk_signal_connect(GTK_OBJECT(mMozArea),
+                       "focus_out_event",
+                       GTK_SIGNAL_FUNC(handle_mozarea_focus_out),
+                       this);
+  }
+
+  // end of settup up focus handling
 
   mask = (GdkEventMask)(GDK_BUTTON_PRESS_MASK |
                         GDK_BUTTON_RELEASE_MASK |
@@ -1674,8 +1734,11 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
   // always find the nsWindow given a specific GtkWidget *
   if (mShell)
     gtk_object_set_data(GTK_OBJECT(mShell), "nsWindow", this);
-  if (mMozArea)
+  if (mMozArea) {
     gtk_object_set_data(GTK_OBJECT(mMozArea), "nsWindow", this);
+    // make sure that the mozarea widget can take the focus
+    GTK_WIDGET_SET_FLAGS(mMozArea, GTK_CAN_FOCUS);
+  }
   // set user data on the bin_window so we can find the superwin for it.
   gdk_window_set_user_data (mSuperWin->bin_window, (gpointer)mSuperWin);
 
@@ -2204,24 +2267,12 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
     gdk_window_show(mSuperWin->bin_window);
     gdk_window_show(mSuperWin->shell_window);
 
-    // are we a toplevel window?
-    if (mIsToplevel && mShell)
+    if (mMozArea)
     {
-#if 0
-      printf("nsWindow::Show %s (%p) bState = %i, mWindowType = %i\n",
-             (const char *) debug_GetName(mWidget),
-             this,
-             bState, mWindowType);
-#endif
-
-      /* bug #8002 -- this has weird side effects like causing the window to come to the front whenever you mouse over it.
-
-        if (GTK_WIDGET_VISIBLE(mShell) && GTK_WIDGET_REALIZED(mShell) && mShell->window)
-          gdk_window_raise(mShell->window);
-      */
-
       gtk_widget_show(mMozArea);
-      gtk_widget_show(mShell);
+      // if we're a toplevel window, show that too
+      if (mShell)
+        gtk_widget_show(mShell);
     }
   }
   // hide
@@ -2232,16 +2283,14 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
     // hide toplevel first so that things don't disapear from the screen one by one
 
     // are we a toplevel window?
-    if (mIsToplevel && mShell)
+    if (mMozArea)
     {
-      gtk_widget_hide(mShell);
+      // if we're a toplevel window hide that too
+      if (mShell)
+        gtk_widget_hide(mShell);
       gtk_widget_hide(mMozArea);
-      //gtk_widget_unmap(mShell);
     } 
 
-    // For some strange reason, gtk_widget_hide() does not seem to
-    // unmap the window.
-    //    gtk_widget_unmap(mWidget);
   }
 
   return NS_OK;
@@ -2344,16 +2393,23 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   // larger resize has happened
   if (aWidth <= 1 || aHeight <= 1)
   {
-    if (mIsToplevel && mShell)
+    if (mMozArea)
     {
       aWidth = 1;
       aHeight = 1;
       mIsTooSmall = PR_TRUE;
-      if (GTK_WIDGET_VISIBLE(mShell))
+      if (mShell)
+      {
+        if (GTK_WIDGET_VISIBLE(mShell))
+        {
+          gtk_widget_hide(mMozArea);
+          gtk_widget_hide(mShell);
+          gtk_widget_unmap(mShell);
+        }
+      }
+      else
       {
         gtk_widget_hide(mMozArea);
-        gtk_widget_hide(mShell);
-        gtk_widget_unmap(mShell);
       }
     }
     else
@@ -2384,11 +2440,16 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     // toplevel window?  if so, we should resize it as well.
     if (mIsToplevel && mShell)
     {
-      if (GTK_WIDGET_VISIBLE(mShell) && GTK_WIDGET_REALIZED(mShell))  // set_default_size won't make a window smaller after it is visible
+      // set_default_size won't make a window smaller after it is visible
+      if (GTK_WIDGET_VISIBLE(mShell) && GTK_WIDGET_REALIZED(mShell))  
         gdk_window_resize(mShell->window, aWidth, aHeight);
 
       gtk_window_set_default_size(GTK_WINDOW(mShell), aWidth, aHeight);
     }
+    // we could be a mozarea resizing.
+    else if (mMozArea)
+      gdk_window_resize(mMozArea->window, aWidth, aHeight);
+    // in any case we always resize our mSuperWin window.
     gdk_superwin_resize(mSuperWin, aWidth, aHeight);
   }
   if (mIsToplevel || mListenForResizes) {
@@ -2460,7 +2521,9 @@ gint handle_toplevel_focus_in(GtkWidget *      aWidget,
                               GdkEventFocus *  aGdkFocusEvent, 
                               gpointer         aData)
 {
-#ifdef DEBUG_saari
+  GtkWindow *window = NULL;
+  GtkBin    *bin = NULL;
+#if defined (DEBUG_sarri) || defined(DEBUG_blizzard)
   printf("handle_toplevel_focus_in\n");
 #endif
   if (!aWidget) {
@@ -2477,23 +2540,10 @@ gint handle_toplevel_focus_in(GtkWidget *      aWidget,
     return PR_TRUE;
   }
 
-  nsGUIEvent eventGotFocus;
-  eventGotFocus.message = NS_GOTFOCUS;
-#ifdef DEBUG_saari
-  printf("Send NS_GOTFOCUS from handle_toplevel_focus_in\n");
-#endif
-  eventGotFocus.widget  = widget;
-  eventGotFocus.eventStructType = NS_GUI_EVENT;
-  eventGotFocus.time = 0;
-  eventGotFocus.point.x = 0;
-  eventGotFocus.point.y = 0;
- 
-  NS_ADDREF(widget);
- 
-  nsEventStatus statusGotFocus;
-  widget->DispatchEvent(&eventGotFocus, statusGotFocus);
+  window = GTK_WINDOW(aWidget);
+  bin = GTK_BIN(window);
   
-  NS_RELEASE(widget);
+  gtk_widget_grab_focus(bin->child);
   return PR_TRUE;
 }
 
@@ -2501,8 +2551,89 @@ gint handle_toplevel_focus_out(GtkWidget *      aWidget,
                                GdkEventFocus *  aGdkFocusEvent, 
                                gpointer         aData)
 {
-#ifdef DEBUG_saari
+  if (!aWidget) {
+    return PR_TRUE;
+  }
+  
+  if (!aGdkFocusEvent) {
+    return PR_TRUE;
+  }
+
+  nsWidget *widget = (nsWidget *) aData;
+
+  if (!widget) {
+    return PR_TRUE;
+  }
+
+#if defined(DEBUG_sarri) || defined(DEBUG_blizzard)
   printf("handle_toplevel_focus_out\n");
+#endif
+
+#ifdef USE_XIM
+  widget->IMEDeactivateWidget();
+#endif // USE_XIM 
+
+  if (widget->focusWindow)
+  {
+#ifdef USE_XIM
+    widget->focusWindow->IMEUnsetFocusWidget();
+#endif // USE_XIM 
+  }
+
+  return PR_TRUE;
+}
+
+gint handle_mozarea_focus_in(GtkWidget *      aWidget, 
+                             GdkEventFocus *  aGdkFocusEvent, 
+                             gpointer         aData)
+{
+#if defined (DEBUG_saari) || defined (DEBUG_blizzard)
+  printf("handle_mozarea_focus_in\n");
+#endif
+  if (!aWidget) {
+    return PR_TRUE;
+  }
+
+  if (!aGdkFocusEvent) {
+    return PR_TRUE;
+  }
+
+  nsWidget *widget = (nsWidget *)aData;
+
+  if (!widget) {
+    return PR_TRUE;
+  }
+
+  // make sure that we set our focus flag
+  GTK_WIDGET_SET_FLAGS(aWidget, GTK_HAS_FOCUS);
+
+  nsGUIEvent eventGotFocus;
+  eventGotFocus.message = NS_GOTFOCUS;
+#if defined (DEBUG_saari) || defined (DEBUG_blizzard)
+  printf("Send NS_GOTFOCUS from handle_mozarea_focus_in\n");
+#endif
+  eventGotFocus.widget  = widget;
+  eventGotFocus.eventStructType = NS_GUI_EVENT;
+  eventGotFocus.time = 0;
+  eventGotFocus.point.x = 0;
+  eventGotFocus.point.y = 0;
+  
+  NS_ADDREF(widget);
+  
+  nsEventStatus statusGotFocus;
+  widget->DispatchEvent(&eventGotFocus, statusGotFocus);
+  
+  NS_RELEASE(widget);
+  
+  return PR_TRUE;
+}
+
+gint handle_mozarea_focus_out(GtkWidget *      aWidget, 
+                              GdkEventFocus *  aGdkFocusEvent, 
+                              gpointer         aData)
+{
+#if defined (DEBUG_saari) || (DEBUG_blizzard)
+  printf("handle_mozarea_focus_out\n");
   printf("... send NS_DEACTIVATE\n");
 #endif
   gJustGotDeactivate = PR_TRUE;
@@ -2520,9 +2651,17 @@ gint handle_toplevel_focus_out(GtkWidget *      aWidget,
     return PR_TRUE;
   }
 
-#ifdef USE_XIM
-  widget->IMEDeactivateWidget();
-#endif // USE_XIM 
+  // make sure that we unset our focus flag
+  GTK_WIDGET_UNSET_FLAGS(aWidget, GTK_HAS_FOCUS);
+
+  // since this mozarea just lost focus make sure to set focusWindow
+  // to null.
+
+  if (widget->focusWindow)
+  {
+    // let the current window loose its focus
+    widget->focusWindow->LooseFocus();
+  }
 
   // Dispatch NS_DEACTIVATE
   nsGUIEvent event;
