@@ -317,7 +317,7 @@ nsGenericDOMDataNode::AppendData(const nsString& aData)
   PRInt32 dataLength = aData.Length();
   PRInt32 textLength = mText.GetLength();
   PRInt32 newSize = textLength + dataLength;
-  PRUnichar* to = new PRUnichar[newSize];
+  PRUnichar* to = new PRUnichar[newSize + 1];
   if (nsnull == to) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -330,6 +330,9 @@ nsGenericDOMDataNode::AppendData(const nsString& aData)
   }
   nsCRT::memcpy(to + textLength, aData.GetUnicode(),
                 sizeof(PRUnichar) * dataLength);
+
+  // Null terminate the new buffer...
+  to[newSize] = (PRUnichar)0;
 
   nsCOMPtr<nsITextContent> textContent = do_QueryInterface(mContent, &result);
 
