@@ -26,12 +26,14 @@
           var button2 = this.childNodes[2];
           button1.setAttribute('collapsed', 'true');
           button2.setAttribute('collapsed', 'true');
+          event.preventBubble();
           " 
         onoverflow="
           var button1 = this.firstChild;
           var button2 = this.childNodes[2];
           button1.removeAttribute('collapsed');
           button2.removeAttribute('collapsed');
+          event.preventBubble();
           "
       >
         <xul:autorepeatbutton class="up" collapsed="true"
