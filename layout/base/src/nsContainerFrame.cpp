@@ -101,6 +101,8 @@ NS_METHOD
 nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
                             nsDidReflowStatus aStatus)
 {
+  NS_FRAME_TRACE_MSG(("enter nsContainerFrame::DidReflow: status=%d",
+                      aStatus));
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     mState &= ~NS_FRAME_IN_REFLOW;
     nsFrameState state;
@@ -113,6 +115,7 @@ nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
       kid->GetNextSibling(kid);
     }
   }
+  NS_FRAME_TRACE_OUT("nsContainerFrame::DidReflow");
   return NS_OK;
 }
 
@@ -236,6 +239,10 @@ void nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
     hidden = PR_TRUE;
   }
 
+  // XXX reminder: use the coordinates in the dirty rect to figure out
+  // which set of children are impacted and only do the intersection
+  // work for them. In addition, stop when we no longer overlap.
+
   nsIFrame* kid = mFirstChild;
   while (nsnull != kid) {
     nsIView *pView;
@@ -246,7 +253,7 @@ void nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
       kid->GetRect(kidRect);
       nsRect damageArea;
       PRBool overlap = damageArea.IntersectRect(aDirtyRect, kidRect);
-      if (!hidden || overlap) {
+      if (overlap) {
         // Translate damage area into kid's coordinate system
         nsRect kidDamageArea(damageArea.x - kidRect.x,
                              damageArea.y - kidRect.y,
