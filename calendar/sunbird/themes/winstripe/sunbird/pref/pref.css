@@ -47,7 +47,7 @@
   background-color: transparent;
   margin-left: 1px;
   margin-right: 1px;
-  list-style-image: url("chrome://calendar/skin/pref/Options.png")
+  list-style-image: url("chrome://calendar/skin/pref/Options.png");
 }
 
 .buttonBoxButton > .button-box {
@@ -80,19 +80,10 @@
 #calendarGeneralButton   {-moz-image-region: rect(0px, 32px,  32px, 0px)}
 #calendarAlarmButton   {-moz-image-region: rect(0px, 64px,  32px, 32px)}
 #calendarPublishbutton  {-moz-image-region: rect(0px, 96px,  32px, 64px)}
-#calendarMiscaButton {-moz-image-region: rect(0px, 128px, 32px, 96px)}
-#calendarViewButton    {-moz-image-region: rect(0px, 160px, 32px, 128px)}
-#calendarTZButton       {-moz-image-region: rect(0px, 192px, 32px, 160px)}
-#calendarMiscbButton  {-moz-image-region: rect(0px, 224px, 32px, 192px)}
-
-expander {
-  margin: 2px;
-  border: 1px solid transparent;
-}
-#privacyCategories > expander[open="true"] {
-  background-color: #FFFFCC;
-  border: 1px solid black;
-}
+#calendarThemesButton {-moz-image-region: rect(0px, 128px, 32px, 96px)}
+#calendarExtButton  {-moz-image-region: rect(0px, 160px, 32px, 128px)}
+#calendarViewButton    {-moz-image-region: rect(0px, 192px, 32px, 160px)}
+#calendarTZButton       {-moz-image-region: rect(0px, 224px, 32px, 192px)}
 
 .themesLink {                                                                   
   margin-left: 5px;                                                             
@@ -104,4 +95,3 @@ expander {
 .themesLink:active {                                                            
   color: red;                                                                   
 }
-

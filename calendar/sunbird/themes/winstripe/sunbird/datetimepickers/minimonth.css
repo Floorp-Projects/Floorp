@@ -1,0 +1,91 @@
+.minimonth-mainbox {
+  min-width: 130px;
+  background-color: #ffffff;
+  border: 1px outset #ffffff;
+  padding: 0px;
+}
+
+.minimonth-month-box {
+  background-color: #EEEEEE;
+}
+
+.minimonth-month-name {
+  font-family: Arial;
+  font-size: 12pt;
+  font-weight: bold;
+  color: #000000;
+  text-align: center;
+}
+
+.minimonth-navbtn {
+  min-width: 10px;
+}
+
+.minimonth-navbtn[dir="-1"] {
+  background: url("chrome://calendar/skin/datetimepickers/left-arrow.gif") no-repeat 50% 50%;
+}
+
+.minimonth-navbtn[dir="1"] {
+  background: url("chrome://calendar/skin/datetimepickers/right-arrow.gif") no-repeat 50% 50%;
+}
+
+/*
+.minimonth-navbtn[dir="-1"]:hover {
+  background: url("chrome://calendar/skin/datetimepickers/left-arrow-hover.gif") no-repeat 50% 50%;
+}
+
+.minimonth-navbtn[dir="1"]:hover {
+  background: url("chrome://calendar/skin/datetimepickers/right-arrow-hover.gif") no-repeat 50% 50%;
+}
+*/
+
+.minimonth-navbtn:active {
+  left: 2px;
+  top: 2px;
+}
+
+.minimonth-cal-box {
+}
+
+.minimonth-header {
+  font-family: Arial;
+  color: blue;
+  text-align: center;
+}
+
+.minimonth-row-body {
+}
+
+.minimonth-day {
+  font-family: Arial;
+  color: #000000;
+  border: 1px solid transparent;
+  text-align: center;
+}
+
+.minimonth-day[othermonth="true"] {
+  color: #d2d2d2;
+}
+
+.minimonth-day[budy="true"] {
+  font-weight : bold;
+}
+
+.minimonth-day[selected="true"] {
+  background-color: #778899;
+  color: #ffffff;
+}
+
+.minimonth-day[busy="true"] {
+  font-weight    : bold;
+}
+
+.minimonth-day:hover {
+  color: #ff0000;
+  border: 1px solid #d2d2d2;
+}
+
+.minimonth-day:active {
+  background-color: #d2d2d2;
+}
+
