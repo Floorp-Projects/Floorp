@@ -56,6 +56,8 @@ var fileComponentRegStr;
 var fileMsvcrt;
 var fileMsvcirt;
 
+$Ren8dot3List$
+
 srDest = $SpaceRequired$:bin;
 err    = initInstall("Mozilla XPCom", "XPCom", "$Version$"); 
 logComment("initInstall: " + err);
@@ -75,6 +77,9 @@ logComment("Installing: " + fProgram + "component.reg");
 if(verifyDiskSpace(fProgram, srDest))
 {
   setPackageFolder(fProgram);
+
+  $Ren8dot3Call$
+
   err = addDirectory("",
                      "$Version$",
                      "bin",              // dir name in jar to extract 
