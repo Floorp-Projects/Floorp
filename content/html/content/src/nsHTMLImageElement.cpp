@@ -53,16 +53,12 @@
 #include "nsContentPolicyUtils.h"
 #include "nsIDOMWindow.h"
 
-#ifdef USE_IMG2
 #include "imgIContainer.h"
 #include "imgILoader.h"
 #include "imgIRequest.h"
 #include "imgIDecoderObserver.h"
 
 #include "nsILoadGroup.h"
-#else
-#include "nsIFrameImageLoader.h"
-#endif
 
 #include "nsIRuleNode.h"
 
@@ -73,10 +69,8 @@
 class nsHTMLImageElement : public nsGenericHTMLLeafElement,
                            public nsIDOMHTMLImageElement,
                            public nsIDOMNSHTMLImageElement,
-                           public nsIJSNativeInitializer
-#ifdef USE_IMG2
-                         , public imgIDecoderObserver
-#endif
+                           public nsIJSNativeInitializer,
+                           public imgIDecoderObserver
 {
 public:
   nsHTMLImageElement();
@@ -100,13 +94,11 @@ public:
   // nsIDOMNSHTMLImageElement
   NS_DECL_NSIDOMNSHTMLIMAGEELEMENT
 
-#ifdef USE_IMG2
   NS_DECL_IMGIDECODEROBSERVER
   NS_DECL_IMGICONTAINEROBSERVER
-#endif
 
   // nsIJSNativeInitializer
-  NS_IMETHOD Initialize(JSContext* aContext, JSObject *aObj, 
+  NS_IMETHOD Initialize(JSContext* aContext, JSObject *aObj,
                         PRUint32 argc, jsval *argv);
 
   // nsIContent
@@ -136,17 +128,7 @@ protected:
   nsIDocument* mOwnerDocument;
 
 
-#ifdef USE_IMG2
   nsCOMPtr<imgIRequest> mRequest;
-#else
-  static nsresult ImageLibCallBack(nsIPresContext* aPresContext,
-                                   nsIFrameImageLoader* aLoader,
-                                   nsIFrame* aFrame,
-                                   void* aClosure,
-                                   PRUint32 aStatus);
-
-  nsCOMPtr<nsIFrameImageLoader> mLoader;
-#endif
 };
 
 nsresult
@@ -210,13 +192,11 @@ nsHTMLImageElement::~nsHTMLImageElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLImageElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLImageElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLImageElement, nsGenericElement)
+NS_IMPL_RELEASE_INHERITED(nsHTMLImageElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLImageElement
-#ifdef USE_IMG2
-
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLImageElement,
                                     nsGenericHTMLLeafElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLImageElement)
@@ -225,18 +205,6 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLImageElement,
   NS_INTERFACE_MAP_ENTRY(imgIDecoderObserver)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLImageElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
-
-#else
-
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLImageElement,
-                                    nsGenericHTMLLeafElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLImageElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLImageElement)
-  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLImageElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
-
-#endif
 
 
 nsresult
@@ -337,7 +305,7 @@ nsHTMLImageElement::GetImageFrame(nsIImageFrame** aImageFrame)
   return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsHTMLImageElement::GetComplete(PRBool* aComplete)
 {
   NS_ENSURE_ARG_POINTER(aComplete);
@@ -352,14 +320,22 @@ nsHTMLImageElement::GetComplete(PRBool* aComplete)
   } else {
     result = NS_OK;
 
-#ifdef USE_IMG2
     *aComplete = !mRequest;
-#else
-    *aComplete = !mLoader;
-#endif
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLImageElement::GetX(PRInt32* aX)
+{
+  return GetOffsetLeft(aX);
+}
+
+NS_IMETHODIMP
+nsHTMLImageElement::GetY(PRInt32* aY)
+{
+  return GetOffsetTop(aY);
 }
 
 NS_IMETHODIMP
@@ -596,7 +572,7 @@ nsHTMLImageElement::GetCallerSourceURL(nsIURI** sourceURL)
   // XXX Question, why does this return NS_OK on failure?
   nsresult result = NS_OK;
 
-  // We need to use the dynamically scoped global and assume that the 
+  // We need to use the dynamically scoped global and assume that the
   // current JSContext is a DOM context with a nsIScriptGlobalObject so
   // that we can get the url of the caller.
   // XXX This will fail on non-DOM contexts :(
@@ -646,10 +622,10 @@ nsHTMLImageElement::GetCallerSourceURL(nsIURI** sourceURL)
   return result;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsHTMLImageElement::Initialize(JSContext* aContext,
                                JSObject *aObj,
-                               PRUint32 argc, 
+                               PRUint32 argc,
                                jsval *argv)
 {
   nsresult result = NS_OK;
@@ -672,7 +648,7 @@ nsHTMLImageElement::Initialize(JSContext* aContext,
       result = domWindow->GetDocument(getter_AddRefs(domDocument));
       if (NS_SUCCEEDED(result)) {
         // Maintain the reference
-        result = domDocument->QueryInterface(NS_GET_IID(nsIDocument), 
+        result = domDocument->QueryInterface(NS_GET_IID(nsIDocument),
                                              (void**)&mOwnerDocument);
       }
     }
@@ -687,7 +663,7 @@ nsHTMLImageElement::Initialize(JSContext* aContext,
       nsHTMLValue widthVal((PRInt32)width, eHTMLUnit_Integer);
 
       result = SetHTMLAttribute(nsHTMLAtoms::width, widthVal, PR_FALSE);
-      
+
       if (NS_SUCCEEDED(result) && (argc > 1)) {
         // The second (optional) argument is the height of the image
         int32 height;
@@ -695,7 +671,7 @@ nsHTMLImageElement::Initialize(JSContext* aContext,
 
         if (ret) {
           nsHTMLValue heightVal((PRInt32)height, eHTMLUnit_Integer);
-          
+
           result = SetHTMLAttribute(nsHTMLAtoms::height, heightVal, PR_FALSE);
         }
         else {
@@ -711,11 +687,11 @@ nsHTMLImageElement::Initialize(JSContext* aContext,
   return result;
 }
 
-NS_IMETHODIMP 
-nsHTMLImageElement::SetDocument(nsIDocument* aDocument, 
+NS_IMETHODIMP
+nsHTMLImageElement::SetDocument(nsIDocument* aDocument,
                                 PRBool aDeep, PRBool aCompileEventHandlers)
 {
-  // If we've been added to the document, we can get rid of 
+  // If we've been added to the document, we can get rid of
   // our owner document reference so as to avoid a circular
   // reference.
   NS_IF_RELEASE(mOwnerDocument);
@@ -752,14 +728,15 @@ nsHTMLImageElement::GetSrc(nsAWritableString& aSrc)
 }
 
 
-#ifdef USE_IMG2
-
-NS_IMETHODIMP nsHTMLImageElement::OnStartDecode(imgIRequest *request, nsISupports *cx)
+NS_IMETHODIMP
+nsHTMLImageElement::OnStartDecode(imgIRequest *request, nsISupports *cx)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLImageElement::OnStartContainer(imgIRequest *request, nsISupports *cx, imgIContainer *image)
+NS_IMETHODIMP
+nsHTMLImageElement::OnStartContainer(imgIRequest *request, nsISupports *cx,
+                                     imgIContainer *image)
 {
   nsCOMPtr<nsIPresContext> pc(do_QueryInterface(cx));
 
@@ -787,49 +764,56 @@ NS_IMETHODIMP nsHTMLImageElement::OnStartContainer(imgIRequest *request, nsISupp
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLImageElement::OnStartFrame(imgIRequest *request, nsISupports *cx, gfxIImageFrame *frame)
+NS_IMETHODIMP
+nsHTMLImageElement::OnStartFrame(imgIRequest *request, nsISupports *cx,
+                                 gfxIImageFrame *frame)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLImageElement::OnDataAvailable(imgIRequest *request, nsISupports *cx, gfxIImageFrame *frame, const nsRect * rect)
+NS_IMETHODIMP
+nsHTMLImageElement::OnDataAvailable(imgIRequest *request, nsISupports *cx,
+                                    gfxIImageFrame *frame, const nsRect * rect)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLImageElement::OnStopFrame(imgIRequest *request, nsISupports *cx, gfxIImageFrame *frame)
+NS_IMETHODIMP
+nsHTMLImageElement::OnStopFrame(imgIRequest *request, nsISupports *cx,
+                                gfxIImageFrame *frame)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLImageElement::OnStopContainer(imgIRequest *request, nsISupports *cx, imgIContainer *image)
+NS_IMETHODIMP
+nsHTMLImageElement::OnStopContainer(imgIRequest *request, nsISupports *cx,
+                                    imgIContainer *image)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLImageElement::OnStopDecode(imgIRequest *request, nsISupports *cx, nsresult status, const PRUnichar *statusArg)
+NS_IMETHODIMP
+nsHTMLImageElement::OnStopDecode(imgIRequest *request, nsISupports *cx,
+                                 nsresult status, const PRUnichar *statusArg)
 {
   nsCOMPtr<nsIPresContext> pc(do_QueryInterface(cx));
 
   NS_ASSERTION(pc, "not a prescontext!");
 
-  // We set mLoader = nsnull to indicate that we're complete.
-#ifdef USE_IMG2
+  // We set mRequest = nsnull to indicate that we're complete.
   mRequest = nsnull;
-#else
-  mLoader = nsnull;
-#endif
+
   // Fire the onload event.
   nsEventStatus estatus = nsEventStatus_eIgnore;
   nsEvent event;
   event.eventStructType = NS_EVENT;
 
-  if (NS_SUCCEEDED(status)) 
+  if (NS_SUCCEEDED(status))
     event.message = NS_IMAGE_LOAD;
   else
     event.message = NS_IMAGE_ERROR;
 
-  this->HandleDOMEvent(pc, &event, nsnull, NS_EVENT_FLAG_INIT, 
+  this->HandleDOMEvent(pc, &event, nsnull, NS_EVENT_FLAG_INIT,
                       &estatus);
 
   return NS_OK;
@@ -839,68 +823,6 @@ NS_IMETHODIMP nsHTMLImageElement::FrameChanged(imgIContainer *container, nsISupp
 {
   return NS_OK;
 }
-
-#else
-
-nsresult nsHTMLImageElement::ImageLibCallBack(nsIPresContext* aPresContext,
-                                              nsIFrameImageLoader* aLoader,
-                                              nsIFrame* aFrame,
-                                              void* aClosure,
-                                              PRUint32 aStatus)
-{
-  nsHTMLImageElement *img = (nsHTMLImageElement *)aClosure;
-
-  if (!img || !img->mLoader)
-    return NS_OK;
-
-  if ((aStatus & NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE) &&
-      !(aStatus & NS_IMAGE_LOAD_STATUS_ERROR)) {
-    nsCOMPtr<nsIPresContext> cx;
-    aLoader->GetPresContext(getter_AddRefs(cx));
-
-    float t2p;
-    cx->GetTwipsToPixels(&t2p);
-
-    nsSize size;
-    aLoader->GetSize(size);
-
-    nsAutoString tmpStr;
-    tmpStr.AppendInt(NSTwipsToIntPixels(size.width, t2p));
-    NS_STATIC_CAST(nsIContent *, img)->SetAttribute(kNameSpaceID_None,
-                                                    nsHTMLAtoms::width,
-                                                    tmpStr, PR_FALSE);
-
-    tmpStr.Truncate();
-    tmpStr.AppendInt(NSTwipsToIntPixels(size.height, t2p));
-    NS_STATIC_CAST(nsIContent *, img)->SetAttribute(kNameSpaceID_None,
-                                                    nsHTMLAtoms::height,
-                                                    tmpStr, PR_FALSE);
-  }
-
-  if (aStatus & (NS_IMAGE_LOAD_STATUS_IMAGE_READY |
-                 NS_IMAGE_LOAD_STATUS_ERROR)) {
-    // We set mLoader = nsnull to indicate that we're complete.
-    img->mLoader->RemoveFrame(img);
-    img->mLoader = nsnull;
-
-    // Fire the onload event.
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent event;
-    event.eventStructType = NS_EVENT;
-
-    if (aStatus & NS_IMAGE_LOAD_STATUS_IMAGE_READY) {
-      event.message = NS_IMAGE_LOAD;
-    } else {
-      event.message = NS_IMAGE_ERROR;
-    }
-
-    img->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, 
-                        &status);
-  }
-
-  return NS_OK;
-}
-#endif
 
 nsresult
 nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
@@ -959,7 +881,7 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
         if ((size.width > 0) || (size.height > 0)) {
           specifiedSize = &size;
         }
-        
+
         nsCOMPtr<nsIURI> uri;
         result = NS_NewURI(getter_AddRefs(uri), aSrc, aBaseURL);
         if (NS_FAILED(result)) return result;
@@ -977,7 +899,7 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
         PRBool shouldLoad = PR_TRUE;
         result = NS_CheckContentLoadPolicy(nsIContentPolicy::IMAGE,
                                        uri,
-                                       NS_STATIC_CAST(nsISupports *, 
+                                       NS_STATIC_CAST(nsISupports *,
                                                       (nsIDOMHTMLImageElement*)this),
                                        domWin, &shouldLoad);
         if (NS_SUCCEEDED(result) && !shouldLoad)
@@ -985,7 +907,6 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
 
         // If we have a loader we're in the middle of loading a image,
         // we'll cancel that load and start a new one.
-#ifdef USE_IMG2
         if (mRequest) {
           // mRequest->Cancel() ?? cancel the load?
         }
@@ -1005,16 +926,6 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
         }
 
         il->LoadImage(uri, loadGroup, this, sup, nsIRequest::LOAD_NORMAL, getter_AddRefs(mRequest));
-#else
-        if (mLoader) {
-          mLoader->RemoveFrame(this);
-        }
-
-        // Start the image loading.
-        result = context->StartLoadImage(url, nsnull, specifiedSize,
-                                         nsnull, ImageLibCallBack, this,
-                                         this, getter_AddRefs(mLoader));
-#endif
       }
     }
 
@@ -1026,7 +937,7 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
   return result;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsHTMLImageElement::SetSrc(const nsAReadableString& aSrc)
 {
   nsCOMPtr<nsIURI> baseURL;
@@ -1037,11 +948,11 @@ nsHTMLImageElement::SetSrc(const nsAReadableString& aSrc)
   if (mDocument && !baseURL) {
     result = mDocument->GetBaseURL(*getter_AddRefs(baseURL));
   }
-  
+
   if (mOwnerDocument && !baseURL) {
     result = mOwnerDocument->GetBaseURL(*getter_AddRefs(baseURL));
   }
-  
+
   if (NS_SUCCEEDED(result)) {
     result = SetSrcInner(baseURL, aSrc);
   }
@@ -1061,9 +972,9 @@ NS_IMETHODIMP
 nsHTMLImageElement::GetNaturalHeight(PRInt32* aNaturalHeight)
 {
   NS_ENSURE_ARG_POINTER(aNaturalHeight);
-  
+
   *aNaturalHeight = 0;
-  
+
   nsIImageFrame* imageFrame = nsnull;
   nsresult rv = GetImageFrame(&imageFrame);
 
@@ -1079,16 +990,16 @@ nsHTMLImageElement::GetNaturalHeight(PRInt32* aNaturalHeight)
 
   *aNaturalHeight = (PRInt32)height;
 
-  return NS_OK;  
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLImageElement::GetNaturalWidth(PRInt32* aNaturalWidth)
 {
   NS_ENSURE_ARG_POINTER(aNaturalWidth);
-  
+
   *aNaturalWidth = 0;
-    
+
   nsIImageFrame* imageFrame;
   nsresult rv = GetImageFrame(&imageFrame);
 
@@ -1104,7 +1015,7 @@ nsHTMLImageElement::GetNaturalWidth(PRInt32* aNaturalWidth)
 
   *aNaturalWidth = (PRInt32)width;
 
-  return NS_OK;  
+  return NS_OK;
 }
 
 
