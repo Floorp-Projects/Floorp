@@ -29,6 +29,10 @@
 /* #define TRUST_LABELS */
 #endif
 
+#if defined(SingleSignon)
+#define EDITOR 1
+#endif
+
 #define alphabetize 1
 #include "rosetta.h"
 #include "xp.h"
