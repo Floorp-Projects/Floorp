@@ -18,7 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *  Robert Ginda, rginda@ndcico.com, original author
+ *  Robert Ginda, rginda@netscape.com, original author
+ *  Samuel Sieb, samuel@sieb.net
  *  Chiaki Koufugata chiaki@mozilla.gr.jp UI i18n 
  */
 
@@ -57,7 +58,7 @@ function onTopicKeyPress (e)
     if (e.keyCode == 13)
     {        
         var line = stringTrim(e.target.value);
-        client.currentObject.setTopic (line);
+        client.currentObject.setTopic (fromUnicode(line));
         onTopicEditEnd();
     }
 }
@@ -79,8 +80,6 @@ function onLoad()
     initHost(client);
     readIRCPrefs();
     setClientOutput();
-    frames[0].document.location.href =
-        "chrome://chatzilla/content/outputwindow.html?" + client.DEFAULT_STYLE;
     initStatic();
 
     client.userScripts = new Array();
@@ -94,6 +93,7 @@ function onLoad()
         }
     }
     
+    processStartupURLs();
     mainStep();
 }
 
@@ -373,7 +373,7 @@ function onOutputContextMenuCreate(e)
         {
             format = format.replace (/\$nick/gi, targetProperNick);
             format = format.replace (/\$viewname/gi,
-                                     client.currentObject.name);
+                                     client.currentObject.unicodeName);
             menuitem.setAttribute ("label", format);
         }
         
@@ -545,6 +545,8 @@ function onDeleteView(view)
         {
             delete view.messageCount;
             delete view.messages;
+            client.deck.removeChild(view.frame);
+            delete view.frame;
 
             if (i >= client.viewsArray.length)
                 i = client.viewsArray.length - 1;            
@@ -558,15 +560,12 @@ function onDeleteView(view)
 function onClearCurrentView()
 {
 
-    if (client.output.firstChild)
-        client.output.removeChild (client.output.firstChild);
-
     client.currentObject.messages = null;
     client.currentObject.messageCount = 0;
 
     client.currentObject.display (getMsg("onClearCurrentViewMsg"), "INFO");
 
-    client.output.appendChild (client.currentObject.messages);
+    client.currentObject.frame.reload();
     
 }
 
@@ -707,7 +706,7 @@ function onToggleStartupURL()
 
 function onViewMenuShowing ()
 {
-    var loc = frames[0].document.location.href;
+    var loc = client.currentFrame.document.location.href;
     loc = loc.substr (loc.indexOf("?") + 1);
 
     var val = (loc == "chrome://chatzilla/skin/output-default.css");
@@ -919,7 +918,7 @@ function onWindowKeyPress (e)
             break;
 
         case 33: /* pgup */
-            w = window.frames[0];
+            w = client.currentFrame;
             newOfs = w.pageYOffset - (w.innerHeight / 2);
             if (newOfs > 0)
                 w.scrollTo (w.pageXOffset, newOfs);
@@ -929,7 +928,7 @@ function onWindowKeyPress (e)
             break;
             
         case 34: /* pgdn */
-            w = window.frames[0];
+            w = client.currentFrame;
             newOfs = w.pageYOffset + (w.innerHeight / 2);
             if (newOfs < (w.innerHeight + w.pageYOffset))
                 w.scrollTo (w.pageXOffset, newOfs);
@@ -1106,12 +1105,16 @@ function cli_icss (e)
         else if (e.inputData.search(/^none$/i) != -1)
             e.inputData = "chrome://chatzilla/content/output-base.css";
     
-        frames[0].document.location.href =
-            "chrome://chatzilla/content/outputwindow.html?" + e.inputData;
+        for (var i = 0; i < client.deck.childNodes.length; i++)
+        {
+            client.deck.childNodes[i].loadURI (
+                "chrome://chatzilla/content/outputwindow.html?" + e.inputData);
+        }
         client.DEFAULT_STYLE = e.inputData;
     }
     
-    client.currentObject.display (getMsg("cli_icss", client.DEFAULT_STYLE), "INFO");
+    client.currentObject.display (getMsg("cli_icss", client.DEFAULT_STYLE),
+                                  "INFO");
     return true;
 }
 
@@ -1217,26 +1220,27 @@ function cli_istatus (e)
                 mode = getMsg("cli_istatusNoMode");
             
             client.currentObject.display (getMsg("cli_istatusChannelOn",
-                                                 [net, mtype, c.name, mode,
+                                                 [net, mtype, c.unicodeName,
+                                                  mode,
                                                   "irc://" + escape(net) + "/" +
-                                                  escape(c.name) + "/"]),
+                                                  escape(c.encodedName) + "/"]),
                                           "STATUS");
             client.currentObject.display (getMsg("cli_istatusChannelDetail",
-                                                 [net, c.name,
+                                                 [net, c.unicodeName,
                                                   c.getUsersLength(),
                                                   c.opCount, c.voiceCount]),
                                           "STATUS");
             if (c.topic)
                 client.currentObject.display (getMsg("cli_istatusChannelTopic",
-                                                     [net, c.name, c.topic]),
+                                              [net, c.unicodeName, c.topic]),
                                               "STATUS");
             else
                 client.currentObject.display (getMsg("cli_istatusChannelNoTopic",
-                                                     [net, c.name]), "STATUS");
+                                              [net, c.unicodeName]), "STATUS");
         }
         else
             client.currentObject.display (getMsg("cli_istatusChannelOff",
-                                                 [net, c.name]), "STATUS");
+                                          [net, c.unicodeName]), "STATUS");
     }
 
     client.currentObject.display (client.userAgent, "STATUS");
@@ -1586,7 +1590,10 @@ function cli_inames (e)
             return false;
         }
 
-        chan = e.inputData;
+        var encodeName = fromUnicode(e.inputData + " ");
+        encodeName = encodeName.substr(0, encodeName.length -1);
+        chan = encodeName;
+
     }
     else
     {
@@ -1910,7 +1917,10 @@ function cli_ijoin (e)
         e.channel = e.server.addChannel (name);
         e.channel.join(key);
         if (!("messages" in e.channel))
-            e.channel.display (getMsg("cli_ijoinMsg3",e.channel.name), "INFO");
+        {
+            e.channel.display (getMsg("cli_ijoinMsg3", e.channel.unicodeName),
+                               "INFO");
+        }
         setCurrentObject(e.channel);
     }
 
@@ -2296,8 +2306,10 @@ function cli_iinvite (e)
         }
         else
         {
-            var chan = e.server.channels[ary[1].toLowerCase()];
-
+            var encodeName = fromUnicode(ary[1] + " ");
+            encodeName = encodeName.substr(0, encodeName.length -1);
+            var chan = e.server.channels[encodeName.toLowerCase()];
+             
             if (chan == undefined) 
             {
                 client.currentObject.display (getMsg("cli_iinviteMsg3", ary[1]),
@@ -2350,12 +2362,12 @@ function cli_ikick (e)
 
     if (ary.length > 2)
     {               
-        cuser.kick(ary[2]);
+        cuser.kick(fromUnicode(ary[2]));
     }
     else     
 
     cuser.kick();    
-            
+     
     return true;
 }
 
@@ -2688,7 +2700,7 @@ function my_323 (e)
 CIRCNetwork.prototype.on322 = /* LIST reply */
 function my_listrply (e)
 {
-    this.displayHere (getMsg("my_322", [e.params[2], e.params[3], e.meat]),
+    this.displayHere (getMsg("my_322", [toUnicode(e.params[2]), e.params[3], e.meat]),
                       "322");
 }
 
@@ -2708,7 +2720,8 @@ function my_315 (e)
 CIRCNetwork.prototype.on352 =
 function my_352 (e)
 {
-    //0-352 1-rginda_ 2-#chatzilla 3-chatzilla 4-h-64-236-139-254.aoltw.net 5-irc.mozilla.org 6-rginda 7-H
+    //0-352 1-rginda_ 2-#chatzilla 3-chatzilla 4-h-64-236-139-254.aoltw.net
+    //5-irc.mozilla.org 6-rginda 7-H
     var desc;
     var hops = "?";
     var ary = e.meat.match(/(\d+)\s(.*)/);
@@ -2729,8 +2742,8 @@ function my_352 (e)
         status = getMsg("my_352.h");
         
     e.user.display (getMsg("my_352", [e.params[6], e.params[3], e.params[4],
-                                      desc, status, e.params[2], e.params[5],
-                                      hops]), e.code, e.user);
+                                      desc, status, toUnicode(e.params[2]), 
+                                      e.params[5], hops]), e.code, e.user);
     updateTitle (e.user);
     if ("whoMatches" in this)
         ++this.whoMatches;
@@ -2792,7 +2805,7 @@ function my_whoisreply (e)
 CIRCNetwork.prototype.on341 = /* invite reply */
 function my_341 (e)
 {
-    this.display (getMsg("my_341", [e.params[2], e.params[3]]), "341");
+    this.display (getMsg("my_341", [e.params[2], toUnicode(e.params[3])]), "341");
 }
 
 CIRCNetwork.prototype.onInvite = /* invite message */
@@ -3043,10 +3056,10 @@ function my_topic (e)
     if (e.code == "332")
     {
         if (this.topic)
-            this.display (getMsg("my_topicMsg2", [this.name, this.topic]),
+            this.display (getMsg("my_topicMsg2", [this.unicodeName, this.topic]),
                           "TOPIC");
         else
-            this.display (getMsg("my_topicMsg3", this.name), "TOPIC");
+            this.display (getMsg("my_topicMsg3", this.unicodeName), "TOPIC");
     }
     
     updateChannel (this);
@@ -3058,7 +3071,7 @@ CIRCChannel.prototype.on333 = /* Topic setter information */
 function my_topicinfo (e)
 {
     
-    this.display (getMsg("my_topicinfoMsg", [this.name, this.topicBy, 
+    this.display (getMsg("my_topicinfoMsg", [this.unicodeName, this.topicBy, 
                                              this.topicDate]), "TOPIC");
     
 }
@@ -3101,13 +3114,13 @@ function my_cjoin (e)
 
     if (userIsMe (e.user))
     {
-        this.display (getMsg("my_cjoinMsg", e.channel.name), "JOIN",
+        this.display (getMsg("my_cjoinMsg", e.channel.unicodeName), "JOIN",
                       e.server.me, this);
         setCurrentObject(this);
     }
     else
         this.display(getMsg("my_cjoinmsg2", [e.user.properNick, e.user.name,
-                                             e.user.host, e.channel.name]),
+                                             e.user.host, e.channel.unicodeName]),
                      "JOIN", e.user, this);
 
     this._addUserToGraph (e.user);
@@ -3124,8 +3137,8 @@ function my_cpart (e)
 
     if (userIsMe (e.user))
     {
-        this.display (getMsg("my_cpartMsg", e.channel.name), "PART", e.user,
-                      this);
+        this.display (getMsg("my_cpartMsg", e.channel.unicodeName), "PART",
+                      e.user, this);
         if (client.currentObject == this)    
             /* hide the tree while we remove (possibly tons) of nodes */
             client.rdf.setTreeRoot("user-list", client.rdf.resNullChan);
@@ -3142,7 +3155,7 @@ function my_cpart (e)
     }
     else
         this.display (getMsg("my_cpartMsg2",
-                             [e.user.properNick, e.channel.name]), 
+                             [e.user.properNick, e.channel.unicodeName]), 
                       "PART", e.user, this);
 
     updateChannel (e.channel);
@@ -3155,7 +3168,7 @@ function my_ckick (e)
 
     if (userIsMe (e.lamer))
         this.display (getMsg("my_ckickMsg",
-                             [e.channel.name, e.user.properNick, e.reason]),
+                             [e.channel.unicodeName, e.user.properNick, e.reason]),
                       "KICK", e.user, this);
     else
     {
@@ -3172,8 +3185,8 @@ function my_ckick (e)
         }
         
         this.display (getMsg("my_ckickMsg2",
-                             [e.lamer.properNick, e.channel.name, enforcerProper,
-                             e.reason]), "KICK", e.user, this);
+                             [e.lamer.properNick, e.channel.unicodeName, 
+                              enforcerProper, e.reason]), "KICK", e.user, this);
     }
     
     this._removeUserFromGraph(e.lamer);
@@ -3187,9 +3200,9 @@ function my_cmode (e)
 {
 
     if ("user" in e)
-        this.display (getMsg("my_cmodeMsg", [e.params.slice(1).join(" "),
-                                             e.user.properNick]), "MODE",
-                      e.user, this);
+        this.display (getMsg("my_cmodeMsg",
+                             [toUnicode(e.params.slice(1).join(" ")),
+                              e.user.properNick]), "MODE", e.user, this);
 
     for (var u in e.usersAffected)
         e.usersAffected[u].updateGraphResource();
@@ -3299,3 +3312,4 @@ function my_unkctcp (e)
                                 "BAD-CTCP", this, e.server.me);
 
 }
+

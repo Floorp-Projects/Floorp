@@ -141,14 +141,7 @@
             </toolbar>
           </toolbox>
   
-          <browser id="output-iframe" class="output-container" type="content"
-            flex="1" tooltip="aHTMLTooltip" context="outputContext"
-            onload="scrollDown();"
-            onclick="focusInput()"
-            ondragover="nsDragAndDrop.dragOver(event, contentDropObserver);"
-            ondragdrop="nsDragAndDrop.drop(event, contentDropObserver);"
-            ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"
-            src="chrome://chatzilla/content/outputwindow.html"/>
+          <deck id="output-deck" flex="1"/>
         </vbox>
   
       </hbox> <!-- tabpanels-contents-box -->

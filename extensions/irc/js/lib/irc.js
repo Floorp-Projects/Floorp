@@ -1334,8 +1334,8 @@ function serv_join (e)
 
     e.channel = new CIRCChannel (this, e.meat);
     if (e.user == this.me)
-        e.server.sendData ("MODE " + e.channel.name + "\n" /* +
-                           "BANS " + e.channel.name + "\n" */);
+        e.server.sendData ("MODE " + e.channel.encodedName + "\n" /* +
+                           "BANS " + e.channel.encodedName + "\n" */);
     e.user = new CIRCChanUser (e.channel, e.user.nick);
     if (userIsMe(e.user))
         e.channel.active = true;
@@ -1633,13 +1633,20 @@ function serv_dccsend (e)
 function CIRCChannel (parent, name)
 {
 
-    name = name.toLowerCase();
+    var encodedName = fromUnicode(name + " ");
+    /* bug 114923 */
+    encodedName = encodedName.substr(0,encodedName.length -1);
+    var unicodeName = toUnicode(encodedName);
+    name = encodedName.toLowerCase();
     
     if (name in parent.channels)
         return parent.channels[name];
     
     this.parent = parent;
-    this.name = name;
+    this.name = name;               // used internally, lowercased
+    this.unicodeName = unicodeName; // converted to unicode for display
+    this.encodedName = encodedName; // encoded for communication with server
+
     this.users = new Object();
     this.bans = new Object();
     this.mode = new CIRCChanMode (this);
@@ -1659,9 +1666,9 @@ function chan_geturl ()
 {
     var target;
     if (this.name[0] == "#")
-        target = this.name.substr(1);
+        target = escape(this.encodedName.substr(1));
     else
-        target = escape(this.name);
+        target = escape(this.encodedName);
     return this.parent.parent.getURL() + target;
 }
 
@@ -1718,7 +1725,8 @@ function chan_topic (str)
     
     str = String(str).split("\n");
     for (var i in str)
-        this.parent.sendData ("TOPIC " + this.name + " :" + str[i] + "\n");
+        this.parent.sendData ("TOPIC " + this.encodedName + " :" + str[i] +
+                              "\n");
     
     return true;
 
@@ -1728,7 +1736,7 @@ CIRCChannel.prototype.say =
 function chan_say (msg)
 {
 
-    this.parent.sayTo (this.name, msg);
+    this.parent.sayTo (this.encodedName, msg);
     
 }
 
@@ -1736,7 +1744,7 @@ CIRCChannel.prototype.act =
 function chan_say (msg)
 {
 
-    this.parent.actTo (this.name, msg);
+    this.parent.actTo (this.encodedName, msg);
     
 }
 
@@ -1744,7 +1752,7 @@ CIRCChannel.prototype.notice =
 function chan_notice (msg)
 {
 
-    this.parent.noticeTo (this.name, msg);
+    this.parent.noticeTo (this.encodedName, msg);
     
 }
 
@@ -1768,7 +1776,7 @@ function chan_join (key)
     if (!key)
         key = "";
     
-    this.parent.sendData ("JOIN " + this.name + " " + key + "\n");
+    this.parent.sendData ("JOIN " + this.encodedName + " " + key + "\n");
     return true;
     
 }
@@ -1777,7 +1785,7 @@ CIRCChannel.prototype.part =
 function chan_part ()
 {
     
-    this.parent.sendData ("PART " + this.name + "\n");
+    this.parent.sendData ("PART " + this.encodedName + "\n");
     this.users = new Object();
     return true;
     
@@ -1792,7 +1800,7 @@ CIRCChannel.prototype.invite =
 function chan_inviteuser (nick)
 {
 
-    this.parent.sendData("INVITE " + nick + " " + this.name + "\n");
+    this.parent.sendData("INVITE " + nick + " " + this.encodedName + "\n");
     return true;
 
 }
@@ -1852,7 +1860,7 @@ function chanm_mode (modestr)
     if (!this.parent.users[this.parent.parent.me.nick].isOp)
         return false;
 
-    this.parent.parent.sendData ("MODE " + this.parent.name + " " +
+    this.parent.parent.sendData ("MODE " + this.parent.encodedName + " " +
                                  modestr + "\n");
 
     return true;
@@ -1866,10 +1874,15 @@ function chanm_limit (n)
         return false;
 
     if ((typeof n == "undefined") || (n <= 0))
-        this.parent.parent.sendData ("MODE " + this.parent.name + " -l\n");
+    {
+        this.parent.parent.sendData ("MODE " + this.parent.encodedName +
+                                     " -l\n");
+    }
     else
-        this.parent.parent.sendData ("MODE " + this.parent.name + " +l " +
+    {
+        this.parent.parent.sendData ("MODE " + this.parent.encodedName + " +l " +
                                      Number(n) + "\n");
+    }
 
     return true;
     
@@ -1881,7 +1894,7 @@ function chanm_lock (k)
     if (!this.parent.users[this.parent.parent.me.nick].isOp)
         return false;
     
-    this.parent.parent.sendData ("MODE " + this.parent.name + " +k " +
+    this.parent.parent.sendData ("MODE " + this.parent.encodedName + " +k " +
                                  k + "\n");
     return true;
     
@@ -1893,7 +1906,7 @@ function chan_unlock (k)
     if (!this.parent.users[this.parent.parent.me.nick].isOp)
         return false;
     
-    this.parent.parent.sendData ("MODE " + this.parent.name + " -k " +
+    this.parent.parent.sendData ("MODE " + this.parent.encodedName + " -k " +
                                  k + "\n");
     return true;
     
@@ -1907,7 +1920,7 @@ function chan_moderate (f)
 
     var modifier = (f) ? "+" : "-";
     
-    this.parent.parent.sendData ("MODE " + this.parent.name + " " +
+    this.parent.parent.sendData ("MODE " + this.parent.encodedName + " " +
                                  modifier + "m\n");
     return true;
     
@@ -1921,7 +1934,7 @@ function chan_pmessages (f)
 
     var modifier = (f) ? "-" : "+";
     
-    this.parent.parent.sendData ("MODE " + this.parent.name + " " +
+    this.parent.parent.sendData ("MODE " + this.parent.encodedName + " " +
                                  modifier + "n\n");
     return true;
     
@@ -1935,7 +1948,7 @@ function chan_ptopic (f)
 
     var modifier = (f) ? "-" : "+";
     
-    this.parent.parent.sendData ("MODE " + this.parent.name + " " +
+    this.parent.parent.sendData ("MODE " + this.parent.encodedName + " " +
                                  modifier + "t\n");
     return true;
     
@@ -1949,7 +1962,7 @@ function chan_invite (f)
 
     var modifier = (f) ? "+" : "-";
     
-    this.parent.parent.sendData ("MODE " + this.parent.name + " " +
+    this.parent.parent.sendData ("MODE " + this.parent.encodedName + " " +
                                  modifier + "i\n");
     return true;
     
@@ -1963,7 +1976,7 @@ function chan_pvt (f)
 
     var modifier = (f) ? "+" : "-";
     
-    this.parent.parent.sendData ("MODE " + this.parent.name + " " +
+    this.parent.parent.sendData ("MODE " + this.parent.encodedName + " " +
                                  modifier + "p\n");
     return true;
     
@@ -1977,7 +1990,7 @@ function chan_secret (f)
 
     var modifier = (f) ? "+" : "-";
     
-    this.parent.parent.sendData ("MODE " + this.parent.name + " " +
+    this.parent.parent.sendData ("MODE " + this.parent.encodedName + " " +
                                  modifier + "p\n");
     return true;
     
@@ -2170,7 +2183,7 @@ function cusr_kick (reason)
     if (!this.parent.users[me.nick].isOp)
         return false;
     
-    server.sendData("KICK " + this.parent.name + " " + this.nick + " :" +
+    server.sendData("KICK " + this.parent.encodedName + " " + this.nick + " :" +
                     reason + "\n");
 
     return true;
@@ -2211,8 +2224,8 @@ function cusr_kban (reason)
     reason = (typeof reason != "undefined") ? reason : this.nick;
     var modifier = " -o+b " + this.nick + " " + this.getHostMask() + " ";
     
-    server.sendData("MODE " + this.parent.name + modifier + "\n" +
-                    "KICK " + this.parent.name + " " + this.nick + " :" +
+    server.sendData("MODE " + this.parent.encodedName + modifier + "\n" +
+                    "KICK " + this.parent.encodedName + " " + this.nick + " :" +
                     reason + "\n");
 
     return true;

@@ -18,9 +18,9 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *  Robert Ginda, rginda@ndcico.com, original author
+ *  Robert Ginda, rginda@netscape.com, original author
  *  Chiaki Koufugata chiaki@mozilla.gr.jp UI i18n 
- *  Samuel Sieb, samuel@sieb.net, MIRC color code, munger menu, and various
+ *  Samuel Sieb, samuel@sieb.net, MIRC color codes, munger menu, and various
  */
 
 if (DEBUG)
@@ -36,7 +36,7 @@ const MSG_UNKNOWN   = getMsg ("unknown");
 
 client.defaultNick = getMsg( "defaultNick" );
 
-client.version = "0.8.8";
+client.version = "0.8.9";
 
 client.TYPE = "IRCClient";
 client.COMMAND_CHAR = "/";
@@ -124,7 +124,8 @@ CIRCChanUser.prototype.MAX_MESSAGES = 200;
 window.onresize =
 function ()
 {
-    scrollDown();
+    for (var i = 0; i < client.deck.childNodes.length; i++)
+        scrollDown(client.deck.childNodes[i], true);
 }
 
 function ucConvertIncomingMessage (e)
@@ -140,7 +141,17 @@ function toUnicode (msg)
     
     /* XXX set charset again to force the encoder to reset, see bug 114923 */
     client.ucConverter.charset = client.CHARSET;
-    return client.ucConverter.ConvertToUnicode(msg);
+    try
+    {
+        return client.ucConverter.ConvertToUnicode(msg);
+    }
+    catch (ex)
+    {
+        dd ("caught exception " + ex + " converting " + msg + " to charset " +
+            client.CHARSET);
+    }
+
+    return msg;
 }
 
 function fromUnicode (msg)
@@ -279,13 +290,19 @@ function initStatic()
     var m = document.getElementById ("menu-settings-autosave");
     m.setAttribute ("checked", String(client.SAVE_SETTINGS));
      
+    setInterval ("onNotifyTimeout()", client.NOTIFY_TIMEOUT);
+    
+}
+
+function processStartupURLs()
+{
     var wentSomewhere = false;
 
     if ("arguments" in window &&
         0 in window.arguments && typeof window.arguments[0] == "object" &&
         "url" in window.arguments[0])
     {
-        url = window.arguments[0].url;
+        var url = window.arguments[0].url;
         if (url.search(/^irc:\/?\/?$/i) == -1)
         {
             /* if the url is not irc: irc:/ or irc://, then go to it. */
@@ -309,10 +326,9 @@ function initStatic()
     {
         var tb = getTabForObject (client);
         deleteTab(tb);
+        client.deck.removeChild(client.frame);
+        client.deck.selectedIndex = 0;
     }
-        
-    setInterval ("onNotifyTimeout()", client.NOTIFY_TIMEOUT);
-    
 }
 
 function setStatus (str)
@@ -495,6 +511,10 @@ function insertMailToLink (matchText, containerTag)
 
 function insertChannelLink (matchText, containerTag, eventData)
 {
+    var encodedMatchText = fromUnicode(matchText + " ");
+    /* bug 114923 */
+    encodedMatchText = encodedMatchText.substr(0, encodedMatchText.length - 1);
+
     if (!("network" in eventData) || 
         matchText.search
             (/^#(include|error|define|if|ifdef|else|elsif|endif|\d+)$/i) != -1)
@@ -507,7 +527,7 @@ function insertChannelLink (matchText, containerTag, eventData)
     var anchor = document.createElementNS ("http://www.w3.org/1999/xhtml",
                                            "html:a");
     anchor.setAttribute ("href", "irc://" + escape(eventData.network.name) +
-                         "/" + escape (matchText));
+                         "/" + escape (encodedMatchText));
     anchor.setAttribute ("class", "chatzilla-link");
     //anchor.setAttribute ("target", "_content");
     insertHyphenatedWord (matchText, anchor);
@@ -836,27 +856,8 @@ function fillInTooltip(tipElement, id)
 /* timer-based mainloop */
 function mainStep()
 {
-    if (!("initialized" in frames[0]))
-    {  /* voodoo required for skin switching.  When the user changes a skin,
-        * the output document is reloaded. this document *cannot* tell us
-        * it has been reloaded, because the type="content" attribute used
-        * on the iframe (to allow selection) also keeps the iframe from getting
-        * to the chrome above it.  Instead, we poll the document looking for
-        * the "initialized" variable. If it's not there, we reset the current
-        * object, and set initialized in the document. */
-        setClientOutput(frames[0].document);        
-        if (client.output)
-        {
-            var o = client.currentObject;
-            client.currentObject = null;
-            setCurrentObject (o);
-            frames[0].initialized = true;
-        }
-    }
-
     client.eventPump.stepEvents();
     setTimeout ("mainStep()", client.STEP_TIMEOUT);
-    
 }
 
 function getMsg (msgName)
@@ -1039,7 +1040,7 @@ function addDynamicRule (rule)
 
 function setClientOutput(doc) 
 {
-    client.output = frames[0].document.getElementById("output");
+    client.deck = document.getElementById('output-deck');
     //XXXcreateHighlightMenu();
 }
 
@@ -1207,7 +1208,7 @@ function parseIRCURL (url)
         }
         
         rv.target = (1 in ary) ? 
-            unescape(ary[1]).toLowerCase().replace("\n", "\\n"): "";
+            unescape(ary[1]).replace("\n", "\\n") : "";
         var params = (2 in ary) ? ary[2].toLowerCase() : "";
         var query = (3 in ary) ? ary[3] : "";
 
@@ -1497,7 +1498,7 @@ function updateTitle (obj)
             var chan = "", mode = "", topic = "";
             nick = "me" in o.parent ? o.parent.me.properNick : 
                 getMsg ("updateTitleNoNick");
-            chan = o.channel.name;
+            chan = o.channel.unicodeName;
             mode = o.channel.mode.getModeStr();
             if (!mode)
                 mode = getMsg("updateTitleNoMode");
@@ -1644,6 +1645,16 @@ function stringToMsg (message, obj)
     return span;
 }
 
+function getFrame()
+{
+    if (client.deck.childNodes.length == 0)
+        return undefined;
+    var panel = client.deck.selectedPanel;
+    return ("contentWindow" in panel ? panel.contentWindow : undefined);
+}
+
+client.__defineGetter__ ("currentFrame", getFrame);
+
 function setCurrentObject (obj)
 {
     if (!obj.messages)
@@ -1652,8 +1663,7 @@ function setCurrentObject (obj)
         return;
     }
 
-    if (("currentObject" in client && client.currentObject == obj) ||
-        !("output" in client) || !client.output)
+    if ("currentObject" in client && client.currentObject == obj)
         return;
         
     var tb, userList;
@@ -1668,10 +1678,6 @@ function setCurrentObject (obj)
         tb.setAttribute ("state", "normal");
     }
     
-    if (client.output.firstChild)
-        client.output.removeChild (client.output.firstChild);
-    client.output.appendChild (obj.messages);
-
     /* Unselect currently selected users. */
     userList = document.getElementById("user-list");
     if (isVisible("user-list-box"))
@@ -1697,18 +1703,14 @@ function setCurrentObject (obj)
     
     var vk = Number(tb.getAttribute("viewKey"));
     delete client.activityList[vk];
+    client.deck.selectedIndex = vk;
 
     updateNetwork();
     updateChannel();
     updateTitle ();
 
     if (client.PRINT_DIRECTION == 1)
-    {
-        scrollDown();
-        setTimeout ("scrollDown()", 500);
-        setTimeout ("scrollDown()", 1000);
-        setTimeout ("scrollDown()", 2000);
-    }
+        scrollDown(obj.frame, false);
     
     onTopicEditEnd();
 
@@ -1733,9 +1735,24 @@ function setCurrentObject (obj)
     }
 }
 
-function scrollDown ()
+function checkScroll(frame)
 {
-    window.frames[0].scrollTo(0, window.frames[0].document.height);
+    if (!frame || !("contentWindow" in frame))
+        return false;
+
+    var w = frame.contentWindow;
+    return ((w.document.height - (w.innerHeight + w.pageYOffset)) < 160);
+}
+
+function scrollDown(frame, force)
+{
+    if (!frame || !("contentWindow" in frame))
+        return;
+
+    var w = frame.contentWindow;
+
+    if (force || checkScroll(frame))
+        w.scrollTo(0, w.document.height);
 }
 
 /* valid values for |what| are "superfluous", "activity", and "attention".
@@ -1812,6 +1829,126 @@ function notifyAttention (source)
     
 }
 
+function getFrameForDOMWindow(window)
+{
+    var frame;
+    for (i = 0; i < client.deck.childNodes.length; i++)
+    {
+        frame = client.deck.childNodes[i];
+        if (frame.contentWindow == window)
+            return frame;
+    }
+    return undefined;
+} 
+
+client.progressListener = new Object();
+ 
+client.progressListener.QueryInterface = 
+function qi(iid)
+{
+    return this;
+}
+
+client.progressListener.onStateChange = 
+function client_statechange (webProgress, request, stateFlags, status)
+{
+    const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;    const START = nsIWebProgressListener.STATE_START;
+    const STOP = nsIWebProgressListener.STATE_STOP;
+
+    var frame;
+    if (stateFlags & START)
+    {
+        frame = getFrameForDOMWindow(webProgress.DOMWindow);
+        if (!frame)
+        {
+            dd("can't find frame for window")
+            webProgress.removeProgressListener (this);
+            return;
+        }
+    }
+    else if (stateFlags == 786448)
+    {
+        frame = getFrameForDOMWindow(webProgress.DOMWindow);
+        if (!frame)
+        {
+            dd("can't find frame for window")
+            webProgress.removeProgressListener (this);
+            return;
+        }
+        frame.contentDocument.body.appendChild(frame.source.messages);
+    }
+}
+
+client.progressListener.onProgressChange =
+function client_progresschange (webProgress, request, currentSelf, totalSelf,
+                                currentMax, selfMax)
+{
+}
+ 
+client.progressListener.onLocationChange =
+function client_locationchange (webProgress, request, uri)
+{
+}
+ 
+client.progressListener.onStatusChange =
+function client_statuschange (webProgress, request, status, message)
+{
+}
+
+client.progressListener.onSecurityChange =
+function client_securitychange (webProgress, request, state)
+{
+}
+
+function syncOutputFrame(iframe)
+{
+    const nsIWebProgress = Components.interfaces.nsIWebProgress;
+    const ALL = nsIWebProgress.NOTIFY_ALL;
+    const DOCUMENT = nsIWebProgress.NOTIFY_STATE_DOCUMENT;
+    const WINDOW = nsIWebProgress.NOTIFY_STATE_WINDOW;
+ 
+    function tryAgain ()
+    {
+        syncOutputFrame(iframe);
+    };
+ 
+    try
+    {
+        if ("contentDocument" in iframe && "webProgress" in iframe)
+        {
+ 
+            iframe.addProgressListener (client.progressListener, WINDOW);
+            iframe.loadURI ("chrome://chatzilla/content/outputwindow.html?" + 
+                            client.DEFAULT_STYLE);
+        }
+        else
+        {
+            setTimeout (tryAgain, 500);
+        }
+    }
+    catch (ex)
+    {
+        dd ("caught exception showing session view, will try again later.");
+        dd (dumpObjectTree(ex)+"\n");
+        setTimeout (tryAgain, 500);
+    }
+}
+
+function createMessages(source)
+{
+    source.messages =
+    document.createElementNS ("http://www.w3.org/1999/xhtml",
+                              "html:table");
+
+    source.messages.setAttribute ("class", "msg-table");
+    source.messages.setAttribute ("view-type", source.TYPE);
+    var tbody =
+        document.createElementNS ("http://www.w3.org/1999/xhtml",
+                                  "html:tbody");
+    source.messages.appendChild (tbody);
+    source.messageCount = 0;
+}
+
 /* gets the toolbutton associated with an object
  * if |create| is present, and true, create if not found */
 function getTabForObject (source, create)
@@ -1825,8 +1962,6 @@ function getTabForObject (source, create)
         return null;
     }
     
-    create = (typeof create != "undefined") ? Boolean(create) : false;
-
     switch (source.TYPE)
     {
         case "IRCChanUser":
@@ -1835,9 +1970,11 @@ function getTabForObject (source, create)
             break;
             
         case "IRCNetwork":
-        case "IRCChannel":
         case "IRCClient":
             name = source.name;
+            break;
+        case "IRCChannel":
+            name = source.unicodeName;
             break;
 
         default:
@@ -1862,6 +1999,8 @@ function getTabForObject (source, create)
 
     if (!tb && create) /* not found, create one */
     {
+        if (!("messages" in source) || source.messages == null)
+            createMessages(source);
         var views = document.getElementById ("views-tbar-inner");
         tb = document.createElement ("tab");
         tb.setAttribute ("ondraggesture",
@@ -1883,6 +2022,22 @@ function getTabForObject (source, create)
             tb.setAttribute("label", name);
 
         views.appendChild (tb);        
+
+        var browser = document.createElement ("browser");
+        browser.setAttribute ("class", "output-container");
+        browser.setAttribute ("type", "content");
+        browser.setAttribute ("flex", "1");
+        browser.setAttribute ("tooltip", "aHTMLTooltip");
+        browser.setAttribute ("context", "outputContext");
+        //browser.setAttribute ("onload", "scrollDown(true);");
+        browser.setAttribute ("onclick", "focusInput()");
+        browser.setAttribute ("ondragover", "nsDragAndDrop.dragOver(event, contentDropObserver);");
+        browser.setAttribute ("ondragdrop", "nsDragAndDrop.drop(event, contentDropObserver);");
+        browser.setAttribute ("ondraggesture", "nsDragAndDrop.startDrag(event, contentAreaDNDObserver);");
+        browser.source = source;
+        source.frame = browser;
+        client.deck.appendChild (browser);
+        syncOutputFrame (browser);
     }
 
     return tb;
@@ -2206,10 +2361,21 @@ function __display(message, msgtype, sourceObj, destObj)
     }
     else
     {
+        var name;
+        if (sourceObj)
+        {
+            name = (sourceObj.TYPE == "CIRCChannel") ?
+                sourceObj.unicodeName : sourceObj.name;
+        }
+        else
+        {
+            name = (this.TYPE == "CIRCChannel") ?
+                this.unicodeName : this.name;
+        }
+
         statusString =
             getMsg("cli_statusString", [d.getMonth() + 1, d.getDate(),
-                                        d.getHours(), mins,
-                                        sourceObj ? sourceObj.name : this.name]);
+                                        d.getHours(), mins, name]);
     }
     
     if (fromType.search(/IRC.*User/) != -1 &&
@@ -2394,28 +2560,13 @@ function __display(message, msgtype, sourceObj, destObj)
 
 function addHistory (source, obj, mergeData, collapseRow)
 {
-    var tbody;
-    
-    if (!("messages" in source) || source.messages == null)
-    {
-        source.messages =
-            document.createElementNS ("http://www.w3.org/1999/xhtml",
-                                      "html:table");
+    if (!("messages" in source) || (source.messages == null))
+        createMessages(source);
 
-        source.messages.setAttribute ("class", "msg-table");
-        source.messages.setAttribute ("view-type", source.TYPE);
-        tbody = document.createElementNS ("http://www.w3.org/1999/xhtml",
-                                          "html:tbody");
-        source.messages.appendChild (tbody);
-    }
-    else
-    {
-        tbody = source.messages.firstChild;
-    }
+    var tbody = source.messages.firstChild;
 
     var needScroll = false;
-    var w = window.frames[0];
-    
+
     if (client.PRINT_DIRECTION == 1)
     {
         if (mergeData || collapseRow)
@@ -2479,9 +2630,8 @@ function addHistory (source, obj, mergeData, collapseRow)
             }   
         }
         
-        if ((w.document.height - (w.innerHeight + w.pageYOffset)) <
-            (w.innerHeight / 3))
-            needScroll = true;
+        if ("frame" in source)
+            needScroll = checkScroll (source.frame);
         if (obj)
             tbody.appendChild (obj);
     }
@@ -2522,15 +2672,13 @@ function addHistory (source, obj, mergeData, collapseRow)
             }
     }
 
-    if ("currentObject" in client && client.currentObject == source &&
-        needScroll)
+    if (needScroll)
     {
-        scrollDown();
-        setTimeout ("scrollDown()", 500);
-        setTimeout ("scrollDown()", 1000);
-        setTimeout ("scrollDown()", 2000);
-    }                    
-    
+        scrollDown(source.frame, true);
+        setTimeout (scrollDown, 500, source.frame, false);
+        setTimeout (scrollDown, 1000, source.frame, false);
+        setTimeout (scrollDown, 2000, source.frame, false);
+    }
 }
 
 function findPreviousColumnInfo (table)
@@ -2652,8 +2800,6 @@ function gettabmatch_usr (line, wordStart, wordEnd, word, cursorpos)
 CIRCChannel.prototype.getSelectedUsers =
 function my_getselectedusers () 
 {
-
-    /* Grab a reference to the tree element with ID = user-list . See chatzilla.xul */
     var tree = document.getElementById("user-list");
     var cell; /* reference to each selected cell of the tree object */
     var rv_ary = new Array; /* return value arrray for CIRCChanUser objects */
