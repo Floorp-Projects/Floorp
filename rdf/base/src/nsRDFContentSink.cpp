@@ -1421,12 +1421,6 @@ RDFContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
                 // Get the attribute value (the URI for the namespace)
                 uri = aNode.GetValueAt(i);
                 rdf_StripAndConvert(uri);
-
-                // Add the name space to the current mappings
-                char prefixBuf[256];
-                char uriBuf[256];
-                mDataSource->AddNameSpaceMapping(prefix.ToCString(prefixBuf, sizeof(prefixBuf)),
-                                                 uri.ToCString(uriBuf, sizeof(uriBuf)));
       
                 // Open a local namespace
                 nsIAtom* prefixAtom = ((0 < prefix.Length()) ? NS_NewAtom(prefix) : nsnull);
