@@ -33,6 +33,7 @@ class nsString;
 class nsIWebShell;
 
 // Factory methods for creating html content objects
+// XXX argument order is wrong (out parameter should be last)
 extern nsresult
 NS_NewHTMLAnchorElement(nsIHTMLContent** aResult, nsIAtom* aTag);
 
@@ -220,7 +221,28 @@ extern nsresult
 NS_NewCommentNode(nsIHTMLContent** aResult, nsIAtom* aTag,
                   const nsString& aComment);
 
+/**
+ * Create a new content object for the given tag.
+ * Returns NS_ERROR_NOT_AVAILABLE for an unknown/unhandled tag.
+ * Returns some other error on error.
+ * Returns NS_OK on success
+ */
+extern nsresult
+NS_CreateHTMLElement(nsIHTMLContent** aResult,
+                     const nsString& aTag);
+
 // Factory methods for creating html layout objects
+
+extern nsresult
+NS_NewImageFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                 nsIFrame*& aFrameResult);
+
+extern nsresult
+NS_NewObjectFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                  nsIFrame*& aFrameResult);
+nsresult
+NS_NewSpacerFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                  nsIFrame*& aResult);
 
 // Everything below this line is obsolete...
 //----------------------------------------------------------------------
@@ -232,36 +254,11 @@ extern nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
                                       nsIURL* aURL,
                                       nsIWebShell* aWebShell);
 
-/**
- * Create a new content object for the given tag.
- * Returns NS_ERROR_NOT_AVAILABLE for an unknown/unhandled tag.
- * Returns some other error on error.
- * Returns NS_OK on success
- */
-extern nsresult NS_CreateHTMLElement(nsIHTMLContent** aInstancePtrResult,
-                                     const nsString& aTag);
 
 // Create an html root part
 extern nsresult
   NS_NewRootPart(nsIHTMLContent** aInstancePtrResult,
                  nsIDocument* aDocument);
-
-// Head parts
-extern nsresult
-  NS_NewHTMLHead(nsIHTMLContent** aInstancePtrResult,
-                 nsIAtom* aTag);
-extern nsresult
-  NS_NewHTMLMeta(nsIHTMLContent** aInstancePtrResult,
-                 nsIAtom* aTag);
-extern nsresult
-  NS_NewHTMLTitle(nsIHTMLContent** aInstancePtrResult,
-                  nsIAtom* aTag,
-                  const nsString& aTitle);
-
-// Create an html body part
-extern nsresult
-  NS_NewBodyPart(nsIHTMLContent** aInstancePtrResult,
-                 nsIAtom* aTag);
 
 // Create a new generic html container (e.g. P, DIV, SPAN, B, I, etc).
 // Not used for tables or framesets (see below).
@@ -277,9 +274,6 @@ extern nsresult
 
 extern nsresult
   NS_NewHTMLWordBreak(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag);
-
-extern nsresult
-  NS_NewHTMLSpacer(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag);
 
 extern nsresult
   NS_NewHTMLBullet(nsIHTMLContent** aInstancePtrResult);
@@ -365,16 +359,6 @@ NS_NewHTMLReflowCommand(nsIReflowCommand**           aInstancePtrResult,
                         nsIFrame*                    aTargetFrame,
                         nsIReflowCommand::ReflowType aReflowType,
                         nsIFrame*                    aChildFrame = nsnull);
-
-extern nsresult
-NS_NewObjectFrame(nsIContent* aContent,
-                  nsIFrame* aParentFrame,
-                  nsIFrame*& aFrameResult);
-
-extern nsresult
-NS_NewImageFrame(nsIContent* aContent,
-                 nsIFrame* aParentFrame,
-                 nsIFrame*& aFrameResult);
 
 extern nsresult
 NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
