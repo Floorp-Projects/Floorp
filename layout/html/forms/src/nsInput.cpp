@@ -49,7 +49,11 @@ nsInput::nsInput(nsIAtom* aTag, nsIFormManager* aManager)
     mFormMan->AddFormControl(&mControl);
   }
   mSize  = ATTR_NOTSET; 
-  mAlign = ATTR_NOTSET;
+  mAlign = nsnull;
+  mWidth = ATTR_NOTSET;
+  mHeight= ATTR_NOTSET;
+  mLastClickPoint.x = -1;
+  mLastClickPoint.y = -1;
 }
 
 nsInput::~nsInput()
@@ -68,10 +72,17 @@ nsInput::~nsInput()
   }
 }
 
+void nsInput::SetClickPoint(nscoord aX, nscoord aY)
+{
+  mLastClickPoint.x = aX;
+  mLastClickPoint.y = aY;
+}
+
 void nsInput::MapAttributesInto(nsIStyleContext* aContext, 
                                 nsIPresContext* aPresContext)
 {
 #if 0
+  XXX
   if (ATTR_NOTSET != mAlign) {
     nsStyleDisplay* display = (nsStyleDisplay*)
       aContext->GetData(kStyleDisplaySID);
@@ -104,6 +115,16 @@ nsresult nsInput::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
   return nsHTMLContainer::QueryInterface(aIID, aInstancePtr);
+}
+
+PRBool nsInput::IsSuccessful(nsIFormControl* aSubmitter) const
+{
+  if (nsnull == mName) {
+    return PR_FALSE;
+  }
+  else {
+    return PR_TRUE;
+  }
 }
 
 nsrefcnt nsInput::Release()
@@ -222,7 +243,8 @@ nsInput::GetMaxNumValues()
 }
 
 PRBool
-nsInput::GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues, nsString* aValues)
+nsInput::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues, 
+                        nsString* aValues, nsString* aNames)
 {
   aNumValues = 0;
   return PR_FALSE;
@@ -256,6 +278,12 @@ void nsInput::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
   else if (aAttribute == nsHTMLAtoms::size) {
     CacheAttribute(aValue, ATTR_NOTSET, mSize);
   } 
+  else if (aAttribute == nsHTMLAtoms::width) {
+    CacheAttribute(aValue, ATTR_NOTSET, mWidth);
+  } 
+  else if (aAttribute == nsHTMLAtoms::height) {
+    CacheAttribute(aValue, ATTR_NOTSET, mHeight);
+  } 
   else if (aAttribute == nsHTMLAtoms::value) {
     CacheAttribute(aValue, mValue);
   } 
@@ -263,7 +291,7 @@ void nsInput::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
     CacheAttribute(aValue, ATTR_NOTSET, mAlign);
   } 
   else {
-    super::SetAttribute(aAttribute, aValue); 
+    nsInputSuper::SetAttribute(aAttribute, aValue); 
   }
 }
 
@@ -300,24 +328,10 @@ nsContentAttr nsInput::GetCacheAttribute(PRInt32 aLoc, nsHTMLValue& aValue, nsHT
     else {
       aValue.SetIntValue(aLoc, aUnit);
     }
-    return eContentAttr_HasValue;
-  }
-}
 
-#if 0
-// Replaced by using eHTMLUnit_Empty in above method
-nsContentAttr nsInput::GetCacheAttribute(PRBool aLoc, nsHTMLValue& aValue) const
-{
-  aValue.Reset();
-  if (aLoc) {
-    aValue.Set(1);
     return eContentAttr_HasValue;
-  } 
-  else {
-    return eContentAttr_NotThere;
   }
 }
-#endif 
 
 nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute, nsString& aValue) const
 {
@@ -356,22 +370,6 @@ nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute, PRInt32& aValue) const
   }
 }
 
-#if 0
-nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute, PRBool& aValue) const
-{
-  PRInt32 intVal;
-  nsContentAttr result = GetAttribute(aAttribute, intVal);
-  if ((eContentAttr_HasValue == result) && (intVal > 0)) {
-    aValue = PR_TRUE;
-    return eContentAttr_HasValue;
-  }
-  else {
-    aValue = PR_FALSE;
-    return eContentAttr_NoValue;
-  }
-}
-#endif
-
 nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute,
                                     nsHTMLValue& aValue) const
 {
@@ -392,6 +390,12 @@ nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute,
   else if (aAttribute == nsHTMLAtoms::size) {
     return GetCacheAttribute(mSize, aValue, eHTMLUnit_Pixel); // XXX pixel or percent??
   }
+  else if (aAttribute == nsHTMLAtoms::width) {
+    return GetCacheAttribute(mWidth, aValue, eHTMLUnit_Pixel); // XXX pixel or percent??
+  }
+  else if (aAttribute == nsHTMLAtoms::height) {
+    return GetCacheAttribute(mHeight, aValue, eHTMLUnit_Pixel); // XXX pixel or percent??
+  }
   else if (aAttribute == nsHTMLAtoms::value) {
     return GetCacheAttribute(mValue, aValue);
   }
@@ -399,7 +403,7 @@ nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute,
     return GetCacheAttribute(mAlign, aValue, eHTMLUnit_Enumerated);
   }
   else {
-    return super::GetAttribute(aAttribute, aValue);
+    return nsInputSuper::GetAttribute(aAttribute, aValue);
   }
 }
 
@@ -450,11 +454,10 @@ PRInt32 nsInput::AggInputControl::GetMaxNumValues()
   return GET_OUTER()->GetMaxNumValues();
 }
 
-PRBool nsInput::AggInputControl::GetValues(PRInt32 aMaxNumValues,
-                                           PRInt32& aNumValues,
-                                           nsString* aValues)
+PRBool nsInput::AggInputControl::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                                                nsString* aValues, nsString* aNames)
 {
-  return GET_OUTER()->GetValues(aMaxNumValues, aNumValues, aValues);
+  return GET_OUTER()->GetNamesValues(aMaxNumValues, aNumValues, aValues, aNames);
 }
 
 void nsInput::AggInputControl::Reset()
@@ -492,3 +495,7 @@ void nsInput::AggInputControl::GetType(nsString& aName) const
   GET_OUTER()->GetType(aName);
 }
 
+PRBool nsInput::AggInputControl::IsSuccessful(nsIFormControl* aSubmitter) const
+{
+  return GET_OUTER()->IsSuccessful(aSubmitter);
+}

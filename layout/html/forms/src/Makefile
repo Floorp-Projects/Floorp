@@ -31,7 +31,6 @@ CPPSRCS =				\
 	nsInputCheckbox.cpp		\
 	nsInputFile.cpp			\
 	nsInputFrame.cpp		\
-	nsInputImage.cpp		\
 	nsInputRadio.cpp		\
 	nsInputText.cpp			\
 	nsSelect.cpp            \

@@ -217,15 +217,17 @@ nsInputText::GetMaxNumValues()
 }
   
 PRBool
-nsInputText::GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                       nsString* aValues)
+nsInputText::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                            nsString* aValues, nsString* aNames)
 {
-  if (aMaxNumValues <= 0) {
+  if ((aMaxNumValues <= 0) || (nsnull == mName)) {
     return PR_FALSE;
   }
   nsITextWidget* text = (nsITextWidget *)GetWidget();
   nsString value;
-  text->GetText(aValues[0], 0);  // the last parm is not used 
+  text->GetText(aValues[0], 0);  // the last parm is not used
+  aNames[0] = *mName;
+  
   aNumValues = 1;
 
   return PR_TRUE;
@@ -268,7 +270,7 @@ void nsInputText::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
     CacheAttribute(aValue, ATTR_NOTSET, mNumCols);
   }
   else {
-    super::SetAttribute(aAttribute, aValue);
+    nsInputTextSuper::SetAttribute(aAttribute, aValue);
   }
 }
 
@@ -285,7 +287,7 @@ nsContentAttr nsInputText::GetAttribute(nsIAtom* aAttribute,
     return GetCacheAttribute(mNumCols, aResult, eHTMLUnit_Integer);
   }
   else {
-    return super::GetAttribute(aAttribute, aResult);
+    return nsInputTextSuper::GetAttribute(aAttribute, aResult);
   }
 }
 

@@ -111,7 +111,8 @@ public:
   virtual void OnReturn();
 
   // callback for submit button controls.
-  virtual void OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame);
+  virtual void OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame, 
+                        nsIFormControl* aSubmitter);
 
   // callback for tabs on controls that can gain focus. This will
   // eventually need to be handled at the document level to support
@@ -257,7 +258,8 @@ nsForm::OnReturn()
 }
 
 void 
-nsForm::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
+nsForm::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame, 
+                 nsIFormControl* aSubmitter)
 {
   printf("\n  YYYYYYYYYYYYY \n");
   // right now we only do "get"
@@ -274,22 +276,22 @@ nsForm::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
   // collect and encode the data from the children controls
   for (PRInt32 childX = 0; childX < numChildren; childX++) {
 	  nsIFormControl* child = (nsIFormControl*) mChildren.ElementAt(childX);
-	  nsString childName;
-		if (PR_TRUE == child->GetName(childName)) {
+		if (child->IsSuccessful(aSubmitter)) {
 		  PRInt32 numValues = 0;
 		  PRInt32 maxNumValues = child->GetMaxNumValues();
 			if (maxNumValues <= 0) {
 				continue;
 			}
+		  nsString* names = new nsString[maxNumValues];
 		  nsString* values = new nsString[maxNumValues];
-			if (PR_TRUE == child->GetValues(maxNumValues, numValues, values)) {
+			if (PR_TRUE == child->GetNamesValues(maxNumValues, numValues, values, names)) {
 				for (int valueX = 0; valueX < numValues; valueX++) {
 				  if (PR_TRUE == firstTime) {
 					  firstTime = PR_FALSE;
 				  } else {
 				    data += "&";
 				  }
-					nsString* convName = EscapeURLString(childName);
+					nsString* convName = EscapeURLString(names[valueX]);
 				  data += *convName;
 					delete convName;
 					data += "=";

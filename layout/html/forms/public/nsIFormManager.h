@@ -63,8 +63,10 @@ public:
     * method attributes. This in response to a submit button being clicked.
     * @param aPresContext the presentation context
     * @param aFrame the frame of the submit button 
+    * @param aSubmitter the control that caused the submit 
     */
-  virtual void OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame) = 0;
+  virtual void OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame, 
+                        nsIFormControl* aSubmitter) = 0;
 
   /**
     * This is tbd and is in repsonse to a tab key being entered in one

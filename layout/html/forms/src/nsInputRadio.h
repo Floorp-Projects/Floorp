@@ -29,7 +29,7 @@ class nsString;
 class nsInputRadio : public nsInput 
 {
 public:
-  typedef nsInput super;
+  typedef nsInput nsInputRadioSuper;
   nsInputRadio (nsIAtom* aTag, nsIFormManager* aManager);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
@@ -48,8 +48,8 @@ public:
 
   virtual PRInt32 GetMaxNumValues() { return 1; }
   
-  virtual PRBool GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                           nsString* aValues);
+  virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                                nsString* aValues, nsString* aNames);
 
   virtual void Reset();
 
