@@ -706,19 +706,22 @@ PUBLIC nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec) {
   return rv;
 }
 
-PRIVATE PRBool
-wallet_KeyExists() {
+/* returns -1 if key does not exist, 0 if key is of length 0, 1 otherwise */
+PRIVATE PRInt32
+wallet_KeySize() {
   nsFileSpec dirSpec;
   nsresult rv = Wallet_ProfileDirectory(dirSpec);
   if (NS_FAILED(rv)) {
-    return PR_FALSE;
+    return -1;
   }
   nsInputFileStream strm(dirSpec + "key");
   if (!strm.is_open()) {
-    return PR_FALSE;
+    return -1;
   } else {
+    char c = strm.get();
+    PRInt32 rv = (strm.eof() ? 0 : 1);
     strm.close();
-    return PR_TRUE;
+    return rv;
   }
 }
 
@@ -737,9 +740,19 @@ Wallet_SetKey(PRBool isNewkey) {
   } else {
     password = Wallet_Localize("password");
   }
-  char * newkey = wallet_GetString(password);
-  if (newkey == NULL) {
-    return PR_FALSE;
+
+  char * newkey;
+  if (wallet_KeySize() == 0) {
+    newkey = PL_strdup("");
+  } else {
+    newkey = wallet_GetString(password);
+  }
+  if (newkey == NULL) { /* user hit cancel button */
+    if (wallet_KeySize() == 0) { /* no password file existed before */
+      newkey  = PL_strdup(""); /* use zero-length password */
+    } else {
+      return PR_FALSE; /* user could not supply the correct password */
+    }
   }
   PR_FREEIF(password);
   for (; (keyPosition < PL_strlen(newkey) && keyPosition < maxKeySize); keyPosition++) {
@@ -750,7 +763,7 @@ Wallet_SetKey(PRBool isNewkey) {
   Wallet_RestartKey();
 
   /* verify this with the saved key */
-  if (isNewkey || !wallet_KeyExists()) {
+  if (isNewkey || (wallet_KeySize() < 0)) {
 
     /*
      * Either key is to be changed or the file containing the saved key doesn' exist.
@@ -775,11 +788,13 @@ Wallet_SetKey(PRBool isNewkey) {
      * key[1..n],key[0] obscured by the actual key.
      */
 
-    char* p = key+1;
-    while (*p) {
-      strm2.put(*(p++)^Wallet_GetKey());
+    if (PL_strlen(key) != 0) {
+      char* p = key+1;
+      while (*p) {
+        strm2.put(*(p++)^Wallet_GetKey());
+      }
+      strm2.put((*key)^Wallet_GetKey());
     }
-    strm2.put((*key)^Wallet_GetKey());
     strm2.flush();
     strm2.close();
     Wallet_RestartKey();
@@ -796,6 +811,15 @@ Wallet_SetKey(PRBool isNewkey) {
      * is why the following code reads a character and immediately after the read
      * checks for eof()
      */
+
+    /* test for a null key */
+    if ((PL_strlen(key) == 0) && (wallet_KeySize() == 0) ) {
+      Wallet_RestartKey();
+      keySet = PR_TRUE;
+      keyFailure = PR_FALSE;
+      return PR_TRUE;
+    }
+
     nsFileSpec dirSpec;
     nsresult rval = Wallet_ProfileDirectory(dirSpec);
     if (NS_FAILED(rval)) {
@@ -1475,7 +1499,7 @@ PUBLIC
 void WLLT_ChangePassword() {
 
   /* do nothing if password was never set */
-  if (!wallet_KeyExists()) {
+  if (wallet_KeySize() < 0) {
     return;
   }
 
@@ -2147,6 +2171,7 @@ wallet_ClearStopwatch();
 PUBLIC void
 WLLT_OKToCapture(PRBool * result, PRInt32 count, char* urlName) {
   nsAutoString * url = new nsAutoString(urlName);
+//  static int level = 0;
 
   /* see if this url is already on list of url's for which we don't want to capture */
   wallet_InitializeURLList();
@@ -2159,6 +2184,12 @@ WLLT_OKToCapture(PRBool * result, PRInt32 count, char* urlName) {
       return;
     }
   }
+
+//  if (level > 0) {
+//    *result = PR_FALSE;
+//    return;
+//  }
+//  level++;
 
   /* ask user if we should capture the values on this form */
   if (wallet_GetFormsCapturingPref() && (count>=3)) {
@@ -2181,6 +2212,7 @@ WLLT_OKToCapture(PRBool * result, PRInt32 count, char* urlName) {
   } else {
     *result = PR_FALSE;
   }
+//  level--;
 }
 
 /*
