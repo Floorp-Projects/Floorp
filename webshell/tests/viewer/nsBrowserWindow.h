@@ -134,7 +134,7 @@ public:
 
 #ifdef NS_DEBUG
   void DumpContent(FILE *out = stdout);
-  void DumpFrames(FILE *out = stdout);
+  void DumpFrames(FILE *out = stdout, nsString *aFilter = nsnull);
   void DumpViews(FILE *out = stdout);
   void DumpWebShells(FILE *out = stdout);
   void DumpStyleSheets(FILE *out = stdout);

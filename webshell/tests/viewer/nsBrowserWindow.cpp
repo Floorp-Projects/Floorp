@@ -1598,13 +1598,14 @@ nsBrowserWindow::DumpContent(FILE* out)
 }
 
 void
-nsBrowserWindow::DumpFrames(FILE* out)
+nsBrowserWindow::DumpFrames(FILE* out, nsString *aFilterName)
 {
   nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
     nsIFrame* root = shell->GetRootFrame();
     if (nsnull != root) {
-      root->List(out);
+      nsIListFilter *filter = nsIFrame::GetFilter(aFilterName);
+      root->List(out, 0, filter);
     }
     NS_RELEASE(shell);
   }

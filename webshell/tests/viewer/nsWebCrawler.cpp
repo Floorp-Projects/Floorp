@@ -24,6 +24,9 @@
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
+#include "nsIPresShell.h"
+#include "nsIPresContext.h"
+#include "nsIFrame.h"
 #include "nsIURL.h"
 #include "nsITimer.h"
 #include "nsIAtom.h"
@@ -145,6 +148,8 @@ nsWebCrawler::nsWebCrawler(nsViewerApp* aViewer)
   mTimer = nsnull;
   mCrawl = PR_FALSE;
   mJiggleLayout = PR_FALSE;
+  mFilter = nsnull;
+  mOutputDir= nsnull;
   mPostExit = PR_FALSE;
   mDelay = 0;
   mMaxPages = -1;
@@ -176,6 +181,10 @@ nsWebCrawler::~nsWebCrawler()
   NS_IF_RELEASE(mFrameTag);
   NS_IF_RELEASE(mIFrameTag);
   delete mVisited;
+  if (nsnull!=mFilter)
+    delete mFilter;
+  if (nsnull!=mOutputDir)
+    delete mOutputDir;
 }
 
 NS_IMPL_ISUPPORTS(nsWebCrawler, kISupportsIID)
@@ -201,6 +210,34 @@ nsWebCrawler::OnStatus(nsIURL* aURL, const nsString& aMsg)
 NS_IMETHODIMP
 nsWebCrawler::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
 {
+  if (nsnull!=mFilter)
+  {
+    nsIPresShell* shell = GetPresShell();
+    if (nsnull != shell) {
+      nsIFrame* root = shell->GetRootFrame();
+      if (nsnull != root) {
+        nsIListFilter *filter = nsIFrame::GetFilter(mFilter);
+        if (nsnull!=mOutputDir)
+        {
+          FILE *fp = GetOutputFile(aURL);
+          if (nsnull!=fp)
+          {
+            root->List(fp, 0, filter);
+            fclose(fp);
+          }
+          else
+            printf("could not open output file for %s\n", aURL->GetFile());
+        }
+        else
+          root->List(stdout, 0, filter);
+      }
+      NS_RELEASE(shell);
+    }
+    else {
+      fputs("null pres shell\n", stdout);
+    }
+  }
+
   if (mJiggleLayout) {
     nsRect r;
     mBrowser->GetBounds(r);
@@ -226,6 +263,44 @@ nsWebCrawler::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
   return NS_OK;
 }
 
+FILE * nsWebCrawler::GetOutputFile(nsIURL *aURL)
+{
+  static const char kDefaultOutputFileName[] = "test.txt";   // the default
+  FILE *result = nsnull;
+  if (nsnull!=aURL)
+  {
+    char *inputFileName;
+    nsAutoString inputFileFullPath(aURL->GetFile());
+    PRInt32 fileNameOffset = inputFileFullPath.RFind('/');
+    if (-1==fileNameOffset)
+    {
+      inputFileName = new char[strlen(kDefaultOutputFileName) + 1];
+      strcpy (inputFileName, kDefaultOutputFileName);
+    }
+    else
+    {
+      PRInt32 len = inputFileFullPath.Length() - fileNameOffset;
+      inputFileName = new char[len + 1];
+      char *c = inputFileName;
+      for (PRInt32 i=fileNameOffset+1; i<fileNameOffset+len; i++)
+      {
+        *c = inputFileFullPath[i]; 
+        c++;
+      }
+      inputFileName[len-1]=nsnull;
+    }
+    nsAutoString outputFileName(*mOutputDir);
+    outputFileName += inputFileName;
+    PRInt32 bufLen = outputFileName.Length()+1;
+    char *buf = new char[bufLen+1];
+    outputFileName.ToCString(buf, bufLen);
+    result = fopen(buf, "wt");
+    delete [] buf;
+    delete [] inputFileName;
+  }
+  return result;
+}
+
 void
 nsWebCrawler::AddURL(const nsString& aURL)
 {
@@ -245,6 +320,24 @@ nsWebCrawler::AddAvoidDomain(const nsString& aDomain)
 {
   nsString* s = new nsString(aDomain);
   mAvoidDomains.AppendElement(s);
+}
+
+void 
+nsWebCrawler::SetFilter(const nsString& aFilter)
+{
+  if (nsnull==mFilter)
+    mFilter = new nsString(aFilter);
+  else
+    (*mFilter) = aFilter;
+}
+
+void 
+nsWebCrawler::SetOutputDir(const nsString& aOutputDir)
+{
+  if (nsnull==mOutputDir)
+    mOutputDir = new nsString(aOutputDir);
+  else
+    (*mOutputDir) = aOutputDir;
 }
 
 void
@@ -514,4 +607,32 @@ nsWebCrawler::LoadNextURL()
   if (mPostExit) {
     mViewer->Exit();
   }
+}
+
+nsIPresShell*
+nsWebCrawler::GetPresShell()
+{
+  nsIWebShell* webShell;
+  mBrowser->GetWebShell(webShell);
+  nsIPresShell* shell = nsnull;
+  if (nsnull != webShell) {
+    nsIContentViewer* cv = nsnull;
+    webShell->GetContentViewer(cv);
+    if (nsnull != cv) {
+      nsIDocumentViewer* docv = nsnull;
+      cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+      if (nsnull != docv) {
+        nsIPresContext* cx;
+        docv->GetPresContext(cx);
+        if (nsnull != cx) {
+          shell = cx->GetShell();
+          NS_RELEASE(cx);
+        }
+        NS_RELEASE(docv);
+      }
+      NS_RELEASE(cv);
+    }
+    NS_RELEASE(webShell);
+  }
+  return shell;
 }
