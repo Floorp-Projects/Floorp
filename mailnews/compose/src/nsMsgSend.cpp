@@ -4145,6 +4145,11 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
     PRUint32 flags2 = 0;
     if (mode == nsMsgSaveAsTemplate)
       flags2 |= MSG_FLAG_TEMPLATE;
+    if (mode == nsMsgDeliverNow || mode == nsMsgSendUnsent) 
+    {
+      flags2 &= ~MSG_FLAG_MDN_REPORT_NEEDED;
+      flags2 |= MSG_FLAG_MDN_REPORT_SENT;
+    }
     buf = PR_smprintf(X_MOZILLA_STATUS2_FORMAT CRLF, flags2);
     if (buf)
     {
