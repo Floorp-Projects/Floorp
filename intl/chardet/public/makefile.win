@@ -23,6 +23,7 @@ DEPTH=..\..\..
 
 XPIDLSRCS = \
 	.\nsIDocumentCharsetInfo.idl \
+	.\nsIDocCharset.idl \
 	$(NULL)
 
 EXPORTS = \
