@@ -128,6 +128,8 @@ endif
 
 endif # BUILD_MODULES == all
 
+STATIC_MAKEFILES := $(NSPRPUB_DIR)
+
 GARBAGE += dist
 DIST_GARBAGE = config.cache config.log config.status config-defs.h \
    dependencies.beos config/autoconf.mk \

@@ -25,10 +25,8 @@ ifndef MOZ_NATIVE_NSPR
 # Do not regenerate Makefile for NSPR
 ifdef USE_NSPR_AUTOCONF
 NSPRPUB_DIR		= nsprpub
-STATIC_MAKEFILES	:= nsprpub
 else
 NSPRPUB_DIR		= $(topsrcdir)/nsprpub
-STATIC_MAKEFILES	:= $(topsrcdir)/nsprpub
 endif
 endif
 
