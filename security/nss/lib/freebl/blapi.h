@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapi.h,v 1.6 2000/12/27 18:47:57 wtc%netscape.com Exp $
+ * $Id: blapi.h,v 1.7 2001/01/05 22:37:47 mcgreer%netscape.com Exp $
  */
 
 #ifndef _BLAPI_H_
@@ -67,7 +67,7 @@ extern RSAPrivateKey *RSA_NewKey(int         keySizeInBits,
 */
 extern SECStatus RSA_PublicKeyOp(RSAPublicKey *   key,
 				 unsigned char *  output,
-				 unsigned char *  input);
+				 const unsigned char *  input);
 
 /*
 ** Perform a raw private-key operation 
@@ -75,7 +75,7 @@ extern SECStatus RSA_PublicKeyOp(RSAPublicKey *   key,
 */
 extern SECStatus RSA_PrivateKeyOp(RSAPrivateKey *  key,
 				  unsigned char *  output,
-				  unsigned char *  input);
+				  const unsigned char *  input);
 
 
 
@@ -89,7 +89,7 @@ extern SECStatus RSA_PrivateKeyOp(RSAPrivateKey *  key,
 **	"params" is a pointer to the PQG parameters for the domain
 **	Uses a random seed.
 */
-extern SECStatus DSA_NewKey(PQGParams *           params, 
+extern SECStatus DSA_NewKey(const PQGParams *     params, 
 		            DSAPrivateKey **      privKey);
 
 /* signature is caller-supplied buffer of at least 20 bytes.
@@ -100,25 +100,26 @@ extern SECStatus DSA_NewKey(PQGParams *           params,
 */
 extern SECStatus DSA_SignDigest(DSAPrivateKey *   key,
 				SECItem *         signature,
-				SECItem *         digest);
+				const SECItem *   digest);
 
 /* signature is caller-supplied buffer of at least 20 bytes.
 ** On input,  signature->len == size of buffer to hold signature.
 **            digest->len    == size of digest.
 */
 extern SECStatus DSA_VerifyDigest(DSAPublicKey *  key,
-				  SECItem *       signature,
-				  SECItem *       digest);
+				  const SECItem * signature,
+				  const SECItem * digest);
 
 /* For FIPS compliance testing. Seed must be exactly 20 bytes long */
-extern SECStatus DSA_NewKeyFromSeed(PQGParams *params, unsigned char * seed,
+extern SECStatus DSA_NewKeyFromSeed(const PQGParams *params, 
+                                    const unsigned char * seed,
                                     DSAPrivateKey **privKey);
 
 /* For FIPS compliance testing. Seed must be exactly 20 bytes. */
 extern SECStatus DSA_SignDigestWithSeed(DSAPrivateKey * key,
-				        SECItem *       signature,
-				        SECItem *       digest,
-				        unsigned char * seed);
+                                        SECItem *       signature,
+                                        const SECItem * digest,
+                                        const unsigned char * seed);
 
 /******************************************************
 ** Diffie Helman key exchange algorithm 
@@ -262,7 +263,7 @@ extern void RC2_DestroyContext(RC2Context *cx, PRBool freeit);
 */
 extern SECStatus RC2_Encrypt(RC2Context *cx, unsigned char *output,
 			    unsigned int *outputLen, unsigned int maxOutputLen,
-			    unsigned char *input, unsigned int inputLen);
+			    const unsigned char *input, unsigned int inputLen);
 
 /*
 ** Perform RC2 decryption.
@@ -277,7 +278,7 @@ extern SECStatus RC2_Encrypt(RC2Context *cx, unsigned char *output,
 */
 extern SECStatus RC2_Decrypt(RC2Context *cx, unsigned char *output,
 			    unsigned int *outputLen, unsigned int maxOutputLen,
-			    unsigned char *input, unsigned int inputLen);
+			    const unsigned char *input, unsigned int inputLen);
 
 /******************************************/
 /*
@@ -317,7 +318,7 @@ extern void RC5_DestroyContext(RC5Context *cx, PRBool freeit);
 */
 extern SECStatus RC5_Encrypt(RC5Context *cx, unsigned char *output,
                             unsigned int *outputLen, unsigned int maxOutputLen,
-                            unsigned char *input, unsigned int inputLen);
+                            const unsigned char *input, unsigned int inputLen);
 
 /*
 ** Perform RC5 decryption.
@@ -333,7 +334,7 @@ extern SECStatus RC5_Encrypt(RC5Context *cx, unsigned char *output,
 
 extern SECStatus RC5_Decrypt(RC5Context *cx, unsigned char *output,
                             unsigned int *outputLen, unsigned int maxOutputLen,
-                            unsigned char *input, unsigned int inputLen);
+                            const unsigned char *input, unsigned int inputLen);
 
 
 
@@ -379,7 +380,7 @@ extern void DES_DestroyContext(DESContext *cx, PRBool freeit);
 */
 extern SECStatus DES_Encrypt(DESContext *cx, unsigned char *output,
 			    unsigned int *outputLen, unsigned int maxOutputLen,
-			    unsigned char *input, unsigned int inputLen);
+			    const unsigned char *input, unsigned int inputLen);
 
 /*
 ** Perform DES decryption.
@@ -396,7 +397,7 @@ extern SECStatus DES_Encrypt(DESContext *cx, unsigned char *output,
 */
 extern SECStatus DES_Decrypt(DESContext *cx, unsigned char *output,
 			    unsigned int *outputLen, unsigned int maxOutputLen,
-			    unsigned char *input, unsigned int inputLen);
+			    const unsigned char *input, unsigned int inputLen);
 
 /******************************************/
 /*
@@ -436,7 +437,7 @@ AES_DestroyContext(AESContext *cx, PRBool freeit);
 extern SECStatus 
 AES_Encrypt(AESContext *cx, unsigned char *output,
             unsigned int *outputLen, unsigned int maxOutputLen,
-            unsigned char *input, unsigned int inputLen);
+            const unsigned char *input, unsigned int inputLen);
 
 /*
 ** Perform AES decryption.
@@ -452,7 +453,7 @@ AES_Encrypt(AESContext *cx, unsigned char *output,
 extern SECStatus 
 AES_Decrypt(AESContext *cx, unsigned char *output,
             unsigned int *outputLen, unsigned int maxOutputLen,
-            unsigned char *input, unsigned int inputLen);
+            const unsigned char *input, unsigned int inputLen);
 
 
 /******************************************/

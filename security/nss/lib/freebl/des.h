@@ -50,7 +50,7 @@ typedef enum {
     DES_DECRYPT = 0xAAAA
 } DESDirection;
 
-typedef void DESFunc(struct DESContextStr *cx, BYTE *out, BYTE *in, 
+typedef void DESFunc(struct DESContextStr *cx, BYTE *out, const BYTE *in, 
                      unsigned int len);
 
 struct DESContextStr {
@@ -64,6 +64,6 @@ struct DESContextStr {
 };
 
 void DES_MakeSchedule( HALF * ks, BYTE * key,   DESDirection direction);
-void DES_Do1Block(     HALF * ks, BYTE * inbuf, BYTE * outbuf);
+void DES_Do1Block(     HALF * ks, const BYTE * inbuf, BYTE * outbuf);
 
 #endif

@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rijndael.c,v 1.2 2001/01/02 16:57:47 mcgreer%netscape.com Exp $
+ * $Id: rijndael.c,v 1.3 2001/01/05 22:37:49 mcgreer%netscape.com Exp $
  */
 
 #include "prerr.h"
@@ -125,7 +125,7 @@
 static SECStatus
 rijndael_key_expansion7(AESContext *cx, unsigned char *key, unsigned int Nk)
 {
-    int i;
+    unsigned int i;
     PRUint32 *W;
     PRUint32 *pW;
     PRUint32 tmp;
@@ -153,11 +153,11 @@ rijndael_key_expansion7(AESContext *cx, unsigned char *key, unsigned int Nk)
 static SECStatus
 rijndael_key_expansion(AESContext *cx, unsigned char *key, unsigned int Nk)
 {
-    int i;
+    unsigned int i;
     PRUint32 *W;
     PRUint32 *pW;
     PRUint32 tmp;
-    int round_key_words = cx->Nb * (cx->Nr + 1);
+    unsigned int round_key_words = cx->Nb * (cx->Nr + 1);
     if (Nk == 7)
 	return rijndael_key_expansion7(cx, key, Nk);
     W = cx->expandedKey;
@@ -217,7 +217,7 @@ rijndael_key_expansion(AESContext *cx, unsigned char *key, unsigned int Nk)
 static SECStatus
 rijndael_invkey_expansion(AESContext *cx, unsigned char *key, unsigned int Nk)
 {
-    int r;
+    unsigned int r;
     PRUint32 *roundkeyw;
     PRUint8 *b;
     int Nb = cx->Nb;
@@ -296,9 +296,9 @@ rijndael_invkey_expansion(AESContext *cx, unsigned char *key, unsigned int Nk)
 static SECStatus 
 rijndael_encryptBlock128(AESContext *cx, 
                          unsigned char *output,
-                         unsigned char *input)
+                         const unsigned char *input)
 {
-    int r, extra_cols;
+    unsigned int r, extra_cols;
     PRUint32 *roundkeyw;
     PRUint8 clone[RIJNDAEL_MAX_STATE_SIZE];
     extra_cols = cx->Nb;
@@ -361,7 +361,7 @@ rijndael_encryptBlock128(AESContext *cx,
 static SECStatus 
 rijndael_decryptBlock128(AESContext *cx, 
                          unsigned char *output,
-                         unsigned char *input)
+                         const unsigned char *input)
 {
     int r, extra_cols;
     PRUint32 *roundkeyw;
@@ -439,10 +439,10 @@ rijndael_decryptBlock128(AESContext *cx,
 SECStatus 
 rijndael_encryptBlock(AESContext *cx, 
                       unsigned char *output,
-                      unsigned char *input)
+                      const unsigned char *input)
 {
-    int j, r, Nb;
-    int c2, c3;
+    unsigned int j, r, Nb;
+    unsigned int c2, c3;
     PRUint32 *roundkeyw;
     PRUint8 clone[RIJNDAEL_MAX_STATE_SIZE];
     Nb = cx->Nb;
@@ -478,7 +478,7 @@ rijndael_encryptBlock(AESContext *cx,
 SECStatus 
 rijndael_decryptBlock(AESContext *cx, 
                       unsigned char *output,
-                      unsigned char *input)
+                      const unsigned char *input)
 {
     int j, r, Nb;
     int c2, c3;
@@ -524,7 +524,8 @@ rijndael_decryptBlock(AESContext *cx,
 static SECStatus 
 rijndael_encryptECB(AESContext *cx, unsigned char *output,
                     unsigned int *outputLen, unsigned int maxOutputLen,
-                    unsigned char *input, unsigned int inputLen, int blocksize)
+                    const unsigned char *input, unsigned int inputLen, 
+                    int blocksize)
 {
     SECStatus rv;
     AESBlockFunc *encryptor;
@@ -544,21 +545,23 @@ rijndael_encryptECB(AESContext *cx, unsigned char *output,
 static SECStatus 
 rijndael_encryptCBC(AESContext *cx, unsigned char *output,
                     unsigned int *outputLen, unsigned int maxOutputLen,
-                    unsigned char *input, unsigned int inputLen, int blocksize)
+                    const unsigned char *input, unsigned int inputLen, 
+                    int blocksize)
 {
     int j;
     SECStatus rv;
     AESBlockFunc *encryptor;
     unsigned char *lastblock;
+    unsigned char inblock[RIJNDAEL_MAX_STATE_SIZE * 8];
     lastblock = cx->iv;
     encryptor = (blocksize == 16) ? &rijndael_encryptBlock128 : 
                                     &rijndael_encryptBlock;
     while (inputLen > 0) {
 	/* XOR with the last block (IV if first block) */
 	for (j=0; j<blocksize; ++j)
-	    input[j] ^= lastblock[j];
+	    inblock[j] = input[j] ^ lastblock[j];
 	/* encrypt */
-        rv = (*encryptor)(cx, output, input);
+        rv = (*encryptor)(cx, output, inblock);
 	if (rv != SECSuccess)
 	    return rv;
 	/* move to the next block */
@@ -573,7 +576,8 @@ rijndael_encryptCBC(AESContext *cx, unsigned char *output,
 static SECStatus 
 rijndael_decryptECB(AESContext *cx, unsigned char *output,
                     unsigned int *outputLen, unsigned int maxOutputLen,
-                    unsigned char *input, unsigned int inputLen, int blocksize)
+                    const unsigned char *input, unsigned int inputLen, 
+                    int blocksize)
 {
     SECStatus rv;
     AESBlockFunc *decryptor;
@@ -594,7 +598,8 @@ rijndael_decryptECB(AESContext *cx, unsigned char *output,
 static SECStatus 
 rijndael_decryptCBC(AESContext *cx, unsigned char *output,
                     unsigned int *outputLen, unsigned int maxOutputLen,
-                    unsigned char *input, unsigned int inputLen, int blocksize)
+                    const unsigned char *input, unsigned int inputLen, 
+                    int blocksize)
 {
     SECStatus rv;
     AESBlockFunc *decryptor;
@@ -728,7 +733,7 @@ AES_DestroyContext(AESContext *cx, PRBool freeit)
 SECStatus 
 AES_Encrypt(AESContext *cx, unsigned char *output,
             unsigned int *outputLen, unsigned int maxOutputLen,
-            unsigned char *input, unsigned int inputLen)
+            const unsigned char *input, unsigned int inputLen)
 {
     int blocksize;
     /* Check args */
@@ -759,7 +764,7 @@ AES_Encrypt(AESContext *cx, unsigned char *output,
 SECStatus 
 AES_Decrypt(AESContext *cx, unsigned char *output,
             unsigned int *outputLen, unsigned int maxOutputLen,
-            unsigned char *input, unsigned int inputLen)
+            const unsigned char *input, unsigned int inputLen)
 {
     int blocksize;
     /* Check args */

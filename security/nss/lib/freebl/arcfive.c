@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: arcfive.c,v 1.1 2000/12/27 03:16:59 nelsonb%netscape.com Exp $
+ * $Id: arcfive.c,v 1.2 2001/01/05 22:37:46 mcgreer%netscape.com Exp $
  */
 
 #include "blapi.h"
@@ -86,7 +86,7 @@ RC5_DestroyContext(RC5Context *cx, PRBool freeit)
 SECStatus 
 RC5_Encrypt(RC5Context *cx, unsigned char *output, unsigned int *outputLen, 
 	    unsigned int maxOutputLen, 
-	    unsigned char *input, unsigned int inputLen)
+	    const unsigned char *input, unsigned int inputLen)
 {
     PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
     return SECFailure;
@@ -106,7 +106,7 @@ RC5_Encrypt(RC5Context *cx, unsigned char *output, unsigned int *outputLen,
 SECStatus 
 RC5_Decrypt(RC5Context *cx, unsigned char *output, unsigned int *outputLen, 
 	    unsigned int maxOutputLen,
-            unsigned char *input, unsigned int inputLen)
+            const unsigned char *input, unsigned int inputLen)
 {
     PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
     return SECFailure;

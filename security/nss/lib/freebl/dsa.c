@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: dsa.c,v 1.5 2001/01/03 19:49:26 larryh%netscape.com Exp $
+ * $Id: dsa.c,v 1.6 2001/01/05 22:37:49 mcgreer%netscape.com Exp $
  */
 
 #include "secerr.h"
@@ -70,7 +70,8 @@ static void translate_mpi_error(mp_err err)
 }
 
 SECStatus 
-dsa_NewKey(PQGParams *params, DSAPrivateKey **privKey, unsigned char *xb)
+dsa_NewKey(const PQGParams *params, DSAPrivateKey **privKey, 
+           const unsigned char *xb)
 {
     unsigned int y_len;
     mp_int p, g;
@@ -147,7 +148,7 @@ cleanup:
 **	Uses a random seed.
 */
 SECStatus 
-DSA_NewKey(PQGParams *params, DSAPrivateKey **privKey)
+DSA_NewKey(const PQGParams *params, DSAPrivateKey **privKey)
 {
     SECStatus rv;
     unsigned char seed[DSA_SUBPRIME_LEN];
@@ -157,25 +158,23 @@ DSA_NewKey(PQGParams *params, DSAPrivateKey **privKey)
 	return SECFailure;
     /* Generate a new DSA key using random seed. */
     rv = dsa_NewKey(params, privKey, seed);
-    /* memset(seed, 0, DSA_SUBPRIME_LEN); */
     return rv;
 }
 
 /* For FIPS compliance testing. Seed must be exactly 20 bytes long */
 SECStatus 
-DSA_NewKeyFromSeed(PQGParams *params, 
-                   unsigned char *seed,
+DSA_NewKeyFromSeed(const PQGParams *params, 
+                   const unsigned char *seed,
                    DSAPrivateKey **privKey)
 {
     SECStatus rv;
     rv = dsa_NewKey(params, privKey, seed);
-    /* memset(seed, 0, DSA_SUBPRIME_LEN); */
     return rv;
 }
 
 SECStatus 
-dsa_SignDigest(DSAPrivateKey *key, SECItem *signature, SECItem *digest,
-               unsigned char *kb)
+dsa_SignDigest(DSAPrivateKey *key, SECItem *signature, const SECItem *digest,
+               const unsigned char *kb)
 {
     mp_int p, q, g;  /* PQG parameters */
     mp_int x, k;     /* private key & pseudo-random integer */
@@ -271,7 +270,7 @@ cleanup:
 ** Uses a random seed.
 */
 SECStatus 
-DSA_SignDigest(DSAPrivateKey *key, SECItem *signature, SECItem *digest)
+DSA_SignDigest(DSAPrivateKey *key, SECItem *signature, const SECItem *digest)
 {
     SECStatus rv;
     int prerr = 0;
@@ -283,7 +282,6 @@ DSA_SignDigest(DSAPrivateKey *key, SECItem *signature, SECItem *digest)
 	rv = dsa_SignDigest(key, signature, digest, KSEED);
 	if (rv) prerr = PORT_GetError();
     } while (prerr == SEC_ERROR_NEED_RANDOM);
-    /*memset(KSEED, 0, DSA_SUBPRIME_LEN);*/
     return rv;
 }
 
@@ -291,12 +289,11 @@ DSA_SignDigest(DSAPrivateKey *key, SECItem *signature, SECItem *digest)
 SECStatus 
 DSA_SignDigestWithSeed(DSAPrivateKey * key,
                        SECItem *       signature,
-                       SECItem *       digest,
-                       unsigned char * seed)
+                       const SECItem * digest,
+                       const unsigned char * seed)
 {
     SECStatus rv;
     rv = dsa_SignDigest(key, signature, digest, seed);
-    /*memset(seed, 0, DSA_SUBPRIME_LEN);*/
     return rv;
 }
 
@@ -305,7 +302,8 @@ DSA_SignDigestWithSeed(DSAPrivateKey * key,
 **            digest->len    == size of digest.
 */
 SECStatus 
-DSA_VerifyDigest(DSAPublicKey *key, SECItem *signature, SECItem *digest)
+DSA_VerifyDigest(DSAPublicKey *key, const SECItem *signature, 
+                 const SECItem *digest)
 {
     /* FIPS-compliance dictates that digest is a SHA1 hash. */
     mp_int p, q, g;      /* PQG parameters */

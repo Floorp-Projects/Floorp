@@ -35,7 +35,7 @@
 /*
  * RSA key generation, public key op, private key op.
  *
- * $Id: rsa.c,v 1.21 2001/01/04 08:21:13 nelsonb%netscape.com Exp $
+ * $Id: rsa.c,v 1.22 2001/01/05 22:37:50 mcgreer%netscape.com Exp $
  */
 
 #include "secerr.h"
@@ -116,7 +116,7 @@ rsa_keygen_from_primes(mp_int *p, mp_int *q, mp_int *e, RSAPrivateKey *key,
     /* 1.  Compute n = p*q */
     CHECK_MPI_OK( mp_mul(p, q, &n) );
     /*     verify that the modulus has the desired number of bits */
-    if (mpl_significant_bits(&n) != keySizeInBits) {
+    if ((unsigned)mpl_significant_bits(&n) != keySizeInBits) {
 	PORT_SetError(SEC_ERROR_NEED_RANDOM);
 	rv = SECFailure;
 	goto cleanup;
@@ -277,7 +277,7 @@ rsa_modulusLen(SECItem *modulus)
 SECStatus 
 RSA_PublicKeyOp(RSAPublicKey  *key, 
                 unsigned char *output, 
-                unsigned char *input)
+                const unsigned char *input)
 {
     unsigned int modLen;
     mp_int n, e, m, c;
@@ -590,7 +590,7 @@ cleanup:
 SECStatus 
 RSA_PrivateKeyOp(RSAPrivateKey *key, 
                  unsigned char *output, 
-                 unsigned char *input)
+                 const unsigned char *input)
 {
     unsigned int modLen;
     unsigned int offset;
