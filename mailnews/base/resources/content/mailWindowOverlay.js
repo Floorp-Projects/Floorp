@@ -230,9 +230,9 @@ function InitViewSortByMenu()
 
 function InitViewMessagesMenu()
 {
-  var viewFlags = gDBView.viewFlags;
-  var viewType = gDBView.viewType;
-  
+  var viewFlags = gDBView ? gDBView.viewFlags : 0;
+  var viewType = gDBView ? gDBView.viewType : 0;
+
   var allMenuItem = document.getElementById("viewAllMessagesMenuItem");
   if (allMenuItem)
     allMenuItem.setAttribute("checked",  (viewFlags & nsMsgViewFlagsType.kUnreadOnly) == 0 && (viewType == nsMsgViewType.eShowAllThreads));
@@ -256,8 +256,7 @@ function InitViewMessagesMenu()
 
 function InitViewMessageViewMenu()
 {
-  var viewFlags = gDBView.viewFlags;
-  var viewType = gDBView.viewType;
+  var viewFlags = gDBView ? gDBView.viewFlags : 0;
 
 	var threadedMenuItem = document.getElementById("viewThreaded");
 	if (threadedMenuItem)
