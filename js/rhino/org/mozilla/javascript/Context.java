@@ -615,7 +615,8 @@ public final class Context {
                         ScriptableObject.defineClass(scope, c, sealed);
                     } else {
                         String s = "org.mozilla.javascript." + classes[i];
-                        new LazilyLoadedCtor(scope, classes[i+1], s, 0);
+                        new LazilyLoadedCtor(scope, classes[i+1], s, 
+                                             ScriptableObject.DONTENUM);
                     }
                 } catch (ClassNotFoundException e) {
                     continue;
