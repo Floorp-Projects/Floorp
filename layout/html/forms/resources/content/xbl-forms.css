@@ -117,6 +117,8 @@ button {
 input[type="button"],input[type="submit"],input[type="reset"] {
   cursor: default;
   -moz-box-sizing: border-box;
+  padding-top: 0px;
+  padding-bottom: 0px;
 }
 
 input[type="button"] {
