@@ -17,9 +17,14 @@ export HOSTDIR
 LOGFILE=${HOSTDIR}/output.log
 export LOGFILE
 touch ${LOGFILE}
-tail -f ${LOGFILE}  &
-TAILPID=$!
-trap "kill ${TAILPID}; exit" 2 
+
+if [ -z "O_CRON" -o "$O_CRON" != "ON" ]
+then
+	tail -f ${LOGFILE}  &
+	TAILPID=$!
+	trap "kill ${TAILPID}; exit" 2 
+fi
+
 for i in ${TESTS}
 do
 	echo "Running Tests for $i"
@@ -32,4 +37,7 @@ do
 	(cd ${CURDIR}/$i ; ./${i}.sh all file >> ${LOGFILE} 2>&1)
 #	cd ${CURDIR}/$i ; ./${i}.sh 
 done
-kill ${TAILPID}
+if [ -z "O_CRON" -o "$O_CRON" != "ON" ]
+then
+	kill ${TAILPID}
+fi
