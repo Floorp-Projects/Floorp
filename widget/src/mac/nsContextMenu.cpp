@@ -384,7 +384,7 @@ nsEventStatus nsContextMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
   location.h = mX;
   location.v = mY;
   UInt32 outUserSelectionType;
-  ConstStr255Param inHelpItemString;
+  Str255 inHelpItemString = "\p";
   ::ContextualMenuSelect (
                      mMacMenuHandle,
                      location,

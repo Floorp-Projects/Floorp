@@ -45,31 +45,6 @@
 struct nsPluginPort;
 
 
-// utility port setting class
-
-class StPortSetter
-{
-public:
-				StPortSetter(WindowPtr destWindowPort)
-				{
-					::GetPort(&mOldPort);
-#if TARGET_CARBON
-					::SetPortWindowPort(destWindowPort);
-#else
-					::SetPort(destWindowPort);
-#endif
-				}
-				
-				~StPortSetter()
-				{
-					::SetPort(mOldPort);
-				}
-				
-protected:
-	GrafPtr		mOldPort;
-};
-
-
 //-------------------------------------------------------------------------
 //
 // nsWindow
@@ -212,7 +187,9 @@ protected:
 	void					ScrollBits ( Rect & foo, PRInt32 inLeftDelta, PRInt32 inTopDelta ) ;
 
 protected:
+#if DEBUG
 	const char*				gInstanceClassName;
+#endif
 
 	nsIWidget*				mParent;
 	PRBool					mResizingChildren;
@@ -239,6 +216,14 @@ protected:
 
 	PRBool					mAcceptFocusOnClick;
 };
+
+
+#if DEBUG
+#define WIDGET_SET_CLASSNAME(n)   gInstanceClassName = (n)
+#else
+#define WIDGET_SET_CLASSNAME(n)   
+#endif
+
 
 //-------------------------------------------------------------------------
 //

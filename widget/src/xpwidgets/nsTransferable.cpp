@@ -100,6 +100,9 @@ DataStruct::SetData ( nsISupports* aData, PRUint32 aDataLen )
       printf("->>>>>>>>>>>>>> Wrote Clipboard to cache file\n");
       return;
     }
+    else
+	    printf("->>>>>>>>>>>>>> Writing Clipboard to cache file FAILED\n");
+	    
   } else {
     printf("->>>>>>>>>>>>>> Write Clipboard to memory\n");
   }
