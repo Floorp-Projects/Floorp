@@ -75,6 +75,7 @@ CPPSRCS		= \
 		nsSVGElement.cpp \
 		nsSVGElementFactory.cpp \
 		nsSVGEllipseElement.cpp \
+		nsSVGFeatures.cpp \
 		nsSVGForeignObjectElement.cpp \
 		nsSVGGElement.cpp \
 		nsSVGGenericStringValue.cpp \
