@@ -4460,7 +4460,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   }
 
   /* get install size required in temp for component Xpcom.  Sould be in Kilobytes */
-  GetPrivateProfileString("Xpcom", "Install Size", "", szBuf, MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Core", "Install Size", "", szBuf, MAX_BUF, szFileIniConfig);
   if(*szBuf != '\0')
     siCFXpcomFile.ullInstallSize = _atoi64(szBuf);
   else
