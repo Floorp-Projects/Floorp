@@ -584,6 +584,7 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
     PR_snprintf(mSpec, plen, "%s://%s%s%s", 
                 mProtocol, ((nsnull != mHost) ? mHost : ""), portBuffer,
                 mFile);
+
     if (mRef) {
       PL_strcat(mSpec, "#");
       PL_strcat(mSpec, mRef);
@@ -622,8 +623,8 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
     }
 
 
-#ifdef XP_UNIX
-    // Always leave the top level slash for absolute file paths under UNIX.
+#if defined(XP_UNIX) || defined (XP_MAC)
+    // Always leave the top level slash for absolute file paths under Mac and UNIX.
     // The code above sometimes results in stripping all of slashes
     // off. This only happens when a previously stripped url is asked to be
     // parsed again. Under Win32 this is not a problem since file urls begin
