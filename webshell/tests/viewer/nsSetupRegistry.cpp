@@ -139,7 +139,7 @@
 #endif
 #define VIEW_DLL   "libraptorview.so"
 #define WEB_DLL    "libraptorwebwidget.so"
-#define PLUGIN_DLL "raptorplugin.so"
+#define PLUGIN_DLL "libraptorplugin.so"
 #define PREF_DLL   "libpref.so"
 #define PARSER_DLL "libraptorhtmlpars.so"
 #define DOM_DLL    "libjsdom.so"
