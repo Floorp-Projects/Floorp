@@ -410,6 +410,7 @@ nsBidiPresUtils::InitLogicalArray(nsIPresContext* aPresContext,
 
     if ( (!display->IsBlockLevel() )
         && ( (nsLayoutAtoms::inlineFrame == frameType.get() )
+          || (nsLayoutAtoms::positionedInlineFrame == frameType.get() )
           || (nsLayoutAtoms::letterFrame == frameType.get() )
           || (nsLayoutAtoms::blockFrame == frameType.get() ) ) ) {
       frame->FirstChild(aPresContext, nsnull, &kid);
@@ -683,6 +684,7 @@ nsBidiPresUtils::RepositionInlineFrames(nsIPresContext*      aPresContext,
     frame->GetFrameType(getter_AddRefs(frameType) );
     if ( frameType.get()
         && ( (nsLayoutAtoms::inlineFrame == frameType.get() )
+          || (nsLayoutAtoms::positionedInlineFrame == frameType.get() )
           || (nsLayoutAtoms::letterFrame == frameType.get() )
           || (nsLayoutAtoms::blockFrame == frameType.get() ) ) ) {
       PRInt32 minX = 0x7FFFFFFF;
@@ -712,6 +714,7 @@ nsBidiPresUtils::RepositionContainerFrame(nsIPresContext* aPresContext,
     frame->GetFrameType(getter_AddRefs(frameType) );
     if ( (frameType.get() )
       && ( (nsLayoutAtoms::inlineFrame == frameType.get() )
+        || (nsLayoutAtoms::positionedInlineFrame == frameType.get() )
         || (nsLayoutAtoms::letterFrame == frameType.get() )
         || (nsLayoutAtoms::blockFrame == frameType.get() ) ) ) {
       RepositionContainerFrame(aPresContext, frame, minX, maxX);
