@@ -55,6 +55,7 @@ extern int  optind;
 #include "prlog.h"
 #include "prprf.h"
 #include "plhash.h"
+#include "pldhash.h"
 #include "nsTraceMalloc.h"
 #include "tmreader.h"
 

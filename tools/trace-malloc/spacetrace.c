@@ -2387,6 +2387,22 @@ htmlNotFound(STRequest * inRequest)
     htmlFooter(inRequest);
 }
 
+void
+htmlStartTable(STRequest* inRequest, const char* table_class, const char * const headers[], PRUint32 header_length)
+{
+        PRUint32 i;
+        
+        PR_fprintf(inRequest->mFD,
+                   "<table class=\"data %s\">\n"
+                   "  <tr class=\"row-header\">\n", table_class ? table_class : "");
+        
+        for (i=0; i< header_length; i++)
+            PR_fprintf(inRequest->mFD,
+                       "    <th>%s</th>\n", headers[i]);
+        
+        PR_fprintf(inRequest->mFD, "</tr>\n");
+}
+
 /*
 ** callsiteArrayFromCallsite
 **
@@ -2684,19 +2700,22 @@ displayTopAllocations(STRequest * inRequest, STRun * aRun, int aWantCallsite)
             PRUint32 loop = 0;
             STAllocation *current = NULL;
 
-            PR_fprintf(inRequest->mFD, "<table class=\"data\">\n");
-            PR_fprintf(inRequest->mFD, "<tr class=\"row-header\">\n");
-            PR_fprintf(inRequest->mFD, "<th>Rank</th>\n");
-            PR_fprintf(inRequest->mFD, "<th>Index</th>\n");
-            PR_fprintf(inRequest->mFD, "<th>Byte Size</th>\n");
-            PR_fprintf(inRequest->mFD, "<th>Lifespan Seconds</th>\n");
-            PR_fprintf(inRequest->mFD, "<th>Weight</th>\n");
-            PR_fprintf(inRequest->mFD, "<th>Heap Operation Seconds</th>\n");
-            if (0 != aWantCallsite) {
-                PR_fprintf(inRequest->mFD, "<th>Origin Callsite</th>\n");
-            }
-            PR_fprintf(inRequest->mFD, "</tr>\n");
+            static const char* const headers[] = {
+                "Rank", "Index", "Byte Size", "Lifespan (sec)",
+                "Weight", "Heap Op (sec)"
+            };
+            
+            static const char* const headers_callsite[] = {
+                "Rank", "Index", "Byte Size", "Lifespan (sec)",
+                "Weight", "Heap Op (sec)", "Origin Callsite"
+            };
 
+            if (aWantCallsite)
+                htmlStartTable(inRequest, NULL, headers_callsite,
+                               sizeof(headers_callsite) / sizeof(headers_callsite[0]));
+            else
+                htmlStartTable(inRequest, NULL, headers,
+                               sizeof(headers) / sizeof(headers[0]));                           
             /*
              ** Loop over the items, up to some limit or until the end.
              */
@@ -2805,16 +2824,13 @@ displayMemoryLeaks(STRequest * inRequest, STRun * aRun)
         PRUint32 displayed = 0;
         STAllocation *current = NULL;
 
-        PR_fprintf(inRequest->mFD, "<table class=\"data\">\n");
-        PR_fprintf(inRequest->mFD, "<tr class=\"row-header\">\n");
-        PR_fprintf(inRequest->mFD, "<th>Rank</th>\n");
-        PR_fprintf(inRequest->mFD, "<th>Index</th>\n");
-        PR_fprintf(inRequest->mFD, "<th>Byte Size</th>\n");
-        PR_fprintf(inRequest->mFD, "<th>Lifespan Seconds</th>\n");
-        PR_fprintf(inRequest->mFD, "<th>Weight</th>\n");
-        PR_fprintf(inRequest->mFD, "<th>Heap Operation Seconds</th>\n");
-        PR_fprintf(inRequest->mFD, "<th>Origin Callsite</th>\n");
-        PR_fprintf(inRequest->mFD, "</tr>\n");
+        static const char * headers[] = {
+            "Rank", "Index", "Byte Size", "Lifespan (sec)",
+            "Weight", "Heap Op (sec)", "Origin Callsite"
+        };
+        
+        htmlStartTable(inRequest, NULL, headers,
+                       sizeof(headers) / sizeof(headers[0]));
 
         /*
          ** Loop over all of the items, or until we've displayed enough.
@@ -2959,16 +2975,16 @@ displayCallsites(STRequest * inRequest, tmcallsite * aCallsite, int aFollow,
                     if (0 == headerDisplayed) {
                         headerDisplayed = __LINE__;
 
-                        PR_fprintf(inRequest->mFD,
-                                   "<table  class=\"data\">\n"
-                                   "<tr class=\"row-header\">\n"
-                                   "<th class=\"callsite\">Callsite</th>\n"
-                                   "<th><abbr title=\"Composite Size\">C. Size</abbr></th>\n"
-                                   "<th><abbr title=\"Composite Seconds\">C. Seconds</abbr></th>\n"
-                                   "<th><abbr title=\"Composite Weight\">C. Weight</abbr></th>\n"
-                                   "<th><abbr title=\"Heap Object Count\">H.O. Count</abbr></th>\n"
-                                   "<th><abbr title=\"Composite Heap Operation Seconds\">C.H. Operation (sec)</abbr></th>\n"
-                                   "</tr>\n");
+                        static const char* const headers[] = {
+                            "Callsite",
+                            "<abbr title=\"Composite Size\">C. Size</abbr>",
+                            "<abbr title=\"Composite Seconds\">C. Seconds</abbr>",
+                            "<abbr title=\"Composite Weight\">C. Weight</abbr>",
+                            "<abbr title=\"Heap Object Count\">H.O. Count</abbr>",
+                            "<abbr title=\"Composite Heap Operation Seconds\">C.H. Operation (sec)</abbr>"
+                        };
+                        htmlStartTable(inRequest, NULL, headers,
+                                       sizeof(headers)/sizeof(headers[0]));
                     }
 
                     /*
@@ -5726,7 +5742,7 @@ handleClient(void *inArg)
                  */
                 PR_fprintf(aFD, "HTTP/1.1 200 OK%s", crlf);
                 PR_fprintf(aFD, "Server: %s%s",
-                           "$Id: spacetrace.c,v 1.45 2003/06/17 21:10:48 alecf%flett.org Exp $",
+                           "$Id: spacetrace.c,v 1.46 2003/06/17 23:01:45 alecf%flett.org Exp $",
                            crlf);
                 PR_fprintf(aFD, "Content-type: ");
                 if (NULL != strstr(start, ".png")) {
