@@ -35,6 +35,7 @@ EXPORTS =				\
 	nsIFrameImageLoader.h		\
 	nsIPresContext.h		\
 	nsIPresShell.h			\
+	nsIRangeList.h		\
 	nsIReflowCommand.h		\
 	nsISelection.h			\
 	nsISpaceManager.h		\
