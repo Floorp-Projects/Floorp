@@ -24,7 +24,7 @@
 #include "nsINetlibURL.h" /* this should be temporary until Network N2 project lands */
 #include "nsFileSpec.h"
 
-class nsMailboxUrl : public nsIMailboxUrl, public nsINetlibURL, nsIMsgUriUrl
+class nsMailboxUrl : public nsIMailboxUrl, public nsINetlibURL, public nsIMsgUriUrl
 {
 public:
     // from nsIURL:
