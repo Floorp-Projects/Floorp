@@ -2681,8 +2681,7 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             }
 
             /* Ok, bad undefined property reference: whine about it. */
-            str = js_DecompileValueGenerator(cx, JS_FALSE, ID_TO_VALUE(id),
-                                             NULL);
+            str = js_DecompileValueGenerator(cx, 0, ID_TO_VALUE(id), NULL);
             if (!str ||
                 !JS_ReportErrorFlagsAndNumber(cx,
                                               JSREPORT_WARNING|JSREPORT_STRICT,
