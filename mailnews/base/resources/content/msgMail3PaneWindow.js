@@ -385,6 +385,7 @@ function loadStartFolder(initialUri)
 {
     var defaultServer = null;
     var startFolderUri = initialUri;
+    var isLoginAtStartUpEnabled = false;
 
     //First get default account
     try
@@ -397,23 +398,30 @@ function loadStartFolder(initialUri)
             var rootFolder = defaultServer.RootFolder;
             var rootMsgFolder = rootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
 
-            //now find Inbox
-            var outNumFolders = new Object();
-            var inboxFolder = rootMsgFolder.getFoldersWithFlag(0x1000, 1, outNumFolders); 
-            if(!inboxFolder) return;
+            var folderResource = rootMsgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+            startFolderUri = folderResource.Value;
 
-            var resource = inboxFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-            startFolderUri = resource.Value;
+            // Get the user pref to see if the login at startup is enabled for default account
+            isLoginAtStartUpEnabled = defaultServer.loginAtStartUp;
 
-            //first, let's see if it's already in the dom.  This will make life easier.
-            //We need to make sure content is built by this time
+            // Get Inbox only if when we have to login 
+            if (isLoginAtStartUpEnabled) 
+            {
+                //now find Inbox
+                var outNumFolders = new Object();
+                var inboxFolder = rootMsgFolder.getFoldersWithFlag(0x1000, 1, outNumFolders); 
+                if(!inboxFolder) return;
+
+                var resource = inboxFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+                startFolderUri = resource.Value;
+            }
         }
         msgNavigationService.EnsureDocumentIsLoaded(document);
 
         var startFolder = document.getElementById(startFolderUri);
 
         //if it's not here we will have to make sure it's open.
-        if(!startFolder && startFolderUri && defaultServer)
+        if(!startFolder && startFolderUri && isLoginAtStartUpEnabled)
         {
             // Opens the twisty for the default account 
             OpenTwistyForServer(defaultServer);
@@ -424,7 +432,7 @@ function loadStartFolder(initialUri)
         ChangeSelection(folderTree, startFolder);
                 
         // only do this on startup, when we pass in null
-        if (!initialUri && defaultServer)
+        if (!initialUri && isLoginAtStartUpEnabled)
         {
             // Start downloading messages for the INBOX of the default server
             TriggerGetMessages(defaultServer);
