@@ -5806,7 +5806,11 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
 NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool &aCanPaste)
 {
   aCanPaste = PR_FALSE;
-  
+
+  // can't paste if readonly
+  if (!IsModifiable())
+    return NS_OK;
+
   nsresult rv;
   NS_WITH_SERVICE(nsIClipboard, clipboard, kCClipboardCID, &rv);
   if (NS_FAILED(rv)) return rv;
