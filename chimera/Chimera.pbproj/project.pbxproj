@@ -206,6 +206,8 @@
 				089C165CFE840E0CC02AAC07,
 				F52CE65C02BFA8B701026D5D,
 				F51B70B4026EC8A601A80166,
+				F5F190BB02D1F81A01026D5D,
+				F5F190BE02D217C201026D5D,
 			);
 			isa = PBXGroup;
 			name = Resources;
@@ -529,6 +531,8 @@
 				F50EA34A02BAAAB701000103,
 				F50EA34B02BAAAB701000103,
 				F52CE65D02BFA8B701026D5D,
+				F5F190BC02D1F81A01026D5D,
+				F5F190BF02D217C201026D5D,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
@@ -4647,6 +4651,8 @@
 				F50EA35102BAB1E401000103,
 				F50EA35202BAB1E401000103,
 				F52CE65E02BFA8B701026D5D,
+				F5F190BD02D1F81A01026D5D,
+				F5F190C002D217C201026D5D,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
@@ -6665,6 +6671,40 @@
 			name = libappcomps.dylib;
 			path = ../xpfe/components/build/libappcomps.dylib;
 			refType = 2;
+		};
+		F5F190BB02D1F81A01026D5D = {
+			isa = PBXFileReference;
+			path = ToolbarDefaults.plist;
+			refType = 4;
+		};
+		F5F190BC02D1F81A01026D5D = {
+			fileRef = F5F190BB02D1F81A01026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F190BD02D1F81A01026D5D = {
+			fileRef = F5F190BB02D1F81A01026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F190BE02D217C201026D5D = {
+			isa = PBXFileReference;
+			path = WebsiteDefaults.strings;
+			refType = 4;
+		};
+		F5F190BF02D217C201026D5D = {
+			fileRef = F5F190BE02D217C201026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F190C002D217C201026D5D = {
+			fileRef = F5F190BE02D217C201026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
 		};
 		F5F24BDB022B88EF010001CA = {
 			buildActionMask = 2147483647;
