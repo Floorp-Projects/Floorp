@@ -105,8 +105,9 @@ class OptTransformer extends NodeTransformer {
 
     protected void visitCall(Node node, ScriptOrFnNode tree) {
         int argCount = detectDirectCall(node, tree);
-        if (inFunction && (argCount == 0))
-            ((OptFunctionNode)tree).setContainsCalls(argCount);
+        if (inFunction && (argCount == 0)) {
+            ((OptFunctionNode)tree).itsContainsCalls0 = true;
+        }
 
         super.visitCall(node, tree);
     }
@@ -138,8 +139,6 @@ class OptTransformer extends NodeTransformer {
 
             if (argCount == N) {
                 callNode.putProp(Node.DIRECTCALL_PROP, theFunction);
-                ((OptFunctionNode)containingTree)
-                                        .addDirectCallTarget(theFunction);
                 theFunction.setIsTargetOfDirectCall();
             }
         }

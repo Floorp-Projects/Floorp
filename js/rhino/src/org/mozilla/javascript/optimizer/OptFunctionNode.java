@@ -82,19 +82,6 @@ class OptFunctionNode extends FunctionNode {
         return itsIsTargetOfDirectCall;
     }
 
-    void addDirectCallTarget(FunctionNode target) {
-        if (itsDirectCallTargets == null)
-            itsDirectCallTargets = new ObjArray();
-        for (int i = 0; i < itsDirectCallTargets.size(); i++)   // OPT !!
-            if (((FunctionNode)itsDirectCallTargets.get(i)) == target)
-                return;
-        itsDirectCallTargets.add(target);
-    }
-
-    ObjArray getDirectCallTargets() {
-        return itsDirectCallTargets;
-    }
-
     void setIsTargetOfDirectCall() {
         itsIsTargetOfDirectCall = true;
     }
@@ -105,19 +92,6 @@ class OptFunctionNode extends FunctionNode {
 
     boolean getParameterNumberContext() {
         return itsParameterNumberContext;
-    }
-
-    boolean containsCalls(int argCount) {
-        if ((argCount < itsContainsCallsCount.length) && (argCount >= 0))
-            return itsContainsCallsCount[argCount];
-        else
-            return itsContainsCalls;
-    }
-
-    void setContainsCalls(int argCount) {
-        if (argCount < itsContainsCallsCount.length)
-            itsContainsCallsCount[argCount] = true;
-        itsContainsCalls = true;
     }
 
     int getVarCount() {
@@ -161,8 +135,7 @@ class OptFunctionNode extends FunctionNode {
     private OptLocalVariable[] optVars;
     private String itsClassName;
     private boolean itsIsTargetOfDirectCall;
-    private boolean itsContainsCalls;
-    private boolean[] itsContainsCallsCount = new boolean[4];
     private boolean itsParameterNumberContext;
-    private ObjArray itsDirectCallTargets;
+    boolean itsContainsCalls0;
+    boolean itsContainsCalls1;
 }
