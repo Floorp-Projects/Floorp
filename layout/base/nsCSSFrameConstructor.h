@@ -790,12 +790,6 @@ protected:
 
   PRBool AreAllKidsInline(nsIFrame* aFrameList);
 
-  PRBool IsFrameSpecial(nsIFrameManager* aFrameManager, nsIFrame* aFrame);
-
-  PRBool IsFrameSpecial(nsIPresContext* aPresContext, nsIFrame* aFrame);
-
-  void SetFrameIsSpecial(nsIFrameManager* aFrameManager, nsIFrame* aFrame);
-
   PRBool WipeContainingBlock(nsIPresContext* aPresContext,
                              nsFrameConstructorState& aState,
                              nsIContent* blockContent,

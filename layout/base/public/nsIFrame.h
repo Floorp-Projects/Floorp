@@ -174,6 +174,11 @@ typedef PRUint32 nsFrameState;
 // If this bit is set, the frame was created from anonymous content.
 #define NS_FRAME_INDEPENDENT_SELECTION 0x00004000
 
+// If this bit is set, the frame is "special" (lame term, I know),
+// which means that it is part of the mangled frame hierarchy that
+// results when an inline has been split because of a nested block.
+#define NS_FRAME_IS_SPECIAL 0x00008000
+
 // The low 16 bits of the frame state word are reserved by this API.
 #define NS_FRAME_RESERVED 0x0000FFFF
 
