@@ -187,11 +187,6 @@ PRBool nsRegionMotif :: ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRI
 
 }
 
-PRBool nsRegionMotif :: ForEachRect(nsRectInRegionFunc *func, void *closure)
-{
-  return PR_FALSE;
-}
-
 
 NS_IMETHODIMP nsRegionMotif :: GetRects(nsRegionRectSet **aRects)
 {
