@@ -57,6 +57,7 @@ CPPSRCS = \
 	nsPKIParamBlock.cpp \
         nsASN1Tree.cpp \
         nsNSSDialogHelper.cpp \
+	nsFormSigningDialog.cpp \
 	$(NULL)
 
 REQUIRES	= nspr \

@@ -27,10 +27,12 @@
 #include "nsNSSDialogs.h"
 #include "nsPKIParamBlock.h"
 #include "nsASN1Tree.h"
+#include "nsFormSigningDialog.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNSSDialogs, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPKIParamBlock, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNSSASN1Tree)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormSigningDialog)
 
 #define NSS_DIALOGS_DESCRIPTION "PSM Dialog Impl"
 
@@ -103,6 +105,12 @@ static const nsModuleComponentInfo components[] =
     NS_PKIPARAMBLOCK_CID,
     NS_PKIPARAMBLOCK_CONTRACTID,
     nsPKIParamBlockConstructor
+  },
+
+  { "Form Signing Dialog", 
+    NS_FORMSIGNINGDIALOG_CID,
+    NS_FORMSIGNINGDIALOG_CONTRACTID,
+    nsFormSigningDialogConstructor
   }
 };
 

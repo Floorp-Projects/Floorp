@@ -50,7 +50,8 @@ interface nsIDOMCrypto : nsISupports
                                                    in boolean doForcedBackup);
   DOMString                 popChallengeResponse(in DOMString challenge);
   DOMString                 random(in long numBytes);
-  DOMString                 signText(/* ... */);
+  DOMString                 signText(in DOMString stringToSign,
+                                     in DOMString caOption /* ... */);
   void                      alert(in DOMString message);
   void                      logout();
   void                      disableRightClick();
