@@ -687,7 +687,7 @@ LocationImpl::Reload(JSContext *cx, jsval *argv, PRUint32 argc)
 
   if (nsnull != mWebShell) {
 #ifdef NECKO
-    result = mWebShell->Reload(PR_FALSE, PR_FALSE);
+    result = mWebShell->Reload(nsIChannel::LOAD_NORMAL);
 #else
     result = mWebShell->Reload(nsURLReload);
 #endif
