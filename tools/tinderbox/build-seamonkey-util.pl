@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.271 $ ';
+$::UtilsVersion = '$Revision: 1.272 $ ';
 
 package TinderUtils;
 
@@ -1115,8 +1115,8 @@ sub get_profile_dir {
     } elsif ($Settings::OS eq "Darwin") {
         # This is ifdef'd in nsXREDirProvider.cpp
         if ($Settings::ProductName eq 'Thunderbird') {
-            $profile_dir = "$ENV{HOME}/Library/Thunderbird/Profiles/$Settings::MozProfileName";
-            ($profile_dir) = <$profile_dir*>;
+            $profile_dir = "$ENV{HOME}/Library/Thunderbird/Profiles";
+            ($profile_dir) = <$profile_dir/*.$Settings::MozProfileName>;
         } else {
             $profile_dir = "$ENV{HOME}/Library/Application Support/$Settings::ProductName/Profiles/$Settings::MozProfileName";
             if ($Settings::VendorName) {
@@ -1594,7 +1594,8 @@ sub run_all_tests {
     #
     unlink("$binary_dir/components/compreg.dat") or warn "$binary_dir/components/compreg.dat not removed\n";
     if($Settings::RegxpcomTest) {
-        AliveTest("regxpcom", $build_dir, ["$binary_dir/regxpcom"],
+#        AliveTest("regxpcom", $build_dir, ["$binary_dir/regxpcom"],
+        AliveTest("regxpcom", $build_dir, [$binary, "-register"],
                   $Settings::RegxpcomTestTimeout);
     }
 
@@ -1655,7 +1656,7 @@ sub run_all_tests {
       # Find the prefs file, remember we have that random string now
       # e.g. <build-dir>/.mozilla/default/uldx6pyb.slt/prefs.js
       # so File::Path::find will find the prefs.js file.
-      #
+      ##
       ($pref_file, $profile_dir) = find_pref_file($profiledir);
 
       #XXX this is ugly and hacky 
