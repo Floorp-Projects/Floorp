@@ -1299,6 +1299,7 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
 
   // Now pass on absolute url to the click handler
   if (aClick) {
+    nsresult proceed = NS_OK;
     // Check that this page is allowed to load this URI.
     NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
@@ -1306,8 +1307,11 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
     if (NS_SUCCEEDED(rv)) 
       rv = NS_NewURI(getter_AddRefs(absURI), absURLSpec, aBaseURL);
     if (NS_SUCCEEDED(rv)) 
-      rv = securityManager->CheckLoadURI(aBaseURL, absURI);
-    if (NS_SUCCEEDED(rv)) 
+      proceed = securityManager->CheckLoadURI(aBaseURL, absURI);
+
+    // Only pass off the click event if the script security manager
+    // says it's ok.
+    if (NS_SUCCEEDED(proceed)) 
       handler->OnLinkClick(mContent, aVerb, absURLSpec.GetUnicode(), aTargetSpec.GetUnicode());
   }
   else {
