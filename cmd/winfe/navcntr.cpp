@@ -633,10 +633,6 @@ void CSelector::AddViewContext(const char* pTitle, CView* pView, CRDFContentView
 }
 
 
-
-
-
-
 void CSelector::PopulatePane()
 {
 	// Construct the notification struct used by HT
@@ -700,7 +696,9 @@ void CSelector::ConstructView(HT_View theView)
     }
     theParent->GetClientRect(&rClient);
     
-	CRDFOutlinerParent* newParent = new CRDFOutlinerParent(m_Pane, theView);
+	// Can't use CSelector's m_Pane, because it might not have been initialized yet.  Calls
+	// HT_GetPane instead.
+	CRDFOutlinerParent* newParent = new CRDFOutlinerParent(HT_GetPane(theView), theView);
 	CRDFContentView* newView = new CRDFContentView(newParent);
 	
 	// Create the windows
