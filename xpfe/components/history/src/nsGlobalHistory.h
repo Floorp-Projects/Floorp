@@ -39,7 +39,6 @@
 #ifndef nsglobalhistory__h____
 #define nsglobalhistory__h____
 
-#include "nsMdbPtr.h"
 #include "mdb.h"
 #include "nsIGlobalHistory.h"
 #include "nsIBrowserHistory.h"
