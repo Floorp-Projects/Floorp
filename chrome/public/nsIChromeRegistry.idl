@@ -107,6 +107,4 @@ interface nsIChromeRegistry : nsISupports
 #define NS_CHROMEREGISTRY_CID \
 { 0xd8c7d8a2, 0xe84c, 0x11d2, { 0xbf, 0x87, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
 
-extern nsresult
-NS_NewChromeRegistry(nsIChromeRegistry* *aResult);
 %}

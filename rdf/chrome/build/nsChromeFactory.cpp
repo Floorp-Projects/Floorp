@@ -30,23 +30,10 @@
 #include "nscore.h"
 #include "rdf.h"
 #include "nsChromeProtocolHandler.h"
+#include "nsChromeRegistry.h"
 
-static NS_IMETHODIMP
-NS_ConstructChromeRegistry(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    nsresult rv;
-    NS_ASSERTION(aOuter == nsnull, "no aggregation");
-    nsIChromeRegistry* chromeRegistry;
-    rv = NS_NewChromeRegistry(&chromeRegistry);
-    if (NS_FAILED(rv)) {
-        NS_ERROR("Unable to construct chrome registry");
-        return rv;
-    }
-    rv = chromeRegistry->QueryInterface(aIID, aResult);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to find correct interface");
-    NS_RELEASE(chromeRegistry);
-    return rv;
-}
+
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsChromeRegistry, Init)
 
 // The list of components we register
 static nsModuleComponentInfo components[] = 
@@ -54,7 +41,7 @@ static nsModuleComponentInfo components[] =
     { "Chrome Registry", 
       NS_CHROMEREGISTRY_CID,
       "@mozilla.org/chrome/chrome-registry;1", 
-      NS_ConstructChromeRegistry
+      nsChromeRegistryConstructor
     },
 
     { "Chrome Protocol Handler", 
