@@ -185,11 +185,23 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
   minWidth = 0;
   minHeight = 0;
 
+  mLineHeight = CalcLineHeight(aPresContext, frame);
+
   // Some frame types are not constrained by width/height style
   // attributes. Return if the frame is one of those types.
   switch (frameType) {
   case eCSSFrameType_Unknown:
+    return;
+
   case eCSSFrameType_Inline:
+    if (mLineHeight >= 0) {
+#if 0
+      minHeight = maxSize.height = mLineHeight;
+#else
+      minHeight = mLineHeight;
+#endif
+      heightConstraint = eHTMLFrameConstraint_FixedContent;
+    }
     return;
 
   default:
@@ -288,6 +300,74 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
 
   // XXX this is probably a good place to calculate auto margins too
   // (section 10.3/10.6 of the spec)
+}
+
+nscoord
+nsHTMLReflowState::CalcLineHeight(nsIPresContext& aPresContext,
+                                  nsIFrame* aFrame)
+{
+  nscoord lineHeight = -1;
+  nsIStyleContext* sc;
+  aFrame->GetStyleContext(sc);
+  const nsStyleFont* elementFont = nsnull;
+  if (nsnull != sc) {
+    elementFont = (const nsStyleFont*)sc->GetStyleData(eStyleStruct_Font);
+    for (;;) {
+      const nsStyleText* text = (const nsStyleText*)
+        sc->GetStyleData(eStyleStruct_Text);
+      if (nsnull != text) {
+        nsStyleUnit unit = text->mLineHeight.GetUnit();
+#ifdef NOISY_VERTICAL_ALIGN
+        printf("  styleUnit=%d\n", unit);
+#endif
+        if (eStyleUnit_Enumerated == unit) {
+          // Normal value; we use 1.0 for normal
+          // XXX could come from somewhere else
+          break;
+        } else if (eStyleUnit_Factor == unit) {
+          if (nsnull != elementFont) {
+            // CSS2 spec says that the number is inherited, not the
+            // computed value. Therefore use the font size of the
+            // element times the inherited number.
+            nscoord size = elementFont->mFont.size;
+            lineHeight = nscoord(size * text->mLineHeight.GetFactorValue());
+          }
+          break;
+        }
+        else if (eStyleUnit_Coord == unit) {
+          lineHeight = text->mLineHeight.GetCoordValue();
+          break;
+        }
+        else if (eStyleUnit_Percent == unit) {
+          // XXX This could arguably be the font-metrics actual height
+          // instead since the spec says use the computed height.
+          const nsStyleFont* font = (const nsStyleFont*)
+            sc->GetStyleData(eStyleStruct_Font);
+          nscoord size = font->mFont.size;
+          lineHeight = nscoord(size * text->mLineHeight.GetPercentValue());
+          break;
+        }
+        else if (eStyleUnit_Inherit == unit) {
+          nsIStyleContext* parentSC;
+          parentSC = sc->GetParent();
+          if (nsnull == parentSC) {
+            // Note: Break before releasing to avoid double-releasing sc
+            break;
+          }
+          NS_RELEASE(sc);
+          sc = parentSC;
+        }
+        else {
+          // other units are not part of the spec so don't bother
+          // looping
+          break;
+        }
+      }
+    }
+    NS_RELEASE(sc);
+  }
+
+  return lineHeight;
 }
 
 void
