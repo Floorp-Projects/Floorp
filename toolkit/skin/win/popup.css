@@ -31,8 +31,12 @@
 
 menupopup,
 popup {
-  border: 1px solid ThreeDShadow;
-  padding: 2px;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDLightShadow ThreeDHighlight;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: ThreeDLightShadow ThreeDHighlight;
+  padding: 1px;
   min-width: 1px;
   background-color: Menu;
 }
@@ -58,7 +62,7 @@ tooltip[titletip="true"] {
   margin: -2px 0px 0px -3px;
   max-width: none;
 }
-
+  
 /* rules for popups associated with menulists */
 
 menulist > menupopup,

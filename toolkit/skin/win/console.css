@@ -31,7 +31,7 @@
   background-color: -moz-Field;
   color: -moz-FieldText;
 }
-
+ 
 /* ::::: console rows ::::: */
 
 .console-row {
@@ -58,7 +58,7 @@
   font-size: larger;
 }
 
-.console-dots,
+.console-dots, 
 .console-caret {
   height: 9px;
 }
@@ -76,7 +76,7 @@
 
 .console-row[type="message"] {
   font-family: monospace;
-}
+} 
 
 /* ..... selected state ..... */
 
@@ -86,25 +86,22 @@
 
 .console-row-code[selected="true"],
 .console-row-content[selected="true"] > .console-row-file > .console-error-source > .text-link {
-  color: inherit !important;
+  color: inherit !important;  
 }
 
 /* ::::: icons ::::: */
 
 .console-row[type="error"],
-.console-row[type="exception"],
-toolbarbutton[observes="Console:modeErrors"] {
-  list-style-image: url("chrome://global/skin/icons/Error.png");
+.console-row[type="exception"] {
+  list-style-image: url("chrome://global/skin/icons/alert-error.gif");
 }
 
-.console-row[type="warning"],
-toolbarbutton[observes="Console:modeWarnings"] {
-  list-style-image: url("chrome://global/skin/icons/Warning.png");
+.console-row[type="warning"] {
+  list-style-image: url("chrome://global/skin/icons/alert-exclam.gif");
 }
 
-.console-row[type="message"],
-toolbarbutton[observes="Console:modeMessages"] {
-  list-style-image: url("chrome://global/skin/icons/Message.png");
+.console-row[type="message"] {
+  list-style-image: url("chrome://global/skin/icons/alert-message.gif");
 }
 
 /* ::::: toolbars ::::: */

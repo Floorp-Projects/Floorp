@@ -52,19 +52,19 @@ menulist > menupopup,
 window,
 page,
 dialog,
-wizard {
+wizard { 
   background-color: -moz-Dialog;
   color: -moz-DialogText;
   font: message-box;
 }
 
 /* deprecated */
-window.dialog {
+window.dialog { 
   padding: 8px 10px 10px 8px;
 }
 
-[wait-cursor] {
-  cursor: wait !important;
+[wait-cursor] { 
+  cursor: wait !important; 
 }
 
 /* ::::: alert icons :::::*/
@@ -78,19 +78,19 @@ window.dialog {
 }
 
 .message-icon {
-  list-style-image: url("chrome://global/skin/icons/Message.png");
+  list-style-image: url("chrome://global/skin/icons/alert-message.gif");
 }
 
 .alert-icon {
-  list-style-image: url("chrome://global/skin/icons/Warning.png");
+  list-style-image: url("chrome://global/skin/icons/alert-exclam.gif");
 }
 
 .error-icon {
-  list-style-image: url("chrome://global/skin/icons/Error.png");
+  list-style-image: url("chrome://global/skin/icons/alert-error.gif");
 }
 
 .question-icon {
-  list-style-image: url("chrome://global/skin/icons/Question.png");
+  list-style-image: url("chrome://global/skin/icons/alert-question.gif");
 }
 
 /* ::::: iframe ::::: */
@@ -140,11 +140,10 @@ statusbarpanel {
 
 /* XXXBlake yeah, shoot me -- these don't belong here.  I'll move them later. */
 
-sidebarheader {
+sidebarheader {  
   height: 25px;
   background-color: -moz-Dialog;
   -moz-appearance: toolbox;
-  border-right: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDShadow;
   border-top: 1px solid ThreeDHighlight;
 }
