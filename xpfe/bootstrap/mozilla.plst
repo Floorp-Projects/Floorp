@@ -139,19 +139,19 @@
 	<key>CFBundleExecutable</key>
 	<string>Mozilla</string>
 	<key>CFBundleGetInfoString</key>
-	<string>1.2b, © 1998-2002 The Mozilla Organization</string>
+	<string>1.3a, © 1998-2002 The Mozilla Organization</string>
 	<key>CFBundleIconFile</key>
 	<string>128</string>
 	<key>CFBundleIdentifier</key>
 	<string>org.mozilla.Mozilla</string>
 	<key>CFBundleLongVersionString</key>
-	<string>1.2b, ©1998-2002 The Mozilla Organization</string>
+	<string>1.3a, ©1998-2002 The Mozilla Organization</string>
 	<key>CFBundleName</key>
 	<string>Mozilla</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.2b</string>
+	<string>1.3a</string>
 	<key>CFBundleSignature</key>
 	<string>MOZZ</string>
 	<key>CFBundleURLTypes</key>
@@ -167,7 +167,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>1.2b</string>
+	<string>1.3a</string>
 	<key>LSRequiresCarbon</key>
 	<true/>
 	<key>NSAppleScriptEnabled</key>
