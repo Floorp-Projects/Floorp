@@ -234,12 +234,16 @@ public:
    */
   virtual ~nsDecoderSupport();
 
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength) = 0;
-
   //--------------------------------------------------------------------
   // Interface nsIUnicodeDecoder [declaration]
 
+  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength, 
+      PRUnichar * aDest, PRInt32 * aDestLength);
+  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
+      PRInt32 * aDestLength) = 0;
+  NS_IMETHOD Reset();
+
+  // XXX deprecated methods - to go away when interface change.
   NS_IMETHOD Convert(PRUnichar * aDest, PRInt32 aDestOffset, 
       PRInt32 * aDestLength, const char * aSrc, PRInt32 aSrcOffset, 
       PRInt32 * aSrcLength);
@@ -247,7 +251,6 @@ public:
       PRInt32 * aDestLength);
   NS_IMETHOD Length(const char * aSrc, PRInt32 aSrcOffset, 
       PRInt32 aSrcLength, PRInt32 * aDestLength);
-  NS_IMETHOD Reset();
   NS_IMETHOD SetInputErrorBehavior(PRInt32 aBehavior);
 };
 
@@ -268,7 +271,7 @@ public:
    * Class constructor.
    */
   nsTableDecoderSupport(uShiftTable * aShiftTable, 
-      uMappingTable  * aMappingTable);
+      uMappingTable * aMappingTable);
 
   /**
    * Class destructor.
@@ -280,6 +283,45 @@ protected:
   nsIUnicodeDecodeHelper    * mHelper;      // decoder helper object
   uShiftTable               * mShiftTable;
   uMappingTable             * mMappingTable;
+
+  //--------------------------------------------------------------------
+  // Subclassing of nsDecoderSupport class [declaration]
+
+  NS_IMETHOD ConvertNoBuff(const char * aSrc, PRInt32 * aSrcLength, 
+      PRUnichar * aDest, PRInt32 * aDestLength);
+};
+
+//----------------------------------------------------------------------
+// Class nsTablesDecoderSupport [declaration]
+
+/**
+ * Support class for a multi-table-driven Unicode decoder.
+ * 
+ * @created         24/Mar/1999
+ * @author  Catalin Rotaru [CATA]
+ */
+class nsTablesDecoderSupport : public nsDecoderSupport
+{
+public:
+
+  /**
+   * Class constructor.
+   */
+  nsTablesDecoderSupport(PRInt32 aTableCount, uRange * aRangeArray, 
+      uShiftTable ** aShiftTable, uMappingTable ** aMappingTable);
+
+  /**
+   * Class destructor.
+   */
+  virtual ~nsTablesDecoderSupport();
+
+protected:
+
+  nsIUnicodeDecodeHelper    * mHelper;      // decoder helper object
+  PRInt32                   mTableCount;
+  uRange                    * mRangeArray;
+  uShiftTable               ** mShiftTable;
+  uMappingTable             ** mMappingTable;
 
   //--------------------------------------------------------------------
   // Subclassing of nsDecoderSupport class [declaration]

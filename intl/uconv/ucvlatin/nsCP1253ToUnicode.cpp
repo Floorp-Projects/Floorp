@@ -17,34 +17,27 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#include "pratom.h"
 #include "nsCP1253ToUnicode.h"
-#include "nsUCvLatinDll.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 gMappingTable[] = {
+static PRUint16 g_CP1253MappingTable[] = {
 #include "cp1253.ut"
 };
 
-static PRBool gFastTableInit = PR_FALSE;
-static PRUnichar gFastTable[256];
+static PRInt16 g_CP1253ShiftTable[] =  {
+  1, u1ByteCharset ,
+  ShiftCell(0,0,0,0,0,0,0,0)
+};
 
 //----------------------------------------------------------------------
 // Class nsCP1253ToUnicode [implementation]
 
-NS_IMPL_ISUPPORTS(nsCP1253ToUnicode, kIUnicodeDecoderIID);
-
 nsCP1253ToUnicode::nsCP1253ToUnicode() 
+: nsTableDecoderSupport((uShiftTable*) &g_CP1253ShiftTable, 
+                        (uMappingTable*) &g_CP1253MappingTable)
 {
-  NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
-}
-
-nsCP1253ToUnicode::~nsCP1253ToUnicode() 
-{
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 
 nsresult nsCP1253ToUnicode::CreateInstance(nsISupports ** aResult) 
@@ -53,22 +46,14 @@ nsresult nsCP1253ToUnicode::CreateInstance(nsISupports ** aResult)
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
-uMappingTable* nsCP1253ToUnicode::GetMappingTable() 
-{
-  return (uMappingTable*) &gMappingTable;
-}
+//----------------------------------------------------------------------
+// Subclassing of nsTableDecoderSupport class [implementation]
 
-PRUnichar * nsCP1253ToUnicode::GetFastTable() 
+NS_IMETHODIMP nsCP1253ToUnicode::GetMaxLength(const char * aSrc, 
+                                              PRInt32 aSrcLength, 
+                                              PRInt32 * aDestLength)
 {
-  return gFastTable;
-}
-
-PRBool nsCP1253ToUnicode::GetFastTableInitState() 
-{
-  return gFastTableInit;
-}
-
-void nsCP1253ToUnicode::SetFastTableInit() 
-{
-  gFastTableInit = PR_TRUE;
+  // we are a single byte to Unicode converter, so...
+  *aDestLength = aSrcLength;
+  return NS_OK_UDEC_EXACTLENGTH;
 }
