@@ -1413,6 +1413,11 @@ HTMLAttributesImpl::GetMappedAttributeStyleRules(nsISupportsArray* aArray) const
 NS_IMETHODIMP
 HTMLAttributesImpl::Reset(void)
 {
+  // Release atoms first, then the table if it was malloc'd
+  PRInt32 i, n = mAttrCount;
+  for (i = 0; i < n; i++) {
+    NS_IF_RELEASE(mAttrNames[i]);
+  }
   if (mAttrNames != mNameBuffer) {
     delete [] mAttrNames;
     mAttrNames = mNameBuffer;
@@ -1421,7 +1426,7 @@ HTMLAttributesImpl::Reset(void)
   mAttrCount = 0;
 
   if (mFirstUnmapped) {
-    delete mFirstUnmapped;
+    HTMLAttribute::DeleteHTMLAttributes(mFirstUnmapped);
   }
 
   if (mMapped) {
