@@ -18,7 +18,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!ENTITY newDirectoryTitle.label           "New Directory">
+<!ENTITY newDirectoryTitle.label           "Directory Server Properties">
 <!ENTITY directoryName.label               "Name: ">
 <!ENTITY directoryName.accesskey           "n">
 <!ENTITY directoryHostname.label           "Hostname: ">
