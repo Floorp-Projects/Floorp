@@ -418,6 +418,7 @@
   'g.description',
   'sel.name',
   'sel.description',
+  'cloned_bug_id'
 ],
 
 'bug/create/create-guided.html.tmpl' => [

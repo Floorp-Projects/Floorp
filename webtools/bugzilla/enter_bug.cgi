@@ -21,6 +21,7 @@
 #                 Dave Miller <justdave@syndicomm.com>
 #                 Joe Robins <jmrobins@tgix.com>
 #                 Gervase Markham <gerv@gerv.net>
+#                 Shane H. W. Travis <travis@sedsystems.ca>
 
 ##############################################################################
 #
@@ -38,6 +39,7 @@ use lib qw(.);
 
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::Bug;
 require "CGI.pl";
 
 use vars qw(
@@ -59,6 +61,9 @@ use vars qw(
 # If we're using bug groups to restrict bug entry, we need to know who the 
 # user is right from the start. 
 Bugzilla->login(LOGIN_REQUIRED) if AnyEntryGroups();
+
+my $cloned_bug;
+my $cloned_bug_id;
 
 my $cgi = Bugzilla->cgi;
 
@@ -133,6 +138,8 @@ if (!defined $product) {
 
         $vars->{'target'} = "enter_bug.cgi";
         $vars->{'format'} = $cgi->param('format');
+
+        $vars->{'cloned_bug_id'} = $cgi->param('cloned_bug_id');
         
         print $cgi->header();
         $template->process("global/choose-product.html.tmpl", $vars)
@@ -271,6 +278,16 @@ sub pickos {
 
 Bugzilla->login(LOGIN_REQUIRED) if (!(AnyEntryGroups()));
 
+# If a user is trying to clone a bug
+#   Check that the user has authorization to view the parent bug
+#   Create an instance of Bug that holds the info from the parent
+$cloned_bug_id = $cgi->param('cloned_bug_id');
+
+if ($cloned_bug_id) {
+    ValidateBugID($cloned_bug_id);
+    $cloned_bug = new Bugzilla::Bug($cloned_bug_id, $userid);
+}
+
 # We need to check and make sure
 # that the user has permission to enter a bug against this product.
 if(!CanEnterProduct($product))
@@ -313,46 +330,106 @@ while (MoreSQLData()) {
 
 my %default;
 
-$vars->{'component_'} = \@components;
-$default{'component_'} = formvalue('component');
+$vars->{'product'}               = $product;
+$vars->{'component_'}            = \@components;
 
-$vars->{'assigned_to'} = formvalue('assigned_to');
-$vars->{'assigned_to_disabled'} = !UserInGroup('editbugs');
+$vars->{'priority'}              = \@legal_priority;
+$vars->{'bug_severity'}          = \@legal_severity;
+$vars->{'rep_platform'}          = \@legal_platform;
+$vars->{'op_sys'}                = \@legal_opsys; 
 
-$vars->{'cc'} = formvalue('cc');
-$vars->{'cc_disabled'} = 0;
+$vars->{'use_keywords'}          = 1 if (@::legal_keywords);
 
-$vars->{'product'} = $product;
-$vars->{'bug_file_loc'} = formvalue('bug_file_loc', "http://");
-$vars->{'short_desc'} = formvalue('short_desc');
-$vars->{'comment'} = formvalue('comment');
+$vars->{'assigned_to'}           = formvalue('assigned_to');
+$vars->{'assigned_to_disabled'}  = !UserInGroup('editbugs');
+$vars->{'cc_disabled'}           = 0;
 
-$vars->{'priority'} = \@legal_priority;
-$default{'priority'} = formvalue('priority', Param('defaultpriority'));
+$vars->{'cloned_bug_id'}         = $cloned_bug_id;
 
-$vars->{'bug_severity'} = \@legal_severity;
-$default{'bug_severity'} = formvalue('bug_severity', Param('defaultseverity'));
+if ($cloned_bug_id) {
 
-$vars->{'rep_platform'} = \@legal_platform;
-$default{'rep_platform'} = pickplatform();
+    $default{'component_'}    = $cloned_bug->{'component'};
+    $default{'priority'}      = $cloned_bug->{'priority'};
+    $default{'bug_severity'}  = $cloned_bug->{'bug_severity'};
+    $default{'rep_platform'}  = $cloned_bug->{'rep_platform'};
+    $default{'op_sys'}        = $cloned_bug->{'op_sys'};
 
-$vars->{'op_sys'} = \@legal_opsys; 
-$default{'op_sys'} = pickos();
+    $vars->{'short_desc'}     = $cloned_bug->{'short_desc'};
+    $vars->{'bug_file_loc'}   = $cloned_bug->{'bug_file_loc'};
+    $vars->{'keywords'}       = $cloned_bug->{'keywords'};
+    $vars->{'dependson'}      = $cloned_bug_id;
+    $vars->{'blocked'}        = "";
 
-$vars->{'keywords'} = formvalue('keywords');
-$vars->{'dependson'} = formvalue('dependson');
-$vars->{'blocked'} = formvalue('blocked');
+    if (exists $cloned_bug->{'cc'}) {
+        $vars->{'cc'}         = join (" ", @{$cloned_bug->{'cc'}});
+    } else {
+        $vars->{'cc'}         = formvalue('cc');
+    }
 
-$vars->{'commentprivacy'} = formvalue('commentprivacy');
+# We need to ensure that we respect the 'insider' status of
+# the first comment, if it has one. Either way, make a note
+# that this bug was cloned from another bug.
 
-# Use the version specified in the URL, if one is supplied. If not,
-# then use the cookie-specified value. (Posting a bug sets a cookie
-# for the current version.) If no URL or cookie version, the default
-# version is the last one in the list (hopefully the latest one).
+    $cloned_bug->longdescs();
+    my $isprivate             = $cloned_bug->{'longdescs'}->[0]->{'isprivate'};
+
+    $vars->{'comment'}        = "";
+    $vars->{'commentprivacy'} = 0;
+
+    if ( !($isprivate) ||
+         ( ( Param("insidergroup") ) && 
+           ( UserInGroup(Param("insidergroup")) ) ) 
+       ) {
+        $vars->{'comment'}        = $cloned_bug->{'longdescs'}->[0]->{'body'};
+        $vars->{'commentprivacy'} = $isprivate;
+    }
+
+# Ensure that the groupset information is set up for later use.
+    $cloned_bug->groups();
+
+} # end of cloned bug entry form
+
+else {
+
+    $default{'component_'}    = formvalue('component');
+    $default{'priority'}      = formvalue('priority', Param('defaultpriority'));
+    $default{'bug_severity'}  = formvalue('bug_severity', Param('defaultseverity'));
+    $default{'rep_platform'}  = pickplatform();
+    $default{'op_sys'}        = pickos();
+
+    $vars->{'short_desc'}     = formvalue('short_desc');
+    $vars->{'bug_file_loc'}   = formvalue('bug_file_loc', "http://");
+    $vars->{'keywords'}       = formvalue('keywords');
+    $vars->{'dependson'}      = formvalue('dependson');
+    $vars->{'blocked'}        = formvalue('blocked');
+
+    $vars->{'cc'}             = formvalue('cc');
+
+    $vars->{'comment'}        = formvalue('comment');
+    $vars->{'commentprivacy'} = formvalue('commentprivacy');
+
+} # end of normal/bookmarked entry form
+
+
+# IF this is a cloned bug,
+# AND the clone's product is the same as the parent's
+#   THEN use the version from the parent bug
+# ELSE IF a version is supplied in the URL
+#   THEN use it
+# ELSE IF there is a version in the cookie
+#   THEN use it (Posting a bug sets a cookie for the current version.)
+# ELSE
+#   The default version is the last one in the list (which, it is
+#   hoped, will be the most recent one).
+#
 # Eventually maybe each product should have a "current version"
 # parameter.
 $vars->{'version'} = $::versions{$product} || [];
-if (formvalue('version')) {
+
+if ( ($cloned_bug_id) &&
+     ("$product" eq "$cloned_bug->{'product'}" ) ) {
+    $default{'version'} = $cloned_bug->{'version'};
+} elsif (formvalue('version')) {
     $default{'version'} = formvalue('version');
 } elsif (defined $cgi->cookie("VERSION-$product") &&
     lsearch($vars->{'version'}, $cgi->cookie("VERSION-$product")) != -1) {
@@ -414,11 +491,23 @@ while (MoreSQLData()) {
              );
     my $check;
 
-    # If this is the group for this product, make it checked.
-    if(formvalue("maketemplate") ne "") 
-    {
-        # If this is a bookmarked template, then we only want to set the
-        # bit for those bits set in the template.        
+    # If this is a cloned bug, 
+    # AND the product for this bug is the same as for the original
+    #   THEN set a group's checkbox if the original also had it on
+    # ELSE IF this is a bookmarked template
+    #   THEN set a group's checkbox if was set in the bookmark
+    # ELSE
+    #   set a groups's checkbox based on the group control map
+    #
+    if ( ($cloned_bug_id) &&
+         ("$product" eq "$cloned_bug->{'product'}" ) ) {
+        foreach my $i (0..(@{$cloned_bug->{'groups'}}-1) ) {
+            if ($cloned_bug->{'groups'}->[$i]->{'bit'} == $id) {
+                $check = $cloned_bug->{'groups'}->[$i]->{'ison'};
+            }
+        }
+    }
+    elsif(formvalue("maketemplate") ne "") {
         $check = formvalue("bit-$id", 0);
     }
     else {
@@ -441,8 +530,6 @@ while (MoreSQLData()) {
 $vars->{'group'} = \@groups;
 
 $vars->{'default'} = \%default;
-
-$vars->{'use_keywords'} = 1 if (@::legal_keywords);
 
 my $format = 
   GetFormat("bug/create/create", scalar $cgi->param('format'), 

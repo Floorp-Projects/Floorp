@@ -252,7 +252,13 @@ function set_assign_to() {
   <tr><td align="right" valign="top"><strong>Description:</strong></td>
     <td colspan="3">
       <textarea wrap="hard" name="comment" rows="10" cols="80">
-        [% comment FILTER html %]</textarea>
+        [% IF cloned_bug_id %]
++++ This [% terms.bug %] was initially created as a clone of [% terms.Bug %] #[% cloned_bug_id %] +++
+
+
+        [% END %]
+        [% comment FILTER html %]
+      </textarea>
       <br>
     </td>
   </tr>
