@@ -39,18 +39,39 @@
 #define VERIFY_READ     1
 #endif
 
+#ifdef STANDALONE_REGISTRY
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
 #include <errno.h>
 
-#ifdef SUNOS4
+#if defined(XP_MAC)
+  #include <Errors.h>
+#endif
+
+#if defined(SUNOS4)
   #include <unistd.h>  /* for SEEK_SET */
 #endif /* SUNOS4 */
 
+#else
+
+#include "prerror.h"
+
+#endif /*STANDALONE_REGISTRY*/
+
 #include "reg.h"
 #include "NSReg.h"
+
+#if !defined(STANDALONE_REGISTRY) && defined(SEEK_SET)
+	/* Undo the damage caused by xp_core.h, which is included by NSReg.h */
+	#undef SEEK_SET
+	#undef SEEK_CUR
+	#undef SEEK_END
+	#define SEEK_SET PR_SEEK_SET
+	#define SEEK_CUR PR_SEEK_CUR
+	#define SEEK_END PR_SEEK_END
+#endif
 
 #if defined(XP_UNIX)
 #ifndef MAX_PATH
@@ -300,8 +321,7 @@ static REGERR nr_UnlockRange(FILEHANDLE fh, REGOFF offset, int32 len);
 static int32  nr_GetFileLength(FILEHANDLE fh);
 /* -------------------------------------------------------------------- */
 
-
-
+#ifdef STANDALONE_REGISTRY
 static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
 {
 	XP_ASSERT( path != NULL );
@@ -313,10 +333,18 @@ static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
 	{
 		switch (errno)
 		{
+#ifdef XP_MAC
+		case fnfErr:
+#else
 		case ENOENT:	/* file not found */
+#endif
 			return REGERR_NOFILE;
 
+#ifdef XP_MAC
+		case opWrErr:
+#else
 		case EACCES:	/* file in use */
+#endif
             /* DVNOTE: should we try read only? */
     	    (*fh) = vr_fileOpen(path, XP_FILE_READ_BIN);
 	        if ( VALID_FILEHANDLE(*fh) )
@@ -334,7 +362,39 @@ static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
 	return REGERR_OK;
 
 }	/* OpenFile */
+#else
+static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
+{
+	PR_ASSERT( path != NULL );
+    PR_ASSERT( fh != NULL );
 
+	/* Open the file for exclusive random read/write */
+	(*fh) = PR_Open(path, PR_RDWR, 00700);
+	if ( !VALID_FILEHANDLE(*fh) )
+	{
+		switch (PR_GetError())
+		{
+		case PR_FILE_NOT_FOUND_ERROR:	/* file not found */
+			return REGERR_NOFILE;
+
+		case PR_FILE_IS_BUSY_ERROR:	/* file in use */
+		case PR_FILE_IS_LOCKED_ERROR:
+		case PR_ILLEGAL_ACCESS_ERROR:
+            /* DVNOTE: should we try read only? */
+			(*fh) = PR_Open(path, PR_RDONLY, 00700);
+	        if ( VALID_FILEHANDLE(*fh) )
+                return REGERR_READONLY;
+            else
+                return REGERR_FAIL;
+		default:
+			return REGERR_FAIL;
+		}
+	}
+
+	return REGERR_OK;
+
+}	/* OpenFile */
+#endif
 
 
 static REGERR nr_CloseFile(FILEHANDLE *fh)
@@ -379,9 +439,15 @@ static REGERR nr_ReadFile(FILEHANDLE fh, REGOFF offset, int32 len, void *buffer)
         readlen = XP_FileRead(buffer, len, fh );
         /* PR_READ() returns an unreliable length, check EOF separately */
 	    if (readlen < 0) {
+#if !defined(STANDALONE_REGISTRY) || !defined(XP_MAC)
+	#if defined(STANDALONE_REGISTRY)
     		if (errno == EBADF)	/* bad file handle, not open for read, etc. */
+	#else
+   			if (PR_GetError() == PR_BAD_DESCRIPTOR_ERROR)
+	#endif
 			    err = REGERR_FAIL;
 		    else
+#endif
     			err = REGERR_BADREAD;
     	}
         else if (readlen < len) {
@@ -3485,10 +3551,6 @@ extern XP_Bool bGlobalRegistry;
 VR_INTERFACE(void) NR_StartupRegistry(void)
 {
     HREG reg;
-    RKEY key;
-    REGERR  err;
-    REGENUM state;
-    XP_Bool removeFromList;
 
     if (bRegStarted)
         return;

@@ -20,12 +20,17 @@
  * into a stand-alone library for use with our installers
  */
 
+#ifdef STANDALONE_REGISTRY
+
 #include <stdio.h>
 #include <string.h>
 
-#ifndef STANDALONE_REGISTRY
+#else
+
 #include "prtypes.h"
-#endif
+#include "plstr.h"
+
+#endif /*STANDALONE_REGISTRY*/
 
 #include "vr_stubs.h"
 
@@ -47,6 +52,7 @@ extern char* globalRegName;
 #define INCL_DOS
 #include <os2.h>
 
+#ifdef STANDALONE_REGISTRY
 extern XP_File vr_fileOpen (const char *name, const char * mode)
 {
     XP_File fh = NULL;
@@ -61,6 +67,7 @@ extern XP_File vr_fileOpen (const char *name, const char * mode)
 
     return fh;
 }
+#endif /*STANDALONE_REGISTRY*/
 
 extern void vr_findGlobalRegName ()
 {
@@ -92,6 +99,7 @@ extern void vr_findGlobalRegName ()
 #include "windows.h"
 #define PATHLEN 260
 
+#ifdef STANDALONE_REGISTRY
 extern XP_File vr_fileOpen (const char *name, const char * mode)
 {
     XP_File fh = NULL;
@@ -106,6 +114,7 @@ extern XP_File vr_fileOpen (const char *name, const char * mode)
 
     return fh;
 }
+#endif /*STANDALONE_REGISTRY*/
 
 extern void vr_findGlobalRegName ()
 {
@@ -148,13 +157,18 @@ int FAR PASCAL _export WEP(int nParam)
 #include <Files.h>
 #include "FullPath.h"
 
-extern XP_File vr_fileOpen (const char *name, const char * mode)
+#ifdef STANDALONE_REGISTRY
+extern XP_File vr_fileOpen(const char *name, const char * mode)
 {
     XP_File fh = NULL;
     struct stat st;
 	OSErr	anErr;
 	FSSpec	newFSSpec;
 	
+#ifdef STANDALONE_REGISTRY
+	errno = 0; // reset errno (only if we're using stdio)
+#endif
+
 	anErr = FSpLocationFromFullPath(strlen(name), name, &newFSSpec);
 	
 	if (anErr == -43)
@@ -178,38 +192,60 @@ extern XP_File vr_fileOpen (const char *name, const char * mode)
             fh = fopen( name, XP_FILE_WRITE_BIN );
      	}
 	}
+#ifdef STANDALONE_REGISTRY
+	if (anErr != noErr)
+		errno = anErr;
+#endif
     return fh;
 }
+#endif /*STANDALONE_REGISTRY*/
 
-extern void vr_findGlobalRegName ()
+extern void vr_findGlobalRegName()
 {
     FSSpec	regSpec;
     OSErr	err;
     short	foundVRefNum;
     long	foundDirID;
-    short	pathLen;
-    Handle	thePath;
     int     bCreate = 0;
-	Ptr		finalPath;
 	
 	err = FindFolder(kOnSystemDisk,'pref', false, &foundVRefNum, &foundDirID);
 
-	if (!err) {
-
+	if (!err)
+	{
 		err = FSMakeFSSpec(foundVRefNum, foundDirID, "\pNetscape Registry", &regSpec);
 
-		if (err == -43) { /* if file doesn't exist */
+		if (err == -43) /* if file doesn't exist */
+		{
 			err = FSpCreate(&regSpec, 'MOSS', 'REGS', smSystemScript);
             bCreate = 1;
 		}
 
-		if (err == noErr) {
+		if (err == noErr)
+		{
+		    Handle thePath;
+		    short pathLen;
 			err = FSpGetFullPath(&regSpec, &pathLen, &thePath);
-			
-			finalPath = NewPtrClear(pathLen+1);
-			BlockMoveData(*thePath, finalPath, pathLen);
-			globalRegName = XP_STRDUP(finalPath);			
-            DisposePtr(finalPath);
+			if (err == noErr && thePath)
+			{
+			#ifdef STANDALONE_REGISTRY
+				globalRegName = XP_STRDUP(*(char**)thePath);
+			#else
+				/* Since we're now using NSPR, this HAS to be a unix path! */
+				const char* src;
+				char* dst;
+				globalRegName = (char*)XP_ALLOC(pathLen + 2);
+				src = *(char**)thePath;
+				dst = globalRegName;
+				*dst++ = '/';
+				while (pathLen--)
+				{
+					char c = *src++;
+					*dst++ = (c == ':') ? '/' : c;
+				}
+				*dst = '\0';
+			#endif
+			}
+			DisposeHandle(thePath);
 		}
 	}
 }
@@ -225,13 +261,15 @@ extern int nr_RenameFile(char *from, char *to)
 	FSSpec			destDirSpec;
 	FSSpec			beforeRenameSpec;
 	
-	errno = 0; // reset errno
-	
+#ifdef STANDALONE_REGISTRY
+	errno = 0; // reset errno (only if we're using stdio)
+#endif
+
 	if (from && to) {
-    	err = FSpLocationFromFullPath(strlen(from), from, &fromSpec);
+    	err = FSpLocationFromFullPath(XP_STRLEN(from), from, &fromSpec);
     	if (err != noErr) goto exit;
     	
-    	err = FSpLocationFromFullPath(strlen(to), to, &toSpec);
+    	err = FSpLocationFromFullPath(XP_STRLEN(to), to, &toSpec);
         if (err != noErr && err != fnfErr) goto exit;
     	
     	// make an FSSpec for the destination directory
@@ -251,13 +289,15 @@ extern int nr_RenameFile(char *from, char *to)
 	}
 		
 	exit:
+#ifdef STANDALONE_REGISTRY
 	if (err != noErr)
 		errno = err;
+#endif
 	return (err == noErr ? 0 : -1);
 }
 
 
-#if 1
+#if 0
 /* Uncomment the following for older Mac build environments
  * that don't support these functions
  */
@@ -343,16 +383,18 @@ int strncasecmp(const char *str1, const char *str2, int length)
  * ------------------------------------------------------------------
  */
 
-/*allow OS/2 to use this main to test...*/
-#if defined(XP_UNIX) || defined(XP_OS2)
+/*allow OS/2 and Macintosh to use this main to test...*/
+#if (defined(STANDALONE_REGISTRY) && defined(XP_MAC)) || defined(XP_UNIX) || defined(XP_OS2)
 
 #include <stdlib.h>
+
 #ifdef XP_OS2
 #include <io.h>
 #define W_OK 0x02 /*evil hack from the docs...*/
 #else
 #include <unistd.h>
 #endif
+
 #include "NSReg.h"
 #include "VerReg.h"
 
@@ -360,7 +402,7 @@ char *TheRegistry = "registry";
 char *Flist;
 
 /* WARNING: build hackery */
-#ifdef STANDALONE_REGISTRY
+#if defined(STANDALONE_REGISTRY) && !defined(XP_MAC)
 long BUILDNUM =
 #include "../../../build/build_number"
 ;
@@ -374,6 +416,7 @@ int main(int argc, char *argv[]);
 
 #define DEF_REG "/.netscape/registry"
 
+#ifdef STANDALONE_REGISTRY
 extern XP_File vr_fileOpen (const char *name, const char * mode)
 {
     XP_File fh = NULL;
@@ -388,6 +431,7 @@ extern XP_File vr_fileOpen (const char *name, const char * mode)
 
     return fh;
 }
+#endif /*STANDALONE_REGISTRY*/
 
 extern void vr_findGlobalRegName ()
 {
@@ -409,13 +453,12 @@ extern void vr_findGlobalRegName ()
     XP_FREEIF(def);
 #else
     globalRegName = TheRegistry;
-#endif
+#endif /*STANDALONE_REGISTRY*/
 }
 
-#endif
+#endif /*XP_UNIX*/
 
-
-#ifdef STANDALONE_REGISTRY
+#if defined(STANDALONE_REGISTRY) && (defined(XP_UNIX) || defined(XP_OS2) || defined(XP_MAC))
 
 int main(int argc, char *argv[])
 {
@@ -448,7 +491,8 @@ int main(int argc, char *argv[])
 
 
     strcpy(buff, TheRegistry);
-    if ( p = strrchr( buff, '/' ))
+    p = strrchr( buff, '/' );
+    if ( p )
     {
        char pwd[1024];
 
@@ -468,11 +512,12 @@ int main(int argc, char *argv[])
     VR_SetRegDirectory(buff);
 
 
+#ifndef XP_MAC
 	if ( -1 == (access( TheRegistry, W_OK )) ) {
         sprintf(ver,"4.50.0.%ld",BUILDNUM);
 		VR_CreateRegistry("Communicator", buff, ver);
     }
-
+#endif
 
 	if ( !(fh = fopen( Flist, "r" )) )
 	{
@@ -504,8 +549,6 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-#endif /* STANDALONE_REGISTRY */
+#endif /* STANDALONE_REGISTRY && (XP_UNIX || XP_OS2 || XP_MAC) */
 
 #endif /* XP_UNIX || XP_OS2 */
-
-

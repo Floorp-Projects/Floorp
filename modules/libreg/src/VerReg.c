@@ -37,10 +37,12 @@
 #include <io.h>
 #endif
 
+#ifdef STANDALONE_REGISTRY
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#endif /*STANDALONE_REGISTRY*/
 
 #include "reg.h"
 #include "NSReg.h"
@@ -135,8 +137,10 @@ static REGERR vr_Init(void)
 
     REGERR  err = REGERR_OK;
     char    *regname = "";
+#if defined(XP_UNIX) || defined(STANDALONE_REGISTRY)
     char    curstr[MAXREGNAMELEN];
     RKEY    navKey;
+#endif
 #ifdef XP_UNIX
     char    *regbuf = NULL;
 #endif
@@ -663,7 +667,9 @@ VR_INTERFACE(REGERR) VR_CreateRegistry( char *installation, char *programPath, c
 {
 	FILEHANDLE  fh;
 	REGERR      err;
+#ifndef STANDALONE_REGISTRY
 	XP_StatStruct st;
+#endif
     char *      regname = "";
 #ifdef XP_UNIX
     char *      regbuf = NULL;
@@ -974,7 +980,9 @@ VR_INTERFACE(REGERR) VR_InRegistry(char *component_path)
 	REGERR err;
 	RKEY rootkey;
 	RKEY key;
+#if !defined(STANDALONE_REGISTRY) && defined(XP_UNIX)
     HREG hreg;
+#endif
 
 	err = vr_Init();
 	if (err != REGERR_OK)
@@ -995,8 +1003,10 @@ VR_INTERFACE(REGERR) VR_ValidateComponent(char *component_path)
 	REGERR err;
 	RKEY rootkey;
 	RKEY key;
-    HREG hreg;
 	char path[MAXREGPATHLEN];
+#if !defined(STANDALONE_REGISTRY) && defined(XP_UNIX)
+    HREG hreg;
+#endif
 
 
 #ifdef USE_CHECKSUM

@@ -88,6 +88,9 @@ sub BuildMozilla()
 		BuildProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",								"NSStdLib$D.shlb");
 		MakeAlias(":mozilla:lib:mac:NSStdLib:NSStdLib$D.shlb", "$dist_dir");
 		
+		BuildProject(":mozilla:modules:libreg:macbuild:libreg.mcp",							"libreg$D.shlb");
+		MakeAlias(":mozilla:modules:libreg:macbuild:libreg$D.shlb", "$dist_dir");
+		
 		BuildProject(":mozilla:xpcom:macbuild:xpcomPPC.mcp",								"xpcom$D.shlb");
 		MakeAlias(":mozilla:xpcom:macbuild:xpcom$D.shlb", "$dist_dir");
 		
