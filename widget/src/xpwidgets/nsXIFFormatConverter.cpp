@@ -42,7 +42,7 @@
 #include "nsWidgetsCID.h"
 #include "nsXIFFormatConverter.h"
 #include "nsPrimitiveHelpers.h"
-
+#include "nsIDocumentEncoder.h"
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_IID);  // don't panic. NS_PARSER_IID just has the wrong name.
 
@@ -314,7 +314,9 @@ nsXIFFormatConverter::ConvertFromXIFToText(const nsAutoString & aFromStr, nsCAut
   
   // convert it!
   nsCOMPtr<nsIHTMLContentSink> sink;
-  rv = NS_New_HTMLToTXT_SinkStream(getter_AddRefs(sink),outStream,&platformCharset);
+  rv = NS_New_HTMLToTXT_SinkStream(getter_AddRefs(sink),outStream,&platformCharset,
+                                   nsIDocumentEncoder::OutputSelectionOnly
+                                    | nsIDocumentEncoder::OutputAbsoluteLinks);
   if ( sink ) {
     parser->SetContentSink(sink);
 	
@@ -353,7 +355,9 @@ nsXIFFormatConverter::ConvertFromXIFToUnicode(const nsAutoString & aFromStr, nsA
 
   // convert it!
   nsCOMPtr<nsIHTMLContentSink> sink;
-  rv = NS_New_HTMLToTXT_SinkStream(getter_AddRefs(sink),&aToStr);
+  rv = NS_New_HTMLToTXT_SinkStream(getter_AddRefs(sink), &aToStr, 0,
+                                   nsIDocumentEncoder::OutputSelectionOnly
+                                    | nsIDocumentEncoder::OutputAbsoluteLinks);
   if ( sink ) {
     parser->SetContentSink(sink);
 	
@@ -386,7 +390,9 @@ nsXIFFormatConverter::ConvertFromXIFToHTML(const nsAutoString & aFromStr, nsAuto
     return rv;
 
   nsCOMPtr<nsIHTMLContentSink> sink;
-  rv = NS_New_HTML_ContentSinkStream(getter_AddRefs(sink),&aToStr,0);
+  rv = NS_New_HTML_ContentSinkStream(getter_AddRefs(sink), &aToStr,
+                                     nsIDocumentEncoder::OutputSelectionOnly
+                                      | nsIDocumentEncoder::OutputAbsoluteLinks);
   if ( sink ) {
     parser->SetContentSink(sink);
 	

@@ -47,6 +47,7 @@
 #include "nsIOutputStream.h"
 #include "nsFileStream.h"
 
+#include "nsNetUtil.h"           // for NS_MakeAbsoluteURI
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIContentSinkIID, NS_ICONTENT_SINK_IID);
@@ -130,6 +131,7 @@ nsHTMLContentSinkStream::nsHTMLContentSinkStream()
   mBuffer = nsnull;
   mBufferSize = 0;
   mBufferLength = 0;
+  mFlags = 0;
 }
 
 NS_IMETHODIMP
@@ -151,6 +153,7 @@ nsHTMLContentSinkStream::Initialize(nsIOutputStream* aOutStream,
                ((aFlags & nsIDocumentEncoder::OutputNoDoctype) ? PR_FALSE
                                                                : PR_TRUE);
   mMaxColumn = 72;
+  mFlags = aFlags;
 
   mStream = aOutStream;
   mString = aOutString;
@@ -292,10 +295,12 @@ void nsHTMLContentSinkStream::Write(const nsString& aString)
     return;
 
   // If an encoder is being used then convert first convert the input string
+  // Ideally, we should do this only for the stream case,
+  // and encode entities (using nsIEntityEncoder) but not charsets
+  // in the string case.
   if (mUnicodeEncoder)
     EncodeToBuffer(aString);
 
-  // No need to re-encode strings, since they're going from UCS2 to UCS2
   if (mString)
   {
     if (mUnicodeEncoder)
@@ -310,7 +315,7 @@ void nsHTMLContentSinkStream::Write(const nsString& aString)
   // Now handle the stream case:
   nsOutputStream out(mStream);
 
-  // If an encoder is being used then convert first convert the input string
+  // Test again in case there was a problem initializing the unicode encoder:
   if (mUnicodeEncoder)
   {
     out.write(mBuffer, mBufferLength);
@@ -376,7 +381,8 @@ nsHTMLContentSinkStream::~nsHTMLContentSinkStream()
  * @param 
  * @return
  */
-void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode) {
+void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode)
+{
   int theCount=aNode.GetAttributeCount();
   if(theCount) {
     int i=0;
@@ -413,12 +419,29 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode) {
       EnsureBufferSize(key.Length());
       key.ToCString(mBuffer,mBufferSize);
 
-
         // send to ouput " [KEY]="
       Write(' ');
       Write(mBuffer);
       mColPos += 1 + strlen(mBuffer) + 1;
-      
+
+      // Make all links absolute when converting only the selection:
+      if ((mFlags & nsIDocumentEncoder::OutputAbsoluteLinks)
+          && (key.Equals("href", PR_TRUE) || key.Equals("src", PR_TRUE)
+              // Would be nice to handle OBJECT and APPLET tags,
+              // but that gets more complicated since we have to
+              // search the tag list for CODEBASE as well.
+              // For now, just leave them relative.
+            ))
+      {
+        if (mURI)
+        {
+          nsAutoString absURI;
+          if (NS_SUCCEEDED(NS_MakeAbsoluteURI(value, mURI, absURI))
+              && !absURI.IsEmpty())
+            value = absURI;
+        }
+      }
+
       if (value.Length() > 0)
       {
         Write(char(kEqual));
@@ -1120,22 +1143,39 @@ nsHTMLContentSinkStream::AddComment(const nsIParserNode& aNode){
   * @return PR_TRUE if successful. 
   */     
 NS_IMETHODIMP
-nsHTMLContentSinkStream::OpenContainer(const nsIParserNode& aNode){
-  
-  const nsString&   name = aNode.GetText();
-  if (name.Equals("document_info"))
+nsHTMLContentSinkStream::OpenContainer(const nsIParserNode& aNode)
+{
+  // Look for XIF document_info tag.  This has a type of userdefined;
+  // GetText() is slow, so don't call it unless we see the right node type.
+  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
+  if (tag == eHTMLTag_userdefined)
   {
-    PRInt32 count=aNode.GetAttributeCount();
-    for(PRInt32 i=0;i<count;i++)
+    nsAutoString name = aNode.GetText();
+    if (name.Equals("document_info"))
     {
-      const nsString& key=aNode.GetKeyAt(i);
-      const nsString& value=aNode.GetValueAt(i);
-
-      if (key.Equals("charset"))
+      PRInt32 count=aNode.GetAttributeCount();
+      for(PRInt32 i=0;i<count;i++)
       {
-        if (mCharsetOverride.Length() == 0)
-          mCharsetOverride.Assign(value);
-        InitEncoder();
+        const nsString& key=aNode.GetKeyAt(i);
+
+        if (key.Equals("charset"))
+        {
+          const nsString& value=aNode.GetValueAt(i);
+          if (mCharsetOverride.IsEmpty())
+            mCharsetOverride.Assign(value);
+          InitEncoder();
+        }
+        else if (key.Equals("uri"))
+        {
+          nsAutoString uristring (aNode.GetValueAt(i));
+
+          // strip double quotes from beginning and end
+          uristring.Trim("\"", PR_TRUE, PR_TRUE);
+
+          // And make it into a URI:
+          if (!uristring.IsEmpty())
+            NS_NewURI(getter_AddRefs(mURI), uristring);
+        }
       }
     }
   }

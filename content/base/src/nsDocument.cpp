@@ -83,6 +83,8 @@
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
 
+#include "nsNetUtil.h"     // for NS_MakeAbsoluteURI
+
 #include "nsIScriptSecurityManager.h"
 #include "nsIAggregatePrincipal.h"
 
@@ -2851,10 +2853,18 @@ nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
     converter.AddStartTag("section"); 
     converter.AddStartTag("section_head");
 
-    nsString charset = mCharacterSet;
-
     converter.BeginStartTag("document_info");
-    converter.AddAttribute(nsString("charset"),charset);
+    converter.AddAttribute(nsAutoString("charset"),mCharacterSet);
+    nsCOMPtr<nsIURI> uri (getter_AddRefs(GetDocumentURL()));
+    if (uri)
+    {
+      char* spec = 0;
+      if (NS_SUCCEEDED(uri->GetSpec(&spec)) && spec)
+      {
+        converter.AddAttribute(nsAutoString("uri"), spec);
+        Recycle(spec);
+      }
+    }
     converter.FinishStartTag("document_info",PR_TRUE,PR_TRUE);
 
     converter.AddEndTag("section_head");
