@@ -7,10 +7,10 @@
 ########################################################
 
 # Functions with the following prefixes will not be listed.
-# DISPT_GetDispatchTable & DISPT_NumDispatchPoints are exported
+# DISPT_InitializeTable & DISPT_LookupSymbol are exported
 # using linker facilities and should always be filtered.
-@unwanted_prefixes = ("__","Java_","java_","awt_","sun_","PR_", "LL_",
-                      "DISPT_GetDispatchTable", "DISPT_NumDispatchPoints");
+@unwanted_prefixes = ("__","Java_","java_","awt_","sun_","PR_", "PL_", "LL_",
+                      "DISPT_InitializeTable", "DISPT_LookupSymbol");
 
 @objfiles = ();
 @symbols = ();
