@@ -1,7 +1,7 @@
 <!ENTITY category.label "Category">
 
 <!--LOCALIZATION NOTE : FILE Lists preferences categories that appear on the left of the preferences dialog -->
-<!ENTITY fonts.label "Fonts &amp; Colors">
+<!ENTITY fonts.label "Fonts and Colors">
 <!ENTITY themes.label "Themes and Extensions">
 <!--LOCALIZATION NOTE (navigator.label): DONT_TRANSLATE -->
 <!ENTITY navigator.label "General">
