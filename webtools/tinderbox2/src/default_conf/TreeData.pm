@@ -29,8 +29,8 @@
 # issue to work out.
 
 
-# $Revision: 1.14 $ 
-# $Date: 2002/05/03 03:27:30 $ 
+# $Revision: 1.15 $ 
+# $Date: 2002/05/03 04:11:12 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TreeData.pm,v $ 
 # $Name:  $ 
@@ -241,28 +241,28 @@ foreach $tree (keys %VC_TREE) {
                          "html_color" => "white",
                          "hdml_char" => "O",
                          "order" => 1,
-                         "description" => "All Checkins allowed",
-                     },
-
-		     'Metered' => {
-                         "html_color" => '#eeff00', # a yellow
-                         "hdml_char" => "R",
-                         "order" => 2,
-                         "description" => "Checkins only by approval of Current Sherriff",
-                     },
-
-		     'Restricted' => {
-                         "html_color" => "#e7e7e7", # a light grey
-                         "hdml_char" => "R",
-                         "order" => 2,
-                         "description" => "Checkins only by approval of Drivers",
+                         "description" => "All allowed",
                      },
 
 		     'Closed' => {
                          "html_color" => "silver",
                          "hdml_char" => "C",
+                         "order" => 2,
+                         "description" => "Require approval of QA",
+                     },
+
+		     'Restricted' => {
+                         "html_color" => "#e7e7e7", # a light grey
+                         "hdml_char" => "R",
                          "order" => 3,
-                         "description" => "Checkins only by approval of QA",
+                         "description" => "Require approval of Drivers",
+                     },
+
+		     'Metered' => {
+                         "html_color" => '#eeff00', # a yellow
+                         "hdml_char" => "R",
+                         "order" => 4,
+                         "description" => "Require Current Sherriff approval",
                      },
 
 		    );
