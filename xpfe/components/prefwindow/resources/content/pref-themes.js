@@ -4,6 +4,7 @@
 
 const DEBUG_USE_PROFILE = true;
 
+
 try 
   {
     var chromeRegistry = Components.classes["component://netscape/chrome/chrome-registry"].getService();
@@ -17,6 +18,17 @@ catch(e)
 function selectSkin()
   {
     var tree = document.getElementById( "skinsTree" );
+    
+    var commonDialogs = nsJSComponentManager.getService("component://netscape/appshell/commonDialogs", 
+                                                        "nsICommonDialogs");
+    // XXX XXX BAD BAD BAD BAD !! XXX XXX
+    // we need to come up with a real solution to the losing content in editor problem
+    // rather than just hacking around it like this. 
+    var dialogTitle = bundle.GetStringFromName("switchskins");
+    var msg = bundle.GetStringFromName("switchskinstitle");
+    if (!commonDialogs.Confirm(window, msg, dialogTitle)) 
+      return false;
+    
     var selectedSkinItem = tree.selectedItems[0];
     var skinName = selectedSkinItem.getAttribute( "name" );
     chromeRegistry.selectSkin( skinName, DEBUG_USE_PROFILE ); 
@@ -86,3 +98,6 @@ function sendEmail(aElement)
                      "chrome,all,dialog=no", "subject='" + aElement.getAttribute('displayName') + "',bodyislink=true");
     
   } 
+  
+var bundle = srGetStrBundle("chrome://communicator/locale/pref/prefutilities.properties");
+  
