@@ -244,6 +244,10 @@ list-style-image: url("chrome://messenger/skin/addressbook/icons/silhouette-hove
   background-color: transparent;
 }
 
+#collapseddateValue > .textbox-input-box menupopup { 
+  text-align: left;
+}
+
 #collapsedfromBox {
   width: 18em;
   background-color: transparent;

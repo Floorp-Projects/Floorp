@@ -203,6 +203,10 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
   background-color: transparent;
 }
 
+#collapseddateValue > .textbox-input-box menupopup { 
+  text-align: left;
+}
+
 #collapsedfromBox {
   width: 18em;
   background-color: transparent;
