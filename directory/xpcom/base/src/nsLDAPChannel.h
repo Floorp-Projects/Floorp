@@ -40,10 +40,10 @@
 #include "nsIChannel.h"
 #include "nsIURI.h"
 #include "nsILoadGroup.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIStreamListener.h"
-#include "nsIBufferInputStream.h"
-#include "nsIBufferOutputStream.h"
 #include "nsILDAPMessageListener.h"
 
 // if the code related to the following #define ever gets removed, also
@@ -103,8 +103,8 @@ protected:
   nsCOMPtr<nsIStreamListener> mListener; // for calls on LDAP callback thread
                                          // which _might_ be the main thread
   nsCOMPtr<nsISupports> mResponseContext; 
-  nsCOMPtr<nsIBufferInputStream> mReadPipeIn; // this end given to the listener
-  nsCOMPtr<nsIBufferOutputStream> mReadPipeOut; // for writes from the channel
+  nsCOMPtr<nsIInputStream> mReadPipeIn; // this end given to the listener
+  nsCOMPtr<nsIOutputStream> mReadPipeOut; // for writes from the channel
   nsCOMPtr<nsILDAPOperation> mCurrentOperation; // current ldap operation
   PRUint32 mReadPipeOffset; // how many bytes written so far?
   PRBool mReadPipeClosed; // has the pipe already been closed?
