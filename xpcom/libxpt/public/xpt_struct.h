@@ -47,8 +47,6 @@ typedef struct XPTTypeDescriptor XPTTypeDescriptor;
 typedef struct XPTTypeDescriptorPrefix XPTTypeDescriptorPrefix;
 typedef struct XPTString XPTString;
 typedef struct XPTAnnotation XPTAnnotation;
-typedef struct XPTAnnotationPrefix XPTAnnotationPrefix;
-typedef struct XPTPrivateAnnotation XPTPrivateAnnotation;
 #ifndef nsID_h__
 /*
  * We can't include nsID.h, because it's full of C++ goop and we're not doing
@@ -72,7 +70,11 @@ typedef struct nsID nsID;
   (to).m3[0] = (from).m3[0];                                                  \
   (to).m3[1] = (from).m3[1];                                                  \
   (to).m3[2] = (from).m3[2];                                                  \
-  (to).m3[3] = (from).m3[3];
+  (to).m3[3] = (from).m3[3];                                                  \
+  (to).m3[4] = (from).m3[4];                                                  \
+  (to).m3[5] = (from).m3[5];                                                  \
+  (to).m3[6] = (from).m3[6];                                                  \
+  (to).m3[7] = (from).m3[7];
 
 
 /*
@@ -151,7 +153,10 @@ struct XPTString {
 };
 
 XPTString *
-XPT_NewString(char *bytes, uint16 len);
+XPT_NewString(uint16 length, char *bytes);
+
+XPTString *
+XPT_NewStringZ(char *bytes);
 
 /* 
  * A TypeDescriptor is a variable-size record used to identify the type of a 
@@ -170,10 +175,20 @@ XPT_NewString(char *bytes, uint16 len);
  * InterfaceIsTypeDescriptor.
  */
 
+/* XXX why bother with a struct? */
 struct XPTTypeDescriptorPrefix {
-    uint8 is_pointer:1, is_unique_pointer:1, is_reference:1,
-          tag:5;
+    uint8 flags;
 };
+
+/* flag bits -- fur and jband were right, I was miserably wrong */
+#define XPT_TDP_POINTER          0x80
+#define XPT_TDP_UNIQUE_POINTER   0x40
+#define XPT_TDP_REFERENCE        0x20
+#define XPT_TDP_FLAGMASK         0xe0
+#define XPT_TDP_TAGMASK          (~XPT_TDP_FLAGMASK)
+#define XPT_TDP_TAG(tdp)         ((tdp).flags & XPT_TDP_TAGMASK)
+
+/* XXX TD #defines should include required flag bits! */
 
 /* 
  * The following defines map mnemonic names to the different numeric values 
@@ -241,12 +256,11 @@ struct XPTTypeDescriptor {
     } type;
 };
 
-#define XPT_COPY_TYPE(to, from)                                              \
-  (to).prefix.is_pointer = (from).prefix.is_pointer;                          \
-  (to).prefix.is_unique_pointer = (from).prefix.is_unique_pointer;            \
-  (to).prefix.is_reference = (from).prefix.is_reference;                      \
-  (to).prefix.tag = (from).prefix.tag;                                        \
-  (to).type.interface = (from).type.interface
+#define XPT_TYPEDESCRIPTOR_SIZE (1 + 4)
+
+#define XPT_COPY_TYPE(to, from)                                               \
+  (to).prefix.flags = (from).prefix.flags;                                    \
+  (to).type.interface = (from).type.interface;
 
 /*
  * A ConstDescriptor is a variable-size record that records the name and 
@@ -290,31 +304,44 @@ struct XPTConstDescriptor {
  * single argument to a method or a method's result.
  */
 struct XPTParamDescriptor {
-    uint8             in:1, out:1, retval:1, reserved:5;
+    uint8             flags;
     XPTTypeDescriptor type;
 };
 
+/* flag bits -- jband and fur were right, and I was miserably wrong */
+#define XPT_PD_IN       0x80
+#define XPT_PD_OUT      0x40
+#define XPT_PD_RETVAL   0x20
+#define XPT_PD_FLAGMASK 0x70
+
+#define XPT_PARAMDESCRIPTOR_SIZE (XPT_TYPEDESCRIPTOR_SIZE + 1)
+
 PRBool
-XPT_FillParamDescriptor(XPTParamDescriptor *pd, PRBool in, PRBool out,
-                        PRBool retval, XPTTypeDescriptor type);
+XPT_FillParamDescriptor(XPTParamDescriptor *pd, uint8 flags,
+                        XPTTypeDescriptor *type);
 
 /*
  * A MethodDescriptor is a variable-size record used to describe a single 
  * interface method.
  */
 struct XPTMethodDescriptor {
-    uint8               is_getter:1, is_setter:1, is_varargs:1,
-                        is_constructor:1, is_hidden:1, reserved:3;
+    uint8               flags;
     char                *name;
     uint8               num_args;
     XPTParamDescriptor  *params;
     XPTParamDescriptor  *result;
 };
 
+/* flag bits -- jband and fur were right, and I was miserably wrong */
+#define XPT_MD_GETTER   0x80
+#define XPT_MD_SETTER   0x40
+#define XPT_MD_VARARGS  0x20
+#define XPT_MD_CTOR     0x10
+#define XPT_MD_HIDDEN   0x08
+#define XPT_MD_FLAGMASK 0xf8
+
 PRBool
-XPT_FillMethodDescriptor(XPTMethodDescriptor *meth, PRBool is_getter,
-                         PRBool is_setter, PRBool is_varargs,
-                         PRBool is_constructor, PRBool is_hidden, char *name,
+XPT_FillMethodDescriptor(XPTMethodDescriptor *meth, uint8 flags, char *name,
                          uint8 num_args);
 
 /*
@@ -335,26 +362,21 @@ XPT_FillMethodDescriptor(XPTMethodDescriptor *meth, PRBool is_getter,
  * indicate an array of Annotation's that's completely empty.  If the tag 
  * is 1, the record is a PrivateAnnotation. 
  */
-#define EMPTY_ANNOTATION 0
-#define PRIVATE_ANNOTATION 1
 
-struct XPTAnnotationPrefix {
-    uint8 is_last:1, tag:7;
-};
-
-struct XPTPrivateAnnotation {
+struct XPTAnnotation {
+    XPTAnnotation *next;
+    uint8 flags;
+    /* remaining fields are present in typelib iff XPT_ANN_IS_PRIVATE */
     XPTString *creator;
     XPTString *private_data;
 };
 
-struct XPTAnnotation {
-    XPTAnnotation *next;
-    XPTAnnotationPrefix prefix;
-    XPTPrivateAnnotation private;
-};
+#define XPT_ANN_LAST	                0x80
+#define XPT_ANN_IS_LAST(flags)          (flags & XPT_ANN_LAST)
+#define XPT_ANN_PRIVATE                 0x40
+#define XPT_ANN_IS_PRIVATE(flags)       (flags & XPT_ANN_PRIVATE)
 
 XPTAnnotation *
-XPT_NewAnnotation(PRBool is_last, PRBool is_empty, XPTString *creator,
-                  XPTString *private_data);
+XPT_NewAnnotation(uint8 flags, XPTString *creator, XPTString *private_data);
 
 #endif /* __xpt_struct_h__ */

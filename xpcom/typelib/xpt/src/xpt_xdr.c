@@ -25,11 +25,14 @@
 #define ENCODING(cursor)                                                      \
   ((cursor)->state->mode == XPT_ENCODE)
 
-#define CURS_POOL_OFFSET(cursor)                                              \
+#define CURS_POOL_OFFSET_RAW(cursor)                                          \
   ((cursor)->pool == XPT_HEADER                                               \
    ? (cursor)->offset                                                         \
    : (PR_ASSERT((cursor)->state->data_offset),                                \
       (cursor)->offset + (cursor)->state->data_offset))
+
+#define CURS_POOL_OFFSET(cursor)                                              \
+  (CURS_POOL_OFFSET_RAW(cursor) - 1)
 
 /* can be used as lvalue */
 #define CURS_POINT(cursor)                                                    \
@@ -45,7 +48,7 @@
 #define CHECK_COUNT_(cursor, space)                                           \
  /* if we're in the header, then exceeding the data_offset is illegal */      \
 ((cursor)->pool == XPT_HEADER ?                                               \
- ((cursor)->offset + (space) > (cursor)->state->data_offset                   \
+ ((cursor)->offset - 1 + (space) > (cursor)->state->data_offset               \
   ? (DBG(("no space left in HEADER %d + %d > %d\n", (cursor)->offset,         \
           (space), (cursor)->state->data_offset)), PR_FALSE)                  \
   : PR_TRUE) :                                                                \
@@ -61,7 +64,8 @@
 #define CHECK_COUNT(cursor, space)                                            \
   (CHECK_COUNT_(cursor, space)                                                \
    ? PR_TRUE                                                                  \
-   : (fprintf(stderr, "FATAL: can't no room for %d in cursor\n", space),      \
+   : (PR_ASSERT(0),                                                           \
+      fprintf(stderr, "FATAL: can't no room for %d in cursor\n", space),      \
       PR_FALSE))
 
 /* increase the data allocation for the pool by XPT_GROW_CHUNK */
@@ -85,7 +89,7 @@ XPT_NewXDRState(XPTMode mode, char *data, uint32 len)
 
     state->mode = mode;
     state->pool = PR_NEW(XPTDatapool);
-    state->next_cursor[0] = state->next_cursor[1] = 0;
+    state->next_cursor[0] = state->next_cursor[1] = 1;
     if (!state->pool)
         goto err_free_state;
 
@@ -133,9 +137,10 @@ XPT_GetXDRData(XPTState *state, XPTPool pool, char **data, uint32 *len)
     } else {
         *data = state->pool->data + state->data_offset;
     }
-    *len = state->next_cursor[pool];
+    *len = state->next_cursor[pool] - 1;
 }
 
+/* All offsets are 1-based */
 void
 XPT_DataOffset(XPTState *state, uint32 *data_offsetp)
 {
@@ -192,33 +197,80 @@ XPT_SeekTo(XPTCursor *cursor, uint32 offset)
     return PR_TRUE;
 }
 
+XPTString *
+XPT_NewString(uint16 length, char *bytes)
+{
+    XPTString *str = PR_NEW(XPTString);
+    if (!str)
+        return NULL;
+    str->length = length;
+    str->bytes = malloc(length);
+    if (!str->bytes) {
+        PR_DELETE(str);
+        return NULL;
+    }
+    memcpy(str->bytes, bytes, length);
+    return str;
+}
+
+XPTString *
+XPT_NewStringZ(char *bytes)
+{
+    uint32 length = strlen(bytes);
+    if (length > 0xffff)
+        return NULL;            /* too long */
+    return XPT_NewString((uint16)length, bytes);
+}
+
+PRBool
+XPT_DoStringInline(XPTCursor *cursor, XPTString **strp)
+{
+    XPTString *str = *strp;
+    XPTMode mode = cursor->state->mode;
+    int i;
+
+    if (mode == XPT_DECODE) {
+        str = PR_NEWZAP(XPTString);
+        if (!str)
+            return PR_FALSE;
+        *strp = str;
+    }
+
+    if (!XPT_Do16(cursor, &str->length))
+        goto error;
+
+    if (mode == XPT_DECODE)
+        if (!(str->bytes = malloc(str->length + 1)))
+            goto error;
+
+    for (i = 0; i < str->length; i++)
+        if (!XPT_Do8(cursor, &str->bytes[i]))
+            goto error_2;
+
+    if (mode == XPT_DECODE)
+        str->bytes[str->length] = 0;
+
+    return PR_TRUE;
+ error_2:
+    PR_DELETE(str->bytes);
+ error:
+    PR_DELETE(str);
+    return PR_FALSE;
+}
+
 PRBool
 XPT_DoString(XPTCursor *cursor, XPTString **strp)
 {
     XPTCursor my_cursor;
     XPTString *str = *strp;
     PRBool already;
+    XPTMode mode = cursor->state->mode;
     int i;
 
-    XPT_PREAMBLE(cursor, strp, XPT_DATA, str->length + 2, my_cursor,
-                 already, XPTString, str);
+    XPT_PREAMBLE_NO_ALLOC(cursor, strp, XPT_DATA, str->length + 2, my_cursor,
+                          already);
     
-    if (!XPT_Do16(&my_cursor, &str->length))
-        goto error;
-
-    if (cursor->state->mode == XPT_DECODE)
-        if (!(str->bytes = malloc(str->length)))
-            goto error;
-    for (i = 0; i < str->length; i++)
-        if (!XPT_Do8(&my_cursor, &str->bytes[i]))
-            goto error_2;
-
-    return PR_TRUE;
-
- error_2:
-    free(str->bytes);
-
-    XPT_ERROR_HANDLE(str);
+    return XPT_DoStringInline(&my_cursor, strp);
 }
 
 PRBool
@@ -332,7 +384,7 @@ XPT_CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, int len,
 
 
 /*
- * When we're writing an IID, we have to do it in a magic order.  From the
+ * IIDs are written in struct order, in the usual big-endian way.  From the
  * typelib file spec:
  *
  *   "For example, this IID:

@@ -38,17 +38,22 @@
 #define TRY(msg, cond)		TRY_(msg, cond, 0)
 #define TRY_Q(msg, cond)	TRY_(msg, cond, 1);
 
-nsID iid = {
+struct nsID iid = {
     0x00112233,
     0x4455,
     0x6677,
-    {0x88, 0x99, 0xaa, 0xbb} };
+    {0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff}
+};
+
+XPTTypeDescriptor td_void = { TD_VOID };
 
 int
 main(int argc, char **argv)
 {
     XPTHeader *header;
+    XPTAnnotation *ann;
     XPTInterfaceDescriptor *id;
+    XPTMethodDescriptor *meth;
 
     XPTState *state;
     XPTCursor curs, *cursor = &curs;
@@ -69,17 +74,40 @@ main(int argc, char **argv)
     header = XPT_NewHeader(1);
     TRY("NewHeader", header);
 
-    header->annotations = XPT_NewAnnotation(PR_TRUE, PR_TRUE, NULL, NULL);
-    TRY("NewAnnotation", header->annotations);
+    
+    ann = XPT_NewAnnotation(XPT_ANN_LAST | XPT_ANN_PRIVATE,
+                            XPT_NewStringZ("SimpleTypeLib 1.0"),
+                            XPT_NewStringZ("See You In Rome"));
+    TRY("NewAnnotation", ann);
+    header->annotations = ann;
 
     header_sz = XPT_SizeOfHeaderBlock(header);
 
-    id = XPT_NewInterfaceDescriptor(0, 0, 0);
+    id = XPT_NewInterfaceDescriptor(0xdead, 2, 0);
     TRY("NewInterfaceDescriptor", id);
     
     ok = XPT_FillInterfaceDirectoryEntry(header->interface_directory, &iid,
-					 "nsIFoo", "nsIBar", id);
+					 "Interface", "NS", id);
     TRY("FillInterfaceDirectoryEntry", ok);
+
+    /* void method1(void) */
+    meth = &id->method_descriptors[0];
+    ok = XPT_FillMethodDescriptor(meth, 0, "method1", 0);
+    TRY("FillMethodDescriptor", ok);
+    meth->result->flags = 0;
+    meth->result->type.prefix.flags = TD_VOID;
+
+    /* wstring method2(in uint32, in bool) */
+    meth = &id->method_descriptors[1];
+    ok = XPT_FillMethodDescriptor(meth, 0, "method2", 2);
+    TRY("FillMethodDescriptor", ok);
+
+    meth->result->flags = 0;
+    meth->result->type.prefix.flags = TD_PBSTR | XPT_TDP_POINTER;
+    meth->params[0].type.prefix.flags = TD_UINT32;
+    meth->params[0].flags = XPT_PD_IN;
+    meth->params[1].type.prefix.flags = TD_BOOL;
+    meth->params[1].flags = XPT_PD_IN;
 
     /* serialize it */
     state = XPT_NewXDRState(XPT_ENCODE, NULL, 0);
@@ -94,7 +122,10 @@ main(int argc, char **argv)
     TRY("DoHeader", ok);
 
     out = fopen(argv[1], "w");
-    TRY_Q("fopen", out);
+    if (!out) {
+        perror("FAILED: fopen");
+        return 1;
+    }
     
     XPT_GetXDRData(state, XPT_HEADER, &data, &len);
     fwrite(data, len, 1, out);
