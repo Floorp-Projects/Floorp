@@ -474,7 +474,11 @@ endif
 echo_objs:
 	@echo $(OBJS)
 
+ifeq ($(OS_ARCH),OS2)
+README_FILE = $(topsrcdir)/README/mozilla/README.os2
+else
 README_FILE = $(topsrcdir)/README.txt
+endif
 
 libs::
 	$(INSTALL) $(README_FILE) $(DIST)/bin
