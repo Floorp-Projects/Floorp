@@ -73,9 +73,9 @@
 
 nsDll::nsDll(nsIFile *dllSpec, nsNativeComponentLoader *loader)
     : m_dllSpec(do_QueryInterface(dllSpec)),
-      m_loader(loader),
       m_instance(NULL), 
       m_moduleObject(NULL),
+      m_loader(loader),
       m_markForUnload(PR_FALSE)
 {
     NS_ASSERTION(loader, "Null loader when creating a nsDLL");
