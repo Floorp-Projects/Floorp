@@ -38,13 +38,15 @@
 #ifndef GFXCOLOR_H
 #define GFXCOLOR_H
 
+#include "nsPrintfCString.h"
+
 struct gfxRGBA {
     double r, g, b, a;
 
     gfxRGBA() { }
     gfxRGBA(const gfxRGBA& c) : r(c.r), g(c.g), b(c.b), a(c.a) {}
     gfxRGBA(double _r, double _g, double _b, double _a=1.0) : r(_r), g(_g), b(_b), a(_a) {}
-    gfxRGBA(unsigned long c) {
+    gfxRGBA(uint32_t c) {
         a = (c & 0xff) / 255.0;
         r = ((c >> 8) & 0xff) / 255.0;
         g = ((c >> 16) & 0xff) / 255.0;
@@ -57,14 +59,18 @@ struct gfxRGBA {
         // if aString[0] is a number, parse it loosely as hex
     }
 
-    unsigned long Packed() {
-        return (((unsigned char)(a * 255.0) << 24) |
-                 ((unsigned char)(b * 255.0) << 16) |
-                 ((unsigned char)(g * 255.0) << 8) |
-                 ((unsigned char)(r * 255.0)));
+    uint32_t Packed() const {
+        return (((uint8_t)(a * 255.0) << 24) |
+                 ((uint8_t)(b * 255.0) << 16) |
+                 ((uint8_t)(g * 255.0) << 8) |
+                 ((uint8_t)(r * 255.0)));
     }
 
-    const char* Hex() const {
+    // XXX I'd really prefer to just have this return an nsACString
+    // Does this function even make sense, since we're just ignoring the alpha value?
+    void Hex(nsACString& result) const {
+        nsPrintfCString hex(8, "%02x%02x%02x", uint8_t(r*255.0), uint8_t(g*255.0), uint8_t(b*255.0));
+        result.Assign(hex);
     }
 
 };

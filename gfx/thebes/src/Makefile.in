@@ -10,7 +10,11 @@ MODULE		= thebes
 LIBRARY_NAME	= libthebes
 LIBXUL_LIBRARY = 1
 
-REQUIRES	= cairo libpixman
+REQUIRES = \
+	cairo \
+	libpixman \
+	string \
+	xpcom
 
 CPPSRCS	= \
 	gfxContext.cpp \
