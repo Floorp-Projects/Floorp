@@ -199,21 +199,21 @@ NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsPoint& outCoordinates, PRB
 	outCoordinates.y = -1;
 	outIsCollapsed = PR_FALSE;
 	
-	err = domSelection->GetIsCollapsed(&outIsCollapsed);
+	err = domSelection->GetIsCollapsed(SELECTION_NORMAL, &outIsCollapsed);
 	if (NS_FAILED(err))	
 		return err;
 		
 	// code in progress
 	nsCOMPtr<nsIDOMNode>	focusNode;
 	
-	err = domSelection->GetFocusNode(getter_AddRefs(focusNode));
+	err = domSelection->GetFocusNode(SELECTION_NORMAL, getter_AddRefs(focusNode));
 	if (NS_FAILED(err))
 		return err;
 	if (!focusNode)
 		return NS_ERROR_FAILURE;
 	
 	PRInt32	focusOffset;
-	err = domSelection->GetFocusOffset(&focusOffset);
+	err = domSelection->GetFocusOffset(SELECTION_NORMAL, &focusOffset);
 	if (NS_FAILED(err))
 		return err;
 		
@@ -417,14 +417,14 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 
 	PRBool isCollapsed;
 
-	if (domSelection && NS_SUCCEEDED(domSelection->GetIsCollapsed(&isCollapsed)) && isCollapsed)
+	if (domSelection && NS_SUCCEEDED(domSelection->GetIsCollapsed(SELECTION_NORMAL, &isCollapsed)) && isCollapsed)
 	{
 		// start and end parent should be the same since we are collapsed
 		nsCOMPtr<nsIDOMNode>	focusNode;
 		PRInt32	contentOffset;
 		
-		if (NS_SUCCEEDED(domSelection->GetFocusNode(getter_AddRefs(focusNode))) && focusNode &&
-				NS_SUCCEEDED(domSelection->GetFocusOffset(&contentOffset)))
+		if (NS_SUCCEEDED(domSelection->GetFocusNode(SELECTION_NORMAL, getter_AddRefs(focusNode))) && focusNode &&
+				NS_SUCCEEDED(domSelection->GetFocusOffset(SELECTION_NORMAL, &contentOffset)))
 		{
 			nsCOMPtr<nsIContent>contentNode = do_QueryInterface(focusNode);
       

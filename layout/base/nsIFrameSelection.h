@@ -29,6 +29,7 @@
 #include "nsISupports.h"
 #include "nsIFrame.h"
 #include "nsIFocusTracker.h"   
+#include "nsIDOMSelection.h"
 
 // IID for the nsIFrameSelection interface
 #define NS_IFRAMESELECTION_IID      \
@@ -39,6 +40,15 @@
 //----------------------------------------------------------------------
 
 // Selection interface
+
+struct SelectionDetails
+{
+  PRInt32 mStart;
+  PRInt32 mEnd;
+  SelectionType mType;
+  SelectionDetails *mNext;
+};
+
 class nsIFrameSelection : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IFRAMESELECTION_IID; return iid; }
@@ -79,8 +89,11 @@ public:
    *  @param aContentOffsetEnd is the content offset of the parent aNewFocus and is specified different
    *                           when you need to select to and include both start and end points
    *  @param aContinueSelection is the flag that tells the selection to keep the old anchor point or not.
+   *  @param aMultipleSelection will tell the frame selector to replace /or not the old selection. 
+   *         cannot coexist with aContinueSelection
    */
-  NS_IMETHOD TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset , PRBool aContinueSelection) = 0;
+  NS_IMETHOD TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset , 
+                       PRBool aContinueSelection, PRBool aMultipleSelection) = 0;
 
   /** EnableFrameNotification
    *  mutch like start batching, except all dirty calls are ignored. no notifications will go 
@@ -93,13 +106,10 @@ public:
    * @param aContent is the content asking
    * @param aContentOffset is the starting content boundary
    * @param aContentLength is the length of the content piece asking
-   * @param aStart start return frame indexed value
-   * @param aEnd   end return frame indexed value
-   * @param aDrawSelected return value if this offset,length has anything in the selected area
-   * @param aFlag what type of selection not used now
+   * @param aReturnDetails linkedlist of return values for the selection. 
    */
   NS_IMETHOD LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
-                             PRInt32 *aStart, PRInt32 *aEnd, PRBool *aDrawSelected, PRUint32 aFlag/*not used*/) = 0;
+                             SelectionDetails **aReturnDetails) = 0;
 
   /** SetMouseDownState(PRBool);
    *  sets the mouse state to aState for resons of drag state.
@@ -114,6 +124,7 @@ public:
   NS_IMETHOD GetMouseDownState(PRBool *aState)=0;
 
 };
+
 
 
 #endif /* nsIFrameSelection_h___ */
