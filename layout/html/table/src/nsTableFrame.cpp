@@ -6503,16 +6503,18 @@ struct BCVerticalSeg
     nsTableColFrame*  col;
     PRInt32           colWidth;
   };
-  PRInt32            colX;
-  nsTableCellFrame*  ajaCell;
-  nsTableCellFrame*  firstCell;  // cell at the start of the segment
-  nsTableCellFrame*  lastCell;   // cell at the current end of the segment
-  PRInt32            segY;
-  PRInt32            segHeight;
-  PRInt16            segWidth;   // width in pixels
-  PRUint8            owner;
-  PRUint8            bevelSide;
-  PRUint16           bevelOffset;
+  PRInt32               colX;
+  nsTableCellFrame*     ajaCell;
+  nsTableCellFrame*     firstCell;  // cell at the start of the segment
+  nsTableRowGroupFrame* firstRowGroup; // row group at the start of the segment
+  nsTableRowFrame*      firstRow; // row at the start of the segment
+  nsTableCellFrame*     lastCell;   // cell at the current end of the segment
+  PRInt32               segY;
+  PRInt32               segHeight;
+  PRInt16               segWidth;   // width in pixels
+  PRUint8               owner;
+  PRUint8               bevelSide;
+  PRUint16              bevelOffset;
 };
 
 BCVerticalSeg::BCVerticalSeg() 
@@ -6540,13 +6542,15 @@ BCVerticalSeg::Start(BCMapBorderIterator& aIter,
   nscoord offset          = CalcVerCornerOffset(ownerSide, cornerSubWidth, maxHorSegHeight, 
                                                 PR_TRUE, topBevel, aPixelsToTwips);
 
-  bevelOffset = (topBevel) ? maxHorSegHeight : 0;
-  bevelSide   = (aHorSegHeight > 0) ? NS_SIDE_RIGHT : NS_SIDE_LEFT;
-  segY       += offset;
-  segHeight   = -offset;
-  segWidth    = aVerSegWidth;
-  owner       = aBorderOwner;
-  firstCell   = aIter.cell;
+  bevelOffset   = (topBevel) ? maxHorSegHeight : 0;
+  bevelSide     = (aHorSegHeight > 0) ? NS_SIDE_RIGHT : NS_SIDE_LEFT;
+  segY         += offset;
+  segHeight     = -offset;
+  segWidth      = aVerSegWidth;
+  owner         = aBorderOwner;
+  firstCell     = aIter.cell;
+  firstRowGroup = aIter.rg;
+  firstRow      = aIter.row;
   if (xAdj > 0) {
     ajaCell = aVerInfoArray[xAdj - 1].lastCell;
   }
@@ -6768,9 +6772,11 @@ nsTableFrame::PaintBCBorders(nsIPresContext*      aPresContext,
         if (info.segWidth > 0) {     
           // get the border style, color and paint the segment
           PRUint8 side = (iter.IsRightMost()) ? NS_SIDE_RIGHT : NS_SIDE_LEFT;
-          nsTableColGroupFrame* cg = nsnull;
-          nsTableColFrame* col = info.col; if (!col) ABORT0();
-          nsTableCellFrame* cell = info.firstCell; 
+          nsTableColGroupFrame* cg       = nsnull;
+          nsTableRowFrame* row           = info.firstRow;
+          nsTableRowGroupFrame* rowGroup = info.firstRowGroup;
+          nsTableColFrame* col           = info.col; if (!col) ABORT0();
+          nsTableCellFrame* cell         = info.firstCell; 
           PRUint8 style = NS_STYLE_BORDER_STYLE_SOLID;
           nscolor color = 0xFFFFFFFF;
           PRBool ignoreIfRules = (iter.IsRightMostTable() || iter.IsLeftMostTable());
@@ -6806,16 +6812,16 @@ nsTableFrame::PaintBCBorders(nsIPresContext*      aPresContext,
             NS_ASSERTION(PR_FALSE, "program error"); // and fall through
           case eRowGroupOwner:
             NS_ASSERTION(iter.IsLeftMostTable() || iter.IsRightMostTable(), "program error");
-            if (iter.rg) {
-              ::GetStyleInfo(*iter.rg, side, style, color, ignoreIfRules); 
+            if (rowGroup) {
+              ::GetStyleInfo(*rowGroup, side, style, color, ignoreIfRules);
             }
             break;
           case eAjaRowOwner:
             NS_ASSERTION(PR_FALSE, "program error"); // and fall through
           case eRowOwner: 
             NS_ASSERTION(iter.IsLeftMostTable() || iter.IsRightMostTable(), "program error");
-            if (iter.row) {
-              ::GetStyleInfo(*iter.row, side, style, color, ignoreIfRules); 
+            if (row) {
+              ::GetStyleInfo(*row, side, style, color, ignoreIfRules);
             }
             break;
           case eAjaCellOwner:
