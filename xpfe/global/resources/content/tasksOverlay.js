@@ -40,7 +40,7 @@ function toOpenWindowByType( inType, uri )
 	if ( topWindow )
 		topWindow.focus();
 	else
-		window.open(uri, "_New", "chrome,menubar");
+		window.open(uri, "", "chrome,menubar");
 }
 
 function CycleWindow( inType, inChromeURL )
@@ -52,9 +52,18 @@ function CycleWindow( inType, inChromeURL )
     
     var desiredWindow = null;
     
-	topWindowOfType = windowManagerInterface.GetMostRecentWindow( inType );
-	topWindow = windowManagerInterface.GetMostRecentWindow( null );
+	var topWindowOfType = windowManagerInterface.GetMostRecentWindow( inType );
+	var topWindow = windowManagerInterface.GetMostRecentWindow( null );
 	dump( "got windows \n");
+	
+	dump( "topWindowOfType = " + topWindowOfType + "\n");
+	if ( topWindowOfType == null )
+	{
+		dump( " no windows of this type so create a new one \n");
+		window.open( inChromeURL, "","chrome,menubar,toolbar" );
+		return;
+	}
+	
 	if ( topWindowOfType != topWindow )
 	{
 		dump( "first not top so give focus \n");
@@ -62,11 +71,6 @@ function CycleWindow( inType, inChromeURL )
 		return;
 	}
 	
-	if ( topWindowOfType == null )
-	{
-		dump( " no windows of this type so create a new one \n");
-		window.open( inChromeURL, "","chrome,menubar" );
-	}
 	var enumerator = windowManagerInterface.GetEnumerator( inType );
 	firstWindow = windowManagerInterface.ConvertISupportsToDOMWindow ( enumerator.GetNext() );
 	if ( firstWindow == topWindowOfType )
