@@ -891,12 +891,11 @@ NS_IMETHODIMP nsRenderingContextImpl::DrawImage(imgIContainer *aImage, const nsR
   mTranMatrix->TransformCoord(&pt.x, &pt.y);
 
   sr = *aSrcRect;
+  mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
 
-  nsCOMPtr<nsIDeviceContext> dc;
-  GetDeviceContext(*getter_AddRefs(dc));
-  float t2p;
-  dc->GetAppUnitsToDevUnits(t2p);
-  sr.ScaleRoundOut(t2p);
+  sr.x = aSrcRect->x;
+  sr.y = aSrcRect->y;
+  mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
 
   nsCOMPtr<gfxIImageFrame> iframe;
   aImage->GetCurrentFrame(getter_AddRefs(iframe));
