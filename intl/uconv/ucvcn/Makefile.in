@@ -39,6 +39,7 @@ CPPSRCS		= \
 		nsUnicodeToGB2312GL.cpp \
 		nsGBKToUnicode.cpp \
 		nsUnicodeToGBK.cpp \
+		nsUnicodeToGBKNoAscii.cpp \
 		nsISO2022CNToUnicode.cpp \
 		nsUnicodeToISO2022CN.cpp \
 		nsHZToUnicode.cpp \
