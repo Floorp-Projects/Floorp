@@ -2036,6 +2036,7 @@ NS_IMETHODIMP nsImapMailFolder::CopyData(nsIInputStream *aIStream,
             if (start >=
                 m_copyState->m_dataBuffer+m_copyState->m_leftOver)
             {
+                maxReadCount = FOUR_K;
                 m_copyState->m_leftOver = 0;
                 break;
             }
