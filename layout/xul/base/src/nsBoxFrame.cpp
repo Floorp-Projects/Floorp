@@ -663,7 +663,7 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
      computedSize.height += m.top + m.bottom;
 
   nsRect r(0,0,computedSize.width, computedSize.height);
-  r.Inflate(m);
+  //r.Inflate(m);
   r.x = mRect.x;
   r.y = mRect.y;
 
@@ -690,16 +690,20 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
 
   // max sure the max element size reflects
   // our min width
-  nsSize* size = nsnull;
-  state.GetMaxElementSize(&size);
-  if (size)
+  nsSize* maxElementSize = nsnull;
+  state.GetMaxElementSize(&maxElementSize);
+  if (maxElementSize)
   {
      nsSize minSize(0,0);
-     GetMinSize(state,  minSize);   
+     GetMinSize(state,  minSize);
+#ifdef FIX_FOR_BUG_40596
+     if (mRect.width > minSize.width)
+#else
      if (mRect.width < minSize.width)
-        size->width = minSize.width;
+#endif
+        maxElementSize->width = minSize.width;
      else
-        size->width = mRect.width;
+        maxElementSize->width = mRect.width;
   }
 
   return NS_OK;
