@@ -162,6 +162,7 @@ InTerminalContent(EventRecord* evt, WindowPtr wCurrPtr)
 		part = TrackControl(gControls->nextB, evt->where, NULL);
 		if (part)
 		{
+		    DisableNavButtons();
 			SpawnSDThread(Install, &tid);
 			return;
 		}

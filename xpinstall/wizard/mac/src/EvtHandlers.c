@@ -125,16 +125,13 @@ void HandleKeyDown(EventRecord* evt)
 					ShowSetupTypeWin();
 					return;
 				case kSetupTypeID:
-					KillControls(gWPtr);
-					
+					ClearDiskSpaceMsgs();
+					KillControls(gWPtr);			
 					/* treat last setup type selection as custom */
 					if (gControls->opt->instChoice == gControls->cfg->numSetupTypes)
 						ShowComponentsWin();
 					else
-					{
-						ClearDiskSpaceMsgs();
 						ShowTerminalWin();
-					}
 					return;				
 				case kComponentsID:
 					KillControls(gWPtr);

@@ -158,7 +158,10 @@ InflateFiles(void *hZip, void *hFind, short tgtVRefNum, long tgtDirID)
 			continue;
 			
 		/* grab leaf filename only */
-		leaf = lastslash + 1;
+		if (lastslash == 0)
+			leaf = filename;
+		else
+			leaf = lastslash + 1;
 		
 		/* obtain and NULL terminate the full path string */
 		err = GetFullPath(tgtVRefNum, tgtDirID, "\p", &fullPathLen, &fullPathH); /* get dirpath */

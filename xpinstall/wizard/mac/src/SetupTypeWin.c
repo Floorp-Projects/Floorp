@@ -327,14 +327,14 @@ DrawDiskNFolder(short vRefNum, unsigned char *folder)
 	char			*cstr;
 	Rect			viewRect, dlb, iconRect;
 	TEHandle		pathInfo;
-	short			bCmp;
+	short			bCmp, outVRefNum;
 	OSErr			err = noErr;
 	FSSpec			fsTarget;
 	IconRef			icon;
 	SInt16			label;
-	
+	unsigned long   free, total;
 	/* get vol and folder name */
-	if ((err = GetVol(volName, &vRefNum)) == noErr)
+	if ((err = HGetVInfo(vRefNum, volName, &outVRefNum, &free, &total)) == noErr)
 	{				
 		dlb = (*gControls->stw->destLocBox)->contrlRect;
 		SetRect(&viewRect, dlb.left+10, dlb.top+15, dlb.left+220, dlb.bottom-5);
@@ -385,7 +385,7 @@ DrawDiskNFolder(short vRefNum, unsigned char *folder)
 	if (err==noErr)
 	{
 #define ICON_DIM 32
-		SetRect(&iconRect, viewRect.left+70, viewRect.top+10, viewRect.left+70+ICON_DIM, viewRect.top+10+ICON_DIM);
+		SetRect(&iconRect, viewRect.left+100, viewRect.top+10, viewRect.left+100+ICON_DIM, viewRect.top+10+ICON_DIM);
 		PlotIconRef(&iconRect, kAlignNone, kTransformNone, kIconServicesNormalUsageFlag, icon);
 	}
 	ReleaseIconRef(icon);
