@@ -19,12 +19,27 @@ DEPTH=..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSWER=$(DIST)\bin\chrome\global\skin\default
+DISTBROWSER=$(DIST)\bin\chrome\global\skin\default
 
 
 install::
-	$(MAKE_INSTALL) dialogs.css $(DISTBROWSWER)
-	$(MAKE_INSTALL) xul.css $(DISTBROWSWER)
-	
+	$(MAKE_INSTALL) dialogs.css $(DISTBROWSER)
+	$(MAKE_INSTALL) xul.css $(DISTBROWSER)
+	$(MAKE_INSTALL) lessCols.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) lessCols_mo.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) lessCols_dis.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) moreCols.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) moreCols_mo.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) moreCols_dis.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) scrollUp.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) scrollUp_mo.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) scrollUp_dis.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) scrollDown.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) scrollDown_mo.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) scrollDown_dis.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) scrollThumb.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) scrollThumb_mo.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) scrollThumb_dis.gif $(DISTBROWSER)
+
 clobber::
   rm -f $(DIST)\bin\chrome\global\skin\default\*.*

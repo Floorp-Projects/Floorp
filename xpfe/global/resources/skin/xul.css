@@ -6,7 +6,7 @@
 
 window { 
   background-color:#CCCCDD;
-  //background-image: url(resource:/res/src/bg.jpg);
+  //background-image: url(chrome://global/skin/bg.jpg);
   display: block; 
   overflow: hidden;
   font: 3mm tahoma,arial,helvetica,sans-serif;
@@ -388,7 +388,7 @@ titledbutton[toggled="2"] {
 titledbutton[default] {
 	//border-color: black;
 	font-weight: bold;
-	list-style-image: url("resource:/res/src/return.gif");
+	list-style-image: url("chrome://global/skin/return.gif");
 }
 
 titledbutton:active:-moz-outline {
@@ -846,15 +846,15 @@ box[debug] progressmeter {
 thumb {
    background-color: rgb(206, 207, 206);
    border: 2px outset rgb(156, 154, 156);
-   list-style-image: url(resource:/res/src/scrollThumb.gif)
+   list-style-image: url(chrome://global/skin/scrollThumb.gif)
 }
 
 thumb:hover {
-   list-style-image: url(resource:/res/src/scrollThumb_mo.gif);
+   list-style-image: url(chrome://global/skin/scrollThumb_mo.gif);
 }
 
 thumb[disabled="true"] {
-   list-style-image: url(resource:/res/src/scrollThumb_dis.gif);
+   list-style-image: url(chrome://global/skin/scrollThumb_dis.gif);
 }
 
 thumb:active {
@@ -888,51 +888,51 @@ scrollbarbutton:active {
 }
 
 scrollbarbutton.decrement {
-   list-style-image: url(resource:/res/src/scrollUp.gif)
+   list-style-image: url(chrome://global/skin/scrollUp.gif)
 }
 
 scrollbarbutton.decrement:hover {
-   list-style-image: url(resource:/res/src/scrollUp_mo.gif)
+   list-style-image: url(chrome://global/skin/scrollUp_mo.gif)
 }
 
 scrollbarbutton.decrement[disabled="true"] {
-   list-style-image: url(resource:/res/src/scrollUp_dis.gif) 
+   list-style-image: url(chrome://global/skin/scrollUp_dis.gif) 
 }
 
 scrollbarbutton.increment {
-   list-style-image: url(resource:/res/src/scrollDown.gif)
+   list-style-image: url(chrome://global/skin/scrollDown.gif)
 }
 
 scrollbarbutton.increment:hover {
-   list-style-image: url(resource:/res/src/scrollDown_mo.gif)
+   list-style-image: url(chrome://global/skin/scrollDown_mo.gif)
 }
 
 scrollbarbutton.increment[disabled="true"] {
-   list-style-image: url(resource:/res/src/scrollDown_dis.gif) 
+   list-style-image: url(chrome://global/skin/scrollDown_dis.gif) 
 }
 
 treepusher.increment {
-   list-style-image: url(resource:/res/src/moreCols_mo.gif)
+   list-style-image: url(chrome://global/skin/moreCols_mo.gif)
 }
 
 treepusher.increment:hover {
-   list-style-image: url(resource:/res/src/moreCols_mo.gif)
+   list-style-image: url(chrome://global/skin/moreCols_mo.gif)
 }
 
 treepusher.increment[disabled="true"] {
-   list-style-image: url(resource:/res/src/moreCols_dis.gif)
+   list-style-image: url(chrome://global/skin/moreCols_dis.gif)
 }
 
 treepusher.decrement {
-   list-style-image: url(resource:/res/src/lessCols_mo.gif)
+   list-style-image: url(chrome://global/skin/lessCols_mo.gif)
 }
 
 treepusher.decrement:hover {
-   list-style-image: url(resource:/res/src/lessCols_mo.gif)
+   list-style-image: url(chrome://global/skin/lessCols_mo.gif)
 }
 
 treepusher.decrement[disabled="true"] {
-   list-style-image: url(resource:/res/src/lessCols_dis.gif)
+   list-style-image: url(chrome://global/skin/lessCols_dis.gif)
 }
 
 splitter {
