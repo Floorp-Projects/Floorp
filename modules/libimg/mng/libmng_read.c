@@ -4,8 +4,8 @@
 /* ************************************************************************** */
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
-/* * file      : libmng_read.c             copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.0                                                      * */
+/* * file      : libmng_read.c             copyright (c) 2000-2002 G.Juyn   * */
+/* * version   : 1.0.5                                                      * */
 /* *                                                                        * */
 /* * purpose   : Read logic (implementation)                                * */
 /* *                                                                        * */
@@ -55,8 +55,23 @@
 /* *             0.9.3 - 10/16/2000 - G.Juyn                                * */
 /* *             - added support for JDAA                                   * */
 /* *                                                                        * */
-/* *             0.9.5 -  1/23/2001 - G.Juyn                                * */
+/* *             0.9.5 - 01/23/2001 - G.Juyn                                * */
 /* *             - fixed timing-problem with switching framing_modes        * */
+/* *                                                                        * */
+/* *             1.0.4 - 06/22/2002 - G.Juyn                                * */
+/* *             - B495443 - incorrect suspend check in read_databuffer     * */
+/* *                                                                        * */
+/* *             1.0.5 - 07/04/2002 - G.Juyn                                * */
+/* *             - added errorcode for extreme chunk-sizes                  * */
+/* *             1.0.5 - 07/08/2002 - G.Juyn                                * */
+/* *             - B578572 - removed eMNGma hack (thanks Dimitri!)          * */
+/* *             1.0.5 - 07/16/2002 - G.Juyn                                * */
+/* *             - B581625 - large chunks fail with suspension reads        * */
+/* *             1.0.5 - 08/19/2002 - G.Juyn                                * */
+/* *             - B597134 - libmng pollutes the linker namespace           * */
+/* *             - added HLAPI function to copy chunks                      * */
+/* *             1.0.5 - 09/16/2002 - G.Juyn                                * */
+/* *             - added event handling for dynamic MNG                     * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -86,7 +101,7 @@
 
 /* ************************************************************************** */
 
-mng_retcode process_eof (mng_datap pData)
+mng_retcode mng_process_eof (mng_datap pData)
 {
   if (!pData->bEOF)                    /* haven't closed the stream yet ? */
   {
@@ -101,10 +116,11 @@ mng_retcode process_eof (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode read_databuffer (mng_datap    pData,
-                             mng_uint8p   pBuf,
-                             mng_uint32   iSize,
-                             mng_uint32 * iRead)
+MNG_LOCAL mng_retcode read_databuffer (mng_datap    pData,
+                                       mng_uint8p   pBuf,
+                                       mng_uint8p * pBufnext,
+                                       mng_uint32   iSize,
+                                       mng_uint32 * iRead)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_READ_DATABUFFER, MNG_LC_START)
@@ -131,30 +147,30 @@ mng_retcode read_databuffer (mng_datap    pData,
     {
       mng_uint32 iRemain;
 
-      if (!pData->pReadbufnext)        /* first time ? */
+      if (!*pBufnext)                  /* first time ? */
       {
         if (pData->iSuspendbufleft)    /* do we have some data left ? */
         {                              /* then copy it */
           MNG_COPY (pBuf, pData->pSuspendbufnext, pData->iSuspendbufleft)
                                        /* fixup variables */
-          pData->pReadbufnext    = pBuf + pData->iSuspendbufleft;
+          *pBufnext              = pBuf + pData->iSuspendbufleft;
           pData->pSuspendbufnext = pData->pSuspendbuf;
           pData->iSuspendbufleft = 0;
         }
         else
         {
-          pData->pReadbufnext    = pBuf;
+          *pBufnext              = pBuf;
         }
       }
                                        /* calculate how much to get */
-      iRemain = iSize - (mng_uint32)(pData->pReadbufnext - pBuf);
+      iRemain = iSize - (mng_uint32)(*pBufnext - pBuf);
                                        /* let's go get it */
-      if (!pData->fReaddata (((mng_handle)pData), pData->pReadbufnext, iRemain, &iTemp))
+      if (!pData->fReaddata (((mng_handle)pData), *pBufnext, iRemain, &iTemp))
         MNG_ERROR (pData, MNG_APPIOERROR);
                                        /* first read after suspension return 0 means EOF */
       if ((pData->iSuspendpoint) && (iTemp == 0))
       {                                /* that makes it final */
-        mng_retcode iRetcode = process_eof (pData);
+        mng_retcode iRetcode = mng_process_eof (pData);
 
         if (iRetcode)                  /* on error bail out */
           return iRetcode;
@@ -165,8 +181,8 @@ mng_retcode read_databuffer (mng_datap    pData,
       {
         if (iTemp < iRemain)           /* suspension required ? */
         {
-          pData->pReadbufnext = pData->pReadbufnext + iTemp;
-          pData->bSuspended   = MNG_TRUE;
+          *pBufnext         = *pBufnext + iTemp;
+          pData->bSuspended = MNG_TRUE;
         }
         else
         {
@@ -200,7 +216,7 @@ mng_retcode read_databuffer (mng_datap    pData,
                                        /* first read after suspension returning 0 means EOF */
         if ((pData->iSuspendpoint) && (iTemp == 0))
         {                              /* that makes it final */
-          mng_retcode iRetcode = process_eof (pData);
+          mng_retcode iRetcode = mng_process_eof (pData);
 
           if (iRetcode)                /* on error bail out */
             return iRetcode;
@@ -237,7 +253,7 @@ mng_retcode read_databuffer (mng_datap    pData,
   {
     if (!pData->fReaddata (((mng_handle)pData), (mng_ptr)pBuf, iSize, iRead))
     {
-      if (iRead == 0)                  /* suspension required ? */
+      if (*iRead == 0)                 /* suspension required ? */
         pData->bSuspended = MNG_TRUE;
       else
         MNG_ERROR (pData, MNG_APPIOERROR);
@@ -255,81 +271,82 @@ mng_retcode read_databuffer (mng_datap    pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_raw_chunk (mng_datap  pData,
-                               mng_uint8p pBuf,
-                               mng_uint32 iBuflen)
+MNG_LOCAL mng_retcode process_raw_chunk (mng_datap  pData,
+                                         mng_uint8p pBuf,
+                                         mng_uint32 iBuflen)
 {
   /* the table-idea & binary search code was adapted from
      libpng 1.1.0 (pngread.c) */
   /* NOTE1: the table must remain sorted by chunkname, otherwise the binary
-     search will break !!! */
+     search will break !!! (ps. watch upper-/lower-case chunknames !!) */
   /* NOTE2: the layout must remain equal to the header part of all the
      chunk-structures (yes, that means even the pNext and pPrev fields;
      it's wasting a bit of space, but hey, the code is a lot easier) */
 
-  mng_chunk_header chunk_unknown = {MNG_UINT_HUH, init_unknown, free_unknown,
-                                    read_unknown, write_unknown, 0, 0};
+  mng_chunk_header chunk_unknown = {MNG_UINT_HUH, mng_init_unknown, mng_free_unknown,
+                                    mng_read_unknown, mng_write_unknown, mng_assign_unknown, 0, 0};
 
   mng_chunk_header chunk_table [] =
   {
-    {MNG_UINT_BACK, init_back, free_back, read_back, write_back, 0, 0},
-    {MNG_UINT_BASI, init_basi, free_basi, read_basi, write_basi, 0, 0},
-    {MNG_UINT_CLIP, init_clip, free_clip, read_clip, write_clip, 0, 0},
-    {MNG_UINT_CLON, init_clon, free_clon, read_clon, write_clon, 0, 0},
-    {MNG_UINT_DBYK, init_dbyk, free_dbyk, read_dbyk, write_dbyk, 0, 0},
-    {MNG_UINT_DEFI, init_defi, free_defi, read_defi, write_defi, 0, 0},
-    {MNG_UINT_DHDR, init_dhdr, free_dhdr, read_dhdr, write_dhdr, 0, 0},
-    {MNG_UINT_DISC, init_disc, free_disc, read_disc, write_disc, 0, 0},
-    {MNG_UINT_DROP, init_drop, free_drop, read_drop, write_drop, 0, 0},
-    {MNG_UINT_ENDL, init_endl, free_endl, read_endl, write_endl, 0, 0},
-    {MNG_UINT_FRAM, init_fram, free_fram, read_fram, write_fram, 0, 0},
-    {MNG_UINT_IDAT, init_idat, free_idat, read_idat, write_idat, 0, 0},  /* 12-th element! */
-    {MNG_UINT_IEND, init_iend, free_iend, read_iend, write_iend, 0, 0},
-    {MNG_UINT_IHDR, init_ihdr, free_ihdr, read_ihdr, write_ihdr, 0, 0},
-    {MNG_UINT_IJNG, init_ijng, free_ijng, read_ijng, write_ijng, 0, 0},
-    {MNG_UINT_IPNG, init_ipng, free_ipng, read_ipng, write_ipng, 0, 0},
+    {MNG_UINT_BACK, mng_init_back, mng_free_back, mng_read_back, mng_write_back, mng_assign_back, 0, 0},
+    {MNG_UINT_BASI, mng_init_basi, mng_free_basi, mng_read_basi, mng_write_basi, mng_assign_basi, 0, 0},
+    {MNG_UINT_CLIP, mng_init_clip, mng_free_clip, mng_read_clip, mng_write_clip, mng_assign_clip, 0, 0},
+    {MNG_UINT_CLON, mng_init_clon, mng_free_clon, mng_read_clon, mng_write_clon, mng_assign_clon, 0, 0},
+    {MNG_UINT_DBYK, mng_init_dbyk, mng_free_dbyk, mng_read_dbyk, mng_write_dbyk, mng_assign_dbyk, 0, 0},
+    {MNG_UINT_DEFI, mng_init_defi, mng_free_defi, mng_read_defi, mng_write_defi, mng_assign_defi, 0, 0},
+    {MNG_UINT_DHDR, mng_init_dhdr, mng_free_dhdr, mng_read_dhdr, mng_write_dhdr, mng_assign_dhdr, 0, 0},
+    {MNG_UINT_DISC, mng_init_disc, mng_free_disc, mng_read_disc, mng_write_disc, mng_assign_disc, 0, 0},
+    {MNG_UINT_DROP, mng_init_drop, mng_free_drop, mng_read_drop, mng_write_drop, mng_assign_drop, 0, 0},
+    {MNG_UINT_ENDL, mng_init_endl, mng_free_endl, mng_read_endl, mng_write_endl, mng_assign_endl, 0, 0},
+    {MNG_UINT_FRAM, mng_init_fram, mng_free_fram, mng_read_fram, mng_write_fram, mng_assign_fram, 0, 0},
+    {MNG_UINT_IDAT, mng_init_idat, mng_free_idat, mng_read_idat, mng_write_idat, mng_assign_idat, 0, 0},  /* 12-th element! */
+    {MNG_UINT_IEND, mng_init_iend, mng_free_iend, mng_read_iend, mng_write_iend, mng_assign_iend, 0, 0},
+    {MNG_UINT_IHDR, mng_init_ihdr, mng_free_ihdr, mng_read_ihdr, mng_write_ihdr, mng_assign_ihdr, 0, 0},
+    {MNG_UINT_IJNG, mng_init_ijng, mng_free_ijng, mng_read_ijng, mng_write_ijng, mng_assign_ijng, 0, 0},
+    {MNG_UINT_IPNG, mng_init_ipng, mng_free_ipng, mng_read_ipng, mng_write_ipng, mng_assign_ipng, 0, 0},
 #ifdef MNG_INCLUDE_JNG
-    {MNG_UINT_JDAA, init_jdaa, free_jdaa, read_jdaa, write_jdaa, 0, 0},
-    {MNG_UINT_JDAT, init_jdat, free_jdat, read_jdat, write_jdat, 0, 0},
-    {MNG_UINT_JHDR, init_jhdr, free_jhdr, read_jhdr, write_jhdr, 0, 0},
-    {MNG_UINT_JSEP, init_jsep, free_jsep, read_jsep, write_jsep, 0, 0},
-    {MNG_UINT_JdAA, init_jdaa, free_jdaa, read_jdaa, write_jdaa, 0, 0},
+    {MNG_UINT_JDAA, mng_init_jdaa, mng_free_jdaa, mng_read_jdaa, mng_write_jdaa, mng_assign_jdaa, 0, 0},
+    {MNG_UINT_JDAT, mng_init_jdat, mng_free_jdat, mng_read_jdat, mng_write_jdat, mng_assign_jdat, 0, 0},
+    {MNG_UINT_JHDR, mng_init_jhdr, mng_free_jhdr, mng_read_jhdr, mng_write_jhdr, mng_assign_jhdr, 0, 0},
+    {MNG_UINT_JSEP, mng_init_jsep, mng_free_jsep, mng_read_jsep, mng_write_jsep, mng_assign_jsep, 0, 0},
+    {MNG_UINT_JdAA, mng_init_jdaa, mng_free_jdaa, mng_read_jdaa, mng_write_jdaa, mng_assign_jdaa, 0, 0},
 #endif
-    {MNG_UINT_LOOP, init_loop, free_loop, read_loop, write_loop, 0, 0},
-    {MNG_UINT_MAGN, init_magn, free_magn, read_magn, write_magn, 0, 0},
-    {MNG_UINT_MEND, init_mend, free_mend, read_mend, write_mend, 0, 0},
-    {MNG_UINT_MHDR, init_mhdr, free_mhdr, read_mhdr, write_mhdr, 0, 0},
-    {MNG_UINT_MOVE, init_move, free_move, read_move, write_move, 0, 0},
-    {MNG_UINT_ORDR, init_ordr, free_ordr, read_ordr, write_ordr, 0, 0},
-    {MNG_UINT_PAST, init_past, free_past, read_past, write_past, 0, 0},
-    {MNG_UINT_PLTE, init_plte, free_plte, read_plte, write_plte, 0, 0},
-    {MNG_UINT_PPLT, init_pplt, free_pplt, read_pplt, write_pplt, 0, 0},
-    {MNG_UINT_PROM, init_prom, free_prom, read_prom, write_prom, 0, 0},
-    {MNG_UINT_SAVE, init_save, free_save, read_save, write_save, 0, 0},
-    {MNG_UINT_SEEK, init_seek, free_seek, read_seek, write_seek, 0, 0},
-    {MNG_UINT_SHOW, init_show, free_show, read_show, write_show, 0, 0},
-    {MNG_UINT_TERM, init_term, free_term, read_term, write_term, 0, 0},
-    {MNG_UINT_bKGD, init_bkgd, free_bkgd, read_bkgd, write_bkgd, 0, 0},
-    {MNG_UINT_cHRM, init_chrm, free_chrm, read_chrm, write_chrm, 0, 0},
-    {MNG_UINT_eXPI, init_expi, free_expi, read_expi, write_expi, 0, 0},
-    {MNG_UINT_fPRI, init_fpri, free_fpri, read_fpri, write_fpri, 0, 0},
-    {MNG_UINT_gAMA, init_gama, free_gama, read_gama, write_gama, 0, 0},
-    {MNG_UINT_hIST, init_hist, free_hist, read_hist, write_hist, 0, 0},
-    {MNG_UINT_iCCP, init_iccp, free_iccp, read_iccp, write_iccp, 0, 0},
-    {MNG_UINT_iTXt, init_itxt, free_itxt, read_itxt, write_itxt, 0, 0},
-    {MNG_UINT_nEED, init_need, free_need, read_need, write_need, 0, 0},
+    {MNG_UINT_LOOP, mng_init_loop, mng_free_loop, mng_read_loop, mng_write_loop, mng_assign_loop, 0, 0},
+    {MNG_UINT_MAGN, mng_init_magn, mng_free_magn, mng_read_magn, mng_write_magn, mng_assign_magn, 0, 0},
+    {MNG_UINT_MEND, mng_init_mend, mng_free_mend, mng_read_mend, mng_write_mend, mng_assign_mend, 0, 0},
+    {MNG_UINT_MHDR, mng_init_mhdr, mng_free_mhdr, mng_read_mhdr, mng_write_mhdr, mng_assign_mhdr, 0, 0},
+    {MNG_UINT_MOVE, mng_init_move, mng_free_move, mng_read_move, mng_write_move, mng_assign_move, 0, 0},
+    {MNG_UINT_ORDR, mng_init_ordr, mng_free_ordr, mng_read_ordr, mng_write_ordr, mng_assign_ordr, 0, 0},
+    {MNG_UINT_PAST, mng_init_past, mng_free_past, mng_read_past, mng_write_past, mng_assign_past, 0, 0},
+    {MNG_UINT_PLTE, mng_init_plte, mng_free_plte, mng_read_plte, mng_write_plte, mng_assign_plte, 0, 0},
+    {MNG_UINT_PPLT, mng_init_pplt, mng_free_pplt, mng_read_pplt, mng_write_pplt, mng_assign_pplt, 0, 0},
+    {MNG_UINT_PROM, mng_init_prom, mng_free_prom, mng_read_prom, mng_write_prom, mng_assign_prom, 0, 0},
+    {MNG_UINT_SAVE, mng_init_save, mng_free_save, mng_read_save, mng_write_save, mng_assign_save, 0, 0},
+    {MNG_UINT_SEEK, mng_init_seek, mng_free_seek, mng_read_seek, mng_write_seek, mng_assign_seek, 0, 0},
+    {MNG_UINT_SHOW, mng_init_show, mng_free_show, mng_read_show, mng_write_show, mng_assign_show, 0, 0},
+    {MNG_UINT_TERM, mng_init_term, mng_free_term, mng_read_term, mng_write_term, mng_assign_term, 0, 0},
+    {MNG_UINT_bKGD, mng_init_bkgd, mng_free_bkgd, mng_read_bkgd, mng_write_bkgd, mng_assign_bkgd, 0, 0},
+    {MNG_UINT_cHRM, mng_init_chrm, mng_free_chrm, mng_read_chrm, mng_write_chrm, mng_assign_chrm, 0, 0},
+    {MNG_UINT_eXPI, mng_init_expi, mng_free_expi, mng_read_expi, mng_write_expi, mng_assign_expi, 0, 0},
+    {MNG_UINT_evNT, mng_init_evnt, mng_free_evnt, mng_read_evnt, mng_write_evnt, mng_assign_evnt, 0, 0},
+    {MNG_UINT_fPRI, mng_init_fpri, mng_free_fpri, mng_read_fpri, mng_write_fpri, mng_assign_fpri, 0, 0},
+    {MNG_UINT_gAMA, mng_init_gama, mng_free_gama, mng_read_gama, mng_write_gama, mng_assign_gama, 0, 0},
+    {MNG_UINT_hIST, mng_init_hist, mng_free_hist, mng_read_hist, mng_write_hist, mng_assign_hist, 0, 0},
+    {MNG_UINT_iCCP, mng_init_iccp, mng_free_iccp, mng_read_iccp, mng_write_iccp, mng_assign_iccp, 0, 0},
+    {MNG_UINT_iTXt, mng_init_itxt, mng_free_itxt, mng_read_itxt, mng_write_itxt, mng_assign_itxt, 0, 0},
+    {MNG_UINT_nEED, mng_init_need, mng_free_need, mng_read_need, mng_write_need, mng_assign_need, 0, 0},
 /* TODO:     {MNG_UINT_oFFs, 0, 0, 0, 0, 0, 0},  */
 /* TODO:     {MNG_UINT_pCAL, 0, 0, 0, 0, 0, 0},  */
-    {MNG_UINT_pHYg, init_phyg, free_phyg, read_phyg, write_phyg, 0, 0},
-    {MNG_UINT_pHYs, init_phys, free_phys, read_phys, write_phys, 0, 0},
-    {MNG_UINT_sBIT, init_sbit, free_sbit, read_sbit, write_sbit, 0, 0},
+    {MNG_UINT_pHYg, mng_init_phyg, mng_free_phyg, mng_read_phyg, mng_write_phyg, mng_assign_phyg, 0, 0},
+    {MNG_UINT_pHYs, mng_init_phys, mng_free_phys, mng_read_phys, mng_write_phys, mng_assign_phys, 0, 0},
+    {MNG_UINT_sBIT, mng_init_sbit, mng_free_sbit, mng_read_sbit, mng_write_sbit, mng_assign_sbit, 0, 0},
 /* TODO:     {MNG_UINT_sCAL, 0, 0, 0, 0, 0, 0},  */
-    {MNG_UINT_sPLT, init_splt, free_splt, read_splt, write_splt, 0, 0},
-    {MNG_UINT_sRGB, init_srgb, free_srgb, read_srgb, write_srgb, 0, 0},
-    {MNG_UINT_tEXt, init_text, free_text, read_text, write_text, 0, 0},
-    {MNG_UINT_tIME, init_time, free_time, read_time, write_time, 0, 0},
-    {MNG_UINT_tRNS, init_trns, free_trns, read_trns, write_trns, 0, 0},
-    {MNG_UINT_zTXt, init_ztxt, free_ztxt, read_ztxt, write_ztxt, 0, 0},
+    {MNG_UINT_sPLT, mng_init_splt, mng_free_splt, mng_read_splt, mng_write_splt, mng_assign_splt, 0, 0},
+    {MNG_UINT_sRGB, mng_init_srgb, mng_free_srgb, mng_read_srgb, mng_write_srgb, mng_assign_srgb, 0, 0},
+    {MNG_UINT_tEXt, mng_init_text, mng_free_text, mng_read_text, mng_write_text, mng_assign_text, 0, 0},
+    {MNG_UINT_tIME, mng_init_time, mng_free_time, mng_read_time, mng_write_time, mng_assign_time, 0, 0},
+    {MNG_UINT_tRNS, mng_init_trns, mng_free_trns, mng_read_trns, mng_write_trns, mng_assign_trns, 0, 0},
+    {MNG_UINT_zTXt, mng_init_ztxt, mng_free_ztxt, mng_read_ztxt, mng_write_ztxt, mng_assign_ztxt, 0, 0},
   };
                                        /* binary search variables */
   mng_int32         iTop, iLower, iUpper, iMiddle;
@@ -341,6 +358,9 @@ mng_retcode process_raw_chunk (mng_datap  pData,
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_PROCESS_RAW_CHUNK, MNG_LC_START)
 #endif
+                                       /* reset timer indicator on read-cycle */
+  if ((pData->bReading) && (!pData->bDisplaying))
+    pData->bTimerset = MNG_FALSE;
                                        /* get the chunkname */
   iChunkname = (mng_chunkid)(mng_get_uint32 (pBuf));
 
@@ -349,7 +369,7 @@ mng_retcode process_raw_chunk (mng_datap  pData,
                                        /* determine max index of table */
   iTop = (sizeof (chunk_table) / sizeof (chunk_table [0])) - 1;
 
-  /* binary search; with 52 chunks, worst-case is 7 comparisons */
+  /* binary search; with 54 chunks, worst-case is 7 comparisons */
   iLower  = 0;
   iMiddle = 11;                        /* start with the IDAT entry */
   iUpper  = iTop;
@@ -392,14 +412,14 @@ mng_retcode process_raw_chunk (mng_datap  pData,
     iRetcode = MNG_NOERROR;
 
   if (pChunk)                          /* store this chunk ? */
-    add_chunk (pData, pChunk);         /* do it */
+    mng_add_chunk (pData, pChunk);     /* do it */
 
 #ifdef MNG_INCLUDE_JNG                 /* implicit EOF ? */
   if ((!pData->bHasMHDR) && (!pData->bHasIHDR) && (!pData->bHasJHDR))
 #else
   if ((!pData->bHasMHDR) && (!pData->bHasIHDR))
 #endif
-    iRetcode = process_eof (pData);    /* then do some EOF processing */
+    iRetcode = mng_process_eof (pData);/* then do some EOF processing */
 
   if (iRetcode)                        /* on error bail out */
     return iRetcode;
@@ -413,7 +433,7 @@ mng_retcode process_raw_chunk (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_retcode read_chunk (mng_datap  pData)
+MNG_LOCAL mng_retcode read_chunk (mng_datap  pData)
 {
   mng_uint32  iBufmax   = pData->iReadbufsize;
   mng_uint8p  pBuf      = pData->pReadbuf;
@@ -438,11 +458,14 @@ mng_retcode read_chunk (mng_datap  pData)
                                        /* can we advance to next object ? */
       if ((!iRetcode) && (pData->pCurraniobj) &&
           (!pData->bTimerset) && (!pData->bSectionwait))
-      {
+      {                                /* reset timer indicator on read-cycle */
+        if ((pData->bReading) && (!pData->bDisplaying))
+          pData->bTimerset = MNG_FALSE;
+
         pData->pCurraniobj = ((mng_object_headerp)pData->pCurraniobj)->pNext;
                                        /* TERM processing to be done ? */
         if ((!pData->pCurraniobj) && (pData->bHasTERM) && (!pData->bHasMHDR))
-          iRetcode = process_display_mend (pData);
+          iRetcode = mng_process_display_mend (pData);
       }
     }                                  /* until error or a break or no more objects */
     while ((!iRetcode) && (pData->pCurraniobj) &&
@@ -454,17 +477,19 @@ mng_retcode read_chunk (mng_datap  pData)
     {
       switch (pData->iBreakpoint)      /* return to broken display routine */
       {
-        case 1 : { iRetcode = process_display_fram2 (pData); break; }
-        case 2 : { iRetcode = process_display_ihdr  (pData); break; }
-        case 3 : ;                     /* same as 4 !!! */
-        case 4 : { iRetcode = process_display_show  (pData); break; }
-        case 5 : { iRetcode = process_display_clon2 (pData); break; }
+        case  1 : { iRetcode = mng_process_display_fram2 (pData); break; }
+        case  2 : { iRetcode = mng_process_display_ihdr  (pData); break; }
+        case  3 : ;                     /* same as 4 !!! */
+        case  4 : { iRetcode = mng_process_display_show  (pData); break; }
+        case  5 : { iRetcode = mng_process_display_clon2 (pData); break; }
 #ifdef MNG_INCLUDE_JNG
-        case 7 : { iRetcode = process_display_jhdr  (pData); break; }
+        case  7 : { iRetcode = mng_process_display_jhdr  (pData); break; }
 #endif
-        case 6 : ;                     /* same as 8 !!! */
-        case 8 : { iRetcode = process_display_iend  (pData); break; }
-        case 9 : { iRetcode = process_display_magn2 (pData); break; }
+        case  6 : ;                     /* same as 8 !!! */
+        case  8 : { iRetcode = mng_process_display_iend  (pData); break; }
+        case  9 : { iRetcode = mng_process_display_magn2 (pData); break; }
+        case 10 : { iRetcode = mng_process_display_mend2 (pData); break; }
+        case 11 : { iRetcode = mng_process_display_past2 (pData); break; }
       }
     }
   }
@@ -480,14 +505,17 @@ mng_retcode read_chunk (mng_datap  pData)
 #else
   if (!pData->bEOF)
 #endif
-  {                                    /* freezing in progress ? */
+  {
+#ifdef MNG_SUPPORT_DISPLAY
+                                       /* freezing in progress ? */
     if ((pData->bFreezing) && (pData->iSuspendpoint == 0))
       pData->bRunning = MNG_FALSE;     /* then this is the right moment to do it */
+#endif
 
     if (pData->iSuspendpoint <= 2)
     {
       iBuflen  = sizeof (mng_uint32);  /* read length */
-      iRetcode = read_databuffer (pData, pBuf, iBuflen, &iRead);
+      iRetcode = read_databuffer (pData, pBuf, &pData->pReadbufnext, iBuflen, &iRead);
 
       if (iRetcode)                    /* bail on errors */
         return iRetcode;
@@ -509,7 +537,7 @@ mng_retcode read_chunk (mng_datap  pData)
         {                              /* note that we don't use the full size
                                           so there's always a zero-byte at the
                                           very end !!! */
-          iRetcode = read_databuffer (pData, pBuf, iBuflen, &iRead);
+          iRetcode = read_databuffer (pData, pBuf, &pData->pReadbufnext, iBuflen, &iRead);
 
           if (iRetcode)                /* bail on errors */
             return iRetcode;
@@ -524,7 +552,7 @@ mng_retcode read_chunk (mng_datap  pData)
             {
               mng_uint32 iL = iBuflen - (mng_uint32)(sizeof (iCrc));
                                        /* calculate the crc */
-              iCrc = crc (pData, pBuf, iL);
+              iCrc = mng_crc (pData, pBuf, iL);
                                        /* and check it */
               if (!(iCrc == mng_get_uint32 (pBuf + iL)))
                 iRetcode = MNG_INVALIDCRC;
@@ -535,13 +563,17 @@ mng_retcode read_chunk (mng_datap  pData)
         }
         else
         {
+          if (iBuflen > 16777216)      /* is the length incredible? */
+            MNG_ERROR (pData, MNG_IMPROBABLELENGTH);
+
           if (!pData->iSuspendpoint)   /* create additional large buffer ? */
           {                            /* again reserve space for the last zero-byte */
             pData->iLargebufsize = iBuflen + 1;
+            pData->pLargebufnext = MNG_NULL;
             MNG_ALLOC (pData, pData->pLargebuf, pData->iLargebufsize)
           }
 
-          iRetcode = read_databuffer (pData, pData->pLargebuf, iBuflen, &iRead);
+          iRetcode = read_databuffer (pData, pData->pLargebuf, &pData->pLargebufnext, iBuflen, &iRead);
 
           if (iRetcode)
             return iRetcode;
@@ -556,7 +588,7 @@ mng_retcode read_chunk (mng_datap  pData)
             {
               mng_uint32 iL = iBuflen - (mng_uint32)(sizeof (iCrc));
                                        /* calculate the crc */
-              iCrc = crc (pData, pData->pLargebuf, iL);
+              iCrc = mng_crc (pData, pData->pLargebuf, iL);
                                        /* and check it */
               if (!(iCrc == mng_get_uint32 (pData->pLargebuf + iL)))
                 iRetcode = MNG_INVALIDCRC;
@@ -574,7 +606,7 @@ mng_retcode read_chunk (mng_datap  pData)
       }
       else
       {                                /* that's final */
-        iRetcode = process_eof (pData);
+        iRetcode = mng_process_eof (pData);
 
         if (iRetcode)                  /* on error bail out */
           return iRetcode;
@@ -593,7 +625,7 @@ mng_retcode read_chunk (mng_datap  pData)
 #ifdef MNG_SUPPORT_DISPLAY             /* refresh needed ? */
   if ((!pData->bTimerset) && (!pData->bSuspended) && (pData->bNeedrefresh))
   {
-    iRetcode = display_progressive_refresh (pData, 1);
+    iRetcode = mng_display_progressive_refresh (pData, 1);
 
     if (iRetcode)                      /* on error bail out */
       return iRetcode;
@@ -609,7 +641,7 @@ mng_retcode read_chunk (mng_datap  pData)
 
 /* ************************************************************************** */
 
-mng_retcode read_graphic (mng_datap pData)
+mng_retcode mng_read_graphic (mng_datap pData)
 {
   mng_uint32  iBuflen;                 /* number of bytes requested */
   mng_uint32  iRead;                   /* number of bytes read */
@@ -629,7 +661,7 @@ mng_retcode read_graphic (mng_datap pData)
   {
     iBuflen = 2 * sizeof (mng_uint32); /* read signature */
 
-    iRetcode = read_databuffer (pData, pData->pReadbuf, iBuflen, &iRead);
+    iRetcode = read_databuffer (pData, pData->pReadbuf, &pData->pReadbufnext, iBuflen, &iRead);
 
     if (iRetcode)
       return iRetcode;
@@ -662,15 +694,19 @@ mng_retcode read_graphic (mng_datap pData)
   if (!pData->bSuspended)              /* still going ? */
   {
     do
-    {
+    {                                  /* reset timer during mng_read() ? */
+      if ((pData->bReading) && (!pData->bDisplaying))
+        pData->bTimerset = MNG_FALSE;
+
       iRetcode = read_chunk (pData);   /* process a chunk */
 
       if (iRetcode)                    /* on error bail out */
         return iRetcode;
     }
 #ifdef MNG_SUPPORT_DISPLAY             /* until EOF or a break-request */
-    while (((!pData->bEOF) || (pData->pCurraniobj)) && (!pData->bSuspended) &&
-           (!pData->bTimerset) && (!pData->bSectionwait));
+    while (((!pData->bEOF) || (pData->pCurraniobj)) &&
+           (!pData->bSuspended) && (!pData->bSectionwait) &&
+           ((!pData->bTimerset) || ((pData->bReading) && (!pData->bDisplaying))));
 #else
     while ((!pData->bEOF) && (!pData->bSuspended));
 #endif

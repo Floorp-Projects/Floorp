@@ -1,16 +1,10 @@
-libmng 1.0.3
+libmng 1.0.5
 ------------
 
-Third maintenance release!
+Final release.
 
-Small cosmetic changes. Cleaning up the contributions.
-New makefile for mingw32, and new fbcon example.
-Major thanks to Greg for helping out with the *nix stuff!
-Note that there's also a separate download for ASM programmers now.
-Check http://www.libmng.com for details (download/ports&packages page).
-
-It may be a while for the next release. I'm "off duty" for the next 8 or
-so months...
+This is the long-awaited final release for the new 'dynamic MNG' feature, and
+brings MNG compliance to near 100%.
 
 Gerard
 
@@ -18,14 +12,14 @@ Gerard
 For more information please visit:
 
 The official libmng web-site:
-  http://www.libmng.com
+  http://www.libmng.com/
 
 Libmng's community on SourceForge:
   https://sourceforge.net/project/?group_id=5635
 
 The official MNG homepage:
-  http://www.libpng.org/pub/mng
+  http://www.libpng.org/pub/mng/
 
 The official PNG homepage:
-  http://www.libpng.org/pub/png
+  http://www.libpng.org/pub/png/
 

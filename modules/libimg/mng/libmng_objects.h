@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_objects.h          copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.0                                                      * */
+/* * version   : 1.0.5                                                      * */
 /* *                                                                        * */
 /* * purpose   : Internal object structures (definition)                    * */
 /* *                                                                        * */
@@ -49,6 +49,17 @@
 /* *             - added valid-flag to stored objects for read() / display()* */
 /* *             0.9.3 - 10/19/2000 - G.Juyn                                * */
 /* *             - added storage for pixel-/alpha-sampledepth for delta's   * */
+/* *                                                                        * */
+/* *             1.0.5 - 09/13/2002 - G.Juyn                                * */
+/* *             - fixed read/write of MAGN chunk                           * */
+/* *             1.0.5 - 09/15/2002 - G.Juyn                                * */
+/* *             - added event handling for dynamic MNG                     * */
+/* *             1.0.5 - 09/20/2002 - G.Juyn                                * */
+/* *             - added support for PAST                                   * */
+/* *             1.0.5 - 09/23/2002 - G.Juyn                                * */
+/* *             - added in-memory color-correction of abstract images      * */
+/* *             1.0.5 - 10/07/2002 - G.Juyn                                * */
+/* *             - fixed DISC support                                       * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -99,6 +110,9 @@ typedef struct {                                 /* MNG specification "object-bu
            mng_uint8         iCompression;
            mng_uint8         iFilter;
            mng_uint8         iInterlace;
+
+           mng_bool          bCorrected;         /* indicates if an abstract image
+                                                    has already been color-corrected */
            
            mng_uint8         iAlphabitdepth;     /* used only for JNG images */
            mng_uint8         iJHDRcompression;
@@ -171,14 +185,16 @@ typedef struct {                                 /* MNG specification "object" *
            mng_int32         iClipr;
            mng_int32         iClipt;
            mng_int32         iClipb;
-           mng_uint16        iMAGN_MethodX;      /* magnification (MAGN) */
-           mng_uint16        iMAGN_MethodY;
+           mng_uint8         iMAGN_MethodX;      /* magnification (MAGN) */
+           mng_uint8         iMAGN_MethodY;
            mng_uint16        iMAGN_MX;
            mng_uint16        iMAGN_MY;
            mng_uint16        iMAGN_ML;
            mng_uint16        iMAGN_MR;
            mng_uint16        iMAGN_MT;
            mng_uint16        iMAGN_MB;
+           mng_int32         iPastx;             /* target x/y from previous PAST */
+           mng_int32         iPasty;
            mng_imagedatap    pImgbuf;            /* the image-data buffer */
         } mng_image;
 typedef mng_image * mng_imagep;
@@ -218,7 +234,7 @@ typedef mng_ani_gama * mng_ani_gamap;
 
 /* ************************************************************************** */
 
-typedef struct {                                 /* global gCRM object */
+typedef struct {                                 /* global cHRM object */
            mng_object_header sHeader;            /* default header (DO NOT REMOVE) */
            mng_bool          bEmpty;
            mng_uint32        iWhitepointx;
@@ -426,6 +442,8 @@ typedef mng_ani_save * mng_ani_savep;
 
 typedef struct {                                 /* SEEK object */
            mng_object_header sHeader;            /* default header (DO NOT REMOVE) */
+           mng_uint32        iSegmentnamesize;
+           mng_pchar         zSegmentname;
         } mng_ani_seek;
 typedef mng_ani_seek * mng_ani_seekp;
 
@@ -485,16 +503,61 @@ typedef struct {                                 /* MAGN object */
            mng_object_header sHeader;            /* default header (DO NOT REMOVE) */
            mng_uint16        iFirstid;
            mng_uint16        iLastid;
-           mng_uint16        iMethodX;
+           mng_uint8         iMethodX;
            mng_uint16        iMX;
            mng_uint16        iMY;
            mng_uint16        iML;
            mng_uint16        iMR;
            mng_uint16        iMT;
            mng_uint16        iMB;
-           mng_uint16        iMethodY;
+           mng_uint8         iMethodY;
         } mng_ani_magn;
 typedef mng_ani_magn * mng_ani_magnp;
+
+/* ************************************************************************** */
+
+typedef struct {                                 /* PAST object */
+           mng_object_header sHeader;            /* default header (DO NOT REMOVE) */
+           mng_uint16        iTargetid;
+           mng_uint8         iTargettype;
+           mng_int32         iTargetx;
+           mng_int32         iTargety;
+           mng_uint32        iCount;
+           mng_ptr           pSources;
+        } mng_ani_past;
+typedef mng_ani_past * mng_ani_pastp;
+
+/* ************************************************************************** */
+
+typedef struct {                                 /* DISC object */
+           mng_object_header sHeader;            /* default header (DO NOT REMOVE) */
+           mng_uint32        iCount;
+           mng_uint16p       pIds;
+        } mng_ani_disc;
+typedef mng_ani_disc * mng_ani_discp;
+
+/* ************************************************************************** */
+
+#ifdef MNG_SUPPORT_DYNAMICMNG
+typedef struct {                                 /* event object */
+           mng_object_header sHeader;            /* default header (DO NOT REMOVE) */
+           mng_uint8         iEventtype;
+           mng_uint8         iMasktype;
+           mng_int32         iLeft;
+           mng_int32         iRight;
+           mng_int32         iTop;
+           mng_int32         iBottom;
+           mng_uint16        iObjectid;
+           mng_uint8         iIndex;
+           mng_uint32        iSegmentnamesize;
+           mng_pchar         zSegmentname;
+
+           mng_ani_seekp     pSEEK;              /* SEEK ani object */
+           mng_int32         iLastx;             /* last X/Y coordinates */
+           mng_int32         iLasty;
+        } mng_event;
+typedef mng_event * mng_eventp;
+#endif
 
 /* ************************************************************************** */
 

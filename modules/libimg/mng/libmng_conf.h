@@ -1,8 +1,8 @@
 /* ************************************************************************** */
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
-/* * file      : libmng_conf.h             copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.0                                                      * */
+/* * file      : libmng_conf.h             copyright (c) G.Juyn             * */
+/* * version   : 1.0.5                                                      * */
 /* *                                                                        * */
 /* * purpose   : main configuration file                                    * */
 /* *                                                                        * */
@@ -31,7 +31,16 @@
 /* *             0.9.3 - 09/16/2000 - G.Juyn                                * */
 /* *             - removed trace-options from default SO/DLL builds         * */
 /* *                                                                        * */
+/* *             1.0.4 - 06/22/2002 - G.Juyn                                * */
+/* *             - B526138 - returned IJGSRC6B calling convention to        * */
+/* *               default for MSVC                                         * */
+/* *                                                                        * */
+/* *             1.0.5 - 09/14/2002 - G.Juyn                                * */
+/* *             - added event handling for dynamic MNG                     * */
+/* *             - added 'supports' call to check function availability     * */
+/* *                                                                        * */
 /* ************************************************************************** */
+
 
 #if defined(__BORLANDC__) && defined(MNG_STRICT_ANSI)
 #pragma option -A                      /* force ANSI-C */
@@ -83,6 +92,16 @@
 #if defined(MNG_SUPPORT_IJG6B) && !defined(MNG_SUPPORT_JPEG8) && !defined(MNG_SUPPORT_JPEG12)
 #define MNG_SUPPORT_JPEG8
 /* #define MNG_SUPPORT_JPEG12 */
+#endif
+
+/* The following is required to export the IJG routines from the DLL in
+   the Windows-standard calling convention;
+   currently this only works for Borland C++ !!! */
+
+#if defined(MNG_BUILD_DLL) || defined(MNG_USE_DLL)
+#if defined(MNG_SUPPORT_IJG6B) && defined(__BORLANDC__)
+#define MNG_DEFINE_JPEG_STDCALL
+#endif
 #endif
 
 /* ************************************************************************** */
@@ -194,6 +213,32 @@
    and 680x0 */
 
 /* #define MNG_BIGENDIAN_SUPPORTED */
+
+/* ************************************************************************** */
+
+/* enable 'supports' function */
+/* use this if you need to query the availability of functions at runtime;
+   useful for apps that dynamically load the library and that need specific
+   functions */
+
+#ifndef MNG_SUPPORT_FUNCQUERY
+#if defined(MNG_BUILD_SO) || defined(MNG_USE_SO) || defined(MNG_BUILD_DLL) || defined(MNG_USE_DLL)
+#define MNG_SUPPORT_FUNCQUERY
+#endif
+#endif
+
+/* ************************************************************************** */
+
+/* enable dynamic MNG features */
+/* use this if you would like to have dynamic support for specifically
+   designed MNGs; eg. this is useful for 'rollover' effects such as common
+   on the world wide web */
+
+#ifndef MNG_SUPPORT_DYNAMICMNG
+#if defined(MNG_BUILD_SO) || defined(MNG_USE_SO) || defined(MNG_BUILD_DLL) || defined(MNG_USE_DLL)
+#define MNG_SUPPORT_DYNAMICMNG
+#endif
+#endif
 
 /* ************************************************************************** */
 /* *                                                                        * */

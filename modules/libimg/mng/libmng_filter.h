@@ -4,8 +4,8 @@
 /* ************************************************************************** */
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
-/* * file      : libmng_filter.h           copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.0                                                      * */
+/* * file      : libmng_filter.h           copyright (c) 2000-2002 G.Juyn   * */
+/* * version   : 1.0.5                                                      * */
 /* *                                                                        * */
 /* * purpose   : Filtering routines (definition)                            * */
 /* *                                                                        * */
@@ -24,6 +24,9 @@
 /* *             0.9.3 - 09/07/2000 - G.Juyn                                * */
 /* *             - added support for new filter_types                       * */
 /* *                                                                        * */
+/* *             1.0.5 - 08/19/2002 - G.Juyn                                * */
+/* *             - B597134 - libmng pollutes the linker namespace           * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #if defined(__BORLANDC__) && defined(MNG_STRICT_ANSI)
@@ -35,32 +38,29 @@
 
 /* ************************************************************************** */
 
-mng_retcode filter_a_row      (mng_datap pData);
-
-mng_retcode filter_sub        (mng_datap pData);
-mng_retcode filter_up         (mng_datap pData);
-mng_retcode filter_average    (mng_datap pData);
-mng_retcode filter_paeth      (mng_datap pData);
+mng_retcode mng_filter_a_row         (mng_datap pData);
 
 /* ************************************************************************** */
 
-mng_retcode init_rowdiffering (mng_datap pData);
+#ifdef FILTER192
+mng_retcode mng_init_rowdiffering    (mng_datap pData);
 
-mng_retcode differ_g1         (mng_datap pData);
-mng_retcode differ_g2         (mng_datap pData);
-mng_retcode differ_g4         (mng_datap pData);
-mng_retcode differ_g8         (mng_datap pData);
-mng_retcode differ_g16        (mng_datap pData);
-mng_retcode differ_rgb8       (mng_datap pData);
-mng_retcode differ_rgb16      (mng_datap pData);
-mng_retcode differ_idx1       (mng_datap pData);
-mng_retcode differ_idx2       (mng_datap pData);
-mng_retcode differ_idx4       (mng_datap pData);
-mng_retcode differ_idx8       (mng_datap pData);
-mng_retcode differ_ga8        (mng_datap pData);
-mng_retcode differ_ga16       (mng_datap pData);
-mng_retcode differ_rgba8      (mng_datap pData);
-mng_retcode differ_rgba16     (mng_datap pData);
+mng_retcode mng_differ_g1            (mng_datap pData);
+mng_retcode mng_differ_g2            (mng_datap pData);
+mng_retcode mng_differ_g4            (mng_datap pData);
+mng_retcode mng_differ_g8            (mng_datap pData);
+mng_retcode mng_differ_g16           (mng_datap pData);
+mng_retcode mng_differ_rgb8          (mng_datap pData);
+mng_retcode mng_differ_rgb16         (mng_datap pData);
+mng_retcode mng_differ_idx1          (mng_datap pData);
+mng_retcode mng_differ_idx2          (mng_datap pData);
+mng_retcode mng_differ_idx4          (mng_datap pData);
+mng_retcode mng_differ_idx8          (mng_datap pData);
+mng_retcode mng_differ_ga8           (mng_datap pData);
+mng_retcode mng_differ_ga16          (mng_datap pData);
+mng_retcode mng_differ_rgba8         (mng_datap pData);
+mng_retcode mng_differ_rgba16        (mng_datap pData);
+#endif
 
 /* ************************************************************************** */
 

@@ -1,8 +1,8 @@
 /* ************************************************************************** */
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
-/* * file      : libmng_read.h             copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.0                                                      * */
+/* * file      : libmng_read.h             copyright (c) 2000-2002 G.Juyn   * */
+/* * version   : 1.0.5                                                      * */
 /* *                                                                        * */
 /* * purpose   : Read management (definition)                               * */
 /* *                                                                        * */
@@ -21,6 +21,9 @@
 /* *             0.9.3 - 10/18/2000 - G.Juyn                                * */
 /* *             - added closestream() processing for mng_cleanup()         * */
 /* *                                                                        * */
+/* *             1.0.5 - 08/19/2002 - G.Juyn                                * */
+/* *             - B597134 - libmng pollutes the linker namespace           * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #if defined(__BORLANDC__) && defined(MNG_STRICT_ANSI)
@@ -32,9 +35,9 @@
 
 /* ************************************************************************** */
 
-mng_retcode process_eof  (mng_datap pData);
+mng_retcode mng_process_eof  (mng_datap pData);
 
-mng_retcode read_graphic (mng_datap pData);
+mng_retcode mng_read_graphic (mng_datap pData);
 
 /* ************************************************************************** */
 

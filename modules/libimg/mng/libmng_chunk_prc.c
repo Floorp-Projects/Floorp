@@ -4,8 +4,8 @@
 /* ************************************************************************** */
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
-/* * file      : libmng_chunk_prc.c        copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.0                                                      * */
+/* * file      : libmng_chunk_prc.c        copyright (c) 2000-2002 G.Juyn   * */
+/* * version   : 1.0.5                                                      * */
 /* *                                                                        * */
 /* * purpose   : Chunk initialization & cleanup (implementation)            * */
 /* *                                                                        * */
@@ -36,6 +36,16 @@
 /* *             0.9.3 - 10/16/2000 - G.Juyn                                * */
 /* *             - added support for JDAA                                   * */
 /* *                                                                        * */
+/* *             1.0.5 - 08/19/2002 - G.Juyn                                * */
+/* *             - B597134 - libmng pollutes the linker namespace           * */
+/* *             - added HLAPI function to copy chunks                      * */
+/* *             1.0.5 - 09/14/2002 - G.Juyn                                * */
+/* *             - added event handling for dynamic MNG                     * */
+/* *             1.0.5 - 10/04/2002 - G.Juyn                                * */
+/* *             - fixed chunk-storage for evNT chunk                       * */
+/* *             1.0.5 - 10/17/2002 - G.Juyn                                * */
+/* *             - fixed issue in freeing evNT chunk                        * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #include "libmng.h"
@@ -59,8 +69,8 @@
 /* *                                                                        * */
 /* ************************************************************************** */
 
-void add_chunk (mng_datap  pData,
-                mng_chunkp pChunk)
+void mng_add_chunk (mng_datap  pData,
+                    mng_chunkp pChunk)
 {
   if (!pData->pFirstchunk)             /* list is still empty ? */
   {
@@ -99,7 +109,7 @@ void add_chunk (mng_datap  pData,
 /* *                                                                        * */
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_ihdr)
+INIT_CHUNK_HDR (mng_init_ihdr)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_IHDR, MNG_LC_START)
@@ -117,7 +127,7 @@ INIT_CHUNK_HDR (init_ihdr)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_plte)
+INIT_CHUNK_HDR (mng_init_plte)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_PLTE, MNG_LC_START)
@@ -135,7 +145,7 @@ INIT_CHUNK_HDR (init_plte)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_idat)
+INIT_CHUNK_HDR (mng_init_idat)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_IDAT, MNG_LC_START)
@@ -153,7 +163,7 @@ INIT_CHUNK_HDR (init_idat)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_iend)
+INIT_CHUNK_HDR (mng_init_iend)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_IEND, MNG_LC_START)
@@ -171,7 +181,7 @@ INIT_CHUNK_HDR (init_iend)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_trns)
+INIT_CHUNK_HDR (mng_init_trns)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_TRNS, MNG_LC_START)
@@ -189,7 +199,7 @@ INIT_CHUNK_HDR (init_trns)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_gama)
+INIT_CHUNK_HDR (mng_init_gama)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_GAMA, MNG_LC_START)
@@ -207,7 +217,7 @@ INIT_CHUNK_HDR (init_gama)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_chrm)
+INIT_CHUNK_HDR (mng_init_chrm)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_CHRM, MNG_LC_START)
@@ -225,7 +235,7 @@ INIT_CHUNK_HDR (init_chrm)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_srgb)
+INIT_CHUNK_HDR (mng_init_srgb)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_SRGB, MNG_LC_START)
@@ -243,7 +253,7 @@ INIT_CHUNK_HDR (init_srgb)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_iccp)
+INIT_CHUNK_HDR (mng_init_iccp)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_ICCP, MNG_LC_START)
@@ -261,7 +271,7 @@ INIT_CHUNK_HDR (init_iccp)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_text)
+INIT_CHUNK_HDR (mng_init_text)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_TEXT, MNG_LC_START)
@@ -279,7 +289,7 @@ INIT_CHUNK_HDR (init_text)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_ztxt)
+INIT_CHUNK_HDR (mng_init_ztxt)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_ZTXT, MNG_LC_START)
@@ -297,7 +307,7 @@ INIT_CHUNK_HDR (init_ztxt)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_itxt)
+INIT_CHUNK_HDR (mng_init_itxt)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_ITXT, MNG_LC_START)
@@ -315,7 +325,7 @@ INIT_CHUNK_HDR (init_itxt)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_bkgd)
+INIT_CHUNK_HDR (mng_init_bkgd)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_BKGD, MNG_LC_START)
@@ -333,7 +343,7 @@ INIT_CHUNK_HDR (init_bkgd)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_phys)
+INIT_CHUNK_HDR (mng_init_phys)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_PHYS, MNG_LC_START)
@@ -351,7 +361,7 @@ INIT_CHUNK_HDR (init_phys)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_sbit)
+INIT_CHUNK_HDR (mng_init_sbit)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_SBIT, MNG_LC_START)
@@ -369,7 +379,7 @@ INIT_CHUNK_HDR (init_sbit)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_splt)
+INIT_CHUNK_HDR (mng_init_splt)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_SPLT, MNG_LC_START)
@@ -387,7 +397,7 @@ INIT_CHUNK_HDR (init_splt)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_hist)
+INIT_CHUNK_HDR (mng_init_hist)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_HIST, MNG_LC_START)
@@ -405,7 +415,7 @@ INIT_CHUNK_HDR (init_hist)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_time)
+INIT_CHUNK_HDR (mng_init_time)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_TIME, MNG_LC_START)
@@ -423,7 +433,7 @@ INIT_CHUNK_HDR (init_time)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_mhdr)
+INIT_CHUNK_HDR (mng_init_mhdr)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_MHDR, MNG_LC_START)
@@ -441,7 +451,7 @@ INIT_CHUNK_HDR (init_mhdr)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_mend)
+INIT_CHUNK_HDR (mng_init_mend)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_MEND, MNG_LC_START)
@@ -459,7 +469,7 @@ INIT_CHUNK_HDR (init_mend)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_loop)
+INIT_CHUNK_HDR (mng_init_loop)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_LOOP, MNG_LC_START)
@@ -477,7 +487,7 @@ INIT_CHUNK_HDR (init_loop)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_endl)
+INIT_CHUNK_HDR (mng_init_endl)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_ENDL, MNG_LC_START)
@@ -495,7 +505,7 @@ INIT_CHUNK_HDR (init_endl)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_defi)
+INIT_CHUNK_HDR (mng_init_defi)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_DEFI, MNG_LC_START)
@@ -513,7 +523,7 @@ INIT_CHUNK_HDR (init_defi)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_basi)
+INIT_CHUNK_HDR (mng_init_basi)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_BASI, MNG_LC_START)
@@ -531,7 +541,7 @@ INIT_CHUNK_HDR (init_basi)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_clon)
+INIT_CHUNK_HDR (mng_init_clon)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_CLON, MNG_LC_START)
@@ -549,7 +559,7 @@ INIT_CHUNK_HDR (init_clon)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_past)
+INIT_CHUNK_HDR (mng_init_past)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_PAST, MNG_LC_START)
@@ -567,7 +577,7 @@ INIT_CHUNK_HDR (init_past)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_disc)
+INIT_CHUNK_HDR (mng_init_disc)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_DISC, MNG_LC_START)
@@ -585,7 +595,7 @@ INIT_CHUNK_HDR (init_disc)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_back)
+INIT_CHUNK_HDR (mng_init_back)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_BACK, MNG_LC_START)
@@ -603,7 +613,7 @@ INIT_CHUNK_HDR (init_back)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_fram)
+INIT_CHUNK_HDR (mng_init_fram)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_FRAM, MNG_LC_START)
@@ -621,7 +631,7 @@ INIT_CHUNK_HDR (init_fram)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_move)
+INIT_CHUNK_HDR (mng_init_move)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_MOVE, MNG_LC_START)
@@ -639,7 +649,7 @@ INIT_CHUNK_HDR (init_move)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_clip)
+INIT_CHUNK_HDR (mng_init_clip)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_CLIP, MNG_LC_START)
@@ -657,7 +667,7 @@ INIT_CHUNK_HDR (init_clip)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_show)
+INIT_CHUNK_HDR (mng_init_show)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_SHOW, MNG_LC_START)
@@ -675,7 +685,7 @@ INIT_CHUNK_HDR (init_show)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_term)
+INIT_CHUNK_HDR (mng_init_term)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_TERM, MNG_LC_START)
@@ -693,7 +703,7 @@ INIT_CHUNK_HDR (init_term)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_save)
+INIT_CHUNK_HDR (mng_init_save)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_SAVE, MNG_LC_START)
@@ -711,7 +721,7 @@ INIT_CHUNK_HDR (init_save)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_seek)
+INIT_CHUNK_HDR (mng_init_seek)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_SEEK, MNG_LC_START)
@@ -729,7 +739,7 @@ INIT_CHUNK_HDR (init_seek)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_expi)
+INIT_CHUNK_HDR (mng_init_expi)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_EXPI, MNG_LC_START)
@@ -747,7 +757,7 @@ INIT_CHUNK_HDR (init_expi)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_fpri)
+INIT_CHUNK_HDR (mng_init_fpri)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_FPRI, MNG_LC_START)
@@ -765,7 +775,7 @@ INIT_CHUNK_HDR (init_fpri)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_need)
+INIT_CHUNK_HDR (mng_init_need)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_NEED, MNG_LC_START)
@@ -783,7 +793,7 @@ INIT_CHUNK_HDR (init_need)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_phyg)
+INIT_CHUNK_HDR (mng_init_phyg)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_PHYG, MNG_LC_START)
@@ -802,7 +812,7 @@ INIT_CHUNK_HDR (init_phyg)
 /* ************************************************************************** */
 
 #ifdef MNG_INCLUDE_JNG
-INIT_CHUNK_HDR (init_jhdr)
+INIT_CHUNK_HDR (mng_init_jhdr)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_JHDR, MNG_LC_START)
@@ -822,7 +832,7 @@ INIT_CHUNK_HDR (init_jhdr)
 /* ************************************************************************** */
 
 #ifdef MNG_INCLUDE_JNG
-INIT_CHUNK_HDR (init_jdaa)
+INIT_CHUNK_HDR (mng_init_jdaa)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_JDAA, MNG_LC_START)
@@ -842,7 +852,7 @@ INIT_CHUNK_HDR (init_jdaa)
 /* ************************************************************************** */
 
 #ifdef MNG_INCLUDE_JNG
-INIT_CHUNK_HDR (init_jdat)
+INIT_CHUNK_HDR (mng_init_jdat)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_JDAT, MNG_LC_START)
@@ -862,7 +872,7 @@ INIT_CHUNK_HDR (init_jdat)
 /* ************************************************************************** */
 
 #ifdef MNG_INCLUDE_JNG
-INIT_CHUNK_HDR (init_jsep)
+INIT_CHUNK_HDR (mng_init_jsep)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_JSEP, MNG_LC_START)
@@ -881,7 +891,7 @@ INIT_CHUNK_HDR (init_jsep)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_dhdr)
+INIT_CHUNK_HDR (mng_init_dhdr)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_DHDR, MNG_LC_START)
@@ -899,7 +909,7 @@ INIT_CHUNK_HDR (init_dhdr)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_prom)
+INIT_CHUNK_HDR (mng_init_prom)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_PROM, MNG_LC_START)
@@ -917,7 +927,7 @@ INIT_CHUNK_HDR (init_prom)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_ipng)
+INIT_CHUNK_HDR (mng_init_ipng)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_IPNG, MNG_LC_START)
@@ -935,7 +945,7 @@ INIT_CHUNK_HDR (init_ipng)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_pplt)
+INIT_CHUNK_HDR (mng_init_pplt)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_PPLT, MNG_LC_START)
@@ -953,7 +963,7 @@ INIT_CHUNK_HDR (init_pplt)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_ijng)
+INIT_CHUNK_HDR (mng_init_ijng)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_IJNG, MNG_LC_START)
@@ -971,7 +981,7 @@ INIT_CHUNK_HDR (init_ijng)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_drop)
+INIT_CHUNK_HDR (mng_init_drop)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_DROP, MNG_LC_START)
@@ -989,7 +999,7 @@ INIT_CHUNK_HDR (init_drop)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_dbyk)
+INIT_CHUNK_HDR (mng_init_dbyk)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_DBYK, MNG_LC_START)
@@ -1007,7 +1017,7 @@ INIT_CHUNK_HDR (init_dbyk)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_ordr)
+INIT_CHUNK_HDR (mng_init_ordr)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_ORDR, MNG_LC_START)
@@ -1025,7 +1035,7 @@ INIT_CHUNK_HDR (init_ordr)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_magn)
+INIT_CHUNK_HDR (mng_init_magn)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_MAGN, MNG_LC_START)
@@ -1043,7 +1053,25 @@ INIT_CHUNK_HDR (init_magn)
 
 /* ************************************************************************** */
 
-INIT_CHUNK_HDR (init_unknown)
+INIT_CHUNK_HDR (mng_init_evnt)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_INIT_EVNT, MNG_LC_START)
+#endif
+
+  MNG_ALLOC (pData, *ppChunk, sizeof (mng_evnt))
+  ((mng_evntp)*ppChunk)->sHeader = *((mng_chunk_headerp)pHeader);
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_INIT_EVNT, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+INIT_CHUNK_HDR (mng_init_unknown)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_UNKNOWN, MNG_LC_START)
@@ -1065,7 +1093,7 @@ INIT_CHUNK_HDR (init_unknown)
 /* *                                                                        * */
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_ihdr)
+FREE_CHUNK_HDR (mng_free_ihdr)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_IHDR, MNG_LC_START)
@@ -1082,7 +1110,7 @@ FREE_CHUNK_HDR (free_ihdr)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_plte)
+FREE_CHUNK_HDR (mng_free_plte)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_PLTE, MNG_LC_START)
@@ -1099,7 +1127,7 @@ FREE_CHUNK_HDR (free_plte)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_idat)
+FREE_CHUNK_HDR (mng_free_idat)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_IDAT, MNG_LC_START)
@@ -1120,7 +1148,7 @@ FREE_CHUNK_HDR (free_idat)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_iend)
+FREE_CHUNK_HDR (mng_free_iend)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_IEND, MNG_LC_START)
@@ -1137,7 +1165,7 @@ FREE_CHUNK_HDR (free_iend)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_trns)
+FREE_CHUNK_HDR (mng_free_trns)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_TRNS, MNG_LC_START)
@@ -1154,7 +1182,7 @@ FREE_CHUNK_HDR (free_trns)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_gama)
+FREE_CHUNK_HDR (mng_free_gama)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_GAMA, MNG_LC_START)
@@ -1171,7 +1199,7 @@ FREE_CHUNK_HDR (free_gama)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_chrm)
+FREE_CHUNK_HDR (mng_free_chrm)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_CHRM, MNG_LC_START)
@@ -1188,7 +1216,7 @@ FREE_CHUNK_HDR (free_chrm)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_srgb)
+FREE_CHUNK_HDR (mng_free_srgb)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_SRGB, MNG_LC_START)
@@ -1205,7 +1233,7 @@ FREE_CHUNK_HDR (free_srgb)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_iccp)
+FREE_CHUNK_HDR (mng_free_iccp)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ICCP, MNG_LC_START)
@@ -1230,7 +1258,7 @@ FREE_CHUNK_HDR (free_iccp)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_text)
+FREE_CHUNK_HDR (mng_free_text)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_TEXT, MNG_LC_START)
@@ -1255,7 +1283,7 @@ FREE_CHUNK_HDR (free_text)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_ztxt)
+FREE_CHUNK_HDR (mng_free_ztxt)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ZTXT, MNG_LC_START)
@@ -1280,7 +1308,7 @@ FREE_CHUNK_HDR (free_ztxt)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_itxt)
+FREE_CHUNK_HDR (mng_free_itxt)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ITXT, MNG_LC_START)
@@ -1313,7 +1341,7 @@ FREE_CHUNK_HDR (free_itxt)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_bkgd)
+FREE_CHUNK_HDR (mng_free_bkgd)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_BKGD, MNG_LC_START)
@@ -1330,7 +1358,7 @@ FREE_CHUNK_HDR (free_bkgd)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_phys)
+FREE_CHUNK_HDR (mng_free_phys)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_PHYS, MNG_LC_START)
@@ -1347,7 +1375,7 @@ FREE_CHUNK_HDR (free_phys)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_sbit)
+FREE_CHUNK_HDR (mng_free_sbit)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_SBIT, MNG_LC_START)
@@ -1364,7 +1392,7 @@ FREE_CHUNK_HDR (free_sbit)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_splt)
+FREE_CHUNK_HDR (mng_free_splt)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_SPLT, MNG_LC_START)
@@ -1390,7 +1418,7 @@ FREE_CHUNK_HDR (free_splt)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_hist)
+FREE_CHUNK_HDR (mng_free_hist)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_HIST, MNG_LC_START)
@@ -1407,7 +1435,7 @@ FREE_CHUNK_HDR (free_hist)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_time)
+FREE_CHUNK_HDR (mng_free_time)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_TIME, MNG_LC_START)
@@ -1424,7 +1452,7 @@ FREE_CHUNK_HDR (free_time)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_mhdr)
+FREE_CHUNK_HDR (mng_free_mhdr)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_MHDR, MNG_LC_START)
@@ -1441,7 +1469,7 @@ FREE_CHUNK_HDR (free_mhdr)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_mend)
+FREE_CHUNK_HDR (mng_free_mend)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_MEND, MNG_LC_START)
@@ -1458,7 +1486,7 @@ FREE_CHUNK_HDR (free_mend)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_loop)
+FREE_CHUNK_HDR (mng_free_loop)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_LOOP, MNG_LC_START)
@@ -1479,7 +1507,7 @@ FREE_CHUNK_HDR (free_loop)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_endl)
+FREE_CHUNK_HDR (mng_free_endl)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ENDL, MNG_LC_START)
@@ -1496,7 +1524,7 @@ FREE_CHUNK_HDR (free_endl)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_defi)
+FREE_CHUNK_HDR (mng_free_defi)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_DEFI, MNG_LC_START)
@@ -1513,7 +1541,7 @@ FREE_CHUNK_HDR (free_defi)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_basi)
+FREE_CHUNK_HDR (mng_free_basi)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_BASI, MNG_LC_START)
@@ -1530,7 +1558,7 @@ FREE_CHUNK_HDR (free_basi)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_clon)
+FREE_CHUNK_HDR (mng_free_clon)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_CLON, MNG_LC_START)
@@ -1547,7 +1575,7 @@ FREE_CHUNK_HDR (free_clon)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_past)
+FREE_CHUNK_HDR (mng_free_past)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_PAST, MNG_LC_START)
@@ -1568,7 +1596,7 @@ FREE_CHUNK_HDR (free_past)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_disc)
+FREE_CHUNK_HDR (mng_free_disc)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_DISC, MNG_LC_START)
@@ -1589,7 +1617,7 @@ FREE_CHUNK_HDR (free_disc)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_back)
+FREE_CHUNK_HDR (mng_free_back)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_BACK, MNG_LC_START)
@@ -1606,7 +1634,7 @@ FREE_CHUNK_HDR (free_back)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_fram)
+FREE_CHUNK_HDR (mng_free_fram)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_FRAM, MNG_LC_START)
@@ -1631,7 +1659,7 @@ FREE_CHUNK_HDR (free_fram)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_move)
+FREE_CHUNK_HDR (mng_free_move)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_MOVE, MNG_LC_START)
@@ -1648,7 +1676,7 @@ FREE_CHUNK_HDR (free_move)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_clip)
+FREE_CHUNK_HDR (mng_free_clip)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_CLIP, MNG_LC_START)
@@ -1665,7 +1693,7 @@ FREE_CHUNK_HDR (free_clip)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_show)
+FREE_CHUNK_HDR (mng_free_show)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_SHOW, MNG_LC_START)
@@ -1682,7 +1710,7 @@ FREE_CHUNK_HDR (free_show)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_term)
+FREE_CHUNK_HDR (mng_free_term)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_TERM, MNG_LC_START)
@@ -1699,7 +1727,7 @@ FREE_CHUNK_HDR (free_term)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_save)
+FREE_CHUNK_HDR (mng_free_save)
 {
   mng_save_entryp pEntry = ((mng_savep)pHeader)->pEntries;
   mng_uint32      iX;
@@ -1731,7 +1759,7 @@ FREE_CHUNK_HDR (free_save)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_seek)
+FREE_CHUNK_HDR (mng_free_seek)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_SEEK, MNG_LC_START)
@@ -1752,7 +1780,7 @@ FREE_CHUNK_HDR (free_seek)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_expi)
+FREE_CHUNK_HDR (mng_free_expi)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_EXPI, MNG_LC_START)
@@ -1773,7 +1801,7 @@ FREE_CHUNK_HDR (free_expi)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_fpri)
+FREE_CHUNK_HDR (mng_free_fpri)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_FPRI, MNG_LC_START)
@@ -1790,7 +1818,7 @@ FREE_CHUNK_HDR (free_fpri)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_need)
+FREE_CHUNK_HDR (mng_free_need)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_NEED, MNG_LC_START)
@@ -1811,7 +1839,7 @@ FREE_CHUNK_HDR (free_need)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_phyg)
+FREE_CHUNK_HDR (mng_free_phyg)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_PHYG, MNG_LC_START)
@@ -1829,7 +1857,7 @@ FREE_CHUNK_HDR (free_phyg)
 /* ************************************************************************** */
 
 #ifdef MNG_INCLUDE_JNG
-FREE_CHUNK_HDR (free_jhdr)
+FREE_CHUNK_HDR (mng_free_jhdr)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_JHDR, MNG_LC_START)
@@ -1848,7 +1876,7 @@ FREE_CHUNK_HDR (free_jhdr)
 /* ************************************************************************** */
 
 #ifdef MNG_INCLUDE_JNG
-FREE_CHUNK_HDR (free_jdaa)
+FREE_CHUNK_HDR (mng_free_jdaa)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_JDAA, MNG_LC_START)
@@ -1871,7 +1899,7 @@ FREE_CHUNK_HDR (free_jdaa)
 /* ************************************************************************** */
 
 #ifdef MNG_INCLUDE_JNG
-FREE_CHUNK_HDR (free_jdat)
+FREE_CHUNK_HDR (mng_free_jdat)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_JDAT, MNG_LC_START)
@@ -1894,7 +1922,7 @@ FREE_CHUNK_HDR (free_jdat)
 /* ************************************************************************** */
 
 #ifdef MNG_INCLUDE_JNG
-FREE_CHUNK_HDR (free_jsep)
+FREE_CHUNK_HDR (mng_free_jsep)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_JSEP, MNG_LC_START)
@@ -1912,7 +1940,7 @@ FREE_CHUNK_HDR (free_jsep)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_dhdr)
+FREE_CHUNK_HDR (mng_free_dhdr)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_DHDR, MNG_LC_START)
@@ -1929,7 +1957,7 @@ FREE_CHUNK_HDR (free_dhdr)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_prom)
+FREE_CHUNK_HDR (mng_free_prom)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_PROM, MNG_LC_START)
@@ -1946,7 +1974,7 @@ FREE_CHUNK_HDR (free_prom)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_ipng)
+FREE_CHUNK_HDR (mng_free_ipng)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_IPNG, MNG_LC_START)
@@ -1963,7 +1991,7 @@ FREE_CHUNK_HDR (free_ipng)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_pplt)
+FREE_CHUNK_HDR (mng_free_pplt)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_PPLT, MNG_LC_START)
@@ -1980,7 +2008,7 @@ FREE_CHUNK_HDR (free_pplt)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_ijng)
+FREE_CHUNK_HDR (mng_free_ijng)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_IJNG, MNG_LC_START)
@@ -1997,7 +2025,7 @@ FREE_CHUNK_HDR (free_ijng)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_drop)
+FREE_CHUNK_HDR (mng_free_drop)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_DROP, MNG_LC_START)
@@ -2018,7 +2046,7 @@ FREE_CHUNK_HDR (free_drop)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_dbyk)
+FREE_CHUNK_HDR (mng_free_dbyk)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_DBYK, MNG_LC_START)
@@ -2039,7 +2067,7 @@ FREE_CHUNK_HDR (free_dbyk)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_ordr)
+FREE_CHUNK_HDR (mng_free_ordr)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ORDR, MNG_LC_START)
@@ -2060,7 +2088,7 @@ FREE_CHUNK_HDR (free_ordr)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_magn)
+FREE_CHUNK_HDR (mng_free_magn)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_MAGN, MNG_LC_START)
@@ -2077,7 +2105,39 @@ FREE_CHUNK_HDR (free_magn)
 
 /* ************************************************************************** */
 
-FREE_CHUNK_HDR (free_unknown)
+FREE_CHUNK_HDR (mng_free_evnt)
+{
+  mng_evnt_entryp pEntry = ((mng_evntp)pHeader)->pEntries;
+  mng_uint32      iX;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_FREE_EVNT, MNG_LC_START)
+#endif
+
+  for (iX = 0; iX < ((mng_evntp)pHeader)->iCount; iX++)
+  {
+    if (pEntry->iSegmentnamesize)
+      MNG_FREEX (pData, pEntry->zSegmentname, pEntry->iSegmentnamesize+1)
+
+    pEntry++;
+  }
+
+  if (((mng_evntp)pHeader)->iCount)
+    MNG_FREEX (pData, ((mng_evntp)pHeader)->pEntries,
+                      ((mng_evntp)pHeader)->iCount * sizeof (mng_evnt_entry) )
+
+  MNG_FREEX (pData, pHeader, sizeof (mng_evnt))
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_FREE_EVNT, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+FREE_CHUNK_HDR (mng_free_unknown)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_UNKNOWN, MNG_LC_START)
@@ -2095,6 +2155,1548 @@ FREE_CHUNK_HDR (free_unknown)
 
   return MNG_NOERROR;
 }
+
+/* ************************************************************************** */
+/* *                                                                        * */
+/* * Chunk specific copy routines                                           * */
+/* *                                                                        * */
+/* ************************************************************************** */
+
+#ifdef MNG_INCLUDE_WRITE_PROCS
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_ihdr)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_IHDR, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_IHDR)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_ihdrp)pChunkto)->iWidth       = ((mng_ihdrp)pChunkfrom)->iWidth;
+  ((mng_ihdrp)pChunkto)->iHeight      = ((mng_ihdrp)pChunkfrom)->iHeight;
+  ((mng_ihdrp)pChunkto)->iBitdepth    = ((mng_ihdrp)pChunkfrom)->iBitdepth;
+  ((mng_ihdrp)pChunkto)->iColortype   = ((mng_ihdrp)pChunkfrom)->iColortype;
+  ((mng_ihdrp)pChunkto)->iCompression = ((mng_ihdrp)pChunkfrom)->iCompression;
+  ((mng_ihdrp)pChunkto)->iFilter      = ((mng_ihdrp)pChunkfrom)->iFilter;
+  ((mng_ihdrp)pChunkto)->iInterlace   = ((mng_ihdrp)pChunkfrom)->iInterlace;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_IHDR, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_plte)
+{
+  mng_uint32 iX;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_PLTE, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_PLTE)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_pltep)pChunkto)->bEmpty      = ((mng_pltep)pChunkfrom)->bEmpty;
+  ((mng_pltep)pChunkto)->iEntrycount = ((mng_pltep)pChunkfrom)->iEntrycount;
+
+  for (iX = 0; iX < ((mng_pltep)pChunkto)->iEntrycount; iX++)
+    ((mng_pltep)pChunkto)->aEntries [iX] = ((mng_pltep)pChunkfrom)->aEntries [iX];
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_PLTE, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_idat)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_IDAT, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_IDAT)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_idatp)pChunkto)->bEmpty    = ((mng_idatp)pChunkfrom)->bEmpty;
+  ((mng_idatp)pChunkto)->iDatasize = ((mng_idatp)pChunkfrom)->iDatasize;
+
+  if (((mng_idatp)pChunkto)->iDatasize)
+  {
+    MNG_ALLOC (pData, ((mng_idatp)pChunkto)->pData, ((mng_idatp)pChunkto)->iDatasize)
+    MNG_COPY  (((mng_idatp)pChunkto)->pData, ((mng_idatp)pChunkfrom)->pData,
+               ((mng_idatp)pChunkto)->iDatasize)
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_IDAT, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_iend)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_IEND, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_IEND)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_IEND, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_trns)
+{
+  mng_uint32 iX;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_TRNS, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_tRNS)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_trnsp)pChunkto)->bEmpty  = ((mng_trnsp)pChunkfrom)->bEmpty;
+  ((mng_trnsp)pChunkto)->bGlobal = ((mng_trnsp)pChunkfrom)->bGlobal;
+  ((mng_trnsp)pChunkto)->iType   = ((mng_trnsp)pChunkfrom)->iType;
+  ((mng_trnsp)pChunkto)->iCount  = ((mng_trnsp)pChunkfrom)->iCount;
+  ((mng_trnsp)pChunkto)->iGray   = ((mng_trnsp)pChunkfrom)->iGray;
+  ((mng_trnsp)pChunkto)->iRed    = ((mng_trnsp)pChunkfrom)->iRed;
+  ((mng_trnsp)pChunkto)->iGreen  = ((mng_trnsp)pChunkfrom)->iGreen;
+  ((mng_trnsp)pChunkto)->iBlue   = ((mng_trnsp)pChunkfrom)->iBlue;
+  ((mng_trnsp)pChunkto)->iRawlen = ((mng_trnsp)pChunkfrom)->iRawlen;
+
+  for (iX = 0; iX < ((mng_trnsp)pChunkto)->iCount; iX++)
+    ((mng_trnsp)pChunkto)->aEntries [iX] = ((mng_trnsp)pChunkfrom)->aEntries [iX];
+
+  for (iX = 0; iX < ((mng_trnsp)pChunkto)->iRawlen; iX++)
+    ((mng_trnsp)pChunkto)->aRawdata [iX] = ((mng_trnsp)pChunkfrom)->aRawdata [iX];
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_TRNS, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_gama)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_GAMA, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_gAMA)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_gamap)pChunkto)->bEmpty = ((mng_gamap)pChunkfrom)->bEmpty;
+  ((mng_gamap)pChunkto)->iGamma = ((mng_gamap)pChunkfrom)->iGamma;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_GAMA, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_chrm)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_CHRM, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_cHRM)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_chrmp)pChunkto)->bEmpty       = ((mng_chrmp)pChunkfrom)->bEmpty;
+  ((mng_chrmp)pChunkto)->iWhitepointx = ((mng_chrmp)pChunkfrom)->iWhitepointx;
+  ((mng_chrmp)pChunkto)->iWhitepointy = ((mng_chrmp)pChunkfrom)->iWhitepointy;
+  ((mng_chrmp)pChunkto)->iRedx        = ((mng_chrmp)pChunkfrom)->iRedx;
+  ((mng_chrmp)pChunkto)->iRedy        = ((mng_chrmp)pChunkfrom)->iRedy;
+  ((mng_chrmp)pChunkto)->iGreenx      = ((mng_chrmp)pChunkfrom)->iGreenx;
+  ((mng_chrmp)pChunkto)->iGreeny      = ((mng_chrmp)pChunkfrom)->iGreeny;
+  ((mng_chrmp)pChunkto)->iBluex       = ((mng_chrmp)pChunkfrom)->iBluex;
+  ((mng_chrmp)pChunkto)->iBluey       = ((mng_chrmp)pChunkfrom)->iBluey;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_CHRM, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_srgb)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_SRGB, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_sRGB)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_srgbp)pChunkto)->iRenderingintent = ((mng_srgbp)pChunkfrom)->iRenderingintent;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_SRGB, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_iccp)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_ICCP, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_iCCP)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_iccpp)pChunkto)->bEmpty       = ((mng_iccpp)pChunkfrom)->bEmpty;
+  ((mng_iccpp)pChunkto)->iNamesize    = ((mng_iccpp)pChunkfrom)->iNamesize;
+  ((mng_iccpp)pChunkto)->iCompression = ((mng_iccpp)pChunkfrom)->iCompression;
+  ((mng_iccpp)pChunkto)->iProfilesize = ((mng_iccpp)pChunkfrom)->iProfilesize;
+
+  if (((mng_iccpp)pChunkto)->iNamesize)
+  {
+    MNG_ALLOC (pData, ((mng_iccpp)pChunkto)->zName, ((mng_iccpp)pChunkto)->iNamesize)
+    MNG_COPY  (((mng_iccpp)pChunkto)->zName, ((mng_iccpp)pChunkfrom)->zName,
+               ((mng_iccpp)pChunkto)->iNamesize)
+  }
+
+  if (((mng_iccpp)pChunkto)->iProfilesize)
+  {
+    MNG_ALLOC (pData, ((mng_iccpp)pChunkto)->pProfile, ((mng_iccpp)pChunkto)->iProfilesize)
+    MNG_COPY  (((mng_iccpp)pChunkto)->pProfile, ((mng_iccpp)pChunkfrom)->pProfile,
+               ((mng_iccpp)pChunkto)->iProfilesize)
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_ICCP, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_text)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_TEXT, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_tEXt)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_textp)pChunkto)->iKeywordsize = ((mng_textp)pChunkfrom)->iKeywordsize;
+  ((mng_textp)pChunkto)->iTextsize    = ((mng_textp)pChunkfrom)->iTextsize;
+
+  if (((mng_textp)pChunkto)->iKeywordsize)
+  {
+    MNG_ALLOC (pData, ((mng_itxtp)pChunkto)->zKeyword, ((mng_textp)pChunkto)->iKeywordsize)
+    MNG_COPY  (((mng_itxtp)pChunkto)->zKeyword, ((mng_textp)pChunkfrom)->zKeyword,
+               ((mng_itxtp)pChunkto)->iKeywordsize)
+  }
+
+  if (((mng_textp)pChunkto)->iTextsize)
+  {
+    MNG_ALLOC (pData, ((mng_textp)pChunkto)->zText, ((mng_textp)pChunkto)->iTextsize)
+    MNG_COPY  (((mng_textp)pChunkto)->zText, ((mng_textp)pChunkfrom)->zText,
+               ((mng_textp)pChunkto)->iTextsize)
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_TEXT, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_ztxt)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_ZTXT, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_zTXt)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_ztxtp)pChunkto)->iKeywordsize = ((mng_ztxtp)pChunkfrom)->iKeywordsize;
+  ((mng_ztxtp)pChunkto)->iCompression = ((mng_ztxtp)pChunkfrom)->iCompression;
+  ((mng_ztxtp)pChunkto)->iTextsize    = ((mng_ztxtp)pChunkfrom)->iTextsize;
+
+  if (((mng_ztxtp)pChunkto)->iKeywordsize)
+  {
+    MNG_ALLOC (pData, ((mng_ztxtp)pChunkto)->zKeyword, ((mng_ztxtp)pChunkto)->iKeywordsize)
+    MNG_COPY  (((mng_ztxtp)pChunkto)->zKeyword, ((mng_ztxtp)pChunkfrom)->zKeyword,
+               ((mng_ztxtp)pChunkto)->iKeywordsize)
+  }
+
+  if (((mng_ztxtp)pChunkto)->iTextsize)
+  {
+    MNG_ALLOC (pData, ((mng_ztxtp)pChunkto)->zText, ((mng_ztxtp)pChunkto)->iTextsize)
+    MNG_COPY  (((mng_ztxtp)pChunkto)->zText, ((mng_ztxtp)pChunkfrom)->zText,
+               ((mng_ztxtp)pChunkto)->iTextsize)
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_ZTXT, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_itxt)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_ITXT, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_iTXt)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_itxtp)pChunkto)->iKeywordsize       = ((mng_itxtp)pChunkfrom)->iKeywordsize;
+  ((mng_itxtp)pChunkto)->iCompressionflag   = ((mng_itxtp)pChunkfrom)->iCompressionflag;
+  ((mng_itxtp)pChunkto)->iCompressionmethod = ((mng_itxtp)pChunkfrom)->iCompressionmethod;
+  ((mng_itxtp)pChunkto)->iLanguagesize      = ((mng_itxtp)pChunkfrom)->iLanguagesize;
+  ((mng_itxtp)pChunkto)->iTranslationsize   = ((mng_itxtp)pChunkfrom)->iTranslationsize;
+  ((mng_itxtp)pChunkto)->iTextsize          = ((mng_itxtp)pChunkfrom)->iTextsize;
+
+  if (((mng_itxtp)pChunkto)->iKeywordsize)
+  {
+    MNG_ALLOC (pData, ((mng_itxtp)pChunkto)->zKeyword, ((mng_itxtp)pChunkto)->iKeywordsize)
+    MNG_COPY  (((mng_itxtp)pChunkto)->zKeyword, ((mng_itxtp)pChunkfrom)->zKeyword,
+               ((mng_itxtp)pChunkto)->iKeywordsize)
+  }
+
+  if (((mng_itxtp)pChunkto)->iTextsize)
+  {
+    MNG_ALLOC (pData, ((mng_itxtp)pChunkto)->zLanguage, ((mng_itxtp)pChunkto)->iLanguagesize)
+    MNG_COPY  (((mng_itxtp)pChunkto)->zLanguage, ((mng_itxtp)pChunkfrom)->zLanguage,
+               ((mng_itxtp)pChunkto)->iLanguagesize)
+  }
+
+  if (((mng_itxtp)pChunkto)->iTextsize)
+  {
+    MNG_ALLOC (pData, ((mng_itxtp)pChunkto)->zTranslation, ((mng_itxtp)pChunkto)->iTranslationsize)
+    MNG_COPY  (((mng_itxtp)pChunkto)->zTranslation, ((mng_itxtp)pChunkfrom)->zTranslation,
+               ((mng_itxtp)pChunkto)->iTranslationsize)
+  }
+
+  if (((mng_itxtp)pChunkto)->iTextsize)
+  {
+    MNG_ALLOC (pData, ((mng_itxtp)pChunkto)->zText, ((mng_itxtp)pChunkto)->iTextsize)
+    MNG_COPY  (((mng_itxtp)pChunkto)->zText, ((mng_itxtp)pChunkfrom)->zText,
+               ((mng_itxtp)pChunkto)->iTextsize)
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_ITXT, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_bkgd)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_BKGD, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_bKGD)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_bkgdp)pChunkto)->bEmpty = ((mng_bkgdp)pChunkfrom)->bEmpty;
+  ((mng_bkgdp)pChunkto)->iType  = ((mng_bkgdp)pChunkfrom)->iType;
+  ((mng_bkgdp)pChunkto)->iIndex = ((mng_bkgdp)pChunkfrom)->iIndex;
+  ((mng_bkgdp)pChunkto)->iGray  = ((mng_bkgdp)pChunkfrom)->iGray;
+  ((mng_bkgdp)pChunkto)->iRed   = ((mng_bkgdp)pChunkfrom)->iRed;
+  ((mng_bkgdp)pChunkto)->iGreen = ((mng_bkgdp)pChunkfrom)->iGreen;
+  ((mng_bkgdp)pChunkto)->iBlue  = ((mng_bkgdp)pChunkfrom)->iBlue;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_BKGD, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_phys)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_PHYS, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_pHYs)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_physp)pChunkto)->bEmpty = ((mng_physp)pChunkfrom)->bEmpty;
+  ((mng_physp)pChunkto)->iSizex = ((mng_physp)pChunkfrom)->iSizex;
+  ((mng_physp)pChunkto)->iSizey = ((mng_physp)pChunkfrom)->iSizey;
+  ((mng_physp)pChunkto)->iUnit  = ((mng_physp)pChunkfrom)->iUnit;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_PHYS, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_sbit)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_SBIT, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_sBIT)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_sbitp)pChunkto)->bEmpty    = ((mng_sbitp)pChunkfrom)->bEmpty;
+  ((mng_sbitp)pChunkto)->iType     = ((mng_sbitp)pChunkfrom)->iType;
+  ((mng_sbitp)pChunkto)->aBits [0] = ((mng_sbitp)pChunkfrom)->aBits [0];
+  ((mng_sbitp)pChunkto)->aBits [1] = ((mng_sbitp)pChunkfrom)->aBits [1];
+  ((mng_sbitp)pChunkto)->aBits [2] = ((mng_sbitp)pChunkfrom)->aBits [2];
+  ((mng_sbitp)pChunkto)->aBits [3] = ((mng_sbitp)pChunkfrom)->aBits [3];
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_SBIT, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_splt)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_SPLT, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_sPLT)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_spltp)pChunkto)->bEmpty       = ((mng_spltp)pChunkfrom)->bEmpty;
+  ((mng_spltp)pChunkto)->iNamesize    = ((mng_spltp)pChunkfrom)->iNamesize;
+  ((mng_spltp)pChunkto)->iSampledepth = ((mng_spltp)pChunkfrom)->iSampledepth;
+  ((mng_spltp)pChunkto)->iEntrycount  = ((mng_spltp)pChunkfrom)->iEntrycount;
+  ((mng_spltp)pChunkto)->pEntries     = ((mng_spltp)pChunkfrom)->pEntries;
+
+  if (((mng_spltp)pChunkto)->iNamesize)
+  {
+    MNG_ALLOC (pData, ((mng_spltp)pChunkto)->zName, ((mng_spltp)pChunkto)->iNamesize)
+    MNG_COPY  (((mng_spltp)pChunkto)->zName, ((mng_spltp)pChunkfrom)->zName,
+               ((mng_spltp)pChunkto)->iNamesize)
+  }
+
+  if (((mng_spltp)pChunkto)->iEntrycount)
+  {
+    mng_uint32 iLen = ((mng_spltp)pChunkto)->iEntrycount *
+                      (((mng_spltp)pChunkto)->iSampledepth * 3 + sizeof (mng_uint16));
+
+    MNG_ALLOC (pData, ((mng_spltp)pChunkto)->pEntries, iLen)
+    MNG_COPY  (((mng_spltp)pChunkto)->pEntries, ((mng_spltp)pChunkfrom)->pEntries, iLen)
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_SPLT, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_hist)
+{
+  mng_uint32 iX;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_HIST, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_hIST)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_histp)pChunkto)->iEntrycount = ((mng_histp)pChunkfrom)->iEntrycount;
+
+  for (iX = 0; iX < ((mng_histp)pChunkto)->iEntrycount; iX++)
+    ((mng_histp)pChunkto)->aEntries [iX] = ((mng_histp)pChunkfrom)->aEntries [iX];
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_HIST, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_time)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_TIME, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_tIME)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_timep)pChunkto)->iYear   = ((mng_timep)pChunkfrom)->iYear;
+  ((mng_timep)pChunkto)->iMonth  = ((mng_timep)pChunkfrom)->iMonth;
+  ((mng_timep)pChunkto)->iDay    = ((mng_timep)pChunkfrom)->iDay;
+  ((mng_timep)pChunkto)->iHour   = ((mng_timep)pChunkfrom)->iHour;
+  ((mng_timep)pChunkto)->iMinute = ((mng_timep)pChunkfrom)->iMinute;
+  ((mng_timep)pChunkto)->iSecond = ((mng_timep)pChunkfrom)->iSecond;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_TIME, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_mhdr)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_MHDR, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_MHDR)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_mhdrp)pChunkto)->iWidth      = ((mng_mhdrp)pChunkfrom)->iWidth;
+  ((mng_mhdrp)pChunkto)->iHeight     = ((mng_mhdrp)pChunkfrom)->iHeight;
+  ((mng_mhdrp)pChunkto)->iTicks      = ((mng_mhdrp)pChunkfrom)->iTicks;
+  ((mng_mhdrp)pChunkto)->iLayercount = ((mng_mhdrp)pChunkfrom)->iLayercount;
+  ((mng_mhdrp)pChunkto)->iFramecount = ((mng_mhdrp)pChunkfrom)->iFramecount;
+  ((mng_mhdrp)pChunkto)->iPlaytime   = ((mng_mhdrp)pChunkfrom)->iPlaytime;
+  ((mng_mhdrp)pChunkto)->iSimplicity = ((mng_mhdrp)pChunkfrom)->iSimplicity;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_MHDR, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_mend)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_MEND, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_MEND)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_MEND, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_loop)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_LOOP, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_LOOP)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_loopp)pChunkto)->iLevel       = ((mng_loopp)pChunkfrom)->iLevel;
+  ((mng_loopp)pChunkto)->iRepeat      = ((mng_loopp)pChunkfrom)->iRepeat;
+  ((mng_loopp)pChunkto)->iTermination = ((mng_loopp)pChunkfrom)->iTermination;
+  ((mng_loopp)pChunkto)->iItermin     = ((mng_loopp)pChunkfrom)->iItermin;
+  ((mng_loopp)pChunkto)->iItermax     = ((mng_loopp)pChunkfrom)->iItermax;
+  ((mng_loopp)pChunkto)->iCount       = ((mng_loopp)pChunkfrom)->iCount;
+
+  if (((mng_loopp)pChunkto)->iCount)
+  {
+    mng_uint32 iLen = ((mng_loopp)pChunkto)->iCount * sizeof (mng_uint32);
+
+    MNG_ALLOC (pData, ((mng_loopp)pChunkto)->pSignals, iLen)
+    MNG_COPY  (((mng_loopp)pChunkto)->pSignals, ((mng_loopp)pChunkfrom)->pSignals, iLen)
+  }
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_LOOP, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_endl)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_ENDL, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_ENDL)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_endlp)pChunkto)->iLevel = ((mng_endlp)pChunkfrom)->iLevel;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_ENDL, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_defi)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_DEFI, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_DEFI)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_defip)pChunkto)->iObjectid     = ((mng_defip)pChunkfrom)->iObjectid;
+  ((mng_defip)pChunkto)->bHasdonotshow = ((mng_defip)pChunkfrom)->bHasdonotshow;
+  ((mng_defip)pChunkto)->iDonotshow    = ((mng_defip)pChunkfrom)->iDonotshow;
+  ((mng_defip)pChunkto)->bHasconcrete  = ((mng_defip)pChunkfrom)->bHasconcrete;
+  ((mng_defip)pChunkto)->iConcrete     = ((mng_defip)pChunkfrom)->iConcrete;
+  ((mng_defip)pChunkto)->bHasloca      = ((mng_defip)pChunkfrom)->bHasloca;
+  ((mng_defip)pChunkto)->iXlocation    = ((mng_defip)pChunkfrom)->iXlocation;
+  ((mng_defip)pChunkto)->iYlocation    = ((mng_defip)pChunkfrom)->iYlocation;
+  ((mng_defip)pChunkto)->bHasclip      = ((mng_defip)pChunkfrom)->bHasclip;
+  ((mng_defip)pChunkto)->iLeftcb       = ((mng_defip)pChunkfrom)->iLeftcb;
+  ((mng_defip)pChunkto)->iRightcb      = ((mng_defip)pChunkfrom)->iRightcb;
+  ((mng_defip)pChunkto)->iTopcb        = ((mng_defip)pChunkfrom)->iTopcb;
+  ((mng_defip)pChunkto)->iBottomcb     = ((mng_defip)pChunkfrom)->iBottomcb;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_DEFI, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_basi)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_BASI, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_BASI)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_basip)pChunkto)->iWidth       = ((mng_basip)pChunkfrom)->iWidth;
+  ((mng_basip)pChunkto)->iHeight      = ((mng_basip)pChunkfrom)->iHeight;
+  ((mng_basip)pChunkto)->iBitdepth    = ((mng_basip)pChunkfrom)->iBitdepth;
+  ((mng_basip)pChunkto)->iColortype   = ((mng_basip)pChunkfrom)->iColortype;
+  ((mng_basip)pChunkto)->iCompression = ((mng_basip)pChunkfrom)->iCompression;
+  ((mng_basip)pChunkto)->iFilter      = ((mng_basip)pChunkfrom)->iFilter;
+  ((mng_basip)pChunkto)->iInterlace   = ((mng_basip)pChunkfrom)->iInterlace;
+  ((mng_basip)pChunkto)->iRed         = ((mng_basip)pChunkfrom)->iRed;
+  ((mng_basip)pChunkto)->iGreen       = ((mng_basip)pChunkfrom)->iGreen;
+  ((mng_basip)pChunkto)->iBlue        = ((mng_basip)pChunkfrom)->iBlue;
+  ((mng_basip)pChunkto)->iAlpha       = ((mng_basip)pChunkfrom)->iAlpha;
+  ((mng_basip)pChunkto)->iViewable    = ((mng_basip)pChunkfrom)->iViewable;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_BASI, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_clon)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_CLON, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_CLON)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_clonp)pChunkto)->iSourceid     = ((mng_clonp)pChunkfrom)->iSourceid;
+  ((mng_clonp)pChunkto)->iCloneid      = ((mng_clonp)pChunkfrom)->iCloneid;
+  ((mng_clonp)pChunkto)->iClonetype    = ((mng_clonp)pChunkfrom)->iClonetype;
+  ((mng_clonp)pChunkto)->iDonotshow    = ((mng_clonp)pChunkfrom)->iDonotshow;
+  ((mng_clonp)pChunkto)->iConcrete     = ((mng_clonp)pChunkfrom)->iConcrete;
+  ((mng_clonp)pChunkto)->bHasloca      = ((mng_clonp)pChunkfrom)->bHasloca;
+  ((mng_clonp)pChunkto)->iLocationtype = ((mng_clonp)pChunkfrom)->iLocationtype;
+  ((mng_clonp)pChunkto)->iLocationx    = ((mng_clonp)pChunkfrom)->iLocationx;
+  ((mng_clonp)pChunkto)->iLocationy    = ((mng_clonp)pChunkfrom)->iLocationy;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_CLON, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_past)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_PAST, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_PAST)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_pastp)pChunkto)->iDestid     = ((mng_pastp)pChunkfrom)->iDestid;
+  ((mng_pastp)pChunkto)->iTargettype = ((mng_pastp)pChunkfrom)->iTargettype;
+  ((mng_pastp)pChunkto)->iTargetx    = ((mng_pastp)pChunkfrom)->iTargetx;
+  ((mng_pastp)pChunkto)->iTargety    = ((mng_pastp)pChunkfrom)->iTargety;
+  ((mng_pastp)pChunkto)->iCount      = ((mng_pastp)pChunkfrom)->iCount;
+
+  if (((mng_pastp)pChunkto)->iCount)
+  {
+    mng_uint32 iLen = ((mng_pastp)pChunkto)->iCount * sizeof (mng_past_source);
+
+    MNG_ALLOC (pData, ((mng_pastp)pChunkto)->pSources, iLen)
+    MNG_COPY  (((mng_pastp)pChunkto)->pSources, ((mng_pastp)pChunkfrom)->pSources, iLen)
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_PAST, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_disc)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_DISC, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_DISC)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_discp)pChunkto)->iCount = ((mng_discp)pChunkfrom)->iCount;
+
+  if (((mng_discp)pChunkto)->iCount)
+  {
+    mng_uint32 iLen = ((mng_discp)pChunkto)->iCount * sizeof (mng_uint16);
+
+    MNG_ALLOC (pData, ((mng_discp)pChunkto)->pObjectids, iLen)
+    MNG_COPY  (((mng_discp)pChunkto)->pObjectids, ((mng_discp)pChunkfrom)->pObjectids, iLen)
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_DISC, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_back)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_BACK, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_BACK)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_backp)pChunkto)->iRed       = ((mng_backp)pChunkfrom)->iRed;
+  ((mng_backp)pChunkto)->iGreen     = ((mng_backp)pChunkfrom)->iGreen;
+  ((mng_backp)pChunkto)->iBlue      = ((mng_backp)pChunkfrom)->iBlue;
+  ((mng_backp)pChunkto)->iMandatory = ((mng_backp)pChunkfrom)->iMandatory;
+  ((mng_backp)pChunkto)->iImageid   = ((mng_backp)pChunkfrom)->iImageid;
+  ((mng_backp)pChunkto)->iTile      = ((mng_backp)pChunkfrom)->iTile;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_BACK, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_fram)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_FRAM, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_FRAM)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_framp)pChunkto)->bEmpty          = ((mng_framp)pChunkfrom)->bEmpty;
+  ((mng_framp)pChunkto)->iMode           = ((mng_framp)pChunkfrom)->iMode;
+  ((mng_framp)pChunkto)->iNamesize       = ((mng_framp)pChunkfrom)->iNamesize;
+  ((mng_framp)pChunkto)->iChangedelay    = ((mng_framp)pChunkfrom)->iChangedelay;
+  ((mng_framp)pChunkto)->iChangetimeout  = ((mng_framp)pChunkfrom)->iChangetimeout;
+  ((mng_framp)pChunkto)->iChangeclipping = ((mng_framp)pChunkfrom)->iChangeclipping;
+  ((mng_framp)pChunkto)->iChangesyncid   = ((mng_framp)pChunkfrom)->iChangesyncid;
+  ((mng_framp)pChunkto)->iDelay          = ((mng_framp)pChunkfrom)->iDelay;
+  ((mng_framp)pChunkto)->iTimeout        = ((mng_framp)pChunkfrom)->iTimeout;
+  ((mng_framp)pChunkto)->iBoundarytype   = ((mng_framp)pChunkfrom)->iBoundarytype;
+  ((mng_framp)pChunkto)->iBoundaryl      = ((mng_framp)pChunkfrom)->iBoundaryl;
+  ((mng_framp)pChunkto)->iBoundaryr      = ((mng_framp)pChunkfrom)->iBoundaryr;
+  ((mng_framp)pChunkto)->iBoundaryt      = ((mng_framp)pChunkfrom)->iBoundaryt;
+  ((mng_framp)pChunkto)->iBoundaryb      = ((mng_framp)pChunkfrom)->iBoundaryb;
+  ((mng_framp)pChunkto)->iCount          = ((mng_framp)pChunkfrom)->iCount;
+
+  if (((mng_framp)pChunkto)->iNamesize)
+  {
+    MNG_ALLOC (pData, ((mng_framp)pChunkto)->zName, ((mng_framp)pChunkto)->iNamesize)
+    MNG_COPY  (((mng_framp)pChunkto)->zName, ((mng_framp)pChunkfrom)->zName,
+               ((mng_framp)pChunkto)->iNamesize)
+  }
+
+  if (((mng_framp)pChunkto)->iCount)
+  {
+    mng_uint32 iLen = ((mng_framp)pChunkto)->iCount * sizeof (mng_uint32);
+
+    MNG_ALLOC (pData, ((mng_framp)pChunkto)->pSyncids, iLen)
+    MNG_COPY  (((mng_framp)pChunkto)->pSyncids, ((mng_framp)pChunkfrom)->pSyncids, iLen)
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_FRAM, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_move)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_MOVE, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_MOVE)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_movep)pChunkto)->iFirstid  = ((mng_movep)pChunkfrom)->iFirstid;
+  ((mng_movep)pChunkto)->iLastid   = ((mng_movep)pChunkfrom)->iLastid;
+  ((mng_movep)pChunkto)->iMovetype = ((mng_movep)pChunkfrom)->iMovetype;
+  ((mng_movep)pChunkto)->iMovex    = ((mng_movep)pChunkfrom)->iMovex;
+  ((mng_movep)pChunkto)->iMovey    = ((mng_movep)pChunkfrom)->iMovey;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_MOVE, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_clip)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_CLIP, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_CLIP)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_clipp)pChunkto)->iFirstid  = ((mng_clipp)pChunkfrom)->iFirstid;
+  ((mng_clipp)pChunkto)->iLastid   = ((mng_clipp)pChunkfrom)->iLastid;
+  ((mng_clipp)pChunkto)->iCliptype = ((mng_clipp)pChunkfrom)->iCliptype;
+  ((mng_clipp)pChunkto)->iClipl    = ((mng_clipp)pChunkfrom)->iClipl;
+  ((mng_clipp)pChunkto)->iClipr    = ((mng_clipp)pChunkfrom)->iClipr;
+  ((mng_clipp)pChunkto)->iClipt    = ((mng_clipp)pChunkfrom)->iClipt;
+  ((mng_clipp)pChunkto)->iClipb    = ((mng_clipp)pChunkfrom)->iClipb;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_CLIP, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_show)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_SHOW, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_SHOW)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_showp)pChunkto)->bEmpty   = ((mng_showp)pChunkfrom)->bEmpty;
+  ((mng_showp)pChunkto)->iFirstid = ((mng_showp)pChunkfrom)->iFirstid;
+  ((mng_showp)pChunkto)->iLastid  = ((mng_showp)pChunkfrom)->iLastid;
+  ((mng_showp)pChunkto)->iMode    = ((mng_showp)pChunkfrom)->iMode;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_SHOW, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_term)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_TERM, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_TERM)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_termp)pChunkto)->iTermaction = ((mng_termp)pChunkfrom)->iTermaction;
+  ((mng_termp)pChunkto)->iIteraction = ((mng_termp)pChunkfrom)->iIteraction;
+  ((mng_termp)pChunkto)->iDelay      = ((mng_termp)pChunkfrom)->iDelay;
+  ((mng_termp)pChunkto)->iItermax    = ((mng_termp)pChunkfrom)->iItermax;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_TERM, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_save)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_SAVE, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_SAVE)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_savep)pChunkto)->bEmpty      = ((mng_savep)pChunkfrom)->bEmpty;
+  ((mng_savep)pChunkto)->iOffsettype = ((mng_savep)pChunkfrom)->iOffsettype;
+  ((mng_savep)pChunkto)->iCount      = ((mng_savep)pChunkfrom)->iCount;
+
+  if (((mng_savep)pChunkto)->iCount)
+  {
+    mng_uint32      iX;
+    mng_save_entryp pEntry;
+    mng_uint32      iLen = ((mng_savep)pChunkto)->iCount * sizeof (mng_save_entry);
+
+    MNG_ALLOC (pData, ((mng_savep)pChunkto)->pEntries, iLen)
+    MNG_COPY  (((mng_savep)pChunkto)->pEntries, ((mng_savep)pChunkfrom)->pEntries, iLen)
+
+    pEntry = ((mng_savep)pChunkto)->pEntries;
+
+    for (iX = 0; iX < ((mng_savep)pChunkto)->iCount; iX++)
+    {
+      if (pEntry->iNamesize)
+      {
+        mng_pchar pTemp = pEntry->zName;
+
+        MNG_ALLOC (pData, pEntry->zName, pEntry->iNamesize)
+        MNG_COPY  (pEntry->zName, pTemp, pEntry->iNamesize)
+      }
+      else
+      {
+        pEntry->zName = MNG_NULL;
+      }
+
+      pEntry++;
+    }
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_SAVE, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_seek)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_SEEK, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_SEEK)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_seekp)pChunkto)->iNamesize = ((mng_seekp)pChunkfrom)->iNamesize;
+
+  if (((mng_seekp)pChunkto)->iNamesize)
+  {
+    MNG_ALLOC (pData, ((mng_seekp)pChunkto)->zName, ((mng_seekp)pChunkto)->iNamesize)
+    MNG_COPY  (((mng_seekp)pChunkto)->zName, ((mng_seekp)pChunkfrom)->zName,
+               ((mng_seekp)pChunkto)->iNamesize)
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_SEEK, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_expi)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_EXPI, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_eXPI)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_expip)pChunkto)->iSnapshotid = ((mng_expip)pChunkfrom)->iSnapshotid;
+  ((mng_expip)pChunkto)->iNamesize   = ((mng_expip)pChunkfrom)->iNamesize;
+
+  if (((mng_expip)pChunkto)->iNamesize)
+  {
+    MNG_ALLOC (pData, ((mng_expip)pChunkto)->zName, ((mng_expip)pChunkto)->iNamesize)
+    MNG_COPY  (((mng_expip)pChunkto)->zName, ((mng_expip)pChunkfrom)->zName,
+               ((mng_expip)pChunkto)->iNamesize)
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_EXPI, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_fpri)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_FPRI, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_fPRI)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_fprip)pChunkto)->iDeltatype = ((mng_fprip)pChunkfrom)->iDeltatype;
+  ((mng_fprip)pChunkto)->iPriority  = ((mng_fprip)pChunkfrom)->iPriority;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_FPRI, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_need)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_NEED, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_nEED)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_needp)pChunkto)->iKeywordssize = ((mng_needp)pChunkfrom)->iKeywordssize;
+
+  if (((mng_needp)pChunkto)->iKeywordssize)
+  {
+    MNG_ALLOC (pData, ((mng_needp)pChunkto)->zKeywords, ((mng_needp)pChunkto)->iKeywordssize)
+    MNG_COPY  (((mng_needp)pChunkto)->zKeywords, ((mng_needp)pChunkfrom)->zKeywords,
+               ((mng_needp)pChunkto)->iKeywordssize)
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_NEED, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_phyg)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_PHYG, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_pHYg)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_phygp)pChunkto)->bEmpty = ((mng_phygp)pChunkfrom)->bEmpty;
+  ((mng_phygp)pChunkto)->iSizex = ((mng_phygp)pChunkfrom)->iSizex;
+  ((mng_phygp)pChunkto)->iSizey = ((mng_phygp)pChunkfrom)->iSizey;
+  ((mng_phygp)pChunkto)->iUnit  = ((mng_phygp)pChunkfrom)->iUnit;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_PHYG, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+#ifdef MNG_INCLUDE_JNG
+ASSIGN_CHUNK_HDR (mng_assign_jhdr)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_JHDR, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_JHDR)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_jhdrp)pChunkto)->iWidth            = ((mng_jhdrp)pChunkfrom)->iWidth;
+  ((mng_jhdrp)pChunkto)->iHeight           = ((mng_jhdrp)pChunkfrom)->iHeight;
+  ((mng_jhdrp)pChunkto)->iColortype        = ((mng_jhdrp)pChunkfrom)->iColortype;
+  ((mng_jhdrp)pChunkto)->iImagesampledepth = ((mng_jhdrp)pChunkfrom)->iImagesampledepth;
+  ((mng_jhdrp)pChunkto)->iImagecompression = ((mng_jhdrp)pChunkfrom)->iImagecompression;
+  ((mng_jhdrp)pChunkto)->iImageinterlace   = ((mng_jhdrp)pChunkfrom)->iImageinterlace;
+  ((mng_jhdrp)pChunkto)->iAlphasampledepth = ((mng_jhdrp)pChunkfrom)->iAlphasampledepth;
+  ((mng_jhdrp)pChunkto)->iAlphacompression = ((mng_jhdrp)pChunkfrom)->iAlphacompression;
+  ((mng_jhdrp)pChunkto)->iAlphafilter      = ((mng_jhdrp)pChunkfrom)->iAlphafilter;
+  ((mng_jhdrp)pChunkto)->iAlphainterlace   = ((mng_jhdrp)pChunkfrom)->iAlphainterlace;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_JHDR, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+#endif /* MNG_INCLUDE_JNG */
+
+/* ************************************************************************** */
+
+#ifdef MNG_INCLUDE_JNG
+ASSIGN_CHUNK_HDR (mng_assign_jdaa)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_JDAA, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_JDAA)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_jdaap)pChunkto)->bEmpty    = ((mng_jdaap)pChunkfrom)->bEmpty;
+  ((mng_jdaap)pChunkto)->iDatasize = ((mng_jdaap)pChunkfrom)->iDatasize;
+
+  if (((mng_jdaap)pChunkto)->iDatasize)
+  {
+    MNG_ALLOC (pData, ((mng_jdaap)pChunkto)->pData, ((mng_jdaap)pChunkto)->iDatasize)
+    MNG_COPY  (((mng_jdaap)pChunkto)->pData, ((mng_jdaap)pChunkfrom)->pData,
+               ((mng_jdaap)pChunkto)->iDatasize)
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_JDAA, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+#endif /* MNG_INCLUDE_JNG */
+
+/* ************************************************************************** */
+
+#ifdef MNG_INCLUDE_JNG
+ASSIGN_CHUNK_HDR (mng_assign_jdat)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_JDAT, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_JDAT)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_jdatp)pChunkto)->bEmpty    = ((mng_jdatp)pChunkfrom)->bEmpty;
+  ((mng_jdatp)pChunkto)->iDatasize = ((mng_jdatp)pChunkfrom)->iDatasize;
+
+  if (((mng_jdatp)pChunkto)->iDatasize)
+  {
+    MNG_ALLOC (pData, ((mng_jdatp)pChunkto)->pData, ((mng_jdatp)pChunkto)->iDatasize)
+    MNG_COPY  (((mng_jdatp)pChunkto)->pData, ((mng_jdatp)pChunkfrom)->pData,
+               ((mng_jdatp)pChunkto)->iDatasize)
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_JDAT, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+#endif /* MNG_INCLUDE_JNG */
+
+/* ************************************************************************** */
+
+#ifdef MNG_INCLUDE_JNG
+ASSIGN_CHUNK_HDR (mng_assign_jsep)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_JSEP, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_JSEP)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_JSEP, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+#endif /* MNG_INCLUDE_JNG */
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_dhdr)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_DHDR, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_DHDR)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_dhdrp)pChunkto)->iObjectid    = ((mng_dhdrp)pChunkfrom)->iObjectid;
+  ((mng_dhdrp)pChunkto)->iImagetype   = ((mng_dhdrp)pChunkfrom)->iImagetype;
+  ((mng_dhdrp)pChunkto)->iDeltatype   = ((mng_dhdrp)pChunkfrom)->iDeltatype;
+  ((mng_dhdrp)pChunkto)->iBlockwidth  = ((mng_dhdrp)pChunkfrom)->iBlockwidth;
+  ((mng_dhdrp)pChunkto)->iBlockheight = ((mng_dhdrp)pChunkfrom)->iBlockheight;
+  ((mng_dhdrp)pChunkto)->iBlockx      = ((mng_dhdrp)pChunkfrom)->iBlockx;
+  ((mng_dhdrp)pChunkto)->iBlocky      = ((mng_dhdrp)pChunkfrom)->iBlocky;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_DHDR, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_prom)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_PROM, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_PROM)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_promp)pChunkto)->iColortype   = ((mng_promp)pChunkfrom)->iColortype;
+  ((mng_promp)pChunkto)->iSampledepth = ((mng_promp)pChunkfrom)->iSampledepth;
+  ((mng_promp)pChunkto)->iFilltype    = ((mng_promp)pChunkfrom)->iFilltype;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_PROM, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_ipng)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_IPNG, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_IPNG)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_IPNG, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_pplt)
+{
+  mng_uint32 iX;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_PPLT, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_PPLT)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_ppltp)pChunkto)->iDeltatype = ((mng_ppltp)pChunkfrom)->iDeltatype;
+  ((mng_ppltp)pChunkto)->iCount     = ((mng_ppltp)pChunkfrom)->iCount;
+
+  for (iX = 0; iX < ((mng_ppltp)pChunkto)->iCount; iX++)
+    ((mng_ppltp)pChunkto)->aEntries [iX] = ((mng_ppltp)pChunkfrom)->aEntries [iX];
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_PPLT, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_ijng)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_IJNG, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_IJNG)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_IJNG, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_drop)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_DROP, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_DROP)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_dropp)pChunkto)->iCount = ((mng_dropp)pChunkfrom)->iCount;
+
+  if (((mng_dropp)pChunkto)->iCount)
+  {
+    mng_uint32 iLen = ((mng_dropp)pChunkto)->iCount * sizeof (mng_uint32);
+
+    MNG_ALLOC (pData, ((mng_dropp)pChunkto)->pChunknames, iLen)
+    MNG_COPY  (((mng_dropp)pChunkto)->pChunknames, ((mng_dropp)pChunkfrom)->pChunknames, iLen)
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_DROP, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_dbyk)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_DBYK, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_DBYK)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_dbykp)pChunkto)->iChunkname    = ((mng_dbykp)pChunkfrom)->iChunkname;
+  ((mng_dbykp)pChunkto)->iPolarity     = ((mng_dbykp)pChunkfrom)->iPolarity;
+  ((mng_dbykp)pChunkto)->iKeywordssize = ((mng_dbykp)pChunkfrom)->iKeywordssize;
+
+  if (((mng_dbykp)pChunkto)->iKeywordssize)
+  {
+    MNG_ALLOC (pData, ((mng_dbykp)pChunkto)->zKeywords, ((mng_dbykp)pChunkto)->iKeywordssize)
+    MNG_COPY  (((mng_dbykp)pChunkto)->zKeywords, ((mng_dbykp)pChunkfrom)->zKeywords,
+               ((mng_dbykp)pChunkto)->iKeywordssize)
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_DBYK, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_ordr)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_ORDR, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_ORDR)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_ordrp)pChunkto)->iCount = ((mng_ordrp)pChunkfrom)->iCount;
+
+  if (((mng_ordrp)pChunkto)->iCount)
+  {
+    mng_uint32 iLen = ((mng_ordrp)pChunkto)->iCount * sizeof (mng_ordr_entry);
+
+    MNG_ALLOC (pData, ((mng_ordrp)pChunkto)->pEntries, iLen)
+    MNG_COPY  (((mng_ordrp)pChunkto)->pEntries, ((mng_ordrp)pChunkfrom)->pEntries, iLen)
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_ORDR, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_magn)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_MAGN, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_MAGN)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_magnp)pChunkto)->iFirstid = ((mng_magnp)pChunkfrom)->iFirstid;
+  ((mng_magnp)pChunkto)->iLastid  = ((mng_magnp)pChunkfrom)->iLastid;
+  ((mng_magnp)pChunkto)->iMethodX = ((mng_magnp)pChunkfrom)->iMethodX;
+  ((mng_magnp)pChunkto)->iMX      = ((mng_magnp)pChunkfrom)->iMX;
+  ((mng_magnp)pChunkto)->iMY      = ((mng_magnp)pChunkfrom)->iMY;
+  ((mng_magnp)pChunkto)->iML      = ((mng_magnp)pChunkfrom)->iML;
+  ((mng_magnp)pChunkto)->iMR      = ((mng_magnp)pChunkfrom)->iMR;
+  ((mng_magnp)pChunkto)->iMT      = ((mng_magnp)pChunkfrom)->iMT;
+  ((mng_magnp)pChunkto)->iMB      = ((mng_magnp)pChunkfrom)->iMB;
+  ((mng_magnp)pChunkto)->iMethodY = ((mng_magnp)pChunkfrom)->iMethodY;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_MAGN, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_evnt)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_EVNT, MNG_LC_START)
+#endif
+
+  if (((mng_chunk_headerp)pChunkfrom)->iChunkname != MNG_UINT_evNT)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  ((mng_evntp)pChunkto)->iCount = ((mng_evntp)pChunkfrom)->iCount;
+
+  if (((mng_evntp)pChunkto)->iCount)
+  {
+    mng_uint32      iX;
+    mng_evnt_entryp pEntry;
+    mng_uint32      iLen = ((mng_evntp)pChunkto)->iCount * sizeof (mng_evnt_entry);
+
+    MNG_ALLOC (pData, ((mng_evntp)pChunkto)->pEntries, iLen)
+    MNG_COPY  (((mng_evntp)pChunkto)->pEntries, ((mng_evntp)pChunkfrom)->pEntries, iLen)
+
+    pEntry = ((mng_evntp)pChunkto)->pEntries;
+
+    for (iX = 0; iX < ((mng_evntp)pChunkto)->iCount; iX++)
+    {
+      if (pEntry->iSegmentnamesize)
+      {
+        mng_pchar pTemp = pEntry->zSegmentname;
+
+        MNG_ALLOC (pData, pEntry->zSegmentname, pEntry->iSegmentnamesize+1)
+        MNG_COPY  (pEntry->zSegmentname, pTemp, pEntry->iSegmentnamesize)
+      }
+      else
+      {
+        pEntry->zSegmentname = MNG_NULL;
+      }
+
+      pEntry++;
+    }
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_EVNT, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+ASSIGN_CHUNK_HDR (mng_assign_unknown)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_UNKNOWN, MNG_LC_START)
+#endif
+
+  ((mng_unknown_chunkp)pChunkto)->iDatasize = ((mng_unknown_chunkp)pChunkfrom)->iDatasize;
+
+  if (((mng_unknown_chunkp)pChunkto)->iDatasize)
+  {
+    MNG_ALLOC (pData, ((mng_unknown_chunkp)pChunkto)->pData, ((mng_unknown_chunkp)pChunkto)->iDatasize)
+    MNG_COPY  (((mng_unknown_chunkp)pChunkto)->pData, ((mng_unknown_chunkp)pChunkfrom)->pData,
+               ((mng_unknown_chunkp)pChunkto)->iDatasize)
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_ASSIGN_UNKNOWN, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+#endif /* MNG_INCLUDE_WRITE_PROCS */
 
 /* ************************************************************************** */
 /* * end of file                                                            * */

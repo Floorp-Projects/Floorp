@@ -4,7 +4,7 @@
 /* ************************************************************************** */
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
-/* * file      : libmng_callback_xs.c      copyright (c) 2000 G.Juyn        * */
+/* * file      : libmng_callback_xs.c      copyright (c) 2000-2002 G.Juyn   * */
 /* * version   : 1.0.2                                                      * */
 /* *                                                                        * */
 /* * purpose   : callback get/set interface (implementation)                * */
@@ -1144,4 +1144,6 @@ mng_processarow MNG_DECL mng_getcb_processarow (mng_handle hHandle)
 /* ************************************************************************** */
 /* * end of file                                                            * */
 /* ************************************************************************** */
+
+
 

@@ -4,8 +4,8 @@
 /* ************************************************************************** */
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
-/* * file      : libmng_error.c            copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.2                                                      * */
+/* * file      : libmng_error.c            copyright (c) 2000-2002 G.Juyn   * */
+/* * version   : 1.0.5                                                      * */
 /* *                                                                        * */
 /* * purpose   : Error routines (implementation)                            * */
 /* *                                                                        * */
@@ -47,11 +47,28 @@
 /* *             0.9.3 - 10/20/2000 - G.Juyn                                * */
 /* *             - added errorcode for delayed delta-processing             * */
 /* *                                                                        * */
-/* *             0.9.4 -  1/18/2001 - G.Juyn                                * */
+/* *             0.9.4 - 01/18/2001 - G.Juyn                                * */
 /* *             - added errorcode for MAGN methods                         * */
 /* *                                                                        * */
 /* *             1.0.2 - 06/23/2001 - G.Juyn                                * */
 /* *             - added optimization option for MNG-video playback         * */
+/* *                                                                        * */
+/* *             1.0.5 - 07/04/2002 - G.Juyn                                * */
+/* *             - added errorcode for extreme chunk-sizes                  * */
+/* *             1.0.5 - 08/15/2002 - G.Juyn                                * */
+/* *             - completed delta-image support                            * */
+/* *             1.0.5 - 08/19/2002 - G.Juyn                                * */
+/* *             - B597134 - libmng pollutes the linker namespace           * */
+/* *             1.0.5 - 09/14/2002 - G.Juyn                                * */
+/* *             - added event handling for dynamic MNG                     * */
+/* *             1.0.5 - 09/15/2002 - G.Juyn                                * */
+/* *             - fixed LOOP iteration=0 special case                      * */
+/* *             1.0.5 - 09/19/2002 - G.Juyn                                * */
+/* *             - warnings are ignored by default now!                     * */
+/* *             1.0.5 - 09/20/2002 - G.Juyn                                * */
+/* *             - added support for PAST                                   * */
+/* *             1.0.5 - 10/07/2002 - G.Juyn                                * */
+/* *             - added check for TERM placement during create/write       * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -70,7 +87,7 @@
 /* ************************************************************************** */
 
 #ifdef MNG_INCLUDE_ERROR_STRINGS
-  mng_error_entry error_table [] =
+MNG_LOCAL mng_error_entry const error_table [] =
   {
     {MNG_NOERROR,          "No error"},
     {MNG_OUTOFMEMORY,      "Out of memory"},
@@ -138,6 +155,14 @@
     {MNG_UNSUPPORTEDNEED,  "Requested nEED resources are not supported"},
     {MNG_INVALIDDELTA,     "The delta operation is invalid (mismatched color_types?)"},
     {MNG_INVALIDMETHOD,    "Method is invalid"},
+    {MNG_IMPROBABLELENGTH, "Chunklength is incredibly large"},
+    {MNG_INVALIDBLOCK,     "Delta block width and or height invalid"},
+    {MNG_INVALIDEVENT,     "Event type is invalid"},
+    {MNG_INVALIDMASK,      "Mask type is invalid"},
+    {MNG_NOMATCHINGLOOP,   "ENDL without matching LOOP"},
+    {MNG_SEEKNOTFOUND,     "evNT points to unknown SEEK"},
+    {MNG_OBJNOTABSTRACT,   "Destination object for PAST must be abstract"},
+    {MNG_TERMSEQERROR,     "TERM misplaced during creation of MNG stream"},
 
     {MNG_INVALIDCNVSTYLE,  "Canvas_style is invalid"},
     {MNG_WRONGCHUNK,       "Attempt to access the wrong chunk"},
@@ -156,7 +181,7 @@
 
     {MNG_LCMS_NOHANDLE,    "Handle could not be initialized"},
     {MNG_LCMS_NOMEM,       "No memory for gamma-table(s)"},
-    {MNG_LCMS_NOTRANS,     "Transformation could not be initialized"},
+    {MNG_LCMS_NOTRANS,     "Transformation could not be initialized"}
   };
 #endif /* MNG_INCLUDE_ERROR_STRINGS */
 
@@ -210,9 +235,9 @@ mng_bool mng_store_error (mng_datap   pData,
       else
         pData->zErrortext = "Unknown error";
     }
-#else
+#else /* MNG_INCLUDE_ERROR_STRINGS */
     pData->zErrortext = 0;
-#endif /* mng_error_telltale */
+#endif /* MNG_INCLUDE_ERROR_STRINGS */
 
     if (iError == 0)                   /* no error is not severe ! */
     {
@@ -250,7 +275,7 @@ mng_bool mng_process_error (mng_datap   pData,
 
   mng_store_error (pData, iError, iExtra1, iExtra2);
 
-  if (pData != 0)
+  if ((pData != MNG_NULL) && (pData->iMagic == MNG_MAGIC))
   {
     if (pData->fErrorproc)             /* callback defined ? */
       return pData->fErrorproc (((mng_handle)pData), iError, pData->iSeverity,
@@ -262,7 +287,7 @@ mng_bool mng_process_error (mng_datap   pData,
   MNG_TRACEB (pData, MNG_FN_PROCESS_ERROR, MNG_LC_END)
 #endif
 
-  return MNG_FALSE;                    /* automatic failure */
+  return MNG_TRUE;                     /* warnings are ignored by default ! */
 }
 
 /* ************************************************************************** */
