@@ -466,18 +466,6 @@ FetcherURLDoneCallback(nsresult aStatus,
       ma->m_charset = PL_strdup(aCharset);
     }
 
-    if ( (!PL_strcasecmp(ma->m_real_name, "ForwardedMessage.eml")) &&
-         (!PL_strcasecmp(ma->m_type, MESSAGE_RFC822)) 
-       )
-    {
-      char *subject = nsMsgParseSubjectFromFile(ma->mFileSpec);
-      if (subject)
-      {
-        PR_FREEIF(ma->m_real_name);
-        ma->m_real_name = subject;
-      }
-    }
-
     return ma->UrlExit(aStatus, aMsg);
   }
   else
@@ -495,8 +483,6 @@ nsMsgAttachmentHandler::SnarfMsgAttachment(nsMsgCompFields *compFields)
     mFileSpec = nsMsgCreateTempFileSpec("nsmail.tmp");
     mDeleteFile = PR_TRUE;
     mCompFields = compFields;
-    PR_FREEIF(m_real_name);
-    m_real_name = PL_strdup("ForwardedMessage.eml");
     PR_FREEIF(m_type);
     m_type = PL_strdup(MESSAGE_RFC822);
     PR_FREEIF(m_override_type);

@@ -2209,7 +2209,7 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
   PRUint32  newLoc = aStartLocation;
   PRUint32 attachmentCount = 0;
   attachmentsArray->Count(&attachmentCount);
-  
+
   //Parse the attachments array
   nsCOMPtr<nsIMsgAttachment> element;
   nsXPIDLCString url;
@@ -2220,57 +2220,61 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
     {
       element->GetUrl(getter_Copies(url));
       if (!url.IsEmpty())
-    {
-      // Just look for files that are NOT local file attachments and do 
-      // the right thing.
-      if (! nsMsgIsLocalFile(url.get()))
       {
+        // Just look for files that are NOT local file attachments and do 
+        // the right thing.
+        if (! nsMsgIsLocalFile(url.get()))
+        {
 #if defined(DEBUG_ducarroz)
           printf("Adding REMOTE attachment %d: %s\n", newLoc, url.get());
 #endif
 
-        m_attachments[newLoc].mDeleteFile = PR_TRUE;
-        m_attachments[newLoc].m_done = PR_FALSE;
-        m_attachments[newLoc].SetMimeDeliveryState(this);
+          m_attachments[newLoc].mDeleteFile = PR_TRUE;
+          m_attachments[newLoc].m_done = PR_FALSE;
+          m_attachments[newLoc].SetMimeDeliveryState(this);
 
-        nsMsgNewURL(getter_AddRefs(m_attachments[newLoc].mURL), url.get());
+          nsMsgNewURL(getter_AddRefs(m_attachments[newLoc].mURL), url.get());
 
-        PR_FREEIF(m_attachments[newLoc].m_charset);
-        m_attachments[newLoc].m_charset = PL_strdup(mCompFields->GetCharacterSet());
-        PR_FREEIF(m_attachments[newLoc].m_encoding);
-        m_attachments[newLoc].m_encoding = PL_strdup ("7bit");
-        
+          PR_FREEIF(m_attachments[newLoc].m_charset);
+          m_attachments[newLoc].m_charset = PL_strdup(mCompFields->GetCharacterSet());
+          PR_FREEIF(m_attachments[newLoc].m_encoding);
+          m_attachments[newLoc].m_encoding = PL_strdup ("7bit");
+
           PR_FREEIF(m_attachments[newLoc].m_x_mac_type);
           element->GetMacType(&m_attachments[newLoc].m_x_mac_type);
           PR_FREEIF(m_attachments[newLoc].m_x_mac_creator);
           element->GetMacCreator(&m_attachments[newLoc].m_x_mac_creator);
 
-        /* Count up attachments which are going to come from mail folders
-        and from NNTP servers. */
+          /* Count up attachments which are going to come from mail folders
+             and from NNTP servers. */
           nsCAutoString strUrl;
           strUrl.Assign(url.get());
-        if (m_attachments[newLoc].mURL)
-        {
+          PRBool do_add_attachment = PR_FALSE;
+          if (m_attachments[newLoc].mURL)
+          {
+            do_add_attachment = PR_TRUE;
+          }
+          else if (strUrl.Find("-message:") != -1)
+          {
+            do_add_attachment = PR_TRUE;
+            if (strUrl.Find("mailbox-message:") != -1 ||
+                strUrl.Find("imap-message:") != -1)
+              (*aMailboxCount)++;
+            else if (strUrl.Find("news-message:") != -1)
+              (*aNewsCount)++;
+
+            m_attachments[newLoc].m_uri = ToNewCString(strUrl);
+          }
+          if (do_add_attachment)
+          {
             nsXPIDLString proposedName;
             element->GetName(getter_Copies(proposedName));
             msg_pick_real_name(&m_attachments[newLoc], proposedName, mCompFields->GetCharacterSet());
-          ++newLoc;
+            ++newLoc;
+          }
         }
-          else if (strUrl.Find("-message:") != -1)
-        {
-            if (strUrl.Find("mailbox-message:") != -1 ||
-                strUrl.Find("imap-message:") != -1)
-            (*aMailboxCount)++;
-            else if (strUrl.Find("news-message:") != -1 ||
-                     strUrl.Find("snews-message:") != -1)
-            (*aNewsCount)++;
-          
-            m_attachments[newLoc].m_uri = ToNewCString(strUrl);
-          ++newLoc;
-    }
       }
     }
-  }
   }
   return NS_OK;
 }
