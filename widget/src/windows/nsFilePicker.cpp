@@ -100,10 +100,12 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
   if (mMode == modeGetFolder) {
 
+    char dirBuffer[MAX_PATH+1];
+    PL_strncpy(dirBuffer, initialDir, MAX_PATH);
     BROWSEINFO browserInfo;
     browserInfo.hwndOwner      = mWnd;
     browserInfo.pidlRoot       = nsnull;
-    browserInfo.pszDisplayName = (LPSTR)initialDir;
+    browserInfo.pszDisplayName = (LPSTR)dirBuffer;
     browserInfo.lpszTitle      = title;
     browserInfo.ulFlags        = BIF_RETURNONLYFSDIRS;//BIF_STATUSTEXT | BIF_RETURNONLYFSDIRS;
     browserInfo.lpfn           = nsnull;
@@ -210,6 +212,9 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     }
 
   }
+
+  if (initialDir)
+    nsMemory::Free(initialDir);
 
   if (title)
     nsMemory::Free( title );
