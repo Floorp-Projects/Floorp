@@ -16,23 +16,32 @@
  * Reserved.
  */
 
+#include <Xm/CascadeBG.h>
+
 #include "nsMenuItem.h"
 #include "nsIMenu.h"
 #include "nsIMenuBar.h"
 #include "nsIWidget.h"
 
-#include "nsStringUtil.h"
 #include "nsXtEventHandler.h"
 
 #include "nsIPopUpMenu.h"
-#include <Xm/CascadeBG.h>
 
-static NS_DEFINE_IID(kIMenuIID,     NS_IMENU_IID);
-static NS_DEFINE_IID(kIMenuBarIID,  NS_IMENUBAR_IID);
+#include "nsCOMPtr.h"
+#include "nsIContent.h"
+#include "nsIContentViewerContainer.h"
+#include "nsIContentViewer.h"
+#include "nsIDOMElement.h"
+#include "nsIDocumentViewer.h"
+#include "nsIPresContext.h"   
+#include "nsIWebShell.h"
+#include "nsICharsetConverterManager.h"
+#include "nsIPlatformCharset.h"
+#include "nsIServiceManager.h"
+
+#include "nsStringUtil.h"
+
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIPopUpMenuIID, NS_IPOPUPMENU_IID);
-static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
-//NS_IMPL_ISUPPORTS(nsMenuItem, kIMenuItemIID)
 
 nsresult nsMenuItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {                                                                        
@@ -40,24 +49,24 @@ nsresult nsMenuItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;                                        
   }                                                                      
                                                                          
-  *aInstancePtr = NULL;                                                  
-                                                                                        
-  if (aIID.Equals(kIMenuItemIID)) {                                         
-    *aInstancePtr = (void*)(nsIMenuItem*)this;                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(kISupportsIID)) {                                      
-    *aInstancePtr = (void*)(nsISupports*)(nsIMenuItem*)this;                     
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
+  *aInstancePtr = NULL;
+
+  if (aIID.Equals(nsIMenuItem::GetIID())) {
+    *aInstancePtr = (void*)(nsIMenuItem*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
   }
-  if (aIID.Equals(kIMenuListenerIID)) {                                      
-    *aInstancePtr = (void*)(nsIMenuListener*)this;                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                     
-  return NS_NOINTERFACE;                                                 
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void*)(nsISupports*)(nsIMenuItem*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(nsIMenuListener::GetIID())) {
+    *aInstancePtr = (void*)(nsIMenuListener*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
 }
 
 NS_IMPL_ADDREF(nsMenuItem)
@@ -72,10 +81,15 @@ NS_IMPL_RELEASE(nsMenuItem)
 nsMenuItem::nsMenuItem() : nsIMenuItem()
 {
   NS_INIT_REFCNT();
-  mMenu        = nsnull;
+  mMenuItem    = nsnull;
   mMenuParent  = nsnull;
   mPopUpParent = nsnull;
   mTarget      = nsnull;
+  mXULCommandListener = nsnull;
+  mIsSeparator = PR_FALSE;
+  mWebShell    = nsnull;
+  mDOMElement  = nsnull;
+  mIsSubMenu   = PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
@@ -88,31 +102,6 @@ nsMenuItem::~nsMenuItem()
   NS_IF_RELEASE(mMenuParent);
   NS_IF_RELEASE(mPopUpParent);
   NS_IF_RELEASE(mTarget);
-}
-
-//-------------------------------------------------------------------------
-void nsMenuItem::Create(nsIWidget      *aMBParent, 
-                        Widget          aParent, 
-                        const nsString &aLabel, 
-                        PRUint32        aCommand)
-{
-  mTarget  = aMBParent;
-  mCommand = aCommand;
-  mLabel   = aLabel;
-
-  if (NULL == aParent || nsnull == aMBParent) {
-    return;
-  }
-
-  mTarget = aMBParent;
-  char * nameStr = mLabel.ToNewCString();
-  Widget parentMenuHandle = GetNativeParent();
-  mMenu = XtVaCreateManagedWidget(nameStr, xmCascadeButtonGadgetClass,
-                                          parentMenuHandle,
-                                          NULL);
-  XtAddCallback(mMenu, XmNactivateCallback, nsXtWidget_Menu_Callback, 
-                (nsIMenuItem *)this);
-  delete[] nameStr;
 }
 
 //-------------------------------------------------------------------------
@@ -142,7 +131,7 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
   // Bump the ref count on the parent, since it gets released unconditionally..
   NS_ADDREF(parent);
   while (1) {
-    if (NS_OK == parent->QueryInterface(kIMenuIID,(void**)&menu)) {
+    if (NS_OK == parent->QueryInterface(nsIMenu::GetIID(),(void**)&menu)) {
       NS_RELEASE(parent);
       if (NS_OK != menu->GetParent(parent)) {
         NS_RELEASE(menu);
@@ -150,7 +139,7 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
       }
       NS_RELEASE(menu);
 
-    } else if (NS_OK == parent->QueryInterface(kIPopUpMenuIID,(void**)&popup)) {
+    } else if (NS_OK == parent->QueryInterface(nsIPopUpMenu::GetIID(),(void**)&popup)) {
       if (NS_OK != popup->GetParent(widget)) {
         widget =  nsnull;
       } 
@@ -158,7 +147,7 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
       NS_RELEASE(popup);
       return widget;
 
-    } else if (NS_OK == parent->QueryInterface(kIMenuBarIID,(void**)&menuBar)) {
+    } else if (NS_OK == parent->QueryInterface(nsIMenuBar::GetIID(),(void**)&menuBar)) {
       if (NS_OK != menuBar->GetParent(widget)) {
         widget =  nsnull;
       } 
@@ -171,51 +160,6 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
     }
   }
   return nsnull;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::Create(nsIMenu        *aParent, 
-                             const nsString &aLabel, 
-                             PRUint32       aCommand)
-                            
-{
-  if (nsnull == aParent) {
-    return NS_ERROR_FAILURE;
-  }
-
-  mMenuParent = aParent;
-  NS_ADDREF(mMenuParent);
-
-  nsIWidget   * widget  = nsnull; // MenuBar's Parent
-  nsISupports * sups;
-  if (NS_OK == aParent->QueryInterface(kISupportsIID,(void**)&sups)) {
-    widget = GetMenuBarParent(sups);
-    NS_RELEASE(sups);
-  }
-
-  Create(widget, GetNativeParent(), aLabel, aCommand);
-  //aParent->AddItem(this);
-
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::Create(nsIPopUpMenu   *aParent, 
-                             const nsString &aLabel,  
-                             PRUint32        aCommand)
-{
-  mPopUpParent = aParent;
-  NS_ADDREF(mPopUpParent);
-
-  nsIWidget * widget = nsnull;
-  if (NS_OK != aParent->GetParent(widget)) {
-    widget = nsnull;
-  }
-
-  Create(widget, GetNativeParent(), aLabel, aCommand);
-  aParent->AddItem(this);
-
-  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -260,7 +204,7 @@ NS_METHOD nsMenuItem::GetTarget(nsIWidget *& aTarget)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::GetNativeData(void *& aData)
 {
-  aData = (void *)mMenu;
+//  aData = (void *)mMenu;
   return NS_OK;
 }
 
@@ -269,126 +213,161 @@ NS_METHOD nsMenuItem::GetNativeData(void *& aData)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
-// FIXME: This needs to be implemented.  --ZuperDee
+  if(!mIsSeparator) {
+    DoCommand();
+  }
   return nsEventStatus_eIgnore;
 }
 
 nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
-// FIXME: This was here before, and not created by me...  But still looks
-// like it needs to be implemented.  --ZuperDee
+  if(mXULCommandListener)
+    return mXULCommandListener->MenuSelected(aMenuEvent);
+
   return nsEventStatus_eIgnore;
 }
 
 nsEventStatus nsMenuItem::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
-// FIXME: This needs to be implemented.  --ZuperDee
   return nsEventStatus_eIgnore;
 }
 
-nsEventStatus nsMenuItem::MenuConstruct(
-  const nsMenuEvent & aMenuEvent,
-  nsIWidget         * aParentWindow,
-  void              * menubarNode,
-  void              * aWebShell)
+nsEventStatus nsMenuItem::MenuConstruct(const nsMenuEvent &aMenuEvent,
+                                        nsIWidget *aParentWindow,
+                                        void *menuNode,
+                                        void *aWebShell)
 {
-// FIXME: This needs to be implemented.  --ZuperDee
   return nsEventStatus_eIgnore;
 }
 
 nsEventStatus nsMenuItem::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
-//FIXME: This needs to be implemented.  --ZuperDee
   return nsEventStatus_eIgnore;
 }
 
 //----------------------------------------------------
-NS_METHOD nsMenuItem::Create(nsISupports    * aParent,
-                  const nsString & aLabel,
-                  PRBool           isSeparator)
+NS_METHOD nsMenuItem::Create(nsISupports *aParent,
+                             const nsString &aLabel,
+                             PRBool aIsSeparator)
 {
-//FIXME: This needs to be implemented.  --ZuperDee
-  return nsEventStatus_eIgnore;
+  printf("nsMenuItem::Create called\n");
+  if (nsnull == aParent) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if(aParent) {
+    nsIMenu * menu;
+    aParent->QueryInterface(nsIMenu::GetIID(), (void**) &menu);
+    mMenuParent = menu;
+    NS_RELEASE(menu);
+  }
+
+  nsIWidget   * widget  = nsnull; // MenuBar's Parent
+  nsISupports * sups;
+  if (NS_OK == aParent->QueryInterface(kISupportsIID,(void**)&sups)) {
+    widget = GetMenuBarParent(sups);
+    // GetMenuBarParent will call release for us
+    // NS_RELEASE(sups);
+    mTarget = widget;
+  }
+
+  mIsSeparator = aIsSeparator;
+  mLabel = aLabel;
+
+  // create the native menu item
+
+  if(mIsSeparator) {
+    mMenuItem = nsnull;
+  } else {
+    char * nameStr = mLabel.ToNewCString();
+    Widget parentMenuHandle = GetNativeParent();
+    mMenuItem = XtVaCreateManagedWidget(nameStr, xmCascadeButtonGadgetClass,
+                                                 parentMenuHandle,
+                                                 NULL);
+    XtAddCallback(mMenuItem, XmNactivateCallback, nsXtWidget_Menu_Callback,
+                  (nsIMenuItem *)this);
+    delete[] nameStr;
+  }
+  return NS_OK;
 }
 
 NS_METHOD nsMenuItem::SetEnabled(PRBool aIsEnabled)
 {
-//FIXME: This needs to be implemented.  --ZuperDee
+  //XXX:Implement this.
   return nsEventStatus_eIgnore;
 }
 
 NS_METHOD nsMenuItem::GetEnabled(PRBool *aIsEnabled)
 {
-//FIXME: This needs to be implemented.  --ZuperDee
+  //XXX:Implement this.
   return nsEventStatus_eIgnore;
 }
 
 NS_METHOD nsMenuItem::SetChecked(PRBool aIsEnabled)
 {
-//FIXME: This needs to be implemented.  --ZuperDee
-  return nsEventStatus_eIgnore;
+  return NS_OK;
 }
 
 NS_METHOD nsMenuItem::GetChecked(PRBool *aIsEnabled)
 {
-//FIXME: This needs to be implemented.  --ZuperDee
-  return nsEventStatus_eIgnore;
+  return NS_OK;
 }
 
 NS_METHOD nsMenuItem::AddMenuListener(nsIMenuListener * aMenuListener)
 {
-//FIXME: This needs to be implemented.  --ZuperDee
-  return nsEventStatus_eIgnore;
+  NS_IF_RELEASE(mXULCommandListener);
+  NS_IF_ADDREF(aMenuListener);
+  mXULCommandListener = aMenuListener;
+  return NS_OK;
 }
 
 NS_METHOD nsMenuItem::RemoveMenuListener(nsIMenuListener * aMenuListener)
 {
-//FIXME: This needs to be implemented.  --ZuperDee
-  return nsEventStatus_eIgnore;
+  return NS_OK;
 }
 
 NS_METHOD nsMenuItem::IsSeparator(PRBool & aIsSep)
 {
-//FIXME: This needs to be implemented.  --ZuperDee
-  return nsEventStatus_eIgnore;
+  aIsSep = mIsSeparator;
+  return NS_OK;
 }
 
-NS_METHOD nsMenuItem::SetCommand(const nsString & aStrCmd)
+NS_METHOD nsMenuItem::SetCommand(const nsString &aStrCmd)
 {
-//FIXME: This needs to be implemented.  --ZuperDee
   return nsEventStatus_eIgnore;
 }
 
 NS_METHOD nsMenuItem::DoCommand()
 {
-//FIXME: This needs to be implemented.  --ZuperDee
+  //XXX:Implement this.
   return nsEventStatus_eIgnore;
 }
 
 NS_METHOD nsMenuItem::SetDOMElement(nsIDOMElement * aDOMElement)
 {
-//FIXME: This needs to be implemented.  --ZuperDee
-  return nsEventStatus_eIgnore;
+  mDOMElement = aDOMElement;
+  return NS_OK;
 }
 
 NS_METHOD nsMenuItem::GetDOMElement(nsIDOMElement ** aDOMElement)
 {
-//FIXME: This needs to be implemented.  --ZuperDee
-  return nsEventStatus_eIgnore;
+  return NS_OK;
 }
 
 NS_METHOD nsMenuItem::SetWebShell(nsIWebShell * aWebShell)
 {
-//FIXME: This needs to be implemented.  --ZuperDee
-  return nsEventStatus_eIgnore;
+  mWebShell = aWebShell;
+  return NS_OK;
 }
 
 NS_METHOD nsMenuItem::SetModifiers(PRUint8 aModifiers)
 {
+  mModifiers = aModifiers;
   return NS_OK;
 }
 
 NS_METHOD nsMenuItem::GetModifiers(PRUint8 * aModifiers)
 {
+  *aModifiers = mModifiers;
   return NS_OK;
 }
