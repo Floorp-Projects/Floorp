@@ -250,7 +250,6 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 
    switch(aEvent->message) {
 
-
         case NS_PAINT: 
            
               // paint the background
