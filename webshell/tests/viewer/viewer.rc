@@ -36,7 +36,8 @@ VIEWER MENU DISCARDABLE
       MENUITEM "demo #6", VIEWER_DEMO6
       MENUITEM "demo #7", VIEWER_DEMO7
       MENUITEM "demo #8", VIEWER_DEMO8
-    }
+      MENUITEM "demo #9", VIEWER_DEMO9
+   }
     POPUP "Print &Preview"
     {
       MENUITEM "One Column", VIEWER_ONE_COLUMN

@@ -948,6 +948,7 @@ nsEventStatus nsViewer::ProcessMenu(PRUint32 aId, WindowData* wd)
     case VIEWER_DEMO6:
     case VIEWER_DEMO7:
     case VIEWER_DEMO8: 
+    case VIEWER_DEMO9: 
       if ((nsnull != wd) && (nsnull != wd->ww)) {
         PRIntn ix = aId - VIEWER_DEMO0;
         char* url = new char[500];
