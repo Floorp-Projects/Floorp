@@ -3008,6 +3008,13 @@ nsComputedDOMStyle::GetAbsoluteOffset(PRUint8 aSide, nsIFrame* aFrame,
   return CallQueryInterface(val, aValue);
 }
 
+
+#if (NS_SIDE_TOP == 0) && (NS_SIDE_RIGHT == 1) && (NS_SIDE_BOTTOM == 2) && (NS_SIDE_LEFT == 3)
+#define NS_OPPOSITE_SIDE(s_) (((s_) + 2) & 3)
+#else
+#error "Somebody changed the side constants."
+#endif
+
 nsresult
 nsComputedDOMStyle::GetRelativeOffset(PRUint8 aSide, nsIFrame* aFrame,
                                       nsIDOMCSSValue** aValue)
@@ -3021,44 +3028,12 @@ nsComputedDOMStyle::GetRelativeOffset(PRUint8 aSide, nsIFrame* aFrame,
   if (positionData) {
     nsStyleCoord coord;
     PRInt32 sign = 1;
-    switch (aSide) {
-      case NS_SIDE_TOP:
-        positionData->mOffset.GetTop(coord);
-        if (coord.GetUnit() != eStyleUnit_Coord &&
-            coord.GetUnit() != eStyleUnit_Percent) {
-          positionData->mOffset.GetBottom(coord);
-          sign = -1;
-        }
-        break;
-      case NS_SIDE_RIGHT:
-        positionData->mOffset.GetRight(coord);
-        if (coord.GetUnit() != eStyleUnit_Coord &&
-            coord.GetUnit() != eStyleUnit_Percent) {
-          positionData->mOffset.GetLeft(coord);
-          sign = -1;
-        }
-        break;
-      case NS_SIDE_BOTTOM:
-        positionData->mOffset.GetBottom(coord);
-        if (coord.GetUnit() != eStyleUnit_Coord &&
-            coord.GetUnit() != eStyleUnit_Percent) {
-          positionData->mOffset.GetTop(coord);
-          sign = -1;
-        }
-        break;
-      case NS_SIDE_LEFT:
-        positionData->mOffset.GetLeft(coord);
-        if (coord.GetUnit() != eStyleUnit_Coord &&
-            coord.GetUnit() != eStyleUnit_Percent) {
-          positionData->mOffset.GetRight(coord);
-          sign = -1;
-        }
-        break;
-      default:
-        NS_WARNING("double check the side");
-        break;
+    positionData->mOffset.Get(aSide, coord);
+    if (coord.GetUnit() != eStyleUnit_Coord &&
+        coord.GetUnit() != eStyleUnit_Percent) {
+      positionData->mOffset.Get(NS_OPPOSITE_SIDE(aSide), coord);
+      sign = -1;
     }
-
     nsIFrame* container = nsnull;
     switch(coord.GetUnit()) {
       case eStyleUnit_Coord:
@@ -3109,29 +3084,7 @@ nsComputedDOMStyle::GetStaticOffset(PRUint8 aSide, nsIFrame* aFrame,
                aFrame);
   if (positionData) {
     nsStyleCoord coord;
-    switch (aSide) {
-      case NS_SIDE_TOP:
-        positionData->mOffset.GetTop(coord);
-
-        break;
-      case NS_SIDE_RIGHT:
-        positionData->mOffset.GetRight(coord);
-
-        break;
-      case NS_SIDE_BOTTOM:
-        positionData->mOffset.GetBottom(coord);
-
-        break;
-      case NS_SIDE_LEFT:
-        positionData->mOffset.GetLeft(coord);
-
-        break;
-      default:
-        NS_WARNING("double check the side");
-
-        break;
-    }
-
+    positionData->mOffset.Get(aSide, coord);
     switch(coord.GetUnit()) {
       case eStyleUnit_Coord:
         val->SetTwips(coord.GetCoordValue());
@@ -3312,25 +3265,7 @@ nsComputedDOMStyle::GetBorderColorsFor(PRUint8 aSide, nsIFrame *aFrame,
   GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border, aFrame);
 
   if (border && border->mBorderColors) {
-    nsBorderColors* borderColors = nsnull;
-    switch (aSide) {
-      case NS_SIDE_TOP:
-        borderColors = border->mBorderColors[0];
-        break;
-      case NS_SIDE_RIGHT:
-        borderColors = border->mBorderColors[1];
-        break;
-      case NS_SIDE_BOTTOM:
-        borderColors = border->mBorderColors[2];
-        break;
-      case NS_SIDE_LEFT:
-        borderColors = border->mBorderColors[3];
-        break;
-      default:
-        NS_WARNING("double check the side");
-        break;
-    }
-
+    nsBorderColors* borderColors = border->mBorderColors[aSide];
     if (borderColors) {
       nsDOMCSSValueList *valueList = GetROCSSValueList(PR_FALSE);
       NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
@@ -3432,19 +3367,7 @@ nsComputedDOMStyle::GetBorderWidthFor(PRUint8 aSide, nsIFrame *aFrame,
     if (borderStyle == NS_STYLE_BORDER_STYLE_NONE) {
       coord.SetCoordValue(0);
     } else {
-      switch(aSide) {
-        case NS_SIDE_TOP:
-          border->mBorder.GetTop(coord); break;
-        case NS_SIDE_BOTTOM :
-          border->mBorder.GetBottom(coord); break;
-        case NS_SIDE_LEFT :
-          border->mBorder.GetLeft(coord); break;
-        case NS_SIDE_RIGHT :
-          border->mBorder.GetRight(coord); break;
-        default:
-          NS_WARNING("double check the side");
-          break;
-      }
+      border->mBorder.Get(aSide, coord);
    }
 
     switch(coord.GetUnit()) {
