@@ -23,6 +23,7 @@
 #include "nsIGenericFactory.h"
 #include "nsDOMSerializer.h"
 #include "nsXMLHttpRequest.h"
+#include "nsDOMParser.h"
 #include "nsIAppShellComponent.h"
 #include "nsIScriptExternalNameSet.h"
 #include "nsIScriptNameSetRegistry.h"
@@ -42,6 +43,7 @@ static NS_DEFINE_CID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID)
 //
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXMLHttpRequest)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
 
 class nsXMLExtrasNameset : public nsIScriptExternalNameSet {
 public:
@@ -78,6 +80,7 @@ nsXMLExtrasNameset::AddNameSet(nsIScriptContext* aScriptContext)
 {
   static NS_DEFINE_CID(kXMLSerializer_CID, NS_XMLSERIALIZER_CID);
   static NS_DEFINE_CID(kXMLHttpRequest_CID, NS_XMLHTTPREQUEST_CID);
+  static NS_DEFINE_CID(kDOMParser_CID, NS_DOMPARSER_CID);
   nsresult result = NS_OK;
   nsCOMPtr<nsIScriptNameSpaceManager> manager;
   
@@ -92,6 +95,12 @@ nsXMLExtrasNameset::AddNameSet(nsIScriptContext* aScriptContext)
     result = manager->RegisterGlobalName(NS_ConvertASCIItoUCS2("XMLHttpRequest"), 
                                          NS_GET_IID(nsIXMLHttpRequest),
                                          kXMLHttpRequest_CID, 
+                                         PR_TRUE);
+    NS_ENSURE_SUCCESS(result, result);
+
+    result = manager->RegisterGlobalName(NS_ConvertASCIItoUCS2("DOMParser"), 
+                                         NS_GET_IID(nsIDOMParser),
+                                         kDOMParser_CID, 
                                          PR_TRUE);
     NS_ENSURE_SUCCESS(result, result);
   }
@@ -215,6 +224,7 @@ static nsModuleComponentInfo components[] = {
   { "XMLExtras component", NS_XML_EXTRAS_CID, NS_XML_EXTRAS_PROGID, nsXMLExtrasConstructor, RegisterXMLExtras },
   { "XML Serializer", NS_XMLSERIALIZER_CID, NS_XMLSERIALIZER_PROGID, nsDOMSerializerConstructor },
   { "XMLHttpRequest", NS_XMLHTTPREQUEST_CID, NS_XMLHTTPREQUEST_PROGID, nsXMLHttpRequestConstructor },
+  { "DOM Parser", NS_DOMPARSER_CID, NS_DOMPARSER_PROGID, nsDOMParserConstructor },
 };
 
 static void PR_CALLBACK

@@ -127,7 +127,7 @@ nsDOMSerializer::SerializeDoctype(nsIDOMDocumentType* aDoctype,
 
     aDoctype->GetName(name);
     aDoctype->GetPublicId(publicId);
-    aDoctype->GetSystemId(publicId);
+    aDoctype->GetSystemId(systemId);
     aDoctype->GetInternalSubset(publicId);
 
     aStr.AppendWithConversion("<!DOCTYPE ");

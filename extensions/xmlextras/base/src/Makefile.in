@@ -32,6 +32,7 @@ LIBRARY_NAME	= xmlextrasbase_s
 CPPSRCS	= 				\
 		nsDOMSerializer.cpp	\
 		nsXMLHttpRequest.cpp	\
+		nsDOMParser.cpp		\
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a

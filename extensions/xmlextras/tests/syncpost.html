@@ -6,7 +6,7 @@ var x = document.implementation.createDocument("", "test", null);
 x.documentElement.appendChild(document.createTextNode("Foo"));
 
 var p = new XMLHttpRequest();
-p.open("POST", "http://blueviper/cgi-bin/time2.cgi", false);
+p.open("POST", "http://blueviper/cgi-bin/echo.cgi", false);
 p.send(x);
 var d = p.responseXML;
 var s = new XMLSerializer()

@@ -23,6 +23,7 @@ DEPTH=..\..\..\..
 
 XPIDLSRCS = .\nsIDOMSerializer.idl  \
 	    .\nsIXMLHttpRequest.idl \
+	    .\nsIDOMParser.idl      \
 	    $(NULL)
 
 MODULE=xmlextras 
