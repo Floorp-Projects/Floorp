@@ -665,7 +665,6 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   // have one.
   NS_ASSERTION(principal, "principal required for document");
 
-  nsAutoString ret;
   nsCAutoString url;
 
   if (aRequest->mURI) {
@@ -679,8 +678,8 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
 
   PRBool isUndefined;
   context->EvaluateString(aScript, nsnull, principal, url.get(),
-                          aRequest->mLineNo, aRequest->mJSVersion, 
-                          ret, &isUndefined);  
+                          aRequest->mLineNo, aRequest->mJSVersion, nsnull,
+                          &isUndefined);  
 
   context->SetProcessingScriptTag(PR_FALSE);
 

@@ -274,7 +274,7 @@ mozXMLTermUtils::ExecuteScript(nsIDOMDocument* aDOMDocument,
   const char* URL = "";
   result = scriptContext->EvaluateString(aScript, (void *) nsnull,
                                          docPrincipal, URL, 0, nsnull,
-                                         aOutput, &isUndefined);
+                                         &aOutput, &isUndefined);
 
   XMLT_LOG(mozXMLTermUtils::ExecuteScript,21,("result=0x%x,isUndefined=0x%x\n",
                                              result, isUndefined));

@@ -281,7 +281,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
                                        url.get(),      // url
                                        1,              // line no
                                        nsnull,
-                                       result,
+                                       &result,
                                        &bIsUndefined);
 
     if (NS_FAILED(rv)) {
