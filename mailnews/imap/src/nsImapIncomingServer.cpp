@@ -3439,6 +3439,29 @@ nsImapIncomingServer::GetNewMessagesAllFolders(nsIMsgFolder *aRootFolder, nsIMsg
   return retval;
 }
 
+NS_IMETHODIMP 
+nsImapIncomingServer::GetShouldDownloadArbitraryHeaders(PRBool *aResult)
+{
+  nsresult rv = NS_OK;      //for now checking for filters is enough
+  nsCOMPtr <nsIMsgFilterList> filterList;  //later on we might have to check for MDN                              ;
+  if (!mFilterList)       
+    GetFilterList(getter_AddRefs(filterList));
+  if (mFilterList)
+    rv = mFilterList->GetShouldDownloadArbitraryHeaders(aResult);
+  else
+    *aResult = PR_FALSE;
+  return rv;
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::GetArbitraryHeaders(char **aResult)
+{
+  nsresult rv =NS_OK;
+  if (mFilterList)
+   rv = mFilterList->GetArbitraryHeaders(aResult);
+  return rv;
+}
+
 NS_IMETHODIMP
 nsImapIncomingServer::OnUserOrHostNameChanged(const char *oldName, const char *newName)
 {
@@ -3461,3 +3484,4 @@ nsImapIncomingServer::OnUserOrHostNameChanged(const char *oldName, const char *n
   ResetFoldersToUnverified(nsnull);
   return NS_OK;
 }
+

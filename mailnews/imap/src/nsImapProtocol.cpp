@@ -2260,49 +2260,18 @@ nsresult nsImapProtocol::BeginMessageDownLoad(
   return rv;
 }
 
-PRBool
-nsImapProtocol::GetShouldDownloadArbitraryHeaders()
+void
+nsImapProtocol::GetShouldDownloadArbitraryHeaders(PRBool *aResult)
 {
-    // *** allocate instead of using local variable to be thread save ***
-    GenericInfo *aInfo = (GenericInfo*) PR_CALLOC(sizeof(GenericInfo));
-    const char *hostName = GetImapHostName();
-    PRBool rv;
-    aInfo->rv = PR_TRUE;         // default
-    
-  aInfo->hostName = PL_strdup (hostName);
-    if (m_imapMiscellaneousSink)
-    {
-        m_imapMiscellaneousSink->GetShouldDownloadArbitraryHeaders(this, aInfo);
-        WaitForFEEventCompletion();
-    }
-    rv = aInfo->rv;
-    if (aInfo->hostName)
-        PL_strfree(aInfo->hostName);
-    if (aInfo->c)
-        PL_strfree(aInfo->c);
-    PR_Free(aInfo);
-    return rv;
+  if (m_imapServerSink)
+    m_imapServerSink->GetShouldDownloadArbitraryHeaders(aResult);
 }
 
-char*
-nsImapProtocol::GetArbitraryHeadersToDownload()
+void
+nsImapProtocol::GetArbitraryHeadersToDownload(char **aResult)
 {
-    // *** allocate instead of using local variable to be thread save ***
-    GenericInfo *aInfo = (GenericInfo*) PR_CALLOC(sizeof(GenericInfo));
-    const char *hostName = GetImapHostName();
-    char *rv = nsnull;
-    aInfo->rv = PR_TRUE;         // default
-    aInfo->hostName = PL_strdup (hostName);
-    if (m_imapMiscellaneousSink)
-    {
-        m_imapMiscellaneousSink->GetShouldDownloadArbitraryHeaders(this, aInfo);
-        WaitForFEEventCompletion();
-    }
-    if (aInfo->hostName)
-        PL_strfree(aInfo->hostName);
-    rv = aInfo->c;
-    PR_Free(aInfo);
-    return rv;
+  if (m_imapServerSink)
+    m_imapServerSink->GetArbitraryHeaders(aResult);
 }
 
 static void PRTime2Seconds(PRTime prTime, PRInt32 *seconds)
@@ -2565,19 +2534,18 @@ nsImapProtocol::FetchMessage(const char * messageIds,
       {
         PRUint32 server_capabilityFlags = GetServerStateParser().GetCapabilityFlag();
 		    PRBool aolImapServer = ((server_capabilityFlags & kAOLImapCapability) != 0);
-        PRBool useArbitraryHeaders = GetShouldDownloadArbitraryHeaders(); // checks filter headers, etc.
+        PRBool useArbitraryHeaders = PR_FALSE;
+        GetShouldDownloadArbitraryHeaders(&useArbitraryHeaders); // checks filter headers, etc.
         if (/***** Fix me *** gOptimizedHeaders &&  */// preference -- able to turn it off
           useArbitraryHeaders)  // if it's ok -- no filters on any header, etc.
         {
           char *headersToDL = nsnull;
           char *what = nsnull;
           const char *dbHeaders = (gUseEnvelopeCmd) ? IMAP_DB_HEADERS : IMAP_ENV_AND_DB_HEADERS;
-          char *arbitraryHeaders = GetArbitraryHeadersToDownload();
+          nsXPIDLCString arbitraryHeaders;
+          GetArbitraryHeadersToDownload(getter_Copies(arbitraryHeaders));
           if (arbitraryHeaders)
-          {
-            headersToDL = PR_smprintf("%s %s",dbHeaders, arbitraryHeaders);
-            PR_Free(arbitraryHeaders);
-          }
+            headersToDL = PR_smprintf("%s %s",dbHeaders, arbitraryHeaders.get());
           else
             headersToDL = nsCRT::strdup(dbHeaders);
 

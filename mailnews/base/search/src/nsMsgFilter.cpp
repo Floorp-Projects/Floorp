@@ -164,32 +164,29 @@ nsMsgFilter::CreateTerm(nsIMsgSearchTerm **aResult)
 }
 
 NS_IMETHODIMP nsMsgFilter::GetTerm(PRInt32 termIndex, 
-	nsMsgSearchAttribValue *attrib,    /* attribute for this term          */
-	nsMsgSearchOpValue *op,         /* operator e.g. opContains           */
-	nsIMsgSearchValue **value,         /* value e.g. "Dogbert"               */
-	PRBool *booleanAnd,		 /* PR_TRUE if AND is the boolean operator.
-                                PR_FALSE if OR is the boolean operator */
-	char ** arbitraryHeader) /* arbitrary header specified by user.
-                                ignore unless attrib = attribOtherHeader */
+                                   nsMsgSearchAttribValue *attrib,    /* attribute for this term          */
+                                   nsMsgSearchOpValue *op,         /* operator e.g. opContains           */
+                                   nsIMsgSearchValue **value,         /* value e.g. "Dogbert"               */
+                                   PRBool *booleanAnd, /* PR_TRUE if AND is the boolean operator. PR_FALSE if OR is the boolean operator */
+                                   char ** arbitraryHeader) /* arbitrary header specified by user.ignore unless attrib = attribOtherHeader */
 {
-    nsresult rv;
-	if (!attrib || !op || !value || !booleanAnd || !arbitraryHeader)
-		return NS_ERROR_NULL_POINTER;
-
-    nsCOMPtr<nsIMsgSearchTerm> term;
-    rv = m_termList->QueryElementAt(termIndex, NS_GET_IID(nsIMsgSearchTerm),
+  nsresult rv;
+  nsCOMPtr<nsIMsgSearchTerm> term;
+  rv = m_termList->QueryElementAt(termIndex, NS_GET_IID(nsIMsgSearchTerm),
                                     (void **)getter_AddRefs(term));
 	if (NS_SUCCEEDED(rv) && term)
 	{
-        term->GetAttrib(attrib);
-        term->GetOp(op);
-
-        term->GetValue(value);
-
-        term->GetBooleanAnd(booleanAnd);
-
-		if (*attrib == nsMsgSearchAttrib::OtherHeader)
-            term->GetArbitraryHeader(arbitraryHeader);
+    if(attrib)
+      term->GetAttrib(attrib);
+    if(op)
+      term->GetOp(op);
+    if(value)
+      term->GetValue(value);
+    if(booleanAnd)
+      term->GetBooleanAnd(booleanAnd);
+    if (attrib && arbitraryHeader)
+		  if (*attrib > nsMsgSearchAttrib::OtherHeader && *attrib < nsMsgSearchAttrib::kNumMsgSearchAttributes)
+        term->GetArbitraryHeader(arbitraryHeader);
 	}
 	return NS_OK;
 }

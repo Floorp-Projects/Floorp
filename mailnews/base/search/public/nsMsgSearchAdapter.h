@@ -213,6 +213,7 @@ protected:
 	nsresult InitNewsTable ();
 	nsresult InitLocalNewsTable(); 
 	nsresult InitNewsExTable (nsINntpIncomingServer *host = nsnull);
+  nsresult InitOtherHeadersInTable(nsIMsgSearchValidityTable *table, const char *customHeaders);
 
 	void EnableLdapAttribute (nsMsgSearchAttribValue, PRBool enabled = PR_TRUE);
 };

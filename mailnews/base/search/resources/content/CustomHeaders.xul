@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+
+Original Contributor(s): Navin Gupta <naving@netscape.com>
+
+-->
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/CustomHeaders.dtd">
+<window class="dialog" id="customHeaders"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  orient="vertical"
+  windowtype="mailnews:customheaders"
+  onload="onLoad();"
+  width="300"
+  height="250"
+  persist="width height screenX screenY"
+  title="&window.title;">
+
+  <script type="application/x-javascript" src="chrome://messenger/content/CustomHeaders.js"/>
+  <script src="chrome://messenger/content/searchTermOverlay.js"/>
+
+  <keyset id="dialogKeys"/>
+
+  <grid flex="1">
+    <columns>
+      <column flex="1"/>
+      <column/>
+    </columns>
+    <rows>
+      <row>
+        <html>&newMsgHeader.label;</html>
+      </row>
+      <row>
+        <textbox flex="50%" id="headerInput"/>
+      </row>
+
+      <row flex="1">
+        <vbox>
+          <tree id="headerTree" class="inset" flex="1" onclick="updateButtons();">
+            <treechildren id="headerList" flex="1"/>
+          </tree>
+        </vbox>
+
+        <vbox>
+          <button id="addButton" label="&addButton.label;" oncommand="onAddHeader();"/>
+          <button id="removeButton" label="&removeButton.label;" oncommand="onRemoveHeader();"/>
+        </vbox>
+      </row>
+    </rows>
+  </grid>
+     
+  <separator/>
+
+  <hbox id="okCancelButtonsRight"/>
+
+</window>

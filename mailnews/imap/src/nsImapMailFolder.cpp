@@ -107,6 +107,7 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 
 #define FOUR_K 4096
+#define MAILNEWS_CUSTOM_HEADERS "mailnews.customHeaders"
 
 /*
     Copies the contents of srcDir into destDir.
@@ -4322,20 +4323,6 @@ nsImapMailFolder::GetMessageId(nsIImapProtocol* aProtocl,
 NS_IMETHODIMP
 nsImapMailFolder::AddSearchResult(nsIImapProtocol* aProtocol, 
                                   const char* searchHitLine)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsImapMailFolder::GetArbitraryHeaders(nsIImapProtocol* aProtocol,
-                                      GenericInfo* aInfo)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsImapMailFolder::GetShouldDownloadArbitraryHeaders(nsIImapProtocol* aProtocol,
-                                                    GenericInfo* aInfo)
 {
     return NS_ERROR_FAILURE;
 }

@@ -370,64 +370,6 @@ nsImapMiscellaneousSinkProxy::~nsImapMiscellaneousSinkProxy()
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsImapMiscellaneousSinkProxy, nsIImapMiscellaneousSink)
 
 NS_IMETHODIMP
-nsImapMiscellaneousSinkProxy::GetArbitraryHeaders(nsIImapProtocol* aProtocol,
-                                              GenericInfo* aInfo)
-{
-    nsresult res = NS_OK;
-    NS_PRECONDITION (aInfo, "Oops... null aInfo");
-    if(!aInfo)
-        return NS_ERROR_NULL_POINTER;
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        GetArbitraryHeadersProxyEvent *ev =
-            new GetArbitraryHeadersProxyEvent(this, aInfo);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-            ev->PostEvent(m_eventQueue);
-    }
-    else
-    {
-        res = m_realImapMiscellaneousSink->GetArbitraryHeaders(aProtocol, aInfo);
-    }
-    return res;
-}
-
-NS_IMETHODIMP
-nsImapMiscellaneousSinkProxy::GetShouldDownloadArbitraryHeaders(
-    nsIImapProtocol* aProtocol, GenericInfo* aInfo)
-{
-    nsresult res = NS_OK;
-    NS_PRECONDITION (aInfo, "Oops... null aInfo");
-    if(!aInfo)
-        return NS_ERROR_NULL_POINTER;
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        GetShouldDownloadArbitraryHeadersProxyEvent *ev =
-            new GetShouldDownloadArbitraryHeadersProxyEvent(this, aInfo);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-        {
-            ev->SetNotifyCompletion(PR_TRUE);
-            ev->PostEvent(m_eventQueue);
-        }
-    }
-    else
-    {
-        res =
-            m_realImapMiscellaneousSink->GetShouldDownloadArbitraryHeaders(aProtocol,
-                                                                   aInfo);
-        aProtocol->NotifyFEEventCompletion();
-    }
-    return res;
-}
-
-NS_IMETHODIMP
 nsImapMiscellaneousSinkProxy::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
 {
     nsresult res = NS_OK;
@@ -963,52 +905,6 @@ nsImapMiscellaneousSinkProxyEvent::~nsImapMiscellaneousSinkProxyEvent()
 {
     NS_IF_RELEASE (m_proxy);
 }
-
-GetArbitraryHeadersProxyEvent::GetArbitraryHeadersProxyEvent(
-    nsImapMiscellaneousSinkProxy* aProxy, GenericInfo* aInfo) :
-    nsImapMiscellaneousSinkProxyEvent(aProxy)
-{
-    NS_ASSERTION (aInfo, "Oops... a null info");
-    m_info = aInfo;
-}
-
-GetArbitraryHeadersProxyEvent::~GetArbitraryHeadersProxyEvent()
-{
-}
-
-NS_IMETHODIMP
-GetArbitraryHeadersProxyEvent::HandleEvent()
-{
-    nsresult res = m_proxy->m_realImapMiscellaneousSink->GetArbitraryHeaders(
-        m_proxy->m_protocol, m_info);
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
-}
-
-GetShouldDownloadArbitraryHeadersProxyEvent::GetShouldDownloadArbitraryHeadersProxyEvent(
-    nsImapMiscellaneousSinkProxy* aProxy, GenericInfo* aInfo) :
-    nsImapMiscellaneousSinkProxyEvent(aProxy)
-{
-    NS_ASSERTION (aInfo, "Oops... a null info");
-    m_info = aInfo;
-}
-
-GetShouldDownloadArbitraryHeadersProxyEvent::~GetShouldDownloadArbitraryHeadersProxyEvent()
-{
-}
-
-NS_IMETHODIMP
-GetShouldDownloadArbitraryHeadersProxyEvent::HandleEvent()
-{
-    nsresult res = 
-        m_proxy->m_realImapMiscellaneousSink->GetShouldDownloadArbitraryHeaders(
-            m_proxy->m_protocol, m_info);
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
-}
-
 
 HeaderFetchCompletedProxyEvent::HeaderFetchCompletedProxyEvent(
     nsImapMiscellaneousSinkProxy* aProxy) :

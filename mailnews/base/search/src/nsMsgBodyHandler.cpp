@@ -92,9 +92,6 @@ void nsMsgBodyHandler::Initialize()
   m_stripHtml = PR_TRUE;
   m_messageIsHtml = PR_FALSE;
   m_passedHeaders = PR_FALSE;
-  
-  // set our offsets to 0 since we haven't handled any bytes yet...
-  m_NewsArticleOffset = 0;
   m_headerBytesRead = 0;
   
 }
@@ -128,7 +125,7 @@ PRInt32 nsMsgBodyHandler::GetNextLine (char * buf, int bufSize)
       // to store offline messages in berkeley format folders.
       if (m_db)
       {
-        length = GetNextLocalLine (buf, bufSize); // (2) POP
+         length = GetNextLocalLine (buf, bufSize); // (2) POP
       }
     }
     
@@ -195,13 +192,14 @@ PRInt32 nsMsgBodyHandler::GetNextLocalLine(char * buf, int bufSize)
 {
   if (m_numLocalLines)
   {
-    m_numLocalLines--; // the line count is for header and body lines
+    if (m_passedHeaders)
+      m_numLocalLines--; // the line count is only for body lines
     // do we need to check the return value here?
     if (m_fileSpec)
     {
       PRBool isEof = PR_FALSE;
       nsresult rv = m_fileSpec->Eof(&isEof);
-      if (NS_SUCCEEDED(rv) && isEof)
+      if (NS_FAILED(rv) || isEof)
         return -1;
       
       PRBool wasTruncated = PR_FALSE;
@@ -213,8 +211,6 @@ PRInt32 nsMsgBodyHandler::GetNextLocalLine(char * buf, int bufSize)
   
   return -1;
 }
-
-
 
 PRInt32 nsMsgBodyHandler::ApplyTransformations (char *buf, PRInt32 length, PRBool &eatThisLine)
 {

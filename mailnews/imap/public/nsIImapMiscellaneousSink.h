@@ -64,10 +64,6 @@ public:
 		return iid;
 	}
 	
-	NS_IMETHOD GetArbitraryHeaders(nsIImapProtocol* aProtocol,
-																 GenericInfo* aInfo) = 0;
-	NS_IMETHOD GetShouldDownloadArbitraryHeaders(nsIImapProtocol* aProtocol,
-																							 GenericInfo* aInfo) = 0;
 	NS_IMETHOD HeaderFetchCompleted(nsIImapProtocol* aProtocol) = 0;
 	NS_IMETHOD UpdateSecurityStatus(nsIImapProtocol* aProtocol) = 0;
 	// ****

@@ -143,6 +143,9 @@ searchTermContainer.prototype = {
     save: function () {
         var searchTerm = this.searchTerm;
         searchTerm.attrib = this.searchattribute.value;
+        var nsMsgSearchAttrib = Components.interfaces.nsMsgSearchAttrib;
+        if (this.searchattribute.value > nsMsgSearchAttrib.OtherHeader && this.searchattribute.value < nsMsgSearchAttrib.kNumMsgSearchAttributes) 
+          searchTerm.arbitraryHeader = this.searchattribute.label;
         searchTerm.op = this.searchoperator.value;
         if (this.searchvalue.value)
             this.searchvalue.save();
@@ -228,6 +231,13 @@ function setSearchScope(scope) {
     for (var i=0; i<gSearchTerms.length; i++) {
         gSearchTerms[i].obj.searchattribute.searchScope = scope;
         gSearchTerms[i].scope = scope;
+    }
+}
+
+function updateSearchAttributes()
+{
+    for (var i=0; i<gSearchTerms.length; i++) {
+        gSearchTerms[i].obj.searchattribute.refreshList();
     }
 }
 
@@ -465,3 +475,4 @@ function convertStringToPRTime(str)
   // so multiply by 1000 when converting
   return (time.getTime() * 1000);
 }
+

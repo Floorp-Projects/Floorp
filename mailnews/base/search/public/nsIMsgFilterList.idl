@@ -68,7 +68,8 @@ interface nsIMsgFilterList : nsISupports {
 
     attribute nsIMsgFolder folder;
     readonly attribute short version;
-    
+	readonly attribute string arbitraryHeaders;
+    readonly attribute boolean shouldDownloadArbitraryHeaders;
     readonly attribute unsigned long filterCount;
     nsIMsgFilter getFilterAt(in unsigned long filterIndex);
     nsIMsgFilter getFilterNamed(in wstring filterName);

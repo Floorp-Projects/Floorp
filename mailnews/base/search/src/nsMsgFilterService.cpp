@@ -61,6 +61,10 @@ NS_IMETHODIMP nsMsgFilterService::OpenFilterList(nsIFileSpec *filterFile, nsIMsg
 
     nsFileSpec filterSpec;
     filterFile->GetFileSpec(&filterSpec);
+    PRBool exists;
+    filterFile->Exists(&exists);
+    if (!exists) 
+      return NS_OK;
 	nsIOFileStream *fileStream = new nsIOFileStream(filterSpec);
 	if (!fileStream)
 		return NS_ERROR_OUT_OF_MEMORY;

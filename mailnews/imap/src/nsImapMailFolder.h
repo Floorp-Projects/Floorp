@@ -247,10 +247,6 @@ public:
     // nsIImapMiscellaneousSink methods
 	NS_IMETHOD AddSearchResult(nsIImapProtocol* aProtocol, 
                                const char* searchHitLine);
-	NS_IMETHOD GetArbitraryHeaders(nsIImapProtocol* aProtocol,
-                                   GenericInfo* aInfo);
-	NS_IMETHOD GetShouldDownloadArbitraryHeaders(nsIImapProtocol* aProtocol,
-                                                 GenericInfo* aInfo);
 	NS_IMETHOD HeaderFetchCompleted(nsIImapProtocol* aProtocol);
 	NS_IMETHOD UpdateSecurityStatus(nsIImapProtocol* aProtocol);
 	// ****

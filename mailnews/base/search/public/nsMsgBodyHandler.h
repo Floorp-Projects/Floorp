@@ -52,8 +52,8 @@ protected:
   void OpenLocalFolder();
   
   // goes through the mail folder 
-  PRInt32 GetNextLocalLine(char * buf, int bufSize);      
-  
+  PRInt32 GetNextLocalLine(char * buf, int bufSize); 
+
   nsIMsgSearchScopeTerm *m_scope;
   nsCOMPtr <nsIFileSpec> m_fileSpec;
   // local file state
@@ -69,9 +69,6 @@ protected:
   
   nsIMsgDBHdr * m_msgHdr;
   nsIMsgDatabase * m_db;
-  
-  // News related methods & state
-  PRInt32 m_NewsArticleOffset;
   
   // Transformations
   PRBool m_stripHeaders;	// PR_TRUE if we're supposed to strip of message headers

@@ -310,9 +310,12 @@ function updateSearchFolderPicker(folderURI) {
     gCurrentFolder =
         RDF.GetResource(folderURI).QueryInterface(nsIMsgFolder);
 
-
     setSearchScope(GetScopeForFolder(gCurrentFolder));
+}
 
+function UpdateAfterCustomHeaderChange()
+{
+  updateSearchAttributes();
 }
 
 function onChooseFolder(event) {

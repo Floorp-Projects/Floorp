@@ -98,7 +98,7 @@ protected:
 	nsMsgFilter		*m_curFilter;	// filter we're filing in or out(?)
 	const char		*m_filterFileName;
 	nsCOMPtr<nsISupportsArray> m_filters;
-  
+  nsCString m_arbitraryHeaders;
   nsCOMPtr<nsIFileSpec> m_defaultFile;
 
 };

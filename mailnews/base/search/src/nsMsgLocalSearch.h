@@ -96,7 +96,6 @@ protected:
 								PRBool *pResult);
 	nsIMsgDatabase *m_db;
 	nsCOMPtr<nsISimpleEnumerator> m_listContext;
-
 	void CleanUpScope();
 };
 

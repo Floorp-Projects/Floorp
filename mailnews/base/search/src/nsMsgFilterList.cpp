@@ -71,6 +71,7 @@ nsMsgFilterList::nsMsgFilterList() :
 	rv = NS_NewISupportsArray(getter_AddRefs(m_filters));
 	m_loggingEnabled = PR_FALSE;
 	m_curFilter = nsnull;
+  m_arbitraryHeaders.SetLength(0);
 	NS_INIT_REFCNT();
 }
 
@@ -723,6 +724,8 @@ nsresult nsMsgFilterList::SaveTextFilters(nsIOFileStream *aStream)
 		else
 			break;
 	}
+  if (NS_SUCCEEDED(err))
+    m_arbitraryHeaders.SetLength(0);
 	return err;
 }
 
@@ -871,8 +874,6 @@ nsresult nsMsgFilterList::MoveFilterAt(PRUint32 filterIndex,
     NS_ENSURE_ARG((motion == nsMsgFilterMotion::up) ||
                   (motion == nsMsgFilterMotion::down));
 
-    nsresult rv;
-
 	PRUint32			filterCount;
 	m_filters->Count(&filterCount);
     
@@ -967,6 +968,63 @@ NS_IMETHODIMP nsMsgFilterList::MatchOrChangeFilterTarget(const char *oldFolderUr
   }
   return rv;
 }
+
+NS_IMETHODIMP nsMsgFilterList::GetShouldDownloadArbitraryHeaders(PRBool *aResult)
+{
+  nsresult rv = NS_OK;
+  if (m_arbitraryHeaders.Length() == 0)
+  {
+    PRUint32 numFilters;
+    rv = m_filters->Count(&numFilters);
+    NS_ENSURE_SUCCESS(rv,rv);
+    nsCOMPtr <nsIMsgFilter> filter;
+    nsCOMPtr <nsISupports> filterSupports;
+    nsMsgSearchAttribValue attrib;
+    nsXPIDLCString arbitraryHeader;
+    for (PRUint32 index = 0; index < numFilters; index++)
+    {
+      filterSupports = getter_AddRefs(m_filters->ElementAt(index));
+      filter = do_QueryInterface(filterSupports, &rv);
+      if (NS_SUCCEEDED(rv) && filter)
+      {
+        nsCOMPtr <nsISupportsArray> searchTerms;
+        PRUint32 numSearchTerms=0;
+        filter->GetSearchTerms(getter_AddRefs(searchTerms));
+        if (searchTerms)
+          searchTerms->Count(&numSearchTerms);
+        for (PRUint32 i=0; i< numSearchTerms;i++)
+        {
+          filter->GetTerm(i, &attrib, nsnull,nsnull,nsnull, getter_Copies(arbitraryHeader));
+          if (arbitraryHeader && arbitraryHeader[0])
+          {
+            if (m_arbitraryHeaders.Length() == 0)
+              m_arbitraryHeaders.Assign(arbitraryHeader);
+            else if (PL_strncasecmp(m_arbitraryHeaders, arbitraryHeader, arbitraryHeader.Length()))
+            {
+              m_arbitraryHeaders.Append(" ");
+              m_arbitraryHeaders.Append(arbitraryHeader);
+            }
+          }
+        }
+      }
+    }
+  }
+  if (m_arbitraryHeaders.Length() > 0)  //if any arbitraryHeaders;
+    *aResult=PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFilterList::GetArbitraryHeaders(char **aResult)
+{
+  PRBool headers=PR_FALSE;
+  GetShouldDownloadArbitraryHeaders(&headers);
+  if (headers)
+    *aResult = ToNewCString(m_arbitraryHeaders);
+  return NS_OK;
+}
+
+
+
 #ifdef DEBUG
 void nsMsgFilterList::Dump()
 {

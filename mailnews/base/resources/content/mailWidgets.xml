@@ -102,9 +102,28 @@
           <![CDATA[
             var strings = new Array;
             var ids = this.valueIds;
+            var pref = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
+            var hdrs;
+            try
+            {
+              hdrs = pref.GetCharPref("mailnews.customHeaders");
+            }
+            catch(ex)
+            {
+              hdrs=null;
+            }
+            var hdrsArray = new Array;
+            if (hdrs)
+              hdrsArray = hdrs.split(": ");
             var bundle = this.stringBundle;
+            var j=0;
             for (var i=0; i<ids.length; i++)
+            {
+              if(ids[i] > Components.interfaces.nsMsgSearchAttrib.OtherHeader && hdrs)
+                strings[i] = hdrsArray[j++];
+              else
                 strings[i] = this.stringBundle.GetStringFromID(ids[i]);
+            }
             return strings;
           ]]>
         </getter>
@@ -150,6 +169,9 @@
           ]]>
         </setter>
       </property>
+      <!-- label forwards to the internal menulist's "label" attribute -->
+      <property name="label" onget="return document.getAnonymousNodes(this)[0].selectedItem.getAttribute('label');">
+      </property>        
       <method name="refreshList">
         <body>
           <![CDATA[
@@ -167,21 +189,35 @@
               popup.removeChild(popup.lastChild);
 
             var newSelection;
-            for (var i=0; i<menuItemIds.length; i++) {
+            var customizePos=-1;
+            for (var i=0; i<menuItemIds.length; i++) 
+            {
               // create the menuitem
-              var menuitem = document.createElement("menuitem");
-              menuitem.setAttribute("label", menuItemStrings[i]);
-              menuitem.setAttribute("value", menuItemIds[i]);
-              popup.appendChild(menuitem);
-
-              // try to restore the selection
-              if (!newSelection || oldData == menuItemIds[i].toString()) {
-                newSelection = menuitem;
+              if (Components.interfaces.nsMsgSearchAttrib.OtherHeader == menuItemIds[i].toString())
+                customizePos = i;
+              else
+              {
+                var menuitem = document.createElement("menuitem");
+                menuitem.setAttribute("label", menuItemStrings[i]);
+                menuitem.setAttribute("value", menuItemIds[i]);
+                popup.appendChild(menuitem);
+                // try to restore the selection
+                if (!newSelection || oldData == menuItemIds[i].toString())
+                  newSelection = menuitem;
               }
             }
-
+            if (customizePos != -1)
+            {
+              var separator = document.createElement("menuseparator");
+              popup.appendChild(separator);
+              var menuitem = document.createElement("menuitem");
+              menuitem.setAttribute("label", menuItemStrings[customizePos]);
+              menuitem.setAttribute("value", menuItemIds[customizePos]);
+              popup.appendChild(menuitem);
+            }
             // now restore the selection
             menulist.selectedItem = newSelection;
+             
           ]]>
         </body>
       </method>
@@ -190,7 +226,6 @@
         <body>
           <![CDATA[
             var menulist = document.getAnonymousNodes(this)[0];
-
             // notify targets
             var targets = this.targets;
             if (targets) {
@@ -250,9 +285,14 @@
       <property name="parentValue">
         <setter>
           <![CDATA[
-            if (this.searchAttribute == val) return val;
+            if (this.searchAttribute == val && val != Components.interfaces.nsMsgSearchAttrib.OtherHeader) return val;
             this.searchAttribute = val;
             this.refreshList();
+            if (val == Components.interfaces.nsMsgSearchAttrib.OtherHeader)
+            {
+              window.openDialog('chrome://messenger/content/CustomHeaders.xul', "", 'modal,titlebar,chrome', null);
+              UpdateAfterCustomHeaderChange();
+            }
             return val;
           ]]>
         </setter>
@@ -540,6 +580,8 @@
           <![CDATA[
             var searchTerm = this.searchTerm;
             searchTerm.attrib = this.searchattribute.value;
+            if (this.searchAttribute > nsMsgSearchAttrib.OtherHeader && this.searchAttribute < nsMsgSearchAttrib.kNumMsgSearchAttributes) 
+              searchTerm.arbitraryHeader = this.searchattribute.label;
             searchTerm.op = this.searchoperator.value;
             if (this.searchvalue.value)
               this.searchvalue.save();

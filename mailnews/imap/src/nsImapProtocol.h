@@ -174,8 +174,8 @@ public:
   static void EscapeUserNamePasswordString(const char *strToEscape, nsCString *resultStr);
 
 	// used to start fetching a message.
-  PRBool GetShouldDownloadArbitraryHeaders();
-  char *GetArbitraryHeadersToDownload();
+  void GetShouldDownloadArbitraryHeaders(PRBool *aResult);
+  void GetArbitraryHeadersToDownload(char **aResult);
   virtual void AdjustChunkSize();
   virtual void FetchMessage(const char * messageIds, 
                             nsIMAPeFetchFields whatToFetch,

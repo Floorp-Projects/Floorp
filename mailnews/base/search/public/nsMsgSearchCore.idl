@@ -123,9 +123,10 @@ interface nsMsgSearchAttrib {
 	const long HomePhone = 46;
 	const long Pager = 47;
 	const long Cellular = 48;
+    //49 is for showing customize... in ui headers start from 50 onwards up until 99.
+	const long OtherHeader = 49;  /* for mail and news. MUST ALWAYS BE LAST attribute since we can have an arbitrary # of these... */
 
-	const long OtherHeader = 49;  /* for mail and news. MUST ALWAYS BE LAST attribute since we can have an arbitrary # of these...*/
-    const long kNumMsgSearchAttributes = 50;      /* must be last attribute */
+    const long kNumMsgSearchAttributes = 100;      /* must be last attribute */
 };
 
 /* NB: If you add elements to this enum, add only to the end, since 
@@ -158,7 +159,6 @@ interface nsMsgSearchOp {
 	const long IsLessThan = 14;
 
 	const long NameCompletion = 15; /* Name Completion operator...as the name implies =) */
-
     const long kNumMsgSearchOperators  = 16;     /* must be last operator */
 };
 

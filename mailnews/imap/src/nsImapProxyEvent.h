@@ -113,10 +113,6 @@ public:
 
     NS_DECL_ISUPPORTS
 	
-    NS_IMETHOD GetArbitraryHeaders(nsIImapProtocol* aProtocol,
-                                   GenericInfo* aInfo);
-    NS_IMETHOD GetShouldDownloadArbitraryHeaders(nsIImapProtocol* aProtocol,
-                                                 GenericInfo* aInfo);
     NS_IMETHOD HeaderFetchCompleted(nsIImapProtocol* aProtocol);
     NS_IMETHOD UpdateSecurityStatus(nsIImapProtocol* aProtocol);
     // ****
@@ -238,25 +234,6 @@ struct nsImapMiscellaneousSinkProxyEvent : public nsImapEvent
     nsImapMiscellaneousSinkProxyEvent(nsImapMiscellaneousSinkProxy* aProxy);
     virtual ~nsImapMiscellaneousSinkProxyEvent();
     nsImapMiscellaneousSinkProxy* m_proxy;
-};
-
-struct GetArbitraryHeadersProxyEvent : public nsImapMiscellaneousSinkProxyEvent
-{
-    GetArbitraryHeadersProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
-                                  GenericInfo* aInfo);
-    virtual ~GetArbitraryHeadersProxyEvent();
-    NS_IMETHOD HandleEvent();
-    GenericInfo *m_info;        // pass in handle we don't own it
-};
-
-struct GetShouldDownloadArbitraryHeadersProxyEvent : 
-    public nsImapMiscellaneousSinkProxyEvent
-{
-    GetShouldDownloadArbitraryHeadersProxyEvent(
-        nsImapMiscellaneousSinkProxy* aProxy, GenericInfo* aInfo);
-    virtual ~GetShouldDownloadArbitraryHeadersProxyEvent();
-    NS_IMETHOD HandleEvent();
-    GenericInfo *m_info;        // pass in handle we don't own it
 };
 
 struct HeaderFetchCompletedProxyEvent : public nsImapMiscellaneousSinkProxyEvent

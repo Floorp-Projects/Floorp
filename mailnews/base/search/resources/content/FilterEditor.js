@@ -300,3 +300,8 @@ function SearchNewFolderOkCallback(name,uri)
     var curFolder = uri+"/"+name;
     SetFolderPicker(curFolder, gActionTargetElement.id);
 }
+
+function UpdateAfterCustomHeaderChange()
+{
+  updateSearchAttributes();
+}

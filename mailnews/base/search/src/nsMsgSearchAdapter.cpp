@@ -80,6 +80,7 @@ const char *nsMsgSearchAdapter::m_kImapCharset = " CHARSET ";
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#define PREF_CUSTOM_HEADERS "mailnews.customHeaders"
 
 NS_IMETHODIMP nsMsgSearchAdapter::FindTargetFolder(const nsMsgResultElement *,nsIMsgFolder * *)
 {
@@ -424,25 +425,6 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
 		whichMnemonic = m_kImapBody;
 		excludeHeader = PR_TRUE;
 		break;
-	case nsMsgSearchAttrib::OtherHeader:  // arbitrary header? if so create arbitrary header string
-    {
-      nsXPIDLCString arbitraryHeaderTerm;
-      term->GetArbitraryHeader(getter_Copies(arbitraryHeaderTerm));
-      if (nsCRT::strlen((const char *) arbitraryHeaderTerm) > 0)
-		  {
-			  arbitraryHeader = new char [nsCRT::strlen((const char *)arbitraryHeaderTerm) + 6];  // 6 bytes for SPACE \" .... \" SPACE
-			  if (!arbitraryHeader)
-				  return NS_ERROR_OUT_OF_MEMORY;
-			  arbitraryHeader[0] = '\0';
-			  PL_strcat(arbitraryHeader, " \"");
-			  PL_strcat(arbitraryHeader, (const char *)arbitraryHeaderTerm);
-			  PL_strcat(arbitraryHeader, "\" ");
-			  whichMnemonic = arbitraryHeader;
-		  }
-		  else
-			  return NS_ERROR_FAILURE;
-    }
-		break;
 	case nsMsgSearchAttrib::AgeInDays:  // added for searching online for age in days...
 		// for AgeInDays, we are actually going to perform a search by date, so convert the operations for age
 		// to the IMAP mnemonics that we would use for date!
@@ -510,8 +492,29 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
 		}
 		break;
 	default:
+    if ( attrib > nsMsgSearchAttrib::OtherHeader && attrib < nsMsgSearchAttrib::kNumMsgSearchAttributes)
+    {
+      nsXPIDLCString arbitraryHeaderTerm;
+      term->GetArbitraryHeader(getter_Copies(arbitraryHeaderTerm));
+      if (nsCRT::strlen((const char *) arbitraryHeaderTerm) > 0)
+		  {
+			  arbitraryHeader = new char [nsCRT::strlen((const char *)arbitraryHeaderTerm) + 6];  // 6 bytes for SPACE \" .... \" SPACE
+			  if (!arbitraryHeader)
+				  return NS_ERROR_OUT_OF_MEMORY;
+			  arbitraryHeader[0] = '\0';
+			  PL_strcat(arbitraryHeader, " \"");
+			  PL_strcat(arbitraryHeader, (const char *)arbitraryHeaderTerm);
+			  PL_strcat(arbitraryHeader, "\" ");
+			  whichMnemonic = arbitraryHeader;
+		  }
+		  else
+			  return NS_ERROR_FAILURE;
+    }
+    else
+    {
 			NS_ASSERTION(PR_FALSE, "invalid search operator");
-		return NS_ERROR_INVALID_ARG;
+		  return NS_ERROR_INVALID_ARG;
+    }
 	}
 
 	char *value = "";
@@ -1004,25 +1007,36 @@ NS_IMPL_ISUPPORTS1(nsMsgSearchValidityManager, nsIMsgSearchValidityManager)
 nsresult nsMsgSearchValidityManager::GetTable (int whichTable, nsIMsgSearchValidityTable **ppOutTable)
 {
 	NS_ENSURE_ARG(ppOutTable);
-
+    
 	nsresult err = NS_OK;
     *ppOutTable = nsnull;
+  
+  nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID, &err);
+  nsXPIDLCString customHeaders;
+  if (NS_SUCCEEDED(err) && pref)
+    pref->GetCharPref(PREF_CUSTOM_HEADERS, getter_Copies(customHeaders));
 
 	switch (whichTable)
 	{
 	case nsMsgSearchScope::offlineMail:
-		if (!m_offlineMailTable)
-			err = InitOfflineMailTable ();
+    if (!m_offlineMailTable)
+      err = InitOfflineMailTable ();
+    if (customHeaders && m_offlineMailTable)
+      err = InitOtherHeadersInTable(m_offlineMailTable, customHeaders.get());
 		*ppOutTable = m_offlineMailTable;
 		break;
 	case nsMsgSearchScope::onlineMail:
 		if (!m_onlineMailTable)
-			err = InitOnlineMailTable ();
+      err = InitOnlineMailTable ();
+    if (customHeaders && m_onlineMailTable)
+      err = InitOtherHeadersInTable(m_onlineMailTable, customHeaders.get());
 		*ppOutTable = m_onlineMailTable;
 		break;
 	case nsMsgSearchScope::onlineMailFilter:
 		if (!m_onlineMailFilterTable)
 			err = InitOnlineMailFilterTable ();
+    if (customHeaders && m_onlineMailFilterTable)
+      err = InitOtherHeadersInTable(m_onlineMailFilterTable, customHeaders.get());
 		*ppOutTable = m_onlineMailFilterTable;
 		break;
 	case nsMsgSearchScope::news:
@@ -1033,6 +1047,8 @@ nsresult nsMsgSearchValidityManager::GetTable (int whichTable, nsIMsgSearchValid
 	case nsMsgSearchScope::localNews:
 		if (!m_localNewsTable)
 			err = InitLocalNewsTable();
+    if (customHeaders && m_localNewsTable)
+      err = InitOtherHeadersInTable(m_localNewsTable, customHeaders.get());
 		*ppOutTable = m_localNewsTable;
 		break;
 #ifdef DOING_EXNEWSSEARCH
@@ -1071,4 +1087,35 @@ nsMsgSearchValidityManager::NewTable(nsIMsgSearchValidityTable **aTable)
     return NS_OK;
 }
 
-
+nsresult 
+nsMsgSearchValidityManager::InitOtherHeadersInTable (nsIMsgSearchValidityTable *aTable, const char *customHeaders)
+{
+  PRUint32 strlen = PL_strlen(customHeaders);
+  PRUint32 numHeaders=0;
+  for (PRUint32 i=0;i <strlen; i++)
+    if (customHeaders[i] == ':')
+      numHeaders++;
+  numHeaders++;
+  NS_ASSERTION(nsMsgSearchAttrib::OtherHeader + numHeaders < nsMsgSearchAttrib::kNumMsgSearchAttributes, "more headers than the table can hold");
+  for (i=nsMsgSearchAttrib::OtherHeader+1;i< (nsMsgSearchAttrib::OtherHeader + numHeaders+1) && nsMsgSearchAttrib::kNumMsgSearchAttributes;i++)
+  {
+    aTable->SetAvailable (i, nsMsgSearchOp::Contains, 1);   // added for arbitrary headers
+    aTable->SetEnabled   (i, nsMsgSearchOp::Contains, 1); 
+    aTable->SetAvailable (i, nsMsgSearchOp::DoesntContain, 1);
+    aTable->SetEnabled   (i, nsMsgSearchOp::DoesntContain, 1);
+    aTable->SetAvailable (i, nsMsgSearchOp::Is, 1);
+    aTable->SetEnabled   (i, nsMsgSearchOp::Is, 1);
+    aTable->SetAvailable (i, nsMsgSearchOp::Isnt, 1);
+    aTable->SetEnabled   (i, nsMsgSearchOp::Isnt, 1);
+  }
+   //because custom headers can change; so reset the table for those which are no longer used. 
+  for (PRUint32 j=nsMsgSearchAttrib::OtherHeader+numHeaders+1; j < nsMsgSearchAttrib::kNumMsgSearchAttributes; j++) 
+  {
+    for (PRUint32 k=0; k < nsMsgSearchOp::kNumMsgSearchOperators; k++) 
+    {
+      aTable->SetAvailable(j,k,0);
+      aTable->SetEnabled(j,k,0);
+    }
+  }
+  return NS_OK;
+}

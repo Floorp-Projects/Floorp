@@ -56,6 +56,7 @@
 #include "nsIMimeConverter.h"
 #include "nsMsgMimeCID.h"
 #include "nsTime.h"
+#include "nsIPref.h"
 
 //---------------------------------------------------------------------------
 // nsMsgSearchTerm specifies one criterion, e.g. name contains phil
@@ -65,7 +66,7 @@
 //-----------------------------------------------------------------------------
 //-------------------- Implementation of nsMsgSearchTerm -----------------------
 //-----------------------------------------------------------------------------
-
+#define MAILNEWS_CUSTOM_HEADERS "mailnews.customHeaders"
 
 typedef struct
 {
@@ -101,9 +102,34 @@ nsresult NS_MsgGetAttributeFromString(const char *string, PRInt16 *attrib)
 			*attrib = SearchAttribEntryTable[idxAttrib].attrib;
 			break;
 		}
-	}
+	}  
 	if (!found)
-		*attrib = nsMsgSearchAttrib::OtherHeader; // assume arbitrary header if we could not find the header in the table
+  {
+    nsresult rv;
+    *attrib = nsMsgSearchAttrib::OtherHeader;
+    nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    nsXPIDLCString headers;
+    if (NS_SUCCEEDED(rv) && prefs)
+      prefs->GetCharPref(MAILNEWS_CUSTOM_HEADERS, getter_Copies(headers));
+    if (headers)
+    {
+      char *headersString = ToNewCString(headers);
+      char *newStr=nsnull;
+      char *token = nsCRT::strtok(headersString,": ", &newStr);
+      PRUint32 i=1;  //headers start from 50 onwards...
+      while (token)
+      {
+        if (nsCRT::strcasecmp(token, string) == 0)
+        {
+          *attrib = nsMsgSearchAttrib::OtherHeader+i;
+          break;
+        }
+        token = nsCRT::strtok(newStr,": ", &newStr);
+        i++;
+      }
+      nsMemory::Free(headersString);
+    }
+  }	
 	return NS_OK;      // we always succeed now
 }
 
@@ -276,7 +302,7 @@ nsMsgSearchTerm::nsMsgSearchTerm (
     NS_INIT_REFCNT();
 	m_operator = op;
 	m_booleanOp = (booleanAND) ? nsMsgSearchBooleanOp::BooleanAND : nsMsgSearchBooleanOp::BooleanOR;
-	if (attrib == nsMsgSearchAttrib::OtherHeader && arbitraryHeader)
+	if (attrib > nsMsgSearchAttrib::OtherHeader  && attrib < nsMsgSearchAttrib::kNumMsgSearchAttributes && arbitraryHeader)
 		m_arbitraryHeader = arbitraryHeader;
 	m_attribute = attrib;
 
@@ -295,7 +321,7 @@ nsMsgSearchTerm::nsMsgSearchTerm (
 	m_operator = op;
 	m_attribute = attrib;
 	m_booleanOp = boolOp;
-	if (attrib == nsMsgSearchAttrib::OtherHeader && arbitraryHeader)
+	if (attrib > nsMsgSearchAttrib::OtherHeader  && attrib < nsMsgSearchAttrib::kNumMsgSearchAttributes && arbitraryHeader)
 		m_arbitraryHeader = arbitraryHeader;
 	nsMsgResultElement::AssignValues (val, &m_value);
 }
@@ -412,7 +438,7 @@ nsresult nsMsgSearchTerm::EnStreamNew (nsCString &outStream)
 	if (ret != NS_OK)
 		return ret;
 
-	if (m_attribute == nsMsgSearchAttrib::OtherHeader)  // if arbitrary header, use it instead!
+	if (m_attribute > nsMsgSearchAttrib::OtherHeader && m_attribute < nsMsgSearchAttrib::kNumMsgSearchAttributes)  // if arbitrary header, use it instead!
 	{
 		outputStr = "\"";
 		outputStr += m_arbitraryHeader;
@@ -441,9 +467,8 @@ nsresult nsMsgSearchTerm::ParseValue(char *inStream)
 	if (IS_STRING_ATTRIBUTE(m_attribute))
 	{
 		PRBool	quoteVal = PR_FALSE;
-		while (nsString::IsSpace(*inStream))
-			inStream++;
-
+    while (nsString::IsSpace(*inStream))
+      inStream++;
 		// need to remove pair of '"', if present
 		if (*inStream == '"')
 		{
@@ -530,7 +555,7 @@ nsMsgSearchTerm::ParseAttribute(char *inStream)
 	err = NS_MsgGetAttributeFromString(inStream, &attributeVal);
 	nsMsgSearchAttribValue attrib = (nsMsgSearchAttribValue) attributeVal;
 	
-	if (attrib == nsMsgSearchAttrib::OtherHeader)  // if we are dealing with an arbitrary header....
+	if (attrib > nsMsgSearchAttrib::OtherHeader && attrib < nsMsgSearchAttrib::kNumMsgSearchAttributes)  // if we are dealing with an arbitrary header....
 		m_arbitraryHeader =  inStream;
 	
 	return attrib;
@@ -646,11 +671,11 @@ nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsIMsgSearchScopeTerm *scope,
 	if (buf)
 	{
 		PRBool searchingHeaders = PR_TRUE;
-		while (searchingHeaders && bodyHandler->GetNextLine(buf, kBufSize))
+		while (searchingHeaders && (bodyHandler->GetNextLine(buf, kBufSize) >=0))
 		{
 			char * buf_end = buf + PL_strlen(buf);
 			int headerLength = m_arbitraryHeader.Length();
-			if (m_arbitraryHeader.Equals(buf))
+      if (!PL_strncasecmp(buf, m_arbitraryHeader.get(),headerLength))
 			{
 				char * headerValue = buf + headerLength; // value occurs after the header name...
 				if (headerValue < buf_end && headerValue[0] == ':')  // + 1 to account for the colon which is MANDATORY

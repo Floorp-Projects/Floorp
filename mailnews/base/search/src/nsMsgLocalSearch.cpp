@@ -255,7 +255,6 @@ void nsMsgSearchBoolExpression::GenerateEncodeStr(nsCString * buffer)
 
 nsMsgSearchIMAPOfflineMail::nsMsgSearchIMAPOfflineMail (nsIMsgSearchScopeTerm *scope, nsISupportsArray  *termList) : nsMsgSearchOfflineMail(scope, termList)
 { 
-
 }                                                                                                                                                                                                                                                                                                                                                                                                                                   
 
 
@@ -315,7 +314,6 @@ nsMsgSearchOfflineMail::nsMsgSearchOfflineMail (nsIMsgSearchScopeTerm *scope, ns
     m_db = nsnull;
     m_listContext = nsnull;
 }
-
 
 nsMsgSearchOfflineMail::~nsMsgSearchOfflineMail ()
 {
@@ -511,6 +509,7 @@ nsMsgSearchOfflineMail::MatchTermsForSearch(nsIMsgDBHdr *msgToMatch,
                                             nsIMsgDatabase *db,
                                             PRBool *pResult)
 {
+
     return MatchTerms(msgToMatch, termList, defaultCharset, scope, db, nsnull, 0, PR_FALSE, pResult);
 }
 
@@ -568,91 +567,89 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
         switch (attrib)
         {
         case nsMsgSearchAttrib::Sender:
-            msgToMatch->GetAuthor(getter_Copies(matchString));
-            err = pTerm->MatchRfc822String (matchString, charset, charsetOverride, &result);
-            break;
+          msgToMatch->GetAuthor(getter_Copies(matchString));
+          err = pTerm->MatchRfc822String (matchString, charset, charsetOverride, &result);
+          break;
         case nsMsgSearchAttrib::Subject:
-			{
+          {
             msgToMatch->GetSubject(getter_Copies(matchString) /* , PR_TRUE */);
             err = pTerm->MatchRfc2047String (matchString, charset, charsetOverride, &result);
-			}
-            break;
+          }
+          break;
         case nsMsgSearchAttrib::ToOrCC:
-        {
+          {
             PRBool boolKeepGoing;
             pTerm->GetMatchAllBeforeDeciding(&boolKeepGoing);
             msgToMatch->GetRecipients(getter_Copies(recipients));
             err = pTerm->MatchRfc822String (recipients, charset, charsetOverride, &result);
             if (boolKeepGoing == result)
             {
-                msgToMatch->GetCcList(getter_Copies(ccList));
-                err = pTerm->MatchRfc822String (ccList, charset, charsetOverride, &result);
+              msgToMatch->GetCcList(getter_Copies(ccList));
+              err = pTerm->MatchRfc822String (ccList, charset, charsetOverride, &result);
             }
-        }
-            break;
+          }
+          break;
         case nsMsgSearchAttrib::Body:
-			{
-				nsMsgKey messageOffset;
-				PRUint32 lineCount;
-				msgToMatch->GetMessageOffset(&messageOffset);
-				msgToMatch->GetLineCount(&lineCount);
-	            err = pTerm->MatchBody (scope, messageOffset, lineCount, charset, msgToMatch, db, &result);
-			}
-            break;
+          {
+            nsMsgKey messageOffset;
+            PRUint32 lineCount;
+            msgToMatch->GetMessageOffset(&messageOffset);
+            msgToMatch->GetLineCount(&lineCount);
+            err = pTerm->MatchBody (scope, messageOffset, lineCount, charset, msgToMatch, db, &result);
+          }
+          break;
         case nsMsgSearchAttrib::Date:
-			{
-				PRTime date;
-				msgToMatch->GetDate(&date);
-				err = pTerm->MatchDate (date, &result);
-			}
-            break;
+          {
+            PRTime date;
+            msgToMatch->GetDate(&date);
+            err = pTerm->MatchDate (date, &result);
+          }
+          break;
         case nsMsgSearchAttrib::MsgStatus:
-            err = pTerm->MatchStatus (msgFlags, &result);
-            break;
+          err = pTerm->MatchStatus (msgFlags, &result);
+          break;
         case nsMsgSearchAttrib::Priority:
-			{
-				nsMsgPriorityValue msgPriority;
-				msgToMatch->GetPriority(&msgPriority);
-				err = pTerm->MatchPriority (msgPriority, &result);
-			}
-            break;
+          {
+            nsMsgPriorityValue msgPriority;
+            msgToMatch->GetPriority(&msgPriority);
+            err = pTerm->MatchPriority (msgPriority, &result);
+          }
+          break;
         case nsMsgSearchAttrib::Size:
-			{
-				PRUint32 messageSize;
-				msgToMatch->GetMessageSize(&messageSize);
-				err = pTerm->MatchSize (messageSize, &result);
-			}
-            break;
+          {
+            PRUint32 messageSize;
+            msgToMatch->GetMessageSize(&messageSize);
+            err = pTerm->MatchSize (messageSize, &result);
+          }
+          break;
         case nsMsgSearchAttrib::To:
-            msgToMatch->GetRecipients(getter_Copies(recipients));
-            err = pTerm->MatchRfc822String(nsCAutoString(recipients), charset, charsetOverride, &result);
-            break;
+          msgToMatch->GetRecipients(getter_Copies(recipients));
+          err = pTerm->MatchRfc822String(nsCAutoString(recipients), charset, charsetOverride, &result);
+          break;
         case nsMsgSearchAttrib::CC:
-            msgToMatch->GetCcList(getter_Copies(ccList));
-            err = pTerm->MatchRfc822String (nsCAutoString(ccList), charset, charsetOverride, &result);
-            break;
+          msgToMatch->GetCcList(getter_Copies(ccList));
+          err = pTerm->MatchRfc822String (nsCAutoString(ccList), charset, charsetOverride, &result);
+          break;
         case nsMsgSearchAttrib::AgeInDays:
-			{
-				PRTime date;
-				msgToMatch->GetDate(&date);
-	            err = pTerm->MatchAge (date, &result);
-			}
-            break;
-        case nsMsgSearchAttrib::OtherHeader:
-			{
-				PRUint32 lineCount;
-				msgToMatch->GetLineCount(&lineCount);
-				nsMsgKey messageKey;
-				msgToMatch->GetMessageKey(&messageKey);
-				err = pTerm->MatchArbitraryHeader (scope, messageKey, lineCount,charset, charsetOverride,
-                                                msgToMatch, db, headers, headerSize, Filtering, &result);
-			}
-            break;
-
+          {
+            PRTime date;
+            msgToMatch->GetDate(&date);
+            err = pTerm->MatchAge (date, &result);
+          }
+          break;
         default:
+          if ( attrib > nsMsgSearchAttrib::OtherHeader && attrib < nsMsgSearchAttrib::kNumMsgSearchAttributes)
+          {
+            PRUint32 lineCount;
+            msgToMatch->GetLineCount(&lineCount);
+            nsMsgKey messageKey;
+            msgToMatch->GetMessageOffset(&messageKey);
+            err = pTerm->MatchArbitraryHeader (scope, messageKey, lineCount,charset, charsetOverride,
+                                                msgToMatch, db, headers, headerSize, Filtering, &result);
+          }
+          else
             err = NS_ERROR_INVALID_ARG; // ### was SearchError_InvalidAttribute
         }
-
         if (expression && NS_SUCCEEDED(err))
             expression = expression->AddSearchTerm(pTerm, result);    // added the term and its value to the expression tree
         else
@@ -705,7 +702,6 @@ nsresult nsMsgSearchOfflineMail::Search (PRBool *aDone)
       NS_ConvertUCS2toUTF8 charset(folderCharset);
       // Is this message a hit?
       err = MatchTermsForSearch (msgDBHdr, m_searchTerms, charset.get(), m_scope, m_db, &match);
-
       // Add search hits to the results list
       if (NS_SUCCEEDED(err) && match)
       {
@@ -808,6 +804,11 @@ nsresult nsMsgSearchOfflineNews::OpenSummaryFile ()
   nsCOMPtr <nsIDBFolderInfo>  folderInfo;
   nsCOMPtr <nsIMsgFolder> scopeFolder;
   err = m_scope->GetFolder(getter_AddRefs(scopeFolder));
+  nsCOMPtr <nsIFileSpec> pathSpec;
+  err= scopeFolder->GetPath(getter_AddRefs(pathSpec));
+  PRBool exists=PR_FALSE;
+  err = pathSpec->Exists(&exists);
+  if (!exists) return NS_ERROR_FILE_NOT_FOUND;
   if (NS_SUCCEEDED(err) && scopeFolder)
     err = scopeFolder->GetMsgDatabase(nsnull, &m_db);
   return err;
@@ -863,16 +864,6 @@ nsresult nsMsgSearchValidityManager::InitLocalNewsTable()
 		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::Date, nsMsgSearchOp::Isnt, 1);
 		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::Date, nsMsgSearchOp::Isnt, 1);
 
-#ifdef DOING_ARBITRARY_HEADERS
-		m_localNewsTable->SetAvailable (attribOtherHeader, nsMsgSearchOp::Contains, 1);   // added for arbitrary headers
-		m_localNewsTable->SetEnabled   (attribOtherHeader, nsMsgSearchOp::Contains, 1);
-		m_localNewsTable->SetAvailable (attribOtherHeader, nsMsgSearchOp::DoesntContain, 1);
-		m_localNewsTable->SetEnabled   (attribOtherHeader, nsMsgSearchOp::DoesntContain, 1);
-		m_localNewsTable->SetAvailable (attribOtherHeader, nsMsgSearchOp::Is, 1);
-		m_localNewsTable->SetEnabled   (attribOtherHeader, nsMsgSearchOp::Is, 1);
-		m_localNewsTable->SetAvailable (attribOtherHeader, nsMsgSearchOp::Isnt, 1);
-		m_localNewsTable->SetEnabled   (attribOtherHeader, nsMsgSearchOp::Isnt, 1);
-#endif
 		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsGreaterThan, 1);
 		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsGreaterThan, 1);
 		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsLessThan,  1);
@@ -884,6 +875,16 @@ nsresult nsMsgSearchValidityManager::InitLocalNewsTable()
 		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Is, 1);
 		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Isnt, 1);
 		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Isnt, 1);
+
+    m_localNewsTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Contains, 1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Contains, 1);
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Is, 1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Is, 1);
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::BeginsWith, 1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::BeginsWith, 1);
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::EndsWith, 1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::EndsWith, 1);
+
 
 	}
 
