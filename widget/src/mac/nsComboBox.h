@@ -59,8 +59,12 @@ public:
     NS_IMETHOD				SelectItem(PRInt32 aPosition);
     NS_IMETHOD				Deselect();
 
-	// msWindow
-	virtual PRBool	OnPaint(nsPaintEvent & aEvent)	{return PR_TRUE;}	//¥¥¥test¥¥¥
+	// nsWindow
+	virtual PRBool			DispatchMouseEvent(nsMouseEvent &aEvent);
+
+protected:
+	// nsMacControl
+	virtual void			GetRectForMacControl(nsRect &outRect);
 
 protected:
 	PRInt16		mMenuID;
