@@ -369,7 +369,7 @@ public:
     PRInt32          mMemberVar;
     nsString         mMemberSymbol;
     nsConflictSet    mConflictSet;
-    NodeSet          mRDFTests;
+    ReteNodeSet      mRDFTests;
 
 protected:
     // pseudo-constants

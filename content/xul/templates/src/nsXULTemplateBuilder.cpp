@@ -446,11 +446,11 @@ nsXULTemplateBuilder::Propogate(nsIRDFResource* aSource,
 
     // First, we'll go through and find all of the test nodes that can
     // propogate the assertion.
-    NodeSet livenodes;
+    ReteNodeSet livenodes;
 
     {
-        NodeSet::Iterator last = mRDFTests.Last();
-        for (NodeSet::Iterator i = mRDFTests.First(); i != last; ++i) {
+        ReteNodeSet::Iterator last = mRDFTests.Last();
+        for (ReteNodeSet::Iterator i = mRDFTests.First(); i != last; ++i) {
             nsRDFTestNode* rdftestnode = NS_STATIC_CAST(nsRDFTestNode*, *i);
 
             Instantiation seed;
@@ -464,13 +464,13 @@ nsXULTemplateBuilder::Propogate(nsIRDFResource* aSource,
     // another live node will be used to propogate the assertion
     // through the rule network
     {
-        NodeSet::Iterator last = livenodes.Last();
-        for (NodeSet::Iterator i = livenodes.First(); i != last; ++i) {
+        ReteNodeSet::Iterator last = livenodes.Last();
+        for (ReteNodeSet::Iterator i = livenodes.First(); i != last; ++i) {
             nsRDFTestNode* rdftestnode = NS_STATIC_CAST(nsRDFTestNode*, *i);
 
             PRBool isdominated = PR_FALSE;
 
-            for (NodeSet::ConstIterator j = livenodes.First(); j != last; ++j) {
+            for (ReteNodeSet::ConstIterator j = livenodes.First(); j != last; ++j) {
                 // we can't be dominated by ourself
                 if (j == i)
                     continue;
@@ -583,8 +583,8 @@ nsXULTemplateBuilder::Retract(nsIRDFResource* aSource,
 {
     // Retract any currently active rules that will no longer be
     // matched.
-    NodeSet::ConstIterator lastnode = mRDFTests.Last();
-    for (NodeSet::ConstIterator node = mRDFTests.First(); node != lastnode; ++node) {
+    ReteNodeSet::ConstIterator lastnode = mRDFTests.Last();
+    for (ReteNodeSet::ConstIterator node = mRDFTests.First(); node != lastnode; ++node) {
         const nsRDFTestNode* rdftestnode = NS_STATIC_CAST(const nsRDFTestNode*, *node);
 
         nsTemplateMatchSet firings(mConflictSet.GetPool());

@@ -103,7 +103,7 @@ nsRuleNetwork::Finish()
     PL_DHashTableFinish(&mSymtab);
 
     // We "own" the nodes. So it's up to us to delete 'em
-    for (NodeSet::Iterator node = mNodes.First(); node != mNodes.Last(); ++node)
+    for (ReteNodeSet::Iterator node = mNodes.First(); node != mNodes.Last(); ++node)
         delete *node;
 
     mNodes.Clear();
@@ -684,8 +684,8 @@ RootNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
     PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
            ("RootNode[%p]: Propogate() begin", this));
 
-    NodeSet::Iterator last = mKids.Last();
-    for (NodeSet::Iterator kid = mKids.First(); kid != last; ++kid)
+    ReteNodeSet::Iterator last = mKids.Last();
+    for (ReteNodeSet::Iterator kid = mKids.First(); kid != last; ++kid)
         kid->Propogate(aInstantiations, aClosure);
 
     PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
@@ -781,8 +781,8 @@ JoinNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
         rv = test->Constrain(instantiations, aClosure);
         if (NS_FAILED(rv)) return rv;
 
-        NodeSet::Iterator last = mKids.Last();
-        for (NodeSet::Iterator kid = mKids.First(); kid != last; ++kid)
+        ReteNodeSet::Iterator last = mKids.Last();
+        for (ReteNodeSet::Iterator kid = mKids.First(); kid != last; ++kid)
             kid->Propogate(instantiations, aClosure);
     }
 
@@ -974,8 +974,8 @@ TestNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
     if (NS_FAILED(rv)) return rv;
 
     if (! instantiations.Empty()) {
-        NodeSet::Iterator last = mKids.Last();
-        for (NodeSet::Iterator kid = mKids.First(); kid != last; ++kid) {
+        ReteNodeSet::Iterator last = mKids.Last();
+        for (ReteNodeSet::Iterator kid = mKids.First(); kid != last; ++kid) {
             PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                    ("TestNode[%p]: Propogate() passing to child %p", this, kid.operator->()));
 
@@ -1040,18 +1040,18 @@ TestNode::HasAncestor(const ReteNode* aNode) const
 
 //----------------------------------------------------------------------0
 
-NodeSet::NodeSet()
+ReteNodeSet::ReteNodeSet()
     : mNodes(nsnull), mCount(0), mCapacity(0)
 {
 }
 
-NodeSet::~NodeSet()
+ReteNodeSet::~ReteNodeSet()
 {
     Clear();
 }
 
 nsresult
-NodeSet::Add(ReteNode* aNode)
+ReteNodeSet::Add(ReteNode* aNode)
 {
     NS_PRECONDITION(aNode != nsnull, "null ptr");
     if (! aNode)
@@ -1077,7 +1077,7 @@ NodeSet::Add(ReteNode* aNode)
 }
 
 nsresult
-NodeSet::Clear()
+ReteNodeSet::Clear()
 {
     delete[] mNodes;
     mNodes = nsnull;
