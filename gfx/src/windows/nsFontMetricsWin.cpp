@@ -90,6 +90,9 @@ const char* nsFontMetricsWin::MapFamilyToFont(const nsString& aLogicalFontName)
   if (aLogicalFontName.EqualsIgnoreCase("monospace")) {
     return "Courier New";
   }
+  if (aLogicalFontName.EqualsIgnoreCase("desdemona")) {
+    return "Desdemona";
+  }
   return "Arial";/* XXX for now */
 }
 
@@ -116,7 +119,8 @@ void nsFontMetricsWin::RealizeFont(nsIDeviceContext *aContext)
   logFont.lfItalic = (mFont->style & NS_FONT_STYLE_ITALIC)
     ? TRUE : FALSE;
   float t2p = aContext->GetAppUnitsToDevUnits();
-  logFont.lfHeight = (LONG)(-mFont->size * t2p);
+  float rounded = (float)NS_POINTS_TO_TWIPS_INT(NS_TWIPS_TO_POINTS_INT(mFont->size));
+  logFont.lfHeight = (LONG)(-rounded * t2p);  // this ugly rounding is to make ours compatible with Nav 4.0
   strncpy(logFont.lfFaceName,
           MapFamilyToFont(mFont->name),
           LF_FACESIZE);
