@@ -48,6 +48,7 @@ CPPSRCS=					\
         nsScrollbarButtonFrame.cpp \
 	nsSliderFrame.cpp \
 	nsColorPickerFrame.cpp \
+	nsStdColorPicker.cpp \
 	nsFontPickerFrame.cpp \
 	nsMenuPopupFrame.cpp \
 	nsMenuFrame.cpp \
@@ -81,6 +82,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsScrollbarButtonFrame.obj \
 	.\$(OBJDIR)\nsSliderFrame.obj \
 	.\$(OBJDIR)\nsColorPickerFrame.obj \
+	.\$(OBJDIR)\nsStdColorPicker.obj \
 	.\$(OBJDIR)\nsFontPickerFrame.obj \
 	.\$(OBJDIR)\nsMenuPopupFrame.obj \
 	.\$(OBJDIR)\nsMenuFrame.obj \
