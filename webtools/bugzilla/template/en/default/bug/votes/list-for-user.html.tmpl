@@ -42,6 +42,13 @@
   [% h2 = voting_user.login FILTER html %]
   [% IF canedit %]
     [% title = "Change Votes" %]
+    [% IF bug_id %]
+      [%# We .select and .focus the input so it works for textbox and 
+          checkbox %]
+      [% onload = "document.forms['voting_form'].bug_" _ bug_id _
+                  ".select();document.forms['voting_form'].bug_" _ bug_id _
+                  ".focus()" %]
+    [% END %]
   [% ELSE %]
     [% title = "Show Votes" %]
   [% END %]
@@ -63,7 +70,7 @@
 [% END %]
 
 [% IF products.size %]
-  <form method="post" action="votes.cgi">
+  <form name="voting_form" method="post" action="votes.cgi">
     <input type="hidden" name="action" value="vote">
     <table cellspacing="4">
       <tr>
@@ -105,10 +112,10 @@
               [% IF canedit %]
                 [% IF product.onevoteonly %]
                   <input type="checkbox" name="[% bug.id %]" value="1"
-                    [% " checked" IF bug.count %]>
+                    [% " checked" IF bug.count %] id="bug_[% bug.id %]">
                 [% ELSE %]
                   <input name="[% bug.id %]" value="[% bug.count %]"
-                         size="2">
+                         size="2" id="bug_[% bug.id %]">
                 [% END %]
               [% ELSE %]
                 [% bug.count %]
