@@ -40,8 +40,8 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 
-#include "gtkdrawing.h"
 #include <gtk/gtkwidget.h>
+#include "gtkdrawing.h"
 
 class nsNativeThemeGTK: public nsITheme {
 public:
@@ -49,28 +49,25 @@ public:
 
   // The nsITheme interface.
   NS_IMETHOD DrawWidgetBackground(nsIRenderingContext* aContext,
-                                  nsIFrame* aFrame,
-                                  PRUint8 aWidgetType,
+                                  nsIFrame* aFrame, PRUint8 aWidgetType,
                                   const nsRect& aRect,
                                   const nsRect& aClipRect);
 
-  NS_IMETHOD GetWidgetBorder(nsIDeviceContext* aContext, 
-                             nsIFrame* aFrame,
-                             PRUint8 aWidgetType,
-                             nsMargin* aResult);
+  NS_IMETHOD GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
+                             PRUint8 aWidgetType, nsMargin* aResult);
 
-  NS_IMETHOD GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
-                                  PRUint8 aWidgetType,
-                                  nsSize* aResult,
-                                  PRBool* aIsOverridable);
+  NS_IMETHOD GetMinimumWidgetSize(nsIRenderingContext* aContext,
+                                  nsIFrame* aFrame, PRUint8 aWidgetType,
+                                  nsSize* aResult, PRBool* aIsOverridable);
 
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType, 
                                 nsIAtom* aAttribute, PRBool* aShouldRepaint);
 
   NS_IMETHOD ThemeChanged();
 
-  NS_IMETHOD_(PRBool) ThemeSupportsWidget(nsIPresContext* aPresContext, nsIFrame* aFrame,
-                             PRUint8 aWidgetType);
+  NS_IMETHOD_(PRBool) ThemeSupportsWidget(nsIPresContext* aPresContext,
+                                          nsIFrame* aFrame,
+                                          PRUint8 aWidgetType);
 
   NS_IMETHOD_(PRBool) WidgetIsContainer(PRUint8 aWidgetType);
 
@@ -78,28 +75,11 @@ public:
   virtual ~nsNativeThemeGTK();
 
 protected:
+  PRBool GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
+                              GtkThemeWidgetType& aWidgetType,
+                              GtkWidgetState* aState, gint* aWidgetFlags);
+
   PRBool IsDisabled(nsIFrame* aFrame);
-
-  void GetGtkWidgetState(PRUint8 aWidgetType,
-                         nsIFrame* aFrame, GtkWidgetState* aState);
-
-  void GetScrollbarMetrics(gint* slider_width,
-                           gint* trough_border,
-                           gint* stepper_size,
-                           gint* stepper_spacing);
-
-  void SetupWidgetPrototype(GtkWidget* widget);
-  void EnsureButtonWidget();
-  void EnsureCheckBoxWidget();
-  void EnsureScrollbarWidget();
-  void EnsureGripperWidget();
-  void EnsureEntryWidget();
-  void EnsureArrowWidget();
-  void EnsureHandleBoxWidget();
-  void EnsureTooltipWidget();
-  void EnsureFrameWidget();
-  void EnsureProgressBarWidget();
-  void EnsureTabWidget();
 
 private:
   nsCOMPtr<nsIAtom> mCheckedAtom;
@@ -110,8 +90,6 @@ private:
   nsCOMPtr<nsIAtom> mInputAtom;
   nsCOMPtr<nsIAtom> mFocusedAtom;
   nsCOMPtr<nsIAtom> mFirstTabAtom;
-
-  GtkWidget* mProtoLayout;
 
   PRUint8 mDisabledWidgetTypes[32];
   static const char* sDisabledEngines[];

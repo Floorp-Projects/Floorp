@@ -51,42 +51,23 @@
 #include "nsILookAndFeel.h"
 #include "nsIDeviceContext.h"
 #include "nsTransform2D.h"
+#include "prlink.h"
 
 #include <gdk/gdkprivate.h>
 
 NS_IMPL_ISUPPORTS1(nsNativeThemeGTK, nsITheme)
 
-GtkWidget* gButtonWidget;
-GtkWidget* gCheckboxWidget;
-GtkWidget* gScrollbarWidget;
-GtkWidget* gGripperWidget;
-GtkWidget* gEntryWidget;
-GtkWidget* gDropdownButonWidget;
-GtkWidget* gArrowWidget;
-GtkWidget* gDropdownButtonWidget;
-GtkWidget* gHandleBoxWidget;
-GtkWidget* gFrameWidget;
-GtkWidget* gProtoWindow;
-GtkWidget* gProgressWidget;
-GtkWidget* gTabWidget;
-GtkTooltips* gTooltipWidget;
-
 static int gLastXError;
-const char* nsNativeThemeGTK::sDisabledEngines[] = {
-  "xeno",   // xenophilia
-  nsnull
-};
-
-typedef struct GtkThemeEnginePrivate {
-  GtkThemeEngine engine;
-  void* library;
-  char* name;
-} GtkThemeEnginePrivate;
 
 nsNativeThemeGTK::nsNativeThemeGTK()
-  : mProtoLayout(nsnull)
 {
   NS_INIT_ISUPPORTS();
+
+  if (moz_gtk_init() != MOZ_GTK_SUCCESS) {
+    memset(mDisabledWidgetTypes, 0xff, sizeof(mDisabledWidgetTypes));
+    return;
+  }
+
   mDisabledAtom = do_GetAtom("disabled");
   mCheckedAtom = do_GetAtom("checked");
   mSelectedAtom = do_GetAtom("selected");
@@ -97,34 +78,16 @@ nsNativeThemeGTK::nsNativeThemeGTK()
 
   memset(mDisabledWidgetTypes, 0, sizeof(mDisabledWidgetTypes));
 
-  // Check for a blacklisted theme engine.  These are known to crash.
-  // If we're using a blacklisted engine, we need to disable all widget types.
-
-  EnsureButtonWidget();  // arbitrary, but we need a widget's style
-  GtkThemeEngine* gtkThemeEng = gButtonWidget->style->engine;
-  if (!gtkThemeEng)  // gtk's built-in drawing routines are safe
-    return;
-
-  const char* curEngine = ((GtkThemeEnginePrivate*) gtkThemeEng)->name;
-  const char* eng;
-  int i = 0;
-  while ((eng = sDisabledEngines[i++])) {
-    if (!strcmp(eng, curEngine)) {
-#ifdef DEBUG
-      printf("Disabling GTK themed widgets due to blacklisted theme engine: %s\n", eng);
-#endif
-      memset(mDisabledWidgetTypes, 0xff, sizeof(mDisabledWidgetTypes));
-      break;
-    }
+  // Look up the symbol for gtk_style_get_prop_experimental
+  PRLibrary* gtkLibrary;
+  PRFuncPtr stylePropFunc = PR_FindFunctionSymbolAndLibrary("gtk_style_get_prop_experimental", &gtkLibrary);
+  if (stylePropFunc) {
+    moz_gtk_enable_style_props((style_prop_t) stylePropFunc);
+    PR_UnloadLibrary(gtkLibrary);
   }
 }
 
 nsNativeThemeGTK::~nsNativeThemeGTK() {
-  // This will destroy all of our widgets
-  if (gProtoWindow)
-    gtk_widget_destroy(gProtoWindow);
-  if (gTooltipWidget)
-    gtk_object_unref(GTK_OBJECT(gTooltipWidget));
   moz_gtk_shutdown();
 }
 
@@ -194,37 +157,12 @@ static PRBool CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
   return attr.EqualsIgnoreCase("true"); // This handles the XUL case.
 }
 
-PRBool nsNativeThemeGTK::IsDisabled(nsIFrame* aFrame)
+PRBool
+nsNativeThemeGTK::IsDisabled(nsIFrame* aFrame)
 {
   return CheckBooleanAttr(aFrame, mDisabledAtom);
 }
   
-nsresult
-GetSystemColor(PRUint8 aWidgetType, nsILookAndFeel::nsColorID& aColorID)
-{
-  switch (aWidgetType) {
-  case NS_THEME_BUTTON:
-  case NS_THEME_TOOLBAR_BUTTON:
-  case NS_THEME_TAB:
-    aColorID = nsILookAndFeel::eColor_buttontext;
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-nsresult 
-GetSystemFont(PRUint8 aWidgetType, nsSystemFontID& aFont)
-{
-  switch (aWidgetType) {
-  case NS_THEME_BUTTON:
-  case NS_THEME_TOOLBAR_BUTTON:
-  case NS_THEME_TAB:
-      aFont = eSystemFont_Button;
-      return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
 static PRBool IsWidgetTypeDisabled(PRUint8* aDisabledVector, PRUint8 aWidgetType) {
   return aDisabledVector[aWidgetType >> 3] & (1 << (aWidgetType & 7));
 }
@@ -233,88 +171,49 @@ static void SetWidgetTypeDisabled(PRUint8* aDisabledVector, PRUint8 aWidgetType)
   aDisabledVector[aWidgetType >> 3] |= (1 << (aWidgetType & 7));
 }
 
-void
-nsNativeThemeGTK::GetGtkWidgetState(PRUint8 aWidgetType,
-                                    nsIFrame* aFrame, GtkWidgetState* aState)
+PRBool
+nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
+                                       GtkThemeWidgetType& aGtkWidgetType,
+                                       GtkWidgetState* aState,
+                                       gint* aWidgetFlags)
 {
-  if (!aFrame) {
-    aState->active = PR_FALSE;
-    aState->focused = PR_FALSE;
-    aState->inHover = PR_FALSE;
-    aState->disabled = PR_FALSE;
-    aState->isDefault = PR_FALSE;
-    aState->canDefault = PR_FALSE;
-  } else {
-    PRInt32 eventState = GetContentState(aFrame);
-    aState->active = (eventState & NS_EVENT_STATE_ACTIVE);
-    if (aWidgetType == NS_THEME_TEXTFIELD ||
-        aWidgetType == NS_THEME_RADIO_CONTAINER)
-      aState->focused = CheckBooleanAttr(aFrame, mFocusedAtom);
-    else
-      aState->focused = (eventState & NS_EVENT_STATE_FOCUS);
-    aState->inHover = (eventState & NS_EVENT_STATE_HOVER);
-    aState->disabled = IsDisabled(aFrame);
-    aState->isDefault = PR_FALSE; // XXX fix me
-    aState->canDefault = PR_FALSE; // XXX fix me
+  if (aState) {
+    if (!aFrame) {
+      aState->active = FALSE;
+      aState->focused = FALSE;
+      aState->inHover = FALSE;
+      aState->disabled = FALSE;
+      aState->isDefault = FALSE;
+      aState->canDefault = FALSE;
+    } else {
+      // for dropdown textfields, look at the parent frame (the textbox)
+      if (aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD)
+        aFrame->GetParent(&aFrame);
+      PRInt32 eventState = GetContentState(aFrame);
+      aState->active = (eventState & NS_EVENT_STATE_ACTIVE);
+      if (aWidgetType == NS_THEME_TEXTFIELD ||
+          aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD ||
+          aWidgetType == NS_THEME_RADIO_CONTAINER)
+        aState->focused = CheckBooleanAttr(aFrame, mFocusedAtom);
+      else
+        aState->focused = (eventState & NS_EVENT_STATE_FOCUS);
+      aState->inHover = (eventState & NS_EVENT_STATE_HOVER);
+      aState->disabled = IsDisabled(aFrame);
+      aState->isDefault = FALSE; // XXX fix me
+      aState->canDefault = FALSE; // XXX fix me
+    }
   }
-}
-
-static int
-NativeThemeErrorHandler(Display* dpy, XErrorEvent* error) {
-  gLastXError = error->error_code;
-  return 0;
-}
-
-NS_IMETHODIMP
-nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
-                                       nsIFrame* aFrame,
-                                       PRUint8 aWidgetType,
-                                       const nsRect& aRect,
-                                       const nsRect& aClipRect)
-{
-  nsDrawingSurfaceGTK* surface;
-  aContext->GetDrawingSurface((nsDrawingSurface*)&surface);
-  GdkWindow* window = (GdkWindow*) surface->GetDrawable();
-
-  nsTransform2D* transformMatrix;
-  aContext->GetCurrentTransform(transformMatrix);
-  nsRect tr(aRect);
-  transformMatrix->TransformCoord(&tr.x, &tr.y, &tr.width, &tr.height);
-  GdkRectangle gdk_rect = {tr.x, tr.y, tr.width, tr.height};
-  nsRect cr(aClipRect);
-  transformMatrix->TransformCoord(&cr.x, &cr.y, &cr.width, &cr.height);
-  GdkRectangle gdk_clip = {cr.x, cr.y, cr.width, cr.height};
-
-  GtkWidgetState state;
-  GetGtkWidgetState(aWidgetType, aFrame, &state);
-
-  NS_ASSERTION(!IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType), "Trying to render an unsafe widget!");
-
-  // The widget code on Solaris replaces gdk's X error handler with its own,
-  // which means that gdk_error_trap_push/pop won't have any effect.
-  // So, instead of using those, we just use our own error handler which
-  // records the last X error to occur, then restore the old error handler
-  // when we're done drawing.
-
-  gLastXError = 0;
-  XErrorHandler oldHandler = XSetErrorHandler(NativeThemeErrorHandler);
 
   switch (aWidgetType) {
-    
   case NS_THEME_BUTTON:
   case NS_THEME_TOOLBAR_BUTTON:
-    {
-      GtkReliefStyle relief = (aWidgetType == NS_THEME_BUTTON) ? GTK_RELIEF_NORMAL : GTK_RELIEF_NONE;
-      moz_gtk_button_paint(window, gButtonWidget->style, &gdk_rect, &gdk_clip,
-                           &state, relief );
-    }
+    if (aWidgetFlags)
+      *aWidgetFlags = (aWidgetType == NS_THEME_BUTTON) ? GTK_RELIEF_NORMAL : GTK_RELIEF_NONE;
+    aGtkWidgetType = MOZ_GTK_BUTTON;
     break;
-
   case NS_THEME_CHECKBOX:
   case NS_THEME_RADIO:
-    {
-      EnsureCheckBoxWidget();
-      
+    if (aWidgetFlags) {
       nsIAtom* atom = nsnull;
 
       if (aFrame) {
@@ -331,135 +230,134 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
             atom = mInputCheckedAtom;
         }
       }
-      
+
       if (!atom)
         atom = (aWidgetType == NS_THEME_CHECKBOX) ? mCheckedAtom : mSelectedAtom;
-      
-      moz_gtk_checkbox_paint(window, gCheckboxWidget->style, &gdk_rect,
-                             &gdk_clip, &state, CheckBooleanAttr(aFrame, atom),
-                             (aWidgetType == NS_THEME_RADIO));
+      *aWidgetFlags = CheckBooleanAttr(aFrame, atom);
     }
-    break;
 
+    aGtkWidgetType = (aWidgetType == NS_THEME_RADIO) ? MOZ_GTK_RADIOBUTTON : MOZ_GTK_CHECKBUTTON;
+    break;
   case NS_THEME_SCROLLBAR_BUTTON_UP:
   case NS_THEME_SCROLLBAR_BUTTON_DOWN:
   case NS_THEME_SCROLLBAR_BUTTON_LEFT:
   case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
-    {
-      EnsureScrollbarWidget();
-      EnsureArrowWidget();
-      GtkArrowType arrowType = GtkArrowType(aWidgetType - NS_THEME_SCROLLBAR_BUTTON_UP);
-      moz_gtk_scrollbar_button_paint(window, gScrollbarWidget->style,
-                                     &gdk_rect, &gdk_clip, &state, arrowType);
-    }
+    if (aWidgetFlags)
+      *aWidgetFlags = GtkArrowType(aWidgetType - NS_THEME_SCROLLBAR_BUTTON_UP);
+    aGtkWidgetType = MOZ_GTK_SCROLLBAR_BUTTON;
     break;
-
   case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
   case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
-    EnsureScrollbarWidget();
-    moz_gtk_scrollbar_trough_paint(window, gScrollbarWidget->style, &gdk_rect,
-                                   &gdk_clip, &state);
+    aGtkWidgetType = MOZ_GTK_SCROLLBAR_TRACK;
     break;
-
   case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
   case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
-    EnsureScrollbarWidget();
-    moz_gtk_scrollbar_thumb_paint(window, gScrollbarWidget->style, &gdk_rect,
-                                  &gdk_clip, &state);
+    aGtkWidgetType = MOZ_GTK_SCROLLBAR_THUMB;
     break;
-
   case NS_THEME_TOOLBAR_GRIPPER:
-    EnsureGripperWidget();
-    moz_gtk_gripper_paint(window, gGripperWidget->style, &gdk_rect, &gdk_clip,
-                          &state);
+    aGtkWidgetType = MOZ_GTK_GRIPPER;
     break;
-
   case NS_THEME_DROPDOWN_TEXTFIELD:
-    if (aFrame)
-      // look at the parent frame (the textbox)
-      aFrame->GetParent(&aFrame);
-
-    // fall through
-
   case NS_THEME_TEXTFIELD:
-    EnsureEntryWidget();
-    moz_gtk_entry_paint(window, gEntryWidget->style, &gdk_rect, &gdk_clip,
-                        &state);
+    aGtkWidgetType = MOZ_GTK_ENTRY;
     break;
-
   case NS_THEME_DROPDOWN_BUTTON:
-    EnsureArrowWidget();
-    moz_gtk_dropdown_arrow_paint(window, gArrowWidget->style, &gdk_rect,
-                                 &gdk_clip, &state);
+    aGtkWidgetType = MOZ_GTK_DROPDOWN_ARROW;
     break;
-
   case NS_THEME_CHECKBOX_CONTAINER:
+    aGtkWidgetType = MOZ_GTK_CHECKBUTTON_CONTAINER;
+    break;
   case NS_THEME_RADIO_CONTAINER:
-    EnsureCheckBoxWidget();
-    moz_gtk_container_paint(window, gCheckboxWidget->style, &gdk_rect,
-                            &gdk_clip, &state,
-                            (aWidgetType == NS_THEME_RADIO_CONTAINER));
+    aGtkWidgetType = MOZ_GTK_RADIOBUTTON_CONTAINER;
     break;
-
   case NS_THEME_TOOLBOX:
-    EnsureHandleBoxWidget();
-    moz_gtk_toolbar_paint(window, gHandleBoxWidget->style, &gdk_rect,
-                          &gdk_clip);
+    aGtkWidgetType = MOZ_GTK_TOOLBAR;
     break;
-
   case NS_THEME_TOOLTIP:
-    EnsureTooltipWidget();
-    moz_gtk_tooltip_paint(window, gTooltipWidget->tip_window->style, &gdk_rect,
-                          &gdk_clip);
+    aGtkWidgetType = MOZ_GTK_TOOLTIP;
     break;
-
   case NS_THEME_STATUSBAR_PANEL:
-    EnsureFrameWidget();
-    moz_gtk_frame_paint(window, gFrameWidget->style, &gdk_rect, &gdk_clip);
+    aGtkWidgetType = MOZ_GTK_FRAME;
     break;
-
   case NS_THEME_PROGRESSBAR:
   case NS_THEME_PROGRESSBAR_VERTICAL:
-    EnsureProgressBarWidget();
-    moz_gtk_progressbar_paint(window, gProgressWidget->style, &gdk_rect,
-                              &gdk_clip);
+    aGtkWidgetType = MOZ_GTK_PROGRESSBAR;
     break;
-
   case NS_THEME_PROGRESSBAR_CHUNK:
   case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
-    EnsureProgressBarWidget();
-    moz_gtk_progress_chunk_paint(window, gProgressWidget->style, &gdk_rect,
-                                 &gdk_clip);
+    aGtkWidgetType = MOZ_GTK_PROGRESS_CHUNK;
     break;
-
   case NS_THEME_TAB_PANELS:
-    EnsureTabWidget();
-    moz_gtk_tabpanels_paint(window, gTabWidget->style, &gdk_rect, &gdk_clip);
+    aGtkWidgetType = MOZ_GTK_TABPANELS;
     break;
-
   case NS_THEME_TAB:
   case NS_THEME_TAB_LEFT_EDGE:
   case NS_THEME_TAB_RIGHT_EDGE:
     {
-      EnsureTabWidget();
-      gint tab_flags = 0;
+      if (aWidgetFlags) {
+        *aWidgetFlags = 0;
 
-      if (aWidgetType == NS_THEME_TAB && CheckBooleanAttr(aFrame, mSelectedAtom))
-        tab_flags |= MOZ_GTK_TAB_SELECTED;
-      else if (aWidgetType == NS_THEME_TAB_LEFT_EDGE)
-        tab_flags |= MOZ_GTK_TAB_BEFORE_SELECTED;
+        if (aWidgetType == NS_THEME_TAB &&
+            CheckBooleanAttr(aFrame, mSelectedAtom))
+          *aWidgetFlags |= MOZ_GTK_TAB_SELECTED;
+        else if (aWidgetType == NS_THEME_TAB_LEFT_EDGE)
+          *aWidgetFlags |= MOZ_GTK_TAB_BEFORE_SELECTED;
 
       nsCOMPtr<nsIContent> content;
       aFrame->GetContent(getter_AddRefs(content));
       if (content->HasAttr(kNameSpaceID_None, mFirstTabAtom))
-        tab_flags |= MOZ_GTK_TAB_FIRST;
+        *aWidgetFlags |= MOZ_GTK_TAB_FIRST;
+      }
 
-      moz_gtk_tab_paint(window, gTabWidget->style, &gdk_rect, &gdk_clip,
-                        tab_flags);
-      break;
+      aGtkWidgetType = MOZ_GTK_TAB;
     }
+    break;
+  default:
+    return PR_FALSE;
   }
 
+  return PR_TRUE;
+}
+
+static int
+NativeThemeErrorHandler(Display* dpy, XErrorEvent* error) {
+  gLastXError = error->error_code;
+  return 0;
+}
+
+NS_IMETHODIMP
+nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
+                                       nsIFrame* aFrame,
+                                       PRUint8 aWidgetType,
+                                       const nsRect& aRect,
+                                       const nsRect& aClipRect)
+{
+  GtkWidgetState state;
+  GtkThemeWidgetType gtkWidgetType;
+  gint flags;
+  if (!GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, &state,
+                            &flags))
+    return NS_OK;
+
+  nsDrawingSurfaceGTK* surface;
+  aContext->GetDrawingSurface((nsDrawingSurface*)&surface);
+  GdkWindow* window = (GdkWindow*) surface->GetDrawable();
+
+  nsTransform2D* transformMatrix;
+  aContext->GetCurrentTransform(transformMatrix);
+  nsRect tr(aRect);
+  transformMatrix->TransformCoord(&tr.x, &tr.y, &tr.width, &tr.height);
+  GdkRectangle gdk_rect = {tr.x, tr.y, tr.width, tr.height};
+  nsRect cr(aClipRect);
+  transformMatrix->TransformCoord(&cr.x, &cr.y, &cr.width, &cr.height);
+  GdkRectangle gdk_clip = {cr.x, cr.y, cr.width, cr.height};
+
+  NS_ASSERTION(!IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType), "Trying to render an unsafe widget!");
+
+  gLastXError = 0;
+  XErrorHandler oldHandler = XSetErrorHandler(NativeThemeErrorHandler);
+  moz_gtk_widget_paint(gtkWidgetType, window, &gdk_rect, &gdk_clip, &state,
+                       flags);
   gdk_flush();
   XSetErrorHandler(oldHandler);
   if (gLastXError) {
@@ -477,65 +375,28 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   return NS_OK;
 }
 
-inline void
-WidgetBorderToMargin(GtkWidget* aWidget, nsMargin* aResult)
-{
-  aResult->left = aResult->right = aWidget->style->klass->xthickness;
-  aResult->top = aResult->bottom = aWidget->style->klass->ythickness;
-}
-
 NS_IMETHODIMP
 nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType, nsMargin* aResult)
 {
-  aResult->top = aResult->bottom = aResult->left = aResult->right = 0;
-
-  switch (aWidgetType) {
-  case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
-  case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+  aResult->top = aResult->left = 0;
+  if (aWidgetType == NS_THEME_SCROLLBAR_TRACK_VERTICAL ||
+      aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL)
     {
       gint trough_border;
-      EnsureScrollbarWidget();
-      moz_gtk_get_scrollbar_metrics(nsnull, &trough_border, nsnull, nsnull, nsnull);
-      aResult->top = aResult->bottom = aResult->left = aResult->right = trough_border;
+      moz_gtk_get_scrollbar_metrics(nsnull, &trough_border,
+                                    nsnull, nsnull, nsnull);
+      aResult->top = aResult->left = trough_border;
+    } else {
+      GtkThemeWidgetType gtkWidgetType;
+      if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nsnull,
+                               nsnull))
+        moz_gtk_get_widget_border(gtkWidgetType, &aResult->left,
+                                  &aResult->top);
     }
-    break;
-  case NS_THEME_TEXTFIELD:
-  case NS_THEME_DROPDOWN_TEXTFIELD:
-    EnsureEntryWidget();
-    WidgetBorderToMargin(gEntryWidget, aResult);
-    break;
-  case NS_THEME_BUTTON:
-  case NS_THEME_TOOLBAR_BUTTON:
-    WidgetBorderToMargin(gButtonWidget, aResult);
-    break;
-  case NS_THEME_TOOLBAR_GRIPPER:
-    EnsureGripperWidget();
-    WidgetBorderToMargin(gGripperWidget, aResult);
-    break;
-  case NS_THEME_DROPDOWN_BUTTON:
-    EnsureArrowWidget();
-    WidgetBorderToMargin(gDropdownButtonWidget, aResult);
-    break;
-  case NS_THEME_CHECKBOX_CONTAINER:
-  case NS_THEME_RADIO_CONTAINER:
-    aResult->top = aResult->bottom = aResult->left = aResult->right = 1;
-    break;
-  case NS_THEME_STATUSBAR_PANEL:
-    EnsureFrameWidget();
-    WidgetBorderToMargin(gFrameWidget, aResult);
-    break;
-  case NS_THEME_PROGRESSBAR:
-  case NS_THEME_PROGRESSBAR_VERTICAL:
-    EnsureProgressBarWidget();
-    WidgetBorderToMargin(gProgressWidget, aResult);
-    break;
-  case NS_THEME_TAB_PANELS:
-    EnsureTabWidget();
-    WidgetBorderToMargin(gTabWidget, aResult);
-    break;
-  }
 
+  aResult->right = aResult->left;
+  aResult->bottom = aResult->top;
   return NS_OK;
 }
 
@@ -553,8 +414,6 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
     case NS_THEME_SCROLLBAR_BUTTON_LEFT:
     case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
       {
-        EnsureScrollbarWidget();
-
         gint slider_width, stepper_size;
         moz_gtk_get_scrollbar_metrics(&slider_width, nsnull, &stepper_size,
                                       nsnull, nsnull);
@@ -567,8 +426,6 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
       {
-        EnsureScrollbarWidget();
-
         gint slider_width, min_slider_size;
         moz_gtk_get_scrollbar_metrics(&slider_width, nsnull, nsnull, nsnull,
                                       &min_slider_size);
@@ -586,17 +443,8 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       break;
   case NS_THEME_DROPDOWN_BUTTON:
     {
-      EnsureArrowWidget();
-
       // First, get the minimum size for the button itself.
-      aResult->width = 2 * (1 + gDropdownButtonWidget->style->klass->xthickness);
-      aResult->height = 2 * (1 + gDropdownButtonWidget->style->klass->ythickness);
-
-      // Now, add in the requested size of the arrow.
-      // Note: the minimum arrow size is fixed at 11 pixels.
-
-      aResult->width += 11 + GTK_MISC(gArrowWidget)->xpad * 2;
-      aResult->height += 11 + GTK_MISC(gArrowWidget)->ypad * 2;      
+      moz_gtk_get_dropdown_arrow_size(&aResult->width, &aResult->height);
       *aIsOverridable = PR_FALSE;
     }
     break;
@@ -605,10 +453,12 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
   case NS_THEME_CHECKBOX_CONTAINER:
   case NS_THEME_RADIO_CONTAINER:
     {
-      EnsureCheckBoxWidget();
-
       gint indicator_size, indicator_spacing;
-      moz_gtk_checkbox_get_metrics(&indicator_size, &indicator_spacing);
+      if (aWidgetType == NS_THEME_CHECKBOX ||
+          aWidgetType == NS_THEME_CHECKBOX_CONTAINER)
+        moz_gtk_checkbox_get_metrics(&indicator_size, &indicator_spacing);
+      else
+        moz_gtk_radio_get_metrics(&indicator_size, &indicator_spacing);
 
       // Hack alert: several themes have indicators larger than the default
       // 10px size, but don't set the indicator size property.  So, leave
@@ -628,8 +478,10 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
                                      nsIAtom* aAttribute, PRBool* aShouldRepaint)
 {
   // Some widget types just never change state.
-  if (aWidgetType == NS_THEME_TOOLBOX || aWidgetType == NS_THEME_TOOLBAR ||
-      aWidgetType == NS_THEME_STATUSBAR || aWidgetType == NS_THEME_STATUSBAR_PANEL ||
+  if (aWidgetType == NS_THEME_TOOLBOX ||
+      aWidgetType == NS_THEME_TOOLBAR ||
+      aWidgetType == NS_THEME_STATUSBAR ||
+      aWidgetType == NS_THEME_STATUSBAR_PANEL ||
       aWidgetType == NS_THEME_STATUSBAR_RESIZER_PANEL ||
       aWidgetType == NS_THEME_PROGRESSBAR_CHUNK ||
       aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL ||
@@ -764,123 +616,3 @@ nsNativeThemeGTK::WidgetIsContainer(PRUint8 aWidgetType)
     return PR_FALSE;
   return PR_TRUE;
 }
-
-void
-nsNativeThemeGTK::SetupWidgetPrototype(GtkWidget* widget)
-{
-  if (!gProtoWindow) {
-    gProtoWindow = gtk_window_new(GTK_WINDOW_POPUP);
-    mProtoLayout = gtk_fixed_new();
-    gtk_container_add(GTK_CONTAINER(gProtoWindow), mProtoLayout);
-  }
-
-  gtk_container_add(GTK_CONTAINER(mProtoLayout), widget);
-  gtk_widget_set_rc_style(widget);
-  gtk_widget_realize(widget);
-}
-
-void
-nsNativeThemeGTK::EnsureButtonWidget()
-{
-  if (!gButtonWidget) {
-    gButtonWidget = gtk_button_new_with_label("M");
-    SetupWidgetPrototype(gButtonWidget);
-  }
-}
-
-void
-nsNativeThemeGTK::EnsureCheckBoxWidget()
-{
-  if (!gCheckboxWidget) {
-    gCheckboxWidget = gtk_check_button_new_with_label("M");
-    SetupWidgetPrototype(gCheckboxWidget);
-  }
-}
-
-void
-nsNativeThemeGTK::EnsureScrollbarWidget()
-{
-  if (!gScrollbarWidget) {
-    gScrollbarWidget = gtk_vscrollbar_new(NULL);
-    SetupWidgetPrototype(gScrollbarWidget);
-  }
-}
-
-void
-nsNativeThemeGTK::EnsureGripperWidget()
-{
-  if (!gGripperWidget) {
-    gGripperWidget = gtk_handle_box_new();
-    SetupWidgetPrototype(gGripperWidget);
-  }
-}
-
-void
-nsNativeThemeGTK::EnsureEntryWidget()
-{
-  if (!gEntryWidget) {
-    gEntryWidget = gtk_entry_new();
-    SetupWidgetPrototype(gEntryWidget);
-  }
-}
-
-void
-nsNativeThemeGTK::EnsureArrowWidget()
-{
-  if (!gArrowWidget) {
-    gDropdownButtonWidget = gtk_button_new();
-    SetupWidgetPrototype(gDropdownButtonWidget);
-    gArrowWidget = gtk_arrow_new(GTK_ARROW_DOWN, GTK_SHADOW_OUT);
-    gtk_container_add(GTK_CONTAINER(gDropdownButtonWidget), gArrowWidget);
-    gtk_widget_set_rc_style(gArrowWidget);
-    gtk_widget_realize(gArrowWidget);
-  }
-}   
-
-void
-nsNativeThemeGTK::EnsureHandleBoxWidget()
-{
-  if (!gHandleBoxWidget) {
-    gHandleBoxWidget = gtk_handle_box_new();
-    SetupWidgetPrototype(gHandleBoxWidget);
-  }
-}
-
-void
-nsNativeThemeGTK::EnsureTooltipWidget()
-{
-  if (!gTooltipWidget) {
-    gTooltipWidget = gtk_tooltips_new();
-    gtk_tooltips_force_window(gTooltipWidget);
-    gtk_widget_set_rc_style(gTooltipWidget->tip_window);
-    gtk_widget_realize(gTooltipWidget->tip_window);
-  }
-}
-
-void
-nsNativeThemeGTK::EnsureFrameWidget()
-{
-  if (!gFrameWidget) {
-    gFrameWidget = gtk_frame_new(NULL);
-    SetupWidgetPrototype(gFrameWidget);
-  }
-}
-
-void
-nsNativeThemeGTK::EnsureProgressBarWidget()
-{
-  if (!gProgressWidget) {
-    gProgressWidget = gtk_progress_bar_new();
-    SetupWidgetPrototype(gProgressWidget);
-  }
-}
-
-void
-nsNativeThemeGTK::EnsureTabWidget()
-{
-  if (!gTabWidget) {
-    gTabWidget = gtk_notebook_new();
-    SetupWidgetPrototype(gTabWidget);
-  }
-}
-
