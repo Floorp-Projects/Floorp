@@ -41,66 +41,100 @@ public:
 
   NS_DECL_ISUPPORTS
   
+  //nsIMenuListener interface
+  nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent,
+                              nsIWidget         * aParentWindow, 
+                              void              * menubarNode,
+                              void              * aWebShell);
+  nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
+
   // nsIMenu Methods
-  NS_IMETHOD Create(nsISupports * aParent);
+  NS_IMETHOD Create(nsISupports * aParent,
+                    const nsString& anAlignment,
+                    const nsString& aAnchorAlign);
   NS_IMETHOD GetParent(nsISupports *&aParent);
 
-  nsEventStatus MenuConstruct(const nsMenuEvent &aMenuEvent,
-                              nsIWidget         *aParentWindow, 
-                              void              *menubarNode,
-                              void              *aWebShell);
-  nsEventStatus MenuDestruct(const nsMenuEvent &aMenuEvent);
+  NS_IMETHOD AddItem(nsISupports * aItem);
 
+  NS_IMETHOD AddSeparator();
+  NS_IMETHOD GetItemCount(PRUint32 &aCount);
+  NS_IMETHOD GetItemAt(const PRUint32 aPos, nsISupports *& aMenuItem);
+  NS_IMETHOD InsertItemAt(const PRUint32 aPos, nsISupports * aMenuItem);
+  NS_IMETHOD RemoveItem(const PRUint32 aPos);
+  NS_IMETHOD RemoveAll();
   NS_IMETHOD GetNativeData(void** aData);
+
+  NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
+  NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
+
+  //
+  NS_IMETHOD AddMenuItem(nsIMenuItem * aMenuItem);
+  NS_IMETHOD AddMenu(nsIMenu * aMenu);
+  NS_IMETHOD InsertSeparator(const PRUint32 aCount);
 
   NS_IMETHOD SetDOMNode(nsIDOMNode * menuNode);
   NS_IMETHOD SetDOMElement(nsIDOMElement * menuElement);
   NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
-  NS_IMETHOD Show(PRBool aShow);
-  NS_IMETHOD SetLocation(PRInt32 aX, PRInt32 aY,
-                         const nsString& anAlignment,
-                         const nsString& aAnchorAlign);
+  NS_IMETHOD SetLocation(PRInt32 aX, PRInt32 aY);
 
   gint GetX(void);
   gint GetY(void);
 
 
 protected:
-  void LoadMenuItem(nsIMenu             *pParentMenu,
-                    nsIDOMElement       *menuitemElement,
-                    nsIDOMNode          *menuitemNode,
-                    unsigned short       menuitemIndex,
-                    nsIWebShell         *aWebShell);
-  
-  void LoadSubMenu(nsIMenu              *pParentMenu,
-                   nsIDOMElement        *menuElement,
-                   nsIDOMNode           *menuNode);
+  nsIMenuBar * GetMenuBar(nsIMenu * aMenu);
+  nsIWidget *  GetParentWidget();
+  char* GetACPString(nsString& aStr);
 
-  void LoadMenuItem(nsIContextMenu      *pParentMenu,
-                    nsIDOMElement       *menuitemElement,
-                    nsIDOMNode          *menuitemNode,
-                    unsigned short       menuitemIndex,
-                    nsIWebShell         *aWebShell);
-  
-  void LoadSubMenu(nsIContextMenu       *pParentMenu,
-                   nsIDOMElement        *menuElement,
-                   nsIDOMNode           *menuNode);
+  void MenuPosFunc(GtkMenu *menu,
+                   gint *x,
+                   gint *y,
+                   gpointer data);
 
-  nsIMenu               *mMenu;
+  void LoadMenuItem(nsIMenu       * pParentMenu,
+                    nsIDOMElement * menuitemElement,
+                    nsIDOMNode    * menuitemNode,
+                    unsigned short  menuitemIndex,
+                    nsIWebShell   * aWebShell);
   
-  nsIWidget             *mParent;
+  void LoadSubMenu(nsIMenu       * pParentMenu,
+                   nsIDOMElement * menuElement,
+                   nsIDOMNode    * menuNode);
+
+  void LoadMenuItem(nsIContextMenu * pParentMenu,
+                    nsIDOMElement  * menuitemElement,
+                    nsIDOMNode     * menuitemNode,
+                    unsigned short   menuitemIndex,
+                    nsIWebShell    * aWebShell);
   
-  nsIDOMNode            *mDOMNode;
-  nsIWebShell           *mWebShell;
-  nsIDOMElement         *mDOMElement;
-  nsIMenuListener       *mListener;
-  PRBool                mConstructed;
+  void LoadSubMenu(nsIContextMenu * pParentMenu,
+                   nsIDOMElement  * menuElement,
+                   nsIDOMNode     * menuNode);
 
-  nsString              mAlignment;
-  nsString              mAnchorAlignment;
+  nsIMenuItem * FindMenuItem(nsIContextMenu * aMenu, PRUint32 aId);
 
-  PRInt32               mX;
-  PRInt32               mY;
+  nsString   mLabel;
+  PRUint32   mNumMenuItems;
+  GtkWidget  *mMenu;
+  
+  nsVoidArray mMenuItemVoidArray;
+
+  nsIWidget  *mParent;
+  nsIMenuListener * mListener;
+  
+  PRBool mConstructCalled;
+  nsIDOMNode    * mDOMNode;
+  nsIWebShell   * mWebShell;
+  nsIDOMElement * mDOMElement;
+
+  nsString        mAlignment;
+  nsString        mAnchorAlignment;
+
+  PRInt32         mX;
+  PRInt32         mY;
 };
 
 #endif // nsContextMenu_h__
