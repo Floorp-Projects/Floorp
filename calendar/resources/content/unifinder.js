@@ -284,7 +284,7 @@ function unifinderOnSelect( event )
    if( ArrayOfEvents.length == 1 )
    {
       /*start date is either the next or last occurence, or the start date of the event */
-      var eventStartDate = getCurrentNextOrPreviousRecurrence( calendarEvent );
+      var eventStartDate = calendarEvent.startDate.jsDate;
       
       /* you need this in case the current day is not visible. */
       if( gCalendarWindow.currentView.getVisibleEvent( calendarEvent ) == false )
