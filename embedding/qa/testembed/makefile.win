@@ -85,6 +85,7 @@ OBJS =                           \
     .\$(OBJDIR)\nsProfile.obj \
     .\$(OBJDIR)\nsIClipBoardCmd.obj \
     .\$(OBJDIR)\nsIObserServ.obj \
+    .\$(OBJDIR)\nsIFile.obj \
     $(NULL)
 
 LLIBS=					\

@@ -159,7 +159,24 @@ BEGIN
     END
     POPUP "&Interfaces"
     BEGIN
-        MENUITEM "nsI&File",                    ID_INTERFACES_NSIFILE
+        POPUP "nsI&File"
+        BEGIN
+            MENUITEM "Run All Tests",               ID_INTERFACES_NSIFILE_RUNALLTESTS
+
+            MENUITEM SEPARATOR
+            MENUITEM "InitWithPath",                ID_INTERFACES_NSIFILE_INITWITHPATH
+
+            MENUITEM "AppendRelaticePath",          ID_INTERFACES_NSIFILE_APPENDRELATICEPATH
+
+            MENUITEM "Exists",                      ID_INTERFACES_NSIFILE_EXISTS
+
+            MENUITEM "Create",                      ID_INTERFACES_NSIFILE_CREATE
+
+            MENUITEM "CopyTo",                      ID_INTERFACES_NSIFILE_COPYTO
+
+            MENUITEM "MoveTo",                      ID_INTERFACES_NSIFILE_MOVETO
+
+        END
         POPUP "nsI&SHistory"
         BEGIN
             MENUITEM "Run All Tests",               ID_INTERFACES_NSISHISTORY_RUNALLTESTS

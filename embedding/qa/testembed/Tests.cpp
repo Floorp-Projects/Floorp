@@ -61,6 +61,7 @@
 #include "nsProfile.h"
 #include "nsIClipboardCmd.h"
 #include "nsIObserServ.h"
+#include "nsIFile.h"
 
 #include "QaUtils.h"
 #include <stdio.h>
@@ -84,7 +85,6 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_TESTS_CREATEPROFILE, OnTestsCreateprofile)
 	ON_COMMAND(ID_TESTS_ADDWEBPROGLISTENER, OnTestsAddWebProgListener)
 	ON_COMMAND(ID_TESTS_ADDHISTORYLISTENER, OnTestsAddHistoryListener)
-	ON_COMMAND(ID_INTERFACES_NSIFILE, OnInterfacesNsifile)
 	ON_COMMAND(ID_TOOLS_REMOVEGHPAGE, OnToolsRemoveGHPage)
 	ON_COMMAND(ID_TOOLS_REMOVEALLGH, OnToolsRemoveAllGH)
 	ON_COMMAND(ID_TOOLS_TESTYOURMETHOD, OnToolsTestYourMethod)
@@ -100,6 +100,7 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_TESTS_REMOVEHISTORYLISTENER, OnTestsRemovehistorylistener)
 	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_GETCANGOBACK, OnInterfacesNsiwebnav)
 	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_CANCOPYSELECTION, OnInterfacesNsiclipboardcommands)
+	ON_COMMAND(ID_INTERFACES_NSIOBSERVERSERVICE_ADDOBSERVERS, OnInterfacesNsiobserverservice)
 	ON_COMMAND(ID_INTERFACES_NSIDIRECTORYSERVICE_REGISTERPROVIDER, OnInterfacesNsidirectoryservice)
 	ON_COMMAND(ID_INTERFACES_NSIDIRECTORYSERVICE_RUNALLTESTS, OnInterfacesNsidirectoryservice)
 	ON_COMMAND(ID_INTERFACES_NSIDIRECTORYSERVICE_UNREGISTERPROVIDER, OnInterfacesNsidirectoryservice)
@@ -188,11 +189,17 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_PASTE, OnInterfacesNsiclipboardcommands)
 	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_SELECTALL, OnInterfacesNsiclipboardcommands)
 	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_SELECTNONE, OnInterfacesNsiclipboardcommands)
-	ON_COMMAND(ID_INTERFACES_NSIOBSERVERSERVICE_ADDOBSERVERS, OnInterfacesNsiobserverservice)
 	ON_COMMAND(ID_INTERFACES_NSIOBSERVERSERVICE_ENUMERATEOBSERVERS, OnInterfacesNsiobserverservice)
 	ON_COMMAND(ID_INTERFACES_NSIOBSERVERSERVICE_NOTIFYOBSERVERS, OnInterfacesNsiobserverservice)
 	ON_COMMAND(ID_INTERFACES_NSIOBSERVERSERVICE_REMOVEOBSERVERS, OnInterfacesNsiobserverservice)
 	ON_COMMAND(ID_INTERFACES_NSIOBSERVERSERVICE_RUNALLTESTS, OnInterfacesNsiobserverservice)
+	ON_COMMAND(ID_INTERFACES_NSIFILE_APPENDRELATICEPATH, OnInterfacesNsifile)
+	ON_COMMAND(ID_INTERFACES_NSIFILE_COPYTO, OnInterfacesNsifile)
+	ON_COMMAND(ID_INTERFACES_NSIFILE_CREATE, OnInterfacesNsifile)
+	ON_COMMAND(ID_INTERFACES_NSIFILE_EXISTS, OnInterfacesNsifile)
+	ON_COMMAND(ID_INTERFACES_NSIFILE_INITWITHPATH, OnInterfacesNsifile)
+	ON_COMMAND(ID_INTERFACES_NSIFILE_MOVETO, OnInterfacesNsifile)
+	ON_COMMAND(ID_INTERFACES_NSIFILE_RUNALLTESTS, OnInterfacesNsifile)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -516,134 +523,6 @@ void CTests::OnToolsTestYourMethod2()
 }
 
 // ***********************************************************************
-// ************************** Interface Tests ****************************
-// ***********************************************************************
-
-// nsIFile:
-
-void CTests::OnInterfacesNsifile() 
-{
-   nsCOMPtr<nsILocalFile> theTestFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
-   nsCOMPtr<nsILocalFile> theFileOpDir(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
-
-    if (!theTestFile)
- 	{
-		QAOutput("File object doesn't exist. No File tests performed.", 2);
-		return;
-	}
-	if (!theFileOpDir)
- 	{
-		QAOutput("File object doesn't exist. No File tests performed.", 2);
-		return;
-	}
-
-	QAOutput("Begin nsIFile tests.", 2);
-
-	InitWithPathTest(theTestFile);
-	AppendRelativePathTest(theTestFile);
-	FileCreateTest(theTestFile);
-	FileExistsTest(theTestFile);
-
-	// FILE COPY test
-
-	FileCopyTest(theTestFile, theFileOpDir);	
-
-	// FILE MOVE test
-
-	FileMoveTest(theTestFile, theFileOpDir);	
-
-	QAOutput("End nsIFile tests.", 2);	
-}
-
-// ***********************************************************************
-// Individual nsIFile tests
-
-void CTests::InitWithPathTest(nsILocalFile *theTestFile)
-{
-	rv = theTestFile->InitWithPath("c:\\temp\\");
-	RvTestResult(rv, "InitWithPath() test (initializing file path)", 2);
-}
-
-void CTests::AppendRelativePathTest(nsILocalFile *theTestFile)
-{
-	rv = theTestFile->AppendRelativePath("myFile.txt");
-	RvTestResult(rv, "AppendRelativePath() test (append file to the path)", 2);
-}
-
-void CTests::FileCreateTest(nsILocalFile *theTestFile)
-{
-	rv = theTestFile->Exists(&exists);
-	if (!exists)
-	{
-		QAOutput("File doesn't exist. We'll try creating it.", 2);
-		rv = theTestFile->Create(nsIFile::NORMAL_FILE_TYPE, 0777);
-		RvTestResult(rv, " File Create() test ('myFile.txt')", 2);
-	}
-	else
-		QAOutput("File already exists (myFile.txt). We won't create it.", 2);
-}
-
-void CTests::FileExistsTest(nsILocalFile *theTestFile)
-{
-	rv = theTestFile->Exists(&exists);
-	if (!exists)
-		QAOutput("Exists() test Failed. File (myFile.txt) doesn't exist.", 2);
-	else
-		QAOutput("Exists() test Passed. File (myFile.txt) exists.", 2);
-
-}
-
-void CTests::FileCopyTest(nsILocalFile *theTestFile, nsILocalFile *theFileOpDir)
-{
-	QAOutput("Start File Copy test.", 2);
-
-	rv = theFileOpDir->InitWithPath("c:\\temp\\");
-	if (NS_FAILED(rv))
-		QAOutput("The target dir wasn't found.", 2);
-	else
-		QAOutput("The target dir was found.", 2);
-
-	rv = theTestFile->InitWithPath("c:\\temp\\myFile.txt");
-	if (NS_FAILED(rv))
-		QAOutput("The path wasn't found.", 2);
-	else
-		QAOutput("The path was found.", 2);
-
-	rv = theTestFile->CopyTo(theFileOpDir, "myFile2.txt");
-	RvTestResult(rv, "rv CopyTo() test", 2);
-
-	rv = theTestFile->InitWithPath("c:\\temp\\myFile2.txt");
-	rv = theTestFile->Exists(&exists);
-	if (!exists)
-		QAOutput("File didn't copy. CopyTo() test Failed.", 2);
-	else
-		QAOutput("File copied. CopyTo() test Passed.", 2);
-}
-
-void CTests::FileMoveTest(nsILocalFile *theTestFile, nsILocalFile *theFileOpDir)
-{
-	QAOutput("Start File Move test.", 2);
-
-	rv = theFileOpDir->InitWithPath("c:\\Program Files\\");
-	if (NS_FAILED(rv))
-		QAOutput("The target dir wasn't found.", 2);
-
-	rv = theTestFile->InitWithPath("c:\\temp\\myFile2.txt");
-	if (NS_FAILED(rv))
-		QAOutput("The path wasn't found.", 2);
-
-	rv = theTestFile->MoveTo(theFileOpDir, "myFile2.txt");
-	RvTestResult(rv, "MoveTo() test", 2);
-
-	rv = theTestFile->InitWithPath("c:\\Program Files\\myFile2.txt");
-	rv = theTestFile->Exists(&exists);
-	if (!exists)
-		QAOutput("File wasn't moved. MoveTo() test Failed.", 2);
-	else
-		QAOutput("File was moved. MoveTo() test Passed.", 2);
-}
-
-// ***********************************************************************
 // ***************** Bug Verifications ******************
 // ***********************************************************************
 
@@ -742,4 +621,10 @@ void CTests::OnInterfacesNsiobserverservice()
 	CnsIObserServ oObserv  ;
 	oObserv.OnStartTests(nCommandID);
 
+}
+
+void CTests::OnInterfacesNsifile() 
+{
+	CNsIFile oFile ;
+	oFile.OnStartTests(nCommandID);
 }
