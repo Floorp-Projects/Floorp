@@ -7,44 +7,31 @@
 /* outer frame */
   textfield
     {
-      border-left         : 1px solid threedshadow;
-      border-top          : 1px solid threedshadow;
-      border-right        : 1px solid threedhighlight;
-      border-bottom       : 1px solid threedhighlight;
-      font                : inherit;
-      color               : windowtext;
-      padding             : 0px;
       margin              : 1px 5px 2px 5px;
-      background-color    : window;
+      border-top          : 1px solid ThreeDShadow;
+      border-right        : 1px solid ThreeDHighlight;
+      border-bottom       : 1px solid ThreeDHighlight;
+      border-left         : 1px solid ThreeDShadow;
+      padding             : 0px;
+      background-color    : -moz-field;
+      color               : WindowText;
       cursor              : text;
     }
     
   textfield[readonly="true"]
     {
-      background-color    : threedface;
+      background-color    : ThreeDFace;
     }
   
 /* internal frame */
-  .textfield-internal-box 
+  .textfield-internal-box, .textarea-internal-box
     {
       margin              : 0px;
       padding             : 1px 2px 1px 2px;
-      cursor              : text;
-      border-left         : 1px solid threeddarkshadow;
-      border-top          : 1px solid threeddarkshadow;
-      border-right        : 1px solid threedface;
-      border-bottom       : 1px solid threedface;
-      background-color    : inherit;
-      color               : inherit;
-    }
-  
-  .textarea-internal-box
-    {
-      border-left         : 1px solid threeddarkshadow;
-      border-top          : 1px solid threeddarkshadow;
-      border-right        : 1px solid threedface;
-      border-bottom       : 1px solid threedface;
-      padding             : 0px 0px 0px 2px;
+      border-left         : 1px solid ThreeDDarkShadow;
+      border-top          : 1px solid ThreeDDarkShadow;
+      border-right        : 1px solid ThreeDFace;
+      border-bottom       : 1px solid ThreeDFace;
     }
   
 /* internal text widget */
@@ -59,9 +46,9 @@
 
   textfield[disabled="true"] 
     {
-      cursor              : default ! important;
-      background-color    : threedface;
-      color               : graytext;
+      cursor              : default !important;
+      background-color    : ThreeDFace;
+      color               : GrayText;
     } 
     
 /** plain atomic textfields, class="plain" **/
@@ -74,34 +61,8 @@
       border              : none !important;
     }
 
-  .autocomplete-icon
-    {
-      border              : none;
-      margin              : 0px;
-    }
-
-  .autocomplete-icon > .autocomplete-icon-internal-box
-    {
-      border              : none;
-      padding             : 0px;
-      margin              : 0px;
-    }  
-    
-  .autocomplete-icon-icon
-    {
-      margin              : 2px 3px 2px 3px;
-      list-style-image    : inherit;
-      cursor              : default !important;
-    }
-    
-  .autocomplete-icon-input
-    {
-      border              : none !important;
-    }    
-
-
 /* autocomplete text field */
   .textfield-popup > menuitem
-  {
+    {
       max-width            : none !important;
-  }
+    }

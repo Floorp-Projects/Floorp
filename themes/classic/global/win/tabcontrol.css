@@ -10,29 +10,29 @@ tabpanel {
 /* top tabs */
 tabcontrol[orient="vertical"] > tabbox + tabpanel {
   border-top: none !important;
-  border-bottom: 1px solid threedshadow !important;
+  border-bottom: 1px solid ThreeDShadow !important;
 }
 
 /* bottom tabs */
 tabcontrol[orient="vertical"] > tabpanel {
-  border-top: 1px solid threedhighlight;
+  border-top: 1px solid ThreeDHighlight;
   border-bottom: none;
-  border-left: 1px solid threedhighlight;
-  border-right: 1px solid threedshadow;
+  border-left: 1px solid ThreeDHighlight;
+  border-right: 1px solid ThreeDShadow;
 }
 
 /* left tabs */
 tabcontrol[orient="horizontal"] > tabbox + tabpanel {
   border-left: none !important;
-  border-right: 1px solid threedshadow !important;
+  border-right: 1px solid ThreeDShadow !important;
 }
 
 /* right tabs */
 tabcontrol[orient="horizontal"] > tabpanel {
-  border-top: 1px solid threedhighlight;
-  border-bottom: 1px solid threedshadow;
+  border-top: 1px solid ThreeDHighlight;
+  border-bottom: 1px solid ThreeDShadow;
   border-right: none;
-  border-left: 1px solid threedhighlight;
+  border-left: 1px solid ThreeDHighlight;
 }
 
 /* border on bottom only, no padding (used in search) */
@@ -43,8 +43,8 @@ tabpanel.light {
 }
 
 .tabpanel-inner-box {
-  border-right: 1px solid threedshadow;
-  border-bottom: 1px solid threedshadow;
+  border-right: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
 }
 
 /*============ tabbox widget ============*/
@@ -57,23 +57,23 @@ tabbox {
 
 /* top tabs */
 tabcontrol[orient="vertical"] > tabbox > .tabbox-spring {
-  border-bottom: 1px solid threedhighlight;
+  border-bottom: 1px solid ThreeDHighlight;
 }
 
 /* bottom tabs */
 tabcontrol[orient="vertical"] > tabpanel + tabbox > .tabbox-spring {
-  border-top: 1px solid threedshadow !important;
+  border-top: 1px solid ThreeDShadow !important;
   border-bottom: none;
 }
 
 /* left tabs */
 tabcontrol[orient="horizontal"] > tabbox > .tabbox-spring {
-  border-right: 1px solid threedhighlight;
+  border-right: 1px solid ThreeDHighlight;
 }
 
 /* right tabs */
 tabcontrol[orient="horizontal"] > tabpanel + tabbox > .tabbox-spring {
-  border-left: 1px solid threedshadow !important;
+  border-left: 1px solid ThreeDShadow !important;
   border-right: none;
 }
 
@@ -85,8 +85,7 @@ tabcontrol[orient="horizontal"] > tabpanel + tabbox > .tabbox-spring {
    
 tab {
   border: none;
-  font: small-caption;
-  color: buttontext;
+  color: ButtonText;
   -moz-user-focus: normal;
 }
 
@@ -96,7 +95,7 @@ tab > .tab-box > .tab-text {
 }
 
 tab:focus > .tab-box > .tab-text {
-  border: 1px dotted buttontext;
+  border: 1px dotted ButtonText;
 }
 
 .tab-box {
@@ -111,15 +110,15 @@ tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] tab[first-tab="true"
 
 tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] tab  { 
   margin-top: 2px;
-  border-right: 1px solid threeddarkshadow;
+  border-right: 1px solid ThreeDDarkShadow;
   -moz-border-radius: 4px 4px 0px 0px;
 }
 
 tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] tab > .tab-box { 
-  border-left: 1px solid threedhighlight;
-  border-top: 1px solid threedhighlight;
-  border-right: 1px solid threedshadow;
-  border-bottom: 1px solid threedhighlight;
+  border-left: 1px solid ThreeDHighlight;
+  border-top: 1px solid ThreeDHighlight;
+  border-right: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDHighlight;
   -moz-border-radius: 4px 4px 0px 0px;
 }
 
@@ -127,15 +126,15 @@ tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] tab > .tab-box {
 tabcontrol[orient="vertical"] > tabpanel + tabbox[orient="horizontal"] > tab { 
   margin-top: 0px;
   margin-bottom: 2px;
-  border-right: 1px solid threeddarkshadow;
-  border-bottom: 1px solid threeddarkshadow;
+  border-right: 1px solid ThreeDDarkShadow;
+  border-bottom: 1px solid ThreeDDarkShadow;
   -moz-border-radius: 0px 0px 4px 4px;
 }
 
 tabcontrol[orient="vertical"] > tabpanel + tabbox[orient="horizontal"] > tab > .tab-box { 
-  border-top: 1px solid threedshadow;
-  border-right: 1px solid threedshadow;
-  border-bottom: 1px solid threedshadow;
+  border-top: 1px solid ThreeDShadow;
+  border-right: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
   -moz-border-radius: 0px 0px 4px 4px;
 }
 
@@ -146,15 +145,15 @@ tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] tab[first-tab="true"
 
 tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] tab  { 
   margin-left: 2px;
-  border-bottom: 1px solid threeddarkshadow;
+  border-bottom: 1px solid ThreeDDarkShadow;
   -moz-border-radius: 4px 0px 0px 4px;
 }
 
 tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] tab > .tab-box  { 
-  border-left: 1px solid threedhighlight;
-  border-top: 1px solid threedhighlight;
-  border-right: 1px solid threedhighlight;
-  border-bottom: 1px solid threedshadow;
+  border-left: 1px solid ThreeDHighlight;
+  border-top: 1px solid ThreeDHighlight;
+  border-right: 1px solid ThreeDHighlight;
+  border-bottom: 1px solid ThreeDShadow;
   -moz-border-radius: 4px 0px 0px 4px;
 }
 
@@ -162,15 +161,15 @@ tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] tab > .tab-box  {
 tabcontrol[orient="horizontal"] > tabpanel + tabbox[orient="vertical"] > tab { 
   margin-right: 2px;
   margin-left: 0px;
-  border-bottom: 1px solid threeddarkshadow;
-  border-right: 1px solid threeddarkshadow;
+  border-bottom: 1px solid ThreeDDarkShadow;
+  border-right: 1px solid ThreeDDarkShadow;
   -moz-border-radius: 0px 4px 4px 0px !important;
 }
 
 tabcontrol[orient="horizontal"] > tabpanel + tabbox[orient="vertical"] > tab > .tab-box { 
-  border-left: 1px solid threedshadow !important;
-  border-right: 1px solid threedshadow;
-  border-bottom: 1px solid threedshadow !important;
+  border-left: 1px solid ThreeDShadow !important;
+  border-right: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow !important;
   -moz-border-radius: 0px 4px 4px 0px !important;
 }
 
@@ -190,13 +189,13 @@ tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] > tab[selected="true
 }
 
 tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] > tab[selected="true"] > .tab-box {
-  border-bottom: 1px solid threedface;
+  border-bottom: 1px solid ThreeDFace;
   padding-left: 5px !important;
   padding-right: 4px !important;
 }
 
 tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] > tab[selected="true"][first-tab="true"] > .tab-box {
-  border-bottom: 1px solid threedface;
+  border-bottom: 1px solid ThreeDFace;
   padding-left: 5px !important;
   padding-right: 4px !important;
 }
@@ -204,12 +203,12 @@ tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] > tab[selected="true
 /* bottom tabs */
 tabcontrol[orient="vertical"] > tabpanel + tabbox[orient="horizontal"] > tab[selected="true"] {
   margin-bottom: 0px;
-  border-bottom: 1px solid threeddarkshadow !important;
+  border-bottom: 1px solid ThreeDDarkShadow !important;
 }
 
 tabcontrol[orient="vertical"] > tabpanel + tabbox[orient="horizontal"] > tab[selected="true"] > .tab-box {
-  border-top: 1px solid threedface;
-  border-bottom: 1px solid threedshadow !important;
+  border-top: 1px solid ThreeDFace;
+  border-bottom: 1px solid ThreeDShadow !important;
 }
 
 /* left tabs */
@@ -219,13 +218,13 @@ tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] > tab[selected="true
 }
 
 tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] > tab[selected="true"] > .tab-box {
-  border-right: 1px solid threedface;
+  border-right: 1px solid ThreeDFace;
   padding-top: 3px !important;
   padding-bottom: 2px !important;
 }
 
 tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] > tab[selected="true"][first-tab="true"] > .tab-box {
-  border-right: 1px solid threedface;
+  border-right: 1px solid ThreeDFace;
   padding-top: 3px !important;
   padding-bottom: 2px !important;
 }
@@ -236,8 +235,8 @@ tabcontrol[orient="horizontal"] > tabpanel + tabbox[orient="vertical"] > tab[sel
 }
 
 tabcontrol[orient="horizontal"] > tabpanel + tabbox[orient="vertical"] > tab[selected="true"] > .tab-box {
-  border-left: 1px solid threedface !important;
-  border-right: 1px solid threedshadow !important;
+  border-left: 1px solid ThreeDFace !important;
+  border-right: 1px solid ThreeDShadow !important;
 }
 
 /* before selected tabs ====================== */

@@ -1,34 +1,34 @@
 toolbox
   {
-    background-color      : threedface;
-    border-left           : 1px solid threedshadow;
-    border-top            : 1px solid threedshadow;
-    border-right          : 1px solid threedhighlight;
+    background-color      : ThreeDFace;
+    border-left           : 1px solid ThreeDShadow;
+    border-top            : 1px solid ThreeDShadow;
+    border-right          : 1px solid ThreeDHighlight;
   }
 
 toolbar
   {
-    background-color      : threedface;
-    min-width			  : 1px;      // DON'T DELETE.  Removes disappearance of scrollbars in content pane when window is made smaller.
-									  // Talk to evaughan@netscape.com for details.
-
+     background-color      : ThreeDFace;
+    // DON'T DELETE.  Removes disappearance of scrollbars in content pane when window is made smaller.
+    // Talk to evaughan@netscape.com for details.
+    min-width			  : 1px;      
   }
   
 .toolbar-holder
   {
-    border-left           : 1px solid threedhighlight;
-    border-top            : 1px solid threedhighlight;
-    border-right          : 1px solid threedshadow;
-    border-bottom         : 1px solid threedshadow;
+    border-left           : 1px solid ThreeDHighlight;
+    border-top            : 1px solid ThreeDHighlight;
+    border-right          : 1px solid ThreeDShadow;
+    border-bottom         : 1px solid ThreeDShadow;
   }  
 
 toolbargrippy
   {
     -moz-binding          : url("chrome://global/skin/classicBindings.xml#toolbargrippy");
-    border-left           : 1px solid threedhighlight;
-    border-top            : 1px solid threedhighlight;
-    border-right          : 1px solid threedshadow;
-    border-bottom         : 1px solid threedshadow;
+    border-left           : 1px solid ThreeDHighlight;
+    border-top            : 1px solid ThreeDHighlight;
+    border-right          : 1px solid ThreeDShadow;
+    border-bottom         : 1px solid ThreeDShadow;
     width                 : 12px;
     padding-bottom        : 1px;
   }
@@ -50,10 +50,10 @@ toolbargrippy
 toolbargrippy[tbgrippy-collapsed="true"] 
   {
     -moz-binding          : url("chrome://global/skin/classicBindings.xml#toolbargrippy-collapsed");
-    border-left           : 1px solid threedhighlight;
-    border-top            : 1px solid threedhighlight;
-    border-right          : 1px solid threedshadow;
-    border-bottom         : 1px solid threedshadow;
+    border-left           : 1px solid ThreeDHighlight;
+    border-top            : 1px solid ThreeDHighlight;
+    border-right          : 1px solid ThreeDShadow;
+    border-bottom         : 1px solid ThreeDShadow;
     height                : 12px;
     padding-right         : 1px;
   }
@@ -76,12 +76,12 @@ toolbargrippy[tbgrippy-collapsed="true"]
 
 .collapsed-tray-spring
   {
-    border-bottom         : 1px solid threedshadow;
+    border-bottom         : 1px solid ThreeDShadow;
   }  
   
 toolbargrippy:hover
   {
-    background-color      : #CCCCFF;
+    background-color      : ThreeDHighlight;
   }
   
 toolbar[collapsed="true"] > toolbargrippy
@@ -92,8 +92,8 @@ toolbar[collapsed="true"] > toolbargrippy
 toolbarseparator 
   {
     width                 : 1px;
-    border-left           : 1px solid threedshadow;
-    border-right          : 1px solid threedhighlight; 
+    border-left           : 1px solid ThreeDShadow;
+    border-right          : 1px solid ThreeDHighlight; 
     margin                : 2px 0.2em 2px 0.2em;
   }
   

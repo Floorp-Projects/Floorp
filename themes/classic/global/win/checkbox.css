@@ -10,10 +10,11 @@
 
   .checkbox-checkmark-box-1
     {
-      border-top          : 1px solid threedshadow;
-      border-left         : 1px solid threedshadow;
-      border-right        : 1px solid threedhighlight;
-      border-bottom       : 1px solid threedhighlight;
+      border-top          : 1px solid ThreeDShadow;
+      border-left         : 1px solid ThreeDShadow;
+      border-right        : 1px solid ThreeDHighlight;
+      border-bottom       : 1px solid ThreeDHighlight;
+      color				        : ThreeDFace;
       background-color    : window;
       margin              : 2px 2px 0px 0px;
       width               : 13px;
@@ -23,15 +24,15 @@
 
   .checkbox-checkmark-box-1[disabled="true"]
     {
-      background-color    : threedface;
+      background-color    : ThreeDFace;
     }
 
   .checkbox-checkmark-box-2
     {
-      border-left         : 1px solid threeddarkshadow;
-      border-top          : 1px solid threeddarkshadow;
-      border-right        : 1px solid threedface;
-      border-bottom       : 1px solid threedface;
+      border-left         : 1px solid ThreeDDarkShadow;
+      border-top          : 1px solid ThreeDDarkShadow;
+      border-right        : 1px solid ThreeDLightShadow;
+      border-bottom       : 1px solid ThreeDLightShadow;
       padding             : 1px;
       width               : 11px;
       height              : 11px;
@@ -55,7 +56,7 @@
 
   checkbox:hover:active > .checkbox-internal-box > .checkbox-checkmark-box-1
     {
-      background-color    : threedface;
+      background-color    : ThreeDFace;
     }
 
 /* text/icon frames */
@@ -72,12 +73,12 @@
     
   .checkbox-text[disabled="true"]
     {
-      color               : graytext;
+      color               : GrayText;
     }
   
   checkbox:focus > .checkbox-internal-box > .checkbox-text
     { 
-      border              : 1px dotted threeddarkshadow;
+      border              : 1px dotted ThreeDDarkShadow;
       padding             : 0px;
     }
     

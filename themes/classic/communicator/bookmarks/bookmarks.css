@@ -50,9 +50,10 @@
 /**
  * Personal toolbar items
  **/
+
   .bookmarkitem
     {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/location.gif");
+      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
       cursor	          : pointer;
     }
 
@@ -143,19 +144,19 @@
   .bookmarkitem.button-toolbar[dragover-left="true"]
     {
       margin-left         : 0px;
-      border-left         : 2px solid threeddarkshadow;
+      border-left         : 2px solid ThreeDDarkShadow;
     }
 
   .bookmarkitem.button-toolbar[dragover-right="true"]
     {
       margin-right        : 0px;
-      border-right        : 2px solid threeddarkshadow;
+      border-right        : 2px solid ThreeDDarkShadow;
     }
 
   .menubutton-toolbar-single-text[dragover-top="true"]
     {
-      background-color    : threeddarkshadow;
-      color               : threedhighlight;
+      background-color    : ThreeDDarkShadow;
+      color               : ThreeDHighlight;
     }
     
 /** 
@@ -246,9 +247,12 @@
   #bookmarksTree
     {
       border-top          : none;
+      border-bottom       : none;
     }
 
 #navprintplus
     {
       display:none !important; 
     }
+
+    

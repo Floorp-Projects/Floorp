@@ -85,7 +85,7 @@ spring#horizontalLargeSpacer {
 }
 
 .headline {
-  font-size                 : 2em;
+  font-size                 : x-large;
   margin                    : 4px;
   font-weight               : bold;
 }

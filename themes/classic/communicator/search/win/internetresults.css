@@ -10,10 +10,10 @@
 #engineTabs 
   {
     padding               : 2px 0px 2px 0px;
-    background-color      : threedface;
-    border-left           : 1px solid threedhighlight;
-    border-top            : 1px solid threedhighlight;
-    border-right          : 1px solid threedshadow;
+    background-color      : ThreeDFace;
+    border-left           : 1px solid ThreeDHighlight;
+    border-top            : 1px solid ThreeDHighlight;
+    border-right          : 1px solid ThreeDShadow;
   }
 
 #internetresultstree

@@ -3,7 +3,7 @@
   splitter 
     {
       cursor                : e-resize;
-      background-color      : threedface;
+      background-color      : ThreeDFace;
       vertical-align        : middle;
       text-align	    	: center;
     }
@@ -11,7 +11,7 @@
   grippy, grippy[collapse="before"]
     {
       -moz-binding          : url("chrome://global/skin/classicBindings.xml#grippy");
-      border                : 1px solid threedshadow;
+      border                : 1px solid ThreeDShadow;
   	  list-style-image      : url("chrome://global/skin/grippy-horizontal-before.gif");
   	  cursor                : pointer;
     }
@@ -28,10 +28,10 @@
     
   .grippy-box
     {
-      border-top            : 1px solid threedhighlight;
-      border-left           : 1px solid threedhighlight;
-      border-right          : 1px solid threedface;
-      border-bottom         : 1px solid threedface;
+      border-top            : 1px solid ThreeDHighlight;
+      border-left           : 1px solid ThreeDHighlight;
+      border-right          : 1px solid ThreeDFace;
+      border-bottom         : 1px solid ThreeDFace;
     }  
     
   .grippy-image
@@ -42,7 +42,7 @@
   splitter[state="dragging"],
   splitter:hover:active
     {
-      background-color      : threedface;
+      background-color      : ThreeDFace;
       background-image      : url("chrome://global/skin/splitter-drag-bg.gif");
     }
   
@@ -58,7 +58,7 @@
     {
       cursor              : n-resize;
       -moz-binding        : url("chrome://global/skin/classicBindings.xml#splitter-hack");
-      border-top          : 1px solid threedhighlight;
+      border-top          : 1px solid ThreeDHighlight;
     }
     
 /* Grippy alignment */
@@ -112,8 +112,8 @@
   box[orient="vertical"] > splitter > grippy
     {
       list-style-image    : url("chrome://global/skin/grippy-vertical-before.gif");
-      border-left         : 1px solid threedshadow;
-      border-right        : 1px solid threedhighlight;
+      border-left         : 1px solid ThreeDShadow;
+      border-right        : 1px solid ThreeDHighlight;
       border-top          : none;
       border-bottom       : none;
     }  
@@ -121,8 +121,8 @@
   window[orient="vertical"] > splitter > grippy > .grippy-box,
   box[orient="vertical"] > splitter > grippy > .grippy-box
     {
-      border-left         : 1px solid threedhighlight;
-      border-right        : 1px solid threedshadow;
+      border-left         : 1px solid ThreeDHighlight;
+      border-right        : 1px solid ThreeDShadow;
       border-top          : none;
       border-bottom       : none;
     }  

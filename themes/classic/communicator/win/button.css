@@ -5,17 +5,17 @@
   /* outer frame */
   .button-toolbar-1, .button-toolbar-2
     {
-      background-color    : transparent;
       -moz-binding        : url("chrome://global/content/xulBindings.xml#buttontop");
       min-width           : 47px;
       margin              : 0px;
       border              : 1px solid transparent;
+      background-color    : transparent;
       -moz-user-focus     : ignore;
     }
 
   .button-toolbar-1:hover, .button-toolbar-2:hover
     {
-      border              : 1px solid threeddarkshadow;
+      border              : 1px solid ThreeDDarkShadow;
       color               : #0000FF;
     } 
     
@@ -36,32 +36,32 @@
   .button-toolbar-2[disabled="true"]:hover:active
     {
       border              : 1px solid transparent;
-      color               : graytext;
+      color               : GrayText;
     }
 
   .button-toolbar-1[disabled="true"]:hover:active > .button-internal-box,
   .button-toolbar-2[disabled="true"]:hover:active > .button-internal-box
     {
-      color               : graytext;
+      color               : GrayText;
     }
 
   .button-toolbar-1:hover > .button-internal-box,
   .button-toolbar-2:hover > .button-internal-box
     {
-      border-left         : 1px solid threedhighlight;
-      border-top          : 1px solid threedhighlight;
-      border-right        : 1px solid threedshadow;
-      border-bottom       : 1px solid threedshadow;
+      border-left         : 1px solid ThreeDHighlight;
+      border-top          : 1px solid ThreeDHighlight;
+      border-right        : 1px solid ThreeDShadow;
+      border-bottom       : 1px solid ThreeDShadow;
     }
 
   .button-toolbar-1:hover:active > .button-internal-box,
   .button-toolbar-2:hover:active > .button-internal-box
     {
       padding             : 3px 6px 1px 7px;
-      border-left         : 1px solid threedshadow !important;
-      border-top          : 1px solid threedshadow !important;
-      border-right        : 1px solid threedhighlight !important;
-      border-bottom       : 1px solid threedhighlight !important;
+      border-left         : 1px solid ThreeDShadow !important;
+      border-top          : 1px solid ThreeDShadow !important;
+      border-right        : 1px solid ThreeDHighlight !important;
+      border-bottom       : 1px solid ThreeDHighlight !important;
       color               : #000080;
     }
     
@@ -89,11 +89,12 @@
   .button-toolbar
     {
       -moz-binding        : url("chrome://global/content/xulBindings.xml#buttonleft");
-      min-width           : 0px;
-      margin              : 0px 1px 0px 1px; 
+      margin              : 1px; 
       border              : 1px solid transparent;
-      -moz-user-focus     : ignore;
+      min-width           : 0px;
       max-width           : 14em;
+      color               : WindowText;
+      -moz-user-focus     : ignore;
     }
 
   .button-toolbar > .button-internal-box
@@ -105,21 +106,20 @@
   /* toggled toolbar styles (editor formatting toolbars, etc) */
   .button-toolbar[toggled="true"] > .button-internal-box
     {
-      border-left         : 1px solid threedshadow;
-      border-top          : 1px solid threedshadow;
-      border-right        : 1px solid threedhighlight;
-      border-bottom       : 1px solid threedhighlight;
-      background-color	  : threedface;
-      background-image    : url("chrome://global/skin/scrollbar-slider-bg.gif");
+      border-left         : 1px solid ThreeDShadow;
+      border-top          : 1px solid ThreeDShadow;
+      border-right        : 1px solid ThreeDHighlight;
+      border-bottom       : 1px solid ThreeDHighlight;
+      background-color	  : ThreeDHighlight;
     }
     
   .button-toolbar[toggled="true"]:hover > .button-internal-box
     {
-      border-left         : 1px solid threedshadow;
-      border-top          : 1px solid threedshadow;
-      border-right        : 1px solid threedhighlight;
-      border-bottom       : 1px solid threedhighlight;
-      background-color	  : threedface;
+      border-left         : 1px solid ThreeDShadow;
+      border-top          : 1px solid ThreeDShadow;
+      border-right        : 1px solid ThreeDHighlight;
+      border-bottom       : 1px solid ThreeDHighlight;
+      background-color	  : ThreeDFace;
       background-image    : none;
     }
     
@@ -130,25 +130,25 @@
 
   .button-toolbar:hover
     {
-      border              : 1px solid threeddarkshadow;
+      border              : 1px solid ThreeDDarkShadow;
     }
     
   .button-toolbar:hover > .button-internal-box
     { 
-      border-left         : 1px solid threedhighlight;
-      border-top          : 1px solid threedhighlight;
-      border-right        : 1px solid threedshadow;
-      border-bottom       : 1px solid threedshadow;
+      border-left         : 1px solid ThreeDHighlight;
+      border-top          : 1px solid ThreeDHighlight;
+      border-right        : 1px solid ThreeDShadow;
+      border-bottom       : 1px solid ThreeDShadow;
       color               : #0000FF;
     }
     
   .button-toolbar:hover:active > .button-internal-box
     {
       padding             : 2px 2px 0px 4px;
-      border-left         : 1px solid threedshadow;
-      border-top          : 1px solid threedshadow;
-      border-right        : 1px solid threedhighlight;
-      border-bottom       : 1px solid threedhighlight;
+      border-left         : 1px solid ThreeDShadow;
+      border-top          : 1px solid ThreeDShadow;
+      border-right        : 1px solid ThreeDHighlight;
+      border-bottom       : 1px solid ThreeDHighlight;
       color               : #000080;
     }
     
@@ -156,7 +156,7 @@
   .button-toolbar[disabled="true"]:hover,
   .button-toolbar[disabled="true"]:hover:active    
     {
-      color               : graytext;
+      color               : GrayText;
       border              : 1px solid transparent;
     }
 
@@ -178,6 +178,7 @@
       min-width           : 0px;
       margin              : 0px;
       border              : 1px solid transparent;
+      color               : WindowText;
       -moz-user-focus     : ignore;
     }
     
@@ -191,7 +192,7 @@
   
   .button-toolbar-4:hover
     {
-      border              : 1px solid threeddarkshadow;
+      border              : 1px solid ThreeDDarkShadow;
       color               : #0000FF;
     } 
     
@@ -200,24 +201,24 @@
   .button-toolbar-4[disabled="true"]:hover:active
     {
       border              : 1px solid transparent;
-      color               : graytext;
+      color               : GrayText;
     }
     
   .button-toolbar-4:hover > .button-internal-box
     {
-      border-left         : 1px solid threedhighlight;
-      border-top          : 1px solid threedhighlight;
-      border-right        : 1px solid threedshadow;
-      border-bottom       : 1px solid threedshadow;
+      border-left         : 1px solid ThreeDHighlight;
+      border-top          : 1px solid ThreeDHighlight;
+      border-right        : 1px solid ThreeDShadow;
+      border-bottom       : 1px solid ThreeDShadow;
     }
 
   .button-toolbar-4:hover:active > .button-internal-box
     {
       padding             : 0px;
-      border-left         : 1px solid threedshadow !important;
-      border-top          : 1px solid threedshadow !important;
-      border-right        : 1px solid threedhighlight !important;
-      border-bottom       : 1px solid threedhighlight !important;
+      border-left         : 1px solid ThreeDShadow !important;
+      border-top          : 1px solid ThreeDShadow !important;
+      border-right        : 1px solid ThreeDHighlight !important;
+      border-bottom       : 1px solid ThreeDHighlight !important;
     }
 
   .button-toolbar-4 > .button-internal-box > .button-text-container

@@ -21,10 +21,6 @@
 
 @import url(chrome://global/skin/global.css);
 
-window {
-    font-size: 12px;
-}
-
 .treecell-error {
     white-space: normal;
 }
