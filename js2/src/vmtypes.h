@@ -43,6 +43,7 @@ namespace JavaScript {
 namespace VM {
 
     using JSTypes::JSValues;
+    using JSTypes::JSString;
 
     enum ICodeOp {
         ADD, /* dest, source1, source2 */
@@ -637,11 +638,11 @@ namespace VM {
         }
     };
 
-    class LoadString : public Instruction_2<Register, String *> {
+    class LoadString : public Instruction_2<Register, JSString*> {
     public:
         /* dest, immediate value (string) */
-        LoadString (Register aOp1, String *aOp2) :
-            Instruction_2<Register, String *>
+        LoadString (Register aOp1, JSString* aOp2) :
+            Instruction_2<Register, JSString*>
             (LOAD_STRING, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[LOAD_STRING] << "\t" << "R" << mOp1 << ", " << "'" << *mOp2 << "'";
