@@ -73,29 +73,6 @@ nsAggregatePrincipal::SetCommonName(const char* aCommonName)
     return certificate->SetCommonName(aCommonName);
 }
 
-NS_IMETHODIMP 
-nsAggregatePrincipal::GetArchive(nsIZipReader** aArchive)
-{
-    if (!mCertificate)
-    {
-        *aArchive = nsnull;
-        return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsICertificatePrincipal> certificate = do_QueryInterface(mCertificate);
-    return certificate->GetArchive(aArchive);
-}
-
-NS_IMETHODIMP 
-nsAggregatePrincipal::SetArchive(nsIZipReader* aArchive)
-{
-    if (!mCertificate)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsICertificatePrincipal> certificate = do_QueryInterface(mCertificate);
-    return certificate->SetArchive(aArchive);
-}
-
 ///////////////////////////////////////////////
 // Methods implementing nsICodebasePrincipal //
 ///////////////////////////////////////////////
