@@ -222,12 +222,6 @@ function HideWallet() {
   element = document.getElementById("wallet");
   element.setAttribute("style","display: none;" );
   element.setAttribute("disabled","true" );
-  element = document.getElementById("walleteditor");
-  element.setAttribute("style","display: none;" );
-  element.setAttribute("disabled","true" );
-  element = document.getElementById("walletSamples");
-  element.setAttribute("style","display: none;" );
-  element.setAttribute("disabled","true" );
 }
 
 function CheckForWallet()
@@ -264,6 +258,28 @@ function WalletAction( action )
     return;
   }
 
+  if (action == "cookieAllow" || action == "cookieBlock" ||
+      action == "imageAllow" || action == "imageBlock") {
+
+    var cookieViewer =
+      Components.classes["component://netscape/cookieviewer/cookieviewer-world"]
+        .createInstance(Components.interfaces["nsICookieViewer"]);
+
+    COOKIEPERMISSION = 0;
+    IMAGEPERMISSION = 1;
+
+    if (action == "cookieAllow") {
+      cookieViewer.AddPermission(window.content, true, COOKIEPERMISSION);
+    } else if (action == "cookieBlock") {
+      cookieViewer.AddPermission(window.content, false, COOKIEPERMISSION);
+    } else if (action == "imageAllow") {
+      cookieViewer.AddPermission(window.content, true, IMAGEPERMISSION);
+    } else if (action == "imageBlock") {
+      cookieViewer.AddPermission(window.content, false, IMAGEPERMISSION);
+    }
+    return;
+  }
+
   if( appCore ) {
     switch( action ) {
       case "safefill":
@@ -291,10 +307,18 @@ function WalletDialog( which )
       window.openDialog("chrome://wallet/content/SignonViewer.xul","SSViewer","modal,chrome,height=504,width=436"); 
       break;
     case "cookie":
+      this.pref.SetBoolPref("cookieviewer.cookieTab", true);
+      window.openDialog("chrome://wallet/content/CookieViewer.xul","CookieViewer","modal,chrome,height=504,width=436"); 
+      break;
+    case "image":
+      this.pref.SetBoolPref("cookieviewer.cookieTab", false);
       window.openDialog("chrome://wallet/content/CookieViewer.xul","CookieViewer","modal,chrome,height=504,width=436"); 
       break;
     case "samples":
       window.content.location.href= 'http://www.mozilla.org/wallet/samples/';
+      break;
+    case "interview":
+      window.content.location.href= 'http://www.mozilla.org/wallet/samples/INTERVIEW.HTML';
       break;
     case "wallet":
     default:
