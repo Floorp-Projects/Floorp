@@ -69,7 +69,7 @@
 	<!-- keys are appended from the overlay -->
   <keyset id="defaultKeySet"/>
 
-  <menubar id="main-menubar" chromeclass="menubar">
+  <menubar id="main-menubar" class="chromeclass-menubar">
     <menu id="fileMenu"/>
     <menu id="editMenu"/>
 
@@ -106,7 +106,7 @@
 
 <toolbox id="EditorToolbox">
    <!-- toolbar filled out from editorOverlay -->
-  <toolbar id="EditToolbar" chromeclass="toolbar" class="standard" persist="collapsed">
+  <toolbar id="EditToolbar" class="standard chromeclass-toolbar" persist="collapsed">
       <button id="newButton"/>
       <button id="openButton"/>
       <button id="saveButton"/>
@@ -122,6 +122,6 @@
     <editor type="content-primary" id="content-frame" src="about:blank" flex="100%"/>
 
     <!-- status bar, from editorOverlay.xul -->
-    <toolbar id="taskbar" chromeclass="extrachrome" />
+    <toolbar id="taskbar" class="chromeclass-extrachrome" />
 
 </window>

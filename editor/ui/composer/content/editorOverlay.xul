@@ -785,7 +785,7 @@
   <!-- end DEBUG only -->
 
   <!-- Window bottom -->
-  <box id="status-bar" chromeclass="status">
+  <box id="status-bar" class="chromeclass-status">
     <box id="state-box" align="horizontal" flex="100%" style="min-width: 1px">
       <box orient="vertical" style="width:100px">
         <spring flex="100%"/>

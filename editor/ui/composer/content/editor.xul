@@ -80,7 +80,7 @@
 	<!-- keys are appended from the overlay -->
   <keyset id="defaultKeySet"/>
 
-  <menubar id="main-menubar" chromeclass="menubar">
+  <menubar id="main-menubar" class="chromeclass-menubar">
     <menu id="fileMenu"/>
     <menu id="editMenu"/>
 
@@ -131,7 +131,7 @@
 <toolbox id="EditorToolbox">
   <!-- toolbar filled out from editorOverlay -->
   <!-- add  class="standard" for dark blue background (icons need rework first) -->
-  <toolbar id="EditToolbar" chromeclass="toolbar" class="standard" persist="collapsed">
+  <toolbar id="EditToolbar" class="standard chromeclass-toolbar" persist="collapsed">
     <button id="newButton"/>
     <button id="openButton"/>
     <button id="saveButton"/>
@@ -153,7 +153,7 @@
 			</titledbutton>
 		</box>
   </toolbar>
-  <toolbar id="FormatToolbar" chromeclass="toolbar" persist="collapsed">
+  <toolbar id="FormatToolbar" class="chromeclass-toolbar" persist="collapsed">
     <html:div>
       <!-- items are filled out from editorOverlay -->
       <html:select id="ParagraphSelect"/>
@@ -185,8 +185,8 @@
 <box id="sidebar-parent" align="horizontal" flex="100%">
   <!-- toolbar/content/status -->
 
-  <box id="sidebar-box" chromeclass="extrachrome"/>
-  <splitter id="sidebar-splitter" chromeclass="extrachrome"/>
+  <box id="sidebar-box" class="chromeclass-extrachrome"/>
+  <splitter id="sidebar-splitter" class="chromeclass-extrachrome"/>
   
   <box id="appcontent" orient="vertical" flex="100%">
     <editor type="content-primary" id="content-frame" src="about:blank" flex="100%"/>
