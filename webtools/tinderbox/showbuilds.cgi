@@ -346,7 +346,7 @@ sub display_build_table_row {
 		# Build Note
 		# 
                 if( $hasnote ){
-                    print "<a href='' onClick=\"return js_what_menu(event,$noteid,'$logfile','$errorparser','$buildname','$buildtime');\">";
+                    print "<a href='' onClick=\"return js_what_menu(event,$noteid,$bn,'$logfile','$buildtime');\">";
                     print "<img src=star.gif border=0></a>\n";
                 }
 
@@ -557,27 +557,14 @@ function js_who_menu(tree,n,d,mindate,maxdate) {
         + "&t1=" + escape("Check-ins within 24 hours")
         + "&u1=" + escape(js_qr24(tree,n));
 
-    if( parseInt(navigator.appVersion) < 4 ){
+    var version = parseInt(navigator.appVersion);
+    if( version < 4 || version >= 5 ){
        document.location = who_link;
        return false;
     }
 
     var l = document.layers['popup'];
     l.src = who_link;
-ENDJS
-    #l.document.write(
-    #    "<table border=1 cellspacing=1><tr><td>" + 
-    #    js_qr(mindate,maxdate,n) + "What did " + n + " <b>check in to the source tree</b>?</a><br>" +
-    #    js_qr24(n) +"What has " + n + " <b>been checking in over the last day</b>?</a> <br>" +
-    #    "<a href=https:#endor.mcom.com/ds/dosearch/endor.mcom.com/uid%3D" +n + "%2Cou%3DPeople%2Co%3DNetscape%20Communications%20Corp.%2Cc%3DUS>" +
-    #        "Who is <b>" + n + "</b> and how do <b>I wake him/her up</b></a>?<br>" +
-    #    "<a href='mailto:" + n + "?subject=Whats up with...'>Send mail to <b>" + n + "</b></a><br>" +
-    #    "<a href=http:#dome/locator/findUser.cgi?email="+n+">Where is <b>"+n+"'s office?</b></a>" +
-    #    "</tr></table>");
-    #l.document.close();
-
-    #alert( d.y );
-$script_str .=<<'ENDJS';
     l.top = d.target.y - 6;
     l.left = d.target.x - 6;
     if( l.left + l.clipWidth > window.width ){
@@ -587,9 +574,31 @@ $script_str .=<<'ENDJS';
     return false;
 }
 
-function js_what_menu(d,noteid,logfile,errorparser,buildname,buildtime) {
-    if( parseInt(navigator.appVersion) < 4 ){
-        return true;
+function log_params(buildindex,logfile,buildtime) {
+  var tree = trees[buildindex];
+  var buildname = build[buildindex];
+  var errorparser = error[buildindex];
+
+  return "tree=" + tree
+         + "&errorparser=" + errorparser
+         + "&buildname="   + escape(buildname)
+         + "&buildtime="   + buildtime
+         + "&logfile="     + logfile;
+}
+
+function log_url(buildindex,logfile,buildtime) {
+  return "showlog.cgi?" + log_params(buildindex,logfile,buildtime);
+}
+
+function comment_url (buildindex,logfile,buildtime) {
+  return "addnote.cgi?" + log_params(buildindex,logfile,buildtime);
+}
+
+function js_what_menu(d,noteid,buildindex,logfile,buildtime) {
+    var version = parseInt(navigator.appVersion);
+    if (version < 4 || version >= 5) {
+      document.location = log_url(buildindex,logfile,buildtime);
+      return false;
     }
 
     var l = document.layers['popup'];
@@ -617,34 +626,17 @@ trees = new Array();
 build = new Array();
 error = new Array();
 
-</script>
-
-<layer name="popup"  onMouseOut="this.visibility='hide';" left=0 top=0 bgcolor="#ffffff" visibility="hide">
-</layer>
-
-<layer name="logpopup"  onMouseOut="this.visibility='hide';" left=0 top=0 bgcolor="#ffffff" visibility="hide">
-</layer>
-
-<SCRIPT>
 function log_popup(e,buildindex,logfile,buildtime)
 {
-    var tree = trees[buildindex];
-    var buildname = build[buildindex];
-    var errorparser = error[buildindex];
 
-    var urlparams = "tree=" + tree
-           + "&errorparser=" + errorparser
-	   + "&buildname=" + escape(buildname)
-           + "&buildtime=" + buildtime
-           + "&logfile=" + logfile;
-    var logurl = "showlog.cgi?" + urlparams;
-    var commenturl = "addnote.cgi?" + urlparams;
+    var logurl = log_url(buildindex,logfile,buildtime);
+    var commenturl = comment_url(buildindex,logfile,buildtime);
 
-    if( parseInt(navigator.appVersion) < 4 ){
+    var version = parseInt(navigator.appVersion);
+    if( version < 4 || version >= 5 ){
       document.location = logurl;
       return false;
     }
-
     var q = document.layers["logpopup"];
     q.top = e.target.y - 6;
 
@@ -658,7 +650,7 @@ function log_popup(e,buildindex,logfile,buildtime)
     q.left = yy;
     q.visibility="show"; 
     q.document.write("<TABLE BORDER=1><TR><TD><B>" + 
-        buildname + "</B><BR>" +
+        build[buildindex] + "</B><BR>" +
         "<A HREF=\"" + logurl + "\">View Brief Log</A><BR>" +
         "<A HREF=\"" + logurl + "&fulltext=1" + "\">View Full Log</A><BR>" +
         "<A HREF=\"" + commenturl + "\">Add a Comment</A><BR>" +
@@ -723,7 +715,14 @@ while ($ii <= $name_count) {
 }
 
 
-$script_str .= "</SCRIPT>\n";
+$script_str .= q(
+</script>
+<layer name="popup"  onMouseOut="this.visibility='hide';" left=0 top=0 bgcolor="#ffffff" visibility="hide">
+</layer>
+
+<layer name="logpopup"  onMouseOut="this.visibility='hide';" left=0 top=0 bgcolor="#ffffff" visibility="hide">
+</layer>
+);
 
 }
 
@@ -777,7 +776,7 @@ sub do_panel {
     my $tm = sprintf("%d/%d&nbsp;%d:%02d",$mon+1,$mday,$hour,$minute);
 
     print q(<body BGCOLOR="#FFFFFF" TEXT="#000000" 
-                  LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000");
+                  LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">);
     print "<a href=showbuilds.cgi?tree=$form{tree}";
     print "&hours=$form{'hours'}" if $form{'hours'};
     print "&nocrap=1" if $form{'nocrap'};
