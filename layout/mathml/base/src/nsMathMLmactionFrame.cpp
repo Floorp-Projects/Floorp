@@ -112,29 +112,26 @@ nsMathMLmactionFrame::Init(nsIPresContext*  aPresContext,
   mActionType = NS_MATHML_ACTION_TYPE_NONE;
   if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_None, 
                    nsMathMLAtoms::actiontype_, value)) {
-    if (value.EqualsWithConversion("toggle"))
+    if (value.Equals(NS_LITERAL_STRING("toggle")))
       mActionType = NS_MATHML_ACTION_TYPE_TOGGLE;
 
     // XXX use goto to jump out of these if?
 
     if (NS_MATHML_ACTION_TYPE_NONE == mActionType) {
       // expected tooltip prefix (8ch)...
-      prefix.AssignWithConversion("tooltip#");
-      if (8 < value.Length() && 0 == value.Find(prefix))
+      if (8 < value.Length() && 0 == value.Find("tooltip#"))
         mActionType = NS_MATHML_ACTION_TYPE_TOOLTIP;
     }
 
     if (NS_MATHML_ACTION_TYPE_NONE == mActionType) {
       // expected statusline prefix (11ch)...
-      prefix.AssignWithConversion("statusline#");
-      if (11 < value.Length() && 0 == value.Find(prefix))
+      if (11 < value.Length() && 0 == value.Find("statusline#"))
         mActionType = NS_MATHML_ACTION_TYPE_STATUSLINE;
     }
 
     if (NS_MATHML_ACTION_TYPE_NONE == mActionType) {
       // expected restyle prefix (8ch)...
-      prefix.AssignWithConversion("restyle#");
-      if (8 < value.Length() && 0 == value.Find(prefix)) {
+      if (8 < value.Length() && 0 == value.Find("restyle#")) {
         mActionType = NS_MATHML_ACTION_TYPE_RESTYLE;
         mRestyle = value;
 
@@ -143,9 +140,8 @@ nsMathMLmactionFrame::Init(nsIPresContext*  aPresContext,
         // given us the associated style. But we want to start with our default style.
 
         // So... first, remove the attribute actiontype="restyle#id"
-        value.SetLength(0);
         PRBool notify = PR_FALSE; // don't trigger a reflow yet!
-        aContent->SetAttribute(kNameSpaceID_None, nsMathMLAtoms::actiontype_, value, notify);
+        aContent->UnsetAttribute(kNameSpaceID_None, nsMathMLAtoms::actiontype_, notify);
 
         // then, re-resolve our style
         nsCOMPtr<nsIStyleContext> parentStyleContext;
@@ -371,16 +367,13 @@ nsMathMLmactionFrame::ShowStatus(nsIPresContext* aPresContext,
   if (NS_SUCCEEDED(rv) && cont) {
     nsCOMPtr<nsIDocShellTreeItem> docShellItem(do_QueryInterface(cont));
     if (docShellItem) {
-
       nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
       docShellItem->GetTreeOwner(getter_AddRefs(treeOwner));
-
-      if(treeOwner)
-      {
-      nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(treeOwner));
-
-      if(browserChrome)
-        browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT, aStatusMsg.GetUnicode());
+      if (treeOwner) {
+        nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(treeOwner));
+        if (browserChrome) {
+          browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT, aStatusMsg.GetUnicode());
+        }
       }
     }
   }
@@ -391,16 +384,12 @@ nsresult
 nsMathMLmactionFrame::MouseOver(nsIDOMEvent* aMouseEvent) 
 {
   // see if we should display a status message
-  if (NS_MATHML_ACTION_TYPE_STATUSLINE == mActionType) 
-  {
+  if (NS_MATHML_ACTION_TYPE_STATUSLINE == mActionType) {
     nsAutoString value;
     if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
-                     nsMathMLAtoms::actiontype_, value)) 
-    {
+                     nsMathMLAtoms::actiontype_, value)) {
       // expected statusline prefix (11ch)...
-      nsAutoString statusline;
-      statusline.AssignWithConversion("statusline#");
-      if (11 < value.Length() && 0 == value.Find(statusline)) {
+      if (11 < value.Length() && 0 == value.Find("statusline#")) {
         value.Cut(0, 11);
         ShowStatus(mPresContext, value);
       }
@@ -413,8 +402,7 @@ nsresult
 nsMathMLmactionFrame::MouseOut(nsIDOMEvent* aMouseEvent) 
 { 
   // see if we should remove the status message
-  if (NS_MATHML_ACTION_TYPE_STATUSLINE == mActionType) 
-  {
+  if (NS_MATHML_ACTION_TYPE_STATUSLINE == mActionType) {
     nsAutoString value;
     value.SetLength(0);
     ShowStatus(mPresContext, value);
@@ -426,8 +414,7 @@ nsresult
 nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
 {
   nsAutoString value;
-  if (NS_MATHML_ACTION_TYPE_TOGGLE == mActionType) 
-  {
+  if (NS_MATHML_ACTION_TYPE_TOGGLE == mActionType) {
     if (mChildCount > 1) {
       PRInt32 selection = (mSelection == mChildCount)? 1 : mSelection + 1;
       char cbuf[10];
@@ -437,23 +424,20 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
       mContent->SetAttribute(kNameSpaceID_None, nsMathMLAtoms::selection_, value, notify);
 
       // Now trigger a content-changed reflow...
-//      ContentChanged(mPresContext, mContent, nsnull);
-
       nsCOMPtr<nsIPresShell> presShell;
       mPresContext->GetShell(getter_AddRefs(presShell));
       ReflowDirtyChild(presShell, mSelectedFrame);
     }
   }
-  else if (NS_MATHML_ACTION_TYPE_RESTYLE == mActionType) 
-  {
+  else if (NS_MATHML_ACTION_TYPE_RESTYLE == mActionType) {
     if (0 < mRestyle.Length()) {
       nsCOMPtr<nsIDOMElement> node( do_QueryInterface(mContent) );
       if (node.get()) {
         if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
                          nsMathMLAtoms::actiontype_, value))
-          node->RemoveAttribute(NS_ConvertASCIItoUCS2("actiontype"));
+          node->RemoveAttribute(NS_LITERAL_STRING("actiontype"));
         else
-          node->SetAttribute(NS_ConvertASCIItoUCS2("actiontype"), mRestyle);
+          node->SetAttribute(NS_LITERAL_STRING("actiontype"), mRestyle);
       }
     }
   }
