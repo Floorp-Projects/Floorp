@@ -448,6 +448,7 @@ PrintHelpInfo(char **argv)
   fprintf(stderr, "-r # -- how many times a page is loaded when autoloading\n");
   fprintf(stderr, "-o dirname -- create an output file for the frame dump of each page\n  and put it in <dirname>. <dirname> must include the trailing\n  <slash> character appropriate for your OS\n");
   fprintf(stderr, "-rd dirname -- specify a regression directory whose contents are from\n  a previous -o run to compare against with this run\n");
+  fprintf(stderr, "-regnostyle -- exclude style data from the regression test output: valid only with -o and -rd\n");
   fprintf(stderr, "-h # -- the initial height of the viewer window\n");
   fprintf(stderr, "-w # -- the initial width of the viewer window\n");
   fprintf(stderr, "-C -- enable crawler\n");
@@ -681,6 +682,9 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
           exit(-1);
         }
         mCrawler->SetPrintTest(printTestType);
+      }
+      else if(PL_strcmp(argv[i], "-regnostyle") == 0) {
+        mCrawler->IncludeStyleData(PR_FALSE);
       }
     }
     else

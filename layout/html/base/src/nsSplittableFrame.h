@@ -67,7 +67,7 @@ public:
 
 protected:
 #ifdef DEBUG
-  virtual void DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent);
+  virtual void DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData);
 #endif
 
   nsIFrame*   mPrevInFlow;

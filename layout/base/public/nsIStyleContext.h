@@ -425,6 +425,10 @@ public:
 
   virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize) = 0;
 
+#ifdef DEBUG
+  virtual void DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) = 0;
+#endif
+
 #ifdef SHARE_STYLECONTEXTS
   // sets aMatches to PR_TRUE if the style data of aStyleContextToMatch matches the 
   // style data of this, PR_FALSE otherwise
