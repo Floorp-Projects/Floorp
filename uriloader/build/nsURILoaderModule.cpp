@@ -23,6 +23,7 @@
 #include "nsIGenericFactory.h"
 #include "nsURILoader.h"
 #include "nsDocLoader.h"
+#include "nsOSHelperAppService.h"
 
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
@@ -31,6 +32,7 @@
 //
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsURILoader)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDocLoaderImpl, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsOSHelperAppService)
 
 ////////////////////////////////////////////////////////////////////////
 // Define a table of CIDs implemented by this module along with other
@@ -42,6 +44,10 @@ static nsModuleComponentInfo components[] = {
   { "Netscape Doc Loader", NS_DOCUMENTLOADER_CID, NS_DOCUMENTLOADER_PROGID, nsDocLoaderImplConstructor, },
   { "Netscape Doc Loader Service", NS_DOCUMENTLOADER_SERVICE_CID, NS_DOCUMENTLOADER_SERVICE_PROGID, 
      nsDocLoaderImplConstructor, },
+  { "Netscape External Helper App Service", NS_EXTERNALHELPERAPPSERVICE_CID, NS_EXTERNALHELPERAPPSERVICE_PROGID, 
+     nsOSHelperAppServiceConstructor, },
+  { "Netscape External Helper App Service", NS_EXTERNALHELPERAPPSERVICE_CID, NS_EXTERNALPROTOCOLSERVICE_PROGID, 
+     nsOSHelperAppServiceConstructor, }  
 };
 
 ////////////////////////////////////////////////////////////////////////

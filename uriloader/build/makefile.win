@@ -26,17 +26,23 @@ DLL = $(LIBNAME).dll
 ################################################################################
 ## library
 
-LINCS=-I..\base
+LINCS=-I..\base                           \
+      -I..\exthandler                     \
+      -I..\exthandler\win                 \
+      $(NULL)
 
 CPP_OBJS=									                \
 			.\$(OBJDIR)\nsURILoaderModule.obj   \
 			$(NULL)
 
 LLIBS=										                \
+      $(DIST)\lib\exthandlers_s.lib       \
 			$(DIST)\lib\xpcom.lib			          \
       $(DIST)\lib\uriloaderbase_s.lib     \
 			$(LIBNSPR)						              \
 			$(NULL)
+
+WIN_LIBS= shell32.lib
 
 include <$(DEPTH)/config/rules.mak>
 
