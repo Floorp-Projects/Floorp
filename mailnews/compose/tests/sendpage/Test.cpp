@@ -101,7 +101,7 @@ public:
   
   NS_IMETHOD OnStopCopy(nsresult aStatus);
   NS_IMETHOD SetMessageKey(PRUint32 aMessageKey);
-  NS_IMETHOD GetMessageId(nsString2* aMessageId);
+  NS_IMETHOD GetMessageId(nsCString* aMessageId);
 
 private:
   nsMsgSendLater    *mSendLater;
@@ -235,7 +235,7 @@ SendOperationListener::SetMessageKey(PRUint32 aMessageKey)
 }
 
 nsresult
-SendOperationListener::GetMessageId(nsString2* aMessageId)
+SendOperationListener::GetMessageId(nsCString* aMessageId)
 {
 	return NS_OK;
 }

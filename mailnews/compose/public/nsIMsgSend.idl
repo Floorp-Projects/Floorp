@@ -34,7 +34,6 @@
 #include "nsIEditorShell.idl"
 
 %{C++
-#include "nsIMsgHdr.h"
 #include "nsIURL.h"
 #include "rosetta.h"
 #include "rosetta_mailnews.h"
@@ -42,6 +41,7 @@
 
 interface	nsIURI;
 interface nsIMessage;
+interface nsIMsgHdr;
 
 typedef PRInt32 nsMsgDeliverMode;
 

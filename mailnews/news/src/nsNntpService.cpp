@@ -222,7 +222,7 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
     return rv;
   }
 
-  nsAutoString messageId;
+  nsCString messageId;
   rv = msgHdr->GetMessageId(&messageId);
 
 #ifdef DEBUG_NEWS
@@ -782,7 +782,7 @@ NS_IMETHODIMP nsNntpService::CancelMessages(const char *hostname, const char *ne
   }
   
   nsMsgKey key;
-  nsString messageId("", eOneByte);
+  nsCString messageId;
   
   nsCOMPtr<nsISupports> msgSupports = getter_AddRefs(messages->ElementAt(0));
   nsCOMPtr<nsIMessage> message(do_QueryInterface(msgSupports));

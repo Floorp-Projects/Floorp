@@ -259,7 +259,7 @@ public:
   NS_IMETHOD  NotifyListenersOnProgressCopy(PRUint32 aProgress, PRUint32 aProgressMax);
   NS_IMETHOD  NotifyListenersOnStopCopy(nsresult aStatus);
   NS_IMETHOD  SetMessageKey(PRUint32 aMessageKey);
-  NS_IMETHOD  GetMessageId(nsString2* aMessageId);
+  NS_IMETHOD  GetMessageId(nsCString* aMessageId);
 
   //
   // Attachment processing...

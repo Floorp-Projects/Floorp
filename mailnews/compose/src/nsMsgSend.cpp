@@ -2642,7 +2642,7 @@ nsMsgComposeAndSend::SetMessageKey(PRUint32 aMessageKey)
 }
 
 nsresult
-nsMsgComposeAndSend::GetMessageId(nsString2* aMessageId)
+nsMsgComposeAndSend::GetMessageId(nsCString* aMessageId)
 {
     if (aMessageId && mCompFields)
     {

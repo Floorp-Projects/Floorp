@@ -39,7 +39,7 @@ extern "C"
 //----------------------------------------------------------------------------
 // Class definitions for the boolean expression structure....
 //----------------------------------------------------------------------------
-nsMsgSearchBoolExpression::nsMsgSearchBoolExpression() : m_encodingStr(eOneByte)
+nsMsgSearchBoolExpression::nsMsgSearchBoolExpression() 
 {
     m_term = nsnull;
     m_boolOp = nsMsgSearchBooleanOp::BooleanAND;
@@ -48,7 +48,7 @@ nsMsgSearchBoolExpression::nsMsgSearchBoolExpression() : m_encodingStr(eOneByte)
     m_rightChild = nsnull;
 }
 
-nsMsgSearchBoolExpression::nsMsgSearchBoolExpression (nsMsgSearchTerm * newTerm, PRBool evalValue, char * encodingStr) : m_encodingStr(eOneByte)
+nsMsgSearchBoolExpression::nsMsgSearchBoolExpression (nsMsgSearchTerm * newTerm, PRBool evalValue, char * encodingStr) 
 // we are creating an expression which contains a single search term (newTerm) 
 // and the search term's IMAP or NNTP encoding value for online search expressions AND
 // a boolean evaluation value which is used for offline search expressions.
@@ -176,7 +176,7 @@ PRInt32 nsMsgSearchBoolExpression::CalcEncodeStrSize()
 }
 
 
-PRInt32 nsMsgSearchBoolExpression::GenerateEncodeStr(nsString2 * buffer)
+PRInt32 nsMsgSearchBoolExpression::GenerateEncodeStr(nsCString * buffer)
 // recurively combine sub expressions to form a single IMAP/NNTP encoded string 
 {
     if ((!m_term && (!m_leftChild || !m_rightChild))) // is expression empty?
@@ -199,7 +199,7 @@ PRInt32 nsMsgSearchBoolExpression::GenerateEncodeStr(nsString2 * buffer)
         
         // HACK ALERT!!! if last returned character in the buffer is now a ' ' then we need to remove it because we don't want
         // a ' ' to preceded the closing paren in the OR encoding.
-        if ((*buffer)[numBytesAdded-1] == ' ')
+        if (buffer->CharAt(numBytesAdded-1) == ' ')
 		{
             buffer->Truncate(buffer->Length() - 1);
 		}

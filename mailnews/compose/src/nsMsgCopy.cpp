@@ -78,7 +78,7 @@ CopyListener::SetMessageKey(PRUint32 aMessageKey)
 }
 
 nsresult
-CopyListener::GetMessageId(nsString2* aMessageId)
+CopyListener::GetMessageId(nsCString* aMessageId)
 {
     if (mComposeAndSend)
         mComposeAndSend->GetMessageId(aMessageId);

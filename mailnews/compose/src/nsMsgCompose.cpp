@@ -1239,7 +1239,7 @@ nsMsgComposeSendListener::SetMessageKey(PRUint32 aMessageKey)
 }
 
 nsresult
-nsMsgComposeSendListener::GetMessageId(nsString2* aMessageId)
+nsMsgComposeSendListener::GetMessageId(nsCString* aMessageId)
 {
 	return NS_OK;
 }

@@ -19,6 +19,7 @@
 // this file implements the nsMsgFilterList interface 
 
 #include "msgCore.h"
+#include "nsIMsgHdr.h"
 #include "nsMsgFilterList.h"
 #include "nsMsgFilter.h"
 #include "nsMsgUtils.h"
@@ -242,7 +243,7 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHd
 //		XP_FilePrintf(*m_logFile, "Action = %s %s\n\n", actionStr, actionValue);
 		if (actionType == nsMsgFilterAction::MoveToFolder)
 		{
-			nsString msgId;
+			nsCString msgId;
 			msgHdr->GetMessageId(&msgId);
 			*stream << "mailbox:";
 			*stream << (char *) value;

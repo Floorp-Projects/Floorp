@@ -202,7 +202,7 @@ public:
   
   NS_IMETHOD OnStopCopy(nsresult aStatus);
   NS_IMETHOD SetMessageKey(PRUint32 aMessageKey);
-  NS_IMETHOD GetMessageId(nsString2* aMessageId);
+  NS_IMETHOD GetMessageId(nsCString* aMessageId);
 
   NS_IMETHOD SetComposeObj(nsMsgCompose *obj);
 	NS_IMETHOD SetDeliverMode(MSG_DeliverMode deliverMode);

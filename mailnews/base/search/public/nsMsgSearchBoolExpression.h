@@ -94,7 +94,7 @@ public:
     // memory in buffer with 
     // the IMAP/NNTP encoding for the expression
     // returns # bytes added to the buffer
-	PRInt32 GenerateEncodeStr(nsString2 * buffer); 
+	PRInt32 GenerateEncodeStr(nsCString * buffer); 
 protected:
 	// if we are a leaf node, all we have is a search term
     // and a Evaluation value for that search term
@@ -103,7 +103,7 @@ protected:
 	PRBool m_evalValue;
     
     // store IMAP/NNTP encoding for the search term if applicable
-	nsString2 m_encodingStr;     
+	nsCString m_encodingStr;     
 
 	// if we are not a leaf node, then we have two other expressions
     // and a boolean operator
