@@ -108,44 +108,6 @@ nsresult testCharsetConverterManager()
 {
   printf("\n[T001] CharsetConverterManager\n");
 
-  nsresult res = nsServiceManager::GetService(kCharsetConverterManagerCID,
-      kICharsetConverterManagerIID, (nsISupports **)&ccMan);
-  if (NS_FAILED(res)) {
-    printf("ERROR at GetService() code=0x%x.\n",res);
-    return res;
-  }
-
-  nsString ** cs;
-  PRInt32 ct;
-
-  res = ccMan->GetDecoderList(&cs, &ct);
-  if (NS_FAILED(res)) {
-    printf("ERROR at GetDecoderList() code=0x%x.\n", res);
-  } else {
-    printf("UDecoders (%d): ", ct);
-    for (int i=0;i<ct;i++) {
-      char * cstr = cs[i]->ToNewCString();
-      printf("%s ",cstr);
-      delete [] cstr;
-    }
-    printf("\n");
-  }
-  delete [] cs;
-
-  res = ccMan->GetEncoderList(&cs, &ct);
-  if (NS_FAILED(res)) {
-    printf("ERROR at GetEncoderList() code=0x%x.\n", res);
-  } else {
-    printf("UEncoders (%d): ", ct);
-    for (int i=0;i<ct;i++) {
-      char * cstr = cs[i]->ToNewCString();
-      printf("%s ",cstr);
-      delete [] cstr;
-    }
-    printf("\n");
-  }
-  delete [] cs;
-
   return NS_OK;
 }
 
