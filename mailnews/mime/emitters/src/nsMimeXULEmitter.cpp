@@ -187,6 +187,12 @@ nsMimeXULEmitter::StartBody(PRBool bodyOnly, const char *msgID, const char *outC
 nsresult
 nsMimeXULEmitter::WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten)
 {
+  if (size == 0)
+  {
+    *amountWritten = 0;
+    return NS_OK;
+  }
+
   mBody.Append(buf, size);
   *amountWritten = size;
 
