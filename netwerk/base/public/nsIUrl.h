@@ -20,6 +20,7 @@
 #define nsIUrl_h___
 
 #include "nsISupports.h"
+#include "nsIConnectionGroup.h"
 #include "nscore.h"
 
 #undef GetPort  // Windows (sigh)
@@ -170,5 +171,10 @@ public:
 };
 
 extern nsresult NS_NewURL(nsIUrl** aInstancePtrResult, const char *aSpec, nsIUrl* aBaseUrl);
+
+extern nsresult NS_NewConnection(nsIUrl* url,
+                             nsISupports* eventSink,
+                             nsIConnectionGroup* group,
+                             nsIProtocolConnection* *result);
 
 #endif /* nsIIUrl_h___ */
