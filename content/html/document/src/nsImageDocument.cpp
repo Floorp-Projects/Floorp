@@ -97,6 +97,8 @@ public:
                                PRBool aReset = PR_TRUE,
                                nsIContentSink* aSink = nsnull);
 
+  NS_IMETHOD SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject);
+
   nsresult CreateSyntheticDocument();
 
   nsresult EndLayout(nsISupports *ctxt, 
@@ -274,6 +276,18 @@ nsImageDocument::StartDocumentLoad(const char* aCommand,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsImageDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
+{
+  if (!aScriptGlobalObject) {
+    // If the global object is being set to null, then it means we are
+    // going away soon. Drop our ref to imgRequest so that we don't end
+    // up leaking due to cycles through imgLib
+    mImageRequest = nsnull;
+  }
+
+  return nsHTMLDocument::SetScriptGlobalObject(aScriptGlobalObject);
+}
 
 nsresult
 nsImageDocument::CreateSyntheticDocument()
