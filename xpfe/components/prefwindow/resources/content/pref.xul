@@ -32,6 +32,9 @@
       
       if( !hPrefWindow )
         throw "failed to create prefwindow";
+
+      <!-- If this call worked, we could center the window here: -->
+      <!-- centerWindowOnScreen(); -->
       
       // modify the cookie tree entry if imageblocking is disabled. 
       if( hPrefWindow.getPref( "bool", "imageblocker.enabled" ) )
