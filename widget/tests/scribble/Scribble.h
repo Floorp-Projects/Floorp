@@ -26,10 +26,13 @@
 #include "nsIDeviceContext.h"
 #include "nsIAppShell.h"
 
+class nsIEventQueueService;
+
 struct ScribbleApp {
     nsIWidget *mainWindow;
     nsIWidget *drawPane;
 
+    nsIEventQueueService *mEventQService;
     nsITextWidget *red;
     nsITextWidget *green;
     nsITextWidget *blue;
