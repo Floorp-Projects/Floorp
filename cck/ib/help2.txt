@@ -1,4 +1,4 @@
-    <menuitem id="releaseUrl" hidden="true" />
+<menuitem id="releaseUrl" hidden="true" />
   </menupopup>
 </menu>
 
@@ -11,6 +11,7 @@
 ::::: browser.toolbars.showbutton.foobar
 ::::: you also need to add a default start pref in mozilla tree at:
 ::::: /modules/libpref/src/init/all.js
+::::: Hidden buttons should use entity's in the dtd files.
 -->
   <titledbox id="prefShowButtons">
      <box orient="vertical">
@@ -28,7 +29,8 @@
                     pref="true"
                     preftype="bool"
                     prefstring="browser.toolbars.showbutton.net2phone"
-                    prefattribute = "checked"/>
+                    prefattribute = "checked"
+                    hidden="&hideNet2phoneButton;"/>
 
           <checkbox allowevents="true"
                     id="netscapeShopButton"

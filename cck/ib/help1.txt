@@ -1,6 +1,11 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/communicatorOverlay.dtd">
+<!DOCTYPE window [
+<!ENTITY % communicatorOverlayDTD SYSTEM "chrome://communicator/locale/communicatorOverlay.dtd">
+%communicatorOverlayDTD;
+<!ENTITY % helpMenuOverlayDTD SYSTEM "chrome://help/locale/helpMenuOverlay.dtd">
+%helpMenuOverlayDTD;
+]>
 
 <overlay id="communicatorOverlay"
          xmlns:html="http://www.w3.org/1999/xhtml"
@@ -9,7 +14,7 @@
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 
   <script language="JavaScript" href="chrome://global/content/globalOverlay.js"/>
-
+  
   <script>
     if (this._elementIDs) {
       this._elementIDs.push('myNetscapeButton');
@@ -21,8 +26,9 @@
 
   <!-- for toolbar buttons in mail/editor -->
   <menupopup id="printMenu">
-    <menuseparator class="nc" insertafter="printMenu"/>
+    <menuseparator class="nc" insertafter="printMenu" hidden="&hidePrintPlusItems;"/>
     <menu class="nc" label="&printPlusMenu.label;" insertafter="printMenuItem"
+          hidden="&hidePrintPlusItems;"
           datasources="chrome://communicator-region/locale/communicatorOverlay.rdf"
           ref="chrome://communicator-region/locale/communicatorOverlay.rdf#root"
           rdf:containment="urn:clienturl:printplus">
@@ -31,9 +37,7 @@
           <menupopup>
             <menuitem uri="..." label="rdf:http://home.netscape.com/NC-rdf#title" 
                       url="rdf:http://home.netscape.com/NC-rdf#content" 
-                      oncommand="openTopWin(this.getAttribute('url')); 
-
-event.preventBubble();"/>
+                      oncommand="openTopWin(this.getAttribute('url')); event.preventBubble();"/>
           </menupopup>
         </rule>
       </template>
@@ -43,9 +47,8 @@ event.preventBubble();"/>
 
   <!-- for toplevel menu items in navigator -->
   <menupopup id="menu_FilePopup">
-    <menu id="navprintplus" class="nc" insertafter="printMenuItem" 
-
-label="&printPlusMenu.label;"
+    <menu id="navprintplus" class="nc" insertafter="printMenuItem" label="&printPlusMenu.label;"
+          hidden="&hidePrintPlusItems;"
           datasources="chrome://communicator-region/locale/communicatorOverlay.rdf"
           ref="chrome://communicator-region/locale/communicatorOverlay.rdf#root"
           rdf:containment="urn:clienturl:printplus">
@@ -65,6 +68,7 @@ label="&printPlusMenu.label;"
   <!-- for toplevel menu items in editor -->
   <menupopup id="fileMenu_Popup">
     <menu class="nc" insertafter="printMenuItem" label="&printPlusMenu.label;"
+          hidden="&hidePrintPlusItems;"
           datasources="chrome://communicator-region/locale/communicatorOverlay.rdf"
           ref="chrome://communicator-region/locale/communicatorOverlay.rdf#root"
           rdf:containment="urn:clienturl:printplus">
@@ -83,8 +87,8 @@ label="&printPlusMenu.label;"
 
 <menu id="menu_Help">
   <menupopup id="helpPopup">
-    <menuitem label="&helpCmd.label;" 
-       accesskey="&helpCmd.accesskey;"
+    <menuitem label="&helpContents.label;" 
+       accesskey="&helpContents.accesskey;"
        id="help"
        oncommand="toOpenWindowByType('mozilla:help', 'chrome://help/content/help.xul');" />
     <menuseparator position="2" />
