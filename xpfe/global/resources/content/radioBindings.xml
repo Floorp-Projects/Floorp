@@ -19,9 +19,33 @@
     <implementation>
       <property name="data" onset="this.setAttribute('data',val); return val;"
                             onget="return this.getAttribute('data');"/>
+      <property name="disabled">
+        <getter>
+        <![CDATA[
+            var v = this.getAttribute('disabled');
+            return v=='true';
+        ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+          this.setAttribute('disabled', 'true');
+          var groupElements = this.getElementsByAttribute( "group", this.id );
+          for( var i = 0; i < groupElements.length; i++ ) {
+            if (val)
+              groupElements[i].setAttribute("disabled","true");
+            else
+              groupElements[i].removeAttribute("disabled");
+          }
+          if (!val)
+            this.removeAttribute('disabled');
+          return val;
+        ]]>
+        </setter>
+      </property>
       <property name="selectedItem">
         <getter>
         <![CDATA[
+          this.disabled = this.disabled; // this strange line is to fire the setter for the disabled property
           var groupElements = this.getElementsByAttribute( "group", this.id );
           for( var i = 0; i < groupElements.length; i++ ) {
             if( groupElements[i].checked || 

@@ -45,7 +45,7 @@ function nsPrefWindow( frame_id )
 
   this.contentFrame   = frame_id
   this.wsm            = new nsWidgetStateManager( frame_id );
-  this.wsm.attributes = ["pref", "preftype", "prefstring", "prefattribute"];
+  this.wsm.attributes = ["pref", "preftype", "prefstring", "prefattribute", "disabled"];
   this.pref           = null;
   
   this.cancelHandlers = [];
@@ -123,7 +123,11 @@ nsPrefWindow.prototype =
           {
             this.cancelHandlers[this.cancelHandlers.length] = aFunctionReference;
           },
-
+      getPrefIsLocked:
+        function ( aPrefString )
+          {
+            return hPrefWindow.pref.PrefIsLocked(aPrefString);
+          },
       getPref:
         function ( aPrefType, aPrefString, aDefaultFlag )
           {
@@ -304,6 +308,9 @@ nsPrefWindow.prototype =
                       }
                     var root = this.wsm.dataManager.getItemData( aPageTag, prefid ); 
                     root[prefattribute] = prefvalue;              
+                    var isPrefLocked = this.getPrefIsLocked(prefstring);
+                    if (isPrefLocked)
+                      root.disabled="true";
                   }
               }      
             this.wsm.setPageData( aPageTag );  // do not set extra elements, accept hard coded defaults
