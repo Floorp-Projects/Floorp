@@ -452,24 +452,27 @@ nsresult nsMapiHook::PopulateCompFields(lpnsMapiMessage aMessage,
         {
             if (aMessage->lpRecips[i].lpszAddress)
             {
+                const char *addressWithoutType = aMessage->lpRecips[i].lpszAddress;
+                if (!PL_strncasecmp(addressWithoutType, "SMTP:", 5))
+                  addressWithoutType += 5;
                 switch (aMessage->lpRecips[i].ulRecipClass)
                 {
                 case MAPI_TO :
                     if (!To.IsEmpty())
                         To += Comma ;
-                    To.AppendWithConversion(aMessage->lpRecips[i].lpszAddress) ;
+                    To.AppendWithConversion(addressWithoutType) ;
                     break ;
 
                 case MAPI_CC :
                     if (!Cc.IsEmpty())
                         Cc += Comma ;
-                    Cc.AppendWithConversion(aMessage->lpRecips[i].lpszAddress) ;
+                    Cc.AppendWithConversion(addressWithoutType) ;
                     break ;
 
                 case MAPI_BCC :
                     if (!Bcc.IsEmpty())
                         Bcc += Comma ;
-                    Bcc.AppendWithConversion(aMessage->lpRecips[i].lpszAddress) ; 
+                    Bcc.AppendWithConversion(addressWithoutType) ; 
                     break ;
                 }
             }
@@ -683,24 +686,28 @@ nsresult nsMapiHook::PopulateCompFieldsWithConversion(lpnsMapiMessage aMessage,
         {
             if (aMessage->lpRecips[i].lpszAddress)
             {
+                const char *addressWithoutType = aMessage->lpRecips[i].lpszAddress;
+                if (!PL_strncasecmp(addressWithoutType, "SMTP:", 5))
+                  addressWithoutType += 5;
+
                 switch (aMessage->lpRecips[i].ulRecipClass)
                 {
                 case MAPI_TO :
                     if (!To.IsEmpty())
                         To += Comma ;
-                    To.AppendWithConversion ((char *) aMessage->lpRecips[i].lpszAddress);
+                    To.AppendWithConversion (addressWithoutType);
                     break ;
 
                 case MAPI_CC :
                     if (!Cc.IsEmpty())
                         Cc += Comma ;
-                    Cc.AppendWithConversion ((char *) aMessage->lpRecips[i].lpszAddress);
+                    Cc.AppendWithConversion (addressWithoutType);
                     break ;
 
                 case MAPI_BCC :
                     if (!Bcc.IsEmpty())
                         Bcc += Comma ;
-                    Bcc.AppendWithConversion ((char *) aMessage->lpRecips[i].lpszAddress) ; 
+                    Bcc.AppendWithConversion (addressWithoutType) ; 
                     break ;
                 }
             }
