@@ -115,7 +115,7 @@ ifdef BUILD_STATIC_LIBS
 # produce the set of components that we need to link in to a
 # ``minimal'' embedding harness.
 ifdef MINIMO
-EMBED_MANIFEST=$(topsrcdir)/embedding/config/minimo-unix
+EMBED_MANIFEST=$(topsrcdir)/embedding/config/minimo-qnx
 else
 EMBED_MANIFEST=$(topsrcdir)/embedding/config/basebrowser-qnx
 endif
