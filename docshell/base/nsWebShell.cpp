@@ -120,6 +120,11 @@
 #include "nsIExternalProtocolService.h"
 #include "nsCExternalHandlerService.h"
 
+#include "nsIIDNService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+#define NS_NET_PREF_IDNSHOWPUNYCODE "network.IDN_show_punycode"
+
 #ifdef NS_DEBUG
 /**
  * Note: the log module is created during initialization which
@@ -723,10 +728,33 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
             keywordsEnabled = PR_FALSE;
         }
 
-        if(keywordsEnabled && (-1 == dotLoc)) {
+        if(keywordsEnabled && (kNotFound == dotLoc)) {
           // only send non-qualified hosts to the keyword server
           nsCAutoString keywordSpec("keyword:");
-          keywordSpec += host;
+          nsCOMPtr<nsIPrefBranch> prefBranch = 
+              do_GetService(NS_PREFSERVICE_CONTRACTID);
+          PRBool showPunycode = PR_FALSE;
+          if (prefBranch && 
+              NS_SUCCEEDED(prefBranch->GetBoolPref(NS_NET_PREF_IDNSHOWPUNYCODE, 
+                           &showPunycode)) && showPunycode) {
+              prefBranch->SetBoolPref(NS_NET_PREF_IDNSHOWPUNYCODE, PR_FALSE);
+              nsCOMPtr<nsIIDNService> idnSrv =
+                  do_GetService(NS_IDNSERVICE_CONTRACTID);
+              if (idnSrv) {
+                  PRBool isACE;
+                  nsCAutoString utf8Host;
+                  if (NS_SUCCEEDED(idnSrv->IsACE(host, &isACE)) && isACE &&
+                      NS_SUCCEEDED(idnSrv->ConvertACEtoUTF8(host, utf8Host)))
+                      keywordSpec.Append(utf8Host);
+                  else
+                      keywordSpec.Append(host);
+              }
+              else 
+                  keywordSpec.Append(host);
+              prefBranch->SetBoolPref(NS_NET_PREF_IDNSHOWPUNYCODE, PR_TRUE);
+          }
+          else 
+              keywordSpec.Append(host);
 
           NS_NewURI(getter_AddRefs(newURI),
                     keywordSpec, nsnull);
