@@ -39,6 +39,7 @@
 class nsICollection : public nsISupports {
 public:
 
+  static const nsIID& IID() { static nsIID iid = NS_ICOLLECTION_IID; return iid; }
 
   /** AddItem will take an ISupports and keep track of it 
    *  @param aItem is the Item to be added WILL BE ADDREFFED
