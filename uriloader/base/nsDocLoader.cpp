@@ -66,13 +66,15 @@ PRLogModuleInfo* gDocLoaderLog = nsnull;
 #if defined(DEBUG)
 void GetURIStringFromRequest(nsIRequest* request, nsXPIDLCString &aStr)
 {
-    nsXPIDLString name;
-    request->GetName(getter_Copies(name));
+    *getter_Shares(aStr) = "???";
 
-    if (name)
-        *getter_Copies(aStr) = ToNewUTF8String(nsLocalString(name));
-    else
-        *getter_Shares(aStr) = "???";
+    if (request) {
+        nsXPIDLString name;
+        request->GetName(getter_Copies(name));
+
+        if (name)
+            *getter_Copies(aStr) = ToNewUTF8String(nsLocalString(name));
+    }
 }
 #endif /* DEBUG */
 
@@ -501,6 +503,9 @@ nsDocLoaderImpl::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
           doStartURLLoad(request);
           FireOnStartURLLoad(this, request);
         }
+
+        NS_POSTCONDITION((1 != count) || mDocumentRequest,
+                         "first request does not have nsIChannel::LOAD_DOCUMENT_URI set");
     }
     else {
       ClearRequestInfoList();
