@@ -1868,6 +1868,15 @@ public class ScriptRuntime {
                 so = null;
             }
 
+            Scriptable varScope = scope;
+            if (fromEvalCode) {
+                // When executing an eval() inside a with statement,
+                // define any variables resulting from var statements
+                // in the first non-with scope. See bug 38590.
+                varScope = scope;
+                while (varScope instanceof NativeWith)
+                    varScope = varScope.getParentScope();
+            }
             for (int i=funObj.names.length-1; i > 0; i--) {
                 String name = funObj.names[i];
                 // Don't overwrite existing def if already defined in object
@@ -1876,8 +1885,8 @@ public class ScriptRuntime {
                     if (so != null && !fromEvalCode)
                         so.defineProperty(name, Undefined.instance,
                                           ScriptableObject.PERMANENT);
-                    else
-                        scope.put(name, scope, Undefined.instance);
+                    else 
+                        varScope.put(name, varScope, Undefined.instance);
                 }
             }
         }
