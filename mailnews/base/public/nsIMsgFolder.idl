@@ -40,6 +40,7 @@ interface nsIMsgFolder : nsIFolder {
         void ReplaceElement(in nsISupports element, in nsISupports newElement);
 
 	nsIEnumerator GetMessages();
+	nsIEnumerator GetThreads();
   nsIEnumerator GetVisibleSubFolders();
 	attribute string prettyName;
 	readonly attribute string prettiestName;

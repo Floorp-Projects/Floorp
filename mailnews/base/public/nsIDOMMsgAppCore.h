@@ -62,6 +62,9 @@ class nsIDOMMsgAppCore : public nsIDOMBaseAppCore {
   /* void ViewUnreadMessages (in nsIRDFCompositeDataSource database); */
   NS_IMETHOD ViewUnreadMessages(nsIRDFCompositeDataSource *database) = 0;
 
+  /* void ViewAllThreadMessages (in nsIRDFCompositeDataSource database); */
+  NS_IMETHOD ViewAllThreadMessages(nsIRDFCompositeDataSource *database) = 0;
+
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
   static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIDOMMsgAppCore *priv);

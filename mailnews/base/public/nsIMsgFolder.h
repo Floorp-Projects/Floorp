@@ -10,7 +10,6 @@
 #include "nsICollection.h" /* interface nsICollection */
 #include "nsIFolderListener.h" /* interface nsIFolderListener */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
-#include "nsID.h" /* interface nsID */
 #include "nsIFolder.h" /* interface nsIFolder */
 #include "nsIMessage.h" /* interface nsIMessage */
 
@@ -43,6 +42,9 @@ class nsIMsgFolder : public nsIFolder {
 
   /* nsIEnumerator GetMessages (); */
   NS_IMETHOD GetMessages(nsIEnumerator **_retval) = 0;
+
+  /* nsIEnumerator GetThreads (); */
+  NS_IMETHOD GetThreads(nsIEnumerator **_retval) = 0;
 
   /* nsIEnumerator GetVisibleSubFolders (); */
   NS_IMETHOD GetVisibleSubFolders(nsIEnumerator **_retval) = 0;

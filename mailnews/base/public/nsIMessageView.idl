@@ -28,4 +28,5 @@ interface nsIMessageView :  nsISupports
 	void SetShowUnread();
 	void SetShowRead();
 	void SetShowWatched();
+	void SetShowThreads(in boolean showThreads);
 };

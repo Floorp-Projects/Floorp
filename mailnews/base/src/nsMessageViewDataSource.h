@@ -27,6 +27,7 @@
 #include "nsVoidArray.h"
 #include "nsIEnumerator.h"
 #include "nsIMessage.h"
+#include "nsIMsgThread.h"
 
 /**
  * The mail data source.
@@ -134,6 +135,8 @@ public:
 	NS_IMETHOD SetShowUnread();
 	NS_IMETHOD SetShowRead();
 	NS_IMETHOD SetShowWatched();
+	NS_IMETHOD SetShowThreads(PRBool showThreads);
+
 
  
 	// caching frequently used resources
@@ -141,6 +144,7 @@ protected:
 
 	nsIRDFDataSource *mDataSource;
 	PRUint32 mShowStatus;
+	PRBool mShowThreads;
 
 	static nsIRDFResource* kNC_MessageChild;
 
@@ -187,4 +191,42 @@ protected:
 
 };
 
+class nsMessageViewThreadEnumerator: public nsIEnumerator
+{
+
+public:
+
+	NS_DECL_ISUPPORTS
+
+	nsMessageViewThreadEnumerator(nsIEnumerator *srcEnumerator);
+	~nsMessageViewThreadEnumerator();
+
+	//nsIEnumerator interface	
+	/** First will reset the list. will return NS_FAILED if no items
+	*/
+	NS_IMETHOD First(void);
+
+	/** Next will advance the list. will return failed if already at end
+	*/
+	NS_IMETHOD Next(void);
+
+	/** CurrentItem will return the CurrentItem item it will fail if the list is empty
+	*  @param aItem return value
+	*/
+	NS_IMETHOD CurrentItem(nsISupports **aItem);
+
+	/** return if the collection is at the end.  that is the beginning following a call to Prev
+	*  and it is the end of the list following a call to next
+	*  @param aItem return value
+	*/
+	NS_IMETHOD IsDone(void);
+
+protected:
+	nsresult GetMessagesForCurrentThread();
+protected:
+
+	nsIEnumerator *mThreads;
+	nsIEnumerator *mMessages;
+
+};
 #endif

@@ -559,12 +559,51 @@ MsgAppCoreViewUnreadMessages(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 		NS_RELEASE(db);
   }
   else {
-    JS_ReportError(cx, "Function CopyMessages requires 1 parameter");
+    JS_ReportError(cx, "Function ViewUnreadMessages requires 1 parameter");
     return JS_FALSE;
   }
 
   return JS_TRUE;
 }
+
+PR_STATIC_CALLBACK(JSBool)
+MsgAppCoreViewAllThreadMessages(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+
+  nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+	nsIRDFCompositeDataSource *db;
+	const nsString typeName;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return NS_OK;
+  }
+
+  if (argc >= 1) {
+		rBool = nsJSUtils::nsConvertJSValToObject((nsISupports**)&db,
+									nsIRDFCompositeDataSource::GetIID(),
+									typeName,
+									cx,
+									argv[0]);
+
+		
+    if (!rBool || NS_OK != nativeThis->ViewAllThreadMessages(db)) {
+      return JS_FALSE;
+    }
+
+		NS_RELEASE(db);
+  }
+  else {
+    JS_ReportError(cx, "Function ViewAllThreadMessages requires 1 parameter");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
 /***********************************************************************/
 //
 // class for MsgAppCore
@@ -607,7 +646,8 @@ static JSFunctionSpec MsgAppCoreMethods[] =
   {"CopyMessages",		MsgAppCoreCopyMessages, 3},
   {"MoveMessages",		MsgAppCoreMoveMessages, 3},
   {"ViewAllMessages",	MsgAppCoreViewAllMessages, 1},
-	{"ViewUnreadMessages", MsgAppCoreViewUnreadMessages, 1},
+  {"ViewUnreadMessages", MsgAppCoreViewUnreadMessages, 1},
+  {"ViewAllThreadMessages", MsgAppCoreViewAllThreadMessages, 1},
   {0}
 };
 

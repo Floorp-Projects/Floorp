@@ -113,6 +113,8 @@ public:
   NS_IMETHOD Exit();
   NS_IMETHOD ViewAllMessages(nsIRDFCompositeDataSource *databsae);
   NS_IMETHOD ViewUnreadMessages(nsIRDFCompositeDataSource *databsae);
+	NS_IMETHOD ViewAllThreadMessages(nsIRDFCompositeDataSource *database);
+
 
 private:
   
@@ -770,6 +772,7 @@ nsMsgAppCore::ViewAllMessages(nsIRDFCompositeDataSource *database)
 	if(NS_SUCCEEDED(AddView(database, &messageView)))
 	{
 		messageView->SetShowAll();
+		messageView->SetShowThreads(PR_FALSE);
 		NS_IF_RELEASE(messageView);
 	}
 
@@ -784,11 +787,27 @@ nsMsgAppCore::ViewUnreadMessages(nsIRDFCompositeDataSource *database)
 	if(NS_SUCCEEDED(AddView(database, &messageView)))
 	{
 		messageView->SetShowUnread();
+		messageView->SetShowThreads(PR_FALSE);
 		NS_IF_RELEASE(messageView);
 	}
 
 	return NS_OK;
 
+}
+
+NS_IMETHODIMP
+nsMsgAppCore::ViewAllThreadMessages(nsIRDFCompositeDataSource *database)
+{
+	nsIMessageView *messageView;
+	if(NS_SUCCEEDED(AddView(database, &messageView)))
+	{
+		messageView->SetShowAll();
+		messageView->SetShowThreads(PR_TRUE);
+		NS_IF_RELEASE(messageView);
+	}
+
+	return NS_OK;
+	return NS_OK;
 }
 
 //  to load the webshell!

@@ -87,6 +87,7 @@ nsMessageViewDataSource::nsMessageViewDataSource(void)
 	mObservers = nsnull;
 	mShowStatus = VIEW_SHOW_ALL;
 	mInitialized = PR_FALSE;
+	mShowThreads = PR_TRUE;
 
 	nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
 											nsIRDFService::GetIID(),
@@ -187,22 +188,43 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 	{
 		if (peq(kNC_MessageChild, property))
 		{
-			nsIEnumerator *messages;
 
-			rv = folder->GetMessages(&messages);
-			if (NS_FAILED(rv)) return rv;
-			nsMessageViewMessageEnumerator * messageEnumerator = 
-				new nsMessageViewMessageEnumerator(messages, mShowStatus);
-			if(!messageEnumerator)
-				return NS_ERROR_OUT_OF_MEMORY;
-			nsRDFEnumeratorAssertionCursor* cursor =
-				new nsRDFEnumeratorAssertionCursor(this, source, kNC_MessageChild, messageEnumerator);
-			NS_IF_RELEASE(messages);
-			if (cursor == nsnull)
-				return NS_ERROR_OUT_OF_MEMORY;
-			NS_ADDREF(cursor);
-			*targets = cursor;
-			rv = NS_OK;
+			if(mShowThreads)
+			{
+				nsIEnumerator *threads = nsnull;
+				rv = folder->GetThreads(&threads);
+				if (NS_FAILED(rv)) return rv;
+				nsMessageViewThreadEnumerator * threadEnumerator = 
+					new nsMessageViewThreadEnumerator(threads);
+				if(!threadEnumerator)
+					return NS_ERROR_OUT_OF_MEMORY;
+				nsRDFEnumeratorAssertionCursor* cursor =
+					new nsRDFEnumeratorAssertionCursor(this, source, kNC_MessageChild, threadEnumerator);
+				NS_IF_RELEASE(threads);
+				if (cursor == nsnull)
+					return NS_ERROR_OUT_OF_MEMORY;
+				NS_ADDREF(cursor);
+				*targets = cursor;
+				rv = NS_OK;
+			}
+			else
+			{
+				nsIEnumerator *messages = nsnull;
+				rv = folder->GetMessages(&messages);
+				if (NS_FAILED(rv)) return rv;
+				nsMessageViewMessageEnumerator * messageEnumerator = 
+					new nsMessageViewMessageEnumerator(messages, mShowStatus);
+				if(!messageEnumerator)
+					return NS_ERROR_OUT_OF_MEMORY;
+				nsRDFEnumeratorAssertionCursor* cursor =
+					new nsRDFEnumeratorAssertionCursor(this, source, kNC_MessageChild, messageEnumerator);
+				NS_IF_RELEASE(messages);
+				if (cursor == nsnull)
+					return NS_ERROR_OUT_OF_MEMORY;
+				NS_ADDREF(cursor);
+				*targets = cursor;
+				rv = NS_OK;
+			}
 		}
 		NS_IF_RELEASE(folder);
 		if(NS_SUCCEEDED(rv))
@@ -404,6 +426,12 @@ NS_IMETHODIMP nsMessageViewDataSource::SetShowWatched()
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMessageViewDataSource::SetShowThreads(PRBool showThreads)
+{
+	mShowThreads = showThreads;
+	return NS_OK;
+}
+
 //////////////////////////   nsMessageViewMessageEnumerator //////////////////
 
 
@@ -535,4 +563,99 @@ nsresult nsMessageViewMessageEnumerator::MeetsCriteria(nsIMessage *message, PRBo
 			*meetsCriteria = flags & MSG_FLAG_WATCHED;
 	}
 	return NS_OK;
+}
+
+//////////////////////////   nsMessageViewThreadEnumerator //////////////////
+
+
+NS_IMPL_ISUPPORTS(nsMessageViewThreadEnumerator, nsIEnumerator::GetIID())
+
+nsMessageViewThreadEnumerator::nsMessageViewThreadEnumerator(nsIEnumerator *threads)
+{
+	NS_INIT_REFCNT();	
+	mThreads = threads;
+	NS_ADDREF(mThreads);
+	mMessages = nsnull;
+
+}
+
+nsMessageViewThreadEnumerator::~nsMessageViewThreadEnumerator()
+{
+	NS_IF_RELEASE(mThreads);
+	NS_IF_RELEASE(mMessages);
+}
+
+/** First will reset the list. will return NS_FAILED if no items
+*/
+NS_IMETHODIMP nsMessageViewThreadEnumerator::First(void)
+{
+	//Get the first thread and first message for that thread.
+	nsresult rv = mThreads->First();
+	if(NS_SUCCEEDED(rv))
+	{
+		rv = GetMessagesForCurrentThread();
+	}
+	return rv;
+}
+
+/** Next will advance the list. will return failed if already at end
+*/
+NS_IMETHODIMP nsMessageViewThreadEnumerator::Next(void)
+{
+	nsresult rv;
+
+	if(!mMessages)
+		return NS_ERROR_FAILURE;
+
+	//Get the next thread
+	rv = mThreads->Next();
+	if(NS_SUCCEEDED(rv))
+		rv = GetMessagesForCurrentThread();
+	return rv;
+}
+
+/** CurrentItem will return the CurrentItem item it will fail if the list is empty
+*  @param aItem return value
+*/
+NS_IMETHODIMP nsMessageViewThreadEnumerator::CurrentItem(nsISupports **aItem)
+{
+	if(!mMessages)
+		return NS_ERROR_FAILURE;
+	//return the current message
+	nsresult rv = mMessages->CurrentItem(aItem);
+	return rv;
+}
+
+/** return if the collection is at the end.  that is the beginning following a call to Prev
+*  and it is the end of the list following a call to next
+*  @param aItem return value
+*/
+NS_IMETHODIMP nsMessageViewThreadEnumerator::IsDone()
+{
+	//First check to see if there are no more threads
+	nsresult rv = mThreads->IsDone();
+	//then check to see if the there are no more messages in last thread
+	if(rv == NS_OK && mMessages)
+		rv = mMessages->IsDone();
+	return rv;
+}
+
+nsresult nsMessageViewThreadEnumerator::GetMessagesForCurrentThread()
+{
+	nsISupports *currentItem;
+	nsIMsgThread *thread;
+	nsresult rv = mThreads->CurrentItem(&currentItem);
+	if(NS_SUCCEEDED(rv))
+	{
+		if(NS_SUCCEEDED(rv = currentItem->QueryInterface(nsIMsgThread::GetIID(), (void**)&thread)))
+		{
+			NS_IF_RELEASE(mMessages);
+			thread->EnumerateMessages(nsMsgKey_None, &mMessages);
+			rv = mMessages->First();
+			NS_IF_RELEASE(thread);
+		}
+		NS_IF_RELEASE(currentItem);
+	}
+
+	return rv;
 }

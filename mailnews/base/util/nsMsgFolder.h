@@ -67,6 +67,8 @@ public:
   NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
   NS_IMETHOD GetVisibleSubFolders(nsIEnumerator* *result);
   NS_IMETHOD GetMessages(nsIEnumerator* *result);
+	NS_IMETHOD GetThreads(nsIEnumerator ** threadEnumerator);
+
   NS_IMETHOD GetPrettyName(char ** name);
   NS_IMETHOD SetPrettyName(char * name);
 #if 0

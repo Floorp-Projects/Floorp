@@ -169,6 +169,13 @@ nsMsgFolder::GetMessages(nsIEnumerator* *result)
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsMsgFolder::GetThreads(nsIEnumerator ** threadEnumerator)
+{
+  // XXX should this return an empty enumeration?
+	return NS_ERROR_FAILURE;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP nsMsgFolder::BuildFolderURL(char **url)
@@ -1391,6 +1398,8 @@ NS_IMETHODIMP nsMsgFolder::GetHostName(char **hostName)
 
 #include "prprf.h"
 #include "prsystem.h"
+
+static const char kMsgRootFolderPref[] = "mail.rootFolder";
 
 static char *gMailboxRoot = nsnull;
 

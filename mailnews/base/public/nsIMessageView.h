@@ -38,6 +38,9 @@ class nsIMessageView : public nsISupports {
   /* void SetShowWatched (); */
   NS_IMETHOD SetShowWatched() = 0;
 
+  /* void SetShowThreads (in boolean showThreads); */
+  NS_IMETHOD SetShowThreads(PRBool showThreads) = 0;
+
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
   static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMessageView *priv);
