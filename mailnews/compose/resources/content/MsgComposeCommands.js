@@ -744,7 +744,7 @@ function ComposeStartup()
                    var atts =  attachmentValue.split(",");
                     for (var i=0; i < atts.length; i++)
                     {
-                        AddAttachment(atts[i]);
+                        AddAttachment(atts[i], null);
                     }
                 }
 			}
@@ -1397,10 +1397,10 @@ function AttachFile()
 		dump("failed to get the local file to attach\n");
 	}
 	
-	AddAttachment(currentAttachment);
+	AddAttachment(currentAttachment, null);
 }
 
-function AddAttachment(attachment)
+function AddAttachment(attachment, prettyName)
 {
 	if (attachment && (attachment != ""))
 	{
@@ -1409,8 +1409,7 @@ function AddAttachment(attachment)
 		var row = document.createElement("treerow");
 		var cell = document.createElement("treecell");
 		
-		var prettyName = attachment;
-		if (msgCompose)
+		if (msgCompose && !prettyName)
 			prettyName = msgCompose.AttachmentPrettyName(attachment);
 		cell.setAttribute("value", prettyName);				//use for display only
 		cell.setAttribute("attachment", attachment);		//full url stored here
@@ -1437,7 +1436,7 @@ function AttachPage()
         	null,
         	result))
         {
-			AddAttachment(result.value);
+			AddAttachment(result.value, null);
         }
     }
 }
@@ -1687,8 +1686,16 @@ var attachmentBucketObserver = {
     {
       aData = aData.length ? aData[0] : aData;
       if (aData.flavour == "text/x-moz-url") {
-        aData = aData.data.data;
-        AddAttachment(aData);
+          aData = aData.data.data.toString();
+          // pull out the URL / title
+          
+          var prettyName;
+          var separator = aData.indexOf("\n");
+          if (separator != -1) {
+              prettyName = aData.substr(separator+1);
+              aData = aData.substr(0,separator);
+          }
+          AddAttachment(aData, prettyName);
       }
     },
     
