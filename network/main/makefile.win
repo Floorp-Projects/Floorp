@@ -31,7 +31,7 @@ include <$(DEPTH)\config\config.mak>
 # Make sure we have MOZILLA_CLIENT defined so we get the
 #   proper JS includes
 #
-LCFLAGS		= $(LCFLAGS)  -DMOZILLA_CLIENT
+LCFLAGS		= $(LCFLAGS) -DWIN32_LEAN_AND_MEAN -DMOZILLA_CLIENT
 
 !ifdef BUILD_DEBUG_GC
 LCFLAGS		= $(LCFLAGS) -DDEBUG_GC
