@@ -223,6 +223,8 @@ public:
         List* mCurrent;
     };
 
+    friend class ConstIterator;
+
     ConstIterator First() const { return ConstIterator(mElements); }
     ConstIterator Last() const { return ConstIterator(nsnull); }
 
@@ -361,6 +363,8 @@ public:
     protected:
         List* mCurrent;
     };
+
+    friend class ConstIterator;
 
     ConstIterator First() const { return ConstIterator(mBindings); }
     ConstIterator Last() const { return ConstIterator(nsnull); }
@@ -503,6 +507,8 @@ public:
             return mCurrent != aConstIterator.mCurrent; }
     };
 
+    friend class ConstIterator;
+
     ConstIterator First() const { return ConstIterator(mHead.mNext); }
     ConstIterator Last() const { return ConstIterator(NS_CONST_CAST(List*, &mHead)); }
 
@@ -542,6 +548,8 @@ public:
 
         friend class InstantiationSet;
     };
+
+    friend class Iterator;
 
     Iterator First() { return Iterator(mHead.mNext); }
     Iterator Last() { return Iterator(&mHead); }
