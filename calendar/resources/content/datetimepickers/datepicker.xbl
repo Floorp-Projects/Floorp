@@ -201,7 +201,7 @@
         <method name="clickDate">
             <parameter name="aMiniMonthGrid" />
             <body><![CDATA[
-                this.update(new Date(aMiniMonthGrid.value), true)
+                this.update(new Date(aMiniMonthGrid.value), true);
                 // select changed value so no cursor appears (can't type to it).
                 this.select();
 
