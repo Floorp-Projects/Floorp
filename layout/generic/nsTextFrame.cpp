@@ -70,8 +70,6 @@ static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 #define WORD_BUF_SIZE 100
 #define TEXT_BUF_SIZE 1000
 
-static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
-
 // Helper class for managing blinking text
 
 class nsBlinkTimer : public nsITimerCallback {
@@ -1021,6 +1019,7 @@ nsTextFrame::GetPositionSlowly(nsIPresContext& aPresContext,
       glyphWidth = charWidth + ts.mLetterSpacing;
     }
     else if (ch == ' ') {
+      nextFont = lastFont;
       glyphWidth = ts.mSpaceWidth + ts.mWordSpacing;
       nscoord extra = ts.mExtraSpacePerSpace;
       if (--ts.mNumSpaces == 0) {
@@ -1029,6 +1028,7 @@ nsTextFrame::GetPositionSlowly(nsIPresContext& aPresContext,
       glyphWidth += extra;
     }
     else {
+      nextFont = lastFont;
       aRendContext->GetWidth(ch, charWidth);
       glyphWidth = charWidth + ts.mLetterSpacing;
     }
@@ -2182,6 +2182,15 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   // frame. This may happen if, for example, this is text inside a table
   // but not inside a cell. For now, just don't reflow.
   if (nsnull == aReflowState.lineLayout) {
+    // XXX Add a method to aMetrics that does this; we do it several places
+    aMetrics.width = 0;
+    aMetrics.height = 0;
+    aMetrics.ascent = 0;
+    aMetrics.descent = 0;
+    if (nsnull != aMetrics.maxElementSize) {
+      aMetrics.maxElementSize->width = 0;
+      aMetrics.maxElementSize->height = 0;
+    }
     return NS_OK;
   }
 
@@ -2887,6 +2896,9 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
           isComplete ? 'T':'F',
           mFlags);
   
+  if (nsnull != mNextSibling) {
+    fprintf(out, " next=%p", mNextSibling);
+  }
   if (nsnull != mPrevInFlow) {
     fprintf(out, "prev-in-flow=%p ", mPrevInFlow);
   }
@@ -2899,9 +2911,9 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
   if (0 != mState) {
     fprintf(out, " [state=%08x]", mState);
   }
+  fprintf(out, " sc=%p<\n", mStyleContext);
 
   // Output the text
-  fputs("<\n", out);
   aIndent++;
 
   IndentBy(out, aIndent);
