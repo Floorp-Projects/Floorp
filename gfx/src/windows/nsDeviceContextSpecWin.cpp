@@ -885,9 +885,10 @@ nsPrinterEnumeratorWin::EnumeratePrinters(PRUint32* aCount, PRUnichar*** aResult
   NS_ENSURE_ARG(aCount);
   NS_ENSURE_ARG_POINTER(aResult);
 
-  if (NS_FAILED(GlobalPrinters::GetInstance()->EnumeratePrinterList())) {
+  nsresult rv = GlobalPrinters::GetInstance()->EnumeratePrinterList();
+  if (NS_FAILED(rv)) {
     PR_PL(("***** nsDeviceContextSpecWin::EnumeratePrinters - Couldn't enumerate printers!\n"));
-    return NS_ERROR_FAILURE;
+    return rv;
   }
 
   if (aCount) 
@@ -1038,7 +1039,7 @@ GlobalPrinters::FreeGlobalPrinters()
 nsresult 
 GlobalPrinters::EnumerateNativePrinters()
 {
-  nsresult rv = NS_ERROR_FAILURE;
+  nsresult rv = NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
 
   PR_PL(("-----------------------\n"));
   PR_PL(("EnumerateNativePrinters\n"));
