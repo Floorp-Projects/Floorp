@@ -29,11 +29,15 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= dom
 
 EXPORTS		= \
+		nsIDOMCounter.h \
 		nsIDOMCSS2Properties.h \
 		nsIDOMCSSFontFaceRule.h \
 		nsIDOMCSSImportRule.h \
 		nsIDOMCSSMediaRule.h \
 		nsIDOMCSSPageRule.h \
+		nsIDOMCSSPrimitiveValue.h \
+		nsIDOMRect.h \
+		nsIDOMRGBColor.h \
 		nsIDOMCSSRule.h \
 		nsIDOMCSSRuleList.h \
 		nsIDOMCSSStyleDeclaration.h \
