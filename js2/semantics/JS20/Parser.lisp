@@ -10,7 +10,7 @@
   '((line-grammar code-grammar :lr-1 :program)
     
     (%heading (1 :semantics) "Data Model")
-    (%heading (2 :semantics) "Errors")
+    (%heading (2 :semantics) "Semantic Exceptions")
     
     (deftuple break (value object) (label label))
     (deftuple continue (value object) (label label))
@@ -57,7 +57,6 @@
     (%heading (4 :semantics) "Qualified Names")
     (deftuple qualified-name (namespace namespace) (id string))
     (definfix qualified-name ("::") ns id)
-    ;(deftype qualified-name-opt (union qualified-name (tag none)))
     
     (deftype multiname (list-set qualified-name))
     
@@ -227,21 +226,6 @@
     (deftype obj-or-ref (union object reference))
     
     
-    (%heading (2 :semantics) "Function Support")
-    (deftag normal)
-    (deftag get)
-    (deftag set)
-    (deftype handling (tag normal get set))
-    
-    (deftag plain-function)
-    (deftag unchecked-function)
-    (deftag prototype-function)
-    (deftag instance-function)
-    (deftag constructor-function)
-    (deftype static-function-kind (tag plain-function unchecked-function prototype-function))
-    (deftype function-kind (tag plain-function unchecked-function prototype-function instance-function constructor-function))
-    
-    
     (%heading (2 :semantics) "Modes of expression evaluation")
     (deftag compile)
     (deftag run)
@@ -263,11 +247,22 @@
       (continue-targets (list-set label)))
     
     
-    (%heading (2 :semantics) "Environments")
-    (deftag singular)
-    (deftag plural)
-    (deftype plurality (tag singular plural))
+    (%heading (2 :semantics) "Function Support")
+    (deftag normal)
+    (deftag get)
+    (deftag set)
+    (deftype handling (tag normal get set))
     
+    (deftag plain-function)
+    (deftag unchecked-function)
+    (deftag prototype-function)
+    (deftag instance-function)
+    (deftag constructor-function)
+    (deftype static-function-kind (tag plain-function unchecked-function prototype-function))
+    (deftype function-kind (tag plain-function unchecked-function prototype-function instance-function constructor-function))
+    
+    
+    (%heading (2 :semantics) "Environments")
     (%text :comment "An " (:type environment) " is a list of two or more frames. Each frame corresponds to a scope. "
            "More specific frames are listed first" :m-dash "each frame" :apostrophe "s scope is directly contained in the following frame"
            :apostrophe "s scope. The last frame is always the " (:type system-frame)
@@ -283,7 +278,6 @@
     
     (defrecord parameter-frame
       (local-bindings (list-set local-binding) :var)
-      (plurality plurality)
       (kind function-kind)
       (handling handling)
       (calls-superconstructor boolean :var)
@@ -299,8 +293,7 @@
       (default object-opt))
     
     (defrecord local-frame
-      (local-bindings (list-set local-binding) :var)
-      (plurality plurality))
+      (local-bindings (list-set local-binding) :var))
     
     (defrecord with-frame
       (value object-opt))
@@ -1668,54 +1661,54 @@
     
     
     (deftuple member-translation
-      (plural-member local-member)
-      (singular-member local-member))
+      (from local-member)
+      (to local-member))
     
-    (define (instantiate-local-frame (plural-frame local-frame) (env environment))
+    (define (instantiate-local-frame (frame local-frame) (env environment))
             local-frame
-      (const singular-frame local-frame (new local-frame (list-set-of local-binding) singular))
+      (const instantiated-frame local-frame (new local-frame (list-set-of local-binding)))
       (const plural-members (list-set local-member)
-        (map (& local-bindings plural-frame) b (& content b)))
+        (map (& local-bindings frame) b (& content b)))
       (const member-translations (list-set member-translation)
-        (map plural-members m (new member-translation m (instantiate-member m (cons singular-frame env)))))
+        (map plural-members m (new member-translation m (instantiate-member m (cons instantiated-frame env)))))
       (function (translate-member (m local-member)) local-member
-        (const mi member-translation (unique-elt-of member-translations mi (= (& plural-member mi) m local-member)))
-        (return (& singular-member mi)))
-      (&= local-bindings singular-frame (map (& local-bindings plural-frame) b (set-field b content (translate-member (& content b)))))
-      (return singular-frame))
+        (const mi member-translation (unique-elt-of member-translations mi (= (& from mi) m local-member)))
+        (return (& to mi)))
+      (&= local-bindings instantiated-frame (map (& local-bindings frame) b (set-field b content (translate-member (& content b)))))
+      (return instantiated-frame))
     
     
-    (define (instantiate-parameter-frame (plural-frame parameter-frame) (env environment) (singular-this object-opt))
+    (define (instantiate-parameter-frame (frame parameter-frame) (env environment) (singular-this object-opt))
             parameter-frame
-      (assert (= (& superconstructor-called plural-frame) (not-in (& kind plural-frame) (tag constructor-function)) boolean)
-        (:expr boolean (& superconstructor-called plural-frame)) " must be " (:tag true) " if and only if "
-        (:expr function-kind (& kind plural-frame)) " is not " (:tag constructor-function) ".")
-      (const singular-frame parameter-frame (new parameter-frame (list-set-of local-binding) singular (& kind plural-frame) (& handling plural-frame)
-                                                 (& calls-superconstructor plural-frame) (& superconstructor-called plural-frame)
-                                                 singular-this :uninit :uninit (&opt return-type plural-frame)))
-      (note (:local plural-members) " will contain the set of all " (:type local-member) " records found in the " (:local plural-frame) ".")
+      (assert (= (& superconstructor-called frame) (not-in (& kind frame) (tag constructor-function)) boolean)
+        (:expr boolean (& superconstructor-called frame)) " must be " (:tag true) " if and only if "
+        (:expr function-kind (& kind frame)) " is not " (:tag constructor-function) ".")
+      (const instantiated-frame parameter-frame (new parameter-frame (list-set-of local-binding) (& kind frame) (& handling frame)
+                                                     (& calls-superconstructor frame) (& superconstructor-called frame)
+                                                     singular-this :uninit :uninit (&opt return-type frame)))
+      (note (:local plural-members) " will contain the set of all " (:type local-member) " records found in the " (:local frame) ".")
       (var plural-members (list-set local-member)
-        (map (& local-bindings plural-frame) b (& content b)))
+        (map (& local-bindings frame) b (& content b)))
       (note "If any of the parameters (including the rest parameter) are anonymous, their bindings will not be present in "
-            (:expr (list-set local-binding) (& local-bindings plural-frame)) ". In this situation, the following steps add their "
+            (:expr (list-set local-binding) (& local-bindings frame)) ". In this situation, the following steps add their "
             (:type local-member) " records to " (:local plural-members) ".")
-      (for-each (&opt parameters plural-frame) p
+      (for-each (&opt parameters frame) p
         (<- plural-members (set+ plural-members (list-set-of local-member (& var p)))))
-      (const rest variable-opt (&opt rest plural-frame))
+      (const rest variable-opt (&opt rest frame))
       (when (not-in rest (tag none) :narrow-true)
         (<- plural-members (set+ plural-members (list-set-of local-member rest))))
       (const member-translations (list-set member-translation)
-        (map plural-members m (new member-translation m (instantiate-member m (cons singular-frame env)))))
+        (map plural-members m (new member-translation m (instantiate-member m (cons instantiated-frame env)))))
       (function (translate-member (m local-member)) local-member
-        (const mi member-translation (unique-elt-of member-translations mi (= (& plural-member mi) m local-member)))
-        (return (& singular-member mi)))
-      (&= local-bindings singular-frame (map (& local-bindings plural-frame) b (set-field b content (translate-member (& content b)))))
-      (&= parameters singular-frame (map (&opt parameters plural-frame) op
-                                         (new parameter (assert-in (translate-member (& var op)) (union variable dynamic-var)) (& default op))))
+        (const mi member-translation (unique-elt-of member-translations mi (= (& from mi) m local-member)))
+        (return (& to mi)))
+      (&= local-bindings instantiated-frame (map (& local-bindings frame) b (set-field b content (translate-member (& content b)))))
+      (&= parameters instantiated-frame (map (&opt parameters frame) op
+                                             (new parameter (assert-in (translate-member (& var op)) (union variable dynamic-var)) (& default op))))
       (if (in rest (tag none) :narrow-false)
-        (&= rest singular-frame none)
-        (&= rest singular-frame (assert-in (translate-member rest) variable)))
-      (return singular-frame))
+        (&= rest instantiated-frame none)
+        (&= rest instantiated-frame (assert-in (translate-member rest) variable)))
+      (return instantiated-frame))
     
     
     
@@ -1932,7 +1925,7 @@
         ((validate cxt env)
          (const v variable (new variable -function none true none busy :uninit))
          (const b local-binding (new local-binding (new qualified-name public (name :identifier)) read-write v false true))
-         (const compile-frame local-frame (new local-frame (list-set b) plural))
+         (const compile-frame local-frame (new local-frame (list-set b)))
          (var kind static-function-kind plain-function)
          (when (and (not (& strict cxt)) (plain :function-common))
            (<- kind unchecked-function))
@@ -1943,7 +1936,7 @@
            (throw-error -constant-error "a " (:character-literal "function") " expression is not a constant expression because it can evaluate to different values"))
          (const v variable (new variable -function none true none none :uninit))
          (const b local-binding (new local-binding (new qualified-name public (name :identifier)) read-write v false true))
-         (const runtime-frame local-frame (new local-frame (list-set b) plural))
+         (const runtime-frame local-frame (new local-frame (list-set b)))
          (const f2 simple-instance (instantiate-function (f :function-expression 0) (cons runtime-frame env)))
          (&= value v f2)
          (return f2))))
@@ -3243,66 +3236,66 @@
                       full)        ;semicolon required at the end
     (grammar-argument :omega_2 abbrev full)
     
-    (rule (:statement :omega) ((validate (-> (context environment (list-set label) jump-targets plurality) void)) (setup (-> () void))
+    (rule (:statement :omega) ((validate (-> (context environment (list-set label) jump-targets boolean) void)) (setup (-> () void))
                                (eval (-> (environment object) object)))
       (production (:statement :omega) (:expression-statement (:semicolon :omega)) statement-expression-statement
-        ((validate cxt env (sl :unused) (jt :unused) (pl :unused)) ((validate :expression-statement) cxt env))
+        ((validate cxt env (sl :unused) (jt :unused) (preinst :unused)) ((validate :expression-statement) cxt env))
         ((setup) :forward)
         ((eval env (d :unused)) (return ((eval :expression-statement) env))))
       (production (:statement :omega) (:super-statement (:semicolon :omega)) statement-super-statement
-        ((validate cxt env (sl :unused) (jt :unused) (pl :unused)) ((validate :super-statement) cxt env))
+        ((validate cxt env (sl :unused) (jt :unused) (preinst :unused)) ((validate :super-statement) cxt env))
         ((setup) :forward)
         ((eval env (d :unused)) (return ((eval :super-statement) env))))
       (production (:statement :omega) (:block) statement-block
-        ((validate cxt env (sl :unused) jt pl) ((validate :block) cxt env jt pl))
+        ((validate cxt env (sl :unused) jt preinst) ((validate :block) cxt env jt preinst))
         ((setup) :forward)
         ((eval env d) (return ((eval :block) env d))))
       (production (:statement :omega) ((:labeled-statement :omega)) statement-labeled-statement
-        ((validate cxt env sl jt (pl :unused)) ((validate :labeled-statement) cxt env sl jt))
+        ((validate cxt env sl jt (preinst :unused)) ((validate :labeled-statement) cxt env sl jt))
         ((setup) :forward)
         ((eval env d) (return ((eval :labeled-statement) env d))))
       (production (:statement :omega) ((:if-statement :omega)) statement-if-statement
-        ((validate cxt env (sl :unused) jt (pl :unused)) ((validate :if-statement) cxt env jt))
+        ((validate cxt env (sl :unused) jt (preinst :unused)) ((validate :if-statement) cxt env jt))
         ((setup) :forward)
         ((eval env d) (return ((eval :if-statement) env d))))
       (production (:statement :omega) (:switch-statement) statement-switch-statement
-        ((validate cxt env (sl :unused) jt (pl :unused)) ((validate :switch-statement) cxt env jt))
+        ((validate cxt env (sl :unused) jt (preinst :unused)) ((validate :switch-statement) cxt env jt))
         ((setup) :forward)
         ((eval env d) (return ((eval :switch-statement) env d))))
       (production (:statement :omega) (:do-statement (:semicolon :omega)) statement-do-statement
-        ((validate cxt env sl jt (pl :unused)) ((validate :do-statement) cxt env sl jt))
+        ((validate cxt env sl jt (preinst :unused)) ((validate :do-statement) cxt env sl jt))
         ((setup) :forward)
         ((eval env d) (return ((eval :do-statement) env d))))
       (production (:statement :omega) ((:while-statement :omega)) statement-while-statement
-        ((validate cxt env sl jt (pl :unused)) ((validate :while-statement) cxt env sl jt))
+        ((validate cxt env sl jt (preinst :unused)) ((validate :while-statement) cxt env sl jt))
         ((setup) :forward)
         ((eval env d) (return ((eval :while-statement) env d))))
       (production (:statement :omega) ((:for-statement :omega)) statement-for-statement
-        ((validate cxt env sl jt (pl :unused)) ((validate :for-statement) cxt env sl jt))
+        ((validate cxt env sl jt (preinst :unused)) ((validate :for-statement) cxt env sl jt))
         ((setup) :forward)
         ((eval env d) (return ((eval :for-statement) env d))))
       (production (:statement :omega) ((:with-statement :omega)) statement-with-statement
-        ((validate cxt env (sl :unused) jt (pl :unused)) ((validate :with-statement) cxt env jt))
+        ((validate cxt env (sl :unused) jt (preinst :unused)) ((validate :with-statement) cxt env jt))
         ((setup) :forward)
         ((eval env d) (return ((eval :with-statement) env d))))
       (production (:statement :omega) (:continue-statement (:semicolon :omega)) statement-continue-statement
-        ((validate (cxt :unused) (env :unused) (sl :unused) jt (pl :unused)) ((validate :continue-statement) jt))
+        ((validate (cxt :unused) (env :unused) (sl :unused) jt (preinst :unused)) ((validate :continue-statement) jt))
         ((setup) :forward)
         ((eval env d) (return ((eval :continue-statement) env d))))
       (production (:statement :omega) (:break-statement (:semicolon :omega)) statement-break-statement
-        ((validate (cxt :unused) (env :unused) (sl :unused) jt (pl :unused)) ((validate :break-statement) jt))
+        ((validate (cxt :unused) (env :unused) (sl :unused) jt (preinst :unused)) ((validate :break-statement) jt))
         ((setup) :forward)
         ((eval env d) (return ((eval :break-statement) env d))))
       (production (:statement :omega) (:return-statement (:semicolon :omega)) statement-return-statement
-        ((validate cxt env (sl :unused) (jt :unused) (pl :unused)) ((validate :return-statement) cxt env))
+        ((validate cxt env (sl :unused) (jt :unused) (preinst :unused)) ((validate :return-statement) cxt env))
         ((setup) :forward)
         ((eval env (d :unused)) (return ((eval :return-statement) env))))
       (production (:statement :omega) (:throw-statement (:semicolon :omega)) statement-throw-statement
-        ((validate cxt env (sl :unused) (jt :unused) (pl :unused)) ((validate :throw-statement) cxt env))
+        ((validate cxt env (sl :unused) (jt :unused) (preinst :unused)) ((validate :throw-statement) cxt env))
         ((setup) :forward)
         ((eval env (d :unused)) (return ((eval :throw-statement) env))))
       (production (:statement :omega) (:try-statement) statement-try-statement
-        ((validate cxt env (sl :unused) jt (pl :unused)) ((validate :try-statement) cxt env jt))
+        ((validate cxt env (sl :unused) jt (preinst :unused)) ((validate :try-statement) cxt env jt))
         ((setup) :forward)
         ((eval env d) (return ((eval :try-statement) env d)))))
     
@@ -3316,7 +3309,7 @@
         ((setup))
         ((eval (env :unused) d) (return d)))
       (production (:substatement :omega) ((:statement :omega)) substatement-statement
-        ((validate cxt env sl jt) ((validate :statement) cxt env sl jt plural))
+        ((validate cxt env sl jt) ((validate :statement) cxt env sl jt false))
         ((setup) ((setup :statement)))
         ((eval env d) (return ((eval :statement) env d))))
       (production (:substatement :omega) (:simple-variable-definition (:semicolon :omega)) substatement-simple-variable-definition
@@ -3431,30 +3424,32 @@
     
     (%heading 2 "Block Statement")
     (rule :block ((compile-frame (writable-cell local-frame))
-                  (validate-using-frame (-> (context environment jump-targets plurality frame) void))
-                  (validate (-> (context environment jump-targets plurality) void))
+                  (preinstantiate (writable-cell boolean))
+                  (validate-using-frame (-> (context environment jump-targets boolean frame) void))
+                  (validate (-> (context environment jump-targets boolean) void))
                   (setup (-> () void))
                   (eval (-> (environment object) object))
                   (eval-using-frame (-> (environment frame object) object)))
       (production :block ({ :directives }) block-directives
-        ((validate-using-frame cxt env jt pl frame)
+        ((validate-using-frame cxt env jt preinst frame)
          (const local-cxt context (new context (& strict cxt) (& open-namespaces cxt)))
-         ((validate :directives) local-cxt (cons frame env) jt pl none))
-        ((validate cxt env jt pl)
-         (const compile-frame local-frame (new local-frame (list-set-of local-binding) pl))
+         ((validate :directives) local-cxt (cons frame env) jt preinst none))
+        ((validate cxt env jt preinst)
+         (const compile-frame local-frame (new local-frame (list-set-of local-binding)))
          (action<- (compile-frame :block 0) compile-frame)
-         ((validate-using-frame :block 0) cxt env jt pl compile-frame))
+         (action<- (preinstantiate :block 0) preinst)
+         ((validate-using-frame :block 0) cxt env jt preinst compile-frame))
         ((setup) ((setup :directives)))
         ((eval env d)
          (const compile-frame local-frame (compile-frame :block 0))
          (var runtime-frame local-frame)
-         (case (& plurality compile-frame)
-           (:select (tag singular) (<- runtime-frame compile-frame))
-           (:select (tag plural) (<- runtime-frame (instantiate-local-frame compile-frame env))))
+         (if (preinstantiate :block 0)
+           (<- runtime-frame compile-frame)
+           (<- runtime-frame (instantiate-local-frame compile-frame env)))
          (return ((eval :directives) (cons runtime-frame env) d)))
         ((eval-using-frame env frame d)
          (return ((eval :directives) (cons frame env) d)))))
-    (%print-actions ("Validation" compile-frame validate validate-using-frame) ("Setup" setup) ("Evaluation" eval eval-using-frame))
+    (%print-actions ("Validation" compile-frame preinstantiate validate validate-using-frame) ("Setup" setup) ("Evaluation" eval eval-using-frame))
     
     
     (%heading 2 "Labeled Statements")
@@ -3531,7 +3526,7 @@
          (const jt2 jump-targets (new jump-targets
                                    (set+ (& break-targets jt) (list-set-of label default))
                                    (& continue-targets jt)))
-         (const compile-frame local-frame (new local-frame (list-set-of local-binding) plural))
+         (const compile-frame local-frame (new local-frame (list-set-of local-binding)))
          (action<- (compile-frame :switch-statement 0) compile-frame)
          (const local-cxt context (new context (& strict cxt) (& open-namespaces cxt)))
          ((validate :case-elements) local-cxt (cons compile-frame env) jt2))
@@ -3598,7 +3593,7 @@
                                     (eval (-> (environment switch-guard object) switch-guard)))
       (production (:case-element :omega_2) ((:directive :omega_2)) case-element-directive
         (n-defaults 0)
-        ((validate cxt env jt) ((validate :directive) cxt env jt plural none))
+        ((validate cxt env jt) ((validate :directive) cxt env jt false none))
         ((setup) :forward)
         ((eval env guard (d :unused))
          (case guard
@@ -3713,7 +3708,7 @@
          (const jt2 jump-targets (new jump-targets
                                    (set+ (& break-targets jt) (list-set-of label default))
                                    (set+ (& continue-targets jt) continue-labels)))
-         (const compile-local-frame local-frame (new local-frame (list-set-of local-binding) plural))
+         (const compile-local-frame local-frame (new local-frame (list-set-of local-binding)))
          (action<- (compile-local-frame :for-statement 0) compile-local-frame)
          (const compile-env environment (cons compile-local-frame env))
          ((validate :for-initialiser) cxt compile-env)
@@ -3745,7 +3740,7 @@
                                    (set+ (& break-targets jt) (list-set-of label default))
                                    (set+ (& continue-targets jt) continue-labels)))
          ((validate :list-expression) cxt env)
-         (const compile-local-frame local-frame (new local-frame (list-set-of local-binding) plural))
+         (const compile-local-frame local-frame (new local-frame (list-set-of local-binding)))
          (action<- (compile-local-frame :for-statement 0) compile-local-frame)
          (const compile-env environment (cons compile-local-frame env))
          ((validate :for-in-binding) cxt compile-env)
@@ -3859,7 +3854,7 @@
         ((validate cxt env jt)
          ((validate :paren-list-expression) cxt env)
          (const compile-with-frame with-frame (new with-frame none))
-         (const compile-local-frame local-frame (new local-frame (list-set-of local-binding) plural))
+         (const compile-local-frame local-frame (new local-frame (list-set-of local-binding)))
          (action<- (compile-local-frame :with-statement 0) compile-local-frame)
          (const compile-env environment (cons compile-local-frame (cons compile-with-frame env)))
          ((validate :substatement) cxt compile-env (list-set-of label) jt))
@@ -3952,7 +3947,7 @@
                           (eval (-> (environment object) object)))
       (production :try-statement (try :block :catch-clauses) try-statement-catch-clauses
         ((validate cxt env jt)
-         ((validate :block) cxt env jt plural)
+         ((validate :block) cxt env jt false)
          ((validate :catch-clauses) cxt env jt))
         ((setup) :forward)
         ((eval env d)
@@ -3968,9 +3963,9 @@
       
       (production :try-statement (try :block :catch-clauses-opt finally :block) try-statement-catch-clauses-finally
         ((validate cxt env jt)
-         ((validate :block 1) cxt env jt plural)
+         ((validate :block 1) cxt env jt false)
          ((validate :catch-clauses-opt) cxt env jt)
-         ((validate :block 2) cxt env jt plural))
+         ((validate :block 2) cxt env jt false))
         ((setup) :forward)
         ((eval env d)
          (var result object-opt none)
@@ -4033,12 +4028,12 @@
                          (eval (-> (environment object) (union object (tag reject)))))
       (production :catch-clause (catch \( :parameter \) :block) catch-clause-block
         ((validate cxt env jt)
-         (const compile-frame local-frame (new local-frame (list-set-of local-binding) plural))
+         (const compile-frame local-frame (new local-frame (list-set-of local-binding)))
          (const compile-env environment (cons compile-frame env))
          (action<- (compile-frame :catch-clause 0) compile-frame)
          (action<- (compile-env :catch-clause 0) compile-env)
          ((validate :parameter) cxt compile-env compile-frame)
-         ((validate :block) cxt compile-env jt plural))
+         ((validate :block) cxt compile-env jt false))
         ((setup)
          ((setup :parameter) (compile-env :catch-clause 0) (compile-frame :catch-clause 0) none)
          ((setup :block)))
@@ -4059,26 +4054,26 @@
     
     (%heading 1 "Directives")
     (rule (:directive :omega_2) ((enabled (writable-cell boolean))
-                                 (validate (-> (context environment jump-targets plurality attribute-opt-not-false) void))
+                                 (validate (-> (context environment jump-targets boolean attribute-opt-not-false) void))
                                  (setup (-> () void))
                                  (eval (-> (environment object) object)))
       (production (:directive :omega_2) (:empty-statement) directive-empty-statement
-        ((validate (cxt :unused) (env :unused) (jt :unused) (pl :unused) (attr :unused)))
+        ((validate (cxt :unused) (env :unused) (jt :unused) (preinst :unused) (attr :unused)))
         ((setup))
         ((eval (env :unused) d) (return d)))
       (production (:directive :omega_2) ((:statement :omega_2)) directive-statement
-        ((validate cxt env jt pl attr)
+        ((validate cxt env jt preinst attr)
          (rwhen (not-in attr (tag none true))
            (throw-error -attribute-error "an ordinary statement only permits the attributes " (:character-literal "true") " and " (:character-literal "false")))
-         ((validate :statement) cxt env (list-set-of label) jt pl))
+         ((validate :statement) cxt env (list-set-of label) jt preinst))
         ((setup) ((setup :statement)))
         ((eval env d) (return ((eval :statement) env d))))
       (production (:directive :omega_2) ((:annotatable-directive :omega_2)) directive-annotatable-directive
-        ((validate cxt env (jt :unused) pl attr) ((validate :annotatable-directive) cxt env pl attr))
+        ((validate cxt env (jt :unused) preinst attr) ((validate :annotatable-directive) cxt env preinst attr))
         ((setup) ((setup :annotatable-directive)))
         ((eval env d) (return ((eval :annotatable-directive) env d))))
       (production (:directive :omega_2) (:attributes :no-line-break (:annotatable-directive :omega_2)) directive-attributes-and-directive
-        ((validate cxt env (jt :unused) pl attr)
+        ((validate cxt env (jt :unused) preinst attr)
          ((validate :attributes) cxt env)
          ((setup :attributes))
          (const attr2 attribute ((eval :attributes) env compile))
@@ -4088,7 +4083,7 @@
            (action<- (enabled :directive 0) false))
           (nil
            (action<- (enabled :directive 0) true)
-           ((validate :annotatable-directive) cxt env pl attr3))))
+           ((validate :annotatable-directive) cxt env preinst attr3))))
         ((setup)
          (when (enabled :directive 0)
            ((setup :annotatable-directive))))
@@ -4097,7 +4092,7 @@
            (return ((eval :annotatable-directive) env d))
            (return d))))
       (production (:directive :omega_2) (:attributes :no-line-break { :directives }) directive-annotated-group
-        ((validate cxt env jt pl attr)
+        ((validate cxt env jt preinst attr)
          ((validate :attributes) cxt env)
          ((setup :attributes))
          (const attr2 attribute ((eval :attributes) env compile))
@@ -4108,7 +4103,7 @@
           (nil
            (action<- (enabled :directive 0) true)
            (const local-cxt context (new context (& strict cxt) (& open-namespaces cxt)))
-           ((validate :directives) local-cxt env jt pl attr3))))
+           ((validate :directives) local-cxt env jt preinst attr3))))
         ((setup)
          (when (enabled :directive 0)
            ((setup :directives))))
@@ -4118,61 +4113,61 @@
            (return d))))
       (? js2
         (production (:directive :omega_2) (:package-definition) directive-package-definition
-          ((validate (cxt :unused) (env :unused) (jt :unused) (pl :unused) attr)
+          ((validate (cxt :unused) (env :unused) (jt :unused) (preinst :unused) attr)
            (if (in attr (tag none true))
              (todo)
              (throw-error -attribute-error "a " (:character-literal "package") " definition only permits the attributes " (:character-literal "true") " and " (:character-literal "false"))))
           ((setup) (todo))
           ((eval (env :unused) (d :unused)) (todo)))
         (production (:directive :omega_2) (:include-directive (:semicolon :omega_2)) directive-include-directive
-          ((validate (cxt :unused) (env :unused) (jt :unused) (pl :unused) attr)
+          ((validate (cxt :unused) (env :unused) (jt :unused) (preinst :unused) attr)
            (if (in attr (tag none true))
              (todo)
              (throw-error -attribute-error "an " (:character-literal "include") " directive only permits the attributes " (:character-literal "true") " and " (:character-literal "false"))))
           ((setup) (todo))
           ((eval (env :unused) (d :unused)) (todo))))
       (production (:directive :omega_2) (:pragma (:semicolon :omega_2)) directive-pragma
-        ((validate cxt (env :unused) (jt :unused) (pl :unused) attr)
+        ((validate cxt (env :unused) (jt :unused) (preinst :unused) attr)
          (if (in attr (tag none true))
            ((validate :pragma) cxt)
            (throw-error -attribute-error "a " (:character-literal "pragma") " directive only permits the attributes " (:character-literal "true") " and " (:character-literal "false"))))
         ((setup))
         ((eval (env :unused) d) (return d))))
     
-    (rule (:annotatable-directive :omega_2) ((validate (-> (context environment plurality attribute-opt-not-false) void))
+    (rule (:annotatable-directive :omega_2) ((validate (-> (context environment boolean attribute-opt-not-false) void))
                                              (setup (-> () void))
                                              (eval (-> (environment object) object)))
       (production (:annotatable-directive :omega_2) ((:variable-definition allow-in) (:semicolon :omega_2)) annotatable-directive-variable-definition
-        ((validate cxt env (pl :unused) attr) ((validate :variable-definition) cxt env attr))
+        ((validate cxt env (preinst :unused) attr) ((validate :variable-definition) cxt env attr))
         ((setup) ((setup :variable-definition)))
         ((eval env d) (return ((eval :variable-definition) env d))))
       (production (:annotatable-directive :omega_2) (:function-definition) annotatable-directive-function-definition
-        ((validate cxt env pl attr) ((validate :function-definition) cxt env pl attr))
+        ((validate cxt env preinst attr) ((validate :function-definition) cxt env preinst attr))
         ((setup) ((setup :function-definition)))
         ((eval (env :unused) d) (return d)))
       (production (:annotatable-directive :omega_2) (:class-definition) annotatable-directive-class-definition
-        ((validate cxt env pl attr) ((validate :class-definition) cxt env pl attr))
+        ((validate cxt env preinst attr) ((validate :class-definition) cxt env preinst attr))
         ((setup) ((setup :class-definition)))
         ((eval env d) (return ((eval :class-definition) env d))))
       (production (:annotatable-directive :omega_2) (:namespace-definition (:semicolon :omega_2)) annotatable-directive-namespace-definition
-        ((validate cxt env pl attr) ((validate :namespace-definition) cxt env pl attr))
+        ((validate cxt env preinst attr) ((validate :namespace-definition) cxt env preinst attr))
         ((setup))
         ((eval (env :unused) d) (return d)))
       ;(production (:annotatable-directive :omega_2) ((:interface-definition :omega_2)) annotatable-directive-interface-definition
-      ;  ((validate (cxt :unused) (env :unused) (pl :unused) (attr :unused)) (todo))
+      ;  ((validate (cxt :unused) (env :unused) (preinst :unused) (attr :unused)) (todo))
       ;  ((setup) (todo))
       ;  ((eval (env :unused) (d :unused)) (todo)))
       (? js2
         (production (:annotatable-directive :omega_2) (:import-directive (:semicolon :omega_2)) annotatable-directive-import-directive
-          ((validate (cxt :unused) (env :unused) (pl :unused) (attr :unused)) (todo))
+          ((validate (cxt :unused) (env :unused) (preinst :unused) (attr :unused)) (todo))
           ((setup) (todo))
           ((eval (env :unused) (d :unused)) (todo)))
         (production (:annotatable-directive :omega_2) (:export-definition (:semicolon :omega_2)) annotatable-directive-export-definition
-          ((validate (cxt :unused) (env :unused) (pl :unused) (attr :unused)) (todo))
+          ((validate (cxt :unused) (env :unused) (preinst :unused) (attr :unused)) (todo))
           ((setup) (todo))
           ((eval (env :unused) (d :unused)) (todo))))
       (production (:annotatable-directive :omega_2) (:use-directive (:semicolon :omega_2)) annotatable-directive-use-directive
-        ((validate cxt env (pl :unused) attr)
+        ((validate cxt env (preinst :unused) attr)
          (if (in attr (tag none true))
            ((validate :use-directive) cxt env)
            (throw-error -attribute-error "a " (:character-literal "use") " directive only permits the attributes " (:character-literal "true") " and " (:character-literal "false"))))
@@ -4180,27 +4175,27 @@
         ((eval (env :unused) d) (return d))))
     
     
-    (rule :directives ((validate (-> (context environment jump-targets plurality attribute-opt-not-false) void)) (setup (-> () void))
+    (rule :directives ((validate (-> (context environment jump-targets boolean attribute-opt-not-false) void)) (setup (-> () void))
                        (eval (-> (environment object) object)))
       (production :directives () directives-none
-        ((validate cxt env jt pl attr) :forward)
+        ((validate cxt env jt preinst attr) :forward)
         ((setup) :forward)
         ((eval (env :unused) d) (return d)))
       (production :directives (:directives-prefix (:directive abbrev)) directives-more
-        ((validate cxt env jt pl attr) :forward)
+        ((validate cxt env jt preinst attr) :forward)
         ((setup) :forward)
         ((eval env d)
          (const o object ((eval :directives-prefix) env d))
          (return ((eval :directive) env o)))))
     
-    (rule :directives-prefix ((validate (-> (context environment jump-targets plurality attribute-opt-not-false) void)) (setup (-> () void))
+    (rule :directives-prefix ((validate (-> (context environment jump-targets boolean attribute-opt-not-false) void)) (setup (-> () void))
                               (eval (-> (environment object) object)))
       (production :directives-prefix () directives-prefix-none
-        ((validate cxt env jt pl attr) :forward)
+        ((validate cxt env jt preinst attr) :forward)
         ((setup) :forward)
         ((eval (env :unused) d) (return d)))
       (production :directives-prefix (:directives-prefix (:directive full)) directives-prefix-more
-        ((validate cxt env jt pl attr) :forward)
+        ((validate cxt env jt preinst attr) :forward)
         ((setup) :forward)
         ((eval env d)
          (const o object ((eval :directives-prefix) env d))
@@ -4663,13 +4658,13 @@
     
     (%heading 2 "Function Definition")
     (rule :function-definition ((overridden-member (writable-cell instance-member-opt))
-                                (validate-static (-> (context environment plurality compound-attribute boolean boolean) void))
+                                (validate-static (-> (context environment boolean compound-attribute boolean boolean) void))
                                 (validate-instance (-> (context environment class compound-attribute boolean) void))
                                 (validate-constructor (-> (context environment class compound-attribute) void))
-                                (validate (-> (context environment plurality attribute-opt-not-false) void))
+                                (validate (-> (context environment boolean attribute-opt-not-false) void))
                                 (setup (-> () void)))
       (production :function-definition (function :function-name :function-common) function-definition-definition
-        ((validate-static cxt env pl a unchecked hoisted)
+        ((validate-static cxt env preinst a unchecked hoisted)
          (const name string (name :function-name))
          (const handling handling (handling :function-name))
          (case handling
@@ -4680,7 +4675,7 @@
               ((& prototype a) (<- kind prototype-function))
               (nil (<- kind plain-function)))
              (var f (union simple-instance uninstantiated-function) ((validate-static-function :function-common) cxt env kind))
-             (when (in pl (tag singular))
+             (when preinst
                (<- f (instantiate-function (assert-in f uninstantiated-function) env)))
              (cond
               (hoisted
@@ -4694,7 +4689,7 @@
              (assert (not (or unchecked hoisted)))
              ((validate :function-common) cxt env plain-function handling)
              (var bound-env environment-opt none)
-             (when (in pl (tag singular))
+             (when preinst
                (<- bound-env env))
              (case handling
                (:select (tag get)
@@ -4732,17 +4727,17 @@
          (&= init c (eval-instance-init :function-common))
          (action<- (overridden-member :function-definition 0) none))
         
-        ((validate cxt env pl attr)
+        ((validate cxt env preinst attr)
          (const a compound-attribute (to-compound-attribute attr))
          (rwhen (& dynamic a)
            (throw-error -attribute-error "a function cannot have the " (:character-literal "dynamic") " attribute"))
          (const frame frame (nth env 0))
          (cond
           ((in frame class :narrow-true)
-           (assert (in pl (tag singular)))
+           (assert preinst)
            (case (& member-mod a)
              (:select (tag static)
-               ((validate-static :function-definition 0) cxt env pl a false false))
+               ((validate-static :function-definition 0) cxt env preinst a false false))
              (:select (tag none)
                (if (= (name :function-name) (& name frame) string)
                  ((validate-constructor :function-definition 0) cxt env frame a)
@@ -4760,7 +4755,7 @@
            (const hoisted boolean (and unchecked
                                        (in attr (tag none))
                                        (or (in frame package) (and (in frame local-frame) (in (nth env 1) parameter-frame)))))
-           ((validate-static :function-definition 0) cxt env pl a unchecked hoisted))))
+           ((validate-static :function-definition 0) cxt env preinst a unchecked hoisted))))
         
         ((setup)
          (const overridden-member instance-member-opt (overridden-member :function-definition 0))
@@ -4775,12 +4770,12 @@
                (:select (tag normal)
                  (bottom "This cannot happen because " (:action validate-instance) " already ensured that a function cannot override an instance variable."))
                (:select (tag get)
-                 (<- overridden-signature (new parameter-frame (list-set-of local-binding) plural instance-function get false false none
+                 (<- overridden-signature (new parameter-frame (list-set-of local-binding) instance-function get false false none
                                                (vector-of parameter) none (&opt type overridden-member))))
                (:select (tag set)
                  (const v variable (new variable (&opt type overridden-member) none false none none :uninit))
                  (const parameters (vector parameter) (vector (new parameter v none)))
-                 (<- overridden-signature (new parameter-frame (list-set-of local-binding) plural instance-function set false false none
+                 (<- overridden-signature (new parameter-frame (list-set-of local-binding) instance-function set false false none
                                                parameters none -void))))
              ((setup-override :function-common) overridden-signature))))))
     
@@ -4817,7 +4812,7 @@
         ((validate cxt env kind handling)
          (const local-cxt context (new context (& strict cxt) (& open-namespaces cxt)))
          (const superconstructor-called boolean (not-in kind (tag constructor-function)))
-         (const compile-frame parameter-frame (new parameter-frame (list-set-of local-binding) plural kind handling false superconstructor-called none
+         (const compile-frame parameter-frame (new parameter-frame (list-set-of local-binding) kind handling false superconstructor-called none
                                                    (vector-of parameter) none :uninit))
          (const compile-env environment (cons compile-frame env))
          (action<- (compile-frame :function-common 0) compile-frame)
@@ -4826,7 +4821,7 @@
            (exec (define-hoisted-var compile-env "arguments" undefined)))
          ((validate :parameters) local-cxt compile-env compile-frame)
          ((validate :result) local-cxt compile-env)
-         ((validate :block) local-cxt compile-env (new jump-targets (list-set-of label) (list-set-of label)) plural))
+         ((validate :block) local-cxt compile-env (new jump-targets (list-set-of label) (list-set-of label)) false))
         
         ((setup)
          (const compile-env environment (compile-env :function-common 0))
@@ -4897,7 +4892,7 @@
          (note "The check that " (:expr boolean (not-in phase (tag compile))) " also ensures that " (:action setup) " has been called.")
          (rwhen (in phase (tag compile) :narrow-false)
            (throw-error -constant-error "constant expressions cannot call user-defined functions"))
-         (note "Class frames are always " (:tag singular) ", so the run environment is the same as compile environment.")
+         (note "Class frames are always preinstantiated, so the run environment is the same as compile environment.")
          (const env environment (compile-env :function-common 0))
          (const compile-frame parameter-frame (compile-frame :function-common 0))
          (const runtime-frame parameter-frame (instantiate-parameter-frame compile-frame env this))
@@ -4915,7 +4910,7 @@
          (note "The check that " (:expr boolean (not-in phase (tag compile))) " also ensures that " (:action setup) " has been called.")
          (rwhen (in phase (tag compile) :narrow-false)
            (throw-error -constant-error "constant expressions cannot call user-defined getters"))
-         (note "Class frames are always " (:tag singular) ", so the run environment is the same as compile environment.")
+         (note "Class frames are always preinstantiated, so the run environment is the same as compile environment.")
          (const env environment (compile-env :function-common 0))
          (const compile-frame parameter-frame (compile-frame :function-common 0))
          (const runtime-frame parameter-frame (instantiate-parameter-frame compile-frame env this))
@@ -4933,7 +4928,7 @@
          (note "The check that " (:expr boolean (not-in phase (tag compile))) " also ensures that " (:action setup) " has been called.")
          (rwhen (in phase (tag compile) :narrow-false)
            (throw-error -constant-error "constant expressions cannot call setters"))
-         (note "Class frames are always " (:tag singular) ", so the run environment is the same as compile environment.")
+         (note "Class frames are always preinstantiated, so the run environment is the same as compile environment.")
          (const env environment (compile-env :function-common 0))
          (const compile-frame parameter-frame (compile-frame :function-common 0))
          (const runtime-frame parameter-frame (instantiate-parameter-frame compile-frame env this))
@@ -4943,7 +4938,7 @@
                  (throw x))))
         
         ((eval-instance-init this args phase)
-         (note "Class frames are always " (:tag singular) ", so the run environment is the same as compile environment.")
+         (note "Class frames are always preinstantiated, so the run environment is the same as compile environment.")
          (const env environment (compile-env :function-common 0))
          (const compile-frame parameter-frame (compile-frame :function-common 0))
          (const runtime-frame parameter-frame (instantiate-parameter-frame compile-frame env this))
@@ -5273,13 +5268,13 @@
     
     (%heading 2 "Class Definition")
     (rule :class-definition ((class (writable-cell class))
-                             (validate (-> (context environment plurality attribute-opt-not-false) void))
+                             (validate (-> (context environment boolean attribute-opt-not-false) void))
                              (setup (-> () void))
                              (eval (-> (environment object) object)))
       (production :class-definition (class :identifier :inheritance :block) class-definition-definition
-        ((validate cxt env pl attr)
-         (rwhen (not-in pl (tag singular))
-           (throw-error -syntax-error "a class may be defined only in a scope that allows class definitions"))
+        ((validate cxt env preinst attr)
+         (rwhen (not preinst)
+           (throw-error -syntax-error "a class may be defined only in a preinstantiated scope"))
          (const super class ((validate :inheritance) cxt env))
          (rwhen (not (& complete super))
            (throw-error -constant-error "cannot override a class before its definition has been compiled"))
@@ -5334,7 +5329,7 @@
          (action<- (class :class-definition 0) c)
          (const v variable (new variable -class c true none none :uninit))
          (exec (define-local-member env (name :identifier) (& namespaces a) (& override-mod a) (& explicit a) read-write v))
-         ((validate-using-frame :block) cxt env (new jump-targets (list-set-of label) (list-set-of label)) pl c)
+         ((validate-using-frame :block) cxt env (new jump-targets (list-set-of label) (list-set-of label)) preinst c)
          (when (in (& init c) (tag none))
            (&= init c (& init super)))
          (&= complete c true))
@@ -5383,11 +5378,11 @@
     
     
     (%heading 2 "Namespace Definition")
-    (rule :namespace-definition ((validate (-> (context environment plurality attribute-opt-not-false) void)))
+    (rule :namespace-definition ((validate (-> (context environment boolean attribute-opt-not-false) void)))
       (production :namespace-definition (namespace :identifier) namespace-definition-normal
-        ((validate (cxt :unused) env pl attr)
-         (rwhen (not-in pl (tag singular))
-           (throw-error -syntax-error "a class may be defined only in a scope that allows class definitions"))
+        ((validate (cxt :unused) env preinst attr)
+         (rwhen (not preinst)
+           (throw-error -syntax-error "a namespace may be defined only in a preinstantiated scope"))
          (var a compound-attribute (to-compound-attribute attr))
          (rwhen (& dynamic a)
            (throw-error -attribute-error "a namespace definition cannot have the " (:character-literal "dynamic") " attribute"))
@@ -5423,7 +5418,7 @@
         (eval-program
          (begin
           (const cxt context (new context false (list-set public)))
-          ((validate :directives) cxt initial-environment (new jump-targets (list-set-of label) (list-set-of label)) singular none)
+          ((validate :directives) cxt initial-environment (new jump-targets (list-set-of label) (list-set-of label)) true none)
           ((setup :directives))
           (return ((eval :directives) initial-environment undefined))))))
     (%print-actions ("Evaluation" eval-program))
