@@ -36,7 +36,6 @@ public class PlugletLoader {
 	Dimension screenSize = new Button().getToolkit().getScreenSize();
     }
     
-    
     //  path to jar file. Name of main class sould to be in MANIFEST.
     public static PlugletFactory getPluglet(String path) {
 	try {
@@ -75,13 +74,24 @@ public class PlugletLoader {
 	    PermissionCollection collection = perm.newPermissionCollection();
 	    collection.add(perm);
 	    policy.grantPermission(codesource,collection);
-	    Object pluglet = loader.loadClass(plugletClassName).newInstance();
-	    if (pluglet instanceof PlugletFactory) {
+	    Class clazz = loader.loadClass(plugletClassName);
+	    if (plugletClass == null) {
+		plugletClass = Class.forName("org.mozilla.pluglet.Pluglet");
+		plugletFactoryClass = Class.forName("org.mozilla.pluglet.PlugletFactory");
+	    }
+	    if (isSubclassOf(clazz, plugletFactoryClass)) {
                 org.mozilla.util.DebugPluglet.print("-- ok we have a PlugletFactory"+"\n");
-		return (PlugletFactory) pluglet;
+		return (PlugletFactory)clazz.newInstance();
 	    } else {
-                org.mozilla.util.DebugPluglet.print("-- oups we do not have a PlugletFactory"+"\n");
-		return null;
+                org.mozilla.util.DebugPluglet.print("-- we do not have a PlugletFactory. Maybe it is Pluglet"+"\n");
+		if (isSubclassOf(clazz,plugletClass)) {
+		    org.mozilla.util.DebugPluglet.print("-- it is Pluglet. Creating Generic Factory"+"\n");
+		    return new PlugletFactoryGeneric(clazz);
+		} else {
+		    org.mozilla.util.DebugPluglet.print("-- That is nor Pluglet nor PlugletFactory\n");
+		    return null;
+		}
+		    
 	    }
 	} catch (Exception e) {
 	    org.mozilla.util.DebugPluglet.print("-- PlugletLoader.getPluglet exc "+e); 
@@ -106,7 +116,36 @@ public class PlugletLoader {
 	    return null;
 	}
     }
+    
+    private static boolean isSubclassOf(Class a, Class b) {
+	if (a == null
+	    || b == null) {
+	    return false;
+	}
+	Class[] interfaces = a.getInterfaces();
+	//org.mozilla.util.DebugPluglet.print("-- PlugletLoader.isSubclassOf "+interfaces.length+" "+a+" "+b+"\n"); 
+	boolean res = false;
+	if (isSubclassOf(a.getSuperclass(),b)) {
+	    res = true;
+	} else {
+	    for (int i = 0; i < interfaces.length; i++) {
+		//org.mozilla.util.DebugPluglet.print("-- PlugletLoader.isSubclassOf "+interfaces[i]+"\n"); 
+		if (b.equals(interfaces[i])) {
+		    res = true;
+		    break;
+		} else if (isSubclassOf(interfaces[i],b)) {
+		    res = true;
+		    break;
+		}
+	    }
+	}
+	return res;
+    }
     private static PlugletPolicy policy = null;
+    private static Class plugletClass = null;
+    private static Class plugletFactoryClass = null;
+
 }
+
 
 
