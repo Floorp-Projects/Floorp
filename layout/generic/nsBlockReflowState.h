@@ -681,15 +681,14 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
   }
 
   // The line may have clear before semantics.
-  mY = mY + aDeltaY;
   if (NS_STYLE_CLEAR_NONE != aLine->mBreakType) {
     // Clear past floaters before the block if the clear style is not none
     aApplyTopMargin = ClearPastFloaters(aLine->mBreakType);
   }
 
   // Recover mPrevBottomMargin and calculate the line's new Y
-  // coordinate (lineY)
-  nscoord lineY = mY;
+  // coordinate (newLineY)
+  nscoord newLineY = mY;
   if (0 == aLine->mBounds.height) {
     if (aLine->IsBlock() &&
         nsBlockReflowContext::IsHTMLParagraph(aLine->mFirstChild)) {
@@ -721,11 +720,16 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
     // The lineY is just below the collapsed top margin value. The
     // mPrevBottomMargin gets set to the bottom margin value for the
     // line.
-    lineY += collapsedTopMargin;
+    newLineY += collapsedTopMargin;
     mPrevBottomMargin = bottomMargin;
   }
-  nscoord oldY = aLine->mBounds.y;
-  aLine->mBounds.y = lineY;
+  nscoord finalDeltaY = newLineY - aLine->mBounds.y;
+  if (0 != finalDeltaY) {
+    // Slide the frames in the line by the computed delta. This also
+    // updates the lines Y coordinate and the combined area's Y
+    // coordinate.
+    mBlock->SlideLine(mPresContext, mSpaceManager, aLine, finalDeltaY);
+  }
 
   // Now that the line's Y coordinate is updated, place floaters back
   // into the space manager
@@ -744,15 +748,8 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
   //   PlaceCurrentLineFloaters and PlaceBelowCurrentLineFloaters
   //   always reflow the floaters...
 
-  // Recover line combined-area. Just slide the value we already have
-  // by the distance the line has ended up moving.
-  nscoord finalDeltaY = aLine->mBounds.y - oldY;
-  aLine->mCombinedArea.y += finalDeltaY;
-
   // Recover mY
   mY = aLine->mBounds.YMost();
-
-  // XXX cope with BR lines
 
   // It's possible that the line has clear after semantics
   if (!aLine->IsBlock() && (NS_STYLE_CLEAR_NONE != aLine->mBreakType)) {
@@ -2118,7 +2115,7 @@ nsBlockFrame::SlideLine(nsIPresContext& aPresContext,
                         nsLineBox* aLine, nscoord aDY)
 {
 #if 0
-ListTag(stdout); printf(": SlideLine: line=%p dy=%d\n", aDY);
+ListTag(stdout); printf(": SlideLine: line=%p dy=%d\n", aLine, aDY);
 #endif
   // Adjust the Y coordinate of the frames in the line
   nsRect r;
