@@ -18,7 +18,7 @@
 #include "nsIMessage.h" /* interface nsIMessage */
 #include "nsIFolder.h" /* interface nsIFolder */
 class nsIInputStream; /* forward decl */
-#include "nsIInputStream.h";
+#include "nsIInputStream.h"
 
 
 /* starting interface:    nsICopyMessageListener */
