@@ -59,7 +59,9 @@ ExtractKeyString( nsHashKey* key, void*, void*, nsISupports** _retval )
           // BULLSHIT ALERT: use |nsCAutoString| to deflate to single-byte until I can add, e.g.,
           //  |nsCStringKey| to hashtable
         const nsString& s = NS_STATIC_CAST(nsStringKey*, key)->GetString();
-        status = obj->SetDataWithLength(s.Length(), nsCAutoString(s));
+	nsCAutoString tmpStr;
+	tmpStr.AssignWithConversion(s);
+        status = obj->SetDataWithLength(tmpStr.Length(), tmpStr);
       }
 
     *_retval = obj;

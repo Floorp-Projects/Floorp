@@ -563,7 +563,7 @@ void nsDocLoaderImpl::FireOnStartDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
     ClearInternalProgress(); // only clear our progress if we are starting a new load....
     nsCOMPtr<nsIWebProgressListener> parentProgressListener;
     GetParentWebProgressListener(this, getter_AddRefs(parentProgressListener));
-    if (parentProgressListener && parentProgressListener != mProgressListener)
+    if (parentProgressListener && parentProgressListener.get() != mProgressListener.get())
     {
 #if defined(DEBUG)
         PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
@@ -637,7 +637,7 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
   {
     nsCOMPtr<nsIWebProgressListener> parentProgressListener;
     GetParentWebProgressListener(this, getter_AddRefs(parentProgressListener));
-    if (parentProgressListener && parentProgressListener != mProgressListener)
+    if (parentProgressListener && (parentProgressListener.get() != mProgressListener.get()))
     {
 #if defined(DEBUG)
    PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 

@@ -66,7 +66,8 @@ nsUNIXCharset::nsUNIXCharset()
   // XXX we should make the following block critical section
   if(nsnull == gInfo)
   {
-      nsAutoString propertyURL("resource:/res/unixcharset.properties");
+      nsAutoString propertyURL;
+      propertyURL.AssignWithConversion("resource:/res/unixcharset.properties");
       nsURLProperties *info = new nsURLProperties( propertyURL );
       NS_ASSERTION( info, "cannot create nsURLProperties");
       gInfo = info;
@@ -74,21 +75,23 @@ nsUNIXCharset::nsUNIXCharset()
 
   if(gInfo && locale)
   {
-      nsAutoString platformLocaleKey("locale." OSTYPE ".");
-      platformLocaleKey.Append(locale);
+      nsAutoString platformLocaleKey;
+      platformLocaleKey.AssignWithConversion("locale." OSTYPE ".");
+      platformLocaleKey.AppendWithConversion(locale);
 
       nsresult res = gInfo->Get(platformLocaleKey, mCharset);
       if(NS_FAILED(res)) 
       {
-         nsAutoString localeKey("locale.all.");
-         localeKey.Append(locale);
+         nsAutoString localeKey;
+	 localeKey.AssignWithConversion("locale.all.");
+         localeKey.AppendWithConversion(locale);
          res = gInfo->Get(localeKey, mCharset);
          if(NS_SUCCEEDED(res))  {
             return; // succeeded
          }
       }
    }
-   mCharset = "ISO-8859-1";
+   mCharset.AssignWithConversion("ISO-8859-1");
    return; // failed
 }
 nsUNIXCharset::~nsUNIXCharset()
@@ -112,7 +115,8 @@ NS_IMETHODIMP
 nsUNIXCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue)
 {
   nsCOMPtr<nsIPosixLocale> pPosixLocale;
-  nsString charset("ISO-8859-1"), localeNameAsString(localeName);
+  nsString charset, localeNameAsString(localeName);
+  charset.AssignWithConversion("ISO-8859-1");
   char posix_locale[128];
 
   //
@@ -133,15 +137,16 @@ nsUNIXCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar
   if (!gInfo) { *_retValue=charset.ToNewUnicode(); return NS_ERROR_OUT_OF_MEMORY; }
 
 
-  nsAutoString locale_key("locale." OSTYPE "."); 
-  locale_key.Append(posix_locale); 
+  nsAutoString locale_key;
+  locale_key.AssignWithConversion("locale." OSTYPE "."); 
+  locale_key.AppendWithConversion(posix_locale); 
  
   rv = gInfo->Get(locale_key,charset);
   if(NS_FAILED(rv)) { 
-    locale_key="locale.all."; 
-    locale_key.Append(posix_locale); 
-    rv = gInfo->Get(locale_key,charset); 
-    if(NS_FAILED(rv)) { charset="ISO-8859-1";}
+    locale_key.AssignWithConversion("locale.all.");
+    locale_key.AppendWithConversion(posix_locale);
+    rv = gInfo->Get(locale_key,charset);
+    if(NS_FAILED(rv)) { charset.AssignWithConversion("ISO-8859-1"); }
   }
 
   *_retValue = charset.ToNewUnicode();

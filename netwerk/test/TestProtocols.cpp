@@ -164,7 +164,8 @@ TestHTTPEventSink::OnHeadersAvailable(nsISupports* context)
                 nsAutoString field;
                 header->GetField(getter_AddRefs(key));
                 key->ToString(field);
-                nsCAutoString theField(field);
+                nsCAutoString theField;
+		theField.AssignWithConversion(field);
                 printf("\t%s: ", theField.GetBuffer());
 
                 header->GetValue(getter_Copies(value));
@@ -191,7 +192,8 @@ TestHTTPEventSink::OnHeadersAvailable(nsISupports* context)
 
                 header->GetField(getter_AddRefs(key));
                 key->ToString(field);
-                nsCAutoString theField(field);
+                nsCAutoString theField;
+		theField.AssignWithConversion(field);
                 printf("\t%s: ", theField.GetBuffer());
 
                 header->GetValue(getter_Copies(value));

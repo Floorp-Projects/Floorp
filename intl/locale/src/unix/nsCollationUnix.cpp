@@ -46,7 +46,7 @@ NS_IMPL_ISUPPORTS(nsCollationUnix, kICollationIID);
 inline void nsCollationUnix::DoSetLocale()
 {
   char *locale = setlocale(LC_COLLATE, NULL);
-  mSavedLocale.SetString(locale ? locale : "");
+  mSavedLocale.AssignWithConversion(locale ? locale : "");
   if (!mSavedLocale.EqualsIgnoreCase(mLocale)) {
     char newLocale[128];
     (void) setlocale(LC_COLLATE, mLocale.ToCString(newLocale, 128));
@@ -87,13 +87,14 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
   }
 
   // default local charset name
-  mCharset.SetString("ISO-8859-1");
+  mCharset.AssignWithConversion("ISO-8859-1");
 
   // default platform locale
-  mLocale.SetString("C");
+  mLocale.AssignWithConversion("C");
 
   PRUnichar *aLocaleUnichar = NULL;
-  nsString aCategory("NSILOCALE_COLLATE");
+  nsString aCategory;
+  aCategory.AssignWithConversion("NSILOCALE_COLLATE");
 
   // get locale string, use app default if no locale specified
   if (locale == nsnull) {
@@ -114,14 +115,14 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
   // Get platform locale and charset name from locale, if available
   if (NS_SUCCEEDED(res)) {
     nsString aLocale;
-    aLocale.SetString(aLocaleUnichar);
+    aLocale = aLocaleUnichar;
     if (NULL != aLocaleUnichar) {
       nsAllocator::Free(aLocaleUnichar);
     }
 
     // keep the same behavior as 4.x as well as avoiding Linux collation key problem
     if (aLocale.EqualsIgnoreCase("en-US")) {
-      aLocale.SetString("C");
+      aLocale.AssignWithConversion("C");
     }
 
     nsCOMPtr <nsIPosixLocale> posixLocale = do_GetService(kPosixLocaleFactoryCID, &res);
@@ -129,7 +130,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
       char platformLocale[kPlatformLocaleLength+1];
       res = posixLocale->GetPlatformLocale(&aLocale, platformLocale, kPlatformLocaleLength+1);
       if (NS_SUCCEEDED(res)) {
-        mLocale.SetString(platformLocale);
+        mLocale.AssignWithConversion(platformLocale);
       }
     }
 
@@ -138,7 +139,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(aLocale.GetUnicode(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
-        mCharset.SetString(mappedCharset);
+        mCharset = mappedCharset;
         nsAllocator::Free(mappedCharset);
       }
     }
@@ -166,7 +167,7 @@ nsresult nsCollationUnix::GetSortKeyLen(const nsCollationStrength strength,
 
   // this may not necessary because collation key length 
   // probably will not change by this normalization
-  nsAutoString stringNormalized(stringIn);
+  nsString stringNormalized = stringIn;
   if (strength != kCollationCaseSensitive) {
     res = mCollation->NormalizeString(stringNormalized);
   }
@@ -192,7 +193,7 @@ nsresult nsCollationUnix::CreateRawSortKey(const nsCollationStrength strength,
 {
   nsresult res = NS_OK;
 
-  nsAutoString stringNormalized(stringIn);
+  nsString stringNormalized = stringIn;
   if (strength != kCollationCaseSensitive) {
     res = mCollation->NormalizeString(stringNormalized);
   }

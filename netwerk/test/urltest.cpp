@@ -94,7 +94,7 @@ int writeoutto(const char* i_pURL, char** o_Result, PRBool bUseStd = PR_TRUE)
         output += temp ? (const char*)temp : "";
         output += ',';
         tURL->GetPort(&port);
-        output += port;
+        output.AppendInt(port);
         output += ',';
         tURL->GetQuery(getter_Copies(temp));
         output += temp ? (const char*)temp : "";

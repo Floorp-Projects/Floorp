@@ -47,7 +47,8 @@ NS_IMPL_ISUPPORTS(nsDateTimeFormatUnix, kIDateTimeFormatIID);
 nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
 {
   PRUnichar *aLocaleUnichar = NULL;
-  nsString aCategory("NSILOCALE_TIME");
+  nsString aCategory;
+  aCategory.AssignWithConversion("NSILOCALE_TIME");
   nsresult res = NS_OK;
 
   // use cached info if match with stored locale
@@ -67,7 +68,7 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
     }
   }
 
-  mCharset.SetString("ISO-8859-1");
+  mCharset.AssignWithConversion("ISO-8859-1");
   PL_strncpy(mPlatformLocale, "en_US", kPlatformLocaleLength+1);
 
   // get locale name string, use app default if no locale specified
@@ -79,7 +80,7 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
       if (NS_SUCCEEDED(res)) {
         res = appLocale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
         if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
-          mAppLocale.SetString(aLocaleUnichar); // cache app locale name
+          mAppLocale = aLocaleUnichar; // cache app locale name
         }
         appLocale->Release();
       }
@@ -90,7 +91,7 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
   }
 
   if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
-    mLocale.SetString(aLocaleUnichar); // cache locale name
+    mLocale = aLocaleUnichar; // cache locale name
     nsAllocator::Free(aLocaleUnichar);
 
     nsCOMPtr <nsIPosixLocale> posixLocale = do_GetService(kPosixLocaleFactoryCID, &res);
@@ -103,7 +104,7 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(mLocale.GetUnicode(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
-        mCharset.SetString(mappedCharset);
+        mCharset = mappedCharset;
         nsAllocator::Free(mappedCharset);
       }
     }
@@ -245,7 +246,7 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
         res = decoder->Convert(strOut, &srcLength,
                                unichars, &unicharLength);
         if (NS_SUCCEEDED(res)) {
-          stringOut.SetString(unichars, unicharLength);
+          stringOut.Assign(unichars, unicharLength);
         }
       }
       delete [] unichars;

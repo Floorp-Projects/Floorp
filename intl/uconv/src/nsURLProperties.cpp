@@ -47,7 +47,8 @@ nsURLProperties::nsURLProperties(nsString& aUrl)
     gRefCnt++;
   }
 
-  nsCAutoString aUrlCString(aUrl);
+  nsCAutoString aUrlCString;
+  aUrlCString.AssignWithConversion(aUrl);
   res = gIOService->NewURI(aUrlCString.GetBuffer(), nsnull, &url);
   if (NS_FAILED(res)) return;
 

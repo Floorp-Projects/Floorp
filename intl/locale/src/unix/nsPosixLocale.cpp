@@ -95,12 +95,12 @@ nsPosixLocale::GetXPLocale(const char* posixLocale, nsString* locale)
 
   if (posixLocale!=nsnull) {
     if (strcmp(posixLocale,"C")==0 || strcmp(posixLocale,"POSIX")==0) {
-      *locale = "en-US";
+      locale->AssignWithConversion("en-US");
       return NS_OK;
     }
     if (!ParseLocaleString(posixLocale,lang_code,country_code,extra,'_')) {
 //      * locale = "x-user-defined";
-      locale->SetString(posixLocale);  // use posix if parse failed
+      locale->AssignWithConversion(posixLocale);  // use posix if parse failed
       return NS_OK;
     }
 
@@ -121,7 +121,7 @@ nsPosixLocale::GetXPLocale(const char* posixLocale, nsString* locale)
       }
     }
 
-    *locale = posix_locale;
+    locale->AssignWithConversion(posix_locale);
     return NS_OK;
 
   }
