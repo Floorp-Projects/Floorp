@@ -57,6 +57,7 @@
 #include "nsStyleChangeList.h"
 #include "nsIFormControl.h"
 #include "nsCSSAtoms.h"
+#include "nsIDeviceContext.h"
 
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
@@ -1783,11 +1784,28 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
   viewManager->GetRootView(rootView);
   viewportFrame->SetView(rootView);
 
-  // As long as the webshell doesn't prohibit it, create a scroll frame
-  // that will act as the scolling mechanism for the viewport
-  // XXX We should only do this when presenting to the screen, i.e., for galley
-  // mode and print-preview, but not when printing
-  PRBool       isScrollable = PR_FALSE;
+  // If the device supports scrolling (e.g., in galley mode on the screen and
+  // for print-preview, but not when printing), then create a scroll frame that
+  // will act as the scrolling mechanism for the viewport. 
+  // XXX Do we even need a viewport when printing to a printer?
+  // XXX It would be nice to have a better way to query for whether the device
+  // is scrollable
+  PRBool  isScrollable = PR_TRUE;
+  if (aPresContext) {
+    nsIDeviceContext* dc;
+    aPresContext->GetDeviceContext(&dc);
+    if (dc) {
+      PRBool  supportsWidgets;
+      if (NS_SUCCEEDED(dc->SupportsNativeWidgets(supportsWidgets))) {
+        isScrollable = supportsWidgets;
+      }
+      NS_RELEASE(dc);
+    }
+  }
+
+  // As long as the webshell doesn't prohibit it, and the device supports
+  // it, create a scroll frame that will act as the scolling mechanism for
+  // the viewport.
   nsISupports* container;
   if (nsnull != aPresContext) {
     aPresContext->GetContainer(&container);
@@ -1797,8 +1815,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
       if (nsnull != webShell) {
         PRInt32 scrolling = -1;
         webShell->GetScrolling(scrolling);
-        if (NS_STYLE_OVERFLOW_HIDDEN != scrolling) {
-          isScrollable = PR_TRUE;
+        if (NS_STYLE_OVERFLOW_HIDDEN == scrolling) {
+          isScrollable = PR_FALSE;
         }
         NS_RELEASE(webShell);
       }
