@@ -808,7 +808,7 @@ function getAccountValue(account, accountValues, type, slot, preftype, isGeneric
     accountValues[type] = new Array;
 
   // fill in the slot from the account if necessary
-  if (!(slot in accountValues[type]) || !accountValues[type][slot]) {
+  if (!(slot in accountValues[type]) || accountValues[type][slot] == undefined) {
     // dump("Array->Form: lazily reading in the " + slot + " from the " + type + "\n");
     var server;
     if (account)
