@@ -41,7 +41,11 @@ else
 OSDIR	= unix
 endif
 
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+OSHELPER	= $(OSDIR)/nsOSHelperAppService.cpp
+else
 OSHELPER	= nsOSHelperAppService.cpp
+endif
 
 EXPORTS = 	nsExternalHelperAppService.h \
 		$(OSDIR)/nsOSHelperAppService.h \
