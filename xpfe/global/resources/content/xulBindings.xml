@@ -157,7 +157,7 @@
   <!-- XUL <button>s -->
   <binding id="buttonleft" extends="chrome://global/content/xulBindings.xml#basetext">
     <content excludes="observes,template">
-  	  <xul:box class="button-internal-box" autostretch="never" flex="1" inherits="disabled">
+  	  <xul:box class="button-internal-box" autostretch="never" flex="1">
         <xul:image class="button-icon" inherits="src"/>
         <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
           <xul:text class="button-text" inherits="value,accesskey,crop,dragover-top"/>
@@ -168,7 +168,7 @@
 
   <binding id="buttontop" extends="chrome://global/content/xulBindings.xml#basetext">
     <content excludes="observes,template">
-  	  <xul:box class="button-internal-box" orient="vertical" autostretch="never" flex="1" inherits="disabled">
+  	  <xul:box class="button-internal-box" orient="vertical" autostretch="never" flex="1">
         <xul:image class="button-icon" inherits="src"/>
         <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
           <xul:text class="button-text" inherits="value,accesskey,crop,dragover-top"/>
@@ -179,7 +179,7 @@
   
   <binding id="buttonright" extends="chrome://global/content/xulBindings.xml#basetext">
     <content excludes="observes,template">
-  	  <xul:box class="button-internal-box" inherits="orient,disabled" autostretch="never" flex="1">
+  	  <xul:box class="button-internal-box" inherits="orient" autostretch="never" flex="1">
         <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
           <xul:text class="button-text" inherits="value,accesskey,crop,dragover-top"/>
         </xul:box>
@@ -190,7 +190,7 @@
 
   <binding id="buttonbottom" extends="chrome://global/content/xulBindings.xml#basetext">
     <content excludes="observes,template">
-  	  <xul:box class="button-internal-box" orient="vertical" autostretch="never" flex="1" inherits="disabled">
+  	  <xul:box class="button-internal-box" orient="vertical" autostretch="never" flex="1">
         <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
           <xul:text class="button-text" inherits="value,accesskey,crop,dragover-top"/>
         </xul:box>
