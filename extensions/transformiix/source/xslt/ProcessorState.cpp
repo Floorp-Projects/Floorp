@@ -25,13 +25,13 @@
  *   -- added code in ::resolveFunctionCall to support the
  *      document() function.
  *
- * $Id: ProcessorState.cpp,v 1.7 2000/09/04 16:25:27 axel%pike.org Exp $
+ * $Id: ProcessorState.cpp,v 1.8 2000/09/18 06:06:10 Peter.VanderBeken%pandora.be Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * Much of this code was ported from XSL:P
- * @version $Revision: 1.7 $ $Date: 2000/09/04 16:25:27 $
+ * @version $Revision: 1.8 $ $Date: 2000/09/18 06:06:10 $
 **/
 
 #include "ProcessorState.h"
@@ -410,12 +410,14 @@ void ProcessorState::getNameSpaceURI(const String& name, String& nameSpaceURI) {
 
     XMLUtils::getNameSpace(name, prefix);
     if (prefix.length() == 0) {
+        nameSpaceURI.clear();
         nameSpaceURI.append(*(String*)defaultNameSpaceURIStack.peek());
     }
     else {
         String* result = (String*)nameSpaceMap.get(prefix);
         if (result) {
-            nameSpaceURI.append(*result);        
+            nameSpaceURI.clear();
+            nameSpaceURI.append(*result);
         }
     }
 } //-- getNameSpaceURI
