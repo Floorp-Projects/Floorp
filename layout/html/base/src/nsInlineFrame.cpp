@@ -20,7 +20,6 @@
 #include "nsFrameList.h"
 #include "nsBlockReflowContext.h"
 #include "nsLineLayout.h"
-#include "nsInlineReflow.h"
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLParts.h"
@@ -28,6 +27,8 @@
 #include "nsIStyleContext.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
+#include "nsIRenderingContext.h"
+#include "nsIFontMetrics.h"
 
 // XXX TODO:
 // append/insert/remove floater testing
@@ -35,7 +36,7 @@
 // Theory of operation:
 // XXX write this
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 #undef NOISY_ANON_BLOCK
 #else
 #undef NOISY_ANON_BLOCK
@@ -89,17 +90,11 @@ public:
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth);
 #endif
-  NS_IMETHOD VerticalAlignFrames(nsIPresContext& aPresContext,
-                                 const nsHTMLReflowState& aParentReflowState,
-                                 nscoord aLineHeight,
-                                 nscoord aDistanceFromTopEdge,
-                                 nsRect& aCombinedArea);
 
 protected:
   // Additional reflow state used during our reflow methods
   struct InlineReflowState {
     nsIFrame* mNextRCFrame;
-    nsInlineReflow* mInlineReflow;
     nsIFrame* mPrevFrame;
     nsInlineFrame* mNextInFlow;
   };
@@ -1184,13 +1179,15 @@ nsInlineFrame::Reflow(nsIPresContext&          aPresContext,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus&          aStatus)
 {
+  if (nsnull == aReflowState.lineLayout) {
+    return NS_ERROR_INVALID_ARG;
+  }
   DrainOverflow();
 
   // Set our own reflow state (additional state above and beyond
   // aReflowState)
   InlineReflowState irs;
   irs.mPrevFrame = nsnull;
-  irs.mInlineReflow = nsnull;
   irs.mNextInFlow = (nsInlineFrame*) mNextInFlow;
   if (eReflowReason_Incremental == aReflowState.reason) {
     // Peel off the next frame in the path if this is an incremental
@@ -1228,8 +1225,7 @@ nsInlineFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   if (HaveAnonymousBlock()) {
-    if ((nsnull != aReflowState.lineLayout) &&
-        (0 != aReflowState.lineLayout->GetPlacedFrames())) {
+    if (!aReflowState.lineLayout->LineIsEmpty()) {
       // This inline frame cannot be placed on the current line
       // because there already is an inline frame on this line (and we
       // contain an anonymous block).
@@ -1239,30 +1235,27 @@ nsInlineFrame::Reflow(nsIPresContext&          aPresContext,
     else {
       rv = ReflowBlockFrame(aPresContext, aReflowState, irs,
                             aMetrics, aStatus);
+
+      // If the combined area of our children exceeds our bounding box
+      // then set the NS_FRAME_OUTSIDE_CHILDREN flag, otherwise clear
+      // it.
+      if ((aMetrics.mCombinedArea.x < 0) ||
+          (aMetrics.mCombinedArea.y < 0) ||
+          (aMetrics.mCombinedArea.XMost() > aMetrics.width) ||
+          (aMetrics.mCombinedArea.YMost() > aMetrics.height)) {
+        mState |= NS_FRAME_OUTSIDE_CHILDREN;
+      }
+      else {
+        mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
+      }
     }
   }
   else {
-    if (nsnull != aReflowState.lineLayout) {
-      rv = ReflowInlineFrames(aPresContext, aReflowState, irs,
-                              aMetrics, aStatus);
-    }
-    else {
-      rv = NS_ERROR_NULL_POINTER;
-    }
-  }
-
-  if (NS_SUCCEEDED(rv)) {
-    // If the combined area of our children exceeds our bounding box
-    // then set the NS_FRAME_OUTSIDE_CHILDREN flag, otherwise clear it.
-    if ((aMetrics.mCombinedArea.x < 0) ||
-        (aMetrics.mCombinedArea.y < 0) ||
-        (aMetrics.mCombinedArea.XMost() > aMetrics.width) ||
-        (aMetrics.mCombinedArea.YMost() > aMetrics.height)) {
-      mState |= NS_FRAME_OUTSIDE_CHILDREN;
-    }
-    else {
-      mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
-    }
+    rv = ReflowInlineFrames(aPresContext, aReflowState, irs,
+                            aMetrics, aStatus);
+    // Note: when we are reflowing inline frames the line layout code
+    // will properly compute our NS_FRAME_OUTSIDE_CHILDREN state for
+    // us.
   }
 
   return rv;
@@ -1284,114 +1277,6 @@ nsInlineFrame::FindTextRuns(nsLineLayout& aLineLayout)
       }
       frame->GetNextSibling(&frame);
     }
-  }
-  return NS_OK;
-}
-
-// Perform pass2 vertical alignment on top/bottom aligned child frames
-// XXX relative positioning will need to be done *after* this
-NS_IMETHODIMP
-nsInlineFrame::VerticalAlignFrames(nsIPresContext& aPresContext,
-                                   const nsHTMLReflowState& aParentReflowState,
-                                   nscoord aLineHeight,
-                                   nscoord aDistanceFromTopEdge,
-                                   nsRect& aCombinedArea)
-{
-  if (HaveAnonymousBlock()) {
-    // This should be impossible - when we have an inline frame and it
-    // contains an anonymous block, none of the blocks children or the
-    // block itself will trigger a pass2 valign at this level.
-    NS_NOTREACHED("can't get here");
-    aCombinedArea = mRect;
-    return NS_OK;
-  }
-
-  // topEdge is the y coordinate of the line's top, relative to this
-  // frame (== in this frames local coordinate system).
-  nscoord topEdge = -aDistanceFromTopEdge;
-
-  nsRect bbox, childCombinedArea;
-  nscoord x0 = 0;
-  nscoord y0 = 0;
-  nscoord x1 = mRect.width;
-  nscoord y1 = mRect.height;
-  nsIFrame* frame = mFrames.FirstChild();
-  while (nsnull != frame) {
-    const nsStyleText* textStyle;
-    frame->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)textStyle);
-    nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
-    frame->GetRect(bbox);
-
-    if (eStyleUnit_Enumerated == verticalAlignUnit) {
-      PRUint8 verticalAlignEnum = textStyle->mVerticalAlign.GetIntValue();
-      if (NS_STYLE_VERTICAL_ALIGN_TOP == verticalAlignEnum) {
-        nsMargin margin;
-        nsHTMLReflowState::ComputeMarginFor(frame, &aParentReflowState,
-                                            margin);
-        nsCSSFrameType frameType =
-          nsHTMLReflowState::DetermineFrameType(frame);
-        bbox.y = topEdge + margin.top;
-        if (NS_CSS_FRAME_TYPE_INLINE == frameType) {
-          nsMargin bp;
-          nsHTMLReflowState::ComputeBorderPaddingFor(frame,
-                                                     &aParentReflowState, bp);
-          bbox.y -= bp.top;
-        }
-        frame->SetRect(bbox);
-      }
-      else if (NS_STYLE_VERTICAL_ALIGN_BOTTOM == verticalAlignEnum) {
-        nsMargin margin;
-        nsHTMLReflowState::ComputeMarginFor(frame, &aParentReflowState,
-                                            margin);
-        nsCSSFrameType frameType =
-          nsHTMLReflowState::DetermineFrameType(frame);
-        bbox.y = topEdge + aLineHeight - bbox.height - margin.bottom;
-        if (NS_CSS_FRAME_TYPE_INLINE == frameType) {
-          nsMargin bp;
-          nsHTMLReflowState::ComputeBorderPaddingFor(frame,
-                                                     &aParentReflowState, bp);
-          bbox.y += bp.bottom;
-        }
-        frame->SetRect(bbox);
-      }
-    }
-
-    // Perform pass2 vertical alignment for top/bottom aligned
-    // frames that are not our direct descendants.
-    nsIHTMLReflow* ihr;
-    nsresult rv = frame->QueryInterface(kIHTMLReflowIID, (void**)&ihr);
-    if (NS_SUCCEEDED(rv)) {
-      nsSize availSize(0, 0);
-      // XXX whacky: we should be passing in the childs reflow state, right?
-      nsHTMLReflowState ourReflowState(aPresContext, aParentReflowState,
-                                       this, availSize);
-      nscoord distanceFromTopEdge = bbox.y - topEdge;
-      ihr->VerticalAlignFrames(aPresContext, ourReflowState, aLineHeight,
-                               distanceFromTopEdge, childCombinedArea);
-      nscoord x = childCombinedArea.x;
-      if (x < x0) x0 = x;
-      nscoord y = childCombinedArea.y;
-      if (y < y0) y0 = y;
-      nscoord xmost = childCombinedArea.XMost();
-      if (xmost > x1) x1 = xmost;
-      nscoord ymost = childCombinedArea.YMost();
-      if (ymost > y1) y1 = ymost;
-    }
-
-    frame->GetNextSibling(&frame);
-  }
-
-  aCombinedArea.x = mRect.x + x0;
-  aCombinedArea.y = mRect.y + y0;
-  aCombinedArea.width = x1 - x0;
-  aCombinedArea.height = y1 - y0;
-
-  // Update our outside-children flag bit
-  if ((x0 < 0) || (y0 < 0) || (x1 > mRect.width) || (y1 > mRect.height)) {
-    mState |= NS_FRAME_OUTSIDE_CHILDREN;
-  }
-  else {
-    mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
   }
   return NS_OK;
 }
@@ -1427,35 +1312,19 @@ nsInlineFrame::ReflowInlineFrames(nsIPresContext& aPresContext,
   nsresult rv = NS_OK;
   aStatus = NS_FRAME_COMPLETE;
 
-  nsInlineReflow ir(*aReflowState.lineLayout, aReflowState, this, PR_FALSE,
-                    nsnull != aMetrics.maxElementSize);
-  irs.mInlineReflow = &ir;
-  ir.SetNextRCFrame(irs.mNextRCFrame);
-  aReflowState.lineLayout->PushInline(&ir);
-
-  // Compute available area
-  nscoord x = aReflowState.mComputedBorderPadding.left;
+  nsLineLayout* lineLayout = aReflowState.lineLayout;
+  nscoord leftEdge = 0;
+  if (nsnull == mPrevInFlow) {
+    leftEdge = aReflowState.mComputedBorderPadding.left;
+  }
   nscoord availableWidth = aReflowState.availableWidth;
   if (NS_UNCONSTRAINEDSIZE != availableWidth) {
-    if (nsnull != mPrevInFlow) {
-      x = 0;
-      availableWidth -= aReflowState.mComputedBorderPadding.right +
-        aReflowState.computedMargin.right;
-    }
-    else {
-      availableWidth -= aReflowState.mComputedBorderPadding.left +
-        aReflowState.computedMargin.left +
-        aReflowState.mComputedBorderPadding.right +
-        aReflowState.computedMargin.right;
-    }
+    // Subtract off left and right border+padding from availableWidth
+    availableWidth -= leftEdge;
+    availableWidth -= aReflowState.mComputedBorderPadding.right;
   }
-  nscoord y = aReflowState.mComputedBorderPadding.top;
-  nscoord availableHeight = aReflowState.availableHeight;
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight) {
-    availableHeight -= aReflowState.mComputedBorderPadding.top +
-      aReflowState.mComputedBorderPadding.right;
-  }
-  ir.Init(x, y, availableWidth, availableHeight);
+  lineLayout->BeginSpan(this, &aReflowState,
+                        leftEdge, leftEdge + availableWidth);
 
   // First reflow our current children
   nsIFrame* frame = mFrames.FirstChild();
@@ -1489,37 +1358,99 @@ nsInlineFrame::ReflowInlineFrames(nsIPresContext& aPresContext,
       irs.mPrevFrame = frame;
     }
   }
-
-  // Compute final metrics
-  if (NS_SUCCEEDED(rv)) {
-#ifdef NS_DEBUG
-    if (NS_FRAME_COMPLETE == aStatus) {
-      // We can't be complete AND have overflow frames!
-      NS_ASSERTION(mOverflowFrames.IsEmpty(), "whoops");
-    }
+#ifdef DEBUG
+  if (NS_FRAME_COMPLETE == aStatus) {
+    // We can't be complete AND have overflow frames!
+    NS_ASSERTION(mOverflowFrames.IsEmpty(), "whoops");
+  }
 #endif
-    nsInlineReflow* ir = irs.mInlineReflow;
-    nsRect bbox;
-    ir->VerticalAlignFrames(bbox, aMetrics.ascent, aMetrics.descent);
-    ir->RelativePositionFrames(aMetrics.mCombinedArea);
-    aMetrics.width = bbox.XMost();
+
+  // If after reflowing our children they take up no area then make
+  // sure that we don't either.
+  nsSize size;
+  lineLayout->EndSpan(this, size, aMetrics.maxElementSize);
+  if ((0 == size.height) && (0 == size.width)) {
+    aMetrics.width = 0;
+    aMetrics.height = 0;
+    aMetrics.ascent = 0;
+    aMetrics.descent = 0;
+    if (nsnull != aMetrics.maxElementSize) {
+      aMetrics.maxElementSize->width = 0;
+      aMetrics.maxElementSize->height = 0;
+    }
+  }
+  else {
+    // Compute final width
+    aMetrics.width = size.width;
+    if (nsnull == mPrevInFlow) {
+      aMetrics.width += aReflowState.mComputedBorderPadding.left;
+    }
     if (NS_FRAME_IS_COMPLETE(aStatus)) {
       aMetrics.width += aReflowState.mComputedBorderPadding.right;
     }
-    aMetrics.height = bbox.height + aReflowState.mComputedBorderPadding.top +
+
+    // Compute final height. The height of our box is the sum of our
+    // font size plus the top and bottom border and padding. The height
+    // of children do not affect our height.
+    //
+    // Note 2: we use the actual font height for sizing our selves instead
+    // of the computed font height. On systems where they disagree the
+    // actual font height is more appropriate.
+    const nsStyleFont* font;
+    GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)font);
+    aReflowState.rendContext->SetFont(font->mFont);
+    nsIFontMetrics* fm;
+    aReflowState.rendContext->GetFontMetrics(fm);
+    fm->GetMaxAscent(aMetrics.ascent);
+    fm->GetMaxDescent(aMetrics.descent);
+    fm->GetHeight(aMetrics.height);
+    aMetrics.ascent += aReflowState.mComputedBorderPadding.top;
+    aMetrics.descent += aReflowState.mComputedBorderPadding.bottom;
+    aMetrics.height += aReflowState.mComputedBorderPadding.top +
       aReflowState.mComputedBorderPadding.bottom;
-#ifdef NOISY_FINAL_SIZE
-    ListTag(stdout);
-    printf(": metrics=%d,%d ascent=%d descent=%d\n",
-           aMetrics.width, aMetrics.height, aMetrics.ascent, aMetrics.descent);
-#endif
-    aMetrics.mCarriedOutTopMargin = 0;
-    aMetrics.mCarriedOutBottomMargin = 0;
-    if (nsnull != aMetrics.maxElementSize) {
-      *aMetrics.maxElementSize = ir->GetMaxElementSize();
+
+#if defined(DEBUG) && defined(XP_UNIX)
+    static PRBool useComputedHeight = PR_FALSE;
+    static PRBool firstTime = 1;
+    if (firstTime) {
+      if (getenv("GECKO_USE_COMPUTED_HEIGHT")) {
+        useComputedHeight = PR_TRUE;
+      }
     }
+    if (useComputedHeight) {
+      // Special debug code that violates the above CSS2 spec
+      // clarification. Why? So that we can predictably compute the values
+      // for testing layout.
+      nscoord computedHeight = aReflowState.mComputedBorderPadding.top +
+        aReflowState.mComputedBorderPadding.bottom +
+        font->mFont.size;
+      if (computedHeight != aMetrics.height) {
+        if (0 == (mState & 0x80000000)) {
+          nsFrame::ListTag(stdout, this);
+          printf(": using computedHeight %d instead of actual height %d\n",
+                 computedHeight, aMetrics.height);
+          mState |= 0x80000000;
+        }
+        aMetrics.height = computedHeight;
+      }
+    }
+#endif
+
+    NS_RELEASE(fm);
   }
-  aReflowState.lineLayout->PopInline();
+
+  // For now our combined area is zero. The real value will be
+  // computed during vertical alignment of the line we are on.
+  aMetrics.mCombinedArea.x = 0;
+  aMetrics.mCombinedArea.y = 0;
+  aMetrics.mCombinedArea.width = aMetrics.width;
+  aMetrics.mCombinedArea.height = aMetrics.height;
+
+#ifdef NOISY_FINAL_SIZE
+  ListTag(stdout);
+  printf(": metrics=%d,%d ascent=%d descent=%d\n",
+         aMetrics.width, aMetrics.height, aMetrics.ascent, aMetrics.descent);
+#endif
 
   return rv;
 }
@@ -1543,8 +1474,8 @@ nsInlineFrame::ReflowInlineFrame(nsIPresContext& aPresContext,
     return NS_OK;
   }
 
-  nsInlineReflow* ir = irs.mInlineReflow;
-  nsresult rv = ir->ReflowFrame(aFrame, PR_FALSE/* XXX */, aStatus);
+  nsLineLayout* lineLayout = aReflowState.lineLayout;
+  nsresult rv = lineLayout->ReflowFrame(aFrame, &irs.mNextRCFrame, aStatus);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1656,7 +1587,7 @@ nsInlineFrame::PushFrames(nsIFrame* aFromChild, nsIFrame* aPrevSibling)
 {
   NS_PRECONDITION(nsnull != aFromChild, "null pointer");
   NS_PRECONDITION(nsnull != aPrevSibling, "pushing first child");
-#ifdef NS_DEBUG
+#ifdef DEBUG
   nsIFrame* prevNextSibling;
   aPrevSibling->GetNextSibling(&prevNextSibling);
   NS_PRECONDITION(prevNextSibling == aFromChild, "bad prev sibling");

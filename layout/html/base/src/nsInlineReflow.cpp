@@ -1,3 +1,4 @@
+#if 0
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
@@ -657,6 +658,14 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
                                     nscoord& aMaxAscent,
                                     nscoord& aMaxDescent)
 {
+#if 1
+  aLineBox.x = mLeftEdge;
+  aLineBox.y = mTopEdge;
+  aLineBox.width = mX - mLeftEdge;
+  aLineBox.height = mMinLineHeight;
+  aMaxAscent = 0;
+  aMaxDescent = 0;
+#else
   PerFrameData* pfd0 = mFrameDataBase;
   PerFrameData* end = pfd0 + mFrameNum;
 
@@ -1011,6 +1020,7 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
          aLineBox.x, aLineBox.y, aLineBox.width, aLineBox.height,
          aMaxAscent, aMaxDescent);
 #endif
+#endif
 }
 
 void
@@ -1230,3 +1240,4 @@ nsInlineReflow::JustifyFrames(nscoord aMaxWidth, nsRect& aLineBox)
     }
   }
 }
+#endif

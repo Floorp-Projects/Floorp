@@ -38,7 +38,6 @@ nsBlockReflowContext::nsBlockReflowContext(nsIPresContext& aPresContext,
     mOuterReflowState(aParentRS),
     mMetrics(aComputeMaxElementSize ? &mMaxElementSize : nsnull)
 {
-  mRunInFrame = nsnull;
   mCompactMarginWidth = 0;
   mStyleSpacing = nsnull;
 }
@@ -102,7 +101,6 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
                                 availSpace, reason);
   aComputedOffsets = reflowState.computedOffsets;
   reflowState.lineLayout = nsnull;
-  reflowState.mRunInFrame = mRunInFrame;
   reflowState.mCompactMarginWidth = mCompactMarginWidth;
   if (!aIsAdjacentWithTop) {
     reflowState.isTopOfPage = PR_FALSE;  // make sure this is cleared
@@ -312,6 +310,8 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
     mFrame->SetRect(r);
     aInFlowBounds = r;
     aCombinedRect = mMetrics.mCombinedArea;
+    mTopMargin = 0;
+    mBottomMargin = 0;
     fits = PR_TRUE;
   }
   else {

@@ -115,7 +115,7 @@ nsHTMLContainerFrame::CreateNextInFlow(nsIPresContext& aPresContext,
     nextInFlow->SetNextSibling(nextFrame);
 
     NS_FRAME_LOG(NS_FRAME_TRACE_NEW_FRAMES,
-       ("nsInlineReflow::MaybeCreateNextInFlow: frame=%p nextInFlow=%p",
+       ("nsHTMLContainerFrame::MaybeCreateNextInFlow: frame=%p nextInFlow=%p",
         aFrame, nextInFlow));
 
     aNextInFlowResult = nextInFlow;

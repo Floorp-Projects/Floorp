@@ -77,8 +77,8 @@ public:
   nsString mAltText;
   nscoord* mCoords;
   PRInt32 mNumCoords;
-  PRBool mHasURL;
   PRBool mSuppressFeedback;
+  PRBool mHasURL;
 };
 
 Area::Area(const nsString& aBaseURL, const nsString& aHREF,
@@ -753,7 +753,7 @@ nsImageMap::UpdateAreas()
   // Get rid of old area data
   FreeAreas();
 
-  nsresult rv;
+  nsresult rv = NS_OK;
   nsIContent* child;
   PRInt32 i, n;
   PRBool containsBlock = PR_FALSE, containsArea = PR_FALSE;

@@ -44,7 +44,6 @@ CPPSRCS=				\
 	nsImageFrame.cpp		\
 	nsImageMap.cpp			\
 	nsInlineFrame.cpp		\
-	nsInlineReflow.cpp		\
 	nsLeafFrame.cpp			\
 	nsLineBox.cpp			\
 	nsLineLayout.cpp		\
@@ -81,7 +80,6 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsImageFrame.obj		\
 	.\$(OBJDIR)\nsImageMap.obj		\
 	.\$(OBJDIR)\nsInlineFrame.obj		\
-	.\$(OBJDIR)\nsInlineReflow.obj		\
 	.\$(OBJDIR)\nsLeafFrame.obj		\
 	.\$(OBJDIR)\nsLineBox.obj		\
 	.\$(OBJDIR)\nsLineLayout.obj		\

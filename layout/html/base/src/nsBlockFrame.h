@@ -277,8 +277,6 @@ protected:
                              nsLineBox* aLine,
                              nscoord aDeltaY);
 
-  void TakeRunInFrames(nsBlockFrame* aRunInFrame);
-
   nsresult ComputeTextRuns(nsIPresContext& aPresContext);
 
   void BuildFloaterList();

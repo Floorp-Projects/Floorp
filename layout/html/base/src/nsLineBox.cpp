@@ -46,16 +46,19 @@ nsLineBox::~nsLineBox()
 static void
 ListFloaters(FILE* out, PRInt32 aIndent, nsVoidArray* aFloaters)
 {
+  nsAutoString frameName;
   PRInt32 j, i, n = aFloaters->Count();
   for (i = 0; i < n; i++) {
     for (j = aIndent; --j >= 0; ) fputs("  ", out);
     nsPlaceholderFrame* ph = (nsPlaceholderFrame*) aFloaters->ElementAt(i);
     if (nsnull != ph) {
-      fprintf(out, "placeholder@%p\n", ph);
+      fprintf(out, "placeholder@%p ", ph);
       nsIFrame* frame = ph->GetAnchoredItem();
       if (nsnull != frame) {
-        frame->List(out, aIndent + 1);
+        frame->GetFrameName(frameName);
+        fputs(frameName, out);
       }
+      fprintf(out, "\n");
     }
   }
 }
@@ -277,14 +280,7 @@ nsLineBox::UnplaceFloaters(nsISpaceManager* aSpaceManager)
 PRBool
 nsLineBox::CheckIsBlock() const
 {
-  nsIFrame* frame = mFirstChild;
-  const nsStyleDisplay* display;
-  frame->GetStyleData(eStyleStruct_Display,
-                      (const nsStyleStruct*&) display);
-  const nsStylePosition* position;
-  frame->GetStyleData(eStyleStruct_Position,
-                      (const nsStyleStruct*&) position);
-  PRBool isBlock = nsLineLayout::TreatFrameAsBlock(display, position);
+  PRBool isBlock = nsLineLayout::TreatFrameAsBlock(mFirstChild);
   return isBlock == IsBlock();
 }
 #endif

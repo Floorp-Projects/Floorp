@@ -234,11 +234,6 @@ public:
   NS_IMETHOD MoveInSpaceManager(nsIPresContext& aPresContext,
                                 nsISpaceManager* aSpaceManager,
                                 nscoord aDeltaX, nscoord aDeltaY);
-  NS_IMETHOD VerticalAlignFrames(nsIPresContext& aPresContext,
-                                 const nsHTMLReflowState& aState,
-                                 nscoord aLineHeight,
-                                 nscoord aDistanceFromTopEdge,
-                                 nsRect& aCombinedRect);
 
   // Selection Methods
   // XXX Doc me... (in nsIFrame.h puhleeze)

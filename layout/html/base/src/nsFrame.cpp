@@ -1049,17 +1049,6 @@ nsFrame::MoveInSpaceManager(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::VerticalAlignFrames(nsIPresContext& aPresContext,
-                             const nsHTMLReflowState& aState,
-                             nscoord aLineHeight,
-                             nscoord aDistanceFromTopEdge,
-                             nsRect& aCombinedRect)
-{
-  aCombinedRect = mRect;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsFrame::ContentChanged(nsIPresContext* aPresContext,
                         nsIContent*     aChild,
                         nsISupports*    aSubContent)
