@@ -90,6 +90,7 @@ protected:
     nsCOMPtr<nsISupports>       mContext;
     nsLoadFlags                 mLoadAttributes;
     nsCOMPtr<nsISupports>       mOwner;
+    PRBool                      mCancelled;
 
     struct LoadEvent {
         PLEvent                mEvent;
@@ -115,7 +116,7 @@ public:
 
     // nsIRequest
     NS_IMETHOD IsPending(PRBool *_retval) { *_retval = PR_TRUE; return NS_OK; }
-    NS_IMETHOD Cancel(void)  { return NS_OK; }
+    NS_IMETHOD Cancel(void)  { mCancelled = PR_TRUE; return NS_OK; }
     NS_IMETHOD Suspend(void) { return NS_OK; }
     NS_IMETHOD Resume(void)  { return NS_OK; }
 
@@ -149,7 +150,7 @@ nsCachedChromeChannel::Create(nsIURI* aURI, nsILoadGroup* aLoadGroup, nsIChannel
 
 
 nsCachedChromeChannel::nsCachedChromeChannel(nsIURI* aURI, nsILoadGroup* aLoadGroup)
-    : mURI(aURI), mLoadGroup(aLoadGroup), mLoadAttributes (nsIChannel::LOAD_NORMAL)
+    : mURI(aURI), mLoadGroup(aLoadGroup), mLoadAttributes (nsIChannel::LOAD_NORMAL), mCancelled(PR_FALSE)
 {
     NS_INIT_REFCNT();
 
@@ -395,9 +396,14 @@ nsCachedChromeChannel::HandleStartLoadEvent(PLEvent* aEvent)
     LoadEvent* event = NS_REINTERPRET_CAST(LoadEvent*, aEvent);
     nsCachedChromeChannel* channel = event->mChannel;
 
+    // If the load has been cancelled, then just bail now. We won't
+    // send On[Start|Stop]Request().
+    if (channel->mCancelled)
+      return nsnull;
+    
     PR_LOG(gLog, PR_LOG_DEBUG,
-           ("nsCachedChromeChannel[%p]: firing OnStartRequest for %p",
-            channel, channel->mListener.get()));
+              ("nsCachedChromeChannel[%p]: firing OnStartRequest for %p",
+               channel, channel->mListener.get()));
 
     (void) channel->mListener->OnStartRequest(channel, channel->mContext);
     (void) PostLoadEvent(channel, HandleStopLoadEvent);
@@ -417,7 +423,8 @@ nsCachedChromeChannel::HandleStopLoadEvent(PLEvent* aEvent)
            ("nsCachedChromeChannel[%p]: firing OnStopRequest for %p",
             channel, channel->mListener.get()));
 
-    (void) channel->mListener->OnStopRequest(channel, channel->mContext, NS_OK, nsnull);
+    (void) channel->mListener->OnStopRequest(channel, channel->mContext, 
+      (channel->mCancelled ? NS_BINDING_ABORTED : NS_OK), nsnull);
 
     if (channel->mLoadGroup) {
         PR_LOG(gLog, PR_LOG_DEBUG,
