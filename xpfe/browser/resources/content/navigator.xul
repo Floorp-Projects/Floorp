@@ -297,9 +297,11 @@ Contributor(s): ______________________________________. -->
               <menuitem value=" "/>
             </menupopup>                       
           </menubutton>
-          <button class="button-toolbar-3" id="go-button" persist="hidden" hidden="true" value="&goButton.label;" oncommand="addToUrlbarHistory(); BrowserLoadURL();" 
-                  tooltip="aTooltip" tooltiptext="&goButton.tooltip;"/> 
+          
         </box>
+
+        <button class="button-toolbar-3" id="go-button" persist="hidden" hidden="true" value="&goButton.label;" oncommand="addToUrlbarHistory(); BrowserLoadURL();" 
+                  tooltip="aTooltip" tooltiptext="&goButton.tooltip;"/> 
 
         <button class="button-toolbar-3 chromeclass-location" persist="hidden" 
                 id="search-button" value="&searchButton.label;" 
