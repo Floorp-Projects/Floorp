@@ -247,7 +247,7 @@ Feed.prototype.parseAsRSS2 = function() {
         guidNode.getAttribute('isPermaLink') == 'false' ? false : true;
     }
 
-    item.url = (guid && isPermaLink) ? guid : link ? link : null;
+    item.url = link ? link : (guid && isPermaLink) ? guid : null;
     item.id = guid;
     item.description = getNodeValue(itemNode.getElementsByTagName("description")[0]);
     item.title = getNodeValue(itemNode.getElementsByTagName("title")[0])
