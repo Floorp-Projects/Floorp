@@ -113,11 +113,23 @@ PR_PUBLIC_API(nsresult) XPI_Init(
 
 #elif defined(XP_PC)
 
+ #ifdef XP_OS2_EMX
+    char componentPath[MAX_PATH];
+    _getcwd2(componentPath, MAX_PATH);
+    int len = strlen(componentPath);
+    for (int i = 0; i < len; i++) {
+      if (componentPath[i] == '/') {
+        componentPath[i] = '\\';
+      }
+    }
+ #else
     char componentPath[MAX_PATH];
     getcwd(componentPath, MAX_PATH);
+ #endif
 
     nsCOMPtr<nsILocalFile> file;
-    NS_NewNativeLocalFile(nsDependentCString(componentPath), PR_TRUE, getter_AddRefs(file));
+    rv = NS_NewNativeLocalFile(nsDependentCString(componentPath), PR_TRUE, getter_AddRefs(file));
+    if (NS_FAILED(rv)) return rv;
     
     rv = NS_InitXPCOM2(&gServiceMgr, file, nsnull); 
 
