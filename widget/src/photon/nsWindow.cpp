@@ -1689,11 +1689,12 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 #else
       rect.ul.x -= offset.x;
       rect.ul.y -= offset.y;
+	  rect.lr.x -= offset.x;
+	  rect.lr.y -= offset.y;
 #endif
 #endif
 
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc damage rect after translate = <%d,%d,%d,%d>\n", rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y));
-
 
       /* If the damage tile is not within our bounds, do nothing */
       if(( rect.ul.x >= area.size.w ) || ( rect.ul.y >= area.size.h ) || ( rect.lr.x < 0 ) || ( rect.lr.y < 0 ))
