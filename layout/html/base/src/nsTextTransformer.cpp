@@ -547,6 +547,35 @@ AsciiToUpperCase(unsigned char* aText, PRInt32 aWordLen)
   }
 }
 
+#define kSzlig 0x00DF
+static PRInt32 CountGermanSzlig(const PRUnichar* aText, PRInt32 len)
+{
+  PRInt32 i,cnt;
+  for(i=0,cnt=0; i<len; i++, aText++)
+  {
+     if(kSzlig == *aText)
+         cnt++;
+  }
+  return cnt;
+}
+static void ReplaceGermanSzligToSS(PRUnichar* aText, PRInt32 len, PRInt32 szCnt)
+{
+  PRUnichar *src, *dest;
+  src = aText + len;
+  dest = src + szCnt;
+  while( (src!=dest) && (src >= aText) )
+  {
+      if(kSzlig == *src )
+      {     
+        *dest-- = PRUnichar('S');
+        *dest-- = PRUnichar('S');
+        src--;
+      } else {
+        *dest-- = *src--;
+      }
+  }
+}
+
 PRUnichar*
 nsTextTransformer::GetNextWord(PRBool aInWord,
                                PRInt32* aWordLenResult,
@@ -669,12 +698,44 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
         switch (mTextTransform) {
         case NS_STYLE_TEXT_TRANSFORM_CAPITALIZE:
           gCaseConv->ToTitle(result, result, wordLen, !aInWord);
+          // if the first character is szlig
+          if(kSzlig == *result)
+          {
+              if ((prevBufferPos + wordLen + 1) >= mTransformBuf.mBufferLen) {
+                mTransformBuf.GrowBy(128);
+                result = &mTransformBuf.mBuffer[prevBufferPos];
+              }
+              PRUnichar* src = result +  wordLen;
+              while(src>result) 
+              {
+                  *(src+1) = *src;
+                  src--;
+              }
+              result[0] = PRUnichar('S');
+              result[1] = PRUnichar('S');
+              wordLen++;
+          }
           break;
         case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
           gCaseConv->ToLower(result, result, wordLen);
           break;
         case NS_STYLE_TEXT_TRANSFORM_UPPERCASE:
-          gCaseConv->ToUpper(result, result, wordLen);
+          {
+            gCaseConv->ToUpper(result, result, wordLen);
+
+            // first we search for German Szlig
+            PRInt32 szligCnt = CountGermanSzlig(result, wordLen);
+            if(szligCnt > 0) {
+              // Make sure we have enough room in the transform buffer
+              if ((prevBufferPos + wordLen + szligCnt) >= mTransformBuf.mBufferLen) 
+              {
+                mTransformBuf.GrowBy(128);
+                result = &mTransformBuf.mBuffer[prevBufferPos];
+              }
+              ReplaceGermanSzligToSS(result, wordLen, szligCnt);
+              wordLen += szligCnt;
+            }
+          }
           break;
         }
       }
