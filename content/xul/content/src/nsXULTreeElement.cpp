@@ -341,3 +341,4 @@ nsXULTreeElement::FireOnSelectHandler()
     content->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
   }
 }
+
