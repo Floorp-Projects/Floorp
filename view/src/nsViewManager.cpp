@@ -79,7 +79,12 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
    we ask for a specific z-order, we don't assume that widget z-ordering actually works.
 */
 
-//#define NO_DOUBLE_BUFFER
+// #define NO_DOUBLE_BUFFER
+
+// Cocoa never double buffers
+#ifdef MOZ_WIDGET_COCOA
+#define NO_DOUBLE_BUFFER
+#endif
 
 // if defined widget changes like moves and resizes are defered until and done
 // all in one pass.
@@ -1412,7 +1417,7 @@ NS_IMETHODIMP nsViewManager::Composite()
     {
       if (nsnull != mRootWindow)
         mRootWindow->Update();
-
+  
       mUpdateCnt = 0;
     }
 
@@ -3107,9 +3112,8 @@ NS_IMETHODIMP nsViewManager::GetWidget(nsIWidget **aWidget)
 
 NS_IMETHODIMP nsViewManager::ForceUpdate()
 {
-  if (mRootWindow) {
+  if (mRootWindow)
     mRootWindow->Update();
-  }
   return NS_OK;
 }
 

@@ -169,6 +169,12 @@ nsScrollbarButtonFrame::MouseClicked()
 
    // get the increment amount
    PRInt32 increment = nsSliderFrame::GetIncrement(content);
+#ifdef MOZ_WIDGET_COCOA
+   // Emulate the Mac IE behavior of scrolling 2 lines instead of 1
+   // on a button press.  This makes scrolling appear smoother and
+   // keeps us competitive with IE.
+   increment *= 2;
+#endif
 
    nsString value;
    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value))

@@ -412,6 +412,17 @@ public:
   NS_IMETHOD InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight) = 0;
 
   /**
+   * For platforms (e.g., Cocoa) that implicitly double buffer, this call can be used
+   * to force a buffer flush following the painting of a rectangle.  This
+   * call needs to be used any time drawing of rects is being done "on the fly",
+   * outside of the normal painting process.
+   * Examples include the blinking caret and tabbing through subimages in an
+   * image map.
+   */
+  NS_IMETHOD FlushRect(const nsRect& aRect) = 0;
+  NS_IMETHOD FlushRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight) = 0;
+  
+  /**
    * Draw a poly in the current foreground color
    * @param aPoints points to use for the drawing, last must equal first
    * @param aNumPonts number of points in the polygon

@@ -977,3 +977,15 @@ NS_IMETHODIMP nsRenderingContextImpl::DrawScaledTile(imgIContainer *aImage, nsco
 }
 
 #endif
+
+NS_IMETHODIMP
+nsRenderingContextImpl::FlushRect(const nsRect& aRect)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRenderingContextImpl::FlushRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+{
+    return NS_OK;
+}

@@ -803,13 +803,13 @@ NS_IMETHODIMP nsView::CreateWidget(const nsIID &aWindowIID,
   }
 
   //make sure visibility state is accurate
-
+  
   if (aResetVisibility) {
     nsViewVisibility vis;
     
     GetVisibility(vis);
     SetVisibility(vis);
-  }
+    }
 
   NS_RELEASE(dx);
 

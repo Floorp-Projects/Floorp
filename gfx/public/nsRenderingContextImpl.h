@@ -70,6 +70,10 @@ public:
 
 // CLASS METHODS
 
+  // See the description in nsIRenderingContext.h
+  NS_IMETHOD FlushRect(const nsRect& aRect);
+  NS_IMETHOD FlushRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+
   /**
    * Gets the Pen Mode for the RenderingContext
    * @param aPenMode The Pen Mode to be retrieved

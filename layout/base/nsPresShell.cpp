@@ -3134,7 +3134,14 @@ PresShell::ScrollLine(PRBool aForward)
     result = viewManager->GetRootScrollableView(&scrollView);
     if (NS_SUCCEEDED(result) && scrollView)
     {
+#ifdef MOZ_WIDGET_COCOA
+      // Emulate the Mac IE behavior of scrolling a minimum of 2 lines
+      // rather than 1.  This vastly improves scrolling speed.
+      scrollView->ScrollByLines(0, aForward ? 2 : -2);
+#else
       scrollView->ScrollByLines(0, aForward ? 1 : -1);
+#endif
+      
 //NEW FOR LINES    
       // force the update to happen now, otherwise multiple scrolls can
       // occur before the update is processed. (bug #7354)

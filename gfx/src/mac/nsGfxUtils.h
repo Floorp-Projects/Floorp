@@ -155,9 +155,19 @@ public:
   //------------------------------------------------------------------------
   static void SetPortToKnownGoodPort()
   {
+#ifndef MOZ_WIDGET_COCOA
     WindowPtr firstWindow = GetTheWindowList();
     if (firstWindow)
       ::SetGWorld(::GetWindowPort(firstWindow), ::GetMainDevice());
+#else
+    static GrafPtr gGoodPort = nsnull;
+    if (!gGoodPort) {
+      Rect macRect;
+      ::SetRect(&macRect, 0, 0, 2, 2);
+      ::NewGWorld(&gGoodPort, 16, &macRect, nsnull, nsnull, 0);
+    }
+    ::SetGWorld(gGoodPort, nsnull);
+#endif
   }
 
 };
