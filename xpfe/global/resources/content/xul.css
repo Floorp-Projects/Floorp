@@ -56,8 +56,12 @@ toolbox, menubar, toolbar {
 }
 
 outlinercol, outlinerrows,outlinerbody,
-radio, radiogroup {
+radio {
   -moz-user-focus: none;
+}
+
+radiogroup {
+  -moz-user-focus: normal;
 }
 
 /******** window ******/
