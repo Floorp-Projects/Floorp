@@ -107,21 +107,26 @@ class nsMacMemoryCushion : public Repeater
 public:
 
   enum {
-    kMemoryReserveSize      = 32 * 1024   // 32k memory reserve    
+    kMemoryBufferSize       = 64 * 1024,  // 64k reserve, purgeable handle purged first
+    kMemoryReserveSize      = 32 * 1024   // 32k memory reserve, freed by the GrowZoneProc
   };
   
                 nsMacMemoryCushion();
                 ~nsMacMemoryCushion();
                 
-  OSErr         Init(Size reserveSize);
+  OSErr         Init(Size bufferSize, Size reserveSize);
 
 
   void          RepeatAction(const EventRecord &aMacEvent);
 
 protected:
 
+                // reallocate the memory buffer. Returns true on success
+  Boolean       RecoverMemoryBuffer(Size bufferSize);
+
                 // allocate or recover the memory reserve. Returns true on success
   Boolean       RecoverMemoryReserve(Size reserveSize);
+
 
 public:
 
@@ -131,6 +136,8 @@ public:
 protected:
 
   static Handle  sMemoryReserve;
+  
+  Handle         mBufferHandle;     // this is first to go
 
 };
 

@@ -89,7 +89,7 @@ NS_IMETHODIMP nsAppShell::Create(int* argc, char ** argv)
   if (!mMacSink.get() || !mMacPump.get() || !mMacMemoryCushion.get())
     return NS_ERROR_OUT_OF_MEMORY;
   
-  OSErr err = mMacMemoryCushion->Init(nsMacMemoryCushion::kMemoryReserveSize);
+  OSErr err = mMacMemoryCushion->Init(nsMacMemoryCushion::kMemoryBufferSize, nsMacMemoryCushion::kMemoryReserveSize);
   if (err != noErr)
     return NS_ERROR_FAILURE;
   
