@@ -47,7 +47,7 @@
 //
 #include "plugin.h"
 
-static NS_DEFINE_IID(kIScriptableIID, NS_ISCRIPTABLEPLUGIN_IID);
+static NS_DEFINE_IID(kIScriptableIID, NS_ISCRIPTABLEPLUGINSAMPLE_IID);
 static NS_DEFINE_IID(kIClassInfoIID, NS_ICLASSINFO_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -87,7 +87,7 @@ NS_IMETHODIMP nsScriptablePeer::QueryInterface(const nsIID& aIID, void** aInstan
     return NS_ERROR_NULL_POINTER; 
 
   if(aIID.Equals(kIScriptableIID)) {
-    *aInstancePtr = static_cast<nsIScriptablePlugin*>(this); 
+    *aInstancePtr = static_cast<nsIScriptablePluginSample*>(this); 
     AddRef();
     return NS_OK;
   }
@@ -99,7 +99,7 @@ NS_IMETHODIMP nsScriptablePeer::QueryInterface(const nsIID& aIID, void** aInstan
   }
 
   if(aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = static_cast<nsISupports*>(static_cast<nsIScriptablePlugin*>(this)); 
+    *aInstancePtr = static_cast<nsISupports*>(static_cast<nsIScriptablePluginSample*>(this)); 
     AddRef();
     return NS_OK;
   }
