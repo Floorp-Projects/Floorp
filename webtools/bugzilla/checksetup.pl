@@ -3992,11 +3992,15 @@ if (TableExists("user_series_map")) {
     RenameField('series_categories', 'category_id', 'id');
     
     AddField("series", "public", "tinyint(1) not null default 0");
-    
+
     # Migrate public-ness across from user_series_map to new field
-    $dbh->do("UPDATE series SET series.public = 1 " .
-             "WHERE series.series_id = user_series_map.series_id " .
-             "  AND user_series_map.user_id = 0");
+    $sth = $dbh->prepare("SELECT series_id from user_series_map " .
+                         "WHERE user_id = 0");
+    $sth->execute();
+    while (my ($public_series_id) = $sth->fetchrow_array()) {
+        $dbh->do("UPDATE series SET public = 1 " .
+                 "WHERE series_id = $public_series_id");
+    }
 
     $dbh->do("DROP TABLE user_series_map");
 }    
