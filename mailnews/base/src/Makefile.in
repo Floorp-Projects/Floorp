@@ -26,6 +26,10 @@ MODULE = mailnewsbase
 LIBRARY_NAME=mailnewsbase
 NO_SHARED_LIB=1
 
+EXPORTS = \
+	nsMsgRFC822Parser.h \
+	$(NULL)
+
 CPPSRCS = \
 	nsMsgRFC822Parser.cpp \
 	$(NULL)
