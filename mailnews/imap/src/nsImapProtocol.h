@@ -248,7 +248,7 @@ public:
   virtual void ProcessMailboxUpdate(PRBool handlePossibleUndo);
   // Send log output...
   void	Log(const char *logSubName, const char *extraInfo, const char *logData);
-  
+  static void LogImapUrl(const char *logMsg, nsIImapUrl *imapUrl);  
   // Comment from 4.5: We really need to break out the thread synchronizer from the
   // connection class...Not sure what this means
   PRBool  GetPseudoInterrupted();

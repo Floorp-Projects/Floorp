@@ -57,7 +57,7 @@
 #include "nsIImapUrl.h"
 #include "nsIUrlListener.h"
 #include "nsIEventQueue.h"
-#include "nsIImapProtocol.h"
+#include "nsImapProtocol.h"
 #include "nsISupportsArray.h"
 #include "nsVoidArray.h"
 #include "nsCOMPtr.h"
@@ -450,6 +450,7 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue * aClientEventQu
   else
   {   // unable to get an imap connection to run the url; add to the url
     // queue
+    nsImapProtocol::LogImapUrl("queuing url", aImapUrl);
     PR_CEnterMonitor(this);
     nsCOMPtr <nsISupports> supports(do_QueryInterface(aImapUrl));
     if (supports)
@@ -501,6 +502,7 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
           nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl, &rv);
           if (NS_SUCCEEDED(rv) && url)
           {
+            nsImapProtocol::LogImapUrl("playing queued url", aImapUrl);
             rv = protocolInstance->LoadUrl(url, aConsumer);
             NS_ASSERTION(NS_SUCCEEDED(rv), "failed running queued url");
             urlRun = PR_TRUE;
@@ -2223,115 +2225,120 @@ NS_IMETHODIMP  nsImapIncomingServer::FormatStringWithHostNameByID(PRInt32 aMsgId
 
 nsresult nsImapIncomingServer::ResetFoldersToUnverified(nsIFolder *parentFolder)
 {
-    nsresult rv = NS_OK;
-    if (!parentFolder) {
-        nsCOMPtr<nsIFolder> rootFolder;
-        rv = GetRootFolder(getter_AddRefs(rootFolder));
-        if (NS_FAILED(rv)) return rv;
-        return ResetFoldersToUnverified(rootFolder);
-    }
-    else {
-        nsCOMPtr<nsIEnumerator> subFolders;
-        nsCOMPtr<nsIMsgImapMailFolder> imapFolder =
-            do_QueryInterface(parentFolder, &rv);
-        if (NS_FAILED(rv)) return rv;
-        rv = imapFolder->SetVerifiedAsOnlineFolder(PR_FALSE);
-        rv = parentFolder->GetSubFolders(getter_AddRefs(subFolders));
-        if (NS_FAILED(rv)) return rv;
-        nsAdapterEnumerator *simpleEnumerator = new
-            nsAdapterEnumerator(subFolders);
-        if (!simpleEnumerator) return NS_ERROR_OUT_OF_MEMORY;
-        PRBool moreFolders = PR_FALSE;
-        while (NS_SUCCEEDED(simpleEnumerator->HasMoreElements(&moreFolders))
-               && moreFolders) {
-            nsCOMPtr<nsISupports> child;
-            rv = simpleEnumerator->GetNext(getter_AddRefs(child));
-            if (NS_SUCCEEDED(rv) && child) {
-                nsCOMPtr<nsIFolder> childFolder = do_QueryInterface(child,
-                                                                    &rv);
-                if (NS_SUCCEEDED(rv) && childFolder) {
-                    rv = ResetFoldersToUnverified(childFolder);
-                    if (NS_FAILED(rv)) break;
-                }
-            }
+  nsresult rv = NS_OK;
+  if (!parentFolder) 
+  {
+    nsCOMPtr<nsIFolder> rootFolder;
+    rv = GetRootFolder(getter_AddRefs(rootFolder));
+    if (NS_FAILED(rv)) return rv;
+    return ResetFoldersToUnverified(rootFolder);
+  }
+  else 
+  {
+    nsCOMPtr<nsIEnumerator> subFolders;
+    nsCOMPtr<nsIMsgImapMailFolder> imapFolder =
+      do_QueryInterface(parentFolder, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = imapFolder->SetVerifiedAsOnlineFolder(PR_FALSE);
+    rv = parentFolder->GetSubFolders(getter_AddRefs(subFolders));
+    if (NS_FAILED(rv)) return rv;
+    nsAdapterEnumerator *simpleEnumerator = new
+      nsAdapterEnumerator(subFolders);
+    if (!simpleEnumerator) return NS_ERROR_OUT_OF_MEMORY;
+    PRBool moreFolders = PR_FALSE;
+    while (NS_SUCCEEDED(simpleEnumerator->HasMoreElements(&moreFolders))
+      && moreFolders) 
+    {
+      nsCOMPtr<nsISupports> child;
+      rv = simpleEnumerator->GetNext(getter_AddRefs(child));
+      if (NS_SUCCEEDED(rv) && child) 
+      {
+        nsCOMPtr<nsIFolder> childFolder = do_QueryInterface(child,
+          &rv);
+        if (NS_SUCCEEDED(rv) && childFolder) 
+        {
+          rv = ResetFoldersToUnverified(childFolder);
+          if (NS_FAILED(rv)) break;
         }
-        delete simpleEnumerator;
+      }
     }
-    return rv;
+    delete simpleEnumerator;
+  }
+  return rv;
 }
 
 nsresult nsImapIncomingServer::GetUnverifiedFolders(nsISupportsArray *aFoldersArray, PRInt32 *aNumUnverifiedFolders)
 {
-	// can't have both be null, but one null is OK, since the caller
-	// may just be trying to count the number of unverified folders.
-	if (!aFoldersArray && !aNumUnverifiedFolders)
-		return NS_ERROR_NULL_POINTER;
-
-	if (aNumUnverifiedFolders)
-		*aNumUnverifiedFolders = 0;
-	nsCOMPtr<nsIFolder> rootFolder;
-	nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
-	if(NS_SUCCEEDED(rv) && rootFolder)
+  // can't have both be null, but one null is OK, since the caller
+  // may just be trying to count the number of unverified folders.
+  if (!aFoldersArray && !aNumUnverifiedFolders)
+    return NS_ERROR_NULL_POINTER;
+  
+  if (aNumUnverifiedFolders)
+    *aNumUnverifiedFolders = 0;
+  nsCOMPtr<nsIFolder> rootFolder;
+  nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
+  if(NS_SUCCEEDED(rv) && rootFolder)
   {
     nsCOMPtr <nsIMsgImapMailFolder> imapRoot = do_QueryInterface(rootFolder);
     if (imapRoot)
       imapRoot->SetVerifiedAsOnlineFolder(PR_TRUE); // don't need to verify the root.
-		rv = GetUnverifiedSubFolders(rootFolder, aFoldersArray, aNumUnverifiedFolders);
+    rv = GetUnverifiedSubFolders(rootFolder, aFoldersArray, aNumUnverifiedFolders);
   }
-	return rv;
+  return rv;
 }
 
 nsresult nsImapIncomingServer::GetUnverifiedSubFolders(nsIFolder *parentFolder, nsISupportsArray *aFoldersArray, PRInt32 *aNumUnverifiedFolders)
 {
-	nsresult rv = NS_OK;
-
-	nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(parentFolder);
-	PRBool verified = PR_FALSE, explicitlyVerify = PR_FALSE;
-	if (imapFolder)
-	{
-		rv = imapFolder->GetVerifiedAsOnlineFolder(&verified);
-        if (NS_SUCCEEDED(rv))
-            rv = imapFolder->GetExplicitlyVerify(&explicitlyVerify);
-
-		if (NS_SUCCEEDED(rv) && (!verified || explicitlyVerify))
-		{
-			if (aFoldersArray)
-			{
-				nsCOMPtr <nsISupports> supports = do_QueryInterface(imapFolder);
-				aFoldersArray->AppendElement(supports);
-			}
-			if (aNumUnverifiedFolders)
-				(*aNumUnverifiedFolders)++;
-		}
-	}
-	nsCOMPtr<nsIEnumerator> subFolders;
-
-	rv = parentFolder->GetSubFolders(getter_AddRefs(subFolders));
-	if(NS_SUCCEEDED(rv))
-	{
-		nsAdapterEnumerator *simpleEnumerator =	new nsAdapterEnumerator(subFolders);
-		if (simpleEnumerator == nsnull)
-			return NS_ERROR_OUT_OF_MEMORY;
-		PRBool moreFolders;
-
-		while (NS_SUCCEEDED(simpleEnumerator->HasMoreElements(&moreFolders)) && moreFolders)
-		{
-			nsCOMPtr<nsISupports> child;
-			rv = simpleEnumerator->GetNext(getter_AddRefs(child));
-			if (NS_SUCCEEDED(rv) && child) 
-			{
-				nsCOMPtr <nsIFolder> childFolder = do_QueryInterface(child, &rv);
-				if (NS_SUCCEEDED(rv) && childFolder)
-				{
-					rv = GetUnverifiedSubFolders(childFolder, aFoldersArray, aNumUnverifiedFolders);
-					if (NS_FAILED(rv))
-						break;
-				}
-			}
-		}
-		delete simpleEnumerator;
-	}
-	return rv;
+  nsresult rv = NS_OK;
+  
+  nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(parentFolder);
+  PRBool verified = PR_FALSE, explicitlyVerify = PR_FALSE;
+  if (imapFolder)
+  {
+    rv = imapFolder->GetVerifiedAsOnlineFolder(&verified);
+    if (NS_SUCCEEDED(rv))
+      rv = imapFolder->GetExplicitlyVerify(&explicitlyVerify);
+    
+    if (NS_SUCCEEDED(rv) && (!verified || explicitlyVerify))
+    {
+      if (aFoldersArray)
+      {
+        nsCOMPtr <nsISupports> supports = do_QueryInterface(imapFolder);
+        aFoldersArray->AppendElement(supports);
+      }
+      if (aNumUnverifiedFolders)
+        (*aNumUnverifiedFolders)++;
+    }
+  }
+  nsCOMPtr<nsIEnumerator> subFolders;
+  
+  rv = parentFolder->GetSubFolders(getter_AddRefs(subFolders));
+  if(NS_SUCCEEDED(rv))
+  {
+    nsAdapterEnumerator *simpleEnumerator = new nsAdapterEnumerator(subFolders);
+    if (simpleEnumerator == nsnull)
+      return NS_ERROR_OUT_OF_MEMORY;
+    PRBool moreFolders;
+    
+    while (NS_SUCCEEDED(simpleEnumerator->HasMoreElements(&moreFolders)) && moreFolders)
+    {
+      nsCOMPtr<nsISupports> child;
+      rv = simpleEnumerator->GetNext(getter_AddRefs(child));
+      if (NS_SUCCEEDED(rv) && child) 
+      {
+        nsCOMPtr <nsIFolder> childFolder = do_QueryInterface(child, &rv);
+        if (NS_SUCCEEDED(rv) && childFolder)
+        {
+          rv = GetUnverifiedSubFolders(childFolder, aFoldersArray, aNumUnverifiedFolders);
+          if (NS_FAILED(rv))
+            break;
+        }
+      }
+    }
+    delete simpleEnumerator;
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsImapIncomingServer::ForgetSessionPassword()
@@ -2414,22 +2421,22 @@ NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword,
 // for the nsIImapServerSink interface
 NS_IMETHODIMP  nsImapIncomingServer::SetCapability(PRUint32 capability)
 {
-	m_capability = capability;
-	SetCapabilityPref(capability);
-	return NS_OK;
+    m_capability = capability;
+    SetCapabilityPref(capability);
+    return NS_OK;
 }
 
 NS_IMETHODIMP  nsImapIncomingServer::CommitNamespaces()
 {
-
-	nsresult rv;
-	nsCOMPtr<nsIImapHostSessionList> hostSession = 
-	         do_GetService(kCImapHostSessionListCID, &rv);
-    if (NS_FAILED(rv)) 
-		return rv;
-
-	return hostSession->CommitNamespacesForHost(this);
-
+  
+  nsresult rv;
+  nsCOMPtr<nsIImapHostSessionList> hostSession = 
+    do_GetService(kCImapHostSessionListCID, &rv);
+  if (NS_FAILED(rv)) 
+    return rv;
+  
+  return hostSession->CommitNamespacesForHost(this);
+  
 }
 
 NS_IMETHODIMP nsImapIncomingServer::PseudoInterruptMsgLoad(nsIMsgFolder *aImapFolder, nsIMsgWindow *aMsgWindow, PRBool *interrupted)
@@ -2469,13 +2476,6 @@ NS_IMETHODIMP nsImapIncomingServer::ResetNamespaceReferences()
   }
   return rv;
 }
-
-//void MSG_IMAPFolderInfoMail::InitializeFolderCreatedOffline()
-//{
-//	TIMAPNamespace *ns = IMAPNS_GetNamespaceForFolder(m_host->GetHostName(), GetOnlineName(), '/');
-//	SetOnlineHierarchySeparator(IMAPNS_GetDelimiterForNamespace(ns));
-//}
-
 
 NS_IMETHODIMP nsImapIncomingServer::SetUserAuthenticated(PRBool aUserAuthenticated)
 {

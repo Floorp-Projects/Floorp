@@ -1236,11 +1236,9 @@ PRBool nsImapProtocol::ProcessCurrentURL()
 
   // acknowledge that we are running the url now..
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningUrl, &rv);
-#ifdef DEBUG_bienvenu1
-    nsXPIDLCString urlSpec;
-    mailnewsurl->GetSpec(getter_Copies(urlSpec));
-    printf("processing url %s\n", (const char *) urlSpec);
-#endif
+  nsCAutoString urlSpec;
+  mailnewsurl->GetSpec(urlSpec);
+  Log("ProcessCurrentURL", urlSpec.get(), " = currentUrl");
   if (NS_SUCCEEDED(rv) && mailnewsurl && m_imapMailFolderSink)
     m_imapMailFolderSink->SetUrlState(this, mailnewsurl, PR_TRUE, NS_OK);
 
@@ -1309,17 +1307,13 @@ PRBool nsImapProtocol::ProcessCurrentURL()
 
     if (mailnewsurl && m_imapMailFolderSink)
     {
-        rv = GetServerStateParser().LastCommandSuccessful() ? NS_OK :
-             NS_ERROR_FAILURE;
-        m_imapMailFolderSink->SetUrlState(this, mailnewsurl, PR_FALSE,
-                                             rv);  // we are done with this
-                                                      // url.
-        if (NS_FAILED(rv) && DeathSignalReceived())
-        {
-            // doom the cache entry
-            if (m_mockChannel)
-                m_mockChannel->Cancel(rv);
-        }
+        rv = GetServerStateParser().LastCommandSuccessful() 
+              ? NS_OK : NS_ERROR_FAILURE;
+        // we are done with this url.
+        m_imapMailFolderSink->SetUrlState(this, mailnewsurl, PR_FALSE, rv);
+         // doom the cache entry
+        if (NS_FAILED(rv) && DeathSignalReceived() && m_mockChannel)
+          m_mockChannel->Cancel(rv);
     }
     else
       NS_ASSERTION(PR_FALSE, "missing url or sink");
@@ -3295,15 +3289,15 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
     PR_Free(boxName);
   }
 
-    // fetch the flags and uids of all existing messages or new ones
-    if (!DeathSignalReceived() && GetServerStateParser().NumberOfMessages())
+  // fetch the flags and uids of all existing messages or new ones
+  if (!DeathSignalReceived() && GetServerStateParser().NumberOfMessages())
+  {
+    if (handlePossibleUndo)
     {
-      if (handlePossibleUndo)
-      {
-        // undo any delete flags we may have asked to
-        nsXPIDLCString undoIdsStr;
-        nsCAutoString undoIds;
-      
+      // undo any delete flags we may have asked to
+      nsXPIDLCString undoIdsStr;
+      nsCAutoString undoIds;
+    
       GetCurrentUrl()->CreateListOfMessageIdsString(getter_Copies(undoIdsStr));
       undoIds.Assign(undoIdsStr);
       if (!undoIds.IsEmpty())
@@ -3321,7 +3315,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
       }
     }
       
-        // make the parser record these flags
+    // make the parser record these flags
     nsCString fetchStr;
     PRInt32 added = 0, deleted = 0;
 
@@ -3351,19 +3345,19 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
       // sprintf(fetchStr, "%ld:*", GetServerStateParser().HighestRecordedUID() + 1);
       FetchMessage(fetchStr.get(), kFlags, PR_TRUE);      // only new messages please
     }
-    }
-    else if (!DeathSignalReceived())
-      GetServerStateParser().ResetFlagInfo(0);
+  }
+  else if (!DeathSignalReceived())
+    GetServerStateParser().ResetFlagInfo(0);
 
-	if (!DeathSignalReceived())
-	{
-      nsImapAction imapAction; 
-      nsresult res = m_runningUrl->GetImapAction(&imapAction);
-	  if (NS_SUCCEEDED(res) && imapAction == nsIImapUrl::nsImapLiteSelectFolder)
-          return;
-	}
-        
-    nsImapMailboxSpec *new_spec = GetServerStateParser().CreateCurrentMailboxSpec();
+  if (!DeathSignalReceived())
+  {
+    nsImapAction imapAction; 
+    nsresult res = m_runningUrl->GetImapAction(&imapAction);
+    if (NS_SUCCEEDED(res) && imapAction == nsIImapUrl::nsImapLiteSelectFolder)
+    return;
+  }
+    
+  nsImapMailboxSpec *new_spec = GetServerStateParser().CreateCurrentMailboxSpec();
   if (new_spec && !DeathSignalReceived())
   {
     if (!DeathSignalReceived())
@@ -3378,11 +3372,11 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
   }
   else if (!new_spec)
     HandleMemoryFailure();
-    
+  
     // Block until libmsg decides whether to download headers or not.
     PRUint32 *msgIdList = nsnull;
     PRUint32 msgCount = 0;
-    
+  
   if (!DeathSignalReceived())
   {
     WaitForPotentialListOfMsgsToFetch(&msgIdList, msgCount);
@@ -3399,14 +3393,14 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
       // this might be bogus, how are we going to do pane notification and stuff when we fetch bodies without
       // headers!
   }
-    // wait for a list of bodies to fetch. 
-    if (!DeathSignalReceived() && GetServerStateParser().LastCommandSuccessful())
+  // wait for a list of bodies to fetch. 
+  if (!DeathSignalReceived() && GetServerStateParser().LastCommandSuccessful())
+  {
+      WaitForPotentialListOfBodysToFetch(&msgIdList, msgCount);
+      if ( msgCount && !DeathSignalReceived() && GetServerStateParser().LastCommandSuccessful())
     {
-        WaitForPotentialListOfBodysToFetch(&msgIdList, msgCount);
-        if ( msgCount && !DeathSignalReceived() && GetServerStateParser().LastCommandSuccessful())
-      {
-        FolderMsgDump(msgIdList, msgCount, kEveryThingRFC822Peek);
-      }
+      FolderMsgDump(msgIdList, msgCount, kEveryThingRFC822Peek);
+    }
   }
   if (DeathSignalReceived())
     GetServerStateParser().ResetFlagInfo(0);
@@ -3633,6 +3627,19 @@ PRBool nsImapProtocol::CheckNewMail()
 
 
 
+/* static */ void nsImapProtocol::LogImapUrl(const char *logMsg, nsIImapUrl *imapUrl)
+{
+  if (PR_LOG_TEST(IMAP, PR_LOG_ALWAYS))
+  {
+    nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(imapUrl);
+    if (mailnewsUrl)
+    {
+      nsCAutoString urlSpec;
+      mailnewsUrl->GetSpec(urlSpec);
+      PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s", logMsg, urlSpec.get()));
+    }
+  }
+}
 
 // log info including current state...
 void nsImapProtocol::Log(const char *logSubName, const char *extraInfo, const char *logData)
