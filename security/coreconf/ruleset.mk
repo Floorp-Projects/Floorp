@@ -277,8 +277,6 @@ else
 endif
 endif
 
-INCLUDES	+= -I$(SOURCE_XP_DIR)/include/nspr
-
 ifdef SYSTEM_INCL_DIR
 	YOPT = -Y$(SYSTEM_INCL_DIR)
 endif
