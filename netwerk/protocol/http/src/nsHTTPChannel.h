@@ -115,6 +115,9 @@ public:
 
     nsresult            ReportProgress(PRUint32 aProgress,
                                        PRUint32 aProgressMax);
+
+    nsresult            BuildNotificationProxies ();
+
 protected:
     nsresult            CheckCache();
     nsresult            ReadFromCache();
@@ -132,6 +135,7 @@ public:
     nsCOMPtr<nsISupports>               mResponseContext;
     nsHTTPResponse*                     mCachedResponse;
     nsCOMPtr<nsIProgressEventSink>      mProgressEventSink;
+    nsCOMPtr<nsIProgressEventSink>      mRealProgressEventSink;
 
 protected:
     // for PUT/POST cases...
@@ -142,9 +146,11 @@ protected:
     nsCOMPtr<nsIURI>                    mURI;
     nsCOMPtr<nsIURI>                    mReferrer;
     nsCOMPtr<nsIHTTPEventSink>          mEventSink;
+    nsCOMPtr<nsIHTTPEventSink>          mRealEventSink;
     PRBool                              mConnected; 
     HTTPState                           mState;
     nsCOMPtr<nsIPrompt>                 mPrompter;
+    nsCOMPtr<nsIPrompt>                 mRealPrompter;
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
 
     nsCOMPtr<nsIStreamListener>         mResponseDataListener;
@@ -195,6 +201,7 @@ protected:
     // Stream as file
     nsCOMPtr<nsISupportsArray>						mStreamAsFileObserverArray;
     PRBool                              mApplyConversion;
+    PRBool                              mNotificationProxiesBuilt;
 };
 
 #include "nsIRunnable.h"

@@ -674,7 +674,7 @@ nsDiskCacheRecordChannel::OnDataAvailable(nsIChannel* transportChannel, nsISuppo
   // insure that the transport will go away even if it is blocked waiting
   // for the consumer to empty the pipe...
   //
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(rv && mFileTransport)) {
     mFileTransport->Cancel(rv);
   }
   return rv;
