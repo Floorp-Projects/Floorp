@@ -73,6 +73,7 @@
 #include "nsUnitConversion.h"
 
 #include "prprf.h"
+#include "math.h"
 
 // XXX TODO:
 // - rework aErrorCode stuff: switch over to nsresult
