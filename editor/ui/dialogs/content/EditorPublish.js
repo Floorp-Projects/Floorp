@@ -208,11 +208,7 @@ function FillSiteList()
   for (i = 0; i < count; i++)
   {
     var name = gPublishSiteData[i].siteName;
-    // XXX Bug 131481: Using "max-width" style and "crop" attribute 
-    //     don't constrain grid width properly, resulting in cut-off buttons
-    //     We'll truncate label strings to prevent this problem
-    var menuitem = AppendLabelAndValueToMenulist(gDialog.SiteList, 
-                        TruncateStringAtWordEnd(name, 30, true), name);
+    var menuitem = AppendStringToMenulist(gDialog.SiteList, name);
     // Highlight the default site
     if (name == gDefaultSiteName)
     {
@@ -349,10 +345,6 @@ function SwitchPanel(panel)
       gDialog.SettingsTab.selected = null;
     }
     gCurrentPanel = panel;
-
-    // XXX Another hack to workaround bug 131481
-    // Resize dialog to be sure buttons are not cut off the right
-    window.sizeToContent();
   }
 }
 
@@ -509,14 +501,8 @@ function ValidateSettings()
     var selectedItem = gDialog.SiteList.selectedItem;
     if (selectedItem && selectedItem.getAttribute("label") != siteName)
     {
-      // XXX More hacks to workaround bug 131481
-      // The real sitename
-      selectedItem.setAttribute("value", siteName);
-
-      // Truncate string to show in the menulist
-      var truncatedName = TruncateStringAtWordEnd(siteName, 30, true);
-      selectedItem.setAttribute("label", truncatedName);
-      gDialog.SiteList.setAttribute("label", truncatedName);
+      selectedItem.setAttribute("label", siteName);
+      gDialog.SiteList.setAttribute("label", siteName);
     }
   }
   
