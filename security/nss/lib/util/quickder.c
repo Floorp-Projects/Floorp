@@ -901,7 +901,11 @@ SECStatus SEC_QuickDERDecodeItem(PRArenaPool* arena, void* dest,
         else
         {
             PORT_ArenaUnmark(arena, savpos);
-            PORT_Assert(0 == newsrc.len);
+            if (newsrc.len)
+            {
+                rv = SECFailure;
+                PORT_SetError(SEC_ERROR_BAD_DER_EXTRA_DATA);
+            }
         }
     }
 
