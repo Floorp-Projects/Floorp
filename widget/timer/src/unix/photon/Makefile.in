@@ -26,8 +26,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= timer
 LIBRARY_NAME	= timer_$(TIMER_SUFFIX)
-
+REQUIRES	= xpcom \
+		  string \
+		  $(NULL)
 
 CPPSRCS		= nsTimerPh.cpp
 
