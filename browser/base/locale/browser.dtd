@@ -95,23 +95,24 @@
 <!-- Toolbar items --> 
 <!ENTITY  homeButton.label            "Home">
 
-<!ENTITY historyCmd.label           "History">  
-<!ENTITY historyCmd.accesskey       "i">
-<!ENTITY history.commandKey       "h">
+<!ENTITY historyCmd.label             "History">  
+<!ENTITY historyCmd.accesskey         "i">
+<!ENTITY history.commandKey           "h">
+
+<!ENTITY toolsMenu.label              "Tools">
+<!ENTITY toolsMenu.accesskey          "T"> 
+
+<!ENTITY downloadManagerCmd.label     "Download Manager">
 
 <!ENTITY pageHolder.commandKey     "j">
 
-<!ENTITY tasksMenu.label "Tools">
-<!ENTITY tasksMenu.accesskey "T"> 
-
-<!ENTITY downloadManagerCmd.label "Download Manager">
 <!ENTITY downloadManagerCmd.accesskey "D">
 
 <!ENTITY javaConsoleCmd.label         "Java Console">
-<!ENTITY javaConsoleCmd.accesskey       "J">
+<!ENTITY javaConsoleCmd.accesskey     "J">
 
-<!ENTITY javaScriptConsoleCmd.label                             "JavaScript Console">
-<!ENTITY javaScriptConsoleCmd.accesskey       "S">
+<!ENTITY javaScriptConsoleCmd.label   "JavaScript Console">
+<!ENTITY javaScriptConsoleCmd.accesskey "S">
 
 <!ENTITY fileMenu.label         "File"> 
 <!ENTITY fileMenu.accesskey       "F">
@@ -217,7 +218,7 @@
 <!ENTITY savePageCmd.commandkey       "s">
 <!ENTITY saveFrameCmd.label           "Save Frame As...">
 <!ENTITY saveFrameCmd.accesskey       "F">
-<!ENTITY saveLinkCmd.label            "Save Link As...">
+<!ENTITY saveLinkCmd.label            "Save Link to Disk...">
 <!ENTITY saveLinkCmd.accesskey        "k">
 <!ENTITY saveImageCmd.label           "Save Image As...">
 <!ENTITY saveImageCmd.accesskey       "v">
@@ -263,7 +264,7 @@
 <!ENTITY pasteButton.tooltip            "Paste">
 
 <!ENTITY findOnSearchBarCmd.label       "Find in this Page">
-<!ENTITY currentDownloads.label          "Current Downloads">
+<!ENTITY currentDownloads.label         "Current Downloads">
 <!ENTITY openDownloadsSidebar.commandkey "E">
 
 #ifdef XP_WIN
