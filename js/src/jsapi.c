@@ -3118,7 +3118,6 @@ JS_ClearRegExpStatics(JSContext *cx)
 {
     JSRegExpStatics *res;
 
-    CHECK_REQUEST(cx);
     /* No locking required, cx is thread-private and input must be live. */
     res = &cx->regExpStatics;
     res->input = NULL;
