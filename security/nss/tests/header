@@ -260,7 +260,7 @@ tbx_dirs()
     fi
     if [ -z "${RESULTDIR}" ] ; then # needs to be different for tinderbox
         Debug "Setting RESULTDIR for tinderbox"
-        RESULTDIR="${D1}/tinderbox/tests_results/security/${HOST}-`date +%Y%m%d-%H:%M`"
+        RESULTDIR="${D1}/tinderbox/tests_results/security/${HOST}-`date +%Y%m%d-%H.%M`"
         #RESULTDIR=${UX_MASTERDIR}/mozilla/tests_results/security
     fi
     TBX_D2=`cd ../../../../..;pwd`
