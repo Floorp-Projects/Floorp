@@ -88,17 +88,13 @@
   background-color: #C1D2EE;
 }
 
-#catGeneralButton {-moz-image-region: rect(0px, 32px, 32px, 0px)}
-#catPrivacyButton {-moz-image-region: rect(0px, 64px, 32px, 32px)}
-#catFeaturesbutton {-moz-image-region: rect(0px, 96px, 32px, 64px)}
-#catThemesButton {-moz-image-region: rect(0px, 128px, 32px, 96px)}
-#catExtButton {-moz-image-region: rect(0px, 160px, 32px, 128px)}
-#catFontsButton {-moz-image-region: rect(0px, 192px, 32px, 160px)}
-#catProxiesButton {-moz-image-region: rect(0px, 224px, 32px, 192px)}
-#catDownloadsButton {
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
-  -moz-image-region: rect(0px, 192px, 32px, 160px);
-}
+#catGeneralButton   {-moz-image-region: rect(0px, 32px,  32px, 0px)}
+#catPrivacyButton   {-moz-image-region: rect(0px, 64px,  32px, 32px)}
+#catFeaturesbutton  {-moz-image-region: rect(0px, 96px,  32px, 64px)}
+#catDownloadsButton {-moz-image-region: rect(0px, 128px, 32px, 96px)}
+#catThemesButton    {-moz-image-region: rect(0px, 160px, 32px, 128px)}
+#catExtButton       {-moz-image-region: rect(0px, 192px, 32px, 160px)}
+#catAdvancedButton  {-moz-image-region: rect(0px, 224px, 32px, 192px)}
 
 .indent {
   margin-left: 23px;
