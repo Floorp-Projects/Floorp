@@ -10,6 +10,6 @@ interface XULFocusTracker {
 
 	void focusChanged();
 
-	xpidl nsIController getController(in Element element);
-	void setController(in Element element, in xpidl nsIController controller);
+	xpidl nsIController getController();
+	void setController(in xpidl nsIController controller);
 };

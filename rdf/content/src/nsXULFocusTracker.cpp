@@ -182,22 +182,26 @@ XULFocusTrackerImpl::FocusChanged()
 }
 
 NS_IMETHODIMP
-XULFocusTrackerImpl::GetController(nsIDOMElement* anElement, nsIController** aResult)
+XULFocusTrackerImpl::GetController(nsIController** aResult)
 {
-  nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(anElement);
-  if (xulElement)
-    return xulElement->GetController(aResult);
+  if (mCurrentElement) {
+    nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(mCurrentElement);
+    if (xulElement)
+      return xulElement->GetController(aResult);
+  }
 
   *aResult = nsnull;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-XULFocusTrackerImpl::SetController(nsIDOMElement* anElement, nsIController* aController)
+XULFocusTrackerImpl::SetController(nsIController* aController)
 {
-  nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(anElement);
-  if (xulElement)
-    return xulElement->SetController(aController);
+  if (mCurrentElement) {
+    nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(mCurrentElement);
+    if (xulElement)
+      return xulElement->SetController(aController);
+  }
 
   return NS_OK;
 }
