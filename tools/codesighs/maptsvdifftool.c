@@ -212,6 +212,14 @@ static int moduleCompare(const void* in1, const void* in2)
     {
         retval = -1;
     }
+    else
+    {
+        retval = strcmp(one->mModule, two->mModule);
+        if(0 > oneSize && 0 > twoSize)
+        {
+            retval *= -1;
+        }
+    }
 
     return retval;
 }
@@ -234,6 +242,14 @@ static int segmentCompare(const void* in1, const void* in2)
     else if(one->mSize > two->mSize)
     {
         retval = -1;
+    }
+    else
+    {
+        retval = strcmp(one->mSegment, two->mSegment);
+        if(0 > one->mSize && 0 > two->mSize)
+        {
+            retval *= -1;
+        }
     }
 
     return retval;
@@ -258,6 +274,14 @@ static int objectCompare(const void* in1, const void* in2)
     {
         retval = -1;
     }
+    else
+    {
+        retval = strcmp(one->mObject, two->mObject);
+        if(0 > one->mSize && 0 > two->mSize)
+        {
+            retval *= -1;
+        }
+    }
 
     return retval;
 }
@@ -280,6 +304,14 @@ static int symbolCompare(const void* in1, const void* in2)
     else if(one->mSize > two->mSize)
     {
         retval = -1;
+    }
+    else
+    {
+        retval = strcmp(one->mSymbol, two->mSymbol);
+        if(0 > one->mSize && 0 > two->mSize)
+        {
+            retval *= -1;
+        }
     }
 
     return retval;
