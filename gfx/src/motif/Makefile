@@ -30,7 +30,7 @@ LCFLAGS+=-D_IMPL_NS_GFXONXP
 LLIBS+=$(DIST)/lib/libxpcom.a $(DIST)/lib/libraptorbase.a $(DIST)/lib/libraptorgfx.a
 
 CPPSRCS=nsDeviceContextUnix.cpp nsFontMetricsUnix.cpp nsGfxFactoryUnix.cpp \
-	nsRenderingContextUnix.cpp nsImageUnix.cpp
+	nsRenderingContextUnix.cpp nsRegionUnix.cpp nsImageUnix.cpp
 
 include $(DEPTH)/config/rules.mk
 
