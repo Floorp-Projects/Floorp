@@ -16,7 +16,6 @@
  * Reserved.
  */
 
-#include "jdefines.h"
 #include "nsMsgTest.h"
 #include "nsxpfcCIID.h"
 #include "nsIAppShell.h"
