@@ -138,12 +138,14 @@ char * eval(PRUint32 aVal) {
   return aVal ? "PASSED":"FAILED";
 }
 
+#if 0
 char * eval(PRBool aVal) {
   if (!aVal) {
     gOverallStatus++;
   }
   return aVal ? "PASSED":"FAILED";
 }
+#endif
 
 /**--------------------------------------------------------------------------------
   * Generic ListWidget Box Non-Visual Test
