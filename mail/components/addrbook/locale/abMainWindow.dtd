@@ -114,3 +114,5 @@ Rights Reserved.
 <!-- LOCALIZATION NOTE (hideSwapFnLnUI) : DONT_TRANSLATE -->
 <!-- Swap FN/LN UI  Set to "false" to show swap fn/ln UI -->
 <!ENTITY  hideSwapFnLnUI "true">
+
+<!ENTITY dirTreeHeader.label               "Address Books"> 

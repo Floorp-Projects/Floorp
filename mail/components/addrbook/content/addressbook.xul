@@ -350,6 +350,9 @@ Contributor(s):
   <!-- The main address book three pane -->
   <hbox flex="1">
     <vbox id="dirTreeBox" persist="width collapsed">
+      <sidebarheader id="abDirTreeHeader" align="center">
+        <label id="abDirTreeHeader-title" value="&dirTreeHeader.label;"/>
+      </sidebarheader>
       <tree id="dirTree" style="min-width:150px" flex="1" persist="width"/>
     </vbox>
 
