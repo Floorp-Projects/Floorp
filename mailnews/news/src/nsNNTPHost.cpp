@@ -22,7 +22,10 @@
 #include "nntpCore.h"
 #include "nsINNTPHost.h"
 #include "nsINNTPCategory.h"
+
 #include "nsINNTPCategoryContainer.h"
+#include "nsNNTPCategoryContainer.h"
+
 #include "nsNNTPHost.h"
 #include "nsNNTPArticleSet.h"
 
@@ -30,6 +33,8 @@
 #include "nsMsgPtrArray.h"
 
 #include "nsINNTPNewsgroup.h"
+#include "nsNNTPNewsgroup.h"
+
 #include "nsIMsgFolder.h"
 
 /* for XP_FilePerm */
@@ -1863,14 +1868,14 @@ nsNNTPHost::RemoveGroup (const nsINNTPNewsgroup *newsInfo)
 {
     PRBool subscribed;
     if (!newsInfo) return NS_ERROR_NULL_POINTER;
-    nsresult rv = newsInfo->GetSubscribed(&subscribed);
+    nsresult rv = ((nsINNTPNewsgroup *)newsInfo)->GetSubscribed(&subscribed);
 	if (NS_SUCCEEDED(rv) && subscribed) 
 	{
-		newsInfo->SetSubscribed(PR_FALSE);
+		((nsINNTPNewsgroup *)newsInfo)->SetSubscribed(PR_FALSE);
 #ifdef HAVE_MASTER
 		m_master->BroadcastFolderDeleted (newsInfo);
 #endif
-        nsIMsgFolder* newsFolder = getFolderFor(newsInfo);
+        nsIMsgFolder* newsFolder = getFolderFor((nsINNTPNewsgroup*)newsInfo);
         if (newsFolder) {
             m_hostinfo->RemoveSubfolder(newsFolder);
             NS_RELEASE(newsFolder);

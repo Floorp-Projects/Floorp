@@ -84,6 +84,7 @@ class nsNNTPNewsgroupList : public nsINNTPNewsgroupList
 {
 public:
   nsNNTPNewsgroupList(nsINNTPHost *, nsINNTPNewsgroup*);
+  nsNNTPNewsgroupList();
   virtual  ~nsNNTPNewsgroupList();
   static void operator delete(void *);
   NS_DECL_ISUPPORTS;
@@ -107,6 +108,7 @@ public:
 
     
 private:
+  NS_METHOD Init(nsINNTPHost *, nsINNTPNewsgroup*);
   NS_METHOD InitNewsgroupList(const char *url, const char *groupName);
 
   NS_METHOD CleanUp();
