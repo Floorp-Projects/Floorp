@@ -31,9 +31,9 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * shvfy.c - routines to verifh signature.
+ * shvfy.c - routines to verify signature on a shared library.
  *
- * $Id: shvfy.c,v 1.1 2003/01/30 23:36:37 relyea%netscape.com Exp $
+ * $Id: shvfy.c,v 1.2 2003/02/07 19:22:42 relyea%netscape.com Exp $
  */
 
 #include "shsign.h"
@@ -41,6 +41,7 @@
 #include "prio.h"
 #include "blapi.h"
 #include "seccomon.h"
+#include "stdio.h"
 
 #ifndef NSPR_HAS_FILEPATH_FUNC
 char *
@@ -48,6 +49,8 @@ freebl_GetLibraryFilePathname(const char *name, PRFuncPtr addr);
 #else
 #define freebl_GetLibraryFilePathname NSPR_GetLibraryFilePathname
 #endif
+
+#define DEBUG_SHVERIFY 1
 
 static char *
 mkCheckFileName(const char *libName)
@@ -114,6 +117,7 @@ BLAPI_SHVerify(const char *name, PRFuncPtr addr)
     int bytesRead, offset;
     SECStatus rv;
     DSAPublicKey key;
+    int count;
 
     PRBool result = PR_FALSE; /* if anything goes wrong,
 			       * the signature does not verify */
@@ -202,8 +206,10 @@ BLAPI_SHVerify(const char *name, PRFuncPtr addr)
     }
     SHA1_Begin(hashcx);
 
+    count = 0;
     while ((bytesRead = PR_Read(shFD, buf, sizeof(buf))) > 0) {
 	SHA1_Update(hashcx, buf, bytesRead);
+	count += bytesRead;
     }
     PR_Close(shFD);
     shFD = NULL;
@@ -215,6 +221,31 @@ BLAPI_SHVerify(const char *name, PRFuncPtr addr)
     if (DSA_VerifyDigest(&key, &signature, &hash) == SECSuccess) {
 	result = PR_TRUE;
     }
+#ifdef DEBUG_SHVERIFY
+  {
+        int i,j;
+        fprintf(stderr,"File %s: %d bytes\n",shName, count);
+        fprintf(stderr,"  hash: %d bytes\n", hash.len);
+#define STEP 10
+        for (i=0; i < hash.len; i += STEP) {
+           fprintf(stderr,"   ");
+           for (j=0; j < STEP && (i+j) < hash.len; j++) {
+                fprintf(stderr," %02x", hash.data[i+j]);
+           }
+           fprintf(stderr,"\n");
+        }
+        fprintf(stderr,"  signature: %d bytes\n", signature.len);
+        for (i=0; i < signature.len; i += STEP) {
+           fprintf(stderr,"   ");
+           for (j=0; j < STEP && (i+j) < signature.len; j++) {
+                fprintf(stderr," %02x", signature.data[i+j]);
+           }
+           fprintf(stderr,"\n");
+        }
+	fprintf(stderr,"Verified : %s\n",result?"TRUE": "FALSE");
+    }
+#endif DEBUG_SHVERIFY
+
 
 loser:
     if (shName != NULL) {
