@@ -189,6 +189,8 @@ namespace ICG {
         bool mHasRestParameter;             // true if this function has a ... parameter
         bool mHasNamedRestParameter;        // true if this function has a named ... parameter
 
+        const StringAtom &mInitName;
+
         std::vector<bool> mPermanentRegister;
 
         Register getTempRegister() 
@@ -243,7 +245,6 @@ namespace ICG {
 
         void setFlag(uint32 flag, bool v) { mFlags = (ICodeGeneratorFlags)((v) ? mFlags | flag : mFlags & ~flag); }
 
-
         typedef enum { Var, Property, Slot, Static, Constructor, Name, Method } LValueKind;
 
         LValueKind resolveIdentifier(const StringAtom &name, TypedRegister &v, uint32 &slotIndex, bool lvalue);
@@ -265,6 +266,7 @@ namespace ICG {
         }
                 
         ICodeModule *complete(JSType *resultType);
+        void readICode(const char *fileName);
 
         JSType *extractType(ExprNode *t);
 
@@ -346,6 +348,7 @@ namespace ICG {
 
     Formatter& operator<<(Formatter &f, ICodeGenerator &i);
     Formatter& operator<<(Formatter &f, ICodeModule &i);
+    Formatter& operator<<(Formatter &f, std::string &s);
     /*
       std::ostream &operator<<(std::ostream &s, ICodeGenerator &i);
       std::ostream &operator<<(std::ostream &s, StringAtom &str);
