@@ -2297,7 +2297,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     aMetrics.mCarriedOutBottomMargin =
       aState.GetFlag(BRS_ISBOTTOMMARGINROOT) ? 0 : aState.mPrevBottomMargin;
 
-#ifdef DEBUG
+#ifdef DEBUG_blocks
     if (CRAZY_WIDTH(aMetrics.width) || CRAZY_HEIGHT(aMetrics.height)) {
       ListTag(stdout);
       printf(": WARNING: desired:%d,%d\n", aMetrics.width, aMetrics.height);

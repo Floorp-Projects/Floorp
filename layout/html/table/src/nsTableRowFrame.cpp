@@ -894,7 +894,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
           nsReflowStatus status;
           rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState,
                            aReflowState.x, 0, 0, status);
-#ifdef NS_DEBUG
+#ifdef NS_DEBUG_karnaze
           if (desiredSize.width > availWidth)
           {
             printf("WARNING: cell returned desired width %d given avail width %d\n",
@@ -1044,13 +1044,17 @@ nsTableRowFrame::InitialReflow(nsIPresContext*      aPresContext,
 
       // the following signals bugs in the content frames.  
       if (kidMaxElementSize.width > kidSize.width) {
+#ifdef DEBUG_karnaze
         printf("WARNING - table cell content max element width %d greater than desired width %d\n",
           kidMaxElementSize.width, kidSize.width);
+#endif
         kidSize.width = kidMaxElementSize.width;
       }
       if (kidMaxElementSize.height > kidSize.height) {
+#ifdef DEBUG_karnaze
         printf("Warning - table cell content max element height %d greater than desired height %d\n",
           kidMaxElementSize.height, kidSize.height);
+#endif
         kidSize.height = kidMaxElementSize.height;
       }
 
