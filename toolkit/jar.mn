@@ -46,35 +46,62 @@ toolkit.jar:
 +        content/global/buildconfig.html                    (content/buildconfig.html)
 *+       content/global/dialogOverlay.xul                   (obsolete/content/dialogOverlay.xul) 
 *+       content/global/dialogOverlay.js                    (obsolete/content/dialogOverlay.js) 
++        content/global/nsClipboard.js                      (obsolete/content/nsClipboard.js) 
++        content/global/nsTreeController.js                 (obsolete/content/nsTreeController.js) 
++        content/global/nsTreeSorting.js                    (obsolete/content/nsTreeSorting.js) 
++        content/global/nsUserSettings.js                   (obsolete/content/nsUserSettings.js) 
 +        content/global/strres.js                           (obsolete/content/strres.js) 
++        content/global/widgetStateManager.js               (obsolete/content/widgetStateManager.js) 
 +        content/global/wizardHandlerSet.js                 (obsolete/content/wizardHandlerSet.js) 
 +        content/global/wizardManager.js                    (obsolete/content/wizardManager.js) 
 +        content/global/wizardOverlay.js                    (obsolete/content/wizardOverlay.js) 
 +        content/global/wizardOverlay.xul                   (obsolete/content/wizardOverlay.xul) 
-+        content/global/nsTreeController.js                 (obsolete/content/nsTreeController.js) 
-+        content/global/nsTreeSorting.js                    (obsolete/content/nsTreeSorting.js) 
-+        content/global/nsClipboard.js                      (obsolete/content/nsClipboard.js) 
-+        content/global/nsUserSettings.js                   (obsolete/content/nsUserSettings.js) 
 
 en-US.jar:
-+        locale/en-US/global/charset.dtd                    (locale/charset.dtd)
-+        locale/en-US/global/finddialog.dtd                 (locale/finddialog.dtd)
-+        locale/en-US/global/finddialog.properties          (locale/finddialog.properties)
++        locale/en-US/global/contents.rdf                   (locale/contents.rdf) 
++        locale/en-US/global/about.xhtml                    (locale/about.xhtml)
++        locale/en-US/global/accept2locale.properties       (locale/accept2locale.properties) 
 +        locale/en-US/global/brand.dtd                      (locale/brand.dtd)
 *+       locale/en-US/global/brand.properties               (locale/brand.properties)
-+        locale/en-US/global/about.xhtml                    (locale/about.xhtml)
++        locale/en-US/global/build.dtd                      (locale/build.dtd)
++        locale/en-US/global/charset.dtd                    (locale/charset.dtd)
 +        locale/en-US/global/customizeToolbar.dtd           (locale/customizeToolbar.dtd)
 +        locale/en-US/global/customizeToolbar.properties    (locale/customizeToolbar.properties)
++        locale/en-US/global/finddialog.dtd                 (locale/finddialog.dtd)
++        locale/en-US/global/finddialog.properties          (locale/finddialog.properties)
++        locale/en-US/global/intl.css                       (locale/intl.css) 
++        locale/en-US/global/keys.properties                (locale/keys.properties)
++        locale/en-US/global/languageNames.properties       (locale/languageNames.properties) 
++        locale/en-US/global/regionNames.properties         (locale/regionNames.properties) 
 +        locale/en-US/global/dialog.properties              (locale/widgets/dialog.properties)
 +        locale/en-US/global/tabbrowser.properties          (locale/widgets/tabbrowser.properties)
 +        locale/en-US/global/tabbrowser.dtd                 (locale/widgets/tabbrowser.dtd)
 +        locale/en-US/global/textcontext.dtd                (locale/widgets/textcontext.dtd)
 +        locale/en-US/global/wizard.properties              (locale/widgets/wizard.properties)
-+        locale/en-US/global/build.dtd                      (locale/build.dtd)
++        locale/en-US/global/charsetOverlay.dtd             (obsolete/locale/charsetOverlay.dtd) 
 *+       locale/en-US/global/dialogOverlay.dtd              (obsolete/locale/dialogOverlay.dtd) 
++        locale/en-US/global/nsTreeSorting.properties       (obsolete/locale/nsTreeSorting.properties)
 +        locale/en-US/global/wizardManager.properties       (obsolete/locale/wizardManager.properties) 
 +        locale/en-US/global/wizardOverlay.dtd              (obsolete/locale/wizardOverlay.dtd) 
-+        locale/en-US/global/nsTreeSorting.properties       (obsolete/locale/nsTreeSorting.properties)
 
 classic.jar:
 +        skin/classic/global/wizardOverlay.css              (obsolete/skin/wizardOverlay.css)
+
+en-win.jar:
++  locale/en-US/global-platform/contents.rdf 		(locale/contents-platform.rdf)
++  locale/en-US/global-platform/platformKeys.properties (locale/platformKeys.properties)
+
+en-unix.jar:
++  locale/en-US/global-platform/contents.rdf 		(locale/contents-platform.rdf)
++  locale/en-US/global-platform/platformKeys.properties (locale/platformKeys.properties)
+
+en-mac.jar:
++  locale/en-US/global-platform/contents.rdf		(locale/contents-platform.rdf)
++  locale/en-US/global-platform/platformKeys.properties (locale/platformKeys-mac.properties)
+
+US.jar:
++  locale/US/global-region/contents.rdf                 (locale/contents-region.rdf) 
++  locale/US/global-region/region.dtd                   (locale/region.dtd)
++  locale/US/global-region/region.properties            (locale/region.properties)
++  locale/US/global-region/builtinURLs.rdf              (locale/builtinURLs.rdf) 
+
