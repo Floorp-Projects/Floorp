@@ -38,33 +38,34 @@ INCLUDES+= -I$(srcdir)/../xpwidgets -I$(srcdir)/../gtk -I$(srcdir)/.
 INCLUDES += $(TK_CFLAGS)
 
 CPPSRCS= \
-	nsFontRetrieverService.cpp \
-	nsFontSizeIterator.cpp \
 	nsAppShell.cpp \
+	nsButton.cpp \
+	nsCheckButton.cpp \
 	nsClipboard.cpp	\
 	nsComboBox.cpp \
 	nsDragService.cpp \
+	nsFileWidget.cpp \
+	nsFontRetrieverService.cpp \
+	nsFontSizeIterator.cpp \
+	nsGtkEventHandler.cpp \
 	nsLabel.cpp \
-	nsScrollbar.cpp \
-	nsButton.cpp \
 	nsListBox.cpp \
 	nsLookAndFeel.cpp \
-	nsTextAreaWidget.cpp \
-	nsCheckButton.cpp \
 	nsMenu.cpp \
-	nsTextHelper.cpp \
 	nsMenuBar.cpp \
-	nsTextWidget.cpp \
-	nsFileWidget.cpp \
 	nsMenuItem.cpp \
-	nsTabWidget.cpp \
-	nsToolkit.cpp \
-	nsGtkEventHandler.cpp \
-	nsRadioButton.cpp \
 	nsPopUpMenu.cpp \
-	nsWidget.cpp \
-	nsWindow.cpp \
+	nsRadioButton.cpp \
+	nsScrollbar.cpp \
 	nsSound.cpp \
+	nsTabWidget.cpp \
+	nsTextAreaWidget.cpp \
+	nsTextHelper.cpp \
+	nsTextWidget.cpp \
+	nsToolkit.cpp \
+	nsWidget.cpp \
+	nsWidgetFactory.cpp \
+	nsWindow.cpp \
 	$(NULL)
 
 TARGETS = $(LIBRARY)

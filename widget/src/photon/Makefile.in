@@ -44,26 +44,28 @@ CPPSRCS=  \
 	PtRawDrawContainer.cpp \
 	nsAppShell.cpp \
 	nsButton.cpp \
-	nsLabel.cpp \
 	nsCheckButton.cpp \
-	nsRadioButton.cpp \
+	nsClipboard.cpp \
+	nsComboBox.cpp \
+	nsFileWidget.cpp \
+	nsLabel.cpp \
+	nsListBox.cpp \
 	nsLookAndFeel.cpp \
-	nsToolkit.cpp \
+	nsMenu.cpp \
 	nsMenuBar.cpp \
 	nsMenuItem.cpp \
-	nsMenu.cpp \
 	nsPopUpMenu.cpp \
-	nsWidget.cpp \
+	nsRadioButton.cpp \
 	nsScrollbar.cpp \
+	nsSound.cpp \
+	nsTextAreaWidget.cpp \
 	nsTextHelper.cpp \
 	nsTextWidget.cpp \
-	nsTextAreaWidget.cpp \
-	nsListBox.cpp \
-	nsFileWidget.cpp \
-	nsComboBox.cpp \
-	nsClipboard.cpp \
-	nsSound.cpp \
-	nsWindow.cpp
+	nsToolkit.cpp \
+	nsWidget.cpp \
+	nsWidgetFactory.cpp \
+	nsWindow.cpp \
+	$(NULL)
 
 TARGETS = $(LIBRARY)
 

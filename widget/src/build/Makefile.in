@@ -34,22 +34,7 @@ LOCAL_INCLUDES := \
 	 -I$(srcdir)/. \
 	$(NULL)
 
-CPPSRCS_gtk	:= \
-	nsGTKWidgetFactory.cpp
-
-CPPSRCS_photon	:= \
-	nsPhWidgetFactory.cpp
-
-# nsMotifWidgetFactory actually has no Motif/Xt/Xlib code in it -- surprise!
-
-CPPSRCS_motif	:= \
-	nsMotifWidgetFactory.cpp
-
-CPPSRCS_beos	:= \
-	nsBeOSWidgetFactory.cpp
-
 CPPSRCS := \
-	$(CPPSRCS_$(MOZ_WIDGET_TOOLKIT)) \
 	nsWidgetSupport.cpp \
 	$(NULL)
 
