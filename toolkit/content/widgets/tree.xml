@@ -628,7 +628,7 @@
     <handlers>
       <!-- If there is no modifier key, we select on mousedown, not
            click, so that drags work correctly. -->
-      <handler event="mousedown">
+      <handler event="mousedown" clickcount="1">
       <![CDATA[
          if (((!event.ctrlKey || !this.parentNode.pageUpOrDownMovesSelection) &&
              !event.shiftKey && !event.metaKey) ||
@@ -668,9 +668,8 @@
 
       <!-- On a click (up+down on the same item), deselect everything
            except this item. -->
-      <handler event="click">
+      <handler event="click" button="0" clickcount="1">
       <![CDATA[
-        if (event.button != 0) return;
         var row = {};
         var col = {};
         var obj = {};
@@ -729,17 +728,18 @@
       <!-- double-click -->
       <handler event="click" clickcount="2">
       <![CDATA[
-           var row = {};
-           var col = {};
-		   var obj = {};
-           var b = this.parentNode.treeBoxObject;
-           b.getCellAt(event.clientX, event.clientY, row, col, obj);
+        var b = this.parentNode.treeBoxObject;
+        var row = b.view.selection.currentIndex;
+        if (row == -1 || !b.view.isContainer(row))
+          return;
 
-           if (row.value == -1)
-             return;
+         var col = {};
+         var obj = {};
+         b.getCellAt(event.clientX, event.clientY, {}, col, obj);
 
-           if (!col.value.cycler && obj.value != "twisty" && b.view.isContainer(row.value))
-             this.parentNode.changeOpenState(row);
+         // Cyclers and twisties respond to single clicks, not double clicks
+         if (!col.value.cycler && obj.value != "twisty")
+           this.parentNode.changeOpenState(row);
       ]]>
       </handler>
       
