@@ -38,6 +38,8 @@ class nsIDOMHistory;
 class nsIDOMWindowCollection;
 class nsIDOMEvent;
 class nsISidebar;
+class nsIDOMPkcs11;
+class nsIDOMCrypto;
 class nsIDOMWindow;
 class nsIControllers;
 
@@ -86,6 +88,10 @@ public:
   NS_IMETHOD    GetClosed(PRBool* aClosed)=0;
 
   NS_IMETHOD    GetFrames(nsIDOMWindowCollection** aFrames)=0;
+
+  NS_IMETHOD    GetCrypto(nsIDOMCrypto** aCrypto)=0;
+
+  NS_IMETHOD    GetPkcs11(nsIDOMPkcs11** aPkcs11)=0;
 
   NS_IMETHOD    GetControllers(nsIControllers** aControllers)=0;
 
@@ -227,6 +233,8 @@ public:
   NS_IMETHOD    GetDirectories(nsIDOMBarProp** aDirectories);  \
   NS_IMETHOD    GetClosed(PRBool* aClosed);  \
   NS_IMETHOD    GetFrames(nsIDOMWindowCollection** aFrames);  \
+  NS_IMETHOD    GetCrypto(nsIDOMCrypto** aCrypto);  \
+  NS_IMETHOD    GetPkcs11(nsIDOMPkcs11** aPkcs11);  \
   NS_IMETHOD    GetControllers(nsIControllers** aControllers);  \
   NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener);  \
   NS_IMETHOD    SetOpener(nsIDOMWindow* aOpener);  \
@@ -315,6 +323,8 @@ public:
   NS_IMETHOD    GetDirectories(nsIDOMBarProp** aDirectories) { return _to GetDirectories(aDirectories); } \
   NS_IMETHOD    GetClosed(PRBool* aClosed) { return _to GetClosed(aClosed); } \
   NS_IMETHOD    GetFrames(nsIDOMWindowCollection** aFrames) { return _to GetFrames(aFrames); } \
+  NS_IMETHOD    GetCrypto(nsIDOMCrypto** aCrypto) { return _to GetCrypto(aCrypto); } \
+  NS_IMETHOD    GetPkcs11(nsIDOMPkcs11** aPkcs11) { return _to GetPkcs11(aPkcs11); } \
   NS_IMETHOD    GetControllers(nsIControllers** aControllers) { return _to GetControllers(aControllers); } \
   NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener) { return _to GetOpener(aOpener); } \
   NS_IMETHOD    SetOpener(nsIDOMWindow* aOpener) { return _to SetOpener(aOpener); } \

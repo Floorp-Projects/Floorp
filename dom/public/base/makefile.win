@@ -28,7 +28,7 @@ EXPORTS=nsIDOMWindow.h nsIDOMNavigator.h nsIDOMLocation.h nsIDOMNSLocation.h \
 	nsIDOMMimeType.h nsIDOMMimeTypeArray.h \
 	nsIDOMPlugin.h nsIDOMPluginArray.h nsIDOMBarProp.h \
 	nsIDOMDOMException.h nsPIDOMWindow.h nsIDOMAbstractView.h \
-	nsIDOMViewCSS.h
+	nsIDOMViewCSS.h nsIDOMCRMFObject.h nsIDOMCrypto.h nsIDOMPkcs11.h
 
 MODULE=dom 
 
