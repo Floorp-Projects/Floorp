@@ -729,6 +729,7 @@ case "$target" in
 	dnl Hack...
 	_OPENVMS_CROSS_COMPILE=1
 	NSPR_LIBS="-lnspr$NSPR_VERSION -lplc$NSPR_VERSION -lplds$NSPR_VERSION"
+    AC_DEFINE(NO_PW_GECOS)
     fi
     ;;
 
@@ -1568,6 +1569,36 @@ if test "$ac_cv_uint16_t" = true ; then
   AC_MSG_RESULT(yes)
 else
   AC_MSG_RESULT(no)
+fi
+
+AC_MSG_CHECKING(for uname.domainname)
+AC_CACHE_VAL(ac_cv_have_uname_domainname_field,
+    [AC_TRY_COMPILE([#include <sys/utsname.h>],
+        [ struct utsname *res; char *domain; 
+            (void)uname(res);  if (res != 0) { domain = res->domainname; } ],
+        [ac_cv_have_uname_domainname_field=true],
+        [ac_cv_have_uname_domainname_field=false])])
+
+if test "$ac_cv_have_uname_domainname_field" = "true"; then
+    AC_DEFINE(HAVE_UNAME_DOMAINNAME_FIELD)
+    AC_MSG_RESULT(yes)
+else
+    AC_MSG_RESULT(no)
+fi
+
+AC_MSG_CHECKING(for uname.__domainname)
+AC_CACHE_VAL(ac_cv_have_uname_us_domainname_field,
+    [AC_TRY_COMPILE([#include <sys/utsname.h>],
+        [ struct utsname *res; char *domain; 
+            (void)uname(res);  if (res != 0) { domain = res->__domainname; } ],
+        [ac_cv_have_uname_us_domainname_field=true],
+        [ac_cv_have_uname_us_domainname_field=false])])
+
+if test "$ac_cv_have_uname_us_domainname_field" = "true"; then
+    AC_DEFINE(HAVE_UNAME_US_DOMAINNAME_FIELD)
+    AC_MSG_RESULT(yes)
+else
+    AC_MSG_RESULT(no)
 fi
 
 dnl Checks for header files.
