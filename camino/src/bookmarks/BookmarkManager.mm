@@ -627,10 +627,10 @@ static unsigned gFirstUserCollection = 0;
     }
   }
   BookmarkFolder *currentArray = aFolder;
-  BookmarkItem *currentItem;
-  NSScanner *tokenScanner;
-  NSString *tokenTag, *tokenString, *tempItem;
-  unsigned scanIndex;
+  BookmarkItem *currentItem = nil;
+  NSScanner *tokenScanner = nil;
+  NSString *tokenTag = nil, *tokenString = nil, *tempItem = nil;
+  unsigned long scanIndex = 0;
   NSRange tempRange, keyRange;
   BOOL justSetTitle = NO;
   // Scan through file.  As we find a token, do something useful with it.

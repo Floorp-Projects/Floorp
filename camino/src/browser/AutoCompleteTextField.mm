@@ -39,7 +39,7 @@ static const int kFrameMargin = 1;
 
 
 // stole this from NSPasteboard+Utils.mm
-static const NSString* kCorePasteboardFlavorType_url  = @"CorePasteboardFlavorType 0x75726C20"; // 'url '  url
+static NSString* kCorePasteboardFlavorType_url  = @"CorePasteboardFlavorType 0x75726C20"; // 'url '  url
 
 @interface AutoCompleteWindow : NSWindow
 - (BOOL)isKeyWindow;
@@ -670,7 +670,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
   NSPasteboard *pboard = [sender draggingPasteboard];
-  NSString *dragString;
+  NSString *dragString = nil;
   if ( [[pboard types] containsObject:kCorePasteboardFlavorType_url] )
     dragString = [pboard stringForType:kCorePasteboardFlavorType_url];
   else if ( [[pboard types] containsObject:NSURLPboardType] )

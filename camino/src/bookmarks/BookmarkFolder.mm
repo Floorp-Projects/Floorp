@@ -972,8 +972,8 @@ NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 
 -(NSString *)writeHTML:(unsigned)aPad
 {
-  id item;
-  NSString* htmlString;
+  id item = nil;
+  NSString* htmlString = nil;
   NSMutableString *padString = [NSMutableString string];
   for (unsigned i = 0;i<aPad;i++) 
     [padString insertString:@"    " atIndex:0];

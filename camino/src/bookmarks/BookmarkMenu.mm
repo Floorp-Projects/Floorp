@@ -138,7 +138,7 @@
 
 - (void)addItem:(BookmarkItem *)anItem toMenu:(NSMenu *)aMenu atIndex:(int)aIndex
 {
-  NSMenuItem *menuItem;
+  NSMenuItem *menuItem = nil;
   NSString *title = [[anItem title] stringByTruncatingTo:MENU_TRUNCATION_CHARS at:kTruncateAtMiddle];
   unsigned realIndex = aIndex;
   if (aMenu == [self menu])
