@@ -619,6 +619,12 @@ public:
     return mSecurityInfo;
   }
 
+  /**
+   * Returns the default namespace ID used for elements created in this
+   * document.
+   */
+  virtual PRInt32 GetDefaultNamespaceID() const = 0;
+
 protected:
   nsString mDocumentTitle;
   nsCOMPtr<nsIURI> mDocumentURI;
