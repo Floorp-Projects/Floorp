@@ -736,6 +736,17 @@ nsHttpHandler::GetConnection_Locked(nsHttpConnectionInfo *ci,
             NS_RELEASE(conn);
             return rv;
         }
+        
+        // We created a new connection
+        // If idle + active connections > max connections, then purge the oldest idle one.
+        if (mIdleConnections.Count() + mActiveConnections.Count() > mMaxConnections) {
+            NS_ASSERTION(mIdleConnections.Count() > 0, "idle connection list is empty");
+            if (mIdleConnections.Count() > 0) {
+                nsHttpConnection *conn = (nsHttpConnection *) mIdleConnections[0];
+                mIdleConnections.RemoveElement(0);
+                NS_RELEASE(conn);
+            }
+        }
     }
     else {
         // Update the connectionInfo (bug 94038)
