@@ -925,11 +925,8 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
         *aResult = PR_TRUE;
         return NS_OK;
     }
-    nsCOMPtr<nsICodebasePrincipal> subjectCodebase;
-    if (NS_SUCCEEDED(subject->QueryInterface(
-                        NS_GET_IID(nsICodebasePrincipal),
-	                (void **) getter_AddRefs(subjectCodebase))))
-    {
+    nsCOMPtr<nsICodebasePrincipal> subjectCodebase = do_QueryInterface(subject);
+    if (subjectCodebase) {
         if (NS_FAILED(subjectCodebase->SameOrigin(object, aResult)))
             return NS_ERROR_FAILURE;
 
@@ -950,15 +947,12 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
     /*
     ** Access tests failed, so now report error.
     */
-    nsCOMPtr<nsIURI> uri;
-    if (NS_FAILED(subjectCodebase->GetURI(getter_AddRefs(uri)))) 
-        return NS_ERROR_FAILURE;
-    char *spec;
-    if (NS_FAILED(uri->GetSpec(&spec)))
+    char *str;
+    if (NS_FAILED(subject->ToString(&str)))
         return NS_ERROR_FAILURE;
     JS_ReportError(aCx, "access disallowed from scripts at %s to documents "
-                        "at another domain", spec);
-    nsCRT::free(spec);
+                        "at another domain", str);
+    nsCRT::free(str);
     *aResult = PR_FALSE;
     return NS_ERROR_DOM_PROP_ACCESS_DENIED;
 }
