@@ -48,6 +48,7 @@ public:
   ns4xPluginStreamListener(nsIPluginInstance* inst, void* notifyData);
   virtual ~ns4xPluginStreamListener();
   PRBool IsStarted();
+  nsresult CleanUpStream();
 
 protected:
   void* mNotifyData;
@@ -57,6 +58,8 @@ protected:
   PRUint32 mPosition;
   PRUint32 mCurrentStreamOffset;
   nsPluginStreamType mStreamType;
+  PRBool mStreamStarted;
+  PRBool mStreamCleanedUp;
 
 public:
   nsIPluginStreamInfo * mStreamInfo;
