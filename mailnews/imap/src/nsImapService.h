@@ -89,7 +89,7 @@ public:
 	NS_IMETHOD DeleteAllMessages(nsIEventQueue * aClientEventQueue, 
                                  nsIMsgFolder * aImapMailFolder,
                                  nsIUrlListener * aUrlListener,
-                                 nsIURL ** aURL);;
+                                 nsIURL ** aURL);
 	NS_IMETHOD AddMessageFlags(nsIEventQueue * aClientEventQueue,
                                nsIMsgFolder * aImapMailFolder, 
                                nsIUrlListener * aUrlListener,
