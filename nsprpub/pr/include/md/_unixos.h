@@ -461,7 +461,7 @@ extern PRStatus _MD_CloseFileMap(struct PRFileMap *fmap);
 #define GETTIMEOFDAY(tp) gettimeofday((tp), NULL)
 #endif
 
-#if defined(LINUX) && defined(_PR_PTHREADS) && !(__GLIBC__ >= 2)
+#if defined(_PR_PTHREADS) && !defined(_PR_POLL_AVAILABLE)
 #define _PR_NEED_FAKE_POLL
 #endif
 
