@@ -509,9 +509,6 @@ nsGenericDOMDataNode::GetScriptObject(nsIContent *aOuterContent,
                                           aContext, aOuterContent,
                                           mParent, (void**)&mScriptObject);
     if (nsnull != mDocument) {
-      nsAutoString nodeName;
-      char nameBuf[128];
-      
       aContext->AddNamedReference((void *)&mScriptObject,
                                   mScriptObject,
                                   "nsGenericDOMDataNode::mScriptObject");
