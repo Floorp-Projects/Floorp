@@ -102,13 +102,6 @@
 #include "nsISecurityCheckedComponent.h"
 #endif
 
-// #define XPC_OLD_DOM_SUPPORT // XXX we should just remove this code soon
-
-#ifdef XPC_OLD_DOM_SUPPORT
-#include "nsIScriptObjectOwner.h"   // for DOM hack in xpcconvert.cpp
-#include "nsIScriptGlobalObject.h"
-#endif
-
 #ifdef XPC_TOOLS_SUPPORT
 #include "nsIXPCToolsProfiler.h"
 #endif
