@@ -480,6 +480,8 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
     aDesiredSize.height = aReflowState.maxSize.height;
   else 
     aDesiredSize.height = state.y;
+  aDesiredSize.ascent = aDesiredSize.height;
+  aDesiredSize.descent = 0;
 
   if (gsDebug==PR_TRUE) 
   {
