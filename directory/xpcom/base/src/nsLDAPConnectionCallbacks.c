@@ -1,4 +1,5 @@
-/* 
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -9,7 +10,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is the mozilla.org LDAP XPCOM component.
+ * The Original Code is the mozilla.org LDAP XPCOM SDK.
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are 
@@ -33,7 +34,7 @@
 
 #include "nspr.h"
 #include "ldap.h"
-// XXXdmose errno.h should go away, probably after ldap C SDK 4.1 lands
+/* XXXdmose errno.h should go away, probably after ldap C SDK 4.1 lands */
 #include "errno.h"
 
 /* one of these exists per thread */
@@ -62,12 +63,12 @@ nsLDAPThreadDataInit(void)
    
    if (kLDAPErrnoData == 0) {
        if (PR_NewThreadPrivateIndex(&kLDAPErrnoData, &PR_Free) 
-	   != PR_SUCCESS) {
+           != PR_SUCCESS) {
 #ifdef DEBUG
-	   PR_fprintf(PR_STDERR, "nsLDAPThreadDataInit(): error "
-		      "allocating kLDAPErrorData thread-private index.\n");
+           PR_fprintf(PR_STDERR, "nsLDAPThreadDataInit(): error "
+                      "allocating kLDAPErrorData thread-private index.\n");
 #endif
-	   return 0;
+           return 0;
        }
    }
 
@@ -91,7 +92,7 @@ nsLDAPThreadDataInit(void)
    if ( PR_SetThreadPrivate(kLDAPErrnoData, errnoData) != PR_SUCCESS ) {
 #ifdef DEBUG
        PR_fprintf(PR_STDERR, "nsLDAPThreadDataInit(): PR_SetThreadPrivate "
-		  "failed\n");
+                  "failed\n");
 #endif
        return 0;
    }
@@ -110,18 +111,18 @@ nsLDAPSetLderrno(int aErrno, char *aMatched, char *aErrMsg, void *aDummy)
 
     nle = PR_GetThreadPrivate(kLDAPErrnoData);
     if (!nle) {
-#ifdef DEBUG	
-	PR_fprintf(PR_STDERR, "nsLDAPSetLDAPErrno(): PR_GetThreadPrivate "
-		   "failed\n");
+#ifdef DEBUG    
+        PR_fprintf(PR_STDERR, "nsLDAPSetLDAPErrno(): PR_GetThreadPrivate "
+                   "failed\n");
 #endif
-	return;
+        return;
     }
 
     nle->mErrno = aErrno;
 
     /* free any previous setting and replace it with the new one */
     if ( nle->mMatched != NULL ) {
-	ldap_memfree( nle->mMatched );
+        ldap_memfree( nle->mMatched );
     }
     nle->mMatched = aMatched;
 
@@ -144,7 +145,7 @@ nsLDAPGetLderrno( char **aMatched, char **aErrMsg, void *aDummy )
    if (!nle) {
 #ifdef DEBUG
        PR_fprintf(PR_STDERR, "nsLDAPSetLDAPErrno(): PR_GetThreadPrivate "
-		  "failed\n");
+                  "failed\n");
 #endif
        return LDAP_OTHER;
    }
@@ -196,11 +197,9 @@ nsLDAPThreadFuncsInit(LDAP *aLDAP)
     kLDAPThreadFuncs.ltf_lderrno_arg = NULL;
 
     if (ldap_set_option(aLDAP, LDAP_OPT_THREAD_FN_PTRS, 
-			(void *)&kLDAPThreadFuncs) != 0) {
-	return 0;
+                        (void *)&kLDAPThreadFuncs) != 0) {
+        return 0;
     }
 
     return 1;
 }
-
-

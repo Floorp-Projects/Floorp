@@ -1,4 +1,5 @@
-/* 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -9,7 +10,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is the mozilla.org LDAP XPCOM component.
+ * The Original Code is the mozilla.org LDAP XPCOM SDK.
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are 
@@ -33,6 +34,7 @@
 
 #include "nsLDAP.h"
 #include "nsLDAPOperation.h"
+#include "nsLDAPConnection.h"
 #include "nsILDAPMessage.h"
 #include "nsIComponentManager.h"
 #include "nsXPIDLString.h"
@@ -59,27 +61,26 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPOperation, nsILDAPOperation);
  */
 NS_IMETHODIMP
 nsLDAPOperation::Init(nsILDAPConnection *aConnection,
-		      nsILDAPMessageListener *aMessageListener)
+                      nsILDAPMessageListener *aMessageListener)
 {
     if (!aConnection) {
-	return NS_ERROR_ILLEGAL_VALUE;
+        return NS_ERROR_ILLEGAL_VALUE;
     }
 
     // so we know that the operation is not yet running (and therefore don't
     // try and call ldap_abandon_ext() on it) or remove it from the queue.
     //
-    mMsgId = 0;
+    mMsgID = 0;
 
     // set the member vars
     //
     mConnection = aConnection;
     mMessageListener = aMessageListener;
 
-    // get and cache the connection handle
-    //	
-    nsresult rv = mConnection->GetConnectionHandle(&mConnectionHandle);
-    if (NS_FAILED(rv)) 
-	return NS_ERROR_UNEXPECTED;
+    // cache the connection handle
+    //
+    mConnectionHandle = 
+        NS_STATIC_CAST(nsLDAPConnection *, aConnection)->mConnectionHandle;
 
     return NS_OK;
 }
@@ -88,7 +89,7 @@ NS_IMETHODIMP
 nsLDAPOperation::GetConnection(nsILDAPConnection* *aConnection)
 {
     if (!aConnection) {
-	return NS_ERROR_ILLEGAL_VALUE;
+        return NS_ERROR_ILLEGAL_VALUE;
     }
 
     *aConnection = mConnection;
@@ -101,7 +102,7 @@ NS_IMETHODIMP
 nsLDAPOperation::GetMessageListener(nsILDAPMessageListener **aMessageListener)
 {
     if (!aMessageListener) {
-	return NS_ERROR_ILLEGAL_VALUE;
+        return NS_ERROR_ILLEGAL_VALUE;
     }
 
     *aMessageListener = mMessageListener;
@@ -120,54 +121,56 @@ nsLDAPOperation::SimpleBind(const char *passwd)
 
     NS_PRECONDITION(mMessageListener != 0, "MessageListener not set");
 
-    rv = this->mConnection->GetBindName(getter_Copies(bindName));
+    rv = mConnection->GetBindName(getter_Copies(bindName));
     if (NS_FAILED(rv))
-	return rv;
+        return rv;
 
-    this->mMsgId = ldap_simple_bind(this->mConnectionHandle, bindName, passwd);
+    mMsgID = ldap_simple_bind(mConnectionHandle, bindName, passwd);
 
-    if (this->mMsgId == -1) {
-        const int lderrno = ldap_get_lderrno(this->mConnectionHandle, 0, 0);
-	
-	switch (lderrno) {
+    if (mMsgID == -1) {
+        const int lderrno = ldap_get_lderrno(mConnectionHandle, 0, 0);
+        
+        switch (lderrno) {
 
-	case LDAP_ENCODING_ERROR:
-	    return NS_ERROR_LDAP_ENCODING_ERROR;
+        case LDAP_ENCODING_ERROR:
+            return NS_ERROR_LDAP_ENCODING_ERROR;
 
-	case LDAP_SERVER_DOWN:
-	    // XXXdmose rebind here?
-	    return NS_ERROR_FAILURE;
+        case LDAP_SERVER_DOWN:
+            // XXXdmose rebind here?
+            return NS_ERROR_FAILURE;
 
-	case LDAP_NO_MEMORY:
-	    return NS_ERROR_OUT_OF_MEMORY;
+        case LDAP_NO_MEMORY:
+            return NS_ERROR_OUT_OF_MEMORY;
 
-	default:
-	    return NS_ERROR_UNEXPECTED;
-	}
+        default:
+            return NS_ERROR_UNEXPECTED;
+        }
 
     } 
   
     // make sure the connection knows where to call back once the messages
     // for this operation start coming in
     //
-    rv = mConnection->AddPendingOperation(this);
+    rv = NS_STATIC_CAST(nsLDAPConnection *, 
+                        NS_STATIC_CAST(nsILDAPConnection *, 
+                        mConnection.get()))->AddPendingOperation(this);
     switch (rv) {
     case NS_OK:
-	break;
+        break;
 
-	// note that the return value of ldap_abandon_ext() is ignored, as 
-	// there's nothing useful to do with it
+        // note that the return value of ldap_abandon_ext() is ignored, as 
+        // there's nothing useful to do with it
 
     case NS_ERROR_OUT_OF_MEMORY:
-	(void *)ldap_abandon_ext(mConnectionHandle, mMsgId, 0, 0);
-	return NS_ERROR_OUT_OF_MEMORY;
-	break;
+        (void *)ldap_abandon_ext(mConnectionHandle, mMsgID, 0, 0);
+        return NS_ERROR_OUT_OF_MEMORY;
+        break;
 
     case NS_ERROR_UNEXPECTED:
     case NS_ERROR_ILLEGAL_VALUE:
     default:
-	(void *)ldap_abandon_ext(mConnectionHandle, mMsgId, 0, 0);
-	return NS_ERROR_UNEXPECTED;
+        (void *)ldap_abandon_ext(mConnectionHandle, mMsgID, 0, 0);
+        return NS_ERROR_UNEXPECTED;
     }
 
     return NS_OK;
@@ -177,143 +180,107 @@ nsLDAPOperation::SimpleBind(const char *passwd)
 //
 int
 nsLDAPOperation::SearchExt(const char *base, // base DN to search
-			   int scope, // LDAP_SCOPE_{BASE,ONELEVEL,SUBTREE}
-			   const char* filter, // search filter
-			   char **attrs, // attribute types to be returned
-			   int attrsOnly, // attrs only, or values too?
-			   LDAPControl **serverctrls, 
-			   LDAPControl **clientctrls,
-			   struct timeval *timeoutp, // how long to wait
-			   int sizelimit) // max # of entries to return
+                           int scope, // SCOPE_{BASE,ONELEVEL,SUBTREE}
+                           const char* filter, // search filter
+                           char **attrs, // attribute types to be returned
+                           int attrsOnly, // attrs only, or values too?
+                           LDAPControl **serverctrls, 
+                           LDAPControl **clientctrls,
+                           struct timeval *timeoutp, // how long to wait
+                           int sizelimit) // max # of entries to return
 {
     if (mMessageListener == 0) {
-	NS_ERROR("nsLDAPOperation::SearchExt(): mMessageListener not set");
-	return NS_ERROR_NOT_INITIALIZED;
+        NS_ERROR("nsLDAPOperation::SearchExt(): mMessageListener not set");
+        return NS_ERROR_NOT_INITIALIZED;
     }
 
-    return ldap_search_ext(this->mConnectionHandle, base, scope, 
-			   filter, attrs, attrsOnly, serverctrls, 
-			   clientctrls, timeoutp, sizelimit, 
-			   &(this->mMsgId));
+    return ldap_search_ext(mConnectionHandle, base, scope, 
+                           filter, attrs, attrsOnly, serverctrls, 
+                           clientctrls, timeoutp, sizelimit, 
+                           &mMsgID);
 }
 
 
 /**
  * wrapper for ldap_search_ext(): kicks off an async search request.
  *
- * @param aBaseDn		Base DN to search
- * @param aScope		One of LDAP_SCOPE_{BASE,ONELEVEL,SUBTREE}
- * @param aFilter		Search filter
- * @param aTimeOut		How long to wait
- * @param aSizeLimit		Maximum number of entries to return.
+ * @param aBaseDn               Base DN to search
+ * @param aScope                One of SCOPE_{BASE,ONELEVEL,SUBTREE}
+ * @param aFilter               Search filter
+ * @param aTimeOut              How long to wait
+ * @param aSizeLimit            Maximum number of entries to return.
  *
  * XXX doesn't currently handle LDAPControl params
  *
  * void searchExt(in string aBaseDn, in PRInt32 aScope,
- *		  in string aFilter, in PRIntervalTime aTimeOut,
- *		  in PRInt32 aSizeLimit);
+ *                in string aFilter, in PRIntervalTime aTimeOut,
+ *                in PRInt32 aSizeLimit);
  */
 NS_IMETHODIMP
 nsLDAPOperation::SearchExt(const char *aBaseDn, PRInt32 aScope, 
-			   const char *aFilter, PRIntervalTime aTimeOut,
-			   PRInt32 aSizeLimit) 
+                           const char *aFilter, PRIntervalTime aTimeOut,
+                           PRInt32 aSizeLimit) 
 {
     // XXX deal with timeouts
     //
-    int retVal = nsLDAPOperation::SearchExt(aBaseDn, aScope, aFilter, NULL, 0, 
-					    NULL, NULL, NULL, aSizeLimit);
+    int retVal = SearchExt(aBaseDn, aScope, aFilter, 0, 0, 
+        0, 0, 0, aSizeLimit);
 
     switch (retVal) {
 
     case LDAP_SUCCESS: 
-	break;
+        break;
 
     case LDAP_ENCODING_ERROR:
-	return NS_ERROR_LDAP_ENCODING_ERROR;
-	break;
+        return NS_ERROR_LDAP_ENCODING_ERROR;
 
     case LDAP_SERVER_DOWN:
-	return NS_ERROR_LDAP_SERVER_DOWN;
-	break;
+        return NS_ERROR_LDAP_SERVER_DOWN;
 
     case LDAP_NO_MEMORY:
-	return NS_ERROR_OUT_OF_MEMORY;
-	break;
+        return NS_ERROR_OUT_OF_MEMORY;
 
     case LDAP_NOT_SUPPORTED:
-	return NS_ERROR_LDAP_NOT_SUPPORTED;
-	break;
+        return NS_ERROR_LDAP_NOT_SUPPORTED;
 
     case LDAP_PARAM_ERROR:
+        return NS_ERROR_INVALID_ARG;
+
     default:
-	NS_ERROR("nsLDAPOperation::SearchExt(): unexpected return value");
-	return NS_ERROR_UNEXPECTED;
+        NS_ERROR("nsLDAPOperation::SearchExt(): unexpected return value");
+        return NS_ERROR_UNEXPECTED;
     }
 
     // make sure the connection knows where to call back once the messages
     // for this operation start coming in
     //
-    nsresult rv = mConnection->AddPendingOperation(this);
+    nsresult rv = NS_STATIC_CAST(nsLDAPConnection *, NS_STATIC_CAST(
+        nsILDAPConnection *, mConnection.get()))->AddPendingOperation(this);
     if (NS_FAILED(rv)) {
-	switch (rv) {
-	case NS_ERROR_OUT_OF_MEMORY: 
-	    (void *)ldap_abandon_ext(mConnectionHandle, mMsgId, 0, 0);
-	    return NS_ERROR_OUT_OF_MEMORY;
-	    break;
+        switch (rv) {
+        case NS_ERROR_OUT_OF_MEMORY: 
+            (void *)ldap_abandon_ext(mConnectionHandle, mMsgID, 0, 0);
+            return NS_ERROR_OUT_OF_MEMORY;
 
-	default: 
-	    (void *)ldap_abandon_ext(mConnectionHandle, mMsgId, 0, 0);
-	    NS_ERROR("nsLDAPOperation::SearchExt(): unexpected error in "
-		     "mConnection->AddPendingOperation");
-	    return NS_ERROR_UNEXPECTED;
-	    break;
-	}
+        default: 
+            (void *)ldap_abandon_ext(mConnectionHandle, mMsgID, 0, 0);
+            NS_ERROR("nsLDAPOperation::SearchExt(): unexpected error in "
+                     "mConnection->AddPendingOperation");
+            return NS_ERROR_UNEXPECTED;
+        }
     }
 
     return NS_OK;
 }
 
-// wrapper for ldap_url_search
-//
 NS_IMETHODIMP
-nsLDAPOperation::UrlSearch(const char *aURL, // the search URL
-			   PRBool aAttrsOnly) // skip attribute names?
+nsLDAPOperation::GetMessageID(PRInt32 *aMsgID)
 {
-    NS_ENSURE_ARG(aURL);
-    NS_PRECONDITION(mMessageListener != 0, "MessageListener not set");
-
-    this->mMsgId = ldap_url_search(this->mConnectionHandle, aURL, 
-				   aAttrsOnly);
-    if (this->mMsgId == -1) {
-	// XXX
-	PR_Abort();
-#ifdef DEBUG
-    char *s;
-
-    (void)this->mConnection->GetErrorString(&s);
-    PR_fprintf(PR_STDERR, "UrlSearch failed: %s\n", s);
-    ldap_memfree(s);
-#endif
-	return NS_ERROR_FAILURE;
+    if (!aMsgID) {
+        return NS_ERROR_ILLEGAL_VALUE;
     }
 
-    // make sure the connection knows where to call back once the messages
-    // for this operation start coming in
-    // XXX should abandon operation if this fails
-    nsresult rv = mConnection->AddPendingOperation(this);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLDAPOperation::GetMessageId(PRInt32 *aMsgId)
-{
-    if (!aMsgId) {
-	return NS_ERROR_ILLEGAL_VALUE;
-    }
-
-    *aMsgId = this->mMsgId;
+    *aMsgID = mMsgID;
    
     return NS_OK;
 }
@@ -323,41 +290,40 @@ nsLDAPOperation::GetMessageId(PRInt32 *aMsgId)
 //
 nsresult
 nsLDAPOperation::AbandonExt(LDAPControl **serverctrls,
-			    LDAPControl **clientctrls)
+                            LDAPControl **clientctrls)
 {
     nsresult rv;
     int retVal;
 
-    if ( mMessageListener == 0 || mMsgId == 0 ) {
-	NS_ERROR("nsLDAPOperation::AbandonExt(): mMessageListener or "
-		 "mMsgId not initialized");
-	return NS_ERROR_NOT_INITIALIZED;
+    if ( mMessageListener == 0 || mMsgID == 0 ) {
+        NS_ERROR("nsLDAPOperation::AbandonExt(): mMessageListener or "
+                 "mMsgId not initialized");
+        return NS_ERROR_NOT_INITIALIZED;
     }
 
-    retVal = ldap_abandon_ext(mConnectionHandle, mMsgId, serverctrls, 
-			      clientctrls);
+    retVal = ldap_abandon_ext(mConnectionHandle, mMsgID, serverctrls, 
+                              clientctrls);
     switch (retVal) {
 
     case LDAP_SUCCESS:
-	break;
+        break;
 
     case LDAP_ENCODING_ERROR:
-	return NS_ERROR_LDAP_ENCODING_ERROR;
-	break;
+        return NS_ERROR_LDAP_ENCODING_ERROR;
     
     case LDAP_SERVER_DOWN:
-	return NS_ERROR_LDAP_SERVER_DOWN;
-	break;
+        return NS_ERROR_LDAP_SERVER_DOWN;
 
     case LDAP_NO_MEMORY:
-	return NS_ERROR_OUT_OF_MEMORY;
-	break;
+        return NS_ERROR_OUT_OF_MEMORY;
 
     case LDAP_PARAM_ERROR:
+        return NS_ERROR_INVALID_ARG;
+
     default: 
-	NS_ERROR("nsLDAPOperation::AbandonExt(): unexpected return value from "
-		 "ldap_abandon_ext");
-	return NS_ERROR_UNEXPECTED;
+        NS_ERROR("nsLDAPOperation::AbandonExt(): unexpected return value from "
+                 "ldap_abandon_ext");
+        return NS_ERROR_UNEXPECTED;
     }
 
     // try to remove it from the pendingOperations queue, if it's there.
@@ -365,15 +331,17 @@ nsLDAPOperation::AbandonExt(LDAPControl **serverctrls,
     // succeeded (and there's nothing else the caller can reasonably do), 
     // so we only pay attention to this in debug builds.
     //
-    rv = mConnection->RemovePendingOperation(this);
+    rv = NS_STATIC_CAST(nsLDAPConnection *, NS_STATIC_CAST(
+        nsILDAPConnection *, mConnection.get()))->RemovePendingOperation(this);
+
     if (NS_FAILED(rv)) {
-	// XXXdmose should we use keep Abandon from happening on multiple 
-	// threads at the same time?  that's when this condition is most 
-	// likely to occur.  i _think_ the LDAP C SDK is ok with this; need 
-	// to verify.
-	//
-	NS_WARNING("nsLDAPOperation::AbandonExt: "
-		   "mConnection->RemovePendingOperation(this) failed.");
+        // XXXdmose should we use keep Abandon from happening on multiple 
+        // threads at the same time?  that's when this condition is most 
+        // likely to occur.  i _think_ the LDAP C SDK is ok with this; need 
+        // to verify.
+        //
+        NS_WARNING("nsLDAPOperation::AbandonExt: "
+                   "mConnection->RemovePendingOperation(this) failed.");
     }
 
     return NS_OK;
@@ -382,5 +350,5 @@ nsLDAPOperation::AbandonExt(LDAPControl **serverctrls,
 NS_IMETHODIMP
 nsLDAPOperation::Abandon(void)
 {
-    return nsLDAPOperation::AbandonExt(NULL, NULL);
+    return nsLDAPOperation::AbandonExt(0, 0);
 }

@@ -10,7 +10,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is the mozilla.org LDAP XPCOM component.
+ * The Original Code is the mozilla.org LDAP XPCOM SDK.
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are 
@@ -37,34 +37,30 @@
 #include "nspr.h"
 #include "nsDebug.h"
 #include "nsCRT.h"
+#include "nsLDAPConnection.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPMessage, nsILDAPMessage);
 
 // constructor
 //
-nsLDAPMessage::nsLDAPMessage()
+nsLDAPMessage::nsLDAPMessage() 
+    : mMsgHandle(0),
+      mMatchedDn(0),
+      mErrorMessage(0),
+      mReferrals(0),
+      mServerControls(0)
 {
     NS_INIT_ISUPPORTS();
-
-    mMsgHandle = 0;
-    mConnectionHandle = 0;
-
-    // stuff returned by ldap_parse_result
-    //
-    mMatchedDn = 0;
-    mErrorMessage = 0;
-    mReferrals = 0;
-    mServerControls = 0;
 }
 
 // destructor
 //
 nsLDAPMessage::~nsLDAPMessage(void)
 {
-    int rc;
+
 
     if (mMsgHandle) {
-        rc = ldap_msgfree(mMsgHandle);
+        int rc = ldap_msgfree(mMsgHandle);
 
         switch(rc) {
         case LDAP_RES_BIND:
@@ -115,9 +111,18 @@ nsLDAPMessage::~nsLDAPMessage(void)
 
 }
 
-// associate this message with an existing operation
-//
-NS_IMETHODIMP
+/** 
+ * Initializes a message.
+ *
+ * @param aConnection           The nsLDAPConnection this message is on
+ * @param aMsgHandle            The native LDAPMessage to be wrapped.
+ * 
+ * @exception NS_ERROR_ILLEGAL_VALUE        null pointer passed in
+ * @exception NS_ERROR_UNEXPECTED           internal err; shouldn't happen
+ * @exception NS_ERROR_LDAP_DECODING_ERROR  problem during BER decoding
+ * @exception NS_ERROR_OUT_OF_MEMORY        ran out of memory
+ */
+nsresult 
 nsLDAPMessage::Init(nsILDAPConnection *aConnection, LDAPMessage *aMsgHandle)
 {
     int parseResult; 
@@ -132,14 +137,12 @@ nsLDAPMessage::Init(nsILDAPConnection *aConnection, LDAPMessage *aMsgHandle)
     mConnection = aConnection;
     mMsgHandle = aMsgHandle;
 
-    // cache the connection handle associated with this operation
+    // cache the connection handle.  we're violating the XPCOM type-system
+    // here since we're a friend of the connection class and in the 
+    // same module.
     //
-    nsresult rv = mConnection->GetConnectionHandle(&mConnectionHandle);
-    if (NS_FAILED(rv)) {
-        NS_WARNING("nsLDAPMessage::Init(): mConnection->GetConnectionHandle() "
-                   "failed");
-        return NS_ERROR_UNEXPECTED;
-    }
+    mConnectionHandle = NS_STATIC_CAST(nsLDAPConnection *, 
+                                            aConnection)->mConnectionHandle;
 
     // do any useful message parsing
     //
@@ -170,8 +173,8 @@ nsLDAPMessage::Init(nsILDAPConnection *aConnection, LDAPMessage *aMsgHandle)
     case LDAP_RES_DELETE:
     case LDAP_RES_MODRDN:
     case LDAP_RES_COMPARE:
-        parseResult = ldap_parse_result(mConnectionHandle, mMsgHandle,
-                                        &mErrorCode, &mMatchedDn,
+        parseResult = ldap_parse_result(mConnectionHandle, 
+                                        mMsgHandle, &mErrorCode, &mMatchedDn,
                                         &mErrorMessage,&mReferrals, 
                                         &mServerControls, 0);
         switch (parseResult) {
@@ -183,13 +186,11 @@ nsLDAPMessage::Init(nsILDAPConnection *aConnection, LDAPMessage *aMsgHandle)
             NS_WARNING("nsLDAPMessage::Init(): ldap_parse_result() hit a "
                        "decoding error");
             return NS_ERROR_LDAP_DECODING_ERROR;
-            break;
 
         case LDAP_NO_MEMORY:
             NS_WARNING("nsLDAPMessage::Init(): ldap_parse_result() ran out " 
                        "of memory");
             return NS_ERROR_OUT_OF_MEMORY;
-            break;
 
         case LDAP_PARAM_ERROR:
         case LDAP_MORE_RESULTS_TO_RETURN:
@@ -198,7 +199,6 @@ nsLDAPMessage::Init(nsILDAPConnection *aConnection, LDAPMessage *aMsgHandle)
             NS_ERROR("nsLDAPMessage::Init(): ldap_parse_result returned "
                      "unexpected return code");
             return NS_ERROR_UNEXPECTED;
-            break;
         }
 
         break;
@@ -206,7 +206,6 @@ nsLDAPMessage::Init(nsILDAPConnection *aConnection, LDAPMessage *aMsgHandle)
     default:
         NS_ERROR("nsLDAPMessage::Init(): unexpected message type");
         return NS_ERROR_UNEXPECTED;
-        break;
     }
 
     return NS_OK;
@@ -256,7 +255,7 @@ nsLDAPMessage::IterateAttrErrHandler(PRInt32 aLderrno, PRUint32 *aAttrCount,
     // if necessary, free the position holder used by 
     // ldap_{first,next}_attribute()  
     //
-    if (position != nsnull) {
+    if (position) {
         ldap_ber_free(position, 0);
     }
 
@@ -264,7 +263,7 @@ nsLDAPMessage::IterateAttrErrHandler(PRInt32 aLderrno, PRUint32 *aAttrCount,
     // the array itself
     //
     if (*aAttributes) {
-        NSLDAP_FREE_XPIDL_ARRAY(*aAttrCount, *aAttributes, nsMemory::Free);
+        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(*aAttrCount, *aAttributes);
     }
 
     // possibly spit out a debugging message, then return an appropriate
@@ -279,7 +278,7 @@ nsLDAPMessage::IterateAttrErrHandler(PRInt32 aLderrno, PRUint32 *aAttrCount,
         break;
 
     case LDAP_DECODING_ERROR:
-	    NS_WARNING("nsLDAPMessage::IterateAttributes(): decoding error");
+        NS_WARNING("nsLDAPMessage::IterateAttributes(): decoding error");
         return NS_ERROR_LDAP_DECODING_ERROR;
         break;
 
@@ -311,12 +310,12 @@ nsLDAPMessage::GetAttributes(PRUint32 *aAttrCount, char** *aAttributes)
 // 
 nsresult
 nsLDAPMessage::IterateAttributes(PRUint32 *aAttrCount, char** *aAttributes, 
-				 PRBool getP)
+                 PRBool getP)
 {
     BerElement *position;
     nsresult rv;
 
-    if (aAttrCount == nsnull || aAttributes == nsnull ) {
+    if (!aAttrCount || !aAttributes ) {
         return NS_ERROR_INVALID_POINTER;
     }
 
@@ -324,7 +323,7 @@ nsLDAPMessage::IterateAttributes(PRUint32 *aAttrCount, char** *aAttributes,
     // count the elements in this message.
     //
     if (getP) {
-        *aAttributes = nsnull;
+        *aAttributes = 0;
         *aAttrCount = 0;
 
         rv = IterateAttributes(aAttrCount, aAttributes, PR_FALSE);
@@ -343,11 +342,11 @@ nsLDAPMessage::IterateAttributes(PRUint32 *aAttrCount, char** *aAttributes,
 
     // get the first attribute
     //
-    char *attr = ldap_first_attribute(mConnectionHandle, mMsgHandle, 
+    char *attr = ldap_first_attribute(mConnectionHandle, 
+                                      mMsgHandle, 
                                       &position);
-    if (attr == nsnull) {
-        return IterateAttrErrHandler(ldap_get_lderrno(mConnectionHandle, 
-                                                      NULL, NULL),
+    if (!attr) {
+        return IterateAttrErrHandler(ldap_get_lderrno(mConnectionHandle, 0, 0),
                                      aAttrCount, aAttributes, position);
     }
 
@@ -375,18 +374,18 @@ nsLDAPMessage::IterateAttributes(PRUint32 *aAttrCount, char** *aAttributes,
     ldap_memfree(attr);
 
     while (1) {
-	
+    
         // get the next attribute
         //
         attr = ldap_next_attribute(mConnectionHandle, mMsgHandle, position);
 
         // check to see if there is an error, or if we're just done iterating
         //
-        if (attr == nsnull) {
+        if (!attr) {
             
             // bail out if there's an error
             //
-            PRInt32 lderrno = ldap_get_lderrno(mConnectionHandle, NULL, NULL);
+            PRInt32 lderrno = ldap_get_lderrno(mConnectionHandle, 0, 0);
             if (lderrno != LDAP_SUCCESS) {
                 return IterateAttrErrHandler(lderrno, aAttrCount, aAttributes, 
                                              position);
@@ -420,49 +419,36 @@ nsLDAPMessage::IterateAttributes(PRUint32 *aAttrCount, char** *aAttributes,
 
     // free the position pointer, if necessary
     //
-    if (position != nsnull) {
+    if (!position) {
         ldap_ber_free(position, 0);
     }
 
     return NS_OK;
 }
 
-/*
- * Wrapper for ldap_get_dn().  Returns the Distinguished Name of the
- * entry associated with this message.
- * 
- * @exception NS_ERROR_OUT_OF_MEMORY            ran out of memory
- * @exception NS_ERROR_ILLEGAL_VALUE            null pointer passed in
- * @exception NS_ERROR_LDAP_DECODING_ERROR      problem during BER-decoding
- * @exception NS_ERROR_UNEXPECTED               bug or memory corruption hit
- *
- *   readonly attribute string dn;
- */
 NS_IMETHODIMP
 nsLDAPMessage::GetDn(char* *aDN)
 {
-    if (aDN == nsnull) {
+    if (!aDN) {
         return NS_ERROR_ILLEGAL_VALUE;
     }
 
     char *dn = ldap_get_dn(mConnectionHandle, mMsgHandle);
     
     if (!dn) {
-         PRInt32 lderrno = ldap_get_lderrno(mConnectionHandle, NULL, NULL);
+        PRInt32 lderrno = ldap_get_lderrno(mConnectionHandle, 0, 0);
 
-         switch (lderrno) {
+        switch (lderrno) {
 
-         case LDAP_DECODING_ERROR:
-             NS_WARNING("nsLDAPMessage::GetDn(): ldap decoding error");
-             return NS_ERROR_LDAP_DECODING_ERROR;
-             break;
+        case LDAP_DECODING_ERROR:
+            NS_WARNING("nsLDAPMessage::GetDn(): ldap decoding error");
+            return NS_ERROR_LDAP_DECODING_ERROR;
 
-         case LDAP_PARAM_ERROR:
-         default:
-             NS_ERROR("nsLDAPMessage::GetDn(): internal error");
-             return NS_ERROR_UNEXPECTED;
-             break;
-         }
+        case LDAP_PARAM_ERROR:
+        default:
+            NS_ERROR("nsLDAPMessage::GetDn(): internal error");
+            return NS_ERROR_UNEXPECTED;
+        }
     } 
 
     // get a copy made with the shared allocator, and dispose of the original
@@ -490,7 +476,7 @@ nsLDAPMessage::GetValues(const char *aAttr, PRUint32 *aCount,
     // bail out if there was a problem
     //
     if (!values) {
-        PRInt32 lderrno = ldap_get_lderrno(mConnectionHandle, NULL, NULL);
+        PRInt32 lderrno = ldap_get_lderrno(mConnectionHandle, 0, 0);
 
         if ( lderrno == LDAP_DECODING_ERROR ) {
             NS_WARNING("nsLDAPMessage::GetValues(): Error decoding values");
@@ -524,8 +510,8 @@ nsLDAPMessage::GetValues(const char *aAttr, PRUint32 *aCount,
     PRUint32 i;
     for ( i = 0 ; i < numVals ; i++ ) {
         (*aValues)[i] = nsCRT::strdup(values[i]);
-        if ((*aValues)[i] == nsnull ) {
-            NSLDAP_FREE_XPIDL_ARRAY(i, aValues, nsMemory::Free);
+        if ( ! (*aValues)[i] ) {
+            NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, aValues);
             return NS_ERROR_OUT_OF_MEMORY;
         }
     }
@@ -534,12 +520,8 @@ nsLDAPMessage::GetValues(const char *aAttr, PRUint32 *aCount,
     return NS_OK;
 }
 
-// returns an LDIF-like string representation of this message
-//
-// string toString();
-//
 NS_IMETHODIMP
-nsLDAPMessage::ToString(char* *aString)
+nsLDAPMessage::ToUnicode(PRUnichar* *aString)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

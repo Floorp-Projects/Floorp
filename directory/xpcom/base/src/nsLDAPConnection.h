@@ -1,4 +1,5 @@
-/* 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -9,7 +10,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is the mozilla.org LDAP XPCOM component.
+ * The Original Code is the mozilla.org LDAP XPCOM SDK.
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are 
@@ -71,14 +72,39 @@ class nsLDAPConnection : public nsILDAPConnection, nsIRunnable
     // delete it from the connection queue
     //
     nsresult InvokeMessageCallback(LDAPMessage *aMsgHandle, 
-				   nsILDAPMessage *aMsg,
-				   PRBool aRemoveOpFromConnQ);
+                                   nsILDAPMessage *aMsg,
+                                   PRBool aRemoveOpFromConnQ);
+    /** 
+     * Add an nsILDAPOperation to the list of operations pending on
+     * this connection.  This is mainly intended for use by the
+     * nsLDAPOperation code.  Used so that the thread waiting on messages
+     * for this connection has an operation to callback to.
+     *
+     * @param aOperation                    operation to add
+     * @exception NS_ERROR_ILLEGAL_VALUE    aOperation was NULL
+     * @exception NS_ERROR_UNEXPECTED       this operation's msgId was not
+     *                                      unique to this connection
+     * @exception NS_ERROR_OUT_OF_MEMORY    out of memory
+     */
+    nsresult AddPendingOperation(nsILDAPOperation *aOperation);
 
-    LDAP *mConnectionHandle;		// the LDAP C SDK's connection object
-    nsCString *mBindName; 		// who to bind as
-    nsCOMPtr<nsIThread> mThread;       	// thread which marshals results
+    /**
+     * Remove an nsILDAPOperation from the list of operations pending on this
+     * connection.  Mainly intended for use by the nsLDAPOperation code.
+     *
+     * @param aOperation        operation to add
+     * @exception NS_ERROR_INVALID_POINTER  aOperation was NULL
+     * @exception NS_ERROR_OUT_OF_MEMORY    out of memory
+     * @exception NS_ERROR_FAILURE          could not delete the operation 
+     */
+    nsresult RemovePendingOperation(nsILDAPOperation *aOperation);
+
+
+    LDAP *mConnectionHandle;            // the LDAP C SDK's connection object
+    nsCString *mBindName;               // who to bind as
+    nsCOMPtr<nsIThread> mThread;        // thread which marshals results
 
     nsSupportsHashtable *mPendingOperations; // keep these around for callbacks
 };
 
-#endif /* _nsLDAPConnection_h_ */
+#endif // _nsLDAPConnection_h_ 

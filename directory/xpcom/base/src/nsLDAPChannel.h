@@ -1,4 +1,5 @@
-/* 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -9,7 +10,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is the mozilla.org LDAP XPCOM component.
+ * The Original Code is the mozilla.org LDAP XPCOM SDK.
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are 
@@ -53,59 +54,58 @@
 //
 #define INVOKE_LDAP_CALLBACKS_ON_MAIN_THREAD 0
 
-/* Header file */
 class nsLDAPChannel : public nsIChannel, public nsILDAPMessageListener
 {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIREQUEST
-  NS_DECL_NSICHANNEL
-  NS_DECL_NSILDAPMESSAGELISTENER
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIREQUEST
+    NS_DECL_NSICHANNEL
+    NS_DECL_NSILDAPMESSAGELISTENER
 
-  nsLDAPChannel();
-  virtual ~nsLDAPChannel();
+    nsLDAPChannel();
+    virtual ~nsLDAPChannel();
 
-  nsresult Init(nsIURI *uri);
+    nsresult Init(nsIURI *uri);
 
-  // this actually only gets called by nsLDAPHandler::NewChannel()
-  //
-  static NS_METHOD
-  Create(nsISupports* aOuter, REFNSIID aIID, void **aResult);
+    // this actually only gets called by nsLDAPHandler::NewChannel()
+    //
+    static NS_METHOD
+	Create(nsISupports* aOuter, REFNSIID aIID, void **aResult);
 
-protected:
+  protected:
 
-  // these are internal functions, called by the dispatcher function
-  // OnLDAPMessage()
-  //
-  nsresult OnLDAPSearchResult(nsILDAPMessage *aMessage);
-  nsresult OnLDAPSearchEntry(nsILDAPMessage *aMessage);
-  nsresult OnLDAPBind(nsILDAPMessage *aMessage);
+    // these are internal functions, called by the dispatcher function
+    // OnLDAPMessage()
+    //
+    nsresult OnLDAPSearchResult(nsILDAPMessage *aMessage);
+    nsresult OnLDAPSearchEntry(nsILDAPMessage *aMessage);
+    nsresult OnLDAPBind(nsILDAPMessage *aMessage);
 
-  // instance vars for read/write nsIChannel attributes
-  //
-  nsresult mStatus;
-  nsCOMPtr<nsIURI> mURI; // the URI we're processing
-  nsCOMPtr<nsILoadGroup> mUnproxiedLoadGroup; // the load group we belong to
-  nsCOMPtr<nsIInterfaceRequestor> mCallbacks; 
-  nsCOMPtr<nsIURI> mOriginalURI; // the URI we started prcessing
-  nsLoadFlags mLoadAttributes; // load attributes for this channel
-  nsCOMPtr<nsISupports> mOwner; // entity responsible for this channel
+    // instance vars for read/write nsIChannel attributes
+    //
+    nsresult mStatus;
+    nsCOMPtr<nsIURI> mURI; // the URI we're processing
+    nsCOMPtr<nsILoadGroup> mUnproxiedLoadGroup; // the load group we belong to
+    nsCOMPtr<nsIInterfaceRequestor> mCallbacks; 
+    nsCOMPtr<nsIURI> mOriginalURI; // the URI we started prcessing
+    nsLoadFlags mLoadAttributes; // load attributes for this channel
+    nsCOMPtr<nsISupports> mOwner; // entity responsible for this channel
 
-  // various other instance vars
-  //
-  nsCOMPtr<nsIStreamListener> mUnproxiedListener; // for calls on main thread
-  nsCOMPtr<nsILoadGroup> mLoadGroup; // possibly an nsISupports proxy
-  nsCOMPtr<nsILDAPConnection> mConnection; // LDAP connection for this channel
-  nsCOMPtr<nsIStreamListener> mListener; // for calls on LDAP callback thread
-                                         // which _might_ be the main thread
-  nsCOMPtr<nsISupports> mResponseContext; 
-  nsCOMPtr<nsIInputStream> mReadPipeIn; // this end given to the listener
-  nsCOMPtr<nsIOutputStream> mReadPipeOut; // for writes from the channel
-  nsCOMPtr<nsILDAPOperation> mCurrentOperation; // current ldap operation
-  PRUint32 mReadPipeOffset; // how many bytes written so far?
-  PRBool mReadPipeClosed; // has the pipe already been closed?
-  nsCOMPtr<nsILDAPMessageListener> mCallback; // callback
-  nsCOMPtr<nsIProgressEventSink> mEventSink; // fire status against this
+    // various other instance vars
+    //
+    nsCOMPtr<nsIStreamListener> mUnproxiedListener; // for calls on main thread
+    nsCOMPtr<nsILoadGroup> mLoadGroup; // possibly an nsISupports proxy
+    nsCOMPtr<nsILDAPConnection> mConnection; // LDAP connection
+    nsCOMPtr<nsIStreamListener> mListener; // for calls on LDAP callback thread
+    // which _might_ be the main thread
+    nsCOMPtr<nsISupports> mResponseContext; 
+    nsCOMPtr<nsIInputStream> mReadPipeIn; // this end given to the listener
+    nsCOMPtr<nsIOutputStream> mReadPipeOut; // for writes from the channel
+    nsCOMPtr<nsILDAPOperation> mCurrentOperation; // current ldap operation
+    PRUint32 mReadPipeOffset; // how many bytes written so far?
+    PRBool mReadPipeClosed; // has the pipe already been closed?
+    nsCOMPtr<nsILDAPMessageListener> mCallback; // callback
+    nsCOMPtr<nsIProgressEventSink> mEventSink; // fire status against this
 
 };
 

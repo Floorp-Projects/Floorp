@@ -1,21 +1,39 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the mozilla.org LDAP XPCOM SDK.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are 
+ * Copyright (C) 2000 Netscape Communications Corporation.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s): Dan Mosedale <dmose@mozilla.org>
+ * 
+ * Alternatively, the contents of this file may be used under the
+ * terms of the GNU General Public License Version 2 or later (the
+ * "GPL"), in which case the provisions of the GPL are applicable 
+ * instead of those above.  If you wish to allow use of your 
+ * version of this file only under the terms of the GPL and not to
+ * allow others to use your version of this file under the MPL,
+ * indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by
+ * the GPL.  If you do not delete the provisions above, a recipient
+ * may use your version of this file under either the MPL or the
+ * GPL.
  */
 #include "nsLDAP.h"
 #include "nspr.h"
 
-// frees all elements of an XPIDL out array of a given size using
-// freeFunc(), then frees the array itself using nsMemory::Free().
-// Thanks to <alecf@netscape.com> for suggesting this form, which can be
-// used to NS_RELEASE entire arrays before freeing as well.
-//
-#define NSLDAP_FREE_XPIDL_ARRAY(size, array, freeFunc) \
-    for ( PRUint32 __iter__ = (size) ; __iter__ > 0 ; ) \
-        freeFunc((array)[--__iter__]); \
-    nsMemory::Free(array);
-
-// XXXdmose should this really be DEBUG-only?
-//
-#ifdef DEBUG
-extern PRLogModuleInfo *gLDAPLogModule;	   // defn in nsLDAPProtocolModule.cpp
+#ifdef PR_LOGGING
+extern PRLogModuleInfo *gLDAPLogModule;    // defn in nsLDAPProtocolModule.cpp
 #endif

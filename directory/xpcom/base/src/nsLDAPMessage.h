@@ -1,4 +1,5 @@
-/* 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -9,7 +10,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is the mozilla.org LDAP XPCOM component.
+ * The Original Code is the mozilla.org LDAP XPCOM SDK.
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are 
@@ -37,7 +38,6 @@
 #include "ldap.h"
 #include "nsILDAPMessage.h"
 #include "nsILDAPOperation.h"
-#include "nsILDAPConnection.h"
 #include "nsCOMPtr.h"
 
 // 76e061ad-a59f-43b6-b812-ee6e8e69423f
@@ -49,8 +49,9 @@
 class nsLDAPMessage : public nsILDAPMessage
 {
     friend class nsLDAPOperation;
+    friend class nsLDAPConnection;
 
-  public:	
+  public:       
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSILDAPMESSAGE
@@ -62,13 +63,21 @@ class nsLDAPMessage : public nsILDAPMessage
 
   protected:
     nsresult IterateAttrErrHandler(PRInt32 aLderrno, PRUint32 *aAttrCount, 
-			    char** *aAttributes, BerElement *position);
+                            char** *aAttributes, BerElement *position);
     nsresult IterateAttributes(PRUint32 *aAttrCount, char** *aAttributes, 
-			      PRBool getP);
+                              PRBool getP);
+    nsresult Init(nsILDAPConnection *aConnection, 
+                  LDAPMessage *aMsgHandle);
     LDAPMessage *mMsgHandle; // the message we're wrapping
     nsCOMPtr<nsILDAPOperation> mOperation;  // operation this msg relates to
-    nsCOMPtr<nsILDAPConnection> mConnection; // cached connection this op is on
-    LDAP *mConnectionHandle; // cached connection handle
+
+    LDAP *mConnectionHandle; // cached connection this op is on
+
+    // since we're caching the connection handle (above), we need to 
+    // hold an owning ref to the relevant nsLDAPConnection object as long
+    // as we're around
+    //
+    nsCOMPtr<nsILDAPConnection> mConnection; 
 
     // the next five member vars are returned by ldap_parse_result()
     //
@@ -79,4 +88,4 @@ class nsLDAPMessage : public nsILDAPMessage
     LDAPControl **mServerControls;
 };
 
-#endif /* _nsLDAPMessage_h */
+#endif // _nsLDAPMessage_h

@@ -30,6 +30,7 @@ XPIDLSRCS= .\nsILDAPConnection.idl \
            .\nsILDAPMessage.idl    \
            .\nsILDAPURL.idl        \
            .\nsILDAPMessageListener.idl \
+	   .\nsILDAPErrors.idl \
            $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

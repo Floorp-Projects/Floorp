@@ -1,4 +1,5 @@
-/* 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -9,7 +10,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is the mozilla.org LDAP XPCOM component.
+ * The Original Code is the mozilla.org LDAP XPCOM SDK.
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are 
@@ -54,18 +55,18 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPURL);
 static nsModuleComponentInfo components[] =
 {
     { "LDAP Protocol Handler", NS_LDAPPROTOCOLHANDLER_CID, 
-	  NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ldap", 
-	  nsLDAPProtocolHandlerConstructor },	
+          NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ldap", 
+          nsLDAPProtocolHandlerConstructor },   
     { "LDAP Service", NS_LDAPSERVICE_CID, 
-	  "@mozilla.org/network/ldap-service;1", nsLDAPServiceConstructor },
+          "@mozilla.org/network/ldap-service;1", nsLDAPServiceConstructor },
     { "LDAP Connection", NS_LDAPCONNECTION_CID,
-	  "@mozilla.org/network/ldap-connection;1", 
-	  nsLDAPConnectionConstructor },
+          "@mozilla.org/network/ldap-connection;1", 
+          nsLDAPConnectionConstructor },
     { "LDAP Operation", NS_LDAPOPERATION_CID,
-	  "@mozilla.org/network/ldap-operation;1", 
-	  nsLDAPOperationConstructor },
+          "@mozilla.org/network/ldap-operation;1", 
+          nsLDAPOperationConstructor },
     { "LDAP Message", NS_LDAPMESSAGE_CID,
-	  "@mozilla.org/network/ldap-message;1", nsLDAPMessageConstructor },
+          "@mozilla.org/network/ldap-message;1", nsLDAPMessageConstructor },
     { "LDAP URL", NS_LDAPURL_CID,
           "@mozilla.org/network/ldap-url;1", nsLDAPURLConstructor }
 };
@@ -74,6 +75,6 @@ static nsModuleComponentInfo components[] =
 //
 NS_IMPL_NSGETMODULE("nsLDAPProtocolModule", components);
 
-#ifdef DEBUG
+#ifdef PR_LOGGING
 PRLogModuleInfo *gLDAPLogModule = 0;
 #endif

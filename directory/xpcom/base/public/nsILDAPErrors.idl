@@ -1,0 +1,229 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is part of the mozilla.org LDAP XPCOM SDK.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are 
+ * Copyright (C) 2001 Netscape Communications Corporation.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s): Dan Mosedale <dmose@netscape.com> (Original Author)
+ * 
+ * Alternatively, the contents of this file may be used under the
+ * terms of the GNU General Public License Version 2 or later (the
+ * "GPL"), in which case the provisions of the GPL are applicable 
+ * instead of those above.  If you wish to allow use of your 
+ * version of this file only under the terms of the GPL and not to
+ * allow others to use your version of this file under the MPL,
+ * indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by
+ * the GPL.  If you do not delete the provisions above, a recipient
+ * may use your version of this file under either the MPL or the
+ * GPL.
+ */
+
+#include "nsISupports.idl"
+
+/**
+ * Error codes used in the LDAP XPCOM SDK.
+ *
+ * Taken from the Mozilla C SDK's ldap.h include file, these should be
+ * the same as those specified in the draft-ietf-ldapext-ldap-c-api-04.txt 
+ * Internet Draft.  
+ *
+ * The only good documentation I'm aware of for these error codes is
+ * at <http://docs.iplanet.com/docs/manuals/directory.html#SDKC>.
+ * Unfortunately, this does not currently seem to be available under any
+ * open source license, so I can't include that documentation here as
+ * doxygen comments.
+ *
+ */
+[scriptable, uuid(f9ac10fa-1dd1-11b2-9798-8d5cbda95d74)]
+interface nsILDAPErrors : nsISupports
+{
+
+    const long SUCCESS = 0x00;
+
+    const long OPERATIONS_ERROR = 0x01;
+
+    const long PROTOCOL_ERROR = 0x02;
+
+    const long TIMELIMIT_EXCEEDED = 0x03;
+
+    const long SIZELIMIT_EXCEEDED = 0x04;
+
+    const long COMPARE_FALSE = 0x05;
+
+    const long COMPARE_TRUE = 0x06;
+
+    const long STRONG_AUTH_NOT_SUPPORTED = 0x07;
+
+    const long STRONG_AUTH_REQUIRED = 0x08;
+
+
+    /**
+     * UMich LDAPv2 extension
+     */
+    const long PARTIAL_RESULTS = 0x09;
+
+    /**
+     * new in LDAPv3
+     */
+    const long REFERRAL = 0x0a;
+
+    /**
+     * new in LDAPv3
+     */
+    const long ADMINLIMIT_EXCEEDED = 0x0b;
+
+    /**
+     * new in LDAPv3
+     */
+    const long UNAVAILABLE_CRITICAL_EXTENSION = 0x0c;
+
+    /**
+     * new in LDAPv3
+     */
+    const long CONFIDENTIALITY_REQUIRED = 0x0d;
+
+    /**
+     * new in LDAPv3
+     */
+    const long SASL_BIND_IN_PROGRESS = 0x0e;
+
+    const long NO_SUCH_ATTRIBUTE = 0x10;
+
+    const long UNDEFINED_TYPE = 0x11;
+
+    const long INAPPROPRIATE_MATCHING = 0x12;
+
+    const long CONSTRAINT_VIOLATION = 0x13;
+
+    const long TYPE_OR_VALUE_EXISTS = 0x14;
+
+    const long INVALID_SYNTAX = 0x15;
+
+    const long NO_SUCH_OBJECT = 0x20;
+
+    const long ALIAS_PROBLEM = 0x21;
+
+    const long INVALID_DN_SYNTAX = 0x22;
+
+    /**
+     * not used in LDAPv3
+     */
+    const long IS_LEAF = 0x23;
+
+    const long ALIAS_DEREF_PROBLEM = 0x24;
+
+    const long INAPPROPRIATE_AUTH = 0x30;
+
+    const long INVALID_CREDENTIALS = 0x31;
+ 
+    const long INSUFFICIENT_ACCESS = 0x32;
+
+    const long BUSY = 0x33;
+
+    const long UNAVAILABLE = 0x34;    
+
+    const long UNWILLING_TO_PERFORM = 0x35;
+
+    const long LOOP_DETECT = 0x36;
+
+    /**
+     * server side sort extension
+     */
+    const long SORT_CONTROL_MISSING = 0x3C;
+
+    /**
+     * VLV extension
+     */
+    const long INDEX_RANGE_ERROR = 0x3D;
+
+    const long NAMING_VIOLATION = 0x40;
+
+    const long OBJECT_CLASS_VIOLATION = 0x41;
+
+    const long NOT_ALLOWED_ON_NONLEAF = 0x42;
+
+    const long NOT_ALLOWED_ON_RDN = 0x43;
+
+    const long ALREADY_EXISTS = 0x44;
+
+    const long NO_OBJECT_CLASS_MODS = 0x45;
+
+    /**
+     * reserved CLDAP
+     */
+    const long RESULTS_TOO_LARGE = 0x46;
+
+    /**
+     * new in LDAPv3
+     */
+    const long AFFECTS_MULTIPLE_DSAS = 0x47;
+
+    const long OTHER = 0x50;
+
+    const long SERVER_DOWN = 0x51;
+
+    const long LOCAL_ERROR = 0x52;
+
+    const long ENCODING_ERROR = 0x53;
+
+    const long DECODING_ERROR = 0x54;
+
+    const long TIMEOUT = 0x55;
+
+    const long AUTH_UNKNOWN = 0x56;
+
+    const long FILTER_ERROR = 0x57;
+
+    const long USER_CANCELLED = 0x58;
+
+    const long PARAM_ERROR = 0x59;
+
+    const long NO_MEMORY = 0x5a;
+
+    const long CONNECT_ERROR = 0x5b;
+
+    /**
+     * new in LDAPv3
+     */
+    const long NOT_SUPPORTED = 0x5c;
+
+    /**
+     * new in LDAPv3
+     */
+    const long CONTROL_NOT_FOUND = 0x5d;
+
+    /**
+     * new in LDAPv3
+     */
+    const long NO_RESULTS_RETURNED = 0x5e;
+
+    /**
+     * new in LDAPv3
+     */
+    const long MORE_RESULTS_TO_RETURN = 0x5f;
+
+    /**
+     * new in LDAPv3
+     */
+    const long CLIENT_LOOP = 0x60;
+
+    /**
+     * new in LDAPv3
+     */
+    const long REFERRAL_LIMIT_EXCEEDED = 0x61;
+};
+

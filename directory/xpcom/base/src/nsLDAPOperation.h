@@ -1,4 +1,5 @@
-/* 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -9,7 +10,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is the mozilla.org LDAP XPCOM component.
+ * The Original Code is the mozilla.org LDAP XPCOM SDK.
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are 
@@ -64,14 +65,14 @@ class nsLDAPOperation : public nsILDAPOperation
      * XXX should move to idl, once LDAPControls have an IDL representation
      */
     int SearchExt(const char *base, // base DN to search
-		  int scope, // LDAP_SCOPE_{BASE,ONELEVEL,SUBTREE}
-		  const char* filter, // search filter
-		  char **attrs, // attribute types to be returned
-		  int attrsOnly, // attrs only, or values too?
-		  LDAPControl **serverctrls, 
-		  LDAPControl **clientctrls,
-		  struct timeval *timeoutp, // how long to wait
-		  int sizelimit); // max # of entries to return
+                  int scope, // SCOPE_{BASE,ONELEVEL,SUBTREE}
+                  const char* filter, // search filter
+                  char **attrs, // attribute types to be returned
+                  int attrsOnly, // attrs only, or values too?
+                  LDAPControl **serverctrls, 
+                  LDAPControl **clientctrls,
+                  struct timeval *timeoutp, // how long to wait
+                  int sizelimit); // max # of entries to return
 
     /** 
      * wrapper for ldap_abandon_ext().
@@ -80,10 +81,14 @@ class nsLDAPOperation : public nsILDAPOperation
      */
     nsresult AbandonExt(LDAPControl **serverctrls, LDAPControl **clientctrls);
 
-    nsCOMPtr<nsILDAPConnection> mConnection; // connection this op is on
+
     nsCOMPtr<nsILDAPMessageListener> mMessageListener; // results go here
-    PRInt32 mMsgId;	     // opaque handle to outbound message for this op
-    LDAP *mConnectionHandle; // cached from mConnection->GetConnectionHandle()
+
+    nsCOMPtr<nsILDAPConnection> mConnection; // connection this op is on
+
+    LDAP *mConnectionHandle; // cache connection handle
+
+    PRInt32 mMsgID;          // opaque handle to outbound message for this op
 };
 
-#endif /* _nsLDAPOperation_h */
+#endif // _nsLDAPOperation_h

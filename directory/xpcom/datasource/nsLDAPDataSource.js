@@ -1,4 +1,5 @@
 /* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -48,14 +49,6 @@ const NS_RDF_CURSOR_EMPTY = NS_ERROR_RDF_BASE + 1;
 const NS_RDF_NO_VALUE = NS_ERROR_RDF_BASE + 2;
 const NS_RDF_ASSERTION_ACCEPTED = Components.results.NS_OK;
 const NS_RDF_ASSERTION_REJECTED = NS_ERROR_RDF_BASE + 3;
-
-// some stuff from ldap.h
-//
-const LDAP_RES_BIND = 0x61;
-const LDAP_RES_SEARCH_ENTRY = 0x64;
-const LDAP_RES_SEARCH_RESULT = 0x65;
-
-const NS_LDAP_SCOPE_BASE = 0;
 
 // ArrayEnumerator courtesy of Brendan Eich <brendan@mozilla.org>
 //
@@ -816,7 +809,7 @@ nsLDAPMessageRDFDelegateFactory.prototype =
                     // XXX how do we deal with this in release builds?
                     // XXX deal with already bound case
                     //
-                    if (aMessage.type != LDAP_RES_BIND) {
+                    if (aMessage.type != aMessage.RES_BIND) {
                         dump("bind failed\n");
                     }
 
@@ -859,7 +852,7 @@ nsLDAPMessageRDFDelegateFactory.prototype =
 
                     var listHash;
 
-                    if (aMessage.type == LDAP_RES_SEARCH_ENTRY) {
+                    if (aMessage.type == aMessage.RES_SEARCH_ENTRY) {
                         if (DEBUG) {
                             dump("getTargetsSearchCallback() called with " + 
                                  "message " + aMessage.dn + " for " + 
@@ -926,7 +919,7 @@ nsLDAPMessageRDFDelegateFactory.prototype =
                             }
                         }
                     }
-                    else if (aMessage.type == LDAP_RES_SEARCH_RESULT) {
+                    else if (aMessage.type == aMessage.RES_SEARCH_RESULT) {
                         listHash = this.callerObject.mMessagesListHash;
                         if (listHash.hasOwnProperty(this.outer.Value)
                            && (listHash[this.outer.Value].Count() == 1)
@@ -987,7 +980,7 @@ nsLDAPMessageRDFDelegateFactory.prototype =
             // make sure that this if this URL is for a messagelist, it 
             // represents something other than a base search
             //
-            if ((aKey == "messagelist.ldap") && (url.scope == NS_LDAP_SCOPE_BASE)) {
+            if ((aKey == "messagelist.ldap") && (url.scope == url.SCOPE_BASE)) {
                 throw Components.results.NS_ERROR_FAILURE;
             }
 

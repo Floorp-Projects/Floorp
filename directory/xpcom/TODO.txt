@@ -39,6 +39,8 @@ items blocked waiting for other work
   GetStatus to return OK, and asserts when it doesn't.  (blocked waiting
   on insight from Warren about nsSocketTransport's use of mCancelStatus).
 
+* ensure that multiple calls to Cancel don't do the wrong thing
+
 * move the ldap_unbind() call out of the nsLDAPConnection destructor, 
   since nsLDAPConnection will soon go back to being callable from the
   UI thread, and ldap_unbind() is actually synchronous.  additionally,
@@ -65,6 +67,9 @@ misc
   now that ldap_parse_result is only called inside the initializer
   nsLDAPMessage::Init(), this is probably no longer an issue there at
   least.  Need to confirm.
+
+* replace instances of (obsolete) |static NS_DEFINE_IID| variables
+  with direct calls to NS_GET_IID in the code.
 
 * investigate use of DNS in LDAP sdk.  I think sync functions used in the 
   wrong places (eg they end up getting called from Mozilla on the UI thread)?

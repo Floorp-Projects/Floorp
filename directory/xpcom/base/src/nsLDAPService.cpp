@@ -1,4 +1,5 @@
-/* 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -9,7 +10,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is the mozilla.org LDAP XPCOM component.
+ * The Original Code is the mozilla.org LDAP XPCOM SDK.
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are 
@@ -38,7 +39,7 @@
 //
 nsLDAPService::nsLDAPService()
 {
-  NS_INIT_ISUPPORTS();
+    NS_INIT_ISUPPORTS();
 }
 
 // destructor
@@ -55,15 +56,15 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPService,nsIRunnable);
 NS_IMETHODIMP
 nsLDAPService::Init(void)
 {
-  nsresult rv;
+    nsresult rv;
 
-  NS_ASSERTION(!mThread, "nsLDAPService already initialized!");
+    NS_ASSERTION(!mThread, "nsLDAPService already initialized!");
 
-  rv = NS_NewThread(getter_AddRefs(mThread),
-		    this, 0, PR_JOINABLE_THREAD);
-  NS_ENSURE_SUCCESS(rv, rv);
+    rv = NS_NewThread(getter_AddRefs(mThread),
+                    this, 0, PR_JOINABLE_THREAD);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_OK;
+    return NS_OK;
 }
 
 // for nsIRunnable.  all the processing work happens here.
@@ -71,14 +72,14 @@ nsLDAPService::Init(void)
 NS_IMETHODIMP
 nsLDAPService::Run(void)
 {
-  PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("nsLDAPService::Run() entered\n"));
+    PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("nsLDAPService::Run() entered\n"));
 
-  // XXX - should use mThreadRunning here
-  //	
-  while (1) {
+    // XXX - should use mThreadRunning here
+    //  
+    while (1) {
+        
+    }
 
-  }
-
-  return NS_OK;
+    return NS_OK;
 }
 

@@ -1,4 +1,5 @@
-/* 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -9,7 +10,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is the mozilla.org LDAP XPCOM component.
+ * The Original Code is the mozilla.org LDAP XPCOM SDK.
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are 
@@ -17,7 +18,7 @@
  * Rights Reserved.
  * 
  * Contributor(s): Dan Mosedale <dmose@mozilla.org>
- *		   Brian Ryner <bryner@uiuc.edu>
+ *                 Brian Ryner <bryner@uiuc.edu>
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -47,12 +48,10 @@ NS_IMPL_ISUPPORTS1(nsLDAPProtocolHandler, nsIProtocolHandler)
 nsLDAPProtocolHandler::nsLDAPProtocolHandler()
 {
   NS_INIT_ISUPPORTS();
-  /* member initializers and constructor code */
 }
 
 nsLDAPProtocolHandler::~nsLDAPProtocolHandler()
 {
-  /* destructor code */
 }
 
 // nsIProtocolHandler methods
@@ -63,7 +62,7 @@ NS_IMETHODIMP
 nsLDAPProtocolHandler::GetScheme(char **result)
 {
   *result = nsCRT::strdup("ldap");
-  if ( *result == nsnull ) 
+  if ( ! *result ) 
     return NS_ERROR_OUT_OF_MEMORY;
   else
     return NS_OK;
@@ -82,7 +81,7 @@ nsLDAPProtocolHandler::GetDefaultPort(PRInt32 *result)
 //
 NS_IMETHODIMP
 nsLDAPProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
-			      nsIURI **result) 
+                              nsIURI **result) 
 {
     nsCOMPtr<nsILDAPURL> url;
     nsresult rv;
@@ -108,24 +107,24 @@ nsLDAPProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 
 NS_IMETHODIMP
 nsLDAPProtocolHandler::NewChannel(nsIURI* uri, 
-				  nsIChannel* *result)
+                                  nsIChannel* *result)
 {
-  nsresult rv;
-  nsLDAPChannel *channel;
+    nsresult rv;
+    nsLDAPChannel *channel;
 
-  rv = nsLDAPChannel::Create(nsnull, NS_GET_IID(nsIChannel),
-			     NS_REINTERPRET_CAST(void **, &channel));
-  NS_ENSURE_SUCCESS(rv, rv);
+    rv = nsLDAPChannel::Create(0, NS_GET_IID(nsIChannel),
+                               NS_REINTERPRET_CAST(void **, &channel));
+    NS_ENSURE_SUCCESS(rv, rv);
   
-  rv = channel->Init(uri);
-  if (NS_FAILED(rv)) {
-      NS_RELEASE(channel);
-      return rv;
-  }
-  // the channel was already AddRefed for us, and since this function itself
-  // is a getter, there's no need to release it here.
-  //
-  *result = channel;
+    rv = channel->Init(uri);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(channel);
+        return rv;
+    }
+    // the channel was already AddRefed for us, and since this function itself
+    // is a getter, there's no need to release it here.
+    //
+    *result = channel;
 
-  return NS_OK;
+    return NS_OK;
 }

@@ -10,7 +10,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is the mozilla.org LDAP XPCOM component.
+ * The Original Code is the mozilla.org LDAP XPCOM SDK.
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are 
@@ -61,7 +61,7 @@ nsLDAPConnection::~nsLDAPConnection()
 
   PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("unbinding\n"));
 
-  rc = ldap_unbind_s(this->mConnectionHandle);
+  rc = ldap_unbind_s(mConnectionHandle);
   if (rc != LDAP_SUCCESS) {
       PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
              ("nsLDAPConnection::~nsLDAPConnection: %s\n", 
@@ -92,7 +92,7 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
         return NS_ERROR_ILLEGAL_VALUE;
     }
 
-#ifdef DEBUG
+#ifdef PR_LOGGING
     // initialize logging, if it hasn't been already
     //
     if (!gLDAPLogModule) {
@@ -113,17 +113,21 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
             return NS_ERROR_OUT_OF_MEMORY;
         }
     } else {
-        mBindName = NULL;
+        mBindName = 0;
     }
 
-    this->mConnectionHandle = ldap_init(aHost, aPort ? aPort : LDAP_PORT);
-    if ( this->mConnectionHandle == NULL ) {
+    // initialize the connection
+    //
+    // XXX buglet: port = -1 fails
+    //
+    mConnectionHandle = ldap_init(aHost, aPort ? aPort : LDAP_PORT);
+    if ( !mConnectionHandle ) {
         return NS_ERROR_FAILURE;  // the LDAP C SDK API gives no useful error
     }
 
     // initialize the threading functions for this connection
     //
-    if (!nsLDAPThreadFuncsInit(this->mConnectionHandle)) {
+    if (!nsLDAPThreadFuncsInit(mConnectionHandle)) {
         return NS_ERROR_UNEXPECTED;
     }
 
@@ -145,8 +149,8 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
 
 #ifdef DEBUG_dmose
     const int lDebug = 0;
-    ldap_set_option(this->mConnectionHandle, LDAP_OPT_DEBUG_LEVEL, &lDebug);
-    ldap_set_option(this->mConnectionHandle, LDAP_OPT_ASYNC_CONNECT, 
+    ldap_set_option(mConnectionHandle, LDAP_OPT_DEBUG_LEVEL, &lDebug);
+    ldap_set_option(mConnectionHandle, LDAP_OPT_ASYNC_CONNECT, 
                     NS_REINTERPRET_CAST(void *, 0));
 #endif
 
@@ -172,7 +176,7 @@ nsLDAPConnection::GetBindName(char **_retval)
     // check for NULL (meaning bind anonymously)
     //
     if (!mBindName) {
-        *_retval = nsnull;
+        *_retval = 0;
     } else {
 
         // otherwise, hand out a copy of the bind name
@@ -195,7 +199,7 @@ nsLDAPConnection::GetLdErrno(char **matched, char **errString,
 {
     NS_ENSURE_ARG_POINTER(_retval);
 
-    *_retval = ldap_get_lderrno(this->mConnectionHandle, matched, errString);
+    *_retval = ldap_get_lderrno(mConnectionHandle, matched, errString);
 
     return NS_OK;
 }
@@ -204,32 +208,26 @@ nsLDAPConnection::GetLdErrno(char **matched, char **errString,
 //
 // XXX - deal with optional params
 // XXX - how does ldap_perror know to look at the global errno?
-// XXX - should copy before returning
 //
 NS_IMETHODIMP
 nsLDAPConnection::GetErrorString(char **_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
 
-    *_retval = ldap_err2string(ldap_get_lderrno(this->mConnectionHandle, 
-                                                NULL, NULL));
-    return NS_OK;
-}
-
-// really only for the internal use of nsLDAPOperation and friends
-//
-// [ptr] native ldapPtr(LDAP);
-// [noscript] readonly attribute ldapPtr connection;
-//
-NS_IMETHODIMP
-nsLDAPConnection::GetConnectionHandle(LDAP* *aConnectionHandle)
-{
-    if (!aConnectionHandle) {
-        NS_ERROR("nsLDAPConnection::GetConnectionHandle(): null pointer "
-                 "passed in");
+    // get the error string
+    //
+    char *rv = ldap_err2string(ldap_get_lderrno(mConnectionHandle, 0, 0));
+    if (!rv) {
+        return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    *aConnectionHandle = mConnectionHandle;
+    // make a copy using the XPCOM shared allocator
+    //
+    *_retval = nsCRT::strdup(rv);
+    if (!*_retval) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     return NS_OK;
 }
 
@@ -238,10 +236,10 @@ nsLDAPConnection::GetConnectionHandle(LDAP* *aConnectionHandle)
  * this connection.  This is also mainly intended for use by the
  * nsLDAPOperation code.
  */
-NS_IMETHODIMP
+nsresult
 nsLDAPConnection::AddPendingOperation(nsILDAPOperation *aOperation)
 {
-    PRInt32 msgId;
+    PRInt32 msgID;
 
     if (!aOperation) {
         return NS_ERROR_ILLEGAL_VALUE;
@@ -249,14 +247,14 @@ nsLDAPConnection::AddPendingOperation(nsILDAPOperation *aOperation)
 
     // find the message id
     //
-    aOperation->GetMessageId(&msgId);
+    aOperation->GetMessageID(&msgID);
 
     // turn it into an nsVoidKey.  note that this is another spot that
     // assumes that sizeof(void*) >= sizeof(PRInt32).  
     //
     // XXXdmose  should really create an nsPRInt32Key.
     //
-    nsVoidKey *key = new nsVoidKey(NS_REINTERPRET_CAST(void *, msgId));
+    nsVoidKey *key = new nsVoidKey(NS_REINTERPRET_CAST(void *, msgID));
     if (!key) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -291,17 +289,17 @@ nsLDAPConnection::AddPendingOperation(nsILDAPOperation *aOperation)
  *
  * void removePendingOperation(in nsILDAPOperation aOperation);
  */
-NS_IMETHODIMP
+nsresult
 nsLDAPConnection::RemovePendingOperation(nsILDAPOperation *aOperation)
 {
     nsresult rv;
-    PRInt32 msgId;
+    PRInt32 msgID;
 
     NS_ENSURE_ARG_POINTER(aOperation);
 
     // find the message id
     //
-    rv = aOperation->GetMessageId(&msgId);
+    rv = aOperation->GetMessageID(&msgID);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // turn it into an nsVoidKey.  note that this is another spot that
@@ -309,20 +307,19 @@ nsLDAPConnection::RemovePendingOperation(nsILDAPOperation *aOperation)
     //
     // XXXdmose  should really create an nsPRInt32Key.
     //
-    nsVoidKey *key = new nsVoidKey(NS_REINTERPRET_CAST(void *, msgId));
+    nsVoidKey *key = new nsVoidKey(NS_REINTERPRET_CAST(void *, msgID));
     if (!key) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
     if (!mPendingOperations->Remove(key)) {
-#ifdef DEBUG
-        PR_fprintf(PR_STDERR, "nsLDAPConnection::RemovePendingOperation was\n"
-                   " unable to remove the requested item from the pending\n"
-                   " operations queue.  This probably means that the item\n"
-                   " in question didn't exist in the queue, which in turn\n"
-                   " probably means that you have found a bug in the code\n"
-                   " that calls this function.\n");
-#endif
+
+        NS_ERROR("nsLDAPConnection::RemovePendingOperation was\n"
+                 " unable to remove the requested item from the pending\n"
+                 " operations queue.  This probably means that the item\n"
+                 " in question didn't exist in the queue, which in turn\n"
+                 " probably means that you have found a bug in the code\n"
+                 " that calls this function.\n");
 
         delete key;
         return NS_ERROR_FAILURE;
@@ -402,8 +399,6 @@ nsLDAPConnection::Run(void)
             PR_Sleep(2000); // XXXdmose - reasonable timeslice?
             continue;
 
-            break;
-
         case -1: // something went wrong 
 
             lderrno = ldap_get_lderrno(mConnectionHandle, 0, 0);
@@ -454,15 +449,19 @@ nsLDAPConnection::Run(void)
             // we want nsLDAPMessage specifically, not a compatible, since
             // we're sharing native objects used by the LDAP C SDK
             //
-            msg = new nsLDAPMessage();
-            if (!msg) {
+            nsLDAPMessage *rawMsg = new nsLDAPMessage();
+            if (!rawMsg) {
                 consoleSvc->LogStringMessage(
                     NS_LITERAL_STRING("LDAP: ERROR: couldn't allocate memory for new LDAP message; search entry dropped").get());
                 // punt and hope things work out better next time around
                 break;
             }
 
-            rv = msg->Init(this, msgHandle);
+            // initialize the message, using a protected method not available
+            // through nsILDAPMessage (which is why we need the raw pointer)
+            //
+            rv = rawMsg->Init(this, msgHandle);
+
             switch (rv) {
 
             case NS_OK: 
@@ -474,14 +473,12 @@ nsLDAPConnection::Run(void)
                 NS_WARNING("nsLDAPConnection::Run(): ldaperrno = "
                            "LDAP_DECODING_ERROR after ldap_result()");
                 continue;
-                break;
 
             case NS_ERROR_OUT_OF_MEMORY:
                 consoleSvc->LogStringMessage(
                     NS_LITERAL_STRING("LDAP: ERROR: couldn't allocate memory for new LDAP message; search entry dropped").get());
                 // punt and hope things work out better next time around
                 continue;
-                break;
 
             case NS_ERROR_ILLEGAL_VALUE:
             case NS_ERROR_UNEXPECTED:
@@ -495,8 +492,12 @@ nsLDAPConnection::Run(void)
 
                 // punt and hope things work out better next time around
                 continue;
-                break;
             }
+
+            // now let the scoping mechanisms provided by nsCOMPtr manage
+            // the reference for us.
+            //
+            msg = rawMsg;
 
             // invoke the callback on the nsILDAPOperation corresponding to 
             // this message
@@ -508,7 +509,6 @@ nsLDAPConnection::Run(void)
                 NS_ERROR("LDAP: ERROR: problem invoking message callback");
                 // punt and hope things work out better next time around
                 continue;
-                break;
             }
 
 #if 0
@@ -562,7 +562,7 @@ nsLDAPConnection::InvokeMessageCallback(LDAPMessage *aMsgHandle,
     // find the operation in question
     //
     nsISupports *data = mPendingOperations->Get(key);
-    if (data == nsnull) {
+    if (!data) {
 
         PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
                ("Warning: InvokeMessageCallback(): couldn't find "

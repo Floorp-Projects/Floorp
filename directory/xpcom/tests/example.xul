@@ -5,7 +5,8 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <tree datasources="rdf:ldap"
-        flex="2" id="testTree" ref="ldap://memberdir.netscape.com:389/ou=member_directory,o=netcenter.com??one?(sn=Rasputin)">
+        flex="2" id="testTree" 
+        ref="ldap://alpha.dante.org.uk:389/dc=dante,dc=org,dc=uk??sub?drink=*">
 
    <template>
      <rule>
@@ -18,19 +19,19 @@
 
        <bindings>
          <binding subject="?child"
-	          predicate="http://www.mozilla.org/LDAPATTR-rdf#mail"
-                  object="?mail" />
+	          predicate="http://www.mozilla.org/LDAPATTR-rdf#drink"
+                  object="?drink" />
          <binding subject="?child"
-                  predicate="http://www.mozilla.org/LDAPATTR-rdf#cn"
-                  object="?cn" />
+                  predicate="http://www.mozilla.org/LDAPATTR-rdf#givenname"
+                  object="?givenname" />
        </bindings>	    
 
        <action>
          <treechildren flex="1">
            <treeitem uri="?child">
              <treerow>
-               <treecell class="treecell-indent" value="?mail" flex="1" />
-               <treecell value="?cn" flex="1" />
+               <treecell class="treecell-indent" value="?drink" flex="1" />
+               <treecell value="?givenname" flex="1" />
              </treerow>
            </treeitem>
          </treechildren>
@@ -40,14 +41,14 @@
   </template>
 
   <treecols id="theColumns">
-    <treecol id="mail" flex="1" />
-    <treecol id="cn" flex="1" />
+    <treecol id="drink" flex="1" />
+    <treecol id="givenname" flex="1" />
   </treecols>
 
   <treehead>
     <treerow id="headRow">
-      <treecell value="Email Address" flex="1" />
-      <treecell value="Real Name" flex="1" />
+      <treecell value="Drink" flex="1" />
+      <treecell value="Given Name" flex="1" />
     </treerow>
    </treehead>
   </tree>

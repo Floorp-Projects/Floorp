@@ -1,4 +1,5 @@
-/* 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -9,7 +10,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is the mozilla.org LDAP XPCOM component.
+ * The Original Code is the mozilla.org LDAP XPCOM SDK.
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are 
@@ -48,25 +49,25 @@
 
 class nsLDAPService : public nsIRunnable
 {
- public: 
-  // interface decls
-  //
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIRUNNABLE
+  public: 
+    // interface decls
+    //
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIRUNNABLE
 
-  // constructor and destructor
-  //
-  nsLDAPService();
-  virtual ~nsLDAPService();
+    // constructor and destructor
+    //
+    nsLDAPService();
+    virtual ~nsLDAPService();
 
-  // initialize; should only be called by the generic 
-  // constructor after creation
-  //
-  NS_METHOD Init(void);
+    // initialize; should only be called by the generic 
+    // constructor after creation
+    //
+    NS_METHOD Init(void);
 
- protected:
-  nsCOMPtr<nsIThread> mThread;
-  PRBool mThreadRunning;
+  protected:
+    nsCOMPtr<nsIThread> mThread;
+    PRBool mThreadRunning;
 
 };
 

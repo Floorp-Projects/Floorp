@@ -10,7 +10,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is the mozilla.org LDAP XPCOM component.
+ * The Original Code is the mozilla.org LDAP XPCOM SDK.
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are 
@@ -18,7 +18,7 @@
  * Rights Reserved.
  * 
  * Contributor(s): Dan Mosedale <dmose@mozilla.org>
- *		   Warren Harris <warren@netscape.com>
+ *                 Warren Harris <warren@netscape.com>
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -56,7 +56,7 @@ static NS_DEFINE_IID(kIProgressEventSink, NS_IPROGRESSEVENTSINK_IID);
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsLDAPChannel, 
                               nsIChannel, 
-                              nsIRequest,	
+                              nsIRequest,   
                               nsILDAPMessageListener);
 
 nsLDAPChannel::nsLDAPChannel()
@@ -123,7 +123,7 @@ nsLDAPChannel::Init(nsIURI *uri)
         return NS_ERROR_FAILURE;
     }
 
-#else 	
+#else   
     mCallback = this;
 #endif
     
@@ -141,7 +141,7 @@ nsLDAPChannel::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
         return NS_ERROR_NO_AGGREGATION;
 
     nsLDAPChannel* ldapChannel = new nsLDAPChannel();
-    if (ldapChannel == nsnull)
+    if (!ldapChannel)
         return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(ldapChannel);
@@ -215,7 +215,7 @@ nsLDAPChannel::Cancel(nsresult aStatus)
     //
     if (mLoadGroup) {
         rv = mLoadGroup->RemoveRequest(this, mResponseContext, aStatus,
-                                       nsnull);
+                                       0);
         if (NS_FAILED(rv)) 
             return rv;
     }
@@ -223,7 +223,7 @@ nsLDAPChannel::Cancel(nsresult aStatus)
     // call listener's onstoprequest
     //
     if (mUnproxiedListener) {
-        rv = mListener->OnStopRequest(this, mResponseContext, aStatus, nsnull);
+        rv = mListener->OnStopRequest(this, mResponseContext, aStatus, 0);
         if (NS_FAILED(rv)) 
             return rv;
     }
@@ -585,7 +585,7 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
                         getter_AddRefs(mReadPipeOut), 
                         NS_PIPE_DEFAULT_SEGMENT_SIZE, 
                         NS_PIPE_DEFAULT_BUFFER_SIZE,
-                        PR_TRUE, PR_FALSE, nsnull);
+                        PR_TRUE, PR_FALSE, 0);
         if (NS_FAILED(rv)) {
             NS_ERROR("nsLDAPChannel::AsyncRead(): unable to create new pipe");
             return NS_ERROR_FAILURE;
@@ -620,7 +620,7 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
     // initialize it with the defaults
     // XXXdmose - need to deal with bind name
     //
-    rv = mConnection->Init(host, port, NULL);
+    rv = mConnection->Init(host, port, 0);
     switch (rv) {
     case NS_OK:
         break;
@@ -636,7 +636,7 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
     }
 
     // create and initialize an LDAP operation (to be used for the bind)
-    //	
+    //  
     mCurrentOperation = do_CreateInstance(
         "@mozilla.org/network/ldap-operation;1", &rv);
     if (NS_FAILED(rv)) {
@@ -652,7 +652,7 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
     // kick off a bind operation 
     // 
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("initiating SimpleBind\n"));
-    rv = mCurrentOperation->SimpleBind(NULL);
+    rv = mCurrentOperation->SimpleBind(0);
     if (NS_FAILED(rv)) {
 
         // XXXdmose better error handling / passthrough; deal with password
@@ -667,7 +667,7 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
 /**
  * Messages received are passed back via this function.
  *
- * @arg aMessage  The message that was returned, NULL if none was.
+ * @arg aMessage  The message that was returned, 0 if none was.
  *
  * void OnLDAPMessage (in nsILDAPMessage aMessage)
  */
@@ -704,7 +704,7 @@ nsLDAPChannel::OnLDAPMessage(nsILDAPMessage *aMessage)
     case LDAP_RES_SEARCH_RESULT:
 
         // the search is finished; we're all done
-        //	
+        //  
         return OnLDAPSearchResult(aMessage);
         break;
 
@@ -745,10 +745,10 @@ nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage)
 
     // XXX should call ldap_parse_result() here
 
-    mCurrentOperation = 0;	// done with bind op; make nsCOMPtr release it
+    mCurrentOperation = 0;  // done with bind op; make nsCOMPtr release it
 
     // create and initialize an LDAP operation (to be used for the search
-    //	
+    //  
     mCurrentOperation = do_CreateInstance(
         "@mozilla.org/network/ldap-operation;1", &rv);
     if (NS_FAILED(rv)) {
@@ -803,7 +803,7 @@ nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage)
 nsresult
 nsLDAPChannel::OnLDAPSearchResult(nsILDAPMessage *aMessage)
 {
-    PRInt32 errorCode;	// the LDAP error code
+    PRInt32 errorCode;  // the LDAP error code
     nsresult rv;
 
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("result returned\n"));
@@ -812,9 +812,7 @@ nsLDAPChannel::OnLDAPSearchResult(nsILDAPMessage *aMessage)
     //
     rv = aMessage->GetErrorCode(&errorCode);
     if ( NS_FAILED(rv) ) {
-#ifdef DEBUG
-        PR_fprintf(PR_STDERR, " %s\n", ldap_err2string(errorCode));
-#endif
+        NS_ERROR(ldap_err2string(errorCode));
         return NS_ERROR_FAILURE;
     }
 
@@ -838,7 +836,7 @@ nsLDAPChannel::OnLDAPSearchResult(nsILDAPMessage *aMessage)
     // remove self from loadgroup to stop the throbber
     //
     if (mLoadGroup) {
-        rv = mLoadGroup->RemoveRequest(this, mResponseContext, NS_OK, nsnull);
+        rv = mLoadGroup->RemoveRequest(this, mResponseContext, NS_OK, 0);
         if (NS_FAILED(rv)) {
             NS_WARNING("nsLDAPChannel::OnSearchResult(): "
                        "mLoadGroup->RemoveChannel() failed");
@@ -849,7 +847,7 @@ nsLDAPChannel::OnLDAPSearchResult(nsILDAPMessage *aMessage)
     // call listener's onstoprequest
     //
     if (mListener) {
-        rv = mListener->OnStopRequest(this, mResponseContext, NS_OK, nsnull);
+        rv = mListener->OnStopRequest(this, mResponseContext, NS_OK, 0);
         if (NS_FAILED(rv)) {
             NS_WARNING("nsLDAPChannel::OnSearchResult(): "
                        "mListener->OnStopRequest failed\n");
@@ -912,7 +910,7 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
         if (NS_FAILED(rv)) {
             NS_WARNING("nsLDAPChannel:OnLDAPSearchEntry(): "
                        "aMessage->GetValues() failed\n");
-            NSLDAP_FREE_XPIDL_ARRAY(attrCount, attrs, nsMemory::Free);
+            NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(attrCount, attrs);
             return rv;;
         }
 
@@ -924,17 +922,16 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
             entry.Append(vals[j]);
             entry.Append("\n");
         }
-        NSLDAP_FREE_XPIDL_ARRAY(valueCount, vals, nsMemory::Free);
+        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(valueCount, vals);
 
     }
-    NSLDAP_FREE_XPIDL_ARRAY(attrCount, attrs, nsMemory::Free);
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(attrCount, attrs);
 
     // XXXdmose better error handling
     //
     if (NS_FAILED(rv)) {
-#ifdef DEBUG
-        PR_fprintf(PR_STDERR, "aMessage: error getting attribute\n");
-#endif
+        PR_LOG(gLDAPLogModule, PR_LOG_ERROR, 
+               ("aMessage: error getting attribute\n"));
         return rv;
     }
 

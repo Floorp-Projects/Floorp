@@ -1,4 +1,5 @@
-/* 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -9,7 +10,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is the mozilla.org LDAP XPCOM component.
+ * The Original Code is the mozilla.org LDAP XPCOM SDK.
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are 
@@ -45,7 +46,7 @@ interface nsILDAPOperation : nsISupports
     /**
      * The connection this operation is on. 
      * 
-     * @exception NS_ERROR_ILLEGAL_VALUE	a NULL pointer was passed in
+     * @exception NS_ERROR_ILLEGAL_VALUE        a NULL pointer was passed in
      */
     readonly attribute nsILDAPConnection connection;
 
@@ -54,16 +55,16 @@ interface nsILDAPOperation : nsISupports
      * by the init() method).  This is actually an nsISupports proxy object, 
      * as the callback will happen from another thread.
      * 
-     * @exception NS_ERROR_ILLEGAL_VALUE	a NULL pointer was passed in
+     * @exception NS_ERROR_ILLEGAL_VALUE        a NULL pointer was passed in
      */
     readonly attribute nsILDAPMessageListener messageListener;
 
     /**
      * The message-id associated with this operation.
      *
-     * @exception NS_ERROR_ILLEGAL_VALUE	a NULL pointer was passed in
+     * @exception NS_ERROR_ILLEGAL_VALUE        a NULL pointer was passed in
      */
-    readonly attribute long messageId;
+    readonly attribute long messageID;
 
     /**
      * Initializes this operation.  Must be called prior to initiating
@@ -75,40 +76,33 @@ interface nsILDAPOperation : nsISupports
      * @param aConnection       connection this operation should use
      * @param aMessageListener  interface used to call back the results.
      *
-     * @exception NS_ERROR_ILLEGAL_VALUE	a NULL pointer was passed in
-     * @exception NS_ERROR_UNEXPECTED		failed to get connection handle
+     * @exception NS_ERROR_ILLEGAL_VALUE        a NULL pointer was passed in
+     * @exception NS_ERROR_UNEXPECTED           failed to get connection handle
      */
     void init(in nsILDAPConnection aConnection, 
               in nsILDAPMessageListener aMessageListener);
 
     /**
-     * wrapper for ldap_simple_bind()
+     * Asynchronously authenticate to the LDAP server.
      * 
      * @param passwd    the password used for binding; NULL for anon-binds
      *
-     * @exception NS_ERROR_LDAP_ENCODING_ERROR	problem encoding bind request
-     * @exception NS_ERROR_FAILURE 		server down (XXX rebinds?)
-     * @exception NS_ERROR_OUT_OF_MEMORY	ran out of memory
-     * @exception NS_ERROR_UNEXPECTED		internal error
+     * @exception NS_ERROR_LDAP_ENCODING_ERROR  problem encoding bind request
+     * @exception NS_ERROR_FAILURE              server down (XXX rebinds?)
+     * @exception NS_ERROR_OUT_OF_MEMORY        ran out of memory
+     * @exception NS_ERROR_UNEXPECTED           internal error
      * 
      */
     void simpleBind(in string passwd);
 
-    // wrapper for ldap_search_url()
-    // XXX this doesn't currently work right, because the connection has 
-    // doesn't know what result came for whom.  also, the it calls
-    // a synchronous bind function under the hood
-    //
-    // XXXdmose should probably get rid of this method, due to it's 
-    // synchronity, and since we have other classes to 
-    //
-    void urlSearch(in string url, in boolean attrsonly);
-
     /**
-     * wrapper for ldap_search_ext(): kicks off an async search request.
+     * Kicks off an asynchronous search request.  The "ext" stands for 
+     * "extensions", and is intended to convey that this method will
+     * eventually support the extensions described in the
+     * draft-ietf-ldapext-ldap-c-api-04.txt Internet Draft.
      *
      * @param aBaseDn           Base DN to search
-     * @param aScope            One of LDAP_SCOPE_{BASE,ONELEVEL,SUBTREE}
+     * @param aScope            One of SCOPE_{BASE,ONELEVEL,SUBTREE}
      * @param aFilter           Search filter
      * @param aTimeOut          How long to wait
      * @param aSizeLimit        Maximum number of entries to return.
@@ -117,6 +111,7 @@ interface nsILDAPOperation : nsISupports
      * @exception NS_ERROR_LDAP_ENCODING_ERROR
      * @exception NS_ERROR_LDAP_SERVER_DOWN
      * @exception NS_ERROR_OUT_OF_MEMORY
+     * @exception NS_ERROR_INVALID_ARG
      * @exception NS_ERROR_LDAP_NOT_SUPPORTED
      *
      * XXX doesn't currently handle LDAPControl params
@@ -126,16 +121,16 @@ interface nsILDAPOperation : nsISupports
                    in PRInt32 aSizeLimit);
 
     /**  
-     * wrapper for ldap_abandon_ext() with NULL LDAPControl
-     * parameters, equivalent to old-style ldap_abandon(), thus the name.
+     * Cancels an async operation that is in progress.
      *
-     * @exception NS_ERROR_NOT_INITIALIZED	operation not initialized
+     * @exception NS_ERROR_NOT_INITIALIZED      operation not initialized
      * @exception NS_ERROR_LDAP_ENCODING_ERROR  error during BER-encoding
-     * @exception NS_ERROR_LDAP_SERVER_DOWN	the LDAP server did not
-     *						receive	the request or the
-     *						connection was lost
-     * @exception NS_ERROR_OUT_OF_MEMORY	out of memory
-     * @exception NS_ERROR_UNEXPECTED		internal error
+     * @exception NS_ERROR_LDAP_SERVER_DOWN     the LDAP server did not
+     *                                          receive the request or the
+     *                                          connection was lost
+     * @exception NS_ERROR_OUT_OF_MEMORY        out of memory
+     * @exception NS_ERROR_INVALID_ARG          invalid argument
+     * @exception NS_ERROR_UNEXPECTED           internal error
      */
     void abandon();
 };
