@@ -32,6 +32,7 @@
 static NS_DEFINE_IID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 static NS_DEFINE_IID(kICaseConversionIID, NS_ICASECONVERSION_IID);
 static nsICaseConversion* gCaseConv =  nsnull;
+static nsrefcnt gCaseConvRefCnt = 0;
 
 //#define DEBUG_GETPREVWORD
 // XXX I'm sure there are other special characters
@@ -47,12 +48,23 @@ nsTextTransformer::nsTextTransformer(nsILineBreaker* aLineBreaker,
     mLineBreaker(aLineBreaker),
     mWordBreaker(aWordBreaker)
 {
+  if (gCaseConvRefCnt++ == 0) {
+    nsresult res;
+    res = nsServiceManager::GetService(kUnicharUtilCID, kICaseConversionIID,
+                                       (nsISupports**)&gCaseConv);
+    NS_ASSERTION( NS_SUCCEEDED(res), "cannot get UnicharUtil");
+    NS_ASSERTION( gCaseConv != NULL, "cannot get UnicharUtil");
+  }
 }
 
 nsTextTransformer::~nsTextTransformer()
 {
   if (mBuffer != mAutoWordBuffer) {
     delete [] mBuffer;
+  }
+  if (--gCaseConvRefCnt == 0) {
+    nsServiceManager::ReleaseService(kUnicharUtilCID, gCaseConv);
+    gCaseConv = nsnull;
   }
 }
 
@@ -104,17 +116,6 @@ nsTextTransformer::Init(nsIFrame* aFrame,
   mPreformatted = (NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace) ||
     (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace);
   mTextTransform = styleText->mTextTransform;
-
-  if(NS_STYLE_TEXT_TRANSFORM_NONE != mTextTransform)
-  {
-     if(nsnull == gCaseConv) {
-        nsresult res;
-        res = nsServiceManager::GetService(kUnicharUtilCID, kICaseConversionIID,
-                                 (nsISupports**)&gCaseConv);
-        NS_ASSERTION( NS_SUCCEEDED(res), "cannot get UnicharUtil");
-        NS_ASSERTION( gCaseConv != NULL, "cannot get UnicharUtil");
-     }
-  }
   return NS_OK;
 }
 
