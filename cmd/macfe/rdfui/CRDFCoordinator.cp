@@ -56,6 +56,8 @@
 #include "BookmarksDialogs.h"
 #include "divview.h"
 #include "LGAIconSuiteControl.h"
+#include "CBrowserView.h"
+#include "CBrowserContext.h"
 
 
 #if 0
@@ -586,17 +588,21 @@ CRDFCoordinator :: SetTargetFrame ( const char* inFrame )
 #pragma mark -
 
 CDockedRDFCoordinator :: CDockedRDFCoordinator(LStream* inStream)
-	: CRDFCoordinator(inStream), mNavCenter(NULL)
+	: CRDFCoordinator(inStream), mNavCenter(NULL), mAdSpace(NULL), mAdSpaceView(NULL)
 {
 	// don't create the HT_pane until we actually need it (someone opens a node
-	// and the want it to be docked).
+	// and they want it to be docked).
 }
 
 
 CDockedRDFCoordinator :: ~CDockedRDFCoordinator()
 {
-	delete mNavCenter;
+	// don't need to clean up the html area, the CHTMLView destructor will do that for us
+	// when the pane goes away.
 
+	// clean up the shelves
+	delete mNavCenter;
+	delete mAdSpace;
 }
 
 
@@ -614,15 +620,30 @@ CDockedRDFCoordinator :: FinishCreateSelf ( )
 	// a LDividedView so no expando-collapso stuff happens.
 	LDividedView* navCenter = dynamic_cast<LDividedView*>(FindPaneByID('ExCt'));
 	if ( navCenter )
-		mNavCenter = new CShelf ( navCenter, NULL );
+		mNavCenter = new CShelf ( navCenter, NULL, 
+									(LDividedView::FeatureFlags)(LDividedView::eZapClosesFirst | LDividedView::eNoOpenByDragging) );
 
+	// initialize the shelf holding the ad space & the tree
+	LDividedView* adSpace = dynamic_cast<LDividedView*>(FindPaneByID('guts'));
+	if ( adSpace )
+		mAdSpace = new CShelf ( adSpace, NULL, 
+									(LDividedView::FeatureFlags)(LDividedView::eZapClosesSecond | LDividedView::eNoOpenByDragging) );
+		
 	// If the close caption is there, register this class as a listener so we get the
 	// close message
 	LBroadcaster* closeCaption = 
 			dynamic_cast<LBroadcaster*>(FindPaneByID(CNavCenterCommandStrip::kClosePaneID));
 	if ( closeCaption )
 		closeCaption->AddListener(this);
-	
+
+	// init the embedded html area
+	mAdSpaceView = dynamic_cast<CBrowserView*>(FindPaneByID(adSpacePane_ID));
+	if ( mAdSpaceView ) {
+		CBrowserContext* theContext = new CBrowserContext();
+		mAdSpaceView->SetContext ( theContext );
+		AdSpaceShelf().SetShelfState ( false );	// don't show HTML area by default.
+	}
+
 } // FinishCreateSelf
 
 
@@ -637,7 +658,8 @@ CDockedRDFCoordinator :: SavePlace ( LStream* outStreamData )
 	if ( !outStreamData )
 		return;
 		
-	mNavCenter->GetShelf()->SavePlace(outStreamData);
+	NavCenterShelf().GetShelf()->SavePlace(outStreamData);
+	AdSpaceShelf().GetShelf()->SavePlace(outStreamData);
 	
 } // SavePlace
 
@@ -653,7 +675,8 @@ CDockedRDFCoordinator :: RestorePlace ( LStream* inStreamData )
 	if ( !inStreamData )	// if reading from new/empty prefs, the stream will be null
 		return;
 		
-	mNavCenter->GetShelf()->RestorePlace(inStreamData);
+	NavCenterShelf().GetShelf()->RestorePlace(inStreamData);
+	AdSpaceShelf().GetShelf()->RestorePlace(inStreamData);
 	
 } // RestorePlace
 
@@ -701,6 +724,30 @@ CDockedRDFCoordinator :: ListenToMessage ( MessageT inMessage, void *ioParam )
 
 } // ListenToMessage
 
+
+void
+CDockedRDFCoordinator :: HandleNotification ( HT_Notification notifyStruct, HT_Resource node, 
+												HT_Event event, void *token, uint32 tokenType )
+{
+	switch ( event ) {
+	
+		case HT_EVENT_VIEW_HTML_ADD:
+			AdSpaceShelf().SetShelfState ( true );	// make sure people can see the html area
+			
+			//еее get the html area size property, convert it from % to pixel value and
+			//еее set the size of the pane accordingly.
+			break;
+			
+		case HT_EVENT_VIEW_HTML_REMOVE:
+			AdSpaceShelf().SetShelfState ( false );	// make sure people don't see the html area
+			break;
+			
+		default:
+			CRDFCoordinator::HandleNotification ( notifyStruct, node, event, token, tokenType );
+			
+	}
+
+} // HandleNotification
 
 //
 // BuildHTPane

@@ -45,6 +45,7 @@
 class CHyperTreeFlexTable;
 class CNavCenterTitle;
 class CNavCenterCommandStrip;
+class CBrowserView;
 
 
 //
@@ -158,7 +159,7 @@ protected:
 class CDockedRDFCoordinator : public CRDFCoordinator
 {
 public:
-	enum { class_ID = 'RCoE', pane_ID = 'RCoE' };
+	enum { class_ID = 'RCoE', pane_ID = 'RCoE', adSpacePane_ID = 'spam' };
 	enum {
 		msg_ShelfStateShouldChange	= 'shlf'		// broadcast when shelf should open/close
 	};
@@ -174,7 +175,11 @@ public:
 		// allows you to easily slide in/out the shelf or check if it is open.
 	CShelf& NavCenterShelf() { return *mNavCenter; } ;
 	const CShelf& NavCenterShelf() const { return *mNavCenter; } ;
-	
+
+		// access to the shelf comprising the HTML ad space
+	CShelf& AdSpaceShelf() { return *mAdSpace; } ;
+	const CShelf& AdSpaceShelf() const { return *mAdSpace; } ;
+		
 		// create the pane with |inNode| as the root of the view
 	virtual void	BuildHTPane ( HT_Resource inNode ) ;
 	
@@ -184,8 +189,15 @@ protected:
 	virtual void	ListenToMessage( MessageT inMessage, void *ioParam);
 
 private:
-	CShelf* 		mNavCenter;
 
+	virtual	void	HandleNotification( HT_Notification	notifyStruct, HT_Resource node, HT_Event event, void *token, uint32 tokenType);
+
+
+	CShelf* 		mNavCenter;
+	CShelf*			mAdSpace;
+	
+	CBrowserView*	mAdSpaceView;
+	
 }; // CDockedRDFCoordinator
 
 
