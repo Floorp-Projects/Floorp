@@ -356,7 +356,12 @@ PRInt32
 nsFormControlHelper::GetType(nsIContent* aContent)
 {
   nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(aContent));
-  return formControl->GetType();
+  if (formControl) {
+    return formControl->GetType();
+  }
+
+  NS_ERROR("Form control not implementing nsIFormControl, assuming TEXT type");
+  return NS_FORM_INPUT_TEXT;
 }
 
 nsresult
