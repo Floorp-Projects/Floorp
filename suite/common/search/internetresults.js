@@ -25,7 +25,7 @@ function doClick(node)
 				{
 					htmlText = target;
 
-					var htmlArea = window.frames["content"];
+					var htmlArea = window.frames["content-frame"];
 					if (htmlArea)
 					{
 						htmlArea.document.open("text/html", "replace");
