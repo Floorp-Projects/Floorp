@@ -31,7 +31,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-$cvs_id = '@(#) $RCSfile: ckapi.perl,v $ $Revision: 1.3 $ $Date: 2000/09/11 22:37:01 $ $Name:  $';
+$cvs_id = '@(#) $RCSfile: ckapi.perl,v $ $Revision: 1.4 $ $Date: 2000/10/13 22:41:36 $ $Name:  $';
 
 $copyright = '/* THIS IS A GENERATED FILE */
 /* 
@@ -239,6 +239,8 @@ static const char NSSCKEPV_CVS_ID[] = "$g{CVS_ID} ; $cvs_id";
 #include "nssckft.h"
 #endif /* NSSCKFT_H */
 
+#include "nssckp.h"
+
 struct CK_FUNCTION_LIST {
   CK_VERSION version;
 EOD
@@ -250,6 +252,8 @@ for( $j = 0; $j <= $count; $j++ ) {
 
 print <<EOD
 };
+
+#include "nsscku.h"
 
 #endif /* NSSCKEPV_H */
 EOD
@@ -483,7 +487,11 @@ __ADJOIN(MODULE_NAME,C_GetFunctionList)
 }
 
 /* This one is always present */
+#ifdef WIN32
+CK_RV _declspec(dllexport)
+#else
 CK_RV CK_ENTRY
+#endif
 C_GetFunctionList
 (
   CK_FUNCTION_LIST_PTR_PTR ppFunctionList
