@@ -179,7 +179,7 @@ NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIDeviceContext* aC
   mHeight = mAscent + mDescent + mLeading;
   mMaxAscent = mAscent;
   mMaxDescent = mDescent;
-  mMaxAdvance = NSToCoordRound(float(fInfo.widMax) * dev2app);
+  mMaxAdvance = NSToCoordRound(float(::CharWidth(' ')) * dev2app);	// don't use fInfo.widMax here
 
   return NS_OK;
 }
@@ -266,37 +266,47 @@ nsFontMetricsMac :: Destroy()
 NS_IMETHODIMP
 nsFontMetricsMac :: GetXHeight(nscoord& aResult)
 {
-  aResult = mMaxAscent / 2;     // XXX temporary code!
+  float  dev2app;
+  mContext->GetDevUnitsToAppUnits(dev2app);
+  aResult = NSToCoordRound(float(mMaxAscent / 2) - dev2app);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFontMetricsMac :: GetSuperscriptOffset(nscoord& aResult)
 {
-  aResult = mMaxAscent / 2;     // XXX temporary code!
+  float  dev2app;
+  mContext->GetDevUnitsToAppUnits(dev2app);
+  aResult = NSToCoordRound(float(mMaxAscent / 2) - dev2app);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFontMetricsMac :: GetSubscriptOffset(nscoord& aResult)
 {
-  aResult = mMaxAscent / 2;     // XXX temporary code!
+  float  dev2app;
+  mContext->GetDevUnitsToAppUnits(dev2app);
+  aResult = NSToCoordRound(- float(mMaxDescent / 2) + dev2app);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFontMetricsMac :: GetStrikeout(nscoord& aOffset, nscoord& aSize)
 {
-  aOffset = 0; /* XXX */
-  aSize = 0;  /* XXX */
+  float  dev2app;
+  mContext->GetDevUnitsToAppUnits(dev2app);
+  aOffset = NSToCoordRound(float(mMaxAscent / 2) - dev2app);
+  aSize   = dev2app;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFontMetricsMac :: GetUnderline(nscoord& aOffset, nscoord& aSize)
 {
-  aOffset = 0; /* XXX */
-  aSize = 0;  /* XXX */
+  float  dev2app;
+  mContext->GetDevUnitsToAppUnits(dev2app);
+  aOffset = NSToCoordRound(- float(mMaxDescent / 2) + dev2app);
+  aSize   = dev2app;
   return NS_OK;
 }
 
@@ -341,6 +351,18 @@ nsFontMetricsMac :: GetWidth(const char* aString, PRUint32 aLength, nscoord& aWi
 
   short textWidth = ::TextWidth(aString, 0, aLength);
   aWidth = NSToCoordRound(float(textWidth) * dev2app);
+
+  if (mFont != nsnull) {
+	switch (mFont->style)
+	{
+		case NS_FONT_STYLE_ITALIC:
+		case NS_FONT_STYLE_OBLIQUE:
+			nscoord aAdvance;
+			GetMaxAdvance(aAdvance);
+			aWidth += aAdvance;
+			break;
+	}
+  }
   return NS_OK;
 }
 
