@@ -112,7 +112,7 @@ NS_IMETHODIMP nsAutoCompleteItem::GetClassName(char * *aClassName)
 }
 NS_IMETHODIMP nsAutoCompleteItem::SetClassName(const char * aClassName)
 {
-    mClassName = aClassName;
+    mClassName.AssignWithConversion(aClassName);
     return NS_OK;
 }
 

@@ -205,7 +205,7 @@ RelatedLinksStreamListener::Init()
 				(nsISupports**)&charsetConv);
 		if (NS_SUCCEEDED(rv) && (charsetConv))
 		{
-			nsString	utf8("UTF-8");
+			nsString	utf8; utf8.AssignWithConversion("UTF-8");
 			rv = charsetConv->GetUnicodeDecoder(&utf8,
 				getter_AddRefs(mUnicodeDecoder));
 			NS_RELEASE(charsetConv);
@@ -239,7 +239,7 @@ NS_IMPL_ISUPPORTS(RelatedLinksStreamListener, NS_GET_IID(nsIStreamListener));
 NS_IMETHODIMP
 RelatedLinksStreamListener::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
 {
-	 nsAutoString		trueStr("true");
+	 nsAutoString		trueStr; trueStr.AssignWithConversion("true");
 	 nsIRDFLiteral		*literal = nsnull;
 	 nsresult		rv;
 	 if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(trueStr.GetUnicode(), &literal)))
@@ -256,7 +256,7 @@ NS_IMETHODIMP
 RelatedLinksStreamListener::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 					nsresult status, const PRUnichar *errorMsg) 
 {
-	 nsAutoString		trueStr("true");
+	 nsAutoString		trueStr; trueStr.AssignWithConversion("true");
 	 nsIRDFLiteral		*literal = nsnull;
 	 nsresult		rv;
 	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(trueStr.GetUnicode(), &literal)))
@@ -342,7 +342,7 @@ RelatedLinksStreamListener::OnDataAvailable(nsIChannel* channel, nsISupports *ct
 	}
 	else
 	{
-		mBuffer.Append(buffer, aLength);
+		mBuffer.AppendWithConversion(buffer, aLength);
 	}
 	delete [] buffer;
 	buffer = nsnull;
@@ -356,7 +356,7 @@ RelatedLinksStreamListener::OnDataAvailable(nsIChannel* channel, nsISupports *ct
 			break;
 		}
 
-		nsAutoString	oneLiner("");
+		nsAutoString	oneLiner;
 		if (eol >= 0)
 		{
 			mBuffer.Left(oneLiner, eol);
@@ -689,14 +689,14 @@ RelatedLinksHandlerImpl::Init()
 			if (NS_SUCCEEDED(rv = prefServ->CopyCharPref("browser.related.provider",
 				&prefVal)) && (prefVal))
 			{
-				mRLServerURL = prefVal;
+				mRLServerURL.AssignWithConversion(prefVal);
 				nsCRT::free(prefVal);
 				prefVal = nsnull;
 			}
 			else
 			{
 				// no preference, so fallback to a well-known URL
-				mRLServerURL = "http://www-rl.netscape.com/wtgn?";
+				mRLServerURL.AssignWithConversion("http://www-rl.netscape.com/wtgn?");
 			}
 		}
 	}
@@ -798,7 +798,7 @@ RelatedLinksHandlerImpl::SetURL(const char* aURL)
 	if (NS_FAILED(rv)) return rv;
 
 	nsAutoString	relatedLinksQueryURL(mRLServerURL);
-	relatedLinksQueryURL += mRelatedLinksURL;
+	relatedLinksQueryURL.AppendWithConversion(mRelatedLinksURL);
 
 	nsCOMPtr<nsIURI> url;
 	rv = NS_NewURI(getter_AddRefs(url), relatedLinksQueryURL);

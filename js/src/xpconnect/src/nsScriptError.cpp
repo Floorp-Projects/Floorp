@@ -91,13 +91,13 @@ nsScriptError::Init(const PRUnichar *message,
                     PRUint32 flags,
                     const char *category)
 {
-    mMessage.SetString(message);
-    mSourceName.SetString(sourceName);
+    mMessage.Assign(message);
+    mSourceName.Assign(sourceName);
     mLineNumber = lineNumber;
-    mSourceLine.SetString(sourceLine);
+    mSourceLine.Assign(sourceLine);
     mColumnNumber = columnNumber;
     mFlags = flags;
-    mCategory.SetString(category);
+    mCategory.Assign(category);
   
     return NS_OK;
 }
