@@ -27,8 +27,8 @@
 #include "nsString.h"
 #include "nsStringUtil.h"
 
-NS_IMPL_ADDREF_INHERITED(nsButton, nsButtonSuper)
-NS_IMPL_RELEASE_INHERITED(nsButton, nsButtonSuper)
+NS_IMPL_ADDREF_INHERITED(nsButton, nsWidget)
+NS_IMPL_RELEASE_INHERITED(nsButton, nsWidget)
 
 //-------------------------------------------------------------------------
 //

@@ -26,8 +26,7 @@
  * Native GTK+ Listbox wrapper
  */
 
-#define nsComboBoxSuper nsWidget
-class nsComboBox : public nsComboBoxSuper,
+class nsComboBox : public nsWidget,
                    public nsIListWidget,
                    public nsIComboBox
 {

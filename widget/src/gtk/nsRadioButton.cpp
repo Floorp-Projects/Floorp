@@ -26,8 +26,8 @@
 
 #include "nsGtkEventHandler.h"
 
-NS_IMPL_ADDREF_INHERITED(nsRadioButton, nsRadioButtonSuper)
-NS_IMPL_RELEASE_INHERITED(nsRadioButton, nsRadioButtonSuper)
+NS_IMPL_ADDREF_INHERITED(nsRadioButton, nsWidget)
+NS_IMPL_RELEASE_INHERITED(nsRadioButton, nsWidget)
 
 //-------------------------------------------------------------------------
 //

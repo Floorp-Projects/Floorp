@@ -30,8 +30,8 @@
 #define INITIAL_MAX_ITEMS 128
 #define ITEMS_GROWSIZE    128
 
-NS_IMPL_ADDREF_INHERITED(nsComboBox, nsComboBoxSuper)
-NS_IMPL_RELEASE_INHERITED(nsComboBox, nsComboBoxSuper)
+NS_IMPL_ADDREF_INHERITED(nsComboBox, nsWidget)
+NS_IMPL_RELEASE_INHERITED(nsComboBox, nsWidget)
 
 //-------------------------------------------------------------------------
 //

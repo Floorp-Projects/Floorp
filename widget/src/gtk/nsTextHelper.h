@@ -25,8 +25,7 @@
 /**
  * Base class for nsTextAreaWidget and nsTextWidget
  */
-#define nsTextHelperSuper nsWidget
-class nsTextHelper : public nsTextHelperSuper,
+class nsTextHelper : public nsWidget,
                      public nsITextAreaWidget,
                      public nsITextWidget
 {
