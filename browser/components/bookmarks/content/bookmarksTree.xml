@@ -539,8 +539,7 @@
               this.treeBoxObject.view.isContainer(row))
             return;
 
-          if ((this.clickCount == 1 || modifKey) && 
-              !this.treeBoxObject.selection.isSelected(row)) {
+          if (this.clickCount == 2 && modifKey) {
             this.treeBoxObject.selection.select(row);
             this._selection = this.getTreeSelection();
           }
@@ -947,7 +946,7 @@
                  onkeypress="event.preventBubble();"/>
       <tree anonid="bookmarks-tree" flex="1" class="plain" hidecolumnpicker="true"
                 datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" ref="NC:BookmarksRoot" flags="dont-build-content"
-                onselect="this.parentNode.treeBoxObject.view.selectionChanged();">
+                onselect="this.parentNode.treeBoxObject.view.selectionChanged();" seltype="single">
         <template xmlns:nc="http://home.netscape.com/NC-rdf#">
           <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
             <treechildren>
