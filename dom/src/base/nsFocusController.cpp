@@ -120,13 +120,15 @@ nsFocusController::UpdateCommands(const nsAReadableString& aEventName)
   else if (mCurrentElement) {
     nsCOMPtr<nsIDOMDocument> domDoc;
     mCurrentElement->GetOwnerDocument(getter_AddRefs(domDoc));
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+    if (domDoc) {
+      nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+ 
+      nsCOMPtr<nsIScriptGlobalObject> global;
+      doc->GetScriptGlobalObject(getter_AddRefs(global));
 
-    nsCOMPtr<nsIScriptGlobalObject> global;
-    doc->GetScriptGlobalObject(getter_AddRefs(global));
-
-    nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(global));
-    window->UpdateCommands(aEventName);
+      nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(global));
+      window->UpdateCommands(aEventName);
+    }
   }
   return NS_OK;
 }
