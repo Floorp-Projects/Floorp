@@ -21,17 +21,18 @@
 class nsImapMailDatabase : public nsMailDatabase
 {
 public:
-	nsImapMailDatabase();
+	// OK, it's dumb that this should require a fileSpec, since there is no file
+	// for the folder. This is mainly because we're deriving from nsMailDatabase;
+	// Perhaps we shouldn't...
+	nsImapMailDatabase(nsFileSpec& folder);
 	virtual ~nsImapMailDatabase();
 	
-	static nsresult		Open(const char * dbName, PRBool create, 
+	static nsresult		Open(nsFileSpec &dbFileSpec, PRBool create, 
 						     nsImapMailDatabase** pMessageDB, 
-						     MSG_Master* mailMaster,
 						     PRBool *dbWasCreated);
 	
 	virtual nsresult		SetSummaryValid(PRBool valid = TRUE);
 	
-	virtual MSG_FolderInfo *GetFolderInfo();
 protected:
 	// IMAP does not set local file flags, override does nothing
 	virtual void	UpdateFolderFlag(nsMsgHdr *msgHdr, PRBool bSet, 
