@@ -34,7 +34,7 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.15 2002/04/12 19:05:19 relyea%netscape.com Exp $
+ * $Id: cmssigdata.c,v 1.16 2003/02/15 00:23:04 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -460,20 +460,98 @@ NSS_CMSSignedData_ImportCerts(NSSCMSSignedData *sigd, CERTCertDBHandle *certdb,
 				SECCertUsage certusage, PRBool keepcerts)
 {
     int certcount;
+    CERTCertificate **certArray = NULL;
+    CERTCertList *certList = NULL;
+    CERTCertListNode *node;
     SECStatus rv;
+    SECItem **rawArray;
     int i;
 
     certcount = NSS_CMSArray_Count((void **)sigd->rawCerts);
 
-    rv = CERT_ImportCerts(certdb, certusage, certcount, sigd->rawCerts, NULL,
-			  keepcerts, PR_FALSE, NULL);
+    /* get the certs in the temp DB */
+    rv = CERT_ImportCerts(certdb, certusage, certcount, sigd->rawCerts, 
+			 &certArray, PR_FALSE, PR_FALSE, NULL);
+    if (rv != SECSuccess) {
+	goto loser;
+    }
+
+    if (!keepcerts) {
+	goto done;
+    }
+
+    /* build a CertList for filtering */
+    certList = CERT_NewCertList();
+    if (certList == NULL) {
+	rv = SECFailure;
+	goto loser;
+    }
+    for (i=0; i < certcount; i++) {
+	CERTCertificate *cert = CERT_DupCertificate(certArray[i]);
+	CERT_AddCertToListTail(certList,cert);
+    }
+
+    /* filter out the certs we don't want */
+    rv = CERT_FilterCertListByUsage(certList,certusage, PR_FALSE);
+    if (rv != SECSuccess) {
+	goto loser;
+    }
+
+    /* go down the remaining list of certs and verify that they have
+     * valid chains, then import them.
+     */
+    for (node = CERT_LIST_HEAD(certList) ; !CERT_LIST_END(node,certList);
+						node= CERT_LIST_NEXT(node)) {
+	CERTCertificateList *certChain;
+
+	if (CERT_VerifyCert(certdb, node->cert, 
+		PR_TRUE, certusage, PR_Now(), NULL, NULL) != SECSuccess) {
+	    continue;
+	}
+
+	certChain = CERT_CertChainFromCert(node->cert, certusage, PR_FALSE);
+	if (!certChain) {
+	    continue;
+	}
+
+	/*
+	 * CertChain returns an array of SECItems, import expects an array of
+	 * SECItem pointers. Create the SECItem Pointers from the array of
+	 * SECItems.
+ 	 */
+	rawArray = (SECItem **)PORT_Alloc(certChain->len*sizeof (SECItem *));
+	if (!rawArray) {
+	    CERT_DestroyCertificateList(certChain);
+	    continue;
+	}
+	for (i=0; i < certChain->len; i++) {
+	    rawArray[i] = &certChain->certs[i];
+	}
+	(void )CERT_ImportCerts(certdb, certusage, certChain->len, 
+			rawArray,  NULL, keepcerts, PR_FALSE, NULL);
+	PORT_Free(rawArray);
+	CERT_DestroyCertificateList(certChain);
+    }
+
+    rv = SECSuccess;
 
     /* XXX CRL handling */
 
+done:
     if (sigd->signerInfos != NULL) {
 	/* fill in all signerinfo's certs */
 	for (i = 0; sigd->signerInfos[i] != NULL; i++)
-	    (void)NSS_CMSSignerInfo_GetSigningCertificate(sigd->signerInfos[i], certdb);
+	    (void)NSS_CMSSignerInfo_GetSigningCertificate(
+						sigd->signerInfos[i], certdb);
+    }
+
+loser:
+    /* now free everything */
+    if (certArray) {
+	CERT_DestroyCertArray(certArray,certcount);
+    }
+    if (certList) {
+	CERT_DestroyCertList(certList);
     }
 
     return rv;
