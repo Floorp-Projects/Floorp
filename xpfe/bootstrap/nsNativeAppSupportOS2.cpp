@@ -410,6 +410,7 @@ private:
     static DWORD mInstance;
     static char *mAppName;
     static nsIDOMWindow *mInitialWindow;
+    static PRBool mUseDDE;
     friend struct MessageWindow;
 }; // nsNativeAppSupportOS2
 
@@ -1076,6 +1077,7 @@ private:
 
 static char nameBuffer[128] = { 0 };
 char *nsNativeAppSupportOS2::mAppName = nameBuffer;
+PRBool nsNativeAppSupportOS2::mUseDDE = PR_FALSE;
 
 /* Start: Tries to find the "message window" to determine if it
  *        exists.  If so, then Mozilla is already running.  In that
@@ -1094,15 +1096,13 @@ nsNativeAppSupportOS2::Start( PRBool *aResult ) {
     NS_ENSURE_ARG( aResult );
     NS_ENSURE_TRUE( mInstance == 0, NS_ERROR_NOT_INITIALIZED );
 
-    PRBool useDDE = PR_TRUE;
-
     nsresult rv = NS_ERROR_FAILURE;
     *aResult = PR_FALSE;
 
     for ( int i = 1; i < __argc; i++ ) {
-        if ( strcmp( "-nodde", __argv[i] ) == 0 ||
-             strcmp( "/nodde", __argv[i] ) == 0 ) {
-            useDDE = PR_FALSE;
+        if ( strcmp( "-dde", __argv[i] ) == 0 ||
+             strcmp( "/dde", __argv[i] ) == 0 ) {
+            mUseDDE = PR_TRUE;
         }
     }
 
@@ -1152,7 +1152,7 @@ nsNativeAppSupportOS2::Start( PRBool *aResult ) {
         // We will be server.
         rv = msgWindow.Create();
         if ( NS_SUCCEEDED( rv ) ) {
-            if (useDDE) {
+            if (mUseDDE) {
                 // Start up DDE server.
                 this->StartDDE();
             }
@@ -1254,6 +1254,10 @@ nsNativeAppSupportOS2::Stop( PRBool *aResult ) {
 
     nsresult rv = NS_OK;
     *aResult = PR_TRUE;
+
+    if (!mUseDDE) {
+       return rv;
+    }
 
     Mutex ddeLock( MOZ_STARTUP_MUTEX_NAME );
 
