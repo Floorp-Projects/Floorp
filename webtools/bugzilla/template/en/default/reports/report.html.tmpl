@@ -37,6 +37,10 @@
            height = 350 
 %]
 
+[% IF min_width AND width < min_width %]
+  [% width = min_width %]
+[% END %]
+
 [%# We ignore row_field for pie charts %]
 [% IF format == "pie" %]
   [% row_field = "" %]

@@ -214,9 +214,7 @@ if ($cgi->param('format') eq "bar") {
         $min_width *= (scalar(@row_names) || 1);
     }
 
-    if ($width < $min_width) {
-        $width = $min_width;
-    }
+    $vars->{'min_width'} = $min_width;
 }
 
 $vars->{'width'} = $width if $width;
