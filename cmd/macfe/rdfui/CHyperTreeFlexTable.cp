@@ -331,7 +331,7 @@ CHyperTreeFlexTable :: EraseTableBackground ( ) const
 	size_t viewHeight = max(mImageSize.height, static_cast<Int32>(mFrameSize.height));
 	Rect backRect = { 0, 0, viewHeight, mImageSize.width };
 	
-	URDFUtilities::SetupBackgroundColor ( HT_TopNode(GetHTView()), gNavCenter->treeBGColor, 
+	URDFUtilities::SetupBackgroundColor ( HT_TopNode(GetHTView()), gNavCenter->viewBGColor, 
 											kThemeListViewBackgroundBrush );
 	::EraseRect(&backRect);
 	
@@ -352,7 +352,7 @@ CHyperTreeFlexTable :: DrawSelf ( )
 	size_t viewHeight = max(mImageSize.height, static_cast<Int32>(mFrameSize.height));
 	if ( topNode ) {
 		char* url = NULL;
-		PRBool success = HT_GetNodeData ( topNode, gNavCenter->treeBGURL, HT_COLUMN_STRING, &url );
+		PRBool success = HT_GetNodeData ( topNode, gNavCenter->viewBGURL, HT_COLUMN_STRING, &url );
 		if ( success && url ) {
 			// draw the background image tiled to fill the whole pane
 			mHasBackgroundImage = true;
@@ -430,7 +430,7 @@ CHyperTreeFlexTable::DrawCellContents( const STableCell& inCell, const Rect& inL
 		URDFUtilities::SetupForegroundTextColor ( HT_TopNode(GetHTView()), gNavCenter->sortColumnFGColor, 
 													kThemeListViewTextColor );
 	else
-		URDFUtilities::SetupForegroundTextColor ( HT_TopNode(GetHTView()), gNavCenter->treeFGColor, 
+		URDFUtilities::SetupForegroundTextColor ( HT_TopNode(GetHTView()), gNavCenter->viewFGColor, 
 													kThemeListViewTextColor );
 	
 	// Get cell data
@@ -452,7 +452,7 @@ CHyperTreeFlexTable::DrawCellContents( const STableCell& inCell, const Rect& inL
 				URDFUtilities::SetupForegroundColor ( HT_TopNode(GetHTView()), gNavCenter->sortColumnFGColor, 
 															kThemeListViewTextColor );
 			else
-				URDFUtilities::SetupForegroundColor ( HT_TopNode(GetHTView()), gNavCenter->treeFGColor, 
+				URDFUtilities::SetupForegroundColor ( HT_TopNode(GetHTView()), gNavCenter->viewFGColor, 
 															kThemeListViewTextColor );
 			
 			::MoveTo ( left,
