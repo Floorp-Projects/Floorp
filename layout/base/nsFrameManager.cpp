@@ -317,7 +317,7 @@ public:
   NS_IMETHOD RemoveFrameProperty(nsIFrame* aFrame,
                                  nsIAtom*  aPropertyName);
 
-  NS_IMETHOD GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIFrame* aChild, nsIFrame** aResult);
+  NS_IMETHOD GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIContent* aChild, nsIFrame** aResult);
 
 #ifdef NS_DEBUG
   NS_IMETHOD DebugVerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame);
@@ -806,8 +806,10 @@ FrameManager::AppendFrames(nsIPresContext* aPresContext,
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   nsIFrame* insertionPoint = nsnull;
-  GetInsertionPoint(&aPresShell, aParentFrame, aFrameList, &insertionPoint);
-  if (insertionPoint) {
+  nsCOMPtr<nsIContent> child;
+  aFrameList->GetContent(getter_AddRefs(child));
+  GetInsertionPoint(&aPresShell, aParentFrame, child, &insertionPoint);
+  if (insertionPoint && (insertionPoint != aParentFrame)) {
     // First append the frames.
     nsresult rv = insertionPoint->AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
 
@@ -837,8 +839,10 @@ FrameManager::InsertFrames(nsIPresContext* aPresContext,
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   nsIFrame* insertionPoint = nsnull;
-  GetInsertionPoint(&aPresShell, aParentFrame, aFrameList, &insertionPoint);
-  if (insertionPoint) {
+  nsCOMPtr<nsIContent> child;
+  aFrameList->GetContent(getter_AddRefs(child));
+  GetInsertionPoint(&aPresShell, aParentFrame, child, &insertionPoint);
+  if (insertionPoint && (insertionPoint != aParentFrame)) {
     // First insert the frames.
     nsresult rv = insertionPoint->InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);
     
@@ -881,8 +885,10 @@ FrameManager::RemoveFrame(nsIPresContext* aPresContext,
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   nsIFrame* insertionPoint = nsnull;
-  GetInsertionPoint(&aPresShell, aParentFrame, aOldFrame, &insertionPoint);
-  if (insertionPoint)
+  nsCOMPtr<nsIContent> child;
+  aOldFrame->GetContent(getter_AddRefs(child));
+  GetInsertionPoint(&aPresShell, aParentFrame, child, &insertionPoint);
+  if (insertionPoint && (insertionPoint != aParentFrame))
     return insertionPoint->RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
 
 #ifdef IBMBIDI
@@ -2615,10 +2621,10 @@ FrameManager::RemoveFrameProperty(nsIFrame* aFrame,
 }
 
 NS_IMETHODIMP
-FrameManager::GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIFrame* aChild, nsIFrame** aResult)
+FrameManager::GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIContent* aChild, nsIFrame** aResult)
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
-  *aResult = nsnull;
+  *aResult = aParent;
 
   nsCOMPtr<nsIContent> content;
   aParent->GetContent(getter_AddRefs(content));
@@ -2637,30 +2643,26 @@ FrameManager::GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIFram
   nsCOMPtr<nsIContent> insertionElement;
   nsIFrame* frame = nsnull;
   if (aChild) {
-    nsCOMPtr<nsIContent> currContent;
-    aChild->GetContent(getter_AddRefs(currContent));
-
     // Check to see if the content is anonymous.
     nsCOMPtr<nsIContent> bindingParent;
-    currContent->GetBindingParent(getter_AddRefs(bindingParent));
+    aChild->GetBindingParent(getter_AddRefs(bindingParent));
     if (bindingParent == content)
       return NS_OK; // It is anonymous. Don't use the insertion point, since that's only
                     // for the explicit kids.
 
     PRUint32 index;
-    bindingManager->GetInsertionPoint(content, currContent, getter_AddRefs(insertionElement), &index);
+    bindingManager->GetInsertionPoint(content, aChild, getter_AddRefs(insertionElement), &index);
     if (insertionElement) {
       aShell->GetPrimaryFrameFor(insertionElement, &frame);
       if (frame) {
         nsCOMPtr<nsIScrollableFrame> scroll(do_QueryInterface(frame));
         if (scroll)
           scroll->GetScrolledFrame(nsnull, frame);
-        if (frame != aParent) {
-          nsIFrame* nestedPoint = nsnull;
-          GetInsertionPoint(aShell, frame, aChild, &nestedPoint);
-          *aResult = nestedPoint ? nestedPoint : frame;
-        }
+        if (frame != aParent) 
+          GetInsertionPoint(aShell, frame, aChild, aResult);
       }
+      else
+        *aResult = nsnull; // There was no frame created yet for the insertion point.
       return NS_OK;
     }
   }
@@ -2674,12 +2676,11 @@ FrameManager::GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIFram
         nsCOMPtr<nsIScrollableFrame> scroll(do_QueryInterface(frame));
         if (scroll)
           scroll->GetScrolledFrame(nsnull, frame);
-        if (frame != aParent) {
-          nsIFrame* nestedPoint = nsnull;
-          GetInsertionPoint(aShell, frame, aChild, &nestedPoint);
-          *aResult = nestedPoint ? nestedPoint : frame;
-        }
+        if (frame != aParent)
+          GetInsertionPoint(aShell, frame, aChild, aResult);
       }
+      else 
+        *aResult = nsnull; // No frame yet.
       return NS_OK;
     }
   }
