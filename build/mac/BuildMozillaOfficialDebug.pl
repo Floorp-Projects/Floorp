@@ -40,7 +40,7 @@ DistMozilla();
 # until ckid/mcvs resource problem is resolved.
 SetBuildNumber();
 
-SetAgentString();
+# SetAgentString();
 
 SetTimeBomb();
 
