@@ -908,8 +908,8 @@ public class Codegen extends Interpreter {
               break;
 
               case TokenStream.SETVAR:
-              visitSetVar(node, child, true);
-              break;
+                visitSetVar(node, child, true);
+                break;
 
               case TokenStream.SETNAME:
                 visitSetName(node, child);
