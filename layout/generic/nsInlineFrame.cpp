@@ -29,6 +29,8 @@
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
+#include "nsAbsoluteContainingBlock.h"
+#include "nsLayoutAtoms.h"
 
 // XXX TODO:
 // append/insert/remove floater testing
@@ -189,6 +191,135 @@ protected:
                             nsHTMLReflowMetrics& aMetrics,
                             nsReflowStatus& aStatus);
 };
+
+//////////////////////////////////////////////////////////////////////
+// Derived class created for relatively positioned inline-level elements
+// that acts as a containing block for child absolutely positioned
+// elements
+
+class nsPositionedInlineFrame : public nsInlineFrame
+{
+public:
+  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+
+  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
+
+  NS_IMETHOD GetAdditionalChildListName(PRInt32   aIndex,
+                                        nsIAtom** aListName) const;
+
+  NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
+
+  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
+
+protected:
+  nsAbsoluteContainingBlock mAbsoluteContainer;
+};
+
+nsresult
+NS_NewPositionedInlineFrame(nsIFrame*& aNewFrame)
+{
+  nsPositionedInlineFrame* it = new nsPositionedInlineFrame;
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  aNewFrame = it;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPositionedInlineFrame::DeleteFrame(nsIPresContext& aPresContext)
+{
+  mAbsoluteContainer.DeleteFrames(aPresContext);
+  return nsInlineFrame::DeleteFrame(aPresContext);
+}
+
+NS_IMETHODIMP
+nsPositionedInlineFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                             nsIAtom*        aListName,
+                                             nsIFrame*       aChildList)
+{
+  nsresult  rv;
+
+  if (nsLayoutAtoms::absoluteList == aListName) {
+    rv = mAbsoluteContainer.SetInitialChildList(aPresContext, aListName, aChildList);
+  } else {
+    rv = nsInlineFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsPositionedInlineFrame::GetAdditionalChildListName(PRInt32   aIndex,
+                                                    nsIAtom** aListName) const
+{
+  NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
+  *aListName = nsnull;
+  if (0 == aIndex) {
+    *aListName = nsLayoutAtoms::absoluteList;
+    NS_ADDREF(*aListName);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPositionedInlineFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
+{
+  NS_PRECONDITION(nsnull != aFirstChild, "null OUT parameter pointer");
+  if (aListName == nsLayoutAtoms::absoluteList) {
+    return mAbsoluteContainer.FirstChild(aListName, aFirstChild);
+  }
+
+  return nsInlineFrame::FirstChild(aListName, aFirstChild);
+}
+
+NS_IMETHODIMP
+nsPositionedInlineFrame::Reflow(nsIPresContext&          aPresContext,
+                                nsHTMLReflowMetrics&     aDesiredSize,
+                                const nsHTMLReflowState& aReflowState,
+                                nsReflowStatus&          aStatus)
+{
+  nsresult  rv = NS_OK;
+
+  // See if it's an incremental reflow command
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    // Give the absolute positioning code a chance to handle it
+    PRBool  handled;
+    
+    mAbsoluteContainer.IncrementalReflow(aPresContext, aReflowState, handled);
+
+    // If the incremental reflow command was handled by the absolute positioning
+    // code, then we're all done
+    if (handled) {
+      // Just return our current size as our desired size
+      aDesiredSize.width = mRect.width;
+      aDesiredSize.height = mRect.height;
+      // XXX This isn't correct...
+      aDesiredSize.ascent = mRect.height;
+      aDesiredSize.descent = 0;
+  
+      // Whether or not we're complete hasn't changed
+      aStatus = (nsnull != mNextInFlow) ? NS_FRAME_NOT_COMPLETE : NS_FRAME_COMPLETE;
+      return rv;
+    }
+  }
+
+  // Let the inline frame do its reflow first
+  rv = nsInlineFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+
+  // Let the absolutely positioned container reflow any absolutely positioned
+  // child frames that need to be reflowed
+  if (NS_SUCCEEDED(rv)) {
+    rv = mAbsoluteContainer.Reflow(aPresContext, aReflowState);
+  }
+
+  return rv;
+}
 
 //////////////////////////////////////////////////////////////////////
 // SectionData implementation
