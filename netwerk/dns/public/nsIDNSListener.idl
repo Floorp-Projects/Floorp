@@ -41,8 +41,8 @@ interface nsIDNSListener : nsISupports
     /**
      * Notify the listener that we have found one or more addresses for the hostname.
      */
-    void OnFound(in nsISupports ctxt, in string hostname,
-                 in nsHostEntStar entry);
+    [noscript] void OnFound(in nsISupports ctxt, in string hostname,
+                            in nsHostEntStar entry);
 
     /**
      * Notify the listener that we the lookup has completed.

@@ -49,7 +49,8 @@ interface nsIRDFXMLSink : nsISupports
     void Resume();
     void EndLoad();
 
-    void AddNameSpace(in nsIAtomPtr aPrefix, [const] in nsStringRef aURI);
+    [noscript] void AddNameSpace(in nsIAtomPtr aPrefix,
+                                 [const] in nsStringRef aURI);
 
     void AddXMLSinkObserver(in nsIRDFXMLSinkObserver aObserver);
     void RemoveXMLSinkObserver(in nsIRDFXMLSinkObserver aObserver);

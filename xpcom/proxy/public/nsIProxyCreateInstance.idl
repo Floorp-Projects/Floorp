@@ -7,14 +7,14 @@ native nsID(nsID *);
 
 interface nsIProxyCreateInstance : nsISupports 
 {
-    void CreateInstanceByIID(in nsIIDRef cid, 
-                             in nsISupports aOuter,
-                             in nsIIDRef iid,
-                             out voidStar result);
+    [noscript] void CreateInstanceByIID(in nsIIDRef cid, 
+                                        in nsISupports aOuter,
+                                        in nsIIDRef iid,
+                                        out voidStar result);
 
-    void CreateInstanceByProgID(in string aProgID, 
-                                in nsISupports aOuter,
-                                in nsIIDRef iid,
-                                out voidStar result);
+    [noscript] void CreateInstanceByProgID(in string aProgID, 
+                                           in nsISupports aOuter,
+                                           in nsIIDRef iid,
+                                           out voidStar result);
 };
 

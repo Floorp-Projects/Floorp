@@ -23,22 +23,6 @@
 #include "xpidl.h"
 #include <ctype.h>
 
-/* is this node from an aggregate type (interface)? */
-#define UP_IS_AGGREGATE(node)                                                 \
-    (IDL_NODE_UP(node) &&                                                     \
-     (IDL_NODE_TYPE(IDL_NODE_UP(node)) == IDLN_INTERFACE ||                   \
-      IDL_NODE_TYPE(IDL_NODE_UP(node)) == IDLN_FORWARD_DCL))
-
-#define UP_IS_NATIVE(node)                                                    \
-    (IDL_NODE_UP(node) &&                                                     \
-     IDL_NODE_TYPE(IDL_NODE_UP(node)) == IDLN_NATIVE)
-
-/* is this type output in the form "<foo> *"? */
-#define STARRED_TYPE(node) (IDL_NODE_TYPE(node) == IDLN_TYPE_STRING ||        \
-                            IDL_NODE_TYPE(node) == IDLN_TYPE_WIDE_STRING ||   \
-                            (IDL_NODE_TYPE(node) == IDLN_IDENT &&             \
-                             UP_IS_AGGREGATE(node)))
-
 static void
 write_header(gpointer key, gpointer value, gpointer user_data)
 {
@@ -470,12 +454,9 @@ op_dcl(TreeState *state)
     gboolean op_notxpcom =
         (IDL_tree_property_get(op->ident, "notxpcom") != NULL);
     IDL_tree iter;
-    
-    if (op->f_varargs) {
-        /* We don't currently support varargs. */
-        IDL_tree_error(state->tree, "varargs are not currently supported\n");
+
+    if (!verify_method_declaration(state))
         return FALSE;
-    }
 
     xpidl_write_comment(state, 2);
 

@@ -43,7 +43,7 @@ class nsIDOMWindow;
 | stream transfer is completed.  The result generally indicates only whether   |
 | or not the stream transfer was successfully initiated.                       |
 ------------------------------------------------------------------------------*/
-[scriptable, uuid(a6cf90f0-15b3-11d2-932e-00805f8add32)]
+[uuid(a6cf90f0-15b3-11d2-932e-00805f8add32)]
 interface nsIStreamTransfer : nsIAppShellComponent {
 
     /*-------------------- SelectFileAndTransferLocation -----------------------

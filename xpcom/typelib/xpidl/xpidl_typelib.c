@@ -619,7 +619,7 @@ handle_iid_is:
                 if (iid_is) {
                     int16 argnum = -1, count;
                     IDL_tree params = IDL_OP_DCL(IDL_NODE_UP(IDL_NODE_UP(state->tree))).parameter_dcls;
-                    for (count = 0; 
+                    for (count = 0;
                          params != NULL && IDL_LIST(params).data != NULL;
                          params = IDL_LIST(params).next, count++)
                     {
@@ -859,14 +859,13 @@ typelib_op_dcl(TreeState *state)
     IDL_tree iter;
     uint16 num_args = 0;
     uint8 op_flags = 0;
-    gboolean op_notxpcom = !!IDL_tree_property_get(op->ident, "notxpcom");
-    gboolean op_noscript = !!IDL_tree_property_get(op->ident, "noscript");
-    
-    if (op->f_varargs) {
-        /* We don't currently support varargs. */
-        IDL_tree_error(state->tree, "varargs are not currently supported\n");
+    gboolean op_notxpcom = (IDL_tree_property_get(op->ident, "notxpcom")
+                            != NULL);
+    gboolean op_noscript = (IDL_tree_property_get(op->ident, "noscript")
+                            != NULL);
+
+    if (!verify_method_declaration(state))
         return FALSE;
-    }
 
     if (!XPT_InterfaceDescriptorAddMethods(id, 1))
         return FALSE;
@@ -878,10 +877,6 @@ typelib_op_dcl(TreeState *state)
     if (op->op_type_spec && !op_notxpcom)
         num_args++;             /* fake param for _retval */
 
-    /*
-     * don't look at op->f_noscript, because we want 'noscript' as a bare keyword
-     * to go away.  (it becomes __f_noscript in libIDL 0.6.8)
-     */
     if (op_noscript || op_notxpcom)
         op_flags |= XPT_MD_HIDDEN;
     if (op->f_varargs)
@@ -903,7 +898,7 @@ typelib_op_dcl(TreeState *state)
             return FALSE;
     }
 
-    /* XXX unless [nonxpcom] */
+    /* XXX unless [notxpcom] */
     if (!op_notxpcom) {
         if (op->op_type_spec) {
             if (!fill_pd_from_type(state, &meth->params[num_args],

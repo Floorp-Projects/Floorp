@@ -26,7 +26,7 @@
 native nsString(nsString&);
 native constnsString(const nsString&);
 
-[scriptable, uuid(be5c13bd-ba9f-11d2-96c4-0060b0fb9956)]
+[uuid(be5c13bd-ba9f-11d2-96c4-0060b0fb9956)]
 interface nsIDOMBaseAppCore : nsISupports
 {
   void GetId(in nsString id);
