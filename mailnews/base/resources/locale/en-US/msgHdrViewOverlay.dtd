@@ -43,4 +43,4 @@ Rights Reserved.
 <!ENTITY printAttachmentCmd.label    ".Print">  
 <!ENTITY printAttachmentCmd.accesskey		"P">  
 <!ENTITY saveAllAttachmentsCmd.label    "Save All...">  
-<!ENTITY saveAllAttachmentsCmd.accesskey		"l">  
+<!ENTITY saveAllAttachmentsCmd.accesskey		"S">  

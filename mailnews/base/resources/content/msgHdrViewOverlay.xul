@@ -44,7 +44,7 @@ Rights Reserved.
 
 <popup id="attachmentMenuList">
   <menuseparator/>
-  <menuitem label="&saveAllAttachmentsCmd.label;" oncommand="SaveAllAttachments();"/>
+  <menuitem label="&saveAllAttachmentsCmd.label;" accesskey="&saveAllAttachmentsCmd.accesskey;" oncommand="SaveAllAttachments();"/>
 </popup>
 
 <tooltip id="attachmentTreeTooltip"

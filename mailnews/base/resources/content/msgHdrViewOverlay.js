@@ -47,7 +47,10 @@ var gBuildAttachmentPopupForCurrentMsg = true;
 var gBuiltExpandedView = false;
 var gBuiltCollapsedView = false;
 var gOpenLabel;
+var gOpenLabelAccesskey;
 var gSaveLabel;
+var gSaveLabelAccesskey;
+var gMessengerBundle;
 
 var msgHeaderParser = Components.classes[msgHeaderParserContractID].getService(Components.interfaces.nsIMsgHeaderParser);
 var abAddressCollector = Components.classes[abAddressCollectorContractID].getService(Components.interfaces.nsIAbAddressCollecter);
@@ -870,13 +873,16 @@ function FillAttachmentListPopup(popup)
 
   if (!gBuildAttachmentPopupForCurrentMsg) return; 
 
+  var attachmentIndex = 0;
+
   // otherwise we need to build the attachment view...
   // First clear out the old view...
   ClearAttachmentMenu(popup);
 
   for (index in currentAttachments)
   {
-    addAttachmentToPopup(popup, currentAttachments[index]);
+    ++attachmentIndex;
+    addAttachmentToPopup(popup, currentAttachments[index], attachmentIndex);
   }
 
   gBuildAttachmentPopupForCurrentMsg = false;
@@ -900,19 +906,28 @@ function GetNumberOfAttachmentsForDisplayedMessage()
 }
 
 // private method used to build up a menu list of attachments
-function addAttachmentToPopup(popup, attachment) 
+function addAttachmentToPopup(popup, attachment, attachmentIndex) 
 { 
   if (popup)
   { 
     var item = document.createElement('menu');
     if ( item ) 
     {     
+      if (!gMessengerBundle)
+        gMessengerBundle = document.getElementById("bundle_messenger");
+
       // insert the item just before the separator...the separator is the 2nd to last element in the popup.
       item.setAttribute('class', 'menu-iconic');
       setApplicationIconForAttachment(attachment,item);
       var numItemsInPopup = popup.childNodes.length;
       item = popup.insertBefore(item, popup.childNodes[numItemsInPopup-2]);
-      item.setAttribute('label', attachment.displayName); 
+
+      var formattedDisplayNameString = gMessengerBundle.getFormattedString("attachmentDisplayNameFormat",
+                                       [attachmentIndex, attachment.displayName]);
+
+      item.setAttribute('label', formattedDisplayNameString); 
+      item.setAttribute('accesskey', attachmentIndex); 
+
       var oncommandPrefix = generateCommandSuffixForAttachment(attachment);
 
       var openpopup = document.createElement('menupopup');
@@ -921,13 +936,17 @@ function addAttachmentToPopup(popup, attachment)
       var menuitementry = document.createElement('menuitem');     
       menuitementry.setAttribute('oncommand', 'openAttachment' + oncommandPrefix); 
 
-      if (!gSaveLabel || !gOpenLabel) {
-        var messengerBundle = document.getElementById("bundle_messenger");
-        gSaveLabel = messengerBundle.getString("saveLabel");
-        gOpenLabel = messengerBundle.getString("openLabel");
-      }
+      if (!gSaveLabel)
+        gSaveLabel = gMessengerBundle.getString("saveLabel");
+      if (!gSaveLabelAccesskey)
+        gSaveLabelAccesskey = gMessengerBundle.getString("saveLabelAccesskey");
+      if (!gOpenLabel)
+        gOpenLabel = gMessengerBundle.getString("openLabel");
+      if (!gOpenLabelAccesskey)
+        gOpenLabelAccesskey = gMessengerBundle.getString("openLabelAccesskey");
 
       menuitementry.setAttribute('label', gOpenLabel); 
+      menuitementry.setAttribute('accesskey', gOpenLabelAccesskey); 
       menuitementry = openpopup.appendChild(menuitementry);
 
       var menuseparator = document.createElement('menuseparator');
@@ -936,6 +955,7 @@ function addAttachmentToPopup(popup, attachment)
       menuitementry = document.createElement('menuitem');
       menuitementry.setAttribute('oncommand', 'saveAttachment' + oncommandPrefix); 
       menuitementry.setAttribute('label', gSaveLabel); 
+      menuitementry.setAttribute('accesskey', gSaveLabelAccesskey); 
       menuitementry = openpopup.appendChild(menuitementry);
     }  // if we created a menu item for this attachment...
   } // if we have a popup

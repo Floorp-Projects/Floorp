@@ -877,7 +877,7 @@ Rights Reserved.
         observes="cmd_openMessage"
         accesskey="&openMessageWindowCmd.accesskey;"
         key="key_openMessage"/>
-      <menu id="fileAttachmentMenu" label="&openAttachmentCmd.label;">
+      <menu id="fileAttachmentMenu" label="&openAttachmentCmd.label;" accesskey="&openAttachmentCmd.accesskey;">
         <menupopup id="attachmentMenuList" onpopupshowing="FillAttachmentListPopup(this);"/>
       </menu>
       <menuseparator/>
