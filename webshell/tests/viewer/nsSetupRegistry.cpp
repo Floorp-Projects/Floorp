@@ -81,7 +81,7 @@
     #define VIEW_DLL   "libgkview"MOZ_DLL_SUFFIX
     #define DOM_DLL    "libjsdom"MOZ_DLL_SUFFIX
     #define CAPS_DLL   "libcaps"MOZ_DLL_SUFFIX
-    #define LIVECONNECT_DLL "libliveconnect"MOZ_DLL_SUFFIX
+    #define LIVECONNECT_DLL "libjsj"MOZ_DLL_SUFFIX
     #define OJI_DLL    "liboji"MOZ_DLL_SUFFIX
 #endif
 
