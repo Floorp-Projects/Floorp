@@ -166,7 +166,7 @@ public:
                          nsMathMLChar*    aMathMLChar,
                          PRBool           aIsMutableChar);
 
-  // helper to check if a frame is embellished
+  // helper to get the mEmbellishData of a frame
   // The MathML REC precisely defines an "embellished operator" as:
   // - an <mo> element;
   // - or one of the elements <msub>, <msup>, <msubsup>, <munder>, <mover>,
@@ -179,10 +179,6 @@ public:
   //   embellished operator;
   // - or an <mrow> whose arguments consist (in any order) of one embellished
   //   operator and zero or more spacelike elements.
-  static PRBool
-  IsEmbellishOperator(nsIFrame* aFrame);
-
-  // helper to get the mEmbellishData of a frame
   static void
   GetEmbellishDataFrom(nsIFrame*        aFrame,
                        nsEmbellishData& aEmbellishData);

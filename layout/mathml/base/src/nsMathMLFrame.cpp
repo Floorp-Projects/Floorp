@@ -122,14 +122,6 @@ nsMathMLFrame::ResolveMathMLCharStyle(nsIPresContext*  aPresContext,
     aMathMLChar->SetStyleContext(newStyleContext);
 }
 
-/* static */ PRBool
-nsMathMLFrame::IsEmbellishOperator(nsIFrame* aFrame)
-{
-  nsEmbellishData embellishData;
-  GetEmbellishDataFrom(aFrame, embellishData);
-  return NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags);
-}
-
 /* static */ void
 nsMathMLFrame::GetEmbellishDataFrom(nsIFrame*        aFrame,
                                     nsEmbellishData& aEmbellishData)
@@ -179,6 +171,9 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
     nsCOMPtr<nsIAtom> tag;
     nsCOMPtr<nsIContent> content;
     frame->GetContent(getter_AddRefs(content));
+    NS_ASSERTION(content, "dangling frame without a content node");
+    if (!content)
+      break;
     content->GetTag(*getter_AddRefs(tag));
     if (tag.get() == nsMathMLAtoms::math) {
       const nsStyleDisplay* display;
@@ -190,6 +185,7 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
     }
     frame->GetParent(&frame);
   }
+  NS_ASSERTION(frame, "bad MathML markup - could not find the top <math> element");
 }
 
 /* static */ PRBool
@@ -575,8 +571,10 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
                                     nsIContent*     aContent)
 {
   // normal case, quick return if there are no attributes
-  PRInt32 attrCount;
-  aContent->GetAttrCount(attrCount);
+  NS_ASSERTION(aContent, "null arg");
+  PRInt32 attrCount = 0;
+  if (aContent)
+    aContent->GetAttrCount(attrCount);
   if (!attrCount)
     return 0;
 

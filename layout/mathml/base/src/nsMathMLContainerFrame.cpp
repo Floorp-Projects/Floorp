@@ -922,6 +922,9 @@ nsMathMLContainerFrame::ReLayoutChildren(nsIPresContext* aPresContext,
     nsCOMPtr<nsIAtom> tag;
     nsCOMPtr<nsIContent> content;
     frame->GetContent(getter_AddRefs(content));
+    NS_ASSERTION(content, "dangling frame without a content node");
+    if (!content)
+      return NS_ERROR_FAILURE;
     content->GetTag(*getter_AddRefs(tag));
     if (tag.get() == nsMathMLAtoms::math) {
       break;
@@ -932,18 +935,25 @@ nsMathMLContainerFrame::ReLayoutChildren(nsIPresContext* aPresContext,
     frame->SetFrameState(state | NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
     frame->GetParent(&frame);
   }
+  NS_ASSERTION(frame, "bad MathML markup - could not find the top <math> element");
+  if (!frame)
+    return NS_OK;
 
   // re-sync the presentation data and embellishment data of our children
 #ifdef DEBUG_rbs
-  PRBool old = IsEmbellishOperator(frame);
+  nsEmbellishData oldData;
+  GetEmbellishDataFrom(frame, oldData);
 #endif
 
   RebuildAutomaticDataForChildren(aPresContext, frame);
 
 #ifdef DEBUG_rbs
-  PRBool now = IsEmbellishOperator(frame);
-  if (old != now)
-    NS_WARNING("REMIND: case where the embellished hierarchy has to be rebuilt too");
+  nsEmbellishData newData;
+  GetEmbellishDataFrom(frame, newData);
+  NS_ASSERTION((NS_MATHML_IS_EMBELLISH_OPERATOR(oldData.flags) == 
+                NS_MATHML_IS_EMBELLISH_OPERATOR(newData.flags)) && 
+               (oldData.coreFrame == newData.coreFrame),
+               "embellished hierarchy has to be rebuilt too");
 #endif
 
   // re-resolve the style data to sync any change of script sizes
