@@ -30,10 +30,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= layout
 LIBRARY_NAME	= gfx_os2
 
-
-CSRCS		= libprint.c
-
 CPPSRCS		= \
+		libprint.cpp \
 		nsDeviceContextOS2.cpp \
 		nsDrawingSurfaceOS2.cpp \
 		nsRenderingContextOS2.cpp \

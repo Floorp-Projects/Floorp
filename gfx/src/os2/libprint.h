@@ -55,7 +55,7 @@ BOOL PrnInitialize( HMODULE hmodResources);
 BOOL PrnTerminate( void);
 
 /* opaque type to describe a print queue (printer)                          */
-typedef struct _PRTQUEUE PRTQUEUE;
+class PRTQUEUE;
 
 /* Select a printer.  If bQuiet is set, the default one is used; otherwise, */
 /* a dialog is popped up to allow the user to choose.  Job properties       */

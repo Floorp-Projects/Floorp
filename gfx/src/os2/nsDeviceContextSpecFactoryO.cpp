@@ -60,7 +60,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryOS2 :: CreateDeviceContextSpec(nsIDevice
 {
   nsresult  rv = NS_ERROR_FAILURE;
 
-  PRTQUEUE *pq = PrnSelectPrinter( HWND_DESKTOP, aQuiet ? TRUE : FALSE);
+  PRTQUEUE* pq (PrnSelectPrinter( HWND_DESKTOP, aQuiet ? TRUE : FALSE));
 
   if( pq)
   {
