@@ -95,9 +95,10 @@ public:
 private:
   PRUint32      mDepth;
   PRBool        mWriteable;
-  PRUint32 mNumCells;
+  PRUint32      mNumCells;
   PRInt16       mScrollbarHeight; 
-  PRInt16       mScrollbarWidth; 
+  PRInt16       mScrollbarWidth;
+  BFont         mMenuFont; 
   static nscoord mDpi; 
  
   float         mWidthFloat; 

@@ -52,6 +52,8 @@
 #include "nsHashtable.h" 
 #include "nsReadableUtils.h"
  
+#include <UnicodeBlockObjects.h>
+
 #undef USER_DEFINED 
 #define USER_DEFINED "x-user-def" 
  
@@ -68,11 +70,13 @@ nsFontMetricsBeOS::nsFontMetricsBeOS()
 
 nsFontMetricsBeOS::~nsFontMetricsBeOS()
 {
-  if (nsnull != mFont) {
+  if (nsnull != mFont) 
+  {
     delete mFont;
     mFont = nsnull;
   }
-  if (mDeviceContext) {
+  if (mDeviceContext) 
+  {
     // Notify our device context that owns us so that it can update its font cache
     mDeviceContext->FontMetricsDeleted(this);
     mDeviceContext = nsnull;
@@ -81,18 +85,17 @@ nsFontMetricsBeOS::~nsFontMetricsBeOS()
  
 NS_IMPL_ISUPPORTS1(nsFontMetricsBeOS, nsIFontMetrics) 
  
-static PRBool 
-IsASCIIFontName(const nsString& aName) 
+static PRBool IsASCIIFontName(const nsString& aName) 
 { 
   PRUint32 len = aName.Length(); 
   const PRUnichar* str = aName.get(); 
-  for (PRUint32 i = 0; i < len; i++) { 
+  for (PRUint32 i = 0; i < len; i++) 
+  { 
     /* 
      * X font names are printable ASCII, ignore others (for now) 
      */ 
-    if ((str[i] < 0x20) || (str[i] > 0x7E)) { 
+    if ((str[i] < 0x20) || (str[i] > 0x7E))
       return PR_FALSE; 
-    } 
   } 
 
   return PR_TRUE; 
@@ -145,13 +148,19 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   // process specified fonts from first item of the array.
   // stop processing next when a real font found;
   PRBool fontfound = PR_FALSE;
-  for (int i=0 ; i<param.family.Count() && !fontfound ; i++) {
+  PRBool isfixed = PR_FALSE;;
+  for (int i=0 ; i<param.family.Count() && !fontfound ; i++) 
+  {
     nsString *fam = param.family.StringAt(i);
     PRBool isgeneric = ( param.isgeneric[i] ) ? PR_TRUE: PR_FALSE;
     char *family = ToNewUTF8String(*fam);
-    if (!isgeneric) {
+    // Fallback
+    isfixed = (strstr(family,"monospace") != nsnull || strstr(family,"fixed")!=nsnull);
+    if (!isgeneric) 
+    {
       // non-generic font
-      if ( count_font_styles((font_family)family) <= 0) {
+      if (count_font_styles((font_family)family) <= 0) 
+      {
         // the specified font is not exist in this computer.
         nsMemory::Free(family);
         continue;
@@ -161,14 +170,14 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
       fontfound = PR_TRUE;
       break;
     } 
-    else {
+    else 
+    {
       // family is generic string like 
       // "serif" "sans-serif" "cursive" "fantasy" "monospace" "-moz-fixed"
       // so look up preferences and get real family name
       const PRUnichar *langGroup;
       aLangGroup->GetUnicode( &langGroup );
       char *lang = ToNewUTF8String(nsDependentString(langGroup));
-
       char prop[256];
       sprintf( prop, "font.name.%s.%s", family, lang );
 
@@ -180,51 +189,61 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
       nsresult res = NS_ERROR_FAILURE;
       //NS_WITH_SERVICE( nsIPref, prefs, kPrefCID, &res );
       nsCOMPtr<nsIPref> prefs = do_GetService( kPrefCID, &res );
-      if( res == NS_OK ) {
+      if (res == NS_OK) 
+      {
         prefs->CopyCharPref( prop, &real_family );
-        if ( (real_family) && count_font_styles((font_family)real_family) > 0) {
+
+        if ((real_family) && count_font_styles((font_family)real_family) > 0) 
+        {
           mFontHandle.SetFamilyAndStyle( (font_family)real_family, NULL );
           fontfound = PR_TRUE;
           break;        
-        } 
+        }
       } 
-      // not successful. use normal font.
-      mFontHandle = be_plain_font;
-      fontfound = PR_TRUE; 
+      // not successful. use system font.
+	  if (isfixed)
+        mFontHandle = be_fixed_font;
+      else
+        mFontHandle = be_plain_font;
+      fontfound = PR_TRUE;
       break;
     } 
   }
 
   // if got no font, then use system font.
   if (!fontfound)
-    mFontHandle = be_plain_font;
+  {
+    if (isfixed)
+      mFontHandle = be_fixed_font;
+    else
+      mFontHandle = be_plain_font;
+  } 
  
   if (aFont.style == NS_FONT_STYLE_ITALIC)
     face |= B_ITALIC_FACE;
 
-  if( aFont.weight > NS_FONT_WEIGHT_NORMAL )
+  if ( aFont.weight > NS_FONT_WEIGHT_NORMAL )
   	face |= B_BOLD_FACE;
         
   // I don't think B_UNDERSCORE_FACE and B_STRIKEOUT_FACE really works...
   // instead, nsTextFrame do them for us. ( my guess... Makoto Hamanaka )
-  if( aFont.decorations & NS_FONT_DECORATION_UNDERLINE )
+  if ( aFont.decorations & NS_FONT_DECORATION_UNDERLINE )
   	face |= B_UNDERSCORE_FACE;
   	
-  if( aFont.decorations & NS_FONT_DECORATION_LINE_THROUGH )
+  if ( aFont.decorations & NS_FONT_DECORATION_LINE_THROUGH )
   	face |= B_STRIKEOUT_FACE;
   	
   mFontHandle.SetFace( face );
   // emulate italic and bold if the selected family has no such style
   if (aFont.style == NS_FONT_STYLE_ITALIC
-    && !(mFontHandle.Face() & B_ITALIC_FACE)) {
+    && !(mFontHandle.Face() & B_ITALIC_FACE)) 
     mFontHandle.SetShear(105.0);
-  }
   if ( aFont.weight > NS_FONT_WEIGHT_NORMAL
-    && !(mFontHandle.Face() & B_BOLD_FACE)) {
+    && !(mFontHandle.Face() & B_BOLD_FACE)) 
     mEmulateBold = PR_TRUE;
-  }
+
   mFontHandle.SetSize( rounded * app2dev );
- 
+  fflush(stdout);
 #ifdef NOISY_FONTS
 #ifdef DEBUG
   fprintf(stderr, "looking for font %s (%d)", wildstring, aFont.size / app2twip);
@@ -252,15 +271,15 @@ void nsFontMetricsBeOS::RealizeFont(nsIDeviceContext* aContext)
   mFontHandle.GetHeight( &height );
  
   struct font_height emHeight; 
-  be_plain_font->GetHeight(&emHeight); 
+  mFontHandle.GetHeight(&emHeight);
+  //be_plain_font->GetHeight(&emHeight); 
  
   int lineSpacing = nscoord(height.ascent + height.descent); 
-  if (lineSpacing > (emHeight.ascent + emHeight.descent)) { 
+  if (lineSpacing > (emHeight.ascent + emHeight.descent))
     mLeading = nscoord((lineSpacing - (emHeight.ascent + emHeight.descent)) * f); 
-  } 
-  else { 
+  else
     mLeading = 0; 
-  } 
+
   mEmHeight = PR_MAX(1, nscoord((emHeight.ascent + emHeight.descent) * f)); 
   mEmAscent = nscoord(height.ascent * (emHeight.ascent + emHeight.descent) * f / lineSpacing); 
   mEmDescent = mEmHeight - mEmAscent; 
@@ -270,7 +289,7 @@ void nsFontMetricsBeOS::RealizeFont(nsIDeviceContext* aContext)
   mMaxAscent = nscoord(height.ascent * f) ;
   mMaxDescent = nscoord(height.descent * f);
   
-  mMaxAdvance = nscoord(mFontHandle.BoundingBox().Width() * f);
+  mMaxAdvance = nscoord((mFontHandle.BoundingBox().Width()+1) * f); //fyy +1
 
   // 56% of ascent, best guess for non-true type 
   mXHeight = NSToCoordRound((float) height.ascent* f * 0.56f); 
@@ -404,9 +423,8 @@ NS_IMETHODIMP  nsFontMetricsBeOS::GetFont(const nsFont*& aFont)
 
 NS_IMETHODIMP  nsFontMetricsBeOS::GetLangGroup(nsIAtom** aLangGroup)
 {
-  if (!aLangGroup) {
+  if (!aLangGroup)
     return NS_ERROR_NULL_POINTER;
-  }
 
   *aLangGroup = mLangGroup;
   NS_IF_ADDREF(*aLangGroup);
@@ -423,9 +441,8 @@ NS_IMETHODIMP  nsFontMetricsBeOS::GetFontHandle(nsFontHandle &aHandle)
 nsresult 
 nsFontMetricsBeOS::FamilyExists(const nsString& aName) 
 { 
-  if (!IsASCIIFontName(aName)) { 
+  if (!IsASCIIFontName(aName)) 
     return NS_ERROR_FAILURE; 
-  } 
  
   nsCAutoString name; 
   name.AssignWithConversion(aName.get()); 
@@ -435,11 +452,14 @@ nsFontMetricsBeOS::FamilyExists(const nsString& aName)
   char* cStr = ToNewCString(name); 
  
   int32 numFamilies = count_font_families(); 
-  for(int32 i = 0; i < numFamilies; i++) { 
+  for (int32 i = 0; i < numFamilies; i++) 
+  { 
     font_family family; 
     uint32 flags; 
-    if(get_font_family(i, &family, &flags) == B_OK) { 
-      if(strcmp(family, cStr) == 0) {
+    if (get_font_family(i, &family, &flags) == B_OK) 
+    { 
+      if (strcmp(family, cStr) == 0) 
+      {
         isthere = PR_TRUE; 
         break; 
       } 
@@ -475,10 +495,119 @@ CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
  
   return nsCRT::strcmp(str1, str2); 
 } 
- 
-static nsresult 
-EnumFonts(nsIAtom* aLangGroup, const char* aGeneric, PRUint32* aCount, 
-  PRUnichar*** aResult) 
+
+static int
+FontMatchesGenericType(font_family family, uint32 flags, const char* aGeneric,
+  const char* aLangGroup)
+{
+  if (!strcmp(aLangGroup, "ja"))    
+    return 1;
+  if (strstr(aLangGroup, "zh"))
+    return 1;
+  if (!strcmp(aLangGroup, "ko"))
+    return 1;
+  if (!strcmp(aLangGroup, "th"))
+    return 1;
+  if (!strcmp(aLangGroup, "he"))
+    return 1;
+  if (!strcmp(aLangGroup, "ar"))
+    return 1;
+  if (strstr(aLangGroup, "user-def"))
+    return 1;
+  if (!strcmp(aLangGroup, "unicode"))
+    return 1;
+
+  if (strstr(aGeneric, "fantasy") 
+  // Let's use all possible fonts as decorative
+#ifdef 0
+    && (strstr(family, "Baskerville") || 
+        strstr(family, "Chicago") ||
+        strstr(family, "Copprpl") ||
+        strstr(family, "Embassy") ||
+        strstr(family, "Europe") ||
+        strstr(family, "Garmnd") ||
+        strstr(family, "Impact") ||
+        strstr(family, "ProFont") ||
+        strstr(family, "VAGRounded"))
+#endif      
+    )
+    return 1;
+  // Hack. Sniffing is based on wide-spread names for serif and sansserif.   No function in BeOS to get full font-info.
+  // NB! "Haru Tohaba" and "Haru" need EXACT match - !strcmp seems suspicious in that case, timeless !!!
+  if (!strcmp(aGeneric, "serif") && 
+     (strstr(family, "Dutch") || strstr(family, "Times") || strstr(family, "Roman") ||
+      strstr(family, "CentSchbook") || strstr(family, "Georgia") || strstr(family, "Baskerville") ||
+      strstr(family, "Garmnd") || strstr(family, "Cyberbit") || strcmp(family, "Haru Tohaba") == 0))
+    return 1;
+  if (!strcmp(aGeneric, "sans-serif") && 
+     (strstr(family, "Arial") || strstr(family, "Chianti") || strstr(family, "Helv") ||
+      strstr(family, "Humnst") || strstr(family, "Swiss") || strstr(family, "Tahoma") ||
+      strstr(family, "Sans") || strstr(family, "sans") || strstr(family, "Verdana") || 
+      strstr(family, "Zurich") || strcmp(family, "Haru") == 0))
+    return 1;
+  if ((strstr(aGeneric, "monospace") || strstr(aGeneric, "-moz-fixed")) && 
+    (flags & B_IS_FIXED || strstr(family, "Cour") || strstr(family, "Consol") ||
+     strstr(family, "Fixed") || strstr(family, "Kurier") || strstr(family, "Lucida") ||
+     strstr(family, "Mono") || strstr(family, "console") || strstr(family, "mono") ||
+     strstr(family, "fixed")))
+    return 1;
+  if (strstr(aGeneric, "cursive") && 
+    (strstr(family, "Cursiv") || strstr(family, "Kursiv") || strstr(family, "Script") ||
+     strstr(family, "kursiv") || strstr(family, "Embassy") || strstr(family, "script") || 
+     strstr(family, "Brush")))
+    return 1;
+
+  return 0;
+}
+
+static int MatchesLangGroup(font_family family,  const char* aLangGroup) 
+{
+  BFont font;
+  font.SetFamilyAndStyle(family, NULL);
+  unicode_block lang = font.Blocks();
+  int match = 0;
+
+  //No restrictions
+  if ((strstr(aLangGroup, "user-def") || strstr(aLangGroup, "unicode")))
+    return 1; 
+  // "tr" and "central-euro" need more testing, but seems OK
+  if ((strstr(aLangGroup, "baltic") || strstr(aLangGroup, "central-euro") || strstr(aLangGroup, "western")) && 
+    lang.Includes(B_LATIN1_SUPPLEMENT_BLOCK))
+    return 1;
+  if (strstr(aLangGroup, "tr") && lang.Includes(B_LATIN_EXTENDED_A_BLOCK))
+    return 1;
+  if (strstr(aLangGroup, "el") && lang.Includes(B_BASIC_GREEK_BLOCK))
+    return 1;
+  if (strstr(aLangGroup, "cyrillic") && lang.Includes(B_CYRILLIC_BLOCK))
+    return 1;
+  if (strstr(aLangGroup, "he") && lang.Includes(B_BASIC_HEBREW_BLOCK))
+    return 1;
+  if (strstr(aLangGroup, "ar") && lang.Includes(B_BASIC_ARABIC_BLOCK))
+    return 1;
+  if (strstr(aLangGroup, "th") && lang.Includes(B_THAI_BLOCK))
+    return 1;
+  // CKJ settings need more verification
+  if ((strstr(aLangGroup, "ja") || strstr(aLangGroup, "ko") || strstr(aLangGroup, "zh") ) &&
+    (lang.Includes(B_CJK_UNIFIED_IDEOGRAPHS_BLOCK) ||
+     lang.Includes(B_CJK_MISCELLANEOUS_BLOCK) ||
+     lang.Includes(B_ENCLOSED_CJK_LETTERS_AND_MONTHS_BLOCK) ||
+     lang.Includes(B_CJK_COMPATIBILITY_BLOCK) ||
+     lang.Includes(B_CJK_COMPATIBILITY_IDEOGRAPHS_BLOCK) ||
+     lang.Includes(B_CJK_COMPATIBILITY_FORMS_BLOCK))) 
+    match = 1;  
+  // additional check for partial CKJ blocks
+  if (strstr(aLangGroup, "ja") && (lang.Includes(B_HIRAGANA_BLOCK) || lang.Includes(B_KATAKANA_BLOCK) ))
+    match = 1; 
+  if (strstr(aLangGroup, "ko") && (lang.Includes(B_HANGUL_BLOCK)))
+    match = 1;   
+  if (strstr(aLangGroup, "zh") && (lang.Includes(B_HIGH_SURROGATES_BLOCK) || lang.Includes(B_LOW_SURROGATES_BLOCK) ))
+    match = 1; 
+   
+
+ return match; 
+}
+
+static nsresult EnumFonts(const char * aLangGroup, const char* aGeneric, PRUint32* aCount, PRUnichar*** aResult) 
 { 
   nsString font_name; 
     
@@ -486,30 +615,33 @@ EnumFonts(nsIAtom* aLangGroup, const char* aGeneric, PRUint32* aCount,
  
   PRUnichar** array = 
     (PRUnichar**) nsMemory::Alloc(numFamilies * sizeof(PRUnichar*)); 
-  if (!array) { 
+  if (!array) 
     return NS_ERROR_OUT_OF_MEMORY; 
-  } 
- 
-  for(int32 i = 0; i < numFamilies; i++) {
+  int j = 0;
+  for(int32 i = 0; i < numFamilies; i++) 
+  {
     font_family family; 
     uint32 flags; 
-    if(get_font_family(i, &family, &flags) == B_OK) {
-      font_name.AssignWithConversion(family); 
-      array[i] = ToNewUnicode(font_name); 
+    if (get_font_family(i, &family, &flags) == B_OK) 
+    {
+      if (family && FontMatchesGenericType(family, flags, aGeneric, aLangGroup)
+         && MatchesLangGroup(family,  aLangGroup)) 
+      {
+        font_name.AssignWithConversion(family); 
+        array[j] = ToNewUnicode(font_name); 
+        ++j;
+      }
     } 
   } 
  
-  NS_QuickSort(array, numFamilies, sizeof(PRUnichar*), CompareFontNames, 
-               nsnull); 
+  NS_QuickSort(array, j, sizeof(PRUnichar*), CompareFontNames, nsnull); 
  
-  *aCount = numFamilies; 
-  if (*aCount) { 
+  *aCount = j; 
+  if (*aCount)
     *aResult = array; 
-  } 
-  else { 
+  else 
     nsMemory::Free(array); 
-  } 
- 
+
   return NS_OK; 
 } 
  
@@ -534,11 +666,10 @@ nsFontEnumeratorBeOS::EnumerateFonts(const char* aLangGroup,
   *aCount = 0; 
   NS_ENSURE_ARG_POINTER(aGeneric); 
   NS_ENSURE_ARG_POINTER(aLangGroup); 
- 
+  // Dunno why this assignment is needed - sergei_d@fi.tartu.ee 
   nsCOMPtr<nsIAtom> langGroup = getter_AddRefs(NS_NewAtom(aLangGroup)); 
- 
-  // XXX still need to implement aLangGroup and aGeneric 
-  return EnumFonts(langGroup, aGeneric, aCount, aResult); 
+
+  return EnumFonts(aLangGroup, aGeneric, aCount, aResult); 
 }
 
 NS_IMETHODIMP
@@ -546,7 +677,7 @@ nsFontEnumeratorBeOS::HaveFontFor(const char* aLangGroup, PRBool* aResult)
 {
   NS_ENSURE_ARG_POINTER(aLangGroup); 
   NS_ENSURE_ARG_POINTER(aResult); 
-  *aResult = PR_FALSE; 
+  *aResult = PR_TRUE; 
   // XXX stub
   return NS_OK;
 }

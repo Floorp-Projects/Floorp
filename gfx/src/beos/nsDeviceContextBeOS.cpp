@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <math.h>
-
+#include <Menu.h>
 #include "nspr.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
@@ -148,9 +148,13 @@ NS_IMETHODIMP nsDeviceContextBeOS::Init(nsNativeWidget aNativeWidget)
   } 
  
   SetDPI(mDpi); 
-  
+
   mScrollbarHeight = PRInt16(B_H_SCROLL_BAR_HEIGHT); 
   mScrollbarWidth = PRInt16(B_V_SCROLL_BAR_WIDTH); 
+
+  menu_info info;
+  get_menu_info(&info);
+  mMenuFont.SetFamilyAndStyle(info.f_family,info.f_style);
   
 #ifdef DEBUG 
   static PRBool once = PR_TRUE; 
@@ -215,7 +219,6 @@ NS_IMETHODIMP nsDeviceContextBeOS::SupportsNativeWidgets(PRBool &aSupportsWidget
   //XXX it is very critical that this not lie!! MMP
   // read the comments in the mac code for this
   aSupportsWidgets = PR_TRUE;
-
   return NS_OK;
 }
 
@@ -233,10 +236,20 @@ NS_IMETHODIMP nsDeviceContextBeOS::GetSystemFont(nsSystemFontID aID, nsFont *aFo
 {
   nsresult status = NS_OK;
 
-  switch (aID) {
-    case eSystemFont_Caption:             // css2
+  switch (aID) 
+  {
+    case eSystemFont_PullDownMenu: 
+    case eSystemFont_Menu:
+      status = GetSystemFontInfo(&mMenuFont, aID, aFont); 
+      break;
+    case eSystemFont_Caption:             // css2 bold  
+      status = GetSystemFontInfo(be_bold_font, aID, aFont); 
+      break;
+    case eSystemFont_List:   
+    case eSystemFont_Field:
+      status = GetSystemFontInfo(be_fixed_font, aID, aFont);     
+      break;
     case eSystemFont_Icon : 
-    case eSystemFont_Menu : 
     case eSystemFont_MessageBox : 
     case eSystemFont_SmallCaption : 
     case eSystemFont_StatusBar : 
@@ -247,13 +260,10 @@ NS_IMETHODIMP nsDeviceContextBeOS::GetSystemFont(nsSystemFontID aID, nsFont *aFo
     case eSystemFont_Info: 
     case eSystemFont_Dialog: 
     case eSystemFont_Button: 
-    case eSystemFont_PullDownMenu: 
-    case eSystemFont_List: 
-    case eSystemFont_Field: 
     case eSystemFont_Tooltips:            // moz 
     case eSystemFont_Widget: 
+    default:
       status = GetSystemFontInfo(be_plain_font, aID, aFont);
-      break;
   }
 
   return status;
@@ -449,8 +459,22 @@ nsDeviceContextBeOS::GetSystemFontInfo(const BFont *theFont, nsSystemFontID anID
   
   // do we have the default_font defined by BeOS, if not then 
   // we error out. 
-  if( !theFont ) 
-    theFont = be_plain_font; // BeOS default font 
+  if( !theFont )
+  	switch (anID) 
+  	{
+      case eSystemFont_Menu:
+        status = GetSystemFontInfo(&mMenuFont, anID, aFont); 
+        break;
+      case eSystemFont_List:
+      case eSystemFont_Field:
+        theFont = be_fixed_font;
+        break;
+      case eSystemFont_Caption:
+        theFont = be_bold_font;
+        break;
+      default:
+        theFont = be_plain_font; // BeOS default font 
+    }
    
   if( !theFont ) 
   { 
@@ -460,14 +484,14 @@ nsDeviceContextBeOS::GetSystemFontInfo(const BFont *theFont, nsSystemFontID anID
   { 
     font_family family; 
     font_style style; 
-       font_height height; 
+    font_height height; 
  
     theFont->GetFamilyAndStyle(&family, &style);   
     aFont->name.AssignWithConversion( family ); 
  
        // No weight 
            
-       theFont->GetHeight(&height); 
+    theFont->GetHeight(&height); 
     aFont->size = NSIntPixelsToTwips(uint32(height.ascent+height.descent+height.leading), mPixelsToTwips); 
  
        // no style 
