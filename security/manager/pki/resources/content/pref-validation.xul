@@ -78,14 +78,14 @@
           </columns>
           
           <rows>
-            <row>
+            <row align="center">
               <text class="label" value="&signingCA.label;" for="signingCA"/>
               <menulist id="signingCA" pref="true" preftype="string" prefstring="security.OCSP.signingCA"
                         prefattribute="value" flex="1" oncommand="changeURL()">
                 <menupopup/>
               </menulist>
             </row>
-            <row>
+            <row align="center">
               <text class="label" value="&serviceURL.label;" for="serviceURL"/>
               <textbox id="serviceURL" pref="true" preftype="string" prefstring="security.OCSP.URL"
                        prefattribute="value" flex="1"/>
