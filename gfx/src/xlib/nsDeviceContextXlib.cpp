@@ -34,8 +34,6 @@ static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
 static PRLogModuleInfo *DeviceContextXlibLM = PR_NewLogModule("DeviceContextXlib");
 
-static PRUint8 _ConvertMaskToCount(unsigned long val);
-static PRUint8 _GetShiftForMask(unsigned long val);
 static void _EvilInitilizeGlobals();
 
 nsDeviceContextXlib::nsDeviceContextXlib()
@@ -70,24 +68,6 @@ extern Screen *   gScreen;
 extern Visual *   gVisual;
 extern int        gDepth;
 extern XVisualInfo     *gVisualInfo;
-
-extern PRUint32  gRedZeroMask;     //red color mask in zero position
-extern PRUint32  gGreenZeroMask;   //green color mask in zero position
-extern PRUint32  gBlueZeroMask;    //blue color mask in zero position
-extern PRUint32  gAlphaZeroMask;   //alpha data mask in zero position
-extern PRUint32  gRedMask;         //red color mask
-extern PRUint32  gGreenMask;       //green color mask
-extern PRUint32  gBlueMask;        //blue color mask
-extern PRUint32  gAlphaMask;       //alpha data mask
-extern PRUint8   gRedCount;        //number of red color bits
-extern PRUint8   gGreenCount;      //number of green color bits
-extern PRUint8   gBlueCount;       //number of blue color bits
-extern PRUint8   gAlphaCount;      //number of alpha data bits
-extern PRUint8   gRedShift;        //number to shift value into red position
-extern PRUint8   gGreenShift;      //number to shift value into green position
-extern PRUint8   gBlueShift;       //number to shift value into blue position
-extern PRUint8   gAlphaShift;      //number to shift value into alpha position
-
 
 NS_IMETHODIMP nsDeviceContextXlib::Init(nsNativeWidget aNativeWidget)
 {
@@ -433,49 +413,5 @@ NS_IMETHODIMP nsDeviceContextXlib::EndPage(void)
 
 static void _EvilInitilizeGlobals()
 {
-  // set up the color info for this display
-  // set up the masks
-  gRedMask = gVisualInfo->red_mask;
-  gGreenMask = gVisualInfo->green_mask;
-  gBlueMask = gVisualInfo->blue_mask;
-  gAlphaMask = 0;
-  // set up the number of bits in each
-  gRedCount = _ConvertMaskToCount(gVisualInfo->red_mask);
-  gGreenCount = _ConvertMaskToCount(gVisualInfo->green_mask);
-  gBlueCount = _ConvertMaskToCount(gVisualInfo->blue_mask);
-  gAlphaCount = 0;
-  // set up the number of bits that you need to shift to get to
-  // a specific mask
-  gRedShift = _GetShiftForMask(gVisualInfo->red_mask);
-  gGreenShift = _GetShiftForMask(gVisualInfo->green_mask);
-  gBlueShift = _GetShiftForMask(gVisualInfo->blue_mask);
-  gAlphaShift = 0;
-}
-
-static PRUint8 _ConvertMaskToCount(unsigned long val)
-{
-  PRUint8 retval = 0;
-  PRUint8 cur_bit = 0;
-  // walk through the number, incrementing the value if
-  // the bit in question is set.
-  while (cur_bit < (sizeof(unsigned long) * 8)) {
-    if ((val >> cur_bit) & 0x1) {
-      retval++;
-    }
-    cur_bit++;
-  }
-  return retval;
-}
-
-static PRUint8 _GetShiftForMask(unsigned long val)
-{
-  PRUint8 cur_bit = 0;
-  // walk through the number, looking for the first 1
-  while (cur_bit < (sizeof(unsigned long) * 8)) {
-    if ((val >> cur_bit) & 0x1) {
-      return cur_bit;
-    }
-    cur_bit++;
-  }
-  return cur_bit;
+  // foo
 }
