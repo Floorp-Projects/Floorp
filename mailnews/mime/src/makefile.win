@@ -63,6 +63,12 @@ DEFINES= -DEBUG_rhp -DHAVE_MIME_DATA_SLOT -D_IMPL_NS_HTML
 #//
 #//------------------------------------------------------------------------
 OBJS=							\
+#
+# Code for XP-COM Factory creation...
+#
+			.\$(OBJDIR)\nsMimeFactory.obj	\
+			.\$(OBJDIR)\nsRFC822toHTMLStreamConverter.obj \
+# MIME parsing code
 			.\$(OBJDIR)\mimecont.obj	\
 			.\$(OBJDIR)\mimeebod.obj	\
 			.\$(OBJDIR)\mimeenc.obj		\
@@ -159,7 +165,8 @@ LINCS=$(LINCS)  -I.                         		\
 			   -I$(PUBLIC)\netlib		\
 			   -I$(PUBLIC)\xpcom		\
 			   -I$(PUBLIC)\raptor		\
-			   -I..\..\base\public 		\
+			   -I$(PUBLIC)\mime		\
+			   -I$(PUBLIC)\mailnews         \
 			   $(NULL)
 
 #//------------------------------------------------------------------------
