@@ -68,7 +68,6 @@ function buttonEnabling(textfield)
 function Startup()
 {
   loadPermissions();
-  document.getElementById("url").focus();
 }
 
 
