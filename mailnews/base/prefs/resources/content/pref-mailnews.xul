@@ -3,6 +3,29 @@
 <?xml-stylesheet href="chrome://messenger/skin/pref-mailnews.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-2001 Netscape Communications Corporation. All
+Rights Reserved.
+
+Contributor(s):
+    rcassin@supernova.org
+-->
+
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-mailnews.dtd">
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
@@ -14,7 +37,8 @@
   <script language="javascript">
   <![CDATA[
     var _elementIDs = ["mailPaneConfig", "mailnewsConfirmMoveFoldersToTrash", 
-                       "mailnewsStartPageEnabled", "mailnewsStartPageUrl"];
+                       "mailnewsStartPageEnabled", "mailnewsStartPageUrl",
+                       "newMailNotification" ];
   ]]>
   </script>
   <script language="javascript" src="chrome://global/content/strres.js"/>
@@ -62,5 +86,15 @@
      </box>
 
 	</titledbox>
-
+	
+  <!-- Sound notification for new mail -->    
+	<titledbox orient="vertical">
+	  <title><text value="&newMessage.label;"/></title>
+	  
+	  <checkbox allowevents="true" id="newMailNotification" value="&playSound.label;"
+	            pref="true" preftype="bool" prefstring="mail.biff.play_sound"
+	            prefattribute="checked" accesskey="&playSound.accesskey;" />
+	            
+    </titledbox>
+  
 </window>

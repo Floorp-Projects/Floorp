@@ -16,3 +16,4 @@ function setHomePageToDefaultPage(folderFieldId)
   var url = prefs.getDefaultLocalizedUnicharPref("mailnews.start_page.url");
   homePageField.value = url;
 }
+

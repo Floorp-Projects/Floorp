@@ -141,7 +141,6 @@ pref("mail.attach_vcard",                   false);
 pref("mail.html_compose",                   true);
 pref("mail.compose.other.header",	    "");
 pref("mail.htmldomains", "netscape.com,mcom.com");
-pref("mail.play_sound",                     true);
 pref("mail.send_html",                      true);
 pref("mail.directory_names.first_first",    true);
 pref("mail.attach_address_card",            false);
@@ -434,3 +433,8 @@ pref("news.cancel.confirm",true);
 pref("news.cancel.alert_on_success",true);
 pref("mail.SpellCheckBeforeSend",false);
 pref("mail.enable_autocomplete",true);
+
+pref("mail.biff.play_sound",true);
+pref("mail.biff.use_default_sound",true);
+pref("mail.biff.sound_file","");
+

@@ -156,6 +156,7 @@ messenger.jar:
     content/messenger/popTest.xul                                              (base/resources/content/popTest.xul)
     content/messenger/pref-advanced_overlay.xul                                (base/prefs/resources/content/pref-advanced_overlay.xul)
     content/messenger/pref-appearance_overlay.xul                              (base/prefs/resources/content/pref-appearance_overlay.xul)
+    content/messenger/newmail.wav                                              (base/resources/content/newmail.wav)
 
 en-US.jar:
     locale/en-US/messenger/contents.rdf                                (base/resources/locale/en-US/contents.rdf)

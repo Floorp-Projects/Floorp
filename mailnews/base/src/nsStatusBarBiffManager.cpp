@@ -35,6 +35,10 @@
 #include "nsMsgFolderDataSource.h"
 #include "MailNewsTypes.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
+#include "nsISound.h"
+#include "nsIPref.h"
+#include "nsXPIDLString.h"
+#include "nsIURL.h"
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kWindowMediatorCID,    NS_WINDOWMEDIATOR_CID);
@@ -79,11 +83,61 @@ nsresult nsStatusBarBiffManager::Shutdown()
 	return NS_OK;
 }
 
+#define PREF_PLAY_SOUND_ON_NEW_MAIL      "mail.biff.play_sound"
+#define PREF_PLAY_DEFAULT_SOUND          "mail.biff.use_default_sound"
+#define PREF_USER_SPECIFIED_SOUND_FILE   "mail.biff.sound_file"
+#define DEFAULT_NEW_MAIL_SOUND           "chrome://messenger/content/newmail.wav"
+
 nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
 {
-
 	// See nsMsgStatusFeedback
 	nsresult rv;
+
+    // if we got new mail, attempt to play a sound.
+    // if we fail along the way, don't return.
+    // we still need to update the UI.
+    if (newBiffFlag == nsIMsgFolder::nsMsgBiffState_NewMail) {
+      nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID);
+      if (pref) {
+        PRBool playSoundOnBiff = PR_FALSE;
+        rv = pref->GetBoolPref(PREF_PLAY_SOUND_ON_NEW_MAIL, &playSoundOnBiff);
+        if (NS_SUCCEEDED(rv) && playSoundOnBiff) {
+          nsCOMPtr<nsISound> sound = do_CreateInstance("@mozilla.org/sound;1");
+          if (sound) {
+            nsCOMPtr<nsIFileURL> soundURL = do_CreateInstance("@mozilla.org/network/standard-url;1");
+            if (soundURL) {
+              PRBool playDefaultSound = PR_TRUE;
+              rv = pref->GetBoolPref(PREF_PLAY_DEFAULT_SOUND, &playDefaultSound);
+              if (NS_SUCCEEDED(rv) && !playDefaultSound) {
+                nsCOMPtr<nsILocalFile> soundFile;
+                rv = pref->GetFileXPref(PREF_USER_SPECIFIED_SOUND_FILE, getter_AddRefs(soundFile));
+                if (NS_SUCCEEDED(rv) && soundFile) {
+                  nsCOMPtr <nsIFile> file = do_QueryInterface(soundFile);
+                  if (file) {
+                    rv = soundURL->SetFile(file);
+                  }
+                  else {
+                    rv = NS_ERROR_FAILURE;
+                  }
+                }
+              }
+
+              if (NS_FAILED(rv) || playDefaultSound) {
+                rv = soundURL->SetSpec(DEFAULT_NEW_MAIL_SOUND);
+              }
+            }
+
+            if (NS_SUCCEEDED(rv) && soundURL) {
+              sound->Play(soundURL);
+            }
+            else {
+              sound->Beep();
+            }
+          } 
+        }
+      }
+    }
+
 	NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
 	nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
 
