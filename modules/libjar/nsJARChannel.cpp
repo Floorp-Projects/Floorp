@@ -515,7 +515,7 @@ nsJARChannel::GetCacheFile(nsIFile* *cacheFile)
     rv = jarCacheFile->Exists(&exists);
     if (NS_FAILED(rv)) return rv;
     if (!exists) {
-        rv = jarCacheFile->Create(nsIFile::DIRECTORY_TYPE, 0664);
+        rv = jarCacheFile->Create(nsIFile::DIRECTORY_TYPE, 0775);
         if (NS_FAILED(rv)) return rv;
     }
 
