@@ -4252,6 +4252,7 @@ MOZ_ARG_ENABLE_BOOL(svg,
     MOZ_SVG= )
 if test -n "$MOZ_SVG"; then
   AC_DEFINE(MOZ_SVG)
+  MOZ_SVG_RENDERER_NOT_FOUND=1
 fi
 
 MOZ_ARG_ENABLE_BOOL(svg-renderer-gdiplus,
@@ -4273,6 +4274,7 @@ if test -n "$MOZ_SVG_RENDERER_GDIPLUS"; then
                  AC_MSG_ERROR([Building the SVG GDI+ renderer requires an appropriate Microsoft SDK.]))
   AC_LANG_RESTORE
   AC_DEFINE(MOZ_SVG_RENDERER_GDIPLUS)
+  MOZ_SVG_RENDERER_NOT_FOUND=
 fi
 
 MOZ_ARG_ENABLE_BOOL(svg-renderer-libart,
@@ -4281,6 +4283,7 @@ MOZ_ARG_ENABLE_BOOL(svg-renderer-libart,
     MOZ_SVG_RENDERER_LIBART= )
 if test -n "$MOZ_SVG_RENDERER_LIBART"; then
   AC_DEFINE(MOZ_SVG_RENDERER_LIBART)
+  MOZ_SVG_RENDERER_NOT_FOUND=
 fi
 
 MOZ_ARG_ENABLE_BOOL(svg-renderer-cairo,
@@ -4289,8 +4292,13 @@ MOZ_ARG_ENABLE_BOOL(svg-renderer-cairo,
     MOZ_SVG_RENDERER_CAIRO= )
 if test -n "$MOZ_SVG_RENDERER_CAIRO"; then
   AC_DEFINE(MOZ_SVG_RENDERER_CAIRO)
+  MOZ_SVG_RENDERER_NOT_FOUND=
 fi
 AC_SUBST(MOZ_SVG_RENDERER_CAIRO)
+
+if test -n "$MOZ_SVG_RENDERER_NOT_FOUND"; then
+  AC_MSG_ERROR([Must choose a SVG renderer if SVG is enabled.])
+fi
 
 dnl To build transformiix standalone, set TX_EXE while configuring
 if test "$TX_EXE"; then
