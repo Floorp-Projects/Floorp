@@ -66,6 +66,9 @@ nsLanguageAtom::Init(const nsString& aLanguage, nsIAtom* aLangGroup)
 NS_IMETHODIMP
 nsLanguageAtom::GetLanguage(PRUnichar** aLanguage)
 {
+  NS_ENSURE_ARG_POINTER(aLanguage);
+  *aLanguage = nsnull;
+
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -96,7 +99,6 @@ NS_IMPL_ISUPPORTS1(nsLanguageAtomService, nsILanguageAtomService)
 nsLanguageAtomService::nsLanguageAtomService()
 {
   NS_INIT_ISUPPORTS();
-  /* member initializers and constructor code */
 }
 
 nsLanguageAtomService::~nsLanguageAtomService()
@@ -139,19 +141,21 @@ nsLanguageAtomService::LookupLanguage(const PRUnichar* aLanguage,
   nsILanguageAtom** aResult)
 {
   nsresult res;
-  NS_ENSURE_ARG_POINTER(aLanguage);
   NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nsnull;
+  NS_ENSURE_ARG_POINTER(aLanguage);
 
   if (!mLangs) {
     NS_ENSURE_SUCCESS(InitLangTable(), NS_ERROR_OUT_OF_MEMORY);
   }
   nsAutoString lowered(aLanguage);
   lowered.ToLowerCase();
-  nsILanguageAtom* lang = nsnull;
+  nsCOMPtr<nsILanguageAtom> lang;
   PRUint32 n;
   NS_ENSURE_SUCCESS(mLangs->Count(&n), NS_ERROR_FAILURE);
   for (PRUint32 i = 0; i < n; i++) {
-    res = mLangs->QueryElementAt(i, NS_GET_IID(nsILanguageAtom), (void**) &lang);
+    res = mLangs->QueryElementAt(i, NS_GET_IID(nsILanguageAtom),
+                                 getter_AddRefs(lang));
     if (NS_SUCCEEDED(res)) {
       PRBool same = PR_FALSE;
       NS_ENSURE_SUCCESS(lang->LanguageIs(lowered.GetUnicode(), &same),
@@ -170,20 +174,21 @@ nsLanguageAtomService::LookupLanguage(const PRUnichar* aLanguage,
     if (!mLangGroups) {
       NS_ENSURE_SUCCESS(InitLangGroupTable(), NS_ERROR_FAILURE);
     }
-    nsAutoString langGroup;
-    res = mLangGroups->GetStringProperty(lowered, langGroup);
+    nsAutoString langGroupStr;
+    res = mLangGroups->GetStringProperty(lowered, langGroupStr);
     if (NS_FAILED(res)) {
       PRInt32 hyphen = lowered.FindChar('-');
       if (hyphen >= 0) {
         nsAutoString truncated(lowered);
         truncated.Truncate(hyphen);
-        res = mLangGroups->GetStringProperty(truncated, langGroup);
+        res = mLangGroups->GetStringProperty(truncated, langGroupStr);
         if (NS_FAILED(res)) {
-          langGroup.AssignWithConversion("x-western");
+          langGroupStr.AssignWithConversion("x-western");
         }
       }
     }
-    language->Init(lowered, NS_NewAtom(langGroup));
+    nsCOMPtr<nsIAtom> langGroup = getter_AddRefs(NS_NewAtom(langGroupStr));
+    language->Init(lowered, langGroup);
     lang = language;
     mLangs->AppendElement(lang);
   }
@@ -198,9 +203,9 @@ nsLanguageAtomService::LookupCharSet(const PRUnichar* aCharSet,
   nsILanguageAtom** aResult)
 {
   nsresult res;
-  NS_ENSURE_ARG_POINTER(aCharSet);
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = nsnull;
+  NS_ENSURE_ARG_POINTER(aCharSet);
 
   if (!mLangs) {
     NS_ENSURE_SUCCESS(InitLangTable(), NS_ERROR_OUT_OF_MEMORY);
