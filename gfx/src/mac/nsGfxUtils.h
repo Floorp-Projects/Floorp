@@ -160,5 +160,36 @@ protected:
 
 };
 
+/** ------------------------------------------------------------
+ *	Utility class for saving, locking, and restoring handle state
+ *  Ok with null handle
+ */
+
+class StHandleLocker
+{
+public:
+
+                    StHandleLocker(Handle theHandle)
+                    :	mHandle(theHandle)
+                    {
+                      if (mHandle)
+                      {
+                    	  mOldHandleState = ::HGetState(mHandle);
+                    	  ::HLock(mHandle);
+                      }										  
+                    }
+
+                    ~StHandleLocker()
+                    {
+                      if (mHandle)
+                        ::HSetState(mHandle, mOldHandleState);
+                    }
+
+protected:
+
+    Handle          mHandle;
+    SInt8           mOldHandleState;
+};
+
 
 #endif // nsGfxUtils_h_

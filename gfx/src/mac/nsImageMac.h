@@ -46,34 +46,34 @@ public:
 
 	virtual PRUint8*		GetBits();
 	virtual PRInt32			GetLineStride()				{ return mRowBytes; }
-	virtual PRBool			GetHasAlphaMask()     { return mAlphaGWorld != nsnull; }
+	virtual PRBool			GetHasAlphaMask()			{ return mMaskBitsHandle != nsnull; }
 
-    NS_IMETHOD     SetNaturalWidth(PRInt32 naturalwidth) { mNaturalWidth= naturalwidth; return NS_OK;}
-    NS_IMETHOD     SetNaturalHeight(PRInt32 naturalheight) { mNaturalHeight= naturalheight; return NS_OK;}
-    virtual PRInt32     GetNaturalWidth() {return mNaturalWidth; }
-    virtual PRInt32     GetNaturalHeight() {return mNaturalHeight; }
+		NS_IMETHOD		 SetNaturalWidth(PRInt32 naturalwidth) { mNaturalWidth= naturalwidth; return NS_OK;}
+		NS_IMETHOD		 SetNaturalHeight(PRInt32 naturalheight) { mNaturalHeight= naturalheight; return NS_OK;}
+		virtual PRInt32			GetNaturalWidth() {return mNaturalWidth; }
+		virtual PRInt32			GetNaturalHeight() {return mNaturalHeight; }
 
-    NS_IMETHOD          SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2);        
-    virtual PRInt32     GetDecodedX1() { return mDecodedX1;}
-    virtual PRInt32     GetDecodedY1() { return mDecodedY1;}
-    virtual PRInt32     GetDecodedX2() { return mDecodedX2;}
-    virtual PRInt32     GetDecodedY2() { return mDecodedY2;}
+		NS_IMETHOD					SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2);				 
+		virtual PRInt32			GetDecodedX1() { return mDecodedX1;}
+		virtual PRInt32			GetDecodedY1() { return mDecodedY1;}
+		virtual PRInt32			GetDecodedX2() { return mDecodedX2;}
+		virtual PRInt32			GetDecodedY2() { return mDecodedY2;}
 
 
 	virtual PRUint8*		GetAlphaBits();
-	virtual PRInt32			GetAlphaWidth() 			{ return mAlphaWidth; }
-	virtual PRInt32			GetAlphaHeight()	 		{ return mAlphaHeight; }
+	virtual PRInt32			GetAlphaWidth()				{ return mAlphaWidth; }
+	virtual PRInt32			GetAlphaHeight()			{ return mAlphaHeight; }
 	virtual PRInt32			GetAlphaLineStride()	{ return mARowBytes; }
 
 	virtual void				ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect);
 	virtual PRBool			IsOptimized()					{ return PR_FALSE; }
 	virtual nsresult		Optimize(nsIDeviceContext* aContext);
-	virtual nsColorMap*	GetColorMap() 				{ return nsnull;}
+	virtual nsColorMap* GetColorMap()					{ return nsnull;}
 
-	NS_IMETHOD 					Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+	NS_IMETHOD					Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 															PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
 
-	NS_IMETHOD 					Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+	NS_IMETHOD					Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 															PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
 															PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
 
@@ -85,14 +85,19 @@ public:
 	NS_IMETHOD					UnlockImagePixels(PRBool aMaskPixels);
 
 protected:
-	
-	void							ClearGWorld(GWorldPtr);
-	OSErr							MakeGrayscaleColorTable(PRInt16 numColors, CTabHandle *outColorTable);
-	OSErr							AllocateGWorld(PRInt16 depth, CTabHandle colorTable, const Rect& bounds, GWorldPtr *outGWorld);
+		
+	static OSErr			CreatePixMap(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, CTabHandle aColorTable,
+																				PixMap& ioPixMap, Handle& ioBitsHandle);
+	static OSErr			AllocateBitsHandle(PRInt32 imageSizeBytes, Handle *outHandle);
+	static PRInt32		CalculateRowBytes(PRUint32 aWidth,PRUint32 aDepth);
+
+	static void				ClearGWorld(GWorldPtr);
+	static OSErr			AllocateGWorld(PRInt16 depth, CTabHandle colorTable, const Rect& bounds, GWorldPtr *outGWorld);
 	
 private:
 
-	GWorldPtr				mImageGWorld;
+	PixMap					mImagePixmap;
+	Handle					mImageBitsHandle;		// handle for the image bits
 	
 	PRInt32					mWidth;
 	PRInt32					mHeight;
@@ -101,22 +106,23 @@ private:
 	PRInt32					mBytesPerPixel;
 		
 	// alpha layer members
-	GWorldPtr				mAlphaGWorld;
-
+	PixMap					mMaskPixmap;			// the alpha level pixel map
+	Handle					mMaskBitsHandle;	// handle for the mask bits
+	
 	PRInt16					mAlphaDepth;		// alpha layer depth
 	PRInt16					mAlphaWidth;		// alpha layer width
 	PRInt16					mAlphaHeight;		// alpha layer height
 	PRInt32					mARowBytes;			// alpha row bytes
 
-    PRInt32	                mNaturalWidth;
-    PRInt32		            mNaturalHeight;
+	PRInt32					mNaturalWidth;
+	PRInt32					mNaturalHeight;
 
-    PRInt32             mDecodedX1;       //Keeps track of what part of image
-    PRInt32             mDecodedY1;       // has been decoded.
-    PRInt32             mDecodedX2; 
-    PRInt32             mDecodedY2;    
+	PRInt32					mDecodedX1;				//Keeps track of what part of image
+	PRInt32					mDecodedY1;				// has been decoded.
+	PRInt32					mDecodedX2; 
+	PRInt32					mDecodedY2;		 
 
-    
+		
 	//nsPoint					mLocation;			// alpha mask location
 
 	//PRInt8					mImageCache;		// place to save off the old image for fast animation
