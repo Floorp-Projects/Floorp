@@ -1,30 +1,14 @@
+#ifdef XP_MACOSX
+<!ENTITY prefWindow.size "width: 58em; height: 45em;">
+#else
+<!ENTITY prefWindow.size "width: 52.3em; height: 45em;">
+#endif
+<!ENTITY prefWindow.title "Options">
 
-<!ENTITY  prefWindow.title            "Options">
-
-<!ENTITY enbJsCheckMailNews.label     "Mail &amp; Newsgroups">
-<!ENTITY enbJsCheckMailNews.accesskey "m">
-<!ENTITY enbPluginCheckMailNews.label     "Mail &amp; Newsgroups">
-<!ENTITY enbPluginCheckMailNews.accesskey "p">
-
-<!ENTITY disableCookieForMailNews.label "Disable cookies in Mail &amp; Newsgroups">
-<!ENTITY disableCookieForMailNews.accesskey "m">
-
-<!ENTITY disableImageInMailNews.label       "Do not load remote images in Mail &amp; Newsgroup messages">
-<!ENTITY disableImageInMailNews.accesskey   "i">
-
-<!ENTITY mail.label "Mail &amp; Newsgroups">
-<!ENTITY mail.accesskey "m">
-<!ENTITY windows.label "Windows">
-<!ENTITY viewingMessages.label "Display">
-<!ENTITY address.label "Addressing">
-<!ENTITY composingMessages.label "Composition">
-<!ENTITY format.label "Send Options">
-<!ENTITY return.label "Return Receipts">
-<!ENTITY advanced.label "Advanced">
 <!ENTITY mailonly.label "General">
-<!ENTITY languages.label "Languages">
+<!ENTITY viewingMessages.label "Display">
+<!ENTITY composingMessages.label "Composition">
+<!ENTITY fonts.label "Fonts">
 <!ENTITY themes.label "Themes">
 <!ENTITY extensions.label "Extensions">
-<!ENTITY fonts.label "Fonts">
-<!ENTITY privacy.label "Privacy">
-
+<!ENTITY advanced.label "Advanced">

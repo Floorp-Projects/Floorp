@@ -1,6 +1,5 @@
-<!ENTITY pane.title                   "Send Options">
-<!ENTITY pane.description             "Message formatting">
-<!ENTITY sendMail.label               "Send Format">
+<!ENTITY dialog.title                 "Send Options">
+<!ENTITY sendMail.title               "Text Format">
 <!ENTITY sendMaildesc.label           "When sending messages in HTML format and one or more recipients are not listed as being able to receive HTML:">
 <!ENTITY askMe.label                  "Ask me what to do">
 <!ENTITY askMe.accesskey              "k">
@@ -11,17 +10,13 @@
 <!ENTITY sendBoth.label               "Send the message in both plain text and HTML">
 <!ENTITY sendBoth.accesskey           "e">
 <!ENTITY receiveHTML.label            "If you know a particular recipient can receive HTML mail, uncheck the 'Send email as plain text (no HTML)' checkbox on the recipient's Address Book card.">
-<!ENTITY sendMail.title               "Text Format">
 <!ENTITY override.label               "Note: Use the Address Book to specify preferred text formats for recipients.">
 
-
-<!-- Html and Plain Text Domains  -->
-<!ENTITY domain.title                 "HTML and Plain Text Domains">
-<!ENTITY domaindesc.label             "When you send a message to an address with one of the domain names listed below, Mail automatically sends the message in the correct format.">
-<!ENTITY HTMLdomaintitle.label        "HTML Domains">
-<!ENTITY HTMLdomaintitle.accesskey    "M">
-<!ENTITY PlainTexttitle.label         "Plain Text Domains">
-<!ENTITY PlainTexttitle.accesskey     "p">
+<!ENTITY domaindesc.label             "When you send a message to an address with one of the domain names listed below, &brandShortName; automatically sends the message in the correct format.">
+<!ENTITY HTMLTab.label                "HTML Domains">
+<!ENTITY HTMLTab.accesskey            "h">
+<!ENTITY PlainTextTab.label           "Plain Text Domains">
+<!ENTITY PlainTextTab.accesskey       "p">
 <!ENTITY AddButton.label              "Add...">
 <!ENTITY AddHtmlDomain.accesskey      "a">
 <!ENTITY AddPlainText.accesskey       "d">
@@ -29,7 +24,6 @@
 <!ENTITY DeleteHtmlDomain.accesskey   "l">
 <!ENTITY DeletePlainText.accesskey    "t">
 
-<!-- Add HTML Domain Name -->
 <!ENTITY add.htmltitle                "Add HTML Domain Name">
 <!ENTITY add.htmldomain               "HTML Domain Name:">
 <!ENTITY add.htmldomain.accesskey     "d">

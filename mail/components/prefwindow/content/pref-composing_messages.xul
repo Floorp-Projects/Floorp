@@ -9,46 +9,54 @@
       headertitle="&pane.title;">
 
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory.js"/>
-    
+
   <script type="application/x-javascript">
-  <![CDATA[
-    var _elementIDs = ["forwardMessageMode", "autoQuote", "replyOnTop", "spellCheckBeforeSend", "strictlyMime", 
-                       "wrapLength", "mailWarnOnSendAccelKey", 
-                       // auto complete prefs 
-                       "addressingAutocomplete", "autocompleteLDAP",
-                       "localDirectoriesList", "directoriesList",];
-    function onLoad()
-    {
-      createDirectoriesList(true);
-      parent.initPanel('chrome://messenger/content/messengercompose/pref-composing_messages.xul');  
-    }
+    <![CDATA[
+      var _elementIDs = ["forwardMessageMode", "autoQuote", "replyOnTop", "spellCheckBeforeSend", "strictlyMime", 
+                         "wrapLength", "mailWarnOnSendAccelKey", 
+                         // auto complete prefs 
+                         "addressingAutocomplete", "autocompleteLDAP",
+                         "localDirectoriesList", "directoriesList"];
 
-    function Startup()
-    {
-      document.getElementById("spellCheckBeforeSend").hidden =
-        !("@mozilla.org/spellchecker;1" in Components.classes);
+      function onLoad()
+      {
+        createDirectoriesList(true); 
+        parent.initPanel('chrome://messenger/content/messengercompose/pref-composing_messages.xul');
+      }
 
-      // autocomplete
-      enableAutocomplete();
+      function Startup()
+      {
+        document.getElementById("spellCheckBeforeSend").hidden =! ("@mozilla.org/spellchecker;1" in Components.classes);
 
-      doEnabling();
-    }
+        // autocomplete
+        enableAutocomplete();
+
+        doEnabling();
+      }
     
-    function doEnabling()
-    {
-      var quotebox = document.getElementById("thenBox");
-      var quotecheck = document.getElementById("autoQuote");
-      if( quotecheck.checked && !quotecheck.disabled ) {
-        quotebox.firstChild.removeAttribute("disabled");
-        quotebox.lastChild.removeAttribute("disabled");
+      function doEnabling()
+      {
+        var quotebox = document.getElementById("thenBox");
+        var quotecheck = document.getElementById("autoQuote");
+        if ( quotecheck.checked && !quotecheck.disabled ) {
+          quotebox.firstChild.removeAttribute("disabled");
+          quotebox.lastChild.removeAttribute("disabled");
+        }
+        else {
+          quotebox.firstChild.setAttribute("disabled","true");
+          quotebox.lastChild.setAttribute("disabled","true");
+        }
       }
-      else {
-        quotebox.firstChild.setAttribute("disabled","true");
-        quotebox.lastChild.setAttribute("disabled","true");
+
+      function sendOptionsDialog()
+      {
+        window.openDialog("chrome://messenger/content/messengercompose/pref-sendOptions.xul", "_blank",
+                   "chrome,resizable=yes,centerscreen","sendOptions");
+
       }
-    }
-  ]]>
-  </script>  
+
+    ]]>
+  </script>
 
   <groupbox>
     <caption label="&forwardReply.label;"/>
@@ -93,18 +101,16 @@
               prefstring="mail.strictly_mime"
               accesskey="&useMIME.accesskey;"/>
 
-    <hbox align="center">
-      <checkbox id="mailWarnOnSendAccelKey" label="&warnOnSendAccelKey.label;"
-                prefstring="mail.warn_on_send_accel_key"
-                accesskey="&warnOnSendAccelKey.accesskey;" />
-    </hbox>
+    <checkbox id="mailWarnOnSendAccelKey" label="&warnOnSendAccelKey.label;"
+              prefstring="mail.warn_on_send_accel_key"
+              accesskey="&warnOnSendAccelKey.accesskey;"/>
     
-	<hbox align="center">
-        <label value="&wrapOutMsg.label;" accesskey="&wrapOutMsg.accesskey;" control="wrapLength"/>
-    <textbox id="wrapLength" size="3" preftype="int"
+    <hbox align="center">
+      <label value="&wrapOutMsg.label;" accesskey="&wrapOutMsg.accesskey;" control="wrapLength"/>
+      <textbox id="wrapLength" size="3" preftype="int"
                prefstring="mailnews.wraplength" prefattribute="value"/>
-    <label value="&char.label;"/>
-  </hbox>
+      <label value="&char.label;"/>
+    </hbox>
   </groupbox>
 
   <!-- Address Autocomplete -->
@@ -134,6 +140,18 @@
               prefstring="pref.ldap.disable_button.edit_directories" 
               oncommand="onEditDirectories();"
               accesskey="&editDirectories.accesskey;"/>
+    </hbox>
+  </groupbox>
+
+  <groupbox>
+    <caption label="&sendOptionsCaption.label;"/>
+    
+    <hbox align="center">
+      <description>&sendOptionsDescription.label;</description>
+      <spring flex="1"/>
+      <button label="&sendOptions.label;" 
+              accesskey="&sendOptions.accesskey;"
+              oncommand="sendOptionsDialog();"/>
     </hbox>
   </groupbox>
 

@@ -1,6 +1,6 @@
 messenger.jar:
-+   content/messenger/messengercompose/pref-formatting.xul             (content/pref-formatting.xul)
 +   content/messenger/messengercompose/pref-composing_messages.xul     (content/pref-composing_messages.xul)
+    content/messenger/messengercompose/pref-sendOptions.xul            (content/pref-sendOptions.xul)
 +   content/messenger/pref-viewing_messages.xul                        (content/pref-viewing_messages.xul)
 *+  content/messenger/pref-mailnews.xul                                (content/pref-mailnews.xul)
 +   content/messenger/pref-mailnews.js                                 (content/pref-mailnews.js)
@@ -24,10 +24,10 @@ en-US.jar:
 +   locale/en-US/communicator/pref/prefutilities.properties            (locale/prefutilities.properties)
 +   locale/en-US/communicator/pref/pref-fonts.dtd                      (locale/pref-fonts.dtd)
 +   locale/en-US/communicator/pref/pref-themes.dtd                     (locale/pref-themes.dtd)
-+   locale/en-US/messenger/messengercompose/pref-formatting.dtd        (locale/pref-formatting.dtd)
 +   locale/en-US/messenger/messengercompose/pref-composing_messages.dtd (locale/pref-composing_messages.dtd)
+    locale/en-US/messenger/messengercompose/pref-sendOptions.dtd       (locale/pref-sendOptions.dtd)
 +   locale/en-US/messenger/pref-mailnews.dtd                           (locale/pref-mailnews.dtd)
-+   locale/en-US/messenger/mailPrefsOverlay.dtd                        (locale/mailPrefsOverlay.dtd)
+*+  locale/en-US/messenger/mailPrefsOverlay.dtd                        (locale/mailPrefsOverlay.dtd)
 +   locale/en-US/messenger/pref-viewing_messages.dtd                   (locale/pref-viewing_messages.dtd)
 +   locale/en-US/messenger/AccountManager.dtd                          (locale/AccountManager.dtd)
 +   locale/en-US/messenger/pref-advanced.dtd                           (locale/pref-advanced.dtd)
@@ -35,7 +35,7 @@ en-US.jar:
 +   locale/en-US/communicator/pref/pref-extensions.dtd                 (locale/pref-extensions.dtd)
 
 classic.jar:
-+  skin/classic/communicator/pref/pref.css                             (skin/pref.css)
-+  skin/classic/messenger/prefPanels.css                               (skin/prefPanels.css)
-   skin/classic/messenger/icons/winvertical.gif                        (skin/winvertical.gif)
++   skin/classic/communicator/pref/pref.css                            (skin/pref.css)
++   skin/classic/messenger/prefPanels.css                              (skin/prefPanels.css)
+    skin/classic/messenger/icons/winvertical.gif                       (skin/winvertical.gif)
 

@@ -162,7 +162,7 @@
   <!-- Labels -->
   <groupbox>
     <caption label="&labelsSettings.label;"/> 
-    <description>&displayText.label;</description>
+    <description>&displayLabelsText.label;</description>
 
     <hbox align="top">
       <vbox>

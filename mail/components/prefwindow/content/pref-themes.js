@@ -36,7 +36,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-
 var gData;
 
 try {
@@ -181,12 +180,14 @@ function themeSelect()
 
     var nameField = document.getElementById("displayName");
     var author = document.getElementById("author");
+    var authorLabel = document.getElementById("authorLabel");
     var image = document.getElementById("previewImage");
     var uninstallButton = document.getElementById("uninstallSkin");
     var uninstallLabel = prefbundle.getString("uninstallThemePrefix");
 
     nameField.setAttribute("value", themeName);
     author.setAttribute("value", selectedItem.getAttribute("author"));
+    authorLabel.removeAttribute("collapsed");
     image.setAttribute("src", selectedItem.getAttribute("image"));
 
     // XXX - this sucks and should only be temporary.

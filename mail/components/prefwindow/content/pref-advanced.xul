@@ -60,7 +60,7 @@
   <![CDATA[
 
     var _elementIDs = [ // privacy settings
-                       "javascriptAllowMailNews", "networkImageDisableImagesInMailNews", "networkDisableCookieForMailNews",
+                       "javascriptAllowMailNews", "networkImageDisableImagesInMailNews", 
                        
                        // return receipts
                        "alwaysRequest", "receiptFolder", "receiptSend", "notInToCcPref", "outsideDomainPref", "otherCasesPref",

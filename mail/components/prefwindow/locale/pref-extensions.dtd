@@ -1,4 +1,3 @@
-
 <!ENTITY  lHeader                 "Extensions">
 <!ENTITY  extensionIntro.label    "Extensions are a great way to customize &brandShortName; with extra features.">
 
@@ -11,7 +10,7 @@
 <!ENTITY  author.label            "Author:">
 <!ENTITY  extDescription.label    "Description:">
 
-<!ENTITY  newExtensionDescription.label "In order to install a new extension for Mozilla Thunderbird, you must first download the extension using a browser." >
+<!ENTITY  newExtensionDescription.label "In order to install a new extension for &brandShortName;, you must first download the extension using a browser.">
 <!ENTITY  installExtension.label        "Install New Extension">
 <!ENTITY  installExtension.accesskey    "I">
 

@@ -59,7 +59,7 @@
     
   </groupbox>
   
-  <hbox flex="1">
+  <hbox>
 
   <groupbox>
     <caption label="&windowSettings.label;"/>

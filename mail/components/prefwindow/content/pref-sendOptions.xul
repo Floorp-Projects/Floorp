@@ -1,0 +1,292 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE dialog [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % sendOptionsDTD SYSTEM "chrome://messenger/locale/messengercompose/pref-sendOptions.dtd" >
+%sendOptionsDTD;
+]>
+
+<dialog id="sendOptions"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&dialog.title;"
+        onload="onLoad();"
+        ondialogaccept="return onAccept();">
+
+  <script>
+    <![CDATA[
+    var gPrefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+
+    //Html Domain object
+    var htmlobj = null;
+
+    //Plain Text Domain object
+    var plainobj = null;
+
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+    promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
+  
+    function onLoad()
+    {
+      var _elementIDs = ["mailDefaultHTMLAction", "mailhtmldomain", "mailplaintextdomain"];
+
+      document.getElementById('mailDefaultHTMLAction').value = gPrefService.getIntPref('mail.default_html_action');
+
+      //Initialize the objects
+      htmlobj = new Object();
+      plainobj = new Object();
+
+      //Initialize the broadcaster value so that you can use it later
+      htmlobj.domain_pref = gPrefService.getCharPref('mailnews.html_domains');
+      plainobj.domain_pref = gPrefService.getCharPref('mailnews.plaintext_domains');
+      htmlobj.listbox = document.getElementById('html_domains');
+      plainobj.listbox = document.getElementById('plaintext_domains');
+
+      //Get the values of the Add Domain Dlg boxes and store it in the objects
+      var AddDomainDlg = document.getElementById('domaindlg');
+      htmlobj.DlgTitle = AddDomainDlg.getAttribute("htmldlg_title");
+      htmlobj.DlgMsg = AddDomainDlg.getAttribute("htmldlg_msg");
+      plainobj.DlgTitle = AddDomainDlg.getAttribute("plaintextdlg_title");
+      plainobj.DlgMsg = AddDomainDlg.getAttribute("plaintextdlg_msg");
+
+      //Id values for the objects for comparison
+      htmlobj.id = "html";
+      plainobj.id = "plain";
+      LoadDomains(htmlobj);
+      LoadDomains(plainobj);
+    }
+
+    function onAccept()
+    {
+      gPrefService.setIntPref('mail.default_html_action', document.getElementById('mailDefaultHTMLAction').value);
+      gPrefService.setCharPref('mailnews.html_domains', htmlobj.domain_pref);
+      gPrefService.setCharPref('mailnews.plaintext_domains', plainobj.domain_pref);
+    }
+
+    function AddDomain(obj)
+    {
+      var DomainName;
+      if (promptService)
+      {
+        var result = {value:null};
+        if (promptService.prompt(
+          window,
+          obj.DlgTitle,
+          obj.DlgMsg,
+          result,
+          null,
+          {value:0}
+        ))
+          DomainName = result.value.replace(/ /g,"");
+      }
+
+      if (DomainName) {
+        var objPrime;
+        if (obj.id == "html")
+          objPrime = plainobj;
+        else
+          objPrime = htmlobj;
+        if (!DomainAlreadyPresent(obj, DomainName, true))
+          if(!DomainAlreadyPresent(objPrime, DomainName, false)) {
+          AddListItem(obj.listbox, DomainName);
+        }
+      }
+
+      UpdateSavePrefString(obj);
+    }
+
+    function AddListItem(listbox, domainTitle)
+    {
+      try {
+        var item = document.createElement('listitem');
+        item.setAttribute('label', domainTitle);
+        listbox.appendChild(item);
+      }
+
+      catch (ex) {
+        dump("*** Failed to add item: " + domainTitle + "\n");
+      }
+
+    }
+
+    function DomainAlreadyPresent(obj, domain_name, dup)
+    {
+      var errorTitle;
+      var errorMsg;
+      var pref_string = obj.domain_pref;
+      var found = false;
+      try {
+        var arrayOfPrefs = pref_string.split(',');
+        if (arrayOfPrefs)
+          for (var i = 0; i < arrayOfPrefs.length; i++) {
+            var str = arrayOfPrefs[i].replace(/ /g,"");
+            if (str == domain_name) {
+              dump("###ERROR DOMAIN ALREADY EXISTS\n");
+              errorTitle = document.getElementById("domainerrdlg").getAttribute("domainerrdlg_title");
+              if(dup)
+              errorMsg = document.getElementById("domainerrdlg").getAttribute("duperr");
+              else
+              errorMsg = document.getElementById("domainerrdlg").getAttribute("dualerr");
+              var errorMessage = errorMsg.replace(/@string@/, domain_name);
+              if (promptService)
+                promptService.alert(window, errorTitle, errorMessage);
+              else
+                window.alert(errorMessage);
+              found = true;
+              break;
+            }
+        }
+
+        return found;
+      }
+
+      catch(ex){
+         return false;
+      }
+    }
+
+    function RemoveDomains(obj)
+    {
+      var nextNode = null;
+      var numSelected = obj.listbox.selectedItems.length;
+      var deleted_all = false;
+
+      while (obj.listbox.selectedItems.length > 0) {
+
+      var selectedNode = obj.listbox.selectedItems[0];
+        nextNode = selectedNode.nextSibling;
+
+      if (!nextNode)
+        if (selectedNode.previousSibling)
+        nextNode = selectedNode.previousSibling;
+
+        obj.listbox.removeChild(selectedNode);
+       }
+
+      if (nextNode)
+        obj.listbox.selectItem(nextNode);
+
+      UpdateSavePrefString(obj);
+    }
+
+    function LoadDomains(obj)
+    {
+      try {
+        var arrayOfPrefs = obj.domain_pref.split(',');
+      }
+      catch (ex) {
+        dump("failed to split the preference string!\n");
+      }
+
+      if (arrayOfPrefs)
+        for (var i = 0; i < arrayOfPrefs.length; i++) {
+
+          var str = arrayOfPrefs[i].replace(/ /g,"");
+          if (str) {
+            AddListItem(obj.listbox, str);
+          }
+        }
+    }
+
+    function UpdateSavePrefString(obj)
+    {
+      var num_domains = 0;
+      var pref_string = "";
+
+      for (var item = obj.listbox.firstChild; item != null; item = item.nextSibling) {
+
+        var domainid = item.getAttribute('label');
+        if (domainid.length > 1) {
+          num_domains++;
+
+          //separate >1 domains by commas
+          if (num_domains > 1)
+            pref_string = pref_string + "," + domainid;
+          else
+            pref_string = domainid;
+        }
+      }
+
+      obj.domain_pref = pref_string;
+    }
+
+  ]]>
+  </script>  
+  
+  <data id="domaindlg" htmldlg_title="&add.htmltitle;" htmldlg_msg="&add.htmldomain;"
+        plaintextdlg_title="&add.plaintexttitle;" plaintextdlg_msg="&add.plaintextdomain;"/>
+  <data id="domainerrdlg" domainerrdlg_title="&domainnameError.title;" duperr="&duplicationError.label;"
+        dualerr="&dualEntryError.label;"/>
+
+  <groupbox>
+    <caption label="&sendMail.title;"/>
+
+    <description width="1">&sendMaildesc.label;</description>
+
+    <hbox class="indent" id="thenBox">
+      <menulist id="mailDefaultHTMLAction" preftype="int" prefstring="mail.default_html_action">
+        <menupopup>
+          <menuitem value="0" label="&askMe.label;" accesskey="&askMe.accesskey;"/>
+          <menuitem value="1" label="&convertPlain.label;" accesskey="&convertPlain.accesskey;"/>  
+          <menuitem value="2" label="&sendHTML.label;" accesskey="&sendHTML.accesskey;"/>
+          <menuitem value="3" label="&sendBoth.label;" accesskey="&sendBoth.accesskey;"/>
+        </menupopup>
+      </menulist>        
+    </hbox>
+
+    <separator class="thin"/>
+
+    <description>&override.label;</description>
+  </groupbox>
+
+  <separator class="thin"/>
+
+  <tabbox>
+    <tabs id="sendOptionsTabs">
+      <tab label="&HTMLTab.label;" accesskey="&HTMLTab.accesskey;"/>
+      <tab label="&PlainTextTab.label;" accesskey="&PlainTextTab.accesskey;"/>
+    </tabs>
+
+    <tabpanels id="sendOptionsTabsPanels" flex="1">
+
+      <vbox index="HTML">
+        <description width="1">&domaindesc.label;</description>
+
+        <hbox>
+          <listbox id="html_domains" flex="1" seltype="multiple"
+                   onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveDomains(htmlobj);"/>
+          <vbox>
+            <button label="&AddButton.label;" oncommand="AddDomain(htmlobj);" accesskey="&AddHtmlDomain.accesskey;">
+              <observes element="mailhtmldomain" attribute="disabled"/>
+            </button>
+            <button label="&DeleteButton.label;" oncommand="RemoveDomains(htmlobj);" accesskey="&DeleteHtmlDomain.accesskey;">
+              <observes element="mailhtmldomain" attribute="disabled"/>
+            </button>
+          </vbox>
+        </hbox>
+      </vbox>
+
+      <vbox index="plainText">
+        <description width="1">&domaindesc.label;</description>
+
+        <hbox>
+          <listbox id="plaintext_domains" flex="1" seltype="multiple"
+                   onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveDomains(plainobj);"/>
+          <vbox>
+            <button label="&AddButton.label;" oncommand="AddDomain(plainobj);" accesskey="&AddPlainText.accesskey;">
+              <observes element="mailplaintextdomain" attribute="disabled"/>
+            </button>
+            <button label="&DeleteButton.label;" oncommand="RemoveDomains(plainobj);" accesskey="&DeletePlainText.accesskey;">
+              <observes element="mailplaintextdomain" attribute="disabled"/>
+            </button>
+          </vbox>
+        </hbox>
+      </vbox>
+
+    </tabpanels> 
+
+  </tabbox>
+
+</dialog>

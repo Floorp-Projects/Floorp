@@ -3,11 +3,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css"?>
 
-<!DOCTYPE overlay [
-  <!ENTITY % dtd1 SYSTEM "chrome://messenger/locale/mailPrefsOverlay.dtd" > %dtd1;
-  <!ENTITY % dtd2 SYSTEM "chrome://communicator-platform/locale/pref/platformPrefOverlay.dtd" > %dtd2;
-  <!ENTITY % dtd3 SYSTEM "chrome://messenger/locale/mailPrefsOverlay.dtd" > %dtd3;
-]>
+<!DOCTYPE dialog SYSTEM "chrome://messenger/locale/mailPrefsOverlay.dtd" >
 
 <!-- This dialog has a fixed size and is not resizable. 
      You MAY NOT increase the size of this dialog. 
@@ -17,7 +13,6 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&prefWindow.title;" 
         style="&prefWindow.size;"
-        buttons="accept,cancel"
         onload="Startup();"
         ondialogaccept="return hPrefWindow.onOK(event);"
         ondialogcancel="return hPrefWindow.onCancel(event);"
@@ -69,7 +64,6 @@
   }  
 
   ]]>
-  
   </script>        
         
   <stringbundle id="bundle_prefutilities"
@@ -80,11 +74,10 @@
   <hbox flex="1">
 
     <vbox id="prefsCategories" class="listBox buttonBox" oncommand="switchPage(event);" orient="vertical" lastpanel="0">
-      <button id="mailnews"  orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&mailonly.label;" url="chrome://messenger/content/pref-mailnews.xul"/>
-      <button orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&viewingMessages.label;" url="chrome://messenger/content/pref-viewing_messages.xul"/>
+      <button id="mailnews"  orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/pref-mailnews.xul" label="&mailonly.label;"/>
+      <button orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/pref-viewing_messages.xul" label="&viewingMessages.label;"/>
       <button id="mailcomposepref" orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/messengercompose/pref-composing_messages.xul" label="&composingMessages.label;"/>
       <button orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://communicator/content/pref/pref-fonts.xul" label="&fonts.label;"/>
-      <button orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/messengercompose/pref-formatting.xul" label="&format.label;"/>
       <button orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://communicator/content/pref/pref-themes.xul" label="&themes.label;"/>
       <button orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://communicator/content/pref/pref-extensions.xul" label="&extensions.label;"/>
       <button orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/pref-advanced.xul" label="&advanced.label;"/>
@@ -92,7 +85,7 @@
 
     <vbox flex="1">
       <dialogheader id="header"/>
-      <iframe id="panelFrame" name="panelFrame" style="width: 0px" flex="1"/>
+      <iframe id="panelFrame" name="panelFrame" flex="1"/>
    </vbox>
   </hbox>
 

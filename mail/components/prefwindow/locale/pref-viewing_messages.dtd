@@ -38,6 +38,6 @@
 
 <!-- labels -->
 <!ENTITY labelsSettings.label       "Labels">
-<!ENTITY displayText.label          "Labels can be used to categorize and prioritize your messages.">
+<!ENTITY displayLabelsText.label    "Labels can be used to categorize and prioritize your messages.">
 <!ENTITY restoreDefaults.label      "Restore Defaults">
 <!ENTITY restoreDefaults.accesskey  "R">

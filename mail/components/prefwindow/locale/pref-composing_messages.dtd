@@ -1,12 +1,10 @@
 <!ENTITY pane.title                           "Composition">
-<!ENTITY pane.description                     "Composing mail messages">
+
 <!ENTITY forwardReply.label                   "Forwarding and Replying to Messages">
 <!ENTITY forwardMsg.label                     "Forward messages:">
 <!ENTITY forwardMsg.accesskey                 "f">
 <!ENTITY inline.label                         "Inline">
 <!ENTITY inline.accesskey                     "I">
-<!ENTITY quoted.label                         "Quoted">
-<!ENTITY quoted.accesskey                     "q">
 <!ENTITY asAttachment.label                   "As Attachment">
 <!ENTITY asAttachment.accesskey               "A">
 <!ENTITY autoQuote.label                      "Automatically quote the original message when replying">
@@ -20,36 +18,31 @@
 <!ENTITY belowQuote.accesskey                 "b">
 <!ENTITY selectAndQuote.label                 "select the quoted text">
 <!ENTITY selectAndQuote.accesskey             "e">
-<!ENTITY warnOnSendAccelKey.label             "Confirm when using keyboard shortcut to send message">
-<!ENTITY warnOnSendAccelKey.accesskey         "C">
-
-<!ENTITY readingMessagesHeader.label          "For incoming messages">
-<!ENTITY messageWrapping.label                "Message Wrapping">
-<!ENTITY wrapInMsg.label                      "Wrap plain text messages to fit window width">
-<!ENTITY wrapInMsg.accesskey                  "w">
 
 <!ENTITY sendingMessagesHeader.label          "Composing Messages">
 <!ENTITY spellCheck.label                     "Check spelling before sending">
 <!ENTITY spellCheck.accesskey                 "c">
+<!ENTITY useMIME.label                        "For messages that contain 8-bit characters, use 'quoted printable' MIME encoding. Leave unchecked to send the messages as is.">
+<!ENTITY useMIME.accesskey                    "o">
+<!ENTITY warnOnSendAccelKey.label             "Confirm when using keyboard shortcut to send message">
+<!ENTITY warnOnSendAccelKey.accesskey         "C">
 <!-- LOCALIZATION NOTE (wrapOutMsg.label): This will concatenate with "xxx characters", using a number and (char.label). -->
 <!ENTITY wrapOutMsg.label                     "Wrap plain text messages at">
 <!ENTITY wrapOutMsg.accesskey                 "l">
 <!ENTITY char.label                           "characters">
-<!ENTITY use8Bits.label                       "Send messages that use 8-bit characters">
-<!ENTITY asIs.label                           "As is (does not work well with some mail servers)">
-<!ENTITY asIs.accesskey                       "t">
-<!ENTITY useMIME.label                        "For messages that contain 8-bit characters, use 'quoted printable' MIME encoding. Leave unchecked to send the messages as is.">
-<!ENTITY useMIME.accesskey                    "o">
 
-<!-- Autocompletion -->
 <!ENTITY addressingTitle.label                 "Address Autocompletion">
-<!-- LOCALIZATION NOTE (addressingText.label) : do not translate "LDAP" in below line -->
+<!ENTITY autocompleteText.label                "When addressing messages, look for matching entries in:">
 <!ENTITY addressingEnable.label                "Local Address Books">
 <!ENTITY addressingEnable.accesskey            "A">
-<!ENTITY autocompleteText.label                "When addressing messages, look for matching entries in:">
 <!ENTITY directories.label                     "Directory Server:">
 <!ENTITY directories.accesskey                 "D">
 <!ENTITY editDirectories.label                 "Edit Directories...">
 <!ENTITY editDirectories.accesskey             "E">
 <!ENTITY matchText.label                       "If there is a match in your local address books:">
 <!ENTITY skipDirectory.label                   "Do not search in the directory">
+
+<!ENTITY sendOptionsCaption.label              "Send Options">
+<!ENTITY sendOptionsDescription.label          "Configure text format behavior:">
+<!ENTITY sendOptions.label                     "Send Options...">
+<!ENTITY sendOptions.accesskey                 "S">
