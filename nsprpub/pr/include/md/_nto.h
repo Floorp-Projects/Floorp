@@ -62,6 +62,9 @@
 #define PR_HAVE_POSIX_NAMED_SHARED_MEMORY
 #define _PR_HAVE_POSIX_SEMAPHORES
 
+#define FD_SETSIZE	4096
+#include <sys/time.h>
+#include <sys/types.h>
 #include <sys/select.h>
 
 #undef  HAVE_STACK_GROWING_UP
@@ -206,9 +209,6 @@ struct _MDCPU {
 ** We wrapped the select() call.  _MD_SELECT refers to the built-in,
 ** unwrapped version.
 */
-#include <sys/time.h>
-#include <sys/types.h>
-#include <sys/select.h>
 #define _MD_SELECT		select
 
 #endif /* nspr_nto_defs_h___ */
