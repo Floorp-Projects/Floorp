@@ -26,13 +26,15 @@
 #include "nsIPrefBranchInternal.h"
 #include "nsIObserver.h"
 #include "nsCOMPtr.h"
+#include "nsWeakReference.h"
 
 class nsIFile;
 
 class nsPrefService : public nsIPrefService,
                       public nsIObserver,
                       public nsIPrefBranch,
-                      public nsIPrefBranchInternal
+                      public nsIPrefBranchInternal,
+                      public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
