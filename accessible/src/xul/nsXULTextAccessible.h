@@ -50,6 +50,7 @@ class nsXULTextAccessible : public nsTextAccessible
 public:
   nsXULTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccName(nsAString& _retval); 
+  NS_IMETHOD GetAccState(PRUint32 *_retval);
 };
 
 #endif  
