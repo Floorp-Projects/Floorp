@@ -959,17 +959,21 @@ NS_METHOD nsTableRowGroupFrame::IR_RowInserted(nsIPresContext&      aPresContext
   if (NS_FAILED(rv))
     return rv;
 
-  // do a pass-1 layout of all the cells in the inserted row
-  //XXX: check the table frame to see if we can skip this
-  rv = ReflowMappedChildren(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                            aInsertedFrame, eReflowReason_Initial, PR_FALSE);
-  if (NS_FAILED(rv))
-    return rv;
-
   nsTableFrame *tableFrame=nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
   if (NS_FAILED(rv) || nsnull==tableFrame)
     return rv;
+
+  if (PR_TRUE==tableFrame->RequiresPass1Layout())
+  {
+    // do a pass-1 layout of all the cells in the inserted row
+    //XXX: check the table frame to see if we can skip this
+    rv = ReflowMappedChildren(aPresContext, aDesiredSize, aReflowState, aStatus, 
+                              aInsertedFrame, eReflowReason_Initial, PR_FALSE);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
   tableFrame->InvalidateCellMap();
   tableFrame->InvalidateColumnCache();
 
@@ -1049,19 +1053,23 @@ NS_METHOD nsTableRowGroupFrame::IR_RowAppended(nsIPresContext&      aPresContext
     if (NS_FAILED(rv))
       return rv;
 
-    // do a pass1 reflow of the new row
-    //XXX: check the table frame to see if we can skip this
-    rv = ReflowMappedChildren(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                              aAppendedFrame, eReflowReason_Initial, PR_FALSE);
-    if (NS_FAILED(rv))
-      return rv;
-
-    // if any column widths have to change due to this, rebalance column widths
-    //XXX need to calculate this, but for now just do it
     nsTableFrame *tableFrame=nsnull;
     rv = nsTableFrame::GetTableFrame(this, tableFrame);
     if (NS_FAILED(rv) || nsnull==tableFrame)
       return rv;
+
+    if (PR_TRUE==tableFrame->RequiresPass1Layout())
+    {
+      // do a pass1 reflow of the new row
+      //XXX: check the table frame to see if we can skip this
+      rv = ReflowMappedChildren(aPresContext, aDesiredSize, aReflowState, aStatus, 
+                                aAppendedFrame, eReflowReason_Initial, PR_FALSE);
+      if (NS_FAILED(rv))
+        return rv;
+    }
+
+    // if any column widths have to change due to this, rebalance column widths
+    //XXX need to calculate this, but for now just do it
     tableFrame->InvalidateColumnWidths();  
   }
   else
