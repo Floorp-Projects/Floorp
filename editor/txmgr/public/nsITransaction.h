@@ -98,15 +98,15 @@ public:
 
   /**
    * Returns the string to display for the undo menu item.
-   * @param aString will point to string to display.
+   * @param aString will be set to the string to display.
    */
-  NS_IMETHOD GetUndoString(nsString **aString) = 0;
+  NS_IMETHOD GetUndoString(nsString *aString) = 0;
 
   /**
    * Returns the string to display for the redo menu item.
-   * @param aString will point to string to display.
+   * @param aString will be set to the string to display.
    */
-  NS_IMETHOD GetRedoString(nsString **aString) = 0;
+  NS_IMETHOD GetRedoString(nsString *aString) = 0;
 };
 
 #endif // nsITransaction_h__

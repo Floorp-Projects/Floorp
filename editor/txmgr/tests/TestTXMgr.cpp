@@ -653,15 +653,17 @@ public:
     return aOutputStream->Write(buf, strlen(buf), &amt);
   }
 
-  NS_IMETHOD GetUndoString(nsString **aString)
+  NS_IMETHOD GetUndoString(nsString *aString)
   {
-    *aString = 0;
+    if (aString)
+      *aString = "";
     return NS_OK;
   }
 
-  NS_IMETHOD GetRedoString(nsString **aString)
+  NS_IMETHOD GetRedoString(nsString *aString)
   {
-    *aString = 0;
+    if (aString)
+      *aString = "";
     return NS_OK;
   }
 
