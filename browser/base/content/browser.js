@@ -3781,7 +3781,7 @@ nsDefaultEngine.prototype =
        break;
    }
    if (linkNode) {
-     if (fieldNormalClicks && !event.ctrlKey && !event.shiftKey && 
+     if (fieldNormalClicks && event.button == 0 && !event.ctrlKey && !event.shiftKey && 
          !event.altKey && !event.metaKey && !linkNode.getAttribute("target")) {
        var url = getShortcutOrURI(linkNode.href);
        if (!url)
