@@ -160,6 +160,9 @@ public class leaksoup {
 			System.exit(1);
 		}
 		
+		// assume user want's lxr URLs. (why?)
+		FileLocator.USE_BLAME = false;
+		
 		for (int i = 0; i < args.length; i++) {
 			String arg = args[i];
 			if (arg.charAt(0) == '-') {
@@ -169,6 +172,9 @@ public class leaksoup {
 				cook(arg);
 			}
 		}
+		
+		// quit the application.
+		System.exit(0);
 	}
 	
 	static void cook(String inputName) {
@@ -301,9 +307,6 @@ public class leaksoup {
 			printLeaks(out, leaks);
 			
 			out.close();
-			
-			// quit the application.
-			System.exit(0);
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 		}
