@@ -84,6 +84,10 @@ struct JSRuntime {
     void                *debuggerHandlerData;
     JSSourceHandler     sourceHandler;
     void                *sourceHandlerData;
+    JSInterpreterHook   executeHook;
+    void                *executeHookData;
+    JSInterpreterHook   callHook;
+    void                *callHookData;
 
     /* More debugging state, see jsdbgapi.c. */
     PRCList             trapList;

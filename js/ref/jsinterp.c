@@ -413,6 +413,8 @@ js_Invoke(JSContext *cx, uintN argc, JSBool constructing)
     void *mark;
     intN nslots, nalloc, surplus;
     JSBool ok;
+    JSInterpreterHook hook;
+    void *hookData;
 
     /* Reach under args and this to find the callable on the stack. */
     fp = cx->fp;
@@ -560,6 +562,9 @@ have_fun:
     /* From here on, control must flow through label out: to return. */
     cx->fp = &frame;
     mark = PR_ARENA_MARK(&cx->stackPool);
+    /* init these now in case we goto out before first hook call */
+    hook = cx->runtime->callHook;
+    hookData = NULL;
 
     /* Check for missing arguments expected by the function. */
     nslots = (intN)((argc < minargs) ? minargs - argc : 0);
@@ -626,6 +631,10 @@ have_fun:
     /* Store the current sp in frame before calling fun. */
     SAVE_SP(&frame);
 
+    /* call the hook if present */
+    if (hook && (native || script))
+        hookData = hook(cx, &frame, JS_TRUE, 0, cx->runtime->callHookData);
+
     /* Call the function, either a native method or an interpreted script. */
     if (native) {
 	frame.scopeChain = fp->scopeChain;
@@ -657,6 +666,8 @@ have_fun:
     }
 
 out:
+    if (hook && hookData)
+        hook(cx, &frame, JS_FALSE, &ok, hookData);
 #if JS_HAS_CALL_OBJECT
     /* If frame has a call object, sync values and clear back-pointer. */
     if (frame.callobj)
@@ -733,7 +744,10 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,
 {
     JSStackFrame *oldfp, frame;
     JSBool ok;
+    JSInterpreterHook hook;
+    void *hookData;
 
+    hook = cx->runtime->executeHook;
     oldfp = cx->fp;
     frame.callobj = frame.argsobj = NULL;
     frame.script = script;
@@ -785,7 +799,13 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,
     }
 
     cx->fp = &frame;
+    if (hook)
+        hookData = hook(cx, &frame, JS_TRUE, 0, cx->runtime->executeHookData);
+
     ok = js_Interpret(cx, result);
+
+    if (hook && hookData)
+        hook(cx, &frame, JS_FALSE, &ok, hookData);
     cx->fp = oldfp;
 
     if (oldfp && oldfp != down) {

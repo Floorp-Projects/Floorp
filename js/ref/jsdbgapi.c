@@ -622,6 +622,30 @@ JS_GetFrameFunction(JSContext *cx, JSStackFrame *fp)
     return fp->fun;
 }
 
+JS_PUBLIC_API(JSBool)
+JS_IsContructorFrame(JSContext *cx, JSStackFrame *fp)
+{
+    return fp->constructing;
+}        
+
+JS_PUBLIC_API(JSBool)
+JS_IsDebuggerFrame(JSContext *cx, JSStackFrame *fp)
+{
+    return fp->debugging;
+}        
+
+JS_PUBLIC_API(jsval)
+JS_GetFrameReturnValue(JSContext *cx, JSStackFrame *fp)
+{
+    return fp->rval;
+}        
+
+JS_PUBLIC_API(void)
+JS_SetFrameReturnValue(JSContext *cx, JSStackFrame *fp, jsval rval)
+{
+    fp->rval = rval;
+}        
+
 /************************************************************************/
 
 JS_PUBLIC_API(const char *)
@@ -814,3 +838,21 @@ JS_SetSourceHandler(JSRuntime *rt, JSSourceHandler handler, void *closure)
     rt->sourceHandlerData = closure;
     return JS_TRUE;
 }        
+
+JS_PUBLIC_API(JSBool)
+JS_SetExecuteHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
+{
+    rt->executeHook = hook;
+    rt->executeHookData = closure;
+    return JS_TRUE;
+}        
+
+extern JS_PUBLIC_API(JSBool)
+JS_SetCallHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
+{
+    rt->callHook = hook;
+    rt->callHookData = closure;
+    return JS_TRUE;
+}        
+
+

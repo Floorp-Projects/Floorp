@@ -142,6 +142,18 @@ JS_GetFrameThis(JSContext *cx, JSStackFrame *fp);
 extern JS_PUBLIC_API(JSFunction *)
 JS_GetFrameFunction(JSContext *cx, JSStackFrame *fp);
 
+extern JS_PUBLIC_API(JSBool)
+JS_IsContructorFrame(JSContext *cx, JSStackFrame *fp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_IsDebuggerFrame(JSContext *cx, JSStackFrame *fp);
+
+extern JS_PUBLIC_API(jsval)
+JS_GetFrameReturnValue(JSContext *cx, JSStackFrame *fp);
+
+extern JS_PUBLIC_API(void)
+JS_SetFrameReturnValue(JSContext *cx, JSStackFrame *fp, jsval rval);
+
 /************************************************************************/
 
 extern JS_PUBLIC_API(const char *)
@@ -221,6 +233,12 @@ JS_SetDebuggerHandler(JSRuntime *rt, JSTrapHandler handler, void *closure);
 
 extern JS_PUBLIC_API(JSBool)
 JS_SetSourceHandler(JSRuntime *rt, JSSourceHandler handler, void *closure);
+
+extern JS_PUBLIC_API(JSBool)
+JS_SetExecuteHook(JSRuntime *rt, JSInterpreterHook hook, void *closure);
+
+extern JS_PUBLIC_API(JSBool)
+JS_SetCallHook(JSRuntime *rt, JSInterpreterHook hook, void *closure);
 
 PR_END_EXTERN_C
 
