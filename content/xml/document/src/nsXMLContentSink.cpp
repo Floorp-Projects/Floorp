@@ -21,7 +21,7 @@
  */
 #include "nsCOMPtr.h"
 #include "nsXMLContentSink.h"
-#include "nsIXMLElementFactory.h"
+#include "nsIElementFactory.h"
 #include "nsIParser.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIDocument.h"
@@ -1853,7 +1853,7 @@ nsXMLContentSink::RefreshIfEnabled(nsIViewManager* vm)
 //   XML Element Factory
 //
 
-class XMLElementFactoryImpl : public nsIXMLElementFactory
+class XMLElementFactoryImpl : public nsIElementFactory
 {
 protected:
   XMLElementFactoryImpl();
@@ -1862,13 +1862,13 @@ protected:
 public:
   friend
   nsresult
-  NS_NewXMLElementFactory(nsIXMLElementFactory** aResult);
+  NS_NewXMLElementFactory(nsIElementFactory** aResult);
 
   // nsISupports interface
   NS_DECL_ISUPPORTS
 
-  // nsIXMLElementFactory interface
-  NS_IMETHOD CreateInstanceByTag(const nsString& aTag, nsIXMLContent** aResult);
+  // nsIElementFactory interface
+  NS_IMETHOD CreateInstanceByTag(const nsString& aTag, nsIContent** aResult);
 
 };
 
@@ -1883,11 +1883,11 @@ XMLElementFactoryImpl::~XMLElementFactoryImpl()
 }
 
 
-NS_IMPL_ISUPPORTS(XMLElementFactoryImpl, NS_GET_IID(nsIXMLElementFactory));
+NS_IMPL_ISUPPORTS(XMLElementFactoryImpl, NS_GET_IID(nsIElementFactory));
 
 
 nsresult
-NS_NewXMLElementFactory(nsIXMLElementFactory** aResult)
+NS_NewXMLElementFactory(nsIElementFactory** aResult)
 {
   NS_PRECONDITION(aResult != nsnull, "null ptr");
   if (! aResult)
@@ -1905,12 +1905,17 @@ NS_NewXMLElementFactory(nsIXMLElementFactory** aResult)
 
 
 NS_IMETHODIMP
-XMLElementFactoryImpl::CreateInstanceByTag(const nsString& aTag, nsIXMLContent** aResult)
+XMLElementFactoryImpl::CreateInstanceByTag(const nsString& aTag, nsIContent** aResult)
 {
   nsCOMPtr<nsIAtom> tag = dont_AddRef(NS_NewAtom(aTag));
   if (! tag)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  return NS_NewXMLElement(aResult, tag);
+  nsCOMPtr<nsIXMLContent> xmlContent;
+  nsresult rv = NS_NewXMLElement(getter_AddRefs(xmlContent), tag);
+  nsCOMPtr<nsIContent> result = do_QueryInterface(xmlContent);
+  *aResult = result;
+  NS_IF_ADDREF(*aResult);
+  return rv; 
 }
 
