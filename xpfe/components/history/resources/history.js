@@ -279,9 +279,10 @@ function OpenURL(aTarget)
 {
     var currentIndex = gHistoryTree.currentIndex;     
     var builder = gHistoryTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
-    var url = builder.getResourceAtIndex(currentIndex).Value;
+    var url = builder.getResourceAtIndex(currentIndex).ValueUTF8;
     var uri = Components.classes["@mozilla.org/network/standard-url;1"].
                 createInstance(Components.interfaces.nsIURI);
+    dump("history: url = " + url + "\n");
     uri.spec = url;
     if (uri.schemeIs("javascript") || uri.schemeIs("data")) {
       var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
