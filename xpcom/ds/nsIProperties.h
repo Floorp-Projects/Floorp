@@ -20,6 +20,8 @@
 #define nsIProperties_h___
 
 #include "nsISupports.h"
+#include "nsIEnumerator.h"
+#include "nsISupportsArray.h"
 
 #define NS_IPROPERTIES_IID                           \
 { /* f42bc870-dc17-11d2-9311-00e09805570f */         \
@@ -106,13 +108,41 @@ public:
 
   NS_IMETHOD Load(nsIInputStream* aIn) = 0;
   NS_IMETHOD Save(nsIOutputStream* aOut, const nsString& aHeader) = 0;
-  NS_IMETHOD Subclass(nsIPersistentProperties* aSubclass) = 0;
+  NS_IMETHOD Subclass(nsIPersistentProperties* aSubclass) = 0;	
+
+  /**
+   * Enumerates the properties in the supplied enumerator.
+   * @return NS_ERROR_FAILURE if no properties to enumerate
+   */
+  NS_IMETHOD EnumerateProperties(nsIBidirectionalEnumerator** aResult) = 0;
 
   // XXX these 2 methods will be subsumed by the ones from 
   // nsIProperties once we figure this all out
   NS_IMETHOD GetProperty(const nsString& aKey, nsString& aValue) = 0;
   NS_IMETHOD SetProperty(const nsString& aKey, nsString& aNewValue,
                          nsString& aOldValue) = 0;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+// {C23C10B3-0E1A-11d3-A430-0060B0EB5963}
+#define NS_IPROPERTYELEMENT_IID \
+{ 0xc23c10b3, 0xe1a, 0x11d3, \
+	{ 0xa4, 0x30, 0x0, 0x60, 0xb0, 0xeb, 0x59, 0x63 } }
+
+// {579C0568-0E1B-11d3-A430-0060B0EB5963}
+NS_DECLARE_ID(kPropertyElementCID, 
+	0x579c0568, 0xe1b, 0x11d3, 0xa4, 0x30, 0x0, 0x60, 0xb0, 0xeb, 0x59, 0x63);
+
+class nsIPropertyElement : public nsISupports
+{
+public:
+	static const nsIID& GetIID() { static nsIID iid = NS_IPROPERTYELEMENT_IID; return iid; }	
+
+	NS_IMETHOD SetKey(nsString* aKey) = 0;
+	NS_IMETHOD SetValue(nsString* aValue) = 0; 
+	NS_IMETHOD GetKey(nsString** aReturnKey) = 0;
+	NS_IMETHOD GetValue(nsString** aReturnValue) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
