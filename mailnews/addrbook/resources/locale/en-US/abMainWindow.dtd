@@ -36,6 +36,12 @@ Rights Reserved.
 <!ENTITY newLDAPDirectoryCmd.label                     "LDAP Directory...">
 <!-- LOCALIZATION NOTE (newLDAPDirectoryCmd.accesskey) : DONT_TRANSLATE -->
 <!ENTITY newLDAPDirectoryCmd.accesskey                 "D">
+<!ENTITY newIM.label "IM">
+<!ENTITY newIM.accesskey "I">
+<!ENTITY newIM.key "I">
+<!ENTITY newChat.label "Chat">
+<!ENTITY newChat.accesskey "h">
+<!ENTITY newChat.key "H">
 <!ENTITY importCmd.label                                "Import..."> 
 <!ENTITY importCmd.accesskey				"I"> 
 <!ENTITY exportCmd.label                                "Export...">  

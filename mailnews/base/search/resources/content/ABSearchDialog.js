@@ -189,91 +189,116 @@ function onSearch()
          searchUri += "or";
      }
 
-     var str = "(";
+     var attrs;
 
      switch (searchTerm.attrib) {
        case nsMsgSearchAttrib.Name:
-         str += "DisplayName";  // search first, last, display too?
+         // when doing an "and" search, we'll use the first one
+         attrs = ["DisplayName","FirstName","LastName"];
          break;
        case nsMsgSearchAttrib.Email:
-         str += "PrimaryEmail";
+         attrs = ["PrimaryEmail"];
          break;
+         // when doing an "and" search, we'll use the first one
        case nsMsgSearchAttrib.PhoneNumber:
-         str += "WorkPhone"; // search home phone too?
+         attrs = ["HomePhone","WorkPhone","FaxNumber","PagerNumber","CellularNumber"]; 
          break;
        case nsMsgSearchAttrib.Organization:
-         str += "Company";
+         attrs = ["Company"];
          break;
        case nsMsgSearchAttrib.Department:
-         str += "Department";
+         attrs = ["Department"];
          break;
        case nsMsgSearchAttrib.City:
-         str += "WorkCity";
+         attrs = ["WorkCity"];
          break;
        case nsMsgSearchAttrib.Street:
-         str += "WorkAddress";
+         attrs = ["WorkAddress"];
          break;
        case nsMsgSearchAttrib.Nickname:
-         str += "NickName";
+         attrs = ["NickName"];
          break;
        case nsMsgSearchAttrib.WorkPhone:
-         str += "WorkPhone";
+         attrs = ["WorkPhone"];
          break;
        case nsMsgSearchAttrib.HomePhone:
-         str += "HomePhone";
+         attrs = ["HomePhone"];
          break;
        case nsMsgSearchAttrib.Fax:
-         str += "FaxNumber";
+         attrs = ["FaxNumber"];
          break;
        case nsMsgSearchAttrib.Pager:
-         str += "PagerNumber";
+         attrs = ["PagerNumber"];
          break;
        case nsMsgSearchAttrib.Mobile:
-         str += "CellularNumber";
+         attrs = ["CellularNumber"];
          break;
        case nsMsgSearchAttrib.Title:
-         str += "JobTitle";
+         attrs = ["JobTitle"];
          break;
        case nsMsgSearchAttrib.AdditionalEmail:
-         str += "SecondEmail";
+         attrs = ["SecondEmail"];
          break;
-       // XXX todo, what about the others?  what about generic, like _AimScreenName
+       case nsMsgSearchAttrib.ScreenName:
+         attrs = ["_AimScreenName"];
+         break;
        default:
-         str += "DisplayName";
+         dump("XXX " + searchTerm.attrib + " not a supported search attr!\n");
+         attrs = ["DisplayName"];
          break;
      }
  
-     str += ",";
+     var opStr;
 
      switch (searchTerm.op) {
       case nsMsgSearchOp.Contains:
-        str += "c";
+        opStr = "c";
         break;
       case nsMsgSearchOp.DoesntContain:
-        str += "!c";
+        opStr = "!c";
         break;
       case nsMsgSearchOp.Is:
-        str += "=";
+        opStr = "=";
         break;
       case nsMsgSearchOp.Isnt:
-        str += "!=";
+        opStr = "!=";
         break;
       case nsMsgSearchOp.BeginsWith:
-        str += "bw";
+        opStr = "bw";
         break;
       case nsMsgSearchOp.EndsWith:
-        str += "ew";
+        opStr = "ew";
         break;
       case nsMsgSearchOp.SoundsLike:
-        str += "~=";
+        opStr = "~=";
         break;
       default:
-        str += "c";
+        opStr = "c";
         break;
      }
 
-     // append the term to the searchUri
-     searchUri += str + "," + escape(searchTerm.value.str) + ")";
+     // currently, we can't do "and" and "or" searches at the same time
+     // (it's either all "and"s or all "or"s)
+     //
+     // so, if we are doing an "and" search
+     // on "Any name" or "Any number" we don't want this:
+     // (displayname,c,seth) && (firstname,c,seth) && (lastname,c,seth)
+     // instead, just use the first term (displayname,c,seth)
+     // max_attrs = 1;
+     //
+     // But, if we are doing an "any" search, we do want:
+     // (displayname,c,seth) || (firstname,c,seth) || (lastname,c,seth)
+     // max_attrs = attrs.length
+     var max_attrs;
+     if (searchTerm.booleanAnd)
+       max_attrs = 1;
+     else
+       max_attrs = attrs.length;
+
+     for (var j=0;j<max_attrs;j++) {
+       // append the term(s) to the searchUri
+       searchUri += "(" + attrs[j] + "," + opStr + "," + escape(searchTerm.value.str) + ")";
+     }
     }
 
     searchUri += ")";

@@ -147,6 +147,10 @@ NS_IMETHODIMP nsAbMDBCardProperty::CopyCard(nsIAbMDBCard* srcCardDB)
 	SetPrimaryEmail(str);
 	srcCard->GetSecondEmail(getter_Copies(str));
 	SetSecondEmail(str);
+  srcCard->GetDefaultEmail(getter_Copies(str));
+  SetDefaultEmail(str);
+  srcCard->GetCardType(getter_Copies(str));
+  SetCardType(str);
 
   PRUint32 format = nsIAbPreferMailFormat::unknown;
   srcCard->GetPreferMailFormat(&format);
@@ -162,6 +166,16 @@ NS_IMETHODIMP nsAbMDBCardProperty::CopyCard(nsIAbMDBCard* srcCardDB)
 	SetPagerNumber(str);
 	srcCard->GetCellularNumber(getter_Copies(str));
 	SetCellularNumber(str);
+  srcCard->GetWorkPhoneType(getter_Copies(str));
+  SetWorkPhoneType(str);
+  srcCard->GetHomePhoneType(getter_Copies(str));
+  SetHomePhoneType(str);
+  srcCard->GetFaxNumberType(getter_Copies(str));
+  SetFaxNumberType(str);
+  srcCard->GetPagerNumberType(getter_Copies(str));
+  SetPagerNumberType(str);
+  srcCard->GetCellularNumberType(getter_Copies(str));
+  SetCellularNumberType(str);
 	srcCard->GetHomeAddress(getter_Copies(str));
 	SetHomeAddress(str);
 	srcCard->GetHomeAddress2(getter_Copies(str));
@@ -192,6 +206,24 @@ NS_IMETHODIMP nsAbMDBCardProperty::CopyCard(nsIAbMDBCard* srcCardDB)
 	SetDepartment(str);
 	srcCard->GetCompany(getter_Copies(str));
 	SetCompany(str);
+  srcCard->GetAimScreenName(getter_Copies(str));
+  SetAimScreenName(str);
+
+  srcCard->GetAnniversaryYear(getter_Copies(str));
+  SetAnniversaryYear(str);
+  srcCard->GetAnniversaryMonth(getter_Copies(str));
+  SetAnniversaryMonth(str);
+  srcCard->GetAnniversaryDay(getter_Copies(str));
+  SetAnniversaryDay(str);
+  srcCard->GetSpouseName(getter_Copies(str));
+  SetSpouseName(str);
+  srcCard->GetFamilyName(getter_Copies(str));
+  SetFamilyName(str);
+  srcCard->GetDefaultAddress(getter_Copies(str));
+  SetDefaultAddress(str);
+  srcCard->GetCategory(getter_Copies(str));
+  SetCategory(str);
+
 	srcCard->GetWebPage1(getter_Copies(str));
 	SetWebPage1(str);
 	srcCard->GetWebPage2(getter_Copies(str));

@@ -630,7 +630,17 @@ NS_IMETHODIMP nsAbMDBDirectory::CreateDirectoryByURI(const PRUnichar *dirName, c
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsAbMDBDirectory::AddMailListWithKey(nsIAbDirectory *list, PRUint32 *key)
+{
+  return(InternalAddMailList(list, key));
+}
+
 NS_IMETHODIMP nsAbMDBDirectory::AddMailList(nsIAbDirectory *list)
+{
+  return(InternalAddMailList(list, nsnull));
+}
+
+nsresult nsAbMDBDirectory::InternalAddMailList(nsIAbDirectory *list, PRUint32 *key)
 {
   if (mIsQueryURI)
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -654,7 +664,10 @@ NS_IMETHODIMP nsAbMDBDirectory::AddMailList(nsIAbDirectory *list)
     dblist = do_QueryInterface(list, &rv);
   }
 
+  if (!key)
   mDatabase->CreateMailListAndAddToDB(list, PR_TRUE);
+  else
+    mDatabase->CreateMailListAndAddToDBWithKey(list, PR_TRUE, key);
   mDatabase->Commit(nsAddrDBCommitType::kLargeCommit);
 
   PRUint32 dbRowID;

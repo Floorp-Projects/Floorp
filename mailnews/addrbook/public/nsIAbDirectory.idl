@@ -152,6 +152,10 @@ interface nsIAbDirectory : nsISupports {
 	// with the properties defined by list
 	void addMailList (in nsIAbDirectory list);
 
+  // Creates a new mailing list in the directory with
+  // the properties defined by list and return a db key
+  void addMailListWithKey (in nsIAbDirectory list, out PRUint32 key);
+
 	// Specific to a directory which is a mail list
 	attribute wstring listNickName;
 	attribute wstring description;

@@ -250,6 +250,9 @@ NS_IMETHODIMP nsAbDirProperty::CreateDirectoryByURI(const PRUnichar *dirName, co
 NS_IMETHODIMP nsAbDirProperty::AddMailList(nsIAbDirectory *list)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
+NS_IMETHODIMP nsAbDirProperty::AddMailListWithKey(nsIAbDirectory *list, PRUint32 *key)
+{ return NS_ERROR_NOT_IMPLEMENTED; }
+
 NS_IMETHODIMP nsAbDirProperty::EditMailListToDatabase(const char *uri, nsIAbCard *listCard)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 

@@ -448,8 +448,7 @@ nsresult nsAbView::GetCardValue(nsIAbCard *card, const PRUnichar *colID, PRUnich
   nsresult rv;
 
   // "G" == "GeneratedName"
-  // "_" == generic column (like _AimScreenName)
-  // else, standard column (like PrimaryEmail)
+  // else, standard column (like PrimaryEmail and _AimScreenName)
   if (colID[0] == PRUnichar('G')) {
     // XXX todo 
     // cache the ab session?
@@ -460,9 +459,6 @@ nsresult nsAbView::GetCardValue(nsIAbCard *card, const PRUnichar *colID, PRUnich
     NS_ENSURE_SUCCESS(rv,rv);
   }
   else {
-    if (colID[0] == PRUnichar('_'))
-      rv = mDirectory->GetValueForCard(card, NS_LossyConvertUCS2toASCII(colID).get(), _retval);
-    else 
       rv = card->GetCardValue(NS_LossyConvertUCS2toASCII(colID).get(), _retval);
   }
   return rv;

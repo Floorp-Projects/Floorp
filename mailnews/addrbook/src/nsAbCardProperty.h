@@ -78,11 +78,18 @@ protected:
 	nsString m_NickName;
 	nsString m_PrimaryEmail;
 	nsString m_SecondEmail;
+  nsString m_DefaultEmail;
+  nsString m_CardType;  // "", "0": normal, "1": AOL groups, "2": AOL additional email address
 	nsString m_WorkPhone;
 	nsString m_HomePhone;
 	nsString m_FaxNumber;
 	nsString m_PagerNumber;
 	nsString m_CellularNumber;
+  nsString m_WorkPhoneType;
+  nsString m_HomePhoneType;
+  nsString m_FaxNumberType;
+  nsString m_PagerNumberType;
+  nsString m_CellularNumberType;
 	nsString m_HomeAddress;
 	nsString m_HomeAddress2;
 	nsString m_HomeCity;
@@ -98,6 +105,14 @@ protected:
 	nsString m_JobTitle;
 	nsString m_Department;
 	nsString m_Company;
+  nsString m_AimScreenName;
+  nsString m_AnniversaryYear;
+  nsString m_AnniversaryMonth;
+  nsString m_AnniversaryDay;
+  nsString m_SpouseName;
+  nsString m_FamilyName;
+  nsString m_DefaultAddress;
+  nsString m_Category;
 	nsString m_WebPage1;
 	nsString m_WebPage2;
 	nsString m_BirthYear;

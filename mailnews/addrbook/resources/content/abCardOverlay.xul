@@ -38,7 +38,7 @@ Rights Reserved.
 
 	<tabbox style="margin:5px">
 	   <tabs id="abTabs">
-        <tab label="&Name.tab;"/>
+        <tab label="&Contact.tab;"/>
         <tab label="&Address.tab;"/>
         <tab label="&Other.tab;"/>
 	   </tabs>
@@ -112,6 +112,13 @@ Rights Reserved.
                   <menuitem value="2" label="&HTML.label;"/>
 								</menupopup>
 							</menulist>
+						</hbox>
+						<hbox>
+							<spacer flex="1"/>
+                                                        <label control="ScreenName" value="&ScreenName.label;" class="CardEditLabel"/>
+							<hbox class="CardEditWidth">
+							<textbox id="ScreenName" flex="1" disableforreadonly="true"/>
+							</hbox>
 						</hbox>
 					</vbox>
 				</groupbox>

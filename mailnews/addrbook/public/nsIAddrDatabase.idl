@@ -65,12 +65,19 @@
 #define kNicknameColumn           "NickName"
 #define kPriEmailColumn           "PrimaryEmail"
 #define k2ndEmailColumn           "SecondEmail"
+#define kDefaultEmailColumn       "DefaultEmail"
+#define kCardTypeColumn           "CardType"
 #define kPreferMailFormatColumn   "PreferMailFormat"
 #define kWorkPhoneColumn          "WorkPhone"
 #define kHomePhoneColumn          "HomePhone"
 #define kFaxColumn                "FaxNumber"
 #define kPagerColumn              "PagerNumber"
 #define kCellularColumn           "CellularNumber"
+#define kWorkPhoneTypeColumn      "WorkPhoneType"
+#define kHomePhoneTypeColumn      "HomePhoneType"
+#define kFaxTypeColumn            "FaxNumberType"
+#define kPagerTypeColumn          "PagerNumberType"
+#define kCellularTypeColumn       "CellularNumberType"
 #define kHomeAddressColumn        "HomeAddress"
 #define kHomeAddress2Column       "HomeAddress2"
 #define kHomeCityColumn           "HomeCity"
@@ -86,6 +93,14 @@
 #define kJobTitleColumn           "JobTitle"
 #define kDepartmentColumn         "Department"
 #define kCompanyColumn            "Company"
+#define kAimScreenNameColumn      "_AimScreenName"
+#define kAnniversaryYearColumn    "AnniversaryYear"
+#define kAnniversaryMonthColumn   "AnniversaryMonth"
+#define kAnniversaryDayColumn     "AnniversaryDay"
+#define kSpouseNameColumn         "SpouseName"
+#define kFamilyNameColumn         "FamilyName"
+#define kDefaultAddressColumn     "DefaultAddress"
+#define kCategoryColumn           "Category"
 // webPage1 is work web page
 #define kWebPage1Column           "WebPage1"
 // webPage2 is home web page
@@ -133,6 +148,7 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	void createNewCardAndAddToDBWithKey(in nsIAbCard newCard, in boolean aNotify, out unsigned long key);	
 	void createNewListCardAndAddToDB(in nsIAbDirectory list, in unsigned long listRowID, in nsIAbCard newCard, in boolean aNotify);
 	void createMailListAndAddToDB(in nsIAbDirectory newList, in boolean aNotify);
+  void createMailListAndAddToDBWithKey(in nsIAbDirectory newList, in boolean aNotify, out PRUint32 key);
 	nsIEnumerator enumerateCards(in nsIAbDirectory directory);
 	nsIEnumerator enumerateListAddresses(in nsIAbDirectory directory);
 	void getMailingListsFromDB(in nsIAbDirectory parentDir);
@@ -165,11 +181,18 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	[noscript] void addNickName(in nsIMdbRow row, in string value);
 	[noscript] void addPrimaryEmail(in nsIMdbRow row, in string value);
 	[noscript] void add2ndEmail(in nsIMdbRow row, in string value);
+  [noscript] void addDefaultEmail(in nsIMdbRow row, in string value);
+  [noscript] void addCardType(in nsIMdbRow row, in string value);
 	[noscript] void addWorkPhone(in nsIMdbRow row, in string value);
 	[noscript] void addHomePhone(in nsIMdbRow row, in string value);
 	[noscript] void addFaxNumber(in nsIMdbRow row, in string value);
 	[noscript] void addPagerNumber(in nsIMdbRow row, in string value);
 	[noscript] void addCellularNumber(in nsIMdbRow row, in string value);
+  [noscript] void addWorkPhoneType(in nsIMdbRow row, in string value);
+  [noscript] void addHomePhoneType(in nsIMdbRow row, in string value);
+  [noscript] void addFaxNumberType(in nsIMdbRow row, in string value);
+  [noscript] void addPagerNumberType(in nsIMdbRow row, in string value);
+  [noscript] void addCellularNumberType(in nsIMdbRow row, in string value);
 	[noscript] void addHomeAddress(in nsIMdbRow row, in string value);
 	[noscript] void addHomeAddress2(in nsIMdbRow row, in string value);
 	[noscript] void addHomeCity(in nsIMdbRow row, in string value);
@@ -185,6 +208,14 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	[noscript] void addJobTitle(in nsIMdbRow row, in string value);
 	[noscript] void addDepartment(in nsIMdbRow row, in string value);
 	[noscript] void addCompany(in nsIMdbRow row, in string value);
+  [noscript] void addAimScreenName(in nsIMdbRow row, in string value);
+  [noscript] void addAnniversaryYear(in nsIMdbRow row, in string value);
+  [noscript] void addAnniversaryMonth(in nsIMdbRow row, in string value);
+  [noscript] void addAnniversaryDay(in nsIMdbRow row, in string value);
+  [noscript] void addSpouseName(in nsIMdbRow row, in string value);
+  [noscript] void addFamilyName(in nsIMdbRow row, in string value);
+  [noscript] void addDefaultAddress(in nsIMdbRow row, in string value);
+  [noscript] void addCategory(in nsIMdbRow row, in string value);
 	[noscript] void addWebPage1(in nsIMdbRow row, in string value);
 	[noscript] void addWebPage2(in nsIMdbRow row, in string value);
 	[noscript] void addBirthYear(in nsIMdbRow row, in string value);
@@ -211,15 +242,15 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 
     /**
      * used for adding a string attributes to a row.
-     * the string attribute does not have to be a generic attribute
-     * (ex:  _AimScreenName).  used during LDIF and addressbook import.
+     * used during LDIF and addressbook import.
      *
      * @param aRow
      *        The row we're adding the column to
-     * @param aColName
-     *        The column name  (example: _AimScreenName)
+     * @param aLDIFAttributeName
+     *        The column name  (examples: mozillaCategory, 
+     *                                    mozilla_AimScreenName)
      * @param aColValue
      *        The column value (example: jabroni316)
      */
-    [noscript] void addRowValue(in nsIMdbRow aRow, in ACString aColName, in AString aColValue);
+    [noscript] void addRowValue(in nsIMdbRow aRow, in ACString aLDIFAttributeName, in AString aColValue);
 };

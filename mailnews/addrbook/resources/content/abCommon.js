@@ -146,6 +146,8 @@ var DirPaneController =
 
   isCommandEnabled: function(command)
   {
+    var selectedDir;
+
     switch (command) {
       case "cmd_selectAll":
         return true;
@@ -153,7 +155,7 @@ var DirPaneController =
       case "button_delete":
         if (command == "cmd_delete")
           goSetMenuValue(command, "valueAddressBook");
-        var selectedDir = GetSelectedDirectory();
+        selectedDir = GetSelectedDirectory();
         if (selectedDir) {
           // If the selected directory is an ldap directory
           // and if the prefs for this directory are locked
@@ -177,7 +179,7 @@ var DirPaneController =
         else
           return false;
       case "button_edit":
-        var selectedDir = GetSelectedDirectory();
+        selectedDir = GetSelectedDirectory();
         if (selectedDir) {
           var directory = GetDirectoryFromURI(selectedDir);
           if ((directory.isMailList) || 

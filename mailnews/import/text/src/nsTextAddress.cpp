@@ -1141,48 +1141,9 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
         m_database->AddCellularNumber(newRow, column.get());
       else if (colType.Equals("member") && bIsList )
         m_database->AddLdifListMember(newRow, column.get());
-      else if (colType.Equals(MOZ_AB_LDIF_PREFIX "secondemail"))
-        m_database->Add2ndEmail(newRow, column.get());
-      else if (colType.Equals(MOZ_AB_LDIF_PREFIX "postaladdress2"))
-        m_database->AddWorkAddress2(newRow, column.get());
-      else if (colType.Equals(MOZ_AB_LDIF_PREFIX "homepostaladdress2"))
-        m_database->AddHomeAddress2(newRow, column.get());
-      else if (colType.Equals(MOZ_AB_LDIF_PREFIX "homelocalityname"))
-        m_database->AddHomeCity(newRow, column.get());
-      else if (colType.Equals(MOZ_AB_LDIF_PREFIX "homestate"))
-        m_database->AddHomeState(newRow, column.get());
-      else if (colType.Equals(MOZ_AB_LDIF_PREFIX "homepostalcode"))
-        m_database->AddHomeZipCode(newRow, column.get());
-      else if (colType.Equals(MOZ_AB_LDIF_PREFIX "homecountryname"))
-        m_database->AddHomeCountry(newRow, column.get());
-      else {
-        // handle all the optional LDIF attributes
-        // like mozillaaimscreenname (mozillaAimScreenName)
-        //
-        // note, all optional LDIF attributes begin with the "mozilla" prefix
-        // see bug #119360.  that's why the import code to handle them
-        // is under the "m" clause.
-        nsresult rv;
-        nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get pref service");
-        if (NS_FAILED(rv))
-          break;
-
-        nsCOMPtr<nsIPrefBranch> prefBranch;
-        rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get pref branch");
-        if (NS_FAILED(rv))
-          break;
-
-        nsCAutoString prefName;
-        prefName = NS_LITERAL_CSTRING("mail.addr_book.import_ldif_map.") + colType;
-
-        nsXPIDLCString columnName;
-        rv = prefBranch->GetCharPref(prefName.get(), getter_Copies(columnName));
-        if (NS_SUCCEEDED(rv) && columnName.Length()) {
-          m_database->AddRowValue(newRow, columnName, NS_ConvertUTF8toUCS2(column));
-        }
-      }
+      // check if it starts with our magic prefix
+      else if (colType.Find(MOZ_AB_LDIF_PREFIX) == 0)
+        m_database->AddRowValue(newRow, colType, NS_ConvertUTF8toUCS2(column));
       break; // 'm'
 
     case 'n':

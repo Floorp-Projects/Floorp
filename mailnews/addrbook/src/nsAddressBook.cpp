@@ -98,67 +98,6 @@
 // see bugs bug #116692 and #118454
 #define MOZ_AB_OBJECTCLASS "mozillaAbPersonObsolete"
 
-// for now, these should be in the same order as they are in the import code
-// see importMsgProperties and nsImportStringBundle.h
-
-#define   EXPORT_ATTRIBUTES_TABLE_COUNT      38
-
-struct ExportAttributesTableStruct
-{
-    const char* abColName;
-    const char* ldapPropertyName;
-    PRBool includeForPlainText;
-};
-
-// XXX todo, merge with what's in nsAbLDAPProperties.cpp, so we can
-// use this for LDAP and LDIF export
-//
-// here's how we're coming up with the ldapPropertyName values
-// if they are specified in RFC 2798, use them
-// else use the 4.x LDIF attribute names (for example, "xmozillanickname"
-// as we want to allow export from mozilla back to 4.x, and other apps
-// are probably out there that can handle 4.x LDIF)
-// else use the MOZ_AB_LDIF_PREFIX prefix, see nsIAddrDatabase.idl
-static ExportAttributesTableStruct EXPORT_ATTRIBUTES_TABLE[] = { 
-  {kFirstNameColumn, "givenName", PR_TRUE},
-  {kLastNameColumn, "sn", PR_TRUE},
-  {kDisplayNameColumn, "cn", PR_TRUE},
-  {kNicknameColumn, "xmozillanickname", PR_TRUE},
-  {kPriEmailColumn, "mail", PR_TRUE},
-  {k2ndEmailColumn, MOZ_AB_LDIF_PREFIX "SecondEmail", PR_TRUE},
-  {kPreferMailFormatColumn, "xmozillausehtmlmail", PR_FALSE},
-  {kLastModifiedDateColumn, "modifytimestamp", PR_FALSE},
-  {kWorkPhoneColumn, "telephoneNumber", PR_TRUE}, 
-  {kHomePhoneColumn, "homePhone", PR_TRUE},
-  {kFaxColumn, "facsimileTelephoneNumber", PR_TRUE},
-  {kPagerColumn, "pager", PR_TRUE},
-  {kCellularColumn, "mobile", PR_TRUE},
-  {kHomeAddressColumn, "homePostalAddress", PR_TRUE},
-  {kHomeAddress2Column, MOZ_AB_LDIF_PREFIX "HomePostalAddress2", PR_TRUE},
-  {kHomeCityColumn, MOZ_AB_LDIF_PREFIX "HomeLocalityName", PR_TRUE},
-  {kHomeStateColumn, MOZ_AB_LDIF_PREFIX "HomeState", PR_TRUE},
-  {kHomeZipCodeColumn, MOZ_AB_LDIF_PREFIX "HomePostalCode", PR_TRUE},
-  {kHomeCountryColumn, MOZ_AB_LDIF_PREFIX "HomeCountryName", PR_TRUE},
-  {kWorkAddressColumn, "postalAddress", PR_TRUE},
-  {kWorkAddress2Column, MOZ_AB_LDIF_PREFIX "PostalAddress2", PR_TRUE}, 
-  {kWorkCityColumn, "l", PR_TRUE}, 
-  {kWorkStateColumn, "st", PR_TRUE}, 
-  {kWorkZipCodeColumn, "postalCode", PR_TRUE}, 
-  {kWorkCountryColumn, "c", PR_TRUE}, 
-  {kJobTitleColumn, "title", PR_TRUE},
-  {kDepartmentColumn, "ou", PR_TRUE},
-  {kCompanyColumn, "o", PR_TRUE},
-  {kWebPage1Column, "workurl", PR_TRUE},
-  {kWebPage2Column, "homeurl", PR_TRUE},
-  {kBirthYearColumn, nsnull, PR_TRUE}, // unused for now
-  {kBirthMonthColumn, nsnull, PR_TRUE}, // unused for now
-  {kBirthDayColumn, nsnull, PR_TRUE}, // unused for now
-  {kCustom1Column, "custom1", PR_TRUE},
-  {kCustom2Column, "custom2", PR_TRUE},
-  {kCustom3Column, "custom3", PR_TRUE},
-  {kCustom4Column, "custom4", PR_TRUE},
-  {kNotesColumn, "description", PR_TRUE},
-};
 
 //
 // nsAddressBook
@@ -1647,18 +1586,6 @@ nsAddressBook::ExportDirectoryToLDIF(nsIAbDirectory *aDirectory, nsILocalFile *a
             }
           }
         
-          nsCString optionalLDIF;
-          rv = GetOptionalLDIFForCard(card, optionalLDIF);
-          NS_ENSURE_SUCCESS(rv,rv);
-
-          length = optionalLDIF.Length();
-          if (length) {
-            rv = outputStream->Write(optionalLDIF.get(), length, &writeCount);
-            NS_ENSURE_SUCCESS(rv,rv);
-            if (length != writeCount)
-              return NS_ERROR_FAILURE;
-          }
-
           // write out the linebreak that seperates the cards
           rv = outputStream->Write(LDIF_LINEBREAK, LDIF_LINEBREAK_LEN, &writeCount);
           NS_ENSURE_SUCCESS(rv,rv);
@@ -1839,44 +1766,6 @@ nsresult nsAddressBook::AppendProperty(const char *aProperty, const PRUnichar *a
 
   return NS_OK;
 }
-
-
-nsresult nsAddressBook::GetOptionalLDIFForCard(nsIAbCard *aCard, nsACString &aResult)
-{
-  nsresult rv;
-  nsCOMPtr<nsIAbMDBCard> dbcard = do_QueryInterface(aCard, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
-  
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  NS_NAMED_LITERAL_CSTRING(kOptionalLDIFExportMapPrefix, "mail.addr_book.export_ldif_map.");
-  PRUint32 i, prefCount, prefixLen=kOptionalLDIFExportMapPrefix.Length();
-  char **prefNames;
-
-  rv = prefBranch->GetChildList(kOptionalLDIFExportMapPrefix.get(), &prefCount, &prefNames);
-  if (NS_SUCCEEDED(rv) && prefCount > 0) {
-    for (i = 0; i < prefCount; i++) {
-      nsXPIDLString genericValue;
-      rv = dbcard->GetStringAttribute(prefNames[i]+prefixLen, getter_Copies(genericValue));
-      if (NS_SUCCEEDED(rv) && !genericValue.IsEmpty()) {
-        nsXPIDLCString mapValue;
-        rv = prefBranch->GetCharPref(prefNames[i], getter_Copies(mapValue));
-        if (NS_SUCCEEDED(rv) && mapValue.Length()) {
-          rv = AppendProperty(mapValue.get(), genericValue.get(), aResult);
-          aResult += LDIF_LINEBREAK;
-        }
-      }
-    }
-    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, prefNames);
-  }
-  return NS_OK;
-}
-
 
 CMDLINEHANDLER_IMPL(nsAddressBook,"-addressbook","general.startup.addressbook","chrome://messenger/content/addressbook/addressbook.xul","Start with the addressbook.",NS_ADDRESSBOOKSTARTUPHANDLER_CONTRACTID,"Addressbook Startup Handler",PR_FALSE,"", PR_TRUE)
 

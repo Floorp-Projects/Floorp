@@ -673,3 +673,44 @@ function IsCardViewAndAbResultsPaneSplitterCollapsed()
   }
 }
 
+function LaunchUrl(url)
+{
+  openTopWin(url);
+}
+
+function AbIMSelected()
+{
+  var cards = GetSelectedAbCards();
+  var count = cards.length;
+  var url;
+
+  if (count == 0) {
+    url = "aim:goim";
+    LaunchUrl(url);
+    return;
+  }
+  
+  for (var i=0;i<count;i++) {
+    url = "aim:goim?screenname=" + cards[i].aimScreenName;
+    LaunchUrl(url);
+  }
+}
+
+function AbChatSelected()
+{
+  var cards = GetSelectedAbCards();
+  var count = cards.length;
+  var url = "aim:SendChatInvite";
+
+  if (count == 0) {
+    LaunchUrl(url);
+    return;
+  }
+
+  url += "?listofscreennames=" + cards[0].aimScreenName;
+  for (var i=1;i<count;i++) {
+    url += "," + cards[i].aimScreenName;
+  }
+  url += "&message=Join+me+in+this+Chat.";  // move to properties
+  LaunchUrl(url);
+}

@@ -87,6 +87,7 @@ public:
 	NS_IMETHOD CreateNewCardAndAddToDBWithKey(nsIAbCard *newCard, PRBool notify, PRUint32 *key);	
 	NS_IMETHOD CreateNewListCardAndAddToDB(nsIAbDirectory *list, PRUint32 listRowID, nsIAbCard *newCard, PRBool notify);
 	NS_IMETHOD CreateMailListAndAddToDB(nsIAbDirectory *newList, PRBool notify);
+  NS_IMETHOD CreateMailListAndAddToDBWithKey(nsIAbDirectory *newList, PRBool notify, PRUint32 *key);
 	NS_IMETHOD EnumerateCards(nsIAbDirectory *directory, nsIEnumerator **result);
 	NS_IMETHOD GetMailingListsFromDB(nsIAbDirectory *parentDir);
 	NS_IMETHOD EnumerateListAddresses(nsIAbDirectory *directory, nsIEnumerator **result);
@@ -120,6 +121,12 @@ public:
 	NS_IMETHOD Add2ndEmail(nsIMdbRow * row, const char * value)
 	{ return AddCharStringColumn(row, m_2ndEmailColumnToken, value); }
 
+  NS_IMETHOD AddDefaultEmail(nsIMdbRow * row, const char * value)
+  { return AddCharStringColumn(row, m_DefaultEmailColumnToken, value); }
+
+  NS_IMETHOD AddCardType(nsIMdbRow * row, const char * value)
+  { return AddCharStringColumn(row, m_CardTypeColumnToken, value); }
+
 	NS_IMETHOD AddPreferMailFormat(nsIMdbRow * row, PRUint32 value)
 	{ return AddIntColumn(row, m_MailFormatColumnToken, value); }
 
@@ -137,6 +144,21 @@ public:
 
 	NS_IMETHOD AddCellularNumber(nsIMdbRow * row, const char * value)
 	{ return AddCharStringColumn(row, m_CellularColumnToken, value); }
+
+  NS_IMETHOD AddWorkPhoneType(nsIMdbRow * row, const char * value)
+  { return AddCharStringColumn(row, m_WorkPhoneTypeColumnToken, value); }
+
+  NS_IMETHOD AddHomePhoneType(nsIMdbRow * row, const char * value)
+  { return AddCharStringColumn(row, m_HomePhoneTypeColumnToken, value); }
+
+  NS_IMETHOD AddFaxNumberType(nsIMdbRow * row, const char * value)
+  { return AddCharStringColumn(row, m_FaxTypeColumnToken, value); }
+
+  NS_IMETHOD AddPagerNumberType(nsIMdbRow * row, const char * value)
+  { return AddCharStringColumn(row, m_PagerTypeColumnToken, value); }
+
+  NS_IMETHOD AddCellularNumberType(nsIMdbRow * row, const char * value)
+  { return AddCharStringColumn(row, m_CellularTypeColumnToken, value); }
 
 	NS_IMETHOD AddHomeAddress(nsIMdbRow * row, const char * value)
 	{ return AddCharStringColumn(row, m_HomeAddressColumnToken, value); }
@@ -182,6 +204,30 @@ public:
 
 	NS_IMETHOD AddCompany(nsIMdbRow * row, const char * value)
 	{ return AddCharStringColumn(row, m_CompanyColumnToken, value); }
+
+  NS_IMETHOD AddAimScreenName(nsIMdbRow * row, const char * value)
+  { return AddCharStringColumn(row, m_AimScreenNameColumnToken, value); }
+
+  NS_IMETHOD AddAnniversaryYear(nsIMdbRow * row, const char * value)
+  { return AddCharStringColumn(row, m_AnniversaryYearColumnToken, value); }
+
+  NS_IMETHOD AddAnniversaryMonth(nsIMdbRow * row, const char * value)
+  { return AddCharStringColumn(row, m_AnniversaryMonthColumnToken, value); }
+
+  NS_IMETHOD AddAnniversaryDay(nsIMdbRow * row, const char * value)
+  { return AddCharStringColumn(row, m_AnniversaryDayColumnToken, value); }
+
+  NS_IMETHOD AddSpouseName(nsIMdbRow * row, const char * value)
+  { return AddCharStringColumn(row, m_SpouseNameColumnToken, value); }
+
+  NS_IMETHOD AddFamilyName(nsIMdbRow * row, const char * value)
+  { return AddCharStringColumn(row, m_FamilyNameColumnToken, value); }
+
+  NS_IMETHOD AddDefaultAddress(nsIMdbRow * row, const char * value)
+  { return AddCharStringColumn(row, m_DefaultAddressColumnToken, value); }
+
+  NS_IMETHOD AddCategory(nsIMdbRow * row, const char * value)
+  { return AddCharStringColumn(row, m_CategoryColumnToken, value); }
 
 	NS_IMETHOD AddWebPage1(nsIMdbRow * row, const char * value)
 	{ return AddCharStringColumn(row, m_WebPage1ColumnToken, value); }
@@ -232,7 +278,7 @@ public:
 
   NS_IMETHOD SetCardValue(nsIAbCard *card, const char *name, const PRUnichar *value, PRBool notify);
   NS_IMETHOD GetCardValue(nsIAbCard *card, const char *name, PRUnichar **value);
-  NS_IMETHOD AddRowValue(nsIMdbRow *aRow, const nsACString & aColName, const nsAString & aColValue);
+  NS_IMETHOD AddRowValue(nsIMdbRow *aRow, const nsACString & aLDIFAttributeName, const nsAString & aColValue);
 
 	// nsAddrDatabase methods:
 
@@ -350,11 +396,18 @@ protected:
 	mdb_token			m_NickNameColumnToken;
 	mdb_token			m_PriEmailColumnToken;
 	mdb_token			m_2ndEmailColumnToken;
+  mdb_token			m_DefaultEmailColumnToken;
+  mdb_token			m_CardTypeColumnToken;
 	mdb_token			m_WorkPhoneColumnToken;
 	mdb_token			m_HomePhoneColumnToken;
 	mdb_token			m_FaxColumnToken;
 	mdb_token			m_PagerColumnToken;
 	mdb_token			m_CellularColumnToken;
+  mdb_token			m_WorkPhoneTypeColumnToken;
+	mdb_token			m_HomePhoneTypeColumnToken;
+	mdb_token			m_FaxTypeColumnToken;
+	mdb_token			m_PagerTypeColumnToken;
+	mdb_token			m_CellularTypeColumnToken;
 	mdb_token			m_HomeAddressColumnToken;
 	mdb_token			m_HomeAddress2ColumnToken;
 	mdb_token			m_HomeCityColumnToken;
@@ -370,6 +423,14 @@ protected:
 	mdb_token			m_JobTitleColumnToken;
 	mdb_token			m_DepartmentColumnToken;
 	mdb_token			m_CompanyColumnToken;
+  mdb_token			m_AimScreenNameColumnToken;
+  mdb_token			m_AnniversaryYearColumnToken;
+  mdb_token			m_AnniversaryMonthColumnToken;
+  mdb_token			m_AnniversaryDayColumnToken;
+  mdb_token			m_SpouseNameColumnToken;
+  mdb_token			m_FamilyNameColumnToken;
+  mdb_token			m_DefaultAddressColumnToken;
+  mdb_token			m_CategoryColumnToken;
 	mdb_token			m_WebPage1ColumnToken;
 	mdb_token			m_WebPage2ColumnToken;
 	mdb_token			m_BirthYearColumnToken;

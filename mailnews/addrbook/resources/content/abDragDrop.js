@@ -108,7 +108,7 @@ var abDirTreeObserver = {
           // target directory is a mailing list on src directory, no need to copy card
           needToCopyCard = false;
         }
-	    }
+      }
 
       // if we still think we have to copy the card,
       // check if srcURI and targetURI are mailing lists on same directory
@@ -134,32 +134,37 @@ var abDirTreeObserver = {
 
   onDragOver: function (aEvent, aFlavour, aDragSession)
     {
-      if (aEvent.target.localName != "treechildren") {
-         aDragSession.canDrop = false;
+      aDragSession.canDrop = false;
+      if (aEvent.target.localName != "treechildren")
         return false;
-      }
       
       var row = {}, col = {}, obj = {};
       dirTree.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, obj);
-      if (row.value >= dirTree.view.rowCount || row.value < 0) return;
+      if (row.value >= dirTree.view.rowCount || row.value < 0)
+        return false;
       
       var item = dirTree.contentView.getItemAtIndex(row.value);
       var targetURI = item.id;
       var srcURI = GetAbViewURI();
 
       // you can't drop a card onto the directory it comes from
-      if (targetURI == srcURI) {
-        aDragSession.canDrop = false;
+      if (targetURI == srcURI)
         return false;
-      }
 
       // determine if we dragging from a mailing list on a directory x to the parent (directory x).
       // if so, don't allow the drop
       var result = srcURI.split(targetURI);
-      if (result != srcURI) {
-        aDragSession.canDrop = false;
+      if (result != srcURI) 
         return false;
-      }
+
+      // check if we can write to the target directory 
+      // LDAP is readonly
+      var targetDirectory = GetDirectoryFromURI(targetURI);
+      if (!targetDirectory.isMailList && 
+          (!(targetDirectory.operations & targetDirectory.opWrite)))
+        return false
+
+      aDragSession.canDrop = true;
       return true;
     },
 

@@ -36,7 +36,10 @@ var gMapItURLFormat = gPrefs.getComplexValue("mail.addr_book.mapit_url.format",
 
 var gAddrbookSession = Components.classes["@mozilla.org/addressbook/services/session;1"].getService().QueryInterface(Components.interfaces.nsIAddrBookSession);
 
-var zName;
+var zListName;
+var zPrimaryEmail;
+var zSecondaryEmail;
+var zScreenName;
 var zNickname;
 var zDisplayName;
 var zWork;
@@ -53,18 +56,21 @@ var cvData;
 
 function OnLoadCardView()
 {
-  zName = gAddressBookBundle.getString("propertyName") + ": ";
-  zNickname = gAddressBookBundle.getString("propertyNickname") + ": ";
-  zDisplayName = gAddressBookBundle.getString("propertyDisplayName") + ": ";
-  zWork = gAddressBookBundle.getString("propertyWork") + ": ";
-  zHome = gAddressBookBundle.getString("propertyHome") + ": ";
-  zFax = gAddressBookBundle.getString("propertyFax") + ": ";
-  zCellular = gAddressBookBundle.getString("propertyCellular") + ": ";
-  zPager = gAddressBookBundle.getString("propertyPager") + ": ";
-  zCustom1 = gAddressBookBundle.getString("propertyCustom1") + ": ";
-  zCustom2 = gAddressBookBundle.getString("propertyCustom2") + ": ";
-  zCustom3 = gAddressBookBundle.getString("propertyCustom3") + ": ";
-  zCustom4 = gAddressBookBundle.getString("propertyCustom4") + ": ";
+  zPrimaryEmail = gAddressBookBundle.getString("propertyPrimaryEmail");
+  zSecondaryEmail = gAddressBookBundle.getString("propertySecondaryEmail");
+  zScreenName = gAddressBookBundle.getString("propertyScreenName");
+  zNickname = gAddressBookBundle.getString("propertyNickname");
+  zDisplayName = gAddressBookBundle.getString("propertyDisplayName");
+  zListName = gAddressBookBundle.getString("propertyListName");
+  zWork = gAddressBookBundle.getString("propertyWork");
+  zHome = gAddressBookBundle.getString("propertyHome");
+  zFax = gAddressBookBundle.getString("propertyFax");
+  zCellular = gAddressBookBundle.getString("propertyCellular");
+  zPager = gAddressBookBundle.getString("propertyPager");
+  zCustom1 = gAddressBookBundle.getString("propertyCustom1");
+  zCustom2 = gAddressBookBundle.getString("propertyCustom2");
+  zCustom3 = gAddressBookBundle.getString("propertyCustom3");
+  zCustom4 = gAddressBookBundle.getString("propertyCustom4");
 
 	var doc = document;
 	
@@ -78,12 +84,14 @@ function OnLoadCardView()
 	// Title
 	cvData.CardTitle		= doc.getElementById("CardTitle");
 	// Name section
-	cvData.cvbName			= doc.getElementById("cvbName");
-	cvData.cvhName			= doc.getElementById("cvhName");
+	cvData.cvbContact = doc.getElementById("cvbContact");
+	cvData.cvhContact = doc.getElementById("cvhContact");
 	cvData.cvNickname		= doc.getElementById("cvNickname");
 	cvData.cvDisplayName	= doc.getElementById("cvDisplayName");
 	cvData.cvEmail1Box		= doc.getElementById("cvEmail1Box");
 	cvData.cvEmail1			= doc.getElementById("cvEmail1");
+	cvData.cvScreennameBox		= doc.getElementById("cvScreennameBox");
+	cvData.cvScreenname		= doc.getElementById("cvScreenname");
 	cvData.cvListNameBox		= doc.getElementById("cvListNameBox");
 	cvData.cvListName               = doc.getElementById("cvListName");
 	cvData.cvEmail2Box		= doc.getElementById("cvEmail2Box");
@@ -178,25 +186,29 @@ function DisplayCardViewPane(card)
   else
     cvSetNode(data.CardTitle, gAddressBookBundle.getFormattedString("viewCardTitle", [titleString]));
 	
-	// Name section
-  cvSetNode(data.cvhName, titleString);
-	cvSetNodeWithLabel(data.cvNickname, zNickname, card.nickName);
+  // Contact section
+  cvSetNodeWithLabel(data.cvNickname, zNickname, card.nickName);
 
   if (card.isMailList) {
-    // email1 and display name always hidden when a mailing list.
-    cvSetVisible(data.cvEmail1Box, false);
+    // email1, display name and screenname always hidden when a mailing list.
     cvSetVisible(data.cvDisplayName, false);
+    cvSetVisible(data.cvEmail1Box, false);
+    cvSetVisible(data.cvScreennameBox, false);
 
-    visible = HandleLink(data.cvListName, card.displayName, data.cvListNameBox, "mailto:" + escape(GenerateAddressFromCard(card))) || visible;
+    visible = HandleLink(data.cvListName, zListName, card.displayName, data.cvListNameBox, "mailto:" + escape(GenerateAddressFromCard(card))) || visible;
   }
   else { 
     // listname always hidden if not a mailing list
     cvSetVisible(data.cvListNameBox, false);
+
     cvSetNodeWithLabel(data.cvDisplayName, zDisplayName, card.displayName);
-    visible = HandleLink(data.cvEmail1, card.primaryEmail, data.cvEmail1Box, "mailto:" + card.primaryEmail) || visible;
+
+    visible = HandleLink(data.cvEmail1, zPrimaryEmail, card.primaryEmail, data.cvEmail1Box, "mailto:" + card.primaryEmail) || visible;
   }
 
-  visible = HandleLink(data.cvEmail2, card.secondEmail, data.cvEmail2Box, "mailto:" + card.secondEmail) || visible;
+  visible = HandleLink(data.cvScreenname, zScreenName, card.aimScreenName, data.cvScreennameBox, "aim:goim?screenname=" + card.aimScreenName) || visible;
+
+  visible = HandleLink(data.cvEmail2, zSecondaryEmail, card.secondEmail, data.cvEmail2Box, "mailto:" + card.secondEmail) || visible;
 
 	// Home section
 	visible = cvSetNode(data.cvHomeAddress, card.homeAddress);
@@ -217,7 +229,7 @@ function DisplayCardViewPane(card)
 	  cvSetVisible(data.cvbHomeMapItBox, false);
         }
 
-  visible = HandleLink(data.cvHomeWebPage, card.webPage2, data.cvHomeWebPageBox, card.webPage2) || visible;
+  visible = HandleLink(data.cvHomeWebPage, "", card.webPage2, data.cvHomeWebPageBox, card.webPage2) || visible;
 
 	cvSetVisible(data.cvhHome, visible);
 	cvSetVisible(data.cvbHome, visible);
@@ -283,7 +295,7 @@ function DisplayCardViewPane(card)
 	  cvSetVisible(data.cvbWorkMapItBox, false);
         }
 
-        visible = HandleLink(data.cvWorkWebPage, card.webPage1, data.cvWorkWebPageBox, card.webPage1) || addressVisible || visible;
+        visible = HandleLink(data.cvWorkWebPage, "", card.webPage1, data.cvWorkWebPageBox, card.webPage1) || addressVisible || visible;
 
 	cvSetVisible(data.cvhWork, visible);
 	cvSetVisible(data.cvbWork, visible);
@@ -299,10 +311,14 @@ function ClearCardViewPane()
 
 function cvSetNodeWithLabel(node, label, text)
 {
-	if ( text )
-		return cvSetNode(node, label + text);
-	else
-		return cvSetNode(node, "");
+  if (text) {
+    if (label)
+      return cvSetNode(node, label + ": " + text);
+    else
+      return cvSetNode(node, text);
+  }
+  else
+    return cvSetNode(node, "");
 }
 
 function cvSetCityStateZip(node, city, state, zip)
@@ -396,9 +412,9 @@ function cvSetVisible(node, visible)
 		node.setAttribute("collapsed", "true");
 }
 
-function HandleLink(node, value, box, link)
+function HandleLink(node, label, value, box, link)
 {
-  var visible = cvSetNode(node, value);
+  var visible = cvSetNodeWithLabel(node, label, value);
   if (visible)
     node.setAttribute('href', link);
   cvSetVisible(box, visible);

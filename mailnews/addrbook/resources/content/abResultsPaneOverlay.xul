@@ -61,6 +61,9 @@
   <treecol id="PrimaryEmail" class="sortDirectionIndicator" 
     persist="hidden ordinal width"  flex="1" label="&PrimaryEmail.label;"/>
   <splitter class="tree-splitter"/>
+  <treecol id="_AimScreenName" class="sortDirectionIndicator" 
+    persist="hidden ordinal width"  flex="1" label="&ScreenName.label;"/>
+  <splitter class="tree-splitter"/>
   <treecol id="WorkPhone" class="sortDirectionIndicator" 
     persist="hidden ordinal width"  flex="1" label="&WorkPhone.label;"/>
   <splitter class="tree-splitter"/>

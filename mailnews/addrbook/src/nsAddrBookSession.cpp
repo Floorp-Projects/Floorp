@@ -64,9 +64,12 @@ nsAddrBookSession::~nsAddrBookSession()
 NS_IMETHODIMP nsAddrBookSession::AddAddressBookListener(nsIAbListener *listener, PRUint32 notifyFlags)
 {
   if (!mListeners)
+  {
     NS_NewISupportsArray(getter_AddRefs(mListeners));
-
   NS_ENSURE_TRUE(mListeners, NS_ERROR_NULL_POINTER);
+  }
+  else if (mListeners->IndexOf(listener) != -1)
+    return NS_OK;
   mListeners->AppendElement(listener);
   mListenerNotifyFlags.Add(notifyFlags);
   return NS_OK;

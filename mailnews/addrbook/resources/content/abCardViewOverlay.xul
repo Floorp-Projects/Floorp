@@ -36,18 +36,27 @@ Rights Reserved.
     <hbox style="width:100%" flex="1">
       
       <vbox flex="1">
-        <vbox id="cvbName" class="cardViewGroup">
-            <description class="CardViewHeading" id="cvhName"/>
+        <vbox id="cvbContact" class="cardViewGroup">
+            <description class="CardViewHeading" id="cvhContact">&contact.heading;</description>          
+
             <description class="CardViewLink" id="cvListNameBox">
               <html:p><html:a href="" id="cvListName"/></html:p>
             </description>
+
             <description class="CardViewText" id="cvDisplayName"/>
+
             <description class="CardViewText" id="cvNickname"/>
+
             <description class="CardViewLink" id="cvEmail1Box">
               <html:a href="" id="cvEmail1"/>
             </description>
+
             <description class="CardViewLink" id="cvEmail2Box">
               <html:a href="" id="cvEmail2"/>
+            </description>
+
+            <description class="CardViewLink" id="cvScreennameBox">
+              <html:a href="" id="cvScreenname"/>
             </description>
         </vbox>
         

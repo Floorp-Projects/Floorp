@@ -18,50 +18,49 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!ENTITY Name.tab				"Name"> 
-	<!ENTITY Name.box				"Name"> 
-		<!ENTITY FirstName.label		"First:"> 
-		<!ENTITY LastName.label			"Last:"> 
-		<!ENTITY DisplayName.label		"Display:"> 
-		<!ENTITY NickName.label			"Nickname:"> 
-	<!ENTITY Internet.box			"Internet"> 
-		<!ENTITY PrimaryEmail.label		"Email:"> 
-		<!ENTITY SecondEmail.label		"Additional Email:"> 
-		<!ENTITY PreferMailFormat.label	"Prefers to receive messages formatted as:"> 
-		<!ENTITY PlainText.label		"Plain Text"> 
-		<!ENTITY HTML.label				"HTML"> 
-		<!ENTITY Unknown.label			"Unknown"> 
-	<!ENTITY Phones.box				"Phones"> 
-		<!ENTITY WorkPhone.label		"Work:"> 
-		<!ENTITY HomePhone.label		"Home:"> 
-		<!ENTITY FaxNumber.label		"Fax:"> 
-		<!ENTITY PagerNumber.label		"Pager:"> 
-		<!ENTITY CellularNumber.label	"Mobile:"> 
-	
-<!ENTITY Address.tab			"Address"> 
-	<!ENTITY Home.box				"Home"> 
-		<!ENTITY HomeAddress.label		"Address:"> 
-		<!ENTITY HomeAddress2.label		""> 
-		<!ENTITY HomeCity.label			"City:"> 
-		<!ENTITY HomeState.label		"State/Province:"> 
-		<!ENTITY HomeZipCode.label		"Zip/Postal Code:"> 
-		<!ENTITY HomeCountry.label		"Country:">
-		<!ENTITY HomeWebPage.label		"Web Page:"> 
-	<!ENTITY Work.box				"Work"> 
-		<!ENTITY JobTitle.label			"Title:"> 
-		<!ENTITY Department.label		"Department:"> 
-		<!ENTITY Company.label			"Organization:"> 
-		<!ENTITY WorkAddress.label		"Address:"> 
-		<!ENTITY WorkAddress2.label		""> 
-		<!ENTITY WorkCity.label			"City:"> 
-		<!ENTITY WorkState.label		"State/Province:"> 
-		<!ENTITY WorkZipCode.label		"Zip/Postal Code:"> 
-		<!ENTITY WorkCountry.label		"Country:">
-		<!ENTITY WorkWebPage.label		"Web Page:"> 
-	
-<!ENTITY Other.tab				"Other"> 
-		<!ENTITY Custom1.label			"Custom 1:"> 
-		<!ENTITY Custom2.label			"Custom 2:"> 
-		<!ENTITY Custom3.label			"Custom 3:"> 
-		<!ENTITY Custom4.label			"Custom 4:"> 
-	<!ENTITY Notes.box				"Notes"> 
+<!ENTITY Contact.tab "Contact"> 
+<!ENTITY Name.box "Name"> 
+<!ENTITY FirstName.label "First:"> 
+<!ENTITY LastName.label "Last:"> 
+<!ENTITY DisplayName.label "Display:"> 
+<!ENTITY NickName.label "Nickname:"> 
+<!ENTITY Internet.box "Internet"> 
+<!ENTITY PrimaryEmail.label "Email:"> 
+<!ENTITY SecondEmail.label "Additional Email:"> 
+<!ENTITY PreferMailFormat.label "Prefers to receive messages formatted as:"> 
+<!ENTITY PlainText.label "Plain Text"> 
+<!ENTITY HTML.label "HTML"> 
+<!ENTITY Unknown.label "Unknown"> 
+<!ENTITY ScreenName.label "Screen Name:"> 
+<!ENTITY Phones.box "Phones"> 
+<!ENTITY WorkPhone.label "Work:"> 
+<!ENTITY HomePhone.label "Home:"> 
+<!ENTITY FaxNumber.label "Fax:"> 
+<!ENTITY PagerNumber.label "Pager:"> 
+<!ENTITY CellularNumber.label "Mobile:"> 
+<!ENTITY Address.tab "Address"> 
+<!ENTITY Home.box "Home"> 
+<!ENTITY HomeAddress.label "Address:"> 
+<!ENTITY HomeAddress2.label ""> 
+<!ENTITY HomeCity.label "City:"> 
+<!ENTITY HomeState.label "State/Province:"> 
+<!ENTITY HomeZipCode.label "Zip/Postal Code:"> 
+<!ENTITY HomeCountry.label "Country:">
+<!ENTITY HomeWebPage.label "Web Page:"> 
+<!ENTITY Work.box "Work"> 
+<!ENTITY JobTitle.label "Title:"> 
+<!ENTITY Department.label "Department:"> 
+<!ENTITY Company.label "Organization:"> 
+<!ENTITY WorkAddress.label "Address:"> 
+<!ENTITY WorkAddress2.label ""> 
+<!ENTITY WorkCity.label "City:"> 
+<!ENTITY WorkState.label "State/Province:"> 
+<!ENTITY WorkZipCode.label "Zip/Postal Code:"> 
+<!ENTITY WorkCountry.label "Country:">
+<!ENTITY WorkWebPage.label "Web Page:"> 
+<!ENTITY Other.tab "Other"> 
+<!ENTITY Custom1.label "Custom 1:"> 
+<!ENTITY Custom2.label "Custom 2:"> 
+<!ENTITY Custom3.label "Custom 3:"> 
+<!ENTITY Custom4.label "Custom 4:"> 
+<!ENTITY Notes.box "Notes"> 

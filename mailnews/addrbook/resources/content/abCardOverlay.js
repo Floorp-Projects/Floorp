@@ -346,6 +346,7 @@ function GetCardValues(cardproperty, doc)
 
     doc.getElementById('PrimaryEmail').value = cardproperty.primaryEmail;
     doc.getElementById('SecondEmail').value = cardproperty.secondEmail;
+    doc.getElementById('ScreenName').value = cardproperty.aimScreenName;
 
     var popup = document.getElementById('PreferMailFormatPopup');
     if ( popup )
@@ -396,6 +397,7 @@ function SetCardValues(cardproperty, doc)
 
     cardproperty.primaryEmail = doc.getElementById('PrimaryEmail').value;
     cardproperty.secondEmail = doc.getElementById('SecondEmail').value;
+    cardproperty.aimScreenName = doc.getElementById('ScreenName').value;
 
     var popup = document.getElementById('PreferMailFormatPopup');
     if ( popup )

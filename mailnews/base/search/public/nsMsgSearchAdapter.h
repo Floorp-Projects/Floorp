@@ -182,56 +182,57 @@ inline nsresult nsMsgSearchValidityTable::GetValidButNotShown (int a, int o, PRB
 class nsMsgSearchValidityManager : public nsIMsgSearchValidityManager
 {
 public:
-	nsMsgSearchValidityManager ();
+  nsMsgSearchValidityManager ();
   
 protected:
   virtual ~nsMsgSearchValidityManager ();
 
 public:
-    NS_DECL_NSIMSGSEARCHVALIDITYMANAGER
-    NS_DECL_ISUPPORTS
+  NS_DECL_NSIMSGSEARCHVALIDITYMANAGER
+  NS_DECL_ISUPPORTS
   
-	nsresult GetTable (int, nsMsgSearchValidityTable**);
+  nsresult GetTable (int, nsMsgSearchValidityTable**);
   
 #ifdef DOING_EXNEWSSEARCH
-	nsresult PostProcessValidityTable (nsINntpIncomingServer *);
+  nsresult PostProcessValidityTable (nsINntpIncomingServer *);
 #endif
 
 protected:
 
-	// There's one global validity manager that everyone uses. You *could* do 
-	// this with static members of the adapter classes, but having a dedicated
-	// object makes cleanup of these tables (at shutdown-time) automagic.
+  // There's one global validity manager that everyone uses. You *could* do 
+  // this with static members of the adapter classes, but having a dedicated
+  // object makes cleanup of these tables (at shutdown-time) automagic.
 
-    nsCOMPtr<nsIMsgSearchValidityTable> m_offlineMailTable;
-    nsCOMPtr<nsIMsgSearchValidityTable> m_onlineMailTable;
-    nsCOMPtr<nsIMsgSearchValidityTable> m_onlineMailFilterTable;
+  nsCOMPtr<nsIMsgSearchValidityTable> m_offlineMailTable;
+  nsCOMPtr<nsIMsgSearchValidityTable> m_onlineMailTable;
+  nsCOMPtr<nsIMsgSearchValidityTable> m_onlineMailFilterTable;
 
-    nsCOMPtr<nsIMsgSearchValidityTable> m_newsTable;
+  nsCOMPtr<nsIMsgSearchValidityTable> m_newsTable;
 #ifdef DOING_EXNEWSSEARCH
-    nsCOMPtr<nsIMsgSearchValidityTable> m_newsExTable;
+  nsCOMPtr<nsIMsgSearchValidityTable> m_newsExTable;
 #endif
-    nsCOMPtr<nsIMsgSearchValidityTable> m_localNewsTable; // used for local news searching or offline news searching...
-    nsCOMPtr<nsIMsgSearchValidityTable> m_ldapTable;
-    nsCOMPtr<nsIMsgSearchValidityTable> m_localABTable;
+  nsCOMPtr<nsIMsgSearchValidityTable> m_localNewsTable; // used for local news searching or offline news searching...
+  nsCOMPtr<nsIMsgSearchValidityTable> m_ldapTable;
+  nsCOMPtr<nsIMsgSearchValidityTable> m_localABTable;
 
-	nsresult NewTable (nsIMsgSearchValidityTable **);
+  nsresult NewTable (nsIMsgSearchValidityTable **);
 
-	nsresult InitOfflineMailTable ();
-	nsresult InitOnlineMailTable ();
-	nsresult InitOnlineMailFilterTable ();
-	nsresult InitNewsTable ();
-	nsresult InitLocalNewsTable(); 
+  nsresult InitOfflineMailTable ();
+  nsresult InitOnlineMailTable ();
+  nsresult InitOnlineMailFilterTable ();
+  nsresult InitNewsTable ();
+  nsresult InitLocalNewsTable(); 
 
 #ifdef DOING_EXNEWSSEARCH
-	nsresult InitNewsExTable (nsINntpIncomingServer *host = nsnull);
+  nsresult InitNewsExTable (nsINntpIncomingServer *host = nsnull);
 #endif
   //set the custom headers in the table, changes whenever "mailnews.customHeaders" pref changes.
   nsresult SetOtherHeadersInTable(nsIMsgSearchValidityTable *table, const char *customHeaders); 
 
   nsresult InitLdapTable();
   nsresult InitLocalABTable();
-	nsresult EnableDirectoryAttribute(nsIMsgSearchValidityTable *table, nsMsgSearchAttribValue aSearchAttrib);
+  nsresult SetUpABTable(nsIMsgSearchValidityTable *aTable, PRBool isLocal);
+  nsresult EnableDirectoryAttribute(nsIMsgSearchValidityTable *table, nsMsgSearchAttribValue aSearchAttrib);
 };
 
 #endif

@@ -1179,31 +1179,10 @@ nsresult nsMsgSearchValidityManager::InitLdapTable()
 {
   NS_ASSERTION(!m_ldapTable,"don't call this twice!");
 
-	nsresult rv = NewTable (getter_AddRefs(m_ldapTable));
+  nsresult rv = NewTable(getter_AddRefs(m_ldapTable));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = m_ldapTable->SetDefaultAttrib(nsMsgSearchAttrib::Name);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-	rv = EnableDirectoryAttribute(m_ldapTable, nsMsgSearchAttrib::Name);
-	NS_ENSURE_SUCCESS(rv,rv);
-  
-  rv = EnableDirectoryAttribute(m_ldapTable, nsMsgSearchAttrib::Email);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  rv = EnableDirectoryAttribute(m_ldapTable, nsMsgSearchAttrib::PhoneNumber);
-  NS_ENSURE_SUCCESS(rv,rv);
-  
-  rv = EnableDirectoryAttribute(m_ldapTable, nsMsgSearchAttrib::Organization);
-  NS_ENSURE_SUCCESS(rv,rv);
-  
-  rv = EnableDirectoryAttribute(m_ldapTable, nsMsgSearchAttrib::Department);
-  NS_ENSURE_SUCCESS(rv,rv);
-  
-  rv = EnableDirectoryAttribute(m_ldapTable, nsMsgSearchAttrib::City);
-  NS_ENSURE_SUCCESS(rv,rv);
-  
-  rv = EnableDirectoryAttribute(m_ldapTable, nsMsgSearchAttrib::Street);
+  rv = SetUpABTable(m_ldapTable, PR_FALSE);
   NS_ENSURE_SUCCESS(rv,rv);
   return rv;
 }
@@ -1212,55 +1191,68 @@ nsresult nsMsgSearchValidityManager::InitLocalABTable()
 {
   NS_ASSERTION(!m_localABTable,"don't call this twice!");
 
-	nsresult rv = NewTable (getter_AddRefs(m_localABTable));
+  nsresult rv = NewTable(getter_AddRefs(m_localABTable));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = m_localABTable->SetDefaultAttrib(nsMsgSearchAttrib::Name);
+  rv = SetUpABTable(m_localABTable, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
+}
+
+
+nsresult 
+nsMsgSearchValidityManager::SetUpABTable(nsIMsgSearchValidityTable *aTable, PRBool isLocal)
+{
+  nsresult rv = aTable->SetDefaultAttrib(nsMsgSearchAttrib::Name);
   NS_ENSURE_SUCCESS(rv,rv);
 
-	rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::Name);
-	NS_ENSURE_SUCCESS(rv,rv);
+  rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::Name);
+  NS_ENSURE_SUCCESS(rv,rv);
  
-  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::Email);
+  rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::Email);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::Nickname);
+  rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::AdditionalEmail);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::WorkPhone);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::HomePhone);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::Fax);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::Pager);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::Mobile);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  //this needs to be handled in a generic way.
-  //we need to get the string generically, and then map it to _AimScreenName
-  //I think we're going to have to add custom headers to AB search as a pref
-  //and let the ns tree define one for screen name.
-  //rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::ScreenName);
-  //NS_ENSURE_SUCCESS(rv,rv);
-
-  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::Title);
+  rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::ScreenName);
   NS_ENSURE_SUCCESS(rv,rv);
   
-  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::Organization);
+  rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::Street);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::City);
   NS_ENSURE_SUCCESS(rv,rv);
   
-  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::Department);
+  rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::Title);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::AdditionalEmail);
+  rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::Organization);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::Department);
   NS_ENSURE_SUCCESS(rv,rv);
 
+  rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::Nickname);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::WorkPhone);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::HomePhone);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::Fax);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::Pager);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::Mobile);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = EnableDirectoryAttribute(aTable, nsMsgSearchAttrib::PhoneNumber);
+  NS_ENSURE_SUCCESS(rv,rv);
   return rv;
 }
 

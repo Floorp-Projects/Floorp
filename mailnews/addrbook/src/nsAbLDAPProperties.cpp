@@ -149,7 +149,8 @@ static MozillaLdapPropertyRelation mozillaLdapPropertyTable[] =
     {MozillaProperty_String, "Company",        "company"},
     // ?
     {MozillaProperty_String, "WorkCountry",        "countryname"},
-
+    // ?
+    {MozillaProperty_String, "_AimScreenName",        "nscpaimscreenname"},
     // ?
     {MozillaProperty_String, "WebPage1",        "workurl"},
     // ?

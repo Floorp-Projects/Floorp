@@ -19,6 +19,7 @@ Rights Reserved.
 --> 
 
 <!-- Box Headings -->
+<!ENTITY contact.heading "Contact">
 <!ENTITY home.heading	 "Home">
 <!ENTITY other.heading	 "Other">
 <!ENTITY phone.heading	 "Phone">
@@ -29,5 +30,4 @@ Rights Reserved.
 <!-- For Map It! -->
 <!ENTITY mapItButton.label "Get Map">
 <!ENTITY mapIt.tooltip "Display a map of this address from the Web">
-
 
