@@ -120,7 +120,7 @@ var folderListener = {
 					{
 						msgFolder.endFolderLoading();
 						RerootFolder(uri, msgFolder, gCurrentLoadingFolderViewType, gCurrentLoadingFolderViewFlags, gCurrentLoadingFolderSortType, gCurrentLoadingFolderSortOrder);
-						gIsEditableMsgFolder = IsSpecialFolder(msgFolder, [ "Drafts" ]);
+						gIsEditableMsgFolder = IsSpecialFolder(msgFolder, MSG_FOLDER_FLAG_DRAFTS);
 
 						gCurrentLoadingFolderSortType = 0;
 						gCurrentLoadingFolderSortOrder = 0;

@@ -30,6 +30,13 @@ var gFolderJustSwitched = false;
 var gBeforeFolderLoadTime;
 var gRDFNamespace = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 
+/* keep in sync with nsMsgFolderFlags.h */
+var MSG_FOLDER_FLAG_TRASH = 0x0100;
+var MSG_FOLDER_FLAG_SENTMAIL = 0x0200
+var MSG_FOLDER_FLAG_DRAFTS = 0x0400;
+var MSG_FOLDER_FLAG_QUEUE = 0x0800;
+var MSG_FOLDER_FLAG_TEMPLATES = 0x400000;
+
 function OpenURL(url)
 {
   //dump("\n\nOpenURL from XUL\n\n\n");
@@ -290,7 +297,10 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
 
   // null this out, so we don't try sort.
   gDBView = null;
-  SetSentFolderColumns(IsSpecialFolder(newFolder, [ "Sent", "Drafts", "Unsent Messages" ]));
+
+  // if this is the drafts folder, the sent folder or the send later folder, 
+  // set the columns like it was the sent folder
+  SetSentFolderColumns(IsSpecialFolder(newFolder, MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_QUEUE));
   // now create the db view, which will sort it.
 
   CreateDBView(newFolder, viewType, viewFlags, sortType, sortOrder);
@@ -424,6 +434,7 @@ function SaveThreadPaneSelection()
 	return selectionArray;
 }
 
+// XXX remove this?
 function ConvertColumnIDToSortType(columnID)
 {
   var sortKey;
@@ -499,6 +510,10 @@ function ConvertSortTypeToColumnID(sortKey)
     case nsMsgViewSortType.byThread:
       columnID = "threadCol";
       break;
+    case nsMsgViewSortType.byId:
+      // there is no orderReceivedCol, so return null
+      columnID = null;
+      break;
     default:
       dump("unsupported sort: " + sortKey + "\n");
       columnID = null;
@@ -522,8 +537,6 @@ var gCurViewFlags;
 
 function CreateBareDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
 {
-  dump("XXX CreateDBView(" + msgFolder + "," + viewType + "," + viewFlags + "," + sortType + "," + sortOrder + ")\n");
-
   var dbviewContractId = "@mozilla.org/messenger/msgdbview;1?type=";
 
   switch (viewType) {
@@ -539,7 +552,6 @@ function CreateBareDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
           break;
   }
 
-  dump("XXX creating " + dbviewContractId + " with: " + viewType + "," + sortType + "," + sortOrder + "\n");
   gDBView = Components.classes[dbviewContractId].createInstance(Components.interfaces.nsIMsgDBView);
 
   var isNews = isNewsURI(msgFolder.URI);
@@ -616,7 +628,6 @@ function ShowAppropriateColumns()
 function SetViewFlags(viewFlags)
 {
     if (!gDBView) return;
-    dump("XXX SetViewFlags(" + viewFlags + ")\n");
     gDBView.viewFlags = viewFlags;
 }
 
@@ -678,7 +689,6 @@ function SortFolderPane(column, sortKey)
 
 function SortColumn(node, sortKey, secondarySortKey, direction)
 {
-	//dump('In SortColumn\n');
 	var xulSortService = Components.classes["@mozilla.org/xul/xul-sort-service;1"].getService();
 
 	if (xulSortService)
@@ -722,13 +732,9 @@ function GetSelectedFolderResource()
 	var selectedFolder = selectedFolderList[0];
 	var uri = selectedFolder.getAttribute('id');
 
-
 	var folderResource = RDF.GetResource(uri);
 	return folderResource;
-
 }
-
-
 
 //Called when the splitter in between the thread and message panes is clicked.
 function OnClickThreadAndMessagePaneSplitter()
@@ -758,7 +764,7 @@ function OnClickThreadAndMessagePaneSplitter()
 
 function PositionThreadPane()
 {
-    dump("need for cross folder navigation. fix me: PositionThreadPane()\n");
+    dump("XXX need for cross folder navigation. fix me: PositionThreadPane()\n");
 /*
        var tree = GetThreadTree();
   
@@ -799,18 +805,17 @@ function FolderPaneSelectionChange()
 
 function ClearThreadPane()
 {
+    dump("XXX implement ClearThreadPane()\n");
 }
 
 function OpenFolderTreeToFolder(folderURI)
 {
 	var tree = GetFolderTree();
 	return OpenToFolder(tree, folderURI);
-
 }
 
 function OpenToFolder(item, folderURI)
 {
-
 	if(item.nodeType != Node.ELEMENT_NODE)
 		return null;
 
@@ -843,37 +848,19 @@ function OpenToFolder(item, folderURI)
 	return null;
 }
 
-
-function IsSpecialFolder(msgFolder, specialFolderNames)
+function IsSpecialFolder(msgFolder, flags)
 {
-	var db = GetFolderDatasource();
-	var folderResource = msgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-	if(folderResource)
-	{
-		var property =
-			RDF.GetResource('http://home.netscape.com/NC-rdf#SpecialFolder');
-		if (!property) return false;
-		var result = db.GetTarget(folderResource, property , true);
-		if (!result) return false;
-		result = result.QueryInterface(Components.interfaces.nsIRDFLiteral);
-		if (!result) return false;
-
-		//dump("We are looking for " + specialFolderNames + "\n");
-		//dump("special folder name = " + result.Value + "\n");
-        
-        var count = specialFolderNames.length;
-        var i;
-        for (i = 0; i < count; i++) {
-            if(result.Value == specialFolderNames[i])
-                return true;
-        }
-	}
-
-	return false;
+    if ((msgFolder.flags & flags) == 0) {
+        return false;
+    }
+    else {
+        return true;
+    }
 }
 
 function SelectNextMessage(nextMessage)
 {
+    dump("XXX implement SelectNextMessage()\n");
 /*
 	var tree = GetThreadTree();
 	ChangeSelection(tree, nextMessage);
@@ -884,22 +871,17 @@ function GetSelectTrashUri(folder)
 {
     if (!folder) return null;
     var uri = folder.getAttribute('id');
-    dump (uri + "\n");
     var resource = RDF.GetResource(uri);
     var msgFolder =
         resource.QueryInterface(Components.interfaces.nsIMsgFolder);
     if (msgFolder)
     {
-        dump("GetSelectTrashUri" + "\n");
         var rootFolder = msgFolder.rootFolder;
         var numFolder;
         var out = new Object();
-        var trashFolder = rootFolder.getFoldersWithFlag(0x0100, 1, out); 
+        var trashFolder = rootFolder.getFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, 1, out); 
         numFolder = out.value;
-        dump (numFolder + "\n");
-        if (trashFolder)
-        {
-            dump (trashFolder.URI + "\n");
+        if (trashFolder) {
             return trashFolder.URI;
         }
     }

@@ -1938,6 +1938,46 @@ nsresult nsMsgDBView::GetPRTimeField(nsIMsgHdr *msgHdr, nsMsgViewSortTypeValue s
     return NS_OK;
 }
 
+#define MSG_STATUS_MASK (MSG_FLAG_REPLIED | MSG_FLAG_FORWARDED)
+
+nsresult nsMsgDBView::GetStatusSortValue(nsIMsgHdr *msgHdr, PRUint32 *result)
+{
+  NS_ENSURE_ARG_POINTER(msgHdr);
+  NS_ENSURE_ARG_POINTER(result);
+
+  PRUint32 messageFlags;
+  nsresult rv = msgHdr->GetFlags(&messageFlags);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (messageFlags & MSG_FLAG_NEW) {
+    // happily, new by definition stands alone
+    *result = 0;
+    return NS_OK;
+  }
+
+  switch (messageFlags & MSG_STATUS_MASK) {
+    case MSG_FLAG_REPLIED:
+        *result = 2;
+        break;
+    case MSG_FLAG_FORWARDED|MSG_FLAG_REPLIED:
+        *result = 1;
+        break;
+    case MSG_FLAG_FORWARDED:
+        *result = 3;
+        break;
+    default:
+        if (messageFlags & MSG_FLAG_READ) {
+            *result = 4;
+        }
+        else {
+            *result = 5;
+        }
+        break;
+    }
+
+    return NS_OK;
+}
+
 nsresult nsMsgDBView::GetLongField(nsIMsgHdr *msgHdr, nsMsgViewSortTypeValue sortType, PRUint32 *result)
 {
   nsresult rv;
@@ -1959,7 +1999,7 @@ nsresult nsMsgDBView::GetLongField(nsIMsgHdr *msgHdr, nsMsgViewSortTypeValue sor
         *result = nsMsgPriority::highest - priority;
         break;
     case nsMsgViewSortType::byStatus:
-        rv = msgHdr->GetStatusOffset(result);
+        rv = GetStatusSortValue(msgHdr,result);
         break;
     case nsMsgViewSortType::byFlagged:
         bits = 0;
@@ -2014,13 +2054,9 @@ NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOr
 {
     nsresult rv;
 
-
     // null db is OK.
     nsMsgKeyArray preservedSelection;
 
-#ifdef DEBUG_seth
-    printf("XXX nsMsgDBView::Sort(%d,%d)\n",(int)sortType,(int)sortOrder);
-#endif
     if (m_sortType == sortType && m_sortValid) {
         if (m_sortOrder == sortOrder) {
             // same as it ever was.  do nothing
@@ -2680,7 +2716,7 @@ nsMsgViewIndex nsMsgDBView::GetIndexForThread(nsIMsgDBHdr *hdr)
 
 nsMsgViewIndex nsMsgDBView::GetInsertIndex(nsIMsgDBHdr *msgHdr)
 {
-	PRBool done = PR_FALSE;
+    PRBool done = PR_FALSE;
 	PRBool withinOne = PR_FALSE;
 	nsMsgViewIndex retIndex = nsMsgViewIndex_None;
 	nsMsgViewIndex tryIndex = GetSize() / 2;
@@ -2721,10 +2757,15 @@ nsMsgViewIndex nsMsgDBView::GetInsertIndex(nsIMsgDBHdr *msgHdr)
 			pValue1 = (void *) &keyInfo1;
 			break;
 		case kU32:
-			GetLongField(msgHdr, m_sortType, &dWordEntryInfo1.dword);
-			msgHdr->GetMessageKey(&dWordEntryInfo1.info.id);
+            if (m_sortType == nsMsgViewSortType::byId) {
+              msgHdr->GetMessageKey(&dWordEntryInfo1.dword);
+            }
+            else {
+              GetLongField(msgHdr, m_sortType, &dWordEntryInfo1.dword);
+            }
+            msgHdr->GetMessageKey(&dWordEntryInfo1.info.id);
+            pValue1 = (void *) &dWordEntryInfo1;
 			comparisonFun = FnSortIdDWord;
-			pValue1 = (void *) &dWordEntryInfo1;
 			break;
     case kPRTime:
       rv = GetPRTimeField(msgHdr, m_sortType, &timeInfo1.prtime);
@@ -2754,7 +2795,12 @@ nsMsgViewIndex nsMsgDBView::GetInsertIndex(nsIMsgDBHdr *msgHdr)
 		}
 		else if (fieldType == kU32)
 		{
-			GetLongField(tryHdr, m_sortType, &dWordEntryInfo2.dword);
+            if (m_sortType == nsMsgViewSortType::byId) {
+              dWordEntryInfo2.dword = messageKey;
+            }
+            else {
+			  GetLongField(tryHdr, m_sortType, &dWordEntryInfo2.dword);
+            }
 			dWordEntryInfo2.info.id = messageKey;
 			pValue2 = &dWordEntryInfo2;
 		}

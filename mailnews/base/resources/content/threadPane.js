@@ -84,8 +84,6 @@ nsMsgDBViewCommandUpdater.prototype =
 
 function HandleColumnClick(columnID)
 {
-  dump("XXX HandleColumnClick()\n");
-
   // if they click on the "threadCol", we need to show the threaded-only columns
   if ((columnID[0] == 't') && (columnID[1] == 'h')) {  
     SetHiddenAttributeOnThreadOnlyColumns(""); // this will show them
@@ -94,7 +92,7 @@ function HandleColumnClick(columnID)
     SetHiddenAttributeOnThreadOnlyColumns("true");  // this will hide them
   }
   
-  dump("fix UpdateSortMenu()\n");
+  dump("XXX fix UpdateSortMenu()\n");
   //UpdateSortMenu(columnID);
 
   ShowAppropriateColumns();
@@ -106,7 +104,6 @@ function PersistViewAttributesOnFolder()
   var folder = GetSelectedFolder();
 
   if (folder) {
-    dump("XXX persist: " + gDBView.viewType + "," + gDBView.viewFlags  + "," + gDBView.sortType + "," + gDBView.sortOrder + "\n");
     folder.setAttribute("viewType", gDBView.viewType);
     folder.setAttribute("viewFlags", gDBView.viewFlags);
     folder.setAttribute("sortType", gDBView.sortType);
@@ -121,11 +118,6 @@ function MsgComposeDraftMessage()
 
     ComposeMessage(msgComposeType.Draft, msgComposeFormat.Default, loadedFolder, messageArray);
 }
-
-/* keep in sync with nsMsgFolderFlags.h */
-var MSG_FOLDER_FLAG_TRASH = 0x0100;
-var MSG_FOLDER_FLAG_DRAFTS = 0x0400;
-var MSG_FOLDER_FLAG_TEMPLATES = 0x400000;
 
 function ThreadPaneDoubleClick()
 {
