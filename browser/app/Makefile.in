@@ -1,0 +1,58 @@
+
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+ifeq ($(USE_SHORT_LIBNAME), 1)
+PROGRAM = mozbrowser$(BIN_SUFFIX)
+else
+PROGRAM = mozbrowser-bin$(BIN_SUFFIX)
+endif
+
+REQUIRES = \
+	appshell \
+	string \
+	xpcom \
+	xulapp \
+	$(NULL)
+
+CPPSRCS = nsBrowserApp.cpp
+
+EXTRA_LIBS = \
+	$(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
+	$(MOZ_JS_LIBS) \
+	$(MOZ_COMPONENT_LIBS) \
+	$(TK_LIBS) \
+	$(NULL)
+
+$(PROGRAM): $(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
+
+ifeq ($(OS_ARCH),WINNT)
+OS_LIBS += comctl32.lib comdlg32.lib uuid.lib shell32.lib ole32.lib oleaut32.lib version.lib winspool.lib
+RCINCLUDE = splash.res
+ifndef MOZ_DEBUG
+MOZ_WINCONSOLE = 0
+endif
+endif
+
+include $(topsrcdir)/config/rules.mk
+
+ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
+mozbrowser:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
+	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
+		-e "s|%MREDIR%|$(mredir)|" \
+		-e "s|mozilla-bin|$(PROGRAM)|g" > $@
+	chmod +x $@
+
+libs:: mozbrowser
+	$(INSTALL) $< $(DIST)/bin
+
+install:: mozbrowser
+	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
+
+GARBAGE += mozbrowser
+
+endif
