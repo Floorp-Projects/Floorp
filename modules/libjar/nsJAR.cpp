@@ -798,7 +798,8 @@ nsJAR::RestoreModTime(nsZipItem *aItem, nsIFile *aExtractedFile)
   if (timestr)
   {
     if (PR_SUCCESS == PR_ParseTimeString(timestr, PR_FALSE, &prtime))
-      rv = aExtractedFile->SetLastModificationDate(prtime);
+        // nsIFile needs usecs.
+      rv = aExtractedFile->SetLastModificationDate(prtime / PR_USEC_PER_MSEC);
 
     JAR_NULLFREE(timestr);
   }
