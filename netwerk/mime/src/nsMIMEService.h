@@ -40,6 +40,8 @@ class nsMIMEService : public nsIMIMEService {
 
     // nsIMIMEService methods
     NS_IMETHOD GetFromExtension(const char *aFileExt, nsIMIMEInfo **_retval);
+    NS_IMETHOD GetTypeFromExtension(const char *aFileExt, char **aContentType);
+    NS_IMETHOD GetTypeFromURI(nsIURI *aURI, char **aContentType);
     NS_IMETHOD GetFromMIMEType(const char *aMIMEType, nsIMIMEInfo **_retval);
 
     NS_IMETHOD AddMIMEInfo(nsIMIMEInfo *aMIMEInfo);

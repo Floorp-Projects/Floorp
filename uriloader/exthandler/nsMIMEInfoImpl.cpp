@@ -32,6 +32,7 @@ nsMIMEInfoImpl::nsMIMEInfoImpl(const char *aMIMEType, const char *aFileExtension
 }
 
 nsMIMEInfoImpl::~nsMIMEInfoImpl() {
+    NS_RELEASE(mMIMEType);
 }
 
 PRBool
@@ -75,7 +76,7 @@ nsMIMEInfoImpl::GetMIMEType(char * *aMIMEType) {
 
 NS_IMETHODIMP
 nsMIMEInfoImpl::SetMIMEType(char * aMIMEType) {
-    delete mMIMEType;
+    NS_RELEASE(mMIMEType);
     mMIMEType = NS_NewAtom(aMIMEType);
     if (!mMIMEType) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
