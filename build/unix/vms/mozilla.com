@@ -116,7 +116,7 @@ $! Text files - covered by the catchall
 $! ".BAK.COM.CSS.DAT.DTD.HTM.HTML.JS.RDF.NET.ORG.SH.SRC.TBL.TXT.XML.XUL"
 $!
 $ define /user VMS_OPEN_ARGS_4 " ",-
-	"ctx=stm", "rfm=stmlf", "rat=cr"
+	"rfm=stmlf", "rat=cr"
 $!
 $ if f$trnlnm("USER") .eqs. "" then define /user user "''moz_user'"
 $ if f$trnlnm("LOGNAME") .eqs. "" then define /user logname "''moz_cwd'"
