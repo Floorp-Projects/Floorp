@@ -1,0 +1,38 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+#include "nsIURI.idl"
+#include "nsIProxy.idl"
+
+%{C++
+#define NS_PROTOCOLPROXYSERVICE_CID                             \
+{ /* E9B301C0-E0E4-11d3-A1A8-0050041CAF44 */                    \
+0xe9b301c0, 0xe0e4, 0x11d3, { 0xa1, 0xa8, 0x0, 0x50, 0x4, 0x1c, 0xaf, 0x44 } }
+%}
+
+[scriptable, uuid(495CC980-E0D4-11d3-A1A8-0050041CAF44)]
+interface nsIProtocolProxyService : nsISupports
+{
+    void examineForProxy(in nsIURI aURI, in nsIProxy aProxy);
+};
+
