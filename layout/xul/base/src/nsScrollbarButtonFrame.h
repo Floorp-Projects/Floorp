@@ -79,7 +79,7 @@ public:
 
 
 protected:
-  virtual void MouseClicked(nsIPresContext* aPresContext);
+  virtual void MouseClicked(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
   virtual void MouseClicked();
 
   
