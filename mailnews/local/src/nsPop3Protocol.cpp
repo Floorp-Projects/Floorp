@@ -736,26 +736,18 @@ nsPop3Protocol::WaitForStartOfConnectionResponse(nsIInputStream* aInputStream,
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(aInputStream, line_length, pauseForMoreData);
 
-    if(pauseForMoreData || !line)
-    {
-		PR_FREEIF(line);
-		m_pop3ConData->pause_for_read = PR_TRUE;
-        return(line_length);
-    }
-    
     PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS,("RECV: %s", line));
 
-    if(*line == '+')
+    if(line && *line == '+')
 	{
         m_pop3ConData->command_succeeded = PR_TRUE;
         if(PL_strlen(line) > 4)
 			m_commandResponse = line+4;
         else
 			m_commandResponse = line;
-        
-        m_pop3ConData->next_state = m_pop3ConData->next_state_after_response;
-        m_pop3ConData->pause_for_read = PR_FALSE; /* don't pause */
-	}
+        } 
+    m_pop3ConData->next_state = m_pop3ConData->next_state_after_response;
+    m_pop3ConData->pause_for_read = PR_FALSE; /* don't pause */
     
 	PR_FREEIF(line);
     return(1);  /* everything ok */
@@ -1072,17 +1064,7 @@ PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
         else       
             Error(POP3_PASSWORD_FAILURE);
         
-		SetFlag(POP3_PASSWORD_FAILED);
-
-        PRBool prefBool = PR_FALSE;
-        m_pop3Server->GetAuthLogin(&prefBool);
-        if (prefBool && m_pop3ConData->capability_flags & POP3_HAS_AUTH_LOGIN)
-            m_pop3ConData->next_state = POP3_AUTH_LOGIN;
-        else
-            m_pop3ConData->next_state = POP3_SEND_USERNAME;
-        /* try again right away */
-        m_pop3ConData->pause_for_read = PR_FALSE;
-        m_pop3ConData->command_succeeded = PR_TRUE;
+	SetFlag(POP3_PASSWORD_FAILED);
 
         // libmsg event sink
         if (m_nsIPop3Sink) 
