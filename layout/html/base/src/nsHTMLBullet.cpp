@@ -75,7 +75,7 @@ public:
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   // nsIFrame
-  NS_IMETHOD DeleteFrame();
+  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
   NS_IMETHOD Paint(nsIPresContext &aCX,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
@@ -194,11 +194,11 @@ BulletFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
 }
 
 NS_METHOD
-BulletFrame::DeleteFrame()
+BulletFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
   // Release image loader first so that it's refcnt can go to zero
   mImageLoader.DestroyLoader();
-  return nsFrame::DeleteFrame();
+  return nsFrame::DeleteFrame(aPresContext);
 }
 
 NS_METHOD

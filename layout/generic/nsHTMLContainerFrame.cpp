@@ -332,7 +332,7 @@ nsHTMLContainerFrame::ContentDeleted(nsIPresShell*   aShell,
     nsIFrame* nextInFlow;
     deadFrame->GetNextInFlow(nextInFlow);
     deadFrame->BreakFromNextFlow();
-    deadFrame->DeleteFrame();
+    deadFrame->DeleteFrame(*aPresContext);
     deadFrame = nextInFlow;
 
     if (nsnull != deadFrame) {

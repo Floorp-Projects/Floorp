@@ -316,7 +316,8 @@ nsCSSInlineLayout::ReflowFrame(nsIFrame*            aKidFrame,
       // parent is not this because we are executing pullup code)
       nsIFrame* parent;
       aKidFrame->GetGeometricParent(parent);
-      ((nsCSSContainerFrame*)parent)->DeleteNextInFlowsFor(aKidFrame);
+      ((nsCSSContainerFrame*)parent)->DeleteNextInFlowsFor(*mLineLayout.mPresContext,
+                                                           aKidFrame);
     }
   }
 

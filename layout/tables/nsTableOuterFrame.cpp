@@ -722,7 +722,7 @@ NS_METHOD nsTableOuterFrame::VerifyTree() const
  * @param   aChild child this child's next-in-flow
  * @return  PR_TRUE if successful and PR_FALSE otherwise
  */
-PRBool nsTableOuterFrame::DeleteChildsNextInFlow(nsIFrame* aChild)
+PRBool nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame* aChild)
 {
   NS_PRECONDITION(IsChild(aChild), "bad geometric parent");
 
@@ -741,7 +741,7 @@ PRBool nsTableOuterFrame::DeleteChildsNextInFlow(nsIFrame* aChild)
 
   nextInFlow->GetNextInFlow(nextNextInFlow);
   if (nsnull != nextNextInFlow) {
-    parent->DeleteChildsNextInFlow(nextInFlow);
+    parent->DeleteChildsNextInFlow(aPresContext, nextInFlow);
   }
 
 #ifdef NS_DEBUG
@@ -800,7 +800,7 @@ PRBool nsTableOuterFrame::DeleteChildsNextInFlow(nsIFrame* aChild)
   }
 
   // Delete the next-in-flow frame and adjust it's parent's child count
-  nextInFlow->DeleteFrame();
+  nextInFlow->DeleteFrame(aPresContext);
   parent->mChildCount--;
 
 #ifdef NS_DEBUG

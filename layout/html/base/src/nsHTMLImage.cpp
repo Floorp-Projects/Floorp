@@ -96,7 +96,7 @@ class ImageFrame : public ImageFrameSuper {
 public:
   ImageFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
-  NS_IMETHOD DeleteFrame();
+  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -377,14 +377,14 @@ ImageFrame::~ImageFrame()
 }
 
 NS_METHOD
-ImageFrame::DeleteFrame()
+ImageFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
   NS_IF_RELEASE(mImageMap);
 
   // Release image loader first so that it's refcnt can go to zero
   mImageLoader.DestroyLoader();
 
-  return nsLeafFrame::DeleteFrame();
+  return nsLeafFrame::DeleteFrame(aPresContext);
 }
 
 NS_IMETHODIMP

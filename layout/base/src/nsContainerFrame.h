@@ -107,6 +107,7 @@ class nsContainerFrame : public nsSplittableFrame
 public:
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
 
+  NS_IMETHOD  DeleteFrame(nsIPresContext& aPresContext);
   /**
    * Default implementation is to use the content delegate to create a new
    * frame. After the frame is created it uses PrepareContinuingFrame() to
@@ -245,7 +246,7 @@ protected:
    *
    * @param   aChild child this child's next-in-flow
    */
-  PRBool  DeleteChildsNextInFlow(nsIFrame* aChild);
+  PRBool  DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame* aChild);
 
  /**
   * Push aFromChild and its next siblings to the next-in-flow. Change the

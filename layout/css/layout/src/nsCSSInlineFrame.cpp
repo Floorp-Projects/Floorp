@@ -160,9 +160,9 @@ nsCSSInlineFrame::CreateContinuingFrame(nsIPresContext&  aCX,
 }
 
 PRBool
-nsCSSInlineFrame::DeleteNextInFlowsFor(nsIFrame* aChild)
+nsCSSInlineFrame::DeleteNextInFlowsFor(nsIPresContext& aPresContext, nsIFrame* aChild)
 {
-  return DeleteChildsNextInFlow(aChild);
+  return DeleteChildsNextInFlow(aPresContext, aChild);
 }
 
 NS_IMETHODIMP
