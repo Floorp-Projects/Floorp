@@ -91,6 +91,37 @@ captureThis();
 
 
 
+function myTest(x)
+{
+  var obj = new Object();
+  var msg;
+
+  with (obj)
+  {
+    msg = (x != null) ? "NO" : "YES";
+    print("Is the provided argument to myTest() null? : " + msg);
+
+    try
+    {
+      throw "ZZZ";
+    }
+    catch (e)
+    {
+      print("Caught thrown exception = " + e);
+    }
+  }
+
+  return 1;
+}
+
+
+status = inSection(3);
+actual = myTest(null);
+expect = 1;
+captureThis();
+
+
+
 //-----------------------------------------------------------------------------
 test();
 //-----------------------------------------------------------------------------
