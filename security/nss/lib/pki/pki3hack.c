@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.76 $ $Date: 2003/09/12 19:38:04 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.77 $ $Date: 2003/11/11 21:46:53 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -412,28 +412,38 @@ nss3certificate_getDERSerialNumber(nssDecodedCert *dc,
     return PR_FAILURE;
 }
 
+/* Returns NULL if "encoding" cannot be decoded. */
 NSS_IMPLEMENT nssDecodedCert *
 nssDecodedPKIXCertificate_Create (
   NSSArena *arenaOpt,
   NSSDER *encoding
 )
 {
-    nssDecodedCert *rvDC;
-    SECItem secDER;
-    rvDC = nss_ZNEW(arenaOpt, nssDecodedCert);
-    rvDC->type = NSSCertificateType_PKIX;
+    nssDecodedCert  *rvDC = NULL;
+    CERTCertificate *cert;
+    SECItem          secDER;
+
     SECITEM_FROM_NSSITEM(&secDER, encoding);
-    rvDC->data = (void *)CERT_DecodeDERCertificate(&secDER, PR_TRUE, NULL);
-    rvDC->getIdentifier = nss3certificate_getIdentifier;
-    rvDC->getIssuerIdentifier = nss3certificate_getIssuerIdentifier;
-    rvDC->matchIdentifier = nss3certificate_matchIdentifier;
-    rvDC->isValidIssuer = nss3certificate_isValidIssuer;
-    rvDC->getUsage = nss3certificate_getUsage;
-    rvDC->isValidAtTime = nss3certificate_isValidAtTime;
-    rvDC->isNewerThan = nss3certificate_isNewerThan;
-    rvDC->matchUsage = nss3certificate_matchUsage;
-    rvDC->getEmailAddress = nss3certificate_getEmailAddress;
-    rvDC->getDERSerialNumber = nss3certificate_getDERSerialNumber;
+    cert = CERT_DecodeDERCertificate(&secDER, PR_TRUE, NULL);
+    if (cert) {
+	rvDC = nss_ZNEW(arenaOpt, nssDecodedCert);
+	if (rvDC) {
+	    rvDC->type                = NSSCertificateType_PKIX;
+	    rvDC->data                = (void *)cert;
+	    rvDC->getIdentifier       = nss3certificate_getIdentifier;
+	    rvDC->getIssuerIdentifier = nss3certificate_getIssuerIdentifier;
+	    rvDC->matchIdentifier     = nss3certificate_matchIdentifier;
+	    rvDC->isValidIssuer       = nss3certificate_isValidIssuer;
+	    rvDC->getUsage            = nss3certificate_getUsage;
+	    rvDC->isValidAtTime       = nss3certificate_isValidAtTime;
+	    rvDC->isNewerThan         = nss3certificate_isNewerThan;
+	    rvDC->matchUsage          = nss3certificate_matchUsage;
+	    rvDC->getEmailAddress     = nss3certificate_getEmailAddress;
+	    rvDC->getDERSerialNumber  = nss3certificate_getDERSerialNumber;
+	} else {
+	    CERT_DestroyCertificate(cert);
+	}
+    }
     return rvDC;
 }
 
@@ -443,19 +453,20 @@ create_decoded_pkix_cert_from_nss3cert (
   CERTCertificate *cc
 )
 {
-    nssDecodedCert *rvDC;
-    rvDC = nss_ZNEW(arenaOpt, nssDecodedCert);
-    rvDC->type = NSSCertificateType_PKIX;
-    rvDC->data = (void *)cc;
-    rvDC->getIdentifier = nss3certificate_getIdentifier;
-    rvDC->getIssuerIdentifier = nss3certificate_getIssuerIdentifier;
-    rvDC->matchIdentifier = nss3certificate_matchIdentifier;
-    rvDC->isValidIssuer = nss3certificate_isValidIssuer;
-    rvDC->getUsage = nss3certificate_getUsage;
-    rvDC->isValidAtTime = nss3certificate_isValidAtTime;
-    rvDC->isNewerThan = nss3certificate_isNewerThan;
-    rvDC->matchUsage = nss3certificate_matchUsage;
-    rvDC->getEmailAddress = nss3certificate_getEmailAddress;
+    nssDecodedCert *rvDC = nss_ZNEW(arenaOpt, nssDecodedCert);
+    if (rvDC) {
+	rvDC->type                = NSSCertificateType_PKIX;
+	rvDC->data                = (void *)cc;
+	rvDC->getIdentifier       = nss3certificate_getIdentifier;
+	rvDC->getIssuerIdentifier = nss3certificate_getIssuerIdentifier;
+	rvDC->matchIdentifier     = nss3certificate_matchIdentifier;
+	rvDC->isValidIssuer       = nss3certificate_isValidIssuer;
+	rvDC->getUsage            = nss3certificate_getUsage;
+	rvDC->isValidAtTime       = nss3certificate_isValidAtTime;
+	rvDC->isNewerThan         = nss3certificate_isNewerThan;
+	rvDC->matchUsage          = nss3certificate_matchUsage;
+	rvDC->getEmailAddress     = nss3certificate_getEmailAddress;
+    }
     return rvDC;
 }
 
@@ -716,16 +727,24 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc, PRBool forced
 static CERTCertificate *
 stan_GetCERTCertificate(NSSCertificate *c, PRBool forceUpdate)
 {
-    nssDecodedCert *dc;
+    nssDecodedCert *dc = c->decoding;
     CERTCertificate *cc;
-    if (!c->decoding) {
+
+    if (!dc) {
 	dc = nssDecodedPKIXCertificate_Create(NULL, &c->encoding);
-	if (!dc) return NULL;
+	if (!dc) 
+	    return NULL;
+	cc = (CERTCertificate *)dc->data;
+	PORT_Assert(cc);
+	if (!cc) {
+	    nssDecodedPKIXCertificate_Destroy(dc);
+	    return NULL;
+	}
+	PORT_Assert(!c->decoding); /* Feeble attempt at race detection. */
 	c->decoding = dc;
-    } else {
-	dc = c->decoding;
     }
     cc = (CERTCertificate *)dc->data;
+    PORT_Assert(cc);
     if (cc) {
 	if (!cc->nssCertificate || forceUpdate) {
 	    fill_CERTCertificateFields(c, cc, forceUpdate);
