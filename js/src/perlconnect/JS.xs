@@ -56,6 +56,10 @@
 
 #include "../jsapi.h"
 #include "jsperlpvt.h"
+#include <malloc.h>
+
+/* __REMOVE__ */
+/* #include <stdio.h> */
 
 static
 JSClass global_class = {
@@ -64,7 +68,422 @@ JSClass global_class = {
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
 };
 
+/* __PH__BEGIN  */
+/* perl callback structure */
+/* prefix PCB means Perl CallBack */
+
+struct PerlCallbackItem{
+    char*  name;
+    SV*    perl_proc;
+    int    param_num;
+    struct PerlCallbackItem *next;
+};
+
+typedef struct PerlCallbackItem PerlCallbackItem;
+
+
+struct PerlObjectItem {
+    char * name;
+    SV* pObject;
+    JSObject *jsObject;
+    JSClass *jsClass;
+    struct PerlCallbackItem* vector;
+    struct PerlObjectItem *next;
+};
+
+typedef struct PerlObjectItem PerlObjectItem;
+
+/* error reporter */
+//struct JSContextItem;
+//struct JSContextItem;
+struct  JSContextItem {
+    JSContext *cx;
+    SV *errorReporter;
+    PerlObjectItem *objects;
+    int dieFromErrors;
+    struct JSContextItem* next;
+};
+
+typedef struct JSContextItem JSContextItem;
+
+static JSContextItem *context_list = NULL;
+
+static JSContextItem*
+PCB_NewContextItem() {
+    JSContextItem *ret;
+    ret = (JSContextItem*)calloc(1, sizeof(JSContextItem));
+}
+
+static JSContextItem*
+PCB_FindContextItem (JSContext *cx) {
+    JSContextItem *cxitem =  context_list;
+    while ( cxitem ) {
+        if (cxitem->cx == cx ) return cxitem;
+        cxitem = cxitem->next;
+    }
+    return NULL;
+}
+
+static  SV*
+PCB_FindErrorReporter (JSContext *cx) {
+    JSContextItem *cxitem;
+    if (cxitem = PCB_FindContextItem(cx)) {
+        return cxitem->errorReporter;
+    } else {
+        return NULL;
+    }
+}
+
+static void
+PCB_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
+{
+    SV *report_proc;
+    if ( report_proc = PCB_FindErrorReporter(cx) ) {
+        dSP;
+        PUSHMARK(SP);
+        XPUSHs(sv_2mortal(newSVpv((char*)message, 0)));
+        if ( report ) {
+            XPUSHs(sv_2mortal(newSVpv((char*)report->filename, 0)));
+            XPUSHs(sv_2mortal(newSViv(report->lineno)));
+            if (report->linebuf) {
+                XPUSHs(sv_2mortal(newSVpv((char*)report->linebuf, 0)));
+                XPUSHs(sv_2mortal(newSVpv((char*)report->tokenptr, 0)));
+            }
+        }
+        PUTBACK;
+        perl_call_sv(report_proc, G_VOID | G_DISCARD);
+
+    } else {
+        warn(message);
+    }
+}
+
+/* perl object stuff */
+
+
+/* functions for callback list handling */
+static PerlCallbackItem*
+PCB_AddCallback(PerlObjectItem* object, char *name, 
+                SV* perl_proc, int param_num) {
+    PerlCallbackItem *cbk;
+
+    cbk = (PerlCallbackItem*)calloc(1, sizeof(PerlCallbackItem));
+    cbk->name = (char*) malloc(strlen(name) + 1);
+    strcpy(cbk->name, name);
+    SvREFCNT_inc(perl_proc);
+    cbk->perl_proc = perl_proc;
+    cbk->param_num = param_num;
+
+    cbk->next = object->vector;
+    object->vector = cbk;
+
+    return cbk;
+}
+
+/* functions for perl object list handling */
+
+static PerlObjectItem*
+PCB_AddObject(char *name, SV *pobj, JSContext *cx, JSObject *jso, JSClass *class) {
+    JSContextItem *cxitem;
+    PerlObjectItem *object;
+
+    /* we should always find the item */
+    cxitem = PCB_FindContextItem(cx);
+    object = (PerlObjectItem*) calloc(1, sizeof(PerlObjectItem));
+    object->name = (char*) malloc(strlen(name) + 1);
+    strcpy(object->name, name);
+    SvREFCNT_inc(pobj);
+    object->pObject = pobj;
+    object->jsObject = jso;
+    object->jsClass = class;
+    object->next = cxitem->objects;
+    cxitem->objects = object;
+
+    return object;
+}
+
+static PerlObjectItem*
+PCB_FindObject(JSContext *cx, JSObject *jso) {
+    JSContextItem *cxitem;
+    PerlObjectItem *objitem;
+
+    cxitem = PCB_FindContextItem(cx);
+    objitem = cxitem->objects;
+
+    while ( objitem ) {
+        if ( objitem->jsObject == jso ) return objitem;
+        objitem = objitem->next;
+    }
+    return NULL;
+}
+
+static PerlCallbackItem*
+PCB_FindCallback(PerlObjectItem *obj, const char *name) {
+    PerlCallbackItem *cbkitem;
+
+    cbkitem = obj->vector;
+    while ( cbkitem ) {
+        if ( strcmp(name, cbkitem->name) == 0 ) return cbkitem;
+        cbkitem = cbkitem->next;
+    }
+    return NULL;
+}
+
+/* deletion functions */
+
+static void 
+PCB_FreeCallbackItem(PerlCallbackItem *callback) {
+    free(callback->name);
+    /* we have to decrease ref. count to proc */
+    SvREFCNT_dec(callback->perl_proc);
+    free(callback);
+}
+
+static void 
+PCB_FreeObjectItem(PerlObjectItem *object) {
+    PerlCallbackItem *cbkitem, *next;
+    JSClass *class;
+
+    free(object->name);
+    free(object->jsClass);
+
+    SvREFCNT_dec(object->pObject);
+    cbkitem = object->vector;
+    while ( cbkitem ) {
+        next = cbkitem->next;
+        PCB_FreeCallbackItem(cbkitem);
+        cbkitem = next;
+    }
+    free(object);
+}
+
+static void 
+PCB_FreeContextItem(JSContext * cx) {
+    JSContextItem *cxitem, *aux;
+    PerlObjectItem *objitem, *next;
+
+    cxitem = PCB_FindContextItem(cx);
+    objitem = cxitem->objects;
+
+    while ( objitem ) {
+        next = objitem->next;
+        PCB_FreeObjectItem(objitem);
+        objitem = next;
+    }
+
+    SvREFCNT_dec(cxitem->errorReporter);
+    
+    if ( context_list == cxitem ) {
+        context_list = cxitem->next;
+    } else {
+        aux = context_list;
+        while ( aux->next != cxitem ) aux = aux->next;
+        aux->next = cxitem->next;
+    }
+    free(cxitem);
+}
+
+/* later the object list should be bind to JS Context
+   in this case is needed to update destructor PerlFreeObjectList
+*/
+
+/* property getter and setter - cooperate with AUTOLOAD */
+
+static JSBool
+PCB_GetProperty(JSContext *cx, JSObject *obj, jsval name, jsval *rval) {
+    PerlObjectItem *po;
+    int i, cnt, len;
+    I32 ax;
+    SV *proc_sv;
+    HV *stash;
+    char prop_name[256];
+    char full_name[256];
+    char *foo;
+    GV *gv;
+    dSP;
+
+    /* property name */
+    strcpy(prop_name, JS_GetStringBytes(JSVAL_TO_STRING(name)));
+
+    if (! (po = PCB_FindObject(cx, obj)))
+        croak("Couldn't find stub for object");
+    if ( (PCB_FindCallback(po, prop_name)))
+        return(JS_TRUE);
+
+    stash = SvSTASH(SvRV(po->pObject));
+    /* strcpy(full_name, HvNAME(stash));
+    strcat(full_name, "::");
+    strcat(full_name, prop_name);
+
+    proc_sv = sv_newmortal();
+    sv_setpv(proc_sv, full_name); */
+    /* start of perl call stuff */
+
+    gv = gv_fetchmeth(stash, prop_name, strlen(prop_name), -1);
+
+    ENTER;
+    SAVETMPS;
+    PUSHMARK(SP);
+    XPUSHs(po->pObject); /* self for perl AUTOLOAD */
+    PUTBACK;
+
+    /* cnt = perl_call_sv(proc_sv, 0); */
+    cnt = perl_call_sv((SV*)GvCV(gv), 0);    
+
+    SPAGAIN;
+    /* adjust stack for use of ST macro (see perlcall) */
+    SP -= cnt;
+    ax = (SP - PL_stack_base) + 1;
+
+    /* read value(s) */
+    if (cnt == 1) {
+        SVToJSVAL(cx, obj, ST(0), rval);
+    } else {
+        warn("sorry, but array properties are not supported yet...");
+    }
+    PUTBACK;
+
+    FREETMPS;
+    LEAVE;
+
+    return(JS_TRUE);
+}
+
+static JSBool
+PCB_SetProperty(JSContext *cx, JSObject *obj, jsval name, jsval *rval) {
+    PerlObjectItem *po;
+    int i, cnt, len;
+    I32 ax;
+    SV *proc_sv, *value_sv;
+    HV *stash;
+    char prop_name[256];
+    char full_name[256];
+    char *foo;
+    dSP;
+
+    /* property name */
+    strcpy(prop_name, JS_GetStringBytes(JSVAL_TO_STRING(name)));
+
+    if (! (po = PCB_FindObject(cx, obj)))
+        croak("Couldn't find stub for object");
+    if ( (PCB_FindCallback(po, prop_name)))
+        return(JS_TRUE);
+
+    stash = SvSTASH(SvRV(po->pObject));
+    strcpy(full_name, HvNAME(stash));
+    strcat(full_name, "::");
+    strcat(full_name, prop_name);
+
+    proc_sv = sv_newmortal();
+    sv_setpv(proc_sv, full_name);
+    value_sv = sv_newmortal();
+    JSVALToSV(cx, obj, *rval, &value_sv);
+    /* start of perl call stuff */
+    ENTER;
+    SAVETMPS;
+    PUSHMARK(SP);
+    XPUSHs(po->pObject); /* self for perl AUTOLOAD */
+    XPUSHs(value_sv);
+    PUTBACK;
+
+    cnt = perl_call_sv(proc_sv, 0);
+    
+    SPAGAIN;
+    /* adjust stack for use of ST macro (see perlcall) */
+    SP -= cnt;
+    ax = (SP - PL_stack_base) + 1;
+
+    /* read value(s) */
+    if (cnt == 1) {
+        SVToJSVAL(cx, obj, ST(0), rval);
+    } else {
+        warn("sorry, but array properties are not supported yet...");
+    }
+    PUTBACK;
+
+    FREETMPS;
+    LEAVE;
+
+    return(JS_TRUE);
+}
+
+/* helper functions */ 
+/* JSClass pointer is disposed by 
+   JS engine during context cleanup _PH_ 
+*/
+static JSClass* 
+PCB_NewStdJSClass(char *name) {	
+    JSClass *class;
+
+    class = (JSClass*)calloc(1, sizeof(JSClass));
+    class->name = name;
+    class->flags = JSCLASS_HAS_PRIVATE;
+    class->addProperty = JS_PropertyStub;
+    class->delProperty = JS_PropertyStub;  
+    class->getProperty = PCB_GetProperty;  
+    class->setProperty = PCB_SetProperty;
+    class->enumerate = JS_EnumerateStub;
+    class->resolve = JS_ResolveStub;
+    class->convert = JS_ConvertStub;
+    class->finalize = JS_FinalizeStub;
+    return(class);
+}
+
+static JSBool
+PCB_UniversalStub (JSContext *cx, JSObject *obj, uintN argc, 
+                   jsval *argv, jsval *rval) {
+    JSFunction *fun;
+    PerlObjectItem *po;
+    PerlCallbackItem *cbk;
+    int i, cnt;
+    I32 ax;
+    SV* sv;
+    dSP;
+
+    fun = JS_ValueToFunction(cx, argv[-2]);
+    if (! (po = PCB_FindObject(cx, obj)))
+        croak("Couldn't find stub for object");
+    if (! (cbk = PCB_FindCallback(po, JS_GetFunctionName(fun))))
+        croak("Couldn't find perl callback");
+
+    /* start of perl call stuff */
+    ENTER;
+    SAVETMPS;
+    PUSHMARK(SP);
+    XPUSHs(po->pObject); /* self for perl object method */
+    for (i = 0; i < argc; i++) {
+        sv = sv_newmortal();
+        JSVALToSV(cx, obj, argv[i], &sv);
+        XPUSHs(sv);
+    }
+    PUTBACK;
+
+    cnt = perl_call_sv(SvRV(cbk->perl_proc), 0);
+    
+    SPAGAIN;
+    /* adjust stack for use of ST macro (see perlcall) */
+    SP -= cnt;
+    ax = (SP - PL_stack_base) + 1;
+
+    /* read value(s) */
+    if (cnt == 1) {
+        SVToJSVAL(cx, obj, ST(0), rval);
+    } else {
+        warn("sorry, but array results are not supported yet...");
+    }
+    PUTBACK;
+
+    FREETMPS;
+    LEAVE;
+
+    return(JS_TRUE);
+};
+
+/* __PH__END */
+
+
 /* Helper functions needed for most JS API routines */
+/*
 static JSRuntime *
 getRuntime()
 {
@@ -76,6 +495,7 @@ getContext()
 {
     return (JSContext *)SvIV((SV*)SvRV(perl_get_sv("JS::Context::this", FALSE)));
 }
+*/ /* commented as obsolete by __PH__ */
 
 /*
     The following packages are defined below:
@@ -94,6 +514,8 @@ PROTOTYPES:  DISABLE
 JSRuntime *
 JS_NewRuntime(maxbytes)
     int maxbytes
+    OUTPUT:
+    RETVAL
 
 void
 JS_DestroyRuntime(rt)
@@ -106,10 +528,17 @@ JS_DestroyRuntime(rt)
             $rt1 = $rt;
             [exit here]
         So both $rt->DESTROY and $rt1->DESTROY will cause runtime destruction.
+
+        _PH_ Thats not true, I guess. At least for Perl 5.
      */
-    if(SvREFCNT(ST(0))==0){
+     /* warn("===> before runtime check\n"); */
+    if(SvREFCNT(ST(0)) == 1){
+        /* warn("===> really runtime destroing"); */
+        /* __PH__ */
+        /*__PH__END */
         JS_DestroyRuntime(rt);
     }
+
 
  # package JS::Runtime
 MODULE = JS    PACKAGE = JS::Runtime   PREFIX = JS_
@@ -118,13 +547,21 @@ JSContext *
 JS_NewContext(rt, stacksize)
     JSRuntime *rt
     int        stacksize
-
+    PREINIT:
+    JSContextItem *cxitem;
     CODE:
     {
         JSObject *obj;
-        jsval v;
+        /* jsval v; comment out unused var __PH__*/
         /* Here we are creating the globals object ourselves. */
-        JSContext *cx = JS_NewContext(rt, stacksize);
+        JSContext *cx;
+        cx = JS_NewContext(rt, stacksize);
+        cxitem = PCB_NewContextItem();
+        cxitem->cx = cx;
+        cxitem->next = context_list;
+        context_list = cxitem;
+        /* __PH__ set the error reporter */
+        JS_SetErrorReporter(cx, PCB_ErrorReporter); 
         obj = JS_NewObject(cx, &global_class, NULL, NULL);
         JS_InitStandardClasses(cx, obj);
         RETVAL = cx;
@@ -137,8 +574,11 @@ JS_DestroyContext(cx)
     JSContext *cx
     CODE:
     /* See the comment about ref. count above */
-    if(SvREFCNT(ST(0))==0){
+    /* warn("===> before context check\n"); */
+    if(SvREFCNT(ST(0)) == 1){
+        /* warn("===> really destroing context"); */
         JS_DestroyContext(cx);
+        PCB_FreeContextItem(cx);
     }
 
 
@@ -149,14 +589,17 @@ jsval
 JS_eval(cx, bytes)
     JSContext *cx
     char *bytes
-
+    PREINIT:
+    JSContextItem *cxitem;
     CODE:
     {
         jsval rval;
-		JSObject *obj;
         /* Call on the global object */
-        if(!JS_EvaluateScript(cx, JS_GetGlobalObject(cx), bytes, strlen(bytes), "Perl", 0, &rval)){
-            croak("Perl eval failed");
+        if(!JS_EvaluateScript(cx, JS_GetGlobalObject(cx), 
+                              bytes, strlen(bytes), "Perl", 0, &rval)){
+            cxitem = PCB_FindContextItem(cx);
+            if (!cxitem || cxitem->dieFromErrors)
+                croak("Perl eval failed");
             XSRETURN_UNDEF;
         }
         RETVAL = rval;
@@ -164,16 +607,105 @@ JS_eval(cx, bytes)
     OUTPUT:
     RETVAL
 
+# __PH__
+void
+JS_setErrorReporter(cx, reporter)
+    JSContext *cx
+    SV* reporter
+    PREINIT:
+    JSContextItem *cxitem;
+    CODE:
+    cxitem = PCB_FindContextItem(cx);
+    SvREFCNT_inc(reporter);
+    if ( cxitem ) cxitem->errorReporter = reporter;
+
+void
+JS_setDieFromErrors(cx, value)
+     JSContext *cx
+     int value
+     PREINIT:
+     JSContextItem *cxitem;
+     CODE:
+     cxitem = PCB_FindContextItem(cx);
+     if ( cxitem ) cxitem->dieFromErrors = value;
+
+void
+JS_createObject(cx, object, name,  methods)
+    JSContext *cx 
+    SV *object
+    char *name
+    SV *methods
+    PREINIT:
+    JSObject *jso;
+    HV *m_hash;
+    I32 len;	
+    HE *he;
+    int i;
+    PerlObjectItem *po;
+    JSClass *object_class;
+    PerlCallbackItem *pcbitem;
+    CODE:
+    if (SvTYPE(SvRV(methods)) != SVt_PVHV) {
+        croak("Second parameter has to be HASHREF");
+    }
+    /* create js object in given context */
+    object_class = PCB_NewStdJSClass(name);
+    jso = JS_NewObject(cx, object_class, NULL, 0);
+    if (!jso) croak("Unable create JS object");
+    /* create callback info */
+    po = PCB_AddObject(name, object, cx, jso, object_class);
+    m_hash = (HV*)SvRV(methods);
+    hv_iterinit(m_hash);
+    while ((he = hv_iternext(m_hash))) {
+	PCB_AddCallback(po, hv_iterkey(he, &len), hv_iterval(m_hash, he), 0);
+    }
+    /* set js object methods */
+    /* HERE _PH_ */
+    pcbitem = po->vector;
+    while ( pcbitem ) {
+        if (! JS_DefineFunction(cx, jso, pcbitem->name, 
+                                PCB_UniversalStub, 0, 0)) 
+            croak("Unable create JS function");
+        pcbitem = pcbitem->next;
+    }
+/*    for (i = 0; i < po->count; i++) {
+        if (! JS_DefineFunction(cx, jso, 
+                           po->vector[i]->name,
+                           PCB_UniversalStub,
+                           0,0))
+           croak("Unable create JS function\n");
+           } */
+    po->jsObject = JS_InitClass(cx, JS_GetGlobalObject(cx), jso, 
+                object_class, 0, 0,
+                NULL, NULL, NULL, NULL);
+
+
+# __PH__END
+
+
  # package JS::Object
 MODULE = JS    PACKAGE = JS::Object   PREFIX = JS_
 
  #
  #   The methods below get used when hash is tied.
  #
-JSObject *
+SV *
 JS_TIEHASH(class, obj)
     char *class
-    JSObject *obj
+    SV *obj
+    PREINIT:
+    JSContext* cx;
+    CODE:
+        RETVAL = obj;
+    OUTPUT:
+    RETVAL
+
+SV *
+JS_TIEARRAY(class, obj)
+    char *class
+    SV *obj
+    PREINIT:
+    JSContext* cx;
     CODE:
         RETVAL = obj;
     OUTPUT:
@@ -184,12 +716,40 @@ JS_FETCH(obj, key)
     JSObject *obj
     char *key
     PREINIT:
+    JSContext* cx;
     jsval rval;
+    MAGIC *magic;
     CODE:
     {
-        /*printf("in FETCH\n");*/
-        JS_GetProperty(getContext(), obj, key, &rval);
+        /* printf("in FETCH\n"); */
+        magic = mg_find(SvRV(ST(0)), '~');
+        if (magic) {
+            cx = (JSContext *)SvIV(magic->mg_obj);
+        } else {
+            warn("Tied object has no magic\n");
+        }
+        JS_GetProperty(cx, obj, key, &rval);
         RETVAL = rval;
+    }
+    OUTPUT:
+    RETVAL
+
+int
+JS_FETCHSIZE(obj)
+    JSObject *obj
+    PREINIT:
+    JSContext* cx;
+    MAGIC *magic;
+    CODE:
+    {
+        /* printf("in FETCH\n"); */
+        magic = mg_find(SvRV(ST(0)), '~');
+        if (magic) {
+            cx = (JSContext *)SvIV(magic->mg_obj);
+        } else {
+            warn("Tied object has no magic\n");
+        }
+        JS_GetArrayLength(cx, obj, &RETVAL);
     }
     OUTPUT:
     RETVAL
@@ -199,42 +759,79 @@ JS_STORE(obj, key, value)
     JSObject *obj
     char *key
     jsval value
+    PREINIT:
+    JSContext* cx;
+    MAGIC *magic;
     CODE:
     {
-        /*printf("In STORE\n");*/
-        JS_SetProperty(getContext(), obj, key, &value);
+        /* printf("In STORE\n"); */
+        magic = mg_find(SvRV(ST(0)), '~');
+        if (magic) {
+            cx = (JSContext *)SvIV(magic->mg_obj);
+        } else {
+            warn("Tied object has no magic\n");
+        }
+        JS_SetProperty(cx, obj, key, &value);
     }
 
 void
 JS_DELETE(obj, key)
     JSObject *obj
     char *key
+    PREINIT:
+    JSContext* cx;
+    MAGIC *magic;
     CODE:
     {
-        /*printf("In DELETE\n");*/
-        JS_DeleteProperty(getContext(), obj, key);
+        /* printf("In DELETE\n"); */
+        magic = mg_find(SvRV(ST(0)), '~');
+        if (magic) {
+            cx = (JSContext *)SvIV(magic->mg_obj);
+        } else {
+            warn("Tied object has no magic\n");
+        }      
+        JS_DeleteProperty(cx, obj, key);
     }
 
 void
 JS_CLEAR(obj)
     JSObject *obj
+    PREINIT:
+    JSContext* cx;
+    MAGIC *magic;
     CODE:
     {
-        /*printf("In CLEAR\n");*/
-        JS_ClearScope(getContext(), obj);
+        /* printf("In CLEAR\n"); */
+        magic = mg_find(SvRV(ST(0)), '~');
+        if (magic) {
+            cx = (JSContext *)SvIV(magic->mg_obj);
+        } else {
+            warn("Tied object has no magic\n");
+        }
+        JS_ClearScope(cx, obj);
     }
 
 int
 JS_EXISTS(obj, key)
     JSObject *obj
     char *key
+    PREINIT:
+    JSContext* cx;
+    MAGIC *magic;
     CODE:
     {
         jsval v;
-
-        /*printf("In EXISTS\n");*/
-        JS_LookupProperty(getContext(), obj, key, &v);
+        /* printf("In EXISTS\n"); */
+        magic = mg_find(SvRV(ST(0)), '~');
+        if (magic) {
+            cx = (JSContext *)SvIV(magic->mg_obj);
+        } else {
+            warn("Tied object has no magic\n");
+        }
+        JS_LookupProperty(cx, obj, key, &v);
         RETVAL = !JSVAL_IS_VOID(v);
     }
     OUTPUT:
     RETVAL
+
+
