@@ -423,13 +423,15 @@ public abstract class IdScriptable extends ScriptableObject
         }
 
         IdFunction ctor = newIdFunction(getClassName(), constructorId);
+        // order is important: setParentScope should be called before
+        // ctor.initAsConstructor
+        setParentScope(ctor); // XXX: why it is not scope ???
         ctor.initAsConstructor(scope, this);
         fillConstructorProperties(cx, ctor, sealed);
         if (sealed) {
             ctor.sealObject();
         }
 
-        setParentScope(ctor);
         setPrototype(getObjectPrototype(scope));
         cacheIdValue(constructorId, ctor);
 
@@ -449,6 +451,7 @@ public abstract class IdScriptable extends ScriptableObject
         (Scriptable obj, int id, boolean sealed)
     {
         IdFunction f = newIdFunction(id);
+        f.setParentScope(getParentScope());
         if (sealed) { f.sealObject(); }
         defineProperty(obj, getIdName(id), f, DONTENUM);
     }
