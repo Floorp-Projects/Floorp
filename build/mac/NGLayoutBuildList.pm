@@ -501,6 +501,8 @@ sub MakeResourceAliases()
         _InstallResources(":mozilla:xpfe:global:resources:locale:en-US:MANIFEST",                       "$global_locale_chrome_dir", 0);
         _InstallResources(":mozilla:xpfe:global:resources:locale:en-US:mac:MANIFEST",           "$global_locale_chrome_dir", 0);
 
+        _InstallResources(":mozilla:xpfe:communicator:resources:skin:MANIFEST", "$communicator_skin_chrome_dir");
+
         _InstallResources(":mozilla:docshell:base:MANIFEST",                                                            "$global_locale_chrome_dir", 0);
 
         my($layout_locale_hack_dir) = "$communicator_locale_chrome_dir"."layout:";
