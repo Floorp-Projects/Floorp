@@ -63,5 +63,5 @@ all clean distclean::
 	done
 
 run::
-	java -cp $(MOZILLA_BUILD):$(GRENDEL_BUILD) grendel.Main
+	java grendel.Main
 
