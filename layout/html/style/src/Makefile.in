@@ -30,6 +30,7 @@ DEFINES += -D_IMPL_NS_HTML
 
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS =				\
+	nsCSSAtoms.cpp		\
 	nsCSSKeywords.cpp		\
 	nsCSSDeclaration.cpp		\
 	nsCSSParser.cpp			\

@@ -25,6 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = raptor
 
 EXPORTS =               \
+        nsCSSAtoms.h	\
         nsICSSParser.h	\
         nsICSSStyleSheet.h \
         nsStyleUtil.h	\

@@ -36,6 +36,7 @@ EXPORTS =			\
 	$(NULL)
 
 CPPSRCS=				\
+	nsCSSAtoms.cpp 		\
 	nsCSSKeywords.cpp 		\
 	nsCSSDeclaration.cpp 		\
 	nsCSSParser.cpp 		\
@@ -55,6 +56,7 @@ CPPSRCS=				\
 	$(NULL)
 
 CPP_OBJS =					\
+	.\$(OBJDIR)\nsCSSAtoms.obj 		\
 	.\$(OBJDIR)\nsCSSKeywords.obj 		\
 	.\$(OBJDIR)\nsCSSDeclaration.obj 	\
 	.\$(OBJDIR)\nsCSSParser.obj 		\
