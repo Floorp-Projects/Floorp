@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -27,10 +26,9 @@
 
 DEPTH			= ../../../..
 
-# XfeWidgets headers are exported to dist/public/XfeToolBar/Xfe.  We use
-# the 'Xfe' directory to avoid the hassle of having to remember yet another
-# include prefix.
+# XfeWidgets headers are exported to dist/include/Xfe.
 MODULE			= XfeToolBar/Xfe
+INCL_SUBDIR	= /Xfe
 
 LIBRARY_NAME	= XfeToolBar
 

@@ -27,10 +27,9 @@
 
 DEPTH			= ../../../..
 
-# XfeWidgets headers are exported to dist/public/XfeToolTip/Xfe.  We use
-# the 'Xfe' directory to avoid the hasstle of having to remember yet another
-# include prefix.
+# XfeWidgets headers are exported to dist/include/Xfe.
 MODULE			= XfeToolTip/Xfe
+INCL_SUBDIR	= /Xfe
 
 LIBRARY_NAME	= XfeToolTip
 

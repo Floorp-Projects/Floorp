@@ -34,8 +34,9 @@
 
 DEPTH			= ../../../..
 
-# XmL headers are exported to dist/public/Microline/XmL
+# XmL headers are exported to dist/include/XmL
 MODULE			= Microline/XmL
+INCL_SUBDIR		= /XmL
 
 LIBRARY_NAME	= XmL
 

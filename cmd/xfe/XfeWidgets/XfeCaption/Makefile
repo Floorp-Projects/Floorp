@@ -27,10 +27,9 @@
 
 DEPTH			= ../../../..
 
-# XfeWidgets headers are exported to dist/public/XfeCaption/Xfe.  We use
-# the 'Xfe' directory to avoid the hasstle of having to remember yet another
-# include prefix.
+# XfeWidgets headers are exported to dist/include/Xfe.
 MODULE			= XfeCaption/Xfe
+INCL_SUBDIR	= /Xfe
 
 LIBRARY_NAME	= XfeCaption
 

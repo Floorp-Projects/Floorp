@@ -26,8 +26,9 @@
 
 DEPTH			= ../../../..
 
-# XfeWidgets headers are exported to dist/public/XfeWidgets/Xfe
+# XfeWidgets headers are exported to dist/include/Xfe
 MODULE			= XfeWidgets/Xfe
+INCL_SUBDIR	= /Xfe
 
 LIBRARY_NAME	= XfeWidgets
 

@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -27,10 +26,9 @@
 
 DEPTH			= ../../../..
 
-# XfeWidgets headers are exported to dist/public/XfeComboBox/Xfe.  We use
-# the 'Xfe' directory to avoid the hasstle of having to remember yet another
-# include prefix.
+# XfeWidgets headers are exported to dist/include/Xfe.
 MODULE			= XfeComboBox/Xfe
+INCL_SUBDIR	= /Xfe
 
 LIBRARY_NAME	= XfeComboBox
 
