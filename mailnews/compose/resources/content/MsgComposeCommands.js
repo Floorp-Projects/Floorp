@@ -182,7 +182,7 @@ var gComposeRecyclingListener = {
     awResetAllRows();
     RemoveAllAttachments();
 
-	  //We need to clear the identity popup menu in case the user will change them. It will be rebuilded later in ComposeStartup
+    // We need to clear the identity popup menu in case the user will change them. It will be rebuilded later in ComposeStartup
     ClearIdentityListPopup(document.getElementById("msgIdentityPopup"));
  
     //Clear the subject
@@ -224,9 +224,9 @@ var gComposeRecyclingListener = {
     var event = document.createEvent('Events');
     event.initEvent('compose-window-close', false, true);
     document.getElementById("msgcomposeWindow").dispatchEvent(event);
-	},
+  },
 
-	onReopen: function(params) {
+  onReopen: function(params) {
     //Reset focus to avoid undesirable visual effect when reopening the winodw
     var identityElement = document.getElementById("msgIdentity");
     if (identityElement)
@@ -240,7 +240,7 @@ var gComposeRecyclingListener = {
     var event = document.createEvent('Events');
     event.initEvent('compose-window-reopen', false, true);
     document.getElementById("msgcomposeWindow").dispatchEvent(event);
-	}
+  }
 };
 
 var stateListener = {
@@ -1149,11 +1149,12 @@ function DoCommandClose()
     }
 
     MsgComposeCloseWindow(true);
-	  // at this point, we might be caching this window.
-	  // in which case, we don't want to close it
+
+    // at this point, we might be caching this window.
+    // in which case, we don't want to close it
     if (sMsgComposeService.isCachedWindow(window)) {
-	    retVal = false;
-	  }
+      retVal = false;
+    }
   }
 
   return retVal;
@@ -1637,7 +1638,7 @@ function InitCharsetMenuCheckMark()
   UpdateMailEditCharset();
   // use setTimeout workaround to delay checkmark the menu
   // when onmenucomplete is ready then use it instead of oncreate
-  // see bug 78290 for the detail
+  // see bug #78290 for the details
   setTimeout("UpdateMailEditCharset()", 0);
 
 }
@@ -2048,32 +2049,38 @@ function ClearIdentityListPopup(popup)
 
 function FillIdentityListPopup(popup)
 {
-    var identities = GetIdentities();
+  // XXX TODO
+  // fix me to get the list of identities for the servers 
+  // in the same order as the folder pane
+  // see bug #191011
 
-    for (var i=0; i<identities.length; i++)
-    {
+  var identities = GetIdentities();
+
+  for (var i=0; i<identities.length; i++)
+  {
     var identity = identities[i];
 
-    //dump(i + " = " + identity.identityName + "," +identity.key + "\n");
+    // Get server prettyName for each identity
+    try {
+      var serverSupports = gAccountManager.GetServersForIdentity(identity);
+    
+      if(serverSupports.GetElementAt(0))
+        var result = serverSupports.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
 
-    //Get server prettyName for each identity
-
-    var serverSupports = gAccountManager.GetServersForIdentity(identity);
-
-    //dump(i + " = " + identity.identityName + "," +identity.key + "\n");
-
-    if(serverSupports.GetElementAt(0))
-      var result = serverSupports.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
-    //dump ("The account name is = "+result.prettyName+ "\n");
-    var accountName = " - "+result.prettyName;
-
-        var item=document.createElement('menuitem');
-        item.setAttribute('label', identity.identityName);
-        item.setAttribute('class', 'identity-popup-item');
-        item.setAttribute('accountname', accountName);
-        item.setAttribute('id', identity.key);
-        popup.appendChild(item);
+      var accountName = " - "+result.prettyName;
+      var item=document.createElement('menuitem');
+      item.setAttribute('label', identity.identityName);
+      item.setAttribute('class', 'identity-popup-item');
+      item.setAttribute('accountname', accountName);
+      item.setAttribute('id', identity.key);
+      popup.appendChild(item);
     }
+    catch (ex) {
+      // if we fail to get a server for the identity, handle it gracefully.
+      // see bug #131384
+      dump("did you get here after removing all accounts?  ex = " + ex + "\n");
+    }
+  }
 }
 
 function getCurrentIdentity()
@@ -2400,7 +2407,7 @@ function Attachments2CompFields(compFields)
 function RemoveAllAttachments()
 {
   var child;
-	var bucket = document.getElementById("attachmentBucket");
+  var bucket = document.getElementById("attachmentBucket");
   for (var i = bucket.childNodes.length - 1; i >= 0; i--)
   {
     child = bucket.removeChild(bucket.childNodes[i]);
