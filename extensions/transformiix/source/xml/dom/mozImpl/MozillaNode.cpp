@@ -38,12 +38,10 @@
 
 #include "mozilladom.h"
 
-/*Node::Node()
+Node::Node()
 {
-  ownerDocument = new Document();
-
-  nsNode = NULL;
-}*/
+  ownerDocument = NULL;
+}
 
 Node::Node(nsIDOMNode* node, Document* owner)
 {
@@ -67,6 +65,12 @@ void Node::setNSObj(nsIDOMNode* node)
   //Finally, place our selves back in the hash table, using the new object
   //as the hash value
   ownerDocument->addWrapper(this, (Int32)node);
+}
+
+void Node::setNSObj(nsIDOMNode* node, Document* owner)
+{
+  ownerDocument = owner;
+  nsNode = node;
 }
 
 nsIDOMNode* Node::getNSObj()
@@ -217,7 +221,7 @@ Node* Node::getNextSibling()
     return NULL;
 
   if (nsNode->GetNextSibling(&tmpNextSib) == NS_OK)
-    return ownerDocument->createWrapper(tmpNextSib);
+      return ownerDocument->createWrapper(tmpNextSib);
   else
     return NULL;
 }

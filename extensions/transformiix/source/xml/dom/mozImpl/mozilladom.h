@@ -40,7 +40,8 @@
 //
 // Modification History:
 // Who  When        What
-//
+// TK   02/11/2000  Added a default constructor for the Document class.  Simply
+//                  create an nsXMLDocument object is one is not provided.
 
 #ifndef MOZILLA_MITRE_DOM
 #define MOZILLA_MITRE_DOM
@@ -139,11 +140,12 @@ class Node : public MITREObject
         NOTATION_NODE
     };
 
-    //Node();
+    Node();
     Node(nsIDOMNode* node, Document* owner);
     virtual ~Node();
 
     virtual void setNSObj(nsIDOMNode* node);
+    void setNSObj(nsIDOMNode* node, Document* owner);
     nsIDOMNode* getNSObj();
 
     //Read functions
@@ -253,7 +255,7 @@ class DocumentFragment : public Node
 class Document : public Node
 {
   public:
-  //Document();
+    Document();
     Document(nsIDOMDocument* document);
     ~Document();
 

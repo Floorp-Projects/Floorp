@@ -38,9 +38,12 @@ void main()
       cout << "ERROR!  Could not retrieve the document's element (" << hex << res << ")" << endl << endl;;
     }
   
+  delete DocTestElem;
 
-  nsXMLDocument* nsxmlDocument = new nsXMLDocument();
-  Document* document = new Document(nsxmlDocument);
+
+  //nsXMLDocument* nsxmlDocument = new nsXMLDocument();
+  //Document* document = new Document(nsxmlDocument);
+  Document* document = new Document();
   Element* elem1;
   Element* subelem1;
   Element* subelem2;
@@ -50,6 +53,8 @@ void main()
   Element* tmpElem = NULL;
   NamedNodeMap* attrs = NULL;
   Node* tmpNode;
+  
+  cout << "--- Before Element Create ---" << endl;
   
   elem1 = document->createElement("FirstElement");
 
@@ -107,6 +112,6 @@ void main()
   
   cout << tmpAttr->getName() << "=" << tmpAttr->getValue() << endl; 
 
-  delete nsxmlDocument;
+  //delete nsxmlDocument;
   delete document;
 }
