@@ -1224,14 +1224,14 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
   else if (nsCRT::strcmp(aTopic, "quit-application") == 0) {
     gStoppingDownloads = PR_TRUE;
     if (mCurrDownloads.Count()) {
-    mCurrDownloads.Enumerate(CancelAllDownloads, this);
+      mCurrDownloads.Enumerate(CancelAllDownloads, this);
 
-    // Download Manager is shutting down! Tell the XPInstallManager to stop
-    // transferring any files that may have been being downloaded. 
-    gObserverService->NotifyObservers(mXPIProgress, "xpinstall-progress", NS_LITERAL_STRING("cancel").get());
-    
-    // Now go and update the datasource so that we "cancel" all paused downloads. 
-    SaveState();
+      // Download Manager is shutting down! Tell the XPInstallManager to stop
+      // transferring any files that may have been being downloaded. 
+      gObserverService->NotifyObservers(mXPIProgress, "xpinstall-progress", NS_LITERAL_STRING("cancel").get());
+
+      // Now go and update the datasource so that we "cancel" all paused downloads. 
+      SaveState();
     }
 
     // Now that active downloads have been canceled, remove all downloads if 
@@ -1609,9 +1609,19 @@ nsDownloadsDataSource::GetTarget(nsIRDFResource* aSource, nsIRDFResource* aPrope
         nsXPIDLCString path;
         nsCOMPtr<nsIRDFResource> res(do_QueryInterface(target));
         res->GetValue(getter_Copies(path));
+
+        nsCOMPtr<nsILocalFile> lf(do_CreateInstance("@mozilla.org/file/local;1"));
+        lf->InitWithNativePath(path);
+        nsCOMPtr<nsIIOService> ios(do_GetService("@mozilla.org/network/io-service;1"));
+        nsCOMPtr<nsIProtocolHandler> ph;
+        ios->GetProtocolHandler("file", getter_AddRefs(ph));
+        nsCOMPtr<nsIFileProtocolHandler> fph(do_QueryInterface(ph));
+
+        nsCAutoString fileURL;
+        fph->GetURLSpecFromFile(lf, fileURL);
         
         nsAutoString iconURL(NS_LITERAL_STRING("moz-icon://"));
-        nsAutoString pathTemp; pathTemp.AssignWithConversion(path);
+        nsAutoString pathTemp; pathTemp.AssignWithConversion(fileURL);
         iconURL += pathTemp + NS_LITERAL_STRING("?size=32");
 
         nsCOMPtr<nsIRDFResource> result;
