@@ -418,7 +418,7 @@ public:
   /** set aIsInline to PR_TRUE if aNode is inline as defined by HTML DTD */
   static nsresult IsNodeInline(nsIDOMNode *aNode, PRBool &aIsInline);
 
-  /** set aIsBlock to PR_TRUE if aNode is inline as defined by HTML DTD */
+  /** set aIsBlock to PR_TRUE if aNode is block as defined by HTML DTD */
   static nsresult IsNodeBlock(nsIDOMNode *aNode, PRBool &aIsBlock);
 
   /** This version is for exposure to JavaScript */
