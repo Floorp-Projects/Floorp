@@ -123,26 +123,11 @@ nsBulletFrame::Init(nsIPresContext*  aPresContext,
   mPresContext = aPresContext;
   
   nsresult  rv = nsFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  if (NS_FAILED(rv))
+    return rv;
 
-  nsIURI *imgURI = GetStyleList()->mListStyleImage;
-  if (imgURI) {
-    nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
-    if (NS_FAILED(rv))
-      return rv;
-
-    nsCOMPtr<nsILoadGroup> loadGroup;
-    GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
-
-    // Get the document URI for the referrer...
-    nsIURI *documentURI = nsnull;
-    nsCOMPtr<nsIDocument> doc;
-    if (mContent) {
-      doc = mContent->GetDocument();
-      if (doc) {
-        documentURI = doc->GetDocumentURI();
-      }
-    }
-
+  imgIRequest *imgRequest = GetStyleList()->mListStyleImage;
+  if (imgRequest) {
     if (!mListener) {
       nsBulletListener *listener;
       NS_NEWXPCOM(listener, nsBulletListener);
@@ -153,10 +138,7 @@ nsBulletFrame::Init(nsIPresContext*  aPresContext,
       NS_RELEASE(listener);
     }
 
-    if (nsContentUtils::CanLoadImage(imgURI, doc, doc)) {
-      // XXX: initialDocumentURI is NULL !
-      il->LoadImage(imgURI, nsnull, documentURI, loadGroup, mListener, aPresContext, nsIRequest::LOAD_NORMAL, nsnull, nsnull, getter_AddRefs(mImageRequest));
-    }
+    imgRequest->Clone(mListener, getter_AddRefs(mImageRequest));
   }
 
   return NS_OK;
@@ -1587,9 +1569,9 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
   }
 
   if (isStyleChange) {
-    nsIURI *newURI = GetStyleList()->mListStyleImage;
+    imgIRequest *newRequest = GetStyleList()->mListStyleImage;
 
-    if (newURI) {
+    if (newRequest) {
 
       if (!mListener) {
         nsBulletListener *listener;
@@ -1607,7 +1589,9 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
         // Reload the image, maybe...
         nsCOMPtr<nsIURI> oldURI;
         mImageRequest->GetURI(getter_AddRefs(oldURI));
-        if (oldURI) {
+        nsCOMPtr<nsIURI> newURI;
+        newRequest->GetURI(getter_AddRefs(newURI));
+        if (oldURI && newURI) {
           PRBool same;
           newURI->Equals(oldURI, &same);
           if (same) {
@@ -1620,29 +1604,7 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
       }
 
       if (needNewRequest) {
-        nsresult rv;
-        nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
-        if (NS_FAILED(rv))
-          return rv;
-
-        nsCOMPtr<nsILoadGroup> loadGroup;
-        GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
-
-        // Get the document URI for the referrer...
-        nsIURI* documentURI = nsnull;
-        nsCOMPtr<nsIDocument> doc;
-        if (mContent) {
-          doc = mContent->GetDocument();
-          if (doc) {
-            documentURI = doc->GetDocumentURI();
-          }
-        }
-
-
-        // XXX: initialDocumentURI is NULL !
-        il->LoadImage(newURI, nsnull, documentURI, loadGroup, mListener, doc,
-                      nsIRequest::LOAD_NORMAL, nsnull, nsnull,
-                      getter_AddRefs(mImageRequest));
+        newRequest->Clone(mListener, getter_AddRefs(mImageRequest));
       }
     }
   }
