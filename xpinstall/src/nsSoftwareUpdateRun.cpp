@@ -55,20 +55,93 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 
+#include "nsIJAR.h"
+#include "nsIPrincipal.h"
+#include "nsICertificatePrincipal.h"
+
 static NS_DEFINE_CID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
-extern JSObject *InitXPInstallObjects(JSContext *jscontext, JSObject *global, nsIFile* jarfile, const PRUnichar* url, const PRUnichar* args, PRUint32 flags, nsIXULChromeRegistry* registry, nsIZipReader* hZip);
+extern JSObject *InitXPInstallObjects(JSContext *jscontext, JSObject *global, 
+                                      nsIFile* jarfile, const PRUnichar* url, 
+                                      const PRUnichar* args, PRUint32 flags, 
+                                      nsIXULChromeRegistry* registry, 
+                                      nsIZipReader* hZip);
 extern nsresult InitInstallVersionClass(JSContext *jscontext, JSObject *global, void** prototype);
 extern nsresult InitInstallTriggerGlobalClass(JSContext *jscontext, JSObject *global, void** prototype);
 
 // Defined in this file:
 PR_STATIC_CALLBACK(void) XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
-static PRInt32  GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, char** scriptBuffer, PRUint32 *scriptLength);
-static nsresult SetupInstallContext(nsIZipReader* hZip, nsIFile* jarFile, const PRUnichar* url, const PRUnichar* args, PRUint32 flags, nsIXULChromeRegistry* reg, JSRuntime *jsRT, JSContext **jsCX, JSObject **jsGlob);
+static PRInt32  GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincipal* aPrincipal, char** scriptBuffer, PRUint32 *scriptLength);
+static nsresult SetupInstallContext(nsIZipReader* hZip, nsIFile* jarFile, const PRUnichar* url, const PRUnichar* args, 
+                                    PRUint32 flags, nsIXULChromeRegistry* reg, JSRuntime *jsRT, JSContext **jsCX, JSObject **jsGlob);
 
 extern "C" void RunInstallOnThread(void *data);
 
+
+nsresult VerifySigning(nsIZipReader* hZip, nsIPrincipal* aPrincipal)
+{
+    if (!aPrincipal) 
+        return NS_OK; // not signed, but not an error
+
+    nsCOMPtr<nsICertificatePrincipal> cp(do_QueryInterface(aPrincipal));
+    if (!cp) 
+        return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIJAR> jar(do_QueryInterface(hZip));
+    if (!jar)
+        return NS_ERROR_FAILURE;
+
+    // See if the archive is signed at all first
+    nsCOMPtr<nsIPrincipal> principal;
+    nsresult rv = jar->GetCertificatePrincipal(nsnull, getter_AddRefs(principal));
+    if (NS_FAILED(rv) || !principal)
+        return NS_ERROR_FAILURE;
+    
+    PRUint32 entryCount = 0;
+
+    // first verify all files in the jar are also in the manifest.
+    nsCOMPtr<nsISimpleEnumerator> entries;
+    rv = hZip->FindEntries("*", getter_AddRefs(entries));
+    if (NS_FAILED(rv))
+        return rv;
+
+    PRBool more;
+    nsXPIDLCString name;
+    while (NS_SUCCEEDED(entries->HasMoreElements(&more)) && more)
+    {
+        nsCOMPtr<nsIZipEntry> file;
+        rv = entries->GetNext(getter_AddRefs(file));
+        if (NS_FAILED(rv)) return rv;
+        
+        file->GetName(getter_Copies(name));
+
+        if ( PL_strncasecmp("META-INF/", name.get(), 9) == 0)
+            continue;
+
+        // we only count the entries not in the meta-inf directory
+        entryCount++;
+
+        // Each entry must be signed
+        PRBool equal;
+        rv = jar->GetCertificatePrincipal(name, getter_AddRefs(principal));
+        if (NS_FAILED(rv) || !principal) return NS_ERROR_FAILURE;
+
+        rv = principal->Equals(aPrincipal, &equal);
+        if (NS_FAILED(rv) || !equal) return NS_ERROR_FAILURE;
+    }
+
+    // next verify all files in the manifest are in the archive.
+    PRUint32 manifestEntryCount;
+    rv = jar->GetManifestEntriesCount(&manifestEntryCount);
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (entryCount != manifestEntryCount)
+        return NS_ERROR_FAILURE;  // some files were deleted from archive
+
+    return NS_OK;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Function name    : XPInstallErrorReporter
@@ -127,7 +200,6 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
              do_GetService(kSoftwareUpdateCID, &rv);
 
     if (NS_FAILED(rv))
-
     {
         NS_WARNING("shouldn't have RunInstall() if we can't get SoftwareUpdate");
         return;
@@ -159,12 +231,14 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
 // Description      : Extracts and reads in a install.js file from a passed jar file.
 // Return type      : static PRInt32
 // Argument         : const char* jarFile     - **NSPR** filepath
+// Argument         : nsIPrincipal* aPrincipal - a principal, if any, displayed to the user 
+//                    regarding the cert used to sign this install
 // Argument         : char** scriptBuffer     - must be deleted via delete []
 // Argument         : PRUint32 *scriptLength
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 static PRInt32
-GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, char** scriptBuffer, PRUint32 *scriptLength)
+GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincipal* aPrincipal, char** scriptBuffer, PRUint32 *scriptLength)
 {
     PRInt32 result = NS_OK;
 
@@ -192,6 +266,13 @@ GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, char** scriptB
         return nsInstall::CANT_READ_ARCHIVE;
     }
 
+    rv = VerifySigning(hZip, aPrincipal);
+    if (NS_FAILED(rv))
+    {
+        NS_ASSERTION(0, "Signing check of archive failed!");
+        return nsInstall::INVALID_SIGNATURE;
+    }
+
     // Extract the install.js file to the temporary directory
     nsSpecialSystemDirectory installJSFileSpec(nsSpecialSystemDirectory::OS_TemporaryDirectory);
     installJSFileSpec += "install.js";
@@ -200,6 +281,7 @@ GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, char** scriptB
     // Extract the install.js file.
     nsCOMPtr<nsILocalFile> iFile;
     rv = NS_NewNativeLocalFile(nsDependentCString(installJSFileSpec), PR_TRUE, getter_AddRefs(iFile));
+
     if (NS_SUCCEEDED(rv))
       rv = hZip->Extract("install.js", iFile);
     if ( NS_SUCCEEDED(rv) )
@@ -393,10 +475,12 @@ extern "C" void RunInstallOnThread(void *data)
         listener->OnInstallStart( installInfo->GetURL() );
 
     nsCOMPtr<nsIFile> jarpath = installInfo->GetFile();
+
     if (NS_SUCCEEDED(rv))
     {
         finalStatus = GetInstallScriptFromJarfile( hZip,
                                                    jarpath,
+                                                   installInfo->mPrincipal,
                                                    &scriptBuffer,
                                                    &scriptLength);
 
@@ -587,4 +671,3 @@ extern "C" void RunChromeInstallOnThread(void *data)
 
     delete info;
 }
-

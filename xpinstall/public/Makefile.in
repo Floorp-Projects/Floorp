@@ -37,6 +37,7 @@ XPIDLSRCS	= \
 		nsIXPINotifier.idl \
 		nsPIXPIProxy.idl \
 		nsPIXPIStubHook.idl \
+		nsPICertNotification.idl \
 		$(NULL)
 
 EXPORTS		= \

@@ -122,6 +122,7 @@ function onLoad()
     {
         var moduleName = param.GetString(i++);
         var URL = param.GetString(i++);
+        var certName = param.GetString(i++);
         addTreeItem(row++, moduleName, URL);
     }
 

@@ -52,6 +52,8 @@
 
 #include "nsIDialogParamBlock.h"
 
+#include "nsPICertNotification.h"
+
 #define NS_XPIDIALOGSERVICE_CONTRACTID "@mozilla.org/embedui/xpinstall-dialog-service;1"
 #define XPI_PROGRESS_TOPIC "xpinstall-progress"
 
@@ -60,7 +62,8 @@ class nsXPInstallManager : public nsIXPIListener,
                            public nsIObserver,
                            public nsIStreamListener,
                            public nsIProgressEventSink,
-                           public nsIInterfaceRequestor
+                           public nsIInterfaceRequestor,
+                           public nsPICertNotification
 {
     public:
         nsXPInstallManager();
@@ -74,10 +77,12 @@ class nsXPInstallManager : public nsIXPIListener,
         NS_DECL_NSIPROGRESSEVENTSINK
         NS_DECL_NSIREQUESTOBSERVER
         NS_DECL_NSIINTERFACEREQUESTOR
+        NS_DECL_NSPICERTNOTIFICATION
 
         NS_IMETHOD InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITriggerInfo* aTrigger, PRUint32 aChromeType );
 
     private:
+        nsresult    InitManagerInternal();
         NS_IMETHOD  DownloadNext();
         void        Shutdown();
         NS_IMETHOD  GetDestinationFile(nsString& url, nsILocalFile* *file);
@@ -93,14 +98,17 @@ class nsXPInstallManager : public nsIXPIListener,
         PRInt32             mNumJars;
         PRUint32            mChromeType;
         PRInt32             mContentLength;
+        PRInt32             mOutstandingCertLoads;
         PRBool              mDialogOpen;
         PRBool              mCancelled;
         PRBool              mSelectChrome;
         PRBool              mNeedsShutdown;
-
+  
         nsCOMPtr<nsIXPIProgressDialog>  mDlg;
         nsCOMPtr<nsIStringBundle>       mStringBundle;
         nsCOMPtr<nsISoftwareUpdate>     mInstallSvc;
+
+        nsCOMPtr<nsIDOMWindowInternal>  mParentWindow;
 };
 
 #endif

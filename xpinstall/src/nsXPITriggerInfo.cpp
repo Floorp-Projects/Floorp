@@ -27,6 +27,7 @@
 #include "nsDebug.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
+#include "nsICertificatePrincipal.h"
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
@@ -38,7 +39,7 @@ MOZ_DECL_CTOR_COUNTER(nsXPITriggerItem)
 
 nsXPITriggerItem::nsXPITriggerItem( const PRUnichar* aName,
                                     const PRUnichar* aURL,
-                                    PRInt32 aFlags )
+                                    PRInt32 aFlags)
   : mName(aName), mURL(aURL), mFlags(aFlags)
 {
     MOZ_COUNT_CTOR(nsXPITriggerItem);
@@ -89,6 +90,18 @@ PRBool nsXPITriggerItem::IsRelativeURL()
 }
 
 
+void
+nsXPITriggerItem::SetPrincipal(nsIPrincipal* aPrincipal)
+{
+	mPrincipal = aPrincipal;
+
+	nsCOMPtr<nsICertificatePrincipal> cp(do_QueryInterface(aPrincipal));
+	if (cp) {
+		nsXPIDLCString cName;
+		cp->GetCommonName(getter_Copies(cName));
+		mCertName = NS_ConvertUTF8toUCS2(cName);
+	}
+}
 //
 // nsXPITriggerInfo
 //

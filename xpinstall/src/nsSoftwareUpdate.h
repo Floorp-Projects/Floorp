@@ -16,12 +16,12 @@
 #include "nsCOMPtr.h"
 
 class nsInstallInfo;
+class nsIPrincipal;
 
 #include "nsIScriptExternalNameSet.h"
 #include "nsIObserver.h"
 #include "nsPIXPIStubHook.h"
 #include "nsTopProgressNotifier.h"
-
 
 class nsSoftwareUpdate: public nsISoftwareUpdate,
                         public nsPIXPIStubHook,
@@ -53,6 +53,7 @@ class nsSoftwareUpdate: public nsISoftwareUpdate,
         NS_IMETHOD InstallJar( nsIFile* localFile,
                                const PRUnichar* URL,
                                const PRUnichar* arguments,
+                               nsIPrincipal* principal = nsnull,
                                PRUint32 flags = 0,
                                nsIXPIListener* aListener = 0);
 
