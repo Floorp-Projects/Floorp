@@ -202,6 +202,141 @@ verify_attribute_declaration(IDL_tree attr_tree)
 }
 
 /*
+ * Find the underlying type of an identifier typedef.
+ * 
+ * All the needed tree-walking seems pretty shaky; isn't there something in
+ * libIDL to automate this?
+ * Might want to export this to handle the bug against no typedef'd const.
+ */
+IDL_tree /* IDL_TYPE_DCL */
+find_underlying_type(IDL_tree typedef_ident)
+{
+    IDL_tree up;
+    IDL_tree type;
+
+    if (typedef_ident == NULL || IDL_NODE_TYPE(typedef_ident) != IDLN_IDENT)
+        return NULL;
+
+    up = IDL_NODE_UP(typedef_ident);
+    if (up == NULL || IDL_NODE_TYPE(up) != IDLN_LIST)
+        return NULL;
+    up = IDL_NODE_UP(up);
+    if (up == NULL || IDL_NODE_TYPE(up) != IDLN_TYPE_DCL)
+        return NULL;
+
+    return IDL_TYPE_DCL(up).type_spec;
+}
+
+static IDL_tree /* IDL_PARAM_DCL */
+find_named_parameter(IDL_tree method_tree, const char *param_name)
+{
+    IDL_tree iter;
+    for (iter = IDL_OP_DCL(method_tree).parameter_dcls; iter;
+         iter = IDL_LIST(iter).next)
+    {
+        IDL_tree param = IDL_LIST(iter).data;
+        IDL_tree simple_decl = IDL_PARAM_DCL(param).simple_declarator;
+        const char *current_name = IDL_IDENT(simple_decl).str;
+        if (strcmp(current_name, param_name) == 0)
+            return param;
+    }
+    return NULL;
+}
+
+typedef enum ParamAttrType {
+    IID_IS,
+    LENGTH_IS,
+    SIZE_IS
+} ParamAttrType;
+
+/*
+ * Check that parameters referred to by attributes such as size_is exist and
+ * refer to parameters of the appropriate type.
+ */
+static gboolean
+check_param_attribute(IDL_tree method_tree, IDL_tree param,
+                      ParamAttrType whattocheck)
+{
+    const char *method_name = IDL_IDENT(IDL_OP_DCL(method_tree).ident).str;
+    const char *referred_name = NULL;
+    IDL_tree param_type = IDL_PARAM_DCL(param).param_type_spec;
+    IDL_tree simple_decl = IDL_PARAM_DCL(param).simple_declarator;
+    const char *param_name = IDL_IDENT(simple_decl).str;
+    const char *attr_name;
+    const char *needed_type;
+
+    if (whattocheck == IID_IS) {
+        attr_name = "iid_is";
+        needed_type = "IID";
+    } else if (whattocheck == LENGTH_IS) {
+        attr_name = "length_is";
+        needed_type = "unsigned long (or PRUint32)";
+    } else if (whattocheck == SIZE_IS) {
+        attr_name = "size_is";
+        needed_type = "unsigned long (or PRUint32)";
+    } else {
+        assert("asked to check an unknown attribute type!");
+        return TRUE;
+    }
+    
+    referred_name = IDL_tree_property_get(simple_decl, attr_name);
+    if (referred_name != NULL) {
+        IDL_tree referred_param = find_named_parameter(method_tree,
+                                                       referred_name);
+        IDL_tree referred_param_type;
+        if (referred_param == NULL) {
+            IDL_tree_error(method_tree,
+                           "attribute [%s(%s)] refers to missing "
+                           "parameter \"%s\"",
+                           attr_name, referred_name, referred_name);
+            return FALSE;
+        }
+        if (referred_param == param) {
+            IDL_tree_error(method_tree,
+                           "attribute [%s(%s)] refers to it's own parameter",
+                           attr_name, referred_name);
+            return FALSE;
+        }
+        
+        referred_param_type = IDL_PARAM_DCL(referred_param).param_type_spec;
+        if (whattocheck == IID_IS) {
+            /* require IID type */
+            if (IDL_tree_property_get(referred_param_type, "nsid") == NULL) {
+                IDL_tree_error(method_tree,
+                               "target \"%s\" of [%s(%s)] attribute "
+                               "must be of %s type",
+                               referred_name, attr_name, referred_name,
+                               needed_type);
+                return FALSE;
+            }
+        } else if (whattocheck == LENGTH_IS || whattocheck == SIZE_IS) {
+            /* require PRUint32 type */
+            IDL_tree real_type;
+
+            /* Could be a typedef; try to map it to the real type. */
+            real_type = find_underlying_type(referred_param_type);
+            real_type = real_type ? real_type : referred_param_type;
+
+            if (IDL_NODE_TYPE(real_type) != IDLN_TYPE_INTEGER ||
+                IDL_TYPE_INTEGER(real_type).f_signed != FALSE ||
+                IDL_TYPE_INTEGER(real_type).f_type != IDL_INTEGER_TYPE_LONG)
+            {
+                IDL_tree_error(method_tree,
+                               "target \"%s\" of [%s(%s)] attribute "
+                               "must be of %s type",
+                               referred_name, attr_name, referred_name,
+                               needed_type);
+
+                return FALSE;
+            }
+        }
+    }
+
+    return TRUE;
+}
+
+
+/*
  * Common method verification code, called by *op_dcl in the various backends.
  */
 gboolean
@@ -209,11 +344,14 @@ verify_method_declaration(IDL_tree method_tree)
 {
     struct _IDL_OP_DCL *op = &IDL_OP_DCL(method_tree);
     IDL_tree iface;
+    IDL_tree iter;
     gboolean scriptable_interface;
+    gboolean scriptable_method;
+    const char *method_name = IDL_IDENT(IDL_OP_DCL(method_tree).ident).str;
 
     if (op->f_varargs) {
         /* We don't currently support varargs. */
-        IDL_tree_error(method_tree, "varargs are not currently supported\n");
+        IDL_tree_error(method_tree, "varargs are not currently supported");
         return FALSE;
     }
 
@@ -238,46 +376,59 @@ verify_method_declaration(IDL_tree method_tree)
      * Require that any method in an interface marked as [scriptable], that
      * *isn't* scriptable because it refers to some native type, be marked
      * [noscript] or [notxpcom].
+     *
+     * Also check that iid_is points to nsid, and length_is, size_is points
+     * to unsigned long.
      */
-    if (scriptable_interface &&
+    scriptable_method = scriptable_interface &&
         IDL_tree_property_get(op->ident, "notxpcom") == NULL &&
-        IDL_tree_property_get(op->ident, "noscript") == NULL)
-    {
-        IDL_tree iter;
+        IDL_tree_property_get(op->ident, "noscript") == NULL;
 
-        /* Loop through the parameters and check. */
-        for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
-            IDL_tree param_type =
-                IDL_PARAM_DCL(IDL_LIST(iter).data).param_type_spec;
-            IDL_tree simple_decl =
-                IDL_PARAM_DCL(IDL_LIST(iter).data).simple_declarator;
-
-            /*
-             * Reject this method if a parameter is native and isn't marked
-             * with either nsid or iid_is.
-             */
-            if (UP_IS_NATIVE(param_type) &&
-                IDL_tree_property_get(param_type, "nsid") == NULL &&
-                IDL_tree_property_get(simple_decl, "iid_is") == NULL)
-            {
-                IDL_tree_error(method_tree,
-                               "methods in [scriptable] interfaces which are "
-                               "non-scriptable because they refer to native "
-                               "types (parameter \"%s\") must be marked "
-                               "[noscript]\n", IDL_IDENT(simple_decl).str);
-                return FALSE;
-            }
-        }
+    /* Loop through the parameters and check. */
+    for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
+        IDL_tree param = IDL_LIST(iter).data;
+        IDL_tree param_type =
+            IDL_PARAM_DCL(param).param_type_spec;
+        IDL_tree simple_decl =
+            IDL_PARAM_DCL(param).simple_declarator;
+        const char *param_name = IDL_IDENT(simple_decl).str;
         
-        /* How about the return type? */
-        if (op->op_type_spec != NULL && UP_IS_NATIVE(op->op_type_spec)) {
+        /*
+         * Reject this method if it should be scriptable and some parameter is
+         * native that isn't marked with either nsid or iid_is.
+         */
+        if (scriptable_method &&
+            UP_IS_NATIVE(param_type) &&
+            IDL_tree_property_get(param_type, "nsid") == NULL &&
+            IDL_tree_property_get(simple_decl, "iid_is") == NULL)
+        {
             IDL_tree_error(method_tree,
                            "methods in [scriptable] interfaces which are "
-                           "non-scriptable because they return native "
-                           "types must be marked [noscript]\n");
+                           "non-scriptable because they refer to native "
+                           "types (parameter \"%s\") must be marked "
+                           "[noscript]", param_name);
             return FALSE;
         }
+
+        if (!check_param_attribute(method_tree, param, IID_IS) ||
+            !check_param_attribute(method_tree, param, LENGTH_IS) ||
+            !check_param_attribute(method_tree, param, SIZE_IS))
+            return FALSE;
     }
+    
+    /* XXX q: can return type be nsid? */
+    /* Native return type? */
+    if (scriptable_method &&
+        op->op_type_spec != NULL && UP_IS_NATIVE(op->op_type_spec) &&
+        IDL_tree_property_get(op->op_type_spec, "nsid") == NULL)
+    {
+        IDL_tree_error(method_tree,
+                       "methods in [scriptable] interfaces which are "
+                       "non-scriptable because they return native "
+                       "types must be marked [noscript]");
+        return FALSE;
+    }
+
     return TRUE;
 }
 

@@ -225,7 +225,6 @@ static gboolean
 doc_attribute_declaration(TreeState *state)
 {
     IDL_tree attr = state->tree;
-    IDL_tree ident_list;
 
     /*
      * Attribute idents can also take doc comments.  They're ignored here;

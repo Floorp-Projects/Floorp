@@ -686,6 +686,7 @@ do_const_dcl(TreeState *state)
     const char *name = IDL_IDENT(dcl->ident).str;
     gboolean success, is_signed;
     GSList *doc_comments = IDL_IDENT(dcl->ident).comments;
+    IDL_tree real_type;
 
     /* const -> list -> interface */
     if (!IDL_NODE_UP(IDL_NODE_UP(state->tree)) ||
@@ -697,9 +698,12 @@ do_const_dcl(TreeState *state)
         return TRUE;
     }
 
-    success = (IDLN_TYPE_INTEGER == IDL_NODE_TYPE(dcl->const_type));
+    /* Could be a typedef; try to map it to the real type. */
+    real_type = find_underlying_type(dcl->const_type);
+    real_type = real_type ? real_type : dcl->const_type;
+    success = (IDLN_TYPE_INTEGER == IDL_NODE_TYPE(real_type));
     if (success) {
-        switch(IDL_TYPE_INTEGER(dcl->const_type).f_type) {
+        switch(IDL_TYPE_INTEGER(real_type).f_type) {
         case IDL_INTEGER_TYPE_SHORT:
         case IDL_INTEGER_TYPE_LONG:
             break;
@@ -707,7 +711,7 @@ do_const_dcl(TreeState *state)
             success = FALSE;
             break;
         }
-        is_signed = IDL_TYPE_INTEGER(dcl->const_type).f_signed;
+        is_signed = IDL_TYPE_INTEGER(real_type).f_signed;
     }
 
     if (doc_comments != NULL) {
