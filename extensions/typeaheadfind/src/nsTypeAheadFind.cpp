@@ -803,6 +803,11 @@ nsTypeAheadFind::HandleChar(PRUnichar aChar)
       mDontTryExactMatch = PR_TRUE;  // Repeated character find mode
       rv = FindItNow(nsnull, PR_TRUE, PR_TRUE, mIsFirstVisiblePreferred);
     }
+    else {
+      // Not using repeated character find
+      mRepeatingMode = eRepeatingNone;
+    }
+
 #endif
   }
 
