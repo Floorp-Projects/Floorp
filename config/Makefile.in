@@ -63,9 +63,7 @@ endif
 
 ifndef COMPILER_DEPEND
 ifndef MOZ_NATIVE_MAKEDEPEND
-ifneq ($(OS_ARCH),OS2)
 DIRS		+= mkdepend
-endif
 endif
 endif
 
