@@ -44,12 +44,8 @@ CPPSRCS		= \
 
 include $(topsrcdir)/config/rules.mk
 
-# Re-enable exception handling so that this code will build since it
-# uses it
-OS_CXXFLAGS := $(subst -fno-exceptions,,$(OS_CXXFLAGS))
+# Re-enable exception handling so that this code will build; since it uses it.
+OS_CXXFLAGS	:= $(subst -fno-exceptions,,$(OS_CXXFLAGS))
 
-LIBS		+= \
-		$(NSPR_LIBS) \
-		-lxpcom \
-		$(NULL)
+LIBS		+= $(NSPR_LIBS) -lxpcom
 
