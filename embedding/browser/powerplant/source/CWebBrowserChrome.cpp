@@ -279,16 +279,14 @@ NS_IMETHODIMP CWebBrowserChrome::OnLocationChange(nsIWebProgress* aWebProgress,
 {
 	NS_ENSURE_TRUE(mBrowserWindow, NS_OK);
 
-	char *buf = nsnull;
  
+	nsCAutoString buf;
 	if (location)
-		location->GetSpec(&buf);
+		location->GetSpec(buf);
 
-	nsAutoString tmp; tmp.AssignWithConversion(buf);
+	nsAutoString tmp;
+	CopyUTF8toUTF16(buf, tmp);
 	mBrowserWindow->SetLocation(tmp);
-
-	if (buf)	
-	    Recycle(buf);
 
 	return NS_OK;
 }
