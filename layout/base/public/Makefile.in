@@ -57,6 +57,7 @@ nsIStyleRule.h \
 nsIStyleSet.h \
 nsIStyleSheet.h \
 nsIStyleSheetLinkingElement.h \
+nsIStyleRuleProcessor.h \
 nsITextContent.h \
 nsLayoutAtoms.h \
 nsLayoutAtomList.h \

@@ -28,6 +28,7 @@
 #include "nsIFrame.h"
 #include "nsHTMLIIDs.h"
 #include "nsICSSStyleRule.h"
+#include "nsIStyleRuleProcessor.h"
 #include "nsIStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
@@ -258,7 +259,8 @@ CSSFirstLetterRule::MapStyleInto(nsIStyleContext* aContext,
 
 // -----------------------------------------------------------
 
-class HTMLCSSStyleSheetImpl : public nsIHTMLCSSStyleSheet {
+class HTMLCSSStyleSheetImpl : public nsIHTMLCSSStyleSheet,
+                              public nsIStyleRuleProcessor {
 public:
   void* operator new(size_t size);
   void* operator new(size_t size, nsIArena* aArena);
@@ -288,19 +290,26 @@ public:
   NS_IMETHOD GetOwningDocument(nsIDocument*& aDocument) const;
   NS_IMETHOD SetOwningDocument(nsIDocument* aDocument);
 
-  virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
-                                nsIContent* aContent,
-                                nsIStyleContext* aParentContext,
-                                nsISupportsArray* aResults);
+  NS_IMETHOD GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
+                                   nsIStyleRuleProcessor* aPrevProcessor);
 
-  virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
-                                nsIContent* aParentContent,
-                                nsIAtom* aPseudoTag,
-                                nsIStyleContext* aParentContext,
-                                nsISupportsArray* aResults);
+  // nsIStyleRuleProcessor api
+  NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
+                           nsIAtom* aMedium,
+                           nsIContent* aContent,
+                           nsIStyleContext* aParentContext,
+                           nsISupportsArray* aResults);
 
-  NS_IMETHOD  HasStateDependentStyle(nsIPresContext* aPresContext,
-                                     nsIContent*     aContent);
+  NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
+                           nsIAtom* aMedium,
+                           nsIContent* aParentContent,
+                           nsIAtom* aPseudoTag,
+                           nsIStyleContext* aParentContext,
+                           nsISupportsArray* aResults);
+
+  NS_IMETHOD HasStateDependentStyle(nsIPresContext* aPresContext,
+                                    nsIAtom*        aMedium,
+                                    nsIContent*     aContent);
 
   // XXX style rule enumerations
 
@@ -410,24 +419,38 @@ nsresult HTMLCSSStyleSheetImpl::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  if (aIID.Equals(nsIStyleRuleProcessor::GetIID())) {
+    *aInstancePtrResult = (void*) ((nsIStyleRuleProcessor*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtrResult = (void*) ((nsISupports*)this);
+    *aInstancePtrResult = (void*) ((nsISupports*)(nsIStyleSheet*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;
 }
 
-PRInt32 HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
-                                             nsIContent* aContent,
-                                             nsIStyleContext* aParentContext,
-                                             nsISupportsArray* aResults)
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
+                                             nsIStyleRuleProcessor* /*aPrevProcessor*/)
+{
+  aProcessor = this;
+  NS_ADDREF(aProcessor);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
+                                     nsIAtom* aMedium,
+                                     nsIContent* aContent,
+                                     nsIStyleContext* aParentContext,
+                                     nsISupportsArray* aResults)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
   NS_PRECONDITION(nsnull != aContent, "null arg");
   NS_PRECONDITION(nsnull != aResults, "null arg");
-
-  PRInt32 matchCount = 0;
 
   nsIStyledContent* styledContent;
 
@@ -440,13 +463,11 @@ PRInt32 HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
       aResults->Count(&postCount);
       while (index < postCount) {
         nsIStyleRule* rule = (nsIStyleRule*)aResults->ElementAt(index++);
-        matchCount++;
         nsICSSStyleRule*  cssRule;
         if (NS_SUCCEEDED(rule->QueryInterface(kICSSStyleRuleIID, (void**)&cssRule))) {
           nsIStyleRule* important = cssRule->GetImportantRule();
           if (nsnull != important) {
             aResults->AppendElement(important);
-            matchCount++;
             NS_RELEASE(important);
           }
           NS_RELEASE(cssRule);
@@ -458,14 +479,16 @@ PRInt32 HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     NS_RELEASE(styledContent);
   }
 
-  return matchCount;
+  return NS_OK;
 }
 
-PRInt32 HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
-                                             nsIContent* aParentContent,
-                                             nsIAtom* aPseudoTag,
-                                             nsIStyleContext* aParentContext,
-                                             nsISupportsArray* aResults)
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
+                                     nsIAtom* aMedium,
+                                     nsIContent* aParentContent,
+                                     nsIAtom* aPseudoTag,
+                                     nsIStyleContext* aParentContext,
+                                     nsISupportsArray* aResults)
 {
   if (aPseudoTag == nsHTMLAtoms::firstLinePseudo) {
     PRUint32 cnt;
@@ -479,7 +502,7 @@ PRInt32 HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
       }
       if (mFirstLineRule) {
         aResults->AppendElement(mFirstLineRule); 
-        return 1; 
+        return NS_OK; 
       }
     } 
   }
@@ -495,12 +518,12 @@ PRInt32 HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
       }
       if (mFirstLetterRule) {
         aResults->AppendElement(mFirstLetterRule); 
-        return 1; 
+        return NS_OK; 
       }
     } 
   }
   // else no pseudo frame style... 
-  return 0;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -522,6 +545,7 @@ HTMLCSSStyleSheetImpl::Init(nsIURI* aURL, nsIDocument* aDocument)
 // Test if style is dependent on content state
 NS_IMETHODIMP
 HTMLCSSStyleSheetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
+                                              nsIAtom*        aMedium,
                                               nsIContent*     aContent)
 {
   return NS_COMFALSE;

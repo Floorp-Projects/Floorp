@@ -30,6 +30,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsISupportsArray.h"
 #include "nsHashtable.h"
+#include "nsICSSStyleRuleProcessor.h"
 #include "nsICSSStyleRule.h"
 #include "nsICSSNameSpaceRule.h"
 #include "nsICSSMediaRule.h"
@@ -418,6 +419,7 @@ class CSSStyleRuleCollectionImpl;
 
 class CSSStyleSheetImpl : public nsICSSStyleSheet, 
                           public nsIDOMCSSStyleSheet, 
+                          public nsIStyleRuleProcessor,
                           public nsIScriptObjectOwner {
 public:
   void* operator new(size_t size);
@@ -451,19 +453,26 @@ public:
   NS_IMETHOD SetOwningDocument(nsIDocument* aDocument);
   NS_IMETHOD SetOwningNode(nsIDOMNode* aOwningNode);
 
+  NS_IMETHOD GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
+                                   nsIStyleRuleProcessor* aPrevProcessor);
+  NS_IMETHOD DropRuleProcessorReference(nsICSSStyleRuleProcessor* aProcessor);
 
-  virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
-                                nsIContent* aContent,
-                                nsIStyleContext* aParentContext,
-                                nsISupportsArray* aResults);
+  // style rule processor API XXX will move to seperate class
+  NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
+                           nsIAtom* aMedium,
+                           nsIContent* aContent,
+                           nsIStyleContext* aParentContext,
+                           nsISupportsArray* aResults);
 
-  virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
-                                nsIContent* aParentContent,
-                                nsIAtom* aPseudoTag,
-                                nsIStyleContext* aParentContext,
-                                nsISupportsArray* aResults);
+  NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
+                           nsIAtom* aMedium,
+                           nsIContent* aParentContent,
+                           nsIAtom* aPseudoTag,
+                           nsIStyleContext* aParentContext,
+                           nsISupportsArray* aResults);
 
   NS_IMETHOD HasStateDependentStyle(nsIPresContext* aPresContext,
+                                    nsIAtom* aMedium,
                                     nsIContent*     aContent);
 
   NS_IMETHOD  ContainsStyleSheet(nsIURI* aURL) const;
@@ -1219,6 +1228,21 @@ nsresult CSSStyleSheetImpl::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
+NS_IMETHODIMP
+CSSStyleSheetImpl::GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
+                                 nsIStyleRuleProcessor* aPrevProcessor)
+{
+  aProcessor = this;  // XXX temp until rule processing gets factored
+  NS_ADDREF(aProcessor);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSStyleSheetImpl::DropRuleProcessorReference(nsICSSStyleRuleProcessor* aProcessor)
+{
+  return NS_OK;
+}
+
 static const PRUnichar kNullCh = PRUnichar('\0');
 
 static PRBool ValueIncludes(const nsString& aValueList, const nsString& aValue, PRBool aCaseSensitive)
@@ -1585,14 +1609,12 @@ struct ContentEnumData {
     mContent = aContent;
     mParentContext = aParentContext;
     mResults = aResults;
-    mCount = 0;
   }
 
   nsIPresContext*   mPresContext;
   nsIContent*       mContent;
   nsIStyleContext*  mParentContext;
   nsISupportsArray* mResults;
-  PRInt32           mCount;
 };
 
 static PRBool SelectorMatchesTree(nsIPresContext* aPresContext, 
@@ -1662,12 +1684,10 @@ static void ContentEnumFunc(nsICSSStyleRule* aRule, void* aData)
       nsIStyleRule* iRule;
       if (NS_OK == aRule->QueryInterface(kIStyleRuleIID, (void**)&iRule)) {
         data->mResults->AppendElement(iRule);
-        data->mCount++;
         NS_RELEASE(iRule);
         iRule = aRule->GetImportantRule();
         if (nsnull != iRule) {
           data->mResults->AppendElement(iRule);
-          data->mCount++;
           NS_RELEASE(iRule);
         }
       }
@@ -1683,22 +1703,18 @@ static PRBool ContentEnumWrap(nsISupports* aRule, void* aData)
 }
 #endif
 
-PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
-                                         nsIContent* aContent,
-                                         nsIStyleContext* aParentContext,
-                                         nsISupportsArray* aResults)
+NS_IMETHODIMP
+CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
+                                 nsIAtom* aMedium,
+                                 nsIContent* aContent,
+                                 nsIStyleContext* aParentContext,
+                                 nsISupportsArray* aResults)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
   NS_PRECONDITION(nsnull != aContent, "null arg");
   NS_PRECONDITION(nsnull != aResults, "null arg");
 
-  PRInt32 matchCount = 0;
-
-  nsIAtom* presMedium = nsnull;
-
-  aPresContext->GetMedium(&presMedium);
-
-  RuleCascadeData* cascade = GetRuleCascade(presMedium);
+  RuleCascadeData* cascade = GetRuleCascade(aMedium);
 
   if (cascade) {
     ContentEnumData data(aPresContext, aContent, aParentContext, aResults);
@@ -1715,7 +1731,6 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     }
 
     cascade->mRuleHash.EnumerateAllRules(tagAtom, idAtom, classArray, ContentEnumFunc, &data);
-    matchCount += data.mCount;
 
 #ifdef DEBUG_RULES
     nsISupportsArray* list1;
@@ -1735,8 +1750,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     NS_IF_RELEASE(tagAtom);
     NS_IF_RELEASE(idAtom);
   }
-  NS_IF_RELEASE(presMedium);
-  return matchCount;
+  return NS_OK;
 }
 
 struct PseudoEnumData {
@@ -1749,7 +1763,6 @@ struct PseudoEnumData {
     mPseudoTag = aPseudoTag;
     mParentContext = aParentContext;
     mResults = aResults;
-    mCount = 0;
   }
 
   nsIPresContext*   mPresContext;
@@ -1757,7 +1770,6 @@ struct PseudoEnumData {
   nsIAtom*          mPseudoTag;
   nsIStyleContext*  mParentContext;
   nsISupportsArray* mResults;
-  PRInt32           mCount;
 };
 
 static void PseudoEnumFunc(nsICSSStyleRule* aRule, void* aData)
@@ -1790,12 +1802,10 @@ static void PseudoEnumFunc(nsICSSStyleRule* aRule, void* aData)
     nsIStyleRule* iRule;
     if (NS_OK == aRule->QueryInterface(kIStyleRuleIID, (void**)&iRule)) {
       data->mResults->AppendElement(iRule);
-      data->mCount++;
       NS_RELEASE(iRule);
       iRule = aRule->GetImportantRule();
       if (nsnull != iRule) {
         data->mResults->AppendElement(iRule);
-        data->mCount++;
         NS_RELEASE(iRule);
       }
     }
@@ -1810,27 +1820,23 @@ static PRBool PseudoEnumWrap(nsISupports* aRule, void* aData)
 }
 #endif
 
-PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
-                                         nsIContent* aParentContent,
-                                         nsIAtom* aPseudoTag,
-                                         nsIStyleContext* aParentContext,
-                                         nsISupportsArray* aResults)
+NS_IMETHODIMP
+CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
+                                 nsIAtom* aMedium,
+                                 nsIContent* aParentContent,
+                                 nsIAtom* aPseudoTag,
+                                 nsIStyleContext* aParentContext,
+                                 nsISupportsArray* aResults)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
   NS_PRECONDITION(nsnull != aPseudoTag, "null arg");
   NS_PRECONDITION(nsnull != aResults, "null arg");
 
-  PRInt32 matchCount = 0;
-
-  nsIAtom* presMedium = nsnull;
-  aPresContext->GetMedium(&presMedium);
-
-  RuleCascadeData* cascade = GetRuleCascade(presMedium);
+  RuleCascadeData* cascade = GetRuleCascade(aMedium);
 
   if (cascade) {
     PseudoEnumData data(aPresContext, aParentContent, aPseudoTag, aParentContext, aResults);
     cascade->mRuleHash.EnumerateTagRules(aPseudoTag, PseudoEnumFunc, &data);
-    matchCount += data.mCount;
 
 #ifdef DEBUG_RULES
     nsISupportsArray* list1;
@@ -1846,8 +1852,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     NS_RELEASE(list2);
 #endif
   }
-  NS_IF_RELEASE(presMedium);
-  return matchCount;
+  return NS_OK;
 }
 
 struct StateEnumData
@@ -1878,21 +1883,18 @@ PRBool StateEnumFunc(void* aSelector, void* aData)
   // Test if style is dependent on content state
 NS_IMETHODIMP
 CSSStyleSheetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
+                                          nsIAtom* aMedium,
                                           nsIContent*     aContent)
 {
   PRBool isStateful = PR_FALSE;
 
-  nsIAtom* presMedium = nsnull;
-  aPresContext->GetMedium(&presMedium);
-
-  RuleCascadeData* cascade = GetRuleCascade(presMedium);
+  RuleCascadeData* cascade = GetRuleCascade(aMedium);
 
   if (cascade) {
     // look up content in state rule list
     StateEnumData data(aPresContext, aContent);
     isStateful = (! cascade->mStateSelectors.EnumerateForwards(StateEnumFunc, &data)); // if stopped, have state
   }
-  NS_IF_RELEASE(presMedium);
 
   return ((isStateful) ? NS_OK : NS_COMFALSE);
 }
@@ -2587,12 +2589,10 @@ GatherStyleRulesForMedium(nsISupports* aRule, void* aData)
 nsresult
 CSSStyleSheetImpl::GatherRulesFor(nsIAtom* aMedium, nsISupportsArray* aRules)
 {
-  if (aRules) {
+  if (aRules && (NS_OK == UseForMedium(aMedium))) {
     CSSStyleSheetImpl*  child = mFirstChild;
     while (nsnull != child) {
-      if (NS_OK == child->UseForMedium(aMedium)) {
-        child->GatherRulesFor(aMedium, aRules);
-      }
+      child->GatherRulesFor(aMedium, aRules);
       child = child->mNext;
     }
 
@@ -2656,13 +2656,11 @@ InsertRuleByWeight(nsISupports* aRule, void* aData)
 nsresult
 CSSStyleSheetImpl::SlowCascadeRulesInto(nsIAtom* aMedium, nsISupportsArray* aRules)
 {
-  if (aRules) {
+  if (aRules && (NS_OK == UseForMedium(aMedium))) {
     // get child rules first
     CSSStyleSheetImpl*  child = mFirstChild;
     while (nsnull != child) {
-      if (NS_OK == child->UseForMedium(aMedium)) {
-        child->SlowCascadeRulesInto(aMedium, aRules);
-      }
+      child->SlowCascadeRulesInto(aMedium, aRules);
       child = child->mNext;
     }
   

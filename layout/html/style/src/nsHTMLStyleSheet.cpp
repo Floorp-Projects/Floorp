@@ -32,6 +32,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsHashtable.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLAttributes.h"
+#include "nsIStyleRuleProcessor.h"
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"
 #include "nsIStyleContext.h"
@@ -259,21 +260,25 @@ TableBackgroundRule::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext*
 NS_IMETHODIMP
 TableBackgroundRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
 {
-  nsStyleColor* styleColor;
-  styleColor = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
-
   nsIStyleContext* parentContext = aContext->GetParent();
-  const nsStyleColor* parentStyleColor;
-  parentStyleColor = (const nsStyleColor*)parentContext->GetStyleData(eStyleStruct_Color);
 
-  if (!(parentStyleColor->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
-    styleColor->mBackgroundColor = parentStyleColor->mBackgroundColor;
-    styleColor->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
-  }
+  if (parentContext) {
+    nsStyleColor* styleColor;
+    styleColor = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
 
-  if (!(parentStyleColor->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE)) {
-    styleColor->mBackgroundImage = parentStyleColor->mBackgroundImage;
-    styleColor->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
+    const nsStyleColor* parentStyleColor;
+    parentStyleColor = (const nsStyleColor*)parentContext->GetStyleData(eStyleStruct_Color);
+
+    if (!(parentStyleColor->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
+      styleColor->mBackgroundColor = parentStyleColor->mBackgroundColor;
+      styleColor->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
+    }
+
+    if (!(parentStyleColor->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE)) {
+      styleColor->mBackgroundImage = parentStyleColor->mBackgroundImage;
+      styleColor->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
+    }
+    NS_RELEASE(parentContext);
   }
 
   return NS_OK;
@@ -356,7 +361,8 @@ nsHashKey* AttributeKey::Clone(void) const
 
 // -----------------------------------------------------------
 
-class HTMLStyleSheetImpl : public nsIHTMLStyleSheet {
+class HTMLStyleSheetImpl : public nsIHTMLStyleSheet,
+                           public nsIStyleRuleProcessor {
 public:
   void* operator new(size_t size);
   void* operator new(size_t size, nsIArena* aArena);
@@ -385,19 +391,26 @@ public:
 
   NS_IMETHOD SetOwningDocument(nsIDocument* aDocumemt);
 
-  virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
-                                nsIContent* aContent,
-                                nsIStyleContext* aParentContext,
-                                nsISupportsArray* aResults);
+  NS_IMETHOD GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
+                                   nsIStyleRuleProcessor* aPrevProcessor);
 
-  virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
-                                nsIContent* aParentContent,
-                                nsIAtom* aPseudoTag,
-                                nsIStyleContext* aParentContext,
-                                nsISupportsArray* aResults);
+  // nsIStyleRuleProcessor API
+  NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
+                           nsIAtom* aMedium,
+                           nsIContent* aContent,
+                           nsIStyleContext* aParentContext,
+                           nsISupportsArray* aResults);
 
-  NS_IMETHOD  HasStateDependentStyle(nsIPresContext* aPresContext,
-                                     nsIContent*     aContent);
+  NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
+                           nsIAtom* aMedium,
+                           nsIContent* aParentContent,
+                           nsIAtom* aPseudoTag,
+                           nsIStyleContext* aParentContext,
+                           nsISupportsArray* aResults);
+
+  NS_IMETHOD HasStateDependentStyle(nsIPresContext* aPresContext,
+                                    nsIAtom*        aMedium,
+                                    nsIContent*     aContent);
 
   // nsIHTMLStyleSheet api
   NS_IMETHOD Init(nsIURI* aURL, nsIDocument* aDocument);
@@ -561,6 +574,11 @@ nsresult HTMLStyleSheetImpl::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  if (aIID.Equals(nsIStyleRuleProcessor::GetIID())) {
+    *aInstancePtrResult = (void*) ((nsIStyleRuleProcessor*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   if (aIID.Equals(kIStyleFrameConstructionIID)) {
     // XXX this breaks XPCOM rules since it isn't a proper delegate
     // This is a temporary method of connecting the constructor for now
@@ -583,16 +601,25 @@ nsresult HTMLStyleSheetImpl::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
-PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
-                                          nsIContent* aContent,
-                                          nsIStyleContext* aParentContext,
-                                          nsISupportsArray* aResults)
+NS_IMETHODIMP
+HTMLStyleSheetImpl::GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
+                                          nsIStyleRuleProcessor* /*aPrevProcessor*/)
+{
+  aProcessor = this;
+  NS_ADDREF(aProcessor);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
+                                  nsIAtom* aMedium,
+                                  nsIContent* aContent,
+                                  nsIStyleContext* aParentContext,
+                                  nsISupportsArray* aResults)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
   NS_PRECONDITION(nsnull != aContent, "null arg");
   NS_PRECONDITION(nsnull != aResults, "null arg");
-
-  PRInt32 matchCount = 0;
 
   nsIStyledContent* styledContent;
   if (NS_SUCCEEDED(aContent->QueryInterface(nsIStyledContent::GetIID(), (void**)&styledContent))) {
@@ -616,7 +643,6 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
               if (! linkHandler) {
                 if (nsnull != mLinkRule) {
                   aResults->AppendElement(mLinkRule);
-                  matchCount++;
                 }
               }
               else {
@@ -647,13 +673,11 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                       case eLinkState_Unvisited:
                         if (nsnull != mLinkRule) {
                           aResults->AppendElement(mLinkRule);
-                          matchCount++;
                         }
                         break;
                       case eLinkState_Visited:
                         if (nsnull != mVisitedRule) {
                           aResults->AppendElement(mVisitedRule);
-                          matchCount++;
                         }
                         break;
                       default:
@@ -676,7 +700,6 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
             if (NS_OK == eventStateManager->GetContentState(aContent, state)) {
               if (0 != (state & NS_EVENT_STATE_ACTIVE)) {
                 aResults->AppendElement(mActiveRule);
-                matchCount++;
               }
             }
             NS_RELEASE(eventStateManager);
@@ -695,38 +718,31 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
         if (eCompatibility_NavQuirks == mode) {
           if (mDocumentColorRule) {
             aResults->AppendElement(mDocumentColorRule);
-            matchCount++;
           }
           aResults->AppendElement(mTableBackgroundRule);
-          matchCount++;
         }
       }
       else if (tag == nsHTMLAtoms::html) {
         if (mDocumentColorRule) {
           aResults->AppendElement(mDocumentColorRule);
-          matchCount++;
         }
       }
       NS_IF_RELEASE(tag);
     } // end html namespace
 
-    // just get the one and only style rule from the content
-    PRUint32 preCount = 0;
-    PRUint32 postCount = 0;
-    aResults->Count(&preCount);
+    // just get the style rules from the content
     styledContent->GetContentStyleRules(aResults);
-    aResults->Count(&postCount);
-    matchCount += (postCount - preCount);
 
     NS_RELEASE(styledContent);
   }
 
-  return matchCount;
+  return NS_OK;
 }
 
 // Test if style is dependent on content state
 NS_IMETHODIMP
 HTMLStyleSheetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
+                                           nsIAtom*        aMedium,
                                            nsIContent*     aContent)
 {
   nsresult result = NS_COMFALSE;
@@ -757,14 +773,16 @@ HTMLStyleSheetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
 
 
 
-PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
-                                          nsIContent* aParentContent,
-                                          nsIAtom* aPseudoTag,
-                                          nsIStyleContext* aParentContext,
-                                          nsISupportsArray* aResults)
+NS_IMETHODIMP
+HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
+                                  nsIAtom* aMedium,
+                                  nsIContent* aParentContent,
+                                  nsIAtom* aPseudoTag,
+                                  nsIStyleContext* aParentContext,
+                                  nsISupportsArray* aResults)
 {
   // no pseudo frame style
-  return 0;
+  return NS_OK;
 }
 
 
