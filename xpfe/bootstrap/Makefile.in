@@ -248,6 +248,12 @@ ifeq ($(OS_ARCH),Darwin)
 EXTRA_DSO_LDOPTS = -execute
 endif
 
+ifeq ($(OS_ARCH),IRIX)
+ifdef BUILD_STATIC_LIBS
+LDFLAGS	+= -Wl,-LD_LAYOUT:lgot_buffer=80
+endif
+endif
+
 # This code removes the console from release builds
 # (unless you've set MOZ_WINCONSOLE=1).
 ifndef MOZ_WINCONSOLE
