@@ -497,7 +497,7 @@ NS_IMETHODIMP
 RDFContentSinkImpl::HandleStartElement(const PRUnichar *aName, 
                                        const PRUnichar **aAtts, 
                                        PRUint32 aAttsCount, 
-                                       PRUint32 aIndex, 
+                                       PRInt32 aIndex, 
                                        PRUint32 aLineNumber)
 {
   FlushText();

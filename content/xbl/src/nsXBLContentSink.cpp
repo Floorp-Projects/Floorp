@@ -230,7 +230,7 @@ NS_IMETHODIMP
 nsXBLContentSink::HandleStartElement(const PRUnichar *aName, 
                                      const PRUnichar **aAtts, 
                                      PRUint32 aAttsCount, 
-                                     PRUint32 aIndex, 
+                                     PRInt32 aIndex, 
                                      PRUint32 aLineNumber)
 {
   nsresult rv = nsXMLContentSink::HandleStartElement(aName,aAtts,aAttsCount,aIndex,aLineNumber);

@@ -767,12 +767,17 @@ NS_IMETHODIMP
 XULContentSinkImpl::HandleStartElement(const PRUnichar *aName, 
                                        const PRUnichar **aAtts,
                                        PRUint32 aAttsCount, 
-                                       PRUint32 aIndex, 
+                                       PRInt32 aIndex, 
                                        PRUint32 aLineNumber)
 { 
   // XXX Hopefully the parser will flag this before we get here. If
   // we're in the epilog, there should be no new elements
   NS_PRECONDITION(mState != eInEpilog, "tag in XUL doc epilog");
+  NS_PRECONDITION(aIndex >= -1, "Bogus aIndex");
+  NS_PRECONDITION(aAttsCount % 2 == 0, "incorrect aAttsCount");
+  // Adjust aAttsCount so it's the actual number of attributes
+  aAttsCount /= 2;
+  
   if (mState == eInEpilog)
       return NS_ERROR_UNEXPECTED;
 
@@ -813,7 +818,7 @@ XULContentSinkImpl::HandleStartElement(const PRUnichar *aName,
   }
 
   // Set the ID attribute atom on the node info object for this node
-  if ((aIndex != (PRUint32)-1) && NS_SUCCEEDED(rv)) {
+  if (aIndex != -1 && NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIAtom> IDAttr = do_GetAtom(aAtts[aIndex]);
 
     if (IDAttr) {
@@ -1079,14 +1084,14 @@ XULContentSinkImpl::ReportError(const PRUnichar* aErrorText,
 
   const PRUnichar* atts[] = {name.get(), value.get(), nsnull};;
     
-  rv = HandleStartElement(NS_LITERAL_STRING("parsererror").get(), atts, 1, 0, 0);
+  rv = HandleStartElement(NS_LITERAL_STRING("parsererror").get(), atts, 1, -1, 0);
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = HandleCharacterData(aErrorText, nsCRT::strlen(aErrorText));
   NS_ENSURE_SUCCESS(rv,rv);  
   
   const PRUnichar* noAtts[] = {0, 0};
-  rv = HandleStartElement(NS_LITERAL_STRING("sourcetext").get(), noAtts, 0, 0, 0);
+  rv = HandleStartElement(NS_LITERAL_STRING("sourcetext").get(), noAtts, 0, -1, 0);
   NS_ENSURE_SUCCESS(rv,rv);
   
   rv = HandleCharacterData(aSourceText, nsCRT::strlen(aSourceText));

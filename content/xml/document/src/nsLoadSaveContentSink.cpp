@@ -139,7 +139,7 @@ NS_IMETHODIMP
 nsLoadSaveContentSink::HandleStartElement(const PRUnichar *aName, 
                                           const PRUnichar **aAtts, 
                                           PRUint32 aAttsCount, 
-                                          PRUint32 aIndex, 
+                                          PRInt32 aIndex, 
                                           PRUint32 aLineNumber)
 {
   return mExpatSink->HandleStartElement(aName, aAtts, aAttsCount, aIndex,

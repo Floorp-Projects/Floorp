@@ -38,31 +38,82 @@
 
 #include "nsISupports.idl"
 
+/**
+ * This interface should be implemented by any content sink that wants
+ * to get output from expat and do something with it; in other words,
+ * by any sink that handles some sort of XML dialect.
+ */
+
 [scriptable, uuid(1DEEA160-C661-11d5-84CC-0010A4E0C706)]
 interface nsIExpatSink : nsISupports 
 {
+  /**
+   * Called to handle the opening tag of an element.
+   * @param aName the fully qualified tagname of the element
+   * @param aAtts the array of attribute names and values.  There are
+   *        aAttsCount/2 names and aAttsCount/2 values, so the total number of
+   *        elements in the array is aAttsCount.  The names and values
+   *        alternate.  Thus, if we number attributes starting with 0,
+   *        aAtts[2*k] is the name of the k-th attribute and aAtts[2*k+1] is
+   *        the value of that attribute  Both explicitly specified attributes
+   *        and attributes that are defined to have default values in a DTD are
+   *        present in aAtts.
+   * @param aAttsCount the number of elements in aAtts.
+   * @param aIndex If the element has an attribute of type ID, then
+   *        aAtts[aIndex] is the name of that attribute.  Otherwise, aIndex
+   *        is -1
+   * @param aLineNumber the line number of the start tag in the data stream.
+   */
   void HandleStartElement(in wstring aName,
-                          [array, size_is (aAttsCount)] in wstring aAtts,
+                          [array, size_is(aAttsCount)] in wstring aAtts,
                           in unsigned long aAttsCount,
-                          in unsigned long aIndex,
+                          in long aIndex,
                           in unsigned long aLineNumber);
 
+  /**
+   * Called to handle the closing tag of an element.
+   * @param aName the fully qualified tagname of the element
+   */
   void HandleEndElement(in wstring aName);
-  
-  void HandleComment(in wstring aName);
-      
-  void HandleCDataSection(in wstring aData, 
+
+  /**
+   * Called to handle a comment
+   * @param aCommentText the text of the comment (not including the
+   *        "<!--" and "-->")
+   */ 
+  void HandleComment(in wstring aCommentText);
+
+  /**
+   * Called to handle a CDATA section
+   * @param aData the text in the CDATA section.  This is null-terminated.
+   * @param aLength the length of the aData string
+   */
+  void HandleCDataSection([size_is(aLength)] in wstring aData, 
                           in unsigned long aLength);
 
+  /**
+   * Called to handle the doctype declaration
+   */
   void HandleDoctypeDecl(in AString aSubset,
                          in AString aName,
                          in AString aSystemId,
                          in AString aPublicId,
                          in nsISupports aCatalogData);
 
-  void HandleCharacterData(in wstring aData, 
+  /**
+   * Called to handle character data.  Note that this does NOT get
+   * called for the contents of CDATA sections.
+   * @param aData the data to handle.  aData is NOT NULL-TERMINATED.
+   * @param aLength the length of the aData string
+   */
+  void HandleCharacterData([size_is(aLength)] in wstring aData, 
                            in unsigned long aLength);
 
+  /**
+   * Called to handle a processing instruction
+   * @param aTarget the PI target (e.g. xml-stylesheet)
+   * @param aData all the rest of the data in the PI
+   */
   void HandleProcessingInstruction(in wstring aTarget, 
                                    in wstring aData);
 
@@ -73,7 +124,7 @@ interface nsIExpatSink : nsISupports
    * @param aLength  The length of the declaration from
    *                 opening '<' to closing '>'.
    **/
-  void HandleXMLDeclaration(in wstring aData, 
+  void HandleXMLDeclaration([size_is(aLength)] in wstring aData, 
                             in unsigned long aLength);
 
   void ReportError(in wstring aErrorText,
