@@ -22,6 +22,8 @@
 #include "nsIMsgIdentity.h"
 #include "nsIMsgSendLater.h"
 #include "nsIEnumerator.h"
+#include "nsIMsgFolder.h"
+#include "nsIMessage.h"
 #include "nsIFileSpec.h"
 
 class nsMsgSendLater: public nsIMsgSendLater
@@ -44,7 +46,7 @@ private:
   // Private Information
   nsIMsgIdentity            *mIdentity;
   nsCOMPtr<nsIMsgFolder>    mMessageFolder;
-	nsCOMPtr<nsIMessage>      mMessage;
+  nsCOMPtr<nsIMessage>      mMessage;
   nsIFileSpec               *mTempFileSpec;
   nsIEnumerator             *mEnumerator;
   PRBool                    mFirstTime;
