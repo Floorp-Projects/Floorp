@@ -5,8 +5,8 @@
 # current time.
 
 
-# $Revision: 1.8 $ 
-# $Date: 2002/04/24 03:20:31 $ 
+# $Revision: 1.9 $ 
+# $Date: 2002/05/10 21:16:53 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbugs.tst,v $ 
 # $Name:  $ 
@@ -158,6 +158,7 @@ foreach $tree (@TREES) {
 		    'QAContact' => "matty\@box.net.au",
 		    
 		    'tinderbox_timenow' => $timenow,
+		    'tinderbox_localtime_timenow' => $localtimenow,
 		    'tinderbox_status' => $status,
 		    'tinderbox_bug_id' => $bug_id,
 		    'tinderbox_bug_url' => "http://bugzilla.mozilla.org/show_bug.cgi?id=$bug_id",
