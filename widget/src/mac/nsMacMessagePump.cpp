@@ -271,10 +271,17 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 				Rect screenRect = (**::GetGrayRgn()).rgnBBox;
 				::DragWindow(whichWindow, anEvent.where, &screenRect);
 
+				// Dispatch the event because some windows may want to know that they have been moved.
+#if 0
+				// Hack: we can't use GetMouse here because by the time DragWindow returns, the mouse
+				// can be located somewhere else than in the drag bar.
 				::GetMouse(&anEvent.where);
 				::LocalToGlobal(&anEvent.where);
-				// it's not really necessary to send that event to Raptor but (who knows?)
-				// some windows may want to know that they have been moved
+#else
+				RgnHandle strucRgn = ((WindowPeek)whichWindow)->strucRgn;
+				Rect* strucRect = &(*strucRgn)->rgnBBox;
+				::SetPt(&anEvent.where, strucRect->left, strucRect->top);
+#endif
 				DispatchOSEventToRaptor(anEvent, whichWindow);
 				break;
 			}
