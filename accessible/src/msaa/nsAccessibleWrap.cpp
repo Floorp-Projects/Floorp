@@ -37,12 +37,15 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAccessibleWrap.h"
+#include "nsAccessibilityAtoms.h"
 #include "nsIAccessibleSelectable.h"
 #include "nsIAccessibleWin32Object.h"
 #include "nsArray.h"
 #include "nsIDOMDocument.h"
+#include "nsINodeInfo.h"
 #include "nsIPrefService.h"
 #include "nsIServiceManager.h"
+#include "nsINameSpaceManager.h"
 
 // for the COM IEnumVARIANT solution in get_AccSelection()
 #define _ATLBASE_IMPL
@@ -268,7 +271,6 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
       /* [retval][out] */ VARIANT __RPC_FAR *pvarRole)
 {
   VariantInit(pvarRole);
-  pvarRole->vt = VT_I4;
 
   nsCOMPtr<nsIAccessible> xpAccessible;
   GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
@@ -280,8 +282,44 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
   if (NS_FAILED(xpAccessible->GetRole(&role)))
     return E_FAIL;
 
-  pvarRole->lVal = role;
-  return S_OK;
+  // -- Try enumerated role
+  if (role != ROLE_NOTHING) {
+    pvarRole->vt = VT_I4;
+    pvarRole->lVal = role;  // Normal enumerated role
+    return S_OK;
+  }
+
+  // -- Try BSTR role
+  // Could not map to known enumerated MSAA role like ROLE_BUTTON
+  // Use BSTR role to expose role attribute or tag name + namespace
+  nsCOMPtr<nsIDOMNode> domNode;
+  nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(xpAccessible));
+  NS_ASSERTION(accessNode, "No accessnode for accessible");
+  accessNode->GetDOMNode(getter_AddRefs(domNode));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(domNode));
+  NS_ASSERTION(content, "No content for accessible");
+  if (content) {
+    nsAutoString roleString;
+    content->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role, roleString);
+    if (roleString.IsEmpty()) {
+      nsINodeInfo *nodeInfo = content->GetNodeInfo();
+      if (nodeInfo) {
+        nodeInfo->GetName(roleString);
+        nsAutoString nameSpaceURI;
+        nodeInfo->GetNamespaceURI(nameSpaceURI);
+        if (!nameSpaceURI.IsEmpty()) {
+          // Only append name space if different from that of current document
+          roleString += NS_LITERAL_STRING(", ") + nameSpaceURI;
+        }
+        if (!roleString.IsEmpty()) {
+          pvarRole->vt = VT_BSTR;
+          pvarRole->bstrVal = ::SysAllocString(roleString.get());
+          return S_OK;
+        }
+      }
+    }
+  }
+  return E_FAIL;
 }
 
 STDMETHODIMP nsAccessibleWrap::get_accState( 

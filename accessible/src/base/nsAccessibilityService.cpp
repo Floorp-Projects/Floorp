@@ -448,15 +448,27 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
     *aAccessible = new nsHTMLLinkAccessible(node, weakShell, frame);
   }
 #endif
-  else if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::tabindex)) {
+  else if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::tabindex) 
+#ifndef MOZ_ACCESSIBILITY_ATK
+           ||
+           tag == nsAccessibilityAtoms::blockquote ||
+           tag == nsAccessibilityAtoms::h1 ||
+           tag == nsAccessibilityAtoms::h2 ||
+           tag == nsAccessibilityAtoms::h3 ||
+           tag == nsAccessibilityAtoms::h4 ||
+           tag == nsAccessibilityAtoms::h5 ||
+           tag == nsAccessibilityAtoms::h6
+#endif
+           ) {
     *aAccessible = new nsGenericAccessible(node, weakShell);
   }
   else {
-    return NS_ERROR_FAILURE;
+    nsAutoString role;
+    if (content->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role, role) == NS_CONTENT_ATTR_HAS_VALUE) {
+      *aAccessible = new nsGenericAccessible(node, weakShell);
+    }
   }
-
-  NS_ENSURE_TRUE(aAccessible, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aAccessible);
+  NS_IF_ADDREF(*aAccessible);
   return NS_OK;
 }
 
