@@ -2530,6 +2530,7 @@ NS_METHOD nsTableFrame::IncrementalReflow(nsIPresContext* aPresContext,
       // Get the next frame in the reflow chain
       nsIFrame* nextFrame;
       reflowState.reflowCommand->GetNext(nextFrame);
+      NS_ASSERTION(nextFrame, "next frame in reflow command is null"); 
 
       // Recover our reflow state
       rv = IR_TargetIsChild(aPresContext, aDesiredSize, state, aStatus, nextFrame);

@@ -327,6 +327,7 @@ nsresult nsTableOuterFrame::IncrementalReflow(nsIPresContext*        aPresContex
       // Get the next frame in the reflow chain
       nsIFrame* nextFrame;
       aReflowState.reflowState.reflowCommand->GetNext(nextFrame);
+      NS_ASSERTION(nextFrame, "next frame in reflow command is null"); 
 
       // Recover our reflow state
       RecoverState(aReflowState, nextFrame);
