@@ -56,7 +56,6 @@ nsTimerQtFactory::nsTimerQtFactory(const nsCID &aClass) :
 
 nsTimerQtFactory::~nsTimerQtFactory()   
 {   
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
 NS_IMPL_ISUPPORTS(nsTimerQtFactory, nsIFactory::GetIID())

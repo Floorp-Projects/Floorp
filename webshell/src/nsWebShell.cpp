@@ -4210,7 +4210,6 @@ nsWebShellFactory::nsWebShellFactory()
 
 nsWebShellFactory::~nsWebShellFactory()
 {
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 nsresult

@@ -73,7 +73,6 @@ nsPrefWindowFactory::nsPrefWindowFactory(
 nsPrefWindowFactory::~nsPrefWindowFactory()   
 //----------------------------------------------------------------------------------------
 {
-	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 //	nsCRT::free(mClassName);
 //	nsCRT::free(mProgID);
 }   

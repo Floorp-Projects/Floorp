@@ -383,7 +383,6 @@ MultiMixedFactory::MultiMixedFactory(const nsCID &aClass,
 
 MultiMixedFactory::~MultiMixedFactory()
 {
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 NS_IMPL_ISUPPORTS(MultiMixedFactory, NS_GET_IID(nsIFactory));

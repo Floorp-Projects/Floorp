@@ -135,8 +135,6 @@ nsWidgetFactory::nsWidgetFactory(const nsCID &aClass)
 nsWidgetFactory::~nsWidgetFactory()   
 {   
   PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::~nsWidgetFactory Destructor Called\n"));
-
-  NS_ASSERTION(mRefCnt == 0, "Reference count not zero in destructor");
 }   
 
 nsresult nsWidgetFactory::QueryInterface(const nsIID &aIID,   

@@ -54,7 +54,6 @@ nsXlibWindowServiceFactory::nsXlibWindowServiceFactory(const nsCID &aClass) :
 
 nsXlibWindowServiceFactory::~nsXlibWindowServiceFactory()
 {
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 NS_IMPL_ISUPPORTS(nsXlibWindowServiceFactory, nsIFactory::GetIID())

@@ -53,7 +53,6 @@ nsMotifAppContextServiceFactory::nsMotifAppContextServiceFactory(const nsCID &aC
 
 nsMotifAppContextServiceFactory::~nsMotifAppContextServiceFactory()
 {
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 NS_IMPL_ISUPPORTS(nsMotifAppContextServiceFactory, nsIFactory::GetIID())

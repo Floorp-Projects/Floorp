@@ -3424,7 +3424,6 @@ nsBrowserWindowFactory::nsBrowserWindowFactory()
 
 nsBrowserWindowFactory::~nsBrowserWindowFactory()
 {
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 nsresult

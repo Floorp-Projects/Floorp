@@ -318,7 +318,6 @@ nsCmdLineServiceFactory::LockFactory(PRBool lock)
 
 nsCmdLineServiceFactory::~nsCmdLineServiceFactory()
 {
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 NS_IMPL_ISUPPORTS(nsCmdLineServiceFactory, kIFactoryIID);

@@ -628,7 +628,6 @@ nsresult nsFileLocatorFactory::LockFactory(PRBool /*lock*/)
 nsFileLocatorFactory::~nsFileLocatorFactory()
 //----------------------------------------------------------------------------------------
 {
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 NS_IMPL_ISUPPORTS(nsFileLocatorFactory, kIFactoryIID);

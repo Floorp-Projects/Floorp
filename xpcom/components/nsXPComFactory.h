@@ -110,10 +110,7 @@ public:                                                           \
   }                                                               \
                                                                   \
 protected:                                                        \
-  virtual ~ns##_name##Factory()                                   \
-  {                                                               \
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction"); \
-  }                                                               \
+  virtual ~ns##_name##Factory() {}                                \
 };                                                                \
 NS_IMPL_ISUPPORTS1(ns##_name##Factory, nsIFactory);
 

@@ -243,9 +243,6 @@ nsWidgetFactory::nsWidgetFactory(const nsCID &aClass)
 nsWidgetFactory::~nsWidgetFactory()   
 
 {   
-
-    NS_ASSERTION(mRefCnt == 0, "Reference count not zero in destructor");   
-
 }   
 
 

@@ -71,7 +71,6 @@ AccountServicesFactoryImpl::AccountServicesFactoryImpl(const nsCID &aClass,
 
 AccountServicesFactoryImpl::~AccountServicesFactoryImpl()
 {
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 NS_IMETHODIMP
