@@ -1735,6 +1735,7 @@ net_AddCookiePermission
 #endif
 
 
+#ifndef XP_WIN /* privacy ifdef - last person to get here please remove */
 /*
  * temporary UI until FE implements this function as a single dialog box
  */
@@ -1742,6 +1743,8 @@ XP_Bool FE_CheckConfirm (
 	MWContext *pContext,
 	char* pConfirmMessage,
 	char* pCheckMessage,
+        char* pOKMessage,
+        char* pCancelMessage,
 	XP_Bool* pChecked) {
 
     Bool userHasAccepted = ET_PostMessageBox(pContext, pConfirmMessage, TRUE);
@@ -1749,6 +1752,7 @@ XP_Bool FE_CheckConfirm (
     return userHasAccepted;
 }
 /* end of temporary UI */
+#endif
 
 /* Java script is calling NET_SetCookieString, netlib is calling 
 ** this via NET_SetCookieStringFromHttp.
@@ -2163,10 +2167,15 @@ net_IntSetCookieString(MWContext * context,
 
 	    {
 		Bool old_cookie_remember_checked = cookie_remember_checked;
+#ifdef XP_WIN /* privacy ifdef - last person to get here please remove */
+		XP_Bool userHasAccepted = ET_PostCheckConfirmBox
+#else
 		XP_Bool userHasAccepted = FE_CheckConfirm
+#endif
 		    (context,
 		     new_string,
 		     remember_string,
+		     0,0,
 		     &cookie_remember_checked);
 		PR_FREEIF(new_string);
 		PR_FREEIF(remember_string);

@@ -458,6 +458,12 @@ extern JSBool
 ET_PostMessageBox(MWContext* context, char* szMessage, 
 		  JSBool bConfirm);
 
+JSBool
+ET_PostCheckConfirmBox(MWContext* context,
+	char* szMainMessage, char* szCheckMessage,
+	char* szOKMessage, char* szCancelMessage,
+	JSBool *bChecked);
+
 extern void
 ET_PostProgress(MWContext* context, const char* szMessage);
 

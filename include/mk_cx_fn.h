@@ -135,6 +135,10 @@ FE_DEFINE(UseFancyNewsgroupListing, XP_Bool, (MWContext *window_id))
 FE_DEFINE(FileSortMethod, int, (MWContext * window_id))
 FE_DEFINE(ShowAllNewsArticles, XP_Bool, (MWContext *window_id))
 FE_DEFINE(Confirm, XP_Bool,(MWContext * context, const char * Msg))
+#ifdef XP_WIN /* privacy ifdef - last person to get here, please remove */
+FE_DEFINE(CheckConfirm, XP_Bool, (MWContext *pContext, const char *pConfirmMessage, const char *pCheckMessage, const char *pOKMessage, const char *pCancelMessage, XP_Bool *pChecked))
+FE_DEFINE(SelectDialog, XP_Bool, (MWContext *pContext, const char *pMessage, const char **pList, int *pCount))
+#endif
 FE_DEFINE(Prompt,char*,(MWContext * context, const char * Msg, const char * dflt))
 FE_DEFINE(PromptWithCaption,char*,(MWContext * context, const char *caption, const char * Msg, const char * dflt))
 FE_DEFINE(PromptUsernameAndPassword, XP_Bool, (MWContext *,const char *,char **, char **))
