@@ -1,0 +1,8 @@
+version="8"
+logging="yes"
+name="HabeasNo"
+enabled="yes"
+type="1"
+action="JunkScore"
+actionValue="0"
+condition="OR (\"X-Habeas-SWE-3\",is,\"like Habeas SWE (tm)\")"
