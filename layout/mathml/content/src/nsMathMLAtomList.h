@@ -42,8 +42,13 @@ MATHML_ATOM(fontsize, "-moz-math-font-size") // different from fontsize_
 MATHML_ATOM(fontstyle, "-moz-math-font-style") // different from fontstyle_
 MATHML_ATOM(fontstyle_stretchy, ":-moz-math-font-style-stretchy")
 MATHML_ATOM(fontstyle_anonymous, ":-moz-math-font-style-anonymous")
+MATHML_ATOM(rowline, "-moz-math-rowline") // different from rowlines_
+MATHML_ATOM(columnline, "-moz-math-columnline") // different from columnlines_
+MATHML_ATOM(firstrow, "-moz-math-firstrow")
+MATHML_ATOM(lastrow, "-moz-math-lastrow")
+MATHML_ATOM(firstcolumn, "-moz-math-firstcolumn")
+MATHML_ATOM(lastcolumn, "-moz-math-lastcolumn")
 MATHML_ATOM(mozMathInline, ":-moz-math-inline")
-MATHML_ATOM(mozMathTable, ":-moz-math-table")
 
 // Alphabetical list of MathML frame types
 MATHML_ATOM(ordinaryMathMLFrame, "OrdinaryMathMLFrame")
@@ -74,6 +79,7 @@ MATHML_ATOM(color_, "color")
 MATHML_ATOM(columnalign_, "columnalign")
 MATHML_ATOM(columnlines_, "columnlines")
 MATHML_ATOM(columnspacing_, "columnspacing")
+MATHML_ATOM(columnspan_, "columnspan")
 MATHML_ATOM(columnwidth_, "columnwidth")
 MATHML_ATOM(compose_, "compose")
 MATHML_ATOM(condition_, "condition")
@@ -206,6 +212,7 @@ MATHML_ATOM(root_, "root")
 MATHML_ATOM(rowalign_, "rowalign")
 MATHML_ATOM(rowlines_, "rowlines")
 MATHML_ATOM(rowspacing_, "rowspacing")
+MATHML_ATOM(rowspan_, "rowspan")
 MATHML_ATOM(rquote_, "rquote")
 MATHML_ATOM(rspace_, "rspace")
 MATHML_ATOM(scriptlevel_, "scriptlevel")

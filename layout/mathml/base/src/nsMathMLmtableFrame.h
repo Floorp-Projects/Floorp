@@ -78,8 +78,32 @@ public:
 protected:
   nsMathMLmtableOuterFrame();
   virtual ~nsMathMLmtableOuterFrame();
+
+  // helper to find the row frame at a given index, positive or negative, e.g.,
+  // 1..n means the first row down to the last row, -1..-n means the last row
+  // up to the first row. Used for alignments that are relative to a given row
+  nsIFrame*
+  GetRowFrameAt(nsIPresContext* aPresContext,
+                PRInt32         aRowIndex);
 }; // class nsMathMLmtableOuterFrame
 
+// --------------
+
+class nsMathMLmtdFrame : public nsTableCellFrame
+{
+public:
+  friend nsresult NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // overloaded nsTableCellFrame methods
+  virtual PRInt32 GetRowSpan();
+  virtual PRInt32 GetColSpan();
+
+protected:
+  nsMathMLmtdFrame();
+  virtual ~nsMathMLmtdFrame();
+}; // class nsMathMLmtdFrame
 
 // --------------
 
