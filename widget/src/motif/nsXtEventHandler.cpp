@@ -169,7 +169,6 @@ void nsXtWidget_InitNSMouseEvent(XEvent   * anXEv,
     anEvent.clickCount = 1; // Fix for double-clicks
     anEvent.eventStructType = NS_MOUSE_EVENT;
 
-    printf("Mouse event isShift %d isControl %d isAlt\n", anEvent.isShift, anEvent.isControl, anEvent.isAlt);
   }
 
   //anEvent.isAlt      = GetKeyState(VK_LMENU) < 0    || GetKeyState(VK_RMENU) < 0;
