@@ -191,8 +191,8 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
         
         nsCOMPtr<nsIFile> parent;
         rv = file->GetParent(getter_AddRefs(parent));
-        if (NS_FAILED(rv)) return rv;
-        if (parent) {
+        
+        if (parent && NS_SUCCEEDED(rv)) {
             NS_GetURLSpecFromFile(parent, url);
             if (NS_FAILED(rv)) return rv;
             parentStr.Assign(url);
