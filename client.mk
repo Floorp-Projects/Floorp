@@ -15,7 +15,7 @@
 # Copyright (C) 1998 Netscape Communications Corporation. All
 # Rights Reserved.
 #
-# Contributor(s): 
+# Contributor(s): Stephen Lamm
 
 # Build the Mozilla client.
 #
@@ -30,10 +30,10 @@
 #    3. gmake -f client.mk
 #
 # Other targets (gmake -f client.mk [targets...]),
-#    checkout  (or pull_all)
-#    build     (or build_all)
-#    realclean (or clobber_all)
-#    clean     (or clobber)
+#    checkout
+#    build
+#    clean (realclean is now the same as clean)
+#    distclean
 #
 # See http://www.mozilla.org/build/unix.html for more information.
 #
@@ -65,7 +65,7 @@ endif
 
 CONFIG_GUESS  := $(wildcard $(TOPSRCDIR)/build/autoconf/config.guess)
 ifdef CONFIG_GUESS
-  CONFIG_GUESS := $(shell $(CONFIG_GUESS))
+  CONFIG_GUESS = $(shell $(CONFIG_GUESS))
 else
   _IS_FIRST_CHECKOUT := 1
 endif
@@ -93,15 +93,15 @@ CVSCO_LOGFILE := $(ROOTDIR)/cvsco.log
 
 # See build pages, http://www.mozilla.org/build/unix.html, 
 # for how to set up mozconfig.
-MOZCONFIG2DEFS := mozilla/build/autoconf/mozconfig2defs.sh
+MOZCONFIG_LOADER := mozilla/build/autoconf/mozconfig2client-mk
+MOZCONFIG_FINDER := mozilla/build/autoconf/mozconfig-find 
 run_for_side_effects := \
   $(shell cd $(ROOTDIR); \
-          if test "$(_IS_FIRST_CHECKOUT)"; then \
-	    $(CVSCO) mozilla/build/autoconf/find-mozconfig.sh; \
-	    $(CVSCO) $(MOZCONFIG2DEFS); \
-	  else true; \
-	  fi; \
-	  $(MOZCONFIG2DEFS) mozilla/.client-defs.mk)
+     if test "$(_IS_FIRST_CHECKOUT)"; then \
+        $(CVSCO) $(MOZCONFIG_FINDER) $(MOZCONFIG_LOADER); \
+     else true; \
+     fi; \
+     $(MOZCONFIG_LOADER) $(TOPSRCDIR) mozilla/.client-defs.mk)
 include $(TOPSRCDIR)/.client-defs.mk
 
 ####################################
@@ -187,11 +187,11 @@ endif
 pull_all:     checkout
 build_all:    build
 clobber:      clean
-clobber_all:  realclean
+clobber_all:  clean
 pull_and_build_all: checkout depend build
 
 # Do everything from scratch
-everything: checkout clobber_all build
+everything: checkout clean build
 
 ####################################
 # CVS checkout
@@ -249,10 +249,10 @@ real_checkout:
 WEBCONFIG_URL   := http://webtools.mozilla.org/build/config.cgi
 WEBCONFIG_FILE  := $(HOME)/.mozconfig
 
-MOZCONFIG2URL := build/autoconf/mozconfig2url.sh
+MOZCONFIG2URL := build/autoconf/mozconfig2url
 webconfig:
 	cd $(TOPSRCDIR); \
-	url=$(WEBCONFIG_URL)`$(MOZCONFIG2URL)`; \
+	url=$(WEBCONFIG_URL)`$(MOZCONFIG2URL) $(TOPSRCDIR)`; \
 	echo Running netscape with the following url: ;\
 	echo ;\
 	echo $$url ;\
@@ -279,13 +279,6 @@ else
 ####################################
 # Configure
 
-ALL_TRASH += \
-	$(OBJDIR)/config.cache \
-	$(OBJDIR)/config.log \
-	$(OBJDIR)/config.status \
-	$(OBJDIR)/config-defs.h \
-	$(NULL)
-
 CONFIG_STATUS := $(wildcard $(OBJDIR)/config.status)
 CONFIG_CACHE  := $(wildcard $(OBJDIR)/config.cache)
 
@@ -308,12 +301,20 @@ CONFIG_STATUS_DEPS := \
 	$(wildcard $(TOPSRCDIR)/mailnews/makefiles) \
 	$(NULL)
 
+# configure uses the program name to determine @srcdir@. Calling it without
+#   $(TOPSRCDIR) will set @srcdir@ to "."; otherwise, it is set to the full
+#   path of $(TOPSRCDIR).
+ifeq ($(TOPSRCDIR),$(OBJDIR))
+  CONFIGURE := configure
+else
+  CONFIGURE := $(TOPSRCDIR)/configure
+endif
+
 $(OBJDIR)/Makefile $(OBJDIR)/config.status: $(CONFIG_STATUS_DEPS)
 	@if test ! -d $(OBJDIR); then $(MKDIR) $(OBJDIR); else true; fi
-	@echo cd $(OBJDIR); 
-	@echo ../configure
-	@cd $(OBJDIR) && \
-	  $(TOPSRCDIR)/configure \
+	@echo cd $(OBJDIR);
+	@echo $(CONFIGURE)
+	@cd $(OBJDIR) && $(CONFIGURE) \
 	  || ( echo "*** Fix above errors and then restart with\
                \"$(MAKE) -f client.mk build\"" && exit 1 )
 	@touch $(OBJDIR)/Makefile
@@ -329,24 +330,20 @@ endif
 # Depend
 
 depend: $(OBJDIR)/Makefile $(OBJDIR)/config.status
-	cd $(OBJDIR); $(MAKE) $(MOZ_MAKE_FLAGS) $@;
+	cd $(OBJDIR); $(MAKE) $@;
 
 ####################################
 # Build it
 
 build:  $(OBJDIR)/Makefile $(OBJDIR)/config.status
-	cd $(OBJDIR); \
-	  $(MAKE) $(MOZ_MAKE_FLAGS) export && \
-	  $(MAKE) $(MOZ_MAKE_FLAGS) libs   && \
-	  $(MAKE) $(MOZ_MAKE_FLAGS) install
+	cd $(OBJDIR); $(MAKE) export && $(MAKE) install
 
 ####################################
 # Other targets
 
 # Pass these target onto the real build system
-clean realclean:
+clean realclean distclean:
 	cd $(OBJDIR); $(MAKE) $@
-	rm -fr $(ALL_TRASH)
 
 cleansrcdir:
 	@cd $(TOPSRCDIR); \
@@ -369,4 +366,4 @@ cleansrcdir:
 # (! IS_FIRST_CHECKOUT)
 endif
 
-.PHONY: checkout real_checkout depend build clean realclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything
+.PHONY: checkout real_checkout depend build clean realclean distclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything
