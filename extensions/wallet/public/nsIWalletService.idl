@@ -38,8 +38,6 @@
 #include "nsISupports.idl"
 
 %{ C++
-#include "nsString.h"
-
 // {738CFD52-ABCF-11d2-AB4B-0080C787AD96}
 #define NS_WALLETSERVICE_CID \
 { 0x738cfd52, 0xabcf, 0x11d2, { 0xab, 0x4b, 0x0, 0x80, 0xc7, 0x87, 0xad, 0x96 } }
@@ -52,37 +50,31 @@ interface nsIDOMNode;
 interface nsIDOMWindowInternal;
 interface nsIPrompt;
 
-native nsAutoString(nsAutoString);
-[ref] native nsAutoStringRef(nsAutoString);
-
 /**
  * The nsIWalletService interface provides an API to the wallet service.
  * This is a preliminary interface which <B>will</B> change over time!
  *
  */
-[scriptable, uuid(738CFD51-ABCF-11d2-AB4B-0080C787AD96)]
+[scriptable, uuid(FEDBF066-9C29-4307-86B1-2C0F69717FC5)]
 interface nsIWalletService : nsISupports {
-  [noscript]void WALLET_PreEdit(in nsAutoStringRef walletList);
-  [noscript]void WALLET_PostEdit(in nsAutoString walletList);
+  void WALLET_PreEdit(out AString walletList);
+  void WALLET_PostEdit(in AString walletList);
   boolean WALLET_ChangePassword();
   void WALLET_DeleteAll();
   unsigned long WALLET_RequestToCapture(in nsIDOMWindowInternal win);
   boolean WALLET_Prefill(in boolean quick, in nsIDOMWindowInternal win);
   wstring WALLET_PrefillOneElement
     (in nsIDOMWindowInternal win, in nsIDOMNode elementNode);
-  [noscript]void WALLET_PrefillReturn(in nsAutoString results);
+  void WALLET_PrefillReturn(in AString results);
   boolean WALLET_ExpirePassword();
   void WALLET_InitReencryptCallback(in nsIDOMWindowInternal win);
 
-  void SI_RemoveUser(in string key, in wstring userName); // !!! get rid of this
-  void SI_StorePassword(in string key, in wstring userName, in wstring pwd); // !!! get rid of this
-
   boolean haveData(in nsIPrompt dialog, in string key, in wstring userName);
 
-  [noscript] void WALLET_GetNopreviewListForViewer(in nsAutoStringRef aNopreviewList);
-  [noscript] void WALLET_GetNocaptureListForViewer(in nsAutoStringRef aNocaptureList);
-  [noscript] void WALLET_GetPrefillListForViewer(in nsAutoStringRef aPrefillList);
-  [noscript] void SI_SignonViewerReturn(in nsAutoString results);
+  void WALLET_GetNopreviewListForViewer(out AString aNopreviewList);
+  void WALLET_GetNocaptureListForViewer(out AString aNocaptureList);
+  void WALLET_GetPrefillListForViewer(out AString aPrefillList);
+  void SI_SignonViewerReturn(in AString results);
 
   string WALLET_Encrypt(in wstring text);
   wstring WALLET_Decrypt(in string crypt);

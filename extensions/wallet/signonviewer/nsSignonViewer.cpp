@@ -47,6 +47,7 @@
 #include "nsReadableUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsSignonViewer.h"
+#include "nsString.h"
 
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 

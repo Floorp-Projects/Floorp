@@ -76,9 +76,6 @@ extern nsresult
 SINGSIGN_RejectEnumerate(PRInt32 rejectNumber, char **host);
 
 extern void
-SINGSIGN_SignonViewerReturn(const nsString& results);
-
-extern void
 SINGSIGN_RestoreSignonData(nsIPrompt* dialog, nsIURI* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 formNumber, PRUint32 elementNumber);
 
 extern nsresult

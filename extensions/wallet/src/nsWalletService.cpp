@@ -94,12 +94,12 @@ NS_IMPL_THREADSAFE_ISUPPORTS5(nsWalletlibService,
                               nsIWebProgressListener,
                               nsISupportsWeakReference)
 
-NS_IMETHODIMP nsWalletlibService::WALLET_PreEdit(nsAutoString& walletList) {
+NS_IMETHODIMP nsWalletlibService::WALLET_PreEdit(nsAString& walletList) {
   ::WLLT_PreEdit(walletList);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_PostEdit(nsAutoString walletList) {
+NS_IMETHODIMP nsWalletlibService::WALLET_PostEdit(const nsAString & walletList) {
   ::WLLT_PostEdit(walletList);
   return NS_OK;
 }
@@ -157,7 +157,7 @@ nsWalletlibService::WALLET_Prefill(PRBool quick,
   return ::WLLT_Prefill(presShell, quick, aWin);
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_PrefillReturn(nsAutoString results){
+NS_IMETHODIMP nsWalletlibService::WALLET_PrefillReturn(const nsAString & results){
   ::WLLT_PrefillReturn(results);
   return NS_OK;
 }
@@ -173,33 +173,23 @@ NS_IMETHODIMP nsWalletlibService::WALLET_InitReencryptCallback(nsIDOMWindowInter
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::SI_RemoveUser(const char *key, const PRUnichar *userName) {
-  ::SINGSIGN_RemoveUser(key, userName, PR_TRUE);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWalletlibService::SI_StorePassword(const char *key, const PRUnichar *userName, const PRUnichar *password) {
-  ::SINGSIGN_StorePassword(key, userName, password);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWalletlibService::WALLET_GetNopreviewListForViewer(nsAutoString& aNopreviewList){
+NS_IMETHODIMP nsWalletlibService::WALLET_GetNopreviewListForViewer(nsAString& aNopreviewList){
   ::WLLT_GetNopreviewListForViewer(aNopreviewList);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_GetNocaptureListForViewer(nsAutoString& aNocaptureList){
+NS_IMETHODIMP nsWalletlibService::WALLET_GetNocaptureListForViewer(nsAString& aNocaptureList){
   ::WLLT_GetNocaptureListForViewer(aNocaptureList);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_GetPrefillListForViewer(nsAutoString& aPrefillList){
+NS_IMETHODIMP nsWalletlibService::WALLET_GetPrefillListForViewer(nsAString& aPrefillList){
   ::WLLT_GetPrefillListForViewer(aPrefillList);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::SI_SignonViewerReturn(nsAutoString results){
-  ::SINGSIGN_SignonViewerReturn(results);
+NS_IMETHODIMP nsWalletlibService::SI_SignonViewerReturn(const nsAString& results){
+  ::Wallet_SignonViewerReturn(results);
   return NS_OK;
 }
 
@@ -219,7 +209,7 @@ NS_IMETHODIMP nsWalletlibService::Observe(nsISupports *aSubject, const char *aTo
     if (uri) {
       nsCAutoString spec;
       if (NS_SUCCEEDED(uri->GetSpec(spec)))
-        SI_StorePassword(spec.get(), nsnull, someData);
+        SINGSIGN_StorePassword(spec.get(), nsnull, someData);
     }
   }
   else if (!nsCRT::strcmp(aTopic, "login-failed")) {

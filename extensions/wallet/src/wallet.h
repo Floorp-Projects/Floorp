@@ -79,32 +79,32 @@ extern void
 WLLT_DeletePersistentUserData();
 
 extern void
-WLLT_PreEdit(nsString& walletList);
+WLLT_PreEdit(nsAString& walletList);
 
 extern void
-WLLT_PostEdit(const nsString& walletList);
+WLLT_PostEdit(const nsAString& walletList);
 
 extern void
-WLLT_PrefillReturn(const nsString& results);
+WLLT_PrefillReturn(const nsAString& results);
 
 extern void
 WLLT_RequestToCapture(nsIPresShell* shell, nsIDOMWindowInternal * win, PRUint32* status);
 
 extern nsresult
 WLLT_PrefillOneElement
-  (nsIDOMWindowInternal* win, nsIDOMNode* elementNode, nsString& compositeValue);
+  (nsIDOMWindowInternal* win, nsIDOMNode* elementNode, nsAString& compositeValue);
 
 extern nsresult
 WLLT_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindowInternal* win);
 
 extern void
-WLLT_GetNopreviewListForViewer(nsString& aNopreviewList);
+WLLT_GetNopreviewListForViewer(nsAString& aNopreviewList);
 
 extern void
-WLLT_GetNocaptureListForViewer(nsString& aNocaptureList);
+WLLT_GetNocaptureListForViewer(nsAString& aNocaptureList);
 
 extern void
-WLLT_GetPrefillListForViewer(nsString& aPrefillList);
+WLLT_GetPrefillListForViewer(nsAString& aPrefillList);
 
 extern void
 WLLT_OnSubmit(nsIContent* formNode, nsIDOMWindowInternal* window);
@@ -119,13 +119,13 @@ extern void
 WLLT_InitReencryptCallback(nsIDOMWindowInternal* window);
 
 extern nsresult
-Wallet_Encrypt(const nsString& text, nsString& crypt);
+Wallet_Encrypt(const nsAString& text, nsAString& crypt);
 
 extern nsresult
-Wallet_Decrypt(const nsString& crypt, nsString& text);
+Wallet_Decrypt(const nsAString& crypt, nsAString& text);
 
 extern nsresult
-wallet_GetLine(nsIInputStream* strm, nsCString& line);
+wallet_GetLine(nsIInputStream* strm, nsACString& line);
 
 /**
  * Writes a line to a stream, including a newline character.
@@ -149,14 +149,8 @@ extern PRInt32 Wallet_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindowInternal
 
 extern void Wallet_GiveCaveat(nsIDOMWindowInternal* window, nsIPrompt* dialog);
 
-extern nsresult
-Wallet_Encrypt2(const nsString& text, nsString& crypt);
-
-extern nsresult
-Wallet_Decrypt2(const nsString& crypt, nsString& text);
-
 extern void
-Wallet_SignonViewerReturn(const nsString& results);
+Wallet_SignonViewerReturn(const nsAString& results);
 
 extern void
 Wallet_ReleaseAllLists();

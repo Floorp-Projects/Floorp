@@ -90,10 +90,10 @@ PRLogModuleInfo* gWalletLog = nsnull;
 /* The following data and procedures are for preference */
 /********************************************************/
 
-static const char *pref_Caveat = "wallet.caveat";
-static const char *pref_captureForms = "wallet.captureForms";
-static const char *pref_enabled = "wallet.enabled";
-static const char *pref_WalletSchemaValueFileName = "wallet.SchemaValueFileName";
+static const char pref_Caveat[] = "wallet.caveat";
+static const char pref_captureForms[] = "wallet.captureForms";
+static const char pref_enabled[] = "wallet.enabled";
+static const char pref_WalletSchemaValueFileName[] = "wallet.SchemaValueFileName";
 
 static PRBool wallet_captureForms = PR_FALSE;
 
@@ -772,7 +772,7 @@ wallet_Decrypt(const nsCString& crypt, nsCString& text) {
 }
 
 nsresult
-Wallet_Encrypt (const nsString& textUCS2, nsString& cryptUCS2) {
+Wallet_Encrypt (const nsAString& textUCS2, nsAString& cryptUCS2) {
   nsCAutoString cryptUTF8;
   nsresult rv = wallet_Encrypt(NS_ConvertUCS2toUTF8(textUCS2), cryptUTF8);
   CopyUTF8toUTF16(cryptUTF8, cryptUCS2);
@@ -780,23 +780,11 @@ Wallet_Encrypt (const nsString& textUCS2, nsString& cryptUCS2) {
 }
 
 nsresult
-Wallet_Decrypt(const nsString& cryptUCS2, nsString& textUCS2) {
+Wallet_Decrypt(const nsAString& cryptUCS2, nsAString& textUCS2) {
   nsCAutoString textUTF8;
   nsresult rv = wallet_Decrypt(NS_ConvertUCS2toUTF8(cryptUCS2), textUTF8);
   CopyUTF8toUTF16(textUTF8, textUCS2);
   return rv;
-}
-
-nsresult
-Wallet_Encrypt2(const nsString& text, nsString& crypt)
-{
-  return Wallet_Encrypt (text, crypt);
-}
-
-nsresult
-Wallet_Decrypt2 (const nsString& crypt, nsString& text)
-{
-  return Wallet_Decrypt (crypt, text);
 }
 
 
@@ -1054,15 +1042,15 @@ wallet_ReadFromList(
 
 char* schemaValueFileName = nsnull;
 
-const char URLFileName[] = "URL.tbl";
-const char allFileName[] = "wallet.tbl";
-const char fieldSchemaFileName[] = "FieldSchema.tbl";
-const char vcardSchemaFileName[] = "VcardSchema.tbl";
-const char schemaConcatFileName[] = "SchemaConcat.tbl";
-const char schemaStringsFileName[] = "SchemaStrings.tbl";
-const char positionalSchemaFileName[] = "PositionalSchema.tbl";
-const char stateSchemaFileName[] = "StateSchema.tbl";
-const char distinguishedSchemaFileName[] = "DistinguishedSchema.tbl";
+static const char URLFileName[] = "URL.tbl";
+static const char allFileName[] = "wallet.tbl";
+static const char fieldSchemaFileName[] = "FieldSchema.tbl";
+static const char vcardSchemaFileName[] = "VcardSchema.tbl";
+static const char schemaConcatFileName[] = "SchemaConcat.tbl";
+static const char schemaStringsFileName[] = "SchemaStrings.tbl";
+static const char positionalSchemaFileName[] = "PositionalSchema.tbl";
+static const char stateSchemaFileName[] = "StateSchema.tbl";
+static const char distinguishedSchemaFileName[] = "DistinguishedSchema.tbl";
 
 
 /******************************************************/
@@ -1108,7 +1096,7 @@ Wallet_RandomName(char* suffix)
  */
 
 nsresult
-wallet_GetLine(nsIInputStream* strm, nsCString &line)
+wallet_GetLine(nsIInputStream* strm, nsACString &line)
 {
   line.Truncate();
   
@@ -2476,7 +2464,7 @@ nsVoidArray * wallet_list;
 nsAutoString wallet_url;
 
 void
-WLLT_GetPrefillListForViewer(nsString& aPrefillList)
+WLLT_GetPrefillListForViewer(nsAString& aPrefillList)
 {
   wallet_Initialize(PR_FALSE); /* to initialize helpMac */
   wallet_PrefillElement * prefillElementPtr;
@@ -2507,13 +2495,13 @@ wallet_FreeURL(wallet_MapElement *url) {
     PR_Free(url);
 }
 
-const char* permission_NoCapture_NoPreview = "yy";
-const char* permission_NoCapture_Preview = "yn";
-const char* permission_Capture_NoPreview = "ny";
-const char* permission_Capture_Preview = "nn";
+static const char permission_NoCapture_NoPreview[] = "yy";
+static const char permission_NoCapture_Preview[] = "yn";
+static const char permission_Capture_NoPreview[] = "ny";
+static const char permission_Capture_Preview[] = "nn";
 
 void
-Wallet_SignonViewerReturn(const nsString& results)
+Wallet_SignonViewerReturn(const nsAString& results)
 {
     wallet_MapElement *url;
     nsAutoString gone;
@@ -2742,7 +2730,7 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, n
 /***************************************************************/
 
 void
-WLLT_GetNopreviewListForViewer(nsString& aNopreviewList)
+WLLT_GetNopreviewListForViewer(nsAString& aNopreviewList)
 {
   wallet_Initialize(PR_FALSE); /* to initialize helpMac */
   nsAutoString buffer;
@@ -2761,7 +2749,7 @@ WLLT_GetNopreviewListForViewer(nsString& aNopreviewList)
 }
 
 void
-WLLT_GetNocaptureListForViewer(nsString& aNocaptureList)
+WLLT_GetNocaptureListForViewer(nsAString& aNocaptureList)
 {
   nsAutoString buffer;
   wallet_MapElement *url;
@@ -2779,7 +2767,7 @@ WLLT_GetNocaptureListForViewer(nsString& aNocaptureList)
 }
 
 void
-WLLT_PostEdit(const nsString& walletList)
+WLLT_PostEdit(const nsAString& walletList)
 {
   nsCOMPtr<nsIFile> file;
   nsresult rv = Wallet_ProfileDirectory(getter_AddRefs(file));
@@ -2856,7 +2844,7 @@ WLLT_PostEdit(const nsString& walletList)
 }
 
 void
-WLLT_PreEdit(nsString& walletList)
+WLLT_PreEdit(nsAString& walletList)
 {
   wallet_Initialize();
   walletList.Assign(BREAK);
@@ -3021,7 +3009,7 @@ wallet_DecodeVerticalBars(nsString& s) {
  * return after previewing a set of prefills
  */
 void
-WLLT_PrefillReturn(const nsString& results)
+WLLT_PrefillReturn(const nsAString& results)
 {
   nsAutoString fillins;
   nsAutoString urlName;
@@ -3270,7 +3258,7 @@ wallet_TraversalForPrefill
 
 nsresult
 WLLT_PrefillOneElement
-  (nsIDOMWindowInternal* win, nsIDOMNode* elementNode, nsString& compositeValue)
+  (nsIDOMWindowInternal* win, nsIDOMNode* elementNode, nsAString& compositeValue)
 {
   nsIDOMHTMLInputElement* inputElement;
   nsIDOMHTMLSelectElement* selectElement;

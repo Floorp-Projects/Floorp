@@ -625,23 +625,10 @@ si_Randomize(nsString& password) {
  * Encryption Routines *
  ***********************/
 
-// don't understand why linker doesn't let me call Wallet_Encrypt and Wallet_Decrypt
-// directly but it doesn't.  Need to introduce Wallet_Enctrypt2 and Wallet_Decrypt2 instead.
-
-static nsresult
-si_Encrypt (const nsString& text, nsString& crypt) {
-  return Wallet_Encrypt2(text, crypt);
-}
-
-static nsresult
-si_Decrypt (const nsString& crypt, nsString& text) {
-  return Wallet_Decrypt2(crypt, text);
-}
-
 static PRBool
 si_CompareEncryptedToCleartext(const nsString& crypt, const nsString& text) {
   nsAutoString decrypted;
-  if (NS_FAILED(si_Decrypt(crypt, decrypted))) {
+  if (NS_FAILED(Wallet_Decrypt(crypt, decrypted))) {
     return PR_FALSE;
   }
   return (decrypted == text);
@@ -651,10 +638,10 @@ static PRBool
 si_CompareEncryptedToEncrypted(const nsString& crypt1, const nsString& crypt2) {
   nsAutoString decrypted1;
   nsAutoString decrypted2;
-  if (NS_FAILED(si_Decrypt(crypt1, decrypted1))) {
+  if (NS_FAILED(Wallet_Decrypt(crypt1, decrypted1))) {
     return PR_FALSE;
   }
-  if (NS_FAILED(si_Decrypt(crypt2, decrypted2))) {
+  if (NS_FAILED(Wallet_Decrypt(crypt2, decrypted2))) {
     return PR_FALSE;
   }
   return (decrypted1 == decrypted2);
@@ -1197,7 +1184,7 @@ si_GetUser(nsIPrompt* dialog, const char* passwordRealm, const char *legacyRealm
         }
         nsAutoString userName;
         data = si_GetFirstNonPasswordData(user);
-        if (NS_SUCCEEDED(si_Decrypt (data->value, userName))) {
+        if (NS_SUCCEEDED(Wallet_Decrypt (data->value, userName))) {
           *(list2++) = ToNewUnicode(userName);
           *(users2++) = user;
           user_count++;
@@ -1371,7 +1358,7 @@ si_GetURLAndUserForChangeForm(nsIPrompt* dialog, const nsString& password)
                                 user->signonData_list.ElementAt(0));
 
           nsAutoString userName;
-          if (NS_SUCCEEDED(si_Decrypt (data->value, userName))) {
+          if (NS_SUCCEEDED(Wallet_Decrypt (data->value, userName))) {
             nsAutoString temp; temp.AssignASCII(url->passwordRealm); // XXX non-ascii realms?
             temp.AppendLiteral(":");
             temp.Append(userName);
@@ -2300,7 +2287,7 @@ si_RememberSignonData
         for (j=0; j<signonData->Count(); j++) {
           data2 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(j));
           nsAutoString value(data2->value);
-          if (NS_FAILED(si_Encrypt(value, data2->value))) {
+          if (NS_FAILED(Wallet_Encrypt(value, data2->value))) {
             return;
           }
         }
@@ -2357,7 +2344,7 @@ si_RememberSignonData
 //    si_Randomize(data1->value);
 //    data2->value = data1->value;
 
-    if (NS_SUCCEEDED(si_Encrypt(data1->value, data->value))) {
+    if (NS_SUCCEEDED(Wallet_Encrypt(data1->value, data->value))) {
       user->time = SecondsFromPRTime(PR_Now()); 
       si_signon_list_changed = PR_TRUE;
       si_SaveSignonDataLocked("signons", PR_TRUE);
@@ -2463,7 +2450,7 @@ si_RestoreSignonData(nsIPrompt* dialog,
           data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list.ElementAt(i));
           if (data->isPassword) {
             nsAutoString password;
-            if (NS_SUCCEEDED(si_Decrypt(data->value, password))) {
+            if (NS_SUCCEEDED(Wallet_Decrypt(data->value, password))) {
               *value = ToNewUnicode(password);
             }
             si_unlock_signon_list();
@@ -2487,7 +2474,7 @@ si_RestoreSignonData(nsIPrompt* dialog,
               NS_LossyConvertUCS2toASCII(data->value).get()));
       if(!correctedName.IsEmpty() && (data->name == correctedName)) {
         nsAutoString password;
-        if (NS_SUCCEEDED(si_Decrypt(data->value, password))) {
+        if (NS_SUCCEEDED(Wallet_Decrypt(data->value, password))) {
           *value = ToNewUnicode(password);
         }
         si_unlock_signon_list();
@@ -2532,14 +2519,14 @@ si_RememberSignonDataFromBrowser(const char* passwordRealm, const nsString& user
   nsVoidArray signonData;
   si_SignonDataStruct data1;
   data1.name.AssignLiteral(USERNAMEFIELD);
-  if (NS_FAILED(si_Encrypt(nsAutoString(username), data1.value))) {
+  if (NS_FAILED(Wallet_Encrypt(username, data1.value))) {
     return;
   }
   data1.isPassword = PR_FALSE;
   signonData.AppendElement(&data1);
   si_SignonDataStruct data2;
   data2.name.AssignLiteral(PASSWORDFIELD);
-  if (NS_FAILED(si_Encrypt(nsAutoString(password), data2.value))) {
+  if (NS_FAILED(Wallet_Encrypt(password, data2.value))) {
     return;
   }
   data2.isPassword = PR_TRUE;
@@ -2580,7 +2567,7 @@ si_RestoreOldSignonDataFromBrowser
   for (PRInt32 i=0; i<dataCount; i++) {
     data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list.ElementAt(i));
     nsAutoString decrypted;
-    if (NS_SUCCEEDED(si_Decrypt(data->value, decrypted))) {
+    if (NS_SUCCEEDED(Wallet_Decrypt(data->value, decrypted))) {
       if(data->name.EqualsLiteral(USERNAMEFIELD)) {
         username = decrypted;
       } else if(data->name.EqualsLiteral(PASSWORDFIELD)) {
@@ -2890,12 +2877,6 @@ SI_FindValueInArgs(const nsAString& results, const nsAString& name, nsAString& v
   value = Substring(start, barPos);
 }
 
-void
-SINGSIGN_SignonViewerReturn(const nsString& results) {
-  /* give wallet a chance to do its deletions */
-  Wallet_SignonViewerReturn(results);
-}
-
 PRBool
 SINGSIGN_ReencryptAll()
 {
@@ -2920,11 +2901,11 @@ SINGSIGN_ReencryptAll()
         data = NS_STATIC_CAST(si_SignonDataStruct *,
                               user->signonData_list.ElementAt(k));
         nsAutoString userName;
-        if (NS_FAILED(si_Decrypt(data->value, userName))) {
+        if (NS_FAILED(Wallet_Decrypt(data->value, userName))) {
           //Don't try to re-encrypt. Just go to the next one.
           continue;
         }
-        if (NS_FAILED(si_Encrypt(userName, data->value))) {
+        if (NS_FAILED(Wallet_Encrypt(userName, data->value))) {
           return PR_FALSE;
         }
       }
@@ -3021,7 +3002,7 @@ SINGSIGN_Enumerate
   nsresult rv;
   nsAutoString userName;
   if (decrypt) {
-    rv = si_Decrypt(data->value, userName);
+    rv = Wallet_Decrypt(data->value, userName);
     if (NS_FAILED(rv)) {
       /* don't display saved signons if user couldn't unlock the database */
     return rv;
@@ -3043,7 +3024,7 @@ SINGSIGN_Enumerate
 
   nsAutoString passWord;
   if (decrypt) {
-    rv = si_Decrypt(data->value, passWord);
+    rv = Wallet_Decrypt(data->value, passWord);
     if (NS_FAILED(rv)) {
       /* don't display saved signons if user couldn't unlock the database */
       Recycle(*user);
