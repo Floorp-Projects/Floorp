@@ -129,17 +129,8 @@ nsresult nsSelectionMgr::PasteTextBlocking(nsString* aPastedText)
   if (scrapLen < 0)  // really an error, no text in scrap
   	goto done;
   
-  // IM says that scrapOffset can be garbage if the Translation Manager is
-  // installed, but everyone seems to use it. So sanity check.
-  long		handSize = ::GetHandleSize(destHandle);
-  if (scrapOffset + scrapLen > handSize)
-  	scrapLen = handSize - scrapOffset;
-  	
-  if (scrapLen < 0)  // really an error, no text in scrap
-    goto done;
-
   HLock(destHandle);
-  aPastedText->SetString(*destHandle + scrapOffset, scrapLen);
+  aPastedText->SetString(*destHandle, scrapLen);
   
 done:
   ::DisposeHandle(destHandle);
