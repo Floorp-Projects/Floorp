@@ -653,8 +653,18 @@ NS_IMETHODIMP	nsWindow::Update()
 		{
 			// initialize the paint event for that widget
 			nsRect rect;
+#if 1
 			GetBounds(rect);
 			rect.x = rect.y = 0;	// the origin is set on the topLeft corner of the widget
+#else
+					//¥TODO: fix this: we don't want to always pass the entire rect
+			Rect macRect = (*updateRgn)->rgnBBox;
+			::OffsetRect(&macRect, -bounds.x, -bounds.y);
+			rect.x = macRect.left;
+			rect.y = macRect.top;
+			rect.width = macRect.right - macRect.left;
+			rect.height = macRect.bottom - macRect.top;
+#endif
 
 			// 			nsEvent
 			nsPaintEvent paintEvent;
