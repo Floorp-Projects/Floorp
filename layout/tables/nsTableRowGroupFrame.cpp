@@ -1053,7 +1053,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
       nsIAtom* pseudoTag;
  
       mStyleContext->GetPseudoType(pseudoTag);
-      if (pseudoTag == nsHTMLAtoms::scrolledContentPseudo) {
+      if (pseudoTag == nsLayoutAtoms::scrolledContentPseudo) {
         nsIFrame* scrollFrame;
         GetParent(&scrollFrame);
         const nsStyleDisplay *display;
