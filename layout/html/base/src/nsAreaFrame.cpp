@@ -500,11 +500,10 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
 
   rv = nsBlockFrame::Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
 
-  // If it's a 'initial', 'resize', or 'style change' reflow command (anything but
-  // incremental), then reflow all the absolutely positioned child frames
-  if (eReflowReason_Incremental != aReflowState.reason) {
-    ReflowAbsoluteFrames(aPresContext, reflowState);
-  }
+  // Reflow the absolutely positioned child frames. We need to do this even for
+  // an incremental reflow, because some of the absolutely positioned child frames
+  // may have 'auto' for an offset
+  ReflowAbsoluteFrames(aPresContext, reflowState);
 
   // Compute our desired size taking into account any floaters
   if (nsnull != mSpaceManager) {
@@ -601,6 +600,9 @@ nsAreaFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
 /////////////////////////////////////////////////////////////////////////////
 // Helper functions
 
+// XXX Optimize the case where it's a resize reflow and the absolutely
+// positioned child has the exact same size and position and skip the
+// reflow...
 nsresult
 nsAreaFrame::ReflowAbsoluteFrame(nsIPresContext&          aPresContext,
                                  const nsHTMLReflowState& aReflowState,
@@ -655,18 +657,21 @@ nsAreaFrame::ReflowAbsoluteFrame(nsIPresContext&          aPresContext,
   return rv;
 }
 
-// Called by Reflow() to reflow all of the absolutely positioned child frames.
-// This is only done for 'initial', 'resize', and 'style change' reflow commands
+// Called by Reflow() to reflow the absolutely positioned child frames.
 void
 nsAreaFrame::ReflowAbsoluteFrames(nsIPresContext&          aPresContext,
                                   const nsHTMLReflowState& aReflowState)
 {
-  NS_PRECONDITION(eReflowReason_Incremental != aReflowState.reason,
-                  "unexpected reflow reason");
+  // Make a copy of the reflow state. If the reason is eReflowReason_Incremental,
+  // then change it to eReflowReason_Resize
+  nsHTMLReflowState reflowState(aReflowState);
+  if (eReflowReason_Incremental == reflowState.reason) {
+    reflowState.reason = eReflowReason_Resize;
+  }
 
   nsIFrame* kidFrame;
   for (kidFrame = mAbsoluteFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
-    // Reflow the frame using our reflow reason
+    // Reflow the frame
     nsReflowStatus  kidStatus;
     ReflowAbsoluteFrame(aPresContext, aReflowState, kidFrame, PR_FALSE,
                         kidStatus);
