@@ -1,12 +1,16 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
 # Persistence::Storable.pm - A implementation of the Persistance API
-# using Storable.  This version should be faster then Dumper.pm but
-# will be harder to debug as it is not possible to read the data
-# structures with a browser.
+# using Storable.  Storable is a commonly used Perl CPAN Module which
+# writes/recovers perl datastructures to files using a binary format.
+# This implemenation of Persistence should be faster then Dumper.pm
+# but will be harder to debug Tinderbox if it is in use as it is not
+# possible to read the data structures which are generated with a
+# browser.
 
-# $Revision: 1.2 $ 
-# $Date: 2000/09/18 19:21:56 $ 
+
+# $Revision: 1.3 $ 
+# $Date: 2000/11/28 00:30:26 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Persistence/Storable.pm,v $ 
 # $Name:  $ 
@@ -42,8 +46,12 @@
 package Persistence;
 
 
-# Standard perl libraries
+# Load standard perl libraries
 use Storable;
+
+# Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
 
 
 # The calling structure looks like the call for Storable because the
@@ -59,6 +67,9 @@ use Storable;
 sub save_structure {
   my ($data_refs, $data_file,) = @_;
 
+  # This may be the output of a glob, make it taint safe.
+  $data_file = main::extract_filename_chars($data_file);
+
   my ($tmpfile) = "$data_file.$main::UID";
 
   store($data_refs, $tmpfile);
@@ -73,6 +84,9 @@ sub save_structure {
 
 sub load_structure {
   my ($data_file,) = @_;
+
+  # This may be the output of a glob, make it taint safe.
+  $data_file = main::extract_filename_chars($data_file);
 
   (-r $data_file) || (-R $data_file) ||
     die("data file: $data_file is not readable\n");
