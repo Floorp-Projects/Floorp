@@ -247,6 +247,7 @@ nsHTMLContainerFrame::CreateWrapperFrame(nsIPresContext& aPresContext,
   return isContainer;
 }
 
+// XXX pass in aFrame's style context instead
 PRBool
 nsHTMLContainerFrame::MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
                                          nsIFrame*              aFrame,
@@ -269,6 +270,7 @@ nsHTMLContainerFrame::MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
     aFrame->GetNextSibling(nextSibling);
     aFrame->SetNextSibling(nsnull);
 
+    nsIFrame* frameToWrapWithAView = aFrame;
     if (isFloated) {
       // Create a placeholder frame that will serve as the anchor point.
       nsPlaceholderFrame* placeholder =
@@ -279,6 +281,7 @@ nsHTMLContainerFrame::MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
       if (CreateWrapperFrame(aPresContext, aFrame, wrapperFrame)) {
         // Bind the wrapper frame to the placeholder
         placeholder->SetAnchoredItem(wrapperFrame);
+        frameToWrapWithAView = wrapperFrame;
       }
   
       aPlaceholderFrame = placeholder;
@@ -293,9 +296,20 @@ nsHTMLContainerFrame::MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
       if (CreateWrapperFrame(aPresContext, aFrame, wrapperFrame)) {
         // Bind the wrapper frame to the placeholder
         placeholder->SetAbsoluteFrame(wrapperFrame);
+        frameToWrapWithAView = wrapperFrame;
       }
   
       aPlaceholderFrame = placeholder;
+    }
+
+    // Wrap the frame in a view if necessary
+    nsIStyleContext* kidSC;
+    aFrame->GetStyleContext(&aPresContext, kidSC);
+    nsresult rv = CreateViewForFrame(aPresContext, frameToWrapWithAView,
+                                     kidSC, PR_FALSE);
+    NS_RELEASE(kidSC);
+    if (NS_OK != rv) {
+      return rv;
     }
 
     // Set the placeholder's next sibling to what aFrame's next sibling was
