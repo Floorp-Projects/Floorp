@@ -58,6 +58,7 @@
 #include "nsIDOMHTMLDivElement.h"
 #include "nsIDOMHTMLDocument.h"		   
 #include "nsIDOMHTMLElement.h"
+#include "nsIDOMHTMLEmbedElement.h"
 #include "nsIDOMHTMLFontElement.h"		   
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLFrameElement.h"	   
@@ -452,9 +453,9 @@ nsDOMScriptObjectFactory::NewScriptElement(const nsString &aTagName,
     case DOMHTMLTag_ol:
       return NS_NewScriptHTMLOListElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_object:
-    case DOMHTMLTag_embed:
-      // XXX Does embed need a different one?
       return NS_NewScriptHTMLObjectElement(aContext, aElement, aParent, aReturn);
+    case DOMHTMLTag_embed:
+      return NS_NewScriptHTMLEmbedElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_optgroup:
       return NS_NewScriptHTMLOptGroupElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_option:
