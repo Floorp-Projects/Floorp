@@ -123,6 +123,7 @@ static NS_DEFINE_CID(kAppShellServiceCID,         NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kPrefCID,                    NS_PREF_CID);
 
 static NS_DEFINE_CID(kStringBundleServiceCID,     NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_CID(kPlatformCharsetCID,         NS_PLATFORMCHARSET_CID);
 
 static const char kURINC_BookmarksRoot[]          = "NC:BookmarksRoot"; // XXX?
 static const char kURINC_IEFavoritesRoot[]        = "NC:IEFavoritesRoot"; // XXX?
