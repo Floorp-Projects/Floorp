@@ -95,7 +95,7 @@ ifdef MAPFILE
 # Add LD options to restrict exported symbols to those in the map file
 endif
 # Change PROCESS to put the mapfile in the correct format for this platform
-PROCESS_MAP_FILE = copy $(LIBRARY_NAME).def $@
+PROCESS_MAP_FILE = $(INSTALL) -m 444 $(LIBRARY_NAME).def $@
 
 
 #
