@@ -442,10 +442,12 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
         samples = ptrDecodedBuf;
       }
 
+      PRUint32 bpr;
+      mFrame->GetImageBytesPerRow(&bpr);
       mFrame->SetImageData(
         samples,             // data
         mInfo.output_width * 3,  // length
-        (mInfo.output_scanline-1) * (mInfo.output_width*3)); // offset
+        (mInfo.output_scanline-1) * bpr); // offset
 #if 0
       ic->imgdcb->ImgDCBHaveRow( 0, samples, 0, mInfo.output_width, mInfo.output_scanline-1,
                   1, ilErase, pass);
