@@ -66,6 +66,7 @@ public:
 
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIDOWNLOAD
+    NS_DECL_NSITRANSFER
     NS_DECL_NSIWEBPROGRESSLISTENER
     
 public:
@@ -85,7 +86,8 @@ private:
     nsCOMPtr<nsIHelperAppLauncher>  mHelperAppLauncher; // If we're talking to uriloader
     
     nsCOMPtr<nsIURI>                mURI;               // The URI of our source file. Null if we're saving a complete document.
-    nsCOMPtr<nsILocalFile>          mDestination;       // Our destination URL.
+    nsCOMPtr<nsIURI>                mDestination;       // Our destination URL.
+    nsCOMPtr<nsILocalFile>          mDestinationFile;   // Our destination file.
     nsresult                        mDownloadStatus;		// status from last nofication
     PRInt64                         mStartTime;         // When the download started
     PRPackedBool                    mBypassCache;       // Whether we should bypass the cache or not.

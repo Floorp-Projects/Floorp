@@ -368,11 +368,15 @@ nsresult nsHeaderSniffer::InitiateDownload(nsISupports* inSourceData, nsString& 
   rv = NS_NewLocalFile(inFileName, PR_FALSE, getter_AddRefs(destFile));
   if (NS_FAILED(rv)) return rv;
 
+  nsCOMPtr<nsIURI> destURI;
+  rv = NS_NewFileURI(getter_AddRefs(destURI), destFile);
+  if (NS_FAILED(rv)) return rv;
+
   PRInt64 timeNow = PR_Now();
   
   nsCOMPtr<nsIDownload> downloader = do_CreateInstance(NS_DOWNLOAD_CONTRACTID);
   // dlListener attaches to its progress dialog here, which gains ownership
-  rv = downloader->Init(inOriginalURI, destFile, inFileName.get(), nsnull, timeNow, webPersist);
+  rv = downloader->Init(inOriginalURI, destURI, inFileName.get(), nsnull, timeNow, webPersist);
   if (NS_FAILED(rv)) return rv;
     
   PRInt32 flags = nsIWebBrowserPersist::PERSIST_FLAGS_REPLACE_EXISTING_FILES;
@@ -382,7 +386,7 @@ nsresult nsHeaderSniffer::InitiateDownload(nsISupports* inSourceData, nsString& 
   { // Tell web persist we want no decoding on this data
     flags |= nsIWebBrowserPersist::PERSIST_FLAGS_NO_CONVERSION;
     webPersist->SetPersistFlags(flags);
-    rv = webPersist->SaveURI(sourceURI, nsnull, nsnull, mPostData, nsnull, destFile);
+    rv = webPersist->SaveURI(sourceURI, nsnull, nsnull, mPostData, nsnull, destURI);
   }
   else
   {
@@ -395,10 +399,7 @@ nsresult nsHeaderSniffer::InitiateDownload(nsISupports* inSourceData, nsString& 
     if (!mContentType.Equals("text/plain")) {
       // Create a local directory in the same dir as our file.  It
       // will hold our associated files.
-      filesFolder = do_CreateInstance("@mozilla.org/file/local;1");
-      nsAutoString unicodePath;
-      destFile->GetPath(unicodePath);
-      filesFolder->InitWithPath(unicodePath);
+      destFile->Clone(getter_AddRefs(filesFolder));
       
       nsAutoString leafName;
       filesFolder->GetLeafName(leafName);
@@ -422,7 +423,7 @@ nsresult nsHeaderSniffer::InitiateDownload(nsISupports* inSourceData, nsString& 
                         nsIWebBrowserPersist::ENCODE_FLAGS_ABSOLUTE_LINKS |
                         nsIWebBrowserPersist::ENCODE_FLAGS_NOFRAMES_CONTENT;
     }
-    rv = webPersist->SaveDocument(domDoc, destFile, filesFolder, mContentType.get(), encodingFlags, 80);
+    rv = webPersist->SaveDocument(domDoc, destURI, filesFolder, mContentType.get(), encodingFlags, 80);
   }
   
   return rv;

@@ -44,7 +44,7 @@
 
 #include "nsIWebProgress.h"
 #include "nsIRequest.h"
-#include "nsIURL.h"
+#include "nsIFileURL.h"
 #include "netCore.h"
 
 nsDownloadListener::nsDownloadListener()
@@ -62,15 +62,29 @@ nsDownloadListener::~nsDownloadListener()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsDownloadListener, CHDownloader, nsIDownload, nsIWebProgressListener)
+NS_IMPL_ISUPPORTS_INHERITED3(nsDownloadListener, CHDownloader, nsIDownload, nsITransfer, nsIWebProgressListener)
 
 #pragma mark -
 
-/* void init (in nsIURI aSource, in nsILocalFile aTarget, in wstring aDisplayName, in wstring openingWith, in long long startTime, in nsIWebBrowserPersist aPersist); */
+/* void init (in nsIURI aSource, in nsIURI aTarget, in wstring aDisplayName, in wstring openingWith, in long long startTime, in nsIWebBrowserPersist aPersist); */
 NS_IMETHODIMP
-nsDownloadListener::Init(nsIURI *aSource, nsILocalFile *aTarget, const PRUnichar *aDisplayName,
+nsDownloadListener::Init(nsIURI *aSource, nsIURI *aTarget, const PRUnichar *aDisplayName,
         nsIMIMEInfo* aMIMEInfo, PRInt64 startTime, nsIWebBrowserPersist *aPersist)
 { 
+  // get the local file corresponding to the given target URI
+  nsCOMPtr<nsILocalFile> targetFile;
+  {
+    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mDestination);
+    if (fileURL)
+    {
+      nsCOMPtr<nsIFile> file;
+      fileURL->GetFile(getter_AddRefs(file));
+      if (file)
+        targetFile = do_QueryInterface(file);
+    }
+  }
+  NS_ENSURE_TRUE(targetFile, NS_ERROR_INVALID_ARG);
+
   CreateDownloadDisplay(); // call the base class to make the download UI
   
   if (aPersist)  // only true for File->Save As.
@@ -83,6 +97,7 @@ nsDownloadListener::Init(nsIURI *aSource, nsILocalFile *aTarget, const PRUnichar
   SetIsFileSave(aPersist != NULL);
   
   mDestination = aTarget;
+  mDestinationFile = targetFile;
   mURI = aSource;
   mStartTime = startTime;
 
@@ -101,9 +116,9 @@ nsDownloadListener::GetSource(nsIURI * *aSource)
   return NS_OK;
 }
 
-/* readonly attribute nsILocalFile target; */
+/* readonly attribute nsIURI target; */
 NS_IMETHODIMP
-nsDownloadListener::GetTarget(nsILocalFile * *aTarget)
+nsDownloadListener::GetTarget(nsIURI * *aTarget)
 {
   NS_ENSURE_ARG_POINTER(aTarget);
   NS_IF_ADDREF(*aTarget = mDestination);
@@ -284,7 +299,7 @@ nsDownloadListener::InitDialog()
   }
 
   nsAutoString pathStr;
-  mDestination->GetPath(pathStr);
+  mDestinationFile->GetPath(pathStr);
   [mDownloadDisplay setDestinationPath: [NSString stringWith_nsAString:pathStr]];
 
   [mDownloadDisplay onStartDownload:IsFileSave()];
@@ -339,7 +354,8 @@ nsDownloadListener::DownloadDone(nsresult aStatus)
   if (NS_FAILED(aStatus))
   {
     // delete the file we created in CHBrowserService::Show
-    mDestination->Remove(PR_FALSE);
+    mDestinationFile->Remove(PR_FALSE);
+    mDestinationFile = nsnull;
     mDestination = nsnull;
   }
   
