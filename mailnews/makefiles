@@ -56,4 +56,7 @@ mailnews/import/public/Makefile
 mailnews/import/src/Makefile
 mailnews/import/text/Makefile
 mailnews/import/text/src/Makefile
-
+mailnews/extensions/smime/Makefile
+mailnews/extensions/smime/build/Makefile
+mailnews/extensions/smime/src/Makefile
+mailnews/extensions/smime/public/Makefile

@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public base db news local mime compose imap addrbook import absync
+DIRS		= public base db news local mime compose imap addrbook import absync extensions
 
 include $(topsrcdir)/config/rules.mk
 
