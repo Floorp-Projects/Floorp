@@ -23,8 +23,8 @@
   
 #define DEBUG_XMLENCODING
 #define XMLENCODING_PEEKBYTES 64
-//#define TEST_DOCTYPES 
 #define DISABLE_TRANSITIONAL_MODE
+
 
 
 #include "nsParser.h"
@@ -106,21 +106,16 @@ public:
 
     nsIDTD* theDTD;
 
-    NS_NewNavHTMLDTD(&theDTD);    //do this as a default HTML DTD...
-    mDTDDeque.Push(theDTD);
-
-      
-#if 1   //to fix bug 50070.
-    const char* theStrictDTDEnabled="true";
-#else
     const char* theStrictDTDEnabled=PR_GetEnv("ENABLE_STRICT");  //always false (except rickg's machine)
-#endif
 
     if(theStrictDTDEnabled) { 
       NS_NewOtherHTMLDTD(&mOtherDTD);  //do this as the default DTD for strict documents...
       mDTDDeque.Push(mOtherDTD);
     }
 
+    NS_NewNavHTMLDTD(&theDTD);    //do this as a default HTML DTD...
+    mDTDDeque.Push(theDTD);
+     
     mHasViewSourceDTD=PR_FALSE;
     mHasRTFDTD=mHasXMLDTD=PR_FALSE;
   }
@@ -210,6 +205,9 @@ void nsParser::FreeSharedObjects(void) {
     gSharedParserObjects=0;
   }
 }
+
+
+
 
 static PRBool gDumpContent=PR_FALSE;
 
@@ -648,13 +646,17 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
   aParseMode=eDTDMode_quirks;
   aDocType=eHTML3Text;
 
+  nsDTDMode thePublicID=eDTDMode_quirks;
+  nsDTDMode theSystemID=eDTDMode_unknown;
+
+  PRBool theMimeTypeIsHTML=aMimeType.EqualsWithConversion(kHTMLTextContentType);
 
     //let's eliminate non-HTML as quickly as possible...
 
   PRInt32 theIndex=aBuffer.Find("?XML",PR_TRUE,0,128);      
   if(kNotFound!=theIndex) {
     aParseMode=eDTDMode_strict;
-    if(aMimeType.EqualsWithConversion(kHTMLTextContentType)) {
+    if(theMimeTypeIsHTML) {
       //this is here to prevent a crash if someone gives us an XML document,
       //but necko tells us it's a text/html mimetype. 
       aDocType=eHTML4Text;
@@ -663,9 +665,10 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
     else {
       if(!aMimeType.EqualsWithConversion(kPlainTextContentType)) {
         aDocType=eXMLText;
+        aParseMode=eDTDMode_strict;
+        theSystemID=thePublicID=eDTDMode_strict;
       }
       else aDocType=ePlainText;
-      return;
     }
   }
   else if(aMimeType.EqualsWithConversion(kPlainTextContentType)) {
@@ -687,25 +690,28 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
 
   //now let's see if we have HTML or XHTML...
 
-  PRInt32 theLTPos=aBuffer.FindChar(kLessThan);  
-  PRInt32 theGTPos=aBuffer.FindChar(kGreaterThan);
+  PRInt32 theOffset=0;
+  PRInt32 theDocTypePos=aBuffer.Find("!DOCTYPE",PR_TRUE,0,500); //find doctype
+  if(kNotFound!=theDocTypePos){
+    theOffset=theDocTypePos-2;
+  }
 
-  if((kNotFound!=theGTPos) && (kNotFound!=theLTPos)) {
+  PRInt32 theLTPos=aBuffer.FindChar(kLessThan,PR_FALSE,theOffset); 
+  PRInt32 theGTPos=aBuffer.FindChar(kGreaterThan,PR_FALSE,theOffset);
+
+  if((kNotFound!=theGTPos) && (kNotFound!=theLTPos)) {  
 
     const PRUnichar*  theBuffer=aBuffer.GetUnicode();
     CWordTokenizer theTokenizer(aBuffer,theLTPos,theGTPos);
-    PRInt32 theOffset=theTokenizer.GetNextWord();  //try to find ?xml, !doctype, etc...
+    theOffset=theTokenizer.GetNextWord();  //try to find ?xml, !doctype, etc...
 
-    if((kNotFound!=theOffset) && 
-       (0==nsCRT::strncasecmp(theBuffer+theOffset,"!DOCTYPE",theTokenizer.mLength))) {             
+    if((kNotFound!=theOffset) && (kNotFound!=theDocTypePos)) {
       
       //Ok -- so assume it's (X)HTML; now figure out the flavor...
         
       PRInt32   theIter=0;      //prevent infinite loops...
       PRBool    done=PR_FALSE;  //use this to quit if we find garbage...
       PRBool    readSystemID=PR_FALSE;
-      nsDTDMode thePublicID=eDTDMode_quirks;
-      nsDTDMode theSystemID=eDTDMode_unknown;
 
       theOffset=theTokenizer.GetNextWord();
 
@@ -839,6 +845,13 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
     }
   }
 
+  if(eXHTMLText==aDocType) {
+    aParseMode=eDTDMode_strict;
+    if(theMimeTypeIsHTML){
+      aDocType=eHTML4Text;
+    }
+  }
+
 #ifdef  DISABLE_TRANSITIONAL_MODE
 
   /********************************************************************************************
@@ -852,8 +865,8 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
   if(eDTDMode_transitional==aParseMode) {
     if(eHTML4Text==aDocType)
       aParseMode=eDTDMode_quirks;
-    else if(eXHTMLText==aDocType)
-      aParseMode=eDTDMode_strict;
+//    else if(eXHTMLText==aDocType)
+//      aParseMode=eDTDMode_strict;
   }
 #endif
 
@@ -1217,6 +1230,7 @@ NS_IMETHODIMP nsParser::CreateCompatibleDTD(nsIDTD** aDTD,
 }
 
 
+//#define TEST_DOCTYPES 
 #ifdef TEST_DOCTYPES
 static const char* doctypes[] = {
 
@@ -1330,10 +1344,12 @@ static const char* doctypes[] = {
   "<!DOCTYPE \"-//W3C//DTD HTML 3.2 Draft//EN\">", 
   "<!DOCTYPE \"-//W3C//DTD HTML 3.2S Draft//EN\">", 
   "<!DOCTYPE \"-//IETF//DTD HTML i18n//EN\">",
+  "<!DOCTYPE HTML PUBLIC \"-//SQ//DTD HTML 2.0 + all extensions//EN\" \"hmpro3.dtd\">",
   0
   };
 #endif
 
+////////////////////////////////////////////////////////////////////////
 
 
 /**
@@ -1350,6 +1366,7 @@ static const char* doctypes[] = {
 nsresult nsParser::WillBuildModel(nsString& aFilename){
 
   nsresult       result=NS_OK;
+
 
 #ifdef TEST_DOCTYPES
 
@@ -2067,8 +2084,8 @@ nsParser::OnStatus(nsIChannel* channel, nsISupports* aContext,
  *  @param   
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::OnStartRequest(nsIChannel* channel, nsISupports* aContext)
-{
+nsresult nsParser::OnStartRequest(nsIChannel* channel, nsISupports* aContext) {
+
   NS_PRECONDITION((eNone==mParserContext->mStreamListenerState),kBadListenerInit);
 
   if (nsnull != mObserver) {

@@ -187,7 +187,7 @@ const nsString& nsCParserNode::GetName() const {
  *  @return  string ref of text from internal token
  */
 const nsString& nsCParserNode::GetText() const {
-  return mToken->GetStringValueXXX();
+  return (mToken) ? mToken->GetStringValueXXX() : GetEmptyString();
 }
 
 /**
@@ -229,7 +229,7 @@ void nsCParserNode::SetSkippedContent(nsString& aString) {
  *  @return  int value that represents tag type
  */
 PRInt32 nsCParserNode::GetNodeType(void) const{
-  return mToken->GetTypeID(); 
+  return (mToken) ? mToken->GetTypeID() : 0;
 }
 
 
@@ -242,7 +242,7 @@ PRInt32 nsCParserNode::GetNodeType(void) const{
  *  @return  
  */
 PRInt32 nsCParserNode::GetTokenType(void) const{
-  return mToken->GetTokenType();
+  return (mToken) ? mToken->GetTokenType() : 0;
 }
 
 
