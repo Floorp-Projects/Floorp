@@ -533,8 +533,13 @@ PRBool nsDBFolderInfo::TestFlag(PRInt32 flags)
 NS_IMETHODIMP
 nsDBFolderInfo::GetCharacterSet(nsString *result) 
 {
-	GetProperty(kCharacterSetColumnName, result);
-    return NS_OK;
+	return GetProperty(kCharacterSetColumnName, result);
+}
+
+NS_IMETHODIMP
+nsDBFolderInfo::GetCharPtrCharacterSet(char **result)
+{
+	return GetCharPtrProperty(kCharacterSetColumnName, result);
 }
 
 NS_IMETHODIMP nsDBFolderInfo::SetCharacterSet(nsString *charSet) 
@@ -635,6 +640,22 @@ NS_IMETHODIMP	nsDBFolderInfo::GetProperty(const char *propertyName, nsString *re
 
 	return err;
 }
+
+// Caller must PR_FREEIF resultProperty.
+NS_IMETHODIMP	nsDBFolderInfo::GetCharPtrProperty(const char *propertyName, char **resultProperty)
+{
+	nsresult err = NS_OK;
+	mdb_token	property_token;
+
+    if (!resultProperty) 
+		return NS_ERROR_NULL_POINTER;
+	err = m_mdb->GetStore()->StringToToken(m_mdb->GetEnv(),  propertyName, &property_token);
+	if (err == NS_OK)
+		err = m_mdb->RowCellColumnToCharPtr(m_mdbRow, property_token, resultProperty);
+
+	return err;
+}
+
 
 NS_IMETHODIMP	nsDBFolderInfo::SetUint32Property(const char *propertyName, PRUint32 propertyValue)
 {

@@ -53,6 +53,9 @@ interface  nsIDBFolderInfo : nsISupports {
 
 	[noscript] void GetCharacterSet(in nsString result);
 	[noscript] void SetCharacterSet(in nsString result);
+
+			   void GetCharPtrCharacterSet(out string result);
+
 	[noscript] void GetLocale(in nsString result);
 	[noscript] void SetLocale(in nsString locale);
     

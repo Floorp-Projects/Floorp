@@ -73,6 +73,8 @@ public:
 	NS_IMETHOD			SetImapUnreadPendingMessages(PRInt32 unreadPending) ;
 	NS_IMETHOD			GetCharacterSet(nsString *result) ;
 	NS_IMETHOD			SetCharacterSet(nsString *charSet) ;
+	NS_IMETHOD			GetCharPtrCharacterSet(char **result);
+
 	NS_IMETHOD			GetLocale(nsString *result) ;
 	NS_IMETHOD			SetLocale(nsString *locale) ;
 
@@ -94,6 +96,7 @@ public:
   
 	NS_IMETHOD			GetProperty(const char *propertyName, nsString *resultProperty);
 	NS_IMETHOD			SetProperty(const char *propertyName, nsString *propertyStr);
+	NS_IMETHOD			GetCharPtrProperty(const char *propertyName, char **resultProperty);
 	NS_IMETHOD			SetUint32Property(const char *propertyName, PRUint32 propertyValue);
 	NS_IMETHOD			GetUint32Property(const char *propertyName, PRUint32 *propertyValue);
 

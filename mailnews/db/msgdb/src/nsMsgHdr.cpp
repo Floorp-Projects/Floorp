@@ -21,8 +21,11 @@
 #include "nsMsgDatabase.h"
 #include "nsMsgUtils.h"
 #include "nsIMsgHeaderParser.h"
+#include "nsIMimeConverter.h"
 
 NS_IMPL_ISUPPORTS(nsMsgHdr, nsIMsgDBHdr::GetIID())
+
+static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow)
 {
@@ -507,9 +510,28 @@ NS_IMETHODIMP nsMsgHdr::GetAuthorCollationKey(nsString *resultAuthor)
 		nsIMsgHeaderParser *headerParser = m_mdb->GetHeaderParser();
 		if (headerParser)
 		{
-			//XXXOnce we get the csid, use Intl version
-			if(NS_SUCCEEDED(ret = headerParser->ExtractHeaderAddressName (nsnull, cSender, &name)))
-				*resultAuthor = name;
+			// apply mime decode
+			nsIMimeConverter *converter;
+			ret = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+												nsIMimeConverter::GetIID(), (void **)&converter);
+
+			if (NS_SUCCEEDED(ret) && nsnull != converter) 
+			{
+				char *resultStr = nsnull;
+				char *charset = nsnull;
+				m_mdb->m_dbFolderInfo->GetCharPtrCharacterSet(&charset);
+				char charsetName[128];
+				PL_strncpy(charsetName, charset, sizeof(charsetName));
+
+				ret = converter->DecodeMimePartIIStr(cSender.GetBuffer(), charsetName, &resultStr);
+				if (NS_SUCCEEDED(ret))
+				{
+					ret = headerParser->ExtractHeaderAddressName (charsetName, resultStr, &name);
+				}
+				NS_RELEASE(converter);
+				PR_FREEIF(resultStr);
+				PR_FREEIF(charset);
+			}
 
 		}
 	}

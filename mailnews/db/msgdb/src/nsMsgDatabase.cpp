@@ -2195,6 +2195,7 @@ nsresult nsMsgDatabase::CharPtrToRowCellColumn(nsIMdbRow *row, mdb_token columnT
 	return row->AddColumn(GetEnv(),  columnToken, &yarn);
 }
 
+// caller must PR_FREEIF result
 nsresult nsMsgDatabase::RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnToken, char **result)
 {
 	nsresult	err = NS_ERROR_NULL_POINTER;
@@ -2215,6 +2216,8 @@ nsresult nsMsgDatabase::RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnT
 
 			hdrCell->CutStrongRef(GetEnv()); // always release ref
 		}
+		else if (err == NS_OK)	// guarantee a non-null result
+			*result = nsCRT::strdup("");
 	}
 	return err;
 }
