@@ -29,8 +29,8 @@
 <!DOCTYPE dialog [
   <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
   %brandDTD;
-  <!ENTITY % openDialogDTD SYSTEM "chrome://browser/locale/pageReportFirstTime.dtd" >
-  %openDialogDTD;
+  <!ENTITY % pageReportTimeDTD SYSTEM "chrome://browser/locale/pageReportFirstTime.dtd" >
+  %pageReportFirstTimeDTD;
 ]>            
  
 <dialog id="pageReportFirstTime"
@@ -49,7 +49,7 @@
   <hbox pack="center">
     <statusbar style="width:5em">
       <statusbarpanel id="page-report-button" blocked="true"/>
-      <statusbarpanel flex="1">
+      <statusbarpanel flex="1"><description>Document: Done</description>
     </statusbar>
   </hbox>
 
