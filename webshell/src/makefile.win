@@ -22,20 +22,18 @@ DEFINES=-D_IMPL_NS_WEB -DWIN32_LEAN_AND_MEAN
 MODULE=raptor 
 
 CPPSRCS=				\
- nsContentViewer.cpp        \
- nsLinkHandler.cpp			\
- nsWebWidget.cpp			\
- nsDocLoader.cpp            \
+ nsDocumentViewer.cpp			\
+ nsDocLoader.cpp			\
+ nsWebShell.cpp				\
  $(NULL)
 
 CPP_OBJS=				\
- .\$(OBJDIR)\nsContentViewer.obj    \
- .\$(OBJDIR)\nsLinkHandler.obj		\
- .\$(OBJDIR)\nsWebWidget.obj		\
+ .\$(OBJDIR)\nsDocumentViewer.obj	\
  .\$(OBJDIR)\nsDocLoader.obj		\
+ .\$(OBJDIR)\nsWebShell.obj		\
  $(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
+LINCS=-I..\public -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
       -I$(PUBLIC)\dom -I$(PUBLIC)\js -I$(PUBLIC)\netlib
 
 MAKE_OBJ_TYPE = DLL
