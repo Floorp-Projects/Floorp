@@ -53,3 +53,16 @@
   list-style-image: url("chrome://communicator/skin/icons/loading.gif") !important;
 }
 
+.bookmark-item > .toolbarbutton-box > .toolbarbutton-icon
+{
+  list-style-image: inherit;
+  width: 16px;
+  height: 16px;
+}
+
+.tree-cell-icon, .tree-cell-primary-icon {
+  list-style-image: inherit;
+  height: 16px;
+  max-width: 32px;   /* 32 pixel hack to get too-large favicons to show; fix when tree becomes outliner */
+  max-height: 16px;
+}

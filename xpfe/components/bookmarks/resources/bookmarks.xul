@@ -293,6 +293,7 @@
               <treecell class="treecell-indent" editable="true" 
                         label="rdf:http://home.netscape.com/NC-rdf#Name"
                         src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                        validate="never"
                         type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                         loading="rdf:http://home.netscape.com/NC-rdf#loading" />
               <treecell crop="center" class="treecell-editable" editable="true"

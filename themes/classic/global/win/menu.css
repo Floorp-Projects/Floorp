@@ -89,8 +89,6 @@ popup > menuitem[menuactive="true"]
   {
     color                 : inherit;
     margin                : 0px 4px 0px 3px;
-    width                 : 16px;
-    list-style-image      : inherit;
   }
 
 .menubar-left 
@@ -243,4 +241,11 @@ menuitem[checked="true"][type="radio"][menuactive="true"]
     {
       margin-left: -4px;
       list-style-image: url("chrome://global/skin/columnselect.gif");
+    }
+    
+  .menu-iconic-icon 
+    {
+      width: 16px;
+      height: 16px;
+      list-style-image: inherit;
     }

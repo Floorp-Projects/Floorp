@@ -85,7 +85,9 @@
 #include "nsIIOService.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
-
+#include "nsICacheService.h"
+#include "nsICacheSession.h"
+#include "nsICacheEntryDescriptor.h"
 
 #include "nsIInputStream.h"
 #include "nsIInputStream.h"
@@ -109,6 +111,7 @@ nsIRDFResource		*kNC_FolderType;
 nsIRDFResource		*kNC_IEFavorite;
 nsIRDFResource		*kNC_IEFavoriteFolder;
 nsIRDFResource		*kNC_Name;
+nsIRDFResource		*kNC_Icon;
 nsIRDFResource		*kNC_NewBookmarkFolder;
 nsIRDFResource		*kNC_NewSearchFolder;
 nsIRDFResource		*kNC_PersonalToolbarFolder;
@@ -123,7 +126,7 @@ nsIRDFResource		*kWEB_Status;
 nsIRDFResource		*kWEB_LastPingDate;
 nsIRDFResource		*kWEB_LastPingETag;
 nsIRDFResource		*kWEB_LastPingModDate;
-nsIRDFResource    *kWEB_LastCharset;
+nsIRDFResource		*kWEB_LastCharset;
 nsIRDFResource		*kWEB_LastPingContentLen;
 
 nsIRDFResource		*kNC_Parent;
@@ -155,6 +158,7 @@ static NS_DEFINE_CID(kPrefCID,                    NS_PREF_CID);
 static NS_DEFINE_IID(kSoundCID,                   NS_SOUND_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID,     NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kPlatformCharsetCID,         NS_PLATFORMCHARSET_CID);
+static NS_DEFINE_CID(kCacheServiceCID,            NS_CACHESERVICE_CID);
 
 #define URINC_BOOKMARKS_ROOT_STRING               "NC:BookmarksRoot"
 
@@ -218,6 +222,7 @@ bm_AddRefGlobals()
 		gRDF->GetResource(NC_NAMESPACE_URI "IEFavorite",          &kNC_IEFavorite);
 		gRDF->GetResource(NC_NAMESPACE_URI "IEFavoriteFolder",    &kNC_IEFavoriteFolder);
 		gRDF->GetResource(NC_NAMESPACE_URI "Name",                &kNC_Name);
+		gRDF->GetResource(NC_NAMESPACE_URI "Icon",                &kNC_Icon);
 		gRDF->GetResource(NC_NAMESPACE_URI "ShortcutURL",         &kNC_ShortcutURL);
 		gRDF->GetResource(NC_NAMESPACE_URI "URL",                 &kNC_URL);
 		gRDF->GetResource(RDF_NAMESPACE_URI "type",               &kRDF_type);
@@ -287,6 +292,7 @@ bm_ReleaseGlobals()
 		NS_IF_RELEASE(kNC_IEFavoriteFolder);
 		NS_IF_RELEASE(kNC_IEFavoritesRoot);
 		NS_IF_RELEASE(kNC_Name);
+		NS_IF_RELEASE(kNC_Icon);
 		NS_IF_RELEASE(kNC_NewBookmarkFolder);
 		NS_IF_RELEASE(kNC_NewSearchFolder);
 		NS_IF_RELEASE(kNC_PersonalToolbarFolder);
@@ -531,6 +537,7 @@ static const char kLastVisitEquals[]       = "LAST_VISIT=\"";
 static const char kLastModifiedEquals[]    = "LAST_MODIFIED=\"";
 static const char kLastCharsetEquals[]     = "LAST_CHARSET=\"";
 static const char kShortcutURLEquals[]     = "SHORTCUTURL=\"";
+static const char kIconEquals[]            = "ICON=\"";
 static const char kScheduleEquals[]        = "SCHEDULE=\"";
 static const char kLastPingEquals[]        = "LAST_PING=\"";
 static const char kPingETagEquals[]        = "PING_ETAG=\"";
@@ -1049,6 +1056,7 @@ BookmarkParser::gBookmarkFieldTable[] =
   { kLastVisitEquals,       WEB_NAMESPACE_URI "LastVisitDate",     nsnull,  BookmarkParser::ParseDate,      nsnull },
   { kLastModifiedEquals,    WEB_NAMESPACE_URI "LastModifiedDate",  nsnull,  BookmarkParser::ParseDate,      nsnull },
   { kShortcutURLEquals,     NC_NAMESPACE_URI  "ShortcutURL",       nsnull,  BookmarkParser::ParseLiteral,   nsnull },
+  { kIconEquals,            NC_NAMESPACE_URI  "Icon",              nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kLastCharsetEquals,     WEB_NAMESPACE_URI "LastCharset",       nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kScheduleEquals,        WEB_NAMESPACE_URI "Schedule",          nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kLastPingEquals,        WEB_NAMESPACE_URI "LastPingDate",      nsnull,  BookmarkParser::ParseDate,      nsnull },
@@ -1707,39 +1715,48 @@ nsBookmarksService::Init()
 	rv = bm_AddRefGlobals();
 	if (NS_FAILED(rv))	return(rv);
 
+	mNetService = do_GetService(kIOServiceCID, &rv);
+	if (NS_FAILED(rv))  return(rv);
+
+    // create cache service/session, ignoring errors
+    mCacheService = do_GetService(kCacheServiceCID, &rv);
+    if (NS_SUCCEEDED(rv))
+    {
+        rv = mCacheService->CreateSession("HTTP", nsICache::STORE_ANYWHERE,
+            nsICache::STREAM_BASED, getter_AddRefs(mCacheSession));
+    }
+
 	/* create a URL for the string resource file */
-	nsCOMPtr<nsIIOService>	pNetService;
-	if (NS_SUCCEEDED(rv = nsServiceManager::GetService(kIOServiceCID, NS_GET_IID(nsIIOService),
-		getter_AddRefs(pNetService))))
+	nsCOMPtr<nsIURI>	uri;
+	if (NS_SUCCEEDED(rv = mNetService->NewURI(bookmark_properties, nsnull,
+		getter_AddRefs(uri))))
 	{
-		nsCOMPtr<nsIURI>	uri;
-		if (NS_SUCCEEDED(rv = pNetService->NewURI(bookmark_properties, nsnull,
-			getter_AddRefs(uri))))
+		/* create a bundle for the localization */
+		nsCOMPtr<nsIStringBundleService>	stringService;
+		if (NS_SUCCEEDED(rv = nsServiceManager::GetService(kStringBundleServiceCID,
+			NS_GET_IID(nsIStringBundleService), getter_AddRefs(stringService))))
 		{
-			/* create a bundle for the localization */
-			nsCOMPtr<nsIStringBundleService>	stringService;
-			if (NS_SUCCEEDED(rv = nsServiceManager::GetService(kStringBundleServiceCID,
-				NS_GET_IID(nsIStringBundleService), getter_AddRefs(stringService))))
+			char	*spec = nsnull;
+			if (NS_SUCCEEDED(rv = uri->GetSpec(&spec)) && (spec))
 			{
-				char	*spec = nsnull;
-				if (NS_SUCCEEDED(rv = uri->GetSpec(&spec)) && (spec))
+				if (NS_SUCCEEDED(rv = stringService->CreateBundle(spec,
+					getter_AddRefs(mBundle))))
 				{
-					if (NS_SUCCEEDED(rv = stringService->CreateBundle(spec,
-						getter_AddRefs(mBundle))))
-					{
-					}
-					nsCRT::free(spec);
-					spec = nsnull;
 				}
+				nsCRT::free(spec);
+				spec = nsnull;
 			}
 		}
 	}
 
-	// determine what the name of the Personal Toolbar Folder is...
-	// first from user preference, then string bundle, then hard-coded default
 	nsCOMPtr<nsIPref> prefServ(do_GetService(kPrefCID, &rv));
 	if (NS_SUCCEEDED(rv) && (prefServ))
 	{
+    	// get browser icon pref
+    	prefServ->GetBoolPref("browser.chrome.site_icons", &mBrowserIcons);
+    	
+    	// determine what the name of the Personal Toolbar Folder is...
+    	// first from user preference, then string bundle, then hard-coded default
 		char	*prefVal = nsnull;
 		if (NS_SUCCEEDED(rv = prefServ->CopyCharPref("custtoolbar.personal_toolbar_folder",
 			&prefVal)) && (prefVal))
@@ -2740,6 +2757,56 @@ nsBookmarksService::GetLastCharset(const char *aURI,  PRUnichar **aLastCharset)
 
 
 NS_IMETHODIMP
+nsBookmarksService::UpdateBookmarkIcon(const char *aURL, const PRUnichar *iconURL)
+{
+    nsresult rv;
+	nsCOMPtr<nsIRDFResource> bookmark;
+	if (NS_FAILED(rv = gRDF->GetResource(aURL, getter_AddRefs(bookmark) )))
+	{
+		NS_ERROR("unable to get bookmark resource");
+		return(rv);
+	}
+    nsCOMPtr<nsIRDFNode>    favIconNode;
+    if (NS_FAILED(rv = ProcessCachedBookmarkIcon(bookmark, iconURL,
+        getter_AddRefs(favIconNode))))
+    {
+        return(rv);
+    }
+    if ((rv != NS_RDF_NO_VALUE) && favIconNode)
+    {
+        // yes, that's right; fake out RDF observers
+        (void)OnAssert(this, bookmark, kNC_Icon, favIconNode);
+    }
+    return(NS_OK);
+}
+
+
+NS_IMETHODIMP
+nsBookmarksService::RemoveBookmarkIcon(const char *aURL, const PRUnichar *iconURL)
+{
+    nsresult rv;
+	nsCOMPtr<nsIRDFResource> bookmark;
+	if (NS_FAILED(rv = gRDF->GetResource(aURL, getter_AddRefs(bookmark) )))
+	{
+		NS_ERROR("unable to get bookmark resource");
+		return(rv);
+	}
+	nsCOMPtr<nsIRDFLiteral>	iconLiteral;
+	if (NS_FAILED(rv = gRDF->GetLiteral(iconURL, getter_AddRefs(iconLiteral))))
+	{
+	    return(rv);
+	}
+	PRBool  hasThisIconURL = PR_FALSE;
+	if (NS_SUCCEEDED(rv = mInner->HasAssertion(bookmark, kNC_Icon, iconLiteral,
+		PR_TRUE, &hasThisIconURL)) && (hasThisIconURL == PR_TRUE))
+    {
+        (void)mInner->Unassert(bookmark, kNC_Icon, iconLiteral);
+    }
+	return(NS_OK);
+}
+
+
+NS_IMETHODIMP
 nsBookmarksService::UpdateBookmarkLastVisitedDate(const char *aURL, const PRUnichar *aCharset)
 {
 	nsCOMPtr<nsIRDFResource>	bookmark;
@@ -3009,9 +3076,142 @@ nsBookmarksService::GetTarget(nsIRDFResource* aSource,
 			return(rv);
 		}
 	}
+	else if (aProperty == kNC_Icon)
+	{
+	    rv = ProcessCachedBookmarkIcon(aSource, nsnull, aTarget);
+	    return(rv);
+	}
 
 	rv = mInner->GetTarget(aSource, aProperty, aTruthValue, aTarget);
 	return(rv);
+}
+
+
+
+nsresult
+nsBookmarksService::ProcessCachedBookmarkIcon(nsIRDFResource* aSource,
+    const PRUnichar *iconURL, nsIRDFNode** aTarget)
+{
+    *aTarget = nsnull;
+
+    if (!mBrowserIcons)
+    {
+        return(NS_RDF_NO_VALUE);
+    }
+
+	// if it is in fact a bookmark or favorite (but NOT a folder, or a separator, etc)...
+	PRBool hasAssertion;
+	mInner->HasAssertion(aSource, kRDF_type, kNC_Bookmark, PR_TRUE, &hasAssertion);
+	if (!hasAssertion)
+	{
+	    mInner->HasAssertion(aSource, kRDF_type, kNC_IEFavorite, PR_TRUE, &hasAssertion);
+    }
+    if (!hasAssertion)
+    {
+        return(NS_RDF_NO_VALUE);
+    }
+
+    nsresult rv;
+	nsCAutoString path;
+	nsCOMPtr<nsIRDFNode>	oldIconNode;
+
+    // if we have a new icon URL, save it away into our internal graph
+    if (iconURL)
+    {
+    	path.AssignWithConversion(iconURL);
+
+		nsCOMPtr<nsIRDFLiteral>	iconLiteral;
+		if (NS_FAILED(rv = gRDF->GetLiteral(iconURL, getter_AddRefs(iconLiteral))))
+		{
+		    return(rv);
+		}
+
+		rv = mInner->GetTarget(aSource, kNC_Icon, PR_TRUE, getter_AddRefs(oldIconNode));
+		if (NS_SUCCEEDED(rv) && (rv != NS_RDF_NO_VALUE) && (oldIconNode))
+		{
+    		(void)mInner->Unassert(aSource, kNC_Icon, oldIconNode);
+		}
+		(void)mInner->Assert(aSource, kNC_Icon, iconLiteral, PR_TRUE);
+    }
+    else
+    {
+        // otherwise, just check and see if we have an internal icon reference
+    	rv = mInner->GetTarget(aSource, kNC_Icon, PR_TRUE, getter_AddRefs(oldIconNode));
+    }
+    
+    if (oldIconNode)
+    {
+        nsCOMPtr<nsIRDFLiteral> tempLiteral = do_QueryInterface(oldIconNode);
+        if (tempLiteral)
+        {
+            const PRUnichar *uni = nsnull;
+            tempLiteral->GetValueConst(&uni);
+            if (uni)    path.AssignWithConversion(uni);
+        }
+    }
+
+    // if no internal icon reference, try and synthesize a URL
+    if (!path.Length())
+    {
+    	const char	*uri;
+    	if (NS_FAILED(rv = aSource->GetValueConst( &uri )))
+    	{
+    		return(rv);
+    	}
+
+    	nsCOMPtr<nsIURI>	nsURI;
+    	if (NS_FAILED(rv = mNetService->NewURI(uri, nsnull, getter_AddRefs(nsURI))))
+    	{
+    	    return(rv);
+    	}
+    	
+    	// only allow http/https URLs for favicon
+    	PRBool  isHTTP = PR_FALSE;
+        nsURI->SchemeIs("http", &isHTTP);
+        if (!isHTTP)
+        {
+            nsURI->SchemeIs("https", &isHTTP);
+        }
+        if (!isHTTP)
+        {
+            return(NS_RDF_NO_VALUE);
+        }
+
+    	nsXPIDLCString prePath;
+    	if (NS_FAILED(rv = nsURI->GetPrePath(getter_Copies(prePath))))
+    	{
+    	    return rv;
+    	}
+    	path.Assign(prePath);
+    	path.Append("/favicon.ico");
+    }
+
+    // only return favicon reference if its in the cache
+    // (that is, never go out onto the net)
+    if (!mCacheSession)
+    {
+        return(NS_RDF_NO_VALUE);
+    }
+    nsCOMPtr<nsICacheEntryDescriptor> entry;
+    rv = mCacheSession->OpenCacheEntry(path.get(), nsICache::ACCESS_READ,
+        nsICache::NON_BLOCKING, getter_AddRefs(entry));
+    if (NS_FAILED(rv) || (!entry))
+    {
+        return(NS_RDF_NO_VALUE);
+    }
+    entry->Close();
+
+    // ok, have a cached icon entry, so return the URL's associated favicon
+    nsAutoString litStr;
+    litStr.AssignWithConversion(path.get());
+	nsCOMPtr<nsIRDFLiteral>	literal;
+	if (NS_FAILED(rv = gRDF->GetLiteral(litStr.get(), getter_AddRefs(literal))))
+	{
+		return(rv);
+    }
+	*aTarget = literal;
+	NS_IF_ADDREF(*aTarget);
+	return(NS_OK);
 }
 
 
@@ -4579,6 +4779,9 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 
 							// output SHORTCUTURL
 							WriteBookmarkProperties(ds, strm, child, kNC_ShortcutURL, kShortcutURLEquals, PR_FALSE);
+
+							// output kNC_Icon
+							WriteBookmarkProperties(ds, strm, child, kNC_Icon, kIconEquals, PR_FALSE);
 
 							// output SCHEDULE
 							WriteBookmarkProperties(ds, strm, child, kWEB_Schedule, kScheduleEquals, PR_FALSE);

@@ -51,6 +51,9 @@
 #include "nsIFileSpec.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
+#include "nsIIOService.h"
+#include "nsICacheService.h"
+#include "nsICacheSession.h"
 
 #ifdef	DEBUG
 #ifdef	XP_MAC
@@ -68,16 +71,20 @@ class nsBookmarksService : public nsIBookmarksService,
 {
 protected:
 	nsIRDFDataSource*		mInner;
-	PRBool				mBookmarksAvailable;
-	PRBool				mDirty;
-	PRBool				busySchedule;
 	nsCOMPtr<nsIRDFResource>	busyResource;
-	PRUint32			htmlSize;
 	nsCOMPtr<nsISupportsArray>      mObservers;
 	nsCOMPtr<nsIStringBundle>	mBundle;
-	nsString			mPersonalToolbarName;
-    PRInt32             mUpdateBatchNest;
 	nsCOMPtr<nsITimer>		mTimer;
+    nsCOMPtr<nsIIOService>	mNetService;
+    nsCOMPtr<nsICacheService> mCacheService;
+    nsCOMPtr<nsICacheSession> mCacheSession;
+	PRUint32			htmlSize;
+    PRInt32             mUpdateBatchNest;
+	nsString			mPersonalToolbarName;
+	PRBool		mBookmarksAvailable;
+	PRBool		mDirty;
+	PRBool		mBrowserIcons;
+	PRBool		busySchedule;
 
 #ifdef	XP_MAC
 	PRBool				mIEFavoritesAvailable;
@@ -105,7 +112,7 @@ nsresult	GetBookmarkToPing(nsIRDFResource **theBookmark);
 	nsresult getFolderViaHint(nsIRDFResource *src, PRBool fallbackFlag, nsIRDFResource **folder);
 	nsresult importBookmarks(nsISupportsArray *aArguments);
 	nsresult exportBookmarks(nsISupportsArray *aArguments);
-
+    nsresult ProcessCachedBookmarkIcon(nsIRDFResource* aSource, const PRUnichar *iconURL, nsIRDFNode** aTarget);
 	nsresult getResourceFromLiteralNode(nsIRDFNode *node, nsIRDFResource **res);
 
 	nsresult ChangeURL(nsIRDFResource* aOldURL,

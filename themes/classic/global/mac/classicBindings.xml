@@ -194,7 +194,7 @@
   <binding id="toolbarbutton-left" extends="chrome://global/content/bindings/button.xml#buttonleft">
     <content>
       <xul:hbox align="center" flex="1">
-        <xul:image class="toolbarbutton-left-icon" inherits="src,disabled"/>
+        <xul:image class="toolbarbutton-left-icon" inherits="src=image,disabled"/>
         <xul:label class="toolbarbutton-left-text" inherits="value=label,crop"/>
       </xul:hbox>
     </content>
@@ -203,7 +203,7 @@
   <binding id="toolbarbutton-top" extends="chrome://global/content/bindings/button.xml#buttontop">
     <content>
       <xul:vbox flex="1" align="center">
-        <xul:image class="toolbarbutton-top-icon" inherits="src,disabled"/>
+        <xul:image class="toolbarbutton-top-icon" inherits="src=image,disabled"/>
         <xul:label class="toolbarbutton-top-text" inherits="value=label,crop"/>
       </xul:vbox>
     </content>

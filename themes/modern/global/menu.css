@@ -68,14 +68,15 @@ menuitem[menuactive="true"][disabled="true"] {
   padding-right: 14px;
 }
 
-.menu-iconic-left {
-  width: 16px;
-  list-style-image: inherit;
-}
-
 .menu-iconic-accel {
   margin-left: 4px;
   padding-right: 14px;
+}
+
+.menu-iconic-icon {
+  width: 16px;
+  height: 16px;
+  list-style-image: inherit;
 }
 
 /* ..... menu arrow box ..... */

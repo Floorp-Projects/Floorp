@@ -329,7 +329,9 @@
         </rule>
         <rule>
           <menupopup>
-            <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*" 
+            <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
+                      src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                      validate="never"
                       label="rdf:http://home.netscape.com/NC-rdf#Name" 
                       status="rdf:http://home.netscape.com/WEB-rdf#status"/>
           </menupopup>

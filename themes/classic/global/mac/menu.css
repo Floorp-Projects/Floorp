@@ -228,3 +228,9 @@ menuitem[checked="true"][menuactive="true"]
     margin-left: -6px;
     list-style-image: url("chrome://global/skin/columnselect.gif");
   }
+
+.menu-iconic-icon {
+  width: 16px;
+  height: 16px;
+  list-style-image: inherit;
+}
