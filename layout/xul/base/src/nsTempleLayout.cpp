@@ -87,16 +87,27 @@ nsTempleLayout::GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSiz
     {
       if (!mMonuments) {
         mMonuments = new nsBoxSizeListImpl(box);
+        mMonuments->AddRef();
       }
 
       current = mMonuments;
       nsBoxSizeList* node = nsnull;
       monument->GetMonumentList(box, aState, &node);
 
+      if (node)
+          node->AddRef();
+
       while(node)
       {
         current->Append(aState, node);
-        node = node->GetNext();
+        node->Release(aState);
+
+        nsBoxSizeList* tmp = node->GetNext();
+        if (tmp)
+          tmp->AddRef();
+
+        node->SetNext(aState, nsnull);
+        node = tmp;
 
         if (node && !current->GetNext()) {
           nsBoxSizeList* newOne = new nsBoxSizeListImpl(box);
@@ -167,7 +178,7 @@ void
 nsTempleLayout::DesecrateMonuments(nsBoxLayoutState& aState)
 {
   mMonuments->Clear(aState);
-  delete mMonuments;
+  mMonuments->Release(aState);
   mMonuments = nsnull;
 }
 

@@ -58,7 +58,8 @@ void nsBoxSizeListNodeImpl::SetNext(nsBoxLayoutState& aState, nsBoxSizeList* aNe
   }
 
   mNext = aNext;
-  aNext->AddRef();
+  if (mNext)
+    aNext->AddRef();
 }
 
 void
@@ -69,7 +70,7 @@ nsBoxSizeListNodeImpl::Append(nsBoxLayoutState& aState, nsBoxSizeList* aChild)
 
 nsBoxSizeListNodeImpl::nsBoxSizeListNodeImpl(nsIBox* aBox):mNext(nsnull), 
                                                            mParent(nsnull), 
-                                                           mRefCount(1),
+                                                           mRefCount(0),
                                                            mBox(aBox),
                                                            mIsSet(PR_FALSE)
 {
@@ -147,9 +148,6 @@ nsBoxSizeListImpl::GetBoxSize(nsBoxLayoutState& aState)
     
     nsBoxSizeList* node = mFirst;
 
-    PRBool isHorizontal = PR_FALSE;
-    mBox->GetOrientation(isHorizontal);
-
     while(node) {
       nsBoxSize size = node->GetBoxSize(aState);
 
@@ -189,8 +187,9 @@ nsBoxSizeListNodeImpl::GetBoxSize(nsBoxLayoutState& aState)
   mBox->GetMaxSize(aState, max);
   mBox->GetAscent(aState, ascent);
   mBox->GetFlex(aState, flex);
+  nsBox::AddMargin(mBox, pref);
 
-  size.Add(min, pref, max, ascent, flex, isHorizontal); 
+  size.Add(min, pref, max, ascent, flex, !isHorizontal); 
 
   return size;
 }
@@ -243,13 +242,13 @@ nsMonumentLayout::GetParentMonument(nsIBox* aBox, nsCOMPtr<nsIBox>& aParentBox, 
   nsCOMPtr<nsIBoxLayout> layout;
   nsCOMPtr<nsIMonument> parentMonument;
   nsresult rv = NS_OK;
-  aParentMonument = nsnull;
+  *aParentMonument = nsnull;
   aBox->GetParentBox(&aBox);
   
   while (aBox) {
     aBox->GetLayoutManager(getter_AddRefs(layout));
     parentMonument = do_QueryInterface(layout, &rv);
-    if (NS_SUCCEEDED(rv) && aParentMonument) {
+    if (NS_SUCCEEDED(rv) && parentMonument) {
       aParentBox = aBox;
       *aParentMonument = parentMonument.get();
       NS_IF_ADDREF(*aParentMonument);
@@ -368,7 +367,7 @@ nsMonumentLayout::CountMonuments(PRInt32& aCount)
 NS_IMETHODIMP
 nsMonumentLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aFirst, nsBoxSize*& aLast)
 {
-   aFirst = aLast = new nsBoxSize();
+   aFirst = aLast = new (aState) nsBoxSize();
 
    nsSize pref(0,0);
    nsSize min(0,0);
@@ -391,9 +390,9 @@ nsMonumentLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
    PRBool isHorizontal = PR_FALSE;
    aBox->GetOrientation(isHorizontal);
 
-   (aFirst)->Add(min, pref, max, ascent, flex, isHorizontal); 
-   (aFirst)->Add(borderPadding,isHorizontal);
-   (aFirst)->Add(margin,isHorizontal);
+   (aFirst)->Add(min, pref, max, ascent, flex, !isHorizontal); 
+   (aFirst)->Add(borderPadding,!isHorizontal);
+   (aFirst)->Add(margin,!isHorizontal);
 
    return NS_OK;
 }

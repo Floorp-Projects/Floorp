@@ -73,8 +73,7 @@ public:
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
   // Reflow methods
-  NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
-                            nsDidReflowStatus aStatus);
+  void LayoutFinished(nsBoxLayoutState& aState);
 
   NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,

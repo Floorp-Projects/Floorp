@@ -46,19 +46,6 @@
 
 nsCOMPtr<nsIBoxLayout> nsSprocketLayout::gInstance = new nsSprocketLayout();
 
-class nsBoxSizeSpecial : public nsBoxSize
-{
-public:
-  void* operator new(size_t sz, nsBoxLayoutState& aState);
-  void operator delete(void* aPtr, size_t sz);
-};
-
-class nsComputedBoxSizeSpecial : public nsComputedBoxSize
-{
-public:
-  void* operator new(size_t sz, nsBoxLayoutState& aState);
-  void operator delete(void* aPtr, size_t sz);
-};
 
 #define DEBUG_SPRING_SIZE 8
 #define DEBUG_BORDER_SIZE 2
@@ -458,14 +445,14 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 
   while(boxSizes)
   {
-     nsBoxSizeSpecial* toDelete = (nsBoxSizeSpecial*)boxSizes;
+     nsBoxSize* toDelete = boxSizes;
      boxSizes = boxSizes->next;
      delete toDelete;
   }
 
   while(computedBoxSizes)
   {
-     nsComputedBoxSizeSpecial* toDelete = (nsComputedBoxSizeSpecial*)computedBoxSizes;
+     nsComputedBoxSize* toDelete = computedBoxSizes;
      computedBoxSizes = computedBoxSizes->next;
      delete toDelete;
   }
@@ -595,13 +582,13 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
   while(child)
   {
     if (!currentBox) {
-      aBoxSizes      = new (aState) nsBoxSizeSpecial();
+      aBoxSizes      = new (aState) nsBoxSize();
       //aComputedBoxSizes = new (aState) nsComputedBoxSizeSpecial();
 
       currentBox      = aBoxSizes;
       //currentComputed = aComputedBoxSizes;
     } else {
-      currentBox->next      = new (aState) nsBoxSizeSpecial();
+      currentBox->next      = new (aState) nsBoxSize();
       //currentComputed->next = new (aState) nsComputedBoxSizeSpecial();
 
       currentBox      = currentBox->next;
@@ -796,6 +783,7 @@ nsSprocketLayout::ChildResized(nsIBox* aBox,
 
             nsSize max(0,0);
             aChild->GetMaxSize(aState, max);
+            AddMargin(aChild, max);
 
             if (isHorizontal)
               childActualHeight = max.height < childActualHeight ? max.height : childActualHeight;
@@ -830,6 +818,7 @@ nsSprocketLayout::ChildResized(nsIBox* aBox,
       if (childActualWidth > childLayoutWidth) {
             nsSize max(0,0);
             aChild->GetMaxSize(aState, max);
+            AddMargin(aChild, max);
 
             // our width now becomes the new size
 
@@ -899,7 +888,7 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
    // ----- calculate the springs constants and the size remaining -----
 
   if (aBoxSizes && !aComputedBoxSizes)
-      aComputedBoxSizes = new (aState) nsComputedBoxSizeSpecial();
+      aComputedBoxSizes = new (aState) nsComputedBoxSize();
   
   nsBoxSize*         boxSizes = aBoxSizes;
   nsComputedBoxSize* computedBoxSizes = aComputedBoxSizes;
@@ -939,7 +928,7 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
     boxSizes = boxSizes->next;
 
     if (boxSizes && !computedBoxSizes->next) 
-      computedBoxSizes->next = new (aState) nsComputedBoxSizeSpecial();
+      computedBoxSizes->next = new (aState) nsComputedBoxSize();
 
     computedBoxSizes = computedBoxSizes->next;
     count++;
@@ -1337,8 +1326,11 @@ nsBoxSize::Add(const nsSize& minSize,
     max = max2;
 
   flex = aFlex;
-  if (aAscent > ascent)
-    ascent = aAscent;
+
+  if (!aIsHorizontal) {
+    if (aAscent > ascent)
+      ascent = aAscent;
+    }
 }
 
 void
@@ -1388,7 +1380,7 @@ nsBoxSize::Clear()
 
 
 void* 
-nsBoxSizeSpecial::operator new(size_t sz, nsBoxLayoutState& aState)
+nsBoxSize::operator new(size_t sz, nsBoxLayoutState& aState)
 {
    void* mem = 0;
    aState.AllocateStackMemory(sz,&mem);
@@ -1397,13 +1389,13 @@ nsBoxSizeSpecial::operator new(size_t sz, nsBoxLayoutState& aState)
 
 
 void 
-nsBoxSizeSpecial::operator delete(void* aPtr, size_t sz)
+nsBoxSize::operator delete(void* aPtr, size_t sz)
 {
 }
 
 
 void* 
-nsComputedBoxSizeSpecial::operator new(size_t sz, nsBoxLayoutState& aState)
+nsComputedBoxSize::operator new(size_t sz, nsBoxLayoutState& aState)
 {
   
    void* mem = 0;
@@ -1412,6 +1404,6 @@ nsComputedBoxSizeSpecial::operator new(size_t sz, nsBoxLayoutState& aState)
 }
 
 void 
-nsComputedBoxSizeSpecial::operator delete(void* aPtr, size_t sz)
+nsComputedBoxSize::operator delete(void* aPtr, size_t sz)
 {
 }
