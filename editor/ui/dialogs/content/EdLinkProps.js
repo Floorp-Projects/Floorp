@@ -2,7 +2,6 @@ var anchorElement = null;
 var imageElement = null;
 var insertNew = true;
 var needLinkText = false;
-var selection;
 var insertLinkAroundSelection = false;
 var linkTextInput;
 var hrefInput;
@@ -58,7 +57,7 @@ function initDialog()
   // Get a single selected anchor element
   anchorElement = editorShell.GetSelectedElement(tagName);
 
-  selection = editorShell.editorSelection;
+  var selection = editorShell.editorSelection;
   if (selection) {
     dump("There is a selection: collapsed = "+selection.isCollapsed+"\n");
   } else {
@@ -66,9 +65,18 @@ function initDialog()
   }
 
   if (anchorElement) {
-    dump("found anchor element\n");
     // We found an element and don't need to insert one
+    dump("found anchor element\n");
     insertNew = false;
+
+    // We get the anchor if any of the selection (or just caret)
+    //  is enclosed by the link. Select the entire link
+    //  so we can show the selection text
+    editorShell.SelectElement(anchorElement);
+    selection = editorShell.editorSelection;
+
+    hrefInput.value = anchorElement.getAttribute("href");
+    dump("Current HREF: "+hrefInput.value+"\n");
   } else {
     // See if we have a selected image instead of text
     imageElement = editorShell.GetSelectedElement("img");
