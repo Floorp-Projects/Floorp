@@ -20,6 +20,7 @@
 #define nsIProtocolConnection_h___
 
 #include "nsICancelable.h"
+#include "netCore.h"
 
 class nsIUrl;
 class nsIInputStream;
@@ -51,8 +52,6 @@ public:
     NS_IMETHOD GetOutputStream(nsIOutputStream* *result) = 0;
 
 };
-
-#define NS_ERROR_NOT_CONNECTED  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 3)
 
 #endif /* nsIIProtocolConnection_h___ */
 
