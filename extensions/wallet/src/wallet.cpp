@@ -432,6 +432,7 @@ Wallet_Confirm(char * szMessage)
   }
 
   const nsString message = szMessage;
+  retval = PR_FALSE; /* in case user exits dialog by clicking X */
   res = dialog->Confirm(message.GetUnicode(), &retval);
   if (NS_FAILED(res)) {
     return retval;
@@ -448,6 +449,7 @@ Wallet_Confirm(char * szMessage)
   }
   if (dialog) {
     const nsString message = szMessage;
+    retval = PR_FALSE; /* in case user exits dialog by clicking X */
     dialog->Confirm(message, &retval);
   }
   nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
@@ -499,6 +501,7 @@ Wallet_CheckConfirm(char * szMessage, char * szCheckMessage, PRBool* checkValue)
 
   const nsString message = szMessage;
   const nsString checkMessage = szCheckMessage;
+  retval = PR_FALSE; /* in case user exits dialog by clicking X */
   res = dialog->ConfirmCheck(message.GetUnicode(), checkMessage.GetUnicode(), checkValue, &retval);
   if (NS_FAILED(res)) {
     *checkValue = 0;
@@ -518,6 +521,7 @@ Wallet_CheckConfirm(char * szMessage, char * szCheckMessage, PRBool* checkValue)
   if (dialog) {
     const nsString message = szMessage;
     const nsString checkMessage = szCheckMessage;
+    retval = PR_FALSE; /* in case user exits dialog by clicking X */
     dialog->ConfirmCheck(message, checkMessage, &retval, checkValue);
     if (*checkValue!=0 && *checkValue!=1) {
       *checkValue = 0; /* this should never happen but it is happening!!! */
@@ -542,6 +546,7 @@ char * wallet_GetString(char * szMessage)
 
   const nsString message = szMessage;
   PRUnichar* pwd;
+  retval = PR_FALSE; /* in case user exits dialog by clicking X */
   res = dialog->PromptPassword(message.GetUnicode(), &pwd, &retval);
   if (NS_FAILED(res)) {
     return NULL;
@@ -565,6 +570,7 @@ char * wallet_GetString(char * szMessage)
   }
   if (dialog) {
     const nsString message = szMessage;
+    retval = PR_FALSE; /* in case user exits dialog by clicking X */
     dialog->PromptPassword(message, password, &retval);
   }
   nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
