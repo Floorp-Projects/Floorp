@@ -761,11 +761,13 @@ nsComputedDOMStyle::GetBinding(nsIFrame *aFrame,
 
   GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display, aFrame);
 
+  // Break this temporarily to prevent assertions.
+  // Add a new method to let XBL and others do this the right way in bug 129960
   if (display && !display->mBinding.IsEmpty()) {
-    val->SetURI(display->mBinding);
+    val->SetString(display->mBinding);
   }
   else {
-    val->SetString(NS_LITERAL_STRING("none"));
+    val->SetString(NS_LITERAL_STRING(""));
   }
 
   return CallQueryInterface(val, &aValue);
