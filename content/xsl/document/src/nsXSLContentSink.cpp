@@ -88,6 +88,7 @@ nsXSLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   nsresult rv;
 
   mDocument->SetRootContent(mDocElement);
+  mDocument->EndLoad();
   styleDoc = do_QueryInterface(mDocument, &rv);
   if (NS_SUCCEEDED(rv) && mXSLTransformMediator) {
     // Pass the style content model to the tranform mediator.
