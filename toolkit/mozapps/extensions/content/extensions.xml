@@ -40,7 +40,7 @@
 
 
 <!DOCTYPE bindings [
-  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
   <!ENTITY % extensionsDTD SYSTEM "chrome://mozapps/locale/extensions/extensions.dtd" >
   %brandDTD;
   %extensionsDTD;

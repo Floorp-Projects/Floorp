@@ -60,7 +60,7 @@
 %messengercomposeDTD;
 <!ENTITY % messengerDTD SYSTEM "chrome://mail/locale/messenger.dtd" >
 %messengerDTD;
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
 %brandDTD;
 ]>
 

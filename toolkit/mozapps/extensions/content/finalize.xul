@@ -42,7 +42,7 @@
 
 <!DOCTYPE dialog [
 <!ENTITY % finalizeDTD SYSTEM "chrome://mozapps/locale/extensions/finalize.dtd">
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
 %finalizeDTD;
 %brandDTD;
 ]>

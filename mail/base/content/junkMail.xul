@@ -43,7 +43,7 @@
 <?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
 
 <!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
 %brandDTD;
 <!ENTITY % junkMailDTD SYSTEM "chrome://messenger/locale/junkMail.dtd" >
 %junkMailDTD;

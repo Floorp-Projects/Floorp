@@ -4,7 +4,7 @@
 
 <!DOCTYPE overlay [
 
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
 %brandDTD;
 <!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
 %globalRegionDTD;

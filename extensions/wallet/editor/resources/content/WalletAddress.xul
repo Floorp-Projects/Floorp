@@ -41,7 +41,7 @@
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE page [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
 %brandDTD;
 <!ENTITY % walletviewerDTD SYSTEM "chrome://communicator/locale/wallet/WalletViewer.dtd" >
 %walletviewerDTD;

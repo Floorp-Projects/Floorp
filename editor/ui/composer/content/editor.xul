@@ -61,7 +61,7 @@
 %editorDTD;
 <!ENTITY % editorOverlayDTD SYSTEM "chrome://editor/locale/editorOverlay.dtd" >
 %editorOverlayDTD;
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
 %brandDTD;
 ]> 
 

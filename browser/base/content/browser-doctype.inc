@@ -1,5 +1,5 @@
 <!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
 %brandDTD;
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
 %browserDTD;

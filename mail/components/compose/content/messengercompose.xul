@@ -46,7 +46,7 @@
 <!DOCTYPE window [
 <!ENTITY % messengercomposeDTD SYSTEM "chrome://messenger/locale/messengercompose/messengercompose.dtd" >
 %messengercomposeDTD;
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
 %brandDTD;
 <!ENTITY % charsetDTD SYSTEM "chrome://global/locale/charsetOverlay.dtd" >
 %charsetDTD;

@@ -47,6 +47,6 @@
   <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
   <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
   <!ENTITY % calendarMenuOverlayDTD SYSTEM "chrome://calendar/locale/menuOverlay.dtd" > %calendarMenuOverlayDTD;
-  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" > %brandDTD;
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" > %brandDTD;
   <!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd"> %globalRegionDTD;
 ]>

@@ -41,7 +41,7 @@
 <?xml-stylesheet href="chrome://messenger/content/preferences/preferences.css"?>
 
 <!DOCTYPE prefwindow [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
 <!ENTITY % preferencesDTD SYSTEM "chrome://messenger/locale/preferences/preferences.dtd">
 %brandDTD;
 %preferencesDTD;
