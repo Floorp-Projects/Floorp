@@ -672,7 +672,6 @@ int32 JulianString::IndexOf(const char* p, int32 iOffset) const
     return (0 == pLoc) ? -1 : pLoc - m_pBuf;
 }
 
-#ifdef MOZ_TREX
 /**
  *  Starting at index i, find the first occurrence of any character
  *  in p.
@@ -690,7 +689,6 @@ int32 JulianString::Strpbrk( int32 i, const char *p ) const
     return -1;
   return (int32)(r - m_pBuf);
 }
-#endif
 
 /**
  *  remove leading and trailing whitespace.

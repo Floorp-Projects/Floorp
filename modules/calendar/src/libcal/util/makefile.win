@@ -10,7 +10,11 @@
 #// root of NS
 #//
 #//------------------------------------------------------------------------
+!ifdef MOZ_TREX
+NS_DEPTH=..\..\..\..\..
+!else
 NS_DEPTH=..\..\..\..
+!endif
 
 DEPTH = $(NS_DEPTH)
 
@@ -18,6 +22,7 @@ MODULE = julian
 
 !ifdef MOZ_TREX
 LCFLAGS= -DMOZ_TREX -DLIBJULIAN $(LCFLAGS)
+CFLAGS= -DMOZ_TREX $(CFLAGS)
 !else
 LCFLAGS= -DLIBJULIAN $(LCFLAGS)
 !endif
