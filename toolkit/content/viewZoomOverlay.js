@@ -218,9 +218,6 @@ ZoomManager.prototype = {
   }
 }
 
-/***** init and helper functions for viewZoomOverlay.xul *****/
-window.addEventListener("load", registerZoomManager, false);
-
 function registerZoomManager()
 {
   var textZoomMenu = document.getElementById("menu_textZoom");
