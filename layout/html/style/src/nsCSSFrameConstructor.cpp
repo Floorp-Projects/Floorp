@@ -86,6 +86,7 @@
 #include "nsFormControlHelper.h"
 #include "nsObjectFrame.h"
 #include "nsIRuleNode.h"
+#include "nsIXULDocument.h"
 
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
@@ -7406,6 +7407,23 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy(nsIPresContext* aPresConte
       state.mFrameManager->ClearPlaceholderFrameMap();
       state.mFrameManager->ClearUndisplayedContentMap();
 
+      // If we're in a XUL document, then we need to crawl up to the
+      // RootBoxFrame and remove _its_ child.
+      if (docElementFrame) {
+        nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mDocument);
+        if (xuldoc) {
+          docElementFrame->GetParent(&docElementFrame);
+          NS_ASSERTION(docElementFrame, "expected to find a ScrollBoxFrame");
+          if (docElementFrame) {
+            docElementFrame->GetParent(&docElementFrame);
+            NS_ASSERTION(docElementFrame, "expected to find a GfxScroll");
+          }
+        }
+      }
+
+      // Take the docElementFrame, and remove it from its parent. For
+      // HTML, we'll be removing the Area frame from the Canvas; for
+      // XUL, we'll remove the GfxScroll frome the RootBoxFrame.
       if (docElementFrame) {
         nsIFrame* docParentFrame;
         docElementFrame->GetParent(&docParentFrame);
@@ -9625,6 +9643,13 @@ nsCSSFrameConstructor::StyleChangeReflow(nsIPresContext* aPresContext,
                                          nsIFrame* aFrame,
                                          nsIAtom* aAttribute)
 {
+  // If the frame hasn't even received an initial reflow, then don't
+  // send it a style-change reflow!
+  nsFrameState state;
+  aFrame->GetFrameState(&state);
+  if (state & NS_FRAME_FIRST_REFLOW)
+    return NS_OK;
+
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
     printf("nsCSSFrameConstructor::StyleChangeReflow: aFrame=");
