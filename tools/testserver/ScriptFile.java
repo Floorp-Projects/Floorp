@@ -132,6 +132,11 @@ class ScriptFile {
                     // ignore should never have appeared here though!
                     continue;
                 }
+                else {// Not a recognizable line... just print it as is...
+                    outDirty = true;
+                    out.println(s);
+                }
+
               }
               in.close();
 

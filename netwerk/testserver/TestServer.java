@@ -51,7 +51,7 @@ public class TestServer extends Thread {
 		try {
 			while (true) {
 				Socket client_socket = listen_socket.accept();
-				Connection c = new Connection(client_socket);
+				new Connection(client_socket);
 			}
 		}
 		catch (IOException e) {
