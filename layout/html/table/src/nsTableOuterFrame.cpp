@@ -107,12 +107,10 @@ nsTableOuterFrame::nsTableOuterFrame(nsIContent* aContent, nsIFrame* aParentFram
 NS_IMETHODIMP nsTableOuterFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
   mFirstChild = aChildList;
-  mChildCount = LengthOf(mFirstChild);
-  NS_ASSERTION(mChildCount > 0, "bad child list");
 
   // Set our internal member data
   mInnerTableFrame = (nsTableFrame*)mFirstChild;
-  if (2 == mChildCount) {
+  if (2 == LengthOf(mFirstChild)) {
     mFirstChild->GetNextSibling(mCaptionFrame);
   }
 
@@ -616,7 +614,6 @@ nsresult nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
 
   // Add it to the list of child frames
   mFirstChild = mInnerTableFrame;
-  mChildCount++;
 
   // Now create the caption frame, prepending a top caption and appending a
   // bottom caption
@@ -666,7 +663,6 @@ nsresult nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
         mCaptionFrame->SetNextSibling(mFirstChild);
         mFirstChild = mCaptionFrame;
       }
-      mChildCount++;
       break;
     }
   }
@@ -700,23 +696,6 @@ nsTableOuterFrame::PrepareContinuingFrame(nsIPresContext&    aPresContext,
 {
   // Append the continuing frame to the flow
   aContFrame->AppendToFlow(this);
-
-  // Initialize it's content offsets. Note that we assume for now that
-  // the continuingFrame will map the remainder of the content and
-  // that therefore mLastContentIsComplete will be true.
-  PRInt32 nextOffset;
-  if (mChildCount > 0) {
-    nextOffset = mLastContentOffset;
-    if (mLastContentIsComplete) {
-      nextOffset++;
-    }
-  } else {
-    nextOffset = mFirstContentOffset;
-  }
-
-  aContFrame->SetFirstContentOffset(nextOffset);
-  aContFrame->SetLastContentOffset(nextOffset);
-  aContFrame->SetLastContentIsComplete(PR_TRUE);
   aContFrame->SetStyleContext(&aPresContext, aStyleContext);
 }
 
@@ -781,26 +760,6 @@ PRBool nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, n
   // Take the next-in-flow out of the parent's child list
   if (parent->mFirstChild == nextInFlow) {
     nextInFlow->GetNextSibling(parent->mFirstChild);
-    if (nsnull != parent->mFirstChild) {
-      PRInt32 contentIndex;
-      parent->mFirstChild->GetContentIndex(contentIndex);
-      parent->SetFirstContentOffset(contentIndex);
-      if (parent->IsPseudoFrame()) {
-        // Tell the parent's parent to update its content offsets
-        nsContainerFrame* pp = (nsContainerFrame*) parent->mGeometricParent;
-        pp->PropagateContentOffsets(parent, parent->mFirstContentOffset,
-                                    parent->mLastContentOffset,
-                                    parent->mLastContentIsComplete);
-      }
-    }
-
-    // When a parent loses it's last child and that last child is a
-    // pseudo-frame then the parent's content offsets are now wrong.
-    // However, we know that the parent will eventually be reflowed
-    // in one of two ways: it will either get a chance to pullup
-    // children or it will be deleted because it's prev-in-flow
-    // (e.g. this) is complete. In either case, the content offsets
-    // will be repaired.
 
   } else {
     nsIFrame* nextSibling;
@@ -820,7 +779,6 @@ PRBool nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, n
 
   // Delete the next-in-flow frame and adjust it's parent's child count
   nextInFlow->DeleteFrame(aPresContext);
-  parent->mChildCount--;
 
 #ifdef NS_DEBUG
   aChild->GetNextInFlow(nextInFlow);
@@ -918,7 +876,7 @@ NS_METHOD nsTableOuterFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFi
     fputs("\n", out);
   }
   // Output the children
-  if (mChildCount > 0) {
+  if (nsnull != mFirstChild) {
     if (PR_TRUE==outputMe)
     {
       if (0 != mState) {
