@@ -1,4 +1,4 @@
-#! gmake
+#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -15,22 +15,13 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH	= ..
+DEPTH = ..\..
 
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+MODULE = netwerk
 
-MODULE		= netwerk
-
-include $(DEPTH)/config/autoconf.mk
-
-DIRS=            \
-	base     \
-	dns      \
-	build    \
-	protocol \
-	test     \
+DIRS=          \
+	public \
+	src    \
 	$(NULL)
 
-include $(topsrcdir)/config/rules.mk
+include <$(DEPTH)\config\rules.mak>

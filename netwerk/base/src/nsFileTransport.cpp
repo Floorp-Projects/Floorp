@@ -117,6 +117,7 @@ nsFileTransport::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsIRequest methods:
 
 NS_IMETHODIMP
 nsFileTransport::Cancel(void)

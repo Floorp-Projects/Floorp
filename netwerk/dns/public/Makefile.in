@@ -23,9 +23,11 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-EXPORTS =			\
-	nsIDnsListener.h	\
-	nsIDnsService.h		\
+XPIDL_MODULE = netwerk_dns
+
+XPIDLSRCS =		     \
+        .\nsIDNSListener.idl \
+        .\nsIDNSService.idl  \
         $(NULL)
 
 include $(DEPTH)/config/autoconf.mk

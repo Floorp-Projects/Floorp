@@ -16,31 +16,35 @@
  * Reserved.
  */
 
-#ifndef nsDnsService_h__
-#define nsDnsService_h__
+#ifndef nsDNSService_h__
+#define nsDNSService_h__
 
-#include "nsIDnsService.h"
+#include "nsIDNSService.h"
+#ifdef XP_PC
+#include <windows.h>
+#endif
 
-
-class nsIDnsListener;
+class nsIDNSListener;
 class nsICancelable;
 
-class nsDnsService : public nsIDnsService
+class nsDNSService : public nsIDNSService
 {
 public:
-     NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS
 
-   // nsDnsService methods:
-    nsDnsService();
-    virtual ~nsDnsService();
+    // nsDNSService methods:
+    nsDNSService();
+    virtual ~nsDNSService();
     nsresult Init();
  
- 	// nsIDnsService methods:
- 	NS_IMETHOD Lookup(const char*     hostname,
-                      nsIDnsListener* listener,
-                      nsICancelable*  *dnsRequest);
+    // nsIDNSService methods:
+    NS_IMETHOD Lookup(nsISupports *ctxt,
+                      const char *hostname,
+                      nsIDNSListener *listener,
+                      nsIRequest **result);
+
 protected:
-    // nsDnsLookup cache? - list of nsDnsLookups
+    // nsDNSLookup cache? - list of nsDNSLookups
 
 #if defined(XP_MAC)
     InetSvcRef  mServiceRef;
@@ -50,10 +54,10 @@ protected:
 
 #elif defined(_WIN32)
     WNDCLASS wc;
-    HWND     dnsWindow;
+    HWND     DNSWindow;
     UINT     msgAsyncSelect;
     UINT     msgFoundDNS;
 #endif
 };
 
-#endif /* nsDnsService_h__ */
+#endif /* nsDNSService_h__ */

@@ -21,6 +21,7 @@ MODULE = netwerk
 
 DIRS=            \
 	base     \
+	dns      \
 	build    \
 	protocol \
 	test     \

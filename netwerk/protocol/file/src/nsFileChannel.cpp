@@ -102,6 +102,28 @@ nsFileChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// From nsIRequest
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsFileChannel::Cancel()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileChannel::Suspend()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileChannel::Resume()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // From nsIChannel
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -146,24 +168,6 @@ nsFileChannel::AsyncWrite(nsIInputStream *fromStream,
                           nsIStreamObserver *observer)
 {
     NS_ASSERTION(startPosition == 0, "fix me");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsFileChannel::Cancel()
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsFileChannel::Suspend()
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsFileChannel::Resume()
-{
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

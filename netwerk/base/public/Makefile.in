@@ -25,6 +25,7 @@ MODULE = netwerk
 XPIDL_MODULE = netwerk_base
 
 XPIDLSRCS =                      \
+        nsIRequest.idl           \
         nsIChannel.idl           \
         nsIURI.idl               \
         nsIURL.idl               \

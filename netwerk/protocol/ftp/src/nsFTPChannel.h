@@ -36,6 +36,11 @@ class nsFTPChannel : public nsIFTPChannel,
 public:
     NS_DECL_ISUPPORTS
 
+    // nsIRequest methods:
+    NS_IMETHOD Cancel();
+    NS_IMETHOD Suspend();
+    NS_IMETHOD Resume();
+
     // nsIChannel methods:
     NS_IMETHOD GetURI(nsIURI * *aURL);
     NS_IMETHOD OpenInputStream(PRUint32 startPosition, PRInt32 readCount, nsIInputStream **_retval);
@@ -50,9 +55,6 @@ public:
                           nsISupports *ctxt,
                           nsIEventQueue *eventQueue,
                           nsIStreamObserver *observer);
-    NS_IMETHOD Cancel();
-    NS_IMETHOD Suspend();
-    NS_IMETHOD Resume();
 
     // nsIFTPChannel methods:
     NS_IMETHOD Get(void);
