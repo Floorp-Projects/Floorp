@@ -340,18 +340,22 @@ NS_METHOD nsMenu::InsertItemAt(const PRUint32 aCount, nsISupports * aMenuItem)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::InsertSeparator(const PRUint32 aCount)
 {
-  nsMenuItem * item = new nsMenuItem();
-  item->Create(this);
-  mItems->InsertElementAt((nsISupports *)(nsIMenuItem *)item, (PRInt32)aCount);
+  nsISupports * supports = nsnull;
+  QueryInterface(kISupportsIID, (void**) &supports);
+  if(supports){
+	nsMenuItem * item = new nsMenuItem();
+    item->Create(supports, "", PR_TRUE);
+	NS_RELEASE(supports);
+    mItems->InsertElementAt((nsISupports *)(nsIMenuItem *)item, (PRInt32)aCount);
+  }
+    MENUITEMINFO menuInfo;
 
-  MENUITEMINFO menuInfo;
+    menuInfo.cbSize = sizeof(menuInfo);
+    menuInfo.fMask  = MIIM_TYPE;
+    menuInfo.fType  = MFT_SEPARATOR;
 
-  menuInfo.cbSize = sizeof(menuInfo);
-  menuInfo.fMask  = MIIM_TYPE;
-  menuInfo.fType  = MFT_SEPARATOR;
-
-  BOOL status = ::InsertMenuItem(mMenu, aCount, TRUE, &menuInfo);
- 
+    BOOL status = ::InsertMenuItem(mMenu, aCount, TRUE, &menuInfo);
+  
   return (status ? NS_OK : NS_ERROR_FAILURE);
 }
 
