@@ -28,6 +28,9 @@
 #include "nsViewsCID.h"
 #include "nsIScrollableView.h"
 
+static NS_DEFINE_IID(kIScrollbarIID, NS_ISCROLLBAR_IID);
+static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
+
 class ScrollBarView : public nsView
 {
 public:
@@ -740,8 +743,6 @@ void nsScrollingView :: ComputeContainerSize()
   nsIScrollbar  *scrollv = nsnull, *scrollh = nsnull;
   nsIWidget     *win;
 
-  static NS_DEFINE_IID(kscroller, NS_ISCROLLBAR_IID);
-
   if (nsnull != scrollview)
   {
     nscoord         dx = 0, dy = 0;
@@ -763,7 +764,7 @@ void nsScrollingView :: ComputeContainerSize()
       mHScrollBarView->GetDimensions(&hwidth, &hheight);
       win = mHScrollBarView->GetWidget();
 
-      if (NS_OK == win->QueryInterface(kscroller, (void **)&scrollh))
+      if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollh))
       {
         if (((mSizeX > mBounds.width) &&
             (mScrollPref != nsScrollPreference_kNeverScroll)) ||
@@ -783,7 +784,7 @@ void nsScrollingView :: ComputeContainerSize()
 
       win = mVScrollBarView->GetWidget();
 
-      if (NS_OK == win->QueryInterface(kscroller, (void **)&scrollv))
+      if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollv))
       {
         if ((mSizeY > mBounds.height) && (mScrollPref != nsScrollPreference_kNeverScroll))
         {
@@ -835,7 +836,7 @@ void nsScrollingView :: ComputeContainerSize()
 
       win = mHScrollBarView->GetWidget();
 
-      if (NS_OK == win->QueryInterface(kscroller, (void **)&scrollh))
+      if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollh))
       {
         if ((mSizeX > mBounds.width) && (mScrollPref != nsScrollPreference_kNeverScroll))
         {
@@ -910,7 +911,7 @@ void nsScrollingView :: ComputeContainerSize()
 
       win = mHScrollBarView->GetWidget();
 
-      if (NS_OK == win->QueryInterface(kscroller, (void **)&scrollh))
+      if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollh))
       {
         scrollh->SetParameters(0, 0, 0, 0);
         NS_RELEASE(scrollh);
@@ -925,7 +926,7 @@ void nsScrollingView :: ComputeContainerSize()
 
       win = mVScrollBarView->GetWidget();
 
-      if (NS_OK == win->QueryInterface(kscroller, (void **)&scrollv))
+      if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollv))
       {
         scrollv->SetParameters(0, 0, 0, 0);
         NS_RELEASE(scrollv);
@@ -986,14 +987,69 @@ nsScrollPreference nsScrollingView :: GetScrollPreference(void)
   return mScrollPref;
 }
 
+// XXX This doesn't do X scrolling yet
+
+// XXX This doesn't let the scrolling code slide the bits on the
+// screen and damage only the appropriate area
+
+// XXX doesn't smooth scroll
+
+NS_IMETHODIMP
+nsScrollingView :: ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags)
+{
+  nsIPresContext  *px = mViewManager->GetPresContext();
+  float           t2p = px->GetTwipsToPixels();
+  float           p2t = px->GetPixelsToTwips();
+  NS_RELEASE(px);
+
+  nsIWidget*      win;
+  win = mVScrollBarView->GetWidget();
+  if (nsnull != win)
+  {
+    nsIScrollbar* scrollv;
+    if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollv))
+    {
+      // Clamp aY
+      nsRect r;
+      GetBounds(r);
+      if (aY + r.height > mSizeY) {
+        aY = mSizeY - r.height;
+        if (aY < 0) {
+          aY = 0;
+        }
+      }
+
+      // Move the scrollbar's thumb
+      PRUint32 newpos =
+        NS_TO_INT_ROUND(NS_TO_INT_ROUND(aY * t2p) * p2t);
+      scrollv->SetPosition(newpos);
+
+      // Update offsets
+      SetVisibleOffset(aX, aY);
+
+      // Damage the updated area
+      r.x = 0;
+      r.y = aY;
+      nsIView* scrolledView = GetScrolledView();
+      if (nsnull != scrolledView)
+      {
+        mViewManager->UpdateView(scrolledView, r, aUpdateFlags);
+        NS_RELEASE(scrolledView);
+      }
+
+      NS_RELEASE(scrollv);
+    }
+    NS_RELEASE(win);
+  }
+  return NS_OK;
+}
+
 void nsScrollingView :: AdjustChildWidgets(nsScrollingView *aScrolling, nsIView *aView, nscoord aDx, nscoord aDy, float scale)
 {
   PRInt32           numkids = aView->GetChildCount();
   nsIScrollableView *scroller;
   nscoord           offx, offy;
   PRBool            isscroll = PR_FALSE;
-
-  static NS_DEFINE_IID(kscroller, NS_ISCROLLABLEVIEW_IID);
 
   if (aScrolling == aView)
   {
@@ -1004,7 +1060,7 @@ void nsScrollingView :: AdjustChildWidgets(nsScrollingView *aScrolling, nsIView 
     {
       nsIWidget *parwidget = parview->GetWidget();
 
-      if (NS_OK == parview->QueryInterface(kscroller, (void **)&scroller))
+      if (NS_OK == parview->QueryInterface(kIScrollableViewIID, (void **)&scroller))
       {
         scroller->GetVisibleOffset(&offx, &offy);
 
@@ -1033,7 +1089,7 @@ void nsScrollingView :: AdjustChildWidgets(nsScrollingView *aScrolling, nsIView 
   aDx += offx;
   aDy += offy;
 
-  if (NS_OK == aView->QueryInterface(kscroller, (void **)&scroller))
+  if (NS_OK == aView->QueryInterface(kIScrollableViewIID, (void **)&scroller))
   {
     scroller->GetVisibleOffset(&offx, &offy);
 
