@@ -743,6 +743,17 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsACString &newName, PRBool mov
                     
             iterator->HasMoreElements(&more);
         }
+        // we've finished moving all the children of this directory
+        // in the new directory.  so now delete the directory
+        // note, we don't need to do a recursive delete.
+        // MoveTo() is recursive.  At this point,
+        // we've already moved the children of the current folder 
+        // to the new location.  nothing should be left in the folder.
+        if (move)
+        {
+          rv = Remove(PR_FALSE);
+          NS_ENSURE_SUCCESS(rv,rv);
+        }
     }
     
 
