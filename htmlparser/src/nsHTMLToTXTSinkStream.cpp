@@ -412,6 +412,15 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream)
       mColPos += text.Length();
     }
   }
+  else if (type == eHTMLTag_br)
+  {
+    if (PR_TRUE)
+    {
+      aStream << endl;
+      mColPos += 1;
+    }
+  }
+
 
   return NS_OK;
 }
