@@ -24,7 +24,6 @@
  */
 
 class nsIRDFService;
-class nsIRDFDataSource;
 class nsIRDFResource;
 class nsICSSLoader;
 class nsISimpleEnumerator;
@@ -52,7 +51,7 @@ public:
   virtual ~nsChromeUIDataSource();
 
 protected:
-  nsIRDFDataSource* mComposite; // [WEAK] We observe the composite source, which holds on to us strongly.
+  nsCOMPtr<nsIRDFDataSource>  mComposite;
   nsCOMPtr<nsISupportsArray>	mObservers;
   nsIRDFService* mRDFService;
 };
