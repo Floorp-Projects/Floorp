@@ -1107,6 +1107,7 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
         result = CloseContainer(aNode);
       }
     }
+    break;
 
   case eHTMLTag_iframe:
     mSink->mNumOpenIFRAMES--;
