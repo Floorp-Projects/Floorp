@@ -52,6 +52,7 @@
 #include "nsIImapMiscellaneousSink.h"
 
 #include "nsIEventQueueService.h"
+#include "nsIEventQueue.h"
 #include "nsXPComCIID.h"
 #include "nsFileSpec.h"
 #include "nsMsgDBCID.h"
@@ -101,6 +102,7 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -688,7 +690,9 @@ int main()
 	// register all the components we might need - what's the imap service going to be called?
 	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
+	nsComponentManager::RegisterComponent(kEventQueueCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+
 	// IMAP Service goes here?
     nsComponentManager::RegisterComponent(kImapUrlCID, nsnull, nsnull,
                                           MSGIMAP_DLL, PR_FALSE, PR_FALSE);
