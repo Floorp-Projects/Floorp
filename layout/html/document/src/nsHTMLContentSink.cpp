@@ -1635,15 +1635,14 @@ nsresult
 HTMLContentSink::Init(nsIDocument* aDoc,
                       nsIURI* aURL,
                       nsIWebShell* aContainer)
-{
-  // NRA Dump document and stopwatch start info here
-#ifdef DEBUG_nisheeth
+{  
+#ifdef RAPTOR_PERF_METRICS
   {
      char* url;
      nsresult rv = NS_OK;
      rv = aURL->GetSpec(&url);
      if (NS_SUCCEEDED(rv)) {
-       printf("Starting stopwatch for '%s'", url);
+       printf("*** Timing layout processes on url: '%s'\n", url);
        delete [] url;
      }
   }
@@ -1731,7 +1730,9 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   // NRA Dump stopwatch stop info here
 #ifdef RAPTOR_PERF_METRICS
   NS_STOP_STOPWATCH(mWatch)
+  printf("Content creation time: ");
   mWatch.Print();
+  printf("\n");
 #endif
 
   if (nsnull == mTitle) {
