@@ -195,6 +195,14 @@ public:
   void GetTranslation(nscoord& aX, nscoord& aY) const { aX = mX; aY = mY; }
 
   /**
+   * Returns the x-most rect in the space manager, or 0 if there are no
+   * rects.
+   *
+   * @return  PR_TRUE if there are bands and PR_FALSE if there are no bands
+   */
+  PRBool XMost(nscoord& aXMost) const;
+
+  /**
    * Returns the y-most of the bottommost band or 0 if there are no bands.
    *
    * @return  PR_TRUE if there are bands and PR_FALSE if there are no bands
@@ -335,6 +343,7 @@ protected:
   struct SpaceManagerState {
     nscoord mX, mY;
     nsIFrame *mLastFrame;
+    nscoord mXMost;
     SpaceManagerState *mNext;
 
     SpaceManagerState() : mX(0), mY(0), mLastFrame(nsnull), mNext(nsnull) {}
@@ -409,6 +418,7 @@ protected:
   nsIFrame* const mFrame;     // frame associated with the space manager
   nscoord         mX, mY;     // translation from local to global coordinate space
   BandList        mBandList;  // header/sentinel for circular linked list of band rects
+  nscoord         mXMost;
   FrameInfo*      mFrameInfoMap;
   nsIntervalSet   mFloatDamage;
 

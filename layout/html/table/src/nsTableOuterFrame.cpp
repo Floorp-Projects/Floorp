@@ -65,7 +65,7 @@
 nsTableCaptionFrame::nsTableCaptionFrame()
 {
   // shrink wrap 
-  SetFlags(NS_BLOCK_SPACE_MGR|NS_BLOCK_WRAP_SIZE);
+  SetFlags(NS_BLOCK_SPACE_MGR);
 }
 
 nsTableCaptionFrame::~nsTableCaptionFrame()

@@ -124,7 +124,6 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
       mContentArea.width = PR_MAX(0, aReflowState.availableWidth - lr);
     }
   }
-  mHaveRightFloaters = PR_FALSE;
 
   // Compute content area height. Unlike the width, if we have a
   // specified style height we ignore it since extra content is
@@ -1007,7 +1006,6 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   // coordinates are computed <b>relative to the translation in the
   // spacemanager</b> which means that the impacted region will be
   // <b>inside</b> the border/padding area.
-  PRBool okToAddRectRegion = PR_TRUE;
   PRBool isLeftFloater;
   if (NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) {
     isLeftFloater = PR_TRUE;
@@ -1031,8 +1029,10 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
       }
     }
     else {
-      okToAddRectRegion = PR_FALSE;
-      region.x = NS_UNCONSTRAINEDSIZE - region.width;
+      // For unconstrained reflows, pretend that a right floater is
+      // instead a left floater.  This will make us end up with the
+      // correct unconstrained width, and we'll place it later.
+      region.x = mAvailSpaceRect.x;
     }
   }
   *aIsLeftFloater = isLeftFloater;
@@ -1048,18 +1048,16 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   }
 
   // Place the floater in the space manager
-  if (okToAddRectRegion) {
-    // if the floater split, then take up all of the vertical height 
-    if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus) && 
-        (NS_UNCONSTRAINEDSIZE != mContentArea.height)) {
-      region.height = PR_MAX(region.height, mContentArea.height);
-    }
-#ifdef DEBUG
-    nsresult rv =
-#endif
-    mSpaceManager->AddRectRegion(floater, region);
-    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "bad floater placement");
+  // if the floater split, then take up all of the vertical height 
+  if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus) && 
+      (NS_UNCONSTRAINEDSIZE != mContentArea.height)) {
+    region.height = PR_MAX(region.height, mContentArea.height);
   }
+#ifdef DEBUG
+  nsresult rv =
+#endif
+  mSpaceManager->AddRectRegion(floater, region);
+  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "bad floater placement");
 
   // If the floater's dimensions have changed, note the damage in the
   // space manager.
@@ -1116,23 +1114,21 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   nsRect combinedArea = aFloaterCache->mCombinedArea;
   combinedArea.x += x;
   combinedArea.y += y;
-  if (!isLeftFloater && 
-      (GetFlag(BRS_UNCONSTRAINEDWIDTH) || GetFlag(BRS_SHRINKWRAPWIDTH))) {
-    // When we are placing a right floater in an unconstrained situation or
-    // when shrink wrapping, we don't apply it to the floater combined area
-    // immediately. Otherwise we end up with an infinitely wide combined
-    // area. Instead, we save it away in mRightFloaterCombinedArea so that
-    // later on when we know the width of a line we can compute a better value.
-    if (!mHaveRightFloaters) {
-      mRightFloaterCombinedArea = combinedArea;
-      mHaveRightFloaters = PR_TRUE;
-    }
-    else {
-      nsBlockFrame::CombineRects(combinedArea, mRightFloaterCombinedArea);
-    }
-  }
-  else {
+  // When we are placing a right floater in an unconstrained situation or
+  // when shrink wrapping, we don't apply it to the floater combined area
+  // immediately, since there's no need to since we're guaranteed another
+  // reflow, and since there's no need to change the code that was
+  // necessary back when the floater was positioned relative to
+  // NS_UNCONSTRAINEDSIZE.
+  if (isLeftFloater ||
+      !GetFlag(BRS_UNCONSTRAINEDWIDTH) ||
+      !GetFlag(BRS_SHRINKWRAPWIDTH)) {
     nsBlockFrame::CombineRects(combinedArea, mFloaterCombinedArea);
+  } else if (GetFlag(BRS_SHRINKWRAPWIDTH)) {
+    // Mark the line dirty so we come back and re-place the floater once
+    // the shrink wrap width is determined
+    mCurrentLine->MarkDirty();
+    SetFlag(BRS_NEEDRESIZEREFLOW, PR_TRUE);
   }
 
   // Remember the y-coordinate of the floater we've just placed

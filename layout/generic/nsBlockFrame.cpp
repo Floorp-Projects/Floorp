@@ -1182,6 +1182,8 @@ HaveAutoWidth(const nsHTMLReflowState& aReflowState)
 {
   const nsHTMLReflowState* rs = &aReflowState;
   if (NS_UNCONSTRAINEDSIZE == rs->mComputedWidth) {
+    // XXXldb Why isn't this always true for the cases where this
+    // function returns true?
     return PR_TRUE;
   }
   const nsStylePosition* pos = rs->mStylePosition;
@@ -1297,37 +1299,33 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     maxWidth = aMetrics.width;
   }
   else {
-    nscoord minWidth = aState.mKidXMost + borderPadding.right;
-    nscoord computedWidth = minWidth;
-    PRBool compact = PR_FALSE;
-#if 0
-    if (NS_STYLE_DISPLAY_COMPACT == aReflowState.mStyleDisplay->mDisplay) {
-      // If we are display: compact AND we have no lines or we have
-      // exactly one line and that line is not a block line AND that
-      // line doesn't end in a BR of any sort THEN we remain a compact
-      // frame.
-      if ((mLines.empty()) ||
-          ((mLines.front() == mLines.back()) && !mLines.front()->IsBlock() &&
-           (NS_STYLE_CLEAR_NONE == mLines.front()->GetBreakType())
-           /*XXX && (computedWidth <= aState.mCompactMarginWidth) */
-            )) {
-        compact = PR_TRUE;
-      }
-    }
-#endif
+    nscoord computedWidth;
 
+    // XXX Misleading comment:
     // There are two options here. We either shrink wrap around our
     // contents or we fluff out to the maximum block width. Note:
     // We always shrink wrap when given an unconstrained width.
     if ((0 == (NS_BLOCK_SHRINK_WRAP & mState)) &&
         !aState.GetFlag(BRS_UNCONSTRAINEDWIDTH) &&
-        !aState.GetFlag(BRS_SHRINKWRAPWIDTH) &&
-        !compact) {
+        !aState.GetFlag(BRS_SHRINKWRAPWIDTH)) {
+      // XXX Misleading comment:
       // Set our width to the max width if we aren't already that
       // wide. Note that the max-width has nothing to do with our
       // contents (CSS2 section XXX)
+      // XXXldb In what cases do we reach this code?
       computedWidth = borderPadding.left + aState.mContentArea.width +
         borderPadding.right;
+    } else {
+      computedWidth = aState.mKidXMost;
+      if (NS_BLOCK_SPACE_MGR & mState) {
+        // Include the space manager's state to properly account for the
+        // extent of floated elements.
+        nscoord xmost;
+        if (aReflowState.mSpaceManager->XMost(xmost) &&
+            computedWidth < xmost)
+          computedWidth = xmost;
+      }
+      computedWidth += borderPadding.right;
     }
 
     // See if we should compute our max element size
@@ -1337,6 +1335,8 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       maxWidth = aState.mMaxElementSize.width +
         borderPadding.left + borderPadding.right;
       if (computedWidth < maxWidth) {
+        // XXXldb It's *compute* max-element-size, not *change size
+        // based on* max-element-size...
         computedWidth = maxWidth;
       }
     }
@@ -1374,6 +1374,8 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       }
 
       if (!parentIsShrinkWrapWidth) {
+        // XXX Is this only used on things that are already NS_BLOCK_SPACE_MGR
+        // and NS_BLOCK_MARGIN_ROOT?
         nsHTMLReflowState reflowState(aReflowState);
 
         reflowState.mComputedWidth = aMetrics.width - borderPadding.left -
@@ -1389,15 +1391,6 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
         ReflowDirtyLines(state);
         aState.mY = state.mY;
         NS_ASSERTION(oldDesiredWidth == aMetrics.width, "bad desired width");
-      }
-    }
-  }
-
-  if (aState.GetFlag(BRS_SHRINKWRAPWIDTH)) {
-    PRBool  parentIsShrinkWrapWidth = PR_FALSE;
-    if (aReflowState.parentReflowState) {
-      if (NS_SHRINKWRAPWIDTH == aReflowState.parentReflowState->mComputedWidth) {
-        parentIsShrinkWrapWidth = PR_TRUE;
       }
     }
   }
@@ -1452,16 +1445,16 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       // XXX check for a fit
       autoHeight += aState.mPrevBottomMargin.get();
     }
-    autoHeight += borderPadding.bottom;
 
     if (NS_BLOCK_SPACE_MGR & mState) {
       // Include the space manager's state to properly account for the
       // bottom margin of any floated elements; e.g., inside a table cell.
       nscoord ymost;
-      aReflowState.mSpaceManager->YMost(ymost);
-      if (ymost > autoHeight)
+      if (aReflowState.mSpaceManager->YMost(ymost) &&
+          autoHeight < ymost)
         autoHeight = ymost;
     }
+    autoHeight += borderPadding.bottom;
 
     // Apply min/max values
     if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMaxHeight) {
@@ -1564,32 +1557,6 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   }
   else {
     mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
-  }
-
-  if (NS_BLOCK_WRAP_SIZE & mState) {
-    // When the area frame is supposed to wrap around all in-flow
-    // children, make sure it is big enough to include those that stick
-    // outside the box.
-    if (NS_FRAME_OUTSIDE_CHILDREN & mState) {
-      nscoord xMost = aMetrics.mOverflowArea.XMost();
-      if (xMost > aMetrics.width) {
-#ifdef NOISY_FINAL_SIZE
-        ListTag(stdout);
-        printf(": changing desired width from %d to %d\n", aMetrics.width, xMost);
-#endif
-        aMetrics.width = xMost;
-      }
-      nscoord yMost = aMetrics.mOverflowArea.YMost();
-      if (yMost > aMetrics.height) {
-#ifdef NOISY_FINAL_SIZE
-        ListTag(stdout);
-        printf(": changing desired height from %d to %d\n", aMetrics.height, yMost);
-#endif
-        aMetrics.height = yMost;
-        // adjust descent to absorb any excess difference
-        aMetrics.descent = aMetrics.height - aMetrics.ascent;
-      }
-    }
   }
 }
 
@@ -2659,9 +2626,14 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       PRBool  oldUnconstrainedWidth = aState.GetFlag(BRS_UNCONSTRAINEDWIDTH);
 
 #if defined(DEBUG_waterson) || defined(DEBUG_dbaron)
+      // XXXwaterson if oldUnconstrainedWidth was set, why do we need
+      // to do the second reflow, below?
+
       if (oldUnconstrainedWidth)
         printf("*** oldUnconstrainedWidth was already set.\n"
-               "*** This code (%s:%d) could be optimized a lot!\n",
+               "*** This code (%s:%d) could be optimized a lot!\n"
+               "+++ possibly doing an unnecessary second-pass unconstrained "
+               "reflow\n",
                __FILE__, __LINE__);
 #endif
 
@@ -2677,13 +2649,6 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       aState.mPrevBottomMargin = oldPrevBottomMargin;
       aState.SetFlag(BRS_UNCONSTRAINEDWIDTH, oldUnconstrainedWidth);
       aState.mSpaceManager->PopState();
-
-#ifdef DEBUG_waterson
-      // XXXwaterson if oldUnconstrainedWidth was set, why do we need
-      // to do the second reflow, below?
-      if (oldUnconstrainedWidth)
-        printf("+++ possibly doing an unnecessary second-pass unconstrained reflow\n");
-#endif
 
       // Update the line's maximum width
       aLine->mMaximumWidth = aLine->mBounds.XMost();
@@ -3707,7 +3672,6 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   // Forget all of the floaters on the line
   aLine->FreeFloaters(aState.mFloaterCacheFreeList);
   aState.mFloaterCombinedArea.SetRect(0, 0, 0, 0);
-  aState.mRightFloaterCombinedArea.SetRect(0, 0, 0, 0);
 
   // Setup initial coordinate system for reflowing the inline frames
   // into. Apply a previous block frame's bottom margin first.
@@ -4413,9 +4377,8 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
         printf("PASS1 ");
       }
       ListTag(stdout);
-      printf(": line.floaters=%s band.floaterCount=%d\n",
+      printf(": band.floaterCount=%d\n",
              //aLine->mFloaters.NotEmpty() ? "yes" : "no",
-             aState.mHaveRightFloaters ? "(have right floaters)" : "",
              aState.mBand.GetFloaterCount());
     }
 #endif
@@ -4488,42 +4451,12 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 #endif
     CombineRects(aState.mFloaterCombinedArea, lineCombinedArea);
 
-    if (aState.mHaveRightFloaters &&
-        (aState.GetFlag(BRS_UNCONSTRAINEDWIDTH) || aState.GetFlag(BRS_SHRINKWRAPWIDTH))) {
-      // We are reflowing in an unconstrained situation or shrink wrapping and
-      // have some right floaters. They were placed at the infinite right edge
-      // which will cause the combined area to be unusable.
-      //
-      // To solve this issue, we pretend that the right floaters ended up just
-      // past the end of the line. Note that the right floater combined area
-      // we computed as we were going will have as its X coordinate the left
-      // most edge of all the right floaters. Therefore, to accomplish our goal
-      // all we do is set that X value to the lines XMost value.
-#ifdef NOISY_COMBINED_AREA
-      printf("  ==> rightFloaterCA=%d,%d,%d,%d lineXMost=%d\n",
-             aState.mRightFloaterCombinedArea.x,
-             aState.mRightFloaterCombinedArea.y,
-             aState.mRightFloaterCombinedArea.width,
-             aState.mRightFloaterCombinedArea.height,
-             aLine->mBounds.XMost());
-#endif
-      aState.mRightFloaterCombinedArea.x = aLine->mBounds.XMost();
-      CombineRects(aState.mRightFloaterCombinedArea, lineCombinedArea);
-
-      if (aState.GetFlag(BRS_SHRINKWRAPWIDTH)) {
-        // Mark the line dirty so we come back and re-place the floater once
-        // the shrink wrap width is determined
-        aLine->MarkDirty();
-        aState.SetFlag(BRS_NEEDRESIZEREFLOW, PR_TRUE);
-      }
-    }
     aLine->SetCombinedArea(lineCombinedArea);
 #ifdef NOISY_COMBINED_AREA
     printf("  ==> final lineCA=%d,%d,%d,%d\n",
            lineCombinedArea.x, lineCombinedArea.y,
            lineCombinedArea.width, lineCombinedArea.height);
 #endif
-    aState.mHaveRightFloaters = PR_FALSE;
   }
 
   // Apply break-after clearing if necessary

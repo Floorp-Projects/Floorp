@@ -69,7 +69,6 @@ class nsIChannel;
 #define NS_BLOCK_NO_AUTO_MARGINS            0x00200000
 #define NS_BLOCK_MARGIN_ROOT                0x00400000
 #define NS_BLOCK_SPACE_MGR                  0x00800000
-#define NS_BLOCK_WRAP_SIZE                  0x01000000
 #define NS_BLOCK_FLAGS_MASK                 0xFFF00000
 
 // Factory method for creating a content iterator for generated
@@ -108,7 +107,7 @@ NS_NewAttributeContent(nsIContent ** aResult);
 // By default, area frames will extend
 // their height to cover any children that "stick out".
 extern nsresult NS_NewSelectsAreaFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame,
-                                       PRUint32 aFlags = NS_BLOCK_WRAP_SIZE);
+                                       PRUint32 aFlags);
 
 // Create a basic area frame.
 extern nsresult NS_NewAreaFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame,
@@ -117,7 +116,7 @@ extern nsresult NS_NewAreaFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame,
 // These AreaFrame's shrink wrap around their contents
 inline nsresult NS_NewTableCellInnerFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame) {
   return NS_NewBlockFrame(aPresShell, aNewFrame,
-                          NS_BLOCK_SPACE_MGR|NS_BLOCK_WRAP_SIZE|NS_BLOCK_MARGIN_ROOT);
+                          NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT);
 }
 
 // This type of AreaFrame is the document root, a margin root, and the
