@@ -212,5 +212,10 @@ menuitem[checked="true"][menuactive="true"]
     font                   : message-box;
   }
 
+/* ::::: tree column picker ::::: */
 
-  
+.treecell-popupcell-menu 
+  {
+    margin-left: -6px;
+    list-style-image: url("chrome://global/skin/columnselect.gif");
+  }

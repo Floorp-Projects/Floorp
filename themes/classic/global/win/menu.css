@@ -229,3 +229,10 @@ menuitem[checked="true"][type="radio"][menuactive="true"]
       border-bottom: 1px solid WindowText;
     }
     
+/* ::::: tree column picker ::::: */
+
+  .treecell-popupcell-menu 
+    {
+      margin-left: -4px;
+      list-style-image: url("chrome://global/skin/columnselect.gif");
+    }

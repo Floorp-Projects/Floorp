@@ -124,8 +124,7 @@
         label="&tree.header.visitcount.label;"
         observes="VisitCount"/>
       <treecell class="treecell-header" allowevents="true" id="popupCell">
-        <menu>
-          <image class="treecell-popup-icon"/>
+        <menu class="treecell-popupcell-menu">
           <menupopup popupanchor="bottomright" 
             popupalign="topright"
             oncreate="BuildTreePopup(document.getElementById('theColumns'), document.getElementById('headRow'), this,

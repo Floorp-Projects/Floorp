@@ -98,6 +98,11 @@
       -moz-binding          : url("chrome://global/content/bindings/wizard.xml#wizard-buttons-mac");
     }
 
+  .treecell-popupcell-menu 
+    {
+      -moz-binding: url("chrome://global/content/bindings/menu.xml#menu-iconic") !important;
+    }
+
 /**  
  * XUL <window> element
  **/

@@ -374,7 +374,6 @@
                   observes="LastModifiedDate" />
         <treecell class="treecell-header" allowevents="true" id="popupCell">
           <menu class="treecell-popupcell-menu" autostretch="never">
-            <image class="treecell-popup-icon"/>
             <menupopup popupanchor="bottomright" popupalign="topright"
                       oncreate="BuildTreePopup(document.getElementById('theColumns'), 
                                                document.getElementById('headRow'), this,
