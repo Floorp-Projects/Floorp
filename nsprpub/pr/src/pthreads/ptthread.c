@@ -311,6 +311,8 @@ static PRThread* _PR_CreateThread(
             thred->state |= PT_THREAD_DETACHED;
         if (PR_GLOBAL_THREAD == scope)
             thred->state |= PT_THREAD_GLOBAL;
+        if (PR_GLOBAL_BOUND_THREAD == scope)
+            thred->state |= (PT_THREAD_GLOBAL | PT_THREAD_BOUND);
         if (PR_SYSTEM_THREAD == type)
             thred->state |= PT_THREAD_SYSTEM;
 
@@ -339,6 +341,9 @@ static PRThread* _PR_CreateThread(
         else pt_book.user += 1;
         PR_Unlock(pt_book.ml);
 
+        if (thred->state & PT_THREAD_BOUND) {
+    		rv = pthread_attr_setscope(&tattr, PTHREAD_SCOPE_SYSTEM);
+		}
         /*
          * We pass a pointer to a local copy (instead of thred->id)
          * to pthread_create() because who knows what wacky things
@@ -518,7 +523,8 @@ PR_IMPLEMENT(PRThread*) PR_GetCurrentThread()
 
 PR_IMPLEMENT(PRThreadScope) PR_GetThreadScope(const PRThread *thred)
 {
-    return PR_GLOBAL_THREAD;
+    return (thred->state & PT_THREAD_BOUND) ?
+        PR_GLOBAL_BOUND_THREAD : PR_GLOBAL_THREAD;
 }  /* PR_GetThreadScope() */
 
 PR_IMPLEMENT(PRThreadType) PR_GetThreadType(const PRThread *thred)

@@ -403,9 +403,10 @@ PR_IMPLEMENT(PRThreadScope) PR_GetThreadScope(const PRThread *thread)
 #endif
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
-    if (_PR_IS_NATIVE_THREAD(thread))
-        return PR_GLOBAL_THREAD;
-    else
+    if (_PR_IS_NATIVE_THREAD(thread)) {
+    	return (thread->flags & _PR_BOUND_THREAD) ? PR_GLOBAL_BOUND_THREAD :
+										PR_GLOBAL_THREAD;
+    } else
         return PR_LOCAL_THREAD;
 }
 

@@ -200,7 +200,8 @@ PRStatus _MD_CreateThread(PRThread *thread,
      *   when the corresponding NSPR threads terminate.  
      */
     flags = THR_SUSPENDED|THR_DETACHED;
-    if (thread->flags & (_PR_GCABLE_THREAD|_PR_BOUND_THREAD))
+    if ((thread->flags & (_PR_GCABLE_THREAD|_PR_BOUND_THREAD)) ||
+    							(scope == PR_GLOBAL_BOUND_THREAD))
 		flags |= THR_BOUND;
 
     if (thr_create(NULL, thread->stack->stackSize,
@@ -219,8 +220,8 @@ PRStatus _MD_CreateThread(PRThread *thread,
     thr_sigsetmask(SIG_SETMASK, &oldset, NULL); 
     _MD_NEW_SEM(&thread->md.waiter_sem, 0);
 
-    if (scope == PR_GLOBAL_THREAD) {
-	thread->flags |= _PR_GLOBAL_SCOPE;
+    if ((scope == PR_GLOBAL_THREAD) || (scope == PR_GLOBAL_BOUND_THREAD)) {
+		thread->flags |= _PR_GLOBAL_SCOPE;
     }
 
     _MD_SET_PRIORITY(&(thread->md), priority);

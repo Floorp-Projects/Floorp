@@ -158,6 +158,7 @@ struct _PT_Notified
 #define PT_THREAD_GCABLE    0x20    /* thread is garbage collectible */
 #define PT_THREAD_SUSPENDED 0x40    /* thread has been suspended */
 #define PT_THREAD_FOREIGN   0x80    /* thread is not one of ours */
+#define PT_THREAD_BOUND     0x100    /* a bound-global thread */
 
 /* 
 ** Possible values for thread's suspend field
