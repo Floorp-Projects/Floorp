@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -16,211 +16,71 @@
  * Reserved.
  */
 
-#ifndef _nsURL_h_
-#define _nsURL_h_
+#ifndef nsUrl_h__
+#define nsUrl_h__
 
-/* 
-    The nsURL class holds the default implementation of the nsIURL class. 
-    For explanation on the implementation see - 
+#include "nsIUrl.h"
+#include "nsAgg.h"
 
-         http://www.w3.org/Addressing/URL/url-spec.txt
-         and the headers for nsIURL.h and nsIURI.h
-    
-    - Gagan Saksena
- */
+// XXX regenerate:
+#define NS_TYPICALURL_CID                            \
+{ /* 8ffae6d0-ee37-11d2-9322-000000000000 */         \
+    0x8ffae6d0,                                      \
+    0xee37,                                          \
+    0x11d2,                                          \
+    {0x93, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} \
+}
 
-#include "nsIURL.h"
-
-class nsURL : public nsIURL
+class nsUrl : public nsIUrl
 {
-
 public:
-    //Constructor
-                        nsURL(const char* i_URL);
-    
-    //Functions from nsISupports
-    
-    NS_DECL_ISUPPORTS
+    NS_DECL_AGGREGATED
 
-    //Functions from nsIURI
-    //Core parsing functions. 
-    /* 
-        The Scheme is the protocol that this URL refers to. 
-    */
-    NS_METHOD           GetScheme(const char* *o_Scheme) const;
-    NS_METHOD           SetScheme(const char* i_Scheme);
+    ////////////////////////////////////////////////////////////////////////////
+    // nsIUrl methods:
 
-    /* 
-        The PreHost portion includes elements like the optional 
-        username:password, or maybe other scheme specific items. 
-    */
-    NS_METHOD           GetPreHost(const char* *o_PreHost) const;
-    NS_METHOD           SetPreHost(const char* i_PreHost);
+    NS_IMETHOD GetScheme(const char* *result);
+    NS_IMETHOD SetScheme(const char* scheme);
 
-    /* 
-        The Host is the internet domain name to which this URL refers. 
-        Note that it could be an IP address as well. 
-    */
-    NS_METHOD           GetHost(const char* *o_Host) const;
-    NS_METHOD           SetHost(const char* i_Host);
+    NS_IMETHOD GetPreHost(const char* *result);
+    NS_IMETHOD SetPreHost(const char* preHost);
 
-    /* 
-        A return value of -1 indicates that no port value is set and the 
-        implementor of the specific scheme will use its default port. 
-        Similarly setting a value of -1 indicates that the default is to be used.
-        Thus as an example-
-            for HTTP, Port 80 is same as a return value of -1. 
-        However after setting a port (even if its default), the port number will
-        appear in the ToString function.
-    */
-    NS_METHOD_(PRInt32) GetPort(void) const;
-    NS_METHOD           SetPort(PRInt32 i_Port);
+    NS_IMETHOD GetHost(const char* *result);
+    NS_IMETHOD SetHost(const char* host);
 
-    /* 
-        Note that the path includes the leading '/' Thus if no path is 
-        available the GetPath will return a "/" 
-        For SetPath if none is provided, one would be prefixed to the path. 
-    */
-    NS_METHOD           GetPath(const char* *o_Path) const;
-    NS_METHOD           SetPath(const char* i_Path);
+    NS_IMETHOD GetPort(PRInt32 *result);
+    NS_IMETHOD SetPort(PRInt32 port);
 
-    //Functions from nsIURL.h 
+    NS_IMETHOD GetPath(const char* *result);
+    NS_IMETHOD SetPath(const char* path);
 
-    /* 
-        Create a copy of this url in the specified location. 
-        Use this as much as possible instead of creating a fresh one
-        each time since we save on the parsing overhead.
-    */
-    NS_METHOD           Clone(nsURL* *o_URL) const;
+    NS_IMETHOD Equals(nsIUrl* other);
+    NS_IMETHOD Clone(nsIUrl* *result);
 
-#ifdef DEBUG
-    NS_METHOD           DebugString(const char* *o_URLString) const;
-#endif //DEBUG
+    NS_IMETHOD ToNewCString(const char* *result);
 
-    /* 
-        Note: The GetStream function also opens a connection using 
-        the available information in the URL. This is the same as 
-        calling OpenInputStream on the connection returned from 
-        OpenProtocolInstance.
-    */
-    NS_METHOD           GetStream(nsIInputStream* *o_InputStream);
+    ////////////////////////////////////////////////////////////////////////////
+    // nsUrl methods:
 
-    /*
-        MakeAbsoluteFrom function takes a new string that is a relative url, 
-        and converts this object to represent the final form. As an example
-        if this is "http://foo/bar" and we call MakeAbsoluteFrom("/baz")
-        then this will change to "http://foo/baz" There is a whole series
-        of possibilities here. Check this URL for more details (TODO -Gagan)
-    */
-    NS_METHOD           MakeAbsoluteFrom(const char* i_NewURL);
+    nsUrl(nsISupports* outer);
+    virtual ~nsUrl();
 
-    /* 
-        The OpenProtocolInstance method sets up the connection as decided by the 
-        protocol implementation. This may then be used to get various 
-        connection specific details like the input and the output streams 
-        associated with the connection, or the header information by querying
-        on the connection type which will be protocol specific.
-    */
-    NS_METHOD          OpenProtocolInstance(nsIProtocolInstance* *o_ProtocolInstance);
-
-
-    //Other utility functions
-    /* 
-        Note that this comparison is only on char* level. Cast nsIURL to 
-        the scheme specific URL to do a more thorough check. For example--
-        in HTTP-
-            http://foo.com:80 == http://foo.com
-        but this function through nsIURL alone will not return equality.
-    */
-    NS_METHOD_(PRBool)  Equals(const nsIURI* i_URI) const;
-
-    /* 
-        Writes a string representation of the URL. 
-    */
-    NS_METHOD           ToString(const char* *o_URLString) const;
+    nsresult Init(const char* aSpec,
+                  nsIUrl* aBaseURL);
 
 protected:
-    
-    //Called only from Release
-    virtual ~nsURL();
+    nsresult Parse(const char* spec, nsIUrl* aBaseUrl);
+    void ReconstructSpec();
 
-    typedef enum 
-    {
-        SCHEME,
-        PREHOST,
-        HOST,
-        PATH,
-        TOTAL_PARTS // Must always be the last one. 
-    } Part;
-
-    /*
-        Parses the portions of the URL into individual pieces 
-        like spec, prehost, host, path etc.
-    */
-    NS_METHOD           Parse();
-
-    /*
-        Extract a portion from the given part id.
-    */
-    NS_METHOD           Extract(const char* *o_OutputString, Part i_id) const;
-
-    /* 
-        This holds the offsets and the lengths of each part. 
-        Optimizes on storage and speed. 
-    */
-    int m_Position[TOTAL_PARTS][2];
-
-    char*       m_URL;
-    PRInt32     m_Port;
-private:
-    NS_METHOD           ExtractPortFrom(int start, int length);
+protected:
+    char*       mScheme;
+    char*       mPreHost;
+    char*       mHost;
+    PRInt32     mPort;
+    char*       mPath;
+    char*       mRef;
+    char*       mQuery;
+    char*       mSpec;  // XXX go away
 };
 
-inline
-NS_METHOD          
-nsURL::GetHost(const char* *o_Host) const
-{
-    return Extract(o_Host, HOST);
-}
-
-inline
-NS_METHOD          
-nsURL::GetScheme(const char* *o_Scheme) const
-{
-    return Extract(o_Scheme, SCHEME);
-}
-
-inline
-NS_METHOD          
-nsURL::GetPreHost(const char* *o_PreHost) const
-{
-    return Extract(o_PreHost, PREHOST);
-}
-
-inline
-NS_METHOD_(PRInt32)          
-nsURL::GetPort() const
-{
-    return m_Port;
-}
-
-inline
-NS_METHOD          
-nsURL::GetPath(const char* *o_Path) const
-{
-    return Extract(o_Path, PATH);
-}
-
-inline
-NS_METHOD
-nsURL::ToString(const char* *o_URLString) const
-{
-    *o_URLString = m_URL;
-    return NS_OK;
-}
-
-//Possible bad url passed.
-#define NS_ERROR_URL_PARSING    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 100);
-#define NS_ERROR_BAD_URL        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 101);
-
-#endif /* _nsURL_h_ */
+#endif // nsUrl_h__

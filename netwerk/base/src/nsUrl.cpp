@@ -1,610 +1,581 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
  * http://www.mozilla.org/NPL/
  *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
- * the License for the specific language governing rights and limitations
- * under the License.
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
  *
- * The Original Code is Mozilla Communicator client code.
- *
- * The Initial Developer of the Original Code is Netscape Communications
- * Corporation.  Portions created by Netscape are Copyright (C) 1998
- * Netscape Communications Corporation.  All Rights Reserved.
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
  */
 
-//
-// TODOs for this file-
-//  - Check error states returned from all occurences of ExtractPortFrom
-//  - Grep on other TODOs...
-//
+#include "nsUrl.h"
+#include "nscore.h"
+#include "nsCRT.h"
+#include "nsString.h"
+#include "prmem.h"
+#include "prprf.h"
 
-#include "nsURL.h"
-#include <stdlib.h>
-#include "plstr.h"
-#include "nsIProtocolHandler.h"
-#include "nsIComponentManager.h"
+static NS_DEFINE_CID(kTypicalUrlCID, NS_TYPICALURL_CID);
 
-static const PRInt32 DEFAULT_PORT = -1;
+////////////////////////////////////////////////////////////////////////////////
+// nsUrl methods:
 
-#define SET_POSITION(__part,__start,__length)   \
-{                                               \
-    m_Position[__part][0] = __start;            \
-    m_Position[__part][1] = __length;           \
+nsUrl::nsUrl(nsISupports* outer)
+    : mScheme(nsnull),
+      mPreHost(nsnull),
+      mHost(nsnull),
+      mPort(-1),
+      mPath(nsnull),
+      mRef(nsnull),
+      mQuery(nsnull),
+      mSpec(nsnull)
+{
+    NS_INIT_AGGREGATED(outer);
 }
 
-
-NS_NET
-nsIURL* CreateURL(const char* i_URL)
+nsUrl::~nsUrl()
 {
-    nsIURL* pReturn = new nsURL(i_URL);
-    if (pReturn)
-        pReturn->AddRef();
-    return pReturn;
-}
-
-nsURL::nsURL(const char* i_URL):
-    m_Port(DEFAULT_PORT),
-    mRefCnt(0)
-{
-    NS_PRECONDITION( (0 != i_URL), "No url string specified!");
-
-    if (i_URL)
-    {
-        m_URL = new char[PL_strlen(i_URL) + 1];
-        if (m_URL)
-        {
-            PL_strcpy(m_URL, i_URL);
-        }
-    }
-    else
-    {
-        m_URL = new char[1];
-        *m_URL = '\0';
-    }
-
-    for (int i=0; i<TOTAL_PARTS; ++i) 
-    {
-        for (int j=0; j<2; ++j)
-        {
-            m_Position[i][j] = -1;
-        }
-    }
-
-    Parse();
-}
-
-nsURL::~nsURL()
-{
-    if (m_URL)
-    {
-        delete[] m_URL;
-        m_URL = 0;
-    }
-}
-
-
-NS_IMPL_ADDREF(nsURL);
-
-PRBool
-nsURL::Equals(const nsIURI* i_URI) const
-{
-    NS_NOTYETIMPLEMENTED("Eeeks!");
-    return PR_FALSE;
+    if (mScheme)        delete[] mScheme;
+    if (mPreHost)       delete[] mPreHost;
+    if (mHost)          delete[] mHost;
+    if (mRef)           delete[] mRef;
+    if (mQuery)         delete[] mQuery;
+    if (mSpec)          delete[] mSpec;
 }
 
 nsresult
-nsURL::Extract(const char* *o_OutputString, nsURL::Part i_id) const
+nsUrl::Init(const char* aSpec,
+            nsIUrl* aBaseUrl)
 {
-	int i = (int) i_id;
-	if (o_OutputString)
-	{
-		*o_OutputString = new char(m_Position[i][1]+1);
-        if (!*o_OutputString)
-            return NS_ERROR_OUT_OF_MEMORY;
+    return Parse(aSpec, aBaseUrl);
+}
 
-        char* dest = (char*) *o_OutputString;
-        char* src = m_URL + m_Position[i][0];
+NS_IMPL_AGGREGATED(nsUrl);
 
-		for (int j=0; j<m_Position[i][1]; ++j)
-		{
-            *dest++ = *src++; 
-		}
-        *dest = '\0';
+NS_IMETHODIMP
+nsUrl::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+    NS_ASSERTION(aInstancePtr, "no instance pointer");
+    if (aIID.Equals(kTypicalUrlCID) ||  // used by Equals
+        aIID.Equals(nsIUrl::GetIID()) ||
+        aIID.Equals(nsISupports::GetIID())) {
+        *aInstancePtr = NS_STATIC_CAST(nsIUrl*, this);
+        NS_ADDREF_THIS();
         return NS_OK;
-	}
-    return NS_ERROR_URL_PARSING; 
+    }
+    return NS_NOINTERFACE; 
 }
 
-nsresult
-nsURL::ExtractPortFrom(int start, int length)
+////////////////////////////////////////////////////////////////////////////////
+// nsIUrl methods:
+
+NS_IMETHODIMP
+nsUrl::GetScheme(const char* *result)
 {
-    char* port = new char[length +1];
-    if (!port)
-    {
+    *result = mScheme;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrl::SetScheme(const char* scheme)
+{
+    mScheme = nsCRT::strdup(scheme);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrl::GetPreHost(const char* *result)
+{
+    *result = mPreHost;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrl::SetPreHost(const char* preHost)
+{
+    mPreHost = nsCRT::strdup(preHost);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrl::GetHost(const char* *result)
+{
+    *result = mHost;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrl::SetHost(const char* host)
+{
+    mHost = nsCRT::strdup(host);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrl::GetPort(PRInt32 *result)
+{
+    *result = mPort;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrl::SetPort(PRInt32 port)
+{
+    mPort = port;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrl::GetPath(const char* *result)
+{
+    *result = mPath;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrl::SetPath(const char* path)
+{
+    mPath = nsCRT::strdup(path);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrl::Equals(nsIUrl* other)
+{
+    PRBool eq = PR_FALSE;
+    if (other) {
+//        NS_LOCK_INSTANCE();
+        nsUrl* otherUrl;
+        if (NS_SUCCEEDED(other->QueryInterface(kTypicalUrlCID, (void**)&otherUrl))) {
+            eq = PRBool((0 == PL_strcmp(mScheme, otherUrl->mScheme)) && 
+                        (0 == PL_strcasecmp(mHost, otherUrl->mHost)) &&
+                        (mPort == otherUrl->mPort) &&
+                        (0 == PL_strcmp(mPath, otherUrl->mPath)));
+            NS_RELEASE(otherUrl);
+        }
+//        NS_UNLOCK_INSTANCE();
+    }
+    return eq;
+}
+
+NS_IMETHODIMP
+nsUrl::Clone(nsIUrl* *result)
+{
+    nsUrl* url = new nsUrl(nsnull);     // XXX outer?
+    if (url == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    }
-    PL_strncpy(port, m_URL+start, length);
-    *(port + length) = '\0';
-    m_Port = atoi(port);
-    delete[] port;
+    url->mScheme = nsCRT::strdup(mScheme);
+    if (url->mScheme == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    url->mPreHost = nsCRT::strdup(mPreHost);
+    if (url->mPreHost == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    url->mHost = nsCRT::strdup(mHost);
+    if (url->mHost == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    url->mPort = mPort;
+    url->mPath = nsCRT::strdup(mPath);
+    if (url->mPath == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    url->mRef = nsCRT::strdup(mRef);
+    if (url->mRef == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    url->mQuery = nsCRT::strdup(mQuery);
+    if (url->mQuery == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    url->mSpec = nsCRT::strdup(mSpec);
+    if (url->mSpec == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
-nsresult 
-nsURL::GetStream(nsIInputStream* *o_InputStream)
+NS_IMETHODIMP
+nsUrl::ToNewCString(const char* *result)
 {
-    NS_PRECONDITION( (0 != m_URL), "GetStream called on empty url!");
-	nsresult result = NS_OK; // change to failure
-	//OpenProtocolInstance and request the input stream
-	nsIProtocolInstance* pi = 0;
-	result = OpenProtocolInstance(&pi);
-   
-	if (NS_OK != result)
-		return result;
- 	return pi->GetInputStream(o_InputStream);		
-}
+    nsAutoString string;
+//    NS_LOCK_INSTANCE();
 
-nsresult nsURL::OpenProtocolInstance(nsIProtocolInstance* *o_ProtocolInstance)
-{
-    const char* scheme =0;
-    GetScheme(&scheme);
-    // If the expected behaviour is to have http as the default scheme, a 
-    // caller must check that before calling this function. We will not 
-    // make any assumptions here. 
-    if (0 == scheme)
-        return NS_ERROR_BAD_URL; 
-
-    nsIProtocolHandler *pHandler=0;
-    nsresult rv = nsComponentManager::CreateInstance(
-        NS_COMPONENT_NETSCAPE_NETWORK_PROTOCOLS "http", // TODO replace!
-        nsnull,
-        nsIProtocolHandler::GetIID(),
-        (void**)&pHandler);
-
-    //return pHandler ? pHandler->GetProtocolInstance(this, o_ProtocolInstance) : rv;
-    return NS_ERROR_BAD_URL; // testing
-
-}
-
-// This code will need thorough testing. A lot of this has to do with 
-// usability and expected behaviour when a user types something in the
-// location bar.
-nsresult nsURL::Parse(void)
-{
-    NS_PRECONDITION( (0 != m_URL), "Parse called on empty url!");
-    if (!m_URL)
-    {
-        return NS_ERROR_URL_PARSING;
-    }
-
-    //Remember to remove leading/trailing spaces, etc. TODO
-    int len = PL_strlen(m_URL);
-    static const char delimiters[] = "/:@"; //this order is optimized.
-    char* brk = PL_strpbrk(m_URL, delimiters);
-    char* lastbrk = brk;
-    if (brk) 
-    {
-        switch (*brk)
-        {
-        case '/' :
-            // If the URL starts with a slash then everything is a path
-            if (brk == m_URL)
-            {
-                SET_POSITION(PATH, 0, len);
-                return NS_OK;
+    // XXX Special-case javascript: URLs for the moment.
+    // This code will go away when we actually start doing
+    // protocol-specific parsing.
+    if (PL_strcmp(mScheme, "javascript") == 0) {
+        string.SetString(mSpec);
+    } else if (PL_strcmp(mScheme, "about") == 0) { 
+        string.SetString(mScheme);
+        string.Append(':');
+        string.Append(mPath);
+    } else {
+        string.SetLength(0);
+        string.Append(mScheme);
+        string.Append("://");
+        if (nsnull != mHost) {
+            string.Append(mHost);
+            if (0 < mPort) {
+                string.Append(':');
+                string.Append(mPort, 10);
             }
-            else // The first part is host, so its host/path
-            {
-                SET_POSITION(HOST, 0, (brk - m_URL));
-                SET_POSITION(PATH, (brk - m_URL), (len - (brk - m_URL)));
-                return NS_OK;
-            }
-            break;
-        case ':' :
-            // If the first colon is followed by // then its definitely a spec
-            if ((*(brk+1) == '/') && (*(brk+2) == '/')) // e.g. http://
-            {
-                SET_POSITION(SCHEME, 0, (brk - m_URL));    
-                lastbrk = brk+3;
-                brk = PL_strpbrk(lastbrk, delimiters);
-                if (brk)
-                {
-                    switch (*brk)
-                    {
-                        case '/' : // standard case- http://host/path
-                            SET_POSITION(HOST, (lastbrk - m_URL), (brk - lastbrk));
-                            SET_POSITION(PATH, (brk - m_URL), (len - (brk - m_URL)));
-                            return NS_OK;
-                            break;
-                        case ':' : 
-                            {
-                                // It could be http://user:pass@host/path or http://host:port/path
-                                // For the first case, there has to be an at after this colon, so...
-                                char* atSign = PL_strchr(brk, '@');
-                                if (atSign)
-                                {
-                                    SET_POSITION(PREHOST, (lastbrk - m_URL), (atSign - lastbrk));
-                                    brk = PL_strpbrk(atSign+1, "/:");
-                                    if (brk) // http://user:pass@host:port/path or http://user:pass@host/path
-                                    {
-                                        SET_POSITION(HOST, (atSign+1 - m_URL), (brk - (atSign+1)));
-                                        if (*brk == '/')
-                                        {
-                                            SET_POSITION(PATH, (brk - m_URL), len - (brk - m_URL));
-                                            return NS_OK;
-                                        }
-                                        else // we have a port since (brk == ':')
-                                        {
-                                            lastbrk = brk+1;
-                                            brk = PL_strchr(lastbrk, '/');
-                                            if (brk) // http://user:pass@host:port/path
-                                            {
-                                                ExtractPortFrom((lastbrk - m_URL), (brk-lastbrk));
-                                                SET_POSITION(PATH, (brk-m_URL), len - (brk-m_URL));
-                                                return NS_OK;
-                                            }
-                                            else // http://user:pass@host:port
-                                            {
-                                                ExtractPortFrom((lastbrk - m_URL), len - (lastbrk - m_URL));
-                                                return NS_OK;
-                                            }
-                                        }
-
-                                    }
-                                    else // its just http://user:pass@host
-                                    {
-                                        SET_POSITION(HOST, (atSign+1 - m_URL), len - (atSign+1 - m_URL));
-                                        return NS_OK;
-                                    }
-                                }
-                                else // definitely the port option, i.e. http://host:port/path
-                                {
-                                    SET_POSITION(HOST, (lastbrk-m_URL), (brk-lastbrk));
-                                    lastbrk = brk+1;
-                                    brk = PL_strchr(lastbrk, '/');
-                                    if (brk)    // http://host:port/path
-                                    {
-                                        ExtractPortFrom((lastbrk-m_URL),(brk-lastbrk));
-                                        SET_POSITION(PATH, (brk-m_URL), len - (brk-m_URL));
-                                        return NS_OK;
-                                    }
-                                    else        // http://host:port
-                                    {
-                                        ExtractPortFrom((lastbrk-m_URL),len - (lastbrk-m_URL));
-                                        return NS_OK;
-                                    }
-                                }
-                            }
-                            break;
-                        case '@' : 
-                            // http://user@host...
-                            {
-                                SET_POSITION(PREHOST, (lastbrk-m_URL), (brk-lastbrk));
-                                lastbrk = brk+1;
-                                brk = PL_strpbrk(lastbrk, ":/");
-                                if (brk)
-                                {
-                                    SET_POSITION(HOST, (lastbrk-m_URL), (brk - lastbrk));
-                                    if (*brk == ':') // http://user@host:port...
-                                    {
-                                        lastbrk = brk+1;
-                                        brk = PL_strchr(lastbrk, '/');
-                                        if (brk)    // http://user@host:port/path
-                                        {
-                                            ExtractPortFrom((lastbrk-m_URL),(brk-lastbrk));
-                                            SET_POSITION(PATH, (brk-m_URL), len - (brk-m_URL));
-                                            return NS_OK;
-                                        }
-                                        else        // http://user@host:port
-                                        {
-                                            ExtractPortFrom((lastbrk-m_URL),len - (lastbrk-m_URL));
-                                            return NS_OK;
-                                        }
-
-                                    }
-                                    else // (*brk == '/') so no port just path i.e. http://user@host/path
-                                    {
-                                        SET_POSITION(PATH, (brk - m_URL), len - (brk - m_URL));
-                                        return NS_OK;
-                                    }
-                                }
-                                else // its just http://user@host
-                                {
-                                    SET_POSITION(HOST, (lastbrk+1 - m_URL), len - (lastbrk+1 - m_URL));
-                                    return NS_OK;
-                                }
-
-                            }
-                            break;
-                        default: NS_POSTCONDITION(0, "This just can't be!");
-                            break;
-                    }
-
-                }
-                else // everything else is a host, as in http://host
-                {
-                    SET_POSITION(HOST, (lastbrk - m_URL), len - (lastbrk - m_URL));
-                    return NS_OK;
-                }
-
-            }
-            else // host:port...
-            {
-                SET_POSITION(HOST, 0, (brk - m_URL));
-                lastbrk = brk+1;
-                brk = PL_strpbrk(lastbrk, delimiters);
-                if (brk)
-                {
-                    switch (*brk)
-                    {
-                        case '/' : // The path, so its host:port/path
-                            ExtractPortFrom(lastbrk-m_URL, brk-lastbrk);
-                            SET_POSITION(PATH, brk- m_URL, len - (brk-m_URL));
-                            return NS_OK;
-                            break;
-                        case ':' : 
-                            return NS_ERROR_URL_PARSING; 
-                            break;
-                        case '@' :
-                            // This is a special case of user:pass@host... so 
-                            // Cleanout our earliar knowledge of host
-                            SET_POSITION(HOST, -1, -1);
-
-                            SET_POSITION(PREHOST, 0, (brk-m_URL));
-                            lastbrk = brk+1;
-                            brk = PL_strpbrk(lastbrk, ":/");
-                            if (brk)
-                            {
-                                SET_POSITION(HOST, (lastbrk-m_URL), (brk-lastbrk));
-                                if (*brk == ':') // user:pass@host:port...
-                                {
-                                    lastbrk = brk+1;
-                                    brk = PL_strchr(lastbrk, '/');
-                                    if (brk)    // user:pass@host:port/path
-                                    {
-                                        ExtractPortFrom((lastbrk-m_URL),(brk-lastbrk));
-                                        SET_POSITION(PATH, (brk-m_URL), len - (brk-m_URL));
-                                        return NS_OK;
-                                    }
-                                    else        // user:pass@host:port
-                                    {
-                                        ExtractPortFrom((lastbrk-m_URL),len - (lastbrk-m_URL));
-                                        return NS_OK;
-                                    }
-                                }
-                                else // (*brk == '/') so user:pass@host/path
-                                {
-                                    SET_POSITION(PATH, (brk - m_URL), len - (brk - m_URL));
-                                    return NS_OK;
-                                }
-                            }
-                            else // its user:pass@host so everthing else is just the host
-                            {
-                                SET_POSITION(HOST, (lastbrk-m_URL), len - (lastbrk-m_URL));
-                                return NS_OK;
-                            }
-
-                            break;
-                        default: NS_POSTCONDITION(0, "This just can't be!");
-                            break;
-                    }
-                }
-                else // Everything else is just the port
-                {
-                    ExtractPortFrom(lastbrk-m_URL, len - (lastbrk-m_URL));
-                    return NS_OK;
-                }
-            }
-            break;
-        case '@' :
-            //Everything before the @ is the prehost stuff
-            SET_POSITION(PREHOST, 0, brk-m_URL);
-            lastbrk = brk+1;
-            brk = PL_strpbrk(lastbrk, ":/");
-            if (brk)
-            {
-                SET_POSITION(HOST, (lastbrk-m_URL), (brk-lastbrk));
-                if (*brk == ':') // user@host:port...
-                {
-                    lastbrk = brk+1;
-                    brk = PL_strchr(lastbrk, '/');
-                    if (brk)    // user@host:port/path
-                    {
-                        ExtractPortFrom((lastbrk-m_URL),(brk-lastbrk));
-                        SET_POSITION(PATH, (brk-m_URL), len - (brk-m_URL));
-                        return NS_OK;
-                    }
-                    else        // user@host:port
-                    {
-                        ExtractPortFrom((lastbrk-m_URL),len - (lastbrk-m_URL));
-                        return NS_OK;
-                    }
-                }
-                else // (*brk == '/') so user@host/path
-                {
-                    SET_POSITION(PATH, (brk - m_URL), len - (brk - m_URL));
-                    return NS_OK;
-                }
-            }
-            else // its user@host so everything else is just the host
-            {
-                SET_POSITION(HOST, (lastbrk-m_URL), (len - (lastbrk-m_URL)));
-                return NS_OK;
-            }
-            break;
-        default:
-            NS_POSTCONDITION(0, "This just can't be!");
-            break;
+        }
+        string.Append(mPath);
+        if (nsnull != mRef) {
+            string.Append('#');
+            string.Append(mRef);
+        }
+        if (nsnull != mQuery) {
+            string.Append('?');
+            string.Append(mQuery);
         }
     }
-    else // everything is a host
-    {
-        SET_POSITION(HOST, 0, len);
-    }
+//    NS_UNLOCK_INSTANCE();
+    *result = string.ToNewCString();
     return NS_OK;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
+// XXX recode to use nsString api's
+// XXX don't bother with port numbers
+// XXX don't bother with ref's
+// XXX null pointer checks are incomplete
 nsresult
-nsURL::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+nsUrl::Parse(const char* spec, nsIUrl* aBaseUrl)
 {
-    if (NULL == aInstancePtr)
-        return NS_ERROR_NULL_POINTER;
+    // XXX hack!
+    nsString specStr(spec);
 
-    *aInstancePtr = NULL;
-    
-    static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-    if (aIID.Equals(nsIURL::GetIID())) {
-        *aInstancePtr = (void*) ((nsIURL*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
+    const char* uProtocol = nsnull;
+    const char* uHost = nsnull;
+    const char* uFile = nsnull;
+    PRInt32 uPort;
+    if (nsnull != aBaseUrl) {
+        nsresult rslt = aBaseUrl->GetScheme(&uProtocol);
+        if (rslt != NS_OK) return rslt;
+        rslt = aBaseUrl->GetHost(&uHost);
+        if (rslt != NS_OK) return rslt;
+        rslt = aBaseUrl->GetPath(&uFile);
+        if (rslt != NS_OK) return rslt;
+        rslt = aBaseUrl->GetPort(&uPort);
+        if (rslt != NS_OK) return rslt;
     }
-    if (aIID.Equals(nsIURI::GetIID())) {
-        *aInstancePtr = (void*) ((nsIURI*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = (void*) ((nsISupports*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
- 
-NS_IMPL_RELEASE(nsURL);
 
-nsresult
-nsURL::SetHost(const char* i_Host)
-{
-    NS_NOTYETIMPLEMENTED("Eeeks!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
+//    NS_LOCK_INSTANCE();
 
-nsresult
-nsURL::SetPath(const char* i_Path)
-{
-    NS_NOTYETIMPLEMENTED("Eeeks!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
+    PR_FREEIF(mScheme);
+    PR_FREEIF(mHost);
+    PR_FREEIF(mPath);
+    PR_FREEIF(mRef);
+    PR_FREEIF(mQuery);
+    mPort = -1;
 
-nsresult
-nsURL::SetPort(PRInt32 i_Port)
-{
-    if (m_Port != i_Port)
-    {
-        m_Port = i_Port;
-        if (DEFAULT_PORT == m_Port)
-        {
-            //Just REMOVE the earliar one. 
-            NS_NOTYETIMPLEMENTED("Eeeks!");
+    if (nsnull == spec) {
+        if (nsnull == aBaseUrl) {
+//            NS_UNLOCK_INSTANCE();
+            return NS_ERROR_ILLEGAL_VALUE;
         }
-        else
-        {
-            //Insert the string equivalent 
-            NS_NOTYETIMPLEMENTED("Eeeks!");
-        }
-        Parse();
-    }
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
+        mScheme = (nsnull != uProtocol) ? nsCRT::strdup(uProtocol) : nsnull;
+        mHost = (nsnull != uHost) ? nsCRT::strdup(uHost) : nsnull;
+        mPort = uPort;
+        mPath = (nsnull != uFile) ? nsCRT::strdup(uFile) : nsnull;
 
-nsresult
-nsURL::SetPreHost(const char* i_PreHost)
-{
-    NS_NOTYETIMPLEMENTED("Eeeks!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsURL::SetScheme(const char* i_Scheme)
-{
-    NS_NOTYETIMPLEMENTED("Eeeks!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-#ifdef DEBUG
-nsresult 
-nsURL::DebugString(const char* *o_String) const
-{
-    if (!m_URL)
+//        NS_UNLOCK_INSTANCE();
         return NS_OK;
-    const char* tempBuff = 0;
-    char* tmp = new char[PL_strlen(m_URL) + 64];
-    char* tmp2 = tmp;
-    for (int i=PL_strlen(m_URL)+64; i>0 ; --i)
-        *tmp2++ = '\0';
-/*///
-    PL_strcpy(tmp, "m_URL= ");
-    PL_strcat(tmp, m_URL);
-    
-    GetScheme(&tempBuff);
-    PL_strcat(tmp, "\nScheme= ");
-    PL_strcat(tmp, tempBuff);
-    
-    GetPreHost(&tempBuff);
-    PL_strcat(tmp, "\nPreHost= ");
-    PL_strcat(tmp, tempBuff);
-    
-    GetHost(&tempBuff);
-    PL_strcat(tmp, "\nHost= ");
-    PL_strcat(tmp, tempBuff);
-    
-    char* tempPort = new char[6];
-    if (tempPort)
-    {
-        itoa(m_Port, tempPort, 10);
-        PL_strcat(tmp, "\nPort= ");
-        PL_strcat(tmp, tempPort);
-        delete[] tempPort;
     }
-    else
-        PL_strcat(tmp, "\nPort couldn't be conv'd to string!");
 
-    GetPath(&tempBuff);
-    PL_strcat(tmp, "\nPath= ");
-    PL_strcat(tmp, tempBuff);
-    PL_strcat(tmp, "\n");
-/*///
-    char delimiter[] = ",";
-#define TEMP_AND_DELIMITER PL_strcat(tmp, tempBuff); \
-    PL_strcat(tmp, delimiter)
+    // Strip out reference and search info
+    char* ref = strpbrk(spec, "#?");
+    if (nsnull != ref) {
+        char* search = nsnull;
+        if ('#' == *ref) {
+            search = PL_strchr(ref + 1, '?');
+            if (nsnull != search) {
+                *search++ = '\0';
+            }
 
-    PL_strcpy(tmp, m_URL);
-    PL_strcat(tmp, "\n");
+            PRIntn hashLen = nsCRT::strlen(ref + 1);
+            if (0 != hashLen) {
+                mRef = (char*) PR_Malloc(hashLen + 1);
+                PL_strcpy(mRef, ref + 1);
+            }      
+        }
+        else {
+            search = ref + 1;
+        }
 
-    GetScheme(&tempBuff);
-    TEMP_AND_DELIMITER;
+        if (nsnull != search) {
+            // The rest is the search
+            PRIntn searchLen = nsCRT::strlen(search);
+            if (0 != searchLen) {
+                mQuery = (char*) PR_Malloc(searchLen + 1);
+                PL_strcpy(mQuery, search);
+            }      
+        }
 
-    GetPreHost(&tempBuff);
-    TEMP_AND_DELIMITER;
-
-    GetHost(&tempBuff);
-    TEMP_AND_DELIMITER;
-
-    char* tempPort = new char[6];
-    if (tempPort)
-    {
-        itoa(m_Port, tempPort, 10);
-        PL_strcat(tmp, tempPort);
-        PL_strcat(tmp, delimiter);
-        delete[] tempPort;
+        // XXX Terminate string at start of reference or search
+        *ref = '\0';
     }
-    else
-        PL_strcat(tmp, "\nPort couldn't be conv'd to string!");
 
-    GetPath(&tempBuff);
-    PL_strcat(tmp, tempBuff);
-    PL_strcat(tmp, "\n");
+    // The URL is considered absolute if and only if it begins with a
+    // protocol spec. A protocol spec is an alphanumeric string of 1 or
+    // more characters that is terminated with a colon.
+    PRBool isAbsolute = PR_FALSE;
+    const char* cp;
+    const char* ap = spec;
+    char ch;
+    while (0 != (ch = *ap)) {
+        if (((ch >= 'a') && (ch <= 'z')) ||
+            ((ch >= 'A') && (ch <= 'Z')) ||
+            ((ch >= '0') && (ch <= '9'))) {
+            ap++;
+            continue;
+        }
+        if ((ch == ':') && (ap - spec >= 2)) {
+            isAbsolute = PR_TRUE;
+            cp = ap;
+            break;
+        }
+        break;
+    }
 
-//*/// 
-    *o_String = tmp;
+    if (!isAbsolute) {
+        // relative spec
+        if (nsnull == aBaseUrl) {
+//            NS_UNLOCK_INSTANCE();
+            return NS_ERROR_ILLEGAL_VALUE;
+        }
+
+        // keep protocol and host
+        mScheme = (nsnull != uProtocol) ? nsCRT::strdup(uProtocol) : nsnull;
+        mHost = (nsnull != uHost) ? nsCRT::strdup(uHost) : nsnull;
+        mPort = uPort;
+
+        // figure out file name
+        PRInt32 len = nsCRT::strlen(spec) + 1;
+        if ((len > 1) && (spec[0] == '/')) {
+            // Relative spec is absolute to the server
+            mPath = nsCRT::strdup(spec);
+        } else {
+            if (spec[0] != '\0') {
+                // Strip out old tail component and put in the new one
+                char* dp = PL_strrchr(uFile, '/');
+                if (!dp) {
+//                    NS_UNLOCK_INSTANCE();
+                    return NS_ERROR_ILLEGAL_VALUE;
+                }
+                PRInt32 dirlen = (dp + 1) - uFile;
+                mPath = (char*) PR_Malloc(dirlen + len);
+                PL_strncpy(mPath, uFile, dirlen);
+                PL_strcpy(mPath + dirlen, spec);
+            }
+            else {
+                mPath = nsCRT::strdup(uFile);
+            }
+        }
+
+        /* Stolen from netlib's mkparse.c.
+         *
+         * modifies a url of the form   /foo/../foo1  ->  /foo1
+         *                       and    /foo/./foo1   ->  /foo/foo1
+         */
+        char *fwdPtr = mPath;
+        char *urlPtr = mPath;
+    
+        for(; *fwdPtr != '\0'; fwdPtr++)
+        {
+    
+            if(*fwdPtr == '/' && *(fwdPtr+1) == '.' && *(fwdPtr+2) == '/')
+            {
+                /* remove ./ 
+                 */	
+                fwdPtr += 1;
+            }
+            else if(*fwdPtr == '/' && *(fwdPtr+1) == '.' && *(fwdPtr+2) == '.' && 
+                    (*(fwdPtr+3) == '/' || *(fwdPtr+3) == '\0'))
+            {
+                /* remove foo/.. 
+                 */	
+                /* reverse the urlPtr to the previous slash
+                 */
+                if(urlPtr != mPath) 
+                    urlPtr--; /* we must be going back at least one */
+                for(;*urlPtr != '/' && urlPtr != mPath; urlPtr--)
+                    ;  /* null body */
+        
+                /* forward the fwd_prt past the ../
+                 */
+                fwdPtr += 2;
+            }
+            else
+            {
+                /* copy the url incrementaly 
+                 */
+                *urlPtr++ = *fwdPtr;
+            }
+        }
+    
+        *urlPtr = '\0';  /* terminate the url */
+
+        // Now that we've resolved the relative URL, we need to reconstruct
+        // a URL spec from the components.
+        ReconstructSpec();
+    } else {
+        // absolute spec
+
+        PR_FREEIF(mSpec);
+        PRInt32 slen = specStr.Length();
+        mSpec = (char *) PR_Malloc(slen + 1);
+        specStr.ToCString(mSpec, slen+1);
+
+        // get protocol first
+        PRInt32 plen = cp - spec;
+        mScheme = (char*) PR_Malloc(plen + 1);
+        PL_strncpy(mScheme, spec, plen);
+        mScheme[plen] = 0;
+        cp++;                               // eat : in protocol
+
+        // skip over one, two or three slashes if it isn't about:
+        if (nsCRT::strcmp(mScheme, "about") != 0) {
+            if (*cp == '/') {
+                cp++;
+                if (*cp == '/') {
+                    cp++;
+                    if (*cp == '/') {
+                        cp++;
+                    }
+                }
+            } else {
+//                NS_UNLOCK_INSTANCE();
+                return NS_ERROR_ILLEGAL_VALUE;
+            }
+        }
+
+
+#if defined(XP_UNIX) || defined (XP_MAC)
+        // Always leave the top level slash for absolute file paths under Mac and UNIX.
+        // The code above sometimes results in stripping all of slashes
+        // off. This only happens when a previously stripped url is asked to be
+        // parsed again. Under Win32 this is not a problem since file urls begin
+        // with a drive letter not a slash. This problem show's itself when 
+        // nested documents such as iframes within iframes are parsed.
+
+        if (nsCRT::strcmp(mScheme, "file") == 0) {
+            if (*cp != '/') {
+                cp--;
+            }
+        }
+#endif /* XP_UNIX */
+
+        const char* cp0 = cp;
+        if ((nsCRT::strcmp(mScheme, "resource") == 0) ||
+            (nsCRT::strcmp(mScheme, "file") == 0) ||
+            (nsCRT::strcmp(mScheme, "about") == 0)) {
+            // resource/file url's do not have host names.
+            // The remainder of the string is the file name
+            PRInt32 flen = nsCRT::strlen(cp);
+            mPath = (char*) PR_Malloc(flen + 1);
+            PL_strcpy(mPath, cp);
+      
+#ifdef NS_WIN32
+            if (nsCRT::strcmp(mScheme, "file") == 0) {
+                // If the filename starts with a "x|" where is an single
+                // character then we assume it's a drive name and change the
+                // vertical bar back to a ":"
+                if ((flen >= 2) && (mPath[1] == '|')) {
+                    mPath[1] = ':';
+                }
+            }
+#endif /* NS_WIN32 */
+        } else {
+            // Host name follows protocol for http style urls
+            cp = PL_strpbrk(cp, "/:");
+      
+            if (nsnull == cp) {
+                // There is only a host name
+                PRInt32 hlen = nsCRT::strlen(cp0);
+                mHost = (char*) PR_Malloc(hlen + 1);
+                PL_strcpy(mHost, cp0);
+            }
+            else {
+                PRInt32 hlen = cp - cp0;
+                mHost = (char*) PR_Malloc(hlen + 1);
+                PL_strncpy(mHost, cp0, hlen); 
+                mHost[hlen] = 0;
+
+                if (':' == *cp) {
+                    // We have a port number
+                    cp0 = cp+1;
+                    cp = PL_strchr(cp, '/');
+                    mPort = strtol(cp0, (char **)nsnull, 10);
+                }
+            }
+
+            if (nsnull == cp) {
+                // There is no file name
+                // Set filename to "/"
+                mPath = (char*) PR_Malloc(2);
+                mPath[0] = '/';
+                mPath[1] = 0;
+            }
+            else {
+                // The rest is the file name
+                PRInt32 flen = nsCRT::strlen(cp);
+                mPath = (char*) PR_Malloc(flen + 1);
+                PL_strcpy(mPath, cp);
+            }
+        }
+    }
+
+    // printf("protocol='%s' host='%s' file='%s'\n", mScheme, mHost, mPath);
+
+//    NS_UNLOCK_INSTANCE();
     return NS_OK;
 }
-#endif // DEBUG
+
+void
+nsUrl::ReconstructSpec()
+{
+    PR_FREEIF(mSpec);
+
+    char portBuffer[10];
+    if (-1 != mPort) {
+        PR_snprintf(portBuffer, 10, ":%d", mPort);
+    }
+    else {
+        portBuffer[0] = '\0';
+    }
+
+    PRInt32 plen = PL_strlen(mScheme) + PL_strlen(mHost) +
+        PL_strlen(portBuffer) + PL_strlen(mPath) + 4;
+    if (mRef) {
+        plen += 1 + PL_strlen(mRef);
+    }
+    if (mQuery) {
+        plen += 1 + PL_strlen(mQuery);
+    }
+
+    mSpec = (char *) PR_Malloc(plen + 1);
+    if (PL_strcmp(mScheme, "about") == 0) {
+        PR_snprintf(mSpec, plen, "%s:%s", mScheme, mPath);
+    } else {
+        PR_snprintf(mSpec, plen, "%s://%s%s%s", 
+                    mScheme, ((nsnull != mHost) ? mHost : ""), portBuffer,
+                    mPath);
+    }
+
+    if (mRef) {
+        PL_strcat(mSpec, "#");
+        PL_strcat(mSpec, mRef);
+    }
+    if (mQuery) {
+        PL_strcat(mSpec, "?");
+        PL_strcat(mSpec, mQuery);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////

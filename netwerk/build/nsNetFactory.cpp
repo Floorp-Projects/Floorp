@@ -22,10 +22,12 @@
 #include "nsNetService.h"
 #include "nsFileTransportService.h"
 #include "nscore.h"
+#include "nsUrl.h"
 
 static NS_DEFINE_CID(kComponentManagerCID,      NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kNetServiceCID,            NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kFileTransportServiceCID,  NS_FILETRANSPORTSERVICE_CID);
+static NS_DEFINE_CID(kTypicalUrlCID,            NS_TYPICALURL_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -76,11 +78,10 @@ nsNetFactory::CreateInstance(nsISupports *aOuter,
     if (aResult == nsnull)
         return NS_ERROR_NULL_POINTER;
 
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
     nsISupports *inst = nsnull;
     if (mClassID.Equals(kNetServiceCID)) {
+        if (aOuter) return NS_ERROR_NO_AGGREGATION;
+
         nsNetService* net = new nsNetService();
         if (net == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
@@ -92,6 +93,8 @@ nsNetFactory::CreateInstance(nsISupports *aOuter,
         inst = net;
     }
     else if (mClassID.Equals(kFileTransportServiceCID)) {
+        if (aOuter) return NS_ERROR_NO_AGGREGATION;
+
         nsFileTransportService* trans = new nsFileTransportService();
         if (trans == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
@@ -101,6 +104,19 @@ nsNetFactory::CreateInstance(nsISupports *aOuter,
             return rv;
         }
         inst = trans;
+    }
+    else if (mClassID.Equals(kFileTransportServiceCID)) {
+        nsUrl* url = new nsUrl(aOuter);
+        if (url == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+#if 0
+        rv = url->Init();
+        if (NS_FAILED(rv)) {
+            delete url;
+            return rv;
+        }
+#endif
+        inst = url;
     }
     else {
         return NS_ERROR_NO_INTERFACE;

@@ -24,12 +24,11 @@ EXPORTS =                         \
         nsIConnectionGroup.h      \
         nsIFileTransportService.h \
         nsINetService.h           \
-        nsIProtocolInstance.h     \
+        nsIProtocolConnection.h   \
         nsIProtocolHandler.h      \
         nsIStreamListener.h       \
         nsITransport.h            \
-        nsIURL.h                  \
-        nsIURI.h                  \
+        nsIUrl.h                  \
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>

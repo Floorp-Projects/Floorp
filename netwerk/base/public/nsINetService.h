@@ -21,8 +21,8 @@
 
 #include "nsISupports.h"
 
-class nsIURL;
-class nsIProtocolInstance;
+class nsIUrl;
+class nsIProtocolConnection;
 class nsIConnectionGroup;
 class nsIProtocolHandler;
 
@@ -47,24 +47,40 @@ class nsINetService : public nsISupports
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_INETSERVICE_IID);
 
-    NS_IMETHOD GetProtocolHandler(nsIURL* url, nsIProtocolHandler* *result) = 0;
+    NS_IMETHOD GetProtocolHandler(const char* scheme,
+                                  nsIProtocolHandler* *result) = 0;
 
     NS_IMETHOD NewConnectionGroup(nsIConnectionGroup* *result) = 0;
 
-    NS_IMETHOD NewURL(nsIURL* *result, 
-                      const char* aSpec,
-                      const nsIURL* aBaseURL,
-                      nsISupports* aContainer) = 0;
+    /**
+     * Returns the absolute URL given a (possibly) relative spec, and 
+     * a base URL. Returns a string that must be freed with delete[].
+     */
+    NS_IMETHOD MakeAbsoluteUrl(const char* aSpec,
+                               nsIUrl* aBaseUrl,
+                               char* *result) = 0;
 
-    NS_IMETHOD Open(nsIURL* url, nsISupports* eventSink,
-                    nsIConnectionGroup* group,
-                    nsIProtocolInstance* *result) = 0;
+    /**
+     * This method constructs a new URL by first determining the scheme
+     * of the url spec, and then delegating the construction of the URL
+     * to the protocol handler for that scheme. QueryInterface can be used
+     * on the resulting URL object to obtain a more specific type of URL.
+     */
+    NS_IMETHOD NewUrl(nsIUrl* *result, 
+                      const char* aSpec,
+                      nsIUrl* aBaseUrl) = 0;
+
+    NS_IMETHOD NewConnection(nsIUrl* url,
+                             nsISupports* eventSink,
+                             nsIConnectionGroup* group,
+                             nsIProtocolConnection* *result) = 0;
 
     /**
      * @return NS_OK if there are active connections
      * @return NS_COMFALSE if there are not.
      */
     NS_IMETHOD HasActiveConnections() = 0;
+
 };
 
 #endif /* nsIINetService_h___ */
