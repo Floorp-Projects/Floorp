@@ -10,7 +10,7 @@
 <!ENTITY  size.select "Size">
 <!ENTITY  fontsFor.select "Fonts for:">
 <!ENTITY  serif.select  "Serif:">
-<!ENTITY  sans-serif.select  "Sans-Serif:">
+<!ENTITY  sans-serif.select  "Sans Serif:">
 <!ENTITY  monospace.select  "Monospace:">
 <!-- LOCALIZATION NOTE (fantasy.select): 'Fantasy' means 'Ornate' -->
 <!ENTITY  fantasy.select  "Fantasy:">
@@ -34,6 +34,10 @@
 <!ENTITY  size1.option "10">
 <!ENTITY  varFont.select "Variable Width Font:">
 <!ENTITY  fixedFont.Select "Fixed Width Font">
+<!-- default font type -->
+<!ENTITY  default.type.label "Default Type:">
+<!ENTITY  useDefaultFontSerif "Serif">
+<!ENTITY  useDefaultFontSansSerif "Sans Serif">
 <!-- LOCALIZATION NOTE (fixedFont.option): DONT_TRANSLATE -->
 <!ENTITY  fixedFont.option "Filler">
 <!ENTITY  header2 "When a webpage chooses its own fonts">

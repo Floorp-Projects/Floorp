@@ -191,6 +191,7 @@ function PREF_ParsePref( elementID, elementObject )
 
       case "int":
         dump("*** elementObject.elType = " + elementObject.elType + "\n");
+
         if( elementObject.elType.toLowerCase() == "radio" && !elementObject.value )
           return false; // ignore, go to next
         if( !elementObject.prefindex ) {
@@ -227,14 +228,28 @@ function PREF_ParsePref( elementID, elementObject )
           dump("*** empty string color pref was going to be set, but we're avoiding this just in the nick of time...\n");
           break;
         }
-        if( charPref != elementObject.value )   // do we care about whitespace? 
+        if( elementObject.elType.toLowerCase() == "radio") {
+            if  (!elementObject.value) {
+                return false; // ignore, go to next
+            }
+            else {
+                var prefvalue = elementObject.prefindex; // element object has prefindex attribute (e.g. radio buttons)
+            }
+        }
+        else {
+          var prefvalue = elementObject.value; // element object does not have a prefindex (e.g. select widgets)
+        }
+        
+        if( charPref != prefvalue )  { // do we care about whitespace? 
           try {
-            whp.SetUnicharPref( elementObject.prefstring, elementObject.value );  // string pref
+          whp.SetUnicharPref( elementObject.prefstring, prefvalue );  // string pref
           }
           catch (ex) {
-            dump("*** failure when calling SetCharPref: " + ex + "\n");
+            dump("*** failure when calling SetUnicharPref: " + ex + "\n");
           }
+        }
         break;
+      
       default:
         // TODO: insert implementation for other pref types;
         break;

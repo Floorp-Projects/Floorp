@@ -65,6 +65,14 @@
 					    <html:option value="ar">&font.langGroup.arabic;</html:option>
 					</html:select>						
 				  </html:td>
+		   </html:tr>
+
+		  <html:tr>
+          <html:td>&serif.select;</html:td>
+  			  <html:td>
+	  				<html:select class="Font" id="serif" pref="true" preftype="string" prefstring="">			   
+			    	</html:select>
+				  </html:td>
 				   <html:td>&varFont.select;</html:td>
 				  <html:td>
 				  
@@ -79,26 +87,17 @@
 					<html:option value="24" >24</html:option>
      				</html:select> 
 				  </html:td>
-		   </html:tr>
-
-		  <html:tr>
-          <html:td>&serif.select;</html:td>
-  			  <html:td>
-	  				<html:select class="Font" id="serif" pref="true" preftype="string">			   
-			    	</html:select>
-				  </html:td>
-				 
 			  </html:tr>
 			 
-	<!--	 <html:tr>
+		 <html:tr>
            <html:td>&sans-serif.select;</html:td>
   			  <html:td>
-	  				<html:select id="sans-serif" pref="true" preftype="string" prefstring="">			   
+	  				<html:select class="Font" id="sans-serif" pref="true" preftype="string" prefstring="">			   
 			    	</html:select>
 				  </html:td>
 			  </html:tr>
 
-		 <html:tr>
+	<!--	 <html:tr>
           <html:td>&cursive.select;</html:td>
   			  <html:td>
 	  				<html:select id="cursive" pref="true" preftype="string" prefstring="">			   
@@ -135,10 +134,32 @@
      				</html:select> 
 				  </html:td>
 			  </html:tr> 
+              <html:tr>
+                <html:td>
+                  <box align="vertical" flex="1">
+	                  <html:div class="vertical-gap">
+                      </html:div>
+                  </box>
+   	          	</html:td>
+	          </html:tr> 
+              <html:tr>
+       	              <html:td>
+                         <html:label>&default.type.label;</html:label>
+                      </html:td>
+       	              <html:td>
+                              <html:input name="DefaultFontRadio" type="radio" id="DefaultFontSerif" pref="true" prefindex="serif" preftype="string" prefstring="font.default"/>
+    		                  <html:label for="DefaultFontSerif" accesskey="t" tabindex="0">
+                               &useDefaultFontSerif;
+       		                  </html:label>
+                  	          <html:input name="DefaultFontRadio" type="radio" id="DefaultFontSansSerif" pref="true" prefindex="sans-serif" preftype="string" prefstring="font.default"/>
+    		                  <html:label for="DefaultFontSansSerif" accesskey="t" tabindex="0">
+    	    	               &useDefaultFontSansSerif;
+    		                  </html:label> 
+                      </html:td>
+    	      </html:tr>  
 			</html:table>  
 			</html:div>
     </titledbox>	
-    
     <!-- fonts with webpages -->
     <titledbox  orient="vertical">
       <title><text value="&header2;"/></title>
@@ -157,6 +178,4 @@
     		</html:label> 
     	</html:div>	
 		</titledbox>
-
-
 </window>
