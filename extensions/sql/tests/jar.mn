@@ -1,6 +1,0 @@
-sql.jar:
-    content/sql/test/test.xul				(test.xul)
-    content/sql/test/test.js				(test.js)
-    content/sql/test/test.css				(test.css)
-    content/sql/test/testDialog.xul			(testDialog.xul)
-    content/sql/test/testDialog.js			(testDialog.js)
