@@ -846,6 +846,17 @@ nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext,
     // Remove the left edge, since we won't be drawing it.
     aResult->left = 0;
 
+  if (aFrame && aWidgetType == NS_THEME_TEXTFIELD) {
+    nsCOMPtr<nsIContent> content;
+    aFrame->GetContent(getter_AddRefs(content));
+    if (content && content->IsContentOfType(nsIContent::eHTML)) {
+      // We need to pad textfields by 1 pixel, since the caret will draw
+      // flush against the edge by default if we don't.
+      aResult->left++;
+      aResult->right++;
+    }
+  }
+
   return NS_OK;
 }
 
@@ -1020,7 +1031,7 @@ nsNativeThemeWin::ThemeSupportsWidget(nsIPresContext* aPresContext,
     return PR_FALSE;
   
   // Check for specific widgets to see if HTML has overridden the style.
-  if (aFrame && aWidgetType == NS_THEME_BUTTON || aWidgetType == NS_THEME_TEXTFIELD) {
+  if (aFrame && (aWidgetType == NS_THEME_BUTTON || aWidgetType == NS_THEME_TEXTFIELD)) {
     nsCOMPtr<nsIContent> content;
     aFrame->GetContent(getter_AddRefs(content));
     if (content->IsContentOfType(nsIContent::eHTML)) {
