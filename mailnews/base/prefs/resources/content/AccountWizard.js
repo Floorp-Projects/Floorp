@@ -184,6 +184,7 @@ function onFinish() {
         dump("wizardContents[" + i + "] = " + wizardContents[i] + "\n");
     }
     createAccount(wizardContents);
+    window.close();
 }
 
 function createAccount(hash) {
@@ -210,6 +211,6 @@ function createAccount(hash) {
         else if (type == "server")
             server[slot] = hash[i];
     }
-
+    return true;
 }
 
