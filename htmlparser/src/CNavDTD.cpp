@@ -868,7 +868,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     //tagset1 has 65 members...
   static char  gTagSet1[]={ 
     eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_address,   eHTMLTag_applet,
-    eHTMLTag_bold,      eHTMLTag_basefont,  eHTMLTag_bdo,       eHTMLTag_big,
+    eHTMLTag_blink,     eHTMLTag_bold,      eHTMLTag_basefont,  eHTMLTag_bdo,
+    eHTMLTag_big,
     eHTMLTag_blockquote,eHTMLTag_br,        eHTMLTag_button,    eHTMLTag_center,
     eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,       eHTMLTag_dir,
     eHTMLTag_div,       eHTMLTag_dl,        eHTMLTag_em,        eHTMLTag_fieldset,
@@ -892,7 +893,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
 
     //tagset2 has 44 members...
   static char  gTagSet2[]={ 
-    eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_bold,
+    eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_blink,
+    eHTMLTag_bold,
     eHTMLTag_basefont,  eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,
     eHTMLTag_button,    eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,
     eHTMLTag_div,       eHTMLTag_em,        eHTMLTag_font,      eHTMLTag_hr,        
@@ -910,7 +912,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
 
     //tagset3 has 57 members...
   static char  gTagSet3[]={ 
-    eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_bold,
+    eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_blink,
+    eHTMLTag_bold,
     eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,        eHTMLTag_blockquote,
     eHTMLTag_body,      eHTMLTag_caption,   eHTMLTag_center,    eHTMLTag_cite,
     eHTMLTag_code,      eHTMLTag_dd,        eHTMLTag_del,       eHTMLTag_dfn,        
