@@ -55,6 +55,9 @@ DIRS		+= qt
 endif
 
 else
+ifdef MOZ_ENABLE_GTK
+DIRS		+= gtksuperwin
+endif
 DIRS		+= $(MOZ_WIDGET_TOOLKIT)
 endif
 
