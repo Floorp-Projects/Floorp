@@ -57,6 +57,9 @@ use File::Basename;
 use Time::Local;
 
 # Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
+
 use TinderDB::BasicTxtDB;
 use Utils;
 use HTMLPopUp;
@@ -64,7 +67,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.2 $ )[1];
+$VERSION = ( qw $Revision: 1.3 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 

@@ -31,11 +31,14 @@ package TinderDB::Time;
 # Load standard perl libraries
 
 # Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
+
 use VCDisplay;
 
 
 
-$VERSION = ( qw $Revision: 1.1 $ )[1];
+$VERSION = ( qw $Revision: 1.2 $ )[1];
 
 # Add an empty object, of this DB subclass, to end of the set of all
 # HTML columns.  This registers the subclass with TinderDB and defines

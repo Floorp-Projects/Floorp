@@ -69,11 +69,14 @@ use File::Basename;
 
 
 # Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
+
 use Utils;
 use HTMLPopUp;
 use TinderDB::BasicTxtDB;
 
-$VERSION = ( qw $Revision: 1.4 $ )[1];
+$VERSION = ( qw $Revision: 1.5 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
