@@ -684,14 +684,13 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         rv = aURI->Clone(getter_AddRefs(chromeURI));        // don't mangle the original
         if (NS_FAILED(rv)) return rv;
 
-        char* spec;
-        rv = reg->ConvertChromeURL(chromeURI, &spec);
+        nsXPIDLCString spec;
+        rv = reg->ConvertChromeURL(chromeURI, getter_Copies(spec));
         if (NS_FAILED(rv)) return rv;
 
         NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
         nsCOMPtr<nsIProtocolHandler> protocolHandler;
         serv->NewURI(spec, nsnull, getter_AddRefs(chromeURI));
-        nsAllocator::Free(spec);
         
         // now fetch the converted URI
         if (NS_FAILED(rv)) return rv;
