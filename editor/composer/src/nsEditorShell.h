@@ -32,7 +32,7 @@
 
 #include "nsIEditorShell.h"
 #include "nsIEditorController.h"
-#include "nsIDocumentLoaderObserver.h"
+#include "nsIWebProgressListener.h"
 #include "nsISelectionListener.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIPrompt.h"
@@ -77,7 +77,7 @@ class nsIStyleSheet;
 
 class nsEditorShell :   public nsIEditorShell,
                         public nsIEditorSpellCheck,
-                        public nsIDocumentLoaderObserver,
+                        public nsIWebProgressListener,
                         public nsIURIContentListener
 {
   public:
@@ -97,8 +97,8 @@ class nsEditorShell :   public nsIEditorShell,
     /* Declare all methods in the nsIEditorSpellCheck interface */
     NS_DECL_NSIEDITORSPELLCHECK
 
-    // nsIDocumentLoaderObserver
-    NS_DECL_NSIDOCUMENTLOADEROBSERVER
+    // nsIWebProgressListener
+    NS_DECL_NSIWEBPROGRESSLISTENER
 
     // nsIURIContentListener
     NS_DECL_NSIURICONTENTLISTENER
@@ -124,7 +124,7 @@ class nsEditorShell :   public nsIEditorShell,
     // a(nother) document.
     nsresult        ResetEditingState();
     nsresult        InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
-    nsresult        PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUrl);
+    nsresult        PrepareDocumentForEditing(nsIDOMWindow* aDOMWindow, nsIURI *aUrl);
     nsresult        ScrollSelectionIntoView();
     nsresult        TransferDocumentStateListeners();
     nsresult        RemoveOneProperty(const nsString& aProp, const nsString& aAttr);
@@ -154,10 +154,22 @@ class nsEditorShell :   public nsIEditorShell,
     // Uses "(Untitled)" for empty title
     nsresult        UpdateWindowTitle();
 
-    // does the document being loaded contain subframes?
-    nsresult        DocumentContainsFrames(nsIDocumentLoader* aLoader, PRBool& outHasFrames);
-    // is the document being loaded the root of a frameset, or a non-frameset doc?
-    nsresult        DocumentIsRootDoc(nsIDocumentLoader* aLoader, PRBool& outIsRoot);
+    // Helper method which is called at the beginning of a new page load
+    nsresult        StartPageLoad();
+
+    // Helper method which is called when an entire page load finishes
+    nsresult        EndPageLoad(nsIDOMWindow *aDOMWindow,
+                                nsIChannel *aChannel,
+                                nsresult aStatus);
+
+    // helper method which is called each time a document (or frame) starts
+    // to load.
+    nsresult        StartDocumentLoad(nsIDOMWindow *aDOMWindow);
+    // helper methods which is called each time a document (or frame) finishes
+    // loading.
+    nsresult        EndDocumentLoad(nsIDOMWindow *aDOMWindow,
+                                    nsIChannel *aChannel,
+                                    nsresult aStatus);
 
     // Check a preference and call NormalizeTable if pref is true
     // Use after deleting or inserting table cells to automatically 

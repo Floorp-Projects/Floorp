@@ -106,8 +106,8 @@
 #include "nsString.h"
 #include "nsIDOMText.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMDocument.h"
-#include "nsIDocumentLoader.h"
+#include "nsIDOMWindowCollection.h"
+#include "nsIWebProgress.h"
 
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
@@ -276,7 +276,7 @@ nsEditorShell::~nsEditorShell()
   // care of themselves.
 }
 
-NS_IMPL_ISUPPORTS4(nsEditorShell, nsIEditorShell, nsIDocumentLoaderObserver, nsIURIContentListener, nsIEditorSpellCheck);
+NS_IMPL_ISUPPORTS4(nsEditorShell, nsIEditorShell, nsIWebProgressListener, nsIURIContentListener, nsIEditorSpellCheck);
 
 NS_IMETHODIMP    
 nsEditorShell::Init()
@@ -324,6 +324,15 @@ nsEditorShell::Shutdown()
   if (mDocShell)
     mDocShell->SetParentURIContentListener(nsnull);
 
+  // Remove our WebProgress listener...
+  nsCOMPtr<nsIWebProgress> webProgress;
+  if (mContentAreaDocShell) {
+    webProgress = do_GetInterface(mContentAreaDocShell);
+    if (webProgress) {
+      (void) webProgress->RemoveProgressListener(this);
+    }
+  }
+
   // Remove our document mouse event listener
   if (mMouseListenerP)
   {
@@ -339,6 +348,7 @@ nsEditorShell::Shutdown()
       else rv = NS_ERROR_NULL_POINTER;
     }
   }
+
   return rv;
 }
 
@@ -428,31 +438,34 @@ nsEditorShell::ResetEditingState()
 }
 
 nsresult    
-nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUrl)
+nsEditorShell::PrepareDocumentForEditing(nsIDOMWindow* aDOMWindow, nsIURI *aUrl)
 {
   if (!mContentAreaDocShell || !mContentWindow)
     return NS_ERROR_NOT_INITIALIZED;
 
   NS_ASSERTION(!mEditor, "Should never have an editor here");
 
-  // get the webshell for this loader. Need this, not mContentAreaDocShell, in
+  // get the docshell for this DOM Window. Need this, not mContentAreaDocShell, in
   // case we are editing a frameset
-  nsCOMPtr<nsISupports> loaderContainer;
-  aLoader->GetContainer(getter_AddRefs(loaderContainer));
-  nsCOMPtr<nsIDocShell> containerAsDocShell = do_QueryInterface(loaderContainer);
-  if (!containerAsDocShell)
+  nsCOMPtr<nsIScriptGlobalObject> scriptObject(do_QueryInterface(aDOMWindow));
+  nsCOMPtr<nsIDocShell> docshell;
+
+  if (scriptObject) {
+    scriptObject->GetDocShell(getter_AddRefs(docshell));
+  }
+  if (!docshell)
   {
-    NS_ASSERTION(0, "Failed to get loader container as web shell");
+    NS_ASSERTION(0, "Failed to get docShell from DOMWindow");
     return NS_ERROR_UNEXPECTED;
   }
   
   // turn off animated GIFs
   nsCOMPtr<nsIPresContext> presContext;
-  containerAsDocShell->GetPresContext(getter_AddRefs(presContext));
+  docshell->GetPresContext(getter_AddRefs(presContext));
   if (presContext)
     presContext->SetImageAnimationMode(eImageAnimation_None);
 
-  nsresult rv = DoEditorMode(containerAsDocShell);
+  nsresult rv = DoEditorMode(docshell);
   if (NS_FAILED(rv)) return rv;
   
   // transfer the doc state listeners to the editor
@@ -724,9 +737,23 @@ nsEditorShell::SetContentWindow(nsIDOMWindowInternal* aWin)
   if (!docShell)
     return NS_ERROR_FAILURE;
     
-  mContentAreaDocShell = docShell;      // dont AddRef
-  rv = docShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
+  // Remove the WebProgress listener from the old docshell (if any...)
+  nsCOMPtr<nsIWebProgress> webProgress;
+  if (mContentAreaDocShell) {
+    webProgress = do_GetInterface(mContentAreaDocShell, &rv);
+    if (webProgress) {
+      (void) webProgress->RemoveProgressListener(this);
+    }
+  }
+
+  // Attach a WebProgress listener to the new docShell
+  webProgress = do_GetInterface(docShell, &rv);
+  if (webProgress) {
+    rv = webProgress->AddProgressListener(this);
+  }
   if (NS_FAILED(rv)) return rv;
+
+  mContentAreaDocShell = docShell;      // dont AddRef
     
   // we make two controllers
   nsCOMPtr<nsIControllers> controllers;      
@@ -5045,29 +5072,135 @@ nsEditorShell::StopLogging()
 #pragma mark -
 #endif
 
-// nsIDocumentLoaderObserver methods
+//----------------------------------------
+// nsIWebProgessListener implementation
+//----------------------------------------
 NS_IMETHODIMP
-nsEditorShell::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand)
+nsEditorShell::OnProgressChange(nsIWebProgress *aProgress,
+                                nsIRequest *aRequest,
+                                PRInt32 aCurSelfProgress,
+                                PRInt32 aMaxSelfProgress,
+                                PRInt32 aCurTotalProgress,
+                                PRInt32 aMaxTotalProgress)
+{
+  if (mParserObserver)
+  {
+    PRBool cancelEdit;
+    mParserObserver->GetBadTagFound(&cancelEdit);
+    if (cancelEdit)
+    {
+      /*
+      nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(mWebShell);
+      if (docShell)
+        docShell->StopLoad();
+      */
+      mParserObserver->End();
+      NS_RELEASE(mParserObserver);
+
+      if (mDocShell) 
+      {
+        // where do we pop up a dialog telling the user they can't edit this doc?
+        // this next call will close the window, but do we want to do that?  or tell the .js UI to do it?
+        mCloseWindowWhenLoaded = PR_TRUE;
+        mCantEditReason = eCantEditFramesets;
+      }
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditorShell::OnStateChange(nsIWebProgress *aProgress,
+                             nsIRequest *aRequest,
+                             PRInt32 aStateFlags,
+                             nsresult aStatus)
+{
+  //
+  // A Request has started...
+  //
+  if (aStateFlags & nsIWebProgressListener::STATE_START)
+  {
+    // Page level notification...
+    if (aStateFlags & nsIWebProgressListener::STATE_IS_NETWORK)
+    {
+      StartPageLoad();
+    }
+    // Document level notification...
+    if (aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT)
+    {
+      nsCOMPtr<nsIDOMWindow> domWindow;
+
+      // Get the DOMWindow where the state change occurred...
+      aProgress->GetDOMWindow(getter_AddRefs(domWindow));
+      if (domWindow)
+      {
+        (void) StartDocumentLoad(domWindow);
+      }
+    }
+  }
+  //
+  // A network or document Request as finished...
+  //
+  else if ((aStateFlags & nsIWebProgressListener::STATE_STOP) &&
+          ((aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT) ||
+           (aStateFlags & nsIWebProgressListener::STATE_IS_NETWORK)))
+  {
+    nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+    nsCOMPtr<nsIDOMWindow> domWindow;
+
+    // Get the DOMWindow where the state change occurred...
+    aProgress->GetDOMWindow(getter_AddRefs(domWindow));
+
+    if (domWindow)
+    {
+      // Document level notification...
+      if (aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT)
+      {
+        (void) EndDocumentLoad(domWindow, channel, aStatus);
+      }
+      // Page level notification...
+      if (aStateFlags & nsIWebProgressListener::STATE_IS_NETWORK)
+      {
+        (void) EndPageLoad(domWindow, channel, aStatus);
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditorShell::OnLocationChange(nsIWebProgress *aProgress,
+                                nsIRequest *aRequest,
+                                nsIURI *aURI)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsEditorShell::OnStatusChange(nsIWebProgress* aWebProgress,
+                              nsIRequest* aRequest,
+                              nsresult aStatus,
+                              const PRUnichar* aMessage)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditorShell::OnSecurityChange(nsIWebProgress *aWebProgress,
+                                nsIRequest *aRequest,
+                                PRInt32 state)
+{
+  return NS_OK;
+}
+
+nsresult nsEditorShell::StartPageLoad()
 {
   // Start the throbber
   // TODO: We should also start/stop it for saving and publishing?
-  SetChromeAttribute( mDocShell, "Editor:Throbber", "busy", NS_ConvertASCIItoUCS2("true") );
+  SetChromeAttribute( mDocShell, "Editor:Throbber", "busy", 
+                      NS_ConvertASCIItoUCS2("true") );
 
-  // Disable JavaScript in this document:
-  nsCOMPtr<nsIScriptGlobalObjectOwner> sgoo (do_QueryInterface(mContentAreaDocShell));
-  if (sgoo)
-  {
-    nsCOMPtr<nsIScriptGlobalObject> sgo;
-    sgoo->GetScriptGlobalObject(getter_AddRefs(sgo));
-    if (sgo)
-    {
-      nsCOMPtr<nsIScriptContext> scriptContext;
-      sgo->GetContext(getter_AddRefs(scriptContext));
-      if (scriptContext)
-        scriptContext->SetScriptsEnabled(PR_FALSE);
-    }
-  }
-  
   // set up a parser observer
   if (!mParserObserver)
   {
@@ -5083,64 +5216,28 @@ nsEditorShell::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, cons
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* aChannel, nsresult aStatus)
+// Called when the entire document, including any sub-documents (ie. frames)
+// have been loaded...
+nsresult nsEditorShell::EndPageLoad(nsIDOMWindow *aDOMWindow,
+                                    nsIChannel *aChannel,
+                                    nsresult aStatus)
 {
-  // for pages with charsets, this gets called the first time with a 
-  // non-zero status value. Don't prepare the editor that time.
-  // aStatus will be NS_BINDING_ABORTED then.
-	if (aStatus == NS_BINDING_ABORTED)
-	  return NS_OK;
-	
-	// note that we continue with other non-success status codes.
-	
-  // Disable meta-refresh
-  nsCOMPtr<nsIRefreshURI> refreshURI = do_QueryInterface(mContentAreaDocShell);
-  if (refreshURI)
-    refreshURI->CancelRefreshURITimers();
-
-  // can we handle this document?
+  // Make sure the ParserObserver is active through any frameset loads?
   if (mParserObserver)
   {
-    mParserObserver->End();     // how do we know if this is the last call?
-    PRBool cancelEdit;
-    mParserObserver->GetBadTagFound(&cancelEdit);
-    if (cancelEdit)
-    {
-      NS_RELEASE(mParserObserver);
-      if (mDocShell)
-      {
-        // where do we pop up a dialog telling the user they can't edit this doc?
-        // this next call will close the window, but do we want to do that?  or tell the .js UI to do it?
-        mCloseWindowWhenLoaded = PR_TRUE;
-        mCantEditReason = eCantEditFramesets;
-      }
-    }
+    mParserObserver->End();
+    NS_RELEASE(mParserObserver);
   }
-  
-  // Is this a MIME type we can handle?
-  if (aChannel)
-  {
-    char  *contentType;
-    aChannel->GetContentType(&contentType);
-    if (contentType)
-    {
-      if ( (strcmp(contentType, "text/html") != 0) &&
-           (strcmp(contentType, "text/plain") != 0))
-      {
-        mCloseWindowWhenLoaded = PR_TRUE;
-        mCantEditReason = eCantEditMimeType;
-      }
-  
-      nsMemory::Free(contentType);
-    }
-  }
-  
-  PRBool isRootDoc;
-  nsresult res = DocumentIsRootDoc(aLoader, isRootDoc);
-  if (NS_FAILED(res)) return res;
-  
-  if (mCloseWindowWhenLoaded && isRootDoc)
+
+  SetChromeAttribute( mDocShell, "Editor:Throbber", "busy", 
+                      NS_ConvertASCIItoUCS2("false") );
+
+  nsAutoString doneText;
+  GetBundleString(NS_LITERAL_STRING("LoadingDone"), doneText);
+  SetChromeAttribute(mDocShell, "statusText", "value", doneText);
+
+  // Display an Alert dialog if the page cannot be edited...
+  if (mCloseWindowWhenLoaded)
   {
     nsAutoString alertLabel, alertMessage;
     GetBundleString(NS_LITERAL_STRING("Alert"), alertLabel);
@@ -5172,133 +5269,87 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* aChanne
 
     return NS_ERROR_ABORT;
   }
-
-  // if we're loading a frameset document (which we can't edit yet), don't make an editor.
-  // Only make an editor for child documents.
-  PRBool docHasFrames;
-  if (NS_SUCCEEDED(DocumentContainsFrames(aLoader, docHasFrames)) && !docHasFrames)
+  //
+  // By this time, we know that the page did not contain any frames
+  // (since mCloseWindowWhenLoaded was PR_FALSE)...  So, make an
+  // editor (assuming that the load succeeded)...
+  //
+  // for pages with charsets, this gets called the first time with a 
+  // non-zero status value. Don't prepare the editor that time.
+  // aStatus will be NS_BINDING_ABORTED then.
+  //
+  if (NS_SUCCEEDED(aStatus))
   {
-    nsCOMPtr<nsIURI>  aUrl;
-    aChannel->GetURI(getter_AddRefs(aUrl));
-    res = PrepareDocumentForEditing(aLoader, aUrl);
-    SetChromeAttribute( mDocShell, "Editor:Throbber", "busy", NS_ConvertASCIItoUCS2("false") );
+    nsCOMPtr<nsIURI>  url;
+    aChannel->GetURI(getter_AddRefs(url));
+    (void) PrepareDocumentForEditing(aDOMWindow, url);
   }
-
-  nsAutoString doneText;
-  GetBundleString(NS_LITERAL_STRING("LoadingDone"), doneText);
-  SetChromeAttribute(mDocShell, "statusText", "value", doneText);
-
-  return res;
+  
+  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsEditorShell::OnStartURLLoad(nsIDocumentLoader* loader,
-                              nsIChannel* channel)
+// Called when each new document, or sub-document (ie. frame) starts to
+// load.
+nsresult nsEditorShell::StartDocumentLoad(nsIDOMWindow *aDOMWindow)
 {
-   return NS_OK;
-}
+  // Disable JavaScript in this document:
+  nsCOMPtr<nsIScriptGlobalObject> sgo (do_QueryInterface(aDOMWindow));
 
-NS_IMETHODIMP
-nsEditorShell::OnProgressURLLoad(nsIDocumentLoader* aLoader,
-                                    nsIChannel* channel, PRUint32 aProgress, 
-                                    PRUint32 aProgressMax)
-{
-  if (mParserObserver)
+  if (sgo)
   {
-    PRBool cancelEdit;
-    mParserObserver->GetBadTagFound(&cancelEdit);
-    if (cancelEdit)
-    {
-      /*
-      nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(mWebShell);
-      if (docShell)
-        docShell->StopLoad();
-      */
-      
-      mParserObserver->End();
-      NS_RELEASE(mParserObserver);
+    nsCOMPtr<nsIScriptContext> scriptContext;
+    sgo->GetContext(getter_AddRefs(scriptContext));
+    if (scriptContext)
+      scriptContext->SetScriptsEnabled(PR_FALSE);
+  }
+  
+  return NS_OK;
+}
 
-      if (mDocShell) 
+// Called when each document, or sub-document (ie. frame) has finished
+// loading...
+nsresult nsEditorShell::EndDocumentLoad(nsIDOMWindow *aDOMWindow,
+                                        nsIChannel* aChannel,
+                                        nsresult aStatus)
+{
+  // for pages with charsets, this gets called the first time with a 
+  // non-zero status value. Don't prepare the editor that time.
+  // aStatus will be NS_BINDING_ABORTED then.
+  if (aStatus == NS_BINDING_ABORTED)
+    return NS_OK;
+
+  // note that we continue with other non-success status codes.
+	
+  // Disable meta-refresh
+  nsCOMPtr<nsIRefreshURI> refreshURI = do_QueryInterface(mContentAreaDocShell);
+  if (refreshURI)
+    refreshURI->CancelRefreshURITimers();
+
+  // Is this a MIME type we can handle?
+  if (aChannel)
+  {
+    char  *contentType;
+    aChannel->GetContentType(&contentType);
+    if (contentType)
+    {
+      if ( (nsCRT::strcmp(contentType, "text/html") != 0) &&
+           (nsCRT::strcmp(contentType, "text/plain") != 0))
       {
-        // where do we pop up a dialog telling the user they can't edit this doc?
-        // this next call will close the window, but do we want to do that?  or tell the .js UI to do it?
         mCloseWindowWhenLoaded = PR_TRUE;
-        mCantEditReason = eCantEditFramesets;
+        mCantEditReason = eCantEditMimeType;
       }
+  
+      nsMemory::Free(contentType);
     }
   }
+  
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsEditorShell::OnStatusURLLoad(nsIDocumentLoader* loader,
-                                  nsIChannel* channel, nsString& aMsg)
-{
-
-  SetChromeAttribute(mDocShell, "statusText", "value", aMsg);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsEditorShell::OnEndURLLoad(nsIDocumentLoader* loader,
-                               nsIChannel* channel, nsresult aStatus)
-{
-   return NS_OK;
-}
 
 #ifdef XP_MAC
 #pragma mark -
 #endif
-
-// does the document being loaded contain subframes?
-nsresult
-nsEditorShell::DocumentContainsFrames(nsIDocumentLoader* aLoader, PRBool& outHasFrames)
-{
-  nsresult rv;
-  
-  outHasFrames = PR_FALSE;
-  
-  nsCOMPtr<nsISupports> container;
-  aLoader->GetContainer(getter_AddRefs(container));
-  nsCOMPtr<nsIDocShellTreeNode> docShellAsNode = do_QueryInterface(container, &rv);
-  if (NS_FAILED(rv)) return rv;
-  if (!docShellAsNode)
-    return NS_ERROR_UNEXPECTED;
-
-  PRInt32 numChildren;
-  rv = docShellAsNode->GetChildCount(&numChildren);
-  if (NS_FAILED(rv)) return rv;
-  
-  outHasFrames = (numChildren != 0);
-
-  return NS_OK;
-}
-
-// is the document being loaded the root of a frameset, or a non-frameset doc?
-nsresult
-nsEditorShell::DocumentIsRootDoc(nsIDocumentLoader* aLoader, PRBool& outIsRoot)
-{
-  nsresult rv;
-  
-  outIsRoot = PR_TRUE;
-  
-  nsCOMPtr<nsISupports> container;
-  aLoader->GetContainer(getter_AddRefs(container));
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsTreeItem = do_QueryInterface(container, &rv);
-  if (NS_FAILED(rv)) return rv;
-  if (!docShellAsTreeItem)
-    return NS_ERROR_UNEXPECTED;
-
-  nsCOMPtr<nsIDocShellTreeItem> rootItem;
-  rv = docShellAsTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(rootItem));
-  if (NS_FAILED(rv)) return rv;
-  if (!rootItem)
-    return NS_ERROR_UNEXPECTED;
-  
-  outIsRoot = (rootItem.get() == docShellAsTreeItem.get());
-  return NS_OK;
-}
 
 nsresult
 nsEditorShell::CheckPrefAndNormalizeTable()
