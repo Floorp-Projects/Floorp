@@ -1104,6 +1104,7 @@ layout/html/style/src/Makefile
 layout/html/table/Makefile
 layout/html/table/src/Makefile
 layout/html/tests/Makefile
+layout/tools/Makefile
 layout/xml/Makefile
 layout/xml/content/Makefile
 layout/xml/content/public/Makefile
@@ -1112,9 +1113,10 @@ layout/xml/document/Makefile
 layout/xml/document/public/Makefile
 layout/xml/document/src/Makefile
 layout/xul/Makefile
+layout/xul/base/Makefile
+layout/xul/base/src/Makefile
 layout/xul/content/Makefile
 layout/xul/content/src/Makefile
-layout/tools/Makefile
 lib/liblayer/Makefile
 lib/liblayer/include/Makefile
 lib/liblayer/src/Makefile
