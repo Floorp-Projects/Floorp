@@ -65,8 +65,7 @@ nsMailDatabase::nsMailDatabase()
 
 nsMailDatabase::~nsMailDatabase()
 {
-  if(m_folderSpec)
-    delete m_folderSpec;
+  delete m_folderSpec;
 }
 
 NS_IMETHODIMP nsMailDatabase::SetFolderStream(nsIOFileStream *aFileStream)
@@ -91,6 +90,9 @@ void nsMailDatabase::GetGlobalPrefs()
   }
 }
 
+// caller passes in upgrading==PR_TRUE if they want back a db even if the db is out of date.
+// If so, they'll extract out the interesting info from the db, close it, delete it, and
+// then try to open the db again, prior to reparsing.
 NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB)
 {
   nsMailDatabase	*mailDB;
@@ -148,9 +150,7 @@ NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, PRBo
     else
     {
       // if opening existing file, make sure summary file is up to date.
-      // if caller is upgrading, don't return NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE so the caller
-      // can pull out the transfer info for the new db.
-      if (!newFile && summaryFileExists && !upgrading)
+      if (!newFile && summaryFileExists)
       {
         PRBool valid;
         mailDB->GetSummaryValid(&valid);
@@ -159,7 +159,7 @@ NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, PRBo
       }
       NS_RELEASE(folderInfo);
     }
-    if (err != NS_OK)
+    if (NS_FAILED(err) && !upgrading)
       deleteInvalidDB = PR_TRUE;
   }
   else
@@ -185,12 +185,12 @@ NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, PRBo
     {					// leave db around and open so caller can upgrade it.
       err = NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
     }
-    else if (err != NS_OK)
+    else if (err != NS_OK && deleteInvalidDB)
     {
       NS_IF_RELEASE(mailDB);
     }
   }
-  if (err == NS_OK || err == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
+  if (err == NS_OK || !deleteInvalidDB)
   {
     *pMessageDB = mailDB;
     if (mailDB)

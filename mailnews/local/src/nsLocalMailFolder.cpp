@@ -230,6 +230,8 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
     nsMsgGetNativePathString(leafName, currentFolderNameStr);
     PR_Free(leafName);
 
+    // here we should handle the case where the current file is a .sbd directory w/o
+    // a matching folder file, or a directory w/o the name .sbd
     if (nsShouldIgnoreFile(currentFolderNameStr))
       continue;
 
@@ -590,7 +592,7 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
     rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(mailDBFactory));
     if (NS_SUCCEEDED(rv) && mailDBFactory)
     {
-      folderOpen = mailDBFactory->OpenFolderDB(this, PR_TRUE, PR_FALSE, getter_AddRefs(mDatabase));
+      folderOpen = mailDBFactory->OpenFolderDB(this, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase));
       if(NS_FAILED(folderOpen) &&
         folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING )
       {
@@ -607,11 +609,23 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
           }
           dbFolderInfo = nsnull;
         }
+        if (mDatabase)
+        {
+          dbFolderInfo = nsnull;
+          mDatabase->ForceClosed();
+        }
+        mDatabase = nsnull;
+      
+        nsFileSpec dbName;
+        rv = pathSpec->GetFileSpec(&dbName);
+        NS_ENSURE_SUCCESS(rv, rv);
+        nsLocalFolderSummarySpec  summarySpec(dbName);
+        // Remove summary file.
+        summarySpec.Delete(PR_FALSE);
+      
         // if it's out of date then reopen with upgrade.
         if(NS_FAILED(rv = mailDBFactory->OpenFolderDB(this, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase))))
-        {
           return rv;
-        }
         else if (transferInfo && mDatabase)
            SetDBTransferInfo(transferInfo);
       }
