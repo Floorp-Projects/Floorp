@@ -698,8 +698,11 @@ nsHttpChannel::ProcessResponse()
     gHttpHandler->OnExamineResponse(this);
 
     // handle unused username and password in url (see bug 232567)
-    if (httpStatus != 401 && httpStatus != 407)
+    if (httpStatus != 401 && httpStatus != 407) {
         CheckForSuperfluousAuth();
+        if (mCanceled)
+            return CallOnStartRequest();
+    }
 
     // handle different server response categories.  Note that we handle
     // caching or not caching of error pages in
