@@ -35,6 +35,7 @@
 
 const NS_XHTML   = "http://www.w3.org/1999/xhtml";
 
+/*
 const HTML_BR    = "html:br";
 const HTML_IMG   = "html:img";
 const HTML_SPAN  = "html:span";
@@ -43,4 +44,96 @@ const HTML_TBODY = "html:tbody";
 const HTML_TD    = "html:td";
 const HTML_TH    = "html:th";
 const HTML_TR    = "html:tr";
+*/
+
+function HTML (tagName, attribs, args)
+{
+    var elem = document.createElementNS (NS_XHTML, tagName);    
+
+    if (typeof attribs == "string")
+        elem.setAttribute ("class", attribs);
+    else if (attribs && typeof attribs == "object")
+        for (var p in attribs)
+            elem.setAttribute (p, attribs[p]);
+    
+    var start = 0;
+    
+    if (args)
+    {
+        if (!(args instanceof Array))
+            args = [args];
+        else if (arguments.length > 3)
+        {
+            start = 2; args = arguments;
+        }
+
+        for (var i = start; i < args.length; ++i)
+            if (typeof args[i] == "string")
+                elem.appendChild (document.createTextNode(args[i]));
+            else if (args[i])
+                elem.appendChild (args[i]);
+        
+    }
+    
+    return elem;
+}
+
+function htmlA(attribs, href, contents)
+{
+    if (typeof contents == "undefined")
+        contents = href;
+    
+    var a = HTML("html:a", attribs, contents);
+    a.setAttribute ("href", href);
+
+    return a;
+}
+    
+function htmlBR(attribs)
+{
+    return HTML("html:br", attribs, argumentsAsArray(arguments, 1));
+}
+
+function htmlImg(attribs, src)
+{
+    var img = HTML("html:img", attribs, argumentsAsArray(arguments, 2));
+    if (src)
+        img.setAttribute ("src", src);
+    return img;
+}
+
+function htmlSpan(attribs)
+{
+    return HTML("html:span", attribs, argumentsAsArray(arguments, 1));
+}
+
+function htmlTable(attribs)
+{
+    return HTML("html:table", attribs, argumentsAsArray(arguments, 1));
+}
+
+function htmlTBody(attribs)
+{
+    return HTML("html:tbody", attribs, argumentsAsArray(arguments, 1));
+}
+
+function htmlText(text)
+{
+    return document.createTextNode(text);
+}
+
+function htmlTD(attribs)
+{
+    return HTML("html:td", attribs, argumentsAsArray(arguments, 1));
+}
+
+function htmlTR(attribs)
+{
+    return HTML("html:tr", attribs, argumentsAsArray(arguments, 1));
+}
+
+function htmlTH(attribs)
+{
+    return HTML("html:th", attribs, argumentsAsArray(arguments, 1));
+}
 
