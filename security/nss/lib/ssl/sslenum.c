@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslenum.c,v 1.5 2001/11/02 04:24:20 nelsonb%netscape.com Exp $
+ * $Id: sslenum.c,v 1.6 2002/08/09 21:53:17 nelsonb%netscape.com Exp $
  */
 
 #include "ssl.h"
@@ -81,6 +81,7 @@ const PRUint16 SSL_ImplementedCiphers[] = {
 
     /* ciphersuites with no encryption */
     SSL_FORTEZZA_DMS_WITH_NULL_SHA,
+    SSL_RSA_WITH_NULL_SHA,
     SSL_RSA_WITH_NULL_MD5,
 
     /* SSL2 cipher suites. */
