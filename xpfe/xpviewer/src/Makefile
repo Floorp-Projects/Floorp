@@ -35,9 +35,9 @@ ifeq ($(USE_NGLAYOUT_GTK),1)
 
 else
 
-	TOOLKIT_GFX_LIB        = -lgfxmotif
-	TOOLKIT_WIDGET_LIB     = -lwidgetmotif
-	TOOLKIT_BASE_LIB = -lgmbasemotif
+	TOOLKIT_GFX_LIB     = -lgfxmotif
+	TOOLKIT_WIDGET_LIB  = -lwidgetmotif
+	TOOLKIT_BASE_LIB    = -lgmbasemotif
 
 	TOOLKIT_CFLAGS = \
 		-DWIDGET_DLL=\"libwidgetmotif.so\" \
