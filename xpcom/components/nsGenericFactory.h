@@ -61,4 +61,32 @@ private:
 	DestructorProcPtr mDestructor;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
+#include "nsIModule.h"
+#include "nsHashtable.h"
+
+class nsGenericModule : public nsIModule
+{
+public:
+    nsGenericModule(const char* moduleName, PRUint32 componentCount,
+                    nsModuleComponentInfo* components);
+    virtual ~nsGenericModule();
+
+    NS_DECL_ISUPPORTS
+
+    NS_DECL_NSIMODULE
+
+protected:
+    nsresult Initialize();
+
+    void Shutdown();
+
+    PRBool                      mInitialized;
+    const char*                 mModuleName;
+    PRUint32                    mComponentCount;
+    nsModuleComponentInfo*      mComponents;
+    nsSupportsHashtable         mFactories;
+};
+
 #endif /* nsGenericFactory_h___ */

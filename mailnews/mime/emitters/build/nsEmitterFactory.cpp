@@ -37,25 +37,29 @@
 #include "nsMimeXmlEmitter.h"
 #include "nsMimeXULEmitter.h"
 
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kHtmlMimeEmitterCID, NS_HTML_MIME_EMITTER_CID);
-static NS_DEFINE_CID(kRawMimeEmitterCID, NS_RAW_MIME_EMITTER_CID);
-static NS_DEFINE_CID(kXmlMimeEmitterCID, NS_XML_MIME_EMITTER_CID);
-static NS_DEFINE_CID(kXULMimeEmitterCID, NS_XUL_MIME_EMITTER_CID);
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeHtmlEmitter);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeRawEmitter);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeXmlEmitter);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeXULEmitter);
 
-
 static nsModuleComponentInfo components[] =
 {
-  { NS_HTML_MIME_EMITTER_CID, &nsMimeHtmlEmitterConstructor, NS_HTML_MIME_EMITTER_PROGID, },
-  { NS_XML_MIME_EMITTER_CID, &nsMimeXmlEmitterConstructor, NS_XML_MIME_EMITTER_PROGID, },
-  { NS_RAW_MIME_EMITTER_CID, &nsMimeRawEmitterConstructor, NS_RAW_MIME_EMITTER_PROGID, },
-  { NS_XUL_MIME_EMITTER_CID, &nsMimeXULEmitterConstructor, NS_XUL_MIME_EMITTER_PROGID, },
+  { "HTML MIME Emitter",
+    NS_HTML_MIME_EMITTER_CID,
+    NS_HTML_MIME_EMITTER_PROGID,
+    nsMimeHtmlEmitterConstructor },
+  { "XML MIME Emitter",
+    NS_XML_MIME_EMITTER_CID,
+    NS_XML_MIME_EMITTER_PROGID,
+    nsMimeXmlEmitterConstructor },
+  { "RAW MIME Emitter",
+    NS_RAW_MIME_EMITTER_CID,
+    NS_RAW_MIME_EMITTER_PROGID,
+    nsMimeRawEmitterConstructor },
+  { "XUL MIME Emitter",
+    NS_XUL_MIME_EMITTER_CID,
+    NS_XUL_MIME_EMITTER_PROGID,
+    nsMimeXULEmitterConstructor }
 };
 
-NS_IMPL_MODULE(nsMimeEmitterModule, components)
-NS_IMPL_NSGETMODULE(nsMimeEmitterModule)
+NS_IMPL_NSGETMODULE("nsMimeEmitterModule", components)

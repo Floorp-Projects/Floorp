@@ -28,22 +28,19 @@
 #include "nsIServiceManager.h"
 #include "rdf.h"
 
-#ifdef NS_DEBUG
-#include <stdio.h>
-#endif
-
-static NS_DEFINE_CID(kRDFDOMDataSourceCID, NS_RDF_DOMDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFDOMResourceFactoryCID, NS_RDF_DOMRESOURCEFACTORY_CID);
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRDFDOMDataSource);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRDFDOMViewerElement);
 
-static nsModuleComponentInfo components[] =
+static nsModuleComponentInfo gRDFDOMViewerModuleComponents[] =
 {
-  { NS_RDF_DOMDATASOURCE_CID,        &nsRDFDOMDataSourceConstructor,  NS_RDF_DATASOURCE_PROGID_PREFIX "domds",  },
-  { NS_RDF_DOMRESOURCEFACTORY_CID, &nsRDFDOMViewerElementConstructor, NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "dom", },
+    { "DOM Data Source", 
+      NS_RDF_DOMDATASOURCE_CID,
+      NS_RDF_DATASOURCE_PROGID_PREFIX "domds",
+      nsRDFDOMDataSourceConstructor },
+    { "DOM Resource Factory",
+      NS_RDF_DOMRESOURCEFACTORY_CID,
+      NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "dom",
+      nsRDFDOMViewerElementConstructor }
 };
 
-NS_IMPL_MODULE(nsRDFDOMViewerModule, components)
-NS_IMPL_NSGETMODULE(nsRDFDOMViewerModule)
+NS_IMPL_NSGETMODULE("nsRDFDOMViewerModule", gRDFDOMViewerModuleComponents)

@@ -32,9 +32,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextPS)
 
 static nsModuleComponentInfo components[] =
 {
-  { NS_DEVICECONTEXTPS_CID, &nsDeviceContextPSConstructor, "component://netscape/gfx/decidecontext/ps", "GFX Postscript Device Context", },
+  { "GFX Postscript Device Context",
+    NS_DEVICECONTEXTPS_CID,
+    "component://netscape/gfx/decidecontext/ps",
+    nsDeviceContextPSConstructor }  
 };
 
-NS_IMPL_MODULE(nsGfxPSModule, components)
-NS_IMPL_NSGETMODULE(nsGfxPSModule)
+NS_IMPL_NSGETMODULE("nsGfxPSModule", components)
 

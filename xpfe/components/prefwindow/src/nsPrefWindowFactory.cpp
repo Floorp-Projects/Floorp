@@ -34,8 +34,10 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrefWindow)
 
 static nsModuleComponentInfo components[] = {
-  { NS_PREFWINDOW_CID, &nsPrefWindowConstructor, NS_PREFWINDOW_PROGID, "Preferences window helper object", },
+  { "Preferences window helper object",
+    NS_PREFWINDOW_CID,
+    NS_PREFWINDOW_PROGID,
+    nsPrefWindowConstructor }
 };
 
-NS_IMPL_MODULE(nsPrefWindowModule, components)
-NS_IMPL_NSGETMODULE(nsPrefWindowModule)
+NS_IMPL_NSGETMODULE("nsPrefWindowModule", components)
