@@ -34,7 +34,7 @@
 /*
  * CMS signerInfo methods.
  *
- * $Id: cmssiginfo.c,v 1.23 2003/12/12 21:42:02 jpierre%netscape.com Exp $
+ * $Id: cmssiginfo.c,v 1.24 2004/01/07 23:07:23 jpierre%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -584,7 +584,7 @@ NSS_CMSSignerInfo_GetSigningTime(NSSCMSSignerInfo *sinfo, PRTime *stime)
     /* XXXX multi-valued attributes NIH */
     if (attr == NULL || (value = NSS_CMSAttribute_GetValue(attr)) == NULL)
 	return SECFailure;
-    if (CERT_DecodeTimeChoice(stime, value) != SECSuccess)
+    if (DER_DecodeTimeChoice(stime, value) != SECSuccess)
 	return SECFailure;
     sinfo->signingTime = *stime;	/* make cached copy */
     return SECSuccess;
@@ -721,7 +721,7 @@ NSS_CMSSignerInfo_AddSigningTime(NSSCMSSignerInfo *signerinfo, PRTime t)
     mark = PORT_ArenaMark(poolp);
 
     /* create new signing time attribute */
-    if (CERT_EncodeTimeChoice(NULL, &stime, t) != SECSuccess)
+    if (DER_EncodeTimeChoice(NULL, &stime, t) != SECSuccess)
 	goto loser;
 
     if ((attr = NSS_CMSAttribute_Create(poolp, SEC_OID_PKCS9_SIGNING_TIME, &stime, PR_FALSE)) == NULL) {

@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.58 2003/12/17 22:43:25 wchang0222%aol.com Exp $
+ * $Id: certdb.c,v 1.59 2004/01/07 23:07:22 jpierre%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -963,13 +963,13 @@ CERT_GetCertTimes(CERTCertificate *c, PRTime *notBefore, PRTime *notAfter)
     }
     
     /* convert DER not-before time */
-    rv = CERT_DecodeTimeChoice(notBefore, &c->validity.notBefore);
+    rv = DER_DecodeTimeChoice(notBefore, &c->validity.notBefore);
     if (rv) {
 	return(SECFailure);
     }
     
     /* convert DER not-after time */
-    rv = CERT_DecodeTimeChoice(notAfter, &c->validity.notAfter);
+    rv = DER_DecodeTimeChoice(notAfter, &c->validity.notAfter);
     if (rv) {
 	return(SECFailure);
     }
@@ -1020,14 +1020,14 @@ SEC_GetCrlTimes(CERTCrl *date, PRTime *notBefore, PRTime *notAfter)
     int rv;
     
     /* convert DER not-before time */
-    rv = CERT_DecodeTimeChoice(notBefore, &date->lastUpdate);
+    rv = DER_DecodeTimeChoice(notBefore, &date->lastUpdate);
     if (rv) {
 	return(SECFailure);
     }
     
     /* convert DER not-after time */
     if (date->nextUpdate.data) {
-	rv = CERT_DecodeTimeChoice(notAfter, &date->nextUpdate);
+	rv = DER_DecodeTimeChoice(notAfter, &date->nextUpdate);
 	if (rv) {
 	    return(SECFailure);
 	}

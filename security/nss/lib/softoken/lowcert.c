@@ -38,7 +38,7 @@
 /*
  * Certificate handling code
  *
- * $Id: lowcert.c,v 1.16 2003/10/17 13:45:39 ian.mcgreer%sun.com Exp $
+ * $Id: lowcert.c,v 1.17 2004/01/07 23:07:24 jpierre%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -288,13 +288,13 @@ nsslowcert_GetCertTimes(NSSLOWCERTCertificate *c, PRTime *notBefore, PRTime *not
     }
     
     /* convert DER not-before time */
-    rv = CERT_DecodeTimeChoice(notBefore, &validity.notBefore);
+    rv = DER_DecodeTimeChoice(notBefore, &validity.notBefore);
     if (rv) {
         return(SECFailure);
     }
     
     /* convert DER not-after time */
-    rv = CERT_DecodeTimeChoice(notAfter, &validity.notAfter);
+    rv = DER_DecodeTimeChoice(notAfter, &validity.notAfter);
     if (rv) {
         return(SECFailure);
     }

@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.38 2003/10/25 00:41:14 jpierre%netscape.com Exp $
+ * $Id: crl.c,v 1.39 2004/01/07 23:07:22 jpierre%netscape.com Exp $
  */
  
 #include "cert.h"
@@ -1875,7 +1875,7 @@ CERT_CheckCRL(CERTCertificate* cert, CERTCertificate* issuer, SECItem* dp,
             /* check the time if we have one */
             if (entry->revocationDate.data && entry->revocationDate.len) {
                 int64 revocationDate = 0;
-                if (SECSuccess == CERT_DecodeTimeChoice(&revocationDate,
+                if (SECSuccess == DER_DecodeTimeChoice(&revocationDate,
                                                         &entry->revocationDate)) {
                     /* we got a good revocation date, only consider the
                        certificate revoked if the time we are inquiring about
