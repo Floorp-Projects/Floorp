@@ -34,13 +34,11 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 
-#if defined(OJI)
 #include "nsIServiceManager.h"
 #include "nsIJVMManager.h"
 #include "nsILiveConnectManager.h"
 #include "nsIPluginInstance.h"
 #include "nsIJVMPluginInstance.h"
-#endif
 
 // XXX this is to get around conflicts with windows.h defines
 // introduced through jni.h
@@ -265,9 +263,7 @@ nsHTMLAppletElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                aFlags, aEventStatus);
 }
 
-#if defined(OJI)
 extern nsresult NS_GetObjectFramePluginInstance(nsIFrame* aFrame, nsIPluginInstance*& aPluginInstance);
-#endif
 
 /**
  * For backwards compatibility an applet element's JavaScript object should expose both the public 
@@ -280,8 +276,10 @@ NS_IMETHODIMP
 nsHTMLAppletElement::GetScriptObject(nsIScriptContext* aContext,
                                      void** aScriptObject)
 {
-#if defined(OJI)
-	nsresult rv = NS_OK;
+ nsresult rv = NS_OK;
+NS_WITH_SERVICE(nsIJVMManager, jvm, nsIJVMManager::GetCID(), &rv);
+if (NS_SUCCEEDED(rv)) {
+	// nsresult rv = NS_OK;
 	if (!mReflectedApplet) {
 		// 1. get the script object corresponding to the <APPLET> element itself.
 		JSObject* elementObject = nsnull;
@@ -334,10 +332,12 @@ nsHTMLAppletElement::GetScriptObject(nsIScriptContext* aContext,
 		rv = mInner.GetScriptObject(aContext, aScriptObject);
 	}
 	return rv;
-#else
-	return mInner.GetScriptObject(aContext, aScriptObject);
-#endif
 }
+else    
+	return mInner.GetScriptObject(aContext, aScriptObject);
+}
+
+
 
 // TODO: if this method ever gets called, it will destroy the prototype type chain.
 

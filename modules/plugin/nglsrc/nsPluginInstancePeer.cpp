@@ -31,13 +31,13 @@
 #include "nsIFileStream.h"
 #include "nsFileSpec.h"
 #include "nsCOMPtr.h"
+#include "nsIJVMManager.h"
+#include "nsIServiceManager.h"
 
-#if defined(OJI)
 #include "nsIDocument.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectOwner.h"
-#endif
 
 #ifdef XP_PC
 #include "windows.h"
@@ -780,7 +780,9 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::GetJSWindow(JSObject* *outJSWindow)
 {
 	*outJSWindow = NULL;
 	nsresult rv = NS_ERROR_FAILURE;
-#if defined(OJI)
+    NS_WITH_SERVICE ( nsIJVMManager, jvm, nsIJVMManager::GetCID(), &rv);
+    if ( NS_SUCCEEDED ( rv ) && jvm != nsnull )
+    {   
 	nsIDocument* document = nsnull;
 	if (mOwner->GetDocument(&document) == NS_OK) {
 		nsIScriptContextOwner* contextOwner = document->GetScriptContextOwner();
@@ -803,7 +805,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::GetJSWindow(JSObject* *outJSWindow)
 		}
 		NS_RELEASE(document);	
 	}
-#endif
+      } 
 	return rv;
 }
 
@@ -817,7 +819,8 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::GetJSContext(JSContext* *outContext)
 {
 	*outContext = NULL;
 	nsresult rv = NS_ERROR_FAILURE;
-#if defined(OJI)
+   NS_WITH_SERVICE(nsIJVMManager, jvm, nsIJVMManager::GetCID(), &rv);
+   if (NS_SUCCEEDED(rv) && jvm != nsnull ) {
 	nsIDocument* document = nsnull;
 	if (mOwner->GetDocument(&document) == NS_OK) {
 		nsIScriptContextOwner* contextOwner = document->GetScriptContextOwner();
@@ -832,7 +835,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::GetJSContext(JSContext* *outContext)
 		}
 		NS_RELEASE(document);	
 	}
-#endif
+    } 
 	return rv;
 }
 
