@@ -37,6 +37,7 @@
 #include "nsIComponentManager.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsIStreamListener.h"
+#include "nsCRT.h"
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
@@ -124,7 +125,7 @@ nsFTPDirListingConv::Convert(nsIInputStream *aFromStream,
 
     convertedData.Append("300: ");
     convertedData.Append(spec);
-    convertedData.Append('\n');
+    convertedData.Append(LF);
     // END 300:
 
     // build up the column heading; 200:
@@ -302,7 +303,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
 
         indexFormat.Append("300: ");
         indexFormat.Append(spec);
-        indexFormat.Append('\n');
+        indexFormat.Append(LF);
         nsAllocator::Free(spec);
         // END 300:
 
@@ -896,9 +897,9 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
     PRBool cr = PR_FALSE;
 
     // while we have new lines, parse 'em into application/http-index-format.
-    while ( line && (eol = PL_strchr(line, '\n')) ) {
+    while ( line && (eol = PL_strchr(line, LF)) ) {
         // yank any carriage returns too.
-        if (eol > line && *(eol-1) == '\r') {
+        if (eol > line && *(eol-1) == CR) {
             eol--;
             *eol = '\0';
             cr = PR_TRUE;
@@ -1115,7 +1116,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
         }
         aString.Append(' ');
 
-        aString.Append('\n'); // complete this line
+        aString.Append(LF); // complete this line
         // END 201:
 
         NS_DELETEXPCOM(thisEntry);
