@@ -59,6 +59,7 @@ public:
 	
 	Boolean onMainThread();
 	
+	Boolean addToClassPath(const FSSpec& fileSpec);
 	Boolean addToClassPath(const char* dirPath);
 	Boolean addURLToClassPath(const char* fileURL);
 
