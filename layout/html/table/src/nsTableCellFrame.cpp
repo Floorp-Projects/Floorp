@@ -681,20 +681,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   aDesiredSize.ascent=aDesiredSize.height;
   aDesiredSize.descent=0;
 
-  // if we got this far with an incremental reflow, the reflow was targeted
-  // at the cell's content.  We should only have to redo pass1 for this cell
-  // then rebalance columns. The pass1 is handled by the cell's parent row.
-  // So here all we have to do is tell the table to rebalance.
-  if (eReflowReason_Incremental == aReflowState.reason) 
-  {
-    nsTableFrame* tableFrame=nsnull;
-    rv = nsTableFrame::GetTableFrame(this, tableFrame);
-    if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
-    {
-      tableFrame->InvalidateColumnWidths();
-    }
-  }
-   
   if (DEBUG_REFLOW_CELL) nsTableFrame::DebugReflow("TC::Rfl ex", this, nsnull, &aDesiredSize);
 
   return NS_OK;
