@@ -62,6 +62,20 @@ CMT_Free_fn cmt_free = free;
 #define CM_ntohl ntohl
 #define CM_htonl htonl
 
+char* SSM_GetVersionString(void)
+{
+    char *newString;
+    int strLen;
+
+    strLen = strlen(SSMVersionString);
+    newString = (char*)malloc(sizeof(char)*(strLen+1));
+    if (newString) {
+        memcpy(newString,SSMVersionString, strlen(SSMVersionString));
+        newString[strLen]='\0';
+    }
+    return newString;
+}
+
 
 /*************************************************************
  *

@@ -305,6 +305,13 @@ typedef CMUint32 SSMSSLConnectionRequestType;
  * library.
  */
 extern char SSMVersionString[];
+#ifdef __cplusplus
+extern "C" {
+char * SSM_GetVersionString(void);
+#endif
+#ifdef __cplusplus
+}
+#endif
 
 /* What type of client */
 typedef enum
