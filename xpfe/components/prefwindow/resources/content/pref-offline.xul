@@ -54,8 +54,6 @@
     </radiogroup> 
 </titledbox>
 
-<separator/>
-
 <titledbox orient="vertical">
     <label value="&header2;"/>
     <radiogroup id="whengoingOnlinestate" orient="vertical" autostretch="never"
@@ -66,8 +64,6 @@
       <radio group="whengoingOnlinestate" value="2" label="&unsentDoNotRadio;"/>
     </radiogroup>
 </titledbox>
-
-<separator/>
 
 <titledbox orient="vertical">
     <label value="&header3;"/>

@@ -4,8 +4,8 @@
 <!ENTITY window.title  "Offline">
 <!ENTITY boxHeader  "Offline">
 <!ENTITY rHeader  "Startup Mode">
-<!ENTITY descipt1 "Mozilla can start in either online or offline modes. When online you have full 
-access to your network.  When offline you can only read messages that you have previously downloaded to your local computer">
+<!ENTITY descipt1 "Mozilla can start in either online or offline mode. When online you have full 
+access to your network.  When offline you can only read messages that you have previously downloaded to your local computer.">
 <!ENTITY prevRadio  "Remember my previous mode">
 <!ENTITY communRemember "Mozilla will remember the state it was in last and start in that mode.">
 <!ENTITY askOfflineRadio  "Ask me at startup">
