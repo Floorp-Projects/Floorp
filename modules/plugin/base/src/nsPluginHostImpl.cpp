@@ -143,6 +143,7 @@
 #include "nsIFile.h"
 #include "nsPluginDirServiceProvider.h"
 #include "nsInt64.h"
+#include "nsPluginError.h"
 
 #ifdef XP_UNIX
 #if defined(MOZ_WIDGET_GTK)
@@ -2451,7 +2452,6 @@ nsPluginHostImpl::nsPluginHostImpl()
   PR_LogFlush();
 #endif
   mCachedPlugins = nsnull;
-  mSyncCachedPlugins = PR_FALSE;
 }
 
 
@@ -2532,8 +2532,7 @@ PRBool nsPluginHostImpl::IsRunningPlugin(nsPluginTag * plugin)
   if(!plugin->mLibrary)
     return PR_FALSE;
 
-  for(int i = 0; i < plugin->mVariants; i++)
-  {
+  for(int i = 0; i < plugin->mVariants; i++) {
     nsActivePlugin * p = mActivePluginList.find(plugin->mMimeTypeArray[i]);
     if(p && !p->mStopped)
       return PR_TRUE;
@@ -2551,8 +2550,7 @@ void nsPluginHostImpl::AddToUnusedLibraryList(PRLibrary * aLibrary)
     return;
 
   nsUnusedLibrary * unusedLibrary = new nsUnusedLibrary(aLibrary);
-  if(unusedLibrary)
-  {
+  if(unusedLibrary) {
     unusedLibrary->mNext = mUnusedLibraries;
     mUnusedLibraries = unusedLibrary;
   }
@@ -2567,8 +2565,7 @@ void nsPluginHostImpl::CleanUnusedLibraries()
   if(!mUnusedLibraries)
     return;
 
-  while (nsnull != mUnusedLibraries)
-  {
+  while (nsnull != mUnusedLibraries) {
     nsUnusedLibrary *temp = mUnusedLibraries->mNext;
     delete mUnusedLibraries;
     mUnusedLibraries = temp;
@@ -2583,18 +2580,28 @@ nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
   ("nsPluginHostImpl::ReloadPlugins Begin reloadPages=%d, active_instance_count=%d\n",
   reloadPages, mActivePluginList.mCount));
 
+  nsresult rv = NS_OK;
+
   // we are re-scanning plugins. New plugins may have been added, also some
   // plugins may have been removed, so we should probably shut everything down
   // but don't touch running (active and  not stopped) plugins
-  if(reloadPages)
-  {
+  if(reloadPages) {
+    // check if plugins changed, no need to refresh and reload
+    // page if no changes to plugins have been made
+    // PR_FALSE instructs not to touch the plugin list, just to
+    // look for possible changes
+    PRBool pluginschanged = PR_TRUE;
+    FindPlugins(PR_FALSE, &pluginschanged);
+
+    // if no changed detected, return an appropriate error code
+    if (!pluginschanged)
+      return NS_ERROR_PLUGINS_PLUGINSNOTCHANGED;
+
     // if we have currently running plugins we should set a flag not to
     // unload them from memory, see bug #61388
     // and form a list of libs to be unloaded later
-    for(nsPluginTag * p = mPlugins; p != nsnull; p = p->mNext)
-    {
-      if(IsRunningPlugin(p) && (p->mFlags & NS_PLUGIN_FLAG_OLDSCHOOL))
-      {
+    for(nsPluginTag * p = mPlugins; p != nsnull; p = p->mNext) {
+      if(IsRunningPlugin(p) && (p->mFlags & NS_PLUGIN_FLAG_OLDSCHOOL)) {
         p->mCanUnloadLibrary = PR_FALSE;
         AddToUnusedLibraryList(p->mLibrary);
       }
@@ -2611,8 +2618,7 @@ nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
   nsPluginTag * prev = nsnull;
   nsPluginTag * next = nsnull;
 
-  for(nsPluginTag * p = mPlugins; p != nsnull;)
-  {
+  for(nsPluginTag * p = mPlugins; p != nsnull;) {
     next = p->mNext;
 
     // XXX only remove our plugin from the list if it's not running and not
@@ -2620,8 +2626,7 @@ nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
     // if plugins are reloaded. This also fixes a crash on UNIX where the call
     // to shutdown would break the ProxyJNI connection to the JRE after a reload.
     // see bug 86591
-    if(!IsRunningPlugin(p) && (!p->mEntryPoint || (p->mFlags & NS_PLUGIN_FLAG_OLDSCHOOL)))
-    {
+    if(!IsRunningPlugin(p) && (!p->mEntryPoint || (p->mFlags & NS_PLUGIN_FLAG_OLDSCHOOL))) {
       if(p == mPlugins)
         mPlugins = next;
       else
@@ -2648,7 +2653,7 @@ nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
     return NS_ERROR_FAILURE;
   }
   NS_ASSERTION(registrar, "No nsIComponentRegistrar from get service");
-  nsresult rv = registrar->AutoRegister(nsnull);
+  rv = registrar->AutoRegister(nsnull);
 
   // load them again
   rv = LoadPlugins();
@@ -4481,10 +4486,15 @@ static int PR_CALLBACK ComparePluginFileInDirectory (const void *v1, const void 
 nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir, 
                                                 nsIComponentManager * compManager, 
                                                 nsIFile * layoutPath,
+                                                PRBool aCreatePluginList,
+                                                PRBool * aPluginsChanged,
                                                 PRBool checkForUnwantedPlugins)
 {
+  NS_ENSURE_ARG_POINTER(aPluginsChanged);
   nsresult rv;
-  
+
+  *aPluginsChanged = PR_FALSE;
+
 #ifdef PLUGIN_LOGGING
   nsXPIDLCString dirPath;
   pluginsDir->GetPath(getter_Copies(dirPath));
@@ -4500,8 +4510,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
   // Collect all the files in this directory in a void array we can sort later
   nsAutoVoidArray pluginFilesArray;  // array for sorting files in this directory
   PRBool hasMore;
-  while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore)  
-  {
+  while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore) {
     nsCOMPtr<nsISupports> supports;
     rv = iter->GetNext(getter_AddRefs(supports));
     if (NS_FAILED(rv))
@@ -4539,119 +4548,126 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
 
   // finally, go through the array, looking at each entry and continue processing it
   for (PRInt32 i = 0; i < pluginFilesArray.Count(); i++) {
-      pluginFileinDirectory* pfd = NS_STATIC_CAST(pluginFileinDirectory*, pluginFilesArray[i]);
-      nsFileSpec file(pfd->mFilename);
-      PRInt64 fileModTime = pfd->mModTime;
-      delete pfd;
+    pluginFileinDirectory* pfd = NS_STATIC_CAST(pluginFileinDirectory*, pluginFilesArray[i]);
+    nsFileSpec file(pfd->mFilename);
+    PRInt64 fileModTime = pfd->mModTime;
+    delete pfd;
 
-      // Look for it in our cache
-      nsPluginTag *pluginTag = RemoveCachedPluginsInfo(file.GetCString());
+    // Look for it in our cache
+    nsPluginTag *pluginTag = RemoveCachedPluginsInfo(file.GetCString());
 
-      if (pluginTag) {
-        PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
-               ("ScanPluginsDirectory : Found plugin in cache : %s\n", pluginTag->mFileName));
-        // If plugin changed, delete cachedPluginTag and dont use cache
-        if (LL_NE(fileModTime, pluginTag->mLastModifiedTime)) {
-          // Plugins has changed. Dont use cached plugin info.
-          PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
-                 ("ScanPluginsDirectory : timestamp check failed. Reloading plugin : %s\n", pluginTag->mFileName));
-          delete pluginTag;
-          pluginTag = nsnull;
-        }
+    if (pluginTag) {
+      // If plugin changed, delete cachedPluginTag and dont use cache
+      if (LL_NE(fileModTime, pluginTag->mLastModifiedTime)) {
+        // Plugins has changed. Dont use cached plugin info.
+        delete pluginTag;
+        pluginTag = nsnull;
+
+        // plugin file changed, flag this fact
+        *aPluginsChanged = PR_TRUE;
       }
       else {
-        PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
-               ("ScanPluginsDirectory : Plugin NOT found in cache : %s\n", file.GetCString()));
-      }
-
-
-      if (!pluginTag) {
-        nsPluginFile pluginFile(file);
-        PRLibrary* pluginLibrary = nsnull;
-        
-        // load the plugin's library so we can ask it some questions, but not for Windows
-#ifndef XP_WIN
-        if (pluginFile.LoadPlugin(pluginLibrary) != NS_OK || pluginLibrary == nsnull)
-          continue;
-#endif
-        
-        // create a tag describing this plugin.
-        nsPluginInfo info = { sizeof(info) };
-        nsresult res = pluginFile.GetPluginInfo(info);
-        if(NS_FAILED(res))
-          continue;
-        // if we don't have mime type -- don't proceed, this is not a plugin
-        if(!info.fMimeTypeArray) {
-          pluginFile.FreePluginInfo(info);
-          continue;
-        }
-        
-        pluginTag = new nsPluginTag(&info);
-        pluginFile.FreePluginInfo(info);
-        
-        if(pluginTag == nsnull)
-          return NS_ERROR_OUT_OF_MEMORY;
-        
-        pluginTag->mLibrary = pluginLibrary;
-        pluginTag->mLastModifiedTime = fileModTime;
-      }
-      
-      PRBool bAddIt = PR_TRUE;
-      
-      // check if there are specific plugins we don't want
-      if(checkForUnwantedPlugins)
-      {
-        if(isUnwantedPlugin(pluginTag)) {
-          bAddIt = PR_FALSE;
+        // if it is unwanted plugin we are checking for, get it back to the cache info list
+        if(checkForUnwantedPlugins && isUnwantedPlugin(pluginTag)) {
           pluginTag->Mark(NS_PLUGIN_FLAG_UNWANTED);
-              
-          // Add it to our cached plugins so we can cache the unwantedness of
-          // this plugin when we sync cached plugins to registry
           pluginTag->mNext = mCachedPlugins;
           mCachedPlugins = pluginTag;
-          
-          // If this plugin wasn't from our cache, we need to sync plugin info
-          // to registry
-          if (!(pluginTag->mFlags & NS_PLUGIN_FLAG_FROMCACHE))
-            mSyncCachedPlugins = PR_TRUE;
-          
-          // Clear plugintag so it wont get deleted
-          pluginTag = nsnull;
         }
       }
+    }
+    else {
+      // plugin file was added, flag this fact
+      *aPluginsChanged = PR_TRUE;
+    }
 
-      // check if we already have this plugin in the list which
-      // is possible if we do refresh
-      if(bAddIt)
-      {
-        for(nsPluginTag* tag = mPlugins; tag != nsnull; tag = tag->mNext)
-        {
-          if(tag->Equals(pluginTag))
-          {
-            bAddIt = PR_FALSE;
-            break;
-          }
+    // if we are not creating the list, just continue the loop
+    // no need to proceed if changes are detected
+    if (!aCreatePluginList) {
+      if (*aPluginsChanged)
+        return NS_OK;
+      else
+        continue;
+    }
+
+    // if it is not found in cache info list or has been changed, create a new one
+    if (!pluginTag) {
+      nsPluginFile pluginFile(file);
+      PRLibrary* pluginLibrary = nsnull;
+      
+      // load the plugin's library so we can ask it some questions, but not for Windows
+#ifndef XP_WIN
+      if (pluginFile.LoadPlugin(pluginLibrary) != NS_OK || pluginLibrary == nsnull)
+        continue;
+#endif
+      
+      // create a tag describing this plugin.
+      nsPluginInfo info = { sizeof(info) };
+      nsresult res = pluginFile.GetPluginInfo(info);
+      if(NS_FAILED(res))
+        continue;
+
+      // if we don't have mime type -- don't proceed, this is not a plugin
+      if(!info.fMimeTypeArray) {
+        pluginFile.FreePluginInfo(info);
+        continue;
+      }
+      
+      pluginTag = new nsPluginTag(&info);
+      pluginFile.FreePluginInfo(info);
+      
+      if(pluginTag == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+      
+      pluginTag->mLibrary = pluginLibrary;
+      pluginTag->mLastModifiedTime = fileModTime;
+
+      // if this is unwanted plugin we are checkin for, add it to our cache info list so we 
+      // can cache the unwantedness of this plugin when we sync cached plugins to registry
+      if(checkForUnwantedPlugins && isUnwantedPlugin(pluginTag)) {
+        pluginTag->Mark(NS_PLUGIN_FLAG_UNWANTED);
+        pluginTag->mNext = mCachedPlugins;
+        mCachedPlugins = pluginTag;
+      }
+    }
+
+    // set the flag that we want to add this plugin to the list for now
+    // and see if it remains after we check several reasons not to do so
+    PRBool bAddIt = PR_TRUE;
+
+    // check if this is a specific plugin we don't want
+    if(checkForUnwantedPlugins && isUnwantedPlugin(pluginTag))
+      bAddIt = PR_FALSE;
+
+    // check if we already have this plugin in the list which
+    // is possible if we do refresh
+    if(bAddIt) {
+      for(nsPluginTag* tag = mPlugins; tag != nsnull; tag = tag->mNext) {
+        if(tag->Equals(pluginTag)) {
+          bAddIt = PR_FALSE;
+          // we cannot get here if the plugin has just been added
+          // and thus |pluginTag| is not from cache, because otherwise
+          // it would not be present in the list;
+          // so there is no need to delete |pluginTag| -- it _is_ from the cache info list.
+          break;
         }
       }
+    }
 
-      // so if we still want it -- do it
-      if(bAddIt)
-      {
-        pluginTag->mNext = mPlugins;
-        mPlugins = pluginTag;
+    // so if we still want it -- do it
+    if(bAddIt) {
+      pluginTag->mNext = mPlugins;
+      mPlugins = pluginTag;
 
-        if(layoutPath)
-          RegisterPluginMimeTypesWithLayout(pluginTag, compManager, layoutPath);
+      if(layoutPath)
+        RegisterPluginMimeTypesWithLayout(pluginTag, compManager, layoutPath);
 
-        // Finally see if this was a plugin that was not in cache. If so,
-        // we need to sync our cache
-        if (!(pluginTag->mFlags & NS_PLUGIN_FLAG_FROMCACHE)) {
-          mSyncCachedPlugins = PR_TRUE;
-        }
-      }
-      else {
-        delete pluginTag;
-      }
+    }
+    else if (!(pluginTag->mFlags & NS_PLUGIN_FLAG_UNWANTED)) {
+      // we don't need it, delete it;
+      // but don't delete unwanted plugins since they are cached 
+      // in the cache info list and will be deleted later
+      delete pluginTag;
+    }
   }
   return NS_OK;
 }
@@ -4659,6 +4675,8 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
 nsresult nsPluginHostImpl::ScanPluginsDirectoryList(nsISimpleEnumerator * dirEnum,
                                                     nsIComponentManager * compManager, 
                                                     nsIFile * layoutPath,
+                                                    PRBool aCreatePluginList,
+                                                    PRBool * aPluginsChanged,
                                                     PRBool checkForUnwantedPlugins)
 {
     PRBool hasMore;
@@ -4671,20 +4689,40 @@ nsresult nsPluginHostImpl::ScanPluginsDirectoryList(nsISimpleEnumerator * dirEnu
       if (NS_FAILED(rv))
         continue;
       
-      ScanPluginsDirectory(nextDir, compManager, layoutPath, checkForUnwantedPlugins);
+      // don't pass aPluginsChanged directly to prevent it from been reset
+      PRBool pluginschanged = PR_FALSE;
+      ScanPluginsDirectory(nextDir, compManager, layoutPath, aCreatePluginList, &pluginschanged, checkForUnwantedPlugins);
+
+      if (pluginschanged)
+        *aPluginsChanged = PR_TRUE;
+
+      // if changes are detected and we are not creating the list, do not proceed
+      if (!aCreatePluginList && *aPluginsChanged)
+        break;
     }
     return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////
-#include "nsITimelineService.h"
 NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 {
   // do not do anything if it is already done
-  // use nsPluginHostImpl::ReloadPlugins to enforce loading
+  // use ReloadPlugins() to enforce loading
   if(mPluginsLoaded)
     return NS_OK;
 
+  PRBool pluginschanged;
+  return FindPlugins(PR_TRUE, &pluginschanged);
+}
+
+#include "nsITimelineService.h"
+
+// if aCreatePluginList is false we will just scan for plugins
+// and see if any changes have been made to the plugins.
+// This is needed in ReloadPlugins to prevent possible recursive reloads
+nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPluginsChanged)
+{
+  // let's start timing if we are only really creating the plugin list
+  if (aCreatePluginList)
   NS_TIMELINE_START_TIMER("LoadPlugins");
 
 #ifdef CALL_SAFETY_ON
@@ -4692,6 +4730,9 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
   NS_INIT_PLUGIN_SAFE_CALLS;
 #endif
 
+  NS_ENSURE_ARG_POINTER(aPluginsChanged);
+
+  *aPluginsChanged = PR_FALSE;
   nsresult rv;
   
   // If the create instance failed, then it automatically disables all
@@ -4738,15 +4779,42 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
   
   nsCOMPtr<nsISimpleEnumerator> dirList;
   
+  // Scan plugins directories;
+  // don't pass aPluginsChanged directly, to prevent its 
+  // possible reset in subsequent ScanPluginsDirectory calls
+  PRBool pluginschanged = PR_FALSE;
+
   // 1. Scan the app-defined list of plugin dirs.
   rv = dirService->Get(NS_APP_PLUGINS_DIR_LIST, NS_GET_IID(nsISimpleEnumerator), getter_AddRefs(dirList));
-  if (NS_SUCCEEDED(rv))
-    ScanPluginsDirectoryList(dirList, compManager, layoutPath);
+  if (NS_SUCCEEDED(rv)) {
+    ScanPluginsDirectoryList(dirList, compManager, layoutPath, aCreatePluginList, &pluginschanged);
+
+    if (pluginschanged)
+      *aPluginsChanged = PR_TRUE;
+
+    // if we are just looking for possible changes, 
+    // no need to proceed if changes are detected
+    if (!aCreatePluginList && *aPluginsChanged) {
+      ClearCachedPluginInfoList();
+      return NS_OK;
+    }
+  }
     
   // 2. Scan the system-defined list of plugin dirs
   rv = dirService->Get(NS_OS_PLUGINS_DIR_LIST, NS_GET_IID(nsISimpleEnumerator), getter_AddRefs(dirList));
-  if (NS_SUCCEEDED(rv))
-    ScanPluginsDirectoryList(dirList, compManager, layoutPath);
+  if (NS_SUCCEEDED(rv)) {
+    ScanPluginsDirectoryList(dirList, compManager, layoutPath, aCreatePluginList, &pluginschanged);
+
+    if (pluginschanged)
+      *aPluginsChanged = PR_TRUE;
+
+    // if we are just looking for possible changes, 
+    // no need to proceed if changes are detected
+    if (!aCreatePluginList && *aPluginsChanged) {
+      ClearCachedPluginInfoList();
+      return NS_OK;
+    }
+  }
 
   mPluginsLoaded = PR_TRUE; // at this point 'some' plugins have been loaded,
                             // the rest is optional
@@ -4761,8 +4829,19 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
   //   2. we ignore 4.x Java plugins no matter what and other 
   //      unwanted plugins as per temporary decision described in bug #23856
   rv = dirService->Get("NS_4DOTX_PLUGINS_DIR", NS_GET_IID(nsIFile), getter_AddRefs(dirToScan));
-  if (NS_SUCCEEDED(rv))
-    ScanPluginsDirectory(dirToScan, compManager, layoutPath, PR_TRUE);
+  if (NS_SUCCEEDED(rv)) {
+    ScanPluginsDirectory(dirToScan, compManager, layoutPath, aCreatePluginList, &pluginschanged, PR_TRUE);
+
+    if (pluginschanged)
+      *aPluginsChanged = PR_TRUE;
+
+    // if we are just looking for possible changes, 
+    // no need to proceed if changes are detected
+    if (!aCreatePluginList && *aPluginsChanged) {
+      ClearCachedPluginInfoList();
+      return NS_OK;
+    }
+  }
   
   // Scan the installation path of Sun's JRE if the prefs are enabled
   nsCOMPtr<nsIPref> prefService = do_GetService(NS_PREF_CONTRACTID);
@@ -4776,24 +4855,54 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
         javaEnabled && doJREPluginScan)
     {
       rv = dirService->Get("NS_WIN_JAVA_JRE_DIR", NS_GET_IID(nsIFile), getter_AddRefs(dirToScan));
-      if (NS_SUCCEEDED(rv))
-        ScanPluginsDirectory(dirToScan, compManager, layoutPath);
+      if (NS_SUCCEEDED(rv)) {
+        ScanPluginsDirectory(dirToScan, compManager, layoutPath, aCreatePluginList, &pluginschanged);
+
+        if (pluginschanged)
+          *aPluginsChanged = PR_TRUE;
+
+        // if we are just looking for possible changes, 
+        // no need to proceed if changes are detected
+        if (!aCreatePluginList && *aPluginsChanged) {
+          ClearCachedPluginInfoList();
+          return NS_OK;
+        }
+      }
     }
   }
 #endif
    
-  // Update the plugins info cache
-  if (mSyncCachedPlugins) {
-    mSyncCachedPlugins = PR_FALSE;
-    CachePluginsInfo(registry);
+  // if get to this point and did not detect changes in plugins
+  // that means no plugins got updated or added
+  // let's see if plugins have been removed
+  if (!*aPluginsChanged) {
+    // count plugins remained in cache, if there are some, that means some plugins were removed;
+    // while counting, we should ignore unwanted plugins which are also present in cache
+    PRUint32 cachecount = 0;
+    for (nsPluginTag * cachetag = mCachedPlugins; cachetag; cachetag = cachetag->mNext) {
+      if (!(cachetag->mFlags & NS_PLUGIN_FLAG_UNWANTED))
+        cachecount++;
+    }
+    // if there is something left in cache, some plugins got removed from the directory
+    // and therefor their info did not get removed from the cache info list during directory scan;
+    // flag this fact
+    if (cachecount > 0) 
+      *aPluginsChanged = PR_TRUE;
   }
 
-  // No more need for cached plugins. Clear it up.
-  while (mCachedPlugins) {
-    nsPluginTag *next = mCachedPlugins->mNext;
-    delete mCachedPlugins;
-    mCachedPlugins = next;
+  // if we are not creating the list, there is no need to proceed
+  if (!aCreatePluginList) {
+    ClearCachedPluginInfoList();
+    return NS_OK;
   }
+
+  // if we are creating the list, it is already done;
+  // update the plugins info cache if changes are detected
+  if (*aPluginsChanged)
+    CachePluginsInfo(registry);
+
+  // No more need for cached plugins. Clear it up.
+  ClearCachedPluginInfoList();
 
   // reverse our list of plugins 
   nsPluginTag *next,*prev = nsnull;
@@ -4802,6 +4911,7 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
     cur->mNext = prev;
     prev = cur;
   }
+
   mPlugins = prev;
 
   NS_TIMELINE_STOP_TIMER("LoadPlugins");
@@ -4810,6 +4920,14 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
   return NS_OK;
 }
 
+void nsPluginHostImpl::ClearCachedPluginInfoList() 
+{
+  while (mCachedPlugins) {
+    nsPluginTag *next = mCachedPlugins->mNext;
+    delete mCachedPlugins;
+    mCachedPlugins = next;
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -5228,10 +5346,8 @@ nsPluginHostImpl::CachePluginsInfo(nsIRegistry* registry)
   // Store all plugins in the mPlugins list - all plugins currently in use.
   char pluginKeyName[64];
   nsPluginTag *tag;
-  for(tag=mPlugins; tag; tag=tag->mNext) {
+  for(tag = mPlugins; tag; tag=tag->mNext) {
     // store each plugin info into the registry
-    PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
-           ("CachePluginsInfo : Caching plugininfo in registry for %s\n", tag->mFileName));
     PR_snprintf(pluginKeyName, sizeof(pluginKeyName), "plugin-%d", ++count);
     AddPluginInfoToRegistry(registry, pluginsSubtreeKey, tag, pluginKeyName);
   }
@@ -5239,14 +5355,12 @@ nsPluginHostImpl::CachePluginsInfo(nsIRegistry* registry)
   // Store any unwanted plugins info so that we wont have to load
   // them again the next time around
   tag = mCachedPlugins;
-  for(tag=mCachedPlugins; tag; tag=tag->mNext) {
+  for(tag = mCachedPlugins; tag; tag=tag->mNext) {
     // Look for unwanted plugins
     if (!(tag->mFlags & NS_PLUGIN_FLAG_UNWANTED))
       continue;
 
     // store each plugin info into the registry
-    PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
-           ("CachePluginsInfo : Caching unwanted plugininfo in registry for %s\n", tag->mFileName));
     PR_snprintf(pluginKeyName, sizeof(pluginKeyName), "plugin-%d", ++count);
     AddPluginInfoToRegistry(registry, pluginsSubtreeKey, tag, pluginKeyName);
   }

@@ -395,10 +395,9 @@ private:
   nsresult
   LoadXPCOMPlugins(nsIComponentManager* aComponentManager, nsIFile* aPath);
 
-  /* Called by InstantiatePlugin */
-
   nsresult
   NewEmbededPluginStream(nsIURI* aURL, nsIPluginInstanceOwner *aOwner, nsIPluginInstance* aInstance);
+
   nsresult
   NewFullPagePluginStream(nsIStreamListener *&aStreamListener, nsIPluginInstance *aInstance);
 
@@ -424,15 +423,22 @@ private:
   RegisterPluginMimeTypesWithLayout(nsPluginTag *pluginTag, nsIComponentManager * compManager, nsIFile * layoutPath);
 
   nsresult
+  FindPlugins(PRBool aCreatePluginList, PRBool * aPluginsChanged);
+
+  nsresult
   ScanPluginsDirectory(nsIFile * pluginsDir, 
                        nsIComponentManager * compManager, 
                        nsIFile * layoutPath,
+                       PRBool aCreatePluginList,
+                       PRBool * aPluginsChanged,
                        PRBool checkForUnwantedPlugins = PR_FALSE);
                        
   nsresult
   ScanPluginsDirectoryList(nsISimpleEnumerator * dirEnum,
                            nsIComponentManager * compManager, 
                            nsIFile * layoutPath,
+                           PRBool aCreatePluginList,
+                           PRBool * aPluginsChanged,
                            PRBool checkForUnwantedPlugins = PR_FALSE);
 
   PRBool IsRunningPlugin(nsPluginTag * plugin);
@@ -446,6 +452,8 @@ private:
   // Given a filename, returns the plugins info from our cache and removes
   // it from the cache.
   nsPluginTag* RemoveCachedPluginsInfo(const char *filename);
+
+  void ClearCachedPluginInfoList();
   
   nsresult EnsurePrivateDirServiceProvider();
 
@@ -455,7 +463,6 @@ private:
   PRBool      mPluginsLoaded;
   PRBool      mDontShowBadPluginMessage;
   PRBool      mIsDestroyed;
-  PRBool      mSyncCachedPlugins;
 
   nsActivePluginList mActivePluginList;
   nsUnusedLibrary *mUnusedLibraries;

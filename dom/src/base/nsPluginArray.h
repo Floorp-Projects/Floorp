@@ -77,7 +77,6 @@ protected:
   PRUint32 mPluginCount;
   nsIDOMPlugin** mPluginArray;
   nsIDocShell* mDocShell; // weak reference
-  nsCOMPtr<nsIURI> mLastURI;
 };
 
 class PluginElementImpl : public nsIDOMPlugin
