@@ -27,11 +27,16 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 CHROME_DIR=packages/core
+CHROME_CONTENT_DIR=communicator/content
 CHROME_MISC_DIR=.
 CHROME_TYPE=content
 
 CHROME_MISC = \
 		manifest.rdf \
+		$(NULL)
+
+CHROME_CONTENT = \
+		communicatorOverlay.xul \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
