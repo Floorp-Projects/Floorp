@@ -730,6 +730,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                               ? &innerMaxElementSize
                               : nsnull);
 #ifdef DEBUG
+  metrics.width = nscoord(0xdeadbeef);
+  metrics.height = nscoord(0xdeadbeef);
+  metrics.ascent = nscoord(0xdeadbeef);
+  metrics.descent = nscoord(0xdeadbeef);
   if (mComputeMaxElementSize) {
     metrics.maxElementSize->width = nscoord(0xdeadbeef);
     metrics.maxElementSize->height = nscoord(0xdeadbeef);
@@ -754,6 +758,15 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     printf(" didn't set max-element-size!\n");
     metrics.maxElementSize->width = 0;
     metrics.maxElementSize->height = 0;
+  }
+  if ((metrics.width == nscoord(0xdeadbeef)) ||
+      (metrics.height == nscoord(0xdeadbeef)) ||
+      (metrics.ascent == nscoord(0xdeadbeef)) ||
+      (metrics.descent == nscoord(0xdeadbeef))) {
+    printf("nsBlockReflowContext: ");
+    nsFrame::ListTag(stdout, aFrame);
+    printf(" didn't set whad %d,%d,%d,%d!\n", metrics.width, metrics.height,
+           metrics.ascent, metrics.descent);
   }
 #endif
 
@@ -1267,7 +1280,7 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
         break;
     }
     if (span) {
-      nscoord distanceFromTop = distanceFromTop + pfd->mBounds.y;
+      nscoord distanceFromTop = aDistanceFromTop + pfd->mBounds.y;
       PlaceTopBottomFrames(span, distanceFromTop, aLineHeight);
     }
     pfd = pfd->mNext;
