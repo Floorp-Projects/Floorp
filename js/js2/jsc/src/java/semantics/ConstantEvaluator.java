@@ -512,7 +512,7 @@ public class ConstantEvaluator extends Evaluator implements Tokens, Attributes {
             ref       = (ReferenceValue) value;
             ref.scope = base;
         } else {
-            error(context,0,"Expecting reference expression after dot operator.",node.pos());
+            error(context,0,"Expecting reference expression after dot operator.",node.name.pos());
         }
 
         return value;
@@ -619,8 +619,7 @@ public class ConstantEvaluator extends Evaluator implements Tokens, Attributes {
         Value expr = UndefinedValue.undefinedValue;
 
         if( !TypeType.type.includes(typeValue) ) {
-            error(context,"A constant type expression expected on right hand side of coerce operator." +
-                                typeValue,node.pos());
+            error(context,"A constant type expression expected on right hand side of coerce operator.",node.type.pos());
         } else {
             Value value;
             expr  = node.expr.evaluate(context,this);
@@ -1957,8 +1956,8 @@ public class ConstantEvaluator extends Evaluator implements Tokens, Attributes {
 
         // Put the new namespace into the current local scope.
 
-        Scope local = context.getLocal();
-        Slot slot   = local.add(null,name);
+        Scope scope = context.getGlobal();
+        Slot slot   = scope.add(null,name);
         slot.type   = NamespaceType.type;
         slot.value  = value;
         slot.attrs  = null; // ACTION: do attrs.
@@ -1993,18 +1992,23 @@ public class ConstantEvaluator extends Evaluator implements Tokens, Attributes {
         Scope scope;
         Slot slot;
 
-        Vector prev_namespaces = used_namespaces;
-        used_namespaces = (Vector)prev_namespaces.clone();
+        if( node.statements != null ) {
+		
+			Vector prev_namespaces = used_namespaces;
+			used_namespaces = (Vector)prev_namespaces.clone();
 
-        scope      = context.getGlobal();
-        slot       = scope.add(null,"_code_");
-        slot.value = node.statements.evaluate(context,this);
-        slot.type  = ObjectType.type;
-        slot.attrs = null; // ACTION: do attrs
+			scope      = context.getGlobal();
+			slot       = scope.add(null,"_code_");
+			slot.value = node.statements.evaluate(context,this);
+			slot.type  = ObjectType.type;
+			slot.attrs = null; // ACTION: do attrs
 
-        used_namespaces = prev_namespaces;
+			used_namespaces = prev_namespaces;
+            return slot.value;
+        } else {
+		    return UndefinedValue.undefinedValue;
+		}
 
-        return slot.value;
     }
 
 /*

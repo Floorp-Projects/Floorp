@@ -39,6 +39,7 @@ public class Scanner implements Tokens, States, CharacterClasses {
     private   String codebase;
     private   boolean foundNewlineInComment;
     private   boolean isFirstTokenOnLine;
+	protected int     errorCount = 0;
     
     InputBuffer input;
 
@@ -305,8 +306,8 @@ public class Scanner implements Tokens, States, CharacterClasses {
     };
 
     public final void error(int kind, String msg, int tokenid) {
+	    errorCount++;
         String loc = null;
-        int pos;
         switch(kind) {
             case lexical_error:
             case lexical_lineterminatorinsinglequotedstringliteral_error:
@@ -320,10 +321,9 @@ public class Scanner implements Tokens, States, CharacterClasses {
                 msg = msg==null?error_messages[kind]:msg;
                 break;
         }
-        pos = loc.length()-1;
         System.err.println(loc+msg);
         System.err.println(input.getLineText(input.positionOfMark()));
-        System.err.println(getLinePointer(input.markCol));
+        System.err.println(getLinePointer(input.markCol-1));
         skiperror(kind);
     }
 
@@ -376,10 +376,13 @@ public class Scanner implements Tokens, States, CharacterClasses {
                     }
                 }
             case syntax_error:
-                err.println("Syntax error");
-                break;
             default:
-                break;
+                while ( true ) {
+                    char nc = nextchar();
+                    if( nc == ';' || nc == '\n' || nc == 0 ) {
+                        return;
+                    }
+                }
         } 
         } catch (Exception x) {
             x.printStackTrace();

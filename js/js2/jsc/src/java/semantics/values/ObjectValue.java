@@ -37,8 +37,7 @@ public class ObjectValue extends Value implements Attributes, Scope {
      *
      */
 
-    Hashtable slots      = new Hashtable();
-    Hashtable attributes = new Hashtable();
+    Hashtable slots = new Hashtable();
     String name;
 
     /**
@@ -123,20 +122,28 @@ public class ObjectValue extends Value implements Attributes, Scope {
      */
 
     public Slot get(Value namespace, String name) {
+
         if( debug ) {
             Debugger.trace("ObjectValue.get() namespace="+namespace+", name="+name);
         }
-        Hashtable names;
+
+        Slot slot;
         if( namespace == null ) {
-            names = slots;
+            slot = (Slot) slots.get(name);
         } else {
-            names = (Hashtable) ((ObjectValue)slots.get(namespace)).slots;
+            ObjectValue names = (ObjectValue)slots.get(namespace);
+			if( names == null ) {
+			    slot = null;
+			} else {
+                slot = (Slot) names.slots.get(name);
+			}
         }
-        return (Slot) names.get(name);
+
+        return slot;
     }
 
     /**
-     *
+     * Add a name to a namespace and return the resulting slot.
      */
 
     public Slot add(Value namespace, String name) throws Exception {

@@ -332,7 +332,8 @@ final class CoersionExpressionNode extends Node {
 
     Node expr, type;
 
-    CoersionExpressionNode( Node expr, Node type ) {
+    CoersionExpressionNode( Node expr, Node type, int pos ) {
+	    super(pos);
         this.expr = expr;
         this.type = type;
     }
@@ -953,7 +954,8 @@ final class IndexedMemberExpressionNode extends Node {
 
     Node base, expr;
 
-    IndexedMemberExpressionNode( Node base, Node expr ) {
+    IndexedMemberExpressionNode( Node base, Node expr, int pos ) {
+	    super(pos);
         this.base = base;
 	    this.expr = expr;
     }
@@ -1333,7 +1335,8 @@ final class MemberExpressionNode extends Node {
 
     Node base, name;
 
-    MemberExpressionNode( Node base, Node name ) {
+    MemberExpressionNode( Node base, Node name, int pos ) {
+	    super(pos);
         this.base = base;
 	    this.name = name;
     }
@@ -1494,7 +1497,8 @@ final class ParenthesizedExpressionNode extends Node {
 
     Node expr;
 
-    public ParenthesizedExpressionNode( Node expr ) {
+    public ParenthesizedExpressionNode( Node expr, int pos ) {
+	    super(pos);
         this.expr = expr;
     }
 

@@ -79,7 +79,7 @@ public final class NodeFactory {
         return new LiteralUndefinedNode();
     }
     static ParenthesizedExpressionNode ParenthesizedExpression( Node expr ) {
-        return new ParenthesizedExpressionNode(expr);
+        return new ParenthesizedExpressionNode(expr,in.positionOfMark());
     }
     static ParenthesizedListExpressionNode ParenthesizedListExpression( Node expr ) {
         return new ParenthesizedListExpressionNode(expr);
@@ -124,13 +124,13 @@ public final class NodeFactory {
         return new CallExpressionNode(member,args);
     }
     static IndexedMemberExpressionNode IndexedMemberExpression( Node base, Node member ) {
-        return new IndexedMemberExpressionNode(base,member);
+        return new IndexedMemberExpressionNode(base,member,in.positionOfMark());
     }
     static MemberExpressionNode MemberExpression( Node base, Node name ) {
-        return new MemberExpressionNode(base,name);
+        return new MemberExpressionNode(base,name,in.positionOfMark());
     }
     static CoersionExpressionNode CoersionExpression( Node expr, Node type ) {
-        return new CoersionExpressionNode(expr,type);
+        return new CoersionExpressionNode(expr,type,in.positionOfMark());
     }
     static UnaryExpressionNode UnaryExpression( int op, Node expr ) {
         return new UnaryExpressionNode(op,expr);

@@ -124,7 +124,7 @@ public class Main {
         Node node;
         Value type;
         Evaluator evaluator;
-		Value value;
+		Value value = UndefinedValue.undefinedValue;
 
         Class pc = Parser.class;
         Class[] args = new Class[0];
@@ -133,6 +133,8 @@ public class Main {
         long t=0;
 
         ObjectValue global = null;
+
+		int errorCount=0;
 
         for( int i = 0; i < input.length; i++ ) {
 
@@ -161,32 +163,38 @@ public class Main {
                 System.gc();
 	            t = System.currentTimeMillis();
                 node = parser.parseProgram();
-                if( traceParser ) {
-                    Debugger.trace("setting parser output to " + input[i]);
-                    JSILGenerator.setOut( input[i]+".par" );
-                    node.evaluate(context,new JSILGenerator());
+                errorCount = parser.errorCount();
+				if( errorCount == 0 ) {
+
+
+					if( traceParser ) {
+						Debugger.trace("setting parser output to " + input[i]);
+						JSILGenerator.setOut( input[i]+".par" );
+						node.evaluate(context,new JSILGenerator());
+					}
+
+					//Evaluator evaluator;
+
+
+					context.setEvaluator(new BlockEvaluator());
+					node.evaluate(context, context.getEvaluator());
+
+					JSILGenerator.setOut( input[i]+".blocks" );
+					context.setEvaluator(new JSILGenerator());
+					node.evaluate(context, context.getEvaluator());
+
+					context.setEvaluator(new ConstantEvaluator());
+					value = node.evaluate(context, context.getEvaluator());
+
+					context.setEvaluator(new JSILGenerator());
+					JSILGenerator.setOut( input[i]+".jsil" );
+					node.evaluate(context, context.getEvaluator());
+					errorCount = context.errorCount();
                 }
-
-                //Evaluator evaluator;
-
-
-                context.setEvaluator(new BlockEvaluator());
-                node.evaluate(context, context.getEvaluator());
-
-                JSILGenerator.setOut( input[i]+".blocks" );
-                context.setEvaluator(new JSILGenerator());
-                node.evaluate(context, context.getEvaluator());
-
-                context.setEvaluator(new ConstantEvaluator());
-                value = node.evaluate(context, context.getEvaluator());
-
-                context.setEvaluator(new JSILGenerator());
-                JSILGenerator.setOut( input[i]+".jsil" );
-                node.evaluate(context, context.getEvaluator());
 
 	            t = System.currentTimeMillis() - t;
                 //Debugger.trace(""+global);
-                System.out.println(input[i] + ": "+context.errorCount()+" errors [" + Long.toString(t) + " msec] --> " + value.getValue(context) );
+                System.out.println(input[i] + ": "+ errorCount +" errors [" + Long.toString(t) + " msec] --> " + value.getValue(context) );
 
             } catch( Exception x ) {
                 x.printStackTrace();
