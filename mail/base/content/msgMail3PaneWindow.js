@@ -22,6 +22,7 @@
 #   Håkan Waara (hwaara@chello.se)
 #   Neil Rashbrook (neil@parkwaycc.co.uk)
 #   Seth Spitzer <sspitzer@netscape.com>
+#   David Bienvenu <bienvenu@nventure.com>
 
 /* This is where functions related to the 3 pane window are kept */
 
@@ -152,7 +153,7 @@ var folderListener = {
                  gDBView.suppressCommandUpdating = false;
                }
 
-               gIsEditableMsgFolder = IsSpecialFolder(msgFolder, MSG_FOLDER_FLAG_DRAFTS);
+               gIsEditableMsgFolder = IsSpecialFolder(msgFolder, MSG_FOLDER_FLAG_DRAFTS, true);
 
                gCurrentLoadingFolderSortType = 0;
                gCurrentLoadingFolderSortOrder = 0;

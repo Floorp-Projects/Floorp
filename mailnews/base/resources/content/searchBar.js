@@ -336,7 +336,7 @@ function createSearchTerms()
   var searchTermsArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
   var selectedFolder = GetThreadPaneFolder();
 
-  var searchAttrib = (IsSpecialFolder(selectedFolder, MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_QUEUE)) ? nsMsgSearchAttrib.ToOrCC : nsMsgSearchAttrib.Sender;
+  var searchAttrib = (IsSpecialFolder(selectedFolder, MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_QUEUE, true)) ? nsMsgSearchAttrib.ToOrCC : nsMsgSearchAttrib.Sender;
   // implement | for QS
   // does this break if the user types "foo|bar" expecting to see subjects with that string?
   // I claim no, since "foo|bar" will be a hit for "foo" || "bar"

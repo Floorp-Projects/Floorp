@@ -177,10 +177,10 @@ function MsgComposeDraftMessage()
 
 function ThreadPaneDoubleClick()
 {
-  if (IsSpecialFolderSelected(MSG_FOLDER_FLAG_DRAFTS)) {
+  if (IsSpecialFolderSelected(MSG_FOLDER_FLAG_DRAFTS, true)) {
     MsgComposeDraftMessage();
   }
-  else if(IsSpecialFolderSelected(MSG_FOLDER_FLAG_TEMPLATES)) {
+  else if(IsSpecialFolderSelected(MSG_FOLDER_FLAG_TEMPLATES, true)) {
     var loadedFolder = GetLoadedMsgFolder();
     var messageArray = GetSelectedMessages();
     ComposeMessage(msgComposeType.Template, msgComposeFormat.Default, loadedFolder, messageArray);
@@ -375,10 +375,10 @@ function UpdateSortIndicators(sortType, sortOrder)
   }
 }
 
-function IsSpecialFolderSelected(flags)
+function IsSpecialFolderSelected(flags, checkAncestors)
 {
   var selectedFolder = GetThreadPaneFolder();
-  return IsSpecialFolder(selectedFolder, flags);
+  return IsSpecialFolder(selectedFolder, flags, checkAncestors);
 }
 
 function GetThreadTree()
