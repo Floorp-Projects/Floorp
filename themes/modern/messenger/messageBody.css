@@ -44,10 +44,6 @@ mailattachcount {
   display: none;
 }
 
-menu[name="attachment-menu"] {
-  background-color: #EFEFEF;
-}
-
 /* :::: message header ::::: */
 
 header {
@@ -59,16 +55,11 @@ headerdisplayname {
   white-space: pre;
 }
 
-box[name="header-attachment"],
-box[name="header-part1"],
 table[name="header-part1"] {
   border-left: 4px solid #EFEFEF;
   background-color: #EFEFEF;
 }
 
-box[name="header-part2"],
-box[name="header-part3"],
-box[name="header-seamonkey"],
 table[name="header-part2"],
 table[name="header-part3"] {
   border: 4px solid #DEDEDE;
