@@ -32,24 +32,27 @@ sub Get {
     my $line = 0;
     while (<FILE>) {
         $line++; chomp;
-        if (/^ *([^#;][^=\n\r]*)=(.*)$/os) {
+        if (/^ *([^#;][^=\n\r]*)(?:=(.*))?$/os) {
             my $value = $$config{$1};
             if (defined($value)) {
                 $value = $$value while ref($value) eq 'REF';
                 if (ref($value) eq 'SCALAR') {
                     $$value = $2;
                 } elsif (ref($value) eq 'ARRAY') {
-                    if ($seen{$1}) {
+                    unless ($seen{$1}) {
+                        @$value = ();
+                    }
+                    if (defined($2)) {
                         push(@$value, $2);
-                    } else {
-                        @$value = ($2);
                     }
                 } elsif (ref($value) eq 'HASH') {
                     unless ($seen{$1}) {
                         %$value = ();
                     }
-                    $2 =~ /^(.)(.*?)\1=>(.*)$/so;
-                    $$value{$2} = $3;
+                    if (defined($2)) {
+                        $2 =~ /^(.)(.*?)\1=>(.*)$/so;
+                        $$value{$2} = $3;
+                    }
                 }
             } # else unknown variable, ignore
             $seen{$1} = 1;
@@ -96,23 +99,35 @@ sub Save {
                             print FILE $1.'='.$$value."\n";
                         }
                     } elsif (ref($value) eq 'HASH') {
-                        foreach my $item (keys %$value) {
-                            my $data = $$value{$item};
-                            my $delimiter;
-                            foreach ('"','\'','|',':','#','*','<','>','/','[',']','{','}',
-                                     '(',')','\\','=','-','@','!','$','%','&',' ','`','~') {
-                                if ($item !~ /\Q$_\E=>/os) {
-                                    $delimiter = $_;
-                                    last;
+                        my @keys = keys %$value;
+                        if (@keys > 0) {
+                            foreach my $item (@keys) {
+                                my $data = $$value{$item};
+                                my $delimiter;
+                                foreach ('"','\'','|',':','#','*','<','>','/','[',']','{','}',
+                                         '(',')','\\','=','-','@','!','\$','%','&',' ','\`','~') {
+                                    if ($item !~ /\Q$_\E=>/os) {
+                                        $delimiter = $_;
+                                        last;
+                                    }
                                 }
+                                print FILE "$1=$delimiter$item$delimiter=>$data\n" if defined($delimiter);
+                                # else, silent data loss... XXX
                             }
-                            print FILE "$1=$delimiter$item$delimiter=>$data\n" if defined($delimiter);
-                            # else, silent data loss... XXX
+                        } else {
+                            print FILE "$1\n";
                         }
                     } elsif (ref($value) eq 'ARRAY') {
-                        foreach my $item (@$value) {
-                            $item = '' unless defined($item);
-                            print FILE "$1=$item\n";
+                        if (@$value > 0) {
+                            foreach my $item (@$value) {
+                                if (defined($item)) {
+                                    print FILE "$1=$item\n";
+                                } else {
+                                    print FILE "$1=\n";
+                                }
+                            }
+                        } else {
+                            print FILE "$1\n";
                         }
                     } else {
                         confess("Unsupported data type '".ref($value)."' writing $1 (".$$config{$1}.')');
