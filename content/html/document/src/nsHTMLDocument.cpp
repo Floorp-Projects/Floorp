@@ -4184,7 +4184,7 @@ static struct MidasCommand gMidasCommandTable[] = {
   { "increasefontsize", "cmd_increaseFont", "", PR_FALSE },
   { "decreasefontsize", "cmd_decreaseFont", "", PR_FALSE },
   { "fontsize",      "cmd_fontSize",        "", PR_FALSE },
-  { "inserthorizontalrule", "cmd_hline",    "", PR_TRUE },
+  { "inserthorizontalrule", "cmd_insertHR", "", PR_TRUE },
   { "createlink",    "cmd_insertLinkNoUI",  "", PR_FALSE },
   { "insertimage",   "cmd_insertImageNoUI", "", PR_FALSE },
   { "justifyleft",   "cmd_align",       "left", PR_TRUE },

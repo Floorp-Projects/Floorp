@@ -163,6 +163,7 @@ nsComposerController::RegisterHTMLEditorCommands(
   NS_REGISTER_ONE_COMMAND(nsInsertHTMLCommand, "cmd_insertHTML");
   NS_REGISTER_TAG_COMMAND(nsInsertTagCommand, "cmd_insertLinkNoUI", "a");
   NS_REGISTER_TAG_COMMAND(nsInsertTagCommand, "cmd_insertImageNoUI", "img");
+  NS_REGISTER_TAG_COMMAND(nsInsertTagCommand, "cmd_insertHR", "hr");
 
   return NS_OK;
 }

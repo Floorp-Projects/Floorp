@@ -1315,6 +1315,22 @@ nsInsertTagCommand::IsCommandEnabled(const char * aCommandName,
 NS_IMETHODIMP
 nsInsertTagCommand::DoCommand(const char *aCmdName, nsISupports *refCon)
 {
+  if (0 == nsCRT::strcmp(mTagName, "hr"))
+  {
+    nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(refCon);
+    if (!editor)
+      return NS_ERROR_NOT_IMPLEMENTED;
+
+    nsCOMPtr<nsIDOMElement> domElem;
+    nsresult rv;
+    rv = editor->CreateElementWithDefaults(NS_ConvertASCIItoUCS2(mTagName),
+                                           getter_AddRefs(domElem));
+    if (NS_FAILED(rv))
+      return rv;
+
+    return editor->InsertElementAtSelection(domElem, PR_TRUE);
+  }
+
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1323,8 +1339,13 @@ nsInsertTagCommand::DoCommandParams(const char *aCommandName,
                                     nsICommandParams *aParams,
                                     nsISupports *refCon)
 {
-  NS_ENSURE_ARG_POINTER(aParams);
   NS_ENSURE_ARG_POINTER(refCon);
+
+  // inserting an hr shouldn't have an parameters, just call DoCommand for that
+  if (0 == nsCRT::strcmp(mTagName, "hr"))
+    return DoCommand(aCommandName, refCon);
+
+  NS_ENSURE_ARG_POINTER(aParams);
 
   nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(refCon);
   if (!editor)
