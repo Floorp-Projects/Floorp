@@ -185,32 +185,40 @@ Verify Existence=
 [Dialog Welcome]
 Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
-Title=$ProductName$ Setup - Welcome
+Title=$ProductName$ Setup
 ;*** LOCALIZE ME BABY ***
-Message0=Welcome to %s Setup.  You are about to install %s 0.8.
+Message0=Welcome to %s. You are about to install %s 0.8.
 ;*** LOCALIZE ME BABY ***
 Message1=It is strongly recommended that you exit all Windows programs before running this Setup program.
 ;*** LOCALIZE ME BABY ***
 Message2=Click Cancel to quit Setup and then close any programs you have running.  Click Next to continue the Setup program.
+;*** LOCALIZE ME BABY ***
+Message3=Click Next to continue installing %s 0.8.
 
 [Dialog License]
 Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
-Title=$ProductName$ Setup - Software License Agreement
+Title=Software License Agreement
+;*** LOCALIZE ME BABY ***
+Sub Title=XXXben Blah Blah Software License Agreement
 License File=license.txt
 ;*** LOCALIZE ME BABY ***
 Message0=Please read the following license agreement.  Use the scroll bar to view the rest of this agreement.
 ;*** LOCALIZE ME BABY ***
-Message1=Click Accept if you accept the terms of the preceeding license agreement.  If Decline is clicked, setup will quit.
+Message1=XXXben Do you accept the agreement?
+;*** LOCALIZE ME BABY ***
+Message2=XXXben I Accept the Agreement
+;*** LOCALIZE ME BABY ***
+Message3=XXXben I do NOT Accept the Agreement
 
 [Dialog Setup Type]
 Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
-Title=$ProductName$ Setup - Setup Type
+Title=Setup Type
 ;*** LOCALIZE ME BABY ***
-Message0=Click the type of setup you prefer, then click Next.
-Readme Filename=readme.txt
-Readme App=notepad.exe
+Sub Title=XXXben blah blah Setup Type blah.
+;*** LOCALIZE ME BABY ***
+Message0=Choose the type of Setup you prefer, then click Next.
 
 ; at least one Setup Type needs to be set, and up to 4 can be
 ; set (Setup Type0, Setup Type1, Setup Type2, Setup Type3).
@@ -257,9 +265,20 @@ C7=Component US region pack
 [Dialog Select Components]
 Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
-Title=$ProductName$ Setup - Select Components
+Title=Select Components
 ;*** LOCALIZE ME BABY ***
-Message0=The browser is always installed.  Select or clear the additional components you want to install.
+Sub Title=XXXben Blah Blah Additional Components
+;*** LOCALIZE ME BABY ***
+Message0=Choose additional components you want to install, then click Next.
+
+[Dialog Select Install Path]
+Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
+Title=Install Folder
+;*** LOCALIZE ME BABY ***
+Sub Title=XXXben blah blah install path
+;*** LOCALIZE ME BABY ***
+Message0=$ProductName$ will be installed into the following folder:
 
 [Dialog Select Additional Components]
 Show Dialog=FALSE
@@ -361,11 +380,15 @@ Turbo Mode Enabled=TRUE
 [Dialog Start Install]
 Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
-Title=$ProductName$ Setup - Start Install
+Title=Summary
 ;*** LOCALIZE ME BABY ***
-Message Install=Setup has enough information to start copying the program files.  If you want to review or change settings, click Back.  If you are satisfied with the current settings, click Install to begin copying files.
+Sub Title=XXXben Summary Blah Blah Summary. 
 ;*** LOCALIZE ME BABY ***
-Message Download=Setup has enough information to start downloading and copying the program files.  If you want to review or change settings, click Back.  If you are satisfied with the current settings, make sure you are currently connected to the internet and click Install to begin downloading files.
+Message Install=Setup will now install the following components:
+;*** LOCALIZE ME BABY ***
+Message Download=Setup will now download and install the following components:
+;*** LOCALIZE ME BABY ***
+Message0=Click Install to continue.
 
 [Dialog Download]
 Show Dialog=TRUE
