@@ -1252,7 +1252,7 @@ nsFileURL::nsFileURL(const char* inString, PRBool inCreateDirs)
         inString + kFileURLPrefixLength,
         mFileSpec.mSpec,
         true, // need to decode
-        true, // resolve alias
+        false, // resolve alias
         false, // must be a full path
         inCreateDirs));
     if (mFileSpec.mError == NS_FILE_RESULT(fnfErr))
@@ -1272,7 +1272,7 @@ nsFileURL::nsFileURL(const nsString& inString, PRBool inCreateDirs)
         cstring + kFileURLPrefixLength,
         mFileSpec.mSpec,
         true, // need to decode
-        true, // resolve alias
+        false, // resolve alias
         false, // must be a full path
         inCreateDirs));
     if (mFileSpec.mError == NS_FILE_RESULT(fnfErr))
