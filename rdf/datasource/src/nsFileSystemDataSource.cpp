@@ -54,6 +54,12 @@
 #include "winbase.h"
 #endif
 
+#undef	XP_BEOS
+
+#ifdef	XP_BEOS
+#include <File.h>
+#include <NodeInfo.h>
+#endif
 
 
 static NS_DEFINE_CID(kRDFServiceCID,               NS_RDFSERVICE_CID);
@@ -83,6 +89,11 @@ private:
 #ifdef	XP_WIN
 	static nsIRDFResource		*kNC_IEFavoriteObject;
 	static char			*ieFavoritesDir;
+#endif
+
+#ifdef	XP_BEOS
+	static nsIRDFResource		*kNC_NetPositiveObject;
+	static char			*netPositiveDir;
 #endif
 
 public:
@@ -164,6 +175,10 @@ public:
 #ifdef	XP_WIN
     static PRBool   isValidFolder(nsIRDFResource *source);
     static nsresult getIEFavoriteURL(nsIRDFResource *source, nsString aFileURL, nsIRDFLiteral **urlLiteral);
+#endif
+
+#ifdef	XP_BEOS
+    static nsresult getNetPositiveURL(nsIRDFResource *source, nsString aFileURL, nsIRDFLiteral **urlLiteral);
 #endif
 
 };
@@ -1174,8 +1189,66 @@ FileSystemDataSource::GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult)
 	}
 #endif
 
+#ifdef	XP_BEOS
+	// under BEOS, try and get the "be:url" attribute
+	if (netPositiveDir)
+	{
+		if (url.Find(netPositiveDir) == 0)
+		{
+			rv = getNetPositiveURL(source, url, &literal);
+			*aResult = literal;
+			return(rv);
+		}
+	}
+#endif
+
+	// if we fall through to here, its not any type of bookmark
+	// stored in the platform native file system, so just set the URL
+
 	gRDFService->GetLiteral(url.GetUnicode(), &literal);
 	*aResult = literal;
 	return NS_OK;
 }
+
+
+
+#ifdef	XP_BEOS
+
+nsresult
+FileSystemDataSource::getNetPositiveURL(nsIRDFResource *source, nsString aFileURL, nsIRDFLiteral **urlLiteral)
+{
+	nsresult		rv = NS_RDF_NO_VALUE;
+
+	*urlLiteral = nsnull;
+
+	nsFileURL		url(aFileURL);
+	nsFileSpec		uri(url);
+	if (uri.IsFile() && (!uri.IsHidden()))
+	{
+		const char	*nativeURI = uri.GetNativePathCString();
+		if (nativeURI)
+		{
+			BFile	bf(nativeURI, B_READ_ONLY);
+			if (bf.InitCheck() == B_OK)
+			{
+				char		beURLattr[4096];
+				ssize_t		len;
+
+				// XXX Is "be:url" the correct NetPositive attribute for URLs?
+
+				if ((len = bf.ReadAttr("be:url", B_STRING_TYPE,
+					0, beURLattr, sizeof(beURLattr-1))) > 0)
+				{
+					beURLattr[len] = '\0';
+					nsAutoString	bookmarkURL(beURLattr);
+					rv = gRDFService->GetLiteral(bookmarkURL.GetUnicode(),
+						urlLiteral);
+				}
+			}
+		}
+	}
+	return(rv);
+}
+
+#endif
 
