@@ -105,7 +105,7 @@ nsresult fromNPError[] = {
 nsPluginManager* thePluginManager = NULL;
 
 nsPluginManager::nsPluginManager(nsISupports* outer)
-    : fJVMMgr(NULL), fMalloc(NULL), fAllocatedMenuIDs(NULL), fCapsManager(NULL), fLiveconnect(NULL)
+    : fJVMMgr(NULL), fMalloc(NULL), fFileUtils(NULL), fAllocatedMenuIDs(NULL), fCapsManager(NULL), fLiveconnect(NULL)
 {
     NS_INIT_AGGREGATED(outer);
 }
