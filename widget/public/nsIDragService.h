@@ -36,6 +36,8 @@ class nsIDragService : public nsISupports {
 
   public:
 
+    static const nsIID& GetIID() { static nsIID iid = NS_IDRAGSERVICE_IID; return iid; }
+
   /**
     * Set the current state of the drag whether it can be dropped or not.
     * usually the target "frame" sets this so the native system can render the correct feedback
