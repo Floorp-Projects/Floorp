@@ -106,6 +106,10 @@
         onget="return document.getAnonymousNodes(this)[0]"
       />
 
+      <property name="innerDiv"
+        onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'innerDiv');"
+      />
+
       <property name="height"
         onget="return this.getAttribute('height');"
       />
@@ -272,18 +276,10 @@
            extends="chrome://xbl-marquee/content/xbl-marquee.xml#marquee"
            inheritstyle="false">
 
-    <implementation>
-
-      <property name="innerDiv"
-        onget="return document.getAnonymousNodes(this)[0].firstChild.firstChild"
-      />
-
-    </implementation>
-
     <content>
       <html:div xbl:inherits="" style="overflow: -moz-scrollbars-none">
         <xul:hbox style="margin: 0 100%;">
-          <html:div>
+          <html:div anonid="innerDiv">
             <children/>
           </html:div>
         </xul:hbox>
@@ -295,15 +291,9 @@
   <binding id="marquee-vertical"
            extends="chrome://xbl-marquee/content/xbl-marquee.xml#marquee">
 
-    <implementation>
-      <property name="innerDiv"
-        onget="return document.getAnonymousNodes(this)[0].firstChild"
-      />
-    </implementation>
-
     <content>
       <html:div xbl:inherits="" style="overflow: -moz-scrollbars-none">
-        <html:div>
+        <html:div anonid="innerDiv">
           <children/>
         </html:div>
       </html:div>
