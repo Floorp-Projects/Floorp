@@ -423,13 +423,13 @@ function lazyAppendFontNames( i )
          try
            {
              var fontPrefString = "font.name." + fontTypes[i] + "." + languageList.value;
-             var selectVal = parent.hPrefWindow.pref.CopyUnicharPref( fontPrefString );
+             var selectVal = gPrefWindow.pref.CopyUnicharPref( fontPrefString );
              var dataEls = selectElement.listElement.getElementsByAttribute( "value", selectVal );
 
              // we need to honor name-list in case name is unavailable 
              if (!dataEls.length) {
                  var fontListPrefString = "font.name-list." + fontTypes[i] + "." + languageList.value;
-                 var nameList = parent.hPrefWindow.pref.CopyUnicharPref( fontListPrefString );
+                 var nameList = gPrefWindow.pref.CopyUnicharPref( fontListPrefString );
                  var fontNames = nameList.split(",");
                  var stripWhitespace = /^\s*(.*)\s*$/;
 
@@ -449,121 +449,6 @@ function lazyAppendFontNames( i )
 
      selectElement.listElement.selectedItem = selectedItem;
      selectElement.listElement.removeAttribute( "disabled" );
-  }
-
-function saveFontPrefs()
-  {
-    // if saveState function is available, assume can call it.
-    // why is this extra qualification required?!!!!
-    if( top.hPrefWindow.wsm.contentArea.saveState )
-      {
-        saveState();
-        parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-fonts.xul"] = GetFields();
-      }
-
-    // saving font prefs
-    var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-fonts.xul"];
-    var pref = parent.hPrefWindow.pref;
-    for( var language in dataObject.languageData )
-      {
-        for( var type in dataObject.languageData[language].types )
-          {
-            var fontPrefString = "font.name." + type + "." + language;
-            var currValue = "";
-            try
-              {
-                currValue = gPrefWindow.pref.CopyUnicharPref( fontPrefString );
-              }
-            catch(e)
-              {
-              }
-
-            var dataValue = dataObject.languageData[language].types[type];
-            if( currValue != dataValue )
-              {
-                if (dataValue)
-                  {
-                    gPrefWindow.pref.SetUnicharPref( fontPrefString, dataValue );
-                  }
-                else
-                  {
-                    // A font name can't be blank. The special blank means the default.
-                    // Unset the pref entirely, letting Gfx to decide. GfxXft will use what
-                    // Xft says, whereas GfxWin and others will use the built-in settings
-                    // that are shipped for font.name and font.name-list.
-                    try
-                      {
-                        // ClearUserPref throws an exception...
-                        gPrefWindow.pref.ClearUserPref( fontPrefString );
-                      }
-                    catch(e)
-                      {
-                      }
-                  }
-              }
-          }
-        var variableSizePref = "font.size.variable." + language;
-        var fixedSizePref = "font.size.fixed." + language;
-        var minSizePref = "font.minimum-size." + language;
-        var currVariableSize = 12, currFixedSize = 12, minSizeVal = 0;
-        try
-          {
-            currVariableSize = gPrefWindow.pref.GetIntPref( variableSizePref );
-            currFixedSize = gPrefWindow.pref.GetIntPref( fixedSizePref );
-            minSizeVal = gPrefWindow.pref.GetIntPref( minSizePref );
-          }
-        catch(e)
-          {
-          }
-        if( currVariableSize != dataObject.languageData[language].variableSize )
-          gPrefWindow.pref.SetIntPref( variableSizePref, dataObject.languageData[language].variableSize );
-        if( currFixedSize != dataObject.languageData[language].fixedSize )
-          gPrefWindow.pref.SetIntPref( fixedSizePref, dataObject.languageData[language].fixedSize );
-        if ( minSizeVal != dataObject.languageData[language].minSize ) {
-          gPrefWindow.pref.SetIntPref ( minSizePref, dataObject.languageData[language].minSize );
-        }
-      }
-
-    // font scaling
-    var fontDPI       = parseInt( dataObject.fontDPI );
-    var myFonts = dataObject.dataEls["useMyFonts"].checked;
-    var defaultFont   = dataObject.defaultFont;
-    var myColors = dataObject.dataEls["useMyColors"].checked;
-    try
-      {
-        var currDPI = gPrefWindow.pref.GetIntPref( "browser.display.screen_resolution" );
-        var currFonts = gPrefWindow.pref.GetIntPref( "browser.display.use_document_fonts" );
-        var currColors = gPrefWindow.pref.GetBoolPref("browser.display.use_document_colors");
-        var currDefault = gPrefWindow.pref.CopyUnicharPref( "font.default" );
-      }
-    catch(e)
-      {
-      }
-    if( currDPI != fontDPI )
-      gPrefWindow.pref.SetIntPref( "browser.display.screen_resolution", fontDPI );
-    if( currFonts == myFonts )
-      gPrefWindow.pref.SetIntPref( "browser.display.use_document_fonts", !myFonts );
-    if( currDefault != defaultFont )
-      {
-        gPrefWindow.pref.SetUnicharPref( "font.default", defaultFont );
-      }
-    if (currColors == myColors)
-      gPrefWindow.pref.SetBoolPref("browser.display.use_document_colors", !myColors);
-
-    var items = ["foregroundText", "background", "unvisitedLinks", "visitedLinks"];
-    var prefs = ["browser.display.foreground_color", "browser.display.background_color",
-                 "browser.anchor_color", "browser.visited_color"];
-    var prefvalue;
-    for (var i = 0; i < items.length; ++i) {
-      prefvalue = dataObject.dataEls[items[i]].value;
-      gPrefWindow.pref.SetUnicharPref(prefs[i], prefvalue)
-    }
-    items = ["browserUseSystemColors", "browserUnderlineAnchors"];
-    prefs = ["browser.display.use_system_colors", "browser.underline_anchors"];
-    for (var i = 0; i < items.length; ++i) {
-      prefvalue = dataObject.dataEls[items[i]].checked;
-      gPrefWindow.pref.SetBoolPref(prefs[i], prefvalue)
-    }
   }
 
 function saveState()
@@ -610,10 +495,10 @@ function selectLanguage()
     // save current state
     saveState();
 
-    if( !currentLanguage )
-      currentLanguage = languageList.value;
-    else if( currentLanguage == languageList.value )
+    if( currentLanguage == languageList.value )
       return; // same as before, nothing changed
+    
+    currentLanguage = languageList.value;
 
     // lazily populate the successive font lists at 100ms intervals.
     // (Note: the third parameter to setTimeout() is going to be
@@ -630,14 +515,23 @@ function selectLanguage()
       }
 
     // and set the font sizes
+    var dataObject = gPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-fonts.xul"];
+    var langData = null;
     try
       {
-        var variableSizePref = "font.size.variable." + languageList.value;
-        var sizeVarVal = parent.hPrefWindow.pref.GetIntPref( variableSizePref );
+        var sizeVarVal, sizeFixedVal;
+        if ('languageData' in dataObject) {
+          langData = dataObject.languageData[currentLanguage];
+          sizeVarVal = langData.variableSize;
+          sizeFixedVal = langData.fixedSize;
+        }
+        else {          
+          var variableSizePref = "font.size.variable." + languageList.value;
+          sizeVarVal = gPrefWindow.pref.GetIntPref( variableSizePref );
+          var fixedSizePref = "font.size.fixed." + languageList.value;
+          sizeFixedVal = gPrefWindow.pref.GetIntPref( fixedSizePref );
+        }
         variableSize.selectedItem = variableSize.getElementsByAttribute( "value", sizeVarVal )[0];
-
-        var fixedSizePref = "font.size.fixed." + languageList.value;
-        var sizeFixedVal = parent.hPrefWindow.pref.GetIntPref( fixedSizePref );
         fixedSize.selectedItem = fixedSize.getElementsByAttribute( "value", sizeFixedVal )[0];
       }
     catch(e) { } // font size lists can simply default to the first entry
@@ -645,12 +539,16 @@ function selectLanguage()
     var minSizeVal = 0;
     try 
       {
-        var minSizePref = "font.minimum-size." + languageList.value;
-        minSizeVal = gPrefWindow.pref.GetIntPref( minSizePref );
+        if (langData) {
+          minSizeVal = langData.minSize;
+        }
+        else {        
+          var minSizePref = "font.minimum-size." + languageList.value;
+          minSizeVal = gPrefWindow.pref.GetIntPref( minSizePref );
+        }
       }
     catch(e) { }
     minSizeSelect( minSizeVal );
-    currentLanguage = languageList.value;
   }
 
 function changeScreenResolution()
