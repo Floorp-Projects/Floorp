@@ -406,6 +406,7 @@ void nsTableRowFrame::SetMaxChildHeight(nscoord aChildHeight, nscoord aTopMargin
   }
   */
 
+static
 PRBool IsFirstRow(nsTableFrame&    aTable,
                   nsTableRowFrame& aRow)
 {
