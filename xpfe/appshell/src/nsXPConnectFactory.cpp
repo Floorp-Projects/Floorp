@@ -110,8 +110,7 @@ NS_IMETHODIMP
 XPConnectFactoryImpl::CreateInstance(const nsString &progID, nsISupports**_retval)
 {
   nsresult rv;
-  nsCID cid;
-  char cidBuffer[48];
+  char *progIdStr;
 
   // Argument validation...
   if (!_retval) {
@@ -119,20 +118,17 @@ XPConnectFactoryImpl::CreateInstance(const nsString &progID, nsISupports**_retva
     goto done;
   }
 
-  // Convert the unicode string into a char*
-  progID.ToCString(cidBuffer, sizeof(cidBuffer));
+  *_retval = nsnull;
+  progIdStr = progID.ToNewCString();
 
-  // Parse the CID string...
-  //
-  // XXX: The progID should *not* be treated as a raw CID...
-  //
-  if (cid.Parse(cidBuffer)) {
-    rv = nsRepository::CreateInstance(cid, nsnull, kISupportsIID, (void**)_retval);
-    if (NS_SUCCEEDED(rv)) {
-    }
+  if (progIdStr) {
+    rv = nsRepository::CreateInstance(progIdStr, 
+                                      nsnull,           // No Aggregration
+                                      kISupportsIID, 
+                                      (void**)_retval);
+    delete [] progIdStr;
   } else {
-    // the progID does not represent a valid IID...
-    rv = NS_ERROR_INVALID_ARG;
+    rv = NS_ERROR_OUT_OF_MEMORY;
   }
 
 done:
