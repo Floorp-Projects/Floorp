@@ -664,27 +664,10 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
         parentContainer = do_QueryInterface(presContainer);
         if (parentContainer) {
           parentContainer->ChildShellAdded(&mWebShell, content);
-          if (mWebShell) {
-            nsIAtom* typeAtom = NS_NewAtom("type");
-	          nsAutoString value;
-	          content->GetAttribute(kNameSpaceID_None, typeAtom, value);
-	          if (value.EqualsIgnoreCase("content")) {
-		          // The web shell's type is content.
-		          mWebShell->SetWebShellType(nsWebShellContent);
-            }
-            else {
-              // Inherit our type from our parent webshell.  If it is
-		          // chrome, we'll be chrome.  If it is content, we'll be
-		          // content.
-		          nsWebShellType parentType;
-		          parentShell->GetWebShellType(parentType);
-		          mWebShell->SetWebShellType(parentType);
-            }
-          }
         }
       }
     }
-  }    
+  }
 #endif // INCLUDE_XUL
 
   if (mWebShell == nsnull) {
@@ -727,6 +710,24 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
         mWebShell->SetContainer(outerContainer);
         NS_RELEASE(outerContainer);
       }
+
+#ifdef INCLUDE_XUL
+      nsWebShellType parentType;
+      outerShell->GetWebShellType(parentType);
+      nsIAtom* typeAtom = NS_NewAtom("type");
+	    nsAutoString value;
+	    content->GetAttribute(kNameSpaceID_None, typeAtom, value);
+	    if (value.EqualsIgnoreCase("content")) {
+		    // The web shell's type is content.
+		    mWebShell->SetWebShellType(nsWebShellContent);
+      }
+      else {
+        // Inherit our type from our parent webshell.  If it is
+		    // chrome, we'll be chrome.  If it is content, we'll be
+		    // content.
+		    mWebShell->SetWebShellType(parentType);
+      }
+#endif // INCLUDE_XUL
 
       nsIPref*  outerPrefs = nsnull;  // connect the prefs
       outerShell->GetPrefs(outerPrefs);

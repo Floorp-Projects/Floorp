@@ -32,7 +32,7 @@
         appCore.setContentWindow( window.frames[0].frames[1] );
 
         // Call in to BrowserAppcore to load initial page.
-	appCore.loadInitialPage();
+	    //appCore.loadInitialPage();
     } else {
         // Try again.
         dump("Scheduling later attempt to set content window\n");
@@ -728,7 +728,7 @@
   </toolbox>
 
   
-  <html:iframe type="content" id="content-frame" name="content" src="contentframe.html" flex="100%" />
+  <html:iframe id="content-frame" src="contentframe.html" flex="100%" />
 
  
   <html:script>
