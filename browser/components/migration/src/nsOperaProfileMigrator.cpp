@@ -428,6 +428,7 @@ nsOperaProfileMigrator::CopyPreferences(PRBool aReplace)
     CopyUserContentSheet(parser);
 
   nsCRT::free(pathCopy);
+  pathCopy = nsnull;
 
   delete parser;
   parser = nsnull;
@@ -1013,7 +1014,7 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
 
   PRInt32 sectionIndex = 1;
   char section[35];
-  char *name = nsnull, *url = nsnull, *keyword = nsnull, *isPost = nsnull;
+  char *name = nsnull, *url = nsnull, *keyword = nsnull;
   PRInt32 keyValueLength = 0;
   do {
     sprintf(section, "Search Engine %d", sectionIndex++);
@@ -1127,7 +1128,7 @@ typedef enum { LineType_FOLDER,
                LineType_NL,
                LineType_OTHER } LineType;
 
-static LineType GetLineType(nsAString& aBuffer, nsAString& aData)
+static LineType GetLineType(nsAString& aBuffer, PRUnichar** aData)
 {
   if (Substring(aBuffer, 0, 7).Equals(NS_LITERAL_STRING("#FOLDER")))
     return LineType_FOLDER;
@@ -1137,27 +1138,27 @@ static LineType GetLineType(nsAString& aBuffer, nsAString& aData)
     return LineType_SEPARATOR;
   if (Substring(aBuffer, 1, 5).Equals(NS_LITERAL_STRING("NAME="))) {
     const nsAString& data = Substring(aBuffer, 6, aBuffer.Length() - 6);
-    aData = ToNewUnicode(data);
+    *aData = ToNewUnicode(data);
     return LineType_NAME;
   }
   if (Substring(aBuffer, 1, 4).Equals(NS_LITERAL_STRING("URL="))) {
     const nsAString& data = Substring(aBuffer, 5, aBuffer.Length() - 5);
-    aData = ToNewUnicode(data);
+    *aData = ToNewUnicode(data);
     return LineType_URL;
   }
   if (Substring(aBuffer, 1, 12).Equals(NS_LITERAL_STRING("DESCRIPTION="))) {
     const nsAString& data = Substring(aBuffer, 13, aBuffer.Length() - 13);
-    aData = ToNewUnicode(data);
+    *aData = ToNewUnicode(data);
     return LineType_DESCRIPTION;
   }
   if (Substring(aBuffer, 1, 11).Equals(NS_LITERAL_STRING("SHORT NAME="))) {
     const nsAString& data = Substring(aBuffer, 12, aBuffer.Length() - 12);
-    aData = ToNewUnicode(data);
+    *aData = ToNewUnicode(data);
     return LineType_KEYWORD;
   }
   if (Substring(aBuffer, 1, 15).Equals(NS_LITERAL_STRING("ON PERSONALBAR="))) {
     const nsAString& data = Substring(aBuffer, 16, aBuffer.Length() - 16);
-    aData = ToNewUnicode(data);
+    *aData = ToNewUnicode(data);
     return LineType_ONTOOLBAR;
   }
   if (aBuffer.IsEmpty())
@@ -1173,7 +1174,6 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
                                              nsIRDFResource* aToolbar,
                                              nsIBookmarksService* aBMS)
 {
-  static PRInt32 callCount = 0;
   nsresult rv;
   PRBool moreData = PR_FALSE;
   nsAutoString buffer;
@@ -1184,11 +1184,11 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
   do {
     rv = aStream->ReadLine(buffer, &moreData);
     if (NS_FAILED(rv)) return rv;
-
+    
     if (!moreData) break;
 
-    nsAutoString data;
-    LineType type = GetLineType(buffer, data);
+    PRUnichar* data = nsnull;
+    LineType type = GetLineType(buffer, &data);
     switch(type) {
     case LineType_FOLDER:
       entryType = EntryType_FOLDER;
@@ -1201,6 +1201,10 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
       // essentially terminating this instance of ParseBookmarksFolder and return
       // to the calling function, which is either ParseBookmarksFolder for a parent
       // folder, or CopyBookmarks (which means we're done parsing all bookmarks).
+      if (data) {
+        nsCRT::free(data);
+	data = nsnull;
+      }
       goto done;
     case LineType_NAME:
       name = data;
@@ -1215,7 +1219,7 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
       description = data;
       break;
     case LineType_ONTOOLBAR:
-      if (data.Equals(NS_LITERAL_STRING("YES")))
+      if (NS_LITERAL_STRING("YES").Equals(data))
         onToolbar = PR_TRUE;
       break;
     case LineType_NL: {
@@ -1223,6 +1227,7 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
       NS_NAMED_LITERAL_STRING(empty, "");
       if (entryType == EntryType_BOOKMARK) {
         if (!name.IsEmpty() && !url.IsEmpty()) {
+	  nsCAutoString temp; temp.AssignWithConversion(name);
           rv = aBMS->CreateBookmarkInContainer(name.get(), 
                                                url.get(), 
                                                keyword.get(), 
@@ -1255,6 +1260,11 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
     }
     case LineType_OTHER:
       break;
+    }
+    
+    if (data) {
+      nsCRT::free(data);
+      data = nsnull;
     }
   }
   while (1);
