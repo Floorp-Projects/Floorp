@@ -1054,13 +1054,15 @@ GIVE_UP_ON_CONTENT_BASE:
 }
 
 char *
-msg_generate_message_id (void)
+msg_generate_message_id (nsIMsgIdentity *identity)
 {
 	time_t now = XP_TIME();
 	PRUint32 salt = 0;
-	nsMsgCompPrefs pCompPrefs;
 	const char *host = 0;
-	const char *from = pCompPrefs.GetUserEmail();
+  
+	char *from;
+  nsresult rv = identity->GetEmail(&from);
+  if (NS_FAILED(rv)) return nsnull;
 
 	GenerateGlobalRandomBytes((unsigned char *) &salt, sizeof(salt));
 	if (from) {

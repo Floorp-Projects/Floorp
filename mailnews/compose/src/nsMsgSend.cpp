@@ -381,7 +381,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
   
 	if (mCompFields->GetMessageId() == nsnull || *mCompFields->GetMessageId() == 0)
 	{
-		char * msgID = msg_generate_message_id();
+		char * msgID = msg_generate_message_id(mUserIdentity);
 		mCompFields->SetMessageId(msgID, nsnull);
 		PR_FREEIF(msgID);
 	}
@@ -1200,16 +1200,9 @@ nsMsgComposeAndSend::Init(
 	m_dont_deliver_p = dont_deliver_p;
 	m_deliver_mode = mode;
 
-  //
-  // We really do need an identity, but for now, if we don't get one, just use
-  // the hack function to pass in an identity.
-  // 
-  extern nsIMsgIdentity *GetHackIdentity();
-
   mUserIdentity = aUserIdentity;
-  if (!mUserIdentity)
-    mUserIdentity = GetHackIdentity();
-
+  NS_ASSERTION(mUserIdentity, "Got null identity!\n");
+  if (!mUserIdentity) return NS_ERROR_UNEXPECTED;
 
   //
   // First sanity check the composition fields parameter and

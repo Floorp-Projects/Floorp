@@ -70,7 +70,7 @@ char        *mime_generate_attachment_headers (const char *type,
 											     nsMsgAttachmentHandler *ma,
 											     const char *charset);
 
-char        *msg_generate_message_id (void);
+char        *msg_generate_message_id (nsIMsgIdentity*);
 
 char        *RFC2231ParmFolding(const char *parmName, const char *charset, 
                       				  const char *language, const char *parmValue);
