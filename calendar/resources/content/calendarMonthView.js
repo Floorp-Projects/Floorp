@@ -338,7 +338,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
             eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
             eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
             eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
-            eventBox.setAttribute( "tooltip", "eventTooltip" );
+            eventBox.setAttribute( "tooltip", "eventTimeViewTooltip" );
    
             this.kungFooDeathGripOnEventBoxes.push( eventBox );
             

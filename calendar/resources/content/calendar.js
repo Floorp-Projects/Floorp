@@ -873,7 +873,7 @@ function getPreviewTextForRepeatingEvent( calendarEventDisplay )
 	showTooltip = true;
       
    var HolderBox = document.createElement( "vbox" );
-
+    
    if (calendarEventDisplay.event.title)
    {
       var TitleHtml = document.createElement( "description" );
@@ -896,6 +896,22 @@ function getPreviewTextForRepeatingEvent( calendarEventDisplay )
    var DateText = document.createTextNode( "Start: "+gCalendarWindow.dateFormater.getFormatedDate( startDate )+" "+gCalendarWindow.dateFormater.getFormatedTime( startDate ) );
    DateHtml.appendChild( DateText );
    HolderBox.appendChild( DateHtml );
+
+   if( calendarEventDisplay.recur == true )
+   {
+      var DateHtml = document.createElement( "description" );
+      var DateText = document.createTextNode( "This is a repeating event." );
+      DateHtml.appendChild( DateText );
+      HolderBox.appendChild( DateHtml );
+   }
+   else
+   {
+      var DateHtml = document.createElement( "description" );
+      var startDate = new Date( calendarEventDisplay.event.end.getTime() );
+      var DateText = document.createTextNode( "End: "+gCalendarWindow.dateFormater.getFormatedDate( startDate )+" "+gCalendarWindow.dateFormater.getFormatedTime( startDate ) );
+      DateHtml.appendChild( DateText );
+      HolderBox.appendChild( DateHtml );
+   }
 
    if (calendarEventDisplay.event.description)
    {
@@ -1007,11 +1023,6 @@ function checkTooltip( event )
    //or false if the tooltip should not be shown
    
    return( showTooltip );
-   
-   if( getCalendarEventFromEvent( event ) == false )
-      return( false );
-   else
-      return( true );
 }
 
 

@@ -295,7 +295,6 @@ var toDoTreeView =
    getCellProperties : function( row,column, props )
    { 
       var aserv=Components.classes["@mozilla.org/atom-service;1"].createInstance(Components.interfaces.nsIAtomService);
-    
       if( column == "unifinder-todo-tree-col-completed" )
       {
          props.AppendElement(aserv.getAtom("completed"));
@@ -303,7 +302,6 @@ var toDoTreeView =
 
       if( column == "unifinder-todo-tree-col-priority" )
       {
-         dump( "\nTREE-> adding in highpriority property for row "+row+" and column "+column );
          props.AppendElement(aserv.getAtom("highpriority"));
       }
    },
@@ -328,7 +326,6 @@ var toDoTreeView =
       if( completed > 0 )
       {
          props.AppendElement(aserv.getAtom("completed"));
-         //treeItem.setAttribute( "checked", "true" );
       }
       
       var startDate     = new Date( calendarToDo.start.getTime() );
@@ -407,10 +404,10 @@ var toDoTreeView =
       switch( column )
       {
          case "unifinder-todo-tree-col-completed":
-            return;
+            return( " " );
          
          case "unifinder-todo-tree-col-priority":
-            return;
+            return( " " );
 
          case "unifinder-todo-tree-col-title":
             if( calendarToDo.title == "" )

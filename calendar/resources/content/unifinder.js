@@ -272,6 +272,7 @@ function getCalendarEventFromEvent( event )
       var event = tree.eventView.getCalendarEventAtRow( row.value );
       return event;
    }
+
    return( false );
 }
 
@@ -717,7 +718,7 @@ function changeToolTipTextForEvent( event )
 {
    var thisEvent = getCalendarEventFromEvent( event );
    
-   var Html = document.getElementById( "eventTooltip" );
+   var Html = document.getElementById( "eventTreeListTooltip" );
 
    while( Html.hasChildNodes() )
    {

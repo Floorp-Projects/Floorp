@@ -279,7 +279,9 @@
    </toolbar>
 </toolbox>
 
-<tooltip id="eventTooltip" onpopupshowing="changeToolTipTextForEvent( event );"/>
+<tooltip id="eventTreeListTooltip" onpopupshowing="changeToolTipTextForEvent( event );return( checkTooltip( event ) );"/>
+
+<tooltip id="eventTooltip"/>
 
 <tooltip id="taskTooltip" onpopupshowing="changeToolTipTextForToDo( event );return( checkTooltip( event ) );"/>
 
@@ -458,7 +460,7 @@
                   </treecols>
        
                   <!-- on mousedown here happens before onclick above -->
-                  <treechildren tooltip="eventTooltip" 
+                  <treechildren tooltip="eventTreeListTooltip" 
                     onkeypress="if (event.keyCode == 13) unifinderEditCommand();"
                     ondragover="return( false );"  
                     ondblclick="unifinderDoubleClickEvent( event )"
