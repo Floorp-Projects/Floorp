@@ -4226,16 +4226,15 @@ static PRBool areTheSameFileNames(char * aPath1, char * aPath2)
   nsCOMPtr<nsILocalFile> file1;
   nsCOMPtr<nsILocalFile> file2;
 
-  rv = NS_NewLocalFile(aPath1, PR_FALSE, getter_AddRefs(file1));
-  if(NS_FAILED(rv))
-    return PR_FALSE;
+  if (NS_SUCCEEDED(NS_NewLocalFile(aPath1, PR_FALSE, getter_AddRefs(file1))))
+    file1->GetLeafName(getter_Copies(filename1));
+  else //XXX if we couldn't create an nsILocalFile, try comparing raw string anyway
+    filename1.Adopt(PL_strdup(aPath1));
 
-  rv = NS_NewLocalFile(aPath2, PR_FALSE, getter_AddRefs(file2));
-  if(NS_FAILED(rv))
-    return PR_FALSE;
-
-  file1->GetLeafName(getter_Copies(filename1));
-  file2->GetLeafName(getter_Copies(filename2));
+  if (NS_SUCCEEDED(NS_NewLocalFile(aPath2, PR_FALSE, getter_AddRefs(file2))))
+    file2->GetLeafName(getter_Copies(filename2));
+  else  //XXX workaround for Mac that sometimes passes in just a leaf name
+    filename2.Adopt(PL_strdup(aPath2));
   
   if(PL_strlen(filename1.get()) != PL_strlen(filename2.get()))
     return PR_FALSE;
