@@ -27,8 +27,12 @@ if ($_SESSION["level"] !=="admin" and $_SESSION["level"] !=="editor") {
 }
 
 //List Page Preview Variables
+// defaults
 $preview_width = "200";
 $preview_height = "150";
+// limits
+$preview_width_max = "690";
+$preview_height_max = "520";
 ?>
 <?php
 $id = escape_string($_GET["id"]);
@@ -96,7 +100,8 @@ $sql = "SELECT * FROM `previews` TP WHERE `ID`='$id' ORDER BY `PreviewID`";
 
 if ($num_results>"0") {
 ?>
-<form name="updatepreviews" method="post" action="?id=<?php echo"$id"; ?>&function=updatepreviews">
+<form name="updatepreviews" method="post" action="?id=<?php echo"$id"; 
+?>&amp;function=updatepreviews">
 <?writeFormKey();?>
 <?php
 }
@@ -213,8 +218,8 @@ if ($type=="2" or $type=="3") {
 //Output Image Dimensions
 
 //Limit Max.
-if ($width > "690") {$width="690";}
-if ($height > "520") {$height="520";}
+if ($width > $preview_width_max) {$width=$preview_width_max;}
+if ($height > $preview_height_max) {$height=$preview_height_max;}
 
 $dest_width="$width"; // Destination Width /$tn_size_width
 $dest_height_fixed="$height"; // Destination Height / $tn_size_height (Fixed)
@@ -265,7 +270,8 @@ echo"<span class=error>The image you uploaded has errors and could not be proces
 
 ?>
 
-<form name="addpreview" method="post" action="?id=<?php echo"$id"; ?>&function=addpreview" enctype="multipart/form-data">
+<form name="addpreview" method="post" action="?id=<?php echo"$id"; 
+?>&amp;function=addpreview" enctype="multipart/form-data">
 <?writeFormKey();?>
 Only PNG or JPG images are supported for addition to the preview screenshots page for your item. Check the "List Page Preview" box
 if you'd like the image to be featured on the list and the top of the item details pages. To just have it added to your screenshots
@@ -273,8 +279,13 @@ page, leave the box unchecked<br>
 <input name="file" SIZE=30 type="file"> <input name="preview" type="checkbox" value="YES">List Page Preview?<br>
 
 Image Width:<input name="width" type="text" value="0" size=5> x Height: <input name="height" type="text" value="0" size=5><br>
-Fill in the image width and height fields above to have the site resize your image for you. Otherwise, leave Width and Height as 0 (the default) for full-size (limited to 690x520, anything larger will be auto-resized). This setting is ignored for preview images, which have strict size requirements of $preview_width x $preview_height.<br><br>
-
+Fill in the image width and height fields above to have the site resize 
+your image for you. Otherwise, leave Width and Height as 0 (the default) 
+for full-size (limited to <?php echo $preview_width_max . " x " 
+. $preview_height_max; ?>, anything larger will be 
+auto-resized). This setting is ignored for preview images, which have 
+strict size requirements of <?php echo $preview_width . " x " . 
+$preview_height; ?>.<br><br> 
 Image Caption: <input name="caption" type="text" size="30"><br>
 
 <input name="submit" type="submit" value="Add Preview"><input name="reset" type="reset" value="Reset">
