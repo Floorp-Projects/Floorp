@@ -57,7 +57,6 @@ nsFontMetricsGTK::nsFontMetricsGTK()
   mFont = nsnull;
   mFontHandle = nsnull;
 
-  mHeight = 0;
   mLeading = 0;
   mEmHeight = 0;
   mEmAscent = 0;
@@ -313,7 +312,6 @@ void nsFontMetricsGTK::RealizeFont()
   mMaxAscent = nscoord(fontInfo->max_bounds.ascent * f) ;
   mMaxDescent = nscoord(fontInfo->max_bounds.descent * f);
 
-  mHeight = nscoord((fontInfo->max_bounds.ascent + fontInfo->max_bounds.descent) * f);
   mMaxAdvance = nscoord(fontInfo->max_bounds.width * f);
 
   // 56% of ascent, best guess for non-true type
@@ -344,7 +342,6 @@ void nsFontMetricsGTK::RealizeFont()
   else
   {
     /* this may need to be different than one for those weird asian fonts */
-    /* mHeight is already multipled by f */
     float height;
     height = fontInfo->ascent + fontInfo->descent;
     mUnderlineOffset = -NSToIntRound(MAX (1, floor (0.1 * height + 0.5)) * f);
@@ -360,7 +357,6 @@ void nsFontMetricsGTK::RealizeFont()
   }
   else
   {
-    /* mHeight is already multipled by f */
     float height;
     height = fontInfo->ascent + fontInfo->descent;
     mUnderlineSize = NSToIntRound(MAX(1, floor (0.05 * height + 0.5)) * f);
@@ -429,7 +425,7 @@ NS_IMETHODIMP  nsFontMetricsGTK::GetUnderline(nscoord& aOffset, nscoord& aSize)
 
 NS_IMETHODIMP  nsFontMetricsGTK::GetHeight(nscoord &aHeight)
 {
-  aHeight = mHeight;
+  aHeight = mMaxHeight;
   return NS_OK;
 }
 
