@@ -95,6 +95,9 @@
         this._bundle = stringBundleService.createBundle(bundleURL, localeService.GetApplicationLocale());
         setTimeout(this.refreshSort, 0, this);
       ]]></constructor>
+      <destructor><![CDATA[
+        this.outlinerBuilder.removeObserver(this.builderObserver);
+      ]]></destructor>
 
       <property name="outlinerBoxObject">
         <getter><![CDATA[
