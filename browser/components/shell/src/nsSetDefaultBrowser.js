@@ -70,7 +70,7 @@ nsSetDefaultBrowser.prototype = {
       // First, get winhooks service.
       var shell = Components.classes["@mozilla.org/browser/shell-service;1"]
                             .getService(Components.interfaces.nsIShellService);
-      shell.isDefaultBrowser = true;
+      shell.setDefaultBrowser(true, true);
       
       // Now, get the cmd line service.
       var cmdLineService = Components.classes[ "@mozilla.org/appshell/commandLineService;1" ]

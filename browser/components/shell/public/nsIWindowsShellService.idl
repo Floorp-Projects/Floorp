@@ -43,8 +43,12 @@ interface nsIWindowsShellService : nsIShellService
     /**
     * Restores system settings to what they were before Firefox 
     * modified them.
+    *
+    * @param aForAllUsers   Whether or not Firefox should restore
+    *                       settings for all users on a multi-user
+    *                       system. 
     */
-    void restoreFileSettings();
+    void restoreFileSettings(in boolean aForAllUsers);
 
     /** 
      * The desktop background color, visible when no background image is 

@@ -49,7 +49,7 @@ nsGNOMEShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefaultBr
 }
 
 NS_IMETHODIMP
-nsGNOMEShellService::SetDefaultBrowser(PRBool aClaimAllTypes)
+nsGNOMEShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUsers)
 {
   return NS_OK;
 }
