@@ -519,10 +519,6 @@ function tovr_appchild (child)
     if (!(child instanceof TreeOViewRecord))
         throw Components.results.NS_ERROR_INVALID_PARAM;
 
-    var changeStart = (this.childData.length > 0) ?
-        this.childData[this.childData.length - 1].calculateVisualRow() :
-        this.calculateVisualRow();
-    
     child.isHidden = false;
     child.parentRecord = this;
     child.childIndex = this.childData.length;
@@ -535,7 +531,8 @@ function tovr_appchild (child)
             this.resort(true);  /* resort, don't invalidate.  we're going to do
                                  * that in the onVisualFootprintChanged call. */
         }
-        this.onVisualFootprintChanged(changeStart, child.visualFootprint);
+        this.onVisualFootprintChanged(child.calculateVisualRow(),
+                                      child.visualFootprint);
     }
 }
 
@@ -546,10 +543,6 @@ function tovr_appchild (child)
 TreeOViewRecord.prototype.appendChildren =
 function tovr_appchild (children)
 {
-    var changeStart = (this.childData.length > 0) ?
-        this.childData[this.childData.length - 1].calculateVisualRow() :
-        this.calculateVisualRow();
-
     var idx = this.childData.length;
     var delta = 0;
     var len = children.length;
@@ -570,7 +563,8 @@ function tovr_appchild (children)
             this.resort(true);  /* resort, don't invalidate.  we're going to do
                                  * that in the onVisualFootprintChanged call. */
         }
-        this.onVisualFootprintChanged(changeStart, delta);
+        this.onVisualFootprintChanged(this.childData[0].calculateVisualRow(),
+                                      delta);
     }
 }
 
@@ -843,8 +837,9 @@ function tolr_getshare()
 {
     if (this.parentRecord)
         return this.parentRecord._share;
-    else
-        ASSERT (0, "TOLabelRecord cannot be the root of a visible tree.");
+
+    ASSERT (0, "TOLabelRecord cannot be the root of a visible tree.");
+    return null;
 }
 
 /* TORootRecord is used internally by TreeOView, you probably don't need to make
@@ -1121,7 +1116,7 @@ function tov_getcelltxt (index, colID)
     if (row._colValues)
         return row._colValues[colID];
     else
-        return;
+        return "";
 }
 
 TreeOView.prototype.getCellProperties =
