@@ -217,8 +217,6 @@ nsGfxTextControlFrame::nsGfxTextControlFrame()
 
 nsGfxTextControlFrame::~nsGfxTextControlFrame()
 {
-  nsFormControlFrame::RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
-
   nsresult result;
   if (mDisplayFrame) {
     mFrameConstructor->RemoveMappingsForFrameSubtree(mFramePresContext,
@@ -3583,6 +3581,8 @@ nsGfxTextControlFrame::FirstChild(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsGfxTextControlFrame::Destroy(nsIPresContext* aPresContext)
 {
+  nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+
   if (mDisplayFrame) {
     mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, mDisplayFrame, nsnull);
     mDisplayFrame->Destroy(aPresContext);
