@@ -23,8 +23,8 @@
  * Contributor(s):
  */
 
-#ifndef _nsStringIO_h__
-#define _nsStringIO_h__
+#ifndef nsStringIO_h___
+#define nsStringIO_h___
 
 #include "nsAReadableString.h"
 #include <stdio.h>
@@ -68,4 +68,4 @@ print_string( const basic_nsAReadableString<CharT>& aString )
   }
 
 
-#endif // !defined(_nsStringIO_h__)
+#endif // !defined(nsStringIO_h___)
