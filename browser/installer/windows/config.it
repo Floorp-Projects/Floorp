@@ -205,9 +205,9 @@ License File=license.txt
 ;*** LOCALIZE ME BABY ***
 Message0=Please read the following license agreement.  Use the scroll bar to view the rest of this agreement.
 ;*** LOCALIZE ME BABY ***
-RadioAccept=XXXben I Accept the Agreement
+RadioAccept=I Accept the terms of the License Agreement
 ;*** LOCALIZE ME BABY ***
-RadioDecline=XXXben I do NOT Accept the Agreement
+RadioDecline=I do NOT Accept the terms of the License Agreement
 
 [Dialog Setup Type]
 Show Dialog=TRUE
@@ -396,7 +396,7 @@ Message Install=Setup will now install the following components:
 ;*** LOCALIZE ME BABY ***
 Message Download=Setup will now download and install the following components:
 ;*** LOCALIZE ME BABY ***
-Message0=Click Install to continue.
+Message0=Click Next to continue.
 
 [Dialog Downloading]
 Show Dialog=TRUE
