@@ -4180,7 +4180,7 @@ GlobalWindowImpl::GetOnmousemove(jsval* aOnmousemove)
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnmousemove(jsval aOnmousemove)
 {
-  return RegisterEventListener("onkeypress", NS_GET_IID(nsIDOMMouseMotionListener));
+  return RegisterEventListener("onmousemove", NS_GET_IID(nsIDOMMouseMotionListener));
 }
 
 NS_IMETHODIMP    
