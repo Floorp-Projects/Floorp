@@ -205,6 +205,8 @@ struct JSCodeGenerator {
     uintN           numSpanDeps;    /* number of span dependencies */
     uintN           numJumpTargets; /* number of jump targets */
     uintN           emitLevel;      /* js_EmitTree recursion level */
+    JSAtomList      constList;      /* compile time constants */
+    JSCodeGenerator *parent;        /* Enclosing function or global context */
 };
 
 #define CG_BASE(cg)             ((cg)->current->base)
@@ -320,6 +322,23 @@ js_PopStatement(JSTreeContext *tc);
  */
 extern JSBool
 js_PopStatementCG(JSContext *cx, JSCodeGenerator *cg);
+
+/*
+ * Define and lookup a primitive jsval associated with the const named by atom.
+ * js_DefineCompileTimeConstant analyzes the constant-folded initializer at pn
+ * and saves the const's value in cg->constList, if it can be used at compile
+ * time.  It returns true unless an error occurred.  If the initializer's value
+ * could not be saved, any later js_LookupCompileTimeConstant calls will return
+ * false.  js_LookupCompileTimeConstant tries to find a const value memorized
+ * for atom, returning true if found with *vp set, false otherwise.
+ */
+extern JSBool
+js_DefineCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
+                             JSParseNode *pn);
+
+extern JSBool
+js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
+                             jsval *vp);
 
 /*
  * Emit code into cg for the tree rooted at pn.

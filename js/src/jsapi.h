@@ -437,6 +437,10 @@ JS_StringToVersion(const char *string);
 #define JSOPTION_PRIVATE_IS_NSISUPPORTS \
                                 JS_BIT(3)       /* context private data points
                                                    to an nsISupports subclass */
+#define JSOPTION_COMPILE_N_GO   JS_BIT(4)       /* one-shot compile+execute,
+                                                   enables compile-time scope
+                                                   chain resolution of consts
+                                                   in many cases, e.g. */
 
 extern JS_PUBLIC_API(uint32)
 JS_GetOptions(JSContext *cx);

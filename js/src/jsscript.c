@@ -201,10 +201,8 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         principals = NULL;
     }
 
-    /* XXXbe set only for the compiler, which does not currently test it */
-    fp->flags |= JSFRAME_EVAL;
-
     /* Compile the new script using the caller's scope chain, a la eval(). */
+    fp->flags |= JSFRAME_EVAL;
     script = JS_CompileUCScriptForPrincipals(cx, scopeobj, principals,
                                              JSSTRING_CHARS(str),
                                              JSSTRING_LENGTH(str),

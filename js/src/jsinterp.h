@@ -93,6 +93,9 @@ typedef struct JSInlineFrame {
 #define JSFRAME_DEBUGGER      0x10  /* frame for JS_EvaluateInStackFrame */
 #define JSFRAME_EVAL          0x20  /* frame for obj_eval */
 #define JSFRAME_SPECIAL       0x30  /* special evaluation frame flags */
+#define JSFRAME_COMPILING     0x40  /* frame is being used by compiler */
+#define JSFRAME_COMPILE_N_GO  0x80  /* compiler-and-go mode, can optimize name
+                                       references based on scope chain */ 
 
 #define JSFRAME_OVERRIDE_SHIFT 24   /* override bit-set params; see jsfun.c */
 #define JSFRAME_OVERRIDE_BITS  8

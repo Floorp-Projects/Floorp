@@ -97,11 +97,13 @@ struct JSAtomListElement {
 #define ALE_ATOM(ale)   ((JSAtom *) (ale)->entry.key)
 #define ALE_INDEX(ale)  ((jsatomid) (ale)->entry.value)
 #define ALE_JSOP(ale)   ((JSOp) (ale)->entry.value)
+#define ALE_VALUE(ale)  ((jsval) (ale)->entry.value)
 #define ALE_NEXT(ale)   ((JSAtomListElement *) (ale)->entry.next)
 
 #define ALE_SET_ATOM(ale,atom)  ((ale)->entry.key = (const void *)(atom))
 #define ALE_SET_INDEX(ale,index)((ale)->entry.value = (void *)(index))
 #define ALE_SET_JSOP(ale,op)    ((ale)->entry.value = (void *)(op))
+#define ALE_SET_VALUE(ale,val)  ((ale)->entry.value = (JSHashEntry *)(val))
 #define ALE_SET_NEXT(ale,link)  ((ale)->entry.next = (JSHashEntry *)(link))
 
 struct JSAtomList {
@@ -232,6 +234,13 @@ struct JSAtomState {
     JSThinLock          lock;
     volatile uint32     tablegen;
 #endif
+#ifdef NARCISSUS
+    JSAtom              *callAtom;
+    JSAtom              *constructAtom;
+    JSAtom              *hasInstanceAtom;
+    JSAtom              *ExecutionContextAtom;
+    JSAtom              *currentAtom;
+#endif
 };
 
 /* Well-known predefined strings and their atoms. */
@@ -274,6 +283,14 @@ extern const char   js_toSource_str[];
 extern const char   js_toString_str[];
 extern const char   js_toLocaleString_str[];
 extern const char   js_valueOf_str[];
+
+#ifdef NARCISSUS
+extern const char   js_call_str[];
+extern const char   js_construct_str[];
+extern const char   js_hasInstance_str[];
+extern const char   js_ExecutionContext_str[];
+extern const char   js_current_str[];
+#endif
 
 /*
  * Initialize atom state.  Return true on success, false with an out of

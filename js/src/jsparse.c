@@ -416,6 +416,7 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
                       JSCodeGenerator *cg)
 {
     JSStackFrame *fp, frame;
+    uint32 flags;
     JSParseNode *pn;
     JSBool ok;
 #ifdef METER_PARSENODES
@@ -438,6 +439,11 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
         frame.down = fp;
         cx->fp = &frame;
     }
+    flags = cx->fp->flags;
+    cx->fp->flags = flags |
+                    (JS_HAS_COMPILE_N_GO_OPTION(cx)
+                     ? JSFRAME_COMPILING | JSFRAME_COMPILE_N_GO
+                     : JSFRAME_COMPILING);
 
     /* Prevent GC activation while compiling. */
     JS_KEEP_ATOMS(cx->runtime);
@@ -478,6 +484,7 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
     JS_DumpArenaStats(stdout);
 #endif
     JS_UNKEEP_ATOMS(cx->runtime);
+    cx->fp->flags = flags;
     cx->fp = fp;
     return ok;
 }
@@ -647,12 +654,15 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
     /* Push a JSStackFrame for use by FunctionBody and js_EmitFunctionBody. */
     fp = cx->fp;
     funobj = fun->object;
-    JS_ASSERT(!fp || fp->fun != fun || fp->varobj != funobj ||
-              fp->scopeChain != funobj);
+    JS_ASSERT(!fp || (fp->fun != fun && fp->varobj != funobj &&
+                      fp->scopeChain != funobj));
     memset(&frame, 0, sizeof frame);
     frame.fun = fun;
     frame.varobj = frame.scopeChain = funobj;
     frame.down = fp;
+    frame.flags = JS_HAS_COMPILE_N_GO_OPTION(cx)
+                  ? JSFRAME_COMPILING | JSFRAME_COMPILE_N_GO
+                  : JSFRAME_COMPILING;
     cx->fp = &frame;
 
     /* Ensure that the body looks like a block statement to js_EmitTree. */
@@ -2034,9 +2044,8 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
         if (!OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &pobj, &prop))
             return NULL;
-        if (pobj == obj &&
-            OBJ_IS_NATIVE(pobj) &&
-            (sprop = (JSScopeProperty *)prop) != NULL) {
+        if (prop && pobj == obj && OBJ_IS_NATIVE(pobj)) {
+            sprop = (JSScopeProperty *)prop;
             if (sprop->getter == js_GetArgument) {
                 const char *name = js_AtomToPrintableString(cx, atom);
                 if (!name) {

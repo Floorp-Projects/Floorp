@@ -128,6 +128,14 @@ const char js_toString_str[]        = "toString";
 const char js_toLocaleString_str[]  = "toLocaleString";
 const char js_valueOf_str[]         = "valueOf";
 
+#ifdef NARCISSUS
+const char js_call_str[]             = "__call__";
+const char js_construct_str[]        = "__construct__";
+const char js_hasInstance_str[]      = "__hasInstance__";
+const char js_ExecutionContext_str[] = "ExecutionContext";
+const char js_current_str[]          = "current";
+#endif
+
 #define HASH_OBJECT(o)  ((JSHashNumber)(o) >> JSVAL_TAGBITS)
 #define HASH_INT(i)     ((JSHashNumber)(i))
 #define HASH_DOUBLE(dp) ((JSHashNumber)(((uint32*)(dp))[0] ^ ((uint32*)(dp))[1]))
@@ -315,6 +323,14 @@ js_InitPinnedAtoms(JSContext *cx, JSAtomState *state)
     FROB(toStringAtom,            js_toString_str);
     FROB(toLocaleStringAtom,      js_toLocaleString_str);
     FROB(valueOfAtom,             js_valueOf_str);
+
+#ifdef NARCISSUS
+    FROB(callAtom,                js_call_str);
+    FROB(constructAtom,           js_construct_str);
+    FROB(hasInstanceAtom,         js_hasInstance_str);
+    FROB(ExecutionContextAtom,    js_ExecutionContext_str);
+    FROB(currentAtom,             js_current_str);
+#endif
 
 #undef FROB
 
@@ -775,7 +791,7 @@ js_IndexAtom(JSContext *cx, JSAtom *atom, JSAtomList *al)
 
     ATOM_LIST_LOOKUP(ale, hep, al, atom);
     if (!ale) {
-        if (al->count <= 5) {
+        if (al->count < 10) {
             /* Few enough for linear search, no hash table needed. */
             JS_ASSERT(!al->table);
             ale = (JSAtomListElement *)js_alloc_temp_entry(cx, atom);

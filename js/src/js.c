@@ -81,7 +81,6 @@
 #endif /* JSDEBUGGER */
 
 #ifdef XP_UNIX
-#include <errno.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -425,6 +424,8 @@ my_BranchCallback(JSContext *cx, JSScript *script)
         gBranchCount = 0;
         return JS_FALSE;
     }
+    if ((gBranchCount & 0x3fff) == 1)
+        JS_MaybeGC(cx);
     return JS_TRUE;
 }
 
@@ -659,6 +660,7 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSBool ok;
     jsval result;
     JSErrorReporter older;
+    uint32 oldopts;
 
     for (i = 0; i < argc; i++) {
         str = JS_ValueToString(cx, argv[i]);
@@ -668,13 +670,16 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         filename = JS_GetStringBytes(str);
         errno = 0;
         older = JS_SetErrorReporter(cx, my_LoadErrorReporter);
+        oldopts = JS_GetOptions(cx);
+        JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
         script = JS_CompileFile(cx, obj, filename);
-        if (!script)
+        if (!script) {
             ok = JS_FALSE;
-        else {
+        } else {
             ok = JS_ExecuteScript(cx, obj, script, &result);
             JS_DestroyScript(cx, script);
         }
+        JS_SetOptions(cx, oldopts);
         JS_SetErrorReporter(cx, older);
         if (!ok)
             return JS_FALSE;
@@ -2164,6 +2169,90 @@ static JSClass env_class = {
     JS_ConvertStub,   JS_FinalizeStub
 };
 
+#ifdef NARCISSUS
+
+static JSBool
+defineProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+               jsval *rval)
+{
+    JSString *str;
+    jsval value;
+    JSBool dontDelete, readOnly, dontEnum;
+    const jschar *chars;
+    size_t length;
+    uintN attrs;
+
+    dontDelete = readOnly = dontEnum = JS_FALSE;
+    if (!JS_ConvertArguments(cx, argc, argv, "Sv/bbb",
+                             &str, &value, &dontDelete, &readOnly, &dontEnum)) {
+        return JS_FALSE;
+    }
+    chars = JS_GetStringChars(str);
+    length = JS_GetStringLength(str);
+    attrs = dontEnum ? 0 : JSPROP_ENUMERATE;
+    if (dontDelete)
+        attrs |= JSPROP_PERMANENT;
+    if (readOnly)
+        attrs |= JSPROP_READONLY;
+    return JS_DefineUCProperty(cx, obj, chars, length, value, NULL, NULL,
+                               attrs);
+}
+
+#include <fcntl.h>
+#include <sys/stat.h>
+
+static JSBool
+snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSString *str;
+    const char *filename;
+    int fd, cc;
+    JSBool ok;
+    size_t len;
+    char *buf;
+    struct stat sb;
+
+    str = JS_ValueToString(cx, argv[0]);
+    if (!str)
+        return JS_FALSE;
+    filename = JS_GetStringBytes(str);
+    fd = open(filename, O_RDONLY);
+    ok = JS_TRUE;
+    len = 0;
+    buf = NULL;
+    if (fd < 0) {
+        JS_ReportError(cx, "can't open %s: %s", filename, strerror(errno));
+        ok = JS_FALSE;
+    } else if (fstat(fd, &sb) < 0) {
+        JS_ReportError(cx, "can't stat %s", filename);
+        ok = JS_FALSE;
+    } else {
+        len = sb.st_size;
+        buf = JS_malloc(cx, len + 1);
+        if (!buf) {
+            ok = JS_FALSE;
+        } else if ((cc = read(fd, buf, len)) != len) {
+            JS_free(cx, buf);
+            JS_ReportError(cx, "can't read %s: %s", filename,
+                           (cc < 0) ? strerror(errno) : "short read");
+            ok = JS_FALSE;
+        }
+    }
+    close(fd);
+    if (!ok)
+        return ok;
+    buf[len] = '\0';
+    str = JS_NewString(cx, buf, len);
+    if (!str) {
+        JS_free(cx, buf);
+        return JS_FALSE;
+    }
+    *rval = STRING_TO_JSVAL(str);
+    return JS_TRUE;
+}
+
+#endif /* NARCISSUS */
+
 int
 main(int argc, char **argv, char **envp)
 {
@@ -2236,7 +2325,7 @@ main(int argc, char **argv, char **envp)
     argc--;
     argv++;
 
-    rt = JS_NewRuntime(8L * 1024L * 1024L);
+    rt = JS_NewRuntime(64L * 1024L * 1024L);
     if (!rt)
         return 1;
 
@@ -2314,6 +2403,25 @@ main(int argc, char **argv, char **envp)
     envobj = JS_DefineObject(cx, glob, "environment", &env_class, NULL, 0);
     if (!envobj || !JS_SetPrivate(cx, envobj, envp))
         return 1;
+
+#ifdef NARCISSUS
+    {
+        jsval v;
+        static const char Object_prototype[] = "Object.prototype";
+
+        if (!JS_DefineFunction(cx, glob, "snarf", snarf, 1, 0))
+            return 1;
+        if (!JS_EvaluateScript(cx, glob,
+                               Object_prototype, sizeof Object_prototype - 1,
+                               NULL, 0, &v)) {
+            return 1;
+        }
+        if (!JS_DefineFunction(cx, JSVAL_TO_OBJECT(v), "__defineProperty__",
+                               defineProperty, 5, 0)) {
+            return 1;
+        }
+    }
+#endif
 
     result = ProcessArgs(cx, glob, argv, argc);
 
