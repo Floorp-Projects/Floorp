@@ -19,33 +19,17 @@
  * Contributor(s):
  * Igor Kushnirskiy <idk@eng.sun.com>
  */
-#ifndef __bcXPCOMStubsAndProxies_h
-#define __bcXPCOMStubsAndProxies_h
-#include "bcIXPCOMStubsAndProxies.h"
-#include "bcIORB.h"
-#include "bcIStub.h"
-#include "bcXPCOMStubsAndProxiesCID.h"
+
+#ifndef __bcORBComponentCID_h__
+#define __bcORBComponentCID_h__
+
+#define BC_ORBCOMPONENT_ContractID "@mozilla.org/blackwood/blackconnect/orbcomponent;1"
+
+/*ffa0d768-1dd1-11b2-8bf2-ab56f26ea844*/
+#define BC_ORBCOMPONENT_CID \
+   { 0xffa0d768, 0x1dd1, 0x11b2, \
+     {0x8b, 0xf2, 0xab, 0x56, 0xf2, 0x6e, 0xa8, 0x44 }}
 
 
-class nsSupportsHashtable;
-
-class bcXPCOMStubsAndProxies : public bcIXPCOMStubsAndProxies {
-    NS_DECL_ISUPPORTS
-    NS_DEFINE_STATIC_IID_ACCESSOR(BC_XPCOMSTUBSANDPROXIES_IID)  
-    NS_IMETHOD GetStub(nsISupports *obj, bcIStub **stub);
-    NS_IMETHOD GetOID(nsISupports *obj, bcIORB *orb, bcOID *oid);
-    NS_IMETHOD GetProxy(bcOID oid, const nsIID &iid, bcIORB *orb, nsISupports **proxy);
-    bcXPCOMStubsAndProxies();
-    virtual ~bcXPCOMStubsAndProxies();
-private:
-    nsSupportsHashtable * oid2objectMap;
-};
-#endif /*  __bcXPCOMStubsAndProxies_h */
-
-
-
-
-
-
-
+#endif
 

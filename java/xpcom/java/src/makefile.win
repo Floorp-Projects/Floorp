@@ -31,7 +31,9 @@ DLLNAME = bcjavastubs
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 EXPORTS = \
-       bcJavaStubsAndProxies.h
+       bcIJavaStubsAndProxies.h \
+       bcJavaStubsAndProxiesCID.h \
+       $(NULL)
 
 OBJS= \
 	.\$(OBJDIR)\bcJavaMarshalToolkit.obj \

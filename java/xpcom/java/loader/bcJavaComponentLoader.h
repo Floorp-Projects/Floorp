@@ -31,14 +31,14 @@
 #include "nsSupportsArray.h"
 
 #define BC_JAVACOMPONENTLOADER_ContractID \
-"@mozilla.org/blackwood/blackconnect/java-component-loader"
+"@mozilla.org/blackwood/blackconnect/java-component-loader;1"
 
 /* 0d6b5198-1dd2-11b2-b2f0-ed49ba755db8 */
 #define BC_JAVACOMPONENTLOADER_CID \
   { 0x0d6b5198, 0x1dd2, 0x11b2, \
      {0xb2, 0xf0, 0xed, 0x49, 0xba, 0x75, 0x5d, 0xb8 }}
 
-#define JAVACOMPONENTTYPENAME "text/java"
+#define JAVACOMPONENTTYPENAME "application/java"
 
 class bcJavaComponentLoader : public nsIComponentLoader {
     NS_DECL_ISUPPORTS

@@ -43,7 +43,6 @@ CXXFLAGS        += -I$(JDKHOME)/include -I$(JDKHOME)/include/linux $(MOZ_TOOLKIT
 
 EXTRA_DSO_LDOPTS += \
       -L$(DIST)/bin/components/ \
-      -lbcorb  -lbcxpcomstubs -lbcjavastubs \
       $(NULL)
 
 include $(topsrcdir)/config/rules.mk

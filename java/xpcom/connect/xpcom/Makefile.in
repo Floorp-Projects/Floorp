@@ -35,7 +35,7 @@ MODULE          = bcorb
 IS_COMPONENT    = 1
 
 CPPSRCS =  \
-           bcORB.cpp \
+           bcORBComponent.cpp \
 	   ../src/Allocator.cpp \
 	   ../src/Call.cpp \
 	   ../src/Marshaler.cpp \
@@ -45,7 +45,8 @@ CPPSRCS =  \
 	   $(NULL)
 	   
 EXPORTS = \
-          bcORB.h \
+          bcIORBComponent.h \
+	  bcORBComponentCID.h \
 	  ../public/bcIORB.h \
 	  ../public/bcDefs.h \
 	  ../public/bcICall.h \

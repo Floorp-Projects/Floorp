@@ -41,7 +41,6 @@ CPPSRCS  =   \
 
 EXTRA_DSO_LDOPTS += \
       -L$(DIST)/bin/components/ \
-      -lbcorb  -lbcxpcomstubs  \
       $(NULL)
 
 

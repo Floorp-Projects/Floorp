@@ -20,35 +20,19 @@
  * Igor Kushnirskiy <idk@eng.sun.com>
  */
 
-#ifndef _bcORB_h
-#define _bcORB_h
+#ifndef __bcIORBCOMPONENT_h__
+#define __bcIORBCOMPONENT_h_
 #include "nsISupports.h"
-#include "bcIORB.h"
-
 
 /*29bde10c-1dd2-11b2-ab23-ebe06c6baec5*/
-#define BC_ORB_IID \
+#define BC_ORBCOMPONENT_IID \
    { 0x29bde10c, 0x1dd2, 0x11b2, \
     {0xab, 0x23, 0xeb, 0xe0, 0x6c, 0x6b, 0xae, 0xc5}}
 
-
-#define BC_ORB_PROGID "component://netscape/blackwood/blackconnect/orb"
-
-/*ffa0d768-1dd1-11b2-8bf2-ab56f26ea844*/
-#define BC_ORB_CID \
-   { 0xffa0d768, 0x1dd1, 0x11b2, \
-     {0x8b, 0xf2, 0xab, 0x56, 0xf2, 0x6e, 0xa8, 0x44 }}
-
-
-class bcORB : public nsISupports {
-    NS_DECL_ISUPPORTS
-    NS_DEFINE_STATIC_IID_ACCESSOR(BC_ORB_IID) 
-    NS_IMETHOD GetORB(bcIORB **orb);
-    bcORB();
-    virtual ~bcORB();
- private:
-    bcIORB *orb;
+class bcIORB;
+class bcIORBComponent : public nsISupports {
+ public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(BC_ORBCOMPONENT_IID) 
+    NS_IMETHOD GetORB(bcIORB **orb) = 0;
 };
-
 #endif
- 

@@ -21,29 +21,16 @@
  */
 #ifndef __bcJavaStubsAndProxies_h
 #define __bcJavaStubsAndProxies_h
-#include "nsISupports.h"
-#include "jni.h"
-#include "bcDefs.h"
-#include "bcIStub.h"
+
+#include "bcIJavaStubsAndProxies.h"
 #include "bcIORB.h"
-
-/* 58034ea6-1dd2-11b2-9b58-8630abb8af47 */
-
-#define BC_JAVASTUBSANDPROXIES_IID \
- {0x58034ea6, 0x1dd2, 0x11b2,  \
- {0x9b, 0x58, 0x86, 0x30, 0xab, 0xb8, 0xaf,0x47}} 
-
-#define BC_JAVASTUBSANDPROXIES_ContractID "@mozilla.org/blackwood/blackconnect/java-stubs-and-proxies"
-
-/* 7cadf6e8-1dd2-11b2-9a6e-b1c37844e004 */
-#define BC_JAVASTUBSANDPROXIES_CID \
- {0x7cadf6e8, 0x1dd2, 0x11b2,  \
- {0x9a, 0x6e, 0xb1, 0xc3, 0x78,0x44, 0xe0, 0x04}}
+#include "bcIStub.h"
+#include "bcJavaStubsAndProxiesCID.h"
 
 class nsHashtable;
-class bcJavaStubsAndProxies : public nsISupports {
+
+class bcJavaStubsAndProxies : public bcIJavaStubsAndProxies {
     NS_DECL_ISUPPORTS
-    NS_DEFINE_STATIC_IID_ACCESSOR(BC_JAVASTUBSANDPROXIES_IID)  
     NS_IMETHOD GetStub(jobject obj, bcIStub **stub);
     NS_IMETHOD GetOID(char *location, bcOID *); //load component by location
     NS_IMETHOD GetOID(jobject object, bcIORB *orb, bcOID *oid); 

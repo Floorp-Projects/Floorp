@@ -19,33 +19,21 @@
  * Contributor(s):
  * Igor Kushnirskiy <idk@eng.sun.com>
  */
-#ifndef __bcXPCOMStubsAndProxies_h
-#define __bcXPCOMStubsAndProxies_h
-#include "bcIXPCOMStubsAndProxies.h"
+
+#ifndef _bcORBCOMPONENT_h
+#define _bcORBCOMPONENT_h
+#include "bcIORBComponent.h"
+#include "bcORBComponentCID.h"
 #include "bcIORB.h"
-#include "bcIStub.h"
-#include "bcXPCOMStubsAndProxiesCID.h"
 
-
-class nsSupportsHashtable;
-
-class bcXPCOMStubsAndProxies : public bcIXPCOMStubsAndProxies {
+class bcORBComponent : public bcIORBComponent {
     NS_DECL_ISUPPORTS
-    NS_DEFINE_STATIC_IID_ACCESSOR(BC_XPCOMSTUBSANDPROXIES_IID)  
-    NS_IMETHOD GetStub(nsISupports *obj, bcIStub **stub);
-    NS_IMETHOD GetOID(nsISupports *obj, bcIORB *orb, bcOID *oid);
-    NS_IMETHOD GetProxy(bcOID oid, const nsIID &iid, bcIORB *orb, nsISupports **proxy);
-    bcXPCOMStubsAndProxies();
-    virtual ~bcXPCOMStubsAndProxies();
-private:
-    nsSupportsHashtable * oid2objectMap;
+    NS_IMETHOD GetORB(bcIORB **orb);
+    bcORBComponent();
+    virtual ~bcORBComponent();
+ private:
+    bcIORB *orb;
 };
-#endif /*  __bcXPCOMStubsAndProxies_h */
 
-
-
-
-
-
-
-
+#endif
+ 

@@ -39,7 +39,8 @@ OBJS= \
 	$(NULL)
 
 EXPORTS = \
-	bcXPCOMStubsAndProxies.h \
+	bcIXPCOMStubsAndProxies.h \
+	bcXPCOMStubsAndProxiesCID.h \
 	$(NULL)
 
 LLIBS=	\

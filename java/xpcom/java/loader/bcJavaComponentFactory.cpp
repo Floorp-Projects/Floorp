@@ -22,13 +22,16 @@
 #include "nsIServiceManager.h"
 #include "nsCRT.h"
 #include "bcJavaComponentFactory.h"
-#include "bcJavaStubsAndProxies.h"
-#include "bcXPCOMStubsAndProxies.h"
-#include "bcORB.h"
+#include "bcIJavaStubsAndProxies.h"
+#include "bcJavaStubsAndProxiesCID.h"
+#include "bcIXPCOMStubsAndProxies.h"
+#include "bcXPCOMStubsAndProxiesCID.h"
+#include "bcIORBComponent.h"
+#include "bcORBComponentCID.h"
 
 static NS_DEFINE_CID(kJavaStubsAndProxies,BC_JAVASTUBSANDPROXIES_CID);
 static NS_DEFINE_CID(kXPCOMStubsAndProxies,BC_XPCOMSTUBSANDPROXIES_CID);
-static NS_DEFINE_CID(kORBCIID,BC_ORB_CID);
+static NS_DEFINE_CID(kORBComponent,BC_ORBCOMPONENT_CID);
 
 NS_IMPL_ISUPPORTS1(bcJavaComponentFactory, nsIFactory)
 
@@ -47,17 +50,17 @@ bcJavaComponentFactory::~bcJavaComponentFactory() {
 NS_IMETHODIMP bcJavaComponentFactory::CreateInstance(nsISupports *aOuter, const nsIID & iid, void * *result) {
     printf("--bcJavaComponentFactory::CreateInstance\n");
     nsresult r;
-    NS_WITH_SERVICE(bcJavaStubsAndProxies, javaStubsAndProxies, kJavaStubsAndProxies, &r);
+    NS_WITH_SERVICE(bcIJavaStubsAndProxies, javaStubsAndProxies, kJavaStubsAndProxies, &r);
     if (NS_FAILED(r)) {
         printf("--bcJavaComponentFactory::CreateInstance javaStubsAndProxies failed \n");
         return r;
     }
-    NS_WITH_SERVICE(bcXPCOMStubsAndProxies, xpcomStubsAndProxies, kXPCOMStubsAndProxies, &r);
+    NS_WITH_SERVICE(bcIXPCOMStubsAndProxies, xpcomStubsAndProxies, kXPCOMStubsAndProxies, &r);
     if (NS_FAILED(r)) {
         printf("--bcJavaComponentFactory::CreateInstance xpcomStubsAndProxies failed \n");
         return r;
     }
-    NS_WITH_SERVICE(bcORB, _orb, kORBCIID, &r);
+    NS_WITH_SERVICE(bcIORBComponent, _orb, kORBComponent, &r);
     if (NS_FAILED(r)) {
         printf("--bcJavaComponentFactory::CreateInstance bcORB failed \n");
         return r;

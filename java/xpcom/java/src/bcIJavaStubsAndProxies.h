@@ -19,33 +19,29 @@
  * Contributor(s):
  * Igor Kushnirskiy <idk@eng.sun.com>
  */
-#ifndef __bcXPCOMStubsAndProxies_h
-#define __bcXPCOMStubsAndProxies_h
-#include "bcIXPCOMStubsAndProxies.h"
-#include "bcIORB.h"
-#include "bcIStub.h"
-#include "bcXPCOMStubsAndProxiesCID.h"
+#ifndef __bcIJavaStubsAndProxies_h
+#define __bcIJavaStubsAndProxies_h
 
+#include "nsISupports.h"
+#include "jni.h"
+#include "bcDefs.h"
 
-class nsSupportsHashtable;
+/* 58034ea6-1dd2-11b2-9b58-8630abb8af47 */
+#define BC_JAVASTUBSANDPROXIES_IID \
+ {0x58034ea6, 0x1dd2, 0x11b2,  \
+ {0x9b, 0x58, 0x86, 0x30, 0xab, 0xb8, 0xaf,0x47}} 
 
-class bcXPCOMStubsAndProxies : public bcIXPCOMStubsAndProxies {
-    NS_DECL_ISUPPORTS
-    NS_DEFINE_STATIC_IID_ACCESSOR(BC_XPCOMSTUBSANDPROXIES_IID)  
-    NS_IMETHOD GetStub(nsISupports *obj, bcIStub **stub);
-    NS_IMETHOD GetOID(nsISupports *obj, bcIORB *orb, bcOID *oid);
-    NS_IMETHOD GetProxy(bcOID oid, const nsIID &iid, bcIORB *orb, nsISupports **proxy);
-    bcXPCOMStubsAndProxies();
-    virtual ~bcXPCOMStubsAndProxies();
-private:
-    nsSupportsHashtable * oid2objectMap;
+class bcIORB;
+class bcIStub;
+
+class bcIJavaStubsAndProxies : public nsISupports {
+public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(BC_JAVASTUBSANDPROXIES_IID)  
+    NS_IMETHOD GetStub(jobject obj, bcIStub **stub) = 0;
+    NS_IMETHOD GetOID(char *location, bcOID *) = 0; //load component by location
+    NS_IMETHOD GetOID(jobject object, bcIORB *orb, bcOID *oid) = 0; 
+    NS_IMETHOD GetProxy(bcOID oid, const nsIID &iid, bcIORB *orb,  jobject *proxy) = 0;
+    NS_IMETHOD GetInterface(const nsIID &iid,  jclass *clazz) = 0;
 };
-#endif /*  __bcXPCOMStubsAndProxies_h */
 
-
-
-
-
-
-
-
+#endif

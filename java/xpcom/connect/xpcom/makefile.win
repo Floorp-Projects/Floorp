@@ -30,11 +30,12 @@ DLLNAME = bcorb
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 OBJS= 			\
-	.\$(OBJDIR)\bcORB.obj \
+	.\$(OBJDIR)\bcORBComponent.obj \
 	$(NULL)
 
 EXPORTS = \
-          bcORB.h \
+          bcIORBComponent.h \
+	  bcORBComponentCID.h \
           $(NULL)
 
 LLIBS=$(LLIBS) $(LIBNSPR) $(DIST)\lib\xpcom.lib $(DIST)\lib\bcorbcore.lib

@@ -19,58 +19,26 @@
  * Contributor(s):
  * Igor Kushnirskiy <idk@eng.sun.com>
  */
-#include "bcORB.h"
-#include "../src/ORB.h"
-#include "nsIGenericFactory.h"
-#include "nsIModule.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(bcORB);
+#ifndef __bcIXPCOMStubsAndProxies_h__
+#define __bcIXPCOMStubsAndProxies_h__
+#include "nsISupports.h"
+#include "bcDefs.h"
 
-static  nsModuleComponentInfo components[] =
-{
-    {
-        "Black Connect ORB",
-        BC_ORB_CID,
-        BC_ORB_PROGID,
-        bcORBConstructor
-    }
+/* 843ff582-1dd2-11b2-84b5-b43ba3ad3ef4 */
+#define BC_XPCOMSTUBSANDPROXIES_IID \
+  {0x843ff582, 0x1dd2, 0x11b2, \
+  {0x84, 0xb5,0xb4, 0x3b, 0xa3, 0xad, 0x3e, 0xf4}}
+
+class bcIStub;
+class bcIORB;
+
+class bcIXPCOMStubsAndProxies : public nsISupports {
+public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(BC_XPCOMSTUBSANDPROXIES_IID)  
+    NS_IMETHOD GetStub(nsISupports *obj, bcIStub **stub) = 0;
+    NS_IMETHOD GetOID(nsISupports *obj, bcIORB *orb, bcOID *oid) = 0;
+    NS_IMETHOD GetProxy(bcOID oid, const nsIID &iid, bcIORB *orb, nsISupports **proxy) = 0;
 };
 
-NS_IMPL_NSGETMODULE("BlackConnectORB",components);
-
-
-
-NS_IMPL_ISUPPORTS(bcORB,NS_GET_IID(bcORB));
-
-bcORB::bcORB() :
-    orb(0)
-{
-    NS_INIT_REFCNT();
-}
-
-bcORB::~bcORB() {
-    if (orb) {
-	delete orb; //nb should we destroy it?
-    }
-}
-
-NS_IMETHODIMP bcORB::GetORB(bcIORB **_orb) {
-    if (!_orb) {
-	printf("--bcORB::GetORB\n");
-	return NS_ERROR_NULL_POINTER;
-    }
-    if (!orb) {
-	orb = new ORB();
-    }
-    *_orb = orb;
-    return NS_OK;
-}
-
-
-
-
-
-
-
-
-
+#endif

@@ -43,8 +43,9 @@ CPPSRCS =  \
      $(NULL)
      
 EXPORTS = \
-       bcXPCOMStubsAndProxies.h
-
+	bcIXPCOMStubsAndProxies.h \
+	bcXPCOMStubsAndProxiesCID.h \
+	$(NULL)
 LIBS     = \
         -lxpcom \
 	-lxptinfo \
@@ -53,7 +54,6 @@ LIBS     = \
 
 EXTRA_DSO_LDOPTS += \
       -L$(DIST)/bin/components/ \
-      -lbcorb \
       $(NULL)
 
 include $(topsrcdir)/config/rules.mk

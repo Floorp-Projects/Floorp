@@ -23,12 +23,10 @@
 #include "nsCOMPtr.h"
 #include "bcXPCOMMarshalToolkit.h"
 #include "nsIServiceManager.h"
-#include "bcORB.h"
 #include "bcXPCOMStubsAndProxies.h"
 #include "nsCRT.h"
 #include "bcXPCOMLog.h"
 
-static NS_DEFINE_CID(kORBCIID,BC_ORB_CID);
 static NS_DEFINE_CID(kXPCOMStubsAndProxies,BC_XPCOMSTUBSANDPROXIES_CID);
 
 bcXPCOMMarshalToolkit::bcXPCOMMarshalToolkit(PRUint16 _methodIndex, nsIInterfaceInfo *_interfaceInfo, 
@@ -395,17 +393,11 @@ bcXPCOMMarshalToolkit::UnMarshalElement(void *data, bcIUnMarshaler *um, nsXPTPar
                     um->ReadSimple(&iid,bc_T_IID);
                     nsISupports *proxy = NULL;
                     if (oid != 0) {
-                        NS_WITH_SERVICE(bcORB, _orb, kORBCIID, &r);
-                        if (NS_FAILED(r)) {
-                            return r; //nb am I sure about that?
-                        }
                         NS_WITH_SERVICE(bcXPCOMStubsAndProxies, xpcomStubsAndProxies,
                                         kXPCOMStubsAndProxies, &r);
                         if (NS_FAILED(r)) {
                             return r;
                         }
-                        bcIORB *orb;
-                        _orb->GetORB(&orb);
                         xpcomStubsAndProxies->GetProxy(oid, iid, orb,&proxy);
                     }
                     *(nsISupports**)data = proxy;
