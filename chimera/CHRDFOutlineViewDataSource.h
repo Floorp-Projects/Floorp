@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import <Foundation/Foundation.h>
-#include <Appkit/Appkit.h>
+#import <Appkit/Appkit.h>
 
 class nsIRDFDataSource;
 class nsIRDFContainer;
@@ -46,17 +46,17 @@ class nsIRDFResource;
 class nsIRDFService;
 
 @interface CHRDFOutlineViewDataSource : NSObject {
-    nsIRDFDataSource* mDataSource;
-    nsIRDFContainer* mContainer;
-    nsIRDFContainerUtils* mContainerUtils;
-    nsIRDFResource* mRootResource;
-    nsIRDFService* mRDFService;
+    nsIRDFDataSource* 		mDataSource;
+    nsIRDFContainer* 		mContainer;
+    nsIRDFContainerUtils* 	mContainerUtils;
+    nsIRDFResource* 		mRootResource;
+    nsIRDFService* 		mRDFService;
 
     IBOutlet id mOutlineView;	
 }
 
 // Initialization Methods
-- (id) initWithDataSource: (nsIRDFDataSource*) aDataSource rootResource: (nsIRDFResource*) aRootResource;
+- (void) ensureDataSourceLoaded;
 
 - (nsIRDFDataSource*) dataSource;
 - (nsIRDFResource*) rootResource;

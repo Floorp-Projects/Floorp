@@ -58,6 +58,7 @@ class nsIDOMNode;
 
   IBOutlet id mSidebarBrowserView;
   IBOutlet id mSidebarBookmarksDataSource;
+  IBOutlet id mHistoryDataSource;
 
   IBOutlet CHBookmarksToolbar* mPersonalToolbar;
 

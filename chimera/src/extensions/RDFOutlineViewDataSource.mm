@@ -44,6 +44,7 @@
 #include "nsIRDFResource.h"
 #include "nsIRDFContainer.h"
 #include "nsIRDFContainerUtils.h"
+#include "nsRDFCID.h"
 
 #include "nsComponentManagerUtils.h"
 #include "nsIServiceManagerUtils.h"
@@ -51,36 +52,23 @@
 #include "nsXPIDLString.h"
 #include "nsString.h"
 
+
+
 @implementation CHRDFOutlineViewDataSource
 
-- (id) init
+- (void) ensureDataSourceLoaded
 {
-    if ((self = [super init])) {
-        nsCOMPtr<nsIRDFContainer> ctr(do_CreateInstance("@mozilla.org/rdf/container;1"));
-        NS_ADDREF(mContainer = ctr);
+    nsCOMPtr<nsIRDFContainer> ctr = do_CreateInstance("@mozilla.org/rdf/container;1");
+    NS_ADDREF(mContainer = ctr);
         
-        nsCOMPtr<nsIRDFContainerUtils> ctrUtils(do_GetService("@mozilla.org/rdf/container-utils;1"));
-        NS_ADDREF(mContainerUtils = ctrUtils);
+    nsCOMPtr<nsIRDFContainerUtils> ctrUtils = do_GetService("@mozilla.org/rdf/container-utils;1");
+    NS_ADDREF(mContainerUtils = ctrUtils);
         
-        nsCOMPtr<nsIRDFService> rdfService(do_GetService("@mozilla.org/rdf/rdf-service;1"));
-        NS_ADDREF(mRDFService = rdfService);
+    nsCOMPtr<nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1");
+    NS_ADDREF(mRDFService = rdfService);
         
-        mDataSource = nsnull;
-        mRootResource = nsnull;
-    }
-    return self;
-}
-
-- (id) initWithDataSource: (nsIRDFDataSource*) aDataSource rootResource: (nsIRDFResource*) aRootResource
-{
-    NS_ASSERTION(aDataSource != nsnull, "Trying to initWithDataSource without a data source!");
-    if (!aDataSource)
-        return nil;
-        
-    NS_ADDREF(mDataSource = aDataSource);
-    NS_IF_ADDREF(mRootResource = aRootResource);
-    
-    return [self init];
+    mDataSource = nsnull;
+    mRootResource = nsnull;
 }
 
 - (void) dealloc
@@ -127,15 +115,35 @@
     return NO;
 }
 
-// XXX write me
-- (BOOL)outlineView: (NSOutlineView*) aOutlineView isItemExpandable: (id) aItem
+- (BOOL) outlineView: (NSOutlineView*) aOutlineView isItemExpandable: (id) aItem
 {
-    return NO;
+    NSLog(@"outlineView:%@isItemExpandable:%@", aOutlineView, aItem);
+    if (!mDataSource)
+        return NO;
+    
+    if (!aItem)
+        return YES; // The root is always open
+    
+    nsCOMPtr<nsIRDFResource> itemResource = [aItem resource];
+    
+    PRBool isSeq = PR_FALSE;
+    mContainerUtils->IsSeq(mDataSource, itemResource, &isSeq);
+    if (isSeq)
+        return YES;
+    
+    nsCOMPtr<nsIRDFResource> childProperty;
+    mRDFService->GetResource("http://home.netscape.com/NC-rdf#child", getter_AddRefs(childProperty));
+    
+    nsCOMPtr<nsIRDFNode> childNode;
+    mDataSource->GetTarget(itemResource, childProperty, PR_TRUE, getter_AddRefs(childNode));
+    
+    return childNode != nsnull;
 }
 
 - (id) outlineView: (NSOutlineView*) aOutlineView child: (int) aIndex
                                                   ofItem: (id) aItem
 {
+    NSLog(@"outlineView:%@child:%dofItem:%@", aOutlineView, aIndex, aItem);
     if (!mDataSource)
         return nil;
     
@@ -157,18 +165,40 @@
     
 - (int) outlineView: (NSOutlineView*) aOutlineView numberOfChildrenOfItem: (id) aItem;
 {
+    NSLog(@"outlineView:%@numberOfChildrenOfItem:%@", aOutlineView, aItem);
     if (!mDataSource)
         return nil;
     
     nsCOMPtr<nsIRDFResource> resource = !aItem ? mRootResource : [aItem resource];
     
-    nsresult rv = mContainer->Init(mDataSource, resource);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Not a container!");
-    if (NS_FAILED(rv))
-        return 0;
+    // XXX just assume NC:child is the only containment arc for now
+    nsCOMPtr<nsIRDFResource> childProperty;
+    mRDFService->GetResource("http://home.netscape.com/NC-rdf#child", getter_AddRefs(childProperty));
     
-    PRInt32 count;
-    mContainer->GetCount(&count);
+    nsCOMPtr<nsISimpleEnumerator> childNodes;
+    mDataSource->GetTargets(resource, childProperty, PR_TRUE, getter_AddRefs(childNodes));
+    
+    PRBool hasMore = PR_FALSE;
+    childNodes->HasMoreElements(&hasMore);
+    
+    PRInt32 count = 0;
+    
+    while (hasMore) {
+        nsCOMPtr<nsISupports> supp;
+        childNodes->GetNext(getter_AddRefs(supp));
+        
+        ++count;
+        
+        childNodes->HasMoreElements(&hasMore);
+    }
+    
+    if (!count) {
+        nsresult rv = mContainer->Init(mDataSource, resource);
+        if (NS_FAILED(rv))
+            return 0;
+        
+        mContainer->GetCount(&count);
+    }
     
     return count;
 }
@@ -176,6 +206,7 @@
 - (id) outlineView: (NSOutlineView*) aOutlineView objectValueForTableColumn: (NSTableColumn*) aTableColumn
                                                   byItem: (id) aItem
 {
+    NSLog(@"outlineView:%@objectValueForTableColumn:%@byItem:%@", aOutlineView, aTableColumn, aItem);
     if (!mDataSource || !aItem)
         return nil;
         
