@@ -45,8 +45,8 @@
 
 <!DOCTYPE overlay 
 [
-   <!ENTITY % calendarDTD SYSTEM "chrome://calendar/locale/calendar.dtd" > %calendarDTD;
-   <!ENTITY % calendarMenuOverlayDTD SYSTEM "chrome://calendar/locale/menuOverlay.dtd" > %calendarMenuOverlayDTD;
+    <!ENTITY % calendarDTD SYSTEM "chrome://calendar/locale/calendar.dtd" > %calendarDTD;
+    <!ENTITY % calendarMenuOverlayDTD SYSTEM "chrome://calendar/locale/menuOverlay.dtd" > %calendarMenuOverlayDTD;
 ]>
 
 <overlay id="calendarOverlay"
@@ -266,7 +266,7 @@
    
     <menu id="tasksMenu"
          label="&toolsMenu.label;"
-         accesskey="&toolsMenu.accesskey;" >                                                                                       
+         accesskey="&toolsMenu.accesskey;">
       <menupopup id="taskPopup">
          <menuitem id="calendar-wizard-menu"
                    key="wizard_key"
@@ -293,7 +293,7 @@
                    observes="publish_events_command"/>
       </menupopup>
    </menu>
-   
+
 
    <menu id="menu_Help"
          accesskey="&helpMenu.accesskey;">
@@ -303,7 +303,7 @@
                    accesskey="&calendar.about.accesskey;"
                    oncommand="displayCalendarVersion();"/>
       </menupopup>
-   </menu>      
+   </menu>
 </menubar>
 
 </overlay>
