@@ -406,13 +406,14 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
             nsXPIDLCString escapedFilePath;
             *((char**)getter_Copies(escapedFilePath)) =
                                     nsEscape(filePath, url_Path);
+      // we're not using the escapedFilePath at this point because it doesn't work.
       if (mPrintingOperation)
-          urlSpec = PR_smprintf("mailbox://%s?number=%d&header=print", (const char *) escapedFilePath, msgKey);
+          urlSpec = PR_smprintf("mailbox://%s?number=%d&header=print", (const char *) filePath, msgKey);
       else if (part)
           urlSpec = PR_smprintf("mailbox://%s?number=%d&%s", (const char *)
-                                escapedFilePath, msgKey, part);
+                                filePath, msgKey, part);
       else
-          urlSpec = PR_smprintf("mailbox://%s?number=%d", (const char *) escapedFilePath, msgKey);
+          urlSpec = PR_smprintf("mailbox://%s?number=%d", (const char *) filePath, msgKey);
             
 			nsCOMPtr <nsIMsgMailNewsUrl> url = do_QueryInterface(*aMailboxUrl);
 			url->SetSpec(urlSpec);
