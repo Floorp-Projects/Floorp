@@ -71,6 +71,23 @@ nsXPFCCanvasManager :: nsXPFCCanvasManager()
 
 nsXPFCCanvasManager :: ~nsXPFCCanvasManager()  
 {
+
+  nsIIterator * iterator;
+  mViewList->CreateIterator(&iterator);
+  iterator->Init();
+
+  ViewListEntry * item ;
+
+  while(!(iterator->IsDone()))
+  {
+    item = (ViewListEntry *) iterator->CurrentItem();
+    delete item;
+    iterator->Next();
+  }
+  NS_RELEASE(iterator);
+
+  mViewList->RemoveAll();
+
   PR_DestroyMonitor(monitor);
   NS_IF_RELEASE(mRootCanvas);
   NS_IF_RELEASE(mViewList);
@@ -264,6 +281,7 @@ nsresult nsXPFCCanvasManager::Unregister(nsIXPFCCanvas * aCanvas)
 
     if (item->canvas == aCanvas)
     {
+      delete item;
       mViewList->Remove((nsComponent)item);
       break;
     }  
