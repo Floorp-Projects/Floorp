@@ -55,6 +55,7 @@
 #include "nsPlaceholderFrame.h"
 #include "nsTableRowGroupFrame.h"
 #include "nsStyleChangeList.h"
+#include "nsIFormControl.h"
 #include "nsCSSAtoms.h"
 
 #ifdef INCLUDE_XUL
@@ -88,6 +89,7 @@ static NS_DEFINE_IID(kIListControlFrameIID,     NS_ILISTCONTROLFRAME_IID);
 static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
 static NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
+static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 
 // Structure used when constructing formatting object trees.
 struct nsFrameItems {
@@ -1293,8 +1295,11 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresContext*  aPresContext,
       // XXX this needs to be fixed so that the form can work without
       // a frame. This is *disgusting*
 
-      // forms need a frame but it can't be a child of an inner table
-      if (nsHTMLAtoms::form == tag.get()) {  
+      // forms, form controls need a frame but it can't be a child of an inner table
+      nsIFormControl* formControl = nsnull;
+      nsresult fcResult = aChildContent->QueryInterface(kIFormControlIID, (void**)&formControl);
+      NS_IF_RELEASE(formControl);
+      if ((nsHTMLAtoms::form == tag.get()) || NS_SUCCEEDED(fcResult)) {
         // if the parent is a table, put the form in the outer table frame
         const nsStyleDisplay* parentDisplay = (const nsStyleDisplay*)
           aParentStyleContext->GetStyleData(eStyleStruct_Display);
