@@ -45,6 +45,7 @@
 #include "nsAVLTree.h"
 #include "nsHashtableEnumerator.h"
 #include "nsPipe2.h"
+#include "nsWeakReference.h"
 
 class dummyComparitor: public nsAVLNodeComparitor {
 public:
@@ -99,6 +100,7 @@ void XXXNeverCalled()
     XPTI_GetInterfaceInfoManager();
     NS_NewGenericFactory(NULL, NULL, NULL);
     NS_NewHashtableEnumerator(NULL, NULL, NULL, NULL);
+    NS_GetWeakReference(NULL);
 #ifdef DEBUG
     TestSegmentedBuffer();
 #endif

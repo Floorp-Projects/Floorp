@@ -3,7 +3,7 @@
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
 
-nsIWeakReference*
+NS_COM nsIWeakReference *
 NS_GetWeakReference( nsISupports* aInstance, nsresult* aResult )
 	{
 		nsresult status;
@@ -18,7 +18,7 @@ NS_GetWeakReference( nsISupports* aInstance, nsresult* aResult )
 		return weakP;
 	}
 
-nsresult
+NS_IMETHODIMP
 nsSupportsWeakReference::GetWeakReference( nsIWeakReference** aInstancePtr )
 	{
 		if ( !aInstancePtr )
@@ -40,13 +40,13 @@ nsSupportsWeakReference::GetWeakReference( nsIWeakReference** aInstancePtr )
 		return status;
 	}
 
-nsrefcnt
+NS_IMETHODIMP_(nsrefcnt)
 nsWeakReference::AddRef()
 	{
 		return ++mRefCount;
 	}
 
-nsrefcnt
+NS_IMETHODIMP_(nsrefcnt)
 nsWeakReference::Release()
 	{
 		nsrefcnt temp = --mRefCount;
@@ -55,7 +55,7 @@ nsWeakReference::Release()
 		return temp;
 	}
 
-nsresult
+NS_IMETHODIMP
 nsWeakReference::QueryInterface( const nsIID& aIID, void** aInstancePtr )
 	{
 		if ( !aInstancePtr )
@@ -80,7 +80,7 @@ nsWeakReference::QueryInterface( const nsIID& aIID, void** aInstancePtr )
 		return status;
 	}
 
-nsresult
+NS_IMETHODIMP
 nsWeakReference::QueryReference( const nsIID& aIID, void** aInstancePtr )
 	{
 		return mReferent ? mReferent->QueryInterface(aIID, aInstancePtr) : NS_ERROR_NULL_POINTER;
