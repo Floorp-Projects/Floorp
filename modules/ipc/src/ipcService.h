@@ -51,27 +51,7 @@
 #include "ipcMessageQ.h"
 #include "ipcm.h"
 
-//----------------------------------------------------------------------------
-// ipcClientQuery
-//----------------------------------------------------------------------------
-
-class ipcClientQuery
-{
-public:
-    ipcClientQuery()
-        : mNext(nsnull)
-        , mID(0)
-        , mReqToken(0)
-        { }
-
-    ipcClientQuery              *mNext;
-    nsCString                    mName;
-    PRUint32                     mID;
-    PRUint32                     mReqToken;
-    nsCOMPtr<ipcIClientObserver> mObserver;
-};
-
-typedef ipcList<ipcClientQuery> ipcClientQueryQ;
+typedef ipcList<class ipcClientQuery> ipcClientQueryQ;
 
 //----------------------------------------------------------------------------
 // ipcService
@@ -99,8 +79,6 @@ private:
     void OnConnectionEstablished(PRUint32 clientID);
     void OnConnectionLost();
     void OnMessageAvailable(const ipcMessage *);
-
-    static PRUint32 gLastReqToken;
 
     nsHashtable     mObserverDB;
     ipcTransport   *mTransport;

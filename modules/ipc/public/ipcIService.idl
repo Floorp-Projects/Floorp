@@ -37,9 +37,9 @@
 
 #include "nsISupports.idl"
 
-interface nsISimpleEnumerator;
 interface ipcIMessageObserver;
 interface ipcIClientObserver;
+interface ipcIClientQueryHandler;
 
 /**
  * the IPC service provides the means to communicate with an external IPC
@@ -105,13 +105,13 @@ interface ipcIService : nsISupports
      * or if there is no client matching the given name, the observer's
      * onClientDown method will be called instead.
      *
-     * @param aName      name or alias of the client being queried.
-     * @param aObserver  client observer to be notified.
+     * @param aName     name of the client being queried.
+     * @param aHandler  handler to be notified asynchronously of result.
      *
-     * @return integer token identifying this request.
+     * @return integer value identifying this query.
      */
-    unsigned long queryClientByName(in ACString           aName,
-                                    in ipcIClientObserver aObserver);
+    unsigned long queryClientByName(in ACString aName,
+                                    in ipcIClientQueryHandler aHandler);
 
     /**
      * query info about a particular client given its client ID. the observer's
@@ -119,10 +119,20 @@ interface ipcIService : nsISupports
      * is no client matching the given name, the observer's onClientDown method
      * will be called instead.
      *
-     * @return integer token identifying this request.
+     * @param aClientID  ID of the client being queried.
+     * @param aHandler   handler to be notified asynchronously of result.
+     *
+     * @return integer value identifying this query.
      */
-    unsigned long queryClientByID(in unsigned long      aClientID,
-                                  in ipcIClientObserver aObserver);
+    unsigned long queryClientByID(in unsigned long aClientID,
+                                  in ipcIClientQueryHandler aHandler);
+
+    /**
+     * called to cancel a pending query.
+     *
+     * @param aQueryID  return value from one of the "query" methods.
+     */
+    void cancelQuery(in unsigned long aQueryID);
 
     /**
      * set client observer.  observer's onClientUp method is called whenever 
@@ -159,7 +169,7 @@ interface ipcIService : nsISupports
      */
     void sendMessage(in unsigned long aClientID,
                      in nsIDRef       aTarget,
-                     [array, const, size_is(aDataLen)]
+                    [array, const, size_is(aDataLen)]
                      in octet         aData,
                      in unsigned long aDataLen);
 };
@@ -176,7 +186,7 @@ interface ipcIMessageObserver : nsISupports
      * @param aDataLen  the data length of the message.
      */
     void onMessageAvailable(in nsIDRef       aTarget,
-                            [array, const, size_is(aDataLen)]
+                           [array, const, size_is(aDataLen)]
                             in octet         aData,
                             in unsigned long aDataLen);
 };
@@ -184,20 +194,27 @@ interface ipcIMessageObserver : nsISupports
 [scriptable, uuid(42283079-030c-4b13-b069-a08b7ad5eab2)]
 interface ipcIClientObserver : nsISupports
 {
-    void onClientUp   (in unsigned long aReqToken,
-                       in unsigned long aClientID);
+    const unsigned long CLIENT_UP   = 1;
+    const unsigned long CLIENT_DOWN = 2;
+    
+    void onClientStatus(in unsigned long aClientID,
+                        in unsigned long aClientStatus);
+};
 
-    void onClientDown (in unsigned long aReqToken,
-                       in unsigned long aClientID);
+[scriptable, uuid(6fefea5c-f747-4bb0-972f-2a7b363a01db)]
+interface ipcIClientQueryHandler : nsISupports
+{
+    void onQueryComplete(in unsigned long aQueryID,
+                         in unsigned long aClientID,
+                        [array, size_is(aNameCount)]
+                         in string aClientNames,
+                         in unsigned long aNameCount,
+                        [array, const, size_is(aTargetCount)]
+                         in nsIDPtr aClientTargets,
+                         in unsigned long aTargetCount);
 
-    void onClientInfo (in unsigned long aReqToken,
-                       in unsigned long aClientID,
-                       [array, size_is(aNameCount)]
-                       in string        aClientNames,
-                       in unsigned long aNameCount,
-                       [array, const, size_is(aTargetCount)]
-                       in nsIDPtr       aClientTargets,
-                       in unsigned long aTargetCount);
+    void onQueryFailed(in unsigned long aQueryID,
+                       in nsresult aReason);
 };
 
 %{C++
