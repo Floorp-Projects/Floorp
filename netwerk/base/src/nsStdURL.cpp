@@ -353,7 +353,12 @@ nsStdURL::AppendString(nsCString& buffer, char * fromUnescapedStr,
     if (!fromUnescapedStr)
         return NS_ERROR_FAILURE;
 
-    if (toFormat == ESCAPED) {
+    if (toFormat == HOSTESCAPED && strchr(fromUnescapedStr, ':')) {
+        buffer += "[";
+        buffer += fromUnescapedStr;
+        buffer += "]";
+    }
+    else if (toFormat != UNESCAPED) {
         rv = nsAppendURLEscapedString(buffer, fromUnescapedStr, mask);
     } else {
         buffer += fromUnescapedStr;
@@ -425,7 +430,7 @@ nsStdURL::GetSpec(char **o_Spec)
 
     if (mHost)
     {
-        rv = AppendString(finalSpec,mHost,ESCAPED,nsIIOService::url_Host);
+        rv = AppendString(finalSpec,mHost,HOSTESCAPED,nsIIOService::url_Host);
         if (-1 != mPort)
         {
             char* portBuffer = PR_smprintf(":%d", mPort);
@@ -643,7 +648,7 @@ nsStdURL::Resolve(const char *relativePath, char **result)
 
     if (mHost)
     {
-        rv = AppendString(finalSpec,mHost,ESCAPED,nsIIOService::url_Host);
+        rv = AppendString(finalSpec,mHost,HOSTESCAPED,nsIIOService::url_Host);
         if (-1 != mPort)
         {
             char* portBuffer = PR_smprintf(":%d", mPort);

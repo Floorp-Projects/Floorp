@@ -22,6 +22,7 @@
 #include "nsCRT.h"
 #include "nsString.h"
 #include "prprf.h"
+#include "prnetdb.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsStdURLParser, nsIURLParser)
 
@@ -64,7 +65,7 @@ nsStdURLParser::ParseAtScheme(const char* i_Spec, char* *o_Scheme,
         return rv;
     }
 
-    static const char delimiters[] = "/:@?#"; //this order is optimized.
+    static const char delimiters[] = "/:@?#[";
     char* brk = PL_strpbrk(i_Spec, delimiters);
 
     if (!brk) // everything is a host
@@ -161,6 +162,17 @@ nsStdURLParser::ParseAtScheme(const char* i_Spec, char* *o_Scheme,
                             o_Port, o_Path);
         return rv;
         break;
+    case '[':
+        if (brk == i_Spec) {
+            rv = ParseAtHost(i_Spec, o_Host, o_Port, o_Path);
+            if (rv != NS_ERROR_MALFORMED_URI) return rv;
+
+            // Try something else
+            CRTFREEIF(*o_Host);
+            *o_Port = -1;
+        }
+        rv = ParseAtPath(i_Spec, o_Path);
+        return rv;
     default:
         NS_ASSERTION(0, "This just can't be!");
         break;
@@ -182,7 +194,7 @@ nsStdURLParser::ParseAtPreHost(const char* i_Spec, char* *o_Username,
     if (fwdPtr && (*fwdPtr != '\0') && (*fwdPtr == '/'))
         fwdPtr++;
 
-    static const char delimiters[] = "/:@?#"; 
+    static const char delimiters[] = "/:@?#["; 
     char* brk = PL_strpbrk(fwdPtr, delimiters);
 	char* brk2 = nsnull;
 
@@ -238,6 +250,17 @@ nsStdURLParser::ParseAtPreHost(const char* i_Spec, char* *o_Username,
 
         rv = ParseAtHost(brk+1, o_Host, o_Port, o_Path);
         break; 
+    case '[':
+        if (brk == fwdPtr) {
+            rv = ParseAtHost(fwdPtr, o_Host, o_Port, o_Path);
+            if (rv != NS_ERROR_MALFORMED_URI) return rv;
+
+            // Try something else
+            CRTFREEIF(*o_Host);
+            *o_Port = -1;
+        }
+        rv = ParseAtPath(fwdPtr, o_Path);
+        break;
     default:
         rv = ParseAtHost(fwdPtr, o_Host, o_Port, o_Path);
     }
@@ -252,6 +275,44 @@ nsStdURLParser::ParseAtHost(const char* i_Spec, char* *o_Host,
 
     int len = PL_strlen(i_Spec);
     static const char delimiters[] = ":/?#"; //this order is optimized.
+
+    const char* fwdPtr= i_Spec;
+    PRNetAddr netaddr;
+ 
+    if (fwdPtr && *fwdPtr == '[') {
+        // Possible IPv6 address
+        fwdPtr = strchr(fwdPtr+1, ']');
+        if (fwdPtr && (fwdPtr[1] == '\0' || strchr(delimiters, fwdPtr[1]))) {
+            rv = ExtractString((char*)i_Spec+1, o_Host, (fwdPtr - i_Spec - 1));
+            if (NS_FAILED(rv))
+                return rv;
+            rv = PR_StringToNetAddr(*o_Host, &netaddr);
+            if (rv != PR_SUCCESS || netaddr.raw.family != PR_AF_INET6) {
+                // try something else
+                CRTFREEIF(*o_Host);
+            } else {
+                ToLowerCase(*o_Host);
+                fwdPtr++;
+                switch (*fwdPtr)
+                {
+                    case '\0': // everything is a host
+                        return NS_OK;
+                    case '/' :
+                    case '?' :
+                    case '#' :
+                        rv = ParseAtPath(fwdPtr, o_Path);
+                        return rv;
+                    case ':' :
+                        rv = ParseAtPort(fwdPtr+1, o_Port, o_Path);
+                        return rv;
+                    default:
+                        NS_ASSERTION(0, "This just can't be!");
+                        break;
+                }
+            }
+        }
+    }
+
     char* brk = PL_strpbrk(i_Spec, delimiters);
     if (!brk) // everything is a host
     {
