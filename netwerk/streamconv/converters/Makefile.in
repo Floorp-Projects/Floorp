@@ -54,7 +54,6 @@ CPPSRCS		= \
 		nsGopherDirListingConv.cpp \
 		mozTXTToHTMLConv.cpp \
 		nsUnknownDecoder.cpp \
-		nsHTTPChunkConv.cpp \
 		nsHTTPCompressConv.cpp \
 		nsTXTToHTMLConv.cpp \
 		nsDirIndex.cpp \

@@ -232,7 +232,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAboutCacheEntry)
 #include "nsFTPDirListingConv.h"
 #include "nsGopherDirListingConv.h"
 #include "nsMultiMixedConv.h"
-#include "nsHTTPChunkConv.h"
 #include "nsHTTPCompressConv.h"
 #include "mozTXTToHTMLConv.h"
 #include "nsUnknownDecoder.h"
@@ -246,7 +245,6 @@ nsresult NS_NewFTPDirListingConv(nsFTPDirListingConv** result);
 nsresult NS_NewGopherDirListingConv(nsGopherDirListingConv** result);
 nsresult NS_NewMultiMixedConv (nsMultiMixedConv** result);
 nsresult MOZ_NewTXTToHTMLConv (mozTXTToHTMLConv** result);
-nsresult NS_NewHTTPChunkConv  (nsHTTPChunkConv ** result);
 nsresult NS_NewHTTPCompressConv  (nsHTTPCompressConv ** result);
 nsresult NS_NewNSTXTToHTMLConv(nsTXTToHTMLConv** result);
 nsresult NS_NewStreamConv(nsStreamConverterService **aStreamConv);
@@ -258,8 +256,6 @@ nsresult NS_NewStreamConv(nsStreamConverterService **aStreamConv);
 #define MULTI_MIXED                  "?from=multipart/mixed&to=*/*"
 #define MULTI_BYTERANGES             "?from=multipart/byteranges&to=*/*"
 #define UNKNOWN_CONTENT              "?from=application/x-unknown-content-type&to=*/*"
-#define CHUNKED_TO_UNCHUNKED         "?from=chunked&to=unchunked"
-#define UNCHUNKED_TO_CHUNKED         "?from=unchunked&to=chunked"
 #define GZIP_TO_UNCOMPRESSED         "?from=gzip&to=uncompressed"
 #define XGZIP_TO_UNCOMPRESSED        "?from=x-gzip&to=uncompressed"
 #define COMPRESS_TO_UNCOMPRESSED     "?from=compress&to=uncompressed"
@@ -279,8 +275,6 @@ static const char *const g_StreamConverterArray[] = {
         MULTI_MIXED,
         MULTI_BYTERANGES,
         UNKNOWN_CONTENT,
-        CHUNKED_TO_UNCHUNKED,
-        UNCHUNKED_TO_CHUNKED,
         GZIP_TO_UNCOMPRESSED,
         XGZIP_TO_UNCOMPRESSED,
         COMPRESS_TO_UNCOMPRESSED,
@@ -455,30 +449,6 @@ CreateNewTXTToHTMLConvFactory(nsISupports* aOuter, REFNSIID aIID, void **aResult
     }   
     mozTXTToHTMLConv* inst = nsnull;
     nsresult rv = MOZ_NewTXTToHTMLConv(&inst);
-    if (NS_FAILED(rv)) {                                             
-        *aResult = nsnull;                                           
-        return rv;                                                   
-    } 
-    rv = inst->QueryInterface(aIID, aResult);
-    if (NS_FAILED(rv)) {                                             
-        *aResult = nsnull;                                           
-    }                                                                
-    NS_RELEASE(inst);             /* get rid of extra refcnt */      
-    return rv;              
-}
-
-static NS_IMETHODIMP                 
-CreateNewHTTPChunkConvFactory (nsISupports* aOuter, REFNSIID aIID, void **aResult) 
-{
-    if (!aResult) {                                                  
-        return NS_ERROR_INVALID_POINTER;                             
-    }
-    if (aOuter) {                                                    
-        *aResult = nsnull;                                           
-        return NS_ERROR_NO_AGGREGATION;                              
-    }   
-    nsHTTPChunkConv* inst = nsnull;
-    nsresult rv = NS_NewHTTPChunkConv (&inst);
     if (NS_FAILED(rv)) {                                             
         *aResult = nsnull;                                           
         return rv;                                                   
@@ -806,18 +776,6 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_UNKNOWNDECODER_CID,
       NS_ISTREAMCONVERTER_KEY UNKNOWN_CONTENT,
       CreateNewUnknownDecoderFactory
-    },
-
-    { "HttpChunkConverter", 
-      NS_HTTPCHUNKCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY CHUNKED_TO_UNCHUNKED,
-      CreateNewHTTPChunkConvFactory
-    },
-
-    { "HttpChunkConverter", 
-      NS_HTTPCHUNKCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY UNCHUNKED_TO_CHUNKED,
-      CreateNewHTTPChunkConvFactory
     },
 
     { "HttpCompressConverter", 
