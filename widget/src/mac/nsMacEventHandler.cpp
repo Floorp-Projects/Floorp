@@ -319,6 +319,7 @@ PRBool nsMacEventHandler::DragEvent ( unsigned int aMessage, Point aMouseGlobal,
 enum
 {
 	kEscapeKeyCode			= 0x35,
+	kCommandKeyCode     = 0x37,
 	kShiftKeyCode				= 0x38,
 	kCapsLockKeyCode		= 0x39,
 	kControlKeyCode			= 0x3B,
@@ -364,10 +365,13 @@ enum
 	kKeypadDecimalKeyCode		= 0x41,
 	kKeypadDivideKeyCode		= 0x4B,
 	kKeypadEqualsKeyCode		= 0x51,			// no correpsonding raptor key code
+	kEnterKeyCode           = 0x4C,
+	kReturnKeyCode          = 0x24,
 	
 	kInsertKeyCode					= 0x72,				// also help key
 	kDeleteKeyCode					= 0x75,				// also forward delete key
 	kTabKeyCode							= 0x30,
+	kBackspaceKeyCode       = 0x33,
 	kHomeKeyCode						= 0x73,	
 	kEndKeyCode							= 0x77,
 	kPageUpKeyCode					= 0x74,
@@ -392,6 +396,7 @@ static PRUint32 ConvertMacToRaptorKeyCode(UInt32 eventMessage, UInt32 eventModif
 // modifiers. We don't get separate events for these
 		case kEscapeKeyCode:				raptorKeyCode = NS_VK_ESCAPE;					break;
 		case kShiftKeyCode:					raptorKeyCode = NS_VK_SHIFT;					break;
+//		case kCommandKeyCode:       raptorKeyCode = NS_VK_META;           break;
 		case kCapsLockKeyCode:			raptorKeyCode = NS_VK_CAPS_LOCK;			break;
 		case kControlKeyCode:				raptorKeyCode = NS_VK_CONTROL;				break;
 		case kOptionkeyCode:				raptorKeyCode = NS_VK_ALT;						break;
@@ -438,8 +443,19 @@ static PRUint32 ConvertMacToRaptorKeyCode(UInt32 eventMessage, UInt32 eventModif
 
 
 // these may clash with forward delete and help
-//	case kInsertKeyCode:				raptorKeyCode = NS_VK_INSERT;					break;
-//	case kDeleteKeyCode:				raptorKeyCode = NS_VK_DELETE;					break;
+    case kInsertKeyCode:				raptorKeyCode = NS_VK_INSERT;					break;
+    case kDeleteKeyCode:				raptorKeyCode = NS_VK_DELETE;					break;
+
+    case kBackspaceKeyCode:     raptorKeyCode = NS_VK_BACK;           break;
+    case kTabKeyCode:           raptorKeyCode = NS_VK_TAB;            break;
+    case kHomeKeyCode:          raptorKeyCode = NS_VK_HOME;           break;
+    case kEndKeyCode:           raptorKeyCode = NS_VK_END;            break;
+		case kPageUpKeyCode:				raptorKeyCode = NS_VK_PAGE_UP;        break;
+		case kPageDownKeyCode:			raptorKeyCode = NS_VK_PAGE_DOWN;      break;
+		case kLeftArrowKeyCode:			raptorKeyCode = NS_VK_LEFT;           break;
+		case kRightArrowKeyCode:		raptorKeyCode = NS_VK_RIGHT;          break;
+		case kUpArrowKeyCode:				raptorKeyCode = NS_VK_UP;             break;
+		case kDownArrowKeyCode:			raptorKeyCode = NS_VK_DOWN;           break;
 
 		default:
 		
@@ -448,19 +464,6 @@ static PRUint32 ConvertMacToRaptorKeyCode(UInt32 eventMessage, UInt32 eventModif
 				{
 					case kReturnCharCode:				raptorKeyCode = NS_VK_RETURN;				break;
 					case kEnterCharCode:				raptorKeyCode = NS_VK_RETURN;				break;			// fix me!
-					case kBackspaceCharCode:		raptorKeyCode = NS_VK_BACK;					break;
-					case kDeleteCharCode:				raptorKeyCode = NS_VK_DELETE;				break;
-					case kTabCharCode:					raptorKeyCode = NS_VK_TAB;					break;
-
-					case kHomeCharCode:					raptorKeyCode = NS_VK_HOME;					break;
-					case kEndCharCode:					raptorKeyCode = NS_VK_END;					break;
-					case kPageUpCharCode:				raptorKeyCode = NS_VK_PAGE_UP;			break;
-					case kPageDownCharCode:			raptorKeyCode = NS_VK_PAGE_DOWN;		break;
-
-					case kLeftArrowCharCode:		raptorKeyCode = NS_VK_LEFT;					break;
-					case kRightArrowCharCode:		raptorKeyCode = NS_VK_RIGHT;				break;
-					case kUpArrowCharCode:			raptorKeyCode = NS_VK_UP;						break;
-					case kDownArrowCharCode:		raptorKeyCode = NS_VK_DOWN;					break;
 					case ' ':										raptorKeyCode = NS_VK_SPACE;				break;
 					case ';':										raptorKeyCode = NS_VK_SEMICOLON;		break;
 					case '=':										raptorKeyCode = NS_VK_EQUALS;				break;
@@ -533,8 +536,17 @@ void nsMacEventHandler::InitializeKeyEvent(nsKeyEvent& aKeyEvent, EventRecord& a
 	//
 	// nsKeyEvent parts
 	//
-	aKeyEvent.keyCode		= ConvertMacToRaptorKeyCode(aOSEvent.message, aOSEvent.modifiers);
-	aKeyEvent.charCode	= aOSEvent.message & charCodeMask;		// will be translated to Unicode, see ConvertKeyEventToUnicode
+	if (message == NS_KEY_PRESS && !IsSpecialRaptorKey((aOSEvent.message & keyCodeMask) >> 8) )
+	{
+    aKeyEvent.keyCode	= 0;
+    aKeyEvent.charCode = ConvertKeyEventToUnicode(aOSEvent);
+	  NS_ASSERTION(0 != aKeyEvent.charCode, "nsMacEventHandler::InitializeKeyEvent: ConvertKeyEventToUnicode returned 0.");
+	}
+	else
+	{
+    aKeyEvent.keyCode = ConvertMacToRaptorKeyCode(aOSEvent.message, aOSEvent.modifiers);
+    aKeyEvent.charCode = 0;
+  }
 }
 
 
@@ -549,14 +561,15 @@ PRBool nsMacEventHandler::IsSpecialRaptorKey(UInt32 macKeyCode)
 	PRBool	isSpecial;
 
 	// 
-	// this table is used to make the macintosh virtual key generation behave the same
-	// as windows and linux
+	// this table is used to determine which keys are special and should not generate a charCode
 	//	
 	switch (macKeyCode)
 	{
 // modifiers. We don't get separate events for these
+// yet
 		case kEscapeKeyCode:				isSpecial = PR_TRUE; break;
 		case kShiftKeyCode:					isSpecial = PR_TRUE; break;
+		case kCommandKeyCode:       isSpecial = PR_TRUE; break;
 		case kCapsLockKeyCode:			isSpecial = PR_TRUE; break;
 		case kControlKeyCode:				isSpecial = PR_TRUE; break;
 		case kOptionkeyCode:				isSpecial = PR_TRUE; break;
@@ -578,28 +591,11 @@ PRBool nsMacEventHandler::IsSpecialRaptorKey(UInt32 macKeyCode)
 		case kPauseKeyCode:				isSpecial = PR_TRUE; break;
 		case kScrollLockKeyCode:	isSpecial = PR_TRUE; break;
 		case kPrintScreenKeyCode:	isSpecial = PR_TRUE; break;
-	
-// keypad
-		case kKeypad0KeyCode:				isSpecial = PR_TRUE; break;
-		case kKeypad1KeyCode:				isSpecial = PR_TRUE; break;
-		case kKeypad2KeyCode:				isSpecial = PR_TRUE; break;
-		case kKeypad3KeyCode:				isSpecial = PR_TRUE; break;
-		case kKeypad4KeyCode:				isSpecial = PR_TRUE; break;
-		case kKeypad5KeyCode:				isSpecial = PR_TRUE; break;
-		case kKeypad6KeyCode:				isSpecial = PR_TRUE; break;
-		case kKeypad7KeyCode:				isSpecial = PR_TRUE; break;
-		case kKeypad8KeyCode:				isSpecial = PR_TRUE; break;
-		case kKeypad9KeyCode:				isSpecial = PR_TRUE; break;
 
-		case kKeypadMultiplyKeyCode:		isSpecial = PR_TRUE; break;
-		case kKeypadAddKeyCode:					isSpecial = PR_TRUE; break;
-		case kKeypadSubtractKeyCode:		isSpecial = PR_TRUE; break;
-		case kKeypadDecimalKeyCode:			isSpecial = PR_TRUE; break;
-		case kKeypadDivideKeyCode:			isSpecial = PR_TRUE; break;	
-
-
+		case kInsertKeyCode:        isSpecial = PR_TRUE; break;
 		case kDeleteKeyCode:				isSpecial = PR_TRUE; break;
 		case kTabKeyCode:						isSpecial = PR_TRUE; break;
+		case kBackspaceKeyCode:     isSpecial = PR_TRUE; break;
 
 		case kHomeKeyCode:					isSpecial = PR_TRUE; break;	
 		case kEndKeyCode:						isSpecial = PR_TRUE; break;
@@ -609,7 +605,9 @@ PRBool nsMacEventHandler::IsSpecialRaptorKey(UInt32 macKeyCode)
 		case kRightArrowKeyCode:		isSpecial = PR_TRUE; break;
 		case kUpArrowKeyCode:				isSpecial = PR_TRUE; break;
 		case kDownArrowKeyCode:			isSpecial = PR_TRUE; break;
-		
+		case kReturnKeyCode:        isSpecial = PR_TRUE; break;
+		case kEnterKeyCode:         isSpecial = PR_TRUE; break;
+
 		default:							isSpecial = PR_FALSE; break;
 	}
 	return isSpecial;
@@ -622,10 +620,8 @@ PRBool nsMacEventHandler::IsSpecialRaptorKey(UInt32 macKeyCode)
 //
 //-------------------------------------------------------------------------
 
-void nsMacEventHandler::ConvertKeyEventToUnicode(nsKeyEvent& aKeyEvent, EventRecord& aOSEvent)
+PRUint32 nsMacEventHandler::ConvertKeyEventToUnicode(EventRecord& aOSEvent)
 {
-	aKeyEvent.charCode = 0;
-
 	char charResult = aOSEvent.message & charCodeMask;
 	
 	//
@@ -640,12 +636,12 @@ void nsMacEventHandler::ConvertKeyEventToUnicode(nsKeyEvent& aKeyEvent, EventRec
 	OSErr err = ::UpgradeScriptInfoToTextEncoding(textScript, kTextLanguageDontCare, kTextRegionDontCare, nsnull,
 											&textEncodingFromScript);
 	NS_ASSERTION(err == noErr, "nsMacEventHandler::ConvertKeyEventToUnicode: UpgradeScriptInfoToTextEncoding failed.");
-	if (err != noErr) return;
+	if (err != noErr) return 0;
 	
 	TextToUnicodeInfo	textToUnicodeInfo;
 	err = ::CreateTextToUnicodeInfoByEncoding(textEncodingFromScript,&textToUnicodeInfo);
 	NS_ASSERTION(err == noErr, "nsMacEventHandler::ConvertKeyEventToUnicode: CreateUnicodeToTextInfoByEncoding failed.");
-	if (err != noErr) return;
+	if (err != noErr) return 0;
 
 	//
 	// convert to Unicode
@@ -660,9 +656,10 @@ void nsMacEventHandler::ConvertKeyEventToUnicode(nsKeyEvent& aKeyEvent, EventRec
 									&result_size,&unicharResult);
 	::DisposeTextToUnicodeInfo(&textToUnicodeInfo);
 	NS_ASSERTION(err == noErr, "nsMacEventHandler::ConvertKeyEventToUnicode: ConverFromTextToUnicode failed.");
-	if (err != noErr) return;
+//	if (err != noErr) return 0;
+// I think we should ignore the above error since we already have the result we want
 
-	aKeyEvent.charCode = unicharResult;
+	return unicharResult;
 }
 
 
@@ -701,10 +698,9 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 		case autoKey:
 			InitializeKeyEvent(keyEvent,aOSEvent,focusedWidget,NS_KEY_DOWN);
 			result = focusedWidget->DispatchWindowEvent(keyEvent);
-			if (! IsSpecialRaptorKey((aOSEvent.message & keyCodeMask) >> 8))
+			if (result == PR_FALSE) // continue processing???  talk to Tague about this (key event spec)
 			{
 				InitializeKeyEvent(keyEvent,aOSEvent,focusedWidget,NS_KEY_PRESS);
-				ConvertKeyEventToUnicode(keyEvent,aOSEvent);
 				result = focusedWidget->DispatchWindowEvent(keyEvent);
 			}
 			break;
