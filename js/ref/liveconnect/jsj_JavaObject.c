@@ -31,6 +31,7 @@
 #include "prassert.h"
 
 #include "jsj_private.h"      /* LiveConnect internals */
+#include "jsj_hash.h"         /* Hash table with Java object as key */
 
 
 /*
@@ -47,7 +48,7 @@
  * When the corresponding JS object instance is finalized, the entry is
  * removed from the table, and a Java GC root for the Java object is removed.
  */
-static PRHashTable *java_obj_reflections = NULL;
+static JSJHashTable *java_obj_reflections = NULL;
 
 #ifdef JS_THREADSAFE
 static PRMonitor *java_obj_reflections_monitor = NULL;
@@ -57,8 +58,8 @@ static JSBool
 init_java_obj_reflections_table()
 {
     java_obj_reflections =
-        PR_NewHashTable(512, jsj_HashJavaObject, jsj_JavaObjectComparator,
-                        NULL, NULL, NULL);
+        JSJ_NewHashTable(512, jsj_HashJavaObject, jsj_JavaObjectComparator,
+                         NULL, NULL, NULL);
     if (!java_obj_reflections)
         return JS_FALSE;
 
@@ -84,18 +85,18 @@ jsj_WrapJavaObject(JSContext *cx,
     JSObject *js_wrapper_obj;
     JavaObjectWrapper *java_wrapper;
     JavaClassDescriptor *class_descriptor;
-    PRHashEntry *he, **hep;
+    JSJHashEntry *he, **hep;
 
     js_wrapper_obj = NULL;
 
-    hash_code = jsj_HashJavaObject((void*)java_obj);
+    hash_code = jsj_HashJavaObject((void*)java_obj, jEnv);
 
 #ifdef JS_THREADSAFE
     PR_EnterMonitor(java_obj_reflections_monitor);
 #endif
     
-    hep = PR_HashTableRawLookup(java_obj_reflections,
-                                hash_code, java_obj);
+    hep = JSJ_HashTableRawLookup(java_obj_reflections,
+                                 hash_code, java_obj, (void*)jEnv);
     he = *hep;
     if (he) {
         js_wrapper_obj = (JSObject *)he->value;
@@ -130,14 +131,17 @@ jsj_WrapJavaObject(JSContext *cx,
     java_wrapper->class_descriptor = class_descriptor;
     java_wrapper->members = NULL;
 
+    java_obj = (*jEnv)->NewGlobalRef(jEnv, java_obj);
+    java_wrapper->java_obj = java_obj;
+    if (!java_obj)
+        goto out_of_memory;
+
+
     /* Add the JavaObject to the hash table */
-    he = PR_HashTableRawAdd(java_obj_reflections, hep, hash_code,
-                            java_obj, js_wrapper_obj);
-    if (he) {
-        java_wrapper->java_obj = (*jEnv)->NewGlobalRef(jEnv, java_obj);
-        if (!java_wrapper->java_obj)
-            goto out_of_memory;
-    } else {
+    he = JSJ_HashTableRawAdd(java_obj_reflections, hep, hash_code,
+                             java_obj, js_wrapper_obj, (void*)jEnv);
+    if (!he) {
+        (*jEnv)->DeleteGlobalRef(jEnv, java_obj);
         goto out_of_memory;
     } 
 
@@ -156,23 +160,24 @@ out_of_memory:
 }
 
 static void
-remove_java_obj_reflection_from_hashtable(jobject java_obj)
+remove_java_obj_reflection_from_hashtable(jobject java_obj, JNIEnv *jEnv)
 {
     prhashcode hash_code;
-    PRHashEntry *he, **hep;
+    JSJHashEntry *he, **hep;
 
-    hash_code = jsj_HashJavaObject((void*)java_obj);
+    hash_code = jsj_HashJavaObject((void*)java_obj, jEnv);
 
 #ifdef JS_THREADSAFE
     PR_EnterMonitor(java_obj_reflections_monitor);
 #endif
 
-    hep = PR_HashTableRawLookup(java_obj_reflections, hash_code, java_obj);
+    hep = JSJ_HashTableRawLookup(java_obj_reflections, hash_code,
+                                 java_obj, (void*)jEnv);
     he = *hep;
 
     PR_ASSERT(he);
     if (he)
-        PR_HashTableRawRemove(java_obj_reflections, hep, he);
+        JSJ_HashTableRawRemove(java_obj_reflections, hep, he, (void*)jEnv);
 
 #ifdef JS_THREADSAFE
     PR_ExitMonitor(java_obj_reflections_monitor);
@@ -195,7 +200,7 @@ JavaObject_finalize(JSContext *cx, JSObject *obj)
         return;
     java_obj = java_wrapper->java_obj;
 
-    remove_java_obj_reflection_from_hashtable(java_obj);
+    remove_java_obj_reflection_from_hashtable(java_obj, jEnv);
 
     (*jEnv)->DeleteGlobalRef(jEnv, java_obj);
     jsj_ReleaseJavaClassDescriptor(cx, jEnv, java_wrapper->class_descriptor);
@@ -205,26 +210,29 @@ JavaObject_finalize(JSContext *cx, JSObject *obj)
     JS_free(cx, java_wrapper);
 }
 
-/*
-static JSBool
-JavaObject_toString(JSContext *cx, JSObject *obj,
-                    uintN argc, jsval *argv, jsval *vp)
+/* Trivial helper for jsj_DiscardJavaObjReflections(), below */
+static PRIntn
+enumerate_remove_java_obj(JSJHashEntry *he, PRIntn i, void *arg)
 {
+    JNIEnv *jEnv = (JNIEnv*)arg;
     jobject java_obj;
-    JavaObjectWrapper *java_wrapper;
-    JavaClassDescriptor *class_descriptor;
 
-    java_wrapper = JS_GetPrivate(cx, obj);
-    if (!java_wrapper) {
-        JS_ReportError(cx, "illegal operation on JavaObject prototype object");
-        return JS_FALSE;
-    }
-    class_descriptor = java_wrapper->class_descriptor;
-    java_obj = java_wrapper->java_obj;
-    
-    return jsj_ConvertJavaObjectToJSString(cx, class_descriptor, java_obj, vp);
+    java_obj = (jobject)he->key;
+    (*jEnv)->DeleteGlobalRef(jEnv, java_obj);
+    return HT_ENUMERATE_REMOVE;
 }
-*/
+
+/* This shutdown routine discards all JNI references to Java objects
+   that have been reflected into JS, even if there are still references
+   to them from JS. */
+void
+jsj_DiscardJavaObjReflections(JNIEnv *jEnv)
+{
+    JSJ_HashTableEnumerateEntries(java_obj_reflections,
+                                  enumerate_remove_java_obj,
+                                  (void*)jEnv);
+}
+
 PR_CALLBACK JSBool
 JavaObject_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
@@ -312,7 +320,7 @@ lookup_member_by_id(JSContext *cx, JNIEnv *jEnv, JSObject *obj,
     PR_ASSERT(class_descriptor->type == JAVA_SIGNATURE_CLASS ||
               class_descriptor->type == JAVA_SIGNATURE_ARRAY);
 
-    /* FIXME - not thread-safe */
+    /* THREADSAFETY - not thread-safe */
     prev_memberp = &java_wrapper->members;
     for (member = *prev_memberp; member; member = member->next) {
         member_descriptor = member->descriptor;
@@ -336,7 +344,7 @@ lookup_member_by_id(JSContext *cx, JNIEnv *jEnv, JSObject *obj,
             
             /* printf("Adding %s\n", member_name); */
 
-            /* FIXME - eliminate JSFUN_BOUND_METHOD */
+            /* TODO - eliminate JSFUN_BOUND_METHOD */
             /* TODO - Use JS_CloneFunction() to save memory */
             function = JS_NewFunction(cx, jsj_JavaInstanceMethodWrapper, 0,
                                       JSFUN_BOUND_METHOD, obj, member_name);

@@ -110,6 +110,10 @@ SOURCE=..\liveconnect\jsj_field.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\jsj_hash.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\jsj_JavaArray.c
 # End Source File
 # Begin Source File

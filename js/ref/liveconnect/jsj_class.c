@@ -36,11 +36,11 @@
 
 #include "jsj_private.h"        /* LiveConnect internals */
 
-#include "prhash.h"             /* Hash tables */
+#include "jsj_hash.h"           /* Hash tables */
 
 /* A one-to-one mapping between all referenced java.lang.Class objects and
    their corresponding JavaClassDescriptor objects */
-static PRHashTable *java_class_reflections;
+static JSJHashTable *java_class_reflections;
 
 /*
  * Given a JVM handle to a java.lang.Class object, malloc a C-string
@@ -299,7 +299,8 @@ destroy_class_descriptor(JSContext *cx, JNIEnv *jEnv, JavaClassDescriptor *class
     JS_FREE_IF(cx, (char *)class_descriptor->name);
     if (class_descriptor->java_class) {
         (*jEnv)->DeleteGlobalRef(jEnv, class_descriptor->java_class);
-        PR_HashTableRemove(java_class_reflections, class_descriptor->java_class);
+        JSJ_HashTableRemove(java_class_reflections,
+                            class_descriptor->java_class, (void*)jEnv);
     }
 
     if (class_descriptor->array_component_signature)
@@ -339,7 +340,8 @@ new_class_descriptor(JSContext *cx, JNIEnv *jEnv, jclass java_class)
         (*jEnv)->CallIntMethod(jEnv, java_class, jlClass_getModifiers);
     class_descriptor->ref_count = 1;
 
-    if (!PR_HashTableAdd(java_class_reflections, java_class, class_descriptor))
+    if (!JSJ_HashTableAdd(java_class_reflections, java_class, class_descriptor,
+                          (void*)jEnv))
         goto error;
 
     return class_descriptor;
@@ -349,12 +351,36 @@ error:
     return NULL;
 }
 
+/* Trivial helper for jsj_DiscardJavaClassReflections(), below */
+static PRIntn
+enumerate_remove_java_class(JSJHashEntry *he, PRIntn i, void *arg)
+{
+    JNIEnv *jEnv = (JNIEnv*)arg;
+    jclass java_class;
+
+    java_class = (jclass)he->key;
+    (*jEnv)->DeleteGlobalRef(jEnv, java_class);
+    return HT_ENUMERATE_REMOVE;
+}
+
+/* This shutdown routine discards all JNI references to Java objects
+   that have been reflected into JS, even if there are still references
+   to them from JS. */
+void
+jsj_DiscardJavaClassReflections(JNIEnv *jEnv)
+{
+    JSJ_HashTableEnumerateEntries(java_class_reflections,
+                                  enumerate_remove_java_class,
+                                  (void*)jEnv);
+}
+
 extern JavaClassDescriptor *
 jsj_GetJavaClassDescriptor(JSContext *cx, JNIEnv *jEnv, jclass java_class)
 {
     JavaClassDescriptor *class_descriptor;
-    class_descriptor = PR_HashTableLookup(java_class_reflections,
-                                          (const void *)java_class);
+    class_descriptor = JSJ_HashTableLookup(java_class_reflections,
+                                           (const void *)java_class,
+                                           (void*)jEnv);
     if (!class_descriptor)
         return new_class_descriptor(cx, jEnv, java_class);
 
@@ -563,8 +589,8 @@ JSBool
 jsj_InitJavaClassReflectionsTable()
 {
     java_class_reflections =
-        PR_NewHashTable(64, jsj_HashJavaObject, jsj_JavaObjectComparator,
-                        NULL, NULL, NULL);
+        JSJ_NewHashTable(64, jsj_HashJavaObject, jsj_JavaObjectComparator,
+                         NULL, NULL, NULL);
 
     if (!java_class_reflections)
         return JS_FALSE;

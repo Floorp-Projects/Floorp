@@ -34,7 +34,7 @@
 #include "prosdep.h"
 
 #include "jsj_private.h"        /* LiveConnect internals */
-#include "jsjava.h"             /* LiveConnect external API */ /* FIXME - get rid of this include */
+#include "jsjava.h"             /* LiveConnect external API */
 
 /*
  * A helper function for jsj_ConvertJavaMethodSignatureToString():

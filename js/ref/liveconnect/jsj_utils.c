@@ -41,15 +41,15 @@
  * object by calling java.lang.System.identityHashCode()
  */
 PR_CALLBACK prhashcode
-jsj_HashJavaObject(const void *key)
+jsj_HashJavaObject(const void *key, JNIEnv *jEnv)
 {
     prhashcode hash_code;
     jobject java_obj;
 
     java_obj = (jobject)key;
-    hash_code = (*jENV)->CallStaticIntMethod(jENV, jlSystem,
+    hash_code = (*jEnv)->CallStaticIntMethod(jEnv, jlSystem,
                                              jlSystem_identityHashCode, java_obj);
-    PR_ASSERT(!(*jENV)->ExceptionOccurred(jENV));
+    PR_ASSERT(!(*jEnv)->ExceptionOccurred(jEnv));
     return hash_code;
 }
 
@@ -61,16 +61,18 @@ jsj_HashJavaObject(const void *key)
  * use the JNI routine for comparing the two objects.
  */
 PR_CALLBACK intN
-jsj_JavaObjectComparator(const void *v1, const void *v2)
+jsj_JavaObjectComparator(const void *v1, const void *v2, void *arg)
 {
     jobject java_obj1, java_obj2;
+    JNIEnv *jEnv;
 
+    jEnv = (JNIEnv*)arg;
     java_obj1 = (jobject)v1;
     java_obj2 = (jobject)v2;
 
     if (java_obj1 == java_obj2)
         return 1;
-    return (*jENV)->IsSameObject(jENV, java_obj1, java_obj2);
+    return (*jEnv)->IsSameObject(jEnv, java_obj1, java_obj2);
 }
 
 /*

@@ -35,7 +35,8 @@
 #include "jsj_private.h"
 #include "jsjava.h"
 
-#include "jscntxt.h"        /* For js_ReportErrorAgain().  FIXME - get rid of private header */
+#include "jscntxt.h"        /* For js_ReportErrorAgain().
+                               TODO - get rid of private header */
 
 #include "netscape_javascript_JSObject.h"   /* javah-generated headers */
 
@@ -763,7 +764,6 @@ Java_netscape_javascript_JSObject_setMember(JNIEnv *jEnv,
         goto done;
     }
 
-    /* FIXME - can property watchers be used to avoid security checks ? */
     /* Get the Unicode string for the JS property name */
     property_name_ucs2 = (*jEnv)->GetStringChars(jEnv, property_name_jstr, &is_copy);
     if (!property_name_ucs2) {
@@ -898,8 +898,6 @@ Java_netscape_javascript_JSObject_call(JNIEnv *jEnv, jobject java_wrapper_obj,
     }
     function_name_len = (*jEnv)->GetStringLength(jEnv, function_name_jstr);
     
-    /* FIXME: What about security stuff ? Don't principals need to be set here ? */
-
     /* Allocate space for JS arguments */
     if (java_args) {
         argc = (*jEnv)->GetArrayLength(jEnv, java_args);

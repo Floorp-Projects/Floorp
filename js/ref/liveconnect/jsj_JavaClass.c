@@ -164,7 +164,7 @@ JavaClass_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     } else {
         JSFunction *function;
         
-        /* FIXME - eliminate JSFUN_BOUND_METHOD */
+        /* TODO - eliminate JSFUN_BOUND_METHOD */
         JS_IdToValue(cx, id, &idval);
         member_name = JS_GetStringBytes(JSVAL_TO_STRING(idval));
         function = JS_NewFunction(cx, jsj_JavaStaticMethodWrapper, 0,
@@ -341,7 +341,7 @@ JavaClass_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         jsj_MapJSContextToJSJThread(cx, &jEnv);
         if (!jEnv)
             return JS_FALSE;
-        member_descriptor = jsj_GetClassInstanceMembers(cx, jEnv, class_descriptor);
+        member_descriptor = jsj_GetClassStaticMembers(cx, jEnv, class_descriptor);
         *statep = PRIVATE_TO_JSVAL(member_descriptor);
         if (idp)
             *idp = INT_TO_JSVAL(class_descriptor->num_instance_members);
