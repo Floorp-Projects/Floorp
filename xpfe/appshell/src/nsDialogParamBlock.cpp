@@ -73,6 +73,7 @@ NS_IMETHODIMP nsDialogParamBlock::SetNumberStrings( PRInt32 inNumStrings )
 	 if ( !mString )
 	 	return NS_ERROR_OUT_OF_MEMORY;
 	 mNumStrings = inNumStrings;
+         return NS_OK;
 }
 
 
