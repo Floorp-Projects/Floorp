@@ -2052,23 +2052,7 @@ NS_IMETHODIMP DocumentViewerImpl::CopyImageLocation()
   // make noise if we're not in an image
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIURI> uri;
-  node->GetCurrentURI(getter_AddRefs(uri));
-  if (!uri)
-    return NS_ERROR_FAILURE;
-
-  nsCAutoString spec;
-  uri->GetSpec(spec);
-
-  NS_ConvertUTF8toUTF16 locationText(spec);
-
-  nsresult rv;
-  nsCOMPtr<nsIClipboardHelper> clipboard =
-    do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // copy the href onto the clipboard
-  return clipboard->CopyString(locationText);
+  return nsCopySupport::ImageCopy(node, PR_FALSE);
 }
 
 NS_IMETHODIMP DocumentViewerImpl::CopyImageContents()
@@ -2079,7 +2063,7 @@ NS_IMETHODIMP DocumentViewerImpl::CopyImageContents()
   // make noise if we're not in an image
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
-  return nsCopySupport::ImageCopy(node, nsIClipboard::kGlobalClipboard);
+  return nsCopySupport::ImageCopy(node, PR_TRUE);
 }
 
 NS_IMETHODIMP DocumentViewerImpl::GetCopyable(PRBool *aCopyable)
