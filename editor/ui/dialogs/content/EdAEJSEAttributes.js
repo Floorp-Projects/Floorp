@@ -81,8 +81,6 @@ function BuildJSEAttributeNameList()
 
   // Use current name and value of first tree item if it exists
   onSelectJSETreeItem();
-
-  gDialog.AddJSEAttributeNameList.focus();
 }
 
 // build attribute list in tree form from element attributes

@@ -34,7 +34,7 @@
 
 var BodyElement;
 var prefs;
-var backgroundImage;
+var gBackgroundImage;
 
 // Initialize in case we can't get them from prefs???
 const defaultTextColor="#000000";
@@ -116,17 +116,14 @@ function Startup()
 function InitDialog()
 {
   // Get image from document
-  backgroundImage = GetHTMLOrCSSStyleValue(globalElement, backgroundStr, cssBackgroundImageStr);
-  var innerURL = backgroundImage.match( /url\((.*)\)/ ) ;
-  if (innerURL)
-  {
-    backgroundImage = RegExp.$1;
-  }
-  if (backgroundImage)
-  {
-    gDialog.BackgroundImageInput.value = backgroundImage;
-    gDialog.ColorPreview.setAttribute(styleStr, backImageStyle+backgroundImage+");");
-  }
+  gBackgroundImage = GetHTMLOrCSSStyleValue(globalElement, backgroundStr, cssBackgroundImageStr);
+  if (gBackgroundImage.match( /url\((.*)\)/ ))
+    gBackgroundImage = RegExp.$1;
+
+  gDialog.BackgroundImageInput.value = gBackgroundImage;
+
+  if (gBackgroundImage)
+    gDialog.ColorPreview.setAttribute(styleStr, backImageStyle+gBackgroundImage+");");
 
   SetRelativeCheckbox();
 
@@ -254,8 +251,8 @@ function SetColorPreview(ColorWellID, color)
     case "backgroundCW":
       // Must combine background color and image style values
       var styleValue = backColorStyle+color;
-      if (backgroundImage)
-        styleValue += ";"+backImageStyle+backgroundImage+");";
+      if (gBackgroundImage)
+        styleValue += ";"+backImageStyle+gBackgroundImage+");";
 
       gDialog.ColorPreview.setAttribute(styleStr,styleValue);
       previewBGColor = color;
@@ -352,13 +349,13 @@ function ValidateAndPreviewImage(ShowErrorMessage)
   var image = TrimString(gDialog.BackgroundImageInput.value);
   if (image)
   {
-    backgroundImage = image;
+    gBackgroundImage = image;
 
     // Display must use absolute URL if possible
     var displayImage = gHaveDocumentUrl ? MakeAbsoluteUrl(image) : image;
     styleValue += backImageStyle+displayImage+");";
   }
-  else backgroundImage = null;
+  else gBackgroundImage = null;
 
   // Set style on preview (removes image if not valid)
   gDialog.ColorPreview.setAttribute(styleStr, styleValue);
@@ -403,8 +400,8 @@ function ValidateData()
   if (ValidateAndPreviewImage(true))
   {
     // A valid image may be null for no image
-    if (backgroundImage)
-      globalElement.setAttribute(backgroundStr, backgroundImage);
+    if (gBackgroundImage)
+      globalElement.setAttribute(backgroundStr, gBackgroundImage);
     else
       globalElement.removeAttribute(backgroundStr);
   

@@ -93,12 +93,11 @@ function Startup()
   
   // Build attribute name arrays for menulists
   BuildJSEAttributeNameList();
-
-  // No menulists for CSS panel (yet), so just clear input fields
-  ClearCSSInputWidgets();
-
-  // Do this last -- sets focus to HTML Name menulist
   BuildHTMLAttributeNameList();
+  // No menulists for CSS panel (yet)
+
+  // Set focus to Name editable menulist in HTML panel
+  SetTextboxFocus(gDialog.AddHTMLAttributeNameInput);
 
   // size the dialog properly
   window.sizeToContent();
