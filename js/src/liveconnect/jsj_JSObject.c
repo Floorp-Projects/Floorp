@@ -289,11 +289,33 @@ jsj_UnwrapJSObjectWrapper(JNIEnv *jEnv, jobject java_wrapper_obj)
 {
     JSObjectHandle *handle;
 
+#ifndef OJI
     handle = (JSObjectHandle*)((*jEnv)->GetIntField(jEnv, java_wrapper_obj, njJSObject_internal));
-    JS_ASSERT(handle);
+#else
+    /* Unwrapping this wrapper requires knowledge of the structure of the object. This is privileged
+       information that only the object implementor can know. In this case the object implementor
+       is the java plugin (such as the Sun plugin class sun.plugin.javascript.navig5.JSObject. 
+	   Since the plugin owns this structure, we defer to it to unwrap the object. If the plugin 
+	   does not implement this callback, then it should be set to null. In that case we try something 
+	   that works with Sun's plugin assuming that it has not yet been implemented yet. This 'else' 
+	   case should be removed as soon as the unwrap function is supported by the Sun JPI. */
+
+    if (JSJ_callbacks->unwrap_java_wrapper != NULL) {
+        handle = (JSObjectHandle*)JSJ_callbacks->unwrap_java_wrapper(jEnv, java_wrapper_obj);
+    }
+    else {
+        jclass   cid = (*jEnv)->GetObjectClass(jEnv, java_wrapper_obj);
+        jfieldID fid = (*jEnv)->GetFieldID(jEnv, cid, "nativeJSObject", "I");
+        handle = (JSObjectHandle*)((*jEnv)->GetIntField(jEnv, java_wrapper_obj, fid));
+    }
+#endif
+    
+	/* JNI returns a NULL handle for a Java 'null' */
     if (!handle)
         return NULL;
+
     return handle->js_obj;
+	
 }
 
 #endif  /* !PRESERVE_JSOBJECT_IDENTITY */

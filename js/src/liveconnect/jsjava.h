@@ -143,6 +143,10 @@ typedef struct JSJCallbacks {
        VM side before calling nsILiveconnect apis. This saves on a round trip request. */
     jobject             (*get_java_wrapper)(JNIEnv *jEnv, jint jsobject);
 
+    /* This allows liveconnect to unwrap a wrapped JSObject that is passed from java to js. 
+	   This happens when Java code is passing back to JS an object that it got from JS. */
+    jint                (*unwrap_java_wrapper)(JNIEnv *jEnv, jobject java_wrapper);
+
     /* The following set of methods abstract over the JavaVM object. */
     JSBool              (*create_java_vm)(SystemJavaVM* *jvm, JNIEnv* *initialEnv, void* initargs);
     JSBool              (*destroy_java_vm)(SystemJavaVM* jvm, JNIEnv* initialEnv);
