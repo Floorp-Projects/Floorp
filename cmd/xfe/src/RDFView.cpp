@@ -347,10 +347,10 @@ XFE_RDFView::Buttonfunc(const OutlineButtonFuncData *data)
           if (data->button == Button2) 
             {
               // Dispatch in new window (same as double click)
-	      char *s = HT_GetNodeURL (node);
-	      URL_Struct *url = NET_CreateURLStruct (s, NET_DONT_RELOAD);
-	      url->window_target = "_rdf_target";
-	      fe_reuseBrowser (m_contextData, url);
+              char *s = HT_GetNodeURL (node);
+              URL_Struct *url = NET_CreateURLStruct (s, NET_DONT_RELOAD);
+              url->window_target = XP_STRDUP("_rdf_target");
+              fe_reuseBrowser (m_contextData, url);
             }
         }
     }
@@ -374,10 +374,10 @@ XFE_RDFView::Buttonfunc(const OutlineButtonFuncData *data)
       else
         {
           // Dispatch in new window (same as button2 above)
-	  char *s = HT_GetNodeURL (node);
-	  URL_Struct *url = NET_CreateURLStruct (s, NET_DONT_RELOAD);
-	  url->window_target = "_rdf_target";
-	  fe_reuseBrowser (m_contextData, url);
+          char *s = HT_GetNodeURL (node);
+          URL_Struct *url = NET_CreateURLStruct (s, NET_DONT_RELOAD);
+          url->window_target = XP_STRDUP("_rdf_target");
+          fe_reuseBrowser (m_contextData, url);
         }
     }
   
