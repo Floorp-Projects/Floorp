@@ -2,7 +2,7 @@
   FILE: icalcomponent.c
   CREATOR: eric 28 April 1999
   
-  $Id: icalcomponent.c,v 1.12 2002/11/07 14:33:28 mostafah%oeone.com Exp $
+  $Id: icalcomponent.c,v 1.13 2002/12/03 21:12:26 mostafah%oeone.com Exp $
 
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -818,7 +818,11 @@ time_t icalcomponent_convert_time(icalproperty *p)
 		time_t t;
 
 		t = time(NULL);
+#ifdef __USE_BSD
 	 	offset = localtime(&t)->tm_gmtoff;
+#else
+	 	offset = localtime(&t)->__tm_gmtoff;
+#endif
 #endif
 #endif
 	}

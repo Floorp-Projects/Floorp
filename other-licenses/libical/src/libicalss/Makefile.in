@@ -35,7 +35,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(srcdir)/objs.mk
 
 MODULE = icalss
-LIBRARY_NAME=mozz
+LIBRARY_NAME=icalss
 
 ifeq ($(OS_ARCH),WINNT)
 MAPFILE	= $(LIBRARY_NAME).map

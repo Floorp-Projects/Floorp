@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(srcdir)/objs.mk
 
 MODULE = ical
-LIBRARY_NAME=mozz
+LIBRARY_NAME=ical
 
 ifeq ($(OS_ARCH),WINNT)
 MAPFILE	= $(LIBRARY_NAME).map
