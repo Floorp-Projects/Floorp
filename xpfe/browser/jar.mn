@@ -27,6 +27,7 @@ comm.jar:
         content/navigator/viewSourceOverlay.xul        (resources/content/viewSourceOverlay.xul)
         content/navigator/viewPartialSource.js         (resources/content/viewPartialSource.js)
         content/navigator/viewPartialSource.xul        (resources/content/viewPartialSource.xul)
+        content/navigator/mailNavigatorOverlay.xul     (resources/content/mailNavigatorOverlay.xul)
 en-US.jar:
         locale/en-US/navigator/contents.rdf                 (resources/locale/en-US/contents.rdf)
         locale/en-US/navigator/viewSource.dtd               (resources/locale/en-US/viewSource.dtd)
@@ -39,6 +40,7 @@ en-US.jar:
         locale/en-US/navigator/linkToolbar.dtd              (resources/locale/en-US/linkToolbar.dtd)
         locale/en-US/navigator/turboDialog.dtd              (resources/locale/en-US/turboDialog.dtd)
         locale/en-US/navigator/turboMenu.properties         (resources/locale/en-US/turboMenu.properties)
+        locale/en-US/navigator/mailNavigatorOverlay.dtd     (resources/locale/en-US/mailNavigatorOverlay.dtd)
 
 US.jar:
         locale/US/navigator-region/contents.rdf             (resources/locale/en-US/contents-region.rdf)
