@@ -25,11 +25,6 @@
 #include "X11/Xlib.h"
 #include "X11/Xutil.h"
 
-#define FLAG_CLIP_VALID       0x0001
-#define FLAG_CLIP_CHANGED     0x0002
-#define FLAG_LOCAL_CLIP_VALID 0x0004
-#define FLAGS_ALL             (FLAG_CLIP_VALID | FLAG_CLIP_CHANGED | FLAG_LOCAL_CLIP_VALID)
-
 class GraphicsState
 {
 public:
@@ -42,7 +37,6 @@ public:
   nscolor         mColor;
   nsIFontMetrics  *mFontMetrics;
   Font            mFont;
-  PRInt32         mFlags;
 };
 
 GraphicsState :: GraphicsState()
@@ -53,7 +47,6 @@ GraphicsState :: GraphicsState()
   mColor = NS_RGB(0, 0, 0);
   mFontMetrics = nsnull;
   mFont = nsnull;
-  mFlags = ~FLAGS_ALL;
 }
 
 GraphicsState :: ~GraphicsState()

@@ -150,7 +150,7 @@ void nsDeviceContextUnix :: InitRenderingContext(nsIRenderingContext *aContext, 
 
   mPixelsToTwips = 1.0f / mTwipsToPixels;
 
-  InstallColormap();
+  //InstallColormap();
 }
 
 PRUint32 nsDeviceContextUnix :: ConvertPixel(nscolor aColor)
