@@ -92,6 +92,8 @@ public:
   NS_IMETHOD CloseForm(const nsIParserNode& aNode);
   NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
+  NS_IMETHOD OpenNoscript(const nsIParserNode& aNode);
+  NS_IMETHOD CloseNoscript(const nsIParserNode& aNode);
   NS_IMETHOD OpenMap(const nsIParserNode& aNode);
   NS_IMETHOD CloseMap(const nsIParserNode& aNode);
   NS_IMETHOD FlushPendingNotifications() { return NS_OK; }
@@ -392,6 +394,18 @@ nsHTMLFragmentContentSink::OpenMap(const nsIParserNode& aNode)
 
 NS_IMETHODIMP 
 nsHTMLFragmentContentSink::CloseMap(const nsIParserNode& aNode)
+{
+  return CloseContainer(aNode);
+}
+
+NS_IMETHODIMP 
+nsHTMLFragmentContentSink::OpenNoscript(const nsIParserNode& aNode)
+{
+  return OpenContainer(aNode);
+}
+
+NS_IMETHODIMP 
+nsHTMLFragmentContentSink::CloseNoscript(const nsIParserNode& aNode)
 {
   return CloseContainer(aNode);
 }
