@@ -1,0 +1,84 @@
+<?xml version="1.0"?> 
+
+<!-- The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+Copyright (C) 1998-2000 Netscape Communications Corporation. All
+Rights Reserved.
+
+Contributor(s):
+  Scott MacGregor <mscott@netscape.com>
+  Jean-Francois Ducarroz <ducarroz@netscape.com>
+  Rod Spears <rods@netscape.com>
+
+ -->
+
+<?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://global/locale/printProgress.dtd">
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="dialog"
+        title="&printWindow.title;"
+        style="width: 36em;"
+        onload="onLoad()"
+        onunload="onUnload()">
+
+  <script type="application/x-javascript" src="chrome://global/content/printProgress.js"/>
+
+    <!-- This is non-visible content that simply adds translatable string
+         into the document so that it is accessible to JS code.
+         
+         XXX-TODO: 
+          convert to use string bundles. 
+    -->
+  
+    <data id="dialog.strings.dialogCloseLabel">&dialogClose.label;</data>
+    <data id="dialog.strings.titlePrefixPrint">&titlePrefixPrint;</data>
+    <data id="dialog.strings.printComplete">&printComplete;</data>
+    <data id="dialog.strings.progressText">&percentPrint;</data>
+
+    <grid flex="1">
+      <columns>
+        <column/>
+        <column flex="1"/>
+      </columns>
+      
+      <rows>
+        <row>
+          <hbox pack="end">
+            <label value="&status;"/>
+          </hbox>
+          <label id="dialog.status"/>
+        </row>
+        <row class="thin-separator">             
+          <hbox pack="end">
+            <label value="&progress;"/>
+          </hbox>
+          <progressmeter id="dialog.progress" mode="normal" value="0"/>
+          <hbox pack="end">
+            <label id="dialog.progressText"/>
+          </hbox>
+        </row>
+      </rows>
+    </grid>
+    <separator/>
+    <hbox id="CancelButton" pack="end">
+      <button id="cancel" label="&dialogCancel.label;" oncommand="doCancelButton()"/>
+    </hbox>
+
+</window>
