@@ -898,7 +898,7 @@ nsPromiseSubstring<CharT>::GetReadableFragment( nsReadableFragment<CharT>& aFrag
 
 template <class InputIterator, class OutputIterator>
 OutputIterator
-string_copy( InputIterator first, InputIterator last, OutputIterator result )
+copy_string( InputIterator first, InputIterator last, OutputIterator result )
   {
     while ( first != last )
       {
@@ -906,7 +906,7 @@ string_copy( InputIterator first, InputIterator last, OutputIterator result )
         if ( first.fragment().mStart == last.fragment().mStart )
           lengthToCopy = NS_MIN(lengthToCopy, PRUint32(last.operator->() - first.operator->()));
 
-        NS_ASSERTION(lengthToCopy, "|string_copy| will never terminate");
+        NS_ASSERTION(lengthToCopy, "|copy_string| will never terminate");
 
         nsCharTraits<InputIterator::value_type>::copy(result.operator->(), first.operator->(), lengthToCopy);
 
@@ -919,7 +919,7 @@ string_copy( InputIterator first, InputIterator last, OutputIterator result )
 
 template <class InputIterator, class CharT>
 CharT*
-string_copy( InputIterator first, InputIterator last, CharT* result )
+copy_string( InputIterator first, InputIterator last, CharT* result )
   {
     while ( first != last )
       {
@@ -927,7 +927,7 @@ string_copy( InputIterator first, InputIterator last, CharT* result )
         if ( first.fragment().mStart == last.fragment().mStart )
           lengthToCopy = NS_MIN(lengthToCopy, PRUint32(last.operator->() - first.operator->()));
 
-        NS_ASSERTION(lengthToCopy, "|string_copy| will never terminate");
+        NS_ASSERTION(lengthToCopy, "|copy_string| will never terminate");
 
         nsCharTraits<CharT>::copy(result, first.operator->(), lengthToCopy);
 
@@ -940,7 +940,7 @@ string_copy( InputIterator first, InputIterator last, CharT* result )
 
 template <class InputIterator, class OutputIterator>
 OutputIterator
-string_copy_backward( InputIterator first, InputIterator last, OutputIterator result )
+copy_string_backward( InputIterator first, InputIterator last, OutputIterator result )
   {
     while ( first != last )
       {
@@ -948,7 +948,7 @@ string_copy_backward( InputIterator first, InputIterator last, OutputIterator re
         if ( first.fragment().mStart == last.fragment().mStart )
           lengthToCopy = NS_MIN(lengthToCopy, PRUint32(last.operator->() - first.operator->()));
 
-        NS_ASSERTION(lengthToCopy, "|string_copy_backward| will never terminate");
+        NS_ASSERTION(lengthToCopy, "|copy_string_backward| will never terminate");
 
         nsCharTraits<InputIterator::value_type>::move(result.operator->()-lengthToCopy, last.operator->()-lengthToCopy, lengthToCopy);
 
