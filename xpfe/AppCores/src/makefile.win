@@ -97,10 +97,6 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(DLL)
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).lib $(DIST)\lib
-	$(MAKE_INSTALL) ..\xul\MailAppShell.html     $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\MailAppShellNoTB.html $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\MailFrame.html        $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\MailToolbar.xml       $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) ..\xul\EditorAppShell.xul    $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) ..\xul\EditorCommands.js     $(DIST)\bin\res\samples	
 	$(MAKE_INSTALL) ..\xul\EditorInitPage.html   $(DIST)\bin\res\samples
