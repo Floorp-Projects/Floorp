@@ -24,7 +24,6 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgMailSession.h"
 #include "nsCOMPtr.h"
-#include "nsFileLocations.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsIMsgWindow.h"
 #include "nsIMsgMessageService.h"

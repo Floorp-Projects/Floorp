@@ -27,7 +27,6 @@
 #include "nsMsgFilterService.h"
 #include "nsFileStream.h"
 #include "nsMsgFilterList.h"
-#include "nsFileLocations.h"
 #include "nsSpecialSystemDirectory.h"
 
 NS_IMPL_ISUPPORTS1(nsMsgFilterService, nsIMsgFilterService)

@@ -32,13 +32,12 @@
 #include "nsIDirectoryService.h"
 #include "nsIProperties.h"
 #include "nsIFile.h"
+#include "nsStdURL.h"
 
 #include "nsNetUtil.h"
 
 #include "nsXPIDLString.h"
 
-#include "nsIFileLocator.h"
-#include "nsFileLocations.h"
 #include "nsIFileSpec.h"
 
 #include "nsAutoLock.h"
@@ -117,10 +116,6 @@ nsP3PDataSchema::PostInit( nsString&  aURISpec ) {
 
   nsresult                  rv = NS_OK;
 
-  nsCOMPtr<nsIFileLocator>  pFileLocator;
-
-  nsCOMPtr<nsIFileSpec>     pFileSpec;
-
   nsXPIDLCString            xcsPath;
 
 
@@ -132,45 +127,50 @@ nsP3PDataSchema::PostInit( nsString&  aURISpec ) {
             PR_LOG_NOTICE,
             ("P3PDataSchema:  %s PostInit, attempting to redirect base DataSchema.\n", (const char *)mcsURISpec) );
 
-    // Create a file locator object
-    pFileLocator = do_CreateInstance( NS_FILELOCATOR_CONTRACTID,
-                                     &rv );
-
+    // Find the components directory
+    nsCOMPtr<nsIFile> compsDir;
+    rv = NS_GetSpecialDirectory(NS_XPCOM_COMPONENT_DIR, getter_AddRefs(compsDir));
     if (NS_SUCCEEDED( rv )) {
-      // Find the components directory
-      rv = pFileLocator->GetFileLocation( nsSpecialFileSpec::App_ComponentsDirectory,
-                                          getter_AddRefs( pFileSpec ) );
-
+                                          
+      // Create a URL of the components directory
+      nsCOMPtr<nsIFileURL> compsDirURI(do_CreateInstance("@mozilla.org/network/standard-url;1", &rv));
       if (NS_SUCCEEDED( rv )) {
-        // Extract the path to the components directory
-        rv = pFileSpec->GetURLString( getter_Copies( xcsPath ) );
-
+        rv = compsDirURI->SetFile(compsDir);
         if (NS_SUCCEEDED( rv )) {
-          // Make the local path the URI to be read
-          mUseDOMParser = PR_TRUE;
-          mReadURISpec.AssignWithConversion((const char *)xcsPath );
-          mReadURISpec.AppendWithConversion( P3P_BASE_DATASCHEMA_LOCAL_NAME );
-          mcsReadURISpec.AssignWithConversion( mReadURISpec );
-          PR_LOG( gP3PLogModule,
-                  PR_LOG_NOTICE,
-                  ("P3PDataSchema:  %s PostInit, redirecting base DataSchema to %s.\n", (const char *)mcsURISpec, (const char *)mcsReadURISpec) );
+          rv = compsDirURI->GetSpec( getter_Copies( xcsPath ) );
+
+          if (NS_SUCCEEDED( rv )) {
+            // Make the local path the URI to be read
+            mUseDOMParser = PR_TRUE;
+            mReadURISpec.AssignWithConversion((const char *)xcsPath );
+            mReadURISpec.AppendWithConversion( P3P_BASE_DATASCHEMA_LOCAL_NAME );
+            mcsReadURISpec.AssignWithConversion( mReadURISpec );
+            PR_LOG( gP3PLogModule,
+                    PR_LOG_NOTICE,
+                    ("P3PDataSchema:  %s PostInit, redirecting base DataSchema to %s.\n", (const char *)mcsURISpec, (const char *)mcsReadURISpec) );
+          }
+          else {
+            PR_LOG( gP3PLogModule,
+                    PR_LOG_ERROR,
+                    ("P3PDataSchema:  %s PostInit, compsDirURI->GetSpec failed - %X, using remote base DataSchema.\n", (const char *)mcsURISpec, rv) );
+          }
         }
         else {
           PR_LOG( gP3PLogModule,
                   PR_LOG_ERROR,
-                  ("P3PDataSchema:  %s PostInit, pFileSpec->GetURLString failed - %X, using remote base DataSchema.\n", (const char *)mcsURISpec, rv) );
+                  ("P3PDataSchema:  %s PostInit, compsDirURI->SetFile failed - %X, using remote base DataSchema.\n", (const char *)mcsURISpec, rv) );
         }
       }
       else {
         PR_LOG( gP3PLogModule,
                 PR_LOG_ERROR,
-                ("P3PDataSchema:  %s PostInit, pFileLocator->GetFileLocation failed - %X, using remote base DataSchema.\n", (const char *)mcsURISpec, rv) );
+                ("P3PDataSchema:  %s PostInit, Creation of nsIFileURL failed - %X, using remote base DataSchema.\n", (const char *)mcsURISpec, rv) );
       }
     }
     else {
       PR_LOG( gP3PLogModule,
               PR_LOG_ERROR,
-              ("P3PDataSchema:  %s PostInit, CreateInstance of pFileLocator failed - %X, using remote base DataSchema.\n", (const char *)mcsURISpec, rv) );
+              ("P3PDataSchema:  %s PostInit, NS_GetSpecialDirectory failed - %X, using remote base DataSchema.\n", (const char *)mcsURISpec, rv) );
     }
 
     // Don't fail if we can't obtain the "local" base DataSchema

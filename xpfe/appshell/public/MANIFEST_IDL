@@ -4,7 +4,6 @@
 
 nsIAppShellService.idl
 nsICmdLineService.idl
-nsIFileLocator.idl
 nsIWindowMediator.idl
 nsIXULWindow.idl
 nsIUserInfo.idl
