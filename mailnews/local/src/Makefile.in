@@ -22,8 +22,9 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=localmail
-LIBRARY_NAME=localmail
+MODULE=localmailbase
+LIBRARY_NAME=localmailbase_s
+NO_SHARED_LIB=1
 
 CPPSRCS = \
 	nsMSGFolderDataSource.cpp \
@@ -47,6 +48,8 @@ EXPORTS= \
 	nsMailboxProtocol.h \
 	nsMailboxService.h \
 	nsPop3Service.h \
+	nsMSGFolderDataSource.h	\
+	nsLocalMailFolder.h	\
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
