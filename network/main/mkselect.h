@@ -55,6 +55,9 @@ extern void NET_SetConnectSelect(MWContext *context, PRFileDesc *file_desc);
 extern void NET_ClearConnectSelect(MWContext *context, PRFileDesc *file_desc);
 extern void NET_ClearDNSSelect(MWContext *context, PRFileDesc *file_desc);
 
+void net_process_net_timer_callback(void *closure);
+void net_process_slow_net_timer_callback(void *closure);
+
 PR_END_EXTERN_C
 
 #endif /* MKSELECT_H */
