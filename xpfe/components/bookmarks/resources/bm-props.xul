@@ -45,7 +45,7 @@
 <tabcontrol orient="vertical">
   <tabbox>
     <tab value="&generalInfo.label;" accesskey="&generalInfo.accesskey;"/>
-    <tab value="&schedule.label;" accesskey="&schedule.accesskey;"/>
+    <tab id="ScheduleTab" value="&schedule.label;" accesskey="&schedule.accesskey;"/>
   </tabbox>
   <tabpanel>
   	<box orient="vertical">
