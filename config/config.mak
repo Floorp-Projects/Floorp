@@ -64,10 +64,17 @@ JAVA_OR_NSJVM = 1
 JAVA_OR_NSJVM = 1
 !endif
 
+
+
 !ifdef MOZ_OJI
 LCFLAGS=$(LCFLAGS) -DOJI
 JAVA_OR_OJI=1
 !endif
+
+!ifdef SMART_MAIL
+LCFLAGS=$(LCFLAGS) -DSMART_MAIL
+!endif
+
 
 ## Include support for MOZ_LITE/MOZ_MEDIUM
 include <$(DEPTH)/config/liteness.mak>
