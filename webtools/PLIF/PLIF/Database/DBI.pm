@@ -151,7 +151,7 @@ sub propertyGetUndefined {
 
 sub settings {
     # if you change this, check out setupConfigure to make sure it is still up to date
-    return qw(type name host port username password);
+    return qw(host port type name username password);
 }
 
 sub setupConfigure {
