@@ -340,7 +340,7 @@ input[type="reset"]:active:hover,
 input[type="button"]:active:hover,
 input[type="submit"]:active:hover {
   border-style: inset;
-  padding: 2px 0 0 2px;
+  padding: 0px 0 0 2px;
 }
 
 button:-moz-focus-inner,
