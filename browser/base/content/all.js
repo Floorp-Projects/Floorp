@@ -620,3 +620,6 @@ pref("browser.xul.error_pages.enabled", true);
 
 pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);
+
+pref("network.protocol-handler.external.mailto", true); // for mail
+pref("network.protocol-handler.external.news" , true); // for news 
