@@ -167,7 +167,7 @@ public:
                 nsContentListMatchFunc aFunc,
                 const nsAString& aData,
                 nsIContent* aRootContent = nsnull,
-                PRBool aData = PR_TRUE);
+                PRBool aDeep = PR_TRUE);
   virtual ~nsContentList();
 
   // nsIDOMHTMLCollection
