@@ -313,19 +313,29 @@ nsNetlibService::SetContainerApplication(nsINetContainerApplication *aContainer)
     if (mContainer) {
         nsAutoString str;
 
-        PR_FREEIF(XP_AppCodeName);
+        if (XP_AppCodeName) {
+            PR_Free((void *)XP_AppCodeName);
+        }
         mContainer->GetAppCodeName(str);
         XP_AppCodeName = str.ToNewCString();
-        PR_FREEIF(XP_AppVersion);
+        if (XP_AppVersion) {
+            PR_Free((void *)XP_AppVersion);
+        }
         mContainer->GetAppVersion(str);
         XP_AppVersion = str.ToNewCString();
-        PR_FREEIF(XP_AppName);
+        if (XP_AppName) {
+            PR_Free((void *)XP_AppName);
+        }
         mContainer->GetAppName(str);
         XP_AppName = str.ToNewCString();
-        PR_FREEIF(XP_AppPlatform);
+        if (XP_AppPlatform) {
+            PR_Free(XP_AppPlatform);
+        }
         mContainer->GetPlatform(str);
         XP_AppPlatform = str.ToNewCString();
-        PR_FREEIF(XP_AppLanguage);
+        if (XP_AppLanguage) {
+            PR_Free(XP_AppLanguage);
+        }
         mContainer->GetLanguage(str);
         XP_AppLanguage = str.ToNewCString();
     }
