@@ -11,8 +11,8 @@
 # logs in compressed form for future reference.
 
 
-# $Revision: 1.4 $ 
-# $Date: 2000/08/30 02:19:15 $ 
+# $Revision: 1.5 $ 
+# $Date: 2000/08/30 20:15:34 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/Attic/processmail,v $ 
 # $Name:  $ 
@@ -308,6 +308,11 @@ sub set_filenames{
     ("$FileStructure::URLS{'gunzip'}?".
      "tree=$tree&full-log=$main::UID");
 
+  # record the basename of the log file
+
+  $TINDERBOX{'full-log'} = File::Basename::basename($FILE{'full-log'});
+  $TINDERBOX{'brief-log'} = File::Basename::basename($FILE{'brief-log'});
+  
   return 1;
 }
 
@@ -1043,9 +1048,6 @@ sub assemble_files {
       die("Could not close file: '$TMP_FILE{'errorpick'}'.\n");
     
   }
-  
-  $TINDERBOX{'full-log'} = File::Basename::basename($FILE{'full-log'});
-  $TINDERBOX{'brief-log'} = File::Basename::basename($FILE{'brief-log'});
   
   if( 
      ($TINDERBOX{'binaryname'}) && 
