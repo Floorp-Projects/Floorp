@@ -104,21 +104,38 @@ function LoadCustomMailView(index)
 {
   prepareForViewChange();
 
-  var searchTermsArray =  gMailViewList.getMailViewAt(index).searchTerms;
+  var searchTermsArray = gMailViewList.getMailViewAt(index).searchTerms;
   
-  // mark the first node as a group
+  // create a temporary isupports array to store our search terms
+  // since we will be modifying the terms so they work with quick search
+  // and we don't want to write out the modified terms when we save the custom view
+  // (see bug #189890)
+  var searchTermsArrayForQS = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+  
   var numEntries = searchTermsArray.Count();
-  var searchTerm; 
-  if (searchTermsArray.Count() > 1)
-  {
-    searchTerm = searchTermsArray.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgSearchTerm);
-    searchTerm.beginsGrouping = true; 
-    searchTerm.booleanAnd = true; // turn the first term to true to work with quick search...
-    searchTermsArray.GetElementAt(numEntries - 1).QueryInterface(Components.interfaces.nsIMsgSearchTerm).endsGrouping = true;
+  for (var i = 0; i < numEntries; i++) {
+    var searchTerm = searchTermsArray.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgSearchTerm); 
+
+    // clone the term, since we might be modifying it
+    var searchTermForQS = gSearchSession.createTerm();
+    searchTermForQS.value = searchTerm.value;
+    searchTermForQS.attrib = searchTerm.attrib;
+    searchTermForQS.op = searchTerm.op;
+
+    // mark the first node as a group
+    if (i == 0)
+      searchTermForQS.beginsGrouping = true;
+    else if (i == numEntries - 1)
+      searchTermForQS.endsGrouping = true;
+
+    // turn the first term to true to work with quick search...
+    searchTermForQS.booleanAnd = i ? searchTerm.booleanAnd : true; 
+    
+    searchTermsArrayForQS.AppendElement(searchTermForQS);
   }
 
-  onSearch(searchTermsArray);   
-  gDefaultSearchViewTerms = searchTermsArray;
+  onSearch(searchTermsArrayForQS);   
+  gDefaultSearchViewTerms = searchTermsArrayForQS;
 }
 
 function cancelCustomMailViews()
