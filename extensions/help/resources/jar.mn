@@ -5,6 +5,7 @@ help.jar:
         content/help/contents.rdf                       (content/contents.rdf)
         content/help/helpMenuOverlay.xul                (content/helpMenuOverlay.xul)
         content/help/test.xul                           (content/test.xul)
+        content/help/helpContextOverlay.xul             (content/helpContextOverlay.xul)
 
 en-US.jar:
         locale/en-US/help/mozillahelp.rdf               (locale/en-US/mozillahelp.rdf)
@@ -14,7 +15,7 @@ en-US.jar:
         locale/en-US/help/contents.rdf                  (locale/en-US/contents.rdf)
         locale/en-US/help/glossary.html                 (locale/en-US/glossary.html)
         locale/en-US/help/welcome_help.html             (locale/en-US/welcome_help.html)
-	locale/en-US/help/forieusers.html		(locale/en-US/forieusers.html)
+	  locale/en-US/help/forieusers.html               (locale/en-US/forieusers.html)
         locale/en-US/help/help-toc.rdf                  (locale/en-US/help-toc.rdf)
         locale/en-US/help/help-index1.rdf               (locale/en-US/help-index1.rdf)
         locale/en-US/help/help-indexAZ.rdf              (locale/en-US/help-indexAZ.rdf)
