@@ -816,9 +816,6 @@ nsAppShellService::RegisterTopLevelWindow(nsIXULWindow* aWindow)
 }
 
 
-#define SOMEBODY_SET_UP_US_THE_NULL_POINTER 1
-// to be turned off once we fix callers who do that to us
-
 NS_IMETHODIMP
 nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
 {
@@ -836,11 +833,7 @@ nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
     return NS_ERROR_FAILURE;
   }
   
-#ifdef SOMEBODY_SET_UP_US_THE_NULL_POINTER
-  if (aWindow) {
-#else
   NS_ENSURE_ARG_POINTER(aWindow);
-#endif
 
   // tell the window mediator
   if (mWindowMediator) {
@@ -862,9 +855,6 @@ nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
         mWindowWatcher->RemoveWindow(domWindow);
     }
   }
-#ifdef SOMEBODY_SET_UP_US_THE_NULL_POINTER
-  }
-#endif
 
   // now quit if the last window has been unregistered (unless we shouldn't)
 
