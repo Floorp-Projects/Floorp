@@ -326,7 +326,12 @@ NS_IMETHODIMP nsXULWindow::Destroy()
 
    nsCOMPtr<nsIXULWindow> placeHolder = this;
 
+   // Remove modality (if any) and hide while destroying. More than
+   // a convenience, the hide prevents user interaction with the partially
+   // destroyed window. This is especially necessary when the eldest window
+   // in a stack of modal windows is destroyed first. It happens.
    ExitModalLoop();
+   mWindow->Show(PR_FALSE);
 
    if(mDocShell)
       {
@@ -722,6 +727,11 @@ NS_IMETHODIMP nsXULWindow::LoadTitleFromXUL()
 
 NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize)
 {
+   // can happen when the persistence timer fires at an inopportune time
+   // during window shutdown
+   if (!mDocShell)
+     return NS_ERROR_FAILURE;
+
    nsCOMPtr<nsIDOMElement> docShellElement;
    GetDOMElementFromDocShell(mDocShell, getter_AddRefs(docShellElement));
    if(!docShellElement)
