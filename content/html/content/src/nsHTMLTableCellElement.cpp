@@ -41,7 +41,7 @@
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
-#include "nsHTMLAttributes.h"
+#include "nsMappedAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
@@ -443,7 +443,7 @@ nsHTMLTableCellElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static 
-void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
+void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                            nsRuleData* aData)
 {
   if (aData->mSID == eStyleStruct_Position) {

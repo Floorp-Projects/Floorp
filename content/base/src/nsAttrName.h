@@ -113,6 +113,11 @@ public:
     return NS_REINTERPRET_CAST(nsIAtom*, mBits);
   }
 
+  PRBool Equals(const nsAttrName& aOther) const
+  {
+    return mBits == aOther.mBits;
+  }
+
   // Faster comparison in the case we know the namespace is null
   PRBool Equals(nsIAtom* aAtom) const
   {
@@ -166,6 +171,20 @@ public:
     else {
       NodeInfo()->GetPrefix(aStr);
     }
+  }
+
+  PRUint32 HashValue() const
+  {
+    // 
+    // mBits and PRUint32 might have different size. This should silence
+    // any warnings or compile-errors. This is what the implementation of
+    // NS_PTR_TO_INT32 does to take care of the same problem.
+    return mBits - 0;
+  }
+
+  PRBool IsSmaller(nsIAtom* aOther) const
+  {
+    return mBits < NS_REINTERPRET_CAST(PtrBits, aOther);
   }
 
 private:

@@ -46,6 +46,8 @@
 
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
+#include "nsCOMArray.h"
+#include "nsIAtom.h"
 
 class nsIDocument;
 
@@ -153,6 +155,7 @@ public:
 #define HTMLUNIT_COLOR      0x0800
 #define HTMLUNIT_ISUPPORTS  0x1000
 #define HTMLUNIT_PERCENT    0x2000
+#define HTMLUNIT_ATOMARRAY  0x4000
 #define HTMLUNIT_CLASS_MASK 0xff00
 
 enum nsHTMLUnit {
@@ -183,7 +186,10 @@ enum nsHTMLUnit {
   eHTMLUnit_ISupports     = HTMLUNIT_ISUPPORTS,
 
   // (1.0 == 100%) value is percentage of something
-  eHTMLUnit_Percent       = HTMLUNIT_PERCENT
+  eHTMLUnit_Percent       = HTMLUNIT_PERCENT,
+
+  // an array of atoms
+  eHTMLUnit_AtomArray     = HTMLUNIT_ATOMARRAY
 };
 
 /**
@@ -200,6 +206,7 @@ public:
   nsHTMLValue(const nsAString& aValue, nsHTMLUnit aUnit = eHTMLUnit_String);
   nsHTMLValue(nsISupports* aValue);
   nsHTMLValue(nscolor aValue);
+  nsHTMLValue(nsCOMArray<nsIAtom>* aArray);
   nsHTMLValue(const nsHTMLValue& aCopy);
   ~nsHTMLValue(void);
 
@@ -220,6 +227,7 @@ public:
   nsAString&   GetStringValue(nsAString& aBuffer) const;
   already_AddRefed<nsISupports> GetISupportsValue(void) const;
   nscolor      GetColorValue(void) const;
+  nsCOMArray<nsIAtom>* AtomArrayValue() const;
 
   /**
    * Reset the string to null type, freeing things in the process if necessary.
@@ -239,10 +247,6 @@ public:
    * @return whether the value was successfully turned to a string
    */
   PRBool ToString(nsAString& aResult) const;
-
-#ifdef DEBUG
-  void  AppendToString(nsAString& aBuffer) const;
-#endif
 
   /**
    * Structure for a mapping from int (enum) values to strings.  When you use
@@ -363,6 +367,8 @@ protected:
     nsISupports*  mISupports;
     /** Color. */
     nscolor       mColor;
+    /** Array if atoms */
+    nsCOMArray<nsIAtom>* mAtomArray;
   } mValue;
 
 private:
@@ -481,6 +487,13 @@ inline nscolor nsHTMLValue::GetColorValue(void) const
     }
   }
   return NS_RGB(0,0,0);
+}
+
+inline nsCOMArray<nsIAtom>*
+nsHTMLValue::AtomArrayValue() const
+{
+  NS_ASSERTION(mUnit == eHTMLUnit_AtomArray, "not an atom array");
+  return mValue.mAtomArray;
 }
 
 inline PRBool nsHTMLValue::operator!=(const nsHTMLValue& aOther) const

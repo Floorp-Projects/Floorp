@@ -38,6 +38,19 @@
 
 #include "nsAttrValue.h"
 #include "nsHTMLValue.h"
+#include "nsIAtom.h"
+#include "nsUnicharUtils.h"
+
+nsAttrValue::nsAttrValue()
+    : mBits(0)
+{
+}
+
+nsAttrValue::nsAttrValue(const nsAttrValue& aOther)
+    : mBits(0)
+{
+  SetTo(aOther);
+}
 
 nsAttrValue::nsAttrValue(const nsAString& aValue)
     : mBits(0)
@@ -46,6 +59,12 @@ nsAttrValue::nsAttrValue(const nsAString& aValue)
 }
 
 nsAttrValue::nsAttrValue(nsHTMLValue* aValue)
+    : mBits(0)
+{
+  SetTo(aValue);
+}
+
+nsAttrValue::nsAttrValue(nsIAtom* aValue)
     : mBits(0)
 {
   SetTo(aValue);
@@ -74,9 +93,41 @@ nsAttrValue::Reset()
       delete NS_STATIC_CAST(nsHTMLValue*, ptr);
       break;
     }
+    case eAtom:
+    {
+      nsIAtom* atom = NS_STATIC_CAST(nsIAtom*, ptr);
+      NS_RELEASE(atom);
+      break;
+    }
   }
 
   mBits = 0;
+}
+
+void
+nsAttrValue::SetTo(const nsAttrValue& aOther)
+{
+  switch (aOther.GetType()) {
+    case eString:
+    {
+      SetTo(aOther.GetStringValue());
+      break;
+    }
+    case eHTMLValue:
+    {
+      nsHTMLValue* newVal =
+        new nsHTMLValue(*aOther.GetHTMLValue());
+      if (newVal) {
+        SetTo(newVal);
+      }
+      break;
+    }
+    case eAtom:
+    {
+      SetTo(aOther.GetAtomValue());
+      break;
+    }
+  }
 }
 
 void
@@ -112,9 +163,25 @@ nsAttrValue::SetTo(nsHTMLValue* aValue)
 }
 
 void
+nsAttrValue::SetTo(nsIAtom* aValue)
+{
+  NS_ASSERTION(aValue, "null value in nsAttrValue::SetTo");
+  Reset();
+  NS_ADDREF(aValue);
+  mBits = NS_REINTERPRET_CAST(PtrBits, aValue) | eAtom;
+}
+
+void
+nsAttrValue::SwapValueWith(nsAttrValue& aOther)
+{
+  PtrBits tmp = aOther.mBits;
+  aOther.mBits = mBits;
+  mBits = tmp;
+}
+
+void
 nsAttrValue::ToString(nsAString& aResult) const
 {
-  aResult.Truncate();
   void* ptr = GetPtr();
 
   switch(GetType()) {
@@ -124,6 +191,9 @@ nsAttrValue::ToString(nsAString& aResult) const
       if (str) {
         aResult = nsCheapStringBufferUtils::GetDependentString(str);
       }
+      else {
+        aResult.Truncate();
+      }
       break;
     }
     case eHTMLValue:
@@ -131,5 +201,94 @@ nsAttrValue::ToString(nsAString& aResult) const
       NS_STATIC_CAST(nsHTMLValue*, ptr)->ToString(aResult);
       break;
     }
+    case eAtom:
+    {
+      NS_STATIC_CAST(nsIAtom*, ptr)->ToString(aResult);
+      break;
+    }
   }
+}
+
+const nsDependentSingleFragmentSubstring
+nsAttrValue::GetStringValue() const
+{
+  NS_PRECONDITION(GetType() == eString,
+                  "Some dork called GetStringValue() on a non-string!");
+
+  static const PRUnichar blankStr[] = { '\0' };
+  void* ptr = GetPtr();
+  return ptr
+         ? nsCheapStringBufferUtils::GetDependentString(NS_STATIC_CAST(PRUnichar*, ptr))
+         : Substring(blankStr, blankStr);
+}
+
+const nsHTMLValue*
+nsAttrValue::GetHTMLValue() const
+{
+  NS_PRECONDITION(GetType() == eHTMLValue,
+                  "Some dork called GetHTMLValue() on a non-htmlvalue!");
+  return NS_REINTERPRET_CAST(nsHTMLValue*, mBits & NS_ATTRVALUE_VALUE_MASK);
+}
+
+nsIAtom*
+nsAttrValue::GetAtomValue() const
+{
+  NS_PRECONDITION(GetType() == eAtom,
+                  "Some dork called GetAtomValue() on a non-atomvalue!");
+  return NS_REINTERPRET_CAST(nsIAtom*, mBits & NS_ATTRVALUE_VALUE_MASK);
+}
+
+PRUint32
+nsAttrValue::HashValue() const
+{
+  void* ptr = GetPtr();
+  switch(GetType()) {
+    case eString:
+    {
+      PRUnichar* str = NS_STATIC_CAST(PRUnichar*, ptr);
+      return str ? nsCheapStringBufferUtils::HashCode(str) : 0;
+    }
+    case eHTMLValue:
+    {
+      return NS_STATIC_CAST(nsHTMLValue*, ptr)->HashValue();
+    }
+    case eAtom:
+    {
+      return NS_PTR_TO_INT32(ptr);
+    }
+  }
+
+  NS_NOTREACHED("unknown attrvalue type");
+  return 0;
+}
+
+PRBool
+nsAttrValue::EqualsIgnoreCase(const nsAttrValue& aOther) const
+{
+  if (GetType() != aOther.GetType()) {
+    return PR_FALSE;
+  }
+
+  switch(GetType()) {
+    case eString:
+    {
+      return GetStringValue().Equals(aOther.GetStringValue(),
+                                     nsCaseInsensitiveStringComparator());
+    }
+    case eHTMLValue:
+    {
+      return *GetHTMLValue() == *aOther.GetHTMLValue();
+    }
+    case eAtom:
+    {
+      const char *class1, *class2;
+      GetAtomValue()->GetUTF8String(&class1);
+      aOther.GetAtomValue()->GetUTF8String(&class2);
+
+      return nsCRT::strcasecmp(class1, class2) == 0;
+    }
+  }
+
+  NS_NOTREACHED("unknown attrvalue type");
+  return PR_FALSE;
 }

@@ -42,7 +42,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
-#include "nsHTMLAttributes.h"
 
 
 class nsHTMLDListElement : public nsGenericHTMLContainerElement,

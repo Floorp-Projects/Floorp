@@ -53,7 +53,7 @@
 #include "nsICSSStyleRule.h"
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
-#include "nsHTMLAttributes.h"
+#include "nsMappedAttributes.h"
 #include "nsISupportsArray.h"
 #include "nsIFrame.h"
 #include "nsIDocShell.h"
@@ -510,7 +510,7 @@ nsHTMLBodyElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 }
 
 static 
-void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleData* aData)
+void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aData)
 {
   if (aData->mSID == eStyleStruct_Display) {
     // When display if first asked for, go ahead and get our colors set up.

@@ -47,7 +47,6 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIDocument.h"
 #include "nsIHTMLStyleSheet.h"
-#include "nsHTMLAttributes.h"
 #include "nsIDOMMutationEvent.h"
 
 class nsHTMLUnknownElement : public nsGenericHTMLContainerElement,
@@ -68,9 +67,6 @@ public:
 
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
-
-  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          const nsAString& aValue, PRBool aNotify);
 };
 
 nsresult
@@ -146,65 +142,4 @@ nsHTMLUnknownElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   NS_ADDREF(*aReturn);
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
-                                   nsIAtom* aAttribute,
-                                   const nsAString& aValue,
-                                   PRBool aNotify)
-{
-  nsresult  result = NS_OK;
-
-  // Check for event handlers
-  if (aNameSpaceID == kNameSpaceID_None && IsEventName(aAttribute)) {
-    AddScriptEventListener(aAttribute, aValue);
-  }
-  
-  nsHTMLValue val;
-  
-  if (NS_CONTENT_ATTR_NOT_THERE !=
-      StringToAttribute(aAttribute, aValue, val)) {
-    // string value was mapped to nsHTMLValue, set it that way
-    result = SetHTMLAttribute(aAttribute, val, aNotify);
-
-    return result;
-  } else {
-    if (ParseCommonAttribute(aAttribute, aValue, val)) {
-      // string value was mapped to nsHTMLValue, set it that way
-      result = SetHTMLAttribute(aAttribute, val, aNotify);
-      return result;
-    }
-
-    if (aValue.IsEmpty()) { // if empty string
-      val.SetEmptyValue();
-      result = SetHTMLAttribute(aAttribute, val, aNotify);
-      return result;
-    }
-
-    mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
-    
-    if (aNotify && mDocument) {
-      mDocument->AttributeWillChange(this, aNameSpaceID, aAttribute);
-    }
-
-    // set as string value to avoid another string copy
-    PRBool mapped = HasAttributeDependentStyle(aAttribute);
-
-    nsIHTMLStyleSheet* sheet =
-      mDocument ? mDocument->GetAttributeStyleSheet() : nsnull;
-    if (!mAttributes) {
-      result = NS_NewHTMLAttributes(&mAttributes);
-      NS_ENSURE_SUCCESS(result, result);
-    }
-    result = mAttributes->SetAttributeFor(aAttribute, aValue, mapped,
-                                          this, sheet);
-  }
-
-  if (aNotify && mDocument) {
-    mDocument->AttributeChanged(this, aNameSpaceID, aAttribute,
-                                nsIDOMMutationEvent::MODIFICATION);
-  }
-
-  return result;
 }

@@ -2135,22 +2135,6 @@ nsGenericElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRul
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsGenericElement::AttributeToString(nsIAtom* aAttribute,
-                                    const nsHTMLValue& aValue,
-                                    nsAString& aResult) const
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsGenericElement::StringToAttribute(nsIAtom* aAttribute,
-                                    const nsAString& aValue,
-                                    nsHTMLValue& aResult)
-{
-  return NS_CONTENT_ATTR_NOT_THERE;
-}
-
 already_AddRefed<nsIURI>
 nsGenericElement::GetBaseURI() const
 {
@@ -3380,7 +3364,8 @@ nsGenericContainerElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                                    getter_AddRefs(ni));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mAttrsAndChildren.SetAttr(ni, aValue);
+    nsAttrValue attrVal(aValue);
+    rv = mAttrsAndChildren.SetAndTakeAttr(ni, attrVal);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -3502,7 +3487,8 @@ nsGenericContainerElement::UnsetAttr(PRInt32 aNameSpaceID,
                          NS_EVENT_FLAG_INIT, &status);
   }
 
-  mAttrsAndChildren.RemoveAttrAt(index);
+  nsresult rv = mAttrsAndChildren.RemoveAttrAt(index);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (mDocument) {
     nsCOMPtr<nsIXBLBinding> binding;

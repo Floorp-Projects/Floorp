@@ -39,7 +39,7 @@
 #include "nsIHTMLTableColElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
-#include "nsHTMLAttributes.h"
+#include "nsMappedAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
@@ -245,7 +245,7 @@ nsHTMLTableColElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static 
-void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleData* aData)
+void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aData)
 {
   if (aData->mSID == eStyleStruct_Position &&
       aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
@@ -294,7 +294,7 @@ void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleDat
 }
 
 static 
-void ColMapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
+void ColMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                               nsRuleData* aData)
 {
   if (aData->mSID == eStyleStruct_Table && 

@@ -43,7 +43,7 @@
 class nsIAtom;
 class nsString;
 class nsHTMLValue;
-class nsIHTMLMappedAttributes;
+class nsMappedAttributes;
 class nsIDocument;
 
 // IID for the nsIHTMLStyleSheet interface {bddbd1b0-c5cc-11d1-8031-006008159b5a}
@@ -64,9 +64,9 @@ public:
   NS_IMETHOD SetVisitedLinkColor(nscolor aColor) = 0;
 
   // Mapped Attribute management methods
-  NS_IMETHOD UniqueMappedAttributes(nsIHTMLMappedAttributes* aMapped,
-                                    nsIHTMLMappedAttributes*& aUniqueMapped) = 0;
-  NS_IMETHOD DropMappedAttributes(nsIHTMLMappedAttributes* aMapped) = 0;
+  NS_IMETHOD UniqueMappedAttributes(nsMappedAttributes* aMapped,
+                                    nsMappedAttributes*& aUniqueMapped) = 0;
+  NS_IMETHOD DropMappedAttributes(nsMappedAttributes* aMapped) = 0;
 };
 
 

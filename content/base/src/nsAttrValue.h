@@ -40,29 +40,48 @@
 #define nsAttrValue_h___
 
 #include "nscore.h"
+#include "nsDependentSubstring.h"
 
 typedef unsigned long PtrBits;
 class nsHTMLValue;
 class nsAString;
+class nsIAtom;
 
 #define NS_ATTRVALUE_TYPE_MASK (PtrBits(3))
 #define NS_ATTRVALUE_VALUE_MASK (~NS_ATTRVALUE_TYPE_MASK)
 
 class nsAttrValue {
 public:
-  nsAttrValue(const nsAString& aValue);
-  nsAttrValue(nsHTMLValue* aValue);
+  nsAttrValue();
+  nsAttrValue(const nsAttrValue& aOther);
+  explicit nsAttrValue(const nsAString& aValue);
+  explicit nsAttrValue(nsHTMLValue* aValue);
+  explicit nsAttrValue(nsIAtom* aValue);
   ~nsAttrValue();
 
   void Reset();
+  void SetTo(const nsAttrValue& aOther);
   void SetTo(const nsAString& aValue);
   void SetTo(nsHTMLValue* aValue);
+  void SetTo(nsIAtom* aValue);
+
+  void SwapValueWith(nsAttrValue& aOther);
 
   void ToString(nsAString& aResult) const;
 
+  // Methods to get value. These methods do not convert so only use them
+  // to retrieve the datatype that this nsAttrValue has.
+  const nsDependentSingleFragmentSubstring GetStringValue() const;
+  const nsHTMLValue* GetHTMLValue() const;
+  nsIAtom* GetAtomValue() const;
+
+  PRUint32 HashValue() const;
+  PRBool EqualsIgnoreCase(const nsAttrValue& aOther) const;
+
   enum Type {
     eString = 0,
-    eHTMLValue = 1  // This should eventually die
+    eHTMLValue = 1,  // This should eventually die
+    eAtom = 2
   };
 
   Type GetType() const

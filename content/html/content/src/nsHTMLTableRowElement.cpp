@@ -42,7 +42,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsDOMError.h"
 #include "nsIHTMLContent.h"
-#include "nsHTMLAttributes.h"
+#include "nsMappedAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "GenericElementCollection.h"
 #include "nsHTMLAtoms.h"
@@ -586,7 +586,7 @@ nsHTMLTableRowElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static 
-void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleData* aData)
+void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aData)
 {
   if (aData->mSID == eStyleStruct_Position) {
     // height: value
