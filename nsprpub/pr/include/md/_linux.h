@@ -39,6 +39,8 @@
 #define _PR_SI_ARCHITECTURE "x86"
 #elif defined(__mips__)
 #define _PR_SI_ARCHITECTURE "mips"
+#elif defined(__arm__)
+#define _PR_SI_ARCHITECTURE "arm"
 #else
 #error "Unknown CPU architecture"
 #endif
