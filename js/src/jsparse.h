@@ -83,6 +83,7 @@ JS_BEGIN_EXTERN_C
  *                            TOK_DEFAULT node
  * TOK_CASE,    binary      pn_left: case expr or null if TOK_DEFAULT
  * TOK_DEFAULT              pn_right: TOK_LC node for this case's statements
+ *                          pn_val: constant value if lookup or table switch
  * TOK_WHILE    binary      pn_left: cond, pn_right: body
  * TOK_DO       binary      pn_left: body, pn_right: cond
  * TOK_FOR      binary      pn_left: either

@@ -588,9 +588,18 @@ JS_TypeOfValue(JSContext *cx, jsval v)
              ops == &js_ObjectOps
              ? (clasp = OBJ_GET_CLASS(cx, obj),
                 clasp->call || clasp == &js_FunctionClass)
-             : ops->call != 0)) {
+             : ops->call != NULL)) {
             type = JSTYPE_FUNCTION;
         } else {
+#ifdef NARCISSUS
+            /* XXX suppress errors/exceptions */
+            OBJ_GET_PROPERTY(cx, obj,
+                             (jsid)cx->runtime->atomState.callAtom,
+                             &v);
+            if (JSVAL_IS_FUNCTION(cx, v))
+                type = JSTYPE_FUNCTION;
+            else
+#endif
             type = JSTYPE_OBJECT;
         }
     } else if (JSVAL_IS_NUMBER(v)) {
@@ -3519,12 +3528,16 @@ JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
                                  const char *filename, uintN lineno,
                                  jsval *rval)
 {
+    uint32 options;
     JSScript *script;
     JSBool ok;
 
     CHECK_REQUEST(cx);
+    options = cx->options;
+    cx->options = options | JSOPTION_COMPILE_N_GO;
     script = JS_CompileUCScriptForPrincipals(cx, obj, principals, chars, length,
                                              filename, lineno);
+    cx->options = options;
     if (!script)
         return JS_FALSE;
     ok = js_Execute(cx, obj, script, NULL, 0, rval);

@@ -1045,7 +1045,6 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         principals = NULL;
     }
 
-    /* XXXbe set only for the compiler, which does not currently test it */
     fp->flags |= JSFRAME_EVAL;
     script = JS_CompileUCScriptForPrincipals(cx, scopeobj, principals,
                                              JSSTRING_CHARS(str),
@@ -3325,6 +3324,33 @@ ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
     }
 }
 
+#ifdef NARCISSUS
+static JSBool
+GetCurrentExecutionContext(JSContext *cx, JSObject *obj, jsval *rval)
+{
+    JSObject *tmp;
+    jsval xcval;
+
+    while ((tmp = OBJ_GET_PARENT(cx, obj)) != NULL)
+        obj = tmp;
+    if (!OBJ_GET_PROPERTY(cx, obj,
+                          (jsid)cx->runtime->atomState.ExecutionContextAtom,
+                          &xcval)) {
+        return JS_FALSE;
+    }
+    if (JSVAL_IS_PRIMITIVE(xcval)) {
+        JS_ReportError(cx, "invalid ExecutionContext in global object");
+        return JS_FALSE;
+    }
+    if (!OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(xcval),
+                          (jsid)cx->runtime->atomState.currentAtom,
+                          rval)) {
+        return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+#endif
+
 JSBool
 js_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -3332,6 +3358,34 @@ js_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(argv[-2]));
     if (!clasp->call) {
+#ifdef NARCISSUS
+        JSObject *callee, *args;
+        jsval fval, nargv[3];
+        JSBool ok;
+
+        callee = JSVAL_TO_OBJECT(argv[-2]);
+        if (!OBJ_GET_PROPERTY(cx, callee,
+                              (jsid)cx->runtime->atomState.callAtom,
+                              &fval)) {
+            return JS_FALSE;
+        }
+        if (JSVAL_IS_FUNCTION(cx, fval)) {
+            if (!GetCurrentExecutionContext(cx, obj, &nargv[2]))
+                return JS_FALSE;
+            args = js_GetArgsObject(cx, cx->fp);
+            if (!args)
+                return JS_FALSE;
+            nargv[0] = OBJECT_TO_JSVAL(obj);
+            nargv[1] = OBJECT_TO_JSVAL(args);
+            return js_InternalCall(cx, callee, fval, 3, nargv, rval);
+        }
+        if (JSVAL_IS_OBJECT(fval) && JSVAL_TO_OBJECT(fval) != callee) {
+            argv[-2] = fval;
+            ok = js_Call(cx, obj, argc, argv, rval);
+            argv[-2] = OBJECT_TO_JSVAL(callee);
+            return ok;
+        }
+#endif
         ReportIsNotFunction(cx, &argv[-2], 0);
         return JS_FALSE;
     }
@@ -3346,6 +3400,33 @@ js_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(argv[-2]));
     if (!clasp->construct) {
+#ifdef NARCISSUS
+        JSObject *callee, *args;
+        jsval cval, nargv[2];
+        JSBool ok;
+
+        callee = JSVAL_TO_OBJECT(argv[-2]);
+        if (!OBJ_GET_PROPERTY(cx, callee,
+                              (jsid)cx->runtime->atomState.constructAtom,
+                              &cval)) {
+            return JS_FALSE;
+        }
+        if (JSVAL_IS_FUNCTION(cx, cval)) {
+            if (!GetCurrentExecutionContext(cx, obj, &nargv[1]))
+                return JS_FALSE;
+            args = js_GetArgsObject(cx, cx->fp);
+            if (!args)
+                return JS_FALSE;
+            nargv[0] = OBJECT_TO_JSVAL(args);
+            return js_InternalCall(cx, callee, cval, 2, nargv, rval);
+        }
+        if (JSVAL_IS_OBJECT(cval) && JSVAL_TO_OBJECT(cval) != callee) {
+            argv[-2] = cval;
+            ok = js_Call(cx, obj, argc, argv, rval);
+            argv[-2] = OBJECT_TO_JSVAL(callee);
+            return ok;
+        }
+#endif
         ReportIsNotFunction(cx, &argv[-2], JSV2F_CONSTRUCT);
         return JS_FALSE;
     }
@@ -3360,6 +3441,21 @@ js_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     clasp = OBJ_GET_CLASS(cx, obj);
     if (clasp->hasInstance)
         return clasp->hasInstance(cx, obj, v, bp);
+#ifdef NARCISSUS
+    {
+        jsval fval, rval;
+
+        if (!OBJ_GET_PROPERTY(cx, obj,
+                              (jsid)cx->runtime->atomState.hasInstanceAtom,
+                              &fval)) {
+            return JS_FALSE;
+        }
+        if (JSVAL_IS_FUNCTION(cx, fval)) {
+            return js_InternalCall(cx, obj, fval, 1, &v, &rval) &&
+                   js_ValueToBoolean(cx, rval, bp);
+        }
+    }
+#endif
     *bp = JS_FALSE;
     return JS_TRUE;
 }
@@ -3415,9 +3511,9 @@ js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto,
 {
     /*
      * Use the given attributes for the prototype property of the constructor,
-     * as user-defined constructors have a DontEnum | DontDelete prototype (it
-     * may be reset), while native or "system" constructors require DontEnum |
-     * ReadOnly | DontDelete.
+     * as user-defined constructors have a DontDelete prototype (which may be
+     * reset), while native or "system" constructors have DontEnum | ReadOnly |
+     * DontDelete.
      */
     if (!OBJ_DEFINE_PROPERTY(cx, ctor,
                              (jsid)cx->runtime->atomState.classPrototypeAtom,

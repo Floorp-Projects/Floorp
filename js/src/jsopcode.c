@@ -145,7 +145,8 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
 {
     JSOp op;
     const JSCodeSpec *cs;
-    intN len, off;
+    ptrdiff_t len, off, jmplen;
+    uint32 type;
     JSAtom *atom;
     JSString *str;
     char *cstr;
@@ -165,7 +166,8 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
     if (lines)
         fprintf(fp, "%4u", JS_PCToLineNumber(cx, script, pc));
     fprintf(fp, "  %s", cs->name);
-    switch (cs->format & JOF_TYPEMASK) {
+    type = cs->format & JOF_TYPEMASK;
+    switch (type) {
       case JOF_BYTE:
         if (op == JSOP_TRAP) {
             op = JS_GetTrapOpcode(cx, script, pc);
@@ -199,35 +201,41 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
 
 #if JS_HAS_SWITCH_STATEMENT
       case JOF_TABLESWITCH:
+      case JOF_TABLESWITCHX:
       {
         jsbytecode *pc2;
         jsint i, low, high;
 
+        jmplen = (type == JOF_TABLESWITCH) ? JUMP_OFFSET_LEN
+                                           : JUMPX_OFFSET_LEN;
         pc2 = pc;
         off = GetJumpOffset(pc, pc2);
+        pc2 += jmplen;
+        low = GET_JUMP_OFFSET(pc2);
         pc2 += JUMP_OFFSET_LEN;
-        low = GetJumpOffset(pc, pc2);
-        pc2 += JUMP_OFFSET_LEN;
-        high = GetJumpOffset(pc, pc2);
+        high = GET_JUMP_OFFSET(pc2);
         pc2 += JUMP_OFFSET_LEN;
         fprintf(fp, " defaultOffset %d low %d high %d", off, low, high);
         for (i = low; i <= high; i++) {
             off = GetJumpOffset(pc, pc2);
             fprintf(fp, "\n\t%d: %d", i, off);
-            pc2 += JUMP_OFFSET_LEN;
+            pc2 += jmplen;
         }
         len = 1 + pc2 - pc;
         break;
       }
 
       case JOF_LOOKUPSWITCH:
+      case JOF_LOOKUPSWITCHX:
       {
         jsbytecode *pc2;
         jsint npairs;
 
+        jmplen = (type == JOF_LOOKUPSWITCH) ? JUMP_OFFSET_LEN
+                                            : JUMPX_OFFSET_LEN;
         pc2 = pc;
         off = GetJumpOffset(pc, pc2);
-        pc2 += JUMP_OFFSET_LEN;
+        pc2 += jmplen;
         npairs = (jsint) GET_ATOM_INDEX(pc2);
         pc2 += ATOM_INDEX_LEN;
         fprintf(fp, " offset %d npairs %u", off, (uintN) npairs);
@@ -235,7 +243,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
             atom = GET_ATOM(cx, script, pc2);
             pc2 += ATOM_INDEX_LEN;
             off = GetJumpOffset(pc, pc2);
-            pc2 += JUMP_OFFSET_LEN;
+            pc2 += jmplen;
 
             str = js_ValueToSource(cx, ATOM_KEY(atom));
             if (!str)
@@ -649,6 +657,8 @@ PopOff(SprintStack *ss, JSOp op)
 typedef struct TableEntry {
     jsval       key;
     ptrdiff_t   offset;
+    JSAtom      *label;
+    jsint       order;          /* source order for stable tableswitch sort */
 } TableEntry;
 
 static int
@@ -657,7 +667,9 @@ CompareOffsets(const void *v1, const void *v2, void *arg)
     const TableEntry *te1 = (const TableEntry *) v1,
                      *te2 = (const TableEntry *) v2;
 
-    return te1->offset - te2->offset;
+    if (te1->offset == te2->offset)
+        return (int) (te1->order - te2->order);
+    return (int) (te1->offset - te2->offset);
 }
 
 static JSBool
@@ -699,10 +711,7 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
 
         for (i = 0; i < tableLength; i++) {
             off = table[i].offset;
-            if (i + 1 < tableLength)
-                off2 = table[i + 1].offset;
-            else
-                off2 = switchLength;
+            off2 = (i + 1 < tableLength) ? table[i + 1].offset : switchLength;
 
             key = table[i].key;
             if (isCondSwitch) {
@@ -721,23 +730,29 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
                     return JS_FALSE;
                 }
                 caseExprOff = nextCaseExprOff;
-           } else {
+            } else {
                 /*
                  * key comes from an atom, not the decompiler, so we need to
-                 * quote it if it's a string literal.
+                 * quote it if it's a string literal.  But if table[i].label
+                 * is non-null, key was constant-propagated and label is the
+                 * name of the const we should show as the case label.  We set
+                 * key to undefined so this identifier is escaped, if required
+                 * by non-ASCII characters, but not quoted, by QuoteString.
                  */
-                str = js_ValueToString(cx, key);
-                if (!str)
-                    return JS_FALSE;
-                jp->indent += 2;
-                if (JSVAL_IS_STRING(key)) {
-                    rval = QuoteString(&ss->sprinter, str, (jschar)'"');
-                    if (!rval)
-                        return JS_FALSE;
-                    RETRACT(&ss->sprinter, rval);
+                if (table[i].label) {
+                    str = ATOM_TO_STRING(table[i].label);
+                    key = JSVAL_VOID;
                 } else {
-                    rval = JS_GetStringBytes(str);
+                    str = js_ValueToString(cx, key);
+                    if (!str)
+                        return JS_FALSE;
                 }
+                rval = QuoteString(&ss->sprinter, str,
+                                   JSVAL_IS_STRING(key) ? (jschar)'"' : 0);
+                if (!rval)
+                    return JS_FALSE;
+                RETRACT(&ss->sprinter, rval);
+                jp->indent += 2;
                 js_printf(jp, "\tcase %s:\n", rval);
             }
 
@@ -761,7 +776,7 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
 
     if (defaultOffset == switchLength) {
         jp->indent += 2;
-        js_printf(jp, "\tdefault:\n");
+        js_printf(jp, "\tdefault:;\n");
         jp->indent -= 2;
     }
     js_printf(jp, "\t}\n");
@@ -1912,19 +1927,22 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_TABLESWITCHX:
               {
                 jsbytecode *pc2;
-                ptrdiff_t off, off2;
+                ptrdiff_t jmplen, off, off2;
                 jsint j, n, low, high;
                 TableEntry *table;
 
                 sn = js_GetSrcNote(jp->script, pc);
                 JS_ASSERT(sn && SN_TYPE(sn) == SRC_SWITCH);
                 len = js_GetSrcNoteOffset(sn, 0);
+                jmplen = (op == JSOP_TABLESWITCH) ? JUMP_OFFSET_LEN
+                                                  : JUMPX_OFFSET_LEN;
                 pc2 = pc;
                 off = GetJumpOffset(pc, pc2);
+                pc2 += jmplen;
+                low = GET_JUMP_OFFSET(pc2);
                 pc2 += JUMP_OFFSET_LEN;
-                low = GetJumpOffset(pc, pc2);
+                high = GET_JUMP_OFFSET(pc2);
                 pc2 += JUMP_OFFSET_LEN;
-                high = GetJumpOffset(pc, pc2);
 
                 n = high - low + 1;
                 if (n == 0) {
@@ -1936,14 +1954,25 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     if (!table)
                         return JS_FALSE;
                     for (i = j = 0; i < n; i++) {
-                        pc2 += JUMP_OFFSET_LEN;
+                        table[j].label = NULL;
                         off2 = GetJumpOffset(pc, pc2);
                         if (off2) {
+                            sn = js_GetSrcNote(jp->script, pc2);
+                            if (sn) {
+                                JS_ASSERT(SN_TYPE(sn) == SRC_LABEL);
+                                table[j].label =
+                                    js_GetAtom(cx, &jp->script->atomMap,
+                                               (jsatomid)
+                                               js_GetSrcNoteOffset(sn, 0));
+                            }
                             table[j].key = INT_TO_JSVAL(low + i);
-                            table[j++].offset = off2;
+                            table[j].offset = off2;
+                            table[j].order = j;
+                            j++;
                         }
+                        pc2 += jmplen;
                     }
-                    js_HeapSort(table, (size_t) j, sizeof *table,
+                    js_HeapSort(table, (size_t) j, sizeof(TableEntry),
                                 CompareOffsets, NULL);
                 }
 
@@ -1960,16 +1989,18 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_LOOKUPSWITCHX:
               {
                 jsbytecode *pc2;
-                ptrdiff_t off, off2;
+                ptrdiff_t jmplen, off, off2;
                 jsint npairs;
                 TableEntry *table;
 
                 sn = js_GetSrcNote(jp->script, pc);
                 JS_ASSERT(sn && SN_TYPE(sn) == SRC_SWITCH);
                 len = js_GetSrcNoteOffset(sn, 0);
+                jmplen = (op == JSOP_LOOKUPSWITCH) ? JUMP_OFFSET_LEN
+                                                   : JUMPX_OFFSET_LEN;
                 pc2 = pc;
                 off = GetJumpOffset(pc, pc2);
-                pc2 += JUMP_OFFSET_LEN;
+                pc2 += jmplen;
                 npairs = (jsint) GET_ATOM_INDEX(pc2);
                 pc2 += ATOM_INDEX_LEN;
 
@@ -1978,10 +2009,19 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 if (!table)
                     return JS_FALSE;
                 for (i = 0; i < npairs; i++) {
+                    sn = js_GetSrcNote(jp->script, pc2);
+                    if (sn) {
+                        JS_ASSERT(SN_TYPE(sn) == SRC_LABEL);
+                        table[i].label =
+                            js_GetAtom(cx, &jp->script->atomMap, (jsatomid)
+                                       js_GetSrcNoteOffset(sn, 0));
+                    } else {
+                        table[i].label = NULL;
+                    }
                     atom = GET_ATOM(cx, jp->script, pc2);
                     pc2 += ATOM_INDEX_LEN;
                     off2 = GetJumpOffset(pc, pc2);
-                    pc2 += JUMP_OFFSET_LEN;
+                    pc2 += jmplen;
                     table[i].key = ATOM_KEY(atom);
                     table[i].offset = off2;
                 }
@@ -2501,7 +2541,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
              * in which a decompilable bytecode string that generated the
              * value as an actual argument might exist.
              */
-            JS_ASSERT(!fp->script && fp->fun && fp->fun->native);
+            JS_ASSERT(!fp->script && (!fp->fun || fp->fun->native));
             down = fp->down;
             if (!down)
                 goto do_fallback;

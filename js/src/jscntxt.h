@@ -409,8 +409,9 @@ struct JSContext {
 };
 
 /* Slightly more readable macros, also to hide bitset implementation detail. */
-#define JS_HAS_STRICT_OPTION(cx)    ((cx)->options & JSOPTION_STRICT)
-#define JS_HAS_WERROR_OPTION(cx)    ((cx)->options & JSOPTION_WERROR)
+#define JS_HAS_STRICT_OPTION(cx)        ((cx)->options & JSOPTION_STRICT)
+#define JS_HAS_WERROR_OPTION(cx)        ((cx)->options & JSOPTION_WERROR)
+#define JS_HAS_COMPILE_N_GO_OPTION(cx)  ((cx)->options & JSOPTION_COMPILE_N_GO)
 
 extern JSContext *
 js_NewContext(JSRuntime *rt, size_t stackChunkSize);

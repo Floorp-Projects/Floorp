@@ -106,6 +106,9 @@ js_GetArgsValue(JSContext *cx, JSStackFrame *fp, jsval *vp)
     return JS_TRUE;
 }
 
+#define MAXARGS(fp)     ((fp)->fun ? JS_MAX((fp)->argc, (fp)->fun->nargs)     \
+                                   : (fp)->argc)
+
 static JSBool
 MarkArgDeleted(JSContext *cx, JSStackFrame *fp, uintN slot)
 {
@@ -116,7 +119,7 @@ MarkArgDeleted(JSContext *cx, JSStackFrame *fp, uintN slot)
 
     argsobj = fp->argsobj;
     (void) JS_GetReservedSlot(cx, argsobj, 0, &bmapval);
-    nbits = JS_MAX(fp->argc, fp->fun->nargs);
+    nbits = MAXARGS(fp);
     JS_ASSERT(slot < nbits);
     if (JSVAL_IS_VOID(bmapval)) {
         if (nbits <= JSVAL_INT_BITS) {
@@ -159,7 +162,7 @@ ArgWasDeleted(JSContext *cx, JSStackFrame *fp, uintN slot)
     (void) JS_GetReservedSlot(cx, argsobj, 0, &bmapval);
     if (JSVAL_IS_VOID(bmapval))
         return JS_FALSE;
-    if (JS_MAX(fp->argc, fp->fun->nargs) <= JSVAL_INT_BITS) {
+    if (MAXARGS(fp) <= JSVAL_INT_BITS) {
         bmapint = JSVAL_TO_INT(bmapval);
         bitmap = (jsbitmap *) &bmapint;
     } else {
@@ -198,7 +201,7 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id,
     *vp = JSVAL_VOID;
     if (JSVAL_IS_INT(id)) {
         slot = (uintN) JSVAL_TO_INT(id);
-        if (slot < JS_MAX(fp->argc, fp->fun->nargs)) {
+        if (slot < MAXARGS(fp)) {
             if (fp->argsobj && ArgWasDeleted(cx, fp, slot))
                 return OBJ_GET_PROPERTY(cx, fp->argsobj, id, vp);
             *vp = fp->argv[slot];
@@ -219,7 +222,6 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
     JSObject *argsobj;
 
     /* Create an arguments object for fp only if it lacks one. */
-    JS_ASSERT(fp->fun);
     argsobj = fp->argsobj;
     if (argsobj)
         return argsobj;
@@ -260,7 +262,7 @@ js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
     (void) JS_GetReservedSlot(cx, argsobj, 0, &bmapval);
     if (!JSVAL_IS_VOID(bmapval)) {
         JS_SetReservedSlot(cx, argsobj, 0, JSVAL_VOID);
-        if (JS_MAX(fp->argc, fp->fun->nargs) > JSVAL_INT_BITS)
+        if (MAXARGS(fp) > JSVAL_INT_BITS)
             JS_free(cx, JSVAL_TO_PRIVATE(bmapval));
     }
 
@@ -297,7 +299,6 @@ args_delProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!fp)
         return JS_TRUE;
     JS_ASSERT(fp->argsobj);
-    JS_ASSERT(fp->fun);
 
     slot = JSVAL_TO_INT(id);
     switch (slot) {
@@ -307,10 +308,8 @@ args_delProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
 
       default:
-        if ((uintN)slot < JS_MAX(fp->argc, fp->fun->nargs) &&
-            !MarkArgDeleted(cx, fp, slot)) {
+        if ((uintN)slot < MAXARGS(fp) && !MarkArgDeleted(cx, fp, slot))
             return JS_FALSE;
-        }
         break;
     }
     return JS_TRUE;
@@ -329,7 +328,6 @@ args_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!fp)
         return JS_TRUE;
     JS_ASSERT(fp->argsobj);
-    JS_ASSERT(fp->fun);
 
     slot = JSVAL_TO_INT(id);
     switch (slot) {
@@ -344,10 +342,8 @@ args_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
 
       default:
-        if ((uintN)slot < JS_MAX(fp->argc, fp->fun->nargs) &&
-            !ArgWasDeleted(cx, fp, slot)) {
+        if ((uintN)slot < MAXARGS(fp) && !ArgWasDeleted(cx, fp, slot))
             *vp = fp->argv[slot];
-        }
         break;
     }
     return JS_TRUE;
@@ -366,7 +362,6 @@ args_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!fp)
         return JS_TRUE;
     JS_ASSERT(fp->argsobj);
-    JS_ASSERT(fp->fun);
 
     slot = JSVAL_TO_INT(id);
     switch (slot) {
@@ -376,10 +371,8 @@ args_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
 
       default:
-        if ((uintN)slot < JS_MAX(fp->argc, fp->fun->nargs) &&
-            !ArgWasDeleted(cx, fp, slot)) {
+        if ((uintN)slot < MAXARGS(fp) && !ArgWasDeleted(cx, fp, slot))
             fp->argv[slot] = *vp;
-        }
         break;
     }
     return JS_TRUE;
@@ -402,12 +395,10 @@ args_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     if (!fp)
         return JS_TRUE;
     JS_ASSERT(fp->argsobj);
-    JS_ASSERT(fp->fun);
 
     if (JSVAL_IS_INT(id)) {
         slot = JSVAL_TO_INT(id);
-        if (slot < JS_MAX(fp->argc, fp->fun->nargs) &&
-            !ArgWasDeleted(cx, fp, slot)) {
+        if (slot < MAXARGS(fp) && !ArgWasDeleted(cx, fp, slot)) {
             /* XXX ECMA specs DontEnum, contrary to other array-like objects */
             if (!js_DefineProperty(cx, obj, (jsid) id, fp->argv[slot],
                                    args_getProperty, args_setProperty,
@@ -466,7 +457,6 @@ args_enumerate(JSContext *cx, JSObject *obj)
     if (!fp)
         return JS_TRUE;
     JS_ASSERT(fp->argsobj);
-    JS_ASSERT(fp->fun);
 
     /*
      * Trigger reflection with value snapshot in args_resolve using a series
@@ -489,7 +479,7 @@ args_enumerate(JSContext *cx, JSObject *obj)
     if (prop)
         OBJ_DROP_PROPERTY(cx, pobj, prop);
 
-    nargs = JS_MAX(fp->argc, fp->fun->nargs);
+    nargs = MAXARGS(fp);
     for (slot = 0; slot < nargs; slot++) {
         if (!js_LookupProperty(cx, obj, (jsid) INT_TO_JSVAL((jsint)slot),
                                &pobj, &prop)) {
@@ -1023,13 +1013,14 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
             return JS_FALSE;
 
         /*
-         * ECMA says that constructor.prototype is DontEnum | DontDelete for
+         * ECMA (15.3.5.2) says that constructor.prototype is DontDelete for
          * user-defined functions, but DontEnum | ReadOnly | DontDelete for
          * native "system" constructors such as Object or Function.  So lazily
          * set the former here in fun_resolve, but eagerly define the latter
          * in JS_InitClass, with the right attributes.
          */
-        if (!js_SetClassPrototype(cx, obj, proto, JSPROP_PERMANENT)) {
+        if (!js_SetClassPrototype(cx, obj, proto,
+                                  JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
             cx->newborn[GCX_OBJECT] = NULL;
             return JS_FALSE;
         }
@@ -1508,7 +1499,7 @@ fun_apply(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSStackFrame *fp;
 
     if (argc == 0) {
-        /* Will get globalObject as 'this' and no other agurments. */
+        /* Will get globalObject as 'this' and no other arguments. */
         return fun_call(cx, obj, argc, argv, rval);
     }
 
