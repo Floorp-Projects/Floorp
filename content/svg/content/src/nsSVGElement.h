@@ -63,7 +63,7 @@ protected:
   nsSVGElement();
   virtual ~nsSVGElement();
 
-  virtual nsresult Init();
+  nsresult Init(nsINodeInfo* aNodeInfo);
 
 public:
   // nsISupports

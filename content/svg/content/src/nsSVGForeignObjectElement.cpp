@@ -56,7 +56,7 @@ protected:
                                                 nsINodeInfo *aNodeInfo);
   nsSVGForeignObjectElement();
   virtual ~nsSVGForeignObjectElement();
-  virtual nsresult Init();
+  nsresult Init(nsINodeInfo* aNodeInfo);
   
 public:
   // interfaces:
@@ -89,21 +89,14 @@ nsresult NS_NewSVGForeignObjectElement(nsIContent **aResult, nsINodeInfo *aNodeI
   if (!it) return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(it);
 
-  nsresult rv = NS_STATIC_CAST(nsGenericElement*,it)->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-
-  rv = it->Init();
+  nsresult rv = it->Init(aNodeInfo);
 
   if (NS_FAILED(rv)) {
     it->Release();
     return rv;
   }
   
-  *aResult = NS_STATIC_CAST(nsIContent *, it);
+  *aResult = it;
 
   return NS_OK;
 }
@@ -136,10 +129,9 @@ nsSVGForeignObjectElement::~nsSVGForeignObjectElement()
 
   
 nsresult
-nsSVGForeignObjectElement::Init()
+nsSVGForeignObjectElement::Init(nsINodeInfo* aNodeInfo)
 {
-  nsresult rv;
-  rv = nsSVGForeignObjectElementBase::Init();
+  nsresult rv = nsSVGForeignObjectElementBase::Init(aNodeInfo);
   NS_ENSURE_SUCCESS(rv,rv);
 
   // Create mapped properties:
@@ -211,14 +203,7 @@ nsSVGForeignObjectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (!it) return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(it);
 
-  nsresult rv = NS_STATIC_CAST(nsGenericElement*,it)->Init(mNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-
-  rv = it->Init();
+  nsresult rv = it->Init(mNodeInfo);
 
   if (NS_FAILED(rv)) {
     it->Release();

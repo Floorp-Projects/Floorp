@@ -64,10 +64,9 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGGraphicElementBase)
 // Implementation
 
 nsresult
-nsSVGGraphicElement::Init()
+nsSVGGraphicElement::Init(nsINodeInfo* aNodeInfo)
 {
-  nsresult rv;
-  rv = nsSVGGraphicElementBase::Init();
+  nsresult rv = nsSVGGraphicElementBase::Init(aNodeInfo);
   NS_ENSURE_SUCCESS(rv,rv);
 
   // Create mapped properties:

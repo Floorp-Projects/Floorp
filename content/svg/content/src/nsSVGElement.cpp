@@ -92,9 +92,10 @@ NS_INTERFACE_MAP_END_INHERITING(nsGenericElement)
 // Implementation
   
 nsresult
-nsSVGElement::Init()
+nsSVGElement::Init(nsINodeInfo* aNodeInfo)
 {
-  nsresult rv;
+  nsresult rv = nsGenericElement::Init(aNodeInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
   
   // Create mapped properties:
   

@@ -50,7 +50,6 @@ protected:
                                     nsINodeInfo *aNodeInfo);
   nsSVGGElement();
   virtual ~nsSVGGElement();
-  virtual nsresult Init();
   
 public:
   // interfaces:
@@ -79,21 +78,14 @@ nsresult NS_NewSVGGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo)
   if (!it) return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(it);
 
-  nsresult rv = NS_STATIC_CAST(nsGenericElement*,it)->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-
-  rv = it->Init();
+  nsresult rv = it->Init(aNodeInfo);
 
   if (NS_FAILED(rv)) {
     it->Release();
     return rv;
   }
   
-  *aResult = NS_STATIC_CAST(nsIContent *, it);
+  *aResult = it;
 
   return NS_OK;
 }
@@ -125,17 +117,6 @@ nsSVGGElement::~nsSVGGElement()
 
 }
 
-  
-nsresult
-nsSVGGElement::Init()
-{
-  nsresult rv;
-  rv = nsSVGGElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  return NS_OK;
-}
-
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
@@ -148,14 +129,7 @@ nsSVGGElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (!it) return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(it);
 
-  nsresult rv = NS_STATIC_CAST(nsGenericElement*,it)->Init(mNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-
-  rv = it->Init();
+  nsresult rv = it->Init(mNodeInfo);
 
   if (NS_FAILED(rv)) {
     it->Release();
