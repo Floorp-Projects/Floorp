@@ -72,6 +72,7 @@
 <tree  id="bookmarksTree" ref="NC:HistoryRoot" context="contextual"
        datasources="rdf:history rdf:localsearch"
        style="width:100%;height:100%"
+       multiple="true"
        ondragover="return DragOverTree(event);"
        ondraggesture="return BeginDragTree(event);"
        ondragdrop="return DropOnTree(event);">
