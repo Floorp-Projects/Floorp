@@ -203,6 +203,7 @@ bin\res\rdf\document.gif
 bin\res\rdf\folder-closed.gif
 bin\res\rdf\folder-open.gif
 bin\res\rdf\loading.gif
+bin\res\rdf\datasets\*
 bin\res\xpinstall\*
 bin\res\throbber\*
 bin\res\toolbar\*
