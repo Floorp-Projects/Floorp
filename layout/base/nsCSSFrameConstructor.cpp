@@ -5753,7 +5753,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
           // letter-frame is present, use its parent.
           nsCOMPtr<nsIAtom> parentFrameType;
           parentFrame->GetFrameType(getter_AddRefs(parentFrameType));
-          if (parentFrameType == nsLayoutAtoms::letterFrame) {
+          if (parentFrameType.get() == nsLayoutAtoms::letterFrame) {
             if (prevSibling) {
               prevSibling = parentFrame;
             }
@@ -7997,7 +7997,7 @@ nsCSSFrameConstructor::AppendFirstLineFrames(
   nsIFrame* lastBlockKid = blockFrames.LastChild();
   nsCOMPtr<nsIAtom> frameType;
   lastBlockKid->GetFrameType(getter_AddRefs(frameType));
-  if (frameType != nsLayoutAtoms::lineFrame) {
+  if (frameType.get() != nsLayoutAtoms::lineFrame) {
     // No first-line frame at the end of the list, therefore there is
     // an interveening block between any first-line frame the frames
     // we are appending. Therefore, we don't need any special
