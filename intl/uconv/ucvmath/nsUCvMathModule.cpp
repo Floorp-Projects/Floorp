@@ -127,7 +127,6 @@ static const nsModuleComponentInfo components[] =
     ENCODER_NAME_BASE "x-ttf-cmr" , NS_UNICODETOTEXCMRTTF_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-ttf-cmr",
     nsUnicodeToTeXCMRttfConstructor, 
-    nsUnicodeToTeXCMRttfRegSelf, nsUnicodeToTeXCMRttfUnRegSelf
   },
   { 
     ENCODER_NAME_BASE "x-ttf-cmmi" , NS_UNICODETOTEXCMMITTF_CID, 
