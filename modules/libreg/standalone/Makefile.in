@@ -33,27 +33,13 @@ LIBRARY_NAME	= mozregsa_s
 
 CSRCS		= $(MODULES_LIBREG_SRC_LCSRCS)
 
-OBJS		= $(addprefix S_,$(CSRCS:.c=.$(OBJ_SUFFIX)))
-
 FORCE_STATIC_LIB = 1
 
-MDDEPDIR := $(MDDEPDIR)_S
-
-GARBAGE_DIRS += .deps
+MDDEPDIR	:= $(MDDEPDIR)_S
+OBJ_SUFFIX	:= S.$(OBJ_SUFFIX)
+COMPILER_DEPEND :=
 
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DSTANDALONE_REGISTRY
 
-# Make sure that these custom rules stay in sync with rules.mk
-S_%.$(OBJ_SUFFIX): %.c
-	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO)
-ifeq ($(MOZ_OS2_TOOLS), VACPP)
-	$(ELOG) $(CC) -Fo$@ -c $(COMPILE_CFLAGS) $<
-else
-	$(ELOG) $(CC) -o $@ -c $(COMPILE_CFLAGS) $<
-endif
-
-$(MDDEPDIR)/S_%.pp: %.c
-	$(MAKE_DEPS_NOAUTO)

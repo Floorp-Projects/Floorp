@@ -78,14 +78,13 @@ EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
 
 # use different MDDEPDIR & OBJ_SUFFIX to work around objs in srcdir/VPATH 
 # issue (bug 87422 & 100851)
+# Turn off compiler dependencies as 'gcc -MD' 
+# cannot handle our obj_suffix renaming. (bug 105005)
 MDDEPDIR       := $(MDDEPDIR)_vpath
-ORIG_OBJ_SUFFIX := $(OBJ_SUFFIX)
 OBJ_SUFFIX	:= xp.$(OBJ_SUFFIX)
+COMPILER_DEPEND :=
 
 include $(topsrcdir)/config/rules.mk
-
-clean clobber clobber_all realclean distclean::
-	-$(RM) -f $(wildcard *.$(ORIG_OBJ_SUFFIX))
 
 DEFINES         += -D_IMPL_NS_GFXONXP -DUSE_MOZILLA_TYPES -DUSE_XPRINT
 ifeq ($(OS_ARCH), Linux)
