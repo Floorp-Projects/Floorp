@@ -58,6 +58,9 @@
 #include "nsIContentViewerEdit.h"
 #include "nsIContentViewer.h"
 
+#include "nsIClipboardDragDropHooks.h"
+#include "nsIClipboardDragDropHookList.h"
+
 const char * const sSelectAllString = "cmd_selectAll";
 const char * const sSelectNoneString = "cmd_selectNone";
 const char * const sCopyImageLocationString = "cmd_copyImageLocation";
@@ -740,6 +743,102 @@ nsGoBackCommand::DoWebNavCommand(const char *aCommandName, nsIWebNavigation* aWe
 
 /*---------------------------------------------------------------------------
 
+  nsClipboardDragDropHookCommand
+      params        value type   possible values
+      "addhook"     isupports    nsIClipboardDragDropHooks as nsISupports
+      "removehook"  isupports    nsIClipboardDragDropHooks as nsISupports
+
+----------------------------------------------------------------------------*/
+
+class nsClipboardDragDropHookCommand : public nsIControllerCommand
+{
+public:
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICONTROLLERCOMMAND
+
+protected:                                                                                   
+  // no member variables, please, we're stateless!
+};
+
+
+NS_IMPL_ISUPPORTS1(nsClipboardDragDropHookCommand, nsIControllerCommand)
+
+NS_IMETHODIMP
+nsClipboardDragDropHookCommand::IsCommandEnabled(const char * aCommandName,
+                                                 nsISupports *aCommandContext,
+                                                 PRBool *outCmdEnabled)
+{
+  *outCmdEnabled = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsClipboardDragDropHookCommand::DoCommand(const char *aCommandName,
+                                          nsISupports *aCommandContext)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsClipboardDragDropHookCommand::DoCommandParams(const char *aCommandName,
+                                                nsICommandParams *aParams,
+                                                nsISupports *aCommandContext)
+{
+  NS_ENSURE_ARG(aParams);
+
+  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(aCommandContext);
+  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(window);
+  NS_ENSURE_TRUE(sgo, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocShell> docShell;
+  sgo->GetDocShell(getter_AddRefs(docShell));
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIClipboardDragDropHookList> obj = do_GetInterface(docShell);
+  if (!obj) return NS_ERROR_INVALID_ARG;
+
+  nsCOMPtr<nsISupports> isuppHook;
+
+  nsresult returnValue = NS_OK;
+  nsresult rv = aParams->GetISupportsValue("addhook", getter_AddRefs(isuppHook));
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsIClipboardDragDropHooks> hook = do_GetInterface(isuppHook);
+    if (hook)
+      returnValue = obj->AddClipboardDragDropHooks(hook);
+    else
+      returnValue = NS_ERROR_INVALID_ARG;
+  }
+
+  rv = aParams->GetISupportsValue("removehook", getter_AddRefs(isuppHook));
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsIClipboardDragDropHooks> hook = do_QueryInterface(isuppHook);
+    if (hook)
+    {
+      rv = obj->RemoveClipboardDragDropHooks(hook);
+      if (NS_FAILED(rv) && NS_SUCCEEDED(returnValue))
+        returnValue = rv;
+    }
+    else
+      returnValue = NS_ERROR_INVALID_ARG;
+  }
+
+  return returnValue;
+}
+
+NS_IMETHODIMP
+nsClipboardDragDropHookCommand::GetCommandStateParams(const char *aCommandName,
+                                                      nsICommandParams *aParams,
+                                                      nsISupports *aCommandContext)
+{
+  NS_ENSURE_ARG_POINTER(aParams);
+  return aParams->SetBooleanValue("state_enabled", PR_TRUE);
+}
+
+/*---------------------------------------------------------------------------
+
   RegisterWindowCommands
 
 ----------------------------------------------------------------------------*/
@@ -821,6 +920,8 @@ nsWindowCommandRegistration::RegisterWindowCommands(
 
   NS_REGISTER_ONE_COMMAND(nsGoBackCommand, "cmd_browserBack");
   NS_REGISTER_ONE_COMMAND(nsGoForwardCommand, "cmd_browserForward");
+
+  NS_REGISTER_ONE_COMMAND(nsClipboardDragDropHookCommand, "cmd_clipboardDragDropHook");
 
   return rv;
 }
