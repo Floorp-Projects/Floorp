@@ -2450,6 +2450,14 @@ NS_IMETHODIMP nsViewManager::SetViewZIndex(nsIView *aView, PRInt32 aZIndex)
 			UpdateTransCnt(aView, nsnull);
 			rv = InsertChild(parent, aView, aZIndex);
 		}
+
+	// XXX The following else block is a workaround and should be cleaned up (bug 43410)
+	} else {
+		nsCOMPtr<nsIWidget> widget;
+		aView->GetWidget(*getter_AddRefs(widget));
+		if (widget) {
+			widget->SetZIndex(aZIndex);
+		}
 	}
 
     nsIView* zParentView = nsnull;
