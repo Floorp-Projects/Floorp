@@ -163,7 +163,6 @@ namespace JavaScript {
             index,                      // InvokeExprNode       <op>[<field>:<value>, <field>:<value>, ..., <field>:<value>]
 
             dot,                        // BinaryExprNode       <op1> . <op2>   (<op2> must be identifier or qualify)
-            dotClass,                   // UnaryExprNode        <op1> .class
             dotParen,                   // BinaryExprNode       <op1> .( <op2> )
             // End of isPostfix()
 

@@ -355,7 +355,6 @@ ByteCodeData gByteCodeData[OpCodeCount] = {
 { 0,        "PushScope", },
 { 0,        "PopScope", },
 { 0,        "NewClosure" },
-{ 0,        "Class" },
 { -1,       "Juxtapose" },
 { -1,       "NamedArgument" },
 
@@ -2326,14 +2325,6 @@ BinaryOpEquals:
             return currentClass;
         }
         break;
-    case ExprNode::dotClass:
-        {
-            UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-            JSType *uType = genExpr(u->op);
-            addByte(ClassOp);
-            return uType;
-        }
-        break;
     case ExprNode::juxtapose:
         {
             BinaryExprNode *j = checked_cast<BinaryExprNode *>(p);
@@ -2408,7 +2399,6 @@ uint32 printInstruction(Formatter &f, uint32 i, const ByteCodeModule& bcm)
     case VoidPopOp:
     case LoadGlobalObjectOp:
     case NewClosureOp:
-    case ClassOp:
     case JuxtaposeOp:
     case NamedArgOp:
         break;

@@ -444,10 +444,6 @@ JS::ExprNode *JS::Parser::parseMember(ExprNode *target, const Token &tOperator, 
 {
     size_t pos = tOperator.getPos();
     const Token &t2 = lexer.get(true);
-
-    if (t2.hasKind(Token::Class) && !target->hasKind(ExprNode::superExpr))
-        return new(arena) UnaryExprNode(pos, ExprNode::dotClass, target);
-
     ExprNode *member;
     ExprNode::Kind kind = ExprNode::dot;
     if (t2.hasKind(Token::openParenthesis) && !target->hasKind(ExprNode::superExpr)) {
@@ -604,17 +600,20 @@ JS::ExprNode *JS::Parser::parseUnaryExpression(SuperState superState)
     switch (t.getKind()) {
       case Token::Delete:
         eKind = ExprNode::Delete;
+        superState = ssNone;
         goto getPostfixExpression;
 
       case Token::increment:
         eKind = ExprNode::preIncrement;
-        goto getPostfixExpression;
+        goto getPostfixExpressionSuper;
 
       case Token::decrement:
         eKind = ExprNode::preDecrement;
+      getPostfixExpressionSuper:
+        superState = ssExpr;
       getPostfixExpression:
         lexer.skip();
-        e = parsePostfixExpression(ssExpr, false);
+        e = parsePostfixExpression(superState, false);
         break;
 
       case Token::Void:
@@ -969,10 +968,6 @@ bool JS::Parser::expressionIsAttribute(const ExprNode *e)
           case ExprNode::dot:
           case ExprNode::dotParen:
             e = checked_cast<const BinaryExprNode *>(e)->op1;
-            break;
-
-          case ExprNode::dotClass:
-            e = checked_cast<const UnaryExprNode *>(e)->op;
             break;
 
           default:
@@ -2121,7 +2116,6 @@ const char *const JS::ExprNode::kindNames[kindsEnd] = {
     0,                      // index
 
     ".",                    // dot
-    ".class",               // dotClass
     ".(",                   // dotParen
 
     0,                      // superExpr
@@ -2331,7 +2325,7 @@ void JS::UnaryExprNode::print(PrettyPrinter &f) const
         if (debugExprNodePrint)
             f << '(';
         const char *name = kindName(getKind());
-        if (hasKind(postIncrement) || hasKind(postDecrement) || hasKind(dotClass))
+        if (hasKind(postIncrement) || hasKind(postDecrement))
             f << op << name;
         else {
             f << name;

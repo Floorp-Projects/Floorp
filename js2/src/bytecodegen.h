@@ -153,7 +153,6 @@ typedef enum {
     PushScopeOp,            // <pointer>        XXX !!! XXX
     PopScopeOp,             // <pointer>        XXX !!! XXX
     NewClosureOp,           //                          <function> --> <function>
-    ClassOp,                //                          <object> --> <type>
     JuxtaposeOp,            //                          <attribute> <attribute> --> <attribute>
     NamedArgOp,             //                          <object> <string> --> <named arg object>
 

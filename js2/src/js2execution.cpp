@@ -1582,13 +1582,6 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     throw Exception(Exception::userException, "");
                 }
                 break;
-            case ClassOp:
-                {
-                    JSValue x = popValue();
-                    ASSERT(x.isObject());
-                    pushValue(JSValue(x.getType()));
-                }
-                break;
             case JuxtaposeOp:
                 {
                     JSValue v2 = popValue();
