@@ -1196,12 +1196,14 @@ ifdef NETSCAPE_OFFICIAL
 	@echo Creating a list of all object files ... objs.txt
 	@echo $(OBJS) > $(OBJDIR)/objs.txt
 	@echo $(EXPORT_OBJS) >> $(OBJDIR)/objs.txt
+	@echo -L$(DIST)/bin >> $(OBJDIR)/objs.txt
+	@echo -L$(DIST)/lib >> $(OBJDIR)/objs.txt
 	@echo $(DSO_EX_LIBS) >> $(OBJDIR)/objs.txt
 	@echo Creating a list of all symbols ... symbols.txt
-	$(PERL) listsymb.pl objs.txt symbols.txt
+	perl5 listsymb.pl $(OBJDIR)/objs.txt $(OBJDIR)/symbols.txt
 	@echo Generating dispatch table ... dispunix.h dispunix.c cmoffset.h
-	$(PERL) gendisp.pl symbols.txt dispunix.h dispunix.c cmoffset.h
-	$(CC) -c -o $(OBJDIR)/dispunix.o -I$(DIST)/include dispunix.c
+	perl5 gendisp.pl $(OBJDIR)/symbols.txt $(OBJDIR)/dispunix.h $(OBJDIR)/dispunix.c
+	$(CC) -c -o $(OBJDIR)/dispunix.o -I$(DIST)/include -I$(OBJDIR)  $(OBJDIR)/dispunix.c
 	$(CCLD) -o $@ $(LDFLAGS) $(OBJDIR)/dispunix.o $(OBJS) $(EXPORT_OBJS) -L$(DIST)/bin -L$(DIST)/lib $(DSO_EX_LIBS) $(DNS_LIB)
 else
 	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(EXPORT_OBJS) -L$(DIST)/bin -L$(DIST)/lib $(DSO_EX_LIBS) $(DNS_LIB)

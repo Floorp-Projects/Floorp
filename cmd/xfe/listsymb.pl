@@ -64,7 +64,7 @@ sub CallNM {
 		if (-f $file) {
 			# nm -g prints only global symbols
 			# nm --demangle demangles C++ names
-			@results = `nm --demangle -g $file`;
+			@results = `nm -gp $file`;
 			foreach (@results) {
 				my($symbol) = ExtractFunctionSymbol($_);
 				if ($symbol ne "") {
