@@ -1224,5 +1224,6 @@ xlfd_from_pango_font_description(GtkWidget *aWidget,
     g_free(subfont_charsets);
   }
   g_free(spec);
+  g_object_unref(font);
 }
 #endif /* MOZ_WIDGET_GTK2 && MOZ_ENABLE_COREXFONTS */
