@@ -237,6 +237,9 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
     char          *part = mime_part_address(child);
     char          *imappart = NULL;
 
+    MimeContainer         *tempObj = (MimeContainer *)child;
+    printf("Children = %d\n", tempObj->nchildren);
+
     if (!part) 
       return NS_ERROR_OUT_OF_MEMORY;
 
@@ -353,12 +356,19 @@ NotifyEmittersOfAttachmentList(MimeDisplayOptions     *opt,
   PRInt32     i = 0;
   struct      nsMsgAttachmentData  *tmp = data;
 
-  if ( (!tmp) || (!tmp->real_name) )
+  if (!tmp) 
     return;
 
-  while ( (tmp) && (tmp->real_name) )
+  while (tmp->url)
   {
     char  *spec;
+
+    if (!tmp->real_name)
+    {
+      ++i;
+      ++tmp;      
+      continue;
+    }
 
     spec = nsnull;
     if ( tmp->url ) 
@@ -908,33 +918,37 @@ mime_find_text_html_part_1(MimeObject* obj)
   return NULL;
 }
 
-/* Finds the main object of the message -- generally a multipart/mixed,
-   text/plain, or text/html. */
 MimeObject*
 mime_get_main_object(MimeObject* obj)
 {
-  MimeContainer* cobj;
-  if (!(mime_subclass_p(obj->clazz, (MimeObjectClass*) &mimeMessageClass))) {
+  MimeContainer *cobj;
+  if (!(mime_subclass_p(obj->clazz, (MimeObjectClass*) &mimeMessageClass))) 
+  {
     return obj;
   }
   cobj = (MimeContainer*) obj;
   if (cobj->nchildren != 1) return obj;
   obj = cobj->children[0];
-  for (;;) {
-#ifdef MOZ_SECURITY
-    HG99001
-#else
-    if (!mime_subclass_p(obj->clazz,
-                         (MimeObjectClass*) &mimeMultipartSignedClass)) {
-#endif /* MOZ_SECURITY */
-      return obj;
+  while (obj)
+  {
+    if ( (!mime_subclass_p(obj->clazz,
+         (MimeObjectClass*) &mimeMultipartSignedClass)) &&
+         (PL_strcasecmp(obj->content_type, MULTIPART_SIGNED) != 0)
+       )
+    {
+        return obj;
     }
-  /* Our main thing is a signed or xlated object.
-     We don't care about that; go on inside to the thing that we signed or
-     xlated. */
-    cobj = (MimeContainer*) obj;
-    if (cobj->nchildren != 1) return obj;
-    obj = cobj->children[0];
+    else
+    {
+      // We don't care about a signed/smime object; Go inside to the 
+      // thing that we signed or smime'ed
+      //
+      cobj = (MimeContainer*) obj;
+      if (cobj->nchildren > 0)
+        obj = cobj->children[0];
+      else
+        obj = nsnull;
+    }
   }
   return NULL;
 }

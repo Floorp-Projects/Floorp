@@ -353,6 +353,7 @@ nsMimeHtmlDisplayEmitter::AddAttachmentField(const char *field, const char *valu
 nsresult
 nsMimeHtmlDisplayEmitter::EndAttachment()
 {
+  mSkipAttachment = PR_FALSE;
   if (BroadCastHeadersAndAttachments())
     return NS_OK;
   
