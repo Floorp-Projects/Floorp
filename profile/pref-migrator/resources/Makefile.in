@@ -28,6 +28,9 @@ EXPORT_RESOURCE_SAMPLES = \
 		prefmProgress.xul \
 		progress_undetermined.xul \
 		prefmProgress.css \
+		pmunprog.dtd	\
+		pmunprog.js	\
+		pmunprog.xul	\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -1,0 +1,4 @@
+<!ENTITY dialogCancel.label "Cancel"> 
+<!ENTITY dialogTitle.label "Migrating user profile">
+<!ENTITY currentlyProcessing.text "This may take a little while.">
+<!ENTITY downloadBeforeUpdate.text "">
