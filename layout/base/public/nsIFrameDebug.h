@@ -41,7 +41,11 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IFRAMEDEBUG_IID; return iid; }
   
   NS_IMETHOD  List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const = 0;
-  
+  /**
+   * lists the frames beginning from the root frame
+   * - calls root frame's List(...)
+   */
+  static NS_LAYOUT void RootFrameList(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent);
   /**
    * Get a printable from of the name of the frame type.
    * XXX This should be eliminated and we use GetFrameType() instead...
