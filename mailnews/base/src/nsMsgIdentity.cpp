@@ -29,6 +29,9 @@ NS_IMPL_ISUPPORTS(nsMsgIdentity, nsIMsgIdentity::GetIID());
 nsMsgIdentity::nsMsgIdentity()
 {
 	NS_INIT_REFCNT();
+	m_organization = nsnull;
+	m_userFullName = nsnull;
+	m_userEmail = nsnull;
 	m_userName = nsnull;
 	m_userPassword = nsnull;
 	m_smtpHost = nsnull;
@@ -39,6 +42,9 @@ nsMsgIdentity::nsMsgIdentity()
 
 nsMsgIdentity::~nsMsgIdentity()
 {
+	PR_FREEIF(m_organization);
+	PR_FREEIF(m_userFullName);
+	PR_FREEIF(m_userEmail);
 	PR_FREEIF(m_userName);
 	PR_FREEIF(m_userPassword);
 	PR_FREEIF(m_smtpHost);
@@ -62,6 +68,18 @@ void nsMsgIdentity::InitializeIdentity()
 		if (NS_SUCCEEDED(rv) && prefLength > 0)
 			m_rootPath = PL_strdup(prefValue);
 		
+		rv = prefs->GetCharPref("mailnews.organization", prefValue, &prefLength);
+		if (NS_SUCCEEDED(rv) && prefLength > 0)
+			m_organization = PL_strdup(prefValue);
+		
+		rv = prefs->GetCharPref("mailnews.user_full_name", prefValue, &prefLength);
+		if (NS_SUCCEEDED(rv) && prefLength > 0)
+			m_userFullName = PL_strdup(prefValue);
+		
+		rv = prefs->GetCharPref("mailnews.user_email", prefValue, &prefLength);
+		if (NS_SUCCEEDED(rv) && prefLength > 0)
+			m_userEmail = PL_strdup(prefValue);
+		
 		rv = prefs->GetCharPref("mailnews.pop_server", prefValue, &prefLength);
 		if (NS_SUCCEEDED(rv) && prefLength > 0)
 			m_popHost = PL_strdup(prefValue);
@@ -83,6 +101,27 @@ void nsMsgIdentity::InitializeIdentity()
 
 		nsServiceManager::ReleaseService(kPrefCID, prefs);
 	}
+}
+
+nsresult nsMsgIdentity::GetOrganization(const char ** aOrganization)
+{
+	if (aOrganization)
+		*aOrganization = m_organization;
+	return NS_OK;
+}
+
+nsresult nsMsgIdentity::GetUserFullName(const char ** aUserFullName)
+{
+	if (aUserFullName)
+		*aUserFullName = m_userFullName;
+	return NS_OK;
+}
+
+nsresult nsMsgIdentity::GetUserEmail(const char ** aUserEmail)
+{
+	if (aUserEmail)
+		*aUserEmail = m_userEmail;
+	return NS_OK;
 }
 
 nsresult nsMsgIdentity::GetPopPassword(const char ** aUserPassword)

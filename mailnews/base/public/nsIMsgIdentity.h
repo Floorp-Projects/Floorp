@@ -49,6 +49,9 @@ public:
 	// user name, pwd, mail server to use, etc....
 	//////////////////////////////////////////////////////////////////////////////////
 	NS_IMETHOD GetRootFolderPath(const char ** aRootFolderPath) = 0;
+	NS_IMETHOD GetOrganization(const char ** aOrganization) = 0;
+	NS_IMETHOD GetUserFullName(const char ** aUserFullName) = 0; // User real name
+	NS_IMETHOD GetUserEmail(const char ** aUserEmail) = 0;
 	NS_IMETHOD GetUserName(const char ** aUserName) = 0; // right now it is pop & smtp user name
 	NS_IMETHOD GetPopPassword(const char ** aUserPassword) = 0;
 	NS_IMETHOD GetPopServer(const char ** aHostName) = 0;
