@@ -22,7 +22,7 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/msgFolderPickerOverlay.dtd">
 
 <overlay id="msgFolderPicker"
-		 xmlns:nc="http://home.netscape.com/NC-rdf#"
+         xmlns:nc="http://home.netscape.com/NC-rdf#"
                  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script language="JavaScript" src="chrome://messenger/content/msgFolderPickerOverlay.js"/>
@@ -271,9 +271,9 @@ Rights Reserved.
               </menu>
             </menupopup>
           </rule>
-	  <rule nc:CanFileMessages="false" nc:ServerType="nntp">
-                <!-- don't show nntp servers in the file picker -->
-          </rule>
+      <rule nc:CanFileMessages="false" nc:ServerType="nntp">
+          <!-- don't show nntp servers in the file picker -->
+      </rule>
 	  <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
 	    <!-- note, there is no "file here" -->
             <menupopup>
@@ -327,7 +327,7 @@ Rights Reserved.
               datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
               ref="msgaccounts:/">
       <template>
-        <rule iscontainer="true" isempty="false">
+        <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
           <menupopup>
               <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name">
                 <menupopup>
@@ -337,7 +337,15 @@ Rights Reserved.
               </menu>
           </menupopup>
         </rule>
-        <rule>
+        <rule nc:CanFileMessages="false" nc:ServerType="nntp">
+            <!-- don't show nntp servers in the file picker -->
+        </rule>
+        <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+          <menupopup>
+             <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="true">
           <menupopup>
              <menuitem uri="..." data="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
           </menupopup>
