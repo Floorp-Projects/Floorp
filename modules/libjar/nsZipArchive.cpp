@@ -32,6 +32,7 @@
 
 
 #ifndef STANDALONE 
+
 #include "nscore.h"
 #include "prmem.h"
 #include "prio.h"
@@ -39,7 +40,9 @@
 #include "xp_regexp.h"
 #define ZFILE_CREATE    PR_WRONLY | PR_CREATE_FILE
 #define READTYPE  PRInt32
+
 #else
+
 #ifdef WIN32
 #include "windows.h"
 #endif
@@ -47,10 +50,11 @@
 #undef MOZILLA_CLIENT       // undoes prtypes damage in zlib.h
 #define ZFILE_CREATE  "wb"
 #define READTYPE  PRUint32
+
 #endif /* STANDALONE */
 
-#include "zlib.h"
 
+#include "zlib.h"
 #include "zipfile.h"
 #include "zipstruct.h"
 #include "nsZipArchive.h"
