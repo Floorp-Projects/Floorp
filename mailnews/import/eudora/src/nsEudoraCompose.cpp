@@ -37,6 +37,7 @@
 #include "nsIMsgSend.h"
 #include "nsIMsgMailSession.h"
 #include "nsIMsgAccountManager.h"
+#include "nsMsgI18N.h"
 
 #include "nsEudoraCompose.h"
 
@@ -614,7 +615,46 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 	// IMPORT_LOG0( "Outlook compose calling CreateAndSendMessage\n");
 	nsMsgAttachedFile *pAttach = GetLocalAttachments();
 
-	rv = m_pSendProxy->CreateAndSendMessage(	nsnull,			// no editor shell
+
+	/*
+		l10n - I have the body of the message in the system charset,
+		I need to "encode" it to be the charset for the message
+		*UNLESS* of course, I don't know what the charset of the message
+		should be?  How do I determine what the charset should
+		be if it doesn't exist?
+
+	*/
+	
+	nsString	uniBody;
+	ConvertSysToUnicode( m_pBody, uniBody);
+	// now do we have a charset?
+	if (!charSet.Length()) {
+		if (!m_defCharset.Length()) {
+			char *pSet = nsMsgI18NGetDefaultMailCharset();
+			m_defCharset.AssignWithConversion( pSet);
+			nsCRT::free( pSet);
+		}
+		charSet = m_defCharset;
+	}
+	nsCString	body;
+	nsCString	theCharset;
+	theCharset.AssignWithConversion( charSet);
+
+	rv = nsMsgI18NConvertFromUnicode( theCharset, uniBody, body);
+	if (NS_FAILED( rv)) {
+		// in this case, if we did not use the default compose
+		// charset, then try that.
+		if (!charSet.Equals( m_defCharset)) {
+			theCharset.AssignWithConversion( m_defCharset);
+			body.Truncate();
+			rv = nsMsgI18NConvertFromUnicode( theCharset, uniBody, body);
+		}
+	}
+	uniBody.Truncate();
+
+	if (NS_FAILED( rv)) {
+
+		rv = m_pSendProxy->CreateAndSendMessage(	nsnull,			// no editor shell
 										m_pIdentity,	// dummy identity
 										m_pMsgFields,	// message fields
 										PR_FALSE,		// digest = NO
@@ -629,7 +669,25 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 										nsnull,			// related part
 										nsnull, 0);		// listener array
 
-	
+	}
+	else {
+		rv = m_pSendProxy->CreateAndSendMessage(	nsnull,			// no editor shell
+										m_pIdentity,	// dummy identity
+										m_pMsgFields,	// message fields
+										PR_FALSE,		// digest = NO
+										PR_TRUE,		// dont_deliver = YES, make a file
+										nsIMsgSend::nsMsgDeliverNow,	// mode
+										nsnull,			// no message to replace
+										pMimeType,		// body type
+										body,		// body pointer
+										body.Length(),		// body length
+										nsnull,			// remote attachment data
+										pAttach,		// local attachments
+										nsnull,			// related part
+										nsnull, 0);		// listener array
+
+	}
+
 	// IMPORT_LOG0( "Returned from CreateAndSendMessage\n");
 
 	if (pAttach)

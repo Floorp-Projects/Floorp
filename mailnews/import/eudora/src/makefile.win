@@ -37,7 +37,8 @@ CPP_OBJS=\
 
 LLIBS=\
         $(DIST)\lib\xpcom.lib       \
-        $(LIBNSPR)                              \
+		$(DIST)\lib\msgbsutl.lib	\
+        $(LIBNSPR)                  \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -157,6 +157,7 @@ private:
 	const char *			m_pHeaders;
 	PRInt32					m_bodyLen;
 	const char *			m_pBody;
+	nsString				m_defCharset;
 	SimpleBuffer			m_readHeaders;
 	nsCOMPtr<nsIImportService>	m_pImportService;
 };
