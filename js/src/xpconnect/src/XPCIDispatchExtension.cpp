@@ -240,7 +240,7 @@ JSBool XPCIDispatchExtension::DefineProperty(XPCCallContext & ccx,
     if(iface == nsnull)
         return JS_FALSE;
     XPCWrappedNativeTearOff* to = 
-        wrapperToReflectInterfaceNames->FindTearOff(ccx, iface, JS_TRUE);
+        wrapperToReflectInterfaceNames->LocateTearOff(ccx, iface);
     if(to == nsnull)
         return JS_FALSE;
     // get the JS Object for the tea

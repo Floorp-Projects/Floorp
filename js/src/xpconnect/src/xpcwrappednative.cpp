@@ -1221,6 +1221,34 @@ XPCWrappedNative::ExtendSet(XPCCallContext& ccx, XPCNativeInterface* aInterface)
 }
 
 XPCWrappedNativeTearOff*
+XPCWrappedNative::LocateTearOff(XPCCallContext& ccx,
+                              XPCNativeInterface* aInterface)
+{
+    XPCAutoLock al(GetLock()); // hold the lock throughout
+
+    for(
+        XPCWrappedNativeTearOffChunk* chunk = &mFirstChunk;
+        chunk != nsnull;
+        chunk = chunk->mNextChunk)
+    {
+        XPCWrappedNativeTearOff* tearOff = chunk->mTearOffs;
+        XPCWrappedNativeTearOff* const end = tearOff + 
+            XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK;
+        for(
+            tearOff = chunk->mTearOffs;
+            tearOff < end; 
+            tearOff++)
+        {
+            if(tearOff->GetInterface() == aInterface)
+            {
+                return tearOff;
+            }
+        }
+    }
+    return nsnull;
+}
+
+XPCWrappedNativeTearOff*
 XPCWrappedNative::FindTearOff(XPCCallContext& ccx,
                               XPCNativeInterface* aInterface,
                               JSBool needJSObject /* = JS_FALSE */,
@@ -1239,7 +1267,12 @@ XPCWrappedNative::FindTearOff(XPCCallContext& ccx,
         lastChunk = chunk, chunk = chunk->mNextChunk)
     {
         to = chunk->mTearOffs;
-        for(int i = XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK; i > 0; i--, to++)
+        XPCWrappedNativeTearOff* const end = chunk->mTearOffs + 
+            XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK;
+        for(
+            to = chunk->mTearOffs;
+            to < end; 
+            to++)
         {
             if(to->GetInterface() == aInterface)
             {
