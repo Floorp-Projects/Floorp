@@ -72,6 +72,8 @@ CHROME_CONTENT = \
 		msgPrintEngine.xul \
 		popTest.js \
 		popTest.xul \
+		imapTest.xul \
+		imapTest.js \
 		openSaveAttachment.xul \
 		openSaveAttachment.js \
 		$(NULL)
