@@ -40,7 +40,12 @@
 /* Read build-wide defines (e.g. MOZILLA_CLIENT) */
 #include "DefinesMozilla.h"
 
+/* ...then undefine the Mozilla specific stuff */
+#undef CookieManagement
+#undef SingleSignon
+#undef PRIVACY_POLICIES
 
-#define STANDALONE_IMAGE_LIB /* libimg */
-#define MODULAR_NETLIB /* network */
+/* ...and define the Raptor specific things */
+#define STANDALONE_IMAGE_LIB 	/* libimg */
+#define MODULAR_NETLIB 			/* network */
 #define MOZ_NGLAYOUT
