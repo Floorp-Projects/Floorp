@@ -488,7 +488,8 @@ nsInlineFrame::ComputeFinalSize(nsInlineReflowState& aState,
   // width in nsInlineLayout so that it doesn't do any horizontal
   // alignment.
   nsRect bounds;
-  aInlineReflow.VerticalAlignFrames(bounds);
+  nscoord maxAscent, maxDescent;
+  aInlineReflow.VerticalAlignFrames(bounds, maxAscent, maxDescent);
   aInlineReflow.RelativePositionFrames();
 
   // Make sure that we collapse into nothingness if our content is
@@ -525,10 +526,8 @@ nsInlineFrame::ComputeFinalSize(nsInlineReflowState& aState,
       aMetrics.descent = 0;
     }
     else {
-      aMetrics.ascent = aState.mBorderPadding.top +
-        aInlineReflow.GetMaxAscent();
-      aMetrics.descent = aInlineReflow.GetMaxDescent() +
-        aState.mBorderPadding.bottom;
+      aMetrics.ascent = aState.mBorderPadding.top + maxAscent;
+      aMetrics.descent = maxDescent + aState.mBorderPadding.bottom;
       aMetrics.height = aMetrics.ascent + aMetrics.descent;
     }
   }
