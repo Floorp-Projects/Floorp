@@ -50,7 +50,10 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  $(NULL)
 
-CPPSRCS		= nsBrowserInstance.cpp
+CPPSRCS		= \
+		nsBrowserInstance.cpp \
+		nsBrowserStatusFilter.cpp \
+		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \

@@ -136,6 +136,9 @@
       <field name="mTabListeners">
         new Array()
       </field>
+      <field name="mTabFilters">
+        new Array()
+      </field>
       <field name="mTabbedMode">
         false
       </field>
@@ -603,18 +606,30 @@
             if (this.shouldLoadFavIcon(uri))
               this.loadFavIcon(uri, "image", this.mCurrentTab);
 
-            // Remove all our progress listeners from the active browser.
+            var filter;
+            if (this.mTabFilters.length > 0) {
+              // Use the filter hooked up in our addProgressListener
+              filter = this.mTabFilters[0];
+            } else {
+              // create a filter and hook it up to our first browser
+              filter = Components.classes["@mozilla.org/appshell/component/browser-status-filter;1"]
+                                 .createInstance(Components.interfaces.nsIWebProgress);
+              this.mTabFilters[0] = filter;
+              this.mCurrentBrowser.webProgress.addProgressListener(filter, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+            }
+
+            // Remove all our progress listeners from the active browser's filter.
             if (this.mProgressListeners) {
               for (var i = 0; i < this.mProgressListeners.length; i++) {
                 var p = this.mProgressListeners[i];
                 if (p)
-                  this.mCurrentBrowser.webProgress.removeProgressListener(p);
+                  filter.removeProgressListener(p);
               }
             }
 
-            // Wire up a progress listener to our tab.
-            var listener = (this.mTabProgressListener)(this, this.mCurrentTab, false);
-            this.webProgress.addProgressListener(listener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+            // Wire up a progress listener to our filter.
+            const listener = (this.mTabProgressListener)(this, this.mCurrentTab, false);
+            filter.addProgressListener(listener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
             this.mTabListeners[0] = listener;
           ]]>
         </body>
@@ -665,8 +680,12 @@
             // wire up a progress listener for the new browser object.
             var position = this.mTabContainer.childNodes.length-1;
             var tabListener = (this.mTabProgressListener)(this, t, blank);
-            b.webProgress.addProgressListener(tabListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+            const filter = Components.classes["@mozilla.org/appshell/component/browser-status-filter;1"]
+                                     .createInstance(Components.interfaces.nsIWebProgress);
+            filter.addProgressListener(tabListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+            b.webProgress.addProgressListener(filter, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
             this.mTabListeners[position] = tabListener;
+            this.mTabFilters[position] = filter;
 
             if (!blank)
               b.loadURIWithFlags(aURI, nsIWebNavigation.LOAD_FLAGS_NONE,
@@ -739,9 +758,12 @@
                   index = i;
             }
 
-            // Remove the tab's progress listener.
+            // Remove the tab's filter and progress listener.
+            const filter = this.mTabFilters[index];
             var oldBrowser = this.mPanelContainer.childNodes[index];
-            oldBrowser.webProgress.removeProgressListener(this.mTabListeners[index]);
+            oldBrowser.webProgress.removeProgressListener(filter);
+            filter.removeProgressListener(this.mTabListeners[index]);
+            this.mTabFilters.splice(index, 1);
             this.mTabListeners.splice(index, 1);
 
             // Remove our title change listener
@@ -758,7 +780,7 @@
               newIndex = currentIndex-1;
             else if (currentIndex < index)
               newIndex = currentIndex;
-            else if (index == this.mPanelContainer.childNodes.length - 1)
+            else if (index == l - 1)
               newIndex = index-1;
             else
               newIndex = index;
@@ -810,7 +832,7 @@
         <body>
           <![CDATA[
             if (!this.mProgressListeners) {
-              this.mProgressListeners = new Array();
+              this.mProgressListeners = [];
               const autoHide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
               const forceHide = this.mPrefs.getBoolPref("browser.tabs.forceHide");
               if (!autoHide && !forceHide)
@@ -822,9 +844,16 @@
 
             this.mProgressListeners.push(aListener);
 
-            if (!this.mTabbedMode)
-              // Just perform a direct wiring to the single active browser.
-              this.mCurrentBrowser.addProgressListener(aListener, aMask);
+            if (!this.mTabbedMode) {
+              // hook a filter up to our first browser
+              const filter = Components.classes["@mozilla.org/appshell/component/browser-status-filter;1"]
+                                       .createInstance(Components.interfaces.nsIWebProgress);
+              this.mTabFilters[0] = filter;
+              this.mCurrentBrowser.webProgress.addProgressListener(filter, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+
+              // Directly hook the listener up to the filter for better performance
+              this.mTabFilters[0].addProgressListener(aListener, aMask);
+            }
           ]]>
         </body>
       </method>
@@ -842,8 +871,8 @@
             }
 
             if (!this.mTabbedMode)
-              // Just do a direct removal.
-              this.mCurrentBrowser.removeProgressListener(aListener);
+              // Don't forget to remove it from the filter we hooked it up to
+              this.mTabFilters[0].removeProgressListener(aListener);
          ]]>
         </body>
       </method>
@@ -1116,12 +1145,12 @@
 
       <destructor>
         <![CDATA[
-          if (this.mTabListeners) {
-            for (var i = 0; i < this.mTabListeners.length; i++) {
-              this.mPanelContainer.childNodes[i].webProgress.removeProgressListener(this.mTabListeners[i]);
-              this.mTabListeners[i] = null;
-              this.mPanelContainer.childNodes[i].removeEventListener("DOMTitleChanged", this.onTitleChanged, false);
-            }
+          for (var i = 0; i < this.mTabListeners.length; ++i) {
+            this.mPanelContainer.childNodes[i].webProgress.removeProgressListener(this.mTabFilters[i]);
+            this.mTabFilters[i].removeProgressListener(this.mTabListeners[i]);
+            this.mTabFilters[i] = null;
+            this.mTabListeners[i] = null;
+            this.mPanelContainer.childNodes[i].removeEventListener("DOMTitleChanged", this.onTitleChanged, false);
           }
           this.mPanelContainer.removeEventListener("DOMLinkAdded", this.onLinkAdded, false);
         ]]>
@@ -1130,6 +1159,7 @@
 
     <handlers>
       <handler event="keypress" modifiers="control" keycode="vk_f4" action="this.removeCurrentTab();"/>
+
       <handler event="DOMWindowClose">
         <![CDATA[
           const browsers = this.browsers;
