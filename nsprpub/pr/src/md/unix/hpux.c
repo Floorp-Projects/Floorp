@@ -36,9 +36,12 @@
 ** Under DCE threads, sigaction() installs a per-thread signal handler,
 ** so we use the sigvector() interface to install a process-wide
 ** handler.
+**
+** On HP-UX 9, struct sigaction doesn't have the sa_sigaction field,
+** so we also need to use the sigvector() interface.
 */
 
-#ifdef _PR_DCETHREADS
+#if defined(_PR_DCETHREADS) || defined(HPUX9)
 static void
 CatchFPE(int sig, int code, struct sigcontext *scp)
 {
@@ -68,7 +71,7 @@ CatchFPE(int sig, int code, struct sigcontext *scp)
     /* clear T-bit */
     scp->sc_sl.sl_ss.ss_frstat &= ~0x40;
 }
-#else /* _PR_DCETHREADS */
+#else /* _PR_DCETHREADS || HPUX9 */
 static void
 CatchFPE(int sig, siginfo_t *info, void *context)
 {
@@ -99,11 +102,11 @@ CatchFPE(int sig, siginfo_t *info, void *context)
     /* clear T-bit */
     ucp->uc_mcontext.ss_frstat &= ~0x40;
 }
-#endif /* _PR_DCETHREADS */
+#endif /* _PR_DCETHREADS || HPUX9 */
 
 void _MD_hpux_install_sigfpe_handler(void)
 {
-#ifdef _PR_DCETHREADS
+#if defined(_PR_DCETHREADS) || defined(HPUX9)
     struct sigvec v;
 
     v.sv_handler = CatchFPE;
@@ -117,7 +120,7 @@ void _MD_hpux_install_sigfpe_handler(void)
     act.sa_flags |= SA_SIGINFO;
     act.sa_sigaction = CatchFPE;
     sigaction(SIGFPE, &act, NULL);
-#endif /* _PR_DCETHREADS */
+#endif /* _PR_DCETHREADS || HPUX9 */
 
 #if defined(HPUX10_30) || defined(HPUX11)
     fesettrapenable(FE_INVALID);

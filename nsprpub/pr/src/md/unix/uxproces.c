@@ -25,6 +25,13 @@
 #include <sys/wait.h>
 
 /*
+ * HP-UX 9 doesn't have the SA_RESTART flag.
+ */
+#ifndef SA_RESTART
+#define SA_RESTART 0
+#endif
+
+/*
  **********************************************************************
  *
  * The Unix process routines
