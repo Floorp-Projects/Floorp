@@ -43,15 +43,11 @@
 // Program icon.
 IDI_APPLICATION ICON THUNDERBIRD_ICO
 
-#define ID_DDE_APPLICATION_NAME 102
-
 STRINGTABLE DISCARDABLE
 BEGIN
 #ifdef DEBUG
-    ID_DDE_APPLICATION_NAME,            "Thunderbird Debug"
     IDS_STARTMENU_APPNAME,              "Thunderbird Debug"
 #else
-    ID_DDE_APPLICATION_NAME,            "Thunderbird"
     IDS_STARTMENU_APPNAME,              "Thunderbird"
 #endif
 END

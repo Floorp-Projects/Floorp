@@ -38,6 +38,8 @@
 
 #include "nsNativeAppSupportBase.h"
 #include "nsNativeAppSupportWin.h"
+#include "nsAppRunner.h"
+#include "nsXULAppAPI.h"
 #include "nsString.h"
 #include "nsICmdLineService.h"
 #include "nsCOMPtr.h"
@@ -318,7 +320,6 @@ private:
 
     static HSZ   mApplication, mTopics[ topicCount ];
     static DWORD mInstance;
-    static char *mAppName;
     static PRBool mCanHandleRequests;
     static PRBool mSupportingDDEExec;
     static char mMutexName[];
@@ -447,7 +448,7 @@ struct MessageWindow {
             ::_snprintf( classNameBuffer,
                          sizeof classNameBuffer,
                          "%s%s",
-                         nsNativeAppSupportWin::mAppName,
+                         gAppData->appName,
                          "MessageWindow" );
             mClassName = classNameBuffer;
         }
@@ -566,9 +567,6 @@ private:
     HWND mHandle;
 }; // struct MessageWindow
 
-static char nameBuffer[128] = { 0 };
-char *nsNativeAppSupportWin::mAppName = nameBuffer;
-
 /* Start: Tries to find the "message window" to determine if it
  *        exists.  If so, then Mozilla is already running.  In that
  *        case, we use the handle to the "message" window and send
@@ -585,6 +583,7 @@ NS_IMETHODIMP
 nsNativeAppSupportWin::Start( PRBool *aResult ) {
     NS_ENSURE_ARG( aResult );
     NS_ENSURE_TRUE( mInstance == 0, NS_ERROR_NOT_INITIALIZED );
+    NS_ENSURE_STATE( gAppData );
 
     if (getenv("MOZ_NO_REMOTE"))
     {
@@ -596,17 +595,9 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
     *aResult = PR_FALSE;
 
     // Grab mutex first.
-    int retval;
-    UINT id = ID_DDE_APPLICATION_NAME;
-    retval = LoadString( (HINSTANCE) NULL, id, (LPTSTR) nameBuffer, sizeof(nameBuffer) );
-    if ( retval == 0 ) {
-        // No app name; just keep running.
-        *aResult = PR_TRUE;
-        return NS_OK;
-    }
 
     // Build mutex name from app name.
-    ::_snprintf( mMutexName, sizeof mMutexName, "%s%s", nameBuffer, MOZ_STARTUP_MUTEX_NAME );
+    ::_snprintf( mMutexName, sizeof mMutexName, "%s%s", gAppData->appName, MOZ_STARTUP_MUTEX_NAME );
     Mutex startupLock = Mutex( mMutexName );
 
     NS_ENSURE_TRUE( startupLock.Lock( MOZ_DDE_START_TIMEOUT ), NS_ERROR_FAILURE );
@@ -733,7 +724,7 @@ nsNativeAppSupportWin::StartDDE() {
                     NS_ERROR_FAILURE );
 
     // Allocate DDE strings.
-    NS_ENSURE_TRUE( ( mApplication = DdeCreateStringHandle( mInstance, mAppName, CP_WINANSI ) ) && InitTopicStrings(),
+    NS_ENSURE_TRUE( ( mApplication = DdeCreateStringHandle( mInstance, gAppData->appName, CP_WINANSI ) ) && InitTopicStrings(),
                     NS_ERROR_FAILURE );
 
     // Next step is to register a DDE service.

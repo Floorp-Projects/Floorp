@@ -29,10 +29,6 @@
 // Splash screen bitmap ID.
 #define IDB_SPLASH  101
 
-// DDE application name
-#define ID_DDE_APPLICATION_NAME 102
-
-
 ICON 1 SUNBIRD_ICO
 
 DLGTEMPLATE IDD_SPLASH DISCARDABLE 
@@ -43,15 +39,6 @@ BEGIN
 END
 
 //BITMAP IDB_SPLASH "splash.bmp"
-
-STRINGTABLE DISCARDABLE
-BEGIN
-#ifdef DEBUG
-    ID_DDE_APPLICATION_NAME,            "Sunbird Debug"
-#else
-    ID_DDE_APPLICATION_NAME,            "Sunbird"
-#endif
-END
 
 #ifdef MOZ_STATIC_BUILD
 #include "wdgtos2rc.h"

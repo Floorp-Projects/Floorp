@@ -48,10 +48,8 @@ IDI_APPLICATION ICON FIREFOX_ICO
 STRINGTABLE DISCARDABLE
 BEGIN
 #ifdef DEBUG
-    ID_DDE_APPLICATION_NAME,            "Firefox Debug"
     IDS_STARTMENU_APPNAME,              "Firefox Debug"
 #else
-    ID_DDE_APPLICATION_NAME,            "Firefox"
     IDS_STARTMENU_APPNAME,              "Firefox"
 #endif
 END

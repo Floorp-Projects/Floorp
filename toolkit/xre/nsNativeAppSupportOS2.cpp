@@ -45,6 +45,8 @@
 
 #include "nsNativeAppSupportBase.h"
 #include "nsNativeAppSupportOS2.h"
+#include "nsAppRunner.h"
+#include "nsXULAppAPI.h"
 #include "nsString.h"
 #include "nsICmdLineService.h"
 #include "nsCOMPtr.h"
@@ -342,7 +344,6 @@ private:
 
     static HSZ   mApplication, mTopics[ topicCount ];
     static DWORD mInstance;
-    static char *mAppName;
     static PRBool mCanHandleRequests;
     static char mMutexName[];
     static PRBool mUseDDE;
@@ -581,7 +582,7 @@ struct MessageWindow {
         if ( !mClassName ) { 
             sprintf( classNameBuffer,
                          "%s%s",
-                         nsNativeAppSupportOS2::mAppName,
+                         gAppData->appName,
                          "MessageWindow" );
             mClassName = classNameBuffer;
         }
@@ -716,8 +717,6 @@ private:
     USHORT   mMsgWindowAtom;
 }; // struct MessageWindow
 
-static char nameBuffer[128] = { 0 };
-char *nsNativeAppSupportOS2::mAppName = nameBuffer;
 PRBool nsNativeAppSupportOS2::mUseDDE = PR_FALSE;
 
 /* Start: Tries to find the "message window" to determine if it
@@ -754,17 +753,9 @@ nsNativeAppSupportOS2::Start( PRBool *aResult ) {
     }
 
     // Grab mutex first.
-    int retval;
-    UINT id = ID_DDE_APPLICATION_NAME;
-    retval = WinLoadString( NULLHANDLE, NULLHANDLE, id, sizeof(nameBuffer), nameBuffer );
-    if ( retval == 0 ) {
-        // No app name; just keep running.
-        *aResult = PR_TRUE;
-        return NS_OK;
-    }
 
     // Build mutex name from app name.
-    PR_snprintf( mMutexName, sizeof mMutexName, "%s%s", nameBuffer, MOZ_STARTUP_MUTEX_NAME );
+    PR_snprintf( mMutexName, sizeof mMutexName, "%s%s", gAppData->appName, MOZ_STARTUP_MUTEX_NAME );
     Mutex startupLock = Mutex( mMutexName );
 
     NS_ENSURE_TRUE( startupLock.Lock( MOZ_DDE_START_TIMEOUT ), NS_ERROR_FAILURE );
@@ -875,7 +866,7 @@ nsNativeAppSupportOS2::StartDDE() {
                     NS_ERROR_FAILURE );
 
     // Allocate DDE strings.
-    NS_ENSURE_TRUE( ( mApplication = WinDdeCreateStringHandle( mAppName, CP_WINANSI ) ) && InitTopicStrings(),
+    NS_ENSURE_TRUE( ( mApplication = WinDdeCreateStringHandle( gAppData->appName, CP_WINANSI ) ) && InitTopicStrings(),
                     NS_ERROR_FAILURE );
 
     // Next step is to register a DDE service.
