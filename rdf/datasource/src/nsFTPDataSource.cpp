@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4; c-file-style: "stroustrup" -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8; c-file-style: "stroustrup" -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -61,6 +61,8 @@ static NS_DEFINE_CID(kRDFServiceCID,                  NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,       NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_IID(kISupportsIID,                   NS_ISUPPORTS_IID);
 
+
+
 class FTPDataSourceCallback : public nsIStreamListener
 {
 private:
@@ -78,17 +80,17 @@ public:
 
 	NS_DECL_ISUPPORTS
 
-                FTPDataSourceCallback(nsIRDFDataSource *ds, nsIRDFResource *parent);
+			FTPDataSourceCallback(nsIRDFDataSource *ds, nsIRDFResource *parent);
 	virtual		~FTPDataSourceCallback(void);
 
 #ifdef NECKO
-    // nsIStreamObserver methods:
-    NS_IMETHOD OnStartBinding(nsISupports *ctxt);
-    NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
-    NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) { return NS_ERROR_NOT_IMPLEMENTED; }
-    // nsIStreamListener methods:
-    NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+	// nsIStreamObserver methods:
+	NS_IMETHOD OnStartBinding(nsISupports *ctxt);
+	NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+	NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_ERROR_NOT_IMPLEMENTED; }
+	NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) { return NS_ERROR_NOT_IMPLEMENTED; }
+	// nsIStreamListener methods:
+	NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
 #else
 	// stream observer
 
@@ -202,9 +204,8 @@ public:
 
 
 
-
-static	nsIRDFService		*gRDFService = nsnull;
-static	FTPDataSource		*gFTPDataSource = nsnull;
+static	nsIRDFService	*gRDFService = nsnull;
+static	FTPDataSource	*gFTPDataSource = nsnull;
 
 nsIRDFResource		*FTPDataSource::kNC_Child;
 nsIRDFResource		*FTPDataSource::kNC_Name;
@@ -225,6 +226,7 @@ nsIRDFResource		*FTPDataSourceCallback::kNC_loading;
 
 static const char	kFTPprotocol[] = "ftp:";
 static const char	kFTPcommand[] = "http://home.netscape.com/NC-rdf#ftpcommand?";
+
 
 
 static PRBool
@@ -634,6 +636,7 @@ FTPDataSourceCallback::OnStartBinding(nsIURI *aURL, const char *aContentType)
 }
 
 
+
 #ifndef NECKO
 NS_IMETHODIMP
 FTPDataSourceCallback::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax) 
@@ -649,6 +652,7 @@ FTPDataSourceCallback::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 	return(NS_OK);
 }
 #endif
+
 
 
 NS_IMETHODIMP
@@ -674,6 +678,7 @@ FTPDataSourceCallback::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUni
 // stream listener methods
 
 
+
 #ifndef NECKO
 NS_IMETHODIMP
 FTPDataSourceCallback::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
@@ -681,6 +686,7 @@ FTPDataSourceCallback::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
 	return(NS_OK);
 }
 #endif
+
 
 
 NS_IMETHODIMP
@@ -811,6 +817,7 @@ FTPDataSourceCallback::QueryInterface(REFNSIID iid, void **result)
 #endif
 
 
+
 NS_METHOD
 FTPDataSource::GetFTPListing(nsIRDFResource *source, nsISimpleEnumerator** aResult)
 {
@@ -919,6 +926,7 @@ FTPDataSource::Unassert(nsIRDFResource *source,
 }
 
 
+
 NS_IMETHODIMP
 FTPDataSource::Change(nsIRDFResource* aSource,
                       nsIRDFResource* aProperty,
@@ -927,6 +935,7 @@ FTPDataSource::Change(nsIRDFResource* aSource,
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
+
 
 
 NS_IMETHODIMP
