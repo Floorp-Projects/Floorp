@@ -210,6 +210,8 @@ protected:
   PRBool                mInitialized;
 #endif
 
+  nsImageAnimation      mImageAnimationModePref;
+
 protected:
   void   GetUserPreferences();
   void   GetFontPreferences();
