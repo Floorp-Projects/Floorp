@@ -24,9 +24,6 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME=profile
 
-EXTRA_DSO_LDOPTS = \
-	$(NULL)
-
 CPPSRCS = \
 	nsProfile.cpp \
 	$(NULL)
