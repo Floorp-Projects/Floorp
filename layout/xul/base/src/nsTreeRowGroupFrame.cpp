@@ -398,6 +398,9 @@ nsTreeRowGroupFrame::ComputeVisibleRowCount(PRInt32& aCount, nsIContent* aParent
 NS_IMETHODIMP
 nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldIndex, PRInt32 aNewIndex)
 {
+  if (aNewIndex < 0)
+    return NS_OK;
+
   if (aOldIndex == aNewIndex)
     return NS_OK;
 
