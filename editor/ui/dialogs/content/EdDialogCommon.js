@@ -1204,13 +1204,10 @@ function SetRelativeCheckbox()
   {
     if (urlScheme)
     {
-      // Url is absolute, scheme and host must be the same
-      if (urlScheme == docScheme)
-      {
-        var urlHost = GetHost(url);
-        var docHost = GetHost(docUrl);
-        enable = (urlHost == docHost);
-      }
+      // Url is absolute
+      // If we can make a relative URL, then enable must be true!
+      // (this lets the smarts of MakeRelativeUrl do all the hard work)
+      enable = (GetScheme(MakeRelativeUrl(url)).length == 0);
     }
     else
     {
