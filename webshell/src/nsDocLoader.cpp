@@ -439,7 +439,7 @@ class nsDocLoaderImpl : public nsIDocumentLoader
 {
 public:
 
-    nsDocLoaderImpl(nsDocLoaderImpl* aParent);
+    nsDocLoaderImpl();
 
     NS_DECL_ISUPPORTS
 
@@ -464,6 +464,14 @@ public:
     NS_IMETHOD AddObserver(nsIDocumentLoaderObserver *aObserver);
     NS_IMETHOD RemoveObserver(nsIDocumentLoaderObserver *aObserver);
 
+    void SetParent(nsDocLoaderImpl* aParent) {
+        // XXX keeping a ref on our parent when our parent has a ref
+        // on us is bad.
+        NS_IF_RELEASE(mParent);
+        mParent = aParent;
+        NS_IF_ADDREF(aParent);
+    }
+
 protected:
     virtual ~nsDocLoaderImpl();
 
@@ -483,15 +491,14 @@ protected:
 };
 
 
-nsDocLoaderImpl::nsDocLoaderImpl(nsDocLoaderImpl* aParent)
+nsDocLoaderImpl::nsDocLoaderImpl()
 {
     NS_INIT_REFCNT();
 
     NS_NewISupportsArray(&m_LoadingDocsList);
     NS_NewISupportsArray(&mChildDocLoaderList);
 
-    mParent = aParent;
-    NS_IF_ADDREF(mParent);
+    mParent = nsnull;
 
     m_DocFactory = new nsDocFactoryImpl();
     NS_ADDREF(m_DocFactory);
@@ -523,12 +530,12 @@ nsDocLoaderImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIDocumentLoaderIID)) {
     *aInstancePtr = (void*)(nsIDocumentLoader*)this;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kDocLoaderImplIID)) {
     *aInstancePtr = (void*)this;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;
@@ -548,11 +555,12 @@ nsDocLoaderImpl::CreateDocumentLoader(nsIDocumentLoader** anInstance)
         goto done;
     }
 
-    newLoader = new nsDocLoaderImpl(this);
+    NS_NEWXPCOM(newLoader, nsDocLoaderImpl);
     if (nsnull == newLoader) {
         rv = NS_ERROR_OUT_OF_MEMORY;
         goto done;
     }
+    newLoader->SetParent(this);
     rv = newLoader->QueryInterface(kIDocumentLoaderIID, (void**)anInstance);
 
     mChildDocLoaderList->AppendElement(newLoader);
@@ -817,32 +825,32 @@ nsDocumentBindInfo::QueryInterface(const nsIID& aIID,
 
   if (aIID.Equals(kIStreamObserverIID)) {
     *aInstancePtrResult = (void*) ((nsIStreamObserver*)this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIStreamListenerIID)) {
     *aInstancePtrResult = (void*) ((nsIStreamListener*)this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIDocumentLoadInfoIID)) {
     *aInstancePtrResult = (void*) ((nsIDocumentLoadInfo*)this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kDocumentBindInfoIID)) {
     *aInstancePtrResult = (void*) this;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kINetSupportIID)) {
     *aInstancePtrResult = (void*) ((nsINetSupport*)this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kRefreshURLIID)) {
     *aInstancePtrResult = (void*) ((nsIRefreshUrl*)this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;
@@ -1264,7 +1272,7 @@ nsDocumentLoaderFactory::CreateInstance(nsISupports* aOuter,
     }
 
     if (nsnull == gGlobalDocLoader) {
-        gGlobalDocLoader = new nsDocLoaderImpl(nsnull);
+        NS_NEWXPCOM(gGlobalDocLoader, nsDocLoaderImpl);
         if (nsnull == gGlobalDocLoader) {
             rv = NS_ERROR_OUT_OF_MEMORY;
             goto done;
@@ -1298,7 +1306,9 @@ NS_NewDocumentLoaderFactory(nsIFactory** aFactory)
         return NS_ERROR_NULL_POINTER;
     }
 
-    *aFactory = new nsDocumentLoaderFactory();
+    nsDocumentLoaderFactory* it;
+    NS_NEWXPCOM(it, nsDocumentLoaderFactory);
+    *aFactory = it;
     if (nsnull == *aFactory) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
