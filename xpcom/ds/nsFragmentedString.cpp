@@ -121,7 +121,7 @@ nsFragmentedString::SetLength( PRUint32 aNewLength )
     // according to the current interpretation of |SetLength|,
     //  cut off characters from the end, or else add unitialized space to fill
 
-    if ( aNewLength < mBufferList.GetDataLength() )
+    if ( aNewLength < PRUint32(mBufferList.GetDataLength()) )
       {
 //      if ( aNewLength )
           mBufferList.DiscardSuffix(mBufferList.GetDataLength()-aNewLength);
@@ -130,7 +130,7 @@ nsFragmentedString::SetLength( PRUint32 aNewLength )
       }
 
 // temporarily... eliminate as soon as our munging routines don't need this form of |SetLength|
-    else if ( aNewLength > mBufferList.GetDataLength() )
+    else if ( aNewLength > PRUint32(mBufferList.GetDataLength()) )
       {
         size_t empty_space_to_add = aNewLength - mBufferList.GetDataLength();
         nsSharedBufferList::Buffer* new_buffer = nsSharedBufferList::NewSingleAllocationBuffer(0, 0, empty_space_to_add);
