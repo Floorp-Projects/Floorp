@@ -836,6 +836,9 @@ loser:
     return(retstr);
 }
 
+/* RDNs are sorted from most general to most specific.
+ * This code returns the FIRST one found, the most general one found.
+ */
 static char *
 CERT_GetNameElement(PRArenaPool *arena, CERTName *name, int wantedTag)
 {
@@ -870,6 +873,49 @@ CERT_GetNameElement(PRArenaPool *arena, CERTName *name, int wantedTag)
     }
     
   done:
+    return buf;
+}
+
+/* RDNs are sorted from most general to most specific.
+ * This code returns the LAST one found, the most specific one found.
+ * This is particularly appropriate for Common Name.  See RFC 2818.
+ */
+static char *
+CERT_GetLastNameElement(PRArenaPool *arena, CERTName *name, int wantedTag)
+{
+    CERTRDN** rdns;
+    CERTRDN *rdn;
+    CERTAVA * lastAva = NULL;
+    char *buf = 0;
+    
+    rdns = name->rdns;
+    while (rdns && (rdn = *rdns++) != 0) {
+	CERTAVA** avas = rdn->avas;
+	CERTAVA*  ava;
+	while (avas && (ava = *avas++) != 0) {
+	    int tag = CERT_GetAVATag(ava);
+	    if ( tag == wantedTag ) {
+		lastAva = ava;
+	    }
+	}
+    }
+
+    if (lastAva) {
+	SECItem *decodeItem = CERT_DecodeAVAValue(&lastAva->value);
+	if(!decodeItem) {
+	    return NULL;
+	}
+	if (arena) {
+	    buf = (char *)PORT_ArenaZAlloc(arena,decodeItem->len + 1);
+	} else {
+	    buf = (char *)PORT_ZAlloc(decodeItem->len + 1);
+	}
+	if ( buf ) {
+	    PORT_Memcpy(buf, decodeItem->data, decodeItem->len);
+	    buf[decodeItem->len] = 0;
+	}
+	SECITEM_FreeItem(decodeItem, PR_TRUE);
+    }    
     return buf;
 }
 
@@ -1120,7 +1166,7 @@ CERT_GetCertEmailAddress(CERTName *name)
 char *
 CERT_GetCommonName(CERTName *name)
 {
-    return(CERT_GetNameElement(NULL, name, SEC_OID_AVA_COMMON_NAME));
+    return(CERT_GetLastNameElement(NULL, name, SEC_OID_AVA_COMMON_NAME));
 }
 
 char *
