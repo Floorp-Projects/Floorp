@@ -16,8 +16,10 @@
  * Reserved.
  */
 
+#include "xp_core.h"
 #include "nsFontMetricsGTK.h"
-#include <gdk/gdkx.h>
+
+#include <gdk/gdk.h>
 
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
@@ -28,109 +30,82 @@ nsFontMetricsGTK :: nsFontMetricsGTK()
   
 nsFontMetricsGTK :: ~nsFontMetricsGTK()
 {
+  
 }
 
 NS_IMPL_ISUPPORTS(nsFontMetricsGTK, kIFontMetricsIID)
-
-nsresult nsFontMetricsGTK :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
+  
+NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIDeviceContext* aContext)
 {
-  mFont = new nsFont(aFont);
-  mContext = aCX ;
-
-  //  QueryFont();
   return NS_OK;
 }
 
-void nsFontMetricsGTK::QueryFont()
+NS_IMETHODIMP  nsFontMetricsGTK::Destroy()
 {
-  const char * str = mFont->name.ToNewCString();
-  mGdkFont = gdk_font_load(str);
-  delete str;
-
-  // Get character sizes
-  float p2t = mContext->GetDevUnitsToAppUnits();
-  for (int i = 0; i < 256; i++)
-    mCharWidths[i] = nscoord((gdk_char_width(mGdkFont, (gchar)i)), p2t);
-
+  return NS_OK;
 }
 
-nscoord nsFontMetricsGTK :: GetWidth(char ch)
+NS_IMETHODIMP  nsFontMetricsGTK::GetXHeight(nscoord& aResult)
 {
-  return mCharWidths[PRUint8(ch)];
+  return NS_OK;
 }
 
-nscoord nsFontMetricsGTK :: GetWidth(PRUnichar ch)
+NS_IMETHODIMP  nsFontMetricsGTK::GetSuperscriptOffset(nscoord& aResult)
 {
-  if (ch < 256)
-    return mCharWidths[ch];
-  return 0; /* XXX */
+  return NS_OK;
 }
 
-nscoord nsFontMetricsGTK :: GetWidth(const nsString& aString)
+NS_IMETHODIMP  nsFontMetricsGTK::GetSubscriptOffset(nscoord& aResult)
 {
-  const char *str = aString.ToNewCString();
-  nscoord width = GetWidth(str);
-  delete str;
-  return width;
+  return NS_OK;
 }
 
-nscoord nsFontMetricsGTK :: GetWidth(const char *aString)
+NS_IMETHODIMP  nsFontMetricsGTK::GetStrikeout(nscoord& aOffset, nscoord& aSize)
 {
-  float p2t = mContext->GetDevUnitsToAppUnits();
-  return nscoord((gdk_string_width(mGdkFont, (const gchar *)aString)), p2t);
+  return NS_OK;
 }
 
-nscoord nsFontMetricsGTK :: GetWidth(const PRUnichar *aString, PRUint32 aLength)
+NS_IMETHODIMP  nsFontMetricsGTK::GetUnderline(nscoord& aOffset, nscoord& aSize)
 {
-  // XXX use native text measurement routine
-  nscoord sum = 0;
-
-  PRUint8 ch;
-  while ((ch = PRUint8(*aString++)) != 0) {
-    sum += mCharWidths[ch];
-  }
-  return sum;
+  return NS_OK;
 }
 
-nscoord nsFontMetricsGTK :: GetHeight()
+NS_IMETHODIMP  nsFontMetricsGTK::GetHeight(nscoord &aHeight)
 {
-  return mGdkFont->descent + mGdkFont->ascent;
+  return NS_OK;
 }
 
-nscoord nsFontMetricsGTK :: GetLeading()
+NS_IMETHODIMP  nsFontMetricsGTK::GetLeading(nscoord &aLeading)
 {
-  return 0;
+  return NS_OK;
 }
 
-nscoord nsFontMetricsGTK :: GetMaxAscent()
+NS_IMETHODIMP  nsFontMetricsGTK::GetMaxAscent(nscoord &aAscent)
 {
-  return mGdkFont->ascent;
+  return NS_OK;
 }
 
-nscoord nsFontMetricsGTK :: GetMaxDescent()
+NS_IMETHODIMP  nsFontMetricsGTK::GetMaxDescent(nscoord &aDescent)
 {
-  return mGdkFont->descent;
+  return NS_OK;
 }
 
-nscoord nsFontMetricsGTK :: GetMaxAdvance()
+NS_IMETHODIMP  nsFontMetricsGTK::GetMaxAdvance(nscoord &aAdvance)
 {
-  return ((XFontStruct *)GDK_FONT_XFONT(mGdkFont))->max_bounds.width;
+  return NS_OK;
 }
 
-const nscoord * nsFontMetricsGTK :: GetWidths()
+NS_IMETHODIMP  nsFontMetricsGTK::GetFont(const nsFont*& aFont)
 {
-  return mCharWidths;
+  return NS_OK;
 }
 
-const nsFont& nsFontMetricsGTK :: GetFont()
+NS_IMETHODIMP  nsFontMetricsGTK::GetFontHandle(nsFontHandle &aHandle)
 {
-  return *mFont;
+  return NS_OK;
 }
 
-nsFontHandle nsFontMetricsGTK :: GetFontHandle()
-{
-  return ((nsFontHandle)mGdkFont);
-}
+
 
 
 

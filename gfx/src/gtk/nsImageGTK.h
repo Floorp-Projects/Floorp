@@ -32,18 +32,26 @@ public:
   /**
   @see nsIImage.h
   */
-  virtual PRInt32     GetHeight()         { return 0; }
-  virtual PRInt32     GetWidth()          { return 0; }
-  virtual PRUint8*    GetBits()           { return nsnull; }
-  virtual PRInt32     GetLineStride()     {return 0; }
-  virtual PRBool      Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-  virtual PRBool      Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
-                                  PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
+  virtual PRInt32         GetHeight()         { return 0; }
+  virtual PRInt32         GetWidth()          { return 0; }
+  virtual PRUint8*        GetBits()           { return nsnull; }
+  virtual void*           GetBitInfo()        { return nsnull; }
+  virtual PRInt32         GetLineStride()     {return 0; }
+  NS_IMETHOD              Draw(nsIRenderingContext &aContext,
+                               nsDrawingSurface aSurface,
+                               PRInt32 aX, PRInt32 aY,
+                               PRInt32 aWidth, PRInt32 aHeight);
+  NS_IMETHOD              Draw(nsIRenderingContext &aContext,
+                               nsDrawingSurface aSurface,
+                               PRInt32 aSX, PRInt32 aSY,
+                               PRInt32 aSWidth, PRInt32 aSHeight,
+                               PRInt32 aDX, PRInt32 aDY,
+                               PRInt32 aDWidth, PRInt32 aDHeight);
   virtual nsColorMap* GetColorMap() {return nsnull;}
   virtual void ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect);
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
   virtual PRBool      IsOptimized()       { return PR_FALSE; }
-  virtual nsresult    Optimize(nsDrawingSurface aSurface);
+  virtual nsresult    Optimize(nsIDeviceContext* aContext);
   virtual PRUint8*    GetAlphaBits()      { return nsnull; }
   virtual PRInt32     GetAlphaWidth()   { return 0;}
   virtual PRInt32     GetAlphaHeight()   {return 0;}

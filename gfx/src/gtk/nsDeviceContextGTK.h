@@ -19,9 +19,8 @@
 #ifndef nsDeviceContextGTK_h___
 #define nsDeviceContextGTK_h___
 
-#include "nsIDeviceContext.h"
+#include "nsDeviceContext.h"
 #include "nsUnitConversion.h"
-#include "nsIFontCache.h"
 #include "nsIWidget.h"
 #include "nsIView.h"
 #include "nsIRenderingContext.h"
@@ -30,55 +29,31 @@
 #include "nsRenderingContextGTK.h"
 #include <gtk/gtk.h>
 
-class nsDeviceContextGTK : public nsIDeviceContext
+class nsDeviceContextGTK : public DeviceContextImpl
 {
 public:
   nsDeviceContextGTK();
 
   NS_DECL_ISUPPORTS
 
-  virtual nsresult Init();
+  //get a low level drawing surface for rendering. the rendering context
+  //that is passed in is used to create the drawing surface if there isn't
+  //already one in the device context. the drawing surface is then cached
+  //in the device context for re-use.
 
-  virtual nsIRenderingContext * CreateRenderingContext(nsIView *aView);
-  virtual void InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWidget);
+  NS_IMETHOD  GetILColorSpace(IL_ColorSpace*& aColorSpace);
+  NS_IMETHOD  GetPaletteInfo(nsPaletteInfo& aPaletteInfo);
+  NS_IMETHOD  Init(nsNativeWidget aNativeWidget);
+  NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
+  NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
 
-  virtual float GetTwipsToDevUnits() const;
-  virtual float GetDevUnitsToTwips() const;
+  NS_IMETHOD ConvertPixel(nscolor aColor, PRUint32 & aPixel);
 
-  virtual void SetAppUnitsToDevUnits(float aAppUnits);
-  virtual void SetDevUnitsToAppUnits(float aDevUnits);
 
-  virtual float GetAppUnitsToDevUnits() const;
-  virtual float GetDevUnitsToAppUnits() const;
-
-  virtual float GetScrollBarWidth() const;
-  virtual float GetScrollBarHeight() const;
-
-  virtual nsIFontCache * GetFontCache();
-  virtual void FlushFontCache();
-
-  virtual nsIFontMetrics* GetMetricsFor(const nsFont& aFont);
-
-  virtual void SetZoom(float aZoom);
-  virtual float GetZoom() const;
-
-  virtual nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext);
-
-  //functions for handling gamma correction of output device
-  virtual float GetGamma(void);
-  virtual void SetGamma(float aGamma);
-
-  //XXX the return from this really needs to be ref counted somehow. MMP
-  virtual PRUint8 * GetGammaTable(void);
+  NS_IMETHOD CheckFontExistence(const nsString& aFontName);
 
 protected:
   ~nsDeviceContextGTK();
-  nsresult CreateFontCache();
-
-  nsIFontCache         *mFontCache;
-  float                 mGammaValue;
-  nsDrawingSurfaceGTK *mSurface;
-
 };
 
 #endif /* nsDeviceContextGTK_h___ */
