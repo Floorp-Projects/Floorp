@@ -708,8 +708,8 @@
     "nsrange.createcontextualfragment", \
     "nsrange.isvalidfragment", \
     "nsuievent.cancelbubble", \
-    "nsuievent.ischar", \
     "nsuievent.getpreventdefault", \
+    "nsuievent.ischar", \
     "nsuievent.layerx", \
     "nsuievent.layery", \
     "nsuievent.pagex", \
