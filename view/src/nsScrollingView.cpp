@@ -191,7 +191,7 @@ void nsScrollingView :: SetDimensions(nscoord width, nscoord height)
   }
 }
 
-nsEventStatus nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRBool aCheckParent, PRBool aCheckChildren)
+nsEventStatus nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags)
 {
   nsEventStatus  retval =  nsEventStatus_eIgnore; 
 
@@ -254,7 +254,7 @@ nsEventStatus nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRBool aCheckPa
     }
 
     default:
-      retval = nsView::HandleEvent(aEvent, aCheckParent, aCheckChildren);
+      retval = nsView::HandleEvent(aEvent, aEventFlags);
       break;
   }
 

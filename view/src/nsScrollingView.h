@@ -49,7 +49,7 @@ public:
 
   //overrides
   virtual void SetDimensions(nscoord width, nscoord height);
-  virtual nsEventStatus HandleEvent(nsGUIEvent *aEvent, PRBool aCheckParent = PR_TRUE, PRBool aCheckChildren = PR_TRUE);
+  virtual nsEventStatus HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags);
   virtual void AdjustChildWidgets(nscoord aDx, nscoord aDy);
 
   //nsIScrollableView interface

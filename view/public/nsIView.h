@@ -113,8 +113,9 @@ public:
    * is specified in view coordinates.
    * @param rc rendering context to paint into
    * @param rect damage area
+   * @param aPaintFlags see nsIView.h for flag definitions
    */
-  virtual void Paint(nsIRenderingContext& rc, const nsRect& rect) = 0;
+  virtual void Paint(nsIRenderingContext& rc, const nsRect& rect, PRUint32 aPaintFlags) = 0;
 
   /**
    * Called to indicate that the specified region of the view
@@ -122,21 +123,19 @@ public:
    * is specified in view coordinates.
    * @param rc rendering context to paint into
    * @param region damage area
+   * @param aPaintFlags see nsIView.h for flag definitions
    */
-  virtual void Paint(nsIRenderingContext& rc, const nsRegion& region) = 0;
+  virtual void Paint(nsIRenderingContext& rc, const nsRegion& region, PRUint32 aPaintFlags) = 0;
   
   /**
    * Called to indicate that the specified event should be handled
    * by the view. This method should return nsEventStatus_eConsumeDoDefault
    * or nsEventStatus_eConsumeNoDefault if the event has been handled.
    * @param event event to process
-   * @param aCheckParent used for recursive processing to indicate whether or
-   *        not parent views should attempt to handle the event
-   * @param aCheckChildren used for recursive processing to indicate whether or
-   *        not child views should attempt to handle the event
+   * @param aEventFlags see nsIView.h for flag definitions
    * @result processing status
    */
-  virtual nsEventStatus HandleEvent(nsGUIEvent *event, PRBool aCheckParent = PR_TRUE, PRBool aCheckChildren = PR_TRUE) = 0;
+  virtual nsEventStatus HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags) = 0;
 
   /**
    * Called to indicate that the position of the view has been changed.
@@ -189,26 +188,22 @@ public:
   /**
    * Called to indicate that the clip of the view has been changed.
    * The clip is relative to the origin of the view.
-   * @param aClip new bounds
+   * @param aLeft new left position
+   * @param aTop new top position
+   * @param aRight new right position
+   * @param aBottom new bottom position
    */
-  virtual void SetClip(const nsRect &aClip) = 0;
-
-  /**
-   * Called to indicate that the clip of the view has been changed.
-   * The clip is relative to the origin of the view.
-   * @param aX new x position
-   * @param aY new y position
-   * @param aWidth new width
-   * @param aHeight new height
-   */
-  virtual void SetClip(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight) = 0;
+  virtual void SetClip(nscoord aLeft, nscoord aTop, nscoord aRight, nscoord aBottom) = 0;
 
   /**
    * Called to get the dimensions and position of the clip for the view.
-   * @param aClip out parameter for bounds
+   * @param aLeft left position
+   * @param aTop top position
+   * @param aRight right position
+   * @param aBottom bottom position
    * @result PR_TRUE of there actually is a clip for the view, else PR_FALSE
    */
-  virtual PRBool GetClip(nsRect &aClip) = 0;
+  virtual PRBool GetClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom) = 0;
 
   /**
    * Called to indicate that the visibility of a view has been
@@ -296,14 +291,14 @@ public:
    * but probably not rotation for the first pass.
    * @param transform new transformation of view
    */
-  virtual void SetTransform(nsTransform2D *transform) = 0;
+  virtual void SetTransform(nsTransform2D &aXForm) = 0;
 
   /**
    * Note: This didn't exist in 4.0. This transform might include scaling
    * but probably not rotation for the first pass.
    * @result view's transformation
    */
-  virtual nsTransform2D * GetTransform() = 0;
+  virtual void GetTransform(nsTransform2D &aXForm) = 0;
 
   /**
    * Note: This didn't exist in 4.0. Called to set the opacity of a view. 
@@ -356,5 +351,16 @@ public:
    */
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 };
+
+//this is passed down to child views during painting and event handling
+//so that a child can determine if it is hidden or shown when it's
+//visibility state is set to inherit
+#define NS_VIEW_FLAG_PARENT_HIDDEN  0x0001
+
+//during event propagation, see if parent views can handle the event
+#define NS_VIEW_FLAG_CHECK_PARENT   0x0002
+
+//during event propagation, see if child views can handle the event
+#define NS_VIEW_FLAG_CHECK_CHILDREN 0x0004
 
 #endif

@@ -267,7 +267,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
   else
     localcx->SetClipRect(trect, PR_FALSE);
 
-  aView->Paint(*localcx, trect);
+  aView->Paint(*localcx, trect, 0);
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
     localcx->CopyOffScreenBits(wrect);
