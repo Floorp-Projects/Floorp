@@ -241,7 +241,7 @@ nsWebCrawler::DumpRegressionData()
         if (viewerFile) {
           nsAutoString regressionFileName;
           FILE *fp = GetOutputFile(mLastURL, regressionFileName);
-            
+
           switch (mPrinterTestType) {
           case 1:
             // dump print data to a file for regression testing
@@ -259,6 +259,16 @@ nsWebCrawler::DumpRegressionData()
             break;
           }
           fclose(fp);
+          if( mPrinterTestType == 1) {
+            if (mRegressing) {
+              PerformRegressionTest(regressionFileName);
+            }
+            else {
+              fputs(NS_LossyConvertUCS2toASCII(regressionFileName).get(),
+                    stdout);
+              printf(" - being written\n");
+            }
+          }
         }
       }
     } 
