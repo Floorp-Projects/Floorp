@@ -233,16 +233,17 @@ C0=Component XPCOM
 C1=Component GRE
 C2=Component Navigator
 C3=Component MailNews
-C4=Component Uninstaller
-C5=Component Chatzilla
-C6=Component Venkman
-C7=Component US English Profile Defaults
-C8=Component En US lang pack
-C9=Component US region pack
+C4 Component Spellchecker
+C5=Component Uninstaller
+C6=Component Chatzilla
+C7=Component Venkman
+C8=Component US English Profile Defaults
+C9=Component En US lang pack
+C10=Component US region pack
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C10=Component DOM Inspector
-C11=Component QFA
+C11=Component DOM Inspector
+C12=Component QFA
 
 [Setup Type2]
 ;*** LOCALIZE ME BABY ***
@@ -259,16 +260,17 @@ C0=Component XPCOM
 C1=Component GRE
 C2=Component Navigator
 C3=Component MailNews
-C4=Component Uninstaller
-C5=Component Chatzilla
-C6=Component Venkman
-C7=Component US English Profile Defaults
-C8=Component En US lang pack
-C9=Component US region pack
+C4=Component Spellchecker
+C5=Component Uninstaller
+C6=Component Chatzilla
+C7=Component Venkman
+C8=Component US English Profile Defaults
+C9=Component En US lang pack
+C10=Component US region pack
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C10=Component DOM Inspector
-C11=Component QFA
+C11=Component DOM Inspector
+C12=Component QFA
 
 
 
@@ -610,6 +612,15 @@ $InstallSizeArchive$:mail.xpi
 Attributes=SELECTED|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\msgbsutl.dll
 
+[Component Spellchecker]
+Description Short=Spellchecker
+;*** LOCALIZE ME BABY ***
+Description Long=for spellchecking
+Archive=spellcheck.xpi
+$InstallSize$:spellcheck
+$InstallSizeArchive$:spellcheck.xpi
+Attributes=SELECTED|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\myspell.dll
 
 [Component Uninstaller]
 Description Short=$CompanyName$ Uninstaller
