@@ -33,11 +33,7 @@
 #include "nsIServiceManager.h"
 #include "nsINetModuleMgr.h"
 #include "nsIEventQueueService.h"
-#ifndef NSPIPE2
-#include "nsIBuffer.h"
-#else
 #include "nsIPipe.h"
-#endif
 
 #include "nsXPIDLString.h" 
 
@@ -90,6 +86,9 @@ static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
 
+////////////////////////////////////////////////////////////////////////////////
+// nsIStreamListener methods:
+
 NS_IMETHODIMP
 nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
                                         nsISupports* context,
@@ -110,7 +109,7 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
     if (!mResponse)
     {
         // why do I need the connection in the constructor... get rid.. TODO
-        mResponse = new nsHTTPResponse (bufferInStream);
+        mResponse = new nsHTTPResponse ();
         if (!mResponse) {
             NS_ERROR("Failed to create the response object!");
             return NS_ERROR_OUT_OF_MEMORY;
@@ -122,22 +121,12 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
     // Parse the status line and the response headers from the server
     //
     if (!mHeadersDone) {
-#ifndef NSPIPE2
-        nsCOMPtr<nsIBuffer> pBuffer;
-
-        rv = bufferInStream->GetBuffer(getter_AddRefs(pBuffer));
-        if (NS_FAILED(rv)) return rv;
-#endif
         //
         // Parse the status line from the server.  This is always the 
         // first line of the response...
         //
         if (!mFirstLineParsed) {
-#ifndef NSPIPE2
-            rv = ParseStatusLine(pBuffer, i_Length, &actualBytesRead);
-#else
             rv = ParseStatusLine(bufferInStream, i_Length, &actualBytesRead);
-#endif
             i_Length -= actualBytesRead;
         }
 
@@ -148,11 +137,7 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
         // the headers are not done...
         //
         while (NS_SUCCEEDED(rv) && i_Length && !mHeadersDone) {
-#ifndef NSPIPE2
-            rv = ParseHTTPHeader(pBuffer, i_Length, &actualBytesRead);
-#else
             rv = ParseHTTPHeader(bufferInStream, i_Length, &actualBytesRead);
-#endif
             NS_ASSERTION(i_Length - actualBytesRead <= i_Length, "wrap around");
             i_Length -= actualBytesRead;
         }
@@ -272,6 +257,9 @@ nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
     return rv;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// nsHTTPResponseListener methods:
+
 nsresult nsHTTPResponseListener::FireOnHeadersAvailable()
 {
     nsresult rv;
@@ -341,15 +329,9 @@ nsWriteToString(void* closure,
 }
 
 
-#ifndef NSPIPE2
-nsresult nsHTTPResponseListener::ParseStatusLine(nsIBuffer* aBuffer, 
-                                                 PRUint32 aLength,
-                                                 PRUint32 *aBytesRead)
-#else
 nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* in, 
                                                  PRUint32 aLength,
                                                  PRUint32 *aBytesRead)
-#endif
 {
   nsresult rv = NS_OK;
 
@@ -368,11 +350,7 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* in,
   }
 
   // Look for the LF which ends the Status-Line.
-#ifndef NSPIPE2
-  rv = aBuffer->Search("\n", PR_FALSE, &bFoundString, &offsetOfEnd);
-#else
   rv = in->Search("\n", PR_FALSE, &bFoundString, &offsetOfEnd);
-#endif
   if (NS_FAILED(rv)) return rv;
 
   if (!bFoundString) {
@@ -386,17 +364,10 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* in,
     totalBytesToRead = offsetOfEnd+1;
   }
 
-#ifndef NSPIPE2
-  rv = aBuffer->ReadSegments(nsWriteToString, 
-                             (void*)&mHeaderBuffer, 
-                             totalBytesToRead, 
-                             &actualBytesRead);
-#else
   rv = in->ReadSegments(nsWriteToString, 
                         (void*)&mHeaderBuffer, 
                         totalBytesToRead, 
                         &actualBytesRead);
-#endif
   if (NS_FAILED(rv)) return rv;
 
   *aBytesRead += actualBytesRead;
@@ -484,21 +455,12 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* in,
 
 
 
-#ifndef NSPIPE2
-nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBuffer* aBuffer,
-                                                 PRUint32 aLength,
-                                                 PRUint32 *aBytesRead)
-#else
 nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBufferInputStream* in,
                                                  PRUint32 aLength,
                                                  PRUint32 *aBytesRead)
-#endif
 {
   nsresult rv = NS_OK;
 
-#ifndef NSPIPE2
-  const char *buf;
-#endif
   PRBool bFoundString;
   PRUint32 offsetOfEnd, totalBytesToRead, actualBytesRead;
 
@@ -520,23 +482,6 @@ nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBufferInputStream* in,
     // may be complete...
     //
     if (mHeaderBuffer.Last() == '\n' ) {
-#ifndef NSPIPE2
-      rv = aBuffer->GetReadSegment(0, &buf, &actualBytesRead);
-      // Need to wait for more data to see if the header is complete.
-      if (0 == actualBytesRead) {
-        return NS_OK;
-      }
-
-      // This line is either LF or CRLF so the header is complete...
-      if (mHeaderBuffer.Length() <= 2) {
-        break;
-      }
-
-      // Not LWS - The header is complete...
-      if ((*buf != ' ') && (*buf != '\t')) {
-        break;
-      }
-#else
       // This line is either LF or CRLF so the header is complete...
       if (mHeaderBuffer.Length() <= 2) {
           break;
@@ -557,15 +502,10 @@ nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBufferInputStream* in,
           }
       }
       // else, go around the loop again and accumulate the rest of the header...
-#endif
     }
 
     // Look for the next LF in the buffer...
-#ifndef NSPIPE2
-    rv = aBuffer->Search("\n", PR_FALSE, &bFoundString, &offsetOfEnd);
-#else
     rv = in->Search("\n", PR_FALSE, &bFoundString, &offsetOfEnd);
-#endif
     if (NS_FAILED(rv)) return rv;
 
     if (!bFoundString) {
@@ -580,17 +520,10 @@ nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBufferInputStream* in,
     }
 
     // Append the buffer into the header string...
-#ifndef NSPIPE2
-    rv = aBuffer->ReadSegments(nsWriteToString, 
-                               (void*)&mHeaderBuffer, 
-                               totalBytesToRead, 
-                               &actualBytesRead);
-#else
     rv = in->ReadSegments(nsWriteToString, 
                           (void*)&mHeaderBuffer, 
                           totalBytesToRead, 
                           &actualBytesRead);
-#endif
     if (NS_FAILED(rv)) return rv;
 
     *aBytesRead += actualBytesRead;
@@ -795,14 +728,14 @@ nsresult nsHTTPResponseListener::ProcessStatusCode(void)
     // Client Error: 4xx
     //
     case 4:
-        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+      PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
             ("ProcessStatusCode [this=%x].\tStatus - Client Error: %d.\n",
             this, statusCode));
-        if (statusCode == 401)
-        {
-            rv = ProcessAuthentication(statusCode);
-        }
-        break;
+      if (401 == statusCode) {
+        rv = ProcessAuthentication(statusCode);
+      }
+      break;
+
     //
     // Server Error: 5xx
     //
@@ -835,7 +768,7 @@ nsHTTPResponseListener::ProcessRedirection(PRInt32 aStatusCode)
 
   mResponse->GetHeader(nsHTTPAtoms::Location, getter_Copies(location));
 
-  if ((301 == aStatusCode) || (302 == aStatusCode) && (location))
+  if (((301 == aStatusCode) || (302 == aStatusCode)) && (location))
   {
       nsCOMPtr<nsIChannel> channel;
 
