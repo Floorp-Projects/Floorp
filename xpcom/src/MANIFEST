@@ -19,3 +19,4 @@ nsIMalloc.h
 nsMalloc.h
 nsVector.h
 nsMacRepository.h
+nsTraceRefcnt.h
