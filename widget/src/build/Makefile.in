@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME := widget$(MOZ_WIDGET_TOOLKIT)
+LIBRARY_NAME := widget_$(MOZ_WIDGET_TOOLKIT)
 
 DEFINES += -D_IMPL_NS_WIDGET
 
