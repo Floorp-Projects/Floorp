@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsecur.c,v 1.13 2001/09/18 01:59:20 nelsonb%netscape.com Exp $
+ * $Id: sslsecur.c,v 1.14 2001/11/08 02:15:38 nelsonb%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -885,6 +885,10 @@ ssl_DestroySecurityInfo(sslSecurityInfo *sec)
 	PORT_ZFree(sec->writeBuf.buf, sec->writeBuf.space);
 	sec->writeBuf.buf = 0;
 
+	if (sec->localCert) {
+	    CERT_DestroyCertificate(sec->localCert);
+	    sec->localCert = NULL;
+	}
 	if (sec->peerCert) {
 	    CERT_DestroyCertificate(sec->peerCert);
 	    sec->peerCert = NULL;
