@@ -1471,6 +1471,12 @@ envirocheck::
 echo-dirs:
 	@echo $(DIRS)
 
+echo-module:
+	@echo $(MODULE)
+
+echo-requires:
+	@echo $(REQUIRES)
+
 echo-depth-path:
 	@$(topsrcdir)/build/unix/print-depth-path.sh
 
