@@ -65,6 +65,12 @@ void bcJavaStub::Dispatch(bcICall *call) {
     } else {
         return;
     }
+    if (!objectClass) {
+        Init();
+        if (!objectClass) {
+            return;
+        }
+    }
     nsXPTMethodInfo* info;
     interfaceInfo->GetMethodInfo(mid,(const nsXPTMethodInfo **)&info);
     PRUint32 paramCount = info->GetParamCount();
@@ -72,12 +78,6 @@ void bcJavaStub::Dispatch(bcICall *call) {
     bcJavaMarshalToolkit * mt = new bcJavaMarshalToolkit(mid, interfaceInfo, args, env,1, call->GetORB());
     bcIUnMarshaler * um = call->GetUnMarshaler();   
     mt->UnMarshal(um);
-    if (!objectClass) {
-        Init();
-        if (!objectClass) {
-            return;
-        }
-    }
     jobject jiid = bcIIDJava::GetObject(&iid);
     bcJavaGlobal::GetJNIEnv()->CallStaticObjectMethod(utilitiesClass, callMethodByIndexMID, object, jiid, (jint)mid, args);
     //nb return value; excepion handling
@@ -106,6 +106,7 @@ void bcJavaStub::Init() {
         return;
     }
 }
+
 
 
 
