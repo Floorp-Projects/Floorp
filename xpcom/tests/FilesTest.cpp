@@ -1,6 +1,11 @@
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 
+#ifdef NS_USING_STL
+using std::endl;
+using std::cout;
+#endif
+
 NS_NAMESPACE FileTest
 {
 	NS_NAMESPACE_PROTOTYPE void WriteStuff(nsOutputFileStream& s);
@@ -59,7 +64,7 @@ void main()
 	
 	// Test of nsOutputFileStream
 
-	nsFilePath myTextFilePath("/Development/iotest.txt");
+	nsFilePath myTextFilePath("iotest.txt");
 
 	{
 		nsOut << "WRITING IDENTICAL OUTPUT TO " << (const char*)myTextFilePath << nsEndl << nsEndl;

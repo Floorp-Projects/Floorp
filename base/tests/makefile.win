@@ -22,15 +22,17 @@ PROG0 = .\$(OBJDIR)\TimerTest.exe
 PROG1 = .\$(OBJDIR)\TestAtoms.exe
 PROG2 = .\$(OBJDIR)\CvtURL.exe
 PROG3 = .\$(OBJDIR)\TestCRT.exe
+PROG4 = .\$(OBJDIR)\FilesTest.exe
 RESFILE = timer.res
 PROGRAMS = $(PROG0) $(PROG1) \
 !ifdef MODULAR_NETLIB
         $(PROG2) \
 	$(PROG3) \
 !endif
-        $(NULL)
+	$(PROG4) \
+	$(NULL)
 
-LINCS=-I..\src -I$(PUBLIC)\xpcom -I$(PUBLIC)\netlib
+LINCS=-I..\src -I$(PUBLIC)\xpcom -I$(PUBLIC)\netlib -I$(PUBLIC)\raptor
 
 LLIBS=				\
  $(DIST)\lib\xpcom32.lib	\
@@ -54,6 +56,7 @@ install:: $(PROGRAMS)
 	$(MAKE_INSTALL) $(PROG2) $(DIST)\bin
 	$(MAKE_INSTALL) $(PROG3) $(DIST)\bin
 !endif
+	$(MAKE_INSTALL) $(PROG4) $(DIST)\bin
 
 clobber::
 	rm -f $(DIST)\bin\TimerTest.exe
@@ -62,6 +65,7 @@ clobber::
 	rm -f $(DIST)\bin\CvtURL.exe
 	rm -f $(DIST)\bin\TestCRT.exe
 !endif
+	rm -f $(DIST)\bin\FilesTest.exe
 
 # Move this into config/obj.inc when it's allowed
 .cpp{.\$(OBJDIR)\}.exe:
@@ -82,6 +86,8 @@ clobber::
 $(PROG0): $(OBJDIR) TimerTest.cpp $(RESFILE)
 
 $(PROG1): $(OBJDIR) TestAtoms.cpp
+
+$(PROG4): $(OBJDIR) FilesTest.cpp
 
 !ifdef MODULAR_NETLIB
 $(PROG2): $(OBJDIR) CvtURL.cpp
