@@ -42,4 +42,10 @@ done
 if [ -z "O_CRON" -o "$O_CRON" != "ON" ]
 then
 	kill ${TAILPID}
+	if [ -n "$os_name" -a "$os_name" = "Windows" ]
+	then
+		echo "MKS special - killing the tail -f"
+		kill `ps | grep "tail -f ${LOGFILE}" | grep -v grep | 
+			sed -e "s/^ *//" -e "s/ *//"`
+	fi
 fi
