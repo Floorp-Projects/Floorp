@@ -384,8 +384,12 @@ LocaleCompare(JSContext *cx, JSString *src1, JSString *src2, jsval *rval)
 }
 
 static void
-SetXPCExceptionWasThrown()
+NotifyXPCIfExceptionPending(JSContext *cx)
 {
+  if (!::JS_IsExceptionPending(cx)) {
+    return;
+  }
+
   nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
 
   if (xpc) {
@@ -714,11 +718,11 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
         ::JS_SetVersion(mContext, oldVersion);
 
       if (!ok) {
-        // Tell XPConnect that an exception was thrown. This is needed
+        // Tell XPConnect about any pending exceptions. This is needed
         // to avoid dropping JS exceptions in case we got here through
         // nested calls through XPConnect.
 
-        SetXPCExceptionWasThrown();
+        NotifyXPCIfExceptionPending(mContext);
       }
     }
   }
@@ -785,10 +789,11 @@ JSValueToAString(JSContext *cx, jsval val, nsAString *result,
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    // Tell XPConnect that an exception was thrown. This is needed to
+    // Tell XPConnect about any pending exceptions. This is needed to
     // avoid dropping JS exceptions in case we got here through nested
     // calls through XPConnect.
-    SetXPCExceptionWasThrown();
+
+    NotifyXPCIfExceptionPending(cx);
   }
 
   return NS_OK;
@@ -893,7 +898,11 @@ nsJSContext::EvaluateString(const nsAString& aScript,
       }
 
       if (!ok) {
-        SetXPCExceptionWasThrown();
+        // Tell XPConnect about any pending exceptions. This is needed
+        // to avoid dropping JS exceptions in case we got here through
+        // nested calls through XPConnect.
+
+        NotifyXPCIfExceptionPending(mContext);
       }
     }
   }
@@ -1052,10 +1061,11 @@ nsJSContext::ExecuteScript(void* aScriptObject,
       aRetValue->Truncate();
     }
 
-    // Tell XPConnect that an exception was thrown. This is needed to
+    // Tell XPConnect about any pending exceptions. This is needed to
     // avoid dropping JS exceptions in case we got here through nested
     // calls through XPConnect.
-    SetXPCExceptionWasThrown();
+
+    NotifyXPCIfExceptionPending(mContext);
   }
 
   ScriptEvaluated(PR_TRUE);
@@ -1251,8 +1261,11 @@ nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
     ScriptEvaluated(PR_TRUE);
 
     if (!ok) {
-      // Tell XPConnect that something went wrong.
-      SetXPCExceptionWasThrown();
+      // Tell XPConnect about any pending exceptions. This is needed
+      // to avoid dropping JS exceptions in case we got here through
+      // nested calls through XPConnect.
+
+      NotifyXPCIfExceptionPending(mContext);
     }
   }
 
@@ -1263,7 +1276,8 @@ nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
 }
 
 NS_IMETHODIMP
-nsJSContext::BindCompiledEventHandler(void *aTarget, nsIAtom *aName, void *aHandler)
+nsJSContext::BindCompiledEventHandler(void *aTarget, nsIAtom *aName,
+                                      void *aHandler)
 {
   const char *charName = AtomToEventHandlerName(aName);
 
