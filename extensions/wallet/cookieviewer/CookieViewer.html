@@ -133,12 +133,13 @@
       top.frames[list_frame].document.write(
         "<form name='fSelectCookie'>" +
           "<p>" +
-            "<table border='0' width='100%' height='95%'>" +
+            "<b>site:cookie-name</b>" +
+            "<table border='0'>" +
               "<tr>" +
                 "<td width='100%' valign='top'>" +
                   "<center>" +
                     "<p>" +
-                      "<select name='selname' size='15' multiple='multiple' onchange='top.ViewCookieSelected();'>"
+                      "<select name='selname' size='10' multiple='multiple' onchange='top.ViewCookieSelected();'>"
       );
       for (i=1; !(i>=cookieList.length); i+=8) {
         if (!deleted_cookies[cookieList[i]]) {
@@ -202,12 +203,12 @@
       top.frames[list_frame].document.write(
         "<form name='fSelectPermission'>" +
           "<p>" +
-            "<table border='0' width='100%' height='95%'>" +
+            "<table border='0'>" +
               "<tr>" +
                 "<td width='100%' valign='top'>" +
                   "<center>" +
                     "<p>" +
-                      "<select name='selname' size='15' multiple='multiple'> "
+                      "<select name='selname' size='10' multiple='multiple'> "
       );
       for (i=1; !(i>=permissionList.length); i+=2) {
         if (!deleted_permissions[permissionList[i]]) {

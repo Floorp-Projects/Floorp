@@ -256,6 +256,9 @@
       function addSchema0() {
         var i;
         text = top.frames[schema_frame].document.schema.newSchema;
+        if (text.value == "") {
+          return;
+        }
         schemaIndex = 0;
         while ((schemaIndex<schemasLength) &&!(strings[values[schemas[schemaIndex]]] >= text.value)) {
           schemaIndex++;
@@ -286,6 +289,9 @@
       function addValue0() {
         var i;
         text = top.frames[value_frame].document.value.newValue;
+        if (text.value == "") {
+          return;
+        }
         stringIndex = values[schemas[currentSchema]+currentValue];
         if(strings[values[schemas[currentSchema]+currentValue]+1]=="") {
           addString(values[schemas[currentSchema]+currentValue]+1, text.value);
@@ -309,6 +315,9 @@
 
       function addSynonym0() {
         text = top.frames[synonym_frame].document.synonym.newSynonym;
+        if (text.value == "") {
+          return;
+        }
         addString(values[schemas[currentSchema]+currentValue]+2, text.value);
       }
 
@@ -418,12 +427,15 @@
 // (bug 3317 workaround)
                   "<button onclick=\"setTimeout('parent.deleteSchema();',0)\">Remove</button>" +
                 "</td>" +
+              "</tr>" +
+              "<tr>" +
                 "<td>" +
-//                "<button onclick='parent.addSchema();'>Add New...</button>" +
+                  "<nobr>" +
+                    "<input type='text' size='8' name='newSchema'>" +
+//                  "<button onclick='parent.addSchema();'>Add</button>" +
 // (bug 3317 workaround)
-                  "<button onclick=\"setTimeout('parent.addSchema();',0)\">Add New...</button>" +
-                  "<br/>" +
-                  "<input type='text' size='8' name='newSchema'>" +
+                    "<button onclick=\"setTimeout('parent.addSchema();',0)\">Add</button>" +
+                  "</nobr>" +
                 "</td>" +
               "</tr>" +
             "</table>" +
@@ -465,11 +477,12 @@
 // (bug 3317 workaround)
                   "<button onclick=\"setTimeout('parent.deleteValue();',0)\">Remove</button>" +
                   "<br/>" +
-                  "<br/>" +
-//                "<button onclick='parent.addValue();'>Add New...</button>" +
+                  "<nobr>" +
+                    "<input type='text' size='8' name='newValue'>" +
+//                  "<button onclick='parent.addValue();'>Add</button>" +
 // (bug 3317 workaround)
-                  "<button onclick=\"setTimeout('parent.addValue();',0)\">Add New...</button>" +
-                  "<input type='text' size='8' name='newValue'>" +
+                    "<button onclick=\"setTimeout('parent.addValue();',0)\">Add</button>" +
+                  "</nobr>" +
                 "</td>" +
               "</tr>" +
             "</table>" +
@@ -482,7 +495,7 @@
         top.frames[synonym_frame].document.open();
         top.frames[synonym_frame].document.write(
           "<body bgcolor='#cccccc' name='schema'>" +
-          "<b>Entries that mean the same:</b><br>" +
+          "<b>Entries that mean the same as the above:</b><br>" +
           "<form name=synonym>" +
             "<table border='0' width='50%' bgcolor='#cccccc'>" +
               "<tr>" +
@@ -509,11 +522,12 @@
 // (bug 3317 workaround)
                   "<button onclick=\"setTimeout('parent.deleteSynonym();',0)\">Remove</button>" +
                   "<br/>" +
-                  "<br/>" +
-//                "<button onclick='parent.addSynonym();'>Add New...</button>" +
+                  "<nobr>" +
+                    "<input type='text' size='8' name='newSynonym'>" +
+//                  "<button onclick='parent.addSynonym();'>Add</button>" +
 // (bug 3317 workaround)
-                  "<button onclick=\"setTimeout('parent.addSynonym();',0)\">Add New...</button>" +
-                  "<input type='text' size='8' name='newSynonym'>" +
+                    "<button onclick=\"setTimeout('parent.addSynonym();',0)\">Add</button>" +
+                  "</nobr>" +
                 "</td>" +
               "</tr>" +
             "</table>" +
@@ -551,11 +565,11 @@
     </script>
   </head>
 
-  <frameset rows="15,110,30" frameborder="no" border="0" bordercolor="#cccccc" onload="loadFrames();"> 
+  <frameset rows="15,115,30" frameborder="no" border="0" bordercolor="#cccccc" onload="loadFrames();"> 
     <frame src="about:blank" frameborder="no" id="title_frame" bordercolor="#cccccc" scrolling="no"/>
-    <frameset cols="200,200" bordercolor="#cccccc">
-      <frame src="about:blank" id="schema_frame" frameborder="no" bordercolor="#cccccc" scrolling="auto"/>
-      <frameset rows="52%,48%" bordercolor="#cccccc">
+    <frameset cols="100,200" bordercolor="#cccccc">
+      <frame src="about:blank" id="schema_frame" frameborder="no bordercolor="#cccccc" scrolling="auto"/>
+      <frameset rows="53%,47%" bordercolor="#cccccc">
         <frame src="about:blank" id="value_frame" frameborder="no" bordercolor="#cccccc" scrolling="auto"/>
         <frame src="about:blank" id="synonym_frame" frameborder="no" bordercolor="#cccccc" scrolling="auto"/>
       </frameset>
