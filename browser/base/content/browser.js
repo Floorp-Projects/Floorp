@@ -362,7 +362,12 @@ function delayedStartup()
   if (gIsLoadingBlank)
     prepareForStartup();
 
-  gURLBar.addEventListener("dragdrop", URLBarOnDrop, true);
+  if (gURLBar)
+    gURLBar.addEventListener("dragdrop", URLBarOnDrop, true);
+
+  var searchBar = document.getElementById("search-bar");
+  if(searchBar)
+    searchBar.addEventListener("dragdrop", SearchBarOnDrop, true);
 
   // loads the services
   initServices();
@@ -1321,9 +1326,9 @@ var urlbarObserver = {
 
       // The URL bar automatically handles inputs with newline characters, 
       // so we can get away with treating text/x-moz-url flavours as text/unicode.
-      if (url) {
-        gURLBar.value = url;
-        handleURLBarCommand();
+      if (url)  {
+        // XXXBlake Workaround caret crash when you try to set the textbox's value on dropping
+        setTimeout(function(u) { gURLBar.value = u; handleURLBarCommand(); }, 0, url);
       }
     },
   getSupportedFlavours: function ()
@@ -1331,6 +1336,32 @@ var urlbarObserver = {
       var flavourSet = new FlavourSet();
 
       // Plain text drops are often misidentified as "text/x-moz-url", so favor plain text.
+      flavourSet.appendFlavour("text/unicode");
+      flavourSet.appendFlavour("text/x-moz-url");
+      flavourSet.appendFlavour("application/x-moz-file", "nsIFile");     
+      return flavourSet;
+    }
+}
+
+function SearchBarOnDrop(evt)
+{
+  nsDragAndDrop.drop(evt, searchbarObserver);
+}
+
+var searchbarObserver = {
+  onDrop: function (aEvent, aXferData, aDragSession)
+    {
+      var data = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
+      if (data) {
+        // XXXBlake Workaround caret crash when you try to set the textbox's value on dropping
+        var field = document.getElementById("search-bar");
+        setTimeout(function(field, data, evt) { field.value = data; field.onTextEntered(evt); }, 0, field, data, aEvent);      
+      }
+    },
+  getSupportedFlavours: function ()
+    {
+      var flavourSet = new FlavourSet();
+
       flavourSet.appendFlavour("text/unicode");
       flavourSet.appendFlavour("text/x-moz-url");
       flavourSet.appendFlavour("application/x-moz-file", "nsIFile");     
