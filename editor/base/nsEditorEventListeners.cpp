@@ -21,7 +21,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsEditorEventListeners.h"
-#include "nsIPlaintextEditor.h"
+#include "nsIHTMLEditor.h"
 #include "nsEditor.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
@@ -178,8 +178,8 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
   // if we are readonly or disabled, then do nothing.
   if (NS_SUCCEEDED(mEditor->GetFlags(&flags)))
   {
-    if (flags & nsIHTMLEditor::eEditorReadonlyMask || 
-        flags & nsIHTMLEditor::eEditorDisabledMask) 
+    if (flags & nsIPlaintextEditor::eEditorReadonlyMask || 
+        flags & nsIPlaintextEditor::eEditorDisabledMask) 
       return NS_OK;
   }
   else
@@ -246,7 +246,7 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
         break;
  
       case nsIDOMKeyEvent::DOM_VK_TAB:
-        if ((flags & nsIHTMLEditor::eEditorSingleLineMask))
+        if ((flags & nsIPlaintextEditor::eEditorSingleLineMask))
           return NS_OK; // let it be used for focus switching
 
         // else we insert the tab straight through
@@ -257,9 +257,8 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
       case nsIDOMKeyEvent::DOM_VK_RETURN:
       case nsIDOMKeyEvent::DOM_VK_ENTER:
-        if (!(flags & nsIHTMLEditor::eEditorSingleLineMask))
+        if (!(flags & nsIPlaintextEditor::eEditorSingleLineMask))
         {
-          //htmlEditor->InsertBreak();
           textEditor->HandleKeyPress(keyEvent);
           ScrollSelectionIntoView(mEditor);
           aKeyEvent->PreventDefault(); // consumed
@@ -642,8 +641,8 @@ nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
     if ( dragSession ) {
       PRUint32 flags;
       if (NS_SUCCEEDED(mEditor->GetFlags(&flags))) {
-        if ((flags & nsIHTMLEditor::eEditorDisabledMask) || 
-            (flags & nsIHTMLEditor::eEditorReadonlyMask)) {
+        if ((flags & nsIPlaintextEditor::eEditorDisabledMask) || 
+            (flags & nsIPlaintextEditor::eEditorReadonlyMask)) {
           dragSession->SetCanDrop(PR_FALSE);
           return NS_OK;
         }
@@ -1041,7 +1040,7 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
     PRUint32 flags;
     aEvent->PreventBubble();
     mEditor->GetFlags(&flags);
-    if (! (flags & nsIHTMLEditor::eEditorDisabledMask))
+    if (! (flags & nsIPlaintextEditor::eEditorDisabledMask))
     { // only enable caret and selection if the editor is not disabled
       nsCOMPtr<nsIEditor>editor = do_QueryInterface(mEditor);
       if (editor)
@@ -1050,7 +1049,7 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
         editor->GetSelectionController(getter_AddRefs(selCon));
         if (selCon)
         {
-          if (! (flags & nsIHTMLEditor::eEditorReadonlyMask))
+          if (! (flags & nsIPlaintextEditor::eEditorReadonlyMask))
           { // only enable caret if the editor is not readonly
             PRInt32 pixelWidth;
             nsresult result;
@@ -1059,7 +1058,7 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
 
             if (NS_SUCCEEDED(result) && look)
             {
-              if(flags & nsIHTMLEditor::eEditorSingleLineMask)
+              if(flags & nsIPlaintextEditor::eEditorSingleLineMask)
                 look->GetMetric(nsILookAndFeel::eMetric_SingleLineCaretWidth, pixelWidth);
               else
                 look->GetMetric(nsILookAndFeel::eMetric_MultiLineCaretWidth, pixelWidth);
@@ -1109,11 +1108,11 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
       if (selCon)
       {
         selCon->SetCaretEnabled(PR_FALSE);
-        if((flags & nsIHTMLEditor::eEditorWidgetMask)  ||
-          (flags & nsIHTMLEditor::eEditorPasswordMask) ||
-          (flags & nsIHTMLEditor::eEditorReadonlyMask) ||
-          (flags & nsIHTMLEditor::eEditorDisabledMask) ||
-          (flags & nsIHTMLEditor::eEditorFilterInputMask))
+        if((flags & nsIPlaintextEditor::eEditorWidgetMask)  ||
+          (flags & nsIPlaintextEditor::eEditorPasswordMask) ||
+          (flags & nsIPlaintextEditor::eEditorReadonlyMask) ||
+          (flags & nsIPlaintextEditor::eEditorDisabledMask) ||
+          (flags & nsIPlaintextEditor::eEditorFilterInputMask))
         {
           selCon->SetDisplaySelection(nsISelectionController::SELECTION_HIDDEN);//hide but do NOT turn off
         }

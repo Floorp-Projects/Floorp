@@ -35,7 +35,7 @@
 #include "nsIDOMFocusListener.h"
 
 #include "nsIEditor.h"
-#include "nsIHTMLEditor.h"
+#include "nsIPlaintextEditor.h"
 
 /** The nsTextEditorKeyListener public nsIDOMKeyListener
  *  This class will delegate events to its editor according to the translation

@@ -25,7 +25,8 @@
 
 #include "nsCOMPtr.h"
 
-#include "nsIPlaintextEditor.h"
+#include "nsPlaintextEditor.h"
+#include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
 #include "nsITableEditor.h"
 #include "nsIEditorMailSupport.h"
@@ -51,8 +52,7 @@ class nsIDocumentEncoder;
  * The HTML editor implementation.<br>
  * Use to edit HTML document represented as a DOM tree. 
  */
-class nsHTMLEditor : public nsEditor,
-                     public nsIPlaintextEditor,
+class nsHTMLEditor : public nsPlaintextEditor,
                      public nsIHTMLEditor,
                      public nsIEditorMailSupport,
                      public nsITableEditor,
@@ -74,7 +74,10 @@ public:
     kOpRemoveList          = 3006,
     kOpMakeDefListItem     = 3007,
     kOpInsertElement       = 3008,
-    kOpInsertQuotation     = 3009
+    kOpInsertQuotation     = 3009,
+    kOpSetTextProperty     = 3010,
+    kOpRemoveTextProperty  = 3011,
+    kOpHTMLPaste           = 3012
   };
 
 
@@ -89,8 +92,9 @@ public:
            nsHTMLEditor();
   virtual  ~nsHTMLEditor();
 
-  /* ------------ nsIPlaintextEditor methods -------------- */
-  NS_DECL_NSIPLAINTEXTEDITOR
+  /* ------------ nsPlaintextEditor overrides -------------- */
+  NS_IMETHODIMP HandleKeyPress(nsIDOMKeyEvent* aKeyEvent);
+  NS_IMETHODIMP CollapseSelectionToStart();
 
   /* ------------ nsIHTMLEditor methods -------------- */
   NS_IMETHOD SetInlineProperty(nsIAtom *aProperty, 
@@ -118,7 +122,6 @@ public:
   NS_IMETHOD RebuildDocumentFromSource(const nsString& aSourceString);
   NS_IMETHOD InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection);
   
-  NS_IMETHOD DeleteSelectionAndCreateNode(const nsString& aTag, nsIDOMNode ** aNewNode);
   NS_IMETHOD SelectElement(nsIDOMElement* aElement);
   NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement);
 
@@ -240,12 +243,6 @@ public:
   /** prepare the editor for use */
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,  nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags);
   
-  NS_IMETHOD GetDocumentIsEmpty(PRBool *aDocumentIsEmpty);
-
-  NS_IMETHOD DeleteSelection(EDirection aAction);
-
-  NS_IMETHOD SetDocumentCharacterSet(const PRUnichar* characterSet);
-
   /** we override this here to install event listeners */
   NS_IMETHOD PostCreate();
 
@@ -265,15 +262,6 @@ public:
   NS_IMETHOD CanDrag(nsIDOMEvent *aDragEvent, PRBool &aCanDrag);
   NS_IMETHOD DoDrag(nsIDOMEvent *aDragEvent);
   NS_IMETHOD InsertFromDrop(nsIDOMEvent* aDropEvent);
-
-  NS_IMETHOD OutputToString(nsAWritableString& aOutputString,
-                            const nsAReadableString& aFormatType,
-                            PRUint32 aFlags);
-                            
-  NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,
-                            const nsAReadableString& aFormatType,
-                            const nsAReadableString* aCharsetOverride,
-                            PRUint32 aFlags);
 
   NS_IMETHOD GetHeadContentsAsHTML(nsString& aOutputString);
   NS_IMETHOD ReplaceHeadContentsWithHTML(const nsString &aSourceToInsert);
@@ -307,7 +295,6 @@ public:
                                 PRInt32 aOffset, 
                                 PRBool aNoEmptyNodes);
                                 
-  NS_IMETHOD GetBodyStyleContext(nsIStyleContext** aStyleContext);
 
   /** returns the absolute position of the end points of aSelection
     * in the document as a text stream.
@@ -356,8 +343,6 @@ protected:
     */
   NS_IMETHOD GetLayoutObject(nsIDOMNode *aInNode, nsISupports **aOutLayoutObject);
 
-  NS_IMETHOD DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parentSelectedNode, PRInt32& offsetOfNewNode);
-
   /* StyleSheet load callback */
   static void ApplyStyleSheetToPresShellDocument(nsICSSStyleSheet* aSheet, void *aData);
 
@@ -376,11 +361,11 @@ protected:
   // key event helpers
   NS_IMETHOD TabInTable(PRBool inIsShift, PRBool *outHandled);
   NS_IMETHOD CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, 
-                      nsCOMPtr<nsIDOMNode> *outBRNode, EDirection aSelect = eNone);
+                      nsCOMPtr<nsIDOMNode> *outBRNode, nsIEditor::EDirection aSelect = nsIEditor::eNone);
   NS_IMETHOD CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent, 
                          PRInt32 *aInOutOffset, 
                          nsCOMPtr<nsIDOMNode> *outBRNode, 
-                         EDirection aSelect);
+                         nsIEditor::EDirection aSelect);
   NS_IMETHOD InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode);
 
 // Table Editing (implemented in nsTableEditor.cpp)
@@ -490,12 +475,6 @@ protected:
                                   PRInt32     aStartOffset,
                                   PRInt32     aEndOffset,
                                   nsISelection *aSelection);
-
-  // Helpers for output routines
-  NS_IMETHOD GetAndInitDocEncoder(const nsAReadableString& aFormatType,
-                                  PRUint32 aFlags,
-                                  const nsAReadableString* aCharset,
-                                  nsIDocumentEncoder** encoder);
 
   // Methods for handling plaintext quotations
   NS_IMETHOD PasteAsPlaintextQuotation(PRInt32 aSelectionType);
@@ -610,38 +589,24 @@ protected:
 // Data members
 protected:
 
-  TypeInState*                  mTypeInState;
-  nsCOMPtr<nsIEditRules>        mRules;
-  nsCOMPtr<nsIDOMEventListener> mKeyListenerP;
-  nsCOMPtr<nsIDOMEventListener> mMouseListenerP;
-  nsCOMPtr<nsIDOMEventListener> mTextListenerP;
-  nsCOMPtr<nsIDOMEventListener> mCompositionListenerP;
-  nsCOMPtr<nsIDOMEventListener> mDragListenerP;
-  nsCOMPtr<nsIDOMEventListener> mFocusListenerP;
-  PRBool 	mIsComposing;
-  
-  // Used by nsIPlaintextEditor but not html editors -- factor me!
-  PRInt32 mMaxTextLength;
+  TypeInState*         mTypeInState;
 
-  nsCOMPtr<nsIAtom> mBoldAtom;
-  nsCOMPtr<nsIAtom> mItalicAtom;
-  nsCOMPtr<nsIAtom> mUnderlineAtom;
-  nsCOMPtr<nsIAtom> mFontAtom;
-  nsCOMPtr<nsIAtom> mLinkAtom;
+  nsCOMPtr<nsIAtom>    mBoldAtom;
+  nsCOMPtr<nsIAtom>    mItalicAtom;
+  nsCOMPtr<nsIAtom>    mUnderlineAtom;
+  nsCOMPtr<nsIAtom>    mFontAtom;
+  nsCOMPtr<nsIAtom>    mLinkAtom;
   nsCOMPtr<nsIDOMNode> mCachedNode;
   
-  PRBool mCachedBoldStyle;
-  PRBool mCachedItalicStyle;
-  PRBool mCachedUnderlineStyle;
+  PRBool   mCachedBoldStyle;
+  PRBool   mCachedItalicStyle;
+  PRBool   mCachedUnderlineStyle;
   nsString mCachedFontName;
 
   // Used by GetFirstSelectedCell and GetNextSelectedCell
   PRInt32  mSelectedCellIndex;
 
 public:
-  static nsIAtom *gTypingTxnName;
-  static nsIAtom *gIMETxnName;
-  static nsIAtom *gDeleteTxnName;
 
 // friends
 friend class nsHTMLEditRules;

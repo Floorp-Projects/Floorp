@@ -25,95 +25,127 @@ include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME=editor
 
-CPPSRCS =				\
-      nsEditor.cpp			     \
-      nsEditorService.cpp    \
-      nsEditorController.cpp \
-      nsEditorCommands.cpp   \
-      nsComposerCommands.cpp \
-      nsEditorUtils.cpp      \
-      nsEditorRegistration.cpp   \
-      nsEditorParserObserver.cpp \
-      nsTextEditRules.cpp    \
-      nsHTMLEditRules.cpp    \
-      nsHTMLEditUtils.cpp    \
-      TextEditorTest.cpp     \
-      nsEditorEventListeners.cpp \
-      nsEditorShellMouseListener.cpp \
-      nsEditProperty.cpp     \
-      EditTxn.cpp            \
-      EditAggregateTxn.cpp   \
-      ChangeAttributeTxn.cpp \
-      InsertTextTxn.cpp      \
-      DeleteTextTxn.cpp      \
-      PlaceholderTxn.cpp     \
-      CreateElementTxn.cpp   \
-      InsertElementTxn.cpp   \
-      DeleteElementTxn.cpp   \
-      DeleteRangeTxn.cpp     \
-      SplitElementTxn.cpp    \
-      JoinElementTxn.cpp     \
-      nsStyleSheetTxns.cpp   \
-      TransactionFactory.cpp \
-      TypeInState.cpp        \
-      nsHTMLEditor.cpp       \
-      nsTableEditor.cpp      \
-      nsInternetCiter.cpp    \
-      nsAOLCiter.cpp         \
-      nsWrapUtils.cpp        \
-      nsInterfaceState.cpp   \
-      nsEditorShell.cpp      \
-	   IMETextTxn.cpp			     \
-	   IMECommitTxn.cpp			   \
-	$(NULL)
+# Uncomment the line below, or define MOZ_BUILD_PLAINTEXT_EDITOR_CORE_ONLY
+# in your environment, to build only the plain text editor core files:
+# MOZ_BUILD_PLAINTEXT_EDITOR_CORE_ONLY=1
 
-CPP_OBJS =					\
-	.\$(OBJDIR)\nsEditor.obj		        \
-	.\$(OBJDIR)\nsEditorService.obj		  \
-	.\$(OBJDIR)\nsEditorController.obj  \
-	.\$(OBJDIR)\nsEditorCommands.obj	  \
-	.\$(OBJDIR)\nsComposerCommands.obj  \
-	.\$(OBJDIR)\nsEditorUtils.obj		    \
-	.\$(OBJDIR)\nsEditorRegistration.obj \
-	.\$(OBJDIR)\nsEditorParserObserver.obj \
-  .\$(OBJDIR)\nsTextEditRules.obj     \
-  .\$(OBJDIR)\TextEditorTest.obj      \
-  .\$(OBJDIR)\nsHTMLEditRules.obj     \
-  .\$(OBJDIR)\nsHTMLEditUtils.obj     \
-  .\$(OBJDIR)\nsEditorEventListeners.obj		\
-  .\$(OBJDIR)\nsEditorShellMouseListener.obj \
-	.\$(OBJDIR)\nsEditProperty.obj	    \
-  .\$(OBJDIR)\EditTxn.obj             \
-  .\$(OBJDIR)\EditAggregateTxn.obj    \
-  .\$(OBJDIR)\ChangeAttributeTxn.obj  \
-  .\$(OBJDIR)\InsertTextTxn.obj       \
-  .\$(OBJDIR)\DeleteTextTxn.obj       \
-  .\$(OBJDIR)\PlaceholderTxn.obj      \
-  .\$(OBJDIR)\CreateElementTxn.obj    \
-  .\$(OBJDIR)\InsertElementTxn.obj    \
-  .\$(OBJDIR)\DeleteElementTxn.obj    \
-  .\$(OBJDIR)\DeleteRangeTxn.obj      \
-  .\$(OBJDIR)\SplitElementTxn.obj     \
-  .\$(OBJDIR)\JoinElementTxn.obj      \
-  .\$(OBJDIR)\nsStyleSheetTxns.obj    \
-  .\$(OBJDIR)\TransactionFactory.obj  \
-  .\$(OBJDIR)\TypeInState.obj         \
-  .\$(OBJDIR)\nsHTMLEditor.obj        \
-  .\$(OBJDIR)\nsTableEditor.obj       \
-  .\$(OBJDIR)\nsInternetCiter.obj     \
-  .\$(OBJDIR)\nsAOLCiter.obj          \
-  .\$(OBJDIR)\nsWrapUtils.obj         \
-  .\$(OBJDIR)\nsInterfaceState.obj    \
-  .\$(OBJDIR)\nsEditorShell.obj       \
-  .\$(OBJDIR)\IMETextTxn.obj          \
-  .\$(OBJDIR)\IMECommitTxn.obj        \
-	$(NULL)
+# Editor Core Source Files and Objects:
 
-MODULE=editor 
+CPPSRCS =                         \
+      ChangeAttributeTxn.cpp      \
+      CreateElementTxn.cpp        \
+      DeleteElementTxn.cpp        \
+      DeleteRangeTxn.cpp          \
+      DeleteTextTxn.cpp           \
+      EditAggregateTxn.cpp        \
+      EditTxn.cpp                 \
+      IMECommitTxn.cpp            \
+      IMETextTxn.cpp              \
+      InsertElementTxn.cpp        \
+      InsertTextTxn.cpp           \
+      JoinElementTxn.cpp          \
+      nsComposerCommands.cpp      \
+      nsEditorCommands.cpp        \
+      nsEditorController.cpp      \
+      nsEditor.cpp                \
+      nsEditorEventListeners.cpp  \
+      nsEditorUtils.cpp           \
+      nsEditProperty.cpp          \
+      nsHTMLEditUtils.cpp         \
+      nsPlaintextDataTransfer.cpp \
+      nsPlaintextEditor.cpp       \
+      nsSelectionState.cpp        \
+      nsStyleSheetTxns.cpp        \
+      nsTextEditRules.cpp         \
+      PlaceholderTxn.cpp          \
+      SplitElementTxn.cpp         \
+      TransactionFactory.cpp      \
+      $(NULL)
 
-MAKE_OBJ_TYPE = DLL
-DLLNAME = editor
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+CPP_OBJS =                                \
+  .\$(OBJDIR)\ChangeAttributeTxn.obj      \
+  .\$(OBJDIR)\CreateElementTxn.obj        \
+  .\$(OBJDIR)\DeleteElementTxn.obj        \
+  .\$(OBJDIR)\DeleteRangeTxn.obj          \
+  .\$(OBJDIR)\DeleteTextTxn.obj           \
+  .\$(OBJDIR)\EditAggregateTxn.obj        \
+  .\$(OBJDIR)\EditTxn.obj                 \
+  .\$(OBJDIR)\IMECommitTxn.obj            \
+  .\$(OBJDIR)\IMETextTxn.obj              \
+  .\$(OBJDIR)\InsertElementTxn.obj        \
+  .\$(OBJDIR)\InsertTextTxn.obj           \
+  .\$(OBJDIR)\JoinElementTxn.obj          \
+  .\$(OBJDIR)\nsComposerCommands.obj      \
+  .\$(OBJDIR)\nsEditorCommands.obj        \
+  .\$(OBJDIR)\nsEditorController.obj      \
+  .\$(OBJDIR)\nsEditorEventListeners.obj  \
+  .\$(OBJDIR)\nsEditor.obj                \
+  .\$(OBJDIR)\nsEditorUtils.obj           \
+  .\$(OBJDIR)\nsEditProperty.obj          \
+  .\$(OBJDIR)\nsHTMLEditUtils.obj         \
+  .\$(OBJDIR)\nsPlaintextDataTransfer.obj \
+  .\$(OBJDIR)\nsPlaintextEditor.obj       \
+  .\$(OBJDIR)\nsSelectionState.obj        \
+  .\$(OBJDIR)\nsStyleSheetTxns.obj        \
+  .\$(OBJDIR)\nsTextEditRules.obj         \
+  .\$(OBJDIR)\PlaceholderTxn.obj          \
+  .\$(OBJDIR)\SplitElementTxn.obj         \
+  .\$(OBJDIR)\TransactionFactory.obj      \
+  $(NULL)
+
+!if defined(MOZ_BUILD_PLAINTEXT_EDITOR_CORE_ONLY)
+
+# We're only building the Core PlainText Editor Source so just include
+# the plain text registration file.
+
+CPPSRCS = $(CPPSRCS)          \
+          nsTextEditorReg.cpp \
+          $(NULL)
+
+CPP_OBJS = $(CPP_OBJS)                     \
+           .\$(OBJDIR)\nsTextEditorReg.obj \
+           $(NULL)
+!else
+
+# Building the full blown HTML Editor  so add it's source files and objects:
+
+CPPSRCS = $(CPPSRCS)                      \
+           nsAOLCiter.cpp                 \
+           nsEditorParserObserver.cpp     \
+           nsEditorRegistration.cpp       \
+           nsEditorService.cpp            \
+           nsEditorShell.cpp              \
+           nsEditorShellMouseListener.cpp \
+           nsHTMLDataTransfer.cpp         \
+           nsHTMLEditor.cpp               \
+           nsHTMLEditorStyle.cpp          \
+           nsHTMLEditRules.cpp            \
+           nsInterfaceState.cpp           \
+           nsInternetCiter.cpp            \
+           nsTableEditor.cpp              \
+           nsWrapUtils.cpp                \
+           TextEditorTest.cpp             \
+           TypeInState.cpp                \
+           $(NULL)
+
+CPP_OBJS = $(CPP_OBJS)                                \
+           .\$(OBJDIR)\nsAOLCiter.obj                 \
+           .\$(OBJDIR)\nsEditorParserObserver.obj     \
+           .\$(OBJDIR)\nsEditorRegistration.obj       \
+           .\$(OBJDIR)\nsEditorService.obj            \
+           .\$(OBJDIR)\nsEditorShellMouseListener.obj \
+           .\$(OBJDIR)\nsEditorShell.obj              \
+           .\$(OBJDIR)\nsHTMLDataTransfer.obj         \
+           .\$(OBJDIR)\nsHTMLEditor.obj               \
+           .\$(OBJDIR)\nsHTMLEditorStyle.obj          \
+           .\$(OBJDIR)\nsHTMLEditRules.obj            \
+           .\$(OBJDIR)\nsInterfaceState.obj           \
+           .\$(OBJDIR)\nsInternetCiter.obj            \
+           .\$(OBJDIR)\nsTableEditor.obj              \
+           .\$(OBJDIR)\nsWrapUtils.obj                \
+           .\$(OBJDIR)\TextEditorTest.obj             \
+           .\$(OBJDIR)\TypeInState.obj                \
+           $(NULL)
 
 # Enable Editor API Logging!
 ENABLE_EDITOR_API_LOG=1
@@ -122,16 +154,25 @@ ENABLE_EDITOR_API_LOG=1
 CPPSRCS = $(CPPSRCS)          \
           nsHTMLEditorLog.cpp \
           nsEditorTxnLog.cpp  \
-	  $(NULL)
+          $(NULL)
 
 CPP_OBJS = $(CPP_OBJS)                     \
            .\$(OBJDIR)\nsHTMLEditorLog.obj \
            .\$(OBJDIR)\nsEditorTxnLog.obj  \
-	   $(NULL)
+           $(NULL)
 
 DEFINES = -DENABLE_EDITOR_API_LOG $(DEFINES)
 
 !endif
+
+!endif
+
+MODULE=editor 
+
+MAKE_OBJ_TYPE = DLL
+DLLNAME = editor
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
 
 LCFLAGS = \
         $(LCFLAGS) \

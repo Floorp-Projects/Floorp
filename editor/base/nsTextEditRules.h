@@ -25,7 +25,7 @@
 
 #include "nsCOMPtr.h"
 
-#include "nsHTMLEditor.h"
+#include "nsPlaintextEditor.h"
 #include "nsIDOMNode.h"
 
 #include "nsEditRules.h"
@@ -50,7 +50,7 @@ public:
   virtual     ~nsTextEditRules();
 
   // nsIEditRules methods
-  NS_IMETHOD Init(nsHTMLEditor *aEditor, PRUint32 aFlags);
+  NS_IMETHOD Init(nsPlaintextEditor *aEditor, PRUint32 aFlags);
   NS_IMETHOD BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection);
   NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection);
   NS_IMETHOD WillDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled);
@@ -163,17 +163,15 @@ protected:
 
   PRBool DeleteEmptyTextNode(nsIDOMNode *aNode);
 
-  nsresult AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection aDirection);
-  
   // data members
-  nsHTMLEditor *mEditor;  // note that we do not refcount the editor
-  nsString      mPasswordText;  // a buffer we use to store the real value of password editors
-  nsCOMPtr<nsIDOMNode> mBogusNode;  // magic node acts as placeholder in empty doc
-  nsCOMPtr<nsIDOMNode> mBody;    // cached root node
-  PRUint32 mFlags;
-  PRUint32 mActionNesting;
-  PRBool   mLockRulesSniffing;
-  PRInt32  mTheAction;    // the top level editor action
+  nsPlaintextEditor   *mEditor;        // note that we do not refcount the editor
+  nsString             mPasswordText;  // a buffer we use to store the real value of password editors
+  nsCOMPtr<nsIDOMNode> mBogusNode;     // magic node acts as placeholder in empty doc
+  nsCOMPtr<nsIDOMNode> mBody;          // cached root node
+  PRUint32             mFlags;
+  PRUint32             mActionNesting;
+  PRBool               mLockRulesSniffing;
+  PRInt32              mTheAction;     // the top level editor action
   // friends
   friend class nsAutoLockRulesSniffing;
 

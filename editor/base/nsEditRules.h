@@ -28,7 +28,7 @@
 0xa6cf911d, 0x15b3, 0x11d2, \
 {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
 
-class nsHTMLEditor;
+class nsPlaintextEditor;
 class nsISelection;
 
 /***************************************************************************
@@ -57,7 +57,7 @@ public:
 //Interfaces for addref and release and queryinterface
 //NOTE: Use   NS_DECL_ISUPPORTS_INHERITED in any class inherited from nsIEditRules
 
-  NS_IMETHOD Init(nsHTMLEditor *aEditor, PRUint32 aFlags)=0;
+  NS_IMETHOD Init(nsPlaintextEditor *aEditor, PRUint32 aFlags)=0;
   NS_IMETHOD BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)=0;
   NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)=0;
   NS_IMETHOD WillDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled)=0;

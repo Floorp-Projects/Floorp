@@ -46,6 +46,7 @@
 #include "nsIDTD.h"
 #include "nsIDOMElement.h"
 #include "nsVoidArray.h"
+#include "nsSelectionState.h"
 
 class nsIEditActionListener;
 class nsIDocumentStateListener;
@@ -72,92 +73,6 @@ class nsIFile;
 class nsISelectionController;
 
 
-/***************************************************************************
- * class for recording selection info.  stores selection as collection of
- * { {startnode, startoffset} , {endnode, endoffset} } tuples.  Cant store
- * ranges since dom gravity will possibly change the ranges.
- */
-
-// first a helper struct for saving/setting ranges
-struct nsRangeStore 
-{
-  nsRangeStore();
-  ~nsRangeStore();
-  nsresult StoreRange(nsIDOMRange *aRange);
-  nsresult GetRange(nsCOMPtr<nsIDOMRange> *outRange);
-        
-  nsCOMPtr<nsIDOMNode> startNode;
-  PRInt32              startOffset;
-  nsCOMPtr<nsIDOMNode> endNode;
-  PRInt32              endOffset;
-  // DEBUG:   static PRInt32 n;
-};
-
-class nsSelectionState
-{
-  public:
-      
-    nsSelectionState();
-    ~nsSelectionState();
-  
-    nsresult SaveSelection(nsISelection *aSel);
-    nsresult RestoreSelection(nsISelection *aSel);
-    PRBool   IsCollapsed();
-    PRBool   IsEqual(nsSelectionState *aSelState);
-    void     MakeEmpty();
-    PRBool   IsEmpty();
-  protected:    
-    nsVoidArray mArray;
-    
-    friend class nsRangeUpdater;
-};
-
-class nsRangeUpdater
-{
-  public:    
-  
-    nsRangeUpdater();
-    ~nsRangeUpdater();
-  
-    void* RegisterRange(nsIDOMRange *aRange);
-    nsCOMPtr<nsIDOMRange> ReclaimRange(void *aCookie);
-    void DropRange(void *aCookie);
-    void RegisterRangeItem(nsRangeStore *aRangeItem);
-    void DropRangeItem(nsRangeStore *aRangeItem);
-    nsresult RegisterSelectionState(nsSelectionState &aSelState);
-    nsresult DropSelectionState(nsSelectionState &aSelState);
-    
-    // editor selection gravity routines.  Note that we can't always depend on
-    // DOM Range gravity to do what we want to the "real" selection.  For instance,
-    // if you move a node, that corresponds to deleting it and reinserting it.
-    // DOM Range gravity will promote the selection out of the node on deletion,
-    // which is not what you want if you know you are reinserting it.
-    nsresult SelAdjCreateNode(nsIDOMNode *aParent, PRInt32 aPosition);
-    nsresult SelAdjInsertNode(nsIDOMNode *aParent, PRInt32 aPosition);
-    nsresult SelAdjDeleteNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aOffset);
-    nsresult SelAdjSplitNode(nsIDOMNode *aOldRightNode, PRInt32 aOffset, nsIDOMNode *aNewLeftNode);
-    nsresult SelAdjJoinNodes(nsIDOMNode *aLeftNode, 
-                             nsIDOMNode *aRightNode, 
-                             nsIDOMNode *aParent, 
-                             PRInt32 aOffset,
-                             PRInt32 aOldLeftNodeLength);
-    nsresult SelAdjInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsString &aString);
-    nsresult SelAdjDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength);
-    // the following gravity routines need will/did sandwiches, because the other gravity
-    // routines will be called inside of these sandwiches, but should be ignored.
-    nsresult WillReplaceContainer();
-    nsresult DidReplaceContainer(nsIDOMNode *aOriginalNode, nsIDOMNode *aNewNode);
-    nsresult WillRemoveContainer();
-    nsresult DidRemoveContainer(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aOffset, PRUint32 aNodeOrigLen);
-    nsresult WillInsertContainer();
-    nsresult DidInsertContainer();
-    nsresult WillMoveNode();
-    nsresult DidMoveNode(nsIDOMNode *aOldParent, PRInt32 aOldOffset, nsIDOMNode *aNewParent, PRInt32 aNewOffset);
-  protected:    
-    nsVoidArray mArray;
-    PRBool mLock;
-};
-
 /** implementation of an editor object.  it will be the controller/focal point 
  *  for the main editor services. i.e. the GUIManager, publishing, transaction 
  *  manager, event interfaces. the idea for the event interfaces is to have them 
@@ -181,18 +96,17 @@ public:
     kOpNone = 0,
     kOpUndo,
     kOpRedo,
-    kOpSetTextProperty,
-    kOpRemoveTextProperty,
     kOpInsertNode,
     kOpCreateNode,
     kOpDeleteNode,
     kOpSplitNode,
     kOpJoinNode,
-    kOpDeleteText,
-    kOpInsertText,
-    kOpInsertIMEText,
     kOpDeleteSelection,
-    kOpHTMLPaste
+    // text commands
+    kOpInsertBreak    = 1000,
+    kOpInsertText     = 1001,
+    kOpInsertIMEText  = 1002,
+    kOpDeleteText     = 1003
   };
 
   static const char* kMOZEditorBogusNodeAttr;
@@ -341,6 +255,8 @@ public:
                                            nsIDOMCharacterData *aTextNode, 
                                            PRInt32 aOffset);
   NS_IMETHOD DeleteSelectionImpl(EDirection aAction);
+  NS_IMETHOD DeleteSelectionAndCreateNode(const nsString& aTag,
+                                           nsIDOMNode ** aNewNode);
 
   /* helper routines for node/parent manipulations */
   nsresult ReplaceContainer(nsIDOMNode *inNode, 
@@ -454,6 +370,8 @@ protected:
                                   nsIDOMNode  *aRightNode,
                                   JoinElementTxn **aTxn);
 
+  NS_IMETHOD DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parentSelectedNode, 
+                                                   PRInt32& offsetOfNewNode);
 
   // called each time we modify the document. Increments the mod
   // count of the doc.
@@ -775,7 +693,7 @@ public:
 
 protected:
 
-  PRUint32        mFlags;		// behavior flags. See nsIHTMLEditor.h for the flags we use.
+  PRUint32        mFlags;		// behavior flags. See nsPlaintextEditor.h for the flags we use.
   
   nsWeakPtr       mPresShellWeak;   // weak reference to the nsIPresShell
   nsWeakPtr       mSelConWeak;   // weak reference to the nsISelectionController

@@ -34,6 +34,7 @@ class nsISupportsArray;
 class nsVoidArray;
 class nsIDOMElement;
 class nsIEditor;
+class nsHTMLEditor;
 
 class nsHTMLEditRules : public nsIHTMLEditRules, public nsTextEditRules, public nsIEditActionListener
 {
@@ -46,7 +47,7 @@ public:
 
 
   // nsIEditRules methods
-  NS_IMETHOD Init(nsHTMLEditor *aEditor, PRUint32 aFlags);
+  NS_IMETHOD Init(nsPlaintextEditor *aEditor, PRUint32 aFlags);
   NS_IMETHOD BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection);
   NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection);
   NS_IMETHOD WillDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled);
@@ -98,10 +99,10 @@ protected:
                             nsString        *outString,
                             PRInt32          aMaxLength);
   nsresult WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled);
+  nsresult DidInsertBreak(nsISelection *aSelection, nsresult aResult);
   nsresult WillDeleteSelection(nsISelection *aSelection, nsIEditor::EDirection aAction, 
                                PRBool *aCancel, PRBool *aHandled);
   nsresult DeleteNonTableElements(nsIDOMNode *aNode);
-
   nsresult WillMakeList(nsISelection *aSelection, const nsString *aListType, PRBool aEntireList, PRBool *aCancel, PRBool *aHandled, const nsString *aItemType=nsnull);
   nsresult WillRemoveList(nsISelection *aSelection, PRBool aOrderd, PRBool *aCancel, PRBool *aHandled);
   nsresult WillIndent(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled);
@@ -110,17 +111,13 @@ protected:
   nsresult WillMakeDefListItem(nsISelection *aSelection, const nsString *aBlockType, PRBool aEntireList, PRBool *aCancel, PRBool *aHandled);
   nsresult WillMakeBasicBlock(nsISelection *aSelection, const nsString *aBlockType, PRBool *aCancel, PRBool *aHandled);
   nsresult DidMakeBasicBlock(nsISelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
-
   nsresult AlignInnerBlocks(nsIDOMNode *aNode, const nsString *alignType);
   nsresult AlignBlockContents(nsIDOMNode *aNode, const nsString *alignType);
   nsresult GetInnerContent(nsIDOMNode *aNode, nsISupportsArray *outArrayOfNodes, PRBool aList = PR_TRUE, PRBool aTble = PR_TRUE);
-
   nsresult InsertTab(nsISelection *aSelection, nsString *outString);
-
   nsresult ReturnInHeader(nsISelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
   nsresult ReturnInParagraph(nsISelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset, PRBool *aCancel, PRBool *aHandled);
   nsresult ReturnInListItem(nsISelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
-  
   nsresult AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection);
   nsresult ConvertListType(nsIDOMNode *aList, nsCOMPtr<nsIDOMNode> *outList, const nsString& aListType, const nsString& aItemType);
   nsresult CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocument *aDoc);
@@ -132,7 +129,6 @@ protected:
   PRBool IsLastNode(nsIDOMNode *aNode);
   PRBool AtStartOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);
   PRBool AtEndOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);
-
   nsresult GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt32 aOffset, 
                             PRInt32 actionID, nsCOMPtr<nsIDOMNode> *outNode, PRInt32 *outOffset);
   nsresult GetPromotedRanges(nsISelection *inSelection, 
@@ -154,20 +150,16 @@ protected:
   nsCOMPtr<nsIDOMNode> GetHighestInlineParent(nsIDOMNode* aNode);
   nsresult MakeTransitionList(nsISupportsArray *inArrayOfNodes, 
                                    nsVoidArray *inTransitionArray);
-                                   
   nsresult ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString *aBlockTag);
   nsresult MakeBlockquote(nsISupportsArray *arrayOfNodes);
   nsresult SplitAsNeeded(const nsString *aTag, nsCOMPtr<nsIDOMNode> *inOutParent, PRInt32 *inOutOffset);
   nsresult AddTerminatingBR(nsIDOMNode *aBlock);
-
   nsresult JoinNodesSmart( nsIDOMNode *aNodeLeft, 
                            nsIDOMNode *aNodeRight, 
                            nsCOMPtr<nsIDOMNode> *aOutMergeParent, 
                            PRInt32 *aOutMergeOffset);
-
-  nsresult GetTopEnclosingMailCite(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutCiteNode);
+  nsresult GetTopEnclosingMailCite(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutCiteNode, PRBool aPlaintext);
   nsresult PopListItem(nsIDOMNode *aListItem, PRBool *aOutOfList);
-
   nsresult AdjustSpecialBreaks(PRBool aSafeToAskFrames = PR_FALSE);
   nsresult AdjustWhitespace(nsISelection *aSelection);
   nsresult AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection aAction);
@@ -180,14 +172,13 @@ protected:
   nsresult SelectionEndpointInNode(nsIDOMNode *aNode, PRBool *aResult);
   nsresult DoTextNodeWhitespace(nsIDOMCharacterData *aTextNode, PRInt32 aStart, PRInt32 aEnd);
   nsresult UpdateDocChangeRange(nsIDOMRange *aRange);
-
   nsresult ConvertWhitespace(const nsString & inString, nsString & outString);
   nsresult ConfirmSelectionInBody();
-
   nsresult InsertMozBRIfNeeded(nsIDOMNode *aNode);
 
 // data members
 protected:
+  nsHTMLEditor         *mHTMLEditor;
   nsCOMPtr<nsIDOMRange> mDocChangeRange;
   PRBool                mListenerEnabled;
   PRBool                mReturnInEmptyLIKillsList;

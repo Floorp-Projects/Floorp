@@ -31,49 +31,82 @@ LIBRARY_NAME	= editor
 IS_COMPONENT	= 1
 REQUIRES	= xpcom dom js locale layout uriloader widget txmgr htmlparser necko pref view appshell rdf webshell timer txtsvc intl lwbrk docshell chrome caps appcomps
 
-CPPSRCS		= \
-		nsEditor.cpp \
-		nsEditorService.cpp \
-		nsEditorController.cpp \
-		nsEditorCommands.cpp \
-		nsComposerCommands.cpp \
-		nsEditorUtils.cpp \
-		nsEditorRegistration.cpp \
-		nsEditorParserObserver.cpp \
-		nsTextEditRules.cpp \
-		nsHTMLEditUtils.cpp \
-		TextEditorTest.cpp \
-		nsHTMLEditRules.cpp \
-		nsEditorEventListeners.cpp \
-		nsEditorShellMouseListener.cpp \
-		nsEditProperty.cpp \
-		nsHTMLEditor.cpp \
-		ChangeAttributeTxn.cpp \
-		EditTxn.cpp \
-		EditAggregateTxn.cpp \
-		nsTableEditor.cpp \
-		InsertTextTxn.cpp \
-		PlaceholderTxn.cpp \
-		DeleteTextTxn.cpp \
-		CreateElementTxn.cpp \
-		InsertElementTxn.cpp \
-		DeleteElementTxn.cpp \
-		DeleteRangeTxn.cpp \
-		SplitElementTxn.cpp \
-		JoinElementTxn.cpp \
-		nsStyleSheetTxns.cpp \
-		TransactionFactory.cpp \
-		TypeInState.cpp \
-		nsInternetCiter.cpp \
-		nsAOLCiter.cpp \
-		nsWrapUtils.cpp \
-		nsInterfaceState.cpp \
-		nsEditorShell.cpp \
-		IMETextTxn.cpp \
-		IMECommitTxn.cpp \
-		nsHTMLEditorLog.cpp \
-		nsEditorTxnLog.cpp \
+CPPSRCS		=                           \
+		ChangeAttributeTxn.cpp      \
+		CreateElementTxn.cpp        \
+		DeleteElementTxn.cpp        \
+		DeleteRangeTxn.cpp          \
+		DeleteTextTxn.cpp           \
+		EditAggregateTxn.cpp        \
+		EditTxn.cpp                 \
+		IMECommitTxn.cpp            \
+		IMETextTxn.cpp              \
+		InsertElementTxn.cpp        \
+		InsertTextTxn.cpp           \
+		JoinElementTxn.cpp          \
+		nsComposerCommands.cpp      \
+		nsEditorCommands.cpp        \
+		nsEditorController.cpp      \
+		nsEditor.cpp                \
+		nsEditorEventListeners.cpp  \
+		nsEditorUtils.cpp           \
+		nsEditProperty.cpp          \
+		nsHTMLEditUtils.cpp         \
+        nsPlaintextDataTransfer.cpp \
+        nsPlaintextEditor.cpp       \
+        nsSelectionState.cpp        \
+		nsStyleSheetTxns.cpp        \
+		nsTextEditRules.cpp         \
+		PlaceholderTxn.cpp          \
+		SplitElementTxn.cpp         \
+		TransactionFactory.cpp      \
 		$(NULL)
+
+# MOZ_BUILD_PLAINTEXT_EDITOR_CORE_ONLY=1
+
+ifdef MOZ_BUILD_PLAINTEXT_EDITOR_CORE_ONLY
+
+# We're only building the Core PlainText Editor Source so just include
+# the plain text registration file.
+
+CPPSRCS += nsTextEditorReg.cpp
+
+else
+
+# Building the full blown HTML Editor  so add it's source files and objects:
+
+CPPSRCS += nsAOLCiter.cpp                 \
+           nsEditorParserObserver.cpp     \
+           nsEditorRegistration.cpp       \
+           nsEditorShell.cpp              \
+           nsEditorShellMouseListener.cpp \
+           nsEditorService.cpp            \
+           nsHTMLDataTransfer.cpp         \
+           nsHTMLEditor.cpp               \
+           nsHTMLEditorStyle.cpp          \
+           nsHTMLEditRules.cpp            \
+           nsInterfaceState.cpp           \
+           nsInternetCiter.cpp            \
+           nsTableEditor.cpp              \
+           nsWrapUtils.cpp                \
+           TextEditorTest.cpp             \
+           TypeInState.cpp                \
+           $(NULL)
+
+# Enable Editor API Logging!
+ENABLE_EDITOR_API_LOG=1
+
+ifdef ENABLE_EDITOR_API_LOG
+
+CPPSRCS += nsHTMLEditorLog.cpp \
+           nsEditorTxnLog.cpp  \
+           $(NULL)
+
+DEFINES += -DENABLE_EDITOR_API_LOG
+
+endif
+
+endif
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_NECKO_UTIL_LIBS) \
@@ -82,6 +115,4 @@ EXTRA_DSO_LDOPTS = \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-DEFINES		+= -DENABLE_EDITOR_API_LOG
 
