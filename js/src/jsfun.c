@@ -708,13 +708,29 @@ call_enumerate(JSContext *cx, JSObject *obj)
     fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
     if (!fp)
         return JS_TRUE;
-    funobj = fp->argv ? JSVAL_TO_OBJECT(fp->argv[-2]) : fp->fun->object;
+
+    /*
+     * Do not enumerate a cloned function object at fp->argv[-2], it may have
+     * gained its own (mutable) scope (e.g., a brutally-shared XUL script sets
+     * the clone's prototype property).  We must enumerate the function object
+     * that was decorated with parameter and local variable properties by the
+     * compiler when the compiler created fp->fun, namely fp->fun->object.
+     *
+     * Contrast with call_resolve, where we prefer fp->argv[-2], because we'll
+     * use js_LookupProperty to find any overridden properties in that object,
+     * if it was a mutated clone; and if not, we will search its prototype,
+     * fp->fun->object, to find compiler-created params and locals.
+     */
+    funobj = fp->fun->object;
     if (!funobj)
         return JS_TRUE;
 
-    /* Reflect actual args for formal parameters and local variables. */
+    /*
+     * Reflect actual args from fp->argv for formal parameters, and local vars
+     * and functions in fp->vars for declared variables and nested-at-top-level
+     * local functions.
+     */
     scope = OBJ_SCOPE(funobj);
-
     for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
         getter = sprop->getter;
         if (getter != js_GetArgument && getter != js_GetLocalVariable)
