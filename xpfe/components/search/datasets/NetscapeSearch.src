@@ -11,9 +11,19 @@
 <INPUT NAME="search" user>
 
 <INTERPRET
+	browserResultType = "category"
 	bannerStart="<!--AD_TAG VENDOR=AOL WIDTH=468 HEIGHT=60-->"
 	bannerEnd="<!--/AD_TAG-->"
-	resultListStart = "Reviewed Web Sites"
+	resultListStart = "Groups of reviewed web sites related to your search term."
+	resultListEnd = "Web sites reviewed and categorized by a team of editors."
+	resultItemStart = "<LI>"
+>
+
+<INTERPRET
+	browserResultType = "result"
+	bannerStart="<!--AD_TAG VENDOR=AOL WIDTH=468 HEIGHT=60-->"
+	bannerEnd="<!--/AD_TAG-->"
+	resultListStart = "Web sites reviewed and categorized by a team of editors."
 	resultItemStart = "<LI>"
 >
 
