@@ -911,7 +911,7 @@ sub BuildRuntimeProjects()
 	
 	#// Build all of the startup libraries, for Application, Component, and Shared Libraries. These are
 	#// required for all subsequent libraries in the system.
-	_BuildProject(":mozilla:lib:mac:NSStartup:NSStartup.mcp",							"NSStartup.all");
+#	_BuildProject(":mozilla:lib:mac:NSStartup:NSStartup.mcp",							"NSStartup.all");
 	
 	#// for NSRuntime under Carbon, don't use BuildOneProject to alias the shlb or the xsym since the 
 	#// target names differ from the output names. Make them by hand instead.
