@@ -82,8 +82,6 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
    we ask for a specific z-order, we don't assume that widget z-ordering actually works.
 */
 
-// #define NO_DOUBLE_BUFFER
-
 // if defined widget changes like moves and resizes are defered until and done
 // all in one pass.
 //#define CACHE_WIDGET_CHANGES
@@ -606,6 +604,34 @@ NS_IMETHODIMP nsViewManager::ResetScrolling(void)
   return NS_OK;
 }
 
+/* Check the prefs to see whether we should do double buffering or not... */
+static
+PRBool DoDoubleBuffering(void)
+{
+  static PRBool gotDoublebufferPrefs = PR_FALSE;
+  static PRBool doDoublebuffering    = PR_TRUE;  /* Double-buffering is ON by default */
+  
+  if (!gotDoublebufferPrefs) {
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+    if (prefs) {
+      PRBool val;
+      if (NS_SUCCEEDED(prefs->GetBoolPref("viewmanager.do_doublebuffering", &val))) {
+        doDoublebuffering = val;
+      }
+    }
+
+#ifdef DEBUG
+    if (!doDoublebuffering) {
+      printf("nsViewManager: Note: Double-buffering disabled via prefs.\n");
+    }
+#endif /* DEBUG */
+
+    gotDoublebufferPrefs = PR_TRUE;
+  }
+  
+  return doDoublebuffering;
+}
+
 /**
    aRegion is given in device coordinates!!
 */
@@ -641,9 +667,9 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext, nsIReg
   if (mTransCnt > 0)
     aUpdateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
 
-#ifdef NO_DOUBLE_BUFFER
-  aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
-#endif
+  if (!DoDoubleBuffering()) {
+    aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
+  }
 
   // check if the rendering context wants double-buffering or not
   if (aContext) {

@@ -769,3 +769,9 @@ pref("network.autodial-helper.enabled", true);
 // problem of Windows showing an alert when it tries to use DDE
 // and we're not already running).
 pref("advanced.system.supportDDEExec", true);
+
+// Pref to control whether the viewmanager code does double-buffering or not
+// See http://bugzilla.mozilla.org/show_bug.cgi?id=169483 for further details...
+pref("viewmanager.do_doublebuffering", true);
+
+
