@@ -117,8 +117,13 @@ NS_METHOD  nsFileWidget::GetFile(nsString& aFile)
   return NS_OK;
 }
 
+
 NS_METHOD  nsFileWidget::GetFile(nsFileSpec& aFile)
 {
+  gchar *fn = gtk_file_selection_get_filename(GTK_FILE_SELECTION(mWidget));
+
+  aFile = fn; // Put the filename into the nsFileSpec instance.
+
   return NS_OK;
 }
 
