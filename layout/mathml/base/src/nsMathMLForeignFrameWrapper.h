@@ -138,7 +138,6 @@ public:
               nsIAtom*        aListName,
               nsIFrame*       aOldFrame)
   {
-    nsBlockFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
     return mParent->RemoveFrame(aPresContext, aPresShell, aListName, this);
   }
 
