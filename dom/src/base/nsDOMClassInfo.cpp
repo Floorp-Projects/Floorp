@@ -1812,7 +1812,7 @@ nsDOMClassInfo::PostCreate(nsIXPConnectWrappedNative *wrapper,
   JSObject *global = obj;
   JSObject *tmp;
 
-  while (tmp = ::JS_GetParent(cx, global)) {
+  while ((tmp = ::JS_GetParent(cx, global))) {
     global = tmp;
   }
 
