@@ -1457,6 +1457,12 @@ function cmdHideView(e)
     if (!e.view)
         e.view = e.sourceObject;
 
+    if (client.viewsArray.length < 2)
+    {
+        display(MSG_ERR_LAST_VIEW_HIDE, MT_ERROR);
+        return;
+    }
+
     var tb = getTabForObject(e.view);
 
     if (tb)
