@@ -64,7 +64,7 @@ union UStrPtr {
 
 struct nsBufDescriptor {
   nsBufDescriptor(char* aBuffer,PRUint32 aBufferSize,eCharSize aCharSize,PRBool aOwnsBuffer) {
-    mStr.mCharBuf=aBuffer;
+    mStr=aBuffer;
     mMultibyte=aCharSize;
     mCapacity=(aBufferSize>>mMultibyte)-1;
     mOwnsBuffer=aOwnsBuffer;
@@ -73,7 +73,11 @@ struct nsBufDescriptor {
   PRUint32        mCapacity;
   PRBool          mOwnsBuffer;
   eCharSize       mMultibyte;
-  UStrPtr         mStr;
+//  UStrPtr         mStr;
+  union { 
+    char*         mStr;
+    PRUnichar*    mUStr;
+  };
 };
 
 
@@ -265,7 +269,10 @@ struct nsStr {
   PRUint32        mCapacity:    30;
   PRUint32        mOwnsBuffer:  1;
   PRUint32        mUnused:      1;
-  UStrPtr         mStr;
+  union { 
+    char*         mStr;
+    PRUnichar*    mUStr;
+  };
 };
 
 /**************************************************************
@@ -296,8 +303,8 @@ inline void ToRange(PRUint32& aValue,PRUint32 aMin,PRUint32 aMax){
 
 inline void AddNullTerminator(nsStr& aDest) {
   if(eTwoByte==aDest.mMultibyte) 
-    aDest.mStr.mUnicharBuf[aDest.mLength]=0;
-  else aDest.mStr.mCharBuf[aDest.mLength]=0;
+    aDest.mUStr[aDest.mLength]=0;
+  else aDest.mStr[aDest.mLength]=0;
 }
 
 //----------------------------------------------------------------------------------------
@@ -331,17 +338,17 @@ public:
 
     aDest.mCapacity=theNewCapacity++;
     size_t theSize=(theNewCapacity<<aDest.mMultibyte);
-    aDest.mStr.mCharBuf=new char[theSize];
+    aDest.mStr=new char[theSize];
     aDest.mOwnsBuffer=1;
     return PR_TRUE;
   }
 
   virtual PRBool Free(nsStr& aDest){
-    if(aDest.mStr.mCharBuf){
+    if(aDest.mStr){
       if(aDest.mOwnsBuffer){
-        delete [] aDest.mStr.mCharBuf;
+        delete [] aDest.mStr;
       }
-      aDest.mStr.mCharBuf=0;
+      aDest.mStr=0;
       aDest.mOwnsBuffer=0;
       return PR_TRUE;
     }
