@@ -82,6 +82,6 @@ int GC_address_to_source(char* codeAddr, char fileName[256], UInt32* fileOffset)
 
 void MWUnmangle(const char *mangled_name, char *unmangled_name, size_t buffersize)
 {
-	::strncpy(unmangled_name, mangled_name, buffersize);
+	strncpy(unmangled_name, mangled_name, buffersize);
 }
 #endif
