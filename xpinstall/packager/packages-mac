@@ -310,6 +310,9 @@ viewer:Components:msgImportText.shlb
 viewer:Components:msgImportEudora.shlb
 viewer:Components:AbSyncSvc.shlb 
 viewer:Components:AbSyncSvc.xpt 
+viewer:Components:mozldap.shlb
+viewer:Components:mozldap.xpt
+viewer:Essential Files:LDAPClient.shlb
 viewer:res:Mailnews:*
 
 [chatzilla]
