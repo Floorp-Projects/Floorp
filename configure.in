@@ -507,12 +507,12 @@ case "$target" in
 	DSO_PIC_CFLAGS="+Z"
 	MKSHLIB='$(CXX) $(DSO_LDOPTS)'
 	MKCSHLIB='$(CC) $(DSO_LDOPTS)'
-	MOZ_POST_PROGRAM_COMMAND='chatr +s enable'
     else
-	DSO_LDOPTS='-b -E -L$(DIST)/bin -L$(DIST)/lib'
+	DSO_LDOPTS='-b -E +s -L$(DIST)/bin -L$(DIST)/lib'
 	MKSHLIB='$(LD) $(DSO_LDOPTS)'
 	MKCSHLIB='$(LD) $(DSO_LDOPTS)'
     fi
+    MOZ_POST_PROGRAM_COMMAND='chatr +s enable'
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     ;;
 
