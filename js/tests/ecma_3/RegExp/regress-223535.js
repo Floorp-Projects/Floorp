@@ -56,54 +56,48 @@ var expectedmatch = '';
 var expectedmatches = new Array();
 
 
-pattern = /a|/;
-status = inSection(1);
 string = 'a';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a');
-addThis();
+  status = inSection(1);
+  pattern = /a|/;
+  actualmatch = string.match(pattern);
+  expectedmatch = Array('a');
+  addThis();
 
-pattern = /|a/;
-status = inSection(2);
-string = 'a';
-actualmatch = string.match(pattern);
-expectedmatch = Array('');
-addThis();
+  status = inSection(2);
+  pattern = /|a/;
+  actualmatch = string.match(pattern);
+  expectedmatch = Array('');
+  addThis();
 
-pattern = /|/;
-status = inSection(3);
-string = 'a';
-actualmatch = string.match(pattern);
-expectedmatch = Array('');
-addThis();
+  status = inSection(3);
+  pattern = /|/;
+  actualmatch = string.match(pattern);
+  expectedmatch = Array('');
+  addThis();
 
-pattern = /(a|)/;
-status = inSection(4);
-string = 'a';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a', 'a');
-addThis();
+  status = inSection(4);
+  pattern = /(a|)/;
+  actualmatch = string.match(pattern);
+  expectedmatch = Array('a', 'a');
+  addThis();
 
-pattern = /(a||)/;
-status = inSection(5);
-string = 'a';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a', 'a');
-addThis();
+  status = inSection(5);
+  pattern = /(a||)/;
+  actualmatch = string.match(pattern);
+  expectedmatch = Array('a', 'a');
+  addThis();
 
-pattern = /(|a)/;
-status = inSection(6);
-string = 'a';
-actualmatch = string.match(pattern);
-expectedmatch = Array('', '');
-addThis();
+  status = inSection(6);
+  pattern = /(|a)/;
+  actualmatch = string.match(pattern);
+  expectedmatch = Array('', '');
+  addThis();
 
-pattern = /(|a|)/;
-status = inSection(7);
-string = 'a';
-actualmatch = string.match(pattern);
-expectedmatch = Array('', '');
-addThis();
+  status = inSection(7);
+  pattern = /(|a|)/;
+  actualmatch = string.match(pattern);
+  expectedmatch = Array('', '');
+  addThis();
 
 
 
