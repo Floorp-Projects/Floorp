@@ -86,11 +86,26 @@ int main(int argc, char *argv[])
 
 	// Main message loop:
     MSG msg;
-	while (GetMessage(&msg, NULL, 0, 0)) 
-	{
+    while (1)
+    {
+        if (!::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
+        {
+            NS_DoIdleEmbeddingStuff();
+            continue;
+        }
+        if (!::GetMessage(&msg, NULL, 0, 0))
+        {
+            break;
+        }
+        PRBool wasHandled = PR_FALSE;
+        NS_HandleEmbeddingEvent(msg, wasHandled);
+        if (wasHandled)
+        {
+            continue;
+        }
 	    TranslateMessage(&msg);
 		DispatchMessage(&msg);
-	}
+    }
 
     // Close down Embedding APIs
     NS_TermEmbedding();
