@@ -49,45 +49,76 @@ class nsICSSStyleSheet;
 
 interface nsIEditorStyleSheets : nsISupports
 {
-  /** load and apply the style sheet, specified by aURL, to
-    * the editor's document. This can involve asynchronous
-    * network I/O
+  /** load and apply the style sheet, specified by aURL, to the
+    * editor's document, replacing the last style sheet added (if any).
+    * This can involve asynchronous network I/O.
+    * 
     * @param aURL         The style sheet to be loaded and applied.
-    * @return             the style sheet created from aURL
     */
-  [noscript] nsICSSStyleSheet applyStyleSheet(in AString aURL);
+  void replaceStyleSheet(in AString aURL);
+
+  /** Add the given Style Sheet to the editor's document,
+    * on top of any that are already there.
+    * This is always synchronous.
+    *
+    * @param aURL  The style sheet to be  applied.
+    */
+  void addStyleSheet(in AString aURL);
+
+  /** load and apply the style sheet, specified by aURL, to the
+    * editor's document, replacing the last style sheet added (if any).
+    * This is always synchronous.
+    * 
+    * @param aURL         The style sheet to be loaded and applied.
+    */
+  void replaceOverrideStyleSheet(in AString aURL);
 
   /** load and apply an Override style sheet, specified by aURL, to
-    * the editor's document. 
+    * the editor's document, on top of any that are already there.
     * IMPORTANT: This is assumed to be synchronous:
     *            URL is a local file with no @import used
     * This action is not undoable.
     * It is not intended for use by "user", only editor developers
     *   to change display behavior for editing (like showing special cursors)
     *   that will not be affected by loading other "document" style sheets
-    *   loaded using ApplyStyleSheet.
+    *   loaded using addStyleSheet or replaceStyleSheet.
     *
     * @param aURL         The style sheet to be loaded and applied.
-    * @return             the style sheet created from aURL
     */
-  [noscript] nsICSSStyleSheet applyOverrideStyleSheet(in AString aURL);
-
-  /** Add the given Style Sheet to the editor's document
-    * This is always synchronous
-    * @param aSheet  The style sheet to be  applied.
-    */
-  [noscript] void addStyleSheet(in nsICSSStyleSheet aSheet);
+  void addOverrideStyleSheet(in AString aURL);
 
   /** Remove the given Style Sheet from the editor's document
     * This is always synchronous
-    * @param aSheet  The style sheet to be removed
+    *
+    * @param aURL  The style sheet to be removed
     */
-  [noscript] void removeStyleSheet(in nsICSSStyleSheet aSheet);
+  void removeStyleSheet(in AString aURL);
 
   /** Remove the given Override Style Sheet from the editor's document
     * This is always synchronous
-    * @param aSheet  The style sheet to be removed.
+    *
+    * @param aURL  The style sheet to be removed.
     */
-  [noscript] void removeOverrideStyleSheet(in nsICSSStyleSheet aSheet);
+  void removeOverrideStyleSheet(in AString aURL);
 
+  /** Enable or disable the given Style Sheet from the editor's document
+    * This is always synchronous
+    *
+    * @param aURL  The style sheet to be removed
+    */
+  void enableStyleSheet(in AString aURL, in PRBool aEnable);
+
+  /** Get the nsICSSStyleSheet associated with the given URL.
+    *
+    * @param aURL         The style sheet's URL
+    * @return             the style sheet
+    */
+  [noscript] nsICSSStyleSheet getStyleSheetForURL(in AString aURL);
+
+  /** Get the URL associated with the given nsICSSStyleSheet.
+    *
+    * @param aStyleSheet  The style sheet
+    * @return             the style sheet's URL
+    */
+  [noscript] AString getURLForStyleSheet(in nsICSSStyleSheet aStyleSheet);
 };

@@ -541,7 +541,6 @@ protected:
   nsIViewManager *mViewManager;
   PRInt32         mUpdateCount;
   nsCOMPtr<nsITransactionManager> mTxnMgr;
-  nsCOMPtr<nsICSSStyleSheet> mLastStyleSheet;			// is owning this dangerous?
   nsWeakPtr         mPlaceHolderTxn;     // weak reference to placeholder for begin/end batch purposes
   nsIAtom          *mPlaceHolderName;    // name of placeholder transaction
   PRInt32           mPlaceHolderBatch;   // nesting count for batching

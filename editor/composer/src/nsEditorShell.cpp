@@ -237,7 +237,6 @@ GetTreeOwner(nsIDocShell* aDocShell, nsIBaseWindow** aBaseWindow)
 
 nsEditorShell::nsEditorShell()
 :  mMailCompose(PR_FALSE)
-,  mDisplayMode(eDisplayModeNormal)
 ,  mHTMLSourceMode(PR_FALSE)
 ,  mWebShellWindow(nsnull)
 ,  mContentWindow(nsnull)
@@ -321,32 +320,6 @@ nsEditorShell::ResetEditingState()
     editor->PreDestroy();
   }
 
-  // Unload existing stylesheets
-  nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
-  if (styleSheets)
-  {
-    if (mBaseStyleSheet)
-    {
-      styleSheets->RemoveOverrideStyleSheet(mBaseStyleSheet);
-      mBaseStyleSheet = 0;
-    }
-    if (mEditModeStyleSheet)
-    {
-      styleSheets->RemoveOverrideStyleSheet(mEditModeStyleSheet);
-      mEditModeStyleSheet = 0;
-    }
-    if (mAllTagsModeStyleSheet)
-    {
-      styleSheets->RemoveOverrideStyleSheet(mAllTagsModeStyleSheet);
-      mAllTagsModeStyleSheet = 0;
-    }
-    if (mParagraphMarksStyleSheet)
-    {
-      styleSheets->RemoveOverrideStyleSheet(mParagraphMarksStyleSheet);
-      mParagraphMarksStyleSheet = 0;  
-    }
-  }
-  
   nsresult rv;  
   // now, unregister the selection listener, if there was one
   if (mStateMaintainer)
@@ -518,20 +491,6 @@ nsEditorShell::PrepareDocumentForEditing(nsIDOMWindow* aDOMWindow, nsIURI *aUrl)
     // Set the editor-specific Window caption
     UpdateWindowTitleAndRecentMenu(PR_TRUE);
   }
-
-  nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
-  if (!styleSheets)
-    return NS_NOINTERFACE;
-
-  // Load style sheet with settings that should never
-  //  change, even in "Browser" mode
-  // We won't unload this, so we don't need to be returned the style sheet pointer
-  
-  
-  styleSheets->ApplyOverrideStyleSheet(NS_LITERAL_STRING("chrome://editor/content/EditorOverride.css"),
-                                       getter_AddRefs(mBaseStyleSheet));
-
-  SetDisplayMode(mDisplayMode);
 
 #ifdef DEBUG
   // Activate the debug menu only in debug builds
@@ -1298,130 +1257,14 @@ nsEditorShell::ApplyStyleSheet(const PRUnichar *url)
 
   nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
   if (styleSheets)
-    result = styleSheets->ApplyStyleSheet(aURL, nsnull);
+    result = styleSheets->ReplaceStyleSheet(aURL);
 
   return result;
 }
 
-// Note: This is not undoable action (on purpose!)
-NS_IMETHODIMP 
-nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
-{
-  if (aDisplayMode == eDisplayModeSource)
-  {
-    // We track only display modes that involve style sheet changes
-    //   with mDisplayMode, so use a separate bool for source mode
-    mHTMLSourceMode = PR_TRUE;
-    // The HTML Source display mode is handled in editor.js
-    return NS_OK;
-  }
-  mHTMLSourceMode = PR_FALSE;
-
-  nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
-  if (!styleSheets) return NS_NOINTERFACE;
-
-  nsCOMPtr<nsIStyleSheet> nsISheet;
-  nsresult res = NS_OK;
-
-  // Extra style sheets to explain optimization testing:
-  // eDisplayModePreview: No extra style sheets
-  // eDisplayModePreview: 1 extra sheet:  mEditModeStyleSheet
-  // eDisplayModeAllTags: 2 extra sheets: mEditModeStyleSheet and mAllTagsModeStyleSheet
-
-  if (aDisplayMode == eDisplayModePreview)
-  {
-    // Disable all extra "edit mode" style sheets 
-    if (mEditModeStyleSheet)
-    {
-      nsISheet = do_QueryInterface(mEditModeStyleSheet);
-      res = nsISheet->SetEnabled(PR_FALSE);
-      if (NS_FAILED(res)) return res;
-    }
-    // Disable ShowAllTags mode if that was the previous mode
-    if (mDisplayMode == eDisplayModeAllTags && mAllTagsModeStyleSheet)
-    {
-      nsISheet = do_QueryInterface(mAllTagsModeStyleSheet);
-      res = nsISheet->SetEnabled(PR_FALSE);
-    }
-  }
-  else if (aDisplayMode == eDisplayModeNormal)
-  {
-    // Don't need to activate if AllTags was last mode
-    if (mDisplayMode != eDisplayModeAllTags)
-    {
-      // If loaded before, enable the sheet
-      if (mEditModeStyleSheet)
-      {
-        nsISheet = do_QueryInterface(mEditModeStyleSheet);
-        res = nsISheet->SetEnabled(PR_TRUE);
-      }
-      else
-      {
-    
-        //Load the editmode style sheet
-        res = styleSheets->ApplyOverrideStyleSheet(NS_LITERAL_STRING("chrome://editor/content/EditorContent.css"),
-                                                   getter_AddRefs(mEditModeStyleSheet));
-      }
-      if (NS_FAILED(res)) return res;
-    }
-
-    // Disable ShowAllTags mode if that was the previous mode
-    if (mDisplayMode == eDisplayModeAllTags && mAllTagsModeStyleSheet)
-    {
-      nsISheet = do_QueryInterface(mAllTagsModeStyleSheet);
-      res = nsISheet->SetEnabled(PR_FALSE);
-    }
-  }
-  else if (aDisplayMode == eDisplayModeAllTags)
-  {
-    // If loaded before, enable the sheet
-    if (mAllTagsModeStyleSheet)
-    {
-      nsISheet = do_QueryInterface(mAllTagsModeStyleSheet);
-      res = nsISheet->SetEnabled(PR_TRUE);
-    }
-    else
-    {
-      // else load it
-      res = styleSheets->ApplyOverrideStyleSheet(NS_LITERAL_STRING("chrome://editor/content/EditorAllTags.css"),
-                                                 getter_AddRefs(mAllTagsModeStyleSheet));
-    }     
-    if (NS_FAILED(res)) return res;
-
-    // We don't need to activate "normal" mode if that was the previous mode
-    if (mDisplayMode != eDisplayModeNormal)
-    {
-      if (mEditModeStyleSheet)
-      {
-        nsISheet = do_QueryInterface(mEditModeStyleSheet);
-        res = nsISheet->SetEnabled(PR_TRUE);
-      }
-      else
-      {
-        res = styleSheets->ApplyOverrideStyleSheet(NS_LITERAL_STRING("chrome://editor/content/EditorContent.css"),
-                                                   getter_AddRefs(mEditModeStyleSheet));
-      }
-    }
-  }
-
-  // Remember the new mode
-  if (NS_SUCCEEDED(res)) mDisplayMode = aDisplayMode;
-  return res;
-}
-
-NS_IMETHODIMP 
-nsEditorShell::GetEditMode(PRInt32 *_retval)
-{
-  if (mHTMLSourceMode)
-    *_retval = eDisplayModeSource;
-  else
-    *_retval = mDisplayMode;
-
-  return NS_OK;
-}
   
 NS_IMETHODIMP 
-nsEditorShell::IsHTMLSourceMode(PRBool *_retval)
+nsEditorShell::GetHTMLSourceMode(PRBool *_retval)
 {
   *_retval = mHTMLSourceMode;
 
@@ -1429,46 +1272,11 @@ nsEditorShell::IsHTMLSourceMode(PRBool *_retval)
 }
 
 NS_IMETHODIMP 
-nsEditorShell::FinishHTMLSource(void)
+nsEditorShell::SetHTMLSourceMode(const PRBool aSourceMode)
 {
-  if (mHTMLSourceMode)
-  {
-    // Call the JS command to convert and switch to previous edit mode
-    return DoControllerCommand("cmd_FinishHTMLSource");
-  }
+  mHTMLSourceMode = aSourceMode;
+
   return NS_OK;
-}
-
-
-NS_IMETHODIMP 
-nsEditorShell::DisplayParagraphMarks(PRBool aShowMarks)
-{
-  nsresult  res = NS_OK;
-
-  nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
-  if (!styleSheets) return NS_NOINTERFACE;
-  nsCOMPtr<nsIStyleSheet> nsISheet;
-  if (aShowMarks)
-  {
-    // Check if style sheet is already loaded -- just enable it
-    if (mParagraphMarksStyleSheet)
-    {
-      nsISheet = do_QueryInterface(mParagraphMarksStyleSheet);
-      return nsISheet->SetEnabled(PR_TRUE);
-    }
-    //First time used -- load the style sheet
-    nsCOMPtr<nsICSSStyleSheet> styleSheet;
-    res = styleSheets->ApplyOverrideStyleSheet(NS_LITERAL_STRING("chrome://editor/content/EditorParagraphMarks.css"),
-                                                getter_AddRefs(mParagraphMarksStyleSheet));
-  }
-  else if (mParagraphMarksStyleSheet)
-  {
-    // Disable the style sheet
-    nsISheet = do_QueryInterface(mParagraphMarksStyleSheet);
-    res = nsISheet->SetEnabled(PR_FALSE);
-  }
-  
-  return res;
 }
 
 NS_IMETHODIMP 

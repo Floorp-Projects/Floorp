@@ -3397,20 +3397,88 @@ nsHTMLEditor::GetLinkedObjects(nsISupportsArray** aNodeList)
 #pragma mark -
 #endif
 
+NS_IMETHODIMP
+nsHTMLEditor::AddStyleSheet(const nsAString &aURL)
+{
+  // Enable existing sheet if already loaded.
+  if (EnableExistingStyleSheet(aURL))
+    return NS_OK;
+
+  // Lose the previously-loaded sheet so there's nothing to replace
+  // This pattern is different from Override methods because
+  //  we must wait to remove mLastStyleSheetURL and add new sheet
+  //  at the same time (in StyleSheetLoaded callback) so they are undoable together
+  mLastStyleSheetURL.Truncate();
+  return ReplaceStyleSheet(aURL);
+}
 
 NS_IMETHODIMP
-nsHTMLEditor::AddStyleSheet(nsICSSStyleSheet* aSheet)
+nsHTMLEditor::ReplaceStyleSheet(const nsAString& aURL)
 {
-  AddStyleSheetTxn* txn;
-  nsresult rv = CreateTxnForAddStyleSheet(aSheet, &txn);
+  // Enable existing sheet if already loaded.
+  if (EnableExistingStyleSheet(aURL))
+  {
+    // Disable last sheet if not the same as new one
+    if (!mLastStyleSheetURL.IsEmpty() && mLastStyleSheetURL.Equals(aURL))
+        return EnableStyleSheet(mLastStyleSheetURL, PR_FALSE);
+
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsICSSLoader> cssLoader;
+  nsresult rv = GetCSSLoader(aURL, getter_AddRefs(cssLoader));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDocument> document;
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  rv = ps->GetDocument(getter_AddRefs(document));
+  NS_ENSURE_SUCCESS(rv, rv);;
+  if (!document)     return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIURI> uaURI;
+  rv = NS_NewURI(getter_AddRefs(uaURI), aURL);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool complete;
+  nsCOMPtr<nsICSSStyleSheet> sheet;
+  rv = cssLoader->LoadAgentSheet(uaURI, *getter_AddRefs(sheet),
+                                 complete, this);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (complete)
+    StyleSheetLoaded(sheet, PR_FALSE);
+
+  //
+  // If not complete, we will be notified later
+  // with a call to StyleSheetLoaded()
+  //
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::RemoveStyleSheet(const nsAString &aURL)
+{
+  nsCOMPtr<nsICSSStyleSheet> sheet;
+  nsresult rv = GetStyleSheetForURL(aURL, getter_AddRefs(sheet));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!sheet)
+    return NS_ERROR_UNEXPECTED;
+
+  RemoveStyleSheetTxn* txn;
+  rv = CreateTxnForRemoveStyleSheet(sheet, &txn);
   if (!txn) rv = NS_ERROR_NULL_POINTER;
   if (NS_SUCCEEDED(rv))
   {
     rv = Do(txn);
     if (NS_SUCCEEDED(rv))
-    {
-      mLastStyleSheet = do_QueryInterface(aSheet);    // save it so we can remove before applying the next one
-    }
+      mLastStyleSheetURL.Truncate();        // forget it
+
+    // Remove it from our internal list
+    rv = RemoveStyleSheetFromList(aURL);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   // The transaction system (if any) has taken ownwership of txns
   NS_IF_RELEASE(txn);
@@ -3419,146 +3487,285 @@ nsHTMLEditor::AddStyleSheet(nsICSSStyleSheet* aSheet)
 }
 
 
-NS_IMETHODIMP
-nsHTMLEditor::RemoveStyleSheet(nsICSSStyleSheet* aSheet)
+NS_IMETHODIMP 
+nsHTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
 {
-  RemoveStyleSheetTxn* txn;
-  nsresult rv = CreateTxnForRemoveStyleSheet(aSheet, &txn);
-  if (!txn) rv = NS_ERROR_NULL_POINTER;
-  if (NS_SUCCEEDED(rv))
+  // Enable existing sheet if already loaded.
+  if (EnableExistingStyleSheet(aURL))
+    return NS_OK;
+
+  nsCOMPtr<nsICSSLoader> cssLoader;
+  nsresult rv = GetCSSLoader(aURL, getter_AddRefs(cssLoader));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> uaURI;
+  rv = NS_NewURI(getter_AddRefs(uaURI), aURL);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // We use null for the callback and data pointer because
+  //  we MUST ONLY load synchronous local files (no @import)
+  PRBool complete;
+  nsCOMPtr<nsICSSStyleSheet> sheet;
+  rv = cssLoader->LoadAgentSheet(uaURI, *getter_AddRefs(sheet),
+                                 complete, nsnull);
+
+  // Synchronous loads should ALWAYS return completed
+  if (!complete || !sheet)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIStyleSheet> styleSheet;
+  styleSheet = do_QueryInterface(sheet);
+  nsCOMPtr<nsIStyleSet> styleSet;
+
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps)
+    return NS_ERROR_NOT_INITIALIZED;
+  rv = ps->GetStyleSet(getter_AddRefs(styleSet));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!styleSet)
+    return NS_ERROR_NULL_POINTER;
+
+  // Add the override style sheet
+  // (This checks if already exists)
+  styleSet->AppendOverrideStyleSheet(styleSheet);
+
+  // Save doc pointer to be able to use nsIStyleSheet::SetEnabled()
+  nsCOMPtr<nsIDocument> document;
+  rv = ps->GetDocument(getter_AddRefs(document));
+  if (NS_FAILED(rv))
+    return rv;
+  if (!document)
+    return NS_ERROR_NULL_POINTER;
+  styleSheet->SetOwningDocument(document);
+
+  // This notifies document observers to rebuild all frames
+  // (this doesn't affect style sheet because it is not a doc sheet)
+  document->SetStyleSheetDisabledState(styleSheet, PR_FALSE);
+
+  // Save as the last-loaded sheet
+  mLastOverrideStyleSheetURL = aURL;
+
+  //Add URL and style sheet to our lists
+  return AddNewStyleSheetToList(aURL, sheet);
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::ReplaceOverrideStyleSheet(const nsAString& aURL)
+{
+  // Enable existing sheet if already loaded.
+  if (EnableExistingStyleSheet(aURL))
   {
-    rv = Do(txn);
-    if (NS_SUCCEEDED(rv))
-    {
-      mLastStyleSheet = nsnull;        // forget it
-    }
+    // Disable last sheet if not the same as new one
+    if (!mLastOverrideStyleSheetURL.IsEmpty() && !mLastOverrideStyleSheetURL.Equals(aURL))
+      return EnableStyleSheet(mLastOverrideStyleSheetURL, PR_FALSE);
+
+    return NS_OK;
   }
-  // The transaction system (if any) has taken ownwership of txns
-  NS_IF_RELEASE(txn);
-  
-  return rv;
+  // Remove the previous sheet
+  if (!mLastOverrideStyleSheetURL.IsEmpty())
+    RemoveOverrideStyleSheet(mLastOverrideStyleSheetURL);
+
+  return AddOverrideStyleSheet(aURL);
 }
 
 // Do NOT use transaction system for override style sheets
 NS_IMETHODIMP
-nsHTMLEditor::RemoveOverrideStyleSheet(nsICSSStyleSheet* aSheet)
+nsHTMLEditor::RemoveOverrideStyleSheet(const nsAString &aURL)
 {
+  nsCOMPtr<nsICSSStyleSheet> sheet;
+  nsresult rv = GetStyleSheetForURL(aURL, getter_AddRefs(sheet));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!sheet)
+    return NS_OK; /// Don't fail if sheet not found
+
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIDocument> document;
-  nsresult rv = ps->GetDocument(getter_AddRefs(document));
-  if (NS_FAILED(rv)) return rv;
+  rv = ps->GetDocument(getter_AddRefs(document));
+  NS_ENSURE_SUCCESS(rv, rv);;
   if (!document)     return NS_ERROR_NULL_POINTER;
 
   nsCOMPtr<nsIStyleSet> styleSet;
   rv = ps->GetStyleSet(getter_AddRefs(styleSet));
-
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   if (!styleSet) return NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsIStyleSheet> styleSheet = do_QueryInterface(aSheet);
+
+  nsCOMPtr<nsIStyleSheet> styleSheet = do_QueryInterface(sheet);
   if (!styleSheet) return NS_ERROR_NULL_POINTER;
+
   styleSet->RemoveOverrideStyleSheet(styleSheet);
 
   // This notifies document observers to rebuild all frames
   // (this doesn't affect style sheet because it is not a doc sheet)
   document->SetStyleSheetDisabledState(styleSheet, PR_FALSE);
 
+  // Remove it from our internal list
+  return RemoveStyleSheetFromList(aURL);
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::EnableStyleSheet(const nsAString &aURL, PRBool aEnable)
+{
+  nsCOMPtr<nsICSSStyleSheet> sheet;
+  nsresult rv = GetStyleSheetForURL(aURL, getter_AddRefs(sheet));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!sheet)
+    return NS_OK; // Don't fail if sheet not found
+
+  nsCOMPtr<nsIStyleSheet> nsISheet = do_QueryInterface(sheet);
+  return nsISheet->SetEnabled(aEnable);
+}
+
+
+PRBool
+nsHTMLEditor::EnableExistingStyleSheet(const nsAString &aURL)
+{
+  nsCOMPtr<nsICSSStyleSheet> sheet;
+  nsresult rv = GetStyleSheetForURL(aURL, getter_AddRefs(sheet));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Enable sheet if already loaded.
+  if (sheet)
+  {
+    nsCOMPtr<nsIStyleSheet> nsISheet = do_QueryInterface(sheet);
+    nsISheet->SetEnabled(PR_TRUE);
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+nsresult
+nsHTMLEditor::EnsureStyleSheetArrays()
+{
+  nsresult rv = NS_OK;
+  if (!mStyleSheets)
+    rv = NS_NewISupportsArray(getter_AddRefs(mStyleSheets));
+
+  return rv;
+}
+
+nsresult
+nsHTMLEditor::AddNewStyleSheetToList(const nsAString &aURL,
+                                     nsICSSStyleSheet *aStyleSheet)
+{
+  PRUint32 countSS;
+  nsresult rv = mStyleSheets->Count(&countSS);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 countU = mStyleSheetURLs.Count();
+
+  if (countU < 0 || countSS != (PRUint32)countU)
+    return NS_ERROR_UNEXPECTED;
+
+  if (!mStyleSheetURLs.AppendString(aURL))
+    return NS_ERROR_UNEXPECTED;
+
+  return mStyleSheets->AppendElement(aStyleSheet);
+}
+
+nsresult
+nsHTMLEditor::RemoveStyleSheetFromList(const nsAString &aURL)
+{
+  nsresult rv = EnsureStyleSheetArrays();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // is it already in the list?
+  PRInt32 foundIndex;
+  foundIndex = mStyleSheetURLs.IndexOf(aURL);
+  if (foundIndex < 0)
+    return NS_ERROR_FAILURE;
+
+  // Attempt both removals; if one fails there's not much we can do.
+  if (!mStyleSheets->RemoveElementAt(foundIndex))
+    rv = NS_ERROR_FAILURE;
+  if (!mStyleSheetURLs.RemoveStringAt(foundIndex))
+    rv = NS_ERROR_FAILURE;
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::GetStyleSheetForURL(const nsAString &aURL,
+                                  nsICSSStyleSheet **aStyleSheet)
+{
+  NS_ENSURE_ARG_POINTER(aStyleSheet);
+  *aStyleSheet = 0;
+  nsresult rv = EnsureStyleSheetArrays();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // is it already in the list?
+  PRInt32 foundIndex;
+  foundIndex = mStyleSheetURLs.IndexOf(aURL);
+  if (foundIndex < 0)
+    return NS_OK; //No sheet -- don't fail!
+
+  *aStyleSheet = (nsICSSStyleSheet*)mStyleSheets->ElementAt(foundIndex);
+  if (!*aStyleSheet)
+    return NS_ERROR_FAILURE;
+
+  NS_ADDREF(*aStyleSheet);
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsHTMLEditor::ApplyOverrideStyleSheet(const nsAString& aURL, nsICSSStyleSheet **aStyleSheet)
+NS_IMETHODIMP
+nsHTMLEditor::GetURLForStyleSheet(nsICSSStyleSheet *aStyleSheet,
+                                  nsAString &aURL)
 {
-  return ApplyDocumentOrOverrideStyleSheet(aURL, PR_TRUE, aStyleSheet);
+  nsresult rv = EnsureStyleSheetArrays();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsISupports> iSupports = do_QueryInterface(aStyleSheet, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+    
+  // is it already in the list?
+  PRInt32 foundIndex;
+  rv = mStyleSheets->GetIndexOf(iSupports, &foundIndex);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Don't fail if we don't find it in our list
+  if (foundIndex == -1)
+    return NS_OK;
+
+  // Found it in the list!
+  nsAString* strp = mStyleSheetURLs.StringAt(foundIndex);
+  if (!strp)
+    return NS_ERROR_UNEXPECTED;
+  aURL = *strp;
+  return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsHTMLEditor::ApplyStyleSheet(const nsAString& aURL, nsICSSStyleSheet **aStyleSheet)
+nsresult
+nsHTMLEditor::GetCSSLoader(const nsAString& aURL, nsICSSLoader** aCSSLoader)
 {
-  return ApplyDocumentOrOverrideStyleSheet(aURL, PR_FALSE, aStyleSheet);
-}
+  if (!aCSSLoader)
+    return NS_ERROR_NULL_POINTER;
+  *aCSSLoader = 0;
 
-//Note: Loading a document style sheet is undoable, loading an override sheet is not
-nsresult 
-nsHTMLEditor::ApplyDocumentOrOverrideStyleSheet(const nsAString& aURL, PRBool aOverride, nsICSSStyleSheet **aStyleSheet)
-{
-  nsresult rv   = NS_OK;
-  nsCOMPtr<nsIURI> uaURL;
+  nsresult rv;
 
-  rv = NS_NewURI(getter_AddRefs(uaURL), aURL);
+  nsCOMPtr<nsIDocument> document;
 
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIDocument> document;
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  rv = ps->GetDocument(getter_AddRefs(document));
+  NS_ENSURE_SUCCESS(rv, rv);;
+  if (!document)     return NS_ERROR_NULL_POINTER;
 
-    if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-    nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-    if (!ps) return NS_ERROR_NOT_INITIALIZED;
-    rv = ps->GetDocument(getter_AddRefs(document));
-    if (NS_FAILED(rv)) return rv;
-    if (!document)     return NS_ERROR_NULL_POINTER;
-
-    nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(document);
-    if (!container) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(document);
+  if (!container) return NS_ERROR_NULL_POINTER;
       
-    nsCOMPtr<nsICSSLoader> cssLoader;
-    nsCOMPtr<nsICSSStyleSheet> cssStyleSheet;
+  nsCOMPtr<nsICSSLoader> cssLoader;
+  nsCOMPtr<nsICSSStyleSheet> cssStyleSheet;
 
-    rv = container->GetCSSLoader(*getter_AddRefs(cssLoader));
-    if (NS_FAILED(rv)) return rv;
-    if (!cssLoader)    return NS_ERROR_NULL_POINTER;
-
-    PRBool complete;
-
-    if (aOverride)
-    {
-      // We use null for the callback and data pointer because
-      //  we MUST ONLY load synchronous local files (no @import)
-      rv = cssLoader->LoadAgentSheet(uaURL, *getter_AddRefs(cssStyleSheet), complete,
-                                     nsnull);
-
-      // Synchronous loads should ALWAYS return completed
-      if (!complete || !cssStyleSheet)
-        return NS_ERROR_NULL_POINTER;
-
-      nsCOMPtr<nsIStyleSheet> styleSheet;
-      styleSheet = do_QueryInterface(cssStyleSheet);
-      nsCOMPtr<nsIStyleSet> styleSet;
-      rv = ps->GetStyleSet(getter_AddRefs(styleSet));
-      if (NS_FAILED(rv)) return rv;
-      if (!styleSet)     return NS_ERROR_NULL_POINTER;
-
-      // Add the override style sheet
-      // (This checks if already exists)
-      styleSet->AppendOverrideStyleSheet(styleSheet);
-      // Save doc pointer to be able to use nsIStyleSheet::SetEnabled()
-      styleSheet->SetOwningDocument(document);
-
-      // This notifies document observers to rebuild all frames
-      // (this doesn't affect style sheet because it is not a doc sheet)
-      document->SetStyleSheetDisabledState(styleSheet, PR_FALSE);
-    }
-    else 
-    {
-      rv = cssLoader->LoadAgentSheet(uaURL, *getter_AddRefs(cssStyleSheet), complete,
-                                     this);
-      if (NS_FAILED(rv)) return rv;
-      if (complete)
-        ApplyStyleSheetToPresShellDocument(cssStyleSheet,this);
-
-      //
-      // If not complete, we will be notified later
-      // with a call to ApplyStyleSheetToPresShellDocument().
-      //
-    }
-    if (aStyleSheet)
-    {
-      *aStyleSheet = cssStyleSheet;
-      NS_ADDREF(*aStyleSheet);
-    }
-  }
-  return rv;
+  rv = container->GetCSSLoader(*getter_AddRefs(cssLoader));
+  NS_ENSURE_SUCCESS(rv, rv);;
+  if (!cssLoader)    return NS_ERROR_NULL_POINTER;
+  *aCSSLoader = cssLoader;
+  NS_ADDREF(*aCSSLoader);
+  return NS_OK;
 }
 
 #ifdef XP_MAC
@@ -3901,44 +4108,47 @@ nsHTMLEditor::GetReconversionString(nsReconversionEventReply* aReply)
 #endif
 
 
-NS_IMETHODIMP
-nsHTMLEditor::ReplaceStyleSheet(nsICSSStyleSheet *aNewSheet)
-{
-  nsresult  rv = NS_OK;
-  
-  nsAutoEditBatch batchIt(this);
-
-  if (mLastStyleSheet)
-  {
-    rv = RemoveStyleSheet(mLastStyleSheet);
-    //XXX: rv is ignored here, why?
-  }
-
-  rv = AddStyleSheet(aNewSheet);
-  
-  return rv;
-}
-
 NS_IMETHODIMP 
-nsHTMLEditor::StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify)
-{
-  ApplyStyleSheetToPresShellDocument(aSheet, this);
-  return NS_OK;
-}
-
-/* static callback */
-void nsHTMLEditor::ApplyStyleSheetToPresShellDocument(nsICSSStyleSheet* aSheet, void *aData)
+nsHTMLEditor::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify)
 {
   nsresult rv = NS_OK;
+  nsAutoEditBatch batchIt(this);
 
-  nsHTMLEditor *editor = NS_STATIC_CAST(nsHTMLEditor*, aData);
-  if (editor)
+  if (!mLastStyleSheetURL.IsEmpty())
+    RemoveStyleSheet(mLastStyleSheetURL);
+
+  AddStyleSheetTxn* txn;
+  rv = CreateTxnForAddStyleSheet(aSheet, &txn);
+  if (!txn) rv = NS_ERROR_NULL_POINTER;
+  if (NS_SUCCEEDED(rv))
   {
-    rv = editor->ReplaceStyleSheet(aSheet);
-  }
-  // XXX: we lose the return value here. Set a flag in the editor?
-}
+    rv = Do(txn);
+    if (NS_SUCCEEDED(rv))
+    {
+      // Get the URI, then url spec from the sheet
+      nsCOMPtr<nsIStyleSheet> sheet = do_QueryInterface(aSheet);
+      nsCOMPtr<nsIURI> uri;
+      rv = sheet->GetURL(*getter_AddRefs(uri));
+      if (NS_FAILED(rv))
+        return rv;
 
+      nsCAutoString spec;
+      rv = uri->GetSpec(spec);
+      if (NS_FAILED(rv))
+        return rv;
+
+      // Save it so we can remove before applying the next one
+      mLastStyleSheetURL.AssignWithConversion(spec.get());
+
+      // Also save in our arrays of urls and sheets
+      AddNewStyleSheetToList(mLastStyleSheetURL, aSheet);
+    }
+  }
+  // The transaction system (if any) has taken ownwership of txns
+  NS_IF_RELEASE(txn);
+
+  return NS_OK;
+}
 
 #ifdef XP_MAC
 #pragma mark -
