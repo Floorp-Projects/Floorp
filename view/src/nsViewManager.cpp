@@ -23,13 +23,15 @@
 #include "nsIDeviceContext.h"
 #include "nsGfxCIID.h"
 #include "nsIScrollableView.h"
-#include "nsIRegion.h"
 #include "nsView.h"
 #include "nsIScrollbar.h"
-#include "nsIBlender.h"
 
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kIScrollbarIID, NS_ISCROLLBAR_IID);
+static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
+static NS_DEFINE_IID(kIBlenderIID, NS_IBLENDER_IID);
+static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
+static NS_DEFINE_IID(kIRegionIID, NS_IREGION_IID);
 
 static const PRBool gsDebug = PR_FALSE;
 
@@ -37,6 +39,9 @@ static const PRBool gsDebug = PR_FALSE;
 
 //#define NO_DOUBLE_BUFFER
 //#define NEW_COMPOSITOR
+
+//used for debugging new compositor
+#define SHOW_RECTS
 
 #define FLATVIEW_INC  3
 
@@ -68,6 +73,12 @@ static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
 PRUint32 nsViewManager::mVMCount = 0;
 nsDrawingSurface nsViewManager::mDrawingSurface = nsnull;
 nsRect nsViewManager::mDSBounds = nsRect(0, 0, 0, 0);
+
+nsDrawingSurface nsViewManager::gOffScreen = nsnull;
+nsDrawingSurface nsViewManager::gRed = nsnull;
+nsDrawingSurface nsViewManager::gBlue = nsnull;
+PRInt32 nsViewManager::gBlendWidth = 0;
+PRInt32 nsViewManager::gBlendHeight = 0;
 
 static NS_DEFINE_IID(knsViewManagerIID, NS_IVIEWMANAGER_IID);
 
@@ -127,6 +138,8 @@ nsViewManager :: ~nsViewManager()
     gOffScreen = nsnull;
     gRed = nsnull;
     gBlue = nsnull;
+    gBlendWidth = 0;
+    gBlendHeight = 0;
   }
 
   mObserver = nsnull;
@@ -147,6 +160,19 @@ nsViewManager :: ~nsViewManager()
     delete mFlatViews;
     mFlatViews = nsnull;
   }
+
+  if (nsnull != mTransRgn)
+  {
+    if (nsnull != mTransRects)
+      mTransRgn->FreeRects(mTransRects);
+
+    NS_RELEASE(mTransRgn);
+  }
+
+  NS_IF_RELEASE(mBlender);
+  NS_IF_RELEASE(mOpaqueRgn);
+  NS_IF_RELEASE(mTRgn);
+  NS_IF_RELEASE(mRCRgn);
 }
 
 NS_IMPL_QUERY_INTERFACE(nsViewManager, knsViewManagerIID)
@@ -203,6 +229,24 @@ NS_IMETHODIMP nsViewManager :: Init(nsIDeviceContext* aContext)
 
   mMouseGrabber = nsnull;
   mKeyGrabber = nsnull;
+
+  //create regions
+  nsRepository::CreateInstance(kRegionCID, nsnull, kIRegionIID, (void **)&mTransRgn);
+  nsRepository::CreateInstance(kRegionCID, nsnull, kIRegionIID, (void **)&mOpaqueRgn);
+  nsRepository::CreateInstance(kRegionCID, nsnull, kIRegionIID, (void **)&mTRgn);
+  nsRepository::CreateInstance(kRegionCID, nsnull, kIRegionIID, (void **)&mRCRgn);
+
+  if (nsnull != mTransRgn)
+    mTransRgn->Init();
+
+  if (nsnull != mOpaqueRgn)
+    mOpaqueRgn->Init();
+
+  if (nsnull != mTRgn)
+    mTRgn->Init();
+
+  if (nsnull != mRCRgn)
+    mRCRgn->Init();
 
   return rv;
 }
@@ -476,7 +520,8 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
 #define FRONT_TO_BACK_ACCUMULATE  2
 #define BACK_TO_FRONT_TRANS       3
 #define BACK_TO_FRONT_OPACITY     4
-#define COMPOSITION_DONE          5
+#define FRONT_TO_BACK_CLEANUP     5
+#define COMPOSITION_DONE          6
 
 //bit shifts
 #define TRANS_PROPERTY_TRANS      0
@@ -485,31 +530,34 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
 //flat view flags
 #define VIEW_INCLUDED             0x0001
 
+static evenodd = 0;
+
 void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect, PRBool &aResult)
 {
 #ifdef NEW_COMPOSITOR
 
   PRInt32           flatlen = 0, cnt;
   PRInt32           state = FRONT_TO_BACK_RENDER;
-  PRInt32           transprop;
-  nsRect            backfrontrect;
-  nsRect            accumrect;
+  PRInt32           transprop = 0;
   PRInt32           increment = FLATVIEW_INC;
   PRInt32           loopstart = 0;
   PRInt32           loopend;
   PRInt32           accumstart;
-  float             t2p;
+  float             t2p, p2t;
   nsDrawingSurface  origsurf;
-  nsIRegion         *transrgn = nsnull;
-  nsIRegion         *temprgn = nsnull;
-  nsIRegion         *rcrgn = nsnull;
+  PRInt32           rgnrect;
+  nsRect            localrect;
+  PRBool            useopaque = PR_FALSE;
+  nsRegionRectSet   onerect, *rectset;
 
+//printf("begin paint\n");
   if (nsnull != aRootView)
     FlattenViewTree(aRootView, &flatlen, &aRect);
 
   loopend = flatlen;
 
   mContext->GetAppUnitsToDevUnits(t2p);
+  mContext->GetDevUnitsToAppUnits(p2t);
   aRC.GetDrawingSurface(&origsurf);
 
 #if 0
@@ -531,42 +579,84 @@ for (cnt = 0; cnt < flatlen; cnt += FLATVIEW_INC)
 
   while (state != COMPOSITION_DONE)
   {
+    nsIView   *curview;
+    nsRect    *currect;
+    PRUint32  curflags;
+
     for (cnt = loopstart; (increment > 0) ? (cnt < loopend) : (cnt > loopend); cnt += increment)
     {
-      nsIView   *curview = (nsIView *)mFlatViews->ElementAt(cnt);
-      nsRect    *currect = (nsRect *)mFlatViews->ElementAt(cnt + 1);
-      PRUint32  curflags = (PRUint32)mFlatViews->ElementAt(cnt + 2);
+      curview = (nsIView *)mFlatViews->ElementAt(cnt);
+      currect = (nsRect *)mFlatViews->ElementAt(cnt + 1);
+      curflags = (PRUint32)mFlatViews->ElementAt(cnt + 2);
     
       if ((nsnull != curview) && (nsnull != currect))
       {
         PRBool  hasWidget = DoesViewHaveNativeWidget(*curview);
+        PRBool  isBottom = cnt == (flatlen - FLATVIEW_INC);
 
-        if ((PR_FALSE == hasWidget) || ((PR_TRUE == hasWidget) && (cnt == (flatlen - FLATVIEW_INC))))
+        if (!hasWidget || isBottom)
         {
-          PRBool  trans;
-          float   opacity;
+          PRBool  trans = PR_FALSE;
+          float   opacity = 1.0f;
+          PRBool  translucent = PR_FALSE;
 
-          curview->HasTransparency(trans);
-          curview->GetOpacity(opacity);
+          if (!isBottom)
+          {
+            curview->HasTransparency(trans);
+            curview->GetOpacity(opacity);
+
+            translucent = opacity < 1.0f;
+          }
 
           switch (state)
           {
-            default:
             case FRONT_TO_BACK_RENDER:
-              if ((PR_TRUE == trans) || (opacity < 1.0f))
+              if (trans || translucent)
               {
-                //need to finish using back to front till this point
-                transprop = (trans << TRANS_PROPERTY_TRANS) | ((opacity < 1.0f) << TRANS_PROPERTY_OPACITY);
-                backfrontrect = accumrect = *currect;
-                state = FRONT_TO_BACK_ACCUMULATE;
-                accumstart = cnt;
+                if (mTransRgn && mOpaqueRgn)
+                {
+                  //need to finish using back to front till this point
+                  state = FRONT_TO_BACK_ACCUMULATE;
+                  accumstart = cnt;
+
+                  mTransRgn->SetTo(0, 0, 0, 0);
+                  mOpaqueRgn->SetTo(0, 0, 0, 0);
+                }
+
+                //falls through
+              }
+              else
+              {
+                RenderView(curview, aRC, aRect, *currect, aResult);
+
+                if (aResult == PR_FALSE)
+                  aRC.SetClipRect(*currect, nsClipCombine_kSubtract, aResult);
+
+                break;
+              }
+
+            case FRONT_TO_BACK_ACCUMULATE:
+            {
+              nsRect  trect;
+
+              trect.IntersectRect(*currect, aRect);
+              trect *= t2p;
+
+              if (trans || translucent ||
+                  mTransRgn->ContainsRect(trect.x, trect.y, trect.width, trect.height) ||
+                  mOpaqueRgn->ContainsRect(trect.x, trect.y, trect.width, trect.height))
+              {
+                transprop |= (trans << TRANS_PROPERTY_TRANS) | (translucent << TRANS_PROPERTY_OPACITY);
                 mFlatViews->ReplaceElementAt((void *)VIEW_INCLUDED, cnt + 2);
 
-                //get a snapshot of the current clip so that we can exclude areas
-                //already excluded in it from the transparency region
-                aRC.GetClipRegion(&rcrgn);
-
-                
+                if (!isBottom)
+                {
+//printf("adding %d %d %d %d\n", trect.x, trect.y, trect.width, trect.height);
+                  if (trans || translucent)
+                    mTransRgn->Union(trect.x, trect.y, trect.width, trect.height);
+                  else
+                    mOpaqueRgn->Union(trect.x, trect.y, trect.width, trect.height);
+                }
               }
               else
               {
@@ -575,90 +665,106 @@ for (cnt = 0; cnt < flatlen; cnt += FLATVIEW_INC)
                 if (aResult == PR_FALSE)
                   aRC.SetClipRect(*currect, nsClipCombine_kSubtract, aResult);
               }
-
-              break;
-
-            case FRONT_TO_BACK_ACCUMULATE:
-              if ((PR_TRUE == backfrontrect.Intersects(*currect)) &&
-                  ((PR_TRUE == trans) || (opacity < 1.0f)))
-              {
-                transprop |= (trans << TRANS_PROPERTY_TRANS) | ((opacity < 1.0f) << TRANS_PROPERTY_OPACITY);
-                accumrect.UnionRect(*currect, accumrect);
-                mFlatViews->ReplaceElementAt((void *)VIEW_INCLUDED, cnt + 2);
-              }
   
               break;
+            }
 
             case BACK_TO_FRONT_TRANS:
-              if (PR_TRUE == accumrect.Intersects(*currect))
+              if ((curflags & VIEW_INCLUDED) && localrect.Intersects(*currect))
               {
                 PRBool clipstate;
 
-                RenderView(curview, aRC, aRect, *currect, clipstate);
+                RenderView(curview, aRC, localrect, *currect, clipstate);
+              }
 
-                //if this view is transparent, it has been accounted
-                //for, so we never have to look at it again.
-                if ((PR_TRUE == trans) && (curflags & VIEW_INCLUDED))
-                {
-                  mFlatViews->ReplaceElementAt(nsnull, cnt);
-                  mFlatViews->ReplaceElementAt(nsnull, cnt + 2);
-                }
+              break;
+
+            case FRONT_TO_BACK_CLEANUP:
+              if ((curflags & VIEW_INCLUDED) && !trans &&
+                  !translucent && localrect.Intersects(*currect))
+              {
+                RenderView(curview, aRC, localrect, *currect, aResult);
+
+                if (aResult == PR_FALSE)
+                  aRC.SetClipRect(*currect, nsClipCombine_kSubtract, aResult);
               }
 
               break;
 
             case BACK_TO_FRONT_OPACITY:
-              if (PR_TRUE == accumrect.Intersects(*currect))
+              if (curflags & VIEW_INCLUDED)
               {
-                PRBool clipstate;
+                nsRect blendrect;
 
-                if (opacity == 1.0f)
-                  RenderView(curview, aRC, aRect, *currect, clipstate);
-                else
+                if (blendrect.IntersectRect(*currect, localrect))
                 {
-                  aRC.SelectOffScreenDrawingSurface(gRed);
+                  PRBool clipstate;
 
-                  RenderView(curview, aRC, aRect, *currect, clipstate);
-
-                  nsRect brect;
-
-                  brect.x = brect.y = 0;
-                  brect.width = accumrect.width;
-                  brect.height = accumrect.height;
-
-                  static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
-                  static NS_DEFINE_IID(kIBlenderIID, NS_IBLENDER_IID);
-
-                  nsIBlender  *blender = nsnull;
-                  nsresult rv;
-
-                  rv = nsRepository::CreateInstance(kBlenderCID, nsnull, kIBlenderIID, (void **)&blender);
-
-                  if (NS_OK == rv)
+                  if (!translucent)
+                    RenderView(curview, aRC, localrect, *currect, clipstate);
+                  else
                   {
-                    nscoord width, height;
+                    aRC.SelectOffScreenDrawingSurface(gRed);
 
-                    width = NSToCoordRound(currect->width * t2p);
-                    height = NSToCoordRound(currect->height * t2p);
+#if 0
+                    if (trans)
+                    {
+                      aRC.SetColor(NS_RGB(255, 0, 0));
+//                      aRC.FillRect(localrect);
+                      aRC.FillRect(blendrect);
+#ifdef SHOW_RECTS
+                      aRC.SetColor(NS_RGB(255 - evenodd, evenodd, 255 - evenodd));
+                      aRC.DrawLine(blendrect.x, blendrect.y, blendrect.x + blendrect.width, blendrect.y + blendrect.height);
+#endif
+                    }
+#endif
+                    RenderView(curview, aRC, localrect, *currect, clipstate);
 
-                    blender->Init(mContext);
-                    blender->Blend(0, 0, width, height, gRed, gOffScreen, 0, 0, opacity);
+#if 0
+                    if (trans)
+                    {
+                      aRC.SelectOffScreenDrawingSurface(gBlue);
+                      aRC.SetColor(NS_RGB(0, 0, 255));
+//                      aRC.FillRect(localrect);
+                      aRC.FillRect(blendrect);
+#ifdef SHOW_RECTS
+                      aRC.SetColor(NS_RGB(255 - evenodd, evenodd, 255 - evenodd));
+                      aRC.DrawLine(blendrect.x, blendrect.y, blendrect.x + blendrect.width, blendrect.y + blendrect.height);
+#endif
+                      RenderView(curview, aRC, localrect, *currect, clipstate);
+                    }
+#endif
 
-                    NS_RELEASE(blender);
+                    if (nsnull == mBlender)
+                    {
+                      if (NS_OK == nsRepository::CreateInstance(kBlenderCID, nsnull, kIBlenderIID, (void **)&mBlender))
+                        mBlender->Init(mContext);
+                    }
+
+                    if (nsnull != mBlender)
+                    {
+                      blendrect.x -= localrect.x;
+                      blendrect.y -= localrect.y;
+
+                      blendrect *= t2p;
+
+                      aRC.SelectOffScreenDrawingSurface(origsurf);
+
+                      mBlender->Blend(blendrect.x, blendrect.y,
+                                      blendrect.width, blendrect.height,
+                                      gRed, gOffScreen,
+                                      blendrect.x, blendrect.y,
+                                      opacity, trans ? gBlue : nsnull,
+                                      NS_RGB(255, 0, 0), NS_RGB(0, 0, 255));
+                    }
+
+                    aRC.SelectOffScreenDrawingSurface(gOffScreen);
                   }
-
-                  aRC.SelectOffScreenDrawingSurface(gOffScreen);
-                }
-
-                //if this view is transparent or non-opaque, it has
-                //been accounted for, so we never have to look at it again.
-                if (((PR_TRUE == trans) || (opacity < 1.0f)) && (curflags & VIEW_INCLUDED))
-                {
-                  mFlatViews->ReplaceElementAt(nsnull, cnt);
-                  mFlatViews->ReplaceElementAt(nsnull, cnt + 2);
                 }
               }
+              //falls through
 
+            default:
               break;
           }
         }
@@ -666,90 +772,200 @@ for (cnt = 0; cnt < flatlen; cnt += FLATVIEW_INC)
           aRC.SetClipRect(*currect, nsClipCombine_kSubtract, aResult);
 
         if (aResult == PR_TRUE)
-        {
-          state = COMPOSITION_DONE;
           break;
-        }
       }
     }
 
     switch (state)
     {
       case FRONT_TO_BACK_ACCUMULATE:
-        loopstart = cnt - FLATVIEW_INC;
-        loopend = accumstart - FLATVIEW_INC;
-        increment = -FLATVIEW_INC;
         state = (transprop & (1 << TRANS_PROPERTY_OPACITY)) ? BACK_TO_FRONT_OPACITY : BACK_TO_FRONT_TRANS;
 
-        if (state == BACK_TO_FRONT_OPACITY)
+        //render the bottom most view
+        RenderView(curview, aRC, aRect, *currect, aResult);
+
+        //get a snapshot of the current clip so that we can exclude areas
+        //already excluded in it from the transparency region
+        aRC.GetClipRegion(&mRCRgn);
+
+        if (!mOpaqueRgn->IsEmpty())
+          useopaque = PR_TRUE;
+
+        if (mTRgn)
         {
-          PRInt32 w, h;
-          nsRect  bitrect;
+          PRInt32 x, y, w, h;
 
-          //prepare offscreen buffers
+          mTransRgn->GetBoundingBox(&x, &y, &w, &h);
 
-          w = NSToCoordRound(accumrect.width * t2p);
-          h = NSToCoordRound(accumrect.height * t2p);
+          mTRgn->SetTo(x, y, w, h);
+          mTRgn->Subtract(*mRCRgn);
 
-          if ((w > gBlendWidth) || (h > gBlendHeight))
+          mTransRgn->Subtract(*mTRgn);
+          mTransRgn->GetBoundingBox(&x, &y, &w, &h);
+
+          aRC.SetClipRegion(*mTransRgn, nsClipCombine_kReplace, aResult);
+
+          //did that finish everything?
+          if (aResult == PR_TRUE)
           {
-            bitrect.x = bitrect.y = 0;
-            bitrect.width = w;
-            bitrect.height = h;
-
-            if (nsnull != gOffScreen)
-            {
-              aRC.DestroyDrawingSurface(gOffScreen);
-              gOffScreen = nsnull;
-            }
-
-            aRC.CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gOffScreen);
-
-            if (nsnull != gRed)
-            {
-              aRC.DestroyDrawingSurface(gRed);
-              gRed = nsnull;
-            }
-
-            aRC.CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gRed);
-
-            gBlendWidth = w;
-            gBlendHeight = h;
-printf("offscr: %d, %d (%d, %d)\n", w, h, accumrect.width, accumrect.height);
+            state = COMPOSITION_DONE;
+            continue;
           }
 
-          if ((nsnull == gOffScreen) || (nsnull == gRed))
-            state = BACK_TO_FRONT_TRANS;
-          else
+          mTransRgn->GetRects(&mTransRects);
+
+          //see if it might be better to ignore the rects and just do everything as one operation...
+
+          if ((state == BACK_TO_FRONT_TRANS) &&
+              (mTransRects->mNumRects > 1) &&
+              (mTransRects->mArea >= PRUint32(w * h * 0.9f)))
           {
-            aRC.Translate(-accumrect.x, -accumrect.y);
+            rectset = &onerect;
+
+            rectset->mNumRects = 1;
+
+            rectset->mRects[0].x = x;
+            rectset->mRects[0].y = y;
+            rectset->mRects[0].width = w;
+            rectset->mRects[0].height = h;
+          }
+          else
+            rectset = mTransRects;
+
+          rgnrect = 0;
+
+#ifdef SHOW_RECTS
+          evenodd = 255 - evenodd;
+#endif
+        }
+        //falls through
+
+      case BACK_TO_FRONT_TRANS:
+      case BACK_TO_FRONT_OPACITY:
+        if (rgnrect > 0)
+        {
+#ifdef SHOW_RECTS
+          aRC.SetColor(NS_RGB(255 - evenodd, evenodd, 255 - evenodd));
+          aRC.DrawRect(localrect);
+
+//          for (int xxxxx = 0; xxxxx < 50000000; xxxxx++);
+#endif
+          //if this is the last rect, we don't need to subtract it, cause
+          //we're done with this region.
+          if (rgnrect < (PRInt32)rectset->mNumRects)
+            aRC.SetClipRect(localrect, nsClipCombine_kSubtract, aResult);
+
+          if (state == BACK_TO_FRONT_OPACITY)
+          {
+            //buffer swap.
+            aRC.SelectOffScreenDrawingSurface(origsurf);
+            aRC.Translate(localrect.x, localrect.y);
+            aRC.CopyOffScreenBits(gOffScreen, 0, 0, localrect, NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
+          }
+        }
+
+        if (rgnrect < (PRInt32)rectset->mNumRects)
+        {
+          if (state == BACK_TO_FRONT_OPACITY)
+            loopstart = flatlen - FLATVIEW_INC;
+          else
+            loopstart = flatlen - (FLATVIEW_INC << 1);
+
+          loopend = accumstart - FLATVIEW_INC;
+          increment = -FLATVIEW_INC;
+
+          localrect.x = rectset->mRects[rgnrect].x;
+          localrect.y = rectset->mRects[rgnrect].y;
+          localrect.width = rectset->mRects[rgnrect].width;
+          localrect.height = rectset->mRects[rgnrect].height;
+
+          if (state == BACK_TO_FRONT_OPACITY)
+          {
+            //prepare offscreen buffers
+
+            if ((localrect.width > gBlendWidth) || (localrect.height > gBlendHeight))
+            {
+              nsRect  bitrect = nsRect(0, 0, localrect.width + 400, localrect.height + 400);
+
+              aRC.SelectOffScreenDrawingSurface(origsurf);
+
+              if (nsnull != gOffScreen)
+              {
+                aRC.DestroyDrawingSurface(gOffScreen);
+                gOffScreen = nsnull;
+              }
+
+              aRC.CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gOffScreen);
+
+              if (nsnull != gRed)
+              {
+                aRC.DestroyDrawingSurface(gRed);
+                gRed = nsnull;
+              }
+
+              aRC.CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gRed);
+
+              if (nsnull != gBlue)
+              {
+                aRC.DestroyDrawingSurface(gBlue);
+                gRed = nsnull;
+              }
+
+              aRC.CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gBlue);
+
+              gBlendWidth = localrect.width + 400;
+              gBlendHeight = localrect.height + 400;
+//printf("offscr: %d, %d (%d, %d)\n", w, h, accumrect.width, accumrect.height);
+            }
+
+            if ((nsnull == gOffScreen) || (nsnull == gRed))
+              state = BACK_TO_FRONT_TRANS;
+          }
+
+//printf("rect: %d %d %d %d\n", localrect.x, localrect.y, localrect.width, localrect.height);
+          localrect *= p2t;
+          rgnrect++;
+
+          if (state == BACK_TO_FRONT_OPACITY)
+          {
+            aRC.Translate(-localrect.x, -localrect.y);
             aRC.SelectOffScreenDrawingSurface(gOffScreen);
           }
+        }
+        else
+        {
+          if (useopaque)
+          {
+            mOpaqueRgn->Subtract(*mTransRgn);
+
+            if (!mOpaqueRgn->IsEmpty())
+            {
+              loopstart = accumstart;
+              loopend = flatlen;
+              increment = FLATVIEW_INC;
+              state = FRONT_TO_BACK_CLEANUP;
+
+              mOpaqueRgn->GetBoundingBox(&localrect.x, &localrect.y, &localrect.width, &localrect.height);
+
+              localrect *= p2t;
+
+              aRC.SetClipRegion(*mOpaqueRgn, nsClipCombine_kReplace, aResult);
+
+              //did that finish everything?
+              if (aResult == PR_TRUE)
+                state = COMPOSITION_DONE;
+
+              break;
+            }
+          }
+
+          state = COMPOSITION_DONE;
         }
 
         break;
 
-      case BACK_TO_FRONT_OPACITY:
-        aRC.SelectOffScreenDrawingSurface(origsurf);
-        aRC.Translate(accumrect.x, accumrect.y);
-        aRC.CopyOffScreenBits(gOffScreen, 0, 0, accumrect, NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
-        //falls through
-
-      case BACK_TO_FRONT_TRANS:
-        loopstart = accumstart + FLATVIEW_INC;
-        loopend = flatlen;
-        increment = FLATVIEW_INC;
-        state = FRONT_TO_BACK_RENDER;
-
-        //clip out what we just rendered
-        aRC.SetClipRect(accumrect, nsClipCombine_kSubtract, aResult);
-
-        //did that finish everything?
-        if (aResult == PR_TRUE)
-          state = COMPOSITION_DONE;
-
-        break;
-
+      default:
+      case FRONT_TO_BACK_CLEANUP:
       case FRONT_TO_BACK_RENDER:
         state = COMPOSITION_DONE;
         break;
