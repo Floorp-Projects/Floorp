@@ -787,6 +787,20 @@ static PRBool IsChromeURI(nsIURI* aURI)
 }
 #endif
 
+static PRBool IsFileURI(nsIURI* aURI)
+{
+  nsresult rv;
+  nsXPIDLCString protocol;
+  rv = aURI->GetScheme(getter_Copies(protocol));
+  if (NS_SUCCEEDED(rv)) {
+    if (PL_strcmp(protocol, "file") == 0) {
+        return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
 nsresult
 CSSLoaderImpl::SheetComplete(nsICSSStyleSheet* aSheet, SheetLoadData* aLoadData)
 {
@@ -1227,8 +1241,16 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
         nsCOMPtr<nsILoadGroup> loadGroup;
         mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
 
+        PRBool isLocalFile;
+#ifdef INCLUDE_XUL
+        isLocalFile = (IsChromeURI(urlClone) || IsFileURI(urlClone));
+#else
+        isLocalFile = IsFileURI(urlClone);
+#endif
+        nsLoadFlags loadAttributes = (isLocalFile ? nsIChannel::LOAD_NORMAL
+                                                  : nsIChannel::FORCE_RELOAD);
         result = NS_NewStreamLoader(&loader, urlClone, aData, nsnull, loadGroup,
-        																			nsnull, nsIChannel::FORCE_RELOAD);
+                                      nsnull, loadAttributes);
 #ifdef NS_DEBUG
         mSyncCallback = PR_FALSE;
 #endif
