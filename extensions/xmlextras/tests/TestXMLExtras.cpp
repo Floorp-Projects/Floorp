@@ -278,6 +278,13 @@ int main (int argc, char* argv[])
     }
   }
 
+  pURI = nsnull;
+  pChannel = nsnull;
+  pInputStream = nsnull;
+  pDOMParser = nsnull;
+  pDOMDocument = nsnull;
+  pXMLHttpRequest = nsnull;
+
   if (servMgr)
     rv = NS_ShutdownXPCOM(servMgr);
   
