@@ -528,12 +528,6 @@ nsComboboxControlFrame::PositionDropdown(nsIPresContext& aPresContext,
   dropdownRect.y = dropdownYOffset; 
   nsRect currentRect;
   dropdownFrame->GetRect(currentRect);
-  ////////////////////////////////////
-  // XXX temporary fix to stop crashing
-  dropdownRect.width  = PR_MAX(dropdownRect.width, 300);
-  dropdownRect.height = PR_MAX(dropdownRect.height, 300);
-  // XXX temporary fix to stop crashing
-  ////////////////////////////////////
 
   //if (currentRect != dropdownRect) {
     dropdownFrame->SetRect(dropdownRect);
