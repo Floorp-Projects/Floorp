@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>thunderbird-bin</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Thunderbird 0.3a, © 2003 The Mozilla Organization</string>
+	<string>Thunderbird 0.5a, © 2003 The Mozilla Organization</string>
 	<key>CFBundleIconFile</key>
 	<string>mach</string>
 	<key>CFBundleIdentifier</key>
@@ -19,11 +19,11 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.3a</string>
+	<string>0.5a</string>
 	<key>CFBundleSignature</key>
 	<string>MOZZ</string>
 	<key>CFBundleVersion</key>
-	<string>0.3a</string>
+	<string>0.5a</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 </dict>
