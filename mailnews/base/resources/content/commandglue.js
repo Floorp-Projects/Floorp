@@ -289,6 +289,12 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
 
   // now create the db view, which will sort it.
   CreateDBView(newFolder, viewType, viewFlags, sortType, sortOrder);
+  if (oldFolder)
+  {
+    if (!IsSpecialFolder(oldFolder, MSG_FOLDER_FLAG_INBOX))
+      if (oldFolder.URI != newFolder.URI)
+        oldFolder.setMsgDatabase(null);
+  }
   // that should have initialized gDBView, now re-root the thread pane
   var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
   if (outlinerView)
@@ -671,6 +677,7 @@ function FolderPaneSelectionChange()
                   sortOrder = dbFolderInfo.sortOrder;
                   viewFlags = dbFolderInfo.viewFlags;
                   viewType = dbFolderInfo.viewType;
+                  msgDatabase = null;
                 }
               }
               catch (ex)

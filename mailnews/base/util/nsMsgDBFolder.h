@@ -78,6 +78,7 @@ public:
 
   NS_IMETHOD GetMsgDatabase(nsIMsgWindow *aMsgWindow,
                             nsIMsgDatabase** aMsgDatabase);
+  NS_IMETHOD SetMsgDatabase(nsIMsgDatabase *msgDatabase);
 
   NS_DECL_ISUPPORTS_INHERITED
 

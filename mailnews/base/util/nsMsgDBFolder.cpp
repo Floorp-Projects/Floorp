@@ -648,6 +648,20 @@ nsMsgDBFolder::GetMsgDatabase(nsIMsgWindow *aMsgWindow,
 }
 
 NS_IMETHODIMP
+nsMsgDBFolder::SetMsgDatabase(nsIMsgDatabase *aMsgDatabase)
+{
+  if (mDatabase)
+  {
+    mDatabase->RemoveListener(this);
+    mDatabase->ClearCachedHdrs();
+  }
+  mDatabase = aMsgDatabase;
+  if (aMsgDatabase)
+    aMsgDatabase->AddListener(this);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMsgDBFolder::OnReadChanged(nsIDBChangeListener * aInstigator)
 {
     /* do nothing.  if you care about this, over ride it.  see nsNewsFolder.cpp */
