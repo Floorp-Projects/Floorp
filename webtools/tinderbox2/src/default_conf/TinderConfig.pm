@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.32 $ 
-# $Date: 2002/05/02 02:47:18 $ 
+# $Revision: 1.33 $ 
+# $Date: 2002/05/02 23:51:58 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -269,7 +269,12 @@ $VCDisplayImpl = (
 # The name of the version control system as it should appear on the
 # column heading.
 
-$VC_NAME = "CVS";
+#$VC_NAME = "CVS";
+$VC_NAME = "Guilty";
+
+# a regular expression to find bug ticket numbers in checkin comments.
+
+$VC_BUGNUM_REGEXP = "(\d\d\d+)";
 
 # Pick one method for storting data, Data::Dumper is slow but text
 # files allows great debugging capabilities and Storable, available
