@@ -89,6 +89,8 @@ public:
   void                 DoPaint(PRInt32 x, PRInt32 y, PRInt32 width, PRInt32 height,
                                nsIRegion *aClipRegion);
   static gboolean      UpdateIdle (gpointer data);
+  // get the toplevel window for this widget
+  virtual GtkWindow   *GetTopLevelWindow(void);
   NS_IMETHOD           Update(void);
   virtual void         OnFocusInSignal(GdkEventFocus * aGdkFocusEvent);
   virtual void         OnFocusOutSignal(GdkEventFocus * aGdkFocusEvent);

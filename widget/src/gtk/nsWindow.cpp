@@ -995,6 +995,7 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
     GTK_WIDGET_SET_FLAGS(mMozArea, GTK_CAN_FOCUS);
     InstallFocusInSignal(mMozArea);
     InstallFocusOutSignal(mMozArea);
+
   }
 
   // track focus in and focus out events for the shell
@@ -1007,6 +1008,27 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
                        "focus_out_event",
                        GTK_SIGNAL_FUNC(handle_toplevel_focus_out),
                        this);
+
+    InstallButtonPressSignal(mShell);
+    InstallButtonReleaseSignal(mShell);
+    
+    InstallMotionNotifySignal(mShell);
+    
+    InstallEnterNotifySignal(mShell);
+    InstallLeaveNotifySignal(mShell);
+    
+    // Initialize this window instance as a drag target.
+    //gtk_drag_dest_set (mWidget,
+    //GTK_DEST_DEFAULT_ALL,
+    //target_table, n_targets - 1, /* no rootwin */
+    //GdkDragAction(GDK_ACTION_COPY | GDK_ACTION_MOVE));
+    
+    // Drag & Drop events.
+    InstallDragBeginSignal(mShell);
+    InstallDragLeaveSignal(mShell);
+    InstallDragMotionSignal(mShell);
+    InstallDragDropSignal(mShell);
+
   }
 
   // XXX fix this later...
@@ -2509,6 +2531,17 @@ nsWindow::GetRenderWindow(GtkObject * aGtkObject)
     }
   }
   return renderWindow;
+}
+
+/* virtual */
+GtkWindow *nsWindow::GetTopLevelWindow(void)
+{
+  GtkWidget *moz_area;
+
+  if (!mSuperWin)
+    return NULL;
+  moz_area = GetMozArea();
+  return GTK_WINDOW(gtk_widget_get_toplevel(moz_area));
 }
 
 //////////////////////////////////////////////////////////////////////

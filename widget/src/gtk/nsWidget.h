@@ -166,6 +166,9 @@ public:
   // Return the Gdk window used for rendering
   virtual GdkWindow * GetRenderWindow(GtkObject * aGtkWidget);
 
+  // get the toplevel window for this widget
+  virtual GtkWindow *GetTopLevelWindow(void);
+
 protected:
 
   virtual void InitCallbacks(char * aName = nsnull);
