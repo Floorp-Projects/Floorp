@@ -1191,7 +1191,7 @@ else
 $(MKDEPENDENCIES)::
 	touch $(MKDEPENDENCIES)
 	$(MKDEPEND) -o'.o' -f$(MKDEPENDENCIES) $(DEFINES) $(ACDEFINES) $(INCLUDES) $(addprefix $(srcdir)/,$(CSRCS) $(CPPSRCS)) >/dev/null 2>&1
-	@mv depend.mk depend.mk.old && cat depend.mk.old | sed "s|^$(srcdir)/||g" > depend.mk && rm -f depend.mk.old
+	@mv $(MKDEPENDENCIES) depend.mk.old && cat depend.mk.old | sed "s|^$(srcdir)/||g" > $(MKDEPENDENCIES) && rm -f depend.mk.old
 
 ifndef MOZ_NATIVE_MAKEDEPEND
 $(MKDEPEND):
