@@ -64,7 +64,7 @@ public:
   /**
    * Sets the select state of the option at index
    */
-  NS_IMETHOD DoneAddingContent() = 0;
+  NS_IMETHOD DoneAddingContent(PRBool aIsDone) = 0;
 
 };
 
