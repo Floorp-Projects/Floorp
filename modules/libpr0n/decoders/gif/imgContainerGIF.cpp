@@ -171,6 +171,11 @@ NS_IMETHODIMP imgContainerGIF::AppendFrame(gfxIImageFrame *item)
         mCompositingFrame->SetBackgroundColor(backgroundColor);
       }
 
+      PRInt32 timeout;
+      // Set timeout because StartAnimation reads it
+      if (NS_SUCCEEDED(firstFrame->GetTimeout(&timeout)))
+        mCompositingFrame->SetTimeout(timeout);
+
       PRInt32 x;
       PRInt32 y;
       PRInt32 width;
@@ -187,6 +192,7 @@ NS_IMETHODIMP imgContainerGIF::AppendFrame(gfxIImageFrame *item)
     }
   }
 
+  mFrames.AppendElement(NS_STATIC_CAST(nsISupports*, item));
   if (numFrames > 0) {
     // If this is our second frame, init a timer so we don't display
     // the next frame until the delay timer has expired for the current
@@ -198,7 +204,7 @@ NS_IMETHODIMP imgContainerGIF::AppendFrame(gfxIImageFrame *item)
 
   mCurrentFrameIsFinishedDecoding = PR_FALSE;
 
-  return mFrames.AppendElement(NS_STATIC_CAST(nsISupports*, item));
+  return NS_OK; 
 }
 
 //******************************************************************************
