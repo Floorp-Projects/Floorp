@@ -39,6 +39,8 @@
 #define nsPersistentProperties_h___
 
 #include "nsIPersistentProperties2.h"
+#include "pldhash.h"
+#include "plarena.h"
 
 class nsIUnicharInputStream;
 
@@ -77,7 +79,8 @@ protected:
   PRUint32 mBufferPos;
   PRUint32 mBufferLength;
   nsIPersistentProperties* mSubclass;
-  struct PLHashTable*    mTable;
+  struct PLDHashTable mTable;
+  PLArenaPool mArena;
 };
 
 class nsPropertyElement : public nsIPropertyElement 

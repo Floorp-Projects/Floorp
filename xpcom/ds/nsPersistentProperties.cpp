@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,29 +36,86 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsPersistentProperties.h"
 #include "nsID.h"
 #include "nsCRT.h"
 #include "nsReadableUtils.h"
 #include "nsIInputStream.h"
-#include "nsIProperties.h"
 #include "nsIUnicharInputStream.h"
-#include "nsProperties.h"
 #include "pratom.h"
 #include "nsEnumeratorUtils.h"
 #include "nsReadableUtils.h"
+#include "nsPrintfCString.h"
 
-static PLHashNumber
-HashKey(const PRUnichar *aString)
+#define PL_ARENA_CONST_ALIGN_MASK 3
+#include "nsPersistentProperties.h"
+#include "nsIProperties.h"
+#include "nsProperties.h"
+
+struct propertyTableEntry : public PLDHashEntryHdr
 {
-  return (PLHashNumber) nsCRT::HashCode(aString);
+    // both of these are arena-allocated
+    const char *mKey;
+    const PRUnichar *mValue;
+};
+
+static PRUnichar*
+ArenaStrdup(const nsAFlatString& aString, PLArenaPool* aArena)
+{
+    void *mem;
+    // add one to include the null terminator
+    PRInt32 len = (aString.Length()+1) * sizeof(PRUnichar);
+    PL_ARENA_ALLOCATE(mem, aArena, len);
+    NS_ASSERTION(mem, "Couldn't allocate space!\n");
+    if (mem) {
+        memcpy(mem, aString.get(), len);
+    }
+    return NS_STATIC_CAST(PRUnichar*, mem);
 }
 
-static PRIntn
-CompareKeys(const PRUnichar *aStr1, const PRUnichar *aStr2)
+static char*
+ArenaStrdup(const nsAFlatCString& aString, PLArenaPool* aArena)
 {
-  return nsCRT::strcmp(aStr1, aStr2) == 0;
+    void *mem;
+    // add one to include the null terminator
+    PRInt32 len = (aString.Length()+1) * sizeof(char);
+    PL_ARENA_ALLOCATE(mem, aArena, len);
+    NS_ASSERTION(mem, "Couldn't allocate space!\n");
+    if (mem)
+        memcpy(mem, aString.get(), len);
+    return NS_STATIC_CAST(char*, mem);
 }
+
+PR_STATIC_CALLBACK(PRBool)
+matchPropertyKeys(PLDHashTable*, const PLDHashEntryHdr* aHdr,
+                  const void *key)
+{
+  const propertyTableEntry* entry =
+    NS_STATIC_CAST(const propertyTableEntry*,aHdr);
+  const char *keyValue = NS_STATIC_CAST(const char*,key);
+    
+  return (strcmp(entry->mKey, keyValue)==0);
+}
+
+PR_STATIC_CALLBACK(const void*)
+getPropertyKey(PLDHashTable*, PLDHashEntryHdr* aHdr)
+{
+  propertyTableEntry* entry =
+    NS_STATIC_CAST(propertyTableEntry*, aHdr);
+
+  return entry->mKey;
+}
+
+struct PLDHashTableOps property_HashTableOps = {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    getPropertyKey,
+    PL_DHashStringKey,
+    matchPropertyKeys,
+    PL_DHashMoveEntryStub,
+    PL_DHashClearEntryStub,
+    PL_DHashFinalizeStub,
+    nsnull,
+};
 
 nsPersistentProperties::nsPersistentProperties()
 {
@@ -66,27 +123,17 @@ nsPersistentProperties::nsPersistentProperties()
 
   mIn = nsnull;
   mSubclass = NS_STATIC_CAST(nsIPersistentProperties*, this);
-  mTable = PL_NewHashTable(128, (PLHashFunction) HashKey,
-    (PLHashComparator) CompareKeys,
-    (PLHashComparator) nsnull, nsnull, nsnull);
-}
+  PL_DHashTableInit(&mTable, &property_HashTableOps, nsnull,
+                    sizeof(propertyTableEntry), 20);
 
-PR_STATIC_CALLBACK(PRIntn)
-FreeHashEntries(PLHashEntry* he, PRIntn i, void* arg)
-{
-  nsCRT::free((PRUnichar*)he->key);
-  nsCRT::free((PRUnichar*)he->value);
-  return HT_ENUMERATE_REMOVE;
+  PL_INIT_ARENA_POOL(&mArena, "PersistentPropertyArena", 2048);
+  
 }
 
 nsPersistentProperties::~nsPersistentProperties()
 {
-  if (mTable) {
-    // Free the PRUnicode* pointers contained in the hash table entries
-    PL_HashTableEnumerateEntries(mTable, FreeHashEntries, 0);
-    PL_HashTableDestroy(mTable);
-    mTable = nsnull;
-  }
+    PL_FinishArenaPool(&mArena);
+    PL_DHashTableFinish(&mTable);
 }
 
 NS_METHOD
@@ -112,9 +159,7 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
   nsresult ret = NS_NewUTF8ConverterStream(&mIn, aIn, 0);
   
   if (ret != NS_OK) {
-#ifdef NS_DEBUG
-      printf("NS_NewConverterStream failed\n");
-#endif
+    NS_WARNING("NS_NewUTF8ConverterStream failed");
     return NS_ERROR_FAILURE;
   }
   c = Read();
@@ -213,7 +258,6 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
   }
   mIn->Close();
   NS_RELEASE(mIn);
-  NS_ASSERTION(!mIn, "unexpected remaining reference");
 
   return NS_OK;
 }
@@ -225,27 +269,22 @@ nsPersistentProperties::SetStringProperty(const nsAString& aKey, nsAString& aNew
 #if 0
   cout << "will add " << NS_LossyConvertUCS2toASCII(aKey).get() << "=" << NS_LossyConvertUCS2ToASCII(aNewValue).get() << endl;
 #endif
-  if (!mTable) {
-    return NS_ERROR_FAILURE;
+
+  NS_ConvertUCS2toUTF8 flatKey(aKey);
+  propertyTableEntry *entry =
+      NS_STATIC_CAST(propertyTableEntry*,
+                     PL_DHashTableOperate(&mTable, flatKey.get(), PL_DHASH_ADD));
+
+  if (entry->mKey) {
+      aOldValue = entry->mValue;
+      NS_WARNING(nsPrintfCString(aKey.Length() + 30,
+                                 "the property %s already exists\n",
+                                 NS_ConvertUCS2toUTF8(aKey).get()).get());
   }
 
-  const nsPromiseFlatString& keyStr = PromiseFlatString(aKey);
-  const PRUnichar *key = keyStr.get();
-  PRUint32 len;
-  PRUint32 hashValue = nsCRT::HashCode(key, &len);
-  PLHashEntry **hep = PL_HashTableRawLookup(mTable, hashValue, key);
-  PLHashEntry *he = *hep;
-  if (he) {
-    // XXX should we copy the old value to aOldValue, and then remove it?
-#ifdef NS_DEBUG
-    printf("warning: property %s already exists\n",
-           NS_ConvertUCS2toUTF8(aKey).get());
-#endif
-    return NS_OK;
-  }
-  PL_HashTableRawAdd(mTable, hep, hashValue, ToNewUnicode(aKey),
-                     ToNewUnicode(aNewValue));
-
+  entry->mKey = ArenaStrdup(flatKey, &mArena);
+  entry->mValue = ArenaStrdup(PromiseFlatString(aNewValue), &mArena);
+  
   return NS_OK;
 }
 
@@ -268,55 +307,51 @@ nsPersistentProperties::Subclass(nsIPersistentProperties* aSubclass)
 NS_IMETHODIMP
 nsPersistentProperties::GetStringProperty(const nsAString& aKey, nsAString& aValue)
 {
-  if (!mTable)
-     return NS_ERROR_FAILURE;
+  NS_ConvertUCS2toUTF8 flatKey(aKey);
 
-  const nsPromiseFlatString& keyStr = PromiseFlatString(aKey);
-  const PRUnichar *key = keyStr.get();
+  propertyTableEntry *entry =
+    NS_STATIC_CAST(propertyTableEntry*,
+                   PL_DHashTableOperate(&mTable, flatKey.get(), PL_DHASH_LOOKUP));
 
-  PRUint32 len;
-  PRUint32 hashValue = nsCRT::HashCode(key, &len);
-  PLHashEntry **hep = PL_HashTableRawLookup(mTable, hashValue, key);
-  PLHashEntry *he = *hep;
-  if (he) {
-    aValue = (const PRUnichar*)he->value;
-    return NS_OK;
-  }
+  if (!entry)
+    return NS_ERROR_FAILURE;
 
-  return NS_ERROR_FAILURE;
+  aValue = entry->mValue;
+  return NS_OK;
 }
 
-PR_STATIC_CALLBACK(PRIntn)
-AddElemToArray(PLHashEntry* he, PRIntn i, void* arg)
+PR_STATIC_CALLBACK(PLDHashOperator)
+AddElemToArray(PLDHashTable* table, PLDHashEntryHdr *hdr,
+               PRUint32 i, void *arg)
 {
-  nsISupportsArray	*propArray = (nsISupportsArray *) arg;
+  nsISupportsArray  *propArray = (nsISupportsArray *) arg;
+  propertyTableEntry* entry =
+      NS_STATIC_CAST(propertyTableEntry*, hdr);
   
   nsPropertyElement *element =
-      new nsPropertyElement((PRUnichar*)he->key,
-                            (PRUnichar*)he->value);
+      new nsPropertyElement(NS_ConvertUTF8toUCS2(entry->mKey).get(),
+                            entry->mValue);
   if (!element)
-     return HT_ENUMERATE_STOP;
+     return PL_DHASH_STOP;
 
   NS_ADDREF(element);
   propArray->InsertElementAt(element, i);
 
-  return HT_ENUMERATE_NEXT;
+  return PL_DHASH_NEXT;
 }
 
 NS_IMETHODIMP
 nsPersistentProperties::EnumerateProperties(nsIBidirectionalEnumerator** aResult)
 {
-  if (!mTable)
-    return NS_ERROR_FAILURE;
-
   nsISupportsArray* propArray;
   nsresult rv = NS_NewISupportsArray(&propArray);
   if (rv != NS_OK)
     return rv;
 
   // Step through hash entries populating a transient array
-   PRIntn n = PL_HashTableEnumerateEntries(mTable, AddElemToArray, (void *)propArray);
-   if ( n < (PRIntn) mTable->nentries )
+  PRUint32 n =
+      PL_DHashTableEnumerate(&mTable, AddElemToArray, (void *)propArray);
+   if ( n < mTable.entryCount )
       return NS_ERROR_OUT_OF_MEMORY;
 
   // Convert array into enumerator
@@ -332,28 +367,25 @@ nsPersistentProperties::SimpleEnumerateProperties(nsISimpleEnumerator** aResult)
 {
   nsCOMPtr<nsIBidirectionalEnumerator> iterator;
 
-  if (!mTable)
-    return NS_ERROR_FAILURE;
-
   nsISupportsArray* propArray;
   nsresult rv = NS_NewISupportsArray(&propArray);
   if (rv != NS_OK)
     return rv;
 
   // Step through hash entries populating a transient array
-   PRIntn n = PL_HashTableEnumerateEntries(mTable, AddElemToArray, (void *)propArray);
-   if ( n < (PRIntn) mTable->nentries )
+  PRUint32 n =
+      PL_DHashTableEnumerate(&mTable, AddElemToArray, (void *)propArray);
+   if ( n < (PRIntn) mTable.entryCount )
       return NS_ERROR_OUT_OF_MEMORY;
 
   // Convert array into enumerator
   rv = NS_NewISupportsArrayEnumerator(propArray, getter_AddRefs(iterator));
+  if (NS_FAILED(rv)) return rv;
+  
   // Convert nsIEnumerator into nsISimpleEnumerator
   rv = NS_NewAdapterEnumerator(aResult, iterator);
 
-  if (rv != NS_OK)
-    return rv;
-
-  return NS_OK;
+  return rv;
 }
 
 
