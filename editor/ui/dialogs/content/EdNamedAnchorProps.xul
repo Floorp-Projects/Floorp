@@ -27,6 +27,7 @@
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
 <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?> 
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EdNamedAnchorProperties.dtd">
 
@@ -42,9 +43,10 @@
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
   <keyset id="keyset"/>
+  <popupset id="aTooltipSet" />
 
   <text class="label" align="left" for="nameInput" value="&anchorNameEditField.label;"/>
-  <textfield class="MinWidth20em" id="nameInput"/>
+  <textfield class="MinWidth20em" id="nameInput" tooltip="aTooltip" tooltiptext="&nameInput.tooltip;"/>
   <text class="label" align="left" value="&noSpacesMsg.label;"/>
   <spring class="spacer"/>
   <!-- from EdDialogOverlay -->
