@@ -138,20 +138,31 @@ NS_IMETHODIMP nsSupportsStringImpl::GetData(char **aData)
 
 NS_IMETHODIMP nsSupportsStringImpl::SetData(const char *aData)
 {
-    if(mData)
-      nsAllocator::Free(mData);
-    if(aData)
-        mData = (char*) nsAllocator::Clone(aData,
-                                (nsCRT::strlen(aData)+1)*sizeof(char));
-    else
-        mData = nsnull;
-    return NS_OK;
+    return SetDataWithLength(aData ? nsCRT::strlen(aData) : 0, aData);
 }
 
 NS_IMETHODIMP nsSupportsStringImpl::ToString(char **_retval)
 {
     return GetData(_retval);
 }  
+
+NS_IMETHODIMP nsSupportsStringImpl::SetDataWithLength(PRInt32 aLength, const char *aData)
+{
+    if(mData)
+      nsAllocator::Free(mData);
+    if(aData) {
+        mData = NS_STATIC_CAST(char*, nsAllocator::Alloc((aLength+1)*sizeof(char)));
+        if ( mData ) {
+          nsCRT::memcpy ( mData, aData, aLength*sizeof(char) );
+          mData[aLength] = NS_STATIC_CAST(char, 0);
+        }
+        else
+          return NS_ERROR_OUT_OF_MEMORY;
+    }
+    else
+        mData = nsnull;
+    return NS_OK;
+}
 
 /***************************************************************************/
 
@@ -191,20 +202,34 @@ NS_IMETHODIMP nsSupportsWStringImpl::GetData(PRUnichar **aData)
 
 NS_IMETHODIMP nsSupportsWStringImpl::SetData(const PRUnichar *aData)
 {
-    if(mData)
-      nsAllocator::Free(mData);
-    if(aData)
-        mData = (PRUnichar*) nsAllocator::Clone(aData,
-                                (nsCRT::strlen(aData)+1)*sizeof(PRUnichar));
-    else
-        mData = nsnull;
-    return NS_OK;
+    return SetDataWithLength(aData ? nsCRT::strlen(aData) : 0, aData);
 }
 
 NS_IMETHODIMP nsSupportsWStringImpl::ToString(PRUnichar **_retval)
 {
     return GetData(_retval);
 }  
+
+// NOTE: assumes |length| does not include the null and null terminates itself. |length|
+// is in characters, not bytes.
+NS_IMETHODIMP nsSupportsWStringImpl::SetDataWithLength(PRInt32 aLength, const PRUnichar *aData)
+{
+    if(mData)
+      nsAllocator::Free(mData);
+    if(aData) {
+        mData = NS_STATIC_CAST(PRUnichar*, nsAllocator::Alloc((aLength+1)*sizeof(PRUnichar)));
+        if ( mData ) {
+          nsCRT::memcpy ( mData, aData, aLength*sizeof(PRUnichar) );
+          mData[aLength] = NS_STATIC_CAST(PRUnichar, 0);
+        }
+        else
+          return NS_ERROR_OUT_OF_MEMORY;
+    }
+    else
+        mData = nsnull;
+    return NS_OK;
+}
+
 
 /***************************************************************************/
 
