@@ -200,6 +200,20 @@ function GET(url, filename)
     runEventPump();
 }
 
+function COPY(url, target, recursive, overwrite)
+{
+    davSvc.copyTo(new Resource(url), target, recursive, overwrite,
+                  new OperationListener());
+    runEventPump();
+}
+
+function MOVE(url, target, overwrite)
+{
+    davSvc.moveTo(new Resource(url), target, overwrite,
+                  new OperationListener());
+    runEventPump();
+}
+
 function PUT(filename, url, contentType)
 {
     var stream = InputStreamForFile(filename);

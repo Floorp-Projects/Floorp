@@ -89,13 +89,14 @@ interface nsIWebDAVService : nsISupports
 
     void moveTo(in nsIWebDAVResource resource,
                 in ACString destination,
+                in boolean overwrite,
                 in nsIWebDAVOperationListener listener);
 
     void copyTo(in nsIWebDAVResource resource,
                 in ACString destination,
-                in nsIWebDAVOperationListener listener,
                 in boolean recursive,
-                in boolean overwrite);
+                in boolean overwrite,
+                in nsIWebDAVOperationListener listener);
 
     void makeCollection(in nsIWebDAVResource resource,
                         in nsIWebDAVOperationListener listener);

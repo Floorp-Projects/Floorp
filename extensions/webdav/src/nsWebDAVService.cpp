@@ -181,13 +181,12 @@ nsWebDAVService::SendPropfindDocumentToChannel(nsIDocument *doc,
     
     channel->SetRequestMethod(NS_LITERAL_CSTRING("PROPFIND"));
 
-    // XXX I wonder how many compilers this will break...
     if (withDepth) {
         channel->SetRequestHeader(NS_LITERAL_CSTRING("Depth"),
-                                  NS_LITERAL_CSTRING("1"), false);
+                                  NS_LITERAL_CSTRING("1"), PR_FALSE);
     } else {
         channel->SetRequestHeader(NS_LITERAL_CSTRING("Depth"),
-                                  NS_LITERAL_CSTRING("0"), false);
+                                  NS_LITERAL_CSTRING("0"), PR_FALSE);
     }
 
     if (LOG_ENABLED()) {
@@ -547,18 +546,95 @@ nsWebDAVService::MakeCollection(nsIWebDAVResource *resource,
 NS_IMETHODIMP
 nsWebDAVService::MoveTo(nsIWebDAVResource *resource,
                         const nsACString &destination,
+                        PRBool overwrite,
                         nsIWebDAVOperationListener *listener)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsCOMPtr<nsIHttpChannel> channel;
+    nsresult rv = ChannelFromResource(resource, getter_AddRefs(channel));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIStreamListener> streamListener;
+    rv = NS_WD_NewOperationStreamListener(resource, listener,
+                                          nsIWebDAVOperationListener::COPY,
+                                          getter_AddRefs(streamListener));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    channel->SetRequestMethod(NS_LITERAL_CSTRING("MOVE"));
+
+    if (!overwrite) {
+        channel->SetRequestHeader(NS_LITERAL_CSTRING("Overwrite"),
+                                  NS_LITERAL_CSTRING("F"),
+                                  PR_FALSE);
+    } else {
+        channel->SetRequestHeader(NS_LITERAL_CSTRING("Overwrite"),
+                                  NS_LITERAL_CSTRING("F"),
+                                  PR_FALSE);
+    }
+
+    channel->SetRequestHeader(NS_LITERAL_CSTRING("Destination"),
+                              destination, PR_FALSE);
+
+    if (LOG_ENABLED()) {
+        nsCOMPtr<nsIURI> uri;
+        channel->GetURI(getter_AddRefs(uri));
+        nsCAutoString spec;
+        uri->GetSpec(spec);
+        LOG(("MOVE starting for %s -> %s", spec.get(),
+             nsCAutoString(destination).get()));
+    }
+
+    return channel->AsyncOpen(streamListener, channel);
 }
 
 NS_IMETHODIMP
 nsWebDAVService::CopyTo(nsIWebDAVResource *resource,
                         const nsACString &destination,
-                        nsIWebDAVOperationListener *listener, PRBool recursive,
-                        PRBool overwrite)
+                        PRBool recursive, PRBool overwrite,
+                        nsIWebDAVOperationListener *listener)
+
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsCOMPtr<nsIHttpChannel> channel;
+    nsresult rv = ChannelFromResource(resource, getter_AddRefs(channel));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIStreamListener> streamListener;
+    rv = NS_WD_NewOperationStreamListener(resource, listener,
+                                          nsIWebDAVOperationListener::COPY,
+                                          getter_AddRefs(streamListener));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    channel->SetRequestMethod(NS_LITERAL_CSTRING("COPY"));
+    if (!overwrite) {
+        channel->SetRequestHeader(NS_LITERAL_CSTRING("Overwrite"),
+                                  NS_LITERAL_CSTRING("F"),
+                                  PR_FALSE);
+    } else {
+        channel->SetRequestHeader(NS_LITERAL_CSTRING("Overwrite"),
+                                  NS_LITERAL_CSTRING("F"),
+                                  PR_FALSE);
+    }
+
+    if (recursive) {
+        channel->SetRequestHeader(NS_LITERAL_CSTRING("Depth"),
+                                  NS_LITERAL_CSTRING("infinity"), PR_FALSE);
+    } else {
+        channel->SetRequestHeader(NS_LITERAL_CSTRING("Depth"),
+                                  NS_LITERAL_CSTRING("0"), PR_FALSE);
+    }
+
+    channel->SetRequestHeader(NS_LITERAL_CSTRING("Destination"),
+                              destination, PR_FALSE);
+
+    if (LOG_ENABLED()) {
+        nsCOMPtr<nsIURI> uri;
+        channel->GetURI(getter_AddRefs(uri));
+        nsCAutoString spec;
+        uri->GetSpec(spec);
+        LOG(("COPY starting for %s -> %s", spec.get(),
+             nsCAutoString(destination).get()));
+    }
+
+    return channel->AsyncOpen(streamListener, channel);
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebDAVService)
