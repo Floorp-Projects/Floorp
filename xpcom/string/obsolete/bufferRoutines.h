@@ -695,7 +695,7 @@ PRInt32 Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool a
  */
 PRInt32 Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCount);
 PRInt32 Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCount){
-  return nsCRT::strncmp(aStr1, aStr2, aCount * sizeof(PRUnichar));
+  return nsCRT::strncmp(aStr1, aStr2, aCount);
 }
 
 
