@@ -708,18 +708,26 @@ function monitorDialupConnection( numSecondsElapsed, monitorFunction,
 
 function set1StepMode( numSecondsElapsed )
 {
+	
+	debug( "set1StepMode: " + numSecondsElapsed );
+	
 	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 
 	var			connectStatusFlag = document.setupPlugin.IsDialerConnected();
 
 	if ( ( numSecondsElapsed < 10 ) || ( connectStatusFlag == true ) )
 	{
+		//debug( "still connected" );
 		numSecondsElapsed = numSecondsElapsed + 1;
 
-		if ( oneStepSemaphone == false )
+		if ( oneStepSemaphore == false )
+		{
 			setTimeout( "set1StepMode(" + numSecondsElapsed + ")", 1000 );
+		}
 		else
+		{
 			oneStepSemphore = false;
+		}
 	}
 	else
 	{
