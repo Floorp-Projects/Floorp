@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.13 2000/08/02 20:50:57 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.14 2000/08/05 03:37:46 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -823,7 +823,7 @@ mp_err   mp_mul(const mp_int *a, const mp_int *b, mp_int * c)
   }
 
   /* This has the effect of left-padding with zeroes... */
-  mp_zero(c);
+  MP_USED(c) = 1; MP_DIGIT(c, 0) = 0;
   if((res = s_mp_pad(c, USED(a) + USED(b))) != MP_OKAY)
     goto CLEANUP;
 
@@ -894,7 +894,7 @@ mp_err   mp_sqr(const mp_int *a, mp_int *sqr)
   }
 
   /* Left-pad with zeroes */
-  mp_zero(sqr);
+  MP_USED(sqr) = 1; MP_DIGIT(sqr, 0) = 0;
   if((res = s_mp_pad(sqr, 2 * USED(a))) != MP_OKAY)
     goto CLEANUP;
 
@@ -927,21 +927,65 @@ mp_err   mp_sqr(const mp_int *a, mp_int *sqr)
     }
   } /* for(ix ...) */
 
-  if (MP_OKAY != (res = s_mp_mul_2d(sqr, 1)))
-    goto CLEANUP;
-  if (MP_OKAY != (res = s_mp_pad(sqr, 2 * USED(a))))
-    goto CLEANUP;
+  /* now sqr *= 2 */
+  ps = MP_DIGITS(sqr);
+  k = 0;
+#define SHIFT_1_BIT(n) \
+    d = ps[n]; ps[n] = (d << 1) | k; k = d >> (DIGIT_BIT - 1)
+  for (ix = MP_USED(sqr); ix >= 8; ix -= 8) {
+    SHIFT_1_BIT(0);
+    SHIFT_1_BIT(1);
+    SHIFT_1_BIT(2);
+    SHIFT_1_BIT(3);
+    SHIFT_1_BIT(4);
+    SHIFT_1_BIT(5);
+    SHIFT_1_BIT(6);
+    SHIFT_1_BIT(7);
+    ps += 8;
+  }
+  if (ix) {
+    ps += ix;
+    switch (ix) {  /* all fallthru */
+    case 7: SHIFT_1_BIT(-7); /* FALLTHRU */
+    case 6: SHIFT_1_BIT(-6); /* FALLTHRU */
+    case 5: SHIFT_1_BIT(-5); /* FALLTHRU */
+    case 4: SHIFT_1_BIT(-4); /* FALLTHRU */
+    case 3: SHIFT_1_BIT(-3); /* FALLTHRU */
+    case 2: SHIFT_1_BIT(-2); /* FALLTHRU */
+    case 1: SHIFT_1_BIT(-1); /* FALLTHRU */
+    case 0: break;
+    }
+  }
 
   pa = MP_DIGITS(a);
+  alim = pa + MP_USED(a);
   ps = MP_DIGITS(sqr);
   w  = 0;
-  while (pa < alim) {
-    d = *pa++;
-    w += (d * (mp_word)d) + *ps;
-    *ps++ = ACCUM(w);
-    w = (w >> DIGIT_BIT) + *ps;
-    *ps++ = ACCUM(w);
-    w = (w >> DIGIT_BIT);
+#define ADD_SQUARE(n) \
+    d = pa[n]; \
+    w += (d * (mp_word)d) + ps[2*n]; \
+    ps[2*n] = ACCUM(w); \
+    w = (w >> DIGIT_BIT) + ps[2*n+1]; \
+    ps[2*n+1] = ACCUM(w); \
+    w = (w >> DIGIT_BIT)
+
+  for (ix = MP_USED(a); ix >= 4; ix -= 4) {
+    ADD_SQUARE(0);
+    ADD_SQUARE(1);
+    ADD_SQUARE(2);
+    ADD_SQUARE(3);
+    pa += 4;
+    ps += 8;
+  }
+  if (ix) {
+    ps += 2*ix;
+    pa += ix;
+    switch (ix) {
+    case 3: ADD_SQUARE(-3); /* FALLTHRU */
+    case 2: ADD_SQUARE(-2); /* FALLTHRU */
+    case 1: ADD_SQUARE(-1); /* FALLTHRU */
+    case 0: break;
+    }
   }
   while (w) {
     w += *ps;
@@ -2480,9 +2524,10 @@ void     s_mp_free(void *ptr)
 /* Remove leading zeroes from the given value                             */
 void     s_mp_clamp(mp_int *mp)
 {
-  while(USED(mp) > 1 && DIGIT(mp, USED(mp) - 1) == 0)
-    USED(mp) -= 1;
-
+  mp_size used = MP_USED(mp);
+  while (used > 1 && DIGIT(mp, used - 1) == 0)
+    --used;
+  MP_USED(mp) = used;
 } /* end s_mp_clamp() */
 #endif
 
@@ -2598,6 +2643,7 @@ mp_err   s_mp_mul_2d(mp_int *mp, mp_digit d)
 void     s_mp_rshd(mp_int *mp, mp_size p)
 {
   mp_size  ix;
+  mp_digit *src, *dst;
 
   if(p == 0)
     return;
@@ -2611,13 +2657,14 @@ void     s_mp_rshd(mp_int *mp, mp_size p)
   }
 
   /* Shift all the significant figures over as needed */
-  for(ix = p; ix < USED(mp); ix++)
-    DIGIT(mp, ix - p) = DIGIT(mp, ix);
+  dst = MP_DIGITS(mp);
+  src = dst + p;
+  for (ix = USED(mp) - p; ix > 0; ix--)
+    *dst++ = *src++;
 
   /* Fill the top digits with zeroes */
-  ix -= p;
-  while(ix < USED(mp))
-    DIGIT(mp, ix++) = 0;
+  while (p-- > 0)
+    *dst++ = 0;
 
   /* Strip off any leading zeroes    */
   s_mp_clamp(mp);
@@ -3085,8 +3132,8 @@ mp_err   s_mp_add_offset(mp_int *a, mp_int *b, mp_size offset)
 /* Compute a = |a| - |b|, assumes |a| >= |b|                              */
 mp_err   s_mp_sub(mp_int *a, const mp_int *b)  /* magnitude subtract      */
 {
-  mp_word   w, k = 0;
-  mp_size   ix;
+  mp_digit *pa, *pb, *limit;
+  mp_sword  w = 0;
 
   /*
     Subtract and propagate borrow.  Up to the precision of b, this
@@ -3094,16 +3141,19 @@ mp_err   s_mp_sub(mp_int *a, const mp_int *b)  /* magnitude subtract      */
     carries get to the right place.  This saves having to pad b out to
     the precision of a just to make the loops work right...
    */
-  for(ix = 0; ix < USED(b); ix++) {
-    w = (RADIX + (mp_word)DIGIT(a, ix)) - k - DIGIT(b, ix);
-    DIGIT(a, ix) = ACCUM(w);
-    k = CARRYOUT(w) ? 0 : 1;
+  pa = MP_DIGITS(a);
+  pb = MP_DIGITS(b);
+  limit = pb + MP_USED(b);
+  while (pb < limit) {
+    w = w + *pa - *pb++;
+    *pa++ = ACCUM(w);
+    w >>= MP_DIGIT_BIT;
   }
-  while(ix < USED(a)) {
-    w = (RADIX + (mp_word)DIGIT(a, ix)) - k;
-    DIGIT(a, ix) = ACCUM(w);
-    k = CARRYOUT(w) ? 0 : 1;
-    ++ix;
+  limit = MP_DIGITS(a) + MP_USED(a);
+  while (w && pa < limit) {
+    w = w + *pa;
+    *pa++ = ACCUM(w);
+    w >>= MP_DIGIT_BIT;
   }
 
   /* Clobber any leading zeroes we created    */
@@ -3114,11 +3164,7 @@ mp_err   s_mp_sub(mp_int *a, const mp_int *b)  /* magnitude subtract      */
      of our input invariant.  We've already done the work,
      but we'll at least complain about it...
    */
-  if(k)
-    return MP_RANGE;
-  else
-    return MP_OKAY;
-
+  return w ? MP_RANGE : MP_OKAY;
 } /* end s_mp_sub() */
 
 /* }}} */
@@ -3134,16 +3180,14 @@ mp_err   s_mp_mul(mp_int *a, const mp_int *b)
 /* }}} */
 
 /* c += a * b * (MP_RADIX ** offset);  */
+/* Caller must assure c has enough space. */
+/* Caller must clamp when done. */
 mp_err	s_mp_mul_d_add_offset(mp_int *a, mp_digit b, mp_int *c, mp_size offset)
 {
   mp_word   w;
   mp_digit *pc;
   mp_digit *pa    = MP_DIGITS(a);
   mp_digit *palim = MP_DIGITS(a) + MP_USED(a);
-  mp_err    res;
-
-  if((res = s_mp_pad(c, MP_USED(a) + 2 + offset)) != MP_OKAY)
-      return res;
 
   pc = MP_DIGITS(c) + offset;
   w = 0;
@@ -3163,7 +3207,7 @@ mp_err	s_mp_mul_d_add_offset(mp_int *a, mp_digit b, mp_int *c, mp_size offset)
   offset = pc - MP_DIGITS(c);
   if (offset > MP_USED(c))
     MP_USED(c) = offset;
-  s_mp_clamp(c);
+  /* don't clamp. Caller will clamp. */
   return MP_OKAY;
 }
 
@@ -3418,23 +3462,45 @@ mp_err   s_mp_reduce(mp_int *x, const mp_int *m, const mp_int *mu)
 /* Compare |a| <=> |b|, return 0 if equal, <0 if a<b, >0 if a>b           */
 int      s_mp_cmp(const mp_int *a, const mp_int *b)
 {
-  if(USED(a) > USED(b))
-    return MP_GT;
-  else if(USED(a) < USED(b))
-    return MP_LT;
-  else {
-    int      ix;
+  mp_size used_a = MP_USED(a);
+  {
+    mp_size used_b = MP_USED(b);
 
-    for(ix = USED(a) - 1; ix >= 0; ix--) {
-      if(DIGIT(a, ix) > DIGIT(b, ix))
-	return MP_GT;
-      else if(DIGIT(a, ix) < DIGIT(b, ix))
-	return MP_LT;
-    }
-
-    return MP_EQ;
+    if (used_a > used_b)
+      goto IS_GT;
+    if (used_a < used_b)
+      goto IS_LT;
   }
+  {
+    mp_digit *pa, *pb;
+    mp_digit da = 0, db = 0;
 
+#define CMP_AB(n) if ((da = pa[n]) != (db = pb[n])) goto done
+
+    pa = MP_DIGITS(a) + used_a;
+    pb = MP_DIGITS(b) + used_a;
+    while (used_a >= 4) {
+      pa     -= 4;
+      pb     -= 4;
+      used_a -= 4;
+      CMP_AB(3);
+      CMP_AB(2);
+      CMP_AB(1);
+      CMP_AB(0);
+    }
+    while (used_a-- > 0 && ((da = *--pa) == (db = *--pb))) 
+      /* do nothing */;
+done:
+    if (da > db)
+      goto IS_GT;
+    if (da < db) 
+      goto IS_LT;
+  }
+  return MP_EQ;
+IS_LT:
+  return MP_LT;
+IS_GT:
+  return MP_GT;
 } /* end s_mp_cmp() */
 
 /* }}} */
