@@ -601,7 +601,7 @@ nsFrame::DisplaySelection(nsIPresContext& aPresContext, PRBool isOkToTurnOn)
 								mParent->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
 							}
 					}
-		      if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_NONE) {
+		      if (userinterface->mUserSelect != NS_STYLE_USER_SELECT_NONE) {
 		        result = PR_FALSE;
 		        isOkToTurnOn = PR_FALSE;
 		      }
