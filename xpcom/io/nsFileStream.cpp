@@ -126,7 +126,7 @@ PRInt32 nsOutputStream::write(const void* s, PRInt32 n)
   if (!mOutputStream)
       return 0;
   PRInt32 result = 0;
-  mOutputStream->Write((char*)s, n, (PRUint32*)&result);
+  mWriteStatus = mOutputStream->Write((char*)s, n, (PRUint32*)&result);
   return result;
 } // nsOutputStream::write
 
@@ -135,6 +135,13 @@ nsresult nsOutputStream::flush()
 //----------------------------------------------------------------------------------------
 {
   return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
+nsresult nsOutputStream::lastWriteStatus()
+//----------------------------------------------------------------------------------------
+{
+  return mWriteStatus;
 }
 
 //----------------------------------------------------------------------------------------
