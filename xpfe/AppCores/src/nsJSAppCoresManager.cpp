@@ -134,7 +134,6 @@ PR_STATIC_CALLBACK(JSBool)
 AppCoresManagerStartup(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -167,7 +166,6 @@ PR_STATIC_CALLBACK(JSBool)
 AppCoresManagerShutdown(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -200,7 +198,6 @@ PR_STATIC_CALLBACK(JSBool)
 AppCoresManagerAdd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMBaseAppCorePtr b0;
 
   *rval = JSVAL_NULL;
@@ -242,7 +239,6 @@ PR_STATIC_CALLBACK(JSBool)
 AppCoresManagerRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMBaseAppCorePtr b0;
 
   *rval = JSVAL_NULL;
@@ -284,7 +280,6 @@ PR_STATIC_CALLBACK(JSBool)
 AppCoresManagerFind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMBaseAppCore* nativeRet;
   nsAutoString b0;
 
