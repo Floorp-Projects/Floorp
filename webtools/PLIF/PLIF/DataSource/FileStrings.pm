@@ -95,7 +95,5 @@ sub getDefaultString {
         }
     }
     # no file exists
-    local $" = '\', \'';
-    $self->dump(9, "No file found for string '$string' in protocol '$protocol' (looking for '@filenames')");
     return; # no can do, sir
 }

@@ -127,6 +127,7 @@ sub output {
     if (not defined($session)) {
         $session = $self->actualSession;
     }
+    $self->dump(9, "outputting string '$string' on protocol '". ($self->actualProtocol) .'\'');
     $self->fillData($data);
     $self->outputter->output($self->app, $session,
                              $self->app->getService('dataSource.strings')->getExpandedString($self->app, $session, $self->actualProtocol, $string, $data));

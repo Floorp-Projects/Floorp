@@ -93,7 +93,6 @@ sub getCustomisedString {
                 $self->stringsCache->{$variant}->{$string} = \@results;
                 return @results;
             } else {
-                $self->dump(9, "Did not find a customised string for '$string' in protocol '$protocol'");
                 return;
             }
         } else {
