@@ -82,11 +82,11 @@ public:
     nsresult Init();
     nsresult AddStandardRequestHeaders(nsHttpHeaderArray *,
                                        PRUint32 capabilities);
+    PRBool   IsAcceptableEncoding(const char *encoding);
 
     const char   *UserAgent();
     nsHttpVersion DefaultVersion()  { return (nsHttpVersion) mHttpVersion; }
     PRUint32      ReferrerLevel()   { return mReferrerLevel; }
-    const char   *AcceptEncodings() { return mAcceptEncodings; }
 
     nsHttpAuthCache *AuthCache() { return mAuthCache; }
 

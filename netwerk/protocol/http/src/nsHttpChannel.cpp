@@ -340,7 +340,7 @@ nsHttpChannel::ApplyContentConversions()
     }
 
     const char *val = mResponseHead->PeekHeader(nsHttp::Content_Encoding);
-    if (val && PL_strcasestr(nsHttpHandler::get()->AcceptEncodings(), val)) {
+    if (nsHttpHandler::get()->IsAcceptableEncoding(val)) {
         nsCOMPtr<nsIStreamConverterService> serv;
         nsresult rv = nsHttpHandler::get()->
                 GetStreamConverterService(getter_AddRefs(serv));
