@@ -111,6 +111,14 @@ var gVAlignTable =
 	"baseline"
 ];
 
+var gTarget =
+[
+  "blank",
+  "self",
+  "parent",
+  "top"
+];
+
 // ================ HTML Attributes ================ //
 /* For each element, there is an array of attributes,
    whose name is the element name,
@@ -162,6 +170,8 @@ gHTMLAttr.a =
   "^lang",
   "dir"
 ];
+
+gHTMLAttr.a_target = gTarget;
 
 gHTMLAttr.a_rel =
 [
@@ -277,6 +287,8 @@ gHTMLAttr.area =
   "dir"
 ];
 
+gHTMLAttr.area_target = gTarget;
+
 gHTMLAttr.area_shape =
 [
   "rect",
@@ -303,6 +315,8 @@ gHTMLAttr.base =
   "href",
   "target"
 ];
+
+gHTMLAttr.base_target = gTarget;
 
 // this is deprecated //
 gHTMLAttr.basefont =
@@ -656,13 +670,7 @@ gHTMLAttr.form_enctype =
   "application/x-www-form-urlencoded"
 ];
 
-gHTMLAttr.form_target =
-[
-  "blank",
-  "self",
-  "parent",
-  "top"
-];
+gHTMLAttr.form_target = gTarget;
 
 gHTMLAttr.frame =
 [
@@ -1063,6 +1071,8 @@ gHTMLAttr.link =
   "^lang",
   "dir"
 ];
+
+gHTMLAttr.link_target = gTarget;
 
 gHTMLAttr.link_rel =
 [
