@@ -3291,6 +3291,16 @@ NS_IMETHODIMP nsDocShell::ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor)
         if (NS_SUCCEEDED(rv) && shell)
         {
             *aWasAnchor = PR_TRUE;
+
+            char *str = sNewRef.ToNewCString();
+
+            // nsUnescape modifies the string that is passed into it.
+            nsUnescape(str);
+
+            sNewRef.AssignWithConversion(str);
+
+            nsMemory::Free(str);
+
             rv = shell->GoToAnchor(sNewRef);
         }
     }
@@ -3496,7 +3506,7 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI *aURI,
                                          nsIChannel *aChannel,
                                          nsISHEntry **aNewEntry)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
   nsCOMPtr<nsISHEntry> entry;
   PRBool shouldPersist;
 
@@ -3661,7 +3671,7 @@ nsDocShell::GetSHEForChild(PRInt32 aChildOffset, nsISHEntry ** aResult)
 NS_IMETHODIMP
 nsDocShell::PersistLayoutHistoryState()
 {
-	nsresult rv;
+	nsresult rv = NS_OK;
 	if (OSHE) {
       nsCOMPtr<nsIPresShell> shell;
 
