@@ -19,6 +19,9 @@
 #include "nsTransactionManager.h"
 #include "COM_auto_ptr.h"
 
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kITransactionManagerIID, NS_ITRANSACTIONMANAGER_IID);
+
 nsTransactionManager::nsTransactionManager()
 {
 }
@@ -29,6 +32,26 @@ nsTransactionManager::~nsTransactionManager()
 
 NS_IMPL_ADDREF(nsTransactionManager)
 NS_IMPL_RELEASE(nsTransactionManager)
+
+nsresult
+nsTransactionManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void*)(nsISupports*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kITransactionManagerIID)) {
+    *aInstancePtr = (void*)(nsITransactionManager*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  *aInstancePtr = 0;
+  return NS_NOINTERFACE;
+}
 
 nsresult
 nsTransactionManager::Do(nsITransaction *aTransaction)
