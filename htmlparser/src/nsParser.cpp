@@ -31,6 +31,9 @@
 #include "CNavDTD.h"
 #include "nsWellFormedDTD.h"
 #include "nsViewSourceHTML.h" //uncomment this to partially enable viewsource...
+#ifdef EXPAT
+  #include "nsExpatDTD.h"
+#endif
 
 #undef rickgdebug
 #ifdef  rickgdebug
