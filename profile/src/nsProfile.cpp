@@ -2963,6 +2963,18 @@ NSGetFactory(nsISupports* serviceMgr,
   return NS_NOINTERFACE;
 }
 
+NS_IMETHODIMP
+nsProfile::GetCurrentProfileDirFromJS(nsIFileSpec **spec)
+{
+	nsresult rv;
+	nsFileSpec dir;
+	rv = GetCurrentProfileDir(&dir);
+	if (NS_FAILED(rv)) return rv;
+
+	rv = NS_NewFileSpecWithSpec(dir, spec);
+	return rv;
+}
+
 extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr)
 {
   return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
