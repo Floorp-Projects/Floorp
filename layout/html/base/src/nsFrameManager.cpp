@@ -325,10 +325,6 @@ FrameManager::~FrameManager()
   // Revoke any events posted to the event queue that we haven't processed yet
   RevokePostedEvents();
 
-  delete mPrimaryFrameMap;
-  delete mPlaceholderMap;
-  delete mUndisplayedMap;
-  
   // Destroy the frame hierarchy. Don't destroy the property lists until after
   // we've destroyed the frame hierarchy because some frames may expect to be
   // able to retrieve their properties during destruction
@@ -337,6 +333,9 @@ FrameManager::~FrameManager()
     mRootFrame = nsnull;
   }
   
+  delete mPrimaryFrameMap;
+  delete mPlaceholderMap;
+  delete mUndisplayedMap;
   DestroyPropertyList(presContext);
 }
 
