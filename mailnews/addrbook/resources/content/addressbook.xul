@@ -234,8 +234,8 @@ Rights Reserved.
 					<spring flex="1"/--> 
 				</box>
 
-				<!--titledbutton id="button_stop" class="other28" align="top" value="&stopButton.label;" disabled="true" onclick="AbStop()"/>
-				<titledbutton id="button_search" class="other28" align="top" value="&searchButton.label;" disabled="true" onclick="AbSearch()"/-->
+				<!--button id="button_stop" class="other28" align="top" value="&stopButton.label;" disabled="true" oncommand="AbStop()"/>
+				<button id="button_search" class="other28" align="top" value="&searchButton.label;" disabled="true" oncommand="AbSearch()"/-->
 			</box>
 
       <button class="plain" id="navigator-throbber" oncommand='goClickThrobber("addressbook.throbber.url")'>

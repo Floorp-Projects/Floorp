@@ -7,14 +7,13 @@
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/askSendFormat.dtd">
 
 <window title="&windowTitle.label;"
-    xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="Startup()"
     align="vertical"
     class="dialog"
     > 
 
-<html:script language="JavaScript" src="chrome://messenger/content/messengercompose/askSendFormat.js"/> 
+<script language="JavaScript" src="chrome://messenger/content/messengercompose/askSendFormat.js"/> 
 
 	<keyset id="keyset"/>
 

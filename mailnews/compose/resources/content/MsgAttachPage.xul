@@ -7,21 +7,20 @@
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/MsgAttachPage.dtd">
 
 <window title="&windowTitle.label;"
-    xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="Startup()"
     align="vertical"
     class="dialog"> 
 
-<html:script language="JavaScript" src="chrome://messenger/content/messengercompose/MsgAttachPage.js"/> 
+<script language="JavaScript" src="chrome://messenger/content/messengercompose/MsgAttachPage.js"/> 
 
 	<keyset id="keyset"/>
 
     <spring style="height:0.5em" />
 	<box align="horizontal">
         <spring style="width:10px" />
-		<html:div>Web Page (URL):</html:div>
-		<html:input type="text" id="attachurl" align="bottom" style="min-width:200px; padding-bottom:0px" />
+		<text value="Web Page (URL):"/>
+		<textfield id="attachurl" align="bottom" style="min-width:200px; padding-bottom:0px" />
         <spring style="width:10px" />
 	</box>
 	

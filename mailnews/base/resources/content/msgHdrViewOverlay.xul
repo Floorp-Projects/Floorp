@@ -24,31 +24,30 @@ Rights Reserved.
 <?xml-stylesheet href="chrome://messenger/skin/msgHdrViewOverlay.css" type="text/css"?>
 
 <overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-         xmlns:html="http://www.w3.org/TR/REC-html40"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<html:script src="chrome://messenger/content/msgHdrViewAddresses.js"/>
-<html:script src="chrome://messenger/content/msgHdrViewOverlay.js"/>
-<html:script src="chrome://messenger/content/mime.js"/>
+<script src="chrome://messenger/content/msgHdrViewAddresses.js"/>
+<script src="chrome://messenger/content/msgHdrViewOverlay.js"/>
+<script src="chrome://messenger/content/mime.js"/>
 
 	<toolbox id="msgHeaderView">
 		<toolbar id="headerPart1" hide="true">
 			<box class="header-splitter" align="horizontal" flex="1">
 				<box class="header-part1" align="vertical" flex="1">
 					<box id="SubjectBox" class="headerBox" align="horizontal" hide="true">
-              <text class="headerdisplayname" value="&subjectField.label;"/>
-              <html:div class="headerValue subjectvalue" id="SubjectValue" flex="1">*</html:div>
+						<text class="headerdisplayname" value="&subjectField.label;"/>
+						<html class="headerValue subjectvalue" id="SubjectValue" flex="1">*</html>
 					</box>
 		      
 					<box id="FromBox" class="headerBox" align="horizontal" hide="true">
-              <text class="headerdisplayname" value="&fromField.label;"/>
-              <html:div class="headerValue" id="FromValue" flex="1">
-            </html:div>
+						<text class="headerdisplayname" value="&fromField.label;"/>
+						<html class="headerValue" id="FromValue" flex="1">
+						</html>
 					</box>
 
 					<box id = "DateBox" class="headerBox" align="horizontal" hide="true">
-               <text class="headerdisplayname" value="&dateField.label;"/>
-							<html:div class="headerValue" id="DateValue" flex="1">*</html:div>
+						<text class="headerdisplayname" value="&dateField.label;"/>
+						<html class="headerValue" id="DateValue" flex="1">*</html>
 					</box>
 				</box>
 
@@ -56,8 +55,7 @@ Rights Reserved.
           <spring class="buttonSpacer"/>
             <box align="vertical">
              <spring class="buttonTopSpacer"/>
-             <titledbutton id="addToAddressBookButton" class="push"
-                onclick="AddSenderToAddressBook();"/>
+             <button id="addToAddressBookButton" oncommand="AddSenderToAddressBook();"/>
              <spring flex="1"/>
             </box>
           <spring class="buttonSpacer"/>
@@ -68,7 +66,7 @@ Rights Reserved.
             <box align="vertical">
                <spring class="buttonTopSpacer"/>
                <menu id="attachmentMenu" class="attachment-menu">
-                  <titledbutton id="attachmentButton" class="push" value="1" align="right"/>
+                  <button id="attachmentButton" value="1" align="right"/>
                   <menupopup id="attachmentPopup" popupanchor="bottomright" popupalign="topright">
                   </menupopup>
                </menu>
@@ -83,35 +81,35 @@ Rights Reserved.
 			<box class="header-part2" align="vertical" flex="1">
 				<box id="ToBox" class="headerBox" align="horizontal" hide="true">
             
-            <text class="headerdisplayname" value="&toField.label;"/>
-            <box class="headervalue" id="ToValueShort" flex="1">
-            <titledbutton class="showMoreAddressesButton" id="ToValueToggleIcon" 
-                onclick="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
-            </box>
+		            <text class="headerdisplayname" value="&toField.label;"/>
+		            <box class="headervalue" id="ToValueShort" flex="1">
+						<button class="showMoreAddressesButton" id="ToValueToggleIcon" 
+						        oncommand="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
+		            </box>
 
-            <box class="headervalue" id="ToValueLong" hide="true" flex="1">
-            <titledbutton class="showFewerAddressesButton"  
-               onclick="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
-            </box>
+		            <box class="headervalue" id="ToValueLong" hide="true" flex="1">
+		            	<button class="showFewerAddressesButton"  
+						        oncommand="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
+		            </box>
 				</box>
 
 			    <box id="CcBox" class="headerBox" align="horizontal" hide="true">
-            <text class="headerdisplayname" value="&ccField.label;"/>
-              <box class="headervalue" id="CcValueShort" flex="1">
-              <titledbutton class="showMoreAddressesButton" id="CcValueToggleIcon" 
-                onclick="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
-              </box>
+					<text class="headerdisplayname" value="&ccField.label;"/>
+					<box class="headervalue" id="CcValueShort" flex="1">
+					<button class="showMoreAddressesButton" id="CcValueToggleIcon" 
+        			        oncommand="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
+					</box>
 
-              <box class="headervalue" id="CcValueLong" hide="true" flex="1">
-              <titledbutton class="showFewerAddressesButton"  
-                onclick="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
-              </box>
-				  </box>
+					<box class="headervalue" id="CcValueLong" hide="true" flex="1">
+						<button class="showFewerAddressesButton"  
+						        oncommand="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
+					</box>
+				</box>
 
-        	<box id="NewsgroupBox" class="headerBox" align="horizontal" hide="true">
-            <text class="headerdisplayname" value="&newsgroupsField.label;"/>
-            <html:div class="headervalue" id="NewsgroupValue" flex="1">*</html:div>
-				  </box>
+				<box id="NewsgroupBox" class="headerBox" align="horizontal" hide="true">
+					<text class="headerdisplayname" value="&newsgroupsField.label;"/>
+					<html class="headervalue" id="NewsgroupValue" flex="1">*</html>
+				</box>
 
 			</box>
 		</toolbar>
@@ -120,7 +118,7 @@ Rights Reserved.
       <box class="header-part3" align="vertical" flex="1">
         <box id="UserAgentBox" class="headerBox" align="horizontal" hide="true">
           <text class="headerdisplayname" value="&userAgentField.label;"/>
-          <html:div class="headervalue" id="UserAgentValue" flex="1">*</html:div>
+          <html class="headervalue" id="UserAgentValue" flex="1">*</html>
         </box>
       </box>
     </toolbar>

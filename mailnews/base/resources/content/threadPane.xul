@@ -26,11 +26,10 @@ Rights Reserved.
 
 <overlay
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-  xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 >
 
-<html:script src="chrome://global/content/treePopups.js"/>
+<script src="chrome://global/content/treePopups.js"/>
 
 
 
@@ -122,7 +121,7 @@ Rights Reserved.
 		<treecell class="treecell-header treecell-inset-header" value="&orderReceivedColumn.label;" onclick="return top.MsgSortByOrderReceived();"/>
 		<treecell class="treecell-header treecell-inset-header" allowevents="true" id="popupCell">
 		  <menu>
-		    <titledbutton src="chrome://global/skin/opentwisty.gif"/>
+		    <button src="chrome://global/skin/opentwisty.gif"/>
 			<menupopup popupanchor="bottomright" 
 			           popupalign="topright"
 					   oncreate="BuildTreePopup(document.getElementById('theThreadColumns'), document.getElementById('headRow'), this,

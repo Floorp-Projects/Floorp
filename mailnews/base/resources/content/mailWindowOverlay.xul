@@ -29,11 +29,10 @@ Rights Reserved.
 <overlay
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:nc="http://home.netscape.com/NC-rdf#"
-  xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<html:script src="chrome://messenger/content/mailCommands.js"/>
-<html:script src="chrome://messenger/content/mailWindowOverlay.js"/>
+<script src="chrome://messenger/content/mailCommands.js"/>
+<script src="chrome://messenger/content/mailWindowOverlay.js"/>
 
 <broadcasterset id="broadcasterset">
 	<!-- File Menu -->
