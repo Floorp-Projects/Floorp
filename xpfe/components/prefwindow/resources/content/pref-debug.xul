@@ -30,7 +30,6 @@
         align="vertical" title="&window.title;"
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-debug' ); else parent.queuedTag = 'pref-debug';">
 
-	<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
 	<box class="header" align="horizontal">  
     <titledbutton class="left-header-text" value="&lHeader;"/>
 	  <spring class="header-spring" flex="1"/>
