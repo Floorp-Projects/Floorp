@@ -43,7 +43,7 @@ sub create {
         $class = ref($class);
     }
     my $self = [@_];
-    bless ($self, $class);
+    bless($self, $class);
     return $self;
 }
 

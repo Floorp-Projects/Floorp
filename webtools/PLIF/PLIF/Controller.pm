@@ -43,6 +43,7 @@ sub init {
     $self->name($0); # may be overridden by descendants
     # prepare the services array for the registration system
     $self->services([]);
+    $self->servicesHash({});
     # perform the registration
     $self->registerServices();
 }
@@ -76,6 +77,8 @@ sub register {
 # objects specific to the current state (e.g. the current user in an
 # event loop). These should be wiped out when the state changes
 # (e.g. at the start of an event loop).
+# Objects should be created with $service->createObject(), not 
+# with $app->getServiceInstance().
 sub addObject {
     my $self = shift;
     foreach my $object (@_) {
@@ -86,6 +89,9 @@ sub addObject {
 sub getService {
     my $self = shift;
     my($name) = @_;
+    if (defined($self->servicesHash->{$name})) {
+        return $self->servicesHash->{$name};
+    }
     foreach my $service (@{$self->services}) {
         if ($service->provides($name)) {
             # Create the service. If it is already created, this will
@@ -95,6 +101,7 @@ sub getService {
             # Doing so would create a circular dependency, resulting
             # in a memory leak.
             $service = $service->create($self);
+            $self->servicesHash->{$name} = $service;
             return $service;
         }
     }
@@ -167,14 +174,6 @@ sub getPipingObjectList {
     return PLIF::MagicPipingArray->create($self->getObjectList(@_));
 }
 
-sub dispatchMethod {
-    my $self = shift;
-    my($service, $prefix, $method, @arguments) = @_;
-    # the \u makes the first letter of the $command uppercase
-    return ($self->getSelectingServiceList($service)->dispatch($self, "$prefix\u$method", @arguments) or 
-            $self->getSelectingObjectList($service)->dispatch($self, "$prefix\u$method", @arguments));
-}
-
 sub getServiceInstance {
     my $self = shift;
     my($name, @data) = @_;
@@ -195,6 +194,38 @@ sub getServiceInstance {
 }
 
 # there's no getObjectInstance since objects already are instances...
+
+# What is the difference between a service instance and an object? The
+# difference is subtle. Objects are instances of classes that are
+# intended to be added to the application's object list, they are
+# created by invoking the 'createObject' method on a service, they
+# initialize with 'objectInit' and not 'init', they are queried with
+# 'objectProvides' and not 'provides'. On the other hand, service
+# instances are services that are NOT intended to be kept in either of
+# the controller's lists, they are created by the controller, and they
+# are never asked for as normal services.
+#
+# It is a serious (and as yet undetected) error for a service to be
+# created from both 'getService' and 'getServiceInstance'.
+
+
+sub dispatchMethod {
+    my $self = shift;
+    my($service, $prefix, $method, @arguments) = @_;
+    # the \u makes the first letter of the $command uppercase
+    return ($self->getSelectingServiceList($service)->dispatch($self, "$prefix\u$method", @arguments) or 
+            $self->getSelectingObjectList($service)->dispatch($self, "$prefix\u$method", @arguments));
+}
+
+sub DESTROY {
+    my $self = shift;
+    $self->dump(9, 'At controller shutdown, there were ' .
+                # I assume there will always be > 1 and so haven't bothered to special case the singular grammar
+                scalar($self->services) . 
+                ' services registered, of which ' .
+                scalar(keys(%{$self->servicesHash})) .
+                ' had been placed in the services hash.')
+}
 
 
 # Implementation Specific Methods

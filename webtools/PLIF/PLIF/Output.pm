@@ -46,8 +46,8 @@ sub protocol {
 
 sub init {
     my $self = shift;
-    $self->SUPER::init(@_);
     my($app) = @_;
+    $self->SUPER::init(@_);
     $self->propertySet('app', $app); 
     # output classes disable implied property creation, so we use
     # propertySet() here instead of just $self->app($app).

@@ -64,25 +64,37 @@ sub create {
         return $class; # already created, return self
     } else {
         $class->dump(10, "Called constructor of class $class, creating object...");
-        return $class->bless(@_); # call our real constructor
+        my $self = $class->bless(@_); # call our real constructor
+        $self->init(@_);
+        return $self;
     }
 }
+
+sub init {} # stub
 
 # provide a constructor that always constructs a new copy of the
 # class. This is used by services that implement factories for objects
 # implemented in the same class (e.g., session objects do this).
-sub bless {
+sub objectCreate {
     my $class = shift;
     if (ref($class)) {
         $class = ref($class);
     }
-    my $self = {};
-    CORE::bless($self, $class);
-    $self->init(@_);
+    $class->dump(10, "Called object constructor of class $class, creating object...");
+    my $self = $class->bless(@_); # call our real constructor
+    $self->objectInit(@_);
     return $self;
 }
 
-sub init {} # stub
+sub objectInit {} # stub
+
+# internals of create and objectCreate
+sub bless {
+    my $class = shift;
+    my $self = {};
+    CORE::bless($self, $class);
+    return $self;
+}
 
 # provide method-like access for any scalars in $self
 sub AUTOLOAD {

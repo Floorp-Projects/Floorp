@@ -57,7 +57,7 @@ sub get {
     # error handling makes code ugly :-)
     my $variant;
     if (defined($session)) {
-        $variant = $session->selectVariant($app, $protocol);
+        $variant = $session->selectVariant($protocol);
     }
     if (not defined($variant)) {
         # default session or $session didn't care, get stuff from

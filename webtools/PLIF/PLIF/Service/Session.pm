@@ -33,7 +33,7 @@ use PLIF::Service;
 @ISA = qw(PLIF::Service);
 1;
 
-sub provides {
+sub objectProvides {
     my $class = shift;
     my($service) = @_;
     return ($service eq 'session' or $class->SUPER::provides($service));
@@ -42,6 +42,13 @@ sub provides {
 # expected by dataSource.strings
 sub selectVariant {
     my $self = shift;
-    my($app, $protocol) = @_;
+    my($protocol) = @_;
     return undef; # 'use some other method to work it out...'
+}
+
+# expected by output modules
+sub getAddress {
+    my $self = shift;
+    my($protocol) = @_;
+    return undef; # 'not known over this protocol'
 }
