@@ -255,15 +255,9 @@ nsPresContext::GetUserPreferences()
   GetFontPreferences();
 }
 
-void
-nsPresContext::PreferenceChanged(const char* aPrefName)
+NS_IMETHODIMP
+nsPresContext::RemapStyleAndReflow()
 {
-  // Initialize our state from the user preferences
-  GetUserPreferences();
-  if (mDeviceContext) {
-    mDeviceContext->FlushFontCache();
-  }
-
   if (mShell) {
     // Have the root frame's style context remap its style based on the
     // user preferences
@@ -283,6 +277,19 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
       // then we only need to repaint...
       mShell->StyleChangeReflow();
     }
+  }
+
+  return NS_OK;
+}
+
+void
+nsPresContext::PreferenceChanged(const char* aPrefName)
+{
+  // Initialize our state from the user preferences
+  GetUserPreferences();
+  if (mDeviceContext) {
+    mDeviceContext->FlushFontCache();
+    RemapStyleAndReflow();
   }
 }
 
