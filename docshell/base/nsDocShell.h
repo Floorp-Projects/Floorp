@@ -319,10 +319,10 @@ protected:
 
     // Reference to the SHEntry for this docshell until the page is destroyed.
     // Somebody give me better name
-    nsCOMPtr<nsISHEntry>       OSHE; 
+    nsCOMPtr<nsISHEntry>       mOSHE; 
     // Reference to the SHEntry for this docshell until the page is loaded
     // Somebody give me better name
-    nsCOMPtr<nsISHEntry>       LSHE;
+    nsCOMPtr<nsISHEntry>       mLSHE;
 
     // this flag is for bug #21358. a docshell may load many urls
     // which don't result in new documents being created (i.e. a new content viewer)

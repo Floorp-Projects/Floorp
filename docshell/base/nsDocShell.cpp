@@ -1924,13 +1924,13 @@ nsDocShell::GetChildSHEntry(PRInt32 aChildOffset, nsISHEntry ** aResult)
     // A nsISHEntry for a child is *only* available when the parent is in
     // the progress of loading a document too...
     //
-    if (LSHE) {
+    if (mLSHE) {
         /* Get the parent's Load Type so that it can be set on the child too.
          * By default give a loadHistory value
          */
         PRUint32 loadType = nsIDocShellLoadInfo::loadHistory;
-        LSHE->GetLoadType(&loadType);
-        nsCOMPtr<nsISHContainer> container(do_QueryInterface(LSHE));
+        mLSHE->GetLoadType(&loadType);
+        nsCOMPtr<nsISHContainer> container(do_QueryInterface(mLSHE));
         if (container) {
             rv = container->GetChildAt(aChildOffset, aResult);
             if (*aResult) {
@@ -1947,11 +1947,11 @@ nsDocShell::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry,
 {
     nsresult rv;
 
-    if (LSHE) {
+    if (mLSHE) {
         /* You get here if you are currently building a 
          * hierarchy ie.,you just visited a frameset page
          */
-        nsCOMPtr<nsISHContainer> container(do_QueryInterface(LSHE, &rv));
+        nsCOMPtr<nsISHContainer> container(do_QueryInterface(mLSHE, &rv));
         if (container) {
             rv = container->AddChild(aNewEntry, aChildOffset);
         }
@@ -1995,15 +1995,15 @@ nsDocShell::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry,
     else {
         /* You will get here when you are in a subframe and
          * a new url has been loaded on you. 
-         * The OSHE in this subframe will be the previous url's
-         * OSHE. This OSHE will be used as the identification
+         * The mOSHE in this subframe will be the previous url's
+         * mOSHE. This mOSHE will be used as the identification
          * for this subframe in the  CloneAndReplace function.
          */
 
         nsCOMPtr<nsIDocShellHistory> parent(do_QueryInterface(mParent, &rv));
         if (parent) {
             if (!aCloneRef) {
-                aCloneRef = OSHE;
+                aCloneRef = mOSHE;
             }
             rv = parent->AddChildSHEntry(aCloneRef, aNewEntry, aChildOffset);
         }
@@ -2210,10 +2210,10 @@ nsDocShell::Reload(PRUint32 aReloadFlags)
 
     nsresult rv;
     /* If you change this part of code, make sure bug 45297 does not re-occur */
-    if (OSHE)
-        rv = LoadHistoryEntry(OSHE, type);
-    else if (LSHE)              // In case a reload happened before the current load is done
-        rv = LoadHistoryEntry(LSHE, type);
+    if (mOSHE)
+        rv = LoadHistoryEntry(mOSHE, type);
+    else if (mLSHE)              // In case a reload happened before the current load is done
+        rv = LoadHistoryEntry(mLSHE, type);
     else
         rv = InternalLoad(mCurrentURI,
                           mReferrerURI,
@@ -3515,8 +3515,8 @@ nsDocShell::Embed(nsIContentViewer * aContentViewer,
     nsresult rv = SetupNewViewer(aContentViewer);
 
     // XXX What if SetupNewViewer fails?
-
-    OSHE = LSHE;
+    if (mLSHE)
+      mOSHE = mLSHE;
 
     PRBool updateHistory = PR_TRUE;
 
@@ -3532,12 +3532,12 @@ nsDocShell::Embed(nsIContentViewer * aContentViewer,
         break;
     }
 
-    if (OSHE && updateHistory) {
+    if (mOSHE && updateHistory) {
         nsCOMPtr<nsILayoutHistoryState> layoutState;
 
-        rv = OSHE->GetLayoutHistoryState(getter_AddRefs(layoutState));
+        rv = mOSHE->GetLayoutHistoryState(getter_AddRefs(layoutState));
         if (layoutState) {
-            // This is a SH load. That's why there is a LayoutHistoryState in OSHE
+            // This is a SH load. That's why there is a LayoutHistoryState in mOSHE
             nsCOMPtr<nsIPresShell> presShell;
             rv = GetPresShell(getter_AddRefs(presShell));
             if (NS_SUCCEEDED(rv) && presShell) {
@@ -3655,12 +3655,12 @@ nsresult
 nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
                         nsIChannel * aChannel, nsresult aStatus)
 {
-    if (LSHE) {
-        LSHE->SetLoadType(nsIDocShellLoadInfo::loadHistory);
+    if (mLSHE) {
+        mLSHE->SetLoadType(nsIDocShellLoadInfo::loadHistory);
 
-        // Clear the LSHE reference to indicate document loading is done one
+        // Clear the mLSHE reference to indicate document loading is done one
         // way or another.
-        LSHE = nsnull;
+        mLSHE = nsnull;
     }
 
     //
@@ -3773,7 +3773,7 @@ nsDocShell::CreateContentViewer(const char *aContentType,
         /* First attach the channel to the right loadgroup
          * and then remove from the old loadgroup. This 
          * puts the notifications in the right order and
-         * we don't null-out LSHE in OnStateChange() for 
+         * we don't null-out mLSHE in OnStateChange() for 
          * all redirected urls
          */
         aOpenedChannel->SetLoadGroup(loadGroup);
@@ -4314,6 +4314,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     
     
     mURIResultedInDocument = PR_FALSE;  // reset the clock...
+    mLSHE = aSHEntry;
     
     //
     // First:
@@ -4330,13 +4331,14 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             mURIResultedInDocument = PR_TRUE;
             OnNewURI(aURI, nsnull, mLoadType);
 
-            // Save the new entry in OSHE
-            OSHE = LSHE;
+            // Save the new entry in mOSHE
+            if (mLSHE)
+              mOSHE = mLSHE;
 
-            /* Clear out LSHE so that further anchor visits get
+            /* Clear out mLSHE so that further anchor visits get
              * recorded in SH and SH won't misbehave. 
              */
-            LSHE = nsnull;
+            mLSHE = nsnull;
             /* Set the title for the SH entry for this target url. so that
              * SH menus in go/back/forward buttons won't be empty for this.
              */
@@ -4365,7 +4367,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     }
 
     mLoadType = aLoadType;
-    LSHE = aSHEntry;
+    
 
     nsDocShellInfoLoadType loadCmd =
         ConvertLoadTypeToDocShellLoadInfo(mLoadType);
@@ -4481,11 +4483,11 @@ nsresult nsDocShell::DoURILoad(nsIURI * aURI,
             cacheChannel(do_QueryInterface(httpChannel));
         /* Get the cache Key from SH */
         nsCOMPtr<nsISupports> cacheKey;
-        if (LSHE) {
-            LSHE->GetCacheKey(getter_AddRefs(cacheKey));
+        if (mLSHE) {
+            mLSHE->GetCacheKey(getter_AddRefs(cacheKey));
         }
-        else if (OSHE)          // for reload cases
-            OSHE->GetCacheKey(getter_AddRefs(cacheKey));
+        else if (mOSHE)          // for reload cases
+            mOSHE->GetCacheKey(getter_AddRefs(cacheKey));
 
         // figure out if we need to set the post data stream on the channel...
         // right now, this is only done for http channels.....
@@ -4988,12 +4990,12 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
 
     if (updateHistory) {        // Page load not from SH
         // Update session history if necessary...
-        if (!LSHE && (mItemType == typeContent) && mURIResultedInDocument) {
+        if (!mLSHE && (mItemType == typeContent) && mURIResultedInDocument) {
             /* This is  a fresh page getting loaded for the first time
              *.Create a Entry for it and add it to SH, if this is the
              * rootDocShell
              */
-            (void) AddToSessionHistory(aURI, aChannel, getter_AddRefs(LSHE));
+            (void) AddToSessionHistory(aURI, aChannel, getter_AddRefs(mLSHE));
         }
 
         // Update Global history if necessary...
@@ -5248,8 +5250,8 @@ nsDocShell::SetCurrentURI(nsIURI * aURI)
         // This is the root docshell
         isRoot = PR_TRUE;
     }
-    if (LSHE) {
-      nsCOMPtr<nsIHistoryEntry> historyEntry(do_QueryInterface(LSHE));
+    if (mLSHE) {
+      nsCOMPtr<nsIHistoryEntry> historyEntry(do_QueryInterface(mLSHE));
       
       // Check if this is a subframe navigation
       if (historyEntry) {
@@ -5327,8 +5329,8 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
     //
     if (LOAD_NORMAL_REPLACE == mLoadType) {
         // There is no need to go to mSessionHistory and get the entry at
-        // current index. OSHE works for subframes and top level docshells.
-        entry = OSHE;
+        // current index. mOSHE works for subframes and top level docshells.
+        entry = mOSHE;
         // If there are children for this entry destroy them, as they are
         // going out of scope. 
         if (entry) {
@@ -5480,7 +5482,7 @@ NS_IMETHODIMP nsDocShell::PersistLayoutHistoryState()
     nsresult
         rv =
         NS_OK;
-    if (OSHE) {
+    if (mOSHE) {
         nsCOMPtr<nsIPresShell> shell;
 
         rv = GetPresShell(getter_AddRefs(shell));
@@ -5489,7 +5491,7 @@ NS_IMETHODIMP nsDocShell::PersistLayoutHistoryState()
             rv = shell->CaptureHistoryState(getter_AddRefs(layoutState),
                                             PR_TRUE);
             if (NS_SUCCEEDED(rv) && layoutState) {
-                rv = OSHE->SetLayoutHistoryState(layoutState);
+                rv = mOSHE->SetLayoutHistoryState(layoutState);
             }
         }
 
