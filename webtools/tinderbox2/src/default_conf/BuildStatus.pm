@@ -1,8 +1,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
 
-# $Revision: 1.12 $ 
-# $Date: 2002/04/26 02:11:49 $ 
+# $Revision: 1.13 $ 
+# $Date: 2002/04/26 22:05:05 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BuildStatus.pm,v $ 
 # $Name:  $ 
@@ -85,7 +85,7 @@ package BuildStatus;
 # intently but be informed when an interesting change has occured.
 
 # Please send us interesting uses for the handler.  We would like to
-# make examples availible.
+# make examples available.
 
 %STATUS = (
 
@@ -98,7 +98,7 @@ package BuildStatus;
                             'html_color'=>  'white',
                             'hdml_char'=> '.',
                             'handler'=> \&main::null,
-                            'description'=>  'Build in progress - status unavailible',
+                            'description'=>  'Build in progress - status unavailable',
                             'order'=>  0,
                            },
            
@@ -106,7 +106,7 @@ package BuildStatus;
                           'html_color'=>  'yellow',
                           'hdml_char'=> '.',
                           'handler'=> \&main::null,
-                          'description'=>  'Build in progress - status availible',
+                          'description'=>  'Build in progress - status available',
                           'order'=>  1,
                          },
            

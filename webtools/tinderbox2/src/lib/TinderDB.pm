@@ -2,7 +2,7 @@
 
 # TinderDB.pm - the persistant storage for tinterbox.  This package
 # allows the user to define which features (columns of the status
-# table) are availible and provide a consistant interface to
+# table) are available and provide a consistant interface to
 # store/load the data and render the HTML to display the data.
 
 
@@ -19,8 +19,8 @@
 #       notice board display,  build display (colored squares)
 
 
-# $Revision: 1.6 $ 
-# $Date: 2002/04/24 03:19:05 $ 
+# $Revision: 1.7 $ 
+# $Date: 2002/04/26 22:05:00 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB.pm,v $ 
 # $Name:  $ 
@@ -181,7 +181,7 @@ $DB = bless(\@TinderDB::HTML_COLUMNS);
 
 
 
-# Our functions for database methods just iterate over the availible
+# Our functions for database methods just iterate over the available
 # implementations.
 
 # the next set of functions manipulate the persistant database.

@@ -64,7 +64,7 @@ package TinderDB::VC_CVS;
 # What we really want it the checkin comments but history does not
 # give us that information and it would be too expensive to run cvs
 # again for each file.  The file name is good enough but other VC
-# implementations should use the checkin comments if availible.
+# implementations should use the checkin comments if available.
 
 #   We store the hash of all names who modified the tree at a
 #   particular time as follows:
@@ -134,7 +134,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.22 $ )[1];
+$VERSION = ( qw $Revision: 1.23 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 

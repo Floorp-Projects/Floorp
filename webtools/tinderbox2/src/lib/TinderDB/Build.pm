@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.31 $ 
-# $Date: 2002/04/26 02:11:46 $ 
+# $Revision: 1.32 $ 
+# $Date: 2002/04/26 22:04:55 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -845,7 +845,7 @@ sub apply_db_updates {
     }    
 
     # If there is a final disposition then we need to add a bunch of
-    # other data which depends on what is already availible.
+    # other data which depends on what is already available.
     
     if ($buildstatus ne 'not_running') {
 

@@ -6,8 +6,8 @@
 # as a Dump of the $DATABASE reference.
 
 
-# $Revision: 1.7 $ 
-# $Date: 2001/08/02 20:04:21 $ 
+# $Revision: 1.8 $ 
+# $Date: 2002/04/26 22:04:55 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BasicTxtDB.pm,v $ 
 # $Name:  $ 
@@ -50,7 +50,7 @@ use FileStructure;
 use Persistence;
 
 
-$VERSION = ( qw $Revision: 1.7 $ )[1];
+$VERSION = ( qw $Revision: 1.8 $ )[1];
 
 
 # To help preserve the database in the event of a serious system
@@ -160,7 +160,7 @@ sub readdir_file_prefix {
 
 
 # load the DB, since the save may have been interrupted we try and
-# recover if there is a good DB file availible.
+# recover if there is a good DB file available.
 
 sub loadtree_db {
   my ($self, $tree) = @_;

@@ -8,8 +8,8 @@
 # The only external interface to this library is summary_pages() and
 # create_global_index() these functions are only called by tinder.cgi.
 
-# $Revision: 1.9 $ 
-# $Date: 2002/02/25 19:31:23 $ 
+# $Revision: 1.10 $ 
+# $Date: 2002/04/26 22:05:02 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Summaries.pm,v $ 
 # $Name:  $ 
@@ -62,7 +62,7 @@ sub summary_pages {
 
   # Build all the summary pages and save data into the $symmary_ref
   # also take the time to build an index page for this tree pointing
-  # to each type of information availible for this tree.
+  # to each type of information available for this tree.
 
   # Summary pages really do not fit in this framework but this is the best
   # place to put them.

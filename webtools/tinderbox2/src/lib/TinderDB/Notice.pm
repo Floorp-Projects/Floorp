@@ -78,18 +78,18 @@ use Utils;
 use HTMLPopUp;
 use TinderDB::BasicTxtDB;
 
-$VERSION = ( qw $Revision: 1.13 $ )[1];
+$VERSION = ( qw $Revision: 1.14 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
 
-# The indicator that a notice is availible for a given notice cell is
+# The indicator that a notice is available for a given notice cell is
 # configurable.  Traditionally it is a star gif however if you wish to
 # run entirely without images I suggest you set it to "X".
 # This is used in TinderDB::Notice.pm
 
-$NOTICE_AVAILIBLE = "X";
-#$NOTICE_AVAILIBLE = "<img src='$FileStructure::IMAGES{star}' border=0>";
+$NOTICE_AVAILABLE = "X";
+#$NOTICE_AVAILABLE = "<img src='$FileStructure::IMAGES{star}' border=0>";
 
 
 sub status_table_legend {
@@ -106,7 +106,7 @@ sub status_table_legend {
 		</tr></thead>
 		<tr>
 			<td>Notice posted: </td>
-			<td align=center>$NOTICE_AVAILIBLE</td>
+			<td align=center>$NOTICE_AVAILABLE</td>
 		</tr>
 		<tr>
 			<td>No Notice posted: </td>
@@ -357,7 +357,7 @@ sub status_table_row {
     @outrow =  (
                 "\t<td>".
                 HTMLPopUp::Link(
-                                "linktxt" => $NOTICE_AVAILIBLE,
+                                "linktxt" => $NOTICE_AVAILABLE,
                                 "href" => $href,
                                 "windowtxt" => $rendered_notice,
                                 "windowtitle" => "Notice Board",

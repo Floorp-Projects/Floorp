@@ -12,8 +12,8 @@
 # server.  No locks are used by the mail processes, data is passed to
 # the tinderbox server in a maildir like format.
 
-# $Revision: 1.17 $ 
-# $Date: 2002/04/26 00:51:11 $ 
+# $Revision: 1.18 $ 
+# $Date: 2002/04/26 22:05:07 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_builds,v $ 
 # $Name:  $ 
@@ -144,7 +144,7 @@ Builds which take a long time to complete can send multiple status
 mails each one conaining the log file which has been completed so far.
 All mails sent before the build is finished should have the status
 'building'.  The last mail must contain the results of the build.  The
-website will make each build log availible so that everyone can see
+website will make each build log available so that everyone can see
 the log file and get a feel for how far into the compilation the build
 machine has progressed.
 
