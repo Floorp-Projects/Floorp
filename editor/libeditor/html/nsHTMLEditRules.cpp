@@ -5445,7 +5445,7 @@ nsHTMLEditRules::BustUpInlinesAtRangeEndpoints(nsRangeStore &item)
   {
     nsCOMPtr<nsIDOMNode> resultEndNode;
     PRInt32 resultEndOffset;
-    item.endNode->GetParentNode(getter_AddRefs(resultEndNode));
+    endInline->GetParentNode(getter_AddRefs(resultEndNode));
     res = mHTMLEditor->SplitNodeDeep(endInline, item.endNode, item.endOffset,
                           &resultEndOffset, PR_TRUE);
     if (NS_FAILED(res)) return res;
@@ -5459,7 +5459,7 @@ nsHTMLEditRules::BustUpInlinesAtRangeEndpoints(nsRangeStore &item)
   {
     nsCOMPtr<nsIDOMNode> resultStartNode;
     PRInt32 resultStartOffset;
-    item.startNode->GetParentNode(getter_AddRefs(resultStartNode));
+    startInline->GetParentNode(getter_AddRefs(resultStartNode));
     res = mHTMLEditor->SplitNodeDeep(startInline, item.startNode, item.startOffset,
                           &resultStartOffset, PR_TRUE);
     if (NS_FAILED(res)) return res;
