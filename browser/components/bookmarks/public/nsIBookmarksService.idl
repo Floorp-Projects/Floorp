@@ -77,6 +77,9 @@ interface nsIBookmarksService : nsISupports
 
     nsIRDFResource cloneResource(in nsIRDFResource aSource);
 
+    nsIRDFResource getBookmarksToolbarFolder();
+    void setBookmarksToolbarFolder(in nsIRDFResource aSource);
+
     void updateBookmarkIcon(in string aURL, in wstring aIconURL);
     void removeBookmarkIcon(in string aURL, in wstring aIconURL);
 
