@@ -18,7 +18,7 @@
                                          if (v == 'true') return true; return false;"/>                                  
       <property name="image"      onset="return this.setAttribute('image',val);"
                                   onget="return this.getAttribute('image');"/>
-      <property name="accesskey"  onset="return this.setAttribute('accesskey',val);"
+      <property name="accessKey"  onset="return this.setAttribute('accesskey',val);"
                                   onget="return this.getAttribute('accesskey');"/>
     </implementation>      
   </binding>
