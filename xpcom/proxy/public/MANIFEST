@@ -4,3 +4,4 @@
 
 nsProxyEvent.h
 nsProxyObjectManager.h
+nsProxiedService.h
