@@ -1642,9 +1642,11 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
         nsCOMPtr<nsICSSStyleSheet> sheet;
         PRUint32 count;
         sheets->Count(&count);
+        // Insert the user sheets at the front of the user sheet list
+        // so that they are most significant user sheets.
         for(PRUint32 i=0; i<count; i++) {
           sheets->GetElementAt(i, getter_AddRefs(sheet));
-          (*aStyleSet)->AppendUserStyleSheet(sheet);
+          (*aStyleSet)->InsertUserStyleSheetBefore(sheet, nsnull);
         }
       }
 

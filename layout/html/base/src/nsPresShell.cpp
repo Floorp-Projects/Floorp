@@ -2236,7 +2236,7 @@ nsresult PresShell::CreatePreferenceStyleSheet(void)
                                      0, &index);
           NS_ENSURE_SUCCESS(result, result);
         }
-        mStyleSet->InsertUserStyleSheetBefore(mPrefStyleSheet, nsnull);
+        mStyleSet->AppendUserStyleSheet(mPrefStyleSheet);
       }
     }
   } else {
