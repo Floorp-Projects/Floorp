@@ -35,6 +35,8 @@
 <!ENTITY openremoteCmd.label "Open Web Location...">
 <!ENTITY fileopenremote.accesskey "l">
 <!ENTITY fileopenremote.keybinding "l">
+<!ENTITY recentFilesMenu.label "Recent Files">
+<!ENTITY recentFilesMenu.accesskey "r">
 <!ENTITY saveCmd.label "Save">
 <!ENTITY filesave.accesskey "s">
 <!ENTITY filesave.keybinding "s">
