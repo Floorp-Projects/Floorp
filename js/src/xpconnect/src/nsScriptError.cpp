@@ -127,11 +127,11 @@ nsScriptError::ToString(char **_retval)
     char* tempSourceName = nsnull;
     char* tempSourceLine = nsnull;
 
-    if(nsnull != mMessage)
+    if(!mMessage.IsEmpty())
         tempMessage = mMessage.ToNewCString();
-    if(nsnull != mSourceName)
+    if(!mSourceName.IsEmpty())
         tempSourceName = mSourceName.ToNewCString();
-    if(nsnull != mSourceLine)
+    if(!mSourceLine.IsEmpty())
         tempSourceLine = mSourceLine.ToNewCString();
 
     if(nsnull != tempSourceName && nsnull != tempSourceLine)
@@ -142,7 +142,7 @@ nsScriptError::ToString(char **_retval)
                            mLineNumber,
                            mColumnNumber,
                            tempSourceLine);
-    else if(nsnull != mSourceName)
+    else if(!mSourceName.IsEmpty())
         temp = JS_smprintf(format1,
                            severity,
                            tempMessage,
