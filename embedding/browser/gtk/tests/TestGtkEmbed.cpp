@@ -40,6 +40,11 @@ main(int argc, char **argv)
   gtk_box_pack_end(GTK_BOX(box), moz_embed, TRUE, TRUE, 1);
   gtk_widget_show(moz_embed);
 
+  if (argc > 1)
+  {
+	  gtk_moz_embed_load_url(GTK_WIDGET (moz_embed), argv[1]);
+  }
+
   gtk_widget_show(toplevelwindow);
 
   gtk_main();
