@@ -113,7 +113,7 @@ function ComposeMessage(type, format)
 	if (type == 0) //new message
 	{
 		//dump("OpenComposeWindow with " + identity + "\n");
-		msgComposeService.OpenComposeWindow(null, null, 0, format, null, identity);
+		msgComposeService.OpenComposeWindow(null, null, 0, format, identity);
 		return;
 	}
 		
@@ -136,9 +136,7 @@ function ComposeMessage(type, format)
 				dump('\n');				
 				if (type == 1 || type == 2) //reply or reply all
 				{
-					if (appCore)
-						object = appCore.GetRDFResourceForMessage(tree, nodeList); //temporary
-					msgComposeService.OpenComposeWindow(null, nodeList[i].getAttribute('id'), type, format, object, identity);
+					msgComposeService.OpenComposeWindow(null, nodeList[i].getAttribute('id'), type, format, identity);
 				}
 				else
 				{
@@ -150,9 +148,7 @@ function ComposeMessage(type, format)
 			
 			if (type == 3 || type == 4) //forward
 			{
-				if (appCore)
-					object = appCore.GetRDFResourceForMessage(tree, nodeList); //temporary
-				msgComposeService.OpenComposeWindow(null, uri, type, format, object, identity);
+				msgComposeService.OpenComposeWindow(null, uri, type, format, identity);
 			}
 		}
 		else
