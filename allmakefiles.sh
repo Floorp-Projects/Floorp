@@ -123,7 +123,7 @@ js/src/Makefile
 js/src/fdlibm/Makefile
 js/src/liveconnect/Makefile
 js/src/liveconnect/classes/Makefile
-js/src/xpcom/Makefile
+# js/src/xpcom/Makefile
 js/src/xpconnect/Makefile
 layout/Makefile
 layout/base/Makefile
@@ -292,6 +292,10 @@ xpcom/libxpt/public/Makefile
 xpcom/libxpt/src/Makefile
 xpcom/libxpt/tests/Makefile
 xpcom/libxpt/tools/Makefile
+xpcom/libxpt/xptinfo/Makefile
+xpcom/libxpt/xptinfo/public/Makefile
+xpcom/libxpt/xptinfo/src/Makefile
+xpcom/libxpt/xptinfo/tests/Makefile
 xpcom/idl/Makefile
 silentdl/Makefile
 xpfe/Makefile
