@@ -38,20 +38,20 @@ window[chromehidden~="extrachrome"] [chromeclass="extrachrome"] {
 /*
  * Images for the main buttons
  */
-titledbutton#back-button {
-	list-style-image:url("chrome://navigator/skin/back.gif");
+#back-button {
+	list-style-image: url("chrome://navigator/skin/back.gif");
 }
 
-titledbutton#forward-button {
-	list-style-image:url("chrome://navigator/skin/forward.gif");
+#forward-button {
+	list-style-image: url("chrome://navigator/skin/forward.gif");
 }
 
-titledbutton#stop-button {
-	list-style-image:url("chrome://navigator/skin/stop.gif");
+#stop-button {
+	list-style-image: url("chrome://navigator/skin/stop.gif");
 } 
 
-titledbutton#reload-button {
-	list-style-image:url("chrome://navigator/skin/reload.gif");
+#reload-button {
+	list-style-image: url("chrome://navigator/skin/reload.gif");
 }
 
 /*all the urlbar stuff*/
