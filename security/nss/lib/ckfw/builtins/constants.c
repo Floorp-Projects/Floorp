@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: constants.c,v $ $Revision: 1.7 $ $Date: 2002/08/28 22:12:57 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: constants.c,v $ $Revision: 1.8 $ $Date: 2002/08/29 17:45:10 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -66,21 +66,21 @@ nss_builtins_LibraryDescription = (NSSUTF8 *) "NSS Builtin Object Cryptoki Modul
 
 NSS_IMPLEMENT_DATA const CK_VERSION
 nss_builtins_LibraryVersion = {
-	NSS_BUILTINS_LIBRARY_VERISON_MAJOR,
-	NSS_BUILTINS_LIBRARY_VERISON_MINOR};
+	NSS_BUILTINS_LIBRARY_VERSION_MAJOR,
+	NSS_BUILTINS_LIBRARY_VERSION_MINOR};
 
 NSS_IMPLEMENT_DATA const NSSUTF8 *
 nss_builtins_SlotDescription = (NSSUTF8 *) "";
 
 NSS_IMPLEMENT_DATA const CK_VERSION
 nss_builtins_HardwareVersion = { 
-	NSS_BUILTINS_HARDWARE_VERISON_MAJOR,
-	NSS_BUILTINS_HARDWARE_VERISON_MINOR };
+	NSS_BUILTINS_HARDWARE_VERSION_MAJOR,
+	NSS_BUILTINS_HARDWARE_VERSION_MINOR };
 
 NSS_IMPLEMENT_DATA const CK_VERSION
 nss_builtins_FirmwareVersion = { 
-	NSS_BUILTINS_FIRMWARE_VERISON_MAJOR,
-	NSS_BUILTINS_FIRMWARE_VERISON_MINOR };
+	NSS_BUILTINS_FIRMWARE_VERSION_MAJOR,
+	NSS_BUILTINS_FIRMWARE_VERSION_MINOR };
 
 NSS_IMPLEMENT_DATA const NSSUTF8 *
 nss_builtins_TokenLabel = (NSSUTF8 *) "Builtin Object Token";

@@ -34,11 +34,6 @@
 #ifndef NSSCKBI_H
 #define NSSCKBI_H
 
-#ifdef DEBUG
-static const char BUILTINS_CVS_ID[] = "@(#) $RCSfile: nssckbi.h,v $ $Revision: 1.1 $ $Date: 2002/08/28 22:13:19 $ $Name:  $";
-#endif /* DEBUG */
-
-
 /*
  * NSS BUILTINS Version numbers.
  *
@@ -54,16 +49,16 @@ static const char BUILTINS_CVS_ID[] = "@(#) $RCSfile: nssckbi.h,v $ $Revision: 1
 
 /* These are the  correct verion numbers that details the changes 
  * to the list of trusted certificates.  */
-#define NSS_BUILTINS_LIBRARY_VERISON_MAJOR 1
-#define NSS_BUILTINS_LIBRARY_VERISON_MINOR 2
+#define NSS_BUILTINS_LIBRARY_VERSION_MAJOR 1
+#define NSS_BUILTINS_LIBRARY_VERSION_MINOR 2
 
 /* These verion numbers that details the semantic changes to the ckfw engine. */
-#define NSS_BUILTINS_HARDWARE_VERISON_MAJOR 1
-#define NSS_BUILTINS_HARDWARE_VERISON_MINOR 0
+#define NSS_BUILTINS_HARDWARE_VERSION_MAJOR 1
+#define NSS_BUILTINS_HARDWARE_VERSION_MINOR 0
 
 /* These verion numbers that details the semantic changes to ckbi itself 
  * (new PKCS #11 objects), etc. */
-#define NSS_BUILTINS_FIRMWARE_VERISON_MAJOR 1
-#define NSS_BUILTINS_FIRMWARE_VERISON_MINOR 0
+#define NSS_BUILTINS_FIRMWARE_VERSION_MAJOR 1
+#define NSS_BUILTINS_FIRMWARE_VERSION_MINOR 0
 
 #endif NSSCKBI_H
