@@ -199,3 +199,4 @@ res/entityTables/transliterate.properties
 
 ; minimo stuff
 components/libchrmlite.so 
+components/libpopuplite.so
