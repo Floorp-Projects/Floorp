@@ -321,6 +321,7 @@ HandleBrowserEvent(nsGUIEvent *aEvent)
       result = nsEventStatus_eConsumeNoDefault;
       break;
 
+    case NS_XUL_CLOSE:
     case NS_DESTROY:
     {
       nsViewerApp* app = bw->mApp;
