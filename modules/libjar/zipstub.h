@@ -34,6 +34,7 @@
 
 #define PR_ASSERT         assert
 #define PR_Malloc         malloc
+#define PR_Free           free
 #define PR_FREEIF(x)      do { if (x) free(x); } while(0)
 #define PL_strfree        free
 #define PL_strcmp         strcmp
