@@ -199,6 +199,20 @@
         with bugs outside her privileges. They would still only receive email
         updates for those bugs she could normally view.</para>        
       </step>
+
+      <step>
+        <para>
+          <command>noresolveonopenblockers</command>:
+
+          This option will prevent users from resolving bugs as FIXED if
+          they have unresolved dependencies. Only the FIXED resolution
+          is affected. Users will be still able to resolve bugs to
+          resolutions other than FIXED if they have unresolved dependent
+          bugs.
+
+        </para>
+      </step>
+
     </procedure>
   </section>
 
