@@ -50,6 +50,7 @@ class nsImageOS2 : public nsIImage
    PRInt32  GetAlphaWidth()      { return mInfo ? mInfo->cx : 0; }
    PRInt32  GetAlphaHeight()     { return mInfo ? mInfo->cy : 0; }
    PRInt32  GetAlphaLineStride() { return mAStride; }
+   PRBool   GetHasAlphaMask()     { return mAImageBits != nsnull; }        
    PRUint8 *GetAlphaBits()       { return mAImageBits; }
 
    void    SetAlphaLevel(PRInt32 aAlphaLevel)      {}
@@ -66,6 +67,9 @@ class nsImageOS2 : public nsIImage
 
    void ImageUpdated( nsIDeviceContext *aContext,
                       PRUint8 aFlags, nsRect *aUpdateRect);
+
+  NS_IMETHOD   LockImagePixels(PRBool aMaskPixels);
+  NS_IMETHOD   UnlockImagePixels(PRBool aMaskPixels);    
 
  private:
    BITMAPINFO2 *mInfo;

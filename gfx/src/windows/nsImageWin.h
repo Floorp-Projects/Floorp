@@ -37,7 +37,9 @@ public:
   virtual PRBool      GetIsRowOrderTopToBottom() { return mIsTopToBottom; }
   virtual PRInt32     GetWidth()          { return mBHead->biWidth; }
   virtual PRUint8*    GetBits()           { return mImageBits; }
-  virtual PRInt32     GetLineStride()     {return mRowBytes; }
+  virtual PRInt32     GetLineStride()     { return mRowBytes; }
+  virtual PRBool      GetHasAlphaMask()   { return mAlphaBits != nsnull; }
+
   NS_IMETHOD          Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   NS_IMETHOD          Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                       PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
@@ -86,6 +88,10 @@ public:
    * @return VOID
    */
   void* GetBitInfo() {return mBHead;}
+
+  NS_IMETHOD   LockImagePixels(PRBool aMaskPixels);
+  NS_IMETHOD   UnlockImagePixels(PRBool aMaskPixels);
+
 
   static PRBool gIsWinNT;
 

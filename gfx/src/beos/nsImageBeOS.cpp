@@ -463,3 +463,19 @@ nsresult nsImageBeOS::Optimize(nsIDeviceContext* aContext)
   mStaticImage = PR_TRUE;
   return NS_OK;
 }
+
+//------------------------------------------------------------
+// lock the image pixels. Implement this if you need it.
+NS_IMETHODIMP
+nsImageBeOS::LockImagePixels(PRBool aMaskPixels)
+{
+  return NS_OK;
+}
+
+//------------------------------------------------------------
+// unlock the image pixels.  Implement this if you need it.
+NS_IMETHODIMP
+nsImageBeOS::UnlockImagePixels(PRBool aMaskPixels)
+{
+  return NS_OK;
+}

@@ -105,9 +105,17 @@ public:
   /**
    * Get the number of bytes needed to get to the next scanline for the pixelmap
    * @update - dwc 2/1/99
-   @return The number of bytes in each scanline
+   * @return The number of bytes in each scanline
    */
   virtual PRInt32 GetLineStride() = 0;
+
+  /**
+   * Get whether this image has an alpha mask. Preferable to testing
+   * if GetAlphaBits() is non-null.
+   * @update - sfraser 10/19/99
+   * @return PR_TRUE if the image has an alpha mask, PR_FALSE otherwise
+   */
+  virtual PRBool GetHasAlphaMask() = 0;
 
   /**
    * Get a pointer to the bits for the alpha mask
@@ -217,6 +225,34 @@ public:
    */
   virtual void* GetBitInfo() = 0;
 
+
+  /**
+   * LockImagePixels
+   * Lock the image pixels so that we can access them directly,
+   * with safely. May be a noop on some platforms.
+   *
+   * aMaskPixels = PR_TRUE for the mask, PR_FALSE for the image
+   *
+   * Must be balanced by a call to UnlockImagePixels().
+   *
+   * @update - sfraser 10/18/99
+   * @return error result
+   */
+  NS_IMETHOD LockImagePixels(PRBool aMaskPixels) = 0;
+  
+  /**
+   * UnlockImagePixels
+   * Unlock the image pixels. May be a noop on some platforms.
+   *
+   * Should balance an earlier call to LockImagePixels().
+   *
+   * aMaskPixels = PR_TRUE for the mask, PR_FALSE for the image
+   *
+   * @update - sfraser 10/18/99
+   * @return error result
+   */
+  NS_IMETHOD UnlockImagePixels(PRBool aMaskPixels) = 0;
+  
   //get the color space metrics for this image
   //virtual NI_ColorSpec * GetColorSpec() = 0;                       fix
 
@@ -224,7 +260,7 @@ public:
   //if this image is color mapped, this value will be an
   //index into the color map. hokey? yes, but it avoids
   //another silly api or struct.
-  //virtual nscolor GetTransparentColor() = 0;                              fix.
+  //virtual nscolor GetTransparentColor() = 0;                       fix.
 };
 
 //change notification API flag bits

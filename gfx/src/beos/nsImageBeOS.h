@@ -43,6 +43,8 @@ public:
   virtual void*       GetBitInfo();
   virtual PRInt32     GetLineStride();
   virtual nsColorMap* GetColorMap();
+  virtual PRBool      GetHasAlphaMask()     { return mAlphaBits != nsnull; }        
+
   NS_IMETHOD Draw(nsIRenderingContext &aContext,
                   nsDrawingSurface aSurface,
                   PRInt32 aX, PRInt32 aY,
@@ -75,6 +77,9 @@ public:
   virtual void  SetAlphaLevel(PRInt32 aAlphaLevel);
   virtual PRInt32 GetAlphaLevel();
   virtual void  MoveAlphaMask(PRInt32 aX, PRInt32 aY);
+
+  NS_IMETHOD   LockImagePixels(PRBool aMaskPixels);
+  NS_IMETHOD   UnlockImagePixels(PRBool aMaskPixels);    
 
 private:
   /**

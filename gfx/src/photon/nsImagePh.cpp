@@ -606,3 +606,19 @@ void* nsImagePh::GetBitInfo()
   return nsnull;
 }
 
+//------------------------------------------------------------
+// lock the image pixels. Implement this if you need it.
+NS_IMETHODIMP
+nsImagePh::LockImagePixels(PRBool aMaskPixels)
+{
+  return NS_OK;
+}
+
+//------------------------------------------------------------
+// unlock the image pixels.  Implement this if you need it.
+NS_IMETHODIMP
+nsImagePh::UnlockImagePixels(PRBool aMaskPixels)
+{
+  return NS_OK;
+}
+

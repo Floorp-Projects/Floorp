@@ -62,6 +62,7 @@ public:
 
   virtual  nsresult   BuildImage(nsDrawingSurface aDrawingSurface);
   virtual nsresult    Optimize(nsIDeviceContext* aContext);
+  virtual PRBool      GetHasAlphaMask()   { return mAlphaBits != nsnull; }        
   virtual PRUint8*    GetAlphaBits()      { return mAlphaBits; }
   virtual PRInt32     GetAlphaWidth()   { return 0;}
   virtual PRInt32     GetAlphaHeight()   {return 0;}
@@ -94,6 +95,9 @@ public:
   virtual void  SetAlphaLevel(PRInt32 /* aAlphaLevel */) {}
   virtual PRInt32 GetAlphaLevel() {return(0);}
   virtual void  MoveAlphaMask(PRInt32 /* aX */, PRInt32 /* aY */) {}
+
+  NS_IMETHOD   LockImagePixels(PRBool aMaskPixels);
+  NS_IMETHOD   UnlockImagePixels(PRBool aMaskPixels);    
 
 private:
   void CreateImage(nsDrawingSurface aSurface);

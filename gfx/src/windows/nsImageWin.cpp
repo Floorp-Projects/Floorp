@@ -795,3 +795,38 @@ PRInt16 numPaletteColors;
   return NS_OK;
 }
 
+/** ---------------------------------------------------
+ *	Lock down the image pixels
+ */
+NS_IMETHODIMP
+nsImageWin::LockImagePixels(PRBool aMaskPixels)
+{
+    /*
+  if (!mHBitmap)
+    return NS_ERROR_NOT_INITIALIZED;
+  
+  if (aMaskPixels && !mAlphaHBitmap)
+  	return NS_ERROR_NOT_INITIALIZED;
+
+   ... and do Windows locking of image pixels here, if necessary
+*/
+	return NS_OK;
+}
+
+/** ---------------------------------------------------
+ *	Unlock the pixels
+ */
+NS_IMETHODIMP
+nsImageWin::UnlockImagePixels(PRBool aMaskPixels)
+{
+    /*
+  if (!mHBitmap)
+    return NS_ERROR_NOT_INITIALIZED;
+  
+  if (aMaskPixels && !mAlphamHBitmap)
+  	return NS_ERROR_NOT_INITIALIZED;
+
+   ... and do Windows unlocking of image pixels here, if necessary
+    */
+	return NS_OK;
+}

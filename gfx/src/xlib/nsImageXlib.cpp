@@ -414,3 +414,20 @@ nsImageXlib::ComputeMetrics()
   mRowBytes = CalcBytesSpan(mWidth);
   mSizeImage = mRowBytes * mHeight;
 }
+
+//------------------------------------------------------------
+// lock the image pixels. Implement this if you need it.
+NS_IMETHODIMP
+nsImageXlib::LockImagePixels(PRBool aMaskPixels)
+{
+  return NS_OK;
+}
+
+//------------------------------------------------------------
+// unlock the image pixels.  Implement this if you need it.
+NS_IMETHODIMP
+nsImageXlib::UnlockImagePixels(PRBool aMaskPixels)
+{
+  return NS_OK;
+}
+

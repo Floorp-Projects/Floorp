@@ -499,3 +499,19 @@ PRBool nsImageQT::GetIsRowOrderTopToBottom()
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsImageQT::GetIsRowOrderTopToBottom()\n"));
     return PR_TRUE;
 }
+
+//------------------------------------------------------------
+// lock the image pixels. Implement this if you need it.
+NS_IMETHODIMP
+nsImageQT::LockImagePixels(PRBool aMaskPixels)
+{
+  return NS_OK;
+}
+
+//------------------------------------------------------------
+// unlock the image pixels.  Implement this if you need it.
+NS_IMETHODIMP
+nsImageQT::UnlockImagePixels(PRBool aMaskPixels)
+{
+  return NS_OK;
+}
