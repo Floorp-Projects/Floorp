@@ -54,6 +54,10 @@ public:
 #define _PRSTR_BP m_psb
 #define _PRSTR_DELBUF(x) /* as nothing */
 #define _PRSTR_DELBUF_C(c, x)	/* as nothing */
+#elif defined(__QNX__)
+#undef  _PRSTR_BP
+#define _PRSTR_DELBUF(x) /* as nothing */
+#define _PRSTR_DELBUF_C(c, x)   /* as nothing */
 #else
 #define _PRSTR_BP bp
 // Unix compilers do not believe in encapsulation
