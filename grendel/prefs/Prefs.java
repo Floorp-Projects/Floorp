@@ -47,7 +47,7 @@ public class Prefs {
   static final String kUserName         = "mail.identity.username.";
   static final String kPopLeaveOnServer = "pop.leaveMailOnServer";
   static final String kMailDirectory    = "mail.directory";
-  static final String kSMTPHost         = "mail.identity-0.smtphost";
+  static final String kSMTPHost         = "mail.identity.smtphost.0";
   static final String kStoreList        = "mail.storelist";
 
   static final String kLocalProtocol = "berkeley";
