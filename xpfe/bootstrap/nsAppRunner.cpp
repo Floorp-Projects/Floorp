@@ -713,13 +713,10 @@ int main(int argc, char* argv[])
     // calling this explicitly will cut down on a large number of leaks we're
     // seeing:
   }
-    
-#if 0
-  if ( unsigned long count = NS_TotalWebShellsInExistence() )
-  {
-    printf("!!!Warning: there are still %l instances of nsWebShell outstanding.  OK?\n", count);
-    char cc;
-    scanf("%c", &cc);
+
+#ifdef DETECT_WEBSHELL_LEAKS
+  if ( unsigned long count = NS_TotalWebShellsInExistence() )  {
+    printf("XXX WARNING: Number of webshells being leaked: %d \n", count);
   }
 #endif
 
