@@ -84,7 +84,7 @@ function OpenURL(event,node)
 
 </html:script>
 
-<xul:tree datasources="rdf:find rdf:files rdf:ftp rdf:relatedlinks rdf:bookmarks rdf:history"  onclick="return OpenURL(event,event.target.parentNode);">
+<xul:tree flex="100%" datasources="rdf:find rdf:files rdf:ftp rdf:relatedlinks rdf:bookmarks rdf:history"  onclick="return OpenURL(event,event.target.parentNode);">
   <xul:treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <xul:treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
   <xul:treecol id="ShortcutURLColumn" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
@@ -149,5 +149,4 @@ function OpenURL(event,node)
 
   </xul:treebody>
 </xul:tree>
-
 </xul:window>

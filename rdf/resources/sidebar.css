@@ -2,6 +2,11 @@ window {
  display: block; 
 } 
 
+#treebox {
+ width: 100%;
+ height: 100%;
+}
+
 tree { 
  display: table; 
  background-color: #eeeeee; 
@@ -33,6 +38,7 @@ treecell {
  display: table-cell;
  font-family: Verdana, Sans-Serif;
  font-size: 8pt;
+ white-space: nowrap;
 } 
 
 treehead treeitem treecell { 
