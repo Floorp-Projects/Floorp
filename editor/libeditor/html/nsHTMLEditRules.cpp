@@ -2654,16 +2654,21 @@ nsHTMLEditRules::JoinBlocks(nsCOMPtr<nsIDOMNode> *aLeftBlock,
       nsCOMPtr<nsIDOMNode> parent;
       PRInt32 offset;
       res = JoinNodesSmart(*aLeftBlock, *aRightBlock, address_of(parent), &offset);
-      if (NS_FAILED(res)) return res;
-      nsCOMPtr<nsIDOMNode> newBlock;
-      res = ConvertListType(*aRightBlock, address_of(newBlock), existingListStr, NS_LITERAL_STRING("li"));
+      if (NS_SUCCEEDED(res) && bMergeLists)
+      {
+        nsCOMPtr<nsIDOMNode> newBlock;
+        res = ConvertListType(*aRightBlock, address_of(newBlock), existingListStr, NS_LITERAL_STRING("li"));
+      }
     }
     else
     {
       // nodes are disimilar types. 
       res = MoveBlock(*aLeftBlock, *aRightBlock, leftOffset, rightOffset);
     }
-    if (brNode) mHTMLEditor->DeleteNode(brNode);
+    if (NS_SUCCEEDED(res) && brNode)
+    {
+      res = mHTMLEditor->DeleteNode(brNode);
+    }
   }
   return res;
 }
