@@ -161,7 +161,7 @@ TranslateLineEndings(nsString &aString)
   if (transBuf)
   {
     DoLineEndingConJobUnicode(transBuf, aString.Length());
-    aString.SetString(transBuf);
+    aString.Assign(transBuf);
     PR_FREEIF(transBuf);
   }
 
@@ -750,7 +750,7 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 			m_compFields->SetSubject(nsCAutoString(subject));
 
 		// Convert body to mail charset not to utf-8 (because we don't manipulate body text)
-		aCharset.SetString(m_compFields->GetCharacterSet());
+		aCharset.Assign(m_compFields->GetCharacterSet());
 		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, body, &outCString))) 
 		{
 			m_compFields->SetBody(outCString);

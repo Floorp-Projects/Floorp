@@ -1637,7 +1637,7 @@ NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionReply(const PRUnichar * aHost, u
   m_logonRedirector = nsnull; // we don't care about it anymore
 	
   // remember the logon cookie
-  mLogonCookie.SetString(aCookieData, aCookieSize);
+  mLogonCookie.Assign(aCookieData, aCookieSize);
 
   //currently the server isn't returning a valid auth logon capability
   // this line is just a HACK to force us to use auth login.

@@ -2487,12 +2487,12 @@ nsresult nsMsgDatabase::RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnT
 
 /* static */void nsMsgDatabase::YarnTonsString(struct mdbYarn *yarn, nsString *str)
 {
-	str->SetString((const char *) yarn->mYarn_Buf, yarn->mYarn_Fill);
+	str->Assign((const char *) yarn->mYarn_Buf, yarn->mYarn_Fill);
 }
 
 /* static */void nsMsgDatabase::YarnTonsCString(struct mdbYarn *yarn, nsCString *str)
 {
-	str->SetString((const char *) yarn->mYarn_Buf, yarn->mYarn_Fill);
+	str->Assign((const char *) yarn->mYarn_Buf, yarn->mYarn_Fill);
 }
 
 

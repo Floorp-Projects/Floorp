@@ -150,13 +150,13 @@ nsresult ConvertToUnicode(const nsString& aCharset,
     return NS_ERROR_NULL_POINTER;
   }
   else if ('\0' == *inCString) {
-    outString.SetString("");
+    outString.Truncate();
     return NS_OK;
   }
   else if (aCharset.IsEmpty() ||
       aCharset.EqualsIgnoreCase("us-ascii") ||
       aCharset.EqualsIgnoreCase("ISO-8859-1")) {
-    outString.SetString(inCString);
+    outString.Assign(inCString);
     return NS_OK;
   }
 
@@ -192,7 +192,7 @@ nsresult ConvertToUnicode(const nsString& aCharset,
       if (unichars != nsnull) {
         // convert to unicode
         res = decoder->Convert(inCString, &srcLen, unichars, &unicharLength);
-        outString.SetString(unichars, unicharLength);
+        outString.Assign(unichars, unicharLength);
         PR_Free(unichars);
       }
       else {
@@ -227,7 +227,7 @@ const nsString& msgCompFileSystemCharset()
 			rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aPlatformCharset);
 
 		if (NS_FAILED(rv)) 
-			aPlatformCharset.SetString("ISO-8859-1");
+			aPlatformCharset.Assign("ISO-8859-1");
 	}
 	return aPlatformCharset;
 }
@@ -371,7 +371,7 @@ nsresult nsMsgI18NConvertToEntity(const nsString& inString, nsString* outString)
 {
   nsresult res;
 
-  outString->SetString("");
+  outString->Truncate();
   nsCOMPtr <nsIEntityConverter> entityConv;
   res = nsComponentManager::CreateInstance(kEntityConverterCID, NULL, 
                                            NS_GET_IID(nsIEntityConverter), getter_AddRefs(entityConv));
@@ -379,7 +379,7 @@ nsresult nsMsgI18NConvertToEntity(const nsString& inString, nsString* outString)
     PRUnichar *entities = NULL;
     res = entityConv->ConvertToEntities(inString.GetUnicode(), nsIEntityConverter::html40Latin1, &entities);
     if (NS_SUCCEEDED(res) && (NULL != entities)) {
-      outString->SetString(entities);
+      outString->Assign(entities);
       nsAllocator::Free(entities);
      }
    }
