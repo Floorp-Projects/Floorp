@@ -216,14 +216,15 @@ NS_METHOD MRJPlugin::CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID, co
 {
 	nsresult result = NS_NOINTERFACE;
 
-	if (::strcmp(aPluginMIMEType, NS_JVM_MIME_TYPE) == 0 || ::strncmp(aPluginMIMEType, NS_APPLET_MIME_TYPE, sizeof(NS_APPLET_MIME_TYPE) - 1) == 0)
-		result = CreateInstance(aOuter, aIID, aResult);
-	else if (::strcmp(aPluginMIMEType, "application/x-java-frame") == 0) {
+	if (::strcmp(aPluginMIMEType, "application/x-java-frame") == 0) {
 		// create a special plugin instance that manages an embedded frame.
 		EmbeddedFramePluginInstance* instance = new EmbeddedFramePluginInstance();
 		nsresult result = instance->QueryInterface(aIID, aResult);
 		if (result != NS_OK)
 			delete instance;
+	} else {
+		// assume it's some kind of an applet.
+		result = CreateInstance(aOuter, aIID, aResult);
 	}
 	return result;
 }
@@ -766,16 +767,18 @@ NS_METHOD MRJPluginInstance::Print(nsPluginPrint* platformPrint)
 	if (platformPrint->mode == nsPluginMode_Embedded) {
 		MRJFrame* frame = mContext->findFrame(WindowRef(NULL));
 		if (frame != NULL) {
-#if 1		
+#if 0		
 			Point frameOrigin = { 0, 0 };
 			GrafPtr printingPort;
 			::GetPort(&printingPort);
+			frame->print(printingPort, frameOrigin);
 #else
 			nsPluginPort* npPort = platformPrint->print.embedPrint.window.window;
 			Point frameOrigin = { -npPort->porty, -npPort->portx };
-			GrafPtr printingPort = GrafPtr(npPort->port);
+			GrafPtr printingPort;
+			::GetPort(&printingPort);
+			mContext->printApplet(printingPort, frameOrigin);
 #endif
-			frame->print(printingPort, frameOrigin);
 		}
 		return NS_OK;
 	}
