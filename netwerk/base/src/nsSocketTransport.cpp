@@ -298,32 +298,33 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
 }
 
 
-nsresult nsSocketTransport::CheckForTimeout(PRIntervalTime aCurrentTime)
+nsresult nsSocketTransport::CheckForTimeout (PRIntervalTime aCurrentTime)
 {
-  nsresult rv = NS_OK;
-  PRIntervalTime idleInterval;
-
-  // Enter the socket transport lock...
-  nsAutoMonitor mon(mMonitor);
-
-  idleInterval = aCurrentTime - mLastActiveTime;
-
-  //
-  // Only timeout if the transport is waiting to connect to the server
-  //
-  if ((eSocketState_WaitConnect == mCurrentState) && 
-      (idleInterval >= gTimeoutInterval)) {
-    PR_LOG(gSocketLog, PR_LOG_ERROR, 
-           ("nsSocketTransport::CheckForTimeout() [%s:%d %x].\t"
+    nsresult rv = NS_OK;
+    PRIntervalTime idleInterval;
+    
+    // Enter the socket transport lock...
+    nsAutoMonitor mon(mMonitor);
+    
+    idleInterval = aCurrentTime - mLastActiveTime;
+    
+    //
+    // Only timeout if the transport is waiting to connect to the server
+    //
+    if ((mCurrentState  == eSocketState_WaitConnect || mCurrentState == eSocketState_WaitReadWrite)
+        && idleInterval >= gTimeoutInterval)
+    {
+        PR_LOG(gSocketLog, PR_LOG_ERROR, 
+            ("nsSocketTransport::CheckForTimeout() [%s:%d %x].\t"
             "TIMED OUT... Idle interval: %d\n",
             mHostName, mPort, this, idleInterval));
-
-    // Move the transport into the Timeout state...  
-    mCurrentState = eSocketState_Timeout;
-    rv = NS_ERROR_NET_TIMEOUT;
-  }
-
-  return rv;
+        
+        // Move the transport into the Timeout state...  
+        mCurrentState = eSocketState_Timeout;
+        rv = NS_ERROR_NET_TIMEOUT;
+    }
+    
+    return rv;
 }
 
 
