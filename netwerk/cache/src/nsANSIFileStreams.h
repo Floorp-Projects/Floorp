@@ -36,19 +36,45 @@ public:
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSISEEKABLESTREAM
     
-    nsANSIInputStream(FILE* file);
+    nsANSIInputStream();
     virtual ~nsANSIInputStream();
+    nsresult Open(nsILocalFile* file);
 };
 
 class nsANSIOutputStream : public nsIOutputStream, public nsISeekableStream {
-    FILE* mFile;
+    FILE*       mFile;
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOUTPUTSTREAM
     NS_DECL_NSISEEKABLESTREAM
     
-    nsANSIOutputStream(FILE* file);
+    nsANSIOutputStream();
     virtual ~nsANSIOutputStream();
+    nsresult Open(nsILocalFile* file);
+};
+
+class nsANSIFileStream : public nsIInputStream, public nsIOutputStream, public nsISeekableStream {
+    FILE*       mFile;
+    PRUint32    mSize;
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIINPUTSTREAM
+
+    // NS_DECL_NSIOUTPUTSTREAM
+    // XXX must only declare additional methods introduced by nsIOutputStream.
+    NS_IMETHOD Flush(void);
+    NS_IMETHOD Write(const char *buf, PRUint32 count, PRUint32 *_retval);
+    NS_IMETHOD WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval);
+    NS_IMETHOD WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval);
+    NS_IMETHOD SetNonBlocking(PRBool aNonBlocking);
+    NS_IMETHOD GetObserver(nsIOutputStreamObserver * *aObserver);
+    NS_IMETHOD SetObserver(nsIOutputStreamObserver * aObserver);
+
+    NS_DECL_NSISEEKABLESTREAM
+
+    nsANSIFileStream();
+    virtual ~nsANSIFileStream();
+    nsresult Open(nsILocalFile* file);
 };
 
 #endif // _nsANSIFileStreams_h_

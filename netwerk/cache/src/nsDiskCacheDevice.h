@@ -38,6 +38,7 @@ class nsDiskCacheRecord;
 class nsISupportsArray;
 class nsIInputStream;
 class nsIOutputStream;
+class nsANSIFileStream;
 
 class nsDiskCacheDevice : public nsCacheDevice {
 public:
@@ -97,7 +98,10 @@ public:
 
     nsresult scanDiskCacheEntries(nsISupportsArray ** result);
     nsresult evictDiskCacheEntries();
+
+    nsresult clobberDiskCache();
     
+    nsresult openCacheMap();
     nsresult readCacheMap();
     nsresult writeCacheMap();
 
@@ -111,6 +115,7 @@ private:
     nsDiskCacheEntryHashTable   mBoundEntries;
     PRUint32                    mCacheCapacity;
     nsDiskCacheMap*             mCacheMap;
+    nsANSIFileStream*           mCacheStream;
 };
 
 #endif // _nsDiskCacheDevice_h_

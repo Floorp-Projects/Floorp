@@ -30,15 +30,17 @@ class nsIInputStream;
 class nsIOutputStream;
 
 struct nsDiskCacheHeader {
-    enum { kCurrentVersion = 0x00010000 };
+    enum { kCurrentVersion = 0x00010002 };
 
     PRUint32    mVersion;                           // cache version.
     PRUint32    mDataSize;                          // size of cache in bytes.
     PRUint32    mEntryCount;                        // number of entries stored in cache.
+    PRUint32    mIsDirty;                           // dirty flag.
     // XXX need a bitmap?
     
     nsDiskCacheHeader()
-        :   mVersion(kCurrentVersion), mDataSize(0), mEntryCount(0)
+        :   mVersion(kCurrentVersion), mDataSize(0),
+            mEntryCount(0), mIsDirty(PR_TRUE)
     {
     }
 
@@ -47,6 +49,7 @@ struct nsDiskCacheHeader {
         mVersion = ::PR_htonl(mVersion);
         mDataSize = ::PR_htonl(mDataSize);
         mEntryCount = ::PR_htonl(mEntryCount);
+        mIsDirty = ::PR_htonl(mIsDirty);
     }
     
     void        Unswap()
@@ -54,18 +57,22 @@ struct nsDiskCacheHeader {
         mVersion = ::PR_ntohl(mVersion);
         mDataSize = ::PR_ntohl(mDataSize);
         mEntryCount = ::PR_ntohl(mEntryCount);
+        mIsDirty = ::PR_ntohl(mIsDirty);
     }
 };
 
-// XXX initial capacity, enough for 8192 distint entries.
+// XXX initial capacity, enough for 8192 distinct entries.
 class nsDiskCacheMap {
 public:
     nsDiskCacheMap();
     ~nsDiskCacheMap();
+
+    void Reset();
     
     PRUint32& DataSize() { return mHeader.mDataSize; }
     PRUint32& EntryCount() { return mHeader.mEntryCount; }
-
+    PRUint32& IsDirty() { return mHeader.mIsDirty; }
+    
     nsDiskCacheRecord* GetRecord(PRUint32 hashNumber);
     void DeleteRecord(nsDiskCacheRecord* record);
     
@@ -74,10 +81,29 @@ public:
         kBucketsPerTable = (1 << 5)                 // must be a power of 2!
     };
     
-    nsDiskCacheRecord* GetBucket(PRUint32 index) { return mBuckets[index].mRecords; }
+    nsDiskCacheRecord* GetBucket(PRUint32 index)
+    {
+        return mBuckets[index].mRecords;
+    }
+    
+    PRUint32 GetBucketIndex(PRUint32 hashNumber)
+    {
+        return (hashNumber & (kBucketsPerTable - 1));
+    }
+    
+    PRUint32 GetBucketIndex(nsDiskCacheRecord* record)
+    {
+        return GetBucketIndex(record->HashNumber());
+    }
     
     nsresult Read(nsIInputStream* input);
     nsresult Write(nsIOutputStream* output);
+    
+    nsresult ReadBucket(nsIInputStream* input, PRUint32 index);
+    nsresult WriteBucket(nsIOutputStream* output, PRUint32 index);
+    
+    nsresult ReadHeader(nsIInputStream* input);
+    nsresult WriteHeader(nsIOutputStream* output);
     
 private:
     struct nsDiskCacheBucket {
