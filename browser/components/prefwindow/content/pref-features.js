@@ -79,7 +79,7 @@ function updateImagePref()
 
 function viewImages() 
 {
-  openDialog("chrome://communicator/content/wallet/CookieViewer.xul","_blank",
+  openDialog("chrome://browser/content/cookieviewer/CookieViewer.xul","_blank",
               "chrome,resizable=yes,modal", "imageManager" );
 }
 
