@@ -523,7 +523,7 @@ nsHTMLFormElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, AcceptCharset, acceptcharset)
-NS_IMPL_STRING_ATTR(nsHTMLFormElement, Action, action)
+NS_IMPL_URI_ATTR(nsHTMLFormElement, Action, action)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Enctype, enctype)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Method, method)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Name, name)
