@@ -77,11 +77,11 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #include "nsIDocumentLoader.h"
 #include "nsIObserverService.h"
+#include "nsFileLocations.h"
 
 #ifdef ClientWallet
 #include "nsIFileLocator.h"
 #include "nsIFileSpec.h"
-#include "nsFileLocations.h"
 #include "nsIWalletService.h"
 static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
