@@ -151,7 +151,12 @@ PRBool nsRegionMac :: IsEqual(const nsIRegion &aRegion)
 
 void nsRegionMac :: GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight)
 {
+#if TARGET_CARBON
+  Rect macRect;
+  ::GetRegionBounds (mRegion, &macRect);
+#else
   Rect macRect = (**mRegion).rgnBBox;
+#endif
 
   *aX = macRect.left;
   *aY = macRect.top;
@@ -401,7 +406,11 @@ void nsRegionMac :: SetRegionType()
   if (::EmptyRgn(mRegion) == PR_TRUE)
     mRegionType = eRegionComplexity_empty;
   else
+#if TARGET_CARBON
+    if ( ::IsRegionRectangular(mRegion) )
+#else
     if ((*mRegion)->rgnSize == 10)
+#endif
       mRegionType = eRegionComplexity_rect;
     else
       mRegionType = eRegionComplexity_complex;
