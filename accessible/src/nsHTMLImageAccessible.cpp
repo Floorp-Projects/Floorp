@@ -30,10 +30,9 @@
 #include "nsIDOMHTMLCollection.h"
 #include "nsIAccessibilityService.h"
 #include "nsIServiceManager.h"
-//#include "imgIRequest.h"
-//#include "imgIContainer.h"
-//#include "nsIImageFrame.h"
-// #include "nsIImageRequest.h"
+#include "imgIRequest.h"
+#include "imgIContainer.h"
+#include "nsIImageFrame.h"
 
 // --- image -----
 
@@ -65,7 +64,7 @@ NS_IMETHODIMP nsHTMLImageAccessible::GetAccState(PRUint32 *_retval)
   // is an animated image.
 
   nsLinkableAccessible::GetAccState(_retval);
-/*
+
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
   nsIFrame *frame = nsnull;
@@ -88,7 +87,7 @@ NS_IMETHODIMP nsHTMLImageAccessible::GetAccState(PRUint32 *_retval)
     if (numFrames > 1)
       *_retval |= STATE_ANIMATED;
   }
-*/
+
   return NS_OK;
 }
 
