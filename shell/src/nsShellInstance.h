@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
 #include <stdio.h>
 #include "nsIApplicationShell.h"
 #include "nsIFactory.h"
@@ -22,6 +23,10 @@
 #include "nsweb.h"
 #include "nsCRT.h"
 #include "nsIShellInstance.h"
+
+
+class nsIPref;
+
 
 // platform independent native handle to application instance
 typedef void * nsNativeApplicationInstance ;
@@ -126,10 +131,13 @@ public:
    */  
   NS_IMETHOD ExitApplication() ;
 
+  NS_IMETHOD_(nsIPref *) GetPreferences() ; 
+
 private:
   nsNativeApplicationInstance mNativeInstance ;
   nsIApplicationShell *       mApplicationShell ;
   nsIWidget *                 mApplicationWindow ;
+  nsIPref *                   mPref;
 
 };
 

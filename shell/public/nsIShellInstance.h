@@ -26,6 +26,7 @@
 #include "nsIWidget.h"
 
 class nsIApplicationShell;
+class nsIPref;
 
 #define NS_ISHELLINSTANCE_IID      \
  { 0xbf88e640, 0xdf99, 0x11d1, \
@@ -112,6 +113,13 @@ public:
    * @result nsresult NS_OK upon succcessful completion
    */  
   NS_IMETHOD ExitApplication() = 0 ;
+
+  /**
+   * Get Preferences Object
+   * @result An nsIPref pointer
+   */
+  NS_IMETHOD_(nsIPref *) GetPreferences() = 0; 
+
 
 };
 
