@@ -205,8 +205,9 @@ function onReplace()
   // If the current selection doesn't match the pattern,
   // then we want to find the next match, but not do the replace.
   // That's what most other apps seem to do.
+  // So here, just return.
   if (!matches)
-    return onFindNext();
+    return false;
 
   // Transfer dialog contents to the find service.
   saveFindData();
