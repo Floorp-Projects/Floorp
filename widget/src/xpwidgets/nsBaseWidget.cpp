@@ -1126,7 +1126,7 @@ nsBaseWidget::Enumerator::IsDone()
     return NS_OK;
   }
   else {
-    return NS_COMFALSE;
+    return NS_ENUMERATOR_FALSE;
   }
   return NS_OK;
 }
