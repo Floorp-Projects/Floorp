@@ -256,6 +256,9 @@ createNavCenterVocab () {
   gNavCenter->controlStripFGColor = newResource("controlStripFGColor", 0 /* XXX */);
   gNavCenter->controlStripBGColor = newResource("controlStripBGColor", 0 /* XXX */);
   gNavCenter->controlStripBGURL = newResource("controlStripBGURL", 0 /* XXX */);
+  gNavCenter->controlStripModeText = newResource("controlModeText", 0 /* XXX */);
+  gNavCenter->controlStripCloseText = newResource("controlCloseText", 0 /* XXX */);
+  gNavCenter->titleBarShowText = newResource("titleBarShowText", 0 /* XXX */);
 
   /* Buttons */
   gNavCenter->buttonTreeMode = newResource("buttonTreeMode", 0 /* XXX */);

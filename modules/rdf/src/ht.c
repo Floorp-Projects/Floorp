@@ -5343,7 +5343,8 @@ HT_IsNodeDataEditable(HT_Resource node, void *token, uint32 tokenType)
 			(token == gNavCenter->loadOpenState) || (token == gNavCenter->saveOpenState) ||
 			(token == gNavCenter->useSelection) || (token == gNavCenter->controlStripFGColor) ||
 			(token == gNavCenter->controlStripBGColor) || (token == gNavCenter->controlStripBGURL) ||
-
+			(token == gNavCenter->controlStripModeText) || (token == gNavCenter->controlStripCloseText) ||
+			(token == gNavCenter->titleBarShowText) ||
 		/*  ((token == gWebData->RDF_URL) && ht_isURLReal(node)) || */
 #ifdef	HT_PASSWORD_RTNS
 			(token == gNavCenter->RDF_Password) ||
@@ -5853,7 +5854,9 @@ htIsPropertyInMoreOptions(RDF_Resource r)
 		(r == gNavCenter->useInlineEditing) || (r == gNavCenter->useSingleClick) ||
 		(r == gNavCenter->loadOpenState) || (r == gNavCenter->saveOpenState) ||
 		(r == gNavCenter->useSelection) || (r == gNavCenter->controlStripFGColor) ||
-		(r == gNavCenter->controlStripBGColor) || (r == gNavCenter->controlStripBGURL))
+		(r == gNavCenter->controlStripBGColor) || (r == gNavCenter->controlStripBGURL) ||
+		(r == gNavCenter->controlStripCloseText) || (r == gNavCenter->controlStripModeText) ||
+		(r == gNavCenter->titleBarShowText))
 
 	{
 		retVal = PR_TRUE;

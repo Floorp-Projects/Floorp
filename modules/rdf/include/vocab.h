@@ -145,6 +145,7 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource titleBarFGColor;
   RDF_Resource titleBarBGColor;
   RDF_Resource titleBarBGURL;
+  RDF_Resource titleBarShowText;
   RDF_Resource dividerColor;
   RDF_Resource showDivider;
   RDF_Resource selectedColumnHeaderFGColor;
@@ -187,6 +188,8 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource controlStripFGColor; /* The tree's control strip foreground */
   RDF_Resource controlStripBGColor; /* The tree's control strip background */
   RDF_Resource controlStripBGURL; /* The tree's control strip BG URL */
+  RDF_Resource controlStripModeText; /* The text to display for switching modes in the control strip. */
+  RDF_Resource controlStripCloseText; /* The text displayed for the close function in the control strip. */
 
   RDF_Resource pos;
   RDF_Resource from;
