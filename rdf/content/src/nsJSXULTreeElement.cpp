@@ -45,7 +45,8 @@ NS_DEF_PTR(nsIDOMNodeList);
 //
 enum XULTreeElement_slots {
   XULTREEELEMENT_SELECTEDITEMS = -1,
-  XULTREEELEMENT_SELECTEDCELLS = -2
+  XULTREEELEMENT_SELECTEDROWS = -2,
+  XULTREEELEMENT_SELECTEDCELLS = -3
 };
 
 /***********************************************************************/
@@ -79,6 +80,23 @@ GetXULTreeElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         nsIDOMNodeList* prop;
         if (NS_SUCCEEDED(a->GetSelectedItems(&prop))) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case XULTREEELEMENT_SELECTEDROWS:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectedrows", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsIDOMNodeList* prop;
+        if (NS_SUCCEEDED(a->GetSelectedRows(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -206,6 +224,7 @@ JSClass XULTreeElementClass = {
 static JSPropertySpec XULTreeElementProperties[] =
 {
   {"selectedItems",    XULTREEELEMENT_SELECTEDITEMS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"selectedRows",    XULTREEELEMENT_SELECTEDROWS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"selectedCells",    XULTREEELEMENT_SELECTEDCELLS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };

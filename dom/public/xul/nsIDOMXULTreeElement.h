@@ -37,18 +37,22 @@ public:
 
   NS_IMETHOD    GetSelectedItems(nsIDOMNodeList** aSelectedItems)=0;
 
+  NS_IMETHOD    GetSelectedRows(nsIDOMNodeList** aSelectedRows)=0;
+
   NS_IMETHOD    GetSelectedCells(nsIDOMNodeList** aSelectedCells)=0;
 };
 
 
 #define NS_DECL_IDOMXULTREEELEMENT   \
   NS_IMETHOD    GetSelectedItems(nsIDOMNodeList** aSelectedItems);  \
+  NS_IMETHOD    GetSelectedRows(nsIDOMNodeList** aSelectedRows);  \
   NS_IMETHOD    GetSelectedCells(nsIDOMNodeList** aSelectedCells);  \
 
 
 
 #define NS_FORWARD_IDOMXULTREEELEMENT(_to)  \
   NS_IMETHOD    GetSelectedItems(nsIDOMNodeList** aSelectedItems) { return _to GetSelectedItems(aSelectedItems); } \
+  NS_IMETHOD    GetSelectedRows(nsIDOMNodeList** aSelectedRows) { return _to GetSelectedRows(aSelectedRows); } \
   NS_IMETHOD    GetSelectedCells(nsIDOMNodeList** aSelectedCells) { return _to GetSelectedCells(aSelectedCells); } \
 
 

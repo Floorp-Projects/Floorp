@@ -46,12 +46,20 @@ nsXULTreeElement::nsXULTreeElement(nsIDOMXULElement* aOuter)
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create DOM node list");
   if (NS_FAILED(rv)) return;
 
+  mSelectedRows = children;
+
+  children = nsnull;
+  rv = nsRDFDOMNodeList::Create(&children);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create DOM node list");
+  if (NS_FAILED(rv)) return;
+
   mSelectedCells = children;
 }
 
 nsXULTreeElement::~nsXULTreeElement()
 {
   NS_IF_RELEASE(mSelectedItems);
+  NS_IF_RELEASE(mSelectedRows);
   NS_IF_RELEASE(mSelectedCells);
 }
 
@@ -60,6 +68,14 @@ nsXULTreeElement::GetSelectedItems(nsIDOMNodeList** aSelectedItems)
 {
   NS_IF_ADDREF(mSelectedItems);
   *aSelectedItems = mSelectedItems;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULTreeElement::GetSelectedRows(nsIDOMNodeList** aSelectedRows)
+{
+  NS_IF_ADDREF(mSelectedRows);
+  *aSelectedRows = mSelectedRows;
   return NS_OK;
 }
 

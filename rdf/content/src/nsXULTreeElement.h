@@ -53,6 +53,7 @@ public:
 
 protected:
     nsIDOMNodeList* mSelectedItems;
+    nsIDOMNodeList* mSelectedRows;
     nsIDOMNodeList* mSelectedCells;
 };
 
