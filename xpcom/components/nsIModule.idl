@@ -29,25 +29,25 @@ interface nsIModule : nsISupports
     //		create new objects.
     // SingletonFactory can be queried off the Class Object. Services can be created
     //		using the singletonfactory.
-    void GetClassObject(in nsIComponentManager aCompMgr, in nsCIDRef aClass,
+    void getClassObject(in nsIComponentManager aCompMgr, in nsCIDRef aClass,
                         in nsIIDRef aIID,
                         [retval, iid_is(aIID)] out nsQIResult result);
 
     // Component registration
-    void RegisterSelf(in nsIComponentManager aCompMgr, in nsIFileSpec location,
+    void registerSelf(in nsIComponentManager aCompMgr, in nsIFileSpec location,
                       in string registryLocation, in string componentType);
 
-    void UnregisterSelf(in nsIComponentManager aCompMgr, in nsIFileSpec location,
+    void unregisterSelf(in nsIComponentManager aCompMgr, in nsIFileSpec location,
                         in string registryLocation);
 
     // Module load management
-    // okToUnload: indicates to the caller if the module can be unloaded.
+    // @return indicates to the caller if the module can be unloaded.
     // 		Returning PR_TRUE isn't a guarantee that the module will be
     //		unloaded. It constitues only willingness of the module to be
     //		unloaded.
     //		Returning PR_FALSE guaratees that the module wont be unloaded.
     //
-    void CanUnload(in nsIComponentManager aCompMgr, out boolean okToUnload);
+    boolean canUnload(in nsIComponentManager aCompMgr);
 };
 
 %{C++

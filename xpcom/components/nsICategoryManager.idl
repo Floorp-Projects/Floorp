@@ -44,17 +44,34 @@ interface nsICategoryManager : nsISupports
      * @param aValue The value for the entry ("moz.httprulez.1")
      * @param aPersist Should we persist between invocations?
      * @param aReplace Should we replace an existing entry?
-     * @return previous entry, if any
+     * @return Previous entry, if any
      */
     string addCategoryEntry(in string aCategory, in string aEntry,
 			    in string aValue, in boolean aPersist,
 			    in boolean aReplace);
 
     /**
+     * Delete an entry from the category.
+     * @param aCategory The name of the category ("protocol")
+     * @param aEntry The entry to be added ("http")
+     * @param aPersist Delete entry from registry, if present?
+     * @return Previous entry, null if none.
+     */
+    string deleteCategoryEntry(in string aCategory, in string aEntry,
+                               in boolean aPersist);
+
+    /**
+     * Delete a category and all entries.
+     * @param aCategory The category to be deleted.
+     * @param aPersist Delete the category from the registry?
+     */
+    void deleteCategory(in string aCategory);
+
+    /**
      * Enumerate the entries in a category.
      * @param aCategory The category to be enumerated.
      */
-    nsIEnumerator enumerateCategory(in string aCategory);
+    nsISimpleEnumerator enumerateCategory(in string aCategory);
 
     /**
      * Get all the category contents.
@@ -64,10 +81,8 @@ interface nsICategoryManager : nsISupports
 			     [array, size_is(count)] out string values,
 			     [retval] out long count);
 
-    const long override   = 0;
-    const long fallback   = 1;
-    const long checkFirst = 0;
-    const long checkLast  = 1;
+    const long OVERRIDE   = 0;
+    const long FALLBACK   = 1;
 
     /*
      * Register a category handler for override or fallback when
