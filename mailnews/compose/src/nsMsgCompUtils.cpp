@@ -157,11 +157,7 @@ nsresult mime_sanity_check_fields (
 	else
 		if ((!to || !*to) && (!cc || !*cc) &&
 				(!bcc || !*bcc) && (!newsgroups || !*newsgroups))
-#if 0
 			return NS_MSG_NO_RECIPIENTS;
-#else
-			return NS_ERROR_INVALID_ARG;
-#endif
 	else
 		return NS_OK;
 }

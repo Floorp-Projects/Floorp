@@ -40,6 +40,7 @@
 #include "nsMsgSend.h"
 #include "nsMsgCreate.h"
 #include "nsMailHeaders.h"
+#include "nsMsgPrompts.h"
 
 // XXX temporary so we can use the current identity hack -alecf
 #include "nsIMsgMailSession.h"
@@ -366,6 +367,11 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,
 	}
 	
 	rv = _SendMsg(deliverMode, identity, callback);
+	if (NS_FAILED(rv))
+	{
+		ShowWindow(PR_TRUE);
+		nsMsgDisplayMessageByID(rv);
+	}
 	
 	return rv;
 }
@@ -443,6 +449,11 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 	else
 		rv = NS_ERROR_NOT_INITIALIZED;
 
+	if (NS_FAILED(rv))
+	{
+		ShowWindow(PR_TRUE);
+		nsMsgDisplayMessageByID(rv);
+	}
 	return rv;
 }
 
@@ -919,6 +930,8 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIChannel * /* aChan
 
 	PRUint32 numWritten = 0; 
 	rv = inStr->Read(newBuf, count, &numWritten);
+	if (rv == NS_BASE_STREAM_WOULD_BLOCK)
+		rv = NS_OK;
 	newBuf[count] = '\0';
 	if (NS_SUCCEEDED(rv) && numWritten > 0)
 	{

@@ -24,6 +24,7 @@
 #include "nsIPref.h"
 #include "nsIIOService.h"
 #include "nsIURI.h"
+#include "msgCore.h"
 
 /* This is the next generation string retrieval call */
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
@@ -54,6 +55,10 @@ ComposeGetStringByID(PRInt32 stringID)
 		if (NS_SUCCEEDED(res))
 		{
 			PRUnichar *ptrv = nsnull;
+			
+			if (NS_IS_MSG_ERROR(stringID))
+				stringID = NS_ERROR_GET_CODE(stringID);
+			
 			res = sBundle->GetStringFromID(stringID, &ptrv);
 
 			NS_RELEASE(sBundle);
