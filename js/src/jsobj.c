@@ -2730,7 +2730,8 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         scope = OBJ_SCOPE(pobj);
 
         attrs = sprop->attrs;
-        if ((attrs & JSPROP_READONLY) || SCOPE_IS_SEALED(scope)) {
+        if ((attrs & JSPROP_READONLY) ||
+            (SCOPE_IS_SEALED(scope) && pobj == obj)) {
             JS_UNLOCK_SCOPE(cx, scope);
             if ((attrs & JSPROP_READONLY) && JSVERSION_IS_ECMA(cx->version))
                 return JS_TRUE;
@@ -2780,7 +2781,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     }
 
     if (!sprop) {
-        if (SCOPE_IS_SEALED(OBJ_SCOPE(obj)))
+        if (SCOPE_IS_SEALED(OBJ_SCOPE(obj)) && OBJ_SCOPE(obj)->object == obj)
             goto read_only_error;
 
         /* Find or make a property descriptor with the right heritage. */

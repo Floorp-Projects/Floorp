@@ -59,7 +59,7 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
     JSScope *scope, *newscope;
 
     scope = OBJ_SCOPE(obj);
-    JS_ASSERT(JS_IS_SCOPE_LOCKED(scope));
+    JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, scope));
     if (scope->object == obj)
         return scope;
     newscope = js_NewScope(cx, 0, scope->map.ops, LOCKED_OBJ_GET_CLASS(obj),
@@ -175,11 +175,7 @@ js_DestroyScope(JSContext *cx, JSScope *scope)
 #endif
 
 #ifdef JS_THREADSAFE
-    /*
-     * Scope must be single-threaded at this point, so set scope->ownercx.
-     * This also satisfies the JS_IS_SCOPE_LOCKED assertions in the _clear
-     * implementations.
-     */
+    /* Scope must be single-threaded at this point, so set scope->ownercx. */
     JS_ASSERT(scope->u.count == 0);
     scope->ownercx = cx;
     js_FinishLock(&scope->lock);
@@ -858,6 +854,7 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
     uint32 size, splen, i;
     int change;
 
+    JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, scope));
     CHECK_ANCESTOR_LINE(scope, JS_TRUE);
 
     /*
@@ -888,7 +885,6 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
     sprop = overwriting = SPROP_FETCH(spp);
     if (!sprop) {
         /* Check whether we need to grow, if the load factor is >= .75. */
-        JS_ASSERT(JS_IS_SCOPE_LOCKED(scope));
         size = SCOPE_CAPACITY(scope);
         if (scope->entryCount + scope->removedCount >= size - (size >> 2)) {
             if (scope->removedCount >= size >> 2) {
@@ -1289,7 +1285,7 @@ js_RemoveScopeProperty(JSContext *cx, JSScope *scope, jsid id)
     JSScopeProperty **spp, *stored, *sprop;
     uint32 size;
 
-    JS_ASSERT(JS_IS_SCOPE_LOCKED(scope));
+    JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, scope));
     CHECK_ANCESTOR_LINE(scope, JS_TRUE);
     if (SCOPE_IS_SEALED(scope)) {
         ReportReadOnlyScope(cx, scope);

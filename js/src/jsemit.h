@@ -170,8 +170,10 @@ struct JSJumpTarget {
 
 struct JSCodeGenerator {
     JSTreeContext   treeContext;    /* base state: statement info stack, etc. */
-    void            *codeMark;      /* low watermark in cx->codePool */
-    void            *noteMark;      /* low watermark in cx->notePool */
+    JSArenaPool     *codePool;      /* pointer to thread code arena pool */
+    JSArenaPool     *notePool;      /* pointer to thread srcnote arena pool */
+    void            *codeMark;      /* low watermark in cg->codePool */
+    void            *noteMark;      /* low watermark in cg->notePool */
     void            *tempMark;      /* low watermark in cx->tempPool */
     struct {
         jsbytecode  *base;          /* base of JS bytecode vector */
@@ -223,18 +225,19 @@ struct JSCodeGenerator {
 #define CG_SWITCH_TO_PROLOG(cg) ((cg)->current = &(cg)->prolog)
 
 /*
- * Initialize cg to allocate bytecode space from cx->codePool, source note
- * space from cx->notePool, and all other arena-allocated temporaries from
- * cx->tempPool.  Return true on success.  Report an error and return false
- * if the initial code segment can't be allocated.
+ * Initialize cg to allocate bytecode space from codePool, source note space
+ * from notePool, and all other arena-allocated temporaries from cx->tempPool.
+ * Return true on success.  Report an error and return false if the initial
+ * code segment can't be allocated.
  */
 extern JS_FRIEND_API(JSBool)
 js_InitCodeGenerator(JSContext *cx, JSCodeGenerator *cg,
+                     JSArenaPool *codePool, JSArenaPool *notePool,
                      const char *filename, uintN lineno,
                      JSPrincipals *principals);
 
 /*
- * Release cx->codePool, cx->notePool, and cx->tempPool to marks set by
+ * Release cg->codePool, cg->notePool, and cx->tempPool to marks set by
  * js_InitCodeGenerator.  Note that cgs are magic: they own the arena pool
  * "tops-of-stack" space above their codeMark, noteMark, and tempMark points.
  * This means you cannot alloc from tempPool and save the pointer beyond the

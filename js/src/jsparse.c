@@ -648,13 +648,17 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
 JSBool
 js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
 {
+    JSArenaPool codePool, notePool;
     JSCodeGenerator funcg;
     JSStackFrame *fp, frame;
     JSObject *funobj;
     JSParseNode *pn;
     JSBool ok;
 
-    if (!js_InitCodeGenerator(cx, &funcg, ts->filename, ts->lineno,
+    JS_InitArenaPool(&codePool, "code", 1024, sizeof(jsbytecode));
+    JS_InitArenaPool(&notePool, "note", 1024, sizeof(jssrcnote));
+    if (!js_InitCodeGenerator(cx, &funcg, &codePool, &notePool,
+                              ts->filename, ts->lineno,
                               ts->principals)) {
         return JS_FALSE;
     }
@@ -697,6 +701,8 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
     cx->fp = fp;
     JS_UNKEEP_ATOMS(cx->runtime);
     js_FinishCodeGenerator(cx, &funcg);
+    JS_FinishArenaPool(&codePool);
+    JS_FinishArenaPool(&notePool);
     return ok;
 }
 

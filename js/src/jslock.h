@@ -76,6 +76,7 @@ typedef struct JSFatLockTable {
  */
 #define JS_ATOMIC_INCREMENT(p)      PR_AtomicIncrement((PRInt32 *)(p))
 #define JS_ATOMIC_DECREMENT(p)      PR_AtomicDecrement((PRInt32 *)(p))
+#define JS_ATOMIC_ADD(p,v)          PR_AtomicAdd((PRInt32 *)(p), (PRInt32)(v))
 
 #define CurrentThreadId()           (jsword)PR_GetCurrentThread()
 #define JS_CurrentThreadId()        js_CurrentThreadId()
@@ -166,19 +167,19 @@ extern void js_FinishSharingScope(JSRuntime *rt, JSScope *scope);
 
 #ifdef DEBUG
 
-#define JS_IS_RUNTIME_LOCKED(rt)    js_IsRuntimeLocked(rt)
-#define JS_IS_OBJ_LOCKED(obj)       js_IsObjLocked(obj)
-#define JS_IS_SCOPE_LOCKED(scope)   js_IsScopeLocked(scope)
+#define JS_IS_RUNTIME_LOCKED(rt)        js_IsRuntimeLocked(rt)
+#define JS_IS_OBJ_LOCKED(cx,obj)        js_IsObjLocked(cx,obj)
+#define JS_IS_SCOPE_LOCKED(cx,scope)    js_IsScopeLocked(cx,scope)
 
 extern JSBool js_IsRuntimeLocked(JSRuntime *rt);
-extern JSBool js_IsObjLocked(JSObject *obj);
-extern JSBool js_IsScopeLocked(JSScope *scope);
+extern JSBool js_IsObjLocked(JSContext *cx, JSObject *obj);
+extern JSBool js_IsScopeLocked(JSContext *cx, JSScope *scope);
 
 #else
 
-#define JS_IS_RUNTIME_LOCKED(rt)    0
-#define JS_IS_OBJ_LOCKED(obj)       1
-#define JS_IS_SCOPE_LOCKED(scope)   1
+#define JS_IS_RUNTIME_LOCKED(rt)        0
+#define JS_IS_OBJ_LOCKED(cx,obj)        1
+#define JS_IS_SCOPE_LOCKED(cx,scope)    1
 
 #endif /* DEBUG */
 
@@ -221,6 +222,7 @@ extern JS_INLINE void js_Unlock(JSThinLock *tl, jsword me);
 
 #define JS_ATOMIC_INCREMENT(p)      (++*(p))
 #define JS_ATOMIC_DECREMENT(p)      (--*(p))
+#define JS_ATOMIC_ADD(p,v)          (*(p) += (v))
 
 #define JS_CurrentThreadId() 0
 #define JS_NEW_LOCK()               NULL
@@ -245,10 +247,10 @@ extern JS_INLINE void js_Unlock(JSThinLock *tl, jsword me);
 #define JS_UNLOCK_SCOPE(cx,scope)   ((void)0)
 #define JS_TRANSFER_SCOPE_LOCK(c,o,n) ((void)0)
 
-#define JS_IS_RUNTIME_LOCKED(rt)    1
-#define JS_IS_OBJ_LOCKED(obj)       1
-#define JS_IS_SCOPE_LOCKED(scope)   1
-#define JS_LOCK_VOID(cx, e)         JS_LOCK_RUNTIME_VOID((cx)->runtime, e)
+#define JS_IS_RUNTIME_LOCKED(rt)        1
+#define JS_IS_OBJ_LOCKED(cx,obj)        1
+#define JS_IS_SCOPE_LOCKED(cx,scope)    1
+#define JS_LOCK_VOID(cx, e)             JS_LOCK_RUNTIME_VOID((cx)->runtime, e)
 
 #endif /* !JS_THREADSAFE */
 

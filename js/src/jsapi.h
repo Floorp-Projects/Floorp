@@ -908,9 +908,6 @@ JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
 extern JS_PUBLIC_API(JSBool)
 JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep);
 
-extern JS_PUBLIC_API(JSBool)
-JS_UnsealObject(JSContext *cx, JSObject *obj, JSBool deep);
-
 extern JS_PUBLIC_API(JSObject *)
 JS_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
                    JSObject *parent);

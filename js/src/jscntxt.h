@@ -313,9 +313,7 @@ struct JSContext {
     JSArenaPool         stackPool;
     JSStackFrame        *fp;
 
-    /* Temporary arena pools used while compiling and decompiling. */
-    JSArenaPool         codePool;
-    JSArenaPool         notePool;
+    /* Temporary arena pool used while compiling and decompiling. */
     JSArenaPool         tempPool;
 
     /* Top-level object and pointer to top stack frame's scope chain. */
@@ -355,6 +353,8 @@ struct JSContext {
     jsword              thread;
     jsrefcount          requestDepth;
     JSScope             *scopeToShare;      /* weak reference, see jslock.c */
+    JSScope             *lockedSealedScope; /* weak ref, for low-cost sealed
+                                               scope locking */
 #endif
 
 #if JS_HAS_LVALUE_RETURN
