@@ -357,7 +357,7 @@ nsresult
 nsHttpTransaction::ReadSegments(nsAHttpSegmentReader *reader,
                                 PRUint32 count, PRUint32 *countRead)
 {
-    NS_ASSERTION(PR_CurrentThread() == gSocketThread, "wrong thread");
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
     if (mTransactionDone) {
         *countRead = 0;
@@ -431,7 +431,7 @@ nsresult
 nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
                                  PRUint32 count, PRUint32 *countWritten)
 {
-    NS_ASSERTION(PR_CurrentThread() == gSocketThread, "wrong thread");
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
     if (mTransactionDone)
         return NS_SUCCEEDED(mStatus) ? NS_BASE_STREAM_CLOSED : mStatus;
@@ -463,7 +463,7 @@ nsHttpTransaction::Close(nsresult reason)
 {
     LOG(("nsHttpTransaction::Close [this=%x reason=%x]\n", this, reason));
 
-    NS_ASSERTION(PR_CurrentThread() == gSocketThread, "wrong thread");
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
     if (mClosed) {
         LOG(("  already closed\n"));
