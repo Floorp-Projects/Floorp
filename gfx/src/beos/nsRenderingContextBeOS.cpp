@@ -460,8 +460,12 @@ NS_IMETHODIMP nsRenderingContextBeOS::CreateDrawingSurface(nsRect *aBounds, PRUi
 	nsDrawingSurfaceBeOS *surf = new nsDrawingSurfaceBeOS();
 	if (surf) {
 		NS_ADDREF(surf);
-		if (!mView) UpdateView();
-		if (mView) mView->UnlockLooper();
+		if (!mView) 
+		{
+		    UpdateView(); 
+		    if (mView) 
+		        mView->UnlockLooper();
+		}
 		surf->Init(mView, aBounds->width, aBounds->height, aSurfFlags);
 	}
 	aSurface = (nsDrawingSurface)surf;
