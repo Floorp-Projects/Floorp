@@ -57,6 +57,9 @@ static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
 // for profile manager
 static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
 
+// Global variable for gProfileDir
+static nsFileSpec* gProfileDir = nsnull;
+
 #ifdef XP_MAC
 #pragma export on
 #endif
@@ -116,7 +119,7 @@ static void GetProfileDirectory(nsFileSpec& outSpec)
 // CreateDefaultProfileDirectorySpec() above.
 //----------------------------------------------------------------------------------------
 {
-    static nsFileSpec* gProfileDir = nsnull;
+    //static nsFileSpec* gProfileDir = nsnull;
         // pointer so that we can detect whether it has been initialized
     if (!gProfileDir)
     {
@@ -383,6 +386,8 @@ public:
       PRUint32 aType, // NOTE: actually nsSpecialFileSpec:Type, see nsFileLocations.h
       nsFileSpec* outSpec);
 
+  NS_IMETHOD ForgetProfileDir();
+
 protected:
   virtual ~nsFileLocator();
 
@@ -421,6 +426,17 @@ NS_IMETHODIMP nsFileLocator::GetFileLocation(
    }
    *(nsSpecialFileSpec*)outSpec = (nsSpecialFileSpec::Type)aType;
    return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsFileLocator::ForgetProfileDir()
+//----------------------------------------------------------------------------------------
+{
+
+	delete gProfileDir;
+	gProfileDir = nsnull;
+
+	return NS_OK;
 }
 
 //----------------------------------------------------------------------------------------

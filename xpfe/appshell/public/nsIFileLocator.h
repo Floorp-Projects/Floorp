@@ -49,6 +49,9 @@ public:
           // NOTE: actually nsSpecialFileSpec:Type, see nsFileLocations.h. Declared as
           // PRUint32 to make it ugly enough for COM use.
       nsFileSpec* outSpec) = 0;
+
+  NS_IMETHOD ForgetProfileDir() = 0;
+
 };
 
 extern "C" NS_APPSHELL nsresult
