@@ -132,8 +132,12 @@ nsXULControllers::RemoveControllerAt(PRUint32 index, nsIController **_retval)
     if(mControllers) {
         nsCOMPtr<nsISupports> supports;
         mControllers->GetElementAt(index, getter_AddRefs(supports));
-        supports->QueryInterface(NS_GET_IID(nsIController), (void**)_retval);
-        mControllers->RemoveElementAt(index);  
+        if (supports) {
+           supports->QueryInterface(NS_GET_IID(nsIController), (void**)_retval);
+           mControllers->RemoveElementAt(index);  
+        } else {
+            *_retval = nsnull;
+        }
     } else
         *_retval = nsnull;
     
@@ -147,7 +151,10 @@ nsXULControllers::GetControllerAt(PRUint32 index, nsIController **_retval)
     if(mControllers) {
         nsCOMPtr<nsISupports> supports;
         mControllers->GetElementAt(index, getter_AddRefs(supports));
-        supports->QueryInterface(NS_GET_IID(nsIController), (void**)_retval);
+        if (supports)
+            supports->QueryInterface(NS_GET_IID(nsIController), (void**)_retval);
+        else
+            *_retval = nsnull;
     } else 
         *_retval = nsnull;
     
