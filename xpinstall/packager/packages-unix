@@ -233,6 +233,8 @@ bin/components/nsHelperAppDlg.js
 bin/components/helperAppDlg.xpt
 bin/components/transformiix.xpt
 bin/components/libtransformiix.so
+bin/components/libfileview.so
+bin/components/filepicker.xpt
 
 bin/chrome/help.jar
 bin/chrome/toolkit.jar
