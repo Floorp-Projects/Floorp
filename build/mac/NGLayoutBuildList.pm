@@ -120,7 +120,6 @@ sub Checkout()
 		$session->checkout("mozilla/config") || die "checkout failure";
 		$session->checkout("mozilla/dbm") || die "checkout failure";
 		$session->checkout("mozilla/lib/liblayer") || die "checkout failure";
-		$session->checkout("mozilla/lib/htmldlgs") || die "checkout failure";
 		$session->checkout("mozilla/modules/zlib") || die "checkout failure";
 		$session->checkout("mozilla/modules/libutil") || die "checkout failure";
 		$session->checkout("mozilla/nsprpub") || die "checkout failure";
@@ -247,8 +246,6 @@ sub BuildDist()
 # IS THIS STILL NEEDED
 #LAYERS
 	[":mozilla:lib:liblayer:include:MANIFEST",	"$distdirectory:layers:"],
-#HTMLDLGS
-	[":mozilla:lib:htmldlgs:MANIFEST",	"$distdirectory:htmldlgs:"],
 #NETWORK
     [":mozilla:network:cache:MANIFEST", "$distdirectory:network:"],
     [":mozilla:network:client:MANIFEST", "$distdirectory:network:"],
