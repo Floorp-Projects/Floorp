@@ -24,6 +24,8 @@
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsUCvLatinCID.h"
+#include "nsICaseConversion.h"
+#include "nsUnicharUtilCIID.h"
 #include "nsCollationCID.h"
 #include "nsICollation.h"
 #include "nsDateTimeFormatCID.h"
@@ -33,14 +35,17 @@
 #define LOCALE_DLL_NAME "NSLOCALE_DLL"
 #define UCONV_DLL       "UCONV_DLL"
 #define UCVLATIN_DLL    "UCVLATIN_DLL"
+#define UNICHARUTIL_DLL_NAME "unicharutil_dll"
 #elif defined(XP_PC)
 #define LOCALE_DLL_NAME "NSLOCALE.DLL"
 #define UCONV_DLL       "uconv.dll"
 #define UCVLATIN_DLL    "ucvlatin.dll"
+#define UNICHARUTIL_DLL_NAME "unicharutil.dll"
 #else
 #define LOCALE_DLL_NAME "libnslocale.so"
 #define UCONV_DLL       "libuconv.so"
 #define UCVLATIN_DLL    "libucvlatin.so"
+#define UNICHARUTIL_DLL_NAME "libunicharutil.so"
 #endif
 
 
@@ -307,7 +312,7 @@ static int compare1( const void *arg1, const void *arg2 )
   string1 = *(nsString *) arg1;
   string2 = *(nsString *) arg2;
 
-  res = g_collationInst->CompareString(kCollationCaseSensitive, string1, string2, &result);
+  res = g_collationInst->CompareString(kCollationCaseInSensitive, string1, string2, &result);
 
   return (int) result;
 }
@@ -356,15 +361,16 @@ static void TestSort(nsILocale *locale)
   nsresult res;
   nsICollationFactory *factoryInst;
   nsICollation *collationInst;
+  nsCollationStrength strength;
   collation_rec key_array[5];
   PRUint8 *aKey;
   PRUint32 aLength;
   //nsString locale("en-US");
   nsString string1("AAC");
   nsString string2("aac");
-  nsString string3("xyz");
-  nsString string4("abb");
-  nsString string5("aacA");
+  nsString string3("AAC");
+  nsString string4("aac");
+  nsString string5("AAC");
   nsString string_array[5];
 
   cout << "==============================\n";
@@ -384,10 +390,6 @@ static void TestSort(nsILocale *locale)
     cout << "\tFailed!! return value != NS_OK\n";
   }
 
-  res = CreateCollationKey(collationInst, kCollationCaseSensitive, string1, &aKey, &aLength);
-  if(NS_FAILED(res)) {
-    cout << "\tFailed!! return value != NS_OK\n";
-  }
   cout << "==============================\n";
   cout << "Sort Test by comparestring.\n";
   cout << "==============================\n";
@@ -412,35 +414,37 @@ static void TestSort(nsILocale *locale)
   cout << "Sort Test by collation key.\n";
   cout << "==============================\n";
 
-  res = CreateCollationKey(collationInst, kCollationCaseSensitive, string1, &aKey, &aLength);
+  strength = kCollationCaseSensitive;
+
+  res = CreateCollationKey(collationInst, strength, string1, &aKey, &aLength);
   if(NS_FAILED(res)) {
     cout << "\tFailed!! return value != NS_OK\n";
   }
   key_array[0].aKey = aKey;
   key_array[0].aLength = aLength;
 
-  res = CreateCollationKey(collationInst, kCollationCaseSensitive, string2, &aKey, &aLength);
+  res = CreateCollationKey(collationInst, strength, string2, &aKey, &aLength);
   if(NS_FAILED(res)) {
     cout << "\tFailed!! return value != NS_OK\n";
   }
   key_array[1].aKey = aKey;
   key_array[1].aLength = aLength;
 
-  res = CreateCollationKey(collationInst, kCollationCaseSensitive, string3, &aKey, &aLength);
+  res = CreateCollationKey(collationInst, strength, string3, &aKey, &aLength);
   if(NS_FAILED(res)) {
     cout << "\tFailed!! return value != NS_OK\n";
   }
   key_array[2].aKey = aKey;
   key_array[2].aLength = aLength;
 
-  res = CreateCollationKey(collationInst, kCollationCaseSensitive, string4, &aKey, &aLength);
+  res = CreateCollationKey(collationInst, strength, string4, &aKey, &aLength);
   if(NS_FAILED(res)) {
     cout << "\tFailed!! return value != NS_OK\n";
   }
   key_array[3].aKey = aKey;
   key_array[3].aLength = aLength;
 
-  res = CreateCollationKey(collationInst, kCollationCaseSensitive, string5, &aKey, &aLength);
+  res = CreateCollationKey(collationInst, strength, string5, &aKey, &aLength);
   if(NS_FAILED(res)) {
     cout << "\tFailed!! return value != NS_OK\n";
   }
@@ -578,6 +582,11 @@ static void TestDateTimeFormat(nsILocale *locale)
   cout << "==============================\n";
 }
  
+// case conversion
+//
+NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
+NS_DEFINE_IID(kCaseConversionIID, NS_ICASECONVERSION_IID);
+
 int main(int argc, char** argv) {
   nsresult res; 
    
@@ -594,6 +603,9 @@ int main(int argc, char** argv) {
   if (NS_FAILED(res)) cout << "RegisterFactory failed\n";
 
   res = nsRepository::RegisterFactory(kLatin1ToUnicodeCID, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
+  if (NS_FAILED(res)) cout << "RegisterFactory failed\n";
+
+  res = nsRepository::RegisterFactory(kUnicharUtilCID, UNICHARUTIL_DLL_NAME, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res)) cout << "RegisterFactory failed\n";
 
   // --------------------------------------------
