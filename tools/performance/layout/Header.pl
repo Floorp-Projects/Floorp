@@ -35,27 +35,27 @@ sub debug_print {
 }
 
 @ARGV;
-$buildRoot = $ARGV[0];
-$buildIDFile = '< '.$buildRoot.'\bin\chrome\locales\en-US\navigator\locale\navigator.dtd';
+#$buildRoot = $ARGV[0];
+#$buildIDFile = '< '.$buildRoot.'\bin\chrome\locales\en-US\navigator\locale\navigator.dtd';
 $pullDate = $ARGV[1];
 $useClockTime = $ARGV[2];
 
-open (XUL_FILE, $buildIDFile) or die "Unable to open BuildID file $buildIDFile (header.pl)";
-$BuildNo = "";
-$LineList;
-while (<XUL_FILE>)
-{
-  $ThisLine = $_;
-  chop ($ThisLine);
-  if (/Build ID/){
-    @LineList = split (/\"/, $ThisLine);
-    $BuildNo = $LineList[1];
-  }
-}
-$BuildNo =~ s/"//g;
-$BuildNo =~ s/[>]//g;
-close (XUL_FILE);
-debug_print ($BuildNo);
+#open (XUL_FILE, $buildIDFile) or die "Unable to open BuildID file $buildIDFile (header.pl)";
+#$BuildNo = "";
+#$LineList;
+#while (<XUL_FILE>)
+#{
+#  $ThisLine = $_;
+#  chop ($ThisLine);
+#  if (/Build ID/){
+#    @LineList = split (/\"/, $ThisLine);
+#    $BuildNo = $LineList[1];
+#  }
+#}
+#$BuildNo =~ s/"//g;
+#$BuildNo =~ s/[>]//g;
+#close (XUL_FILE);
+#debug_print ($BuildNo);
 
 #############################################
 
@@ -77,7 +77,7 @@ open (TABLE_FILE, ">table.html");
 print (TABLE_FILE "<center><b><font size=+2>Top 40 Sites - File Load Performance Metrics</font></b></center>");
 print (TABLE_FILE "<center><b><font size=+2>Seamonkey Win32</font></B></Center>");
 print (TABLE_FILE "<BR>");
-print (TABLE_FILE "<center><font size=+2 color=maroon>$pullDate  / $BuildNo </font></center>");
+print (TABLE_FILE "<center><font size=+2 color=maroon>$pullDate</font></center>");
 print (TABLE_FILE "<BR><center><b><font size=+1>");
 print (TABLE_FILE "$weekday{$wday} ");
 print (TABLE_FILE "$mon/$mday/$year ");

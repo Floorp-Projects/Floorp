@@ -32,7 +32,7 @@ sub debug_print {
 #------------------------------------------------------------------------------
 @ARGV;
 $buildRoot = $ARGV[0];
-$buildIDFile = '< '.$buildRoot.'\bin\chrome\locales\en-US\navigator\locale\navigator.dtd';
+#$buildIDFile = '< '.$buildRoot.'\bin\chrome\locales\en-US\navigator\locale\navigator.dtd';
 $PullID = $ARGV[1];
 
 #------------------------------------------------------------------------------
@@ -58,23 +58,22 @@ $count = 0;
 
 #------------------------------------------------------------------------------
 # Get the BuildID
-open (XUL_FILE, $buildIDFile) or die "Unable to open BuildID file $buildIDFile (footer.pl)";
-$BuildNo = "";
-$LineList;
-while (<XUL_FILE>)
-{
-  $ThisLine = $_;
-  chop ($ThisLine);
-  if (/Build ID/){
-    @LineList = split (/\"/, $ThisLine);
-    $BuildNo = $LineList[1];
-  }
-}
-$BuildNo =~ s/"//g;
-$BuildNo =~ s/[>]//g;
-close (XUL_FILE);
-debug_print ($BuildNo);
-
+#open (XUL_FILE, $buildIDFile) or die "Unable to open BuildID file $buildIDFile (footer.pl)";
+#$BuildNo = "";
+#$LineList;
+#while (<XUL_FILE>)
+#{
+#  $ThisLine = $_;
+#  chop ($ThisLine);
+#  if (/Build ID/){
+#    @LineList = split (/\"/, $ThisLine);
+#    $BuildNo = $LineList[1];
+#  }
+#}
+#$BuildNo =~ s/"//g;
+#$BuildNo =~ s/[>]//g;
+#close (XUL_FILE);
+#debug_print ($BuildNo);
 
 #------------------------------------------------------------------------------
 # Process the averages file: get the number of entries 

@@ -37,37 +37,38 @@ $NumOfSites = $ARGV[2];
 $buildRoot = $ARGV[3];
 $LinkURL = $ARGV[4];
 $useClockTime = $ARGV[5];
-$buildIDFile = '< '.$buildRoot.'\bin\chrome\locales\en-US\navigator\locale\navigator.dtd';
+#$buildIDFile = '< '.$buildRoot.'\bin\chrome\locales\en-US\navigator\locale\navigator.dtd';
+#$buildIDFile = "";
 debug_print( "Arguments:[ $UrlName | $logFile | $NumOfSites | $buildRoot | $LinkURL | $useClockTime]\n");
 
 #------------------------------------------------------------------------------
 # Open the ID file and get the build ID
 #------------------------------------------------------------------------------
-open (XUL_FILE, $buildIDFile) or die "Cannot open BuildID file $buildIDFile (AverageTable2.pl)\n";
-$BuildNo = "";
-$LineList;
-while (<XUL_FILE>)
-{
-  $ThisLine = $_;
-  chop ($ThisLine);
-  if (/Build ID/){
-    @LineList = split (/\"/, $ThisLine);
-    $BuildNo = $LineList[1];
-  }
-}
-@LineList = split (/ /, $BuildNo);
-$BuildNo = $LineList[2];
-$BuildNo =~ s/"//g;
-$BuildNo =~ s/[>]//g;
-debug_print ("Build Number: $BuildNo\n");
-close( XUL_FILE );
+
+#open (XUL_FILE, $buildIDFile) or die "Cannot open BuildID file $buildIDFile (AverageTable2.pl)\n";
+#$BuildNo = "";
+#$LineList;
+#while (<XUL_FILE>)
+#{
+#  $ThisLine = $_;
+#  chop ($ThisLine);
+#  if (/Build ID/){
+#    @LineList = split (/\"/, $ThisLine);
+#    $BuildNo = $LineList[1];
+#  }
+#}
+#@LineList = split (/ /, $BuildNo);
+#$BuildNo = $LineList[2];
+#$BuildNo =~ s/"//g;
+#$BuildNo =~ s/[>]//g;
+#debug_print ("Build Number: $BuildNo\n");
+#close( XUL_FILE );
 
 #------------------------------------------------------------------------------
 # Open the logfile (input)
 # and the deviation file (output,append)
 #------------------------------------------------------------------------------
 open (LOG_FILE, "< $logFile") or die "Logfile $logFile could not be opened";
-
 
 #------------------------------------------------------------------------------
 # Deviation file:
@@ -78,12 +79,17 @@ open (LOG_FILE, "< $logFile") or die "Logfile $logFile could not be opened";
 # BuildNo,date,url,parsingtime,parsingper,contenttime,contentper,frametime,
 # frameper,styletime,styleper,reflowtime,reflowper,totallayouttime,totallayoutper,
 # totalpageloadtime
+($Second, $Minute, $Hour, $DayOfMonth, $Month, $Year, $WeekDay, $DayOfYear, $IsDST) = localtime (time);
+$RealMonth = $Month + 1;
+$Year += 1900;
+$BuildNo = $RealMonth.$DayOfMonth.$Year;
 $file = $BuildNo.".dat";
 open (DEVIATION, ">> $file") or die "Deviation file could not be opened";
 
 # add entry to the deviation file
-($Second, $Minute, $Hour, $DayOfMonth, $Month, $Year, $$WeekDay, $DayOfYear, $IsDST) = localtime (time);
+($Second, $Minute, $Hour, $DayOfMonth, $Month, $Year, $WeekDay, $DayOfYear, $IsDST) = localtime (time);
 $RealMonth = $Month + 1;
+$Year += 1900;
 $date2 = $RealMonth.$DayOfMonth.$Year;
 print (DEVIATION "$BuildNo,$date2,$UrlName,");
 

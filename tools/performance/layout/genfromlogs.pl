@@ -33,7 +33,10 @@ $cnt = 0;
 system( ("copy", "history.txt", "history.bak" ) );
 
 # Delete the average.txt file so we don;t get old values in the averages
-system( ("del", "average.txt") );
+if (-e "average.txt")
+{
+	system( ("del", "average.txt") );
+}
 
 # Run the Header script
 system( ("perl", "header.pl", "$bldRoot", "$milestone", "$ARGV[2]" ) );
