@@ -25,7 +25,6 @@
 #include <X11/Intrinsic.h>
 #include <X11/Xutil.h>
 #include <X11/Xlib.h>
-#include <pthread.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,7 +52,6 @@ struct _GtkXtBin
   Display       *xtdisplay;        /* Xt Toolkit Display */
   XtAppContext   xtcontext;        /* Xt Toolkit Application Context */
   Window         xtwindow;         /* Xt Toolkit XWindow */
-  pthread_t      xtEventThread;    /* Xt Toolkit Event Loop Thread */
   gint           x, y;
   gint           width, height;
 };
