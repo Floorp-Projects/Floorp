@@ -26,6 +26,7 @@
 #include <jni.h> // for JNICALL
 
 #include "nsCOMPtr.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
 class nsIDocumentLoader;
 class nsIDocShell;
