@@ -176,6 +176,42 @@ CopyASCIItoUCS2( const nsACString& aSource, nsAString& aDest )
     copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
   }
 
+NS_COM
+void
+CopyUCS2toUTF8( const nsAString& aSource, nsACString& aDest )
+  {
+    aDest.Truncate();
+    AppendUCS2toUTF8(aSource, aDest);
+  }
+
+NS_COM
+void
+CopyUTF8toUCS2( const nsACString& aSource, nsAString& aDest )
+  {
+    aDest.Truncate();
+    AppendUTF8toUCS2(aSource, aDest);
+  }
+
+NS_COM
+void
+AppendUCS2toUTF8( const nsAString& aSource, nsACString& aDest )
+  {
+    // This isn't the fastest possible implementation of this method,
+    // but it works, and that's better than nothing!
+
+    aDest.Append(NS_ConvertUCS2toUTF8(aSource));
+  }
+
+NS_COM
+void
+AppendUTF8toUCS2( const nsACString& aSource, nsAString& aDest )
+  {
+    // This isn't the fastest possible implementation of this method,
+    // but it works, and that's better than nothing!
+
+    aDest.Append(NS_ConvertUTF8toUCS2(aSource));
+  }
+
 
   /**
    * A helper function that allocates a buffer of the desired character type big enough to hold a copy of the supplied string (plus a zero terminator).
