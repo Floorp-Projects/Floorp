@@ -752,7 +752,7 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
   NS_TRY_SAFE_CALL_RETURN(error, CallNPP_DestroyProc(fCallbacks->destroy, &fNPP, &sdata), fLibrary);
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-  ("NPP Destroy called: this=%p, npp=%p, return=%d\n", this, fNPP, error));
+  ("NPP Destroy called: this=%p, npp=%p, return=%d\n", this, &fNPP, error));
 
   mStarted = PR_FALSE;
   if(error != NPERR_NO_ERROR)
@@ -810,7 +810,7 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPP New called: this=%p, npp=%p, mime=%s, mode=%d, argc=%d, return=%d\n",
-  this, fNPP, mimetype, mode, count, error));
+  this, &fNPP, mimetype, mode, count, error));
 
   if(error != NPERR_NO_ERROR)
     rv = NS_ERROR_FAILURE;
@@ -936,7 +936,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
     ("NPP SetWindow called: this=%p, [x=%d,y=%d,w=%d,h=%d], clip[t=%d,b=%d,l=%d,r=%d], return=%d\n",
-    this, fNPP, window->x, window->y, window->width, window->height,
+    this, &fNPP, window->x, window->y, window->width, window->height,
     window->clipRect.top, window->clipRect.bottom, window->clipRect.left, window->clipRect.right, error));
       
     // XXX In the old code, we'd just ignore any errors coming
@@ -1040,7 +1040,7 @@ NS_IMETHODIMP ns4xPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* hand
 
       NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
       ("NPP HandleEvent called: this=%p, npp=%p, event=%d, return=%d\n", 
-      this, fNPP, event->event, res));
+      this, &fNPP, event->event, res));
 
       *handled = res;
     }
@@ -1082,7 +1082,7 @@ NS_IMETHODIMP ns4xPluginInstance :: GetValue(nsPluginInstanceVariable variable,
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPP GetValue called: this=%p, npp=%p, var=%d, value=%d, return=%d\n", 
-  this, fNPP, variable, value, res));
+  this, &fNPP, variable, value, res));
 
   return res;
 }
