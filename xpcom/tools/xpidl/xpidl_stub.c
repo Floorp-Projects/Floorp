@@ -206,64 +206,66 @@ stub_op_dcl(TreeState *state)
           "  ",
           state->file);
 
-    state->tree = op->op_type_spec;
-    xpcom_type(state);
-    fputs(" retval;\n", state->file);
+    if (op->op_type_spec) {
+        state->tree = op->op_type_spec;
+        xpcom_type(state);
+        fputs(" retval;\n", state->file);
 
-    fprintf(state->file,
-            "  nsresult result = priv->%s(",
-            IDL_IDENT(op->ident).str);
-    for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
-        param = IDL_LIST(iter).data;
         fprintf(state->file,
-                "%s, ",
-                IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str);
-    }
-    fputs("&retval);\n", state->file);
-
-    fputs("  if (NS_FAILED(result)) {\n"
-          "    JS_ReportError(cx, XXXnsresult2string(result));\n"
-          "    return JS_FALSE;\n"
-          "  }\n",
-          state->file);
-
-    switch (IDL_NODE_TYPE(state->tree)) {
-      case IDLN_TYPE_INTEGER:
-        fputs("  if (!JS_NewNumberValue(cx, (jsdouble) retval, rval))\n"
-              "    return JS_FALSE;\n",
-              state->file);
-        break;
-      case IDLN_TYPE_STRING:
-        /* XXXbe leak retval here after XPCOM-compliant out-param return? */
-        fputs("  JSString *str = JS_NewStringCopyZ(cx, retval);\n"
-              "  if (!str)\n"
-              "    return JS_FALSE;\n"
-              "  *rval = STRING_TO_JSVAL(str);\n",
-              state->file);
-        break;
-      case IDLN_TYPE_BOOLEAN:
-        fputs("  *rval = BOOLEAN_TO_JSVAL(retval);\n", state->file);
-        break;
-      case IDLN_IDENT:
-        fputs("  *rval = JSVAL_NULL;\n", state->file);
-        if (IDL_NODE_UP(state->tree) &&
-            IDL_NODE_TYPE(IDL_NODE_UP(state->tree)) == IDLN_NATIVE) {
-            /* XXXbe issue warning, method should have been noscript? */
-            break;
+                "  nsresult result = priv->%s(",
+                IDL_IDENT(op->ident).str);
+        for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
+            param = IDL_LIST(iter).data;
+            fprintf(state->file,
+                    "%s, ",
+                    IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str);
         }
-        fputs("  nsIXPConnectWrappedNative *xwn = 0;\n"
-              "  if (NS_SUCCEEDED(retval->QueryInterface(nsIXPConnectWrappedNative::IID(),\n"
-              "                   (void**) &xwn))) {\n"
-              "    JSObject *xjo = 0;\n"
-              "    if (NS_SUCCEEDED(xwn->GetJSObject(&xjo)))\n"
-              "      *rval = OBJECT_TO_JSVAL(xjo);\n"
-              "    NS_RELEASE(xwn);\n"
+        fputs("&retval);\n", state->file);
+
+        fputs("  if (NS_FAILED(result)) {\n"
+              "    JS_ReportError(cx, XXXnsresult2string(result));\n"
+              "    return JS_FALSE;\n"
               "  }\n",
               state->file);
-        break;
-      default:
-        assert(0); /* XXXbe */
-        break;
+
+        switch (IDL_NODE_TYPE(state->tree)) {
+          case IDLN_TYPE_INTEGER:
+            fputs("  if (!JS_NewNumberValue(cx, (jsdouble) retval, rval))\n"
+                  "    return JS_FALSE;\n",
+                  state->file);
+            break;
+          case IDLN_TYPE_STRING:
+            /* XXXbe leak retval here after XPCOM-compliant out-param return? */
+            fputs("  JSString *str = JS_NewStringCopyZ(cx, retval);\n"
+                  "  if (!str)\n"
+                  "    return JS_FALSE;\n"
+                  "  *rval = STRING_TO_JSVAL(str);\n",
+                  state->file);
+            break;
+          case IDLN_TYPE_BOOLEAN:
+            fputs("  *rval = BOOLEAN_TO_JSVAL(retval);\n", state->file);
+            break;
+          case IDLN_IDENT:
+            fputs("  *rval = JSVAL_NULL;\n", state->file);
+            if (IDL_NODE_UP(state->tree) &&
+                IDL_NODE_TYPE(IDL_NODE_UP(state->tree)) == IDLN_NATIVE) {
+                /* XXXbe issue warning, method should have been noscript? */
+                break;
+            }
+            fputs("  nsIXPConnectWrappedNative *xwn = 0;\n"
+                  "  if (NS_SUCCEEDED(retval->QueryInterface(nsIXPConnectWrappedNative::IID(),\n"
+                  "                   (void**) &xwn))) {\n"
+                  "    JSObject *xjo = 0;\n"
+                  "    if (NS_SUCCEEDED(xwn->GetJSObject(&xjo)))\n"
+                  "      *rval = OBJECT_TO_JSVAL(xjo);\n"
+                  "    NS_RELEASE(xwn);\n"
+                  "  }\n",
+                  state->file);
+            break;
+          default:
+            assert(0); /* XXXbe */
+            break;
+        }
     }
     fputs("  return JS_TRUE;\n"
           "}\n",
