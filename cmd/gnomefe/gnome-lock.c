@@ -32,7 +32,7 @@ fe_ensure_config_dir_exists ()
   struct stat st;
   XP_Bool exists;
 
-  dir = PR_smprintf ("%s/.netscape", fe_home_dir);
+  dir = PR_smprintf ("%s/%s", fe_home_dir, MOZ_USER_DIR);
   if (!dir)
     return FALSE;
 
@@ -240,7 +240,7 @@ void check_for_lock_file()
       else
 	{
 	  char *fmt = NULL;
-	  char *lock = name ? name : ".netscape/lock";
+	  char *lock = name ? name : MOZ_USER_DIR "/lock";
 
 	  fmt = PR_sprintf_append(fmt, XP_GetString(GNOMEFE_APP_HAS_DETECTED_LOCK),
 				  XP_AppName, lock);

@@ -3398,7 +3398,7 @@ char* fe_GetLDAPTmpFile(char *name) {
 	{
         	strncpy(tmp, configdir, sizeof(tmp));
 		free(configdir);
-	} else snprintf(tmp, sizeof(tmp), "%.900s/.netscape/", home);
+	} else snprintf(tmp, sizeof(tmp), "%.900s/%s/", home, MOZ_USER_DIR);
 
 #ifdef _XP_TMP_FILENAME_FOR_LDAP_
 	/* we need to write this */

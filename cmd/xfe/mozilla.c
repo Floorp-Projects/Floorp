@@ -862,7 +862,7 @@ XtResource fe_GlobalResources [] =
   /* The location of the config dir ($HOME/.netscape by default) */
   { "configDir", XtCString, XtRString, sizeof (String),
     XtOffset (fe_GlobalData *, config_dir), XtRString,
-    ".netscape" },
+    MOZ_USER_DIR },
 
 # undef RES_ERROR
 };
@@ -915,7 +915,7 @@ char *fe_GetConfigDir(void)
   if(fe_globalData.config_dir) {
     result = PR_smprintf("%s/%s", home, fe_globalData.config_dir);
   } else {
-    result = PR_smprintf("%s/.netscape", home);
+    result = PR_smprintf("%s/%s", home, MOZ_USER_DIR);
   }
 
   return result;
@@ -2716,7 +2716,7 @@ main
           /* allocated for the real filename.  extremely unlikely, and    */
           /* if it happens, the program should probably just crash anyway */
           /* because it's not going to be able to do much else.           */
-	  char *lock = name ? name : ".netscape/lock";
+	  char *lock = name ? name : MOZ_USER_DIR "/lock";
 
 	  fmt = PR_sprintf_append(fmt, XP_GetString(XFE_APP_HAS_DETECTED_LOCK),
 				  XP_AppName, lock);
@@ -3877,7 +3877,7 @@ fe_copy_init_files (Widget toplevel)
     }
 
   FROB("preferences",
-       "./netscape/preferences",
+       ".netscape/preferences",
        ".netscape-preferences",
        ".MCOM-preferences",
        (S_IRUSR | S_IWUSR))		/* rw only by owner */

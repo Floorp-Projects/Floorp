@@ -488,7 +488,7 @@ HPUX_RESOURCE_HACK	= -Wp,-H16384
 
 OTHER_LIBS	= -L$(DIST)/lib $(OS_LIBS)
 
-ifndef NO_EDITOR
+ifdef MOZ_EDITOR
 EXPORT_DEPLIBS	+= cxxlink-filter
 US_DEPLIBS	+= cxxlink-filter
 CCLD		= CC -tl,./cxxlink-filter
@@ -596,7 +596,7 @@ EXPORT_LDFLAGS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB) $(OTHER
 FRANCE_LDFLAGS	= $(BASIC_LIBS) $(FRANCE_LIB) $(BASIC_LIBS_2) $(NSPR_LIB) $(OTHER_LIBS)
 US_LDFLAGS	= $(BASIC_LIBS) $(US_LIB) $(BASIC_LIBS_2) $(NSPR_LIB) $(OTHER_LIBS)
 
-ifndef NO_EDITOR
+ifdef MOZ_EDITOR
 #
 # OSF's cxx link command will link in _dynamic_ version of two C++
 # libraries. This is bad, they are not shipped on a base system.
@@ -658,7 +658,7 @@ ifndef NO_WEBFONTS
 EXTRA_REL_FILES += $(WEBFONT_DSO)
 endif
 
-ifndef NO_EDITOR
+ifdef MOZ_EDITOR
 OTHER_LIBS	+= -L/tools/ns/lib
 
 #

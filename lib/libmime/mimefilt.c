@@ -363,9 +363,9 @@ test_kdb_name_cb (void *arg, int vers)
 {
   static char f[1024];
   if (vers <= 2)
-	sprintf(f, "%s/.netscape/key.db", getenv("HOME"));
+	sprintf(f, "%s/%s/key.db", getenv("HOME"),MOZ_USER_DIR);
   else
-	sprintf(f, "%s/.netscape/key%d.db", getenv("HOME"), vers);
+	sprintf(f, "%s/%s/key%d.db", getenv("HOME"), MOZ_USER_DIR, vers);
   return f;
 }
 

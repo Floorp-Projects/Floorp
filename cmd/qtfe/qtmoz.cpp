@@ -1,4 +1,4 @@
-/* $Id: qtmoz.cpp,v 1.1 1998/09/25 18:01:40 ramiro%netscape.com Exp $
+/* $Id: qtmoz.cpp,v 1.2 1998/09/30 00:23:35 cls%seawood.org Exp $
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -1073,7 +1073,7 @@ mozilla_main(int argc, char** argv)
     }
 
     PR_snprintf (buf, sizeof (buf), "%s/%s", fe_home_dir,
-        ".netscape/preferences.js");
+        MOZ_USER_DIR "/preferences.js");
     PREF_Init((char*)buf);
 #endif // XP_WIN
 
@@ -1144,7 +1144,7 @@ mozilla_main(int argc, char** argv)
 	    fe_pidlock = name;
 	} else {
 	    char *fmt = NULL;
-	    char *lock = name ? name : ".netscape/lock";
+	    char *lock = name ? name : MOZ_USER_DIR "/lock";
 
             fmt = PR_sprintf_append(fmt, XP_GetString(QTFE_APP_HAS_DETECTED_LOCK),
 				    XP_AppName, lock);
@@ -1211,9 +1211,9 @@ mozilla_main(int argc, char** argv)
     /* New XP-prefs routine. */
     SECNAV_InitConfigObject();
 
-    PR_snprintf (buf, sizeof (buf), "%s/%s", fe_home_dir, ".netscape/user.js");
+    PR_snprintf (buf, sizeof (buf), "%s/%s", fe_home_dir, MOZ_USER_DIR "/user.js");
     PREF_ReadUserJSFile(buf);
-    PR_snprintf (buf, sizeof (buf), "%s/%s", fe_home_dir, ".netscape/hook.js");
+    PR_snprintf (buf, sizeof (buf), "%s/%s", fe_home_dir, MOZ_USER_DIR "/hook.js");
     HK_ReadHookFile(buf);
 
     /*fe_globalPrefs.global_history_expiration*/
@@ -1437,7 +1437,7 @@ fe_ensure_config_dir_exists ()
     struct stat st;
     XP_Bool exists;
 
-    dir = PR_smprintf ("%s/.netscape", fe_home_dir);
+    dir = PR_smprintf ("%s/%s", fe_home_dir, MOZ_USER_DIR);
     if (!dir)
         return FALSE;
 

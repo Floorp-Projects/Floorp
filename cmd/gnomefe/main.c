@@ -147,7 +147,7 @@ main(int argc,
 #ifdef OLD_UNIX_FILES
                  ".netscape-preferences"
 #else
-                 ".netscape/preferences.js"
+                 MOZ_USER_DIR "/preferences.js"
 #endif
                  );
     
