@@ -39,9 +39,20 @@
 
 #include "nsIDOMCSSValue.idl"
 
+/**
+ * The nsIDOMCSSPrimitiveValue interface is a datatype for a primitive
+ * CSS value in the Document Object Model.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/DOM-Level-2-Style
+ *
+ * @status FROZEN
+ */
+
 [scriptable, uuid(e249031f-8df9-4e7a-b644-18946dce0019)]
 interface nsIDOMCSSPrimitiveValue : nsIDOMCSSValue
 {
+  // UnitTypes
   const unsigned short      CSS_UNKNOWN                    = 0;
   const unsigned short      CSS_NUMBER                     = 1;
   const unsigned short      CSS_PERCENTAGE                 = 2;

@@ -40,6 +40,16 @@
 
 #include "nsIDOMEvent.idl"
 
+/**
+ * The nsIDOMUIEvent interface is the datatype for all UI events in the
+ * Document Object Model.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/DOM-Level-2-Events/
+ *
+ * @status FROZEN
+ */
+
 [scriptable, uuid(a6cf90c3-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMUIEvent : nsIDOMEvent
 {

@@ -1040,8 +1040,11 @@ nsresult nsGeneratedSubtreeIterator::Init(nsIDOMRange* aRange)
   // does not fully contain any node.
   
   PRBool nodeBefore(PR_FALSE), nodeAfter(PR_FALSE);
-  if (!mFirstIter && NS_FAILED(CompareNodeToRange(firstCandidate, aRange, &nodeBefore, &nodeAfter)))
+  if (!mFirstIter &&
+      NS_FAILED(nsRange::CompareNodeToRange(firstCandidate, aRange,
+                                            &nodeBefore, &nodeAfter)))
     return NS_ERROR_FAILURE;
+
   if (nodeBefore || nodeAfter)
   {
     MakeEmpty();
@@ -1122,9 +1125,10 @@ nsresult nsGeneratedSubtreeIterator::Init(nsIDOMRange* aRange)
   // is indeed contained.  Else we have a range that
   // does not fully contain any node.
   
-  if (!mLastIter && NS_FAILED(CompareNodeToRange(lastCandidate, aRange, &nodeBefore, &nodeAfter)))
+  if (!mLastIter &&
+      NS_FAILED(nsRange::CompareNodeToRange(lastCandidate, aRange, &nodeBefore,
+                                            &nodeAfter)))
     return NS_ERROR_FAILURE;
-
   
   if (nodeBefore || nodeAfter)
   {
@@ -1230,8 +1234,10 @@ nsresult nsGeneratedSubtreeIterator::GetTopAncestorInRange(
   
   // sanity check: aNode is itself in the range
   PRBool nodeBefore, nodeAfter;
-  if (NS_FAILED(CompareNodeToRange(aNode, mRange, &nodeBefore, &nodeAfter)))
+  if (NS_FAILED(nsRange::CompareNodeToRange(aNode, mRange, &nodeBefore,
+                                            &nodeAfter)))
     return NS_ERROR_FAILURE;
+
   if (nodeBefore || nodeAfter)
     return NS_ERROR_FAILURE;
   
@@ -1240,8 +1246,10 @@ nsresult nsGeneratedSubtreeIterator::GetTopAncestorInRange(
   {
     if (NS_FAILED(aNode->GetParent(*getter_AddRefs(parent))) || !parent)
       return NS_ERROR_FAILURE;
-    if (NS_FAILED(CompareNodeToRange(parent, mRange, &nodeBefore, &nodeAfter)))
+    if (NS_FAILED(nsRange::CompareNodeToRange(parent, mRange, &nodeBefore,
+                                              &nodeAfter)))
       return NS_ERROR_FAILURE;
+
     if (nodeBefore || nodeAfter)
     {
       *outAnestor = aNode;

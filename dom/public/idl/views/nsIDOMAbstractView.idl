@@ -39,10 +39,18 @@
 
 #include "domstubs.idl"
 
+/**
+ * The nsIDOMAbstractView interface is a datatype for a view in the
+ * Document Object Model.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/DOM-Level-2-Views
+ *
+ * @status FROZEN
+ */
+
 [scriptable, uuid(F51EBADE-8B1A-11D3-AAE7-0010830123B4)]
 interface nsIDOMAbstractView : nsISupports
 {
-
   readonly attribute nsIDOMDocumentView     document;
 };
-

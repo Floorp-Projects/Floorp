@@ -40,6 +40,16 @@
 
 #include "domstubs.idl"
 
+/**
+ * The nsIDOMHTMLCollection interface is an interface to a collection
+ * of [X]HTML elements.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/DOM-Level-2-HTML/
+ *
+ * @status FROZEN
+ */
+
 [scriptable, uuid(a6cf9083-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLCollection : nsISupports
 {

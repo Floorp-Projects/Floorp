@@ -6946,9 +6946,9 @@ nsTypedSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYe
         // else not recursive -- node itself must be contained,
         // so we need to do more checking
         PRBool nodeStartsBeforeRange, nodeEndsAfterRange;
-        if (NS_SUCCEEDED(CompareNodeToRange(content, range,
-                                            &nodeStartsBeforeRange,
-                                            &nodeEndsAfterRange)))
+        if (NS_SUCCEEDED(nsRange::CompareNodeToRange(content, range,
+                                                     &nodeStartsBeforeRange,
+                                                     &nodeEndsAfterRange)))
         {
 #ifdef DEBUG_ContainsNode
           nsAutoString name, value;

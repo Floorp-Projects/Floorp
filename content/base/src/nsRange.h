@@ -90,49 +90,7 @@ public:
   static void Shutdown();
 
   // nsIDOMRange interface
-  
-  NS_IMETHOD    GetIsPositioned(PRBool* aIsPositioned);
-
-  NS_IMETHOD    GetStartContainer(nsIDOMNode** aStartParent);
-  NS_IMETHOD    GetStartOffset(PRInt32* aStartOffset);
-
-  NS_IMETHOD    GetEndContainer(nsIDOMNode** aEndParent);
-  NS_IMETHOD    GetEndOffset(PRInt32* aEndOffset);
-
-  NS_IMETHOD    GetCollapsed(PRBool* aIsCollapsed);
-
-  NS_IMETHOD    GetCommonAncestorContainer(nsIDOMNode** aCommonParent);
-
-  NS_IMETHOD    SetStart(nsIDOMNode* aParent, PRInt32 aOffset);
-  NS_IMETHOD    SetStartBefore(nsIDOMNode* aSibling);
-  NS_IMETHOD    SetStartAfter(nsIDOMNode* aSibling);
-
-  NS_IMETHOD    SetEnd(nsIDOMNode* aParent, PRInt32 aOffset);
-  NS_IMETHOD    SetEndBefore(nsIDOMNode* aSibling);
-  NS_IMETHOD    SetEndAfter(nsIDOMNode* aSibling);
-
-  NS_IMETHOD    Collapse(PRBool aToStart);
-
-  NS_IMETHOD    Unposition();
-
-  NS_IMETHOD    SelectNode(nsIDOMNode* aN);
-  NS_IMETHOD    SelectNodeContents(nsIDOMNode* aN);
-
-  NS_IMETHOD    CompareBoundaryPoints(PRUint16 how, nsIDOMRange* srcRange, PRInt32* ret);
-
-  NS_IMETHOD    DeleteContents();
-
-  NS_IMETHOD    ExtractContents(nsIDOMDocumentFragment** aReturn);
-  NS_IMETHOD    CloneContents(nsIDOMDocumentFragment** aReturn);
-
-  NS_IMETHOD    InsertNode(nsIDOMNode* aN);
-  NS_IMETHOD    SurroundContents(nsIDOMNode* aN);
-
-  NS_IMETHOD    CloneRange(nsIDOMRange** aReturn);
-
-  NS_IMETHOD    Detach();
-
-  NS_IMETHOD    ToString(nsAString& aReturn);
+  NS_DECL_NSIDOMRANGE
 
 /*BEGIN nsIDOMNSRange interface implementations*/
   NS_IMETHOD    CreateContextualFragment(const nsAString& aFragment, 
@@ -201,6 +159,17 @@ public:
                                       nsIDOMNode** closestAncestor,
                                       nsIDOMNode** farthestAncestor);
 
+/******************************************************************************
+ *  Utility routine to detect if a content node starts before a range and/or 
+ *  ends after a range.  If neither it is contained inside the range.
+ *  
+ *  XXX - callers responsibility to ensure node in same doc as range!
+ *
+ *****************************************************************************/
+  static nsresult CompareNodeToRange(nsIContent* aNode, nsIDOMRange* aRange,
+                                     PRBool *outNodeBefore,
+                                     PRBool *outNodeAfter);
+
 protected:
 
   // CollapseRangeAfterDelete() should only be called from DeleteContents()
@@ -227,6 +196,7 @@ protected:
  
   nsresult      ContentOwnsUs(nsIDOMNode* domNode);
 
+  nsresult      GetIsPositioned(PRBool* aIsPositioned);
 };
 
 // Make a new nsIDOMRange object
@@ -249,19 +219,6 @@ PRInt32 ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
  *  Utility routine to detect if a content node intersects a range
  ************************************************************************************/
 PRBool IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange);
-
-
-/*************************************************************************************
- *  Utility routine to detect if a content node starts before a range and/or 
- *  ends after a range.  If neither it is contained inside the range.
- *  
- *  XXX - callers responsibility to ensure node in same doc as range!
- *
- ************************************************************************************/
-nsresult CompareNodeToRange(nsIContent* aNode, 
-                            nsIDOMRange* aRange,
-                            PRBool *outNodeBefore,
-                            PRBool *outNodeAfter);
 
 
 /*************************************************************************************

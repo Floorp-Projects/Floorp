@@ -7460,7 +7460,7 @@ nsHTMLEditRules::UpdateDocChangeRange(nsIDOMRange *aRange)
   }
   else
   {
-    PRInt32 result;
+    PRInt16 result;
     
     // compare starts of ranges
     res = mDocChangeRange->CompareBoundaryPoints(nsIDOMRange::START_TO_START, aRange, &result);

@@ -40,6 +40,16 @@
 
 #include "domstubs.idl"
 
+/**
+ * The nsIDOMMediaList interface is a datatype for a list of media
+ * types in the Document Object Model.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/DOM-Level-2-Style
+ *
+ * @status FROZEN
+ */
+
 [scriptable, uuid(9b0c2ed7-111c-4824-adf9-ef0da6dad371)]
 interface nsIDOMMediaList : nsISupports
 {
@@ -48,7 +58,6 @@ interface nsIDOMMediaList : nsISupports
 
   readonly attribute unsigned long    length;
   DOMString          item(in unsigned long index);
-
   void               deleteMedium(in DOMString oldMedium)
                                         raises(DOMException);
   void               appendMedium(in DOMString newMedium)

@@ -40,6 +40,16 @@
 
 #include "nsIDOMHTMLElement.idl"
 
+/**
+ * The nsIDOMHTMLAppletElement interface is the interface to a [X]HTML
+ * applet element.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/DOM-Level-2-HTML/
+ *
+ * @status FROZEN
+ */
+
 [scriptable, uuid(a6cf90ae-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLAppletElement : nsIDOMHTMLElement
 {
@@ -49,9 +59,12 @@ interface nsIDOMHTMLAppletElement : nsIDOMHTMLElement
            attribute DOMString        code;
            attribute DOMString        codeBase;
            attribute DOMString        height;
+  // Modified in DOM Level 2:
            attribute long             hspace;
            attribute DOMString        name;
+  // Modified in DOM Level 2:
            attribute DOMString        object;
+  // Modified in DOM Level 2:
            attribute long             vspace;
            attribute DOMString        width;
 };

@@ -40,12 +40,24 @@
 
 #include "nsIDOMDocument.idl"
 
+/**
+ * The nsIDOMHTMLDocument interface is the interface to a [X]HTML
+ * document object.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/DOM-Level-2-HTML/
+ *
+ * @status FROZEN
+ */
+
 [scriptable, uuid(a6cf9084-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLDocument : nsIDOMDocument
 {
            attribute DOMString            title;
   readonly attribute DOMString            referrer;
-           attribute DOMString            domain;
+  // domain is readonly per spec, but it's settable in
+  // nsIDOMNSHTMLDocument
+  [noscript] readonly attribute DOMString domain;
   readonly attribute DOMString            URL;
            attribute nsIDOMHTMLElement    body;
   readonly attribute nsIDOMHTMLCollection images;
@@ -54,7 +66,11 @@ interface nsIDOMHTMLDocument : nsIDOMDocument
   readonly attribute nsIDOMHTMLCollection forms;
   readonly attribute nsIDOMHTMLCollection anchors;
            attribute DOMString            cookie;
+                                             // raises(DOMException) on setting
 
+  // open() is noscript here since the DOM Level 0 version of open()
+  // returned nsIDOMDocument, and not void. The script version of
+  // open() is defined in nsIDOMNSHTMLDocument.
   [noscript] void           open();
   void                      close();
 

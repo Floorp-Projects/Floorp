@@ -78,7 +78,10 @@ interface nsIDOMNodeList;
 interface nsIDOMNotation;
 interface nsIDOMProcessingInstruction;
 interface nsIDOMText;
+
+// Needed for raises() in our IDL
 interface DOMException;
+interface RangeException;
 
 // Style Sheets
 interface nsIDOMStyleSheetList;
