@@ -31,7 +31,7 @@
           <xul:label xbl:inherits="value=progress"/>
         </xul:hbox>
         <xul:hbox align="start">
-          <xul:label value="&cancel.label;" class="link" onclick="this.parentNode.parentNode.parentNode.parentNode.cancel();"/>
+          <xul:label value="&cancel.label;" class="link" onclick="this.parentNode.parentNode.parentNode.cancel();"/>
         </xul:hbox>
       </xul:vbox>
     </content>
