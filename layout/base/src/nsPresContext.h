@@ -39,13 +39,15 @@ public:
   NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode);
   NS_IMETHOD GetBaseURL(nsIURL*& aURL);
   virtual nsIStyleContext* ResolveStyleContextFor(nsIContent* aContent,
-                                                  nsIFrame* aParentFrame,
+                                                  nsIStyleContext* aParentContext,
                                                   PRBool aForceUnique = PR_FALSE);
-  virtual nsIStyleContext* ResolvePseudoStyleContextFor(nsIAtom* aPseudoTag,
-                                                        nsIFrame* aParentFrame,
+  virtual nsIStyleContext* ResolvePseudoStyleContextFor(nsIContent* aParentContent,
+                                                        nsIAtom* aPseudoTag,
+                                                        nsIStyleContext* aParentContext,
                                                         PRBool aForceUnique = PR_FALSE);
-  virtual nsIStyleContext* ProbePseudoStyleContextFor(nsIAtom* aPseudoTag,
-                                                      nsIFrame* aParentFrame,
+  virtual nsIStyleContext* ProbePseudoStyleContextFor(nsIContent* aParentContent,
+                                                      nsIAtom* aPseudoTag,
+                                                      nsIStyleContext* aParentContext,
                                                       PRBool aForceUnique = PR_FALSE);
   virtual nsIFontMetrics* GetMetricsFor(const nsFont& aFont);
   virtual const nsFont& GetDefaultFont(void);
