@@ -2743,20 +2743,7 @@ void
 nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttributes,
                                               nsRuleData* aData)
 {
-  if (aData->mSID == eStyleStruct_TextReset) {
-    if (aData->mTextData->mUnicodeBidi.GetUnit() == eCSSUnit_Null) {
-      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::dir);
-      if (value && value->Type() == nsAttrValue::eEnum)
-        aData->mTextData->mUnicodeBidi.SetIntValue(
-            NS_STYLE_UNICODE_BIDI_EMBED, eCSSUnit_Enumerated);
-    }
-  } else if (aData->mSID == eStyleStruct_Visibility) {
-    if (aData->mDisplayData->mDirection.GetUnit() == eCSSUnit_Null) {
-      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::dir);
-      if (value && value->Type() == nsAttrValue::eEnum)
-        aData->mDisplayData->mDirection.SetIntValue(value->GetEnumValue(),
-                                                    eCSSUnit_Enumerated);
-    }
+  if (aData->mSID == eStyleStruct_Visibility) {
     const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::lang);
     if (value && value->Type() == nsAttrValue::eString) {
       aData->mDisplayData->mLang.SetStringValue(value->GetStringValue(),
@@ -2769,7 +2756,6 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
 
 /* static */ const nsGenericHTMLElement::MappedAttributeEntry
 nsGenericHTMLElement::sCommonAttributeMap[] = {
-  { &nsHTMLAtoms::dir },
   { &nsHTMLAtoms::lang },
   { nsnull }
 };

@@ -63,7 +63,6 @@ public:
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
-  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   virtual nsresult GetInnerHTML(nsAString& aInnerHTML);
   virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
 };
@@ -94,30 +93,6 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 
 NS_IMPL_DOM_CLONENODE(nsHTMLSpanElement)
 
-
-static void
-BdoMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                         nsRuleData* aData)
-{
-  if (aData->mSID == eStyleStruct_TextReset &&
-      aData->mTextData->mUnicodeBidi.GetUnit() == eCSSUnit_Null) {
-    aData->mTextData->mUnicodeBidi.SetIntValue(NS_STYLE_UNICODE_BIDI_OVERRIDE, eCSSUnit_Enumerated);
-  }
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
-}
-
-NS_IMETHODIMP
-nsHTMLSpanElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
-{
-  if (mNodeInfo->Equals(nsHTMLAtoms::bdo)) {
-    aMapRuleFunc = &BdoMapAttributesIntoRule;
-  }
-  else {
-    nsGenericHTMLElement::GetAttributeMappingFunction(aMapRuleFunc);
-  }
-
-  return NS_OK;
-}
 
 nsresult
 nsHTMLSpanElement::GetInnerHTML(nsAString& aInnerHTML)
