@@ -37,6 +37,6 @@
 .handleb {position:absolute; top:100%; left:48%; height:5px; width:5px; background-color:#ff00ff;}
 #marquee {position:absolute; top:1px; left:-5px; height:-5px; width:1px; border: 1 dashed #0000ff; z-index:10000; visibility: hidden;}
 #bgDiv {position:absolute; top:0px; left:0px; width:1; background:url("chrome://editor/skin/images/Map_checker.gif"); background-color: white; cursor: inherit;}
-BODY {background-color:appworkspace; height: 100%;}
+BODY {background-color:appworkspace;}
 HTML {height: 100%;}
 IMG {opacity: .99;}
