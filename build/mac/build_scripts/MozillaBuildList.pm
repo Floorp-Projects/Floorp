@@ -186,6 +186,7 @@ sub InstallNonChromeResources()
     }
     
     MakeAlias(":mozilla:layout:html:document:src:html.css",                            "$resource_dir");
+    MakeAlias(":mozilla:layout:html:document:src:forms.css",                           "$resource_dir");
     MakeAlias(":mozilla:layout:html:document:src:quirk.css",                           "$resource_dir");
     MakeAlias(":mozilla:layout:html:document:src:arrow.gif",                           "$resource_dir"); 
     MakeAlias(":mozilla:webshell:tests:viewer:resources:viewer.properties",            "$resource_dir");
