@@ -315,10 +315,17 @@ function updateWinReg()
 
 function upgradeCleanup()
 {
-  // Obsolete files from Netscape 6.0 and Netscape 6.01 that
+  // Obsolete files from previous versions of Firefox that
   // need to be cleaned up.
-  
-  // For now, since we're new, we have no such files. 
+  deleteThisFile("Chrome",	"US.jar");
+  deleteThisFile("Chrome",	"en-win.jar");
+  deleteThisFile("Components", 	"compreg.dat");
+  deleteThisFile("Components", 	"xpti.dat");
+  deleteThisFile("Program",	"defaults/pref/all.js");
+  deleteThisFile("Program",	"defaults/pref/security-prefs.js");
+  deleteThisFile("Program",	"defaults/pref/winpref.js");
+  deleteThisFile("Program",	"defaults/pref/xpinstall.js");
+  deleteThisFolder("Program",	"defaults/profile/US");
 }
 
 // main
