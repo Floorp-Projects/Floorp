@@ -420,6 +420,7 @@ NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator **aEnum)
 
   nsPermissionEnumerator* permissionEnum = new nsPermissionEnumerator(&mHostTable, hostList, mHostCount, NS_CONST_CAST(const char**, mTypeArray));
   if (!permissionEnum) {
+    delete[] hostList;
     return NS_ERROR_OUT_OF_MEMORY;
   }
   NS_ADDREF(permissionEnum);
