@@ -100,6 +100,7 @@ class FileImpl
             kOuputBufferMaxSize        = 4096
         };
         
+        nsresult                        InternalFlush(PRBool syncFile);
         nsresult                        AllocateBuffers(PRUint32 segmentSize, PRUint32 maxSize);
 
         PRFileDesc*                     mFileDesc;
@@ -327,7 +328,7 @@ NS_IMETHODIMP FileImpl::Seek(PRInt32 whence, PRInt32 offset)
     mEOF = PR_FALSE; // reset on a seek.
     
     // To avoid corruption, we flush during a seek. see bug number 18949
-    Flush();
+    InternalFlush(PR_FALSE);
 
     PRInt32 position = PR_Seek(mFileDesc, 0, PR_SEEK_CUR);
     PRInt32 available = PR_Available(mFileDesc);
@@ -431,7 +432,7 @@ NS_IMETHODIMP FileImpl::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWrit
             if (seg == nsnull) 
             {
                 // buffer is full, try again
-                Flush();
+                InternalFlush(PR_FALSE);
                 seg = mOutBuffer.AppendNewSegment();
                 if (seg == nsnull)
                     return NS_ERROR_OUT_OF_MEMORY;
@@ -506,7 +507,7 @@ NS_IMETHODIMP FileImpl::Close()
 //----------------------------------------------------------------------------------------
 {
     if ((mNSPRMode & PR_RDONLY) == 0)
-        Flush();
+        InternalFlush(PR_FALSE);
 
     if (mFileDesc==PR_STDIN || mFileDesc==PR_STDOUT || mFileDesc==PR_STDERR || !mFileDesc) 
        return NS_OK;
@@ -521,45 +522,8 @@ NS_IMETHODIMP FileImpl::Close()
 NS_IMETHODIMP FileImpl::Flush()
 //----------------------------------------------------------------------------------------
 {
-#ifdef XP_MAC
-    if (mFileDesc == PR_STDOUT || mFileDesc == PR_STDERR)
-    {
-        std::cout.flush();
-        return NS_OK;
-    }
-#endif
-    if (!mFileDesc) 
-        return NS_FILE_RESULT(PR_BAD_DESCRIPTOR_ERROR);
-    
-    PRInt32 segCount = mOutBuffer.GetSegmentCount();
-    PRUint32 segSize = mOutBuffer.GetSegmentSize();
-
-    for (PRInt32 i = 0; i < segCount; i++) 
-    {
-        char* seg = mOutBuffer.GetSegment(i);
-
-        // if it is the last buffer, it may not be completely full.  
-        if(i == (segCount-1))
-            segSize = (mWriteCursor - seg);
-
-        PRInt32 bytesWrit = PR_Write(mFileDesc, seg, segSize);
-        if (bytesWrit != (PRInt32)segSize)
-        {
-          mFailed = PR_TRUE;
-          return NS_FILE_RESULT(PR_GetError());
-        }
-    }
-
-    if (mGotBuffers)
-        mOutBuffer.Empty();
-    mWriteCursor = nsnull;
-    mWriteLimit  = nsnull;
-
-    // On unix, it seems to fail always.
-    if (PR_Sync(mFileDesc) != PR_SUCCESS)
-        mFailed = PR_TRUE;
-                                                
-    return NS_OK;
+  // for external callers, this will do a Sync as well as flush buffers.
+  return InternalFlush(PR_TRUE);
 } // FileImpl::flush
 
 
@@ -599,7 +563,50 @@ nsresult FileImpl::AllocateBuffers(PRUint32 segmentSize, PRUint32 maxBufSize)
     return rv;
 }
 
+// external callers of Flush will have sync get called,
+// but internal callers just want to flush the buffers to disk.
+nsresult FileImpl::InternalFlush(PRBool syncFile)
+{
+#ifdef XP_MAC
+    if (mFileDesc == PR_STDOUT || mFileDesc == PR_STDERR)
+    {
+        std::cout.flush();
+        return NS_OK;
+    }
+#endif
+    if (!mFileDesc) 
+        return NS_FILE_RESULT(PR_BAD_DESCRIPTOR_ERROR);
+    
+    PRInt32 segCount = mOutBuffer.GetSegmentCount();
+    PRUint32 segSize = mOutBuffer.GetSegmentSize();
 
+    for (PRInt32 i = 0; i < segCount; i++) 
+    {
+        char* seg = mOutBuffer.GetSegment(i);
+
+        // if it is the last buffer, it may not be completely full.  
+        if(i == (segCount-1))
+            segSize = (mWriteCursor - seg);
+
+        PRInt32 bytesWrit = PR_Write(mFileDesc, seg, segSize);
+        if (bytesWrit != (PRInt32)segSize)
+        {
+          mFailed = PR_TRUE;
+          return NS_FILE_RESULT(PR_GetError());
+        }
+    }
+
+    if (mGotBuffers)
+        mOutBuffer.Empty();
+    mWriteCursor = nsnull;
+    mWriteLimit  = nsnull;
+
+    // On unix, it seems to fail always.
+    if (syncFile && PR_Sync(mFileDesc) != PR_SUCCESS)
+        mFailed = PR_TRUE;
+                                                
+    return NS_OK;
+}
 //----------------------------------------------------------------------------------------
 nsresult NS_NewTypicalInputFileStream(
     nsISupports** aResult,
