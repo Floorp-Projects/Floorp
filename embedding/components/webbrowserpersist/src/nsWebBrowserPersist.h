@@ -79,6 +79,12 @@ protected:
     nsresult SaveDocumentInternal(
         nsIDOMDocument *aDocument, nsIURI *aFile, nsIURI *aDataPath);
     nsresult SaveDocuments();
+    nsresult GetDocEncoderContentType(
+        nsIDOMDocument *aDocument, const PRUnichar *aContentType,
+        PRUnichar **aRealContentType);
+    nsresult GetExtensionForContentType(
+        const PRUnichar *aContentType, PRUnichar **aExt);
+    nsresult GetDocumentExtension(nsIDOMDocument *aDocument, PRUnichar **aExt);
 
 // Private members
 private:
