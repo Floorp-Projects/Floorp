@@ -37,6 +37,7 @@
 class nsIDOMEventListener;
 class nsIScriptContext;
 class nsIScriptGlobalObject;
+class nsIScriptSecurityManager;
 
 class nsJSUtils {
 public:
@@ -141,11 +142,17 @@ public:
                                         jsid id, JSAccessMode mode,
 	                                    jsval *vp);
 
+  static NS_EXPORT nsIScriptSecurityManager *
+                    nsGetSecurityManager(JSContext *cx, JSObject *obj);
+
+  static NS_EXPORT void nsClearCachedSecurityManager();
+
 protected:
   static PRBool NameAndFormatForNSResult(nsresult rv,
                                          const char** name,
                                          const char** format);
 
+  static nsIScriptSecurityManager *mCachedSecurityManager;
 };
 
 #endif /* nsJSUtils_h__ */

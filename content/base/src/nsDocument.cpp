@@ -1664,18 +1664,21 @@ nsDocument::AttributeChanged(nsIContent* aChild,
                              PRInt32 aHint)
 {
   PRInt32 i;
+  nsresult result = NS_OK;
   // Get new value of count for every iteration in case
   // observers remove themselves during the loop.
   for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-    observer->AttributeChanged(this, aChild, aNameSpaceID, aAttribute, aHint);
+    nsresult rv = observer->AttributeChanged(this, aChild, aNameSpaceID, aAttribute, aHint);
+    if (NS_FAILED(rv) && NS_SUCCEEDED(result))
+      result = rv;
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
     if (observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
     }
   }
-  return NS_OK;
+  return result;
 }
 
 

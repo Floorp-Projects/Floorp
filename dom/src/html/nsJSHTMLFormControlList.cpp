@@ -58,37 +58,30 @@ GetHTMLFormControlListProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
   }
 
   PRBool checkNamedItem = PR_TRUE;
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     checkNamedItem = PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:
       {
-        nsresult result = NS_OK;
-        result = a->Item(cx, &id, 1, vp);
-        if (NS_FAILED(result)) {
-          return nsJSUtils::nsReportError(cx, obj, result);
-        }
+        rv = a->Item(cx, &id, 1, vp);
       }
     }
   }
 
   if (checkNamedItem) {
-    nsresult result = a->NamedItem(cx, &id, 1, vp);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
+    rv = a->NamedItem(cx, &id, 1, vp);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -107,13 +100,11 @@ SetHTMLFormControlListProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
   }
 
   PRBool checkNamedItem = PR_TRUE;
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     checkNamedItem = PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case 0:
@@ -125,6 +116,8 @@ SetHTMLFormControlListProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -174,21 +167,14 @@ HTMLFormControlListNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLFORMCONTROLLIST_NAMEDITEM, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLFORMCONTROLLIST_NAMEDITEM, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->NamedItem(cx, argv+0, argc-0, &nativeRet);
     if (NS_FAILED(result)) {
@@ -217,21 +203,14 @@ HTMLFormControlListItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLFORMCONTROLLIST_ITEM, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLFORMCONTROLLIST_ITEM, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->Item(cx, argv+0, argc-0, &nativeRet);
     if (NS_FAILED(result)) {

@@ -81,289 +81,215 @@ GetKeyEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case KEYEVENT_CHARCODE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_KEYEVENT_CHARCODE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRUint32 prop;
-        nsresult result = NS_OK;
-        result = a->GetCharCode(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRUint32 prop;
+          rv = a->GetCharCode(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case KEYEVENT_KEYCODE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_KEYEVENT_KEYCODE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRUint32 prop;
-        nsresult result = NS_OK;
-        result = a->GetKeyCode(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRUint32 prop;
+          rv = a->GetKeyCode(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case KEYEVENT_ALTKEY:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_KEYEVENT_ALTKEY, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRBool prop;
-        nsresult result = NS_OK;
-        result = a->GetAltKey(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = BOOLEAN_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          rv = a->GetAltKey(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = BOOLEAN_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case KEYEVENT_CTRLKEY:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_KEYEVENT_CTRLKEY, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRBool prop;
-        nsresult result = NS_OK;
-        result = a->GetCtrlKey(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = BOOLEAN_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          rv = a->GetCtrlKey(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = BOOLEAN_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case KEYEVENT_SHIFTKEY:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_KEYEVENT_SHIFTKEY, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRBool prop;
-        nsresult result = NS_OK;
-        result = a->GetShiftKey(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = BOOLEAN_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          rv = a->GetShiftKey(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = BOOLEAN_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case KEYEVENT_METAKEY:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_KEYEVENT_METAKEY, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRBool prop;
-        nsresult result = NS_OK;
-        result = a->GetMetaKey(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = BOOLEAN_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          rv = a->GetMetaKey(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = BOOLEAN_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case MOUSEEVENT_SCREENX:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_MOUSEEVENT_SCREENX, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsIDOMMouseEvent* b;
-        if (NS_OK == a->QueryInterface(kIMouseEventIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetScreenX(&prop);
-          if(NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMMouseEvent* b;
+          if (NS_OK == a->QueryInterface(kIMouseEventIID, (void **)&b)) {
+            rv = b->GetScreenX(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
       case MOUSEEVENT_SCREENY:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_MOUSEEVENT_SCREENY, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsIDOMMouseEvent* b;
-        if (NS_OK == a->QueryInterface(kIMouseEventIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetScreenY(&prop);
-          if(NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMMouseEvent* b;
+          if (NS_OK == a->QueryInterface(kIMouseEventIID, (void **)&b)) {
+            rv = b->GetScreenY(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
       case MOUSEEVENT_CLIENTX:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_MOUSEEVENT_CLIENTX, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsIDOMMouseEvent* b;
-        if (NS_OK == a->QueryInterface(kIMouseEventIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetClientX(&prop);
-          if(NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMMouseEvent* b;
+          if (NS_OK == a->QueryInterface(kIMouseEventIID, (void **)&b)) {
+            rv = b->GetClientX(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
       case MOUSEEVENT_CLIENTY:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_MOUSEEVENT_CLIENTY, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsIDOMMouseEvent* b;
-        if (NS_OK == a->QueryInterface(kIMouseEventIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetClientY(&prop);
-          if(NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMMouseEvent* b;
+          if (NS_OK == a->QueryInterface(kIMouseEventIID, (void **)&b)) {
+            rv = b->GetClientY(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
       case MOUSEEVENT_BUTTON:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_MOUSEEVENT_BUTTON, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRUint16 prop;
-        nsIDOMMouseEvent* b;
-        if (NS_OK == a->QueryInterface(kIMouseEventIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetButton(&prop);
-          if(NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
+        if (NS_SUCCEEDED(rv)) {
+          PRUint16 prop;
+          nsIDOMMouseEvent* b;
+          if (NS_OK == a->QueryInterface(kIMouseEventIID, (void **)&b)) {
+            rv = b->GetButton(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
       case MOUSEEVENT_CLICKCOUNT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_MOUSEEVENT_CLICKCOUNT, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRUint16 prop;
-        nsIDOMMouseEvent* b;
-        if (NS_OK == a->QueryInterface(kIMouseEventIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetClickCount(&prop);
-          if(NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
+        if (NS_SUCCEEDED(rv)) {
+          PRUint16 prop;
+          nsIDOMMouseEvent* b;
+          if (NS_OK == a->QueryInterface(kIMouseEventIID, (void **)&b)) {
+            rv = b->GetClickCount(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
       case MOUSEEVENT_RELATEDNODE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_MOUSEEVENT_RELATEDNODE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMNode* prop;
-        nsIDOMMouseEvent* b;
-        if (NS_OK == a->QueryInterface(kIMouseEventIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetRelatedNode(&prop);
-          if(NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMNode* prop;
+          nsIDOMMouseEvent* b;
+          if (NS_OK == a->QueryInterface(kIMouseEventIID, (void **)&b)) {
+            rv = b->GetRelatedNode(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
@@ -375,6 +301,8 @@ GetKeyEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -392,13 +320,11 @@ SetKeyEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:
@@ -409,6 +335,8 @@ SetKeyEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -467,21 +395,14 @@ KeyEventInitKeyEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_KEYEVENT_INITKEYEVENT, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_KEYEVENT_INITKEYEVENT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 10) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -561,21 +482,14 @@ MouseEventInitMouseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_MOUSEEVENT_INITMOUSEEVENT, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_MOUSEEVENT_INITMOUSEEVENT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 11) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }

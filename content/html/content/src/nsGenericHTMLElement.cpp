@@ -1057,7 +1057,7 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
   NS_RELEASE(htmlContent);
 
   if (aNotify && (nsnull != mDocument)) {
-    mDocument->AttributeChanged(mContent, aNameSpaceID, aAttribute, NS_STYLE_HINT_UNKNOWN);
+    result = mDocument->AttributeChanged(mContent, aNameSpaceID, aAttribute, NS_STYLE_HINT_UNKNOWN);
     mDocument->EndUpdate();
   }
 

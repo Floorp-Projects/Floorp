@@ -45,6 +45,7 @@
 #include "nsIDOMDOMException.h"
 #include "nsDOMError.h"
 #include "nsCOMPtr.h"
+#include "nsIScriptSecurityManager.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
@@ -670,4 +671,30 @@ nsJSUtils::nsCheckAccess(JSContext *cx, JSObject *obj,
     return PR_TRUE;
 }
 
+NS_EXPORT nsIScriptSecurityManager * 
+nsJSUtils::nsGetSecurityManager(JSContext *cx, JSObject *obj)
+{
+    if (!mCachedSecurityManager) {
+        nsresult rv;
+        NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                        NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+        if (NS_FAILED(rv)) {
+          nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+          return nsnull;
+        }
+        mCachedSecurityManager = secMan;
+        NS_ADDREF(mCachedSecurityManager);
+    }
+    return mCachedSecurityManager;
+}
 
+NS_EXPORT void 
+nsJSUtils::nsClearCachedSecurityManager()
+{
+    if (mCachedSecurityManager) {
+        NS_RELEASE(mCachedSecurityManager);
+        mCachedSecurityManager = nsnull;
+    }
+}
+
+nsIScriptSecurityManager *nsJSUtils::mCachedSecurityManager;

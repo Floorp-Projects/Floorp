@@ -860,6 +860,7 @@ nsJSEnvironment::GetScriptingEnvironment()
 }
 
 const char kJSRuntimeServiceProgID[] = "nsJSRuntimeService";
+static int globalCount;
 
 nsJSEnvironment::nsJSEnvironment()
 {
@@ -883,10 +884,14 @@ nsJSEnvironment::nsJSEnvironment()
     PRBool started = PR_FALSE;
     rv = manager->StartupLiveConnect(mRuntime, started);
   }
+
+  globalCount++;
 }
 
 nsJSEnvironment::~nsJSEnvironment()
 {
+  if (--globalCount == 0)
+    nsJSUtils::nsClearCachedSecurityManager();
   if (mRuntimeService)
     nsServiceManager::ReleaseService(kJSRuntimeServiceProgID, mRuntimeService);
 }

@@ -59,6 +59,8 @@
 #include "nsLayoutAtoms.h"
 #include "nsIChromeEventHandler.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsICodebasePrincipal.h"
+#include "nsXPIDLString.h"
 #include "nsIScrollable.h"
 
 class nsHTMLFrame;
@@ -411,7 +413,7 @@ nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
     printf("got a request\n");
     nsIFrame* firstChild = mFrames.FirstChild();
     if (nsnull != firstChild) {
-      ((nsHTMLFrameInnerFrame*)firstChild)->ReloadURL();
+      return ((nsHTMLFrameInnerFrame*)firstChild)->ReloadURL();
     }
   }
   return NS_OK;
@@ -960,13 +962,57 @@ nsHTMLFrameInnerFrame::ReloadURL()
         mCreatingViewer=PR_TRUE;
 
         // load the document
-        nsString absURL;
+        nsAutoString absURL;
         TempMakeAbsURL(content, url, absURL);
+
+        // Get the referrer from the currently executing script, if any.
+        nsresult rv;
+        NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                        NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+        if (NS_FAILED(rv))
+          return rv;
+        nsCOMPtr<nsIPrincipal> principal;
+        rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
+        if (NS_FAILED(rv))
+          return rv;
+        nsString referrer;
+        if (principal) {
+          nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
+          nsCOMPtr<nsIURI> fromURI;
+          nsXPIDLCString spec;
+          if (codebase) {
+            rv = codebase->GetURI(getter_AddRefs(fromURI));
+            if (NS_FAILED(rv))
+              return rv;
+            nsCOMPtr<nsIURI> newURI;
+            rv = NS_NewURI(getter_AddRefs(newURI), absURL);           
+            if (NS_FAILED(rv))
+              return rv;
+            rv = secMan->CheckLoadURI(fromURI, newURI, PR_FALSE);
+            if (NS_FAILED(rv))
+              return rv;
+            rv = fromURI->GetSpec(getter_Copies(spec));
+            if (NS_FAILED(rv))
+              return rv;
+            referrer = spec;
+          }
+        }
 
         nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mSubShell));
         NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
 
         rv = webNav->LoadURI(absURL.GetUnicode()); // URL string with a default nsnull value for post Data
+/*
+XXX no webshell to call LoadURL on, webNav doesn't have a referrer arg
+        // load with an URL string with a default nsnull value for post Data
+        rv = mWebShell->LoadURL(absURL.GetUnicode(),
+                                nsnull, PR_TRUE,
+                                nsIChannel::LOAD_NORMAL,
+                                0,
+                                nsnull,
+                                referrer.Length() > 0 ? referrer.GetUnicode()
+                                                      : nsnull);
+*/
       }
     } else {
       mCreatingViewer = PR_TRUE;

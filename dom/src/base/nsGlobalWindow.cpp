@@ -1852,6 +1852,14 @@ PRBool GlobalWindowImpl::GetProperty(JSContext* aContext, JSObject* aObj,
                }
             }
          }
+      else 
+         {
+           nsIScriptSecurityManager * securityManager = 
+             nsJSUtils::nsGetSecurityManager(aContext, aObj);
+           if(NS_FAILED(securityManager->CheckScriptAccess(aContext, aObj,
+                        NS_DOM_PROP_WINDOW_SCRIPTGLOBALS, PR_FALSE)))
+              return PR_FALSE;
+         }
       }
    return PR_TRUE;
 }
@@ -2397,7 +2405,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
       nsCOMPtr<nsIURI> newUrl;
       nsCOMPtr<nsIScriptContext> scriptCX;
       nsJSUtils::nsGetStaticScriptContext(cx, (JSObject*)mScriptObject, 
-                                     getter_AddRefs(scriptCX));
+                                          getter_AddRefs(scriptCX));
       if(!scriptCX ||
          NS_FAILED(scriptCX->GetSecurityManager(getter_AddRefs(secMan))) ||
          NS_FAILED(NS_NewURI(getter_AddRefs(newUrl), mAbsURL)) ||

@@ -625,22 +625,22 @@ function RevealSearchPanel()
   }
   
   function createInstance( progid, iidName ) {
-      var iid = eval( "Components.interfaces." + iidName );
+      var iid = Components.interfaces[iidName];
       return Components.classes[ progid ].createInstance( iid );
   }
 
   function createInstanceById( cid, iidName ) {
-      var iid = eval( "Components.interfaces." + iidName );
+      var iid = Components.interfaces[iidName];
       return Components.classesByID[ cid ].createInstance( iid );
   }
 
   function getService( progid, iidName ) {
-      var iid = eval( "Components.interfaces." + iidName );
+      var iid = Components.interfaces[iidName];
       return Components.classes[ progid ].getService( iid );
   }
 
   function getServiceById( cid, iidName ) {
-      var iid = eval( "Components.interfaces." + iidName );
+      var iid = Components.interfaces[iidName];
       return Components.classesByID[ cid ].getService( iid );
   }
 

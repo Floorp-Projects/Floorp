@@ -763,7 +763,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
 
     caller = cx->fp->down;
-    indirectCall = (caller->pc && *caller->pc != JSOP_EVAL);
+    indirectCall = (!caller->pc || *caller->pc != JSOP_EVAL);
 
     if (JSVERSION_IS_ECMA(cx->version) && indirectCall) {
 	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,

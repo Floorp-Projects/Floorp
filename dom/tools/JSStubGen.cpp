@@ -322,24 +322,20 @@ static const char kPropFuncBeginStr[] = "\n"
 "\n";
 
 static const char kIntCaseStr[] =
+"  nsresult rv = NS_OK;\n"
 "  if (JSVAL_IS_INT(id)) {\n"
-"    nsresult rv;\n"
-"    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,\n"
-"                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);\n"
-"    if (NS_FAILED(rv)) {\n"
-"      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);\n"
-"    }\n"
+"    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);\n"
+"    if (!secMan)\n"
+"        return PR_FALSE;\n"
 "    switch(JSVAL_TO_INT(id)) {\n";
 
 static const char kIntCaseNamedItemStr[] =
 "  PRBool checkNamedItem = PR_TRUE;\n"
+"  nsresult rv = NS_OK;\n"
 "  if (JSVAL_IS_INT(id)) {\n"
-"    nsresult rv;\n"
-"    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,\n"
-"                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);\n"
-"    if (NS_FAILED(rv)) {\n"
-"      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);\n"
-"    }\n"
+"    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);\n"
+"    if (!secMan)\n"
+"        return PR_FALSE;\n"
 "    checkNamedItem = PR_FALSE;\n"
 "    switch(JSVAL_TO_INT(id)) {\n";
 
@@ -358,14 +354,10 @@ static const char kPropFuncDefaultNamedItemStr[] =
 static const char kPropFuncDefaultItemStr[] = 
 "      default:\n"
 "      {\n"
-"        nsresult result = NS_OK;\n"
 "        %s prop;\n"
-"        result = a->Item(JSVAL_TO_INT(id), %sprop);\n"
-"        if (NS_SUCCEEDED(result)) {\n"
+"        rv = a->Item(JSVAL_TO_INT(id), %sprop);\n"
+"        if (NS_SUCCEEDED(rv)) {\n"
 "%s"
-"        }\n"
-"        else {\n"
-"          return nsJSUtils::nsReportError(cx, obj, result);\n"
 "        }\n"
 "      }\n"
 "    }\n"
@@ -374,11 +366,7 @@ static const char kPropFuncDefaultItemStr[] =
 static const char kPropFuncDefaultItemEllipsisStr[] = 
 "      default:\n"
 "      {\n"
-"        nsresult result = NS_OK;\n"
-"        result = a->Item(cx, &id, 1, vp);\n"
-"        if (NS_FAILED(result)) {\n"
-"          return nsJSUtils::nsReportError(cx, obj, result);\n"
-"        }\n"
+"        rv = a->Item(cx, &id, 1, vp);\n"
 "      }\n"
 "    }\n"
 "  }\n";
@@ -390,18 +378,14 @@ static const char kPropFuncDefaultItemNonPrimaryStr[] =
 "        nsIDOM%s* b;\n"
 "        if (NS_OK == a->QueryInterface(kI%sIID, (void **)&b)) {\n"
 "          nsresult result = NS_OK;\n"
-"          result = b->Item(JSVAL_TO_INT(id), %sprop);\n"
-"          if (NS_SUCCEEDED(result)) {\n"
+"          rv = b->Item(JSVAL_TO_INT(id), %sprop);\n"
+"          if (NS_SUCCEEDED(rv)) {\n"
 "%s"
-"            NS_RELEASE(b);\n"
 "          }\n"
-"          else {\n"
-"            NS_RELEASE(b);\n"
-"            return nsJSUtils::nsReportError(cx, obj, result);\n"
-"          }\n"
+"          NS_RELEASE(b);\n"
 "        }\n"
 "        else {\n"
-"          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);\n"
+"          rv = NS_ERROR_DOM_WRONG_TYPE_ERR;\n"
 "        }\n"
 "      }\n"
 "    }\n"
@@ -412,15 +396,11 @@ static const char kPropFuncDefaultItemEllipsisNonPrimaryStr[] =
 "      {\n"
 "        nsIDOM%s* b;\n"
 "        if (NS_OK == a->QueryInterface(kI%sIID, (void **)&b)) {\n"
-"          nsresult result = NS_OK;\n"
-"          result = b->Item(cx, &id, 1, vp);\n"
+"          rv = b->Item(cx, &id, 1, vp);\n"
 "          NS_RELEASE(b);\n"
-"          if (NS_FAILED(result)) {\n"
-"            return nsJSUtils::nsReportError(cx, obj, result);\n"
-"          }\n"
 "        }\n"
 "        else {\n"
-"          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);\n"
+"          rv = NS_ERROR_DOM_WRONG_TYPE_ERR;\n"
 "        }\n"
 "      }\n"
 "    }\n"
@@ -431,6 +411,8 @@ static const char kPropFuncEndStr[] =
 "    return nsJSUtils::nsCallJSScriptObject%sProperty(a, cx, obj, id, vp);\n"
 "  }\n"
 "\n"
+"  if (NS_FAILED(rv))\n"
+"      return nsJSUtils::nsReportError(cx, obj, rv);\n"
 "  return PR_TRUE;\n"
 "}\n";
 
@@ -466,10 +448,7 @@ static const char kPropFuncNamedItemStr[] =
 static const char kPropFuncNamedItemEllipsisStr[] = 
 "\n"
 "  if (checkNamedItem) {\n"
-"    nsresult result = a->NamedItem(cx, &id, 1, vp);\n"
-"    if (NS_FAILED(result)) {\n"
-"      return nsJSUtils::nsReportError(cx, obj, result);\n"
-"    }\n"
+"    rv = a->NamedItem(cx, &id, 1, vp);\n"
 "  }\n";
 
 static const char kPropFuncNamedItemNonPrimaryStr[] =
@@ -539,11 +518,10 @@ static const char kPropCaseBeginStr[] =
 "      case %s_%s:\n"
 "      {\n"
 "        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_%s_%s, %s);\n"
-"        if (NS_FAILED(rv)) {\n"
-"          return nsJSUtils::nsReportError(cx, obj, rv);\n"
-"        }\n";
+"        if (NS_SUCCEEDED(rv)) {\n";
 
 static const char kPropCaseEndStr[] = 
+"        }\n"
 "        break;\n"
 "      }\n";
 
@@ -701,54 +679,45 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
 }
 
 static const char kGetCaseStr[] = 
-"        %s prop;\n"
-"        nsresult result = NS_OK;\n"
-"        result = a->Get%s(%sprop);\n"
-"        if (NS_SUCCEEDED(result)) {\n"
+"          %s prop;\n"
+"          rv = a->Get%s(%sprop);\n"
+"          if (NS_SUCCEEDED(rv)) {\n"
 "%s"
-"        }\n"
-"        else {\n"
-"          return nsJSUtils::nsReportError(cx, obj, result);\n"
-"        }\n";
+"          }\n";
 
 static const char kGetCaseNonPrimaryStr[] =
-"        %s prop;\n"
-"        nsIDOM%s* b;\n"
-"        if (NS_OK == a->QueryInterface(kI%sIID, (void **)&b)) {\n"
-"          nsresult result = NS_OK;\n"
-"          result = b->Get%s(%sprop);\n"
-"          if(NS_SUCCEEDED(result)) {\n"
+"          %s prop;\n"
+"          nsIDOM%s* b;\n"
+"          if (NS_OK == a->QueryInterface(kI%sIID, (void **)&b)) {\n"
+"            rv = b->Get%s(%sprop);\n"
+"            if(NS_SUCCEEDED(rv)) {\n"
 "%s"
+"            }\n"
 "            NS_RELEASE(b);\n"
 "          }\n"
 "          else {\n"
-"            NS_RELEASE(b);\n"
-"            return nsJSUtils::nsReportError(cx, obj, result);\n"
-"          }\n"
-"        }\n"
-"        else {\n"
-"          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);\n"
-"        }\n";
+"            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;\n"
+"          }\n";
 
 static const char kObjectGetCaseStr[] = 
-"          // get the js object\n"
-"          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);\n";
+"            // get the js object\n"
+"            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);\n";
 
 static const char kXPIDLObjectGetCaseStr[] =
-"          // get the js object; n.b., this will do a release on 'prop'\n"
-"          nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(%s), cx, obj, vp);\n";
+"            // get the js object; n.b., this will do a release on 'prop'\n"
+"            nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(%s), cx, obj, vp);\n";
 
 static const char kStringGetCaseStr[] = 
-"          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);\n";
+"            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);\n";
 
 static const char kIntGetCaseStr[] = 
-"          *vp = INT_TO_JSVAL(prop);\n";
+"            *vp = INT_TO_JSVAL(prop);\n";
 
 static const char kBoolGetCaseStr[] =
-"          *vp = BOOLEAN_TO_JSVAL(prop);\n";
+"            *vp = BOOLEAN_TO_JSVAL(prop);\n";
 
 static const char kJSValGetCaseStr[] =
-"          *vp = prop;\n";
+"            *vp = prop;\n";
 
 void
 JSStubGen::GeneratePropGetter(ofstream *file,
@@ -852,62 +821,62 @@ JSStubGen::GeneratePropGetter(ofstream *file,
 
 
 static const char kSetCaseStr[] = 
-"        %s prop;\n"
+"          %s prop;\n"
 "%s      \n"
-"        a->Set%s(prop);\n"
-"        %s\n";
+"          rv = a->Set%s(prop);\n"
+"          %s\n";
 
 static const char kSetCaseNonPrimaryStr[] =
-"        %s prop;\n"
+"          %s prop;\n"
 "%s      \n"
-"        nsIDOM%s *b;\n"
-"        if (NS_OK == a->QueryInterface(kI%sIID, (void **)&b)) {\n"
-"          b->Set%s(prop);\n"
-"          NS_RELEASE(b);\n"
-"        }\n"
-"        else {\n"
-"           %s\n"
-"          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);\n"
-"        }\n"
-"        %s\n";
+"          nsIDOM%s *b;\n"
+"          if (NS_OK == a->QueryInterface(kI%sIID, (void **)&b)) {\n"
+"            b->Set%s(prop);\n"
+"            NS_RELEASE(b);\n"
+"          }\n"
+"          else {\n"
+"             %s\n"
+"            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;\n"
+"          }\n"
+"          %s\n";
 
 
 static const char kObjectSetCaseStr[] = 
-"        if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,\n"
-"                                                kI%sIID, \"%s\",\n"
-"                                                cx, *vp)) {\n"
-"          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);\n"
-"        }\n";
+"          if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,\n"
+"                                                  kI%sIID, \"%s\",\n"
+"                                                  cx, *vp)) {\n"
+"            rv = NS_ERROR_DOM_NOT_OBJECT_ERR;\n"
+"          }\n";
 
 static const char kXPIDLObjectSetCaseStr[] = 
-"        if (PR_FALSE == nsJSUtils::nsConvertJSValToXPCObject((nsISupports **) &prop,\n"
-"                                                kI%sIID, cx, *vp)) {\n"
-"          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_XPC_OBJECT_ERR);\n"
-"        }\n";
+"          if (PR_FALSE == nsJSUtils::nsConvertJSValToXPCObject((nsISupports **) &prop,\n"
+"                                                  kI%sIID, cx, *vp)) {\n"
+"            rv = NS_ERROR_DOM_NOT_XPC_OBJECT_ERR;\n"
+"          }\n";
 
 static const char kObjectSetCaseEndStr[] = "NS_IF_RELEASE(prop);";
 
 static const char* kXPIDLObjectSetCaseEndStr = kObjectSetCaseEndStr;
 
 static const char kStringSetCaseStr[] = 
-"        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);\n";
+"          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);\n";
 
 static const char kIntSetCaseStr[] = 
-"        int32 temp;\n"
-"        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {\n"
-"          prop = (%s)temp;\n"
-"        }\n"
-"        else {\n"
-"          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);\n"
-"        }\n";
+"          int32 temp;\n"
+"          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {\n"
+"            prop = (%s)temp;\n"
+"          }\n"
+"          else {\n"
+"            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;\n"
+"          }\n";
 
 static const char kBoolSetCaseStr[] =
-"        if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {\n"
-"          return nsJSUtils::nsReportError(cx, obj,  NS_ERROR_DOM_NOT_BOOLEAN_ERR);\n"
-"        }\n";
+"          if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {\n"
+"            rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;\n"
+"          }\n";
 
 static const char kJSValSetCaseStr[] =
-"       prop = *vp;\n";
+"         prop = *vp;\n";
 
 void
 JSStubGen::GeneratePropSetter(ofstream *file,
@@ -994,12 +963,9 @@ static const char kCustomPropFuncBeginStr[] = "\n"
 "  }\n"
 "\n"
 "  nsresult rv;\n"
-"  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,\n"
-"                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);\n"
-"  if (NS_FAILED(rv)) {\n"
-"    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);\n"
-"  }\n"
-"\n"
+"  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);\n"
+"  if (!secMan)\n"
+"      return PR_FALSE;\n"
 "  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_%s_%s, %s);\n"
 "  if (NS_FAILED(rv)) {\n"
 "    return nsJSUtils::nsReportError(cx, obj, rv);\n"
@@ -1192,21 +1158,15 @@ static const char kMethodReturnStr[] =
 
 static const char kMethodParamStr[] =  "  %s b%d;\n";
 
-static const char kMethodBodyBeginStr[] = "\n"
-"  *rval = JSVAL_NULL;\n"
-"\n"
-"  {\n"
-"    nsresult rv;\n"
-"    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,\n"
-"                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);\n"
-"    if (NS_SUCCEEDED(rv)) {\n"
-"      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_%s_%s, PR_FALSE);\n"
-"    }\n"
-"    if (NS_FAILED(rv)) {\n"
-"      return nsJSUtils::nsReportError(cx, obj, rv);\n"
-"    }\n"
-"  }\n"
-"\n";
+static const char kMethodBodyBeginStr[] = 
+"    *rval = JSVAL_NULL;\n"
+"    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);\n"
+"    if (!secMan)\n"
+"        return PR_FALSE;\n"
+"    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_%s_%s, PR_FALSE);\n"
+"    if (NS_FAILED(result)) {\n"
+"      return nsJSUtils::nsReportError(cx, obj, result);\n"
+"    }\n";
 
 static const char kMethodCheckNullStr[] = 
 "  // If there's no private data, this must be the prototype, so ignore\n"
