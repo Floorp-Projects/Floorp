@@ -297,7 +297,21 @@ nsSmtpService::createKeyedServer(const char *key, nsISmtpServer** aResult)
     
     server->SetKey(NS_CONST_CAST(char *,key));
     mSmtpServers->AppendElement(server);
-    // XXX todo: append this server to the prefs list
+
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        nsXPIDLCString serverList;
+        prefs->CopyCharPref("mail.smtpservers",getter_Copies(serverList));
+        if (serverList && *serverList) {
+            nsCAutoString newServerList(serverList);
+            newServerList += ',';
+            newServerList += key;
+            serverList = newServerList;
+        } else {
+            serverList = key;
+        }
+        prefs->SetCharPref("mail.smtpservers", serverList);
+    }
 
     if (aResult) {
         *aResult = server;
