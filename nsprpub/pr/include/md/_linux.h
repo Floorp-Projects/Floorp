@@ -73,6 +73,9 @@ extern void _MD_CleanupBeforeExit(void);
 #ifdef __powerpc__
 /* PowerPC based MkLinux */
 #define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[0].__misc[0]
+#define _MD_SET_FP(_t, val)
+#define _MD_GET_SP_PTR(_t) &(_MD_GET_SP(_t))
+#define _MD_GET_FP_PTR(_t) ((void *) 0)
 /* aix = 64, macos = 70 */
 #define PR_NUM_GCREGS  64
 
@@ -81,9 +84,15 @@ extern void _MD_CleanupBeforeExit(void);
 
 #if defined(__GLIBC__) && __GLIBC__ >= 2
 #define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[JB_SP]
+#define _MD_SET_FP(_t, val)
+#define _MD_GET_SP_PTR(_t) &(_MD_GET_SP(_t))
+#define _MD_GET_FP_PTR(_t) ((void *) 0)
 #define _MD_SP_TYPE long int
 #else
 #define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[0].__sp
+#define _MD_SET_FP(_t, val)
+#define _MD_GET_SP_PTR(_t) &(_MD_GET_SP(_t))
+#define _MD_GET_FP_PTR(_t) ((void *) 0)
 #define _MD_SP_TYPE __ptr_t
 #endif /* defined(__GLIBC__) && __GLIBC__ >= 2 */
 
@@ -99,8 +108,14 @@ extern void _MD_CleanupBeforeExit(void);
  */
 #if defined(__GLIBC__) && __GLIBC__ >= 2
 #define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[0].__sp
+#define _MD_SET_FP(_t, val)
+#define _MD_GET_SP_PTR(_t) &(_MD_GET_SP(_t))
+#define _MD_GET_FP_PTR(_t) ((void *) 0)
 #else
 #define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[0].__sp
+#define _MD_SET_FP(_t, val)
+#define _MD_GET_SP_PTR(_t) &(_MD_GET_SP(_t))
+#define _MD_GET_FP_PTR(_t) ((void *) 0)
 #endif /* defined(__GLIBC__) && __GLIBC__ >= 2 */
 
 /* XXX not sure if this is correct, or maybe it should be 17? */
@@ -110,9 +125,15 @@ extern void _MD_CleanupBeforeExit(void);
 /* Intel based Linux */
 #if defined(__GLIBC__) && __GLIBC__ >= 2
 #define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[JB_SP]
+#define _MD_SET_FP(_t, val) ((_t)->md.context[0].__jmpbuf[JB_BP] = val)
+#define _MD_GET_SP_PTR(_t) &(_MD_GET_SP(_t))
+#define _MD_GET_FP_PTR(_t) (&(_t)->md.context[0].__jmpbuf[JB_BP])
 #define _MD_SP_TYPE int
 #else
 #define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[0].__sp
+#define _MD_SET_FP(_t, val) ((_t)->md.context[0].__jmpbuf[0].__bp = val)
+#define _MD_GET_SP_PTR(_t) &(_MD_GET_SP(_t))
+#define _MD_GET_FP_PTR(_t) &((_t)->md.context[0].__jmpbuf[0].__bp)
 #define _MD_SP_TYPE __ptr_t
 #endif /* defined(__GLIBC__) && __GLIBC__ >= 2 */
 #define PR_NUM_GCREGS   6
@@ -131,6 +152,9 @@ extern void _MD_CleanupBeforeExit(void);
         _main();  \
     }  \
     _MD_GET_SP(_thread) = (unsigned char*) ((_sp) - 128); \
+	_thread->md.sp = _MD_GET_SP_PTR(_thread); \
+	_thread->md.fp = _MD_GET_FP_PTR(_thread); \
+    _MD_SET_FP(_thread, 0); \
 }
 
 #else
@@ -142,6 +166,9 @@ extern void _MD_CleanupBeforeExit(void);
         _main();  \
     }  \
     _MD_GET_SP(_thread) = (_MD_SP_TYPE) ((_sp) - 64); \
+	_thread->md.sp = _MD_GET_SP_PTR(_thread); \
+	_thread->md.fp = _MD_GET_FP_PTR(_thread); \
+    _MD_SET_FP(_thread, 0); \
 }
 
 #endif /*__powerpc__*/
@@ -166,6 +193,8 @@ extern void _MD_CleanupBeforeExit(void);
 
 struct _MDThread {
     PR_CONTEXT_TYPE context;
+	void *sp;
+	void *fp;
     int id;
     int errcode;
 };
