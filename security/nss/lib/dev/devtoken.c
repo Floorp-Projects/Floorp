@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.1 $ $Date: 2001/11/08 00:14:53 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.2 $ $Date: 2001/11/09 00:36:12 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -402,7 +402,7 @@ loser:
 
 #define OBJECT_STACK_SIZE 16
 
-static PRStatus *
+static PRStatus 
 nsstoken_TraverseObjects
 (
   NSSToken *tok,
@@ -475,14 +475,14 @@ nsstoken_TraverseObjects
     }
     if (objectArena)
 	NSSArena_Destroy(objectArena);
-    return NULL;
+    return PR_SUCCESS;
 loser:
     if (objectArena)
 	NSSArena_Destroy(objectArena);
-    return NULL; /* for now... */
+    return PR_FAILURE;
 }
 
-NSS_IMPLEMENT PRStatus *
+NSS_IMPLEMENT PRStatus 
 nssToken_TraverseCertificates
 (
   NSSToken *tok,
@@ -501,7 +501,7 @@ nssToken_TraverseCertificates
     nssrv = nssToken_TraverseCertificatesByTemplate(tok, sessionOpt, NULL,
                                                     cert_template, ctsize,
                                                     callback, arg);
-    return NULL; /* XXX */
+    return nssrv;
 }
 
 NSS_IMPLEMENT PRStatus
@@ -516,7 +516,7 @@ nssToken_TraverseCertificatesByTemplate
   void *arg
 )
 {
-    PRStatus *rvstack;
+    PRStatus rv;
     nssSession *session;
     struct cert_callback_str ccb;
     session = (sessionOpt) ? sessionOpt : tok->defaultSession;
@@ -528,15 +528,9 @@ nssToken_TraverseCertificatesByTemplate
     }
     ccb.callback = callback;
     ccb.arg = arg;
-    rvstack = nsstoken_TraverseObjects(tok, session, 
-                                       cktemplate, ctsize,
-                                       retrieve_cert, (void *)&ccb);
-    if (rvstack) {
-	/* examine the errors */
-	goto loser;
-    }
-    return PR_SUCCESS;
-loser:
-    return PR_FAILURE;
+    rv = nsstoken_TraverseObjects(tok, session, 
+                                  cktemplate, ctsize,
+                                  retrieve_cert, (void *)&ccb);
+    return rv;
 }
 
