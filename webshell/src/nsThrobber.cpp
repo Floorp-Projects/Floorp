@@ -448,11 +448,7 @@ nsThrobber::LoadThrobberImages(const nsString& aFileNameMask, PRInt32 aNumImages
   }
 
   nsIDeviceContext *deviceCtx = mWidget->GetDeviceContext();
-#ifndef NECKO
   mImageGroup->Init(deviceCtx, nsnull);
-#else
-  mImageGroup->Init(deviceCtx);
-#endif // NECKO
   NS_RELEASE(deviceCtx);
 
   rv = NS_NewTimer(&mTimer);

@@ -853,11 +853,7 @@ char *str;
     if (gImageGroup == NULL) 
       {
       nsIDeviceContext *deviceCtx = gWindow->GetDeviceContext();
-#ifdef NECKO
-      if (NS_NewImageGroup(&gImageGroup) != NS_OK || gImageGroup->Init(deviceCtx) != NS_OK) 
-#else
       if (NS_NewImageGroup(&gImageGroup) != NS_OK || gImageGroup->Init(deviceCtx, nsnull) != NS_OK) 
-#endif
         {
         ::MessageBox(NULL, "Couldn't create image group",class1Name, MB_OK);
         NS_RELEASE(deviceCtx);
