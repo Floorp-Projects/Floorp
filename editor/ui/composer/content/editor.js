@@ -1483,8 +1483,10 @@ function BuildRecentMenu(savePrefs)
     var title = getUnicharPref("editor.history_title_"+i);
     var url = getUnicharPref("editor.history_url_"+i);
 
+    // Continue if URL pref is missing because 
+    //  a URL not found during loading may have been removed
     if (!url)
-      break;
+      continue;
 
     // Skip over current URL
     if (url != curUrl)
@@ -1703,16 +1705,20 @@ function InitListMenu()
     if (state)
       IDSuffix = state;
   }
+  // Set enable state for the "None" menuitem
+  goSetCommandEnabled("cmd_removeList", state);
+
   // Set "radio" check on one item, but...
   var menuItem = document.getElementById("menu_"+IDSuffix);
+  if (!menuitem)
+    return;
+
   menuItem.setAttribute("checked", "true");
 
   // ..."noList" is returned if mixed selection, so remove checkmark
   if (mixedObj.value)
     menuItem.setAttribute("checked", "false");
 
-  // Set enable state for the "None" menuitem
-  goSetCommandEnabled("cmd_removeList", state);
 }
 
 function InitAlignMenu()
@@ -1768,7 +1774,6 @@ function EditorSetDefaultPrefsAndDoctype()
   // Insert a doctype element for a new doc or 
   // if it is missing from existing doc
   var needDoctype = newDoc ? true : !domdoc.doctype;
-
   if ( needDoctype )
   {
     var newdoctype = domdoc.implementation.createDocumentType("html", "-//W3C//DTD HTML 4.01 Transitional//EN","");
