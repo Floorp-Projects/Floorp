@@ -510,7 +510,7 @@ protected:
 
   static nsresult ResolveImpl(nsIXPConnectWrappedNative *wrapper, jsval id,
                               nsISupports **result);
-  static JSBool DocumentOpen(JSContext *cx, JSObject *obj, uintN argc,
+  static JSBool JS_DLL_CALLBACK DocumentOpen(JSContext *cx, JSObject *obj, uintN argc,
                              jsval *argv, jsval *rval);
 
 public:
