@@ -42,6 +42,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsDependentString.h"
 
 class nsSupportsIDImpl : public nsISupportsID
 {
@@ -317,5 +318,24 @@ private:
 };
 
 /***************************************************************************/
+
+/**
+ * Wraps a static const char* buffer for use with nsISupportsCString
+ *
+ * Only use this class with static buffers, or arena-allocated buffers of
+ * permanent lifetime!
+ */
+class nsSupportsDependentCString : public nsISupportsCString
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISUPPORTSPRIMITIVE
+  NS_DECL_NSISUPPORTSCSTRING
+
+  nsSupportsDependentCString(const char* aStr);
+  virtual ~nsSupportsDependentCString();
+private:
+  nsDependentCString mData;
+};
 
 #endif /* nsSupportsPrimitives_h__ */

@@ -59,7 +59,7 @@ interface nsICategoryManager : nsISupports
      * @param aCategory The name of the category ("protocol")
      * @param aEntry The entry to be added ("http")
      * @param aValue The value for the entry ("moz.httprulez.1")
-     * @param aPersist Should we persist between invocations?
+     * @param aPersist Should this data persist between invocations?
      * @param aReplace Should we replace an existing entry?
      * @return Previous entry, if any
      */
@@ -71,7 +71,7 @@ interface nsICategoryManager : nsISupports
      * Delete an entry from the category.
      * @param aCategory The name of the category ("protocol")
      * @param aEntry The entry to be added ("http")
-     * @param aPersist Delete entry from registry, if present?
+     * @param aPersist Delete persistent data from registry, if present?
      */
     void deleteCategoryEntry(in string aCategory, in string aEntry,
                                in boolean aPersist);
@@ -85,12 +85,16 @@ interface nsICategoryManager : nsISupports
     /**
      * Enumerate the entries in a category.
      * @param aCategory The category to be enumerated.
+     * @return a simple enumerator, each result QIs to
+     *         nsISupportsCString.
      */
     nsISimpleEnumerator enumerateCategory(in string aCategory);
 
     /**
-     * Enumerate the entries in a category.
+     * Enumerate all existing categories
      * @param aCategory The category to be enumerated.
+     * @return a simple enumerator, each result QIs to
+     *         nsISupportsCString.
      */
     nsISimpleEnumerator enumerateCategories();
 };

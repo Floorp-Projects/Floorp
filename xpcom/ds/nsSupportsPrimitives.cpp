@@ -144,7 +144,6 @@ NS_IMETHODIMP nsSupportsCStringImpl::SetData(const nsACString& aData)
     return NS_OK;
 }
 
-
 /*****************************************************************************
  * nsSupportsStringImpl
  *****************************************************************************/
@@ -181,7 +180,6 @@ NS_IMETHODIMP nsSupportsStringImpl::SetData(const nsAString& aData)
     mData = aData;
     return NS_OK;
 }
-
 
 /***************************************************************************/
 
@@ -885,3 +883,46 @@ NS_IMETHODIMP nsSupportsInterfacePointerImpl::ToString(char **_retval)
 }
 
 /***************************************************************************/
+
+NS_IMPL_ISUPPORTS2(nsSupportsDependentCString,nsISupportsCString,nsISupportsPrimitive)
+
+nsSupportsDependentCString::nsSupportsDependentCString(const char* aStr)
+    : mData(aStr)
+{ }
+
+nsSupportsDependentCString::~nsSupportsDependentCString()
+{ }
+
+NS_IMETHODIMP
+nsSupportsDependentCString::GetType(PRUint16 *aType)
+{
+    NS_ENSURE_ARG_POINTER(aType);
+
+    *aType = TYPE_CSTRING;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSupportsDependentCString::GetData(nsACString& aData)
+{
+    aData = mData;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSupportsDependentCString::ToString(char **_retval)
+{
+    NS_ENSURE_ARG_POINTER(_retval);
+
+    *_retval = ToNewCString(mData);
+    if (!*_retval)
+        return NS_ERROR_OUT_OF_MEMORY;
+    
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSupportsDependentCString::SetData(const nsACString& aData)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
