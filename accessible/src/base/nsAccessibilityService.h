@@ -19,9 +19,8 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
  * Original Author: David W. Hyatt (hyatt@netscape.com)
- *
+ * Contributor(s):  John Gaunt (jgaunt@netscape.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -52,20 +51,17 @@ class nsIDOMNode;
 class nsAccessibilityService : public nsIAccessibilityService
 {
 public:
+  nsAccessibilityService();
+  virtual ~nsAccessibilityService();
+
   NS_DECL_ISUPPORTS
 
   // nsIAccessibilityService methods:
   NS_DECL_NSIACCESSIBILITYSERVICE
 
-  // nsAccessibilityService methods:
-  nsAccessibilityService();
-  virtual ~nsAccessibilityService();
-
-public:
-
 private:
-  NS_IMETHOD GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIWeakReference** aShell, nsIDOMNode** aContent);
-  NS_IMETHOD GetShellFromNode(nsIDOMNode *aNode, nsIWeakReference **weakShell);
+  nsresult GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIWeakReference** aShell, nsIDOMNode** aContent);
+  nsresult GetShellFromNode(nsIDOMNode *aNode, nsIWeakReference **weakShell);
   void GetOwnerFor(nsIPresShell *aPresShell, nsIPresShell **aOwnerShell, nsIContent **aOwnerContent);
   nsIContent* FindContentForDocShell(nsIPresShell* aPresShell, nsIContent* aContent, nsIDocShell*  aDocShell);
 };

@@ -40,7 +40,9 @@ LINCS = $(LINCS) -I..\src         # for implementation headers
 SUB_LIBRARIES=\
   $(DIST)\lib\accessibility_base_s.lib \
   $(DIST)\lib\accessibility_html_s.lib \
+!ifdef MOZ_XUL
   $(DIST)\lib\accessibility_xul_s.lib \
+!endif
   $(NULL)
 
 LLIBS=\
