@@ -39,11 +39,6 @@
 #include "nsIXPConnect.h"
 #include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
-#include "nsIObserver.h"
-#include "nsIObserverService.h"
-#include "nsIPref.h"
-#include "nsICategoryManager.h"
-#include "nsIJSRuntimeService.h"
 #include "nsIEventQueueService.h"
 #include "nsMemory.h"
 #include "jsdebug.h"
@@ -80,21 +75,6 @@
      0x11b2,                                         \
     {0xa3, 0x47, 0xee, 0x6b, 0x76, 0x60, 0xe0, 0x48} \
 }
-
-#define JSDASO_CID                                   \
-{ /* f2723a7e-1dd1-11b2-9f9e-ff701f717575 */         \
-     0xf2723a7e,                                     \
-     0x1dd1,                                         \
-     0x11b2,                                         \
-    {0x9f, 0x9e, 0xff, 0x70, 0x1f, 0x71, 0x75, 0x75} \
-}
-
-#define NS_CATMAN_CTRID "@mozilla.org/categorymanager;1"
-#define NS_PREF_CTRID "@mozilla.org/preferences;1"
-#define NS_JSRT_CTRID "@mozilla.org/js/xpc/RuntimeService;1"
-
-#define APPSTART_CATEGORY "app-startup"
-#define PROFILE_CHANGE_EVENT "profile-after-change"
 
 JS_STATIC_DLL_CALLBACK (JSBool)
 jsds_GCCallbackProc (JSContext *cx, JSGCStatus status);
@@ -1631,108 +1611,8 @@ jsdService::GetService ()
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(jsdService, jsdService::GetService);
 
-/* app-start observer. turns on the debugger at app-start if 
- * js.debugger.autostart pref is true
- */
-class jsdASObserver : public nsIObserver 
-{
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-
-    jsdASObserver ()
-    {
-        NS_INIT_ISUPPORTS();
-    }    
-};
-
-NS_IMPL_THREADSAFE_ISUPPORTS1(jsdASObserver, nsIObserver); 
-
-NS_IMETHODIMP
-jsdASObserver::Observe (nsISupports *aSubject, const PRUnichar *aTopic,
-                        const PRUnichar *aData)
-{
-    nsresult rv;
-
-    if (!nsCRT::strcmp(aTopic,
-                       NS_LITERAL_STRING(PROFILE_CHANGE_EVENT).get())) {
-        /* profile change means that the prefs file is loaded, so we can finally
-         * check to see if we're supposed to start the debugger.
-         */
-            
-        nsCOMPtr<nsIPref> pref = do_GetService (NS_PREF_CTRID);
-        if (!pref)
-            return NS_ERROR_FAILURE;
-    
-        PRBool f = PR_FALSE;
-    
-        rv = pref->GetBoolPref("js.debugger.autostart", &f);
-    
-        if (NS_SUCCEEDED(rv) && f) {
-            jsdService *jsds = jsdService::GetService();
-            nsCOMPtr<nsIJSRuntimeService> rts = do_GetService(NS_JSRT_CTRID);
-            JSRuntime *rt;
-            rts->GetRuntime (&rt);
-            jsds->OnForRuntime(rt);
-        }
-    } else if (!nsCRT::strcmp(aTopic,
-                              NS_LITERAL_STRING(APPSTART_CATEGORY).get())) {
-        /* on app-start, register an interest in hearing when the profile is
-         * loaded.
-         */
-        nsCOMPtr<nsIObserverService> observerService =
-            do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) return rv;
-        if (observerService) {
-            rv = observerService->AddObserver(this, 
-                                              NS_LITERAL_STRING(PROFILE_CHANGE_EVENT).get());
-            if (NS_FAILED(rv)) return rv;
-        }
-    }
-    
-    return NS_OK;
-}
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(jsdASObserver);
-
-static NS_METHOD
-RegisterASObserver (nsIComponentManager *aCompMgr, nsIFile *aPath,
-                    const char *registryLocation, const char *componentType,
-                    const nsModuleComponentInfo *info)
-{
-    nsresult rv;
-    nsCOMPtr<nsICategoryManager>
-        categoryManager(do_GetService(NS_CATMAN_CTRID, &rv));
-    if (NS_SUCCEEDED(rv)) {
-        rv = categoryManager->AddCategoryEntry(APPSTART_CATEGORY,
-                                               "JSDebugger app-start observer",
-                                               jsdASObserverCtrID,
-                                               PR_TRUE, PR_TRUE,nsnull);
-    }
-    return rv;
-}
-
-static NS_METHOD
-UnRegisterASObserver(nsIComponentManager *aCompMgr, nsIFile *aPath, 
-                     const char *registryLocation,
-                     const nsModuleComponentInfo *info)
-{
-    nsresult rv;
-    nsCOMPtr<nsICategoryManager> 
-        categoryManager(do_GetService(NS_CATMAN_CTRID, &rv));
-    if (NS_SUCCEEDED(rv)) {
-        rv = 
-            categoryManager->DeleteCategoryEntry(APPSTART_CATEGORY,
-                                                 "JSDebugger app-start observer",
-                                                 PR_TRUE);
-    }
-    return rv;
-}
-
 static nsModuleComponentInfo components[] = {
-    {"JSDService", JSDSERVICE_CID, jsdServiceCtrID, jsdServiceConstructor},
-    {"JSDASObserver", JSDASO_CID, jsdASObserverCtrID,
-     jsdASObserverConstructor, RegisterASObserver, UnRegisterASObserver }
+    {"JSDService", JSDSERVICE_CID, jsdServiceCtrID, jsdServiceConstructor}
 };
 
 NS_IMPL_NSGETMODULE(JavaScript_Debugger, components);
