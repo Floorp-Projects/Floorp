@@ -70,6 +70,20 @@ public:
   virtual nsresult Clear(void) = 0;
 
   /**
+   * Turns on the transaction manager's batch mode, forcing all transactions
+   * executed by the transaction manager's Do() method to be aggregated
+   * together until EndBatch() is called.  This mode allows an application to
+   * execute and group together several independent transactions so they
+   * can be undone with a single call to Undo().
+   */
+  virtual nsresult BeginBatch() = 0;
+
+  /**
+   * Turns off the transaction manager's batch mode.
+   */
+  virtual nsresult EndBatch() = 0;
+
+  /**
    * Returns the number of items on the undo stack.
    * @param aNumItems will contain number of items.
    */
