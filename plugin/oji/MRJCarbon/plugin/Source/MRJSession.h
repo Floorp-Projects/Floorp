@@ -50,6 +50,7 @@
 class NativeMessage {
 public:
 	NativeMessage() : mNext(NULL) {}
+	virtual ~NativeMessage() {}
 	
 	virtual void execute() = 0;
 
