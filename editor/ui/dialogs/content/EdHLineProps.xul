@@ -3,7 +3,7 @@
 <?xml-stylesheet href="chrome://editordlgs/skin/EditorDialog.css" type="text/css"?>
 <!DOCTYPE window>
 <!-- dialog containing a control requiring initial setup -->
-<xul:window width="280" height="285" title="Horizontal Line Properties"
+<xul:window width="250" height="275" title="Horizontal Line Properties"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()">
@@ -63,7 +63,7 @@
   <table width="95%"> <!-- WIDTH SHOULD BE 100%, BUT BUG PREVENTS THAT -->
     <tr>
       <td>
-        <button class="spaced" id="Advanced" onclick="onAdvanced()">Advanced Attributes</button>
+        <button class="spaced" id="Advanced" onclick="onAdvanced()">More Attributes...</button>
       </td>
       <td align="right">
         <button class="spaced" id="OK" onclick="onOK()">OK</button>  
