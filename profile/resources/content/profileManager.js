@@ -56,14 +56,28 @@ function RenameProfile()
     return;
   var profileTree = document.getElementById( "profiles" );
   var selected = profileTree.selectedItems[0];
+  var profilename = selected.getAttribute("profile_name");
   if( selected.firstChild.firstChild.getAttribute("rowMigrate") == "no" ) {
     // migrate if the user wants to
     var lString = gProfileManagerBundle.getString("migratebeforerename");
     lString = lString.replace(/\s*<html:br\/>/g,"\n");
     lString = lString.replace(/%brandShortName%/, gBrandBundle.getString("brandShortName"));
     var title = gProfileManagerBundle.getString("migratetitle");
-    if (promptService.confirm(window, title, lString))
+    if (promptService.confirm(window, title, lString)) {
+      var profileDir = profile.getProfileDir(profilename);
+      if (profileDir) {
+        profileDir = profileDir.QueryInterface( Components.interfaces.nsIFile );
+        if (profileDir) {
+          if (!profileDir.exists()) {
+            var errorMessage = gProfileManagerBundle.getString("sourceProfileDirMissing");
+            var profileDirMissingTitle = gProfileManagerBundle.getString("sourceProfileDirMissingTitle");
+            promptService.alert(window, profileDirMissingTitle, errorMessage);
+              return false;          
+          }
+        }
+      }      
       profile.migrateProfile( profilename, true );
+    }
     else
       return false;
   }
