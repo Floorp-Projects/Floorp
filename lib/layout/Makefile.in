@@ -100,11 +100,11 @@ endif
 ifneq ($(OS_ARCH),OS2)
 $(OBJDIR)/laymocha.o: laymocha.c
 	@$(MAKE_OBJDIR)
-	$(CC) -o $@ -c $(CFLAGS) -I$(srcdir)/mocha/include $<
+	$(CC) -o $@ -c $(CFLAGS) -I$(DEPTH)/mocha/include $<
 else
 $(OBJDIR)/laymocha.o: laymocha.c
 	@$(MAKE_OBJDIR)
-	$(CC) -Fo$@ -c $(CFLAGS) -I$(srcdir)/mocha/include $<
+	$(CC) -Fo$@ -c $(CFLAGS) -I$(DEPTH)/mocha/include $<
 endif
 
 $(LIBRARY): $(OBJS)
