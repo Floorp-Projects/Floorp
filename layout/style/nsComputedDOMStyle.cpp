@@ -52,6 +52,7 @@
 #include "nsCSSKeywords.h"
 #include "nsDOMCSSRect.h"
 #include "nsLayoutAtoms.h"
+#include "nsThemeConstants.h"
 
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
@@ -222,13 +223,31 @@ static const nsCSSProperty queryableProperties[] = {
    * Implementations of -moz- styles *
   \* ******************************* */
 
+  eCSSProperty_appearance,
   eCSSProperty_binding,
+
+#ifdef INCLUDE_XUL
+  eCSSProperty_box_align,
+  eCSSProperty_box_direction,
+  eCSSProperty_box_flex,
+  eCSSProperty_box_ordinal_group,
+  eCSSProperty_box_orient,
+  eCSSProperty_box_pack,
+#endif
+  eCSSProperty_box_sizing,
+
+  eCSSProperty_float_edge,
 
   eCSSProperty_opacity,
   //// eCSSProperty_outline,
   eCSSProperty_outline_color,
   eCSSProperty_outline_style,
-  eCSSProperty_outline_width
+  eCSSProperty_outline_width,
+
+  eCSSProperty_user_focus,
+  eCSSProperty_user_input,
+  eCSSProperty_user_modify,
+  eCSSProperty_user_select
 
 };
 
@@ -377,8 +396,28 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
   nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
 
   switch (prop) {
+    case eCSSProperty_appearance:
+      rv = GetAppearance(frame, *getter_AddRefs(val)); break;
     case eCSSProperty_binding :
       rv = GetBinding(frame, *getter_AddRefs(val)); break;
+
+#if INCLUDE_XUL
+    case eCSSProperty_box_align:
+      rv = GetBoxAlign(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_box_direction:
+      rv = GetBoxDirection(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_box_flex:
+      rv = GetBoxFlex(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_box_ordinal_group:
+      rv = GetBoxOrdinalGroup(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_box_orient:
+      rv = GetBoxOrient(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_box_pack:
+      rv = GetBoxPack(frame, *getter_AddRefs(val)); break;
+#endif // INCLUDE_XUL
+    case eCSSProperty_box_sizing:
+      rv = GetBoxSizing(frame, *getter_AddRefs(val)); break;
+
     case eCSSProperty_display :
       rv = GetDisplay(frame, *getter_AddRefs(val)); break;
     case eCSSProperty_position :
@@ -387,6 +426,8 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
       rv = GetClear(frame, *getter_AddRefs(val)); break;
     case eCSSProperty_float :
       rv = GetCssFloat(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_float_edge:
+      rv = GetFloatEdge(frame, *getter_AddRefs(val)); break;
     case eCSSProperty_width :
       rv = GetWidth(frame, *getter_AddRefs(val)); break;
     case eCSSProperty_height :
@@ -557,6 +598,14 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
       // User interface
     case eCSSProperty_cursor:
       rv = GetCursor(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_user_focus:
+      rv = GetUserFocus(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_user_input:
+      rv = GetUserInput(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_user_modify:
+      rv = GetUserModify(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_user_select:
+      rv = GetUserSelect(frame, *getter_AddRefs(val)); break;
 
     default :
       break;
@@ -2116,6 +2165,331 @@ nsComputedDOMStyle::GetCursor(nsIFrame *aFrame,
     }
   } else {
     val->SetIdent(NS_LITERAL_STRING("auto"));
+  }
+
+  return CallQueryInterface(val, &aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetAppearance(nsIFrame *aFrame,
+                                nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleDisplay *displayData = nsnull;
+  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)displayData, aFrame);
+
+  PRUint8 appearance = NS_THEME_NONE;
+  if (displayData) {
+    appearance = displayData->mAppearance;
+  }
+
+  const nsAFlatCString& appearanceIdent =
+    nsCSSProps::SearchKeywordTable(appearance,
+                                   nsCSSProps::kAppearanceKTable);
+  val->SetIdent(appearanceIdent);
+
+  return CallQueryInterface(val, &aValue);
+}
+
+
+#ifdef INCLUDE_XUL
+nsresult
+nsComputedDOMStyle::GetBoxAlign(nsIFrame *aFrame,
+                                nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleXUL *xul = nsnull;
+  GetStyleData(eStyleStruct_XUL, (const nsStyleStruct*&)xul, aFrame);
+
+  PRUint8 boxAlign = NS_STYLE_BOX_ALIGN_STRETCH;
+  if (xul) {
+    boxAlign = xul->mBoxAlign;
+  }
+
+  const nsAFlatCString& boxAlignIdent =
+    nsCSSProps::SearchKeywordTable(boxAlign,
+                                   nsCSSProps::kBoxAlignKTable);
+  val->SetIdent(boxAlignIdent);
+
+  return CallQueryInterface(val, &aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetBoxDirection(nsIFrame *aFrame,
+                                    nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleXUL *xul = nsnull;
+  GetStyleData(eStyleStruct_XUL, (const nsStyleStruct*&)xul, aFrame);
+
+  PRUint8 boxDirection = NS_STYLE_BOX_DIRECTION_NORMAL;
+  if (xul) {
+    boxDirection = xul->mBoxDirection;
+  }
+
+  const nsAFlatCString& boxDirectionIdent =
+    nsCSSProps::SearchKeywordTable(boxDirection,
+                                   nsCSSProps::kBoxDirectionKTable);
+  val->SetIdent(boxDirectionIdent);
+
+  return CallQueryInterface(val, &aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetBoxFlex(nsIFrame *aFrame,
+                               nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleXUL *xul = nsnull;
+  GetStyleData(eStyleStruct_XUL, (const nsStyleStruct*&)xul, aFrame);
+
+  float boxFlex = 0.0f;
+  if (xul) {
+    boxFlex = xul->mBoxFlex;
+  }
+
+  val->SetNumber(boxFlex);
+
+  return CallQueryInterface(val, &aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetBoxOrdinalGroup(nsIFrame *aFrame,
+                                       nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleXUL *xul = nsnull;
+  GetStyleData(eStyleStruct_XUL, (const nsStyleStruct*&)xul, aFrame);
+
+  PRUint32 boxOrdinalGroup = 1;
+  if (xul) {
+    boxOrdinalGroup = xul->mBoxOrdinal;
+  }
+
+  val->SetNumber(boxOrdinalGroup);
+
+  return CallQueryInterface(val, &aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetBoxOrient(nsIFrame *aFrame,
+                                 nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleXUL *xul = nsnull;
+  GetStyleData(eStyleStruct_XUL, (const nsStyleStruct*&)xul, aFrame);
+
+  PRUint8 boxOrient = NS_STYLE_BOX_ORIENT_HORIZONTAL;
+  if (xul) {
+    boxOrient = xul->mBoxOrient;
+  }
+
+  const nsAFlatCString& boxOrientIdent =
+    nsCSSProps::SearchKeywordTable(boxOrient,
+                                   nsCSSProps::kBoxOrientKTable);
+  val->SetIdent(boxOrientIdent);
+
+  return CallQueryInterface(val, &aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetBoxPack(nsIFrame *aFrame,
+                               nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleXUL *xul = nsnull;
+  GetStyleData(eStyleStruct_XUL, (const nsStyleStruct*&)xul, aFrame);
+
+  PRUint8 boxPack = NS_STYLE_BOX_PACK_START;
+  if (xul) {
+    boxPack = xul->mBoxPack;
+  }
+
+  const nsAFlatCString& boxPackIdent =
+    nsCSSProps::SearchKeywordTable(boxPack,
+                                   nsCSSProps::kBoxPackKTable);
+  val->SetIdent(boxPackIdent);
+
+  return CallQueryInterface(val, &aValue);
+}
+
+#endif // INCLUDE_XUL
+
+nsresult
+nsComputedDOMStyle::GetBoxSizing(nsIFrame *aFrame,
+                                 nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStylePosition *positionData = nsnull;
+  GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)positionData, aFrame);
+
+  PRUint8 boxSizing = NS_STYLE_BOX_SIZING_CONTENT;
+  if (positionData) {
+    boxSizing = positionData->mBoxSizing;
+  }
+
+  const nsAFlatCString& boxSizingIdent =
+    nsCSSProps::SearchKeywordTable(boxSizing,
+                                   nsCSSProps::kBoxSizingKTable);
+  val->SetIdent(boxSizingIdent);
+
+  return CallQueryInterface(val, &aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetFloatEdge(nsIFrame *aFrame,
+                                 nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleBorder *borderData = nsnull;
+  GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderData, aFrame);
+
+  PRUint8 floatEdge = NS_STYLE_FLOAT_EDGE_CONTENT;
+  if (borderData) {
+    floatEdge = borderData->mFloatEdge;
+  }
+
+  const nsAFlatCString& floatEdgeIdent =
+    nsCSSProps::SearchKeywordTable(floatEdge,
+                                   nsCSSProps::kFloatEdgeKTable);
+  val->SetIdent(floatEdgeIdent);
+
+  return CallQueryInterface(val, &aValue);
+}
+
+
+nsresult
+nsComputedDOMStyle::GetUserFocus(nsIFrame *aFrame,
+                                 nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleUserInterface *uiData = nsnull;
+  GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)uiData, aFrame);
+
+  if (uiData && uiData->mUserFocus != NS_STYLE_USER_FOCUS_NONE) {
+    if (uiData->mUserFocus == NS_STYLE_USER_FOCUS_NORMAL) {
+      const nsAFlatCString& userFocusIdent =
+              nsCSSKeywords::GetStringValue(eCSSKeyword_normal);
+      val->SetIdent(userFocusIdent);
+    }
+    else {
+      const nsAFlatCString& userFocusIdent =
+        nsCSSProps::SearchKeywordTable(uiData->mUserFocus,
+                                       nsCSSProps::kUserFocusKTable);
+      val->SetIdent(userFocusIdent);
+    }
+  }
+  else {
+    const nsAFlatCString& userFocusIdent =
+            nsCSSKeywords::GetStringValue(eCSSKeyword_none);
+    val->SetIdent(userFocusIdent);
+  }
+
+  return CallQueryInterface(val, &aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetUserInput(nsIFrame *aFrame,
+                                 nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleUserInterface *uiData = nsnull;
+  GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)uiData, aFrame);
+
+  if (uiData && uiData->mUserInput != NS_STYLE_USER_INPUT_AUTO) {
+    if (uiData->mUserInput == NS_STYLE_USER_INPUT_NONE) {
+      const nsAFlatCString& userInputIdent =
+        nsCSSKeywords::GetStringValue(eCSSKeyword_none);
+      val->SetIdent(userInputIdent);
+    }
+    else {
+      const nsAFlatCString& userInputIdent =
+        nsCSSProps::SearchKeywordTable(uiData->mUserInput,
+                                       nsCSSProps::kUserInputKTable);
+      val->SetIdent(userInputIdent);
+    }
+  }
+  else {
+    const nsAFlatCString& userInputIdent =
+            nsCSSKeywords::GetStringValue(eCSSKeyword_auto);
+    val->SetIdent(userInputIdent);
+  }
+
+  return CallQueryInterface(val, &aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetUserModify(nsIFrame *aFrame,
+                                  nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleUserInterface *uiData = nsnull;
+  GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)uiData, aFrame);
+
+  PRUint8 userModify = NS_STYLE_USER_MODIFY_READ_ONLY;
+  if (uiData) {
+    userModify = uiData->mUserModify;
+  }
+
+  const nsAFlatCString& userModifyIdent =
+    nsCSSProps::SearchKeywordTable(userModify,
+                                   nsCSSProps::kUserModifyKTable);
+  val->SetIdent(userModifyIdent);
+
+  return CallQueryInterface(val, &aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetUserSelect(nsIFrame *aFrame,
+                                  nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleUIReset *uiData = nsnull;
+  GetStyleData(eStyleStruct_UIReset, (const nsStyleStruct*&)uiData, aFrame);
+
+  if (uiData && uiData->mUserSelect != NS_STYLE_USER_SELECT_AUTO) {
+    if (uiData->mUserSelect == NS_STYLE_USER_SELECT_NONE) {
+      const nsAFlatCString& userSelectIdent =
+        nsCSSKeywords::GetStringValue(eCSSKeyword_none);
+      val->SetIdent(userSelectIdent);
+    }
+    else {
+      const nsAFlatCString& userSelectIdent =
+        nsCSSProps::SearchKeywordTable(uiData->mUserSelect,
+                                       nsCSSProps::kUserSelectKTable);
+      val->SetIdent(userSelectIdent);
+    }
+  }
+  else {
+    const nsAFlatCString& userSelectIdent =
+            nsCSSKeywords::GetStringValue(eCSSKeyword_auto);
+    val->SetIdent(userSelectIdent);
   }
 
   return CallQueryInterface(val, &aValue);
