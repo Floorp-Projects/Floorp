@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.10 2001/02/07 00:34:56 nelsonb%netscape.com Exp $
+ * $Id: sslsock.c,v 1.11 2001/02/07 02:06:05 nelsonb%netscape.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -1138,6 +1138,8 @@ ssl_Recv(PRFileDesc *fd, void *buf, PRInt32 len, PRIntn flags,
     }
     SSL_LOCK_READER(ss);
     ss->rTimeout = timeout;
+    if (!ss->fdx)
+	ss->wTimeout = timeout;
     rv = (*ss->ops->recv)(ss, (unsigned char*)buf, len, flags);
     SSL_UNLOCK_READER(ss);
     return rv;
@@ -1157,6 +1159,8 @@ ssl_Send(PRFileDesc *fd, const void *buf, PRInt32 len, PRIntn flags,
     }
     SSL_LOCK_WRITER(ss);
     ss->wTimeout = timeout;
+    if (!ss->fdx)
+	ss->rTimeout = timeout;
     rv = (*ss->ops->send)(ss, (const unsigned char*)buf, len, flags);
     SSL_UNLOCK_WRITER(ss);
     return rv;
@@ -1175,6 +1179,8 @@ ssl_Read(PRFileDesc *fd, void *buf, PRInt32 len)
     }
     SSL_LOCK_READER(ss);
     ss->rTimeout = PR_INTERVAL_NO_TIMEOUT;
+    if (!ss->fdx)
+	ss->wTimeout = PR_INTERVAL_NO_TIMEOUT;
     rv = (*ss->ops->read)(ss, (unsigned char*)buf, len);
     SSL_UNLOCK_READER(ss);
     return rv;
@@ -1193,6 +1199,8 @@ ssl_Write(PRFileDesc *fd, const void *buf, PRInt32 len)
     }
     SSL_LOCK_WRITER(ss);
     ss->wTimeout = PR_INTERVAL_NO_TIMEOUT;
+    if (!ss->fdx)
+	ss->rTimeout = PR_INTERVAL_NO_TIMEOUT;
     rv = (*ss->ops->write)(ss, (const unsigned char*)buf, len);
     SSL_UNLOCK_WRITER(ss);
     return rv;
