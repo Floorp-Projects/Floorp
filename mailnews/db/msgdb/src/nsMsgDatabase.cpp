@@ -4134,6 +4134,12 @@ NS_IMETHODIMP nsMsgDatabase::ApplyRetentionSettings(nsIMsgRetentionSettings *msg
   switch (retainByPreference)
   {
   case nsIMsgRetentionSettings::nsMsgRetainAll:
+    if (keepUnreadMessagesOnly && m_mdbAllMsgHeadersTable)
+    {
+      mdb_count numHdrs = 0;
+      m_mdbAllMsgHeadersTable->GetCount(GetEnv(), &numHdrs);
+      return PurgeExcessMessages(numHdrs, PR_TRUE);
+    }
     break;
   case nsIMsgRetentionSettings::nsMsgRetainByAge:
     msgRetentionSettings->GetDaysToKeepHdrs(&daysToKeepHdrs);
