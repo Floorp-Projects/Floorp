@@ -107,8 +107,9 @@ void ProcessorState::addAttributeSet(Element* aAttributeSet,
     if (!aAttributeSet)
         return;
 
-    const String& name = aAttributeSet->getAttribute(NAME_ATTR);
-    if (name.isEmpty()) {
+    String name;
+    if (!aAttributeSet->getAttr(txXSLTAtoms::name,
+                                kNameSpaceID_None, name)) {
         String err("missing required name attribute for xsl:attribute-set");
         recieveError(err);
         return;
@@ -155,8 +156,9 @@ void ProcessorState::addTemplate(Element* aXslTemplate,
 {
     NS_ASSERTION(aXslTemplate, "missing template");
     
-    const String& name = aXslTemplate->getAttribute(NAME_ATTR);
-    if (!name.isEmpty()) {
+    String name;
+    if (aXslTemplate->getAttr(txXSLTAtoms::name,
+                              kNameSpaceID_None, name)) {
         // check for duplicates
         Element* tmp = (Element*)aImportFrame->mNamedTemplates.get(name);
         if (tmp) {
@@ -168,10 +170,12 @@ void ProcessorState::addTemplate(Element* aXslTemplate,
         aImportFrame->mNamedTemplates.put(name, aXslTemplate);
     }
 
-    const String& match = aXslTemplate->getAttribute(MATCH_ATTR);
-    if (!match.isEmpty()) {
+    String match;
+    if (aXslTemplate->getAttr(txXSLTAtoms::match,
+                              kNameSpaceID_None, match)) {
         // get the txList for the right mode
-        const String& mode = aXslTemplate->getAttribute(MODE_ATTR);
+        String mode;
+        aXslTemplate->getAttr(txXSLTAtoms::mode, kNameSpaceID_None, mode);
         txList* templates =
             (txList*)aImportFrame->mMatchableTemplates.get(mode);
 
@@ -669,8 +673,11 @@ MBool ProcessorState::addKey(Element* aKeyElem)
     Element* oldContext = mXPathParseContext;
     mXPathParseContext = aKeyElem;
     Pattern* match;
-    match = exprParser.createPattern(aKeyElem->getAttribute(MATCH_ATTR));
-    Expr* use = exprParser.createExpr(aKeyElem->getAttribute(USE_ATTR));
+    String matchAttr, useAttr;
+    aKeyElem->getAttr(txXSLTAtoms::match, kNameSpaceID_None, matchAttr);
+    aKeyElem->getAttr(txXSLTAtoms::use, kNameSpaceID_None, useAttr);
+    match = exprParser.createPattern(matchAttr);
+    Expr* use = exprParser.createExpr(useAttr);
     mXPathParseContext = oldContext;
     if (!match || !use || !xslKey->addKey(match, use)) {
         delete match;
@@ -700,8 +707,8 @@ MBool ProcessorState::addDecimalFormat(Element* element)
     if (!format)
         return MB_FALSE;
 
-    String attValue = element->getAttribute(NAME_ATTR);
-    String formatName = attValue;
+    String formatName, attValue;
+    element->getAttr(txXSLTAtoms::name, kNameSpaceID_None, formatName);
 
     if (element->getAttr(txXSLTAtoms::decimalSeparator,
                          kNameSpaceID_None, attValue)) {
