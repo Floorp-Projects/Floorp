@@ -399,6 +399,7 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
   mDoc = aDoc;
   mPresShell = aPresShell;		// we don't addref the pres shell
   mPresShell->GetViewManager(&mViewManager);
+  mPresShell->SetDisplayNonTextSelection(PR_TRUE);//we want to see all the selection reflected to user
   if (mViewManager){
     mViewManager->Release(); //we want a weak link
   }
