@@ -570,7 +570,7 @@ LocationImpl::GetSearch(nsString& aSearch)
     }
   }
 
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
