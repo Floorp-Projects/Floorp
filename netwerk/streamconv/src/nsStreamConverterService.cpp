@@ -148,7 +148,6 @@ nsStreamConverterService::BuildGraph() {
         rv = components->Next();
     }
 
-    registry->Close();
     NS_IF_RELEASE( components );
     nsServiceManager::ReleaseService( NS_REGISTRY_PROGID, registry );
 

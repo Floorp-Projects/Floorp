@@ -210,8 +210,6 @@ nsMimeXULEmitter::BuildListOfStatusProviders()
     rv = components->Next();
   }
   
-  registry->Close();
- 
   return NS_OK;
 }
 

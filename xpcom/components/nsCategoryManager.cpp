@@ -135,7 +135,7 @@ class nsCategoryManager
         // Warning: whoever creates an instance must call |initialize()| before any other method
 
     public:
-      virtual ~nsCategoryManager();
+        virtual ~nsCategoryManager();
 
       NS_DECL_ISUPPORTS
       NS_DECL_NSICATEGORYMANAGER
@@ -226,8 +226,6 @@ nsCategoryManager::initialize()
 
 nsCategoryManager::~nsCategoryManager()
   {
-    if ( mRegistry )
-      mRegistry->Close();
   }
 
 CategoryNode*
