@@ -368,6 +368,9 @@ nsHostResolver::ResolveHost(const char            *host,
             rv = NS_ERROR_NOT_INITIALIZED;
         else {
             PRNetAddr tempAddr;
+
+            // unfortunately, PR_StringToNetAddr does not properly initialize
+            // the output buffer in the case of IPv6 input.  see bug 223145.
             memset(&tempAddr, 0, sizeof(PRNetAddr));
             
             // check to see if there is already an entry for this |host|
