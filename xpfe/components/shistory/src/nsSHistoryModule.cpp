@@ -46,10 +46,14 @@ static nsModuleComponentInfo gSHistoryModuleInfo[] =
 {
    { "nsSHEntry", NS_SHENTRY_CID,
       NS_SHENTRY_CONTRACTID, nsSHEntryConstructor },
+   { "nsSHEntry", NS_HISTORYENTRY_CID,
+      NS_HISTORYENTRY_CONTRACTID, nsSHEntryConstructor },
    { "nsSHTransaction", NS_SHTRANSACTION_CID,
       NS_SHTRANSACTION_CONTRACTID, nsSHTransactionConstructor },
    { "nsSHistory", NS_SHISTORY_CID,
-      NS_SHISTORY_CONTRACTID, nsSHistoryConstructor }
+      NS_SHISTORY_CONTRACTID, nsSHistoryConstructor },
+   { "nsSHistory", NS_SHISTORY_INTERNAL_CID,
+      NS_SHISTORY_INTERNAL_CONTRACTID, nsSHistoryConstructor }
 };
 
 NS_IMPL_NSGETMODULE("Session History Module", gSHistoryModuleInfo)

@@ -226,12 +226,10 @@ protected:
    virtual nsresult AddToSessionHistory(nsIURI* aURI, nsIChannel *aChannel,
                                         nsISHEntry **aNewEntry);   
 
-   NS_IMETHOD UpdateCurrentSessionHistory();
-
    NS_IMETHOD LoadHistoryEntry(nsISHEntry* aEntry, PRUint32 aLoadType);
 //   NS_IMETHOD GetCurrentSHE(PRInt32 aChildOffset, nsISHEntry ** aResult);
    NS_IMETHOD PersistLayoutHistoryState();
-   NS_IMETHOD CloneAndReplace(nsISHEntry * srcEntry, PRUint32 aCloneID,
+   NS_IMETHOD CloneAndReplace(nsISHEntry* srcEntry, PRUint32 aCloneID,
 							nsISHEntry * areplaceEntry, nsISHEntry **destEntry);
    // Global History
    NS_IMETHOD ShouldAddToGlobalHistory(nsIURI* aURI, PRBool* aShouldAdd);

@@ -508,16 +508,14 @@ NS_IMETHODIMP nsWebShell::GoTo(PRInt32 aIndex)
 {
    NS_ENSURE_STATE(mSessionHistory);
    NS_ENSURE_TRUE(!IsFrame(), NS_ERROR_FAILURE);
+   nsCOMPtr<nsIHistoryEntry> entry;
 
-   nsCOMPtr<nsISHEntry> entry;
-
-   NS_ENSURE_SUCCESS(mSessionHistory->GetEntryAtIndex(aIndex, PR_TRUE, 
-      getter_AddRefs(entry)), NS_ERROR_FAILURE);
+   mSessionHistory->GetEntryAtIndex(aIndex, PR_TRUE, getter_AddRefs(entry));
    NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
+    nsCOMPtr<nsISHEntry> shEntry(do_QueryInterface(entry));
+    NS_ENSURE_TRUE(shEntry, NS_ERROR_FAILURE);
 
-   UpdateCurrentSessionHistory();  
-
-   NS_ENSURE_SUCCESS(LoadHistoryEntry(entry, LOAD_HISTORY), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(LoadHistoryEntry(shEntry, LOAD_HISTORY), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
@@ -548,7 +546,7 @@ nsWebShell::GetURL(PRInt32 aIndex, const PRUnichar** aURLResult)
    NS_ENSURE_STATE(mSessionHistory);
    NS_ENSURE_TRUE(!IsFrame(), NS_ERROR_FAILURE);
 
-   nsCOMPtr<nsISHEntry> entry;
+   nsCOMPtr<nsIHistoryEntry> entry;
 
    NS_ENSURE_SUCCESS(mSessionHistory->GetEntryAtIndex(aIndex, PR_TRUE, 
       getter_AddRefs(entry)), NS_ERROR_FAILURE);

@@ -67,7 +67,7 @@
 #include "nsILocaleService.h"
 #include "nsITimer.h"
 #include "nsIFileStream.h"
-
+#include "nsISHistoryInternal.h"
 #include "nsIPrincipal.h"
 
 #include "nsPIDOMWindow.h"
@@ -1316,23 +1316,29 @@ nsDocShell::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry,
      * hierarchy ie.,you just visited a frameset page
      */
     nsCOMPtr<nsISHContainer>  container(do_QueryInterface(LSHE, &rv));
-    if(container)
+    if(container) {
       rv = container->AddChild(aNewEntry, aChildOffset);
+    }
   }
   else if (mSessionHistory) {
     /* You are currently in the rootDocShell.
      * You will get here when a subframe has a new url
      * to load and you have walked up the tree all the 
-     * way to the top  
+     * way to the top to clone the current SHEntry hierarchy
+     * and replace the subframe where a new url was loaded with
+     * a new entry.
      */
     PRInt32 index=-1;
-    nsCOMPtr<nsISHEntry> currentEntry;
+    nsCOMPtr<nsIHistoryEntry> currentHE;
     mSessionHistory->GetIndex(&index);
     if (index < 0)
       return NS_ERROR_FAILURE;
 
     rv = mSessionHistory->GetEntryAtIndex(index, PR_FALSE,
-                                          getter_AddRefs(currentEntry));
+                                          getter_AddRefs(currentHE));
+    NS_ENSURE_TRUE(currentHE, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsISHEntry> currentEntry(do_QueryInterface(currentHE));
     if (currentEntry) {
       PRUint32 cloneID=0;
       nsCOMPtr<nsISHEntry> nextEntry; //(do_CreateInstance(NS_SHENTRY_CONTRACTID));
@@ -1343,7 +1349,9 @@ nsDocShell::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry,
                            getter_AddRefs(nextEntry));
       
       if (NS_SUCCEEDED(rv)) {
-        rv = mSessionHistory->AddEntry(nextEntry, PR_TRUE);
+        nsCOMPtr<nsISHistoryInternal> shPrivate(do_QueryInterface(mSessionHistory));
+        NS_ENSURE_TRUE(shPrivate, NS_ERROR_FAILURE);
+        rv = shPrivate->AddEntry(nextEntry, PR_TRUE);
       }
     }
   }
@@ -1639,9 +1647,11 @@ NS_IMETHODIMP nsDocShell::SetSessionHistory(nsISHistory* aSessionHistory)
     GetSameTypeRootTreeItem(getter_AddRefs(root));
     NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
     if (root.get() == NS_STATIC_CAST(nsIDocShellTreeItem *, this)) {
-        mSessionHistory = aSessionHistory;  
-		mSessionHistory->SetRootDocShell(this);
-		return NS_OK;
+      mSessionHistory = aSessionHistory; 
+      nsCOMPtr<nsISHistoryInternal> shPrivate(do_QueryInterface(mSessionHistory));    
+      NS_ENSURE_TRUE(shPrivate,NS_ERROR_FAILURE);
+      shPrivate->SetRootDocShell(this);
+      return NS_OK;
     }
      return NS_ERROR_FAILURE;
 
@@ -2105,8 +2115,10 @@ NS_IMETHODIMP nsDocShell::SetTitle(const PRUnichar* aTitle)
       {
       PRInt32 index = -1;
       mSessionHistory->GetIndex(&index);
-      nsCOMPtr<nsISHEntry>   shEntry;
-      mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(shEntry));
+      nsCOMPtr<nsIHistoryEntry>   hEntry;
+      mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(hEntry));
+      NS_ENSURE_TRUE(hEntry, NS_ERROR_FAILURE);
+      nsCOMPtr<nsISHEntry>  shEntry(do_QueryInterface(hEntry));
       if(shEntry)
          shEntry->SetTitle(mTitle.GetUnicode());      
       }
@@ -3088,8 +3100,10 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
 			{
                PRInt32 index = -1;
                mSessionHistory->GetIndex(&index);
-               nsCOMPtr<nsISHEntry>   shEntry;
-               mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(shEntry));
+               nsCOMPtr<nsIHistoryEntry>   hEntry;
+               mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(hEntry));
+               NS_ENSURE_TRUE(hEntry, NS_ERROR_FAILURE);
+               nsCOMPtr<nsISHEntry> shEntry(do_QueryInterface(hEntry));
                if(shEntry)
                  shEntry->SetTitle(mTitle.GetUnicode());      
 			}
@@ -3107,10 +3121,7 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
     }
 
     mLoadType = aLoadType;
-// XXX: I think that LSHE should *always* be set to the new Entry.
-//      Even if it is null...
-//   if (aSHEntry)
-	   LSHE = aSHEntry;
+    LSHE = aSHEntry;
 
     nsDocShellInfoLoadType loadCmd = ConvertLoadTypeToDocShellLoadInfo(mLoadType);
     NS_ENSURE_SUCCESS(DoURILoad(aURI, aReferrer, aOwner, aInheritOwner,
@@ -3973,8 +3984,11 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI *aURI,
   //
   if(mSessionHistory && LOAD_NORMAL_REPLACE == mLoadType) {
     PRInt32 index = 0;
+    nsCOMPtr<nsIHistoryEntry> hEntry;
     mSessionHistory->GetIndex(&index);
-    mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(entry));
+    mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(hEntry));
+    if(hEntry)
+      entry = do_QueryInterface(hEntry);
     // see if the entry has any children and remove if any.
     if (entry) {
       nsCOMPtr<nsISHContainer> shContainer(do_QueryInterface(entry));
@@ -4023,8 +4037,11 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI *aURI,
   // will be deleted when it loses scope...
   //
   if (mLoadType != LOAD_NORMAL_REPLACE) {
-     if (mSessionHistory)	  
-         rv = mSessionHistory->AddEntry(entry, shouldPersist);
+    if (mSessionHistory)	  {
+      nsCOMPtr<nsISHistoryInternal> shPrivate(do_QueryInterface(mSessionHistory));
+      NS_ENSURE_TRUE(shPrivate, NS_ERROR_FAILURE);
+      rv = shPrivate->AddEntry(entry, shouldPersist);
+    }
      else 
          rv = AddChildSHEntry(nsnull, entry, mChildOffset);
   }
@@ -4041,39 +4058,6 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI *aURI,
   return rv;
 }
 
- /* 
-  * Save the HistoryLayoutState for this page before we leave it.
-  */
-NS_IMETHODIMP nsDocShell::UpdateCurrentSessionHistory()
-{
-   nsresult rv = NS_OK;
-   if(!mInitialPageLoad && mSessionHistory) {
-  
-     PRInt32 index = 0;
-     mSessionHistory->GetIndex(&index);
-     if (-1 < index) {
- 
-       nsCOMPtr<nsISHEntry> entry;
-       rv = mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(entry));
-       if (NS_SUCCEEDED(rv) && entry) {
- 
-         nsCOMPtr<nsIPresShell> shell;
-         rv = GetPresShell(getter_AddRefs(shell));            
-         if (NS_SUCCEEDED(rv) && shell) {
- 
-           nsCOMPtr<nsILayoutHistoryState> layoutState;
-           rv = shell->CaptureHistoryState(getter_AddRefs(layoutState), PR_TRUE);
-           if (NS_SUCCEEDED(rv) && layoutState) {
- 
-             rv = entry->SetLayoutHistoryState(layoutState);
-           }
-         }
-       }
-     }
-   }
-   return rv;
-   
-}
 
 NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, PRUint32 aLoadType)
 {
@@ -4082,8 +4066,10 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, PRUint32 aLoadTyp
    PRBool repost = PR_TRUE;
 
    NS_ENSURE_TRUE(aEntry, NS_ERROR_FAILURE);
+   nsCOMPtr<nsIHistoryEntry> hEntry(do_QueryInterface(aEntry));
+   NS_ENSURE_TRUE(hEntry, NS_ERROR_FAILURE);
 
-   NS_ENSURE_SUCCESS(aEntry->GetURI(getter_AddRefs(uri)), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(hEntry->GetURI(getter_AddRefs(uri)), NS_ERROR_FAILURE);
    NS_ENSURE_SUCCESS(aEntry->GetPostData(getter_AddRefs(postData)),
       NS_ERROR_FAILURE);
 
@@ -4157,20 +4143,22 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, PRUint32 aCloneID,
 {
 	nsresult result = NS_OK;
 	NS_ENSURE_ARG_POINTER(resultEntry);
-	if (!src || !replaceEntry)
-		return NS_ERROR_FAILURE;
-    nsISHEntry * dest = (nsISHEntry *) nsnull;
-
-    PRUint32 srcID;
-    src->GetID(&srcID);
+  nsISHEntry * dest = (nsISHEntry *) nsnull;
+  PRUint32 srcID;
+  src->GetID(&srcID);
+  nsCOMPtr<nsIHistoryEntry>  srcHE(do_QueryInterface(src));
  
-    if (srcID == aCloneID) {		
-      dest = replaceEntry;
-	  *resultEntry = dest;
-	  NS_IF_ADDREF(*resultEntry);
+  if (!src || !replaceEntry || !srcHE)
+    return NS_ERROR_FAILURE;
+
+  if (srcID == aCloneID) {		
+    dest = replaceEntry;
+    dest->SetIsSubFrame(PR_TRUE);
+    *resultEntry = dest;
+    NS_IF_ADDREF(*resultEntry);
 	}
 	else {
-    nsCOMPtr<nsIURI> uri;
+  nsCOMPtr<nsIURI> uri;
 	nsCOMPtr<nsIInputStream> postdata;
 	nsCOMPtr<nsILayoutHistoryState> LHS;
 	PRUnichar * title=nsnull;
@@ -4181,9 +4169,9 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, PRUint32 aCloneID,
 	if (!NS_SUCCEEDED(result))
       return result;
 
-	src->GetURI(getter_AddRefs(uri));
+	srcHE->GetURI(getter_AddRefs(uri));
 	src->GetPostData(getter_AddRefs(postdata));
-	src->GetTitle(&title);
+	srcHE->GetTitle(&title);
 	src->GetLayoutHistoryState(getter_AddRefs(LHS));
 	//XXX Is this correct? parent is a weak ref in nsISHEntry
 	src->GetParent(getter_AddRefs(parent));
@@ -4196,6 +4184,7 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, PRUint32 aCloneID,
 	dest->SetTitle(title);
 	dest->SetParent(parent);
     dest->SetID(id);
+    dest->SetIsSubFrame(PR_TRUE);
 	*resultEntry = dest;
 
 	PRInt32 childCount= 0;
@@ -4221,9 +4210,8 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, PRUint32 aCloneID,
 		result = destContainer->AddChild(destChild, i);
 		if (!NS_SUCCEEDED(result))
 			return result;
-	}
-
-	}
+  }    // for 
+  }   
     
 	return result;
 

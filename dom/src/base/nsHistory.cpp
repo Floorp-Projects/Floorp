@@ -30,7 +30,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebNavigation.h"
-#include "nsISHEntry.h"
+#include "nsIHistoryEntry.h"
 #include "nsIURI.h"
 #include "nsXPIDLString.h"
 
@@ -109,7 +109,7 @@ HistoryImpl::GetCurrent(nsAWritableString& aCurrent)
 
   // Get the current index at session History
   sHistory->GetIndex(&curIndex);
-  nsCOMPtr<nsISHEntry> curEntry;
+  nsCOMPtr<nsIHistoryEntry> curEntry;
   nsCOMPtr<nsIURI>     uri;
 
   // Get the SH entry for the current index
@@ -139,7 +139,7 @@ HistoryImpl::GetPrevious(nsAWritableString& aPrevious)
 
   // Get the current index at session History
   sHistory->GetIndex(&curIndex);
-  nsCOMPtr<nsISHEntry> prevEntry;
+  nsCOMPtr<nsIHistoryEntry> prevEntry;
   nsCOMPtr<nsIURI>     uri;
 
   // Get the previous SH entry
@@ -169,7 +169,7 @@ HistoryImpl::GetNext(nsAWritableString& aNext)
 
   // Get the current index at session History
   sHistory->GetIndex(&curIndex);
-  nsCOMPtr<nsISHEntry> nextEntry;
+  nsCOMPtr<nsIHistoryEntry> nextEntry;
   nsCOMPtr<nsIURI>     uri;
 
   // Get the next SH entry
@@ -245,7 +245,7 @@ HistoryImpl::Go(JSContext* cx, jsval* argv, PRUint32 argc)
         nsAutoString substr; substr.AssignWithConversion(JS_GetStringBytes(jsstr));
         result = sHistory->GetCount(&count);
         for (i = 0; (i < count) && NS_SUCCEEDED(result); i++) {
-          nsCOMPtr<nsISHEntry>   shEntry;
+          nsCOMPtr<nsIHistoryEntry>   shEntry;
           nsCOMPtr<nsIURI>   uri;
 
           result = sHistory->GetEntryAtIndex(i, PR_FALSE, getter_AddRefs(shEntry));
@@ -282,7 +282,7 @@ HistoryImpl::Item(PRUint32 aIndex, nsAWritableString& aReturn)
   GetSessionHistoryFromDocShell(mDocShell, getter_AddRefs(sHistory));
   NS_ENSURE_TRUE(sHistory, NS_ERROR_FAILURE);
 
- 	nsCOMPtr<nsISHEntry> shEntry;
+ 	nsCOMPtr<nsIHistoryEntry> shEntry;
  	nsCOMPtr<nsIURI> uri;
 
   result = sHistory->GetEntryAtIndex(aIndex, PR_FALSE, getter_AddRefs(shEntry));

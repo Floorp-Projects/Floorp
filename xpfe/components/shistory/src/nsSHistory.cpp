@@ -65,6 +65,7 @@ NS_INTERFACE_MAP_BEGIN(nsSHistory)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISHistory)
    NS_INTERFACE_MAP_ENTRY(nsISHistory)
    NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
+   NS_INTERFACE_MAP_ENTRY(nsISHistoryInternal)
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -118,8 +119,11 @@ nsSHistory::AddEntry(nsISHEntry * aSHEntry, PRBool aPersist)
     nsCOMPtr<nsISHistoryListener> listener(do_QueryInterface(mListener));
     if (listener) {
       nsCOMPtr<nsIURI> uri;
-      aSHEntry->GetURI(getter_AddRefs(uri));
-      listener->OnHistoryNewEntry(uri);
+      nsCOMPtr<nsIHistoryEntry> hEntry(do_QueryInterface(aSHEntry));
+      if (hEntry) {
+        hEntry->GetURI(getter_AddRefs(uri));
+        listener->OnHistoryNewEntry(uri);
+      }
     }
   }
 
@@ -162,49 +166,39 @@ nsSHistory::GetIndex(PRInt32 * aResult)
 	return NS_OK;
 }
 
-/* Get the entry prior to the current index */
 NS_IMETHODIMP
-nsSHistory::GetPreviousEntry(PRBool aModifyIndex, nsISHEntry ** aResult)
+nsSHistory::GetEntryAtIndex(PRInt32 aIndex, PRBool aModifyIndex, nsISHEntry** aResult)
 {
-    nsresult rv;
+  nsresult rv;
+  nsCOMPtr<nsISHTransaction> txn;
 
-    /* GetEntryAtIndex ensures aResult is valid */
-      rv = GetEntryAtIndex((mIndex-1), aModifyIndex, aResult);
-      return rv;
-}
-
-/* Get the entry next to the current index */
-NS_IMETHODIMP
-nsSHistory::GetNextEntry(PRBool aModifyIndex, nsISHEntry ** aResult)
-{
-    nsresult rv;
-
-      /* GetEntryAtIndex ensures aResult is valid */
-      rv = GetEntryAtIndex((mIndex+1), aModifyIndex, aResult);
-    return rv;
+  /* GetTransactionAtIndex ensures aResult is valid and validates aIndex */
+  rv = GetTransactionAtIndex(aIndex, getter_AddRefs(txn));
+  if (NS_SUCCEEDED(rv) && txn) {
+    //Get the Entry from the transaction
+    rv = txn->GetSHEntry(getter_AddRefs(aResult));
+    if (NS_SUCCEEDED(rv) && (*aResult)) {
+      // Set mIndex to the requested index, if asked to do so..
+      if (aModifyIndex) {
+        mIndex = aIndex;
+      }
+    } //entry
+  }  //Transaction
+  return rv;
 }
 
 
 /* Get the entry at a given index */
 NS_IMETHODIMP
-nsSHistory::GetEntryAtIndex(PRInt32 aIndex, PRBool aModifyIndex, nsISHEntry** aResult)
+nsSHistory::GetEntryAtIndex(PRInt32 aIndex, PRBool aModifyIndex, nsIHistoryEntry** aResult)
 {
-    nsresult rv;
-      nsCOMPtr<nsISHTransaction> txn;
-
-      /* GetTransactionAtIndex ensures aResult is valid and validates aIndex */
-      rv = GetTransactionAtIndex(aIndex, getter_AddRefs(txn));
-      if (NS_SUCCEEDED(rv) && txn) {
-         //Get the Entry from the transaction
-         rv = txn->GetSHEntry(aResult);
-         if (NS_SUCCEEDED(rv) && (*aResult)) {
-                 // Set mIndex to the requested index, if asked to do so..
-                 if (aModifyIndex) {
-                         mIndex = aIndex;
-                 }
-         } //entry
-      }  //Transaction
-      return rv;
+  nsresult rv;
+  nsCOMPtr<nsISHEntry> shEntry;
+  rv = GetEntryAtIndex(aIndex, aModifyIndex, getter_AddRefs(shEntry));
+  if (NS_SUCCEEDED(rv) && shEntry) 
+    rv = CallQueryInterface(shEntry, aResult);
+ 
+  return rv;
 }
 
 /* Get the transaction at a given index */
@@ -283,8 +277,11 @@ nsSHistory::PrintHistory()
               nsXPIDLCString  url;
 
               entry->GetLayoutHistoryState(getter_AddRefs(layoutHistoryState));
-              entry->GetURI(getter_AddRefs(uri));
-              entry->GetTitle(&title);              
+              nsCOMPtr<nsIHistoryEntry> hEntry(do_QueryInterface(entry));
+              if (hEntry) {
+                hEntry->GetURI(getter_AddRefs(uri));
+                hEntry->GetTitle(&title);              
+              }
               
 			  if (uri)
                  uri->GetSpec(getter_Copies(url));
@@ -532,11 +529,13 @@ NS_IMETHODIMP
 nsSHistory::GetCurrentURI(nsIURI** aResultURI)
 {
   NS_ENSURE_ARG_POINTER(aResultURI);
+  nsresult rv;
 
-  nsCOMPtr<nsISHEntry> currentEntry;
-  nsresult rv = GetEntryAtIndex(mIndex, PR_FALSE, getter_AddRefs(currentEntry));
+  nsCOMPtr<nsIHistoryEntry> currentEntry;
+  rv = GetEntryAtIndex(mIndex, PR_FALSE, getter_AddRefs(currentEntry));
   if (NS_FAILED(rv) && !currentEntry) return rv;
-  return currentEntry->GetURI(aResultURI);
+  rv = currentEntry->GetURI(aResultURI);
+  return rv;
 }
 
 
@@ -571,35 +570,39 @@ nsSHistory::GotoIndex(PRInt32 aIndex)
 NS_IMETHODIMP
 nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType)
 {
-   nsCOMPtr<nsIDocShell> docShell;
-   nsCOMPtr<nsISHEntry> shEntry;
-   PRInt32 oldIndex = mIndex;
+  nsCOMPtr<nsIDocShell> docShell;
+  nsCOMPtr<nsISHEntry> shEntry;
+  PRInt32 oldIndex = mIndex;
 
-   nsCOMPtr<nsISHEntry> prevEntry;
-   GetEntryAtIndex(mIndex, PR_FALSE, getter_AddRefs(prevEntry));
-   mIndex = aIndex;
+  nsCOMPtr<nsISHEntry> prevEntry;
+  GetEntryAtIndex(mIndex, PR_FALSE, getter_AddRefs(prevEntry));
+  mIndex = aIndex;
    
-   nsCOMPtr<nsISHEntry> nextEntry;
-   GetEntryAtIndex(mIndex, PR_FALSE, getter_AddRefs(nextEntry));
-
+  nsCOMPtr<nsISHEntry> nextEntry;   
+  GetEntryAtIndex(mIndex, PR_FALSE, getter_AddRefs(nextEntry));
+  nsCOMPtr<nsIHistoryEntry> nHEntry(do_QueryInterface(nextEntry));
+  if (!nextEntry || !prevEntry || !nHEntry)
+    return NS_ERROR_FAILURE;
+  
   // Send appropriate listener notifications
   PRBool canNavigate = PR_TRUE;
-  if(mListener) {
-    nsCOMPtr<nsIURI> uri;
-    nextEntry->GetURI(getter_AddRefs(uri));
+  // Get the uri for the entry we are about to visit
+  nsCOMPtr<nsIURI> nextURI;
+  nHEntry->GetURI(getter_AddRefs(nextURI));
+  if(mListener) {    
     nsCOMPtr<nsISHistoryListener> listener(do_QueryInterface(mListener));
     if (listener) {
       if (mIndex+1 == oldIndex) {
         // We are going back one entry. Send GoBack notifications
-        listener->OnHistoryGoBack(uri, &canNavigate);
+        listener->OnHistoryGoBack(nextURI, &canNavigate);
       }
       else if (mIndex-1 == oldIndex) {
         // We are going forward. Send GoForward notification
-        listener->OnHistoryGoForward(uri, &canNavigate);
+        listener->OnHistoryGoForward(nextURI, &canNavigate);
       }
       else if (mIndex != oldIndex) {
         // We are going somewhere else. This is not reload either
-        listener->OnHistoryGotoIndex(mIndex, uri, &canNavigate);
+        listener->OnHistoryGotoIndex(mIndex, nextURI, &canNavigate);
       }
     }
   }
@@ -611,70 +614,68 @@ nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType)
     return NS_OK;  // XXX Maybe I can return some other error code?
   }
 
-   nsCOMPtr<nsIURI> nexturi;
-   PRInt32 pCount=0, nCount=0;
-   nsCOMPtr<nsISHContainer> prevAsContainer(do_QueryInterface(prevEntry));
-   nsCOMPtr<nsISHContainer> nextAsContainer(do_QueryInterface(nextEntry));
-
-   if (prevAsContainer && nextAsContainer) {
-	   prevAsContainer->GetChildCount(&pCount);
-	   nextAsContainer->GetChildCount(&nCount);
-   }
+  nsCOMPtr<nsIURI> nexturi;
+  PRInt32 pCount=0, nCount=0;
+  nsCOMPtr<nsISHContainer> prevAsContainer(do_QueryInterface(prevEntry));
+  nsCOMPtr<nsISHContainer> nextAsContainer(do_QueryInterface(nextEntry));
+  if (prevAsContainer && nextAsContainer) {
+    prevAsContainer->GetChildCount(&pCount);
+    nextAsContainer->GetChildCount(&nCount);
+  }
   
-   nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-   if (oldIndex == aIndex) {
-	   // Possibly a reload case 
-	   docShell = mRootDocShell;
-   }
-   else {
-	   // Going back or forward.
-	   if ((pCount > 0) && (nCount > 0)) {
-		 /* THis is a subframe navigation. Go find 
-		  * the docshell in which load should happen
-		  */
-		  PRBool result = CompareSHEntry(prevEntry, nextEntry, mRootDocShell, 
-                                     getter_AddRefs(docShell),
-                                     getter_AddRefs(shEntry));
-		  if (!result) {
-		    /* There was an error in finding the entry and docshell
-			 * where the load should happen. Reset the index back 
-			 * to what it was. Return failure.
-		     */
-	        mIndex = oldIndex;   
-		    return NS_ERROR_FAILURE;
-		  }
-		  else {
-		    nextEntry = shEntry;
-		  }
-	   }
-	   else
-		   docShell = mRootDocShell;
-   }
+  nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+  if (oldIndex == aIndex) {
+    // Possibly a reload case 
+    docShell = mRootDocShell;
+  }
+  else {
+    // Going back or forward.
+    if ((pCount > 0) && (nCount > 0)) {
+      /* THis is a subframe navigation. Go find 
+       * the docshell in which load should happen
+       */
+      PRBool result = CompareSHEntry(prevEntry, nextEntry, mRootDocShell, 
+                                      getter_AddRefs(docShell),
+                                      getter_AddRefs(shEntry));
+      if (!result) {
+        /* There was an error in finding the entry and docshell
+         * where the load should happen. Reset the index back 
+         * to what it was. Return failure.
+         */
+        mIndex = oldIndex;   
+        return NS_ERROR_FAILURE;
+      }
+      else {        
+        nextEntry = shEntry;
+      }
+    }   // (pCount >0)
+    else
+      docShell = mRootDocShell;
+    }
   
 
-   if (!docShell || !nextEntry || !mRootDocShell)
-	    return NS_ERROR_FAILURE;
+    if (!docShell || !nextEntry || !mRootDocShell)
+      return NS_ERROR_FAILURE;
 
-   nextEntry->GetURI(getter_AddRefs(nexturi));
-   /* Set the loadType in the SHEntry too to  what was passed on.
-    * This will be passed on to child subframes later in nsDocShell,
-    * so that proper loadType is maintained through out a frameset
-    */
-   nextEntry->SetLoadType(aLoadType);
+    /* Set the loadType in the SHEntry too to  what was passed on.
+     * This will be passed on to child subframes later in nsDocShell,
+     * so that proper loadType is maintained through out a frameset
+     */
+    nextEntry->SetLoadType(aLoadType);
 
-   mRootDocShell->CreateLoadInfo (getter_AddRefs(loadInfo));
-   // This is not available yet
-   loadInfo->SetLoadType(aLoadType);
-   loadInfo->SetSHEntry(nextEntry);
-   // Time to initiate a document load
-   nsresult rv = docShell->LoadURI(nexturi, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
-   /* If the loadURI call failed for some reason,
-    * reset mIndex to what it was. so that back/forward
-    * won't misbehave
-    */
-   if (!NS_SUCCEEDED(rv))
+    mRootDocShell->CreateLoadInfo (getter_AddRefs(loadInfo));
+
+    loadInfo->SetLoadType(aLoadType);
+    loadInfo->SetSHEntry(nextEntry);
+    // Time to initiate a document load
+    nsresult rv = docShell->LoadURI(nextURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
+    /* If the loadURI call failed for some reason,
+     * reset mIndex to what it was. so that back/forward
+     * won't misbehave
+     */
+    if (!NS_SUCCEEDED(rv))
       mIndex = oldIndex;
-   return rv;
+    return rv;
 }
 
 
@@ -689,7 +690,6 @@ nsSHistory::CompareSHEntry(nsISHEntry * aPrevEntry, nsISHEntry * aNextEntry, nsI
 	   return PR_FALSE;
 
 	PRBool result = PR_FALSE;
-	nsCOMPtr<nsIURI>   prevURI, nextURI;
 	PRUint32 prevID, nextID;
 
 	aPrevEntry->GetID(&prevID);
@@ -763,3 +763,64 @@ nsSHistory::GetRootDocShell(nsIDocShell ** aDocShell)
    return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsSHistory::GetSHistoryEnumerator(nsISimpleEnumerator** aEnumerator)
+{
+  nsresult status = NS_OK;
+
+  NS_ENSURE_ARG_POINTER(aEnumerator);
+  nsSHEnumerator * iterator = new nsSHEnumerator(this);
+  if (iterator && !NS_SUCCEEDED(status = CallQueryInterface(iterator, aEnumerator)))
+    delete iterator;
+  return status;
+}
+
+
+//*****************************************************************************
+//***    nsSHEnumerator: Object Management
+//*****************************************************************************
+
+nsSHEnumerator::nsSHEnumerator(nsSHistory * aSHistory):mIndex(-1)
+{
+  NS_INIT_REFCNT();
+  mSHistory = aSHistory;
+}
+
+nsSHEnumerator::~nsSHEnumerator()
+{
+  mSHistory = nsnull;
+}
+
+NS_IMPL_ISUPPORTS1(nsSHEnumerator, nsISimpleEnumerator)
+
+NS_IMETHODIMP
+nsSHEnumerator::HasMoreElements(PRBool * aReturn)
+{
+  PRInt32 cnt;
+  *aReturn = PR_FALSE;
+  mSHistory->GetCount(&cnt);
+  if (mIndex >= 0 && mIndex < cnt ) { 
+    *aReturn = PR_TRUE;
+  }
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP 
+nsSHEnumerator::GetNext(nsISupports **aItem)
+{
+  NS_ENSURE_ARG_POINTER(aItem);
+  PRInt32 cnt= 0;
+
+  nsresult  result = NS_ERROR_FAILURE;
+  mSHistory->GetCount(&cnt);
+  if (mIndex < (cnt-1)) {
+    mIndex++;
+    nsCOMPtr<nsIHistoryEntry> hEntry;
+    result = mSHistory->GetEntryAtIndex(mIndex, PR_FALSE, getter_AddRefs(hEntry));
+  	if (hEntry)
+      result = CallQueryInterface(hEntry, aItem);
+  }
+  return result;
+}
