@@ -361,13 +361,6 @@ NOMD_CXXFLAGS	= $(XP_DEFINE) $(OPTIMIZER) $(OS_CXXFLAGS) $(DEFINES) $(INCLUDES) 
 LDFLAGS		= $(OS_LDFLAGS)
 
 #
-# Include the binary distrib stuff, if necessary.
-#
-ifdef NS_BUILD_CORE
-include $(topsrcdir)/config/coreconf.mk
-endif
-
-#
 # The following platforms support detection of paths and libraries.
 #
 # Need to define these before include the $ARCH.mk makefile
