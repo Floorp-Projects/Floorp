@@ -87,20 +87,27 @@ titledbox {
 }
 
 .color-well {
-  width:20px;
-  height: 13px; 
-  border: 1px inset #B4C3D4;
-  margin: 4px 2px 4px 8px;
+  width: 20px;
+  height: 12px; 
+/*  border: 1px inset #B4C3D4; */
+  border: blue;
+  margin: 4px; 10px 4px 10px;
 }
 
 .color-well[default="true"] {
-  border: 1px solid transparent;
+  border: 1px solid blue;
   background-color: inherit;
 }
 
 button.color-button {
   /* need to override large default min-width */
-  min-width : 37px;
+  min-width : 32px;
+  width : 32px;
+  margin: 4px;
+}
+
+.menu-list[selected="true"] {
+  color: black;
 }
 
 #ColorPickerSwatch {

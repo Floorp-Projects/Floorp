@@ -85,11 +85,12 @@ titledbox {
   margin-top    : 6px;
   margin-bottom : 6px;
 }
+
 .color-well {
-  width:20px;
-  height: 16px; 
+  width: 20px;
+  height: 12px; 
   border: 1px inset #CCCCCC;
-  margin: 4px 2px 5px 8px;
+  margin: 4px; 10px 4px 10px;
 }
 
 .color-well[default="true"] {
@@ -99,7 +100,13 @@ titledbox {
 
 button.color-button {
   /* need to override large default min-width */
-  min-width : 37px;
+  min-width : 32px;
+  width : 32px;
+  margin: 4px;
+}
+
+.menu-list[focused="true"] {
+  color: white;
 }
 
 #ColorPickerSwatch {
