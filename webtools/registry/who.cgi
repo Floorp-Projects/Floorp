@@ -20,7 +20,20 @@
 require 'lloydcgi.pl';
 $|=1;
 
-$email= $form{"email"};
+$rawname= $form{"email"};
+$email = $rawname;
+if ($email !~ '@') {
+    $email =~ s/%/@/;
+}
+$username = $email;
+$username =~ s/@.*$//;
+$hostname = $email;
+$hostname =~ s/^.*@//;
+if ($hostname eq $email) {
+    $hostname = "netscape.com";
+}
+
+
 $full_name = $email;
 $enc_full_name = $email;    #this should be url encoded
 
@@ -54,18 +67,16 @@ if( @extra_text ){
 }
 
 print "
-<dt><A HREF='mailto:$email\@netscape.com'>
+<dt><A HREF='mailto:$username\@$hostname'>
   Send Mail</A>
 
 
 
-<dt><A HREF='../bonsai/cvsquery.cgi?module=all&branch=&dir=&file=&who=$email&sortby=Date&hours=2&date=week&mindate=&maxdate='>
+<dt><A HREF='../bonsai/cvsquery.cgi?module=all&branch=&dir=&file=&who=$rawname&sortby=Date&hours=2&date=week&mindate=&maxdate='>
   Check-ins within 7 days</A>
 
 </table>
 
-<form method='post' name='aka' action='http://aka/aka/snoop-reverse-cache.cgi'>
-<input type=hidden name=alias value='$email'>   </form>
 ";
 
 sub load_extra_data {
