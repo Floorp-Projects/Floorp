@@ -140,6 +140,7 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsProgIDKey: Where keys are ProgIDs (char[64])
+// This same thing is used for hashing filenames too in nsComponentManager.cpp
 
 #include "plstr.h"
 
