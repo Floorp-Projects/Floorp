@@ -2281,7 +2281,7 @@ struct callinfo info[NFRAMES];
 
 #if defined(SAVE_CALL_CHAIN) && defined(POWERPC) && defined(MACOS)
 
-#if (NFRAMES > 1)
+#if (NFRAMES > 2)
 
 /* traditional, fixed-size call chain buffer. */
 
@@ -2329,9 +2329,6 @@ struct stack_frame {
 	void*			savedTOC;
 };
 
-/* primordial root of the call tree. */
-static call_tree root = { 0, 0, 0, 0 };
-
 asm stack_frame* getStackFrame()
 {
 	mr		r3, sp
@@ -2340,15 +2337,20 @@ asm stack_frame* getStackFrame()
 
 static call_tree* find_tree(stack_frame* frame)
 {
+    /* primordial root of the call tree. */
+    static call_tree root = { 0, 0, 0, 0 };
+
     if ((frame == NULL) || ((word)frame & 0x1))
         return &root;
     else {
         call_tree* parent = find_tree(frame->next);
-        call_tree* tree = parent->children;
+        call_tree** link = &parent->children;
+        call_tree* tree = *link;
         while (tree != NULL) {
             if (tree->pc == frame->savedLR)
                 break;
-            tree = tree->siblings;
+            link = &tree->siblings;
+            tree = *link;
         }
         if (tree == NULL) {
             /* no tree exists for this frame, so we create one. */
@@ -2359,6 +2361,13 @@ static call_tree* find_tree(stack_frame* frame)
                 tree->siblings = parent->children;
                 parent->children = tree;
                 tree->children = NULL;
+            }
+        } else {
+            if (parent->children != tree) {
+                /* splay tree to front of list. */
+                *link = tree->siblings;
+                tree->siblings = parent->children;
+                parent->children = tree;
             }
         }
         return tree;
