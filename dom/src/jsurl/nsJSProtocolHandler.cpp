@@ -42,6 +42,7 @@
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIJSConsoleService.h"
+#include "nsIConsoleService.h"
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
@@ -151,23 +152,54 @@ nsresult nsJSThunk::EvaluateScript()
 
     nsCOMPtr<nsIScriptContext> scriptContext;
     rv = global->GetContext(getter_AddRefs(scriptContext));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     // Get principal of code for execution
     nsCOMPtr<nsISupports> owner;
     rv = mChannel->GetOwner(getter_AddRefs(owner));
     nsCOMPtr<nsIPrincipal> principal;
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCOMPtr<nsIScriptSecurityManager> securityManager;
+    securityManager = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
     if (owner) {
         principal = do_QueryInterface(owner, &rv);
         NS_ASSERTION(principal, "Channel's owner is not a principal");
-        if (!principal) return NS_ERROR_FAILURE;
+        if (!principal)
+            return NS_ERROR_FAILURE;
+
+
+        //-- Don't run if the script principal is different from the
+        //   principal of the context
+        nsCOMPtr<nsIPrincipal> objectPrincipal;
+        rv = securityManager->GetObjectPrincipal(
+                                (JSContext*)scriptContext->GetNativeContext(),
+                                global->GetGlobalJSObject(),
+                                getter_AddRefs(objectPrincipal));
+        if (NS_FAILED(rv))
+            return rv;
+        nsCOMPtr<nsIPrincipal> systemPrincipal;
+        securityManager->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
+        PRBool equals = PR_FALSE;
+        if (principal.get() != systemPrincipal.get() &&
+            (NS_FAILED(objectPrincipal->Equals(principal, &equals)) || !equals)) {
+           // Don't run the script. Print a message to the console and
+           // return undefined.
+           nsCOMPtr<nsIConsoleService> console(do_GetService("@mozilla.org/consoleservice;1"));
+           if (console) {
+               console->LogStringMessage(
+                        NS_LITERAL_STRING("Attempt to load a javascript: URL from one host\nin a window displaying content from another host\nwas blocked by the security manager.").get());
+           }
+           return NS_ERROR_DOM_RETVAL_UNDEFINED;
+        }
     }
     else {
         // No owner from channel, use the current URI to generate a principal
-        nsCOMPtr<nsIScriptSecurityManager> securityManager;
-        securityManager = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
         rv = securityManager->GetCodebasePrincipal(mURI, 
                                                    getter_AddRefs(principal));
         if (NS_FAILED(rv) || !principal) {
