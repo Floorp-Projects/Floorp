@@ -1,0 +1,58 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+/*
+ * browser-specific interface to global history
+ */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(1a9129f7-2490-49d1-ba54-196ddb848ddb)]
+interface nsIBrowserHistory : nsISupports
+{
+    /**
+     * removePage
+     * Remove the specified page from the global history
+     */
+    void removePage(in string aURL);
+
+    /**
+     * removePAgesFromHost
+     * Remove all pages from the given host.
+     * If aEntireDomain is true, will assume aHost is a domain,
+     * and remove all pages from the entire domain.
+     */
+    void removePagesFromHost(in string aHost, in boolean aEntireDomain);
+
+    /**
+     * removeAllPages
+     * Remove all pages from global history
+     */
+    void removeAllPages();
+
+    /**
+     * lastPageVisited
+     * the most recently visited page
+     */
+    readonly attribute string lastPageVisited;
+
+};
