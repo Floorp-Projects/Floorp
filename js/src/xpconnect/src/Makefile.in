@@ -48,6 +48,7 @@ CPPSRCS		= \
 		xpccomponents.cpp \
 		xpccontext.cpp \
 		xpcconvert.cpp \
+		xpcdebug.cpp \
 		xpcexception.cpp \
 		xpcjsid.cpp \
 		xpcjsruntime.cpp \

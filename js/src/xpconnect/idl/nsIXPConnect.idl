@@ -338,6 +338,10 @@ interface nsIXPConnect : nsISupports
 
     void debugDump(in short depth);
     void debugDumpObject(in nsISupports aCOMObj, in short depth);
-    void debugDumpJSStack();
+    void debugDumpJSStack(in PRBool showArgs, 
+                          in PRBool showLocals,
+                          in PRBool showThisProps);
+    void debugDumpEvalInJSStackFrame(in PRUint32 aFrameNumber,
+                                     in string aSourceText);
 };
 

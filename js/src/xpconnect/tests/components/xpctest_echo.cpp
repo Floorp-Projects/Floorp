@@ -307,7 +307,7 @@ xpctestEcho::DebugDumpJSStack()
     NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
     if(NS_SUCCEEDED(rv))
     {
-        rv = xpc->DebugDumpJSStack();
+        rv = xpc->DebugDumpJSStack(JS_TRUE, JS_TRUE, JS_TRUE);
     }
     return rv;
 }        
