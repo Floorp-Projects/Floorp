@@ -25,13 +25,15 @@
 #include <LSmallIconTable.h>
 #include "ntypes.h"
 #include "CDynamicTooltips.h"
+#include "CURLDragHelper.h"
+
 
 class CPersonalToolbarManager;
 class CUserButtonInfo;
 
 
 class CPersonalToolbarTable : public LSmallIconTable, public LListener, public LDragAndDrop,
-								public CDynamicTooltipMixin
+								public CDynamicTooltipMixin, public CHTAwareURLDragMixin
 {
 	public:
 	
@@ -81,8 +83,11 @@ class CPersonalToolbarTable : public LSmallIconTable, public LListener, public L
 		void InsideDropArea ( DragReference inDragRef ) ;
 		void DrawDividingLine ( TableIndexT inCol ) ;
 		void LeaveDropArea( DragReference inDragRef ) ;
-		bool FindBestFlavor ( DragReference inDragRef, ItemReference inItemRef, 
-								FlavorType & oFlavor ) ;
+		virtual void HandleDropOfPageProxy ( const char* inURL, const char* inTitle ) ;
+		virtual void HandleDropOfLocalFile ( const char* inFileURL, const char* fileName,
+												const HFSFlavor & /*inFileData*/ ) ;
+		virtual void HandleDropOfText ( const char* inTextData ) ;
+		virtual void HandleDropOfHTResource ( HT_Resource node ) ;
 
 		virtual void ComputeItemDropAreas ( const Rect & inLocalCellRect, Rect & oLeftSide, 
 												Rect & oRightSide ) ;

@@ -34,20 +34,17 @@
 #include "CStandardFlexTable.h"
 #include "LTableRowSelector.h"
 #include "CDynamicTooltips.h"
+#include "CURLDragHelper.h"
 
 // STL Headers
 #include <vector.h>
-
-// RDF Headers
-#include "rdf.h"
-#include "htrdf.h"
 
 
 #pragma mark -- class CHyperTreeFlexTable --
 
 
 class CHyperTreeFlexTable :
-	public CStandardFlexTable, public CDynamicTooltipMixin
+	public CStandardFlexTable, public CDynamicTooltipMixin, public CHTAwareURLDragMixin
 {
 public:
 		enum {
@@ -78,7 +75,6 @@ protected:
 	virtual Boolean CellSelects ( const STableCell& inCell ) const;
 	virtual Boolean RowCanAcceptDrop ( DragReference inDragRef, TableIndexT inDropRow ) ;
 	virtual Boolean RowCanAcceptDropBetweenAbove( DragReference inDragRef, TableIndexT inDropRow ) ;
-	virtual FlavorType FindAcceptableFlavor ( DragReference inDragRef, ItemReference inItemRef ) ;
 	virtual Boolean NodeCanAcceptDrop ( DragReference inDragRef, HT_Resource inTargetNode ) ;
 	virtual void HiliteDropRow ( TableIndexT inRow, Boolean inDrawBarAbove ) ;
 	virtual Boolean	RowIsContainer ( const TableIndexT & /* inRow */ ) const ;
@@ -103,13 +99,15 @@ protected:
 		// Handle drag and drop
 	virtual void DragSelection(const STableCell& inCell, const SMouseDownEvent &inMouseDown);
 	virtual void DoDragSendData ( FlavorType inFlavor, ItemReference inItemRef, DragReference inDragRef) ;
-	virtual void ReceiveDragItem ( DragReference inDragRef, DragAttributes inDragAttrs,
-										ItemReference inItemRef, Rect &inItemBounds ) ;
 	virtual Boolean ItemIsAcceptable ( DragReference inDragRef, ItemReference inItemRef ) ;
 	virtual void HandleDropOfHTResource ( HT_Resource node ) ;
-	virtual void HandleDropOfPageProxy ( vector<char> & inURLAndTitle ) ;
-	virtual void HandleDropOfLocalFile ( const char* inFileURL, const char* fileName ) ;
+	virtual void HandleDropOfPageProxy ( const char* inURL, const char* inTitle ) ;
+	virtual void HandleDropOfLocalFile ( const char* inFileURL, const char* fileName,
+											const HFSFlavor & /*inFileData*/ ) ;
+	virtual void HandleDropOfText ( const char* inTextData ) ;
 	virtual void DeleteSelectionByDragToTrash ( LArray & inItems ) ;
+	virtual void ReceiveDragItem ( DragReference inDragRef, DragAttributes /*inDragAttrs*/,
+											ItemReference inItemRef, Rect & /*inItemBounds*/ ) ;
 
 		// for dynamic tooltip tracking and mouse cursor tracking
 	virtual void MouseWithin ( Point inPortPt, const EventRecord& ) ;	

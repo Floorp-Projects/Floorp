@@ -702,31 +702,17 @@ CPersonalToolbarTable :: DrawDividingLine( TableIndexT inCol )
 
 
 //
-// FindBestFlavor
+// ReceiveDragItem
 //
-// Scan through the list of acceptable flavors and find the best one that is contained
-// in the given drag item. Returns true if it found one in the list and false if the
-// drag item doesn't contain any of the desired flavors.
+// Pass this along to the implementation in CHTAwareURLDragMixin.
 //
-bool
-CPersonalToolbarTable :: FindBestFlavor ( DragReference inDragRef, ItemReference inItemRef,
-											FlavorType & oFlavor ) 
+void
+CPersonalToolbarTable :: ReceiveDragItem ( DragReference inDragRef, DragAttributes inDragAttrs,
+											ItemReference inItemRef, Rect & inItemBounds )
 {
-	static FlavorType flavors[] = { emHTNodeDrag, emBookmarkDrag, NULL };	// must end in NULL
-	
-	oFlavor = '****';
-	short i = 0;
-	for ( FlavorType curr = flavors[0]; flavors[i]; i++, curr = flavors[i] ) {
-		FlavorFlags theFlags;
-		if ( ::GetFlavorFlags(inDragRef, inItemRef, curr, &theFlags) == noErr ) {
-			oFlavor = curr;
-			return true;
-		}
-	} // for each flavor in list
+	CHTAwareURLDragMixin::ReceiveDragItem(inDragRef, inDragAttrs, inItemRef, inItemBounds );
 
-	return false;
-
-} // FindBestFlavor
+} // ReceiveDragItem
 
 
 //
@@ -745,57 +731,66 @@ CPersonalToolbarTable :: ItemIsAcceptable ( DragReference inDragRef, ItemReferen
 
 
 //
-// ReceiveDragItem
+// HandleDropOfHTResource
 //
-// Called for each item dropped on the table. Create a new bookmark in the PT folder for
-// each item
+// Called when the user drops an HT_Resource from some other HT aware view on the
+// personal toolbar. Add a button for this new item.
 //
 void
-CPersonalToolbarTable :: ReceiveDragItem ( DragReference inDragRef, DragAttributes /*inDragAttrs*/,
-											ItemReference inItemRef, Rect & /*inItemBounds*/ )
+CPersonalToolbarTable :: HandleDropOfHTResource ( HT_Resource inDropNode ) 
 {
-	FlavorType flavorToUse;
-	FindBestFlavor ( inDragRef, inItemRef, flavorToUse );		// ok to ignore return result
-	
-	// Get the data.
-	Size theDataSize;
-	ThrowIfOSErr_( ::GetFlavorDataSize(inDragRef, inItemRef, flavorToUse, &theDataSize) );
-	
-	switch ( flavorToUse ) {
-		
-		case emHTNodeDrag:
-			HT_Resource node;
-			ThrowIfOSErr_( ::GetFlavorData( inDragRef, inItemRef, flavorToUse, &node, &theDataSize, 0 ) );
+	if ( mDropOn ) {
+		SysBeep(1);		//еее implement
+	}
+	else
+		CFrontApp::GetPersonalToolbarManager()->AddButton ( inDropNode, mDropCol );	
 
-			if ( mDropOn ) {
-				SysBeep(1);		//еее implement
-			}
-			else
-				CFrontApp::GetPersonalToolbarManager()->AddButton ( node, mDropCol );	
-			break;
-			
-		case emBookmarkDrag:
-			vector<char> urlAndTitle ( theDataSize + 1 );
-			ThrowIfOSErr_( ::GetFlavorData( inDragRef, inItemRef, flavorToUse, urlAndTitle.begin(), &theDataSize, 0 ) );
-			urlAndTitle[theDataSize] = NULL;
+} // HandleDropOfHTResource
 
-			char* title = find(urlAndTitle.begin(), urlAndTitle.end(), '\r');
-			if ( title != urlAndTitle.end() ) {
-				title[0] = NULL;
-				title++;
-				char* url = urlAndTitle.begin();
-				
-				if ( mDropOn ) {
-					SysBeep(1);		//еее implement
-				}
-				else
-					CFrontApp::GetPersonalToolbarManager()->AddButton ( url, title, mDropCol );
-			}
-			break;
+
+//
+// HandleDropOfPageProxy
+//
+// Called when user drops the page proxy icon (or an embedded url) onto the personal
+// toolbar. Add a button for this new item.
+//
+void
+CPersonalToolbarTable :: HandleDropOfPageProxy ( const char* inURL, const char* inTitle )
+{
+	if ( mDropOn ) {
+		SysBeep(1);		//еее implement
+	}
+	else
+		CFrontApp::GetPersonalToolbarManager()->AddButton ( inURL, inTitle, mDropCol );
+
+} // HandleDropOfPageProxy
+
+
+//
+// HandleDropOfLocalFile
+//
+// A local file is just an url and a title, so cheat.
+//
+void
+CPersonalToolbarTable :: HandleDropOfLocalFile ( const char* inFileURL, const char* fileName,
+													const HFSFlavor & /*inFileData*/ )
+{
+	HandleDropOfPageProxy ( inFileURL, fileName );
 	
-	} // case of which flavor
-		
-} // ReceiveDragItem
+} // HandleDropOfLocalFile
+
+
+//
+// HandleDropOfText
+//
+// Need to implement
+//
+void 
+CPersonalToolbarTable :: HandleDropOfText ( const char* inTextData )
+{
+	DebugStr("\pDropping TEXT here not implemented; g");
+	
+} // HandleDropOfText
 
 
 //

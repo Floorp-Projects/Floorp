@@ -297,13 +297,17 @@ CNavCenterSelectorPane :: NoticeActiveWorkspaceChanged ( HT_View inOldSel )
 // Just about anything should be acceptable because we just want to make sure
 // that the appropriate nav center view is open for the user to then drag into. Drops
 // can occur here, so I guess we have to make sure that it is something that we
-// recognize (TEXT, for example, should not be allowed).
+// recognize.
+//
+// If FindBestFlavor() finds an acceptable flavor, then this item can be accepted. If not, it
+// can't. We don't really care at this point what that flavor is.
 //
 Boolean
-CNavCenterSelectorPane :: ItemIsAcceptable ( DragReference /*inDragRef*/, ItemReference /*inItemRef*/ )
+CNavCenterSelectorPane :: ItemIsAcceptable ( DragReference inDragRef, ItemReference inItemRef )
 {
-	return true;	// for now....
-		
+	FlavorType ignored;
+	return FindBestFlavor ( inDragRef, inItemRef, ignored );
+	
 } // ItemIsAcceptable
 
 
@@ -590,6 +594,109 @@ CNavCenterSelectorPane :: DrawDividingLine( TableIndexT inRow, EDropLocation inP
 	}
 
 } // DrawDividingLine
+
+
+//
+// ReceiveDragItem
+//
+// Pass this along to the implementation in CURLDragMixin.
+//
+void
+CNavCenterSelectorPane :: ReceiveDragItem ( DragReference inDragRef, DragAttributes inDragAttrs,
+											ItemReference inItemRef, Rect & inItemBounds )
+{
+	CHTAwareURLDragMixin::ReceiveDragItem(inDragRef, inDragAttrs, inItemRef, inItemBounds );
+
+} // ReceiveDragItem
+
+
+//
+// HandleDropOfHTResource
+//
+// The user dropped something from HT onto the selector bar. If they dropped _on_ the
+// selector icon, drop it into that workspace. If they dropped it _between_ two workspaces,
+// get HT to create a new workspace for us with that data in it. If there are no
+// workspaces, we have to create our own and put the data in it.
+//
+void
+CNavCenterSelectorPane :: HandleDropOfHTResource ( HT_Resource inDropNode ) 
+{
+	if ( HT_GetViewListCount(GetHTPane()) ) {
+		HT_View view = HT_GetNthView ( GetHTPane(), mDropRow );
+		HT_Resource viewTopNode = HT_TopNode(view);
+		
+		if ( mDropPreposition == kDropOn )
+			HT_DropHTROn ( viewTopNode, inDropNode );
+		else
+			HT_DropHTRAtPos ( viewTopNode, inDropNode, mDropPreposition == kDropBefore ? PR_TRUE : PR_FALSE );
+	}
+	else {
+		// there are no existing workspaces to drop before/after, so we must create our own
+		DebugStr("\pDrop when no workspaces present not implemented");
+	}
+	
+} // HandleDropOfHTResource
+
+
+//
+// HandleDropOfPageProxy
+//
+// The user dropped something from navigator onto the selector bar. If they dropped _on_ the
+// selector icon, drop it into that workspace. If they dropped it _between_ two workspaces,
+// get HT to create a new workspace for us with that data in it. If there are no
+// workspaces, we have to create our own and put the data in it.
+//
+void
+CNavCenterSelectorPane :: HandleDropOfPageProxy ( const char* inURL, const char* inTitle )
+{
+	// cast away constness for HT
+	char* url = const_cast<char*>(inURL);
+	char* title = const_cast<char*>(inTitle);
+
+	if ( HT_GetViewListCount(GetHTPane()) ) {
+		HT_View view = HT_GetNthView ( GetHTPane(), mDropRow );
+		HT_Resource viewTopNode = HT_TopNode(view);
+		
+		if ( mDropPreposition == kDropOn )
+			HT_DropURLAndTitleOn ( viewTopNode, url, title );
+		else
+			HT_DropURLAndTitleAtPos ( viewTopNode, url, title, mDropPreposition == kDropBefore ? PR_TRUE : PR_FALSE );
+	}
+	else {
+		// there are no existing workspaces to drop before/after, so we must create our own
+		DebugStr("\pDrop when no workspaces present not implemented");
+	}
+
+} // HandleDropOfPageProxy
+
+
+//
+// HandleDropOfLocalFile
+//
+// The user dropped something from the Finder onto the selector bar. Since a file url is
+// just a url, cheat and use the same code as the page proxy.
+//
+void
+CNavCenterSelectorPane :: HandleDropOfLocalFile ( const char* inFileURL, const char* fileName,
+													const HFSFlavor & /*inFileData*/ )
+{
+	HandleDropOfPageProxy ( inFileURL, fileName );
+	
+} // HandleDropOfLocalFile
+
+
+//
+// HandleDropOfText
+//
+// Called when user drops a text clipping onto the navCenter. Do nothing for now.
+//
+void
+CNavCenterSelectorPane :: HandleDropOfText ( const char* /*inTextData*/ ) 
+{
+	DebugStr("\pDropping TEXT here not implemented");
+	
+} // HandleDropOfText
+
 
 #pragma mark --- struct SelectorData ---
 

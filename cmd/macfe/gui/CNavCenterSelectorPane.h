@@ -39,6 +39,7 @@
 #include "LString.h"
 #include "htrdf.h"
 #include "CDynamicTooltips.h"
+#include "CURLDragHelper.h"
 
 
 #pragma mark -- class SelectorImage and SelectorData --
@@ -84,7 +85,7 @@ struct SelectorData
 
 class CNavCenterSelectorPane
 		: public LView, public LDragAndDrop, public LBroadcaster, public LCommander,
-			public CDynamicTooltipMixin
+			public CDynamicTooltipMixin, public CHTAwareURLDragMixin
 {
 public:
 	friend class CNavCenterSelectorContextMenuAttachment;
@@ -148,7 +149,14 @@ protected:
 	virtual void	InsideDropArea ( DragReference inDragRef ) ;
 	virtual void	EnterDropArea ( DragReference inDragRef, Boolean inDragHasLeftSender ) ;
 	virtual void	LeaveDropArea ( DragReference inDragRef ) ;
-	virtual void DrawDividingLine( TableIndexT inRow, EDropLocation inPrep ) ;
+	virtual void	DrawDividingLine( TableIndexT inRow, EDropLocation inPrep ) ;
+	virtual void	HandleDropOfHTResource ( HT_Resource node ) ;
+	virtual void	HandleDropOfPageProxy ( const char* inURL, const char* inTitle ) ;
+	virtual void	HandleDropOfLocalFile ( const char* inFileURL, const char* fileName,
+												const HFSFlavor & /*inFileData*/ ) ;
+	virtual void	HandleDropOfText ( const char* inTextData ) ;
+	virtual void	ReceiveDragItem ( DragReference inDragRef, DragAttributes inDragAttrs,
+											ItemReference inItemRef, Rect & inItemBounds ) ;
 	
 	bool				mIsEmbedded;			// is this embedded in chrome or standalone window?
 	HT_Pane				mHTPane;

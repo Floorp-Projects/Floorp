@@ -907,76 +907,14 @@ CHyperTreeFlexTable :: DoDragSendData( FlavorType inFlavor, ItemReference inItem
 //
 // ReceiveDragItem
 //
-// Called for each item dropped on the table. FindAcceptableFlavor() will try to get us
-// the highest fidelity flavor to do the drop...
+// Pass this along to the implementation in CURLDragMixin.
 //
 void
-CHyperTreeFlexTable :: ReceiveDragItem ( DragReference inDragRef, DragAttributes /*inDragAttrs*/,
-											ItemReference inItemRef, Rect & /*inItemBounds*/ )
+CHyperTreeFlexTable :: ReceiveDragItem ( DragReference inDragRef, DragAttributes inDragAttrs,
+											ItemReference inItemRef, Rect & inItemBounds )
 {
-	try {
-		FlavorType useFlavor = FindAcceptableFlavor ( inDragRef, inItemRef );
-		Size theDataSize = 0;
-		switch ( useFlavor ) {
-		
-			case emHTNodeDrag:
-			{
-				HT_Resource draggedNode = NULL;
-				HT_Resource node = NULL;
-				theDataSize = sizeof(void*);
-				ThrowIfOSErr_(::GetFlavorData( inDragRef, inItemRef, emHTNodeDrag, &node, &theDataSize, 0 ));
-				HandleDropOfHTResource ( node );
-			}
-			break;
-				
-			case emBookmarkDrag:
-			{
-				OSErr err = ::GetFlavorDataSize(inDragRef, inItemRef, emBookmarkDrag, &theDataSize);
-				if ( err && err != badDragFlavorErr )
-					Throw_(err);
-				else if ( theDataSize ) {
-					vector<char> urlAndTitle ( theDataSize + 1 );
-					try {
-						ThrowIfOSErr_( ::GetFlavorData( inDragRef, inItemRef, emBookmarkDrag,
-														urlAndTitle.begin(), &theDataSize, 0 ) );
-						urlAndTitle[theDataSize] = NULL;
-						HandleDropOfPageProxy ( urlAndTitle );
-					}
-					catch ( ... ) { 
-						DebugStr ( "\pError getting flavor data for proxy drag" );
-					}
-				}
-			}
-			break;
-				
-			case flavorTypeHFS:
-			{
-				HFSFlavor theData;
-				Boolean ignore1, ignore2;
-				
-				::GetFlavorDataSize(inDragRef, inItemRef, flavorTypeHFS, &theDataSize);
-				OSErr anError = ::GetFlavorData(inDragRef, inItemRef, flavorTypeHFS, &theData, &theDataSize, nil);
-				if ( anError == badDragFlavorErr )
-					anError = ::GetHFSFlavorFromPromise (inDragRef, inItemRef, &theData, true);
-			
-				// if there's an error resolving the alias, the local file url will refer to the alias itself.
-				::ResolveAliasFile(&theData.fileSpec, true, &ignore1, &ignore2);
-				char* localURL = CFileMgr::GetURLFromFileSpec(theData.fileSpec);
-				Assert_(localURL != nil);
-				HandleDropOfLocalFile ( localURL, CStr255(theData.fileSpec.name) );	
-			}
-			break;
-				
-			case 'TEXT':
-				DebugStr("\pchecking for TEXT flavor on drop into tree, unimplemented; g");
-				break;
-		
-		} // case of best flavor
-	}
-	catch ( ... ) {
-		DebugStr ( "\pCan't find the flavor we want; g" );
-	}
-					
+	CHTAwareURLDragMixin::ReceiveDragItem(inDragRef, inDragAttrs, inItemRef, inItemBounds );
+
 } // ReceiveDragItem
 
 
@@ -988,32 +926,29 @@ CHyperTreeFlexTable :: ReceiveDragItem ( DragReference inDragRef, DragAttributes
 // new node.
 //
 void
-CHyperTreeFlexTable :: HandleDropOfPageProxy ( vector<char> & inURLAndTitle )
+CHyperTreeFlexTable :: HandleDropOfPageProxy ( const char* inURL, const char* inTitle )
 {
-	char* title = find(inURLAndTitle.begin(), inURLAndTitle.end(), '\r');
-	if ( title != inURLAndTitle.end() ) {
-		title[0] = NULL;
-		title++;
-		char* url = inURLAndTitle.begin();
+	// cast away constness for HT
+	char* url = const_cast<char*>(inURL);
+	char* title = const_cast<char*>(inTitle);
 	
-		// Extract the node where the drop will occur. If the drop is on a container, put
-		// it in the container, unless the mouse is actually between the rows which means the
-		// user wants to put it at the same level as the container. Otherwise just put it
-		// above (and at the same level) as the item it is dropped on.
-		bool dropAtEnd = mDropNode == NULL;
-		if ( dropAtEnd ) {
-			mDropNode = HT_GetNthItem( GetHTView(), URDFUtilities::PPRowToHTRow(mRows) );
-			if ( !mDropNode ) {
-				// the view is empty, do drop on and bail
-				HT_DropURLAndTitleOn ( HT_TopNode(GetHTView()), url, title );
-				return;
-			}
+	// Extract the node where the drop will occur. If the drop is on a container, put
+	// it in the container, unless the mouse is actually between the rows which means the
+	// user wants to put it at the same level as the container. Otherwise just put it
+	// above (and at the same level) as the item it is dropped on.
+	bool dropAtEnd = mDropNode == NULL;
+	if ( dropAtEnd ) {
+		mDropNode = HT_GetNthItem( GetHTView(), URDFUtilities::PPRowToHTRow(mRows) );
+		if ( !mDropNode ) {
+			// the view is empty, do drop on and bail
+			HT_DropURLAndTitleOn ( HT_TopNode(GetHTView()), url, title );
+			return;
 		}
-		if ( HT_IsContainer(mDropNode) && !mIsDropBetweenRows )
-			HT_DropURLAndTitleOn ( mDropNode, url, title );
-		else
-			HT_DropURLAndTitleAtPos ( mDropNode, url, title, dropAtEnd ? PR_FALSE : PR_TRUE );
 	}
+	if ( HT_IsContainer(mDropNode) && !mIsDropBetweenRows )
+		HT_DropURLAndTitleOn ( mDropNode, url, title );
+	else
+		HT_DropURLAndTitleAtPos ( mDropNode, url, title, dropAtEnd ? PR_FALSE : PR_TRUE );
 
 } // HandleDropOfPageProxy
 
@@ -1056,7 +991,8 @@ CHyperTreeFlexTable :: HandleDropOfHTResource ( HT_Resource dropNode )
 // resolved
 //
 void
-CHyperTreeFlexTable :: HandleDropOfLocalFile ( const char* inFileURL, const char* inFileName )
+CHyperTreeFlexTable :: HandleDropOfLocalFile ( const char* inFileURL, const char* inFileName,
+												const HFSFlavor & /*inFileData*/ )
 {
 	// Extract the node where the drop will occur. If the drop is on a container, put
 	// it in the container, unless the mouse is actually between the rows which means the
@@ -1082,31 +1018,16 @@ CHyperTreeFlexTable :: HandleDropOfLocalFile ( const char* inFileURL, const char
 
 
 //
-// FindAcceptableFlavor
-// THROWS int
+// HandleDropOfText
 //
-// Checks the item being dropped and returns the best flavor that we support. It checks in
-// for the following:
-//	- HT Node
-//	- proxy icon
-//	- file from desktop
-//	- a TEXT url from some other app
+// Called when user drops a text clipping onto the navCenter. Do nothing for now.
 //
-FlavorType
-CHyperTreeFlexTable :: FindAcceptableFlavor ( DragReference inDragRef, ItemReference inItemRef )
+void
+CHyperTreeFlexTable :: HandleDropOfText ( const char* /*inTextData*/ ) 
 {
-	FlavorFlags flags;
-	FlavorType checkFor[] = { emHTNodeDrag, emBookmarkDrag, 'TEXT', flavorTypeHFS,
-								flavorTypePromiseHFS, NULL };				// end this in a NULL
-	for ( int i = 0; checkFor[i]; i++ )
-		if ( ::GetFlavorFlags(inDragRef, inItemRef, checkFor[i], &flags) != badDragFlavorErr )
-			return checkFor[i];
+	DebugStr("\pDropping TEXT here not implemented");
 	
-	// cant find anything we're looking for by this point
-	throw(-1);
-	return 0;
-	
-} // FindAcceptableFlavor
+} // HandleDropOfText
 
 
 //
@@ -1127,7 +1048,8 @@ CHyperTreeFlexTable :: NodeCanAcceptDrop ( DragReference inDragRef, HT_Resource 
 		::GetDragItemReferenceNumber(inDragRef, item, &itemRef);
 
 		try {
-			FlavorType useFlavor = FindAcceptableFlavor ( inDragRef, itemRef );
+			FlavorType useFlavor;
+			FindBestFlavor ( inDragRef, itemRef, useFlavor );
 			switch ( useFlavor ) {
 			
 				case emHTNodeDrag:
@@ -1155,17 +1077,22 @@ CHyperTreeFlexTable :: NodeCanAcceptDrop ( DragReference inDragRef, HT_Resource 
 					
 				case flavorTypeHFS:
 				case flavorTypePromiseHFS:
+				{
 					// We don't care what kind of url it is, just that it is a url so pass a 
 					// bogus url to the backend.
 					if ( targetIsContainer )
 						acceptableDrop |= HT_CanDropURLOn ( inTargetNode, "file://foo" );	// FIX TO CHANGE CURSOR....
 					else
 						acceptableDrop |= HT_CanDropURLAtPos ( inTargetNode, "file://foo", PR_TRUE );
-					break;
+				}
+				break;
 					
 				case 'TEXT':
 					break;
-					
+				
+				default:
+					// throw? 
+					break;
 			}
 		}
 		catch ( ... ) {

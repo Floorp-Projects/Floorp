@@ -17,8 +17,11 @@
  */
 
 //
-// Implementaion of a class that contains code common to classes that have to do drag and
-// drop for items w/ urls (bookmarks, etc).
+// Mike Pinkerton
+// Netscape Communications
+//
+// A collection of classes for helping out with drag and drop. See header file
+// for more information regarding usage.
 //
 
 #include "CURLDragHelper.h"
@@ -31,6 +34,7 @@
 #include "CURLDispatcher.h"
 #include "macutil.h"
 #include "FSpCompat.h"
+
 
 //
 // DoDragSendData
@@ -193,7 +197,7 @@ CURLDragHelper :: DoDragSendData( const char* inURL, char* inTitle, FlavorType i
 			
 		case emBookmarkDrag:
 			{
-				cstring urlAndTitle(inURL);
+				string urlAndTitle(inURL);
 /*
 				if (theElement->type == LO_IMAGE)
 				{
@@ -203,7 +207,7 @@ CURLDragHelper :: DoDragSendData( const char* inURL, char* inTitle, FlavorType i
 */
 				{
 					urlAndTitle += "\r";
-					cstring title;
+					string title;
 					
 					if (inTitle)
 					{
@@ -216,7 +220,7 @@ CURLDragHelper :: DoDragSendData( const char* inURL, char* inTitle, FlavorType i
 				}			
 				
 				// send url<CR>title with the null terminator
-				::SetDragItemFlavorData(inDragRef, inItemRef, inFlavor, urlAndTitle, strlen(urlAndTitle) + 1, 0);
+				::SetDragItemFlavorData(inDragRef, inItemRef, inFlavor, urlAndTitle.c_str(), urlAndTitle.length() + 1, 0);
 			}
 			break;	
 				
@@ -239,7 +243,7 @@ Cleanup:
 // Use this to make sure that the caption for a dragged item is not too long, and if it
 // is, middle truncates it to avoid the visual turdfest
 //
-cstring 
+string 
 CURLDragHelper :: MakeIconTextValid ( const char* inText )
 {
 	const Uint8 kMaxTitleLength = 50;
@@ -257,3 +261,215 @@ CURLDragHelper :: MakeIconTextValid ( const char* inText )
 	
 } // MakeIconTextValid
 
+
+#pragma mark -
+
+
+//
+// CURLDragMixin constructor
+//
+// Fill in the vector of acceptable drag flavors in this order:
+//	- proxy icon (title & url)
+//	- TEXT from some other app (should contain a URL, but doesn't have to)
+//	- file from desktop
+//
+CURLDragMixin :: CURLDragMixin ( )
+	: mAcceptableFlavors(4)
+{
+	static const FlavorType checkFor[] = { emBookmarkDrag, 'TEXT', flavorTypeHFS, flavorTypePromiseHFS };
+	AcceptedFlavors().assign(checkFor, &checkFor[sizeof(checkFor) - 1]);
+	
+} // constructor
+
+
+//
+// ReceiveDragItem
+//
+// Called for each item dropped on the table. Pass it off the the backend, etc to do the
+// right thing for the kind dropped here.
+//
+void
+CURLDragMixin :: ReceiveDragItem ( DragReference inDragRef, DragAttributes /*inDragAttrs*/,
+											ItemReference inItemRef, Rect & /*inItemBounds*/ )
+{
+	try {
+		FlavorType useFlavor;
+		FindBestFlavor ( inDragRef, inItemRef, useFlavor );
+		Size theDataSize = 0;
+		switch ( useFlavor ) {
+		
+			case emBookmarkDrag:
+			{
+				OSErr err = ::GetFlavorDataSize(inDragRef, inItemRef, emBookmarkDrag, &theDataSize);
+				if ( err && err != badDragFlavorErr )
+					throw(err);
+				else if ( theDataSize ) {
+					vector<char> urlAndTitle ( theDataSize + 1 );
+					try {
+						ThrowIfOSErr_( ::GetFlavorData( inDragRef, inItemRef, emBookmarkDrag,
+														urlAndTitle.begin(), &theDataSize, 0 ) );
+						urlAndTitle[theDataSize] = NULL;
+						char* title = find(urlAndTitle.begin(), urlAndTitle.end(), '\r');
+						if ( title != urlAndTitle.end() ) {
+							title[0] = NULL;
+							title++;
+							char* url = urlAndTitle.begin();
+							HandleDropOfPageProxy ( url, title );
+						}
+						else
+							throw(0);
+					}
+					catch ( ... ) { 
+						DebugStr ( "\pError getting flavor data for proxy drag" );
+					}
+				}
+			}
+			break;
+				
+			case flavorTypeHFS:
+			case flavorTypePromiseHFS:
+			{
+				HFSFlavor theData;
+				Boolean ignore1, ignore2;
+				
+				::GetFlavorDataSize(inDragRef, inItemRef, flavorTypeHFS, &theDataSize);
+				OSErr anError = ::GetFlavorData(inDragRef, inItemRef, flavorTypeHFS, &theData, &theDataSize, nil);
+				if ( anError == badDragFlavorErr )
+					ThrowIfOSErr_( ::GetHFSFlavorFromPromise (inDragRef, inItemRef, &theData, true) );
+				
+				// if there's an error resolving the alias, the local file url will refer to the alias itself.
+				::ResolveAliasFile(&theData.fileSpec, true, &ignore1, &ignore2);
+				char* localURL = CFileMgr::GetURLFromFileSpec(theData.fileSpec);
+				Assert_(localURL != nil);
+				if ( localURL )
+					HandleDropOfLocalFile ( localURL, CStr255(theData.fileSpec.name), theData );	
+			}
+			break;
+				
+			case 'TEXT':
+			{
+				OSErr err = ::GetFlavorDataSize(inDragRef, inItemRef, 'TEXT', &theDataSize);
+				if ( err && err != badDragFlavorErr )
+					throw(err);
+				else if ( theDataSize ) {
+					vector<char> textData ( theDataSize + 1 );
+					try {
+						ThrowIfOSErr_( ::GetFlavorData( inDragRef, inItemRef, 'TEXT',
+														textData.begin(), &theDataSize, 0 ) );
+						HandleDropOfText ( textData.begin() );
+					}
+					catch ( ... ) {
+						DebugStr("\pError getting flavor data for TEXT");
+					}
+				}
+			}
+			break;
+			
+			default:
+				throw(-1);
+				break;
+		
+		} // case of best flavor
+	}
+	catch ( ... ) {
+		DebugStr ( "\pCan't find the flavor we want; g" );
+	}
+					
+} // ReceiveDragItem
+
+
+//
+// FindBestFlavor
+//
+// Checks the item being dropped and returns the best flavor that we support. It does
+// this by searching through the list of acceptable flavors, returning the first one
+// supported by the drag item. Since the acceptable flavors are ordered by preference,
+// the first one found is the best one.
+//
+bool
+CURLDragMixin :: FindBestFlavor ( DragReference inDragRef, ItemReference inItemRef,
+										FlavorType & oFlavor )
+{
+	// a function object which implements the body of the find_if() loop below. Returns
+	// true if the flavor given is present in the drag item
+	class FindBestFlavor_imp
+	{
+	public:
+		FindBestFlavor_imp ( DragReference inDragRef, ItemReference inItemRef )
+			: mDragRef(inDragRef), mItemRef(inItemRef) { } ;			
+		bool operator() ( const FlavorType & inType )
+		{
+			FlavorFlags ignore;
+			if ( ::GetFlavorFlags(mDragRef, mItemRef, inType, &ignore) == noErr )
+				return true;
+			return false;
+		}
+ 	private:
+ 		DragReference mDragRef;
+ 		ItemReference mItemRef;
+ 	};
+ 	
+	FlavorType* result = find_if ( AcceptedFlavors().begin(), AcceptedFlavors().end(), 
+										FindBestFlavor_imp(inDragRef, inItemRef) );
+	if ( result != AcceptedFlavors().end() ) {
+		oFlavor = *result;
+		return true;
+	}
+	return false;
+		
+} // FindBestFlavor
+
+
+#pragma mark -
+
+
+//
+// CHTAwareURLDragMixin constructor
+//
+// As the name implies, this version of the URLDragMixin class knows about HT, and thus
+// HT_Resources. Add the HT_Resource drag flavor to the front of the acceptable flavors
+// list, because we want to use that first if it is present over all other drag flavors
+//
+CHTAwareURLDragMixin :: CHTAwareURLDragMixin ( )
+{
+	AcceptedFlavors().insert ( AcceptedFlavors().begin(), 1, (FlavorType)emHTNodeDrag );
+
+} // constructor
+
+
+//
+// ReceiveDragItem
+//
+// Overridden to handle the HT_Resource drag flavor before all the others
+//
+void
+CHTAwareURLDragMixin :: ReceiveDragItem ( DragReference inDragRef, DragAttributes inDragAttrs,
+											ItemReference inItemRef, Rect & inItemBounds )
+{
+	try {
+		FlavorType useFlavor;
+		FindBestFlavor ( inDragRef, inItemRef, useFlavor );
+		Size theDataSize = 0;
+		switch ( useFlavor ) {
+		
+			case emHTNodeDrag:
+			{
+				HT_Resource draggedNode = NULL;
+				HT_Resource node = NULL;
+				theDataSize = sizeof(void*);
+				ThrowIfOSErr_(::GetFlavorData( inDragRef, inItemRef, emHTNodeDrag, &node, &theDataSize, 0 ));
+				HandleDropOfHTResource ( node );
+			}
+			break;
+	
+			default:
+				CURLDragMixin::ReceiveDragItem(inDragRef, inDragAttrs, inItemRef, inItemBounds);
+				break;
+		
+		} // switch on best flavor
+	}
+	catch ( ... ) {
+		DebugStr ( "\pCan't find the flavor we want; g" );	
+	}
+
+} // ReceiveDragItem

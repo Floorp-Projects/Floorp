@@ -121,10 +121,10 @@ CProxyPane::ListenToMessage(
 					
 					// now we at least have something (either title or url). Handle middle
 					// truncation, etc and then set the new title.
-					cstring finalCaption = CURLDragHelper::MakeIconTextValid( tempCaption );
+					string finalCaption = CURLDragHelper::MakeIconTextValid( tempCaption );
 					if (theURL)
 						NET_FreeURLStruct( theURL ); // we're done with the address string.
-					mIconText->SetDescriptor(LStr255(finalCaption));
+					mIconText->SetDescriptor(LStr255(finalCaption.c_str()));
 										
 					Boolean enabled = false;
 					Boolean a; Char16 b; Str255 c;
