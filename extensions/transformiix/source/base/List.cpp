@@ -20,8 +20,10 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
+ * Bob Miller, kbob@oblix.com
+ *    -- plugged core leak.
  *
- * $Id: List.cpp,v 1.2 1999/11/15 07:12:39 nisheeth%netscape.com Exp $
+ * $Id: List.cpp,v 1.3 1999/11/25 03:03:02 kvisco%ziplink.net Exp $
  */
 
 #include "List.h"
@@ -34,7 +36,7 @@
 /**
  * Default constructor for a List;
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:12:39 $
+ * @version $Revision: 1.3 $ $Date: 1999/11/25 03:03:02 $
 **/
 
 List::List() {
@@ -307,6 +309,7 @@ void* ListIterator::remove() {
         List::ListItem* item = currentItem;
         previous(); //-- make previous item the current item
         list->remove(item);
+        delete item;
     }
     return obj;
 } //-- remove

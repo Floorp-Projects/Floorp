@@ -20,8 +20,10 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
+ * Bob Miller, kbob@oblix.com
+ *    -- plugged core leak.
  *
- * $Id: XSLProcessor.cpp,v 1.4 1999/11/18 04:39:58 kvisco%ziplink.net Exp $
+ * $Id: XSLProcessor.cpp,v 1.5 1999/11/25 03:03:06 kvisco%ziplink.net Exp $
  */
 
 #include "XSLProcessor.h"
@@ -34,7 +36,7 @@
 /**
  * XSLProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 1999/11/18 04:39:58 $
+ * @version $Revision: 1.5 $ $Date: 1999/11/25 03:03:06 $
 **/
 
 /**
@@ -55,7 +57,7 @@ XSLProcessor::XSLProcessor() {
 
     xslVersion.append("1.0");
     appName.append("TransforMiiX");
-    appVersion.append("1.0 [beta v19991114]");
+    appVersion.append("1.0 [beta v19991124]");
 
 
     //-- create XSL element types
@@ -929,6 +931,7 @@ void XSLProcessor::processAction
                         newAttr->setValue(value);
                         if ( ! ps->addToResultTree(newAttr) )
                             delete newAttr;
+                        delete dfrag;
                     }
                 }
                 break;
@@ -999,6 +1002,7 @@ void XSLProcessor::processAction
                 //XMLUtils::normalizePIValue(value);
                 Comment* comment = resultDoc->createComment(value);
                 if ( ! ps->addToResultTree(comment) ) delete comment;
+                delete dfrag;
                 break;
             }
             //-- xsl:copy
@@ -1150,6 +1154,7 @@ void XSLProcessor::processAction
                     ProcessingInstruction* pi
                             = resultDoc->createProcessingInstruction(name, value);
                     if ( ! ps->addToResultTree(pi) ) delete pi;
+                    delete dfrag;
                 }
                 break;
             }

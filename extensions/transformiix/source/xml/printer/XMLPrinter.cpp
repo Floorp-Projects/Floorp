@@ -20,8 +20,10 @@
  *    -- original author
  * Majkel Kretschmar
  *    -- UTF-8 changes
+ * Bob Miller, kbob@oblix.com
+ *    -- plugged core leak.
  *
- * $Id: XMLPrinter.cpp,v 1.2 1999/11/15 07:13:01 nisheeth%netscape.com Exp $
+ * $Id: XMLPrinter.cpp,v 1.3 1999/11/25 03:03:05 kvisco%ziplink.net Exp $
  */
 
 #include "printers.h"
@@ -34,7 +36,7 @@
  * A class for printing XML nodes.
  * This class was ported from XSL:P Java source
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:13:01 $
+ * @version $Revision: 1.3 $ $Date: 1999/11/25 03:03:05 $
 **/
 
 /**
@@ -116,6 +118,11 @@ void XMLPrinter::initialize(ostream& os, int indentSize) {
     useEmptyElementShorthand = MB_TRUE;
     useFormat = MB_FALSE;
 } //-- initialize
+
+// destructor is needed so that subclasses are destroyed.
+
+XMLPrinter::~XMLPrinter()
+{ }
 
 /**
  * Prints the given Node

@@ -20,8 +20,10 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
+ * Bob Miller, kbob@oblix.com
+ *    -- plugged core leak.
  *    
- * $Id: PathExpr.cpp,v 1.2 1999/11/15 07:13:13 nisheeth%netscape.com Exp $
+ * $Id: PathExpr.cpp,v 1.3 1999/11/25 03:03:07 kvisco%ziplink.net Exp $
  */
 
 #include "Expr.h"
@@ -125,7 +127,14 @@ ExprResult* PathExpr::evaluate(Node* context, ContextState* cs) {
         cs->getNodeSetStack()->push(nodes);
         for (int i = 0; i < nodes->size(); i++) {
             Node* node = nodes->get(i);
+#if 0
             NodeSet* xNodes = (NodeSet*) pxi->pExpr->evaluate(node, cs);
+#else
+           ExprResult *res = pxi->pExpr->evaluate(node, cs);
+           if (!res || res->getResultType() != ExprResult::NODESET)
+               continue;
+            NodeSet* xNodes = (NodeSet *) res;
+#endif
             if ( tmpNodes ) {
                 xNodes->copyInto(*tmpNodes);
             }
