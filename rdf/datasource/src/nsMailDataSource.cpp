@@ -108,7 +108,7 @@ static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 ////////////////////////////////////////////////////////////////////////
 // RDF property & resource declarations
 
-static const char kURIMailRoot[]  = "MailRoot";
+static const char kURINC_MailRoot[]  = "NC:MailRoot";
 
 #define NC_NAMESPACE_URI "http://home.netscape.com/NC-rdf#"
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
@@ -233,9 +233,6 @@ MailDataSource::Init(const char* uri)
                                                     (void**) &mMiscMailData)))
         return rv;
 
-    if (NS_FAILED(rv = AddColumns()))
-        return rv;
-
     gRDFService->GetResource(kURINC_child,   &mResourceChild);
     gRDFService->GetResource(kURINC_Folder,  &mResourceFolder);
     gRDFService->GetResource(kURINC_from,    &mResourceFrom);
@@ -246,7 +243,7 @@ MailDataSource::Init(const char* uri)
     gRDFService->GetResource(kURINC_account, &mResourceAccount);
     gRDFService->GetResource(kURINC_Name,    &mResourceName);
     gRDFService->GetResource(kURINC_Columns, &mResourceColumns);
-    gRDFService->GetResource(kURIMailRoot,   &mMailRoot);
+    gRDFService->GetResource(kURINC_MailRoot, &mMailRoot);
 
     if (NS_FAILED(rv = InitAccountList()))
         return rv;
@@ -469,66 +466,6 @@ MailDataSource::InitAccountList(void)
     }
     if (dir) PR_CloseDir(dir);
     return NS_OK;
-}
-
-
-nsresult
-MailDataSource::AddColumns(void)
-{
-    // XXX this is unsavory. I really don't like hard-coding the
-    // columns that should be displayed here. What we should do is
-    // merge in a "style" graph that contains just a wee bit of
-    // information about columns, etc.
-    nsresult rv;
-
-    nsIRDFResource* columns = nsnull;
-
-    static const char* gColumnTitles[] = {
-        "subject",
-        "date",
-        "from",
-        nsnull
-    };
-
-    static const char* gColumnURIs[] = {
-        kURINC_subject,
-        kURINC_date,
-        kURINC_from,
-        nsnull
-    };
-
-    const char* const* columnTitle = gColumnTitles;
-    const char* const* columnURI   = gColumnURIs;
-
-    if (NS_FAILED(rv = rdf_CreateAnonymousResource(gRDFService, &columns)))
-        goto done;
-
-    if (NS_FAILED(rv = rdf_MakeSeq(gRDFService, mMiscMailData, columns)))
-        goto done;
-
-    while (*columnTitle && *columnURI) {
-        nsIRDFResource* column = nsnull;
-
-        if (NS_SUCCEEDED(rv = rdf_CreateAnonymousResource(gRDFService, &column))) {
-            rdf_Assert(gRDFService, mMiscMailData, column, kURINC_Title,  *columnTitle);
-            rdf_Assert(gRDFService, mMiscMailData, column, kURINC_Column, *columnURI);
-
-            rdf_ContainerAddElement(gRDFService, mMiscMailData, columns, column);
-            NS_IF_RELEASE(column);
-        }
-
-        ++columnTitle;
-        ++columnURI;
-
-        if (NS_FAILED(rv))
-            break;
-    }
-
-    rdf_Assert(gRDFService, mMiscMailData, kURIMailRoot, kURINC_Columns, columns);
-
-done:
-    NS_IF_RELEASE(columns);
-    return rv;
 }
 
 
