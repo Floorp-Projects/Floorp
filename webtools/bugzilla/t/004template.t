@@ -86,6 +86,10 @@ foreach my $include_path (@include_paths) {
         # Need to define filters used in the codebase, they don't
         # actually have to function in this test, just be defined.
         # See globals.pl for the actual codebase definitions.
+
+        # Initialize templates (f.e. by loading plugins like Hook).
+        PRE_PROCESS => "global/initialize.none.tmpl",
+
         FILTERS =>
         {
             html_linebreak => sub { return $_; },

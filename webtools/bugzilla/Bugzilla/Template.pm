@@ -79,6 +79,7 @@ sub getTemplateIncludePath () {
     if (not ($languages =~ /,/)) {
         return $template_include_path =
                ["$templatedir/$languages/custom",
+                "$templatedir/$languages/extension",
                 "$templatedir/$languages/default"];
     }
     my @languages       = sortAcceptLanguage($languages);
@@ -97,6 +98,7 @@ sub getTemplateIncludePath () {
     push(@usedlanguages, Param('defaultlanguage'));
     return $template_include_path =
         [map(("$templatedir/$_/custom",
+              "$templatedir/$_/extension",
               "$templatedir/$_/default"),
              @usedlanguages)];
 }
@@ -184,6 +186,9 @@ sub create {
         TRIM => 1,
 
         COMPILE_DIR => "$datadir/template",
+
+        # Initialize templates (f.e. by loading plugins like Hook).
+        PRE_PROCESS => "global/initialize.none.tmpl",
 
         # Functions for processing text within templates in various ways.
         # IMPORTANT!  When adding a filter here that does not override a

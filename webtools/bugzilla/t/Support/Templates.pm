@@ -69,6 +69,8 @@ $num_actual_files = 0;
         my $path = File::Spec->catdir('template', $langdir, 'custom');
         my @dirs = ();
         push(@dirs, $path) if(-d $path);
+        $path = File::Spec->catdir('template', $langdir, 'extension');
+        push(@dirs, $path) if(-d $path);
         $path = File::Spec->catdir('template', $langdir, 'default');
         push(@dirs, $path) if(-d $path);
 

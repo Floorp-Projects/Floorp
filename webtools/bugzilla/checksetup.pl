@@ -1046,6 +1046,8 @@ END
             next if($dir =~ /^CVS$/i);
             my $path = File::Spec->catdir($templatedir, $dir, 'custom');
             push(@templatepaths, $path) if(-d $path);
+            $path = File::Spec->catdir($templatedir, $dir, 'extension');
+            push(@templatepaths, $path) if(-d $path);
             $path = File::Spec->catdir($templatedir, $dir, 'default');
             push(@templatepaths, $path) if(-d $path);
         }
@@ -1087,6 +1089,9 @@ END
 
                # => $datadir/template/`pwd`/template/{en, ...}/{custom,default}
                COMPILE_DIR => "$datadir/template",
+
+               # Initialize templates (f.e. by loading plugins like Hook).
+               PRE_PROCESS => "global/initialize.none.tmpl",
 
                # These don't actually need to do anything here, just exist
                FILTERS =>
