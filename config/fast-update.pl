@@ -62,8 +62,8 @@ print "within the $rootdir directory..\n" if ($rootdir);
 # this is my lame way of checking if a command succeeded AND getting
 # output from it. I'd love a better way. -alecf@netscape.com
 my $have_checkins = 0;
-@args = ("wget", "--quiet", "--output-document=-", $url);
-open CHECKINS,"wget --quiet --output-document=- '$url'|" or
+@args = ("wget", "--quiet", "--output-document=-", "\"$url\"");
+open CHECKINS,"wget --quiet --output-document=- \"$url\"|" or
   die "Error opening wget: $!\n";
 
 $header = <CHECKINS> and $have_checkins=1;
