@@ -113,6 +113,8 @@ void nsWebShell_SetUnixEventQueue(PLEventQueue* aEventQueue)
 #endif  /* OLD_EVENT_QUEUE  */
 
 
+static NS_DEFINE_CID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
+
 //----------------------------------------------------------------------
 
 class nsWebShell : public nsIWebShell,
@@ -385,6 +387,7 @@ protected:
 
   nsVoidArray mHistory;
   PRInt32 mHistoryIndex;
+  nsIGlobalHistory* mHistoryService;
 
   nsString mTitle;
 
@@ -540,10 +543,16 @@ nsWebShell::nsWebShell()
   mHintCharset = "";
   mHintCharsetSource = kCharsetUninitialized;
   mForceCharacterSet = "";
+  mHistoryService = nsnull;
 }
 
 nsWebShell::~nsWebShell()
 {
+  if (nsnull != mHistoryService) {
+    nsServiceManager::ReleaseService(kGlobalHistoryCID, mHistoryService);
+    mHistoryService = nsnull;
+  }
+
   // Stop any pending document loads and destroy the loader...
   if (nsnull != mDocLoader) {
     mDocLoader->Stop();
@@ -2285,16 +2294,15 @@ nsWebShell:: GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState)
 {
   nsString URLSpec(aURLSpec);
   aState = eLinkState_Unvisited;
-
-  static NS_DEFINE_CID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
-
   
   nsresult rv;
 
-  nsIGlobalHistory* history;
-  rv = nsServiceManager::GetService(kGlobalHistoryCID,
-                                    nsIGlobalHistory::GetIID(),
-                                    (nsISupports**) &history);
+  // XXX: GlobalHistory is going to be moved out of the webshell into a more appropriate place.
+  if (nsnull == mHistoryService) {
+    rv = nsServiceManager::GetService(kGlobalHistoryCID,
+                                      nsIGlobalHistory::GetIID(),
+                                      (nsISupports**) &mHistoryService);
+  }
 
   if (NS_FAILED(rv))
     return NS_OK; // XXX Okay, we couldn't color the link. Big deal.
@@ -2314,7 +2322,7 @@ nsWebShell:: GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState)
   if (url) {
     urlStr.ToCString(url, urlStr.Length() + 1);
 
-    rv = history->GetLastVisitDate(url, &lastVisitDate);
+    rv = mHistoryService->GetLastVisitDate(url, &lastVisitDate);
 
     if (url != buf)
       delete[] url;
@@ -2323,7 +2331,7 @@ nsWebShell:: GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState)
     rv = NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsServiceManager::ReleaseService(kGlobalHistoryCID, history);
+//XXX: Moved to destructor  nsServiceManager::ReleaseService(kGlobalHistoryCID, mHistoryService);
 
   if (NS_FAILED(rv)) return rv;
 
