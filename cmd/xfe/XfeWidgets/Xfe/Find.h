@@ -127,6 +127,9 @@ XfeAncestorFindTopLevelShell	(Widget				w);
 extern Widget
 XfeAncestorFindApplicationShell	(Widget				w);
 /*----------------------------------------------------------------------*/
+extern Widget
+XfeAncestorFindShell			(Widget				w);
+/*----------------------------------------------------------------------*/
 
 XFE_END_CPLUSPLUS_PROTECTION
 

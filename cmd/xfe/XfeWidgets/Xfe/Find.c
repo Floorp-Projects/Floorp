@@ -263,6 +263,12 @@ XfeAncestorFindApplicationShell(Widget w)
     return XfeAncestorFindByClass(w,applicationShellWidgetClass,XfeFIND_ANY);
 }
 /*----------------------------------------------------------------------*/
+/* extern */ Widget
+XfeAncestorFindShell(Widget w)
+{
+    return XfeAncestorFindByClass(w,shellWidgetClass,XfeFIND_ANY);
+}
+/*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/

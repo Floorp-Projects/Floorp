@@ -1077,25 +1077,30 @@ WidgetStageOneEH(Widget		w,
 /* Tool tip shell access												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static Widget _xfe_tt_shell = NULL;
-
 /* extern */ Widget
 _XfeToolTipGetShell(Widget w)
 {
-	/* Create to global tool tip shell if needed */
-	if (!_xfe_tt_shell)
-	{
-		Widget aw = XfeAncestorFindApplicationShell(w);
+	static Widget _tool_tip_shell = NULL;
 
+	/* Create to global tool tip shell if needed */
+	if (!_tool_tip_shell)
+	{
+		/* Find the ancestor shell */
+		Widget aw = XfeAncestorFindShell(w);
+        
 		assert( _XfeIsAlive(aw) );
 
-		_xfe_tt_shell = XfeCreateToolTipShell(aw,
-											  TOOL_TIP_SHELL_NAME,
-											  NULL,
-											  0);
+		/* Create tool tip shell with the same visual, depth & cmap as aw */
+		_tool_tip_shell = XtVaCreateWidget(TOOL_TIP_SHELL_NAME,
+										   xfeToolTipShellWidgetClass,
+										   aw,
+										   XmNvisual,		XfeVisual(aw),
+										   XmNcolormap,		XfeColormap(aw),
+										   XmNdepth,		XfeDepth(aw),
+										   NULL);
 	}
 
-	return _xfe_tt_shell;
+	return _tool_tip_shell;
 }
 /*----------------------------------------------------------------------*/
 /* extern */ Widget
