@@ -653,7 +653,7 @@ class nsCOMPtr
 #endif
           NSCAP_LOG_ASSIGNMENT(this, temp);
           NSCAP_LOG_RELEASE(this, mRawPtr);
-          rhs = mRawPtr;
+          rhs = NS_STATIC_CAST(T*, mRawPtr);
           mRawPtr = temp;
           NSCAP_ASSERT_NO_QUERY_NEEDED();
         }
