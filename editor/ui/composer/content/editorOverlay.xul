@@ -662,7 +662,7 @@
     </menupopup>
   </menu>
 
-  <popup id="TextColorPopup"  popupanchor="bottomleft" tooltip="aTooltip" ignorekeys="true">
+  <popup id="TextColorPopup"  popupanchor="bottomleft" ignorekeys="true">
     <text class="ColorPickerLabel" id="TextColorCaption" value="&textColorCaption.label;" flex="1"/>
     <!-- TODO: Add "Last color picked" button and text -->
     <box valign="middle" autostretch="never">
@@ -770,7 +770,7 @@
           tooltip="aTooltip"               tooltiptext="&anchorToolbarCmd.tooltip;"/>
 
   <!-- Formatting toolbar items. "data" are HTML tagnames, don't translate -->
-  <menulist id="ParagraphSelect">
+  <menulist id="ParagraphSelect" tooltip="aTooltip" tooltiptext="&ParagraphSelect.tooltip;">
     <observes element="cmd_paragraphState" attribute="state" onbroadcast="onParagraphFormatChange('cmd_paragraphState')"/>
     <menupopup oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.data)">
       <menuitem value="&normalCmd.label;"              data=""/>
@@ -791,7 +791,7 @@
 
   <!-- TODO: Use actual "face" value when combobox can display arbitrary HTML -->
   <!-- "data" are HTML tagnames, don't translate -->
-  <menulist id="FontFaceSelect">
+  <menulist id="FontFaceSelect" tooltip="aTooltip" tooltiptext="&FontFaceSelect.tooltip;">
     <observes element="Editor:Font:Face" attribute="face" onbroadcast="onFontFaceChange()"/>
     <menupopup  oncommand="EditorSetFontFace(event.target.data)">
       <menuitem value="&fontVarWidth.label;"      data=""/>
@@ -803,7 +803,7 @@
     </menupopup>
   </menulist>  
   
-  <menulist id="FontSizeSelect" oncommand="EditorSelectFontSize()">
+  <menulist id="FontSizeSelect" oncommand="EditorSelectFontSize()" tooltip="aTooltip" tooltiptext="&FontSizeSelect.tooltip;">
     <observes element="Editor:Font:Size" attribute="fontsize" onbroadcast="onFontSizeChange()"/>
     <menupopup>
       <menuitem value="&size-xx-smallCmd.label;"/>
@@ -817,8 +817,10 @@
   </menulist>          
 
   <stack id="ColorButtons" autostretch="never">
-    <text class="color-button" id="BackColorPopupButton" popup="BackColorPopup"/>
-    <text class="color-button" id="TextColorPopupButton" popup="TextColorPopup"/>
+    <text class="color-button" id="BackColorPopupButton" popup="BackColorPopup"
+          tooltip="aTooltip"   tooltiptext="&BackColorPopupButton.tooltip;"/>
+    <text class="color-button" id="TextColorPopupButton" popup="TextColorPopup"
+          tooltip="aTooltip"   tooltiptext="&TextColorPopupButton.tooltip;"/>
   </stack>
 
 <!-- A BUG IN CSS/BOXES MAKES THIS ASSERT WHEN CLASS= IS PRESENT AND WE TRY TO COLLAPSE THE TOOLBOX -->
@@ -855,15 +857,20 @@
   <button class="button-toolbar format" id="indentButton"     observes="cmd_indent"
           tooltip="aTooltip"            tooltiptext="&indentToolbarCmd.tooltip;"/>
   <button class="button-toolbar format popup" id="AlignPopupButton" disabled="true"
-          tooltip="aTooltip"            tooltiptext="&alignmentToolbarCmd.tooltip;"/>
+          tooltip="aTooltip"            tooltiptext="&AlignPopupButton.tooltip;"/>
   
   <!-- Edit Mode toolbar -->
-  <button id="NormalModeButton"   class="EditModeButton plain" type="text" selected="1" value="&normalMode.label;"    onclick="SetEditMode(1)"/>
-  <button id="TagModeButton"      class="EditModeButton plain" type="text" selected="0" value="&showAllTags.label;"   onclick="SetEditMode(2)"/>
-  <button id="SourceModeButton"   class="EditModeButton plain" type="text" selected="0" value="&sourceMode.label;"    onclick="SetEditMode(3)"/>
-  <button id="PreviewModeButton"  class="EditModeButton plain" type="text" selected="0" value="&previewMode.label;"   onclick="SetEditMode(0)"/>
+  <button id="NormalModeButton"   class="EditModeButton plain" type="text" selected="1" value="&normalMode.label;"    onclick="SetEditMode(1)"
+          tooltip="aTooltip"      tooltiptext="&normalMode.tooltip;"/>
+  <button id="TagModeButton"      class="EditModeButton plain" type="text" selected="0" value="&showAllTags.label;"   onclick="SetEditMode(2)"
+          tooltip="aTooltip"      tooltiptext="&showAllTags.tooltip;"/>
+  <button id="SourceModeButton"   class="EditModeButton plain" type="text" selected="0" value="&sourceMode.label;"    onclick="SetEditMode(3)"
+          tooltip="aTooltip"      tooltiptext="&sourceMode.tooltip;"/>
+  <button id="PreviewModeButton"  class="EditModeButton plain" type="text" selected="0" value="&previewMode.label;"   onclick="SetEditMode(0)"
+          tooltip="aTooltip"      tooltiptext="&previewMode.tooltip;"/>
   <!-- button id="ToggleEditModeType" class="plain" onclick="ToggleEditModeType()"/ -->
-  <image id="ToggleEditModeType" onclick="ToggleEditModeType()"/>
+  <image id="ToggleEditModeType" onclick="ToggleEditModeType()"
+          tooltip="aTooltip"      tooltiptext="&ToggleEditModeType.tooltip;"/>
 
  <!-- InsertPopupButton is used by messengercompose.xul -->
   <button class="plain format popup" id="InsertPopupButton"/>
