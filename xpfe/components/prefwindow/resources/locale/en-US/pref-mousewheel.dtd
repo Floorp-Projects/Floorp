@@ -4,12 +4,12 @@
 <!ENTITY info.label "Mouse Wheel Configuration">
 <!ENTITY mouseWheelPanel.label "When ">
 <!ENTITY usingJustTheWheel.label "using just the mouse wheel">
-<!ENTITY usingWheelAndAlt.label "using the wheel while pressing the Alt key">
-<!ENTITY usingWheelAndCtrl.label "using the wheel while pressing the Ctrl key">
-<!ENTITY usingWheelAndShft.label "using the wheel while pressing the Shift key">
+<!ENTITY usingWheelAndAlt.label "using the wheel while pressing the &altKey.label; key">
+<!ENTITY usingWheelAndCtrl.label "using the wheel while pressing the &ctrlKey.label; key">
+<!ENTITY usingWheelAndShft.label "using the wheel while pressing the &shiftKey.label; key">
 <!ENTITY scroll.label "Scroll the document by ">
 <!ENTITY scrollLines.label " lines. ">
 <!ENTITY useSystemDefault.label "Use system default.">
 <!ENTITY scrollPgUpPgDn.label "Scroll a page up or a page down">
 <!ENTITY history.label "Move back and forward in the browsing history">
-  
+
