@@ -272,6 +272,14 @@ MD5_Begin(MD5Context *cx)
 
 #define cls(i32, s) (tmp = i32, tmp << s | tmp >> (32 - s))
 
+#if defined(SOLARIS) || defined(HPUX)
+#define addto64(sumhigh, sumlow, addend) \
+	sumlow += addend; sumhigh += (sumlow < addend);
+#else
+#define addto64(sumhigh, sumlow, addend) \
+	sumlow += addend; if (sumlow < addend) ++sumhigh;
+#endif
+
 #define MASK 0x00ff00ff
 #ifdef IS_LITTLE_ENDIAN
 #define lendian(i32) \
@@ -281,13 +289,55 @@ MD5_Begin(MD5Context *cx)
 	(tmp = i32 >> 16 | i32 << 16, (tmp & MASK) << 8 | tmp >> 8 & MASK)
 #endif
 
-#if defined(SOLARIS) || defined(HPUX)
-#define addto64(sumhigh, sumlow, addend) \
-	sumlow += addend; sumhigh += (sumlow < addend);
-#else
-#define addto64(sumhigh, sumlow, addend) \
-	sumlow += addend; if (sumlow < addend) ++sumhigh;
+#ifndef IS_LITTLE_ENDIAN
+
+#define lebytes(b4) \
+	((b4)[3] << 24 | (b4)[2] << 16 | (b4)[1] << 8 | (b4)[0])
+
+static void
+md5_prep_state_le(MD5Context *cx)
+{
+	PRUint32 tmp;
+	cx->u.w[0] = lendian(cx->u.w[0]);
+	cx->u.w[1] = lendian(cx->u.w[1]);
+	cx->u.w[2] = lendian(cx->u.w[2]);
+	cx->u.w[3] = lendian(cx->u.w[3]);
+	cx->u.w[4] = lendian(cx->u.w[4]);
+	cx->u.w[5] = lendian(cx->u.w[5]);
+	cx->u.w[6] = lendian(cx->u.w[6]);
+	cx->u.w[7] = lendian(cx->u.w[7]);
+	cx->u.w[8] = lendian(cx->u.w[8]);
+	cx->u.w[9] = lendian(cx->u.w[9]);
+	cx->u.w[10] = lendian(cx->u.w[10]);
+	cx->u.w[11] = lendian(cx->u.w[11]);
+	cx->u.w[12] = lendian(cx->u.w[12]);
+	cx->u.w[13] = lendian(cx->u.w[13]);
+	cx->u.w[14] = lendian(cx->u.w[14]);
+	cx->u.w[15] = lendian(cx->u.w[15]);
+}
+
+static void
+md5_prep_buffer_le(MD5Context *cx, const PRUint8 *beBuf)
+{
+	cx->u.w[0] = lebytes(&beBuf[0]);
+	cx->u.w[1] = lebytes(&beBuf[4]);
+	cx->u.w[2] = lebytes(&beBuf[8]);
+	cx->u.w[3] = lebytes(&beBuf[12]);
+	cx->u.w[4] = lebytes(&beBuf[16]);
+	cx->u.w[5] = lebytes(&beBuf[20]);
+	cx->u.w[6] = lebytes(&beBuf[24]);
+	cx->u.w[7] = lebytes(&beBuf[28]);
+	cx->u.w[8] = lebytes(&beBuf[32]);
+	cx->u.w[9] = lebytes(&beBuf[36]);
+	cx->u.w[10] = lebytes(&beBuf[40]);
+	cx->u.w[11] = lebytes(&beBuf[44]);
+	cx->u.w[12] = lebytes(&beBuf[48]);
+	cx->u.w[13] = lebytes(&beBuf[52]);
+	cx->u.w[14] = lebytes(&beBuf[56]);
+	cx->u.w[15] = lebytes(&beBuf[60]);
+}
 #endif
+
 
 #define F(X, Y, Z) \
 	((X & Y) | ((~X) & Z))
@@ -314,7 +364,7 @@ MD5_Begin(MD5Context *cx)
 	a = b + cls(a + I(b, c, d) + bufint + ti, s)
 
 static void
-md5_compress(MD5Context *cx)
+md5_compress(MD5Context *cx, const PRUint32 *wBuf)
 {
 	PRUint32 a, b, c, d;
 	PRUint32 tmp;
@@ -322,88 +372,70 @@ md5_compress(MD5Context *cx)
 	b = cx->cv[1];
 	c = cx->cv[2];
 	d = cx->cv[3];
-#ifndef IS_LITTLE_ENDIAN
-	cx->u.w[0] = lendian(cx->u.w[0]);
-	cx->u.w[1] = lendian(cx->u.w[1]);
-	cx->u.w[2] = lendian(cx->u.w[2]);
-	cx->u.w[3] = lendian(cx->u.w[3]);
-	cx->u.w[4] = lendian(cx->u.w[4]);
-	cx->u.w[5] = lendian(cx->u.w[5]);
-	cx->u.w[6] = lendian(cx->u.w[6]);
-	cx->u.w[7] = lendian(cx->u.w[7]);
-	cx->u.w[8] = lendian(cx->u.w[8]);
-	cx->u.w[9] = lendian(cx->u.w[9]);
-	cx->u.w[10] = lendian(cx->u.w[10]);
-	cx->u.w[11] = lendian(cx->u.w[11]);
-	cx->u.w[12] = lendian(cx->u.w[12]);
-	cx->u.w[13] = lendian(cx->u.w[13]);
-	cx->u.w[14] = lendian(cx->u.w[14]);
-	cx->u.w[15] = lendian(cx->u.w[15]);
-#endif
-	FF(a, b, c, d, cx->u.w[R1B0 ], S1_0, T1_0);
-	FF(d, a, b, c, cx->u.w[R1B1 ], S1_1, T1_1);
-	FF(c, d, a, b, cx->u.w[R1B2 ], S1_2, T1_2);
-	FF(b, c, d, a, cx->u.w[R1B3 ], S1_3, T1_3);
-	FF(a, b, c, d, cx->u.w[R1B4 ], S1_0, T1_4);
-	FF(d, a, b, c, cx->u.w[R1B5 ], S1_1, T1_5);
-	FF(c, d, a, b, cx->u.w[R1B6 ], S1_2, T1_6);
-	FF(b, c, d, a, cx->u.w[R1B7 ], S1_3, T1_7);
-	FF(a, b, c, d, cx->u.w[R1B8 ], S1_0, T1_8);
-	FF(d, a, b, c, cx->u.w[R1B9 ], S1_1, T1_9);
-	FF(c, d, a, b, cx->u.w[R1B10], S1_2, T1_10);
-	FF(b, c, d, a, cx->u.w[R1B11], S1_3, T1_11);
-	FF(a, b, c, d, cx->u.w[R1B12], S1_0, T1_12);
-	FF(d, a, b, c, cx->u.w[R1B13], S1_1, T1_13);
-	FF(c, d, a, b, cx->u.w[R1B14], S1_2, T1_14);
-	FF(b, c, d, a, cx->u.w[R1B15], S1_3, T1_15);
-	GG(a, b, c, d, cx->u.w[R2B0 ], S2_0, T2_0);
-	GG(d, a, b, c, cx->u.w[R2B1 ], S2_1, T2_1);
-	GG(c, d, a, b, cx->u.w[R2B2 ], S2_2, T2_2);
-	GG(b, c, d, a, cx->u.w[R2B3 ], S2_3, T2_3);
-	GG(a, b, c, d, cx->u.w[R2B4 ], S2_0, T2_4);
-	GG(d, a, b, c, cx->u.w[R2B5 ], S2_1, T2_5);
-	GG(c, d, a, b, cx->u.w[R2B6 ], S2_2, T2_6);
-	GG(b, c, d, a, cx->u.w[R2B7 ], S2_3, T2_7);
-	GG(a, b, c, d, cx->u.w[R2B8 ], S2_0, T2_8);
-	GG(d, a, b, c, cx->u.w[R2B9 ], S2_1, T2_9);
-	GG(c, d, a, b, cx->u.w[R2B10], S2_2, T2_10);
-	GG(b, c, d, a, cx->u.w[R2B11], S2_3, T2_11);
-	GG(a, b, c, d, cx->u.w[R2B12], S2_0, T2_12);
-	GG(d, a, b, c, cx->u.w[R2B13], S2_1, T2_13);
-	GG(c, d, a, b, cx->u.w[R2B14], S2_2, T2_14);
-	GG(b, c, d, a, cx->u.w[R2B15], S2_3, T2_15);
-	HH(a, b, c, d, cx->u.w[R3B0 ], S3_0, T3_0);
-	HH(d, a, b, c, cx->u.w[R3B1 ], S3_1, T3_1);
-	HH(c, d, a, b, cx->u.w[R3B2 ], S3_2, T3_2);
-	HH(b, c, d, a, cx->u.w[R3B3 ], S3_3, T3_3);
-	HH(a, b, c, d, cx->u.w[R3B4 ], S3_0, T3_4);
-	HH(d, a, b, c, cx->u.w[R3B5 ], S3_1, T3_5);
-	HH(c, d, a, b, cx->u.w[R3B6 ], S3_2, T3_6);
-	HH(b, c, d, a, cx->u.w[R3B7 ], S3_3, T3_7);
-	HH(a, b, c, d, cx->u.w[R3B8 ], S3_0, T3_8);
-	HH(d, a, b, c, cx->u.w[R3B9 ], S3_1, T3_9);
-	HH(c, d, a, b, cx->u.w[R3B10], S3_2, T3_10);
-	HH(b, c, d, a, cx->u.w[R3B11], S3_3, T3_11);
-	HH(a, b, c, d, cx->u.w[R3B12], S3_0, T3_12);
-	HH(d, a, b, c, cx->u.w[R3B13], S3_1, T3_13);
-	HH(c, d, a, b, cx->u.w[R3B14], S3_2, T3_14);
-	HH(b, c, d, a, cx->u.w[R3B15], S3_3, T3_15);
-	II(a, b, c, d, cx->u.w[R4B0 ], S4_0, T4_0);
-	II(d, a, b, c, cx->u.w[R4B1 ], S4_1, T4_1);
-	II(c, d, a, b, cx->u.w[R4B2 ], S4_2, T4_2);
-	II(b, c, d, a, cx->u.w[R4B3 ], S4_3, T4_3);
-	II(a, b, c, d, cx->u.w[R4B4 ], S4_0, T4_4);
-	II(d, a, b, c, cx->u.w[R4B5 ], S4_1, T4_5);
-	II(c, d, a, b, cx->u.w[R4B6 ], S4_2, T4_6);
-	II(b, c, d, a, cx->u.w[R4B7 ], S4_3, T4_7);
-	II(a, b, c, d, cx->u.w[R4B8 ], S4_0, T4_8);
-	II(d, a, b, c, cx->u.w[R4B9 ], S4_1, T4_9);
-	II(c, d, a, b, cx->u.w[R4B10], S4_2, T4_10);
-	II(b, c, d, a, cx->u.w[R4B11], S4_3, T4_11);
-	II(a, b, c, d, cx->u.w[R4B12], S4_0, T4_12);
-	II(d, a, b, c, cx->u.w[R4B13], S4_1, T4_13);
-	II(c, d, a, b, cx->u.w[R4B14], S4_2, T4_14);
-	II(b, c, d, a, cx->u.w[R4B15], S4_3, T4_15);
+	FF(a, b, c, d, wBuf[R1B0 ], S1_0, T1_0);
+	FF(d, a, b, c, wBuf[R1B1 ], S1_1, T1_1);
+	FF(c, d, a, b, wBuf[R1B2 ], S1_2, T1_2);
+	FF(b, c, d, a, wBuf[R1B3 ], S1_3, T1_3);
+	FF(a, b, c, d, wBuf[R1B4 ], S1_0, T1_4);
+	FF(d, a, b, c, wBuf[R1B5 ], S1_1, T1_5);
+	FF(c, d, a, b, wBuf[R1B6 ], S1_2, T1_6);
+	FF(b, c, d, a, wBuf[R1B7 ], S1_3, T1_7);
+	FF(a, b, c, d, wBuf[R1B8 ], S1_0, T1_8);
+	FF(d, a, b, c, wBuf[R1B9 ], S1_1, T1_9);
+	FF(c, d, a, b, wBuf[R1B10], S1_2, T1_10);
+	FF(b, c, d, a, wBuf[R1B11], S1_3, T1_11);
+	FF(a, b, c, d, wBuf[R1B12], S1_0, T1_12);
+	FF(d, a, b, c, wBuf[R1B13], S1_1, T1_13);
+	FF(c, d, a, b, wBuf[R1B14], S1_2, T1_14);
+	FF(b, c, d, a, wBuf[R1B15], S1_3, T1_15);
+	GG(a, b, c, d, wBuf[R2B0 ], S2_0, T2_0);
+	GG(d, a, b, c, wBuf[R2B1 ], S2_1, T2_1);
+	GG(c, d, a, b, wBuf[R2B2 ], S2_2, T2_2);
+	GG(b, c, d, a, wBuf[R2B3 ], S2_3, T2_3);
+	GG(a, b, c, d, wBuf[R2B4 ], S2_0, T2_4);
+	GG(d, a, b, c, wBuf[R2B5 ], S2_1, T2_5);
+	GG(c, d, a, b, wBuf[R2B6 ], S2_2, T2_6);
+	GG(b, c, d, a, wBuf[R2B7 ], S2_3, T2_7);
+	GG(a, b, c, d, wBuf[R2B8 ], S2_0, T2_8);
+	GG(d, a, b, c, wBuf[R2B9 ], S2_1, T2_9);
+	GG(c, d, a, b, wBuf[R2B10], S2_2, T2_10);
+	GG(b, c, d, a, wBuf[R2B11], S2_3, T2_11);
+	GG(a, b, c, d, wBuf[R2B12], S2_0, T2_12);
+	GG(d, a, b, c, wBuf[R2B13], S2_1, T2_13);
+	GG(c, d, a, b, wBuf[R2B14], S2_2, T2_14);
+	GG(b, c, d, a, wBuf[R2B15], S2_3, T2_15);
+	HH(a, b, c, d, wBuf[R3B0 ], S3_0, T3_0);
+	HH(d, a, b, c, wBuf[R3B1 ], S3_1, T3_1);
+	HH(c, d, a, b, wBuf[R3B2 ], S3_2, T3_2);
+	HH(b, c, d, a, wBuf[R3B3 ], S3_3, T3_3);
+	HH(a, b, c, d, wBuf[R3B4 ], S3_0, T3_4);
+	HH(d, a, b, c, wBuf[R3B5 ], S3_1, T3_5);
+	HH(c, d, a, b, wBuf[R3B6 ], S3_2, T3_6);
+	HH(b, c, d, a, wBuf[R3B7 ], S3_3, T3_7);
+	HH(a, b, c, d, wBuf[R3B8 ], S3_0, T3_8);
+	HH(d, a, b, c, wBuf[R3B9 ], S3_1, T3_9);
+	HH(c, d, a, b, wBuf[R3B10], S3_2, T3_10);
+	HH(b, c, d, a, wBuf[R3B11], S3_3, T3_11);
+	HH(a, b, c, d, wBuf[R3B12], S3_0, T3_12);
+	HH(d, a, b, c, wBuf[R3B13], S3_1, T3_13);
+	HH(c, d, a, b, wBuf[R3B14], S3_2, T3_14);
+	HH(b, c, d, a, wBuf[R3B15], S3_3, T3_15);
+	II(a, b, c, d, wBuf[R4B0 ], S4_0, T4_0);
+	II(d, a, b, c, wBuf[R4B1 ], S4_1, T4_1);
+	II(c, d, a, b, wBuf[R4B2 ], S4_2, T4_2);
+	II(b, c, d, a, wBuf[R4B3 ], S4_3, T4_3);
+	II(a, b, c, d, wBuf[R4B4 ], S4_0, T4_4);
+	II(d, a, b, c, wBuf[R4B5 ], S4_1, T4_5);
+	II(c, d, a, b, wBuf[R4B6 ], S4_2, T4_6);
+	II(b, c, d, a, wBuf[R4B7 ], S4_3, T4_7);
+	II(a, b, c, d, wBuf[R4B8 ], S4_0, T4_8);
+	II(d, a, b, c, wBuf[R4B9 ], S4_1, T4_9);
+	II(c, d, a, b, wBuf[R4B10], S4_2, T4_10);
+	II(b, c, d, a, wBuf[R4B11], S4_3, T4_11);
+	II(a, b, c, d, wBuf[R4B12], S4_0, T4_12);
+	II(d, a, b, c, wBuf[R4B13], S4_1, T4_13);
+	II(c, d, a, b, wBuf[R4B14], S4_2, T4_14);
+	II(b, c, d, a, wBuf[R4B15], S4_3, T4_15);
 	cx->cv[0] += a;
 	cx->cv[1] += b;
 	cx->cv[2] += c;
@@ -415,6 +447,7 @@ MD5_Update(MD5Context *cx, const unsigned char *input, unsigned int inputLen)
 {
 	PRUint32 bytesToConsume;
 	PRUint32 inBufIndex = cx->lsbInput & 63;
+	const PRUint32 *wBuf;
 
 	/* Add the number of input bytes to the 64-bit input counter. */
 	addto64(cx->msbInput, cx->lsbInput, inputLen);
@@ -422,9 +455,13 @@ MD5_Update(MD5Context *cx, const unsigned char *input, unsigned int inputLen)
 		/* There is already data in the buffer.  Fill with input. */
 		bytesToConsume = PR_MIN(inputLen, MD5_BUFFER_SIZE - inBufIndex);
 		memcpy(&cx->inBuf[inBufIndex], input, bytesToConsume);
-		if (inBufIndex + bytesToConsume >= MD5_BUFFER_SIZE)
+		if (inBufIndex + bytesToConsume >= MD5_BUFFER_SIZE) {
 			/* The buffer is filled.  Run the compression function. */
-			md5_compress(cx);
+#ifndef IS_LITTLE_ENDIAN
+			md5_prep_state_le(cx);
+#endif
+			md5_compress(cx, cx->u.w);
+		}
 		/* Remaining input. */
 		inputLen -= bytesToConsume;
 		input += bytesToConsume;
@@ -432,8 +469,25 @@ MD5_Update(MD5Context *cx, const unsigned char *input, unsigned int inputLen)
 
 	/* Iterate over 64-byte chunks of the message. */
 	while (inputLen >= MD5_BUFFER_SIZE) {
-		memcpy(cx->inBuf, input, MD5_BUFFER_SIZE);
-		md5_compress(cx);
+#ifdef IS_LITTLE_ENDIAN
+#ifdef _X86_
+		/* x86 can handle arithmetic on non-word-aligned buffers */
+		wBuf = (PRUint32 *)input;
+#else
+		if ((ptrdiff_t)input & 0x3) {
+			/* buffer not aligned, copy it to force alignment */
+			memcpy(cx->inBuf, buf, MD5_BUFFER_SIZE);
+			wBuf = cx->u.w;
+		} else {
+			/* buffer is aligned */
+			wBuf = (PRUint32 *)input;
+		}
+#endif
+#else
+		md5_prep_buffer_le(cx, input);
+		wBuf = cx->u.w;
+#endif
+		md5_compress(cx, wBuf);
 		inputLen -= MD5_BUFFER_SIZE;
 		input += MD5_BUFFER_SIZE;
 	}
@@ -490,7 +544,10 @@ MD5_End(MD5Context *cx, unsigned char *digest,
 	cx->u.w[15] = lendian(highInput);
 
 	/* Final call to compress. */
-	md5_compress(cx);
+#ifndef IS_LITTLE_ENDIAN
+	md5_prep_state_le(cx);
+#endif
+	md5_compress(cx, cx->u.w);
 
 	/* Copy the resulting values out of the chain variables into return buf. */
 	*digestLen = MD5_HASH_LEN;
