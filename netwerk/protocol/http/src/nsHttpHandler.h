@@ -156,10 +156,22 @@ public:
     nsICookieService * GetCookieService(); // not addrefed
 
     // Called by the channel before writing a request
-    nsresult OnModifyRequest(nsIHttpChannel *);
+    void OnModifyRequest(nsIHttpChannel *chan)
+    {
+        NotifyObservers(chan, NS_HTTP_ON_MODIFY_REQUEST_TOPIC);
+    }
 
     // Called by the channel once headers are available
-    nsresult OnExamineResponse(nsIHttpChannel *);
+    void OnExamineResponse(nsIHttpChannel *chan)
+    {
+        NotifyObservers(chan, NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC);
+    }
+
+    // Called by the channel once headers have been merged with cached headers
+    void OnExamineMergedResponse(nsIHttpChannel *chan)
+    {
+        NotifyObservers(chan, NS_HTTP_ON_EXAMINE_MERGED_RESPONSE_TOPIC);
+    }
 
 private:
 
@@ -176,12 +188,11 @@ private:
     nsresult SetAcceptEncodings(const char *);
     nsresult SetAcceptCharsets(const char *);
 
-    // timer callback for cleansing the idle connection list
-    //static void DeadConnectionCleanupCB(nsITimer *, void *);
-
     nsresult InitConnectionMgr();
     void     StartPruneDeadConnectionsTimer();
     void     StopPruneDeadConnectionsTimer();
+
+    void     NotifyObservers(nsIHttpChannel *chan, const char *event);
 
 private:
 
