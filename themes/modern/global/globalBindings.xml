@@ -210,7 +210,7 @@
     <content usechromesheets="chrome://global/skin/scrollbars-mini.css"/>
   </binding>
   
-  <binding id="browser-miniscroll" extends="chrome://global/content/bindings/general.xml#browser">
+  <binding id="browser-miniscroll" extends="chrome://global/content/bindings/browser.xml#browser">
     <content usechromesheets="chrome://global/skin/scrollbars-mini.css"/>
   </binding>
 
