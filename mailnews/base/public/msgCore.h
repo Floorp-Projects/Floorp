@@ -131,6 +131,12 @@ NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MAILNEWS, value)
 
 #define NS_MSG_ERROR_OFFLINE NS_MSG_GENERATE_FAILURE(20)
 
+#define NS_MSG_POP_FILTER_TARGET_ERROR NS_MSG_GENERATE_FAILURE(21)
+
+#define NS_MSG_INVALID_OR_MISSING_SERVER NS_MSG_GENERATE_FAILURE(22)
+
+#define NS_MSG_SERVER_USERNAME_MISSING NS_MSG_GENERATE_FAILURE(23)
+
 /* ducarroz: error codes for message compose are defined into compose\src\nsMsgComposeStringBundle.h.
              Message compose use the same error code space than other mailnews modules. To avoid any
              conflict, I reserve values between 12500 and 12999 for it.
