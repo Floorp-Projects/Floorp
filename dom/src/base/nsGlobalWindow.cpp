@@ -2111,6 +2111,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetLocation(nsIDOMLocation** aLocation)
 
 NS_IMETHODIMP GlobalWindowImpl::Activate()
 {
+/*
    nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
    GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
    if(treeOwnerAsWin)
@@ -2133,6 +2134,43 @@ NS_IMETHODIMP GlobalWindowImpl::Activate()
    NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
    return widget->SetFocus();
+   
+ */
+    nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
+   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
+   if(treeOwnerAsWin)
+      treeOwnerAsWin->SetVisibility(PR_TRUE);
+
+   nsCOMPtr<nsIPresShell> presShell;
+   mDocShell->GetPresShell(getter_AddRefs(presShell));
+   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsIViewManager> vm;
+   presShell->GetViewManager(getter_AddRefs(vm));
+   NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
+
+   nsIView* rootView;
+   vm->GetRootView(rootView);
+   NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
+   
+   nsCOMPtr<nsIWidget> widget;
+   rootView->GetWidget(*getter_AddRefs(widget));
+   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
+
+   nsEventStatus status;
+   nsGUIEvent	guiEvent;
+
+	guiEvent.eventStructType = NS_GUI_EVENT;
+	guiEvent.point.x = 0;
+	guiEvent.point.y = 0;
+	guiEvent.time = PR_IntervalNow();
+	guiEvent.nativeMsg = nsnull;
+	guiEvent.message = NS_DEACTIVATE;
+	guiEvent.widget = widget;
+
+   vm->DispatchEvent(&guiEvent, &status);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP GlobalWindowImpl::Deactivate()
