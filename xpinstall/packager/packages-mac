@@ -29,11 +29,11 @@ viewer:Essential Files:zlib.shlb
 viewer:Mozilla 
 viewer:Mozilla Addressbook 
 viewer:Mozilla Editor 
-viewer:Mozilla Installer
 viewer:Mozilla Message Compose 
 viewer:Mozilla Messenger 
 viewer:Mozilla Preferences 
 viewer:Mozilla Profile Manager
+viewer:Mozilla Profile Migration
 viewer:Mozilla Profile Wizard
 viewer:Mozilla Select Profile
 viewer:NSPR Logging
@@ -172,8 +172,6 @@ viewer:chrome:editor:*
 -viewer:chrome:editor:content:default:sb-file-panel.js
 -viewer:chrome:editor:content:default:sb-file-panel.xul
 -viewer:chrome:editor:content:default:sb-FileWidgetFileHandler.js
--viewer:chrome:editor:content:default:viewsource.js
--viewer:chrome:editor:content:default:viewsource.xul 
 viewer:chrome:directory:* 
 viewer:chrome:global:* 
 viewer:chrome:history:* 
