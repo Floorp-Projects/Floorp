@@ -1803,6 +1803,15 @@ addThis();
 /*
  * MODIFIED - ECMA has different rules for paren contents. Note
  * this regexp has two non-capturing parens, and one capturing
+ *
+ * The issue: shouldn't the match be ['ab', undefined]? Because the
+ * '\1' matches the undefined value of the second iteration of the '*'
+ * (in which the 'b' part of the '|' matches). But Perl wants ['ab','b'].
+ *
+ * Answer: waldemar@netscape.com:
+ *
+ * The correct answer is ['ab', undefined].  Perl doesn't match
+ * ECMAScript here, and I'd say that Perl is wrong in this case.
  */
 status = inSection(241);
 pattern = /^(?:b|a(?=(.)))*\1/;
