@@ -59,7 +59,7 @@ function onLoad() {
     const title = o.title;
     filePickerMode = o.mode;
     if (o.displayDirectory) {
-      const directory = o.displayDirectory.path;
+      const directory = o.displayDirectory.unicodePath;
     }
     const initialText = o.defaultString;
     const filterTitles = o.filters.titles;
@@ -128,11 +128,11 @@ function onLoad() {
   homeDir = dirServiceProvider.getFile("Home", persistent);
 
   if (directory) {
-    sfile.initWithPath(directory);
+    sfile.initWithUnicodePath(directory);
   }
   if (!directory || !(sfile.exists() && sfile.isDirectory())) {
     // Start in the user's home directory
-    sfile.initWithPath(homeDir.path);
+    sfile.initWithUnicodePath(homeDir.unicodePath);
   }
 
   retvals.buttonStatus = nsIFilePicker.returnCancel;
@@ -211,7 +211,7 @@ function onOK()
 
   var input = textInput.value;
   if (input[0] == '~') // XXX XP?
-    input  = homeDir.path + input.substring(1);
+    input  = homeDir.unicodePath + input.substring(1);
 
   var file = sfile.clone().QueryInterface(nsILocalFile);
   if (!file)
@@ -219,10 +219,10 @@ function onOK()
 
   /* XXX we need an XP way to test for an absolute path! */
   if (input[0] == '/')   /* an absolute path was entered */
-    file.initWithPath(input);
+    file.initWithUnicodePath(input);
   else {
     try {
-      file.appendRelativePath(input);
+      file.appendRelativeUnicodePath(input);
     } catch (e) {
       dump("Can't append relative path '"+input+"':\n");
       return false;
@@ -241,7 +241,7 @@ function onOK()
   switch(filePickerMode) {
   case nsIFilePicker.modeOpen:
     if (isFile) {
-      retvals.directory = file.parent.path;
+      retvals.directory = file.parent.unicodePath;
       ret = nsIFilePicker.returnOK;
     } else if (isDir) {
       if (!sfile.equals(file)) {
@@ -255,10 +255,10 @@ function onOK()
   case nsIFilePicker.modeSave:
     if (isFile) { // can only be true if file.exists()
       // we need to pop up a dialog asking if you want to save
-      rv = window.confirm(file.path + " " + bundle.GetStringFromName("confirmFileReplacing"));
+      rv = window.confirm(file.unicodePath + " " + bundle.GetStringFromName("confirmFileReplacing"));
       if (rv) {
         ret = nsIFilePicker.returnReplace;
-        retvals.directory = file.parent.path;
+        retvals.directory = file.parent.unicodePath;
       } else {
         ret = nsIFilePicker.returnCancel;
       }
@@ -273,19 +273,19 @@ function onOK()
       var parent = file.parent;
       if (parent.exists() && parent.isDirectory()) {
         ret = nsIFilePicker.returnOK;
-        retvals.directory = parent.path;
+        retvals.directory = parent.unicodePath;
       } else {
         // See bug 55026, do nothing for now, leaves typed text as clue.
-        // window.alert("Directory "+parent.path+" doesn't seem to exist, can't save "+file.path);
+        // window.alert("Directory "+parent.unicodePath+" doesn't seem to exist, can't save "+file.unicodePath);
         ret = nsIFilePicker.returnCancel;
       }
     }
     break;
   case nsIFilePicker.modeGetFolder:
     if (isDir) {
-      retvals.directory = file.parent.path;
+      retvals.directory = file.parent.unicodePath;
     } else { // if nothing selected, the current directory will be fine
-      retvals.directory = sfile.path;
+      retvals.directory = sfile.unicodePath;
     }
     ret = nsIFilePicker.returnOK;
     break;
@@ -359,7 +359,7 @@ function onSelect(e) {
          - GetFolder mode   : a directory was selected (only option)
          - Open or Save mode: a file was selected                    */
       if ((filePickerMode == nsIFilePicker.modeGetFolder) || file.isFile()) {
-        textInput.value = file.leafName;
+        textInput.value = file.unicodeLeafName;
         doEnabling();
       }
     }
@@ -371,7 +371,7 @@ function onDirectoryChanged(target)
   var path = target.getAttribute("value");
 
   var file = Components.classes[nsILocalFile_CONTRACTID].createInstance(nsILocalFile);
-  file.initWithPath(path);
+  file.initWithUnicodePath(path);
 
   if (!sfile.equals(file)) {
     gotoDirectory(file);
@@ -424,8 +424,7 @@ function goUp() {
 }
 
 function gotoDirectory(directory) {
-  var newURL = fileToURL(directory);
-  addToHistory(directory.path);
+  addToHistory(directory.unicodePath);
   directoryTree.setAttribute("ref", fileToURL(directory).spec);
   sfile = directory;
 }
