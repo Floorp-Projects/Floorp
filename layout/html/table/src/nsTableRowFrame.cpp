@@ -368,12 +368,24 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
       kidAvailSize.width -= kidMargin.left + kidMargin.right;
     }
 
+    // Compute the x-origin for the child, taking into account straddlers (cells from prior
+    // rows with rowspans > 1)
+    nscoord x = kidMargin.left;
+    PRInt32 cellColIndex = ((nsTableCellFrame *)kidFrame)->GetColIndex();
+    for (PRInt32 colIndex=0; colIndex<cellColIndex; colIndex++)
+    {
+      x += aState.tableFrame->GetColumnWidth(colIndex);
+    }
+
+    // Reflow the child
+    kidFrame->WillReflow(*aPresContext);
+    kidFrame->MoveTo(x, kidMargin.top);
+
     if (NS_UNCONSTRAINEDSIZE == aState.availSize.width)
     {
       // Reflow the child into the available space
       nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
                                    eReflowReason_Resize);
-      kidFrame->WillReflow(*aPresContext);
       status = ReflowChild(kidFrame, aPresContext, desiredSize,
                            kidReflowState);
       nsCellLayoutData *kidLayoutData = new nsCellLayoutData((nsTableCellFrame *)kidFrame, &desiredSize, pKidMaxElementSize);
@@ -391,7 +403,6 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
       kidAvailSize.width = availWidth;
       nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
                                    eReflowReason_Resize);
-      kidFrame->WillReflow(*aPresContext);
       status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
     }
     if (gsDebug1)
@@ -427,13 +438,6 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
       break;
     }
 
-    // Adjust the running x-offset, taking into account intruders (cells from prior rows with rowspans > 1)
-    aState.x = kidMargin.left;
-    PRInt32 cellColIndex = ((nsTableCellFrame *)kidFrame)->GetColIndex();
-    for (PRInt32 colIndex=0; colIndex<cellColIndex; colIndex++)
-    {
-      aState.x += aState.tableFrame->GetColumnWidth(colIndex);
-    }
     // Place the child after taking into account it's margin and attributes
     nscoord specifiedHeight = 0;
     nscoord cellHeight = desiredSize.height;
@@ -463,7 +467,11 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
     }
     // end special Nav4 compatibility code
 
-    nsRect kidRect (aState.x, kidMargin.top, cellWidth, cellHeight);
+    // Adjust the running x-offset
+    aState.x = x;
+
+    // Place the child
+    nsRect kidRect (x, kidMargin.top, cellWidth, cellHeight);
 
     PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize,
                kidMaxElementSize);
@@ -952,15 +960,14 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
     }
     mChildCount++;
 
-    // Compute the origin for the child frame
-    aState.x = margin.left;
-    // if we're constrained, compute the x offset where the cell should be put
+    // If we're constrained compute the origin for the child frame
+    nscoord x = margin.left;
     if (NS_UNCONSTRAINEDSIZE!=aState.availSize.width)
     {
       // Adjust the running x-offset, taking into account intruders (cells from prior rows with rowspans > 1)
       PRInt32 cellColIndex = ((nsTableCellFrame *)kidFrame)->GetColIndex();
       for (PRInt32 colIndex=0; colIndex<cellColIndex; colIndex++)
-            aState.x += aState.tableFrame->GetColumnWidth(colIndex);
+            x += aState.tableFrame->GetColumnWidth(colIndex);
     }
 
     // Try to reflow the child into the available space. It might not
@@ -971,7 +978,7 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
 
     // Inform the child it's being reflowed
     kidFrame->WillReflow(*aPresContext);
-    kidFrame->MoveTo(aState.x, topMargin);
+    kidFrame->MoveTo(x, topMargin);
     if (NS_UNCONSTRAINEDSIZE == aState.availSize.width)
     {
       nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
@@ -1021,8 +1028,11 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
       break;
     }
 
+    // Update the running x-offset
+    aState.x = x;
+
     // Place the child
-    nsRect kidRect (aState.x, topMargin, desiredSize.width, desiredSize.height);
+    nsRect kidRect (x, topMargin, desiredSize.width, desiredSize.height);
     PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize, *pKidMaxElementSize);
 
     prevKidFrame = kidFrame;

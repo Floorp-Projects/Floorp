@@ -637,7 +637,7 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
     if ((kidFrame == mFirstChild) || (aState.availSize.height > 0)) {
       // Reflow the child into the available space
       kidFrame->WillReflow(*aPresContext);
-      kidFrame->MoveTo(kidMargin.left, aState.y);
+      kidFrame->MoveTo(kidMargin.left, aState.y + topMargin);
       nsReflowState kidReflowState(kidFrame, aState.reflowState, kidFrame == mInnerTableFrame ?
                                    aState.innerTableMaxSize : aState.availSize,
                                    eReflowReason_Resize);
