@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.39 $ 
-# $Date: 2003/08/17 01:44:07 $ 
+# $Revision: 1.40 $ 
+# $Date: 2004/07/18 17:57:13 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -582,6 +582,35 @@ sub hash2string {
     return $str
 }
 
+# given a list of files, return a list representing these files with
+# large groups of files from the same directory replaced by the
+# directory name '/*'.
+
+sub group_files {
+    my (@files) = @_;
+    
+    $limit_dir_files = 5;
+
+    my %dirs;
+    my @out;
+
+    foreach $file (@files) {
+        my $dirname = File::Basename::dirname($file);
+        push @{$dirs{$dirname}}, $file; 
+    }
+    
+    foreach $dir (keys %dirs) {
+        
+        if ($#{$dirs{$dir}} >= $limit_dir_files) {
+            push @out, $dir.'/*';
+        } else {
+            push @out, @{$dirs{$dir}};
+        }
+        
+    }
+
+    return @out;
+}
 
 # load a list of modules
 
