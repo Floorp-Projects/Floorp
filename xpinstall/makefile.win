@@ -25,6 +25,6 @@
 
 DEPTH=..
 
-DIRS= public res src stub wizard\windows
+DIRS= public res src stub wizard\libxpnet wizard\windows
 
 include <$(DEPTH)\config\rules.mak>
