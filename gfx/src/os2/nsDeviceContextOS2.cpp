@@ -971,11 +971,11 @@ nsresult nsDeviceContextOS2::EndPage()
 char* 
 nsDeviceContextOS2::GetACPString(const nsString& aStr)
 {
-   int acplen = aStr.Length() * 2 + 1;
+   int acplen = aStr.Length() * 3 + 1;
    if (acplen == 1) {
       return nsnull;
-   } /* endif */
-   char * acp = new char[acplen];
+   }
+   char* acp = new char[acplen];
    if(acp)
    {
       int outlen = ::WideCharToMultiByte( 0,

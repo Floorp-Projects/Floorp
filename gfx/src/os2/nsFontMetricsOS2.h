@@ -43,18 +43,7 @@
 #include "nsDeviceContextOS2.h"
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
-
-// An nsFontHandle is actually a pointer to one of these.
-// It knows how to select itself into a ps.
-struct nsFontHandleOS2
-{
-   FATTRS fattrs;
-   SIZEF  charbox;
-
-   nsFontHandleOS2();
-   void SelectIntoPS( HPS hps, long lcid);
-   ULONG ulHashMe;
-};
+#include "nsDrawingSurfaceOS2.h"
 
 #ifndef FM_DEFN_LATIN1
 #define FM_DEFN_LATIN1          0x0010   /* Base latin character set     */
@@ -74,106 +63,157 @@ struct nsFontHandleOS2
 #define FM_DEFN_UGL1105         0x3FF0   /* Chars in bitmap fonts        */
 #endif
 
+
+// An nsFontHandle is actually a pointer to one of these.
+// It knows how to select itself into a ps.
 class nsFontOS2
 {
-public:
-//  nsFontWin(FATTRS* aFattrs, nsFontHandleOS2* aFont, PRUint32* aMap);
-//  virtual ~nsFontWin();
-  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
-
-//  virtual PRInt32 GetWidth(HPS aPS, const PRUnichar* aString,
-//                           PRUint32 aLength) = 0;
-  // XXX return width from DrawString
-//  virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
-//                          const PRUnichar* aString, PRUint32 aLength) = 0;
-#ifdef MOZ_MATHML
-  virtual nsresult
-  GetBoundingMetrics(HDC                aDC,
-                     const PRUnichar*   aString,
-                     PRUint32           aLength,
-                     nsBoundingMetrics& aBoundingMetrics) = 0;
-#endif
-
-  char      mName[FACESIZE];
-  char      mFamilyName[FACESIZE];
-  nsFontHandleOS2* mFont;
-#ifdef MOZ_MATHML
-  nsCharacterMap* mCMAP;
-#endif
+ public:
+            nsFontOS2(void);
+  void      SelectIntoPS( HPS hps, long lcid );
+  PRInt32   GetWidth( HPS aPS, const PRUnichar* aString,
+                      PRUint32 aLength );
+  void      DrawString( HPS aPS, nsDrawingSurfaceOS2* aSurface,
+                        PRInt32 aX, PRInt32 aY,
+                        const PRUnichar* aString, PRUint32 aLength );
+                      
+  FATTRS    fattrs;
+  SIZEF     charbox;
+  ULONG     ulHashMe;
+  nscoord   mMaxAscent;
+  nscoord   mMaxDescent;
 };
 
-
-typedef struct nsGlobalFont
+typedef struct _nsMiniFontMetrics
 {
-  nsString*     name;
-  FONTMETRICS   fontMetrics;
-#ifdef OLDCODE
-  PRUint32*     map;
-  PRUint8       skip;
-#endif
-  USHORT        signature;
+  char    szFamilyname[FACESIZE];
+  char    szFacename[FACESIZE];
+  USHORT  fsType;
+  USHORT  fsDefn;
+  USHORT  fsSelection;
+  PANOSE  panose;
+ #ifdef DEBUG_pedemont
+  LONG    lMatch;
+ #endif 
+} nsMiniFontMetrics;
+
+typedef struct _nsGlobalFont
+{
+  nsMiniFontMetrics metrics;
   int           nextFamily;
 } nsGlobalFont;
+
+/**
+ * nsFontSwitchCallback
+ *
+ * Font-switching callback function. Used by ResolveForwards() and
+ * ResolveBackwards(). aFontSwitch points to a structure that gives
+ * details about the current font needed to represent the current
+ * substring. In particular, this struct contains a handler to the font
+ * and some metrics of the font. These metrics may be different from
+ * the metrics obtained via nsIFontMetrics.
+ * Return PR_FALSE to stop the resolution of the remaining substrings.
+ */
+
+struct nsFontSwitch {
+  // Simple wrapper on top of nsFontWin for the moment
+  // Could hold other attributes of the font
+  nsFontOS2* mFont;
+};
+
+typedef PRBool (*PR_CALLBACK nsFontSwitchCallback)
+               (const nsFontSwitch* aFontSwitch,
+                const PRUnichar*    aSubstring,
+                PRUint32            aSubstringLength,
+                void*               aData);
+
 
 class nsFontMetricsOS2 : public nsIFontMetrics
 {
  public:
-   nsFontMetricsOS2();
-   virtual ~nsFontMetricsOS2();
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+  NS_DECL_ISUPPORTS
 
-   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+  nsFontMetricsOS2();
+  virtual ~nsFontMetricsOS2();
 
-   NS_DECL_ISUPPORTS
+  NS_IMETHOD Init( const nsFont& aFont, nsIAtom* aLangGroup, nsIDeviceContext *aContext);
+  NS_IMETHOD Destroy();
 
-   NS_IMETHOD Init( const nsFont& aFont, nsIAtom* aLangGroup, nsIDeviceContext *aContext);
-   NS_IMETHOD Destroy();
+  // Metrics
+  NS_IMETHOD  GetXHeight( nscoord &aResult);
+  NS_IMETHOD  GetSuperscriptOffset( nscoord &aResult);
+  NS_IMETHOD  GetSubscriptOffset( nscoord &aResult);
+  NS_IMETHOD  GetStrikeout( nscoord &aOffset, nscoord &aSize);
+  NS_IMETHOD  GetUnderline( nscoord &aOffset, nscoord &aSize);
 
-   // Metrics
-   NS_IMETHOD  GetXHeight( nscoord &aResult);
-   NS_IMETHOD  GetSuperscriptOffset( nscoord &aResult);
-   NS_IMETHOD  GetSubscriptOffset( nscoord &aResult);
-   NS_IMETHOD  GetStrikeout( nscoord &aOffset, nscoord &aSize);
-   NS_IMETHOD  GetUnderline( nscoord &aOffset, nscoord &aSize);
-
-   NS_IMETHOD  GetHeight( nscoord &aHeight);
-   NS_IMETHOD  GetNormalLineHeight(nscoord &aHeight);
-   NS_IMETHOD  GetLeading( nscoord &aLeading);
-   NS_IMETHOD  GetEmHeight(nscoord &aHeight);
-   NS_IMETHOD  GetEmAscent(nscoord &aAscent);
-   NS_IMETHOD  GetEmDescent(nscoord &aDescent);
-   NS_IMETHOD  GetMaxHeight(nscoord &aHeight);
-   NS_IMETHOD  GetMaxAscent( nscoord &aAscent);
-   NS_IMETHOD  GetMaxDescent( nscoord &aDescent);
-   NS_IMETHOD  GetMaxAdvance( nscoord &aAdvance);
-   NS_IMETHOD  GetFont( const nsFont *&aFont);
-   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
-   NS_IMETHOD  GetFontHandle( nsFontHandle &aHandle);
+  NS_IMETHOD  GetHeight( nscoord &aHeight);
+  NS_IMETHOD  GetNormalLineHeight(nscoord &aHeight);
+  NS_IMETHOD  GetLeading( nscoord &aLeading);
+  NS_IMETHOD  GetEmHeight(nscoord &aHeight);
+  NS_IMETHOD  GetEmAscent(nscoord &aAscent);
+  NS_IMETHOD  GetEmDescent(nscoord &aDescent);
+  NS_IMETHOD  GetMaxHeight(nscoord &aHeight);
+  NS_IMETHOD  GetMaxAscent( nscoord &aAscent);
+  NS_IMETHOD  GetMaxDescent( nscoord &aDescent);
+  NS_IMETHOD  GetMaxAdvance( nscoord &aAdvance);
+  NS_IMETHOD  GetFont( const nsFont *&aFont);
+  NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
+  NS_IMETHOD  GetFontHandle( nsFontHandle &aHandle);
   NS_IMETHOD  GetAveCharWidth(nscoord &aAveCharWidth);
-
   NS_IMETHOD  GetSpaceWidth(nscoord &aSpaceWidth);
 
-  NS_IMETHODIMP SetUnicodeFont( HPS aPS, LONG lcid );
+  virtual nsresult
+  ResolveForwards(HPS                  aPS,
+                  const PRUnichar*     aString,
+                  PRUint32             aLength,
+                  nsFontSwitchCallback aFunc, 
+                  void*                aData);
 
-  virtual FATTRS* FindGlobalFont(HPS aPS, BOOL bBold, BOOL bItalic);
-  virtual FATTRS* FindGenericFont(HPS aPS, BOOL bBold, BOOL bItalic);
-  virtual FATTRS* FindLocalFont(HPS aPS, BOOL bBold, BOOL bItalic);
-  virtual FATTRS* FindUserDefinedFont(HPS aPS, BOOL bBold, BOOL bItalic);
-  FATTRS*         FindFont(HPS aPS, BOOL bBold, BOOL bItalic);
-  virtual FATTRS* LoadGenericFont(HPS aPS, BOOL bBold, BOOL bItalic, char** aName);
-  virtual FATTRS* LoadFont(HPS aPS, nsString* aName, BOOL bBold, BOOL bItalic);
+  virtual nsresult
+  ResolveBackwards(HPS                  aPS,
+                   const PRUnichar*     aString,
+                   PRUint32             aLength,
+                   nsFontSwitchCallback aFunc, 
+                   void*                aData);
 
-  static nsGlobalFont* gGlobalFonts;
-  static int gGlobalFontsCount;
+  nsFontOS2*          FindFont( HPS aPS );
+  nsFontOS2*          FindGlobalFont( HPS aPS );
+  nsFontOS2*          FindGenericFont( HPS aPS );
+  nsFontOS2*          FindLocalFont( HPS aPS );
+  nsFontOS2*          FindUserDefinedFont( HPS aPS );
+  nsFontOS2*          LoadFont (HPS aPS, nsString* aName );
+  nsFontOS2*          LoadFont (HPS aPS, const char* aFamilyName );
+  static nsVoidArray* InitializeGlobalFonts();
 
-  static nsGlobalFont* InitializeGlobalFonts();
-  int mCodePage;
+  static nsVoidArray* gGlobalFonts;
+  static PLHashTable* gFamilyNames;
+  static nscoord      gDPI;
+  static long         gSystemRes;
+
+  nsStringArray       mFonts;
+  PRUint16            mFontsIndex;
+  nsVoidArray         mFontIsGeneric;
+
+  nsString            mGeneric;
+  nsCOMPtr<nsIAtom>   mLangGroup;
+  nsAutoString        mUserDefined;
+
+  PRUint8             mTriedAllGenerics;
+  PRUint8             mIsUserDefined;
+
+  int                 mCodePage;
+
 
  protected:
-  nsresult RealizeFont();
-  PRBool GetVectorSubstitute( HPS aPS, const char* aFacename, PRBool aIsBold,
-                             PRBool aIsItalic, char* alias );
+  nsresult      RealizeFont(void);
+  PRBool        GetVectorSubstitute( HPS aPS, const char* aFacename, char* alias );
+  nsFontOS2*    GetUnicodeFont( HPS aPS );
+  void          SetFontHandle( HPS aPS, nsFontOS2* aFH );
+  PLHashTable*  InitializeFamilyNames(void);
 
-  nsFont   *mFont;
+
+  nsFont   mFont;
   nscoord  mSuperscriptYOffset;
   nscoord  mSubscriptYOffset;
   nscoord  mStrikeoutPosition;
@@ -192,28 +232,10 @@ class nsFontMetricsOS2 : public nsIFontMetrics
   nscoord  mXHeight;
   nscoord  mAveCharWidth;
 
-  nsFontHandleOS2    *mFontHandle;
+  nsFontOS2          *mFontHandle;
   nsDeviceContextOS2 *mDeviceContext;
 
   static PRBool       gSubstituteVectorFonts;
-
-public:
-  nsStringArray       mFonts;
-  PRUint16            mFontsIndex;
-  nsVoidArray         mFontIsGeneric;
-
-  nsAutoString        mDefaultFont;
-  nsString            *mGeneric;
-  nsCOMPtr<nsIAtom>   mLangGroup;
-  nsAutoString        mUserDefined;
-
-  PRUint8 mTriedAllGenerics;
-  PRUint8 mIsUserDefined;
-  static nscoord      gDPI;
-  static long         gSystemRes;
-protected:
-  static PLHashTable* InitializeFamilyNames(void);
-  static PLHashTable* gFamilyNames;
 };
 
 class nsFontEnumeratorOS2 : public nsIFontEnumerator

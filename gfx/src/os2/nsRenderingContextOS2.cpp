@@ -59,9 +59,6 @@ LONG OS2_CombineClipRegion( HPS hps, HRGN hrgnCombine, LONG lMode);
 HRGN OS2_CopyClipRegion( HPS hps);
 #define OS2_SetClipRegion(hps,hrgn) OS2_CombineClipRegion(hps, hrgn, CRGN_COPY)
 
-BOOL doSetupFontAndTextColor = PR_TRUE;
-BOOL doSetupFont = PR_TRUE;
-
 #define FLAG_CLIP_VALID       0x0001
 #define FLAG_CLIP_CHANGED     0x0002
 #define FLAG_LOCAL_CLIP_VALID 0x0004
@@ -124,26 +121,29 @@ GraphicsState :: ~GraphicsState()
 
 nsRenderingContextOS2::nsRenderingContextOS2()
 {
-   NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
 
-   mContext = nsnull;
-   mSurface = nsnull;
-   mPS = 0;
-   mMainSurface = nsnull;
-   mColor = NS_RGB( 0, 0, 0);
-   mFontMetrics = nsnull;
-   mLineStyle = nsLineStyle_kSolid;
-   mPreservedInitialClipRegion = PR_FALSE;
-   mPaletteMode = PR_FALSE;
+  mContext = nsnull;
+  mSurface = nsnull;
+  mPS = 0;
+  mMainSurface = nsnull;
+  mColor = NS_RGB( 0, 0, 0);
+  mFontMetrics = nsnull;
+  mLineStyle = nsLineStyle_kSolid;
+  mPreservedInitialClipRegion = PR_FALSE;
+  mPaletteMode = PR_FALSE;
 
-   // Need to enforce setting color values for first time. Make cached values different from current ones.
-   mCurrFontMetrics = mFontMetrics + 1;
-   mCurrTextColor   = mColor + 1;
-   mCurrLineColor   = mColor + 1;
-   mCurrLineStyle   = (nsLineStyle)((int)mLineStyle + 1);
-   mCurrFillColor   = mColor + 1;
+  // Need to enforce setting color values for first time. Make cached values different from current ones.
+  mCurrFontMetrics = mFontMetrics + 1;
+  mCurrTextColor   = mColor + 1;
+  mCurrLineColor   = mColor + 1;
+  mCurrLineStyle   = (nsLineStyle)((int)mLineStyle + 1);
+  mCurrFillColor   = mColor + 1;
 
   mStateCache = new nsVoidArray();
+#ifdef IBMBIDI
+  mRightToLeftText = PR_FALSE;
+#endif
 
   //create an initial GraphicsState
 
@@ -390,26 +390,20 @@ nsRenderingContextOS2::SelectOffScreenDrawingSurface( nsDrawingSurface aSurface)
 NS_IMETHODIMP
 nsRenderingContextOS2::GetDrawingSurface( nsDrawingSurface *aSurface)
 {
-   if( !aSurface)
-      return NS_ERROR_NULL_POINTER;
-
-   *aSurface = (void*)((nsDrawingSurfaceOS2 *) mSurface);
+   *aSurface = mSurface;
    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsRenderingContextOS2::GetHints(PRUint32& aResult)
 {
-  PRUint32 result = 0;
-
-  aResult = result;
-
+  aResult = 0;
+  
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextOS2::Reset()
 {
-   // okay, what's this supposed to do?  Empty the state stack?
    return NS_OK;
 }
 
@@ -703,14 +697,19 @@ NS_IMETHODIMP nsRenderingContextOS2::SetClipRegion( const nsIRegion &aRegion, ns
  */
 NS_IMETHODIMP nsRenderingContextOS2::CopyClipRegion(nsIRegion &aRegion)
 {
+#if 0
   HRGN hr = OS2_CopyClipRegion(mPS);
 
   if (hr == HRGN_ERROR)
     return NS_ERROR_FAILURE;
 
-  //((nsRegionOS2 *)&aRegion)->mRegion = hr;
+  ((nsRegionOS2 *)&aRegion)->mRegion = hr;
 
   return NS_OK;
+#else
+  NS_ASSERTION( 0, "nsRenderingContextOS2::CopyClipRegion() not implemented" );
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 // Somewhat dubious & rather expensive
@@ -969,6 +968,30 @@ NS_IMETHODIMP nsRenderingContextOS2::DrawLine( nscoord aX0, nscoord aY0, nscoord
    return NS_OK;
 }
 
+NS_IMETHODIMP nsRenderingContextOS2::DrawStdLine( nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
+{
+   POINTL ptls[] = { { (long) aX0, (long) aY0 },
+                     { (long) aX1, (long) aY1 } };
+   mSurface->NS2PM (ptls, 2);
+
+   if (ptls[0].x > ptls[1].x)
+      ptls[0].x--;
+   else if (ptls[1].x > ptls[0].x)
+      ptls[1].x--;
+
+   if (ptls[0].y < ptls[1].y)
+      ptls[0].y++;
+   else if (ptls[1].y < ptls[0].y)
+      ptls[1].y++;
+
+   SetupLineColorAndStyle ();
+
+   GFX (::GpiMove (mPS, ptls), FALSE);
+   GFX (::GpiLine (mPS, ptls + 1), GPI_ERROR);
+
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsRenderingContextOS2::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
    PMDrawPoly( aPoints, aNumPoints, PR_FALSE);
@@ -983,11 +1006,18 @@ NS_IMETHODIMP nsRenderingContextOS2::DrawPolygon( const nsPoint aPoints[], PRInt
 
 NS_IMETHODIMP nsRenderingContextOS2::FillPolygon( const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-   PMDrawPoly( aPoints, aNumPoints, PR_TRUE);
+   PMDrawPoly( aPoints, aNumPoints, PR_TRUE );
    return NS_OK;
 }
 
-void nsRenderingContextOS2::PMDrawPoly( const nsPoint aPoints[], PRInt32 aNumPoints, PRBool bFilled)
+NS_IMETHODIMP nsRenderingContextOS2::FillStdPolygon( const nsPoint aPoints[], PRInt32 aNumPoints)
+{
+   PMDrawPoly( aPoints, aNumPoints, PR_TRUE, PR_FALSE );
+   return NS_OK;
+}
+
+ // bDoTransform defaults to PR_TRUE
+void nsRenderingContextOS2::PMDrawPoly( const nsPoint aPoints[], PRInt32 aNumPoints, PRBool bFilled, PRBool bDoTransform)
 {
    if( aNumPoints > 1)
    {
@@ -996,7 +1026,7 @@ void nsRenderingContextOS2::PMDrawPoly( const nsPoint aPoints[], PRInt32 aNumPoi
       PPOINTL pts = aptls;
 
       if( aNumPoints > 20)
-         pts = new POINTL [ aNumPoints];
+         pts = new POINTL[aNumPoints];
 
       PPOINTL pp = pts;
       const nsPoint *np = &aPoints[0];
@@ -1005,7 +1035,8 @@ void nsRenderingContextOS2::PMDrawPoly( const nsPoint aPoints[], PRInt32 aNumPoi
       {
          pp->x = np->x;
          pp->y = np->y;
-         mTranMatrix->TransformCoord( (int*)&pp->x, (int*)&pp->y);
+         if( bDoTransform )
+           mTranMatrix->TransformCoord( (int*)&pp->x, (int*)&pp->y);
       }
 
       // go to os2
@@ -1263,14 +1294,14 @@ NS_IMETHODIMP nsRenderingContextOS2 :: GetWidth(const char* aString,
                                                 PRUint32 aLength,
                                                 nscoord& aWidth)
 {
+  if( !aLength )
+  {
+    aWidth = 0;
+    return NS_OK;
+  }
+
   if (nsnull != mFontMetrics)
   {
-    if( !aLength )
-    {
-      aWidth = 0;
-      return NS_OK;
-    }
-
     // Check for the very common case of trying to get the width of a single
     // space.
     if ((1 == aLength) && (aString[0] == ' '))
@@ -1280,8 +1311,8 @@ NS_IMETHODIMP nsRenderingContextOS2 :: GetWidth(const char* aString,
 
     SIZEL size;
 
-    SetupFontAndTextColor ();
-    ::GetTextExtentPoint32(mPS, aString, aLength, &size);
+    SetupFontAndColor ();
+    GetTextExtentPoint32(mPS, aString, aLength, &size);
     aWidth = NSToCoordRound(float(size.cx) * mP2T);
 
     return NS_OK;
@@ -1297,135 +1328,99 @@ NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const nsString &aString,
    return GetWidth( aString.get(), aString.Length(), aWidth, aFontID);
 }
 
+static PRBool
+AreFattrsEqual( const FATTRS &fattrs1, const FATTRS &fattrs2 )
+{
+  if( PL_strcasecmp(fattrs1.szFacename, fattrs2.szFacename) == 0 &&
+      fattrs1.usCodePage == fattrs2.usCodePage )
+    return PR_TRUE;
+  else
+    return PR_FALSE;
+}
+
+struct GetWidthData {
+  HPS     mPS;      // IN
+  FATTRS  mFattrs;  // IN/OUT (running)
+  LONG    mWidth;   // IN/OUT (running, accumulated width so far)
+  LONG    mOldLCID; // OUT holds old font id when switching
+};
+
+static PRBool PR_CALLBACK
+do_GetWidth(const nsFontSwitch* aFontSwitch,
+            const PRUnichar*    aSubstring,
+            PRUint32            aSubstringLength,
+            void*               aData)
+{
+  nsFontOS2* font = aFontSwitch->mFont;
+
+  GetWidthData* data = (GetWidthData*)aData;
+  if( !AreFattrsEqual( data->mFattrs, font->fattrs ))
+  {
+     // the desired font is not the current font in the PS
+    data->mFattrs = font->fattrs;
+    if( data->mOldLCID == 0 )
+    {   // set 'other' font
+      data->mOldLCID = GpiQueryCharSet(data->mPS);
+      NS_ASSERTION( data->mOldLCID != 1, "mOldLCID is equal to one!" );
+      GFX (::GpiCreateLogFont (data->mPS, 0, 1, &(data->mFattrs)), GPI_ERROR);
+      font->SelectIntoPS( data->mPS, 1 );
+    }
+    else
+    {  // reset 'normal' font
+      font->SelectIntoPS( data->mPS, data->mOldLCID );
+      GFX (::GpiDeleteSetId (data->mPS, 1), FALSE);
+      data->mOldLCID = 0;
+    }
+  }
+  
+  data->mWidth += font->GetWidth(data->mPS, aSubstring, aSubstringLength);
+  
+   // cleanup
+  delete font;
+
+  return PR_TRUE; // don't stop till the end
+}
+
 NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const PRUnichar *aString,
                                                PRUint32 aLength,
                                                nscoord &aWidth,
                                                PRInt32 *aFontID)
 {
-  nsresult temp;
-  char buf[1024];
+  if (!mFontMetrics)
+    return NS_ERROR_FAILURE;
 
-  PRUnichar* pstr = (PRUnichar *)(const PRUnichar *)aString;
-
-  PRUint32 start = 0;
-  nscoord tWidth;
-  BOOL createdFont = FALSE;
-  LONG oldLcid;
-  int convertedLength = 0;
-  nsresult rv;
-
-  aWidth = 0;
-
-  if (((nsFontMetricsOS2*)mFontMetrics)->mCodePage == 1252)
+  if( !aLength )
   {
-    for (PRUint32 i = 0; i < aLength; i++)
-    {
-      PRUnichar c = pstr[i];
-      if (c > 0x00FF)
-      {
-        if (!createdFont)
-        {
-           // find the font specified for Unicode characters and use it to
-           // display any characters above 0x00FF
-          rv = ((nsFontMetricsOS2*)mFontMetrics)->SetUnicodeFont( mPS, 1 );
-
-          if( NS_FAILED(rv) )
-            continue;         // failed to load unicode font; use 'normal' font
-          else
-            createdFont = TRUE;
-        }
-
-         // Calculate width of the preceding non-unicode characters
-        if( i-start > 0 )
-        {
-          convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage,
-                                      &pstr[start], i-start, buf, sizeof(buf));
-          GetWidth((const char*)buf,convertedLength,tWidth);
-          aWidth += tWidth;
-        }
-
-         // Group unicode chars together
-        PRUint32 end = i+1;
-        while( end < aLength && pstr[end] > 0x00FF )
-          end++;
-
-         // change to use unicode font
-        LONG oldLcid = GpiQueryCharSet(mPS);
-        GFX (::GpiSetCharSet (mPS, 1), FALSE);
-        doSetupFontAndTextColor = PR_FALSE;
-
-        convertedLength = WideCharToMultiByte( 1208, &pstr[i], end-i, buf, sizeof(buf));
-        GetWidth((const char*)buf,convertedLength,tWidth);
-        aWidth+=tWidth;
-
-        doSetupFontAndTextColor = PR_TRUE;
-        GFX (::GpiSetCharSet (mPS, oldLcid), FALSE);
-        start = end;
-        i = end - 1;   /* get incremented by for loop */
-      }
-    } /*endfor*/
-  }
-  else
-  {
-    for (PRUint32 i = 0; i < aLength; i++)
-    {
-      PRUnichar c = pstr[i];
-      if ((c >= 0x0080) && (c <= 0x00FF))
-      {
-        if (!createdFont)
-        {
-          nsFontHandle fh = nsnull;
-          if (mFontMetrics)
-            mFontMetrics->GetFontHandle(fh);
-          nsFontHandleOS2 *pHandle = (nsFontHandleOS2 *) fh;
-          FATTRS fattrs = pHandle->fattrs;
-          fattrs.usCodePage = 1252;
-          GFX (::GpiCreateLogFont (mPS, 0, 1, &fattrs), GPI_ERROR);
-          createdFont = TRUE;
-        }
-
-        if( i-start > 0 )
-        {
-          convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, &pstr[start], i-start, buf, sizeof(buf));
-          GetWidth((const char*)buf,convertedLength,tWidth);
-          aWidth += tWidth;
-        }
-
-         // Group chars together
-        PRUint32 end = i+1;           
-        while( end < aLength && pstr[end] >= 0x0080 && pstr[end] <= 0x00FF )
-          end++;
-
-        LONG oldLcid = GpiQueryCharSet(mPS);
-        GFX (::GpiSetCharSet (mPS, 1), FALSE);
-        doSetupFontAndTextColor = PR_FALSE;
-
-        convertedLength = WideCharToMultiByte( 1252, &pstr[i], end-i, buf, sizeof(buf));
-        GetWidth((const char*)buf,convertedLength,tWidth);
-        aWidth+=tWidth;
-
-        doSetupFontAndTextColor = PR_TRUE;
-        GFX (::GpiSetCharSet (mPS, oldLcid), FALSE);
-        start = end;
-        i = end - 1;   /* get incremented by for loop */
-      }
-    }
+    aWidth = 0;
+    return NS_OK;
   }
 
-  if (createdFont)
+  SetupFontAndColor();
+
+  nsFontMetricsOS2* metrics = (nsFontMetricsOS2*)mFontMetrics;
+  GetWidthData data;
+  data.mPS = mPS;
+  data.mFattrs = mCurrFont;
+  data.mWidth = 0;
+  data.mOldLCID = 0;
+
+  metrics->ResolveForwards(mPS, aString, aLength, do_GetWidth, &data);
+  aWidth = NSToCoordRound(float(data.mWidth) * mP2T);
+
+  if( data.mOldLCID != 0 )
   {
-    GFX (::GpiDeleteSetId(mPS, 1), FALSE);
-    createdFont = FALSE;
+     // If the font was changed along the way, restore our font
+    nsFontHandle fh;
+    metrics->GetFontHandle( fh );
+    nsFontOS2* font = (nsFontOS2*)fh;
+    font->SelectIntoPS( mPS, data.mOldLCID );
+    GFX (::GpiDeleteSetId (data.mPS, 1), FALSE);
   }
 
-  if( aLength-start > 0 )
-  {
-    convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, &pstr[start], aLength-start, buf, sizeof(buf));
-    temp = GetWidth( buf, convertedLength, tWidth);
-    aWidth+= tWidth;
-  }
+  if (aFontID)
+    *aFontID = 0;
 
-  return temp;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1439,6 +1434,418 @@ nsRenderingContextOS2::GetTextDimensions(const char*       aString,
                                          nsTextDimensions& aLastWordDimensions,
                                          PRInt32*          aFontID)
 {
+  NS_PRECONDITION(aBreaks[aNumBreaks - 1] == aLength, "invalid break array");
+
+  if (nsnull != mFontMetrics) {
+    // Setup the font and foreground color
+    SetupFontAndColor();
+
+    // If we need to back up this state represents the last place we could
+    // break. We can use this to avoid remeasuring text
+    PRInt32 prevBreakState_BreakIndex = -1; // not known (hasn't been computed)
+    nscoord prevBreakState_Width = 0; // accumulated width to this point
+
+    // Initialize OUT parameters
+    nsFontMetricsOS2* metrics = (nsFontMetricsOS2*)mFontMetrics;
+    metrics->GetMaxAscent( aLastWordDimensions.ascent );
+    metrics->GetMaxDescent( aLastWordDimensions.descent );
+    aLastWordDimensions.width = -1;
+    aNumCharsFit = 0;
+
+    // Iterate each character in the string and determine which font to use
+    nscoord width = 0;
+    PRInt32 start = 0;
+    nscoord aveCharWidth;
+    metrics->GetAveCharWidth( aveCharWidth );
+
+    while (start < aLength) {
+      // Estimate how many characters will fit. Do that by diving the available
+      // space by the average character width. Make sure the estimated number
+      // of characters is at least 1
+      PRInt32 estimatedNumChars = 0;
+      if (aveCharWidth > 0) {
+        estimatedNumChars = (aAvailWidth - width) / aveCharWidth;
+      }
+      if (estimatedNumChars < 1) {
+        estimatedNumChars = 1;
+      }
+
+      // Find the nearest break offset
+      PRInt32 estimatedBreakOffset = start + estimatedNumChars;
+      PRInt32 breakIndex;
+      nscoord numChars;
+
+      // Find the nearest place to break that is less than or equal to
+      // the estimated break offset
+      if (aLength < estimatedBreakOffset) {
+        // All the characters should fit
+        numChars = aLength - start;
+        breakIndex = aNumBreaks - 1;
+      } 
+      else {
+        breakIndex = prevBreakState_BreakIndex;
+        while (((breakIndex + 1) < aNumBreaks) &&
+               (aBreaks[breakIndex + 1] <= estimatedBreakOffset)) {
+          ++breakIndex;
+        }
+        if (breakIndex == prevBreakState_BreakIndex) {
+          ++breakIndex; // make sure we advanced past the previous break index
+        }
+        numChars = aBreaks[breakIndex] - start;
+      }
+
+      // Measure the text
+      nscoord twWidth = 0;
+      if ((1 == numChars) && (aString[start] == ' ')) {
+        metrics->GetSpaceWidth(twWidth);
+      } 
+      else if (numChars > 0) {
+        SIZEL size;
+        GetTextExtentPoint32(mPS, &aString[start], numChars, &size);
+        twWidth = NSToCoordRound(float(size.cx) * mP2T);
+      }
+
+      // See if the text fits
+      PRBool  textFits = (twWidth + width) <= aAvailWidth;
+
+      // If the text fits then update the width and the number of
+      // characters that fit
+      if (textFits) {
+        aNumCharsFit += numChars;
+        width += twWidth;
+        start += numChars;
+
+        // This is a good spot to back up to if we need to so remember
+        // this state
+        prevBreakState_BreakIndex = breakIndex;
+        prevBreakState_Width = width;
+      }
+      else {
+        // See if we can just back up to the previous saved state and not
+        // have to measure any text
+        if (prevBreakState_BreakIndex > 0) {
+          // If the previous break index is just before the current break index
+          // then we can use it
+          if (prevBreakState_BreakIndex == (breakIndex - 1)) {
+            aNumCharsFit = aBreaks[prevBreakState_BreakIndex];
+            width = prevBreakState_Width;
+            break;
+          }
+        }
+
+        // We can't just revert to the previous break state
+        if (0 == breakIndex) {
+          // There's no place to back up to so even though the text doesn't fit
+          // return it anyway
+          aNumCharsFit += numChars;
+          width += twWidth;
+          break;
+        }
+
+        // Repeatedly back up until we get to where the text fits or we're all
+        // the way back to the first word
+        width += twWidth;
+        while ((breakIndex >= 1) && (width > aAvailWidth)) {
+          twWidth = 0;
+          start = aBreaks[breakIndex - 1];
+          numChars = aBreaks[breakIndex] - start;
+          
+          if ((1 == numChars) && (aString[start] == ' ')) {
+            metrics->GetSpaceWidth(twWidth);
+          } 
+          else if (numChars > 0) {
+            SIZEL size;
+            GetTextExtentPoint32(mPS, &aString[start], numChars, &size);
+            twWidth = NSToCoordRound(float(size.cx) * mP2T);
+          }
+
+          width -= twWidth;
+          aNumCharsFit = start;
+          breakIndex--;
+        }
+        break;
+      }
+    }
+
+    aDimensions.width = width;
+    metrics->GetMaxAscent( aDimensions.ascent );
+    metrics->GetMaxDescent( aDimensions.descent ); 
+
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+struct BreakGetTextDimensionsData {
+  HPS      mPS;                // IN
+  FATTRS   mFattrs;            // IN/OUT (running)
+  float    mP2T;               // IN
+  PRInt32  mAvailWidth;        // IN
+  PRInt32* mBreaks;            // IN
+  PRInt32  mNumBreaks;         // IN
+  nscoord  mSpaceWidth;        // IN
+  nscoord  mAveCharWidth;      // IN
+  PRInt32  mEstimatedNumChars; // IN (running -- to handle the edge case of one word)
+
+  PRInt32  mNumCharsFit;  // IN/OUT -- accumulated number of chars that fit so far
+  nscoord  mWidth;        // IN/OUT -- accumulated width so far
+
+  // If we need to back up, this state represents the last place
+  // we could break. We can use this to avoid remeasuring text
+  PRInt32 mPrevBreakState_BreakIndex; // IN/OUT, initialized as -1, i.e., not yet computed
+  nscoord mPrevBreakState_Width;      // IN/OUT, initialized as  0
+
+  // Remember the fonts that we use so that we can deal with
+  // line-breaking in-between fonts later. mOffsets[0] is also used
+  // to initialize the current offset from where to start measuring
+  nsVoidArray* mFonts;   // OUT
+  nsVoidArray* mOffsets; // IN/OUT
+
+  LONG     mOldLCID;           // OUT holds old font id when switching
+};
+
+static PRBool PR_CALLBACK
+do_BreakGetTextDimensions(const nsFontSwitch* aFontSwitch,
+                          const PRUnichar*    aSubstring,
+                          PRUint32            aSubstringLength,
+                          void*               aData)
+{
+  nsFontOS2* font = aFontSwitch->mFont;
+
+  // Make sure the font is selected
+  BreakGetTextDimensionsData* data = (BreakGetTextDimensionsData*)aData;
+  if( !AreFattrsEqual( data->mFattrs, font->fattrs ))
+  {
+     // the desired font is not the current font in the PS
+    data->mFattrs = font->fattrs;
+    if( data->mOldLCID == 0 )
+    {   // set 'other' font
+      data->mOldLCID = GpiQueryCharSet(data->mPS);
+      NS_ASSERTION( data->mOldLCID != 1, "mOldLCID is equal to one!" );
+      GFX (::GpiCreateLogFont (data->mPS, 0, 1, &(data->mFattrs)), GPI_ERROR);
+      font->SelectIntoPS( data->mPS, 1 );
+    }
+    else
+    {  // reset 'normal' font
+      font->SelectIntoPS( data->mPS, data->mOldLCID );
+      GFX (::GpiDeleteSetId (data->mPS, 1), FALSE);
+      data->mOldLCID = 0;
+    }
+  }
+
+   // set mMaxAscent & mMaxDescent if not already set in nsFontOS2 struct
+  if( font->mMaxAscent == 0 )
+  {
+    FONTMETRICS fm;
+    GFX (::GpiQueryFontMetrics ( data->mPS, sizeof (fm), &fm), FALSE);
+    
+    font->mMaxAscent  = NSToCoordRound( fm.lMaxAscender * data->mP2T );
+    font->mMaxDescent = NSToCoordRound( fm.lMaxDescender * data->mP2T );
+  }
+
+  // Our current state relatively to the _full_ string...
+  // This allows emulating the previous code...
+  const PRUnichar* pstr = (const PRUnichar*)data->mOffsets->ElementAt(0);
+  PRInt32 numCharsFit = data->mNumCharsFit;
+  nscoord width = data->mWidth;
+  PRInt32 start = (PRInt32)(aSubstring - pstr);
+  PRInt32 i = start + aSubstringLength;
+  PRBool allDone = PR_FALSE;
+
+  while (start < i) {
+    // Estimate how many characters will fit. Do that by dividing the
+    // available space by the average character width
+    PRInt32 estimatedNumChars = data->mEstimatedNumChars;
+    if (!estimatedNumChars && data->mAveCharWidth > 0) {
+      estimatedNumChars = (data->mAvailWidth - width) / data->mAveCharWidth;
+    }
+    // Make sure the estimated number of characters is at least 1
+    if (estimatedNumChars < 1) {
+      estimatedNumChars = 1;
+    }
+
+    // Find the nearest break offset
+    PRInt32 estimatedBreakOffset = start + estimatedNumChars;
+    PRInt32 breakIndex = -1; // not yet computed
+    PRBool  inMiddleOfSegment = PR_FALSE;
+    nscoord numChars;
+
+    // Avoid scanning the break array in the case where we think all
+    // the text should fit
+    if (i <= estimatedBreakOffset) {
+      // Everything should fit
+      numChars = i - start;
+    }
+    else {
+      // Find the nearest place to break that is less than or equal to
+      // the estimated break offset
+      breakIndex = data->mPrevBreakState_BreakIndex;
+      while (data->mBreaks[breakIndex + 1] <= estimatedBreakOffset) {
+        ++breakIndex;
+      }
+
+      if (breakIndex == -1)
+        breakIndex = 0;
+
+      // We found a place to break that is before the estimated break
+      // offset. Where we break depends on whether the text crosses a
+      // segment boundary
+      if (start < data->mBreaks[breakIndex]) {
+        // The text crosses at least one segment boundary so measure to the
+        // break point just before the estimated break offset
+        numChars = PR_MIN(data->mBreaks[breakIndex] - start, (PRInt32)aSubstringLength);
+      } 
+      else {
+        // See whether there is another segment boundary between this one
+        // and the end of the text
+        if ((breakIndex < (data->mNumBreaks - 1)) && (data->mBreaks[breakIndex] < i)) {
+          ++breakIndex;
+          numChars = data->mBreaks[breakIndex] - start;
+        }
+        else {
+          NS_ASSERTION(i != data->mBreaks[breakIndex], "don't expect to be at segment boundary");
+
+          // The text is all within the same segment
+          numChars = i - start;
+
+          // Remember we're in the middle of a segment and not in between
+          // two segments
+          inMiddleOfSegment = PR_TRUE;
+        }
+      }
+    }
+
+    // Measure the text
+    nscoord twWidth, pxWidth;
+    if ((1 == numChars) && (pstr[start] == ' ')) {
+      twWidth = data->mSpaceWidth;
+    }
+    else {
+      pxWidth = font->GetWidth(data->mPS, &pstr[start], numChars);
+      twWidth = NSToCoordRound(float(pxWidth) * data->mP2T);
+    }
+
+    // See if the text fits
+    PRBool textFits = (twWidth + width) <= data->mAvailWidth;
+
+    // If the text fits then update the width and the number of
+    // characters that fit
+    if (textFits) {
+      numCharsFit += numChars;
+      width += twWidth;
+
+      // If we computed the break index and we're not in the middle
+      // of a segment then this is a spot that we can back up to if
+      // we need to so remember this state
+      if ((breakIndex != -1) && !inMiddleOfSegment) {
+        data->mPrevBreakState_BreakIndex = breakIndex;
+        data->mPrevBreakState_Width = width;
+      }
+    }
+    else {
+      // The text didn't fit. If we're out of room then we're all done
+      allDone = PR_TRUE;
+
+      // See if we can just back up to the previous saved state and not
+      // have to measure any text
+      if (data->mPrevBreakState_BreakIndex != -1) {
+        PRBool canBackup;
+
+        // If we're in the middle of a word then the break index
+        // must be the same if we can use it. If we're at a segment
+        // boundary, then if the saved state is for the previous
+        // break index then we can use it
+        if (inMiddleOfSegment) {
+          canBackup = data->mPrevBreakState_BreakIndex == breakIndex;
+        } else {
+          canBackup = data->mPrevBreakState_BreakIndex == (breakIndex - 1);
+        }
+
+        if (canBackup) {
+          numCharsFit = data->mBreaks[data->mPrevBreakState_BreakIndex];
+          width = data->mPrevBreakState_Width;
+          break;
+        }
+      }
+
+      // We can't just revert to the previous break state. Find the break
+      // index just before the end of the text
+      i = start + numChars;
+      if (breakIndex == -1) {
+        breakIndex = 0;
+        if (data->mBreaks[breakIndex] < i) {
+          while ((breakIndex + 1 < data->mNumBreaks) && (data->mBreaks[breakIndex + 1] < i)) {
+            ++breakIndex;
+          }
+        }
+      }
+
+      if ((0 == breakIndex) && (i <= data->mBreaks[0])) {
+        // There's no place to back up to so even though the text doesn't fit
+        // return it anyway
+        numCharsFit += numChars;
+        width += twWidth;
+
+        // Edge case of one word: it could be that we just measured a fragment of the
+        // first word and its remainder involves other fonts, so we want to keep going
+        // until we at least measure the first word entirely
+        if (numCharsFit < data->mBreaks[0]) {
+          allDone = PR_FALSE;
+          // from now on, the estimated number of characters is what we want to measure
+          data->mEstimatedNumChars = data->mBreaks[0] - numCharsFit;
+          start += numChars;
+        }
+
+        break;
+      }
+
+      // Repeatedly back up until we get to where the text fits or we're
+      // all the way back to the first word
+      width += twWidth;
+      while ((breakIndex >= 0) && (width > data->mAvailWidth)) {
+        twWidth = 0;
+        start = data->mBreaks[breakIndex];
+        numChars = i - start;
+        if ((1 == numChars) && (pstr[start] == ' ')) {
+          twWidth = data->mSpaceWidth;
+        }
+        else if (numChars > 0) {
+          pxWidth = font->GetWidth(data->mPS, &pstr[start], numChars);
+          twWidth = NSToCoordRound(float(pxWidth) * data->mP2T);
+        }
+
+        width -= twWidth;
+        numCharsFit = start;
+        --breakIndex;
+        i = start;
+      }
+    }
+
+    start += numChars;
+  }
+
+#ifdef DEBUG
+  NS_ASSERTION(allDone || start == i, "internal error");
+  NS_ASSERTION(allDone || data->mNumCharsFit != numCharsFit, "internal error");
+#endif
+
+  if (data->mNumCharsFit != numCharsFit) {
+    // some text was actually retained
+    data->mWidth = width;
+    data->mNumCharsFit = numCharsFit;
+    data->mFonts->AppendElement(font);
+    data->mOffsets->AppendElement((void*)&pstr[numCharsFit]);
+  }
+  else
+    delete font;  // cleanup
+
+  if (allDone) {
+    // stop now
+    return PR_FALSE;
+  }
+
+  return PR_TRUE; // don't stop if we still need to measure more characters
 }
 
 NS_IMETHODIMP
@@ -1452,7 +1859,180 @@ nsRenderingContextOS2::GetTextDimensions(const PRUnichar*  aString,
                                          nsTextDimensions& aLastWordDimensions,
                                          PRInt32*          aFontID)
 {
-   return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mFontMetrics)
+    return NS_ERROR_FAILURE;
+
+  SetupFontAndColor();
+
+  nsFontMetricsOS2* metrics = (nsFontMetricsOS2*)mFontMetrics;
+
+  nscoord spaceWidth, aveCharWidth;
+  metrics->GetSpaceWidth(spaceWidth);
+  metrics->GetAveCharWidth(aveCharWidth);
+
+  // Note: aBreaks[] is supplied to us so that the first word is located
+  // at aString[0 .. aBreaks[0]-1] and more generally, the k-th word is
+  // located at aString[aBreaks[k-1] .. aBreaks[k]-1]. Whitespace can
+  // be included and each of them counts as a word in its own right.
+
+  // Upon completion of glyph resolution, characters that can be
+  // represented with fonts[i] are at offsets[i] .. offsets[i+1]-1
+
+  nsAutoVoidArray fonts, offsets;
+  offsets.AppendElement((void*)aString);
+
+  BreakGetTextDimensionsData data; 
+  data.mPS = mPS;
+  data.mFattrs = mCurrFont;
+  data.mP2T = mP2T;
+  data.mAvailWidth = aAvailWidth;
+  data.mBreaks = aBreaks;
+  data.mNumBreaks = aNumBreaks;
+  data.mSpaceWidth = spaceWidth;
+  data.mAveCharWidth = aveCharWidth;
+  data.mEstimatedNumChars = 0;
+  data.mNumCharsFit = 0;
+  data.mWidth = 0;
+  data.mPrevBreakState_BreakIndex = -1;
+  data.mPrevBreakState_Width = 0;
+  data.mFonts = &fonts;
+  data.mOffsets = &offsets;
+  data.mOldLCID = 0;
+
+  metrics->ResolveForwards(mPS, aString, aLength, do_BreakGetTextDimensions, &data);
+
+  if( data.mOldLCID != 0 )
+  {
+    // If the font was changed along the way, restore our font
+    nsFontHandle fh;
+    metrics->GetFontHandle( fh );
+    nsFontOS2* fontOS2 = (nsFontOS2*)fh;
+    fontOS2->SelectIntoPS( mPS, data.mOldLCID );
+    GFX (::GpiDeleteSetId (data.mPS, 1), FALSE);
+  }
+
+  if (aFontID)
+    *aFontID = 0;
+
+  aNumCharsFit = data.mNumCharsFit;
+  aDimensions.width = data.mWidth;
+
+  ///////////////////
+  // Post-processing for the ascent and descent:
+  //
+  // The width of the last word is included in the final width, but its
+  // ascent and descent are kept aside for the moment. The problem is that
+  // line-breaking may occur _before_ the last word, and we don't want its
+  // ascent and descent to interfere. We can re-measure the last word and
+  // substract its width later. However, we need a special care for the ascent
+  // and descent at the break-point. The idea is to keep the ascent and descent
+  // of the last word separate, and let layout consider them later when it has
+  // determined that line-breaking doesn't occur before the last word.
+  //
+  // Therefore, there are two things to do:
+  // 1. Determine the ascent and descent up to where line-breaking may occur.
+  // 2. Determine the ascent and descent of the remainder.
+  //    For efficiency however, it is okay to bail out early if there is only
+  //    one font (in this case, the height of the last word has no special
+  //    effect on the total height).
+
+  // aLastWordDimensions.width should be set to -1 to reply that we don't
+  // know the width of the last word since we measure multiple words
+  aLastWordDimensions.Clear();
+  aLastWordDimensions.width = -1;
+
+  nsFontOS2* font = (nsFontOS2*)fonts[0];
+  aDimensions.ascent = font->mMaxAscent;
+  aDimensions.descent = font->mMaxDescent;
+
+   // for the normal case of only one font, take fast path: cleanup & return
+   // else, do the computations
+  if( fonts.Count() != 1 )
+  {
+    // get the last break index.
+    // If there is only one word, we end up with lastBreakIndex = 0. We don't
+    // need to worry about aLastWordDimensions in this case too. But if we didn't
+    // return earlier, it would mean that the unique word needs several fonts
+    // and we will still have to loop over the fonts to return the final height
+    PRInt32 lastBreakIndex = 0;
+    while (aBreaks[lastBreakIndex] < aNumCharsFit)
+      ++lastBreakIndex;
+
+    const PRUnichar* lastWord = (lastBreakIndex > 0) 
+      ? aString + aBreaks[lastBreakIndex-1]
+      : aString + aNumCharsFit; // let it point outside to play nice with the loop
+
+    // now get the desired ascent and descent information... this is however
+    // a very fast loop of the order of the number of additional fonts
+
+    PRInt32 currFont = 0;
+    const PRUnichar* pstr = aString;
+    const PRUnichar* last = aString + aNumCharsFit;
+
+    while (pstr < last) {
+      font = (nsFontOS2*)fonts[currFont];
+      PRUnichar* nextOffset = (PRUnichar*)offsets[++currFont]; 
+
+      // For consistent word-wrapping, we are going to handle the whitespace
+      // character with special care because a whitespace character can come
+      // from a font different from that of the previous word. If 'x', 'y', 'z',
+      // are Unicode points that require different fonts, we want 'xyz <br>'
+      // and 'xyz<br>' to have the same height because it gives a more stable
+      // rendering, especially when the window is resized at the edge of the word.
+      // If we don't do this, a 'tall' trailing whitespace, i.e., if the whitespace
+      // happens to come from a font with a bigger ascent and/or descent than all
+      // current fonts on the line, this can cause the next lines to be shifted
+      // down the window is slowly resized to fit that whitespace.
+      if (*pstr == ' ') {
+        // skip pass the whitespace to ignore the height that it may contribute
+        ++pstr;
+        // get out if we reached the end
+        if (pstr == last) {
+          break;
+        }
+        // switch to the next font if we just passed the current font 
+        if (pstr == nextOffset) {
+          font = (nsFontOS2*)fonts[currFont];
+          nextOffset = (PRUnichar*)offsets[++currFont];
+        } 
+      }
+
+      // see if the last word intersects with the current font
+      // (we are testing for 'nextOffset-1 >= lastWord' since the
+      // current font ends at nextOffset-1)
+      if (nextOffset > lastWord) {
+        if (aLastWordDimensions.ascent < font->mMaxAscent) {
+          aLastWordDimensions.ascent = font->mMaxAscent;
+        }
+        if (aLastWordDimensions.descent < font->mMaxDescent) {
+          aLastWordDimensions.descent = font->mMaxDescent;
+        }
+      }
+
+      // see we have not reached the last word yet
+      if (pstr < lastWord) {
+        if (aDimensions.ascent < font->mMaxAscent) {
+          aDimensions.ascent = font->mMaxAscent;
+        }
+        if (aDimensions.descent < font->mMaxDescent) {
+          aDimensions.descent = font->mMaxDescent;
+        }
+      }
+
+      // advance to where the next font starts
+      pstr = nextOffset;
+    }
+  }
+
+   // clean up font array
+  PRUint32 count = fonts.Count();
+  for( int i = count - 1; i >= 0; i-- )
+  {
+    font = (nsFontOS2*)fonts.ElementAt(i);
+    delete font;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1460,11 +2040,70 @@ nsRenderingContextOS2::GetTextDimensions(const char*       aString,
                                          PRUint32          aLength,
                                          nsTextDimensions& aDimensions)
 {
-  if (mFontMetrics) {
+  GetWidth(aString, aLength, aDimensions.width);
+  if (mFontMetrics)
+  {
     mFontMetrics->GetMaxAscent(aDimensions.ascent);
     mFontMetrics->GetMaxDescent(aDimensions.descent);
   }
-  return GetWidth(aString, aLength, aDimensions.width);
+  return NS_OK;
+}
+
+struct GetTextDimensionsData {
+  HPS     mPS;      // IN
+  float   mP2T;     // IN
+  FATTRS  mFattrs;  // IN/OUT (running)
+  LONG    mWidth;   // IN/OUT (running)
+  nscoord mAscent;  // IN/OUT (running)
+  nscoord mDescent; // IN/OUT (running)
+  LONG    mOldLCID; // OUT holds old font id when switching
+};
+
+static PRBool PR_CALLBACK
+do_GetTextDimensions(const nsFontSwitch* aFontSwitch,
+                     const PRUnichar*    aSubstring,
+                     PRUint32            aSubstringLength,
+                     void*               aData)
+{
+  nsFontOS2* font = aFontSwitch->mFont;
+  
+  GetTextDimensionsData* data = (GetTextDimensionsData*)aData;
+  if( !AreFattrsEqual( data->mFattrs, font->fattrs ))
+  {
+    data->mFattrs = font->fattrs;
+    if( data->mOldLCID == 0 )
+    {   // set 'other' font
+      data->mOldLCID = GpiQueryCharSet(data->mPS);
+      NS_ASSERTION( data->mOldLCID != 1, "mOldLCID is equal to one!" );
+      GFX (::GpiCreateLogFont (data->mPS, 0, 1, &(data->mFattrs)), GPI_ERROR);
+      font->SelectIntoPS( data->mPS, 1 );
+    }
+    else
+    {  // reset 'normal' font
+      font->SelectIntoPS( data->mPS, data->mOldLCID );
+      GFX (::GpiDeleteSetId (data->mPS, 1), FALSE);
+      data->mOldLCID = 0;
+    }
+  }
+  
+  data->mWidth += font->GetWidth(data->mPS, aSubstring, aSubstringLength);
+
+  FONTMETRICS fm;
+  GFX (::GpiQueryFontMetrics (data->mPS, sizeof (fm), &fm), FALSE);
+  font->mMaxAscent  = NSToCoordRound( fm.lMaxAscender * data->mP2T );
+  font->mMaxDescent = NSToCoordRound( fm.lMaxDescender * data->mP2T );
+
+  if (data->mAscent < font->mMaxAscent) {
+    data->mAscent = font->mMaxAscent;
+  }
+  if (data->mDescent < font->mMaxDescent) {
+    data->mDescent = font->mMaxDescent;
+  }
+  
+   // cleanup
+  delete font;
+
+  return PR_TRUE; // don't stop till the end
 }
 
 NS_IMETHODIMP
@@ -1473,19 +2112,41 @@ nsRenderingContextOS2::GetTextDimensions(const PRUnichar*  aString,
                                          nsTextDimensions& aDimensions,
                                          PRInt32*          aFontID)
 {
-  if (mFontMetrics) {
-    mFontMetrics->GetMaxAscent(aDimensions.ascent);
-    mFontMetrics->GetMaxDescent(aDimensions.descent);
-  }
-  return GetWidth(aString, aLength, aDimensions.width, aFontID);
-}
+  aDimensions.Clear();
 
-NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const nsString& aString,
-                                                  nscoord aX, nscoord aY,
-                                                  PRInt32 aFontID,
-                                                  const nscoord* aSpacing)
-{
-  return DrawString(aString.get(), aString.Length(), aX, aY, aFontID, aSpacing);
+  if (!mFontMetrics)
+    return NS_ERROR_FAILURE;
+
+  SetupFontAndColor();
+
+  nsFontMetricsOS2* metrics = (nsFontMetricsOS2*)mFontMetrics;
+  GetTextDimensionsData data;
+  data.mPS = mPS;
+  data.mP2T = mP2T;
+  data.mFattrs = mCurrFont;
+  data.mWidth = 0;
+  data.mAscent = 0;
+  data.mDescent = 0;
+  data.mOldLCID = 0;
+
+  metrics->ResolveForwards(mPS, aString, aLength, do_GetTextDimensions, &data);
+  aDimensions.width = NSToCoordRound(float(data.mWidth) * mP2T);
+  aDimensions.ascent = data.mAscent;
+  aDimensions.descent = data.mDescent;
+
+  if( data.mOldLCID != 0 )
+  {
+    // If the font was changed on the way, restore our font
+    nsFontHandle fh;
+    metrics->GetFontHandle( fh );
+    nsFontOS2* font = (nsFontOS2*)fh;
+    font->SelectIntoPS( mPS, data.mOldLCID );
+    GFX (::GpiDeleteSetId (data.mPS, 1), FALSE);
+  }
+
+  if (aFontID) *aFontID = 0;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const char *aString, PRUint32 aLength,
@@ -1497,11 +2158,11 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const char *aString, PRUint32 
   PRInt32 x = aX;
   PRInt32 y = aY;
 
-  SetupFontAndTextColor ();
+  SetupFontAndColor ();
 
   INT dxMem[500];
-  INT* dx0;
-  if (nsnull != aSpacing) {
+  INT* dx0 = NULL;
+  if (aSpacing) {
     dx0 = dxMem;
     if (aLength > 500) {
       dx0 = new INT[aLength];
@@ -1513,13 +2174,88 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const char *aString, PRUint32 
   POINTL ptl = { x, y };
   mSurface->NS2PM (&ptl, 1);
 
-  ::ExtTextOut(mPS, ptl.x, ptl.y, 0, NULL, aString, aLength, aSpacing ? dx0 : NULL);
+  ExtTextOut(mPS, ptl.x, ptl.y, 0, NULL, aString, aLength, dx0);
 
-  if ((nsnull != aSpacing) && (dx0 != dxMem)) {
+  if (dx0 && (dx0 != dxMem)) {
     delete [] dx0;
   }
 
   return NS_OK;
+}
+
+struct DrawStringData {
+  HPS                   mPS;        // IN
+  nsDrawingSurfaceOS2  *mSurface;   // IN
+  FATTRS                mFattrs;    // IN/OUT (running)
+  nsTransform2D        *mTranMatrix;// IN
+  nscoord               mX;         // IN/OUT (running)
+  nscoord               mY;         // IN
+  const nscoord        *mSpacing;   // IN
+  nscoord               mMaxLength; // IN (length of the full string)
+  nscoord               mLength;    // IN/OUT (running, current length already rendered)
+  LONG                  mOldLCID;   // OUT holds old font id when switching
+};
+
+static PRBool PR_CALLBACK
+do_DrawString(const nsFontSwitch* aFontSwitch,
+              const PRUnichar*    aSubstring,
+              PRUint32            aSubstringLength,
+              void*               aData)
+{
+  nsFontOS2* font = aFontSwitch->mFont;
+
+  PRInt32 x, y;
+  DrawStringData* data = (DrawStringData*)aData;
+  if( !AreFattrsEqual( data->mFattrs, font->fattrs ))
+  {
+    data->mFattrs = font->fattrs;
+    if( data->mOldLCID == 0 )
+    {   // set 'other' font
+      data->mOldLCID = GpiQueryCharSet(data->mPS);
+      NS_ASSERTION( data->mOldLCID != 1, "mOldLCID is equal to one!" );
+      GFX (::GpiCreateLogFont (data->mPS, 0, 1, &(data->mFattrs)), GPI_ERROR);
+      font->SelectIntoPS( data->mPS, 1 );
+    }
+    else
+    {  // reset 'normal' font
+      font->SelectIntoPS( data->mPS, data->mOldLCID );
+      GFX (::GpiDeleteSetId (data->mPS, 1), FALSE);
+      data->mOldLCID = 0;
+    }
+  }
+
+  data->mLength += aSubstringLength;
+  if (data->mSpacing) {
+    // XXX Fix path to use a twips transform in the DC and use the
+    // spacing values directly and let windows deal with the sub-pixel
+    // positioning.
+
+    // Slow, but accurate rendering
+    const PRUnichar* str = aSubstring;
+    const PRUnichar* end = aSubstring + aSubstringLength;
+    while (str < end) {
+      // XXX can shave some cycles by inlining a version of transform
+      // coord where y is constant and transformed once
+      x = data->mX;
+      y = data->mY;
+      data->mTranMatrix->TransformCoord(&x, &y);
+      font->DrawString(data->mPS, data->mSurface, x, y, str, 1);
+      data->mX += *data->mSpacing++;
+      ++str;
+    }
+  }
+  else {
+    font->DrawString(data->mPS, data->mSurface, data->mX, data->mY, aSubstring, aSubstringLength);
+    // be ready if there is more to come
+    if (data->mLength < data->mMaxLength) {
+      data->mX += font->GetWidth(data->mPS, aSubstring, aSubstringLength);
+    }
+  }
+
+   // cleanup
+  delete font;
+
+  return PR_TRUE; // don't stop till the end
 }
 
 NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const PRUnichar *aString, PRUint32 aLength,
@@ -1527,236 +2263,58 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const PRUnichar *aString, PRUi
                                                   PRInt32 aFontID,
                                                   const nscoord* aSpacing)
 {
-  char buf[1024];
+  if (!mFontMetrics)
+    return NS_ERROR_FAILURE;
 
-  PRUnichar* pstr = (PRUnichar *)(const PRUnichar *)aString;
+  SetupFontAndColor();
 
-  PRInt32 x = aX;
-  PRInt32 y = aY;
+  nsFontMetricsOS2* metrics = (nsFontMetricsOS2*)mFontMetrics;
 
-  PRUint32 start = 0;
-  nscoord tWidth;
-  BOOL createdFont = FALSE;
-  LONG oldLcid;
-  int convertedLength = 0;
+  DrawStringData data;
+  data.mPS = mPS;
+  data.mSurface = mSurface;
+  data.mFattrs = mCurrFont;
+  data.mTranMatrix = mTranMatrix;
+  data.mX = aX;
+  data.mY = aY;
+  data.mSpacing = aSpacing;
+  data.mMaxLength = aLength;
+  data.mLength = 0;
+  data.mOldLCID = 0;
 
-  nsresult rv = NS_OK;
+  if (!aSpacing) { // @see do_DrawString for the spacing case
+    mTranMatrix->TransformCoord(&data.mX, &data.mY);
+  }
 
-  if (((nsFontMetricsOS2*)mFontMetrics)->mCodePage == 1252)
-  {
-    for (PRUint32 i = 0; i < aLength; i++)
-    {
-      PRUnichar c = pstr[i];
-      if (c > 0x00FF)
-      {
-        if (!createdFont)
-        {
-          rv = ((nsFontMetricsOS2*)mFontMetrics)->SetUnicodeFont( mPS, 1 );
-
-          if( NS_FAILED(rv) )
-            continue;         // failed to load unicode font; use 'normal' font
-          else
-            createdFont = TRUE;
-        }
-
-        if( i-start > 0 )
-        {
-          if( aSpacing )
-          {
-            convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage,
-                                        &pstr[start], i-start, buf, sizeof(buf));
-            char* bufptr = buf;                                
-
-            while( start < i )
-            {
-              DrawString( bufptr, 1, x, y, NULL );
-              x += *aSpacing;
-              bufptr++;
-              aSpacing++;
-              start++;
-            }
-          }
-          else
-          {
-            convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage,
-                                        &pstr[start], i-start, buf, sizeof(buf));
-            DrawString( buf, convertedLength, x, y, NULL );
-
-            GetWidth( buf, convertedLength, tWidth );
-            x += tWidth;
-          }
-        }
-
-         // Group unicode chars together
-        PRUint32 end = i+1;
-        while( end < aLength && pstr[end] > 0x00FF )
-          end++;
-
-        LONG oldLcid = GpiQueryCharSet(mPS);
-        GFX (::GpiSetCharSet (mPS, 1), FALSE);
-        doSetupFont = PR_FALSE;
-
-        if( aSpacing )
-        {
-          while( i < end )
-          {
-            convertedLength = WideCharToMultiByte( 1208, &pstr[i], 1, buf, sizeof(buf));
-            rv = DrawString( buf, convertedLength, x, y, NULL );
-            x += *aSpacing;
-            aSpacing++;
-            i++;
-          }
-        }
-        else
-        {
-          convertedLength = WideCharToMultiByte( 1208, &pstr[i], end-i, buf, sizeof(buf));
-          rv = DrawString( buf, convertedLength, x, y, NULL );
-          GetWidth( buf, convertedLength, tWidth );
-          x += tWidth;
-        }
-
-        doSetupFont = PR_TRUE;
-        GFX (::GpiSetCharSet (mPS, oldLcid), FALSE);
-        start = end;
-        i = end - 1;
-      }
-    } /* endfor */
-  }                                              
+#ifdef IBMBIDI
+  if (mRightToLeftText) {
+    metrics->ResolveBackwards(mPS, aString, aLength, do_DrawString, &data);
+  }
   else
+#endif // IBMBIDI
   {
-    for (PRUint32 i = 0; i < aLength; i++)
-    {
-      PRUnichar c = pstr[i];
-      if ((c >= 0x0080) && (c <= 0x00FF))
-      {
-        if (!createdFont)
-        {
-          nsFontHandle fh = nsnull;
-          if (mFontMetrics)
-            mFontMetrics->GetFontHandle(fh);
-          nsFontHandleOS2 *pHandle = (nsFontHandleOS2 *) fh;
-          FATTRS fattrs = pHandle->fattrs;
-          fattrs.usCodePage = 1252;
-          GFX (::GpiCreateLogFont (mPS, 0, 1, &fattrs), GPI_ERROR);
-          createdFont = TRUE;
-        }
-
-        if( i-start > 0 )
-        {
-          if( aSpacing )
-          {
-            while( start < i )
-            {
-              convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage,
-                                          &pstr[start], 1, buf, sizeof(buf));
-              DrawString( buf, convertedLength, x, y, NULL);
-              x += *aSpacing;
-              aSpacing++;
-              start++;
-            }
-          }
-          else
-          {
-            convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage,
-                                        &pstr[start], i-start, buf, sizeof(buf));
-            DrawString( buf, convertedLength, x, y, aSpacing);
-
-            GetWidth( buf, convertedLength, tWidth );
-            x += tWidth;
-          }
-        }
-
-         // Group chars together
-        PRUint32 end = i+1;
-        while( end < aLength && pstr[end] >= 0x0080 && pstr[end] <= 0x00FF )
-          end++;
-
-        LONG oldLcid = GpiQueryCharSet(mPS);
-        GFX (::GpiSetCharSet (mPS, 1), FALSE);
-        doSetupFont = PR_FALSE;
-
-        if( aSpacing )
-        {
-          while( i < end )
-          {
-            convertedLength = WideCharToMultiByte( 1252, &pstr[i], 1, buf, sizeof(buf));
-            rv = DrawString( buf, convertedLength, x, y, NULL );
-            x += *aSpacing;
-            aSpacing++;
-            i++;
-          }
-        }
-        else
-        {
-          convertedLength = WideCharToMultiByte( 1252, &pstr[i], end-i, buf, sizeof(buf));
-          rv = DrawString( buf, convertedLength, x, y, NULL );
-          GetWidth( buf, convertedLength, tWidth );
-          x += tWidth;
-        }
-
-        doSetupFont = PR_TRUE;
-        GFX (::GpiSetCharSet (mPS, oldLcid), FALSE);
-        start = end;
-        i = end - 1;
-      }
-    } /* endfor */
+    metrics->ResolveForwards(mPS, aString, aLength, do_DrawString, &data);
   }
 
-  if (createdFont)
+  if( data.mOldLCID != 0 )
   {
-    GpiDeleteSetId(mPS, 1);
-    createdFont = FALSE;
+    // If the font was changed along the way, restore our font
+    nsFontHandle fh;
+    metrics->GetFontHandle( fh );
+    nsFontOS2* font = (nsFontOS2*)fh;
+    font->SelectIntoPS( mPS, data.mOldLCID );
+    GFX (::GpiDeleteSetId (data.mPS, 1), FALSE);
   }
 
-  if( aLength-start > 0 )
-  {
-    if( aSpacing )
-    {
-       // In codepage 1252, we are guaranteed coming out of the for loop above
-       // that each char coming out of the WideCharToMultibyte translation
-       // has a one-to-one correspondence to a unicode character (i.e. the
-       // length of the unicode text passed in to WideCharToMultibyte is equal
-       // to convertedLength.  Therefore, we do one big conversion, and then
-       // cycle through the buffer to position each char.
-       // This is not necessarily true for other codepages, such as those
-       // supporting DBCS, where one unicode char may map to 2 or 3 chars.  In
-       // these cases, we have to do the translation a character at a time.
-      if (((nsFontMetricsOS2*)mFontMetrics)->mCodePage == 1252)
-      {
-        convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage,
-                                &pstr[start], aLength-start, buf, sizeof(buf));
-        char* bufptr = buf;                                
-        while( start < aLength )
-        {
-          DrawString( bufptr, 1, x, y, NULL );
-          x += *aSpacing;
-          bufptr++;
-          aSpacing++;
-          start++;
-        }
-      }
-      else
-      {
-        while( start < aLength )
-        {
-          convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage,
-                                      &pstr[start], 1, buf, sizeof(buf));
-          DrawString( buf, convertedLength, x, y, NULL );
-          x += *aSpacing;
-          aSpacing++;
-          start++;
-        }
-      }
-    }
-    else
-    {
-      convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage,
-                                &pstr[start], aLength-start, buf, sizeof(buf));
-      rv = DrawString( buf, convertedLength, x, y, NULL );
-    }
-  }
+  return NS_OK;
+}
 
-  return rv;
+NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const nsString& aString,
+                                                  nscoord aX, nscoord aY,
+                                                  PRInt32 aFontID,
+                                                  const nscoord* aSpacing)
+{
+  return DrawString(aString.get(), aString.Length(), aX, aY, aFontID, aSpacing);
 }
 
 // Image drawing: just proxy on to the image object, so no worries yet.
@@ -1782,7 +2340,7 @@ NS_IMETHODIMP nsRenderingContextOS2::DrawImage( nsIImage *aImage, nscoord aX, ns
 
    return this->DrawImage( aImage, tr);
 }
-
+                                             
 NS_IMETHODIMP nsRenderingContextOS2::DrawImage( nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
 {
    nsRect sr,dr;
@@ -1878,17 +2436,20 @@ NS_IMETHODIMP nsRenderingContextOS2::RetrieveCurrentNativeGraphicData(PRUint32* 
   return NS_OK;
 }
 
-void nsRenderingContextOS2::SetupFontAndTextColor (void)
+void nsRenderingContextOS2::SetupFontAndColor (void)
 {
-   if (!doSetupFontAndTextColor)
-      return;
-
-   if( doSetupFont && mFontMetrics != mCurrFontMetrics )
+   if( mFontMetrics != mCurrFontMetrics )
    {
-      // select font
+       // select font
       mCurrFontMetrics = mFontMetrics;
-      if( mCurrFontMetrics)
-         mSurface->SelectFont( mCurrFontMetrics);
+      if( mCurrFontMetrics )
+      {
+        mSurface->SelectFont( mCurrFontMetrics );
+        nsFontHandle fh;
+        mCurrFontMetrics->GetFontHandle(fh);
+        nsFontOS2* font = (nsFontOS2*)fh;
+        mCurrFont = font->fattrs;
+      }
    }
 
    if (mColor != mCurrTextColor)
@@ -1908,7 +2469,7 @@ void nsRenderingContextOS2::SetupFontAndTextColor (void)
 }
 
 void nsRenderingContextOS2::PushClipState(void)
-{
+{                           
   if (!(mStates->mFlags & FLAG_CLIP_CHANGED))
   {
     GraphicsState *tstate = mStates->mNext;
