@@ -462,6 +462,8 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
 	caretFrame->GetOffsetFromView(viewOffset, &theView);
 	if (theView == nsnull) return;
 	
+	nsIView* returnView = nsnull;
+	
 	nscoord		x, y;
 	
 	do {
@@ -469,17 +471,24 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
 		viewOffset.x += x;
 		viewOffset.y += y;
 
-		if (coordType == eViewCoordinates)
+		if (!returnView)
 		{
 			nsCOMPtr<nsIWidget>	viewWidget;
 			theView->GetWidget(*getter_AddRefs(viewWidget));
-			if (viewWidget) break;
-		}
+			
+			if (viewWidget)
+			{
+		  	returnView = theView;
+			
+        if (coordType == eViewCoordinates)
+          break;
+			}
+		}		
 		
 		theView->GetParent(theView);
 	} while (theView);
 		
-	outView = theView;
+	outView = returnView;
 }
 
 
