@@ -50,6 +50,7 @@ var gHeaderParser = Components.classes["@mozilla.org/messenger/headerparser;1"].
 const kDefaultSortColumn = "GeneratedName";
 const kDefaultAscending = "ascending";
 const kDefaultDescending = "descending";
+const kLdapUrlPrefix = "moz-abldapdirectory://";
 const kPersonalAddressbookURI = "moz-abmdbdirectory://abook.mab";
 const kCollectedAddressbookURI = "moz-abmdbdirectory://history.mab";
 
@@ -81,7 +82,6 @@ var ResultsPaneController =
     switch (command) {
       case "cmd_selectAll":
         return true;
-
       case "cmd_delete":
       case "button_delete":
         var numSelected;
@@ -153,8 +153,6 @@ var DirPaneController =
 
   isCommandEnabled: function(command)
   {
-    var selectedDir;
-
     switch (command) {
       case "cmd_selectAll":
         // the dirTree pane
@@ -164,20 +162,19 @@ var DirPaneController =
         // don't bother sending to the results pane
         return (gAbView != null);
       case "cmd_delete":
+        goSetMenuValue(command, "valueAddressBook");
+	// fall through
       case "button_delete":
-        if (command == "cmd_delete")
-          goSetMenuValue(command, "valueAddressBook");
-        selectedDir = GetSelectedDirectory();
-        if (selectedDir == kPersonalAddressbookURI || selectedDir == kCollectedAddressbookURI)
-          return false;
-        if (selectedDir) {
+        var selectedDir = GetSelectedDirectory();
+        if (selectedDir &&
+            (selectedDir != kPersonalAddressbookURI) &&
+            (selectedDir != kCollectedAddressbookURI)) {
           // If the selected directory is an ldap directory
           // and if the prefs for this directory are locked
           // disable the delete button.
-          var ldapUrlPrefix = "moz-abldapdirectory://";
-          if ((selectedDir.indexOf(ldapUrlPrefix, 0)) == 0)
+          if (selectedDir.lastIndexOf(kLdapUrlPrefix, 0) == 0)
           {
-            var prefName = selectedDir.substr(ldapUrlPrefix.length, selectedDir.length);
+            var prefName = selectedDir.substr(kLdapUrlPrefix.length);
             var disable = false;
             try {
 	            disable = gPrefs.getBoolPref(prefName + ".disable_delete");
@@ -245,10 +242,9 @@ function AbEditSelectedDirectory()
     else {
       var properties = directory.directoryProperties;
       if (properties.dirType == kLDAPDirectory) {
-        var ldapUrlPrefix = "moz-abldapdirectory://";
         var args = { selectedDirectory: directory.dirName,
                      selectedDirectoryString: null};
-        args.selectedDirectoryString = selecteduri.substr(ldapUrlPrefix.length, selecteduri.length);
+        args.selectedDirectoryString = selecteduri.substr(kLdapUrlPrefix.length);
         window.openDialog("chrome://messenger/content/addressbook/pref-directory-add.xul",
                       "editDirectory", "chrome,modal=yes,resizable=no,centerscreen", args);
       }
@@ -259,20 +255,6 @@ function AbEditSelectedDirectory()
   }
 }
 
-function GetParentRow(aTree, aRow)
-{
-  var row = aRow;
-  var level = aTree.view.getLevel(row);
-  var parentLevel = level;
-  while (parentLevel >= level) {
-    row--;
-    if (row == -1)
-      return row;
-    parentLevel = aTree.view.getLevel(row);
-  }
-  return row;
-}
-        
 function InitCommonJS()
 {
   dirTree = document.getElementById("dirTree");
@@ -290,10 +272,8 @@ function InitCommonJS()
 // the pref so that we'll migrate each of them once.
 function UpgradeAddressBookResultsPaneUI(prefName)
 {
-  var resultsPaneUIVersion;
-
   try {
-    resultsPaneUIVersion = gPrefs.getIntPref(prefName);
+    var resultsPaneUIVersion = gPrefs.getIntPref(prefName);
     if (resultsPaneUIVersion == 1) {
       // hide all columns with hiddenbydefault="true" 
       var elements = document.getElementsByAttribute("hiddenbydefault","true");
@@ -337,21 +317,16 @@ function GetSelectedCardTypes()
     else
       cardCnt++;
   }
-  if (mailingListCnt && cardCnt)
-    return kListsAndCards;        // lists and cards selected
-  else if (mailingListCnt && !cardCnt) {
-    if (mailingListCnt > 1)
-      return kMultipleListsOnly; // only multiple mailing lists selected
-    else
-      return kSingleListOnly;    // only single mailing list
-  }
-  else if (!mailingListCnt && cardCnt)
-    return kCardsOnly;           // only card(s) selected
+  return (mailingListCnt == 0) ? kCardsOnly :
+           (cardCnt > 0) ? kListsAndCards :
+             (mailingListCnt == 1) ? kSingleListOnly :
+               kMultipleListsOnly;
 }
 
 function AbDelete()
 {
   var types = GetSelectedCardTypes();
+
   if (types == kNothingSelected)
     return;
 
@@ -430,24 +405,22 @@ function AbEditCard(card)
 
 function AbNewMessage()
 {
-  var msgComposeType = Components.interfaces.nsIMsgCompType;
-  var msgComposFormat = Components.interfaces.nsIMsgCompFormat;
-  var msgComposeService = Components.classes["@mozilla.org/messengercompose;1"].getService();
-  msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
-
   var params = Components.classes["@mozilla.org/messengercompose/composeparams;1"].createInstance(Components.interfaces.nsIMsgComposeParams);
   if (params)
   {
-    params.type = msgComposeType.New;
-    params.format = msgComposFormat.Default;
     var composeFields = Components.classes["@mozilla.org/messengercompose/composefields;1"].createInstance(Components.interfaces.nsIMsgCompFields);
     if (composeFields)
     {
+      params.type = Components.interfaces.nsIMsgCompType.New;
+      params.format = Components.interfaces.nsIMsgCompFormat.Default;
       if (DirPaneHasFocus())
         composeFields.to = GetSelectedAddressesFromDirTree();
       else
         composeFields.to = GetSelectedAddresses();
       params.composeFields = composeFields;
+      var msgComposeService =
+        Components.classes["@mozilla.org/messengercompose;1"]
+                  .getService(Components.interfaces.nsIMsgComposeService);
       msgComposeService.OpenComposeWindowWithParams(null, params);
     }
   }
@@ -455,10 +428,7 @@ function AbNewMessage()
 
 function GetOneOrMoreCardsSelected()
 {
-  if (!gAbView)
-    return false;
-
-  return (gAbView.selection.getRangeCount() > 0);
+  return (gAbView && (gAbView.selection.getRangeCount() > 0));
 }
 
 // XXX todo
@@ -511,6 +481,7 @@ function GetSelectedAddressesFromDirTree()
       addresses = GetAddressesForCards(cards);
     }
   }
+
   return addresses;
 }
 
@@ -530,15 +501,16 @@ function GetAddressesForCards(cards)
     return addresses;
 
   var count = cards.length;
-  if (count > 0)
-    addresses += GenerateAddressFromCard(cards[0]);
-
-  for (var i = 1; i < count; i++) { 
+  for (var i = 0; i < count; ++i) {
     var generatedAddress = GenerateAddressFromCard(cards[i]);
-
-    if (generatedAddress)
-      addresses += "," + generatedAddress;
+    if (generatedAddress) {
+      // If it's not the first address in the list, add a comma separator.
+      if (addresses)
+        addresses += ",";
+      addresses += generatedAddress;
+    }
   }
+
   return addresses;
 }
 
@@ -568,8 +540,6 @@ function GetSelectedRows()
 
   var i,j;
   var rangeCount = gAbView.selection.getRangeCount();
-  var current = 0;
-
   for (i=0; i < rangeCount; i++) {
     var start = new Object;
     var end = new Object;
@@ -580,6 +550,7 @@ function GetSelectedRows()
       selectedRows += j;
     }
   }
+
   return selectedRows;
 }
 
@@ -589,8 +560,9 @@ function GetSelectedAbCards()
 
   // if sidebar is open, and addressbook panel is open and focused,
   // then use the ab view from sidebar (gCurFrame is from sidebarOverlay.js)
-  const abPanelUrl = "chrome://messenger/content/addressbook/addressbook-panel.xul";
   if (document.getElementById("sidebar-box")) {
+    const abPanelUrl =
+            "chrome://messenger/content/addressbook/addressbook-panel.xul";
     if (gCurFrame && 
         gCurFrame.getAttribute("src") == abPanelUrl &&
         document.commandDispatcher.focusedWindow == gCurFrame.contentDocument.defaultView) 
@@ -605,9 +577,7 @@ function GetSelectedAbCards()
   var cards = new Array(abView.selection.count);
   var i,j;
   var count = abView.selection.getRangeCount();
-
   var current = 0;
-
   for (i=0; i < count; i++) {
     var start = new Object;
     var end = new Object;
@@ -745,9 +715,7 @@ function ChangeDirectoryByURI(uri)
   
   var sortColumn = gAbResultsTree.getAttribute("sortCol");
   var sortDirection = document.getElementById(sortColumn).getAttribute("sortDirection");
-  
   var actualSortColumn = SetAbView(uri, sortColumn, sortDirection);
-
   UpdateSortIndicators(actualSortColumn, sortDirection);
   
   // only select the first card if there is a first card
@@ -758,7 +726,6 @@ function ChangeDirectoryByURI(uri)
     // the selection changes if we were switching directories.
     ResultsPaneSelectionChanged()
   }
-  return;
 }
 
 function AbSortAscending()
@@ -776,20 +743,14 @@ function AbSortDescending()
 function SortResultPane(sortColumn)
 {
   var sortDirection = kDefaultAscending;
-
   if (gAbView) {
      sortDirection = gAbView.sortDirection;
   }
-
   SortAndUpdateIndicators(sortColumn, sortDirection);
 }
 
 function SortAndUpdateIndicators(sortColumn, sortDirection)
 {
-  // XXX todo remove once #116341 is fixed
-  if (!sortColumn)
-    return;
-    
   UpdateSortIndicators(sortColumn, sortDirection);
 
   if (gAbView)
@@ -798,7 +759,8 @@ function SortAndUpdateIndicators(sortColumn, sortDirection)
 
 function UpdateSortIndicators(colID, sortDirection)
 {
-  var sortedColumn;
+  var sortedColumn = null;
+
   // set the sort indicator on the column we are sorted by
   if (colID) {
     sortedColumn = document.getElementById(colID);
@@ -898,7 +860,6 @@ function GenerateAddressFromCard(card)
     return "";
 
   var email;
-
   if (card.isMailList) 
   {
     var directory = GetDirectoryFromURI(card.mailListURI);
@@ -909,7 +870,6 @@ function GenerateAddressFromCard(card)
   }
   else 
     email = card.primaryEmail;
-
   return gHeaderParser.makeFullAddressWString(card.displayName, email);
 }
 

@@ -536,7 +536,7 @@ function AbDeleteDirectory()
 
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
  
-  var parentRow = GetParentRow(dirTree, dirTree.currentIndex);
+  var parentRow = dirTree.view.getParentIndex(dirTree.currentIndex);
   var parentId = (parentRow == -1) ? "moz-abdirectory://" : dirTree.builderView.getResourceAtIndex(parentRow).Value;
   var parentDir = GetDirectoryFromURI(parentId);
   parentArray.AppendElement(parentDir);
