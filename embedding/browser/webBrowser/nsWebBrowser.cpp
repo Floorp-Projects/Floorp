@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -22,6 +22,7 @@
 
 // Local Includes
 #include "nsWebBrowser.h"
+#include "nsWebBrowserPersist.h"
 
 // Helper Classes
 #include "nsGfxCIID.h"
@@ -50,10 +51,11 @@ static NS_DEFINE_IID(kDeviceContextCID,       NS_DEVICE_CONTEXT_CID);
 
 nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nsnull), 
    mContentListener(nsnull), mInitInfo(nsnull), mContentType(typeContentWrapper),
-   mParentNativeWindow(nsnull), mParentWidget(nsnull), mParent(nsnull)
+   mParentNativeWindow(nsnull), mParentWidget(nsnull), mParent(nsnull),
+   mProgressListener(nsnull)
 {
     NS_INIT_REFCNT();
-   mInitInfo = new nsWebBrowserInitInfo();
+    mInitInfo = new nsWebBrowserInitInfo();
 }
 
 nsWebBrowser::~nsWebBrowser()
@@ -107,6 +109,7 @@ NS_INTERFACE_MAP_BEGIN(nsWebBrowser)
     NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
     NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSetup)
+    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPersist)
 NS_INTERFACE_MAP_END
 
 ///*****************************************************************************
@@ -489,7 +492,89 @@ NS_IMETHODIMP nsWebBrowser::SetProperty(PRUint32 aId, PRUint32 aValue)
     return NS_OK;
 }
 
+//*****************************************************************************
+// nsWebBrowser::nsIWebBrowserPersist
+//*****************************************************************************
 
+/* attribute nsIWebBrowserPersistProgress progressListener; */
+NS_IMETHODIMP nsWebBrowser::GetProgressListener(nsIWebBrowserPersistProgress * *aProgressListener)
+{
+    NS_ENSURE_ARG_POINTER(aProgressListener);
+    *aProgressListener = mProgressListener;
+    NS_IF_ADDREF(*aProgressListener);
+    return NS_OK;
+}
+  
+NS_IMETHODIMP nsWebBrowser::SetProgressListener(nsIWebBrowserPersistProgress * aProgressListener)
+{
+    mProgressListener = aProgressListener;
+    return NS_OK;
+}
+
+/* void saveURI (in nsIURI aURI, in string aFileName); */
+NS_IMETHODIMP nsWebBrowser::SaveURI(nsIURI *aURI, nsIInputStream *aPostData, const char *aFileName)
+{
+    // Create a throwaway persistence object to do the work
+    nsWebBrowserPersist *persist = new nsWebBrowserPersist();
+    if (persist == nsnull)
+    {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    persist->AddRef();
+    persist->SetProgressListener(mProgressListener);
+    nsresult rv = persist->SaveURI(aURI, aPostData, aFileName);
+    persist->Release();
+    return rv;
+}
+
+/* void saveCurrentURI (in string aFileName); */
+NS_IMETHODIMP nsWebBrowser::SaveCurrentURI(const char *aFileName)
+{
+    // Get the current URI
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = GetCurrentURI(getter_AddRefs(uri));
+    if (NS_FAILED(rv))
+    {
+        return NS_ERROR_FAILURE;
+    }
+
+    return SaveURI(uri, nsnull, aFileName);
+}
+
+/* void saveDocument (in nsIDOMDocument document); */
+NS_IMETHODIMP nsWebBrowser::SaveDocument(nsIDOMDocument *aDocument, const char *aFileName, const char *aDataPath)
+{
+    // Use the specified DOM document, or if none is specified, the one
+    // attached to the web browser.
+
+    nsCOMPtr<nsIDOMDocument> doc;
+    if (aDocument)
+    {
+        doc = do_QueryInterface(aDocument);
+    }
+    else
+    {
+        GetDocument(getter_AddRefs(doc));
+    }
+    if (!doc)
+    {
+        return NS_ERROR_FAILURE;
+    }
+
+    // Create a throwaway persistence object to do the work
+    nsWebBrowserPersist *persist = new nsWebBrowserPersist();
+    if (persist == nsnull)
+    {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    persist->AddRef();
+    persist->SetProgressListener(mProgressListener);
+    nsresult rv = persist->SaveDocument(doc, aFileName, aDataPath);
+//    persist->Release(); // TODO memory leak
+    return rv;
+}
+
+ 
 //*****************************************************************************
 // nsWebBrowser::nsIWebProgress
 //*****************************************************************************
@@ -586,6 +671,10 @@ NS_IMETHODIMP nsWebBrowser::Create()
    }
    mDocShellAsItem->SetTreeOwner(mDocShellTreeOwner);
    mDocShell->SetParentURIContentListener(mContentListener);
+   
+   // If the webbrowser is a content docshell item then we won't hear any
+   // events from subframes. To solve that we install our own chrome event handler
+   // that always gets called (even for subframes) for any bubbling event.
 
    if(!mInitInfo->sessionHistory)
       mInitInfo->sessionHistory = do_CreateInstance(NS_SHISTORY_CONTRACTID);
