@@ -45,7 +45,6 @@ public:
   GdkGC			*GetSharedGC(void);
   
 private:
-  PLEventQueue		*mPLEventQueue;
   GdkGC			*mSharedGC;
 };
 

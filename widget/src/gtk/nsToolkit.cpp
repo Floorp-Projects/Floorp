@@ -29,7 +29,6 @@
 nsToolkit::nsToolkit()
 {
   NS_INIT_REFCNT();
-  mPLEventQueue = nsnull;
   mSharedGC = nsnull;
 }
 
@@ -67,28 +66,12 @@ GdkGC *nsToolkit::GetSharedGC(void)
   return mSharedGC;
 }
 
-static void event_processor_callback(gpointer data,
-				     gint source,
-				     GdkInputCondition condition)
-{
-   PLEventQueue *event = (PLEventQueue*)data;
-   PR_ProcessPendingEvents(event);
-}
-
 //-------------------------------------------------------------------------
 //
 //
 //-------------------------------------------------------------------------
 NS_METHOD nsToolkit::Init(PRThread *aThread)
 {
-  if ( mPLEventQueue == NULL )
-    mPLEventQueue = PL_CreateEventQueue("toolkit", aThread);
-
-  gdk_input_add(PR_GetEventQueueSelectFD(mPLEventQueue),
-                  GDK_INPUT_READ,
-		  event_processor_callback,
-		  mPLEventQueue);
-
   CreateSharedGC();
 
   return NS_OK;

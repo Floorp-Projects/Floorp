@@ -172,7 +172,11 @@ NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
   mBounds.x = aX;
   mBounds.y = aY;
 
+#ifdef USE_GTK_FIXED
+  ::gtk_fixed_move(GTK_FIXED(mWidget->parent), mWidget, aX, aY);
+#else
   ::gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
+#endif
   return NS_OK;
 }
 
@@ -519,13 +523,17 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   }
 
   CreateNative (parentWidget);
+  gtk_widget_show(mWidget);
 
   Resize(mBounds.width, mBounds.height, PR_FALSE);
 
   /* place the widget in its parent */
   if (parentWidget)
+#ifdef USE_GTK_FIXED
+    gtk_fixed_put(GTK_FIXED(parentWidget), mWidget, mBounds.x, mBounds.y);
+#else
     gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, mBounds.x, mBounds.y);
-
+#endif
   gtk_widget_pop_colormap();
   gtk_widget_pop_visual();
 
