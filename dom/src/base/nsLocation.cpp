@@ -366,7 +366,7 @@ LocationImpl::SetHref(const nsAReadableString& aHref)
     return NS_ERROR_FAILURE;
 
   if (cx) {
-    rv = SetHrefWithContext(cx, aHref);
+    rv = SetHrefWithContext(cx, aHref, PR_FALSE);
   } else {
     rv = GetHref(oldHref);
 
@@ -385,8 +385,8 @@ LocationImpl::SetHref(const nsAReadableString& aHref)
 }
 
 nsresult
-LocationImpl::SetHrefWithContext(JSContext* cx,
-                                 const nsAReadableString& aHref)
+LocationImpl::SetHrefWithContext(JSContext* cx, const nsAReadableString& aHref,
+                                 PRBool aReplace)
 {
   nsCOMPtr<nsIURI> base;
 
@@ -397,7 +397,7 @@ LocationImpl::SetHrefWithContext(JSContext* cx,
     return result;
   }
 
-  return SetHrefWithBase(aHref, base, PR_FALSE);
+  return SetHrefWithBase(aHref, base, aReplace);
 }
 
 nsresult
@@ -728,24 +728,37 @@ LocationImpl::Reload()
 NS_IMETHODIMP
 LocationImpl::Replace(const nsAReadableString& aUrl)
 {
-  nsAutoString oldHref;
-  nsresult result = NS_OK;
+  nsresult rv = NS_OK;
 
-  result = GetHref(oldHref);
+  // Get JSContext from stack.
+  nsCOMPtr<nsIJSContextStack>
+    stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
 
-  // XXX: Get current context and base URL!!!
+  if (stack) {
+    JSContext *cx;
 
-  if (NS_SUCCEEDED(result)) {
-    nsCOMPtr<nsIURI> oldUri;
+    rv = stack->Peek(&cx);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    result = NS_NewURI(getter_AddRefs(oldUri), oldHref);
+    if (NS_FAILED(rv))
+      return rv;
 
-    if (oldUri) {
-      result = SetHrefWithBase(aUrl, oldUri, PR_TRUE);
+    if (cx) {
+      return SetHrefWithContext(cx, aUrl, PR_TRUE);
     }
   }
 
-  return result;
+  nsAutoString oldHref;
+
+  rv = GetHref(oldHref);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> oldUri;
+
+  rv = NS_NewURI(getter_AddRefs(oldUri), oldHref);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return SetHrefWithBase(aUrl, oldUri, PR_TRUE);
 }
 
 NS_IMETHODIMP
