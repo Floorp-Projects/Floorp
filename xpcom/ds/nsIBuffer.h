@@ -50,6 +50,14 @@ class nsIBuffer : public nsISupports {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBUFFER_IID);
 
+    enum { SEGMENT_OVERHEAD = 8 };
+
+    /**
+     * Initializes a buffer. The segment size (including overhead) will 
+     * start from and increment by the growBySize, until reaching maxSize.
+     * The size of the data that can fit in a segment will be the growBySize
+     * minus SEGMENT_OVERHEAD bytes.
+     */
     NS_IMETHOD Init(PRUint32 growBySize, PRUint32 maxSize,
                     nsIAllocator* allocator) = 0;
 
@@ -64,6 +72,20 @@ public:
                               char* *result,
                               PRUint32 *writeBufferLength) = 0;
     NS_IMETHOD SetEOF() = 0;
+    NS_IMETHOD AtEOF(PRBool *result) = 0;
+
+    /**
+     * Searches for a string in the buffer. Since the buffer has a notion
+     * of EOF, it is possible that the string may at some time be in the 
+     * buffer, but is is not currently found up to some offset. Consequently,
+     * both the found and not found cases return an offset:
+     *    if found, return offset where it was found
+     *    if not found, return offset of the first byte not searched
+     * In the case the buffer is at EOF and the string is not found, the first
+     * byte not searched will correspond to the length of the buffer.
+     */
+    NS_IMETHOD Search(const char* forString, PRBool ignoreCase, 
+                      PRBool *found, PRUint32 *offsetSearchedTo) = 0;
 };
 
 extern NS_COM nsresult

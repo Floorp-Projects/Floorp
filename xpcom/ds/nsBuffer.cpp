@@ -44,6 +44,9 @@ NS_IMETHODIMP
 nsBuffer::Init(PRUint32 growBySize, PRUint32 maxSize,
                nsIAllocator* allocator)
 {
+    NS_ASSERTION(sizeof(PRCList) <= SEGMENT_OVERHEAD,
+                 "need to change SEGMENT_OVERHEAD size");
+    NS_ASSERTION(growBySize > SEGMENT_OVERHEAD, "bad growBySize");
     mGrowBySize = growBySize;
     mMaxSize = maxSize;
     mAllocator = allocator;
@@ -86,22 +89,20 @@ nsBuffer::PushWriteSegment()
     }
 
     // allocate a new segment to write into
-    char* seg;
     PRCList* header;
 
-    seg = (char*)mAllocator->Alloc(mGrowBySize);
-    if (seg == nsnull) 
+    header = (PRCList*)mAllocator->Alloc(mGrowBySize);
+    if (header == nsnull) 
         return NS_ERROR_OUT_OF_MEMORY;
 
     mBufferSize += mGrowBySize;
 
-    header = (PRCList*)seg;
     PR_INSERT_BEFORE(header, &mSegments);       // insert at end
 
     // initialize the write segment
-    mWriteSegment = seg;
-    mWriteSegmentEnd = mWriteSegment + mGrowBySize;
-    mWriteCursor = mWriteSegment + sizeof(PRCList);
+    mWriteSegment = header;
+    mWriteSegmentEnd = (char*)mWriteSegment + mGrowBySize;
+    mWriteCursor = (char*)mWriteSegment + sizeof(PRCList);
 
     return NS_OK;
 }
@@ -115,7 +116,7 @@ nsBuffer::PopReadSegment()
     PRCList* header = (PRCList*)mSegments.next;
     char* segment = (char*)header;
 
-    NS_ASSERTION(mReadSegment == segment, "wrong segment");
+    NS_ASSERTION(mReadSegment == header, "wrong segment");
 
     // make sure that the writer isn't still in this segment (that the
     // reader is removing)
@@ -136,9 +137,9 @@ nsBuffer::PopReadSegment()
         mReadCursor = nsnull;
     }
     else {
-        mReadSegment = (char*)mSegments.next;
-        mReadSegmentEnd = mReadSegment + mGrowBySize;
-        mReadCursor = mReadSegment + sizeof(PRCList);
+        mReadSegment = mSegments.next;
+        mReadSegmentEnd = (char*)mReadSegment + mGrowBySize;
+        mReadCursor = (char*)mReadSegment + sizeof(PRCList);
     }
     return NS_OK;
 }
@@ -185,6 +186,7 @@ nsBuffer::GetReadBuffer(PRUint32 startPosition,
                         char* *result,
                         PRUint32 *readBufferLength)
 {
+    // first set the read segment and cursor if not already set
     if (mReadSegment == nsnull) {
         if (PR_CLIST_IS_EMPTY(&mSegments)) {
             *readBufferLength = 0;
@@ -192,29 +194,67 @@ nsBuffer::GetReadBuffer(PRUint32 startPosition,
             return mEOF ? NS_BASE_STREAM_EOF : NS_OK;
         }
         else {
-            mReadSegment = (char*)mSegments.next;
-            mReadSegmentEnd = mReadSegment + mGrowBySize;
-            mReadCursor = mReadSegment + sizeof(PRCList);
+            mReadSegment = mSegments.next;
+            mReadSegmentEnd = (char*)mReadSegment + mGrowBySize;
+            mReadCursor = (char*)mReadSegment + sizeof(PRCList);
         }
     }
 
-    // snapshot the write cursor into a local variable -- this allows
-    // a writer to freely change it while we're reading while avoiding
-    // using a lock
-    char* snapshotWriteCursor = mWriteCursor;   // atomic
+    // now search for the segment starting from startPosition and return it
+    PRCList* curSeg = mReadSegment;
+    char* curSegStart = mReadCursor;
+    char* curSegEnd = mReadSegmentEnd;
+    PRInt32 amt;
+    PRInt32 offset = (PRInt32)startPosition;
+    while (offset >= 0) {
+        // snapshot the write cursor into a local variable -- this allows
+        // a writer to freely change it while we're reading while avoiding
+        // using a lock
+        char* snapshotWriteCursor = mWriteCursor;   // atomic
 
-    // next check if the write cursor is in our segment
-    if (mReadCursor <= snapshotWriteCursor &&
-        snapshotWriteCursor < mReadSegmentEnd) {
-        // same segment -- read up to the snapshotWriteCursor
-        *readBufferLength = snapshotWriteCursor - mReadCursor;
+        // next check if the write cursor is in our segment
+        if (curSegStart <= snapshotWriteCursor &&
+            snapshotWriteCursor < curSegEnd) {
+            // same segment -- read up to the snapshotWriteCursor
+            curSegEnd = snapshotWriteCursor;
+
+            amt = curSegEnd - curSegStart;
+            if (offset < amt) {
+                // startPosition is in this segment, so read up to its end
+                *readBufferLength = amt - offset;
+                *result = curSegStart + offset;
+                return NS_OK;
+            }
+            else {
+                // don't continue past the write segment
+                *readBufferLength = 0;
+                *result = nsnull;
+                return mEOF ? NS_BASE_STREAM_EOF : NS_OK;
+            }
+        }
+        else {
+            amt = curSegEnd - curSegStart;
+            if (offset < amt) {
+                // startPosition is in this segment, so read up to its end
+                *readBufferLength = amt - offset;
+                *result = curSegStart + offset;
+                return NS_OK;
+            }
+            else {
+                curSeg = PR_NEXT_LINK(curSeg);
+                if (curSeg == mReadSegment) {
+                    // been all the way around
+                    *readBufferLength = 0;
+                    *result = nsnull;
+                    return mEOF ? NS_BASE_STREAM_EOF : NS_OK;
+                }
+                curSegEnd = (char*)curSeg + mGrowBySize;
+                curSegStart = (char*)curSeg + sizeof(PRCList);
+                offset -= amt;
+            }
+        }
     }
-    else {
-        // otherwise, read up to the end of this segment
-        *readBufferLength = mReadSegmentEnd - mReadCursor;
-    }
-    *result = mReadCursor;
-    return NS_OK;
+    return NS_ERROR_FAILURE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -241,6 +281,7 @@ nsBuffer::Write(const char* fromBuf, PRUint32 bufLen, PRUint32 *writeCount)
 
         PRUint32 count = PR_MIN(writeBufLen, bufLen);
         nsCRT::memcpy(writeBuf, fromBuf, count);
+		fromBuf += count;
         bufLen -= count;
         *writeCount += count;
         // set the write cursor after the data is valid
@@ -331,6 +372,82 @@ nsBuffer::SetEOF()
     mWriteSegmentEnd = nsnull;
     // don't reset mWriteCursor here -- we need it for the EOF point in the buffer
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBuffer::AtEOF(PRBool *result)
+{
+    *result = mEOF;
+    return NS_OK;
+}
+
+typedef PRInt32 (*compare_t)(const char*, const char*, PRUint32);
+
+NS_IMETHODIMP
+nsBuffer::Search(const char* string, PRBool ignoreCase, 
+                 PRBool *found, PRUint32 *offsetSearchedTo)
+{
+    nsresult rv;
+    char* bufSeg1;
+    PRUint32 bufSegLen1;
+    PRUint32 segmentPos = 0;
+    PRUint32 strLen = nsCRT::strlen(string);
+    compare_t compare = 
+        ignoreCase ? (compare_t)nsCRT::strncasecmp : (compare_t)nsCRT::strncmp;
+
+    rv = GetReadBuffer(segmentPos, &bufSeg1, &bufSegLen1);
+    if (NS_FAILED(rv) || bufSegLen1 == 0) {
+        *found = PR_FALSE;
+        *offsetSearchedTo = segmentPos;
+        return NS_OK;
+    }
+
+    while (PR_TRUE) {
+        PRUint32 i;
+        // check if the string is in the buffer segment
+        for (i = 0; i < bufSegLen1 - strLen + 1; i++) {
+            if (compare(&bufSeg1[i], string, strLen) == 0) {
+                *found = PR_TRUE;
+                *offsetSearchedTo = segmentPos + i;
+                return NS_OK;
+            }
+        }
+
+        // get the next segment
+        char* bufSeg2;
+        PRUint32 bufSegLen2;
+        segmentPos += bufSegLen1;
+        rv = GetReadBuffer(segmentPos, &bufSeg2, &bufSegLen2);
+        if (NS_FAILED(rv) || bufSegLen2 == 0) {
+            *found = PR_FALSE;
+            if (mEOF) 
+                *offsetSearchedTo = segmentPos - bufSegLen1;
+            else
+                *offsetSearchedTo = segmentPos - bufSegLen1 - strLen + 1;
+            return NS_OK;
+        }
+
+        // check if the string is straddling the next buffer segment
+        PRUint32 limit = PR_MIN(strLen, bufSegLen2 + 1);
+        for (i = 0; i < limit; i++) {
+            PRUint32 strPart1Len = strLen - i - 1;
+            PRUint32 strPart2Len = strLen - strPart1Len;
+            const char* strPart2 = &string[strLen - strPart2Len];
+            PRUint32 bufSeg1Offset = bufSegLen1 - strPart1Len;
+            if (compare(&bufSeg1[bufSeg1Offset], string, strPart1Len) == 0 &&
+                compare(bufSeg2, strPart2, strPart2Len) == 0) {
+                *found = PR_TRUE;
+                *offsetSearchedTo = segmentPos - strPart1Len;
+                return NS_OK;
+            }
+        }
+
+        // finally continue with the next buffer
+        bufSeg1 = bufSeg2;
+        bufSegLen1 = bufSegLen2;
+    }
+    NS_NOTREACHED("can't get here");
+    return NS_ERROR_FAILURE;    // keep compiler happy
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -18,30 +18,13 @@
 
 #include "nsIInputStream.idl"
 
+interface nsIBuffer;
+
 [scriptable, uuid(93e9a230-1955-11d3-933b-000064657374)]
 interface nsIBufferInputStream : nsIInputStream
 {
     /**
-     * Returns a pointer to the buffer underlying an input stream.
-     * @param startPosition - the position relative to the start of
-     *   the available data for which the segment is to be returned.
-     *   If the startPosition is >= the available amount of data
-     *   (returned by GetLength), NULL is returned for the bufferSegment.
-     * @param bufferSegment - returns the buffer, starting from the 
-     *   "read cursor" location.
-     * @param bufferSegmentSize - the number of contiguous bytes
-     *   that can be read from this location.
-     * Note that the bufferSegmentSize may be less than the available
-     * amount of data (returned by GetLength) if the buffer input
-     * stream is internally represented by discontiguous segments. 
+     * Returns the buffer underlying this input stream.
      */
-    void GetBuffer(in unsigned long startPosition,
-                   out charStar bufferSegment, 
-                   out unsigned long bufferSegmentSize);
-
-    /**
-     * Returns the position of a string in the buffer. Returns -1 if
-     * not found.
-     */
-    long Find(in charStar aString);
+    readonly attribute nsIBuffer Buffer;
 };

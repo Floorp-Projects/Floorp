@@ -106,7 +106,7 @@ public:
     return PRUint32(PL_strcmp(s1, s2));
   }
 
-  static PRUint32 strncmp(const char* s1, const char* s2,
+  static PRInt32 strncmp(const char* s1, const char* s2,
                          PRUint32 aMaxLen) {
     return PRInt32(PL_strncmp(s1, s2, aMaxLen));
   }

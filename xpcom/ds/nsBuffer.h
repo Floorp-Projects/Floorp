@@ -45,6 +45,9 @@ public:
                               char* *result,
                               PRUint32 *writeBufferLength);
     NS_IMETHOD SetEOF();
+    NS_IMETHOD AtEOF(PRBool *result);
+    NS_IMETHOD Search(const char* forString, PRBool ignoreCase,
+                      PRBool *found, PRUint32 *offsetSearchedTo);
 
     // nsBuffer methods:
     nsBuffer();
@@ -61,11 +64,11 @@ protected:
     PRCList             mSegments;
     PRUint32            mBufferSize;
     
-    char*               mReadSegment;
+    PRCList*            mReadSegment;
     char*               mReadSegmentEnd;
     char*               mReadCursor;
 
-    char*               mWriteSegment;
+    PRCList*            mWriteSegment;
     char*               mWriteSegmentEnd;
     char*               mWriteCursor;
 

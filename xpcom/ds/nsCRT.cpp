@@ -216,13 +216,14 @@ PRBool nsCRT::IsLower(PRUnichar aChar)
 #define SET_DELIM(m, c)         ((m)[(c) >> 3] |= (1 << ((c) & 7)))
 #define DELIM_TABLE_SIZE        32
 
-char* nsCRT::strtok(char* str, const char* delims, char* *newStr)
+char* nsCRT::strtok(char* string, const char* delims, char* *newStr)
 {
-  NS_ASSERTION(str, "Unlike regular strtok, the first argument cannot be null.");
+  NS_ASSERTION(string, "Unlike regular strtok, the first argument cannot be null.");
 
   char delimTable[DELIM_TABLE_SIZE];
   PRUint32 i;
   char* result;
+  char* str = string;
 
   for (i = 0; i < DELIM_TABLE_SIZE; i++)
     delimTable[i] = '\0';
