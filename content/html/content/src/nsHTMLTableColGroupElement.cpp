@@ -160,7 +160,7 @@ nsHTMLTableColGroupElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
 
 NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, Align, align)
-NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, Ch, ch)
+NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, Ch, _char)
 NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, ChOff, charoff)
 NS_IMPL_INT_ATTR(nsHTMLTableColGroupElement, Span, span)
 NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, VAlign, valign)
