@@ -346,7 +346,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsFtpState,
                               nsIRequest);
 
 nsFtpState::nsFtpState() {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpState created", this));
     // bool init
@@ -751,7 +751,7 @@ nsFtpState::Process()
             
             if (FTP_ERROR == mState)
                 mInternalError = NS_ERROR_FTP_LOGIN;
-            
+
             break;
 
 // TYPE            
@@ -953,7 +953,7 @@ nsFtpState::S_user() {
 
             nsCOMPtr<nsIStringBundle> bundle;
             rv = bundleService->CreateBundle(NECKO_MSGS_URL, getter_AddRefs(bundle));
-
+            if (NS_FAILED(rv)) return rv;
             
             nsXPIDLString formatedString;
             const PRUnichar *formatStrings[1] = { hostU.get()};
@@ -963,7 +963,7 @@ nsFtpState::S_user() {
 
             rv = mAuthPrompter->PromptUsernameAndPassword(nsnull,
                                                           formatedString,
-                                                          NS_ConvertASCIItoUCS2(host).get(), // XXX i18n
+                                                          NS_ConvertASCIItoUCS2(host).get(),
                                                           nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
                                                           &user, 
                                                           &passwd, 
@@ -1167,13 +1167,38 @@ nsFtpState::R_syst() {
         else
         {
             NS_ASSERTION(0, "Server type list format unrecognized.");
-            // Guessing causes crashes.  
-#if DEBUG
-            printf("Server listing unrecognized: %s \n", mResponseMsg.get());
-#endif
+            // Guessing causes crashes.
+            // (Of course, the parsing code should be more robust...)
+            nsresult rv;
+            nsCOMPtr<nsIStringBundleService> bundleService =
+                do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+            if (NS_FAILED(rv)) return FTP_ERROR;
+
+            nsCOMPtr<nsIStringBundle> bundle;
+            rv = bundleService->CreateBundle(NECKO_MSGS_URL,
+                                             getter_AddRefs(bundle));
+            if (NS_FAILED(rv)) return FTP_ERROR;
+            
+            nsXPIDLString formatedString;
+            PRUnichar* ucs2Response = ToNewUnicode(mResponseMsg);
+            const PRUnichar *formatStrings[1] = { ucs2Response };
+            rv = bundle->FormatStringFromName(NS_LITERAL_STRING("UnsupportedFTPServer").get(),
+                                              formatStrings, 1,
+                                              getter_Copies(formatedString));
+            nsMemory::Free(ucs2Response);
+            if (NS_FAILED(rv)) return FTP_ERROR;
+
+            NS_ASSERTION(mPrompter, "no prompter!");
+            if (mPrompter)
+                (void) mPrompter->Alert(nsnull, formatedString.get());
+            
+            // since we just alerted the user, clear mResponseMsg,
+            // which is displayed to the user.
+            mResponseMsg = "";
+            
             return FTP_ERROR;
         }
-
+        
         return FTP_S_PWD;
     }
 
@@ -1987,14 +2012,13 @@ nsFtpState::KillControlConnection() {
 
 nsresult
 nsFtpState::StopProcessing() {
-    nsresult rv;
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpState stopping", this));
 
 #ifdef DEBUG_dougt
     printf("FTP Stopped: [response code %d] [response msg follows:]\n%s\n", mResponseCode, mResponseMsg.get());
 #endif
 
-    if ( NS_FAILED(mInternalError) && mResponseMsg.Length()) 
+    if ( NS_FAILED(mInternalError) && !mResponseMsg.IsEmpty()) 
     {
         // check to see if the control status is bad.
         // web shell wont throw an alert.  we better:
@@ -2010,14 +2034,12 @@ nsFtpState::StopProcessing() {
 
     if (mFireCallbacks && mChannel) {
         nsCOMPtr<nsIStreamListener> channelListener = do_QueryInterface(mChannel);
-        nsCOMPtr<nsIRequest> channelRequest = do_QueryInterface(mChannel);
-        NS_ASSERTION(channelListener && channelRequest, "ftp channel better have these interfaces");        
-    
+        NS_ASSERTION(channelListener, "ftp channel should be a stream listener");
         nsCOMPtr<nsIStreamListener> asyncListener;
-        rv = NS_NewAsyncStreamListener(getter_AddRefs(asyncListener), channelListener, NS_UI_THREAD_EVENTQ);
+        NS_NewAsyncStreamListener(getter_AddRefs(asyncListener), channelListener, NS_UI_THREAD_EVENTQ);
         if(asyncListener) {
-            (void) asyncListener->OnStartRequest(channelRequest, nsnull);
-            (void) asyncListener->OnStopRequest(channelRequest, nsnull, broadcastErrorCode);
+            (void) asyncListener->OnStartRequest(this, nsnull);
+            (void) asyncListener->OnStopRequest(this, nsnull, broadcastErrorCode);
         }
     }
 
