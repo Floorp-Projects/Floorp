@@ -48,6 +48,13 @@ In particular you will need a TinderConfig.pm and a TreeData.pm which
 discribes your local setup.  You may need to make local versions of
 the other files depending on how you wish to have Tinderbox configured.
 
+I install Tinderbox via RPM.  I have three RPMS. One tracks changes in
+the Tinderbox server source code just as I get it from CVS. One RPM
+contains my local_conf files.  The clientbin files get put in their
+own RPM which is installed on the buildmachine along with the
+local_conf files.  I do not currently have all the other configuration
+details worked out (crontab files, /etc/rc.d/init.d, .cvspass,) but
+most of the state of my machines is under RPM control.
 
 *) Run ./configure. When configure is done you will have a Makefile
 and a config.out.  Although Tinderbox consists entirely of perl
