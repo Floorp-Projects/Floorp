@@ -3333,31 +3333,30 @@ pk11ListCertCallback(NSSCertificate *c, void *arg)
     char *nickname = NULL;
     unsigned int certType;
 
-    if ((type == PK11CertListUnique) || (type == PK11CertListRootUnique)) {
+    if ((type == PK11CertListUnique) || (type == PK11CertListRootUnique) ||
+        (type == PK11CertListCAUnique) || (type == PK11CertListUserUnique) ) {
+        /* only list one instance of each certificate, even if several exist */
 	isUnique = PR_TRUE;
     }
-    if ((type == PK11CertListCA) || (type == PK11CertListRootUnique)) {
+    if ((type == PK11CertListCA) || (type == PK11CertListRootUnique) ||
+        (type == PK11CertListCAUnique)) {
 	isCA = PR_TRUE;
     }
 
-
     /* if we want user certs and we don't have one skip this cert */
-    if ((type == PK11CertListUser) && 
+    if ( ( (type == PK11CertListUser) || (type == PK11CertListUserUnique) ) && 
 		!NSSCertificate_IsPrivateKeyAvailable(c, NULL,NULL)) {
 	return PR_SUCCESS;
     }
 
-    /* if we want root certs, skip the user certs */
+    /* PK11CertListRootUnique means we want CA certs without a private key.
+     * This is for legacy app support . PK11CertListCAUnique should be used
+     * instead to get all CA certs, regardless of private key
+     */
     if ((type == PK11CertListRootUnique) && 
 		NSSCertificate_IsPrivateKeyAvailable(c, NULL,NULL)) {
 	return PR_SUCCESS;
     }
-
-    /* if we want Unique certs and we already have it on our list, skip it */
-    if ( isUnique && isOnList(certList,c) ) {
-	return PR_SUCCESS;
-    }
-
 
     newCert = STAN_GetCERTCertificate(c);
     if (!newCert) {

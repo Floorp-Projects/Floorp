@@ -118,10 +118,15 @@ struct PK11RSAGenParamsStr {
 };
 
 typedef enum {
-     PK11CertListUnique = 0,
-     PK11CertListUser = 1,
-     PK11CertListRootUnique = 2,
-     PK11CertListCA = 3
+     PK11CertListUnique = 0,     /* get one instance of all certs */
+     PK11CertListUser = 1,       /* get all instances of user certs */
+     PK11CertListRootUnique = 2, /* get one instance of CA certs without a private key.
+                                  * deprecated. Use PK11CertListCAUnique
+                                  */
+     PK11CertListCA = 3,         /* get all instances of CA certs */
+     PK11CertListCAUnique = 4,   /* get one instance of CA certs */
+     PK11CertListUserUnique = 5, /* get one instance of user certs */
+     PK11CertListAll = 6         /* get all instances of all certs */
 } PK11CertListType;
 
 /*
