@@ -2153,8 +2153,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
          children.AddChild(scrollFrame);
 
         // if there are any anonymous children for the nsScrollFrame create frames for them.
-        nsIDocument* doc = nsnull;
-        nsresult rv = aDocElement->GetDocument(doc);
+        nsCOMPtr<nsIDocument> doc;
+        nsresult rv = aDocElement->GetDocument(*getter_AddRefs(doc));
         if (NS_FAILED(rv) || !doc)
           return rv;
 
@@ -2464,8 +2464,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
         children.AddChild(scrollFrame);
 
         // if there are any anonymous children for the nsScrollFrame create frames for them.
-        nsIDocument* doc = nsnull;
-        nsresult rv = aDocElement->GetDocument(doc);
+        nsCOMPtr<nsIDocument> doc;
+        nsresult rv = aDocElement->GetDocument(*getter_AddRefs(doc));
         if (NS_FAILED(rv) || !doc)
           return rv;
 
@@ -2528,8 +2528,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
         children.AddChild(scrollFrame);
 
         // if there are any anonymous children for the nsScrollFrame create frames for them.
-        nsIDocument* doc = nsnull;
-        nsresult rv = aDocElement->GetDocument(doc);
+        nsCOMPtr<nsIDocument> doc;
+        nsresult rv = aDocElement->GetDocument(*getter_AddRefs(doc));
         if (NS_FAILED(rv) || !doc)
           return rv;
 
@@ -3255,8 +3255,8 @@ nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresContext*  aPresConte
   nsCOMPtr<nsISupportsArray> anonymousItems;
   NS_NewISupportsArray(getter_AddRefs(anonymousItems));
 
-  nsIDocument* doc = nsnull;
-  nsresult rv = aParent->GetDocument(doc);
+  nsCOMPtr<nsIDocument> doc;
+  nsresult rv = aParent->GetDocument(*getter_AddRefs(doc));
   if (NS_FAILED(rv) || !doc)
     return rv;
 
@@ -3932,8 +3932,8 @@ nsCSSFrameConstructor::BuildGfxScrollFrame (nsIPresContext*          aPresContex
   aAnonymousFrames.AddChild(scrollbox);
 
   // if there are any anonymous children for the nsScrollFrame create frames for them.
-  nsIDocument* doc = nsnull;
-  nsresult rv = aContent->GetDocument(doc);
+  nsCOMPtr<nsIDocument> doc;
+  nsresult rv = aContent->GetDocument(*getter_AddRefs(doc));
   if (NS_FAILED(rv) || !doc)
     return rv;
 
