@@ -757,20 +757,20 @@ PRInt32 nsMsgThreadEnumerator::MsgKeyFirstChildIndex(nsMsgKey inMsgKey)
 
 NS_IMETHODIMP nsMsgThreadEnumerator::GetNext(nsISupports **aItem)
 {
-	if (!aItem)
-		return NS_ERROR_NULL_POINTER;
-	nsresult rv = NS_OK;
-
-	if (mNeedToPrefetch)
-		rv = Prefetch();
-
-    if (NS_SUCCEEDED(rv) && mResultHdr) 
-	{
-        *aItem = mResultHdr;
-        NS_ADDREF(*aItem);
-		mNeedToPrefetch = PR_TRUE;
-    }
-	return rv;
+  if (!aItem)
+    return NS_ERROR_NULL_POINTER;
+  nsresult rv = NS_OK;
+  
+  if (mNeedToPrefetch)
+    rv = Prefetch();
+  
+  if (NS_SUCCEEDED(rv) && mResultHdr) 
+  {
+    *aItem = mResultHdr;
+    NS_ADDREF(*aItem);
+    mNeedToPrefetch = PR_TRUE;
+  }
+  return rv;
 }
 
 nsresult nsMsgThreadEnumerator::Prefetch()

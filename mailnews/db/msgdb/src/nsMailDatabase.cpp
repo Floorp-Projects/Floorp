@@ -514,8 +514,10 @@ NS_IMETHODIMP nsMailDatabase::GetOfflineOpForKey(nsMsgKey msgKey, PRBool create,
 
     if (!offlineOpRow && create)
     {
-  		err  = m_mdbStore->NewRowWithOid(GetEnv(), &rowObjectId, &offlineOpRow);
-      m_mdbAllOfflineOpsTable->AddRow(GetEnv(), offlineOpRow);
+      err  = m_mdbStore->NewRowWithOid(GetEnv(), &rowObjectId, &offlineOpRow);
+      NS_ENSURE_SUCCESS(err, err);
+      if (offlineOpRow)
+        m_mdbAllOfflineOpsTable->AddRow(GetEnv(), offlineOpRow);
       newOp = PR_TRUE;
     }
 
@@ -705,7 +707,7 @@ nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec *folderName, int num, int
 	}
 	else if (pMessageDB)
 	{ 
-		err = pMessageDB->Commit(nsMsgDBCommitType::kSessionCommit);
+		err = pMessageDB->Commit(nsMsgDBCommitType::kLargeCommit);
 		pMessageDB->Release();
 	}
 	return err;
