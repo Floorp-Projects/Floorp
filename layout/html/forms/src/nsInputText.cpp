@@ -269,6 +269,7 @@ nsInputTextFrame::GetWidgetInitData(nsIPresContext& aPresContext)
 
   if (kInputText_Password == content->GetTextType()) {
     data = new nsTextWidgetInitData();
+    data->clipChildren = PR_TRUE;
     data->mIsPassword = PR_TRUE;
   }
   NS_RELEASE(content);
