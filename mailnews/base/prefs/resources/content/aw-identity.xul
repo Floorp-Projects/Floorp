@@ -26,6 +26,7 @@ Rights Reserved.
 <window id="identitypage" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     align="vertical"
+    class="dialog"
     onload="parent.wizardPageLoaded('identity');">
 
   <box class="title" align="horizontal">
