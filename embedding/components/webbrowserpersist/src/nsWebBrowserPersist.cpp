@@ -1308,15 +1308,18 @@ nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode, PRBool *aAbort)
     {
         URIData *data = nsnull;
         StoreURIAttribute(aNode, "src", PR_FALSE, &data);
-        data->mIsSubFrame = PR_TRUE;
-        // TODO how do we get the proper extension (or MIME type) from a DOM document?
-        data->mSubFrameExt.Assign(NS_LITERAL_STRING(".htm"));
-        // Save the frame content
-        nsCOMPtr<nsIDOMDocument> content;
-        nodeAsFrame->GetContentDocument(getter_AddRefs(content));
-        if (content)
+        if (data)
         {
-            SaveSubframeContent(content, data);
+            data->mIsSubFrame = PR_TRUE;
+            // TODO how do we get the proper extension (or MIME type) from a DOM document?
+            data->mSubFrameExt.Assign(NS_LITERAL_STRING(".htm"));
+            // Save the frame content
+            nsCOMPtr<nsIDOMDocument> content;
+            nodeAsFrame->GetContentDocument(getter_AddRefs(content));
+            if (content)
+            {
+                SaveSubframeContent(content, data);
+            }
         }
         return NS_OK;
     }
@@ -1326,15 +1329,18 @@ nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode, PRBool *aAbort)
     {
         URIData *data = nsnull;
         StoreURIAttribute(aNode, "src", PR_FALSE, &data);
-        data->mIsSubFrame = PR_TRUE;
-        // TODO how do we get the proper extension (or MIME type) from a DOM document?
-        data->mSubFrameExt.Assign(NS_LITERAL_STRING(".htm"));
-        // Save the frame content
-        nsCOMPtr<nsIDOMDocument> content;
-        nodeAsIFrame->GetContentDocument(getter_AddRefs(content));
-        if (content && data)
+        if (data)
         {
-            SaveSubframeContent(content, data);
+            data->mIsSubFrame = PR_TRUE;
+            // TODO how do we get the proper extension (or MIME type) from a DOM document?
+            data->mSubFrameExt.Assign(NS_LITERAL_STRING(".htm"));
+            // Save the frame content
+            nsCOMPtr<nsIDOMDocument> content;
+            nodeAsIFrame->GetContentDocument(getter_AddRefs(content));
+            if (content)
+            {
+                SaveSubframeContent(content, data);
+            }
         }
         return NS_OK;
     }
