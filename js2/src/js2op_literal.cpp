@@ -200,7 +200,7 @@ makeLimitedInstance:
             baseVal = OBJECT_TO_JS2VAL(aInst);
             for (uint16 i = 0; i < argCount; i++) {
                 b = pop();
-                meta->createDynamicProperty(aInst, numberToString((argCount - 1) - i), b, ReadWriteAccess, false, true);
+                meta->createDynamicProperty(aInst, numberToString(toUInt32((argCount - 1) - i)), b, ReadWriteAccess, false, true);
             }
             setLength(meta, aInst, argCount);
             push(baseVal);

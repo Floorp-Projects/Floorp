@@ -519,7 +519,7 @@ static void js_qsort(js2val *vec, size_t nel, CompareArgs *arg)
     js2val *pivot;
     QSortArgs qa;
 
-    pivot = (js2val *)STD::malloc(nel);
+    pivot = (js2val *)STD::malloc(nel * sizeof(js2val));
     qa.vec = vec;
     qa.pivot = pivot;
     qa.arg = arg;

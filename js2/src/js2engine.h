@@ -253,6 +253,7 @@ public:
 
     String *numberToString(float64 *number);    // non-static since they need access to meta
     String *numberToString(int32 i);
+    String *numberToString(uint32 i);
 
     js2val allocFloat(float32 x); 
     js2val pushFloat(float32 x)         { js2val retval = allocFloat(x); push(retval); return retval; }

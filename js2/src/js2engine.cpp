@@ -328,6 +328,13 @@ namespace MetaData {
         const char *chrp = doubleToStr(buf, dtosStandardBufferSize, i, dtosStandard, 0);
         return allocStringPtr(chrp);
     }
+    // Convert an integer to a string
+    String *JS2Engine::numberToString(uint32 i)
+    {
+        char buf[dtosStandardBufferSize];
+        const char *chrp = doubleToStr(buf, dtosStandardBufferSize, i, dtosStandard, 0);
+        return allocStringPtr(chrp);
+    }
 
     // Convert a double to a string
     String *JS2Engine::numberToString(float64 *number)

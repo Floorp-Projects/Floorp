@@ -214,7 +214,7 @@ namespace MetaData {
                 if (match->parens[i].index != -1) {
                     parenStr = meta->engine->allocString(str->substr((uint32)(match->parens[i].index), (uint32)(match->parens[i].length)));
                     if (!test)
-						meta->createDynamicProperty(A, meta->engine->numberToString(i + 1), parenStr, ReadWriteAccess, false, true);
+						meta->createDynamicProperty(A, meta->engine->numberToString(toUInt32(i + 1)), parenStr, ReadWriteAccess, false, true);
 					if (i < 9) { // 0-->8 maps to $1 thru $9
 						char name[3] = "$0";
 						name[1] = '1' + i;
@@ -224,7 +224,7 @@ namespace MetaData {
 				}
 				else {
 					if (!test)
-						meta->createDynamicProperty(A, meta->engine->numberToString(i + 1), JS2VAL_UNDEFINED, ReadWriteAccess, false, true);
+						meta->createDynamicProperty(A, meta->engine->numberToString(toUInt32(i + 1)), JS2VAL_UNDEFINED, ReadWriteAccess, false, true);
 					if (i < 9) { // 0-->8 maps to $1 thru $9
 						char name[3] = "$0";
 						name[1] = '1' + i;
