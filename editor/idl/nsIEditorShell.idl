@@ -60,14 +60,6 @@ interface nsIEditorShell : nsISupports
     eDisplayModeEdit,
     eDisplayModeBrowserPreview
   };
-
-  enum {
-    eTable,
-    eTableRow,
-    eTableColumn,
-    eTableCell,
-    eTableCaption
-  };
 %}
   readonly attribute boolean              documentModified;
   readonly attribute boolean              documentIsEmpty;
@@ -200,6 +192,22 @@ interface nsIEditorShell : nsISupports
     *      (an "A" tag with the "name" attribute set)
     */
   nsIDOMElement GetSelectedElement(in wstring tagName);
+
+  /** Get first selected node from first selection range.
+    * Assumes cell-selection model where each cell
+    * is in a separate range (selection parent node is table row)
+    * Returns null if ranges don't contain cell selections
+    */
+  nsIDOMElement GetFirstSelectedCell();
+  
+  /** Get next selected cell element from first selection range.
+    * Assumes cell-selection model where each cell
+    * is in a separate range (selection parent node is table row)
+    * Always call GetFirstSelectedCell() to initialize stored index of "next" cell
+    * Returns null if after last cell or 
+    *   ranges don't contain cell selections
+    */
+  nsIDOMElement GetNextSelectedCell();
 
   /** Return the input node or a parent matching the given aTagName,
     *   starting the search at the supplied node.
@@ -368,12 +376,34 @@ interface nsIEditorShell : nsISupports
     *
     * Returns:
     *   The table element (table, row, or cell) found
+    *     If multiple table cells are selected, this is the "focus" cell (last cell selected)
+    *
     *   tagName           The tagname of returned element
     *                       Note that "td" will be returned if name is actually "th"
-    *   isSelected        Tells if element returned is a selected element 
-    *                       (false if element is a parent cell of selection)
+    *   selectedCount     How many table elements were selected
+    *                       This tells us if we have multiple cells selected
+    *                       (0 if element is a parent cell of selection)
     */
-  nsIDOMElement GetSelectedOrParentTableElement(out wstring tagName, out boolean isSelected);
+  nsIDOMElement GetSelectedOrParentTableElement(out wstring tagName, out PRInt32 selectedCount);
+
+  /** Generally used after GetSelectedOrParentTableElement
+    *   to test if selected cells are complete rows or columns
+    * 
+    * cellElement               Any table, cell, or element inside a table
+    *                           Used to get enclosing table. 
+    *                           If null, selection's focusNode is used
+    * 
+    * Returns: (defines are from nsIFrameSelection.h)
+    *  0                         cellElement was not a cell
+    *  1 (TABLESELECTION_CELL)   There are 1 or more cells selected
+    *                              but complete rows or columns are not selected
+    *  2 (TABLESELECTION_ROW)    All cells are in 1 or more rows
+    *                              and in each row, all cells selected
+    *                              Note: This is the value if all rows (thus all cells) are selected
+    *  3 (TABLESELECTION_COLUMN) All cells are in 1 or more columns
+    *                              and in each column, all cells are selected
+    */
+  PRUint32 GetSelectedCellsType(in nsIDOMElement element);
 
   /**** end of table editing *****/
 

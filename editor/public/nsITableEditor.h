@@ -237,13 +237,48 @@ public:
     * @param aTableElement      The table element (table, row, or cell) returned
     * @param aTagName           The tagname of returned element
     *                           Note that "td" will be returned if name is actually "th"
-    * @param aIsSelected        Tells if element returned is a selected element 
-    *                           (false if element is a parent cell of selection)
+    * @param aSelectedCount     How many table elements were selected
+    *                           This tells us if we have multiple cells selected
+    *                             (0 if element is a parent cell of selection)
+    *
     * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
     */
-  NS_IMETHOD GetSelectedOrParentTableElement(nsIDOMElement* &aTableElement, nsString& aTagName, PRBool &aIsSelected)=0;
+  NS_IMETHOD GetSelectedOrParentTableElement(nsIDOMElement* &aTableElement, nsString& aTagName, PRInt32 &aSelectedCount)=0;
 
+  /** Generally used after GetSelectedOrParentTableElement
+    *   to test if selected cells are complete rows or columns
+    * 
+    * @param aElement           Any table or cell element or any element inside a table
+    *                           Used to get enclosing table. 
+    *                           If null, selection's anchorNode is used
+    * 
+    * @param aSelectionType     Returns:
+    *                             0                        aCellElement was not a cell (returned result = NS_ERROR_FAILURE)
+    *                             TABLESELECTION_CELL      There are 1 or more cells selected
+    *                                                        but complete rows or columns are not selected
+    *                             TABLESELECTION_ROW       All cells are in 1 or more rows
+    *                                                       and in each row, all cells selected
+    *                                                       Note: This is the value if all rows (thus all cells) are selected
+    *                             TABLESELECTION_COLUMN    All cells are in 1 or more columns
+    *                                                       and in each column, all cells are selected
+    */
+  NS_IMETHOD GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 &aSelectionType)=0;
+
+  /** Get first selected element from first selection range.
+    * Assumes cell-selection model where each cell
+    * is in a separate range (selection parent node is table row)
+    * @param aCell     Selected cell or null if ranges don't contain cell selections
+    */
+  NS_IMETHOD GetFirstSelectedCell(nsIDOMElement **aCell)=0;
+  
+  /** Get next selected cell element from first selection range.
+    * Assumes cell-selection model where each cell
+    * is in a separate range (selection parent node is table row)
+    * Always call GetFirstSelectedCell() to initialize stored index of "next" cell
+    * @param aCell     Selected cell or null if no more selected cells
+    *                     or ranges don't contain cell selections
+    */
+  NS_IMETHOD GetNextSelectedCell(nsIDOMElement **aCell)=0;
 };
-
 
 #endif // nsITableEditor_h__

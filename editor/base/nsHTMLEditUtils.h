@@ -44,6 +44,7 @@ public:
   static PRBool IsHeader(nsIDOMNode *aNode);
   static PRBool IsParagraph(nsIDOMNode *aNode);
   static PRBool IsListItem(nsIDOMNode *aNode);
+  static PRBool IsTable(nsIDOMNode *aNode);
   static PRBool IsTableRow(nsIDOMNode *aNode);
   static PRBool IsTableCell(nsIDOMNode *aNode);
   static PRBool IsList(nsIDOMNode *aNode);

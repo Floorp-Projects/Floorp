@@ -2848,6 +2848,59 @@ nsEditorShell::GetSelectedElement(const PRUnichar *aInTagName, nsIDOMElement **a
 }
 
 NS_IMETHODIMP
+nsEditorShell::GetFirstSelectedCell(nsIDOMElement **aOutElement)
+{
+  if (!aOutElement)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult  result = NS_NOINTERFACE;
+  
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+    {
+      nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
+      if (tableEditor)
+        result = tableEditor->GetFirstSelectedCell(aOutElement);
+      break;
+    }
+
+    case ePlainTextEditorType:
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return result;
+}
+
+
+NS_IMETHODIMP
+nsEditorShell::GetNextSelectedCell(nsIDOMElement **aOutElement)
+{
+  if (!aOutElement)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult  result = NS_NOINTERFACE;
+  
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+    {
+      nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
+      if (tableEditor)
+        result = tableEditor->GetNextSelectedCell(aOutElement);
+      break;
+    }
+    case ePlainTextEditorType:
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return result;
+}
+
+
+NS_IMETHODIMP
 nsEditorShell::GetElementOrParentByTagName(const PRUnichar *aInTagName, nsIDOMNode *node, nsIDOMElement **aOutElement)
 {
   //node can be null -- this signals using the selection anchorNode
@@ -3537,9 +3590,9 @@ nsEditorShell::GetNextRow(nsIDOMElement *aCurrentRow, nsIDOMElement **_retval)
 }
 
 NS_IMETHODIMP
-nsEditorShell::GetSelectedOrParentTableElement(PRUnichar **aTagName, PRBool *aIsSelected, nsIDOMElement **_retval)
+nsEditorShell::GetSelectedOrParentTableElement(PRUnichar **aTagName, PRInt32 *aSelectedCount, nsIDOMElement **_retval)
 {
-  if (!_retval || !aTagName || !aIsSelected)
+  if (!_retval || !aTagName || !aSelectedCount)
     return NS_ERROR_NULL_POINTER;
 
   nsresult  result = NS_NOINTERFACE;
@@ -3550,8 +3603,30 @@ nsEditorShell::GetSelectedOrParentTableElement(PRUnichar **aTagName, PRBool *aIs
         nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
         nsAutoString TagName(*aTagName);
         if (tableEditor)
-          result = tableEditor->GetSelectedOrParentTableElement(*_retval, TagName, *aIsSelected);
+          result = tableEditor->GetSelectedOrParentTableElement(*_retval, TagName, *aSelectedCount);
           *aTagName = TagName.ToNewUnicode();
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsEditorShell::GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 *_retval)
+{
+  if (!_retval)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
+        if (tableEditor)
+          result = tableEditor->GetSelectedCellsType(aElement, *_retval);
       }
       break;
     default:

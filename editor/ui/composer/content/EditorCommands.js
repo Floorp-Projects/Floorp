@@ -1153,9 +1153,9 @@ function SetBackColorString(xulElementID)
   if (xulElement)
   {
     var textVal;
-    var isSelectedObj = new Object();
+    var selectedCountObj = new Object();
     var tagNameObj = new Object();
-    var element = editorShell.GetSelectedOrParentTableElement(tagNameObj, isSelectedObj);  
+    var element = editorShell.GetSelectedOrParentTableElement(tagNameObj, selectedCountObj);  
 
     if (tagNameObj.value == "table")
       textVal = editorShell.GetString("TableBackColor");
@@ -1564,6 +1564,7 @@ function EditorInsertOrEditTable(insertAllowed)
 
 function EditorTableCellProperties()
 {
+dump("*** EditorTableCellProperties\n");
   var cell = editorShell.GetElementOrParentByTagName("td", null);
   if (cell) {
     // Start Table Properties dialog on the "Cell" panel

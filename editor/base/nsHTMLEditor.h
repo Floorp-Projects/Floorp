@@ -203,9 +203,17 @@ public:
   NS_IMETHOD GetFirstRow(nsIDOMElement* aTableElement, nsIDOMElement* &aRow);
   NS_IMETHOD GetNextRow(nsIDOMElement* aTableElement, nsIDOMElement* &aRow);
   NS_IMETHOD SetCaretAfterTableEdit(nsIDOMElement* aTable, PRInt32 aRow, PRInt32 aCol, PRInt32 aDirection);
-  NS_IMETHOD GetSelectedOrParentTableElement(nsIDOMElement* &aTableElement, nsString& aTagName, PRBool &aIsSelected);
-    
+  NS_IMETHOD GetSelectedOrParentTableElement(nsIDOMElement* &aTableElement, nsString& aTagName, PRInt32 &aSelectedCount);
+  NS_IMETHOD GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 &aSelectionType);
+  // Finds the first selected cell in first range of selection
+  // This is in the *order of selection*, not order in the table
+  // (i.e., each cell added to selection is added in another range 
+  //  in the selection's rangelist, independent of location in table)
+  NS_IMETHOD GetFirstSelectedCell(nsIDOMElement **aCell);
+  // Get next cell until no more are found. Always use GetFirstSelected cell first
+  NS_IMETHOD GetNextSelectedCell(nsIDOMElement **aCell);
 
+    
 // Selection and navigation
   /* obsolete
   NS_IMETHOD MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelection);
@@ -348,24 +356,23 @@ protected:
   // Needed to do appropriate deleting when last cell or row is about to be deleted
   // This doesn't count cells that don't start in the given row (are spanning from row above)
   PRInt32  GetNumberOfCellsInRow(nsIDOMElement* aTable, PRInt32 rowIndex);
-  
+  // Test if all cells in row or column at given index are selected
+  PRBool AllCellsInRowSelected(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32 aNumberOfColumns);
+  PRBool AllCellsInColumnSelected(nsIDOMElement *aTable, PRInt32 aColIndex, PRInt32 aNumberOfRows);
+
   // Most insert methods need to get the same basic context data
   NS_IMETHOD GetCellContext(nsCOMPtr<nsIDOMSelection> &aSelection,
                             nsCOMPtr<nsIDOMElement> &aTable, nsCOMPtr<nsIDOMElement> &aCell, 
                             nsCOMPtr<nsIDOMNode> &aCellParent, PRInt32& aCellOffset, 
                             PRInt32& aRow, PRInt32& aCol);
 
-  // Finds the first selected cell in first range of selection
-  // This is in the *order of selection*, not order in the table
-  // (i.e., each cell added to selection is added in another range 
-  //  in the selection's rangelist, independent of location in table)
-  NS_IMETHOD GetFirstSelectedCell(nsIDOMElement **aCell);
-
   // Fallback method: Call this after using ClearSelection() and you
   //  failed to set selection to some other content in the document
   NS_IMETHOD SetSelectionAtDocumentStart(nsIDOMSelection *aSelection);
 
-  // end of table editing utilities
+
+// End of Table Editing utilities
+  
 
   NS_IMETHOD ReParentContentOfNode(nsIDOMNode *aNode, 
                                    nsString   &aParentTag,
@@ -607,13 +614,8 @@ protected:
   PRBool mCachedUnderlineStyle;
   nsString mCachedFontName;
 
-  // True when selection consists of table cell(s)
-  PRBool mSelectingTableCells;
-
-  // Used to monitor block of cells selected
-  //   by dragging mouse across the table
-  nsCOMPtr<nsIDOMElement> mStartSelectedCell;
-  nsCOMPtr<nsIDOMElement> mCurrentSelectedCell;
+  // Used by GetFirstSelectedCell and GetNextSelectedCell
+  PRInt32  mSelectedCellIndex;
 
 public:
   static nsIAtom *gTypingTxnName;

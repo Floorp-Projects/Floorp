@@ -1857,7 +1857,6 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
       {
         nsCOMPtr<nsIDOMAttr> resultAttribute;
         destElement->RemoveAttributeNode(destAttribute, getter_AddRefs(resultAttribute));
-        // Is the resultAttribute deleted automagically?
       }
     }
   }
@@ -1881,7 +1880,7 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
             // Do we ever get here?
             destElement->RemoveAttribute(sourceAttrName);
 #if DEBUG_cmanske
-            printf("Attribute in NamedNodeMap has empty value in nsEditor::CloneAttributes()\n");
+            printf("Attribute in sourceAttribute has empty value in nsEditor::CloneAttributes()\n");
 #endif
           }
         }        
@@ -5014,19 +5013,11 @@ nsEditor::GetFirstNodeInRange(nsIDOMRange *aRange, nsIDOMNode **aNode)
   if (NS_FAILED(res)) return res;
   if (!startParent) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMNode> startNode;
   PRInt32 offset;
   res = aRange->GetStartOffset(&offset);
   if (NS_FAILED(res)) return res;
 
-  nsCOMPtr<nsIDOMNodeList> nodeList;
-  res = startParent->GetChildNodes(getter_AddRefs(nodeList));
-  if (NS_FAILED(res)) return res;
-  if (!nodeList) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDOMNode> child;
-  res = nodeList->Item(offset,getter_AddRefs(child));
-  if (NS_FAILED(res)) return res;
+  nsCOMPtr<nsIDOMNode> child = GetChildAt(startParent, offset);
   if (!child) return NS_ERROR_FAILURE;
 
   *aNode = child.get();
