@@ -92,8 +92,8 @@ class nsCString : public nsEmbedCString
       PRInt32 FindChar(char c, PRUint32 offset = 0)
         {
           NS_ASSERTION(offset <= Length(), "invalid offset");
-          const char *data = get() + offset;
-          for (const char *p = data; *p; ++p)
+          const char *data = get();
+          for (const char *p = data + offset; *p; ++p)
             if (*p == c)
               return p - data;
           return kNotFound;
@@ -151,8 +151,8 @@ class nsString : public nsEmbedString
       PRInt32 FindChar(PRUnichar c, PRUint32 offset = 0)
         {
           NS_ASSERTION(offset <= Length(), "invalid offset");
-          const PRUnichar *data = get() + offset;
-          for (const PRUnichar *p = data; *p; ++p)
+          const PRUnichar *data = get();
+          for (const PRUnichar *p = data + offset; *p; ++p)
             if (*p == c)
               return p - data;
           return kNotFound;
