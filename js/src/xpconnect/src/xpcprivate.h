@@ -56,7 +56,6 @@
 #include "nsIClassInfo.h"
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
-#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIGenericFactory.h"
 #include "nsMemory.h"
