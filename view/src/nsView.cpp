@@ -927,7 +927,15 @@ nsresult nsView :: LoadWidget(const nsCID &aClassIID)
 void nsView :: List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
-  fprintf(out, "%p win=%p ", this, mWindow);
+  fprintf(out, "%p ", this);
+  if (nsnull != mWindow) {
+    nsRect windowBounds;
+    mWindow->GetBounds(windowBounds);
+    fprintf(out, "(widget=%p pos={%d,%d,%d,%d}) ",
+            mWindow,
+            windowBounds.x, windowBounds.y,
+            windowBounds.width, windowBounds.height);
+  }
   out << mBounds;
   fprintf(out, " z=%d vis=%d opc=%1.3f <\n", mZindex, mVis, mOpacity);
   nsIView* kid = mFirstChild;
