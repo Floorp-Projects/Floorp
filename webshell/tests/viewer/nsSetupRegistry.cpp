@@ -59,9 +59,7 @@
 #ifdef XP_PC
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
-#ifdef BUILD_PROFILE
 #include "nsIProfile.h"
-#endif
 #endif
 
 #include "nsIAllocator.h"
@@ -79,9 +77,7 @@
 #define WEB_DLL    "raptorweb.dll"
 #define PLUGIN_DLL "raptorplugin.dll"
 #define PREF_DLL   "xppref32.dll"
-#ifdef BUILD_PROFILE
 #define PROFILE_DLL   "xpprofile32.dll"
-#endif
 #define PARSER_DLL "raptorhtmlpars.dll"
 #define DOM_DLL    "jsdom.dll"
 #define LAYOUT_DLL "raptorhtml.dll"
@@ -216,9 +212,7 @@ static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 #ifdef XP_PC
 static NS_DEFINE_IID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
 static NS_DEFINE_IID(kObserverCID, NS_OBSERVER_CID);
-#ifdef BUILD_PROFILE
 static NS_DEFINE_IID(kProfileCID, NS_PROFILE_CID);
-#endif
 #endif
 
 //#define NEW_CLIPBOARD_SUPPORT
@@ -370,9 +364,7 @@ NS_SetupRegistry()
 #ifdef XP_PC
   nsComponentManager::RegisterComponent(kObserverServiceCID, "ObserverService", NS_OBSERVERSERVICE_PROGID, BASE_DLL,PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kObserverCID, "Observer", NS_OBSERVER_PROGID, BASE_DLL,PR_FALSE, PR_FALSE);
-#ifdef BUILD_PROFILE
   nsComponentManager::RegisterComponent(kProfileCID, NULL, NULL, PROFILE_DLL, PR_FALSE, PR_FALSE);
-#endif
 #endif
 
 #if 0	// autoregistration now works on all platforms, and RDF self-registers, so commenting out
