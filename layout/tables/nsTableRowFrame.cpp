@@ -1132,7 +1132,7 @@ nsTableRowFrame::InitialReflow(nsIPresContext*      aPresContext,
       // XXX do we need to call CalculateCellActualSize?
       PlaceChild(aPresContext, aReflowState, kidFrame, kidSize, x, 0,
                  aDesiredSize.maxElementSize, &kidMaxElementSize);
-      SetTallestCell(aDesiredSize.height, aDesiredSize.ascent, aDesiredSize.descent, aReflowState.tableFrame, (nsTableCellFrame*)kidFrame);
+      SetTallestCell(kidSize.height, kidSize.ascent, kidSize.descent, aReflowState.tableFrame, (nsTableCellFrame*)kidFrame);
       x += kidSize.width + cellSpacingX;
     }
     else
