@@ -343,6 +343,13 @@ const int kReuseWindowOnAE = 2;
   }
 }
 
++(BOOL) isBlankURL:(NSString*)inURL
+{
+  BOOL isBlank = NO;
+  if ([inURL isEqualToString: @"about:blank"] || [inURL isEqualToString: @""])
+    isBlank = YES;
+  return isBlank;
+}
 
 -(IBAction)newWindow:(id)aSender
 {
@@ -356,7 +363,7 @@ const int kReuseWindowOnAE = 2;
   NSString* homePage = mStartURL ? mStartURL : [[PreferenceManager sharedInstance] homePage:YES];
   BrowserWindowController* controller = [self openBrowserWindowWithURL:homePage andReferrer:nil];
 
-  if ([homePage isEqualToString: @"about:blank"])
+  if ([MainController isBlankURL:homePage])
     [controller focusURLBar];
   else
     [[[controller getBrowserWrapper] getBrowserView] setActive: YES];
@@ -687,11 +694,11 @@ const int kReuseWindowOnAE = 2;
 // open a new URL. This method always makes a new browser window
 -(BrowserWindowController*)openBrowserWindowWithURL: (NSString*)aURL andReferrer: (NSString*)aReferrer
 {
-	BrowserWindowController* browser = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];
+  BrowserWindowController* browser = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];
 
   // The process of creating a new tab in this brand new window loads about:blank for us as a 
   // side effect of calling GetDocument(). We don't need to do it again.
-  if ( [aURL isEqualToString:@"about:blank"] )
+  if ([MainController isBlankURL:aURL])
     [browser disableLoadPage];
   else
     [browser loadURL: aURL referrer:aReferrer activate:YES];
@@ -1085,7 +1092,7 @@ const int kReuseWindowOnAE = 2;
     NSString* titleString = nil;
     NSString* urlString = nil;
     [[[self getMainWindowBrowserController] getBrowserWrapper] getTitle:&titleString andHref:&urlString];
-    return [urlString length] > 0 && ![urlString isEqualToString:@"about:blank"];
+    return ![MainController isBlankURL:urlString];
   }
 
   // default return

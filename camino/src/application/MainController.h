@@ -176,4 +176,7 @@
 // bookmarks file.
 -(IBAction) setFileExtension:(id)aSender;
 
+// utility routine to test if a url is "blank" (either empty or about:blank)
++(BOOL) isBlankURL:(NSString*)inURL;
+
 @end

@@ -998,7 +998,7 @@ static NSArray* sToolbarDefaults = nil;
   else if (action == @selector(sendURL:))
   {
     NSString* curURL = [[self getBrowserWrapper] getCurrentURLSpec];
-    return [curURL length] > 0 && ![curURL isEqualToString:@"about:blank"];
+    return ![MainController isBlankURL:curURL];
   }
   else
     return YES;
@@ -1775,7 +1775,7 @@ static NSArray* sToolbarDefaults = nil;
       if (loadHomepage)
         urlToLoad = [[PreferenceManager sharedInstance] homePage: NO];
 
-      focusURLBar = locationBarVisible && [urlToLoad isEqualToString:@"about:blank"];      
+      focusURLBar = locationBarVisible && [MainController isBlankURL:urlToLoad];      
 
       [newView loadURI:urlToLoad referrer:nil flags:NSLoadFlagsNone activate:!focusURLBar];
     }
