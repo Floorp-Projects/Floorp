@@ -119,6 +119,7 @@ public: // state is public because the entire Mork system is private
   mork_able         mEnv_AutoClear;
   mork_bool         mEnv_ShouldAbort;
   mork_bool         mEnv_BeVerbose;
+  mork_bool         mEnv_OwnsHeap;
   
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods

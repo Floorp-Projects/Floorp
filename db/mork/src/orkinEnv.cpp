@@ -67,6 +67,19 @@ orkinEnv:: ~orkinEnv() // morkHandle destructor does everything
 {
 }
 
+void orkinEnv::CloseMorkNode(morkEnv* ev) // override to clean up mork env
+{
+  morkEnv* mev = (morkEnv*) this->mHandle_Object;
+
+  if ( mev->IsOpenNode() )
+  {
+    mev->MarkClosing();
+    mev->CloseEnv(ev);
+    mev->MarkShut();
+  }
+  morkHandle::CloseMorkNode(ev);
+}
+
 /*protected non-poly construction*/
 orkinEnv::orkinEnv(morkEnv* ev, // morkUsage is morkUsage_kPool
     morkHandleFace* ioFace,    // must not be nil, cookie for this handle
@@ -212,7 +225,19 @@ orkinEnv::CutStrongRef(nsIMdbEnv* mev)
 /*virtual*/ mdb_err
 orkinEnv::CloseMdbObject(nsIMdbEnv* mev)
 {
-  return this->Handle_CloseMdbObject(mev);
+  morkEnv* ev = (morkEnv*) this->mHandle_Object;
+  mdb_err ret = this->Handle_CloseMdbObject(mev);
+  if (ev && ev->mEnv_Heap)
+  {
+    mork_bool ownsHeap = ev->mEnv_OwnsHeap;
+    nsIMdbHeap*saveHeap = ev->mEnv_Heap;
+
+    ev->mEnv_Heap->Free(this, ev);
+    if (ownsHeap)
+      delete saveHeap;
+
+  }
+  return ret;
 }
 
 /*virtual*/ mdb_err

@@ -69,7 +69,7 @@ class orkinEnv : public morkHandle, public nsIMdbEnv { // nsIMdbObject
 
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods
-  // virtual void CloseMorkNode(morkEnv* ev); // morkHandle is fine
+  virtual void CloseMorkNode(morkEnv* ev); // override to clean up mork env
   virtual ~orkinEnv(); // morkHandle destructor does everything
   
 protected: // construction is protected (use the static Make() method)
