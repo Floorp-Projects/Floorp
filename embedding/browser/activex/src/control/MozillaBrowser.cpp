@@ -87,10 +87,12 @@ CMozillaBrowser::CMozillaBrowser()
 	m_bWndLess = FALSE;
 
 	// Initialize layout interfaces
+	m_pIDocShell = nsnull;
     m_pIWebShell = nsnull;
 	m_pIWebShellWin = nsnull;
 	m_pIPref = nsnull;
     m_pIServiceManager = nsnull;
+	m_bValidBrowser = FALSE;
 
 	// Ready state of control
 	m_nBrowserReadyState = READYSTATE_UNINITIALIZED;
@@ -116,15 +118,16 @@ CMozillaBrowser::CMozillaBrowser()
 	m_UserKey.Create(HKEY_CURRENT_USER, MOZ_CONTROL_REG_KEY);
 
 	// Initialise the web shell
-	InitWebShell();
+	Initialize();
 }
 
 
 CMozillaBrowser::~CMozillaBrowser()
 {
 	NG_TRACE_METHOD(CMozillaBrowser::~CMozillaBrowser);
+	
 	// Close the web shell
-	TermWebShell();
+	Terminate();
 
 	// Close registry keys
 	m_SystemKey.Close();
@@ -190,7 +193,7 @@ LRESULT CMozillaBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	SetWindowLong(GWL_STYLE, GetWindowLong(GWL_STYLE) | WS_CLIPCHILDREN);
 
     // Create the NGLayout WebShell
-    CreateWebShell();
+    CreateBrowser();
 
 	// TODO create and register a drop target
 
@@ -223,37 +226,8 @@ LRESULT CMozillaBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	// Unload browser helpers
 	UnloadBrowserHelpers();
 
-	// TODO unregister drop target
-
- 	// Destroy the htmldoc
- 	if (m_pDocument != NULL)
- 	{
- 		m_pDocument->Release();
- 		m_pDocument = NULL;
- 	}
-
-    // Destroy layout...
-	if (m_pIWebShellWin != nsnull)
-	{
-		m_pIWebShellWin->Destroy();
-		NS_RELEASE(m_pIWebShellWin);
-	}
-
-    if (m_pIWebShell != nsnull)
-	{
-        NS_RELEASE(m_pIWebShell);
-	}
-
-	if (m_pWebShellContainer)
-	{
-		m_pWebShellContainer->Release();
-		m_pWebShellContainer = NULL;
-	}
-
-	if (m_pIPref)
-	{
-		NS_RELEASE(m_pIPref);
-	}
+	// Clean up the browser
+	DestroyBrowser();
 
 	return 0;
 }
@@ -279,7 +253,7 @@ HRESULT CMozillaBrowser::OnDraw(ATL_DRAWINFO& di)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::OnDraw);
 
-    if (m_pIWebShell == nsnull)
+	if (!IsValid())
 	{
 		RECT& rc = *(RECT*)di.prcBounds;
 		Rectangle(di.hdcDraw, rc.left, rc.top, rc.right, rc.bottom);
@@ -304,23 +278,22 @@ LRESULT CMozillaBrowser::OnPageSetup(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 LRESULT CMozillaBrowser::OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::OnPrint);
-
-	nsresult res;
+	if (IsValid())
+	{
+		return 0;
+	}
 
 	// Print the contents
-	if (m_pIWebShell)
+	nsIContentViewer *pContentViewer = nsnull;
+	nsresult res = m_pIDocShell->GetContentViewer(&pContentViewer);
+	if (NS_SUCCEEDED(res))
 	{
-		nsIContentViewer *pContentViewer = nsnull;
-		res = m_pIDocShell->GetContentViewer(&pContentViewer);
-		if (NS_SUCCEEDED(res))
-		{
-            nsCOMPtr<nsIContentViewerFile> spContentViewerFile = do_QueryInterface(pContentViewer);
-			spContentViewerFile->Print(PR_TRUE, nsnull);
-			NS_RELEASE(pContentViewer);
-		}
+        nsCOMPtr<nsIContentViewerFile> spContentViewerFile = do_QueryInterface(pContentViewer);
+		spContentViewerFile->Print(PR_TRUE, nsnull);
+		NS_RELEASE(pContentViewer);
 	}
 	
-	return res;
+	return 0;
 }
 
 LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
@@ -563,8 +536,7 @@ LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 BOOL CMozillaBrowser::IsValid()
 {
 	NG_TRACE_METHOD(CMozillaBrowser::IsValid);
-
-	return (m_pIWebShell == nsnull) ? FALSE : TRUE;
+	return m_bValidBrowser;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -575,7 +547,7 @@ static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 // Initialises the web shell engine
-HRESULT CMozillaBrowser::InitWebShell()
+HRESULT CMozillaBrowser::Initialize()
 {
 	// Initialise XPCOM
 	TCHAR szBinDirPath[MAX_PATH];
@@ -621,7 +593,7 @@ HRESULT CMozillaBrowser::InitWebShell()
 }
 
 // Terminates the web shell engine
-HRESULT CMozillaBrowser::TermWebShell()
+HRESULT CMozillaBrowser::Terminate()
 {
 	// XXX: Do not call DestroyThreadEventQueue(...) for now...
 	
@@ -633,9 +605,9 @@ HRESULT CMozillaBrowser::TermWebShell()
 }
 
 // Create and initialise the web shell
-HRESULT CMozillaBrowser::CreateWebShell() 
+HRESULT CMozillaBrowser::CreateBrowser() 
 {	
-	NG_TRACE_METHOD(CMozillaBrowser::CreateWebShell);
+	NG_TRACE_METHOD(CMozillaBrowser::CreateBrowser);
 
 	if (m_pIWebShell != nsnull)
 	{
@@ -650,6 +622,12 @@ HRESULT CMozillaBrowser::CreateWebShell()
 		rcLocation.bottom++;
 		rcLocation.top++;
 	}
+
+	nsRect r;
+	r.x = 0;
+	r.y = 0;
+	r.width  = rcLocation.right  - rcLocation.left;
+	r.height = rcLocation.bottom - rcLocation.top;
 
 	nsresult rv;
 
@@ -668,33 +646,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	rv = m_pIPref->StartUp();		//Initialize the preference service
 	rv = m_pIPref->ReadUserPrefs();	//Reads from default_prefs.js
 	
-//------------------------------------------------------
-
-
 	PRBool aAllowPlugins = PR_TRUE;
-
-	// Create top level window
-	rv = nsComponentManager::CreateInstance(kWindowCID, nsnull,
-		   kIWidgetIID, (void**)&m_pIWindow);
-	if (NS_OK != rv)
-	{
-		return rv;
-	}
-
-	nsWidgetInitData initData;
-	initData.mWindowType = eWindowType_child;
-	initData.mBorderStyle = eBorderStyle_none;
-
-	nsRect r;
-	r.x = 0;
-	r.y = 0;
-	r.width  = rcLocation.right  - rcLocation.left;
-	r.height = rcLocation.bottom - rcLocation.top;
-
-	// Create the window that the browser will live inside
-	m_pIWindow->Create(nsNativeWidget(m_hWnd), r, nsnull, nsnull, nsnull, nsnull, &initData);
-	m_pIWindow->GetClientBounds(r);
-	m_pIWindow->Show(PR_TRUE);
 
 	// Create web shell
 	m_pIWebBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID, &rv);
@@ -706,9 +658,9 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	{
 		return rv;
 	}
-	r.x = r.y = 0;
+
 	m_pIWebBrowser->QueryInterface(NS_GET_IID(nsIBaseWindow), (void **) &m_pIWebShellWin);
-	rv = m_pIWebShellWin->InitWindow(nsnull, m_pIWindow, r.x, r.y, r.width, r.height);
+	rv = m_pIWebShellWin->InitWindow(nsNativeWidget(m_hWnd), nsnull, r.x, r.y, r.width, r.height);
 	m_pIWebShellWin->Create();
 	m_pIWebBrowser->GetDocShell(&m_pIDocShell);
 	m_pIDocShell->SetAllowPlugins(aAllowPlugins);
@@ -736,6 +688,53 @@ HRESULT CMozillaBrowser::CreateWebShell()
 
 	m_pIWebShellWin->SetVisibility(PR_TRUE);
 
+	m_bValidBrowser = TRUE;
+
+	return S_OK;
+}
+
+// Clean up the browser
+HRESULT CMozillaBrowser::DestroyBrowser()
+{
+	// TODO unregister drop target
+
+	m_bValidBrowser = FALSE;
+
+ 	// Destroy the htmldoc
+ 	if (m_pDocument != NULL)
+ 	{
+ 		m_pDocument->Release();
+ 		m_pDocument = NULL;
+ 	}
+
+    // Destroy layout...
+	if (m_pIWebShellWin != nsnull)
+	{
+		m_pIWebShellWin->Destroy();
+		NS_RELEASE(m_pIWebShellWin);
+	}
+
+    if (m_pIWebShell != nsnull)
+	{
+        NS_RELEASE(m_pIWebShell);
+	}
+
+	if (m_pIDocShell != nsnull)
+	{
+		NS_RELEASE(m_pIDocShell);
+	}
+
+	if (m_pWebShellContainer)
+	{
+		m_pWebShellContainer->Release();
+		m_pWebShellContainer = NULL;
+	}
+
+	if (m_pIPref)
+	{
+		NS_RELEASE(m_pIPref);
+	}
+	
 	return S_OK;
 }
 
@@ -748,7 +747,7 @@ HRESULT CMozillaBrowser::SetEditorMode(BOOL bEnabled)
 	m_bEditorMode = FALSE;
 	if (bEnabled && m_pEditor == nsnull)
 	{
-		if (m_pIWebShell == nsnull)
+		if (!IsValid())
 		{
 			return E_UNEXPECTED;
 		}
@@ -884,7 +883,7 @@ HRESULT CMozillaBrowser::GetPresShell(nsIPresShell **pPresShell)
 
 	*pPresShell = nsnull;
 
-	if (m_pIWebShell == nsnull)
+	if (!IsValid())
 	{
 		NG_ASSERT(0);
 		return E_UNEXPECTED;
@@ -930,7 +929,7 @@ HRESULT CMozillaBrowser::GetDOMDocument(nsIDOMDocument **pDocument)
 
 	*pDocument = nsnull;
 
-	if (m_pIWebShell == nsnull)
+	if (!IsValid())
 	{
 		NG_ASSERT(0);
 		return E_UNEXPECTED;

@@ -50,7 +50,7 @@ NS_IMPL_RELEASE(CWebShellContainer)
 
 NS_INTERFACE_MAP_BEGIN(CWebShellContainer)
 	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
-//	NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+	NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 	NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
 	NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
 	NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
@@ -58,6 +58,16 @@ NS_INTERFACE_MAP_BEGIN(CWebShellContainer)
 	NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
 	NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
 NS_INTERFACE_MAP_END
+
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIURIContentListener
+
+NS_IMETHODIMP CWebShellContainer::GetInterface(const nsIID & uuid, void * *result)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIURIContentListener
@@ -111,6 +121,7 @@ NS_IMETHODIMP CWebShellContainer::SetParentContentListener(nsIURIContentListener
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIDocShellTreeOwner
@@ -309,6 +320,7 @@ CWebShellContainer::SetTitle(const PRUnichar * aTitle)
 {
 	return NS_ERROR_FAILURE;
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIWebBrowserChrome implementation
@@ -591,10 +603,9 @@ CWebShellContainer::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext, n
 	return NS_OK;
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////
 // nsIDocumentLoaderObserver implementation 
-
-
 
 NS_IMETHODIMP
 CWebShellContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand)

@@ -303,7 +303,6 @@ protected:
 
 	// Mozilla interfaces
 	nsCOMPtr<nsIWebBrowser>	m_pIWebBrowser;
-	nsIWidget			*	m_pIWindow;
 	nsIDocShell			*	m_pIDocShell;
 	nsIBaseWindow		*	m_pIWebShellWin;
     
@@ -317,6 +316,8 @@ protected:
 	CRegKey                 m_SystemKey;
 	// User registry key for various control settings
 	CRegKey                 m_UserKey;
+	// Flag to indicate if browser is created or not
+	BOOL                    m_bValidBrowser;
 	// Indicates the browser is busy doing something
 	BOOL					m_bBusy;
 	// Flag to indicate if browser is in edit mode or not
@@ -334,9 +335,10 @@ protected:
 	// Post data from last navigate operation
 	CComVariant             m_vLastPostData;
 
-	virtual HRESULT CreateWebShell();
-	virtual HRESULT InitWebShell();
-	virtual HRESULT TermWebShell();
+	virtual HRESULT Initialize();
+	virtual HRESULT Terminate();
+	virtual HRESULT CreateBrowser();
+	virtual HRESULT DestroyBrowser();
 	virtual HRESULT SetErrorInfo(LPCTSTR lpszDesc, HRESULT hr);
 	virtual HRESULT GetPresShell(nsIPresShell **pPresShell);
 	virtual HRESULT GetDOMDocument(nsIDOMDocument **pDocument);
