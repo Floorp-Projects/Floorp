@@ -11,6 +11,7 @@ DOM_PATH          = $(XML_PATH)/dom
 NET_PATH          = $(ROOT_PATH)/net
 XPATH_PATH        = $(ROOT_PATH)/xpath
 XSLTUTIL_PATH     = ./util
+XSLTFUNC_PATH     = ./functions
 XMLPRINTER_PATH   = $(XML_PATH)/printer
 XMLPARSER_PATH    = $(XML_PATH)/parser
 EXPAT_PARSER_PATH = $(XMLPARSER_PATH)/xmlparse
@@ -18,11 +19,12 @@ EXPAT_TOKEN_PATH  = $(XMLPARSER_PATH)/xmltok
 
 
 INCLUDE_PATHS = -I.                   \
-		-I$(BASE_PATH)        \
+		        -I$(BASE_PATH)        \
                 -I$(NET_PATH)         \
                 -I$(DOM_PATH)         \
                 -I$(XPATH_PATH)       \
                 -I$(XSLTUTIL_PATH)    \
+                -I$(XSLTFUNC_PATH)    \
                 -I$(XML_PATH)         \
                 -I$(XMLUTIL_PATH)     \
                 -I$(XMLPARSER_PATH)   \
