@@ -2060,30 +2060,26 @@ NS_METHOD nsWindow::ConstrainPosition(PRBool aAllowSlop,
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
-   // Check to see if window needs to be removed first
-   // to avoid a costly call to SetWindowPos. This check
-   // can not be moved to the calling code in nsView, because 
-   // some platforms do not position child windows correctly
+  // Check to see if window needs to be moved first
+  // to avoid a costly call to SetWindowPos. This check
+  // can not be moved to the calling code in nsView, because 
+  // some platforms do not position child windows correctly
 
-  nsRect currentRect;
-  GetBounds(currentRect); 
+  // Only perform this check for non-popup windows, since the positioning can
+  // in fact change even when the x/y do not.  We always need to perform the
+  // check. See bug #97805 for details.
+  if (mWindowType != eWindowType_popup && (mBounds.x == aX) && (mBounds.y == aY))
   {
-   // Only perform this check for non-popup windows, since the positioning can
-   // in fact change even when the x/y do not.  We always need to perform the
-   // check. See bug #97805 for details.
-   if (mWindowType != eWindowType_popup && (currentRect.x == aX) && (currentRect.y == aY))
-   {
-      // Nothing to do, since it is already positioned correctly.
-     return NS_OK;    
-   }
+    // Nothing to do, since it is already positioned correctly.
+    return NS_OK;    
   }
 
-   // When moving a borderless top-level window the window
-   // must be placed relative to its parent. WIN32 wants to
-   // place it relative to the screen, so we used the cached parent
-   // to calculate the parent's location then add the x,y passed to
-   // the move to get the screen coordinate for the borderless top-level
-   // window.
+  // When moving a borderless top-level window the window
+  // must be placed relative to its parent. WIN32 wants to
+  // place it relative to the screen, so we used the cached parent
+  // to calculate the parent's location then add the x,y passed to
+  // the move to get the screen coordinate for the borderless top-level
+  // window.
   if (mWindowType == eWindowType_popup) {
     HWND parent = mBorderlessParent;
     if (parent) { 
