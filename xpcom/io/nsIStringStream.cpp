@@ -207,6 +207,14 @@ class CharImpl
 	                                            
                                             }
                                         }
+                                        
+                                        ~CharImpl()
+                                        {
+                                            if (mString) 
+                                            {
+                                                delete [] mString;
+                                            }
+                                        }
 
         virtual PRInt32                 write(const char* buf, PRUint32 aCount)
                                         {
