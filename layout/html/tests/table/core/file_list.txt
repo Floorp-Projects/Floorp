@@ -1,11 +1,15 @@
 file:///s|/mozilla/layout/html/tests/table/core/backgrounds.html
+delay:=2
 file:///s|/mozilla/layout/html/tests/table/core/bloomberg.html
 file:///s|/mozilla/layout/html/tests/table/core/borders.html
 file:///s|/mozilla/layout/html/tests/table/core/box_sizing.html
+delay:=1
 file:///s|/mozilla/layout/html/tests/table/core/captions.html
 file:///s|/mozilla/layout/html/tests/table/core/captions1.html
 file:///s|/mozilla/layout/html/tests/table/core/captions2.html
+delay:=2
 file:///s|/mozilla/layout/html/tests/table/core/captions3.html
+delay:=1
 file:///s|/mozilla/layout/html/tests/table/core/cell_heights.html
 file:///s|/mozilla/layout/html/tests/table/core/columns.html
 file:///s|/mozilla/layout/html/tests/table/core/col_span.html
@@ -26,7 +30,9 @@ file:///s|/mozilla/layout/html/tests/table/core/col_widths_auto_fixPer.html
 file:///s|/mozilla/layout/html/tests/table/core/col_widths_auto_per.html
 file:///s|/mozilla/layout/html/tests/table/core/cols1.html
 file:///s|/mozilla/layout/html/tests/table/core/conflicts.html
+delay:=2
 file:///s|/mozilla/layout/html/tests/table/core/misc.html
+delay:=1
 file:///s|/mozilla/layout/html/tests/table/core/nested1.html
 file:///s|/mozilla/layout/html/tests/table/core/row_span.html
 file:///s|/mozilla/layout/html/tests/table/core/standards1.html
