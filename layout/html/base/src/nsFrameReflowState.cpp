@@ -265,11 +265,21 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     NS_ASSERTION(nsnull != cbrs, "no containing block");
 
     // Get the containing block width and height. We'll need them when
-    // calculating the computed width and height
+    // calculating the computed width and height. For all elements other
+    // than absolutely positioned elements, the containing block is formed
+    // by the content edge
     nscoord containingBlockWidth = cbrs->computedWidth;
     nscoord containingBlockHeight = cbrs->computedHeight;
     nsStyleUnit widthUnit = pos->mWidth.GetUnit();
     nsStyleUnit heightUnit = pos->mHeight.GetUnit();
+
+    // It's possible the child's max width is less than the width of the
+    // containing block (e.g., for scrolled elements because we subtract for
+    // the scrollbar width).
+    // XXX Don't do this if the max width is 0, which is the case for floaters...
+    if ((maxSize.width < containingBlockWidth) && (maxSize.width > 0)) {
+      containingBlockWidth = maxSize.width;
+    }
 
     // Check for a percentage based height
     if (eStyleUnit_Percent == heightUnit) {
@@ -289,13 +299,15 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
         // A specified value of 'auto' uses the element's intrinsic width
         computedWidth = NS_INTRINSICSIZE;
       } else {
-        ComputeHorizontalValue(*cbrs, widthUnit, pos->mWidth, computedWidth);
+        ComputeHorizontalValue(containingBlockWidth, widthUnit, pos->mWidth,
+                               computedWidth);
       }
       if (eStyleUnit_Auto == heightUnit) {
         // A specified value of 'auto' uses the element's intrinsic height
         computedHeight = NS_INTRINSICSIZE;
       } else {
-        ComputeVerticalValue(*cbrs, heightUnit, pos->mHeight, computedHeight);
+        ComputeVerticalValue(containingBlockHeight, heightUnit, pos->mHeight,
+                             computedHeight);
       }
 
     } else if (eCSSFrameType_Floating == frameType) {
@@ -304,12 +316,14 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
         // A specified value of 'auto' becomes a computed width of 0
         computedWidth = 0;
       } else {
-        ComputeHorizontalValue(*cbrs, widthUnit, pos->mWidth, computedWidth);
+        ComputeHorizontalValue(containingBlockWidth, widthUnit, pos->mWidth,
+                               computedWidth);
       }
       if (eStyleUnit_Auto == heightUnit) {
         computedHeight = NS_AUTOHEIGHT;  // let it choose its height
       } else {
-        ComputeVerticalValue(*cbrs, heightUnit, pos->mHeight, computedHeight);
+        ComputeVerticalValue(containingBlockHeight, heightUnit, pos->mHeight,
+                             computedHeight);
       }
 
     } else {
@@ -324,8 +338,8 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
       // Compute the content width
       if (eStyleUnit_Auto == widthUnit) {
         if (eCSSFrameType_BlockReplaced == frameType) {
-          // Block-level replaced element in the flow. A specified value of 'auto'
-          // uses the element's intrinsic width
+          // Block-level replaced element in the flow. A specified value of 
+          // 'auto' uses the element's intrinsic width
           computedWidth = NS_INTRINSICSIZE;
 
         } else {
@@ -337,7 +351,8 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
         }
         
       } else {
-        ComputeHorizontalValue(*cbrs, widthUnit, pos->mWidth, computedWidth);
+        ComputeHorizontalValue(containingBlockWidth, widthUnit, pos->mWidth,
+                               computedWidth);
 
         // Calculate the computed left and right margin again taking into
         // account the computed width, border/padding, and width of the
@@ -354,7 +369,8 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
           computedHeight = NS_AUTOHEIGHT;
         }
       } else {
-        ComputeVerticalValue(*cbrs, heightUnit, pos->mHeight, computedHeight);
+        ComputeVerticalValue(containingBlockHeight, heightUnit, pos->mHeight,
+                             computedHeight);
       }
     }
   }
@@ -429,16 +445,15 @@ nsHTMLReflowState::CalcLineHeight(nsIPresContext& aPresContext,
 }
 
 void
-nsHTMLReflowState::ComputeHorizontalValue(const nsHTMLReflowState& aRS,
+nsHTMLReflowState::ComputeHorizontalValue(nscoord aContainingBlockWidth,
                                           nsStyleUnit aUnit,
                                           const nsStyleCoord& aCoord,
                                           nscoord& aResult)
 {
   aResult = 0;
   if (eStyleUnit_Percent == aUnit) {
-    nscoord width = aRS.computedWidth;
     float pct = aCoord.GetPercentValue();
-    aResult = NSToCoordFloor(width * pct);
+    aResult = NSToCoordFloor(aContainingBlockWidth * pct);
   
   } else if (eStyleUnit_Coord == aUnit) {
     aResult = aCoord.GetCoordValue();
@@ -446,7 +461,7 @@ nsHTMLReflowState::ComputeHorizontalValue(const nsHTMLReflowState& aRS,
 }
 
 void
-nsHTMLReflowState::ComputeVerticalValue(const nsHTMLReflowState& aRS,
+nsHTMLReflowState::ComputeVerticalValue(nscoord aContainingBlockHeight,
                                         nsStyleUnit aUnit,
                                         const nsStyleCoord& aCoord,
                                         nscoord& aResult)
@@ -456,10 +471,9 @@ nsHTMLReflowState::ComputeVerticalValue(const nsHTMLReflowState& aRS,
     // Verify no one is trying to calculate a percentage based height against
     // a height that's shrink wrapping to its content. In that case they should
     // treat the specified value like 'auto'
-    NS_ASSERTION(NS_AUTOHEIGHT != aRS.computedHeight, "unexpected containing block height");
-    nscoord height = aRS.computedHeight;
+    NS_ASSERTION(NS_AUTOHEIGHT != aContainingBlockHeight, "unexpected containing block height");
     float pct = aCoord.GetPercentValue();
-    aResult = NSToCoordFloor(height * pct);
+    aResult = NSToCoordFloor(aContainingBlockHeight * pct);
 
   } else if (eStyleUnit_Coord == aUnit) {
     aResult = aCoord.GetCoordValue();
@@ -492,9 +506,10 @@ nsHTMLReflowState::ComputeMarginFor(nsIFrame* aFrame,
       const nsHTMLReflowState* rs = GetContainingBlockReflowState(aParentRS);
       if (nsnull != rs) {
         nsStyleCoord left, right;
-        ComputeHorizontalValue(*rs, spacing->mMargin.GetLeftUnit(),
+        nscoord containingBlockWidth = rs->computedWidth;
+        ComputeHorizontalValue(containingBlockWidth, spacing->mMargin.GetLeftUnit(),
                                spacing->mMargin.GetLeft(left), aResult.left);
-        ComputeHorizontalValue(*rs, spacing->mMargin.GetRightUnit(),
+        ComputeHorizontalValue(containingBlockWidth, spacing->mMargin.GetRightUnit(),
                                spacing->mMargin.GetRight(right),
                                aResult.right);
       }
@@ -509,9 +524,9 @@ nsHTMLReflowState::ComputeMarginFor(nsIFrame* aFrame,
         // According to the CSS2 spec, margin percentages are
         // calculated with respect to the *height* of the containing
         // block when in a paginated context.
-        ComputeVerticalValue(*rs2, spacing->mMargin.GetTopUnit(),
+        ComputeVerticalValue(rs2->computedHeight, spacing->mMargin.GetTopUnit(),
                              spacing->mMargin.GetTop(top), aResult.top);
-        ComputeVerticalValue(*rs2, spacing->mMargin.GetBottomUnit(),
+        ComputeVerticalValue(rs2->computedHeight, spacing->mMargin.GetBottomUnit(),
                              spacing->mMargin.GetBottom(bottom),
                              aResult.bottom);
       }
@@ -519,9 +534,10 @@ nsHTMLReflowState::ComputeMarginFor(nsIFrame* aFrame,
         // According to the CSS2 spec, margin percentages are
         // calculated with respect to the *width* of the containing
         // block, even for margin-top and margin-bottom.
-        ComputeHorizontalValue(*rs, spacing->mMargin.GetTopUnit(),
+        nscoord containingBlockWidth = rs->computedWidth;
+        ComputeHorizontalValue(containingBlockWidth, spacing->mMargin.GetTopUnit(),
                                spacing->mMargin.GetTop(top), aResult.top);
-        ComputeHorizontalValue(*rs, spacing->mMargin.GetBottomUnit(),
+        ComputeHorizontalValue(containingBlockWidth, spacing->mMargin.GetBottomUnit(),
                                spacing->mMargin.GetBottom(bottom),
                                aResult.bottom);
       }
@@ -560,18 +576,19 @@ nsHTMLReflowState::ComputePaddingFor(nsIFrame* aFrame,
       const nsHTMLReflowState* rs = GetContainingBlockReflowState(aParentRS);
       if (nsnull != rs) {
         nsStyleCoord left, right, top, bottom;
-        ComputeHorizontalValue(*rs, spacing->mPadding.GetLeftUnit(),
+        nscoord containingBlockWidth = rs->computedWidth;
+        ComputeHorizontalValue(containingBlockWidth, spacing->mPadding.GetLeftUnit(),
                                spacing->mPadding.GetLeft(left), aResult.left);
-        ComputeHorizontalValue(*rs, spacing->mPadding.GetRightUnit(),
+        ComputeHorizontalValue(containingBlockWidth, spacing->mPadding.GetRightUnit(),
                                spacing->mPadding.GetRight(right),
                                aResult.right);
 
         // According to the CSS2 spec, padding percentages are
         // calculated with respect to the *width* of the containing
         // block, even for padding-top and padding-bottom.
-        ComputeHorizontalValue(*rs, spacing->mPadding.GetTopUnit(),
+        ComputeHorizontalValue(containingBlockWidth, spacing->mPadding.GetTopUnit(),
                                spacing->mPadding.GetTop(top), aResult.top);
-        ComputeHorizontalValue(*rs, spacing->mPadding.GetBottomUnit(),
+        ComputeHorizontalValue(containingBlockWidth, spacing->mPadding.GetBottomUnit(),
                                spacing->mPadding.GetBottom(bottom),
                                aResult.bottom);
       }
@@ -636,17 +653,18 @@ nsHTMLReflowState::ComputeBorderPaddingFor(nsIFrame* aFrame,
       const nsHTMLReflowState* rs = GetContainingBlockReflowState(aParentRS);
       if (nsnull != rs) {
         nsStyleCoord left, right, top, bottom;
-        ComputeHorizontalValue(*rs, spacing->mPadding.GetLeftUnit(),
+        nscoord containingBlockWidth = rs->computedWidth;
+        ComputeHorizontalValue(containingBlockWidth, spacing->mPadding.GetLeftUnit(),
                                spacing->mPadding.GetLeft(left), p.left);
-        ComputeHorizontalValue(*rs, spacing->mPadding.GetRightUnit(),
+        ComputeHorizontalValue(containingBlockWidth, spacing->mPadding.GetRightUnit(),
                                spacing->mPadding.GetRight(right), p.right);
 
         // According to the CSS2 spec, padding percentages are
         // calculated with respect to the *width* of the containing
         // block, even for padding-top and padding-bottom.
-        ComputeHorizontalValue(*rs, spacing->mPadding.GetTopUnit(),
+        ComputeHorizontalValue(containingBlockWidth, spacing->mPadding.GetTopUnit(),
                                spacing->mPadding.GetTop(top), p.top);
-        ComputeHorizontalValue(*rs, spacing->mPadding.GetBottomUnit(),
+        ComputeHorizontalValue(containingBlockWidth, spacing->mPadding.GetBottomUnit(),
                                spacing->mPadding.GetBottom(bottom), p.bottom);
       }
       else {
