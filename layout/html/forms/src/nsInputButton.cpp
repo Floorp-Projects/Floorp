@@ -41,11 +41,7 @@
 #include "nsIFormManager.h"
 #include "nsIImage.h"
 #include "nsHTMLForms.h"
-#include "nsIFrameImageLoader.h"
-
-// XXX rewrite this to embed an html image frame in the form element
-// frame so that the html image code can be 100% reused to deal with
-// the image
+#include "nsHTMLImage.h"
 
 enum nsButtonTagType {
   kButtonTag_Button,
@@ -59,7 +55,7 @@ enum nsButtonType {
   kButton_Image,
   kButton_Hidden
 };
-	
+
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 
 class nsInputButton : public nsInput {
@@ -72,6 +68,10 @@ public:
                                nsIFrame*        aParentFrame,
                                nsIStyleContext* aStyleContext,
                                nsIFrame*&       aResult);
+
+  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+  virtual void MapAttributesInto(nsIStyleContext* aContext, 
+                                 nsIPresContext* aPresContext);
 
   virtual void GetDefaultLabel(nsString& aLabel);
 
@@ -122,9 +122,6 @@ public:
   nsButtonType GetButtonType() const;
   nsButtonTagType GetButtonTagType() const;
 
-  nsIImage* GetImage(nsIPresContext& aPresContext, PRBool aNeedSize);
-
-
 protected:
   virtual  ~nsInputButtonFrame();
 
@@ -132,6 +129,8 @@ protected:
                               const nsSize& aMaxSize,
                               nsReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
+
+  nsHTMLImageLoader mImageLoader;
 };
 
 
@@ -245,7 +244,7 @@ nsInputButton::GetMaxNumValues()
   } else if ((kButton_Image == mType) && (kButtonTag_Input == mTagType)) {
     return 2;
   } else {
-	  return 0;
+    return 0;
   }
 }
 
@@ -289,6 +288,35 @@ nsInputButton::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   }
 }
 
+void
+nsInputButton::SetAttribute(nsIAtom* aAttribute, const nsString& aString)
+{
+  nsHTMLValue val;
+  if (ParseImageProperty(aAttribute, aString, val)) {
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return;
+  }
+  nsInputButtonSuper::SetAttribute(aAttribute, aString);
+}
+
+void
+nsInputButton::MapAttributesInto(nsIStyleContext* aContext, 
+                                 nsIPresContext* aPresContext)
+{
+  if ((kButton_Image == mType) && (kButtonTag_Input == mTagType)) {
+    // Apply the image border as well. For form elements the color is
+    // always forced to blue.
+    static nscolor blue[4] = {
+      NS_RGB(0, 0, 255),
+      NS_RGB(0, 0, 255),
+      NS_RGB(0, 0, 255),
+      NS_RGB(0, 0, 255)
+    };
+    MapImageBorderInto(aContext, aPresContext, blue);
+  }
+  nsInputButtonSuper::MapAttributesInto(aContext, aPresContext);
+}
+
 //----------------------------------------------------------------------
 // nsInputButtonFrame Implementation
 
@@ -316,43 +344,24 @@ nsInputButtonFrame::GetButtonTagType() const
   return button->GetButtonTagType();
 }
 
-nsIImage* nsInputButtonFrame::GetImage(nsIPresContext& aPresContext,
-                                       PRBool aNeedSize)
-{
-  if (kButton_Image != GetButtonType()) {
-    return nsnull;
-  }
-
-  nsAutoString src;
-  if (eContentAttr_HasValue == mContent->GetAttribute("SRC", src)) {
-    nsIFrameImageLoader* loader = nsnull;
-    nsresult rv = aPresContext.LoadImage(src, this, aNeedSize, loader);
-    if ((NS_OK == rv) && (nsnull != loader)) {
-      nsIImage* image = nsnull;
-      loader->GetImage(image);
-      NS_RELEASE(loader);
-      return image;
-    }
-  }
-  return nsnull;
-}
-
 NS_METHOD nsInputButtonFrame::Paint(nsIPresContext& aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               const nsRect& aDirtyRect)
 {
   // let super do processing if there is no image
   if (kButton_Image != GetButtonType()) {
-    return nsInputButtonFrameSuper::Paint(aPresContext, aRenderingContext, aDirtyRect);
-  }
-
-  nsIImage* image = GetImage(aPresContext, PR_FALSE);
-  if (nsnull == image) {
-    return NS_OK;
+    return nsInputButtonFrameSuper::Paint(aPresContext, aRenderingContext,
+                                          aDirtyRect);
   }
 
   // First paint background and borders
   nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+
+  nsIImage* image = mImageLoader.GetImage();
+  if (nsnull == image) {
+    // No image yet
+    return NS_OK;
+  }
 
   // Now render the image into our inner area (the area without the
   nsRect inner;
@@ -423,31 +432,13 @@ nsInputButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
     aDesiredLayoutSize.descent = 0;
   }
   else {
-    nsSize styleSize;
-    GetStyleSize(*aPresContext, styleSize);
-
     if (kButton_Image == GetButtonType()) { // there is an image
-      float p2t = aPresContext->GetPixelsToTwips();
-      if ((0 < styleSize.width) && (0 < styleSize.height)) {
-        GetImage(*aPresContext, PR_FALSE);
-
-        // Use dimensions from style attributes
-        aDesiredLayoutSize.width  = nscoord(styleSize.width);
-        aDesiredLayoutSize.height = nscoord(styleSize.height);
-      } else {
-        nsIImage* image = GetImage(*aPresContext, PR_TRUE);
-        if (nsnull == image) {
-          // XXX Here is where we trigger a resize-reflow later on; or block
-          // layout or whatever our policy wants to be
-          aDesiredLayoutSize.width  = nscoord(50 * p2t);
-          aDesiredLayoutSize.height = nscoord(50 * p2t);
-        } else {
-          aDesiredLayoutSize.width  = nscoord(image->GetWidth()  * p2t);
-          aDesiredLayoutSize.height = nscoord(image->GetHeight() * p2t);
-        }
-      }
+      mImageLoader.GetDesiredSize(aPresContext, this,
+                                  aDesiredLayoutSize, aMaxSize);
     }
     else {  // there is a widget
+      nsSize styleSize;
+      GetStyleSize(*aPresContext, styleSize);
       nsSize size;
       PRBool widthExplicit, heightExplicit;
       PRInt32 ignore;
@@ -480,8 +471,8 @@ nsInputButtonFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aVie
 {
   nsIButton* button;
   if (NS_OK == GetWidget(aView, (nsIWidget **)&button)) {
-	  button->SetFont(GetFont(aPresContext));
-	} 
+    button->SetFont(GetFont(aPresContext));
+  } 
   else {
     NS_ASSERTION(0, "no widget in button control");
   }
@@ -491,7 +482,7 @@ nsInputButtonFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aVie
   nsString value;
   nsContentAttr status = content->GetAttribute(nsHTMLAtoms::value, value);
   if (eContentAttr_HasValue == status) {  
-	  button->SetLabel(value);
+    button->SetLabel(value);
   } 
   else {
     button->SetLabel(" ");
