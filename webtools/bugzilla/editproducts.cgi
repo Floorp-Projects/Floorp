@@ -66,6 +66,9 @@ sub EmitFormElements ($$$$)
 {
     my ($product, $description, $milestoneurl, $disallownew) = @_;
 
+    $product = value_quote($product);
+    $description = value_quote($description);
+
     print "  <TH ALIGN=\"right\">Product:</TH>\n";
     print "  <TD><INPUT SIZE=64 MAXLENGTH=64 NAME=\"product\" VALUE=\"$product\"></TD>\n";
     print "</TR><TR>\n";
@@ -74,6 +77,7 @@ sub EmitFormElements ($$$$)
     print "  <TD><TEXTAREA ROWS=4 COLS=64 WRAP=VIRTUAL NAME=\"description\">$description</TEXTAREA></TD>\n";
 
     if (Param('usetargetmilestone')) {
+        $milestoneurl = value_quote($milestoneurl);
         print "</TR><TR>\n";
         print "  <TH ALIGN=\"right\">Milestone URL:</TH>\n";
         print "  <TD><INPUT TYPE=TEXT SIZE=64 MAXLENGTH=255 NAME=\"milestoneurl\" VALUE=\"$milestoneurl\"></TD>\n";
@@ -397,7 +401,8 @@ one.";
     print "<FORM METHOD=POST ACTION=editproducts.cgi>\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Yes, delete\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"delete\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"product\" VALUE=\"$product\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"product\" VALUE=\"" .
+        value_quote($product) . "\">\n";
     print "</FORM>";
 
     PutTrailer($localtrailer);
@@ -544,9 +549,12 @@ if ($action eq 'edit') {
 
     print "</TD>\n</TR></TABLE>\n";
 
-    print "<INPUT TYPE=HIDDEN NAME=\"productold\" VALUE=\"$product\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"descriptionold\" VALUE=\"$description\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"milestoneurlold\" VALUE=\"$milestoneurl\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"productold\" VALUE=\"" .
+        value_quote($product) . "\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"descriptionold\" VALUE=\"" .
+        value_quote($description) . "\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"milestoneurlold\" VALUE=\"" .
+        value_quote($milestoneurl) . "\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"disallownewold\" VALUE=\"$disallownew\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Update\">\n";

@@ -110,21 +110,26 @@ sub EmitFormElements ($$$$$)
     my ($product, $component, $initialowner, $initialqacontact, $description) = @_;
 
     print "  <TH ALIGN=\"right\">Component:</TH>\n";
-    print "  <TD><INPUT SIZE=64 MAXLENGTH=255 NAME=\"component\" VALUE=\"$component\">\n";
-    print "      <INPUT TYPE=HIDDEN NAME=\"product\" VALUE=\"$product\"></TD>\n";
+    print "  <TD><INPUT SIZE=64 MAXLENGTH=255 NAME=\"component\" VALUE=\"" .
+        value_quote($component) . "\">\n";
+    print "      <INPUT TYPE=HIDDEN NAME=\"product\" VALUE=\"" .
+        value_quote($product) . "\"></TD>\n";
 
     print "</TR><TR>\n";
     print "  <TH ALIGN=\"right\">Description:</TH>\n";
-    print "  <TD><TEXTAREA ROWS=4 COLS=64 WRAP=VIRTUAL NAME=\"description\">$description</TEXTAREA></TD>\n";
+    print "  <TD><TEXTAREA ROWS=4 COLS=64 WRAP=VIRTUAL NAME=\"description\">" .
+        value_quote($description) . "</TEXTAREA></TD>\n";
 
     print "</TR><TR>\n";
     print "  <TH ALIGN=\"right\">Initial owner:</TH>\n";
-    print "  <TD><INPUT TYPE=TEXT SIZE=64 MAXLENGTH=255 NAME=\"initialowner\" VALUE=\"$initialowner\"></TD>\n";
+    print "  <TD><INPUT TYPE=TEXT SIZE=64 MAXLENGTH=255 NAME=\"initialowner\" VALUE=\"" .
+        value_quote($initialowner) . "\"></TD>\n";
 
     if (Param('useqacontact')) {
         print "</TR><TR>\n";
         print "  <TH ALIGN=\"right\">Initial QA contact:</TH>\n";
-        print "  <TD><INPUT TYPE=TEXT SIZE=64 MAXLENGTH=255 NAME=\"initialqacontact\" VALUE=\"$initialqacontact\"></TD>\n";
+        print "  <TD><INPUT TYPE=TEXT SIZE=64 MAXLENGTH=255 NAME=\"initialqacontact\" VALUE=\"" .
+            value_quote($initialqacontact) . "\"></TD>\n";
     }
 }
 
@@ -522,8 +527,10 @@ one.";
     print "<FORM METHOD=POST ACTION=editcomponents.cgi>\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Yes, delete\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"delete\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"product\" VALUE=\"$product\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"component\" VALUE=\"$component\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"product\" VALUE=\"" .
+        value_quote($product) . "\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"component\" VALUE=\"" .
+        value_quote($component) . "\">\n";
     print "</FORM>";
 
     PutTrailer($localtrailer);
@@ -632,10 +639,14 @@ if ($action eq 'edit') {
 
     print "</TD>\n</TR></TABLE>\n";
 
-    print "<INPUT TYPE=HIDDEN NAME=\"componentold\" VALUE=\"$component\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"descriptionold\" VALUE=\"$cdesc\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"initialownerold\" VALUE=\"$initialowner\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"initialqacontactold\" VALUE=\"$initialqacontact\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"componentold\" VALUE=\"" .
+        value_quote($component) . "\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"descriptionold\" VALUE=\"" .
+        value_quote($cdesc) . "\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"initialownerold\" VALUE=\"" .
+        value_quote($initialowner) . "\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"initialqacontactold\" VALUE=\"" .
+        value_quote($initialqacontact) . "\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Update\">\n";
 

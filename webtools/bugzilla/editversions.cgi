@@ -100,8 +100,10 @@ sub EmitFormElements ($$)
     my ($product, $version) = @_;
 
     print "  <TH ALIGN=\"right\">Version:</TH>\n";
-    print "  <TD><INPUT SIZE=64 MAXLENGTH=64 NAME=\"version\" VALUE=\"$version\">\n";
-    print "      <INPUT TYPE=HIDDEN NAME=\"product\" VALUE=\"$product\"></TD>\n";
+    print "  <TD><INPUT SIZE=64 MAXLENGTH=64 NAME=\"version\" VALUE=\"" .
+        value_quote($version) . "\">\n";
+    print "      <INPUT TYPE=HIDDEN NAME=\"product\" VALUE=\"" .
+        value_quote($product) . "\"></TD>\n";
 }
 
 
@@ -383,8 +385,10 @@ one.";
     print "<FORM METHOD=POST ACTION=editversions.cgi>\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Yes, delete\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"delete\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"product\" VALUE=\"$product\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"version\" VALUE=\"$version\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"product\" VALUE=\"" .
+        value_quote($product) . "\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"version\" VALUE=\"" .
+        value_quote($version) . "\">\n";
     print "</FORM>";
 
     PutTrailer($localtrailer);
@@ -467,7 +471,8 @@ if ($action eq 'edit') {
 
     print "</TR></TABLE>\n";
 
-    print "<INPUT TYPE=HIDDEN NAME=\"versionold\" VALUE=\"$version\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"versionold\" VALUE=\"" .
+        value_quote($version) . "\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Update\">\n";
 
