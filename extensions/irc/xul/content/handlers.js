@@ -2511,7 +2511,8 @@ function my_showtonet (e)
     switch (e.code)
     {
         case "004":
-            str = e.params.slice(1).join (" ");
+        case "005":
+            str = e.params.slice(3).join (" ");
             break;
 
         case "001":
