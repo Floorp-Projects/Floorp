@@ -34,6 +34,7 @@ nsXInstaller::nsXInstaller()
 
 nsXInstaller::~nsXInstaller()
 {
+    XI_IF_DELETE(gCtx);
 }
 
 int
@@ -156,7 +157,6 @@ gint
 nsXInstaller::Kill(GtkWidget *widget, GtkWidget *event, gpointer data)
 {
     gtk_main_quit();
-    XI_IF_DELETE(gCtx);
     return FALSE;
 }
 
@@ -290,6 +290,7 @@ main(int argc, char **argv)
 {
     nsXInstaller *installer = new nsXInstaller();
     int err = OK;
+    void *eng_th_rv = NULL;
 
     if (installer)
     {
@@ -298,6 +299,13 @@ main(int argc, char **argv)
     }
     else
         err = E_MEM;
+
+    // join engine thread
+    if (gCtx->bThSpawned)
+    {
+        pthread_join(gCtx->eng_th, &eng_th_rv);
+        DUMP("post pthread_join");
+    }
 
     XI_IF_DELETE(installer);
     DUMP("post nsXInstaller instance deletion");

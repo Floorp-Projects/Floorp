@@ -78,7 +78,6 @@ nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
     DUMP("Next");
     int bCus;
     nsComponentList *comps = NULL;
-    pthread_t ength;
     pthread_t *me = (pthread_t *) malloc(sizeof(pthread_t));
 
     if (aData != gCtx->idlg) return;
@@ -113,8 +112,8 @@ nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
     pthread_cond_init(&gCtx->prog_cv, NULL);
 
     *me = pthread_self();
-    pthread_create(&ength, NULL, WorkDammitWork, (void*) me);
-    pthread_detach(ength);
+    pthread_create(&gCtx->eng_th, NULL, WorkDammitWork, (void*) me);
+    gCtx->bThSpawned = TRUE;
 
     gtk_timeout_add(1, ProgressUpdater, NULL);
 
@@ -327,8 +326,10 @@ nsInstallDlg::WorkDammitWork(void *arg)
     gCtx->threadTurn = nsXIContext::UI_THREAD;
     pthread_cond_signal(&gCtx->prog_cv);
     pthread_mutex_unlock(&gCtx->prog_mutex);
+
+    DUMP("pre pthread_exit");
     pthread_exit((void *) 0);
-    return ((void *) 0);  // XXX which one?
+    DUMP("post pthread_exit");
 
 BAIL:
     // destroy xpiengine

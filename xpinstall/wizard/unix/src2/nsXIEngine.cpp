@@ -419,11 +419,24 @@ nsXIEngine::UnloadXPIStub(xpistub_t *aStub)
         return E_PARAM;
 
 	/* release XPCOM and XPInstall */
+    XI_ASSERT(aStub->fn_exit, "XPI_Exit is NULL and wasn't called!");
 	if (aStub->fn_exit)
 	{
 		aStub->fn_exit();
 		DUMP("XPI_Exit called");
 	}
+
+#if 0
+    /* NOTE:
+     * ----
+     *      Don't close the stub: it'll be released on exit.
+     *      This fixes the seg fault on exit bug,
+     *      Apparently, the global destructors are no longer
+     *      around when the app exits (since xpcom etc. was 
+     *      unloaded when the stub was unloaded).  To get 
+     *      around this we don't close the stub (which is 
+     *      apparently safe on Linux/Unix.
+     */
 
 	/* close xpistub library */
 	if (aStub->handle)
@@ -431,6 +444,7 @@ nsXIEngine::UnloadXPIStub(xpistub_t *aStub)
 		dlclose(aStub->handle);
 		DUMP("xpistub closed");
 	}
+#endif
 
     return err;
 }
