@@ -1490,6 +1490,7 @@ static PRBool HandleDumpArguments(int argc, char* argv[])
       DumpVersion(argv[0]);
       return PR_TRUE;
     }
+#ifdef MOZ_PHOENIX
 	if ((PL_strcasecmp(argv[i], "/turbo") == 0)
 		|| (PL_strcasecmp(argv[i], "-turbo") == 0)
 		|| (PL_strcasecmp(argv[i], "/server") == 0)
@@ -1498,6 +1499,7 @@ static PRBool HandleDumpArguments(int argc, char* argv[])
 	  DumpTurbo(argv[0]);
 	  return PR_TRUE;
 	}
+#endif
   }
 
   return PR_FALSE;
