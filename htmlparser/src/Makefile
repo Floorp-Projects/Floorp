@@ -24,7 +24,7 @@ DEFINES = -D_IMPL_NS_HTMLPARS
 CPPSRCS =     \
   nsHTMLContentSink.cpp \
   nsParserNode.cpp  \
-  nsParserDebug.cpp \
+  nsDTDDebug.cpp \
   nsScanner.cpp   \
   nsToken.cpp   \
   nsTokenHandler.cpp \

@@ -23,7 +23,7 @@
 #include "nsString.h"
 #include "nsIURL.h"
 #include "nsIStreamListener.h"
-#include "nsIParserDebug.h"
+#include "nsIDTDDebug.h"
 
 static NS_DEFINE_IID(kIRobotSinkObserverIID, NS_IROBOTSINKOBSERVER_IID);
 
@@ -168,14 +168,14 @@ extern "C" NS_EXPORT int DebugRobot(
   NS_ADDREF(myObserver);
   g_workList = workList;
 
-  nsIParserDebug * pIParserDebug;
-  nsresult rval = NS_NewParserDebug(&pIParserDebug);
+  nsIDTDDebug * pIDTDDebug;
+  nsresult rval = NS_NewDTDDebug(&pIDTDDebug);
   if (NS_OK != rval) {
     fputs("Cannot create parser debugger.\n", stdout);
     NS_RELEASE(myObserver);
     return -1;
   }
-  pIParserDebug->SetVerificationDirectory(verify_dir);
+  pIDTDDebug->SetVerificationDirectory(verify_dir);
 
   for (;;) {
     PRInt32 n = g_workList->Count();
@@ -192,7 +192,7 @@ extern "C" NS_EXPORT int DebugRobot(
       printf("invalid URL: '");
       fputs(*urlName, stdout);
       printf("'\n");
-      NS_RELEASE(pIParserDebug);
+      NS_RELEASE(pIDTDDebug);
       NS_RELEASE(myObserver);
       return -1;
     }
@@ -211,7 +211,7 @@ extern "C" NS_EXPORT int DebugRobot(
     rv = NS_NewParser(&parser);
     if (NS_OK != rv) {
       printf("can't make parser\n");
-      NS_RELEASE(pIParserDebug);
+      NS_RELEASE(pIDTDDebug);
       NS_RELEASE(myObserver);
       return -1;
     }
@@ -220,7 +220,7 @@ extern "C" NS_EXPORT int DebugRobot(
     rv = NS_NewRobotSink(&sink);
     if (NS_OK != rv) {
       printf("can't make parser\n");
-      NS_RELEASE(pIParserDebug);
+      NS_RELEASE(pIDTDDebug);
       NS_RELEASE(myObserver);
       return -1;
     }
@@ -229,7 +229,8 @@ extern "C" NS_EXPORT int DebugRobot(
 
     parser->SetContentSink(sink);
     g_bReadyForNextUrl = PR_FALSE;
-    parser->Parse(url, pl, pIParserDebug);/* XXX hook up stream listener here! */
+
+    parser->Parse(url, pl, pIDTDDebug);/* XXX hook up stream listener here! */
     while (!g_bReadyForNextUrl) {
        if (yieldProc != NULL)
           (*yieldProc)(url->GetSpec());
@@ -253,8 +254,8 @@ extern "C" NS_EXPORT int DebugRobot(
   NS_RELEASE(pl);
   NS_RELEASE(myObserver);
 
-  pIParserDebug->DumpVectorRecord();
-  NS_RELEASE(pIParserDebug);
+  pIDTDDebug->DumpVectorRecord();
+  NS_RELEASE(pIDTDDebug);
 
   return 0;
 }

@@ -34,7 +34,7 @@ class nsString;
 class CToken;
 class nsIURL;
 class nsIDTD;
-class nsIParserDebug;
+class nsIDTDDebug;
 
 /**
  *  This class defines the iparser interface. This XPCOM
@@ -48,6 +48,7 @@ class nsIParser : public nsISupports {
     virtual nsIContentSink* SetContentSink(nsIContentSink* aContentSink)=0;
 
     virtual void SetDTD(nsIDTD* aDTD)=0;
+
     virtual nsIDTD* GetDTD(void)=0;
 
     /**
@@ -62,9 +63,9 @@ class nsIParser : public nsISupports {
 
     virtual PRInt32 Parse(nsIURL* aURL,
                           nsIStreamListener* aListener,
-                          nsIParserDebug * aDebug = 0) = 0;
+						  nsIDTDDebug * aDTDDebug = 0) = 0;
 
-    virtual PRInt32 Parse(const char* aFilename,nsIParserDebug * aDebug = 0)=0;
+    virtual PRInt32 Parse(const char* aFilename)=0;
 
     virtual PRInt32 Parse(nsString& anHTMLString,PRBool appendTokens)=0;
 

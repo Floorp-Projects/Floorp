@@ -41,7 +41,7 @@
 
 class nsParser;
 class nsIHTMLContentSink;
-class nsIParserDebug;
+class nsIDTDDebug;
 
 class COtherDTD : public nsIDTD {
             
@@ -68,15 +68,21 @@ class COtherDTD : public nsIDTD {
      */
     virtual ~COtherDTD();
 
- 
- 
+    /**
+     * 
+     * @update	jevering6/23/98
+     * @param 
+     * @return
+     */
+	virtual void SetDTDDebug(nsIDTDDebug * aDTDDebug);
+	
     /**
      * 
      * @update	gess5/18/98
      * @param 
      * @return
      */
-    virtual PRInt32 WillBuildModel(const char* aFilename=0, nsIParserDebug* aIParserDebug=0);
+    virtual PRInt32 WillBuildModel(const char* aFilename=0);
 
     /**
      * 
@@ -681,7 +687,7 @@ protected:
     PRBool              mHasOpenMap;
     nsDeque             mTokenDeque;
     char*               mFilename;
-    nsIParserDebug*     mParserDebug;
+    nsIDTDDebug*		mDTDDebug;
 };
 
 
