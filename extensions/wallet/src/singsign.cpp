@@ -2708,18 +2708,19 @@ SINGSIGN_PromptUsernameAndPassword
                                   savePassword,
                                   promptUsernameAndPassword);
   }
-
   /* prefill with previous username/password if any */
   nsAutoString username, password;
   si_RestoreOldSignonDataFromBrowser(dialog, passwordRealm, PR_FALSE, username, password);
 
   /* get new username/password from user */
-  if (!(*user = ToNewUnicode(username))) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  if (!(*pwd = ToNewUnicode(password))) {
-    PR_Free(*user);
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (!username.IsEmpty()) {
+    if (!(*user = ToNewUnicode(username))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    if (!(*pwd = ToNewUnicode(password))) {
+      PR_Free(*user);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   PRBool checked = (**user != 0);
@@ -2996,7 +2997,7 @@ SINGSIGN_UserCount(PRInt32 host) {
 
 nsresult
 SINGSIGN_Enumerate
-    (PRInt32 hostNumber, PRInt32 userNumber, char **host,
+    (PRInt32 hostNumber, PRInt32 userNumber, PRBool decrypt, char **host,
      PRUnichar ** user, PRUnichar ** pswd) {
 
   if (gSelectUserDialogCount>0 && hostNumber==0 && userNumber==0) {
@@ -3033,11 +3034,16 @@ SINGSIGN_Enumerate
     }
   }
 
+  nsresult rv;
   nsAutoString userName;
-  nsresult rv = si_Decrypt(data->value, userName);
-  if (NS_FAILED(rv)) {
-    /* don't display saved signons if user couldn't unlock the database */
+  if (decrypt) {
+    rv = si_Decrypt(data->value, userName);
+    if (NS_FAILED(rv)) {
+      /* don't display saved signons if user couldn't unlock the database */
     return rv;
+    }
+  } else {
+    userName = data->value;
   }
   if (!(*user = ToNewUnicode(userName))) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -3052,12 +3058,16 @@ SINGSIGN_Enumerate
   }
 
   nsAutoString passWord;
-  rv = si_Decrypt(data->value, passWord);
-  if (NS_FAILED(rv)) {
-    /* don't display saved signons if user couldn't unlock the database */
-    Recycle(*user);
-    return rv;
-  }
+  if (decrypt) {
+    rv = si_Decrypt(data->value, passWord);
+    if (NS_FAILED(rv)) {
+      /* don't display saved signons if user couldn't unlock the database */
+      Recycle(*user);
+      return rv;
+    }
+  } else {
+    passWord = data->value;
+  }  
   if (!(*pswd = ToNewUnicode(passWord))) {
     Recycle(*user);
     return NS_ERROR_OUT_OF_MEMORY;

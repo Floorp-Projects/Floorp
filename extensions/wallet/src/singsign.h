@@ -70,7 +70,7 @@ SINGSIGN_RejectCount();
 
 extern nsresult
 SINGSIGN_Enumerate
-  (PRInt32 hostNumber, PRInt32 userNumber, char **host, PRUnichar **user, PRUnichar **pswd);
+  (PRInt32 hostNumber, PRInt32 userNumber, PRBool decrypt, char **host, PRUnichar **user, PRUnichar **pswd);
 
 extern nsresult
 SINGSIGN_RejectEnumerate(PRInt32 rejectNumber, char **host);

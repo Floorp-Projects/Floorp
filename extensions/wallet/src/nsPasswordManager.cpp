@@ -39,6 +39,7 @@
 #include "nsPasswordManager.h"
 #include "nsPassword.h"
 #include "singsign.h"
+#include "wallet.h"
 #include "nsReadableUtils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +50,8 @@ class nsPasswordManagerEnumerator : public nsISimpleEnumerator
 
     NS_DECL_ISUPPORTS
 
-    nsPasswordManagerEnumerator() : mHostCount(0), mUserCount(0)
+    nsPasswordManagerEnumerator(PRBool aDecrypt = PR_TRUE) : 
+      mHostCount(0), mUserCount(0), mDecrypt(aDecrypt)
     {
     }
 
@@ -64,7 +66,7 @@ class nsPasswordManagerEnumerator : public nsISimpleEnumerator
       char * host;
       PRUnichar * user;
       PRUnichar * pswd;
-      nsresult rv = SINGSIGN_Enumerate(mHostCount, mUserCount++, &host, &user, &pswd);
+      nsresult rv = SINGSIGN_Enumerate(mHostCount, mUserCount++, mDecrypt, &host, &user, &pswd);
       if (NS_FAILED(rv)) {
         mUserCount = 0;
         mHostCount++;
@@ -94,6 +96,7 @@ class nsPasswordManagerEnumerator : public nsISimpleEnumerator
   protected:
     PRInt32 mHostCount;
     PRInt32 mUserCount;
+    PRBool  mDecrypt;
 };
 
 NS_IMPL_ISUPPORTS1(nsPasswordManagerEnumerator, nsISimpleEnumerator)
@@ -212,10 +215,9 @@ nsPasswordManager::FindPasswordEntry
   nsresult rv;
   nsCOMPtr<nsIPassword> passwordElem;
 
-  nsCOMPtr<nsISimpleEnumerator> enumerator;
-  rv = GetEnumerator(getter_AddRefs(enumerator));
-  if (NS_FAILED(rv)) {
-    return rv; // could not unlock the database
+  nsCOMPtr<nsISimpleEnumerator> enumerator = new nsPasswordManagerEnumerator(PR_FALSE);
+  if (!enumerator) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   PRBool hasMoreElements = PR_FALSE;
@@ -231,16 +233,27 @@ nsPasswordManager::FindPasswordEntry
 
       // Get the contents of this saved login
       nsCAutoString hostURI;
-      nsAutoString username;
-      nsAutoString password;
+      nsAutoString encUsername, username;
+      nsAutoString encPassword, password;
 
       passwordElem->GetHost(hostURI);
-      passwordElem->GetUser(username);
-      passwordElem->GetPassword(password);
+      passwordElem->GetUser(encUsername);
+      passwordElem->GetPassword(encPassword);
 
       // Check for a match with the input parameters, treating null input values as
       // wild cards
       PRBool hostURIOK  = aHostURI.IsEmpty()  || hostURI.Equals(aHostURI);
+      if (hostURIOK) {
+        rv = Wallet_Decrypt(encUsername, username);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+        rv = Wallet_Decrypt(encPassword, password);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+      }
+
       PRBool usernameOK = aUsername.IsEmpty() || username.Equals(aUsername);
       PRBool passwordOK = aPassword.IsEmpty() || password.Equals(aPassword);
 
