@@ -67,7 +67,7 @@ public:
 #ifdef NECKO
   NS_IMETHOD Reload(PRBool bypassCache, PRBool bypassProxy) = 0;
 #else
-  NS_IMETHOD Reload(nsURLReloadType aReloadType) = 0;
+  NS_IMETHOD Reload(nsIWebShell * aPrev, nsURLReloadType aReloadType) = 0;
 #endif
 
   /**
@@ -88,7 +88,7 @@ public:
   /**
    * Goto to a particular point in history 
    */
-  NS_IMETHOD Goto(PRInt32 aHistoryIndex, nsIWebShell * prev) = 0;
+  NS_IMETHOD Goto(PRInt32 aHistoryIndex, nsIWebShell * prev, PRBool aIsReloading) = 0;
   /**
    * Get the length of the History list
    */
