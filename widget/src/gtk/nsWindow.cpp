@@ -2680,20 +2680,31 @@ NS_IMETHODIMP nsWindow::CaptureMouse(PRBool aCapture)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
+NS_IMETHODIMP nsWindow::ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
 {
   if (mIsToplevel && mShell)
   {
     PRInt32 screenWidth = gdk_screen_width();
     PRInt32 screenHeight = gdk_screen_height();
-    if (*aX < kWindowPositionSlop - mBounds.width)
-      *aX = kWindowPositionSlop - mBounds.width;
-    if (*aX > screenWidth - kWindowPositionSlop)
-      *aX = screenWidth - kWindowPositionSlop;
-    if (*aY < kWindowPositionSlop - mBounds.height)
-      *aY = kWindowPositionSlop - mBounds.height;
-    if (*aY > screenHeight - kWindowPositionSlop)
-      *aY = screenHeight - kWindowPositionSlop;
+    if (aAllowSlop) {
+      if (*aX < kWindowPositionSlop - mBounds.width)
+        *aX = kWindowPositionSlop - mBounds.width;
+      if (*aX > screenWidth - kWindowPositionSlop)
+        *aX = screenWidth - kWindowPositionSlop;
+      if (*aY < kWindowPositionSlop - mBounds.height)
+        *aY = kWindowPositionSlop - mBounds.height;
+      if (*aY > screenHeight - kWindowPositionSlop)
+        *aY = screenHeight - kWindowPositionSlop;
+    } else {
+      if (*aX < 0)
+        *aX = 0;
+      if (*aX > screenWidth - mBounds.width)
+        *aX = screenWidth - mBounds.width;
+      if (*aY < 0)
+        *aY = 0;
+      if (*aY > screenHeight - mBounds.height)
+        *aY = screenHeight - mBounds.height;
+    }
   }
   return NS_OK;
 }

@@ -57,6 +57,7 @@
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
+#include "nsIScreenManager.h"
 #include "nsRect.h"
 #include "nsTransform2D.h"
 #include <windows.h>
@@ -126,6 +127,8 @@ static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 #ifndef IDC_HAND
 #define IDC_HAND MAKEINTRESOURCE(32649)
 #endif
+
+static const char *sScreenManagerContractID = "@mozilla.org/gfx/screenmanager;1";
 
 ////////////////////////////////////////////////////
 // Manager for Registering and unregistering OLE
@@ -1596,27 +1599,73 @@ NS_METHOD nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
 // Constrain a potential move to fit onscreen
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
+NS_METHOD nsWindow::ConstrainPosition(PRBool aAllowSlop,
+                                      PRInt32 *aX, PRInt32 *aY)
 {
-  if (mWnd && mIsTopWidgetWindow) { // only a problem for top-level windows
-    // XXX: Needs multiple monitor support
-    HDC dc = ::GetDC(mWnd);
-    if(dc) {
-      if (::GetDeviceCaps(dc, TECHNOLOGY) == DT_RASDISPLAY) {
-        RECT workArea;
-        ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-        if (*aX < 0)
-          *aX = 0;
-        if (*aX >= workArea.right - kWindowPositionSlop)
-          *aX = workArea.right - kWindowPositionSlop;
-        if (*aY < 0)
-          *aY = 0;
-        if (*aY >= workArea.bottom - kWindowPositionSlop)
-          *aY = workArea.bottom - kWindowPositionSlop;
+  if (!mIsTopWidgetWindow) // only a problem for top-level windows
+    return NS_OK;
+
+  PRBool doConstrain = PR_FALSE; // whether we have enough info to do anything
+
+  /* get our playing field. use the current screen, or failing that
+    for any reason, use device caps for the default screen. */
+  RECT screenRect;
+
+  nsCOMPtr<nsIScreenManager> screenmgr = do_GetService(sScreenManagerContractID);
+  if (screenmgr) {
+    nsCOMPtr<nsIScreen> screen;
+    PRInt32 left, top, width, height;
+
+    // zero size rects confuse the screen manager
+    width = mBounds.width > 0 ? mBounds.width : 1;
+    height = mBounds.height > 0 ? mBounds.height : 1;
+    screenmgr->ScreenForRect(*aX, *aY, width, height,
+                            getter_AddRefs(screen));
+    if (screen) {
+      screen->GetAvailRect(&left, &top, &width, &height);
+      screenRect.left = left;
+      screenRect.right = left+width;
+      screenRect.top = top;
+      screenRect.bottom = top+height;
+      doConstrain = PR_TRUE;
+    }
+  } else {
+    if (mWnd) {
+      HDC dc = ::GetDC(mWnd);
+      if(dc) {
+        if (::GetDeviceCaps(dc, TECHNOLOGY) == DT_RASDISPLAY) {
+          ::SystemParametersInfo(SPI_GETWORKAREA, 0, &screenRect, 0);
+          doConstrain = PR_TRUE;
+        }
+        ::ReleaseDC(mWnd, dc);
       }
-      ::ReleaseDC(mWnd, dc);
     }
   }
+
+  if (aAllowSlop) {
+    if (*aX < screenRect.left - mBounds.width + kWindowPositionSlop)
+      *aX = screenRect.left - mBounds.width + kWindowPositionSlop;
+    else if (*aX >= screenRect.right - kWindowPositionSlop)
+      *aX = screenRect.right - kWindowPositionSlop;
+
+    if (*aY < screenRect.top - mBounds.height + kWindowPositionSlop)
+      *aY = screenRect.top - mBounds.height + kWindowPositionSlop;
+    else if (*aY >= screenRect.bottom - kWindowPositionSlop)
+      *aY = screenRect.bottom - kWindowPositionSlop;
+
+  } else {
+
+    if (*aX < screenRect.left)
+      *aX = screenRect.left;
+    else if (*aX >= screenRect.right - mBounds.width)
+      *aX = screenRect.right - mBounds.width;
+
+    if (*aY < screenRect.top)
+      *aY = screenRect.top;
+    else if (*aY >= screenRect.bottom - mBounds.height)
+      *aY = screenRect.bottom - mBounds.height;
+  }
+
   return NS_OK;
 }
 
