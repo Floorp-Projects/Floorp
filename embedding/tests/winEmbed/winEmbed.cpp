@@ -825,7 +825,7 @@ nsresult StartupProfile()
 	if (NS_FAILED(rv))
       return rv;
     
-	appData->Append(NS_LITERAL_STRING("winembed"));
+	appDirData->Append(NS_LITERAL_STRING("winembed"));
 	nsCOMPtr<nsILocalFile> localAppDataDir(do_QueryInterface(appDataDir));
 
 	nsCOMPtr<nsProfileDirServiceProvider> locProvider;
