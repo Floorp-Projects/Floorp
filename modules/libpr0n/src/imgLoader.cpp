@@ -531,8 +531,9 @@ NS_IMETHODIMP imgLoader::SupportImageWithMimeType(const char* aMimeType, PRBool 
   nsresult rv = NS_GetComponentRegistrar(getter_AddRefs(reg));
   if (NS_FAILED(rv))
     return rv;
-
-  nsCAutoString decoderId(NS_LITERAL_CSTRING("@mozilla.org/image/decoder;2?type=") + nsDependentCString(aMimeType));
+  nsCAutoString mimeType(aMimeType);
+  ToLowerCase(mimeType);
+  nsCAutoString decoderId(NS_LITERAL_CSTRING("@mozilla.org/image/decoder;2?type=") + mimeType);
   return reg->IsContractIDRegistered(decoderId.get(),  _retval);
 }
 
