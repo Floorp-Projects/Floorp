@@ -48,8 +48,6 @@
 #include "nsICharsetAlias.h"
 #include "nsITextToSubURI.h"
 #include "nsIServiceManager.h"
-#include "nsCharsetMenu.h"
-#include "rdf.h"
 #include "nsUConvDll.h"
 #include "nsFileSpec.h"
 #include "nsIFile.h"
@@ -177,10 +175,6 @@ static nsModuleComponentInfo gComponents[] = {
 
   { "Charset Alias Information",  NS_CHARSETALIAS_CID,
     NS_CHARSETALIAS_CONTRACTID, NS_NewCharsetAlias },
-
-  { NS_CHARSETMENU_PID, NS_CHARSETMENU_CID,
-    NS_RDF_DATASOURCE_CONTRACTID_PREFIX NS_CHARSETMENU_PID,
-    NS_NewCharsetMenu},
 
   { "Text To Sub URI Helper", NS_TEXTTOSUBURI_CID,
     NS_ITEXTTOSUBURI_CONTRACTID, NS_NewTextToSubURI },

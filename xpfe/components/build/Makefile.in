@@ -39,6 +39,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  timer \
 		  intl \
+		  locale \
 		  mork \
 		  widget \
 		  dom \
@@ -59,6 +60,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/libbookmarks_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/libdirectory_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/libhistory_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/libappcompintl_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/librelated_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/libsearch_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/libtimebomb_s.$(LIB_SUFFIX) \

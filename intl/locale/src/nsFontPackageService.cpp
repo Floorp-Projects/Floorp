@@ -38,8 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsFontPackageService.h"
-#include "nsFontPackageHandler.h"
-
+#include "nsIComponentManager.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsFontPackageService, 
    nsIFontPackageService,
@@ -77,10 +76,11 @@ NS_IMETHODIMP nsFontPackageService::FontPackageHandled(PRBool aSuccess, PRBool a
 NS_IMETHODIMP nsFontPackageService::NeedFontPackage(const char *aFontPackID)
 {
   if (!mHandler) {
+    nsresult rv;
+    
     // create default handler
-    mHandler = new nsFontPackageHandler;
-    if (!mHandler) 
-      return NS_ERROR_OUT_OF_MEMORY;
+    mHandler = do_CreateInstance("@mozilla.org/locale/default-font-package-handler;1", &rv);
+    if (NS_FAILED(rv)) return rv;
   }
   return mHandler->NeedFontPackage(aFontPackID);
 }
