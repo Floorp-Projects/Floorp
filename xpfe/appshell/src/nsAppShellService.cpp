@@ -301,7 +301,7 @@ void
 nsAppShellService::EnumerateComponents( EnumeratorMemberFunction function ) {
     nsresult rv;
     nsIRegistry *registry = 0;
-    nsIRegistry::Key key;
+    nsRegistryKey key;
     nsIEnumerator *components = 0;
     const char *failed = "GetService";
     if ( NS_SUCCEEDED( ( rv = nsServiceManager::GetService( NS_REGISTRY_PROGID,

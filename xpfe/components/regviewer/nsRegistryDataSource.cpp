@@ -241,7 +241,7 @@ nsRegistryDataSource::GetKey(nsIRDFResource* aResource)
     if (PL_strncmp(uri, kKeyPrefix, sizeof(kKeyPrefix) - 1) != 0)
         return -1;
 
-    nsIRegistry::Key key;
+    nsRegistryKey key;
     const char* path = uri + sizeof(kKeyPrefix); // one extra to skip initial '/'
     rv = mRegistry->GetSubtree(nsIRegistry::Common, path, &key);
     if (NS_FAILED(rv)) return -1;
