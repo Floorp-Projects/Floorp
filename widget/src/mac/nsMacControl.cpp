@@ -292,11 +292,9 @@ void nsMacControl::SetupMacControlFont()
 	TextStyle		theStyle;
 	nsFontMetricsMac::GetNativeTextStyle(*mFontMetrics, *mContext, theStyle);
 	
-#if DONT_USE_FONTS_SMALLER_THAN_9
-	// impose a min size of 9pt on the control font
+	// if needed, impose a min size of 9pt on the control font
 	if (theStyle.tsSize < 9)
 		theStyle.tsSize = 9;
-#endif
 	
 	ControlFontStyleRec fontStyleRec;
 	fontStyleRec.flags = (kControlUseFontMask | kControlUseFaceMask | kControlUseSizeMask);

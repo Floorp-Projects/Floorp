@@ -19,6 +19,7 @@
 #include "nsATSUIUtils.h"
 #include "nsIDeviceContext.h"
 #include "nsDrawingSurfaceMac.h"
+#include "nsDeviceContextMac.h"
 #include "nsTransform2D.h"
 #include "plhash.h"
 #include <Gestalt.h>
@@ -419,10 +420,8 @@ ATSUTextLayout nsATSUIToolkit::GetTextLayout()
 
 		mContext->GetDevUnitsToAppUnits(dev2app);
  		Fixed size = FloatToFixed( roundf(float(fontsize) / dev2app));
-#if DONT_USE_FONTS_SMALLER_THAN_9
- 		if( FixRound ( size ) < 9 )
+ 		if( FixRound ( size ) < 9  && !nsDeviceContextMac::DisplayVerySmallFonts())
  			size = X2Fix(9);
-#endif
 
 		theTag[1] = kATSUSizeTag;
 		theValueSize[1] = (ByteCount) sizeof(Fixed);
