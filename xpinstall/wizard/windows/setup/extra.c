@@ -54,7 +54,6 @@
 
 // shellapi.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <shellapi.h>
-#include <shlwapi.h>
 
 #define HIDWORD(l)   ((DWORD) (((ULONG) (l) >> 32) & 0xFFFF))
 #define LODWORD(l)   ((DWORD) (l))
@@ -548,6 +547,8 @@ void RemoveDelayedDeleteFileEntries(const char *aPathToMatch)
   char  *multiStr = NULL;
   const char key[] = "SYSTEM\\CurrentControlSet\\Control\\Session Manager";
   const char name[] = "PendingFileRenameOperations";
+  char  *pathToMatch;
+  char  *lcName;
   char  *pName;
   char  *pRename;
   int   nameLen, renameLen;
@@ -572,11 +573,19 @@ void RemoveDelayedDeleteFileEntries(const char *aPathToMatch)
   if (!multiStr)
     return;
 
+  pathToMatch = strdup(aPathToMatch);
+  if (!pathToMatch)
+  {
+      free(multiStr);
+      return;
+  }
+
   if (RegQueryValueEx(hkResult, name, 0, NULL, multiStr, &oldMaxValueLen) == ERROR_SUCCESS)
   {
       // The registry value consists of name/newname pairs of null-terminated
       // strings, with a final extra null termination. We're only interested
       // in files to be deleted, which are indicated by a null newname.
+      CharLower(pathToMatch);
       lenToEnd = newMaxValueLen = oldMaxValueLen;
       pName = multiStr;
       while(*pName && lenToEnd > 0)
@@ -593,7 +602,11 @@ void RemoveDelayedDeleteFileEntries(const char *aPathToMatch)
           if (*pRename == '\0')
           {
               // No new name, it's a delete. Is it the one we want?
-              if (StrStrI(pName, aPathToMatch))
+              lcName = strdup(pName);
+              if (lcName)
+              {
+                  CharLower(lcName);
+                  if (strstr(lcName, pathToMatch))
               {
                   // It's a match--
                   // delete this pair by moving the remainder on top
@@ -603,7 +616,10 @@ void RemoveDelayedDeleteFileEntries(const char *aPathToMatch)
                   newMaxValueLen -= (nameLen + renameLen);
 
                   // next pair is in place, continue w/out moving pName
+                      free(lcName);
                   continue;
+              }
+                  free(lcName);
               }
           }
           // on to the next pair
@@ -620,6 +636,7 @@ void RemoveDelayedDeleteFileEntries(const char *aPathToMatch)
 
   RegCloseKey(hkResult);
   free(multiStr);
+  free(pathToMatch);
 }
 
 
