@@ -29,11 +29,13 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 CPPSRCS=    nsMsgFilterService.cpp\
 			nsMsgFilterList.cpp\
 			nsMsgFilter.cpp\
+			nsMsgSearchTerm.cpp\
 			$(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsMsgFilterService.obj  \
 			.\$(OBJDIR)\nsMsgFilterList.obj\
 			.\$(OBJDIR)\nsMsgFilter.obj\
+			.\$(OBJDIR)\nsMsgSearchTerm.obj\
 			$(NULL)
 
 

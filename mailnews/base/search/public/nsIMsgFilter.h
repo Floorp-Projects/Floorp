@@ -34,7 +34,7 @@ public:
     static const nsIID& GetIID() { static nsIID iid = NS_IMSGFILTER_IID; return iid; }
 
 	NS_IMETHOD GetFilterType(nsMsgFilterType *filterType)= 0;
-	NS_IMETHOD EnableFilter(XP_Bool enable)= 0;
+	NS_IMETHOD EnableFilter(PRBool enable)= 0;
 	NS_IMETHOD IsFilterEnabled(PRBool *enabled)= 0;
 	NS_IMETHOD GetFilterName(char **name)= 0;	
 	NS_IMETHOD SetFilterName(char *name)= 0;

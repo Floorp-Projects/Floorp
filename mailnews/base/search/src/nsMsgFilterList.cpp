@@ -42,6 +42,54 @@ nsMsgFilterList::nsMsgFilterList(nsIOFileStream *fileStream)
 	m_curFilter = nsnull;
 }
 
+NS_IMPL_ADDREF(nsMsgFilterList)
+NS_IMPL_RELEASE(nsMsgFilterList)
+
+NS_IMETHODIMP nsMsgFilterList::QueryInterface(REFNSIID aIID, void** aResult)
+{   
+    if (aResult == NULL)  
+        return NS_ERROR_NULL_POINTER;  
+
+    if (aIID.Equals(nsIMsgFilterList::GetIID()) ||
+        aIID.Equals(::nsISupports::GetIID()))
+	{
+        *aResult = NS_STATIC_CAST(nsMsgFilterList*, this);   
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    return NS_NOINTERFACE;
+}   
+
+NS_IMETHODIMP nsMsgFilterList::CreateFilter(char *name,class nsIMsgFilter **aFilter)
+{
+	if (!aFilter)
+		return NS_ERROR_NULL_POINTER;
+
+	nsMsgFilter *filter = new nsMsgFilter;
+	*aFilter = filter;
+	if (filter)
+	{
+		nsString2 strName(name, eOneByte);
+		filter->SetName(&strName);
+		return NS_OK;
+	}
+	return NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP nsMsgFilterList::EnableLogging(PRBool enable)
+{
+	m_loggingEnabled = enable;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFilterList::GetFolderForFilterList(class nsIMsgFolder **aFolder)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//static enum nsMsgRuleActionType  __cdecl nsMsgFilter::GetActionForFilingStr(class nsString2 &)" (?GetActionForFilingStr@nsMsgFilter@@SA?AW4nsMsgRuleActionType@@A
+//AVnsString2@@@Z)
+
 NS_IMETHODIMP nsMsgFilterList::IsLoggingEnabled(PRBool *aResult)
 {
 	if (!aResult)
@@ -457,8 +505,9 @@ nsresult nsMsgFilterList::WriteIntAttr(nsMsgFilterFileAttrib attrib, int value)
 	return NS_OK;
 }
 
-nsresult nsMsgFilterList::WriteStrAttr(nsMsgFilterFileAttrib attrib, const char *str)
+nsresult nsMsgFilterList::WriteStrAttr(nsMsgFilterFileAttrib attrib, nsString2 &str2)
 {
+	const char *str = str2.GetBuffer();
 	if (str && m_fileStream) // only proceed if we actually have a string to write out. 
 	{
 		char *escapedStr = nsnull;
@@ -481,7 +530,8 @@ nsresult nsMsgFilterList::WriteStrAttr(nsMsgFilterFileAttrib attrib, const char 
 
 nsresult nsMsgFilterList::WriteBoolAttr(nsMsgFilterFileAttrib attrib, PRBool boolVal)
 {
-	return WriteStrAttr(attrib, (boolVal) ? "yes" : "no");
+	nsString2 strToWrite((boolVal) ? "yes" : "no", eOneByte);
+	return WriteStrAttr(attrib, strToWrite);
 }
 
 nsresult nsMsgFilterList::SaveTextFilters()

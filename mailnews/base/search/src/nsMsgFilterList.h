@@ -79,12 +79,14 @@ public:
 	nsresult		LoadTextFilters();
 
 	PRInt16			GetVersion() {return m_fileVersion;}
+
+	// IO routines, used by filter object filing code.
+	nsresult WriteIntAttr( nsMsgFilterFileAttrib attrib, int value);
+	nsresult WriteStrAttr(nsMsgFilterFileAttrib attrib, nsString2 &str);
+	nsresult WriteBoolAttr(nsMsgFilterFileAttrib attrib, XP_Bool boolVal);
 protected:
 		// type-safe accessor when you really have to have an nsMsgFilter
 		nsresult GetMsgFilterAt(PRUint32 filterIndex, nsMsgFilter **filter);
-		nsresult WriteIntAttr( nsMsgFilterFileAttrib attrib, int value);
-		nsresult WriteStrAttr(nsMsgFilterFileAttrib attrib, const char *str);
-		nsresult WriteBoolAttr(nsMsgFilterFileAttrib attrib, XP_Bool boolVal);
 #ifdef DEBUG
 		void Dump();
 #endif

@@ -30,7 +30,7 @@ typedef struct nsMsgRuleAction
 		// this used to be a union - why bother?
         nsMsgPriority m_priority;  /* priority to set rule to */
         nsString2     m_folderName;    /* Or some folder identifier, if such a thing is invented */
-        char	*m_originalServerPath;
+//        char	*m_originalServerPath;   // shouldn't need this anymore.
 } nsMsgRuleAction;
 
 
@@ -44,7 +44,7 @@ public:
 	virtual ~nsMsgFilter ();
 
 	NS_IMETHOD GetFilterType(nsMsgFilterType *filterType);
-	NS_IMETHOD EnableFilter(XP_Bool enable);
+	NS_IMETHOD EnableFilter(PRBool enable);
 	NS_IMETHOD IsFilterEnabled(PRBool *enabled);
 	NS_IMETHOD GetFilterName(char **name);	
 	NS_IMETHOD SetFilterName(char *name);
@@ -88,7 +88,15 @@ public:
 	nsresult		GetDescription(nsString2 *desc);
 	void			SetFilterScript(nsString2 *filterName) ;
 	void			SetFilterList(nsMsgFilterList *filterList) ;
+	PRBool			IsRule() 
+						{return (m_type & (nsMsgFilterInboxRule | nsMsgFilterNewsRule)) != 0;}
+	PRBool			IsScript() {return (m_type &
+							(nsMsgFilterInboxJavaScript | nsMsgFilterNewsJavaScript)) != 0;}
+
+	// filing routines.
 	nsresult		SaveToTextFile(nsIOFileStream *stream);
+	nsresult		SaveRule();
+
 	PRInt16			GetVersion() {return (m_filterList) ? m_filterList->GetVersion() : 0;}
 	nsMsgFilterList	*GetFilterList() {return m_filterList;}
     void            SetDontFileMe(PRBool bDontFileMe) {m_dontFileMe = bDontFileMe;}
@@ -99,13 +107,14 @@ public:
 
 	nsresult		ConvertMoveToFolderValue(nsString2 &relativePath);
 static	char *GetActionStr(nsMsgRuleActionType action);
-static	const char *GetActionFilingStr(nsMsgRuleActionType action);
+static	nsresult GetActionFilingStr(nsMsgRuleActionType action, nsString2 &actionStr);
 static nsMsgRuleActionType GetActionForFilingStr(nsString2 &actionStr);
 	nsMsgRuleAction      m_action;
 protected:
 	nsMsgFilterType m_type;
 	PRBool			m_enabled;
 	nsString2		m_filterName;
+	nsString2		m_scriptFileName;	// iff this filter is a script.
 	nsString2		m_description;
     PRBool         m_dontFileMe;
 

@@ -24,6 +24,7 @@
 
 class nsMsgDatabase;
 class nsIMsgFolder;
+class nsMsgSearchAdapter;
 
 typedef enum
 {
@@ -97,7 +98,7 @@ typedef enum
 	nsMsgSearchAttribCellular,
 
 	nsMsgSearchAttribOtherHeader,  /* for mail and news. MUST ALWAYS BE LAST attribute since we can have an arbitrary # of these...*/
-    kNumMsgSearchNumAttributes      /* must be last attribute */
+    kNumMsgSearchAttributes      /* must be last attribute */
 } nsMsgSearchAttribute;
 
 /* NB: If you add elements to this enum, add only to the end, since 
@@ -171,13 +172,79 @@ typedef struct nsMsgSearchValue
 } nsMsgSearchValue;
 
 struct nsMsgScopeTerm;
-struct nsMsgResultElement;
 struct nsMsgDIRServer;
+class nsMsgSearchTerm;
+
+class nsMsgSearchTermArray : public nsVoidArray
+{
+public:
+	nsMsgSearchTerm *ElementAt(PRUint32 i) const { return (nsMsgSearchTerm*) nsVoidArray::ElementAt(i); }
+};
+
+class nsMsgSearchValueArray : public nsVoidArray
+{
+public:
+	nsMsgSearchValue *ElementAt(PRUint32 i) const { return (nsMsgSearchValue*) nsVoidArray::ElementAt(i); }
+};
+
+class nsMsgScopeTermArray : public nsVoidArray
+{
+public:
+	nsMsgScopeTerm *ElementAt(PRUint32 i) const { return (nsMsgScopeTerm*) nsVoidArray::ElementAt(i); }
+};
+
+// nsMsgResultElement specifies a single search hit.
+
+//---------------------------------------------------------------------------
+// nsMsgResultElement is a list of attribute/value pairs which are used to
+// represent a search hit without requiring a message header or server connection
+//---------------------------------------------------------------------------
+
+class nsMsgResultElement
+{
+public:
+	nsMsgResultElement (nsMsgSearchAdapter *);
+	virtual ~nsMsgResultElement ();
+
+	static nsresult AssignValues (nsMsgSearchValue *src, nsMsgSearchValue *dst);
+	nsresult GetValue (nsMsgSearchAttribute, nsMsgSearchValue **) const;
+	nsresult AddValue (nsMsgSearchValue*);
+
+	nsresult GetPrettyName (nsMsgSearchValue**);
+
+
+	const nsMsgSearchValue *GetValueRef (nsMsgSearchAttribute) const;
+	nsresult Open (void *window);
+
+	// added as part of the search as view capabilities...
+	static int CompareByFolderInfoPtrs (const void *, const void *);  
+
+	static int Compare (const void *, const void *);
+	static nsresult DestroyValue (nsMsgSearchValue *value);
+
+	nsMsgSearchValueArray m_valueList;
+	nsMsgSearchAdapter *m_adapter;
+
+protected:
+};
+
+
+inline PRBool IsStringAttribute (nsMsgSearchAttribute a)
+{
+	return ! (a == nsMsgSearchAttribPriority || a == nsMsgSearchAttribDate || 
+		a == nsMsgSearchAttribMsgStatus || a == nsMsgSearchAttribMessageKey ||
+		a == nsMsgSearchAttribSize || a == nsMsgSearchAttribAgeInDays ||
+		a == nsMsgSearchAttribFolderInfo);
+}
+
+
 
 //---------------------------------------------------------------------------
 // nsMsgSearchTerm specifies one criterion, e.g. name contains phil
 //---------------------------------------------------------------------------
 
+// perhaps this should go in its own header file, if this class gets
+// its own cpp file, nsMsgSearchTerm.cpp
 class nsMsgSearchTerm
 {
 public:
@@ -204,7 +271,7 @@ public:
 	nsresult MatchRfc822String(const char *, int16 csid);
 	nsresult MatchAge (time_t);
 
-	nsresult EnStreamNew (char **, PRInt16 *length);
+	nsresult EnStreamNew (nsString2 &stream);
 	nsresult DeStream (char *, PRInt16 length);
 	nsresult DeStreamNew (char *, PRInt16 length);
 
@@ -212,7 +279,8 @@ public:
 
 	PRBool IsBooleanOpAND() { return m_booleanOp == nsMsgSearchBooleanAND ? PR_TRUE : PR_FALSE;}
 	nsMsgSearchBooleanOp GetBooleanOp() {return m_booleanOp;}
-	char * GetArbitraryHeader() {return m_arbitraryHeader;}
+	// maybe should return nsString2 &   ??
+	const char * GetArbitraryHeader() {return m_arbitraryHeader.GetBuffer();}
 
 	static char *	EscapeQuotesInStr(const char *str);
 	PRBool MatchAllBeforeDeciding ();
@@ -220,7 +288,7 @@ public:
 	nsMsgSearchOperator m_operator;
 	nsMsgSearchValue m_value;
 	nsMsgSearchBooleanOp m_booleanOp;  // boolean operator to be applied to this search term and the search term which precedes it.
-	char * m_arbitraryHeader;         // user specified string for the name of the arbitrary header to be used in the search
+	nsString2 m_arbitraryHeader;         // user specified string for the name of the arbitrary header to be used in the search
 									  // only has a value when m_attribute = attribOtherHeader!!!!
 protected:
 	nsresult		OutputValue(nsString2 &outputStr);
@@ -240,23 +308,6 @@ typedef struct nsMsgSearchMenuItem
 } nsMsgSearchMenuItem;
 
 
-class nsMsgSearchTermArray : public nsVoidArray
-{
-public:
-	nsMsgSearchTerm *ElementAt(PRUint32 i) const { return (nsMsgSearchTerm*) nsVoidArray::ElementAt(i); }
-};
-
-class nsMsgSearchValueArray : public nsVoidArray
-{
-public:
-	nsMsgSearchValue *ElementAt(PRUint32 i) const { return (nsMsgSearchValue*) nsVoidArray::ElementAt(i); }
-};
-
-class nsMsgScopeTermArray : public nsVoidArray
-{
-public:
-	nsMsgScopeTerm *ElementAt(PRUint32 i) const { return (nsMsgScopeTerm*) nsVoidArray::ElementAt(i); }
-};
 
 
 
