@@ -33,6 +33,7 @@
 #include "nsIStringBundle.h"
 #include "nsIStreamConverterService.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIFileStream.h"
 #include "nsNetUtil.h"
 #include "nsString2.h"
 #include "nsReadableUtils.h"
@@ -1112,10 +1113,23 @@ nsHttpChannel::ProcessAuthentication(PRUint32 httpStatus)
     mTransaction->Cancel(NS_BINDING_REDIRECTED);
     mPrevTransaction = mTransaction;
     mTransaction = nsnull;
-
+   
     // and create a new one...
     rv = SetupTransaction();
     if (NS_FAILED(rv)) return rv;
+
+    // rewind the upload stream
+    if (mUploadStream) {
+        nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mUploadStream);
+        if (seekable)
+            seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+        else {
+            // try nsIRandomAccessStore
+            nsCOMPtr<nsIRandomAccessStore> ras = do_QueryInterface(mUploadStream);
+            if (ras)
+                ras->Seek(PR_SEEK_SET, 0);
+        }
+    }
 
     rv = nsHttpHandler::get()->InitiateTransaction(mTransaction, mConnectionInfo);
     if (NS_FAILED(rv)) return rv;
