@@ -842,7 +842,7 @@ sub html_diff {
         $mark = 0;
         if (/^a(\d+)/) {
             $point = $1;
-            $old_line_num = skip_to_line($point + 1, *OLDREV, $old_line_num);
+            $old_line_num = skip_to_line($point + 1, $old_line_num);
             while (<DIFF>) {
                 last if (/^\.$/);
                 &print_row('', $stable_bg_color, $_, $addition_bg_color);
@@ -850,7 +850,7 @@ sub html_diff {
         } elsif ((($point, $mark) = /^c(\d+) (\d+)$/) ||
                  (($point) = /^c(\d+)$/)) {
             $mark = $point if (!$mark);
-            $old_line_num = skip_to_line($point, *OLDREV, $old_line_num);
+            $old_line_num = skip_to_line($point, $old_line_num);
             while (<DIFF>) {
                 last if (/^\.$/);
                 if ($old_line_num <= $mark) {
@@ -869,7 +869,7 @@ sub html_diff {
         } elsif ((($point, $mark) = /^d(\d+) (\d+)$/) ||
                  (($point) = /^d(\d+)$/)) {
             $mark = $point if (!$mark);
-            $old_line_num = skip_to_line($point, *OLDREV, $old_line_num);
+            $old_line_num = skip_to_line($point, $old_line_num);
             while (1) {
                 $old_line = <OLDREV>;
                 last unless defined $old_line;
@@ -910,12 +910,10 @@ sub html_diff {
 
 sub skip_to_line {
     my ($line_num, $old_line_num);
-    local (*OLDREV);
-    ($line_num, *OLDREV, $old_line_num) = @_;
+    ($line_num, $old_line_num) = @_;
     my ($anchor_printed) = 0;
     my ($skip_line_printed) = ($line_num - $old_line_num <= 10);
     my ($base_old_line_num) = $old_line_num;
-
 
     while ($old_line_num < $line_num) {
         if (!$anchor_printed && $old_line_num >= $line_num - 10) {
