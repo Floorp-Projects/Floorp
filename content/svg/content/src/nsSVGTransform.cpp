@@ -203,7 +203,8 @@ nsSVGTransform::GetValueString(nsAString& aValue)
         nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar),
                                   NS_LITERAL_STRING("matrix(%g, %g, %g, %g, %g, %g)").get(),
                                   a, b, c, d, e, f);
-      } 
+      }
+      break;
     default:
       buf[0] = '\0';
       NS_ERROR("unknown transformation type");
