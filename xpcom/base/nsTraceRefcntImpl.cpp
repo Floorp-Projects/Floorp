@@ -1120,9 +1120,11 @@ struct mybuf {
 };
 
 
+static void myinit();
+
 #pragma init (myinit)
 
-static int
+static void
 myinit()
 {
 
@@ -1143,7 +1145,6 @@ myinit()
 #endif /*__GNUC__*/
     }    
     initialized = 1;
-    return(1);
 }
 
 
