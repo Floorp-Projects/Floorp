@@ -575,7 +575,11 @@
 
           if (!this.hasAttribute("disablehistory")) {
             var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-            os.removeObserver(this, "browser:purge-session-history", false);
+            try {
+              os.removeObserver(this, "browser:purge-session-history", false);
+            } catch (ex) {
+              // It's not clear why this sometimes throws an exception.
+            }
           }
 
           if (this.mDragDropHandler)
