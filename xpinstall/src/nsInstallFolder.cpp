@@ -38,16 +38,6 @@
 #include "nsFileLocations.h"
 #include "nsIFileLocator.h"
 
-#ifdef XP_UNIX
-#define DIRECTORY_SEPARATOR '/'
-#elif defined XP_BEOS
-#define DIRECTORY_SEPARATOR '/'
-#elif defined WIN32
-#define DIRECTORY_SEPARATOR '\\'
-#elif defined XP_MAC
-#define DIRECTORY_SEPARATOR ':'
-#endif
-
 struct DirectoryTable
 {
 	char *  directoryName;			/* The formal directory name */
@@ -160,8 +150,8 @@ nsInstallFolder::GetDirectoryPath(nsString& aDirectoryPath)
 
        if (mFileSpec->IsDirectory())
        {
-          if (aDirectoryPath.Last() != DIRECTORY_SEPARATOR)
-              aDirectoryPath.Append(DIRECTORY_SEPARATOR);
+          if (aDirectoryPath.Last() != FILESEP)
+              aDirectoryPath.Append(FILESEP);
        }
     }
 }

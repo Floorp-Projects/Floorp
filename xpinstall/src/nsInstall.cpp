@@ -75,14 +75,6 @@
 #include "nsAppleSingleDecoder.h"
 #endif 
 
-#ifdef XP_PC
-#define FILESEP '\\'
-#elif defined(XP_MAC)
-#define FILESEP ':'
-#else
-#define FILESEP '/'
-#endif
-
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 #ifdef NECKO
