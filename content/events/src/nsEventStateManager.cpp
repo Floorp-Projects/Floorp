@@ -294,9 +294,7 @@ nsEventStateManager::~nsEventStateManager()
 nsresult
 nsEventStateManager::Shutdown()
 {
-  if (mPrefBranch) {
-    mPrefBranch = nsnull;
-  }
+  mPrefBranch = nsnull;
 
   m_haveShutdown = PR_TRUE;
   return NS_OK;
