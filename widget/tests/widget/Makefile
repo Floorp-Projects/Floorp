@@ -98,7 +98,7 @@ $(OBJDIR)/%.o: %.cpp
 	@$(MAKE_OBJDIR)
 	$(CCC) -o $@ $(CFLAGS) -c $*.cpp
 
-$(OBJDIR)/$(PROG): $(EX_LIBS)
+$(OBJDIR)/$(PROG): $(EX_LIBS) $(OBJDIR)/main.o $(OBJDIR)/nsWidgetTest.o
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH),Linux)
 	$(CCC) -rdynamic -o $@ $(OBJDIR)/main.o $(OBJDIR)/nsWidgetTest.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -L/usr/X11R6/lib -lXm -lXt -lX11 -lXp -lXext

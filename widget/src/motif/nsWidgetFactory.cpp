@@ -34,10 +34,11 @@
 #include "nsFileWidget.h"
 #include "nsListBox.h"
 #include "nsComboBox.h"
+#include "nsLookAndFeel.h"
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
-static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
+static NS_DEFINE_IID(kCAppShellCID,      NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCHorzScrollbarCID, NS_HORZSCROLLBAR_CID);
 static NS_DEFINE_IID(kCVertScrollbarCID, NS_VERTSCROLLBAR_CID);
 static NS_DEFINE_IID(kCCheckButtonCID, NS_CHECKBUTTON_CID);
@@ -48,6 +49,7 @@ static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kCButtonCID,     NS_BUTTON_CID);
 static NS_DEFINE_IID(kCListBoxCID,    NS_LISTBOX_CID);
 static NS_DEFINE_IID(kCComboBoxCID,    NS_COMBOBOX_CID);
+static NS_DEFINE_IID(kCLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 
 static NS_DEFINE_IID(kIWidget,        NS_IWIDGET_IID);
@@ -177,34 +179,39 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCChild)) {
         inst = new ChildWindow(aOuter);
     }
-
-    else if (aIID.Equals(kIAppShellIID)) {
-      nsIAppShell *appInst = (nsIAppShell*)new nsAppShell();
-      if (appInst == NULL) {  
-          return NS_ERROR_OUT_OF_MEMORY;  
-      }  
-      nsresult res = appInst->QueryInterface(aIID, aResult);
-      if (res != NS_OK) {
-        delete appInst ;
-      }
-      return res;
+    else if (mClassID.Equals(kCLookAndFeelCID)) {
+        nsLookAndFeel *laf = new nsLookAndFeel(aOuter);
+        if (laf == NULL) {  
+            return NS_ERROR_OUT_OF_MEMORY;  
+        }  
+        nsresult res = laf->QueryInterface(aIID, aResult);
+        if (res != NS_OK) {
+            delete laf;
+        }
+        return res;
     }
-  
-    if (inst == NULL) {  
+    else if (mClassID.Equals(kCAppShellCID)) {
+        nsAppShell *appInst = new nsAppShell();
+        if (appInst == NULL) {  
+            return NS_ERROR_OUT_OF_MEMORY;  
+        }  
+        nsresult res = appInst->QueryInterface(aIID, aResult);
+        if (res != NS_OK) {
+            delete appInst;
+        }
+        return res;
+    }
+
+    if (inst == NULL) {
         return NS_ERROR_OUT_OF_MEMORY;  
-    }  
+    }
+        
+    nsresult res = inst->QueryObject(aIID, aResult);
 
-
-  nsresult res = inst->QueryObject(aIID, aResult);
-
-  if (res != NS_OK) {
-    delete inst ;
-  }
-  else {
-    NS_RELEASE(inst);
-  }
-
-  return res;
+    if (res != NS_OK) {
+         delete inst;         
+    }
+    return res;
 }  
 
 nsresult nsWidgetFactory::LockFactory(PRBool aLock)  

@@ -188,7 +188,7 @@ nsWindow::nsWindow(nsISupports *aOuter):
     mOuter = aOuter;
   else
     mOuter = &mInner;
-  mRefCnt = 1; 
+  mRefCnt = 0; 
 
   mGC = nsnull ;
   mShown = PR_FALSE;
@@ -928,12 +928,18 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
     case NS_NATIVE_WIDGET:
       return (void*)(mWidget);
     case NS_NATIVE_GRAPHIC:
-      // We Cache a Read-Only Shared GC in the Toolkit.  If we don't
-      // have one ourselves (because it needs to be writeable) grab the
-      // the shared GC
-      if (nsnull == mGC)
-        return (((nsToolkit *)mToolkit)->GetSharedGC());
-      return ((void*)mGC);
+      {
+        void *res = NULL;
+        // We Cache a Read-Only Shared GC in the Toolkit.  If we don't
+        // have one ourselves (because it needs to be writeable) grab the
+        // the shared GC
+        if (nsnull == mGC)
+          res = (void *)((nsToolkit *)mToolkit)->GetSharedGC(); 
+        else
+          res = (void *)mGC;
+        NS_ASSERTION(res, "Unable to return GC");
+        return res;
+      }
     case NS_NATIVE_COLORMAP:
     default:
       break;
@@ -1213,9 +1219,9 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
 					      kRenderingContextIID, 
 					      (void **)&event.renderingContext))
       {
-	event.renderingContext->Init(mContext, this);
-	result = DispatchEvent(&event);
-	NS_RELEASE(event.renderingContext);
+        event.renderingContext->Init(mContext, this);
+        result = DispatchEvent(&event);
+        NS_RELEASE(event.renderingContext);
       }
     else 
       {
