@@ -82,7 +82,7 @@ interface nsIMsgHeaderParser : nsISupports {
 
      Caller must call PL_strfree on returnValue (which is allocated by the function)
   */
-  [noscript] void extractHeaderAddressMailboxes (in string charset, in string line, out string mailboxes);
+  void extractHeaderAddressMailboxes (in string charset, in string line, out string mailboxes);
 
 
   /* Given a string which contains a list of Header addresses, returns a
