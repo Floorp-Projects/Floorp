@@ -307,14 +307,16 @@ fieldset {
 ul, menu, dir {
   display: block;
   list-style-type: disc;
-  margin: 1em 0 1em 40px;
+  margin: 1em 0;
+  padding-left: 40px;
   counter-reset: -html-counter 0;
 }
 
 ol {
   display: block;
   list-style-type: decimal;
-  margin: 1em 0 1em 40px;
+  margin: 1em 0;
+  padding-left: 40px;
   counter-reset: -html-counter 0;
 }
 
@@ -373,7 +375,7 @@ dl {
 dt {
   display: block;
 }
-dl[compact] > DT {  /* compact allowed on DL, OL, UL, DIR MENU */
+dl[compact] > dt {  /* compact allowed on DL, OL, UL, DIR MENU */
   display: compact;
 }
 dd {
@@ -382,6 +384,9 @@ dd {
 }
 dl dl {
   margin: 0 0 0 40px;
+}
+dt dl, dd dl {
+  margin: 0;
 }
 
 /* leafs */
