@@ -45,7 +45,9 @@ DIRS = \
   jpeg				\
   modules\libreg		\
   xpcom				\
+!if defined(BUILD_PROFILE)
   profile			\
+!endif
   modules\zlib			\
   modules\libjar        \
   modules\libutil		\
