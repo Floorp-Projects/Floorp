@@ -48,7 +48,7 @@
 
 #include "nsThread.h"
 
-#include _NEW_NSIFILE
+#ifdef _NEW_NSIFILE
 #include "nsIFileImpl.h"
 #include "nsIDirEnumeratorImpl.h"
 #endif
@@ -447,7 +447,7 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
                                 nsSupportsVoidImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
-#include _NEW_NSIFILE
+#ifdef _NEW_NSIFILE
     rv = RegisterGenericFactory(compMgr, nsIFileImpl::GetCID(),
                                 NS_FILE_CLASSNAME,
                                 NS_FILE_PROGID,
