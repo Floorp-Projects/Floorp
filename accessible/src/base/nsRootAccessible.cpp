@@ -580,15 +580,6 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     else if (eventType.EqualsIgnoreCase("change")) {
       if (selectElement) // it's a HTML <select>
         HandleEvent(nsIAccessibleEventListener::EVENT_ATK_SELECTION_CHANGE, accessible, nsnull);
-      else {
-        nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(targetNode));
-        if (inputElement) { // it's a HTML <input>
-          accessible->GetAccState(&stateData.state);
-          stateData.enable = (stateData.state & STATE_CHECKED) != 0;
-          stateData.state = STATE_CHECKED;
-          HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, &stateData);
-        }
-      }
     }
     else if (eventType.EqualsIgnoreCase("select")) {
       if (selectControl) // it's a XUL <listbox>
