@@ -82,6 +82,7 @@ nsEventStateManager::nsEventStateManager()
   mPresContext = nsnull;
   mCurrentTabIndex = 0;
   mLastWindowToHaveFocus = nsnull;
+  mConsumeFocusEvents = PR_FALSE;
   NS_INIT_REFCNT();
 }
 
@@ -114,6 +115,13 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
                                  nsEventStatus& aStatus,
                                  nsIView* aView)
 {
+  // This is an experiement and may be temporary
+  // this consumes the very next focus event
+  if (mConsumeFocusEvents && aEvent->message == NS_GOTFOCUS) {
+    //mConsumeFocusEvents = PR_FALSE;
+    return NS_ERROR_FAILURE; // this should consume the event
+  }
+
   mCurrentTarget = aTargetFrame;
   NS_IF_RELEASE(mCurrentTargetContent);
 
@@ -368,13 +376,13 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
   case NS_MOUSE_RIGHT_BUTTON_DOWN: 
     {
       if (nsEventStatus_eConsumeNoDefault != aStatus) {
-        nsIContent* newFocus;
-        mCurrentTarget->GetContent(&newFocus);
+        nsCOMPtr<nsIContent> newFocus;
+        mCurrentTarget->GetContent(getter_AddRefs(newFocus));
         nsCOMPtr<nsIFocusableContent> focusable;
   
         if (newFocus) {
           // Look for the nearest enclosing focusable content.
-          nsCOMPtr<nsIContent> current = dont_QueryInterface(newFocus);
+          nsCOMPtr<nsIContent> current = newFocus;
           while (current) {
             focusable = do_QueryInterface(current);
             if (focusable)
@@ -384,7 +392,56 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
             current->GetParent(*getter_AddRefs(parent));
             current = parent;
           }
-          
+
+          // if a focusable piece of content is an anonymous node
+          // weed to find the parent and have the parent be the 
+          // new focusable node
+          //
+          // We fist to check here to see if the focused content 
+          // is anonymous content
+          if (focusable) {
+            nsCOMPtr<nsIContent> parent;
+            current->GetParent(*getter_AddRefs(parent));
+            NS_ASSERTION(parent.get(), "parent is null.  this should not happen.");
+            PRInt32 numChilds;
+            parent->ChildCount(numChilds);
+            PRInt32 i;
+            PRBool isChild = PR_FALSE;
+            for (i=0;i<numChilds;i++) {
+              nsCOMPtr<nsIContent> child;
+              parent->ChildAt(i, *getter_AddRefs(child));
+              if (child.get() == current.get()) {
+                isChild = PR_TRUE;
+                break;
+              }
+            }
+            // if it isn't a child of the parent, then it is anonynous content
+            // Now, go up the parent list to find a focusable content node
+            if (!isChild) {
+              current = parent;
+              while (current) {
+                focusable = do_QueryInterface(current);
+                if (focusable)
+                  break;
+
+                nsCOMPtr<nsIContent> tempParent;
+                current->GetParent(*getter_AddRefs(tempParent));
+                current = tempParent;
+              }
+            }
+            // now we ned to get the content node's frame and reset 
+            // the mCurrentTarget target
+            nsCOMPtr<nsIPresShell> shell;
+            if (mPresContext) {
+              nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
+              if (NS_SUCCEEDED(rv) && shell){
+                shell->GetPrimaryFrameFor(current, &mCurrentTarget);
+              }
+            }
+            // now adjust the value for the "newFocus"
+            newFocus = current;
+          }
+
           PRBool focusChangeFailed = PR_TRUE;
           if (focusable) {
             if (current.get() != mCurrentFocus) {
@@ -406,7 +463,6 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
 
         SetContentState(newFocus, NS_EVENT_STATE_ACTIVE);
 
-        NS_IF_RELEASE(newFocus);
       }
 
     }
