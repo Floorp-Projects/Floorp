@@ -384,7 +384,6 @@ if ($action eq 'new') {
                 SendSQL("INSERT INTO group_control_map " .
                         "(group_id, product_id, entry, " .
                         "membercontrol, othercontrol, canedit) VALUES " .
-                        "entry, control, canedit) VALUES " .
                         "($grpid, $product_id, 0, " .
                         CONTROLMAPSHOWN . ", " .
                         CONTROLMAPNA . ", 0)");
