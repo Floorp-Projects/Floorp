@@ -32,7 +32,7 @@
 #  Robert Ginda
 #
 # Second cut at runtests.pl script originally by
-# Christine Begle (christine@netscape.com)
+# Christine Begle (cbegle@netscape.com)
 # Branched 11/01/99
 #
 
@@ -71,6 +71,8 @@ $SIG{INT} = 'int_handler';
 
 &execute_tests (@test_list);
 &write_results;
+
+print STDERR "-#- Wrote results to '$opt_output_file'\n";
 
 sub execute_tests {
     local (@test_list) = @_;
@@ -115,8 +117,14 @@ sub execute_tests {
         @output = <OUTPUT>;
         close (OUTPUT);
         
-        $got_exit = ($? >> 8);
-        $exit_signal = ($? & 255);
+        if ($os_type ne "WIN") {
+            $got_exit = ($? >> 8);
+            $exit_signal = ($? & 255);
+        } else {
+            $got_exit = $?;
+            $exit_signal = 0;
+        }
+
         $failure_lines = "";
         $bug_line = "";
 
