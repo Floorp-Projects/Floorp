@@ -205,7 +205,7 @@ Show Dialog=TRUE
 Title=$ProductName$ Setup - Additional Options
 ;*** LOCALIZE ME BABY ***
 Message1=Select the following option if you wish to save downloaded Setup files on your own computer.  This allows you to re-run Setup without downloading the files again.  The Setup files will be saved to the path below.
-Save Installer=
+Save Installer=TRUE
 ; The following settings control whether the Recapture Homepage checkbox is displayed.
 ;    For this option to work the file nsResetPref.js must be installed into the 
 ;    components directory
@@ -551,6 +551,20 @@ Key=[REGPATH]\$UserAgentShort$\AppList\[APP_ID]
 Name=PathToExe
 ;*** LOCALIZE ME BABY ***
 Name Value=[PATH_TO_APP]
+Type=REG_SZ
+Decrypt Key=TRUE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post smartupdate
+
+[Windows Registry4]
+Root Key=HKEY_LOCAL_MACHINE
+Key=[REGPATH]\$UserAgentShort$\Installer
+Name=PathToExe
+;*** LOCALIZE ME BABY ***
+Name Value=[SETUP PATH]\Setup\setup.exe
 Type=REG_SZ
 Decrypt Key=TRUE
 Decrypt Name=FALSE
