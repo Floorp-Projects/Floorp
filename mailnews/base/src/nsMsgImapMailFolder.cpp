@@ -239,7 +239,7 @@ NS_IMETHODIMP nsMsgImapMailFolder::GetRequiresCleanup(PRBool *requiresCleanup)
 		PRBool purgePrompt = m_master->GetPrefs()->GetPurgeThreshholdEnabled();;
 		return (purgePrompt && m_expungedBytes / 1000L > purgeThreshhold);
 	}
-	return FALSE;
+	return PR_FALSE;
 #endif
 	return NS_OK;
 }
@@ -298,12 +298,12 @@ NS_IMETHODIMP nsMsgImapMailFolder::GetHostName(char** hostName)
 NS_IMETHODIMP nsMsgImapMailFolder::UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate)
 {
 #ifdef HAVE_PORT
-		PRBool ret = FALSE;
+		PRBool ret = PR_FALSE;
 	if (m_master->IsCachePasswordProtected() && !m_master->IsUserAuthenticated() && !m_master->AreLocalFoldersAuthenticated())
 	{
 		char *savedPassword = GetRememberedPassword();
-		if (savedPassword && XP_STRLEN(savedPassword))
-			ret = TRUE;
+		if (savedPassword && nsCRT::strlen(savedPassword))
+			ret = PR_TRUE;
 		FREEIF(savedPassword);
 	}
 	return ret;
@@ -316,7 +316,7 @@ NS_IMETHODIMP nsMsgImapMailFolder::RememberPassword(const char *password)
 {
 #ifdef HAVE_DB
   MailDB *mailDb = NULL;
-	MailDB::Open(m_pathName, TRUE, &mailDb);
+	MailDB::Open(m_pathName, PR_TRUE, &mailDb);
 	if (mailDb)
 	{
 		mailDb->SetCachedPassword(password);
@@ -352,11 +352,11 @@ NS_IMETHODIMP nsMsgImapMailFolder::GetRememberedPassword(char ** password)
 		{
 			char *retPassword = NULL;
 			MailDB *mailDb = NULL;
-			MailDB::Open(m_pathName, FALSE, &mailDb, FALSE);
+			MailDB::Open(m_pathName, PR_FALSE, &mailDb, PR_FALSE);
 			if (mailDb)
 			{
 				mailDb->GetCachedPassword(cachedPassword);
-				retPassword = XP_STRDUP(cachedPassword);
+				retPassword = nsCRT::strdup(cachedPassword);
 				mailDb->Close();
 
 			}

@@ -17,6 +17,7 @@
  */
 
 #include "msgCore.h"    // precompiled header...
+#include "prlog.h"
 
 #include "nsMsgMessageDataSource.h"
 #include "nsMsgRDFUtils.h"

@@ -181,7 +181,7 @@ nsresult nsMsgFolderCache::InitExistingDB()
 			if (NS_SUCCEEDED(err) && rowCursor)
 			{
 				// iterate over the table rows and create nsMsgFolderCacheElements for each.
-				while (TRUE)
+				while (PR_TRUE)
 				{
 					nsresult rv;
 					nsIMdbRow* hdrRow;
