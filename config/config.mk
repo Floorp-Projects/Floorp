@@ -121,7 +121,7 @@ OS_CONFIG	:= $(OS_ARCH)$(OS_RELEASE)
 
 ifneq (, $(filter $(MODULE), $(MOZ_DEBUG_MODULES)))
   MOZ_DEBUG=1
-  CFLAGS="$CFLAGS -g"
+  OS_CFLAGS += -g
 endif
 
 #
