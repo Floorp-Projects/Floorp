@@ -32,7 +32,7 @@
  *
  * key.h - public data structures and prototypes for the private key library
  *
- * $Id: lowkeyi.h,v 1.4 2001/12/07 01:36:18 relyea%netscape.com Exp $
+ * $Id: lowkeyi.h,v 1.5 2002/02/21 22:41:38 ian.mcgreer%sun.com Exp $
  */
 
 #ifndef _LOWKEYI_H_
@@ -45,6 +45,20 @@
 #include "lowkeyti.h"
 
 SEC_BEGIN_PROTOS
+
+/*
+ * See bugzilla bug 125359
+ * Since NSS (via PKCS#11) wants to handle big integers as unsigned ints,
+ * all of the templates above that en/decode into integers must be converted
+ * from ASN.1's signed integer type.  This is done by marking either the
+ * source or destination (encoding or decoding, respectively) type as
+ * siUnsignedInteger.
+ */
+extern void prepare_low_rsa_priv_key_for_asn1(NSSLOWKEYPrivateKey *key);
+extern void prepare_low_pqg_params_for_asn1(PQGParams *params);
+extern void prepare_low_dsa_priv_key_for_asn1(NSSLOWKEYPrivateKey *key);
+extern void prepare_low_dsa_priv_key_export_for_asn1(NSSLOWKEYPrivateKey *key);
+extern void prepare_low_dh_priv_key_for_asn1(NSSLOWKEYPrivateKey *key);
 
 typedef char * (* NSSLOWKEYDBNameFunc)(void *arg, int dbVersion);
     

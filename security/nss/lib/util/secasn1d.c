@@ -35,7 +35,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.14 2002/01/14 23:20:42 ian.mcgreer%sun.com Exp $
+ * $Id: secasn1d.c,v 1.15 2002/02/21 22:41:42 ian.mcgreer%sun.com Exp $
  */
 
 #include "secasn1.h"
@@ -1338,9 +1338,10 @@ sec_asn1d_parse_leaf (sec_asn1d_state *state,
 
     item = (SECItem *)(state->dest);
     if (item != NULL && item->data != NULL) {
-	/* Strip leading zeroes */
+	/* Strip leading zeroes when target is unsigned integer */
 	if (state->underlying_kind == SEC_ASN1_INTEGER && /* INTEGER   */
-	    item->len == 0)                               /* MSB       */
+	    item->len == 0 &&                             /* MSB       */
+	    item->type == siUnsignedInteger)              /* unsigned  */
 	{
 	    while (len > 1 && buf[0] == 0) {              /* leading 0 */
 		buf++;

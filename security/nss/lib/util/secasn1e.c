@@ -35,7 +35,7 @@
  * Support for ENcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1e.c,v 1.6 2002/01/22 22:48:26 ian.mcgreer%sun.com Exp $
+ * $Id: secasn1e.c,v 1.7 2002/02/21 22:41:42 ian.mcgreer%sun.com Exp $
  */
 
 #include "secasn1.h"
@@ -685,17 +685,18 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 	break;
 
       case SEC_ASN1_INTEGER:
-	/* ASN.1 INTEGERs are signed.  PKCS#11 BigIntegers are unsigned.  NSS
-	 * will treat numbers going in and out of the ASN.1 encoder as
-	 * unsigned, so the encoder must handle the conversion.
+	/* ASN.1 INTEGERs are signed.
+	 * If the source is an unsigned integer, the encoder will need 
+	 * to handle the conversion here.
 	 */
 	{
 	    unsigned char *buf = ((SECItem *)src)->data;
+	    SECItemType integerType = ((SECItem *)src)->type;
 	    len = ((SECItem *)src)->len;
 	    while (len > 0) {
 		if (*buf != 0) {
-		    if (*buf & 0x80) {
-			len++; /* leading zero needed */
+		    if (*buf & 0x80 && integerType == siUnsignedInteger) {
+			len++; /* leading zero needed to make number signed */
 		    }
 		    break; /* reached beginning of number */
 		}
@@ -1007,17 +1008,18 @@ sec_asn1e_write_contents (sec_asn1e_state *state,
 	    goto process_string;
 
 	  case SEC_ASN1_INTEGER:
-	   /* ASN.1 INTEGERs are signed.  PKCS#11 BigIntegers are unsigned.  
-	    * NSS will treat numbers going in and out of the ASN.1 encoder as
-	    * unsigned, so the encoder must handle the conversion.
+	   /* ASN.1 INTEGERs are signed.  If the source is an unsigned
+	    * integer, the encoder will need to handle the conversion here.
 	    */
 	    {
 		unsigned int blen;
 		unsigned char *buf;
+		SECItemType integerType;
 		blen = ((SECItem *)state->src)->len;
 		buf = ((SECItem *)state->src)->data;
+		integerType = ((SECItem *)state->src)->type;
 		while (blen > 0) {
-		    if (*buf & 0x80) {
+		    if (*buf & 0x80 && integerType == siUnsignedInteger) {
 			char zero = 0; /* write a leading 0 */
 			sec_asn1e_write_contents_bytes(state, &zero, 1);
 			/* and then the remaining buffer */
@@ -1025,10 +1027,16 @@ sec_asn1e_write_contents (sec_asn1e_state *state,
 			                               (char *)buf, blen); 
 			break;
 		    } 
-		    if (*buf != 0 || blen == 1) {
-			/* no leading zeros, msb of MSB is not 1, so write
-			 * the remaining buffer (0 itself also goes here)
-			 */
+		    /* Check three possibilities:
+		     * 1.  No leading zeros, msb of MSB is not 1;
+		     * 2.  The number is zero itself;
+		     * 3.  Encoding a signed integer with a leading zero,
+		     *     keep the zero so that the number is positive.
+		     */
+		    if (*buf != 0 || 
+		         blen == 1 || 
+		         (buf[1] & 0x80 && integerType != siUnsignedInteger) ) 
+		    {
 			sec_asn1e_write_contents_bytes(state, 
 			                               (char *)buf, blen); 
 			break;

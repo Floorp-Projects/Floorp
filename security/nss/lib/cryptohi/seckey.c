@@ -143,6 +143,48 @@ SEC_ASN1_CHOOSER_IMPLEMENT(SECKEY_DSAPublicKeyTemplate)
 SEC_ASN1_CHOOSER_IMPLEMENT(SECKEY_RSAPublicKeyTemplate)
 SEC_ASN1_CHOOSER_IMPLEMENT(CERT_SubjectPublicKeyInfoTemplate)
 
+/*
+ * See bugzilla bug 125359
+ * Since NSS (via PKCS#11) wants to handle big integers as unsigned ints,
+ * all of the templates above that en/decode into integers must be converted
+ * from ASN.1's signed integer type.  This is done by marking either the
+ * source or destination (encoding or decoding, respectively) type as
+ * siUnsignedInteger.
+ */
+static void
+prepare_rsa_pub_key_for_asn1(SECKEYPublicKey *pubk)
+{
+    pubk->u.rsa.modulus.type = siUnsignedInteger;
+    pubk->u.rsa.publicExponent.type = siUnsignedInteger;
+}
+
+static void
+prepare_dsa_pub_key_for_asn1(SECKEYPublicKey *pubk)
+{
+    pubk->u.dsa.publicValue.type = siUnsignedInteger;
+}
+
+static void
+prepare_pqg_params_for_asn1(SECKEYPQGParams *params)
+{
+    params->prime.type = siUnsignedInteger;
+    params->subPrime.type = siUnsignedInteger;
+    params->base.type = siUnsignedInteger;
+}
+
+static void
+prepare_dh_pub_key_for_asn1(SECKEYPublicKey *pubk)
+{
+    pubk->u.dh.prime.type = siUnsignedInteger;
+    pubk->u.dh.base.type = siUnsignedInteger;
+    pubk->u.dh.publicValue.type = siUnsignedInteger;
+}
+
+static void
+prepare_kea_pub_key_for_asn1(SECKEYPublicKey *pubk)
+{
+    pubk->u.kea.publicValue.type = siUnsignedInteger;
+}
 
 /* Create an RSA key pair is any slot able to do so.
 ** The created keys are "session" (temporary), not "token" (permanent), 
@@ -509,6 +551,7 @@ SECKEY_FortezzaDecodePQGtoOld(PRArenaPool *arena, SECKEYPublicKey *pubk,
             /* PQG params are in the standard format */
 
 	    /* Store DSA PQG parameters */
+	    prepare_pqg_params_for_asn1(&pubk->u.fortezza.params);
             rv = SEC_ASN1DecodeItem(arena, &pubk->u.fortezza.params,
                               SECKEY_PQGParamsTemplate,
                               params);
@@ -628,6 +671,7 @@ SECKEY_DSADecodePQG(PRArenaPool *arena, SECKEYPublicKey *pubk, SECItem *params) 
         (params->data[0] != 0xa0)) {
     
          /* PQG params are in the standard format */
+         prepare_pqg_params_for_asn1(&pubk->u.dsa.params);
          rv = SEC_ASN1DecodeItem(arena, &pubk->u.dsa.params,
                              SECKEY_PQGParamsTemplate,
                              params);
@@ -875,6 +919,7 @@ seckey_ExtractPublicKey(CERTSubjectPublicKeyInfo *spki)
       case SEC_OID_X500_RSA_ENCRYPTION:
       case SEC_OID_PKCS1_RSA_ENCRYPTION:
 	pubk->keyType = rsaKey;
+	prepare_rsa_pub_key_for_asn1(pubk);
 	rv = SEC_ASN1DecodeItem(arena, pubk, SECKEY_RSAPublicKeyTemplate, &os);
 	if (rv == SECSuccess)
 	    return pubk;
@@ -882,6 +927,7 @@ seckey_ExtractPublicKey(CERTSubjectPublicKeyInfo *spki)
       case SEC_OID_ANSIX9_DSA_SIGNATURE:
       case SEC_OID_SDN702_DSA_SIGNATURE:
 	pubk->keyType = dsaKey;
+	prepare_dsa_pub_key_for_asn1(pubk);
 	rv = SEC_ASN1DecodeItem(arena, pubk, SECKEY_DSAPublicKeyTemplate, &os);
 	if (rv != SECSuccess) break;
 
@@ -892,6 +938,7 @@ seckey_ExtractPublicKey(CERTSubjectPublicKeyInfo *spki)
 	break;
       case SEC_OID_X942_DIFFIE_HELMAN_KEY:
 	pubk->keyType = dhKey;
+	prepare_dh_pub_key_for_asn1(pubk);
 	rv = SEC_ASN1DecodeItem(arena, pubk, SECKEY_DHPublicKeyTemplate, &os);
 	if (rv != SECSuccess) break;
 
@@ -914,6 +961,7 @@ seckey_ExtractPublicKey(CERTSubjectPublicKeyInfo *spki)
       case SEC_OID_MISSI_KEA:
 	pubk->keyType = keaKey;
 
+	prepare_kea_pub_key_for_asn1(pubk);
         rv = SEC_ASN1DecodeItem(arena, pubk,
                                 SECKEY_KEAPublicKeyTemplate, &os);
         if (rv != SECSuccess) break;
@@ -1269,6 +1317,7 @@ SECKEY_CreateSubjectPublicKeyInfo(SECKEYPublicKey *pubk)
 		/*
 		 * DER encode the public key into the subjectPublicKeyInfo.
 		 */
+		prepare_rsa_pub_key_for_asn1(pubk);
 		rv_item = SEC_ASN1EncodeItem(arena, &spki->subjectPublicKey,
 					     pubk, SECKEY_RSAPublicKeyTemplate);
 		if (rv_item != NULL) {
@@ -1286,6 +1335,7 @@ SECKEY_CreateSubjectPublicKeyInfo(SECKEYPublicKey *pubk)
 	    break;
 	  case dsaKey:
 	    /* DER encode the params. */
+	    prepare_pqg_params_for_asn1(&pubk->u.dsa.params);
 	    rv_item = SEC_ASN1EncodeItem(arena, &params, &pubk->u.dsa.params,
 					 SECKEY_PQGParamsTemplate);
 	    if (rv_item != NULL) {
@@ -1296,6 +1346,7 @@ SECKEY_CreateSubjectPublicKeyInfo(SECKEYPublicKey *pubk)
 		    /*
 		     * DER encode the public key into the subjectPublicKeyInfo.
 		     */
+		    prepare_dsa_pub_key_for_asn1(pubk);
 		    rv_item = SEC_ASN1EncodeItem(arena, &spki->subjectPublicKey,
 						 pubk,
 						 SECKEY_DSAPublicKeyTemplate);
@@ -1390,6 +1441,7 @@ SECKEY_DecodeDERPublicKey(SECItem *pubkder)
 	pubk->arena = arena;
 	pubk->pkcs11Slot = NULL;
 	pubk->pkcs11ID = 0;
+	prepare_rsa_pub_key_for_asn1(pubk);
 	rv = SEC_ASN1DecodeItem(arena, pubk, SECKEY_RSAPublicKeyTemplate,
 				pubkder);
 	if (rv == SECSuccess)
@@ -1732,14 +1784,17 @@ SECKEY_ImportDERPublicKey(SECItem *derKey, CK_KEY_TYPE type)
 
     switch( type ) {
       case CKK_RSA:
+	prepare_rsa_pub_key_for_asn1(pubk);
         rv = SEC_ASN1DecodeItem(NULL, pubk, SECKEY_RSAPublicKeyTemplate,derKey);
         pubk->keyType = rsaKey;
         break;
       case CKK_DSA:
+	prepare_dsa_pub_key_for_asn1(pubk);
         rv = SEC_ASN1DecodeItem(NULL, pubk, SECKEY_DSAPublicKeyTemplate,derKey);
         pubk->keyType = dsaKey;
         break;
       case CKK_DH:
+	prepare_dh_pub_key_for_asn1(pubk);
         rv = SEC_ASN1DecodeItem(NULL, pubk, SECKEY_DHPublicKeyTemplate, derKey);
         pubk->keyType = dhKey;
         break;

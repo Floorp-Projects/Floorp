@@ -3327,13 +3327,16 @@ static SECItem *pk11_PackagePrivateKey(PK11Object *key)
     param = NULL;
     switch(lk->keyType) {
 	case NSSLOWKEYRSAKey:
+	    prepare_low_rsa_priv_key_for_asn1(lk);
 	    dummy = SEC_ASN1EncodeItem(arena, &pki->privateKey, lk,
 				       nsslowkey_RSAPrivateKeyTemplate);
 	    algorithm = SEC_OID_PKCS1_RSA_ENCRYPTION;
 	    break;
 	case NSSLOWKEYDSAKey:
+            prepare_low_dsa_priv_key_export_for_asn1(lk);
 	    dummy = SEC_ASN1EncodeItem(arena, &pki->privateKey, lk,
 				       nsslowkey_DSAPrivateKeyExportTemplate);
+	    prepare_low_pqg_params_for_asn1(&lk->u.dsa.params);
 	    param = SEC_ASN1EncodeItem(NULL, NULL, &(lk->u.dsa.params),
 				       nsslowkey_PQGParamsTemplate);
 	    algorithm = SEC_OID_ANSIX9_DSA_SIGNATURE;
@@ -3530,12 +3533,15 @@ pk11_unwrapPrivateKey(PK11Object *key, SECItem *bpki)
 	    paramTemplate = NULL;
 	    paramDest = NULL;
 	    lpk->keyType = NSSLOWKEYRSAKey;
+	    prepare_low_rsa_priv_key_for_asn1(lpk);
 	    break;
 	case SEC_OID_ANSIX9_DSA_SIGNATURE:
 	    keyTemplate = nsslowkey_DSAPrivateKeyExportTemplate;
 	    paramTemplate = nsslowkey_PQGParamsTemplate;
 	    paramDest = &(lpk->u.dsa.params);
 	    lpk->keyType = NSSLOWKEYDSAKey;
+	    prepare_low_dsa_priv_key_export_for_asn1(lpk);
+	    prepare_low_pqg_params_for_asn1(&lpk->u.dsa.params);
 	    break;
 	/* case NSSLOWKEYDHKey: */
 	default:

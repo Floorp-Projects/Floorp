@@ -83,6 +83,61 @@ const SEC_ASN1Template nsslowkey_DHPrivateKeyTemplate[] = {
     { 0, }
 };
 
+/*
+ * See bugzilla bug 125359
+ * Since NSS (via PKCS#11) wants to handle big integers as unsigned ints,
+ * all of the templates above that en/decode into integers must be converted
+ * from ASN.1's signed integer type.  This is done by marking either the
+ * source or destination (encoding or decoding, respectively) type as
+ * siUnsignedInteger.
+ */
+
+void
+prepare_low_rsa_priv_key_for_asn1(NSSLOWKEYPrivateKey *key)
+{
+    key->u.rsa.modulus.type = siUnsignedInteger;
+    key->u.rsa.publicExponent.type = siUnsignedInteger;
+    key->u.rsa.privateExponent.type = siUnsignedInteger;
+    key->u.rsa.prime1.type = siUnsignedInteger;
+    key->u.rsa.prime2.type = siUnsignedInteger;
+    key->u.rsa.exponent1.type = siUnsignedInteger;
+    key->u.rsa.exponent2.type = siUnsignedInteger;
+    key->u.rsa.coefficient.type = siUnsignedInteger;
+}
+
+void
+prepare_low_pqg_params_for_asn1(PQGParams *params)
+{
+    params->prime.type = siUnsignedInteger;
+    params->subPrime.type = siUnsignedInteger;
+    params->base.type = siUnsignedInteger;
+}
+
+void
+prepare_low_dsa_priv_key_for_asn1(NSSLOWKEYPrivateKey *key)
+{
+    key->u.dsa.publicValue.type = siUnsignedInteger;
+    key->u.dsa.privateValue.type = siUnsignedInteger;
+    key->u.dsa.params.prime.type = siUnsignedInteger;
+    key->u.dsa.params.subPrime.type = siUnsignedInteger;
+    key->u.dsa.params.base.type = siUnsignedInteger;
+}
+
+void
+prepare_low_dsa_priv_key_export_for_asn1(NSSLOWKEYPrivateKey *key)
+{
+    key->u.dsa.privateValue.type = siUnsignedInteger;
+}
+
+void
+prepare_low_dh_priv_key_for_asn1(NSSLOWKEYPrivateKey *key)
+{
+    key->u.dh.prime.type = siUnsignedInteger;
+    key->u.dh.base.type = siUnsignedInteger;
+    key->u.dh.publicValue.type = siUnsignedInteger;
+    key->u.dh.privateValue.type = siUnsignedInteger;
+}
+
 void
 nsslowkey_DestroyPrivateKey(NSSLOWKEYPrivateKey *privk)
 {
