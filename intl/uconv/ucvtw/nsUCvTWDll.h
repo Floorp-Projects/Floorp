@@ -30,5 +30,7 @@ extern "C" PRInt32 g_LockCount;
 extern "C" PRUint16 g_ufBig5Mapping[];
 extern "C" PRUint16 g_utBIG5Mapping[];
 extern "C" PRUint16 g_ASCIIMapping[];
+extern "C" PRUint16 g_ufBig5HKSCSMapping[];
+extern "C" PRUint16 g_utBig5HKSCSMapping[];
 
 #endif /* nsUCvTWDll_h___ */
