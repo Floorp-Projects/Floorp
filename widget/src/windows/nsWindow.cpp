@@ -2870,7 +2870,10 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
     DispatchKeyEvent(NS_KEY_PRESS, 0, VK_BACK, aKeyData);
   }
   else if (mIsControlDown && !mIsShiftDown && aVirtualKeyCode == NS_VK_SUBTRACT) {
-    DispatchKeyEvent(NS_KEY_PRESS, aVirtualKeyCode-64, 0, aKeyData);
+    DispatchKeyEvent(NS_KEY_PRESS, '-', 0, aKeyData);
+  }
+  else if (mIsControlDown && !mIsShiftDown && aVirtualKeyCode == NS_VK_ADD) {
+    DispatchKeyEvent(NS_KEY_PRESS, '+', 0, aKeyData);
   }
   else if ((mIsControlDown && !mIsShiftDown) &&
            ((( NS_VK_0 <= aVirtualKeyCode) && (aVirtualKeyCode <= NS_VK_9)) ||
