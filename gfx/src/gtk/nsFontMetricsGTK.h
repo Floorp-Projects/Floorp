@@ -205,7 +205,7 @@ protected:
   PRUint16            mPixelSize;
   PRUint8             mStretchIndex;
   PRUint8             mStyleIndex;
-  void                *mDocConverterType;
+  nsFontCharSetConverter mDocConverterType;
 };
 
 class nsFontEnumeratorGTK : public nsIFontEnumerator
