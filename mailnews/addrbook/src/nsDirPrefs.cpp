@@ -2901,6 +2901,7 @@ void DIR_SetServerFileName(DIR_Server *server, const char* leafName)
 
 	if (server && (!server->fileName || !(*server->fileName)) )
 	{
+          PR_FREEIF(server->fileName); // might be one byte empty string.
 		/* make sure we have a pref name...*/
 		if (!server->prefName || !*server->prefName)
 			server->prefName = DIR_CreateServerPrefName (server, nsnull);

@@ -281,4 +281,12 @@ static nsModuleComponentInfo components[] =
     nsAbDirectoryQueryProxyConstructor }
 };
 
-NS_IMPL_NSGETMODULE(nsAbModule, components)
+
+PR_STATIC_CALLBACK(void)
+msgAbModuleDtor(nsIModule* self)
+{
+    nsAddrDatabase::CleanupCache();
+}
+
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsAbModule, components, msgAbModuleDtor)
+

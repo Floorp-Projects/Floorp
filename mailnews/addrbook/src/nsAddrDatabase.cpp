@@ -223,10 +223,10 @@ NS_IMETHODIMP_(nsrefcnt) nsAddrDatabase::Release(void)
     if (m_mdbAnonymousTable)
       m_mdbAnonymousTable->Release();
     if (m_mdbStore)
-      m_mdbStore->CloseMdbObject(m_mdbEnv);
+      m_mdbStore->Release();
     if (m_mdbEnv)
     {
-      m_mdbEnv->CloseMdbObject(m_mdbEnv); //??? is this right?
+      m_mdbEnv->Release();
       m_mdbEnv = nsnull;
     }
     NS_DELETEXPCOM(this);                              
@@ -662,7 +662,7 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsFileSpec *dbName, PRBool create)
             else
               ret = NS_ERROR_FAILURE;  //check: use the right error code
           }
-          oldFile->CutStrongRef(m_mdbEnv); // always release our file ref, store has own
+          NS_RELEASE(oldFile); // always release our file ref, store has own
         }
       }
       
@@ -713,13 +713,10 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsFileSpec *dbName, PRBool create)
             if (ret == NS_OK)
               ret = InitNewDB();
           }
-          newFile->CutStrongRef(m_mdbEnv); // always release our file ref, store has own
+          NS_RELEASE(newFile); // always release our file ref, store has own
         }
       }
-      if(thumb)
-      {
-        thumb->CutStrongRef(m_mdbEnv);
-      }
+      NS_IF_RELEASE(thumb);
     }
   }
   //Convert the DB error to a valid nsresult error.
@@ -782,7 +779,7 @@ NS_IMETHODIMP nsAddrDatabase::ForceClosed()
 	err = CloseMDB(PR_FALSE);	// since we're about to delete it, no need to commit.
 	if (m_mdbStore)
 	{
-		m_mdbStore->CloseMdbObject(m_mdbEnv);
+		m_mdbStore->Release();
 		m_mdbStore = nsnull;
 	}
 	Release();
@@ -895,7 +892,7 @@ nsresult nsAddrDatabase::InitLastRecorKey()
 		m_LastRecordKey = 0;
 		err = AddIntColumn(pDataRow, m_LastRecordKeyColumnToken, 0);
 		err = m_mdbPabTable->AddRow(GetEnv(), pDataRow);
-		pDataRow->CutStrongRef(GetEnv());
+		NS_RELEASE(pDataRow);
 	}
 	return err;
 }
@@ -929,7 +926,7 @@ nsresult nsAddrDatabase::GetLastRecorKey()
 		err = GetIntColumn(pDataRow, m_LastRecordKeyColumnToken, &m_LastRecordKey, 0);
 		if (NS_FAILED(err))
 			err = NS_ERROR_NOT_AVAILABLE;
-		pDataRow->CutStrongRef(GetEnv());
+		NS_RELEASE(pDataRow);
 		return NS_OK;
 	}
 	else
@@ -950,7 +947,7 @@ nsresult nsAddrDatabase::UpdateLastRecordKey()
 	{
 		err = AddIntColumn(pDataRow, m_LastRecordKeyColumnToken, m_LastRecordKey);
 		err = m_mdbPabTable->AddRow(GetEnv(), pDataRow);
-		pDataRow->CutStrongRef(GetEnv());
+		NS_RELEASE(pDataRow);
 		return NS_OK;
 	}
 	else if (!pDataRow)
@@ -1002,16 +999,10 @@ nsresult nsAddrDatabase::CheckAndUpdateRecordKey()
 	if (!(merror == NS_OK && rowCursor))
 		return NS_ERROR_FAILURE;
 
-	mdb_count total = 0;
-	merror = rowCursor->GetCount(GetEnv(), &total);
-
 	nsIMdbRow *pDataRow = nsnull;
 	err = GetDataRow(&pDataRow);
 	if (NS_FAILED(err))
 		InitLastRecorKey();
-
-	if (total == 0)
-		return NS_OK;
 
 	do
 	{  //add key to each card and mailing list row
@@ -1049,14 +1040,6 @@ nsresult nsAddrDatabase::UpdateLowercaseEmailListName()
   if (!(merror == NS_OK && rowCursor))
     return NS_ERROR_FAILURE;
   
-  mdb_count total = 0;
-  merror = rowCursor->GetCount(GetEnv(), &total);
-  
-  if (total == 0)
-  {
-    rowCursor->Release();
-    return NS_OK;
-  }
   do
   {   //add lowercase primary emial to each card and mailing list row
     merror = rowCursor->NextRow(GetEnv(), &findRow, &rowPos);
@@ -1639,7 +1622,7 @@ NS_IMETHODIMP nsAddrDatabase::CreateNewCardAndAddToDB(nsIAbCard *newCard, PRBool
 		AddRecordKeyColumnToRow(cardRow);
 		mdb_err merror = m_mdbPabTable->AddRow(GetEnv(), cardRow);
 		if (merror != NS_OK) return NS_ERROR_FAILURE;
-		cardRow->CutStrongRef(GetEnv());
+		NS_RELEASE(cardRow);
 	}
 	else
 		return err;
@@ -1762,7 +1745,7 @@ nsresult nsAddrDatabase::AddListCardColumnsToRow
 						nsCRT::free(file);
 					}
 				}
-                                pCardRow->CutStrongRef(GetEnv());
+                                NS_RELEASE(pCardRow);
 			}
 
 			if (!pCardRow)
@@ -1782,7 +1765,7 @@ nsresult nsAddrDatabase::AddListCardColumnsToRow
 				//save address row ID to the list row
 				err = AddIntColumn(pListRow, listAddressColumnToken, outOid.mOid_Id);
 			}
-			pCardRow->CutStrongRef(GetEnv());
+			NS_RELEASE(pCardRow);
 		}
 	}
 
@@ -1940,7 +1923,7 @@ NS_IMETHODIMP nsAddrDatabase::CreateMailListAndAddToDB(nsIAbDirectory *newList, 
 		CreateABListCard(listRow, getter_AddRefs(listCard));
 		NotifyCardEntryChange(AB_NotifyInserted, listCard, NULL);
 
-		listRow->CutStrongRef(GetEnv());
+		NS_RELEASE(listRow);
 		return NS_OK;
 	}
 	else 
@@ -2003,7 +1986,7 @@ nsresult nsAddrDatabase::DoStringAnonymousTransaction
 				{
 					AddCharStringColumn(anonymousRow, anonymousColumnToken, pValueStr);
 					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
-					anonymousRow->CutStrongRef(GetEnv());
+					NS_RELEASE(anonymousRow);
 				}
 			}
 			else if (code == AB_NotifyDeleted)
@@ -2017,7 +2000,7 @@ nsresult nsAddrDatabase::DoStringAnonymousTransaction
 				if (NS_SUCCEEDED(err) && anonymousRow)
 				{
 					err = DeleteRow(m_mdbAnonymousTable, anonymousRow);
-					anonymousRow->CutStrongRef(GetEnv());
+					NS_RELEASE(anonymousRow);
 				}
 			}
 			else /* Edit */
@@ -2027,7 +2010,7 @@ nsresult nsAddrDatabase::DoStringAnonymousTransaction
 				{
 					AddCharStringColumn(anonymousRow, anonymousColumnToken, pValueStr);
 					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
-					anonymousRow->CutStrongRef(GetEnv());
+					NS_RELEASE(anonymousRow);
 				}
 			}
  		}
@@ -2059,7 +2042,7 @@ nsresult nsAddrDatabase::DoIntAnonymousTransaction
 				{
 					AddIntColumn(anonymousRow, anonymousColumnToken, value);
 					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
-					anonymousRow->CutStrongRef(GetEnv());
+					NS_RELEASE(anonymousRow);
 				}
 			}
 			else if (code == AB_NotifyDeleted)
@@ -2075,7 +2058,7 @@ nsresult nsAddrDatabase::DoIntAnonymousTransaction
 				if (NS_SUCCEEDED(err) && anonymousRow)
 				{
 					err = DeleteRow(m_mdbAnonymousTable, anonymousRow);
-					anonymousRow->CutStrongRef(GetEnv());
+					NS_RELEASE(anonymousRow);
 				}
 			}
 			else
@@ -2085,7 +2068,7 @@ nsresult nsAddrDatabase::DoIntAnonymousTransaction
 				{
 					AddIntColumn(anonymousRow, anonymousColumnToken, value);
 					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
-					anonymousRow->CutStrongRef(GetEnv());
+					NS_RELEASE(anonymousRow);
 				}
 			}
  		}
@@ -2122,7 +2105,7 @@ nsresult nsAddrDatabase::DoBoolAnonymousTransaction
 				{
 					AddIntColumn(anonymousRow, anonymousColumnToken, nBoolValue);
 					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
-					anonymousRow->CutStrongRef(GetEnv());
+					NS_RELEASE(anonymousRow);
 				}
 			}
 			else if (code == AB_NotifyDeleted)
@@ -2138,7 +2121,7 @@ nsresult nsAddrDatabase::DoBoolAnonymousTransaction
 				if (NS_SUCCEEDED(err) && anonymousRow)
 				{
 					err = DeleteRow(m_mdbAnonymousTable, anonymousRow);
-					anonymousRow->CutStrongRef(GetEnv());
+					NS_RELEASE(anonymousRow);
 				}
 			}
 			else
@@ -2148,7 +2131,7 @@ nsresult nsAddrDatabase::DoBoolAnonymousTransaction
 				{
 					AddIntColumn(anonymousRow, anonymousColumnToken, nBoolValue);
 					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
-					anonymousRow->CutStrongRef(GetEnv());
+					NS_RELEASE(anonymousRow);
 				}
 			}
  		}
@@ -2251,11 +2234,11 @@ void nsAddrDatabase::DeleteCardFromAllMailLists(mdb_id cardRowID)
 					if (IsListRowScopeToken(rowOid.mOid_Scope))
 						DeleteCardFromListRow(pListRow, cardRowID);
 				}
-				pListRow->CutStrongRef(GetEnv());
+				NS_RELEASE(pListRow);
 			}
 		} while (pListRow);
 
-		rowCursor->CutStrongRef(GetEnv());
+		rowCursor->Release();
 	}
 }
 
@@ -2300,7 +2283,7 @@ NS_IMETHODIMP nsAddrDatabase::DeleteCard(nsIAbCard *card, PRBool notify)
 			if (notify) 
 				NotifyCardEntryChange(AB_NotifyDeleted, card, NULL);
 		}
-		pCardRow->CutStrongRef(GetEnv());
+		NS_RELEASE(pCardRow);
 	}
 	return NS_OK;
 }
@@ -2391,7 +2374,7 @@ NS_IMETHODIMP nsAddrDatabase::DeleteCardFromMailList(nsIAbDirectory *mailList, n
 			if (beNotify) 
 				NotifyCardEntryChange(AB_NotifyDeleted, card, NULL);
 		}
-		pListRow->CutStrongRef(GetEnv());
+		NS_RELEASE(pListRow);
 	}
 	return NS_OK;
 }
@@ -2419,8 +2402,7 @@ NS_IMETHODIMP nsAddrDatabase::EditCard(nsIAbCard *card, PRBool notify)
 	if (notify) 
 		NotifyCardEntryChange(AB_NotifyPropertyChanged, card, NULL);
 
-	if (pCardRow)
-		pCardRow->CutStrongRef(GetEnv());
+	NS_IF_RELEASE(pCardRow);
 	return NS_OK;
 }
 
@@ -2482,7 +2464,7 @@ NS_IMETHODIMP nsAddrDatabase::DeleteMailList(nsIAbDirectory *mailList, PRBool no
 			NS_ENSURE_SUCCESS(err, err);
 			RemoveListener(listener);
 		}
-		pListRow->CutStrongRef(GetEnv());
+		NS_RELEASE(pListRow);
 	}
 	return NS_OK;
 }
@@ -2534,8 +2516,7 @@ NS_IMETHODIMP nsAddrDatabase::EditMailList(nsIAbDirectory *mailList, PRBool noti
 			PR_smprintf_free(listCardURI);
 	}
 
-	if (pListRow)
-		pListRow->CutStrongRef(GetEnv());
+	NS_IF_RELEASE(pListRow);
 	return NS_OK;
 }
 
@@ -2626,7 +2607,7 @@ NS_IMETHODIMP nsAddrDatabase::AddLdifListMember(nsIMdbRow* listRow, const char* 
 		result = AddIntColumn(listRow, listAddressColumnToken, rowID);
 
 		SetListAddressTotal(listRow, total);
-		cardRow->CutStrongRef(GetEnv());
+		NS_RELEASE(cardRow);
 	}
 	if (emailAddress)
 		Recycle(emailAddress);
@@ -2726,7 +2707,7 @@ nsresult nsAddrDatabase::GetStringColumn(nsIMdbRow *cardRow, mdb_token outToken,
         str.Assign(uniStr);
       else
         err = NS_ERROR_FAILURE;
-      cardCell->CutStrongRef(GetEnv()); // always release ref
+      cardCell->Release(); // always release ref
     }
     else
       err = NS_ERROR_FAILURE;
@@ -2773,7 +2754,7 @@ nsresult nsAddrDatabase::GetIntColumn
 			struct mdbYarn yarn;
 			cardCell->AliasYarn(GetEnv(), &yarn);
 			YarnToUInt32(&yarn, pValue);
-			cardCell->CutStrongRef(GetEnv());
+			cardCell->Release();
 		}
 		else
 			err = NS_ERROR_FAILURE;
@@ -2795,7 +2776,7 @@ nsresult nsAddrDatabase::GetBoolColumn(nsIMdbRow *cardRow, mdb_token outToken, P
 			struct mdbYarn yarn;
 			cardCell->AliasYarn(GetEnv(), &yarn);
 			YarnToUInt32(&yarn, &nValue);
-			cardCell->CutStrongRef(GetEnv());
+			cardCell->Release();
 		}
 		else
 			err = NS_ERROR_FAILURE;
@@ -2933,13 +2914,13 @@ NS_IMETHODIMP nsAddrDatabase::GetAnonymousStringAttribute(const char *attrname, 
         if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
         {
           *value = ToNewUTF8String(tempString);
-          rowCursor->CutStrongRef(GetEnv());
+          rowCursor->Release();
           return NS_OK;
         }
-        cardRow->CutStrongRef(GetEnv());
+        NS_RELEASE(cardRow);
       }
     } while (cardRow);
-    rowCursor->CutStrongRef(GetEnv());
+    NS_RELEASE(rowCursor);
   }
   return NS_ERROR_FAILURE;
 }
@@ -2948,7 +2929,7 @@ NS_IMETHODIMP nsAddrDatabase::GetAnonymousIntAttribute(const char *attrname, PRU
 {
 	if (m_mdbAnonymousTable)
 	{
-		nsIMdbRow* cardRow;
+		nsCOMPtr <nsIMdbRow> cardRow;
 		nsIMdbTableRowCursor* rowCursor;
 		mdb_pos rowPos;
 		PRUint32 nValue;
@@ -2960,7 +2941,7 @@ NS_IMETHODIMP nsAddrDatabase::GetAnonymousIntAttribute(const char *attrname, PRU
 		m_mdbAnonymousTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
 		do 
 		{
-			mdb_err err = rowCursor->NextRow(GetEnv(), &cardRow, &rowPos);
+			mdb_err err = rowCursor->NextRow(GetEnv(), getter_AddRefs(cardRow), &rowPos);
 
 			if (NS_SUCCEEDED(err) && cardRow)
 			{
@@ -2968,13 +2949,12 @@ NS_IMETHODIMP nsAddrDatabase::GetAnonymousIntAttribute(const char *attrname, PRU
 				if (NS_SUCCEEDED(err))
 				{
 					*value = nValue;
-                                        rowCursor->CutStrongRef(GetEnv());
+                                        NS_RELEASE(rowCursor);
 					return err;
 				}
-				cardRow->CutStrongRef(GetEnv());
 			}
 		} while (cardRow);
-          rowCursor->CutStrongRef(GetEnv());
+          NS_RELEASE(rowCursor);
 	}
 	return NS_ERROR_FAILURE;
 }
@@ -2983,7 +2963,7 @@ NS_IMETHODIMP nsAddrDatabase::GetAnonymousBoolAttribute(const char *attrname, PR
 {
 	if (m_mdbAnonymousTable)
 	{
-		nsIMdbRow* cardRow;
+		nsCOMPtr <nsIMdbRow> cardRow;
 		nsIMdbTableRowCursor* rowCursor;
 		mdb_pos rowPos;
 		PRUint32 nValue;
@@ -2995,7 +2975,7 @@ NS_IMETHODIMP nsAddrDatabase::GetAnonymousBoolAttribute(const char *attrname, PR
 		m_mdbAnonymousTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
 		do 
 		{
-			mdb_err err = rowCursor->NextRow(GetEnv(), &cardRow, &rowPos);
+			mdb_err err = rowCursor->NextRow(GetEnv(), getter_AddRefs(cardRow), &rowPos);
 
 			if (NS_SUCCEEDED(err) && cardRow)
 			{
@@ -3006,13 +2986,12 @@ NS_IMETHODIMP nsAddrDatabase::GetAnonymousBoolAttribute(const char *attrname, PR
 						*value = PR_TRUE;
 					else
 						*value = PR_FALSE;
-                                        rowCursor->CutStrongRef(GetEnv());
+                                        NS_RELEASE(rowCursor);
 					return err;
 				}
-				cardRow->CutStrongRef(GetEnv());
 			}
 		} while (cardRow);
-                rowCursor->CutStrongRef(GetEnv());
+                NS_RELEASE(rowCursor);
 	}
 
 	return NS_ERROR_FAILURE;
@@ -3442,8 +3421,7 @@ nsAddrDBEnumerator::nsAddrDBEnumerator(nsAddrDatabase* db)
 
 nsAddrDBEnumerator::~nsAddrDBEnumerator()
 {
-	if (mRowCursor)
-		mRowCursor->CutStrongRef(mDB->GetEnv());
+  NS_IF_RELEASE(mRowCursor);
 }
 
 NS_IMPL_ISUPPORTS1(nsAddrDBEnumerator, nsIEnumerator)
@@ -3468,8 +3446,7 @@ NS_IMETHODIMP nsAddrDBEnumerator::Next(void)
 		mDone = PR_TRUE;
 		return NS_ERROR_FAILURE;
 	}
-	if (mCurrentRow)
-		mCurrentRow->CutStrongRef(mDB->GetEnv());
+	NS_IF_RELEASE(mCurrentRow);
 	nsresult rv = mRowCursor->NextRow(mDB->GetEnv(), &mCurrentRow, &mRowPos);
     if (mCurrentRow && NS_SUCCEEDED(rv))
 	{
@@ -3570,8 +3547,7 @@ nsListAddressEnumerator::nsListAddressEnumerator(nsAddrDatabase* db, mdb_id rowI
 
 nsListAddressEnumerator::~nsListAddressEnumerator()
 {
-	if (mListRow)
-		mListRow->CutStrongRef(mDB->GetEnv());
+	NS_IF_RELEASE(mListRow);
 }
 
 NS_IMPL_ISUPPORTS1(nsListAddressEnumerator, nsIEnumerator)
@@ -3595,7 +3571,7 @@ NS_IMETHODIMP nsListAddressEnumerator::Next(void)
 	//go to the next address column
 	if (mCurrentRow)
 	{
-		mCurrentRow->CutStrongRef(mDB->GetEnv());
+		NS_RELEASE(mCurrentRow);
 		mCurrentRow = nsnull;
 	}
 	mAddressPos++;
@@ -3651,44 +3627,41 @@ NS_IMETHODIMP nsAddrDatabase::EnumerateCards(nsIAbDirectory *directory, nsIEnume
 
 NS_IMETHODIMP nsAddrDatabase::GetMailingListsFromDB(nsIAbDirectory *parentDir)
 {
-	nsCOMPtr<nsIAbDirectory>	resultList;
-	nsIMdbTable*				dbTable = nsnull;
-	nsIMdbTableRowCursor*       rowCursor = nsnull;
-	nsIMdbRow*					currentRow = nsnull;
- 	mdb_pos						rowPos;
-    PRBool                      done = PR_FALSE;
-
-	m_dbDirectory = parentDir;
-	dbTable = GetPabTable();
-
-	if (!dbTable)
-		return NS_ERROR_FAILURE;
-
-	dbTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
-	if (!rowCursor)
-		return NS_ERROR_FAILURE;
-
-	while (!done)
-	{
-		if (currentRow)
-			currentRow->CutStrongRef(GetEnv());
-		nsresult rv = rowCursor->NextRow(GetEnv(), &currentRow, &rowPos);
-		if (currentRow && NS_SUCCEEDED(rv))
-		{
-			mdbOid rowOid;
-
-			if (currentRow->GetOid(GetEnv(), &rowOid) == NS_OK)
-			{
-				if (IsListRowScopeToken(rowOid.mOid_Scope))
-					rv = CreateABList(currentRow, getter_AddRefs(resultList));
-			}
-		}
-		else
-			done = PR_TRUE;
-	}
-	if (rowCursor)
-		rowCursor->CutStrongRef(GetEnv());
-    return NS_OK;
+  nsCOMPtr<nsIAbDirectory>	resultList;
+  nsIMdbTable*				dbTable = nsnull;
+  nsIMdbTableRowCursor*       rowCursor = nsnull;
+  nsCOMPtr <nsIMdbRow>					currentRow;
+  mdb_pos						rowPos;
+  PRBool                      done = PR_FALSE;
+  
+  m_dbDirectory = parentDir;
+  dbTable = GetPabTable();
+  
+  if (!dbTable)
+    return NS_ERROR_FAILURE;
+  
+  dbTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
+  if (!rowCursor)
+    return NS_ERROR_FAILURE;
+  
+  while (!done)
+  {
+    nsresult rv = rowCursor->NextRow(GetEnv(), getter_AddRefs(currentRow), &rowPos);
+    if (currentRow && NS_SUCCEEDED(rv))
+    {
+      mdbOid rowOid;
+      
+      if (currentRow->GetOid(GetEnv(), &rowOid) == NS_OK)
+      {
+        if (IsListRowScopeToken(rowOid.mOid_Scope))
+          rv = CreateABList(currentRow, getter_AddRefs(resultList));
+      }
+    }
+    else
+      done = PR_TRUE;
+  }
+  NS_IF_RELEASE(rowCursor);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAddrDatabase::EnumerateListAddresses(nsIAbDirectory *directory, nsIEnumerator **result)
@@ -3953,7 +3926,7 @@ NS_IMETHODIMP nsAddrDatabase::GetCardForEmailAddress(nsIAbDirectory *directory, 
 	if (NS_SUCCEEDED(result) && cardRow)
 	{
 		rv = CreateABCard(cardRow, cardResult);
-                cardRow->CutStrongRef(GetEnv());
+                NS_RELEASE(cardRow);
 	}
 	else
 		*cardResult = nsnull;
@@ -4082,7 +4055,7 @@ NS_IMETHODIMP nsAddrDatabase::FindMailListbyUnicodeName(const PRUnichar *listNam
 		if (pListRow)
 		{
 			*exist = PR_TRUE;
-			pListRow->CutStrongRef(GetEnv());
+			NS_RELEASE(pListRow);
 		}
 		else
 			*exist = PR_FALSE;
@@ -4190,7 +4163,7 @@ NS_IMETHODIMP nsAddrDatabase::RemoveExtraCardsInCab(PRUint32 cardTotal, PRUint32
 			}
 		}
 	} while (findRow);
-        rowCursor->CutStrongRef(GetEnv());
+        NS_RELEASE(rowCursor);
 
 	PRInt32 count = delCardArray.Count();
 	PRInt32 i;
@@ -4211,7 +4184,7 @@ NS_IMETHODIMP nsAddrDatabase::RemoveExtraCardsInCab(PRUint32 cardTotal, PRUint32
 
 			NotifyCardEntryChange(AB_NotifyDeleted, card, NULL);
 		}
-		findRow->CutStrongRef(GetEnv());
+		NS_RELEASE(findRow);
 	}
 	return NS_OK;
 }
