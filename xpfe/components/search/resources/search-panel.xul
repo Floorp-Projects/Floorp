@@ -47,6 +47,15 @@
       <menu />
     </popup>
   </popupset>
+
+  <popupset id="descTooltipSet">
+    <tooltip id="descTooltip" noautohide="true" onpopupshowing="return FillInDescTooltip(document.tooltipNode)">
+      <vbox id="tipTextBox" flex="1">  
+        <text id="titleText" />
+        <text id="urlText" />
+      </vbox>
+    </tooltip>
+  </popupset>
  
   <vbox flex="1">
     <vbox class="box-padded outset-top-bottom">
@@ -140,7 +149,8 @@
                   <treerow class="searchresult">
                     <treecell class="treecell-iconic searchresult-cell" 
                               src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                              label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                              label="rdf:http://home.netscape.com/NC-rdf#Name"
+                              tooltip="descTooltip"/>
                   </treerow>
                 </treeitem>
               </treechildren>
