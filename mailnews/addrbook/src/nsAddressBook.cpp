@@ -1360,31 +1360,33 @@ NS_IMETHODIMP nsAddressBook::ExportAddressBook(nsIAbDirectory *aDirectory)
   nsCOMPtr<nsIStringBundle> bundle;
   rv = bundleService->CreateBundle("chrome://messenger/locale/addressbook/addressBook.properties", getter_AddRefs(bundle));
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
+  nsCOMPtr<nsIDOMWindow> parentWindow = do_GetInterface(mDocShell);
+
   nsXPIDLString title;
   rv = bundle->GetStringFromName(NS_LITERAL_STRING("ExportAddressBookTitle").get(), getter_Copies(title));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = filePicker->Init(nsnull, title.get(), nsIFilePicker::modeSave);
+  rv = filePicker->Init(parentWindow, title, nsIFilePicker::modeSave);
   NS_ENSURE_SUCCESS(rv, rv);
  
   nsXPIDLString filterString;
   rv = bundle->GetStringFromName(NS_LITERAL_STRING("LDIFFiles").get(), getter_Copies(filterString));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = filePicker->AppendFilter(filterString.get(), NS_LITERAL_STRING("*.ldi; *.ldif").get());
+  rv = filePicker->AppendFilter(filterString, NS_LITERAL_STRING("*.ldi; *.ldif"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = bundle->GetStringFromName(NS_LITERAL_STRING("CSVFiles").get(), getter_Copies(filterString));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = filePicker->AppendFilter(filterString.get(), NS_LITERAL_STRING("*.csv").get());
+  rv = filePicker->AppendFilter(filterString, NS_LITERAL_STRING("*.csv"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = bundle->GetStringFromName(NS_LITERAL_STRING("TABFiles").get(), getter_Copies(filterString));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = filePicker->AppendFilter(filterString.get(), NS_LITERAL_STRING("*.tab; *.txt").get());
+  rv = filePicker->AppendFilter(filterString, NS_LITERAL_STRING("*.tab; *.txt"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt16 dialogResult;

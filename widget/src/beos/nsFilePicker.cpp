@@ -310,13 +310,13 @@ NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
 // Get the file + path
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::SetDefaultString(const PRUnichar *aString)
+NS_IMETHODIMP nsFilePicker::SetDefaultString(const nsAString& aString)
 {
 	mDefault = aString;
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsFilePicker::GetDefaultString(PRUnichar **aString)
+NS_IMETHODIMP nsFilePicker::GetDefaultString(nsAString& aString)
 {
 	return NS_ERROR_FAILURE;
 }
@@ -326,13 +326,13 @@ NS_IMETHODIMP nsFilePicker::GetDefaultString(PRUnichar **aString)
 // The default extension to use for files
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::GetDefaultExtension(PRUnichar **aExtension)
+NS_IMETHODIMP nsFilePicker::GetDefaultExtension(nsAString& aExtension)
 {
-	*aExtension = nsnull;
+	aExtension.Truncate();
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsFilePicker::SetDefaultExtension(const PRUnichar *aExtension)
+NS_IMETHODIMP nsFilePicker::SetDefaultExtension(const nsAString& aExtension)
 {
 	return NS_OK;
 }
@@ -361,123 +361,24 @@ NS_IMETHODIMP nsFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::InitNative(nsIWidget *aParent,
-                                       const PRUnichar *aTitle,
-                                       PRInt16 aMode)
+void nsFilePicker::InitNative(nsIWidget *aParent,
+                              const nsAString& aTitle,
+                              PRInt16 aMode)
 {
 	mParentWindow = 0;
-	if (aParent) {
-		BView *view = (BView *) aParent->GetNativeData(NS_NATIVE_WIDGET);
-		if (view && view->LockLooper()) {
-			mParentWindow = view->Window();
-			view->UnlockLooper();
-		}
-	}
+
+  BView *view = (BView *) aParent->GetNativeData(NS_NATIVE_WIDGET);
+  if (view && view->LockLooper()) {
+    mParentWindow = view->Window();
+    view->UnlockLooper();
+  }
+
 	mTitle.Assign(aTitle);
 	mMode = aMode;
-	return NS_OK;
 }
-
-
-#if 0
-//-------------------------------------------------------------------------
-void nsFilePicker::GetFileSystemCharset(nsString & fileSystemCharset)
-{
-	static nsAutoString aCharset;
-	nsresult rv;
-
-	if (aCharset.IsEmpty()) {
-		nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
-		if (NS_SUCCEEDED(rv))
-			rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
-
-		NS_ASSERTION(NS_SUCCEEDED(rv), "error getting platform charset");
-		if (NS_FAILED(rv))
-			aCharset.Assign(NS_LITERAL_STRING("UTF-8"));// XXX ok?
-	}
-	fileSystemCharset = aCharset;
-}
-
-//-------------------------------------------------------------------------
-char * nsFilePicker::ConvertToFileSystemCharset(const PRUnichar *inString)
-{
-	char *outString = nsnull;
-	nsresult rv = NS_OK;
-
-	// get file system charset and create a unicode encoder
-	if (!mUnicodeEncoder) {
-		nsAutoString fileSystemCharset;
-		GetFileSystemCharset(fileSystemCharset);
-
-		nsCOMPtr<nsICharsetConverterManager> ccm =
-		    do_GetService(kCharsetConverterManagerCID, &rv);
-		if (NS_SUCCEEDED(rv)) {
-			rv = ccm->GetUnicodeEncoder(&fileSystemCharset, &mUnicodeEncoder);
-		}
-	}
-
-	// converts from unicode to the file system charset
-	if (NS_SUCCEEDED(rv)) {
-		PRInt32 inLength = nsCRT::strlen(inString);
-		PRInt32 outLength;
-		rv = mUnicodeEncoder->GetMaxLength(inString, inLength, &outLength);
-		if (NS_SUCCEEDED(rv)) {
-			outString = NS_STATIC_CAST( char*, nsMemory::Alloc( outLength+1 ) );
-			if (!outString) {
-				return nsnull;
-			}
-			rv = mUnicodeEncoder->Convert(inString, &inLength, outString, &outLength);
-			if (NS_SUCCEEDED(rv)) {
-				outString[outLength] = '\0';
-			}
-		}
-	}
-
-	return NS_SUCCEEDED(rv) ? outString : nsnull;
-}
-
-//-------------------------------------------------------------------------
-PRUnichar * nsFilePicker::ConvertFromFileSystemCharset(const char *inString)
-{
-	PRUnichar *outString = nsnull;
-	nsresult rv = NS_OK;
-
-	// get file system charset and create a unicode encoder
-	if (!mUnicodeDecoder) {
-		nsAutoString fileSystemCharset;
-		GetFileSystemCharset(fileSystemCharset);
-
-		nsCOMPtr<nsICharsetConverterManager> ccm =
-		    do_GetService(kCharsetConverterManagerCID, &rv);
-		if (NS_SUCCEEDED(rv)) {
-			rv = ccm->GetUnicodeDecoder(&fileSystemCharset, &mUnicodeDecoder);
-		}
-	}
-
-	// converts from the file system charset to unicode
-	if (NS_SUCCEEDED(rv)) {
-		PRInt32 inLength = nsCRT::strlen(inString);
-		PRInt32 outLength;
-		rv = mUnicodeDecoder->GetMaxLength(inString, inLength, &outLength);
-		if (NS_SUCCEEDED(rv)) {
-			outString = NS_STATIC_CAST( PRUnichar*, nsMemory::Alloc( (outLength+1) * sizeof( PRUnichar ) ) );
-			if (!outString) {
-				return nsnull;
-			}
-			rv = mUnicodeDecoder->Convert(inString, &inLength, outString, &outLength);
-			if (NS_SUCCEEDED(rv)) {
-				outString[outLength] = 0;
-			}
-		}
-	}
-
-	NS_ASSERTION(NS_SUCCEEDED(rv), "error charset conversion");
-	return NS_SUCCEEDED(rv) ? outString : nsnull;
-}
-#endif
 
 NS_IMETHODIMP
-nsFilePicker::AppendFilter(const PRUnichar *aTitle, const PRUnichar *aFilter)
+nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
 {
 	mFilterList.Append(aTitle);
 	mFilterList.Append(PRUnichar('\0'));

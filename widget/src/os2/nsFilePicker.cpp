@@ -421,7 +421,7 @@ NS_IMETHODIMP nsFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
 // Get the file + path
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::SetDefaultString(const PRUnichar *aString)
+NS_IMETHODIMP nsFilePicker::SetDefaultString(const nsAString& aString)
 {
   mDefault = aString;
 
@@ -461,7 +461,7 @@ NS_IMETHODIMP nsFilePicker::SetDefaultString(const PRUnichar *aString)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFilePicker::GetDefaultString(PRUnichar **aString)
+NS_IMETHODIMP nsFilePicker::GetDefaultString(nsAString& aString)
 {
   return NS_ERROR_FAILURE;
 }
@@ -471,15 +471,13 @@ NS_IMETHODIMP nsFilePicker::GetDefaultString(PRUnichar **aString)
 // The default extension to use for files
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::GetDefaultExtension(PRUnichar **aExtension)
+NS_IMETHODIMP nsFilePicker::GetDefaultExtension(nsAString& aExtension)
 {
-  *aExtension = ToNewUnicode(mDefaultExtension);
-  if (!*aExtension)
-    return NS_ERROR_OUT_OF_MEMORY;
+  aExtension = mDefaultExtension;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFilePicker::SetDefaultExtension(const PRUnichar *aExtension)
+NS_IMETHODIMP nsFilePicker::SetDefaultExtension(const nsAString& aExtension)
 {
   mDefaultExtension = aExtension;
   return NS_OK;
@@ -528,14 +526,13 @@ NS_IMETHODIMP nsFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
 
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::InitNative(nsIWidget *aParent,
-                                       const PRUnichar *aTitle,
-                                       PRInt16 aMode)
+void nsFilePicker::InitNative(nsIWidget *aParent,
+                              const nsAString& aTitle,
+                              PRInt16 aMode)
 {
   mWnd = (HWND) ((aParent) ? aParent->GetNativeData(NS_NATIVE_WINDOW) : 0); 
   mTitle.Assign(aTitle);
   mMode = aMode;
-  return NS_OK;
 }
 
 
@@ -558,7 +555,7 @@ void nsFilePicker::GetFileSystemCharset(nsCString & fileSystemCharset)
 }
 
 //-------------------------------------------------------------------------
-char * nsFilePicker::ConvertToFileSystemCharset(const PRUnichar *inString)
+char * nsFilePicker::ConvertToFileSystemCharset(const nsAString& inString)
 {
   char *outString = nsnull;
   nsresult rv = NS_OK;
@@ -577,15 +574,20 @@ char * nsFilePicker::ConvertToFileSystemCharset(const PRUnichar *inString)
 
   // converts from unicode to the file system charset
   if (NS_SUCCEEDED(rv)) {
-    PRInt32 inLength = nsCRT::strlen(inString);
+    PRInt32 inLength = inString.Length();
+
+    const nsAFlatString& flatInString = PromiseFlatString(inString);
+
     PRInt32 outLength;
-    rv = mUnicodeEncoder->GetMaxLength(inString, inLength, &outLength);
+    rv = mUnicodeEncoder->GetMaxLength(flatInString.get(), inLength,
+                                       &outLength);
     if (NS_SUCCEEDED(rv)) {
       outString = NS_STATIC_CAST( char*, nsMemory::Alloc( outLength+1 ) );
       if (nsnull == outString) {
         return nsnull;
       }
-      rv = mUnicodeEncoder->Convert(inString, &inLength, outString, &outLength);
+      rv = mUnicodeEncoder->Convert(flatInString.get(), &inLength, outString,
+                                    &outLength);
       if (NS_SUCCEEDED(rv)) {
         outString[outLength] = '\0';
       }
@@ -636,10 +638,10 @@ PRUnichar * nsFilePicker::ConvertFromFileSystemCharset(const char *inString)
 
 
 NS_IMETHODIMP
-nsFilePicker::AppendFilter(const PRUnichar *aTitle, const PRUnichar *aFilter)
+nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
 {
-  mFilters.AppendString(nsDependentString(aFilter));
-  mTitles.AppendString(nsDependentString(aTitle));
+  mFilters.AppendString(aFilter);
+  mTitles.AppendString(aTitle);
   
   return NS_OK;
 }

@@ -318,7 +318,6 @@ public:
 nsMessenger::nsMessenger() 
 {
   mScriptObject = nsnull;
-  mWindow = nsnull;
   mMsgWindow = nsnull;
   mStringBundle = nsnull;
   mSendingUnsentMsgs = PR_FALSE;
@@ -327,8 +326,6 @@ nsMessenger::nsMessenger()
 
 nsMessenger::~nsMessenger()
 {
-    NS_IF_RELEASE(mWindow);
-
     // Release search context.
     mSearchContext = nsnull;
 }
@@ -372,9 +369,7 @@ nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
   
   mMsgWindow = aMsgWindow;
   
-  NS_IF_RELEASE(mWindow);
   mWindow = aWin;
-  NS_ADDREF(aWin);
   
   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
   NS_ENSURE_TRUE(globalObj, NS_ERROR_FAILURE);
@@ -525,10 +520,10 @@ nsMessenger::PromptIfFileExists(nsFileSpec &fileSpec)
                 do_CreateInstance("@mozilla.org/filepicker;1", &rv);
             if (NS_FAILED(rv)) return rv;
 
-            filePicker->Init(nsnull,
-                             GetString(NS_LITERAL_STRING("SaveAttachment")).get(),
+            filePicker->Init(mWindow,
+                             GetString(NS_LITERAL_STRING("SaveAttachment")),
                              nsIFilePicker::modeSave);
-            filePicker->SetDefaultString(path.get());
+            filePicker->SetDefaultString(path);
             filePicker->AppendFilters(nsIFilePicker::filterAll);
             
             nsCOMPtr <nsILocalFile> lastSaveDir;
@@ -817,9 +812,9 @@ nsMessenger::SaveAttachment(const char * contentType, const char * url,
   rv = ConvertAndSanitizeFileName(displayName, getter_Copies(defaultDisplayString), nsnull);
   if (NS_FAILED(rv)) goto done;
 
-  filePicker->Init(nsnull, GetString(NS_LITERAL_STRING("SaveAttachment")).get(),
+  filePicker->Init(mWindow, GetString(NS_LITERAL_STRING("SaveAttachment")),
                    nsIFilePicker::modeSave);
-  filePicker->SetDefaultString(defaultDisplayString.get());
+  filePicker->SetDefaultString(defaultDisplayString);
   filePicker->AppendFilters(nsIFilePicker::filterAll);
   
   rv = GetLastSaveDirectory(getter_AddRefs(lastSaveDir));
@@ -867,8 +862,8 @@ nsMessenger::SaveAllAttachments(PRUint32 count,
 
     if (NS_FAILED(rv)) goto done;
 
-    filePicker->Init(nsnull,
-                     GetString(NS_LITERAL_STRING("SaveAllAttachments")).get(),
+    filePicker->Init(mWindow,
+                     GetString(NS_LITERAL_STRING("SaveAllAttachments")),
                      nsIFilePicker::modeGetFolder);
 
     rv = GetLastSaveDirectory(getter_AddRefs(lastSaveDir));
@@ -956,21 +951,21 @@ nsMessenger::SaveAs(const char *aURI, PRBool aAsFile, nsIMsgIdentity *aIdentity,
     if (NS_FAILED(rv)) 
       goto done;
 
-    filePicker->Init(nsnull, GetString(NS_LITERAL_STRING("SaveMailAs")).get(),
+    filePicker->Init(mWindow, GetString(NS_LITERAL_STRING("SaveMailAs")),
                      nsIFilePicker::modeSave);
 
     // if we have a non-null filename use it, otherwise use default save message one
     if (aMsgFilename)    
-      filePicker->SetDefaultString(aMsgFilename);
+      filePicker->SetDefaultString(nsDependentString(aMsgFilename));
     else {
-      filePicker->SetDefaultString(GetString(NS_LITERAL_STRING("defaultSaveMessageAsFileName")).get());
+      filePicker->SetDefaultString(GetString(NS_LITERAL_STRING("defaultSaveMessageAsFileName")));
     }
 
     // because we will be using GetFilterIndex()
     // we must call AppendFilters() one at a time, 
     // in MESSENGER_SAVEAS_FILE_TYPE order
-    filePicker->AppendFilter(GetString(NS_LITERAL_STRING("EMLFiles")).get(),
-                             NS_LITERAL_STRING("*.eml").get());
+    filePicker->AppendFilter(GetString(NS_LITERAL_STRING("EMLFiles")),
+                             NS_LITERAL_STRING("*.eml"));
     filePicker->AppendFilters(nsIFilePicker::filterHTML);     
     filePicker->AppendFilters(nsIFilePicker::filterText);
     filePicker->AppendFilters(nsIFilePicker::filterAll);

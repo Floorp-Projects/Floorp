@@ -63,10 +63,10 @@ public:
   NS_DECL_ISUPPORTS
 
     // nsIFilePicker (less what's in nsBaseFilePicker)
-  NS_IMETHOD GetDefaultString(PRUnichar * *aDefaultString);
-  NS_IMETHOD SetDefaultString(const PRUnichar * aDefaultString);
-  NS_IMETHOD GetDefaultExtension(PRUnichar * *aDefaultExtension);
-  NS_IMETHOD SetDefaultExtension(const PRUnichar * aDefaultExtension);
+  NS_IMETHOD GetDefaultString(nsAString& aDefaultString);
+  NS_IMETHOD SetDefaultString(const nsAString& aDefaultString);
+  NS_IMETHOD GetDefaultExtension(nsAString& aDefaultExtension);
+  NS_IMETHOD SetDefaultExtension(const nsAString& aDefaultExtension);
   NS_IMETHOD GetDisplayDirectory(nsILocalFile * *aDisplayDirectory);
   NS_IMETHOD SetDisplayDirectory(nsILocalFile * aDisplayDirectory);
   NS_IMETHOD GetFilterIndex(PRInt32 *aFilterIndex);
@@ -76,29 +76,24 @@ public:
   NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
   NS_IMETHOD Show(PRInt16 *aReturnVal); 
   NS_IMETHOD ShowW(PRInt16 *aReturnVal); 
-  NS_IMETHOD AppendFilter(const PRUnichar *aTitle,  const PRUnichar *aFilter) ;
+  NS_IMETHOD AppendFilter(const nsAString& aTitle, const nsAString& aFilter);
 
 protected:
   /* method from nsBaseFilePicker */
-  NS_IMETHOD InitNative(nsIWidget *aParent,
-                        const PRUnichar *aTitle,
-                        PRInt16 aMode);
+  virtual void InitNative(nsIWidget *aParent,
+                          const nsAString& aTitle,
+                          PRInt16 aMode);
 
 
   void GetFilterListArray(nsString& aFilterList);
-  static void GetFileSystemCharset(nsCString & fileSystemCharset);
-  char * ConvertToFileSystemCharset(const PRUnichar *inString);
-  PRUnichar * ConvertFromFileSystemCharset(const char *inString);
 
-  nsIWidget              *mParentWidget;
+  nsCOMPtr<nsIWidget>    mParentWidget;
   nsString               mTitle;
   PRInt16                mMode;
   nsCString              mFile;
   nsString               mDefault;
   nsString               mDefaultExtension;
   nsString               mFilterList;
-  nsIUnicodeEncoder*     mUnicodeEncoder;
-  nsIUnicodeDecoder*     mUnicodeDecoder;
   nsCOMPtr<nsILocalFile> mDisplayDirectory;
   PRInt16                mSelectedType;
   nsCOMPtr <nsISupportsArray> mFiles;

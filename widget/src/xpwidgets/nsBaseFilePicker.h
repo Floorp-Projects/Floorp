@@ -51,8 +51,8 @@ public:
   nsBaseFilePicker(); 
   virtual ~nsBaseFilePicker();
 
-  NS_IMETHOD Init(nsIDOMWindowInternal *aParent,
-                  const PRUnichar *aTitle,
+  NS_IMETHOD Init(nsIDOMWindow *aParent,
+                  const nsAString& aTitle,
                   PRInt16 aMode);
 
   NS_IMETHOD AppendFilters(PRInt32 filterMask);
@@ -62,11 +62,12 @@ public:
 
 protected:
 
-  NS_IMETHOD InitNative(nsIWidget *aParent, const PRUnichar *aTitle, PRInt16 aMode) = 0;
+  virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle,
+                          PRInt16 aMode) = 0;
 
 private:
 
-  NS_IMETHOD DOMWindowToWidget(nsIDOMWindowInternal *dw, nsIWidget **aResult);
+  nsIWidget *DOMWindowToWidget(nsIDOMWindow *dw);
 };
 
 #endif // nsBaseFilePicker_h__

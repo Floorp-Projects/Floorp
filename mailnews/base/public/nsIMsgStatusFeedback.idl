@@ -38,7 +38,7 @@
 #include "nsISupports.idl"
 
 interface nsIDocShell;
-interface nsIDOMWindowInternal;
+interface nsIDOMWindow;
 
 [scriptable, uuid(a0032cf0-49e9-11d3-8d77-00805f8a6617)]
 interface nsIMsgStatusFeedback : nsISupports {
@@ -47,7 +47,7 @@ interface nsIMsgStatusFeedback : nsISupports {
 	void startMeteors();
 	void stopMeteors();
 	void showProgress(in long percent);
-	[noscript] void setDocShell(in nsIDocShell shell, in nsIDOMWindowInternal window);
+	[noscript] void setDocShell(in nsIDocShell shell, in nsIDOMWindow window);
 	void closeWindow();
 };
 

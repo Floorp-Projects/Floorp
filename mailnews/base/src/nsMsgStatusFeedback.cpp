@@ -239,18 +239,15 @@ NS_IMETHODIMP nsMsgStatusFeedback::CloseWindow()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgStatusFeedback::SetDocShell(nsIDocShell *shell, nsIDOMWindowInternal *aWindow)
+NS_IMETHODIMP nsMsgStatusFeedback::SetDocShell(nsIDocShell *shell, nsIDOMWindow *aWindow)
 {
 
-  if (aWindow)
+  nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(aWindow));
+  if (piDOMWindow)
   {
-     nsCOMPtr<nsISupports> xpConnectObj;
-     nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(aWindow));
-     if (piDOMWindow)
-     {
-        piDOMWindow->GetObjectProperty(NS_LITERAL_STRING("MsgStatusFeedback").get(), getter_AddRefs(xpConnectObj));
-        mStatusFeedback = do_QueryInterface(xpConnectObj);
-     }
+    nsCOMPtr<nsISupports> xpConnectObj;
+    piDOMWindow->GetObjectProperty(NS_LITERAL_STRING("MsgStatusFeedback").get(), getter_AddRefs(xpConnectObj));
+    mStatusFeedback = do_QueryInterface(xpConnectObj);
   }
 
   mWindow = aWindow;

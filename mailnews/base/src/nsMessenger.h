@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -48,6 +48,7 @@
 #include "nsILocalFile.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
+#include "nsIDOMWindow.h"
 
 class nsMessenger : public nsIMessenger, public nsIObserver, public nsSupportsWeakReference
 {
@@ -86,7 +87,7 @@ private:
   nsCOMPtr<nsITransactionManager> mTxnMgr;
 
   /* rhp - need this to drive message display */
-  nsIDOMWindowInternal      *mWindow;
+  nsCOMPtr<nsIDOMWindow>    mWindow;
   nsCOMPtr<nsIMsgWindow>    mMsgWindow;
   nsCOMPtr<nsIDocShell>     mDocShell;
 

@@ -70,9 +70,6 @@ char nsFilePicker::mLastUsedDirectory[MAX_PATH+1] = { 0 };
 //-------------------------------------------------------------------------
 nsFilePicker::nsFilePicker()
 {
-  mParentWidget = nsnull;
-  mUnicodeEncoder = nsnull;
-  mUnicodeDecoder = nsnull;
   mSelectedType   = 1;
   mDisplayDirectory = do_CreateInstance("@mozilla.org/file/local;1");
 }
@@ -84,9 +81,6 @@ nsFilePicker::nsFilePicker()
 //-------------------------------------------------------------------------
 nsFilePicker::~nsFilePicker()
 {
-  NS_IF_RELEASE(mParentWidget);
-  NS_IF_RELEASE(mUnicodeEncoder);
-  NS_IF_RELEASE(mUnicodeDecoder);
 }
 
 //-------------------------------------------------------------------------
@@ -116,7 +110,8 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
 
   // suppress blur events
   if (mParentWidget) {
-    nsWindow *parent = NS_STATIC_CAST(nsWindow *, mParentWidget);
+    nsIWidget *tmp = mParentWidget;
+    nsWindow *parent = NS_STATIC_CAST(nsWindow *, tmp);
     parent->SuppressBlurEvents(PR_TRUE);
   }
 
@@ -124,8 +119,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
   PRUnichar fileBuffer[FILE_BUFFER_SIZE+1];
   wcsncpy(fileBuffer,  mDefault.get(), FILE_BUFFER_SIZE);
 
-  nsAutoString htmExt(NS_LITERAL_STRING("html"));
-  PRUnichar *title = ToNewUnicode(mTitle);
+  NS_NAMED_LITERAL_STRING(htmExt, "html");
   nsAutoString initialDir;
   mDisplayDirectory->GetPath(initialDir);
 
@@ -143,10 +137,10 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
 
     BROWSEINFOW browserInfo;
     browserInfo.hwndOwner      = (HWND)
-      (mParentWidget ? mParentWidget->GetNativeData(NS_NATIVE_WINDOW) : 0); 
+      (mParentWidget.get() ? mParentWidget->GetNativeData(NS_NATIVE_WINDOW) : 0); 
     browserInfo.pidlRoot       = nsnull;
     browserInfo.pszDisplayName = (LPWSTR)dirBuffer;
-    browserInfo.lpszTitle      = title;
+    browserInfo.lpszTitle      = mTitle.get();
     browserInfo.ulFlags        = BIF_USENEWUI | BIF_RETURNONLYFSDIRS;
     if (initialDir.Length()) // convert folder path to native, the strdup copy will be released in BrowseCallbackProc
     {
@@ -192,11 +186,11 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
       ofn.lpstrInitialDir = initialDir.get();
     }
     
-    ofn.lpstrTitle   = (LPCWSTR)title;
+    ofn.lpstrTitle   = (LPCWSTR)mTitle.get();
     ofn.lpstrFilter  = (LPCWSTR)filterBuffer.get();
     ofn.nFilterIndex = mSelectedType;
     ofn.hwndOwner    = (HWND)
-      (mParentWidget ? mParentWidget->GetNativeData(NS_NATIVE_WINDOW) : 0); 
+      (mParentWidget.get() ? mParentWidget->GetNativeData(NS_NATIVE_WINDOW) : 0); 
     ofn.lpstrFile    = fileBuffer;
     ofn.nMaxFile     = FILE_BUFFER_SIZE;
 
@@ -325,9 +319,6 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
 
   }
 
-  if (title)
-    nsMemory::Free( title );
-
   if (result) {
     PRInt16 returnOKorReplace = returnOK;
 
@@ -365,7 +356,8 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     *aReturnVal = returnCancel;
   }
   if (mParentWidget) {
-    nsWindow *parent = NS_STATIC_CAST(nsWindow *, mParentWidget);
+    nsIWidget *tmp = mParentWidget;
+    nsWindow *parent = NS_STATIC_CAST(nsWindow *, tmp);
     parent->SuppressBlurEvents(PR_FALSE);
   }
 
@@ -423,7 +415,7 @@ NS_IMETHODIMP nsFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
 // Get the file + path
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::SetDefaultString(const PRUnichar *aString)
+NS_IMETHODIMP nsFilePicker::SetDefaultString(const nsAString& aString)
 {
   mDefault = aString;
 
@@ -455,7 +447,7 @@ NS_IMETHODIMP nsFilePicker::SetDefaultString(const PRUnichar *aString)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFilePicker::GetDefaultString(PRUnichar **aString)
+NS_IMETHODIMP nsFilePicker::GetDefaultString(nsAString& aString)
 {
   return NS_ERROR_FAILURE;
 }
@@ -465,15 +457,13 @@ NS_IMETHODIMP nsFilePicker::GetDefaultString(PRUnichar **aString)
 // The default extension to use for files
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::GetDefaultExtension(PRUnichar **aExtension)
+NS_IMETHODIMP nsFilePicker::GetDefaultExtension(nsAString& aExtension)
 {
-  *aExtension = ToNewUnicode(mDefaultExtension);
-  if (!*aExtension)
-    return NS_ERROR_OUT_OF_MEMORY;
+  aExtension = mDefaultExtension;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFilePicker::SetDefaultExtension(const PRUnichar *aExtension)
+NS_IMETHODIMP nsFilePicker::SetDefaultExtension(const nsAString& aExtension)
 {
   mDefaultExtension = aExtension;
   return NS_OK;
@@ -524,126 +514,27 @@ NS_IMETHODIMP nsFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
 
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::InitNative(nsIWidget *aParent,
-                                       const PRUnichar *aTitle,
-                                       PRInt16 aMode)
+void nsFilePicker::InitNative(nsIWidget *aParent,
+                              const nsAString& aTitle,
+                              PRInt16 aMode)
 {
   mParentWidget = aParent;
-  NS_IF_ADDREF(mParentWidget);
   mTitle.Assign(aTitle);
   mMode = aMode;
-  return NS_OK;
-}
-
-
-//-------------------------------------------------------------------------
-void nsFilePicker::GetFileSystemCharset(nsCString & fileSystemCharset)
-{
-  static nsCAutoString aCharset;
-  nsresult rv;
-
-  if (aCharset.Length() < 1) {
-    nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
-	  if (NS_SUCCEEDED(rv)) 
-		  rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
-
-    NS_ASSERTION(NS_SUCCEEDED(rv), "error getting platform charset");
-	  if (NS_FAILED(rv)) 
-		  aCharset.Assign(NS_LITERAL_CSTRING("windows-1252"));
-  }
-  fileSystemCharset = aCharset;
-}
-
-//-------------------------------------------------------------------------
-char * nsFilePicker::ConvertToFileSystemCharset(const PRUnichar *inString)
-{
-  char *outString = nsnull;
-  nsresult rv = NS_OK;
-
-  // get file system charset and create a unicode encoder
-  if (nsnull == mUnicodeEncoder) {
-    nsCAutoString fileSystemCharset;
-    GetFileSystemCharset(fileSystemCharset);
-
-    nsCOMPtr<nsICharsetConverterManager> ccm = 
-             do_GetService(kCharsetConverterManagerCID, &rv); 
-    if (NS_SUCCEEDED(rv)) {
-      rv = ccm->GetUnicodeEncoderRaw(fileSystemCharset.get(), &mUnicodeEncoder);
-    }
-  }
-
-  // converts from unicode to the file system charset
-  if (NS_SUCCEEDED(rv)) {
-    PRInt32 inLength = nsCRT::strlen(inString);
-    PRInt32 outLength;
-    rv = mUnicodeEncoder->GetMaxLength(inString, inLength, &outLength);
-    if (NS_SUCCEEDED(rv)) {
-      outString = NS_STATIC_CAST( char*, nsMemory::Alloc( outLength+1 ) );
-      if (nsnull == outString) {
-        return nsnull;
-      }
-      rv = mUnicodeEncoder->Convert(inString, &inLength, outString, &outLength);
-      if (NS_SUCCEEDED(rv)) {
-        outString[outLength] = '\0';
-      }
-    }
-  }
-  
-  return NS_SUCCEEDED(rv) ? outString : nsnull;
-}
-
-//-------------------------------------------------------------------------
-PRUnichar * nsFilePicker::ConvertFromFileSystemCharset(const char *inString)
-{
-  PRUnichar *outString = nsnull;
-  nsresult rv = NS_OK;
-
-  // get file system charset and create a unicode encoder
-  if (nsnull == mUnicodeDecoder) {
-    nsCAutoString fileSystemCharset;
-    GetFileSystemCharset(fileSystemCharset);
-
-    nsCOMPtr<nsICharsetConverterManager> ccm = 
-             do_GetService(kCharsetConverterManagerCID, &rv); 
-    if (NS_SUCCEEDED(rv)) {
-      rv = ccm->GetUnicodeDecoderRaw(fileSystemCharset.get(), &mUnicodeDecoder);
-    }
-  }
-
-  // converts from the file system charset to unicode
-  if (NS_SUCCEEDED(rv)) {
-    PRInt32 inLength = strlen(inString);
-    PRInt32 outLength;
-    rv = mUnicodeDecoder->GetMaxLength(inString, inLength, &outLength);
-    if (NS_SUCCEEDED(rv)) {
-      outString = NS_STATIC_CAST( PRUnichar*, nsMemory::Alloc( (outLength+1) * sizeof( PRUnichar ) ) );
-      if (nsnull == outString) {
-        return nsnull;
-      }
-      rv = mUnicodeDecoder->Convert(inString, &inLength, outString, &outLength);
-      if (NS_SUCCEEDED(rv)) {
-        outString[outLength] = 0;
-      }
-    }
-  }
-
-  NS_ASSERTION(NS_SUCCEEDED(rv), "error charset conversion");
-  return NS_SUCCEEDED(rv) ? outString : nsnull;
 }
 
 
 NS_IMETHODIMP
-nsFilePicker::AppendFilter(const PRUnichar *aTitle, const PRUnichar *aFilter)
+nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
 {
   mFilterList.Append(aTitle);
   mFilterList.Append(PRUnichar('\0'));
 
-  if (!nsCRT::strcmp(aFilter, NS_LITERAL_STRING("..apps").get()))
+  if (aFilter.Equals(NS_LITERAL_STRING("..apps")))
     mFilterList.Append(NS_LITERAL_STRING("*.exe;*.com"));
   else
   {
-    nsString filter;
-    filter.Assign(aFilter);
+    nsAutoString filter(aFilter);
     filter.StripWhitespace();
     if (filter.Equals(NS_LITERAL_STRING("*")))
       filter.Append(NS_LITERAL_STRING(".*"));

@@ -54,19 +54,19 @@ class nsMsgStatusFeedback : public nsIMsgStatusFeedback,
                             public nsSupportsWeakReference
 {
 public:
-	nsMsgStatusFeedback();
-	virtual ~nsMsgStatusFeedback();
+  nsMsgStatusFeedback();
+  virtual ~nsMsgStatusFeedback();
 
-	NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGSTATUSFEEDBACK
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSIPROGRESSEVENTSINK
 
 protected:
-	nsIDOMWindowInternal			*mWindow;
-	PRBool					m_meteorsSpinning;
-	PRInt32					m_lastPercent;
-	PRInt64					m_lastProgressTime;
+  nsIDOMWindow     *mWindow;
+  PRBool           m_meteorsSpinning;
+  PRInt32          m_lastPercent;
+  PRInt64          m_lastProgressTime;
 
 
   void BeginObserving();
