@@ -532,7 +532,7 @@ nsBuffer::WriteSegments(nsReadSegmentFun reader, void* closure, PRUint32 count,
 
         writeBufLen = PR_MIN(writeBufLen, count);
         while (writeBufLen > 0) {
-            PRUint32 readCount;
+            PRUint32 readCount = 0;
             rv = reader(closure, writeBuf, *writeCount, writeBufLen, &readCount);
             if (rv == NS_BASE_STREAM_WOULD_BLOCK || readCount == 0) {
                 // if the place we're putting the data would block (probably ran
