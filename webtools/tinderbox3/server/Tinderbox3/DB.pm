@@ -154,9 +154,9 @@ sub update_tree_action {
     my $field_short_names = $p->param('field_short_names') || "";
     my $field_processors = $p->param('field_processors') || "";
     my $statuses = $p->param('statuses') || "";
-    my $min_row_size = $p->param('min_row_size') || "";
-    my $max_row_size = $p->param('max_row_size') || "";
-    my $default_tinderbox_view = $p->param('default_tinderbox_view') || "";
+    my $min_row_size = $p->param('min_row_size') || "0";
+    my $max_row_size = $p->param('max_row_size') || "0";
+    my $default_tinderbox_view = $p->param('default_tinderbox_view') || "0";
     my $new_machines_visible = sql_get_bool($p->param('new_machines_visible'));
     my $editors = $p->param('editors') || "";
 
