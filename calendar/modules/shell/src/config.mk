@@ -43,6 +43,13 @@ LD_LIBS += \
 	netlib \
 	xpfc10 \
 	$(NATIVE_RAPTOR_WIDGET) \
+	calui10 \
+	calparser10 \
+	calcapi10 \
+	$(NATIVE_RAPTOR_GFX) \
+	$(RAPTOR_GFX) \
+	$(NATIVE_ZLIB_DLL) \
+	$(NATIVE_XP_DLL) \
 	$(NATIVE_JULIAN_DLL) \
 	nsfmt$(MOZ_BITS)30 \
 	nsuni$(MOZ_BITS)30 \
@@ -50,16 +57,8 @@ LD_LIBS += \
 	nsjpn$(MOZ_BITS)30 \
 	nscnv$(MOZ_BITS)30 \
 	nssb$(MOZ_BITS)30 \
-	calui10 \
-	calparser10 \
-    calcapi10 \
-	util10 \
-	$(NATIVE_RAPTOR_GFX) \
-	$(RAPTOR_GFX) \
-	$(NATIVE_JULIAN_DLL) \
 	xpcom$(MOZ_BITS) \
-	$(NATIVE_ZLIB_DLL) \
-	$(NATIVE_XP_DLL) \
+	util10 \
 	$(XP_REG_LIB)
 
 STATIC_LIBS += shell

@@ -15,6 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "jdefines.h"
+#include "julnstr.h"
 #include "nsCalShellFactory.h"
 #include "nsString.h"
 #include "nsFont.h"
