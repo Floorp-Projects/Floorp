@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Tom Beauvais 
  * Norris Boyd
  * Mike McCabe
  *
@@ -682,7 +683,27 @@ public class NativeString extends ScriptableObject implements Wrapper {
         return tagify("A NAME", "A", value);
     }
 
-    /**
+    public static Object jsFunction_equals(Context cx, Scriptable thisObj,
+                                           Object[] args, Function funObj)
+    {
+        String target = ScriptRuntime.toString(thisObj);
+        String strOther = ScriptRuntime.toString(args[0]);
+        return new Boolean(target.equals(strOther));
+    }
+    
+
+    public static Object jsFunction_equalsIgnoreCase(Context cx, 
+                                                     Scriptable thisObj,
+                                                     Object[] args, 
+                                                     Function funObj)
+    {
+        String target = ScriptRuntime.toString(thisObj);
+        String strOther = ScriptRuntime.toString(args[0]);
+        return new Boolean(target.equalsIgnoreCase(strOther));
+    }
+   
+   
+   /**
      * Unwrap this NativeString as a j.l.String for LiveConnect use.
      */
 
