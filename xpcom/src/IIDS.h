@@ -137,7 +137,7 @@ nsIConnectionInfo = { /* a6cf9062-15b3-11d2-932e-00805f8add32 */
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9063-15b3-11d2-932e-00805f8add32 */
+nsXMLDocument = { /* a6cf9063-15b3-11d2-932e-00805f8add32 */
     0xa6cf9063,
     0x15b3,
     0x11d2,
@@ -749,19 +749,19 @@ nsIDOMHTMLImageElementFactory = { /* a6cf90c8-15b3-11d2-932e-00805f8add32 */
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90c9-15b3-11d2-932e-00805f8add32 */
+nsIXMLContentSink = { /* a6cf90c9-15b3-11d2-932e-00805f8add32 */
     0xa6cf90c9,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90ca-15b3-11d2-932e-00805f8add32 */
+nsIXMLDocument = { /* a6cf90ca-15b3-11d2-932e-00805f8add32 */
     0xa6cf90ca,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90cb-15b3-11d2-932e-00805f8add32 */
+nsIXMLContent = { /* a6cf90cb-15b3-11d2-932e-00805f8add32 */
     0xa6cf90cb,
     0x15b3,
     0x11d2,
