@@ -251,8 +251,10 @@ public:
 
   // nsIWebShellServices
   NS_IMETHOD LoadDocument(const char* aURL, 
-                          const char* aCharset, 
-                          nsCharsetSource aSource);
+                          const char* aCharset= nsnull , 
+                          nsCharsetSource aSource = kCharsetUninitialized);
+  NS_IMETHOD ReloadDocument(const char* aCharset= nsnull , 
+                 nsCharsetSource aSource = kCharsetUninitialized);                        
   NS_IMETHOD StopDocumentLoad(void);
   NS_IMETHOD SetRendering(PRBool aRender);
 
@@ -358,6 +360,8 @@ public:
   NS_IMETHOD GetDefaultCharacterSet (const PRUnichar** aDefaultCharacterSet);
   NS_IMETHOD SetDefaultCharacterSet (const PRUnichar*  aDefaultCharacterSet);
 
+  NS_IMETHOD GetCharacterSetHint (const PRUnichar** oHintCharset, nsCharsetSource* oSource);
+
 protected:
   void InitFrameData(PRBool aCompleteInitScrolling);
   nsresult CheckForTrailingSlash(nsIURL* aURL);
@@ -413,6 +417,10 @@ protected:
   static nsIPluginManager *mPluginManager;
   static PRUint32          mPluginInitCnt;
   PRBool mProcessedEndDocumentLoad;
+  
+  // XXX store mHintCharset and mHintCharsetSource here untill we find out a good cood path
+  nsString mHintCharset;
+  nsCharsetSource mHintCharsetSource; 
 };
 
 //----------------------------------------------------------------------
@@ -527,6 +535,8 @@ nsWebShell::nsWebShell()
   // XXX we should get such mDefaultCharacterSet from pref laster...
   mDefaultCharacterSet = "ISO-8859-1";
   mProcessedEndDocumentLoad = PR_FALSE;
+  mHintCharset = "";
+  mHintCharsetSource = kCharsetUninitialized;
 }
 
 nsWebShell::~nsWebShell()
@@ -1981,9 +1991,24 @@ nsWebShell::LoadDocument(const char* aURL,
                          const char* aCharset, 
                          nsCharsetSource aSource)
 {
+  // XXX hack. kee the aCharset and aSource wait to pick it up
+  mHintCharset = aCharset;
+  mHintCharsetSource = aSource;
+  
   nsAutoString url(aURL);
   LoadURL(url.GetUnicode());
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::ReloadDocument(const char* aCharset, 
+                           nsCharsetSource aSource)
+{
+  // XXX hack. kee the aCharset and aSource wait to pick it up
+  mHintCharset = aCharset;
+  mHintCharsetSource= aSource;
+  
+  return this->Reload(nsURLReload);
 }
 
 NS_IMETHODIMP
@@ -2907,6 +2932,20 @@ nsWebShell::SetDefaultCharacterSet (const PRUnichar*  aDefaultCharacterSet)
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP nsWebShell::GetCharacterSetHint (const PRUnichar** oHintCharset, nsCharsetSource* oSource)
+{
+	*oSource = mHintCharsetSource;
+	if(kCharsetUninitialized == mHintCharsetSource) {
+		*oHintCharset = nsnull;
+	} else {
+		*oHintCharset = mHintCharset.GetUnicode();
+		// clean up after we access it.
+		mHintCharsetSource = kCharsetUninitialized;
+	}
+	return NS_OK;
+}
+
 
 //----------------------------------------------------
 NS_IMETHODIMP

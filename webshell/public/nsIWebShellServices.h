@@ -36,8 +36,10 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IWEB_SHELL_SERVICES_IID; return iid; }
 
   NS_IMETHOD LoadDocument(const char* aURL, 
-                          const char* aCharset, 
-                          nsCharsetSource aSource) = 0;
+                          const char* aCharset= nsnull , 
+                          nsCharsetSource aSource = kCharsetUninitialized) = 0;
+  NS_IMETHOD ReloadDocument(const char* aCharset = nsnull , 
+                            nsCharsetSource aSource = kCharsetUninitialized) = 0;
   NS_IMETHOD StopDocumentLoad(void) = 0;
   NS_IMETHOD SetRendering(PRBool aRender) = 0;
 
