@@ -16,19 +16,27 @@
 # Reserved.
 
 
-##########################################################################
-#
-# Name:			Makefile
-# Description:	Makefile for Xfe Widgets tests
-# Author:		Ramiro Estrugo <ramiro@netscape.com>
-#
-##########################################################################
+# 
 
-DEPTH			= ../../../..
+DEPTH			= ../../../../..
 
-DIRS			= \
-				Xfe \
+CSRCS			= \
+				MenuTest.c \
+				$(NULL)
+
+REQUIRES		= \
+				XfeTest \
 				XfeBm \
-				XmL
+				XfeWidgets
+
+STATIC_PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=.static))
+SHARED_PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=.shared))
 
 include $(DEPTH)/config/rules.mk
+include $(DEPTH)/cmd/xfe/XfeWidgets/XfeWidgets.mk
+
+all:: $(STATIC_PROGS) $(SHARED_PROGS)
+install:: $(STATIC_PROGS) $(SHARED_PROGS)
+
+shared: $(SHARED_PROGS)
+static: $(STATIC_PROGS)

@@ -29,6 +29,8 @@
 #include "bkmks.h"
 
 #include <Xfe/XfeAll.h>
+#include <Xfe/BmButton.h>
+#include <Xfe/BmCascade.h>
 
 #define IS_CASCADE(w)	(XmIsCascadeButton(w) || XmIsCascadeButtonGadget(w))
 #define IS_PUSH(w)		(XmIsPushButton(w) || XmIsPushButtonGadget(w))

@@ -30,6 +30,7 @@
 
 #include <Xfe/Button.h>
 #include <Xfe/Cascade.h>
+#include <Xfe/BmButton.h>
 #include <Xfe/BmCascade.h>
 #include <Xm/XmAll.h>
 

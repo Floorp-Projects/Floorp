@@ -35,6 +35,7 @@ endif
 
 DIRS			= \
 				Xfe \
+				XfeBm \
 				$(TEST_DIRS)
 
 include $(DEPTH)/config/rules.mk

@@ -45,7 +45,8 @@ CSRCS			= \
 
 REQUIRES		= \
 				XfeTest \
-				XfeWidgets
+				XfeWidgets \
+				XfeBm
 
 EXPORTS			= \
 				XfeTest.h \

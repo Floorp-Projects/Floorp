@@ -33,6 +33,8 @@
 #include <unistd.h>
 
 #include <Xfe/XfeAll.h>
+#include <Xfe/BmButton.h>
+#include <Xfe/BmCascade.h>
 
 #include <Xm/XmAll.h>
 

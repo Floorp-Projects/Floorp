@@ -39,6 +39,8 @@
 #include "intl_csi.h"
 
 #include <Xfe/XfeAll.h>
+#include <Xfe/BmButton.h>
+#include <Xfe/BmCascade.h>
 
 #include <Xm/CascadeB.h>
 #include <Xm/PushB.h>

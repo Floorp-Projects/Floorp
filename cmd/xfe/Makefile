@@ -73,9 +73,10 @@ DIRS		= \
 		  Microline3.0/XmL \
 		  $(NULL)
 
-REQUIRES	= \
-		XfeWidgets \
-		Microline \
+REQUIRES	=\
+			XfeWidgets \
+			XfeBm \
+			Microline \
 		  addr \
 		  applet \
 		  img \
@@ -195,8 +196,9 @@ GARBAGE		+= e_kit_resources.h cxxlink-filter
 
 ICONS_LIB	= $(DIST)/lib/lib$(LITE_PREFIX)xfeicons.a
 
-DTWIDGETS_LIB	= $(DIST)/lib/libDtWidgets.a
-XFE_WIDGETS_LIB	= $(DIST)/lib/libXfeWidgets.a
+DTWIDGETS_LIB		= $(DIST)/lib/libDtWidgets.a
+XFE_WIDGETS_LIB		= $(DIST)/lib/libXfeWidgets.a
+XFE_WIDGETS_BM_LIB	= $(DIST)/lib/libXfeBm.a
 
 ifeq ($(OS_ARCH),AIX)
 NSPR_LIB	= 
@@ -224,6 +226,7 @@ BASIC_LIBS	= \
 		  $(MICROLINE_LIB) \
 		  $(ICONS_LIB) \
 		  $(DTWIDGETS_LIB) \
+		  $(XFE_WIDGETS_BM_LIB) \
 		  $(XFE_WIDGETS_LIB) \
 		  $(DIST)/lib/libxlate.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)net.a \
@@ -791,6 +794,9 @@ $(DTWIDGETS_LIB):
 
 $(XFE_WIDGETS_LIB):
 	cd XfeWidgets/Xfe; $(MAKE)
+
+$(XFE_WIDGETS_BM_LIB):
+	cd XfeWidgets/XfeBm; $(MAKE)
 
 $(XFE2_LIB):
 	cd src; $(MAKE)

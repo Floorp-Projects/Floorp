@@ -78,8 +78,6 @@ CSRCS			= \
 				$(DEMO_CSRCS) \
 				$(UNUSED_CSRCS) \
 				Arrow.c \
-				BmButton.c \
-				BmCascade.c \
 				Button.c \
 				BypassShell.c \
 				CallProcs.c \
@@ -129,10 +127,6 @@ EXPORTS			= \
 				$(UNUSED_EXPORTS) \
 				Arrow.h \
 				ArrowP.h \
-				BmButton.h \
-				BmButtonP.h \
-				BmCascade.h \
-				BmCascadeP.h \
 				Button.h \
 				ButtonP.h \
 				BypassShell.h \

@@ -45,6 +45,7 @@
 #include <Xm/SeparatoG.h>
 
 #include <Xfe/Xfe.h>
+#include <Xfe/BmButton.h>
 #include <Xfe/BmCascade.h>
 
 

@@ -59,6 +59,13 @@ XFE_SHARED_TEST_LIB		= $(DIST)/bin/libXfeTest.$(DLL_SUFFIX)
 XFE_TEST_REQUIRES		= XfeTest
 
 ##
+## Xfe Widgets Bm Library
+##
+XFE_STATIC_BM_LIB		= $(DIST)/lib/libXfeBm.a
+XFE_SHARED_BM_LIB		= $(DIST)/bin/libXfeBm.$(DLL_SUFFIX)
+XFE_BM_REQUIRES			= XfeBm
+
+##
 ## Linux specific
 ##
 ifeq ($(OS_ARCH),Linux)
@@ -182,6 +189,16 @@ ifeq ($(filter $(REQUIRES),$(XFE_TEST_REQUIRES)),$(XFE_TEST_REQUIRES))
 
 XFE_SHARED_LIBS			+= $(XFE_SHARED_TEST_LIB)
 XFE_STATIC_LIBS			+= $(XFE_STATIC_TEST_LIB)
+
+endif
+
+##
+## XfeBm required ?
+##
+ifeq ($(filter $(REQUIRES),$(XFE_BM_REQUIRES)),$(XFE_BM_REQUIRES))
+
+XFE_SHARED_LIBS			+= $(XFE_SHARED_BM_LIB)
+XFE_STATIC_LIBS			+= $(XFE_STATIC_BM_LIB)
 
 endif
 

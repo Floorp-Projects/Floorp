@@ -1,4 +1,4 @@
-#! gmake
+#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -19,16 +19,32 @@
 ##########################################################################
 #
 # Name:			Makefile
-# Description:	Makefile for Xfe Widgets tests
+# Description:	Makefile for XfeBm library.
 # Author:		Ramiro Estrugo <ramiro@netscape.com>
 #
 ##########################################################################
 
 DEPTH			= ../../../..
 
-DIRS			= \
-				Xfe \
-				XfeBm \
-				XmL
+# XfeWidgets headers are exported to dist/public/XfeWidgets/Xfe
+MODULE			= XfeWidgets/Xfe
+
+LIBRARY_NAME	= XfeBm
+
+CSRCS			= \
+				BmButton.c \
+				BmCascade.c \
+				$(NULL)
+
+REQUIRES		=\
+				XfeWidgets \
+				XfeBm
+
+EXPORTS			= \
+				BmButton.h \
+				BmButtonP.h \
+				BmCascade.h \
+				BmCascadeP.h \
+				$(NULL)
 
 include $(DEPTH)/config/rules.mk

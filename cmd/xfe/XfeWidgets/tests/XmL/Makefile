@@ -31,6 +31,7 @@ CSRCS			= \
 
 REQUIRES		= \
 				XfeWidgets \
+				XfeBm \
 				XfeTest \
 				Microline
 

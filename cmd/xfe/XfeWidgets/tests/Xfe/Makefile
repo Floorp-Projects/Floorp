@@ -44,7 +44,6 @@ CSRCS			= \
 				DashBoardTest.c \
 				LabelTest.c \
 				LogoTest.c \
-				MenuTest.c \
 				PaneTestOne.c \
 				PaneTestThree.c \
 				PaneTestTwo.c \
@@ -59,7 +58,8 @@ CSRCS			= \
 
 REQUIRES		= \
 				XfeTest \
-				XfeWidgets
+				XfeWidgets \
+				XfeBm
 
 STATIC_PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=.static))
 SHARED_PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=.shared))

@@ -28,8 +28,6 @@
 #define _XfeAll_h_
 
 #include <Xfe/Arrow.h>
-#include <Xfe/BmButton.h>
-#include <Xfe/BmCascade.h>
 #include <Xfe/Button.h>
 #include <Xfe/Cascade.h>
 #include <Xfe/Chrome.h>
