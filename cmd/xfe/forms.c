@@ -2472,7 +2472,7 @@ htmlarea_create_widget(FEFormData *fed, LO_FormElementStruct *form)
   if (default_text)
   {
     fe_forms_clean_text(fed->context, text_attr->charset, default_text, False);
-    EDT_SetDefaultText(ha_fed->editor_context, default_text);
+    EDT_SetDefaultHTML(ha_fed->editor_context, default_text);
   }
 }
 
@@ -2551,7 +2551,7 @@ htmlarea_reset(FEFormData *fed, LO_FormElementStruct *form)
   if (default_text)
   {
     fe_forms_clean_text(fed->context, charset, default_text, False);
-    EDT_SetDefaultText(ha_fed->editor_context, default_text);
+    EDT_SetDefaultHTML(ha_fed->editor_context, default_text);
   }
 #endif /* NOT_YET_KIN */
 }
@@ -3917,3 +3917,4 @@ fe_SetFormsGravity (MWContext *context, int gravity)
                 valuemask, &attr);
   }
 }
+
