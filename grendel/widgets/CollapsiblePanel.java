@@ -43,10 +43,17 @@ import grendel.widgets.Animation;
 import grendel.widgets.Collapsible;
 import grendel.widgets.Spring;
 
+/**
+ * This is an implementation of the grendel.widgets.Collapsible interface,
+ * which provides the standard Communicator-style collapsing toolbar panel.
+ * 
+ * @author Jeff Galyan
+ * @see Collapsible
+ */
+
 public class CollapsiblePanel extends JPanel implements Collapsible {
     
     private boolean collapsed = false;
-    private boolean collapsible = true;
     private Component myComponents[];
     private int componentCount;
     private final int VERTICAL = 0;
@@ -58,6 +65,10 @@ public class CollapsiblePanel extends JPanel implements Collapsible {
 
     private ToolBarLayout layout;
     
+  /** 
+   * Constructor
+   */
+
     public CollapsiblePanel(boolean isDoubleBuffered) {
 	super(isDoubleBuffered);
         
@@ -85,6 +96,9 @@ public class CollapsiblePanel extends JPanel implements Collapsible {
         revalidate();
     }
 
+  /**
+   * Collapses the panel. 
+   */
 
     public void collapse() {
 
@@ -115,6 +129,10 @@ public class CollapsiblePanel extends JPanel implements Collapsible {
 	
 	collapsed = true;
     }
+ 
+  /**
+   * Uncollapses the panel.
+   */
     
     public void expand() {
 	Dimension dim = new Dimension(height, width);
@@ -134,9 +152,20 @@ public class CollapsiblePanel extends JPanel implements Collapsible {
 	collapsed = false;
     }
 
+  /**
+   * Tells you whether this component is collapsible. 
+   * @returns a boolean indicating this component is collapsible.
+   */
+
     public boolean isCollapsible() {
 	return collapsible;
     }
+
+  /**
+   * Tells you whether this component is currently collapsed. 
+   * Useful for checking the component's status.
+   * @returns true if this component is collapsed, false if it is not.
+   */
 
     public boolean isCollapsed() {
 	return collapsed;
