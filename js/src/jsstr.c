@@ -563,7 +563,7 @@ static JSBool
 str_charAt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str;
-    jsdouble d;
+    int32 i;
     size_t index;
     jschar buf[2];
 
@@ -572,13 +572,12 @@ str_charAt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	return JS_FALSE;
     argv[-1] = STRING_TO_JSVAL(str);
 
-    if (!js_ValueToNumber(cx, argv[0], &d))
+    if (!js_ValueToECMAInt32(cx, argv[0], &i))
 	return JS_FALSE;
-    d = js_DoubleToInteger(d);
-    if (d < 0 || str->length <= d) {
+    if (i < 0 || str->length <= (size_t)i) {
 	*rval = JS_GetEmptyStringValue(cx);
     } else {
-	index = (size_t)d;
+	index = (size_t)i;
 	buf[0] = str->chars[index];
 	buf[1] = 0;
 	str = js_NewStringCopyN(cx, buf, 1, 0);
@@ -594,7 +593,7 @@ str_charCodeAt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	       jsval *rval)
 {
     JSString *str;
-    jsdouble d;
+    int32 i;
     size_t index;
 
     str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
@@ -602,13 +601,12 @@ str_charCodeAt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	return JS_FALSE;
     argv[-1] = STRING_TO_JSVAL(str);
 
-    if (!js_ValueToNumber(cx, argv[0], &d))
+    if (!js_ValueToECMAInt32(cx, argv[0], &i))
 	return JS_FALSE;
-    d = js_DoubleToInteger(d);
-    if (d < 0 || str->length <= d) {
+    if (i < 0 || str->length <= (size_t)i) {
 	*rval = JS_GetNaNValue(cx);
     } else {
-	index = (size_t)d;
+	index = (size_t)i;
 	*rval = INT_TO_JSVAL((jsint)str->chars[index]);
     }
     return JS_TRUE;
@@ -822,18 +820,22 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	reobj = JSVAL_TO_OBJECT(argv[0]);
 	re = JS_GetPrivate(cx, reobj);
     } else {
-	src = js_ValueToString(cx, argv[0]);
-	if (!src)
-	    return JS_FALSE;
-	if (data->optarg < argc) {
-	    argv[0] = STRING_TO_JSVAL(src);
-	    opt = js_ValueToString(cx, argv[data->optarg]);
-	    if (!opt)
-		return JS_FALSE;
-	} else {
-	    opt = NULL;
-	}
-	re = js_NewRegExpOpt(cx, src, opt);
+        if (JSVAL_IS_VOID(argv[0]))
+            re = js_NewRegExp(cx, cx->runtime->emptyString, 0);
+        else {
+	    src = js_ValueToString(cx, argv[0]);
+	    if (!src)
+	        return JS_FALSE;
+	    if (data->optarg < argc) {
+	        argv[0] = STRING_TO_JSVAL(src);
+	        opt = js_ValueToString(cx, argv[data->optarg]);
+	        if (!opt)
+		    return JS_FALSE;
+	    } else {
+	        opt = NULL;
+	    }
+	    re = js_NewRegExpOpt(cx, src, opt);
+        }
 	if (!re)
 	    return JS_FALSE;
 	reobj = NULL;
