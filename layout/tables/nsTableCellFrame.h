@@ -53,6 +53,8 @@ public:
 
   // default constructor supplied by the compiler
 
+  ~nsTableCellFrame();
+
   NS_IMETHOD Init(nsIPresContext&  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
@@ -253,7 +255,7 @@ protected:
   nsPoint      mCollapseOffset;
 
 public:
-  nsBorderEdges mBorderEdges;       // one list of border segments for each side of the table frame
+  nsBorderEdges *mBorderEdges;      // one list of border segments for each side of the table frame
                                     // used only for the collapsing border model
 
 };
