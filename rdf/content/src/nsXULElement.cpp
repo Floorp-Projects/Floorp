@@ -68,6 +68,7 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIServiceManager.h"
 #include "nsIStyleContext.h"
 #include "nsIStyleRule.h"
@@ -1988,8 +1989,10 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
         if (! protodoc)
             return NS_ERROR_UNEXPECTED;
 
-        nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(protodoc);
-        NS_ASSERTION(global != nsnull, "prototype doc is not a script global");
+        nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner = do_QueryInterface(protodoc);
+        nsCOMPtr<nsIScriptGlobalObject> global;
+        globalOwner->GetScriptGlobalObject(getter_AddRefs(global));
+        NS_ASSERTION(global != nsnull, "prototype doc does not have a script global");
         if (! global)
             return NS_ERROR_UNEXPECTED;
 
@@ -1997,7 +2000,7 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
         if (NS_FAILED(rv)) return rv;
 
         // Use the prototype script's special scope object
-        nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(protodoc);
+        nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(global);
         if (! owner)
             return NS_ERROR_UNEXPECTED;
     
@@ -4435,25 +4438,26 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
     // Use the prototype document's special context
     nsCOMPtr<nsIScriptContext> context;
 
+    // Use the prototype script's special scope object
+    JSObject* scopeObject;
+
     {
-        nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(aPrototypeDocument);
-        NS_ASSERTION(global != nsnull, "prototype doc is not a script global");
+        nsCOMPtr<nsIScriptGlobalObject> global;
+        nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner
+          = do_QueryInterface(aPrototypeDocument);
+        globalOwner->GetScriptGlobalObject(getter_AddRefs(global));
+        NS_ASSERTION(global != nsnull, "prototype doc has no script global");
         if (! global)
             return NS_ERROR_UNEXPECTED;
 
         rv = global->GetContext(getter_AddRefs(context));
         if (NS_FAILED(rv)) return rv;
-    }
 
-    NS_ASSERTION(context != nsnull, "no context for script global");
-    if (! context)
-        return NS_ERROR_UNEXPECTED;
+        NS_ASSERTION(context != nsnull, "no context for script global");
+        if (! context)
+            return NS_ERROR_UNEXPECTED;
 
-    // Use the prototype script's special scope object
-    JSObject* scopeObject;
-
-    {
-        nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(aPrototypeDocument);
+        nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(global);
         if (! owner)
             return NS_ERROR_UNEXPECTED;
     
