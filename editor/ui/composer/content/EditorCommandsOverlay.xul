@@ -62,7 +62,7 @@
 
   <menuitem id="objectProperties" value="&properties.label;"
             accesskey="&properties.accesskey;"
-            oncommand="EditorObjectProperties()"/>
+            observes="cmd_objectProperties"/>
 
   <menu id="tableMenu" value="&tableMenu.label;" accesskey="&tablemenu.accesskey;">
     <menupopup  oncreate="EditorInitTableMenu()">

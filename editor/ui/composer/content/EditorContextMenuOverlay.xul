@@ -64,8 +64,7 @@
 		<menuitem id="tableProperties_cm" value="&tableProperties.label;"/>
 		<menuseparator id="tableMenu-separator"/>
 		
-		<menuitem id="objectProperties_cm" value="&properties.label;" 
-		          oncommand="EditorObjectProperties()"/>
+		<menuitem id="objectProperties_cm" value="&properties.label;" observes="cmd_objectProperties"/>
  </popup>
 </popupset>
 

@@ -58,7 +58,8 @@ function SetupControllerCommands()
   gComposerCommandManager.registerCommand("cmd_pageProperties",  nsPagePropertiesCommand);
   gComposerCommandManager.registerCommand("cmd_colorProperties", nsColorPropertiesCommand);
   gComposerCommandManager.registerCommand("cmd_advancedProperties", nsAdvancedPropertiesCommand);
-
+  gComposerCommandManager.registerCommand("cmd_objectProperties", nsObjectPropertiesCommand);
+  
   gComposerCommandManager.registerCommand("cmd_image",         nsImageCommand);
   gComposerCommandManager.registerCommand("cmd_hline",         nsHLineCommand);
   gComposerCommandManager.registerCommand("cmd_link",          nsLinkCommand);
@@ -536,45 +537,6 @@ var nsHLineCommand =
 };
 
 //-----------------------------------------------------------------------------------
-// Launch Object properties for appropriate selected element 
-
-function EditorObjectProperties()
-{
-  var element = GetSelectedElementOrParentCell();
-  // dump("EditorObjectProperties: element="+element+"\n");
-  if (element)
-  {
-    // dump("TagName="+element.nodeName+"\n");
-    switch (element.nodeName)
-    {
-      case 'IMG':
-        goDoCommand("cmd_image");
-        break;
-      case 'HR':
-        goDoCommand("cmd_hline");
-        break;
-      case 'TABLE':
-        EditorInsertOrEditTable(false);
-        break;
-      case 'TD':
-        EditorTableCellProperties();
-        break;
-      case 'A':
-        if(element.href)
-          goDoCommand("cmd_link");
-        else if (element.name)
-          goDoCommand("cmd_anchor");
-        break;
-    }
-  } else {
-    // We get a partially-selected link if asked for specifically
-    element = editorShell.GetSelectedElement("href");
-    if (element)
-      goDoCommand("cmd_link");
-  }
-}
-
-//-----------------------------------------------------------------------------------
 var nsLinkCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
@@ -680,7 +642,67 @@ var nsPagePropertiesCommand =
 };
 
 //-----------------------------------------------------------------------------------
+var nsObjectPropertiesCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    if (window.editorShell && window.editorShell.documentEditable)
+    {
+      // Launch Object properties for appropriate selected element 
+      var element = GetSelectedElementOrParentCell();
+      //dump("nsObjectProperties, isCommandEnabled: element="+element+",TagName="+element.nodeName+"\n");
+      return (element && 
+              (element.nodeName == "img"   ||
+               element.nodeName == "hr"    ||
+               element.nodeName == "table" ||
+               element.nodeName == "td"    ||
+               element.nodeName == "a"     ||
+               editorShell.GetSelectedElement("href")));
+    }
+    return false;
+  },
+  doCommand: function(aCommand)
+  {
+    // Launch Object properties for appropriate selected element 
+    var element = GetSelectedElementOrParentCell();
+    if (element)
+    {
+      switch (element.nodeName)
+      {
+        case 'img':
+          goDoCommand("cmd_image");
+          break;
+        case 'hr':
+          goDoCommand("cmd_hline");
+          break;
+        case 'table':
+          EditorInsertOrEditTable(false);
+          break;
+        case 'td':
+          EditorTableCellProperties();
+          break;
+        case 'a':
+          if (element.name)
+          {
+            goDoCommand("cmd_anchor");
+          }
+          else if(element.href)
+          {
+            goDoCommand("cmd_link");
+          }
+          break;
+      }
+    } else {
+      // We get a partially-selected link if asked for specifically
+      element = editorShell.GetSelectedElement("href");
+      if (element)
+        goDoCommand("cmd_link");
+    }
+    window.content.focus();
+  }
+};
 
+//-----------------------------------------------------------------------------------
 var nsAdvancedPropertiesCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
@@ -721,172 +743,14 @@ var nsEditHTMLCommand =
   {
     if (gEditorDisplayMode === DisplayModeSource)
     {
-dump(" *** Switch back to HTML Source mode\n");
       SetEditMode(DisplayModeNormal);
     }
     else
     {
-dump(" *** Switch back to NORMAL\n");
       SetEditMode(DisplayModeSource);
     }
   }
 };
-
-//-----------------------------------------------------------------------------------
-// TABLE EDITING COMMANDS
-// Command Updating Strategy:
-//   Don't update on on selection change, only when menu is displayed,
-//   with this "oncreate" hander:
-function EditorInitTableMenu()
-{
-  // Change text on the "Join..." item depending if we
-  //   are joining selected cells or just cell to right
-  // TODO: What to do about normal selection that crosses
-  //       table border? Try to figure out all cells
-  //       included in the selection?
-  var menuText;
-
-  // Use "Join selected cells if there's more than 1 cell selected
-  var tagNameObj = new Object;
-  var countObj = new Object;
-  if (window.editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj) && countObj.value > 1)
-    menuText = GetString("JoinSelectedCells");
-  else
-    menuText = GetString("JoinCellToRight");
-
-  document.getElementById("menu_tableJoinCells").setAttribute("value",menuText);
-
-  // Set platform-specific hints for how to select cells
-  if (gIsWin) osKey = "XulKeyWin";
-  if (gIsMac) osKey = "XulKeyMac";
-  if (gIsUNIX) osKey = "XulKeyUnix";
-
-  var DragStr = GetString(osKey)+GetString("Drag");
-  var ClickStr = GetString(osKey)+GetString("Click");
-  var DelStr = GetString(gIsMac ? "Clear" : "Del");
-
-  document.getElementById("menu_DeleteCell").setAttribute("acceltext",ClickStr);
-  document.getElementById("menu_SelectRow").setAttribute("acceltext",DragStr);
-  document.getElementById("menu_SelectColumn").setAttribute("acceltext",DragStr);
-  document.getElementById("menu_SelectAllCells").setAttribute("acceltext",DragStr);
-  // And add "Del" or "Clear"
-  document.getElementById("menu_DeleteCellContents").setAttribute("acceltext",DelStr);
-
-  // Set enable states for all table commands
-  goUpdateTableMenuItems(document.getElementById("composerTableMenuItems"));
-}
-
-function goUpdateTableMenuItems(commandset)
-{
-  var enabled = false; 
-
-  var enabledIfTable = false;
-  if (window.editorShell && window.editorShell.documentEditable)
-  {
-    var selectedCountObj = new Object();
-    var tagNameObj = new Object();
-    var element = editorShell.GetSelectedOrParentTableElement(tagNameObj, selectedCountObj);  
-    if (element)
-    {
-      // Value when we need to have a selected table or inside a table
-      enabledIfTable = true;  
-
-      // All others require being inside a cell or selected cell
-      enabled = (tagNameObj.value == "td");
-    }
-  }
-
-  // Loop through command nodes
-  for (var i = 0; i < commandset.childNodes.length; i++)
-  {
-    var commandID = commandset.childNodes[i].getAttribute("id");
-    if (commandID)
-    {
-      if (commandID == "cmd_InsertTable" ||
-          commandID == "cmd_tableJoinCells" ||
-          commandID == "cmd_tableSplitCell")
-      {
-        // Call the update method in the command class
-        goUpdateCommand(commandID);
-      } 
-      // Directly set with the values calculated here
-      else if (commandID == "cmd_DeleteTable" ||
-               commandID == "cmd_NormalizeTable")
-      {
-        goSetCommandEnabled(commandID, enabledIfTable);
-      } else {
-        goSetCommandEnabled(commandID, enabled);
-      }
-    }
-  }
-}
-
-//-----------------------------------------------------------------------------------
-// Helpers for inserting and editing tables:
-
-function IsInTable()
-{
-  return (window.editorShell && window.editorShell.documentEditable &&
-          null != window.editorShell.GetElementOrParentByTagName("table", null));
-}
-
-function IsInTableCell()
-{
-  return (window.editorShell && window.editorShell.documentEditable &&
-          null != window.editorShell.GetElementOrParentByTagName("td", null));
-}
-
-function IsSelectionInOneCell()
-{
-  var selection = window.editorShell.editorSelection;
-
-  if (selection && selection.rangeCount == 1)
-  {
-    // We have a "normal" single-range selection
-    if (!selection.isCollapsed &&
-       selection.anchorNode != selection.focusNode)
-    {
-      // Check if both nodes are within the same cell
-      var anchorCell = window.editorShell.GetElementOrParentByTagName("td", selection.anchorNode);
-      var focusCell = window.editorShell.GetElementOrParentByTagName("td", selection.focusNode);
-      return (focusCell != null && anchorCell != null && (focusCell == anchorCell));
-    }
-    // Collapsed selection or anchor == focus (thus must be in 1 cell)
-    return true;
-  }
-  return false;
-}
-
-// Call this with insertAllowed = true to allow inserting if not in existing table,
-//   else use false to do nothing if not in a table
-function EditorInsertOrEditTable(insertAllowed)
-{
-  if (IsInTable()) {
-    // Edit properties of existing table
-    window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "","TablePanel");
-    window.content.focus();
-  } else if(insertAllowed) {
-    EditorInsertTable();
-  }
-}
-
-function EditorInsertTable()
-{
-dump("EditorInsertTable\n");
-  // Insert a new table
-  window.openDialog("chrome://editor/content/EdInsertTable.xul", "_blank", "chrome,close,titlebar,modal", "");
-  window.content.focus();
-}
-
-function EditorTableCellProperties()
-{
-  var cell = editorShell.GetElementOrParentByTagName("td", null);
-  if (cell) {
-    // Start Table Properties dialog on the "Cell" panel
-    window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "", "CellPanel");
-    window.content.focus();
-  }
-}
 
 //-----------------------------------------------------------------------------------
 var nsInsertOrEditTableCommand =
