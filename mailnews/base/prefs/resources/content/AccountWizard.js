@@ -192,7 +192,6 @@ function createAccount(hash) {
     var mail = Components.classes["component://netscape/messenger/services/session"].getService(Components.interfaces.nsIMsgMailSession);
     var am = mail.accountManager;
 
-    var account = am.createAccount();
 
     // workaround for lame-ass combo box bug
     var serverType = hash["server.type"];
@@ -201,9 +200,6 @@ function createAccount(hash) {
     var server = am.createIncomingServer(serverType);
     
     var identity = am.createIdentity();
-
-    account.incomingServer = server;
-    account.addIdentity(identity);
 
     for (var i in hash) {
         var vals = i.split(".");
@@ -215,6 +211,11 @@ function createAccount(hash) {
         else if (type == "server")
             server[slot] = hash[i];
     }
+    
+    var account = am.createAccount();
+    account.incomingServer = server;
+    account.addIdentity(identity);
+
     return true;
 }
 
