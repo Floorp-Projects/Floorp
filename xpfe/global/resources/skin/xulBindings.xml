@@ -344,10 +344,7 @@
                                   onget="return this.anonymousContent[0].firstChild.readonly;"/>
     </interface>
     <handlers>
-      <handler type="focus" value="this.setAttribute('focused','true'); 
-                                   this.anonymousContent[0].firstChild.focus();
-                                   if(this.getAttribute('selectall') == 'true') 
-                                     this.anonymousContent[0].firstChild.setSelectionRange(0,this.value.length);"/>
+      <handler type="focus" value="this.setAttribute('focused','true'); this.anonymousContent[0].firstChild.focus(); "/>
       <handler type="blur" value="this.removeAttribute('focused'); this.anonymousContent[0].firstChild.blur();"/>
     </handlers>    
   </binding>
@@ -362,13 +359,7 @@
 
   <binding id="text">
     <handlers>
-      <handler type="click" value="var forElementID = this.getAttribute('for'); 
-                                   if(forElementID) 
-                                     var forElement = document.getElementById(forElementID); 
-                                   if(forElement) 
-                                     forElement.focus();
-                                   if(forElement && forElement.nodeName == "textfield")
-                                     forElement.anonymousContent[0].firstChild.setSelectionRange(0,forElement.value.length);"/>
+      <handler type="click" value="var forElementID = this.getAttribute('for'); if(forElementID) var forElement = document.getElementById(forElementID); if(forElement) forElement.focus();"/>
     </handlers>
   </binding>
   
