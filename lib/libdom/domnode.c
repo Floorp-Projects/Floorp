@@ -92,7 +92,8 @@ dom_node_getter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             *vp = JSVAL_NULL; /* XXX '#nameless' or some such? */
             return JS_TRUE;
         }
-        str = JS_InternString(cx, node->name);
+        /* str = JS_InternString(cx, node->name);  XXX crashes? */
+        str = JS_NewStringCopyZ(cx, node->name);
         if (!str)
             return JS_FALSE;
         *vp = STRING_TO_JSVAL(str);
