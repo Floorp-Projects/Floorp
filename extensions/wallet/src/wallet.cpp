@@ -3226,8 +3226,8 @@ WLLT_OnSubmit(nsIContent* formNode) {
       /* save login if appropriate */
       SINGSIGN_RememberSignonData (URLName, signonData);
 
-      PRInt32 count = signonData->Count();
-      for (PRInt32 i=count-1; i>=0; i--) {
+      PRInt32 count2 = signonData->Count();
+      for (PRInt32 i=count2-1; i>=0; i--) {
         data = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(i));
         delete data;
       }
