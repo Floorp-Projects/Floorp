@@ -75,7 +75,7 @@ ifdef LOADABLE_FREEBL
     CHECKFILES += freebl_pure32_3.chk freebl_hybrid_3.chk
 endif
 
-CHECKLOC=$(addprefix $(DIST)/lib/$(LIB_PREFIX), $(CHECKFILES))
+CHECKLOC=$(addprefix $(DIST)/lib/$(DLL_PREFIX), $(CHECKFILES))
 
 MD_LIB_RELEASE_FILES = $(CHECKLOC)
 ALL_TRASH += $(CHECKLOC)
