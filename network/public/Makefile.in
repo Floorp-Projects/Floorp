@@ -30,6 +30,7 @@ EXPORTS = nsIStreamListener.h           \
           nsIPostToServer.h             \
           nsIHttpURL.h                  \
           nsILoadAttribs.h              \
+          nsITransport.h		\
           $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
