@@ -744,18 +744,19 @@ function zoom(direction, ratio){
   }
   
   imgEl = frameDoc.getElementById("mainImg");
+  bgDiv = frameDoc.getElementById("bgDiv");
   dump(imgEl.getAttribute("width")+'\n');
   if (ratio > currentZoom){
     imgEl.setAttribute("width", (parseInt(imgEl.offsetWidth)*(ratio/currentZoom)));
-    imgEl.setAttribute("height", (parseInt(imgEl.offsetHeight)*(ratio/currentZoom)));
-    frameDoc.getElementById("bgDiv").style.width = imgEl.getAttribute("width");
-    frameDoc.getElementById("bgDiv").style.height = imgEl.getAttribute("height");
+    //imgEl.setAttribute("height", (parseInt(imgEl.offsetHeight)*(ratio/currentZoom));
+    bgDiv.style.width = imgEl.offsetWidth;
+    bgDiv.style.height = imgEl.offsetHeight;
   }
   else{
     imgEl.setAttribute("width", (parseInt(imgEl.offsetWidth)/(currentZoom/ratio)));
-    imgEl.setAttribute("height", (parseInt(imgEl.offsetHeight)/(currentZoom/ratio)));
-    frameDoc.getElementById("bgDiv").style.width = imgEl.getAttribute("width");
-    frameDoc.getElementById("bgDiv").style.height = imgEl.getAttribute("height");
+    //imgEl.setAttribute("height", (parseInt(imgEl.offsetHeight)/(currentZoom/ratio)));
+    bgDiv.style.width = imgEl.offsetWidth;
+    bgDiv.style.height = imgEl.offsetHeight;
   }
   currentZoom = ratio;  
 }

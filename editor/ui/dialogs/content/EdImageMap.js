@@ -28,6 +28,7 @@ var imageElement = null;
 var mapName = '';
 var imageMap = null;
 var imageEl;
+var srcInputValue = null;
 
 function Startup(){
   if (!InitEditorShell())
@@ -53,6 +54,30 @@ function initDialog(){
   heightInput = window.opener.document.getElementById("heightInput");
   borderInput = window.opener.document.getElementById("border");
 
+  //check for relative url
+  if (!((srcInput.value.indexOf("http://") != -1) || (srcInput.value.indexOf("file://") != -1))){
+    if (editorShell.editorDocument.location == "about:blank"){
+      alert("Relative URLs can only be used on documents which have been saved");
+      window.close();
+      //TODO: add option to save document now
+    }
+    else{
+      edDoc = new String(editorShell.editorDocument.location);
+      imgDoc = new String(srcInput.value);
+      imgDoc = imgDoc.split("../");
+      len = imgDoc.length;
+      for (i=0; i<len; i++){
+        if (edDoc.length > (String(editorShell.editorDocument.location.protocol).length+2))
+          edDoc = edDoc.substring(0, edDoc.lastIndexOf("/"));
+      }
+      imgDoc = edDoc+"/"+imgDoc[imgDoc.length-1];
+      srcInputValue = imgDoc;
+    }
+  }
+  else{
+    srcInputValue = srcInput.value;
+  }
+
   //Set iframe pointer
   frameDoc = window.frames[0].document;
 
@@ -77,20 +102,25 @@ function initDialog(){
   //Place Image
   var newImg = frameDoc.createElement("img");
   if ( newImg ) {
-    newImg.setAttribute("src", srcInput.value);
+    newImg.setAttribute("src", srcInputValue);
     if (parseInt(widthInput.value) > 0)
       newImg.setAttribute("width", widthInput.value);
     if (parseInt(heightInput.value) > 0)
       newImg.setAttribute("height", heightInput.value);
     newImg.setAttribute("id", "mainImg");
     imageEl = frameDoc.getElementById("bgDiv").appendChild(newImg);
+    imageEl.addEventListener("error", imgError, false);
   }
 
   //Resize background DIV to fit image
   fixBgDiv();
 
   //Recreate Image Map if it exists
-    recreateMap();
+  recreateMap();
+}
+
+function imgError(){
+  alert("Error loading image "+srcInputValue+"\nPlease check the URL and try again");
 }
 
 function fixBgDiv(){
