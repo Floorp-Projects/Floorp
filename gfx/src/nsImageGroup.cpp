@@ -77,6 +77,7 @@ private:
 ImageGroupImpl::ImageGroupImpl(nsIImageManager *aManager)
 {
   NS_INIT_REFCNT();
+  // XXX: The caller has already called AddRef() on aManager...
   mManager = aManager;
 }
  

@@ -125,6 +125,8 @@ NS_NewImageManager(nsIImageManager **aInstancePtrResult)
 
   if (ImageManagerImpl::sTheImageManager == nsnull) {
     ImageManagerImpl::sTheImageManager = new ImageManagerImpl();
+    // XXX: This will prevent the ImageManager from being deleted :-(
+    NS_IF_ADDREF(ImageManagerImpl::sTheImageManager);
   }
 
   if (ImageManagerImpl::sTheImageManager == nsnull) {
