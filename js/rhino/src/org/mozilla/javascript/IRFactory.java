@@ -60,8 +60,8 @@ public class IRFactory {
         if (children != null)
             result.addChildrenToBack(children);
         result.putProp(Node.SOURCENAME_PROP, sourceName);
-        result.putProp(Node.BASE_LINENO_PROP, new Integer(baseLineno));
-        result.putProp(Node.END_LINENO_PROP, new Integer(endLineno));
+        result.putIntProp(Node.BASE_LINENO_PROP, baseLineno);
+        result.putIntProp(Node.END_LINENO_PROP, endLineno);
         if (source != null)
             result.putProp(Node.SOURCE_PROP, source);
         return result;
@@ -220,8 +220,8 @@ public class IRFactory {
         f.setFunctionType(isExpr ? FunctionNode.FUNCTION_EXPRESSION
                                  : FunctionNode.FUNCTION_STATEMENT);
         f.putProp(Node.SOURCENAME_PROP, sourceName);
-        f.putProp(Node.BASE_LINENO_PROP, new Integer(baseLineno));
-        f.putProp(Node.END_LINENO_PROP, new Integer(endLineno));
+        f.putIntProp(Node.BASE_LINENO_PROP, baseLineno);
+        f.putIntProp(Node.END_LINENO_PROP, endLineno);
         if (source != null)
             f.putProp(Node.SOURCE_PROP, source);
         Node result = new Node(TokenStream.FUNCTION, name);
@@ -916,14 +916,10 @@ public class IRFactory {
         if (type == TokenStream.NEWTEMP) {
             Node result = new Node(TokenStream.USETEMP);
             result.putProp(Node.TEMP_PROP, newTemp);
-            Integer n = (Integer) newTemp.getProp(Node.USES_PROP);
-            if (n == null) {
-                n = new Integer(1);
-            } else {
-                if (n.intValue() < Integer.MAX_VALUE)
-                    n = new Integer(n.intValue() + 1);
+            int n = newTemp.getIntProp(Node.USES_PROP, 0);
+            if (n != Integer.MAX_VALUE) {
+                newTemp.putIntProp(Node.USES_PROP, n + 1);
             }
-            newTemp.putProp(Node.USES_PROP, n);
             return result;
         }
         return newTemp.cloneNode();

@@ -193,7 +193,11 @@ public class NativeMath extends IdScriptable
 
     private double js_ceil(double x) { return Math.ceil(x); }
 
-    private double js_cos(double x) { return Math.cos(x); }
+    private double js_cos(double x) {
+        if (x == Double.POSITIVE_INFINITY || x == Double.NEGATIVE_INFINITY)
+            return Double.NaN;
+        return Math.cos(x);
+    }
 
     private double js_exp(double x) {
         return (x == Double.POSITIVE_INFINITY) ? x
@@ -267,7 +271,11 @@ public class NativeMath extends IdScriptable
         return (double) l;
     }
 
-    private double js_sin(double x) { return Math.sin(x); }
+    private double js_sin(double x) {
+        if (x == Double.POSITIVE_INFINITY || x == Double.NEGATIVE_INFINITY)
+            return Double.NaN;
+        return Math.sin(x);
+    }
 
     private double js_sqrt(double x) { return Math.sqrt(x); }
 

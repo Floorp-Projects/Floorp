@@ -215,15 +215,8 @@ public class NodeTransformer {
               }
 
               case TokenStream.NEWLOCAL : {
-                    Integer localCount
-                            = (Integer)(tree.getProp(Node.LOCALCOUNT_PROP));
-                    if (localCount == null) {
-                        tree.putProp(Node.LOCALCOUNT_PROP, new Integer(1));
-                    }
-                    else {
-                        tree.putProp(Node.LOCALCOUNT_PROP,
-                                        new Integer(localCount.intValue() + 1));
-                    }
+                    int localCount = tree.getIntProp(Node.LOCALCOUNT_PROP, 0);
+                    tree.putIntProp(Node.LOCALCOUNT_PROP, localCount + 1);
                 }
                 break;
 
@@ -255,15 +248,8 @@ public class NodeTransformer {
                     loops.push(node);
                     loopEnds.push(finallytarget);
                 }
-                Integer localCount
-                        = (Integer)(tree.getProp(Node.LOCALCOUNT_PROP));
-                if (localCount == null) {
-                    tree.putProp(Node.LOCALCOUNT_PROP, new Integer(1));
-                }
-                else {
-                    tree.putProp(Node.LOCALCOUNT_PROP,
-                                 new Integer(localCount.intValue() + 1));
-                }
+                int localCount = tree.getIntProp(Node.LOCALCOUNT_PROP, 0);
+                tree.putIntProp(Node.LOCALCOUNT_PROP, localCount + 1);
                 break;
               }
 

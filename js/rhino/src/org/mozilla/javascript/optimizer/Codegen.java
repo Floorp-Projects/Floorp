@@ -505,9 +505,9 @@ public class Codegen extends Interpreter {
                             "[Ljava/lang/Object;)Ljava/lang/Object;",
                            1, false, true);
             generatePrologue(cx, tree, false, -1);
-            Object linenum = tree.getProp(Node.END_LINENO_PROP);
-            if (linenum != null)
-              classFile.addLineNumberEntry(((Integer) linenum).shortValue());
+            int linenum = tree.getIntProp(Node.END_LINENO_PROP, -1);
+            if (linenum != -1)
+              classFile.addLineNumberEntry((short)linenum);
             tree.addChildToBack(new Node(TokenStream.RETURN));
             codegenBase = tree;
         }
@@ -665,7 +665,7 @@ public class Codegen extends Interpreter {
                         generateCodeFromNode(child, node, trueLabel, falseLabel);
                         child = child.getNextSibling();
                     }
-                    if (node.getProp(Node.ISNUMBER_PROP) != null)
+                    if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1)
                         addByteCode(ByteCode.POP2);
                     else
                         addByteCode(ByteCode.POP);
@@ -778,26 +778,19 @@ public class Codegen extends Interpreter {
                     generateCodeFromNode(child, node, trueLabel, falseLabel);
                     generateCodeFromNode(child.getNextSibling(), 
                                                  node, trueLabel, falseLabel);
-                    Integer childNumberFlag = 
-                                  (Integer)(node.getProp(Node.ISNUMBER_PROP));
-                    if (childNumberFlag != null) {
-                        if (childNumberFlag.intValue() == Node.BOTH) {
+                    switch (node.getIntProp(Node.ISNUMBER_PROP, -1)) {
+                        case Node.BOTH:
                             addByteCode(ByteCode.DADD);
-                        }
-                        else {
-                            if (childNumberFlag.intValue() == Node.LEFT) {
+                            break;
+                        case Node.LEFT:
                                 addOptRuntimeInvoke("add",
-                                      "(DLjava/lang/Object;)",
-                                      "Ljava/lang/Object;");
-                            }
-                            else {
+                                "(DLjava/lang/Object;)", "Ljava/lang/Object;");
+                            break;
+                        case Node.RIGHT:
                                 addOptRuntimeInvoke("add",
-                                      "(Ljava/lang/Object;D)",
-                                      "Ljava/lang/Object;");
-                            }
-                        }
-                    }
-                    else {
+                                "(Ljava/lang/Object;D)", "Ljava/lang/Object;");
+                            break;
+                        default:
                         addScriptRuntimeInvoke("add",
                                     "(Ljava/lang/Object;Ljava/lang/Object;)",
                                     "Ljava/lang/Object;");
@@ -848,15 +841,18 @@ public class Codegen extends Interpreter {
                                              "(Ljava/lang/Object;)", "D");
                         }
                         else {
-                            if (toType == ScriptRuntime.ObjectClass) {// convert from double
-                                if ((child.getType() == TokenStream.NUMBER)
-                                     && (child.getProp(Node.ISNUMBER_PROP)
-                                                                    != null)) {
-                                    Object oldProp
-                                           = child.getProp(Node.ISNUMBER_PROP);
-                                    child.putProp(Node.ISNUMBER_PROP, null);
-                                    generateCodeFromNode(child, node, trueLabel, falseLabel);
-                                    child.putProp(Node.ISNUMBER_PROP, oldProp);
+                            if (toType == ScriptRuntime.ObjectClass) {
+                                // convert from double
+                                int prop = -1;
+                                if (child.getType() == TokenStream.NUMBER) {
+                                    prop = child.getIntProp(Node.ISNUMBER_PROP,
+                                                            -1);
+                                }
+                                if (prop != -1) {
+                                    child.removeProp(Node.ISNUMBER_PROP);
+                                    generateCodeFromNode(child, node, trueLabel,
+                                                         falseLabel);
+                                    child.putIntProp(Node.ISNUMBER_PROP, prop);
                                 }
                                 else {
                                     addByteCode(ByteCode.NEW, "java/lang/Double");
@@ -893,7 +889,7 @@ public class Codegen extends Interpreter {
                     child = child.getNextSibling();
                 }
                 aload(variableObjectLocal);
-                if (node.getProp(Node.ISNUMBER_PROP) != null) {
+                if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
                     addOptRuntimeInvoke("getElem",
                                       "(Ljava/lang/Object;D" +
                                       "Lorg/mozilla/javascript/Scriptable;)",
@@ -911,7 +907,7 @@ public class Codegen extends Interpreter {
                 OptLocalVariable lVar
                         = (OptLocalVariable)(node.getProp(Node.VARIABLE_PROP));
                 visitGetVar(lVar,
-                            node.getProp(Node.ISNUMBER_PROP) != null,
+                            node.getIntProp(Node.ISNUMBER_PROP, -1) != -1,
                             node.getString());
               }
               break;
@@ -934,7 +930,7 @@ public class Codegen extends Interpreter {
                     child = child.getNextSibling();
                 }
                 aload(variableObjectLocal);
-                if (node.getProp(Node.ISNUMBER_PROP) != null) {
+                if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
                     addOptRuntimeInvoke("setElem",
                               "(Ljava/lang/Object;D" +
                               "Ljava/lang/Object;Lorg/mozilla/javascript/Scriptable;)",
@@ -1363,7 +1359,7 @@ public class Codegen extends Interpreter {
                                     "Ljava/lang/String;" +
                                     "Lorg/mozilla/javascript/Context;Z)",
                                    "Lorg/mozilla/javascript/NativeFunction;");
-            def.putProp(Node.FUNCTION_PROP, new Short(i));
+            def.putIntProp(Node.FUNCTION_PROP, i);
             addByteCode(ByteCode.AASTORE);    // store NativeFunction
                                               // instance to array
         }
@@ -1422,10 +1418,10 @@ public class Codegen extends Interpreter {
 
         // These locals are to be pre-allocated since they need function scope.
         // They are primarily used by the exception handling mechanism
-        Integer localCount = (Integer)(tree.getProp(Node.LOCALCOUNT_PROP));
-        if (localCount != null) {
+        int localCount = tree.getIntProp(Node.LOCALCOUNT_PROP, 0);
+        if (localCount != 0) {
             itsLocalAllocationBase = (short)(argsLocal + 1);
-            for (int i = 0; i < localCount.intValue(); i++) {
+            for (int i = 0; i < localCount; i++) {
                 reserveWordLocal(itsLocalAllocationBase + i);
             }
         }
@@ -1614,11 +1610,11 @@ public class Codegen extends Interpreter {
 
     private void visitFunction(Node fn, boolean setName) {
         aload(variableObjectLocal);
-        Short index = (Short) fn.getProp(Node.FUNCTION_PROP);
+        int index = fn.getExistingIntProp(Node.FUNCTION_PROP);
         aload(funObjLocal);
         classFile.add(ByteCode.GETFIELD, "org/mozilla/javascript/NativeFunction",
                 "nestedFunctions", "[Lorg/mozilla/javascript/NativeFunction;");
-        push(index.shortValue());
+        push((short)index);
         addByteCode(ByteCode.AALOAD);
         addVirtualInvoke("java/lang/Object", "getClass", "()", "Ljava/lang/Class;");
         aload(contextLocal);
@@ -1633,28 +1629,21 @@ public class Codegen extends Interpreter {
     }
 
     private void visitTarget(Node node) {
-        Object lblObect = node.getProp(Node.LABEL_PROP);
-        if (lblObect == null) {
-            int label = markLabel(acquireLabel());
-            node.putProp(Node.LABEL_PROP, new Integer(label));
+        int label = node.getIntProp(Node.LABEL_PROP, -1);
+        if (label == -1) {
+            label = acquireLabel();
+            node.putIntProp(Node.LABEL_PROP, label);
         }
-        else {
-            int label = ((Integer)lblObect).intValue();
-            markLabel(label);
-        }
-
+        markLabel(label);
     }
 
     private void visitGOTO(Node node, int type, Node child) {
         Node target = (Node)(node.getProp(Node.TARGET_PROP));
-        Object lblObect = target.getProp(Node.LABEL_PROP);
-        int targetLabel;
-        if (lblObect == null) {
+        int targetLabel = target.getIntProp(Node.LABEL_PROP, -1);
+        if (targetLabel == -1) {
             targetLabel = acquireLabel();
-            target.putProp(Node.LABEL_PROP, new Integer(targetLabel));
+            target.putIntProp(Node.LABEL_PROP, targetLabel);
         }
-        else
-            targetLabel = ((Integer)lblObect).intValue();
         int fallThruLabel = acquireLabel();
 
         if ((type == TokenStream.IFEQ) || (type == TokenStream.IFNE)) {
@@ -1713,7 +1702,7 @@ public class Codegen extends Interpreter {
              "Ljava/util/Enumeration;");
         short x = getNewWordLocal();
         astore(x);
-        node.putProp(Node.LOCAL_PROP, new Integer(x));
+        node.putIntProp(Node.LOCAL_PROP, x);
     }
 
     private void visitEnumNext(Node node, Node child) {
@@ -1722,8 +1711,8 @@ public class Codegen extends Interpreter {
             child = child.getNextSibling();
         }
         Node init = (Node) node.getProp(Node.ENUM_PROP);
-        Integer local = (Integer) init.getProp(Node.LOCAL_PROP);
-        aload(local.shortValue());
+        int local = init.getExistingIntProp(Node.LOCAL_PROP);
+        aload((short)local);
         addScriptRuntimeInvoke("nextEnum", "(Ljava/util/Enumeration;)", "Ljava/lang/Object;");
     }
 
@@ -1733,8 +1722,8 @@ public class Codegen extends Interpreter {
             child = child.getNextSibling();
         }
         Node init = (Node) node.getProp(Node.ENUM_PROP);
-        Integer local = (Integer) init.getProp(Node.LOCAL_PROP);
-        releaseWordLocal(local.shortValue());
+        int local = init.getExistingIntProp(Node.LOCAL_PROP);
+        releaseWordLocal((short)local);
     }
 
     private void visitEnterWith(Node node, Node child) {
@@ -1761,7 +1750,7 @@ public class Codegen extends Interpreter {
     private void resetTargets(Node node)
     {
         if (node.getType() == TokenStream.TARGET) {
-            node.putProp(Node.LABEL_PROP, null);
+            node.removeProp(Node.LABEL_PROP);
         }
         Node child = node.getFirstChild();
         while (child != null) {
@@ -1830,10 +1819,9 @@ public class Codegen extends Interpreter {
                     }
                 }
                 if (!handled) {
-                    Integer childNumberFlag
-                                = (Integer)(child.getProp(Node.ISNUMBER_PROP));
-                    if ((childNumberFlag != null)
-                            && (childNumberFlag.intValue() == Node.BOTH)) {
+                    int childNumberFlag
+                                = child.getIntProp(Node.ISNUMBER_PROP, -1);
+                    if (childNumberFlag == Node.BOTH) {
                         classFile.add(ByteCode.GETSTATIC,
                                 "java/lang/Void",
                                 "TYPE",
@@ -2030,16 +2018,15 @@ public class Codegen extends Interpreter {
                         OptLocalVariable lVar
                           = (OptLocalVariable)(child.getProp(Node.VARIABLE_PROP));
                         if (lVar.isParameter()) {
-                            child.putProp(Node.ISNUMBER_PROP, null);
+                            child.removeProp(Node.ISNUMBER_PROP);
                             generateCodeFromNode(child, node, -1, -1);
                             handled = true;
                         }
                     }
                     if (!handled) {
-                        Integer childNumberFlag
-                                = (Integer)(child.getProp(Node.ISNUMBER_PROP));
-                        if ((childNumberFlag != null)
-                                && (childNumberFlag.intValue() == Node.BOTH)) {
+                        int childNumberFlag
+                                = child.getIntProp(Node.ISNUMBER_PROP, -1);
+                        if (childNumberFlag == Node.BOTH) {
                             addByteCode(ByteCode.NEW,"java/lang/Double");
                             addByteCode(ByteCode.DUP);
                             generateCodeFromNode(child, node, -1, -1);
@@ -2189,8 +2176,7 @@ public class Codegen extends Interpreter {
         // catch area.
         if (catchTarget != null) {
             // get the label to goto
-            int catchLabel =
-                ((Integer)catchTarget.getProp(Node.LABEL_PROP)).intValue();
+            int catchLabel = catchTarget.getExistingIntProp(Node.LABEL_PROP);
 
             generateCatchBlock(JAVASCRIPTEXCEPTION, savedVariableObject, 
                                catchLabel, startLabel);
@@ -2238,7 +2224,7 @@ public class Codegen extends Interpreter {
 
             // get the label to JSR to
             int finallyLabel =
-                ((Integer)finallyTarget.getProp(Node.LABEL_PROP)).intValue();
+                finallyTarget.getExistingIntProp(Node.LABEL_PROP);
             addByteCode(ByteCode.JSR, finallyLabel);
 
             // rethrow
@@ -2497,7 +2483,7 @@ public class Codegen extends Interpreter {
     private void visitIncDec(Node node, boolean isInc)
     {
         Node child = node.getFirstChild();
-        if (node.getProp(Node.ISNUMBER_PROP) != null) {
+        if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
             OptLocalVariable lVar
                     = (OptLocalVariable)(child.getProp(Node.VARIABLE_PROP));
             if (lVar.getJRegister() == -1)
@@ -2567,8 +2553,8 @@ public class Codegen extends Interpreter {
     private void visitArithmetic(Node node, byte opCode, Node child, 
                                  Node parent) 
     {
-        Integer childNumberFlag = (Integer)(node.getProp(Node.ISNUMBER_PROP));
-        if (childNumberFlag != null) {
+        int childNumberFlag = node.getIntProp(Node.ISNUMBER_PROP, -1);
+        if (childNumberFlag != -1) {
             generateCodeFromNode(child, node, -1, -1);
             generateCodeFromNode(child.getNextSibling(), node, -1, -1);
             addByteCode(opCode);
@@ -2593,8 +2579,8 @@ public class Codegen extends Interpreter {
     }
 
     private void visitBitOp(Node node, int type, Node child) {
-        Integer childNumberFlag = (Integer)(node.getProp(Node.ISNUMBER_PROP));
-        if (childNumberFlag == null) {
+        int childNumberFlag = node.getIntProp(Node.ISNUMBER_PROP, -1);
+        if (childNumberFlag == -1) {
             addByteCode(ByteCode.NEW, "java/lang/Double");
             addByteCode(ByteCode.DUP);
         }
@@ -2616,7 +2602,7 @@ public class Codegen extends Interpreter {
             addDoubleConstructor();
             return;
         }
-        if (childNumberFlag == null) {
+        if (childNumberFlag == -1) {
             addScriptRuntimeInvoke("toInt32", "(Ljava/lang/Object;)", "I");
             generateCodeFromNode(child.getNextSibling(), node, -1, -1);
             addScriptRuntimeInvoke("toInt32", "(Ljava/lang/Object;)", "I");
@@ -2646,7 +2632,7 @@ public class Codegen extends Interpreter {
             badTree();
         }
         addByteCode(ByteCode.I2D);
-        if (childNumberFlag == null) {
+        if (childNumberFlag == -1) {
             addDoubleConstructor();
         }
     }
@@ -2691,9 +2677,8 @@ public class Codegen extends Interpreter {
                                    int trueGOTO, int falseGOTO)
     {
         int op = node.getInt();
-        Integer childNumberFlag = (Integer)(node.getProp(Node.ISNUMBER_PROP));
-        if ((childNumberFlag != null)
-                    && (childNumberFlag.intValue() == Node.BOTH)) {
+        int childNumberFlag = node.getIntProp(Node.ISNUMBER_PROP, -1);
+        if (childNumberFlag == Node.BOTH) {
             generateCodeFromNode(child, node, -1, -1);
             generateCodeFromNode(child.getNextSibling(), node, -1, -1);
             genSimpleCompare(op, trueGOTO, falseGOTO);
@@ -2749,8 +2734,7 @@ public class Codegen extends Interpreter {
                         }
                         else {  // just the left child is a DCP, if the right child
                                 // is a number it's worth testing the left
-                            if ((childNumberFlag != null)
-                                    && (childNumberFlag.intValue() == Node.RIGHT)) {
+                            if (childNumberFlag == Node.RIGHT) {
                                 OptLocalVariable lVar1
                                     = (OptLocalVariable)(child.getProp(Node.VARIABLE_PROP));                        
                                 aload(lVar1.getJRegister());
@@ -2770,8 +2754,7 @@ public class Codegen extends Interpreter {
                     }
                     else {  //  just the right child is a DCP, if the left child
                             //  is a number it's worth testing the right
-                        if ((childNumberFlag != null)
-                                && (childNumberFlag.intValue() == Node.LEFT)) {
+                        if (childNumberFlag == Node.LEFT) {
                             OptLocalVariable lVar2
                                 = (OptLocalVariable)(rChild.getProp(Node.VARIABLE_PROP));                        
                             aload(lVar2.getJRegister());
@@ -2791,7 +2774,7 @@ public class Codegen extends Interpreter {
                 }
                 generateCodeFromNode(child, node, -1, -1);
                 generateCodeFromNode(rChild, node, -1, -1);
-                if (childNumberFlag == null) {
+                if (childNumberFlag == -1) {
                     if (op == TokenStream.GE || op == TokenStream.GT) {
                         addByteCode(ByteCode.SWAP);
                     }
@@ -2801,8 +2784,7 @@ public class Codegen extends Interpreter {
                                "(Ljava/lang/Object;Ljava/lang/Object;)", "I");
                 }
                 else {
-                    boolean doubleThenObject
-                                   = (childNumberFlag.intValue() == Node.LEFT);
+                    boolean doubleThenObject = (childNumberFlag == Node.LEFT);
                     if (op == TokenStream.GE || op == TokenStream.GT) {
                         if (doubleThenObject) {
                             addByteCode(ByteCode.DUP_X2);
@@ -2835,11 +2817,10 @@ public class Codegen extends Interpreter {
             this is the version that returns an Object result
         */
         int op = node.getInt();
-        Integer childNumberFlag = (Integer)(node.getProp(Node.ISNUMBER_PROP));
-        if (((childNumberFlag != null)
-                    && (childNumberFlag.intValue() == Node.BOTH))
-                || (op == TokenStream.INSTANCEOF)
-                || (op == TokenStream.IN)) 
+        int childNumberFlag = node.getIntProp(Node.ISNUMBER_PROP, -1);
+        if (childNumberFlag == Node.BOTH
+                || op == TokenStream.INSTANCEOF
+                || op == TokenStream.IN) 
         {
             if (op == TokenStream.INSTANCEOF)
                 aload(variableObjectLocal);
@@ -2879,7 +2860,7 @@ public class Codegen extends Interpreter {
                      || (op == TokenStream.GT)) ? "cmp_LTB" : "cmp_LEB";
             generateCodeFromNode(child, node, -1, -1);
             generateCodeFromNode(child.getNextSibling(), node, -1, -1);
-            if (childNumberFlag == null) {
+            if (childNumberFlag == -1) {
                 if (op == TokenStream.GE || op == TokenStream.GT) {
                     addByteCode(ByteCode.SWAP);
                 }
@@ -2888,8 +2869,7 @@ public class Codegen extends Interpreter {
                            "Ljava/lang/Boolean;");
             }
             else {
-                boolean doubleThenObject
-                               = (childNumberFlag.intValue() == Node.LEFT);
+                boolean doubleThenObject = (childNumberFlag == Node.LEFT);
                 if (op == TokenStream.GE || op == TokenStream.GT) {
                     if (doubleThenObject) {
                         addByteCode(ByteCode.DUP_X2);
@@ -3103,7 +3083,7 @@ public class Codegen extends Interpreter {
             push(node.getString());
         } else {
        	    Number num = (Number) node.getDatum();
-            if (node.getProp(Node.ISNUMBER_PROP) != null) {
+            if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
                 push(num.doubleValue());
             }
             else {
@@ -3373,7 +3353,7 @@ public class Codegen extends Interpreter {
             if (lVar.isParameter() 
                         && inDirectCallFunction
                         && !itsForcedObjectParameters) {
-                if (node.getProp(Node.ISNUMBER_PROP) != null) {
+                if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
                     if (needValue) addByteCode(ByteCode.DUP2);
                     aload(lVar.getJRegister());
                     classFile.add(ByteCode.GETSTATIC,
@@ -3400,7 +3380,7 @@ public class Codegen extends Interpreter {
                 }
             }
             else {
-                if (node.getProp(Node.ISNUMBER_PROP) != null) {
+                if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
                       dstore(lVar.getJRegister());
                       if (needValue) dload(lVar.getJRegister());
                 }
@@ -3528,20 +3508,18 @@ public class Codegen extends Interpreter {
     }
 
     private short getLocalFromNode(Node node) {
-        Integer localProp = (Integer) node.getProp(Node.LOCAL_PROP);
-        if (localProp == null) {
+        int local = node.getIntProp(Node.LOCAL_PROP, -1);
+        if (local == -1) {
             // for NEWLOCAL & USELOCAL, use the next pre-allocated
             // register, otherwise for NEWTEMP & USETEMP, get the
             // next available from the pool
-            short local = ((node.getType() == TokenStream.NEWLOCAL)
+            local = ((node.getType() == TokenStream.NEWLOCAL)
                                 || (node.getType() == TokenStream.USELOCAL)) ?
                             itsLocalAllocationBase++ : getNewWordLocal();
 
-            node.putProp(Node.LOCAL_PROP, new Integer(local));
-            return local;
-        } else {
-            return localProp.shortValue();
+            node.putIntProp(Node.LOCAL_PROP, local);
         }
+        return (short)local;
     }
 
     private void visitNewTemp(Node node, Node child) {
@@ -3552,8 +3530,7 @@ public class Codegen extends Interpreter {
         short local = getLocalFromNode(node);
         addByteCode(ByteCode.DUP);
         astore(local);
-        Integer n = (Integer) node.getProp(Node.USES_PROP);
-        if (n == null || n.intValue() == 0)
+        if (node.getIntProp(Node.USES_PROP, 0) == 0)
             releaseWordLocal(local);
     }
 
@@ -3571,16 +3548,12 @@ public class Codegen extends Interpreter {
             addByteCode(ByteCode.RET, local);
         else
             aload(local);
-        Integer n = (Integer) temp.getProp(Node.USES_PROP);
-        if (n == null) {
-            releaseWordLocal(local);
-        } else {
-            if (n.intValue() < Integer.MAX_VALUE) {
-                int i = n.intValue() - 1;
-                if (i == 0)
+        int n = temp.getIntProp(Node.USES_PROP, 0);
+        if (n <= 1) {
                     releaseWordLocal(local);
-                temp.putProp(Node.USES_PROP, new Integer(i));
             }
+        if (n != 0 && n != Integer.MAX_VALUE) {
+            temp.putIntProp(Node.USES_PROP, n - 1);
         }
     }
 

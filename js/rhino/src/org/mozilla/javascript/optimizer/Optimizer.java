@@ -356,7 +356,7 @@ public class Optimizer {
             OptLocalVariable theVar
                  = (OptLocalVariable)(n.getProp(Node.VARIABLE_PROP));
             if ((theVar != null) && theVar.isParameter()) {
-                n.putProp(Node.ISNUMBER_PROP, null);
+                n.removeProp(Node.ISNUMBER_PROP);
                 return true;
             }
         }
@@ -370,11 +370,11 @@ public class Optimizer {
                     Node child = n.getFirstChild();
                     int type = rewriteForNumberVariables(child);
                     if (type == TypeEvent.NumberType)
-                        n.putProp(Node.ISNUMBER_PROP, new Integer(Node.BOTH));
+                        n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                      return TypeEvent.NoType;
                 }
             case TokenStream.NUMBER :
-                n.putProp(Node.ISNUMBER_PROP, new Integer(Node.BOTH));
+                n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                 return TypeEvent.NumberType;
 
             case TokenStream.GETVAR : {
@@ -382,12 +382,12 @@ public class Optimizer {
                          = (OptLocalVariable)(n.getProp(Node.VARIABLE_PROP));
                     if (theVar != null) {
                         if (inDirectCallFunction && theVar.isParameter()) {
-                            n.putProp(Node.ISNUMBER_PROP, new Integer(Node.BOTH));
+                            n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             return TypeEvent.NumberType;
                         }
                         else
                             if (theVar.isNumber()) {
-                                n.putProp(Node.ISNUMBER_PROP, new Integer(Node.BOTH));
+                                n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                                 return TypeEvent.NumberType;
                             }
                     }
@@ -401,7 +401,7 @@ public class Optimizer {
                         OptLocalVariable theVar
                              = (OptLocalVariable)(child.getProp(Node.VARIABLE_PROP));
                         if ((theVar != null) && theVar.isNumber()) {
-                            n.putProp(Node.ISNUMBER_PROP, new Integer(Node.BOTH));
+                            n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             markDCPNumberContext(child);
                             return TypeEvent.NumberType;
                         }
@@ -420,7 +420,7 @@ public class Optimizer {
                     if (inDirectCallFunction && theVar.isParameter()) {
                         if (rType == TypeEvent.NumberType) {
                             if (!convertParameter(rChild)) {
-                                n.putProp(Node.ISNUMBER_PROP, new Integer(Node.BOTH));
+                                n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                                 return TypeEvent.NumberType;
                             }
                             markDCPNumberContext(rChild);
@@ -437,7 +437,7 @@ public class Optimizer {
                                 newRChild.putProp(Node.TYPE_PROP, Double.class);
                                 n.addChildToBack(newRChild);
                             }
-                            n.putProp(Node.ISNUMBER_PROP, new Integer(Node.BOTH));
+                            n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             markDCPNumberContext(rChild);
                             return TypeEvent.NumberType;
                         }
@@ -488,33 +488,33 @@ public class Optimizer {
                             }
                             else {
                                 if (rType == TypeEvent.NumberType) {
-                                    n.putProp(Node.ISNUMBER_PROP,
-                                                    new Integer(Node.RIGHT));
+                                    n.putIntProp(Node.ISNUMBER_PROP,
+                                                 Node.RIGHT);
                                 }
                             }
                         }
                         else {
                             if (convertParameter(rChild)) {
                                 if (lType == TypeEvent.NumberType) {
-                                    n.putProp(Node.ISNUMBER_PROP,
-                                                    new Integer(Node.LEFT));
+                                    n.putIntProp(Node.ISNUMBER_PROP,
+                                                 Node.LEFT);
                                 }
                             }
                             else {
                                 if (lType == TypeEvent.NumberType) {
                                     if (rType == TypeEvent.NumberType) {
-                                        n.putProp(Node.ISNUMBER_PROP,
-                                                      new Integer(Node.BOTH));
+                                        n.putIntProp(Node.ISNUMBER_PROP,
+                                                     Node.BOTH);
                                     }
                                     else {
-                                        n.putProp(Node.ISNUMBER_PROP,
-                                                      new Integer(Node.LEFT));
+                                        n.putIntProp(Node.ISNUMBER_PROP,
+                                                     Node.LEFT);
                                     }
                                 }
                                 else {
                                     if (rType == TypeEvent.NumberType) {
-                                        n.putProp(Node.ISNUMBER_PROP,
-                                                      new Integer(Node.RIGHT));
+                                        n.putIntProp(Node.ISNUMBER_PROP,
+                                                     Node.RIGHT);
                                     }
                                 }
                             }
@@ -537,29 +537,30 @@ public class Optimizer {
                         }
                         else {
                             if (rType == TypeEvent.NumberType) {
-                                n.putProp(Node.ISNUMBER_PROP,new Integer(Node.RIGHT));
+                                n.putIntProp(Node.ISNUMBER_PROP, Node.RIGHT);
                             }
                         }
                     }
                     else {
                         if (convertParameter(rChild)) {
                             if (lType == TypeEvent.NumberType) {
-                                n.putProp(Node.ISNUMBER_PROP,new Integer(Node.LEFT));
+                                n.putIntProp(Node.ISNUMBER_PROP, Node.LEFT);
                             }
                         }
                         else {
                             if (lType == TypeEvent.NumberType) {
                                 if (rType == TypeEvent.NumberType) {
-                                    n.putProp(Node.ISNUMBER_PROP,new Integer(Node.BOTH));
+                                    n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                                     return TypeEvent.NumberType;
                                 }
                                 else {
-                                    n.putProp(Node.ISNUMBER_PROP,new Integer(Node.LEFT));
+                                    n.putIntProp(Node.ISNUMBER_PROP, Node.LEFT);
                                 }
                             }
                             else {
                                 if (rType == TypeEvent.NumberType) {
-                                    n.putProp(Node.ISNUMBER_PROP,new Integer(Node.RIGHT));
+                                    n.putIntProp(Node.ISNUMBER_PROP,
+                                                 Node.RIGHT);
                                 }
                             }
                         }
@@ -584,8 +585,7 @@ public class Optimizer {
                     markDCPNumberContext(rChild);
                     if (lType == TypeEvent.NumberType) {
                         if (rType == TypeEvent.NumberType) {
-                            n.putProp(Node.ISNUMBER_PROP,
-                                                new Integer(Node.BOTH));
+                            n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             return TypeEvent.NumberType;
                         }
                         else {
@@ -594,8 +594,7 @@ public class Optimizer {
                                 Node newRChild = new Node(TokenStream.CONVERT, rChild);
                                 newRChild.putProp(Node.TYPE_PROP, Double.class);
                                 n.addChildToBack(newRChild);
-                                n.putProp(Node.ISNUMBER_PROP,
-                                                    new Integer(Node.BOTH));
+                                n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             }
                             return TypeEvent.NumberType;
                         }
@@ -607,8 +606,7 @@ public class Optimizer {
                                 Node newLChild = new Node(TokenStream.CONVERT, lChild);
                                 newLChild.putProp(Node.TYPE_PROP, Double.class);
                                 n.addChildToFront(newLChild);
-                                n.putProp(Node.ISNUMBER_PROP,
-                                                    new Integer(Node.BOTH));
+                                n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             }
                             return TypeEvent.NumberType;
                         }
@@ -625,8 +623,7 @@ public class Optimizer {
                                 newRChild.putProp(Node.TYPE_PROP, Double.class);
                                 n.addChildToBack(newRChild);
                             }
-                            n.putProp(Node.ISNUMBER_PROP,
-                                                new Integer(Node.BOTH));
+                            n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             return TypeEvent.NumberType;
                         }
                     }
@@ -649,7 +646,7 @@ public class Optimizer {
                         // setting the ISNUMBER_PROP signals the codegen
                         // to use the scriptRuntime.setElem that takes
                         // a double index
-                        n.putProp(Node.ISNUMBER_PROP, new Integer(Node.LEFT));
+                        n.putIntProp(Node.ISNUMBER_PROP, Node.LEFT);
                         markDCPNumberContext(arrayIndex);
                     }
                     int rValueType = rewriteForNumberVariables(rValue);
@@ -680,7 +677,7 @@ public class Optimizer {
                         // setting the ISNUMBER_PROP signals the codegen
                         // to use the scriptRuntime.getElem that takes
                         // a double index
-                        n.putProp(Node.ISNUMBER_PROP, new Integer(Node.RIGHT));
+                        n.putIntProp(Node.ISNUMBER_PROP, Node.RIGHT);
                         markDCPNumberContext(arrayIndex);
                     }
                     return TypeEvent.NoType;

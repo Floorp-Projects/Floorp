@@ -172,13 +172,12 @@ class OptTransformer extends NodeTransformer {
                     }
                     /*
                     if (oldFn != null) {
-                        Object prop = fnNode.getProp(Node.BASE_LINENO_PROP);
+                        int line = fnNode.getIntProp(Node.BASE_LINENO_PROP, 0);
                         Object[] errArgs = { name };
                         Context.reportWarning(
                             Context.getMessage("msg.fn.redecl", errArgs),
                             (String) fnNode.getProp(Node.SOURCENAME_PROP),
-                            prop == null ? 0 : ((Integer) prop).intValue(),
-                            null, 0);
+                            line, null, 0);
                     }
                     */
                     theFnClassNameList.put(name, fnNode);

@@ -342,18 +342,27 @@ public class Node implements Cloneable {
     }
 
     public void putProp(int propType, Object prop) {
-        if (props == null)
-            props = new UintMap(2);
-        if (prop == null)
-            props.remove(propType);
-        else
+        if (prop == null) {
+            removeProp(propType);
+        }
+        else {
+            if (props == null) {
+                props = new UintMap(2);
+            }
             props.put(propType, prop);
+        }
     }
 
     public void putIntProp(int propType, int prop) {
         if (props == null)
             props = new UintMap(2);
         props.put(propType, prop);
+    }
+    
+    public void removeProp(int propType) {
+        if (props != null) {
+            props.remove(propType);
+        }
     }
 
     public Object getDatum() {
