@@ -405,7 +405,7 @@ foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
 }
 
 SendSQL("SELECT DISTINCT groups.id, groups.name, " .
-        "membercontrol, othercontrol " .
+        "membercontrol, othercontrol, description " .
         "FROM groups LEFT JOIN group_control_map " .
         "ON group_id = id AND product_id = $product_id " .
         " WHERE isbuggroup != 0 AND isactive != 0 ORDER BY description");
