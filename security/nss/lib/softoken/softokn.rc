@@ -35,14 +35,7 @@
 #include <winver.h>
 
 #define MY_LIBNAME "softokn"
-
-#ifdef REMOTE_DBM
-#define DBM " with Shared Database"
-#else
-#define DBM ""
-#endif
-
-#define MY_FILEDESCRIPTION "NSS PKCS #11 Library" DBM
+#define MY_FILEDESCRIPTION "NSS PKCS #11 Library"
 
 #define STRINGIZE(x) #x
 #define STRINGIZE2(x) STRINGIZE(x)
