@@ -1,9 +1,5 @@
 /* XPM */
-#ifdef MOZ_PHOENIX
-char * splash_xpm[] = {
-#else
 static char * splash_xpm[] = {
-#endif
 "390 261 257 2",
 "  	c None",
 ". 	c #000000",
