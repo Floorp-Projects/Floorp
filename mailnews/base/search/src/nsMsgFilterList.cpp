@@ -32,6 +32,7 @@
 #include "nsFileStream.h"
 #include "nsMsgUtils.h"
 #include "nsMsgSearchTerm.h"
+#include "nsXPIDLString.h"
 
 // unicode "%s" format string
 static const PRUnichar unicodeFormatter[] = {
@@ -721,6 +722,36 @@ nsresult nsMsgFilterList::GetFilterAt(PRUint32 filterIndex, nsIMsgFilter **filte
 		return NS_ERROR_NULL_POINTER;
 	*filter = (nsIMsgFilter *) m_filters->ElementAt(filterIndex);
 	return NS_OK;
+}
+
+nsresult
+nsMsgFilterList::GetFilterNamed(const PRUnichar *aName, nsIMsgFilter **aResult)
+{
+    nsresult rv;
+    NS_ENSURE_ARG_POINTER(aName);
+    NS_ENSURE_ARG_POINTER(aResult);
+    PRUint32 count=0;
+    m_filters->Count(&count);
+
+    *aResult = nsnull;
+    PRUint32 i;
+    for (i=0; i<count; i++) {
+        nsCOMPtr<nsISupports> filterSupports;
+        rv = m_filters->GetElementAt(i, getter_AddRefs(filterSupports));
+        if (NS_FAILED(rv)) continue;
+        
+        // cast is safe because array is private
+        nsIMsgFilter *filter = (nsIMsgFilter *)filterSupports.get();
+        nsXPIDLString filterName;
+        filter->GetFilterName(getter_Copies(filterName));
+        if (nsCRT::strcmp(filterName, aName) == 0) {
+            *aResult = filter;
+            break;
+        }
+    }
+
+    NS_IF_ADDREF(*aResult);
+    return NS_OK;
 }
 
 nsresult nsMsgFilterList::SetFilterAt(PRUint32 filterIndex, nsIMsgFilter *filter)

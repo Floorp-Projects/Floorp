@@ -56,6 +56,7 @@ interface nsIMsgFilterList : nsISupports {
     
     readonly attribute unsigned long filterCount;
     nsIMsgFilter GetFilterAt(in unsigned long filterIndex);
+    nsIMsgFilter getFilterNamed(in wstring filterName);
 	/* these methods don't delete filters - they just change the list.
      * FE still must
      * call MSG_DestroyFilter to delete a filter.
