@@ -187,7 +187,8 @@ nsInstallTrigger::StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRIn
 {
     nsresult rv = NS_ERROR_OUT_OF_MEMORY;
 
-    // The Install manager will delete itself when done
+    // The Install manager will delete itself when done, once we've called
+    // InitManager. Before then **WE** must delete it
     nsXPInstallManager *mgr = new nsXPInstallManager();
     if (mgr)
     {
@@ -203,15 +204,13 @@ nsInstallTrigger::StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRIn
             }
             else
             {
-                rv = NS_ERROR_OUT_OF_MEMORY;
                 delete trigger;
+                delete mgr;
             }
         }
         else
-            rv = NS_ERROR_OUT_OF_MEMORY;
+            delete mgr;
     }
-    else
-        rv = NS_ERROR_OUT_OF_MEMORY;
 
     *aReturn = NS_OK;  // maybe we should do something more.
     return rv;
@@ -429,7 +428,7 @@ nsInstallTrigger::CreateTempFileFromURL(const nsString& aURL, nsString& tempFile
 
 nsInstallTriggerFactory::nsInstallTriggerFactory(void)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsInstallTriggerFactory::~nsInstallTriggerFactory(void)
