@@ -479,6 +479,9 @@ function onReset(event)
     while (gTotalSearchTerms>0)
         removeSearchRow(--gTotalSearchTerms);
     onMore(event);
+
+    // Ensure less button is disabled now that we have cleared everything
+    gSearchLessButton.setAttribute("disabled", "true");
 }
 
 // this is a helper routine used by our search term xbl widget
