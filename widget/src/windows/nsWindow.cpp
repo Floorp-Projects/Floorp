@@ -1885,9 +1885,14 @@ NS_METHOD nsWindow::Show(PRBool bState)
           ::SetWindowPos(mWnd, HWND_TOP, 0, 0, 0, 0, flags);
         }
       }
-    } else
-      ::SetWindowPos(mWnd, 0, 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOMOVE | 
-        SWP_NOZORDER | SWP_NOACTIVATE);
+    } else {
+      if (mWindowType != eWindowType_dialog) {
+        ::ShowWindow(mWnd, SW_HIDE);
+      } else {
+        ::SetWindowPos(mWnd, 0, 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOMOVE | 
+          SWP_NOZORDER | SWP_NOACTIVATE);
+      }
+    }
   }
   mIsVisible = bState;
   return NS_OK;
