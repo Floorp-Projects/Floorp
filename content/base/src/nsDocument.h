@@ -371,6 +371,8 @@ public:
   NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins);
   NS_IMETHOD    GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult);
   NS_IMETHOD    SetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject* aBoxObject);
+  NS_IMETHOD    GetDir(nsAWritableString& aDirection);
+  NS_IMETHOD    SetDir(const nsAReadableString& aDirection);
  
   // nsIDOMNode interface
   NS_DECL_IDOMNODE

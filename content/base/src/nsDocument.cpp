@@ -2369,6 +2369,19 @@ nsDocument::SetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject* aBoxObject)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDocument::GetDir(nsAWritableString& aDirection)
+{
+  aDirection.Assign(NS_LITERAL_STRING("ltr") );
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::SetDir(const nsAReadableString& aDirection)
+{
+  return NS_OK;
+}
+
 //
 // nsIDOMNode methods
 //

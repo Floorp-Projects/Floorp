@@ -2932,6 +2932,19 @@ nsXULDocument::GetPlugins(nsIDOMPluginArray** aPlugins)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsXULDocument::GetDir(nsAWritableString& aDirection)
+{
+  aDirection.Assign(NS_LITERAL_STRING("ltr") );
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsXULDocument::SetDir(const nsAReadableString& aDirection)
+{
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------
 //
 // nsIDOMXULDocument interface
