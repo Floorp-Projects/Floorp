@@ -2195,7 +2195,19 @@ nsGfxTextControlFrame2::GetSizeFromContent(PRInt32* aSize) const
 }
 
 void    nsGfxTextControlFrame2::SetFocus(PRBool aOn , PRBool aRepaint){}
-void    nsGfxTextControlFrame2::ScrollIntoView(nsIPresContext* aPresContext){}
+
+void    nsGfxTextControlFrame2::ScrollIntoView(nsIPresContext* aPresContext)
+{
+  if (aPresContext) {
+    nsCOMPtr<nsIPresShell> presShell;
+    aPresContext->GetShell(getter_AddRefs(presShell));
+    if (presShell) {
+      presShell->ScrollFrameIntoView(this,
+                   NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
+    }
+  }
+}
+
 void    nsGfxTextControlFrame2::MouseClicked(nsIPresContext* aPresContext){}
 
 void    nsGfxTextControlFrame2::Reset(nsIPresContext* aPresContext)

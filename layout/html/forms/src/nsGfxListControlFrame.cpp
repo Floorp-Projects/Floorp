@@ -2215,9 +2215,10 @@ nsGfxListControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
   if (aPresContext) {
     nsCOMPtr<nsIPresShell> presShell;
     aPresContext->GetShell(getter_AddRefs(presShell));
-    presShell->ScrollFrameIntoView(this,
+    if (presShell) {
+      presShell->ScrollFrameIntoView(this,
                    NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
-
+    }
   }
 }
 
