@@ -184,12 +184,19 @@ CIconTextDragTask :: AddFlavorForItem ( DragReference inDragRef, ItemReference i
 											const CIconTextSuite* inItem )
 {
 	#pragma unused (inDragRef)
-	
+
 	// ...register standard bookmark flavors
 	AddFlavorBookmarkFile(inItemRef);
 	AddFlavorURL(inItemRef);
 	AddFlavorHTNode(inItemRef, inItem->GetHTNodeData());
 
+	string urlAndTitle = HT_GetNodeURL(inItem->GetHTNodeData());
+	if ( inItem->IconText().length() ) {
+		urlAndTitle += "\r";
+		urlAndTitle += inItem->IconText().c_str();
+	}
+	AddFlavorBookmark ( inItemRef, urlAndTitle.c_str() );
+	
 } // AddFlavorForItem
 
 
