@@ -46,6 +46,7 @@ LCFLAGS		= $(LCFLAGS) -DDEBUG_GC
 
 LLIBS=  \
 	$(LIBNSPR) \
+	$(DIST)\lib\js32$(VERSION_NUMBER).lib \
 	$(DIST)\lib\xpcom.lib \
 	$(NULL)
 
