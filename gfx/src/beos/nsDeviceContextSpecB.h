@@ -110,18 +110,20 @@ public:
 
   NS_IMETHOD GetUserCancelled( PRBool &aCancel );      
 
-protected:
 /**
  * Destuct a nsDeviceContextSpecMac, this will release the printrecord
  * @update  dc 2/16/98
  */
+protected:
   virtual ~nsDeviceContextSpecBeOS();
  
+public:
   static nsStringArray *globalPrinterList;
   static int globalNumPrinters;
   int InitializeGlobalPrinters();
   void FreeGlobalPrinters();
 
+protected:
   BeOSPrData mPrData;
 	
 };
