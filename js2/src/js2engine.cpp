@@ -68,8 +68,6 @@ namespace MetaData {
     {
         jsr(execPhase, targetbCon);
         js2val result = interpreterLoop();
-        if (!activationStackEmpty())
-            rts();
         return result;
     }
 
@@ -105,8 +103,6 @@ namespace MetaData {
             float64 x;
             uint8 a[8];
         } u;
-        if (x != x)
-            return nanValue;
 
         u.x = x;
         uint8 hash = u.a[0] ^ u.a[1] ^ u.a[2] ^ u.a[3] ^ u.a[4] ^ u.a[5] ^  u.a[6] ^ u.a[7];
@@ -137,8 +133,11 @@ namespace MetaData {
         js2val retval;
         if (JSDOUBLE_IS_INT(x, i) && INT_FITS_IN_JS2VAL(i))
             retval = INT_TO_JS2VAL(i);
-        else
+        else {
+            if (x != x)
+                return nanValue;
             retval = DOUBLE_TO_JS2VAL(newDoubleValue(x));
+        }
         return retval;
     }
 
@@ -225,6 +224,28 @@ namespace MetaData {
         return true;
     }
 
+    // x is not an int
+    int32 JS2Engine::convertValueToInteger(js2val x)
+    {
+        float64 f = (JS2VAL_IS_DOUBLE(x)) ? *JS2VAL_TO_DOUBLE(x) : convertValueToDouble(x);
+        return toInt32(f);
+    }
+
+    int32 JS2Engine::toInt32(float64 d)
+    {
+        if ((d == 0.0) || !JSDOUBLE_IS_FINITE(d) )
+            return 0;
+        d = fd::fmod(d, two32);
+        d = (d >= 0) ? d : d + two32;
+        if (d >= two31)
+            return (int32)(d - two32);
+        else
+            return (int32)(d);    
+    }
+
+
+
+
 
     #define INIT_STRINGATOM(n) n##_StringAtom(world.identifiers[#n])
 
@@ -241,11 +262,12 @@ namespace MetaData {
                   INIT_STRINGATOM(function),
                   INIT_STRINGATOM(object)
     {
-        nanValue = (float64 *)gc_alloc_8();
-        *nanValue = nan;
-
         for (int i = 0; i < 256; i++)
             float64Table[i] = NULL;
+
+        nanValue = DOUBLE_TO_JS2VAL(allocNumber(nan));
+        posInfValue = DOUBLE_TO_JS2VAL(allocNumber(positiveInfinity));
+        negInfValue = DOUBLE_TO_JS2VAL(allocNumber(negativeInfinity));
 
         sp = execStack = new js2val[MAX_EXEC_STACK];
         activationStackTop = activationStack = new ActivationFrame[MAX_ACTIVATION_STACK];
@@ -378,34 +400,32 @@ namespace MetaData {
 
     // XXX Default construction of an instance of the class
     // that is the value at the top of the execution stack
-    JS2Object *JS2Engine::defaultConstructor(JS2Engine *engine, uint16 argCount)
+    js2val JS2Engine::defaultConstructor(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
     {
-        js2val v = engine->pop();
+        js2val v = meta->engine->pop();
         ASSERT(JS2VAL_IS_OBJECT(v) && !JS2VAL_IS_NULL(v));
         JS2Object *obj = JS2VAL_TO_OBJECT(v);
         ASSERT(obj->kind == ClassKind);
         JS2Class *c = checked_cast<JS2Class *>(obj);
         if (c->dynamic)
-            return new DynamicInstance(c);
+            return OBJECT_TO_JS2VAL(new DynamicInstance(c));
         else
             if (c->prototype)
-                return new PrototypeInstance(c->prototype);
+                return OBJECT_TO_JS2VAL(new PrototypeInstance(c->prototype));
             else
-                return new FixedInstance(c);
+                return OBJECT_TO_JS2VAL(new FixedInstance(c));
     }
 
     // Save current engine state (pc, environment top) and
     // jump to start of new bytecodeContainer
     void JS2Engine::jsr(Phase execPhase, BytecodeContainer *new_bCon)
     {
-        if (pc) {
-            ASSERT(activationStackTop < (activationStack + MAX_ACTIVATION_STACK));
-            activationStackTop->bCon = bCon;
-            activationStackTop->pc = pc;
-            activationStackTop->phase = phase;
-            activationStackTop->topFrame = meta->env.getTopFrame();
-            activationStackTop++;
-        }
+        ASSERT(activationStackTop < (activationStack + MAX_ACTIVATION_STACK));
+        activationStackTop->bCon = bCon;
+        activationStackTop->pc = pc;
+        activationStackTop->phase = phase;
+        activationStackTop->topFrame = meta->env.getTopFrame();
+        activationStackTop++;
         bCon = new_bCon;
         pc = new_bCon->getCodeStart();
         phase = execPhase;
@@ -433,7 +453,8 @@ namespace MetaData {
         if (bCon)
             bCon->mark();
         for (ActivationFrame *a = activationStack; (a < activationStackTop); a++) {
-            a->bCon->mark();
+            if (a->bCon)
+                a->bCon->mark();
         }
         for (js2val *e = execStack; (e < sp); e++) {
             if (JS2VAL_IS_OBJECT(*e)) {
@@ -441,24 +462,15 @@ namespace MetaData {
                 GCMARKOBJECT(obj)
             }
         }
-        JS2Object::mark(nanValue);
+        JS2Object::mark(JS2VAL_TO_DOUBLE(nanValue));
+        JS2Object::mark(JS2VAL_TO_DOUBLE(posInfValue));
+        JS2Object::mark(JS2VAL_TO_DOUBLE(negInfValue));
         for (uint32 i = 0; i < 256; i++) {
             if (float64Table[i])
                 JS2Object::mark(float64Table[i]);
         }
     }
 
-    int32 JS2Engine::toInt32(float64 d)
-    {
-        if ((d == 0.0) || !JSDOUBLE_IS_FINITE(d) )
-            return 0;
-        d = fd::fmod(d, two32);
-        d = (d >= 0) ? d : d + two32;
-        if (d >= two31)
-            return (int32)(d - two32);
-        else
-            return (int32)(d);    
-    }
 
 }
 }

@@ -42,17 +42,13 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <map>
+#include <list>
 
 #include "world.h"
 #include "utilities.h"
 #include "js2value.h"
 #include "numerics.h"
-#include "prmjtime.h"
-
-#include <map>
-#include <algorithm>
-#include <list>
-
 #include "reader.h"
 #include "parser.h"
 #include "js2engine.h"
@@ -2065,30 +2061,9 @@ doUnary:
         //else A hoisted binding of the same var already exists, so there is no need to create another one
     }
 
-    void t(JS2Engine *engine, uint16 argCount)
+    js2val Object_toString(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
     {
-    }
-
-    JS2Object *dateConstructor(JS2Engine *engine, uint16 argCount)
-    {
-        js2val v = engine->pop();
-        ASSERT(JS2VAL_IS_OBJECT(v) && !JS2VAL_IS_NULL(v));
-        JS2Object *obj = JS2VAL_TO_OBJECT(v);
-        ASSERT(obj == engine->meta->dateClass);
-
-        if (argCount == 0) {
-            DateInstance *result = new DateInstance(engine->meta->dateClass->prototype);
-            int64 us, ms, us2ms;
-            float64 msec_time;
-
-            us = PRMJ_Now();
-            JSLL_UI2L(us2ms, PRMJ_USEC_PER_MSEC);
-            JSLL_DIV(ms, us, us2ms);
-            JSLL_L2D(msec_time, ms);
-
-            result->ms = msec_time;
-        }
-        return NULL;
+        return STRING_TO_JS2VAL(&meta->engine->object_StringAtom);
     }
 
 #define MAKEBUILTINCLASS(c, super, dynamic, allowNull, final, name) c = new JS2Class(super, NULL, new Namespace(engine->private_StringAtom), dynamic, allowNull, final, name); c->complete = true
@@ -2121,34 +2096,28 @@ doUnary:
         MAKEBUILTINCLASS(prototypeClass, objectClass, true, true, true, world.identifiers["prototype"]);
         MAKEBUILTINCLASS(packageClass, objectClass, true, true, true, world.identifiers["package"]);
         
-
-        MAKEBUILTINCLASS(dateClass, objectClass, true, true, true, world.identifiers["Date"]);
-        Variable *v = new Variable(classClass, OBJECT_TO_JS2VAL(objectClass), true);
-        NamespaceList publicNamespaceList;
-        publicNamespaceList.push_back(publicNamespace);
-        defineStaticMember(&env, world.identifiers["Date"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        dateClass->prototype = new PrototypeInstance(NULL);
-        dateClass->construct = dateConstructor;
-        /*
-        FixedInstance *fInst = new FixedInstance(functionClass);
-        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), t);
-        writeDynamicProperty(objectClass->prototype, new Multiname(world.identifiers["toString"], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
-        */
-
-
         // A 'forbidden' member, used to mark hidden bindings
         forbiddenMember = new StaticMember(Member::Forbidden);
 
         // Non-function properties of the global object : 'undefined', 'NaN' and 'Infinity'
         writeDynamicProperty(glob, new Multiname(engine->undefined_StringAtom, publicNamespace), true, JS2VAL_UNDEFINED, RunPhase);
-        writeDynamicProperty(glob, new Multiname(world.identifiers["NaN"], publicNamespace), true, engine->allocNumber(nan), RunPhase);
-        writeDynamicProperty(glob, new Multiname(world.identifiers["Infinity"], publicNamespace), true, engine->allocNumber(positiveInfinity), RunPhase);
+        writeDynamicProperty(glob, new Multiname(world.identifiers["NaN"], publicNamespace), true, engine->nanValue, RunPhase);
+        writeDynamicProperty(glob, new Multiname(world.identifiers["Infinity"], publicNamespace), true, engine->posInfValue, RunPhase);
 
         // Function properties of the Object prototype object
         objectClass->prototype = new PrototypeInstance(NULL);
         FixedInstance *fInst = new FixedInstance(functionClass);
-        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), t);
+        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_toString);
         writeDynamicProperty(objectClass->prototype, new Multiname(world.identifiers["toString"], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
+
+
+        MAKEBUILTINCLASS(dateClass, objectClass, true, true, true, world.identifiers["Date"]);
+        Variable *v = new Variable(classClass, OBJECT_TO_JS2VAL(dateClass), true);
+        NamespaceList publicNamespaceList;
+        publicNamespaceList.push_back(publicNamespace);
+        defineStaticMember(&env, world.identifiers["Date"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        dateClass->prototype = new PrototypeInstance(NULL);
+        initDateObject(this);
 
     }
 

@@ -55,7 +55,9 @@ class FixedInstance;
 
 typedef void (Invokable)();
 typedef Invokable Callor;
-typedef JS2Object *(Constructor)(JS2Engine *engine, uint16 argCount);
+typedef js2val (Constructor)(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
+
+extern void initDateObject(JS2Metadata *meta);
 
 
 // OBJECT is the semantic domain of all possible objects and is defined as:
@@ -725,7 +727,7 @@ private:
 };
 
 
-typedef void (NativeCode)(JS2Engine *engine, uint16 argCount);
+typedef js2val (NativeCode)(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc);
 
 class FunctionWrapper {
 public:

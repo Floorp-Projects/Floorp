@@ -134,17 +134,19 @@ public:
     // Use the pc map in the current bytecode container to get a source offset
     size_t errorPos();
 
+    int32 toInt32(float64 f);
 
     String *convertValueToString(js2val x);
     js2val convertValueToPrimitive(js2val x);
     float64 convertValueToDouble(js2val x);
     bool convertValueToBoolean(js2val x);
+    int32 convertValueToInteger(js2val x);
 
     String *toString(js2val x)      { if (JS2VAL_IS_STRING(x)) return JS2VAL_TO_STRING(x); else return convertValueToString(x); }
     js2val toPrimitive(js2val x)    { if (JS2VAL_IS_PRIMITIVE(x)) return x; else return convertValueToPrimitive(x); }
     float64 toNumber(js2val x)      { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else if (JS2VAL_IS_DOUBLE(x)) return *JS2VAL_TO_DOUBLE(x); else return convertValueToDouble(x); }
     bool toBoolean(js2val x)        { if (JS2VAL_IS_BOOLEAN(x)) return JS2VAL_TO_BOOLEAN(x); else return convertValueToBoolean(x); }
-    int32 toInt32(float64 f);
+    js2val toInteger(js2val x)      { if (JS2VAL_IS_INT(x)) return x; else return allocNumber(convertValueToInteger(x)); }
 
     js2val assignmentConversion(js2val val, JS2Class *type)     { return val; } // XXX s'more code, please
 
@@ -156,16 +158,20 @@ public:
     BytecodeContainer *bCon;
     Phase phase;
 
-
+    // Handy f.p. values
+    js2val nanValue;
+    js2val posInfValue;
+    js2val negInfValue;
 
     // A cache of f.p. values (XXX experimentally trying to reduce # of double pointers XXX)
-    float64 *nanValue;
     float64 *float64Table[256];
     js2val allocNumber(float64 x); 
     js2val pushNumber(float64 x)        { js2val retval = allocNumber(x); push(retval); return retval; }
     void *gc_alloc_8();
+private:
     float64 *newDoubleValue(float64 x);
 
+public:
 
 
     // Cached StringAtoms for handy access
@@ -209,7 +215,7 @@ public:
     void mark();
 
 
-    static JS2Object *defaultConstructor(JS2Engine *engine, uint16 argCount);
+    static js2val defaultConstructor(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc);
 
 
 };

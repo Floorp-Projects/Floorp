@@ -139,13 +139,14 @@ static int readEvalPrint(FILE *in)
                     f.end();
                     stdOut << '\n';
                 }
-
-                metadata->setCurrentParser(&p);  // for error reporting
-
-                metadata->ValidateStmtList(parsedStatements);
-                js2val rval = metadata->ExecuteStmtList(RunPhase, parsedStatements);
-                if (!JS2VAL_IS_VOID(rval))
-                    stdOut << *metadata->engine->toString(rval) << '\n';                
+                if (parsedStatements) {
+                    metadata->setCurrentParser(&p);  // for error reporting
+            
+                    metadata->ValidateStmtList(parsedStatements);
+                    js2val rval = metadata->ExecuteStmtList(RunPhase, parsedStatements);
+                    if (!JS2VAL_IS_VOID(rval))
+                        stdOut << *metadata->engine->toString(rval) << '\n';
+                }
             }
             clear(buffer);
         } catch (Exception &e) {

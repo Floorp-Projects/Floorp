@@ -68,7 +68,7 @@
             JS2Object *obj = JS2VAL_TO_OBJECT(v);
             ASSERT(obj->kind == ClassKind);
             JS2Class *c = checked_cast<JS2Class *>(obj);
-            push(OBJECT_TO_JS2VAL(c->construct(this, argCount)));
+            push(c->construct(meta, JS2VAL_NULL, NULL, argCount));
         }
         break;
 
@@ -104,7 +104,7 @@
                     jsr(phase, fWrap->bCon);   // seems out of order, but we need to catch the current top frame 
                 meta->env.addFrame(runtimeFrame);
                 if (fWrap->code) {
-                    fWrap->code(this, argCount);
+                    push(fWrap->code(meta, runtimeThis, NULL, argCount));
                     meta->env.removeTopFrame();
                 }
             }
@@ -132,19 +132,18 @@
 
     case eReturn: 
         {
-            if (activationStackEmpty()) 
+            retval = pop();
+            rts();
+            if (pc == NULL) 
                 return pop();
-            else
-                rts();
 	}
         break;
 
     case eReturnVoid: 
         {
-            if (activationStackEmpty()) 
+            rts();
+            if (pc == NULL) 
                 return retval;
-            else
-                rts();
 	}
         break;
 
