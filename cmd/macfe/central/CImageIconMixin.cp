@@ -47,7 +47,7 @@ CImageIconMixin :: CImageIconMixin ( const string & inURL )
 // 
 CImageIconMixin :: ~CImageIconMixin ( )
 {
-	gIconCache.ListenerGoingAway ( mURL, this );
+	gImageCache().ListenerGoingAway ( mURL, this );
 	
 }
 
@@ -77,12 +77,12 @@ CImageIconMixin :: DrawImage ( const Point & inTopLeft, const IconTransformType 
 								Uint32 inWidth, Uint32 inHeight ) const
 {
 	try { 
-		if ( gIconCache.RequestIcon(mURL, this) == CIconCache::kDataPresent ) {
+		if ( gImageCache().RequestIcon(mURL, this) == CImageCache::kDataPresent ) {
 			StColorState::Normalize();
 
 			DrawingState state;
 			state.copyMode = srcCopy;
-			gIconCache.FetchImageData ( mURL, &state.pixmap, &state.mask );
+			gImageCache().FetchImageData ( mURL, &state.pixmap, &state.mask );
 
 			LockFEPixmapBuffer ( state.pixmap ) ;
 			LockFEPixmapBuffer ( state.mask );
@@ -131,7 +131,7 @@ CImageIconMixin :: DoDrawing ( DrawingState & inState, const Point & inTopLeft,
 void
 CImageIconMixin :: SetImageURL ( const string & inNewURL )
 {
-	gIconCache.ListenerGoingAway ( mURL, this );
+	gImageCache().ListenerGoingAway ( mURL, this );
 	mURL = inNewURL;
 	
 } // SetImageURL
