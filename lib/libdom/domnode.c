@@ -186,6 +186,61 @@ if (refNode->parent != node) {                                                \
 PR_END_MACRO
 
 static JSBool
+IsLegalChild(DOM_Node *node, DOM_Node *child)
+{
+    switch(node->type) {
+      case NODE_TYPE_ATTRIBUTE:
+        if (child->type == NODE_TYPE_TEXT ||
+            child->type == NODE_TYPE_ENTITY_REF)
+            return JS_TRUE;
+        return JS_FALSE;
+        if (child->type == NODE_TYPE_ELEMENT ||
+            child->type == NODE_TYPE_COMMENT ||
+            child->type == NODE_TYPE_TEXT ||
+            child->type == NODE_TYPE_PI ||
+            child->type == NODE_TYPE_CDATA ||
+            child->type == NODE_TYPE_ENTITY_REF)
+            return JS_TRUE;
+        return JS_FALSE;
+      case NODE_TYPE_ELEMENT:
+      case NODE_TYPE_DOCFRAGMENT:
+      case NODE_TYPE_ENTITY_REF:
+        if (child->type == NODE_TYPE_ELEMENT ||
+            child->type == NODE_TYPE_PI ||
+            child->type == NODE_TYPE_COMMENT ||
+            child->type == NODE_TYPE_TEXT ||
+            child->type == NODE_TYPE_CDATA ||
+            child->type == NODE_TYPE_ENTITY_REF)
+            return JS_TRUE;
+        return JS_FALSE;
+      case NODE_TYPE_DOCUMENT:
+        if(child->type == NODE_TYPE_PI ||
+           child->type == NODE_TYPE_COMMENT ||
+           child->type == NODE_TYPE_DOCTYPE)
+            return JS_TRUE;
+        if (child->type == NODE_TYPE_ELEMENT)
+            /* XXX check to make sure it's the only one */
+            return JS_TRUE;
+        return JS_FALSE;
+      case NODE_TYPE_DOCTYPE:
+        if (child->type == NODE_TYPE_NOTATION ||
+            child->type == NODE_TYPE_ENTITY)
+            return JS_TRUE;
+        return JS_FALSE;
+      default:               /* PI, COMMENT, TEXT, CDATA, ENTITY, NOTATION */
+        return JS_FALSE;
+    }
+}
+
+#define CHECK_LEGAL_CHILD(node, child)                                        \
+PR_BEGIN_MACRO                                                                \
+    if (!IsLegalChild(node, child)) {                                         \
+        DOM_SignalException(cx, DOM_HIERARCHY_REQUEST_ERR);                   \
+        return JS_FALSE;                                                      \
+    }                                                                         \
+PR_END_MACRO
+
+static JSBool
 node_insertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 		  jsval *vp)
 {
@@ -206,6 +261,7 @@ node_insertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return JS_TRUE;
     }
 
+    CHECK_LEGAL_CHILD(node, newNode);
     FAIL_UNLESS_CHILD(node, refNode);
     REMOVE_FROM_TREE(newNode);
 
@@ -240,6 +296,7 @@ node_replaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         !newNode || !oldNode)
         return JS_TRUE;
 
+    CHECK_LEGAL_CHILD(node, newNode);
     FAIL_UNLESS_CHILD(node, oldNode);
     REMOVE_FROM_TREE(newNode);
     
@@ -290,6 +347,7 @@ node_appendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (!node || !newNode)
         return JS_TRUE;
 
+    CHECK_LEGAL_CHILD(node, newNode);
     REMOVE_FROM_TREE(newNode);
 
     newNode->parent = node;

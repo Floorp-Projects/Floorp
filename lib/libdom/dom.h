@@ -76,8 +76,7 @@ struct DOM_NodeOps {
     JSBool	(*replaceChild)(JSContext *cx, DOM_Node *node, DOM_Node *child,
                             DOM_Node *old);
     JSBool	(*removeChild) (JSContext *cx, DOM_Node *node, DOM_Node *old);
-    JSBool	(*appendChild) (JSContext *cx, DOM_Node *node,
-                            DOM_Node *child);
+    JSBool	(*appendChild) (JSContext *cx, DOM_Node *node, DOM_Node *child);
 
     /* free up Node-private data */
     void		(*destroyNode) (JSContext *cx, DOM_Node *node);
@@ -116,7 +115,13 @@ DOM_ReflectNodeStub(JSContext *cx, DOM_Node *node);
 struct DOM_ElementOps {
     /*
      * if this succeeds, pre-existing JS reflections (DOM_Attributes)
-     * will be updated as well.
+     * will be updated as well.  Removal (removeAttribute, etc.) of an
+     * attribute is signalled by passing a value of NULL.  The
+     * setAttribute function is responsible for doing
+     * DOM_SignalException(cx, DOM_INVALID_NAME_ERR) if it's an
+     * invalid name.  (The DOM_NO_MODIFICATION_ALLOWED_ERR case is
+     * handled in the DOM code itself, and no call will be made to the
+     * setAttribute handler in that case.)  
      */
     JSBool			(*setAttribute)(JSContext *cx, DOM_Element *element,
                                     const char *name, const char *value);
@@ -227,10 +232,21 @@ struct DOM_Document {
     DOM_Node node;
 };
 
+typedef enum DOM_CDataOperationCode {
+    CDATA_APPEND,
+    CDATA_INSERT,
+    CDATA_DELETE,
+    CDATA_REPLACE
+} DOM_CDataOperationCode;
+
+typedef JSBool (*DOM_CDataOp)(JSContext *cx, DOM_CharacterData *cdata,
+                              DOM_CDataOperationCode op);
+
 struct DOM_CharacterData {
     DOM_Node node;
     char *data;
     uintN len;
+    DOM_CDataOp notify;
 };
 
 struct DOM_Text {
@@ -238,7 +254,7 @@ struct DOM_Text {
 };
 
 DOM_Text *
-DOM_NewText(const char *data, int64 len);
+DOM_NewText(const char *data, int64 len, DOM_CDataOp notify);
 
 JSObject *
 DOM_NewTextObject(JSContext *cx, DOM_Text *text);

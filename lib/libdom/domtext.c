@@ -73,6 +73,183 @@ cdata_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
+static JSBool
+cdata_substringData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                    jsval *vp)
+{
+    JSString *substr;
+    uint32 offset, count;
+    DOM_CharacterData *cdata;
+
+    if (!JS_ConvertArguments(cx, argc, argv, "uu", &offset, &count))
+        return JS_FALSE;
+
+    cdata = (DOM_CharacterData *)JS_GetPrivate(cx, obj);
+    if (!cdata) {
+        *vp = STRING_TO_JSVAL(JS_GetEmptyStringValue(cx));
+        return JS_TRUE;
+    }
+
+    if (offset > cdata->len || offset < 0 || count < 0) {
+        DOM_SignalException(cx, DOM_INDEX_SIZE_ERR);
+        return JS_FALSE;
+    }
+
+    if (offset + count > cdata->len)
+        count = cdata->len - offset;
+    
+    substr = JS_NewStringCopyN(cx, cdata->data + offset, count);
+    if (!substr)
+        return JS_FALSE;
+    
+    *vp = STRING_TO_JSVAL(substr);
+    return JS_TRUE;
+}
+
+static JSBool
+cdata_appendData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                 jsval *vp)
+{
+    JSString *newData;
+    uint32 newlen;
+    DOM_CharacterData *cdata;
+
+    if (!JS_ConvertArguments(cx, argc, argv, "S", &newData))
+        return JS_FALSE;
+
+    cdata = (DOM_CharacterData *)JS_GetPrivate(cx, obj);
+    if (!cdata)
+        return JS_TRUE;
+
+    newlen = JS_GetStringLength(newData);
+
+    cdata->data = XP_REALLOC(cdata->data, cdata->len + newlen);
+    if (!cdata->data)
+        return JS_FALSE;
+
+    XP_MEMCPY(cdata->data + cdata->len, JS_GetStringBytes(newData),
+              newlen);
+    cdata->len += newlen;
+    
+    return cdata->notify(cx, cdata, CDATA_APPEND);
+}
+
+static JSBool
+cdata_insertData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                 jsval *vp)
+{
+    uint32 offset, newlen;
+    JSString *newData;
+    char *data2;
+    DOM_CharacterData *cdata;
+
+    if (!JS_ConvertArguments(cx, argc, argv, "uS", &offset, &newData))
+        return JS_FALSE;
+
+    cdata = (DOM_CharacterData *)JS_GetPrivate(cx, obj);
+    if (!cdata)
+        return JS_TRUE;
+
+    if (offset < 0 || offset > cdata->len) {
+        DOM_SignalException(cx, DOM_INDEX_SIZE_ERR);
+        return JS_FALSE;
+    }
+
+    newlen = JS_GetStringLength(newData);
+    data2 = XP_ALLOC(cdata->len + newlen);
+    if (!data2)
+        return JS_FALSE;
+
+    XP_MEMCPY(data2, cdata->data, offset);
+    XP_MEMCPY(data2 + offset, JS_GetStringBytes(newData), newlen);
+    XP_MEMCPY(data2 + offset + newlen, cdata->data + offset,
+              cdata->len - offset);
+
+    XP_FREE(cdata->data);
+    cdata->data = data2;
+    cdata->len += newlen;
+
+    return cdata->notify(cx, cdata, CDATA_INSERT);
+}
+
+static JSBool
+cdata_deleteData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                 jsval *vp)
+{
+    uint32 offset, count;
+    DOM_CharacterData *cdata;
+    char *data2;
+
+    if (!JS_ConvertArguments(cx, argc, argv, "uu", &offset, &count))
+        return JS_FALSE;
+
+    cdata = (DOM_CharacterData *)JS_GetPrivate(cx, obj);
+    if (!cdata)
+        return JS_TRUE;
+
+    if (offset < 0 || offset > cdata->len || count < 0) {
+        DOM_SignalException(cx, DOM_INDEX_SIZE_ERR);
+        return JS_FALSE;
+    }
+
+    if (offset + count > cdata->len)
+        count = cdata->len - offset;
+
+    data2 = XP_ALLOC(cdata->len - count);
+    if (!data2)
+        return JS_FALSE;
+    XP_MEMCPY(data2, cdata->data, offset);
+    XP_MEMCPY(data2 + offset, cdata->data + offset + count,
+              cdata->len - offset - count);
+    XP_FREE(cdata->data);
+    cdata->data = data2;
+    cdata->len -= count;
+
+    return cdata->notify(cx, cdata, CDATA_DELETE);
+}
+
+static JSBool
+cdata_replaceData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                  jsval *vp)
+{
+    uint32 offset, count, newlen;
+    JSString *newData;
+    DOM_CharacterData *cdata;
+
+    char *data2;
+
+    if (!JS_ConvertArguments(cx, argc, argv, "uuS", &offset, &count,
+                             &newData))
+        return JS_FALSE;
+
+    cdata = (DOM_CharacterData *)JS_GetPrivate(cx, obj);
+    if (!cdata)
+        return JS_TRUE;
+
+    if (offset < 0 || offset > cdata->len || count < 0) {
+        DOM_SignalException(cx, DOM_INDEX_SIZE_ERR);
+        return JS_FALSE;
+    }
+
+    if (offset + count > cdata->len)
+        count = cdata->len - offset;
+
+    newlen = JS_GetStringLength(newData);
+
+    data2 = XP_ALLOC(cdata->len - count + newlen);
+    if (!data2)
+        return JS_FALSE;
+    XP_MEMCPY(data2, cdata->data, offset);
+    XP_MEMCPY(data2 + offset, JS_GetStringBytes(newData), newlen);
+    XP_MEMCPY(data2 + offset + newlen, cdata->data + offset + count,
+              cdata->len - offset - count);
+    XP_FREE(cdata->data);
+    cdata->data = data2;
+    cdata->len += newlen - count;
+
+    return cdata->notify(cx, cdata, CDATA_REPLACE);
+}
+
 static JSClass DOM_CDataClass = {
     "CharacterData", JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub, cdata_getter,     cdata_setter,
@@ -88,6 +265,11 @@ static JSPropertySpec cdata_props[] = {
 };
 
 static JSFunctionSpec cdata_methods[] = {
+    {"substringData", cdata_substringData, 2},
+    {"appendData",    cdata_appendData,    1},
+    {"insertData",    cdata_insertData,    2},
+    {"deleteData",	  cdata_deleteData,	   2},
+    {"replaceData",   cdata_replaceData,   3},
     {0}
 };
 
@@ -142,7 +324,7 @@ DOM_NewTextObject(JSContext *cx, DOM_Text *text)
 }
 
 DOM_Text *
-DOM_NewText(const char *data, int64 length)
+DOM_NewText(const char *data, int64 length, DOM_CDataOp notify)
 {
     XP_ASSERT((0 && "DOM_NewText NYI"));
     return NULL;

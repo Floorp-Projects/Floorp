@@ -80,6 +80,95 @@ element_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
+static JSBool
+element_getAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                     jsval *rval)
+{
+    DOM_Element *element;
+    JSString *name;
+    char *value;
+    JSBool cache;
+
+    if (!JS_ConvertArguments(cx, argc, argv, "S", &name))
+        return JS_FALSE;
+
+    element = (DOM_Element *)JS_GetPrivate(cx, obj);
+    if (!element)
+        return JS_TRUE;
+
+    value = element->ops->getAttribute(cx, element, JS_GetStringBytes(name),
+                                       &cache);
+    if (value) {
+        *rval = STRING_TO_JSVAL(JS_InternString(cx, value));
+        if (!JSVAL_TO_STRING(*rval))
+            return JS_FALSE;
+    } else {
+        *rval = STRING_TO_JSVAL(JS_GetEmptyStringValue(cx));
+    }
+
+    return JS_TRUE;
+}
+
+static JSBool
+element_setAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                     jsval *rval)
+{
+    DOM_Element *element;
+    JSString *name, *value;
+
+    if (!JS_ConvertArguments(cx, argc, argv, "SS", &name, &value))
+        return JS_FALSE;
+
+    element = (DOM_Element *)JS_GetPrivate(cx, obj);
+    if (!element)
+        return JS_TRUE;
+
+    return element->ops->setAttribute(cx, element, JS_GetStringBytes(name),
+                                      JS_GetStringBytes(value));
+
+}
+
+static JSBool
+element_removeAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                        jsval *rval)
+{
+    DOM_Element *element;
+    JSString *name;
+
+    if (!JS_ConvertArguments(cx, argc, argv, "S", &name))
+        return JS_FALSE;
+
+    element = (DOM_Element *)JS_GetPrivate(cx, obj);
+    if (!element)
+        return JS_TRUE;
+
+    /* NULL setAttribute call indicates removal */
+    return element->ops->setAttribute(cx, element, JS_GetStringBytes(name),
+                                      NULL);
+
+}
+
+static JSBool
+element_getAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                         jsval *rval)
+{
+    return JS_TRUE;
+}
+
+static JSBool
+element_setAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                         jsval *rval)
+{
+    return JS_TRUE;
+}
+
+static JSBool
+element_removeAttributeNode(JSContext *cx, JSObject *obj, uintN argc,
+                            jsval *argv, jsval *rval)
+{
+    return JS_TRUE;
+}
+
 static void
 element_finalize(JSContext *cx, JSObject *obj)
 {
@@ -117,8 +206,7 @@ DOM_ObjectForElement(JSContext *cx, DOM_Element *element)
 }
 
 static JSBool
-Element(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-	jsval *vp)
+Element(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *vp)
 {
     return JS_TRUE;
 }
