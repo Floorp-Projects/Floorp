@@ -28,15 +28,11 @@
 class nsIFactory;
 class nsIURL;
 class nsIWidget;
+class nsString;
 
 // e5e5af70-8a38-11d2-9938-0080c7cb1080
 #define NS_IAPPSHELL_SERVICE_IID \
 { 0xe5e5af70, 0x8a38, 0x11d2, \
-  {0x99, 0x38, 0x00, 0x80, 0xc7, 0xcb, 0x10, 0x80} }
-
-// 43147b80-8a39-11d2-9938-0080c7cb1080
-#define NS_APPSHELL_SERVICE_CID \
-{ 0x43147b80, 0x8a39, 0x11d2, \
   {0x99, 0x38, 0x00, 0x80, 0xc7, 0xcb, 0x10, 0x80} }
 
 
@@ -48,12 +44,10 @@ public:
   NS_IMETHOD Run(void) = 0;
   NS_IMETHOD Shutdown(void) = 0;
 
-  NS_IMETHOD CreateTopLevelWindow(nsIURL* aUrl, nsIWidget*& aResult) = 0;
+  NS_IMETHOD CreateTopLevelWindow(nsIURL* aUrl, 
+                                  nsString& aControllerIID,
+                                  nsIWidget*& aResult) = 0;
   NS_IMETHOD CloseTopLevelWindow(nsIWidget* aWindow) = 0;
 };
-
-
-extern "C" NS_APPSHELL nsresult
-NS_NewAppShellServiceFactory(nsIFactory** aFactory);
 
 #endif /* nsIAppShellService_h__ */
