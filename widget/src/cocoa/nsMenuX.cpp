@@ -1067,7 +1067,7 @@ nsMenuX::OnCreated()
     return PR_FALSE;
   }
   nsCOMPtr<nsPresContext> presContext;
-  MenuHelpersX::DocShellToPresContext(DocShell, getter_AddRefs(presContext) );
+  MenuHelpersX::DocShellToPresContext(docShell, getter_AddRefs(presContext) );
   if ( presContext ) {
     nsresult rv = NS_OK;
     nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
