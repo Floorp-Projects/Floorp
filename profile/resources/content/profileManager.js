@@ -68,37 +68,39 @@ function RenameProfile()
     var result = { };
     var dialogTitle = bundle.GetStringFromName("renameprofiletitle");
     var msg = bundle.GetStringFromName("renameprofilepromptA") + oldName + bundle.GetStringFromName("renameprofilepromptB");
-    if (commonDialogService.Prompt(window, dialogTitle, msg, oldName, result)) {
-      var newName = result.value;
-      dump("*** newName = |" + newName + "|\n");
-      if (!newName)
-        return false;
-      var invalidChars = ["/", "\\", "*", ":"];
-      for( var i = 0; i < invalidChars.length; i++ )
-      {
-        if( newName.indexOf( invalidChars[i] ) != -1 ) {
-          var aString = bundle.GetStringFromName("invalidCharA");
-          var bString = bundle.GetStringFromName("invalidCharB");
-          bString = bString.replace(/\s*<html:br\/>/g,"\n");
-          var lString = aString + invalidChars[i] + bString;
-          alert( lString );
-          return false;
+    while (1) {
+      var rv = commonDialogService.Prompt(window, dialogTitle, msg, oldName, result);
+      if (rv) {
+        var newName = result.value;
+        if (!newName) return false;
+        var invalidChars = ["/", "\\", "*", ":"];
+        for( var i = 0; i < invalidChars.length; i++ )
+        {
+          if( newName.indexOf( invalidChars[i] ) != -1 ) {
+            var aString = bundle.GetStringFromName("invalidCharA");
+            var bString = bundle.GetStringFromName("invalidCharB");
+            bString = bString.replace(/\s*<html:br\/>/g,"\n");
+            var lString = aString + invalidChars[i] + bString;
+            alert( lString );
+            return false;
+          }
+        }
+        
+        var migrate = selected.firstChild.firstChild.getAttribute("rowMigrate");
+        try {
+          profile.renameProfile(oldName, newName);
+          selected.firstChild.firstChild.setAttribute( "value", newName );
+          selected.setAttribute( "rowName", newName );
+          selected.setAttribute( "profile_name", newName );
+        }
+        catch(e) {
+          var lString = bundle.GetStringFromName("profileExists");
+          var profileExistsTitle = bundle.GetStringFromName("profileExistsTitle");
+          commonDialogService.Alert(window, profileExistsTitle, lString);
+          continue;
         }
       }
-      
-      var migrate = selected.firstChild.firstChild.getAttribute("rowMigrate");
-      dump("*** oldName = "+ oldName+ ", newName = "+ newName+ ", migrate = "+ migrate+ "\n");
-      try {
-        profile.renameProfile(oldName, newName);
-        selected.firstChild.firstChild.setAttribute( "value", newName );
-        selected.setAttribute( "rowName", newName );
-        selected.setAttribute( "profile_name", newName );
-      }
-      catch(e) {
-        var lString = bundle.GetStringFromName("profileExists");
-        var profileExistsTitle = bundle.GetStringFromName("profileExistsTitle");
-        commonDialogService.Alert(window, profileExistsTitle, lString);
-      }
+      break;
     }
   }
   // set the button state
