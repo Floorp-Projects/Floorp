@@ -18,7 +18,7 @@ var ResultsPaneController =
 
 	isCommandEnabled: function(command)
 	{
-		dump('ResultsPaneController::isCommandEnabled(' + command + ')\n');
+		//dump('ResultsPaneController::isCommandEnabled(' + command + ')\n');
 		switch ( command )
 		{
 			case "cmd_selectAll":
@@ -99,7 +99,7 @@ var DirPaneController =
 
 	isCommandEnabled: function(command)
 	{
-		dump('DirPaneController::isCommandEnabled(' + command + ')\n');
+		//dump('DirPaneController::isCommandEnabled(' + command + ')\n');
 		switch ( command )
 		{
 			case "cmd_selectAll":
@@ -158,19 +158,13 @@ function SetupCommandUpdateHandlers()
 	
 	// dir pane
 	widget = document.getElementById('dirTree');
-	if ( widget ) {
-	    dump('About to execute appendController(DirPaneController \n');
+	if ( widget )
 		widget.controllers.appendController(DirPaneController);
-		dump('Finished appendController(DirPaneController \n');
-    }
 	
 	// results pane
 	widget = document.getElementById('resultsTree');
-	if ( widget ) {
-	    dump('About to execute appendController(ResultsPaneController \n');
+	if ( widget )
 		widget.controllers.appendController(ResultsPaneController);
-		dump('Finished to execute appendController(ResultsPaneController \n');
-		}
 }
 
 
@@ -197,7 +191,7 @@ function AbEditCard()
 		var card = rdf.GetResource(uri);
 		card = card.QueryInterface(Components.interfaces.nsIAbCard);
 		goEditCardDialog(document.getElementById('resultsTree').getAttribute('ref'),
-						 card, top.editCardCallback);
+						 card, top.gUpdateCardView);
 	}
 }
 
@@ -232,7 +226,6 @@ function GetSelectedAddresses()
 			selectedAddresses += "\"" + card.DisplayName + "\" <" + card.PrimaryEmail + ">";
 		}
 	}
-	dump("selectedAddresses = " + selectedAddresses + "\n");
 	return selectedAddresses;	
 }
 
@@ -254,46 +247,78 @@ function SelectFirstAddressBook()
 
 function DirPaneSelectionChange()
 {
-	// FIX ME - deselect the items in the results pane to work around tree bug
-	var resultsTree = document.getElementById('resultsTree');
-	if ( resultsTree )
-		resultsTree.clearItemSelection();
-	// ----
-	
-	var tree = document.getElementById('dirTree');
-	if ( tree && tree.selectedItems && (tree.selectedItems.length == 1) )
-		ChangeDirectoryByDOMNode(tree.selectedItems[0]);
+	var dirTree = document.getElementById('dirTree');
+	if ( dirTree && dirTree.selectedItems && (dirTree.selectedItems.length == 1) )
+	{
+		ChangeDirectoryByDOMNode(dirTree.selectedItems[0]);
+	}
 	else	
 	{
-		var tree = document.getElementById('resultsTree');
-		if ( tree )
-			tree.setAttribute('ref', null);
+		var resultsTree = document.getElementById('resultsTree');
+		if ( resultsTree )
+		{
+			ClearResultsTreeSelection();
+			resultsTree.setAttribute('ref', null);
+		}
 	}
 }
 
 function ChangeDirectoryByDOMNode(dirNode)
 {
 	var uri = dirNode.getAttribute('id');
-	dump("uri = " + uri + "\n");
 	
-	var tree = document.getElementById('resultsTree');
-	if ( tree )
-		tree.setAttribute('ref', uri);
+	var resultsTree = document.getElementById('resultsTree');
+	if ( resultsTree )
+	{
+		if ( uri != resultsTree.getAttribute('ref') )
+		{
+			ClearResultsTreeSelection();
+			resultsTree.setAttribute('ref', uri);
+		}
+	}
 }
 
 function ResultsPaneSelectionChange()
 {
-	// FIX ME! - Should use some js var to determine abmain vs selectaddress dialog
-	// not in ab window if no parent.parent.rdf
-	if ( parent.parent.rdf )
+	if ( top.gUpdateCardView )
+		top.gUpdateCardView();
+}
+
+function ClearResultsTreeSelection()
+{
+	var resultsTree = document.getElementById('resultsTree');
+	if ( resultsTree )
+		resultsTree.clearItemSelection();
+}
+
+function GetResultsTreeChildren()
+{
+	var tree = document.getElementById('resultsTree');
+	
+	if ( tree && tree.childNodes )
 	{
-		var tree = document.getElementById('resultsTree');
-		
-		if ( tree && tree.selectedItems && (tree.selectedItems.length == 1) )
-			DisplayCardViewPane(tree.selectedItems[0]);
-		else
-			ClearCardViewPane();
+		for ( var index = tree.childNodes.length - 1; index >= 0; index-- )
+		{
+			if ( tree.childNodes[index].tagName == 'treechildren' )
+			{
+				return(tree.childNodes[index]);
+			}
+		}
 	}
+	return null;
+}
+
+function GetResultsTreeItem(row)
+{
+	var treechildren = GetResultsTreeChildren();
+	
+	if ( treechildren && row > 0)
+	{
+		var treeitems = treechildren.getElementsByTagName('treeitem');
+		if ( treeitems && treeitems.length >= row )
+			return treeitems[row-1];
+	}
+	return null;
 }
 
 function SortResultPane(column, sortKey)

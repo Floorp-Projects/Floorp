@@ -896,13 +896,13 @@ titledbutton[class~="borderless"][disabled]:active {
 /******** Tree widget **********/
 
 tree {
- background-color: white;
- border: none;
- border-spacing: 0px;
- width: 100%;
+  background-color: white;
+  border: none;
+  border-spacing: 0px;
+  width: 100%;
 }
 
-treeitem[selected="true"] > treerow { 
+treeitem[selected="true"] { 
   color: white;
   background-color: #336699;
 }

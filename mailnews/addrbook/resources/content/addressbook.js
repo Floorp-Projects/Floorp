@@ -1,15 +1,15 @@
 var addressbook = 0;
-var editCardCallback = 0;
+var gUpdateCardView = 0;
 
 function OnLoadAddressBook()
 {
+	top.addressbook = Components.classes["component://netscape/addressbook"].createInstance();
+	top.addressbook = top.addressbook.QueryInterface(Components.interfaces.nsIAddressBook);
+	top.gUpdateCardView = UpdateCardView;
+
 	// FIX ME - later we will be able to use onload from the overlay
 	OnLoadCardView();
 	
-	top.addressbook = Components.classes["component://netscape/addressbook"].createInstance();
-	top.addressbook = top.addressbook.QueryInterface(Components.interfaces.nsIAddressBook);
-	top.editCardCallback = UpdateCardView;
-
 	try {
 		top.addressbook.SetWebShellWindow(window)
 	}
@@ -24,8 +24,6 @@ function OnLoadAddressBook()
 
 function CommandUpdate_AddressBook()
 {
-	dump("CommandUpdate_AddressBook\n");
-	
 	goUpdateCommand('button_delete');
 	
 	// get selection info from dir pane
@@ -33,7 +31,6 @@ function CommandUpdate_AddressBook()
 	var oneAddressBookSelected = false;
 	if ( tree && tree.selectedItems && (tree.selectedItems.length == 1) )
 		oneAddressBookSelected = true;
-	dump("oneAddressBookSelected = " + oneAddressBookSelected + "\n");
 		
 	// get selection info from results pane
 	var selectedCards = GetSelectedAddresses();
@@ -55,6 +52,8 @@ function UpdateCardView()
 
 	if ( tree && tree.selectedItems && (tree.selectedItems.length == 1) )
 		DisplayCardViewPane(tree.selectedItems[0]);
+	else
+		ClearCardViewPane();
 }
 
 

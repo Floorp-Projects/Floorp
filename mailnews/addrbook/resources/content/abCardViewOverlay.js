@@ -132,9 +132,9 @@ function DisplayCardViewPane(abNode)
 
 function ClearCardViewPane()
 {
+	dump("ClearCardViewPane\n");
 	cvSetVisible(top.cvData.CardViewBox, false);
 
-	/* can remove this code now that boxes handle display:none
 	// HACK - we need to be able to set the entire box or div to display:none when bug fixed
 	var data = top.cvData;
 
@@ -174,8 +174,6 @@ function ClearCardViewPane()
 	cvSetVisible(data.cvWorkAddress2, false);
 	cvSetVisible(data.cvWorkCityStZip, false);
 	cvSetVisible(data.cvWorkCountry, false);
-	
-	*/
 }
 
 function cvSetNodeWithLabel(node, label, text)
