@@ -390,7 +390,11 @@ main(int argc, char **argv)
 		if (utime(toname, &utb) < 0)
 		    fail("cannot set times of %s", toname);
 	    }
+#ifdef HAVE_FCHMOD
 	    if (fchmod(tofd, mode) < 0)
+#else
+	    if (chmod(toname, mode) < 0)
+#endif
 		fail("cannot change mode of %s", toname);
 #endif
 	    if ((owner || group) && fchown(tofd, uid, gid) < 0)
