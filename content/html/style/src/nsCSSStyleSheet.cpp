@@ -71,6 +71,7 @@
 #include "nsIStyleRuleSupplier.h"
 #include "nsISizeOfHandler.h"
 #include "nsStyleUtil.h"
+#include "nsQuickSort.h"
 #ifdef MOZ_XUL
 #include "nsIXULContent.h"
 #endif
@@ -124,6 +125,45 @@ nsHashKey* AtomKey::Clone(void) const
 {
   return new AtomKey(*this);
 }
+
+// ----------------------
+// Rule array hash key
+//
+class nsWeightKey: public nsHashKey {
+public:
+  nsWeightKey(PRInt32 aWeight);
+  nsWeightKey(const nsWeightKey& aKey);
+  virtual ~nsWeightKey(void);
+  virtual PRUint32 HashCode(void) const;
+  virtual PRBool Equals(const nsHashKey *aKey) const;
+  virtual nsHashKey *Clone(void) const;
+  PRInt32 mWeight;
+};
+
+nsWeightKey::nsWeightKey(PRInt32 aWeight) :
+  mWeight(aWeight)
+{
+}
+
+nsWeightKey::~nsWeightKey(void)
+{
+}
+
+PRUint32 nsWeightKey::HashCode(void) const
+{
+  return (PRUint32)mWeight;
+}
+
+PRBool nsWeightKey::Equals(const nsHashKey* aKey) const
+{
+  return PRBool (((nsWeightKey*)aKey)->mWeight == mWeight);
+}
+
+nsHashKey* nsWeightKey::Clone(void) const
+{
+  return new nsWeightKey(mWeight);
+}
+
 
 struct RuleValue {
   RuleValue(nsICSSStyleRule* aRule, PRInt32 aIndex)
@@ -2642,14 +2682,19 @@ CSSRuleProcessor::AppendStyleSheet(nsICSSStyleSheet* aStyleSheet)
   return result;
 }
 
+MOZ_DECL_CTOR_COUNTER(SelectorMatchesData)
 
 struct SelectorMatchesData {
   SelectorMatchesData(nsIPresContext* aPresContext, nsIContent* aContent, 
-                  nsIStyleContext* aParentContext, nsISupportsArray* aResults,
-                  nsCompatibility* aCompat = nsnull);
+                  nsISupportsArray* aResults, nsCompatibility* aCompat = nsnull);
   
   ~SelectorMatchesData() 
   {
+    MOZ_COUNT_DTOR(SelectorMatchesData);
+
+    delete mPreviousSiblingData;
+    delete mParentData;
+
     NS_IF_RELEASE(mParentContent);
     NS_IF_RELEASE(mContentTag);
     NS_IF_RELEASE(mContentID);
@@ -2659,7 +2704,6 @@ struct SelectorMatchesData {
   nsIPresContext*   mPresContext;
   nsIContent*       mContent;
   nsIContent*       mParentContent; // if content, content->GetParent()
-  nsIStyleContext*  mParentContext;
   nsISupportsArray* mResults;
   nsCOMPtr<nsIStyleRuleSupplier> mStyleRuleSupplier; // used to query for the current scope
   
@@ -2674,16 +2718,19 @@ struct SelectorMatchesData {
   PRInt32           mEventState;    // if content, eventStateMgr->GetContentState()
   PRBool            mHasAttributes; // if content, content->GetAttributeCount() > 0
   PRInt32           mNameSpaceID;   // if content, content->GetNameSapce()
+  SelectorMatchesData* mPreviousSiblingData;
+  SelectorMatchesData* mParentData;
 };
 
 SelectorMatchesData::SelectorMatchesData(nsIPresContext* aPresContext, nsIContent* aContent, 
-                nsIStyleContext* aParentContext, nsISupportsArray* aResults,
+                nsISupportsArray* aResults,
                 nsCompatibility* aCompat /*= nsnull*/)
 {
+  MOZ_COUNT_CTOR(SelectorMatchesData);
+
   mPresContext = aPresContext;
   mContent = aContent;
   mParentContent = nsnull;
-  mParentContext = aParentContext;
   mResults = aResults;
 
   mContentTag = nsnull;
@@ -2695,6 +2742,8 @@ SelectorMatchesData::SelectorMatchesData(nsIPresContext* aPresContext, nsIConten
   mLinkState = eLinkState_Unknown;
   mEventState = NS_EVENT_STATE_UNSPECIFIED;
   mNameSpaceID = kNameSpaceID_Unknown;
+  mPreviousSiblingData = nsnull;
+  mParentData = nsnull;
 
   if(!aCompat) {
     // get the compat. mode (unless it is provided)
@@ -3116,8 +3165,8 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
     } else {
       result = localTrue;
       nsAttrSelector* attr = aSelector->mAttrList;
+      nsAutoString value;
       do {
-        nsAutoString  value, partValue;
         nsresult  attrState = data.mContent->GetAttribute(attr->mNameSpace, attr->mAttr, value);
         if (NS_FAILED(attrState) || (NS_CONTENT_ATTR_NOT_THERE == attrState)) {
           result = localFalse;
@@ -3141,21 +3190,31 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
               result = PRBool(localTrue == ValueDashMatch(value, attr->mValue, isCaseSensitive));
               break;
             case NS_ATTR_FUNC_ENDSMATCH:
-              value.Right(partValue, attr->mValue.Length());
-              if (isCaseSensitive) {
-                result = PRBool(localTrue == partValue.Equals(attr->mValue));
-              }
-              else {
-                result = PRBool(localTrue == partValue.EqualsIgnoreCase(attr->mValue));
+              {
+                PRUint32 selLen = attr->mValue.Length();
+                PRUint32 valLen = value.Length();
+                if (selLen > valLen) {
+                  result = PR_FALSE;
+                } else {
+                  if (isCaseSensitive)
+                    result = PRBool(localTrue == !Compare(Substring(value, valLen - selLen, selLen), attr->mValue, nsDefaultStringComparator()));
+                  else
+                    result = PRBool(localTrue == !Compare(Substring(value, valLen - selLen, selLen), attr->mValue, nsCaseInsensitiveStringComparator()));
+                }
               }
               break;
             case NS_ATTR_FUNC_BEGINSMATCH:
-              value.Left(partValue, attr->mValue.Length());
-              if (isCaseSensitive) {
-                result = PRBool(localTrue == partValue.Equals(attr->mValue));
-              }
-              else {
-                result = PRBool(localTrue == partValue.EqualsIgnoreCase(attr->mValue));
+              {
+                PRUint32 selLen = attr->mValue.Length();
+                PRUint32 valLen = value.Length();
+                if (selLen > valLen) {
+                  result = PR_FALSE;
+                } else {
+                  if (isCaseSensitive)
+                    result = PRBool(localTrue == !Compare(Substring(value, 0, selLen), attr->mValue, nsDefaultStringComparator()));
+                  else
+                    result = PRBool(localTrue == !Compare(Substring(value, 0, selLen), attr->mValue, nsCaseInsensitiveStringComparator()));
+                }
               }
               break;
             case NS_ATTR_FUNC_CONTAINSMATCH:
@@ -3208,8 +3267,8 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
 
 struct ContentEnumData : public SelectorMatchesData {
   ContentEnumData(nsIPresContext* aPresContext, nsIContent* aContent, 
-                  nsIStyleContext* aParentContext, nsISupportsArray* aResults)
-  : SelectorMatchesData(aPresContext,aContent,aParentContext,aResults)
+                  nsISupportsArray* aResults)
+  : SelectorMatchesData(aPresContext,aContent,aResults)
   {}
 };
 
@@ -3222,44 +3281,68 @@ static PRBool SelectorMatchesTree(SelectorMatchesData &data,
     nsIContent* content = nsnull;
     nsIContent* lastContent = data.mContent;
     NS_ADDREF(lastContent);
+    SelectorMatchesData* curdata = &data;
     while (nsnull != selector) { // check compound selectors
+      // Find the appropriate content (whether parent or previous sibling)
+      // to check next, and if we don't already have a SelectorMatchesData
+      // for it, create one.
+
       // for adjacent sibling combinators, the content to test against the
       // selector is the previous sibling
+      nsCompatibility compat = curdata->mIsQuirkMode ? eCompatibility_NavQuirks : eCompatibility_Standard;
+      SelectorMatchesData* newdata;
       if (PRUnichar('+') == selector->mOperator) {
-        nsIContent* parent;
-        PRInt32 index;
-        lastContent->GetParent(parent);
-        if (parent) {
-          parent->IndexOf(lastContent, index);
-          while (0 <= --index) {  // skip text & comment nodes
-            parent->ChildAt(index, content);
-            nsIAtom* tag;
-            content->GetTag(tag);
-            if ((tag != nsLayoutAtoms::textTagName) && 
-                (tag != nsLayoutAtoms::commentTagName)) {
+        newdata = curdata->mPreviousSiblingData;
+        if (!newdata) {
+          nsIContent* parent;
+          PRInt32 index;
+          lastContent->GetParent(parent);
+          if (parent) {
+            parent->IndexOf(lastContent, index);
+            while (0 <= --index) {  // skip text & comment nodes
+              parent->ChildAt(index, content);
+              nsIAtom* tag;
+              content->GetTag(tag);
+              if ((tag != nsLayoutAtoms::textTagName) && 
+                  (tag != nsLayoutAtoms::commentTagName)) {
+                NS_IF_RELEASE(tag);
+                newdata =
+                    new SelectorMatchesData(curdata->mPresContext, content,
+                                            curdata->mResults, &compat);
+                curdata->mPreviousSiblingData = newdata;    
+                break;
+              }
+              NS_RELEASE(content);
               NS_IF_RELEASE(tag);
-              break;
             }
-            NS_RELEASE(content);
-            NS_IF_RELEASE(tag);
+            NS_RELEASE(parent);
           }
-          NS_RELEASE(parent);
+        } else {
+          content = newdata->mContent;
+          NS_ADDREF(content);
         }
       }
       // for descendant combinators and child combinators, the content
       // to test against is the parent
       else {
-        lastContent->GetParent(content);
+        newdata = curdata->mParentData;
+        if (!newdata) {
+          lastContent->GetParent(content);
+          if (content) {
+            newdata = new SelectorMatchesData(curdata->mPresContext, content,
+                                              curdata->mResults, &compat);
+            curdata->mParentData = newdata;    
+          }
+        } else {
+          content = newdata->mContent;
+          NS_ADDREF(content);
+        }
       }
-      if (! content) {
+      if (! newdata) {
+        NS_ASSERTION(!content, "content must be null");
         break;
       }
-      // create a mew SelectorMatches data with the new content
-      // - NOTE - have to create a new one due to recursion
-      nsCompatibility compat = data.mIsQuirkMode ? eCompatibility_NavQuirks : eCompatibility_Standard;
-      SelectorMatchesData newdata(data.mPresContext, content, data.mParentContext, 
-                                  data.mResults, &compat);
-      if (SelectorMatches(newdata, selector, PR_TRUE, 0)) {
+      if (SelectorMatches(*newdata, selector, PR_TRUE, 0)) {
         // to avoid greedy matching, we need to recurse if this is a
         // descendant combinator and the next combinator is not
         if ((NS_IS_GREEDY_OPERATOR(selector->mOperator)) &&
@@ -3273,7 +3356,7 @@ static PRBool SelectorMatchesTree(SelectorMatchesData &data,
           // it tests from the top of the content tree, down.  This
           // doesn't matter much for performance since most selectors
           // don't match.  (If most did, it might be faster...)
-          if (SelectorMatchesTree(newdata, selector)) {
+          if (SelectorMatchesTree(*newdata, selector)) {
             selector = nsnull; // indicate success
             break;
           }
@@ -3291,6 +3374,7 @@ static PRBool SelectorMatchesTree(SelectorMatchesData &data,
       NS_IF_RELEASE(lastContent);
       lastContent = content;  // take refcount
       content = nsnull;
+      curdata = newdata;
     }
     NS_IF_RELEASE(lastContent);
   }
@@ -3345,7 +3429,7 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
     nsAutoVoidArray classArray;
 
     // setup the ContentEnumData 
-    ContentEnumData data(aPresContext, aContent, aParentContext, aResults);
+    ContentEnumData data(aPresContext, aContent, aResults);
 
     nsIStyledContent* styledContent;
     if (NS_SUCCEEDED(aContent->QueryInterface(NS_GET_IID(nsIStyledContent), (void**)&styledContent))) {
@@ -3378,10 +3462,9 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
 
 struct PseudoEnumData : public SelectorMatchesData {
   PseudoEnumData(nsIPresContext* aPresContext, nsIContent* aParentContent,
-                 nsIAtom* aPseudoTag, nsIStyleContext* aParentContext, 
-                 nsICSSPseudoComparator* aComparator,
+                 nsIAtom* aPseudoTag, nsICSSPseudoComparator* aComparator,
                  nsISupportsArray* aResults)
-  : SelectorMatchesData(aPresContext, aParentContent, aParentContext, aResults)
+  : SelectorMatchesData(aPresContext, aParentContent, aResults)
   {
     mPseudoTag = aPseudoTag;
     mComparator = aComparator;
@@ -3460,7 +3543,7 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
   RuleCascadeData* cascade = GetRuleCascade(aMedium);
 
   if (cascade) {
-    PseudoEnumData data(aPresContext, aParentContent, aPseudoTag, aParentContext, aComparator, aResults);
+    PseudoEnumData data(aPresContext, aParentContent, aPseudoTag, aComparator, aResults);
     cascade->mRuleHash.EnumerateTagRules(aPseudoTag, PseudoEnumFunc, &data);
 
 #ifdef DEBUG_RULES
@@ -3482,7 +3565,7 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
 
 struct StateEnumData : public SelectorMatchesData {
   StateEnumData(nsIPresContext* aPresContext, nsIContent* aContent)
-    : SelectorMatchesData(aPresContext, aContent, nsnull, nsnull)
+    : SelectorMatchesData(aPresContext, aContent, nsnull)
   { }
 };
 
@@ -3740,36 +3823,15 @@ PRBool BuildStateEnum(nsISupports* aRule, void* aArray)
 }
 
 struct CascadeEnumData {
-  CascadeEnumData(nsIAtom* aMedium, nsISupportsArray* aRules)
+  CascadeEnumData(nsIAtom* aMedium)
     : mMedium(aMedium),
-      mRules(aRules)
+      mRuleArrays(64)
   {
   }
+
   nsIAtom* mMedium;
-  nsISupportsArray* mRules;
+  nsSupportsHashtable mRuleArrays; // of nsISupportsArray
 };
-
-struct WeightEnumData {
-  WeightEnumData(PRInt32 aWeight)
-    : mWeight(aWeight),
-      mIndex(0)
-  {
-  }
-  PRInt32 mWeight;
-  PRInt32 mIndex;
-};
-
-static PRBool
-FindEndOfWeight(nsISupports* aRule, void* aData)
-{
-  nsICSSStyleRule* rule = (nsICSSStyleRule*)aRule;
-  WeightEnumData* data = (WeightEnumData*)aData;
-  if (rule->GetWeight() <= data->mWeight) {
-    return PR_FALSE;  // stop loop
-  }
-  data->mIndex++;
-  return PR_TRUE;
-}
 
 static PRBool
 InsertRuleByWeight(nsISupports* aRule, void* aData)
@@ -3782,10 +3844,16 @@ InsertRuleByWeight(nsISupports* aRule, void* aData)
   if (nsICSSRule::STYLE_RULE == type) {
     nsICSSStyleRule* styleRule = (nsICSSStyleRule*)rule;
 
-    WeightEnumData  weight(styleRule->GetWeight());
-    data->mRules->EnumerateForwards(FindEndOfWeight, &weight);
-
-    data->mRules->InsertElementAt(styleRule, weight.mIndex);
+    PRInt32 weight = styleRule->GetWeight();
+    nsWeightKey key(weight);
+    nsCOMPtr<nsISupportsArray> rules(dont_AddRef(
+            NS_STATIC_CAST(nsISupportsArray*, data->mRuleArrays.Get(&key))));
+    if (!rules) {
+      NS_NewISupportsArray(getter_AddRefs(rules));
+      if (!rules) return PR_FALSE; // out of memory
+      data->mRuleArrays.Put(&key, rules);
+    }
+    rules->AppendElement(styleRule);
   }
   else if (nsICSSRule::MEDIA_RULE == type) {
     nsICSSMediaRule* mediaRule = (nsICSSMediaRule*)rule;
@@ -3820,6 +3888,74 @@ CSSRuleProcessor::CascadeSheetRulesInto(nsISupports* aSheet, void* aData)
   return PR_TRUE;
 }
 
+struct RuleArrayData {
+  PRInt32 mWeight;
+  nsISupportsArray* mRuleArray;
+};
+
+PR_STATIC_CALLBACK(int) CompareArrayData(const void* aArg1, const void* aArg2,
+                                         void* closure)
+{
+  const RuleArrayData* arg1 = NS_STATIC_CAST(const RuleArrayData*, aArg1);
+  const RuleArrayData* arg2 = NS_STATIC_CAST(const RuleArrayData*, aArg2);
+  return arg2->mWeight - arg1->mWeight; // put higher weight first
+}
+
+
+struct FillArrayData {
+  FillArrayData(RuleArrayData* aArrayData) :
+    mIndex(0),
+    mArrayData(aArrayData)
+  {
+  }
+  PRInt32 mIndex;
+  RuleArrayData* mArrayData;
+};
+
+PR_STATIC_CALLBACK(PRBool) FillArray(nsHashKey* aKey, void* aData,
+                                     void* aClosure)
+{
+  nsWeightKey* key = NS_STATIC_CAST(nsWeightKey*, aKey);
+  nsISupportsArray* weightArray = NS_STATIC_CAST(nsISupportsArray*, aData);
+  FillArrayData* data = NS_STATIC_CAST(FillArrayData*, aClosure);
+
+  RuleArrayData& ruleData = data->mArrayData[data->mIndex++];
+  ruleData.mRuleArray = weightArray;
+  ruleData.mWeight = key->mWeight;
+
+  return PR_TRUE;
+}
+
+PR_STATIC_CALLBACK(PRBool) AppendRuleToArray(nsISupports* aElement, void* aData)
+{
+  nsISupportsArray* ruleArray = NS_STATIC_CAST(nsISupportsArray*, aData);
+  ruleArray->AppendElement(aElement);
+  return PR_TRUE;
+}
+
+/**
+ * Takes the hashtable of arrays (keyed by weight, in order sort) and
+ * puts them all in one big array which has a primary sort by weight
+ * and secondary sort by reverse order.
+ */
+static void PutRulesInList(nsSupportsHashtable* aRuleArrays,
+                           nsISupportsArray* aWeightedRules)
+{
+  PRInt32 arrayCount = aRuleArrays->Count();
+  RuleArrayData* arrayData = new RuleArrayData[arrayCount];
+  FillArrayData faData(arrayData);
+  aRuleArrays->Enumerate(FillArray, &faData);
+  NS_QuickSort(arrayData, arrayCount, sizeof(RuleArrayData),
+               CompareArrayData, nsnull);
+  PRInt32 i;
+  for (i = 0; i < arrayCount; i++) {
+    // append the array in reverse
+    arrayData[i].mRuleArray->EnumerateBackwards(AppendRuleToArray,
+                                                aWeightedRules);
+  }
+
+  delete [] arrayData;
+}
 
 RuleCascadeData*
 CSSRuleProcessor::GetRuleCascade(nsIAtom* aMedium)
@@ -3841,8 +3977,9 @@ CSSRuleProcessor::GetRuleCascade(nsIAtom* aMedium)
         if (cascade) {
           mMediumCascadeTable->Put(&mediumKey, cascade);
 
-          CascadeEnumData data(aMedium, cascade->mWeightedRules);
+          CascadeEnumData data(aMedium);
           mSheets->EnumerateForwards(CascadeSheetRulesInto, &data);
+          PutRulesInList(&data.mRuleArrays, cascade->mWeightedRules);
 
           cascade->mWeightedRules->EnumerateBackwards(BuildHashEnum, &(cascade->mRuleHash));
           cascade->mWeightedRules->EnumerateBackwards(BuildStateEnum, &(cascade->mStateSelectors));
