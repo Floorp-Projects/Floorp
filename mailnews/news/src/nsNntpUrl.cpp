@@ -51,7 +51,6 @@ static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
     
 nsNntpUrl::nsNntpUrl()
 {
-  m_offlineNews = nsnull;
   m_newsgroupPost = nsnull;
   m_newsAction = nsINntpUrl::ActionGetNewNews;
   m_addDummyEnvelope = PR_FALSE;
@@ -62,7 +61,6 @@ nsNntpUrl::nsNntpUrl()
          
 nsNntpUrl::~nsNntpUrl()
 {
-  NS_IF_RELEASE(m_offlineNews);
   NS_IF_RELEASE(m_newsgroupPost);
 }
   
@@ -125,31 +123,6 @@ NS_IMETHODIMP nsNntpUrl::SetNewsAction(nsNewsAction aNewsAction)
 {
 	m_newsAction = aNewsAction;
 	return NS_OK;
-}
-
-nsresult nsNntpUrl::SetOfflineNewsState (nsIMsgOfflineNewsState * offlineNews)
-{
-	NS_LOCK_INSTANCE();
-	if (offlineNews)
-	{
-		NS_IF_RELEASE(m_offlineNews);
-		m_offlineNews = offlineNews;
-		NS_ADDREF(m_offlineNews);
-	}
-	NS_UNLOCK_INSTANCE();
-	return NS_OK;
-}
-
-nsresult nsNntpUrl::GetOfflineNewsState (nsIMsgOfflineNewsState ** offlineNews) 
-{
-	NS_LOCK_INSTANCE();
-	if (offlineNews)
-	{
-		*offlineNews = m_offlineNews;
-		NS_IF_ADDREF(m_offlineNews);
-	}
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
 }
 
 NS_IMETHODIMP nsNntpUrl::SetUri(const char * aURI)

@@ -36,7 +36,6 @@
 
 #include "nsINNTPNewsgroupList.h"
 #include "nsINNTPArticleList.h"
-#include "nsIMsgOfflineNewsState.h"
 #include "nsIMsgNewsFolder.h"
 #include "nsIMsgWindow.h"
 
@@ -157,19 +156,19 @@ public:
 
   // nsITimerCallback interfaces
   NS_IMETHOD_(void) Notify(nsITimer *timer);
-
-	// Creating a protocol instance requires the URL 
-	// need to call Initialize after we do a new of nsNNTPProtocol
-	nsNNTPProtocol(nsIURI * aURL, nsIMsgWindow *aMsgWindow);	
-	virtual ~nsNNTPProtocol();
-
-	// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-	NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports * aCtxt, nsresult aStatus);
-
-	char * m_ProxyServer;		/* proxy server hostname */
-
-	NS_IMETHOD Cancel(nsresult status);  // handle stop button
-	NS_IMETHOD GetContentType(char * *aContentType);
+  
+  // Creating a protocol instance requires the URL 
+  // need to call Initialize after we do a new of nsNNTPProtocol
+  nsNNTPProtocol(nsIURI * aURL, nsIMsgWindow *aMsgWindow);	
+  virtual ~nsNNTPProtocol();
+  
+  // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
+  NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports * aCtxt, nsresult aStatus);
+  
+  char * m_ProxyServer;		/* proxy server hostname */
+  
+  NS_IMETHOD Cancel(nsresult status);  // handle stop button
+  NS_IMETHOD GetContentType(char * *aContentType);
   NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt);
   nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer);
 
@@ -191,10 +190,8 @@ private:
 
   nsCOMPtr<nsIOutputStream> m_tempArticleStream; 
    
-	// News Event Sinks
   nsCOMPtr <nsINNTPNewsgroupList> m_newsgroupList;
   nsCOMPtr <nsINNTPArticleList> m_articleList;
-	nsCOMPtr <nsIMsgOfflineNewsState> m_offlineNewsState;
 
   nsCOMPtr <nsIMsgNewsFolder> m_newsFolder;
   nsCOMPtr <nsIMsgWindow> m_msgWindow;
@@ -419,10 +416,5 @@ private:
   nsresult SetupPartExtractorListener(nsIStreamListener * aConsumer);
 };
 
-NS_BEGIN_EXTERN_C
-
-nsresult NS_MailNewsLoadUrl(const nsString& urlString, nsISupports * aConsumer);
-
-NS_END_EXTERN_C
 
 #endif  // nsNNTPProtocol_h___

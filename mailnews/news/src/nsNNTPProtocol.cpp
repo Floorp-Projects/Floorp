@@ -498,9 +498,6 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
       mailnewsUrl->SetMsgWindow(aMsgWindow);
       mailnewsUrl->GetMsgIsInLocalCache(&msgIsInLocalCache);
     }
-		// okay, now fill in our event sinks...Note that each getter ref counts before
-		// it returns the interface to us...we'll release when we are done
-		m_runningURL->GetOfflineNewsState(getter_AddRefs(m_offlineNewsState));
     if (msgIsInLocalCache)
       return NS_OK; // probably don't need to do anything else - definitely don't want
                     // to open the socket.
@@ -950,10 +947,6 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 
   SetIsBusy(PR_TRUE);
 
-  // okay, now fill in our event sinks...Note that each getter ref counts before
-  // it returns the interface to us...we'll release when we are done
-  m_runningURL->GetOfflineNewsState(getter_AddRefs(m_offlineNewsState));
-
   PR_FREEIF(m_messageID);
   m_messageID = nsnull;
 
@@ -1099,40 +1092,6 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   	ce->format_out = CLEAR_CACHE_BIT (ce->format_out);
 #endif
 
-#ifdef UNREADY_CODE
-  if (m_typeWanted == ARTICLE_WANTED)
-  {
-		PRUint32 number = 0;
-        nsresult rv;
-        PRBool articleIsOffline;
-        rv = m_newsgroup->IsOfflineArticle(number,&articleIsOffline);
-
-		if (NET_IsOffline() || (NS_SUCCEEDED(rv) && articleIsOffline))
-		{
-			ce->local_file = PR_TRUE;
-			cd->articleIsOffline = articleIsOffline;
-			ce->socket = NULL;
-
-			if (!articleIsOffline)
-				ce->format_out = CLEAR_CACHE_BIT(ce->format_out);
-			NET_SetCallNetlibAllTheTime(ce->window_id,"mknews");
-            
-            rv = nsComponentManager::CreateInstance(kMsgOfflineNewsStateCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIMsgOfflineNewsState),
-                                            getter_AddRefs(cd->offline_state));
-
-            if (NS_FAILED(rv) || ! cd->offline_state) {
-                goto FAIL;
-            }
-
-            rv = cd->offline_state->Initialize(cd->newsgroup, number);
-            if (NS_FAILED(rv)) goto FAIL;
-		}
-  }
-  if (cd->offline_state)
-	  goto FAIL;	/* we don't need to do any of this connection stuff */
-#endif
 
  FAIL:
   PR_FREEIF (commandSpecificData);
@@ -4969,12 +4928,6 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 	if (!mailnewsurl)
     return NS_OK; // probably no data available - it's OK.
 
-#ifdef UNREADY_CODE
-    if (m_offlineNewsState != NULL)
-	{
-		return NET_ProcessOfflineNews(ce, cd);
-	}
-#endif
     
 	ClearFlag(NNTP_PAUSE_FOR_READ); 
 

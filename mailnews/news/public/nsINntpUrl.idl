@@ -24,7 +24,6 @@
 #include "MailNewsTypes2.idl"
 
 %{ C++
-#include "nsIMsgOfflineNewsState.h"
 #include "nsINNTPNewsgroupPost.h"
 #include "nsIMsgMailNewsUrl.h"
 
@@ -33,14 +32,12 @@
 %}
 
 interface nsIMsgDBHdr;
-interface nsIMsgOfflineNewsState;
 interface nsINNTPNewsgroupPost;
 
 typedef long nsNewsAction;
 
 [scriptable, uuid(BDD12930-A682-11d2-804C-006008128C4E)]
 interface nsINntpUrl : nsISupports {
-  attribute nsIMsgOfflineNewsState offlineNewsState;
   attribute nsINNTPNewsgroupPost messageToPost;
   readonly attribute nsIMsgDBHdr messageHeader;
   attribute nsNewsAction newsAction;
