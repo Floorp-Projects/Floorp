@@ -36,6 +36,8 @@ LLIBS=                      \
  $(DIST)\lib\xpcomxpt_s.lib \
  $(NULL)
 
+MOZ_NO_COVERAGE=1
+
 include <$(DEPTH)\config\rules.mak>
 
 # build these xpt tools early so that it'll be
