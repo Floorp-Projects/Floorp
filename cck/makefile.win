@@ -86,8 +86,8 @@ export::
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Output
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Output
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\AnimLogo
-	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Autorun\Shell\bmps
-	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Autorun\Shell\NSetup32
+#	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Autorun\Shell\bmps
+#	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Autorun\Shell\NSetup32
 
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Bkmarks
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\CustInst

@@ -32,3 +32,7 @@ export::
 	$(MAKE_INSTALL) *.bmp $(CCKDIST)\CCKTool\Configs\Default\Workspace\Autorun\Shell\bmps
 	$(MAKE_INSTALL) *.ico $(CCKDIST)\CCKTool\Configs\Default\Workspace\Autorun\Shell\bmps
 
+	$(MAKE_INSTALL) *.bmp $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Autorun\Shell\bmps
+	$(MAKE_INSTALL) *.ico $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Autorun\Shell\bmps
+
+

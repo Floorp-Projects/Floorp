@@ -32,3 +32,7 @@ export::
 
 	$(MAKE_INSTALL) *.exe $(CCKDIST)\CCKTool\Configs\Default\Workspace\Autorun\Shell\nsetup32
 	$(MAKE_INSTALL) *.ini $(CCKDIST)\CCKTool\Configs\Default\Workspace\Autorun\Shell\nsetup32
+
+	$(MAKE_INSTALL) *.exe $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Autorun\Shell\nsetup32
+	$(MAKE_INSTALL) *.ini $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Autorun\Shell\nsetup32
+
