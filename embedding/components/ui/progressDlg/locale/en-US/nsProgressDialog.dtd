@@ -123,8 +123,9 @@
     xxxTimeFormat strings defined above).  You can omit "#1" if you don't
     want the elapsed time in the message.
 
-    #1 will be replaced by the elapsed time -->
-<!ENTITY completeMsg "Download complete (elapsed time was #1)">
+    #1 will be replaced by the elapsed time
+    #2 will be replaced by the size of the file in Kilobytes -->
+<!ENTITY completeMsg "Finished, #2 KB downloaded (elapsed time was #1)">
 
 <!-- LOCALIZATION NOTE (percentMsg):
 
