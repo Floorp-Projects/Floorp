@@ -90,46 +90,16 @@ nsIWebProgress * CnsiWebProg::GetWebProgObject()
 
 void CnsiWebProg::AddWebProgLstnr(PRUint32 theFlag)
 {
-	char flagName[200];
+	nsCAutoString flagName(NS_LITERAL_CSTRING("xxxx"));
 
-	switch(theFlag)
-	{
-	case nsIWebProgress::NOTIFY_STATE_REQUEST:
-		strcpy(flagName, "NOTIFY_STATE_REQUEST");
-		break;
-	case nsIWebProgress::NOTIFY_STATE_DOCUMENT:
-		strcpy(flagName, "NOTIFY_STATE_DOCUMENT");
-		break;
-	case nsIWebProgress::NOTIFY_STATE_NETWORK:
-		strcpy(flagName, "NOTIFY_STATE_NETWORK");
-		break;
-	case nsIWebProgress::NOTIFY_STATE_WINDOW:
-		strcpy(flagName, "NOTIFY_STATE_WINDOW");
-		break;
-	case nsIWebProgress::NOTIFY_STATE_ALL:
-		strcpy(flagName, "NOTIFY_STATE_ALL");
-		break;
-	case nsIWebProgress::NOTIFY_PROGRESS:
-		strcpy(flagName, "NOTIFY_PROGRESS");
-		break;
-	case nsIWebProgress::NOTIFY_STATUS:
-		strcpy(flagName, "NOTIFY_STATUS");
-		break;
-	case nsIWebProgress::NOTIFY_SECURITY:
-		strcpy(flagName, "NOTIFY_SECURITY");
-		break;
-	case nsIWebProgress::NOTIFY_LOCATION:
-		strcpy(flagName, "NOTIFY_LOCATION");
-		break;
-	case nsIWebProgress::NOTIFY_ALL:
-		strcpy(flagName, "NOTIFY_ALL");
-		break;
-	}
+	ConvertWPFlagToString(theFlag, flagName);
+
 			// addWebProgListener
 	nsCOMPtr<nsIWebProgress> qaWebProgress;
 	qaWebProgress = GetWebProgObject();
 	nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, qaBrowserImpl));
 	rv = qaWebProgress->AddProgressListener(listener, theFlag);
+//	StoreWebProgFlag(theFlag);
 	RvTestResult(rv, "nsIWebProgress::AddProgressListener() test", 2);
 	FormatAndPrintOutput("WebProgressListener flag = ", flagName, 2);
 }
@@ -157,6 +127,68 @@ void CnsiWebProg::GetTheDOMWindow()
 		RvTestResult(rv, "nsIWebProgress::GetDOMWindow() test", 2);
 }
 
+void CnsiWebProg::ConvertWPFlagToString(PRUint32 theFlag,
+										nsCAutoString& flagName)
+{
+	switch(theFlag)
+	{
+	case nsIWebProgress::NOTIFY_STATE_REQUEST:
+		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_STATE_REQUEST"));
+		break;
+	case nsIWebProgress::NOTIFY_STATE_DOCUMENT:
+		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_STATE_DOCUMENT"));
+		break;
+	case nsIWebProgress::NOTIFY_STATE_NETWORK:
+		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_STATE_NETWORK"));
+		break;
+	case nsIWebProgress::NOTIFY_STATE_WINDOW:
+		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_STATE_WINDOW"));
+		break;
+	case nsIWebProgress::NOTIFY_STATE_ALL:
+		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_STATE_ALL"));
+		break;
+	case nsIWebProgress::NOTIFY_PROGRESS:
+		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_PROGRESS"));
+		break;
+	case nsIWebProgress::NOTIFY_STATUS:
+		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_STATUS"));
+		break;
+	case nsIWebProgress::NOTIFY_SECURITY:
+		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_SECURITY"));
+		break;
+	case nsIWebProgress::NOTIFY_LOCATION:
+		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_LOCATION"));
+		break;
+	case nsIWebProgress::NOTIFY_ALL:
+		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_ALL"));
+		break;
+	case nsIWebProgress::NOTIFY_STATE_DOCUMENT | nsIWebProgress::NOTIFY_STATE_REQUEST:
+		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_STATE_DOCUMENT&REQUEST"));
+		break;
+	case nsIWebProgress::NOTIFY_STATE_DOCUMENT | nsIWebProgress::NOTIFY_STATE_REQUEST
+					| nsIWebProgress::NOTIFY_STATE_NETWORK	:
+		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_STATE_DOCUMENT&REQUEST&NETWORK"));
+		break;
+	case nsIWebProgress::NOTIFY_STATE_NETWORK | nsIWebProgress::NOTIFY_STATE_WINDOW:
+		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_STATE_NETWORK&WINDOW"));
+		break;
+	}
+}
+
+void CnsiWebProg::StoreWebProgFlag(PRUint32 theFlag)
+{
+	theStoredFlag = theFlag;
+}
+
+void CnsiWebProg::RetrieveWebProgFlag()
+{
+	PRUint32 theFlag;
+	nsCAutoString flagName(NS_LITERAL_CSTRING("NOTIFY_ALL"));
+
+	theFlag = theStoredFlag;
+	ConvertWPFlagToString(theFlag, flagName);
+	FormatAndPrintOutput("WebProgressListener flag = ", flagName, 2);
+}
 void CnsiWebProg::OnStartTests(UINT nMenuID)
 {
 	switch(nMenuID)
@@ -165,7 +197,7 @@ void CnsiWebProg::OnStartTests(UINT nMenuID)
 			RunAllTests();
 			break ;
 		case ID_INTERFACES_NSIWEBPROGRESS_ADDPROGRESSLISTENER :
-			AddWebProgLstnr(nsIWebProgress::NOTIFY_ALL);
+			AddWebProgLstnr(nsIWebProgress::NOTIFY_STATE_ALL);
 			break ;
 		case ID_INTERFACES_NSIWEBPROGRESS_REMOVEPROGRESSLISTENER :
 			RemoveWebProgLstnr();

@@ -30,8 +30,14 @@ public:
 	void RemoveWebProgLstnr(void);
 	void GetTheDOMWindow(void);
 
+	void ConvertWPFlagToString(PRUint32, nsCAutoString&);
+	void StoreWebProgFlag(PRUint32);
+	void RetrieveWebProgFlag();
+
 	void OnStartTests(UINT nMenuID);
 	void RunAllTests(void);
+
+	PRUint32 theStoredFlag;
 
 public:
 // Attributes
