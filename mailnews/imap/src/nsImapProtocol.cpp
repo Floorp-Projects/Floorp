@@ -107,6 +107,7 @@ PRLogModuleInfo *IMAP;
 #include "nsIStreamConverterService.h"
 #include "nsIProxyInfo.h"
 #include "nsEventQueueUtils.h"
+#include "nsISSLSocketControl.h"
 #if 0
 #include "nsIHashAlgorithm.h"
 #endif
@@ -321,6 +322,7 @@ static PRBool gHideOtherUsersFromList = PR_FALSE;
 static PRBool gUseEnvelopeCmd = PR_FALSE;
 static PRBool gUseLiteralPlus = PR_TRUE;
 static PRBool gCheckDeletedBeforeExpunge = PR_FALSE; //bug 235004
+static PRInt32 gResponseTimeout = 60;
 
 nsresult nsImapProtocol::GlobalInitialization()
 {
@@ -344,6 +346,7 @@ nsresult nsImapProtocol::GlobalInitialization()
                             &gUseEnvelopeCmd);
     prefBranch->GetBoolPref("mail.imap.use_literal_plus", &gUseLiteralPlus);
     prefBranch->GetBoolPref("mail.imap.check_deleted_before_expunge", &gCheckDeletedBeforeExpunge);
+    prefBranch->GetIntPref("mailnews.tcptimeout", &gResponseTimeout);
     return NS_OK;
 }
 
@@ -798,6 +801,8 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
           // Ensure that the socket can get the notification callbacks
           SetSecurityCallbacksFromChannel(m_transport, m_mockChannel);
 
+          m_transport->SetTimeout(nsISocketTransport::TIMEOUT_CONNECT, gResponseTimeout + 60);
+          m_transport->SetTimeout(nsISocketTransport::TIMEOUT_READ_WRITE, gResponseTimeout);
           // open buffered, blocking input stream
           rv = m_transport->OpenInputStream(nsITransport::OPEN_BLOCKING, 0, 0, getter_AddRefs(m_inputStream));
           if (NS_FAILED(rv)) return rv;
@@ -939,28 +944,7 @@ NS_IMETHODIMP nsImapProtocol::Run()
   }
       
   me->m_runningUrl = nsnull;
-  if (m_inputStream)
-    m_inputStream->Close();
-  if (m_outputStream)
-    m_outputStream->Close();
-  if (m_transport)
-  {
-      // make sure the transport closes (even if someone is still indirectly
-      // referencing it).
-      me->m_transport->Close(NS_ERROR_ABORT);
-      me->m_transport = nsnull;
-  }
-  me->m_inputStream = nsnull;
-  me->m_outputStream = nsnull;
-  me->m_channelListener = nsnull;
-  me->m_channelContext = nsnull;
-  if (me->m_mockChannel)
-  {
-      me->m_mockChannel->Close();
-      me->m_mockChannel = nsnull;
-  }
-  me->m_channelInputStream = nsnull;
-  me->m_channelOutputStream = nsnull;
+  CloseStreams();
   me->m_sinkEventQueue = nsnull;
   me->m_server = nsnull;
   me->m_imapMailFolderSink = nsnull;
@@ -969,6 +953,34 @@ NS_IMETHODIMP nsImapProtocol::Run()
 
   return NS_OK;
 }
+
+// called from UI thread.
+void nsImapProtocol::CloseStreams()
+{
+  if (m_inputStream)
+    m_inputStream->Close();
+  if (m_outputStream)
+    m_outputStream->Close();
+  if (m_transport)
+  {
+      // make sure the transport closes (even if someone is still indirectly
+      // referencing it).
+      m_transport->Close(NS_ERROR_ABORT);
+      m_transport = nsnull;
+  }
+  m_inputStream = nsnull;
+  m_outputStream = nsnull;
+  m_channelListener = nsnull;
+  m_channelContext = nsnull;
+  if (m_mockChannel)
+  {
+      m_mockChannel->Close();
+      m_mockChannel = nsnull;
+  }
+  m_channelInputStream = nsnull;
+  m_channelOutputStream = nsnull;
+}
+
 
 NS_IMETHODIMP nsImapProtocol::OnInputStreamReady(nsIAsyncInputStream *inStr)
 {
@@ -989,17 +1001,6 @@ NS_IMETHODIMP nsImapProtocol::OnInputStreamReady(nsIAsyncInputStream *inStr)
   return NS_OK;
 }
 
-void nsImapProtocol::SetResponseTimer(PRUint32 seconds)
-{
-}
-
-void nsImapProtocol::CancelResponseTimer()
-{
-}
-
-/* static */ void nsImapProtocol::OnResponseTimeout(nsITimer *timer, void *aImapProtocol)
-{
-}
 
 NS_IMETHODIMP
 nsImapProtocol::TellThreadToDie(PRBool isSafeToClose)
@@ -1013,7 +1014,6 @@ nsImapProtocol::TellThreadToDie(PRBool isSafeToClose)
                 nsImapServerResponseParser::kFolderSelected && isSafeToClose;
   nsCString command;
   nsresult rv = NS_OK;
-  PRUint32 writeCount;
 
   if (m_currentServerCommandTagNumber > 0)
   {
@@ -1023,25 +1023,16 @@ nsImapProtocol::TellThreadToDie(PRBool isSafeToClose)
     if (closeNeeded && GetDeleteIsMoveToTrash() &&
         TestFlag(IMAP_CONNECTION_IS_OPEN) && m_outputStream)
     {
-      IncrementCommandTagNumber();
-      command = GetServerCommandTag();
-      command.Append(" close" CRLF);
-      rv = m_outputStream->Write(command.get(), command.Length(),
-                                 &writeCount);
-      Log("SendData", "TellThreadToDie", command.get());
+      Close(PR_TRUE);
     }
 
     if (NS_SUCCEEDED(rv) && TestFlag(IMAP_CONNECTION_IS_OPEN) && m_outputStream)
     {
-      IncrementCommandTagNumber();
-      command = GetServerCommandTag();
-      command.Append(" logout" CRLF);
-      rv = m_outputStream->Write(command.get(), command.Length(),
-                                 &writeCount);
-      Log("SendData", "TellThreadToDie", command.get());
+      Logout(PR_TRUE);
     }
   }
 
+  CloseStreams(); 
   Log("TellThreadToDie", nsnull, "close socket connection");
 
   PR_EnterMonitor(m_threadDeathMonitor);
@@ -1331,6 +1322,33 @@ PRBool nsImapProtocol::ProcessCurrentURL()
       }
       else
       {
+        if ((m_socketType == nsIMsgIncomingServer::tryTLS 
+            && (GetServerStateParser().GetCapabilityFlag() & kHasStartTLSCapability))
+          || m_socketType == nsIMsgIncomingServer::alwaysUseTLS)
+        {
+          StartTLS();
+          if (GetServerStateParser().LastCommandSuccessful())
+          {
+            nsCOMPtr<nsISupports> secInfo;
+            nsCOMPtr<nsISocketTransport> strans = do_QueryInterface(m_transport, &rv);
+            if (NS_FAILED(rv)) return rv;
+
+            rv = strans->GetSecurityInfo(getter_AddRefs(secInfo));
+
+            if (NS_SUCCEEDED(rv) && secInfo) 
+            {
+                nsCOMPtr<nsISSLSocketControl> sslControl = do_QueryInterface(secInfo, &rv);
+
+                if (NS_SUCCEEDED(rv) && sslControl)
+                    rv = sslControl->StartTLS();
+            }
+
+            Capability();
+          }
+          else if (m_socketType == nsIMsgIncomingServer::alwaysUseTLS)
+            return PR_FALSE;
+        }
+
         logonFailed = !TryToLogon();
       }
   } // if death signal not received
@@ -1377,6 +1395,10 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   }
   else
     NS_ASSERTION(PR_FALSE, "missing url or sink");
+
+  // disable timeouts before caching connection.
+  if (m_transport)
+    m_transport->SetTimeout(nsISocketTransport::TIMEOUT_READ_WRITE, PR_UINT32_MAX);
 
 // if we are set up as a channel, we should notify our channel listener that we are stopping...
 // so pass in ourself as the channel and not the underlying socket or file channel the protocol
@@ -4176,7 +4198,6 @@ char* nsImapProtocol::CreateNewLineFromSocket()
   do
   {
     newLine = m_inputStreamBuffer->ReadNextLine(m_inputStream, numBytesInLine, needMoreData, &rv); 
-
     PR_LOG(IMAP, PR_LOG_DEBUG, ("ReadNextLine [stream=%x nb=%u needmore=%u]\n",
         m_inputStream.get(), numBytesInLine, needMoreData));
 
@@ -4788,6 +4809,18 @@ void nsImapProtocol::HandleCurrentUrlError()
   }
 }
 
+void nsImapProtocol::StartTLS()
+{
+    IncrementCommandTagNumber();
+    nsCString command(GetServerCommandTag());
+
+    command.Append(" STARTTLS" CRLF);
+            
+    nsresult rv = SendData(command.get());
+    if (NS_SUCCEEDED(rv))
+        ParseIMAPandCheckForNewMail();
+}
+
 void nsImapProtocol::Capability()
 {
 
@@ -5048,7 +5081,7 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
   } // if has auth login capability
 
   // Fall back to InsecureLogin() if the user did not request secure authentication
-  if (!m_useSecAuth)
+  if (!m_useSecAuth && ! (GetServerStateParser().GetCapabilityFlag() & kLoginDisabled))
     InsecureLogin(userName, password);
 
   PR_Free(currentCommand);
@@ -5529,7 +5562,7 @@ void nsImapProtocol::OnRefreshAllACLs()
 }
 
 // any state commands
-void nsImapProtocol::Logout()
+void nsImapProtocol::Logout(PRBool shuttingDown /* = PR_FALSE */)
 {
   ProgressEventFunctionUsingId (IMAP_STATUS_LOGGING_OUT);
 
@@ -5552,9 +5585,11 @@ void nsImapProtocol::Logout()
   command.Append(" logout" CRLF);
 
   nsresult rv = SendData(command.get());
+  if (m_transport && shuttingDown)
+    m_transport->SetTimeout(nsISocketTransport::TIMEOUT_READ_WRITE, 5);
   // the socket may be dead before we read the response, so drop it.
-    if (NS_SUCCEEDED(rv))
-        ParseIMAPandCheckForNewMail();
+  if (NS_SUCCEEDED(rv))
+      ParseIMAPandCheckForNewMail();
 }
 
 void nsImapProtocol::Noop()
@@ -6823,11 +6858,13 @@ void nsImapProtocol::EndIdle(PRBool waitForResponse /* = PR_TRUE */)
   if (asyncInputStream)
     asyncInputStream->AsyncWait(nsnull, 0, 0, nsnull);
   nsresult rv = SendData("DONE"CRLF);
+  // set a short timeout if we don't want to wait for a response
+  if (m_transport && !waitForResponse)
+    m_transport->SetTimeout(nsISocketTransport::TIMEOUT_READ_WRITE, 5);
   if (NS_SUCCEEDED(rv))
   {
     m_idle = PR_FALSE;
-    if (waitForResponse)
-      ParseIMAPandCheckForNewMail();
+    ParseIMAPandCheckForNewMail();
   }
   m_imapMailFolderSink = nsnull;
 }
@@ -7205,7 +7242,7 @@ void nsImapProtocol::ProcessStoreFlags(const char * messageIdsString,
 }
 
 
-void nsImapProtocol::Close()
+void nsImapProtocol::Close(PRBool shuttingDown /* = PR_FALSE */)
 {
   IncrementCommandTagNumber();
 
@@ -7217,6 +7254,9 @@ void nsImapProtocol::Close()
   GetServerStateParser().ResetFlagInfo(0);
     
   nsresult rv = SendData(command.get());
+  if (m_transport && shuttingDown)
+    m_transport->SetTimeout(nsISocketTransport::TIMEOUT_READ_WRITE, 5);
+
   if (NS_SUCCEEDED(rv))
       ParseIMAPandCheckForNewMail();
 }
@@ -7297,6 +7337,7 @@ PRBool nsImapProtocol::TryToLogon()
 
       PRBool lastReportingErrors = GetServerStateParser().GetReportingErrors();
       GetServerStateParser().SetReportingErrors(PR_FALSE);  // turn off errors - we'll put up our own.
+
       nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv)); 
       if (NS_SUCCEEDED(rv) && prefBranch) 
         prefBranch->GetBoolPref("mail.auth_login", &prefBool);
@@ -7356,10 +7397,10 @@ PRBool nsImapProtocol::TryToLogon()
           AuthLogin (userName, password,  kHasAuthLoginCapability); 
           logonTries++; // This counts as a logon try for most servers
         }
-        else
+        else if (! (GetServerStateParser().GetCapabilityFlag() & kLoginDisabled))
           InsecureLogin(userName, password);
       }
-      else
+      else if (! (GetServerStateParser().GetCapabilityFlag() & kLoginDisabled))
         InsecureLogin(userName, password);
 
       if (!GetServerStateParser().LastCommandSuccessful())
@@ -7829,8 +7870,8 @@ nsImapMockChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry, nsCache
   NS_ENSURE_ARG(m_url); // kick out if m_url is null for some reason. 
 
 #ifdef DEBUG_bienvenu
-      nsXPIDLCString entryKey;
-      entry->GetKey(getter_Copies(entryKey));
+      nsCAutoString entryKey;
+      entry->GetKey(entryKey);
       printf("%s with access %ld status %ld\n", entryKey.get(), access, status);
 #endif
   if (NS_SUCCEEDED(status)) 

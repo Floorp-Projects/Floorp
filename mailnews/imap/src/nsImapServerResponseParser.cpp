@@ -2118,6 +2118,8 @@ void nsImapServerResponseParser::capability_data()
         fCapabilityFlag |= kHasAuthMSNCapability;
       else if (! PL_strcasecmp(fNextToken, "STARTTLS"))
         fCapabilityFlag |= kHasStartTLSCapability;
+      else if (! PL_strcasecmp(fNextToken, "LOGINDISABLED"))
+        fCapabilityFlag |= kLoginDisabled;
       else if (! PL_strcasecmp(fNextToken, "X-NETSCAPE"))
         fCapabilityFlag |= kHasXNetscapeCapability;
       else if (! PL_strcasecmp(fNextToken, "XSENDER"))

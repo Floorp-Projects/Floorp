@@ -137,7 +137,8 @@ typedef enum {
     kHasIdleCapability       = 0x00080000,  /* RFC 2177 idle extension */
     kHasAuthNTLMCapability = 0x00100000,  /* AUTH NTLM extension */
     kHasAuthMSNCapability = 0x00200000,   /* AUTH MSN extension */
-    kHasStartTLSCapability = 0x00400000   /* STARTTLS support */
+    kHasStartTLSCapability = 0x00400000,   /* STARTTLS support */
+    kLoginDisabled = 0x00800000        /* login disabled */
 } eIMAPCapabilityFlag;
 
 // this used to be part of the connection object class - maybe we should move it into 

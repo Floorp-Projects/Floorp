@@ -169,44 +169,10 @@ public:
   //////////////////////////////////////////////////////////////////////////////////
   // we support the nsIImapProtocol interface
   //////////////////////////////////////////////////////////////////////////////////
-  NS_IMETHOD LoadImapUrl(nsIURI * aURL, nsISupports * aConsumer);
-  NS_IMETHOD IsBusy(PRBool * aIsConnectionBusy, PRBool *isInboxConnection);
-  NS_IMETHOD CanHandleUrl(nsIImapUrl * aImapUrl, PRBool * aCanRunUrl,
-                          PRBool * hasToWait);
-  NS_IMETHOD Initialize(nsIImapHostSessionList * aHostSessionList, nsIImapIncomingServer *aServer, nsIEventQueue * aSinkEventQueue);
-  
-  NS_IMETHOD GetRunningImapURL(nsIImapUrl **aImapUrl);
-  ////////////////////////////////////////////////////////////////////////////////////////
-  // we suppport the nsIStreamListener interface 
-  ////////////////////////////////////////////////////////////////////////////////////////
-    
-    
-  // This is evil, I guess, but this is used by libmsg to tell a running imap url
-  // about headers it should download to update a local database.
-  NS_IMETHOD NotifyHdrsToDownload(PRUint32 *keys, PRUint32 keyCount);
-  NS_IMETHOD NotifyBodysToDownload(PRUint32 *keys, PRUint32 keyCount);
-  
-  NS_IMETHOD GetFlagsForUID(PRUint32 uid, PRBool *foundIt, imapMessageFlagsType *flags, char **customFlags);
-  NS_IMETHOD GetSupportedUserFlags(PRUint16 *flags);
-  
-  NS_IMETHOD GetRunningUrl(nsIURI **aUrl);
-  
-  // Tell thread to die. This can only be called by imap service
-  // 
-  NS_IMETHOD TellThreadToDie(PRBool isSafeToClose);
-  
-  // Get last active time stamp
-  NS_IMETHOD GetLastActiveTimeStamp(PRTime *aTimeStamp);
-  
-  NS_IMETHOD PseudoInterruptMsgLoad(nsIMsgFolder *aImapFolder, nsIMsgWindow *aMsgWindow, 
-                                    PRBool *interrupted);
-  NS_IMETHOD GetSelectedMailboxName(char ** folderName);
-  NS_IMETHOD ResetToAuthenticatedState();
-  NS_IMETHOD OverrideConnectionInfo(const PRUnichar *pHost, PRUint16 pPort, const char *pCookieData);
-  //////////////////////////////////////////////////////////////////////////////////////
-  // End of nsIStreamListenerSupport
-  ////////////////////////////////////////////////////////////////////////////////////////
-  
+  NS_DECL_NSIIMAPPROTOCOL
+
+  void CloseStreams();
+
   // message id string utilities.
   PRUint32		CountMessagesInIdString(const char *idString);
   static	PRBool	HandlingMultipleMessages(const char *messageIdString);
@@ -310,11 +276,11 @@ public:
   void FetchMsgAttribute(const char * messageIds, const char *attribute);
   void Expunge();
   void UidExpunge(const char* messageSet);
-  void Close();
+  void Close(PRBool shuttingDown = PR_FALSE);
   void Check();
   void SelectMailbox(const char *mailboxName);
   // more imap commands
-  void Logout();
+  void Logout(PRBool shuttingDown = PR_FALSE);
   void Noop();
   void XServerInfo();
   void Netscape();
@@ -486,6 +452,7 @@ private:
   void IncrementCommandTagNumber();
   char *GetServerCommandTag();  
   
+  void StartTLS();
   // login related methods. All of these methods actually issue protocol
   void Capability(); // query host for capabilities.
   void Language(); // set the language on the server if it supports it
@@ -594,13 +561,6 @@ private:
   
   nsIImapHostSessionList * m_hostSessionList;
 
-  // Response timer to drop hung connections
-  nsCOMPtr<nsITimer> m_responseTimer;
-  void SetResponseTimer(PRUint32 seconds);
-  void CancelResponseTimer();
-  static void OnResponseTimeout(nsITimer *timer, void *aImapProtocol);
-
-  
   PRBool m_fromHeaderSeen;
   
   // these settings allow clients to override various pieces of the connection info from the url
