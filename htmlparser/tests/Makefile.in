@@ -26,6 +26,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= outsinks
+DIRS            = outsinks \
+                  grabpage \
+                  logparse \
+                  html \
+                  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
