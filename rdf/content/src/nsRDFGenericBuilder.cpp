@@ -1128,18 +1128,15 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 									if (NS_FAILED(rv = mDB->GetTarget(aValue, propRes, PR_TRUE,
 										getter_AddRefs(valueNode))) || (rv == NS_RDF_NO_VALUE))
 										continue;
-									nsCOMPtr<nsIRDFLiteral>	literalValue = do_QueryInterface(valueNode);
-									if (!literalValue)
+									if (NS_FAILED(rv = nsRDFContentUtils::GetTextForNode(valueNode, attribValue)))
+									{
 										continue;
-									PRUnichar	*uniVal;
-									if (NS_FAILED(rv = literalValue->GetValue(&uniVal)))
-										continue;
-									attribValue = uniVal;
+									}
 								}
 								else if (attribValue.EqualsIgnoreCase("..."))
 								{
-									char	*uri = nsnull;
-									aValue->GetValue(&uri);
+									const char	*uri = nsnull;
+									aValue->GetValueConst(&uri);
 									attribValue=uri;
 								}
 								treeGrandchild->SetAttribute(attribNameSpaceID,
