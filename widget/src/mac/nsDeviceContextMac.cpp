@@ -80,7 +80,7 @@ double				pix_inch;
  */
 NS_IMETHODIMP nsDeviceContextMac :: CreateRenderingContext(nsIRenderingContext *&aContext)
 {
-nsIRenderingContext   *pContext;
+nsRenderingContextMac *pContext;
 nsresult              rv;
 GrafPtr								thePort;
 
