@@ -48,7 +48,7 @@ XPIDLSRCS	= \
 		nsIFileTransportService.idl \
 		nsISocketTransportService.idl \
 		nsIStatusCodeEventSink.idl \
-		nsIFileSystem.idl \
+		nsIStreamIO.idl \
 		nsIStreamLoader.idl \
 		nsINetPrompt.idl \
 		nsISocketTransport.idl \

@@ -10,7 +10,7 @@ nsIChannel.idl
 nsIRequest.idl
 nsISocketTransportService.idl
 nsIFileTransportService.idl
-nsIFileSystem.idl
+nsIStreamIO.idl
 nsIPrompt.idl
 nsIStreamLoader.idl
 nsIURLParser.idl

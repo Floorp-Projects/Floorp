@@ -166,7 +166,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS6(nsJARChannel,
                               nsIRequest,
                               nsIStreamObserver,
                               nsIStreamListener,
-                              nsIFileSystem)
+                              nsIStreamIO)
 
 NS_METHOD
 nsJARChannel::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -472,8 +472,8 @@ nsJARChannel::EnsureJARFileAvailable(OnJARFileAvailableFun onJARFileAvailable,
         rv = jarBaseChannel->OpenInputStream(getter_AddRefs(jarBaseIn));
         if (NS_FAILED(rv)) goto error;
 
-    // use a file transport to serve as a data pump for the download (done
-    // on some other thread)
+        // use a file transport to serve as a data pump for the download (done
+        // on some other thread)
         rv = fts->CreateTransport(jarCacheFile, PR_WRONLY | PR_CREATE_FILE, 0, 
                                   getter_AddRefs(mJarCacheTransport));
         if (NS_FAILED(rv)) goto error;
@@ -563,10 +563,8 @@ nsJARChannel::AsyncReadJARElement()
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString spec;
-    rv = mURI->GetSpec(getter_Copies(spec));    // name for display purposes in status bar
-    rv = fts->CreateTransportFromFileSystem(this, spec,
-                                            getter_AddRefs(mJarExtractionTransport));
+    rv = fts->CreateTransportFromStreamIO(this, 
+                                          getter_AddRefs(mJarExtractionTransport));
     if (NS_FAILED(rv)) return rv;
     rv = mJarExtractionTransport->SetBufferSegmentSize(mBufferSegmentSize);
     if (NS_FAILED(rv)) return rv;
@@ -907,7 +905,7 @@ nsJARChannel::OnDataAvailable(nsIChannel* jarCacheTransport,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIFileSystem methods:
+// nsIStreamIO methods:
 
 NS_IMETHODIMP
 nsJARChannel::Open(char* *contentType, PRInt32 *contentLength) 
@@ -972,6 +970,12 @@ nsJARChannel::GetOutputStream(nsIOutputStream* *aOutputStream)
 {
 	NS_NOTREACHED("nsJARChannel::GetOutputStream");
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsJARChannel::GetName(char* *aName) 
+{
+    return mURI->GetSpec(aName);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -30,24 +30,51 @@
 #include "nsILoadGroup.h"
 #include "nsIStreamListener.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsCOMPtr.h"
+#include "nsIStreamIO.h"
 
-class nsInputStreamChannel : public nsIInputStreamChannel, 
-                             public nsIStreamListener
+class nsInputStreamIO : public nsIInputStreamIO
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISTREAMIO
+    NS_DECL_NSIINPUTSTREAMIO
+
+    nsInputStreamIO();
+    virtual ~nsInputStreamIO();
+
+    static NS_METHOD
+    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+protected:
+    char*                               mName;
+    nsCOMPtr<nsIInputStream>            mInputStream;
+    char*                               mContentType;
+    PRInt32                             mContentLength;
+    nsresult                            mStatus;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+class nsStreamIOChannel : public nsIStreamIOChannel, 
+                          public nsIStreamListener
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
-    NS_DECL_NSIINPUTSTREAMCHANNEL
+    NS_DECL_NSISTREAMIOCHANNEL
     NS_DECL_NSISTREAMOBSERVER
     NS_DECL_NSISTREAMLISTENER
 
-    nsInputStreamChannel(); 
-    virtual ~nsInputStreamChannel();
+    nsStreamIOChannel(); 
+    virtual ~nsStreamIOChannel();
 
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+protected:
+    nsIStreamListener* GetListener() { return (nsIStreamListener*)mUserObserver.get(); }
+    void SetListener(nsIStreamListener* listener) { mUserObserver = listener; }
 
 protected:
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
@@ -55,11 +82,11 @@ protected:
     nsCOMPtr<nsIURI>                    mURI;
     char*                               mContentType;
     PRInt32                             mContentLength;
-    nsCOMPtr<nsIInputStream>            mInputStream;
+    nsCOMPtr<nsIStreamIO>               mStreamIO;
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
     nsCOMPtr<nsISupports>               mOwner;
     nsCOMPtr<nsIChannel>                mFileTransport;
-    nsCOMPtr<nsIStreamListener>         mRealListener;
+    nsCOMPtr<nsIStreamObserver>         mUserObserver;
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;
     PRUint32                            mLoadAttributes;

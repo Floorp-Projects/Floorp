@@ -27,7 +27,7 @@
 #include "nsIStreamListener.h"
 #include "nsIJARProtocolHandler.h"
 #include "nsIJARURI.h"
-#include "nsIFileSystem.h"
+#include "nsIStreamIO.h"
 #include "nsIChannel.h"
 #include "nsIZipReader.h"
 #include "nsIChannel.h"
@@ -55,7 +55,7 @@ typedef nsresult
 
 class nsJARChannel : public nsIJARChannel, 
                      public nsIStreamListener,
-                     public nsIFileSystem
+                     public nsIStreamIO
 {
 public:
     NS_DECL_ISUPPORTS
@@ -64,7 +64,7 @@ public:
     NS_DECL_NSIJARCHANNEL
     NS_DECL_NSISTREAMOBSERVER
     NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSIFILESYSTEM
+    NS_DECL_NSISTREAMIO
 
     nsJARChannel();
     virtual ~nsJARChannel();

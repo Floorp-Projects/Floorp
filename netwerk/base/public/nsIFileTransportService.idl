@@ -26,11 +26,11 @@
 %}
 
 interface nsIChannel;
-interface nsIFileSystem;
 interface nsIEventSinkGetter;
 interface nsIInputStream;
 interface nsIRunnable;
 interface nsIFile;
+interface nsIStreamIO;
 
 [scriptable, uuid(57211a60-8c45-11d3-93ac-00104ba0fd40)]
 interface nsIFileTransportService : nsISupports
@@ -41,13 +41,12 @@ interface nsIFileTransportService : nsISupports
 
     // This version can be used with an existing input stream to serve
     // as a data pump:
-    nsIChannel createTransportFromStream(in nsIInputStream fromStream,
-                                         in string streamName,
+    nsIChannel createTransportFromStream(in string name,
+                                         in nsIInputStream fromStream,
                                          in string contentType,
                                          in long contentLength);
 
-    nsIChannel createTransportFromFileSystem(in nsIFileSystem fsObj,
-                                             in string streamName);
+    nsIChannel createTransportFromStreamIO(in nsIStreamIO io);
 
     void dispatchRequest(in nsIRunnable runnable);
     void suspend(in nsIRunnable trans);

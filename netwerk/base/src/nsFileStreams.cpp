@@ -22,7 +22,256 @@
 
 #include "nsFileStreams.h"
 #include "nsILocalFile.h"
+#include "nsXPIDLString.h"
 #include "prerror.h"
+#include "nsCRT.h"
+#include "nsInt64.h"
+#include "nsIMIMEService.h"
+#include "nsIFile.h"
+#include "nsDirectoryIndexStream.h"
+#include "nsMimeTypes.h"
+
+#if defined(PR_LOGGING)
+//
+// Log module for nsFileTransport logging...
+//
+// To enable logging (see prlog.h for full details):
+//
+//    set NSPR_LOG_MODULES=nsFileIO:5
+//    set NSPR_LOG_FILE=nspr.log
+//
+// this enables PR_LOG_DEBUG level information and places all output in
+// the file nspr.log
+//
+PRLogModuleInfo* gFileIOLog = nsnull;
+
+#endif /* PR_LOGGING */
+
+static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
+
+////////////////////////////////////////////////////////////////////////////////
+// nsFileIO
+
+#define NS_INPUT_STREAM_BUFFER_SIZE     (16 * 1024)
+#define NS_OUTPUT_STREAM_BUFFER_SIZE    (64 * 1024)
+
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsFileIO,
+                              nsIFileIO,
+                              nsIStreamIO)
+
+nsFileIO::nsFileIO()
+    : mIOFlags(0),
+      mPerm(0),
+      mStatus(NS_OK)
+{
+    NS_INIT_REFCNT();
+#if defined(PR_LOGGING)
+    //
+    // Initialize the global PRLogModule for socket transport logging
+    // if necessary...
+    //
+    if (nsnull == gFileIOLog) {
+        gFileIOLog = PR_NewLogModule("nsFileIO");
+    }
+
+    mSpec = nsnull;
+#endif /* PR_LOGGING */
+}
+
+nsFileIO::~nsFileIO()
+{
+    (void)Close(NS_OK);
+#ifdef PR_LOGGING
+    if (mSpec) nsCRT::free(mSpec);
+#endif      
+}
+
+NS_METHOD
+nsFileIO::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+    nsFileIO* io = new nsFileIO();
+    if (io == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(io);
+    nsresult rv = io->QueryInterface(aIID, aResult);
+    NS_RELEASE(io);
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFileIO::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm)
+{
+    mFile = file;
+    mIOFlags = ioFlags;
+    mPerm = perm;
+#ifdef PR_LOGGING
+    nsresult rv = mFile->GetPath(&mSpec);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "GetSpec failed");
+#endif      
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileIO::GetFile(nsIFile* *aFile)
+{
+    *aFile = mFile;
+    NS_ADDREF(*aFile);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileIO::Open(char **contentType, PRInt32 *contentLength)
+{
+    // don't actually open the file here -- we'll do it on demand in the
+    // GetInputStream/GetOutputStream methods
+    nsresult rv = NS_OK;
+
+    // We'll try to use the file's length, if it has one. If not,
+    // assume the file to be special, and set the content length
+    // to -1, which means "read the stream until exhausted".
+    PRInt64 size;
+    rv = mFile->GetFileSize(&size);
+    if (NS_SUCCEEDED(rv)) {
+        *contentLength = nsInt64(size);
+        if (! *contentLength)
+            *contentLength = -1;
+    }
+    else 
+        *contentLength = -1;
+
+    PRBool isDir;
+    rv = mFile->IsDirectory(&isDir);
+    if (NS_SUCCEEDED(rv) && isDir) {
+        // Directories turn into an HTTP-index stream, with
+        // unbounded (i.e., read 'til the stream says it's done)
+        // length.
+        *contentType = nsCRT::strdup("application/http-index-format");
+        *contentLength = -1;
+    }
+    else {
+        NS_WITH_SERVICE(nsIMIMEService, mimeServ, kMIMEServiceCID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            rv = mimeServ->GetTypeFromFile(mFile, contentType);
+        }
+	
+        if (NS_FAILED(rv)) {
+            // if all else fails treat it as text/html?
+            *contentType = nsCRT::strdup(UNKNOWN_CONTENT_TYPE);
+            if (*contentType == nsnull)
+                rv = NS_ERROR_OUT_OF_MEMORY;
+            else
+                rv = NS_OK;
+        }
+    }
+    PR_LOG(gFileIOLog, PR_LOG_DEBUG,
+           ("nsFileIO: logically opening %s: type=%s len=%d",
+            mSpec, *contentType, *contentLength));
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFileIO::Close(nsresult status)
+{
+    if (mFile) {
+        PR_LOG(gFileIOLog, PR_LOG_DEBUG,
+               ("nsFileIO: logically closing %s: status=%x",
+                mSpec, status));
+        mFile = nsnull;
+    }
+    mStatus = status;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileIO::GetInputStream(nsIInputStream * *aInputStream)
+{
+    nsresult rv;
+    PRBool isDir;
+    rv = mFile->IsDirectory(&isDir);
+    if (NS_SUCCEEDED(rv) && isDir) {
+        rv = nsDirectoryIndexStream::Create(mFile, aInputStream);
+        PR_LOG(gFileIOLog, PR_LOG_DEBUG,
+               ("nsFileIO: opening local dir %s for input (%x)",
+                mSpec, rv));
+        return rv;
+    }
+
+    nsFileInputStream* fileIn = new nsFileInputStream();
+    if (fileIn == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(fileIn);
+    rv = fileIn->Init(mFile, mIOFlags, mPerm);
+    if (NS_FAILED(rv)) {
+#if DEBUG
+        char* filePath = nsnull;
+        mFile->GetPath(&filePath);
+        if (filePath)
+        {
+            printf("Opening %s failed\n", filePath);
+            nsAllocator::Free(filePath);
+        }
+#endif        
+        return rv;
+    }
+        
+#ifdef NO_BUFFERING
+    *aInputStream = fileIn;
+    NS_ADDREF(*aInputStream);
+#else
+    rv = NS_NewBufferedInputStream(aInputStream,
+                                   fileIn, NS_OUTPUT_STREAM_BUFFER_SIZE);
+#endif
+
+    // printf("opening %s for reading\n", mSpec);
+    PR_LOG(gFileIOLog, PR_LOG_DEBUG,
+           ("nsFileIO: opening local file %s for input (%x)",
+            mSpec, rv));
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFileIO::GetOutputStream(nsIOutputStream * *aOutputStream)
+{
+    nsresult rv;
+    PRBool isDir;
+    rv = mFile->IsDirectory(&isDir);
+    if (NS_SUCCEEDED(rv) && isDir) {
+        return NS_ERROR_FAILURE;
+    }
+
+    nsFileOutputStream* fileOut = new nsFileOutputStream();
+    if (fileOut == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(fileOut);
+    rv = fileOut->Init(mFile, mIOFlags, mPerm);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIOutputStream> bufStr;
+#ifdef NO_BUFFERING
+    bufStr = fileOut;
+#else
+    rv = NS_NewBufferedOutputStream(getter_AddRefs(bufStr),
+                                    fileOut, NS_OUTPUT_STREAM_BUFFER_SIZE);
+    if (NS_FAILED(rv)) return rv;
+#endif
+
+    *aOutputStream = bufStr;
+    NS_ADDREF(*aOutputStream);
+
+    // printf("opening %s for writing\n", mSpec);
+    PR_LOG(gFileIOLog, PR_LOG_DEBUG,
+           ("nsFileIO: opening local file %s for output (%x)",
+            mSpec, rv));
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFileIO::GetName(char* *aName)
+{
+    return mFile->GetPath(aName);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsFileStream

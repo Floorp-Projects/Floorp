@@ -35,7 +35,7 @@
 #include "nsIProgressEventSink.h"
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
-#include "nsIFileSystem.h"
+#include "nsIStreamIO.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIFile.h"
 #include "prlog.h"
@@ -64,12 +64,11 @@ public:
     nsresult Init(nsIFile* file,
                   PRInt32 ioFlags,
                   PRInt32 perm);
-    nsresult Init(nsIInputStream* fromStream, 
-                  const char* streamName,
+    nsresult Init(const char* name, 
+                  nsIInputStream* fromStream,
                   const char* contentType,
                   PRInt32 contentLength);
-    nsresult Init(nsIFileSystem* fsObj,
-                  const char* streamName);
+    nsresult Init(nsIStreamIO* io);
 
     void Process(void);
     void DoClose(void);
@@ -94,15 +93,12 @@ public:
     };
 
 protected:
-    nsCOMPtr<nsIFile>                   mFile;
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
     nsCOMPtr<nsIProgressEventSink>      mProgress;
-    nsCOMPtr<nsIFileSystem>             mFileObject;
+    nsCOMPtr<nsIStreamIO>               mStreamIO;
     char*                               mContentType;
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;
-    PRInt32                             mIOFlags;
-    PRInt32                             mPerm;
 
     nsCOMPtr<nsIStreamObserver>         mOpenObserver;
     nsCOMPtr<nsISupports>               mOpenContext;

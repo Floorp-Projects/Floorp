@@ -27,7 +27,34 @@
 #include "nsIFile.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsIStreamIO.h"
 #include "nsCOMPtr.h"
+#include "prlog.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+class nsFileIO : public nsIFileIO
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISTREAMIO
+    NS_DECL_NSIFILEIO
+
+    nsFileIO();
+    virtual ~nsFileIO();
+
+    static NS_METHOD
+    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+protected:
+    nsCOMPtr<nsIFile>   mFile;
+    PRInt32             mIOFlags;
+    PRInt32             mPerm;
+    nsresult            mStatus;
+#ifdef PR_LOGGING
+    char*               mSpec;
+#endif
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
