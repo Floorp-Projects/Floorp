@@ -33,7 +33,7 @@
 CORE_DEPTH = ..
 DEPTH      = ..
 
-IMPORTS =	nspr20/v4.2.2-rc1 \
+IMPORTS =	nspr20/v4.2.2 \
 		dbm/DBM_1_61_RTM \
 		$(NULL)
 
