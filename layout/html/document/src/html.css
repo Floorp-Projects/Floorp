@@ -493,7 +493,6 @@ input[type=file][disabled] input[type="button"] {
 } 
 
 input[type=file] input[type="button"]:-moz-buttonlabel {
-  content:"Browse...";
   font-family: sans-serif;
 }
 
@@ -663,19 +662,12 @@ input[type="submit"]:focus:-moz-focus-inner {
 }
 
 input[type=submit]:-moz-buttonlabel {
-  content:"Submit Query";
   font-family: sans-serif;
   font-size: small;
 }
 
 input[type="submit"][disabled]:-moz-buttonlabel  {
   color: gray;
-}
-
-input[type=submit][value]:-moz-buttonlabel {
-  content:attr(value);
-  font-family: sans-serif;
-  font-size: small;
 }
 
 
@@ -743,19 +735,12 @@ input[type="reset"]:focus:-moz-focus-inner {
    border : 1px dotted black;
 }
 input[type=reset]:-moz-buttonlabel {
-  content:"Reset";
   font-family: sans-serif;
   font-size: small;
 }
 
 input[type="reset"][disabled]:-moz-buttonlabel  {
   color: gray;
-}
-
-input[type=reset][value]:-moz-buttonlabel {
-  content:attr(value);
-  font-family: sans-serif;
-  font-size: small;
 }
 
 /* button */
@@ -804,7 +789,6 @@ input[type="button"][disabled]:active {
 
 input[type="button"]:-moz-buttonlabel {
   box-sizing: border-box;
-  content:"   ";
   font-family: inherit;
   font-size: inherit;
   background-color:inherit;
@@ -812,13 +796,6 @@ input[type="button"]:-moz-buttonlabel {
 
 input[type="button"][disabled]:-moz-buttonlabel {
   color: gray;
-}
-
-input[type="button"][value]:-moz-buttonlabel {
-  content:attr(value);
-  font-family: inherit;
-  font-size: inherit;
-  background-color:inherit;
 }
 
 

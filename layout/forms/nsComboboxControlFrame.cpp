@@ -1729,7 +1729,7 @@ nsComboboxControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
     mPopupFrames.SetFrames(aChildList);
   } else {
     rv = nsAreaFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    InitTextStr(aPresContext, PR_FALSE);
+    InitTextStr(aPresContext, PR_TRUE);
   }
   return rv;
 }
