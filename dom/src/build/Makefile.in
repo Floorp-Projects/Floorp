@@ -39,6 +39,7 @@ REQUIRES	= xpcom \
 		  content \
 		  caps \
 		  webbrwsr \
+		  commandhandler \
 		  xuldoc \
 		  docshell \
 		  sidebar \

@@ -31,6 +31,7 @@ LIBRARY_NAME	= jsdombase_s
 REQUIRES	= xpcom \
 		  string \
 		  webbrwsr \
+		  commandhandler \
 		  js \
 		  widget \
 		  gfx \
@@ -71,6 +72,7 @@ CPPSRCS =			\
 	nsJSEnvironment.cpp	\
 	nsFocusController.cpp	\
 	nsGlobalWindow.cpp      \
+	nsGlobalWindowCommands.cpp \
 	nsLocation.cpp		\
 	nsDOMWindowList.cpp	\
 	nsJSUtils.cpp		\
