@@ -111,10 +111,7 @@
 #include "nsISupportsPrimitives.h"
 #include "SetDocTitleTxn.h"
 #include "nsGUIEvent.h"
-
-#define _IMPL_NS_LAYOUT
 #include "nsTextFragment.h"
-#undef _IMPL_NS_LAYOUT
 
 // netwerk
 #include "nsIURI.h"
