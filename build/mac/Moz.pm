@@ -39,6 +39,8 @@ require			Exporter;
 	use File::Path;
 	use ExtUtils::Manifest 'maniread';
 
+	use CodeWarriorLib;
+
 sub current_directory()
 	{
 		my $current_directory = cwd();
@@ -74,21 +76,22 @@ Pretty much, everything is taken care of for you.
 
 sub UseCodeWarriorLib($)
 	{
-		($CodeWarriorLib) = @_;
-		$CodeWarriorLib = full_path_to($CodeWarriorLib);
+#		($CodeWarriorLib) = @_;
+#		$CodeWarriorLib = full_path_to($CodeWarriorLib);
 	}
 
 sub activate_CodeWarrior()
 	{
-MacPerl::DoAppleScript(<<END_OF_APPLESCRIPT);
-	tell (load script file "$CodeWarriorLib") to ActivateCodeWarrior()
-END_OF_APPLESCRIPT
+#MacPerl::DoAppleScript(<<END_OF_APPLESCRIPT);
+#	tell (load script file "$CodeWarriorLib") to ActivateCodeWarrior()
+#END_OF_APPLESCRIPT
 	}
 
 BEGIN
 	{
-		UseCodeWarriorLib(":CodeWarriorLib");
-		activate_CodeWarrior();
+#		UseCodeWarriorLib(":CodeWarriorLib");
+#		activate_CodeWarrior();
+		CodeWarriorLib::activate();
 	}
 
 $logging								= 0;
@@ -222,8 +225,8 @@ sub build_project($$$)
 		my ($project_path, $target_name, $clean_build) = @_;
 		$project_path = full_path_to($project_path);
 
-		$project_path =~ m/.+:(.+)/;
-		my $project_name = $1;
+#		$project_path =~ m/.+:(.+)/;
+#		my $project_name = $1;
 
 		log_message_with_time("### Building \"$project_path\"");
 
@@ -236,10 +239,15 @@ sub build_project($$$)
 		
 		print "Building \"$project_path\"\n";
 		
-		$had_errors =
-MacPerl::DoAppleScript(<<END_OF_APPLESCRIPT);
-	tell (load script file "$CodeWarriorLib") to BuildProject("$project_path", "$project_name", "$target_name", "$recent_errors_file", $clean_build)
-END_OF_APPLESCRIPT
+		$had_errors = CodeWarriorLib::build_project(
+			$project_path, $target_name, $recent_errors_file, $clean_build
+		);
+
+
+#		$had_errors =
+#MacPerl::DoAppleScript(<<END_OF_APPLESCRIPT);
+#	tell (load script file "$CodeWarriorLib") to BuildProject("$project_path", "$project_name", "$target_name", "$recent_errors_file", $clean_build)
+#END_OF_APPLESCRIPT
 
 			# Append any errors to the globally accumulated log file
 		if ( $had_errors )
@@ -291,18 +299,26 @@ sub MakeAlias($$)
 				$new_file .= $1;
 			}
 
-		my $message = "Can't create a Finder alias (at \"$new_file\")\n for \"$old_file\";";
-		# die "$message symlink doesn't work on directories.\n" if -d $old_file;
-		die "$message because \"$old_file\" doesn't exist.\n" unless -e $old_file;
-		#check if the alias is already pointing to the right direction
-		my ($aliasto) = readlink($new_file);
-		my ($full_old_file) = ( $old_file =~ m/^:/ ) ? cwd() . $old_file : $old_file;
-		unless ($aliasto && ($aliasto eq $full_old_file))
-		{
-			unlink $new_file;
-			# print "symlink(\"$old_file\", \"$new_file\");\n";
-			symlink($old_file, $new_file) || die "$message symlink returned an unexpected error.\n";
-		}
+		my $message = "Can't create a Finder alias (at \"$new_file\")\n for \"$old_file\"; because ";
+
+		die "$message \"$old_file\" doesn't exist.\n" unless -e $old_file;
+		die "$message I won't replace an existing (non-alias) file with an alias.\n" if ( -e $new_file && ! -l $new_file );
+
+			# now: $old_file exists; $new_file doesn't (or else, is an alias already)
+
+		if ( -l $new_file )
+			{
+					# ...then see if it already points to $old_file
+				my $current_target	= full_path_to(readlink($new_file));
+				my $new_target			= full_path_to($old_file);
+
+				return if ( $current_target eq $new_target );
+					# if the desired alias already exists and points to the right thing, then we're done
+				
+				unlink $new_file;
+			}
+		
+		symlink($old_file, $new_file) || die "$message symlink returned an unexpected error.\n";
 	}
 	
 	
