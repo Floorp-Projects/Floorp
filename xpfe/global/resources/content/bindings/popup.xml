@@ -115,7 +115,7 @@
       </method>
       
       <method name="sizeTo">
-        <parameter nmae="aWidth"/>
+        <parameter name="aWidth"/>
         <parameter name="aHeight"/>
         <body>
         <![CDATA[
