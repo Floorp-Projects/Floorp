@@ -37,8 +37,6 @@ EXPORTS		= \
 		nsUnicharUtilCIID.h \
 		nsHankakuToZenkakuCID.h \
 		nsArabicBasicLToPFormBVCID.h \
-		nsIUBidiUtils.h \
-		nsIBidi.h \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

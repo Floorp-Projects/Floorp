@@ -59,7 +59,8 @@
 #include "nsIHTMLDocument.h"
 #include "nsHTMLAtoms.h"
 #ifdef IBMBIDI
-#include "nsIUBidiUtils.h"
+#include "nsBidiUtils.h"
+#include "nsBidiPresUtils.h"
 //static NS_DEFINE_CID(kUBidiUtilCID, NS_UNICHARBIDIUTIL_CID);
 #endif
 
@@ -134,11 +135,12 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
       if (context) {
         context->IsArabicEncoding(arabicCharset);
         if (arabicCharset) {
-          nsCOMPtr<nsIUBidiUtils> bidiUtils = do_GetService("@mozilla.org/intl/unicharbidiutil;1");
+          nsBidiPresUtils* bidiUtils;
           PRUint32 bidiOptions;
           PRBool isVisual;
           PRBool isBidiSystem;
-    
+
+          context->GetBidiUtils(&bidiUtils);
           context->GetBidi(&bidiOptions);
           context->IsVisualMode(isVisual);
           context->GetIsBidiSystem(isBidiSystem);
@@ -147,10 +149,10 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
             nsAutoString newBuffer;
             if (isBidiSystem) { 
               if (GET_BIDI_OPTION_DIRECTION(bidiOptions) == IBMBIDI_TEXTDIRECTION_RTL) {
-                bidiUtils->Conv_FE_06(buffer, newBuffer);
+                Conv_FE_06(buffer, newBuffer);
               }
               else {
-                bidiUtils->Conv_FE_06_WithReverse(buffer, newBuffer);
+                Conv_FE_06_WithReverse(buffer, newBuffer);
               }
             }
             else { //nonbidisystem
@@ -165,7 +167,7 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
             if (bidiCharset.EqualsIgnoreCase("UTF-8") || (!isVisual)) {
               if ( (GET_BIDI_OPTION_CLIPBOARDTEXTMODE(bidiOptions) == IBMBIDI_CLIPBOARDTEXTMODE_VISUAL) || (!isBidiSystem) ) {
                 nsAutoString newBuffer;
-                bidiUtils->Conv_06_FE_WithReverse(buffer, newBuffer, GET_BIDI_OPTION_DIRECTION(bidiOptions));
+                Conv_06_FE_WithReverse(buffer, newBuffer, GET_BIDI_OPTION_DIRECTION(bidiOptions));
                 bidiUtils->HandleNumbers(newBuffer, buffer);
               }
             }

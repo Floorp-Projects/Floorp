@@ -65,6 +65,7 @@ EXPORTS =				\
 !ifdef IBMBIDI
 	nsBidiPresUtils.h		\
 	nsITextFrame.h			\
+	nsBidi.h						\
 !endif
 	$(NULL)
 

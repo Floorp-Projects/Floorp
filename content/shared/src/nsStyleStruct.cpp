@@ -53,7 +53,7 @@
 #include "prenv.h"
 
 #ifdef IBMBIDI
-#include "nsIUBidiUtils.h"
+#include "nsBidiUtils.h"
 #endif
 
 inline PRBool IsFixedUnit(nsStyleUnit aUnit, PRBool aEnumOK)

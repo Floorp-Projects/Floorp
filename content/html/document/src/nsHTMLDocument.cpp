@@ -132,7 +132,7 @@
 #include "nsIPrompt.h"
 //AHMED 12-2 
 #ifdef IBMBIDI
-#include "nsIUBidiUtils.h"
+#include "nsBidiUtils.h"
 #endif
 
 #define DETECTOR_CONTRACTID_MAX 127

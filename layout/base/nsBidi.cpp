@@ -22,19 +22,41 @@
  *   Copyright (C) 2000, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  *
- * Contributor(s):  
+ * Contributor(s): Simon Montagu
  */
 #ifdef IBMBIDI
 
 #include "prmem.h"
-#include "nsBidiImp.h"
-#include "nsUUDll.h"
-#include "nsIServiceManager.h"
-#include "nsIUBidiUtils.h"
+#include "nsBidi.h"
+#include "nsBidiUtils.h"
+#include "bidicattable.h"
+#include "symmtable.h"
 
+static nsCharType ebc2ucd[15] = {
+  eCharType_OtherNeutral, /* Placeholder -- there will never be a 0 index value */
+  eCharType_LeftToRight,
+  eCharType_RightToLeft,
+  eCharType_RightToLeftArabic,
+  eCharType_ArabicNumber,
+  eCharType_EuropeanNumber,
+  eCharType_EuropeanNumberSeparator,
+  eCharType_EuropeanNumberTerminator,
+  eCharType_CommonNumberSeparator,
+  eCharType_OtherNeutral,
+  eCharType_DirNonSpacingMark,
+  eCharType_BoundaryNeutral,
+  eCharType_BlockSeparator,
+  eCharType_SegmentSeparator,
+  eCharType_WhiteSpaceNeutral
+};
 
-NS_IMPL_ISUPPORTS1(nsBidi, nsIBidi)
-
+static nsCharType cc2ucd[5] = {
+  eCharType_LeftToRightEmbedding,
+  eCharType_RightToLeftEmbedding,
+  eCharType_PopDirectionalFormat,
+  eCharType_LeftToRightOverride,
+  eCharType_RightToLeftOverride
+};
 
 /*  Comparing the description of the Bidi algorithm with this implementation
     is easier with the same names for the Bidi types in the code as there.
@@ -200,7 +222,6 @@ nsBidi::~nsBidi()
 
 void nsBidi::Init()
 {
-  NS_INIT_REFCNT();
   /* reset the object, all pointers NULL, all flags PR_FALSE, all sizes 0 */
   mLength = 0;
   mParaLevel = 0;
@@ -289,8 +310,8 @@ void nsBidi::Free()
 
 /* SetPara ------------------------------------------------------------ */
 
-NS_IMETHODIMP nsBidi::SetPara(const PRUnichar *aText, PRInt32 aLength,
-             nsBidiLevel aParaLevel, nsBidiLevel *aEmbeddingLevels)
+nsresult nsBidi::SetPara(const PRUnichar *aText, PRInt32 aLength,
+                         nsBidiLevel aParaLevel, nsBidiLevel *aEmbeddingLevels)
 {
   nsBidiDirection direction;
 
@@ -477,82 +498,53 @@ void nsBidi::GetDirProps(const PRUnichar *aText)
   Flags flags=0;      /* collect all directionalities in the text */
   PRUnichar uchar;
   DirProp dirProp;
-  nsCharType dir;
 
-  nsCOMPtr<nsIUBidiUtils> bidiUtils = do_GetService("@mozilla.org/intl/unicharbidiutil;1");
-
-  if (!bidiUtils) {
-    /* default to left-to-right*/
-    flags |= DIRPROP_FLAG(L);
-    if(IS_DEFAULT_LEVEL(mParaLevel)) {
-      mParaLevel&=1;
-    }
-    while (i<length) {
+  if(IS_DEFAULT_LEVEL(mParaLevel)) {
+    /* determine the paragraph level (P2..P3) */
+    for(;;) {
       uchar=aText[i];
       if(!IS_FIRST_SURROGATE(uchar) || i+1==length || !IS_SECOND_SURROGATE(aText[i+1])) {
         /* not a surrogate pair */
-        dirProps[i]=L;
+        flags|=DIRPROP_FLAG(dirProps[i]=dirProp=GetCharType(uchar));
       } else {
         /* a surrogate pair */
-        dirProps[i++]=BN;   /* second surrogate in the pair gets the BN type */
-        dirProps[i]=L;
-        flags|=DIRPROP_FLAG(BN);
+        dirProps[i++]=BN;   /* first surrogate in the pair gets the BN type */
+        flags|=DIRPROP_FLAG(dirProps[i]=dirProp=GetCharType(GET_UTF_32(uchar, aText[i])))|DIRPROP_FLAG(BN);
       }
       ++i;
-    }
-  } else {
-
-    if(IS_DEFAULT_LEVEL(mParaLevel)) {
-      /* determine the paragraph level (P2..P3) */
-      for(;;) {
-        uchar=aText[i];
-        if(!IS_FIRST_SURROGATE(uchar) || i+1==length || !IS_SECOND_SURROGATE(aText[i+1])) {
-          /* not a surrogate pair */
-          bidiUtils->GetCharType(uchar, &dir);
-          flags|=DIRPROP_FLAG(dirProps[i]=dirProp=dir);
-        } else {
-          /* a surrogate pair */
-          dirProps[i++]=BN;   /* first surrogate in the pair gets the BN type */
-          bidiUtils->GetCharType(GET_UTF_32(uchar, aText[i]), &dir);
-          flags|=DIRPROP_FLAG(dirProps[i]=dirProp=dir)|DIRPROP_FLAG(BN);
-        }
-        ++i;
-        if(dirProp==L) {
-          mParaLevel=0;
-          break;
-        } else if(dirProp==R || dirProp==AL) {
-          mParaLevel=1;
-          break;
-        } else if(i==length) {
-          /*
-           * see comment in nsIBidi.h:
-           * the DEFAULT_XXX values are designed so that
-           * their bit 0 alone yields the intended default
-           */
-          mParaLevel&=1;
-          break;
-        }
+      if(dirProp==L) {
+        mParaLevel=0;
+        break;
+      } else if(dirProp==R || dirProp==AL) {
+        mParaLevel=1;
+        break;
+      } else if(i==length) {
+        /*
+         * see comment in nsIBidi.h:
+         * the DEFAULT_XXX values are designed so that
+         * their bit 0 alone yields the intended default
+         */
+        mParaLevel&=1;
+        break;
       }
     }
+  }
 
-    /* get the rest of the directional properties and the flags bits */
-    while(i<length) {
-      uchar=aText[i];
-      if(!IS_FIRST_SURROGATE(uchar) || i+1==length || !IS_SECOND_SURROGATE(aText[i+1])) {
-        /* not a surrogate pair */
-        bidiUtils->GetCharType(uchar, &dir);
-        flags|=DIRPROP_FLAG(dirProps[i]=dir);
-      } else {
-        /* a surrogate pair */
-        dirProps[i++]=BN;   /* second surrogate in the pair gets the BN type */
-        bidiUtils->GetCharType(GET_UTF_32(uchar, aText[i]), &dir);
-        flags|=DIRPROP_FLAG(dirProps[i]=dir)|DIRPROP_FLAG(BN);
-      }
-      ++i;
+  /* get the rest of the directional properties and the flags bits */
+  while(i<length) {
+    uchar=aText[i];
+    if(!IS_FIRST_SURROGATE(uchar) || i+1==length || !IS_SECOND_SURROGATE(aText[i+1])) {
+      /* not a surrogate pair */
+      flags|=DIRPROP_FLAG(dirProps[i]=GetCharType(uchar));
+    } else {
+      /* a surrogate pair */
+      dirProps[i++]=BN;   /* second surrogate in the pair gets the BN type */
+      flags|=DIRPROP_FLAG(dirProps[i]=GetCharType(GET_UTF_32(uchar, aText[i])))|DIRPROP_FLAG(BN);
     }
-    if(flags&MASK_EMBEDDING) {
-      flags|=DIRPROP_FLAG_LR(mParaLevel);
-    }
+    ++i;
+  }
+  if(flags&MASK_EMBEDDING) {
+    flags|=DIRPROP_FLAG_LR(mParaLevel);
   }
   mFlags=flags;
 }
@@ -1173,19 +1165,19 @@ void nsBidi::AdjustWSLevels()
 
 /* -------------------------------------------------------------------------- */
 
-NS_IMETHODIMP nsBidi::GetDirection(nsBidiDirection* aDirection)
+nsresult nsBidi::GetDirection(nsBidiDirection* aDirection)
 {
   *aDirection = mDirection;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBidi::GetLength(PRInt32* aLength)
+nsresult nsBidi::GetLength(PRInt32* aLength)
 {
   *aLength = mLength;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBidi::GetParaLevel(nsBidiLevel* aParaLevel)
+nsresult nsBidi::GetParaLevel(nsBidiLevel* aParaLevel)
 {
   *aParaLevel = mParaLevel;
   return NS_OK;
@@ -1240,7 +1232,7 @@ NS_IMETHODIMP nsBidi::GetParaLevel(nsBidiLevel* aParaLevel)
  * a pointer into them, not by copying. This again saves memory and forbids to
  * change the now shared levels for (L1).
  */
-NS_IMETHODIMP nsBidi::SetLine(nsIBidi* aParaBidi, PRInt32 aStart, PRInt32 aLimit)
+nsresult nsBidi::SetLine(nsIBidi* aParaBidi, PRInt32 aStart, PRInt32 aLimit)
 {
   nsBidi* pParent = (nsBidi*)aParaBidi;
   PRInt32 length;
@@ -1380,7 +1372,7 @@ void nsBidi::SetTrailingWSStart() {
   mTrailingWSStart=start;
 }
 
-NS_IMETHODIMP nsBidi::GetLevelAt(PRInt32 aCharIndex, nsBidiLevel* aLevel)
+nsresult nsBidi::GetLevelAt(PRInt32 aCharIndex, nsBidiLevel* aLevel)
 {
   /* return paraLevel if in the trailing WS run, otherwise the real level */
   if(aCharIndex<0 || mLength<=aCharIndex) {
@@ -1393,7 +1385,7 @@ NS_IMETHODIMP nsBidi::GetLevelAt(PRInt32 aCharIndex, nsBidiLevel* aLevel)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBidi::GetLevels(nsBidiLevel** aLevels)
+nsresult nsBidi::GetLevels(nsBidiLevel** aLevels)
 {
   PRInt32 start, length;
 
@@ -1438,7 +1430,7 @@ NS_IMETHODIMP nsBidi::GetLevels(nsBidiLevel** aLevels)
 }
 #endif // FULL_BIDI_ENGINE
 
-NS_IMETHODIMP nsBidi::GetCharTypeAt(PRInt32 aCharIndex, nsCharType* pType)
+nsresult nsBidi::GetCharTypeAt(PRInt32 aCharIndex, nsCharType* pType)
 {
   if(aCharIndex<0 || mLength<=aCharIndex) {
     return NS_ERROR_INVALID_ARG;
@@ -1447,7 +1439,7 @@ NS_IMETHODIMP nsBidi::GetCharTypeAt(PRInt32 aCharIndex, nsCharType* pType)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBidi::GetLogicalRun(PRInt32 aLogicalStart, PRInt32 *aLogicalLimit, nsBidiLevel *aLevel)
+nsresult nsBidi::GetLogicalRun(PRInt32 aLogicalStart, PRInt32 *aLogicalLimit, nsBidiLevel *aLevel)
 {
   PRInt32 length = mLength;
 
@@ -1482,7 +1474,7 @@ NS_IMETHODIMP nsBidi::GetLogicalRun(PRInt32 aLogicalStart, PRInt32 *aLogicalLimi
 
 /* runs API functions ------------------------------------------------------- */
 
-NS_IMETHODIMP nsBidi::CountRuns(PRInt32* aRunCount)
+nsresult nsBidi::CountRuns(PRInt32* aRunCount)
 {
   if(mRunCount<0 && !GetRuns()) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1493,7 +1485,7 @@ NS_IMETHODIMP nsBidi::CountRuns(PRInt32* aRunCount)
   }
 }
 
-NS_IMETHODIMP nsBidi::GetVisualRun(PRInt32 aRunIndex, PRInt32 *aLogicalStart, PRInt32 *aLength, nsBidiDirection *aDirection)
+nsresult nsBidi::GetVisualRun(PRInt32 aRunIndex, PRInt32 *aLogicalStart, PRInt32 *aLength, nsBidiDirection *aDirection)
 {
   if( aRunIndex<0 ||
       mRunCount==-1 && !GetRuns() ||
@@ -1803,7 +1795,7 @@ void nsBidi::ReorderLine(nsBidiLevel aMinLevel, nsBidiLevel aMaxLevel)
   }
 }
 
-NS_IMETHODIMP nsBidi::ReorderVisual(const nsBidiLevel *aLevels, PRInt32 aLength, PRInt32 *aIndexMap)
+nsresult nsBidi::ReorderVisual(const nsBidiLevel *aLevels, PRInt32 aLength, PRInt32 *aIndexMap)
 {
   PRInt32 start, end, limit, temp;
   nsBidiLevel minLevel, maxLevel;
@@ -1906,7 +1898,7 @@ PRBool nsBidi::PrepareReorder(const nsBidiLevel *aLevels, PRInt32 aLength,
 #ifdef FULL_BIDI_ENGINE
 /* API functions for logical<->visual mapping ------------------------------- */
 
-NS_IMETHODIMP nsBidi::GetVisualIndex(PRInt32 aLogicalIndex, PRInt32* aVisualIndex) {
+nsresult nsBidi::GetVisualIndex(PRInt32 aLogicalIndex, PRInt32* aVisualIndex) {
   if(aLogicalIndex<0 || mLength<=aLogicalIndex) {
     return NS_ERROR_INVALID_ARG;
   } else {
@@ -1947,7 +1939,7 @@ NS_IMETHODIMP nsBidi::GetVisualIndex(PRInt32 aLogicalIndex, PRInt32* aVisualInde
   }
 }
 
-NS_IMETHODIMP nsBidi::GetLogicalIndex(PRInt32 aVisualIndex, PRInt32 *aLogicalIndex)
+nsresult nsBidi::GetLogicalIndex(PRInt32 aVisualIndex, PRInt32 *aLogicalIndex)
 {
   if(aVisualIndex<0 || mLength<=aVisualIndex) {
     return NS_ERROR_INVALID_ARG;
@@ -2006,7 +1998,7 @@ NS_IMETHODIMP nsBidi::GetLogicalIndex(PRInt32 aVisualIndex, PRInt32 *aLogicalInd
   }
 }
 
-NS_IMETHODIMP nsBidi::GetLogicalMap(PRInt32 *aIndexMap)
+nsresult nsBidi::GetLogicalMap(PRInt32 *aIndexMap)
 {
   nsBidiLevel *levels;
   nsresult rv;
@@ -2022,7 +2014,7 @@ NS_IMETHODIMP nsBidi::GetLogicalMap(PRInt32 *aIndexMap)
   }
 }
 
-NS_IMETHODIMP nsBidi::GetVisualMap(PRInt32 *aIndexMap)
+nsresult nsBidi::GetVisualMap(PRInt32 *aIndexMap)
 {
   PRInt32* runCount=NULL;
   nsresult rv;
@@ -2061,7 +2053,7 @@ NS_IMETHODIMP nsBidi::GetVisualMap(PRInt32 *aIndexMap)
 
 /* reorder a line based on a levels array (L2) ------------------------------ */
 
-NS_IMETHODIMP nsBidi::ReorderLogical(const nsBidiLevel *aLevels, PRInt32 aLength, PRInt32 *aIndexMap)
+nsresult nsBidi::ReorderLogical(const nsBidiLevel *aLevels, PRInt32 aLength, PRInt32 *aIndexMap)
 {
   PRInt32 start, limit, sumOfSosEos;
   nsBidiLevel minLevel, maxLevel;
@@ -2126,7 +2118,7 @@ NS_IMETHODIMP nsBidi::ReorderLogical(const nsBidiLevel *aLevels, PRInt32 aLength
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBidi::InvertMap(const PRInt32 *aSrcMap, PRInt32 *aDestMap, PRInt32 aLength)
+nsresult nsBidi::InvertMap(const PRInt32 *aSrcMap, PRInt32 *aDestMap, PRInt32 aLength)
 {
   if(aSrcMap!=NULL && aDestMap!=NULL) {
     aSrcMap+=aLength;
@@ -2138,8 +2130,8 @@ NS_IMETHODIMP nsBidi::InvertMap(const PRInt32 *aSrcMap, PRInt32 *aDestMap, PRInt
 }
 
 #endif // FULL_BIDI_ENGINE
-static PRInt32 doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
-                              PRUnichar *dest, PRUint16 options) {
+PRInt32 nsBidi::doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
+                               PRUnichar *dest, PRUint16 options) {
   /*
    * RTL run -
    *
@@ -2160,8 +2152,6 @@ static PRInt32 doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
    */
   PRInt32 i, j, destSize;
   PRUint32 c;
-
-  nsCOMPtr<nsIUBidiUtils> bidiUtils = do_GetService("@mozilla.org/intl/unicharbidiutil;1");
 
   /* optimize for several combinations of options */
   switch(options&(NSBIDI_REMOVE_BIDI_CONTROLS|NSBIDI_DO_MIRRORING|NSBIDI_KEEP_BASE_COMBINING)) {
@@ -2204,11 +2194,9 @@ static PRInt32 doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
         i=srcLength;
 
       /* collect code units and modifier letters for one base character */
-        PRBool isModifier;
         do {
           UTF_PREV_CHAR(src, 0, srcLength, c);
-          bidiUtils->IsBidiCategory(c, eBidiCat_NSM, &isModifier);
-        } while(srcLength>0 && isModifier);
+        } while(srcLength>0 && IsBidiCategory(c, eBidiCat_NSM));
 
       /* copy this "user character" */
         j=srcLength;
@@ -2232,13 +2220,11 @@ static PRInt32 doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
                which will not include the Bidi control characters */
         PRInt32 length=srcLength;
         PRUnichar ch;
-        PRBool isBidiControl;
 
         i=0;
         do {
           ch=*src++;
-          bidiUtils->IsBidiControl(ch, &isBidiControl);
-          if(!isBidiControl) {
+          if (!IsBidiControl(ch)) {
             ++i;
           }
         } while(--length>0);
@@ -2255,18 +2241,12 @@ static PRInt32 doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
         UTF_PREV_CHAR(src, 0, srcLength, c);
         if(options&NSBIDI_KEEP_BASE_COMBINING) {
         /* collect modifier letters for this base character */
-          PRBool isModifier;
-          bidiUtils->IsBidiCategory(c, eBidiCat_NSM, &isModifier);
-          while(srcLength>0 && isModifier) {
+          while(srcLength>0 && IsBidiCategory(c, eBidiCat_NSM)) {
             UTF_PREV_CHAR(src, 0, srcLength, c);
-            bidiUtils->IsBidiCategory(c, eBidiCat_NSM, &isModifier);
           }
         }
 
-        PRBool isBidiControl;
-        bidiUtils->IsBidiControl(c, &isBidiControl);
-
-        if(options&NSBIDI_REMOVE_BIDI_CONTROLS && isBidiControl) {
+        if(options&NSBIDI_REMOVE_BIDI_CONTROLS && IsBidiControl(c)) {
         /* do not copy this Bidi control character */
           continue;
         }
@@ -2275,13 +2255,8 @@ static PRInt32 doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
         j=srcLength;
         if(options&NSBIDI_DO_MIRRORING) {
           /* mirror only the base character */
-          if (!bidiUtils)
-            ; /* default to the original form */
-          else {
-            PRUnichar ch = (PRUnichar)c;
-            bidiUtils->SymmSwap(&ch);
-            c = ch;
-          }
+          c = SymmSwap((PRUnichar)c);
+
           PRInt32 k=0;
           UTF_APPEND_CHAR_UNSAFE(dest, k, c);
           dest+=k;
@@ -2296,7 +2271,7 @@ static PRInt32 doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
   return destSize;
 }
 
-NS_IMETHODIMP nsBidi::WriteReverse(const PRUnichar *aSrc, PRInt32 aSrcLength, PRUnichar *aDest, PRUint16 aOptions, PRInt32 *aDestSize)
+nsresult nsBidi::WriteReverse(const PRUnichar *aSrc, PRInt32 aSrcLength, PRUnichar *aDest, PRUint16 aOptions, PRInt32 *aDestSize)
 {
   if( aSrc==NULL || aSrcLength<0 ||
       aDest==NULL
@@ -2315,6 +2290,53 @@ NS_IMETHODIMP nsBidi::WriteReverse(const PRUnichar *aSrc, PRInt32 aSrcLength, PR
     *aDestSize = doWriteReverse(aSrc, aSrcLength, aDest, aOptions);
   }
   return NS_OK;
+}
+
+eBidiCategory nsBidi::GetBidiCategory(PRUnichar aChar)
+{
+  eBidiCategory oResult = GetBidiCat(aChar);
+  if (eBidiCat_CC == oResult)
+    oResult = (eBidiCategory)(aChar & 0xFF); /* Control codes have special treatment to keep the tables smaller */
+  return oResult;
+}
+
+PRBool nsBidi::IsBidiCategory(PRUnichar aChar, eBidiCategory aBidiCategory)
+{
+  return (GetBidiCategory(aChar) == aBidiCategory);
+}
+
+#define LRM_CHAR 0x200e
+PRBool nsBidi::IsBidiControl(PRUnichar aChar)
+{
+  // This method is used when stripping Bidi control characters for
+  // display, so it will return TRUE for LRM and RLM as well as the
+  // characters with category eBidiCat_CC
+  return (eBidiCat_CC == GetBidiCat(aChar) || ((aChar)&0xfffe)==LRM_CHAR);
+}
+
+nsCharType nsBidi::GetCharType(PRUnichar aChar)
+{
+  nsCharType oResult;
+  eBidiCategory bCat = GetBidiCat(aChar);
+  if (eBidiCat_CC != bCat) {
+    NS_ASSERTION(bCat < (sizeof(ebc2ucd)/sizeof(nsCharType)), "size mismatch");
+    if(bCat < (sizeof(ebc2ucd)/sizeof(nsCharType)))
+      oResult = ebc2ucd[bCat];
+    else 
+      oResult = ebc2ucd[0]; // something is very wrong, but we need to return a value
+  } else {
+    NS_ASSERTION((aChar-0x202a) < (sizeof(cc2ucd)/sizeof(nsCharType)), "size mismatch");
+    if((aChar-0x202a) < (sizeof(cc2ucd)/sizeof(nsCharType)))
+      oResult = cc2ucd[aChar - 0x202a];
+    else 
+      oResult = ebc2ucd[0]; // something is very wrong, but we need to return a value
+  }
+  return oResult;
+}
+
+PRUnichar nsBidi::SymmSwap(PRUnichar aChar)
+{
+  return Mirrored(aChar);
 }
 
 #endif // IBMBIDI

@@ -96,13 +96,6 @@ PRBool nsFormFrame::gInitPasswordManager = PR_FALSE;
 
 //----------------------------------------------------------------------
 
-//ahmed 15-1
-#ifdef IBMBIDI
-#include "nsIUBidiUtils.h"
-//static NS_DEFINE_CID(kUBidiUtilCID, NS_UNICHARBIDIUTIL_CID);
-#endif
-//end
-
 NS_IMETHODIMP
 nsFormFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {

@@ -97,7 +97,7 @@
 #include "nsITextFrame.h"
 
 //ahmed
-#include "nsIUBidiUtils.h"
+#include "nsBidiUtils.h"
 //ahmed end
 #endif // IBMBIDI
 

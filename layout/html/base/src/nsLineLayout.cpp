@@ -62,7 +62,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsTextFragment.h"
 #ifdef IBMBIDI
-#include "nsIUBidiUtils.h"
+#include "nsBidiUtils.h"
 #include "nsIFormControlFrame.h"
 #include "nsITextFrame.h"
 #define FIX_FOR_BUG_40882

@@ -58,6 +58,7 @@ CPPSRCS		= \
 		nsXBLAtoms.cpp \
 		nsStyleCoord.cpp \
 		nsStyleStruct.cpp \
+		nsBidiUtils.cpp \
 		$(NULL)
 
 ifdef MOZ_SVG

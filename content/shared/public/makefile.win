@@ -47,6 +47,9 @@ EXPORTS =				\
   nsSVGAtomList.h \
   nsSVGAtoms.h \
 !endif
+!ifdef IBMBIDI
+  nsBidiUtils.h \
+!endif
   nsXBLAtomList.h \
   nsXBLAtoms.h \
 	$(NULL)

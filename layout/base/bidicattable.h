@@ -10,8 +10,8 @@
  * for the specific language governing rights and limitations under the
  * MPL.
  *
- * The Initial Developer of the Original Code is
- * IBM Corporation.   Portions created by IBM are
+ * The Initial Developer of the Original Code is IBM
+ * Corporation.  Portions created by IBM are
  * Copyright (C) 2000 IBM Corporation. All
  * Rights Reserved.
  */
@@ -1943,4 +1943,3 @@ static eBidiCategory GetBidiCat(PRUnichar u)
     return eBidiCat_L; /* UNDEFINE = L */
 };
 /* total data size = 2252 */
-

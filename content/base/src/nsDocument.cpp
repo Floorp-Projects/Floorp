@@ -127,7 +127,7 @@
 #include "nsXULAtoms.h"
 
 #ifdef IBMBIDI
-#include "nsIUBidiUtils.h"
+#include "nsBidiUtils.h"
 #endif
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);

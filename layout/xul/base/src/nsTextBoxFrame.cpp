@@ -64,7 +64,7 @@
 #include "nsUnicharUtils.h"
 
 #ifdef IBMBIDI
-#include "nsIUBidiUtils.h"
+#include "nsBidiUtils.h"
 #include "nsBidiPresUtils.h"
 #include "nsReadableUtils.h"
 #endif // IBMBIDI

@@ -69,6 +69,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsStyleChangeList.obj	\
 !ifdef IBMBIDI
 	.\$(OBJDIR)\nsBidiPresUtils.obj		\
+	.\$(OBJDIR)\nsBidi.obj		\
 !endif        
 	$(NULL)
 

@@ -49,7 +49,7 @@
 #include "nsIFrameManager.h"
 #include "nsBidiFrames.h"
 #include "nsITextFrame.h"
-#include "nsIUBidiUtils.h"
+#include "nsBidiUtils.h"
 
 static const PRUnichar kSpace            = 0x0020;
 static const PRUnichar kLineSeparator    = 0x2028;
@@ -64,6 +64,19 @@ static const PRUnichar kPDF              = 0x202C;
 static const PRUnichar ALEF              = 0x05D0;
 #endif
 
+#define CHAR_IS_HEBREW(c) ((0x0590 <= (c)) && ((c)<= 0x05FF))
+// Note: The above code are moved from gfx/src/windows/nsRenderingContextWin.cpp
+
+#define ARABIC_TO_HINDI_DIGIT_INCREMENT (START_HINDI_DIGITS - START_ARABIC_DIGITS)
+#define NUM_TO_ARABIC(c) \
+  ((((c)>=START_HINDI_DIGITS) && ((c)<=END_HINDI_DIGITS)) ? \
+   ((c) - (PRUint16)ARABIC_TO_HINDI_DIGIT_INCREMENT) : \
+   (c))
+#define NUM_TO_HINDI(c) \
+  ((((c)>=START_ARABIC_DIGITS) && ((c)<=END_ARABIC_DIGITS)) ? \
+   ((c) + (PRUint16)ARABIC_TO_HINDI_DIGIT_INCREMENT): \
+   (c))
+
 extern nsresult
 NS_NewContinuingTextFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 extern nsresult
@@ -73,10 +86,9 @@ nsBidiPresUtils::nsBidiPresUtils() : mArraySize(8),
                                      mIndexMap(nsnull),
                                      mLevels(nsnull),
                                      mSuccess(NS_ERROR_FAILURE),
-                                     mBidiEngine(nsnull),
-                                     mUnicodeUtils(nsnull)
+                                     mBidiEngine(nsnull)
 {
-  mBidiEngine = do_GetService("@mozilla.org/intl/bidi;1");
+  mBidiEngine = new nsBidi();
   if (mBidiEngine) {
     mSuccess = NS_OK;
   }
@@ -861,12 +873,6 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
                                    PRBool           aIsBidiSystem)
 {
   nsresult rv = NS_OK;
-  if (!mUnicodeUtils) {
-    mUnicodeUtils = do_GetService("@mozilla.org/intl/unicharbidiutil;1");
-    if (!mUnicodeUtils) {
-      return NS_ERROR_FAILURE;
-    }
-  }
   // ahmed 
   //adjusted for correct numeral shaping  
   PRUint32 bidiOptions;
@@ -874,11 +880,11 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
   switch (GET_BIDI_OPTION_NUMERAL(bidiOptions)) {
 
     case IBMBIDI_NUMERAL_HINDI:
-      mUnicodeUtils->HandleNumbers(aText,aTextLength,IBMBIDI_NUMERAL_HINDI);
+      HandleNumbers(aText,aTextLength,IBMBIDI_NUMERAL_HINDI);
       break;
 
     case IBMBIDI_NUMERAL_ARABIC:
-      mUnicodeUtils->HandleNumbers(aText,aTextLength,IBMBIDI_NUMERAL_ARABIC);
+      HandleNumbers(aText,aTextLength,IBMBIDI_NUMERAL_ARABIC);
       break;
 
     case IBMBIDI_NUMERAL_REGULAR:
@@ -886,11 +892,11 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
       switch (aCharType) {
 
         case eCharType_EuropeanNumber:
-          mUnicodeUtils->HandleNumbers(aText,aTextLength,IBMBIDI_NUMERAL_ARABIC);
+          HandleNumbers(aText,aTextLength,IBMBIDI_NUMERAL_ARABIC);
           break;
 
         case eCharType_ArabicNumber:
-          mUnicodeUtils->HandleNumbers(aText,aTextLength,IBMBIDI_NUMERAL_HINDI);
+          HandleNumbers(aText,aTextLength,IBMBIDI_NUMERAL_HINDI);
           break;
 
         default:
@@ -900,9 +906,9 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
       
     case IBMBIDI_NUMERAL_HINDICONTEXT:
       if ( ( (GET_BIDI_OPTION_DIRECTION(bidiOptions)==IBMBIDI_TEXTDIRECTION_RTL) && (IS_ARABIC_DIGIT (aText[0])) ) || (eCharType_ArabicNumber == aCharType) )
-        mUnicodeUtils->HandleNumbers(aText,aTextLength,IBMBIDI_NUMERAL_HINDI);
+        HandleNumbers(aText,aTextLength,IBMBIDI_NUMERAL_HINDI);
       else if (eCharType_EuropeanNumber == aCharType)
-        mUnicodeUtils->HandleNumbers(aText,aTextLength,IBMBIDI_NUMERAL_ARABIC);
+        HandleNumbers(aText,aTextLength,IBMBIDI_NUMERAL_ARABIC);
       break;
 
     default:
@@ -940,7 +946,7 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
       }
     }
     if (doShape) {
-      rv = mUnicodeUtils->ArabicShaping(aText, aTextLength, buffer, (PRUint32 *)&newLen);
+      rv = ArabicShaping(aText, aTextLength, buffer, (PRUint32 *)&newLen);
       if (NS_SUCCEEDED(rv) ) {
         aTextLength = newLen;
         memcpy(aText, buffer, aTextLength * sizeof(PRUnichar) );
@@ -1044,12 +1050,11 @@ nsBidiPresUtils::CalculateCharType(PRInt32& aOffset,
   aOffset = offset;
 }
 
-nsresult nsBidiPresUtils::GetBidiEngine(nsIBidi** aBidiEngine)
+nsresult nsBidiPresUtils::GetBidiEngine(nsBidi** aBidiEngine)
 {
   nsresult rv = NS_ERROR_FAILURE;
   if (mBidiEngine) {
     *aBidiEngine = mBidiEngine;
-    NS_ADDREF(*aBidiEngine);
     rv = NS_OK;
   }
   return rv; 
@@ -1136,4 +1141,40 @@ nsresult nsBidiPresUtils::RenderText(PRUnichar*           aText,
   return NS_OK;
 }
   
+nsresult nsBidiPresUtils::HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32 aNumFlag)
+{
+  PRUint32 i;
+  // IBMBIDI_NUMERAL_REGULAR *
+  // IBMBIDI_NUMERAL_HINDICONTEXT
+  // IBMBIDI_NUMERAL_ARABIC
+  // IBMBIDI_NUMERAL_HINDI
+  mNumflag=aNumFlag;
+
+  switch (aNumFlag) {
+    case IBMBIDI_NUMERAL_HINDI:
+      for (i=0;i<aSize;i++)
+        aBuffer[i] = NUM_TO_HINDI(aBuffer[i]);
+      break;
+    case IBMBIDI_NUMERAL_ARABIC:
+      for (i=0;i<aSize;i++)
+        aBuffer[i] = NUM_TO_ARABIC(aBuffer[i]);
+      break;
+    default : // IBMBIDI_NUMERAL_REGULAR, IBMBIDI_NUMERAL_HINDICONTEXT for HandleNum() which is called for clipboard handling
+      for (i=1;i<aSize;i++) {
+        if (IS_ARABIC_CHAR(aBuffer[i-1])) 
+          aBuffer[i] = NUM_TO_HINDI(aBuffer[i]);
+        else 
+          aBuffer[i] = NUM_TO_ARABIC(aBuffer[i]);
+      }
+      break;
+  }
+  return NS_OK;
+}
+
+nsresult nsBidiPresUtils::HandleNumbers(const nsString& aSrc, nsString& aDst)
+{
+  aDst = aSrc;
+  return HandleNumbers((PRUnichar *)aDst.get(),aDst.Length(),mNumflag);
+}
+
 #endif // IBMBIDI
