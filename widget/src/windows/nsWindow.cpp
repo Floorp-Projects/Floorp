@@ -2125,7 +2125,7 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVir
                             (('A'<=(vk))&&((vk)<='Z')) || \
                             ((VK_NUMPAD0 <=(vk))&&((vk)<=VK_DIVIDE)) || \
                             (((vk)==NS_VK_BACK_QUOTE)) || \
-                            ((NS_VK_OPEN_BRACKET >=(vk))&&((vk)<=NS_VK_QUOTE)) \
+                            ((NS_VK_OPEN_BRACKET <=(vk))&&((vk)<=NS_VK_QUOTE)) \
                             )
 #define NO_WM_CHAR_LATER(vk) (! WM_CHAR_LATER(vk))
 
