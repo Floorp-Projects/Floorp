@@ -45,9 +45,9 @@ var useWith = '';
 
 function F(i)
 {
-  i = 0;  
+  i = 0;
   if(useWith) with(1){i;}
-  i++;	
+  i++;
 
   outerValue = i; // capture value of i in outer function
   F1 = function() {innerValue = i;}; // capture value of i in inner function
@@ -71,10 +71,10 @@ addThis();
 
 
 function G(i)
-{ 
+{
   i = 0;
   with (new Object()) {i=100};
-  i++;	
+  i++;
 
   outerValue = i; // capture value of i in outer function
   G1 = function() {innerValue = i;}; // capture value of i in inner function
