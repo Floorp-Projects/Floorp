@@ -3837,20 +3837,27 @@ if (!defined $dbh->bz_get_index_def('bugs_activity','who')) {
     $dbh->do('ALTER TABLE bugs_activity ADD INDEX (who)');
 }
 
-$dbh->bz_change_field_type('bugs', 'status_whiteboard', 
-                           q{mediumtext not null default ''});
-$dbh->bz_change_field_type('bugs', 'keywords',
-                           q{mediumtext not null default ''});
-$dbh->bz_change_field_type('bugs', 'votes', 'mediumint not null default 0');
+# This lastdiffed change and these default changes are unrelated,
+# but in order for MySQL to successfully run these default changes only once,
+# they have to be inside this block.
+# If bugs.lastdiffed is NOT NULL...
+if(!$dbh->bz_get_field_def('bugs', 'lastdiffed')->[2]) {
+    # Add defaults for some fields that should have them but didn't.
+    $dbh->bz_change_field_type('bugs', 'status_whiteboard', 
+                                q{mediumtext not null default ''});
+    $dbh->bz_change_field_type('bugs', 'keywords',
+                               q{mediumtext not null default ''});
+    $dbh->bz_change_field_type('bugs', 'votes', 
+                               'mediumint not null default 0');
+    # And change lastdiffed to NULL
+    $dbh->bz_change_field_type('bugs', 'lastdiffed', 'datetime');
+}
 
 # 2005-03-03 travis@sedsystems.ca -- Bug 41972
 add_setting ("display_quips", {"on" => 1, "off" => 2 }, "on" );
 
-$dbh->bz_change_field_type('bugs', 'lastdiffed', 'datetime');
 
 } # END LEGACY CHECKS
-
-
 
 
 # If you had to change the --TABLE-- definition in any way, then add your
