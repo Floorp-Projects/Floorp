@@ -46,7 +46,14 @@ interface nsIDOM3Node : nsISupports
   // Introduced in DOM Level 3:
   readonly attribute DOMString        baseURI;
   // Introduced in DOM Level 3:
-  unsigned short     compareTreePosition(in nsIDOMNode other);
+  // XXXcaa compareTreePosition existed in an old DOM3 Core WD:
+  // <http://www.w3.org/TR/2002/WD-DOM-Level-3-Core-20020409/>
+  // It has been renamed in the newest WD to compareDocumentPosition:
+  // <http://www.w3.org/TR/2002/WD-DOM-Level-3-Core-20021022/>
+  // Disable compareTreePosition from script only for now since we
+  // rely on it in C++.  When we implement this as per the latest
+  // spec, re-enable it for scripts.
+  [noscript] unsigned short     compareTreePosition(in nsIDOMNode other);
   // Introduced in DOM Level 3:
   boolean            isSameNode(in nsIDOMNode other);
   // Introduced in DOM Level 3:

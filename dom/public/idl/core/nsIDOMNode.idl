@@ -110,12 +110,24 @@ interface nsIDOMNode : nsISupports
   // Introduced in DOM Level 2:
   boolean            hasAttributes();
 
+%{C++
   // Introduced in DOM Level 3:
-  const unsigned short      TREE_POSITION_PRECEDING        = 0x01;
-  const unsigned short      TREE_POSITION_FOLLOWING        = 0x02;
-  const unsigned short      TREE_POSITION_ANCESTOR         = 0x04;
-  const unsigned short      TREE_POSITION_DESCENDANT       = 0x08;
-  const unsigned short      TREE_POSITION_EQUIVALENT       = 0x10;
-  const unsigned short      TREE_POSITION_SAME_NODE        = 0x20;
-  const unsigned short      TREE_POSITION_DISCONNECTED     = 0x00;
+  // XXXcaa the constants existed in an old DOM3 Core WD:
+  // <http://www.w3.org/TR/2002/WD-DOM-Level-3-Core-20020409/>
+  // They have been renamed in the newest WD:
+  // <http://www.w3.org/TR/2002/WD-DOM-Level-3-Core-20021022/>
+  // Disable these from script only for now since we rely on them
+  // in C++.  When we implement them as per the latest spec,
+  // rename and re-enable them.
+  enum {
+    TREE_POSITION_PRECEDING        = 0x01,
+    TREE_POSITION_FOLLOWING        = 0x02,
+    TREE_POSITION_ANCESTOR         = 0x04,
+    TREE_POSITION_DESCENDANT       = 0x08,
+    TREE_POSITION_EQUIVALENT       = 0x10,
+    TREE_POSITION_SAME_NODE        = 0x20,
+    TREE_POSITION_DISCONNECTED     = 0x00
+  };
+%}
+
 };
