@@ -2517,6 +2517,11 @@ nsComboboxControlFrame::Paint(nsIPresContext*     aPresContext,
     nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
                        NS_FRAME_PAINT_LAYER_FOREGROUND);
 
+    // nsITheme should take care of drawing the focus border, but currently does so only on Mac.
+    // If all of the nsITheme implementations are fixed to draw the focus border correctly,
+    // this #ifdef should be replaced with a -moz-appearance / ThemeSupportsWidget() check.
+
+#ifndef MOZ_WIDGET_COCOA
     if (mDisplayFrame) {
       aRenderingContext.PushState();
       PRBool clipEmpty;
@@ -2568,6 +2573,7 @@ nsComboboxControlFrame::Paint(nsIPresContext*     aPresContext,
       /////////////////////
       aRenderingContext.PopState(clipEmpty);
     }
+#endif
   }
   
   // Call to the base class to draw selection borders when appropriate

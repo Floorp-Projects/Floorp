@@ -10,6 +10,15 @@
 // A checkbox element. 
 #define NS_THEME_CHECKBOX                                  3
 
+// A small radio button, for HTML forms
+#define NS_THEME_RADIO_SMALL                               4
+
+// A small checkbox, for HTML forms
+#define NS_THEME_CHECKBOX_SMALL                            5
+
+// A small button, for HTML forms
+#define NS_THEME_BUTTON_SMALL                              6
+
 // The toolbox that contains the toolbars.
 #define NS_THEME_TOOLBOX                                   11
 
@@ -169,13 +178,13 @@
 // A generic container that always repaints on state
 // changes.  This is a hack to make checkboxes and
 // radio buttons work.
-#define NS_THEME_CHECKBOX_CONTAINER                        200
-#define NS_THEME_RADIO_CONTAINER                           201
+#define NS_THEME_CHECKBOX_CONTAINER                        150
+#define NS_THEME_RADIO_CONTAINER                           151
 
 // Window and dialog backgrounds
-#define NS_THEME_WINDOW                                    250
-#define NS_THEME_DIALOG                                    251
+#define NS_THEME_WINDOW                                    200
+#define NS_THEME_DIALOG                                    201
 
 // Menu and Menu Bar backgrounds
-#define NS_THEME_MENU                                      260
-#define NS_THEME_MENUBAR                                   261
+#define NS_THEME_MENU                                      210
+#define NS_THEME_MENUBAR                                   211

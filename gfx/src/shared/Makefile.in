@@ -36,12 +36,21 @@ REQUIRES= \
 		  string \
 		  imglib2 \
 		  widget \
+		  content \
+		  layout \
+		  necko \
+		  dom \
+		  locale \
 		  $(NULL)
 
 CPPSRCS = \
 	nsRenderingContextImpl.cpp \
 	gfxImageFrame.cpp \
 	$(NULL)
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+CPPSRCS += nsNativeTheme.cpp
+endif
 
 LOCAL_INCLUDES = -I$(srcdir)/.. \
                  $(NULL)

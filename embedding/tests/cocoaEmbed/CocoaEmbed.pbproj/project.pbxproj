@@ -417,6 +417,18 @@
 			settings = {
 			};
 		};
+		A7CEA3AF0413683F0083435A = {
+			isa = PBXFileReference;
+			name = "platform-forms.css";
+			path = "../../../dist/Embed/res/platform-forms.css";
+			refType = 2;
+		};
+		A7CEA3B00413685F0083435A = {
+			fileRef = A7CEA3AF0413683F0083435A;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 //A70
 //A71
 //A72
@@ -1281,12 +1293,12 @@
 				F6BD64BA01B316DA01A962F7,
 				F6BD64BB01B316DA01A962F7,
 				F6BD64BC01B316DA01A962F7,
-				F6BD64C701B3172601A962F7,
 				A764728B0416CFA000A967F8,
 				A764728C0416CFA000A967F8,
 				F6BD64C801B3172601A962F7,
 				F6BD64D701B3172601A962F7,
 				F6BD64DD01B3172601A962F7,
+				A7CEA3AF0413683F0083435A,
 				F6BD64DE01B3172601A962F7,
 				F6BD64DF01B3172601A962F7,
 				F6BD64E001B3172601A962F7,
@@ -1793,8 +1805,8 @@
 				F6BD64C401B316DA01A962F7,
 				F6BD64C501B316DA01A962F7,
 				F6BD64C601B316DA01A962F7,
-				F6BD650401B3184301A962F7,
 				F6BD650501B3184301A962F7,
+				A7CEA3B00413685F0083435A,
 				F6BD650601B3184301A962F7,
 				F6BD650701B3184301A962F7,
 				F6BD650801B3184301A962F7,
@@ -1869,12 +1881,6 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
-		};
-		F6BD64C701B3172601A962F7 = {
-			isa = PBXFileReference;
-			name = arrow.gif;
-			path = ../../../layout/html/document/src/arrow.gif;
-			refType = 2;
 		};
 		F6BD64C801B3172601A962F7 = {
 			children = (
@@ -2016,12 +2022,6 @@
 			name = embed.jar;
 			path = ../../../dist/bin/chrome/embed.jar;
 			refType = 2;
-		};
-		F6BD650401B3184301A962F7 = {
-			fileRef = F6BD64C701B3172601A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F6BD650501B3184301A962F7 = {
 			fileRef = F6BD64DD01B3172601A962F7;

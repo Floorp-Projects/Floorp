@@ -305,6 +305,7 @@ viewer:res:strres-test.xul
 viewer:res:throbber:*
 viewer:res:ua.css
 viewer:res:forms.css
+viewer:res:platform-forms.css
 
 ; MathML
 viewer:res:mathml.css
