@@ -160,7 +160,12 @@ components/libpref.so
 
 ; profile
 components/libprofile.so                  
-components/profile.xpt                  
+components/profile.xpt
+
+; wallet
+; Optional - only if you need password persistence
+components/libwallet.so
+components/wallet.xpt                  
 
 ; psm2
 ; Optional - only if you need PSM2 support
