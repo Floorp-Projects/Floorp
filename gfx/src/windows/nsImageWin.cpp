@@ -749,7 +749,7 @@ HBITMAP             maskBits,tileBits,oldBits,oldMaskBits;
   ((nsDrawingSurfaceWin *)aSurface)->GetTECHNOLOGY(&canRaster);
 
   // we have to use the old way.. for 256 color mode and printing.. slow, but will always work.
-  if ((canRaster==DT_RASPRINTER) || (256==mNumPaletteColors) || (aWidth>MAX_BUFFER_WIDTH) || (aHeight>MAX_BUFFER_HEIGHT)){
+  if ((mAlphaDepth>1) || (canRaster==DT_RASPRINTER) || (256==mNumPaletteColors) || (aWidth>MAX_BUFFER_WIDTH) || (aHeight>MAX_BUFFER_HEIGHT)){
     for(y=aY0;y<aY1;y+=aHeight){
       for(x=aX0;x<aX1;x+=aWidth){
         this->Draw(aContext,aSurface,x,y,aWidth,aHeight);
@@ -1105,8 +1105,10 @@ UINT                palType;
       oldbits = (HBITMAP)::SelectObject(memPrDC,mHBitmap);
 
       numbytes = ::GetObject(mHBitmap,sizeof(BITMAP),&srcinfo);
-
-      // put into a DIB
+      
+      if (nsnull != mBHead){
+        delete[] mBHead;
+      }
       BuildDIB(&mBHead,mBHead->biWidth,mBHead->biHeight,srcinfo.bmBitsPixel,&mNumBytesPixel);
       mRowBytes = CalcBytesSpan(mBHead->biWidth);
       mSizeImage = mRowBytes * mBHead->biHeight; // no compression
@@ -1143,11 +1145,15 @@ PRInt16 numPaletteColors;
   if (8 == aDepth) {
     numPaletteColors = 256;
     *aNumBytesPix = 1;
+  } else if (16 == aDepth) {
+    numPaletteColors = 0;
+    *aNumBytesPix = 2; 
   } else if (24 == aDepth) {
     numPaletteColors = 0;
     *aNumBytesPix = 3;
-  } else if (16 == aDepth) {
-    *aNumBytesPix = 2;  
+  } else if (32 == aDepth) {
+    numPaletteColors = 0;  
+    *aNumBytesPix = 4;
   } else {
     NS_ASSERTION(PR_FALSE, "unexpected image depth");
     return NS_ERROR_UNEXPECTED;
