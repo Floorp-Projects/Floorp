@@ -106,3 +106,7 @@
 
 <!ENTITY more.label "MAIS" >
 <!ENTITY less.label "MENOS" >
+
+<!ENTITY add.label     "Add">
+<!ENTITY edit.label    "Edit">
+<!ENTITY remove.label  "Remove">

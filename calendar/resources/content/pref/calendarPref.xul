@@ -43,6 +43,7 @@
 <!DOCTYPE page 
 [
     <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/prefs.dtd" > %dtd1;
+    <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd2;
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -193,9 +194,9 @@
        <listbox flex="1" id="catergorieslist"/>
        <vbox>
          <spacer flex="1"/>
-         <button label="Add" oncommand="addCategory()"/>
-         <button label="Edit" oncommand="editCategory()"/>
-         <button label="Remove" oncommand="deleteCategory()"/>
+         <button label="&add.label;" oncommand="addCategory()"/>
+         <button label="&edit.label;" oncommand="editCategory()"/>
+         <button label="&remove.label;" oncommand="deleteCategory()"/>
        </vbox>
      </hbox>
      <textbox id="categories" prefstring="calendar.categories.names" hidden="true"/>
