@@ -81,7 +81,7 @@ struct FactoryData
   char    * mCharsetDest;
 };
 
-FactoryData g_FactoryData[] =
+static FactoryData g_FactoryData[] =
 {
   {
     &kGB2312ToUnicodeCID,
