@@ -529,8 +529,7 @@ PRInt32 nsHTMLFrameInnerFrame::GetMarginWidth(nsIPresContext* aPresContext, nsIC
 {
   PRInt32 marginWidth = -1;
   nsIHTMLContent* content = nsnull;
-  mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
-  if (nsnull != content) {
+  if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID, (void**) &content))) {
     float p2t;
     aPresContext->GetScaledPixelsToTwips(p2t);
     nsHTMLValue value;
@@ -550,8 +549,7 @@ PRInt32 nsHTMLFrameInnerFrame::GetMarginHeight(nsIPresContext* aPresContext, nsI
 {
   PRInt32 marginHeight = -1;
   nsIHTMLContent* content = nsnull;
-  mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
-  if (nsnull != content) {
+  if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID, (void**) &content))) {
     float p2t;
     aPresContext->GetScaledPixelsToTwips(p2t);
     nsHTMLValue value;
@@ -562,6 +560,7 @@ PRInt32 nsHTMLFrameInnerFrame::GetMarginHeight(nsIPresContext* aPresContext, nsI
         marginHeight = 0;
       }
     }
+    NS_RELEASE(content);
   }
   return marginHeight;
 }
