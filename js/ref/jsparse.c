@@ -428,30 +428,43 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 	    if (!ok)
 		goto out;
 	    if (sprop && pobj == fun->object) {
+                if (sprop->getter == js_GetArgument) {
 #ifdef CHECK_ARGUMENT_HIDING
-		if (sprop->getter == js_GetArgument) {
-		    OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
-		    js_ReportCompileError(cx, ts,
-					  "duplicate formal argument %s",
-					  ATOM_BYTES(argAtom));
-		    ok = JS_FALSE;
-		    goto out;
-		}
+                    OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
+                    js_ReportCompileError(cx, ts,
+                                          "duplicate formal argument %s",
+                                          ATOM_BYTES(argAtom));
+                    ok = JS_FALSE;
+                    goto out;
+#else
+                    /* A duplicate parameter name. We create a dummy symbol
+                     * entry with property id of the parameter number and set
+                     * the id to the name of the parameter.
+                     * The decompiler will know to treat this case specially.
+                     */
+                    jsid oldArgId = (jsid) sprop->id;
+                    OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
+                    sprop = NULL;
+                    ok = js_DefineProperty(cx, fun->object,
+                                           oldArgId, JSVAL_VOID,
+                                           js_GetArgument, js_SetArgument,
+                                           JSPROP_ENUMERATE | JSPROP_PERMANENT,
+                                           (JSProperty **)&sprop);
+                    if (!ok)
+                        goto out;
+                    sprop->id = (jsid) argAtom;
 #endif
-		sprop->getter = js_GetArgument;
-		sprop->setter = js_SetArgument;
-		sprop->attrs |= JSPROP_ENUMERATE | JSPROP_PERMANENT;
-	    } else {
-		if (sprop) {
-		    OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
-		    sprop = NULL;
-		}
-		ok = js_DefineProperty(cx, fun->object,
-				       (jsid)argAtom, JSVAL_VOID,
-				       js_GetArgument, js_SetArgument,
-				       JSPROP_ENUMERATE | JSPROP_PERMANENT,
-				       (JSProperty **)&sprop);
+                }
+            }
+	    if (sprop) {
+		OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
+		sprop = NULL;
 	    }
+	    ok = js_DefineProperty(cx, fun->object,
+				   (jsid)argAtom, JSVAL_VOID,
+				   js_GetArgument, js_SetArgument,
+				   JSPROP_ENUMERATE | JSPROP_PERMANENT,
+				   (JSProperty **)&sprop);
 	    if (!ok)
 		goto out;
 	    PR_ASSERT(sprop);

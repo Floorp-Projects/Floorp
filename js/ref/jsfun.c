@@ -1420,15 +1420,31 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                                        (JSProperty **)&sprop)) {
                     goto badargs;
                 }
-#ifdef CHECK_ARGUMENT_HIDING
                 if (sprop && obj2 == obj) {
+#ifdef CHECK_ARGUMENT_HIDING
                     PR_ASSERT(sprop->getter == js_GetArgument);
                     OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
                     JS_ReportError(cx, "duplicate formal argument %s",
                                    ATOM_BYTES(atom));
                     goto badargs;
+#else
+                /* A duplicate parameter name. We create a dummy symbol
+                 * entry with property id of the parameter number and set
+                 * the id to the name of the parameter.
+                 * The decompiler will know to treat this case specially.
+                 */
+                jsid oldArgId = (jsid) sprop->id;
+                OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
+                sprop = NULL;
+                if (!js_DefineProperty(cx, obj, oldArgId, JSVAL_VOID,
+                                       js_GetArgument, js_SetArgument,
+                                       JSPROP_ENUMERATE | JSPROP_PERMANENT,
+                                       (JSProperty **)&sprop)) {
+                    goto badargs;
                 }
+                sprop->id = (jsid) atom;
 #endif
+                }
                 if (sprop)
                     OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
                 if (!js_DefineProperty(cx, obj, (jsid)atom, JSVAL_VOID,
