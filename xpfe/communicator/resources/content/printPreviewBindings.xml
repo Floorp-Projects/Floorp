@@ -322,14 +322,13 @@
         <parameter name="aValue"/>
         <body>
         <![CDATA[
-          var value = Math.round(aValue);
           var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
           var promptStr = this.mScaleLabel.value;
           var renameTitle = this.mCustomTitle;
-          var result = {value:value};
-          var confirmed = promptService.prompt(window, renameTitle, promptStr, result, null, {value:value});
+          var result = {value:aValue};
+          var confirmed = promptService.prompt(window, renameTitle, promptStr, result, null, {value:aValue});
           this._debug("confirmed: " + confirmed);
-          if (!confirmed || (!result.value) || (result.value == "") || result.value == value) {
+          if (!confirmed || !result.value || result.value == "") {
             return(-1);
           }
           return result.value;
@@ -349,10 +348,13 @@
           for (var i=0;i<scaleValues.length;i++) {
             if (aValue == scaleValues[i]) {
               this.mScaleCombobox.selectedIndex = i;
+              this.mScaleCombobox.setAttribute('lastValidInx', this.mScaleCombobox.selectedIndex);
               return;
             }
           }
+
           this.mScaleCombobox.value = "Custom";
+          this.mScaleCombobox.setAttribute('lastValidInx', 14);
         ]]>
         </body>
       </method>
@@ -465,7 +467,7 @@
             aValue = this.promptForScaleValue(settings.scaling * 100.0);
             this._debug("promptForScaleValue "+aValue);
             if (aValue >= 10) {
-              aValue /= 100.0;
+              aValue /= 100;
             } else {
               this.mScaleCombobox.selectedIndex = this.mScaleCombobox.getAttribute('lastValidInx');
               return;
@@ -473,7 +475,6 @@
           }
 
           this.setScaleCombobox(aValue);
-          this.mScaleCombobox.setAttribute('lastValidInx', this.mScaleCombobox.selectedIndex);
 
           settings.shrinkToFit = false;
           settings.scaling = aValue;
@@ -535,6 +536,7 @@
           if (settings.shrinkToFit) {
             this._debug("setting ShrinkToFit");
             this.mScaleCombobox.value = "ShrinkToFit";
+            this.mScaleCombobox.setAttribute('lastValidInx', 13);
           } else {
             this.setScaleCombobox(settings.scaling);
           }
