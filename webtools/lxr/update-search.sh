@@ -3,7 +3,7 @@
 # to do full-text searches.
 # Created 12-Jun-98 by jwz.
 
-PATH=/opt/local/bin:/opt/cvs-tools/bin:$PATH
+PATH=/opt/local/bin:/opt/cvs-tools/bin:/usr/ucb:$PATH
 export PATH
 
 lxr_dir=.
