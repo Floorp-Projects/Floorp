@@ -1,0 +1,150 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="history.css" type="text/css"?>
+
+<xul:window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <html:script>
+  function HistoryNewWindow()
+  {
+    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+    if (!toolkitCore) {
+      toolkitCore = new ToolkitCore();
+      if (toolkitCore) {
+        toolkitCore.Init("ToolkitCore");
+      }
+    }
+    if (toolkitCore) {
+      toolkitCore.ShowWindow("resource:/res/rdf/history.xul",
+                             window);
+    }
+  }
+  function OpenURL(event,node)
+  {
+
+    url = node.getAttribute('id');
+
+    // Ignore "NC:" urls.
+    if (url.substring(0, 3) == "NC:") {
+      return false;
+    }
+
+    /*window.open(url,'bookmarks');*/
+    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+    if (!toolkitCore) {
+      toolkitCore = new ToolkitCore();
+      if (toolkitCore) {
+        toolkitCore.Init("ToolkitCore");
+      }
+    }
+    if (toolkitCore) {
+      toolkitCore.ShowWindow(url,window);
+    }
+
+    dump("OpenURL(" + url + ")\n");
+
+    return true;
+  }
+
+function doSort(sortColName)
+{
+        var node = document.getElementById(sortColName);
+	// determine column resource to sort on
+	var sortResource = node.getAttribute('resource');
+	if (!node)	return(false);
+
+        var sortDirection="ascending";
+        var isSortActive = node.getAttribute('sortActive');
+        if (isSortActive == "true")
+        {
+                var currentDirection = node.getAttribute('sortDirection');
+                if (currentDirection == "ascending")
+                        sortDirection = "descending";
+                else if (currentDirection == "descending")
+                        sortDirection = "natural";
+                else    sortDirection = "ascending";
+        }
+
+	// get RDF Core service
+	var rdfCore = XPAppCoresManager.Find("RDFCore");
+	if (!rdfCore)
+	{
+		rdfCore = new RDFCore();
+		if (!rdfCore)
+		{
+			return(false);
+		}
+		rdfCore.Init("RDFCore");
+                XPAppCoresManager.Add(rdfCore);
+	}
+	// sort!!!
+        rdfCore.doSort(node, sortResource, sortDirection);
+        return(false);
+}
+
+  </html:script>
+
+  <menubar>
+    <menu name="File">
+      <menuitem name="New Window" onclick="HistoryNewWindow();"/>
+      <separator/>
+      <menuitem name="Close"/>
+    </menu>
+    <menu name="Edit">
+      <menuitem name="Undo"/>
+      <menuitem name="Redo"/>
+      <separator/>
+      <menuitem name="Cut"/>
+      <menuitem name="Copy"/>
+      <menuitem name="Paste"/>
+      <menuitem name="Delete"/>
+      <menuitem name="Select All"/>
+      <separator/>
+      <menuitem name="Find in History..."/>
+      <menuitem name="Find Again"/>
+    </menu>
+  </menubar>
+
+<tree rdf:datasources="rdf:history" onclick="return OpenURL(event,event.target.parentNode);">
+  <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
+  <treecol id="ShortcutURLColumn" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
+  <treehead>
+    <treeitem>
+      <treecell onclick="return doSort('NameColumn');">
+	<xul:observes element="NameColumn" attribute="sortActive"/>
+	<xul:observes element="NameColumn" attribute="sortDirection"/>
+      Name</treecell>
+      <treecell onclick="return doSort('URLColumn');">
+	<xul:observes element="URLColumn" attribute="sortActive"/>
+	<xul:observes element="URLColumn" attribute="sortDirection"/>
+      URL</treecell>
+      <treecell onclick="return doSort('ShortcutURLColumn');">
+	<xul:observes element="ShortcutURLColumn" attribute="sortActive"/>
+	<xul:observes element="ShortcutURLColumn" attribute="sortDirection"/>
+      Shortcut URL</treecell>
+    </treeitem>
+  </treehead>
+
+ <treebody>
+    <treeitem id="NC:HistoryBySite">
+      <treecell>History By Site</treecell>
+      <treecell></treecell>
+      <treecell></treecell>
+      <treecell></treecell>
+    </treeitem>
+
+    <treeitem id="NC:HistoryByDate">
+      <treecell>History By Date</treecell>
+      <treecell></treecell>
+      <treecell></treecell>
+      <treecell></treecell>
+    </treeitem>
+
+  </treebody>
+
+</tree>
+
+<xul:/window>
