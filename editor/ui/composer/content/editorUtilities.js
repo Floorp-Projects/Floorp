@@ -868,9 +868,7 @@ function GetOS()
 
 function ConvertRGBColorIntoHEXColor(color)
 {
-  if (color.search( /rgb.*/ ) != -1)
-  {
-    var res = color.match( /rgb\((\d*),(\d*),(\d*)\)/ );
+  if ( /rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/.test(color) ) {
     var r = Number(RegExp.$1).toString(16);
     if (r.length == 1) r = "0"+r;
     var g = Number(RegExp.$2).toString(16);
