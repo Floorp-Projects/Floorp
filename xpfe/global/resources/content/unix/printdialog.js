@@ -149,7 +149,7 @@ function doPrintRange( inx )
 function getDoubleStr( val, dec )
 {
   var str = val.toString();
-  inx = str.indexOf(".");
+  var inx = str.indexOf(".");
   return str.substring(0, inx+dec+1);
 }
 
@@ -372,6 +372,7 @@ function onOK()
     }
     printService.paperSize = print_paper_size;
     
+    var print_orientation;
     if (dialog.portraitRadio.checked) {
       print_orientation = gPrintOptInterface.kPortraitOrientation;
     } else if (dialog.landscapeRadio.checked) {
