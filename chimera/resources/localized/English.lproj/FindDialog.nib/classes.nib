@@ -1,13 +1,13 @@
 {
     IBClasses = (
         {
-            ACTIONS = {find = id; }; 
+            ACTIONS = {findNextAndOrderOut = id; findNextButton = id; findPreviousButton = id; }; 
             CLASS = FindDlgController; 
             LANGUAGE = ObjC; 
             OUTLETS = {
-                mFindButton = NSButton; 
+                mFindNextButton = NSButton; 
+                mFindPrevButton = NSButton; 
                 mIgnoreCaseBox = NSButton; 
-                mSearchBackwardsBox = NSButton; 
                 mSearchField = NSTextField; 
                 mWrapAroundBox = NSButton; 
             }; 
