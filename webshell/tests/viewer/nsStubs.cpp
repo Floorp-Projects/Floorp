@@ -13,7 +13,7 @@ extern "C" XP_Bool ValidateDocData(MWContext *window_id)
 }
 
 /* dist/public/xp/xp_linebuf.h */
-int XP_ReBuffer (const char *net_buffer, int32 net_buffer_size,
+extern "C" int XP_ReBuffer (const char *net_buffer, int32 net_buffer_size,
                         uint32 desired_buffer_size,
                         char **bufferP, uint32 *buffer_sizeP,
                         uint32 *buffer_fpP,
