@@ -577,6 +577,15 @@ sub GenerateSQL {
              push(@wherepart, "$table.fieldid = $ftable.fieldid");
              $term = "($ftable.name = '$f' AND $table.bug_when > $q)";
          },
+         ",changedfrom" => sub {
+             my $table = "act_$chartid";
+             my $ftable = "fielddefs_$chartid";
+             push(@supptables, "bugs_activity $table");
+             push(@supptables, "fielddefs $ftable");
+             push(@wherepart, "$table.bug_id = bugs.bug_id");
+             push(@wherepart, "$table.fieldid = $ftable.fieldid");
+             $term = "($ftable.name = '$f' AND $table.removed = $q)";
+         },
          ",changedto" => sub {
              my $table = "act_$chartid";
              my $ftable = "fielddefs_$chartid";

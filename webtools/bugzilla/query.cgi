@@ -890,6 +890,7 @@ my @types = (
 	     ["nowords", "none of the words"],
 	     ["changedbefore", "changed before"],
 	     ["changedafter", "changed after"],
+	     ["changedfrom", "changed from"],
 	     ["changedto", "changed to"],
 	     ["changedby", "changed by"],
 	     );
