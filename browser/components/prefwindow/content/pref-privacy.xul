@@ -29,15 +29,11 @@
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["histDay", "browserCacheDiskCache", "enableCookies",
-                       "enableCookiesForOriginatingSiteOnly", "enableCookiesForCurrentSessionOnly",
-                       "enableImages", "enableImagesForOriginatingSiteOnly"];
+                       "enableCookiesForOriginatingSiteOnly", "enableCookiesForCurrentSessionOnly"];
     function Startup() {
       var cookiesEnabled = document.getElementById("enableCookies").checked;
-      var imagesEnabled = document.getElementById("enableImages").checked;
       var cookieBroadcaster = document.getElementById("cookieBroadcaster");
-      var imageBroadcaster = document.getElementById("imageBroadcaster");
       cookieBroadcaster.setAttribute("disabled", !cookiesEnabled);
-      imageBroadcaster.setAttribute("disabled", !imagesEnabled);
       var clearHistButton = document.getElementById("browserClearHistory");
       try {
         var urlBarHist = Components.classes["@mozilla.org/browser/urlbarhistory;1"]
@@ -49,10 +45,6 @@
       }
       catch(ex) {
       }
-    }
-    function viewImages() {
-      window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","_blank",
-                        "chrome,resizable=yes", "imageManager" );
     }
     
     function viewCookies() {
@@ -85,7 +77,6 @@
   ]]>
   </script>
 
-  <broadcaster id="imageBroadcaster"/>
   <broadcaster id="cookieBroadcaster"/>
   <groupbox orient="horizontal" align="center">
     <caption label="&history.label;"/>
@@ -138,26 +129,6 @@
               label="&manageCookies.label;" accesskey="&manageCookies.accesskey;"
               oncommand="viewCookies();"
               prefstring="pref.advanced.cookies.disable_button.view_cookies"/>
-    </vbox>
-  </groupbox>
-  <groupbox orient="horizontal">
-    <caption label="&images.label;"/>
-    <vbox flex="1">
-      <checkbox id="enableImages"
-                oncommand="document.getElementById('imageBroadcaster').setAttribute('disabled', this.checked ? 'false' : 'true');"
-                label="&enableImages.label;" accesskey="&enableImages.accesskey;"
-                prefstring="network.image.enable"/>
-      <checkbox id="enableImagesForOriginatingSiteOnly" observes="imageBroadcaster"
-                label="&forOriginatingSiteOnly.label;"
-                accesskey="&forOriginatingSiteOnly.accesskey;"
-                prefstring="network.image.enableForOriginatingWebsiteOnly"
-                style="margin-left: 23px;"/>
-    </vbox>
-    <vbox>
-      <button id="manageImages"
-              label="&manageImages.label;" accesskey="&manageImages.accesskey;"
-              oncommand="viewImages();"
-              prefstring="pref.advanced.images.disable_button.view_image"/>
     </vbox>
   </groupbox>
 </page>

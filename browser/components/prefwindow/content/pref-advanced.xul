@@ -33,10 +33,16 @@
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["advancedJavaAllow", "advancedMailFTP", "advancedMailFTPAddress", "useProgressDialogs",
-                       "imageLooping"];   
+                       "popupPolicy"];   
     
+    var policyButton;
+    var manageTree;
     function Startup() {
       ftpCheck();
+      policyButton = document.getElementById("popupPolicy");
+      manageTree = document.getElementById("permissionsTree");
+      toggleEnabling();
+
     }
     function ftpCheck() {
       var checked = document.getElementById("advancedMailFTP").checked;
@@ -45,6 +51,233 @@
       if (checked)
         field.focus();
     }
+
+    function toggleEnabling() {
+      var enabled = policyButton.checked;
+      var remove1 = document.getElementById("removePermission");
+      var remove2 = document.getElementById("removeAllPermissions");
+      var description = document.getElementById("popupDescription");
+      remove1.disabled = !enabled;
+      remove2.disabled = !enabled;
+      description.disabled = !enabled;
+      manageTree.disabled = !enabled;
+    }
+
+  
+  /*** =================== PERMISSIONS CODE =================== ***/
+  
+  var permissionsTreeView = {
+    rowCount : 0,
+    setTree : function(tree){},
+    getImageSrc : function(row,column) {},
+    getProgressMode : function(row,column) {},
+    getCellValue : function(row,column) {},
+    getCellText : function(row,column){
+      var rv="";
+      if (column=="siteCol") {
+        rv = permissions[row].rawHost;
+      } else if (column=="statusCol") {
+        rv = permissions[row].capability;
+      }
+      return rv;
+    },
+    isSeparator : function(index) {return false;},
+    isSorted: function() { return false; },
+    isContainer : function(index) {return false;},
+    cycleHeader : function(aColId, aElt) {},
+    getRowProperties : function(row,column,prop){},
+    getColumnProperties : function(column,columnElement,prop){},
+    getCellProperties : function(row,prop){}
+   };
+  var permissionsTree;
+  
+  var permissions           = [];
+  var deletedPermissions   = [];
+  
+  function Permission(number, host, rawHost, type, capability) {
+    this.number = number;
+    this.host = host;
+    this.rawHost = rawHost;
+    this.type = type;
+    this.capability = capability;
+  }
+  
+  var permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
+  permissionmanager = permissionmanager.QueryInterface(Components.interfaces.nsIPermissionManager);
+  var popupmanager = Components.classes["@mozilla.org/PopupWindowManager;1"].getService();
+  popupmanager = popupmanager.QueryInterface(Components.interfaces.nsIPopupWindowManager);
+  
+  function DeleteAllFromTree
+      (tree, view, table, deletedTable, removeButton, removeAllButton) {
+  
+    // remove all items from table and place in deleted table
+    for (var i=0; i<table.length; i++) {
+      deletedTable[deletedTable.length] = table[i];
+    }
+    table.length = 0;
+  
+    // clear out selections
+    tree.treeBoxObject.view.selection.select(-1); 
+  
+    // redisplay
+    view.rowCount = 0;
+    tree.treeBoxObject.invalidate();
+  
+  
+    // disable buttons
+    document.getElementById(removeButton).setAttribute("disabled", "true")
+    document.getElementById(removeAllButton).setAttribute("disabled","true");
+  }
+  
+  function DeleteSelectedItemFromTree
+      (tree, view, table, deletedTable, removeButton, removeAllButton) {
+  
+    // remove selected items from list (by setting them to null) and place in deleted list
+    var selections = GetTreeSelections(tree);
+    for (var s=selections.length-1; s>= 0; s--) {
+      var i = selections[s];
+      deletedTable[deletedTable.length] = table[i];
+      table[i] = null;
+    }
+  
+    // collapse list by removing all the null entries
+    for (var j=0; j<table.length; j++) {
+      if (table[j] == null) {
+        var k = j;
+        while ((k < table.length) && (table[k] == null)) {
+          k++;
+        }
+        table.splice(j, k-j);
+      }
+    }
+  
+    // redisplay
+    var box = tree.treeBoxObject;
+    var firstRow = box.getFirstVisibleRow();
+    if (firstRow > (table.length-1) ) {
+      firstRow = table.length-1;
+    }
+    view.rowCount = table.length;
+    box.rowCountChanged(0, table.length);
+    box.scrollToRow(firstRow)
+  
+    // update selection and/or buttons
+    if (table.length) {
+  
+      // update selection
+      // note: we need to deselect before reselecting in order to trigger ...Selected method
+      var nextSelection = (selections[0] < table.length) ? selections[0] : table.length-1;
+      tree.treeBoxObject.view.selection.select(-1); 
+      tree.treeBoxObject.view.selection.select(nextSelection);
+  
+    } else {
+  
+      // disable buttons
+      document.getElementById(removeButton).setAttribute("disabled", "true")
+      document.getElementById(removeAllButton).setAttribute("disabled","true");
+  
+      // clear out selections
+      tree.treeBoxObject.view.selection.select(-1); 
+    }
+  }
+  
+  function GetTreeSelections(tree) {
+    var selections = [];
+    var select = tree.treeBoxObject.selection;
+    if (select) {
+      var count = select.getRangeCount();
+      var min = new Object();
+      var max = new Object();
+      for (var i=0; i<count; i++) {
+        select.getRangeAt(i, min, max);
+        for (var k=min.value; k<=max.value; k++) {
+          if (k != -1) {
+            selections[selections.length] = k;
+          }
+        }
+      }
+    }
+    return selections;
+  }
+  
+  function loadPermissions() {
+    // load permissions into a table
+    if (!permissionsTree)
+      permissionsTree = document.getElementById("permissionsTree");
+  
+    var enumerator = permissionmanager.enumerator;
+    var count = 0;
+    var contentStr;
+    var dialogType = 2; // Popups
+   
+    while (enumerator.hasMoreElements()) {
+      var nextPermission = enumerator.getNext();
+      nextPermission = nextPermission.QueryInterface(Components.interfaces.nsIPermission);
+      if (nextPermission.type == dialogType) {
+        var host = nextPermission.host;
+        permissions[count] = 
+          new Permission(count++, host,
+                         (host.charAt(0)==".") ? host.substring(1,host.length) : host,
+                         nextPermission.type,
+                         "");
+      }
+    }
+    permissionsTreeView.rowCount = permissions.length;
+  
+    // sort and display the table
+    permissionsTree.treeBoxObject.view = permissionsTreeView;
+    
+    // disable "remove all" button if there are no popups
+    if (permissions.length == 0) {
+      document.getElementById("removeAllPermissions").setAttribute("disabled","true");
+    } else {
+      document.getElementById("removeAllPermissions").removeAttribute("disabled");
+    }
+  }
+  
+  function PermissionSelected() {
+    var selections = GetTreeSelections(permissionsTree);
+    if (selections.length) {
+      document.getElementById("removePermission").removeAttribute("disabled");
+    }
+  }
+  
+  function DeletePermission() {
+    DeleteSelectedItemFromTree(permissionsTree, permissionsTreeView,
+                                   permissions, deletedPermissions,
+                                   "removePermission", "removeAllPermissions");
+    FinalizePermissionDeletions();
+  }
+  
+  function DeleteAllPermissions() {
+    DeleteAllFromTree(permissionsTree, permissionsTreeView,
+                          permissions, deletedPermissions,
+                          "removePermission", "removeAllPermissions");
+    FinalizePermissionDeletions();
+  }
+  
+  function FinalizePermissionDeletions() {
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                      .getService(Components.interfaces.nsIIOService);
+  
+    for (var p=0; p<deletedPermissions.length; p++) {
+      if (deletedPermissions[p].type == 2) {
+        // we lost the URI's original scheme, but this will do because the scheme
+        // is stripped later anyway.
+        var uri = ioService.newURI("http://"+deletedPermissions[p].host, null, null);
+        popupmanager.remove(uri);
+      } else
+        permissionmanager.remove(deletedPermissions[p].host, deletedPermissions[p].type);
+    }
+    deletedPermissions.length = 0;
+  }
+  
+  function HandlePermissionKeyPress(e) {
+    if (e.keyCode == 46) {
+      DeletePermission();
+    }
+  }
+
   ]]>
   </script>
 
@@ -63,17 +296,37 @@
     <checkbox id="useProgressDialogs" label="&useProgressDialogs.label;" accesskey="&useProgressDialogs.accesskey;"
               prefstring="browser.downloads.useProgressDialogs"/>
   </groupbox>
-  <groupbox>
-    <caption label="&animLoopingTitle.label;"/>
-    <radiogroup id="imageLooping"
-                preftype="string" prefstring="image.animation_mode">
-        <radio value="normal" label="&animLoopAsSpecified.label;"
-               accesskey="&animLoopAsSpecified.accesskey;"/>
-        <radio value="once" label="&animLoopOnce.label;"
-               accesskey="&animLoopOnce.accesskey;"/>
-        <radio value="none" label="&animLoopNever.label;"
-               accesskey="&animLoopNever.accesskey;"/>
-    </radiogroup>
+
+  <groupbox id="popupsArea" flex="1">
+    <caption>
+      <checkbox label="&popupReject.label;"
+                prefstring="dom.disable_open_during_load"
+                accesskey="&popupReject.accesskey;"
+                oncommand="toggleEnabling()" id="popupPolicy"/>
+   </caption>
+  
+    <vbox id="servers" flex="1">
+        <label id="popupDescription" value="&div.blessedservers.label;"/>
+        <separator class="thin"/>
+        <tree id="permissionsTree" flex="1"
+              seltype="multiple" hidecolumnpicker="true"
+              onkeypress="HandlePermissionKeyPress(event)"
+              onselect="PermissionSelected();">
+          <treecols>
+            <treecol id="siteCol" hideheader="true" flex="1"/>
+          </treecols>
+          <treechildren/>
+        </tree>
+        <hbox>
+          <button id="removePermission" disabled="true" 
+                        label="&removepermission.label;" 
+                        oncommand="DeletePermission();"/>
+          <button id="removeAllPermissions"
+                        label="&removeallpermissions.label;" 
+                        oncommand="DeleteAllPermissions();"/>
+        </hbox>
+    </vbox>
+  
   </groupbox>
 </page>
 

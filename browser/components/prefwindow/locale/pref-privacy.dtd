@@ -12,11 +12,6 @@
 <!ENTITY pageHis.label                     "Remember visited pages for the last">
 <!ENTITY pageHis.accesskey                 "p">
 <!ENTITY days.label                        "days">
-<!ENTITY images.label                      "Images">
-<!ENTITY enableImages.label                "Enable images">
-<!ENTITY enableImages.accesskey            "i">
-<!ENTITY manageImages.label                "Manage Images...">
-<!ENTITY manageImages.accesskey            "n">
 <!ENTITY cache.label                       "Cache">
 <!ENTITY diskCache.label                   "Use up to:">
 <!ENTITY diskCache.accesskey               "U">

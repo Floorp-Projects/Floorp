@@ -8,13 +8,13 @@
 <!ENTITY useProgressDialogs.label     "Display a progress window when starting a download">
 <!ENTITY useProgressDialogs.accesskey "D">
 
-<!ENTITY animLoopingTitle.label         "Animated images should loop">
-<!ENTITY animLoopAsSpecified.label      "As many times as the image specifies">
-<!ENTITY animLoopAsSpecified.accesskey  "m">
-<!ENTITY animLoopOnce.label             "Once">
-<!ENTITY animLoopOnce.accesskey         "O">
-<!ENTITY animLoopNever.label            "Never">
-<!ENTITY animLoopNever.accesskey        "v">
 <!ENTITY sendAddFtpCheck.label        "Send this email address as anonymous FTP password:">
 <!ENTITY sendAddFtpCheck.accesskey    "e">
 <!ENTITY general.label "General">
+<!ENTITY popupReject.label              "Reject popup windows">
+<!ENTITY popupReject.accesskey          "r">
+
+<!ENTITY div.blessedservers.label       "Always allow the sites below to open popup windows:">
+
+<!ENTITY removepermission.label         "Remove Site">
+<!ENTITY removeallpermissions.label     "Remove All Sites">

@@ -20,7 +20,7 @@
 <!ENTITY privacy.label "Privacy">
 <!ENTITY advance.label "Advanced">
 <!ENTITY connection.label "Connection">
-<!ENTITY popups.label "Popup Windows">
+<!ENTITY images.label "Images">
 <!ENTITY scriptsAndWindows.label "JavaScript">
 <!ENTITY tabs.label "Tabbed Browsing">
 #ifdef XP_WIN
