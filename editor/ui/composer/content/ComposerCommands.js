@@ -269,7 +269,9 @@ var nsSaveCommand =
   isCommandEnabled: function(aCommand, dummy)
   {
     return window.editorShell && 
-      (window.editorShell.documentModified || window.editorShell.editorDocument.location == "about:blank");
+      (window.editorShell.documentModified || 
+       window.editorShell.editorDocument.location == "about:blank" ||
+       gEditorDisplayMode == DisplayModeSource);
   },
   
   doCommand: function(aCommand)
@@ -486,9 +488,10 @@ var nsSendPageCommand =
       // Lauch Messenger Composer window with current page as contents
       var pageTitle = window.editorShell.editorDocument.title;
       var pageUrl = window.editorShell.editorDocument.location;
-      window.openDialog("chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
-                          "chrome,all,dialog=no", "attachment='" + pageUrl + "',body='" + pageUrl +
-                          "',subject='" + pageTitle + "',bodyislink=true");
+      window.openDialog( "chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
+                         "chrome,all,dialog=no", 
+                         "attachment='" + pageUrl.replace(/\,/g, "%2C") + "',body='" + pageUrl +
+                         "',subject='" + pageTitle + "',bodyislink=true");
     }
   }
 };
