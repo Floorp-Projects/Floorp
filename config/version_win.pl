@@ -228,8 +228,8 @@ if ($official eq "1") {
 		$fileflags = "0";
 	      
 		my @mstone = split(/\./,$milestone);
-		$productversion="$mstone[0],$mstone[1]";
-		$productversion=~s/\D*$//g;
+		$mstone[1] =~s/\D*$//g;
+		$productversion="$mstone[0],$mstone[1],0,0";
 
 	}
 
@@ -242,7 +242,8 @@ if ($official eq "1") {
 	$buildid_lo = substr($buildid, 5);
 
 	$mfversion = $mpversion = "$milestone: $buildid";
-	$fileversion = "$productversion,$buildid_hi,$buildid_lo";
+	my @pvarray = split(',', $productversion);
+	$fileversion = "$pvarray[0],$pvarray[1],$buildid_hi,$buildid_lo";
 }
 
 my $copyright = "License: MPL 1.1/GPL 2.0/LGPL 2.1";
