@@ -27,8 +27,8 @@
 #include "xcDll.h"
 #include "plstr.h"	// strdup and strfree
 
-nsDll::nsDll(const char *libFullPath) : m_instance(NULL), m_status(DLL_OK),
-	m_fullpath(NULL)
+nsDll::nsDll(const char *libFullPath) : m_fullpath(NULL), m_instance(NULL),
+	m_status(DLL_OK)
 {
 	// XXX No initializer for PRTime's
 	// m_lastModTime = 0;
