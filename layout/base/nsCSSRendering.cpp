@@ -881,16 +881,16 @@ void nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
       ycount = 0;
       break;
     case NS_STYLE_BG_REPEAT_X:
-      xcount = (PRIntn) (aBounds.width / tileWidth);
+      xcount = (tileWidth  == 0) ? 0 : (PRIntn) (aBounds.width / tileWidth);
       ycount = 0;
       break;
     case NS_STYLE_BG_REPEAT_Y:
       xcount = 0;
-      ycount = (PRIntn) (aBounds.height / tileHeight);
+      ycount = (tileHeight == 0) ? 0 : (PRIntn) (aBounds.height / tileHeight);
       break;
     case NS_STYLE_BG_REPEAT_XY:
-      xcount = (PRIntn) (aBounds.width / tileWidth);
-      ycount = (PRIntn) (aBounds.height / tileHeight);
+      xcount = (tileWidth  == 0) ? 0 : (PRIntn) (aBounds.width / tileWidth);
+      ycount = (tileHeight == 0) ? 0 : (PRIntn) (aBounds.height / tileHeight);
       break;
     }
 
