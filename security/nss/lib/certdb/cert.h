@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.17 2002/07/04 03:09:29 jpierre%netscape.com Exp $
+ * $Id: cert.h,v 1.18 2002/07/19 00:59:20 jpierre%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -388,6 +388,26 @@ CERT_DecodeDERCertificate (SECItem *derSignedCert, PRBool copyDER, char *nicknam
 
 extern CERTSignedCrl *
 CERT_DecodeDERCrl (PRArenaPool *arena, SECItem *derSignedCrl,int type);
+
+/*
+ * same as CERT_DecodeDERCrl, plus allow options to be passed in
+ */
+
+CERTSignedCrl *
+CERT_DecodeDERCrlEx(PRArenaPool *narena, SECItem *derSignedCrl, int type,
+                          PRInt32 options);
+
+/* CRL options to pass */
+
+#define CRL_DECODE_DEFAULT_OPTIONS          0x00000000
+
+/* when CRL_DECODE_DONT_COPY_DER is set, the DER is not copied . The
+   application must then keep derSignedCrl until it destroys the
+   CRL . Ideally, it should allocate derSignedCrl in an arena
+   and pass that arena in as the first argument to CERT_DecodeDERCrlEx */
+
+#define CRL_DECODE_DONT_COPY_DER            0x00000001
+
 
 /* Validate CRL then import it to the dbase.  If there is already a CRL with the
  * same CA in the dbase, it will be replaced if derCRL is more up to date.  

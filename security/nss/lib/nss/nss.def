@@ -683,6 +683,7 @@ SECMOD_CanDeleteInternalModule;
 ;+NSS_3.6 { 	# NSS 3.6 release
 ;+    global:
 CERT_AddOCSPAcceptableResponses;
+CERT_DecodeDERCrlEx;
 CERT_CreateOCSPCertID;
 CERT_CreateOCSPRequest;
 CERT_DecodeOCSPResponse;
@@ -696,6 +697,7 @@ CERT_VerifyCertificate;
 CERT_VerifyCertificateNow;
 CERT_VerifyOCSPResponseSignature;
 PK11_GetPBEIV;
+PK11_ImportCRL;
 PK11_SaveContextAlloc;
 ;+    local:
 ;+       *;

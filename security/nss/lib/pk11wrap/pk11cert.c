@@ -3255,7 +3255,6 @@ pk11ListCertCallback(NSSCertificate *c, void *arg)
     CERTCertificate *newCert = NULL;
     PK11CertListType type = listCertP->type;
     CERTCertList *certList = listCertP->certList;
-    CERTCertTrust *trust;
     PRBool isUnique = PR_FALSE;
     PRBool isCA = PR_FALSE;
     char *nickname = NULL;
@@ -4007,3 +4006,69 @@ PK11_SaveSMimeProfile(PK11SlotInfo *slot, char *emailAddr, SECItem *derSubj,
 }
 
 
+CERTSignedCrl * crl_storeCRL (PK11SlotInfo *slot,char *url,
+                  CERTSignedCrl *newCrl, SECItem *derCrl, int type);
+
+/* import the CRL into the token */
+
+CERTSignedCrl* PK11_ImportCRL(PK11SlotInfo * slot, SECItem *derCRL, char *url,
+    int type, void *wincx, PRInt32 importOptions, PRArenaPool* arena,
+    PRInt32 decodeoptions)
+{
+    CERTSignedCrl *newCrl, *crl;
+    SECStatus rv;
+
+    newCrl = crl = NULL;
+
+    do {
+        newCrl = CERT_DecodeDERCrlEx(arena, derCRL, type, decodeoptions);
+        if (newCrl == NULL) {
+            if (type == SEC_CRL_TYPE) {
+                /* only promote error when the error code is too generic */
+                if (PORT_GetError () == SEC_ERROR_BAD_DER)
+                    PORT_SetError(SEC_ERROR_CRL_INVALID);
+	        } else {
+                PORT_SetError(SEC_ERROR_KRL_INVALID);
+            }
+            break;		
+        }
+
+        if (0 == (importOptions & CRL_IMPORT_BYPASS_CHECKS)){
+            CERTCertificate *caCert;
+            CERTCertDBHandle* handle = CERT_GetDefaultCertDB();
+            PR_ASSERT(handle != NULL);
+            caCert = CERT_FindCertByName (handle,
+                                          &newCrl->crl.derName);
+            if (caCert == NULL) {
+                PORT_SetError(SEC_ERROR_UNKNOWN_ISSUER);	    
+                break;
+            }
+
+            /* If caCert is a v3 certificate, make sure that it can be used for
+               crl signing purpose */
+            rv = CERT_CheckCertUsage (caCert, KU_CRL_SIGN);
+            if (rv != SECSuccess) {
+                break;
+            }
+
+            rv = CERT_VerifySignedData(&newCrl->signatureWrap, caCert,
+                                       PR_Now(), wincx);
+            if (rv != SECSuccess) {
+                if (type == SEC_CRL_TYPE) {
+                    PORT_SetError(SEC_ERROR_CRL_BAD_SIGNATURE);
+                } else {
+                    PORT_SetError(SEC_ERROR_KRL_BAD_SIGNATURE);
+                }
+                break;
+            }
+        }
+
+	crl = crl_storeCRL(slot, url, newCrl, derCRL, type);
+
+    } while (0);
+
+    if (crl == NULL) {
+	SEC_DestroyCrl (newCrl);
+    }
+    return (crl);
+}

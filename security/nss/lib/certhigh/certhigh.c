@@ -50,9 +50,6 @@
 #include "pki3hack.h"
 
 
-CERTSignedCrl * crl_storeCRL (PK11SlotInfo *slot,char *url,
-                  CERTSignedCrl *newCrl, SECItem *derCrl, int type);
-
 PRBool
 CERT_MatchNickname(char *name1, char *name2) {
     char *nickname1= NULL;
@@ -497,7 +494,6 @@ CERT_GetCertNicknames(CERTCertDBHandle *handle, int what, void *wincx)
     PRArenaPool *arena;
     CERTCertNicknames *names;
     int i;
-    SECStatus rv;
     stringNode *node;
     
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
@@ -786,62 +782,13 @@ CERT_FindCRLDistributionPoints (CERTCertificate *cert)
 CERTSignedCrl * CERT_ImportCRL
    (CERTCertDBHandle *handle, SECItem *derCRL, char *url, int type, void *wincx)
 {
-    CERTCertificate *caCert;
-    CERTSignedCrl *newCrl, *crl;
-    SECStatus rv;
-    PK11SlotInfo *slot;
+    CERTSignedCrl* retCrl = NULL;
+    PK11SlotInfo* slot = PK11_GetInternalKeySlot();
+    retCrl = PK11_ImportCRL(slot, derCRL, url, type, wincx,
+        CRL_IMPORT_DEFAULT_OPTIONS, NULL, CRL_DECODE_DEFAULT_OPTIONS);
+    PK11_FreeSlot(slot);
 
-    newCrl = crl = NULL;
-
-    PORT_Assert (handle != NULL);
-    do {
-
-	newCrl = CERT_DecodeDERCrl(NULL, derCRL, type);
-	if (newCrl == NULL) {
-	    if (type == SEC_CRL_TYPE) {
-		/* only promote error when the error code is too generic */
-		if (PORT_GetError () == SEC_ERROR_BAD_DER)
-			PORT_SetError(SEC_ERROR_CRL_INVALID);
-	    } else {
-		PORT_SetError(SEC_ERROR_KRL_INVALID);
-	    }
-	    break;		
-	}
-    
-	caCert = CERT_FindCertByName (handle, &newCrl->crl.derName);
-	if (caCert == NULL) {
-	    PORT_SetError(SEC_ERROR_UNKNOWN_ISSUER);	    
-	    break;
-	}
-
-	/* If caCert is a v3 certificate, make sure that it can be used for
-	   crl signing purpose */
-	rv = CERT_CheckCertUsage (caCert, KU_CRL_SIGN);
-	if (rv != SECSuccess) {
-	    break;
-	}
-
-	rv = CERT_VerifySignedData(&newCrl->signatureWrap, caCert,
-				   PR_Now(), wincx);
-	if (rv != SECSuccess) {
-	    if (type == SEC_CRL_TYPE) {
-		PORT_SetError(SEC_ERROR_CRL_BAD_SIGNATURE);
-	    } else {
-		PORT_SetError(SEC_ERROR_KRL_BAD_SIGNATURE);
-	    }
-	    break;
-	}
-
-	slot = PK11_GetInternalKeySlot();
-	crl = crl_storeCRL(slot, url, newCrl, derCRL, type);
-	PK11_FreeSlot(slot);
-
-    } while (0);
-
-    if (crl == NULL) {
-	SEC_DestroyCrl (newCrl);
-    }
-    return (crl);
+    return retCrl;
 }
 
 /* From certdb.c */
