@@ -19,6 +19,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "nsIServiceManager.h"
+#include "nsIEventQueueService.h"
+#include "nsXPComCIID.h"
 #include "nsIButton.h"
 #include "nsICheckButton.h"
 #include "nsILookAndFeel.h"
@@ -52,6 +55,7 @@ static nsIImageGroup    *gImageGroup = nsnull;
 static nsIImageRequest  *gImageReq = nsnull;
 
 #ifdef XP_PC
+#define XPCOM_DLL "xpcom32.dll"
 #define WIDGET_DLL "raptorwidget.dll"
 #define GFXWIN_DLL "raptorgfxwin.dll"
 #define TEXT_HEIGHT 25
@@ -59,6 +63,7 @@ static nsIImageRequest  *gImageReq = nsnull;
 #endif
 
 #ifdef XP_UNIX
+#define XPCOM_DLL "libxpcom.so"
 #define WIDGET_DLL "libwidgetgtk.so"
 #define GFXWIN_DLL "libgfxgtk.so"
 #define TEXT_HEIGHT 30
@@ -66,6 +71,7 @@ static nsIImageRequest  *gImageReq = nsnull;
 #endif
 
 #ifdef XP_MAC
+#define XPCOM_DLL "XPCOM_DLL"
 #define WIDGET_DLL "WIDGET_DLL"
 #define GFXWIN_DLL "GFXWIN_DLL"
 #define TEXT_HEIGHT 30
@@ -80,8 +86,10 @@ static PRBool			gInstalledColorMap = PR_FALSE;
 
 void  MyLoadImage(char *aFileName);
 
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCToolkitCID, NS_TOOLKIT_CID);
+static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIWindowIID, NS_IWINDOW_IID);	//еее
@@ -160,7 +168,6 @@ nsEventStatus PR_CALLBACK HandleEventControlPane(nsGUIEvent *aEvent)
 {
     //printf("aEvent->message %d on 0x%X\n", aEvent->message, aEvent->widget);
 
-    nsEventStatus result = nsEventStatus_eConsumeNoDefault;
     switch(aEvent->message) {
         case NS_PAINT:
         {
@@ -213,7 +220,6 @@ nsEventStatus PR_CALLBACK HandleEventControlPane(nsGUIEvent *aEvent)
 nsEventStatus PR_CALLBACK HandleEventGraphicPane(nsGUIEvent *aEvent)
 {
     //printf("aEvent->message %d on 0x%X\n", aEvent->message, aEvent->widget);
-    nsEventStatus result = nsEventStatus_eConsumeNoDefault;
     switch(aEvent->message) {
 
         case NS_PAINT:
@@ -454,6 +460,9 @@ nsresult CreateApplication(int * argc, char ** argv)
 {
     scribbleData.isDrawing = PR_FALSE;
 
+    // register xpcom classes
+    nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
+
     // register graphics classes
     static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID);
     static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID);
@@ -503,12 +512,28 @@ nsresult CreateApplication(int * argc, char ** argv)
     static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
     static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
+    // Create the Event Queue for the UI thread...
+    res = nsServiceManager::GetService(kEventQueueServiceCID,
+                                       kIEventQueueServiceIID,
+                                       (nsISupports **)&scribbleData.mEventQService);
+
+    if (NS_OK != res) {
+        NS_ASSERTION(PR_FALSE, "Could not obtain the event queue service");
+        return res;
+    }
+
+    printf("Going to create teh event queue\n");
+    res = scribbleData.mEventQService->CreateThreadEventQueue();
+    if (NS_OK != res) {
+        NS_ASSERTION(PR_FALSE, "Could not create the event queu for the thread");
+	return res;
+    }
+
      // Create an application shell
     nsIAppShell *appShell = nsnull;
     nsComponentManager::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID,
                                  (void**)&appShell);
     appShell->Create(argc, argv);
-   
 
     res = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&scribbleData.mContext);
 
@@ -519,7 +544,6 @@ nsresult CreateApplication(int * argc, char ** argv)
     //nsILookAndFeel *laf;
     //nsComponentManager::CreateInstance(kCLookAndFeelCID, nsnull, kILookAndFeelIID,(void**)&laf);
 
-    
     //
     // create the main window
     //
@@ -534,7 +558,6 @@ nsresult CreateApplication(int * argc, char ** argv)
     //scribbleData.mainWindow->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
     scribbleData.mainWindow->SetBackgroundColor(NS_RGB(255,255,255));
     scribbleData.mainWindow->SetTitle("Scribble");
-
     //
     // create the control pane
     //
@@ -546,14 +569,12 @@ nsresult CreateApplication(int * argc, char ** argv)
     controlPane->SetBackgroundColor(NS_RGB(100,128,128));
     controlPane->Show(PR_TRUE);
 
-
     //
     // Add the scribble/lines section
     //
 
     // create the "Scribble" radio button
     rect.SetRect(50, 50, 100, 25);  
-
     nsComponentManager::CreateInstance(kCRadioButtonCID, nsnull, kIRadioButtonIID, (void **)&(scribbleData.scribble));
     NS_CreateRadioButton(controlPane,scribbleData.scribble,rect,HandleEventRadioButton);
     scribbleData.scribble->SetLabel("Scribble");
@@ -568,7 +589,6 @@ nsresult CreateApplication(int * argc, char ** argv)
     scribbleData.lines->SetLabel("Lines");
     scribbleData.lines->SetState(PR_TRUE);
     //scribbleData.lines->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
-
     // Add the circle/rectangle section
 
     // create the "Circles" check button
@@ -691,6 +711,7 @@ nsresult CreateApplication(int * argc, char ** argv)
 
     polllistener *plistener = new polllistener;
     appShell->SetDispatchListener(plistener);
+
     return(appShell->Run());
 }
 
@@ -700,7 +721,7 @@ class MyObserver : public nsIImageRequestObserver
 {
 public:
 	MyObserver();
-	~MyObserver();
+	virtual ~MyObserver();
 	
 	NS_DECL_ISUPPORTS
 	
@@ -765,7 +786,6 @@ MyObserver::Notify(nsIImageRequest *aImageRequest,
 	        } 
 	      gInstalledColorMap = PR_TRUE; 
 	      } 
-	    nsRect *rect = (nsRect *)aParam3; 
 
       nsIRenderingContext *drawCtx = scribbleData.drawPane->GetRenderingContext();
 
@@ -779,6 +799,8 @@ MyObserver::Notify(nsIImageRequest *aImageRequest,
 	      } 
 	   } 
 	   break; 
+	   default: /* should never get here? */
+	   break;
 	} 
 } 
 
@@ -809,7 +831,9 @@ void
 MyLoadImage(char *aFileName)
 {
 char fileURL[256];
+#ifdef XP_PC
 char *str;
+#endif
 
     MyInterrupt();
 
