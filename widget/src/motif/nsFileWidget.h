@@ -28,12 +28,17 @@
  * Native Motif FileSelector wrapper
  */
 
-class nsFileWidget : public nsWindow
+class nsFileWidget : public nsWindow, public nsIFileWidget
 {
   public:
-                            nsFileWidget(nsISupports *aOuter); 
+                            nsFileWidget(); 
     virtual                 ~nsFileWidget();
-    NS_IMETHOD QueryObject(REFNSIID aIID, void** aInstancePtr);
+
+
+    // nsISupports
+    NS_IMETHOD_(nsrefcnt) AddRef();
+    NS_IMETHOD_(nsrefcnt) Release();
+    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
     void Create(nsIWidget *aParent,
                 const nsRect &aRect,
@@ -85,46 +90,6 @@ class nsFileWidget : public nsWindow
      nsString               mDefault;
 
      void GetFilterListArray(nsString& aFilterList);
-
-  private:
-
-    // this should not be public
-    static PRInt32 GetOuterOffset() {
-      return offsetof(nsFileWidget,mAggWidget);
-    }
-
-
-    // Aggregator class and instance variable used to aggregate in the
-    // nsIFileWidget interface to nsFileWidget w/o using multiple
-    // inheritance.
-    class AggFileWidget : public nsIFileWidget {
-    public:
-      AggFileWidget();
-      virtual ~AggFileWidget();
-  
-      AGGREGATE_METHOD_DEF
-  
-      // nsIFileWidget
-      virtual void            Create( nsIWidget *aParent,
-                                      nsString& aTitle,
-                                      nsMode aMode,
-                                      nsIDeviceContext *aContext = nsnull,
-                                      nsIAppShell *aAppShell = nsnull,
-                                      nsIToolkit *aToolkit = nsnull,
-                                      void *aInitData = nsnull);
-
-      virtual void            GetFile(nsString& aFile);
-      virtual void            SetDefaultString(nsString& aString);
-      virtual void            SetFilterList(PRUint32 aNumberOfFilters,
-                                            const nsString aTitles[],
-                                            const nsString aFilters[]);
-
-      virtual PRBool          Show();
-      virtual void            OnOk();
-      virtual void            OnCancel();
-    };
-    AggFileWidget mAggWidget;
-    friend class AggFileWidget;
 
 };
 
