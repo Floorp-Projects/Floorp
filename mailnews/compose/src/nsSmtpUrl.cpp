@@ -33,6 +33,7 @@
 // that doesn't allow you to call ::nsISupports::IID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 
 nsSmtpUrl::nsSmtpUrl(nsISupports* aContainer, nsIURLGroup* aGroup) : m_fileName(""), m_userName(""), m_userPassword("")
 {
@@ -70,6 +71,9 @@ nsSmtpUrl::nsSmtpUrl(nsISupports* aContainer, nsIURLGroup* aGroup) : m_fileName(
     m_search = nsnull;
 	m_errorMessage = nsnull;
 	m_runningUrl = PR_FALSE;
+
+	nsServiceManager::GetService(kUrlListenerManagerCID, nsIUrlListenerManager::IID(),
+								 (nsISupports **)&m_urlListeners);
  
     m_container = aContainer;
     NS_IF_ADDREF(m_container);
@@ -79,6 +83,8 @@ nsSmtpUrl::nsSmtpUrl(nsISupports* aContainer, nsIURLGroup* aGroup) : m_fileName(
 nsSmtpUrl::~nsSmtpUrl()
 {
 	CleanupSmtpState(); 
+
+	NS_IF_RELEASE(m_urlListeners);
 
     NS_IF_RELEASE(m_container);
 	PR_FREEIF(m_errorMessage);
@@ -124,6 +130,13 @@ nsresult nsSmtpUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
         return NS_OK;
     }
 
+	if (aIID.Equals(nsIMsgMailNewsUrl::IID()))
+	{
+		*aInstancePtr = (void *) ((nsIMsgMailNewsUrl*) this);
+		AddRef();
+		return NS_OK;
+	}
+
 #if defined(NS_DEBUG)
     /*
      * Check for the debug-only interface indicating thread-safety
@@ -139,7 +152,44 @@ nsresult nsSmtpUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Begin nsISmtpUrl specific support
+
 ////////////////////////////////////////////////////////////////////////////////////
+
+nsresult nsSmtpUrl::GetUrlState(PRBool * aRunningUrl)
+{
+	if (aRunningUrl)
+		*aRunningUrl = m_runningUrl;
+
+	return NS_OK;
+}
+
+nsresult nsSmtpUrl::SetUrlState(PRBool aRunningUrl, nsresult aExitCode)
+{
+	m_runningUrl = aRunningUrl;
+	if (m_urlListeners)
+	{
+		if (m_runningUrl)
+			m_urlListeners->OnStartRunningUrl(this);
+		else
+			m_urlListeners->OnStopRunningUrl(this, aExitCode);
+	}
+
+	return NS_OK;
+}
+
+nsresult nsSmtpUrl::RegisterListener (nsIUrlListener * aUrlListener)
+{
+	if (m_urlListeners)
+		m_urlListeners->RegisterListener(aUrlListener);
+	return NS_OK;
+}
+
+nsresult nsSmtpUrl::UnRegisterListener (nsIUrlListener * aUrlListener)
+{
+	if (m_urlListeners)
+		m_urlListeners->UnRegisterListener(aUrlListener);
+	return NS_OK;
+}
 
 nsresult nsSmtpUrl::SetErrorMessage (char * errorMessage)
 {

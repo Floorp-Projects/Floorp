@@ -21,6 +21,7 @@
 
 #include "nsISmtpUrl.h"
 #include "nsINetlibURL.h" /* this should be temporary until Network N2 project lands */
+#include "nsIUrlListenerManager.h"
 
 class nsSmtpUrl : public nsISmtpUrl, public nsINetlibURL
 {
@@ -56,8 +57,9 @@ public:
     NS_IMETHOD GetServerStatus(PRInt32 *status);  // make obsolete
     NS_IMETHOD ToString(PRUnichar* *aString) const;
 
-	NS_IMPL_CLASS_GETSET(RunningUrlFlag, PRBool, m_runningUrl);
-  
+	NS_IMETHOD SetUrlState(PRBool aRunningUrl, nsresult aStatusCode);
+	NS_IMETHOD GetUrlState(PRBool * aRunningUrl);
+
     // from nsINetlibURL:
 
     NS_IMETHOD GetURLInfo(URL_Struct_ **aResult) const;
@@ -103,14 +105,13 @@ public:
 	NS_IMETHOD GetUserPassword(const nsString ** aUserPassword);
 	NS_IMETHOD SetUserPassword(const nsString& aUserPassword);
 	
-	// mscott: this interface really belongs in nsIURL and I will move it there after talking
-	// it over with core netlib. This error message replaces the err_msg which was in the 
-	// old URL_struct. Also, it should probably be a nsString or a PRUnichar *. I don't know what
-	// XP_GetString is going to return in mozilla. 
-
+	// nsIMsgMailNewsUrl
 	NS_IMETHOD SetErrorMessage (char * errorMessage);
 	// caller must free using PR_FREE
 	NS_IMETHOD GetErrorMessage (char ** errorMessage) const;
+	
+	NS_IMETHOD RegisterListener (nsIUrlListener * aUrlListener);
+	NS_IMETHOD UnRegisterListener (nsIUrlListener * aUrlListener);
 
     // nsSmtpUrl
 
@@ -157,6 +158,9 @@ protected:
     
 	PRInt32 m_port;
     nsISupports*    m_container;
+
+	// manager of all of current url listeners....
+	nsIUrlListenerManager * m_urlListeners;
 
 	/* Smtp specific event sinks */
 	nsString	m_userPassword;
