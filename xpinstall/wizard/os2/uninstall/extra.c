@@ -324,20 +324,14 @@ void SetUninstallRunMode(PSZ szMode)
 
 void RemoveBackSlash(PSZ szInput)
 {
-  int   iCounter;
-  ULONG ulInputLen;
+  char  *ptrChar = NULL;
 
-  if(szInput != NULL)
-  {
-    ulInputLen = strlen(szInput);
+  if(!szInput)
+    return;
 
-    for(iCounter = ulInputLen -1; iCounter >= 0 ; iCounter--)
-    {
-      if(szInput[iCounter] == '\\')
-        szInput[iCounter] = '\0';
-      else
-        break;
-    }
+  ptrChar = WinPrevChar(0, 0, 0, szInput, szInput + strlen(szInput));
+  if (*ptrChar == '\\') {
+    *ptrChar = '\0';
   }
 }
 

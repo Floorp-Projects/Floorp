@@ -1363,13 +1363,7 @@ HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
 
   dwIndex0 = 0;
   BuildNumberedString(dwIndex0, szSectionPrefix, "Program Folder", szSection0, sizeof(szSection0));
-  GetPrivateProfileString(szSection0, "Program Folder", "", szBuf, sizeof(szBuf), szFileIniConfig);
-  if(TimingCheck(dwTiming, szSection0, szFileIniConfig))
-  {
-    /* Create program folder */
-    WinCreateObject("WPFolder", sgProduct.szProgramFolderName, "",
-                    sgProduct.szProgramFolderPath, CO_REPLACEIFEXISTS);
-  }
+  GetPrivateProfileString(szSection0, "Timing", "", szBuf, sizeof(szBuf), szFileIniConfig);
   while(*szBuf != '\0')
   {
     if(TimingCheck(dwTiming, szSection0, szFileIniConfig))
@@ -1381,11 +1375,10 @@ HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
       strcpy(szSection1, szSection0);
       strcat(szSection1, "-Object");
       strcat(szSection1, szIndex1);
-      GetPrivateProfileString(szSection1, "ClassName", "", szClassName, sizeof(szClassName), szFileIniConfig);
+      GetPrivateProfileString(szSection1, "Title", "", szBuf, sizeof(szBuf), szFileIniConfig);
       while(*szBuf != '\0')
       {
         *szSetupString = '\0';
-        GetPrivateProfileString(szSection1, "Title",    "", szBuf, sizeof(szBuf), szFileIniConfig);
         DecryptString(szTitle, szBuf);
         GetPrivateProfileString(szSection1, "Location",  "", szBuf, sizeof(szBuf), szFileIniConfig);
         DecryptString(szLocation, szBuf);
@@ -1452,10 +1445,16 @@ HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
           }
           strcat(szSetupString, szBuf2);
         }
+        GetPrivateProfileString(szSection1, "ClassName", "", szBuf, sizeof(szBuf), szFileIniConfig);
+        if (szBuf[0]) {
+           strcpy(szClassName, szBuf);
+        } else {
+           strcpy(szClassName, "WPProgram");
+        }
 
-        WinCreateObject(szClassName, szTitle, szSetupString, szLocation, CO_REPLACEIFEXISTS);
+        WinCreateObject(szClassName, szTitle, szSetupString, szLocation, CO_UPDATEIFEXISTS);
 
-        if (szObjectID) {
+        if (szObjectID[0]) {
           strcpy(szBuf, szObjectID);
         } else {
           strcpy(szBuf, szProgramFolder);
@@ -1469,7 +1468,7 @@ HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
         strcpy(szSection1, szSection0);
         strcat(szSection1, "-Object");
         strcat(szSection1, szIndex1);
-        GetPrivateProfileString(szSection1, "ClassName", "", szBuf, sizeof(szBuf), szFileIniConfig);
+        GetPrivateProfileString(szSection1, "Title", "", szBuf, sizeof(szBuf), szFileIniConfig);
       }
     }
 

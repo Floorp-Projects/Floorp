@@ -26,13 +26,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= nsinstall$(BIN_SUFFIX)
-RESFILE		= nsinstall.res
+PROGRAM		= stubinstall$(BIN_SUFFIX)
+RESFILE		= stubinstall.res
 USE_NON_MT_LIBS = 1
 USE_STATIC_LIBS = 1
 
 CPPSRCS		= \
-		nsinstall.cpp \
+		stubinstall.cpp \
 		nsINIParser.cpp \
 		$(NULL)
 		

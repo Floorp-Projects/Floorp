@@ -617,8 +617,8 @@ main(int argc, char *argv[], char *envp[])
 
   WinLoadString(0, NULLHANDLE, IDS_TITLE, MAX_BUF, szTitle);
 
-  /* Allow only one instance of nsinstall to run.
-   * Detect a previous instance of nsinstall, bring it to the 
+  /* Allow only one instance of stubnsinstall to run.
+   * Detect a previous instance of stubnsinstall, bring it to the 
    * foreground, and quit current instance */
   if(FindWindow("NSExtracting") != NULL)
     return(1);

@@ -1333,24 +1333,14 @@ long RetrieveArchives()
 
 void RemoveBackSlash(PSZ szInput)
 {
-  ULONG ulInputLen;
-  BOOL  bDone;
-  /* Workaround for compiler optimization bug */
-  volatile char  *ptrChar = NULL;
+  char  *ptrChar = NULL;
 
-  if(szInput)
-  {
-    ulInputLen = strlen(szInput);
-    bDone = FALSE;
-    ptrChar = &szInput[ulInputLen];
-    while(!bDone)
-    {
-      ptrChar = WinPrevChar(0, 0, 0, szInput, ptrChar);
-      if(*ptrChar == '\\')
-        *ptrChar = '\0';
-      else
-        bDone = TRUE;
-    }
+  if(!szInput)
+    return;
+
+  ptrChar = WinPrevChar(0, 0, 0, szInput, szInput + strlen(szInput));
+  if (*ptrChar == '\\') {
+    *ptrChar = '\0';
   }
 }
 
