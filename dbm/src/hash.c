@@ -81,7 +81,7 @@ static int   hash_delete __P((const DB *, const DBT *, uint));
 static int   hash_fd __P((const DB *));
 static int   hash_get __P((const DB *, const DBT *, DBT *, uint));
 static int   hash_put __P((const DB *, DBT *, const DBT *, uint));
-static void *hash_realloc __P((SEGMENT **, int, int));
+static void *hash_realloc __P((SEGMENT **, size_t, size_t));
 static int   hash_seq __P((const DB *, DBT *, DBT *, uint));
 static int   hash_sync __P((const DB *, uint));
 static int   hdestroy __P((HTAB *));
@@ -424,7 +424,7 @@ init_hash(HTAB *hashp, const char *file, HASHINFO *info)
        	if (hashp->BSIZE > MAX_BSIZE)
        		hashp->BSIZE = MAX_BSIZE;
 #endif
-		hashp->BSHIFT = __log2(hashp->BSIZE);
+		hashp->BSHIFT = __log2((uint32)hashp->BSIZE);
 	}
 
 	if (info) {
@@ -477,7 +477,7 @@ init_htab(HTAB *hashp, int nelem)
 	 */
 	nelem = (nelem - 1) / hashp->FFACTOR + 1;
 
-	l2 = __log2(MAX(nelem, 2));
+	l2 = __log2((uint32)MAX(nelem, 2));
 	nbuckets = 1 << l2;
 
 	hashp->SPARES[l2] = l2 + 1;
@@ -486,7 +486,7 @@ init_htab(HTAB *hashp, int nelem)
 	hashp->LAST_FREED = 2;
 
 	/* First bitmap page is at: splitpoint l2 page offset 1 */
-	if (__ibitmap(hashp, OADDR_OF(l2, 1), l2 + 1, 0))
+	if (__ibitmap(hashp, (int)OADDR_OF(l2, 1), l2 + 1, 0))
 		return (-1);
 
 	hashp->MAX_BUCKET = hashp->LOW_MASK = nbuckets - 1;
@@ -495,7 +495,7 @@ init_htab(HTAB *hashp, int nelem)
 	    hashp->BSHIFT) + 1;
 
 	nsegs = (nbuckets - 1) / hashp->SGSIZE + 1;
-	nsegs = 1 << __log2(nsegs);
+	nsegs = 1 << __log2((uint32)nsegs);
 
 	if (nsegs > hashp->DSIZE)
 		hashp->DSIZE = nsegs;
@@ -763,7 +763,8 @@ hash_access(
 	register BUFHEAD *rbufp;
 	BUFHEAD *bufp, *save_bufp;
 	register uint16 *bp;
-	register long n, ndx, off, size;
+	register long n, ndx, off;
+	register size_t size;
 	register char *kp;
 	uint16 pageno;
 	uint32 ovfl_loop_count=0;
@@ -822,7 +823,7 @@ hash_access(
 			off = hashp->BSIZE;
 		                } else if (bp[1] < REAL_KEY) {
 			if ((ndx =
-			    __find_bigpair(hashp, rbufp, ndx, kp, size)) > 0)
+			    __find_bigpair(hashp, rbufp, ndx, kp, (int)size)) > 0)
 				goto found;
 			if (ndx == -2) {
 				bufp = rbufp;
@@ -998,7 +999,8 @@ extern int
 __expand_table(HTAB *hashp)
 {
 	uint32 old_bucket, new_bucket;
-	int dirsize, new_segnum, spare_ndx;
+	int new_segnum, spare_ndx;
+	size_t dirsize;
 
 #ifdef HASH_STATISTICS
 	hash_expansions++;
@@ -1019,7 +1021,7 @@ __expand_table(HTAB *hashp)
 			hashp->DSIZE = dirsize << 1;
 		}
 		if ((hashp->dir[new_segnum] =
-		    (SEGMENT)calloc(hashp->SGSIZE, sizeof(SEGMENT))) == NULL)
+		    (SEGMENT)calloc((size_t)hashp->SGSIZE, sizeof(SEGMENT))) == NULL)
 			return (-1);
 		hashp->exsegs++;
 		hashp->nsegs++;
@@ -1029,7 +1031,7 @@ __expand_table(HTAB *hashp)
 	 * * increases), we need to copy the current contents of the spare
 	 * split bucket to the next bucket.
 	 */
-	spare_ndx = __log2(hashp->MAX_BUCKET + 1);
+	spare_ndx = __log2((uint32)(hashp->MAX_BUCKET + 1));
 	if (spare_ndx > hashp->OVFL_POINT) {
 		hashp->SPARES[spare_ndx] = hashp->SPARES[hashp->OVFL_POINT];
 		hashp->OVFL_POINT = spare_ndx;
@@ -1051,7 +1053,7 @@ __expand_table(HTAB *hashp)
 static void *
 hash_realloc(
 	SEGMENT **p_ptr,
-	int oldsize, int newsize)
+	size_t oldsize, size_t newsize)
 {
 	register void *p;
 
@@ -1065,7 +1067,7 @@ hash_realloc(
 }
 
 extern uint32
-__call_hash(HTAB *hashp, char *k, int len)
+__call_hash(HTAB *hashp, char *k, size_t len)
 {
 	uint32 n, bucket;
 
@@ -1092,7 +1094,7 @@ alloc_segs(
 	int save_errno;
 
 	if ((hashp->dir =
-	    (SEGMENT *)calloc(hashp->DSIZE, sizeof(SEGMENT *))) == NULL) {
+	    (SEGMENT *)calloc((size_t)hashp->DSIZE, sizeof(SEGMENT *))) == NULL) {
 		save_errno = errno;
 		(void)hdestroy(hashp);
 		errno = save_errno;
@@ -1100,7 +1102,7 @@ alloc_segs(
 	}
 	/* Allocate segments */
 	if ((store =
-	    (SEGMENT)calloc(nsegs << hashp->SSHIFT, sizeof(SEGMENT))) == NULL) {
+	    (SEGMENT)calloc((size_t)nsegs << hashp->SSHIFT, sizeof(SEGMENT))) == NULL) {
 		save_errno = errno;
 		(void)hdestroy(hashp);
 		errno = save_errno;

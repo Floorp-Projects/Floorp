@@ -159,7 +159,7 @@ long new_lseek(int fd, long offset, int origin)
 	   	memset(&buffer, 0, 1024);
 	   	while(len > 0)
 	      {
-	        write(fd, (char*)&buffer, (1024 > len ? len : 1024));
+	        write(fd, (char*)&buffer, (size_t)(1024 > len ? len : 1024));
 		    len -= 1024;
 		  }
 		return(lseek(fd, seek_pos, SEEK_SET));
@@ -285,7 +285,8 @@ __split_page(HTAB *hashp, uint32 obucket, uint32 nbucket)
 	DBT key, val;
     uint16 n, ndx;
 	int retval;
-	uint16 copyto, diff, off, moved;
+	uint16 copyto, diff, moved;
+	size_t off;
 	char *op;
 
 	copyto = (uint16)hashp->BSIZE;
@@ -684,8 +685,9 @@ __get_page(HTAB *hashp,
 	int is_disk, 
 	int is_bitmap)
 {
-	register int fd, page, size;
-	int rsize;
+	register int fd, page;
+	size_t size;
+	ssize_t rsize;
 	uint16 *bp;
 
 	fd = hashp->fp;
@@ -819,8 +821,9 @@ __get_page(HTAB *hashp,
 extern int
 __put_page(HTAB *hashp, char *p, uint32 bucket, int is_bucket, int is_bitmap)
 {
-	register int fd, page, size;
-	int wsize;
+	register int fd, page;
+	size_t size;
+	ssize_t wsize;
 
 	size = hashp->BSIZE;
 	if ((hashp->fp == -1) && open_temp(hashp))
@@ -904,9 +907,9 @@ extern int
 __ibitmap(HTAB *hashp, int pnum, int nbits, int ndx)
 {
 	uint32 *ip;
-	int clearbytes, clearints;
+	size_t clearbytes, clearints;
 
-	if ((ip = (uint32 *)malloc(hashp->BSIZE)) == NULL)
+	if ((ip = (uint32 *)malloc((size_t)hashp->BSIZE)) == NULL)
 		return (1);
 	hashp->nmaps++;
 	clearints = ((nbits - 1) >> INT_BYTE_SHIFT) + 1;
@@ -1201,7 +1204,7 @@ fetch_bitmap(HTAB *hashp, uint32 ndx)
 {
 	if (ndx >= hashp->nmaps)
 		return (NULL);
-	if ((hashp->mapp[ndx] = (uint32 *)malloc(hashp->BSIZE)) == NULL)
+	if ((hashp->mapp[ndx] = (uint32 *)malloc((size_t)hashp->BSIZE)) == NULL)
 		return (NULL);
 	if (__get_page(hashp,
 	    (char *)hashp->mapp[ndx], hashp->BITMAPS[ndx], 0, 1, 1)) {

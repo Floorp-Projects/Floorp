@@ -183,7 +183,7 @@ typedef struct htab	 {		/* Memory resident data structure */
 #define	OADDR_OF(S,O)	((uint32)((uint32)(S) << SPLITSHIFT) + (O))
 
 #define BUCKET_TO_PAGE(B) \
-	(B) + hashp->HDRPAGES + ((B) ? hashp->SPARES[__log2((B)+1)-1] : 0)
+	(B) + hashp->HDRPAGES + ((B) ? hashp->SPARES[__log2((uint32)((B)+1))-1] : 0)
 #define OADDR_TO_PAGE(B) 	\
 	BUCKET_TO_PAGE ( (1 << SPLITNUM((B))) -1 ) + OPAGENUM((B));
 
@@ -311,10 +311,10 @@ extern uint32 (*__default_hash) (const void *, size_t);
 void __buf_init(HTAB *hashp, int32 nbytes);
 int __big_delete(HTAB *hashp, BUFHEAD *bufp);
 BUFHEAD * __get_buf(HTAB *hashp, uint32 addr, BUFHEAD *prev_bp, int newpage);
-uint32 __call_hash(HTAB *hashp, char *k, int len);
+uint32 __call_hash(HTAB *hashp, char *k, size_t len);
 #include "page.h"
 extern int __big_split(HTAB *hashp, BUFHEAD *op,BUFHEAD *np,
-BUFHEAD *big_keyp,int addr,uint32   obucket, SPLIT_RETURN *ret);
+BUFHEAD *big_keyp,uint32 addr,uint32   obucket, SPLIT_RETURN *ret);
 void __free_ovflpage(HTAB *hashp, BUFHEAD *obufp);
 BUFHEAD * __add_ovflpage(HTAB *hashp, BUFHEAD *bufp);
 int __big_insert(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val);
