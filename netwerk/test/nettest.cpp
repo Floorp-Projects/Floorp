@@ -24,7 +24,7 @@
 #endif
 
 #include "plstr.h"
-#include "plevent.h"
+#include "nsIEventQueue.h"
 
 #include "nsIProtocolConnection.h"
 #include "nsIStreamListener.h"

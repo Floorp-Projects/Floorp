@@ -20,7 +20,7 @@
 #define nsITransport_h___
 
 #include "nsICancelable.h"
-#include "plevent.h"
+#include "nsIEventQueue.h"
 
 class nsIStreamListener;
 class nsIStreamObserver;
@@ -45,12 +45,12 @@ public:
     // with incoming data, calling the listener.
 
     NS_IMETHOD AsyncRead(nsISupports* context,
-                         PLEventQueue* appEventQueue,
+                         nsIEventQueue* appEventQueue,
                          nsIStreamListener* listener) = 0;
 
     NS_IMETHOD AsyncWrite(nsIInputStream* fromStream,
                           nsISupports* context,
-                          PLEventQueue* appEventQueue,
+                          nsIEventQueue* appEventQueue,
                           nsIStreamObserver* observer) = 0;
 
     // Synchronous routines

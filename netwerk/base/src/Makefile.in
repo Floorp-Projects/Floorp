@@ -27,6 +27,7 @@ CPPSRCS =                              \
         nsConnectionGroup.cpp          \
         nsAsyncStreamListener.cpp      \
         nsSyncStreamListener.cpp       \
+	nsSyncOutStreamListener.cpp    \
         nsFileTransport.cpp            \
         nsFileTransportService.cpp     \
         nsSocketTransport.cpp          \

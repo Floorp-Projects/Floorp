@@ -651,7 +651,7 @@ nsSocketTransport::Resume(void)
 
 NS_IMETHODIMP
 nsSocketTransport::AsyncRead(nsISupports* aContext, 
-                             PLEventQueue* aAppEventQueue,
+                             nsIEventQueue* aAppEventQueue,
                              nsIStreamListener* aListener)
 {
   nsresult rv = NS_OK;
@@ -688,7 +688,7 @@ nsSocketTransport::AsyncRead(nsISupports* aContext,
 NS_IMETHODIMP
 nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream, 
                               nsISupports* aContext,
-                              PLEventQueue* aAppEventQueue,
+                              nsIEventQueue* aAppEventQueue,
                               nsIStreamObserver* aObserver)
 {
   nsresult rv = NS_OK;
@@ -756,10 +756,11 @@ nsSocketTransport::OpenInputStream(nsIInputStream* *result)
 }
 
 
+static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
+
 NS_IMETHODIMP
 nsSocketTransport::OpenOutputStream(nsIOutputStream* *result)
 {
-#if 0
   nsresult rv = NS_OK;
 
   if (eSocketOperation_None != mOperation) {
@@ -767,15 +768,26 @@ nsSocketTransport::OpenOutputStream(nsIOutputStream* *result)
     rv = NS_ERROR_FAILURE;
   }
 
+  if (NS_SUCCEEDED(rv) && !mWriteStream) {
+    nsIByteBufferInputStream* tmp = nsnull;
+    rv = NS_NewByteBufferInputStream(&tmp, PR_FALSE, 
+                                     MAX_IO_BUFFER_SIZE);
+    if (NS_SUCCEEDED(rv)) {
+      rv = tmp->QueryInterface(kIInputStreamIID, (void **) mWriteStream);
+      NS_RELEASE(tmp);
+      if (NS_FAILED(rv)) return rv;
+    }
+  }
+
   if (NS_SUCCEEDED(rv)) {
-    NS_IF_RELEASE(mWriteStream);
-    mWriteStream = nsnull;
+    //NS_IF_RELEASE(mWriteStream);
+    //mWriteStream = nsnull;
 
     NS_IF_RELEASE(mContext);
     mContext = nsnull;
 
     NS_IF_RELEASE(mListener);
-    rv = NS_NewSyncStreamObserver(&mListener, result);
+    rv = NS_NewSyncOutStreamListener(&mListener, result);
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -784,8 +796,6 @@ nsSocketTransport::OpenOutputStream(nsIOutputStream* *result)
   }
 
   return rv;
-#endif
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 

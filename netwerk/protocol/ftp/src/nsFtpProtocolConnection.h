@@ -29,7 +29,7 @@
 
 
 #include "nsString2.h"
-#include "plevent.h"
+#include "nsIEventQueue.h"
 
 class nsFtpProtocolConnection : public nsIFtpProtocolConnection
                                 ,public nsIStreamListener {
@@ -69,11 +69,11 @@ public:
     nsFtpProtocolConnection();
     virtual ~nsFtpProtocolConnection();
 
-    nsresult Init(nsIUrl* aUrl, nsISupports* aEventSink, PLEventQueue* aEventQueue);
+    nsresult Init(nsIUrl* aUrl, nsISupports* aEventSink, nsIEventQueue* aEventQueue);
 
 protected:
     nsIUrl*                 mUrl;
-    PLEventQueue*           mEventQueue;
+    nsIEventQueue*           mEventQueue;
 
     PRBool                  mConnected;
     nsIStreamListener*      mListener;

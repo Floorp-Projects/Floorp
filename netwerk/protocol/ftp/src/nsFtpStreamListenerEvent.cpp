@@ -57,15 +57,15 @@ void PR_CALLBACK nsFtpStreamListenerEvent::DestroyPLEvent(PLEvent* aEvent)
 }
 
 nsresult
-nsFtpStreamListenerEvent::Fire(PLEventQueue* aEventQueue) 
+nsFtpStreamListenerEvent::Fire(nsIEventQueue* aEventQueue) 
 {
-    NS_PRECONDITION(nsnull != aEventQueue, "PLEventQueue for thread is null");
+    NS_PRECONDITION(nsnull != aEventQueue, "nsIEventQueue for thread is null");
 
     PL_InitEvent(this, nsnull,
                  (PLHandleEventProc)  nsFtpStreamListenerEvent::HandlePLEvent,
                  (PLDestroyEventProc) nsFtpStreamListenerEvent::DestroyPLEvent);
 
-    PRStatus status = PL_PostEvent(aEventQueue, this);
+    PRStatus status = aEventQueue->PostEvent(this);
     return status == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE;
 }
 

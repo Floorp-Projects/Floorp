@@ -72,7 +72,7 @@ public:
 
     nsresult Init(nsIUrl* url, nsISupports* eventSink, 
                   nsHttpProtocolHandler* handler,
-                  PLEventQueue* eventQueue);
+                  nsIEventQueue* eventQueue);
     nsresult GetExistingTransport(const char* host, PRInt32 port,
                                   nsITransport* *result);
 
@@ -89,7 +89,7 @@ protected:
     nsIHttpEventSink*           mEventSink;
     State                       mState;
     nsITransport*               mTransport;
-    PLEventQueue*               mEventQueue;
+    nsIEventQueue*               mEventQueue;
 };
 
 const char HTTP_VERSION_STRING_1_1[] = "HTTP/1.1";

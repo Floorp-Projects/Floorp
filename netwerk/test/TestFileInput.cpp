@@ -21,7 +21,8 @@
 #include "nsIServiceManager.h"
 #include "nsIInputStream.h"
 #include "nsIThread.h"
-#include "plevent.h"
+#include "nsIEventQueue.h"
+#include "nsIEventQueueService.h"
 #include "prinrval.h"
 #include "prmon.h"
 #include "prio.h"
@@ -35,6 +36,7 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
+static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUE_CID);
 
 PRIntervalTime gDuration = 0;
 PRUint32 gVolume = 0;
@@ -53,7 +55,13 @@ public:
         PR_ExitMonitor(mMonitor);
 
 //        printf("running\n");
-        PL_EventLoop(mEventQueue);
+
+        // event loop
+        mEventQueue->ProcessPendingEvents();
+
+        while (PR_TRUE) {
+
+        }
 //        printf("quitting\n");
         return NS_OK;
     }
@@ -67,17 +75,23 @@ public:
 
     virtual ~nsReader() {
         NS_IF_RELEASE(mThread);
+        NS_IF_RELEASE(mEventQueue);
         PR_DestroyMonitor(mMonitor);
     }
 
     nsresult Init(nsIThread* thread) {
+        nsresult rv;
         mThread = thread;
         NS_ADDREF(mThread);
         PRThread* prthread;
         thread->GetPRThread(&prthread);
         PR_EnterMonitor(mMonitor);
-        mEventQueue = PL_CreateEventQueue("runner event loop",
-                                          prthread);
+        NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+        if (NS_SUCCEEDED(rv)) {
+          rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &mEventQueue);
+        }
+        if (NS_FAILED(rv)) return rv;
+
         // wake up event loop
         PR_Notify(mMonitor);
         PR_ExitMonitor(mMonitor);
@@ -85,7 +99,7 @@ public:
         return NS_OK;
     }
 
-    PLEventQueue* GetEventQueue() { return mEventQueue; }
+    nsIEventQueue* GetEventQueue() { return mEventQueue; }
 
     NS_IMETHOD OnStartBinding(nsISupports* context) {
         PR_EnterMonitor(mMonitor);
@@ -135,7 +149,7 @@ public:
     }
 
 protected:
-    PLEventQueue*       mEventQueue;
+    nsIEventQueue*       mEventQueue;
     PRIntervalTime      mStartTime;
     nsIThread*          mThread;
 

@@ -170,7 +170,7 @@ nsFileTransport::Resume(void)
 
 NS_IMETHODIMP
 nsFileTransport::AsyncRead(nsISupports* context,
-                           PLEventQueue* appEventQueue,
+                           nsIEventQueue* appEventQueue,
                            nsIStreamListener* listener)
 {
     nsresult rv;
@@ -191,7 +191,7 @@ nsFileTransport::AsyncRead(nsISupports* context,
 NS_IMETHODIMP
 nsFileTransport::AsyncWrite(nsIInputStream* fromStream,
                             nsISupports* context,
-                            PLEventQueue* appEventQueue,
+                            nsIEventQueue* appEventQueue,
                             nsIStreamObserver* observer)
 {
     return NS_ERROR_NOT_IMPLEMENTED;

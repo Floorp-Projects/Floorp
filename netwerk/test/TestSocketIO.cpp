@@ -46,10 +46,11 @@
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
 
 static PRTime gElapsedTime;
 static int gKeepRunning = 1;
-static PLEventQueue* gEventQ = nsnull;
+static nsIEventQueue* gEventQ = nsnull;
 
 class InputTestConsumer : public nsIStreamListener
 {
@@ -208,6 +209,7 @@ main(int argc, char* argv[])
  
   // XXX why do I have to do this?!
   nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kEventQueueCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
   rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
                                         "components");
   if (NS_FAILED(rv)) return rv;
