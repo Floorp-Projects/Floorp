@@ -83,12 +83,7 @@ public class TokenStream {
             String name = Token.name(token);
 
             switch (token) {
-            case Token.UNARYOP:
             case Token.ASSIGN:
-            case Token.PRIMARY:
-            case Token.EQOP:
-            case Token.SHOP:
-            case Token.RELOP:
                 return name + " " + Token.name(this.op);
 
             case Token.STRING:
@@ -117,20 +112,20 @@ public class TokenStream {
             Id_do            = Token.DO,
             Id_else          = Token.ELSE,
             Id_export        = Token.EXPORT,
-            Id_false         = Token.PRIMARY | (Token.FALSE << 8),
+            Id_false         = Token.FALSE,
             Id_for           = Token.FOR,
             Id_function      = Token.FUNCTION,
             Id_if            = Token.IF,
-            Id_in            = Token.RELOP | (Token.IN << 8),
+            Id_in            = Token.IN,
             Id_new           = Token.NEW,
-            Id_null          = Token.PRIMARY | (Token.NULL << 8),
+            Id_null          = Token.NULL,
             Id_return        = Token.RETURN,
             Id_switch        = Token.SWITCH,
-            Id_this          = Token.PRIMARY | (Token.THIS << 8),
-            Id_true          = Token.PRIMARY | (Token.TRUE << 8),
-            Id_typeof        = Token.UNARYOP | (Token.TYPEOF << 8),
+            Id_this          = Token.THIS,
+            Id_true          = Token.TRUE,
+            Id_typeof        = Token.TYPEOF,
             Id_var           = Token.VAR,
-            Id_void          = Token.UNARYOP | (Token.VOID << 8),
+            Id_void          = Token.VOID,
             Id_while         = Token.WHILE,
             Id_with          = Token.WITH,
 
@@ -152,7 +147,7 @@ public class TokenStream {
             Id_goto          = Token.RESERVED,
             Id_implements    = Token.RESERVED,
             Id_import        = Token.IMPORT,
-            Id_instanceof    = Token.RELOP | (Token.INSTANCEOF << 8),
+            Id_instanceof    = Token.INSTANCEOF,
             Id_int           = Token.RESERVED,
             Id_interface     = Token.RESERVED,
             Id_long          = Token.RESERVED,
@@ -271,7 +266,6 @@ public class TokenStream {
 // #/generated#
 // #/string_id_map#
         if (id == 0) { return Token.EOF; }
-        this.op = id >> 8;
         return id & 0xff;
     }
 
@@ -766,10 +760,9 @@ public class TokenStream {
             case '=':
                 if (matchChar('=')) {
                     if (matchChar('='))
-                        this.op = Token.SHEQ;
+                        return Token.SHEQ;
                     else
-                        this.op = Token.EQ;
-                    return Token.EQOP;
+                        return Token.EQ;
                 } else {
                     this.op = Token.NOP;
                     return Token.ASSIGN;
@@ -778,13 +771,11 @@ public class TokenStream {
             case '!':
                 if (matchChar('=')) {
                     if (matchChar('='))
-                        this.op = Token.SHNE;
+                        return Token.SHNE;
                     else
-                        this.op = Token.NE;
-                    return Token.EQOP;
+                        return Token.NE;
                 } else {
-                    this.op = Token.NOT;
-                    return Token.UNARYOP;
+                    return Token.NOT;
                 }
 
             case '<':
@@ -804,16 +795,13 @@ public class TokenStream {
                         this.op = Token.LSH;
                         return Token.ASSIGN;
                     } else {
-                        this.op = Token.LSH;
-                        return Token.SHOP;
+                        return Token.LSH;
                     }
                 } else {
                     if (matchChar('=')) {
-                        this.op = Token.LE;
-                        return Token.RELOP;
+                        return Token.LE;
                     } else {
-                        this.op = Token.LT;
-                        return Token.RELOP;
+                        return Token.LT;
                     }
                 }
 
@@ -824,25 +812,21 @@ public class TokenStream {
                             this.op = Token.URSH;
                             return Token.ASSIGN;
                         } else {
-                            this.op = Token.URSH;
-                            return Token.SHOP;
+                            return Token.URSH;
                         }
                     } else {
                         if (matchChar('=')) {
                             this.op = Token.RSH;
                             return Token.ASSIGN;
                         } else {
-                            this.op = Token.RSH;
-                            return Token.SHOP;
+                            return Token.RSH;
                         }
                     }
                 } else {
                     if (matchChar('=')) {
-                        this.op = Token.GE;
-                        return Token.RELOP;
+                        return Token.GE;
                     } else {
-                        this.op = Token.GT;
-                        return Token.RELOP;
+                        return Token.GT;
                     }
                 }
 
@@ -931,16 +915,15 @@ public class TokenStream {
                 }
 
             case '%':
-                this.op = Token.MOD;
                 if (matchChar('=')) {
+                    this.op = Token.MOD;
                     return Token.ASSIGN;
                 } else {
                     return Token.MOD;
                 }
 
             case '~':
-                this.op = Token.BITNOT;
-                return Token.UNARYOP;
+                return Token.BITNOT;
 
             case '+':
                 if (matchChar('=')) {

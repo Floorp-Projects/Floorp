@@ -54,14 +54,13 @@ package org.mozilla.javascript;
  * this wouldn't have saved any space in the resulting source
  * representation, and would have meant that I'd have to duplicate
  * parser logic in the decompiler to disambiguate situations where
- * newlines are important.)  NativeFunction.decompile expands the
+ * newlines are important.)  The function decompile expands the
  * tokens back into their string representations, using simple
  * lookahead to correct spacing and indentation.
-
- * Token types with associated ops (ASSIGN, SHOP, PRIMARY, etc.) are
- * saved as two-token pairs.  Number tokens are stored inline, as a
- * NUMBER token, a character representing the type, and either 1 or 4
- * characters representing the bit-encoding of the number.  String
+ *
+ * Assignments are saved as two-token pairs (Token.ASSIGN, op). Number tokens
+ * are stored inline, as a NUMBER token, a character representing the type, and
+ * either 1 or 4 characters representing the bit-encoding of the number.  String
  * types NAME, STRING and OBJECT are currently stored as a token type,
  * followed by a character giving the length of the string (assumed to
  * be less than 2^16), followed by the characters of the string
@@ -70,13 +69,6 @@ package org.mozilla.javascript;
  * save a lot of space... but would require some method of deriving
  * the final constant pool entry from information available at parse
  * time.
-
- * Nested functions need a similar mechanism... fortunately the nested
- * functions for a given function are generated in source order.
- * Nested functions are encoded as FUNCTION followed by a function
- * number (encoded as a character), which is enough information to
- * find the proper generated NativeFunction instance.
-
  */
 public class Decompiler
 {
@@ -127,14 +119,12 @@ public class Decompiler
         append((char)Token.EOL);
     }
 
-    void addOp(int token, int op)
+    void addAssign(int op)
     {
-        if (!(0 <= token && token <= Token.LAST_TOKEN))
-            throw new IllegalArgumentException();
         if (!(0 <= op && op <= Token.LAST_TOKEN))
             throw new IllegalArgumentException();
 
-        append((char)token);
+        append((char)Token.ASSIGN);
         append((char)op);
     }
 
@@ -190,7 +180,7 @@ public class Decompiler
         }
         else {
             // we can ignore negative values, bc they're already prefixed
-            // by UNARYOP SUB
+            // by NEG
                if (lbits < 0) Context.codeBug();
 
             // will it fit in a char?
@@ -292,7 +282,7 @@ public class Decompiler
                                    int indent, int indentGap, int caseGap)
     {
         String source = (String)sourceObj;
-        
+
         int length = source.length();
         if (length == 0) { return ""; }
 
@@ -349,37 +339,20 @@ public class Decompiler
                 i = printSourceNumber(source, i + 1, result);
                 continue;
 
-            case Token.PRIMARY:
-                ++i;
-                switch(source.charAt(i)) {
-                case Token.TRUE:
-                    result.append("true");
-                    break;
+            case Token.TRUE:
+                result.append("true");
+                break;
 
-                case Token.FALSE:
-                    result.append("false");
-                    break;
+            case Token.FALSE:
+                result.append("false");
+                break;
 
-                case Token.NULL:
-                    result.append("null");
-                    break;
+            case Token.NULL:
+                result.append("null");
+                break;
 
-                case Token.THIS:
-                    result.append("this");
-                    break;
-
-                case Token.TYPEOF:
-                    result.append("typeof");
-                    break;
-
-                case Token.VOID:
-                    result.append("void");
-                    break;
-
-                case Token.UNDEFINED:
-                    result.append("undefined");
-                    break;
-                }
+            case Token.THIS:
+                result.append("this");
                 break;
 
             case Token.FUNCTION:
@@ -588,7 +561,7 @@ public class Decompiler
 
             case Token.ASSIGN:
                 ++i;
-                switch(source.charAt(i)) {
+                switch (source.charAt(i)) {
                 case Token.NOP:
                     result.append(" = ");
                     break;
@@ -680,96 +653,76 @@ public class Decompiler
                 result.append(" & ");
                 break;
 
-            case Token.EQOP:
-                ++i;
-                switch(source.charAt(i)) {
-                case Token.SHEQ:
-                    result.append(" === ");
-                    break;
-
-                case Token.SHNE:
-                    result.append(" !== ");
-                    break;
-
-                case Token.EQ:
-                    result.append(" == ");
-                    break;
-
-                case Token.NE:
-                    result.append(" != ");
-                    break;
-                }
+            case Token.SHEQ:
+                result.append(" === ");
                 break;
 
-            case Token.RELOP:
-                ++i;
-                switch(source.charAt(i)) {
-                case Token.LE:
-                    result.append(" <= ");
-                    break;
-
-                case Token.LT:
-                    result.append(" < ");
-                    break;
-
-                case Token.GE:
-                    result.append(" >= ");
-                    break;
-
-                case Token.GT:
-                    result.append(" > ");
-                    break;
-
-                case Token.INSTANCEOF:
-                    result.append(" instanceof ");
-                    break;
-                }
+            case Token.SHNE:
+                result.append(" !== ");
                 break;
 
-            case Token.SHOP:
-                ++i;
-                switch(source.charAt(i)) {
-                case Token.LSH:
-                    result.append(" << ");
-                    break;
-
-                case Token.RSH:
-                    result.append(" >> ");
-                    break;
-
-                case Token.URSH:
-                    result.append(" >>> ");
-                    break;
-                }
+            case Token.EQ:
+                result.append(" == ");
                 break;
 
-            case Token.UNARYOP:
-                ++i;
-                switch(source.charAt(i)) {
-                case Token.TYPEOF:
-                    result.append("typeof ");
-                    break;
+            case Token.NE:
+                result.append(" != ");
+                break;
 
-                case Token.VOID:
-                    result.append("void ");
-                    break;
+            case Token.LE:
+                result.append(" <= ");
+                break;
 
-                case Token.NOT:
-                    result.append('!');
-                    break;
+            case Token.LT:
+                result.append(" < ");
+                break;
 
-                case Token.BITNOT:
-                    result.append('~');
-                    break;
+            case Token.GE:
+                result.append(" >= ");
+                break;
 
-                case Token.POS:
-                    result.append('+');
-                    break;
+            case Token.GT:
+                result.append(" > ");
+                break;
 
-                case Token.NEG:
-                    result.append('-');
-                    break;
-                }
+            case Token.INSTANCEOF:
+                result.append(" instanceof ");
+                break;
+
+            case Token.LSH:
+                result.append(" << ");
+                break;
+
+            case Token.RSH:
+                result.append(" >> ");
+                break;
+
+            case Token.URSH:
+                result.append(" >>> ");
+                break;
+
+            case Token.TYPEOF:
+                result.append("typeof ");
+                break;
+
+            case Token.VOID:
+                result.append("void ");
+                break;
+
+            case Token.NOT:
+                result.append('!');
+                break;
+
+            case Token.BITNOT:
+                result.append('~');
+                break;
+
+            case Token.POS:
+                result.append('+');
+                break;
+
+            case Token.NEG:
+                result.append('-');
                 break;
 
             case Token.INC:

@@ -157,32 +157,27 @@ public class Token
         COLON       = 78,
         OR          = 79, // logical or (||)
         AND         = 80, // logical and (&&)
-        EQOP        = 81, // equality ops (== !=)
-        RELOP       = 82, // relational ops (< <= > >=)
-        SHOP        = 83, // shift ops (<< >> >>>)
-        UNARYOP     = 84, // unary prefix operator
-        INC         = 85, // increment/decrement (++ --)
-        DEC         = 86,
-        DOT         = 87, // member operator (.)
-        PRIMARY     = 88, // true, false, null, this
-        FUNCTION    = 89, // function keyword
-        EXPORT      = 90, // export keyword
-        IMPORT      = 91, // import keyword
-        IF          = 92, // if keyword
-        ELSE        = 93, // else keyword
-        SWITCH      = 94, // switch keyword
-        CASE        = 95, // case keyword
-        DEFAULT     = 96, // default keyword
-        WHILE       = 97, // while keyword
-        DO          = 98, // do keyword
-        FOR         = 99, // for keyword
-        BREAK       = 100, // break keyword
-        CONTINUE    = 101, // continue keyword
-        VAR         = 102, // var keyword
-        WITH        = 103, // with keyword
-        CATCH       = 104, // catch keyword
-        FINALLY     = 105, // finally keyword
-        RESERVED    = 106, // reserved keywords
+        INC         = 81, // increment/decrement (++ --)
+        DEC         = 82,
+        DOT         = 83, // member operator (.)
+        FUNCTION    = 84, // function keyword
+        EXPORT      = 85, // export keyword
+        IMPORT      = 86, // import keyword
+        IF          = 87, // if keyword
+        ELSE        = 88, // else keyword
+        SWITCH      = 89, // switch keyword
+        CASE        = 90, // case keyword
+        DEFAULT     = 91, // default keyword
+        WHILE       = 92, // while keyword
+        DO          = 93, // do keyword
+        FOR         = 94, // for keyword
+        BREAK       = 95, // break keyword
+        CONTINUE    = 96, // continue keyword
+        VAR         = 97, // var keyword
+        WITH        = 98, // with keyword
+        CATCH       = 99, // catch keyword
+        FINALLY     = 100, // finally keyword
+        RESERVED    = 101, // reserved keywords
 
         /** Added by Mike - these are JSOPs in the jsref, but I
          * don't have them yet in the java implementation...
@@ -191,36 +186,42 @@ public class Token
          * Most of these go in the 'op' field when returning
          * more general token types, eg. 'DIV' as the op of 'ASSIGN'.
          */
-        NOP         = 107, // NOP
-        PRE         = 108, // for INC, DEC nodes.
-        POST        = 109,
+        NOP         = 102, // NOP
+        PRE         = 103, // for INC, DEC nodes.
+        POST        = 104,
 
         /**
          * For JSOPs associated with keywords...
-         * eg. op = THIS; token = PRIMARY
+         * eg. op = ADD; token = ASSIGN
          */
 
-        VOID        = 110,
+        VOID        = 105,
 
         /* types used for the parse tree - these never get returned
          * by the scanner.
          */
-        BLOCK       = 111, // statement block
-        ARRAYLIT    = 112, // array literal
-        OBJLIT      = 113, // object literal
-        LABEL       = 114, // label
-        TARGET      = 115,
-        LOOP        = 116,
-        ENUMDONE    = 117,
-        EXPRSTMT    = 118,
-        PARENT      = 119,
-        CONVERT     = 120,
-        JSR         = 121,
-        NEWLOCAL    = 122,
-        USELOCAL    = 123,
-        SCRIPT      = 124,   // top-level node for entire script
 
-        LAST_TOKEN  = 124;
+        EQOP        = 106, // equality ops (== !=)
+        RELOP       = 107, // relational ops (< <= > >= in instanceof)
+        UNARYOP     = 108, // unary prefix operator
+        PRIMARY     = 109, // true, false, null, this
+
+        BLOCK       = 110, // statement block
+        ARRAYLIT    = 111, // array literal
+        OBJLIT      = 112, // object literal
+        LABEL       = 113, // label
+        TARGET      = 114,
+        LOOP        = 115,
+        ENUMDONE    = 116,
+        EXPRSTMT    = 117,
+        PARENT      = 118,
+        CONVERT     = 119,
+        JSR         = 120,
+        NEWLOCAL    = 121,
+        USELOCAL    = 122,
+        SCRIPT      = 123,   // top-level node for entire script
+
+        LAST_TOKEN  = 123;
 
     public static String name(int token)
     {
@@ -310,7 +311,6 @@ public class Token
                 case AND:             return "and";
                 case EQOP:            return "eqop";
                 case RELOP:           return "relop";
-                case SHOP:            return "shop";
                 case UNARYOP:         return "unaryop";
                 case INC:             return "inc";
                 case DEC:             return "dec";
