@@ -129,8 +129,11 @@
   <tr>
     [% IF bugs.size > 0 %]
       <td valign="middle">
-        <form method="post" action="long_list.cgi">
-          <input type="hidden" name="buglist" value="[% buglist %]">
+        <form method="post" action="show_bug.cgi">
+          [% FOREACH id = buglist %]
+            <input type="hidden" name="id" value="[% id FILTER html %]">
+          [% END %]
+          <input type="hidden" name="format" value="multiple">
           <input type="submit" value="Long Format">
         </form>
       </td>

@@ -217,10 +217,6 @@
   'title', 
 ],
 
-'list/list.html.tmpl' => [
-  'buglist', 
-],
-
 'list/list.rdf.tmpl' => [
   'template_version', 
   'bug.bug_id', 
