@@ -1253,7 +1253,7 @@ CompositeDataSourceImpl::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* 
     for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
         nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
 
-        PRBool enabled;
+        PRBool enabled = PR_TRUE;
         rv = ds->IsCommandEnabled(aSources, aCommand, aArguments, &enabled);
         if (NS_FAILED(rv) && (rv != NS_ERROR_NOT_IMPLEMENTED))
         {
@@ -1262,11 +1262,11 @@ CompositeDataSourceImpl::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* 
 
         if (! enabled) {
             *aResult = PR_FALSE;
-            return NS_OK;
+            return(NS_OK);
         }
     }
     *aResult = PR_TRUE;
-    return NS_OK;
+    return(NS_OK);
 }
 
 NS_IMETHODIMP
@@ -1282,7 +1282,7 @@ CompositeDataSourceImpl::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSource
 		return(rv);   // all datasources must succeed
 	}
     }
-    return NS_OK;
+    return(NS_OK);
 }
 
 ////////////////////////////////////////////////////////////////////////
