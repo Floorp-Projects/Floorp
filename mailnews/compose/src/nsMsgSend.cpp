@@ -1150,7 +1150,6 @@ FAIL:
   }
 
   return status;
-
 }
 
 PRInt32
@@ -1665,36 +1664,41 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
     // Ok, now we need to get the element in the array and do the magic
     // to process this element.
     //
-    nsCOMPtr<nsIDOMNode>    node;
-    nsCOMPtr <nsISupports> isupp = getter_AddRefs(aNodeList->ElementAt(locCount));
+    nsCOMPtr<nsIDOMNode>   node;
     
-    if (!isupp) {
-      return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
+    {
+      nsCOMPtr <nsISupports> isupp = getter_AddRefs(aNodeList->ElementAt(locCount));
+      
+      if (!isupp) {
+        return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
+      }
+      
+      node = do_QueryInterface(isupp);
+      if (!node) {
+        return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
+      }
     }
     
-    node = do_QueryInterface(isupp);
-    if (!node) {
-      return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
-    }
-
     j++;
     domSaveArray[j].node = node;
     
 
     // Check if the object has an moz-do-not-send attribute set. If it's the case,
     // we must ignore it and just continue with the next one
-    nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(node);
-    if (domElement)
     {
-      nsAutoString attributeValue;
-      if (NS_SUCCEEDED(domElement->GetAttribute(NS_LITERAL_STRING("moz-do-not-send"), attributeValue)))
+      nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(node);
+      if (domElement)
       {
-        if (attributeValue.Equals(NS_LITERAL_STRING("true"),
-                                  nsCaseInsensitiveStringComparator()))
-          continue;
+        nsAutoString attributeValue;
+        if (NS_SUCCEEDED(domElement->GetAttribute(NS_LITERAL_STRING("moz-do-not-send"), attributeValue)))
+        {
+          if (attributeValue.Equals(NS_LITERAL_STRING("true"),
+                                    nsCaseInsensitiveStringComparator()))
+            continue;
+        }
       }
     }
-
+    
     // Now, we know the types of objects this node can be, so we will do
     // our query interface here and see what we come up with 
     nsCOMPtr<nsIDOMHTMLBodyElement>     body = (do_QueryInterface(node));
@@ -1822,28 +1826,29 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
     //
     // Before going further, check if we are dealing with a local file and
     // if it's the case be sure the file exist!
-    nsCOMPtr<nsIFileURL> fileUrl (do_QueryInterface(attachment.url));
-    if (fileUrl)
     {
-      PRBool isAValidFile = PR_FALSE;
-
-      nsCOMPtr<nsIFile> aFile;
-      rv = fileUrl->GetFile(getter_AddRefs(aFile));
-      if (NS_SUCCEEDED(rv) && aFile)
+      nsCOMPtr<nsIFileURL> fileUrl (do_QueryInterface(attachment.url));
+      if (fileUrl)
       {
-        nsCOMPtr<nsILocalFile> aLocalFile (do_QueryInterface(aFile));
-        if (aLocalFile)
+        PRBool isAValidFile = PR_FALSE;
+
+        nsCOMPtr<nsIFile> aFile;
+        rv = fileUrl->GetFile(getter_AddRefs(aFile));
+        if (NS_SUCCEEDED(rv) && aFile)
         {
-          rv = aLocalFile->IsFile(&isAValidFile);
-          if (NS_FAILED(rv))
-            isAValidFile = PR_FALSE;
+          nsCOMPtr<nsILocalFile> aLocalFile (do_QueryInterface(aFile));
+          if (aLocalFile)
+          {
+            rv = aLocalFile->IsFile(&isAValidFile);
+            if (NS_FAILED(rv))
+              isAValidFile = PR_FALSE;
+          }
         }
-      }
-      
-      if (! isAValidFile)
-        continue;
-    }  
-    
+        
+        if (! isAValidFile)
+          continue;
+      }  
+    }
     
     // 
     // Now we have to get all of the interesting information from
