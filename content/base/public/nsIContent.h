@@ -529,6 +529,35 @@ public:
   {
   }
 
+  /**
+   * This method is called when the parser finishes creating the element's children,
+   * if any are present.
+   *
+   * NOTE: this is currently only called for textarea, select, applet, and
+   * object elements in the HTML content sink.  If you want
+   * to call it on your element, modify the content sink of your
+   * choice to do so.  This is an efficiency measure.
+   *
+   * If you also need to determine whether the parser is the one creating your
+   * element (through createElement() or cloneNode() generally) then add a
+   * boolean aFromParser to the NS_NewXXX() constructor for your element and
+   * have the parser pass true.  See nsHTMLInputElement.cpp and
+   * nsHTMLContentSink::MakeContentObject().
+   */
+  virtual void DoneAddingChildren()
+  {
+  }
+
+  /**
+   * For HTML textarea, select, applet, and object elements, returns
+   * PR_TRUE if all children have been added OR if the element was not
+   * created by the parser. Returns PR_TRUE for all other elements.
+   */
+  virtual PRBool IsDoneAddingChildren()
+  {
+    return PR_TRUE;
+  }
+
 #ifdef DEBUG
   /**
    * List the content (and anything it contains) out to the given

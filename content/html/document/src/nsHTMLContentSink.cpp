@@ -104,7 +104,6 @@
 
 #include "nsIParserService.h"
 #include "nsISelectElement.h"
-#include "nsITextAreaElement.h"
 
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsTimer.h"
@@ -180,10 +179,12 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 // sampling the clock too often.
 #define NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE 200
 
-typedef nsresult (*contentCreatorCallback)(nsIHTMLContent**, nsINodeInfo*);
+typedef nsresult (*contentCreatorCallback)(nsIHTMLContent**, nsINodeInfo*,
+                                           PRBool aFromParser);
 
 nsresult
-NS_NewHTMLNOTUSEDElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
+NS_NewHTMLNOTUSEDElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
+                         PRBool aFromParser)
 {
   NS_NOTREACHED("The element ctor should never be called");
   return NS_ERROR_FAILURE;
@@ -1077,26 +1078,12 @@ MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
   }
 
   nsresult rv;
-  // The "creator" functions for input and select elements don't have
-  // the usual prototype and hence are not in the creator callback
-  // table
-  if (aNodeType == eHTMLTag_input) {
-    rv = NS_NewHTMLInputElement(aResult, aNodeInfo, aFromParser);
-    if (NS_SUCCEEDED(rv) && !aInsideNoXXXTag) {
-      SetForm(*aResult, aForm);
-    }
-    return rv;
-  }
+  contentCreatorCallback cb = sContentCreatorCallbacks[aNodeType];
 
-  if (aNodeType == eHTMLTag_select) {
-    rv = NS_NewHTMLSelectElement(aResult, aNodeInfo, aFromParser);
-    if (NS_SUCCEEDED(rv) && !aInsideNoXXXTag) {
-      SetForm(*aResult, aForm);
-    }
-    return rv;
-  }
+  NS_ASSERTION(cb != NS_NewHTMLNOTUSEDElement,
+               "Don't know how to construct tag element!");
 
-  rv = sContentCreatorCallbacks[aNodeType](aResult, aNodeInfo);
+  rv = cb(aResult, aNodeInfo, aFromParser);
 
   if (NS_SUCCEEDED(rv) && !aInsideNoXXXTag) {
     switch (aNodeType) {
@@ -1105,6 +1092,8 @@ MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
     case eHTMLTag_label:
     case eHTMLTag_legend:
     case eHTMLTag_object:
+    case eHTMLTag_input:
+    case eHTMLTag_select:
     case eHTMLTag_textarea:
       SetForm(*aResult, aForm);
       break;
@@ -1476,13 +1465,11 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
 
     break;
   case eHTMLTag_select:
-    {
-      nsCOMPtr<nsISelectElement> select = do_QueryInterface(content);
-
-      if (select) {
-        result = select->DoneAddingChildren();
-      }
-    }
+    // case eHTMLTag_textarea:
+    // textarea is treated as a leaf, not as a container
+  case eHTMLTag_object:
+  case eHTMLTag_applet:
+    content->DoneAddingChildren();
 
     break;
   default:
@@ -1559,15 +1546,11 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
 
         break;
       case eHTMLTag_textarea:
-      {
-        // XXX textarea deserves to be treated like the container it is.
-        nsCOMPtr<nsITextAreaElement> textarea(do_QueryInterface(content));
-        if (textarea) {
-          textarea->DoneAddingChildren();
-        }
+        // XXX as long as a textarea is treated as a leaf, not a real container,
+        // we have to do this here, even though it can't have any children
+        content->DoneAddingChildren();
 
         break;
-      }
       default:
         break;
       }

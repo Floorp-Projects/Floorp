@@ -47,7 +47,6 @@ XPIDL_MODULE    = content_html
 
 XPIDLSRCS	= \
 		nsISelectElement.idl \
-		nsITextAreaElement.idl \
 		nsIPhonetic.idl \
 		$(NULL)
 

@@ -236,6 +236,9 @@ public:
   // nsISelectElement
   NS_DECL_NSISELECTELEMENT
 
+  virtual void DoneAddingChildren();
+  virtual PRBool IsDoneAddingChildren();
+
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -416,20 +419,7 @@ protected:
 // construction, destruction
 
 
-nsresult
-NS_NewHTMLSelectElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
-                        PRBool aFromParser)
-{
-  nsHTMLSelectElement* it = new nsHTMLSelectElement(aNodeInfo, aFromParser);
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(*aResult = it);
-
-  return NS_OK;
-}
-
+NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Select)
 
 nsHTMLSelectElement::nsHTMLSelectElement(nsINodeInfo *aNodeInfo,
                                          PRBool aFromParser)
@@ -1701,15 +1691,13 @@ nsHTMLSelectElement::SelectSomething()
   return PR_FALSE;
 }
 
-NS_IMETHODIMP
-nsHTMLSelectElement::IsDoneAddingChildren(PRBool * aIsDone)
+PRBool
+nsHTMLSelectElement::IsDoneAddingChildren()
 {
-  *aIsDone = mIsDoneAddingChildren;
-
-  return NS_OK;
+  return mIsDoneAddingChildren;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLSelectElement::DoneAddingChildren()
 {
   mIsDoneAddingChildren = PR_TRUE;
@@ -1734,8 +1722,6 @@ nsHTMLSelectElement::DoneAddingChildren()
   // Now that we're done, select something (if it's a single select something
   // must be selected)
   CheckSelectSomething();
-
-  return NS_OK;
 }
 
 PRBool

@@ -399,7 +399,7 @@ ShouldBeInElements(nsIFormControl* aFormControl)
 // construction, destruction
 nsresult
 NS_NewHTMLFormElement(nsIHTMLContent** aInstancePtrResult,
-                      nsINodeInfo *aNodeInfo)
+                      nsINodeInfo *aNodeInfo, PRBool aFromParser)
 {
   nsHTMLFormElement* it = new nsHTMLFormElement(aNodeInfo);
   if (!it) {

@@ -154,7 +154,8 @@ protected:
 };
 
 nsresult
-NS_NewHTMLImageElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
+NS_NewHTMLImageElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
+                       PRBool aFromParser)
 {
   /*
    * nsHTMLImageElement's will be created without a nsINodeInfo passed in
@@ -186,7 +187,6 @@ NS_NewHTMLImageElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
 
   return NS_OK;
 }
-
 
 nsHTMLImageElement::nsHTMLImageElement(nsINodeInfo *aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
