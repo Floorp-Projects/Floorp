@@ -34,7 +34,6 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/EditorLinkProperties.dtd \
 	$(srcdir)/EditorPersonalDictionary.dtd \
 	$(srcdir)/EditorSpellCheck.dtd \
-	$(srcdir)/EdLinkProps.dtd \
 	$(srcdir)/EdNamedAnchorProperties.dtd \
 	$(NULL)
 
