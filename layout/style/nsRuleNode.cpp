@@ -2512,6 +2512,10 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
   // opacity: factor, inherit
   if (eCSSUnit_Number == displayData.mOpacity.GetUnit()) {
     display->mOpacity = displayData.mOpacity.GetFloatValue();
+    if (display->mOpacity > 1.0f)
+      display->mOpacity = 1.0f;
+    if (display->mOpacity < 0.0f)
+      display->mOpacity = 0.0f;
   }
   else if (eCSSUnit_Inherit == displayData.mOpacity.GetUnit()) {
     inherited = PR_TRUE;
