@@ -3414,6 +3414,11 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
           PRUnichar * docURLStr;
           GetWebShellTitleAndURL(webShell, &docTitleStr, &docURLStr); 
 
+          if (!docTitleStr) {
+            nsAutoString emptyTitle(NS_LITERAL_STRING(""));
+            docTitleStr = emptyTitle.ToNewUnicode();
+          }
+
           if (docTitleStr) {
             printService->SetTitle(docTitleStr);
             nsMemory::Free(docTitleStr);
