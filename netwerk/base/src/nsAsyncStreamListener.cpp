@@ -142,8 +142,7 @@ nsStreamListenerEvent::Fire(nsIEventQueue* aEventQueue)
                  (PLHandleEventProc)  nsStreamListenerEvent::HandlePLEvent,
                  (PLDestroyEventProc) nsStreamListenerEvent::DestroyPLEvent);
 
-    PRStatus status = aEventQueue->PostEvent(&mEvent);
-    return status == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE;
+    return aEventQueue->PostEvent(&mEvent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
