@@ -37,14 +37,13 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static PRLogModuleInfo* gFrameImageLoaderLMI;
 
 NS_LAYOUT nsresult
-NS_NewFrameImageLoader(nsIFrameImageLoader** aInstancePtrResult)
+NS_NewFrameImageLoader(nsIFrameImageLoader** aResult)
 {
   nsFrameImageLoader* it = new nsFrameImageLoader();
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIFrameImageLoaderIID,
-                            (void**) aInstancePtrResult);
+  return it->QueryInterface(kIFrameImageLoaderIID, (void**) aResult);
 }
 
 nsFrameImageLoader::nsFrameImageLoader()
@@ -55,6 +54,7 @@ nsFrameImageLoader::nsFrameImageLoader()
   mSize.height = 0;
   mError = (nsImageError) -1;
   mTargetFrame = nsnull;
+  mCallBack = nsnull;
   mPresContext = nsnull;
   mImageRequest = nsnull;
   mImageLoadStatus = NS_IMAGE_LOAD_STATUS_NONE;
@@ -110,6 +110,7 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
                          const nsString& aURL,
                          const nscolor* aBackgroundColor,
                          nsIFrame* aTargetFrame,
+                         nsFrameImageLoaderCB aCallBack,
                          PRBool aNeedSizeUpdate)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null ptr");
@@ -122,6 +123,7 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
     return NS_ERROR_ALREADY_INITIALIZED;
   }
   mTargetFrame = aTargetFrame;
+  mCallBack = aCallBack;
   mPresContext = aPresContext;
   NS_IF_ADDREF(mPresContext);
   if (aNeedSizeUpdate) {
@@ -338,16 +340,8 @@ nsFrameImageLoader::ReflowFrame()
          ("nsFrameImageLoader::ReflowFrame frame=%p status=%x",
           mTargetFrame, mImageLoadStatus));
 
-  nsIContent* content = nsnull;
-  mTargetFrame->GetContent(content);
-  if (nsnull != content) {
-    nsIDocument* document = nsnull;
-    content->GetDocument(document);
-    if (nsnull != document) {
-      document->ContentChanged(content, nsnull);
-      NS_RELEASE(document);
-    }
-    NS_RELEASE(content);
+  if (nsnull != mCallBack) {
+    (*mCallBack)(*mPresContext, mTargetFrame, mImageLoadStatus);
   }
 }
 
