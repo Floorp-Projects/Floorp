@@ -850,7 +850,7 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
 
           // Search forwards
           nsCOMPtr<nsIFormControl> passField;
-          for (i = index; i < count; ++i) {
+          for (i = index + 1; i < count; ++i) {
             form->GetElementAt(i, getter_AddRefs(passField));
 
             if (passField && passField->GetType() == NS_FORM_INPUT_PASSWORD) {
@@ -859,16 +859,17 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
             }
           }
 
-          if (!temp) {
+          if (!temp && index != 0) {
             // Search backwards
-            for (i = index; i >= 0; --i) {
+            i = index;
+            do {
               form->GetElementAt(i, getter_AddRefs(passField));
 
               if (passField && passField->GetType() == NS_FORM_INPUT_PASSWORD) {
                 foundNode = passField;
                 temp = do_QueryInterface(foundNode);
               }
-            }
+            } while (i-- != 0);
           }
         }
       }
