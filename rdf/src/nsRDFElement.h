@@ -96,6 +96,8 @@ public:
                               nsIDOMEvent** aDOMEvent,
                               PRUint32 aFlags,
                               nsEventStatus& aEventStatus);
+    NS_IMETHOD RangeAdd(nsIDOMRange& aRange);
+    NS_IMETHOD RangeRemove(nsIDOMRange& aRange); 
 
     // nsIXMLContent (from nsIRDFContent)
     NS_IMETHOD SetNameSpacePrefix(nsIAtom* aNameSpace);
