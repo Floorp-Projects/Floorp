@@ -1097,15 +1097,15 @@ p12u_DigestRead(void *arg, unsigned char *buf, unsigned long len)
     int toread = len;
     SEC_PKCS12DecoderContext* p12cxt = arg;
 
-    if(!buf || len == 0) {
+    if(!buf || len == 0 || !p12cxt->buffer) {
 	return -1;
     }
 
-    if (!p12cxt->buffer || ((p12cxt->filesize-p12cxt->currentpos)<(long)len) ) {
+    if ((p12cxt->filesize - p12cxt->currentpos) < (long)len) {
         /* trying to read past the end of the buffer */
-        toread = p12cxt->filesize-p12cxt->currentpos;
+        toread = p12cxt->filesize - p12cxt->currentpos;
     }
-    memcpy(buf, (void*)((char*)p12cxt->buffer+p12cxt->currentpos), toread);
+    memcpy(buf, (void*)((char*)p12cxt->buffer + p12cxt->currentpos), toread);
     p12cxt->currentpos += toread;
     return toread;
 }
@@ -1136,7 +1136,7 @@ p12u_DigestWrite(void *arg, unsigned char *buf, unsigned long len)
         p12cxt->allocated = newsize;
     }
     PR_ASSERT(p12cxt->buffer);
-    memcpy((void*)((char*)p12cxt->buffer+p12cxt->currentpos), buf, len);
+    memcpy((void*)((char*)p12cxt->buffer + p12cxt->currentpos), buf, len);
     p12cxt->currentpos += len;
     return len;
 }
@@ -1285,7 +1285,16 @@ loser:
     return SECFailure;
 }
 
-#define IN_BUF_LEN	HASH_LENGTH_MAX
+/* This should be a nice sized buffer for reading in data (potentially large 
+** amounts) to be MACed.  It should be MUCH larger than HASH_LENGTH_MAX.
+*/
+#define IN_BUF_LEN	1024
+#ifdef DEBUG
+static const char bufferEnd[] = { "BufferEnd" } ;
+#define FUDGE sizeof bufferEnd
+#else
+#define FUDGE 128 /* extra protection when assertions disabled. */
+#endif
 
 /* verify the hmac by reading the data from the temporary file
  * using the routines specified when the decodingContext was 
@@ -1294,22 +1303,30 @@ loser:
 static SECStatus
 sec_pkcs12_decoder_verify_mac(SEC_PKCS12DecoderContext *p12dcx)
 {
-    SECStatus rv = SECFailure;
-    SECStatus lrv;
-    SECItem hmacRes;
-    unsigned char buf[IN_BUF_LEN];
-    unsigned int bufLen;
-    int iteration;
-    PK11Context *pk11cx = NULL;
-    PK11SymKey *symKey = NULL;
-    SECItem *params = NULL;
-    SECItem ignore = {0};
-    SECOidTag algtag;
+    PK11Context *     pk11cx = NULL;
+    PK11SymKey *      symKey = NULL;
+    SECItem *         params = NULL;
+    unsigned char *   buf;
+    SECStatus         rv     = SECFailure;
+    SECStatus         lrv;
+    unsigned int      bufLen;
+    int               iteration;
+    int               bytesRead;
+    SECOidTag         algtag;
+    SECItem           hmacRes;
+    SECItem           ignore = {0};
     CK_MECHANISM_TYPE integrityMech;
     
     if(!p12dcx || p12dcx->error) {
 	return SECFailure;
     }
+    buf = (unsigned char *)PORT_Alloc(IN_BUF_LEN + FUDGE);
+    if (!buf)
+    	return SECFailure;  /* error code has been set. */
+
+#ifdef DEBUG
+    memcpy(buf + IN_BUF_LEN, bufferEnd, sizeof bufferEnd);
+#endif
 
     /* generate hmac key */
     if(p12dcx->macData.iter.data) {
@@ -1360,20 +1377,28 @@ sec_pkcs12_decoder_verify_mac(SEC_PKCS12DecoderContext *p12dcx)
      * is returned as -1, then an error occured reading from the 
      * file.
      */
-    while(1) {
-	int bytesRead = (*p12dcx->dRead)(p12dcx->dArg, buf, IN_BUF_LEN);
-	if(bytesRead == -1) {
+    do {
+	bytesRead = (*p12dcx->dRead)(p12dcx->dArg, buf, IN_BUF_LEN);
+	if (bytesRead < 0) {
+	    PORT_SetError(SEC_ERROR_PKCS12_UNABLE_TO_READ);
+	    goto loser;
+	}
+	PORT_Assert(bytesRead <= IN_BUF_LEN);
+	PORT_Assert(!memcmp(buf + IN_BUF_LEN, bufferEnd, sizeof bufferEnd));
+
+	if (bytesRead > IN_BUF_LEN) {
+	    /* dRead callback overflowed buffer. */
+	    PORT_SetError(SEC_ERROR_PKCS12_UNABLE_TO_READ);
 	    goto loser;
 	}
 
-	lrv = PK11_DigestOp(pk11cx, buf, bytesRead);
-	if (lrv == SECFailure) {
-	    goto loser;
-	}
-	if(bytesRead < IN_BUF_LEN) {
-	    break;
-	}
-    }
+	if (bytesRead) {
+	    lrv = PK11_DigestOp(pk11cx, buf, bytesRead);
+	    if (lrv == SECFailure) {
+		goto loser;
+	    }
+    	}
+    } while (bytesRead == IN_BUF_LEN);
 
     /* finish the hmac context */
     lrv = PK11_DigestFinal(pk11cx, buf, &bufLen, IN_BUF_LEN);
@@ -1407,6 +1432,7 @@ loser:
     if (symKey) {
 	PK11_FreeSymKey(symKey);
     }
+    PORT_ZFree(buf, IN_BUF_LEN + FUDGE);
 
     return rv;
 }
