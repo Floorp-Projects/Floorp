@@ -112,7 +112,7 @@ Rights Reserved.
 <!ENTITY showMessageCmd.label				"Message">  
 <!ENTITY showMessageCmd.accesskey                               "e">  
 <!ENTITY sortMenu.label "Sort by"> 
-<!ENTITY sortMenu.accesskey "o"> 
+<!ENTITY sortMenu.accesskey "b"> 
 <!ENTITY sortByDateCmd.label "Date">  
 <!ENTITY sortByDateCmd.accesskey "e">  
 <!ENTITY sortByFlagCmd.label "Flag">  
@@ -132,7 +132,7 @@ Rights Reserved.
 <!ENTITY sortByOrderReceivedCmd.label "Order Received">  
 <!ENTITY sortByOrderReceivedCmd.accesskey "o">  
 <!ENTITY msgsMenu.label "Messages"> 
-<!ENTITY msgsMenu.accesskey "m"> 
+<!ENTITY msgsMenu.accesskey "a"> 
 <!ENTITY threadsMsgsCmd.label "Threaded">  
 <!ENTITY threadsMsgsCmd.accesskey "t">  
 <!ENTITY allMsgsCmd.label "All">  
