@@ -92,7 +92,7 @@ while (<STDIN>) {
     }
 
     chomp;
-    if (! m@\[(\d+)/(\w+)/(\d+):(\d+):(\d+):(\d+).*\].*GET (/\S+) HTTP@) {
+    if (! m@\[(\d+)/(\w+)/(\d+):(\d+):(\d+):(\d+).*\].*GET (/\S*) HTTP@) {
 	next;
     }
 	
