@@ -12,10 +12,22 @@
 ;;; 
 ;;; The Initial Developer of the Original Code is Netscape Communications
 ;;; Corporation.  Portions created by Netscape Communications Corporation are
-;;; Copyright (C) 1999 Netscape Communications Corporation.  All
+;;; Copyright (C) 1999-2002 Netscape Communications Corporation.  All
 ;;; Rights Reserved.
 ;;; 
 ;;; Contributor(s):   Waldemar Horwat <waldemar@acm.org>
+;;;
+;;; Alternatively, the contents of this file may be used under the terms of
+;;; either the GNU General Public License Version 2 or later (the "GPL"), or
+;;; the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+;;; in which case the provisions of the GPL or the LGPL are applicable instead
+;;; of those above. If you wish to allow use of your version of this file only
+;;; under the terms of either the GPL or the LGPL, and not to allow others to
+;;; use your version of this file under the terms of the MPL, indicate your
+;;; decision by deleting the provisions above and replace them with the notice
+;;; and other provisions required by the GPL or the LGPL. If you do not delete
+;;; the provisions above, a recipient may use your version of this file under
+;;; the terms of any one of the MPL, the GPL or the LGPL.
 
 ;;;
 ;;; Handy lisp utilities
@@ -354,6 +366,22 @@
                   (return-from hash-table-= nil))))
           hash-table1)
          t)))
+
+
+; Given a list, destructively delete elements that are equal to the previous element using the given
+; equality test.  Return list.
+(defun delete-adjacent-duplicates (list &key (test #'eql))
+  (unless (endp list)
+    (let ((p list))
+      (do ((value (first p))
+           (rest (rest p) (rest p)))
+          ((endp rest))
+        (let ((value2 (first rest)))
+          (if (funcall test value value2)
+            (setf (rest p) (rest rest))
+            (setq p rest))
+          (setq value value2))))
+    list))
 
 
 ; Given an association list ((key1 . data1) (key2 . data2) ... (keyn datan)),
