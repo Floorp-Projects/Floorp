@@ -896,11 +896,11 @@ sub get_tempfile_name {
     my $rv;
     
     if ($os_type ne "MAC") {
-        $rv = "results-" . $opt_engine_type . "-" . $year . "-" . $mon . "-" . $mday .
-           "-" . $hour . $min . $sec;
+        $rv = "results-" . $year . "-" . $mon . "-" . $mday . "-" . $hour . 
+          $min . $sec . "-" . $opt_engine_type;
     } else {
-        $rv = "res-" . $opt_engine_type . "-" . $year . $mon . $mday .
-          $hour . $min . $sec;
+        $rv = "res-" . $year . $mon . $mday . $hour . $min . $sec . "-" .
+          $opt_engine_type
     }
     
     return $rv . ".html";
