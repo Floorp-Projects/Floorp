@@ -67,7 +67,6 @@
 
 #include "nsIXULPopupListener.h"
 #include "nsIDOMXULElement.h"
-#include "nsRDFCID.h"
 
 #include "nsGUIEvent.h"
 #include "nsWidgetsCID.h"
