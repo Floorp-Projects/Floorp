@@ -92,8 +92,8 @@ protected:
                             nsISelection *aSelection, 
                             PRBool          *aCancel,
                             PRBool          *aHandled,
-                            const nsString  *inString,
-                            nsString        *outString,
+                            const nsAReadableString  *inString,
+                            nsAWritableString        *outString,
                             PRInt32          aMaxLength);
   nsresult DidInsertText(nsISelection *aSelection, nsresult aResult);
   nsresult GetTopEnclosingPre(nsIDOMNode *aNode, nsIDOMNode** aOutPreNode);
@@ -132,8 +132,8 @@ protected:
     *                   and use aOutText as the result.
     */
   nsresult WillOutputText(nsISelection *aSelection,
-                          const nsString  *aInFormat,
-                          nsString *aOutText, 
+                          const nsAReadableString  *aInFormat,
+                          nsAWritableString *aOutText, 
                           PRBool   *aOutCancel, 
                           PRBool *aHandled);
 
@@ -151,13 +151,13 @@ protected:
   /** returns a truncated insertion string if insertion would place us
       over aMaxLength */
   nsresult TruncateInsertionIfNeeded(nsISelection *aSelection, 
-                                           const nsString  *aInString,
-                                           nsString        *aOutString,
+                                           const nsAReadableString  *aInString,
+                                           nsAWritableString        *aOutString,
                                            PRInt32          aMaxLength);
   
   /** Echo's the insertion text into the password buffer, and converts
       insertion text to '*'s */                                        
-  nsresult EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsString *aOutString);
+  nsresult EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsAWritableString *aOutString);
 
   nsresult CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outBRNode);
 
@@ -200,9 +200,9 @@ class nsTextRulesInfo : public nsRulesInfo
   virtual ~nsTextRulesInfo() {};
   
   // kInsertText
-  const nsString *inString;
-  nsString *outString;
-  const nsString *outputFormat;
+  const nsAReadableString *inString;
+  nsAWritableString *outString;
+  const nsAReadableString *outputFormat;
   PRInt32 maxLength;
   
   // kDeleteSelection
@@ -213,10 +213,10 @@ class nsTextRulesInfo : public nsRulesInfo
   PRBool entireList;
 
   // kAlign
-  const nsString *alignType;
+  const nsAReadableString *alignType;
   
   // kMakeBasicBlock
-  const nsString *blockType;
+  const nsAReadableString *blockType;
   
   // kInsertElement
   const nsIDOMElement* insertElement;

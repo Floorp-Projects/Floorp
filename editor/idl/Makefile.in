@@ -29,12 +29,18 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= editor
 
 XPIDLSRCS	= \
-		nsIPlaintextEditor.idl \
+		nsICiter.idl \
+		nsIDocumentStateListener.idl \
+		nsIEditActionListener.idl \
+		nsIEditorController.idl \
+		nsIEditor.idl \
+		nsIEditorIMESupport.idl \
+		nsIEditorObserver.idl \
+		nsIEditorService.idl \
 		nsIEditorShell.idl \
 		nsIEditorSpellCheck.idl \
-		nsIDocumentStateListener.idl \
-		nsIEditorService.idl \
-		nsIEditorController.idl \
+		nsIHTMLEditor.idl \
+		nsIPlaintextEditor.idl \
 		nsPIEditorTransaction.idl \
 		$(NULL)
 

@@ -59,7 +59,7 @@ public:
     */
   NS_IMETHOD Init(nsIDOMCharacterData *aElement,
                   PRUint32 aOffset,
-                  const nsString& aString,
+                  const nsAReadableString& aString,
                   nsIEditor *aEditor);
 
 private:

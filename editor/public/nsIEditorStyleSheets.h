@@ -46,7 +46,7 @@ public:
     * @param aURL         The style sheet to be loaded and applied.
     * @param aStyleSheet  Optional: if not null, return the style sheet created from aURL
     */
-  NS_IMETHOD ApplyStyleSheet(const nsString& aURL, nsICSSStyleSheet **aStyleSheet)=0;
+  NS_IMETHOD ApplyStyleSheet(const nsAReadableString& aURL, nsICSSStyleSheet **aStyleSheet)=0;
 
   /** load and apply an Override style sheet, specified by aURL, to
     * the editor's document. 
@@ -61,7 +61,7 @@ public:
     * @param aURL         The style sheet to be loaded and applied.
     * @param aStyleSheet  Optional: if not null, return the style sheet created from aURL
     */
-  NS_IMETHOD ApplyOverrideStyleSheet(const nsString& aURL, nsICSSStyleSheet **aStyleSheet)=0;
+  NS_IMETHOD ApplyOverrideStyleSheet(const nsAReadableString& aURL, nsICSSStyleSheet **aStyleSheet)=0;
 
   /** Add the given Style Sheet to the editor's document
     * This is always synchronous

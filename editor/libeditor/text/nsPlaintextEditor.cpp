@@ -245,7 +245,7 @@ nsPlaintextEditor::EndEditorInit()
 }
 
 NS_IMETHODIMP 
-nsPlaintextEditor::SetDocumentCharacterSet(const PRUnichar* characterSet) 
+nsPlaintextEditor::SetDocumentCharacterSet(const nsAReadableString & characterSet) 
 { 
   nsresult result; 
 
@@ -312,7 +312,7 @@ nsPlaintextEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
               return NS_ERROR_FAILURE; 
 
             // Set attributes to the created element 
-            if (resultNode && nsCRT::strlen(characterSet) > 0) { 
+            if (resultNode && characterSet.Length() > 0) { 
               metaElement = do_QueryInterface(resultNode); 
               if (metaElement) { 
                 // not undoable, undo should undo CreateNode 
@@ -505,19 +505,19 @@ NS_IMETHODIMP nsPlaintextEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
      || keyCode == nsIDOMKeyEvent::DOM_VK_ENTER)
     {
       nsString empty;
-      return TypedText(empty.GetUnicode(), eTypedBreak);
+      return TypedText(empty, eTypedBreak);
     }
     else if (keyCode == nsIDOMKeyEvent::DOM_VK_ESCAPE)
     {
       // pass escape keypresses through as empty strings: needed for ime support
       nsString empty;
-      return TypedText(empty.GetUnicode(), eTypedText);
+      return TypedText(empty, eTypedText);
     }
     
     if (character && !altKey && !ctrlKey && !isShift && !metaKey)
     {
       nsAutoString key(character);
-      return TypedText(key.GetUnicode(), eTypedText);
+      return TypedText(key, eTypedText);
     }
   }
   return NS_ERROR_FAILURE;
@@ -529,7 +529,7 @@ NS_IMETHODIMP nsPlaintextEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
    to TypedText() to determine what action to take, but without passing
    an event.
    */
-NS_IMETHODIMP nsPlaintextEditor::TypedText(const PRUnichar* aString,
+NS_IMETHODIMP nsPlaintextEditor::TypedText(const nsAReadableString& aString,
                                       PRInt32 aAction)
 {
   nsAutoPlaceHolderBatch batch(this, gTypingTxnName);
@@ -944,7 +944,7 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
   return result;
 }
 
-NS_IMETHODIMP nsPlaintextEditor::InsertText(const PRUnichar* aStringToInsert)
+NS_IMETHODIMP nsPlaintextEditor::InsertText(const nsAReadableString &aStringToInsert)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -967,9 +967,9 @@ NS_IMETHODIMP nsPlaintextEditor::InsertText(const PRUnichar* aStringToInsert)
   nsAutoString resultString;
   // XXX can we trust instring to outlive ruleInfo,
   // XXX and ruleInfo not to refer to instring in its dtor?
-  nsAutoString instring(aStringToInsert);
+  //nsAutoString instring(aStringToInsert);
   nsTextRulesInfo ruleInfo(theAction);
-  ruleInfo.inString = &instring;
+  ruleInfo.inString = &aStringToInsert;
   ruleInfo.outString = &resultString;
   ruleInfo.maxLength = mMaxTextLength;
 
@@ -1361,9 +1361,11 @@ NS_IMETHODIMP nsPlaintextEditor::Cut()
   return res;
 }
 
-NS_IMETHODIMP nsPlaintextEditor::CanCut(PRBool &aCanCut)
+NS_IMETHODIMP nsPlaintextEditor::CanCut(PRBool *aCanCut)
 {
-  aCanCut = PR_FALSE;
+  if (!aCanCut)
+    return NS_ERROR_NULL_POINTER;
+  *aCanCut = PR_FALSE;
   
   nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
@@ -1373,7 +1375,7 @@ NS_IMETHODIMP nsPlaintextEditor::CanCut(PRBool &aCanCut)
   res = selection->GetIsCollapsed(&isCollapsed);
   if (NS_FAILED(res)) return res;
 
-  aCanCut = !isCollapsed && IsModifiable();
+  *aCanCut = !isCollapsed && IsModifiable();
   return NS_OK;
 }
 
@@ -1385,9 +1387,11 @@ NS_IMETHODIMP nsPlaintextEditor::Copy()
   return ps->DoCopy();
 }
 
-NS_IMETHODIMP nsPlaintextEditor::CanCopy(PRBool &aCanCopy)
+NS_IMETHODIMP nsPlaintextEditor::CanCopy(PRBool *aCanCopy)
 {
-  aCanCopy = PR_FALSE;
+  if (!aCanCopy)
+    return NS_ERROR_NULL_POINTER;
+  *aCanCopy = PR_FALSE;
   
   nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
@@ -1397,7 +1401,7 @@ NS_IMETHODIMP nsPlaintextEditor::CanCopy(PRBool &aCanCopy)
   res = selection->GetIsCollapsed(&isCollapsed);
   if (NS_FAILED(res)) return res;
 
-  aCanCopy = !isCollapsed;
+  *aCanCopy = !isCollapsed;
   return NS_OK;
 }
 
@@ -1406,7 +1410,7 @@ NS_IMETHODIMP nsPlaintextEditor::CanCopy(PRBool &aCanCopy)
 NS_IMETHODIMP
 nsPlaintextEditor::GetAndInitDocEncoder(const nsAReadableString& aFormatType,
                                         PRUint32 aFlags,
-                                        const nsAReadableString* aCharset,
+                                        const nsAReadableString& aCharset,
                                         nsIDocumentEncoder** encoder)
 {
   nsCOMPtr<nsIPresShell> presShell;
@@ -1426,9 +1430,9 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAReadableString& aFormatType,
   rv = docEncoder->Init(doc, aFormatType, aFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aCharset && aCharset->Length() != 0
-      && !(aCharset->Equals(NS_LITERAL_STRING("null"))))
-    docEncoder->SetCharset(*aCharset);
+  if (aCharset.Length() != 0
+    && !(aCharset.Equals(NS_LITERAL_STRING("null"))))
+    docEncoder->SetCharset(aCharset);
 
   PRInt32 wc;
   (void) GetWrapWidth(&wc);
@@ -1512,7 +1516,7 @@ nsPlaintextEditor::OutputToString(nsAWritableString& aOutputString,
   }
 
   nsCOMPtr<nsIDocumentEncoder> encoder;
-  rv = GetAndInitDocEncoder(aFormatType, aFlags, 0, getter_AddRefs(encoder));
+  rv = GetAndInitDocEncoder(aFormatType, aFlags, NS_LITERAL_STRING(""), getter_AddRefs(encoder));
   if (NS_FAILED(rv))
     return rv;
   rv = encoder->EncodeToString(aOutputString);
@@ -1522,7 +1526,7 @@ nsPlaintextEditor::OutputToString(nsAWritableString& aOutputString,
 NS_IMETHODIMP
 nsPlaintextEditor::OutputToStream(nsIOutputStream* aOutputStream,
                              const nsAReadableString& aFormatType,
-                             const nsAReadableString* aCharset,
+                             const nsAReadableString& aCharset,
                              PRUint32 aFlags)
 {
   nsresult rv;
@@ -1647,7 +1651,7 @@ static nsICiter* MakeACiter()
 }
 
 NS_IMETHODIMP
-nsPlaintextEditor::InsertAsQuotation(const nsString& aQuotedText,
+nsPlaintextEditor::InsertAsQuotation(const nsAReadableString& aQuotedText,
                                      nsIDOMNode **aNodeInserted)
 {
   // We have the text.  Cite it appropriately:
@@ -1681,7 +1685,7 @@ nsPlaintextEditor::InsertAsQuotation(const nsString& aQuotedText,
   if (cancel) return NS_OK; // rules canceled the operation
   if (!handled)
   {
-    rv = InsertText(quotedStuff.GetUnicode());
+    rv = InsertText(quotedStuff);
 
     // XXX Should set *aNodeInserted to the first node inserted
     if (aNodeInserted && NS_SUCCEEDED(rv))
@@ -1694,17 +1698,17 @@ nsPlaintextEditor::InsertAsQuotation(const nsString& aQuotedText,
 }
 
 NS_IMETHODIMP
-nsPlaintextEditor::PasteAsCitedQuotation(const nsString& aCitation,
+nsPlaintextEditor::PasteAsCitedQuotation(const nsAReadableString& aCitation,
                                          PRInt32 aSelectionType)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsPlaintextEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
-                                          const nsString& aCitation,
+nsPlaintextEditor::InsertAsCitedQuotation(const nsAReadableString& aQuotedText,
+                                          const nsAReadableString& aCitation,
                                           PRBool aInsertHTML,
-                                          const nsString& aCharset,
+                                          const nsAReadableString& aCharset,
                                           nsIDOMNode **aNodeInserted)
 {
   return InsertAsQuotation(aQuotedText, aNodeInserted);
@@ -1752,7 +1756,7 @@ nsPlaintextEditor::Rewrap(PRBool aRespectNewlines)
     rv = SelectAll();
     if (NS_FAILED(rv)) return rv;
 
-    return InsertText(wrapped.GetUnicode());
+    return InsertText(wrapped);
   }
   else                // rewrap only the selection
   {
@@ -1770,7 +1774,7 @@ nsPlaintextEditor::Rewrap(PRBool aRespectNewlines)
                        wrapped);
     if (NS_FAILED(rv)) return rv;
 
-    return InsertText(wrapped.GetUnicode());
+    return InsertText(wrapped);
   }
   return NS_OK;
 }
@@ -1813,7 +1817,7 @@ nsPlaintextEditor::StripCites()
     rv = SelectAll();
     if (NS_FAILED(rv)) return rv;
 
-    return InsertText(stripped.GetUnicode());
+    return InsertText(stripped);
   }
   else                // rewrap only the selection
   {
@@ -1829,7 +1833,7 @@ nsPlaintextEditor::StripCites()
     rv = citer->StripCites(current, stripped);
     if (NS_FAILED(rv)) return rv;
 
-    return InsertText(stripped.GetUnicode());
+    return InsertText(stripped);
   }
   return NS_OK;
 }
@@ -1849,7 +1853,7 @@ nsPlaintextEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
 #endif
 
 NS_IMETHODIMP
-nsPlaintextEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply)
+nsPlaintextEditor::SetCompositionString(const nsAReadableString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply)
 {
   NS_ASSERTION(aTextRangeList, "null ptr");
   if(nsnull == aTextRangeList)
@@ -1872,7 +1876,7 @@ nsPlaintextEditor::SetCompositionString(const nsString& aCompositionString, nsIP
   mIMETextRangeList = aTextRangeList;
   nsAutoPlaceHolderBatch batch(this, gIMETxnName);
 
-  result = InsertText(aCompositionString.GetUnicode());
+  result = InsertText(aCompositionString);
 
   mIMEBufferLength = aCompositionString.Length();
 

@@ -54,8 +54,8 @@ public:
     */
   NS_IMETHOD Init(nsIEditor      *aEditor,
                   nsIDOMElement  *aNode,
-                  const nsString& aAttribute,
-                  const nsString& aValue,
+                  const nsAReadableString& aAttribute,
+                  const nsAReadableString& aValue,
                   PRBool aRemoveAttribute);
 
 private:

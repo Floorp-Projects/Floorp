@@ -1885,7 +1885,7 @@ nsHTMLEditor::CopyCellBackgroundColor(nsIDOMElement *destCell, nsIDOMElement *so
   nsAutoString bgcolor; bgcolor.AssignWithConversion("bgcolor");
   nsAutoString color;
   PRBool isSet;
-  nsresult res = GetAttributeValue(sourceCell, bgcolor, color, isSet);
+  nsresult res = GetAttributeValue(sourceCell, bgcolor, color, &isSet);
 
   if (NS_SUCCEEDED(res) && isSet)
     res = SetAttribute(destCell, bgcolor, color);

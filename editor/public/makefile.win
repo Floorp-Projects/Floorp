@@ -22,17 +22,11 @@
 DEPTH=..\..
 
 
-EXPORTS =		                         \
-    nsIEditActionListener.h	         \
-    nsIEditor.h	                     \
-    nsEditorCID.h	                   \
-    nsICiter.h	                     \
-    nsIEditorIMESupport.h            \
+EXPORTS =                            \
+    nsEditorCID.h                    \
     nsIEditorLogging.h               \
     nsIEditorMailSupport.h           \
-    nsIEditorObserver.h              \
     nsIEditorStyleSheets.h           \
-    nsIHTMLEditor.h                  \
     nsITableEditor.h                 \
     $(NULL)
 

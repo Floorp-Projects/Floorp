@@ -65,7 +65,7 @@ NS_IMETHODIMP IMETextTxn::Init(nsIDOMCharacterData     *aElement,
                                PRUint32                 aOffset,
                                PRUint32                 aReplaceLength,
                                nsIPrivateTextRangeList *aTextRangeList,
-                               const nsString          &aStringToInsert,
+                               const nsAReadableString &aStringToInsert,
                                nsWeakPtr                aSelConWeak)
 {
   NS_ASSERTION(aElement, "illegal value- null ptr- aElement");

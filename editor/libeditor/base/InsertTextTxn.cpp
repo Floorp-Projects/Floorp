@@ -60,7 +60,7 @@ InsertTextTxn::~InsertTextTxn()
 
 NS_IMETHODIMP InsertTextTxn::Init(nsIDOMCharacterData *aElement,
                                   PRUint32             aOffset,
-                                  const nsString      &aStringToInsert,
+                                  const nsAReadableString      &aStringToInsert,
                                   nsIEditor           *aEditor)
 {
 #if 0 //def DEBUG_cmanske

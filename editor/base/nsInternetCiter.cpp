@@ -21,9 +21,9 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
-#include "nsInternetCiter.h"
 
 #include "nsString.h"
+#include "nsInternetCiter.h"
 
 #include "nsCOMPtr.h"
 
@@ -76,7 +76,7 @@ nsInternetCiter::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsInternetCiter::GetCiteString(const nsString& aInString, nsString& aOutString)
+nsInternetCiter::GetCiteString(const nsAReadableString& aInString, nsAWritableString& aOutString)
 {
   PRInt32 i = 0;
   PRInt32 length = aInString.Length();
@@ -85,9 +85,10 @@ nsInternetCiter::GetCiteString(const nsString& aInString, nsString& aOutString)
 
   // Strip trailing new lines which will otherwise turn up
   // as ugly quoted empty lines.
+  nsString tString(aInString); //CRAPCRAP
   while(length > 0 &&
-        (aInString[length-1] == cr ||
-         aInString[length-1] == nl))
+        (tString[length-1] == cr ||
+         tString[length-1] == nl))
   {
     --length;
   }
@@ -100,11 +101,11 @@ nsInternetCiter::GetCiteString(const nsString& aInString, nsString& aOutString)
       aOutString.Append(gt);
       // No space between >: this is ">>> " style quoting, for
       // compatability with RFC 2646 and format=flowed.
-      if (aInString[i] != gt)
+      if (tString[i] != gt)
         aOutString.Append(space);
     }
 
-    uch = aInString[i++];
+    uch = tString[i++];
 
     aOutString += uch;
   }
@@ -116,8 +117,8 @@ nsInternetCiter::GetCiteString(const nsString& aInString, nsString& aOutString)
 }
 
 nsresult
-nsInternetCiter::StripCitesAndLinebreaks(const nsString& aInString,
-                                         nsString& aOutString,
+nsInternetCiter::StripCitesAndLinebreaks(const nsAReadableString& aInString,
+                                         nsAWritableString& aOutString,
                                          PRBool aLinebreaksToo,
                                          PRInt32* aCiteLevel)
 {
@@ -126,36 +127,37 @@ nsInternetCiter::StripCitesAndLinebreaks(const nsString& aInString,
 
   aOutString.SetLength(0);
 
-  PRInt32 length = aInString.Length();
+  nsString tString(aInString);//CRAPCRAP
+  PRInt32 length = tString.Length();
   PRInt32 i = 0;
   while (i < length)  // loop over lines
   {
     // Clear out cites first, at the beginning of the line:
     PRInt32 thisLineCiteLevel = 0;
-    while (aInString[i] == gt || nsCRT::IsAsciiSpace(aInString[i]))
+    while (tString[i] == gt || nsCRT::IsAsciiSpace(tString[i]))
     {
-      if (aInString[i] == gt) ++thisLineCiteLevel;
+      if (tString[i] == gt) ++thisLineCiteLevel;
       ++i;
     }
 
     // Now copy characters until line end:
-    PRInt32 nextNewline = aInString.FindCharInSet("\r\n", i);
+    PRInt32 nextNewline = tString.FindCharInSet("\r\n", i);
     if (nextNewline > i)
     {
       while (i < nextNewline)
-        aOutString.Append(aInString[i++]);
+        aOutString.Append(tString[i++]);
       if (aLinebreaksToo)
-        aOutString.AppendWithConversion(' ');
+        aOutString.Append(PRUnichar(' '));
       else
-        aOutString.AppendWithConversion('\n');    // DOM linebreaks, not NS_LINEBREAK
+        aOutString.Append(PRUnichar('\n'));    // DOM linebreaks, not NS_LINEBREAK
       // Skip over any more consecutive linebreak-like characters:
-      while (i < length && (aInString[i] == '\r' || aInString[i] == '\n'))
+      while (i < length && (tString[i] == '\r' || tString[i] == '\n'))
         ++i;
     }
     else    // no more newlines
     {
       while (i < length)
-        aOutString.Append(aInString[i++]);
+        aOutString.Append(tString[i++]);
     }
 
     // Done with this line -- update cite level
@@ -166,24 +168,24 @@ nsInternetCiter::StripCitesAndLinebreaks(const nsString& aInString,
 }
 
 NS_IMETHODIMP
-nsInternetCiter::StripCites(const nsString& aInString, nsString& aOutString)
+nsInternetCiter::StripCites(const nsAReadableString& aInString, nsAWritableString& aOutString)
 {
   return StripCitesAndLinebreaks(aInString, aOutString, PR_FALSE, 0);
 }
 
-static void AddCite(nsString& aOutString, PRInt32 citeLevel)
+static void AddCite(nsAWritableString& aOutString, PRInt32 citeLevel)
 {
   for (PRInt32 i = 0; i < citeLevel; ++i)
-    aOutString.Append(gt);
+    aOutString.Append(PRUnichar(gt));
   if (citeLevel > 0)
-    aOutString.Append(space);
+    aOutString.Append(PRUnichar(space));
 }
 
 NS_IMETHODIMP
-nsInternetCiter::Rewrap(const nsString& aInString,
+nsInternetCiter::Rewrap(const nsAReadableString& aInString,
                         PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
                         PRBool aRespectNewlines,
-                        nsString& aOutString)
+                        nsAWritableString& aOutString)
 {
   nsCOMPtr<nsILineBreaker> lineBreaker;
   nsILineBreakerFactory *lf;
@@ -205,21 +207,21 @@ nsInternetCiter::Rewrap(const nsString& aInString,
   PRUint32 posInString = 0;
   PRUint32 outStringCol = 0;
   PRUint32 citeLevel = 0;
-  const PRUnichar* unicodeStr = aInString.GetUnicode();
+  const nsPromiseFlatString &tString = PromiseFlatString(aInString);//MJUDGE SCC NEED HELP
   while (posInString < length)
   {
 #ifdef DEBUG_wrapping
-    nsAutoString debug (nsPromiseSubstring<PRUnichar>(aInString, posInString, length-posInString));
+    nsAutoString debug (nsPromiseSubstring<PRUnichar>(tString, posInString, length-posInString));
     printf("Outer loop: '%s'\n", debug.ToNewCString());
 #endif
 
     // Get the new cite level here since we're at the beginning of a line
     PRUint32 newCiteLevel = 0;
-    while (posInString < length && aInString[posInString] == gt)
+    while (posInString < length && tString[posInString] == gt)
     {
       ++newCiteLevel;
       ++posInString;
-      while (posInString < length && aInString[posInString] == space)
+      while (posInString < length && tString[posInString] == space)
         ++posInString;
     }
     if (posInString >= length)
@@ -227,9 +229,12 @@ nsInternetCiter::Rewrap(const nsString& aInString,
 
     // Special case: if this is a blank line, maintain a blank line
     // (retain the original paragraph breaks)
-    if (aInString[posInString] == nl)
+    if (tString[posInString] == nl)
     {
-      if (aOutString.Length() > 0 && aOutString[aOutString.Length()-1] != nl)
+      nsReadingIterator <PRUnichar> outPeekIter;
+      aOutString.EndReading(outPeekIter);
+      outPeekIter.advance(-1);
+      if (aOutString.Length() > 0 && (*outPeekIter) != nl)
         aOutString.Append(nl);
       AddCite(aOutString, newCiteLevel);
       aOutString.Append(nl);
@@ -267,12 +272,12 @@ nsInternetCiter::Rewrap(const nsString& aInString,
       printf("Appending space; citeLevel=%d, outStringCol=%d\n", citeLevel,
              outStringCol);
 #endif
-      aOutString.Append(space);
+      aOutString.Append(PRUnichar(space));
       ++outStringCol;
     }
 
     // find the next newline -- don't want to go farther than that
-    PRInt32 nextNewline = aInString.FindChar(nl, PR_FALSE, posInString);
+    PRInt32 nextNewline = tString.FindChar(nl, posInString);
     if (nextNewline < 0) nextNewline = length;
 
     // For now, don't wrap unquoted lines at all.
@@ -285,11 +290,11 @@ nsInternetCiter::Rewrap(const nsString& aInString,
     if (citeLevel == 0)
     {
 #ifdef DEBUG_wrapping
-      nsAutoString debug (nsPromiseSubstring<PRUnichar>(aInString, posInString,
+      nsAutoString debug (nsPromiseSubstring<PRUnichar>(tString, posInString,
                                     nextNewline-posInString));
       printf("Unquoted: appending '%s'\n", debug.ToNewCString());
 #endif
-      aOutString.Append(nsPromiseSubstring(aInString, posInString,
+      aOutString.Append(nsPromiseSubstring(tString, posInString,
                                   nextNewline-posInString));
       outStringCol += nextNewline - posInString;
       if (nextNewline != (PRInt32)length)
@@ -309,7 +314,7 @@ nsInternetCiter::Rewrap(const nsString& aInString,
     while ((PRInt32)posInString < nextNewline)
     {
 #ifdef DEBUG_wrapping
-      nsAutoString debug (nsPromiseSubstring<PRUnichar>(aInString, posInString, nextNewline-posInString));
+      nsAutoString debug (nsPromiseSubstring<PRUnichar>(tString, posInString, nextNewline-posInString));
       printf("Inner loop: '%s'\n", debug.ToNewCString());
 #endif
 
@@ -318,13 +323,13 @@ nsInternetCiter::Rewrap(const nsString& aInString,
       {
         // If this short line is the final one in the in string,
         // then we need to include the final newline, if any:
-        if (nextNewline+1 == (PRInt32)length && aInString[nextNewline-1] == nl)
+        if (nextNewline+1 == (PRInt32)length && tString[nextNewline-1] == nl)
           ++nextNewline;
 #ifdef DEBUG_wrapping
-        nsAutoString debug (nsPromiseSubstring<PRUnichar>(aInString, posInString, nextNewline - posInString));
+        nsAutoString debug (nsPromiseSubstring<PRUnichar>(tString, posInString, nextNewline - posInString));
         printf("Short line: '%s'\n", debug.ToNewCString());
 #endif
-        aOutString += nsPromiseSubstring(aInString,
+        aOutString += nsPromiseSubstring(tString,
                                 posInString, nextNewline - posInString);
         outStringCol += nextNewline - posInString;
         posInString = nextNewline + 1;
@@ -339,13 +344,13 @@ nsInternetCiter::Rewrap(const nsString& aInString,
       rv = NS_ERROR_BASE;
       if (lineBreaker)
       {
-        rv = lineBreaker->Prev(unicodeStr + posInString, length - posInString,
+        rv = lineBreaker->Prev(tString.get() + posInString, length - posInString,
                                eol - posInString, &breakPt, &needMore);
         if (NS_FAILED(rv) || needMore)
         {
           // if we couldn't find a breakpoint looking backwards,
           // try looking forwards:
-          rv = lineBreaker->Next(unicodeStr + posInString,
+          rv = lineBreaker->Next(tString.get() + posInString,
                                  length - posInString,
                                  eol - posInString, &breakPt, &needMore);
           if (needMore) rv = NS_ERROR_BASE;
@@ -365,7 +370,7 @@ nsInternetCiter::Rewrap(const nsString& aInString,
       printf("breakPt = %d\n", breakPt);
 #endif
 
-      aOutString += nsPromiseSubstring(aInString, posInString, breakPt);
+      aOutString += nsPromiseSubstring(tString, posInString, breakPt);
       posInString += breakPt;
       outStringCol += breakPt;
 

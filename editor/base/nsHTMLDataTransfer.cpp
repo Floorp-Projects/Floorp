@@ -160,29 +160,29 @@ static nsCOMPtr<nsIDOMNode> GetTableParent(nsIDOMNode* aNode)
 }
 
 
-NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
+NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsAReadableString & aInString)
 {
   nsAutoString charset;
-  return InsertHTMLWithCharset(aInputString, charset);
+  return InsertHTMLWithCharset(aInString, charset);
 }
 
-nsresult nsHTMLEditor::InsertHTMLWithContext(const nsString& aInputString, const nsString& aContextStr, const nsString& aInfoStr)
+nsresult nsHTMLEditor::InsertHTMLWithContext(const nsAReadableString & aInputString, const nsAReadableString & aContextStr, const nsAReadableString & aInfoStr)
 {
   nsAutoString charset;
   return InsertHTMLWithCharsetAndContext(aInputString, charset, aContextStr, aInfoStr);
 }
 
 
-NS_IMETHODIMP nsHTMLEditor::InsertHTMLWithCharset(const nsString& aInputString, const nsString& aCharset)
+NS_IMETHODIMP nsHTMLEditor::InsertHTMLWithCharset(const nsAReadableString & aInputString, const nsAReadableString & aCharset)
 {
   return InsertHTMLWithCharsetAndContext(aInputString, aCharset, nsAutoString(), nsAutoString());
 }
 
 
-nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsString& aInputString,
-                                                       const nsString& aCharset,
-                                                       const nsString& aContextStr,
-                                                       const nsString& aInfoStr)
+nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAReadableString & aInputString,
+                                                       const nsAReadableString & aCharset,
+                                                       const nsAReadableString & aContextStr,
+                                                       const nsAReadableString & aInfoStr)
 {
   if (!mRules) return NS_ERROR_NOT_INITIALIZED;
 
@@ -604,8 +604,8 @@ NS_IMETHODIMP nsHTMLEditor::PrepareTransferable(nsITransferable **transferable)
 }
 
 NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable, 
-                                                   const nsString& aContextStr,
-                                                   const nsString& aInfoStr)
+                                                   const nsAReadableString & aContextStr,
+                                                   const nsAReadableString & aInfoStr)
 {
   nsresult rv = NS_OK;
   char* bestFlavor = nsnull;
@@ -645,7 +645,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
         nsAutoEditBatch beginBatching(this);
         // pasting does not inherit local inline styles
         RemoveAllInlineProperties();
-        rv = InsertText(stuffToPaste.GetUnicode());
+        rv = InsertText(stuffToPaste);
         if (text)
           nsMemory::Free(text);
       }
@@ -906,12 +906,15 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   return rv;
 }
 
-NS_IMETHODIMP nsHTMLEditor::CanDrag(nsIDOMEvent *aDragEvent, PRBool &aCanDrag)
+NS_IMETHODIMP nsHTMLEditor::CanDrag(nsIDOMEvent *aDragEvent, PRBool *aCanDrag)
 {
+  if (!aCanDrag)
+    return NS_ERROR_NULL_POINTER;
+
   /* we really should be checking the XY coordinates of the mouseevent and ensure that
    * that particular point is actually within the selection (not just that there is a selection)
    */
-  aCanDrag = PR_FALSE;
+  *aCanDrag = PR_FALSE;
  
   // KLUDGE to work around bug 50703
   // After double click and object property editing, 
@@ -949,7 +952,7 @@ NS_IMETHODIMP nsHTMLEditor::CanDrag(nsIDOMEvent *aDragEvent, PRBool &aCanDrag)
       res = selection->ContainsNode(eventTargetDomNode, PR_FALSE, &amTargettedCorrectly);
       if (NS_FAILED(res)) return res;
 
-    	aCanDrag = amTargettedCorrectly;
+    	*aCanDrag = amTargettedCorrectly;
     }
   }
 
@@ -1123,9 +1126,11 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
 }
 
 
-NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool &aCanPaste)
+NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
 {
-  aCanPaste = PR_FALSE;
+  if (!aCanPaste)
+    return NS_ERROR_NULL_POINTER;
+  *aCanPaste = PR_FALSE;
   
   // can't paste if readonly
   if (!IsModifiable())
@@ -1180,7 +1185,7 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool &aCanPaste)
   rv = clipboard->HasDataMatchingFlavors(flavorsList, aSelectionType, &haveFlavors);
   if (NS_FAILED(rv)) return rv;
   
-  aCanPaste = haveFlavors;
+  *aCanPaste = haveFlavors;
   return NS_OK;
 }
 
@@ -1197,7 +1202,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsQuotation(PRInt32 aSelectionType)
   return PasteAsCitedQuotation(citation, aSelectionType);
 }
 
-NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsString& aCitation,
+NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsAReadableString & aCitation,
                                                   PRInt32 aSelectionType)
 {
   nsAutoEditBatch beginBatching(this);
@@ -1310,7 +1315,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation(PRInt32 aSelectionType)
   return rv;
 }
 
-NS_IMETHODIMP nsHTMLEditor::InsertAsQuotation(const nsString& aQuotedText,
+NS_IMETHODIMP nsHTMLEditor::InsertAsQuotation(const nsAReadableString & aQuotedText,
                                               nsIDOMNode **aNodeInserted)
 {
   if (mFlags & eEditorPlaintextMask)
@@ -1327,7 +1332,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertAsQuotation(const nsString& aQuotedText,
 // in that here, quoted material is enclosed in a <pre> tag
 // in order to preserve the original line wrapping.
 NS_IMETHODIMP
-nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
+nsHTMLEditor::InsertAsPlaintextQuotation(const nsAReadableString & aQuotedText,
                                          nsIDOMNode **aNodeInserted)
 {
   nsresult rv;
@@ -1399,10 +1404,10 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
-                                     const nsString& aCitation,
+nsHTMLEditor::InsertAsCitedQuotation(const nsAReadableString & aQuotedText,
+                                     const nsAReadableString & aCitation,
                                      PRBool aInsertHTML,
-                                     const nsString& aCharset,
+                                     const nsAReadableString & aCharset,
                                      nsIDOMNode **aNodeInserted)
 {
   nsCOMPtr<nsIDOMNode> newNode;
@@ -1450,7 +1455,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
         res = InsertHTMLWithCharset(aQuotedText, aCharset);
 
       else
-        res = InsertText(aQuotedText.GetUnicode());  // XXX ignore charset
+        res = InsertText(aQuotedText);  // XXX ignore charset
 
       if (aNodeInserted)
       {
@@ -1475,9 +1480,9 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
 }
 
 nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(nsIDOMNSRange *aNSRange,
-                                                  const nsString& aInputString,
-                                                  const nsString& aContextStr,
-                                                  const nsString& aInfoStr,
+                                                  const nsAReadableString & aInputString,
+                                                  const nsAReadableString & aContextStr,
+                                                  const nsAReadableString & aInfoStr,
                                                   nsCOMPtr<nsIDOMNode> *outFragNode,
                                                   PRInt32 *outRangeStartHint,
                                                   PRInt32 *outRangeEndHint)

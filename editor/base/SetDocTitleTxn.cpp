@@ -38,7 +38,7 @@ SetDocTitleTxn::SetDocTitleTxn()
 }
 
 NS_IMETHODIMP SetDocTitleTxn::Init(nsIHTMLEditor *aEditor,
-                                   const nsString *aValue)
+                                   const nsAReadableString *aValue)
 
 {
   NS_ASSERTION(aEditor && aValue, "null args");
@@ -72,7 +72,7 @@ NS_IMETHODIMP SetDocTitleTxn::RedoTransaction(void)
   return SetDocTitle(mValue);
 }
 
-nsresult SetDocTitleTxn::SetDocTitle(nsString& aTitle)
+nsresult SetDocTitleTxn::SetDocTitle(const nsAReadableString& aTitle)
 {
   NS_ASSERTION(mEditor, "bad state");
   if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
@@ -89,7 +89,7 @@ nsresult SetDocTitleTxn::SetDocTitle(nsString& aTitle)
   return HTMLDoc->SetTitle(aTitle);
 }
 
-nsresult SetDocTitleTxn::SetDomTitle(nsString& aTitle)
+nsresult SetDocTitleTxn::SetDomTitle(const nsAReadableString& aTitle)
 {
   nsCOMPtr<nsIDOMDocument>  domDoc;
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
