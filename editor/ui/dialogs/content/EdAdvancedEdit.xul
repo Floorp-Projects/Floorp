@@ -55,6 +55,7 @@
   <script type="application/x-javascript" src="chrome://editor/content/EdAdvancedEdit.js"/>
   <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
   <script type="application/x-javascript" src="chrome://global/content/strres.js" />
+  <script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
   <broadcaster id="args" value=""/>
 
@@ -217,6 +218,6 @@
     </tabpanels>
   </tabbox>
   <spring class="spacer"/>
-  <box id="okCancelButtonsRight"/> 
+  <box id="okCancelHelpButtonsRight"/> 
 
 </window>

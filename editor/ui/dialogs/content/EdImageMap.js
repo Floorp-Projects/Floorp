@@ -40,6 +40,11 @@ function Startup(){
   initDialog();
 }
 
+function doHelpButton()
+{
+  openHelp("chrome://help/content/help.xul?imagemap_properties");
+}
+
 function initDialog(){
   //Get image element from parent
   imageElement = window.arguments[0];

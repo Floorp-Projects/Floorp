@@ -40,6 +40,7 @@
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdLinkProps.js"/>
   <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
+  <script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
   <broadcaster id="args" value=""/>
   <spring id="location" offsetY="50" persist="offsetX offsetY"/>
@@ -80,5 +81,5 @@
   <!-- from EdDialogOverlay -->
   <box id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->
-  <box id="okCancelButtons"/> 
+  <box id="okCancelHelpButtonsRight"/> 
 </window>

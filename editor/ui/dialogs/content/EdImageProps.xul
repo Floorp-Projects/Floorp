@@ -47,6 +47,7 @@
   <script type="application/x-javascript" src="chrome://editor/content/EdImageProps.js"/>
   <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
   <spring id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
@@ -301,5 +302,5 @@
   </box> <!-- END OF MORE/FEWER SECTION -->
   <separator class="groove"/>
   <!-- from global dialogOverlay -->
-  <box id="okCancelButtons"/> 
+  <box id="okCancelHelpButtonsRight"/> 
 </window>

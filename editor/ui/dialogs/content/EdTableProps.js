@@ -1242,6 +1242,11 @@ function Apply()
   return false;
 }
 
+function doHelpButton()
+{
+  openHelp("chrome://help/content/help.xul?table_properties");
+}
+
 function onOK()
 {
   // Do same as Apply and close window if ValidateData succeeded

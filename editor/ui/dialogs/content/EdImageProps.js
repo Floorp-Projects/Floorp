@@ -601,6 +601,11 @@ function ValidateData()
   return true;
 }
 
+function doHelpButton()
+{
+  openHelp("chrome://help/content/help.xul?image_properties");
+}
+
 function onOK()
 {
   // handle insertion of new image

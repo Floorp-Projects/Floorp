@@ -44,6 +44,7 @@
   <!-- Methods common to all editor dialogs -->
   <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js" />
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+  <script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
   <!-- Methods for Image Map only -->
   <script type="application/x-javascript" src="chrome://editor/content/EdImageMap.js" />
@@ -168,6 +169,6 @@
   <separator class="groove"/>
 
   <!-- from global dialogOverlay -->
-  <box id="okCancelButtons"/>
+  <box id="okCancelHelpButtonsRight"/>
 
 </window>
