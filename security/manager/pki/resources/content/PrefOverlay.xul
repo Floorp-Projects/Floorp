@@ -21,36 +21,31 @@
    -   Terry Hayes <thayes@netscape.com>
   -->
 
-<!-- This file extends "chrome://communicator/content/pref/preftree.xul" -->
+<!-- This file overlays "chrome://communicator/content/pref/preftree.xul" -->
 
 <!DOCTYPE overlay SYSTEM "chrome://pippki/locale/PrefOverlay.dtd">
 
 <overlay id="pipPrefOverlayID"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  
-  <treechildren id="panelChildren">
-    <treeitem id="securityItem" open="true" position="3" container="true" >
+
+  <treechildren id="securityChildren">
+    <treeitem id="sslItem" >
       <treerow>
-        <treecell class="treecell-indent" url="chrome://pippki/content/pref-security.xul"
-           label="&security.label;" />
+        <treecell class="treecell-indent" url="chrome://pippki/content/pref-ssl.xul"
+                  label="&ssl.label;" />
       </treerow>
-      <!-- Subitems go here -->
-      <treechildren id="securityChildren">
-        <treeitem id="sslItem" open="true" >
-          <treerow>
-             <treecell class="treecell-indent" url="chrome://pippki/content/pref-ssl.xul"
-               label="&ssl.label;" />
-          </treerow>
-        </treeitem>
-      </treechildren>
-      <treechildren id="securityChildren">
-        <treeitem id="validationItem" open="true" >
-          <treerow>
-             <treecell class="treecell-indent" url="chrome://pippki/content/pref-validation.xul"
-               label="&validation.label;" />
-          </treerow>
-        </treeitem>
-      </treechildren>
+    </treeitem>
+    <treeitem id="certItem" >
+      <treerow>
+        <treecell class="treecell-indent" url="chrome://pippki/content/pref-certs.xul"
+                  label="&certs.label;" />
+      </treerow>
+    </treeitem>
+    <treeitem id="validationItem" open="true" >
+      <treerow>
+        <treecell class="treecell-indent" url="chrome://pippki/content/pref-validation.xul"
+                 label="&validation.label;" />
+      </treerow>
     </treeitem>
   </treechildren>
 </overlay>

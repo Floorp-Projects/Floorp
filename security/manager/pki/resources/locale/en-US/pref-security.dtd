@@ -24,6 +24,7 @@
 <!ENTITY  security.title         "Security Preferences">
 <!ENTITY  security.label         "Privacy and Security">
 <!ENTITY  security.description   "Settings for Privacy and Security">
+
 <!ENTITY  resetsettings.label    "Reset Settings">
 <!ENTITY  resetpreferences.label "Reset Preferences...">
 <!ENTITY  managecerts.label      "Manage Certificates">
@@ -32,4 +33,8 @@
 <!ENTITY  managedevices.label    "Manage Security Devices...">
 <!ENTITY  managedevices.text     "Use this button to manage your security devices, such as smart cards.">
 <!ENTITY  managedevices.button   "Manage Security Devices...">
+
 <!ENTITY  ssl.label              "SSL">
+
+<!ENTITY  certs.title            "Certificates">
+<!ENTITY  certs.label            "Certificates">

@@ -26,7 +26,7 @@
 <overlay id="cookiePrefsOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <treechildren id="advancedChildren">
+  <treechildren id="securityChildren">
     <treeitem position="1">
       <treerow>
         <treecell class="treecell-indent"

@@ -18,77 +18,71 @@
    - Rights Reserved.
    - 
    - Contributor(s):
-   -  Bob Lord <lord@netscape.com>
-   -  Terry Hayes <thayes@netscape.com>
-   -  Javier Delgadillo <javi@netscape.com>
-   -
-   - Alternatively, the contents of this file may be used under the
-   - terms of the GNU General Public License Version 2 or later (the
-   - "GPL"), in which case the provisions of the GPL are applicable 
-   - instead of those above.  If you wish to allow use of your 
-   - version of this file only under the terms of the GPL and not to
-   - allow others to use your version of this file under the MPL,
-   - indicate your decision by deleting the provisions above and
-   - replace them with the notice and other provisions required by
-   - the GPL.  If you do not delete the provisions above, a recipient
-   - may use your version of this file under either the MPL or the
-   - GPL.
-  --> 
+   -   Bob Lord <lord@netscape.com>
+   -   Terry Hayes <thayes@netscape.com>
+  -->
+
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://pippki/locale/pref-security.dtd">
+<!DOCTYPE window [
+  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+  <!ENTITY % prefSec SYSTEM "chrome://pippki/locale/pref-security.dtd">
+  <!ENTITY % prefSslDTD SYSTEM "chrome://pippki/locale/pref-ssl.dtd">
+  %brandDTD;
+  %prefSec;
+  %prefSslDTD;
+]>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
-        orient="vertical" title="&security.title;"
-        onload="onLoad();" >
+        orient="vertical" title="certs.title;"
+        onload="parent.initPanel('chrome://pippki/content/pref-certs.xul');" >
 
-  <!-- List elements to manage for prefs?? -->
+  <!-- List elements to manage for prefs -->
+  <script language="JavaScript" src="pref-security.js"/>
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = [];
+    var _elementIDs = [ "certSelection" ];
   ]]>
   </script>
-  <script src="chrome://global/content/strres.js" />
-  <script src="pippki.js" />
-  <script src="pref-security.js" />
             
   <!-- Fancy panel header -->
-  <box class="box-smallheader" title="&security.label;" 
-     description="&security.description;"/>
+  <box class="box-smallheader" title="&certs.label;"/>
 
-  <titledbox orient="vertical">
-    <label value="&resetsettings.label;"/>
-<html id="resetsettings.text" />
+  <titledbox orient="vertical" autostretch="never" >
+    <label value="&SSLClientAuthMethod;"/>
+    <html> &certselect.description; </html>
     <!-- Prefs -->
-    <box halign="left" autostretch="never">
-      <button class="dialog" label="&resetpreferences.label;" disabled="true"
-        oncommand="alert('You FOOL! You'll get us ALL killed!');" />
-</box>
+    <radiogroup id="certSelection" pref="true" preftype="string" 
+	prefstring="security.default_personal_cert" prefattribute="value">
+    <radio group="certSelection" label="&certselect.auto;" value="Select Automatically"/>
+    <radio group="certSelection" label="&certselect.ask;" value="Ask Every Time"/>
+    </radiogroup>
   </titledbox>
 
+  <!-- Certificate manager -->
   <titledbox orient="vertical">
     <label value="&managecerts.label;"/>
-<html>
-&managecerts.text;
-</html>
+    <html>
+      &managecerts.text;
+    </html>
     <box halign="left" autostretch="never">
       <button class="dialog" label="&managecerts.button;" disabled="false"
         oncommand="openCertManager();" />
     </box>
   </titledbox>
 
+  <!-- Device manager -->
   <titledbox orient="vertical">
     <label value="&managedevices.label;"/>
-<html>
-&managedevices.text;
-</html>
+    <html>
+      &managedevices.text;
+    </html>
     <box halign="left" autostretch="never">
       <button class="dialog" label="&managedevices.button;" disabled="false"
         oncommand="openDeviceManager();" />
     </box>
   </titledbox>
-
 
 </window>
