@@ -2173,10 +2173,10 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   nsIFrame* spanFrame = spanFramePFD->mFrame;
 
   // Get the parent frame's font for all of the frames in this span
-  const nsStyleFont* parentFont;
-  spanFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)parentFont);
+  nsCOMPtr<nsIStyleContext> styleContext;
+  spanFrame->GetStyleContext(getter_AddRefs(styleContext));
   nsIRenderingContext* rc = mBlockReflowState->rendContext;
-  rc->SetFont(parentFont->mFont);
+  SetFontFromStyle(mBlockReflowState->rendContext, styleContext);
   nsCOMPtr<nsIFontMetrics> fm;
   rc->GetFontMetrics(*getter_AddRefs(fm));
 
@@ -2705,6 +2705,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         nscoord fontAscent, fontHeight;
         fm->GetMaxAscent(fontAscent);
         if (nsHTMLReflowState::UseComputedHeight()) {
+          const nsStyleFont* parentFont;
+          spanFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)parentFont);
           fontHeight = parentFont->mFont.size;
         }
         else 

@@ -1532,7 +1532,7 @@ nsTreeBodyFrame::GetCellWidth(PRInt32 aRow, const nsAString& aColID,
     mPresContext->GetShell(getter_AddRefs(shell));
     nsCOMPtr<nsIRenderingContext> rc;
     shell->CreateRenderingContext(this, getter_AddRefs(rc));
-    rc->SetFont(fontStyle->mFont);
+    rc->SetFont(fontStyle->mFont, nsnull);
 
     // Get the width of the text itself
     nscoord width;

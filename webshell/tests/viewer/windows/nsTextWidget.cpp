@@ -296,14 +296,14 @@ NS_METHOD nsTextWidget::Paint(nsIRenderingContext& aRenderingContext,
   //DrawScaledLine(aRenderingContext, rect.x+twoPixels, bottom-onePixel, right, bottom-onePixel, scale, appUnits, PR_TRUE); // bottom + 1
   
 
-  aRenderingContext.SetFont(*mFont);
+  nsIFontMetrics* metrics;
+  context->GetMetricsFor(*mFont, metrics);
+  aRenderingContext.SetFont(metrics);
 
   nscoord textWidth;
   nscoord textHeight;
   aRenderingContext.GetWidth(mText, textWidth);
 
-  nsIFontMetrics* metrics;
-  context->GetMetricsFor(*mFont, metrics);
   metrics->GetMaxAscent(textHeight);
 
   nscoord x = (twoPixels * 2)  + rect.x;

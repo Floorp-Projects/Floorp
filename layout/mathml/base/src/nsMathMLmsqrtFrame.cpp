@@ -199,7 +199,7 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
   nsIRenderingContext& renderingContext = *aReflowState.rendContext;
   const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
     mStyleContext->GetStyleData(eStyleStruct_Font));
-  renderingContext.SetFont(font->mFont);
+  renderingContext.SetFont(font->mFont, nsnull);
   nsCOMPtr<nsIFontMetrics> fm;
   renderingContext.GetFontMetrics(*getter_AddRefs(fm));
 

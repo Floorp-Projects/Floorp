@@ -2378,7 +2378,7 @@ nsHTMLReflowState::CalcLineHeight(nsIPresContext* aPresContext,
       lineHeight = font->mFont.size;
     }
     else {
-      aRenderingContext->SetFont(font->mFont);
+      SetFontFromStyle(aRenderingContext, sc);
       nsCOMPtr<nsIFontMetrics> fm;
       aRenderingContext->GetFontMetrics(*getter_AddRefs(fm));
 #ifdef NEW_FONT_HEIGHT_APIS
@@ -2416,21 +2416,9 @@ nsHTMLReflowState::ComputeHorizontalValue(nscoord aContainingBlockWidth,
       // pretend its zero...
     }
     else {
-      const nsStyleFont* font;
-      frame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&) font);
-
-      const nsStyleVisibility* vis; 
-      frame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
-
-      nsCOMPtr<nsIDeviceContext> deviceContext;
-      rendContext->GetDeviceContext(*getter_AddRefs(deviceContext));
-      nsCOMPtr<nsIAtom> langGroup;
-      if (vis->mLanguage) {
-        vis->mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
-      }
-      nsCOMPtr<nsIFontMetrics> fm;
-      deviceContext->GetMetricsFor(font->mFont, langGroup, *getter_AddRefs(fm));
-      rendContext->SetFont(fm);
+      nsCOMPtr<nsIStyleContext> styleContext;
+      frame->GetStyleContext(getter_AddRefs(styleContext));
+      SetFontFromStyle(rendContext, styleContext);
       nscoord fontWidth;
       rendContext->GetWidth('M', fontWidth);
       aResult = aCoord.GetIntValue() * fontWidth;

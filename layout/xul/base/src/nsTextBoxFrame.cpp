@@ -425,7 +425,7 @@ nsTextBoxFrame::PaintTitle(nsIPresContext*      aPresContext,
       aRenderingContext.FillRect(textRect.x, textRect.y + baseline - offset, mRect.width, size);
     }
  
-    aRenderingContext.SetFont(fontStyle->mFont);
+    aRenderingContext.SetFont(fontStyle->mFont, nsnull);
 
     CalculateUnderline(aRenderingContext);
 

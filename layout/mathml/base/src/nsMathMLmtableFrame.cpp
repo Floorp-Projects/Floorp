@@ -557,7 +557,7 @@ nsMathMLmtableOuterFrame::Reflow(nsIPresContext*          aPresContext,
       // XXX should instead use style data from the row of reference here ?
       const nsStyleFont* font;
       GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
-      aReflowState.rendContext->SetFont(font->mFont);
+      aReflowState.rendContext->SetFont(font->mFont, nsnull);
       nsCOMPtr<nsIFontMetrics> fm;
       aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
       nscoord axisHeight;

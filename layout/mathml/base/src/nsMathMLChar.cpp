@@ -589,7 +589,7 @@ nsGlyphTable::GetBoundingMetrics(nsIRenderingContext& aRenderingContext,
   if (aGlyphCode.font) {
     // glyph not associated to our primary font, it comes from an external font
     mFontName.StringAt(aGlyphCode.font, aFont.name);
-    aRenderingContext.SetFont(aFont);
+    aRenderingContext.SetFont(aFont, nsnull);
   }
 
   //if (mType == NS_TABLE_TYPE_UNICODE)
@@ -601,7 +601,7 @@ nsGlyphTable::GetBoundingMetrics(nsIRenderingContext& aRenderingContext,
   if (aGlyphCode.font) {
     // restore our primary font in the rendering context
     mFontName.StringAt(0, aFont.name);
-    aRenderingContext.SetFont(aFont);
+    aRenderingContext.SetFont(aFont, nsnull);
   }
   return rv;
 }
@@ -624,7 +624,7 @@ nsGlyphTable::DrawGlyph(nsIRenderingContext& aRenderingContext,
   if (aGlyphCode.font) {
     // glyph not associated to our primary font, it comes from an external font
     mFontName.StringAt(aGlyphCode.font, aFont.name);
-    aRenderingContext.SetFont(aFont);
+    aRenderingContext.SetFont(aFont, nsnull);
   }
 
   //if (mType == NS_TABLE_TYPE_UNICODE)
@@ -636,7 +636,7 @@ nsGlyphTable::DrawGlyph(nsIRenderingContext& aRenderingContext,
   if (aGlyphCode.font) {
     // restore our primary font in the rendering context
     mFontName.StringAt(0, aFont.name);
-    aRenderingContext.SetFont(aFont);
+    aRenderingContext.SetFont(aFont, nsnull);
   }
   if (aClipRect) {
     aRenderingContext.PopState(clipState);
@@ -1480,7 +1480,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
     fontName.Assign(NS_LITERAL_STRING("CMSY10")); // assumptions in the sqrt code, we need
     SetFirstFamily(theFont, fontName);         // to force precedence on this TeX font
   }
-  aRenderingContext.SetFont(theFont);
+  aRenderingContext.SetFont(theFont, nsnull);
   rv = aRenderingContext.GetBoundingMetrics(mData.get(),
                                             PRUint32(mData.Length()),
                                             mBoundingMetrics);
@@ -1577,7 +1577,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
     }
     glyphTable->GetPrimaryFontName(fontName);
     SetFirstFamily(theFont, fontName);
-    aRenderingContext.SetFont(theFont);
+    aRenderingContext.SetFont(theFont, nsnull);
 #ifdef NOISY_SEARCH
     char str[50];
     fontName.ToCString(str, sizeof(str));
@@ -1674,7 +1674,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
     // See if the parts of this table fit in the desired space ///////////////////////
     glyphTable->GetPrimaryFontName(fontName);
     SetFirstFamily(theFont, fontName);
-    aRenderingContext.SetFont(theFont);
+    aRenderingContext.SetFont(theFont, nsnull);
     // Compute the bounding metrics of all partial glyphs
     PRInt32 i;
     nsGlyphCode chdata[4];
@@ -1956,7 +1956,7 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
         fontName.Assign(NS_LITERAL_STRING("CMSY10")); // assumptions in the sqrt code, we need
         SetFirstFamily(theFont, fontName);        // to force precedence on this TeX font
       }
-      aRenderingContext.SetFont(theFont);
+      aRenderingContext.SetFont(theFont, nsnull);
 //printf("Painting %04X like a normal char\n", mData[0]);
 //aRenderingContext.SetColor(NS_RGB(255,0,0));
       aRenderingContext.DrawString(mData.get(), len, mRect.x, mRect.y + mBoundingMetrics.ascent);
@@ -1965,7 +1965,7 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
       // Set the stretchy font and grab some metrics to adjust the placements ...
       mGlyphTable->GetPrimaryFontName(fontName);
       SetFirstFamily(theFont, fontName);
-      aRenderingContext.SetFont(theFont);
+      aRenderingContext.SetFont(theFont, nsnull);
       // if there is a glyph of appropriate size, paint that glyph
       if (mGlyph) {
 //printf("Painting %04X with a glyph of appropriate size\n", mData[0]);

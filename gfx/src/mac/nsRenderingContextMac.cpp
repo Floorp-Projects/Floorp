@@ -801,13 +801,13 @@ NS_IMETHODIMP nsRenderingContextMac::GetLineStyle(nsLineStyle &aLineStyle)
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac::SetFont(const nsFont& aFont)
+NS_IMETHODIMP nsRenderingContextMac::SetFont(const nsFont& aFont, nsIAtom* aLangGroup)
 {
 	NS_IF_RELEASE(mGS->mFontMetrics);
 
 	if (mContext)
-		mContext->GetMetricsFor(aFont, mGS->mFontMetrics);
-		
+		mContext->GetMetricsFor(aFont, aLangGroup, mGS->mFontMetrics);
+
 	mChanges |= kFontChanged;
 		
 	return NS_OK;
