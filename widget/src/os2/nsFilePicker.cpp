@@ -112,10 +112,8 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   nsCAutoString initialDir;
   mDisplayDirectory->GetNativePath(initialDir);
   // If no display directory, re-use the last one.
-  if(initialDir.IsEmpty()) {
-    // Allocate copy of last used dir.
+  if(initialDir.IsEmpty())
     initialDir = mLastUsedDirectory;
-  }
 
   mFile.SetLength(0);
 
