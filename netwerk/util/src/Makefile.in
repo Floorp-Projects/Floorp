@@ -19,7 +19,7 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-LIBRARY_NAME = netwerkutil_s
+LIBRARY_NAME = neckoutil_s
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -32,7 +32,7 @@ EXPORTS =			   \
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
-MODULE = netwerk
+MODULE = necko
 
 include $(topsrcdir)/config/config.mk
 

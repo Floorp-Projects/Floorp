@@ -39,9 +39,9 @@ EXPORTS=			\
 	nsHTTPCID.h		\
 	$(NULL)
 
-REQUIRES = xpcom netwerk raptor
+REQUIRES = xpcom necko raptor
 
-MODULE = netwerk
+MODULE = necko
 
 include $(topsrcdir)/config/config.mk
 

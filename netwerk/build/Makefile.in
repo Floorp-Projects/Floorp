@@ -23,18 +23,18 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-LIBRARY_NAME = netwerk
+LIBRARY_NAME = necko
 IS_COMPONENT = 1
 
-MODULE = netwerk
+MODULE = necko
 
 CPPSRCS =                              \
         nsNetFactory.cpp 	       \
         $(NULL)
 
 SHARED_LIBRARY_LIBS =                       \
-        $(DIST)/lib/libnetwerkbase_s.a \
-        $(DIST)/lib/libnetwerkdns_s.a \
+        $(DIST)/lib/libneckobase_s.a \
+        $(DIST)/lib/libneckodns_s.a \
         $(NULL)
 
 LOCAL_INCLUDES  += \

@@ -21,7 +21,7 @@ MODULE=necko
 // temporary, until we land:
 !ifndef NECKO
 include <$(DEPTH)/config/config.mak>
-PUBLIC = $(DEPTH)\necko\dist\include
+PUBLIC = $(DEPTH)\netwerk\dist\include
 !endif
 
 MAKE_OBJ_TYPE=DLL
@@ -32,11 +32,11 @@ CPP_OBJS=                            \
         .\$(OBJDIR)\nsNetFactory.obj \
 	$(NULL)
 
-LLIBS=                                \
+LLIBS=                              \
         $(DIST)\lib\neckobase_s.lib \
         $(DIST)\lib\neckodns_s.lib  \
-        $(DIST)\lib\xpcom.lib         \
-        $(DIST)\lib\plc3.lib          \
+        $(DIST)\lib\xpcom.lib       \
+        $(DIST)\lib\plc3.lib        \
         $(LIBNSPR)  
 
 MISCDEP=$(LLIBS)

@@ -21,8 +21,8 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-MODULE = netwerk
-XPIDL_MODULE = netwerk_base
+MODULE = necko
+XPIDL_MODULE = necko_base
 
 XPIDLSRCS =                      \
         nsIRequest.idl           \

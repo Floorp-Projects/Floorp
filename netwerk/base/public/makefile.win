@@ -22,7 +22,7 @@ DEPTH = ..\..\..
 // temporary, until we land:
 !ifndef NECKO
 include <$(DEPTH)/config/config.mak>
-PUBLIC = $(DEPTH)\necko\dist\include
+PUBLIC = $(DEPTH)\netwerk\dist\include
 !endif
 
 EXPORTS =                           \
@@ -53,7 +53,7 @@ XPIDLSRCS =                        \
 
 include <$(DEPTH)/config/rules.mak>
 
-$(DEPTH)\necko\dist\include: 
-        -mkdir $(DEPTH)\necko\dist
-        -mkdir $(DEPTH)\necko\dist\include
+$(DEPTH)\netwerk\dist\include: 
+        -mkdir $(DEPTH)\netwerk\dist
+        -mkdir $(DEPTH)\netwerk\dist\include
 

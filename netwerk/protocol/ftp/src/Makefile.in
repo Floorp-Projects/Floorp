@@ -33,7 +33,7 @@ CPPSRCS =                             \
         nsFtpFactory.cpp              \
         $(NULL)
 
-MODULE = netwerk
+MODULE = necko
 
 include $(topsrcdir)/config/config.mk
 

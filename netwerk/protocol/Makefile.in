@@ -21,7 +21,7 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-MODULE		= netwerk
+MODULE		= necko
 
 include $(DEPTH)/config/autoconf.mk
 
