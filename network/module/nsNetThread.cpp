@@ -65,6 +65,8 @@ void net_InitAsyncDNS();
 #endif /* XP_PC */
 
 
+PRThread* gNetlibThread = nsnull;
+
 /*
  * Initialize our protocols
  */
@@ -202,6 +204,7 @@ void nsNetlibThread::NetlibThreadMain(void *aParam)
      * Initialize netlib on the netlib thread...
      */
     NS_InitNetlib();
+    gNetlibThread = PR_GetCurrentThread();
     
     me->mIsNetlibThreadRunning = PR_TRUE;
 
@@ -610,79 +613,98 @@ nsresult nsStreamListenerProxy::GetStatus()
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 NS_IMPL_THREADSAFE_ISUPPORTS(nsStreamListenerProxy, kIStreamListenerIID);
 
-
 NS_IMETHODIMP 
 nsStreamListenerProxy::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
-    nsresult rv;
+  nsresult rv;
+
+  if (PR_GetCurrentThread() == gNetlibThread) {
     OnStartBindingProxyEvent* ev;
 
     rv = GetStatus();
     if (NS_SUCCEEDED(rv)) {
-        ev = new OnStartBindingProxyEvent(this, aURL, aContentType);
-        if (nsnull == ev) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        } else {
-          ev->Fire();
-        }
+      ev = new OnStartBindingProxyEvent(this, aURL, aContentType);
+      if (nsnull == ev) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      } else {
+        ev->Fire();
+      }
     }
-    return rv;
+  } else {
+    rv = mRealListener->OnStartBinding(aURL, aContentType);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
 nsStreamListenerProxy::OnProgress(nsIURL* aURL, PRInt32 aProgress, 
                                   PRInt32 aProgressMax)
 {
+  nsresult rv;
+
+  if (PR_GetCurrentThread() == gNetlibThread) {
     OnProgressProxyEvent* ev;
-    nsresult rv;
 
     rv = GetStatus();
     if (NS_SUCCEEDED(rv)) {
-        ev = new OnProgressProxyEvent(this, aURL, aProgress, aProgressMax);
-        if (nsnull == ev) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        } else {
-            ev->Fire();
-        }
+      ev = new OnProgressProxyEvent(this, aURL, aProgress, aProgressMax);
+      if (nsnull == ev) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      } else {
+        ev->Fire();
+      }
     }
-    return rv;
+  } else {
+    rv = mRealListener->OnProgress(aURL, aProgress, aProgressMax);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
 nsStreamListenerProxy::OnStatus(nsIURL* aURL, const nsString &aMsg)
 {
-    nsresult rv;
+  nsresult rv;
+
+  if (PR_GetCurrentThread() == gNetlibThread) {
     OnStatusProxyEvent* ev;
 
     rv = GetStatus();
     if (NS_SUCCEEDED(rv)) {
-        ev = new OnStatusProxyEvent(this, aURL, aMsg);
-        if (nsnull == ev) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        } else {
-            ev->Fire();
-        }
+      ev = new OnStatusProxyEvent(this, aURL, aMsg);
+      if (nsnull == ev) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      } else {
+        ev->Fire();
+      }
     }
-    return rv;
+  } else {
+    rv = mRealListener->OnStatus(aURL, aMsg);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
 nsStreamListenerProxy::OnStopBinding(nsIURL* aURL, PRInt32 aStatus, 
                                      const nsString &aMsg)
 {
-    nsresult rv;
+  nsresult rv;
+
+  if (PR_GetCurrentThread() == gNetlibThread) {
     OnStopBindingProxyEvent* ev;
 
     rv = GetStatus();
     if (NS_SUCCEEDED(rv)) {
-        ev = new OnStopBindingProxyEvent(this, aURL, aStatus, aMsg);
-        if (nsnull == ev) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        } else {
-            ev->Fire();
-        }
+      ev = new OnStopBindingProxyEvent(this, aURL, aStatus, aMsg);
+      if (nsnull == ev) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      } else {
+        ev->Fire();
+      }
     }
-    return rv;
+  } else {
+    rv = mRealListener->OnStopBinding(aURL, aStatus, aMsg);
+  }
+  return rv;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -690,27 +712,39 @@ nsStreamListenerProxy::OnStopBinding(nsIURL* aURL, PRInt32 aStatus,
 NS_IMETHODIMP
 nsStreamListenerProxy::GetBindInfo(nsIURL* aURL)
 {
-    return NS_ERROR_FAILURE;
+  nsresult rv;
+
+  if (PR_GetCurrentThread() == gNetlibThread) {
+    PR_ASSERT(0);
+    rv = NS_ERROR_FAILURE;
+  } else {
+    rv = mRealListener->GetBindInfo(aURL);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
 nsStreamListenerProxy::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, 
                                        PRInt32 aLength)
 {
-    nsresult rv;
+  nsresult rv;
+
+  if (PR_GetCurrentThread() == gNetlibThread) {
     OnDataAvailableProxyEvent* ev;
 
     rv = GetStatus();
     if (NS_SUCCEEDED(rv)) {
-        ev = new OnDataAvailableProxyEvent(this, aURL, aIStream, aLength);
-        if (nsnull == ev) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        } else {
-            ev->Fire();
-        }
+      ev = new OnDataAvailableProxyEvent(this, aURL, aIStream, aLength);
+      if (nsnull == ev) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      } else {
+        ev->Fire();
+      }
     }
-
-    return rv;
+  } else {
+    mRealListener->OnDataAvailable(aURL, aIStream, aLength);
+  }
+  return rv;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -792,11 +826,16 @@ net_CallExitRoutineProxy(Net_GetUrlExitFunc* exit_routine,
                          FO_Present_Types    format_out,
                          MWContext*          window_id)
 {
-  CallExitRoutineProxyEvent* ev;
 
-  ev = new CallExitRoutineProxyEvent(exit_routine, URL_s, status, 
-                                     format_out, window_id);
-  if (nsnull != ev) {
-    ev->Fire();
+  if (PR_GetCurrentThread() == gNetlibThread) {
+    CallExitRoutineProxyEvent* ev;
+
+    ev = new CallExitRoutineProxyEvent(exit_routine, URL_s, status, 
+                                       format_out, window_id);
+    if (nsnull != ev) {
+      ev->Fire();
+    }
+  } else {
+    net_CallExitRoutine(exit_routine, URL_s, status, format_out, window_id);
   }
 }
