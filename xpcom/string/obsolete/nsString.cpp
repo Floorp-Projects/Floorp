@@ -70,12 +70,10 @@ nsCString::nsCString()  {
   Initialize(*this,eOneByte);
 }
 
-#ifdef NEW_STRING_APIS
 nsCString::nsCString(const char* aCString) {  
   Initialize(*this,eOneByte);
   Assign(aCString);
 }
-#endif
 
 /**
  * This constructor accepts an ascii string
@@ -137,7 +135,6 @@ nsCString::~nsCString() {
   Destroy(*this);
 }
 
-#ifdef NEW_STRING_APIS
 const char* nsCString::GetReadableFragment( nsReadableFragment<char>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const {
   switch ( aRequest ) {
     case kFirstFragment:
@@ -172,7 +169,6 @@ nsCString::nsCString( const nsAReadableCString& aReadable ) {
   Initialize(*this,eOneByte);
   Assign(aReadable);
 }
-#endif
 
 void nsCString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
   if (aResult) {
@@ -232,35 +228,6 @@ const char* nsCString::GetBuffer(void) const {
   return mStr;
 }
 
-#ifndef NEW_STRING_APIS
-/**
- * Get nth character.
- */
-PRUnichar nsCString::operator[](PRUint32 anIndex) const {
-  return GetCharAt(*this,anIndex);
-}
-
-/**
- * Get nth character.
- */
-PRUnichar nsCString::CharAt(PRUint32 anIndex) const {
-  return GetCharAt(*this,anIndex);
-}
-
-/**
- * Get 1st character.
- */
-PRUnichar nsCString::First(void) const{
-  return GetCharAt(*this,0);
-}
-
-/**
- * Get last character.
- */
-PRUnichar nsCString::Last(void) const{
-  return (char)GetCharAt(*this,mLength-1);
-}
-#endif // !defined(NEW_STRING_APIS)
 
 /**
  * set a char inside this string at given index
@@ -281,57 +248,6 @@ PRBool nsCString::SetCharAt(PRUnichar aChar,PRUint32 anIndex){
 /*********************************************************
   append (operator+) METHODS....
  *********************************************************/
-#ifndef NEW_STRING_APIS
-/**
- * Create a new string by appending given string to this
- * @update  gess 01/04/99
- * @param   aString -- 2nd string to be appended
- * @return  new subsumeable string (this makes things faster by reducing copying)
- */
-nsSubsumeCStr nsCString::operator+(const nsCString& aString){
-  nsCString temp(*this); //make a temp string the same size as this...
-  nsStr::StrAppend(temp,aString,0,aString.mLength);
-  return nsSubsumeCStr(temp);
-}
-
-
-/**
- * create a new string by adding this to the given buffer.
- * @update  gess 01/04/99
- * @param   aCString is a ptr to cstring to be added to this
- * @return  newly created subsumable string
- */
-nsSubsumeCStr nsCString::operator+(const char* aCString) {
-  nsCString temp(*this);
-  temp.Append(aCString);
-  return nsSubsumeCStr(temp);
-}
-
-
-/**
- * create a new string by adding this to the given char.
- * @update  gess 01/04/99
- * @param   aChar is a char to be added to this
- * @return  newly created subsumable string
- */
-nsSubsumeCStr nsCString::operator+(PRUnichar aChar) {
-  nsCString temp(*this);
-  temp.Append(aChar);
-  return nsSubsumeCStr(temp);
-}
-
-/**
- * create a new string by adding this to the given char.
- * @update  gess 01/04/99
- * @param   aChar is a char to be added to this
- * @return  newly created string
- */
-nsSubsumeCStr nsCString::operator+(char aChar) {
-  nsCString temp(*this);
-  temp.Append(aChar);
-  return nsSubsumeCStr(temp);
-}
-#endif // !defined(NEW_STRING_APIS)
 
 /**********************************************************************
   Lexomorphic transforms...
@@ -843,73 +759,6 @@ PRInt32 nsCString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
   String manipulation methods...                
  *********************************************************************/
 
-#ifndef NEW_STRING_APIS
-/**
- * assign given nsStr (or derivative) to this one
- * @update  gess 01/04/99
- * @param   aString: string to be appended
- * @return  this
- */
-nsCString& nsCString::Assign(const nsStr& aString,PRInt32 aCount) {
-  if(this!=&aString){
-    nsStr::Truncate(*this,0);
-
-    if(aCount<0)
-      aCount=aString.mLength;
-    else aCount=MinInt(aCount,aString.mLength);
-
-    StrAssign(*this,aString,0,aCount);
-  }
-  return *this;
-}
-  
-/**
- * assign given char* to this string
- * @update  gess 01/04/99
- * @param   aCString: buffer to be assigned to this 
- * @param   aCount -- length of given buffer or -1 if you want me to compute length.
- * NOTE:    IFF you pass -1 as aCount, then your buffer must be null terminated.
- *
- * @return  this
- */
-nsCString& nsCString::Assign(const char* aCString,PRInt32 aCount) {
-  nsStr::Truncate(*this,0);
-  if(aCString){
-    Append(aCString,aCount);
-  }
-  return *this;
-}
-
-/**
- * assign given char to this string
- * @update  gess 01/04/99
- * @param   aChar: char to be assignd to this
- * @return  this
- */
-nsCString& nsCString::Assign(char aChar) {
-  nsStr::Truncate(*this,0);
-  return Append(aChar);
-}
-
-/**
- * WARNING! THIS IS A VERY SPECIAL METHOD. 
- * This method "steals" the contents of aSource and hands it to aDest.
- * Ordinarily a copy is made, but not in this version.
- * @update  gess10/30/98
- * @param 
- * @return
- */
-#if defined(AIX) || defined(XP_OS2_VACPP)
-nsCString& nsCString::operator=(const nsSubsumeCStr& aSubsumeString) {
-  nsSubsumeCStr temp(aSubsumeString);  // a temp is needed for the AIX and VAC++ compiler
-  CSubsume(*this,temp);
-#else
-nsCString& nsCString::operator=(nsSubsumeCStr& aSubsumeString) {
-  CSubsume(*this,aSubsumeString);
-#endif // AIX || XP_OS2_VACPP
-  return *this;
-}
-#endif
 
 /**
  * assign given unichar* to this string
@@ -952,7 +801,6 @@ void nsCString::AssignWithConversion( const nsString& aString ) {
   AssignWithConversion(aString.GetUnicode(), aString.Length());
 }
 
-#ifdef NEW_STRING_APIS
 void nsCString::AssignWithConversion( const nsAReadableString& aString ) {
   nsStr::Truncate(*this,0);
   PRInt32 count = aString.Length();
@@ -976,9 +824,7 @@ void nsCString::AssignWithConversion( const nsAReadableString& aString ) {
     }
   }
 }
-#endif
 
-#ifdef NEW_STRING_APIS
 void nsCString::AppendWithConversion( const nsAReadableString& aString ) {
   PRInt32 count = aString.Length();
 
@@ -1001,7 +847,6 @@ void nsCString::AppendWithConversion( const nsAReadableString& aString ) {
     }
   }
 }
-#endif
 
 /**
  * assign given unichar to this string
@@ -1014,7 +859,6 @@ void nsCString::AssignWithConversion(PRUnichar aChar) {
   AppendWithConversion(aChar);
 }
 
-#ifdef NEW_STRING_APIS
 void nsCString::do_AppendFromReadable( const nsAReadableCString& aReadable )
   {
     if ( SameImplementation( NS_STATIC_CAST(const nsAReadableCString&, *this), aReadable) )
@@ -1022,87 +866,7 @@ void nsCString::do_AppendFromReadable( const nsAReadableCString& aReadable )
     else
       nsAWritableCString::do_AppendFromReadable(aReadable);
   }
-#endif
 
-#ifndef NEW_STRING_APIS
-/**
- * append given string to this string
- * @update  gess 01/04/99
- * @param   aString : string to be appended to this
- * @return  this
- */
-nsCString& nsCString::Append(const nsCString& aString,PRInt32 aCount) {
-  if(aCount<0)
-    aCount=aString.mLength;
-  else aCount=MinInt(aCount,aString.mLength);
-  if(0<aCount)
-    StrAppend(*this,aString,0,aCount);
-  return *this;
-}
-
-#if 0
-/**
- * append given string to this string; 
- * @update  gess 01/04/99
- * @param   aString : string to be appended to this
- * @return  this
- */
-nsCString& nsCString::Append(const nsStr& aString,PRInt32 aCount) {
-
-  if(aCount<0)
-    aCount=aString.mLength;
-  else aCount=MinInt(aCount,aString.mLength);
-
-  if(0<aCount)
-    StrAppend(*this,aString,0,aCount);
-  return *this;
-}
-#endif
-
-/**
- * append given c-string to this string
- * @update  gess 01/04/99
- * @param   aString : string to be appended to this
- * @param   aCount: #of chars to be copied; -1 means to copy the whole thing
- * NOTE:    IFF you pass -1 as aCount, then your buffer must be null terminated.
- *
- * @return  this
- */
-nsCString& nsCString::Append(const char* aCString,PRInt32 aCount) {
-  if(aCString){
-    nsStr temp;
-    nsStr::Initialize(temp,eOneByte);
-    temp.mStr=(char*)aCString;
-
-    if(0<aCount) {
-      temp.mLength=aCount;
-    }
-    else aCount=temp.mLength=nsCRT::strlen(aCString);
-
-    if(0<aCount)
-      StrAppend(*this,temp,0,aCount);
-  }
-  return *this;
-}
-
-/**
- * append given unichar to this string
- * @update  gess 01/04/99
- * @param   aChar: char to be appended to this
- * @return  this
- */
-nsCString& nsCString::Append(char aChar) {
-  char buf[2]={0,0};
-  buf[0]=aChar;
-
-  nsStr temp;
-  nsStr::Initialize(temp,eOneByte);
-  temp.mStr=buf;
-  temp.mLength=1;
-  StrAppend(*this,temp,0,1);
-  return *this;
-}
-#endif
 
 /**
  * append given char to this string
@@ -1272,7 +1036,6 @@ void nsCString::InsertWithConversion(PRUnichar aChar,PRUint32 anOffset){
   StrInsert(*this,anOffset,temp,0,1);
 }
 
-#ifdef NEW_STRING_APIS
 void nsCString::do_InsertFromReadable( const nsAReadableCString& aReadable, PRUint32 atPosition )
   {
     if ( SameImplementation( NS_STATIC_CAST(const nsAReadableCString&, *this), aReadable) )
@@ -1280,98 +1043,9 @@ void nsCString::do_InsertFromReadable( const nsAReadableCString& aReadable, PRUi
     else
       nsAWritableCString::do_InsertFromReadable(aReadable, atPosition);
   }
-#endif
-
-#ifndef NEW_STRING_APIS
-/*
- *  This method inserts n chars from given string into this
- *  string at str[anOffset].
- *  
- *  @update gess 4/1/98
- *  @param  aString -- source String to be inserted into this
- *  @param  anOffset -- insertion position within this str
- *  @param  aCount -- number of chars to be copied from aCopy
- *  @return this
- */
-void nsCString::Insert(const nsCString& aString,PRUint32 anOffset,PRInt32 aCount) {
-
-  StrInsert(*this,anOffset,aString,0,aCount);
-}
-
-/**
- * Insert a char* into this string at a specified offset.
- *
- * @update  gess4/22/98
- * @param   char* aCString to be inserted into this string
- * @param   anOffset is insert pos in str 
- * @param   aCounttells us how many chars to insert
- * @return  this
- */
-void nsCString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCount){
-  if(aCString){
-    nsStr temp;
-    nsStr::Initialize(temp,eOneByte);
-    temp.mStr=(char*)aCString;
-
-    if(0<aCount) {
-      temp.mLength=aCount;
-
-      // If this assertion fires, the caller is probably lying about the length of
-      //   the passed-in string.  File a bug on the caller.
-#ifdef NS_DEBUG
-      PRInt32 len=nsStr::FindChar(temp,0,PR_FALSE,0,temp.mLength);
-      if(kNotFound<len) {
-        NS_WARNING(kPossibleNull);
-      }
-#endif
-
-    }
-    else aCount=temp.mLength=nsCRT::strlen(aCString);
-
-    if(temp.mLength && (0<aCount)){
-      StrInsert(*this,anOffset,temp,0,aCount);
-    }
-  }
-}
 
 
-/**
- * Insert a single uni-char into this string at
- * a specified offset.
- *
- * @update  gess4/22/98
- * @param   aChar char to be inserted into this string
- * @param   anOffset is insert pos in str 
- * @return  this
- */
-void nsCString::Insert(char aChar,PRUint32 anOffset){
-  char theBuffer[2]={0,0};
-  theBuffer[0]=aChar;
-  nsStr temp;
-  nsStr::Initialize(temp,eOneByte);
-  temp.mStr=theBuffer;
-  temp.mLength=1;
-  StrInsert(*this,anOffset,temp,0,1);
-}
-#endif
 
-
-/*
- *  This method is used to cut characters in this string
- *  starting at anOffset, continuing for aCount chars.
- *  
- *  @update gess 01/04/99
- *  @param  anOffset -- start pos for cut operation
- *  @param  aCount -- number of chars to be cut
- *  @return *this
- */
-#ifndef NEW_STRING_APIS
-void nsCString::Cut(PRUint32 anOffset, PRInt32 aCount) {
-  if(0<aCount) {
-    nsStr::Delete(*this,anOffset,aCount);
-  }
-}
-#endif
 
 /**********************************************************************
   Searching methods...                
@@ -1676,55 +1350,6 @@ PRInt32 nsCString::CompareWithConversion(const char *aCString,PRBool aIgnoreCase
   return 0;
 }
 
-#ifndef NEW_STRING_APIS
-/**
- * Compare given nsStr with this cstring.
- * 
- * @param   aString is an nsStr instance to be compared
- * @param   aIgnoreCase tells us how to treat case
- * @param   aCount tells us how many chars to test; -1 implies full length
- * @return  -1,0,1
- */
-PRInt32 nsCString::Compare(const nsStr& aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  return nsStr::StrCompare(*this,aString,aCount,aIgnoreCase);
-}
-#endif
-
-#ifndef NEW_STRING_APIS
-/**
- *  Here come a whole bunch of operator functions that are self-explanatory...
- */
-PRBool nsCString::operator==(const nsStr& S) const {return Equals(S);}      
-PRBool nsCString::operator==(const char* s) const {return Equals(s);}
-//PRBool nsCString::operator==(const PRUnichar* s) const {return Equals(s);}
-
-PRBool nsCString::operator!=(const nsStr& S) const {return PRBool(Compare(S)!=0);}
-PRBool nsCString::operator!=(const char* s) const {return PRBool(Compare(nsCAutoString(s))!=0);}
-//PRBool nsCString::operator!=(const PRUnichar* s) const {return PRBool(Compare(s)!=0);}
-
-PRBool nsCString::operator<(const nsStr& S) const {return PRBool(Compare(S)<0);}
-PRBool nsCString::operator<(const char* s) const {return PRBool(Compare(nsCAutoString(s))<0);}
-//PRBool nsCString::operator<(const PRUnichar* s) const {return PRBool(Compare(s)<0);}
-
-PRBool nsCString::operator>(const nsStr& S) const {return PRBool(Compare(S)>0);}
-PRBool nsCString::operator>(const char* s) const {return PRBool(Compare(nsCAutoString(s))>0);}
-//PRBool nsCString::operator>(const PRUnichar* s) const {return PRBool(Compare(s)>0);}
-
-PRBool nsCString::operator<=(const nsStr& S) const {return PRBool(Compare(S)<=0);}
-PRBool nsCString::operator<=(const char* s) const {return PRBool(Compare(nsCAutoString(s))<=0);}
-//PRBool nsCString::operator<=(const PRUnichar* s) const {return PRBool(Compare(s)<=0);}
-
-PRBool nsCString::operator>=(const nsStr& S) const {return PRBool(Compare(S)>=0);}
-PRBool nsCString::operator>=(const char* s) const {return PRBool(Compare(nsCAutoString(s))>=0);}
-//PRBool nsCString::operator>=(const PRUnichar* s) const {return PRBool(Compare(s)>=0);}
-#endif
-
-#ifndef NEW_STRING_APIS
-PRBool nsCString::EqualsIgnoreCase(const nsStr& aString) const {
-  return Equals(aString,PR_TRUE);
-}
-#endif
-
 PRBool nsCString::EqualsIgnoreCase(const char* aString,PRInt32 aLength) const {
   return EqualsWithConversion(aString,PR_TRUE,aLength);
 }
@@ -1734,22 +1359,6 @@ PRBool nsCString::EqualsIgnoreCase(const PRUnichar* aString,PRInt32 aLength) con
 }
 
 
-#ifndef NEW_STRING_APIS
-/**
- * Compare this to given string; note that we compare full strings here.
- * 
- * @update gess 01/04/99
- * @param  aString is the other nsCString to be compared to
- * @param   aIgnoreCase tells us how to treat case
- * @param   aCount tells us how many chars to test; -1 implies full length
- * @return TRUE if equal
- */
-PRBool nsCString::Equals(const nsStr& aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  PRInt32 theAnswer=nsStr::StrCompare(*this,aString,aCount,aIgnoreCase);
-  PRBool  result=PRBool(0==theAnswer);
-  return result;
-}
-#endif
 
 /**
  * Compare this to given string; note that we compare full strings here.
@@ -1935,7 +1544,6 @@ void nsCString::DebugDump(void) const {
        
 //----------------------------------------------------------------------
 
-#ifdef NEW_STRING_APIS
 NS_ConvertUCS2toUTF8::NS_ConvertUCS2toUTF8( const nsAReadableString& aString )
   {
     nsReadingIterator<PRUnichar> start(aString.BeginReading());
@@ -1947,7 +1555,6 @@ NS_ConvertUCS2toUTF8::NS_ConvertUCS2toUTF8( const nsAReadableString& aString )
       start += start.size_forward();
     }
   }
-#endif
 
 void
 NS_ConvertUCS2toUTF8::Append( const PRUnichar* aString, PRUint32 aLength )
