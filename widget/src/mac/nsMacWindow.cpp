@@ -1461,8 +1461,10 @@ NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
         // instead we just hide the window by calling Show(false), which sets
         // mVisible to false. But the window is still considered to be 'visible'
         // so we set that back to true.
-        Show(PR_FALSE);
-        mVisible = PR_TRUE;
+        if (mVisible) {
+          Show(PR_FALSE);
+          mVisible = PR_TRUE;
+        }
       }
     }
   }
