@@ -228,7 +228,9 @@ ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs)
      (!aAttach->real_name || *aAttach->real_name == 0))
   {
     if (aHdrs->munged_subject)
-      mime_SACopy(&(aAttach->real_name), aHdrs->munged_subject);
+    {
+      aAttach->real_name = PR_smprintf("%s.eml", aHdrs->munged_subject);
+    }
     else
       mime_SACopy(&(aAttach->real_name), "ForwardedMessage.eml");
     return;

@@ -17,7 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *       Ben Bucksch <mozilla@bucksch.org>
  */
 
 #include "mimetpla.h"
@@ -63,10 +64,8 @@ MimeTextBuildPrefixCSS(PRInt32    quotedSizeSetting,   // mail.quoted_size
                        PRInt32    quotedStyleSetting,  // mail.quoted_style
                        char       *citationColor)      // mail.citation_color
 {
-  char        *openDiv = nsnull;
+  char        *formatCstr = nsnull;
   nsCString   formatString;
-  
-  formatString = "<DIV name=\"text-cite\" style=\"";
   
   switch (quotedStyleSetting)
   {
@@ -87,32 +86,36 @@ MimeTextBuildPrefixCSS(PRInt32    quotedSizeSetting,   // mail.quoted_size
   {
   case 0:     // regular
     break;
-  case 1:     // bigger
-    formatString.Append("font-size: bigger; ");
+  case 1:     // large
+    formatString.Append("font-size: large; ");
     break;
-  case 2:     // smaller
-    formatString.Append("font-size: smaller; ");
+  case 2:     // small
+    formatString.Append("font-size: small; ");
     break;
   }
   
-  if (citationColor)
+  if (citationColor && nsCRT::strlen(citationColor) != 0)
   {
-    formatString.Append("color: %s;\">");
-    openDiv = PR_smprintf(formatString, citationColor);
+    formatString += "color: ";
+    formatString += citationColor;
+    formatString += ';';
   }
-  else
-  {
-    formatString.Append("\">");
-    openDiv = formatString.ToNewCString();
-  }
-  
-  return openDiv;
+
+  formatCstr = formatString.ToNewCString();
+  return formatCstr;
 }
 
 static int
 MimeInlineTextPlain_parse_begin (MimeObject *obj)
 {
   int status = 0;
+  PRBool quoting = ( obj->options
+    && ( obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting ||
+         obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting
+       )       );  // The output will be inserted in the composer as quotation
+  PRBool plainHTML = quoting || (obj->options &&
+       obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs);
+       // Just good(tm) HTML. No reliance on CSS (only for prefs).
 
   status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_begin(obj);
   if (status < 0) return status;
@@ -123,73 +126,86 @@ MimeInlineTextPlain_parse_begin (MimeObject *obj)
 	  obj->options->write_html_p &&
 	  obj->options->output_fn)
 	{
-    char buf[256];          // local buffer for html tag
-    char fontName[128];     // default font name
-    PRInt32 fontSize;       // default font size
-    PRBool setDefaultFont = PR_FALSE;
-    nsresult rv;
-    
-    // Use a default font (otherwise unicode font will be used since the data is UTF-8).
-    if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
-        nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
-    {
-      rv = GetMailNewsFont(obj, !obj->options->variable_width_plaintext_p, fontName, 128, &fontSize);
-      setDefaultFont = NS_SUCCEEDED(rv);
-    }
+      MimeInlineTextPlain *text = (MimeInlineTextPlain *) obj;
+      text->mCiteLevel = 0;
 
-    MimeInlineTextPlain *text = (MimeInlineTextPlain *) obj;
+      // Get the prefs
 
-    // Ok, first get the quoting settings.
-    text->mInsideQuote = PR_FALSE;
-    text->mQuotedSizeSetting = 0;   // mail.quoted_size
-    text->mQuotedStyleSetting = 0;  // mail.quoted_style
-    text->mCitationColor = nsnull;  // mail.citation_color
+      // Quoting
+      text->mBlockquoting = PR_TRUE; // mail.quoteasblock
 
-    nsIPref *prefs = GetPrefServiceManager(obj->options);
-    if (prefs)
-    {
-      prefs->GetIntPref("mail.quoted_size", &(text->mQuotedSizeSetting));
-      prefs->GetIntPref("mail.quoted_style", &(text->mQuotedStyleSetting));
-      prefs->CopyCharPref("mail.citation_color", &(text->mCitationColor));
-    }
+      // Viewing
+      text->mQuotedSizeSetting = 0;   // mail.quoted_size
+      text->mQuotedStyleSetting = 0;  // mail.quoted_style
+      text->mCitationColor = nsnull;  // mail.citation_color
+      PRBool graphicalQuote = PR_TRUE; // mail.quoted_graphical
 
-    if (setDefaultFont) 
-    {
-      // For quoting, keep it simple...
-      if ( (obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting) ||
-           (obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting) )
-        PR_snprintf(buf, 256, "<pre %s style=\"font-family: %s; font-size: %dpx;\">", 
-                    obj->options->wrap_long_lines_p ? "wrap" : "",
-                    (const char *) fontName, fontSize);
-      else
-        PR_snprintf(buf, 256, "<pre %s style=\"font-family: %s; font-size: %dpx;\">", 
-                    obj->options->wrap_long_lines_p ? "wrap" : "",
-                    (const char *) fontName, fontSize);
-    }
-    else 
-    {
-	    char* strs[4];
-      strs[0] = "<PRE>";
-	    strs[1] = "<PRE style=\"font-family: serif;\">";
-	    strs[2] = "<PRE WRAP>";
-	    strs[3] = "<PRE WRAP style=\"font-family: serif;\">";
-      // For quoting, keep it simple...
-      if ( (obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting) ||
-           (obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting) )
+      nsIPref *prefs = GetPrefServiceManager(obj->options);
+      if (prefs)
+      {
+        prefs->GetIntPref("mail.quoted_size", &(text->mQuotedSizeSetting));
+        prefs->GetIntPref("mail.quoted_style", &(text->mQuotedStyleSetting));
+        prefs->CopyCharPref("mail.citation_color", &(text->mCitationColor));
+        prefs->GetBoolPref("mail.quoted_graphical", &graphicalQuote);
+        prefs->GetBoolPref("mail.quoteasblock", &(text->mBlockquoting));
+      }
+
+      // Get font
+      // only used for viewing (!plainHTML)
+      nsCAutoString fontstyle;
+      if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
+          nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
+      {
+        /* Use a langugage sensitive default font
+           (otherwise unicode font will be used since the data is UTF-8). */
+        char fontName[128];     // default font name
+        PRInt32 fontSize;       // default font size
+        nsresult rv = GetMailNewsFont(obj,
+                           !obj->options->variable_width_plaintext_p,
+                           fontName, 128, &fontSize);
+        if (NS_SUCCEEDED(rv))
+        {
+          fontstyle = "font-family: ";
+          fontstyle += fontName;
+          fontstyle += "; font-size: ";
+          fontstyle.AppendInt(fontSize);
+          fontstyle += "px;";
+        }
+        else
+        {
+          if (!obj->options->variable_width_plaintext_p)
+            fontstyle = "font-family: -moz-fixed";
+        }
+      }
+      else  // DELETEME: makes sense?
+      {
+        if (!obj->options->variable_width_plaintext_p)
+          fontstyle = "font-family: -moz-fixed";
+      }
+
+      // Opening <div>. We currently have to add formatting here. :-(
+      nsCAutoString openingDiv("<div class=text-plain");
+      if (!plainHTML)
       {
         if (obj->options->wrap_long_lines_p)
-          PL_strcpy(buf, strs[2]);
+          openingDiv += " wrap=true";
         else
-          PL_strcpy(buf, strs[0]);
-      }
-      else
-      {
-  	    PL_strcpy(buf, strs[(obj->options->variable_width_plaintext_p ? 1 : 0) +
-	  					   (obj->options->wrap_long_lines_p ? 2 : 0)]);
-      }
-    }
+          openingDiv += " wrap=false";
 
-	  status = MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
+        if (graphicalQuote)
+          openingDiv += " graphical-quote=true";
+        else
+          openingDiv += " graphical-quote=false";
+
+        if (!fontstyle.IsEmpty())
+        {
+          openingDiv += " style=\"";
+          openingDiv += fontstyle;
+          openingDiv += '\"';
+        }
+      }
+      openingDiv += "><pre wrap>";
+	  status = MimeObject_write(obj, openingDiv,openingDiv.Length(), PR_FALSE);
 	  if (status < 0) return status;
 
 	  /* text/plain objects always have separators before and after them.
@@ -206,6 +222,10 @@ MimeInlineTextPlain_parse_eof (MimeObject *obj, PRBool abort_p)
 {
   int status;
   if (obj->closed_p) return 0;
+  PRBool quoting = ( obj->options
+    && ( obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting ||
+         obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting
+       )           );  // see above
   
   /* Run parent method first, to flush out any buffered data. */
   status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_eof(obj, abort_p);
@@ -218,22 +238,18 @@ MimeInlineTextPlain_parse_eof (MimeObject *obj, PRBool abort_p)
 	  obj->options->output_fn &&
 	  !abort_p)
 	{
-	  char s[] = "</PRE>";
-	  status = MimeObject_write(obj, s, nsCRT::strlen(s), PR_FALSE);
+      MimeInlineTextPlain *text = (MimeInlineTextPlain *) obj;
+      if (text->mIsSig && !quoting)
+      {
+        status = MimeObject_write(obj, "</div>", 6, PR_FALSE);
+             // sig
+        if (status < 0) return status;
+      }
+      status = MimeObject_write(obj, "</pre></div>", 12, PR_FALSE);
+             // pre, text-plain
 	  if (status < 0) return status;
 
-    // Make sure we close out any <DIV>'s if they are open!
-    MimeInlineTextPlain *text = (MimeInlineTextPlain *) obj;
-    PR_FREEIF(text->mCitationColor);
-
-    if (text->mInsideQuote)
-    {
-      char *closeDiv = "</DIV>";
-	    status = MimeObject_write(obj, closeDiv, nsCRT::strlen(closeDiv), PR_FALSE);
-  	  if (status < 0) return status;
-    }
-
-    /* text/plain objects always have separators before and after them.
+      /* text/plain objects always have separators before and after them.
 		 Note that this is not the case for text/enriched objects.
 	   */
 	  status = MimeObject_write_separator(obj);
@@ -247,121 +263,205 @@ MimeInlineTextPlain_parse_eof (MimeObject *obj, PRBool abort_p)
 static int
 MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
 {
-  // this routine gets called for every line of data that comes through the mime
-  // converter. It's important to make sure we are efficient with 
+  int status;
+  PRBool quoting = ( obj->options
+    && ( obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting ||
+         obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting
+       )           );  // see above
+  PRBool plainHTML = quoting || (obj->options &&
+       obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs);
+       // see above
+
+  // this routine gets called for every line of data that comes through the
+  // mime converter. It's important to make sure we are efficient with 
   // how we allocate memory in this routine. be careful if you go to add
   // more to this routine.
-
-  int status;
 
   NS_ASSERTION(length > 0, "zero length");
   if (length <= 0) return 0;
 
+#ifdef USE_OBUFFER
+  /* There is the issue of guessing how much space we will need for emoticons.
+     So what we will do is count the total number of "special" chars and
+     multiply by 82 (max len for a smiley line) and add one for good measure.*/
+  // Do we need obj->obuffer at all here? Bug 39226
   PRInt32 buffersizeneeded = (length * 2);
-
-  // Ok, there is always the issue of guessing how much space we will need for emoticons.
-  // So what we will do is count the total number of "special" chars and multiply by 82 
-  // (max len for a smiley line) and add one for good measure
-  //XXX: make dynamic
   PRInt32   specialCharCount = 0;
   for (PRInt32 z=0; z<length; z++)
   {
-    if ( (line[z] == ')') || (line[z] == '(') || (line[z] == ':') || (line[z] == ';') )
+    if ( (line[z] == ')') || (line[z] == '(') || (line[z] == ':')
+         || (line[z] == ';') || (line[z] == '>') )
       ++specialCharCount;
   }
   buffersizeneeded += 82 * (specialCharCount + 1); 
 
   status = MimeObject_grow_obuffer (obj, buffersizeneeded);
   if (status < 0) return status;
-
-  /* Copy `line' to `out', quoting HTML along the way.
-	 Note: this function does no charset conversion; that has already
-	 been done.
-   */
   *obj->obuffer = 0;
+#endif
 
   mozITXTToHTMLConv *conv = GetTextConverter(obj->options);
-
-  PRBool skipConversion =
-       !conv ||
-       ( obj->options &&
-         (
-           obj->options->force_user_charset ||
-           obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs
-         ) );
-
-  // Before we do any other processing, we should figure out if we need to
-  // put this information in a <DIV> tag
   MimeInlineTextPlain *text = (MimeInlineTextPlain *) obj;
-  if (text->mInsideQuote)
-  {
-    if (line[0] != '>')
-    {
-      char *closeDiv = "</DIV>";
-      status = MimeObject_write(obj, closeDiv, nsCRT::strlen(closeDiv), PR_FALSE);
-      if (status < 0) return status;
-      text->mInsideQuote = PR_FALSE;
-    }
-  }
-  else if ( (line[0] == '>') &&
-            ( (obj) && 
-               obj->options->format_out != nsMimeOutput::nsMimeMessageQuoting &&
-               obj->options->format_out != nsMimeOutput::nsMimeMessageBodyQuoting ) )
-  {        
 
-    char *openDiv = MimeTextBuildPrefixCSS(text->mQuotedSizeSetting,
-                                           text->mQuotedStyleSetting,
-                                           text->mCitationColor);
-    if (openDiv)
-    {
-      status = MimeObject_write(obj, openDiv, nsCRT::strlen(openDiv), PR_FALSE);
-      if (status < 0) return status;
-      text->mInsideQuote = PR_TRUE;
-    }
-
-    PR_FREEIF(openDiv);
-  }
+  PRBool skipConversion = !conv ||
+                          (obj->options && obj->options->force_user_charset);
 
   if (!skipConversion)
   {
-    nsString strline; strline.AssignWithConversion(line, length);
-    nsresult rv = NS_OK;
-    PRUnichar* wresult = nsnull;
-    PRBool whattodo = obj->options->whattodo;
-    if
-      (
-        obj->options
-          &&
-          (
-            obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting ||
-            obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting
-          )
-      )
-      whattodo = 0;
+    nsString lineSourceStr;
+    lineSourceStr.AssignWithConversion(line, length);
+    nsresult rv;
+    nsCAutoString prefaceResultStr;  // Quoting stuff before the real text
 
-    rv = conv->ScanTXT(strline.GetUnicode(), whattodo, &wresult);
+    // Recognize quotes
+    PRUint32 oldCiteLevel = text->mCiteLevel;
+    PRUint32 logicalLineStart = 0;
+    rv = conv->CiteLevelTXT(lineSourceStr.GetUnicode(),
+                            &logicalLineStart, &(text->mCiteLevel));
     if (NS_FAILED(rv))
       return -1;
 
-    //XXX I18N Converting PRUnichar* to char*
-    // avoid an extra string copy by using nsSubsumeStr, this transfers ownership of
-    // wresult to strresult so don't try to free wresult later.
-    nsString strresult(nsSubsumeStr(wresult, PR_TRUE /* assume ownership */, nsCRT::strlen(wresult)));
+    // Find out, which recognitions to do
+    PRBool whattodo = obj->options->whattodo;
+    if (plainHTML)
+    {
+      if (quoting)
+        whattodo = 0;  // This is done on Send. Don't do it twice.
+      else
+        whattodo = whattodo & ~mozITXTToHTMLConv::kGlyphSubstitution;
+                   /* Do recognition for the case, the result is viewed in
+                      Mozilla, but not GlyphSubstitution, because other UAs
+                      might not be able to display the glyphs. */
+      if (!text->mBlockquoting)
+        text->mCiteLevel = 0;
+    }
 
-    // avoid yet another extra string copy of the line by using .ToCString which will
-    // convert and copy directly into the buffer we have already allocated.
-    strresult.ToCString(obj->obuffer, obj->obuffer_size - 10); 
+    // Write blockquote
+    if (text->mCiteLevel > oldCiteLevel)
+    {
+      prefaceResultStr += "</pre>";
+      for (PRUint32 i = 0; i < text->mCiteLevel - oldCiteLevel; i++)
+      {
+        char *style = MimeTextBuildPrefixCSS(text->mQuotedSizeSetting,
+                                             text->mQuotedStyleSetting,
+                                             text->mCitationColor);
+        if (!plainHTML && style && nsCRT::strlen(style))
+        {
+          prefaceResultStr += "<blockquote type=cite style=\"";
+          prefaceResultStr += style;
+          prefaceResultStr += "\">";
+        }
+        else
+          prefaceResultStr += "<blockquote type=cite>";
+        Recycle(style);
+      }
+      prefaceResultStr += "<pre wrap>";
+    }
+    else if (text->mCiteLevel < oldCiteLevel)
+    {
+      prefaceResultStr += "</pre>";
+      for (PRUint32 i = 0; i < oldCiteLevel - text->mCiteLevel; i++)
+        prefaceResultStr += "</blockquote>";
+      prefaceResultStr += "<pre wrap>";
+      if (text->mCiteLevel == 0)
+        prefaceResultStr += "<!---->";   /* Make sure, NGLayout puts out
+                                            a linebreak */
+    }
+
+    // Write plain text quoting tags
+    if (logicalLineStart != 0 && !(plainHTML && text->mBlockquoting))
+    {
+      if (!quoting)
+        prefaceResultStr += "<span class=txt-citetags>";
+
+      nsAutoString citeTagsSource;
+      lineSourceStr.Mid(citeTagsSource, 0, logicalLineStart);
+      NS_ASSERTION(citeTagsSource.IsASCII(), "Non-ASCII-Chars are about to be "
+                   "added to nsCAutoString prefaceResultStr. "
+                   "Change the latter to nsAutoString.");
+        /* I'm currently using nsCAutoString, because currently citeTagsSource
+           is always ASCII and I save 2 conversions this way. */
+
+      // Convert to HTML
+      PRUnichar* citeTagsResultUnichar = nsnull;
+      rv = conv->ScanTXT(citeTagsSource.GetUnicode(), 0 /* no recognition */,
+                         &citeTagsResultUnichar);
+      if (NS_FAILED(rv)) return -1;
+
+      // Convert to char* and write out
+      nsSubsumeStr citeTagsResultStr(citeTagsResultUnichar,
+                                     PR_TRUE /* assume ownership */);
+      char* citeTagsResultCStr = citeTagsResultStr.ToNewCString();
+
+      prefaceResultStr += citeTagsResultCStr;
+      Recycle(citeTagsResultCStr);
+      if (!quoting)
+        prefaceResultStr += "</span>";
+    }
+
+
+    // recognize signature
+    if (lineSourceStr.First() == '-'
+        && lineSourceStr.EqualsWithConversion("-- ", PR_FALSE, 3)
+        && (lineSourceStr[3] == '\r' || lineSourceStr[3] == '\n') )
+    {
+      text->mIsSig = PR_TRUE;
+      if (!quoting)
+        prefaceResultStr += "<div class=txt-sig>";
+    }
+
+    /* This is the main TXT to HTML conversion:
+       escaping (very important), eventually recognizing etc. */
+    PRUnichar* lineResultUnichar = nsnull;
+    rv = conv->ScanTXT(lineSourceStr.GetUnicode() + logicalLineStart,
+                       whattodo, &lineResultUnichar);
+    if (NS_FAILED(rv)) return -1;
+
+    // avoid an extra string copy by using nsSubsumeStr, this transfers
+    // ownership of wresult to strresult so don't try to free wresult later.
+    nsSubsumeStr lineResultStr(lineResultUnichar,
+                               PR_TRUE /* assume ownership */);
+
+    if (!(text->mIsSig && quoting))
+    {
+#ifdef USE_OBUFFER
+      /* Do we need obj->obuffer at all here? Bug 39226 */
+      prefaceResultStr.ToCString(obj->obuffer, obj->obuffer_size - 10);
+      lineResultStr.ToCString(obj->obuffer + prefaceResultStr.Length(),
+                          obj->obuffer_size - 10 - prefaceResultStr.Length());
+#else
+      char* tmp = prefaceResultStr.ToNewCString();
+      status = MimeObject_write(obj, tmp, prefaceResultStr.Length(), PR_TRUE);
+      if (status < 0) return status;
+      Recycle(tmp);
+      tmp = lineResultStr.ToNewCString();
+      status = MimeObject_write(obj, tmp, lineResultStr.Length(), PR_TRUE);
+      if (status < 0) return status;
+      Recycle(tmp);
+#endif
+    }
+    else
+    {
+      status = NS_OK;
+    }
   }
   else
   {
+#ifdef USE_OBUFFER
     nsCRT::memcpy(obj->obuffer, line, length);
     obj->obuffer[length] = '\0';
     status = NS_OK;
+#else
+    status = MimeObject_write(obj, line, length, PR_TRUE);
+    if (status < 0) return status;
+#endif
   }
 
-  if (status != NS_OK)
-    return status;
-
+#ifdef USE_OBUFFER
   NS_ASSERTION(*line == 0 || *obj->obuffer, "have line or buffer");
-  return MimeObject_write(obj, obj->obuffer, nsCRT::strlen(obj->obuffer), PR_TRUE);
+  status = MimeObject_write(obj, obj->obuffer, nsCRT::strlen(obj->obuffer),
+                            PR_TRUE);
+#endif
+  return status;
 }
+

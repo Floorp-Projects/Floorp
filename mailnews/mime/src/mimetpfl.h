@@ -56,6 +56,7 @@ struct MimeInlineTextPlainFlowedExData {
   PRBool inflow; /* If we currently are in flow */
   PRBool fixedwidthfont; /* If we output text for fixed width font */
   PRUint32 quotelevel; /* How deep is your love, uhr, quotelevel I meen. */
+  PRBool isSig;  // we're currently in a signature
   struct MimeInlineTextPlainFlowedExData *next;
 };
 

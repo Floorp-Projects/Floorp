@@ -33,8 +33,6 @@
 #include "mimemoz2.h"
 #include "prprf.h"
 
-#define PREF_MAIL_FIXED_WIDTH_MESSAGES "mail.fixed_width_messages"
-
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 #define MIME_SUPERCLASS mimeInlineTextClass
@@ -47,9 +45,10 @@ static int MimeInlineTextPlainFlowed_parse_eof (MimeObject *, PRBool);
 
 static MimeInlineTextPlainFlowedExData *MimeInlineTextPlainFlowedExDataList = 0;
 
-extern "C" char *MimeTextBuildPrefixCSS(PRInt32    quotedSizeSetting,   // mail.quoted_size
-                                        PRInt32    quotedStyleSetting,  // mail.quoted_style
-                                        char       *citationColor);     // mail.citation_color
+extern "C" char *MimeTextBuildPrefixCSS(
+                       PRInt32 quotedSizeSetting,      // mail.quoted_size
+                       PRInt32    quotedStyleSetting,  // mail.quoted_style
+                       char       *citationColor);     // mail.citation_color
 
 
 static int
@@ -70,9 +69,16 @@ MimeInlineTextPlainFlowed_parse_begin (MimeObject *obj)
   int status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_begin(obj);
   if (status < 0) return status;
 
-  char s[] = "";  
-  status =  MimeObject_write(obj, s, 0, PR_TRUE); /* force out any separators... */
+  status =  MimeObject_write(obj, "", 0, PR_TRUE); /* force out any separators... */
   if(status<0) return status;
+
+  PRBool quoting = ( obj->options
+    && ( obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting ||
+         obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting
+       )       );  // The output will be inserted in the composer as quotation
+  PRBool plainHTML = quoting || (obj->options &&
+       obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs);
+       // Just good(tm) HTML. No reliance on CSS (only for prefs).
 
   // Setup the data structure that is connected to the actual document
   // Saved in a linked list in case this is called with several documents
@@ -81,75 +87,84 @@ MimeInlineTextPlainFlowed_parse_begin (MimeObject *obj)
   struct MimeInlineTextPlainFlowedExData *exdata =
     (MimeInlineTextPlainFlowedExData *)PR_MALLOC(sizeof(struct MimeInlineTextPlainFlowedExData));
   if(!exdata) return MIME_OUT_OF_MEMORY;
-  exdata->ownerobj = obj;
-  exdata->inflow=PR_FALSE;
-  exdata->fixedwidthfont=PR_FALSE;
-  exdata->quotelevel=0;
-
-  // Check the pref for fixed width font
-  nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
-  if (NS_SUCCEEDED(rv) && prefs) 
-  {
-    rv=prefs->GetBoolPref(PREF_MAIL_FIXED_WIDTH_MESSAGES, &(exdata->fixedwidthfont));
-    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get the mail.fixed_width_messages pref");
-  }
-
-  // Set a default font (otherwise unicode font will be used since the data is UTF-8).
-  if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
-      nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out) {
-    char fontName[128];
-    char buf[256];
-    PRInt32 fontSize;
-    if (exdata->fixedwidthfont) {
-      rv = GetMailNewsFont(obj, PR_TRUE, fontName, 128, &fontSize);
-      if (NS_SUCCEEDED(rv)) {
-        PR_snprintf(buf, 256, "<tt style=\"font-family: %s; font-size: %dpx;\">", (const char *) fontName, fontSize);
-        status = MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
-      }
-      else
-        status = MimeObject_write(obj, "<tt>", 4, PR_FALSE);
-    }
-    else {
-      rv = GetMailNewsFont(obj, PR_FALSE, fontName, 128, &fontSize);
-      if (NS_SUCCEEDED(rv)) {
-        PR_snprintf(buf, 256, "<div style=\"font-family: %s; font-size: %dpx;\">", (const char *) fontName, fontSize);
-        status = MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
-      }
-      else
-        status = MimeObject_write(obj, "<div>", 5, PR_FALSE);
-    }
-    if(status<0) return status;
-  }
 
   MimeInlineTextPlainFlowed *text = (MimeInlineTextPlainFlowed *) obj;
-  
-  // Ok, first get the quoting settings.
+
+  // Link it up.
+  exdata->next = MimeInlineTextPlainFlowedExDataList;
+  MimeInlineTextPlainFlowedExDataList = exdata;
+
+  // Initialize data
+
+  exdata->ownerobj = obj;
+  exdata->inflow = PR_FALSE;
+  exdata->quotelevel = 0;
+  exdata->isSig = PR_FALSE;
+
+  // Get Prefs for viewing
+
+  exdata->fixedwidthfont = PR_FALSE;
+  //  Quotes
   text->mQuotedSizeSetting = 0;   // mail.quoted_size
   text->mQuotedStyleSetting = 0;  // mail.quoted_style
   text->mCitationColor = nsnull;  // mail.citation_color
   
+  nsIPref *prefs = GetPrefServiceManager(obj->options);
   if (prefs)
   {
     prefs->GetIntPref("mail.quoted_size", &(text->mQuotedSizeSetting));
     prefs->GetIntPref("mail.quoted_style", &(text->mQuotedStyleSetting));
     prefs->CopyCharPref("mail.citation_color", &(text->mCitationColor));
+    nsresult rv = prefs->GetBoolPref( "mail.fixed_width_messages",
+         &(exdata->fixedwidthfont)  );  // Check at least the success of one
+    NS_ASSERTION(NS_SUCCEEDED(rv),
+         "failed to get the mail.fixed_width_messages pref"); 
   }
 
-  // Link it up.
-  exdata->next = MimeInlineTextPlainFlowedExDataList;
-  MimeInlineTextPlainFlowedExDataList = exdata;
-  
-  // If we should use a fixed width font, emit
-  // a <div style="font-family:monospace">   DIDN'T WORK
-  // a <tt>
-  if(exdata->fixedwidthfont)
+  // Get font
+  // only used for viewing (!plainHTML)
+  nsCAutoString fontstyle;
+  if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
+      nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
+  {
+    /* Use a langugage sensitive default font
+       (otherwise unicode font will be used since the data is UTF-8). */
+    char fontName[128];     // default font name
+    PRInt32 fontSize;       // default font size
+    nsresult rv = GetMailNewsFont(obj, exdata->fixedwidthfont,
+                                  fontName, 128, &fontSize);
+    if (NS_SUCCEEDED(rv))
     {
-    // *Don't work*   status = MimeObject_write(obj, "<div style=\"font-family=monospace\">", 35, PR_FALSE);
-    status = MimeObject_write(obj, "<tt>", 4, PR_FALSE);
-    if(status<0) return status;
+      fontstyle = "font-family: ";
+      fontstyle += fontName;
+      fontstyle += "; font-size: ";
+      fontstyle.AppendInt(fontSize);
+      fontstyle += "px;";
+    }
+    else
+    {
+      if (exdata->fixedwidthfont)
+        fontstyle = "font-family: -moz-fixed";
+    }
   }
-  
+  else  // DELETEME: makes sense?
+  {
+    if (exdata->fixedwidthfont)
+      fontstyle = "font-family: -moz-fixed";
+  }
+
+  // Opening <div>. We currently have to add formatting here. :-(
+  nsCAutoString openingDiv("<div class=text-flowed");
+  if (!plainHTML && !fontstyle.IsEmpty())
+  {
+    openingDiv += " style=\"";
+    openingDiv += fontstyle;
+    openingDiv += '\"';
+  }
+  openingDiv += "><tt>";
+  status = MimeObject_write(obj, openingDiv,openingDiv.Length(), PR_FALSE);
+  if (status < 0) return status;
+
   return 0;
 }
 
@@ -157,6 +172,12 @@ static int
 MimeInlineTextPlainFlowed_parse_eof (MimeObject *obj, PRBool abort_p)
 {
   int status;
+  MimeInlineTextPlainFlowed *text = (MimeInlineTextPlainFlowed *) nsnull;
+  PRBool quoting = ( obj->options
+    && ( obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting ||
+         obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting
+       )           );  // see above
+
   if (obj->closed_p) return 0;
   
   /* Run parent method first, to flush out any buffered data. */
@@ -183,55 +204,26 @@ MimeInlineTextPlainFlowed_parse_eof (MimeObject *obj, PRBool abort_p)
     prevexdata->next = exdata->next;
   }
 
-  PRUint32 quotelevel = exdata->quotelevel;
-  PRBool fixedwidthfont = exdata->fixedwidthfont;
-  PR_Free(exdata);
-
-  while(quotelevel>0) {
-    // Write </blockquote>
-    if(exdata->fixedwidthfont) {
-      status = MimeObject_write(obj, "</tt></blockquote><tt>", 22, PR_FALSE);
-    } else {
-      status = MimeObject_write(obj, "</blockquote>", 13, PR_FALSE);
-    }
-    if(status<0) {
-      return status;
-    }
-    
-    quotelevel--;
+  for(; exdata->quotelevel>0; exdata->quotelevel--) {
+    status = MimeObject_write(obj, "</blockquote>", 13, PR_FALSE);
+    if(status<0) goto EarlyOut;
   }
+  if (exdata->isSig && !quoting) {
+    status = MimeObject_write(obj, "</div>", 6, PR_FALSE);
+    if (status<0) goto EarlyOut;
+  }
+  status = MimeObject_write(obj, "</tt></div>", 12, PR_FALSE);  // text-flowed
+  if (status<0) goto EarlyOut;
 
-  // Make sure we close out any <DIV>'s if they are open!
-  MimeInlineTextPlainFlowed *text = (MimeInlineTextPlainFlowed *) obj;
+  status = 0;
+  text = (MimeInlineTextPlainFlowed *) obj;
+
+EarlyOut:
+  if (exdata) 
+    PR_Free(exdata);
   PR_FREEIF(text->mCitationColor);
 
-  // Close out the block quote
-  status = MimeObject_write(obj, "</DIV>", 6, PR_FALSE);
-
-  if(fixedwidthfont)
-  {
-    // *don't work*    status = MimeObject_write(obj, "</div>", 6, PR_FALSE);
-    status = MimeObject_write(obj, "</tt>", 5, PR_FALSE);
-    if(status<0) return status;
-#ifdef DEBUG_rhp
-    printf("fixbredd\n");
-#endif
-  } else {
-#ifdef DEBUG_rhp
-    printf("propbredd");
-#endif
-  }
-
-  // End defalut font
-  if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
-      nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out) {
-    if (fixedwidthfont)
-      status = MimeObject_write(obj, "</tt>", 5, PR_FALSE);
-    else
-      status = MimeObject_write(obj, "</div>", 6, PR_FALSE);
-  }
-
-  return 0;
+  return status;
 }
 
 
@@ -239,13 +231,20 @@ static int
 MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *obj)
 {
   int status;
-  
+  PRBool quoting = ( obj->options
+    && ( obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting ||
+         obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting
+       )           );  // see above
+  PRBool plainHTML = quoting || (obj->options &&
+       obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs);
+       // see above
+
   struct MimeInlineTextPlainFlowedExData *exdata;
   exdata = MimeInlineTextPlainFlowedExDataList;
   while(exdata && (exdata->ownerobj != obj)) {
     exdata = exdata->next;
   }
-    
+
   NS_ASSERTION(exdata, "The extra data has disappeared!");
 
 #ifdef DEBUG_bratell
@@ -301,13 +300,14 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
   }
   buffersizeneeded += 30; // For possible <nobr> ... </nobr>
 
-  // Ok, there is always the issue of guessing how much space we will need for emoticons.
-  // So what we will do is count the total number of "special" chars and multiply by 82 
-  // (max len for a smiley line) and add one for good measure
+  /* There is the issue of guessing how much space we will need for emoticons.
+     So what we will do is count the total number of "special" chars and
+     multiply by 82 (max len for a smiley line) and add one for good measure.*/
   PRInt32   specialCharCount = 0;
   for (PRInt32 z=0; z<length; z++)
   {
-    if ( (line[z] == ')') || (line[z] == '(') || (line[z] == ':') || (line[z] == ';') )
+     if ( (line[z] == ')') || (line[z] == '(') || (line[z] == ':')
+         || (line[z] == ';') || (line[z] == '>') )
       ++specialCharCount;
   }
   buffersizeneeded += 82 * (specialCharCount + 1); 
@@ -342,44 +342,38 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
 
   mozITXTToHTMLConv *conv = GetTextConverter(obj->options);
 
-  PRBool skipConversion =
-       !conv ||
-       ( obj->options
-           &&
-           (
-             obj->options->force_user_charset ||
-             obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs
-           ) );
+  PRBool skipConversion = !conv ||
+                          (obj->options && obj->options->force_user_charset);
     
   if (!skipConversion)
   {
-    //XXX I18N Converting char* to PRUnichar*
-    nsString strline; strline.AssignWithConversion(linep, (length - (linep - line)) );
+    nsString strline;
+    strline.AssignWithConversion(linep, (length - (linep - line)) );
     PRUnichar* wresult = nsnull;
     nsresult rv = NS_OK;
     PRBool whattodo = obj->options->whattodo;
-    if
-      (
-        obj->options
-          &&
-          (
-            obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting ||
-            obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting
-          )
-      )
-      whattodo = 0;
+    if (plainHTML)
+    {
+      if (quoting)
+        whattodo = 0;
+      else
+        whattodo = whattodo & ~mozITXTToHTMLConv::kGlyphSubstitution;
+                   /* Do recognition for the case, the result is viewed in
+                      Mozilla, but not GlyphSubstitution, because other UAs
+                      might not be able to display the glyphs. */
+    }
 
     rv = conv->ScanTXT(strline.GetUnicode(), whattodo, &wresult);
     if (NS_FAILED(rv))
       return -1;
 
-    //XXX I18N Converting PRUnichar* to char*
-    // avoid an extra string copy by using nsSubsumeStr, this transfers ownership of
-    // wresult to strresult so don't try to free wresult later.
-    nsString strresult(nsSubsumeStr(wresult, PR_TRUE /* assume ownership */, nsCRT::strlen(wresult)));
+    /* avoid an extra string copy by using nsSubsumeStr, this transfers
+       ownership of wresult to strresult so don't try to free wresult later. */
+    nsSubsumeStr strresult(wresult, PR_TRUE /* assume ownership */);
 
-    // avoid yet another extra string copy of the line by using .ToCString which will
-    // convert and copy directly into the buffer we have already allocated.
+    /* avoid yet another extra string copy of the line by using .ToCString
+       which will convert and copy directly into the buffer we have already
+       allocated. */
     strresult.ToCString(templine, buffersizeneeded - 10); 
   }
   else
@@ -414,13 +408,11 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
   while(quoteleveldiff>0) {
     quoteleveldiff--;
     /* Output <blockquote> */
-    if(exdata->fixedwidthfont) {
-      *outlinep='<'; outlinep++;
-      *outlinep='/'; outlinep++;
-      *outlinep='t'; outlinep++;
-      *outlinep='t'; outlinep++;
-      *outlinep='>'; outlinep++;
-    }      
+    *outlinep='<'; outlinep++;
+    *outlinep='/'; outlinep++;
+    *outlinep='t'; outlinep++;
+    *outlinep='t'; outlinep++;
+    *outlinep='>'; outlinep++;
     *outlinep='<'; outlinep++;
     *outlinep='b'; outlinep++;
     *outlinep='l'; outlinep++;
@@ -442,35 +434,40 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
     *outlinep='i'; outlinep++;
     *outlinep='t'; outlinep++;
     *outlinep='e'; outlinep++;
-    *outlinep='>'; outlinep++;
-    if(exdata->fixedwidthfont) {
-      *outlinep='<'; outlinep++;
-      *outlinep='t'; outlinep++;
-      *outlinep='t'; outlinep++;
-      *outlinep='>'; outlinep++;
-    }
-        
     // This is to have us observe the user pref settings for citations
     MimeInlineTextPlainFlowed *tObj = (MimeInlineTextPlainFlowed *) obj;
-    char *openDiv = MimeTextBuildPrefixCSS(tObj->mQuotedSizeSetting,
-                                           tObj->mQuotedStyleSetting,
-                                           tObj->mCitationColor);
-    if (openDiv)
+    char *style = MimeTextBuildPrefixCSS(tObj->mQuotedSizeSetting,
+                                         tObj->mQuotedStyleSetting,
+                                         tObj->mCitationColor);
+    if (!plainHTML && style && strlen(style))
     {
-      status = MimeObject_write(obj, openDiv, nsCRT::strlen(openDiv), PR_FALSE);
-      if (status < 0) return status;
+      *outlinep=' '; outlinep++;
+      *outlinep='s'; outlinep++;
+      *outlinep='t'; outlinep++;
+      *outlinep='y'; outlinep++;
+      *outlinep='l'; outlinep++;
+      *outlinep='e'; outlinep++;
+      *outlinep='='; outlinep++;
+      *outlinep='\"'; outlinep++;
+      strcpy(outlinep, style);
+      outlinep += nsCRT::strlen(style);
+      *outlinep='\"'; outlinep++;
+      PR_FREEIF(style);
     }
+    *outlinep='>'; outlinep++;
+    *outlinep='<'; outlinep++;
+    *outlinep='t'; outlinep++;
+    *outlinep='t'; outlinep++;
+    *outlinep='>'; outlinep++;
   }
   while(quoteleveldiff<0) {
     quoteleveldiff++;
     /* Output </blockquote> */
-    if(exdata->fixedwidthfont) {
-      *outlinep='<'; outlinep++;
-      *outlinep='/'; outlinep++;
-      *outlinep='t'; outlinep++;
-      *outlinep='t'; outlinep++;
-      *outlinep='>'; outlinep++;
-    }      
+    *outlinep='<'; outlinep++;
+    *outlinep='/'; outlinep++;
+    *outlinep='t'; outlinep++;
+    *outlinep='t'; outlinep++;
+    *outlinep='>'; outlinep++;
     *outlinep='<'; outlinep++;
     *outlinep='/'; outlinep++;
     *outlinep='b'; outlinep++;
@@ -484,17 +481,15 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
     *outlinep='t'; outlinep++;
     *outlinep='e'; outlinep++;
     *outlinep='>'; outlinep++;
-    if(exdata->fixedwidthfont) {
-      *outlinep='<'; outlinep++;
-      *outlinep='t'; outlinep++;
-      *outlinep='t'; outlinep++;
-      *outlinep='>'; outlinep++;
-    }      
+    *outlinep='<'; outlinep++;
+    *outlinep='t'; outlinep++;
+    *outlinep='t'; outlinep++;
+    *outlinep='>'; outlinep++;
   }
   exdata->quotelevel = linequotelevel;
-  
 
   if(flowed) {
+
     int32 dashdashspace; // Check for RFC 2646 4.3
     if((0==linequotelevel) && !exdata->inflow){
       // possible
@@ -502,6 +497,9 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
     } else {
       dashdashspace = -1;
     }
+    PRBool firstSpaceNbsp = PR_FALSE;   /* Convert all spaces but
+         the first in a row into nbsp (i.e. always wrap) */
+    PRBool nextSpaceIsNbsp = firstSpaceNbsp;
     while(*templinep && ('\r' != *templinep)) {
       // Check RFC 2646 "4.3. Usenet Signature Convention": "-- "+CRLF is
       // not a flowed line
@@ -526,10 +524,49 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
       } // end if(dashdashspace...)
 
       // Output the same character
-
-      *outlinep=*templinep;
-      outlinep++;
-      templinep++;
+      // Here, the most of the flowing text is written
+      // DELETEME: What is this intag in the fixed code and do we need it here?
+      if((' ' == *templinep) && !exdata->inflow) {
+        if (nextSpaceIsNbsp)
+        {
+          *outlinep='&'; outlinep++;
+          *outlinep='n'; outlinep++;
+          *outlinep='b'; outlinep++;
+          *outlinep='s'; outlinep++;
+          *outlinep='p'; outlinep++;
+          *outlinep=';'; outlinep++;
+        }
+        else
+        {
+          *outlinep=' '; outlinep++;
+        }
+        nextSpaceIsNbsp = PR_TRUE;
+        templinep++;
+      } else if(('\t' == *templinep) && !exdata->inflow) {
+        // Output 4 "spaces"
+        for(int spaces=0; spaces<4; spaces++) {
+          if (nextSpaceIsNbsp)
+          {
+            *outlinep='&'; outlinep++;
+            *outlinep='n'; outlinep++;
+            *outlinep='b'; outlinep++;
+            *outlinep='s'; outlinep++;
+            *outlinep='p'; outlinep++;
+            *outlinep=';'; outlinep++;
+          }
+          else
+          {
+            *outlinep=' '; outlinep++;
+          }
+          nextSpaceIsNbsp = PR_TRUE;
+        }
+        templinep++;
+      } else {
+        nextSpaceIsNbsp = firstSpaceNbsp;
+        *outlinep = *templinep;
+        outlinep++;
+        templinep++;
+      } 
       
     }
     if(3 == dashdashspace) {
@@ -538,12 +575,11 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
       *outlinep='b'; outlinep++;
       *outlinep='r'; outlinep++;
       *outlinep='>'; outlinep++;
-    } 
+    }
 
     exdata->inflow=PR_TRUE;
   } else {
     // Fixed
-    uint32 intag = 0; 
 
     /*    // Output the stripped '>':s
     while(linequotelevel) {
@@ -556,22 +592,17 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
     }
     */
     
+    uint32 intag = 0; 
+    PRBool firstSpaceNbsp = !plainHTML && !obj->options->wrap_long_lines_p;
+         /* If wrap, convert all spaces but the first in a row into nbsp,
+            otherwise all. */
+    PRBool nextSpaceIsNbsp = firstSpaceNbsp;
     while(*templinep && (*templinep != '\r')) {
       if('<' == *templinep) intag = 1;
       if(!intag) {
         if((' ' == *templinep) && !exdata->inflow) {
-          // To not get any line wraps
-          *outlinep='&'; outlinep++;
-          *outlinep='n'; outlinep++;
-          *outlinep='b'; outlinep++;
-          *outlinep='s'; outlinep++;
-          *outlinep='p'; outlinep++;
-          *outlinep=';'; outlinep++;
-          templinep++;
-        } else if(('\t' == *templinep) && !exdata->inflow) {
-          // To not get any line wraps
-          // Output 4 spaces
-          for(int spaces=0; spaces<4; spaces++) {
+          if (nextSpaceIsNbsp)
+          {
             *outlinep='&'; outlinep++;
             *outlinep='n'; outlinep++;
             *outlinep='b'; outlinep++;
@@ -579,14 +610,40 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
             *outlinep='p'; outlinep++;
             *outlinep=';'; outlinep++;
           }
+          else
+          {
+            *outlinep=' '; outlinep++;
+          }
+          nextSpaceIsNbsp = PR_TRUE;
+          templinep++;
+        } else if(('\t' == *templinep) && !exdata->inflow) {
+          // Output 4 "spaces"
+          for(int spaces=0; spaces<4; spaces++) {
+            if (nextSpaceIsNbsp)
+            {
+              *outlinep='&'; outlinep++;
+              *outlinep='n'; outlinep++;
+              *outlinep='b'; outlinep++;
+              *outlinep='s'; outlinep++;
+              *outlinep='p'; outlinep++;
+              *outlinep=';'; outlinep++;
+            }
+            else
+            {
+              *outlinep=' '; outlinep++;
+            }
+            nextSpaceIsNbsp = PR_TRUE;
+          }
           templinep++;
         } else {
+          nextSpaceIsNbsp = firstSpaceNbsp;
           *outlinep = *templinep;
           outlinep++;
           templinep++;
         } 
       } else {
         // In tag. Don't change anything
+        nextSpaceIsNbsp = firstSpaceNbsp;
         *outlinep = *templinep;
         outlinep++;
         templinep++;
@@ -601,14 +658,10 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
     exdata->inflow = PR_FALSE;
   } // End Fixed line
 
-  *outlinep='\r'; outlinep++;
-  *outlinep='\n'; outlinep++;
   *outlinep='\0'; outlinep++;
 
   PR_Free(templine);
-  
-  
-  
+
 #ifdef DEBUG_bratell
   fprintf(stderr,"*OUT*");
   for(uint32 lineindex2 = 0; lineindex2 < nsCRT::strlen(obj->obuffer); lineindex2++) {

@@ -1938,6 +1938,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   PRBool        htmlSig = PR_FALSE;
   PRBool        imageSig = PR_FALSE;
   nsAutoString  sigData;
+  nsAutoString sigOutput;
 
   if (identity)
   {
@@ -1992,38 +1993,29 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
     PR_FREEIF(fileExt);
     PR_FREEIF(sigContentType);
   }
-  
-  // If we have an image signature, then we should put in the appropriate
-  // HTML for inclusion, otherwise, just mention something about it.
+
+  static const char      htmlBreak[] = "<BR>";
+  static const char      dashes[] = "-- ";
+  static const char      divopen[] = "<div class=signature>";
+  static const char      divclose[] = "</div>";
+
   if (imageSig)
   {
+    // We have an image signature. If we're using the in HTML composer, we
+    // should put in the appropriate HTML for inclusion, otherwise, do nothing.
     if (m_composeHTML)
     {
-      aMsgBody->AppendWithConversion("<PRE>");
-      aMsgBody->AppendWithConversion(CRLF);
-      aMsgBody->AppendWithConversion("-- ");
-      aMsgBody->AppendWithConversion(CRLF);
-      aMsgBody->AppendWithConversion("</PRE>");
-      aMsgBody->AppendWithConversion("<IMG SRC=\"file:///");
-      aMsgBody->AppendWithConversion(testSpec);
-      aMsgBody->AppendWithConversion("\" BORDER=0>");
+      sigOutput.AppendWithConversion(htmlBreak);
+      sigOutput.AppendWithConversion(divopen);
+      sigOutput.AppendWithConversion(dashes);
+      sigOutput.AppendWithConversion(htmlBreak);
+      sigOutput.AppendWithConversion("<img src=\"file:///");
+           /* XXX pp This gives me 4 slashes on Unix, that's at least one to
+              much. Better construct the URL with some service. */
+      sigOutput.AppendWithConversion(testSpec);
+      sigOutput.AppendWithConversion("\" border=0>");
+      sigOutput.AppendWithConversion(divclose);
     }
-    else
-    {
-      nsCOMPtr<nsIMsgStringService> composebundle (do_GetService(NS_MSG_COMPOSESTRINGSERVICE_PROGID));
-      nsXPIDLString omitString;
-      composebundle->GetStringByID(NS_MSG_ATTACHMENT_TYPE_MISMATCH, getter_Copies(omitString));
-
-      if (omitString)
-      {
-        aMsgBody->AppendWithConversion("-- ");
-        aMsgBody->AppendWithConversion(CRLF);
-        aMsgBody->Append(omitString);
-        aMsgBody->AppendWithConversion(CRLF);
-      }
-    }
-
-    return NS_OK;
   }
   else
   {
@@ -2039,36 +2031,37 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
 
   // Now that sigData holds data...if any, append it to the body in a nice
   // looking manner
-  //
-  char      *htmlBreak = "<BR>";
-  char      *dashes = "--";
   if (!sigData.IsEmpty())
   {
     if (m_composeHTML)
     {
-      aMsgBody->AppendWithConversion(htmlBreak);
+      sigOutput.AppendWithConversion(htmlBreak);
+      sigOutput.AppendWithConversion(divopen);
       if (!htmlSig)
       {
-        aMsgBody->AppendWithConversion("<pre>");
-        aMsgBody->AppendWithConversion(CRLF);
+        sigOutput.AppendWithConversion("<pre>");
       }
     }
     else
-      aMsgBody->AppendWithConversion(CRLF);
-    
-    aMsgBody->AppendWithConversion(dashes);
+      sigOutput.AppendWithConversion(CRLF);
+
+    sigOutput.AppendWithConversion(dashes);
 
     if ( (!m_composeHTML) || ((m_composeHTML) && (!htmlSig)) )
-      aMsgBody->AppendWithConversion(CRLF);
+      sigOutput.AppendWithConversion(CRLF);
     else if (m_composeHTML)
-      aMsgBody->AppendWithConversion(htmlBreak);
-    
-    aMsgBody->Append(sigData);
+      sigOutput.AppendWithConversion(htmlBreak);
+
+    sigOutput.Append(sigData);
+         //DELETEME: I18N: Converting down (2byte->1byte) OK?
 
     if ( (m_composeHTML) && (!htmlSig) )
-      aMsgBody->AppendWithConversion("</pre>");
+      sigOutput.AppendWithConversion("</pre>");
+    if (m_composeHTML)
+      sigOutput.AppendWithConversion(divclose);
   }
 
+  aMsgBody->Append(sigOutput);
   return NS_OK;
 }
 

@@ -52,6 +52,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsMsgMimeCID.h"
 #include "nsStreamConverter.h"    // test hack
+#include "nsIAllocator.h"
 
 #ifdef XP_PC
 #include <windows.h>
@@ -469,11 +470,24 @@ main(int argc, char** argv)
   // Do some sanity checking...
   if (argc < 2) 
   {
-    fprintf(stderr, "usage: %s <rfc822_disk_file> <output_format>\n\n", argv[0]);
+    fprintf(stderr, "usage: %s <rfc822_disk_file> [<output_format>]\n\n", argv[0]);
     fprintf(stderr, "where output_format is:\n\n19 - indentation formatting\n");
-    fprintf(stderr, "  1 - nsMimeMessagePrintOutput\n");
+    fprintf(stderr, "  0 - nsMimeMessageSplitDisplay\n");
+    fprintf(stderr, "  1 - nsMimeMessageHeaderDisplay\n");
     fprintf(stderr, "  2 - nsMimeMessageBodyDisplay\n");
     fprintf(stderr, "  3 - nsMimeMessageQuoting\n");
+    fprintf(stderr, "  4 - nsMimeMessageBodyQuoting\n");
+    fprintf(stderr, "  5 - nsMimeMessageRaw\n");
+    fprintf(stderr, "  6 - nsMimeMessageDraftOrTemplate\n");
+    fprintf(stderr, "  7 - nsMimeMessageEditorTemplate\n");
+    fprintf(stderr, "  8 - nsMimeMessageXULDisplay\n");
+    fprintf(stderr, "  9 - nsMimeMessagePrintOutput\n");
+    fprintf(stderr, "  10 - nsMimeMessageSaveAs\n");
+    fprintf(stderr, "  11 - nsMimeMessageSource\n");
+    fprintf(stderr, "  12 - nsMimeUnknown\n");
+    fprintf(stderr, "  (the numbers are not garanteed to persist. See\n");
+    fprintf(stderr, "  <http://lxr.mozilla.org/seamonkey/source/mailnews/mime/public/nsIMimeStreamConverter.idl>\n");
+    fprintf(stderr, "  interface nsMimeOutput for most recent info.)\n");
     return 1;
   }
   
@@ -515,13 +529,6 @@ DoRFC822toHTMLConversion(char *filename, int numArgs, int outFormat)
   char              newURL[1024] = ""; // URL for filename
   nsIURI            *theURI = nsnull;
   char              *contentType = nsnull;
-
-  if (outFormat == 1)
-    outFormat = nsMimeOutput::nsMimeMessagePrintOutput;
-  else if (outFormat == 2)
-    outFormat = nsMimeOutput::nsMimeMessageBodyDisplay;
-  else if (outFormat == 3)
-    outFormat = nsMimeOutput::nsMimeMessageBodyDisplay;
 
   char *opts = PL_strchr(filename, '?');
   char save;
@@ -599,9 +606,10 @@ DoRFC822toHTMLConversion(char *filename, int numArgs, int outFormat)
   nsIChannel    *tChannel = nsnull;
 
   NewChannel(&tChannel, theURI);
-  mimeParser->AsyncConvertData(nsString("message/rfc822").GetUnicode(), 
-                               nsString("text/xul").GetUnicode(),
-                               out, tChannel);
+  mimeParser->AsyncConvertData(
+                 nsString(NS_ConvertToString("message/rfc822")).GetUnicode(), 
+                 nsString(NS_ConvertToString("text/xul")).GetUnicode(),
+                 out, tChannel);
 
 //  rv = mimeParser->Init(theURI, out, nsnull);
   if (NS_FAILED(rv) || !mimeParser)
