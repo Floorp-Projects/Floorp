@@ -13,8 +13,6 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-IGNORE_MANIFEST=1
-
 DEPTH=..\..\..
 MODULE=msgbase 
 
@@ -35,9 +33,6 @@ CPP_OBJS=									\
 			.\$(OBJDIR)\nsMsgFactory.obj    \
 			$(NULL)
 
-LCFLAGS=-DNETSCAPE
-
-# These are the libraries we need to link with to create the dll
 LLIBS=										\
 			$(DIST)\lib\xpcom.lib			\
 			$(DIST)\lib\plc3.lib			\
