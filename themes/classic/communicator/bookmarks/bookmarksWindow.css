@@ -41,13 +41,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/**
- * XXX - disable print plus. This needs to go into ns/!!!
- */
-#navprintplus {
-  display: none !important;
-}
-
 #status-bar {
   height: 1em;
 }

@@ -42,7 +42,3 @@
   ======================================================================= */
 
 @import url(chrome://communicator/skin/bookmarks/bookmarks.css);
-
-#navprintplus {
- display: none !important; 
-} 
