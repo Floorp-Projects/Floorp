@@ -2720,7 +2720,7 @@ GlobalWindowImpl::ScrollByPages(PRInt32 numPages)
   result = GetScrollInfo(&view, &p2t, &t2p);
   if (view)
   {
-    result = view->ScrollByPages(numPages);
+    result = view->ScrollByPages(0, numPages);
   }
 
   return result;
@@ -3840,7 +3840,7 @@ GlobalWindowImpl::AddEventListenerByIID(nsIDOMEventListener* aListener,
 {
   nsCOMPtr<nsIEventListenerManager> manager;
 
-  if (NS_OK == GetListenerManager(getter_AddRefs(manager))) {
+  if (NS_SUCCEEDED (GetListenerManager(getter_AddRefs(manager)))) {
     manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
     return NS_OK;
   }
@@ -6222,7 +6222,7 @@ nsDOMWindowController::IsCommandEnabled(const char* aCommand,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(editInterface, NS_ERROR_NOT_INITIALIZED);
 
-	
+
   if (!nsCRT::strcmp(sCopyString,aCommand)) {
     rv = editInterface->GetCopyable(aResult);
   }

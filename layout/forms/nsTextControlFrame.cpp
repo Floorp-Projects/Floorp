@@ -811,7 +811,7 @@ nsTextInputSelectionImpl::ScrollPage(PRBool aForward)
   if (!scrollableView)
     return NS_ERROR_NOT_INITIALIZED;
 
-  return scrollableView->ScrollByPages(aForward ? 1 : -1);
+  return scrollableView->ScrollByPages(0, aForward ? 1 : -1);
 }
 
 NS_IMETHODIMP

@@ -3143,7 +3143,6 @@ PRBool nsWindow::OnVScroll( MPARAM mp1, MPARAM mp2)
 
 PRBool nsWindow::OnHScroll( MPARAM mp1, MPARAM mp2)
 {
-#if 0  /* OS2TODO */
     if (nsnull != mEventCallback) {
         nsMouseScrollEvent scrollEvent;
         scrollEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
@@ -3175,7 +3174,6 @@ PRBool nsWindow::OnHScroll( MPARAM mp1, MPARAM mp2)
         DispatchWindowEvent(&scrollEvent);
         NS_RELEASE(scrollEvent.widget);
     }
-#endif
     return PR_FALSE;
 }
 

@@ -58,9 +58,9 @@ public:
 
   //overrides
   NS_IMETHOD  Init(nsIViewManager* aManager,
-      						 const nsRect &aBounds,
+                   const nsRect &aBounds,
                    const nsIView *aParent,
-      						 nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
+                   nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
   virtual void SetDimensions(const nsRect& aRect, PRBool aPaint = PR_TRUE);
   virtual void SetPosition(nscoord aX, nscoord aY);
    // SetVisibility is overriden so that it will set it's components visibility (ClipView, 
@@ -94,7 +94,7 @@ public:
   NS_IMETHOD  SetLineHeight(nscoord aHeight);
   NS_IMETHOD  GetLineHeight(nscoord *aHeight);
   NS_IMETHOD  ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLinesY);
-  NS_IMETHOD  ScrollByPages(PRInt32 aNumPages);
+  NS_IMETHOD  ScrollByPages(PRInt32 aNumPagesX, PRInt32 aNumPagesY);
   NS_IMETHOD  ScrollByWhole(PRBool aTop);
   
   NS_IMETHOD  GetClipView(const nsIView** aClipView) const;

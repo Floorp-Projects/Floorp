@@ -3694,7 +3694,7 @@ nsDocShell::ScrollByPages(PRInt32 numPages)
         return NS_ERROR_FAILURE;
     }
 
-    NS_ENSURE_SUCCESS(scrollView->ScrollByPages(numPages), NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(scrollView->ScrollByPages(0, numPages), NS_ERROR_FAILURE);
 
     return NS_OK;
 }

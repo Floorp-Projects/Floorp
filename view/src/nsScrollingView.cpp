@@ -175,7 +175,7 @@ NS_IMETHODIMP CornerView::ShowQuality(PRBool aShow)
         mViewManager->SetViewVisibility(this, nsViewVisibility_kShow);
 
       nsIScrollableView *par;
-      if (NS_OK == mParent->QueryInterface(NS_GET_IID(nsIScrollableView), (void **)&par)) {
+      if (NS_SUCCEEDED (mParent->QueryInterface(NS_GET_IID(nsIScrollableView), (void **)&par))) {
         par->ComputeScrollOffsets(PR_TRUE);
       }
     }
@@ -211,16 +211,12 @@ void CornerView::Show(PRBool aShow, PRBool aRethink)
     if (PR_TRUE == aRethink)
     {
       nsIScrollableView *par;
-      if (NS_OK == mParent->QueryInterface(NS_GET_IID(nsIScrollableView), (void **)&par)) {
+      if (NS_SUCCEEDED (mParent->QueryInterface(NS_GET_IID(nsIScrollableView), (void **)&par))) {
         par->ComputeScrollOffsets(PR_TRUE);
       }
     }
   }
 }
-
-#ifndef min
-#define min(a, b) ((a) < (b) ? (a) : (b))
-#endif
 
 NS_IMETHODIMP CornerView::Paint(nsIRenderingContext& rc, const nsRect& rect,
                                   PRUint32 aPaintFlags, PRBool &aResult)
@@ -283,9 +279,9 @@ NS_IMETHODIMP CornerView::Paint(nsIRenderingContext& rc, const nsRect& rect,
 
       //this is inefficient, but compact...
 
-      tcolor = NS_RGB((int)min(NS_GET_R(bcolor) + 40, 255), 
-                      (int)min(NS_GET_G(bcolor) + 40, 255),
-                      (int)min(NS_GET_B(bcolor) + 40, 255));
+      tcolor = NS_RGB((int)PR_MIN(NS_GET_R(bcolor) + 40, 255), 
+                      (int)PR_MIN(NS_GET_G(bcolor) + 40, 255),
+                      (int)PR_MIN(NS_GET_B(bcolor) + 40, 255));
 
       rc.SetColor(tcolor);
 
@@ -294,9 +290,9 @@ NS_IMETHODIMP CornerView::Paint(nsIRenderingContext& rc, const nsRect& rect,
                      nscoord(brect.width * 0.28f),
                      nscoord(brect.height * 0.28f));
 
-      tcolor = NS_RGB((int)min(NS_GET_R(bcolor) + 120, 255), 
-                      (int)min(NS_GET_G(bcolor) + 120, 255),
-                      (int)min(NS_GET_B(bcolor) + 120, 255));
+      tcolor = NS_RGB((int)PR_MIN(NS_GET_R(bcolor) + 120, 255), 
+                      (int)PR_MIN(NS_GET_G(bcolor) + 120, 255),
+                      (int)PR_MIN(NS_GET_B(bcolor) + 120, 255));
 
       rc.SetColor(tcolor);
 
@@ -314,10 +310,10 @@ NS_IMETHODIMP CornerView::Paint(nsIRenderingContext& rc, const nsRect& rect,
 
 NS_IMETHODIMP
 CornerView::Paint(nsIRenderingContext& rc, const nsIRegion& region,
-                    PRUint32 aPaintFlags, PRBool &aResult)
+                  PRUint32 aPaintFlags, PRBool &aResult)
 {
-   // Corner View Paint is overridden to get rid of compiler warnings caused
-   // by overloading Paint then overriding Paint.
+  // Corner View Paint is overridden to get rid of compiler warnings caused
+  // by overloading Paint then overriding Paint.
   return nsView::Paint(rc, region, aPaintFlags, aResult);
 }
 
@@ -446,9 +442,9 @@ nsrefcnt nsScrollingView::Release()
 
 
 NS_IMETHODIMP nsScrollingView::Init(nsIViewManager* aManager,
-                                      const nsRect &aBounds,
-                                      const nsIView *aParent,
-                                      nsViewVisibility aVisibilityFlag)
+                                    const nsRect &aBounds,
+                                    const nsIView *aParent,
+                                    nsViewVisibility aVisibilityFlag)
 {
   nsIDeviceContext  *dx = nsnull;
 
@@ -562,7 +558,7 @@ nsScrollingView::SetComponentVisibility(nsView* aView, nsViewVisibility aViewVis
 {
   nsresult rv = NS_OK;
   if (nsnull != aView) {
-      // Only set visibility if it's not currently set.
+    // Only set visibility if it's not currently set.
     nsViewVisibility componentVisibility;
     aView->GetVisibility(componentVisibility);
     if (aViewVisibility != componentVisibility) {
@@ -581,10 +577,10 @@ nsScrollingView::UpdateComponentVisibility(nsViewVisibility aScrollingViewVisibi
   nsresult rv = NS_OK;
   if (nsViewVisibility_kHide == aScrollingViewVisibility) {
 
-     // Hide Clip View 
+    // Hide Clip View 
     rv = SetComponentVisibility(mClipView, nsViewVisibility_kHide);
 
-     // Hide horizontal scrollbar
+    // Hide horizontal scrollbar
     if (NS_SUCCEEDED(rv)) {
       rv = SetComponentVisibility(mHScrollBarView, nsViewVisibility_kHide);
     }
@@ -600,31 +596,31 @@ nsScrollingView::UpdateComponentVisibility(nsViewVisibility aScrollingViewVisibi
     }
 
   } else if (nsViewVisibility_kShow == aScrollingViewVisibility) {
-      // Show clip view if if the scrolling view is visible
-     rv = SetComponentVisibility(mClipView, nsViewVisibility_kShow);
+    // Show clip view if if the scrolling view is visible
+    rv = SetComponentVisibility(mClipView, nsViewVisibility_kShow);
     
-     PRBool horizEnabled = PR_FALSE; 
-     PRBool vertEnabled = PR_FALSE; 
+    PRBool horizEnabled = PR_FALSE; 
+    PRBool vertEnabled = PR_FALSE; 
 
-     // Show horizontal scrollbar if it is enabled otherwise hide it
-     if ((NS_SUCCEEDED(rv)) && (nsnull != mHScrollBarView)) {
-       horizEnabled = ((ScrollBarView *)mHScrollBarView)->GetEnabled();
-       rv = SetComponentVisibility(mHScrollBarView, horizEnabled ? nsViewVisibility_kShow : nsViewVisibility_kHide);
-     }
+    // Show horizontal scrollbar if it is enabled otherwise hide it
+    if ((NS_SUCCEEDED(rv)) && (nsnull != mHScrollBarView)) {
+      horizEnabled = ((ScrollBarView *)mHScrollBarView)->GetEnabled();
+      rv = SetComponentVisibility(mHScrollBarView, horizEnabled ? nsViewVisibility_kShow : nsViewVisibility_kHide);
+    }
       
-     // Show vertical scrollbar view if it is enabled otherwise hide it
-     if ((NS_SUCCEEDED(rv)) &&  (nsnull != mVScrollBarView)) {
-       vertEnabled = ((ScrollBarView *)mVScrollBarView)->GetEnabled(); 
-       rv = SetComponentVisibility(mVScrollBarView, vertEnabled ? nsViewVisibility_kShow : nsViewVisibility_kHide);
-     }
+    // Show vertical scrollbar view if it is enabled otherwise hide it
+    if ((NS_SUCCEEDED(rv)) &&  (nsnull != mVScrollBarView)) {
+      vertEnabled = ((ScrollBarView *)mVScrollBarView)->GetEnabled(); 
+      rv = SetComponentVisibility(mVScrollBarView, vertEnabled ? nsViewVisibility_kShow : nsViewVisibility_kHide);
+    }
 
-     // Show the corner view if both the horizontal and vertical scrollbars are enabled otherwise hide it
-     if (NS_SUCCEEDED(rv)) {
-       rv = SetComponentVisibility(mCornerView, (horizEnabled && vertEnabled) ? nsViewVisibility_kShow : nsViewVisibility_kHide);
-     }
-   }
+    // Show the corner view if both the horizontal and vertical scrollbars are enabled otherwise hide it
+    if (NS_SUCCEEDED(rv)) {
+      rv = SetComponentVisibility(mCornerView, (horizEnabled && vertEnabled) ? nsViewVisibility_kShow : nsViewVisibility_kHide);
+    }
+  }
 
-   return rv;
+  return rv;
 }
 
 
@@ -646,20 +642,20 @@ NS_IMETHODIMP nsScrollingView::GetClipView(const nsIView** aClipView) const
 
 NS_IMETHODIMP nsScrollingView::AddScrollPositionListener(nsIScrollPositionListener* aListener)
 {
-	if (nsnull == mListeners) {
-		nsresult rv = NS_NewISupportsArray(&mListeners);
-		if (NS_FAILED(rv))
-			return rv;
-	}
-	return mListeners->AppendElement(aListener);
+  if (nsnull == mListeners) {
+    nsresult rv = NS_NewISupportsArray(&mListeners);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+  return mListeners->AppendElement(aListener);
 }
 
 NS_IMETHODIMP nsScrollingView::RemoveScrollPositionListener(nsIScrollPositionListener* aListener)
 {
-	if (nsnull != mListeners) {
-		return mListeners->RemoveElement(aListener);
-	}
-	return NS_ERROR_FAILURE;
+  if (nsnull != mListeners) {
+    return mListeners->RemoveElement(aListener);
+  }
+  return NS_ERROR_FAILURE;
 }
 
 void nsScrollingView::HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags)
@@ -787,7 +783,7 @@ NS_IMETHODIMP nsScrollingView::Notify(nsITimer * aTimer)
 
   nsIViewObserver *obs;
 
-  if (NS_OK == mViewManager->GetViewObserver(obs))
+  if (NS_SUCCEEDED (mViewManager->GetViewObserver(obs)))
   {
     PRBool handled;
     obs->HandleEvent((nsIView *)this, &event, &retval, PR_TRUE, handled);
@@ -950,24 +946,24 @@ NS_IMETHODIMP nsScrollingView::SetWidget(nsIWidget *aWidget)
 
 NS_IMETHODIMP nsScrollingView::SetZIndex(PRBool aAuto, PRInt32 aZIndex, PRBool aTopMost)
 {
-	nsView::SetZIndex(aAuto, aZIndex, aTopMost);
-	
-	// inform all views that the z-index has changed.
+  nsView::SetZIndex(aAuto, aZIndex, aTopMost);
+
+  // inform all views that the z-index has changed.
   // XXX why are we doing this? they're all a child of this view, so they
   // shouldn't need to be re-z-indexed.
-	if (mClipView) mViewManager->SetViewZIndex(mClipView, aAuto, aZIndex, aTopMost);
-	if (mCornerView) mViewManager->SetViewZIndex(mCornerView, aAuto, aZIndex, aTopMost);
-	if (mVScrollBarView) mViewManager->SetViewZIndex(mVScrollBarView, aAuto, aZIndex, aTopMost);
-	if (mHScrollBarView) mViewManager->SetViewZIndex(mHScrollBarView, aAuto, aZIndex, aTopMost);
+  if (mClipView) mViewManager->SetViewZIndex(mClipView, aAuto, aZIndex, aTopMost);
+  if (mCornerView) mViewManager->SetViewZIndex(mCornerView, aAuto, aZIndex, aTopMost);
+  if (mVScrollBarView) mViewManager->SetViewZIndex(mVScrollBarView, aAuto, aZIndex, aTopMost);
+  if (mHScrollBarView) mViewManager->SetViewZIndex(mHScrollBarView, aAuto, aZIndex, aTopMost);
 
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
 {
   nsView        *scrolledView = GetScrolledView();
   nsIScrollbar  *scrollv = nsnull, *scrollh = nsnull;
-  PRBool		hasVertical = PR_TRUE, hasHorizontal = PR_FALSE;
+  PRBool        hasVertical = PR_TRUE, hasHorizontal = PR_FALSE;
   nsIWidget     *win;
 
   if (nsnull != scrolledView)
@@ -995,7 +991,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
       mHScrollBarView->GetDimensions(hSize);
       mHScrollBarView->GetWidget(win);
       
-      if (NS_OK == win->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollh)) {
+      if (NS_SUCCEEDED (win->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollh))) {
         if (((mSizeX > controlRect.width) &&
             (mScrollPref != nsScrollPreference_kNeverScroll)) ||
             (mScrollPref == nsScrollPreference_kAlwaysScroll) ||
@@ -1015,7 +1011,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
 
       mVScrollBarView->GetWidget(win);
 
-      if (NS_OK == win->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollv)) {
+      if (NS_SUCCEEDED (win->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollv))) {
         if ((mSizeY > (controlRect.height - (hasHorizontal ? hSize.height : 0)))) {
           // if we are scrollable
           if (mScrollPref != nsScrollPreference_kNeverScroll) {
@@ -1089,7 +1085,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
       offx = mOffsetX;
       mHScrollBarView->GetWidget(win);
       
-      if (NS_OK == win->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollh)) {
+      if (NS_SUCCEEDED (win->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollh))) {
         if ((mSizeX > (controlRect.width - (hasVertical ? vSize.width : 0)))) {
           if (mScrollPref != nsScrollPreference_kNeverScroll) {
             //we need to be able to scroll
@@ -1196,7 +1192,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
       ((ScrollBarView *)mHScrollBarView)->SetEnabled(PR_FALSE);
 
       mHScrollBarView->GetWidget(win);
-      if (NS_OK == win->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollh)) {
+      if (NS_SUCCEEDED (win->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollh))) {
         scrollh->SetParameters(0, 0, 0, 0);
         NS_RELEASE(scrollh);
       }
@@ -1208,7 +1204,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
       ((ScrollBarView *)mVScrollBarView)->SetEnabled(PR_FALSE);
 
       mVScrollBarView->GetWidget(win);
-      if (NS_OK == win->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollv))
+      if (NS_SUCCEEDED (win->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollv)))
       {
         scrollv->SetParameters(0, 0, 0, 0);
         NS_RELEASE(scrollv);
@@ -1270,101 +1266,101 @@ NS_IMETHODIMP nsScrollingView::GetScrollPreference(nsScrollPreference &aScrollPr
 
 NS_IMETHODIMP nsScrollingView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags)
 {
-	nsIDeviceContext  *dev;
-	float             t2p;
-	float             p2t;
-	nsSize            clipSize;
-	nsIWidget         *widget;
-	PRInt32           dx = 0, dy = 0;
+  nsIDeviceContext  *dev;
+  float             t2p;
+  float             p2t;
+  nsSize            clipSize;
+  nsIWidget         *widget;
+  PRInt32           dx = 0, dy = 0;
 
-	mViewManager->GetDeviceContext(dev);
-	dev->GetAppUnitsToDevUnits(t2p);
-	dev->GetDevUnitsToAppUnits(p2t);
+  mViewManager->GetDeviceContext(dev);
+  dev->GetAppUnitsToDevUnits(t2p);
+  dev->GetDevUnitsToAppUnits(p2t);
 
-	NS_RELEASE(dev);
+  NS_RELEASE(dev);
 
   mClipView->GetDimensions(clipSize);
 
-	// Clamp aX
+  // Clamp aX
 
-	if ((aX + clipSize.width) > mSizeX)
-		aX = mSizeX - clipSize.width;
+  if ((aX + clipSize.width) > mSizeX)
+    aX = mSizeX - clipSize.width;
 
-	if (aX < 0)
-		aX = 0;
+  if (aX < 0)
+    aX = 0;
 
-	// Clamp aY
+  // Clamp aY
 
-	if ((aY + clipSize.height) > mSizeY)
-		aY = mSizeY - clipSize.height;
+  if ((aY + clipSize.height) > mSizeY)
+    aY = mSizeY - clipSize.height;
 
-	if (aY < 0)
-		aY = 0;
+  if (aY < 0)
+    aY = 0;
 
-	aX = NSIntPixelsToTwips(NSTwipsToIntPixels(aX, t2p), p2t);
-	aY = NSIntPixelsToTwips(NSTwipsToIntPixels(aY, t2p), p2t);
+  aX = NSIntPixelsToTwips(NSTwipsToIntPixels(aX, t2p), p2t);
+  aY = NSIntPixelsToTwips(NSTwipsToIntPixels(aY, t2p), p2t);
 
-	// do nothing if the we aren't scrolling.
-	if (aX == mOffsetX && aY == mOffsetY)
-		return NS_OK;
+  // do nothing if the we aren't scrolling.
+  if (aX == mOffsetX && aY == mOffsetY)
+    return NS_OK;
 
-	mVScrollBarView->GetWidget(widget);
+  mVScrollBarView->GetWidget(widget);
 
-	if (nsnull != widget) {
-		nsIScrollbar* scrollv = nsnull;
-		if (NS_OK == widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollv)) {
-			// Move the scrollbar's thumb
+  if (nsnull != widget) {
+    nsIScrollbar* scrollv = nsnull;
+    if (NS_SUCCEEDED (widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollv))) {
+      // Move the scrollbar's thumb
 
-			PRUint32  oldpos = mOffsetY;
+      PRUint32  oldpos = mOffsetY;
 
-			scrollv->SetPosition(aY);
+      scrollv->SetPosition(aY);
 
-			dy = NSTwipsToIntPixels((oldpos - aY), t2p);
+      dy = NSTwipsToIntPixels((oldpos - aY), t2p);
 
-			NS_RELEASE(scrollv);
-		}
+      NS_RELEASE(scrollv);
+    }
 
-		NS_RELEASE(widget);
-	}
+    NS_RELEASE(widget);
+  }
 
-	mHScrollBarView->GetWidget(widget);
+  mHScrollBarView->GetWidget(widget);
 
-	if (nsnull != widget) {
-		nsIScrollbar* scrollh = nsnull;
-		if (NS_OK == widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollh)) {
-			// Move the scrollbar's thumb
+  if (nsnull != widget) {
+    nsIScrollbar* scrollh = nsnull;
+    if (NS_SUCCEEDED (widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollh))) {
+      // Move the scrollbar's thumb
 
-			PRUint32  oldpos = mOffsetX;
+      PRUint32  oldpos = mOffsetX;
 
-			scrollh->SetPosition(aX);
+      scrollh->SetPosition(aX);
 
-			dx = NSTwipsToIntPixels((oldpos - aX), t2p);
+      dx = NSTwipsToIntPixels((oldpos - aX), t2p);
 
-			NS_RELEASE(scrollh);
-		}
+      NS_RELEASE(scrollh);
+    }
 
-		NS_RELEASE(widget);
-	}
+    NS_RELEASE(widget);
+  }
 
-	// Update the scrolled view's position
+  // Update the scrolled view's position
 
-	nsView* scrolledView = GetScrolledView();
+  nsView* scrolledView = GetScrolledView();
 
   NotifyScrollPositionWillChange(aX, aY);
 
-	if (nsnull != scrolledView)
-	{
-		scrolledView->SetPosition(-aX, -aY);
+  if (nsnull != scrolledView)
+  {
+    scrolledView->SetPosition(-aX, -aY);
 
-		mOffsetX = aX;
-		mOffsetY = aY;
-	}
+    mOffsetX = aX;
+    mOffsetY = aY;
+  }
 
-	Scroll(scrolledView, dx, dy, t2p, 0);
+  Scroll(scrolledView, dx, dy, t2p, 0);
 
   NotifyScrollPositionDidChange(aX, aY);
 
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsScrollingView::SetControlInsets(const nsMargin &aInsets)
@@ -1380,7 +1376,7 @@ NS_IMETHODIMP nsScrollingView::GetControlInsets(nsMargin &aInsets) const
 }
 
 NS_IMETHODIMP nsScrollingView::GetScrollbarVisibility(PRBool *aVerticalVisible,
-                                                        PRBool *aHorizontalVisible) const
+                                                      PRBool *aHorizontalVisible) const
 {
   *aVerticalVisible = mVScrollBarView && ViewIsShowing((ScrollBarView *)mVScrollBarView);
   *aHorizontalVisible = mHScrollBarView && ViewIsShowing((ScrollBarView *)mHScrollBarView);
@@ -1390,8 +1386,8 @@ NS_IMETHODIMP nsScrollingView::GetScrollbarVisibility(PRBool *aVerticalVisible,
 void nsScrollingView::AdjustChildWidgets(nsScrollingView *aScrolling, nsView *aView,
                                          nscoord aDx, nscoord aDy, float scale)
 {
-  nscoord           offx, offy;
-  PRBool            isscroll = PR_FALSE;
+  nscoord offx, offy;
+  PRBool  isscroll = PR_FALSE;
 
   if (aScrolling == aView)
   {
@@ -1579,7 +1575,7 @@ NS_IMETHODIMP nsScrollingView::ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLin
   nscoord newPosX = 0, newPosY = 0;
 
   if (aNumLinesX != 0) {
-    if (mHScrollBarView->GetWidget(*getter_AddRefs(widget)) == NS_OK) {
+    if (NS_SUCCEEDED (mHScrollBarView->GetWidget(*getter_AddRefs(widget)))) {
       nsCOMPtr<nsIScrollbar> scrollh( do_QueryInterface(widget) );
       if (scrollh) {
         PRUint32  oldPos  = 0;
@@ -1593,7 +1589,7 @@ NS_IMETHODIMP nsScrollingView::ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLin
     }
   }
   if (aNumLinesY != 0) {
-    if (mVScrollBarView->GetWidget(*getter_AddRefs(widget)) == NS_OK) {
+    if (NS_SUCCEEDED (mVScrollBarView->GetWidget(*getter_AddRefs(widget)))) {
       nsCOMPtr<nsIScrollbar> scrollv( do_QueryInterface(widget) );
       if (scrollv) {
         PRUint32  oldPos  = 0;
@@ -1611,8 +1607,8 @@ NS_IMETHODIMP nsScrollingView::ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLin
   mClipView->GetDimensions(clipSize);
 
   //sanity check values
-  if (newPosX > (mSizeX - clipSize.height))
-    newPosX = mSizeX - clipSize.height;
+  if (newPosX > (mSizeX - clipSize.width))
+    newPosX = mSizeX - clipSize.width;
   else if (newPosX < 0)
     newPosX = 0;
 
@@ -1626,53 +1622,71 @@ NS_IMETHODIMP nsScrollingView::ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLin
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScrollingView::ScrollByPages(PRInt32 aNumPages)
+NS_IMETHODIMP nsScrollingView::ScrollByPages(PRInt32 aNumPagesX, PRInt32 aNumPagesY)
 {
-	nsIWidget* widget = nsnull;
-	if (mVScrollBarView->GetWidget(widget) == NS_OK) {
-		nsIScrollbar* scrollv = nsnull;
-		if (widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollv) == NS_OK) {
-			PRUint32  oldPos = 0;
-			nsSize    clipSize;
-			nscoord   newPos = 0;
+  nsCOMPtr<nsIWidget> widget;
+  nscoord newPosX = 0, newPosY = 0;
 
-			scrollv->GetPosition(oldPos);
-			NS_RELEASE(scrollv);
-			
-			mClipView->GetDimensions(clipSize);
+  nsSize clipSize;
+  mClipView->GetDimensions(clipSize);
 
-			newPos = oldPos + clipSize.height * aNumPages;
+  if (aNumPagesX != 0) {
+    if (NS_SUCCEEDED (mHScrollBarView->GetWidget(*getter_AddRefs(widget)))) {
+      nsCOMPtr<nsIScrollbar> scrollh( do_QueryInterface(widget) );
+      if (scrollh) {
+        PRUint32  oldPos = 0;
 
-			if (newPos > (mSizeY - clipSize.height))
-				newPos = mSizeY - clipSize.height;
+        scrollh->GetPosition(oldPos);
 
-			if (newPos < 0)
-				newPos = 0;
+        newPosX = oldPos + clipSize.width * aNumPagesX;
+      }
+    }
+  }
+  if (aNumPagesY != 0) {
+    if (NS_SUCCEEDED (mVScrollBarView->GetWidget(*getter_AddRefs(widget)))) {
+      nsCOMPtr<nsIScrollbar> scrollv( do_QueryInterface(widget) );
+      if (scrollv) {
+        PRUint32  oldPos  = 0;
 
-			ScrollTo(0, newPos, 0);
-		}
-		NS_RELEASE(widget);
-	}
+        scrollv->GetPosition(oldPos);
 
-	return NS_OK;
+        newPosY = oldPos + clipSize.height * aNumPagesY;
+      }
+    }
+  }
+
+  //sanity check values
+  if (newPosX > (mSizeX - clipSize.width))
+    newPosX = mSizeX - clipSize.width;
+  else if (newPosX < 0)
+    newPosX = 0;
+
+  if (newPosY > (mSizeY - clipSize.height))
+    newPosY = mSizeY - clipSize.height;
+  else if (newPosY < 0)
+    newPosY = 0;
+
+  ScrollTo(newPosX, newPosY, 0);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsScrollingView::ScrollByWhole(PRBool aTop)
 {
-	nscoord   newPos = 0;
+  nscoord   newPos = 0;
 
   if (aTop) {
-		newPos = 0;
+    newPos = 0;
   }
   else {
-  	nsSize    clipSize;
-	  mClipView->GetDimensions(clipSize);
-		newPos = mSizeY - clipSize.height;
+    nsSize    clipSize;
+    mClipView->GetDimensions(clipSize);
+    newPos = mSizeY - clipSize.height;
   }
 
-	ScrollTo(0, newPos, 0);
+  ScrollTo(0, newPos, 0);
 
-	return NS_OK;
+  return NS_OK;
 }
 
 PRBool nsScrollingView::CannotBitBlt(nsView* aScrolledView)
