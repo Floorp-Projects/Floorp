@@ -1,0 +1,17 @@
+
+/* class for text with a 'link' appearance */
+.text-link
+  {
+    color                 : #666699;
+    text-decoration       : underline;
+  }
+  
+.text-link:hover
+  {
+    color                 : #333366;
+  } 
+  
+.text-link:hover:active
+  {
+    color                 : #990000;
+  } 
