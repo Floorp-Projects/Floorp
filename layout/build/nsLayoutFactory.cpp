@@ -59,6 +59,7 @@
 #include "nsIBindingManager.h"
 
 #include "nsIAutoCopy.h"
+#include "nsIXIFConverter.h"
 
 #include "nsINodeInfo.h"
 
@@ -105,6 +106,7 @@ static NS_DEFINE_CID(kBindingManagerCID, NS_BINDINGMANAGER_CID);
 static NS_DEFINE_CID(kDOMImplementationCID, NS_DOM_IMPLEMENTATION_CID);
 static NS_DEFINE_CID(kNodeInfoManagerCID, NS_NODEINFOMANAGER_CID);
 static NS_DEFINE_CID(kAutoCopyServiceCID, NS_AUTOCOPYSERVICE_CID);
+static NS_DEFINE_CID(kXIFConverterCID, NS_XIFCONVERTER_CID);
 
 
 extern nsresult NS_NewSelection(nsIFrameSelection** aResult);
@@ -133,6 +135,8 @@ extern nsresult NS_NewBindingManager(nsIBindingManager** aResult);
 extern nsresult NS_NewNodeInfoManager(nsINodeInfoManager** aResult);
 
 extern nsresult NS_NewAutoCopyService(nsIAutoCopyService** aResult);
+
+extern nsresult NS_NewXIFConverter(nsIXIFConverter** aResult);
 
 //----------------------------------------------------------------------
 
@@ -411,6 +415,13 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       return res;
     }
   }
+  else if (mClassID.Equals(kXIFConverterCID)) {
+    res = NS_NewXIFConverter((nsIXIFConverter**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewAutoCopyService", res);
+      return res;
+    }
+  }  
   else if (mClassID.Equals(kDOMImplementationCID)) {
     res = NS_NewDOMImplementation((nsIDOMDOMImplementation**) &inst);
 	if (NS_FAILED(res)) {
