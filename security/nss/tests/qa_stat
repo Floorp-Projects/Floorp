@@ -167,11 +167,12 @@ setQAsysvars()
 		TESTNUMBER=`echo $MACHINE | sed -e 's/.*\.//'`
 		SYSNAME=`echo $MACHINE | sed -e 's/\..*//'`
 		Debug "SYSNAME= $SYSNAME"
-		QA_SYS_OS=`grep $SYSNAME $TMP_PLATFORMLIST_FILE | uniq | sed \
-			-e "s/${SYSNAME}_//" \
-			-e "s/WINNT_WINNT WINNT_WIN95/Windows NT/" \
-			-e "s/WINNT_WINNT/Windows NT/" \
-			-e "s/WINNT_WIN95/Windows 95/" `
+		QA_SYS_OS=`grep $SYSNAME $TMP_PLATFORMLIST_FILE |sed -e 's///' | \
+			sort | uniq | sed  -e "s/$SYSNAME//" \
+			-e "s/WINNT_WIN95/Windows NT/"  \
+			-e "s/WINNT_WINNT/Windows NT/"  \
+			-e "s/Windows_NT_WIN95/Windows NT/"  \
+			-e "s/Windows_NT_WINNT/Windows NT/"  | sort | uniq`
 		Debug "QA_SYS_OS= $QA_SYS_OS"
 	fi
 	BUILD_SYS=`echo $BUILDPLATFORM | sed -e 's/\.OBJ//' -e 's/_DBG/ Debug/' \
