@@ -55,6 +55,7 @@
 #include "nsAutoLock.h"
 #include "nsXPIDLString.h"
 #include "nsNetCID.h"
+#include "nsURLHelper.h"
 
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -203,4 +204,16 @@ nsFileProtocolHandler::NewFileURI(nsIFile *file, nsIURI **result)
     if (NS_FAILED(rv)) return rv;
 
     return CallQueryInterface(url, result);
+}
+
+NS_IMETHODIMP
+nsFileProtocolHandler::GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
+{
+    return net_GetURLSpecFromFile(aFile, result);
+}
+
+NS_IMETHODIMP
+nsFileProtocolHandler::GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
+{
+    return net_GetFileFromURLSpec(aURL, result);
 }

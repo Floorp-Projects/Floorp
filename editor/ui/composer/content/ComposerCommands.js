@@ -930,6 +930,7 @@ function PromptForSaveLocation(aDoSaveAsText, aEditorType, aMIMEType, ahtmlDocum
   // assuming we have information needed (like prior saved location)
   try {
     var ioService = GetIOService();
+    var fileHandler = GetFileProtocolHandler();
     
     var isLocalFile = true;
     try {
@@ -941,7 +942,7 @@ function PromptForSaveLocation(aDoSaveAsText, aEditorType, aMIMEType, ahtmlDocum
     var parentLocation = null;
     if (isLocalFile)
     {
-      var fileLocation = ioService.getFileFromURLSpec(aDocumentURLString); // this asserts if url is not local
+      var fileLocation = fileHandler.getFileFromURLSpec(aDocumentURLString); // this asserts if url is not local
       parentLocation = fileLocation.parent;
     }
     if (parentLocation)
@@ -964,7 +965,7 @@ function PromptForSaveLocation(aDoSaveAsText, aEditorType, aMIMEType, ahtmlDocum
   if (dialogResult.filepickerClick != nsIFilePicker.returnCancel)
   {
     // reset urlstring to new save location
-    dialogResult.resultingURIString = ioService.getURLSpecFromFile(fp.file);
+    dialogResult.resultingURIString = fileHandler.getURLSpecFromFile(fp.file);
     dialogResult.resultingLocalFile = fp.file;
     SaveFilePickerDirectory(fp, aEditorType);
   }
@@ -1757,8 +1758,8 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
       
       if (docURI.schemeIs("file"))
       {
-        ioService = GetIOService();
-        tempLocalFile = ioService.getFileFromURLSpec(urlstring).QueryInterface(Components.interfaces.nsILocalFile);
+        var fileHandler = GetFileProtocolHandler();
+        tempLocalFile = fileHandler.getFileFromURLSpec(urlstring).QueryInterface(Components.interfaces.nsILocalFile);
       }
     }
 
@@ -2433,8 +2434,8 @@ var nsValidateCommand =
     // See if it's a file:
     var ifile;
     try {
-      var ioService = GetIOService();
-      ifile = ioService.getFileFromURLSpec(URL2Validate);
+      var fileHandler = GetFileProtocolHandler();
+      ifile = fileHandler.getFileFromURLSpec(URL2Validate);
       // nsIFile throws an exception if it's not a file url
     } catch (e) { ifile = null; }
     if (ifile)

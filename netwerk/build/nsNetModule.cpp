@@ -147,71 +147,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsResumableEntityID)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static NS_METHOD
-RegisterBuiltInURLParsers(nsIComponentManager *aCompMgr, 
-                          nsIFile *aPath,
-                          const char *registryLocation, 
-                          const char *componentType,
-                          const nsModuleComponentInfo *info)
-{
-    nsresult rv;
-    nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsXPIDLCString previous;
-
-    catman->AddCategoryEntry(NS_IURLPARSER_KEY, 
-                             "file", 
-                             NS_NOAUTHURLPARSER_CONTRACTID,
-                             PR_TRUE, 
-                             PR_TRUE, 
-                             getter_Copies(previous));
-
-    catman->AddCategoryEntry(NS_IURLPARSER_KEY, 
-                             "ftp", 
-                             NS_AUTHURLPARSER_CONTRACTID,
-                             PR_TRUE, 
-                             PR_TRUE, 
-                             getter_Copies(previous));
-
-    catman->AddCategoryEntry(NS_IURLPARSER_KEY, 
-                             "http", 
-                             NS_AUTHURLPARSER_CONTRACTID,
-                             PR_TRUE, 
-                             PR_TRUE, 
-                             getter_Copies(previous));
-
-    catman->AddCategoryEntry(NS_IURLPARSER_KEY, 
-                             "https", 
-                             NS_AUTHURLPARSER_CONTRACTID,
-                             PR_TRUE, 
-                             PR_TRUE, 
-                             getter_Copies(previous));
-    return NS_OK;
-}
-
-static NS_METHOD
-UnregisterBuiltInURLParsers(nsIComponentManager *aCompMgr, 
-                            nsIFile *aPath,
-                            const char *registryLocation,
-                            const nsModuleComponentInfo *info)
-{
-    nsresult rv;
-    nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    catman->DeleteCategoryEntry(NS_IURLPARSER_KEY, "file", PR_TRUE);
-    catman->DeleteCategoryEntry(NS_IURLPARSER_KEY, "ftp", PR_TRUE);
-    catman->DeleteCategoryEntry(NS_IURLPARSER_KEY, "http", PR_TRUE);
-    catman->DeleteCategoryEntry(NS_IURLPARSER_KEY, "https", PR_TRUE);
-
-    return NS_OK;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
 #include "nsFileChannel.h"
 #include "nsFileProtocolHandler.h"
 #include "nsDataHandler.h"
@@ -554,6 +489,9 @@ static void PR_CALLBACK nsNeckoShutdown(nsIModule *neckoModule)
 
     // Release buffer cache
     NS_IF_RELEASE(nsIOService::gBufferCache);
+
+    // Release global state used by the URL helper module.
+    net_ShutdownURLHelper();
 }
 
 static const nsModuleComponentInfo gNetModuleInfo[] = {
@@ -671,9 +609,7 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
     { NS_STDURLPARSER_CLASSNAME,
       NS_STDURLPARSER_CID,
       NS_STDURLPARSER_CONTRACTID,
-      nsStdURLParserConstructor,
-      RegisterBuiltInURLParsers,  
-      UnregisterBuiltInURLParsers}, 
+      nsStdURLParserConstructor},
     { NS_NOAUTHURLPARSER_CLASSNAME,
       NS_NOAUTHURLPARSER_CID,
       NS_NOAUTHURLPARSER_CONTRACTID,

@@ -175,10 +175,10 @@ InspectorApp.prototype =
     var file = FilePickerUtils.pickFile("Find Search File", path, ["filterXML"], "Open");
     if (file) {
       var ioService = XPCU.getService("@mozilla.org/network/io-service;1","nsIIOService");
+      var fileHandler = XPCU.QI(ioService.getProtocolHandler("file"), "nsIFileProtocolHandler");
 
-      var url = ioService.getURLSpecFromFile(file);
-      // XX temporary until 56354 is fixed
-      url = url.replace("file://", "file:///");      
+      var url = fileHandler.getURLSpecFromFile(file);
+
       this.startSearchModule(url);
     }
   },

@@ -96,7 +96,7 @@ nsJARURI::SetSpec(const nsACString &aSpec)
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString scheme;
-    rv = ::ExtractURLScheme(aSpec, nsnull, nsnull, &scheme);
+    rv = net_ExtractURLScheme(aSpec, nsnull, nsnull, &scheme);
     if (NS_FAILED(rv)) return rv;
 
     if (strcmp("jar", scheme.get()) != 0)
@@ -127,9 +127,9 @@ nsJARURI::SetSpec(const nsACString &aSpec)
     while (*delim_end == '/')
         ++delim_end;
 
-    rv = ::ResolveRelativePath(Substring(delim_end, end),
-                                         NS_LITERAL_CSTRING(""),
-                                         mJAREntry);
+    rv = net_ResolveRelativePath(Substring(delim_end, end),
+                                           NS_LITERAL_CSTRING(""),
+                                           mJAREntry);
     return rv;
 }
 
@@ -329,7 +329,7 @@ nsJARURI::Resolve(const nsACString &relativePath, nsACString &result)
     nsresult rv;
 
     nsCAutoString scheme;
-    rv = ::ExtractURLScheme(relativePath, nsnull, nsnull, &scheme);
+    rv = net_ExtractURLScheme(relativePath, nsnull, nsnull, &scheme);
     if (NS_SUCCEEDED(rv)) {
         // then aSpec is absolute
         result = relativePath;
@@ -344,8 +344,8 @@ nsJARURI::Resolve(const nsACString &relativePath, nsACString &result)
         path = "";
 
     nsCAutoString resolvedEntry;
-    rv = ::ResolveRelativePath(relativePath, path,
-                               resolvedEntry);
+    rv = net_ResolveRelativePath(relativePath, path,
+                                 resolvedEntry);
     if (NS_FAILED(rv)) return rv;
 
     return FormatSpec(resolvedEntry, result);
@@ -385,9 +385,9 @@ nsJARURI::SetJAREntry(const nsACString &entryPath)
 {
     mJAREntry.Truncate();
 
-    return ::ResolveRelativePath(entryPath,
-                                 NS_LITERAL_CSTRING(""),
-                                 mJAREntry);
+    return net_ResolveRelativePath(entryPath,
+                                   NS_LITERAL_CSTRING(""),
+                                   mJAREntry);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

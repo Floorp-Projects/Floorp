@@ -518,8 +518,9 @@ inSearchModule.prototype =
     var file = XPCU.QI(file, "nsIFile");
 
     var ioService = XPCU.getService("@mozilla.org/network/io-service;1", "nsIIOService");
+    var fileHandler = XPCU.QI(ioService.getProtocolHandler("file"), "nsIFileProtocolHandler");
 
-    this.mDialogURL = ioService.getURLSpecFromFile(basefile);
+    this.mDialogURL = fileHandler.getURLSpecFromFile(basefile);
     */
   }  
 

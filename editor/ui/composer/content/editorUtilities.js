@@ -305,6 +305,13 @@ function GetIOService()
   return gIOService;
 }
 
+function GetFileProtocolHandler()
+{
+  var ios = GetIOService();
+  var handler = ios.getProtocolHandler("file");
+  return handler.QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+}
+
 function GetPrefsService()
 {
   if (gPrefsService)

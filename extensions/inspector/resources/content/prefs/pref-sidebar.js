@@ -145,8 +145,9 @@ SidebarPrefs.prototype =
         return null;
 
       var ioService = XPCU.getService("@mozilla.org/network/io-service;1", "nsIIOService");
+      var fileHandler = XPCU.QI(ioService.getProtocolHandler("file"), "nsIFileProtocolHandler");
 
-      return ioService.getURLSpecFromFile(file);
+      return fileHandler.getURLSpecFromFile(file);
 
     } catch (ex) {
       return null;

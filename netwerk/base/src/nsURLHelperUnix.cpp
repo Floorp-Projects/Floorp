@@ -38,12 +38,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* Unix-specific local file uri parsing */
-#include "nsIOService.h"
+#include "nsURLHelper.h"
 #include "nsEscape.h"
 #include "nsILocalFile.h"
 
-NS_IMETHODIMP
-nsIOService::GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
+nsresult
+net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
 {
     nsresult rv;
     nsCAutoString ePath;
@@ -79,8 +79,8 @@ nsIOService::GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsIOService::GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
+nsresult
+net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
 {
     nsresult rv;
 
@@ -93,7 +93,7 @@ nsIOService::GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
     
     nsCAutoString directory, fileBaseName, fileExtension, path;
 
-    rv = ParseFileURL(aURL, directory, fileBaseName, fileExtension);
+    rv = net_ParseFileURL(aURL, directory, fileBaseName, fileExtension);
     if (NS_FAILED(rv)) return rv;
 
     if (!directory.IsEmpty())

@@ -35,35 +35,41 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _nsURLHelper_h_
-#define _nsURLHelper_h_
+#ifndef nsURLHelper_h__
+#define nsURLHelper_h__
 
-#include "prtypes.h"
-#include "nscore.h"
-#include "nsCRT.h"
 #include "nsString.h"
 
+class nsIFile;
+class nsIURLParser;
+
+//----------------------------------------------------------------------------
+// This module contains some private helper functions related to URL parsing.
+//----------------------------------------------------------------------------
+
+/* shutdown frees URL parser */
+void net_ShutdownURLHelper();
+
+/* access URL parsers */
+nsIURLParser *net_GetAuthURLParser();
+nsIURLParser *net_GetNoAuthURLParser();
+nsIURLParser *net_GetStdURLParser();
+
+/* convert between nsIFile and file:// URL spec */
+nsresult net_GetURLSpecFromFile(nsIFile *, nsACString &);
+nsresult net_GetFileFromURLSpec(const nsACString &, nsIFile **);
+
+/* extract file path components from file:// URL */
+nsresult net_ParseFileURL(const nsACString &inURL,
+                          nsACString &outDirectory,
+                          nsACString &outFileBaseName,
+                          nsACString &outFileExtension);
+
 /* handle .. in dirs while resolving relative URLs */
-void CoalesceDirsRel(char* io_Path);
+void net_CoalesceDirsRel(char* io_Path);
 
 /* handle .. in dirs while resolving absolute URLs */
-void CoalesceDirsAbs(char* io_Path);
-
-/* convert to lower case */
-void ToLowerCase(char* str, PRUint32 length);
-void ToLowerCase(char* str);
-
-/* Extract URI-Scheme if possible */
-nsresult ExtractURLScheme(const nsACString &inURI, PRUint32 *startPos, 
-                          PRUint32 *endPos, nsACString *scheme = nsnull);
-
-/* check that the given scheme conforms to RFC 2396 */
-PRBool IsValidScheme(const char *scheme, PRUint32 schemeLen);
-
-inline PRBool IsValidScheme(const nsAFlatCString &scheme)
-{
-    return IsValidScheme(scheme.get(), scheme.Length());
-}
+void net_CoalesceDirsAbs(char* io_Path);
 
 /**
  * Resolves a relative path string containing "." and ".."
@@ -78,8 +84,33 @@ inline PRBool IsValidScheme(const nsAFlatCString &scheme)
  *
  * @return a new string, representing canonical uri
  */
-nsresult ResolveRelativePath(const nsACString &relativePath,
-                             const nsACString &basePath,
-                             nsACString &result);
+nsresult net_ResolveRelativePath(const nsACString &relativePath,
+                                 const nsACString &basePath,
+                                 nsACString &result);
 
-#endif
+/**
+ * Extract URI-Scheme if possible
+ *
+ * @param inURI     URI spec
+ * @param startPos  start of scheme (may be null)
+ * @param endPos    end of scheme; index of colon (may be null)
+ * @param scheme    scheme copied to this buffer on return (may be null)
+ */
+nsresult net_ExtractURLScheme(const nsACString &inURI,
+                              PRUint32 *startPos, 
+                              PRUint32 *endPos,
+                              nsACString *scheme = nsnull);
+
+/* check that the given scheme conforms to RFC 2396 */
+PRBool net_IsValidScheme(const char *scheme, PRUint32 schemeLen);
+
+inline PRBool net_IsValidScheme(const nsAFlatCString &scheme)
+{
+    return net_IsValidScheme(scheme.get(), scheme.Length());
+}
+
+/* convert to lower case (XXX this needs to be factored out) */
+void net_ToLowerCase(char* str, PRUint32 length);
+void net_ToLowerCase(char* str);
+
+#endif // !nsURLHelper_h__

@@ -240,10 +240,6 @@ private:
 
     // global objects.  don't use COMPtr as its destructor will cause a
     // coredump if we leak it.
-    static nsIIOService                *gIOService;
-    static nsIURLParser                *gNoAuthParser;
-    static nsIURLParser                *gAuthParser;
-    static nsIURLParser                *gStdParser;
     static nsIIDNService               *gIDNService;
     static nsICharsetConverterManager2 *gCharsetMgr;
     static PRBool                       gInitialized;

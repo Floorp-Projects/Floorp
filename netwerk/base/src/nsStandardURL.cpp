@@ -57,10 +57,6 @@
 static NS_DEFINE_CID(kThisImplCID, NS_THIS_STANDARDURL_IMPL_CID);
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 
-nsIIOService *nsStandardURL::gIOService = nsnull;
-nsIURLParser *nsStandardURL::gNoAuthParser = nsnull;
-nsIURLParser *nsStandardURL::gAuthParser = nsnull;
-nsIURLParser *nsStandardURL::gStdParser = nsnull;
 nsIIDNService *nsStandardURL::gIDNService = nsnull;
 nsICharsetConverterManager2 *nsStandardURL::gCharsetMgr = nsnull;
 PRBool nsStandardURL::gInitialized = PR_FALSE;
@@ -329,7 +325,7 @@ nsStandardURL::nsStandardURL()
     }
 
     // default parser in case nsIStandardURL::Init is never called
-    mParser = gStdParser;
+    mParser = net_GetStdURLParser();
 }
 
 nsStandardURL::~nsStandardURL()
@@ -342,36 +338,6 @@ nsStandardURL::~nsStandardURL()
 void
 nsStandardURL::InitGlobalObjects()
 {
-    nsCOMPtr<nsIURLParser> parser;
-
-    parser = do_GetService(NS_NOAUTHURLPARSER_CONTRACTID);
-    NS_ASSERTION(parser, "failed getting 'noauth' url parser");
-    if (parser) {
-        gNoAuthParser = parser.get();
-        NS_ADDREF(gNoAuthParser);
-    }
-
-    parser = do_GetService(NS_AUTHURLPARSER_CONTRACTID);
-    NS_ASSERTION(parser, "failed getting 'auth' url parser");
-    if (parser) {
-        gAuthParser = parser.get();
-        NS_ADDREF(gAuthParser);
-    }
-
-    parser = do_GetService(NS_STDURLPARSER_CONTRACTID);
-    NS_ASSERTION(parser, "failed getting 'std' url parser");
-    if (parser) {
-        gStdParser = parser.get();
-        NS_ADDREF(gStdParser);
-    }
-
-    nsCOMPtr<nsIIOService> serv(do_GetIOService());
-    NS_ASSERTION(serv, "failed getting IO service");
-    if (serv) {
-        gIOService = serv.get();
-        NS_ADDREF(gIOService);
-    }
-
     nsCOMPtr<nsIPrefService> prefService( do_GetService(NS_PREFSERVICE_CONTRACTID) );
     if (prefService) {
         nsCOMPtr<nsIPrefBranch> prefBranch;
@@ -390,10 +356,6 @@ nsStandardURL::InitGlobalObjects()
 void
 nsStandardURL::ShutdownGlobalObjects()
 {
-    NS_IF_RELEASE(gIOService);
-    NS_IF_RELEASE(gNoAuthParser);
-    NS_IF_RELEASE(gAuthParser);
-    NS_IF_RELEASE(gStdParser);
     NS_IF_RELEASE(gIDNService);
     NS_IF_RELEASE(gCharsetMgr);
 }
@@ -453,7 +415,7 @@ nsStandardURL::EncodeHost(const char *host, nsCString &result)
 void
 nsStandardURL::CoalescePath(char *path)
 {
-    CoalesceDirsAbs(path);
+    net_CoalesceDirsAbs(path);
     PRInt32 newLen = strlen(path);
     if (newLen < mPath.mLen) {
         PRInt32 diff = newLen - mPath.mLen;
@@ -549,7 +511,7 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
 
     if (mScheme.mLen > 0) {
         i = AppendSegmentToBuf(buf, i, spec, mScheme);
-        ToLowerCase(buf + mScheme.mPos, mScheme.mLen);
+        net_ToLowerCase(buf + mScheme.mPos, mScheme.mLen);
         i = AppendToBuf(buf, i, "://", 3);
     }
 
@@ -567,7 +529,7 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
     }
     if (mHost.mLen > 0) {
         i = AppendSegmentToBuf(buf, i, spec, mHost);
-        ToLowerCase(buf + mHost.mPos, mHost.mLen);
+        net_ToLowerCase(buf + mHost.mPos, mHost.mLen);
         if (mPort != -1 && mPort != mDefaultPort) {
             nsCAutoString portbuf;
             portbuf.AppendInt(mPort);
@@ -1087,7 +1049,7 @@ nsStandardURL::SetScheme(const nsACString &input)
         return NS_ERROR_NOT_INITIALIZED;
     }
 
-    if (!IsValidScheme(scheme)) {
+    if (!net_IsValidScheme(scheme)) {
         NS_ERROR("the given url scheme contains invalid characters");
         return NS_ERROR_UNEXPECTED;
     }
@@ -1105,7 +1067,7 @@ nsStandardURL::SetScheme(const nsACString &input)
     //
     // XXX the string code unfortunately doesn't provide a ToLowerCase
     //     that operates on a substring.
-    ToLowerCase((char *) mSpec.get(), mScheme.mLen);
+    net_ToLowerCase((char *) mSpec.get(), mScheme.mLen);
     return NS_OK;
 }
 
@@ -1542,7 +1504,7 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
     LOG(("nsStandardURL::Resolve [this=%p spec=%s relpath=%s]\n",
         this, mSpec.get(), relpath));
 
-    NS_ASSERTION(gNoAuthParser, "no parser: unitialized");
+    NS_ASSERTION(mParser, "no parser: unitialized");
 
     // NOTE: there is no need for this function to produce normalized
     // output.  normalization will occur when the result is used to 
@@ -1562,10 +1524,10 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
     // relative urls should never contain a host, so we always want to use
     // the noauth url parser.
     // use it to extract a possible scheme
-    rv = gNoAuthParser->ParseURL(relpath, flat.Length(),
-                                 &scheme.mPos, &scheme.mLen,
-                                 nsnull, nsnull,
-                                 nsnull, nsnull);
+    rv = mParser->ParseURL(relpath, flat.Length(),
+                           &scheme.mPos, &scheme.mLen,
+                           nsnull, nsnull,
+                           nsnull, nsnull);
 
     // if the parser fails (for example because there is no valid scheme)
     // reset the scheme and assume a relative url
@@ -1638,14 +1600,14 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
         return NS_ERROR_OUT_OF_MEMORY;
 
     if (resultPath)
-        CoalesceDirsRel(resultPath);
+        net_CoalesceDirsRel(resultPath);
     else {
         // locate result path
         resultPath = PL_strstr(*result, "://");
         if (resultPath) {
             resultPath = PL_strchr(resultPath + 3, '/');
             if (resultPath)
-                CoalesceDirsRel(resultPath);
+                net_CoalesceDirsRel(resultPath);
         }
     }
     // XXX avoid extra copy
@@ -1888,10 +1850,10 @@ nsStandardURL::SetFilePath(const nsACString &input)
         PRInt32 dirLen, baseLen, extLen;
         nsresult rv;
 
-        rv = gNoAuthParser->ParseFilePath(filepath, -1,
-                                          &dirPos, &dirLen,
-                                          &basePos, &baseLen,
-                                          &extPos, &extLen);
+        rv = mParser->ParseFilePath(filepath, -1,
+                                    &dirPos, &dirLen,
+                                    &basePos, &baseLen,
+                                    &extPos, &extLen);
         if (NS_FAILED(rv)) return rv;
 
         // build up new candidate spec
@@ -2110,9 +2072,9 @@ nsStandardURL::SetFileName(const nsACString &input)
 	    URLSegment basename, extension;
 
 	    // let the parser locate the basename and extension
-	    rv = gNoAuthParser->ParseFileName(filename, -1,
-	                                      &basename.mPos, &basename.mLen,
-	                                      &extension.mPos, &extension.mLen);
+	    rv = mParser->ParseFileName(filename, -1,
+	                                &basename.mPos, &basename.mLen,
+	                                &extension.mPos, &extension.mLen);
 	    if (NS_FAILED(rv)) return rv;
 
 	    if (basename.mLen < 0) {
@@ -2207,7 +2169,7 @@ nsStandardURL::GetFile(nsIFile **result)
         return NS_ERROR_FAILURE;
     }
 
-    nsresult rv = gIOService->GetFileFromURLSpec(mSpec, result);
+    nsresult rv = net_GetFileFromURLSpec(mSpec, result);
     
     // XXX ultimately, we should probably cache this result to speed
     //     up subsequent calls, but past attempts to do so have been
@@ -2240,7 +2202,7 @@ nsStandardURL::SetFile(nsIFile *file)
     nsresult rv;
     nsCAutoString url;
 
-    rv = gIOService->GetURLSpecFromFile(file, url);
+    rv = net_GetURLSpecFromFile(file, url);
     if (NS_FAILED(rv)) return rv;
 
     rv = SetSpec(url);
@@ -2274,13 +2236,13 @@ nsStandardURL::Init(PRUint32 urlType,
 
     switch (urlType) {
     case URLTYPE_STANDARD:
-        mParser = gStdParser;
+        mParser = net_GetStdURLParser();
         break;
     case URLTYPE_AUTHORITY:
-        mParser = gAuthParser;
+        mParser = net_GetAuthURLParser();
         break;
     case URLTYPE_NO_AUTHORITY:
-        mParser = gNoAuthParser;
+        mParser = net_GetNoAuthURLParser();
         break;
     default:
         NS_NOTREACHED("bad urlType");
@@ -2309,11 +2271,11 @@ nsStandardURL::Init(PRUint32 urlType,
     if (baseURI) {
         PRUint32 start, end;
         // pull out the scheme and where it ends
-        nsresult rv = ExtractURLScheme(spec, &start, &end, nsnull);
-        if (NS_SUCCEEDED(rv) && spec.Length() > end+1) {
+        nsresult rv = net_ExtractURLScheme(spec, &start, &end, nsnull);
+        if (NS_SUCCEEDED(rv) && spec.Length() > end+2) {
             nsACString::const_iterator slash;
             spec.BeginReading(slash);
-            slash.advance(end);
+            slash.advance(end+1);
             // then check if // follows
             // if it follows, aSpec is really absolute ... 
             // ignore aBaseURI in this case
@@ -2360,13 +2322,13 @@ nsStandardURL::Read(nsIObjectInputStream *stream)
     if (NS_FAILED(rv)) return rv;
     switch (mURLType) {
       case URLTYPE_STANDARD:
-        mParser = gStdParser;
+        mParser = net_GetStdURLParser();
         break;
       case URLTYPE_AUTHORITY:
-        mParser = gAuthParser;
+        mParser = net_GetAuthURLParser();
         break;
       case URLTYPE_NO_AUTHORITY:
-        mParser = gNoAuthParser;
+        mParser = net_GetNoAuthURLParser();
         break;
       default:
         NS_NOTREACHED("bad urlType");

@@ -74,14 +74,14 @@ CPPSRCS		= \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-	CPPSRCS += nsIOServiceOS2.cpp
+	CPPSRCS += nsURLHelperOS2.cpp
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-	CPPSRCS += nsIOServiceWin.cpp
+	CPPSRCS += nsURLHelperWin.cpp
 	CPPSRCS += nsNativeConnectionHelper.cpp
 	CPPSRCS += nsAutodialWin.cpp
 else
-	CPPSRCS += nsIOServiceUnix.cpp
+	CPPSRCS += nsURLHelperUnix.cpp
 endif
 endif
 

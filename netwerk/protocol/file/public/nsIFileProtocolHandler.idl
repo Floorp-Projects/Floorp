@@ -50,4 +50,20 @@ interface nsIFileProtocolHandler : nsIProtocolHandler
      * @return reference to a new nsIURI object
      */
     nsIURI newFileURI(in nsIFile aFile);
+
+    /**
+     * Converts the nsIFile to the corresponding URL string.  NOTE: under
+     * some platforms this is a lossy conversion (e.g., Mac Carbon build).
+     * If the nsIFile is a local file, then the result will be a file://
+     * URL string.
+     *
+     * The resulting string may contain URL-escaped characters.
+     */
+    AUTF8String getURLSpecFromFile(in nsIFile file);
+
+    /**
+     * Converts the URL string into the corresponding nsIFile if possible.
+     * A local file will be created if the URL string begins with file://.
+     */
+    nsIFile getFileFromURLSpec(in AUTF8String url);
 };

@@ -868,8 +868,9 @@ function get_sidebar_datasource_uri() {
     var sidebar_file = sidebar_get_panels_file();
     
     var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+    var fileHandler = ioService.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
     
-    return ioService.getURLSpecFromFile(sidebar_file);
+    return fileHandler.getURLSpecFromFile(sidebar_file);
   } catch (ex) {
     // This should not happen
     debug("Error: Unable to load panels file.\n");

@@ -123,14 +123,6 @@ struct nsHttp
 // utilities...
 //-----------------------------------------------------------------------------
 
-static inline nsresult
-DupString(const char *src, char **dst)
-{
-    NS_ENSURE_ARG_POINTER(dst);
-    *dst = PL_strdup(src);
-    return *dst ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
 static inline PRUint32
 PRTimeToSeconds(PRTime t_usec)
 {
