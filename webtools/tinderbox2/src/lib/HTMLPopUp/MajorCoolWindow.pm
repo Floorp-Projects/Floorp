@@ -12,8 +12,8 @@
 #	 http://www.webreference.com/dhtml/hiermenus/
 
 
-# $Revision: 1.4 $ 
-# $Date: 2000/09/01 18:39:49 $ 
+# $Revision: 1.5 $ 
+# $Date: 2000/09/22 14:55:12 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MajorCoolWindow.pm,v $ 
 # $Name:  $ 
@@ -186,7 +186,7 @@ $header .=<<EOF;
         tipColor = "#FFFF80";                   // yellow background
         // Timing
         tipOpen = 150;                          // open msecs after mouseover
-        tipClose = 50;                          // close msecs after mouseout
+        tipClose = 800;                         // close msecs after mouseout
         tipFactor = 2;                          // est: chars read in 1 msec
         // Null defaults
         tipWin = null;
