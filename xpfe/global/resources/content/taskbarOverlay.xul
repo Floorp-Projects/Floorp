@@ -2,7 +2,6 @@
 <!DOCTYPE  window SYSTEM "chrome://global/locale/taskbarOverlay.dtd">
 
 <overlay id="taskbarOverlay"
-                 xmlns:html="http://www.w3.org/TR/REC-html40"
                  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <box id="taskbarMenuBox" align="horizontal" flex="10"
 	 datasources="chrome://global/locale/taskbar.rdf"

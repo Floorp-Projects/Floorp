@@ -10,7 +10,7 @@
 	onload="selectDialogOnLoad()"
 	class="dialog"
 	height ="250"> 
-    <html:script language="JavaScript" src="chrome://global/content/selectDialog.js" />
+    <script language="JavaScript" src="chrome://global/content/selectDialog.js" />
      
 	    <keyset id="keyset"/>
 

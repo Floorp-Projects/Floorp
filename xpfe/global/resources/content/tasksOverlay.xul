@@ -7,10 +7,9 @@
 <?xul-overlay href="chrome://global/content/taskbarOverlay.xul"?>
 
 <overlay id="tasksOverlay"
-      xmlns:html="http://www.w3.org/TR/REC-html40"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-      <html:script language="JavaScript" src="chrome://global/content/tasksOverlay.js"/>
+      <script language="JavaScript" src="chrome://global/content/tasksOverlay.js"/>
 
       <broadcasterset id="broadcasterset"/>
  
