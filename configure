@@ -108,7 +108,7 @@ ac_help="$ac_help
   --enable-crash-on-assert
                           Make NS_ASSERTION crash on Unix"
 ac_help="$ac_help
-  --enable-optimize(=val) Enable code optimizations level (val) "
+  --enable-optimize(=flag) Enable code optimizations (flag, ie. -O2) "
 ac_help="$ac_help
   --disable-debug         Disable building with debug info"
 ac_help="$ac_help
