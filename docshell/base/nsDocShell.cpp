@@ -2911,10 +2911,6 @@ nsDocShell::GetVisibility(PRBool * aVisibility)
     NS_ENSURE_SUCCESS(vm->GetRootView(view), NS_ERROR_FAILURE);
     NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
 
-    nsRect viewBounds;
-    view->GetBounds(viewBounds);
-    printf("rootView: dim=(%d,%d)\n", viewBounds.width, viewBounds.height);
-
     // if our root view is hidden, we are not visible
     nsViewVisibility vis;
     NS_ENSURE_SUCCESS(view->GetVisibility(vis), NS_ERROR_FAILURE);
