@@ -1191,8 +1191,14 @@ function GetLoadedMsgFolder()
 	var folderResource = RDF.GetResource(folderUri);
 	if(folderResource)
 	{
-		var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-		return msgFolder;
+		try {
+			var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+			return msgFolder;
+		}
+		catch (ex) {
+			dump(ex + "\n");
+			dump("we know about this.  see bug #35591\n");
+		}
 	}
 	return null;
 }
