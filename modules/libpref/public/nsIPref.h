@@ -23,7 +23,15 @@
 #include "jsapi.h"
 #include "nsISupports.h"
 
+/* Temporarily conditionally compile PrefChangedFunc typedef.
+** During migration from old libpref to nsIPref we need it in
+** both header files.  Eventually prefapi.h will become a private
+** file.  The two types need to be in sync for now.  Certain
+** compilers were having problems with multiple definitions.
+*/
+#ifndef PREFAPI_H
 typedef int (*PrefChangedFunc) (const char *, void *); 
+#endif /* PREFAPI_H */
 
 // {A22AD7B0-CA86-11d1-A9A4-00805F8A7AC4}
 NS_DECLARE_ID(kIPrefIID, 
