@@ -62,12 +62,7 @@ public:
     NS_IMETHOD           SetMenuBar(nsIMenuBar * aMenuBar);
     NS_IMETHOD           Show(PRBool aShow);
     NS_IMETHOD           ShowMenuBar(PRBool aShow);
-<<<<<<< nsWindow.h
     NS_IMETHOD           Move(PRInt32 aX, PRInt32 aY);
-    NS_IMETHOD           IsMenuBarVisible(PRBool *aVisible);
-=======
-    NS_IMETHOD           Move(PRUint32 aX, PRUint32 aY);
->>>>>>> 1.45
 
     NS_IMETHOD           Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD           Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
