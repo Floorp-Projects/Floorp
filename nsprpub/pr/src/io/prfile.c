@@ -514,6 +514,23 @@ PR_IMPLEMENT(PRFileDesc*) PR_ImportFile(PRInt32 osfd)
     return fd;
 }
 
+/*
+** Import an existing OS pipe to NSPR 
+*/
+PR_IMPLEMENT(PRFileDesc*) PR_ImportPipe(PRInt32 osfd)
+{
+    PRFileDesc *fd = NULL;
+
+    if (!_pr_initialized) _PR_ImplicitInitialization();
+
+    fd = PR_AllocFileDesc(osfd, &_pr_pipeMethods);
+    if( !fd ) {
+        (void) _PR_MD_CLOSE_FILE(osfd);
+    }
+
+    return fd;
+}
+
 #ifndef NO_NSPR_10_SUPPORT
 /*
 ** PR_Stat() for Win16 is defined in w16io.c

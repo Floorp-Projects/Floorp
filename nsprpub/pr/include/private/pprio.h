@@ -52,6 +52,7 @@ NSPR_API(void)         PR_FreeFileDesc(PRFileDesc *fd);
 ** Import an existing OS file to NSPR. 
 */
 NSPR_API(PRFileDesc*)  PR_ImportFile(PRInt32 osfd);
+NSPR_API(PRFileDesc*)  PR_ImportPipe(PRInt32 osfd);
 NSPR_API(PRFileDesc*)  PR_ImportTCPSocket(PRInt32 osfd);
 NSPR_API(PRFileDesc*)  PR_ImportUDPSocket(PRInt32 osfd);
 

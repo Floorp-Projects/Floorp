@@ -655,6 +655,9 @@ PR_IMPLEMENT(PRFileDesc *) PR_GetInheritedFD(
                 case PR_DESC_FILE:
                     fd = PR_ImportFile(osfd);
                     break;
+                case PR_DESC_PIPE:
+                    fd = PR_ImportPipe(osfd);
+                    break;
                 case PR_DESC_SOCKET_TCP:
                     fd = PR_ImportTCPSocket(osfd);
                     break;
