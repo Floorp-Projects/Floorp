@@ -360,7 +360,13 @@ nsCommonWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
         // Are the bounds sane?
         if (AreBoundsSane()) {
             // Yep?  Resize the window
-            NativeResize(aWidth, aHeight, aRepaint);
+            //Maybe, the toplevel has moved
+            if (mIsTopLevel)
+                NativeResize(mBounds.x, mBounds.y,
+                             mBounds.width, mBounds.height, aRepaint);
+            else
+                NativeResize(mBounds.width, mBounds.height, aRepaint);
+
             // Does it need to be shown because it was previously insane?
             if (mNeedsShow)
                 NativeShow(PR_TRUE);
