@@ -105,7 +105,8 @@ XULFocusTrackerImpl::QueryInterface(REFNSIID iid, void** result)
         return NS_ERROR_NULL_POINTER;
 
     *result = nsnull;
-    if (iid.Equals(nsIXULFocusTracker::GetIID())) {
+    if (iid.Equals(nsIXULFocusTracker::GetIID()) ||
+        iid.Equals(kISupportsIID)) {
         *result = NS_STATIC_CAST(nsIXULFocusTracker*, this);
         NS_ADDREF_THIS();
         return NS_OK;

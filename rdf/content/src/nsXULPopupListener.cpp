@@ -139,7 +139,8 @@ XULPopupListenerImpl::QueryInterface(REFNSIID iid, void** result)
         return NS_ERROR_NULL_POINTER;
 
     *result = nsnull;
-    if (iid.Equals(nsIXULPopupListener::GetIID())) {
+    if (iid.Equals(nsIXULPopupListener::GetIID()) ||
+        iid.Equals(kISupportsIID)) {
         *result = NS_STATIC_CAST(nsIXULPopupListener*, this);
         NS_ADDREF_THIS();
         return NS_OK;
