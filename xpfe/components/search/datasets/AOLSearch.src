@@ -5,7 +5,7 @@
 	name="AOL Search"
 	description="AOL Search"
 	method="GET"
-	action="http://search.aol.com/dirsearch.adp"
+	action="http://info.netscape.com/fwd/sidb_aol/http://search.aol.com/dirsearch.adp"
 	routeType = internet
 >
 
@@ -21,3 +21,5 @@
 >
 
 </SEARCH>
+
+<BROWSER alsomatch="http://search.aol.com/dirsearch.adp">

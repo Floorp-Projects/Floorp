@@ -7,7 +7,7 @@
      name        = "Tech News by CNET"
      description = "Tech News by CNET"
      method      = "GET"
-     action      = "http://technews.netscape.com/news/search/results/1,10199,0-1002,00.html"
+     action      = "http://info.netscape.com/fwd/sidb_ctn/http://technews.netscape.com/news/search/results/1,10199,0-1002,00.html"
 >
 
 <INPUT NAME="qt" user> 
@@ -21,4 +21,4 @@
 
 </search>
 
-
+<BROWSER alsomatch="http://technews.netscape.com/news/search/results/1,10199,0-1002,00.html">

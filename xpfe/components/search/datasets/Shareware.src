@@ -1,13 +1,11 @@
 # Sherlock Plugin for Netscape Open Directory
 # Copyright (c) 2000 Netscape Communications Corp.
-# Author - Myron Rosmarin
-# 
 
 <search 
      name        = "Shareware"
      description = "Shareware - Netscape"
      method      = "GET"
-     action      = "http://sharewaresearch.netscape.com/cgi-bin/search.cgi"
+     action      = "http://info.netscape.com/fwd/sidb_shw/http://sharewaresearch.netscape.com/cgi-bin/search.cgi"
 >
 
 <INPUT NAME="keywords" user> 
@@ -26,3 +24,4 @@
 
 </search>
 
+<BROWSER alsomatch="http://sharewaresearch.netscape.com/cgi-bin/search.cgi">
