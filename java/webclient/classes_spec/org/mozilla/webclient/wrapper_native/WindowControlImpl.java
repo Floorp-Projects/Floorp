@@ -30,6 +30,8 @@ import org.mozilla.webclient.BrowserControl;
 import org.mozilla.webclient.WindowControl;
 import org.mozilla.webclient.WrapperFactory;
 
+import org.mozilla.webclient.UnimplementedException;
+
 import java.awt.Rectangle;
 
 public class WindowControlImpl extends ImplObjectNative implements WindowControl
@@ -242,7 +244,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("WindowControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.7 2000/09/12 20:44:47 ashuk%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.8 2000/09/14 22:00:20 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);
