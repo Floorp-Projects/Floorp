@@ -784,6 +784,11 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext* aPresContext, nsGUI
       StopTrackingDragGesture();
     }
   }
+
+  // Now flush all pending notifications.
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  shell->FlushPendingNotifications();
 } // GenerateDragGesture
 
 nsresult
@@ -1516,17 +1521,9 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIE
             targetContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
           }
         
-          if ( status != nsEventStatus_eConsumeNoDefault ) {
-            nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(targetContent));
-            if (!elt) {
-              // Only elements can be placed into :hover. Instead of putting
-              // ourselves into :hover, put our parent element into :hover instead.
-              nsCOMPtr<nsIContent> child = targetContent;
-              child->GetParent(*getter_AddRefs(targetContent));
-            }
+          if ( status != nsEventStatus_eConsumeNoDefault )
             SetContentState(targetContent, NS_EVENT_STATE_HOVER);
-          }
-
+          
           //Now dispatch to the frame
           if (mCurrentTarget) {
             //XXX Get the new frame
@@ -1750,6 +1747,11 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext* aPresContext, nsG
 
   //reset mCurretTargetContent to what it was
   mCurrentTargetContent = targetBeforeEvent;
+
+  // Now flush all pending notifications.
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  shell->FlushPendingNotifications();
 }
 
 NS_IMETHODIMP
@@ -2376,6 +2378,7 @@ nsEventStateManager::GetContentState(nsIContent *aContent, PRInt32& aState)
       aState |= NS_EVENT_STATE_HOVER;
     }
   }
+
   if (aContent == mCurrentFocus) {
     aState |= NS_EVENT_STATE_FOCUS;
   }

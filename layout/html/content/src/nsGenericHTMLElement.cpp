@@ -1153,14 +1153,12 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
 
       case NS_MOUSE_ENTER_SYNTH:
       {
-#if 0
         nsIEventStateManager *stateManager;
         if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
           stateManager->SetContentState(mContent, NS_EVENT_STATE_HOVER);
           NS_RELEASE(stateManager);
         }
         *aEventStatus = nsEventStatus_eConsumeNoDefault; 
-#endif
       }
       // Set the status bar the same for focus and mouseover
       case NS_FOCUS_CONTENT:
@@ -1180,14 +1178,12 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
 
       case NS_MOUSE_EXIT_SYNTH:
       {
-#if 0
         nsIEventStateManager *stateManager;
         if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
           stateManager->SetContentState(nsnull, NS_EVENT_STATE_HOVER);
           NS_RELEASE(stateManager);
         }
         *aEventStatus = nsEventStatus_eConsumeNoDefault; 
-#endif
 
         nsAutoString empty;
         ret = TriggerLink(aPresContext, eLinkVerb_Replace, nsnull, empty, empty, PR_FALSE);
