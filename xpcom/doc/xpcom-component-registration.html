@@ -265,6 +265,15 @@ factories and components</li>
 
 <li>
 ProgID cache to improve performance of ProgID&nbsp;queries</li>
+
+<li>
+Notion of Component dlls living in a <b>Components directory </b>and autoregistration
+will load/manage only these components. Other components that are linked
+in to the app need to call <tt>nsRepository::RegisterFactory()</tt> from
+the app. <b>To make this happen we need a list of these.</b></li>
+
+<li>
+<b>nsRegistry:</b> Enabling the new nsRegistry developed by Bill Law &lt;law@netscape.com></li>
 </ul>
 
 <h3>
