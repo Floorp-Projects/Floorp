@@ -4273,7 +4273,7 @@ nsTableFrame::GetFrameAtOrBefore(nsIFrame*       aParentFrame,
     return result;
   }
   if (aChildType == aPriorChildFrame->GetType()) {
-    return (nsTableCellFrame*)aPriorChildFrame;
+    return aPriorChildFrame;
   }
 
   // aPriorChildFrame is not of type aChildType, so we need start from 
@@ -4286,7 +4286,7 @@ nsTableFrame::GetFrameAtOrBefore(nsIFrame*       aParentFrame,
     }
     childFrame = childFrame->GetNextSibling();
   }
-  return (nsTableCellFrame*)lastMatchingFrame;
+  return lastMatchingFrame;
 }
 
 #ifdef DEBUG
