@@ -10635,22 +10635,36 @@ EDT_ImageData* CEditImageElement::GetImageData(){
     pRet->bWidthPercent = m_bWidthPercent;
     pRet->bHeightPercent = m_bHeightPercent;
     
-    if( m_href != ED_LINK_ID_NONE ){
+    if( m_href != ED_LINK_ID_NONE )
         pRet->pHREFData = m_href->GetData();
+
+    // We need to set the link border if there's an HREF or USEMAP
+    // Unfortunately, we don't explicitly handle USEMAP any more
+    //   so we must fish for it in the tag. We don't worry about win_csid
+    //   (last param) since we just want to know if string exists
+    char *pUsemap = edt_FetchParamString(pTag, PARAM_USEMAP, CS_FE_ASCII );
+
+    if( pUsemap ||
+        m_href != ED_LINK_ID_NONE )
+    {
         // The only way to consistently show the "default" 2-pixel border
         // is to set it to 2 if it was missing in the tag params
         if( pRet->iBorder == -1 )
-            pRet->iBorder = GetDefaultBorder();
+            pRet->iBorder = 2; //Don't use GetDefaultBorder - doesn't consider USEMAP
     }
     pRet->align = m_align;
     PA_FreeTag( pTag );
+    XP_FREEIF(pUsemap);
     return pRet;
 }
 
 // border is weird.  If we are in a link the border is default 2, if 
 //  we are not in a link, border is default 0.  In order not to foist this
 //  weirdness on the user, we are always explicit on our image borders.
-//
+// This isn't correct - it doesn't consider if there's a USEMAP
+// 9/29/98: This was used by FEs, but now that we always set a border value
+//  instead of trying to maintain the -1 that means no BORDER param is written,
+//  this isn't called, so let's not worry about USEMAP
 int32 CEditImageElement::GetDefaultBorder(){
     return ( m_href != ED_LINK_ID_NONE ) ? 2 : 0;
 }
