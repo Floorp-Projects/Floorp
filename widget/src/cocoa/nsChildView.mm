@@ -1257,12 +1257,21 @@ NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 
     NSRect frame = [mView bounds];
     NSRect horizInvalid = frame;
-    horizInvalid.size.height = abs(aDy);
-    if ( aDy < 0 )
-        horizInvalid.origin.y = frame.origin.y + frame.size.height + aDy;
+    NSRect vertInvalid = frame;
+
+    horizInvalid.size.width = abs(aDx);
+    vertInvalid.size.height = abs(aDy);
+    if (aDy < 0)
+      vertInvalid.origin.y = frame.origin.y + frame.size.height + aDy;
+    if (aDx < 0)
+      horizInvalid.origin.x = frame.origin.x + frame.size.width + aDx;
+
+    if (aDx != 0)
+      [mView setNeedsDisplayInRect: horizInvalid];
+
     if (aDy != 0)
-        [mView setNeedsDisplayInRect: horizInvalid];
-  
+      [mView setNeedsDisplayInRect: vertInvalid];
+    
     return NS_OK;
 }
 
