@@ -251,29 +251,21 @@ PRInt32	offx,offy;
     mCurStatePtr->mMacPortRelativeClipRgn = ::NewRgn();
   if (mCurStatePtr->mMacPortRelativeClipRgn)
     ::CopyRgn(widgetRgn, mCurStatePtr->mMacPortRelativeClipRgn); 
+  mMacScreenPortRelativeRect.top = (** mCurStatePtr->mMacPortRelativeClipRgn).rgnBBox.top;
+  mMacScreenPortRelativeRect.left = (** mCurStatePtr->mMacPortRelativeClipRgn).rgnBBox.left;
+  mMacScreenPortRelativeRect.bottom = (** mCurStatePtr->mMacPortRelativeClipRgn).rgnBBox.bottom;
+  mMacScreenPortRelativeRect.right = (** mCurStatePtr->mMacPortRelativeClipRgn).rgnBBox.right;
   
   mOriginalSurface = mCurStatePtr->mRenderingSurface;    // we need to know when we set back
   ::SetPort(mCurStatePtr->mRenderingSurface);
   ::SetOrigin(-offx,-offy);
-  //if(((**mMacOriginRelativeClipRgn).rgnBBox.left - offx) < 0)
-  //{
-  // 	offx = 0;
-  //}
-  //if(((**mMacOriginRelativeClipRgn).rgnBBox.top - offy) < 0)
-  //{
-  //	offy = 0;
-  //}
+
   ::OffsetRgn(mCurStatePtr->mMainRegion, -offx, -offy);
-  //::OffsetRgn(mMainRegion, offx, offy);
   
   ::OffsetRgn(mCurStatePtr->mMacOriginRelativeClipRgn, -offx, -offy);
-  //::OffsetRgn(mMacOriginRelativeClipRgn, offx, offy);
 
   mCurStatePtr->mOffx = -offx;
   mCurStatePtr->mOffy = -offy;
-
-  // TODO - cps - Push the state to overcome design bugs
-  //PushState();
 
   return (CommonInit());
 }
@@ -326,6 +318,11 @@ NS_IMETHODIMP nsRenderingContextMac :: SelectOffScreenDrawingSurface(nsDrawingSu
   	// surface relative parameters must be set as well. This means a 
   	// rendering context push.
   	
+   mMacScreenPortRelativeRect.top = (**mCurStatePtr->mMacPortRelativeClipRgn).rgnBBox.top;
+   mMacScreenPortRelativeRect.left = (**mCurStatePtr->mMacPortRelativeClipRgn).rgnBBox.left;
+   mMacScreenPortRelativeRect.bottom = (**mCurStatePtr->mMacPortRelativeClipRgn).rgnBBox.bottom;
+   mMacScreenPortRelativeRect.right = (**mCurStatePtr->mMacPortRelativeClipRgn).rgnBBox.right;
+  
   	// This push is balaced by a pop in CopyOffScreenBits. This is a hack.
   	PushState();
   	
@@ -685,8 +682,8 @@ NS_IMETHODIMP nsRenderingContextMac :: GetClipRect(nsRect &aRect, PRBool &aClipV
 NS_IMETHODIMP nsRenderingContextMac :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty)
 {
   nsRect    rect;
-  Rect	    mrect;
-  RgnHandle	mregion;
+  //Rect	    mrect;
+  //RgnHandle	mregion;
 
   nsRegionMac *pRegion = (nsRegionMac *)&aRegion;
   
@@ -1543,7 +1540,13 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
   //::SetRect(&srcrect, x, y, x + drect.width, y + drect.height);
   //::SetRect(&dstrect, drect.x, drect.y, drect.x + drect.width, drect.y + drect.height);
   ::SetRect(&srcrect, x, y, drect.width, drect.height);
-  ::SetRect(&dstrect, drect.x, drect.y, drect.x + drect.width, drect.y + drect.height);
+  ::SetRect(
+    &dstrect, 
+    mMacScreenPortRelativeRect.left, 
+    mMacScreenPortRelativeRect.top, 
+    mMacScreenPortRelativeRect.left + drect.x + drect.width, 
+    mMacScreenPortRelativeRect.top + drect.y + drect.height);
+  
 
 	::GetPort(&savePort);
 	::SetPort(destport);

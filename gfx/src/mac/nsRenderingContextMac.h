@@ -127,6 +127,9 @@ protected:
   
   nsDrawingSurfaceMac		mFrontBuffer;      // current buffer to draw into
   
+  // cps - Wierd hack
+  Rect						mMacScreenPortRelativeRect;
+  
   /*
   nscolor                   mCurrentColor;
   nsTransform2D		  		*mTMatrix;         // transform that all the graphics drawn here will obey
