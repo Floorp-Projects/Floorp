@@ -216,7 +216,7 @@ nsRDFContentUtils::GetElementResource(nsIContent* aElement, nsIRDFResource** aRe
     nsresult rv;
     nsAutoString uri;
 
-    nsCOMPtr<nsIAtom> kIdAtom( dont_QueryInterface(NS_NewAtom("id")) );
+    nsCOMPtr<nsIAtom> kIdAtom( dont_AddRef(NS_NewAtom("id")) );
     rv = aElement->GetAttribute(kNameSpaceID_None, kIdAtom, uri);
     NS_ASSERTION(NS_SUCCEEDED(rv), "severe error retrieving attribute");
     if (NS_FAILED(rv)) return rv;
@@ -240,7 +240,7 @@ nsRDFContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
     nsresult rv;
     nsAutoString uri;
 
-    nsCOMPtr<nsIAtom> kIdAtom( dont_QueryInterface(NS_NewAtom("ref")) );
+    nsCOMPtr<nsIAtom> kIdAtom( dont_AddRef(NS_NewAtom("ref")) );
     rv = aElement->GetAttribute(kNameSpaceID_None, kIdAtom, uri);
     NS_ASSERTION(NS_SUCCEEDED(rv), "severe error retrieving attribute");
     if (NS_FAILED(rv)) return rv;
