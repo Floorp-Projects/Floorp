@@ -26,8 +26,20 @@
 
 #ifdef GC_LEAK_DETECTOR
 
+/* for FILE */
+#include <stdio.h>
+
+/* NSPR stuff */
 #include "generic_threads.h"
+#include "prthread.h"
+#include "prlock.h"
+
+/* Linux/Win32 export private NSPR files to include/private */
+#ifdef XP_MAC
 #include "pprthred.h"
+#else
+#include "private/pprthred.h"
+#endif
 
 extern FILE *GC_stdout, *GC_stderr;
 
@@ -48,7 +60,7 @@ static PRStatus PR_CALLBACK scanner(PRThread* t, void** baseAddr, PRUword count,
 static void mark_all_stacks(GC_mark_range_proc marker)
 {
 	/* PR_ThreadScanStackPointers(PR_GetCurrentThread(), &scanner, marker); */
-	PR_ScanStackPointers(&scanner, marker);
+	PR_ScanStackPointers(&scanner, (void *)marker);
 }
 
 static void locker(void* mutex)
