@@ -564,7 +564,7 @@ nsEditorAppCore::Exit()
 
   if (NS_OK == rvv) {
     nsITransferable * trans;
-    clipboard->GetTransferable(&trans);
+    clipboard->GetData(&trans);
     if (nsnull != trans) {
       if (NS_OK == trans->IsLargeDataSet()) {
         // XXX A Dialog goes here to see if they want to "force" a copy 
