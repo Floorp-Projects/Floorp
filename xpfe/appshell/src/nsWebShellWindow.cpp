@@ -337,7 +337,7 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
                                       nsWidgetInitData& widgetInitData)
 {
   nsresult rv;
-  nsIWidget *parentWidget;
+  nsCOMPtr<nsIWidget> parentWidget;
 
   mCreatedVisible = aCreatedVisible;
   mLoadDefaultPage = aLoadDefaultPage;
@@ -353,9 +353,6 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
     return rv;
   }
 
-  if (!aParent || NS_FAILED(aParent->GetWidget(parentWidget)))
-    parentWidget = nsnull;
-
   /* This next bit is troublesome. We carry two different versions of a pointer
      to our parent window. One is the parent window's widget, which is passed
      to our own widget. The other is a weak reference we keep here to our
@@ -367,9 +364,8 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
      to be closed. This would mimic the behaviour of OSes that support
      top-level child windows in OSes that do not. Later.
   */
-  parentWidget = nsnull;
   if (aParent) {
-    aParent->GetWidget(parentWidget);
+    aParent->GetWidget(*getter_AddRefs(parentWidget));
     mParentWindow = getter_AddRefs(NS_GetWeakReference(aParent));
   }
 
