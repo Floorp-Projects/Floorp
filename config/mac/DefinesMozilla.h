@@ -82,5 +82,6 @@
 
 #define NECKO 1
 
+#define MOZILLA_VERSION "1.3b"
 
 #endif /* DefinesMozilla_h_ */
