@@ -2739,6 +2739,40 @@ static PRIOMethods _pr_udp_methods = {
     pt_SetSocketOption
 };
 
+
+static PRIOMethods _pr_socketpollfd_methods = {
+    PR_DESC_SOCKET_POLL,
+    (PRCloseFN)_PR_InvalidStatus,
+    (PRReadFN)_PR_InvalidInt,
+    (PRWriteFN)_PR_InvalidInt,
+    (PRAvailableFN)_PR_InvalidInt,
+    (PRAvailable64FN)_PR_InvalidInt64,
+    (PRFsyncFN)_PR_InvalidStatus,
+    (PRSeekFN)_PR_InvalidInt,
+    (PRSeek64FN)_PR_InvalidInt64,
+    (PRFileInfoFN)_PR_InvalidStatus,
+    (PRFileInfo64FN)_PR_InvalidStatus,
+    (PRWritevFN)_PR_InvalidInt,        
+    (PRConnectFN)_PR_InvalidStatus,        
+    (PRAcceptFN)_PR_InvalidDesc,        
+    (PRBindFN)_PR_InvalidStatus,        
+    (PRListenFN)_PR_InvalidStatus,        
+    (PRShutdownFN)_PR_InvalidStatus,    
+    (PRRecvFN)_PR_InvalidInt,        
+    (PRSendFN)_PR_InvalidInt,        
+    (PRRecvfromFN)_PR_InvalidInt,    
+    (PRSendtoFN)_PR_InvalidInt,        
+	pt_Poll,
+    (PRAcceptreadFN)_PR_InvalidInt,   
+    (PRTransmitfileFN)_PR_InvalidInt, 
+    (PRGetsocknameFN)_PR_InvalidStatus,    
+    (PRGetpeernameFN)_PR_InvalidStatus,    
+    (PRGetsockoptFN)_PR_InvalidStatus,    
+    (PRSetsockoptFN)_PR_InvalidStatus,    
+    (PRGetsocketoptionFN)_PR_InvalidStatus,
+    (PRSetsocketoptionFN)_PR_InvalidStatus
+};
+
 #if defined(_PR_FCNTL_FLAGS)
 #undef _PR_FCNTL_FLAGS
 #endif
@@ -2803,6 +2837,11 @@ PR_IMPLEMENT(const PRIOMethods*) PR_GetTCPMethods()
 PR_IMPLEMENT(const PRIOMethods*) PR_GetUDPMethods()
 {
     return &_pr_udp_methods;
+}  /* PR_GetUDPMethods */
+
+static const PRIOMethods* PR_GetSocketPollFdMethods()
+{
+    return &_pr_socketpollfd_methods;
 }  /* PR_GetUDPMethods */
 
 PR_IMPLEMENT(PRFileDesc*) PR_AllocFileDesc(
@@ -3524,6 +3563,38 @@ PR_IMPLEMENT(PRFileDesc*) PR_ImportUDPSocket(PRInt32 osfd)
     if (NULL != fd) close(osfd);
     return fd;
 }  /* PR_ImportUDPSocket */
+
+PR_IMPLEMENT(PRFileDesc*) PR_CreateSocketPollFd(PRInt32 osfd)
+{
+    PRFileDesc *fd;
+
+    if (!_pr_initialized) _PR_ImplicitInitialization();
+
+    fd = _PR_Getfd();
+
+    if (fd == NULL) PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+    else
+    {
+        fd->secret->md.osfd = osfd;
+        fd->secret->inheritable = PR_FALSE;
+    	fd->secret->state = _PR_FILEDESC_OPEN;
+        fd->methods = PR_GetSocketPollFdMethods();
+    }
+
+    return fd;
+}  /* PR_CreateSocketPollFD */
+
+PR_IMPLEMENT(PRStatus) PR_DestroySocketPollFd(PRFileDesc *fd)
+{
+    if (NULL == fd)
+    {
+        PR_SetError(PR_BAD_DESCRIPTOR_ERROR, 0);
+        return PR_FAILURE;
+    }
+    fd->secret->state = _PR_FILEDESC_CLOSED;
+    _PR_Putfd(fd);
+    return PR_SUCCESS;
+}  /* PR_DestroySocketPollFd */
 
 PR_IMPLEMENT(PRInt32) PR_FileDesc2NativeHandle(PRFileDesc *bottom)
 {
