@@ -28,6 +28,12 @@ class nsIHTMLStyleSheet;
 #define NS_IHTMLDOCUMENT_IID \
 {0xb2a848b0, 0xd0a9, 0x11d1, {0x89, 0xb1, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81}}
 
+enum nsDTDMode {
+  eDTDMode_NoQuirks = 0,
+  eDTDMode_Nav = 1,
+  eDTDMode_Other = 2
+};
+
 /**
  * HTML document extensions to nsIDocument.
  */
@@ -51,6 +57,13 @@ public:
   // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
  
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aStyleSheet) = 0;
+
+  /**
+   * Access DTD compatibility mode for this document
+   */
+  NS_IMETHOD GetDTDMode(nsDTDMode& aMode) = 0;
+  NS_IMETHOD SetDTDMode(nsDTDMode aMode) = 0;
+
 };
 
 #endif /* nsIHTMLDocument_h___ */
