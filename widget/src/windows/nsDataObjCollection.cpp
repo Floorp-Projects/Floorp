@@ -26,7 +26,7 @@
 #include "OLE2.h"
 #include "URLMON.h"
 
-#if 1
+#if 0
 #define PRNTDEBUG(_x) printf(_x);
 #define PRNTDEBUG2(_x1, _x2) printf(_x1, _x2);
 #define PRNTDEBUG3(_x1, _x2, _x3) printf(_x1, _x2, _x3);
@@ -143,7 +143,6 @@ BOOL nsDataObjCollection::FormatsMatch(const FORMATETC& source, const FORMATETC&
 //-----------------------------------------------------
 STDMETHODIMP nsDataObjCollection::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 {
-  printf("nsDataObjCollection::GetData2\n");
   PRNTDEBUG("nsDataObjCollection::GetData\n");
   PRNTDEBUG3("  format: %d  Text: %d\n", pFE->cfFormat, CF_TEXT);
 
