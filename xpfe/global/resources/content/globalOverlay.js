@@ -76,10 +76,12 @@ function goPreferences(id, pane)
 		top.goPrefWindow.showWindow(id, window, pane);
 }
 
-function toggleToolbar( id )
+
+function toggleToolbar( id, broadcasterID )
 {
 	dump( "toggling toolbar "+id+"\n");
 	var toolbar = document.getElementById( id );
+	var broadcaster = document.getElementById( broadcasterID );
 	if ( toolbar )
 	{
 	 	var attribValue = toolbar.getAttribute("hidden") ;
@@ -89,13 +91,18 @@ function toggleToolbar( id )
 		{
 		//	dump( "Show \n");
 			toolbar.setAttribute("hidden", "" );
+			if ( broadcaster )
+				broadcaster.setAttribute("checked","true")
 		}
 		else
 		{
 		//	dump("hide \n");
 			toolbar.setAttribute("hidden", true );
+			if ( broadcaster )
+				broadcaster.setAttribute("checked","")
 		}
-		document.persist(id, 'hidden')
+		document.persist(id, 'hidden');
+		document.persist(broadcasterID, 'checked');
 	}
 }
 

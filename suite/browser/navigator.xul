@@ -250,6 +250,10 @@ var contextTarget = null; // Content element to which context menu applies.
 	<broadcaster id="cmd_paste"/>
 	<broadcaster id="cmd_delete"/>
 	<broadcaster id="cmd_selectAll"/>
+	
+	<broadcaster id="cmd_viewnavbar" oncommand="toggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
+	<broadcaster id="cmd_viewpersonaltoolbar"  oncommand="toggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
+	<broadcaster id="cmd_viewtaskbar" oncommand="toggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
 </broadcasterset>
 	
 <!-- HELLO!! IS ANYONE READING THIS?  In case you are reading this,
@@ -304,9 +308,9 @@ var contextTarget = null; // Content element to which context menu applies.
     <menupopup>
     	 <menu value="&toolbarsCmd.label;"  >
 		  	<menupopup> 
-		  		<menuitem value="&navbarCmd.label;" oncommand="toggleToolbar( 'nav-bar');" />
-		  		<menuitem value="&personalbarCmd.label;" oncommand="toggleToolbar('PersonalToolbar');" />
-		  		<menuitem value="&taskbarCmd.label;" oncommand="toggleToolbar('taskbar');" />
+		  		<menuitem value="&navbarCmd.label;" observes="cmd_viewnavbar"  />
+		  		<menuitem value="&personalbarCmd.label;" observes="cmd_viewpersonaltoolbar" />
+		  		<menuitem value="&taskbarCmd.label;" observes="cmd_viewtaskbar" />
 		  	</menupopup>
 		  </menu>
    
@@ -390,7 +394,7 @@ var contextTarget = null; // Content element to which context menu applies.
       <menu value="&dcharMenu.label;">
         <menupopup>
           <menuitem value="&dcharIso1Cmd.label;"
-            oncommand="BrowserSetDefaultCharacterSet('ISO-8859-1');"/>
+            oncommand="BrowserSetDefaultCharacterSet('ISO-8859-1');" />
           <menuitem value="&dcharIso2Cmd.label;"
             oncommand="BrowserSetDefaultCharacterSet('ISO-8859-2');"/>
           <menuitem value="&dcharIso3Cmd.label;"
@@ -625,12 +629,14 @@ var contextTarget = null; // Content element to which context menu applies.
 <!-- sidebar/toolbar/content/status -->
 <box id="sidebarparent" align="horizontal" flex="100%">
   <!-- toolbar/content/status -->
-  <box id="sidebarbox" chromeclass="extrachrome"/>
-  <splitter id="sidebarsplitter" collapse="before" persist="state hidden"
+ 
+  <box id="sidebarbox" chromeclass="extrachrome" />
+  <splitter id="sidebarsplitter" collapse="before" persist="state hidden" chromeclass="extrachrome"
     onclick="sidebarSaveState(this)"/>
+  
   <box id="appcontent" align="vertical" flex="100%">
     <toolbox id="main-toolbox">
-      <toolbar class="main-bar" chromeclass="toolbar">
+      <toolbar class="main-bar" chromeclass="toolbar" persist="collapsed">
         <titledbutton id="back-button" align="top" value="&backButton.label;" observes="canGoBack" />          
         
         <titledbutton id="forward-button" align="top" value="&forwardButton.label;" observes="canGoForward" />
@@ -671,7 +677,7 @@ var contextTarget = null; // Content element to which context menu applies.
           <observes element="Browser:Throbber" attribute="busy"/>
         </titledbutton>
       </toolbar>
-      <toolbar class="main-bar" chromeclass="toolbar" 
+      <toolbar class="main-bar" chromeclass="toolbar" persist="collapsed"
         datasources="rdf:bookmarks" id="PersonalToolbar"
         ref="NC:PersonalToolbarFolder" 
         ondraggesture="return BeginDragPersonalToolbar(event);"
@@ -758,6 +764,6 @@ var contextTarget = null; // Content element to which context menu applies.
     </box><!-- status -->
   </box><!-- toolbar/content/status -->
 </box><!-- sidebar and tools/content/status -->
-<toolbox id="taskbox" chromeclass="extrachrome"/>
+<toolbox id="taskbox" chromeclass="extrachrome" />
 
 </window>
