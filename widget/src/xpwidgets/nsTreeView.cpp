@@ -98,6 +98,16 @@ nsresult nsTreeView::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return (nsWindow::QueryInterface(aIID, aInstancePtr));
 }
 
+NS_METHOD nsTreeView::SetContentRoot(nsIContent* pContent)
+{
+	if (mDataModel)
+	{
+		mDataModel->SetContentRoot(pContent);
+	}
+
+	return NS_OK;
+}
+
 void nsTreeView::HandleDataModelEvent(int anEvent, nsHierarchicalDataItem* pItem)
 {
 	Invalidate(PR_FALSE);

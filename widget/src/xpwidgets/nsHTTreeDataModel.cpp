@@ -28,6 +28,7 @@
 #include "nsIImageObserver.h"
 #include "nsIImageRequest.h"
 #include "nsIImageGroup.h"
+#include "nsHTTreeItem.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIImageObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
@@ -291,4 +292,11 @@ void nsHTTreeDataModel::Notify(nsIImageRequest *aImageRequest,
 void nsHTTreeDataModel::NotifyError(nsIImageRequest *aImageRequest,
                                nsImageError aErrorType)
 {
+}
+
+// Inherited functions from nsHTDataModel
+nsHierarchicalDataItem* nsHTTreeDataModel::CreateDataItemWithContentNode(nsIContent* pContent)
+{
+	nsHTTreeItem* pItem = new nsHTTreeItem(pContent, this);
+	return pItem;
 }

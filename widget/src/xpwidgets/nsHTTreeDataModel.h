@@ -56,6 +56,8 @@ public:
 
 	// Functions inherited from abstract hierarchical data model should be delegated to our
 	// concrete base class
+	// Setting the Content Root for the tree
+	virtual void SetContentRoot(nsIContent* pContent) { SetContentRootDelegate(pContent); }
 	virtual nsHierarchicalDataItem* GetRoot() const { return GetRootDelegate(); }
 	virtual PRUint32 GetFirstVisibleItemIndex() const { return GetFirstVisibleItemIndexDelegate(); };
 	virtual void SetFirstVisibleItemIndex(PRUint32 index) { SetFirstVisibleItemIndexDelegate(index); };
@@ -90,6 +92,10 @@ public:
 
 	// Text for the title bar, control strip and column headers
 	virtual void GetTitleBarText(nsString& text) const;
+
+public:
+	// Inherited functions from HTDataModel go here.
+	nsHierarchicalDataItem* CreateDataItemWithContentNode(nsIContent* pContent);
 
 protected:
 	nsIImageRequest* RequestImage(nsString& reqUrl) const; // Helper to kick off the image load.

@@ -18,6 +18,7 @@
 
 #include "nspr.h"
 #include "nsString.h"
+#include "nsHTColumn.h"
 #include "nsHTTreeItem.h"
 #include "nsHTTreeDataModel.h"
 #include "nsWidgetsCID.h"
@@ -25,6 +26,7 @@
 #include "nsIImageObserver.h"
 #include "nsIImageRequest.h"
 #include "nsIImageGroup.h"
+#include "nsIContent.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIImageObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
@@ -32,7 +34,8 @@ static NS_DEFINE_IID(kIImageObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
 NS_IMPL_ADDREF(nsHTTreeItem)
 NS_IMPL_RELEASE(nsHTTreeItem)
 
-nsHTTreeItem::nsHTTreeItem() : nsTreeItem(), nsHTItem()
+nsHTTreeItem::nsHTTreeItem(nsIContent* pContent, nsHierarchicalDataModel* pModel) 
+: nsTreeItem(), nsHTItem(pContent, pModel)
 {
   NS_INIT_REFCNT();
   mClosedIconRequest = nsnull;
@@ -40,11 +43,14 @@ nsHTTreeItem::nsHTTreeItem() : nsTreeItem(), nsHTItem()
   mClosedTriggerRequest = nsnull;
   mOpenTriggerRequest = nsnull;
   mBackgroundRequest = nsnull;
+
+  SetImplData((void*)(nsHTItem*)this);
 }
 
 //--------------------------------------------------------------------
 nsHTTreeItem::~nsHTTreeItem()
 {
+  NS_IF_RELEASE(mContentNode);
 }
 
 // ISupports Implementation --------------------------------------------------------------------
@@ -168,7 +174,17 @@ nsIImageRequest* nsHTTreeItem::RequestImage(nsString& reqUrl) const
 
 void nsHTTreeItem::GetTextForColumn(nsTreeColumn* pColumn, nsString& nodeText) const
 {
-	nodeText = "Node Stuff";
+	nsString text("Node Stuff");
+	nsString columnName;
+	pColumn->GetColumnName(columnName);
+
+	// Look for a child of the content node that has this name as its tag.
+	nsIContent* pColumnNode = FindChildWithName("columns");
+	if (pColumnNode)
+	{
+		nsIContent* pChildNode = FindChildWithName(columnName);
+		nsHTItem::GetChildTextForNode(pChildNode, nodeText);
+	}
 }
 
 // image request observer implementation

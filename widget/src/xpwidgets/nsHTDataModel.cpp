@@ -25,6 +25,9 @@
 #include "nsTreeColumn.h"
 #include "nsHTTreeItem.h"
 #include "nsIDeviceContext.h"
+#include "nsIDocument.h"
+#include "nsIContent.h"
+#include "nsVoidArray.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -32,10 +35,8 @@ nsHTDataModel::nsHTDataModel()
 {
 	mListener = nsnull;
 	mImageGroup = nsnull;
-
-	// Init. one of our hard-coded values
-	mSingleNode = new nsHTTreeItem(); // TODO: This is all ridiculously illegal.
-	((nsHTTreeItem*)mSingleNode)->SetDataModel((nsHTTreeDataModel*)this); // This is very bad. Just doing to test.
+	mContentRoot = nsnull;
+	mDocument = nsnull;
 }
 
 //--------------------------------------------------------------------
@@ -47,8 +48,7 @@ nsHTDataModel::~nsHTDataModel()
 		NS_RELEASE(mImageGroup);
 	}
 
-	// Delete hard-coded value
-	delete mSingleNode;
+	// TODO: Destroy visibility array
 }
 
 void nsHTDataModel::SetDataModelListenerDelegate(nsDataModelWidget* pWidget)
@@ -65,10 +65,62 @@ void nsHTDataModel::SetDataModelListenerDelegate(nsDataModelWidget* pWidget)
 
 // Hierarchical Data Model Implementation ---------------------
 
+void nsHTDataModel::SetContentRootDelegate(nsIContent* pContent)
+{
+	NS_IF_RELEASE(mDocument);
+	NS_IF_RELEASE(mContentRoot);
+
+	mContentRoot = pContent;
+	pContent->GetDocument(mDocument); // I'm assuming this addrefs the document.
+	NS_ADDREF(mContentRoot);
+
+	// Destroy our old visibility list.
+	// TODO
+
+	// Reconstruct our visibility list (so that all items that are visible 
+	// are instantiated).  Need to only look for folder and item children.  All other children should be ignored.
+	AddNodesToArray(mContentRoot);
+}
+
+void nsHTDataModel::AddNodesToArray(nsIContent* pContent)
+{
+	// Add this child to the array (unless it is the root node).
+	nsHierarchicalDataItem* pDataItem = CreateDataItemWithContentNode(pContent);
+	if (pContent != mContentRoot)
+		mVisibleItemArray.AppendElement(pDataItem);
+	else mRootNode = pDataItem;
+
+	nsHTItem* pItem = (nsHTItem*)(pDataItem->GetImplData());
+
+	nsIContent* pChildrenNode = pItem->FindChildWithName("children");
+	if (pChildrenNode)
+	{
+		// If the node is OPEN, then its children need to be added to the visibility array.
+		nsString attrValue;
+		nsresult result = pContent->GetAttribute("open", attrValue);
+		if ((pContent == mContentRoot) || (result == NS_CONTENT_ATTR_NO_VALUE ||
+			(result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true")))
+		{
+			PRInt32 numChildren = 0;
+			pChildrenNode->ChildCount(numChildren);
+			for (PRInt32 i = 0; i < numChildren; i++)
+			{
+				nsIContent* child = nsnull;
+				pContent->ChildAt(i, child);
+				if (child)
+				{
+					AddNodesToArray(child);
+				}
+
+				NS_IF_RELEASE(child);
+			}
+		}
+	}
+}
 
 nsHierarchicalDataItem* nsHTDataModel::GetRootDelegate() const
 {
-	return (nsHTTreeItem*)mSingleNode;
+	return mRootNode;
 }
 
 
@@ -83,7 +135,11 @@ void nsHTDataModel::SetFirstVisibleItemIndexDelegate(PRUint32 n)
 
 nsHierarchicalDataItem* nsHTDataModel::GetNthItemDelegate(PRUint32 n) const
 {
-	return (nsHTTreeItem*)mSingleNode;
+	PRUint32 itemCount = (PRUint32)(mVisibleItemArray.Count());
+
+	if (n < itemCount)
+		return (nsHierarchicalDataItem*)(mVisibleItemArray[n]);
+	else return nsnull;
 }
 
 void nsHTDataModel::ImageLoaded(nsHierarchicalDataItem* pItem)
