@@ -111,8 +111,12 @@ struct nsStylePosition : public nsStyleStruct {
 
   nsStyleCoord  mLeftOffset;            // [reset] 
   nsStyleCoord  mTopOffset;             // [reset] 
-  nsStyleCoord  mWidth;                 // [reset] 
-  nsStyleCoord  mHeight;                // [reset] 
+  nsStyleCoord  mWidth;                 // [reset] coord, percent, auto, inherit
+  nsStyleCoord  mMinWidth;              // [reset] coord, percent, inherit
+  nsStyleCoord  mMaxWidth;              // [reset] coord, percent, null, inherit
+  nsStyleCoord  mHeight;                // [reset] coord, percent, auto, inherit
+  nsStyleCoord  mMinHeight;             // [reset] coord, percent, inherit
+  nsStyleCoord  mMaxHeight;             // [reset] coord, percent, null, inherit
 
   nsStyleCoord  mZIndex;                // [reset] 
 
