@@ -48,6 +48,7 @@ CPPSRCS=					\
 	nsFontPickerFrame.cpp \
 	nsMenuPopupFrame.cpp \
 	nsMenuFrame.cpp \
+	nsMenuBarFrame.cpp \
 	$(NULL)
 
 CPP_OBJS=					\
@@ -75,6 +76,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsFontPickerFrame.obj \
 	.\$(OBJDIR)\nsMenuPopupFrame.obj \
 	.\$(OBJDIR)\nsMenuFrame.obj \
+	.\$(OBJDIR)\nsMenuBarFrame.obj \
 	$(NULL)
 
 EXPORTS =					\

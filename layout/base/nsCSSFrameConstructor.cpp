@@ -130,6 +130,10 @@ NS_NewMenuPopupFrame ( nsIFrame** aNewFrame );
 
 nsresult
 NS_NewMenuFrame ( nsIFrame** aNewFrame );
+
+nsresult
+NS_NewMenuBarFrame ( nsIFrame** aNewFrame );
+
 #endif
 
 //static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
@@ -3035,7 +3039,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     else if (aTag == nsXULAtoms::xpmenubar) {
       // XXX Will be a derived class toolbar frame.
       processChildren = PR_TRUE;
-      rv = NS_NewToolbarFrame(&newFrame);
+      rv = NS_NewMenuBarFrame(&newFrame);
     }
     else if (aTag == nsXULAtoms::xpmenubutton) {
       // XXX Will be a derived class titledbutton frame
