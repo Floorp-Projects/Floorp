@@ -19,6 +19,11 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
+[%# INTERFACE:
+  # header_done: boolean. True if the header has already been printed.
+  # error: string. The error message to be displayed. May contain HTML.
+  #%]
+  
 [% UNLESS header_done %]
   [% PROCESS global/header.html.tmpl %]
 [% END %]

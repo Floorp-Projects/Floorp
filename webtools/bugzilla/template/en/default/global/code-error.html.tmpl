@@ -19,6 +19,13 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
+[%# INTERFACE:
+  # header_done: boolean. True if the header has already been printed.
+  # error: string. The error message to be printed. May contain HTML.
+  # variables: hash. Useful data about the problem. The keys are the variable
+  #  names, and the values the variable values.
+  #%]
+  
 [% UNLESS header_done %]
   [% PROCESS global/header.html.tmpl %]
 [% END %]

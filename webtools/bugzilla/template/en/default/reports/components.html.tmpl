@@ -19,6 +19,15 @@
   # Contributor(s): Bradley Baetz <bbaetz@student.usyd.edu.au>
   #%]
 
+[%# INTERFACE:
+  # product: string. The product this is the components list for.
+  # components: List of hashes. May be empty. Each hash has four members:
+  #   name: string. Name of the component.
+  #   description: string. Description of the component. May contain HTML.
+  #   initialowner: string. Component's initial owner.
+  #   initialqacontact: string. Component's initial QA contact.
+  #%]
+  
 [% filtered_product = product FILTER html %]
 [% PROCESS global/header.html.tmpl 
   title = "Components for $product"

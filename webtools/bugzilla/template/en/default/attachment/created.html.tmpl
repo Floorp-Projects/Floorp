@@ -19,6 +19,16 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   #%]
 
+[%# INTERFACE:
+  # bugid: integer. ID of the bug we just attached an attachment to.
+  # attachid: integer. ID of the attachment just created.
+  # description: string. Description of the attachment just created.
+  # contenttype: string. The Content Type we attached it as.
+  # contenttypemethod: string. How we got the content type of the attachment.
+  #  Possible values: autodetect, list, manual.
+  # mailresults: string. who was mailed, and who wasn't.
+  #%]
+  
 [% PROCESS global/header.html.tmpl 
   title = "Changes Submitted"
   style = "th { text-align: left; }"

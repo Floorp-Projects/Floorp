@@ -18,4 +18,9 @@
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
+[%# INTERFACE:
+  # form: hash. This is the $::FORM variable from a bug submission (i.e. the
+  # fields on a template from enter_bug.cgi.) It can be used to pull out 
+  # various custom fields and format an initial Description entry from them. 
+  #%]  
 [% form.comment %]

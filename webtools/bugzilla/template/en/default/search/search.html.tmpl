@@ -19,6 +19,12 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
+[%# INTERFACE:
+  # This template has no interface. However, to use it, you need to fulfill
+  # the interfaces of search/form.html.tmpl, search/knob.html.tmpl and
+  # search/boolean-charts.html.tmpl.
+  #%]
+
 [% PROCESS global/header.html.tmpl 
   title = "Search for bugs"
   extra = " onLoad=\"selectProduct(document.forms['queryform']);\""

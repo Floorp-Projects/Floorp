@@ -19,6 +19,13 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
+[%# INTERFACE:
+  # added_quip: string. Defined if the CGI added a quip data before 
+  #                displaying anything; if defined, its value is that quip.
+  # show_quips: boolean. True if we are showing the entire quip list.
+  # quips: list of strings. Defined iff show_quips is true. List of all quips.
+  #%]
+
 [% PROCESS global/header.html.tmpl
            title = "Bugzilla Quip System"
            h1 = "Add your own clever headline"

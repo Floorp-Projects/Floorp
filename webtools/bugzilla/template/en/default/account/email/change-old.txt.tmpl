@@ -18,6 +18,11 @@
   #
   # Contributor(s):     John Vandenberg <zeroj@null.net>
   #%]
+[%# INTERFACE:
+  # emailaddress: string. The user's old Bugzilla login email address.
+  # newemailaddress: string. The user's new Bugzilla login email address.
+  # token: string. The token associated with this change.
+  #%]
 [% expiration_ts = token_ts + (max_token_age * 86400) %]
 From: bugzilla-admin-daemon
 To: [% emailaddress %]

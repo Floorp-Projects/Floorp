@@ -20,6 +20,12 @@
   #                 Gervase Markham <gerv@gerv.net>
   #%]
 
+[%# INTERFACE:
+  # bugid: integer. ID of the bug we are updating.
+  # attachid: integer. ID of the attachment we just attached.
+  # mailresults: string. Who was mailed and who wasn't. 
+  #%]
+  
 [% PROCESS global/header.html.tmpl 
   title = "Changes Submitted"
   style = "th { text-align: left; }"

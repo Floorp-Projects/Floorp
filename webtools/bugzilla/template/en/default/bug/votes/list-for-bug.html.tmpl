@@ -19,6 +19,14 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
+[%# INTERFACE:
+  # bug_id: integer. ID of the bug we are listing the votes for.
+  # users: list of hashes. May be empty. Each hash has two members:
+  #   name: string. The login name of the user whose vote is attached
+  #   count: integer. The number of times that user has votes for this bug.
+  # total: integer. The total number of votes for this bug. 
+  #%]
+  
 [% PROCESS global/header.html.tmpl
            title = "Show Votes"
            h2 = "Bug <a href='show_bug.cgi?id=$bug_id'>$bug_id</a>"

@@ -19,6 +19,16 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   #%]
 
+[%# INTERFACE:
+  # statusdefs: list of hashes. may be empty. Each hash has six members:
+  #   name: string. The name of the attachment status.
+  #   description: string. Its description.
+  #   sortkey: integer. Sorting priority.
+  #   product: string. The product to which the attachment status applies.
+  #   id: integer. Its internal ID number.
+  #   attachcount: integer. How many attachments have that status.
+  #%]
+
 [% PROCESS global/header.html.tmpl 
   title = 'Administer Attachment Statuses'
   message = message

@@ -19,6 +19,14 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   #%]
 
+[%# INTERFACE:
+  # name: string. The name of the attachment status we are editing.
+  # desc: string. Its description.
+  # sortkey: integer. Where it's sorted in the list.
+  # product: string. Which product it applies to.
+  # id: integer. Its internal ID number.
+  #%]
+
 [% PROCESS global/header.html.tmpl 
   title = "Edit Attachment Status"
   style = "
