@@ -33,7 +33,6 @@ EXPORTS =                         \
 	nsFileLocations.h         \
 	nsIFileLocator.h          \
 	nsIDOMXPConnectFactory.h  \
-	nsIGlobalHistory.h	  \
 	nsINetSupportDialogService.h \
 	$(NULL)
 
