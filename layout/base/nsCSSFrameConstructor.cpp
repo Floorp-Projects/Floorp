@@ -6065,7 +6065,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       rv = NS_NewGrippyFrame(aPresShell, &newFrame);
     }
     // End of GRIPPY CONSTRUCTION logic
-
+#if 0
     else if (aTag != nsHTMLAtoms::html) {
       nsCAutoString str("Invalid XUL tag encountered in file. Perhaps you used the wrong namespace?\n\nThe tag name is ");
       nsAutoString tagName;
@@ -6073,6 +6073,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       str.AppendWithConversion(tagName);
       NS_ERROR(str);
     }
+#endif
   }
 
   // If we succeeded in creating a frame then initialize it, process its
