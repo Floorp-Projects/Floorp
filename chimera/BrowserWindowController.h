@@ -103,6 +103,11 @@ class nsIDOMNode;
 
   // Cached bookmark ds used when adding through a sheet
   id mCachedBMDS;
+
+  // Throbber state variables.
+  NSTimer* mThrobberTimer;
+  NSArray* mThrobberImages;
+  int mThrobberFrame;
 }
 
 - (void)dealloc;
@@ -137,6 +142,9 @@ class nsIDOMNode;
             url: (NSURL*)aURL suggestedFilename: (NSString*)aFilename;
 - (void)printDocument;
 - (void)printPreview;
+
+- (void)startThrobber;
+- (void)stopThrobber;
 
 //- (BOOL)findInPage:(NSString*)text;
 

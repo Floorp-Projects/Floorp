@@ -61,6 +61,8 @@
 #include "nsIWebBrowser.h"
 #include "nsIInterfaceRequestorUtils.h"
 
+#include <QuickTime/QuickTime.h>
+
 static NSString *BrowserToolbarIdentifier	= @"Browser Window Toolbar";
 static NSString *BackToolbarItemIdentifier	= @"Back Toolbar Item";
 static NSString *ForwardToolbarItemIdentifier	= @"Forward Toolbar Item";
@@ -70,6 +72,7 @@ static NSString *HomeToolbarItemIdentifier	= @"Home Toolbar Item";
 static NSString *LocationToolbarItemIdentifier	= @"Location Toolbar Item";
 static NSString *SidebarToolbarItemIdentifier	= @"Sidebar Toolbar Item";
 static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
+static NSString *ThrobberToolbarItemIdentifier = @"Throbber Toolbar Item";
 
 @interface BrowserWindowController(Private)
 - (void)setupToolbar;
@@ -160,6 +163,13 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
   [mSidebarBrowserView windowClosed];
 
   [mProgress release];
+
+  if (mThrobberTimer) {
+      [mThrobberTimer invalidate];
+      [mThrobberTimer release];
+  }
+  
+  [mThrobberImages release];
   
   [super dealloc];
 }
@@ -343,6 +353,7 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
                                         HomeToolbarItemIdentifier,
                                         LocationToolbarItemIdentifier,
                                         SidebarToolbarItemIdentifier,
+                                        ThrobberToolbarItemIdentifier,
                                         PrintToolbarItemIdentifier,
                                         NSToolbarCustomizeToolbarItemIdentifier,
                                         NSToolbarFlexibleSpaceItemIdentifier,
@@ -359,6 +370,7 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
                                         StopToolbarItemIdentifier,
                                         LocationToolbarItemIdentifier,
                                         SidebarToolbarItemIdentifier,
+                                        ThrobberToolbarItemIdentifier,
                                         nil];
 }
 
@@ -409,6 +421,15 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
         [toolbarItem setImage:[NSImage imageNamed:@"sidebarClosed"]];
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(toggleSidebar:)];
+    } else if ( [itemIdent isEqual:ThrobberToolbarItemIdentifier] ) {
+        [toolbarItem setLabel:@"Throbber"];
+        [toolbarItem setPaletteLabel:@"Throbber"];
+        [toolbarItem setToolTip:@"http://www.netscape.com"];
+        [toolbarItem setImage:[NSImage imageNamed:@"throbber-01"]];
+        [toolbarItem setTarget:self];
+        [toolbarItem setTag:'Thrb'];
+        // XXX change this to go somewhere appropriate.
+        [toolbarItem setAction:@selector(testThrobber:)];
     } else if ( [itemIdent isEqual:LocationToolbarItemIdentifier] ) {
         
         NSMenuItem *menuFormRep = [[[NSMenuItem alloc] init] autorelease];
@@ -437,7 +458,7 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
     } else {
         toolbarItem = nil;
     }
-        
+    
     return toolbarItem;
 }
 
@@ -460,7 +481,7 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
    
 - (void)updateToolbarItems
 {
-  [[[self window] toolbar] validateVisibleItems];
+    [[[self window] toolbar] validateVisibleItems];
 }
 
 - (void)performAppropriateLocationAction
@@ -587,6 +608,143 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
 - (void)printPreview
 {
   [[mBrowserView getBrowserView] printPreview];
+}
+
+static Boolean movieControllerFilter(MovieController mc, short action, void *params, long refCon)
+{
+    if (action == mcActionMovieClick || action == mcActionMouseDown) {
+        EventRecord* event = (EventRecord*) params;
+        event->what = nullEvent;
+        return true;
+    }
+    return false;
+}
+
+- (NSArray*)throbberImages
+{
+    // Simply load an array of NSImage objects from the files "throbber-NN.tif". I used "Quicktime Player" to
+    // save all of the frames of the animated gif as individual .tif files for simplicity of implementation.
+    if (mThrobberImages == nil) {
+        NSImage* images[43];
+        for (int i = 0; i < 43; ++i) {
+            NSString* imageName = [NSString stringWithFormat: @"throbber-%02d", i + 1];
+            images[i] = [NSImage imageNamed: imageName];
+            if (images[i] == nil) {
+                NSLog(@"throbber image %@ failed to load", imageName);
+                abort();
+            }
+        }
+        mThrobberImages = [[NSArray alloc] initWithObjects: images count: 43];
+    }
+    return mThrobberImages;
+}
+
+- (NSToolbarItem*)throbberItem
+{
+    // find our throbber toolbar item.
+    NSToolbar* toolbar = [[self window] toolbar];
+    NSArray* items = [toolbar items];
+    unsigned count = [items count];
+    for (unsigned i = 0; i < count; ++i) {
+        NSToolbarItem* item = [items objectAtIndex: i];
+        if ([item tag] == 'Thrb') {
+            return item;
+        }
+    }
+    return nil;
+}
+
+// XXX this is just temporary for testing the throbber.
+
+- (void)testThrobber:(id)aSender
+{
+    if (mThrobberTimer == nil)
+        [self startThrobber];
+    else
+        [self stopThrobber];
+}
+
+// Called by an NSTimer.
+
+- (void)pulseThrobber:(id)aSender
+{
+    // advance to next frame.
+    NSArray* throbberImages = [self throbberImages];
+    if (++mThrobberFrame >= [throbberImages count])
+        mThrobberFrame = 0;
+    NSToolbarItem* toolbarItem = (NSToolbarItem*) [aSender userInfo];
+    [toolbarItem setImage: [throbberImages objectAtIndex: mThrobberFrame]];
+}
+
+- (void)startThrobber
+{
+#if 0
+    // Use Quicktime to draw the frames from a single Animated GIF. This works fine for the animation, but
+    // when the frames stop, the poster frame disappears.
+    NSToolbarItem* throbber = mThrobber;
+    if (throbber != nil && [throbber view] == nil) {
+        NSLog(@"Original view: %@", [throbber view]);
+        NSSize minSize = [throbber minSize];
+        NSLog(@"Origin minSize = %f X %f", minSize.width, minSize.height);
+        NSSize maxSize = [throbber maxSize];
+        NSLog(@"Origin maxSize = %f X %f", maxSize.width, maxSize.height);
+        
+        NSURL* throbberURL = [NSURL fileURLWithPath: [[NSBundle mainBundle] pathForResource:@"throbber" ofType:@"gif"]];
+        NSLog(@"throbberURL = %@", throbberURL);
+        NSMovie* throbberMovie = [[[NSMovie alloc] initWithURL: throbberURL byReference: YES] autorelease];
+        NSLog(@"throbberMovie = %@", throbberMovie);
+        
+        if ([throbberMovie QTMovie] != nil) {
+            NSMovieView* throbberView = [[[NSMovieView alloc] init] autorelease];
+            [throbberView setMovie: throbberMovie];
+            [throbberView showController: NO adjustingSize: NO];
+            [throbberView setLoopMode: NSQTMovieLoopingPlayback];
+            [throbber setView: throbberView];
+            NSSize size = NSMakeSize(32, 32);
+            [throbber setMinSize: size];
+            [throbber setMaxSize: size];
+            [throbberView gotoPosterFrame: self];
+            [throbberView start: self];
+    
+            // experiment, veto mouse clicks in the movie controller by using an action filter.
+            MCSetActionFilterWithRefCon((MovieController) [throbberView movieController],
+                                        NewMCActionFilterWithRefConUPP(movieControllerFilter),
+                                        0);
+        }
+    }
+#else
+    if (mThrobberTimer == nil) {
+        mThrobberTimer = [[NSTimer scheduledTimerWithTimeInterval: (1.0 / 15.0)
+                                   target: self selector: @selector(pulseThrobber:)
+                                   userInfo: [self throbberItem] repeats: YES] retain];
+    }
+#endif
+}
+
+- (void)stopThrobber
+{
+#if 0
+    // Stop the quicktime animation.
+    NSToolbarItem* throbber = mThrobber;
+    if (throbber != nil) {
+        NSMovieView* throbberView = [throbber view];
+        if ([throbberView isPlaying]) {
+            [throbberView stop: self];
+            [throbberView gotoPosterFrame: self];
+        } else {
+            [throbberView start: self];
+        }
+    }
+#else
+    if (mThrobberTimer != nil) {
+        [mThrobberTimer invalidate];
+        [mThrobberTimer release];
+        mThrobberTimer = nil;
+
+        mThrobberFrame = 0;
+        [[self throbberItem] setImage: [[self throbberImages] objectAtIndex: 0]];
+    }
+#endif
 }
 
 - (BOOL)findInPage:(NSString*)text
