@@ -205,6 +205,7 @@ C9=Component US region pack
 ; this component can easily remove it.
 C10=Component DOM Inspector
 C11=Component QFA
+C12=Component Type Ahead Find
 
 [Setup Type2]
 ;*** LOCALIZE ME BABY ***
@@ -231,6 +232,7 @@ C9=Component US region pack
 ; this component can easily remove it.
 C10=Component DOM Inspector
 C11=Component QFA
+C12=Component Type Ahead Find
 
 
 
@@ -579,6 +581,17 @@ $InstallSizeSystem$
 $InstallSizeArchive$:inspector.xpi
 Attributes=SELECTED|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\Chrome\inspector.jar
+
+[Component Type Ahead Find]
+Description Short=Type Ahead Find
+;*** LOCALIZE ME BABY ***
+Description Long=Type Ahead Find
+Archive=typeaheadfind.xpi
+$InstallSize$:typeaheadfind
+$InstallSizeSystem$
+$InstallSizeArchive$:inspector.xpi
+Attributes=SELECTED|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\Chrome\typeaheadfind.jar
 
 [Component US English Profile Defaults]
 Description Short=US English profile defaults

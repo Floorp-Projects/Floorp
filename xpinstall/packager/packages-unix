@@ -416,3 +416,9 @@ bin/defaults/pref/inspector.js
 bin/res/inspector/viewer-registry.rdf
 bin/res/inspector/search-registry.rdf
 bin/chrome/icons/default/winInspectorMain*.xpm
+
+[typeaheadfind]
+bin/components/libtypeaheadfind.so
+bin/components/typeaheadfind.xpt
+bin/chrome/typeaheadfind.jar
+bin/defaults/pref/typeaheadfind.js
