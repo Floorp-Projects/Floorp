@@ -105,6 +105,7 @@ void nsHTDataModel::AddNodesToArray(nsIContent* pContent, PRUint32 indentLevel)
 		// If the node is OPEN, then its children need to be added to the visibility array.
 		nsString attrValue;
 		nsresult result = pContent->GetAttribute("open", attrValue);
+        attrValue.ToLowerCase();
 		if ((pContent == mContentRoot) || (result == NS_CONTENT_ATTR_NO_VALUE ||
 			(result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true")))
 		{
@@ -166,7 +167,7 @@ void nsHTDataModel::GetChildTextForNode(nsIContent* pChildNode, nsString& text)
 
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 
-	if (pChild->QueryInterface(kIDOMNodeIID, (void**)&pTextChild))
+	if (NS_SUCCEEDED(pChild->QueryInterface(kIDOMNodeIID, (void**)&pTextChild)))
 	{
 		pTextChild->GetNodeValue(text);
 		NS_IF_RELEASE(pTextChild);
