@@ -63,7 +63,7 @@ class nsInstallFile : public nsInstallObject
         PRInt32 Prepare();
         PRInt32 Complete();
         void  Abort();
-        char* toString();
+        PRUnichar* toString();
 
         PRBool CanUninstall();
         PRBool RegisterPackageNode();

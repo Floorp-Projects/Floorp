@@ -54,7 +54,7 @@ public:
 
   PRInt32 Complete();
   
-  char* toString();
+  PRUnichar* toString();
   
   void Abort();
   

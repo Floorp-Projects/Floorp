@@ -36,7 +36,7 @@ class nsInstallObject
         virtual PRInt32 Complete() = 0;
 
         /* Override with an explanatory string for the progress dialog */
-        virtual char* toString() = 0;
+        virtual PRUnichar* toString() = 0;
 
         /* Override with your clean-up function */
         virtual void Abort() = 0;
