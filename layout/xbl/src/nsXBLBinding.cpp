@@ -196,6 +196,7 @@ nsIAtom* nsXBLBinding::kNameAtom = nsnull;
 nsIAtom* nsXBLBinding::kReadOnlyAtom = nsnull;
 nsIAtom* nsXBLBinding::kAttachToAtom = nsnull;
 nsIAtom* nsXBLBinding::kBindingAttachedAtom = nsnull;
+nsIAtom* nsXBLBinding::kBindingDetachedAtom = nsnull;
 nsIAtom* nsXBLBinding::kInheritStyleAtom = nsnull;
 
 nsIXBLService* nsXBLBinding::gXBLService = nsnull;
@@ -308,6 +309,7 @@ nsXBLBinding::nsXBLBinding(const nsCString& aDocURI, const nsCString& aID)
     kReadOnlyAtom = NS_NewAtom("readonly");
     kAttachToAtom = NS_NewAtom("attachto");
     kBindingAttachedAtom = NS_NewAtom("bindingattached");
+    kBindingDetachedAtom = NS_NewAtom("bindingdetached");
     kInheritStyleAtom = NS_NewAtom("inheritstyle");
 
     nsServiceManager::GetService("component://netscape/xbl",
@@ -602,7 +604,8 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
         PRBool found = PR_FALSE;
         PRBool special = PR_FALSE;
         nsCOMPtr<nsIAtom> eventAtom = getter_AddRefs(NS_NewAtom(type));
-        if (eventAtom.get() == kBindingAttachedAtom) {
+        if (eventAtom.get() == kBindingAttachedAtom ||
+            eventAtom.get() == kBindingDetachedAtom) {
           *aBinding = this;
           NS_ADDREF(*aBinding);
           special = PR_TRUE;
