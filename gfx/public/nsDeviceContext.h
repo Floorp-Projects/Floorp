@@ -27,6 +27,7 @@
 #include "nsIDeviceContextSpec.h"
 #include "libimg.h"
 #include "nsCOMPtr.h"
+#include "nsIAtom.h"
 
 class nsIImageRequest;
 class nsHashtable;
