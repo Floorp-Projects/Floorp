@@ -131,10 +131,8 @@ NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, PRBo
   mailDB->m_folderSpec = new nsFileSpec(folderName);
   mailDB->m_folder = m_folder;
   mailDB->AddRef();
-  // stat file before we open the db, because if we've latered
-  // any messages, handling latered will change time stamp on
-  // folder file.
-  summaryFileExists = summarySpec.Exists();
+  // treat empty summary file as not existing...so we can create and parse it.
+  summaryFileExists = summarySpec.Exists() && summarySpec.GetFileSize() > 0;
   
   nsresult err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
   
