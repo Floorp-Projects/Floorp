@@ -84,7 +84,7 @@ public:
         rv = inStr->Read(buffer, len, &read);
         buffer[len] = '\0';
         if (NS_SUCCEEDED(rv)) {
-            printf("CONTEXT %x: Received %d bytes and the following data: \n %s\n\n", ctxt, (PRInt32)read, buffer);
+            printf("CONTEXT %p: Received %u bytes and the following data: \n %s\n\n", ctxt, read, buffer);
         }
         nsAllocator::Free(buffer);
 
@@ -249,7 +249,6 @@ main(int argc, char* argv[])
     nsString2 dummyData("--aBoundary Test ");
     nsIInputStream *inputData = nsnull;
     nsISupports *inputDataSup = nsnull;
-    nsIInputStream *convertedData = nsnull;
 
     rv = NS_NewStringInputStream(&inputDataSup, dummyData);
     if (NS_FAILED(rv)) return rv;
@@ -330,6 +329,7 @@ main(int argc, char* argv[])
 
 #else
     // SYNCRONOUS conversion
+    nsIInputStream *convertedData = nsnull;
     rv = StreamConvService->Convert(inputData, from, to, nsnull, &convertedData);
 #endif
 
