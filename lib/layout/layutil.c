@@ -743,7 +743,7 @@ char* lo_alignStrings[] = {
     "texttop",			/* LO_ALIGN_TOP */
     "absbottom",		/* LO_ALIGN_BOTTOM */
     "baseline",			/* LO_ALIGN_BASELINE */
-    "center",			/* LO_ALIGN_NCSA_CENTER */
+    "middle",			/* LO_ALIGN_NCSA_CENTER */
     "bottom",			/* LO_ALIGN_NCSA_BOTTOM */
     "top",				/* LO_ALIGN_NCSA */
 	0
