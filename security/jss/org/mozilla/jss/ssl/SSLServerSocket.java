@@ -41,7 +41,7 @@ import java.net.SocketException;
 /**
  * SSL server socket.
  */
-public class SSLServerSocket {
+public class SSLServerSocket extends java.net.ServerSocket {
 
     /**
      * The default size of the listen queue.
@@ -76,8 +76,8 @@ public class SSLServerSocket {
         // Dance the dance of fools.  The superclass doesn't have a default
         // constructor, so we have to trick it here. This is an example
         // of WHY WE SHOULDN'T BE EXTENDING SERVERSOCKET.
-        //super(0);
-        //super.close();
+        super(0);
+        super.close();
 
         // create the socket
         sockProxy = new SocketProxy( base.socketCreate(this, null, null) );
