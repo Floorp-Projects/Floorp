@@ -25,8 +25,6 @@
 #define DEBUG_NEWS 1
 #endif
 
-#define BUG_7770_FIXED 1
-
 // The following string constants are protocol strings. I'm defining them as macros here
 // so I don't have to sprinkle all of the strings throughout the protocol. 
 #define NNTP_CMD_LIST_EXTENSIONS		"LIST EXTENSIONS" CRLF

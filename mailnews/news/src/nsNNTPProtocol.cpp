@@ -123,6 +123,7 @@ protected:
 #define UNTIL_STRING_BUNDLES_MK_NNTP_CANCEL_DISALLOWED "This message does not appear to be from you.  You may only cancel your own posts, not those made by others."
 #define UNTIL_STRING_BUNDLES_MK_NNTP_CANCEL_CONFIRM "Are you sure you want to cancel this message?"
 #define UNTIL_STRING_BUNDLES_MK_MSG_MESSAGE_CANCELLED "Message cancelled."
+#define UNTIL_STRING_BUNDLES_MK_MSG_ERROR_FROM_SERVER "A News (NNTP) error occurred:  "
 
 /* #define UNREADY_CODE	*/  /* mscott: generic flag for hiding access to url struct and active entry which are now gone */
 
@@ -1068,12 +1069,13 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
     /* almost correct */
     if(status > 1)
 	{
-#ifdef DEBUG_NEWS
-	printf("received %d bytes\n", status);
-#endif
 #ifdef UNREADY_CODE
         ce->bytes_received += status;
         FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status, ce->URL_s->content_length);
+#else
+#ifdef DEBUG_NEWS
+	printf("received %d bytes\n", status);
+#endif
 #endif
 	}
 
@@ -1082,7 +1084,18 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 	m_previousResponseCode = m_responseCode;
 
     PR_sscanf(line, "%d", &m_responseCode);
-
+    PRInt32 major_opcode = MK_NNTP_RESPONSE_TYPE(m_responseCode); 
+    if ((major_opcode == MK_NNTP_RESPONSE_TYPE_CANNOT) || (major_opcode == MK_NNTP_RESPONSE_TYPE_ERROR)) {
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &rv);
+	if (NS_SUCCEEDED(rv) || dialog) {
+		nsString errorText(UNTIL_STRING_BUNDLES_MK_MSG_ERROR_FROM_SERVER);
+		errorText += m_responseText;
+          	rv = dialog->Alert(errorText.GetUnicode());  
+		// XXX:  todo, check rv?
+	}
+    }
+    
 	/* authentication required can come at any time
 	 */
 #ifdef CACHE_NEWSGRP_PASSWORD
@@ -1830,7 +1843,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
         /* if the server returned a 400 error then it is an expected
          * error.  the NEWS_ERROR state will not sever the connection
          */
-        if(major_opcode == 4)
+        if(major_opcode == MK_NNTP_RESPONSE_TYPE_CANNOT)
           m_nextState = NEWS_ERROR;
         else
           m_nextState = NNTP_ERROR;
@@ -1907,6 +1920,10 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
      */
 #ifdef UNREADY_CODE
     FE_GraphProgressInit(ce->window_id, ce->URL_s, ce->URL_s->content_length);
+#else
+#ifdef DEBUG_NEWS
+    printf("start the graph progress indicator\n");
+#endif
 #endif
 	SetFlag(NNTP_DESTROY_PROGRESS_GRAPH);
 #ifdef UNREADY_CODE
@@ -2057,15 +2074,16 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 	}
 	if(status > 1)
 	{		
+#ifdef UNREADY_CODE
+		ce->bytes_received += status;
+		FE_GraphProgress(ce->window_id, ce->URL_s,
+						 ce->bytes_received, status,
+						 ce->URL_s->content_length);
+#else
 #ifdef DEBUG_NEWS
 		printf("received %d bytes\n", status);
 #endif
-#ifdef UNREADY_CODE
-		ce->bytes_received += status;
 #endif
-		//	FE_GraphProgress(ce->window_id, ce->URL_s,
-		//					 ce->bytes_received, status,
-		//					 ce->URL_s->content_length);
 	}
 
 	if(!line)
@@ -2684,12 +2702,13 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
      */
     if(status > 1)
     {
-#ifdef DEBUG_NEWS
-	printf("received %d bytes\n", status);
-#endif
 #ifdef UNREADY_CODE
         ce->bytes_received += status;
         FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status, ce->URL_s->content_length);
+#else
+#ifdef DEBUG_NEWS
+	printf("received %d bytes\n", status);
+#endif
 #endif
     }
 
@@ -2793,12 +2812,13 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
      */
     if(status > 1)
     {
-#ifdef DEBUG_NEWS
-	printf("received %d bytes\n", status);
-#endif
 #ifdef UNREADY_CODE
     	ce->bytes_received += status;
         FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status, ce->URL_s->content_length);
+#else
+#ifdef DEBUG_NEWS
+	printf("received %d bytes\n", status);
+#endif
 #endif
 	}
     
@@ -3062,13 +3082,14 @@ PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
      */
     if(status > 1)
     {
-#ifdef DEBUG_NEWS
-	printf("received %d bytes\n", status);
-#endif
 #ifdef UNREADY_CODE
         ce->bytes_received += status;
         FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status,
 						 ce->URL_s->content_length);
+#else
+#ifdef DEBUG_NEWS
+	printf("received %d bytes\n", status);
+#endif
 #endif
 	}
 
@@ -3509,7 +3530,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 #ifdef UNREADY_CODE
 				FE_Progress (ce->window_id, statusText);
 #else
-				printf("FE_Progress(%s)\n",statusText);
+				SetProgressStatus(statusText);
 #endif
 				PR_Free(statusText);
 			}
@@ -3804,14 +3825,8 @@ PRInt32 nsNNTPProtocol::Cancel()
   
       if (!cancelInfo.from) {
           alertText = UNTIL_STRING_BUNDLES_MK_NNTP_CANCEL_DISALLOWED;
-          if (dialog) {
-              // until #7770 is fixed, we can't do dialogs on Linux from here
-#if defined(BUG_7770_FIXED)
-              rv = dialog->Alert(alertText.GetUnicode());
-#else
-              printf("%s\n",UNTIL_STRING_BUNDLES_MK_NNTP_CANCEL_DISALLOWED);
-#endif /* BUG_7770_FIXED */
-          }
+          rv = dialog->Alert(alertText.GetUnicode());
+	  // XXX:  todo, check rv?
           
           status = MK_NNTP_CANCEL_DISALLOWED;
 		  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
@@ -3835,15 +3850,8 @@ PRInt32 nsNNTPProtocol::Cancel()
   
   /* Last chance to cancel the cancel.
    */
-  if (dialog) {
-      // until #7770 is fixed, we can't do dialogs on UNIX from here
-#if defined(BUG_7770_FIXED)
-      rv = dialog->Confirm(confirmText.GetUnicode(), &confirmCancelResult);
-#else
-      printf("%s\n", UNTIL_STRING_BUNDLES_MK_NNTP_CANCEL_CONFIRM);
-      confirmCancelResult = 1;
-#endif /* BUG_7770_FIXED */
-  }
+  rv = dialog->Confirm(confirmText.GetUnicode(), &confirmCancelResult);
+  // XXX:  todo, check rv?
   
   if (confirmCancelResult != 1) {
       // they canceled the cancel
@@ -3908,17 +3916,12 @@ PRInt32 nsNNTPProtocol::Cancel()
 	m_nextStateAfterResponse = NNTP_SEND_POST_DATA_RESPONSE;
 
     alertText = UNTIL_STRING_BUNDLES_MK_MSG_MESSAGE_CANCELLED;
-    if (dialog) {
-        // until #7770 is fixed, we can't do dialogs on Linux from here
-#if defined(BUG_7770_FIXED)
-        rv = dialog->Alert(alertText.GetUnicode());
-#else
-        printf("%s\n", UNTIL_STRING_BUNDLES_MK_MSG_MESSAGE_CANCELLED);
-#endif /* BUG_7770_FIXED */
-    }
+    rv = dialog->Alert(alertText.GetUnicode());
+    // XXX:  todo, check rv?
 
     // just me for now...
-#ifdef DEBUG_seth
+    // start of work for bug #8216
+#if defined(DEBUG_seth) || defined(DEBUG_sspitzer)
     // delete the message from the db here.
     nsMsgKey key = nsMsgKey_None;
     rv = m_runningURL->GetMessageKey(&key);
@@ -4192,12 +4195,13 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 	 /* almost correct */
 	if(status > 1)
 	{
-#ifdef DEBUG_NEWS
-		printf("received %d bytes\n", status);
-#endif
 #ifdef UNREADY_CODE
 		ce->bytes_received += status;
 		FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status, ce->URL_s->content_length);
+#else
+#ifdef DEBUG_NEWS
+		printf("received %d bytes\n", status);
+#endif
 #endif
 	}
 
