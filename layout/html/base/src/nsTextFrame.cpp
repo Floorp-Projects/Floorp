@@ -43,6 +43,7 @@
 #include "nsXIFConverter.h"
 #include "nsHTMLAtoms.h"
 #include "nsILineBreaker.h"
+#include "nsIWordBreaker.h"
 
 #include "nsITextContent.h"
 #include "nsTextReflow.h"/* XXX rename to nsTextRun */
@@ -820,7 +821,9 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
   // Transform text from content into renderable form
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
-  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb);
+  nsCOMPtr<nsIWordBreaker> wb;
+  doc->GetWordBreaker(getter_AddRefs(wb));
+  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb,wb);
   PrepareUnicodeText(tx,
                      displaySelection ? ip : nsnull,
                      paintBuf, textLength, width);
@@ -969,7 +972,9 @@ TextFrame::GetPositionSlowly(nsIPresContext& aCX,
   // Transform text from content into renderable form
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
-  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE, lb);
+  nsCOMPtr<nsIWordBreaker> wb;
+  doc->GetWordBreaker(getter_AddRefs(wb));
+  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE, lb,wb);
   PrepareUnicodeText(tx,
                      ip,
                      paintBuf, textLength, width);
@@ -1286,7 +1291,9 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
   // Transform text from content into renderable form
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
-  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE, lb);
+  nsCOMPtr<nsIWordBreaker> wb;
+  doc->GetWordBreaker(getter_AddRefs(wb));
+  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE, lb,wb);
   aTextStyle.mNumSpaces = PrepareUnicodeText(tx,
                                              displaySelection ? ip : nsnull,
                                              paintBuf, textLength, width);
@@ -1444,7 +1451,9 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
   // Transform text from content into renderable form
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
-  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb);
+  nsCOMPtr<nsIWordBreaker> wb;
+  doc->GetWordBreaker(getter_AddRefs(wb));
+  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb,wb);
   PrepareUnicodeText(tx,
                      displaySelection ? ip : nsnull,
                      rawPaintBuf, textLength, width);
@@ -1671,7 +1680,9 @@ TextFrame::GetPosition(nsIPresContext& aCX,
   // Get the renderable form of the text
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
-  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb);
+  nsCOMPtr<nsIWordBreaker> wb;
+  doc->GetWordBreaker(getter_AddRefs(wb));
+  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb,wb);
   PrepareUnicodeText(tx,
                      ip, paintBuf, textLength, width);
   ip[mContentLength] = ip[mContentLength-1];
@@ -1894,7 +1905,9 @@ TextFrame::GetPointFromOffset(nsIPresContext* inPresContext, nsIRenderingContext
 
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
-  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE, lb);
+  nsCOMPtr<nsIWordBreaker> wb;
+  doc->GetWordBreaker(getter_AddRefs(wb));
+  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE, lb,wb);
   PrepareUnicodeText(tx,
                      ip,
                      paintBuf, textLength, width);
@@ -1974,9 +1987,11 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
   
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
+  nsCOMPtr<nsIWordBreaker> wb;
+  doc->GetWordBreaker(getter_AddRefs(wb));
   NS_IF_RELEASE(doc);
 
-  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb);
+  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb,wb);
   nsresult result(NS_OK);
   switch (aAmount){
   case eSelectNoAmount : {
@@ -2051,14 +2066,14 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
     if (aDirection == eDirPrevious){
       keepSearching = PR_TRUE;
       tx.Init(this, mContentOffset + aStartOffset);
-      if (tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace)){
+      if (tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE)){
         if ((aEatingWS && !isWhitespace) || !aEatingWS){
           *aFrameOffset = aStartOffset - contentLen;
           //check for whitespace next.
           if (*aFrameOffset > 0)
             keepSearching = PR_FALSE;//reached the beginning of a word
           aEatingWS = !isWhitespace;//nowhite space, just eat chars.
-          while (isWhitespace && tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace)){
+          while (isWhitespace && tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE)){
             *aFrameOffset -= contentLen;
             aEatingWS = PR_FALSE;
           }
@@ -2080,13 +2095,13 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
     }
     else if (aDirection == eDirNext){
       tx.Init(this, mContentOffset + aStartOffset );
-      if (tx.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace)){
+      if (tx.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE)){
         if ((aEatingWS && isWhitespace) || !aEatingWS){
           *aFrameOffset = aStartOffset + contentLen;
           //check for whitespace next.
           keepSearching = PR_TRUE;
           isWhitespace = PR_TRUE;
-          while (tx.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace) && isWhitespace){
+          while (tx.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE) && isWhitespace){
             *aFrameOffset += contentLen;
             keepSearching = PR_FALSE;
           }
@@ -2228,7 +2243,9 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   PRUnichar wordBuf[WORD_BUF_SIZE];
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
-  nsTextTransformer tx(wordBuf, WORD_BUF_SIZE,lb);
+  nsCOMPtr<nsIWordBreaker> wb;
+  doc->GetWordBreaker(getter_AddRefs(wb));
+  nsTextTransformer tx(wordBuf, WORD_BUF_SIZE,lb,wb);
   nsresult rv = tx.Init(/**textRun, XXX*/ this, startingOffset);
   if (NS_OK != rv) {
     return rv;
@@ -2711,9 +2728,11 @@ TextFrame::ComputeWordFragmentWidth(nsIPresContext& aPresContext,
 
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
+  nsCOMPtr<nsIWordBreaker> wb;
+  doc->GetWordBreaker(getter_AddRefs(wb));
   NS_IF_RELEASE(doc);
 
-  nsTextTransformer tx(buf, TEXT_BUF_SIZE,lb);
+  nsTextTransformer tx(buf, TEXT_BUF_SIZE,lb,wb);
   // XXX we need the content-offset of the text frame!!! 0 won't
   // always be right when continuations are in action
   tx.Init(/**textRun, XXX*/ aTextFrame, 0);
