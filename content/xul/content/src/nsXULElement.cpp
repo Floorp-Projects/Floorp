@@ -993,6 +993,11 @@ nsXULElement::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
     if (NS_FAILED(rv))
         return rv;
 
+    // We can't insert an ancestor or ourself.
+    if (IsAncestor(aNewChild, this)) {
+        return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    }
+
     nsCOMPtr<nsIContent> newcontent = do_QueryInterface(aNewChild);
     NS_ASSERTION(newcontent != nsnull, "not an nsIContent");
     if (! newcontent)
