@@ -2559,9 +2559,14 @@ nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData)
   char          *readBuf;
   char          *ptr;
 
+  if (fSpec.IsDirectory()) {
+    NS_ASSERTION(0,"file is a directory");
+    return NS_MSG_ERROR_READING_FILE;  
+  }
+
   nsInputFileStream tempFile(fSpec);
   if (!tempFile.is_open())
-    return NS_MSG_ERROR_WRITING_FILE;        
+    return NS_MSG_ERROR_READING_FILE;  
   
   readSize = fSpec.GetFileSize();
   ptr = readBuf = (char *)PR_Malloc(readSize + 1);  if (!readBuf)

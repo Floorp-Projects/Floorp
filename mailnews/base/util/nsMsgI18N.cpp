@@ -557,9 +557,15 @@ nsMsgI18NParseMetaCharset(nsFileSpec* fileSpec)
 { 
   static char charset[kMAX_CSNAME+1]; 
   char buffer[512]; 
-  nsInputFileStream fileStream(*fileSpec); 
 
   *charset = '\0'; 
+
+  if (fileSpec->IsDirectory()) {
+    NS_ASSERTION(0,"file is a directory");
+    return charset; 
+  }
+
+  nsInputFileStream fileStream(*fileSpec); 
 
   while (!fileStream.eof() && !fileStream.failed() && 
          fileStream.is_open()) { 
