@@ -57,8 +57,10 @@ Contributor(s):
         <box align="vertical" id="treebox">
             <html>
                 <tree id="modulesTree">
-                    <treecol />
-                    <treecol />
+                    <treecolgroup>
+                      <treecol flex="1"/>
+                      <treecol flex="1"/>
+                    </treecolgroup>
 
                     <treehead>
                         <treerow>
@@ -67,7 +69,7 @@ Contributor(s):
                         </treerow>
                     </treehead>
 
-                    <treechildren id="theTreeBody">
+                    <treechildren id="theTreeBody" flex="1">
                     </treechildren>
                 </tree>
            </html>

@@ -3,7 +3,11 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 align="vertical" style="width:100%;height:100%">
 <tree flex="1">
-  <treechildren>
+  <treecolgroup>
+    <treecol flex="1"/>
+  </treecolgroup>
+
+  <treechildren flex="1">
     <treeitem>
       <treerow>
 	    <treecell value="I'm so happy being a XUL tree!"/>
