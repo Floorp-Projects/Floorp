@@ -124,9 +124,7 @@ nsTextTransformer::nsTextTransformer(nsILineBreaker* aLineBreaker,
     mLineBreaker(aLineBreaker),
     mWordBreaker(aWordBreaker),
     mBufferPos(0),
-    mLeaveAsAscii(PR_FALSE),
-    mHasMultibyte(PR_FALSE),
-    mTransformedTextIsAscii(PR_FALSE),
+    mFlags(0),
     mTextTransform(NS_STYLE_TEXT_TRANSFORM_NONE)
 {
   MOZ_COUNT_CTOR(nsTextTransformer);
@@ -180,17 +178,17 @@ nsTextTransformer::Init(nsIFrame* aFrame,
       mMode = ePreWrap;
     }
     mTextTransform = styleText->mTextTransform;
-
-    mLeaveAsAscii = aLeaveAsAscii;
-    if (mLeaveAsAscii) {
-      // See if the text fragment is 1-byte text
+    
+    if (aLeaveAsAscii) { // See if the text fragment is 1-byte text
+      SetLeaveAsAscii(PR_TRUE);	    
       // XXX Currently we only leave it as ascii for normal text and not for preformatted
       // or preformatted wrapped text
-      if (mFrag->Is2b() || (eNormal != mMode)) {
+      if (mFrag->Is2b() || (eNormal != mMode))
         // We don't step down from Unicode to ascii
-        mLeaveAsAscii = PR_FALSE;
-      }
-    }
+        SetLeaveAsAscii(PR_FALSE);           
+    } 
+    else 
+      SetLeaveAsAscii(PR_FALSE);
   }
   return rv;
 }
@@ -221,7 +219,7 @@ nsTextTransformer::ScanNormalWhiteSpace_F()
     mTransformBuf.GrowBy(128);
   }
 
-  if (mTransformedTextIsAscii) {
+  if (TransformedTextIsAscii()) {
     unsigned char*  bp = (unsigned char*)mTransformBuf.mBuffer;
     bp[mBufferPos++] = ' ';
   } else {
@@ -260,7 +258,7 @@ nsTextTransformer::ScanNormalAsciiText_F(PRInt32* aWordLen,
     PRUnichar* bp2;
   };
   bp2 = mTransformBuf.GetBuffer();
-  if (mTransformedTextIsAscii) {
+  if (TransformedTextIsAscii()) {
     bp1 += mBufferPos;
   } else {
     bp2 += mBufferPos;
@@ -282,10 +280,10 @@ nsTextTransformer::ScanNormalAsciiText_F(PRInt32* aWordLen,
     if (ch > MAX_UNIBYTE) {
       // The text has a multibyte character so we can no longer leave the
       // text as ascii text
-      mHasMultibyte = PR_TRUE;
-
-      if (mTransformedTextIsAscii) {
-        mTransformedTextIsAscii = PR_FALSE;
+      SetHasMultibyte(PR_TRUE);        
+		
+      if (TransformedTextIsAscii()) { 
+        SetTransformedTextIsAscii(PR_FALSE);
         *aWasTransformed = PR_TRUE;
 
         // Transform any existing ascii text to Unicode
@@ -302,13 +300,13 @@ nsTextTransformer::ScanNormalAsciiText_F(PRInt32* aWordLen,
         break;
       }
       bp2 = mTransformBuf.GetBuffer();
-      if (mTransformedTextIsAscii) {
+      if (TransformedTextIsAscii()) {
         bp1 += mBufferPos;
       } else {
         bp2 += mBufferPos;
       }
     }
-    if (mTransformedTextIsAscii) {
+    if (TransformedTextIsAscii()) {
       *bp1++ = ch;
     } else {
       *bp2++ = PRUnichar(ch);
@@ -335,7 +333,7 @@ nsTextTransformer::ScanNormalAsciiText_F_ForWordBreak(PRInt32* aWordLen,
     PRUnichar* bp2;
   };
   bp2 = mTransformBuf.GetBuffer();
-  if (mTransformedTextIsAscii) {
+  if (TransformedTextIsAscii()) {
     bp1 += mBufferPos;
   } else {
     bp2 += mBufferPos;
@@ -361,10 +359,10 @@ nsTextTransformer::ScanNormalAsciiText_F_ForWordBreak(PRInt32* aWordLen,
     if (ch > MAX_UNIBYTE) {
       // The text has a multibyte character so we can no longer leave the
       // text as ascii text
-      mHasMultibyte = PR_TRUE;
+      SetHasMultibyte(PR_TRUE);
 
-      if (mTransformedTextIsAscii) {
-        mTransformedTextIsAscii = PR_FALSE;
+      if (TransformedTextIsAscii()) {
+        SetTransformedTextIsAscii(PR_FALSE);
         *aWasTransformed = PR_TRUE;
 
         // Transform any existing ascii text to Unicode
@@ -381,13 +379,13 @@ nsTextTransformer::ScanNormalAsciiText_F_ForWordBreak(PRInt32* aWordLen,
         break;
       }
       bp2 = mTransformBuf.GetBuffer();
-      if (mTransformedTextIsAscii) {
+      if (TransformedTextIsAscii()) {
         bp1 += mBufferPos;
       } else {
         bp2 += mBufferPos;
       }
     }
-    if (mTransformedTextIsAscii) {
+    if (TransformedTextIsAscii()) {
       *bp1++ = ch;
     } else {
       *bp2++ = PRUnichar(ch);
@@ -412,7 +410,7 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool   aForLineBreak,
   PRInt32 offset = mOffset;
 
   PRUnichar firstChar = frag->CharAt(offset++);
-  if (firstChar > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
+  if (firstChar > MAX_UNIBYTE) SetHasMultibyte(PR_TRUE);
 
   // Only evaluate complex breaking logic if there are more characters
   // beyond the first to look at.
@@ -473,7 +471,7 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool   aForLineBreak,
           numChars--;
           continue;
         }
-        if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
+        if (ch > MAX_UNIBYTE) SetHasMultibyte(PR_TRUE);
         *bp++ = ch;
         mBufferPos++;
       }
@@ -562,7 +560,7 @@ nsTextTransformer::ScanPreData_F(PRInt32* aWordLen,
     else if (IS_DISCARDED(ch)) {
       continue;
     }
-    if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
+    if (ch > MAX_UNIBYTE) SetHasMultibyte(PR_TRUE);
     if (bp == endbp) {
       PRInt32 oldLength = bp - mTransformBuf.GetBuffer();
       nsresult rv = mTransformBuf.GrowBy(1000);
@@ -607,7 +605,7 @@ nsTextTransformer::ScanPreAsciiData_F(PRInt32* aWordLen,
     else if (IS_DISCARDED(ch)) {
       continue;
     }
-    if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
+    if (ch > MAX_UNIBYTE) SetHasMultibyte(PR_TRUE);
     if (bp == endbp) {
       PRInt32 oldLength = bp - mTransformBuf.GetBuffer();
       nsresult rv = mTransformBuf.GrowBy(1000);
@@ -699,7 +697,7 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
   // beginning of the buffer
   if (aResetTransformBuf) {
     mBufferPos = 0;
-    mTransformedTextIsAscii = mLeaveAsAscii;
+    SetTransformedTextIsAscii(LeaveAsAscii());
   }
   prevBufferPos = mBufferPos;
 
@@ -739,7 +737,7 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
           }
 
           offset++;
-          if (mTransformedTextIsAscii) {
+          if (TransformedTextIsAscii()) {
             ((unsigned char*)mTransformBuf.mBuffer)[mBufferPos++] = ' ';
           } else {
             mTransformBuf.mBuffer[mBufferPos++] = PRUnichar(' ');
@@ -795,7 +793,7 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
         break;
     }
 
-    if (mTransformedTextIsAscii) {
+    if (TransformedTextIsAscii()) {
       unsigned char* wordPtr = (unsigned char*)mTransformBuf.mBuffer + prevBufferPos;
       
       if (!isWhitespace) {
@@ -924,8 +922,8 @@ nsTextTransformer::ScanNormalAsciiText_B(PRInt32* aWordLen)
     }
     else if (IS_DISCARDED(ch)) {
       continue;
-    }
-    if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
+    } 
+    if (ch > MAX_UNIBYTE) SetHasMultibyte(PR_TRUE);
     if (bp == startbp) {
       PRInt32 oldLength = mTransformBuf.mBufferLen;
       nsresult rv = mTransformBuf.GrowBy(1000);
@@ -954,7 +952,7 @@ nsTextTransformer::ScanNormalUnicodeText_B(PRBool aForLineBreak,
 
   PRUnichar firstChar = frag->CharAt(offset);
   mTransformBuf.mBuffer[mTransformBuf.mBufferLen - 1] = firstChar;
-  if (firstChar > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
+  if (firstChar > MAX_UNIBYTE) SetHasMultibyte(PR_TRUE);
 
   PRInt32 numChars = 1;
   if (offset > 0) {
@@ -1002,7 +1000,7 @@ nsTextTransformer::ScanNormalUnicodeText_B(PRBool aForLineBreak,
         else if (IS_DISCARDED(ch)) {
           continue;
         }
-        if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
+        if (ch > MAX_UNIBYTE) SetHasMultibyte(PR_TRUE);
         *--bp = ch;
       }
 
@@ -1073,7 +1071,7 @@ nsTextTransformer::ScanPreData_B(PRInt32* aWordLen)
     else if (IS_DISCARDED(ch)) {
       continue;
     }
-    if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
+    if (ch > MAX_UNIBYTE) SetHasMultibyte(PR_TRUE);
     if (bp == startbp) {
       PRInt32 oldLength = mTransformBuf.mBufferLen;
       nsresult rv = mTransformBuf.GrowBy(1000);
