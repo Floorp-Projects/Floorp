@@ -740,20 +740,22 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
 	{
 		rv = pNetService->CreateURL(&url, aUrl);
 		if (NS_FAILED(rv))
-			goto done;
+			goto done;		// goto in C++ is evil!
 	}
 	else
-		goto done;
+		goto done;		// goto in C++ is evil!
 
+  nsCOMPtr<nsIWebShellWindow>  newWindow;
 	appShell->CreateTopLevelWindow(nsnull,      // parent
                                    url,
                                    PR_TRUE,
-                                   mWebShellWindow,   // result widget
+                                   *getter_AddRefs(newWindow),   // result widget
                                    nsnull,      // observer
                                    this,      // callbacks
                                    615,         // width
                                    650);        // height
 	
+	mWebShellWindow = newWindow;
   // Get the default charset from pref, use this as a mail charset.
   default_mail_charset = nsMsgI18NGetDefaultMailCharset();
   if (NULL != default_mail_charset) {

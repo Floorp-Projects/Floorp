@@ -26,6 +26,7 @@
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsIWidget.h"
+#include "nsIWebShellWindow.h"
 #include "nsIPref.h"
 #include "plevent.h"
 #include "prmem.h"
@@ -258,7 +259,7 @@ int main(int argc, char* argv[])
   
 
   if (NS_FAILED(rv)) {
-    goto done;
+    goto done;			// don't use goto in C++!
   }
   profileService->Startup(nsnull);
 
@@ -276,14 +277,14 @@ int main(int argc, char* argv[])
                                     (nsISupports **)&cmdLineArgs);
   if (NS_FAILED(rv)) {
     fprintf(stderr, "Could not obtain CmdLine processing service\n");
-    goto done;
+    goto done;			// don't use goto in C++!
   }
 
   // Initialize the cmd line service 
   rv = cmdLineArgs->Initialize(argc, argv);
   if (rv  == NS_ERROR_INVALID_ARG) {
     PrintUsage();
-    goto done;
+    goto done;			// don't use goto in C++!
   }
   
 #if 0
@@ -291,7 +292,7 @@ int main(int argc, char* argv[])
   rv = cmdLineArgs->GetURLToLoad(&urlstr);
   if (rv  == NS_ERROR_INVALID_ARG) {
     PrintUsage();
-    goto done;
+    goto done;			// don't use goto in C++!
   }
 #endif  /* 0 */
 
@@ -445,7 +446,7 @@ int main(int argc, char* argv[])
   // Get the value of -width option
   rv = cmdLineArgs->GetCmdLineValue("-width", &width);
   if (NS_FAILED(rv)) {
-    goto done;
+    goto done;			// don't use goto in C++!
   }
   if (width) {
     PR_sscanf(width, "%d", &widthVal);
@@ -457,7 +458,7 @@ int main(int argc, char* argv[])
   // Get the value of -height option
   rv = cmdLineArgs->GetCmdLineValue("-height", &height);
   if (NS_FAILED(rv)) {
-    goto done;
+    goto done;			// don't use goto in C++!
   }
   if (height) {
     PR_sscanf(height, "%d", &heightVal);
@@ -473,7 +474,7 @@ int main(int argc, char* argv[])
                                     nsIPref::GetIID(), 
                                     (nsISupports **)&prefs);
   if (NS_FAILED(rv))
-    goto done;
+    goto done;			// don't use goto in C++!
 
   /*
    * Create the Application Shell instance...
@@ -482,7 +483,7 @@ int main(int argc, char* argv[])
                                     kIAppShellServiceIID,
                                     (nsISupports**)&appShell);
   if (NS_FAILED(rv)) {
-    goto done;
+    goto done;			// don't use goto in C++!
   }
 
   /*
@@ -490,7 +491,7 @@ int main(int argc, char* argv[])
    */
   rv = appShell->Initialize( cmdLineArgs );
   if (NS_FAILED(rv)) {
-    goto done;
+    goto done;			// don't use goto in C++!
   }
  
   /*
@@ -501,7 +502,6 @@ int main(int argc, char* argv[])
    * deal with GUI initialization...
    */
   ///write me...
-  nsIWebShellWindow* newWindow;
   
 #ifndef NECKO
   rv = NS_NewURL(&url, urlstr);
@@ -519,7 +519,7 @@ int main(int argc, char* argv[])
 #endif // NECKO
 
   if (NS_FAILED(rv)) {
-    goto done;
+    goto done;			// don't use goto in C++!
   }
 
   /* ********************************************************************* */
@@ -595,7 +595,6 @@ int main(int argc, char* argv[])
 		PRInt32 profWinWidth  = 615;
 		PRInt32 profWinHeight = 500;
 
-		nsIWebShellWindow*  profWindow;
 		nsIAppShellService* profAppShell;
 
 		/*
@@ -628,7 +627,8 @@ int main(int argc, char* argv[])
 				goto done;
 			} 
 
-			rv = profAppShell->CreateTopLevelWindow(nsnull, profURL, PR_TRUE, profWindow,
+		  nsCOMPtr<nsIWebShellWindow>  profWindow;
+			rv = profAppShell->CreateTopLevelWindow(nsnull, profURL, PR_TRUE, *getter_AddRefs(profWindow),
 				       nsnull, nsnull, profWinWidth, profWinHeight);
 
 			NS_RELEASE(profURL);
@@ -656,7 +656,8 @@ int main(int argc, char* argv[])
     goto done;
 
   if ( !useArgs ) {
-      rv = appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, newWindow,
+      nsCOMPtr<nsIWebShellWindow> newWindow;
+      rv = appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, *getter_AddRefs(newWindow),
                        nsnull, nsnull, widthVal, heightVal);
   } else {
       nsIDOMToolkitCore* toolkit = nsnull;
@@ -664,7 +665,6 @@ int main(int argc, char* argv[])
                                         nsIDOMToolkitCore::GetIID(),
                                         (nsISupports**)&toolkit);
       if (NS_SUCCEEDED(rv)) {
-          nsIWebShellWindow* newWindow = nsnull;
           
           toolkit->ShowWindowWithArgs( urlstr, nsnull, withArgs );
           

@@ -536,7 +536,7 @@ OSErr nsAppleEventHandler::HandleOpen1Doc(const FSSpec& inFileSpec, OSType inFil
 	// Another way, but this way loads the URL as the "chrome" - no toolbar, etc.
 	// Personally, I like this better, but it's not "right" :-)
 
-	nsIWebShellWindow* aWindow = FindWebShellWindow(nsnull);
+	nsCOMPtr<nsIWebShellWindow> aWindow = getter_AddRefs(FindWebShellWindow(nsnull));
 	if (!aWindow)
 		return errAEEventNotHandled;
 
@@ -760,7 +760,7 @@ Clean:
 	// evaluate the javascript till after javascript is initialized.
 //	nsCOMPtr<nsJavascriptCallbacks> cb(
 //		nsDontQueryInterface<nsJavascriptCallbacks>(new nsJavascriptCallbacks(scriptText)));
-	nsIWebShellWindow* aWindow = FindWebShellWindow(nsnull);
+	nsCOMPtr<nsIWebShellWindow> aWindow = getter_AddRefs(FindWebShellWindow(nsnull));
 	if (!aWindow)
 		return errAEEventNotHandled;
 	
@@ -971,6 +971,7 @@ OSErr nsAppleEventHandler::SetAEProperty(DescType inProperty,
 }
 
 //----------------------------------------------------------------------------------------
+// The return value has been AddRefed. Callers should release it.
 nsIWebShellWindow* FindWebShellWindow(nsIXULWindowCallbacks* inCallbacks)
 //----------------------------------------------------------------------------------------
 {
@@ -980,7 +981,6 @@ nsIWebShellWindow* FindWebShellWindow(nsIXULWindowCallbacks* inCallbacks)
 	if (NS_FAILED(rv))
 		return nsnull;
 
-	nsIWebShellWindow* aWindow;
 	const PRInt32 windowWidth  = 615;
 	const PRInt32 windowHeight = 650;
 	nsCOMPtr<nsIURL> urlObj;
@@ -1000,6 +1000,8 @@ nsIWebShellWindow* FindWebShellWindow(nsIXULWindowCallbacks* inCallbacks)
 #endif // NECKO
 	if (NS_FAILED(rv))
 		return nsnull;
+
+	nsIWebShellWindow *aWindow = nsnull;			// we will return the window AddRefed
 	rv = appShellService->CreateTopLevelWindow(
     	nsnull,
     	urlObj, // nsIURL* of chrome

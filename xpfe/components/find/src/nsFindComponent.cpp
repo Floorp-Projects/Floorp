@@ -631,7 +631,6 @@ nsFindComponent::Find(nsISupports *aContext, PRBool *aDidFind)
         Context *context = (Context*)aContext;
 
         // Open Find dialog and prompt for search parameters.
-        nsIWebShellWindow *newWindow;
 
         // Make url for dialog xul.
         nsIURL *url;
@@ -657,10 +656,11 @@ nsFindComponent::Find(nsISupports *aContext, PRBool *aDidFind)
         // Create callbacks object for the find dialog.
         nsFindDialog *dialog = new nsFindDialog( this, context );
 
+        nsCOMPtr<nsIWebShellWindow> newWindow;
         rv = mAppShell->CreateTopLevelWindow( nsnull,
                                               url,
                                               PR_TRUE,
-                                              newWindow,
+                                              *getter_AddRefs(newWindow),
                                               nsnull,
                                               dialog,
                                               0,
