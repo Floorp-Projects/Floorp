@@ -42,6 +42,7 @@ class nsIDOMWindow;
 class nsIScriptGlobalObject : public nsISupports {
 public:
   NS_IMETHOD_(void)       SetContext(nsIScriptContext *aContext)=0;
+  NS_IMETHOD_(void)       GetContext(nsIScriptContext **aContext)=0;
   NS_IMETHOD_(void)       SetNewDocument(nsIDOMDocument *aDocument)=0;
   NS_IMETHOD_(void)       SetWebShell(nsIWebShell *aWebShell)=0;
   NS_IMETHOD_(void)       GetWebShell(nsIWebShell **aWebShell)=0;

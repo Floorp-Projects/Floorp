@@ -54,7 +54,7 @@ class ScreenImpl;
 class HistoryImpl;
 
 // Global object for scripting
-class GlobalWindowImpl : public nsIScriptObjectOwner, public nsIScriptGlobalObject, public nsIDOMWindow, 
+class GlobalWindowImpl : public nsIScriptObjectOwner, public nsIScriptGlobalObject, public nsIDOMWindow,
                          public nsIJSScriptObject, public nsIDOMEventCapturer
 {
 public:
@@ -67,6 +67,7 @@ public:
   NS_IMETHOD SetScriptObject(void *aScriptObject);
 
   NS_IMETHOD_(void)       SetContext(nsIScriptContext *aContext);
+  NS_IMETHOD_(void)       GetContext(nsIScriptContext **aContext);
   NS_IMETHOD_(void)       SetNewDocument(nsIDOMDocument *aDocument);
   NS_IMETHOD_(void)       SetWebShell(nsIWebShell *aWebShell);
   NS_IMETHOD_(void)       GetWebShell(nsIWebShell **aWebShell);// XXX This may be temporary - rods
@@ -144,6 +145,8 @@ public:
   NS_IMETHOD    SetInterval(JSContext *cx, jsval *argv, PRUint32 argc, 
                             PRInt32* aReturn);
   NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc, 
+                            nsIDOMWindow** aReturn);
+  NS_IMETHOD    OpenDialog(JSContext *cx, jsval *argv, PRUint32 argc, 
                             nsIDOMWindow** aReturn);
 
   // nsIDOMEventCapturer interface

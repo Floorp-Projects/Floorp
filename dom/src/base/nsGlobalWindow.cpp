@@ -221,6 +221,13 @@ GlobalWindowImpl::SetContext(nsIScriptContext *aContext)
   NS_ADDREF(mContext);
 }
 
+NS_IMETHODIMP_(void)
+GlobalWindowImpl::GetContext(nsIScriptContext **aContext)
+{
+  *aContext = mContext;
+  NS_IF_ADDREF(*aContext);
+}
+
 NS_IMETHODIMP_(void)       
 GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
 {
@@ -1563,17 +1570,62 @@ GlobalWindowImpl::Open(JSContext *cx,
   nsIDOMWindow *newDOMWindow = nsnull;
   if (nsnull != newGlobalObject) {
     if (NS_OK == newGlobalObject->QueryInterface(kIDOMWindowIID, (void**)&newDOMWindow)) {
-    *aReturn = newDOMWindow;
+      *aReturn = newDOMWindow;
     }
 
     /* Set opener */
     newGlobalObject->SetOpenerWindow(this);
   }
 
-
   NS_IF_RELEASE(newGlobalObject);
 
   return NS_OK;
+}
+
+// like Open, but attaches to the new window any extra parameters past [features]
+// as a JS property named "arguments"
+NS_IMETHODIMP    
+GlobalWindowImpl::OpenDialog(JSContext *cx,
+                       jsval *argv, 
+                       PRUint32 argc, 
+                       nsIDOMWindow** aReturn)
+{
+  nsresult res;
+
+  res = Open(cx, argv, argc, aReturn);
+
+  // copy the extra parameters into a JS Array and attach it
+  if (NS_OK == res && argc > 3) {
+    JSObject *args;
+    void *scriptObject;
+    nsIScriptGlobalObject *scriptGlobal;
+    nsIScriptObjectOwner *owner;
+    JSContext *newWinContext;
+    nsIScriptContext *newWinScriptContext;
+
+    res = (*aReturn)->QueryInterface(kIScriptGlobalObjectIID, (void **)&scriptGlobal);
+    if (NS_SUCCEEDED(res)) {
+      scriptGlobal->GetContext(&newWinScriptContext);
+      if (newWinScriptContext) {
+        newWinContext = (JSContext *) newWinScriptContext->GetNativeContext();
+        res = (*aReturn)->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner);
+        if (NS_SUCCEEDED(res)) {
+          res = owner->GetScriptObject(newWinScriptContext, &scriptObject);
+          args = JS_NewArrayObject(newWinContext, argc-3, argv+3);
+          if (args) {
+            jsval argsVal = OBJECT_TO_JSVAL(args);
+//          JS_DefineProperty(newWinContext, (JSObject *)scriptObject, "arguments",
+//            argsVal, NULL, NULL, JSPROP_PERMANENT);
+            JS_SetProperty(newWinContext, (JSObject *)scriptObject, "arguments", &argsVal);
+          }
+          NS_RELEASE(owner);
+        }
+        NS_RELEASE(newWinScriptContext);
+      }
+      NS_RELEASE(scriptGlobal);
+    }
+  }
+  return res;
 }
 
 nsresult 
