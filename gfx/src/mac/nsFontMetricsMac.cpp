@@ -295,6 +295,32 @@ NS_IMETHODIMP nsFontMetricsMac :: GetWidth(const char *aString, nscoord &aWidth)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsFontMetricsMac :: GetWidth(const char* aString,
+                             PRUint32 aLength,
+                             nscoord& aWidth)
+{
+/*  if (nsnull == mDeviceContext) {
+    aWidth = 0;
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsNativeWidget widget;
+  mDeviceContext->GetNativeWidget(widget);
+  HWND win = (HWND)widget;
+  HDC  hdc = ::GetDC(win);
+  HFONT oldfont = (HFONT)::SelectObject(hdc, (HGDIOBJ) mFontHandle);
+  SIZE size;
+  BOOL status = GetTextExtentPoint32(hdc, aString, aLength, &size);
+  ::ReleaseDC(win, hdc);
+
+  float  dev2app;
+  mDeviceContext->GetDevUnitsToAppUnits(dev2app);
+
+  aWidth = nscoord(float(size.cx) * dev2app);*/
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsFontMetricsMac :: GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth)
 {
 //  XChar2b * xstring ;
