@@ -127,6 +127,7 @@ function generateControls()
 	var	showBack				=	true;
 	var	showNext				=	true;
 	var	showConnectServer		=	false;
+	var	showConnectISP			=	false;
 	var	showConnectNow			=	false;
 	var showDownload			=	false;
 	var	showConnectLater		=	false;
@@ -257,10 +258,10 @@ function generateControls()
 			if ( editMode == true )
 				showBack = true;
 		}
-		else if ( formName == "2step.htm" )
+		else if ( formName == "2stpwrap.htm" )
 		{
 			showNext = false;
-			showConnectServer = true;
+			showConnectISP = true;
 			if ( editMode == true )
 				showScreenOptions = true;
 		}
@@ -398,7 +399,10 @@ function generateControls()
 			editMode = false;
 		}
 
-		if ( document && document.layers && document.layers[ "controls" ] && document.layers[ "controls" ].document && document.layers[ "controls" ].document.layers && document.layers[ "controls" ].document.layers.length > 0 )
+		if ( document && document.layers && document.layers[ "controls" ] &&
+				document.layers[ "controls" ].document &&
+				document.layers[ "controls" ].document.layers &&
+				document.layers[ "controls" ].document.layers.length > 0 )
 		{
 			document.layers[ "controls" ].layers[ "help" ].visibility = ( ( showHelp == true ) ? "show" : "hide" );			
 			document.layers[ "controls" ].layers[ "exit" ].visibility = ( ( showExit == true ) ? "show" : "hide" );			
@@ -407,6 +411,7 @@ function generateControls()
 			document.layers[ "controls" ].layers[ "connectnow" ].visibility = ( ( showConnectNow == true ) ? "show" : "hide" );
 			document.layers[ "controls" ].layers[ "download" ].visibility = ( ( showDownload == true ) ? "show" : "hide" ); 
 			document.layers[ "controls" ].layers[ "connectserver" ].visibility = ( ( showConnectServer == true ) ? "show" : "hide" );			
+			document.layers[ "controls" ].layers[ "connectisp" ].visibility = ( ( showConnectISP == true ) ? "show" : "hide" );
 			document.layers[ "controls" ].layers[ "connectagain" ].visibility = ( ( showAgain == true ) ? "show" : "hide" );			
 			document.layers[ "controls" ].layers[ "done" ].visibility = ( ( showDone == true) ? "show" : "hide" );			
 			document.layers[ "controls" ].layers[ "restart" ].visibility = ( ( showRestart == true ) ? "show" : "hide" );			

@@ -21,7 +21,7 @@
 
 <HEAD>
 <TITLE>Account Setup</TITLE>
-<SCRIPT LANGUAGE = "JavaScript" ARCHIVE="asw.jar" SRC="2step.js"></SCRIPT>
+<SCRIPT LANGUAGE="JavaScript" ARCHIVE="asw.jar" SRC="2step.js"></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/JavaScript" ARCHIVE="asw.jar" HREF="sheet.js"></LINK>
 </HEAD>
 
@@ -29,8 +29,7 @@
 
 <!-- The layer below contains the Account Setup identifier. -->
 
-<LAYER NAME = "tagtext" LEFT = 420 TOP = 0 VISIBILITY = SHOW>
-
+<LAYER NAME="tagtext" LEFT=420 TOP=0 VISIBILITY=SHOW>
 <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=200 ID="nospace">
 <TR><TD HEIGHT=20 VALIGN=MIDDLE BACKGROUND="images/tag.gif">
 <B CLASS="previewtag">ACCOUNT SETUP</B>
@@ -40,10 +39,19 @@
 
 <!-- The layer below contains the headline and text of this screen -->
 
-<P CLASS="title"><B>Download</B></P>
-<P>Connect to Internet Service Provider for account creation</P>
+<P CLASS="title"><B>Connect to 
+<SCRIPT LANGUAGE="JavaScript" ID="2step101">insertISPName();</SCRIPT>
+</B></P>
+
+<P>Account Setup will now connect you to
+<SCRIPT LANGUAGE="JavaScript" ID="2step102">insertISPName();</SCRIPT>
+so that you can create an account with this ISP.  (Note: It may take a minute for your modem to connect to this ISP.)</P>
+<P>After you have connected to
+<SCRIPT LANGUAGE="JavaScript" ID="2step103">insertISPName();</SCRIPT>
+you will be asked to supply account and billing information, such as your desired electronic mail name and password, and credit card information.</P>
+
 <CENTER>
-<SCRIPT LANGUAGE = "JavaScript" ID="2step101">
+<SCRIPT LANGUAGE="JavaScript" ID="2step104">
 	generatePopNumberList();
 </SCRIPT>
 </CENTER>

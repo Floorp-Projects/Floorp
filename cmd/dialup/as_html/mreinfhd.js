@@ -23,18 +23,17 @@ function loadData()
 				"/client_data/html/sales.html";
 	
 	parent.moreinfo.location.replace( fileToLoad );
+	
+	if ( parent.parent.controls.generateControls )
+		parent.parent.controls.generateControls();
 }
 
 function generateHeader()
 {
-	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
+//	parent.parent.parent.globals.debug( "ispDisplayName" + ispDisplayName );
 
-	var		ispDisplayName = parent.parent.parent.globals.document.setupPlugin.GetISPDisplayName(
-		parent.parent.parent.globals.selectedISP );				
-
-	parent.parent.parent.globals.debug( "ispDisplayName" + ispDisplayName );
-
-	document.writeln( "More Information about " + ispDisplayName );
+	document.writeln( "More Information about " + 
+		parent.parent.parent.globals.getSelectedISPName() );
 }
 
 // end hiding contents from old browers -->

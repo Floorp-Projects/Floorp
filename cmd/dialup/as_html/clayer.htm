@@ -49,7 +49,6 @@ Choose "Edit | Preferences | Advanced" and enable JavaScript, then reload this p
 <LAYER NAME="controls" WIDTH=620 HEIGHT=55 TOP=0 LEFT=0>
 
 	<LAYER NAME="help" LEFT=4 TOP=0 WIDTH=200 VISIBILITY=HIDE>
-
 		<LAYER LEFT=4 TOP=6>
 			<A HREF="about:blank"	onClick="document.images['help'].src='images/hlp_down.gif';var flag=go('Help');document.images['help'].src='images/hlp_up.gif';return false"
 								onMouseOver="document.images['help'].src='images/hlp_mo.gif'"
@@ -63,7 +62,6 @@ Choose "Edit | Preferences | Advanced" and enable JavaScript, then reload this p
 	</LAYER>
 
 	<LAYER NAME="exit" LEFT=50 TOP=0 WIDTH=200 VISIBILITY=HIDE>
-
 		<LAYER LEFT=4 TOP=6>
 			<A HREF="about:blank" 	onClick="document.images['exit'].src='images/ext_down.gif';var flag=go('Exit');document.images['exit'].src='images/ext_up.gif';return false"
 								onMouseOver="document.images['exit'].src='images/ext_mo.gif'"
@@ -150,7 +148,20 @@ Choose "Edit | Preferences | Advanced" and enable JavaScript, then reload this p
 		</LAYER>
 
 		<LAYER LEFT=8 TOP=43>
-			<B CLASS="clayer">CONNECT TO SERVER</B>
+			<B CLASS="clayer">CONNECT TO NETSCAPE</B>
+		</LAYER>
+	</LAYER>
+
+	<LAYER NAME="connectisp" LEFT=310 TOP=0 WIDTH=200 VISIBILITY=HIDE>
+		<LAYER LEFT=4 TOP=6>
+			<A HREF="about:blank"	onClick="document.images['connectisp'].src='images/cn_down.gif';var flag=go('Next');document.images['connectisp'].src='images/cn_up.gif';return false"
+								onMouseOver="document.images['connectisp'].src='images/cn_mo.gif'"
+								onMouseOut="document.images['connectisp'].src='images/cn_up.gif'" ID="clayer114">
+			<IMG NAME="connectisp" SRC="images/cn_up.gif" BORDER=0 HEIGHT=32 WIDTH=32></A>
+		</LAYER>
+
+		<LAYER LEFT=8 TOP=43>
+			<B CLASS="clayer">CONNECT TO ISP</B>
 		</LAYER>
 	</LAYER>
 

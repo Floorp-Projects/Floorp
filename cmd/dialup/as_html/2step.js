@@ -17,19 +17,21 @@
  */
 <!--  to hide script contents from old browsers
 
+var globals = parent.parent.parent.globals;
+var controls = parent.parent.controls;
+
 function go( msg )
 {
 	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 
 	// * skip if we're in edit mode
-	if ( parent.parent.globals.document.vars.editMode.value != "yes" )
+	if ( globals.document.vars.editMode.value != "yes" )
 	{
 		if ( document.forms && document.forms[ 0 ] && document.forms[ 0 ].popList )
-			parent.parent.globals.document.setupPlugin.CreateConfigIAS(
-				parent.parent.globals.selectedISP, document.forms[ 0 ].popList.selectedIndex );
+			globals.document.setupPlugin.CreateConfigIAS(
+				globals.selectedISP, document.forms[ 0 ].popList.selectedIndex );
 		else
-			parent.parent.globals.document.setupPlugin.CreateConfigIAS(
-				parent.parent.globals.selectedISP, -1 );
+			globals.document.setupPlugin.CreateConfigIAS( globals.selectedISP, -1 );
 				
 		return true;
 	}
@@ -44,27 +46,37 @@ function checkData()
 	return true;
 }
 
-function loadData()
-{
-	if ( parent.controls.generateControls )
-		parent.controls.generateControls();
-}
-
 function saveData()
 {
+}
+
+function insertISPName()
+{
+	document.write( globals.getSelectedISPName() );
+}
+
+function loadData()
+{
+	parent.twostepfooter.document.writeln( "<BODY BACKGROUND='images/bg.gif' BGCOLOR='cccccc'>" );
+	parent.twostepfooter.document.writeln( "<P>If you have trouble setting up your account call " );
+	parent.twostepfooter.document.writeln( globals.getSelectedISPName() );
+	parent.twostepfooter.document.writeln( "at (support number).</P>" );
+	parent.twostepfooter.document.close();
+
+	if ( controls.generateControls )
+		controls.generateControls();
 }
 
 function generatePopNumberList()
 {
 	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 
-	var list = parent.parent.globals.document.setupPlugin.GetISPPopList(
-					parent.parent.globals.selectedISP );
+	var list = globals.document.setupPlugin.GetISPPopList( globals.selectedISP );
 	
-	parent.parent.globals.debug( "generating pop list" );
+	globals.debug( "generating pop list" );
 	if ( list && list.length > 0 )
 	{
-		parent.parent.globals.debug( "emitting table" );
+		globals.debug( "emitting table" );
 		document.writeln( "<TABLE CELLPADDING=2 CELLSPACING=0 ID='minspace'><TR><TD ALIGN=LEFT VALIGN=TOP HEIGHT=25><spacer type=vertical size=2><B>Pick a phone number from the following list to connect to:</B></TD><TD ALIGN=LEFT VALIGN=TOP><FORM><SELECT NAME='popList'>");
 		for ( var x = 0; x < list.length; x++ )
 		{
