@@ -1208,7 +1208,8 @@ int nsParseMailMessageState::FinalizeHeaders()
       
       flags &= ~MSG_FLAG_OFFLINE; // don't keep MSG_FLAG_OFFLINE for local msgs
       if (mdn_dnt && !(origFlags & MSG_FLAG_READ) &&
-        !(origFlags & MSG_FLAG_MDN_REPORT_SENT))
+          !(origFlags & MSG_FLAG_MDN_REPORT_SENT) &&
+          !(flags & MSG_FLAG_MDN_REPORT_SENT))
         flags |= MSG_FLAG_MDN_REPORT_NEEDED;
       
       m_newMsgHdr->SetFlags(flags);
@@ -1667,64 +1668,6 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
 			{
 				msgHdr->GetFlags(&msgFlags);
 
-				if (msgFlags & MSG_FLAG_MDN_REPORT_NEEDED &&
-					!isRead)
-				{
-          nsCOMPtr<nsIMsgMdnGenerator> mdnGenerator;
-          nsCOMPtr<nsIMimeHeaders> mimeHeaders;
-
-          mdnGenerator =
-            do_CreateInstance(NS_MSGMDNGENERATOR_CONTRACTID, &rv);
-          
-          // To ensure code works w/o MDN enabled
-          if (NS_SUCCEEDED(rv) && mdnGenerator) {
-            mimeHeaders = do_CreateInstance(NS_IMIMEHEADERS_CONTRACTID, &rv);
-
-            if (NS_SUCCEEDED(rv) && mimeHeaders) {
-                char* allHeaders;
-                PRInt32 allHeadersSize = 0;
-                
-                rv = GetAllHeaders(&allHeaders,
-                                   &allHeadersSize);
-                if (NS_SUCCEEDED(rv)) {
-                    rv = mimeHeaders->Initialize(allHeaders, allHeadersSize);
-                    if (NS_SUCCEEDED(rv))
-                    {
-                        nsCOMPtr <nsIMsgFolder> rootMsgFolder = 
-                            do_QueryInterface(m_rootFolder, &rv);
-                        if (NS_SUCCEEDED(rv) && rootMsgFolder)
-                        {
-                            nsMsgKey msgKey;
-                            msgHdr->GetMessageKey(&msgKey);
-            
-                            if (actionType == nsMsgFilterAction::Delete)
-                            {
-                                mdnGenerator->Process(nsIMsgMdnGenerator::eDeleted,
-                                                      msgWindow, rootMsgFolder,
-                                                      msgKey,
-                                                      mimeHeaders, PR_TRUE);
-                            }
-                            else
-                            {
-                                mdnGenerator->Process(nsIMsgMdnGenerator::eProcessed,
-                                                      msgWindow, rootMsgFolder,
-                                                      msgKey,
-                                                      mimeHeaders, PR_TRUE);
-                            }
-                        }
-                    }
-                }
-            }
-          }
-          // unsetting MDN_REPORT_NEEDED flag and mark the message as
-          // MDN_REPORT_SENT
-          // There are cases that: a) user wishes not to send MDN, b)
-          // mdn module is not installed, c) the message can be marked
-          // as unread and force it back to the original mdn
-          // needed state. 
-          msgHdr->SetFlags(msgFlags & ~MSG_FLAG_MDN_REPORT_NEEDED);
-          msgHdr->OrFlags(MSG_FLAG_MDN_REPORT_SENT, &newFlags);
-        }
         nsresult err = MoveIncorporatedMessage(msgHdr, m_mailDB, (const char *) actionTargetFolderUri, filter, msgWindow);
         if (NS_SUCCEEDED(err))
           m_msgMovedByFilter = PR_TRUE;
