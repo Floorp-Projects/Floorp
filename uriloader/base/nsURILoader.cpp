@@ -822,9 +822,9 @@ NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
           listenerToUse = listener;
         }
       } else {
-        // remove from the listener list, and reset i
-        m_listeners->RemoveElementAt(i);
-        i--;
+        // remove from the listener list, reset i and update count
+        m_listeners->RemoveElementAt(i--);
+        --count;
       }
     } // for loop
   } // if we can't handle the content
