@@ -196,8 +196,18 @@ treechildren::-moz-tree-image(op-true) {
     list-style-image: url(chrome://chatzilla/skin/images/op-graphic.png);
 }
 
+/* away */
+treechildren:-moz-tree-cell-text(away-true) {
+    color: GrayText;
+    font-style: italic;
+}
+
 treechildren::-moz-tree-cell-text(away-true) {
     color: GrayText;
+    font-style: italic;
+}
+
+treechildren:-moz-tree-cell-text(away-false) {
 }
 
 treechildren::-moz-tree-cell-text(away-false) {
