@@ -140,10 +140,26 @@ HRESULT FileUncompress(LPSTR szFrom, LPSTR szTo)
 
 HRESULT ProcessCoreFile()
 {
+  char szSource[MAX_BUF];
+  char szDestination[MAX_BUF];
+
   if(*siCFCoreFile.szMessage != '\0')
     ShowMessage(siCFCoreFile.szMessage, TRUE);
 
   FileUncompress(siCFCoreFile.szSource, siCFCoreFile.szDestination);
+
+  /* copy msvcrt.dll and msvcirt.dll to the bin of the core temp dir:
+   *   (c:\temp\core.ns\bin)
+   * This is incase these files do not exist on the system */
+  lstrcpy(szSource, siCFCoreFile.szDestination);
+  AppendBackSlash(szSource, sizeof(szSource));
+  lstrcat(szSource, "ms*.dll");
+
+  lstrcpy(szDestination, siCFCoreFile.szDestination);
+  AppendBackSlash(szDestination, sizeof(szDestination));
+  lstrcat(szDestination, "bin");
+
+  FileCopy(szSource, szDestination, TRUE);
 
   if(*siCFCoreFile.szMessage != '\0')
     ShowMessage(siCFCoreFile.szMessage, FALSE);
