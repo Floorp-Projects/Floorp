@@ -14,7 +14,7 @@
       <BODY>
          <P ALIGN="CENTER">
             <B>
-               <FONT SIZE="+2">Sorted Entries</FONT>
+               <FONT SIZE="+2">A simple sorting example</FONT>
                <HR SIZE="1"/>
             </B>
          </P>
@@ -26,12 +26,30 @@
 
 <!-- matches root element -->
 <xsl:template match="/*">
-   <OL>
-     <xsl:apply-templates>
-        <!-- sort using the value of the selected node -->
-        <xsl:sort select="."/>
-     </xsl:apply-templates>
-  </OL>
+   <TABLE BORDER="0">
+   <TR><TD>Sorting in ascending order</TD></TR>
+   <TR>
+      <TD>
+         <OL>
+            <xsl:apply-templates>
+               <!-- sort using the value of the selected node -->
+               <xsl:sort select="."/>
+            </xsl:apply-templates>
+         </OL>
+      </TD>
+   </TR>
+   <TR><TD>Sorting in descending order</TD></TR>
+   <TR>
+      <TD>
+         <OL>
+            <xsl:apply-templates>
+               <!-- sort using the value of the selected node -->
+               <xsl:sort select="." order="descending"/>
+            </xsl:apply-templates>
+         </OL>
+      </TD>
+   </TR>
+   </TABLE>
 </xsl:template>
 
 <!-- matches only entry elements -->
