@@ -237,6 +237,8 @@ class TableBackgroundPainter
       nsStyleBorder* mSynthBorder;
     };
 
+    struct ColData;
+    friend struct ColData;
     struct ColData {
       TableBackgroundData  mCol;
       TableBackgroundData* mColGroup; //link to col's parent colgroup's data (owned by painter)
