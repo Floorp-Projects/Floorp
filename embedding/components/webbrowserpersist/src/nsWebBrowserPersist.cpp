@@ -2159,8 +2159,13 @@ nsWebBrowserPersist::FixupNodeAttribute(nsIDOMNode *aNode,
         if (mURIMap.Exists(&key))
         {
             URIData *data = (URIData *) mURIMap.Get(&key);
-            nsCOMPtr<nsIURI> fileAsURI = data->mFile;
-            if (!fileAsURI)
+            nsCOMPtr<nsIURI> fileAsURI;
+            if (data->mFile)
+            {
+                rv = data->mFile->Clone(getter_AddRefs(fileAsURI)); 
+                NS_ENSURE_SUCCESS(rv, PR_FALSE);
+            }
+            else
             {
                 rv = data->mDataPath->Clone(getter_AddRefs(fileAsURI));
                 NS_ENSURE_SUCCESS(rv, PR_FALSE);
