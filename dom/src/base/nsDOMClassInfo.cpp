@@ -254,6 +254,7 @@
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "nsIDOMCSSStyleRule.h"
 #include "nsIDOMCSSStyleSheet.h"
+#include "nsIDOMCSSValueList.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMNSRange.h"
 #include "nsIDOMRangeException.h"
@@ -787,6 +788,10 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(RangeException, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(CSSValueList, nsCSSValueListSH,
+                           ARRAY_SCRIPTABLE_FLAGS)
+
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
@@ -1772,6 +1777,10 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ROCSSPrimitiveValue,
                                       nsIDOMCSSPrimitiveValue)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSPrimitiveValue)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CSSValueList, nsIDOMCSSValueList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSValueList)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(CSSRect, nsIDOMRect)
@@ -4270,23 +4279,21 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIScriptGlobalObject> global;
-  doc->GetScriptGlobalObject(getter_AddRefs(global));
+  // Get the computed -moz-binding directly from the style context
+  nsCOMPtr<nsIPresContext> pctx;
+  shell->GetPresContext(getter_AddRefs(pctx));
+  NS_ENSURE_TRUE(pctx, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIDOMViewCSS> viewCSS(do_QueryInterface(global));
-  NS_ENSURE_TRUE(viewCSS, NS_ERROR_UNEXPECTED);
+  nsCOMPtr<nsIStyleContext> sctx;
+  rv = pctx->ResolveStyleContextFor(content, nsnull,
+                                    getter_AddRefs(sctx));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
+  const nsStyleDisplay* display =
+    (const nsStyleDisplay*)sctx->GetStyleData(eStyleStruct_Display);
+  NS_ENSURE_TRUE(display, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(native));
-
-  viewCSS->GetComputedStyle(elt, nsString(), getter_AddRefs(cssDecl));
-  NS_ENSURE_TRUE(cssDecl, NS_ERROR_UNEXPECTED);
-
-  nsAutoString value;
-  cssDecl->GetPropertyValue(NS_LITERAL_STRING("-moz-binding"), value);
-
-  if (value.IsEmpty()) {
+  if (display->mBinding.IsEmpty()) {
     // No binding, nothing left to do here.
 
     return NS_OK;
@@ -4298,8 +4305,8 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));
   NS_ENSURE_TRUE(xblService, NS_ERROR_NOT_AVAILABLE);
 
-  xblService->LoadBindings(content, value, PR_FALSE, getter_AddRefs(binding),
-                           &dummy);
+  xblService->LoadBindings(content, display->mBinding, PR_FALSE,
+                           getter_AddRefs(binding), &dummy);
 
   if (binding) {
     binding->ExecuteAttachedHandler();
@@ -5717,6 +5724,24 @@ nsStyleSheetListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
   nsresult rv = stylesheets->Item(aIndex, &sheet);
 
   *aResult = sheet;
+
+  return rv;
+}
+
+
+// CSSValueList helper
+
+nsresult
+nsCSSValueListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
+                            nsISupports **aResult)
+{
+  nsCOMPtr<nsIDOMCSSValueList> cssValueList(do_QueryInterface(aNative));
+  NS_ENSURE_TRUE(cssValueList, NS_ERROR_UNEXPECTED);
+
+  nsIDOMCSSValue *cssValue = nsnull; // Weak, transfer the ownership over to aResult
+  nsresult rv = cssValueList->Item(aIndex, &cssValue);
+
+  *aResult = cssValue;
 
   return rv;
 }

@@ -44,6 +44,7 @@ XPIDLSRCS =					\
 	nsIDOMCSSStyleSheet.idl			\
 	nsIDOMCSSUnknownRule.idl		\
 	nsIDOMCSSValue.idl			\
+	nsIDOMCSSValueList.idl			\
 	nsIDOMCounter.idl			\
 	nsIDOMDocumentCSS.idl			\
 	nsIDOMElementCSSInlineStyle.idl		\

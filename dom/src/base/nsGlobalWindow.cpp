@@ -144,13 +144,13 @@
 #include "nsIXBLService.h"
 
 
+static nsIEntropyCollector* gEntropyCollector          = nsnull;
+static PRInt32              gRefCnt                    = 0;
+nsIXPConnect *GlobalWindowImpl::sXPConnect             = nsnull;
+nsIScriptSecurityManager *GlobalWindowImpl::sSecMan    = nsnull;
+nsIFactory *GlobalWindowImpl::sComputedDOMStyleFactory = nsnull;
+
 #define DOM_MIN_TIMEOUT_VALUE 10 // 10ms
-
-
-static nsIEntropyCollector* gEntropyCollector       = nsnull;
-static PRInt32              gRefCnt                 = 0;
-nsIXPConnect *GlobalWindowImpl::sXPConnect          = nsnull;
-nsIScriptSecurityManager *GlobalWindowImpl::sSecMan = nsnull;
 
 // CIDs
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -250,6 +250,7 @@ GlobalWindowImpl::ShutDown()
 {
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecMan);
+  NS_IF_RELEASE(sComputedDOMStyleFactory);
 
 #ifdef DEBUG_jst
   printf ("---- Leaked %d GlobalWindowImpl's\n", gRefCnt);
@@ -3993,17 +3994,40 @@ GlobalWindowImpl::GetComputedStyle(nsIDOMElement* aElt,
   NS_ENSURE_ARG_POINTER(aElt);
   *aReturn = nsnull;
 
-  NS_ENSURE_TRUE(mDocShell, NS_OK);
+  if (!mDocShell) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIPresShell> presShell;
   mDocShell->GetPresShell(getter_AddRefs(presShell));
-  NS_ENSURE_TRUE(presShell, NS_OK);
+
+  if (!presShell) {
+    return NS_OK;
+  }
 
   nsresult rv = NS_OK;
   nsCOMPtr<nsIComputedDOMStyle> compStyle;
 
-  compStyle =
-    do_CreateInstance("@mozilla.org/DOM/Level2/CSS/computedStyleDeclaration;1", &rv);
+  if (!sComputedDOMStyleFactory) {
+    nsCID cid;
+    rv = nsComponentManager::
+      ContractIDToClassID("@mozilla.org/DOM/Level2/CSS/computedStyleDeclaration;1",
+                          &cid);
+
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = nsComponentManager::
+      GetClassObject(cid, NS_GET_IID(nsIFactory),
+                     (void **)&sComputedDOMStyleFactory);
+
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv =
+    sComputedDOMStyleFactory->CreateInstance(nsnull,
+                                             NS_GET_IID(nsIComputedDOMStyle),
+                                             getter_AddRefs(compStyle));
+
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = compStyle->Init(aElt, aPseudoElt, presShell);

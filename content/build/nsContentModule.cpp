@@ -102,6 +102,7 @@
 #include "nsPlainTextSerializer.h"
 #include "mozSanitizingSerializer.h"
 #include "nsRange.h"
+#include "nsComputedDOMStyle.h"
 #include "nsXMLContentSerializer.h"
 #include "nsRuleNode.h"
 #include "nsWyciwygProtocolHandler.h"
@@ -232,6 +233,7 @@ Shutdown(nsIModule* aSelf)
   nsGenericElement::Shutdown();
   nsGenericDOMDataNode::Shutdown();
   nsEventListenerManager::Shutdown();
+  nsComputedDOMStyle::Shutdown();
 
   // Release all of our atoms
   nsColorNames::ReleaseTable();
