@@ -102,6 +102,16 @@ nsHTMLEditUtils::IsParagraph(nsIDOMNode *node)
 
 
 ///////////////////////////////////////////////////////////////////////////
+// IsHR: true if node an horizontal rule
+//                  
+PRBool 
+nsHTMLEditUtils::IsHR(nsIDOMNode *node)
+{
+  return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("hr"));
+}
+
+
+///////////////////////////////////////////////////////////////////////////
 // IsListItem: true if node an html list item
 //                  
 PRBool 
