@@ -86,7 +86,10 @@ NS_IMETHODIMP nsUnicodeDecodeUtil::Convert(
       if(uScan(aShiftTable,	(PRInt32*) 0, src, &med, srclen, &scanlen))	{
           uMapCode((uTable*) aMappingTable,med, dest);
           if(*dest == NOMAPPING) {
-            if(nsIUnicodeDecoder::kOnError_Signal == aBehavior)
+            if((*src < 0x20)  || (0x7F == *src))
+            { // somehow some table miss the 0x00 - 0x20 part 
+              *dest = (PRUnichar) *src;
+            } else if(nsIUnicodeDecoder::kOnError_Signal == aBehavior)
             {
               *aSrcLength -= srclen;
               *aDestLength = validlen;
@@ -153,7 +156,10 @@ NS_IMETHODIMP nsUnicodeDecodeUtil::Convert(
         }
       }
       if(i == numberOfTable) {
-         if(nsIUnicodeDecoder::kOnError_Signal == aBehavior)
+         if((*src < 0x20)  || (0x7F == *src))
+         { // somehow some table miss the 0x00 - 0x20 part 
+           *dest = (PRUnichar) *src;
+         } else  if(nsIUnicodeDecoder::kOnError_Signal == aBehavior)
          {
            *aSrcLength -= srclen;
            *aDestLength = validlen;
