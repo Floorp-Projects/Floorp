@@ -65,6 +65,12 @@ static char THIS_FILE[] = __FILE__;
  {0xa2112d6a, 0x0e28, 0x421f, {0xb4, 0x6a, 0x25, 0xc0, 0xb3, 0x8, 0xcb, 0xd0}}
 static NS_DEFINE_CID(kPromptServiceCID, NS_PROMPTSERVICE_CID);
 
+// this is for overriding the Mozilla default HelperAppLauncherDialog
+#include "HelperAppService.h"
+#define NS_HELPERAPPLAUNCHERDIALOG_CID \
+    {0xf68578eb, 0x6ec2, 0x4169, {0xae, 0x19, 0x8c, 0x62, 0x43, 0xf0, 0xab, 0xe1}}
+static NS_DEFINE_CID(kHelperAppLauncherDialogCID, NS_HELPERAPPLAUNCHERDIALOG_CID);
+
 BEGIN_MESSAGE_MAP(CMfcEmbedApp, CWinApp)
 	//{{AFX_MSG_MAP(CMfcEmbedApp)
 	ON_COMMAND(ID_NEW_BROWSER, OnNewBrowser)
@@ -164,6 +170,29 @@ nsresult CMfcEmbedApp::OverrideComponents()
                                                     "Prompt Service",
                                                     "@mozilla.org/embedcomp/prompt-service;1",
                                                     promptFactory,
+                                                    PR_TRUE); // replace existing
+        } else
+          ::FreeLibrary(overlib);
+    }
+
+    // Replace Mozilla's helper app launcher dialog with our own
+    overlib = ::LoadLibrary(kComponentsLibname);
+    if (overlib) {
+        InitHelperAppDlgType InitLib;
+        MakeFactoryType MakeFactory;
+        InitLib = reinterpret_cast<InitHelperAppDlgType>(::GetProcAddress(overlib, kHelperAppDlgInitFuncName));
+        MakeFactory = reinterpret_cast<MakeFactoryType>(::GetProcAddress(overlib, kHelperAppDlgFactoryFuncName));
+
+        if (InitLib && MakeFactory) {
+            InitLib(overlib);
+
+            nsCOMPtr<nsIFactory> helperAppDlgFactory;
+            rv = MakeFactory(getter_AddRefs(helperAppDlgFactory));
+            if (NS_SUCCEEDED(rv))
+                nsComponentManager::RegisterFactory(kHelperAppLauncherDialogCID,
+                                                    "Helper App Launcher Dialog",
+                                                    "@mozilla.org/helperapplauncherdialog;1",
+                                                    helperAppDlgFactory,
                                                     PR_TRUE); // replace existing
         } else
           ::FreeLibrary(overlib);
