@@ -125,13 +125,14 @@ nsStandardURL::SetSpec(char* aSpec)
 NS_IMETHODIMP
 nsStandardURL::GetScheme(char* *result)
 {
-    *result = mScheme;
+    *result = nsCRT::strdup(mScheme);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsStandardURL::SetScheme(char* scheme)
 {
+    if (mScheme) nsCRT::free(mScheme);
     mScheme = nsCRT::strdup(scheme);
     return NS_OK;
 }
@@ -139,13 +140,14 @@ nsStandardURL::SetScheme(char* scheme)
 NS_IMETHODIMP
 nsStandardURL::GetPreHost(char* *result)
 {
-    *result = mPreHost;
+    *result = nsCRT::strdup(mPreHost);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsStandardURL::SetPreHost(char* preHost)
 {
+    if (mPreHost) nsCRT::free(mPreHost);
     mPreHost = nsCRT::strdup(preHost);
     return NS_OK;
 }
@@ -153,13 +155,14 @@ nsStandardURL::SetPreHost(char* preHost)
 NS_IMETHODIMP
 nsStandardURL::GetHost(char* *result)
 {
-    *result = mHost;
+    *result = nsCRT::strdup(mHost);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsStandardURL::SetHost(char* host)
 {
+    if (mHost) nsCRT::free(mHost);
     mHost = nsCRT::strdup(host);
     return NS_OK;
 }
@@ -174,20 +177,21 @@ nsStandardURL::GetPort(PRInt32 *result)
 NS_IMETHODIMP
 nsStandardURL::SetPort(PRInt32 port)
 {
-    mPort = port;
+    if (mHost) nsCRT::free(mHost);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsStandardURL::GetPath(char* *result)
 {
-    *result = mPath;
+    *result = nsCRT::strdup(mPath);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsStandardURL::SetPath(char* path)
 {
+    if (mPath) nsCRT::free(mPath);
     mPath = nsCRT::strdup(path);
     return NS_OK;
 }
