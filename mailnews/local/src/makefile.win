@@ -26,12 +26,13 @@ REQUIRES=xpcom nspr rdf
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS= \
+CPPSRCS=                         \
 	nsMSGFolderDataSource.cpp	\
 	nsPop3Protocol.cpp			\
 	nsPop3URL.cpp				\
 	nsPop3Sink.cpp				\
 	nsMailboxUrl.cpp			\
+	nsParseMailbox.cpp \
 	nsMailboxProtocol.cpp		\
 	$(NULL)
 
@@ -41,14 +42,17 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsPop3URL.obj				\
 	.\$(OBJDIR)\nsPop3Sink.obj				\
 	.\$(OBJDIR)\nsMailboxUrl.obj			\
+	.\$(OBJDIR)\nsParseMailbox.obj \
 	.\$(OBJDIR)\nsMailboxProtocol.obj		\
 	$(NULL)
+
 
 EXPORTS=				\
 	nsPop3Protocol.h	\
 	nsPop3URL.h			\
 	nsPop3Sink.h		\
 	nsMailboxUrl.h		\
+	nsParseMailbox.h \
 	nsMailboxProtocol.h	\
 	$(NULL)
 

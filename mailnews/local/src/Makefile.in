@@ -29,7 +29,8 @@ CPPSRCS = \
 	nsMSGFolderDataSource.cpp \
 	nsPop3Protocol.cpp \
 	nsPop3URL.cpp \
-	nsPop3Sink.cpp 	\
+	nsPop3Sink.cpp \
+	nsParseMailbox.cpp \
 	nsMailboxProtocol.cpp 	\
 	nsMailboxUrl.cpp	\
 	$(NULL)
@@ -38,6 +39,7 @@ EXPORTS= \
 	nsPop3Protocol.h \
 	nsPop3URL.h \
 	nsPop3Sink.h \
+	nsParseMailbox.h \
 	nsMailboxUrl.h \
 	nsMailboxProtocol.h \
 	$(NULL)
