@@ -450,8 +450,8 @@ nsMathMLOperators::LookupOperator(const nsString&       aOperator,
 
     nsAutoString key(aOperator);
     key.AppendInt(form, 10);
-    nsStringKey hashkey(key);
-    gOperatorFound[form] = found = (OperatorData*)gOperatorTable->Get(&hashkey);
+    nsStringKey hkey(key);
+    gOperatorFound[form] = found = (OperatorData*)gOperatorTable->Get(&hkey);
 
     // If not found, check if the operator exists perhaps in a different form,
     // in the order of preference: infix, postfix, prefix

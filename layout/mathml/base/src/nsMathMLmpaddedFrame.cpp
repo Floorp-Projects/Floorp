@@ -188,7 +188,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
     aSign = NS_MATHML_SIGN_UNSPECIFIED;
 
   // skip any space after the sign
-  if (i < stringLength && NS_IS_SPACE(aString[i]))
+  if (i < stringLength && nsCRT::IsAsciiSpace(aString[i]))
     i++;
 
   // get the number
@@ -229,7 +229,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
   }
 
   // skip any space after the number
-  if (i < stringLength && NS_IS_SPACE(aString[i]))
+  if (i < stringLength && nsCRT::IsAsciiSpace(aString[i]))
     i++;
 
   // see if this is a percentage-based value
@@ -238,7 +238,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
     gotPercent = PR_TRUE;
 
     // skip any space after the '%' sign
-    if (i < stringLength && NS_IS_SPACE(aString[i]))
+    if (i < stringLength && nsCRT::IsAsciiSpace(aString[i]))
       i++;
   }
 
