@@ -44,7 +44,7 @@ package org.mozilla.javascript;
 
 import org.mozilla.classfile.*;
 import java.lang.reflect.*;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 public final class JavaAdapter
@@ -268,22 +268,56 @@ public final class JavaAdapter
         }
     }
 
-    // Needed by NativeJavaObject de-serializer
-
-    static Object createAdapterClass(Scriptable scope, Class superClass,
-                                     Class[] interfaces,
-                                     Scriptable obj, Scriptable self)
-        throws ClassNotFoundException
+    // Needed by NativeJavaObject serializer
+    public static void writeAdapterObject(Object javaObject,
+                                          ObjectOutputStream out)
+        throws IOException
     {
-        Class adapterClass = getAdapterClass(scope, superClass, interfaces,
-                                             obj);
+        Class cl = javaObject.getClass();
+        out.writeObject(cl.getSuperclass().getName());
+
+        Class[] interfaces = cl.getInterfaces();
+        String[] interfaceNames = new String[interfaces.length];
+
+        for (int i=0; i < interfaces.length; i++)
+            interfaceNames[i] = interfaces[i].getName();
+
+        out.writeObject(interfaceNames);
 
         try {
-            Class[] ctorParms = {
-                ScriptRuntime.ScriptableClass,
-                ScriptRuntime.ScriptableClass
-            };
-            Object[] ctorArgs = { obj, self };
+            Object delegee = cl.getField("delegee").get(javaObject);
+            out.writeObject(delegee);
+            return;
+        } catch (IllegalAccessException e) {
+        } catch (NoSuchFieldException e) {
+        }
+        throw new IOException();
+    }
+
+    // Needed by NativeJavaObject de-serializer
+    public static Object readAdapterObject(Scriptable self,
+                                           ObjectInputStream in)
+        throws IOException, ClassNotFoundException
+    {
+        Class superClass = Class.forName((String)in.readObject());
+
+        String[] interfaceNames = (String[])in.readObject();
+        Class[] interfaces = new Class[interfaceNames.length];
+
+        for (int i=0; i < interfaceNames.length; i++)
+            interfaces[i] = Class.forName(interfaceNames[i]);
+
+        Scriptable delegee = (Scriptable)in.readObject();
+
+        Class adapterClass = getAdapterClass(self, superClass, interfaces,
+                                             delegee);
+
+        Class[] ctorParms = {
+            ScriptRuntime.ScriptableClass,
+            ScriptRuntime.ScriptableClass
+        };
+        Object[] ctorArgs = { delegee, self };
+        try {
             return adapterClass.getConstructor(ctorParms).newInstance(ctorArgs);
         } catch(InstantiationException e) {
         } catch(IllegalAccessException e) {
@@ -463,7 +497,7 @@ public final class JavaAdapter
      * Make glue object implementing single-method interface cl that will
      * call the supplied JS function when called.
      */
-    static IFGlue makeIFGlue(Class cl, Function f)
+    public static IFGlue makeIFGlue(Class cl, Function f)
     {
         ClassCache cache = ClassCache.get(f);
         Hashtable masters = cache.javaAdapterIFGlueMasters;

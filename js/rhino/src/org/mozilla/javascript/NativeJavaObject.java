@@ -667,7 +667,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 reportConversionError(value, type, !useErrorHandler);
             }
             else if (type.isInterface()) {
-                if (value instanceof Function) {
+                if (value instanceof Function && adapter_makeIFGlue != null) {
                     // Try to wrap function into interface with single method.
                     Function f = (Function)value;
 
@@ -686,7 +686,13 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                             // Function was already wrapped
                             return old;
                         }
-                        Object glue = JavaAdapter.makeIFGlue(type, f);
+                        Object glue;
+                        Object[] args = { type, f };
+                        try {
+                            glue = adapter_makeIFGlue.invoke(null, args);
+                        } catch (Exception ex) {
+                            throw ScriptRuntime.throwAsUncheckedException(ex);
+                        }
                         if (glue != null) {
                             // Store for later retrival
                             glue = so.associateValue(key, glue);
@@ -911,27 +917,15 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
         if (javaObject != null) {
             Class joClass = javaObject.getClass();
             if (joClass.getName().startsWith("adapter")) {
-
                 out.writeBoolean(true);
-                out.writeObject(joClass.getSuperclass().getName());
-
-                Class[] interfaces = joClass.getInterfaces();
-                String[] interfaceNames = new String[interfaces.length];
-
-                for (int i=0; i < interfaces.length; i++)
-                    interfaceNames[i] = interfaces[i].getName();
-
-                out.writeObject(interfaceNames);
-
+                if (adapter_writeAdapterObject == null) {
+                    throw new IOException();
+                }
+                Object[] args = { javaObject, out };
                 try {
-                    Object delegee
-                        = joClass.getField("delegee").get(javaObject);
-                    Object self
-                        = joClass.getField("self").get(javaObject);
-                    out.writeObject(delegee);
-                    out.writeObject(self);
-                } catch (IllegalAccessException e) {
-                } catch (NoSuchFieldException e) {
+                    adapter_writeAdapterObject.invoke(null, args);
+                } catch (Exception ex) {
+                    throw new IOException();
                 }
             } else {
                 out.writeBoolean(false);
@@ -955,17 +949,14 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
         in.defaultReadObject();
 
         if (in.readBoolean()) {
-            Class superclass = Class.forName((String)in.readObject());
-
-            String[] interfaceNames = (String[])in.readObject();
-            Class[] interfaces = new Class[interfaceNames.length];
-
-            for (int i=0; i < interfaceNames.length; i++)
-                interfaces[i] = Class.forName(interfaceNames[i]);
-
-            javaObject = JavaAdapter.createAdapterClass(
-                parent, superclass, interfaces,
-                (Scriptable)in.readObject(), (Scriptable)in.readObject());
+            if (adapter_readAdapterObject == null)
+                throw new ClassNotFoundException();
+            Object[] args = { this, in };
+            try {
+                javaObject = adapter_readAdapterObject.invoke(null, args);
+            } catch (Exception ex) {
+                throw new IOException();
+            }
         } else {
             javaObject = in.readObject();
         }
@@ -997,4 +988,36 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
     private transient Hashtable fieldAndMethods;
 
     private static final Object COERCED_INTERFACE_KEY = new Object();
+    private static Method adapter_makeIFGlue;
+    private static Method adapter_writeAdapterObject;
+    private static Method adapter_readAdapterObject;
+
+    static {
+        // Reflection in java is verbose
+        Class cl = Kit.classOrNull("org.mozilla.javascript.JavaAdapter");
+        if (cl != null) {
+            Class[] sig2 = new Class[2];
+            try {
+                sig2[0] = ScriptRuntime.ClassClass;
+                sig2[1] = ScriptRuntime.FunctionClass;
+                adapter_makeIFGlue = cl.getMethod("makeIFGlue", sig2);
+
+                sig2[0] = ScriptRuntime.ObjectClass;
+                sig2[1] = Kit.classOrNull("java.io.ObjectOutputStream");
+                adapter_writeAdapterObject = cl.getMethod("writeAdapterObject",
+                                                          sig2);
+
+                sig2[0] = ScriptRuntime.ScriptableClass;
+                sig2[1] = Kit.classOrNull("java.io.ObjectInputStream");
+                adapter_readAdapterObject = cl.getMethod("readAdapterObject",
+                                                         sig2);
+
+            } catch (Exception ex) {
+                adapter_makeIFGlue = null;
+                adapter_writeAdapterObject = null;
+                adapter_readAdapterObject = null;
+            }
+        }
+    }
+
 }
