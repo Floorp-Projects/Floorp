@@ -20,6 +20,8 @@
 
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
+#include "nsIPref.h"
+
 #ifndef NECKO
 #include "nsINetService.h"
 #else
@@ -27,10 +29,10 @@
 #endif // NECKO
 //#include "nsXPComCIID.h"
 
-static NS_DEFINE_IID(kIEventQueueServiceIID,
-                     NS_IEVENTQUEUESERVICE_IID);
-static NS_DEFINE_IID(kEventQueueServiceCID,
-                     NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kIEventQueueServiceIID,NS_IEVENTQUEUESERVICE_IID);
+static NS_DEFINE_IID(kEventQueueServiceCID,NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 extern "C" void NS_SetupRegistry();
 
@@ -133,6 +135,12 @@ gtk_mozilla_realize (GtkWidget *widget)
   moz_container->Show();
 }
 
+// THIS is a total hack.  Needed cause mozilla wont work without prefs
+// no more.  Having the prefs be static over here is bad and a better
+// fix is to make them members of some kind of structure which gets
+// cleaned up at shutdown time.
+static nsIPref * sPrefs = nsnull;
+
 static void
 gtk_mozilla_init (GtkMozilla *moz)
 {
@@ -145,7 +153,7 @@ gtk_mozilla_init (GtkMozilla *moz)
 
   GTK_WIDGET_SET_FLAGS (GTK_WIDGET(moz), GTK_CAN_FOCUS);
   
-  moz->mozilla_container = new GtkMozillaContainer(moz);
+  moz->mozilla_container = new GtkMozillaContainer(moz,sPrefs);
 }
 
 static void event_processor_callback(gpointer data,
@@ -211,11 +219,23 @@ gtk_mozilla_get_type (void)
 
     NS_RELEASE(aEventQService);
 
-    //printf("Initializing NetService.\n");
 
-#ifndef NECKO
-    NS_InitINetService();
-#endif
+    // Prefs
+    rv = nsComponentManager::CreateInstance(kPrefCID, 
+                                            NULL, 
+                                            kIPrefIID,
+                                            (void **) & sPrefs);
+    if (NS_OK != rv) 
+    {
+      printf("Could not create the pref thing.\n");
+
+      return rv;
+    }
+
+    printf("prefs created ok.\n");
+    
+    sPrefs->StartUp();
+    sPrefs->ReadUserPrefs();
 
     gdk_input_add(EQueue->GetEventQueueSelectFD(),
                   GDK_INPUT_READ,
