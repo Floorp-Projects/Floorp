@@ -51,7 +51,7 @@
 
 #define _MAX_LENGTH 256
 
-static char gNewProfileData[20][256] = {'\0', '\0'};
+static char gNewProfileData[20][_MAX_LENGTH] = {'\0', '\0'};
 static int g_Count = 0;
 
 extern "C" NS_EXPORT nsresult
@@ -151,7 +151,7 @@ NS_IMPL_ISUPPORTS(nsProfile, kIProfileIID);
 // or any other registry that would be finalized for 5.0
 NS_IMETHODIMP nsProfile::Startup(char *filename)
 {
-#if defined(NS_DEBUG)
+#if defined(DEBUG_profile)
     printf("ProfileManager (nsProfile) : Startup : Get Registry handle\n");
 #endif
     nsresult rv;
@@ -179,7 +179,7 @@ NS_IMETHODIMP nsProfile::Shutdown()
 NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* profileDir)
 {
     nsresult rv;
-#if defined(NS_DEBUG)
+#if defined(DEBUG_profile)
     printf("ProfileManager : GetProfileDir\n");
 #endif
     // Check result.
@@ -191,12 +191,12 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
         rv = m_reg->Open();
         if (NS_FAILED(rv))
         {
-#if defined(NS_DEBUG)
+#if defined(NS_DEBUG_profile)
             printf("Error opening Registry.\n" );
 #endif
             return rv;
         }
-#if defined(NS_DEBUG)
+#if defined(DEBUG_profile)
         printf("Registry opened OK.\n" );
 #endif
         nsIRegistry::Key key;
@@ -204,13 +204,13 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
 
         if (NS_FAILED(rv))
         {
-#if defined(NS_DEBUG)
+#if defined(DEBUG_profile)
             printf("Registry Error OK.\n" );
 #endif
             return rv;
         }
 
-#if defined(NS_DEBUG) 
+#if defined(DEBUG_profile)
         printf("Registry:Profiles opened OK.\n" );
 #endif
         nsIRegistry::Key newKey;
@@ -224,7 +224,7 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
 
         if (NS_FAILED(rv))
         {
-#ifdef NS_DEBUG
+#ifdef DEBUG_profile
             printf( "Error");
 #endif
             return rv;
@@ -233,7 +233,7 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
         rv = m_reg->SetString(key, "CurrentProfile", profileName);
         if (NS_FAILED(rv))
         {
-#ifdef NS_DEBUG
+#ifdef DEBUG_profile
             printf( "Error");
 #endif
             return rv;
@@ -255,7 +255,7 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
 NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
 {
     nsresult rv;
-#if defined(NS_DEBUG) 
+#if defined(DEBUG_profile)
     printf("ProfileManager : GetProfileCount\n");
 #endif
     // Check result.
@@ -266,7 +266,7 @@ NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
         // Open it against the input file name.
         rv = m_reg->Open();
         if (NS_SUCCEEDED(rv)) {
-#if defined(NS_DEBUG)
+#if defined(DEBUG_profile)
             printf("Registry opened OK.\n" );
 #endif
             // Enumerate all subkeys (immediately) under the given node.
@@ -302,7 +302,7 @@ NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
 NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
 {
   nsresult rv;
-#if defined(NS_DEBUG)
+#if defined(DEBUG_profile)
     printf("ProfileManager : GetSingleProfile\n");
 #endif
     // Check result.
@@ -313,7 +313,7 @@ NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
         // Open it against the input file name.
         rv = m_reg->Open();
         if (NS_SUCCEEDED(rv)) {
-#if defined(NS_DEBUG) 
+#if defined(DEBUG_profile) 
             printf("Registry opened OK.\n" );
 #endif
             // Enumerate all subkeys (immediately) under the given node.
@@ -346,7 +346,7 @@ NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
                             if (NS_SUCCEEDED(rv)) {
                                 rv = m_reg->SetString(key, "CurrentProfile", *profileName);
                                 // Print name:
-#ifdef NS_DEBUG
+#ifdef DEBUG_profile
                                 printf( "\t\tProfile name: %s", *profileName);
 #endif
                             }
@@ -367,7 +367,7 @@ NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
 NS_IMETHODIMP nsProfile::GetCurrentProfile(char **profileName)
 {
   nsresult rv;
-#if defined(NS_DEBUG) 
+#if defined(DEBUG_profile) 
   printf("ProfileManager : GetCurrentProfile\n");
 #endif
   // Check result.
@@ -379,7 +379,7 @@ NS_IMETHODIMP nsProfile::GetCurrentProfile(char **profileName)
       rv = m_reg->Open();
       if (NS_SUCCEEDED(rv)) 
       {
-#if defined(NS_DEBUG)
+#if defined(DEBUG_profile)
           printf("Registry opened OK.\n" );
 #endif
           nsIRegistry::Key key;
@@ -406,7 +406,7 @@ NS_IMETHODIMP nsProfile::GetCurrentProfile(char **profileName)
 //  Returns the name of the first profile in the Registry
 NS_IMETHODIMP nsProfile::GetFirstProfile(char **profileName)
 {
-#if defined(NS_DEBUG)
+#if defined(DEBUG_profile)
     printf("ProfileManager : GetFirstProfile\n");
 #endif
     GetSingleProfile(profileName);
@@ -417,7 +417,7 @@ NS_IMETHODIMP nsProfile::GetFirstProfile(char **profileName)
 // Returns the name of the current profile directory
 NS_IMETHODIMP nsProfile::GetCurrentProfileDir(nsFileSpec* profileDir)
 {
-#if defined(NS_DEBUG)
+#if defined(DEBUG_profile)
     printf("ProfileManager : GetCurrentProfileDir\n");
 #endif
     char *profileName;
@@ -438,7 +438,7 @@ NS_IMETHODIMP nsProfile::GetCurrentProfileDir(nsFileSpec* profileDir)
 NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, const nsFileSpec& profileDir)
 {
     nsresult rv;
-#if defined(NS_DEBUG)
+#if defined(DEBUG_profile)
     printf("ProfileManager : SetProfileDir\n");
     printf("profileName : %s ", profileName);
     printf("profileDir  : %s\n", profileDir.GetCString());
@@ -454,26 +454,26 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, const nsFileSpec
     rv = m_reg->Open();
     if (NS_FAILED(rv))
     {
-#if defined(NS_DEBUG) 
+#if defined(DEBUG_profile) 
         printf("Registry NOT opened OK.\n" );
 #endif
         return rv;
     }
 
-#if defined(NS_DEBUG)
+#if defined(DEBUG_profile)
     printf("Registry opened OK.\n" );
 #endif
     nsIRegistry::Key key;
     rv = m_reg->AddSubtree(nsIRegistry::Common, "Profiles", &key);
     if (NS_FAILED(rv)) 
     {
-#if defined(NS_DEBUG)
+#if defined(DEBUG_profile)
         printf("Registry Subtree not added.\n" );
 #endif
         return rv;
     }
 
-#if defined(NS_DEBUG)
+#if defined(DEBUG_profile)
     printf("Registry:Profiles opened OK.\n" );
 #endif
     nsIRegistry::Key newKey;
@@ -509,7 +509,7 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, const nsFileSpec
 // Creates a new profile
 NS_IMETHODIMP nsProfile::CreateNewProfile(char* charData)
 {
-#if defined(NS_DEBUG)
+#if defined(DEBUG_profile)
     printf("ProfileManager : CreateNewProfile\n");
       printf("ProfileManagerData*** : %s\n", charData);
 #endif
@@ -537,11 +537,11 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(char* charData)
 		      return NS_ERROR_FAILURE;
 		  dirSpec.SetLeafName(profileName);
       }
-#ifdef NS_DEBUG
+#ifdef DEBUG_profile
       printf("before SetProfileDir\n");
 #endif
       rv = SetProfileDir(profileName, dirSpec);
-#ifdef NS_DEBUG
+#ifdef DEBUG_profile
       printf("after SetProfileDir\n");
 #endif
       if (NS_FAILED(rv))
@@ -550,7 +550,7 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(char* charData)
       if (dirName)
           PR_DELETE(dirName);
       delete [] profileName;
-#ifdef NS_DEBUG
+#ifdef DEBUG_profile
       printf("SMTP  %s\n", GetValue("SMTP"));
       printf("NNTP  %s\n", GetValue("NNTP"));
       printf("EMAIL %s\n", GetValue("EMAIL"));
@@ -560,7 +560,7 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(char* charData)
 }
 void nsProfile::CreateUserDirectories(const nsFileSpec& profileDir)
 {
-#if defined(NS_DEBUG)
+#if defined(DEBUG_profile)
     printf("ProfileManager : CreateUserDirectories\n");
 #endif
       nsFileSpec tmpDir;
@@ -587,19 +587,19 @@ void nsProfile::CreateUserDirectories(const nsFileSpec& profileDir)
 // Set the data stream into an array
 void nsProfile::SetDataArray(nsString data)
 {
-#if defined(NS_DEBUG)
+#if defined(DEBUG_profile)
   printf("ProfileManager : Setting new profile data\n");
   printf("SetDataArray data : %s\n", data.ToNewCString());
 #endif
   char *newStr=nsnull;
   char *tokstr = data.ToNewCString();
   char *token = nsCRT::strtok(tokstr, "%", &newStr);
-#ifdef NS_DEBUG
+#ifdef DEBUG_profile
   printf("before while loop\n");
 #endif
   while (token)
     {
-#ifdef NS_DEBUG
+#ifdef DEBUG_profile
       printf("subTok : %s\n", token);
 #endif
       PL_strcpy(gNewProfileData[g_Count], token);
@@ -609,7 +609,7 @@ void nsProfile::SetDataArray(nsString data)
     }
   
   delete[] tokstr;
-#ifdef NS_DEBUG
+#ifdef DEBUG_profile
   printf("after while loop\n");
 #endif
 }
@@ -631,7 +631,7 @@ char* nsProfile::GetValue(char *name)
             }
         }
     }
-#ifdef NS_DEBUG
+#ifdef DEBUG_profile
     printf("after for loop\n");
 #endif
     return nsnull;
