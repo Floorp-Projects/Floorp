@@ -51,6 +51,8 @@
 #include "nsLayoutAtoms.h"
 #include "nsIDOMNode.h"
 #include "nsHTMLTextAccessible.h"
+#include "nsITextContent.h"
+#include "nsTextFragment.h"
 #include "nsHTMLTableAccessible.h"
 #include "nsHTMLImageAccessible.h"
 #include "nsHTMLAreaAccessible.h"
@@ -287,6 +289,24 @@ NS_IMETHODIMP nsAccessibilityService::CreateHTMLTextAccessible(nsISupports *aFra
   if (NS_FAILED(rv))
     return rv;
 
+  *_retval = nsnull;
+
+  nsCOMPtr<nsITextContent> textContent(do_QueryInterface(node));
+  if (textContent) {
+    // If empty text string, don't include in accessible tree
+    // Items with length 0 are already gone, we just need to check for single NBSP's
+    PRInt32 textLength = 0;
+    textContent->GetTextLength(&textLength);
+    if (textLength == 1) {
+      const PRUnichar NBSP = 160;
+      const nsTextFragment *textFrag;
+      nsresult rv = textContent->GetText(&textFrag);
+      PRUnichar theChar = textFrag->CharAt(0);
+      if (theChar == NBSP)
+        return NS_ERROR_FAILURE;
+    }
+  }
+    
   *_retval = new nsHTMLTextAccessible(node, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
@@ -347,6 +367,17 @@ NS_IMETHODIMP nsAccessibilityService::CreateHTMLTableCellAccessible(nsISupports 
 
 NS_IMETHODIMP nsAccessibilityService::CreateXULImageAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
 {
+  // Don't include nameless images in accessible tree
+  *_retval = nsnull;
+
+  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aNode));
+  NS_ASSERTION(elt, "No DOM element or node!");
+  PRBool hasTextEquivalent;
+  elt->HasAttribute(NS_LITERAL_STRING("tooltiptext"), &hasTextEquivalent); // Prefer value over tooltiptext
+  if (!hasTextEquivalent) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIWeakReference> weakShell;
   GetShellFromNode(aNode, getter_AddRefs(weakShell));
 
@@ -355,6 +386,7 @@ NS_IMETHODIMP nsAccessibilityService::CreateXULImageAccessible(nsIDOMNode *aNode
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(*_retval);
+
   return NS_OK;
 }
 
