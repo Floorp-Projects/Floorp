@@ -375,6 +375,24 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
     return rv;
   }
 
+  nsIFormControlFrame* formControlFrame = nsnull;
+  rv = GetPrimaryFrame(this, formControlFrame, PR_FALSE);
+  if (NS_SUCCEEDED(rv) && formControlFrame)
+  {
+    nsIFrame* formFrame = nsnull;
+    if (NS_SUCCEEDED(formControlFrame->QueryInterface(NS_GET_IID(nsIFrame), 
+                                  (void **)&formFrame)) && formFrame)
+    {
+      const nsStyleUserInterface* uiStyle;
+      formFrame->GetStyleData(eStyleStruct_UserInterface,
+                              (const nsStyleStruct *&)uiStyle);
+
+      if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
+          uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
+        return NS_OK;
+    }
+  }
+  
   // Try script event handlers first
   nsresult ret;
   ret = nsGenericHTMLContainerFormElement::HandleDOMEvent(aPresContext,
