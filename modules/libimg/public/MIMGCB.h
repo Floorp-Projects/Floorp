@@ -88,8 +88,8 @@ EXTERN_C const JMCInterfaceID IMGCB_ID = { 0x38775d44, 0x23525963, 0x7f763562, 0
 #define IMGCB_DestroyPixmap(self, a, b)	\
 	(((self)->vtable->DestroyPixmap)(self, IMGCB_DestroyPixmap_op, a, b))
 
-#define IMGCB_DisplayPixmap(self, a, b, c, d, e, f, g, h, i)	\
-	(((self)->vtable->DisplayPixmap)(self, IMGCB_DisplayPixmap_op, a, b, c, d, e, f, g, h, i))
+#define IMGCB_DisplayPixmap(self, a, b, c, d, e, f, g, h, i, j, k)	\
+	(((self)->vtable->DisplayPixmap)(self, IMGCB_DisplayPixmap_op, a, b, c, d, e, f, g, h, i, j, k))
 
 #define IMGCB_DisplayIcon(self, a, b, c, d)	\
 	(((self)->vtable->DisplayIcon)(self, IMGCB_DisplayIcon_op, a, b, c, d))
@@ -121,7 +121,7 @@ struct IMGCBInterface {
 	void	(*UpdatePixmap)(struct IMGCB* self, jint op, void* a, IL_Pixmap* b, jint c, jint d, jint e, jint f);
 	void	(*ControlPixmapBits)(struct IMGCB* self, jint op, void* a, IL_Pixmap* b, IL_PixmapControl c);
 	void	(*DestroyPixmap)(struct IMGCB* self, jint op, void* a, IL_Pixmap* b);
-	void	(*DisplayPixmap)(struct IMGCB* self, jint op, void* a, IL_Pixmap* b, IL_Pixmap* c, jint d, jint e, jint f, jint g, jint h, jint i);
+	void	(*DisplayPixmap)(struct IMGCB* self, jint op, void* a, IL_Pixmap* b, IL_Pixmap* c, jint d, jint e, jint f, jint g, jint h, jint i, jint j, jint k);
 	void	(*DisplayIcon)(struct IMGCB* self, jint op, void* a, jint b, jint c, jint d);
 	void	(*GetIconDimensions)(struct IMGCB* self, jint op, void* a, int* b, int* c, jint d);
 };
@@ -242,7 +242,7 @@ extern JMC_PUBLIC_API(void)
 _IMGCB_DestroyPixmap(struct IMGCB* self, jint op, void* a, IL_Pixmap* b);
 
 extern JMC_PUBLIC_API(void)
-_IMGCB_DisplayPixmap(struct IMGCB* self, jint op, void* a, IL_Pixmap* b, IL_Pixmap* c, jint d, jint e, jint f, jint g, jint h, jint i);
+_IMGCB_DisplayPixmap(struct IMGCB* self, jint op, void* a, IL_Pixmap* b, IL_Pixmap* c, jint d, jint e, jint f, jint g, jint h, jint i, jint j, jint k);
 
 extern JMC_PUBLIC_API(void)
 _IMGCB_DisplayIcon(struct IMGCB* self, jint op, void* a, jint b, jint c, jint d);

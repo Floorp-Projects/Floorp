@@ -1,21 +1,3 @@
-/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
- *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
- */
-
 package netscape.libimg;
 import netscape.jmc.*;
 
@@ -55,7 +37,7 @@ public interface IMGCBIF {
 
   public void
   NewPixmap(CType display_context, int width, int height,
-        ILPix_t image, ILPix_t mask);
+	    ILPix_t image, ILPix_t mask);
 
 
 /* Inform the front-end that the specified rectangular portion of the
@@ -68,7 +50,7 @@ public interface IMGCBIF {
 
   public void
   UpdatePixmap(CType display_context, ILPix_t pixmap,
-           int x_offset, int y_offset, int width, int height);
+	       int x_offset, int y_offset, int width, int height);
 
 
 /* Informs the callee that the imagelib has acquired or relinquished control
@@ -91,7 +73,7 @@ public interface IMGCBIF {
 
   public void
   ControlPixmapBits(CType display_context, ILPix_t pixmap,
-            ILPixCtl message);
+		    ILPixCtl message);
 
 
   /* Release the memory storage and other resources associated with an image
@@ -104,7 +86,7 @@ public interface IMGCBIF {
 
 
 /* Render a rectangular portion of the given pixmap.
-
+ 
    Render the image using transparency if mask is non-NULL.
    x and y are measured in pixels and are in document coordinates.
    x_offset and y_offset are with respect to the image origin.
@@ -121,9 +103,9 @@ public interface IMGCBIF {
 
   public void
   DisplayPixmap(CType display_context,
-        ILPix_t image, ILPix_t mask,
-        int x, int y, int x_offset, int y_offset,
-        int width, int height);
+		ILPix_t image, ILPix_t mask,
+		int x, int y, int x_offset, int y_offset,
+		int width, int height, int req_w, int req_h );
 
 
 /* These are the icon display functions.  It's not clear whether or
@@ -142,5 +124,5 @@ public interface IMGCBIF {
 
   public void
   GetIconDimensions(CType display_context, int_t width, int_t height,
-            int icon_number);
+		    int icon_number);
 }
