@@ -1802,7 +1802,10 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
       break;
     case eReflowReason_Resize:
       // do the resize reflow below
-      NS_ASSERTION(HadInitialReflow(), "intial reflow not called");
+      if (!HadInitialReflow()) {
+        // NS_ASSERTION(HadInitialReflow(), "intial reflow not called");
+        nextReason = eReflowReason_Initial;
+      }
       NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth, "this doesn't do anything");
       SetNeedStrategyBalance(PR_TRUE); 
       break; 
