@@ -55,6 +55,11 @@ public:
                                     nsIStyleContext* aContext,
                                     nsIFrame*        aPrevInFlow);
 
+  NS_IMETHOD GetCursor(nsIPresContext& aPresContext,
+                                     nsPoint&        aPoint,
+                                     PRInt32&        aCursor);
+
+
   // nsIAnonymousContentCreator
   NS_IMETHOD  CreateAnonymousContent(nsISupportsArray& aAnonymousItems);
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 

@@ -24,6 +24,7 @@
 // See documentation in associated header file
 //
 
+#include "nsButtonFrameRenderer.h"
 #include "nsTitledButtonFrame.h"
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
@@ -100,6 +101,26 @@ static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 #define CROP_RIGHT  "right"
 #define CROP_CENTER "center"
 
+class nsTitledButtonRenderer : public nsButtonFrameRenderer
+{
+public:
+    // change this to do the XML thing. An boolean attribute is only true if it is set to true
+    // it is false otherwise
+    virtual PRBool isDisabled() 
+    {
+      nsCOMPtr<nsIContent> content;
+      GetFrame()->GetContent(getter_AddRefs(content));
+      nsAutoString value;
+      if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(GetNameSpace(), nsHTMLAtoms::disabled, value))
+      {
+          if (value.EqualsIgnoreCase("true"))
+              return PR_TRUE;
+      }
+
+      return PR_FALSE;
+    }
+};
+
 nsresult
 nsTitledButtonFrame::UpdateImageFrame(nsIPresContext* aPresContext,
                                       nsHTMLImageLoader* aLoader,
@@ -174,7 +195,7 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
     nsFrame::Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
 
   // redraw
-  mRenderer.Redraw();
+  mRenderer->Redraw();
 
   #if !ONLOAD_CALLED_TOO_EARLY
   // onload handlers are called to early, so we have to do this code
@@ -199,7 +220,13 @@ nsTitledButtonFrame::nsTitledButtonFrame()
 	mCropType = CropRight;
 	mNeedsLayout = PR_TRUE;
 	mHasImage = PR_FALSE;
-  mHasOnceBeenInMixedState = PR_FALSE;
+    mHasOnceBeenInMixedState = PR_FALSE;
+    mRenderer = new nsTitledButtonRenderer();
+}
+
+nsTitledButtonFrame::~nsTitledButtonFrame()
+{
+    delete mRenderer;
 }
 
 NS_METHOD
@@ -221,8 +248,8 @@ nsTitledButtonFrame::Init(nsIPresContext&  aPresContext,
 {
   nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  mRenderer.SetNameSpace(kNameSpaceID_None);
-  mRenderer.SetFrame(this,aPresContext);
+  mRenderer->SetNameSpace(kNameSpaceID_None);
+  mRenderer->SetFrame(this,aPresContext);
   
   // place 4 pixels of spacing
   float p2t;
@@ -267,9 +294,9 @@ void
 nsTitledButtonFrame::SetDisabled(nsAutoString aDisabled)
 {
   if (aDisabled.EqualsIgnoreCase("true"))
-     mRenderer.SetDisabled(PR_TRUE, PR_TRUE);
+     mRenderer->SetDisabled(PR_TRUE, PR_TRUE);
   else
-	 mRenderer.SetDisabled(PR_FALSE, PR_TRUE);
+	 mRenderer->SetDisabled(PR_FALSE, PR_TRUE);
 }
 
 void
@@ -393,12 +420,12 @@ nsTitledButtonFrame::Paint(nsIPresContext& aPresContext,
 
    	nsRect rect (0,0, mRect.width, mRect.height);
 
+	mRenderer->PaintButton(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, rect);
+
     aRenderingContext.PushState();
     PRBool clipState;
     aRenderingContext.SetClipRect(rect, nsClipCombine_kIntersect, clipState);    
 
-	mRenderer.PaintButton(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, rect);
-	
     LayoutTitleAndImage(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);  
    
     PaintTitle(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);   
@@ -432,7 +459,7 @@ nsTitledButtonFrame::LayoutTitleAndImage(nsIPresContext& aPresContext,
 	 // if they don't fit then crop the text, the image can't be squeezed.
 
 	 nsRect rect; 
-	 mRenderer.GetButtonContentRect(nsRect(0,0,mRect.width,mRect.height), rect);
+	 mRenderer->GetButtonContentRect(nsRect(0,0,mRect.width,mRect.height), rect);
 
 	 // set up some variables we will use a lot. 
 	 nscoord bottom_y = rect.y + rect.height;
@@ -756,7 +783,7 @@ nsTitledButtonFrame::PaintTitle(nsIPresContext& aPresContext,
      }
        
 	   // if disabled paint 
-	   if (PR_TRUE == mRenderer.isDisabled())
+	   if (PR_TRUE == mRenderer->isDisabled())
 	   {
 		   aRenderingContext.SetColor(NS_RGB(255,255,255));
 		   aRenderingContext.DrawString(mCroppedTitle, disabledRect.x, 
@@ -1082,7 +1109,7 @@ nsTitledButtonFrame::HandleEvent(nsIPresContext& aPresContext,
 {
 
   // if disabled do nothing
-  if (PR_TRUE == mRenderer.isDisabled()) {
+  if (PR_TRUE == mRenderer->isDisabled()) {
     return NS_OK;
   }
 
@@ -1229,14 +1256,14 @@ NS_IMETHODIMP
 nsTitledButtonFrame::GetAdditionalStyleContext(PRInt32 aIndex, 
                                                nsIStyleContext** aStyleContext) const
 {
-  return mRenderer.GetStyleContext(aIndex, aStyleContext);
+  return mRenderer->GetStyleContext(aIndex, aStyleContext);
 }
 
 NS_IMETHODIMP
 nsTitledButtonFrame::SetAdditionalStyleContext(PRInt32 aIndex, 
                                                nsIStyleContext* aStyleContext)
 {
-  return mRenderer.SetStyleContext(aIndex, aStyleContext);
+  return mRenderer->SetStyleContext(aIndex, aStyleContext);
 }
 
 //
@@ -1261,7 +1288,7 @@ nsTitledButtonFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsI
       aParentChange = *aLocalChange;  // tell children about or change
     }
   }
-  mRenderer.ReResolveStyles(*aPresContext, aParentChange, aChangeList, aLocalChange);
+  mRenderer->ReResolveStyles(*aPresContext, aParentChange, aChangeList, aLocalChange);
 
   // if list-style-image change we want to change the image
   UpdateImage(*aPresContext);
@@ -1375,7 +1402,7 @@ nsTitledButtonFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflow
       break;
    }
 
-   nsMargin focusBorder = mRenderer.GetAddedButtonBorderAndPadding();
+   nsMargin focusBorder = mRenderer->GetAddedButtonBorderAndPadding();
 
    aSize.prefSize.width += focusBorder.left + focusBorder.right;
    aSize.prefSize.height += focusBorder.top + focusBorder.bottom;

@@ -92,6 +92,9 @@ public:
 
   virtual void Redraw();
 
+  virtual nsIFrame* GetFrame();
+  virtual PRInt32 GetNameSpace();
+
 protected:
 
 private:

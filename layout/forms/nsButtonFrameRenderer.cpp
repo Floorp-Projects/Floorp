@@ -33,6 +33,18 @@ nsButtonFrameRenderer::SetFrame(nsFrame* aFrame, nsIPresContext& aPresContext)
 	ReResolveStyles(aPresContext, 0, nsnull, nsnull);
 }
 
+nsIFrame*
+nsButtonFrameRenderer::GetFrame()
+{
+    return mFrame;
+}
+
+PRInt32
+nsButtonFrameRenderer::GetNameSpace()
+{
+    return mNameSpace;
+}
+
 void
 nsButtonFrameRenderer::SetDisabled(PRBool aDisabled, PRBool notify)
 {
