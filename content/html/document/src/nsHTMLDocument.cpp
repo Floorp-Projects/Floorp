@@ -4008,7 +4008,35 @@ nsHTMLDocument::QueryCommandIndeterm(const nsAString & commandID,
   if (!mEditingIsOn)
     return NS_ERROR_FAILURE;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // get command manager and dispatch command to our window if it's acceptable
+  nsCOMPtr<nsICommandManager> cmdMgr;
+  GetMidasCommandManager(getter_AddRefs(cmdMgr));
+  if (!cmdMgr)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(mScriptGlobalObject);
+  if (!window)
+    return NS_ERROR_FAILURE;
+
+  nsCAutoString cmdToDispatch, paramToCheck;
+  PRBool dummy;
+  if (!ConvertToMidasInternalCommand(commandID, commandID,
+                                     cmdToDispatch, paramToCheck, dummy, dummy))
+    return NS_ERROR_NOT_IMPLEMENTED;
+
+  nsresult rv;
+  nsCOMPtr<nsICommandParams> cmdParams = do_CreateInstance(
+                                           NS_COMMAND_PARAMS_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = cmdMgr->GetCommandState(cmdToDispatch.get(), window, cmdParams);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // if command does not have a state_mixed value, this call fails, so we fail too,
+  // which is what is expected
+  rv = cmdParams->GetBooleanValue("state_mixed", _retval);
+  return rv;
 }
 
 /* boolean queryCommandState(in DOMString commandID); */
