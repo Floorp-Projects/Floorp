@@ -44,14 +44,14 @@ namespace JavaScript {
         static void Init(Arena& arena) {
             state = new NodeFactory(arena);
         }
-        static Arena& Arena() {
+        static Arena& getArena() {
             return NodeFactory::state->arena;
         }
 		static IdentifierExprNode *Identifier(const Token &t) {
-            return new(Arena()) IdentifierExprNode(t);
+            return new(getArena()) IdentifierExprNode(t);
         }
 		static IdentifierList *ListedIdentifier(String &name) {
-            return new(Arena()) IdentifierList(*new StringAtom(name));
+            return new(getArena()) IdentifierList(*new StringAtom(name));
         }
 #if 0
         static QualifiedIdentifierNode QualifiedIdentifier( Node qualifier, IdentifierNode identifier ) {
@@ -68,10 +68,10 @@ namespace JavaScript {
         }
 #endif
         static ExprPairList *LiteralField(ExprNode *name = 0, ExprNode *value = 0) {
-            return new(Arena()) ExprPairList(name,value);
+            return new(getArena()) ExprPairList(name,value);
         }
         static NumberExprNode * LiteralNumber(const Token &t) {
-            return new(Arena()) NumberExprNode(t);
+            return new(getArena()) NumberExprNode(t);
         }
 #if 0
         static LiteralObjectNode LiteralObject( Node fieldlist ) {
@@ -82,7 +82,7 @@ namespace JavaScript {
         }
 #endif
         static StringExprNode *LiteralString(uint32 pos, ExprNode::Kind kind, String &str) {
-            return new(Arena()) StringExprNode(pos,kind,str);
+            return new(getArena()) StringExprNode(pos,kind,str);
         }
 #if 0
         static LiteralTypeNode LiteralType( Type type ) {
@@ -253,7 +253,7 @@ namespace JavaScript {
         }
 #endif
         static VariableBinding *Parameter(ExprNode *name, ExprNode *type) {
-	        return new(Arena()) VariableBinding(0, name, type);
+	        return new(getArena()) VariableBinding(0, name, type);
         }
 #if 0
         static VariableBinding *NamedParameter( StringExprNode *name, ParseNode *parameter ) {
@@ -290,51 +290,3 @@ namespace JavaScript {
     };
 }
 #endif // nodefactory_h
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
