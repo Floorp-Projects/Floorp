@@ -53,6 +53,8 @@ NS_METHOD nsLeafFrame::Reflow(nsIPresContext*      aPresContext,
                               const nsReflowState& aReflowState,
                               nsReflowStatus&      aStatus)
 {
+  NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
+
   // XXX add in code to check for width/height being set via css
   // and if set use them instead of calling GetDesiredSize.
 

@@ -326,6 +326,7 @@ NS_METHOD nsAbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
 
     nsReflowMetrics desiredSize(nsnull);
     nsReflowState   reflowState(eReflowReason_Initial, availSize);
+    mFrame->WillReflow(*aPresContext);
     mFrame->Reflow(aPresContext, desiredSize, reflowState, aStatus);
 
     // Figure out what size to actually use. If the position style is 'auto' or
@@ -340,6 +341,7 @@ NS_METHOD nsAbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
       rect.height = desiredSize.height;
     }
     mFrame->SizeTo(rect.width, rect.height);
+    mFrame->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
   }
 
   // Return our desired size as (0, 0)
