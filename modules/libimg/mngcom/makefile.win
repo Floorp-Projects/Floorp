@@ -49,6 +49,7 @@ LCFLAGS		= $(LCFLAGS) /TP
 
 LLIBS= $(LIBNSPR)  \
 	$(DIST)\lib\util.lib    \
+	$(DIST)\lib\mng.lib \
 	$(DIST)\lib\jpeg3250.lib \
 	$(DIST)\lib\xpcom.lib \
         $(DIST)\lib\zlib.lib \
