@@ -272,6 +272,8 @@ NotifyEmittersOfAttachmentList(MimeDisplayOptions     *opt,
     mimeEmitterStartAttachment(opt, tmp->real_name, tmp->real_type, spec);
     mimeEmitterAddAttachmentField(opt, HEADER_X_MOZILLA_PART_URL, spec);
 
+	if (spec)
+		nsAllocator::Free(spec);
     /* rhp - for now, just leave these here, but they are really
              not necessary
     printf("URL for Part      : %s\n", spec);
