@@ -75,7 +75,7 @@ function OnLoad()
         // this is not i18n friendly, fix this
         var infotext = downloadHeadersInfoText1 + " " + args.articleCount + " " + downloadHeadersInfoText2;
         setText('info',infotext);
-        var okbutton = document.documentElement.getButton("accept");
+        var okbutton = document.getElementById("ok");
         okbutton.setAttribute("label", okButtonText);
         setText("newsgroupLabel", args.groupName);
     }
@@ -103,9 +103,8 @@ function OkButtonCallback() {
     nntpServer.markOldRead = markreadElement.checked;
 
     var radio = document.getElementById("all");
-    if (radio) {
-        args.downloadAll = radio.checked;
-    }
+    if (radio)
+      args.downloadAll = radio.selected;
 
     args.hitOK = true;
     return true;

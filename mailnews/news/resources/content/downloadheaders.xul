@@ -46,7 +46,7 @@ Contributor(s):
       <radio id="all" label="&all.label;" oncommand="setupDownloadUI(false);"/> 
       <separator class="thin"/>
       <hbox align="center" valign="middle">
-        <radio id="some" checked="true" label="&download.label;" oncommand="setupDownloadUI(true);"/>
+        <radio id="some" selected="true" label="&download.label;" oncommand="setupDownloadUI(true);"/>
         <textbox id="number" size="7"/>
         <description value="&headers.label;" />
       </hbox>
