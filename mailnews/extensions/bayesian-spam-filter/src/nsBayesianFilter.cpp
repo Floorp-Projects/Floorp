@@ -381,7 +381,6 @@ void Tokenizer::tokenizeHeaders(nsIUTF8StringEnumerator * aHeaderNames, nsIUTF8S
         // This does not compile on linux yet. Need to figure out why. Commenting out for now
         // if (FindInReadable(FORGED_RECEIVED_HEADER_HINT, headerValue))
         //   addTokenForHeader(headerName.get(), FORGED_RECEIVED_HEADER_HINT);
-        // for now 
       }
       
       // leave out reply-to
@@ -443,6 +442,102 @@ void Tokenizer::tokenize_ascii_word(char * aWord)
   } 
 }
 
+// one substract and one conditional jump should be faster than two conditional jump on most recent system.
+#define IN_RANGE(x, low, high)  ((PRUint16)((x)-(low)) <= (high)-(low))
+
+#define IS_JA_HIRAGANA(x)   IN_RANGE(x, 0x3040, 0x309F)
+// swapping the range using xor operation to reduce conditional jump.
+#define IS_JA_KATAKANA(x)	(IN_RANGE(x^0x0004, 0x30A0, 0x30FE)||(IN_RANGE(x, 0xFF66, 0xFF9F)))
+#define IS_JA_KANJI(x)      (IN_RANGE(x, 0x2E80, 0x2FDF)||IN_RANGE(x, 0x4E00, 0x9FAF))
+#define IS_JA_KUTEN(x)      (((x)==0x3001)||((x)==0xFF64)||((x)==0xFF0E))
+#define IS_JA_TOUTEN(x)     (((x)==0x3002)||((x)==0xFF61)||((x)==0xFF0C))
+#define IS_JA_SPACE(x)      ((x)==0x3000)
+#define IS_JA_FWLATAIN(x)   IN_RANGE(x, 0xFF01, 0xFF5E)
+#define IS_JA_FWNUMERAL(x)  IN_RANGE(x, 0xFF10, 0xFF19)
+
+#define IS_JAPANESE_SPECIFIC(x) (IN_RANGE(x, 0x3040, 0x30FF)||IN_RANGE(x, 0xFF01, 0xFF9F))
+
+enum char_class{
+    others = 0,
+    space,
+    hiragana,
+    katakana,
+    kanji,
+    kuten,
+    touten,
+    kigou,
+    fwlatain,
+    ascii
+};
+
+char_class getCharClass(PRUnichar c)
+{
+  char_class charClass = others;
+
+  if(IS_JA_HIRAGANA(c))
+    charClass = hiragana;
+  else if(IS_JA_KATAKANA(c))
+    charClass = katakana;
+  else if(IS_JA_KANJI(c))
+    charClass = kanji;
+  else if(IS_JA_KUTEN(c))
+    charClass = kuten;
+  else if(IS_JA_TOUTEN(c))
+    charClass = touten;
+  else if(IS_JA_FWLATAIN(c))
+    charClass = fwlatain;
+
+  return charClass;
+}
+
+static PRBool isJapanese(const char* word)
+{
+  nsString text = NS_ConvertUTF8toUCS2(word);
+  PRUnichar* p = (PRUnichar*)text.get();
+  PRUnichar c;
+    
+  // it is japanese chunk if it contains any hiragana or katakana.
+  while((c = *p++))
+    if( IS_JAPANESE_SPECIFIC(c)) 
+      return PR_TRUE;
+
+  return PR_FALSE;
+}
+
+PRBool isFWNumeral(const PRUnichar* p1, const PRUnichar* p2)
+{
+  for(;p1<p2;p1++)
+    if(!IS_JA_FWNUMERAL(*p1)) 
+      return PR_FALSE;
+
+  return PR_TRUE;
+}
+
+// The japanese tokenizer was added as part of Bug #277354
+void Tokenizer::tokenize_japanese_word(char* chunk)
+{
+  PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("entering tokenize_japanese_word(%s)", chunk));
+    
+  nsString srcStr = NS_ConvertUTF8toUCS2(chunk);
+  const PRUnichar* p1 = srcStr.get();
+  const PRUnichar* p2 = p1;
+  if(!*p2) return;
+  
+  char_class cc = getCharClass(*p2);
+  while(*(++p2))
+  {
+    if(cc == getCharClass(*p2)) 
+      continue;
+   
+    nsCString token = NS_ConvertUCS2toUTF8(p1, p2-p1);
+    if( (!isDecimalNumber(token.get())) && (!isFWNumeral(p1, p2)))      
+      add(PromiseFlatCString(NS_LITERAL_CSTRING("JA:") + token).get());
+        
+    cc = getCharClass(*p2);
+    p1 = p2;
+  }
+}
+
 nsresult Tokenizer::stripHTML(const nsAString& inString, nsAString& outString)
 {
   nsresult rv = NS_OK;
@@ -483,7 +578,17 @@ void Tokenizer::tokenize(char* aText)
     nsString text = NS_ConvertUTF8toUCS2(aText);
     nsString strippedUCS2;
     stripHTML(text, strippedUCS2);
-
+    
+    // convert 0x3000(full width space) into 0x0020
+    nsString::iterator substr_start, substr_end;
+    strippedUCS2.BeginWriting(substr_start);
+    strippedUCS2.EndWriting(substr_end);
+    while (substr_start != substr_end) {
+        if (*substr_start == 0x3000)
+            *substr_start = 0x0020;
+        ++substr_start;
+    }
+    
     nsCString strippedStr = NS_ConvertUCS2toUTF8(strippedUCS2);
     char * strippedText = (char *) strippedStr.get(); // bleh
     PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("tokenize stripped html: %s", strippedText));
@@ -495,6 +600,8 @@ void Tokenizer::tokenize(char* aText)
         if (isDecimalNumber(word)) continue;
         if (isASCII(word))
             tokenize_ascii_word(word);
+        else if (isJapanese(word))
+            tokenize_japanese_word(word);
         else {
             nsresult rv;
             // use I18N  scanner to break this word into meaningful semantic units.

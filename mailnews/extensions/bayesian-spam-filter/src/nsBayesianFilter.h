@@ -127,6 +127,7 @@ public:
 private:
     char* copyWord(const char* word, PRUint32 len);
     void tokenize_ascii_word(char * word);
+    void tokenize_japanese_word(char* chunk);
     inline void addTokenForHeader(const char * aTokenPrefix, nsACString& aValue, PRBool aTokenizeValue = false);
     nsresult stripHTML(const nsAString& inString, nsAString& outString);
 
