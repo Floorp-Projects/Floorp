@@ -48,12 +48,18 @@ class CPropertyFrameDialog {
 		// a chance to translate accelerators
 		HRESULT		TranslateAccelerator(LPMSG);
 
+        // Static functions to be used to ensure only one property frame is
+        // showing.
+        static BOOL IsShowing() { return m_hwndShowing != 0; }
+        static void BringToTop() { ::BringWindowToTop(m_hwndShowing); }
+
 	protected:
 		int			RunModalLoop();
 
 	private:
 		HWND				 m_hdlg;
 		HWND				 m_hwndOwner;
+        static HWND          m_hwndShowing;
 		int					 m_x, m_y;
 		LPCSTR				 m_lpszCaption;
 		ULONG				 m_nInitialCategory;

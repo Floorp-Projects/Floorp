@@ -330,20 +330,27 @@ NS_CreatePropertyFrame(HWND     			   		 hwndOwner,
 	if (nCategories == 0)
 		return ResultFromScode(S_FALSE);
 
-	// Create the property frame dialog
-	CPropertyFrameDialog	dialog(hwndOwner, x, y, lpszCaption, lpfnNetHelp);
-
-	// Initialize the property frame dialog
-	hres = dialog.CreatePages(nCategories, lplpProviders, nInitial);
-	if (FAILED(hres)) {
-#ifdef _DEBUG
-		OutputDebugString("CPropertyFrameDialog::CreatePages failed\n");
-#endif
-		return hres;
-	}
-
-	// Display the property frame as a modal dialog
-	dialog.DoModal();
+    // Catch cases where prefs already showing; we can get here if prefs are
+    // showing and user does "mozilla -prefs", for example.
+    if ( CPropertyFrameDialog::IsShowing() ) {
+        // Bring existing property frame dialog to top.
+        CPropertyFrameDialog::BringToTop();
+    } else {
+    	// Create the property frame dialog
+    	CPropertyFrameDialog	dialog(hwndOwner, x, y, lpszCaption, lpfnNetHelp);
+    
+    	// Initialize the property frame dialog
+    	hres = dialog.CreatePages(nCategories, lplpProviders, nInitial);
+    	if (FAILED(hres)) {
+    #ifdef _DEBUG
+    		OutputDebugString("CPropertyFrameDialog::CreatePages failed\n");
+    #endif
+    		return hres;
+    	}
+    
+    	// Display the property frame as a modal dialog
+    	dialog.DoModal();
+    }
 	return NOERROR;
 }
 

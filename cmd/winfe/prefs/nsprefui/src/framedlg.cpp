@@ -215,6 +215,8 @@ DialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 /////////////////////////////////////////////////////////////////////////////
 // CPropertyFrameDialog implementation
 
+HWND CPropertyFrameDialog::m_hwndShowing = 0;
+
 // Constructor
 CPropertyFrameDialog::CPropertyFrameDialog(HWND		   hwndOwner,
 										   int		   x,
@@ -286,7 +288,7 @@ CPropertyFrameDialog::InitDialog(HWND hdlg)
 	HWND	hwnd;
 
 	// Save away the window handle for the dialog
-	m_hdlg = hdlg;
+	m_hwndShowing = m_hdlg = hdlg;
 
 	// Get the bold font we will be using. It's the same font as the
 	// dialog box uses, except it's bold
@@ -885,6 +887,7 @@ CPropertyFrameDialog::DoModal()
 	// Cleanup
 	if (m_pCurPage)
 		m_pCurPage->m_pPage->SetObjects(0, NULL);
+    m_hwndShowing = 0;
 	DestroyWindow(m_hdlg);
 
 	return nResult;
