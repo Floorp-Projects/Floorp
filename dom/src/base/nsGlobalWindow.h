@@ -166,6 +166,7 @@ public:
   NS_IMETHOD    ResizeTo(PRInt32 aWidth, PRInt32 aHeight);
   NS_IMETHOD    ResizeBy(PRInt32 aWidthDif, PRInt32 aHeightDif);
   NS_IMETHOD    SizeToContent();
+  NS_IMETHOD    GetAttention();
   NS_IMETHOD    Scroll(PRInt32 aXScroll, PRInt32 aYScroll);
   NS_IMETHOD    ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll);
   NS_IMETHOD    ScrollBy(PRInt32 aXScrollDif, PRInt32 aYScrollDif);

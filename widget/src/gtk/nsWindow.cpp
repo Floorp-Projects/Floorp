@@ -2311,7 +2311,7 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWindow::Flash(void)
+NS_IMETHODIMP nsWindow::GetAttention(void)
 {
   // get the next up moz area
   GtkWidget *top_mozarea = GetMozArea();

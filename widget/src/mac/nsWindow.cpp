@@ -1976,7 +1976,7 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& title)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWindow::Flash()
+NS_IMETHODIMP nsWindow::GetAttention()
 {
 	// Since the Mac doesn't consider each window a seperate process this call functions
 	// slightly different than on other platforms.  We first check to see if we're the

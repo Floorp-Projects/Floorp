@@ -721,7 +721,7 @@ NS_METHOD nsBaseWidget::ModalEventFilter(PRBool aRealEvent, void *aEvent,
 }
 
 NS_IMETHODIMP
-nsBaseWidget::Flash() {
+nsBaseWidget::GetAttention() {
     return NS_OK;
 }
 

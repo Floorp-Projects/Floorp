@@ -1792,6 +1792,49 @@ WindowSizeToContent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
 
 //
+// Native method GetAttention
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowGetAttention(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_GETATTENTION, PR_FALSE, &ok);
+    if (!ok) {
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+    }
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+
+    result = nativeThis->GetAttention();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method Scroll
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -2809,6 +2852,7 @@ static JSFunctionSpec WindowMethods[] =
   {"resizeTo",          WindowResizeTo,     2},
   {"resizeBy",          WindowResizeBy,     2},
   {"sizeToContent",          WindowSizeToContent,     0},
+  {"GetAttention",          WindowGetAttention,     0},
   {"scroll",          WindowScroll,     2},
   {"scrollTo",          WindowScrollTo,     2},
   {"scrollBy",          WindowScrollBy,     2},

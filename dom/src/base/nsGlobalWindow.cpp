@@ -1550,6 +1550,16 @@ GlobalWindowImpl::SizeToContent()
   return NS_ERROR_NOT_INITIALIZED;
 }
 
+NS_IMETHODIMP
+GlobalWindowImpl::GetAttention()
+{
+#if 0
+  if (mWebShell)
+    return mWebShell->GetAttention();
+#endif
+  return NS_OK;
+}
+
 nsresult
 GlobalWindowImpl::GetScrollInfo(nsIScrollableView** aScrollableView,
                                 float* aP2T, float* aT2P)

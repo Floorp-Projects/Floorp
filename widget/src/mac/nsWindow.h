@@ -172,7 +172,7 @@ public:
     NS_IMETHOD				CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
     NS_IMETHOD				SetTitle(const nsString& title);
   
-    NS_IMETHOD				Flash();
+    NS_IMETHOD				GetAttention();
 
     // Mac specific methods
     void 					nsRectToMacRect(const nsRect& aRect, Rect& aMacRect) const;
