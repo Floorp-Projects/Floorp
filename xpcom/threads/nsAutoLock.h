@@ -138,7 +138,8 @@ public:
     }
 
     ~nsAutoMonitor() {
-        PR_ExitMonitor(mMonitor);
+        PRStatus status = PR_ExitMonitor(mMonitor);
+        NS_ASSERTION(status == PR_SUCCESS, "PR_CExitMonitor failed");
     }
 
     nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT) {
@@ -193,7 +194,8 @@ public:
     }
 
     ~nsAutoCMonitor() {
-        PR_CExitMonitor(mLockObject);
+        PRStatus status = PR_CExitMonitor(mLockObject);
+        NS_ASSERTION(status == PR_SUCCESS, "PR_CExitMonitor failed");
     }
 
     nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT) {
