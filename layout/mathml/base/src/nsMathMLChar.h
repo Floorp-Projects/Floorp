@@ -25,10 +25,27 @@
 #include "nsMathMLOperators.h"
 
 typedef PRUint32 nsStretchDirection;
-enum nsMathMLCharEnum;
 
 #define NS_STRETCH_DIRECTION_HORIZONTAL   0
 #define NS_STRETCH_DIRECTION_VERTICAL     1
+
+// chars that we know how to stretch
+enum nsMathMLCharEnum {
+  eMathMLChar_UNKNOWN = -1,
+  eMathMLChar_LeftParenthesis,
+  eMathMLChar_RightParenthesis,
+  eMathMLChar_Integral ,
+  eMathMLChar_LeftSquareBracket,
+  eMathMLChar_RightSquareBracket,
+  eMathMLChar_LeftCurlyBracket, 
+  eMathMLChar_RightCurlyBracket, 
+  eMathMLChar_DownArrow, 
+  eMathMLChar_UpArrow, 
+  eMathMLChar_LeftArrow, 
+  eMathMLChar_RightArrow,   
+  eMathMLChar_RadicalBar,
+  eMathMLChar_COUNT
+};
 
 // Structure used for a char's size and alignment information.
 struct nsCharMetrics {

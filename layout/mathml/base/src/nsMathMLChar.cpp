@@ -218,6 +218,7 @@ static PRUnichar gMathMLCharGlyph[] = {
   
   //------------
   //index = 66
+  //Section for: square-root bar
   0xF8E5, // RADICAL EXTENDER	# radicalex (CUS)
 
   0x0000, // That's all folks ...
@@ -228,7 +229,7 @@ static PRUnichar gMathMLCharGlyph[] = {
   0xF8E5, // RADICAL EXTENDER	# radicalex (CUS)
 
   //------------
-  //index = 70
+  //index = 72
   //end of table ...
   0x0000, 
 };
@@ -246,27 +247,11 @@ static PRInt32 gMathMLCharIndex[] = {
   48,  // eMathMLChar_UpArrow, 
   54,  // eMathMLChar_LeftArrow, 
   60,  // eMathMLChar_RightArrow, 
-  66,  // eMathMLChar_RadicalExtender, 
+  66,  // eMathMLChar_RadicalBar, 
   72,  // safeguard, *must* always point at the *end* of gMathMLCharGlyph[]  
 };
 
 // data to enable a clean architecture and extensibility
-enum nsMathMLCharEnum {
-  eMathMLChar_UNKNOWN = -1,
-  eMathMLChar_LeftParenthesis,
-  eMathMLChar_RightParenthesis,
-  eMathMLChar_Integral ,
-  eMathMLChar_LeftSquareBracket,
-  eMathMLChar_RightSquareBracket,
-  eMathMLChar_LeftCurlyBracket, 
-  eMathMLChar_RightCurlyBracket, 
-  eMathMLChar_DownArrow, 
-  eMathMLChar_UpArrow, 
-  eMathMLChar_LeftArrow, 
-  eMathMLChar_RightArrow,   
-  eMathMLChar_RadicalExtender,
-  eMathMLChar_COUNT
-};
 
 static const PRInt32 kMathMLChar[] = {
   eMathMLChar_LeftParenthesis  ,  '(',
@@ -280,7 +265,7 @@ static const PRInt32 kMathMLChar[] = {
   eMathMLChar_UpArrow,           0x2191,
   eMathMLChar_LeftArrow,         0x2190,
   eMathMLChar_RightArrow,        0x2192,
-  eMathMLChar_RadicalExtender,   0xF8E5,
+  eMathMLChar_RadicalBar,        0xF8E5,
 //  eMathMLChar_Radical,           0x221A,
 };
 
