@@ -28,3 +28,9 @@ bookmarks-toolbar {
   min-width: 0px;
   width:0px;
 }
+
+/* ::::: print preview toolbar ::::: */
+
+toolbar[printpreview="true"] {
+  -moz-binding: url("chrome://browser/content/printPreviewBindings.xml#printpreviewtoolbar");
+}
