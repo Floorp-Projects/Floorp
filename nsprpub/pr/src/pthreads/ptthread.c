@@ -1213,8 +1213,6 @@ static void PR_SuspendSet(PRThread *thred)
 
 static void PR_SuspendTest(PRThread *thred)
 {
-    PRIntn rv;
-
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, 
 	   ("Begin PR_SuspendTest thred %X thread id = %X\n", thred, thred->id));
 
@@ -1236,7 +1234,7 @@ static void PR_SuspendTest(PRThread *thred)
 #else
     while ((thred->suspend & PT_THREAD_SUSPENDED) == 0)
     {
-		rv = sigtimedwait(&sigwait_set, NULL, &onemillisec);
+		PRIntn rv = sigtimedwait(&sigwait_set, NULL, &onemillisec);
     	PR_ASSERT(-1 == rv);
 	}
 #endif
