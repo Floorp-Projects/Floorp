@@ -434,7 +434,7 @@ ns4xPlugin::Shutdown(void)
 {
   if (nsnull != fShutdownEntry)
   {
-#ifdef NS_DEBUG
+#ifdef DEBUG_edburns
 	printf("shutting down plugin %08x\n",(int)this);
 #endif
 #ifdef XP_MAC
@@ -455,7 +455,7 @@ ns4xPlugin::Shutdown(void)
 nsresult
 ns4xPlugin::GetMIMEDescription(const char* *resultingDesc)
 {
-#ifdef NS_DEBUG
+#ifdef DEBUG_edburns
   printf("plugin getmimedescription called\n");
 #endif
   const char* (*npGetMIMEDescrpition)() =
@@ -468,7 +468,7 @@ ns4xPlugin::GetMIMEDescription(const char* *resultingDesc)
 nsresult
 ns4xPlugin::GetValue(nsPluginVariable variable, void *value)
 {
-#ifdef NS_DEBUG
+#ifdef DEBUG_edburns
   printf("plugin getvalue %d called\n", variable);
 #endif
 
