@@ -248,7 +248,8 @@ function loadEventsFromFile()
       
       // If there were no events or todos to import, let the user know
       //
-      if (parsedEventArray.length == 0 && parsedToDoArray.length == 0)
+      if (calendarEventArray.length == 0 && duplicateEventArray.length == 0 &&
+          calendarToDoArray.length == 0 && duplicateToDoArray.length == 0)
         alert( gCalendarBundle.getFormattedString( "noEventsOrTasksToImport", [fromFileNames] ) );
   }
   return true;
