@@ -50,7 +50,7 @@ LIBS		= \
 		-lmozutil \
 		-lxp \
 		-lxpcom \
-		$(TIMER_LIBS) \
+		$(MOZ_TIMER_LIBS) \
 		$(TK_LIBS) \
 		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \

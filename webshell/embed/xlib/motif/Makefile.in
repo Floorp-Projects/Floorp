@@ -41,7 +41,7 @@ BASE_LIBS	= \
 
 GECKO_LIBS		= \
 			-lraptorgfx \
-			$(TIMER_LIBS) \
+			$(MOZ_TIMER_LIBS) \
 			$(NULL)
 
 IMGLIB_LIBS		= \

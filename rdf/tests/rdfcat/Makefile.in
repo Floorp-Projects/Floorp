@@ -62,7 +62,7 @@ endif
 
 LIBS		= \
 		$(NETLIB_LIBS) \
-		$(TIMER_LIBS) \
+		$(MOZ_TIMER_LIBS) \
 		$(BASE_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \

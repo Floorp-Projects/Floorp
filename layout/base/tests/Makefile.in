@@ -50,7 +50,7 @@ LIBS		+= \
 		$(PNG_LIBS) \
 		$(JPEG_LIBS) \
 		-lmozjs \
-		$(TIMER_LIBS) \
+		$(MOZ_TIMER_LIBS) \
 		-lxpcom \
 		-lxp \
 		-ljsurl \

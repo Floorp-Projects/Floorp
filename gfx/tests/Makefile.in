@@ -63,7 +63,7 @@ LIBS		= \
 		$(PNG_LIBS) \
 		-lmozutil \
 		-lxp \
-		$(TIMER_LIBS) \
+		$(MOZ_TIMER_LIBS) \
 		$(TK_LIBS) \
 		$(NSPR_LIBS) \
 		$(NET_LIBS) \
