@@ -20,6 +20,7 @@
 #define nsIStringBundle_h___
 
 #include "nsIFactory.h"
+#include "nsILocale.h"
 #include "nsIURL.h"
 #include "nsString.h"
 
@@ -53,7 +54,7 @@ public:
 class nsIStringBundleFactory : public nsIFactory
 {
 public:
-  NS_IMETHOD CreateBundle(nsIURL* aURL, const nsString& aLocale,
+  NS_IMETHOD CreateBundle(nsIURL* aURL, nsILocale* aLocale,
                           nsIStringBundle** aResult) = 0;
 };
 
