@@ -1413,7 +1413,8 @@ str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSRegExp *re;
     JSSubString *sep, tmp;
     jsdouble d;
-    jsint len, limit, i, j, sublen;
+    jsint i, j, sublen;
+    uint32 len, limit;
     const jschar *substr;
 
     str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
@@ -1457,20 +1458,17 @@ str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	}
 
 	/* Use the second argument as the split limit, if given. */
-	/* XXX our v2 ecma spec checks against given, undefined. */
-	limited = (argc > 1);
+	limited = (argc > 1) && !JSVAL_IS_VOID(argv[1]);
         limit = 0; /* Avoid warning. */
 	if (limited) {
-	    if (!js_ValueToNumber(cx, argv[1], &d))
+            if (!js_ValueToNumber(cx, argv[1], &d))
 		return JS_FALSE;
 
 	    /* Clamp limit between 0 and 1 + string length. */
-	    d = js_DoubleToInteger(d);
-	    if (d < 0)
-		d = 0;
-	    else if (d > str->length)
-		d = 1 + str->length;
-	    limit = (jsint)d;
+	    if (!js_DoubleToECMAUint32(cx, d, &limit))
+                return JS_FALSE;
+	    if (limit > str->length)
+		limit = 1 + str->length;
 	}
 
 	if (reobj) {
