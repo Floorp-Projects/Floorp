@@ -396,18 +396,6 @@ nsXBLBinding::GetAnonymousContent(nsIContent** aResult)
   return NS_OK;
 }
 
-static void UpdateBindingParent(nsIContent* aContent, nsIContent* aBindingParent)
-{
-  aContent->SetBindingParent(aBindingParent);
-  PRInt32 count;
-  aContent->ChildCount(count);
-  for (PRInt32 i = 0; i < count; i++) {
-    nsCOMPtr<nsIContent> child;
-    aContent->ChildAt(i, *getter_AddRefs(child));
-    UpdateBindingParent(child, aBindingParent);
-  }
-}
-
 NS_IMETHODIMP
 nsXBLBinding::SetAnonymousContent(nsIContent* aParent)
 {
@@ -430,7 +418,7 @@ nsXBLBinding::SetAnonymousContent(nsIContent* aParent)
     nsCOMPtr<nsIContent> child;
     mContent->ChildAt(i, *getter_AddRefs(child));
     child->SetParent(mBoundElement);
-    UpdateBindingParent(child, mBoundElement);
+    child->SetBindingParent(mBoundElement);
   }
 
   // (3) We need to insert entries into our attribute table for any elements
