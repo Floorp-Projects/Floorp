@@ -36,12 +36,10 @@ LLIBS = \
         $(DIST)\lib\js3250.lib \
 	$(DIST)\lib\xpcom.lib \
 	$(DIST)\lib\windowwatcher_s.lib \
-	$(DIST)\lib\appstartupnotifier_s.lib \
 	$(NULL)
 
 INCS = $(INCS) \
 	-I$(DEPTH)\embedding\components\windowwatcher\src \
-	-I$(DEPTH)\embedding\components\appstartup\src \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
