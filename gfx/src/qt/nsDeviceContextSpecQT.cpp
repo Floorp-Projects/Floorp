@@ -287,7 +287,13 @@ NS_IMETHODIMP nsDeviceContextSpecQT::GetPageDimensions(float &aWidth,
         aWidth = 8.27;
         aHeight = 11.69;
     }
-    return NS_OK;
+    else if (mPrData.size == NS_A3_SIZE) {
+        // 297mm X 420mm == 11.69in X 16.53in
+        aWidth = 11.69;
+        aHeight = 16.53;
+    }
+        
+  return NS_OK;
 }
  
 NS_IMETHODIMP nsDeviceContextSpecQT::GetTopMargin(float &value)
