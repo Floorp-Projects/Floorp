@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.246 $ ';
+$::UtilsVersion = '$Revision: 1.247 $ ';
 
 package TinderUtils;
 
@@ -654,9 +654,9 @@ sub BuildIt {
 
     my $build_dir = get_system_cwd();
 
-    if ($Settings::OS =~ /^WIN/ && $build_dir =~ m/^\/cygdrive\//) {
-        $build_dir =~ s/^\/cygdrive\///;
-        substr($build_dir,1,1,":/");
+    if ($Settings::OS =~ /^WIN/ && $build_dir !~ m/^.:\//) {
+        chomp($build_dir = `cygpath -w $build_dir`);
+        $build_dir =~ s/\\/\//g;
     }
 
     my $binary_basename = "$Settings::BinaryName";
@@ -1409,9 +1409,9 @@ sub run_all_tests {
 
     # Windows needs this for file: urls.
     my $win32_build_dir = $build_dir;
-    if ($Settings::OS =~ /^WIN/ && $win32_build_dir =~ m/^\/cygdrive\//) {
-        $win32_build_dir =~ s/^\/cygdrive\///;
-        substr($win32_build_dir,1,1,'|/');
+    if ($Settings::OS =~ /^WIN/ && $win32_build_dir !~ m/^.:\//) {
+        chomp($win32_build_dir = `cygpath -w $win32_build_dir`);
+        $win32_build_dir =~ s/\\/\//g;
     }
 
     #
@@ -2523,9 +2523,9 @@ sub BloatTest2 {
     my $binary_basename = File::Basename::basename($binary);
     my $binary_dir = File::Basename::dirname($binary);
     my $PERL = $^X;
-    if ($Settings::OS =~ /^WIN/ && $build_dir =~ m/^\/cygdrive\//) {
-        $build_dir =~ s/^\/cygdrive\///;
-        substr($build_dir,1,1,':/');
+    if ($Settings::OS =~ /^WIN/ && $build_dir !~ m/^.:\//) {
+        chomp($build_dir = `cygpath -w $build_dir`);
+        $build_dir =~ s/\\/\//g;
         $PERL = "perl";
     }
     my $binary_log = "$build_dir/bloattest2.log";
