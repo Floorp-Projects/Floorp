@@ -90,6 +90,7 @@ EXPORTS		= \
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
+		$(XPCOM_GLUE_LIBS) \
 		-lgtksuperwin \
 		$(NULL)
 
