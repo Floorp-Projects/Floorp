@@ -3,6 +3,7 @@
 
 #ifndef _DEBUG
 #  include <assert.h>
+#  define NG_TRACE ATLTRACE
 #  define NG_ASSERT(expr) assert(expr)
 #  define NG_ASSERT_POINTER(p, type) \
 	NG_ASSERT(((p) != NULL) && NgIsValidAddress((p), sizeof(type), FALSE))
