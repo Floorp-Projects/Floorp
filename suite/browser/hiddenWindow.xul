@@ -285,27 +285,39 @@ Contributor(s): ______________________________________. -->
        have a menubar for situations where they're the only window remaining
        on a platform that wants to leave the app running, like the Mac.
        This really really wants to be an included file, but for now,
-       it's every bit a copy. -->
+       it's every bit a copy. 
+  -->
+
+  <!-- Comment to whoever made this (Dan?).  Move this into an overlay and 
+	   put it in global/platform/mac!  Then nobody else has to deal with this! 
+	   Also, can't this be a minimal menu bar?  It doesn't have to have everything 
+	   navigator.xul has!
+	   (Dave H.) -->
 
   <menubar chromeclass="menubar">
-      <menu value="&fileMenu.label;">
+    <menu value="&fileMenu.label;">
+	  <menupopup> 
       <menuitem value="&browserCmd.label;" onaction="BrowserNewWindow();"/>
       	<menu value="New">
-      		<menuitem value="&newMailCmd.label;" onaction="MsgNewMessage();"/>
+      		<menupopup>
+			<menuitem value="&newMailCmd.label;" onaction="MsgNewMessage();"/>
 		      <menuseparator />
 		      <menuitem value="&newBlankPageCmd.label;" onaction="BrowserNewEditorWindow();"/>
 		      <menuitem value="&newPageFromTemplateCmd.label;" onaction="BrowserNewWindow();"/>
 		      <menuitem value="&newPageFromDraftCmd.label;" onaction="BrowserNewWindow();"/>
-    		</menu>
+			</menupopup>
+    	</menu>
       <menuitem value="&openCmd.label;" onaction="BrowserOpenWindow();"/>
       <menuseparator />
       <menuitem value="&sendPageCmd.label;" onaction="BrowserReload();"/>
 	   <menuitem value="&editPageCmd.label;" onaction="BrowserEditPage(window.content.location.href);" />
 	   <menuseparator />
       <menu value="&offlineMenu.label;">
+	      <menupopup>
 	      <menuitem value="&offlineGoOfflineCmd.label;" onaction="BrowserReload();"/>
 	      <menuseparator />
 	      <menuitem value="&offlineSynchronizeCmd.label;" onaction="BrowserReload();"/>
+		  </menupopup>
       </menu>
       <menuseparator />
       <menuitem value="&printSetupCmd.label;" onaction=";"/>
@@ -314,8 +326,10 @@ Contributor(s): ______________________________________. -->
       <menuseparator />
       <menuitem value="&closeCmd.label;" onaction="BrowserClose();"/>
       <menuitem value="&quitCmd.label;" onaction="BrowserExit();"/>
+	  </menupopup>
     </menu>
 	<menu value="&editMenu.label;"> 
+	  <menupopup>
       <menuitem value="&undoCmd.label;" onaction="BrowserReload();"/> 
       <menuitem value="&redoCmd.label;" onaction="BrowserReload();"/> 
       <menuseparator /> 
@@ -325,7 +339,8 @@ Contributor(s): ______________________________________. -->
       <menuitem value="&deleteCmd.label;" onaction="BrowserReload();"/> 
       <menuseparator /> 
       <menu value="&walletMenu.label;"> 
-          <menuitem value="&walletSafeFillCmd.label;" onaction="WalletSafeFillin();"/> 
+          <menupopup>
+		  <menuitem value="&walletSafeFillCmd.label;" onaction="WalletSafeFillin();"/> 
           <menuitem value="&walletQuickFillCmd.label;" onaction="WalletQuickFillin();"/> 
           <menuseparator /> 
           <menuitem value="&walletContentsCmd.label;" onaction="WalletEditor();"/> 
@@ -333,15 +348,18 @@ Contributor(s): ______________________________________. -->
           <menuitem value="&walletDisplayCookiesCmd.label;" onaction="CookieViewer();"/> 
           <menuseparator /> 
           <menuitem value="&walletSamplesCmd.label;" onaction="WalletSamples();"/> 
-          <menuitem value="&walletChangePasswordCmd.label;" onaction="WalletChangePassword();"/> 
+          <menuitem value="&walletChangePasswordCmd.label;" onaction="WalletChangePassword();"/>
+		  </menupopup> 
 	  </menu> 
       <menuseparator /> 
       <menuitem value="&selectAllCmd.label;" onaction="BrowserReload();"/> 
       <menuseparator /> 
       <menuitem value="&preferences.label;" onaction="DoPreferences();"/> 
+	  </menupopup>
     </menu> 
 
     <menu value="&viewMenu.label;">
+	  <menupopup>
       <menuitem value="&toolbarsCmd.label;" onaction="toolbar.visible=true"/>
       <menuitem value="&sidebarCmd.label;" onaction="BrowserReload();"/>
       <menuseparator />
@@ -349,11 +367,13 @@ Contributor(s): ______________________________________. -->
       <menuitem value="&reduceTextSizeCmd.label;" onaction="BrowserReload();"/>
       <menuseparator />
       <menu value="&useStyleSheetMenu.label;" onaction="BrowserReload();">
+	      <menupopup>
 	      <menuitem value="&useStyleSheetDefaultCmd.label;" onaction="BrowserReload();"/>
 	      <menuseparator />
 	      <menuitem value="&useStyleSheetEasyReadingCmd.label;" onaction="BrowserReload();"/>
 	      <menuitem value="&useStyleSheetMaxInfoCmd.label;" onaction="BrowserReload();"/>
 	      <menuitem value="&useStlyleSheetBizarreCmd.label;" onaction="BrowserReload();"/>
+		  </menupopup>
       </menu>
       <menuseparator />
       <menuitem value="&reloadCmd.label;" id="menuitem-reload" onaction="BrowserReallyReload(0);"/>
@@ -366,7 +386,8 @@ Contributor(s): ______________________________________. -->
       <menuitem value="&pageInfoCmd.label;" onaction="BrowserReload();"/>
       <menuseparator />
       <menu value="&translateMenu.label;">
-	      <menuitem value="&translateEngtoFrenCmd.label;" onaction="Translate('en', 'fr', 'SSI');"/>
+	      <menupopup>
+		  <menuitem value="&translateEngtoFrenCmd.label;" onaction="Translate('en', 'fr', 'SSI');"/>
 	      <menuitem value="&translateEngtoGermCmd.label;" onaction="Translate('en', 'de', 'SSI');"/>
 	      <menuitem value="&translateEngtoItalianCmd.label;" onaction="Translate('en', 'it', 'SSI');"/>
 	      <menuitem value="&translateEngtoJapaneseCmd.label;" onaction="Translate('en', 'ja', 'Neocortech');"/>
@@ -390,9 +411,11 @@ Contributor(s): ______________________________________. -->
 	      <menuitem value="&tanslateSpantoEngCmd.label;" onaction="Translate('es', 'en', 'SSI');"/>
 	      <menuitem value="&translateSpantoFrenCmd.label;" onaction="Translate('es', 'fr', 'SSI');"/>
 	      <menuitem value="&translateSpantoGermCmd.label;" onaction="Translate('es', 'de', 'SSI');"/>
+		  </menupopup>
     </menu>
 
       <menu value="&dcharMenu.label;">
+	    <menupopup>
 	         <menuitem value="&dcharIso1Cmd.label;" onaction="BrowserSetDefaultCharacterSet('ISO-8859-1');"/>
 	         <menuitem value="&dcharIso2Cmd.label;" onaction="BrowserSetDefaultCharacterSet('ISO-8859-2');"/>
 	         <menuitem value="&dcharIso3Cmd.label;" onaction="BrowserSetDefaultCharacterSet('ISO-8859-3');"/>
@@ -453,9 +476,12 @@ Contributor(s): ______________________________________. -->
                  <menuseparator />
 	         <menuitem value="&dcharIso8Cmd.label;" onaction="BrowserSetDefaultCharacterSet('ISO-8859-8');"/>
 	         <menuitem value="&dcharCp1255Cmd.label;" onaction="BrowserSetDefaultCharacterSet('windows-1255');"/>
+	     </menupopup>
 	   </menu>
+	  </menupopup>
     </menu>
     <menu value="&searchMenu.label;">
+	  <menupopup>
       <menuitem value="&findOnCmd.label;" onaction="BrowserFind();"/>
       <menuitem value="&findAgainCmd.label;" onaction="BrowserFindAgain();"/>
       <menuseparator />
@@ -470,8 +496,10 @@ Contributor(s): ______________________________________. -->
       <menuitem value="&searchPeopleCmd.label;" onaction="BrowserReload();"/>
       <menuseparator />
       <menuitem value="&searchComputerCmd.label;" onaction="BrowserReload();"/>
+	  </menupopup>
     </menu>
     <menu value="&goMenu.label;">
+	  <menupopup>
       <menuitem id="menuitem-back" value="&goBackCmd.label;" onaction="BrowserBack();"/>
       <menuitem id="menuitem-forward" value="&goForwardCmd.label;" onaction="BrowserForward();" />
       <menuitem value="&goHomeCmd.label;" onaction="BrowserHome();"/>
@@ -479,36 +507,50 @@ Contributor(s): ______________________________________. -->
       <menuitem value="&goPrev1Cmd.label;" onaction="BrowserBack();"/>
       <menuitem value="&goPrev2Cmd.label;" onaction="BrowserBack();"/>
       <menuitem value="&goPrevnCmd.label;" onaction="BrowserBack();"/>
+	  </menupopup>
     </menu>
     <menu value="&bookmarksMenu.label;" onaction="OpenBookmarkURL(event.target)" 
 						   datasources="rdf:bookmarks rdf:files rdf:find" id="NC:BookmarksRoot">
 
 	<template>
 		<rule iscontainer="true" isempty="false">
+		   <menupopup>
 			<menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#value"/>
+		   </menupopup>
 		</rule>
 		<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+			<menupopup>
 			<menuseparator uri="..." />
+			</menupopup>
 		</rule>
 		<rule>
+		    <menupopup>
 			<menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#value" onaction="OpenBookmarkURL(event.target)" />
+		    </menupopup>
 		</rule>
 	</template>
-
+        <menupopup>
 		<menuitem value="&addCurPageCmd.label;" onaction="BrowserAddBookmark(window.content.location.href,window.content.document.title);"/>
 		<menuitem value="&manBookmarksCmd.label;" onaction="BrowserEditBookmarks();"/>
 		<menuseparator/>
+		</menupopup>
 	</menu>
 	 <menu value="&tasksMenu.label;" onaction="ShowWindowFromResource(event.target)" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot" >
       <template>
 		<rule iscontainer="true" isempty="false">
+			<menupopup>
 			<menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#value"/>
+			</menupopup>
 		</rule>
 		<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+			<menupopup>
 			<menuseparator uri="..." />
+			</menupopup>
 		</rule>
 		<rule>
+			<menupopup>
 			<menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#value"/>
+			</menupopup>
 		</rule>
       </template>
       <menuitem value="&navigatorCmd.label;" onaction="BrowserReload();"/>
@@ -518,18 +560,21 @@ Contributor(s): ______________________________________. -->
       <menuitem value="&manageHistoryCmd.label;"    onaction="OpenHistoryView();" />
       <menuseparator />
       <menu value="&toolsMenu.label;">
-	      <menuitem value="&toolsPluginsInfoCmd.label;" onaction="BrowserReload();"/>
+	      <menupopup>
+		  <menuitem value="&toolsPluginsInfoCmd.label;" onaction="BrowserReload();"/>
 	      <menuitem value="&toolsJavaConsoleCmd.label;" onaction="BrowserReload();" />
 	      <menuitem value="&toolsServerToolsCmd.label;" onaction="BrowserReload();"/>
 	      <menuitem value="&toolsJsDebuggerCmd.label;" onaction="BrowserReload();"/>
+		  </menupopup>
       </menu>
       <menuseparator />
       <menuitem value="&securityInfo.label;" onaction="BrowserReload();"/>
       <menuseparator/>
-      
+      </menupopup>  
     </menu>
     
      <menu value="&helpMenuCmd.label;">
+	   <menupopup>
       <menuitem value="&helpContentsCmd.label;" onaction="window.content.location.href = 'http://www.mozilla.org/projects/user-docs/local/browserhelp/browsertop.html'"/>
       <menuseparator />
       <menuitem value="&howTutorialCmd.label;" onaction="BrowserReload();"/>
@@ -543,13 +588,15 @@ Contributor(s): ______________________________________. -->
       <menuseparator />
       <menuitem value="&aboutCommunicatorCmd.label;" 
 	            onaction="window.content.location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'"/>
-    </menu>
+      </menupopup>
+	</menu>
 
     // Menu for testing.
     <menu value="&debugMenu.label;">
-
+      <menupopup>
       <menu value="&debugVerCmd.label;"> // Build verification sites.
-        <menuitem value="&ver1Cmd.label;"   onaction="window.content.location.href='http://www.mozilla.org'"/>
+        <menupopup>
+		<menuitem value="&ver1Cmd.label;"   onaction="window.content.location.href='http://www.mozilla.org'"/>
         <menuitem value="&ver2Cmd.label;"     onaction="window.content.location.href='http://www.yahoo.com'"/>
         <menuitem value="&ver3Cmd.label;"  onaction="window.content.location.href='http://www.netscape.com'"/>
         <menuitem value="&ver4Cmd.label;"    onaction="window.content.location.href='http://www.excite.com'"/>
@@ -575,10 +622,12 @@ Contributor(s): ______________________________________. -->
         <menuitem value="&ver23Cmd.label;" onaction="window.content.location.href='resource:/res/samples/test2.html'"/>
         <menuitem value="&ver24Cmd.label;" onaction="window.content.location.href='http://slip/projects/marvin/bft/browser/bft_browser_html_mix3.html'"/>
         <menuitem value="&ver25Cmd.label;" onaction="window.content.location.href='http://slip/projects/marvin/bft/browser/bft_browser_link.html'"/>
-      </menu>
+        </menupopup>
+	  </menu>
 
 	  <menu value="&viewDemoMenu.label;">  // Viewer tests.
-        <menuitem value="&demo0Cmd.label;"  onaction="window.content.location.href='resource:/res/samples/test0.html'"/>
+        <menupopup>
+		<menuitem value="&demo0Cmd.label;"  onaction="window.content.location.href='resource:/res/samples/test0.html'"/>
         <menuitem value="&demo1Cmd.label;"  onaction="window.content.location.href='resource:/res/samples/test1.html'"/>
         <menuitem value="&demo2Cmd.label;"  onaction="window.content.location.href='resource:/res/samples/test2.html'"/>
         <menuitem value="&demo3Cmd.label;"  onaction="window.content.location.href='resource:/res/samples/test3.html'"/>
@@ -595,25 +644,30 @@ Contributor(s): ______________________________________. -->
         <menuitem value="&demo14Cmd.label;" onaction="window.content.location.href='resource:/res/samples/test14.html'"/>
         <menuitem value="&demo15Cmd.label;" onaction="window.content.location.href='resource:/res/samples/test15.html'"/>
         <menuitem value="&demo16Cmd.label;" onaction="window.content.location.href='resource:/res/samples/test16.html'"/>
-      </menu>
+        </menupopup>
+	  </menu>
 
       <menu value="&xptkMenu.label;"> // XPToolkit tests.
-        <menuitem value="&xptk1Cmd.label;" onaction="window.content.location.href='resource:/res/samples/checkboxTest.xul'"/>
+        <menupopup>
+		<menuitem value="&xptk1Cmd.label;" onaction="window.content.location.href='resource:/res/samples/checkboxTest.xul'"/>
         <menuitem value="&xptk2Cmd.label;" onaction="window.content.location.href='resource:/res/samples/toolbarTest1.xul'"/>
         <menuitem value="&xptk3Cmd.label;" onaction="window.content.location.href='resource:/res/samples/treeTest1.xul'"/>
         <menuitem value="&xptk4Cmd.label;" onaction="window.content.location.href='resource:/res/samples/dexsimplemaster.xul'"/>
         <menuitem value="&xptk5Cmd.label;" onaction="window.content.location.href='resource:/res/samples/dexanimmaster.xul'"/>
         <menuitem value="&xptk6Cmd.label;" onaction="window.content.location.href='resource:/res/samples/tab.xul'"/>
         <menuitem value="&xptk7Cmd.label;" onaction="window.content.location.href='resource:/res/samples/beeptest.html'"/>
-      </menu>
-
+        </menupopup>
+	  </menu>
+      </menupopup>
     </menu>
   <menu value="&QA.label;"> // QA tests.
-        <menuitem value="&QABugCmd.label;" onaction="window.content.location.href='http://www.mozilla.org/quality/bug-writing-guidelines.html'"/>
+        <menupopup>
+		<menuitem value="&QABugCmd.label;" onaction="window.content.location.href='http://www.mozilla.org/quality/bug-writing-guidelines.html'"/>
         <menuitem value="&QATempCmd.label;" onaction="window.content.location.href='http://www.mozilla.org/quality/bug-template.html'"/>
         <menuitem value="&QASmokeCmd.label;" onaction="window.content.location.href='http://www.mozilla.org/quality/smoketests/'"/>
         <menuitem value="&QAKnownBugCmd.label;" onaction="window.content.location.href='http://www.mozilla.org/quality/most-frequent-bugs/'"/>
-		</menu>
+        </menupopup>
+  </menu>
   </menubar>
 
 </window>
