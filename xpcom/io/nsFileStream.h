@@ -100,12 +100,34 @@
 
 #endif // NS_USING_NAMESPACE
 
-#ifdef NS_USING_STL
+#ifndef XP_MAC
+// PR_STDOUT and PR_STDIN are fatal on Macintosh.  So for console i/o, we must use the std
+// stream stuff instead.  However, we have to require that cout and cin are passed in
+// to the constructor because in the current build, there is a copy in the base.shlb,
+// and another in the caller's file.  Passing it in as a parameter ensures that the
+// caller and this library are using the same global object.  Groan.
+//
+// Unix currently does not support iostreams at all.  Their compilers do not support
+// ANSI C++, or even ARM C++.
+//
+// Windows supports them, but only if you turn on the -GX compile flag, to support
+// exceptions.
+
+// Catch 22.
+#define NS_USE_PR_STDIO
+#endif
+
+#ifdef NS_USE_PR_STDIO
+class istream;
+class ostream;
+#define CONSOLE_IN 0
+#define CONSOLE_OUT 0
+#else
 #include <iostream>
 using std::istream;
 using std::ostream;
-#else
-#include <iostream.h>
+#define CONSOLE_IN &std::cin
+#define CONSOLE_OUT &std::cout
 #endif
 
 //=========================== End Compiler-specific macros ===============================
@@ -151,15 +173,11 @@ class NS_BASE nsInputFileStream
 {
 public:
 	enum  { kDefaultMode = PR_RDONLY };
-                                      nsInputFileStream()
-                                      : nsBasicFileStream()
-                                      , mStdStream(0) {}
-                                      nsInputFileStream(
-                                          istream& stream);
+                                      nsInputFileStream(istream* stream = CONSOLE_IN);
                                       nsInputFileStream(
                                           const nsFilePath& inFile,
                                           int nsprMode = kDefaultMode,
-                                          PRIntn accessMode = 0x00400)
+                                          PRIntn accessMode = 00700) // <- OCTAL
                                       : nsBasicFileStream(inFile, nsprMode, accessMode)
                                       , mStdStream(0) {}
 
@@ -174,13 +192,13 @@ public:
                                           // false result indicates line was truncated
                                           // to fit buffer, or an error occurred.
 
-    // Output streamers.  Add more as needed
+    // Input streamers.  Add more as needed
     nsInputFileStream&                operator >> (char& ch);
     
     void                              open(
                                            const nsFilePath& inFile,
                                            int nsprMode = kDefaultMode,
-                                           PRIntn accessMode = 0x00400)
+                                           PRIntn accessMode = 00700) // <- OCTAL
                                       {
                                           nsBasicFileStream::open(inFile, nsprMode, accessMode);
                                       }
@@ -201,15 +219,11 @@ class NS_BASE nsOutputFileStream
 public:
 	enum  { kDefaultMode = (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE) };
 
-                                      nsOutputFileStream()
-                                      : nsBasicFileStream()
-                                      , mStdStream(0) {}
-                                      nsOutputFileStream(
-                                          ostream& stream);
+                                      nsOutputFileStream(ostream* stream = CONSOLE_OUT);
                                       nsOutputFileStream(
                                            const nsFilePath& inFile,
                                            int nsprMode = kDefaultMode,
-                                           PRIntn accessMode = 0x00200)
+                                           PRIntn accessMode = 00700) // <- OCTAL
                                       : nsBasicFileStream(inFile, nsprMode, accessMode)
                                       , mStdStream(0) {}
  
@@ -217,7 +231,7 @@ public:
     inline void                       open(
                                           const nsFilePath& inFile,
                                           int nsprMode = kDefaultMode,
-                                          PRIntn accessMode = 0x00200)
+                                          PRIntn accessMode = 00700) // <- OCTAL
                                       {
                                           nsBasicFileStream::open(inFile, nsprMode, accessMode);
                                       }
@@ -238,6 +252,7 @@ public:
     nsOutputFileStream&               operator << (unsigned long val);
 
 protected:
+
 	ostream*                          mStdStream;
 }; // class nsOutputFileStream
 

@@ -1,18 +1,13 @@
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 
-#ifdef NS_USING_STL
-using std::endl;
-using std::cout;
-#endif
-
-NS_NAMESPACE FileTest
+NS_NAMESPACE FilesTest
 {
 	NS_NAMESPACE_PROTOTYPE void WriteStuff(nsOutputFileStream& s);
 } NS_NAMESPACE_END
 
 //----------------------------------------------------------------------------------------
-void FileTest::WriteStuff(nsOutputFileStream& s)
+void FilesTest::WriteStuff(nsOutputFileStream& s)
 //----------------------------------------------------------------------------------------
 {
 	// Initialize a URL from a string without suffix.  Change the path to suit your machine.
@@ -54,12 +49,14 @@ void main()
 //----------------------------------------------------------------------------------------
 {
 
-	// Test of nsFileSpec
+	// Test of console output
 	
-	nsOutputFileStream nsOut(cout);
+	nsOutputFileStream nsOut;
 	nsOut << "WRITING TEST OUTPUT TO cout" << nsEndl << nsEndl;
 
-	FileTest::WriteStuff(nsOut);
+	// Test of nsFileSpec
+	
+	FilesTest::WriteStuff(nsOut);
 	nsOut << nsEndl << nsEndl;
 	
 	// Test of nsOutputFileStream
@@ -69,8 +66,16 @@ void main()
 	{
 		nsOut << "WRITING IDENTICAL OUTPUT TO " << (const char*)myTextFilePath << nsEndl << nsEndl;
 		nsOutputFileStream testStream(myTextFilePath);
-		NS_ASSERTION(testStream.is_open(), "File could not be opened");
-		FileTest::WriteStuff(testStream);
+		if (!testStream.is_open())
+		{
+			nsOut
+			    << "ERROR: File "
+			    << (const char*)myTextFilePath
+			    << " could not be opened for output"
+			    << nsEndl;
+			return;
+		}
+		FilesTest::WriteStuff(testStream);
 	}	// <-- Scope closes the stream (and the file).
 
 	// Test of nsInputFileStream
@@ -78,7 +83,15 @@ void main()
 	{
 		nsOut << "READING BACK DATA FROM " << (const char*)myTextFilePath << nsEndl << nsEndl;
 		nsInputFileStream testStream2(myTextFilePath);
-		NS_ASSERTION(testStream2.is_open(), "File could not be opened");
+		if (!testStream2.is_open())
+		{
+			nsOut
+			    << "ERROR: File "
+			    << (const char*)myTextFilePath
+			    << " could not be opened for input"
+			    << nsEndl;
+			return;
+		}
 		char line[1000];
 		
 		testStream2.seek(0); // check that the seek compiles
@@ -87,5 +100,5 @@ void main()
 			testStream2.readline(line, sizeof(line));
 			nsOut << line << nsEndl;
 		}
-	}
+	}	// <-- Scope closes the stream (and the file).
 } // main

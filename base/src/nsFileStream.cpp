@@ -20,11 +20,6 @@
 //  Since nsFileStream.h is entirely templates, common code (such as open())
 //  which does not actually depend on the charT, can be placed here.
 
-#ifdef XP_UNIX
-// Compile the un-inlined functions in this file only.
-#define DEFINING_FILE_STREAM
-#endif
-
 #include "nsFileStream.h"
 
 #include <string.h>
@@ -32,11 +27,6 @@
 
 #ifdef XP_MAC
 #include <Errors.h>
-#endif
-
-#ifdef NS_USING_STL
-using std::endl;
-using std::cout;
 #endif
 
 //========================================================================================
@@ -224,12 +214,11 @@ PRIntn nsBasicFileStream::tell() const
 //========================================================================================
 
 //----------------------------------------------------------------------------------------
-nsInputFileStream::nsInputFileStream(
-  istream& stream)
+nsInputFileStream::nsInputFileStream(istream* stream)
 //----------------------------------------------------------------------------------------
-#ifdef XP_MAC
+#ifndef NS_USE_PR_STDIO
     : nsBasicFileStream(0, kDefaultMode)
-    , mStdStream(&stream)
+    , mStdStream(stream)
 #else
     : nsBasicFileStream(PR_STDIN, kDefaultMode)
     , mStdStream(0)
@@ -279,12 +268,14 @@ bool nsInputFileStream::readline(char* s, PRInt32 n)
 PRInt32 nsInputFileStream::read(void* s, PRInt32 n)
 //----------------------------------------------------------------------------------------
 {
+#ifndef NS_USE_PR_STDIO
     // Calling PR_Read on stdin is sure suicide on Macintosh.
     if (mStdStream)
     {
     	mStdStream->read((char*)s, n);
     	return n;
     }
+#endif
     if (!mFileDesc || mFailed)
         return -1;
     PRInt32 bytesRead = PR_Read(mFileDesc, s, n);
@@ -308,12 +299,11 @@ nsInputFileStream& nsInputFileStream::operator >> (char& c)
 //========================================================================================
 
 //----------------------------------------------------------------------------------------
-nsOutputFileStream::nsOutputFileStream(
-  ostream& stream)
+nsOutputFileStream::nsOutputFileStream(ostream* stream)
 //----------------------------------------------------------------------------------------
-#ifdef XP_MAC
+#ifndef NS_USE_PR_STDIO
     : nsBasicFileStream(0, kDefaultMode)
-    , mStdStream(&stream)
+    , mStdStream(stream)
 #else
     : nsBasicFileStream(PR_STDOUT, kDefaultMode)
     , mStdStream(0)
@@ -332,12 +322,14 @@ void nsOutputFileStream::put(char c)
 PRInt32 nsOutputFileStream::write(const void* s, PRInt32 n)
 //----------------------------------------------------------------------------------------
 {
+#ifndef NS_USE_PR_STDIO
     // Calling PR_Write on stdout is sure suicide.
     if (mStdStream)
     {
     	mStdStream->write((const char*)s, n);
         return n;
     }
+#endif
     if (!mFileDesc || mFailed)
        return -1;
     PRInt32 bytesWrit = PR_Write(mFileDesc, s, n);
@@ -403,11 +395,13 @@ void nsOutputFileStream::flush()
 // Must precede the destructor because both are inline.
 //----------------------------------------------------------------------------------------
 {
+#ifndef NS_USE_PR_STDIO
     if (mStdStream)
     {
         mStdStream->flush();
         return;
     }
+#endif
     if (mFileDesc == 0) 
         return;
     bool itFailed = PR_Sync(mFileDesc) != PR_SUCCESS;
@@ -426,13 +420,15 @@ void nsOutputFileStream::flush()
 nsOutputFileStream& nsEndl(nsOutputFileStream& os)
 //----------------------------------------------------------------------------------------
 {
+#ifndef NS_USE_PR_STDIO
     // Calling PR_Write on stdout is sure suicide on Macintosh.
     ostream* stream = os.GetStandardStream();
     if (stream)
     {
-        *stream << endl;
+        *stream << std::endl;
         return os;
     }
+#endif
      os.put('\n');
      os.flush();
      return os;
