@@ -1044,7 +1044,7 @@ nsJARItem::GetName(char * *aName)
     if ( !mZipItem->name )
         return NS_ERROR_FAILURE;
 
-    namedup = PL_strndup( mZipItem->name, mZipItem->namelen );
+    namedup = PL_strdup( mZipItem->name );
     if ( !namedup )
         return NS_ERROR_OUT_OF_MEMORY;
 
