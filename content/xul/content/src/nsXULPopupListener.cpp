@@ -43,6 +43,7 @@
 #include "nsIContent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsITimer.h"
+#include "nsIDOMNSUIEvent.h"
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -171,6 +172,20 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
   mouseEvent = do_QueryInterface(aMouseEvent);
   if (!mouseEvent) {
     //non-ui event passed in.  bad things.
+    return NS_OK;
+  }
+
+  // check if someone has attempted to prevent this action.
+  nsCOMPtr<nsIDOMNSUIEvent> nsUIEvent;
+  nsUIEvent = do_QueryInterface(mouseEvent);
+  if (!nsUIEvent) {
+    return NS_OK;
+  }
+
+  PRBool preventDefault;
+  nsUIEvent->GetPreventDefault(&preventDefault);
+  if (preventDefault) {
+    // someone called preventDefault. bail.
     return NS_OK;
   }
 
