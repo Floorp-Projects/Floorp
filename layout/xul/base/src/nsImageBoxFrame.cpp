@@ -576,21 +576,6 @@ nsImageBoxFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 
-already_AddRefed<nsILoadGroup>
-nsImageBoxFrame::GetLoadGroup()
-{
-  nsIPresShell *shell = GetPresContext()->GetPresShell();
-  if (!shell)
-    return nsnull;
-
-  nsIDocument *doc = shell->GetDocument();
-  if (!doc)
-    return nsnull;
-
-  return doc->GetDocumentLoadGroup(); // already_AddRefed
-}
-
-
 NS_IMETHODIMP nsImageBoxFrame::OnStartContainer(imgIRequest *request,
                                                 imgIContainer *image)
 {

@@ -535,7 +535,7 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
 
       // XXX see bug #206793
       if (docshell)
-        docshell->SetAppType(nsIDocShell::APP_TYPE_UNKNOWN);
+        docshell->SetAppType(nsIDocShell::APP_TYPE_EDITOR);
 
       m_editor->EndOfDocument();
     }
@@ -697,6 +697,8 @@ nsMsgCompose::Initialize(nsIDOMWindowInternal *aWindow, nsIMsgComposeParams *par
     if (NS_FAILED(rv)) return rv;
 
     m_baseWindow = do_QueryInterface(treeOwner);
+
+    globalObj->GetDocShell()->SetAppType(nsIDocShell::APP_TYPE_EDITOR);
   }
   
   MSG_ComposeFormat format;
@@ -2405,7 +2407,7 @@ QuotingOutputStreamListener::InsertToCompose(nsIEditor *aEditor,
 
       // XXX see bug #206793
       if (docshell)
-        docshell->SetAppType(nsIDocShell::APP_TYPE_UNKNOWN);
+        docshell->SetAppType(nsIDocShell::APP_TYPE_EDITOR);
     }
       
   }
