@@ -75,7 +75,7 @@ use RelationSet;
 delete $ENV{PATH};
 
 # Contains the version string for the current running Bugzilla.
-$::param{'version'} = '2.13';
+$::param{'version'} = '2.14rc';
 
 $::dontchange = "--do_not_change--";
 $::chooseone = "--Choose_one:--";
