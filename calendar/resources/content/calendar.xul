@@ -379,7 +379,7 @@
                   </box>
                </hbox>
                <tree id="unifinder-search-results-listbox" flex="1" 
-                  onselect="unifinderClickEvent( event )"
+                  onselect="unifinderOnSelect( event )"
                   enableColumnDrag="true"
                   >
                <treecols id="unifinder-search-results-tree-cols">
@@ -403,7 +403,9 @@
                       flex="1" label="&calendar.unifinder.tree.categories.label;"/>
                   </treecols>
        
+                  <!-- on mousedown here happens before onclick above -->
                   <treechildren tooltip="savetip" 
+                    onmousedown=""
                     onmousemove="changeToolTipTextForEvent( event )"
                     onkeypress="if (event.keyCode == 13) unifinderEditCommand();"
                     ondragover="return( false );"  
