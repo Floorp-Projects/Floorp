@@ -1220,6 +1220,7 @@ PRBool CSSParserImpl::ParseRuleSet(PRInt32& aErrorCode)
 {
   // First get the list of selectors for the rule
   SelectorList* slist = nsnull;
+  PRUint32 linenum = mScanner->GetLineNumber();
   if (! ParseSelectorList(aErrorCode, slist)) {
     REPORT_UNEXPECTED1(NS_LITERAL_STRING("Ruleset ignored due to bad selector"));
     SkipRuleSet(aErrorCode);
@@ -1248,6 +1249,7 @@ PRBool CSSParserImpl::ParseRuleSet(PRInt32& aErrorCode)
 
   while (nsnull != list) {
     nsICSSStyleRule* rule = nsnull;
+
     NS_NewCSSStyleRule(&rule, *(list->mSelectors));
     if (nsnull != rule) {
       if (nsnull != list->mSelectors->mNext) { // hand off other selectors to new rule
@@ -1255,6 +1257,7 @@ PRBool CSSParserImpl::ParseRuleSet(PRInt32& aErrorCode)
         ruleFirst->mNext = list->mSelectors->mNext;
         list->mSelectors->mNext = nsnull;
       }
+      rule->SetLineNumber(linenum);
       rule->SetDeclaration(declaration);
       rule->SetWeight(list->mWeight);
       rule->SetSourceSelectorText(list->mSourceString); // capture the original input (need this for namespace prefixes)

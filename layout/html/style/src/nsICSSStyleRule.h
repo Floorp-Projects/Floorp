@@ -99,7 +99,7 @@ public:
   PRInt32 CalcWeight(void) const;
 
   void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
-  nsresult ToString( nsAWritableString& aString ) const;
+  nsresult ToString( nsAWritableString& aString, nsICSSStyleSheet* aSheet ) const;
 
 public:
   PRInt32         mNameSpace;
@@ -126,6 +126,9 @@ public:
   virtual void DeleteSelector(nsCSSSelector* aSelector) = 0;
   virtual void SetSourceSelectorText(const nsString& aSelectorText) = 0;
   virtual void GetSourceSelectorText(nsString& aSelectorText) const = 0;
+
+  virtual PRUint32 GetLineNumber(void) const = 0;
+  virtual void SetLineNumber(PRUint32 aLineNumber) = 0;
 
   virtual nsICSSDeclaration* GetDeclaration(void) const = 0;
   virtual void SetDeclaration(nsICSSDeclaration* aDeclaration) = 0;

@@ -110,6 +110,8 @@ class nsCSSScanner {
   void ReportError(const nsAReadableString& aError);
 #endif
 
+  PRUint32 GetLineNumber();
+
   // Get the next token. Return nsfalse on EOF or ERROR. aTokenResult
   // is filled in with the data for the token.
   PRBool Next(PRInt32& aErrorCode, nsCSSToken& aTokenResult);
@@ -153,9 +155,9 @@ protected:
   PRInt32 mLastRead;
   PRUnichar mLocalPushback[4];
 
+  PRUint32 mLineNumber;
 #ifdef CSS_REPORT_PARSE_ERRORS
   nsXPIDLCString mFileName;
-  PRUint32 mLineNumber;
   PRUint32 mColNumber;
 #endif
 
