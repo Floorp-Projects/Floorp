@@ -40,10 +40,11 @@
 #include "nsXPIDLString.h"
 #include "nsIProxyAutoConfig.h"
 #include "nsAutoLock.h"
-#include "nsNetCID.h"
 #include "nsIIOService.h"
 #include "nsIEventQueueService.h"
 #include "nsIProtocolHandler.h"
+#include "nsReadableUtils.h"
+#include "nsNetUtil.h"
 #include "nsCRT.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -63,11 +64,15 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsProtocolProxyService, nsIProtocolProxyService);
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsProtocolProxyService::nsProxyInfo, nsIProxyInfo);
 
 
-nsProtocolProxyService::nsProtocolProxyService():
-    mArrayLock(PR_NewLock()),
-    mUseProxy(0),
-    mPAC(nsnull)
-
+nsProtocolProxyService::nsProtocolProxyService()
+    : mArrayLock(PR_NewLock())
+    , mUseProxy(0)
+    , mHTTPProxyPort(-1)
+    , mFTPProxyPort(-1)
+    , mGopherProxyPort(-1)
+    , mHTTPSProxyPort(-1)
+    , mSOCKSProxyPort(-1)
+    , mSOCKSProxyVersion(4)
 {
     NS_INIT_ISUPPORTS();
 }
@@ -77,8 +82,7 @@ nsProtocolProxyService::~nsProtocolProxyService()
     if(mArrayLock)
         PR_DestroyLock(mArrayLock);
 
-    if (mFiltersArray.Count() > 0) 
-    {
+    if (mFiltersArray.Count() > 0) {
         mFiltersArray.EnumerateForwards(
                 (nsVoidArrayEnumFunc)this->CleanupFilterArray, nsnull);
         mFiltersArray.Clear();
@@ -120,7 +124,38 @@ nsProtocolProxyService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResul
 }
 
 void
-nsProtocolProxyService::PrefsChanged(const char* pref) {
+nsProtocolProxyService::LoadStringPref(const char *aPref, nsCString &aResult)
+{
+    nsXPIDLCString temp;
+    nsresult rv;
+    
+    rv = mPrefs->CopyCharPref(aPref, getter_Copies(temp));
+    if (NS_FAILED(rv))
+        aResult.Truncate();
+    else {
+        aResult.Assign(temp);
+        // all of our string prefs are hostnames, so we should remove any
+        // whitespace characters that the user might have unknowingly entered.
+        aResult.StripWhitespace();
+    }
+}
+
+void
+nsProtocolProxyService::LoadIntPref(const char *aPref, PRInt32 &aResult)
+{
+    PRInt32 temp;
+    nsresult rv;
+
+    rv = mPrefs->GetIntPref(aPref, &temp);
+    if (NS_FAILED(rv)) 
+        aResult = -1;
+    else
+        aResult = temp;
+}
+
+void
+nsProtocolProxyService::PrefsChanged(const char* pref)
+{
     NS_ASSERTION(mPrefs, "No preference service available!");
     if (!mPrefs) return;
 
@@ -128,8 +163,7 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
     PRBool reloadPAC = PR_FALSE;
     nsXPIDLCString tempString;
 
-    if (!pref || !PL_strcmp(pref, "network.proxy.type"))
-    {
+    if (!pref || !strcmp(pref, "network.proxy.type")) {
         PRInt32 type = -1;
         rv = mPrefs->GetIntPref("network.proxy.type",&type);
         if (NS_SUCCEEDED(rv)) {
@@ -149,114 +183,57 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
         }
     }
 
-    if (!pref || !PL_strcmp(pref, "network.proxy.http"))
-    {
-        rv = mPrefs->CopyCharPref("network.proxy.http", 
-                getter_Copies(mHTTPProxyHost));
-        if (NS_FAILED(rv))
-            mHTTPProxyHost.Adopt(nsCRT::strdup(""));
-    }
+    if (!pref || !strcmp(pref, "network.proxy.http"))
+        LoadStringPref("network.proxy.http", mHTTPProxyHost);
 
-    if (!pref || !PL_strcmp(pref, "network.proxy.http_port"))
-    {
-        mHTTPProxyPort = -1;
-        PRInt32 proxyPort;
-        rv = mPrefs->GetIntPref("network.proxy.http_port",&proxyPort);
-        if (NS_SUCCEEDED(rv)) 
-            mHTTPProxyPort = proxyPort;
-    }
+    if (!pref || !strcmp(pref, "network.proxy.http_port"))
+        LoadIntPref("network.proxy.http_port", mHTTPProxyPort);
 
-    if (!pref || !PL_strcmp(pref, "network.proxy.ssl"))
-    {
-        rv = mPrefs->CopyCharPref("network.proxy.ssl", 
-                getter_Copies(mHTTPSProxyHost));
-        if (NS_FAILED(rv))
-            mHTTPSProxyHost.Adopt(nsCRT::strdup(""));
-    }
+    if (!pref || !strcmp(pref, "network.proxy.ssl"))
+        LoadStringPref("network.proxy.ssl", mHTTPSProxyHost);
 
-    if (!pref || !PL_strcmp(pref, "network.proxy.ssl_port"))
-    {
-        mHTTPSProxyPort = -1;
-        PRInt32 proxyPort;
-        rv = mPrefs->GetIntPref("network.proxy.ssl_port",&proxyPort);
-        if (NS_SUCCEEDED(rv)) 
-            mHTTPSProxyPort = proxyPort;
-    }
+    if (!pref || !strcmp(pref, "network.proxy.ssl_port"))
+        LoadIntPref("network.proxy.ssl_port", mHTTPSProxyPort);
 
-    if (!pref || !PL_strcmp(pref, "network.proxy.ftp"))
-    {
-        rv = mPrefs->CopyCharPref("network.proxy.ftp", 
-                getter_Copies(mFTPProxyHost));
-        if (NS_FAILED(rv))
-            mFTPProxyHost.Adopt(nsCRT::strdup(""));
-    }
+    if (!pref || !strcmp(pref, "network.proxy.ftp"))
+        LoadStringPref("network.proxy.ftp", mFTPProxyHost);
 
-    if (!pref || !PL_strcmp(pref, "network.proxy.ftp_port"))
-    {
-        mFTPProxyPort = -1;
-        PRInt32 proxyPort;
-        rv = mPrefs->GetIntPref("network.proxy.ftp_port",&proxyPort);
-        if (NS_SUCCEEDED(rv)) 
-            mFTPProxyPort = proxyPort;
-    }
+    if (!pref || !strcmp(pref, "network.proxy.ftp_port"))
+        LoadIntPref("network.proxy.ftp_port", mFTPProxyPort);
 
-    if (!pref || !PL_strcmp(pref, "network.proxy.gopher"))
-    {
-        rv = mPrefs->CopyCharPref("network.proxy.gopher", 
-                                      getter_Copies(mGopherProxyHost));
-        if (NS_FAILED(rv) || !mGopherProxyHost)
-            mGopherProxyHost.Adopt(nsCRT::strdup(""));
-    }
+    if (!pref || !strcmp(pref, "network.proxy.gopher"))
+        LoadStringPref("network.proxy.gopher", mGopherProxyHost);
 
-    if (!pref || !PL_strcmp(pref, "network.proxy.gopher_port"))
-    {
-        mGopherProxyPort = -1;
-        PRInt32 proxyPort = -1;
-        rv = mPrefs->GetIntPref("network.proxy.gopher_port",&proxyPort);
-        if (NS_SUCCEEDED(rv) && proxyPort>0) 
-            mGopherProxyPort = proxyPort;
-    }
+    if (!pref || !strcmp(pref, "network.proxy.gopher_port"))
+        LoadIntPref("network.proxy.gopher_port", mGopherProxyPort);
 
-    if (!pref || !PL_strcmp(pref, "network.proxy.socks"))
-    {
-        rv = mPrefs->CopyCharPref("network.proxy.socks", 
-                                  getter_Copies(mSOCKSProxyHost));
-        if (NS_FAILED(rv))
-            mSOCKSProxyHost.Adopt(nsCRT::strdup(""));
-    }
+    if (!pref || !strcmp(pref, "network.proxy.socks"))
+        LoadStringPref("network.proxy.socks", mSOCKSProxyHost);
     
-    if (!pref || !PL_strcmp(pref, "network.proxy.socks_port"))
-    {
-        mSOCKSProxyPort = -1;
-        PRInt32 proxyPort;
-        rv = mPrefs->GetIntPref("network.proxy.socks_port",&proxyPort);
-        if (NS_SUCCEEDED(rv)) 
-            mSOCKSProxyPort = proxyPort;
+    if (!pref || !strcmp(pref, "network.proxy.socks_port"))
+        LoadIntPref("network.proxy.socks_port", mSOCKSProxyPort);
+
+    if (!pref || !strcmp(pref, "network.proxy.socks_version")) {
+        PRInt32 version;
+        LoadIntPref("network.proxy.socks_version", version);
+        // make sure this preference value remains sane
+        if (version == 5)
+            mSOCKSProxyVersion = 5;
+        else
+            mSOCKSProxyVersion = 4;
     }
 
-    if (!pref || !PL_strcmp(pref, "network.proxy.socks_version"))
-    {
-        mSOCKSProxyVersion = -1; 
-        PRInt32 SOCKSVersion;
-        rv = mPrefs->GetIntPref("network.proxy.socks_version",&SOCKSVersion);
-        if (NS_SUCCEEDED(rv)) 
-            mSOCKSProxyVersion = SOCKSVersion;
-    }
-
-    if (!pref || !PL_strcmp(pref, "network.proxy.no_proxies_on"))
-    {
+    if (!pref || !strcmp(pref, "network.proxy.no_proxies_on")) {
         rv = mPrefs->CopyCharPref("network.proxy.no_proxies_on",
                                   getter_Copies(tempString));
         if (NS_SUCCEEDED(rv))
-            (void)LoadFilters((const char*)tempString);
+            LoadFilters(tempString.get());
     }
 
-    if ((!pref || !PL_strcmp(pref, "network.proxy.autoconfig_url") || reloadPAC) && 
-        (mUseProxy == 2))
-    {
+    if ((!pref || !strcmp(pref, "network.proxy.autoconfig_url") || reloadPAC) && (mUseProxy == 2)) {
         rv = mPrefs->CopyCharPref("network.proxy.autoconfig_url", 
                                   getter_Copies(tempString));
-        if (NS_SUCCEEDED(rv) && (!reloadPAC || PL_strcmp(tempString, mPACURL))) 
+        if (NS_SUCCEEDED(rv) && (!reloadPAC || strcmp(tempString.get(), mPACURL.get()))) 
             ConfigureFromPAC(tempString);
     }
 }
@@ -280,8 +257,8 @@ void PR_CALLBACK nsProtocolProxyService::HandlePACLoadEvent(PLEvent* aEvent)
         return;
     }
 
-    if (!pps->mPACURL) {
-        NS_ERROR("HandlePACLoadEvent: js PACURL component is null");
+    if (pps->mPACURL.IsEmpty()) {
+        NS_ERROR("HandlePACLoadEvent: js PACURL component is empty");
         return;
     }
 
@@ -307,10 +284,10 @@ void PR_CALLBACK nsProtocolProxyService::HandlePACLoadEvent(PLEvent* aEvent)
 
 void PR_CALLBACK nsProtocolProxyService::DestroyPACLoadEvent(PLEvent* aEvent)
 {
-  nsProtocolProxyService *pps = 
-      (nsProtocolProxyService*) PL_GetEventOwner(aEvent);
-  NS_IF_RELEASE(pps);
-  delete aEvent;
+    nsProtocolProxyService *pps = 
+        (nsProtocolProxyService*) PL_GetEventOwner(aEvent);
+    NS_IF_RELEASE(pps);
+    delete aEvent;
 }
 
 PRBool
@@ -335,8 +312,7 @@ nsProtocolProxyService::CanUseProxy(nsIURI* aURI)
     int host_len = host.Length();
     int filter_host_len;
     
-    while (++index < mFiltersArray.Count()) 
-    {
+    while (++index < mFiltersArray.Count()) {
         host_port* hp = (host_port*) mFiltersArray[index];
         
         // only if port doesn't exist or matches
@@ -360,19 +336,12 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxyInfo* *aResult) {
 
     *aResult = nsnull;
 
-    nsCOMPtr<nsIIOService> ios = do_GetService(kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
     nsCAutoString scheme;
     rv = aURI->GetScheme(scheme);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIProtocolHandler> handler;
-    rv = ios->GetProtocolHandler(scheme.get(), getter_AddRefs(handler));
-    if (NS_FAILED(rv)) return rv;
-
     PRUint32 flags;
-    rv = handler->GetProtocolFlags(&flags);
+    rv = GetProtocolFlags(scheme.get(), &flags);
     if (NS_FAILED(rv)) return rv;
 
     if (!(flags & nsIProtocolHandler::ALLOWS_PROXY))
@@ -380,129 +349,128 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxyInfo* *aResult) {
 
     // if proxies are enabled and this host:port combo is
     // supposed to use a proxy, check for a proxy.
-    if ((0 == mUseProxy) || 
-        ((1 == mUseProxy) && !CanUseProxy(aURI))) {
+    if (0 == mUseProxy || (1 == mUseProxy && !CanUseProxy(aURI)))
         return NS_OK;
-    }
 
-    nsProxyInfo* proxyInfo = nsnull;
-    NS_NEWXPCOM(proxyInfo, nsProxyInfo);
-    if (!proxyInfo)
-        return NS_ERROR_OUT_OF_MEMORY;
+    // proxy info values
+    const char *type = nsnull;
+    char *host = nsnull;
+    PRInt32 port = -1;
     
     // Proxy auto config magic...
-    if (2 == mUseProxy)
-    {
+    if (2 == mUseProxy) {
         if (!mPAC) {
             NS_ERROR("ERROR: PAC js component is null, assuming DIRECT");
-            delete proxyInfo;
             return NS_OK; // assume DIRECT connection for now
         }
 
-         rv = mPAC->ProxyForURL(aURI, 
-                                &proxyInfo->mHost,
-                                &proxyInfo->mPort, 
-                                &proxyInfo->mType);
-         if (NS_FAILED(rv) || !proxyInfo->Type() ||               // If: it didn't work
-             !PL_strcasecmp("direct", proxyInfo->Type()) ||       // OR we're meant to go direct
-             (!PL_strcasecmp("http", proxyInfo->Type()) &&        // OR we're an http proxy...
-              !(flags & nsIProtocolHandler::ALLOWS_PROXY_HTTP))) { // ... but we can't proxy with http
-             delete proxyInfo;                                    // don't proxy this
-         } else {
-             if (proxyInfo->Port() <= 0)
-                proxyInfo->mPort = -1;
-             NS_ADDREF(*aResult = proxyInfo);
-         }
-         // assume errors mean direct - its better than just failing, and
-         // the js conosle will have the specific error
-         return NS_OK;
-    }
-    
-    // Nothing below here returns failure
-    NS_ADDREF(*aResult = proxyInfo);
+        nsXPIDLCString rawType; // XXX an enum might make better sense here
 
-    PRBool isScheme = PR_FALSE;
+        rv = mPAC->ProxyForURL(aURI, &host, &port, getter_Copies(rawType));
+        if (NS_SUCCEEDED(rv) && rawType && host) {
+            //
+            // Accept only known values for the proxy type
+            //
+            if (PL_strcasecmp(rawType, "http") == 0) {
+                if (flags & nsIProtocolHandler::ALLOWS_PROXY_HTTP)
+                    type = "http";
+            }
+            else if (PL_strcasecmp(rawType, "socks") == 0)
+                type = "socks";
+            else if (PL_strcasecmp(rawType, "socks4") == 0)
+                type = "socks4";
+        }
 
-    if (mHTTPProxyHost.get()[0] && mHTTPProxyPort > 0 &&
-        NS_SUCCEEDED(aURI->SchemeIs("http", &isScheme)) && isScheme) {
-        proxyInfo->mHost = PL_strdup(mHTTPProxyHost);
-        proxyInfo->mType = PL_strdup("http");
-        proxyInfo->mPort = mHTTPProxyPort;
-        return NS_OK;
-    }
-    
-    if (mHTTPSProxyHost.get()[0] && mHTTPSProxyPort > 0 &&
-        NS_SUCCEEDED(aURI->SchemeIs("https", &isScheme)) && isScheme) {
-        proxyInfo->mHost = PL_strdup(mHTTPSProxyHost);
-        proxyInfo->mType = PL_strdup("http");
-        proxyInfo->mPort = mHTTPSProxyPort;
-        return NS_OK;
-    }
-    
-    if (mFTPProxyHost.get()[0] && mFTPProxyPort > 0 &&
-        NS_SUCCEEDED(aURI->SchemeIs("ftp", &isScheme)) && isScheme) {
-        proxyInfo->mHost = PL_strdup(mFTPProxyHost);
-        proxyInfo->mType = PL_strdup("http");
-        proxyInfo->mPort = mFTPProxyPort;
+        if (type) {
+            if (port <= 0)
+                port = -1;
+            return NewProxyInfo_Internal(type, host, port, aResult);
+        }
+
+        // assume errors mean direct - its better than just failing, and
+        // the js conosle will have the specific error
+        if (host)
+            nsMemory::Free(host);
         return NS_OK;
     }
 
-    if (mGopherProxyHost.get()[0] && mGopherProxyPort > 0 &&
-        NS_SUCCEEDED(aURI->SchemeIs("gopher", &isScheme)) && isScheme) {
-        proxyInfo->mHost = PL_strdup(mGopherProxyHost);
-        proxyInfo->mType = PL_strdup("http");
-        proxyInfo->mPort = mGopherProxyPort;
+    if (!mHTTPProxyHost.IsEmpty() && mHTTPProxyPort > 0 &&
+            scheme.Equals(NS_LITERAL_CSTRING("http"))) {
+        host = ToNewCString(mHTTPProxyHost);
+        type = "http";
+        port = mHTTPProxyPort;
         return NS_OK;
     }
     
-    if (mSOCKSProxyHost.get()[0] && mSOCKSProxyPort > 0 &&
-        mSOCKSProxyVersion == 4) {
-        proxyInfo->mHost = PL_strdup(mSOCKSProxyHost);
-        proxyInfo->mPort = mSOCKSProxyPort;
-        proxyInfo->mType = PL_strdup("socks4");
+    if (!mHTTPSProxyHost.IsEmpty() && mHTTPSProxyPort > 0 &&
+            scheme.Equals(NS_LITERAL_CSTRING("https"))) {
+        host = ToNewCString(mHTTPSProxyHost);
+        type = "http";
+        port = mHTTPSProxyPort;
         return NS_OK;
     }
-
-    if (mSOCKSProxyHost.get()[0] && mSOCKSProxyPort > 0 &&
-        mSOCKSProxyVersion == 5) {
-        proxyInfo->mHost = PL_strdup(mSOCKSProxyHost);
-        proxyInfo->mPort = mSOCKSProxyPort;
-        proxyInfo->mType = PL_strdup("socks");
-        return NS_OK;
-    }
-
-    NS_RELEASE(*aResult); // Will call destructor
     
+    if (!mFTPProxyHost.IsEmpty() && mFTPProxyPort > 0 &&
+            scheme.Equals(NS_LITERAL_CSTRING("ftp"))) {
+        host = ToNewCString(mFTPProxyHost);
+        type = "http";
+        port = mFTPProxyPort;
+        return NS_OK;
+    }
+
+    if (!mGopherProxyHost.IsEmpty() && mGopherProxyPort > 0 &&
+            scheme.Equals(NS_LITERAL_CSTRING("gopher"))) {
+        host = ToNewCString(mGopherProxyHost);
+        type = "http";
+        port = mGopherProxyPort;
+        return NS_OK;
+    }
+    
+    if (!mSOCKSProxyHost.IsEmpty() && mSOCKSProxyPort > 0) {
+        host = ToNewCString(mSOCKSProxyHost);
+        if (mSOCKSProxyVersion == 4) 
+            type = "socks4";
+        else
+            type = "socks";
+        port = mSOCKSProxyPort;
+        return NS_OK;
+    }
+
+    if (type)
+        return NewProxyInfo_Internal(type, host, port, aResult);
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsProtocolProxyService::NewProxyInfo(const char* type, const char* host,
-                                     PRInt32 port, nsIProxyInfo* *result)
+nsProtocolProxyService::NewProxyInfo(const char *aType,
+                                     const char *aHost,
+                                     PRInt32 aPort,
+                                     nsIProxyInfo **aResult)
 {
-    nsProxyInfo* proxyInfo = nsnull;
-    NS_NEWXPCOM(proxyInfo, nsProxyInfo);
-    if (!proxyInfo)
-        return NS_ERROR_OUT_OF_MEMORY;
+    const char *type = nsnull;
 
-    if (type)
-        proxyInfo->mType = nsCRT::strdup(type);
+    // canonicalize type
+    if (PL_strcasecmp(aType, "http"))
+        type = "http";
+    else if (PL_strcasecmp(aType, "socks"))
+        type = "socks";
+    else if (PL_strcasecmp(aType, "socks4"))
+        type = "socks4";
+    else
+        return NS_ERROR_INVALID_ARG;
 
-    if (host)
-        proxyInfo->mHost = nsCRT::strdup(host);
+    if (aPort <= 0)
+        aPort = -1;
 
-    proxyInfo->mPort = port;
-
-    *result = proxyInfo;
-    NS_ADDREF(*result);
-    return NS_OK;
+    return NewProxyInfo_Internal(type, nsCRT::strdup(aHost), aPort, aResult);
 }
 
 NS_IMETHODIMP
 nsProtocolProxyService::ConfigureFromPAC(const char *url)
 {
     nsresult rv = NS_OK;
-    mPACURL.Adopt(nsCRT::strdup(url));
+    mPACURL.Assign(url);
 
     /* now we need to setup a callback from the main ui thread
        in which we will load the pac file from the specified
@@ -588,13 +556,10 @@ nsProtocolProxyService::RemoveNoProxyFor(const char* iHost, PRInt32 iPort)
         return NS_ERROR_FAILURE;
 
     PRInt32 index = -1;
-    while (++index < mFiltersArray.Count())
-    {
+    while (++index < mFiltersArray.Count()) {
         host_port* hp = (host_port*) mFiltersArray[index];
-        if ((hp && hp->host) &&
-            (iPort == hp->port) && 
-            (0 == PL_strcasecmp((const char*)hp->host, iHost))) 
-        {
+        if ((hp && hp->host) && (iPort == hp->port) && 
+            (0 == PL_strcasecmp((const char*)hp->host, iHost))) {
             delete hp->host;
             delete hp;
             mFiltersArray.RemoveElementAt(index);
@@ -607,8 +572,7 @@ nsProtocolProxyService::RemoveNoProxyFor(const char* iHost, PRInt32 iPort)
 PRBool 
 nsProtocolProxyService::CleanupFilterArray(void* aElement, void* aData) 
 {
-    if (aElement) 
-    {
+    if (aElement) {
         host_port* hp = (host_port*)aElement;
         delete hp->host;
         delete hp;
@@ -621,8 +585,7 @@ nsProtocolProxyService::LoadFilters(const char* filters)
 {
     host_port* hp;
     // check to see the owners flag? /!?/ TODO
-    if (mFiltersArray.Count() > 0) 
-    {
+    if (mFiltersArray.Count() > 0) {
         mFiltersArray.EnumerateForwards(
             (nsVoidArrayEnumFunc)this->CleanupFilterArray, nsnull);
         mFiltersArray.Clear();
@@ -632,8 +595,7 @@ nsProtocolProxyService::LoadFilters(const char* filters)
         return ;//fail silently...
 
     char* np = (char*)filters;
-    while (*np)
-    {
+    while (*np) {
         // skip over spaces and ,
         while (*np && (*np == ',' || nsCRT::IsAsciiSpace(*np)))
             np++;
@@ -641,9 +603,7 @@ nsProtocolProxyService::LoadFilters(const char* filters)
         char* endproxy = np+1; // at least that...
         char* portLocation = 0; 
         PRInt32 nport = 0; // no proxy port
-        while (*endproxy && (*endproxy != ',' && 
-                    !nsCRT::IsAsciiSpace(*endproxy)))
-        {
+        while (*endproxy && (*endproxy != ',' && !nsCRT::IsAsciiSpace(*endproxy))) {
             if (*endproxy == ':')
                 portLocation = endproxy;
             endproxy++;
@@ -664,4 +624,40 @@ nsProtocolProxyService::LoadFilters(const char* filters)
         mFiltersArray.AppendElement(hp);
         np = endproxy;
     }
+}
+
+nsresult
+nsProtocolProxyService::GetProtocolFlags(const char *aScheme, PRUint32 *aFlags)
+{
+    nsresult rv;
+
+    if (!mIOService) {
+        mIOService = do_GetIOService(&rv);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    nsCOMPtr<nsIProtocolHandler> handler;
+    rv = mIOService->GetProtocolHandler(aScheme, getter_AddRefs(handler));
+    if (NS_FAILED(rv)) return rv;
+
+    return handler->GetProtocolFlags(aFlags);
+}
+
+nsresult
+nsProtocolProxyService::NewProxyInfo_Internal(const char *aType,
+                                              char *aHost,
+                                              PRInt32 aPort,
+                                              nsIProxyInfo **aResult)
+{
+    nsProxyInfo *proxyInfo = nsnull;
+    NS_NEWXPCOM(proxyInfo, nsProxyInfo);
+    if (!proxyInfo)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    proxyInfo->mType = aType;
+    proxyInfo->mHost = aHost;
+    proxyInfo->mPort = aPort;
+
+    NS_ADDREF(*aResult = proxyInfo);
+    return NS_OK;
 }

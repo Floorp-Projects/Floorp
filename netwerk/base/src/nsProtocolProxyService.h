@@ -43,13 +43,14 @@
 #include "nsCOMPtr.h"
 #include "nsIPref.h"
 #include "nsVoidArray.h"
-#include "nsXPIDLString.h"
 #include "nsIProtocolProxyService.h"
 #include "nsIProxyAutoConfig.h"
 #include "nsIProxyInfo.h"
+#include "nsIIOService.h"
 #include "prmem.h"
 
-class nsProtocolProxyService : public nsIProtocolProxyService {
+class nsProtocolProxyService : public nsIProtocolProxyService
+{
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROTOCOLPROXYSERVICE
@@ -64,7 +65,9 @@ public:
 
     void PrefsChanged(const char* pref);
 
-    class nsProxyInfo : public nsIProxyInfo {
+    class nsProxyInfo : public nsIProxyInfo
+    {
+    public:
         NS_DECL_ISUPPORTS
 
         NS_IMETHOD_(const char*) Host() {
@@ -80,21 +83,24 @@ public:
         }
 
         virtual ~nsProxyInfo() {
-            PR_FREEIF(mHost);
-            PR_FREEIF(mType);
+            if (mHost) nsMemory::Free(mHost);
         }
 
         nsProxyInfo() : mType(nsnull), mHost(nsnull), mPort(-1) {
             NS_INIT_ISUPPORTS();
         }
 
-        char* mType;
+        const char* mType;
         char* mHost;
         PRInt32 mPort;
     };
 
 protected:
 
+    nsresult       GetProtocolFlags(const char *scheme, PRUint32 *flags);
+    nsresult       NewProxyInfo_Internal(const char *type, char *host, PRInt32 port, nsIProxyInfo **);
+    void           LoadStringPref(const char *pref, nsCString &result);
+    void           LoadIntPref(const char *pref, PRInt32 &result);
     void           LoadFilters(const char* filters);
     static PRBool  CleanupFilterArray(void* aElement, void* aData);
 
@@ -109,27 +115,29 @@ protected:
 
     PRBool CanUseProxy(nsIURI* aURI);
 
+    nsCOMPtr<nsIIOService>  mIOService;
+
     nsCOMPtr<nsIPref>       mPrefs;
     PRUint16                mUseProxy;
 
-    nsXPIDLCString          mHTTPProxyHost;
+    nsCString               mHTTPProxyHost;
     PRInt32                 mHTTPProxyPort;
 
-    nsXPIDLCString          mFTPProxyHost;
+    nsCString               mFTPProxyHost;
     PRInt32                 mFTPProxyPort;
 
-    nsXPIDLCString          mGopherProxyHost;
+    nsCString               mGopherProxyHost;
     PRInt32                 mGopherProxyPort;
 
-    nsXPIDLCString          mHTTPSProxyHost;
+    nsCString               mHTTPSProxyHost;
     PRInt32                 mHTTPSProxyPort;
     
-    nsXPIDLCString          mSOCKSProxyHost;
+    nsCString               mSOCKSProxyHost;
     PRInt32                 mSOCKSProxyPort;
     PRInt32                 mSOCKSProxyVersion;
 
     nsCOMPtr<nsIProxyAutoConfig> mPAC;
-    nsXPIDLCString          mPACURL;
+    nsCString                    mPACURL;
 
     static void PR_CALLBACK HandlePACLoadEvent(PLEvent* aEvent);
     static void PR_CALLBACK DestroyPACLoadEvent(PLEvent* aEvent);
