@@ -20,6 +20,7 @@
 
 %{C++
 
+#include "nscore.h"
 #include "prtime.h"
 
 /* 

@@ -18,10 +18,6 @@
 
 #include "nsISupports.idl"
 
-%{C++
-#include "nscore.h" // for PRUnichar
-%}
-
 [scriptable, uuid(DB242E01-E4D9-11d2-9DDE-000064657374)]
 interface nsIObserver : nsISupports {
 
