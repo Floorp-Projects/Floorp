@@ -115,6 +115,8 @@ public:
                                PRUint32 aLength);
 };
 
+
+
 class SearchDataSource : public nsIRDFSearchDataSource
 {
 private:
@@ -217,7 +219,7 @@ static	nsIRDFService		*gRDFService = nsnull;
 static	SearchDataSource	*gSearchDataSource = nsnull;
 
 PRInt32				SearchDataSource::gRefCnt;
-nsIRDFDataSource		*SearchDataSource::mInner;
+nsIRDFDataSource		*SearchDataSource::mInner = nsnull;
 
 nsIRDFResource			*SearchDataSource::kNC_SearchRoot;
 nsIRDFResource			*SearchDataSource::kNC_Child;
@@ -318,7 +320,7 @@ SearchDataSource::~SearchDataSource (void)
 		NS_RELEASE(kRDF_InstanceOf);
 		NS_RELEASE(kRDF_type);
 
-		NS_RELEASE(mInner);
+		NS_IF_RELEASE(mInner);
 
 		gSearchDataSource = nsnull;
 		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
@@ -436,8 +438,11 @@ SearchDataSource::GetTarget(nsIRDFResource *source,
 	// we only have positive assertions in the internet search data source.
 	if (! tv)
 		return(rv);
-
-	rv = mInner->GetTarget(source, property, tv, target);
+	
+	if (mInner)
+	{
+		rv = mInner->GetTarget(source, property, tv, target);
+	}
 	return(rv);
 }
 
@@ -460,17 +465,20 @@ SearchDataSource::GetTargets(nsIRDFResource *source,
 	if (! targets)
 		return NS_ERROR_NULL_POINTER;
 
+	nsresult rv = NS_RDF_NO_VALUE;
+
 	// we only have positive assertions in the internet search data source.
 	if (! tv)
-		return NS_RDF_NO_VALUE;
-
-	nsresult rv;
+		return(rv);
 
 	if (source == kNC_SearchRoot)
 	{
 		if (property == kNC_Child)
 		{
-			rv = mInner->GetTargets(source, property,tv, targets);
+			if (mInner)
+			{
+				rv = mInner->GetTargets(source, property,tv, targets);
+			}
 			return(rv);
 		}
 	}
@@ -479,7 +487,10 @@ SearchDataSource::GetTargets(nsIRDFResource *source,
 		if (property == kNC_Child)
 		{
 			BeginSearchRequest(source);
-			rv = mInner->GetTargets(source, property,tv, targets);
+			if (mInner)
+			{
+				rv = mInner->GetTargets(source, property,tv, targets);
+			}
 			return(rv);
 		}
 	}
@@ -540,7 +551,12 @@ SearchDataSource::HasAssertion(nsIRDFResource *source,
 		*hasAssertion = PR_FALSE;
 		return NS_OK;
         }
-	nsresult	rv = mInner->HasAssertion(source, property, target, tv, hasAssertion);
+        nsresult	rv = NS_RDF_NO_VALUE;
+        
+        if (mInner)
+        {
+		mInner->HasAssertion(source, property, target, tv, hasAssertion);
+	}
         return(rv);
 }
 
@@ -595,7 +611,12 @@ SearchDataSource::ArcLabelsOut(nsIRDFResource *source,
 NS_IMETHODIMP
 SearchDataSource::GetAllResources(nsISimpleEnumerator** aCursor)
 {
-	nsresult	rv = mInner->GetAllResources(aCursor);
+	nsresult	rv = NS_RDF_NO_VALUE;
+
+	if (mInner)
+	{
+		rv = mInner->GetAllResources(aCursor);
+	}
 	return(rv);
 }
 
@@ -616,7 +637,10 @@ SearchDataSource::AddObserver(nsIRDFObserver *n)
 			return NS_ERROR_OUT_OF_MEMORY;
 	}
 	mObservers->AppendElement(n);
-	rv = mInner->AddObserver(n);
+	if (mInner)
+	{
+		rv = mInner->AddObserver(n);
+	}
 	return(rv);
 }
 
@@ -634,7 +658,10 @@ SearchDataSource::RemoveObserver(nsIRDFObserver *n)
 	if (nsnull == mObservers)
 		return NS_OK;
 	mObservers->RemoveElement(n);
-	rv = mInner->RemoveObserver(n);
+	if (mInner)
+	{
+		rv = mInner->RemoveObserver(n);
+	}
 	return(rv);
 }
 
@@ -643,7 +670,12 @@ SearchDataSource::RemoveObserver(nsIRDFObserver *n)
 NS_IMETHODIMP
 SearchDataSource::Flush()
 {
-	nsresult	rv = mInner->Flush();
+	nsresult	rv = NS_OK;
+
+	if (mInner)
+	{
+		rv = mInner->Flush();
+	}
 	return(rv);
 }
 
@@ -805,6 +837,11 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
 	if (!engine)
 		return(NS_ERROR_NULL_POINTER);
 
+	if (!mInner)
+	{
+		return(NS_RDF_NO_VALUE);
+	}
+
 	nsCOMPtr<nsIRDFNode>	dataTarget;
 	if (NS_FAILED(rv = mInner->GetTarget(engine, kNC_Data, PR_TRUE, getter_AddRefs(dataTarget))))
 		return(rv);
@@ -907,6 +944,11 @@ nsresult
 SearchDataSource::GetSearchEngineList()
 {
         nsresult			rv = NS_OK;
+
+	if (!mInner)
+	{
+		return(NS_RDF_NO_VALUE);
+	}
 
 #ifdef	XP_MAC
 	// on Mac, use system's search files
@@ -1400,6 +1442,7 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 		mDataSource->Unassert(mParent, kNC_loading, literal);
 		NS_RELEASE(literal);
 	}
+
 	if (!mLine)
 	{
 #ifdef	DEBUG
