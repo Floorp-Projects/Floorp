@@ -48,8 +48,7 @@
 #include "jsj_private.h"
 #include "jsjava.h"
 
-#include "jscntxt.h"        /* For js_ReportErrorAgain().
-                               TODO - get rid of private header */
+#include "jscntxt.h"        /* For js_ReportErrorAgain().*/
 
 #include "netscape_javascript_JSObject.h"   /* javah-generated headers */
 #include "nsISecurityContext.h"
@@ -70,6 +69,57 @@ PR_END_EXTERN_C
 
 #include "nsCLiveconnect.h"
 
+#include "jsinterp.h"  // XXX private API so we can auto-push a JSStackFrame
+
+#include "nsIPrincipal.h"
+#include "nsNetUtil.h"
+#include "nsISecurityContext.h"
+#include "nsIScriptSecurityManager.h"
+#include "prmem.h"
+
+static nsresult
+CreatePrincipal(nsISupports* securitySupports,
+                nsIPrincipal ** outPrincipal)
+{
+    nsresult rv;
+    nsCOMPtr<nsISecurityContext> securityContext(
+        do_QueryInterface(securitySupports, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    char originBuf1[512];
+    char* origin = originBuf1;
+    size_t originSize = sizeof(originBuf1);
+    rv = securityContext->GetOrigin(origin, originSize);
+    while (NS_FAILED(rv) && originSize < 65536U)
+    {  // Try allocating a larger buffer on the heap
+        if (origin != originBuf1)
+        PR_Free(origin);
+        originSize *= 2;
+        origin = (char*)PR_Malloc(originSize);
+        if (!origin)
+            return NS_ERROR_OUT_OF_MEMORY;
+        rv = securityContext->GetOrigin(origin, originSize);
+    }
+    if (NS_FAILED(rv))
+    {
+        if (origin != originBuf1)
+            PR_Free(origin);
+        return rv;
+    }
+
+    nsCOMPtr<nsIURI> originURI;
+    rv = NS_NewURI(getter_AddRefs(originURI), origin);
+    if (origin != originBuf1)
+        PR_Free(origin);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIScriptSecurityManager> secMan(
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    return secMan->GetCodebasePrincipal(originURI, outPrincipal);
+}
+
 /***************************************************************************/
 // A class to put on the stack to manage JS contexts when we are entering JS.
 // This pushes and pops the given context
@@ -81,40 +131,103 @@ PR_END_EXTERN_C
 class AutoPushJSContext
 {
 public:
-    AutoPushJSContext(JSContext *cx)
-    {
-        mContextStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+    AutoPushJSContext(nsISupports* aSecuritySupports, JSContext *cx);
 
-        if(mContextStack)
-        {
-            JSContext* currentCX;
-            if(NS_SUCCEEDED(mContextStack->Peek(&currentCX)))
-            {
-                // Is the current context already on the stack?
-                if(cx == currentCX)
-                    mContextStack = nsnull;
-                else
-                {
-                    mContextStack->Push(cx);
-                    // Leave the reference to the mContextStack to
-                    // indicate that we need to pop it in our dtor.                                               
-                }
-            }
-        }
-    }
+    ~AutoPushJSContext();
 
-    ~AutoPushJSContext()
-    {
-        if(mContextStack)
-        {
-            mContextStack->Pop(nsnull);
-            mContextStack = nsnull;
-        }
-    }
+    nsresult ResultOfPush() { return mPushResult; };
 
 private:
     nsCOMPtr<nsIJSContextStack> mContextStack;
+    JSContext*                  mContext;
+    JSStackFrame                mFrame;
+    nsresult                    mPushResult;
 };
+
+AutoPushJSContext::AutoPushJSContext(nsISupports* aSecuritySupports,
+                                     JSContext *cx) 
+                                     : mContext(cx), mPushResult(NS_OK)
+{
+    mContextStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+
+    if(mContextStack)
+    {
+        JSContext* currentCX;
+        if(NS_SUCCEEDED(mContextStack->Peek(&currentCX)))
+        {
+            // Is the current context already on the stack?
+            if(cx == currentCX)
+                mContextStack = nsnull;
+            else
+            {
+                mContextStack->Push(cx);
+                // Leave the reference to the mContextStack to
+                // indicate that we need to pop it in our dtor.                                               
+            }
+
+        }
+    }
+
+    memset(&mFrame, 0, sizeof(mFrame));
+
+    // See if there are any scripts on the stack.
+    // If not, we need to add a dummy frame with a principal.
+    PRBool hasScript = PR_FALSE;
+    JSStackFrame* tempFP = cx->fp;
+    while (tempFP)
+    {
+        if (tempFP->script)
+        {
+            hasScript = PR_TRUE;
+            break;
+        }
+        tempFP = tempFP->down;
+    };
+
+    if (!hasScript)
+    {
+        nsCOMPtr<nsIPrincipal> principal;
+        if (aSecuritySupports)
+            mPushResult = CreatePrincipal(aSecuritySupports, getter_AddRefs(principal));
+        else
+        {
+            nsCOMPtr<nsIScriptSecurityManager> secMan(
+                do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &mPushResult));
+            if (NS_SUCCEEDED(mPushResult))
+                mPushResult = secMan->GetPrincipalFromContext(cx, getter_AddRefs(principal));
+        }
+
+        if (NS_SUCCEEDED(mPushResult))
+        {
+            JSPrincipals* jsprinc;
+            principal->GetJSPrincipals(&jsprinc);
+
+            mFrame.script = JS_CompileScriptForPrincipals(cx, JS_GetGlobalObject(cx),
+                                                          jsprinc, "", 0, "", 1);
+            JSPRINCIPALS_DROP(cx, jsprinc);
+
+            if (mFrame.script)
+            {
+                mFrame.down = cx->fp;
+                cx->fp = &mFrame;
+            }
+            else
+                mPushResult = NS_ERROR_OUT_OF_MEMORY;
+        }
+        else
+            JS_ReportError(cx, "failed to get a principal");
+    }
+}
+
+AutoPushJSContext::~AutoPushJSContext()
+{
+    if (mContextStack)
+        mContextStack->Pop(nsnull);
+
+    if (mFrame.script)
+        mContext->fp = mFrame.down;
+
+}
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -182,7 +295,9 @@ nsCLiveconnect::GetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize l
     if (!jsj_env)
         return NS_ERROR_FAILURE;
 
-    AutoPushJSContext autopush(cx);
+    AutoPushJSContext autopush(securitySupports, cx);
+    if (NS_FAILED(autopush.ResultOfPush()))
+        goto done;
 
     if (!name) {
         JS_ReportError(cx, "illegal null member name");
@@ -238,7 +353,9 @@ nsCLiveconnect::GetSlot(JNIEnv *jEnv, jsobject obj, jint slot, void* principalsA
     if (!jsj_env)
        return NS_ERROR_FAILURE;
 
-    AutoPushJSContext autopush(cx);
+    AutoPushJSContext autopush(securitySupports, cx);
+    if (NS_FAILED(autopush.ResultOfPush()))
+        goto done;
     
     // =-= sudu: check to see if slot can be passed in as is.
     //           Should it be converted to a jsint?
@@ -286,7 +403,9 @@ nsCLiveconnect::SetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize l
     if (!jsj_env)
         return NS_ERROR_FAILURE;
 
-    AutoPushJSContext autopush(cx);
+    AutoPushJSContext autopush(securitySupports, cx);
+    if (NS_FAILED(autopush.ResultOfPush()))
+        goto done;
     
     if (!name) {
         JS_ReportError(cx, "illegal null member name");
@@ -334,7 +453,9 @@ nsCLiveconnect::SetSlot(JNIEnv *jEnv, jsobject obj, jint slot, jobject java_obj,
     if (!jsj_env)
         return NS_ERROR_FAILURE;
 
-    AutoPushJSContext autopush(cx);
+    AutoPushJSContext autopush(securitySupports, cx);
+    if (NS_FAILED(autopush.ResultOfPush()))
+        goto done;
     
     if (!jsj_ConvertJavaObjectToJSValue(cx, jEnv, java_obj, &js_val))
         goto done;
@@ -373,7 +494,9 @@ nsCLiveconnect::RemoveMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsiz
     if (!jsj_env)
         return NS_ERROR_FAILURE;
 
-    AutoPushJSContext autopush(cx);
+    AutoPushJSContext autopush(securitySupports, cx);
+    if (NS_FAILED(autopush.ResultOfPush()))
+        goto done;
     
     if (!name) {
         JS_ReportError(cx, "illegal null member name");
@@ -425,9 +548,11 @@ nsCLiveconnect::Call(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length
     if (!jsj_env)
         return NS_ERROR_FAILURE;
 
-    AutoPushJSContext autopush(cx);
-    
     result = NULL;
+    AutoPushJSContext autopush(securitySupports, cx);
+    if (NS_FAILED(autopush.ResultOfPush()))
+        goto done;
+    
     if (!name) {
         JS_ReportError(cx, "illegal null JavaScript function name");
         goto done;
@@ -502,9 +627,11 @@ nsCLiveconnect::Eval(JNIEnv *jEnv, jsobject obj, const jchar *script, jsize leng
     if (!jsj_env)
        return NS_ERROR_FAILURE;
 
-    AutoPushJSContext autopush(cx);
-    
     result = NULL;
+    AutoPushJSContext autopush(securitySupports, cx);
+    if (NS_FAILED(autopush.ResultOfPush()))
+        goto done;
+    
     if (!script) {
         JS_ReportError(cx, "illegal null string eval argument");
         goto done;
@@ -571,9 +698,11 @@ nsCLiveconnect::GetWindow(JNIEnv *jEnv, void *pJavaObject,  void* principalsArra
     if (!jsj_env)
        return NS_ERROR_FAILURE;
 
-    AutoPushJSContext autopush(cx);
-    
     err_msg = NULL;
+    AutoPushJSContext autopush(securitySupports, cx);
+    if (NS_FAILED(autopush.ResultOfPush()))
+        goto done;
+    
     js_obj = JSJ_callbacks->map_java_object_to_js_object(jEnv, mJavaClient, &err_msg);
     if (!js_obj) {
         if (err_msg) {
@@ -650,9 +779,11 @@ nsCLiveconnect::ToString(JNIEnv *jEnv, jsobject obj, jstring *pjstring)
     if (!jsj_env)
        return NS_ERROR_FAILURE;
 
-    AutoPushJSContext autopush(cx);
-    
     result = NULL;
+    AutoPushJSContext autopush(nsnull, cx);
+    if (NS_FAILED(autopush.ResultOfPush()))
+        return NS_ERROR_FAILURE;
+
     jsstr = JS_ValueToString(cx, OBJECT_TO_JSVAL(js_obj));
     if (jsstr)
         result = jsj_ConvertJSStringToJavaString(cx, jEnv, jsstr);
