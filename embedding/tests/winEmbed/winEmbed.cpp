@@ -38,6 +38,7 @@
 #include "nsIProfile.h"
 
 // Local header files
+#include "winEmbed.h"
 #include "WebBrowserChrome.h"
 #include "resource.h"
 
@@ -145,28 +146,48 @@ class Win32ChromeUI : public WebBrowserChromeUI
 //
 nsresult OpenWebPage(const char *url)
 {
-    WebBrowserChrome * chrome = new WebBrowserChrome();
-    if (!chrome)
-        return NS_ERROR_FAILURE;
-    NS_ADDREF(chrome); // native window will hold the addref.
 
-    // Note, the chrome owns the UI object once set & will delete it
-    chrome->SetUI(new Win32ChromeUI);
-    
-    // Create the browser window
-    nsCOMPtr<nsIWebBrowser> newBrowser;
-    chrome->CreateBrowserWindow(0, -1, -1, -1, -1, getter_AddRefs(newBrowser));
-    if (!newBrowser)
-        return NS_ERROR_FAILURE;
+  nsresult         rv;
+  WebBrowserChrome *chrome;
 
-    // Place it where we want it.
-    ResizeEmbedding(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome));
+  rv = CreateBrowserWindow(nsIWebBrowserChrome::CHROME_ALL, nsnull,
+         &chrome);
 
+  if (NS_SUCCEEDED(rv)) {
     // Start loading a page
+    nsCOMPtr<nsIWebBrowser> newBrowser;
+    chrome->GetWebBrowser(getter_AddRefs(newBrowser));
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(newBrowser));
     return webNav->LoadURI(NS_ConvertASCIItoUCS2(url).GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+  }
+  return rv;
 }   
 
+
+nsresult CreateBrowserWindow(PRInt32 aChromeFlags,
+           WebBrowserChrome *aParent, WebBrowserChrome **aNewWindow)
+{
+  WebBrowserChrome * chrome = new WebBrowserChrome();
+  if (!chrome)
+    return NS_ERROR_FAILURE;
+  NS_ADDREF(chrome); // native window will hold the addref.
+
+  chrome->SetChromeFlags(aChromeFlags);
+
+  // Note, the chrome owns the UI object once set & will delete it
+  chrome->SetUI(new Win32ChromeUI);
+  
+  // Create the browser window
+  nsCOMPtr<nsIWebBrowser> newBrowser;
+  chrome->CreateBrowser(-1, -1, -1, -1, getter_AddRefs(newBrowser));
+  if (!newBrowser)
+    return NS_ERROR_FAILURE;
+
+  // Place it where we want it.
+  ResizeEmbedding(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome));
+  *aNewWindow = chrome;
+  return NS_OK;
+}
 
 //
 //  FUNCTION: GetBrowserFromChrome()
@@ -407,8 +428,13 @@ void UpdateUI(nsIWebBrowserChrome *aChrome)
                 ((canPaste) ? MF_ENABLED : (MF_DISABLED | MF_GRAYED)));
     }
 
-    EnableWindow(GetDlgItem(hwndDlg, IDC_BACK), canGoBack);
-    EnableWindow(GetDlgItem(hwndDlg, IDC_FORWARD), canGoForward);
+    HWND button;
+    button = GetDlgItem(hwndDlg, IDC_BACK);
+    if (button)
+      EnableWindow(button, canGoBack);
+    button = GetDlgItem(hwndDlg, IDC_FORWARD);
+    if (button)
+      EnableWindow(button, canGoForward);
 }
 
 
@@ -596,26 +622,39 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
             // Reposition the status area. Status bar
             // gets any space that the fixed size progress bar doesn't use.
-            RECT rcStatus;
-            RECT rcProgress;
+            int progressWidth;
+            int statusWidth;
+            int statusHeight;
             HWND hwndStatus = GetDlgItem(hwndDlg, IDC_STATUS);
+            if (hwndStatus) {
+              RECT rcStatus;
+              GetWindowRect(hwndStatus, &rcStatus);
+              statusHeight = rcStatus.bottom - rcStatus.top;
+            } else
+              statusHeight = 0;
+
             HWND hwndProgress = GetDlgItem(hwndDlg, IDC_PROGRESS);
-            GetWindowRect(hwndStatus, &rcStatus);
-            GetWindowRect(hwndProgress, &rcProgress);
-            int progressWidth = rcProgress.right - rcProgress.left;
-            int statusWidth = newDlgWidth - progressWidth;
-            int statusHeight = rcStatus.bottom - rcStatus.top;
-            SetWindowPos(hwndStatus,
-                         HWND_TOP,
-                         0, newDlgHeight - statusHeight,
-                         statusWidth,
-                         statusHeight,
-                         SWP_NOZORDER);
-            SetWindowPos(hwndProgress,
-                         HWND_TOP,
-                         statusWidth, newDlgHeight - statusHeight,
-                         0, 0,
-                         SWP_NOSIZE | SWP_NOZORDER);
+            if (hwndProgress) {
+              RECT rcProgress;
+              GetWindowRect(hwndProgress, &rcProgress);
+              progressWidth = rcProgress.right - rcProgress.left;
+            } else
+              progressWidth = 0;
+            statusWidth = newDlgWidth - progressWidth;
+
+            if (hwndStatus)
+              SetWindowPos(hwndStatus,
+                           HWND_TOP,
+                           0, newDlgHeight - statusHeight,
+                           statusWidth,
+                           statusHeight,
+                           SWP_NOZORDER);
+            if (hwndProgress)
+              SetWindowPos(hwndProgress,
+                           HWND_TOP,
+                           statusWidth, newDlgHeight - statusHeight,
+                           0, 0,
+                           SWP_NOSIZE | SWP_NOZORDER);
 
             // Resize the browser area (assuming the browse is
             // sandwiched between the control bar and status area)
@@ -648,7 +687,7 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
         break;
 
     case WM_DESTROY:
-        gDialogCount--;
+        --gDialogCount;
         if (webNavigation)
         {
             webNavigation->Stop();
@@ -889,24 +928,35 @@ LRESULT CALLBACK ChooseProfileDlgProc(HWND hDlg, UINT message, WPARAM wParam, LP
 //
 nativeWindow Win32ChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
 {
-    // Load the browser dialog from resource
-    HWND hwndDialog = CreateDialog(ghInstanceResources,
-                                   MAKEINTRESOURCE(IDD_BROWSER),
-                                   NULL,
-                                   BrowserDlgProc);
-    if (!hwndDialog)
-    {
-        return NULL;
-    }
+  // Load the browser dialog from resource
+  HWND hwndDialog;
+  PRUint32 chromeFlags;
 
-    gDialogCount++;
+  chrome->GetChromeFlags(&chromeFlags);
+  if ((chromeFlags & nsIWebBrowserChrome::CHROME_ALL) == nsIWebBrowserChrome::CHROME_ALL)
+    hwndDialog = CreateDialog(ghInstanceResources,
+                              MAKEINTRESOURCE(IDD_BROWSER),
+                              NULL,
+                              BrowserDlgProc);
+  else
+    hwndDialog = CreateDialog(ghInstanceResources,
+                              MAKEINTRESOURCE(IDD_BROWSER_NC),
+                              NULL,
+                              BrowserDlgProc);
+  if (!hwndDialog)
+    return NULL;
 
-    // Stick a menu onto it
+  ++gDialogCount;
+
+  // Stick a menu onto it
+  if (chromeFlags & nsIWebBrowserChrome::CHROME_MENUBAR) {
     HMENU hmenuDlg = LoadMenu(ghInstanceResources, MAKEINTRESOURCE(IDC_WINEMBED));
     SetMenu(hwndDialog, hmenuDlg);
+  }
 
-    // Add some interesting URLs to the address drop down
-    HWND hwndAddress = GetDlgItem(hwndDialog, IDC_ADDRESS);
+  // Add some interesting URLs to the address drop down
+  HWND hwndAddress = GetDlgItem(hwndDialog, IDC_ADDRESS);
+  if (hwndAddress) {
     SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.mozilla.org/"));
     SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.netscape.com/"));
     SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://127.0.0.1/"));
@@ -922,12 +972,13 @@ nativeWindow Win32ChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
     SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.hotmail.com/"));
     SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.cnn.com/"));
     SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.javasoft.com/"));
+  }
 
-    // Fetch the browser window handle
-    HWND hwndBrowser = GetDlgItem(hwndDialog, IDC_BROWSER);
-    SetWindowLong(hwndBrowser, GWL_USERDATA, (LONG)chrome);  // save the browser LONG_PTR.
-    SetWindowLong(hwndBrowser, GWL_STYLE, GetWindowLong(hwndBrowser, GWL_STYLE) | WS_CLIPCHILDREN);
-    return hwndBrowser;
+  // Fetch the browser window handle
+  HWND hwndBrowser = GetDlgItem(hwndDialog, IDC_BROWSER);
+  SetWindowLong(hwndBrowser, GWL_USERDATA, (LONG)chrome);  // save the browser LONG_PTR.
+  SetWindowLong(hwndBrowser, GWL_STYLE, GetWindowLong(hwndBrowser, GWL_STYLE) | WS_CLIPCHILDREN);
+  return hwndBrowser;
 }
 
 
@@ -978,8 +1029,13 @@ void Win32ChromeUI::UpdateCurrentURI(nsIWebBrowserChrome *aChrome)
 void Win32ChromeUI::UpdateBusyState(nsIWebBrowserChrome *aChrome, PRBool aBusy)
 {
     HWND hwndDlg = GetBrowserDlgFromChrome(aChrome);
-    EnableWindow(GetDlgItem(hwndDlg, IDC_STOP), aBusy);
-    EnableWindow(GetDlgItem(hwndDlg, IDC_GO), !aBusy);
+    HWND button;
+    button = GetDlgItem(hwndDlg, IDC_STOP);
+    if (button)
+      EnableWindow(button, aBusy);
+    button = GetDlgItem(hwndDlg, IDC_GO);
+    if (button)
+      EnableWindow(button, !aBusy);
     UpdateUI(aChrome);
 }
 
@@ -1001,9 +1057,13 @@ void Win32ChromeUI::UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aCurren
     {
         aMax = aCurrent + 20; // What to do?
     }
-    SendMessage(hwndProgress, PBM_SETRANGE, 0, MAKELPARAM(0, aMax));
-    SendMessage(hwndProgress, PBM_SETPOS, aCurrent, 0);
+    if (hwndProgress)
+    {
+        SendMessage(hwndProgress, PBM_SETRANGE, 0, MAKELPARAM(0, aMax));
+        SendMessage(hwndProgress, PBM_SETPOS, aCurrent, 0);
+    }
 }
+
 
 //
 //  FUNCTION: GetResourceStringByID()
