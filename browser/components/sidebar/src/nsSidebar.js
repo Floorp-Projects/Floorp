@@ -19,6 +19,7 @@
  * Contributor(s): Stephen Lamm            <slamm@netscape.com>
  *                 Robert John Churchill   <rjc@netscape.com>
  *                 David Hyatt             <hyatt@mozilla.org>
+ *                 Christopher A. Aillon   <christopher@aillon.com>
  */
 
 /*
@@ -64,15 +65,14 @@ function nsSidebar()
     debug('datasource_uri is ' + this.datasource_uri);
     this.resource = 'urn:sidebar:current-panel-list';
     this.datasource = this.rdf.GetDataSource(this.datasource_uri);
+    
+    const PROMPTSERVICE_CONTRACTID = "@mozilla.org/embedcomp/prompt-service;1";
+    const nsIPromptService = Components.interfaces.nsIPromptService;
+    this.promptService =
+        Components.classes[PROMPTSERVICE_CONTRACTID].getService(nsIPromptService);
 }
 
 nsSidebar.prototype.nc = "http://home.netscape.com/NC-rdf#";
-
-nsSidebar.prototype.setWindow =
-function (aWindow)
-{    
-    this.window = aWindow;    
-}
 
 function sidebarURLSecurityCheck(url)
 {
@@ -102,12 +102,6 @@ function(aTitle, aContentURL, aCustomizeURL)
 nsSidebar.prototype.addPanelInternal =
 function (aTitle, aContentURL, aCustomizeURL, aPersist)
 {
-    if (!this.window)
-    {
-        debug ("no window object set, bailing out.");
-        throw Components.results.NS_ERROR_NOT_INITIALIZED;
-    }
-
     sidebarURLSecurityCheck(aContentURL);
 
     // Avert your eyes children.  It may assume other forms.
@@ -133,12 +127,6 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
 {
     debug("addSearchEngine(" + engineURL + ", " + iconURL + ", " +
           suggestedCategory + ", " + suggestedTitle + ")");
-
-    if (!this.window)
-    {
-        debug ("no window object set, bailing out.");
-        throw Components.results.NS_ERROR_NOT_INITIALIZED;
-    }
 
     try
     {
@@ -173,7 +161,7 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
     }
     catch(ex)
     {
-        this.window.alert("Failed to add the search engine.\n");
+        this.promptService.alert(null, "Failed to add the search engine.");
         throw Components.results.NS_ERROR_INVALID_ARG;
     }
 
@@ -199,9 +187,7 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
         dialogMessage += "\nSource: " + engineURL;
     }
           
-    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-    promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
-    var rv = promptService.confirm(this.window, titleMessage, dialogMessage);
+    var rv = this.promptService.confirm(null, titleMessage, dialogMessage);
       
     if (!rv)
         return;
@@ -255,6 +241,17 @@ function (compMgr, fileSpec, location, type)
                                     fileSpec, 
                                     location,
                                     type);
+    const CATMAN_CONTRACTID = "@mozilla.org/categorymanager;1";
+    const nsICategoryManager = Components.interfaces.nsICategoryManager;
+    var catman = Components.classes[CATMAN_CONTRACTID].
+                            getService(nsICategoryManager);
+                            
+    const JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY = "JavaScript global property";
+    catman.addCategoryEntry(JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY,
+                            "sidebar",
+                            SIDEBAR_CONTRACTID,
+                            true,
+                            true);
 }
 
 sidebarModule.getClassObject =
@@ -355,5 +352,3 @@ function srGetStrBundle(path)
    }
    return strBundle;
 }
-
-
