@@ -441,7 +441,7 @@ nsresult nsSmtpUrl::ParseUrl()
 	
 	// set the username
 	nsXPIDLCString userName;
-	rv = GetPreHost(getter_Copies(userName));
+	rv = GetUsername(getter_Copies(userName));
 	if (NS_FAILED(rv)) return rv; 
 	m_userName = (const char *)userName;
 
