@@ -1512,41 +1512,44 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
           }
         }
 
-				PRInt32 count = document->GetNumberOfShells();
-				for (PRInt32 i = 0; i < count; i++) {
-				  nsCOMPtr<nsIPresShell> shell = getter_AddRefs(document->GetShellAt(i));
-				  
-				  // Retrieve the context in which our DOM event will fire.
-				  nsCOMPtr<nsIPresContext> aPresContext;
-				  shell->GetPresContext(getter_AddRefs(aPresContext));
-			
-				  // Handle the DOM event
-				  nsEventStatus status = nsEventStatus_eIgnore;
-				  nsKeyEvent event;
-				  event.eventStructType = NS_KEY_EVENT;
-				  switch (aEventType)
-				  {
-				    case eKeyPress:  event.message = NS_KEY_PRESS; break;
-				    case eKeyDown:   event.message = NS_KEY_DOWN; break;
-				    default:         event.message = NS_KEY_UP; break;
-				  }
-				  aKeyEvent->PreventBubble();
-				  aKeyEvent->PreventCapture();
-				  content->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+        PRInt32 count = document->GetNumberOfShells();
+        for (PRInt32 i = 0; i < count; i++) {
+          nsCOMPtr<nsIPresContext> aPresContext;
+          { /* scope the shell variable (prevents the PresShell
+               from outliving its ViewManager if the key event
+               happens to delete the window.) */
+            // Retrieve the context in which our DOM event will fire.
+            nsCOMPtr<nsIPresShell> shell = getter_AddRefs(document->GetShellAt(i));
+            shell->GetPresContext(getter_AddRefs(aPresContext));
+          }
+
+          // Handle the DOM event
+          nsEventStatus status = nsEventStatus_eIgnore;
+          nsKeyEvent event;
+          event.eventStructType = NS_KEY_EVENT;
+          switch (aEventType)
+          {
+            case eKeyPress:  event.message = NS_KEY_PRESS; break;
+            case eKeyDown:   event.message = NS_KEY_DOWN; break;
+            default:         event.message = NS_KEY_UP; break;
+          }
+          aKeyEvent->PreventBubble();
+          aKeyEvent->PreventCapture();
+          content->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
           nsresult ret = NS_ERROR_BASE;
 
-		      if (aEventType == eKeyPress) {
-		        // Also execute the oncommand handler on a key press.
-		        // Execute the oncommand event handler.
-		        nsEventStatus stat = nsEventStatus_eIgnore;
-		        nsMouseEvent evt;
-		        evt.eventStructType = NS_EVENT;
-		        evt.message = NS_MENU_ACTION;
-		        content->HandleDOMEvent(aPresContext, &evt, nsnull, NS_EVENT_FLAG_INIT, &stat);
-					}
+          if (aEventType == eKeyPress) {
+            // Also execute the oncommand handler on a key press.
+            // Execute the oncommand event handler.
+            nsEventStatus stat = nsEventStatus_eIgnore;
+            nsMouseEvent evt;
+            evt.eventStructType = NS_EVENT;
+            evt.message = NS_MENU_ACTION;
+            content->HandleDOMEvent(aPresContext, &evt, nsnull, NS_EVENT_FLAG_INIT, &stat);
+          }
           // Ok, we got this far and handled the event, so don't continue scanning nodes
-					//printf("Keybind executed \n");
-					return ret;
+          //printf("Keybind executed \n");
+          return ret;
         } // end for (PRInt32 i = 0; i < count; i++)
       } while (PR_FALSE); // do { ...
 	  } // end if (keyNodeType.Equals("key"))
