@@ -45,9 +45,9 @@ REQUIRES	= xpconnect xpcom string js
 CPPSRCS		= xpcshell.cpp
 
 LIBS		= \
+		$(MOZ_JS_LIBS) \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
-		$(MOZ_JS_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
