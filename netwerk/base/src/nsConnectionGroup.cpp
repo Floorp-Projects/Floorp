@@ -82,7 +82,7 @@ nsConnectionGroup::Cancel(void)
 
     for (PRUint32 i = 0; i < cnt; i++) {
         nsIProtocolConnection* connection = 
-            (nsIProtocolConnection*)(*mElements)[i];
+            (nsIProtocolConnection*)mElements->ElementAt(i);
         rv = connection->Cancel();
         if (NS_FAILED(rv)) break;
     }
@@ -99,7 +99,7 @@ nsConnectionGroup::Suspend(void)
 
     for (PRUint32 i = 0; i < cnt; i++) {
         nsIProtocolConnection* connection = 
-            (nsIProtocolConnection*)(*mElements)[i];
+            (nsIProtocolConnection*)mElements->ElementAt(i);
         rv = connection->Suspend();
         if (NS_FAILED(rv)) break;
     }
@@ -116,7 +116,7 @@ nsConnectionGroup::Resume(void)
 
     for (PRUint32 i = 0; i < cnt; i++) {
         nsIProtocolConnection* connection = 
-            (nsIProtocolConnection*)(*mElements)[i];
+            (nsIProtocolConnection*)mElements->ElementAt(i);
         rv = connection->Resume();
         if (NS_FAILED(rv)) break;
     }
