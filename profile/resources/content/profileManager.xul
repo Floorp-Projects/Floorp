@@ -56,9 +56,9 @@
 		
 	<box align="horizontal">	
 		<box align="vertical">	
-			<titledbutton value="&newCmd.label;"  onclick="openCreateProfile();" />
-			<titledbutton id="rename" disabled="true" value="&renameCmd.label;"  onclick="openRename();" />
-			<titledbutton id="delete" disabled="true" value="&deleteCmd.label;"  onclick="ConfirmDelete();" />
+			<titledbutton class="dialog push" value="&newCmd.label;"  onclick="openCreateProfile();" />
+			<titledbutton class="dialog push" id="rename" disabled="true" value="&renameCmd.label;"  onclick="openRename();" />
+			<titledbutton class="dialog push" id="delete" disabled="true" value="&deleteCmd.label;"  onclick="ConfirmDelete();" />
 		</box>
 		<!--<html:br></html:br>-->
 	
@@ -76,8 +76,8 @@
 				<html:br></html:br>
 			</box>
 			<box align="horizontal">
-				<titledbutton id="start" disabled="true" value="&startCmd.label;"  onclick="onStart();" />
-				<titledbutton value="&exitCmd.label;"  onclick="onExit();" />
+				<titledbutton class="dialog push" id="start" disabled="true" value="&startCmd.label;"  onclick="onStart();" />
+				<titledbutton class="dialog push" value="&exitCmd.label;"  onclick="onExit();" />
 			</box>
 		</box>
 	</box>

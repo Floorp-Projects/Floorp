@@ -93,11 +93,11 @@
   <html:div class="rule"/>
   <spring style="height: 5px;"/>
   <box class="selection" align="horizontal">
-    <titledbutton class="padded" id="manage" value="&manage.label;" onclick="onManageProfiles();"/>
+    <titledbutton class="dialog push padded" id="manage" value="&manage.label;" onclick="onManageProfiles();"/>
     <spring flex="100%"/>
-    <titledbutton id="exit" value="&exit.label;" onclick="onExit();"/>
+    <titledbutton class="dialog push" id="exit" value="&exit.label;" onclick="onExit();"/>
     <spring style="width: 5px;"/>
-    <titledbutton class="padded" id="start" value="&start.label;" onclick="onStart();"/>
+    <titledbutton class="dialog push padded" id="start" value="&start.label;" onclick="onStart();"/>
     <spring style="width: 19px;"/>
   </box>
 
