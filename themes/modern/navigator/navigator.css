@@ -141,7 +141,13 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 
 #print-button 
   {
-    behavior              : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-standard");
-	list-style-image      : url("chrome://global/skin/print.gif");
-    margin                : 0px;
+	  list-style-image      : url("chrome://global/skin/print.gif");
   }
+
+#nav-bar-buttons
+  {
+    behavior              : url("chrome://navigator/skin/navigatorBindings.xml#navigation-buttons");
+    vertical-align        : middle;
+  }  
+  
+  
