@@ -1,4 +1,5 @@
 var goPrefWindow = 0;
+var goDefaultController = 0;
 
 function goPageSetup()
 {
@@ -99,9 +100,14 @@ function toggleToolbar( id )
 }
 
 
+//
+// Command Updater functions
+//
 function goUpdateCommand(command)
 {
 	var controller = document.commandDispatcher.getController();
+	if ( !controller )
+		controller = top.goDefaultController;
 	
 	var enabled = false;
 	
@@ -116,11 +122,18 @@ function goUpdateCommand(command)
 function goDoCommand(command)
 {
 	var controller = document.commandDispatcher.getController();
+	if ( !controller )
+		controller = top.goDefaultController;
 
 	if ( controller )
 		controller.DoCommand(command);
 }
 
+
+function goSetDefaultController(controller)
+{
+	top.goDefaultController = controller;
+}
 
 function goSetCommandEnabled(id, enabled)
 {
