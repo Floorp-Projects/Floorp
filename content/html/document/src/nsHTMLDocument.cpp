@@ -722,7 +722,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     if (kCharsetFromBookmarks > charsetSource)
     {
       nsCOMPtr<nsIRDFDataSource>  datasource;
-      if (NS_SUCCEEDED(rv = gRDF->GetDataSource("rdf:bookmarks", getter_AddRefs(datasource))))
+      if (NS_SUCCEEDED(rv_detect = gRDF->GetDataSource("rdf:bookmarks", getter_AddRefs(datasource))))
       {
            nsCOMPtr<nsIBookmarksService>   bookmarks = do_QueryInterface(datasource);
            if (bookmarks)
