@@ -45,7 +45,8 @@ public:
    */
   static void HorizontallyPlaceChildren(nsIPresContext* aPresContext,
                                         nsIFrame* aContainer,
-                                        nsStyleText* aContainerStyle,
+                                        PRInt32 aTextAlign,
+                                        PRInt32 aDirection,
                                         nsIFrame* aFirstChild,
                                         PRInt32 aChildCount,
                                         nscoord aLineWidth,

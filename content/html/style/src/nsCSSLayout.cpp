@@ -206,24 +206,32 @@ nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
 void
 nsCSSLayout::HorizontallyPlaceChildren(nsIPresContext* aCX,
                                        nsIFrame* aContainer,
-                                       nsStyleText* aContainerStyle,
+                                       PRInt32 aTextAlign,
+                                       PRInt32 aDirection,
                                        nsIFrame* aFirstChild,
                                        PRInt32 aChildCount,
                                        nscoord aLineWidth,
                                        nscoord aMaxWidth)
 {
   if (aLineWidth < aMaxWidth) {
-    PRIntn textAlign = aContainerStyle->mTextAlign;
     nscoord dx = 0;
-    switch (textAlign) {
-    case NS_STYLE_TEXT_ALIGN_LEFT:
-    case NS_STYLE_TEXT_ALIGN_JUSTIFY:
-      // Default layout has everything aligned left
-      return;
+    switch (aTextAlign) {
+    case NS_STYLE_TEXT_ALIGN_DEFAULT:
+      if (NS_STYLE_DIRECTION_LTR == aDirection) {
+        // default alignment for left-to-right is left so do nothing
+        return;
+      }
+      // Fall through to align right case for default alignment
+      // used when the direction is right-to-left.
 
     case NS_STYLE_TEXT_ALIGN_RIGHT:
       dx = aMaxWidth - aLineWidth;
       break;
+
+    case NS_STYLE_TEXT_ALIGN_LEFT:
+    case NS_STYLE_TEXT_ALIGN_JUSTIFY:
+      // Default layout has everything aligned left
+      return;
 
     case NS_STYLE_TEXT_ALIGN_CENTER:
       dx = (aMaxWidth - aLineWidth) / 2;
@@ -328,7 +336,8 @@ nsCSSLayout::GetStyleSize(nsIPresContext* aPresContext,
   nsIStyleContext* sc = nsnull;
   aFrame->GetStyleContext(aPresContext, sc);
   if (nsnull != sc) {
-    nsStylePosition* pos = (nsStylePosition*) sc->GetData(eStyleStruct_Position);
+    nsStylePosition* pos = (nsStylePosition*
+      ) sc->GetData(eStyleStruct_Position);
     if (GetStyleDimension(aPresContext, aFrame, pos, pos->mWidth,
                           aStyleSize.width)) {
       rv |= NS_SIZE_HAS_WIDTH;
