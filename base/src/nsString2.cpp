@@ -25,18 +25,15 @@
 #include "nsDebug.h"
 #include "nsCRT.h"
 #include "nsIAtom.h"
-#include "nsISizeOfHandler.h"
-#include "prprf.h"
-#include "prdtoa.h"
 #include "nsDeque.h"
 
-#include "nsUnicharUtilCIID.h"
-#include "nsIServiceManager.h"
-#include "nsICaseConversion.h"
+#ifndef RICKG_TESTBED
+#include "prdtoa.h"
+#include "nsISizeOfHandler.h"
+#endif
 
 static const char* kNullPointerError = "Error: unexpected null ptr";
 static const char* kWhitespace="\b\t\r\n ";
-static const PRInt32  kNotFound=-1;
 
 #ifdef  NS_DEBUG
 PRBool nsString2::mSelfTested = PR_FALSE;   
@@ -97,58 +94,7 @@ public:
     }
   }
 };
-static CTableConstructor gTableConstructor;
 
-//---- XPCOM code to connect with UnicharUtil
-
-class HandleCaseConversionShutdown3 : public nsIShutdownListener {
-public :
-   NS_IMETHOD OnShutdown(const nsCID& cid, nsISupports* service);
-   HandleCaseConversionShutdown3(void) { NS_INIT_REFCNT(); }
-   virtual ~HandleCaseConversionShutdown3(void) {}
-   NS_DECL_ISUPPORTS
-};
-static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
-static NS_DEFINE_IID(kICaseConversionIID, NS_ICASECONVERSION_IID);
-
-static nsICaseConversion * gCaseConv = NULL; 
-
-static NS_DEFINE_IID(kIShutdownListenerIID, NS_ISHUTDOWNLISTENER_IID);
-NS_IMPL_ISUPPORTS(HandleCaseConversionShutdown3, kIShutdownListenerIID);
-
-nsresult
-HandleCaseConversionShutdown3::OnShutdown(const nsCID& cid, nsISupports* service)
-{
-    if (cid.Equals(kUnicharUtilCID)) {
-        NS_ASSERTION(service == gCaseConv, "wrong service!");
-        gCaseConv->Release();
-        gCaseConv = NULL;
-    }
-    return NS_OK;
-}
-
-static HandleCaseConversionShutdown3* gListener = NULL;
-
-static void StartUpCaseConversion()
-{
-    nsresult err;
-
-    if ( NULL == gListener )
-    {
-      gListener = new HandleCaseConversionShutdown3();
-      gListener->AddRef();
-    }
-    err = nsServiceManager::GetService(kUnicharUtilCID, kICaseConversionIID,
-                                        (nsISupports**) &gCaseConv, gListener);
-}
-static void CheckCaseConversion()
-{
-    if(NULL == gCaseConv )
-      StartUpCaseConversion();
-
-    // NS_ASSERTION( gCaseConv != NULL , "cannot obtain UnicharUtil");
-   
-}
 
 /***********************************************************************
   IMPLEMENTATION NOTES:
@@ -158,6 +104,15 @@ static void CheckCaseConversion()
   that no poor soul would ever have to do this again. Sigh.
  ***********************************************************************/
 
+void Subsume(nsStr& aDest,nsStr& aSource){
+  aDest.mStr=aSource.mStr;
+  aDest.mLength=aSource.mLength;
+  aDest.mMultibyte=aSource.mMultibyte;
+  aDest.mCapacity=aSource.mCapacity;
+  aDest.mOwnsBuffer=aSource.mOwnsBuffer;
+  aSource.mOwnsBuffer=PR_FALSE;
+  aSource.mStr=0;
+}
 
 /**
  * Default constructor. Note that we actually allocate a small buffer
@@ -214,6 +169,15 @@ nsString2::nsString2(const nsStr &aString,eCharSize aCharSize,nsIMemoryAgent* an
 nsString2::nsString2(const nsString2& aString) :mAgent(aString.mAgent) {
   nsStr::Initialize(*this,(eCharSize)aString.mMultibyte);
   nsStr::Assign(*this,aString,0,aString.mLength,mAgent);
+}
+
+/**
+ * construct off a subsumeable string
+ * @update	gess 1/4/99
+ * @param   reference to a subsumeString
+ */
+nsString2::nsString2(nsSubsumeStr& aSubsumeStr) :mAgent(0) {
+  Subsume(*this,aSubsumeStr);
 }
 
 /**
@@ -293,7 +257,7 @@ void nsString2::SetCapacity(PRUint32 aLength) {
  * @param 
  * @return
  */
-char* nsString2::GetBuffer(void) const {
+const char* nsString2::GetBuffer(void) const {
   if(!mMultibyte)
     return mStr;
   return 0;
@@ -305,7 +269,7 @@ char* nsString2::GetBuffer(void) const {
  * @param 
  * @return
  */
-PRUnichar* nsString2::GetUnicode(void) const {
+const PRUnichar* nsString2::GetUnicode(void) const {
   if(mMultibyte)
     return (PRUnichar*)mUStr;
   return 0;
@@ -314,11 +278,11 @@ PRUnichar* nsString2::GetUnicode(void) const {
 /**
  * Get nth character.
  */
-PRUnichar nsString2::operator[](int anIndex) const {
+PRUnichar nsString2::operator[](PRUint32 anIndex) const {
   return GetCharAt(*this,anIndex);
 }
 
-PRUnichar nsString2::CharAt(int anIndex) const {
+PRUnichar nsString2::CharAt(PRUint32 anIndex) const {
   return GetCharAt(*this,anIndex);
 }
 
@@ -352,10 +316,10 @@ PRBool nsString2::SetCharAt(PRUnichar aChar,PRUint32 anIndex){
  * @param   aString -- 2nd string to be appended
  * @return  new string
  */
-nsString2 nsString2::operator+(const nsStr& aString){
+nsSubsumeStr nsString2::operator+(const nsStr& aString){
   nsString2 temp(*this); //make a temp string the same size as this...
   nsStr::Append(temp,aString,0,aString.mLength,mAgent);
-  return temp;
+  return nsSubsumeStr(temp);
 }
 
 /**
@@ -364,10 +328,10 @@ nsString2 nsString2::operator+(const nsStr& aString){
  * @param   aString -- 2nd string to be appended
  * @return  new string
  */
-nsString2 nsString2::operator+(const nsString2& aString){
+nsSubsumeStr nsString2::operator+(const nsString2& aString){
   nsString2 temp(*this); //make a temp string the same size as this...
   nsStr::Append(temp,aString,0,aString.mLength,mAgent);
-  return temp;
+  return nsSubsumeStr(temp);
 }
 
 
@@ -377,10 +341,10 @@ nsString2 nsString2::operator+(const nsString2& aString){
  * @param   aCString is a ptr to cstring to be added to this
  * @return  newly created string
  */
-nsString2 nsString2::operator+(const char* aCString) {
+nsSubsumeStr nsString2::operator+(const char* aCString) {
   nsString2 temp(*this);
   temp.Append(aCString);
-  return temp;
+  return nsSubsumeStr(temp);
 }
 
 
@@ -390,10 +354,10 @@ nsString2 nsString2::operator+(const char* aCString) {
  * @param   aChar is a char to be added to this
  * @return  newly created string
  */
-nsString2 nsString2::operator+(char aChar) {
+nsSubsumeStr nsString2::operator+(char aChar) {
   nsString2 temp(*this);
   temp.Append(char(aChar));
-  return temp;
+  return nsSubsumeStr(temp);
 }
 
 /**
@@ -402,10 +366,10 @@ nsString2 nsString2::operator+(char aChar) {
  * @param   aString is a ptr to unistring to be added to this
  * @return  newly created string
  */
-nsString2 nsString2::operator+(const PRUnichar* aString) {
+nsSubsumeStr nsString2::operator+(const PRUnichar* aString) {
   nsString2 temp(*this);
   temp.Append(aString);
-  return temp;
+  return nsSubsumeStr(temp);
 }
 
 
@@ -415,10 +379,10 @@ nsString2 nsString2::operator+(const PRUnichar* aString) {
  * @param   aChar is a unichar to be added to this
  * @return  newly created string
  */
-nsString2 nsString2::operator+(PRUnichar aChar) {
+nsSubsumeStr nsString2::operator+(PRUnichar aChar) {
   nsString2 temp(*this);
   temp.Append(char(aChar));
-  return temp;
+  return nsSubsumeStr(temp);
 }
 
 /**********************************************************************
@@ -429,6 +393,7 @@ nsString2 nsString2::operator+(PRUnichar aChar) {
  * Converts all chars in given string to UCS2
  */
 void nsString2::ToUCS2(PRUint32 aStartOffset){
+  static CTableConstructor gTableConstructor;
   if(aStartOffset<mLength){
     if(mMultibyte) {
       PRUint32 theIndex=0;
@@ -621,11 +586,11 @@ PRUnichar* nsString2::ToNewUnicode() const {
  */
 char* nsString2::ToCString(char* aBuf, PRUint32 aBufLength) const{
   if(aBuf) {
-    nsStr theTempStr;
-    nsStr::Initialize(theTempStr,eOneByte);
-    theTempStr.mStr=aBuf;
-    theTempStr.mCapacity=aBufLength;
-    nsStr::Assign(theTempStr,*this,0,mLength,mAgent);
+    nsStr temp;
+    nsStr::Initialize(temp,eOneByte);
+    temp.mStr=aBuf;
+    temp.mCapacity=aBufLength;
+    nsStr::Assign(temp,*this,0,mLength,mAgent);
   }
   return aBuf;
 }
@@ -800,14 +765,18 @@ nsString2& nsString2::Assign(PRUnichar aChar) {
 }
 
 /**
- * Copies contents of this onto given string.
- * @update	gess 7/27/98
- * @param   aString to hold copy of this
- * @return  nada.
+ * WARNING! THIS IS A VERY SPECIAL METHOD. 
+ * This method "steals" the contents of aSource and hands it to aDest.
+ * Ordinarily a copy is made, but not in this version.
+ * @update	gess10/30/98
+ * @param 
+ * @return
  */
-void nsString2::Copy(nsString2& aString) const{
-  aString.SetString(*this);
+nsString2& nsString2::operator=(nsSubsumeStr& aSubsumeString) {
+  Subsume(*this,aSubsumeString);
+  return *this;
 }
+
 
 /**
  * append given string to this string
@@ -843,12 +812,12 @@ nsString2& nsString2::Append(const nsString2& aString,PRInt32 aCount) {
  */
 nsString2& nsString2::Append(const char* aCString,PRInt32 aCount) {
   if(aCString){
-    nsStr theTemp;
-    Initialize(theTemp,eOneByte);
-    theTemp.mStr=(char*)aCString;
-    theTemp.mLength=nsCRT::strlen(aCString);
-    if(-1==aCount) aCount=theTemp.mLength;
-    nsStr::Append(*this,theTemp,0,aCount,mAgent);
+    nsStr temp;
+    Initialize(temp,eOneByte);
+    temp.mStr=(char*)aCString;
+    temp.mLength=nsCRT::strlen(aCString);
+    if(-1==aCount) aCount=temp.mLength;
+    nsStr::Append(*this,temp,0,aCount,mAgent);
   }
   return *this;
 }
@@ -862,12 +831,12 @@ nsString2& nsString2::Append(const char* aCString,PRInt32 aCount) {
  */
 nsString2& nsString2::Append(const PRUnichar* aString,PRInt32 aCount) {
   if(aString){
-    nsStr theTemp;
-    Initialize(theTemp,eTwoByte);
-    theTemp.mUStr=(PRUnichar*)aString;
-    theTemp.mLength=nsCRT::strlen(aString);
-    if(-1==aCount) aCount=theTemp.mLength;
-    nsStr::Append(*this,theTemp,0,aCount,mAgent);
+    nsStr temp;
+    Initialize(temp,eTwoByte);
+    temp.mUStr=(PRUnichar*)aString;
+    temp.mLength=nsCRT::strlen(aString);
+    if(-1==aCount) aCount=temp.mLength;
+    nsStr::Append(*this,temp,0,aCount,mAgent);
   }
   return *this;
 }
@@ -882,11 +851,11 @@ nsString2& nsString2::Append(char aChar) {
   char buf[2]={0,0};
   buf[0]=aChar;
 
-  nsStr theTemp;
-  Initialize(theTemp,eOneByte);
-  theTemp.mStr=buf;
-  theTemp.mLength=1;
-  nsStr::Append(*this,theTemp,0,1,mAgent);
+  nsStr temp;
+  Initialize(temp,eOneByte);
+  temp.mStr=buf;
+  temp.mLength=1;
+  nsStr::Append(*this,temp,0,1,mAgent);
   return *this;
 }
 
@@ -900,11 +869,11 @@ nsString2& nsString2::Append(PRUnichar aChar) {
   PRUnichar buf[2]={0,0};
   buf[0]=aChar;
 
-  nsStr theTemp;
-  Initialize(theTemp,eTwoByte);
-  theTemp.mUStr=buf;
-  theTemp.mLength=1;
-  nsStr::Append(*this,theTemp,0,1,mAgent);
+  nsStr temp;
+  Initialize(temp,eTwoByte);
+  temp.mUStr=buf;
+  temp.mLength=1;
+  nsStr::Append(*this,temp,0,1,mAgent);
   return *this;
 }
 
@@ -1001,7 +970,7 @@ PRUint32 nsString2::Right(nsString2& aCopy,PRInt32 aCount) const{
  *  @param  aCount -- number of chars to be copied from aCopy
  *  @return number of chars inserted into this.
  */
-nsString2& nsString2::Insert(nsString2& aCopy,PRUint32 anOffset,PRInt32 aCount) {
+nsString2& nsString2::Insert(const nsString2& aCopy,PRUint32 anOffset,PRInt32 aCount) {
   nsStr::Insert(*this,anOffset,aCopy,0,aCount,mAgent);
   return *this;
 }
@@ -1018,12 +987,12 @@ nsString2& nsString2::Insert(nsString2& aCopy,PRUint32 anOffset,PRInt32 aCount) 
 nsString2& nsString2::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCount){
   if(aCString){
     if(0<aCount) {
-      nsStr theTemp;
-      nsStr::Initialize(theTemp,eOneByte);
-      theTemp.mStr=(char*)aCString;
-      theTemp.mLength=nsCRT::strlen(aCString);
-      if(theTemp.mLength){
-        nsStr::Insert(*this,anOffset,theTemp,0,aCount,0);
+      nsStr temp;
+      nsStr::Initialize(temp,eOneByte);
+      temp.mStr=(char*)aCString;
+      temp.mLength=nsCRT::strlen(aCString);
+      if(temp.mLength){
+        nsStr::Insert(*this,anOffset,temp,0,aCount,0);
       }
     }
   }
@@ -1044,11 +1013,11 @@ nsString2& nsString2::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCou
 nsString2& nsString2::Insert(char aChar,PRUint32 anOffset){
   char theBuffer[2]={0,0};
   theBuffer[0]=aChar;
-  nsStr theTempStr;
-  nsStr::Initialize(theTempStr,eOneByte);
-  theTempStr.mStr=(char*)theBuffer;
-  theTempStr.mLength=1;
-  nsStr::Insert(*this,anOffset,theTempStr,0,1,0);
+  nsStr temp;
+  nsStr::Initialize(temp,eOneByte);
+  temp.mStr=(char*)theBuffer;
+  temp.mLength=1;
+  nsStr::Insert(*this,anOffset,temp,0,1,0);
   return *this;
 }
 */
@@ -1065,12 +1034,12 @@ nsString2& nsString2::Insert(char aChar,PRUint32 anOffset){
 nsString2& nsString2::Insert(const PRUnichar* aString,PRUint32 anOffset,PRInt32 aCount){
   if(aString){
     if(0<aCount) {
-      nsStr theTemp;
-      nsStr::Initialize(theTemp,eTwoByte);
-      theTemp.mUStr=(PRUnichar*)aString;
-      theTemp.mLength=nsCRT::strlen(aString);
-      if(theTemp.mLength){
-        nsStr::Insert(*this,anOffset,theTemp,0,aCount,0);
+      nsStr temp;
+      nsStr::Initialize(temp,eTwoByte);
+      temp.mUStr=(PRUnichar*)aString;
+      temp.mLength=nsCRT::strlen(aString);
+      if(temp.mLength){
+        nsStr::Insert(*this,anOffset,temp,0,aCount,0);
       }
     }
   }
@@ -1090,11 +1059,11 @@ nsString2& nsString2::Insert(const PRUnichar* aString,PRUint32 anOffset,PRInt32 
 nsString2& nsString2::Insert(PRUnichar aChar,PRUint32 anOffset){
   PRUnichar theBuffer[2]={0,0};
   theBuffer[0]=aChar;
-  nsStr theTempStr;
-  nsStr::Initialize(theTempStr,eTwoByte);
-  theTempStr.mUStr=theBuffer;
-  theTempStr.mLength=1;
-  nsStr::Insert(*this,anOffset,theTempStr,0,1,0);
+  nsStr temp;
+  nsStr::Initialize(temp,eTwoByte);
+  temp.mUStr=theBuffer;
+  temp.mLength=1;
+  nsStr::Insert(*this,anOffset,temp,0,1,0);
   return *this;
 }
 
@@ -1153,11 +1122,11 @@ PRInt32 nsString2::Find(const char* aCString,PRBool aIgnoreCase) const{
 
   PRInt32 result=kNotFound;
   if(aCString) {
-    nsStr theTempStr;
-    nsStr::Initialize(theTempStr,eOneByte);
-    theTempStr.mLength=nsCRT::strlen(aCString);
-    theTempStr.mStr=(char*)aCString;
-    result=nsStr::FindSubstr(*this,theTempStr,aIgnoreCase,0);
+    nsStr temp;
+    nsStr::Initialize(temp,eOneByte);
+    temp.mLength=nsCRT::strlen(aCString);
+    temp.mStr=(char*)aCString;
+    result=nsStr::FindSubstr(*this,temp,aIgnoreCase,0);
   }
   return result;
 }
@@ -1174,11 +1143,11 @@ PRInt32 nsString2::Find(const PRUnichar* aString,PRBool aIgnoreCase) const{
 
   PRInt32 result=kNotFound;
   if(aString) {
-    nsStr theTempStr;
-    nsStr::Initialize(theTempStr,eTwoByte);
-    theTempStr.mLength=nsCRT::strlen(aString);
-    theTempStr.mUStr=(PRUnichar*)aString;
-    result=nsStr::FindSubstr(*this,theTempStr,aIgnoreCase,0);
+    nsStr temp;
+    nsStr::Initialize(temp,eTwoByte);
+    temp.mLength=nsCRT::strlen(aString);
+    temp.mUStr=(PRUnichar*)aString;
+    result=nsStr::FindSubstr(*this,temp,aIgnoreCase,0);
   }
   return result;
 }
@@ -1191,6 +1160,18 @@ PRInt32 nsString2::Find(const PRUnichar* aString,PRBool aIgnoreCase) const{
  *  @return  offset in string, or -1 (kNotFound)
  */
 PRInt32 nsString2::Find(const nsStr& aString,PRBool aIgnoreCase) const{
+  PRInt32 result=nsStr::FindSubstr(*this,aString,aIgnoreCase,0);
+  return result;
+}
+
+/**
+ *  Search for given buffer within this string
+ *  
+ *  @update  gess 3/25/98
+ *  @param   nsString2 -- buffer to be found
+ *  @return  offset in string, or -1 (kNotFound)
+ */
+PRInt32 nsString2::Find(const nsString2& aString,PRBool aIgnoreCase) const{
   PRInt32 result=nsStr::FindSubstr(*this,aString,aIgnoreCase,0);
   return result;
 }
@@ -1219,11 +1200,11 @@ PRInt32 nsString2::FindCharInSet(const char* aCStringSet,PRUint32 anOffset) cons
 
   PRInt32 result=kNotFound;
   if(aCStringSet) {
-    nsStr theTempStr;
-    nsStr::Initialize(theTempStr,eOneByte);
-    theTempStr.mLength=nsCRT::strlen(aCStringSet);
-    theTempStr.mStr=(char*)aCStringSet;
-    result=nsStr::FindCharInSet(*this,theTempStr,PR_FALSE,anOffset);
+    nsStr temp;
+    nsStr::Initialize(temp,eOneByte);
+    temp.mLength=nsCRT::strlen(aCStringSet);
+    temp.mStr=(char*)aCStringSet;
+    result=nsStr::FindCharInSet(*this,temp,PR_FALSE,anOffset);
   }
   return result;
 }
@@ -1252,11 +1233,11 @@ PRInt32 nsString2::RFindCharInSet(const char* aCStringSet,PRUint32 anOffset) con
 
   PRInt32 result=kNotFound;
   if(aCStringSet) {
-    nsStr theTempStr;
-    nsStr::Initialize(theTempStr,eOneByte);
-    theTempStr.mLength=nsCRT::strlen(aCStringSet);
-    theTempStr.mStr=(char*)aCStringSet;
-    result=nsStr::RFindCharInSet(*this,theTempStr,PR_FALSE,anOffset);
+    nsStr temp;
+    nsStr::Initialize(temp,eOneByte);
+    temp.mLength=nsCRT::strlen(aCStringSet);
+    temp.mStr=(char*)aCStringSet;
+    result=nsStr::RFindCharInSet(*this,temp,PR_FALSE,anOffset);
   }
   return result;
 }
@@ -1292,16 +1273,28 @@ PRInt32 nsString2::RFind(const nsStr& aString,PRBool aIgnoreCase) const{
  *  @param   
  *  @return  
  */
+PRInt32 nsString2::RFind(const nsString2& aString,PRBool aIgnoreCase) const{
+  PRInt32 result=nsStr::RFindSubstr(*this,aString,aIgnoreCase,0);
+  return result;
+}
+
+/**
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ */
 PRInt32 nsString2::RFind(const char* aString,PRBool aIgnoreCase) const{
   NS_ASSERTION(0!=aString,kNullPointerError);
 
   PRInt32 result=kNotFound;
   if(aString) {
-    nsStr theTempStr;
-    nsStr::Initialize(theTempStr,eOneByte);
-    theTempStr.mLength=nsCRT::strlen(aString);
-    theTempStr.mStr=(char*)aString;
-    result=nsStr::RFindSubstr(*this,theTempStr,aIgnoreCase,0);
+    nsStr temp;
+    nsStr::Initialize(temp,eOneByte);
+    temp.mLength=nsCRT::strlen(aString);
+    temp.mStr=(char*)aString;
+    result=nsStr::RFindSubstr(*this,temp,aIgnoreCase,0);
   }
   return result;
 }
@@ -1334,11 +1327,11 @@ PRInt32 nsString2::Compare(const char *aCString,PRBool aIgnoreCase,PRInt32 aLeng
   NS_ASSERTION(0!=aCString,kNullPointerError);
 
   if(aCString) {
-    nsStr theTempStr;
-    nsStr::Initialize(theTempStr,eOneByte);
-    theTempStr.mLength=nsCRT::strlen(aCString);
-    theTempStr.mStr=(char*)aCString;
-    return nsStr::Compare(*this,theTempStr,aLength,aIgnoreCase);
+    nsStr temp;
+    nsStr::Initialize(temp,eOneByte);
+    temp.mLength=nsCRT::strlen(aCString);
+    temp.mStr=(char*)aCString;
+    return nsStr::Compare(*this,temp,aLength,aIgnoreCase);
   }
   return 0;
 }
@@ -1354,11 +1347,11 @@ PRInt32 nsString2::Compare(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 a
   NS_ASSERTION(0!=aString,kNullPointerError);
 
   if(aString) {
-    nsStr theTempStr;
-    nsStr::Initialize(theTempStr,eTwoByte);
-    theTempStr.mLength=nsCRT::strlen(aString);
-    theTempStr.mUStr=(PRUnichar*)aString;
-    return nsStr::Compare(*this,theTempStr,aLength,aIgnoreCase);
+    nsStr temp;
+    nsStr::Initialize(temp,eTwoByte);
+    temp.mLength=nsCRT::strlen(aString);
+    temp.mUStr=(PRUnichar*)aString;
+    return nsStr::Compare(*this,temp,aLength,aIgnoreCase);
   }
   return 0;
 }
@@ -1568,14 +1561,35 @@ PRBool nsString2::IsDigit(PRUnichar aChar) {
 }
 
 
+/**************************************************************
+  Define the string deallocator class...
+ **************************************************************/
+class nsStringDeallocator: public nsDequeFunctor{
+public:
+  virtual void* operator()(void* anObject) {
+    static nsMemoryAgent theAgent;
+    nsString2* aString= (nsString2*)anObject;
+    if(aString){
+      aString->mAgent=&theAgent;
+      delete aString;
+    }
+    return 0;
+  }
+};
+
 /****************************************************************************
  * This class, appropriately enough, creates and recycles nsString2 objects..
  ****************************************************************************/
 
-#if 0
+
 class nsStringRecycler {
 public:
   nsStringRecycler() : mDeque(0) {
+  }
+
+  ~nsStringRecycler() {
+    nsStringDeallocator theDeallocator;
+    mDeque.ForEach(theDeallocator); //now delete the strings
   }
 
   void Recycle(nsString2* aString) {
@@ -1623,7 +1637,6 @@ void nsString2::Recycle(nsString2* aString){
   GetRecycler().Recycle(aString);
 }
 
-#endif
 
 /**
  * 
@@ -1690,14 +1703,12 @@ NS_BASE int fputs(const nsString2& aString, FILE* out)
  */
 void nsString2::SelfTest(void) {
 
-#if 0
+#ifdef NS_DEBUG
   static const char* kConstructorError = kConstructorError;
   static const char* kComparisonError  = "Comparision error!";
   static const char* kEqualsError = "Equals error!";
 
-#ifdef  NS_DEBUG
 	mSelfTested=PR_TRUE;
-#endif
   
   eCharSize theSize=eOneByte;
 
@@ -1705,8 +1716,18 @@ void nsString2::SelfTest(void) {
   {
     {
       nsString2 theString0("foo",theSize);  //watch it construct and destruct
-
     }
+
+    {
+      nsString2 theString("hello");
+      nsString2 temp1=theString+" there!";
+      nsString2 temp2=theString+'!';
+      nsSubsumeStr temp3=theString+'?';
+      nsString2 temp4(temp3);
+      temp1=temp3;
+      nsSubsumeStr temp5("hello");
+    }
+
     nsString2 theString1(theSize);
     nsString2 theString("hello",theSize);
     nsString2 theString3(theString,theSize);
@@ -1721,6 +1742,8 @@ void nsString2::SelfTest(void) {
     //while we're here, let's try truncation and setting the length.
     theString3.Truncate(3);
     theLen=theString3.Length();
+
+
     theString.SetCapacity(3);
     const char* theBuffer=theString.GetBuffer();
     const char* theOther=theBuffer;
@@ -1736,12 +1759,17 @@ void nsString2::SelfTest(void) {
     theString5.StripWhitespace();
 
     nsString2* theString6=theString5.ToNewString();
+    nsString2::Recycle(theString6);
+
     char* str=theString5.ToNewCString();
+    delete [] str;
+
     char buffer[100];
     theString5.ToCString(buffer,sizeof(buffer)-1);
     theOther=theString5.GetBuffer();
   }
-    //try a few numeric conversion routines...
+
+  //try a few numeric conversion routines...
   {
     nsString2 str1("10000",theSize);
     PRInt32 err;
@@ -1753,11 +1781,12 @@ void nsString2::SelfTest(void) {
   {
     nsString2 theString("hello",theSize);
     PRUint32 len=theString.Length();
+    PRUnichar ch;
     for(PRUint32 i=0;i<len;i++) {
-      PRUnichar ch3=theString.CharAt(i);
+      ch=theString.CharAt(i);
     }
-    PRUnichar ch4=theString.First();
-    PRUnichar ch5=theString.Last();
+    ch=theString.First();
+    ch=theString.Last();
   }
 
   //**********************************************
@@ -1825,7 +1854,6 @@ void nsString2::SelfTest(void) {
     temp1.Mid(temp2,6,5);
     temp1.Right(temp2,4);
   }
-
 
   //**********************************************
   //Now let's test the INSERTION methods...
@@ -1973,6 +2001,15 @@ void nsString2::SelfTest(void) {
     pos=find1.BinarySearch('i');
     pos=find1.BinarySearch('z');
   }
+
+  {
+    //now let's try a memory allocation test...
+    nsString2 temp;
+    for(int i=0;i<100;i++){
+      temp+="hello ";
+    }
+    int x=5;
+  }
 #endif
 }
 
@@ -1981,14 +2018,6 @@ void nsString2::SelfTest(void) {
   IMPLEMENTATION NOTES: AUTOSTRING...
  ***********************************************************************/
 
-void InitAutoStr(nsAutoString2& aDest,nsBufDescriptor& aBufDescriptor){
-  aDest.mAgent=0;
-  aDest.mStr=aBufDescriptor.mStr;
-  aDest.mMultibyte=aBufDescriptor.mMultibyte;
-  aDest.mCapacity=(sizeof(aDest.mBuffer)>>aDest.mMultibyte)-1;
-  aDest.mOwnsBuffer=aBufDescriptor.mOwnsBuffer;
-  AddNullTerminator(aDest);
-}
 
 /**
  * Special case constructor, that allows the consumer to provide
@@ -1998,8 +2027,9 @@ void InitAutoStr(nsAutoString2& aDest,nsBufDescriptor& aBufDescriptor){
  * @param   aCurrentLength tells us the current length of the buffer
  */
 nsAutoString2::nsAutoString2(eCharSize aCharSize) : nsString2(aCharSize){
-  nsBufDescriptor theDescriptor(mBuffer,sizeof(mBuffer),aCharSize,PR_FALSE);
-  InitAutoStr(*this,theDescriptor);
+  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>aCharSize)-1,0,aCharSize,PR_FALSE);
+  mAgent=0;
+  AddNullTerminator(*this);
 }
 
 /**
@@ -2007,8 +2037,10 @@ nsAutoString2::nsAutoString2(eCharSize aCharSize) : nsString2(aCharSize){
  * @param   anExtBuffer describes an external buffer
  * @param   aCString is a ptr to a 1-byte cstr
  */
-nsAutoString2::nsAutoString2(nsBufDescriptor& aBufDescriptor,const char* aCString) : nsString2(aBufDescriptor.mMultibyte) {
-  InitAutoStr(*this,aBufDescriptor);
+nsAutoString2::nsAutoString2(nsStr& aStr,const char* aCString) : nsString2(aStr.mMultibyte) {
+  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>aStr.mMultibyte)-1,0,aStr.mMultibyte,PR_FALSE);
+  mAgent=0;
+  AddNullTerminator(*this);
   Assign(aCString);
 }
 
@@ -2017,8 +2049,9 @@ nsAutoString2::nsAutoString2(nsBufDescriptor& aBufDescriptor,const char* aCStrin
  * @param   aCString is a ptr to a 1-byte cstr
  */
 nsAutoString2::nsAutoString2(const char* aCString,eCharSize aCharSize) : nsString2(aCharSize) {
-  nsBufDescriptor theDescriptor(mBuffer,sizeof(mBuffer),aCharSize,PR_FALSE);
-  InitAutoStr(*this,theDescriptor);
+  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>aCharSize)-1,0,aCharSize,PR_FALSE);
+  mAgent=0;
+  AddNullTerminator(*this);
   Assign(aCString);
 }
 
@@ -2026,15 +2059,15 @@ nsAutoString2::nsAutoString2(const char* aCString,eCharSize aCharSize) : nsStrin
  * Copy construct from ascii c-string
  * @param   aCString is a ptr to a 1-byte cstr
  */
-nsAutoString2::nsAutoString2(char* aCString,PRUint32 aLen,eCharSize aCharSize,PRBool assumeOwnership) : nsString2(aCharSize) {
+nsAutoString2::nsAutoString2(char* aCString,PRUint32 aCapacity,eCharSize aCharSize,PRBool assumeOwnership) : nsString2(aCharSize) {
+  mAgent=0;
   if(assumeOwnership) {
-    nsBufDescriptor theDescriptor(aCString,aLen,eOneByte,PR_TRUE);
-    InitAutoStr(*this,theDescriptor);
+    nsStr::Initialize(*this,aCString,aCapacity,0,eOneByte,PR_TRUE);
   }
   else {
-    nsBufDescriptor theDescriptor(mBuffer,aLen,aCharSize,PR_FALSE);
-    InitAutoStr(*this,theDescriptor);
+    nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>aCharSize)-1,0,aCharSize,PR_FALSE);
   }
+  AddNullTerminator(*this);
   Assign(aCString);
 }
 
@@ -2043,8 +2076,9 @@ nsAutoString2::nsAutoString2(char* aCString,PRUint32 aLen,eCharSize aCharSize,PR
  * @param   aString is a ptr to a unistr
  */
 nsAutoString2::nsAutoString2(const PRUnichar* aString,eCharSize aCharSize) : nsString2(aCharSize) {
-  nsBufDescriptor theDescriptor(mBuffer,sizeof(mBuffer),aCharSize,PR_FALSE);
-  InitAutoStr(*this,theDescriptor);
+  mAgent=0;
+  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>aCharSize)-1,0,aCharSize,PR_FALSE);
+  AddNullTerminator(*this);
   Assign(aString);
 }
 
@@ -2052,15 +2086,15 @@ nsAutoString2::nsAutoString2(const PRUnichar* aString,eCharSize aCharSize) : nsS
  * Copy construct from uni-string
  * @param   aString is a ptr to a unistr
  */
-nsAutoString2::nsAutoString2(PRUnichar* aString,PRUint32 aLength,eCharSize aCharSize,PRBool assumeOwnership) : nsString2(aCharSize) {
+nsAutoString2::nsAutoString2(PRUnichar* aString,PRUint32 aCapacity,eCharSize aCharSize,PRBool assumeOwnership) : nsString2(aCharSize) {
+  mAgent=0;
   if(assumeOwnership) {
-    nsBufDescriptor theDescriptor((char*)aString,aLength,eTwoByte,PR_TRUE);
-    InitAutoStr(*this,theDescriptor);
+    nsStr::Initialize(*this,(char*)aString,aCapacity,0,eTwoByte,PR_TRUE);
   }
   else {
-    nsBufDescriptor theDescriptor(mBuffer,sizeof(mBuffer),aCharSize,PR_FALSE);
-    InitAutoStr(*this,theDescriptor);
+    nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>aCharSize)-1,0,aCharSize,PR_FALSE);
   }
+  AddNullTerminator(*this);
   Assign(aString);
 }
 
@@ -2070,8 +2104,9 @@ nsAutoString2::nsAutoString2(PRUnichar* aString,PRUint32 aLength,eCharSize aChar
  * @param   
  */
 nsAutoString2::nsAutoString2(const nsStr& aString,eCharSize aCharSize) : nsString2(aCharSize) {
-  nsBufDescriptor theDescriptor(mBuffer,sizeof(mBuffer),aCharSize,PR_FALSE);
-  InitAutoStr(*this,theDescriptor);
+  mAgent=0;
+  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>aCharSize)-1,0,aCharSize,PR_FALSE);
+  AddNullTerminator(*this);
   Assign(aString);
 }
 
@@ -2080,8 +2115,9 @@ nsAutoString2::nsAutoString2(const nsStr& aString,eCharSize aCharSize) : nsStrin
  * @param   
  */
 nsAutoString2::nsAutoString2(const nsAutoString2& aString,eCharSize aCharSize) : nsString2(aCharSize) {
-  nsBufDescriptor theDescriptor(mBuffer,sizeof(mBuffer),aCharSize,PR_FALSE);
-  InitAutoStr(*this,theDescriptor);
+  mAgent=0;
+  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>aCharSize)-1,0,aCharSize,PR_FALSE);
+  AddNullTerminator(*this);
   Assign(aString);
 }
 
@@ -2090,8 +2126,9 @@ nsAutoString2::nsAutoString2(const nsAutoString2& aString,eCharSize aCharSize) :
  * @param   
  */
 nsAutoString2::nsAutoString2(const nsString2& aString,eCharSize aCharSize) : nsString2(aCharSize){
-  nsBufDescriptor theDescriptor(mBuffer,sizeof(mBuffer),aCharSize,PR_FALSE);
-  InitAutoStr(*this,theDescriptor);
+  mAgent=0;
+  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>aCharSize)-1,0,aCharSize,PR_FALSE);
+  AddNullTerminator(*this);
   Assign(aString);
 }
 
@@ -2101,9 +2138,20 @@ nsAutoString2::nsAutoString2(const nsString2& aString,eCharSize aCharSize) : nsS
  * @param   
  */
 nsAutoString2::nsAutoString2(PRUnichar aChar,eCharSize aCharSize) : nsString2(aCharSize){
-  nsBufDescriptor theDescriptor(mBuffer,sizeof(mBuffer),aCharSize,PR_FALSE);
-  InitAutoStr(*this,theDescriptor);
+  mAgent=0;
+  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>aCharSize)-1,0,aCharSize,PR_FALSE);
+  AddNullTerminator(*this);
   Assign(aChar);
+}
+
+/**
+ * construct from a subsumeable string
+ * @update	gess 1/4/99
+ * @param   reference to a subsumeString
+ */
+nsAutoString2::nsAutoString2( nsSubsumeStr& aSubsumeStr) :nsString2(aSubsumeStr.mMultibyte) {
+  mAgent=0;
+  Subsume(*this,aSubsumeStr);
 }
 
 /**
@@ -2120,3 +2168,16 @@ void nsAutoString2::SizeOf(nsISizeOfHandler* aHandler) const {
   aHandler->Add(mCapacity << mMultibyte);
 }
 
+nsSubsumeStr::nsSubsumeStr(nsString2& aString) : nsString2() {
+  Subsume(*this,aString);
+}
+
+nsSubsumeStr::nsSubsumeStr(nsStr& aString) : nsString2() {
+  Subsume(*this,aString);
+}
+
+nsSubsumeStr::nsSubsumeStr(const PRUnichar* aString) : nsString2(aString,eTwoByte) {
+}
+
+nsSubsumeStr::nsSubsumeStr(const char* aString) : nsString2(aString,eOneByte) {
+}
