@@ -226,6 +226,11 @@ private:
 
     nsIDOMElement* element; // Weak reference. The element will go away first.
     nsIDOMDocument* mDOMDocument; // Weak reference.
+
+    // The "xul key" modifier can be any of the known modifiers:
+    enum {
+        xulKeyNone, xulKeyShift, xulKeyControl, xulKeyAlt, xulKeyMeta
+    } mXULKeyModifier;
 }; 
 
 ////////////////////////////////////////////////////////////////////////
@@ -279,8 +284,10 @@ nsXULKeyListenerImpl::Init(
   nsIDOMElement  * aElement,
   nsIDOMDocument * aDocument)
 {
+    printf("nsXULKeyListenerImpl::Init()\n");
   element = aElement; // Weak reference. Don't addref it.
   mDOMDocument = aDocument; // Weak reference.
+  mXULKeyModifier = xulKeyControl;
   return NS_OK;
 }
 
@@ -369,6 +376,28 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 
 	nsCOMPtr<nsIDOMNode> keysetNode;
 	rootNode->GetFirstChild(getter_AddRefs(keysetNode));
+
+#undef DEBUG_XUL_KEYS
+#ifdef DEBUG_XUL_KEYS
+    if (aEventType == eKeyPress)
+    {
+        PRUint32 charcode, keycode;
+      keyEvent->GetCharCode(&charcode);
+      keyEvent->GetKeyCode(&keycode);
+      printf("DoKey [%s]: key code 0x%d, char code '%c', ",
+             (aEventType == eKeyPress ? "KeyPress" : ""), keycode, charcode);
+      PRBool ismod;
+      keyEvent->GetShiftKey(&ismod);
+      if (ismod) printf("[Shift] ");
+      keyEvent->GetCtrlKey(&ismod);
+      if (ismod) printf("[Ctrl] ");
+      keyEvent->GetAltKey(&ismod);
+      if (ismod) printf("[Alt] ");
+      keyEvent->GetMetaKey(&ismod);
+      if (ismod) printf("[Meta] ");
+      printf("\n");
+    }
+#endif /* DEBUG_XUL_KEYS */
 	
 	while (keysetNode) {
 		nsAutoString keysetNodeType;
@@ -384,6 +413,7 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
           oldkeysetNode->GetNextSibling(getter_AddRefs(keysetNode));
 		  continue;
 		}
+
 		// Given the DOM node and Key Event
 		// Walk the node's children looking for 'key' types
 
@@ -391,9 +421,9 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 		// Compares the received key code to found 'key' types
 		// Executes command if found
 		// Marks event as consumed
-	    nsCOMPtr<nsIDOMNode> keyNode;
-	    keysetNode->GetFirstChild(getter_AddRefs(keyNode));
-	    while (keyNode) {
+        nsCOMPtr<nsIDOMNode> keyNode;
+        keysetNode->GetFirstChild(getter_AddRefs(keyNode));
+        while (keyNode) {
 			nsCOMPtr<nsIDOMElement> keyElement(do_QueryInterface(keyNode));
 			if (!keyElement) {
 			  continue;
@@ -402,7 +432,29 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 			nsAutoString property;
 			keyElement->GetNodeName(property);
 			//printf("keyNodeType [%s] \n", keyNodeType.ToNewCString()); // this leaks
-			if (property.Equals("key")) {
+
+            // See if we're redefining the special XUL modifier key
+			if (property.Equals("xulkey")) {
+                keyElement->GetAttribute(nsAutoString("key"), property);
+                if (property.Equals("shift"))
+                    mXULKeyModifier = xulKeyShift;
+                else if (property.Equals("control"))
+                    mXULKeyModifier = xulKeyControl;
+                else if (property.Equals("alt"))
+                    mXULKeyModifier = xulKeyAlt;
+                else if (property.Equals("meta"))
+                    mXULKeyModifier = xulKeyMeta;
+                else if (property.Equals("none"))
+                    mXULKeyModifier = xulKeyNone;
+#ifdef DEBUG_XUL_KEYS
+                else printf("Property didn't match: %s\n",
+                            property.ToNewCString());
+                char* propstr = property.ToNewCString();
+                printf("Set xul key to %s(%d)\n", propstr, mXULKeyModifier);
+                Recycle(propstr);
+#endif
+            }
+            if (property.Equals("key")) {
 				//printf("onkeypress [%s] \n", cmdToExecute.ToNewCString()); // this leaks
 				do {	
 				    property = falseString;	
@@ -464,93 +516,90 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 			        if (!isMatching) {
 			          break;
 			        } 
-				
-				    // Make these tri-state --
-                    //   true(1), false(0), and unspecified (3)
-				    int modCommand = 3;
-			        int modControl = 3;
-			        
-			        property = "";
-					keyElement->GetAttribute(nsAutoString("command"), property);
-					if(property == trueString)
-					  modCommand = 1;
-					else if(property == falseString)
-					  modCommand = 0;
-					  
-					property = "";
-					keyElement->GetAttribute(nsAutoString("control"), property);
-					if(property == trueString)
-					  modControl = 1;
-					else if(property == falseString)
-					  modControl = 0;
-					
-					// Test Command attribute
-					PRBool isCommand = PR_FALSE;
-					PRBool isControl = PR_FALSE;
-					keyEvent->GetMetaKey(&isCommand);
-					keyEvent->GetCtrlKey(&isControl);
-					if (((isCommand && (modCommand==0)) ||
-					    (!isCommand && (modCommand==1))) || 
-					    ((isControl && (modControl==0)) ||
-					    (!isControl && (modControl==1))))
-					{
-#ifndef XP_MAC
-					   // Temp hack. we should remove this
-					   // after XUL can spec which key for keybinding
-					   if((isControl && (modCommand==0)) || 
-					      (!isControl && (modCommand==1)))
-                                           {
-                                             break;
-                                           } 
-#else
-					  break;
-#endif
-					}
-					//printf("Passed command/ctrl test \n"); // this leaks   
 
-					// Test Shift attribute
-					int modShift = 3;
-					property = "";
-					keyElement->GetAttribute(nsAutoString("shift"), property);
-					if(property == trueString)
-					  modShift = 1;
-					else if(property == falseString)
-					  modShift = 0;
-					  
-					PRBool isShift = PR_FALSE;
-					keyEvent->GetShiftKey(&isShift);
-					if ((isShift && (modShift==0)) || 
-					   (!isShift && (modShift==1)))
-					{
-					  break;
-                    }
-                    
-					// Test Alt attribute
-					int modAlt = 3;
-					property = "";
-					keyElement->GetAttribute(nsAutoString("alt"),     property);
-					if(property == trueString)
-					  modAlt = 1;
-					else if(property == falseString)
-					  modAlt = 0;
-					  
-					PRBool isAlt = PR_FALSE;
-					keyEvent->GetAltKey(&isAlt);
-					if ((isAlt && (modAlt==0)) || 
-					   (!isAlt && (modAlt==1))) 
-					{
-					  break;
-                    }
+                    // This is gross -- we're doing string compares
+                    // every time we loop over this list!
+				
+				    // Modifiers in XUL files are tri-state --
+                    //   true, false, and unspecified.
+                    // If a modifier is unspecified, we don't check
+                    // the status of that modifier (always match).
+
+			        // Get the attribute for the "xulkey" modifier.
+                    nsAutoString xproperty = "";
+                    keyElement->GetAttribute(nsAutoString("xulkey"),
+                                             xproperty);
+
+                    // Is the modifier key set in the event?
+					PRBool isModKey = PR_FALSE;
+
+                    // Check whether the shift key fails to match:
+					keyEvent->GetShiftKey(&isModKey);
+                    property = "";
+                    keyElement->GetAttribute(nsAutoString("shift"), property);
+                    if ((property == trueString && !isModKey)
+                        || (property == falseString && isModKey))
+                        break;
+                    // and also the xul key, if it's specified to be shift:
+                    if (xulKeyShift == mXULKeyModifier &&
+                        ((xproperty == trueString && !isModKey)
+                         || (xproperty == falseString && isModKey)))
+                        break;
+
+                    // and the control key:
+					keyEvent->GetCtrlKey(&isModKey);
+			        property = "";
+					keyElement->GetAttribute(nsAutoString("control"), property);
+					if ((property == trueString && !isModKey)
+                        || (property == falseString && isModKey))
+                        break;
+                    // and if xul is control:
+                    if (xulKeyControl == mXULKeyModifier &&
+                        ((xproperty == trueString && !isModKey)
+                         || (xproperty == falseString && isModKey)))
+                        break;
+
+                    // and the alt key
+					keyEvent->GetAltKey(&isModKey);
+			        property = "";
+					keyElement->GetAttribute(nsAutoString("alt"), property);
+					if ((property == trueString && !isModKey)
+                        || (property == falseString && isModKey))
+                        break;
+                    // and if xul is alt:
+                    if (xulKeyAlt == mXULKeyModifier &&
+                        ((xproperty == trueString && !isModKey)
+                         || (xproperty == falseString && isModKey)))
+                        break;
+
+                    // and the meta key
+					keyEvent->GetMetaKey(&isModKey);
+			        property = "";
+					keyElement->GetAttribute(nsAutoString("meta"), property);
+					if ((property == trueString && !isModKey)
+                        || (property == falseString && isModKey))
+                        break;
+                    // and if xul is meta:
+                    if (xulKeyMeta == mXULKeyModifier &&
+                        ((xproperty == trueString && !isModKey)
+                         || (xproperty == falseString && isModKey)))
+                        break;
+
 					// Modifier tests passed so execute onclick command
 					nsAutoString cmdToExecute;
 					nsAutoString oncommand;
 					switch(aEventType) {
 						case eKeyPress:
 						  keyElement->GetAttribute(nsAutoString("onkeypress"), cmdToExecute);
-						  printf("onkeypress = %s\n", cmdToExecute.ToNewCString());
-						  
+#if defined(DEBUG_saari) || defined(DEBUG_akkana)
+						  printf("onkeypress = %s\n",
+                                 cmdToExecute.ToNewCString());
+#endif
+
 						  keyElement->GetAttribute(nsAutoString("oncommand"), oncommand);
+#if defined(DEBUG_saari) || defined(DEBUG_akkana)
 						  printf("oncommand = %s\n", oncommand.ToNewCString());
+#endif
 						break;
 						case eKeyDown:
 						  keyElement->GetAttribute(nsAutoString("onkeydown"), cmdToExecute);

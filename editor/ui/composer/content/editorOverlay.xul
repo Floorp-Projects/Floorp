@@ -30,45 +30,47 @@
 <html:script language="JavaScript" src="chrome://editor/content/editorOverlay.js"/>
 
   <keyset id="defaultKeySet">
+
     <!-- defined in globalOverlay -->
 	  <key id="key_newNavigator"/>
 	  <key id="key_newMessage"/>
     <key id="key_newBlankPage"/>
 
-    <key id="openeditorkb"  disabled="false" command="true" key="o" observes="Editor:Open" />
-    <key id="savekb"        disabled="false" command="true" key="s" observes="Editor:Save"/>
-    <key id="closekb"       disabled="false" command="true" key="w" observes="Editor:Close" />
-    <key id="printkb"       disabled="false" command="true" key="p" observes="Editor:Print" />
-    <key id="exitkb"        disabled="false" command="true" key="q" observes="Editor:Exit" />
+    <key id="openeditorkb"  disabled="false" xulkey="true" key="o" observes="Editor:Open" />
+    <key id="savekb"        disabled="false" xulkey="true" key="s" observes="Editor:Save"/>
+    <key id="closekb"       disabled="false" xulkey="true" key="w" observes="Editor:Close" />
+    <key id="printkb"       disabled="false" xulkey="true" key="p" observes="Editor:Print" />
+    <key id="exitkb"        disabled="false" xulkey="true" key="q" observes="Editor:Exit" />
 
-    <key id="undokb"        disabled="false" command="true" key="z" observes="Editor:Undo" />
-    <key id="redokb"        disabled="false" command="true" key="y" observes="Editor:Redo" />
-    <key id="cutkb"         disabled="false" command="true" key="x" observes="Editor:Cut" />
-    <key id="copykb"        disabled="false" command="true" key="c" observes="Editor:Copy" />
-    <key id="pastekb"       disabled="false" command="true" key="v" observes="Editor:Paste" />
-    <key id="pastequotationkb" disabled="false" command="true" alt="true" key="v" observes="Editor:PasteQuote" />
-    <key id="selectallkb"   disabled="false" command="true" key="a" observes="Editor:SelectAll" />
-    <key id="findkb"        disabled="false" command="true" key="f" observes="Editor:Find" />
-    <key id="findnextkb"    disabled="false" command="true" key="g" observes="Editor:FindNext" />
-    <key id="checkspellingkb" disabled="false" command="true" key="k" observes="Editor:CheckSpelling" />
+    <key id="undokb"        disabled="false" xulkey="true" key="z" observes="Editor:Undo" />
+    <key id="redokb"        disabled="false" xulkey="true" key="y" observes="Editor:Redo" />
+    <key id="cutkb"         disabled="false" xulkey="true" key="x" observes="Editor:Cut" />
+    <key id="copykb"        disabled="false" xulkey="true" key="c" observes="Editor:Copy" />
+    <key id="pastekb"       disabled="false" xulkey="true" key="v" observes="Editor:Paste" />
+    <key id="pastequotationkb" disabled="false" xulkey="true" alt="true" key="v" observes="Editor:PasteQuote" />
+    <key id="selectallkb"   disabled="false" xulkey="true" key="a" observes="Editor:SelectAll" />
+    <key id="findkb"        disabled="false" xulkey="true" key="f" observes="Editor:Find" />
+    <key id="findnextkb"    disabled="false" xulkey="true" key="g" observes="Editor:FindNext" />
+    <key id="checkspellingkb" disabled="false" xulkey="true" key="k" observes="Editor:CheckSpelling" />
 
-    <key id="inserthtmlkb"  disabled="false" command="true" alt="true"  key="i" observes="Editor:InsertHTML"/>
+    <key id="inserthtmlkb"  disabled="false" xulkey="true" alt="true"  key="i" observes="Editor:InsertHTML"/>
 
-    <key id="boldkb"        disabled="false" command="true" key="b" observes="Editor:Bold"/>
-    <key id="italickb"      disabled="false" command="true" key="i" observes="Editor:Italic"/>
+    <key id="boldkb"        disabled="false" xulkey="true" key="b" observes="Editor:Bold"/>
+    <key id="italickb"      disabled="false" xulkey="true" key="i" observes="Editor:Italic"/>
     
     
-    <key id="underlinekb"   disabled="false" command="true" key="u" onkeypress="EditorToggleStyle('underline')"/>
-    <key id="navigatorkb"   disabled="false" command="true" key="1" onkeypress="Navigator()" />
-    <key id="messengerkb"   disabled="false" command="true" key="2" onkeypress="Messenger()" />
-    <key id="composerkb"    disabled="false" command="true" key="3" onkeypress="Composer()" />
-    <key id="calendarkb"    disabled="false" command="true" key="4" onkeypress="Calendar()" />
-    <key id="indentkb"      disabled="false" command="true" key="=" onkeypress="EditorIndent('indent')" />
-    <key id="outdentkb"     disabled="false" command="true" key="-" onkeypress="EditorIndent('outdent')" />
+    <key id="underlinekb"   disabled="false" xulkey="true" key="u" onkeypress="EditorToggleStyle('underline')"/>
+    <key id="navigatorkb"   disabled="false" xulkey="true" shift="true" key="n" onkeypress="Navigator()" />
+    <key id="navvigatorkb"   disabled="false" xulkey="true" key="1" onkeypress="Navigator()" />
+    <key id="messengerkb"   disabled="false" xulkey="true" key="2" onkeypress="Messenger()" />
+    <key id="composerkb"    disabled="false" xulkey="true" key="3" onkeypress="Composer()" />
+    <key id="calendarkb"    disabled="false" xulkey="true" key="4" onkeypress="Calendar()" />
+    <key id="indentkb"      disabled="false" xulkey="true" key="=" onkeypress="EditorIndent('indent')" />
+    <key id="outdentkb"     disabled="false" xulkey="true" key="-" onkeypress="EditorIndent('outdent')" />
 
-    <key id="removestyleskb" disabled="false" shift="true" command="true" key="k" onkeypress="EditorRemoveStyle('all')" />
-    <key id="decreasefontsizekb" disabled="false" shift="true" command="true" key="[" onkeypress="DecreaseFontSize()" />
-    <key id="increasefontsizekb" disabled="false" shift="true" command="true" key="]" onkeypress="IncreaseFontSize()" />
+    <key id="removestyleskb" disabled="false" shift="true" xulkey="true" key="k" onkeypress="EditorRemoveStyle('all')" />
+    <key id="decreasefontsizekb" disabled="false" shift="true" xulkey="true" key="[" onkeypress="DecreaseFontSize()" />
+    <key id="increasefontsizekb" disabled="false" shift="true" xulkey="true" key="]" onkeypress="IncreaseFontSize()" />
 
 <!-- how to handle return, enter, tab, function keys, arrow keys, others? saari working on solution -->
         <!-- scroll document/page/line and move caret -->
@@ -76,19 +78,19 @@
     <key id="endkb"       disabled="false" keycode="VK_END" onkeypress="EditorMoveToBottomOfWindow( true, false )" />
     <key id="pageupkb"    disabled="false" keycode="VK_PAGE_UP" onkeypress="EditorMoveUpPage( true, false )" />
     <key id="pagedownkb"  disabled="false" keycode="VK_PAGE_DOWN" onkeypress="EditorMoveDownPage( true, false )" />
-    <key id="beginoflinekb" disabled="false" keycode="VK_LEFT" command="true" onkeypress="EditorBeginningOfLine( false )" />
-    <key id="endoflinekb" disabled="false" keycode="VK_RIGHT" command="true" onkeypress="EditorEndOfLine( false )" />
-    <key id="uphomekb"    disabled="false" keycode="VK_UP" command="true" onkeypress="EditorMoveToTopOfWindow( true, false )" />
-    <key id="downendkb"   disabled="false" keycode="VK_DOWN" command="true" onkeypress="EditorMoveToBottomOfWindow( true, false )" />
+    <key id="beginoflinekb" disabled="false" keycode="VK_LEFT" xulkey="true" onkeypress="EditorBeginningOfLine( false )" />
+    <key id="endoflinekb" disabled="false" keycode="VK_RIGHT" xulkey="true" onkeypress="EditorEndOfLine( false )" />
+    <key id="uphomekb"    disabled="false" keycode="VK_UP" xulkey="true" onkeypress="EditorMoveToTopOfWindow( true, false )" />
+    <key id="downendkb"   disabled="false" keycode="VK_DOWN" xulkey="true" onkeypress="EditorMoveToBottomOfWindow( true, false )" />
         <!-- scroll document/page/line and extend selection -->
     <key id="homeextendkb"      disabled="false" keycode="VK_HOME"  shift="true" onkeypress="EditorMoveToTopOfWindow( true, true )" />
     <key id="endextendkb"       disabled="false" keycode="VK_END"   shift="true" onkeypress="EditorMoveToBottomOfWindow( true, true )" />
     <key id="pageupextendkb"    disabled="false" keycode="VK_PAGE_UP" shift="true" onkeypress="EditorMoveUpPage( true, true )" />
     <key id="pagedownextendkb"  disabled="false" keycode="VK_PAGE_DOWN" shift="true" onkeypress="EditorMoveDownPage( true, true )" />
-    <key id="beginoflineextendkb" disabled="false" keycode="VK_LEFT" shift="true" command="true" onkeypress="EditorBeginningOfLine( false )" />
-    <key id="endoflineextendkb" disabled="false" keycode="VK_RIGHT" shift="true" command="true" onkeypress="EditorEndOfLine( false )" />
-    <key id="uphomeextendkb"    disabled="false" keycode="VK_UP"    shift="true" command="true" onkeypress="EditorMoveToTopOfWindow( true, false )" />
-    <key id="downendextendkb"   disabled="false" keycode="VK_DOWN"  shift="true" command="true" onkeypress="EditorMoveToBottomOfWindow( true, false )" />
+    <key id="beginoflineextendkb" disabled="false" keycode="VK_LEFT" shift="true" xulkey="true" onkeypress="EditorBeginningOfLine( false )" />
+    <key id="endoflineextendkb" disabled="false" keycode="VK_RIGHT" shift="true" xulkey="true" onkeypress="EditorEndOfLine( false )" />
+    <key id="uphomeextendkb"    disabled="false" keycode="VK_UP"    shift="true" xulkey="true" onkeypress="EditorMoveToTopOfWindow( true, false )" />
+    <key id="downendextendkb"   disabled="false" keycode="VK_DOWN"  shift="true" xulkey="true" onkeypress="EditorMoveToBottomOfWindow( true, false )" />
        <!-- move caret by one character -->
     <key id="leftkb" disabled="false" keycode="VK_LEFT" onkeypress="EditorPreviousCharacter( false )" />
     <key id="rightkb" disabled="false" keycode="VK_RIGHT" onkeypress="EditorNextCharacter( false )" />

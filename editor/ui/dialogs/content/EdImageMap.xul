@@ -51,14 +51,7 @@
 
   <xul:broadcaster id="args" value=""/>
 
-  <xul:keyset id="defaultKeySet">
-
-    <xul:key id="removestyleskb" disabled="false" shift="true" command="true" alt="false" key="k" onkeypress="EditorRemoveStyle('all')" />
-    <xul:key id="decreasefontsizekb" disabled="false" shift="true" command="true" alt="false" key="[" onkeypress="DecreaseFontSize()" />
-    <xul:key id="increasefontsizekb" disabled="false" shift="true" command="true" alt="false" key="]" onkeypress="IncreaseFontSize()" />
-
-<!-- how to handle return, enter, tab, function keys, arrow keys, others? saari working on solution -->
-  </xul:keyset>
+  <xul:keyset id="defaultKeySet/> 
 
   <xul:broadcaster id="args" value="chrome://editor/content/EditorInitPage.html"/>
   <xul:broadcaster id="canPrint"/>

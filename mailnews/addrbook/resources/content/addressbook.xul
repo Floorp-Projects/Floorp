@@ -79,7 +79,7 @@ Rights Reserved.
 	<!-- File Menu -->
 	<key id="key_newNavigator"/>
 	<key id="key_newMessage"/>
-	<key id="key_PrintCard" command="true" key="&printCardViewCmd.key;" observes="cmd_PrintCard" />
+	<key id="key_PrintCard" xulkey="true" key="&printCardViewCmd.key;" observes="cmd_PrintCard" />
 	<key id="key_close"/>
 	<key id="key_quit"/>
 	<!-- Edit Menu -->

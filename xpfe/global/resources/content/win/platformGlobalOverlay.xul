@@ -10,17 +10,17 @@
 
 	<!-- close -->
 	<menuitem id="menu_close" value="&closeCmd.label;" key="key_close" accesskey="&closeCmd.accesskey;" observes="cmd_close"/>
-	<key id="key_close" command="true" key="&closeCmd.key;" observes="cmd_close"/>
+	<key id="key_close" xulkey="true" key="&closeCmd.key;" observes="cmd_close"/>
 	
 	<!-- quit -->
 	<menupopup id="menu_FilePopup">
 		<menuitem value="&quitApplicationCmd.label;" key="key_quit" accesskey="&quitApplicationCmd.accesskey;" observes="cmd_quit"/>
 	</menupopup>
-	<key id="key_quit" command="true" key="&quitApplicationCmd.key;" observes="cmd_quit"/>
+	<key id="key_quit" xulkey="true" key="&quitApplicationCmd.key;" observes="cmd_quit"/>
  	<broadcaster id="cmd_quit" oncommand="goQuitApplication()"/>
 	
 	<!-- Edit Menu -->
 	<menuitem id="menu_redo" value="&redoCmd.label;" key="key_redo" accesskey="&redoCmd.accesskey;" observes="cmd_redo"/>
-	<key id="key_redo" command="true" key="&redoCmd.key;" observes="cmd_redo"/>
+	<key id="key_redo" xulkey="true" key="&redoCmd.key;" observes="cmd_redo"/>
 	
 </overlay>		

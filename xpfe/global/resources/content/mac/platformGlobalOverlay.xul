@@ -8,19 +8,25 @@
 		 xmlns:html="http://www.w3.org/TR/REC-html40"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+	<!-- change the xul key for Unix -->
+	<keyset id="unixoverlaykeyset">
+	<xulkey key="alt" />
+	<key keycode="VK_ENTER" oncommand="doOKButton()"/>
+	</keyset>
+
 	<!-- close -->
 	<menuitem id="menu_close" value="&closeCmd.label;" key="key_close" observes="cmd_close"/>
-	<key id="key_close" command="true" key="&closeCmd.key;" observes="cmd_close"/>
+	<key id="key_close" xulkey="true" key="&closeCmd.key;" observes="cmd_close"/>
 	
 	<!-- quit -->
 	<menupopup id="menu_FilePopup">
 		<menuitem value="&quitApplicationCmd.label;" key="key_quit" observes="cmd_quit"/>
 	</menupopup>
-	<key id="key_quit" command="true" key="&quitApplicationCmd.key;" observes="cmd_quit"/>
+	<key id="key_quit" xulkey="true" key="&quitApplicationCmd.key;" observes="cmd_quit"/>
  	<broadcaster id="cmd_quit" oncommand="goQuitApplication()"/>
 	
 	<!-- Edit Menu -->
 	<menuitem id="menu_redo" value="&redoCmd.label;" key="key_redo" observes="cmd_redo"/>
-	<key id="key_redo" shift="true" command="true" key="&redoCmd.key;" observes="cmd_redo"/>
+	<key id="key_redo" shift="true" xulkey="true" key="&redoCmd.key;" observes="cmd_redo"/>
 	
 </overlay>		
