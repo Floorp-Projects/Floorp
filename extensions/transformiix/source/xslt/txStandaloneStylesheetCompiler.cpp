@@ -40,7 +40,8 @@
 #include "TxLog.h"
 #include "txStylesheetCompiler.h"
 #include "txURIUtils.h"
-#include "xmlparse.h"
+#include "expat_config.h"
+#include "expat.h"
 
 /**
  *  Implementation of an In-Memory DOM based XML parser.  The actual XML
@@ -157,8 +158,8 @@ externalEntityRefHandler(XML_Parser aParser,
     // aParser is aUserData is the txDriver,
     // we set that in txDriver::parse
     NS_ENSURE_TRUE(aParser, XML_ERROR_NONE);
-    return TX_DRIVER(aParser)->ExternalEntityRef(aContext, aBase,
-                                                 aSystemId, aPublicId);
+    return ((txDriver*)aParser)->ExternalEntityRef(aContext, aBase,
+                                                   aSystemId, aPublicId);
 }
 
 
