@@ -8,10 +8,9 @@
     serves as a reference and smoketest distribution to demonstrate a typical
     subset of Mozilla needed to embed it into another application. The
     distribution contains sample applications for testing and development purposes.</p>
-    <p>Please note the phrase<i> typical subset</i>! Your application may need more or less functionality than is found in this
-    distribution. If this is the case, then take a look at the
-    build scripts in <a href="http://lxr.mozilla.org/seamonkey/source/embedding/config/">mozilla/embedding/config</a>
-    to see how this distribution was constructed. </p>
+    <p>Please note the phrase<i> typical subset</i>! If you want to use a different
+    subset then see the <a href="#cust">customizing the embedding distribution</a>
+    section below.</p>
     <h2>Where can I find more information about embedding? </h2>
     <p>Mozilla.org - <a href="http://www.mozilla.org/">http://www.mozilla.org/</a>.</p>
     <p>The Embedding project page - <a href="http://www.mozilla.org/projects/embedding/">http://www.mozilla.org/projects/embedding/</a>.
@@ -70,5 +69,39 @@
         choice.</li>
       <li>Double-click on mfcembed.exe</li>
     </ol>
+    <h2><a name="cust">Customizing the embedding distribution</a></h2>
+    <p>The embedding distribution is produced by first building the full Mozilla
+    source and cherry picking files and chrome into a separate embedding directory.
+    Basically the steps are:</p>
+    <ol>
+      <li>Build Mozilla as usual</li>
+      <li>cd mozilla/embedding/config</li>
+      <li>make</li>
+    </ol>
+    <p>The embedding distribution will appear in mozilla/dist/Embed.</p>
+    <p>The build process works by reading a file called basebrowser-win (or
+    basebrowser-unix, basebrowser-mac-macho etc.) and copying the listed files from
+    mozilla/dist/bin into mozilla/dist/Embed. It then reads a file called embed-jar.mn
+    and repackages the specified chrome files and directories into a single
+    embed.jar.</p>
+    <p>The build process also also looks for a file called client-win (or client-unix,
+    client-mac-macho etc.) and if present copies from there as well. This file
+    allows embedders to specify files to be added or removed from the default
+    embedding distribution. </p>
+    <p>For example if you wanted a distribution containing character converters for
+    various character sets, but not the ActiveX control you might define a
+    client-win like this:</p>
+    <pre>[Embed]
+components\ucvja.dll
+components\ucvko.dll
+components\ucvcn.dll
+components\ucvtw.dll
+components\ucvtw2.dll
+components\ucvibm.dll
+-mozctl.dll
+-mozctlx.dll</pre>
+    <p>When the build process is run, the files from embed-win will be copied first
+    and then those in client-win. Minus signs in front of filenames delete the
+    files, so the previous example would delete mozctl.dll and mozctlx.dll.</p>
   </body>
 </html>
