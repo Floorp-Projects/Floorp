@@ -667,7 +667,8 @@ static bool generatedBoolean(ExprNode *p)
     case ExprNode::logicalOr:
         return true;
     default:
-        NOT_REACHED("I shouldn't be here."); /* quiet linux warnings */
+        break;
+        
     }
     return false;
 }
