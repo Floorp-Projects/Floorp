@@ -387,15 +387,13 @@ NS_IMETHODIMP nsFontEnumeratorPh::EnumerateAllFonts(PRUint32* aCount, PRUnichar*
 	else return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsFontEnumeratorPh::EnumerateFonts( const char* aLangGroup, const char* aGeneric, PRUint32* aCount, PRUint32* aDefault, PRUnichar*** aResult )
+NS_IMETHODIMP nsFontEnumeratorPh::EnumerateFonts( const char* aLangGroup, const char* aGeneric, PRUint32* aCount, PRUnichar*** aResult )
 {
 
 	NS_ENSURE_ARG_POINTER(aResult);
 	*aResult = nsnull;
 	NS_ENSURE_ARG_POINTER(aCount);
 	*aCount = 0;
-	NS_ENSURE_ARG_POINTER(aDefault);
-	*aDefault = 0;
 
 	// aLangGroup=null or ""  means any (i.e., don't care)
 	// aGeneric=null or ""  means any (i.e, don't care)
