@@ -105,10 +105,9 @@ PRLogModuleInfo* gCookieLog = nsnull;
 #endif
 
 static const char *kCookiesFileName = "cookies.txt";
-static const char* kWhitespace="\b\t\r\n ";
 
 MODULE_PRIVATE nsresult
-cookie_ParseDate(char *date_string, time_t& date);
+cookie_ParseDate(const nsAFlatCString &date_string, time_t & date);
 
 typedef enum {
   COOKIE_Normal,
@@ -190,11 +189,16 @@ get_current_time()
     return current_time_in_seconds;
   }
 
-#if defined(PR_LOGGING)
+// Cookie logging macros for when PR_LOGGING is switched on
 #define SET_COOKIE PR_TRUE
 #define GET_COOKIE PR_FALSE
+
+#ifdef PR_LOGGING
+#define COOKIE_LOGFAILURE(a, b, c, d) cookie_LogFailure(a, b, c, d)
+#define COOKIE_LOGSUCCESS(a, b, c, d) cookie_LogSuccess(a, b, c, d)
+
 PRIVATE void
-cookie_LogFailure(PRBool set_cookie, nsIURI * curURL, const char * cookieString, const char * reason) {
+cookie_LogFailure(PRBool set_cookie, nsIURI * curURL, const char *cookieString, const char *reason) {
   if (!gCookieLog) {
     gCookieLog = PR_NewLogModule("cookie");
   }
@@ -214,42 +218,47 @@ cookie_LogFailure(PRBool set_cookie, nsIURI * curURL, const char * cookieString,
   PR_LOG(gCookieLog, PR_LOG_WARNING,("\n"));
 }
 
+// inline wrapper to make passing in nsAStrings easier
+PRIVATE inline void
+cookie_LogFailure(PRBool set_cookie, nsIURI * curURL, const nsAFlatCString &cookieString, const char *reason) {
+  cookie_LogFailure(set_cookie, curURL, cookieString.get(), reason);
+}
+
 PRIVATE void
-cookie_LogSuccess(PRBool set_cookie, nsIURI * curURL, const char * cookieString, cookie_CookieStruct * cookie) {
+cookie_LogSuccess(PRBool set_cookie, nsIURI * curURL, const nsAFlatCString &cookieString, cookie_CookieStruct * cookie) {
   if (!gCookieLog) {
     gCookieLog = PR_NewLogModule("cookie");
   }
   nsCAutoString spec;
-  nsresult result = curURL->GetSpec(spec);
+  curURL->GetSpec(spec);
 
   PR_LOG(gCookieLog, PR_LOG_DEBUG,
     ("%s%s%s\n", "===== ", set_cookie ? "COOKIE ACCEPTED" : "COOKIE SENT", " ====="));
   PR_LOG(gCookieLog, PR_LOG_DEBUG,("request URL: %s\n", spec.get()));
-  PR_LOG(gCookieLog, PR_LOG_DEBUG,("cookie string: %s\n", cookieString));
+  PR_LOG(gCookieLog, PR_LOG_DEBUG,("cookie string: %s\n", cookieString.get()));
   time_t curTime = get_current_time();
   PR_LOG(gCookieLog, PR_LOG_DEBUG,("current time (gmt): %s", asctime(gmtime(&curTime))));
 
   if (set_cookie) {
     PR_LOG(gCookieLog, PR_LOG_DEBUG,("----------------\n"));
-    PR_LOG(gCookieLog, PR_LOG_DEBUG,("name: %s\n", cookie->name));
-    PR_LOG(gCookieLog, PR_LOG_DEBUG,("value: %s\n", cookie->cookie));
-    PR_LOG(gCookieLog, PR_LOG_DEBUG,("%s: %s\n", cookie->isDomain ? "domain" : "host", cookie->host));
-    PR_LOG(gCookieLog, PR_LOG_DEBUG,("path: %s\n", cookie->path));
+    PR_LOG(gCookieLog, PR_LOG_DEBUG,("name: %s\n", cookie->name.get()));
+    PR_LOG(gCookieLog, PR_LOG_DEBUG,("value: %s\n", cookie->cookie.get()));
+    PR_LOG(gCookieLog, PR_LOG_DEBUG,("%s: %s\n", cookie->isDomain ? "domain" : "host", cookie->host.get()));
+    PR_LOG(gCookieLog, PR_LOG_DEBUG,("path: %s\n", cookie->path.get()));
     PR_LOG(gCookieLog, PR_LOG_DEBUG,("expires (gmt): %s",
            cookie->expires ? asctime(gmtime(&cookie->expires)) : "at end of session"));
     PR_LOG(gCookieLog, PR_LOG_DEBUG,("is secure: %s\n", cookie->isSecure ? "true" : "false"));
   }
   PR_LOG(gCookieLog, PR_LOG_DEBUG,("\n"));
 }
+#else
+#define COOKIE_LOGFAILURE(a, b, c, d) /* nothing */
+#define COOKIE_LOGSUCCESS(a, b, c, d) /* nothing */
 #endif
 
-PRBool PR_CALLBACK deleteCookie(void *aElement, void *aData) {
+PR_STATIC_CALLBACK(PRBool) deleteCookie(void *aElement, void *aData) {
   cookie_CookieStruct *cookie = (cookie_CookieStruct*)aElement;
-  PR_FREEIF(cookie->path);
-  PR_FREEIF(cookie->host);
-  PR_FREEIF(cookie->name);
-  PR_FREEIF(cookie->cookie);
-  PR_Free(cookie);
+  delete cookie;
   return PR_TRUE;
 }
 
@@ -307,7 +316,7 @@ cookie_RemoveOldestCookie(void) {
   }
   if(oldest_cookie) {
     cookie_list->RemoveElementAt(oldestLoc);
-    deleteCookie((void*)oldest_cookie, nsnull);
+    delete oldest_cookie;
     cookie_changed = PR_TRUE;
   }
 
@@ -331,7 +340,7 @@ cookie_RemoveExpiredCookies() {
        * the entire session. They'll get cleared on exit. */
       if( cookie_s->expires && (cookie_s->expires < cur_time) ) {
         cookie_list->RemoveElementAt(i);
-        deleteCookie((void*)cookie_s, nsnull);
+        delete cookie_s;
         cookie_changed = PR_TRUE;
       }
   }
@@ -351,7 +360,7 @@ COOKIE_RemoveSessionCookies() {
     NS_ASSERTION(cookie_s, "corrupt cookie list");
       if(!cookie_s->expires) {
         cookie_list->RemoveElementAt(i);
-        deleteCookie((void*)cookie_s, nsnull);
+        delete cookie_s;
       }
   }
 }
@@ -361,7 +370,7 @@ COOKIE_RemoveSessionCookies() {
  * case
  */
 PRIVATE void
-cookie_CheckForMaxCookiesFromHost(const char * cur_host) {
+cookie_CheckForMaxCookiesFromHost(const nsACString &cur_host) {
   cookie_CookieStruct * cookie_s;
   cookie_CookieStruct * oldest_cookie = 0;
   int cookie_count = 0;
@@ -375,7 +384,7 @@ cookie_CheckForMaxCookiesFromHost(const char * cur_host) {
   for (PRInt32 i = 0; i < count; ++i) {
     cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
     NS_ASSERTION(cookie_s, "corrupt cookie list");
-    if(!PL_strcasecmp(cookie_s->host, cur_host)) {
+    if(cur_host.Equals(cookie_s->host, nsCaseInsensitiveCStringComparator())) {
       cookie_count++;
       if(!oldest_cookie || oldest_cookie->lastAccessed > cookie_s->lastAccessed) {
         oldest_cookie = cookie_s;
@@ -386,18 +395,16 @@ cookie_CheckForMaxCookiesFromHost(const char * cur_host) {
   if(cookie_count >= MAX_COOKIES_PER_SERVER && oldest_cookie) {
     NS_ASSERTION(oldestLoc > -1, "oldestLoc got out of sync with oldest_cookie");
     cookie_list->RemoveElementAt(oldestLoc);
-    deleteCookie((void*)oldest_cookie, nsnull);
+    delete oldest_cookie;
     cookie_changed = PR_TRUE;
   }
 }
 
-
 /* search for previous exact match */
 PRIVATE cookie_CookieStruct *
-cookie_CheckForPrevCookie(const char * path, const char * hostname,
-                          const char * name) {
+cookie_CheckForPrevCookie(const nsACString &path, const nsACString &hostname, const nsACString &name) {
   cookie_CookieStruct * cookie_s;
-  if (cookie_list == nsnull) {
+  if (!cookie_list) {
     return nsnull;
   }
   
@@ -405,9 +412,8 @@ cookie_CheckForPrevCookie(const char * path, const char * hostname,
   for (PRInt32 i = 0; i < count; ++i) {
     cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
     NS_ASSERTION(cookie_s, "corrupt cookie list");
-    if(path && hostname && cookie_s->path && cookie_s->host && cookie_s->name
-      && !PL_strcmp(name, cookie_s->name) && !PL_strcmp(path, cookie_s->path)
-      && !PL_strcasecmp(hostname, cookie_s->host)) {
+    if(name.Equals(cookie_s->name) && path.Equals(cookie_s->path)
+       && hostname.Equals(cookie_s->host, nsCaseInsensitiveCStringComparator())) {
       return(cookie_s);
     }
   }
@@ -648,8 +654,8 @@ cookie_P3PPrefChanged(const char * newpref, void * data) {
 }
 #endif
 
-PRIVATE int
-cookie_SameDomain(char * currentHost, char * firstHost);
+PRIVATE PRBool
+cookie_SameDomain(const nsAFlatCString &currentHost, const nsAFlatCString &firstHost);
 
 PUBLIC void
 COOKIE_RegisterPrefCallbacks(void) {
@@ -746,18 +752,15 @@ COOKIE_RegisterPrefCallbacks(void) {
   prefs->RegisterCallback(cookie_lifetimeBehaviorPref, cookie_LifetimeBehaviorPrefChanged, nsnull);
 }
 
-PRBool
-cookie_IsIPAddress(const char* name) {
+static PRBool
+cookie_IsIPAddress(const nsAFlatCString &name) {
   // determine if name is an IP address
   PRNetAddr addr;
-  return (PR_StringToNetAddr(name, &addr) == PR_SUCCESS);
+  return PR_StringToNetAddr(name.get(), &addr) == PR_SUCCESS;
 }
 
 PRBool
-cookie_IsInDomain(char* domain, char* host) {
-  int domainLength = PL_strlen(domain);
-  int hostLength = PL_strlen(host);
-
+cookie_IsInDomain(const nsAFlatCString &domain, const nsAFlatCString &host) {
   /* special case for domainName being identical to hostName
    *   This probably buys some efficiency.
    *   But, more important, it allows a site that has an IP address to set a domain
@@ -768,7 +771,7 @@ cookie_IsInDomain(char* domain, char* host) {
    *      this one special case -- where the domain name is identically equal to the host
    *      name.
    */
-  if (!PL_strcmp(domain, host)) {
+  if (domain.Equals(host)) {
     return PR_TRUE;
   }
 
@@ -784,8 +787,7 @@ cookie_IsInDomain(char* domain, char* host) {
    *    e.g., hostName = netscape.com
    *          domainName = .netscape.com
    */
-  if ((domainLength == hostLength+1) && (domain[0] == '.') && 
-      !PL_strncasecmp(&domain[1], host, hostLength)) {
+  if (domain.Equals(NS_LITERAL_CSTRING(".") + host, nsCaseInsensitiveCStringComparator())) {
     return PR_TRUE;
   }
 
@@ -794,13 +796,9 @@ cookie_IsInDomain(char* domain, char* host) {
    *    e.g., hostName = home.netscape.com
    *          domainName = .netscape.com
    */
-  if(domainLength <= hostLength &&
-      !PL_strncasecmp(domain, &host[hostLength-domainLength], domainLength)) {
-    return PR_TRUE;
-  }
-
-  /* tests failed, not in domain */
-  return PR_FALSE;
+  /* this is the final test - if failed, not in domain */
+  const nsACString &hostSubstring = Substring(host, host.Length() - domain.Length(), domain.Length());
+  return domain.Equals(hostSubstring, nsCaseInsensitiveCStringComparator());
 }
 
 /* returns PR_TRUE if authorization is required
@@ -811,19 +809,17 @@ cookie_IsInDomain(char* domain, char* host) {
 */
 PUBLIC char *
 COOKIE_GetCookie(nsIURI * address) {
-  char *name=0;
   cookie_CookieStruct * cookie_s;
   PRBool isSecure = PR_TRUE;
   time_t cur_time = get_current_time();
 
-  /* return string to build */
-  char * rv=0;
+  // initialize string for return data
+  nsCAutoString cookieData;
+  NS_NAMED_LITERAL_CSTRING(equals, "=");
 
   /* disable cookies if the user's prefs say so */
   if(cookie_GetBehaviorPref() == PERMISSION_DontUse) {
-#if defined(PR_LOGGING)
-    cookie_LogFailure(GET_COOKIE, address, "", "Cookies are disabled");
-#endif
+    COOKIE_LOGFAILURE(GET_COOKIE, address, "", "cookies are disabled");
     return nsnull;
   }
 
@@ -834,66 +830,55 @@ COOKIE_GetCookie(nsIURI * address) {
   /* Don't let ftp sites read cookies (could be a security issue) */
   PRBool isFtp;
   if (NS_FAILED(address->SchemeIs("ftp", &isFtp)) || isFtp) {
-#if defined(PR_LOGGING)
-    cookie_LogFailure(GET_COOKIE, address, "", "ftp sites cannot read cookies");
-#endif
+    COOKIE_LOGFAILURE(GET_COOKIE, address, "", "ftp sites cannot read cookies");
     return nsnull;
   }
   /* search for all cookies */
   if (cookie_list == nsnull) {
-#if defined(PR_LOGGING)
-    cookie_LogFailure(GET_COOKIE, address, "", "Cookie list is empty");
-#endif
+    COOKIE_LOGFAILURE(GET_COOKIE, address, "", "cookie list is empty");
     return nsnull;
   }
   nsCAutoString host, path;
   // Get host and path
   nsresult result = address->GetHost(host);
   if (NS_FAILED(result)) {
-#if defined(PR_LOGGING)
-    cookie_LogFailure(GET_COOKIE, address, "", "GetHost failed");
-#endif
+    COOKIE_LOGFAILURE(GET_COOKIE, address, "", "GetHost failed");
     return nsnull;
   }
-  if ((host.RFindChar(' ') != -1) || (host.RFindChar('\t') != -1)) {
-#if defined(PR_LOGGING)
-    cookie_LogFailure(GET_COOKIE, address,  "", "Host has embedded space character");
-#endif
+  if ((host.RFindChar(' ') != kNotFound) || (host.RFindChar('\t') != kNotFound)) {
+    COOKIE_LOGFAILURE(GET_COOKIE, address, "", "host has embedded space character");
     return nsnull;
   }
   result = address->GetPath(path);
   if (NS_FAILED(result)) {
-#if defined(PR_LOGGING)
-    cookie_LogFailure(GET_COOKIE, address, "", "GetPath failed");
-#endif
+    COOKIE_LOGFAILURE(GET_COOKIE, address, "", "GetPath failed");
     return nsnull;
   }
 
   for (PRInt32 i = 0; i <cookie_list->Count(); i++) {
     cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
     NS_ASSERTION(cookie_s, "corrupt cookie list");
-    if(!cookie_s->host) continue;
 
     /* check the host or domain first */
     if(cookie_s->isDomain) {
-      if(!cookie_IsInDomain(cookie_s->host, (char*)host.get())) {
+      if(!cookie_IsInDomain(cookie_s->host, host)) {
         continue;
       }
-    } else if(PL_strcasecmp(host.get(), cookie_s->host)) {
+    } else if(!host.Equals(cookie_s->host, nsCaseInsensitiveCStringComparator())) {
       /* hostname matchup failed. FAIL */
       continue;
     }
 
     /* shorter strings always come last so there can be no ambiquity */
-    int cookiePathLen = PL_strlen(cookie_s->path);
-    if (cookiePathLen > 0 && cookie_s->path[cookiePathLen-1] == '/') {
+    PRUint32 cookiePathLen = cookie_s->path.Length();
+    if (cookiePathLen > 0 && cookie_s->path.Last() == '/') {
       cookiePathLen--;
     }
-    if(cookie_s->path && !PL_strncmp(path.get(), cookie_s->path, cookiePathLen)) {
-      PRUint32 pathLen = path.Length();
-      if (pathLen>cookiePathLen && 
-          path[cookiePathLen] != '/' && path[cookiePathLen] != '?' &&
-          path[cookiePathLen] != '#' && path[cookiePathLen] != ';') {
+
+    if (path.Length() > cookiePathLen &&
+        Substring(path, 0, cookiePathLen).Equals(Substring(cookie_s->path, 0, cookiePathLen))) {
+      char pathLastChar = path.CharAt(cookiePathLen);
+      if (pathLastChar != '/' && pathLastChar != '?' && pathLastChar != '#' && pathLastChar != ';') {
         /*
          * note that the '?' test above allows a site at host/abc?def to receive a cookie that
          * has a path attribute of abc.  This seems strange but at least one major site
@@ -912,86 +897,67 @@ COOKIE_GetCookie(nsIURI * address) {
       if( cookie_s->expires && (cookie_s->expires < cur_time) ) {
         /* expire and remove the cookie */
         cookie_list->RemoveElementAt(i--); /* decr i so next cookie isn't skipped */
-        deleteCookie((void*)cookie_s, nsnull);
+        delete cookie_s;
         cookie_changed = PR_TRUE;
         continue;
       }
 
       /* if we've already added a cookie to the return list, append a "; " so
        * subsequent cookies are delimited in the final list. */
-      if (rv) CKutil_StrAllocCat(rv, "; ");
+      if (!cookieData.IsEmpty()) cookieData.Append("; ");
 
-      if(cookie_s->name && *cookie_s->name != '\0') {
+      if (!cookie_s->name.IsEmpty()) {
         cookie_s->lastAccessed = cur_time;
-        CKutil_StrAllocCopy(name, cookie_s->name);
-        CKutil_StrAllocCat(name, "=");
+        const nsACString &nameString = cookie_s->name + equals;
 
 #ifdef PREVENT_DUPLICATE_NAMES
         /* make sure we don't have a previous name mapping already in the string */
-        if(!rv || !PL_strstr(rv, name)) {
-          CKutil_StrAllocCat(rv, name);
-          CKutil_StrAllocCat(rv, cookie_s->cookie);
+        if (cookieData.Find(nameString) == kNotFound) {
+          cookieData.Append(nameString);
+          cookieData.Append(cookie_s->cookie);
         }
 #else
-        CKutil_StrAllocCat(rv, name);
-        CKutil_StrAllocCat(rv, cookie_s->cookie);
+        cookieData.Append(nameString);
+        cookieData.Append(cookie_s->cookie);
 #endif /* PREVENT_DUPLICATE_NAMES */
       } else {
-        CKutil_StrAllocCat(rv, cookie_s->cookie);
+        cookieData.Append(cookie_s->cookie);
       }
     }
   }
 
-  PR_FREEIF(name);
-
   /* may be nsnull */
-#if defined(PR_LOGGING)
-  cookie_LogSuccess(GET_COOKIE, address, rv, nsnull);
-#endif
-  return(rv);
+  COOKIE_LOGSUCCESS(GET_COOKIE, address, cookieData, nsnull);
+  return ToNewCString(cookieData);
 }
 
 /* Determines whether the inlineHost is in the same domain as the currentHost.
  * For use with rfc 2109 compliance/non-compliance.
  */
-PRIVATE int
-cookie_SameDomain(char * currentHost, char * firstHost) {
-  char * dot = 0;
-  char * currentDomain = 0;
-  char * firstDomain = 0;
-  if(!currentHost || !firstHost) {
-    return 0;
-  }
-
+PRIVATE PRBool
+cookie_SameDomain(const nsAFlatCString &currentHost, const nsAFlatCString &firstHost) {
   /* case insensitive compare */
-  if(PL_strcasecmp(currentHost, firstHost) == 0) {
-    return 1;
-  }
-  currentDomain = PL_strchr(currentHost, '.');
-  firstDomain = PL_strchr(firstHost, '.');
-  if(!currentDomain || !firstDomain) {
-    return 0;
+  if (currentHost.Equals(firstHost, nsCaseInsensitiveCStringComparator())) {
+    return PR_TRUE;
   }
 
   /* check for at least two dots before continuing, if there are
    * not two dots we don't have enough information to determine
-   * whether or not the firstDomain is within the currentDomain
+   * whether or not the currentHost is within the firstHost
    */
-  dot = PL_strchr(firstDomain, '.');
-  if(dot) {
-    dot = PL_strchr(dot+1, '.');
-  } else {
-    return 0;
+  PRInt32 currentHostDot = currentHost.FindChar('.');
+  PRInt32 firstHostDot = firstHost.FindChar('.');
+  if (currentHostDot == kNotFound || firstHostDot == kNotFound) {
+    return PR_FALSE;
+  }
+  PRInt32 dot = firstHost.FindChar('.', firstHostDot + 1);
+  /* |dot + 1 == length| handles .com. case */
+  if (dot == kNotFound || dot + 1 == (PRInt32) firstHost.Length()) {
+    return PR_FALSE;
   }
 
-  /* handle .com. case */
-  if(!dot || (*(dot+1) == '\0')) {
-    return 0;
-  }
-  if(!PL_strcasecmp(firstDomain, currentDomain)) {
-    return 1;
-  }
-  return 0;
+  // we use PL_strcasecmp here, because to do this with string fu is an ugly overkill
+  return !PL_strcasecmp(currentHost.get() + currentHostDot, firstHost.get() + firstHostDot);
 }
 
 PRBool
@@ -1036,9 +1002,7 @@ cookie_isForeign (nsIURI * curURL, nsIURI * firstURL) {
   }
 
   /* determine if it's foreign */
-  PRBool retval = (!cookie_SameDomain((char*)curHost.get(), (char*)firstHost.get()));
-
-  return retval;
+  return !cookie_SameDomain(curHost, firstHost);
 }
 
 nsCookieStatus
@@ -1138,12 +1102,6 @@ cookie_P3PDecision (nsIURI * curURL, nsIURI * firstURL, nsIHttpChannel* aHttpCha
 */
 PUBLIC char *
 COOKIE_GetCookieFromHttp(nsIURI * address, nsIURI * firstAddress) {
-
-#ifdef DEBUG_morse
-   //printf("--- curURL=%s\n",address);
-   //printf("--- 1stURL=%s\n",firstAddress);
-#endif
-
   if ((cookie_GetBehaviorPref() == PERMISSION_DontAcceptForeign) &&
       (!firstAddress || cookie_isForeign(address, firstAddress))) {
 
@@ -1156,33 +1114,31 @@ COOKIE_GetCookieFromHttp(nsIURI * address, nsIURI * firstAddress) {
      * have to resort to two prefs
      */
 
-#if defined(PR_LOGGING)
-    cookie_LogFailure(GET_COOKIE, address, "", "Originating server test failed");
-#endif
+    COOKIE_LOGFAILURE(GET_COOKIE, address, "", "Originating server test failed");
     return nsnull;
   }
   return COOKIE_GetCookie(address);
 }
 
 MODULE_PRIVATE PRBool
-cookie_IsFromHost(cookie_CookieStruct *cookie_s, char *host) {
-  if (!cookie_s || !(cookie_s->host)) {
+cookie_IsFromHost(cookie_CookieStruct *cookie_s, const nsAFlatCString &host) {
+  if (!cookie_s) {
     return PR_FALSE;
   }
   if (cookie_s->isDomain) {
     /* compare the tail end of host to cook_s->host */
     return cookie_IsInDomain(cookie_s->host, host);
   } else {
-    return PL_strcasecmp(host, cookie_s->host) == 0;
+    return host.Equals(cookie_s->host, nsCaseInsensitiveCStringComparator());
   }
 }
 
 /* find out how many cookies this host has already set */
-PRIVATE int
-cookie_Count(char * host) {
-  int count = 0;
+PRIVATE PRInt32
+cookie_Count(const nsAFlatCString &host) {
+  PRInt32 count = 0;
   cookie_CookieStruct * cookie;
-  if (!cookie_list || !host) return 0;
+  if (!cookie_list || host.IsEmpty()) return 0;
 
   for (PRInt32 i = cookie_list->Count(); i > 0;) {
     i--;
@@ -1197,276 +1153,117 @@ cookie_Count(char * host) {
  * this via COOKIE_SetCookieStringFromHttp.
  */
 PRIVATE void
-cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCookieHeader,
-                       time_t timeToExpire, nsIHttpChannel* aHttpChannel, nsCookieStatus status) {
-  cookie_CookieStruct * prev_cookie;
-  char *path_from_header=nsnull, *host_from_header=nsnull;
-  char *name_from_header=nsnull, *cookie_from_header=nsnull;
+cookie_SetCookieString(nsIURI *curURL, nsIPrompt *aPrompter, const nsAFlatCString &setCookieHeader,
+                       cookie_CookieStruct *aCookie, time_t timeToExpire, nsIHttpChannel *aHttpChannel,
+                       nsCookieStatus status)
+{
   nsCAutoString cur_host, cur_path;
   nsresult rv;
   rv = curURL->GetHost(cur_host);
   if (NS_FAILED(rv)) {
-#if defined(PR_LOGGING)
-    cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "GetHost failed");
-#endif
+    COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "GetHost failed");
     return;
   }
 
   /* Don't let ftp sites set cookies (could be a security issue) */
   PRBool isFtp;
   if (NS_FAILED(curURL->SchemeIs("ftp", &isFtp)) || isFtp) {
-#if defined(PR_LOGGING)
-    cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "ftp sites cannot set cookies");
-#endif
+    COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "ftp sites cannot set cookies");
     return;
   }
 
   rv = curURL->GetPath(cur_path);
   if (NS_FAILED(rv)) {
-#if defined(PR_LOGGING)
-    cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "GetPath failed");
-#endif
+    COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "GetPath failed");
     return;
   }
 
-  char *semi_colon, *ptr, *equal;
-  PRBool isSecure=PR_FALSE, isDomain=PR_FALSE;
   PRBool pref_scd = PR_FALSE;
 
-  /* Only allow cookies to be set in the listed contexts.
-   * We don't want cookies being set in html mail. 
-   */
-/* We need to come back and work on this - Neeti 
-  type = context->type;
-  if(!((type==MWContextBrowser) || (type==MWContextHTMLHelp) || (type==MWContextPane))) {
-    PR_Free(cur_path);
-    PR_Free(cur_host);
-    return;
-  }
-*/
   if(cookie_GetBehaviorPref() == PERMISSION_DontUse) {
-#if defined(PR_LOGGING)
-    cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Cookies are disabled");
-#endif
+    COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "cookies are disabled");
     return;
   }
 
-//printf("\nSetCookieString(URL '%s', header '%s') time %d == %s\n",curURL,setCookieHeader,timeToExpire,asctime(gmtime(&timeToExpire)));
   if(cookie_GetLifetimePref() == COOKIE_Discard) {
     if(cookie_GetLifetimeTime() < timeToExpire) {
-#if defined(PR_LOGGING)
-      cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Cookie lifetime test failed");
-#endif
+      COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "cookie lifetime test failed");
       return;
     }
   }
 
-//HG87358 -- @@??
-
-  /* terminate at any carriage return or linefeed */
-  char *setCookieHeaderInternal = nsCRT::strdup(setCookieHeader);
-  for(ptr=setCookieHeaderInternal; *ptr; ptr++) {
-    if(*ptr == nsCRT::LF || *ptr == nsCRT::CR) {
-      *ptr = '\0';
-      break;
-    }
-  }
-
-  /* parse path and expires attributes from header if present */
-  semi_colon = PL_strchr(setCookieHeaderInternal, ';');
-  if(semi_colon) {
-    /* truncate at semi-colon and advance */
-    *semi_colon++ = '\0';
-
-    /* look for the secure attribute */
-
-    // Note the following will consider the cookie as secure if the set-cookie header
-    // in in either of the following two forms:
-    //   secure;  -- this is the correct syntax according to the cookie spec
-    //   secure=<anything>; -- this violates the spec but is accepted by IE
-    // This means that things like "secure=yes", "secure=true", etc will set the
-    // secure attribute.  But so will things like "secure=no", "secure=false", etc.
-    // Seems like the wrong thing to do, but this is indeed what IE does, so we might
-    // break some sites if we don't do the same.  In any event, any site that has
-    // an equal sign is in violation of the spec so whatever we do to them is fair game.
-
-    char * ptr;
-    static const char secureToken[] = "secure";
-    ptr = PL_strcasestr(semi_colon, secureToken);
-    while (ptr) {
-      char * ptr2 = ptr + sizeof(secureToken) -1; // -1 for the null terminator
-
-      // make sure nothing follows "secure" except for equal sign or semicolon
-      while (*ptr2 == ' ' || *ptr2 == '\t') { // skip over trailing whitespace
-        ptr2++;
-      }
-      if (*ptr2 == ';' || *ptr2 == '=' || *ptr2 == '\0') {
-
-        // make sure nothing precedes "secure" except for ';'
-        ptr--;
-        while (*ptr == ' ' || *ptr == '\t') { // skip over leading whitespace
-          ptr--;
-        }
-        if (*ptr == ';' || *ptr == '\0') { // note: '\0' means we got to beginning of string
-          isSecure = PR_TRUE;
-          break;
-        }
-      }
-      ptr = PL_strcasestr(ptr2, "secure");
+  // process domain attribute
+  if (!aCookie->host.IsEmpty()) {
+    if (aCookie->host.First() != '.' && !cookie_IsIPAddress(cur_host)) {
+      // if host is not an IP address, force domain name to start with a dot
+      aCookie->host.Insert(NS_LITERAL_CSTRING("."), 0);
     }
 
-    /* look for the path attribute */
-    ptr = PL_strcasestr(semi_colon, "path=");
-    if(ptr) {
-      nsCAutoString path(ptr+5);
-      path.Trim(kWhitespace);
-      CKutil_StrAllocCopy(path_from_header, path.get());
-      /* terminate at first space or semi-colon */
-      for(ptr=path_from_header; *ptr != '\0'; ptr++) {
-        if(nsString::IsSpace(*ptr) || *ptr == ';' || *ptr == ',') {
-          *ptr = '\0';
-          break;
-        }
-      }
-    }
-
-    /* look for the URI or URL attribute
+    /*
+     * verify that this host has the authority to set for this domain.   We do
+     * this by making sure that the host is in the domain.  We also require
+     * that a domain have at least two periods to prevent domains of the form
+     * ".com" and ".edu"
      *
-     * This might be a security hole so I'm removing
-     * it for now.
+     * Also make sure that there is more stuff after the second dot to prevent ".com."
      */
-
-    /* look for a domain */
-    ptr = PL_strcasestr(semi_colon, "domain=");
-    if(ptr) {
-      ptr += 7; // get past the "domain="
-      char *domain_from_header=nsnull;
-      char *dot;
-      int domain_length, cur_host_length;
-
-      /* remove leading spaces, else the dot-forcing below will put a dot before the space */
-      while (nsString::IsSpace(*ptr)) {
-        ptr++;
-      }
-
-      /* allocate more than we need */
-      nsCAutoString domain;
-      if (*ptr != '.' && !cookie_IsIPAddress(cur_host.get())) {
-        // if host is not an IP address, force domain name to start with a dot
-        domain = '.';
-      }
-      domain.Append(ptr);
-
-      domain.Trim(kWhitespace);
-      CKutil_StrAllocCopy(domain_from_header, domain.get());
-
-      /* terminate at first space or semi-colon */
-      for(ptr=domain_from_header; *ptr != '\0'; ptr++) {
-        if(nsString::IsSpace(*ptr) || *ptr == ';' || *ptr == ',') {
-          *ptr = '\0';
-          break;
-        }
-      }
-
-      /* verify that this host has the authority to set for this domain.   We do
-       * this by making sure that the host is in the domain.  We also require
-       * that a domain have at least two periods to prevent domains of the form
-       * ".com" and ".edu"
-       *
-       * Also make sure that there is more stuff after
-       * the second dot to prevent ".com."
-       */
-      dot = PL_strchr(domain_from_header, '.');
-      if(dot) {
-        dot = PL_strchr(dot+1, '.');
-      }
-      if(!dot || *(dot+1) == '\0') {
-        /* did not pass two dot test. FAIL */
-        PR_FREEIF(path_from_header);
-        PR_Free(domain_from_header);
-        // TRACEMSG(("DOMAIN failed two dot test"));
-        nsCRT::free(setCookieHeaderInternal);
-#if defined(PR_LOGGING)
-        cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Failed the two-dot test");
-#endif
-        return;
-      }
-
-      domain_length   = PL_strlen(domain_from_header);
-      cur_host_length = PL_strlen(cur_host.get());
-
-      /* check to see if the host is in the domain */
-      if (!cookie_IsInDomain(domain_from_header, (char*)cur_host.get())) {
-          // TRACEMSG(("DOMAIN failed host within domain test."
-//        " Domain: %s, Host: %s", domain_from_header, cur_host));
-        PR_FREEIF(path_from_header);
-        PR_Free(domain_from_header);
-        nsCRT::free(setCookieHeaderInternal);
-#if defined(PR_LOGGING)
-        cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Host is not in the domain");
-#endif
-        return;
-      }
-
-      /*
-       * check that portion of host not in domain does not contain a dot
-       *    This satisfies the fourth requirement in section 4.3.2 of the cookie
-       *    spec rfc 2109 (see www.cis.ohio-state.edu/htbin/rfc/rfc2109.html).
-       *    It prevents host of the form x.y.co.nz from setting cookies in the
-       *    entire .co.nz domain.  Note that this doesn't really solve the problem,
-       *    it justs makes it more unlikely.  Sites such as y.co.nz can still set
-       *    cookies for the entire .co.nz domain.
-       */
-
-      /*
-       *  Although this is the right thing to do(tm), it breaks too many sites.  
-       *  So only do it if the restrictCookieDomains pref is PR_TRUE.
-       *
-       */
-      nsresult rv;
-      nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-      if (!prefs || NS_FAILED(prefs->GetBoolPref(cookie_strictDomainsPref, &pref_scd))) {
-        pref_scd = PR_FALSE;
-      }
-      if ( pref_scd == PR_TRUE ) {
-        cur_host.SetCharAt(cur_host_length-domain_length, '\0');
-        dot = (char *)strchr(cur_host.get(), '.');
-        cur_host.SetCharAt(cur_host_length-domain_length, '.');
-        if (dot) {
-        // TRACEMSG(("host minus domain failed no-dot test."
-        //  " Domain: %s, Host: %s", domain_from_header, cur_host));
-          PR_FREEIF(path_from_header);
-          PR_Free(domain_from_header);
-          nsCRT::free(setCookieHeaderInternal);
-#if defined(PR_LOGGING)
-          cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Host minus domain failed the no-dot test");
-#endif
-          return;
-        }
-      }
-
-      /* all tests passed, copy in domain to hostname field */
-      CKutil_StrAllocCopy(host_from_header, domain_from_header);
-      isDomain = PR_TRUE;
-      // TRACEMSG(("Accepted domain: %s", host_from_header));
-      PR_Free(domain_from_header);
+    PRInt32 dot = aCookie->host.FindChar('.');
+    dot = aCookie->host.FindChar('.', ++dot);
+    if (dot == kNotFound || ++dot == (PRInt32) aCookie->host.Length()) {
+      /* did not pass two dot test. FAIL */
+      COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "failed the two-dot test");
+      return;
     }
+
+    /* check to see if the host is in the domain */
+    if (!cookie_IsInDomain(aCookie->host, cur_host)) {
+      COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "host is not in the domain");
+      return;
+    }
+
+    /*
+     * check that portion of host not in domain does not contain a dot
+     *    This satisfies the fourth requirement in section 4.3.2 of the cookie
+     *    spec rfc 2109 (see www.cis.ohio-state.edu/htbin/rfc/rfc2109.html).
+     *    It prevents a host of the form x.y.co.nz from setting cookies in the
+     *    entire .co.nz domain.  Note that this doesn't really solve the problem,
+     *    it justs makes it more unlikely.  Sites such as y.co.nz can still set
+     *    cookies for the entire .co.nz domain.
+     *
+     *  Although this is the right thing to do(tm), it breaks too many sites.  
+     *  So only do it if the restrictCookieDomains pref is PR_TRUE.
+     *
+     */
+    nsresult rv;
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    if (NS_FAILED(rv) || !prefs || NS_FAILED(prefs->GetBoolPref(cookie_strictDomainsPref, &pref_scd))) {
+      pref_scd = PR_FALSE;
+    }
+    if ( pref_scd == PR_TRUE ) {
+      dot = cur_host.FindChar('.', 0, cur_host.Length() - aCookie->host.Length());
+      if (dot != kNotFound) {
+        COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "host minus domain failed the no-dot test");
+        return;
+      }
+    }
+
+    /* all tests passed, set isDomain flag */
+    aCookie->isDomain = PR_TRUE;
+
+  } else {
+    aCookie->host = cur_host;
+    aCookie->isDomain = PR_FALSE;
   }
 
   /* set path if none found in header, else verify that host has authority for indicated path */
-  if(!path_from_header) {
+  if (aCookie->path.IsEmpty()) {
     /* Strip down everything after the last slash to get the path,
      * ignoring slashes in the query string part.
      */
-    char * iter = PL_strchr(cur_path.get(), '?');
-    if(iter) {
-      *iter = '\0';
+    nsCOMPtr<nsIURL> url = do_QueryInterface(curURL);
+    if (url) {
+      url->GetDirectory(aCookie->path);
     }
-    iter = PL_strrchr(cur_path.get(), '/');
-    if(iter) {
-      *(iter+1) = '\0';
-    }
-    path_from_header = nsCRT::strdup(cur_path.get());
 #if 0
   } else {
     /*
@@ -1476,112 +1273,61 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
      * bracketed by an if statement to allow it to be disabled in the event that we cannot
      * evangelize these sites.
      */
-    if(PL_strncmp(cur_path.get(), path_from_header, PL_strlen(path_from_header))) {
-      PR_FREEIF(path_from_header);
-      PR_FREEIF(host_from_header);
-      nsCRT::free(setCookieHeaderInternal);
-#if defined(PR_LOGGING)
-      cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Failed the path test");
-#endif
+    if (cur_path.Find(path_from_header, PR_FALSE, 0, aCookie->path.Length())) {
+      COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "failed the path test");
       return;
     }
 #endif
   }
-  if(!host_from_header) {
-    host_from_header = nsCRT::strdup(cur_host.get());
-  }
 
-  /* keep cookies under the max bytes limit */
-  if(PL_strlen(setCookieHeaderInternal) > MAX_BYTES_PER_COOKIE) {
-    setCookieHeaderInternal[MAX_BYTES_PER_COOKIE-1] = '\0';
-  }
+  // put the remaining cookie information into the struct.
+  aCookie->expires = cookie_TrimLifetime(timeToExpire);
+  aCookie->lastAccessed = get_current_time();
+  aCookie->status = status;
+  aCookie->policy = cookie_GetPolicy(P3P_SitePolicy(curURL, aHttpChannel));
 
-  /* separate the name from the cookie */
-  equal = PL_strchr(setCookieHeaderInternal, '=');
-  if (equal)
-      *equal = '\0';
-
-  nsCAutoString cookieHeader(setCookieHeaderInternal);
-  cookieHeader.Trim(kWhitespace);
-  if(equal) {
-    CKutil_StrAllocCopy(name_from_header, cookieHeader.get());
-    nsCAutoString value(equal+1);
-    value.Trim(kWhitespace);
-    CKutil_StrAllocCopy(cookie_from_header, value.get());
-  } else {
-    CKutil_StrAllocCopy(cookie_from_header, cookieHeader.get());
-    CKutil_StrAllocCopy(name_from_header, "");
-  }
-
-  int count = cookie_Count(host_from_header);
-  prev_cookie = cookie_CheckForPrevCookie
-    (path_from_header, host_from_header, name_from_header);
-
-  //TRACEMSG(("mkaccess.c: Setting cookie: %s for host: %s for path: %s",
-  //          cookie_from_header, host_from_header, path_from_header));
-  
-  /* use common code to determine if we can set the cookie */
+  // check permissions from site permission list, or ask the user,
+  // to determine if we can set the cookie
   PRBool permission = PR_TRUE;
   if (NS_SUCCEEDED(PERMISSION_Read())) {
-    PRBool modify = prev_cookie != nsnull;
+    // get the number of previous cookies from host, and whether the same cookie
+    // has been previously set; to pass to the permission checker
+    PRInt32 count = cookie_Count(aCookie->host);
+    PRBool modify = cookie_CheckForPrevCookie(aCookie->path, aCookie->host, aCookie->name) != nsnull;
 
     // put the cookie information into the cookie structure.
     nsCOMPtr<nsICookie> thisCookie = 
-      new nsCookie(nsDependentCString(name_from_header),
-                   nsDependentCString(cookie_from_header),
-                   isDomain,
-                   nsDependentCString(host_from_header),
-                   nsDependentCString(path_from_header),
-                   isSecure,
+      new nsCookie(aCookie->name,
+                   aCookie->cookie,
+                   aCookie->isDomain,
+                   aCookie->host,
+                   aCookie->path,
+                   aCookie->isSecure,
                    cookie_TrimLifetime(timeToExpire),
                    status,
                    cookie_GetPolicy(P3P_SitePolicy(curURL, aHttpChannel)));
 
-    permission = Permission_Check(aPrompter, host_from_header, COOKIEPERMISSION,
-// I believe this is the right place to eventually add the logic to ask
-// about cookies that have excessive lifetimes, but it shouldn't be done
-// until generalized per-site preferences are available.
-                                       //cookie_GetLifetimeAsk(timeToExpire) ||
-                                       cookie_GetWarningPref(),
-                                       thisCookie,
-                                       count, modify);
+    // We need to think about adding logic to ask the user about cookies that have
+    // excessive lifetimes, but it shouldn't be done until generalized per-site preferences
+    // are available. cookie_GetLifetimeAsk() is part of this.
+    permission = Permission_Check(aPrompter, aCookie->host.get(), COOKIEPERMISSION,
+                                  cookie_GetWarningPref(), // || cookie_GetLifetimeAsk(timeToExpire)
+                                  thisCookie, count, modify);
   }
   if (!permission) {
-    PR_FREEIF(path_from_header);
-    PR_FREEIF(host_from_header);
-    PR_FREEIF(name_from_header);
-    PR_FREEIF(cookie_from_header);
-    nsCRT::free(setCookieHeaderInternal);
-#if defined(PR_LOGGING)
-    cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Cookies blocked for this site");
-#endif
+    COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "cookies blocked for this site");
     return;
   }
 
-  nsCRT::free(setCookieHeaderInternal);
-  rv = COOKIE_AddCookie(host_from_header, path_from_header,
-                        name_from_header, cookie_from_header,
-                        isSecure, isDomain, timeToExpire,
-                        status,
-                        cookie_GetPolicy(P3P_SitePolicy(curURL, aHttpChannel)));
-#if defined(PR_LOGGING)
-  if (NS_FAILED(rv))
-    cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "cookie_add failed");
-  else {
-    cookie_CookieStruct logCookie; // temporary for logging purposes
-    logCookie.path = path_from_header;
-    logCookie.host = host_from_header;
-    logCookie.name = name_from_header;
-    logCookie.cookie = cookie_from_header;
-    logCookie.expires = timeToExpire;
-    logCookie.lastAccessed = get_current_time();
-    logCookie.isSecure = isSecure;
-    logCookie.isDomain = isDomain;
-    logCookie.status = status;
-    logCookie.policy = nsICookie::POLICY_UNKNOWN; // unused in log
-    cookie_LogSuccess(SET_COOKIE, curURL, setCookieHeader, &logCookie);
+  rv = COOKIE_AddCookie(aCookie->host, aCookie->path,
+                        aCookie->name, aCookie->cookie,
+                        aCookie->isSecure, aCookie->isDomain, aCookie->expires,
+                        aCookie->status, aCookie->policy);
+  if (NS_FAILED(rv)) {
+    COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "couldn't add cookie to list");
+  } else {
+    COOKIE_LOGSUCCESS(SET_COOKIE, curURL, setCookieHeader, aCookie);
   }
-#endif
 }
 
 PUBLIC void
@@ -1592,20 +1338,233 @@ COOKIE_SetCookieString(nsIURI * aURL, nsIPrompt *aPrompter, const char * setCook
   if (aHttpChannel) {
     nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(aHttpChannel);
     if (!httpInternal) {
-#if defined(PR_LOGGING)
-      cookie_LogFailure(SET_COOKIE, aURL, setCookieHeader, "unable to QueryInterface httpInternal");
-#endif
+      COOKIE_LOGFAILURE(SET_COOKIE, aURL, setCookieHeader, "unable to QueryInterface httpInternal");
       return;
     }
     rv = httpInternal->GetDocumentURI(getter_AddRefs(pFirstURL));
     if (NS_FAILED(rv)) {
-#if defined(PR_LOGGING)
-      cookie_LogFailure(SET_COOKIE, aURL, setCookieHeader, "unable to determine first URL");
-#endif
+      COOKIE_LOGFAILURE(SET_COOKIE, aURL, setCookieHeader, "unable to determine first URL");
       return;
     }
   }
   COOKIE_SetCookieStringFromHttp(aURL, pFirstURL, aPrompter, setCookieHeader, 0, aHttpChannel);
+}
+
+// The following comment block elucidates the function of cookie_ParseAttributes.
+
+/******************************************************************************
+ ** Augmented BNF, modified from RFC2109 Section 4.2.2 and RFC2616 Section 2.1
+ ** please note: this BNF deviates from both specifications, and reflects this
+ ** implementation. <bnf> indicates a reference to the defined grammer "bnf".
+
+ ** Differences from RFC2109/2616 and explanations:
+    1. implied *LWS
+         The grammar described by this specification is word-based. Except
+         where noted otherwise, linear white space (<LWS>) can be included
+         between any two adjacent words (token or quoted-string), and
+         between adjacent words and separators, without changing the
+         interpretation of a field.
+       <LWS> according to spec is SP|HT|CR|LF, but here, we allow only SP | HT.
+
+    2. We use CR | LF as cookie separators, not ',' per spec, since ',' is in
+       common use inside values.
+
+    3. tokens and values have looser restrictions on allowed characters than
+       spec. This is also due to certain characters being in common use inside
+       values. We allow only '=' to separate token/value pairs, and ';' to
+       terminate tokens or values.
+
+    4. where appropriate, full <OCTET>s are allowed, where the spec dictates to
+       reject control chars or non-ASCII chars. This is erring on the loose
+       side, since there's probably no good reason to enforce this strictness.
+
+    5. cookie <VALUE> is optional, where spec requires it. This is a fairly
+       trivial case, but allows the flexibility of setting only a cookie <NAME>.
+
+ ** Begin BNF:
+    token         = 1*<any allowed-chars except separators>
+    value         = token-value | quoted-string
+    token-value   = 1*<any allowed-chars except value-sep>
+    quoted-string = ( <"> *( qdtext | quoted-pair ) <"> )
+    qdtext        = <any OCTET except <"> or NUL>        ; CR | LF allowed here
+    quoted-pair   = "\" <any OCTET except NUL>           ; CR | LF allowed here
+    separators    = ";" | "=" | LWS
+    value-sep     = ";"
+    cookie-sep    = CR | LF
+    allowed-chars = <any OCTET except NUL or cookie-sep>
+    OCTET         = <any 8-bit sequence of data>
+    LWS           = SP | HT
+    NUL           = <US-ASCII NUL, null control character (0)>
+    CR            = <US-ASCII CR, carriage return (13)>
+    LF            = <US-ASCII LF, linefeed (10)>
+    SP            = <US-ASCII SP, space (32)>
+    HT            = <US-ASCII HT, horizontal-tab (9)>
+
+    set-cookie    = "Set-Cookie:" cookies
+    cookies       = cookie *( cookie-sep cookie )
+    cookie        = NAME ["=" VALUE] *(";" cookie-av)    ; cookie NAME/VALUE must come first
+    NAME          = token                                ; cookie name
+    VALUE         = value                                ; cookie value
+    cookie-av     = token ["=" value]
+
+    valid values for cookie-av (checked post-parsing) are:
+    cookie-av     = "Path" "=" value
+                  | "Domain"  "=" value
+                  | "Expires" "=" value
+                  | "Max-Age" "=" value
+                  | "Comment" "=" value
+                  | "Version" "=" value
+                  | "Secure"
+
+******************************************************************************/
+
+// helper functions for cookie_GetTokenValue
+PRIVATE inline PRBool iswhitespace    (char c) { return c == ' '  || c == '\t'; }
+PRIVATE inline PRBool isterminator    (char c) { return c == '\n' || c == '\r'; }
+PRIVATE inline PRBool isvalueseparator(char c) { return isterminator(c) || c == ';'; }
+PRIVATE inline PRBool istokenseparator(char c) { return isvalueseparator(c) || iswhitespace(c) || c == '='; }
+
+// Parse a single token/value pair.
+// Returns PR_TRUE if a cookie terminator is found, so caller can parse new cookie.
+PRIVATE PRBool
+cookie_GetTokenValue(nsASingleFragmentCString::const_char_iterator &aIter,
+                     nsASingleFragmentCString::const_char_iterator &aEndIter,
+                     nsDependentSingleFragmentCSubstring &aTokenString,
+                     nsDependentSingleFragmentCSubstring &aTokenValue)
+{
+  nsASingleFragmentCString::const_char_iterator start;
+  // initialize value string to clear garbage
+  aTokenValue.Rebind(aIter, aIter);
+
+  // find <token>
+  while (aIter != aEndIter && iswhitespace(*aIter))
+    ++aIter;
+  start = aIter;
+  while (aIter != aEndIter && !istokenseparator(*aIter))
+    ++aIter;
+  aTokenString.Rebind(start, aIter);
+
+  // now expire whitespace to see if '=' awaits us
+  while (aIter != aEndIter && iswhitespace(*aIter)) // skip over spaces at end of cookie name
+    ++aIter;
+
+  if (*aIter == '=') {
+    // find <value>
+    while (++aIter != aEndIter && iswhitespace(*aIter));
+
+    start = aIter;
+
+    if (*aIter == '"') {
+      // process <quoted-string>
+      // (note: cookie terminators, CR | LF, allowed)
+      // assume value mangled if no terminating '"', return
+      while (++aIter != aEndIter && *aIter != '"') {
+        // if <qdtext> (backwhacked char), skip over it. this allows '\"' in <quoted-string>.
+        // we increment once over the backwhack, nullcheck, then continue to the 'while',
+        // which increments over the backwhacked char.
+        if (*aIter == '\\' && ++aIter == aEndIter)
+          break;
+      }
+
+      if (aIter != aEndIter) {
+        // include terminating quote in attribute string
+        aTokenValue.Rebind(start, ++aIter);
+        // skip to next ';'
+        while (aIter != aEndIter && !isvalueseparator(*aIter))
+          ++aIter;
+      }
+    } else {
+      // process <token-value>
+      // just look for ';' to terminate ('=' allowed)
+      while (aIter != aEndIter && !isvalueseparator(*aIter))
+        ++aIter;
+
+      // remove trailing <LWS>; first check we're not at the beginning
+      if (aIter != start) {
+        nsASingleFragmentCString::const_char_iterator lastSpace = aIter;
+        while (--lastSpace != start && iswhitespace(*lastSpace));
+        aTokenValue.Rebind(start, ++lastSpace);
+      }
+    }
+  }
+
+  // aIter is on ';', or terminator, or EOS
+  if (aIter != aEndIter) {
+    // if on terminator, increment past & return PR_TRUE to process new cookie
+    if (isterminator(*aIter)) {
+      ++aIter;
+      return PR_TRUE;
+    }
+    // fall-through: aIter is on ';', increment and return PR_FALSE
+    ++aIter;
+  }
+  return PR_FALSE;
+}
+
+// Parses attributes from cookie header. expires/max-age attributes aren't folded into the
+// cookie struct here, because we don't know which one to use until we've parsed the header.
+PRIVATE PRBool
+cookie_ParseAttributes(nsDependentCString  &aCookieHeader,
+                       cookie_CookieStruct *aCookie,
+                       nsACString          &aExpiresAttribute,
+                       nsACString          &aMaxageAttribute)
+{
+  static NS_NAMED_LITERAL_CSTRING(kPath,    "path"   );
+  static NS_NAMED_LITERAL_CSTRING(kDomain,  "domain" );
+  static NS_NAMED_LITERAL_CSTRING(kExpires, "expires");
+  static NS_NAMED_LITERAL_CSTRING(kMaxage,  "max-age");
+  static NS_NAMED_LITERAL_CSTRING(kSecure,  "secure" );
+
+  nsASingleFragmentCString::const_char_iterator tempBegin, tempEnd;
+  nsASingleFragmentCString::const_char_iterator cookieStart, cookieEnd;
+  aCookieHeader.BeginReading(cookieStart);
+  aCookieHeader.EndReading(cookieEnd);
+
+  aCookie->isSecure = PR_FALSE;
+
+  nsDependentSingleFragmentCSubstring tokenString(cookieStart, cookieStart);
+  nsDependentSingleFragmentCSubstring tokenValue (cookieStart, cookieStart);
+  PRBool newCookie;
+
+  // extract cookie NAME & VALUE (first attribute), and copy the strings
+  // if we find multiple cookies, return for processing
+  // note: if there's no '=', we assume token is NAME, not VALUE.
+  //       the old code assumed VALUE instead.
+  newCookie = cookie_GetTokenValue(cookieStart, cookieEnd, tokenString, tokenValue);
+  aCookie->name = tokenString;
+  aCookie->cookie = tokenValue;
+
+  // extract remaining attributes
+  while (cookieStart != cookieEnd && !newCookie) {
+    newCookie = cookie_GetTokenValue(cookieStart, cookieEnd, tokenString, tokenValue);
+
+    if (!tokenValue.IsEmpty() && *tokenValue.BeginReading(tempBegin) == '"'
+                              && *tokenValue.EndReading(tempEnd) == '"') {
+      // our parameter is a quoted-string; remove quotes for later parsing
+      tokenValue.Rebind(++tempBegin, --tempEnd);
+    }
+
+    // decide which attribute we have, and copy the string
+    if (tokenString.Equals(kPath, nsCaseInsensitiveCStringComparator()))
+      aCookie->path = tokenValue;
+
+    else if (tokenString.Equals(kDomain, nsCaseInsensitiveCStringComparator()))
+      aCookie->host = tokenValue;
+
+    else if (tokenString.Equals(kExpires, nsCaseInsensitiveCStringComparator()))
+      aExpiresAttribute = tokenValue;
+
+    else if (tokenString.Equals(kMaxage, nsCaseInsensitiveCStringComparator()))
+      aMaxageAttribute = tokenValue;
+
+    // ignore any tokenValue for isSecure; just set the boolean
+    else if (tokenString.Equals(kSecure, nsCaseInsensitiveCStringComparator()))
+      aCookie->isSecure = PR_TRUE;
+  }
+
+  // rebind aCookieHeader, in case we need to process another cookie
+  aCookieHeader.Rebind(cookieStart, cookieEnd);
+  return newCookie;
 }
 
 /* This function wrapper wraps COOKIE_SetCookieString for the purposes of 
@@ -1618,21 +1577,14 @@ COOKIE_SetCookieString(nsIURI * aURL, nsIPrompt *aPrompter, const char * setCook
 
 PUBLIC void
 COOKIE_SetCookieStringFromHttp(nsIURI * curURL, nsIURI * firstURL, nsIPrompt *aPrompter,  const char * setCookieHeader, char * server_date, nsIHttpChannel* aHttpChannel) {
+  // switch to a nice string type now
+  nsDependentCString cookieHeader(setCookieHeader);
 
-#ifdef DEBUG_morse
-//   printf("... curURL=%s\n",curURL);
-//   printf("... 1stURL=%s\n",firstURL);
-#endif
-
-  /* allow for multiple cookies separated by newlines */
-   char *newline = PL_strchr(setCookieHeader, '\n');
-   if(newline) {
-     *newline = '\0';
-     COOKIE_SetCookieStringFromHttp(curURL, firstURL, aPrompter, setCookieHeader, server_date, aHttpChannel);
-     *newline = '\n';
-     COOKIE_SetCookieStringFromHttp(curURL, firstURL, aPrompter, newline+1, server_date, aHttpChannel);
-     return;
-   }
+  // reject cookie if it's over the size limit, per RFC2109
+  if (cookieHeader.Length() > MAX_BYTES_PER_COOKIE) {
+    COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "cookie too big (> 4kb)");
+    return;
+  }
 
   /* If the outputFormat is not PRESENT (the url is not going to the screen), and not
    *  SAVE AS (shift-click) then 
@@ -1640,7 +1592,6 @@ COOKIE_SetCookieStringFromHttp(nsIURI * curURL, nsIURI * firstURL, nsIPrompt *aP
    *  to based on his preference to deal with foreign cookies. If it's not inline, just set
    *  the cookie.
    */
-  char *ptr=nsnull;
   time_t gmtCookieExpires=0, expires=0, sDate;
 
   /* check to see if P3P pref is satisfied */
@@ -1651,9 +1602,7 @@ COOKIE_SetCookieStringFromHttp(nsIURI * curURL, nsIURI * firstURL, nsIPrompt *aP
       nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
       if (os)
         os->NotifyObservers(nsnull, "cookieIcon", NS_LITERAL_STRING("on").get());
-#if defined(PR_LOGGING)
-      cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "P3P test failed");
-#endif
+      COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "P3P test failed");
       return;
     }
   }
@@ -1662,19 +1611,31 @@ COOKIE_SetCookieStringFromHttp(nsIURI * curURL, nsIURI * firstURL, nsIPrompt *aP
   if ((cookie_GetBehaviorPref() == PERMISSION_DontAcceptForeign) &&
       cookie_isForeign(curURL, firstURL)) {
     /* it's a foreign cookie so don't set the cookie */
-#if defined(PR_LOGGING)
-    cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Originating server test failed");
-#endif
+    COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "originating server test failed");
     return;
   }
 
   /* check if a Mail/News message is setting the cookie */
   if (cookie_GetDisableCookieForMailNewsPref() && cookie_isFromMailNews(firstURL)) {
-#if defined(PR_LOGGING)
-    cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Cookies disabled for mailnews");
-#endif
+    COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "cookies disabled for mailnews");
     return;
   }
+
+  // initialize structs and strings, and parse attributes from cookie header.
+  // cookieAttributes stores all the attributes parsed from the cookie;
+  // expires and maxage are separate, because we have to process them to find the expiry.
+  nsCAutoString expiresAttribute, maxageAttribute;
+  cookie_CookieStruct *cookieAttributes = new cookie_CookieStruct;
+  if (!cookieAttributes) {
+    COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "unable to allocate memory for new cookie");
+    delete cookieAttributes;
+    return;
+  }
+
+  // newCookie says whether there are multiple cookies in the header; so we can handle them separately.
+  // we don't need the cookieHeader string for processing this cookie anymore;
+  // so this function uses it as an outparam to point to the next cookie, if there is one.
+  PRBool newCookie = cookie_ParseAttributes(cookieHeader, cookieAttributes, expiresAttribute, maxageAttribute);
 
   /* Determine when the cookie should expire. This is done by taking the difference between 
    * the server time and the time the server wants the cookie to expire, and adding that 
@@ -1682,70 +1643,54 @@ COOKIE_SetCookieStringFromHttp(nsIURI * curURL, nsIURI * firstURL, nsIPrompt *aP
    * not the TZ environment variable was set on the client.
    */
 
-  /* Get the time the cookie is supposed to expire according to the expires attribute*/
-  ptr = PL_strcasestr(setCookieHeader, "expires=");
-  if(ptr) {
-    char *date =  ptr+8;
-    char origLast = '\0';
-    for(ptr=date; *ptr != '\0'; ptr++) {
-      if(*ptr == ';') {
-        origLast = ';';
-        *ptr = '\0';
-        break;
-      }
-    }
-    if (NS_SUCCEEDED(cookie_ParseDate(date, expires)) && expires == 0) {
-      expires = 1; // avoid confusion with session cookies
-    }
-    *ptr=origLast;
-  }
-  if (server_date && *server_date) {
-    cookie_ParseDate(server_date, sDate);
-  } else {
-    sDate = get_current_time();
-  }
-  if( sDate && expires ) {
-    if( expires < sDate ) {
-      gmtCookieExpires=1;
-    } else {
-      gmtCookieExpires = expires - sDate + get_current_time();
-      // if overflow 
-      if( gmtCookieExpires < get_current_time()) {
-        gmtCookieExpires = MAX_EXPIRE; // max int
-      }
-    }
-  }
-
-  /* If max-age attribute is present, it overrides expires attribute */
-#define MAXAGE "max-age"
-  ptr = PL_strcasestr(setCookieHeader, MAXAGE);
-  if(ptr) {
-    ptr += PL_strlen(MAXAGE);
-    while (isspace(*ptr)) { // skip over white space
-      ptr++;
-    }
-    if (*ptr++ != '=') {
-#if defined(PR_LOGGING)
-      cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "max-age is not followed by an equal sign");
-#endif
-      return;  // invalid syntax: max-age but no equal sign
-    }
-    while (isspace(*ptr)) { // skip over white space again
-      ptr++;
-    }
-    if (*ptr == '"' || *ptr == '\'') { // skip over quote or apostrophe
-      ptr++;
-    }
-    time_t delta = atoi(ptr); // obtain numeric value of argument
+  // check for max-age attribute first; this overrides expires attribute
+  if (!maxageAttribute.IsEmpty()) {
+    PRInt32 errorCode;
+    time_t delta = maxageAttribute.ToInteger(&errorCode, 10); // obtain numeric value of argument
     if (delta <= 0) {  // negative max-age is not allowed; but this is more robust
       gmtCookieExpires = 1; // force cookie to expire immediately
     } else {
       gmtCookieExpires = get_current_time() + delta;
     }
+
+  // check for expires attribute
+  } else if (!expiresAttribute.IsEmpty()) {
+    if (NS_SUCCEEDED(cookie_ParseDate(expiresAttribute, expires)) &&
+        expires == 0) {
+      expires = 1; // force immediate expiry
+    }
+
+    if (server_date && *server_date) {
+      cookie_ParseDate(nsDependentCString(server_date), sDate);
+    } else {
+      sDate = get_current_time();
+    }
+
+    if (sDate && expires) {
+      if (expires < sDate) {
+        gmtCookieExpires = 1; // force immediate expiry
+      } else {
+        gmtCookieExpires = expires - sDate + get_current_time();
+        // if overflow 
+        if( gmtCookieExpires < get_current_time()) {
+          gmtCookieExpires = MAX_EXPIRE; // max int
+        }
+      }
+    }
   }
 
-  cookie_SetCookieString(curURL, aPrompter, setCookieHeader, gmtCookieExpires,
-                         aHttpChannel, status);
+  // call the main cookie processing function
+  cookie_SetCookieString(curURL, aPrompter, cookieHeader, cookieAttributes,
+                         gmtCookieExpires, aHttpChannel, status);
+
+  // we're finished with attributes - data has been copied, if required
+  delete cookieAttributes;
+
+  // finally, if we have multiple cookies to process, recurse.
+  if (newCookie) {
+    COOKIE_SetCookieStringFromHttp(curURL, firstURL, aPrompter, cookieHeader.get(),
+                                   server_date, aHttpChannel);
+  }
 }
 
 /* saves out the HTTP cookies to disk */
@@ -1800,7 +1745,7 @@ COOKIE_Write() {
         continue;
       }
 
-      strm.write(cookie_s->host, strlen(cookie_s->host));
+      strm.write(cookie_s->host.get(), cookie_s->host.Length());
 
       if (cookie_s->isDomain) {
         strm.write("\tTRUE\t", 6);
@@ -1808,7 +1753,7 @@ COOKIE_Write() {
         strm.write("\tFALSE\t", 7);
       }
 
-      strm.write(cookie_s->path, strlen(cookie_s->path));
+      strm.write(cookie_s->path.get(), cookie_s->path.Length());
 
       if (cookie_s->isSecure) {
         strm.write("\tTRUE\t", 6);
@@ -1820,9 +1765,9 @@ COOKIE_Write() {
 
       strm.write(date_string, strlen(date_string));
       strm.write("\t", 1);
-      strm.write(cookie_s->name, strlen(cookie_s->name));
+      strm.write(cookie_s->name.get(), cookie_s->name.Length());
       strm.write("\t", 1);
-      strm.write(cookie_s->cookie, strlen(cookie_s->cookie));
+      strm.write(cookie_s->cookie.get(), cookie_s->cookie.Length());
       strm.write("\n", 1);
   }
 
@@ -1850,7 +1795,6 @@ COOKIE_Read() {
     return NS_OK;
   }
   cookie_CookieStruct *new_cookie, *tmp_cookie_ptr;
-  size_t new_len;
   nsCAutoString buffer;
   PRBool added_to_list;
   nsFileSpec dirSpec;
@@ -1881,10 +1825,9 @@ COOKIE_Read() {
   while (CKutil_GetLine(strm, readbuffer, BUFSIZE, next, count, buffer) != -1){
     added_to_list = PR_FALSE;
 
-    if ( !buffer.IsEmpty() ) {
-      char firstChar = buffer.CharAt(0);
-      if (firstChar == '#' || firstChar == nsCRT::CR ||
-          firstChar == nsCRT::LF || firstChar == 0) {
+    if (!buffer.IsEmpty()) {
+      char bufferFirstChar = buffer.First();
+      if (bufferFirstChar == '#' || bufferFirstChar == '\n' || bufferFirstChar == '\r') {
         continue;
       }
     }
@@ -1908,16 +1851,15 @@ COOKIE_Read() {
     buffer.Mid(cookie, cookieIndex, buffer.Length()-cookieIndex);
 
     /* create a new cookie_struct and fill it in */
-    new_cookie = PR_NEW(cookie_CookieStruct);
+    new_cookie = new cookie_CookieStruct;
     if (!new_cookie) {
       strm.close();
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    memset(new_cookie, 0, sizeof(cookie_CookieStruct));
-    new_cookie->name = ToNewCString(name);
-    new_cookie->cookie = ToNewCString(cookie);
-    new_cookie->host = ToNewCString(host);
-    new_cookie->path = ToNewCString(path);
+    new_cookie->name = name;
+    new_cookie->cookie = cookie;
+    new_cookie->host = host;
+    new_cookie->path = path;
     if (isDomain.Equals(NS_LITERAL_CSTRING("TRUE"))) {
       new_cookie->isDomain = PR_TRUE;
     } else {
@@ -1928,24 +1870,23 @@ COOKIE_Read() {
     } else {
       new_cookie->isSecure = PR_FALSE;
     }
-    char * expiresCString = ToNewCString(expires);
-    new_cookie->expires = strtoul(expiresCString, nsnull, 10);
-    nsCRT::free(expiresCString);
+    PRInt32 errorCode;
+    new_cookie->expires = expires.ToInteger(&errorCode, 10);
 
     new_cookie->status = nsICookie::STATUS_UNKNOWN;
     new_cookie->policy = nsICookie::POLICY_UNKNOWN;
 
     /* check for bad legacy cookies (domain not starting with a dot) */
-    if (new_cookie->isDomain && *new_cookie->host != '.') {
+    if (new_cookie->isDomain && !new_cookie->host.IsEmpty() && new_cookie->host.First() != '.') {
       /* bad cookie, discard it */
-      deleteCookie((void*)new_cookie, nsnull);
+      delete new_cookie;
       continue;
     }
 
     /* check for bad legacy cookies (domain containing a port) */
-    if (strchr(new_cookie->host, ':')) {
+    if (new_cookie->host.FindChar(':') != kNotFound) {
       /* bad cookie, discard it */
-      deleteCookie((void*)new_cookie, nsnull);
+      delete new_cookie;
       continue;
     }
   
@@ -1953,19 +1894,18 @@ COOKIE_Read() {
     if (!cookie_list) {
       cookie_list = new nsVoidArray();
       if (!cookie_list) {
-        deleteCookie((void*)new_cookie, nsnull);
+        delete new_cookie;
         strm.close();
         return NS_ERROR_OUT_OF_MEMORY;
       }
     }
 
     /* add new cookie to the list so that it is before any strings of smaller length */
-    new_len = PL_strlen(new_cookie->path);
     for (PRInt32 i = cookie_list->Count(); i > 0;) {
       i--;
       tmp_cookie_ptr = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
       NS_ASSERTION(tmp_cookie_ptr, "corrupt cookie list");
-      if (new_len <= PL_strlen(tmp_cookie_ptr->path)) {
+      if (new_cookie->path.Length() <= tmp_cookie_ptr->path.Length()) {
         cookie_list->InsertElementAt(new_cookie, i);
         added_to_list = PR_TRUE;
         break;
@@ -1983,31 +1923,6 @@ COOKIE_Read() {
   return NS_OK;
 }
 
-/*
- * return a string that has each " of the argument sting
- * replaced with \" so it can be used inside a quoted string
- */
-PRIVATE char*
-cookie_FixQuoted(char* s) {
-  char * result;
-  int count = PL_strlen(s);
-  char *quote = s;
-  unsigned int i, j;
-  while ((quote = PL_strchr(quote, '"'))) {
-    count++;
-    quote++;
-  }
-  result = (char*)PR_Malloc(count + 1);
-  for (i=0, j=0; i<PL_strlen(s); i++) {
-    if (s[i] == '"') {
-      result[i+(j++)] = '\\';
-    }
-    result[i+j] = s[i];
-  }
-  result[i+j] = '\0';
-  return result;
-}
-
 PUBLIC PRInt32
 COOKIE_Count() {
   if (!cookie_list) {
@@ -2021,18 +1936,27 @@ COOKIE_Count() {
   return cookie_list->Count();
 }
 
+/*
+ * return a string that has each " of the argument string
+ * replaced with \" so it can be used inside a quoted string
+ */
+PRIVATE void
+cookie_FixQuoted(const nsACString &inStr, nsACString &outStr) {
+  outStr = inStr;
+
+  PRInt32 pos = 0;
+  while (pos < (PRInt32) outStr.Length() && (pos = outStr.FindChar('"', pos)) != kNotFound) {
+    outStr.Insert('\\', pos);
+    ++pos;
+    ++pos;
+   }
+ }
+
 PUBLIC nsresult
-COOKIE_Enumerate
-    (PRInt32 count,
-     nsACString &name,
-     nsACString &value,
-     PRBool *isDomain,
-     nsACString &host,
-     nsACString &path,
-     PRBool * isSecure,
-     PRUint64 * expires,
-     nsCookieStatus * status,
-     nsCookiePolicy * policy) {
+COOKIE_Enumerate (PRInt32 count, nsACString &name, nsACString &value, PRBool &isDomain,
+                  nsACString &host, nsACString &path, PRBool &isSecure, PRUint64 &expires,
+                  nsCookieStatus &status, nsCookiePolicy &policy)
+{
   if (count > COOKIE_Count()) {
     return NS_ERROR_FAILURE;
   }
@@ -2044,22 +1968,23 @@ COOKIE_Enumerate
   cookie = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(count));
   NS_ASSERTION(cookie, "corrupt cookie list");
 
-  name = cookie_FixQuoted(cookie->name);
-  value = cookie_FixQuoted(cookie->cookie);
-  *isDomain = cookie->isDomain;
-  host = cookie_FixQuoted(cookie->host);
-  path = cookie_FixQuoted(cookie->path);
-  *isSecure = cookie->isSecure;
+  cookie_FixQuoted(cookie->name, name);
+  cookie_FixQuoted(cookie->cookie, value);
+  cookie_FixQuoted(cookie->host, host);
+  cookie_FixQuoted(cookie->path, path);
+  isDomain = cookie->isDomain;
+  isSecure = cookie->isSecure;
   // *expires = cookie->expires; -- no good on mac, using next line instead
-  LL_UI2L(*expires, cookie->expires);
-  *status = cookie->status;
-  *policy = cookie->policy;
+  LL_UI2L(expires, cookie->expires);
+  status = cookie->status;
+  policy = cookie->policy;
+
   return NS_OK;
 }
 
 PUBLIC void
 COOKIE_Remove
-    (const char* host, const char* name, const char* path, const PRBool blocked) {
+    (const nsACString &host, const nsACString &name, const nsACString &path, const PRBool blocked) {
   cookie_CookieStruct * cookie;
   PRInt32 count = 0;
 
@@ -2070,19 +1995,21 @@ COOKIE_Remove
       count--;
       cookie = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(count));
       NS_ASSERTION(cookie, "corrupt cookie list");
-      if ((PL_strcmp(cookie->host, host) == 0) &&
-          (PL_strcmp(cookie->name, name) == 0) &&
-          (PL_strcmp(cookie->path, path) == 0)) {
-        if (blocked && cookie->host) {
-          char * hostnameAfterDot = cookie->host;
-          while (*hostnameAfterDot == '.') {
-            hostnameAfterDot++;
+      if (cookie->host.Equals(host) &&
+          cookie->name.Equals(name) &&
+          cookie->path.Equals(path)) {
+        if (blocked) {
+          PRInt32 pos = 0;
+          while (cookie->host.CharAt(pos) == '.') {
+            ++pos;
           }
-          if (NS_SUCCEEDED(PERMISSION_Read()))
-            Permission_AddHost(nsDependentCString(hostnameAfterDot), PR_FALSE, COOKIEPERMISSION, PR_TRUE);
+          if (NS_SUCCEEDED(PERMISSION_Read())) {
+            const nsACString &hostSubstring = Substring(cookie->host, pos, cookie->host.Length() - pos);
+            Permission_AddHost(PromiseFlatCString(hostSubstring), PR_FALSE, COOKIEPERMISSION, PR_TRUE);
+          }
         }
         cookie_list->RemoveElementAt(count);
-        deleteCookie((void*)cookie, nsnull);
+        delete cookie;
         cookie_changed = PR_TRUE;
         COOKIE_Write();
         break;
@@ -2092,10 +2019,10 @@ COOKIE_Remove
 }
 
 // this is a backdoor. normally use COOKIE_SetCookieString.
-// caller must hand off ownership of the strings to us.
+// caller does NOT hand off ownership of strings to us.
 PUBLIC nsresult
-COOKIE_AddCookie(char *aDomain, char *aPath,
-                 char *aName, char *aValue,
+COOKIE_AddCookie(const nsACString &aDomain, const nsACString &aPath,
+                 const nsACString &aName, const nsACString &aValue,
                  PRBool aSecure, PRBool aIsDomain,
                  time_t aExpires,
                  nsCookieStatus aStatus, nsCookiePolicy aPolicy)
@@ -2112,11 +2039,6 @@ COOKIE_AddCookie(char *aDomain, char *aPath,
 
   prev_cookie = cookie_CheckForPrevCookie (aPath, aDomain, aName);
   if(prev_cookie) {
-    PR_FREEIF(prev_cookie->path);
-    PR_FREEIF(prev_cookie->host);
-    PR_FREEIF(prev_cookie->name);
-    PR_FREEIF(prev_cookie->cookie);
-
     prev_cookie->path = aPath;
     prev_cookie->host = aDomain;
     prev_cookie->name = aName;
@@ -2133,7 +2055,7 @@ COOKIE_AddCookie(char *aDomain, char *aPath,
     if (!cookie_list)
       cookie_list = new nsVoidArray();
 
-    prev_cookie = PR_NEW(cookie_CookieStruct);
+    prev_cookie = new cookie_CookieStruct;
     if (prev_cookie) {
       prev_cookie->path = aPath;
       prev_cookie->host = aDomain;
@@ -2149,14 +2071,13 @@ COOKIE_AddCookie(char *aDomain, char *aPath,
 
     if (prev_cookie && cookie_list) {
       // add it to the list so that it is before any strings of smaller length
-      size_t new_len = PL_strlen(prev_cookie->path);
       for (PRInt32 i = cookie_list->Count(); i > 0;) {
         i--;
         cookie_CookieStruct *tmp_cookie_ptr =
               NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
         NS_ASSERTION(tmp_cookie_ptr, "corrupt cookie list");
-        if (new_len <= PL_strlen(tmp_cookie_ptr->path)) {
-          cookie_list->InsertElementAt(prev_cookie, i+1);
+        if (prev_cookie->path.Length() <= tmp_cookie_ptr->path.Length()) {
+          cookie_list->InsertElementAt(prev_cookie, i + 1);
           cookieAdded = PR_TRUE;
           break;
         }
@@ -2167,11 +2088,7 @@ COOKIE_AddCookie(char *aDomain, char *aPath,
         cookieAdded = PR_TRUE;
       }
     } else {
-      PR_FREEIF(aPath);
-      PR_FREEIF(aDomain);
-      PR_FREEIF(aName);
-      PR_FREEIF(aValue);
-      PR_FREEIF(prev_cookie);
+      delete prev_cookie;
     }
   }
 
@@ -2192,13 +2109,13 @@ COOKIE_AddCookie(char *aDomain, char *aPath,
 }
 
 MODULE_PRIVATE nsresult
-cookie_ParseDate(char *date_string, time_t & date) {
+cookie_ParseDate(const nsAFlatCString &date_string, time_t & date) {
 
   PRTime prdate;
   date = 0;
   // TRACEMSG(("Parsing date string: %s\n",date_string));
 
-  if(PR_ParseTimeString(date_string, PR_TRUE, &prdate) == PR_SUCCESS) {
+  if(PR_ParseTimeString(date_string.get(), PR_TRUE, &prdate) == PR_SUCCESS) {
     if (LL_CMP(prdate, <, LL_Zero())) { // prdate < 0
       return NS_OK; // date = 0 from above
     }
@@ -2214,4 +2131,3 @@ cookie_ParseDate(char *date_string, time_t & date) {
   } 
   return NS_ERROR_FAILURE;
 }
-
