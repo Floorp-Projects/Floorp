@@ -870,7 +870,7 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     if (port == -1)
         GetDefaultPort (&port);
 
-    nsIChannel* trans = nsnull;
+    nsCOMPtr<nsIChannel> trans;
     // Check in the idle transports for a host/port match
     count = 0;
     PRInt32 index = 0;
@@ -926,7 +926,6 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
                                 {
                                     // Addref it before removing it!
                                     trans = cTrans;
-                                    NS_ADDREF (trans);
                                     // Remove it from the idle
                                     mIdleTransports->RemoveElement(trans);
                                     break;// break out of the for loop 
@@ -939,7 +938,7 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
         } /* count > 0 */
     }
     // if we didn't find any from the keep-alive idlelist
-    if (trans == nsnull)
+    if (!trans)
     {
         if (! (flags & TRANSPORT_OPEN_ALWAYS) )
         {
@@ -961,31 +960,30 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
             }
         }
 
-        rv = CreateTransport( host, 
-                              port, 
-                              proxy, 
-                              proxyPort, 
-                              bufferSegmentSize, 
-                              bufferMaxSize, 
-                              &trans );
+        rv = CreateTransport(host, 
+                             port, 
+                             proxy, 
+                             proxyPort, 
+                             bufferSegmentSize, 
+                             bufferMaxSize, 
+                             getter_AddRefs(trans));
         
         if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (*o_pTrans, &rv);
-        if (NS_SUCCEEDED (rv))
-        {
-            trans->SetSocketTimeout(mRequestTimeout);
-            trans->SetSocketConnectTimeout(mConnectTimeout);
+        nsCOMPtr<nsISocketTransport> socketTrans = do_QueryInterface(trans, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            socketTrans->SetSocketTimeout(mRequestTimeout);
+            socketTrans->SetSocketConnectTimeout(mConnectTimeout);
         }
     }
 
     // Put it in the table...
     // XXX this method incorrectly returns a bool
-    rv = mTransportList->AppendElement(trans) ? 
-        NS_OK : NS_ERROR_FAILURE;  
+    rv = mTransportList->AppendElement(trans) ? NS_OK : NS_ERROR_FAILURE;  
     if (NS_FAILED(rv)) return rv;
 
     *o_pTrans = trans;
+    NS_IF_ADDREF(*o_pTrans);
     
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPHandler::RequestTransport."
