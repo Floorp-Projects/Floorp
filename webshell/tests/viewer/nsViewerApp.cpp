@@ -205,7 +205,7 @@ nsViewerApp::AutoregisterComponents()
 #else
   sysdir += "components";
 #endif /* XP_MAC */
-  nsprPath componentsDir(sysdir);
+  nsNSPRPath componentsDir(sysdir);
   const char *componentsDirPath = (const char *) componentsDir;
   if (componentsDirPath != NULL)
   {

@@ -753,6 +753,4 @@ private:
     char*                        modifiedNSPRPath; // Currently used only on XP_PC                           
 }; // class nsNSPRPath
 
-typedef nsNSPRPath nsprPath; // old name.
-
 #endif //  _FILESPEC_H_

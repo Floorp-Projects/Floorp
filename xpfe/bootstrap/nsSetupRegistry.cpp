@@ -100,7 +100,7 @@ nsresult NS_AutoregisterComponents()
   if (NS_FAILED(rv))
     return rv;
 
-  nsprPath componentsDir(sysdir);
+  nsNSPRPath componentsDir(sysdir);
   const char *componentsDirPath = (const char *) componentsDir;
   if (componentsDirPath != NULL)
   {

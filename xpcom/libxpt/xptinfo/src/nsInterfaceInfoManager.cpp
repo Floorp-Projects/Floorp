@@ -347,7 +347,7 @@ nsInterfaceInfoManager::initInterfaceTables()
 			continue;
 		
 		// XXX this assumes ASCII strings are returned from nsFileSpec. Is this valid?
-		nsprPath path(spec);
+		nsNSPRPath path(spec);
 		const char* fullname = path; // path needs to stay in scope, beacuse fullname refers to an internal member
 		int flen = PL_strlen(fullname);
         if (flen < 4 || PL_strcasecmp(&(fullname[flen - 4]), ".xpt"))

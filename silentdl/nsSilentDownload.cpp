@@ -783,7 +783,7 @@ nsSilentDownloadTask::SetNextByte(PRInt32 aNextByte)
 NS_IMETHODIMP    
 nsSilentDownloadTask::GetOutFile(nsString& aOutFile)
 {
-    aOutFile.SetString(nsprPath(*mOutFile));
+    aOutFile.SetString(nsNSPRPath(*mOutFile));
     return NS_OK;
 }
 
