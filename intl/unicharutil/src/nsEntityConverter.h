@@ -20,13 +20,19 @@
 #include "nsIFactory.h"
 #include "nsIProperties.h"
 
+
 nsresult NS_NewEntityConverter(nsISupports** oResult);
 
-class nsEntityEntry
+#define kVERSION_STRING_LEN 128
+
+class nsEntityVersionList
 {
 public:
-	PRUnichar	mChar;
-	PRUnichar*	mEntityValue;
+  nsEntityVersionList() : mEntityProperties(NULL) {}
+  ~nsEntityVersionList() {NS_IF_RELEASE(mEntityProperties);}
+  PRUint32 mVersion;
+  PRUnichar mEntityListName[kVERSION_STRING_LEN+1];
+  nsIPersistentProperties *mEntityProperties;
 };
 
 class nsEntityConverter: public nsIEntityConverter
@@ -47,16 +53,25 @@ public:
 	//
 	// nsIEntityConverter
 	//
-	NS_IMETHOD ConvertToEntity(PRUnichar character, PRUnichar **_retval);
+	NS_IMETHOD ConvertToEntity(PRUnichar character, PRUint32 entityVersion, char **_retval);
+
+	NS_IMETHOD ConvertToEntities(const PRUnichar *inString, PRUint32 entityVersion, PRUnichar **_retval);
 
 protected:
 
-	void LoadEntityProperties(nsIPersistentProperties* entityProperties);
-	nsString		mEntityListName;
-	nsEntityEntry	*mEntityList;
-	PRInt32			mEntityListLength;
+  // load a version property file and generate a version list (number/name pair)
+  NS_IMETHOD LoadVersionPropertyFile();
 
+  // map version number to version string
+  const PRUnichar* GetVersionName(PRUint32 versionNumber);
+
+  // map version number to nsIPersistentProperties
+  nsIPersistentProperties* GetVersionPropertyInst(PRUint32 versionNumber);
+
+  // load a properies file
+  nsIPersistentProperties* LoadEntityPropertyFile(PRInt32 version);
+
+
+  nsEntityVersionList *mVersionList;            // array of version number/name pairs
+  PRUint32 mVersionListLength;                  // number of supported versions
 };
-
-
-

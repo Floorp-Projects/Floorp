@@ -27,88 +27,154 @@
 // guids
 //
 NS_DEFINE_IID(kIEntityConverterIID,NS_IENTITYCONVERTER_IID);
+NS_DEFINE_IID(kIFactoryIID,NS_IFACTORY_IID);
 NS_DEFINE_IID(kIPersistentPropertiesIID,NS_IPERSISTENTPROPERTIES_IID);
 
 //
 // implementation methods
 //
 nsEntityConverter::nsEntityConverter()
-:	mEntityList(nsnull),
-	mEntityListLength(0)
+:	mVersionList(NULL),
+  mVersionListLength(0)
 {
 	NS_INIT_REFCNT();
-	nsIPersistentProperties* pEntities = nsnull;
-	nsIURI* url = nsnull;
-	nsIInputStream* in = nsnull;
-	nsresult	res;
-	nsString	aUrl("resource:/res/entityTables/html40Latin1.properties");
-
-	res = NS_NewURI(&url,aUrl,nsnull);
-	if (NS_FAILED(res)) return;
-
-	res = NS_OpenURI(&in,url);
-	NS_RELEASE(url);
-	if (NS_FAILED(res)) return;
-
-	res = nsComponentManager::CreateInstance(NS_PERSISTENTPROPERTIES_PROGID,nsnull,
-                                             kIPersistentPropertiesIID, 
-                                             (void**)&pEntities);
-	if(NS_SUCCEEDED(res) && in) {
-		res = pEntities->Load(in);
-		LoadEntityProperties(pEntities);
-		pEntities->Release();
-	}
-
-
 }
 
 nsEntityConverter::~nsEntityConverter()
 {
-
+  if (NULL != mVersionList) delete [] mVersionList;
 }
 
-void
-nsEntityConverter::LoadEntityProperties(nsIPersistentProperties* pEntities)
+NS_IMETHODIMP 
+nsEntityConverter::LoadVersionPropertyFile()
 {
-	nsString key, value, temp;
-	PRInt32	i;
-	PRInt32	result;
+	nsString	aUrl("resource:/res/entityTables/htmlEntityVersions.properties");
+	nsIPersistentProperties* entityProperties = NULL;
+	nsIURI* url = NULL;
+	nsIInputStream* in = NULL;
+	nsresult rv;
+  
+  rv = NS_NewURI(&url,aUrl,NULL);
+	if (NS_FAILED(rv)) return rv;
 
-	key="entity.list.name";
-	nsresult rv = pEntities->GetStringProperty(key,mEntityListName);
-	NS_ASSERTION(NS_SUCCEEDED(rv),"nsEntityConverter: malformed entity table\n");
-	if (NS_FAILED(rv)) return;
+	rv = NS_OpenURI(&in,url);
+	NS_RELEASE(url);
+	if (NS_FAILED(rv)) return rv;
 
-	key="entity.list.length";
-	rv = pEntities->GetStringProperty(key,value);
-	NS_ASSERTION(NS_SUCCEEDED(rv),"nsEntityConverter: malformed entity table\n");
-	if (NS_FAILED(rv)) return;
-	mEntityListLength = value.ToInteger(&result);
+	rv = nsComponentManager::CreateInstance(NS_PERSISTENTPROPERTIES_PROGID,NULL,
+                                             kIPersistentPropertiesIID, 
+                                             (void**)&entityProperties);
+	if(NS_SUCCEEDED(rv) && in) {
+		rv = entityProperties->Load(in);
+    if (NS_SUCCEEDED(rv)) {
+	    nsAutoString key("length"), value;
+    	PRInt32	result;
 
-	//
-	// allocate the table
-	//
-	mEntityList = new nsEntityEntry[mEntityListLength];
-	if (!mEntityList) return;
+	    rv = entityProperties->GetStringProperty(key,value);
+	    NS_ASSERTION(NS_SUCCEEDED(rv),"nsEntityConverter: malformed entity table\n");
+      if (NS_FAILED(rv)) goto done;
+      mVersionListLength = value.ToInteger(&result);
+ 	    NS_ASSERTION(32 >= mVersionListLength,"nsEntityConverter: malformed entity table\n");
+      if (32 < mVersionListLength) goto done;
+      mVersionList = new nsEntityVersionList[mVersionListLength];
+      if (NULL == mVersionList) {rv = NS_ERROR_OUT_OF_MEMORY; goto done;}
 
-	for(i=1;i<=mEntityListLength;i++)
-	{
-		key="entity.";
-		key.Append(i,10);
-		rv = pEntities->GetStringProperty(key,value);
-		if (NS_FAILED(rv)) return;
-
-		PRInt32 offset = value.Find(":");
-		value.Left(temp,offset);
-		mEntityList[i-1].mChar = (PRUnichar)temp.ToInteger(&result);
-
-		value.Mid(temp,offset+1,-1);
-		mEntityList[i-1].mEntityValue = temp.ToNewUnicode();
-	
+      for (PRUint32 i = 0; i < mVersionListLength && NS_SUCCEEDED(rv); i++) {
+        key.SetString("");
+        key.Append(i+1, 10);
+	      rv = entityProperties->GetStringProperty(key, value);
+        PRUint32 len = value.Length();
+        if (kVERSION_STRING_LEN < len) {rv = NS_ERROR_OUT_OF_MEMORY; goto done;}
+        nsCRT::memcpy(mVersionList[i].mEntityListName, value.GetUnicode(), len*sizeof(PRUnichar));
+        mVersionList[i].mEntityListName[len] = 0;
+        mVersionList[i].mVersion = (1 << i);
+        mVersionList[i].mEntityProperties = NULL;
+      }
+    }
+done:
+		NS_IF_RELEASE(in);
+		NS_IF_RELEASE(entityProperties);
 	}
-
-
+  return rv;
 }
+
+nsIPersistentProperties* 
+nsEntityConverter::LoadEntityPropertyFile(PRInt32 version)
+{
+  nsString aUrl("resource:/res/entityTables/");
+	nsIPersistentProperties* entityProperties = NULL;
+	nsIURI* url = NULL;
+	nsIInputStream* in = NULL;
+  const PRUnichar *versionName = NULL;
+	nsresult rv;
+  
+  versionName = GetVersionName(version);
+  if (NULL == versionName) return NULL;
+
+  aUrl.Append(versionName);
+  aUrl.Append(".properties");
+
+  rv = NS_NewURI(&url,aUrl,NULL);
+	if (NS_FAILED(rv)) return NULL;
+
+	rv = NS_OpenURI(&in,url);
+	NS_RELEASE(url);
+	if (NS_FAILED(rv)) return NULL;
+
+	rv = nsComponentManager::CreateInstance(NS_PERSISTENTPROPERTIES_PROGID,NULL,
+                                             kIPersistentPropertiesIID, 
+                                             (void**)&entityProperties);
+	if(NS_SUCCEEDED(rv) && in) {
+		rv = entityProperties->Load(in);
+    if (NS_SUCCEEDED(rv)) {
+      NS_IF_RELEASE(in);
+      return entityProperties;
+    }
+	}
+  NS_IF_RELEASE(in);
+  NS_IF_RELEASE(entityProperties);
+    
+  return NULL;
+}
+
+const PRUnichar*
+nsEntityConverter:: GetVersionName(PRUint32 versionNumber)
+{
+  for (PRUint32 i = 0; i < mVersionListLength; i++) {
+    if (versionNumber == mVersionList[i].mVersion)
+      return mVersionList[i].mEntityListName;
+  }
+
+  return NULL;
+}
+
+nsIPersistentProperties*
+nsEntityConverter:: GetVersionPropertyInst(PRUint32 versionNumber)
+{
+  if (NULL == mVersionList) {
+    // load the property file which contains available version names
+    // and generate a list of version/name pair
+    nsresult rv = LoadVersionPropertyFile();
+    if (NS_FAILED(rv)) return NULL;
+  }
+
+  PRUint32 i;
+  for (i = 0; i < mVersionListLength; i++) {
+    if (versionNumber == mVersionList[i].mVersion) {
+      if (NULL == mVersionList[i].mEntityProperties)
+      { // not loaded
+        // load the property file
+        mVersionList[i].mEntityProperties = LoadEntityPropertyFile(versionNumber);
+        NS_ASSERTION(mVersionList[i].mEntityProperties, "LoadEntityPropertyFile failed");
+      }
+      return mVersionList[i].mEntityProperties;
+    }
+  }
+
+  return NULL;
+}
+
+
 //
 // nsISupports methods
 //
@@ -119,20 +185,82 @@ NS_IMPL_ISUPPORTS(nsEntityConverter,kIEntityConverterIID)
 // nsIEntityConverter
 //
 NS_IMETHODIMP
-nsEntityConverter::ConvertToEntity(PRUnichar character, PRUnichar **_retval)
+nsEntityConverter::ConvertToEntity(PRUnichar character, PRUint32 entityVersion, char **_retval)
 {
-	PRInt32		i;
+  NS_ASSERTION(_retval, "null ptr- _retval");
+  if(nsnull == _retval)
+    return NS_ERROR_NULL_POINTER;
+  *_retval = NULL;
 
-	for(i=0;i<mEntityListLength;i++)
-	{
-		if (mEntityList[i].mChar==character) {
-				nsString entity = mEntityList[i].mEntityValue;
-				*_retval = entity.ToNewUnicode();
-				return NS_OK;
-		}
-	}
+  for (PRUint32 mask = 1, mask2 = 0xFFFFFFFFL; (0!=(entityVersion & mask2)); mask<<=1, mask2<<=1) {
+    if (0 == (entityVersion & mask)) 
+      continue;
+    nsIPersistentProperties* entityProperties = GetVersionPropertyInst(entityVersion & mask);
+    NS_ASSERTION(entityProperties, "Cannot get the property file");
 
+    if (NULL == entityProperties) 
+      continue;
+
+    nsAutoString key("entity."), value;
+		key.Append(character,10);
+    nsresult rv = entityProperties->GetStringProperty(key, value);
+    if (NS_SUCCEEDED(rv)) {
+      *_retval = value.ToNewCString();
+      if(nsnull == *_retval)
+        return NS_ERROR_OUT_OF_MEMORY;
+      else
+        return NS_OK;
+    }
+  }
 	return NS_ERROR_ILLEGAL_VALUE;
+}
+
+NS_IMETHODIMP
+nsEntityConverter::ConvertToEntities(const PRUnichar *inString, PRUint32 entityVersion, PRUnichar **_retval)
+{
+  NS_ASSERTION(inString, "null ptr- inString");
+  NS_ASSERTION(_retval, "null ptr- _retval");
+  if((nsnull == inString) || (nsnull == _retval))
+    return NS_ERROR_NULL_POINTER;
+  *_retval = NULL;
+
+  const PRUnichar *entity = NULL;
+  nsString outString("");
+
+  // per character look for the entity
+  PRUint32 len = nsCRT::strlen(inString);
+  for (PRUint32 i = 0; i < len; i++) {
+    nsAutoString key("entity."), value;
+		key.Append(inString[i],10);
+    entity = NULL;
+    for (PRUint32 mask = 1, mask2 = 0xFFFFFFFFL; (0!=(entityVersion & mask2)); mask<<=1, mask2<<=1) {
+      if (0 == (entityVersion & mask)) 
+         continue;
+      nsIPersistentProperties* entityProperties = GetVersionPropertyInst(entityVersion & mask);
+      NS_ASSERTION(entityProperties, "Cannot get the property file");
+
+      if (NULL == entityProperties) 
+          continue;
+
+      nsresult rv = entityProperties->GetStringProperty(key, value);
+      if (NS_SUCCEEDED(rv)) {
+        entity = value.GetUnicode();
+        break;
+      }
+    }
+    if (NULL != entity) {
+      outString.Append(entity);
+    }
+    else {
+      outString.Append(&inString[i], 1);
+    }
+  }
+
+  *_retval = outString.ToNewUnicode();
+  if (NULL == *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return NS_OK;
 }
 
 

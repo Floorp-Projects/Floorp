@@ -55,10 +55,6 @@ protected:
 
   NS_IMETHOD DoCharsetConversion(const PRUnichar *inString, char **outString);
 
-  NS_IMETHOD DoEntityConversion(const PRUnichar *inString, PRUnichar **outString);
-
-  NS_IMETHOD DoEntityConversion(PRUnichar inCharacter, char *outString, PRInt32 bufferLength);
-
   NS_IMETHOD DoConversionFallBack(PRUnichar inCharacter, char *outString, PRInt32 bufferLength);
 
   // do the fallback, reallocate the buffer if necessary

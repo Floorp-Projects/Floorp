@@ -27,6 +27,14 @@
 [scriptable, uuid(D14C7111-55E0-11d3-91D9-00105AA3F7DC)]
 interface nsIEntityConverter : nsISupports
 {
+  const unsigned long entityNone = 0;
+  const unsigned long html40Latin1 = 1;
+  const unsigned long html40Symbols = 2;
+  const unsigned long html40Special = 4;                       // excludes &quot, &amp, &lt, &gt
+  const unsigned long html32 = html40Latin1;
+  const unsigned long html40 = html40Latin1+html40Symbols+html40Special;
 
-	wstring ConvertToEntity(in wchar character);
+	string ConvertToEntity(in wchar character, in unsigned long entityVersion);
+
+  wstring ConvertToEntities(in wstring inString, in unsigned long entityVersion);
 };
