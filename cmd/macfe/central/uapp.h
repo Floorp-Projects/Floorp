@@ -51,7 +51,6 @@ class CSplashScreen;
 class CStr255;
 class CMailNewsWindow;
 class CBrowserWindow;
-class CPersonalToolbarManager;
 class CLICommander;
 
 /*****************************************************************************
@@ -218,10 +217,6 @@ public:
 	static double		sHRes;
 	static double		sVRes;
 	
-	// Personal Toolbar support
-	static CPersonalToolbarManager* GetPersonalToolbarManager()
-				{ return sPersonalToolbarManager; } ;
-
 	static CAutoPtr<CNSContext>	sRDFContext;
 
 // DW FIX i made these non-static, and protected instead of public
@@ -282,10 +277,6 @@ protected:
 	
 	Boolean				mHasBookmarksMenu;
 	Boolean				mHasFrontierMenuSharing;
-	
-	// the object in charge of making sure that the personal toolbars in all the browser
-	// windows stays in sync.
-	static CPersonalToolbarManager* sPersonalToolbarManager;
 	
 	static list<CommandT>	sCommandsToUpdateBeforeSelectingMenu;
 	

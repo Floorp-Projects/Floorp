@@ -64,7 +64,6 @@
 #include "xp_trace.h"
 #include "CTargetedUpdateMenuRegistry.h"
 #include "UDesktop.h"
-#include "CPersonalToolbarManager.h"
 #include "CNavCenterWindow.h"
 #include "URobustCreateWindow.h"
 #include "URDFUtilities.h"
@@ -295,7 +294,6 @@ short					CFrontApp::sHelpMenuItemCount = 0;
 double			CFrontApp::sHRes = 1.0;
 double			CFrontApp::sVRes = 1.0;
 static PA_InitData		parser_initdata;
-CPersonalToolbarManager*	CFrontApp::sPersonalToolbarManager = NULL;		// created after prefs init'ed.
 
 static void		InitDebugging();
 static void		ConfirmWeWillRun();
@@ -1503,10 +1501,6 @@ void CFrontApp::ProperStartup( FSSpec* file, short fileType )
 
 	SplashProgress(  GetPString(MAC_PROGRESS_BOOKMARK));
 	InitBookmarks();
-	// create the object that makes sure personal toolbars are in sync. This must be done after
-	// prefs are loaded and after bookmarks are initialized.
-	sPersonalToolbarManager = new CPersonalToolbarManager;
-
 	
 	//	Create the NSPR event queue
 	
