@@ -508,8 +508,8 @@ PRUint32 nsCRT::HashCode(const char* str, PRUint32* resultingStrLen)
   if (str) {
     char ch;
     while ((ch = *str++) != 0) {
-      // FYI: hc = hc*37 + ch
-      hc = ((hc << 5) + (hc << 2) + hc) + ch;
+      // FYI: hc = hc*33 + ch
+      hc = ((hc << 5) + hc) + ch;
       len++;
     }
   }
@@ -524,8 +524,8 @@ PRUint32 nsCRT::HashCode(const PRUnichar* str, PRUint32* resultingStrLen)
   if (str) {
     PRUnichar ch;
     while ((ch = *str++) != 0) {
-      // FYI: hc = hc*37 + ch
-      hc = ((hc << 5) + (hc << 2) + hc) + ch;
+      // FYI: hc = hc*33 + ch
+      hc = ((hc << 5) + hc) + ch;
       len++;
     }
   }
@@ -539,8 +539,8 @@ PRUint32 nsCRT::BufferHashCode(const char* buf, PRUint32 len)
   PRUint32 hc = 0;
   for (PRUint32 i = 0; i < len; i++) {
     char ch = *buf++;
-    // FYI: hc = hc*37 + ch
-    hc = ((hc << 5) + (hc << 2) + hc) + ch;
+    // FYI: hc = hc*33 + ch
+    hc = ((hc << 5) + hc) + ch;
   }
   return hc;
 }
