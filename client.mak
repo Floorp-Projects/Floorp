@@ -86,7 +86,7 @@ pull_lizard:
 	$(CVSCO_LIZARD) $(MOZ_TOP)/lib/liblayer
 	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/zlib
 	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/libutil
-	$(CVSCO_TAG) -r NSPRPUB_RELEASE_3_0 $(MOZ_TOP)/nsprpub
+	$(CVSCO_LIZARD) $(MOZ_TOP)/nsprpub
 	$(CVSCO_LIZARD) $(MOZ_TOP)/sun-java
 	$(CVSCO_LIZARD) $(MOZ_TOP)/nav-java
 	$(CVSCO_LIZARD) $(MOZ_TOP)/js
