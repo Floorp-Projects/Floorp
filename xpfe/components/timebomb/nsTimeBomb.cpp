@@ -166,6 +166,8 @@ nsTimeBomb::CheckWithUI(PRBool *expired)
 NS_IMETHODIMP
 nsTimeBomb::LoadUpdateURL()
 {
+    if (!mPrefs) return NS_ERROR_NULL_POINTER;
+
     char* url;
     nsresult rv = GetTimebombURL(&url);
     if (NS_FAILED(rv)) return rv;
@@ -177,6 +179,8 @@ nsTimeBomb::LoadUpdateURL()
 NS_IMETHODIMP
 nsTimeBomb::GetExpired(PRBool *expired)
 {
+    if (!mPrefs) return NS_ERROR_NULL_POINTER;
+
     *expired = PR_FALSE;
 
     PRTime bombTime    = LL_Zero();
@@ -228,6 +232,8 @@ nsTimeBomb::GetExpired(PRBool *expired)
 NS_IMETHODIMP
 nsTimeBomb::GetWarned(PRBool *warn)
 {
+    if (!mPrefs) return NS_ERROR_NULL_POINTER;
+    
     *warn = PR_FALSE;
 
     PRTime bombTime    = LL_Zero();
@@ -279,6 +285,8 @@ nsTimeBomb::GetWarned(PRBool *warn)
 NS_IMETHODIMP
 nsTimeBomb::GetEnabled(PRBool *enabled)
 {
+    if (!mPrefs) return NS_ERROR_NULL_POINTER;
+    
     return mPrefs->GetBoolPref("timebomb.enabled",enabled);
 }
 
@@ -286,6 +294,8 @@ nsTimeBomb::GetEnabled(PRBool *enabled)
 NS_IMETHODIMP
 nsTimeBomb::GetExpirationTime(PRTime *time)
 {
+    if (!mPrefs) return NS_ERROR_NULL_POINTER;
+    
     return GetInt64ForPref("timebomb.expiration_time", time);
 }
 
@@ -293,6 +303,8 @@ nsTimeBomb::GetExpirationTime(PRTime *time)
 NS_IMETHODIMP
 nsTimeBomb::GetWarningTime(PRTime *time)
 {
+    if (!mPrefs) return NS_ERROR_NULL_POINTER;
+    
     return GetInt64ForPref("timebomb.warning_time", time);
 }
 
@@ -300,12 +312,16 @@ nsTimeBomb::GetWarningTime(PRTime *time)
 NS_IMETHODIMP
 nsTimeBomb::GetBuildTime(PRTime *time)
 {
+    if (!mPrefs) return NS_ERROR_NULL_POINTER;
+    
     return GetInt64ForPref("timebomb.build_time", time);
 }
 
 NS_IMETHODIMP
 nsTimeBomb::GetFirstLaunch(PRTime *time)
 {
+    if (!mPrefs) return NS_ERROR_NULL_POINTER;
+    
     return GetInt64ForPref("timebomb.first_launch_time", time);
 }
 
@@ -313,12 +329,16 @@ nsTimeBomb::GetFirstLaunch(PRTime *time)
 NS_IMETHODIMP
 nsTimeBomb::GetWarningOffset(PRInt64 *offset)
 {
+    if (!mPrefs) return NS_ERROR_NULL_POINTER;
+    
     return GetInt64ForPref("timebomb.warning_offset", offset);
 }
 
 NS_IMETHODIMP
 nsTimeBomb::GetExpirationOffset(PRInt64 *offset)
 {
+    if (!mPrefs) return NS_ERROR_NULL_POINTER;
+
     return GetInt64ForPref("timebomb.expiration_offset", offset);
 }
 
@@ -327,6 +347,8 @@ nsTimeBomb::GetExpirationOffset(PRInt64 *offset)
 NS_IMETHODIMP
 nsTimeBomb::GetTimebombURL(char* *url)
 {
+    if (!mPrefs) return NS_ERROR_NULL_POINTER;
+    
     char* string;
     nsresult rv = mPrefs->CopyCharPref("timebomb.update_url", &string);
     if (NS_SUCCEEDED(rv))
@@ -354,6 +376,8 @@ nsTimeBomb::GetTimebombURL(char* *url)
 nsresult 
 nsTimeBomb::GetInt64ForPref(const char* pref, PRInt64* time)
 {
+    if (!mPrefs) return NS_ERROR_NULL_POINTER;
+    
     char* string;
     nsresult rv = mPrefs->CopyCharPref(pref, &string);
     if (NS_SUCCEEDED(rv))
