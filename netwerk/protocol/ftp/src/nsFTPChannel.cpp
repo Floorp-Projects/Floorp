@@ -628,6 +628,7 @@ nsFTPChannel::OnStartRequest(nsIRequest *request, nsISupports *aContext)
             this, request));
    
     nsresult rv = NS_OK;
+    request->GetStatus(&mStatus);
 
     if (mListener) {
         rv = mListener->OnStartRequest(this, mUserContext);
