@@ -450,18 +450,18 @@ nsXULTemplateBuilder::DocumentWillBeDestroyed(nsIDocument *aDocument)
 //
 
 nsresult
-nsXULTemplateBuilder::Propogate(nsIRDFResource* aSource,
+nsXULTemplateBuilder::Propagate(nsIRDFResource* aSource,
                                 nsIRDFResource* aProperty,
                                 nsIRDFNode* aTarget,
                                 nsClusterKeySet& aNewKeys)
 {
-    // Find the "dominating" tests that could be used to propogate the
+    // Find the "dominating" tests that could be used to propagate the
     // assertion we've just received. (Test A "dominates" test B if A
     // is an ancestor of B in the rule network).
     nsresult rv;
 
     // First, we'll go through and find all of the test nodes that can
-    // propogate the assertion.
+    // propagate the assertion.
     ReteNodeSet livenodes;
 
     {
@@ -470,14 +470,14 @@ nsXULTemplateBuilder::Propogate(nsIRDFResource* aSource,
             nsRDFTestNode* rdftestnode = NS_STATIC_CAST(nsRDFTestNode*, *i);
 
             Instantiation seed;
-            if (rdftestnode->CanPropogate(aSource, aProperty, aTarget, seed)) {
+            if (rdftestnode->CanPropagate(aSource, aProperty, aTarget, seed)) {
                 livenodes.Add(rdftestnode);
             }
         }
     }
 
     // Now, we'll go through each, and any that aren't dominated by
-    // another live node will be used to propogate the assertion
+    // another live node will be used to propagate the assertion
     // through the rule network
     {
         ReteNodeSet::Iterator last = livenodes.Last();
@@ -500,7 +500,7 @@ nsXULTemplateBuilder::Propogate(nsIRDFResource* aSource,
             if (! isdominated) {
                 // Bogus, to get the seed instantiation
                 Instantiation seed;
-                rdftestnode->CanPropogate(aSource, aProperty, aTarget, seed);
+                rdftestnode->CanPropagate(aSource, aProperty, aTarget, seed);
 
                 InstantiationSet instantiations;
                 instantiations.Append(seed);
@@ -509,7 +509,7 @@ nsXULTemplateBuilder::Propogate(nsIRDFResource* aSource,
                 if (NS_FAILED(rv)) return rv;
 
                 if (! instantiations.Empty()) {
-                    rv = rdftestnode->Propogate(instantiations, &aNewKeys);
+                    rv = rdftestnode->Propagate(instantiations, &aNewKeys);
                     if (NS_FAILED(rv)) return rv;
                 }
             }
@@ -579,7 +579,7 @@ nsXULTemplateBuilder::OnAssert(nsIRDFDataSource* aDataSource,
     LOG("onassert", aSource, aProperty, aTarget);
 
     nsClusterKeySet newkeys;
-    rv = Propogate(aSource, aProperty, aTarget, newkeys);
+    rv = Propagate(aSource, aProperty, aTarget, newkeys);
     if (NS_FAILED(rv)) return rv;
 
     rv = FireNewlyMatchedRules(newkeys);
@@ -693,7 +693,7 @@ nsXULTemplateBuilder::OnChange(nsIRDFDataSource* aDataSource,
     if (aNewTarget) {
         // Fire any new rules that are activated by aNewTarget
         nsClusterKeySet newkeys;
-        rv = Propogate(aSource, aProperty, aNewTarget, newkeys);
+        rv = Propagate(aSource, aProperty, aNewTarget, newkeys);
         if (NS_FAILED(rv)) return rv;
 
         rv = FireNewlyMatchedRules(newkeys);

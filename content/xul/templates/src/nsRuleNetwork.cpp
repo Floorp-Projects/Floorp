@@ -43,7 +43,7 @@
 
   To Do.
 
-  - Constrain() & Propogate() still feel like they are poorly named.
+  - Constrain() & Propagate() still feel like they are poorly named.
   - As do Instantiation and InstantiationSet.
   - Make InstantiationSet share and do copy-on-write.
   - Make things iterative, instead of recursive.
@@ -750,17 +750,17 @@ InstantiationSet::HasAssignmentFor(PRInt32 aVariable) const
 //
 
 nsresult
-RootNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
+RootNode::Propagate(const InstantiationSet& aInstantiations, void* aClosure)
 {
     PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-           ("RootNode[%p]: Propogate() begin", this));
+           ("RootNode[%p]: Propagate() begin", this));
 
     ReteNodeSet::Iterator last = mKids.Last();
     for (ReteNodeSet::Iterator kid = mKids.First(); kid != last; ++kid)
-        kid->Propogate(aInstantiations, aClosure);
+        kid->Propagate(aInstantiations, aClosure);
 
     PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-           ("RootNode[%p]: Propogate() end", this));
+           ("RootNode[%p]: Propagate() end", this));
 
     return NS_OK;
 }
@@ -809,9 +809,9 @@ JoinNode::JoinNode(InnerNode* aLeftParent,
 }
 
 nsresult
-JoinNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
+JoinNode::Propagate(const InstantiationSet& aInstantiations, void* aClosure)
 {
-    // the add will have been propogated down from one of the parent
+    // the add will have been propagated down from one of the parent
     // nodes: either the left or the right. Test the other node for
     // matches.
     nsresult rv;
@@ -848,13 +848,13 @@ JoinNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
     }
 
     if (! instantiations.Empty()) {
-        // propogate consistency checking back up the tree
+        // propagate consistency checking back up the tree
         rv = test->Constrain(instantiations, aClosure);
         if (NS_FAILED(rv)) return rv;
 
         ReteNodeSet::Iterator last = mKids.Last();
         for (ReteNodeSet::Iterator kid = mKids.First(); kid != last; ++kid)
-            kid->Propogate(instantiations, aClosure);
+            kid->Propagate(instantiations, aClosure);
     }
 
     return NS_OK;
@@ -1033,12 +1033,12 @@ TestNode::TestNode(InnerNode* aParent)
 
 
 nsresult
-TestNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
+TestNode::Propagate(const InstantiationSet& aInstantiations, void* aClosure)
 {
     nsresult rv;
 
     PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-           ("TestNode[%p]: Propogate() begin", this));
+           ("TestNode[%p]: Propagate() begin", this));
 
     InstantiationSet instantiations = aInstantiations;
     rv = FilterInstantiations(instantiations, aClosure);
@@ -1048,14 +1048,14 @@ TestNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
         ReteNodeSet::Iterator last = mKids.Last();
         for (ReteNodeSet::Iterator kid = mKids.First(); kid != last; ++kid) {
             PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-                   ("TestNode[%p]: Propogate() passing to child %p", this, kid.operator->()));
+                   ("TestNode[%p]: Propagate() passing to child %p", this, kid.operator->()));
 
-            kid->Propogate(instantiations, aClosure);
+            kid->Propagate(instantiations, aClosure);
         }
     }
 
     PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-           ("TestNode[%p]: Propogate() end", this));
+           ("TestNode[%p]: Propagate() end", this));
 
     return NS_OK;
 }

@@ -57,17 +57,17 @@ public:
         : TestNode(aParent) {}
 
     /**
-     * Determine wether the node can propogate an assertion
+     * Determine wether the node can propagate an assertion
      * with the specified source, property, and target. If the
-     * assertion can be propogated, aInitialBindings will be
+     * assertion can be propagated, aInitialBindings will be
      * initialized with appropriate variable-to-value assignments
-     * to allow the rule network to start a constrain and propogate
+     * to allow the rule network to start a constrain and propagate
      * search from this node in the network.
      *
-     * @return PR_TRUE if the node can propogate the specified
+     * @return PR_TRUE if the node can propagate the specified
      * assertion.
      */
-    virtual PRBool CanPropogate(nsIRDFResource* aSource,
+    virtual PRBool CanPropagate(nsIRDFResource* aSource,
                                 nsIRDFResource* aProperty,
                                 nsIRDFNode* aTarget,
                                 Instantiation& aInitialBindings) const = 0;

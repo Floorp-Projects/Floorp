@@ -85,7 +85,7 @@ public:
     virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;
 
     virtual PRBool
-    CanPropogate(nsIRDFResource* aSource,
+    CanPropagate(nsIRDFResource* aSource,
                  nsIRDFResource* aProperty,
                  nsIRDFNode* aTarget,
                  Instantiation& aInitialBindings) const;

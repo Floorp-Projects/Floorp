@@ -497,14 +497,14 @@ nsRDFConMemberTestNode::GetAncestorVariables(VariableSet& aVariables) const
 
 
 PRBool
-nsRDFConMemberTestNode::CanPropogate(nsIRDFResource* aSource,
+nsRDFConMemberTestNode::CanPropagate(nsIRDFResource* aSource,
                                      nsIRDFResource* aProperty,
                                      nsIRDFNode* aTarget,
                                      Instantiation& aInitialBindings) const
 {
     nsresult rv;
 
-    PRBool canpropogate = PR_FALSE;
+    PRBool canpropagate = PR_FALSE;
 
     nsCOMPtr<nsIRDFContainerUtils> rdfc =
         do_GetService("@mozilla.org/rdf/container-utils;1");
@@ -512,12 +512,12 @@ nsRDFConMemberTestNode::CanPropogate(nsIRDFResource* aSource,
     if (! rdfc)
         return NS_ERROR_FAILURE;
 
-    // We can certainly propogate ordinal properties
-    rv = rdfc->IsOrdinalProperty(aProperty, &canpropogate);
+    // We can certainly propagate ordinal properties
+    rv = rdfc->IsOrdinalProperty(aProperty, &canpropagate);
     if (NS_FAILED(rv)) return PR_FALSE;
 
-    if (! canpropogate) {
-        canpropogate = mMembershipProperties.Contains(aProperty);
+    if (! canpropagate) {
+        canpropagate = mMembershipProperties.Contains(aProperty);
     }
 
 #ifdef PR_LOGGING
@@ -532,13 +532,13 @@ nsRDFConMemberTestNode::CanPropogate(nsIRDFResource* aSource,
         nsXULContentUtils::GetTextForNode(aTarget, target);
 
         PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-               ("nsRDFConMemberTestNode[%p]: CanPropogate([%s]==[%s]=>[%s]) => %s",
+               ("nsRDFConMemberTestNode[%p]: CanPropagate([%s]==[%s]=>[%s]) => %s",
                 this, source, property, NS_ConvertUCS2toUTF8(target).get(),
-                canpropogate ? "true" : "false"));
+                canpropagate ? "true" : "false"));
     }
 #endif
 
-    if (canpropogate) {
+    if (canpropagate) {
         aInitialBindings.AddAssignment(mContainerVariable, Value(aSource));
         aInitialBindings.AddAssignment(mMemberVariable, Value(aTarget));
         return PR_TRUE;
