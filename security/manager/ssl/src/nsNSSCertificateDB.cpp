@@ -1056,9 +1056,9 @@ nsNSSCertificateDB::ImportPKCS12File(nsISupports *aToken,
 {
   NS_ENSURE_ARG(aFile);
   nsPKCS12Blob blob;
-  if (aToken) {
-    nsCOMPtr<nsIPK11Token> t = do_QueryInterface(aToken);
-    blob.SetToken(t);
+  nsCOMPtr<nsIPK11Token> token = do_QueryInterface(aToken);
+  if (token) {
+    blob.SetToken(token);
   }
   return blob.ImportFromFile(aFile);
 }
