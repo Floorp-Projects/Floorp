@@ -19,7 +19,7 @@
 #ifndef nsTreeView_h___
 #define nsTreeView_h___
 
-#include "nsITreeView.h"
+#include "nsIContentConnector.h"
 #include "nsTreeDataModel.h"
 #include "nsTreeItem.h"
 #include "nsTreeColumn.h"
@@ -40,7 +40,7 @@ class nsIImage;
 // to display the data.  It passes all expand/collapse/deletion/etc. events back
 // to the data model.
 
-class nsTreeView : public nsITreeView,
+class nsTreeView : public nsIContentConnector,
 				   public nsDataModelWidget
 {
 public:
@@ -50,7 +50,7 @@ public:
 	// nsISupports Interface --------------------------------
 	NS_DECL_ISUPPORTS
 	
-	// nsITreeView Interface --------------------------------
+	// nsIContentConnector Interface --------------------------------
 	NS_IMETHOD SetContentRoot(nsIContent* pContent);
 	NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent);
 
@@ -113,7 +113,7 @@ protected:
 							const nsRect& rect);
 
 protected:
-	// Data members
+	// Data members (*** these should both be smart pointers***)
 	nsTreeDataModel* mDataModel; // The data source from which everything to draw is obtained.
 	nsIImageGroup* mImageGroup; // Used to make requests for tree images.
 

@@ -27,7 +27,7 @@
 #include "nsTreeView.h"
 #include "nsHTTreeDataModel.h"
 
-static NS_DEFINE_IID(kITreeViewIID, NS_ITREEVIEW_IID);
+static NS_DEFINE_IID(kIContentConnectorIID, NS_ICONTENTCONNECTOR_IID);
 
 NS_IMPL_ADDREF(nsTreeView)
 NS_IMPL_RELEASE(nsTreeView)
@@ -36,8 +36,8 @@ static nsEventStatus PR_CALLBACK
 HandleTreeEvent(nsGUIEvent *aEvent)
 {
   nsEventStatus result = nsEventStatus_eIgnore;
-  nsITreeView * tree;
-  if (NS_OK == aEvent->widget->QueryInterface(kITreeViewIID,(void**)&tree)) {
+  nsIContentConnector * tree;
+  if (NS_OK == aEvent->widget->QueryInterface(kIContentConnectorIID,(void**)&tree)) {
     result = tree->HandleEvent(aEvent);
     NS_RELEASE(tree);
   }
@@ -62,7 +62,7 @@ NS_METHOD nsTreeView::Create(nsIWidget *aParent,
   return answer;
 }
 
-nsTreeView::nsTreeView() : nsITreeView(), nsDataModelWidget()
+nsTreeView::nsTreeView() : nsIContentConnector(), nsDataModelWidget()
 {
   NS_INIT_REFCNT();
   mDataModel = nsnull;
@@ -90,8 +90,8 @@ nsresult nsTreeView::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {                                            
     return NS_ERROR_NULL_POINTER;                                        
   }                                                                      
-  if (aIID.Equals(kITreeViewIID)) {                                          
-    *aInstancePtr = (void*) (nsITreeView *)this;                                        
+  if (aIID.Equals(kIContentConnectorIID)) {                                          
+    *aInstancePtr = (void*) (nsIContentConnector *)this;                                        
     AddRef();                                                           
     return NS_OK;                                                        
   }     
