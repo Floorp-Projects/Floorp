@@ -139,15 +139,6 @@ NS_IMETHODIMP nsExceptionManager::GetExceptionFromProvider(nsresult rc, nsIExcep
 }
 
 /* The Exception Service */
-class ProviderInfo {
-public:
-    ProviderInfo(nsIExceptionProvider *_rep, PRUint32 _mod) :
-      provider(_rep), errorModule(_mod) {}
-
-  nsCOMPtr<nsIExceptionProvider> provider;
-  PRUint32 errorModule;
-};
-
 
 PRUintn nsExceptionService::tlsIndex = BAD_TLS_INDEX;
 PRLock *nsExceptionService::lock = PR_FALSE;
@@ -267,9 +258,6 @@ NS_IMETHODIMP nsExceptionService::GetCurrentExceptionManager(nsIExceptionManager
 NS_IMETHODIMP nsExceptionService::RegisterExceptionProvider(nsIExceptionProvider *provider, PRUint32 errorModule)
 {
     CHECK_SERVICE_USE_OK();
-    ProviderInfo *pi = new ProviderInfo(provider, errorModule);
-    if (pi==nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
 
     nsProviderKey key(errorModule);
     if (mProviders.Put(&key, provider)) {
@@ -304,7 +292,7 @@ nsExceptionService::DoGetExceptionFromProvider(nsresult errCode,
 {
     nsProviderKey key(NS_ERROR_GET_MODULE(errCode));
     nsCOMPtr<nsIExceptionProvider> provider =
-        (nsIExceptionProvider *)mProviders.Get(&key);
+        dont_AddRef((nsIExceptionProvider *)mProviders.Get(&key));
 
     // No provider so we'll return the default exception
     if (!provider) {
