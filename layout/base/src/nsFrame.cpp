@@ -41,7 +41,6 @@
 #include "nsIPresShell.h"
 
 // Some Misc #defines
-#define DO_SELECTION           0
 #define SELECTION_DEBUG        0
 #define FORCE_SELECTION_UPDATE 1
 #define TRACKER_DEBUG          0
