@@ -894,8 +894,8 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
   aStatus = nsEventStatus_eIgnore;
   
   if (nsnull != mMenuListener){
-    //if(NS_MENU_EVENT == event->eventStructType)
-  	  //aStatus = mMenuListener->MenuSelected( static_cast<nsMenuEvent&>(*event) );
+    if(NS_MENU_EVENT == event->eventStructType)
+  	  aStatus = mMenuListener->MenuSelected( static_cast<nsMenuEvent&>(*event) );
   }
   if (mEventCallback)
     aStatus = (*mEventCallback)(event);
