@@ -221,6 +221,7 @@ private:
     PRUint32                          mStatus;
     nsUint64                          mLogicalOffset;
     PRUint8                           mCaps;
+    PRInt16                           mPriority;
 
     nsCString                         mContentTypeHint;
     nsCString                         mContentCharsetHint;

@@ -96,6 +96,7 @@ nsHttpChannel::nsHttpChannel()
     , mStatus(NS_OK)
     , mLogicalOffset(0)
     , mCaps(0)
+    , mPriority(0)
     , mCachedResponseHead(nsnull)
     , mCacheAccess(0)
     , mPostID(0)
@@ -352,7 +353,7 @@ nsHttpChannel::Connect(PRBool firstTime)
     rv = SetupTransaction();
     if (NS_FAILED(rv)) return rv;
 
-    rv = gHttpHandler->InitiateTransaction(mTransaction);
+    rv = gHttpHandler->InitiateTransaction(mTransaction, mPriority);
     if (NS_FAILED(rv)) return rv;
 
     return mTransactionPump->AsyncRead(this, nsnull);
@@ -3639,6 +3640,20 @@ nsHttpChannel::GetProxyInfo(nsIProxyInfo **result)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHttpChannel::GetPriority(PRInt16 *value)
+{
+    *value = mPriority;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetPriority(PRInt16 value)
+{
+    mPriority = value;
+    return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsIRequestObserver
 //-----------------------------------------------------------------------------
@@ -4169,7 +4184,7 @@ nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn)
             seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
     }
 
-    rv = gHttpHandler->InitiateTransaction(mTransaction);
+    rv = gHttpHandler->InitiateTransaction(mTransaction, mPriority);
     if (NS_FAILED(rv)) return rv;
 
     return mTransactionPump->AsyncRead(this, nsnull);

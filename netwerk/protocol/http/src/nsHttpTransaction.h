@@ -132,6 +132,10 @@ public:
     void   SetSSLConnectFailed() { mSSLConnectFailed = PR_TRUE; }
     PRBool    SSLConnectFailed() { return mSSLConnectFailed; }
 
+    // These methods may only be used by the connection manager.
+    void    SetPriority(PRInt32 priority) { mPriority = priority; }
+    PRInt32    Priority()                 { return mPriority; }
+
 private:
     nsresult Restart();
     void     ParseLine(char *line);
@@ -180,6 +184,8 @@ private:
     nsHttpChunkedDecoder           *mChunkedDecoder;
 
     nsresult                        mStatus;
+
+    PRInt16                         mPriority;
 
     PRUint16                        mRestartCount;        // the number of times this transaction has been restarted
     PRUint8                         mCaps;
