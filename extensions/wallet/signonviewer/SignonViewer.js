@@ -165,6 +165,7 @@ function LoadSignons()
       var unused = { };
       var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                     .getService(Components.interfaces.nsIIOService);
+      var username;
       try {
         username = ioService.extractUrlPart(host, ioService.url_Username, unused, unused);
       } catch(e) {
