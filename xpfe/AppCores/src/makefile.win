@@ -41,6 +41,7 @@ LINCS= \
 	-I$(XPDIST)\public\util	    \
 	-I$(XPDIST)\public\nspr2 	\
     -I$(XPDIST)\public\pref 	\
+    -I$(XPDIST)\public\profile 	\
 	-I$(XPDIST)\public\raptor   \
 	-I$(XPDIST)\public\appcores \
 	-I$(XPDIST)\public\xpfe\components \
