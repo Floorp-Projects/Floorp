@@ -211,7 +211,7 @@ nsDiskCacheOutputStream::nsDiskCacheOutputStream( nsDiskCacheStreamIO * parent)
 nsDiskCacheOutputStream::~nsDiskCacheOutputStream()
 {
     Close();
-    NS_ASSERTION(mStreamIO == nsnull, "leak");
+    NS_ASSERTION(!mStreamIO, "leak");
 }
 
 
