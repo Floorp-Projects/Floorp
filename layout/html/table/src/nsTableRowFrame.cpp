@@ -146,14 +146,13 @@ nsTableRowFrame::ResizeReflow(nsIPresContext*  aPresContext,
   PreReflowCheck();
 #endif
 
+  //nsresult result = NS_OK;
   PRInt32 maxCellHeight = 0;
   ResetMaxChildHeight();
 
   aStatus = frComplete;
 
   mFirstContentOffset = mLastContentOffset = 0;
-
-  nsIContent* c = mContent;
 
   nsSize availSize(aMaxSize);
   nsSize maxSize(0, 0);
@@ -164,7 +163,7 @@ nsTableRowFrame::ResizeReflow(nsIPresContext*  aPresContext,
   nscoord maxAscent = 0;
   nscoord maxDescent = 0;
   PRInt32 kidIndex = 0;
-  PRInt32 lastIndex = c->ChildCount();
+  PRInt32 lastIndex = mContent->ChildCount();
   nsIFrame* prevKidFrame = nsnull;/* XXX incremental reflow! */
 
 // Row doesn't factor in insets, the cells do that
@@ -174,34 +173,33 @@ nsTableRowFrame::ResizeReflow(nsIPresContext*  aPresContext,
   mContentParent->GetContentParent((nsIFrame*&)tableFrame);
 
   for (;;) {
-    nsIContent* kid = c->ChildAt(kidIndex);   // kid: REFCNT++
-    if (nsnull == kid) {
+    nsTableCell* cell = (nsTableCell *)(mContent->ChildAt(kidIndex));   // cell: REFCNT++
+    if (nsnull == cell) {
       aStatus = frComplete;
       break;
     }
 
-    // get frame, creating one if needed
-    nsIFrame* kidFrame;
-     
-    ChildAt(kidIndex, kidFrame);
+    // get next frame, creating one if needed
+    nsIFrame* kidFrame=nsnull;
+    if (nsnull!=prevKidFrame)
+      prevKidFrame->GetNextSibling(kidFrame);  // no need to check for an error, just see if it returned null...
+    else
+      ChildAt(0, kidFrame);
     if (nsnull==kidFrame)
     {
       nsIContentDelegate* kidDel;
-      kidDel = kid->GetDelegate(aPresContext);
-      kidFrame = kidDel->CreateFrame(aPresContext, kid, kidIndex, this);
+      kidDel = cell->GetDelegate(aPresContext);
+      kidFrame = kidDel->CreateFrame(aPresContext, cell, kidIndex, this);
       mChildCount++;
       NS_RELEASE(kidDel);
       // Resolve style
       nsIStyleContext* kidStyleContext =
-        aPresContext->ResolveStyleContextFor(kid, this);
+        aPresContext->ResolveStyleContextFor(cell, this);
       NS_ASSERTION(nsnull!=kidStyleContext, "bad style context for kid.");
       kidFrame->SetStyleContext(kidStyleContext);
       NS_RELEASE(kidStyleContext);
     }
 
-    nsTableCell* cell;
-     
-    kidFrame->GetContent((nsIContent*&)cell);  // cell: ADDREF++
     // Try to reflow the child into the available space.
     if (NS_UNCONSTRAINEDSIZE == availSize.width)
     {  // Each cell is given the entire row width to try to lay out into
@@ -239,10 +237,12 @@ nsTableRowFrame::ResizeReflow(nsIPresContext*  aPresContext,
     PRInt32 rowSpan = cell->GetRowSpan();
     if ((1==rowSpan) && (maxCellHeight<kidSize.height))
       maxCellHeight = kidSize.height;
-    NS_RELEASE(cell);                                             // cell: ADDREF--
 
     // SEC: the next line is probably unnecessary
     // Place the child since some of it's content fit in us.
+    if (PR_TRUE==gsDebug1)
+      printf ("row: placing cell at %d, %d, %d, %d\n",
+           cellXOffset, 0, kidSize.width, kidSize.height);
     kidFrame->SetRect(nsRect(cellXOffset, 0, kidSize.width, kidSize.height));
     if (kidSize.width > maxSize.width) {
       maxSize.width = kidSize.width;
@@ -286,7 +286,7 @@ nsTableRowFrame::ResizeReflow(nsIPresContext*  aPresContext,
       mLastContentIsComplete = PR_FALSE;
       break;
     }
-    NS_RELEASE(kid);  // kid: REFCNT--
+    NS_RELEASE(cell);  // kid: REFCNT--
   }
 
   if (nsnull != prevKidFrame) {

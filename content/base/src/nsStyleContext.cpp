@@ -465,7 +465,7 @@ void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
       mMolecule.borderStyle[0] = mMolecule.borderStyle[1] =
       mMolecule.borderStyle[2] = mMolecule.borderStyle[3] = NS_STYLE_BORDER_STYLE_SOLID;
       mMolecule.fixedWidth = -1;
-      mMolecule.proportionalWidth = 100;
+      mMolecule.proportionalWidth = -1;
       nsString  align("ALIGN");
       nsString  value;
       if (eContentAttr_HasValue == aContent->GetAttribute(align, value)) {
@@ -478,15 +478,15 @@ void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
     } else if (buf.EqualsIgnoreCase("CAPTION")) {                   // CAPTION
       mMolecule.verticalAlign = NS_STYLE_VERTICAL_ALIGN_TOP;
     } else if (buf.EqualsIgnoreCase("TBODY")) {                     // TBODY
-      mMolecule.padding.top = NS_POINTS_TO_TWIPS_INT(1);
-      mMolecule.padding.bottom = NS_POINTS_TO_TWIPS_INT(1);
-      mMolecule.padding.right = NS_POINTS_TO_TWIPS_INT(1);
-      mMolecule.padding.left = NS_POINTS_TO_TWIPS_INT(1);
+      mMolecule.padding.top = NS_POINTS_TO_TWIPS_INT(0);
+      mMolecule.padding.bottom = NS_POINTS_TO_TWIPS_INT(0);
+      mMolecule.padding.right = NS_POINTS_TO_TWIPS_INT(0);
+      mMolecule.padding.left = NS_POINTS_TO_TWIPS_INT(0);
     } else if (buf.EqualsIgnoreCase("TR")) {                        // TROW
-      mMolecule.padding.top = NS_POINTS_TO_TWIPS_INT(1);
-      mMolecule.padding.bottom = NS_POINTS_TO_TWIPS_INT(1);
-      mMolecule.padding.right = NS_POINTS_TO_TWIPS_INT(1);
-      mMolecule.padding.left = NS_POINTS_TO_TWIPS_INT(1);
+      mMolecule.padding.top = NS_POINTS_TO_TWIPS_INT(0);
+      mMolecule.padding.bottom = NS_POINTS_TO_TWIPS_INT(0);
+      mMolecule.padding.right = NS_POINTS_TO_TWIPS_INT(0);
+      mMolecule.padding.left = NS_POINTS_TO_TWIPS_INT(0);
     } else if (buf.EqualsIgnoreCase("TD")) {                        // TD
       float p2t = aPresContext->GetPixelsToTwips();
       

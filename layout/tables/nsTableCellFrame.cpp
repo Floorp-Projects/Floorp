@@ -217,7 +217,6 @@ NS_METHOD nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
     availSize.width -= leftInset+rightInset;
   if (NS_UNCONSTRAINEDSIZE!=availSize.height)
     availSize.height -= topInset+bottomInset;
-  //was: availSize.SizeBy(-(leftInset+rightInset), -(topInset+bottomInset));
 
   mLastContentIsComplete = PR_TRUE;
 
@@ -279,7 +278,11 @@ NS_METHOD nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
   aDesiredSize.descent = bottomInset;
 
   if (nsnull!=aMaxElementSize)
+  {
     *aMaxElementSize = *pMaxElementSize;
+    aMaxElementSize->height += topInset + bottomInset;
+    aMaxElementSize->width += leftInset + rightInset;
+  }
   
   if (gsDebug==PR_TRUE)
     printf("  nsTableCellFrame::ResizeReflow returning aDesiredSize=%d,%d\n",
