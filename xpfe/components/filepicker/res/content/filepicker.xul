@@ -44,7 +44,7 @@
 <script type="application/x-javascript" src="chrome://global/content/filepicker.js"/>
 
 <hbox align="center">
-  <label value="&lookInMenuList.label;"/>
+  <label value="&lookInMenuList.label;" control="lookInMenuList" accesskey="&lookInMenuList.accesskey;"/>
   <menulist id="lookInMenuList" flex="1" oncommand="onDirectoryChanged(event.target);" crop="start">
     <menupopup id="lookInMenu"/>
   </menulist>
@@ -85,19 +85,19 @@
 
   <rows>
     <row align="center">
-      <label value="&textInput.label;" id="textInputLabel"/>
+      <label value="&textInput.label;" id="textInputLabel" control="textInput" accesskey="&textInput.accesskey;"/>
       <textbox id="textInput" flex="1" oninput="doEnabling()" 
                onfocus="onTextFieldFocus();"/>
     </row>
     <row id="filterBox" hidden="true" align="center">
-      <label value="&filterMenuList.label;"/>
+      <label value="&filterMenuList.label;"  control="filterMenuList" accesskey="&filterMenuList.accesskey;"/>
       <menulist id="filterMenuList" flex="1" oncommand="onFilterChanged(event.target);"/>
     </row>
   </rows>
 </grid>
 <hbox class="dialog-button-box" align="center">
   <checkbox label="&showHiddenFiles.label;" oncommand="toggleShowHidden();"
-            flex="1" align="left"/>
+            flex="1" align="left"  accesskey="&showHiddenFiles.accesskey;"/>
   <button dlgtype="accept" class="dialog-button"/>
   <button dlgtype="cancel" class="dialog-button"/>
 </hbox>
