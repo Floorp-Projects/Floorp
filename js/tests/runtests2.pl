@@ -40,39 +40,47 @@ use Getopt::Mixed "nextOption";
 
 # command line option defaults
 local $opt_classpath = "";
-local $opt_engine_type = "smopt";
+local $opt_engine_type = "";
 local $opt_output_file = "";
 local $opt_test_list_file = "";
 local $opt_suite_path = "./";
 local $opt_shell_path = "";
+local $opt_java_path = "";
 local $opt_bug_url = "http://bugzilla.mozilla.org/show_bug.cgi?id=";
 local $opt_trace = 0;
-local $opt_verbose = 0;
+local $opt_console_failures = 0;
 local $opt_lxr_url = "http://lxr.mozilla.org/mozilla/source/js/tests/";
 
 # command line option definition
 local $options = "b=s bugurl>b c=s classpath>c d smdebug>d f=s file>f " .
-  "h help>h l=s list>l o smopt>o p=s testpath>p r rhino>r s=s shellpath>s " .
-  "t trace>t v verbose>v x=s lxrurl>x";
+  "h help>h j=s javapath>j k confail>k l=s list>l o smopt>o p=s testpath>p " .
+  "r rhino>r s=s shellpath>s t trace>t x=s lxrurl>x";
 
 &parse_args;
+
+if (!$opt_engine_type) {
+    die "You must select a type of engine to test.\n";
+}
+
+&dd ("output file is '$opt_output_file'");
 
 local $user_exit = 0;
 local $html = "";
 local @failed_tests;
 local $os_type = &get_os_type;
-local @test_list = &get_test_list;
 local $failures_reported = 0;
 local $tests_completed = 0;
-
-&dd ("output file is '$opt_output_file'");
+local @test_list = &get_test_list;
 
 $SIG{INT} = 'int_handler';
 
 &execute_tests (@test_list);
 &write_results;
 
-print STDERR "-#- Wrote results to '$opt_output_file'\n";
+&status ("Wrote results to '$opt_output_file'.");
+if ($opt_console_failures) {
+    &status ("$failures_reported test(s) failed");
+}
 
 sub execute_tests {
     local (@test_list) = @_;
@@ -81,6 +89,8 @@ sub execute_tests {
     local $file_param = " -f ";
     local $last_suite, $last_test_dir;
     local $failure_lines;
+
+    &status ("Executing " . ($#test_list + 1) . " test(s).");
 
     foreach $test (@test_list) {
         local ($suite, $test_dir, $test_file) = split("/", $test);
@@ -150,7 +160,7 @@ sub execute_tests {
             &report_failure ($test, "Expected exit code " .
                              "$expected_exit, got $got_exit\n" .
                              "Testcase terminated with signal $exit_signal\n" .
-                             "Test case produced no output!", $bug_line);
+                             "Test case produced no output!\n", $bug_line);
         } elsif ($got_exit != $expected_exit) {
             &report_failure ($test, "Expected exit code " .
                              "$expected_exit, got $got_exit\n" .
@@ -159,7 +169,7 @@ sub execute_tests {
                              join ("\n",@output), $bug_line);
         } elsif ($failure_lines) {
             &report_failure ($test, "Failure messages were:\n" . $failure_lines,
-                            $bug_line);
+                             $bug_line);
         }        
         
         &dd ("exit code $got_exit, exit signal $exit_signal.");
@@ -246,6 +256,17 @@ sub parse_args {
         } elsif ($option eq "h") {
             &usage;
             
+        } elsif ($option eq "j") {
+            if (!($value =~ /[\/\\]$/)) {
+                $value .= "/";
+            }
+            &dd ("opt: setting java path to '$value'.");
+            $opt_java_url = $value;
+            
+        } elsif ($option eq "k") {
+            &dd ("opt: displaying failures on console.");
+            $opt_console_failures=1;
+
         } elsif ($option eq "l") {	
             &dd ("opt: setting test list to '$value'.");
             $opt_test_list_file = $value;
@@ -273,7 +294,8 @@ sub parse_args {
             &dd ("opt: setting shell path to '$opt_shell_path'.");
             
         } elsif ($option eq "t") {
-            &dd ("opt: tracing output.");
+            &dd ("opt: tracing output.  (console failures at no extra charge.)");
+            $opt_console_failures = 1;
             $opt_trace = 1;
             
         } elsif ($option eq "v") {
@@ -304,23 +326,25 @@ sub parse_args {
 sub usage {
     print STDERR 
       ("\nusage: $0 [<options>] \n" .
-       "(-b|--bugurl)           Bugzilla URL\n" .
+       "(-b|--bugurl)           Bugzilla URL.\n" .
        "                        (default is $opt_bug_url)\n" .
-       "(-c|--classpath)        Classpath (Rhino only)\n" .
-       "(-d|--smdebug)          Test SpiderMonkey Debug engine\n" .
-       "(-f|--file) <file>      Redirect output to file named <file>\n" .
+       "(-c|--classpath)        Classpath (Rhino only.)\n" .
+       "(-d|--smdebug)          Test SpiderMonkey Debug engine.\n" .
+       "(-f|--file) <file>      Redirect output to file named <file>.\n" .
        "                        (default is " .
        "results-<engine-type>-<date-stamp>.html)\n" .
-       "(-h|--help)             Print this message\n" .
-       "(-l|--list) <file>      List of tests to execute\n" . 
-       "(-o|--smopt)            Test SpiderMonkey Optimized engine\n" .
-       "(-p|--testpath) <path>  Root of the test suite (default is ./)\n" .
-       "(-r|--rhino)            Test Rhino engine\n" .
-       "(-s|--shellpath) <path> Location of JavaScript shell\n" .
-       "(-t|--trace)            Trace execution (for debugging)\n" .
+       "(-h|--help)             Print this message.\n" .
+       "(-j|--javapath)         Location of java executable.\n" .
+       "(-k|--confail)          Log failures to console (also.)\n" . 
+       "(-l|--list) <file>      List of tests to execute.\n" . 
+       "(-o|--smopt)            Test SpiderMonkey Optimized engine.\n" .
+       "(-p|--testpath) <path>  Root of the test suite. (default is ./)\n" .
+       "(-r|--rhino)            Test Rhino engine.\n" .
+       "(-s|--shellpath) <path> Location of JavaScript shell.\n" .
+       "(-t|--trace)            Trace script execution.\n" .
        # "(-v|--verbose)          Show all test cases (not recommended)\n" .
-       "(-x|--lxrurl) <url>     Complete url to tests subdirectory on lxr\n" .
-       "                        (default is\n$opt_lxr_url)\n\n");
+       "(-x|--lxrurl) <url>     Complete URL to tests subdirectory on lxr.\n" .
+       "                        (default is $opt_lxr_url)\n\n");
     
     exit (1);
     
@@ -351,7 +375,7 @@ sub get_engine_command {
 # get the shell command used to run rhino
 #
 sub get_rhino_engine_command {    
-    local $retval = "java ";
+    local $retval = $opt_java_path . "java ";
     
     if ($opt_shell_path) {
         $opt_classpath = ($opt_classpath) ?
@@ -464,8 +488,6 @@ sub get_test_list {
         @test_list = &get_default_test_list($opt_suite_path);
     }
     
-    &dd (($#test_list + 1) . " test(s) found.");
-    
     return @test_list;
     
 }
@@ -510,6 +532,8 @@ sub get_default_test_list {
     local @suite_list = &get_subdirs($suite_path);
     local $suite;
     local @retval;
+
+    &status ("Scanning for tests in $suite_path.");
     
     foreach $suite (@suite_list) {
         local @test_dir_list = get_subdirs ($suite_path . $suite);
@@ -615,7 +639,9 @@ sub report_failure {
 
     $failures_reported++;
 
-    dd ("<> Testcase $test failed:\n$message");
+    if ($opt_console_failures) {
+        print STDERR ("*-* Testcase $test failed:\n$message\n");
+    }
 
     $message =~ s/\n/<br>\n/g;
     $html .= "<a name='failure$failures_reported'></a>";
@@ -650,6 +676,12 @@ sub dd {
     if ($opt_trace) {
         print ("-*- ", @_ , "\n");
     }
+    
+}
+
+sub status {
+    
+    print ("-#- ", @_ , "\n");
     
 }
 
