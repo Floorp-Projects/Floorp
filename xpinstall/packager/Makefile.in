@@ -35,12 +35,26 @@ include $(DEPTH)/config/autoconf.mk
 ifndef MOZ_PKG_FORMAT
 MOZ_PKG_FORMAT	= TGZ
 endif
+ifndef MOZ_PKG_APPNAME
+MOZ_PKG_APPNAME = mozilla
+endif
+
+MAKE_PACKAGE	= echo "Sorry, don't know how to build a $(MOZ_PKG_FORMAT) file yet...."
+
+PKG_BASENAME	:= $(MOZ_PKG_APPNAME)-$(shell $(topsrcdir)/build/autoconf/config.guess)
+PACKAGE		= $(PKG_BASENAME)$(PKG_SUFFIX)
 
 ifeq ($(MOZ_PKG_FORMAT),TGZ)
 PKG_SUFFIX	= .tar.gz
+MAKE_PACKAGE 	= tar -cvhf - $(MOZ_PKG_APPNAME) | gzip -vf9 > $(PACKAGE)
+endif
+ifeq ($(MOZ_PKG_FORMAT),BZ2)
+PKG_SUFFIX	= .tar.bz2
+MAKE_PACKAGE 	= tar -cvhf - $(MOZ_PKG_APPNAME) | bzip2 -vf > $(PACKAGE)
 endif
 ifeq ($(MOZ_PKG_FORMAT),ZIP)
 PKG_SUFFIX	= .zip
+MAKE_PACKAGE	= $(ZIP) -vr9 $(PACKAGE) $(MOZ_PKG_APPNAME)
 endif
 ifeq ($(MOZ_PKG_FORMAT),RPM)
 PKG_SUFFIX	= .rpm
@@ -48,9 +62,6 @@ endif
 ifeq ($(MOZ_PKG_FORMAT),DEB)
 PKG_SUFFIX	= .deb
 endif
-
-PKG_BASENAME	:= mozilla-$(shell $(topsrcdir)/build/autoconf/config.guess)
-PACKAGE		:= $(PKG_BASENAME)$(PKG_SUFFIX)
 
 ifdef BUILD_OFFICIAL
 TARGETS		= $(PACKAGE)
@@ -93,13 +104,13 @@ ifneq ($(NSPR_DIR),$(DIST)/bin)
 	@echo "Copying NSPR..."
 	@cp -p $(NSPR_DIR)/* $(DIST)/bin/.
 endif
-	@rm -rf $(DIST)/package $(DIST)/$(PKG_BASENAME).tar $@ $(EXCLUDE_LIST)
+	@rm -rf $(DIST)/$(MOZ_PKG_APPNAME) $(DIST)/$(PKG_BASENAME).tar $@ $(EXCLUDE_LIST)
 # NOTE: this must be a cp now that dist links into the tree so that we
 # do not strip the binaries actually in the tree.
 	@echo "Creating package directory..."
-	@cp -rp ${DIST}/bin $(DIST)/package
+	@cp -rp ${DIST}/bin $(DIST)/$(MOZ_PKG_APPNAME)
 	@echo "Stripping package directory..."
-	@cd $(DIST)/package; find . ! -type d \
+	@cd $(DIST)/$(MOZ_PKG_APPNAME); find . ! -type d \
 			! -name "*.js" \
 			! -name "*.xpt" \
 			! -name "*.gif" \
@@ -122,16 +133,33 @@ endif
 			! -name "*.reg" \
 			$(PLATFORM_EXCLUDE_LIST) \
 			-exec $(STRIP) $(STRIP_FLAGS) {} >/dev/null 2>&1 \;
-ifeq ($(MOZ_PKG_FORMAT),TGZ)
-	cd $(DIST); tar -cvhf - package | gzip -vf9 > $@
+ifneq ($(MOZ_PKG_APPNAME),mozilla)
+	@echo "Creating start script $(MOZ_PKG_APPNAME)..."
+	cd $(DIST)/$(MOZ_PKG_APPNAME); cp mozilla $(MOZ_PKG_APPNAME)
 endif
-ifeq ($(MOZ_PKG_FORMAT),ZIP)
-	cd $(DIST); $(ZIP) -vr9 $@ package
+	@echo "Compressing..."
+	cd $(DIST); $(MAKE_PACKAGE)
+
+dist: $(DIST)/bin/mozilla-bin
+ifndef MOZ_PKG_DEST
+	@echo "Please define MOZ_PKG_DEST first. It must be an absolute path to a dir outside the source tree. It should be empty (files might get deleted without warning)."
+	@echo "Other options (not required):"
+	@echo "MOZ_PKG_NAME: Either TGZ for .tar.gz or BZ2 for .tar.bz2. Default TGZ."
+	@echo "MOZ_PKG_APPNAME: Application name, used for tarball filename, top-level dir in tarball and application start script. Default mozilla."
+else
+	@if [ ! -d $(MOZ_PKG_DEST) ]; then mkdir $(MOZ_PKG_DEST); fi
+	@cd $(MOZ_PKG_DEST); rm -rf bin $(MOZ_PKG_APPNAME) $(PACKAGE)
+	@echo "Creating distribution tarball in $(MOZ_PKG_DEST)..."
+	$(PERL) $(srcdir)/pkgcp.pl --source $(DEPTH)/dist --destination $(MOZ_PKG_DEST) --file $(srcdir)/packages-unix  --os unix --flat
+	@cd $(MOZ_PKG_DEST); mv bin $(MOZ_PKG_APPNAME)
+ifneq ($(MOZ_PKG_APPNAME),mozilla)
+	@echo "Creating start script $(MOZ_PKG_APPNAME)..."
+	cd $(MOZ_PKG_DEST)/$(MOZ_PKG_APPNAME); cp mozilla $(MOZ_PKG_APPNAME)
 endif
-ifeq ($(MOZ_PKG_FORMAT),RPM)
-	@echo "Sorry, don't know how to build an RPM file yet...."
-endif
-ifeq ($(MOZ_PKG_FORMAT),DEB)
-	@echo "Sorry, don't know how to build a DEB file yet...."
+	@echo "Compressing..."
+	cd $(MOZ_PKG_DEST); $(MAKE_PACKAGE)
+	@echo "Deleting work files..."
+	@cd $(MOZ_PKG_DEST); rm -rf $(MOZ_PKG_APPNAME)
+	@echo "Done creating $(PACKAGE)."
 endif
 

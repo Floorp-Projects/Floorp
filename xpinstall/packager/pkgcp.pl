@@ -70,6 +70,7 @@ $return = GetOptions(
 			"help|h",               \$help,
 			"debug=i",              \$debug,
 			"verbose|v",            \$verbose,
+		        "flat|l",               \$flat,
 			"<>",                   \&do_badargument
 			);
 
@@ -210,7 +211,11 @@ sub do_delete
 	my ($targetpath) = $_[0];
 	my ($targetcomp) = $_[1];
 	my ($targetfile) = $_[2];
-	my ($target)     = "$targetpath$PD$targetcomp$PD$targetfile";
+	if ($flat) {
+	  my ($target)     = "$targetpath$PD$targetfile";
+	} else {
+	  my ($target)     = "$targetpath$PD$targetcomp$PD$targetfile";
+ 	}
 
 	($debug >= 2) && print "do_delete():\n";
 	($debug >= 1) && print "-$targetfile\n";
@@ -243,6 +248,7 @@ sub do_delete
 sub do_copyfile
 {
 	my ($destpath)     = "";  # destination directory path
+	my ($destpathcomp) = "";  # ditto, but possibly including component dir
 	my ($destname)     = "";  # destination file name
 	my ($destsuffix)   = "";  # destination file name suffix
 	my ($altpath)      = "";  # alternate destination directory path
@@ -270,21 +276,26 @@ sub do_copyfile
 	}
 
 	# set the destination path, if alternate destination given, use it.
+	if ($flat) {
+	  $destpathcomp = "$destdir";
+	} else {
+	  $destpathcomp = "$destdir$PD$component";
+ 	}
 	if ( $altdest ne "" ) {
 		if ( $dirflag ) {	# directory copy to altdest
-			($destname, $destpath, $destsuffix) = fileparse("$destdir$PD$component$PD$altdest$PD$File::Find::name", '\..*?$');
+			($destname, $destpath, $destsuffix) = fileparse("$destpathcomp$PD$altdest$PD$File::Find::name", '\..*?$');
 			# Todo: add MSDOS hack
 			$destpath =~ s/$srcdir$PD$line$PD//;	# rm info added by find
 			($debug >= 5) &&
 				print " dir copy to altdest: $destpath $destname $destsuffix\n";
 		} else {	# single file copy to altdest
-			($destname, $destpath, $destsuffix) = fileparse("$destdir$PD$component$PD$altdest", '\..*?$');
+			($destname, $destpath, $destsuffix) = fileparse("$destpathcomp$PD$altdest", '\..*?$');
 			($debug >= 5) &&
 				print " file copy to altdest: $destpath $destname $destsuffix\n";
 		}
 	} else {
 		if ( $dirflag ) {	# directory copy, no altdest
-			($destname, $destpath, $destsuffix) = fileparse("$destdir$PD$component$PD$File::Find::name", '\..*?$');
+			($destname, $destpath, $destsuffix) = fileparse("$destpathcomp$PD$File::Find::name", '\..*?$');
 
 			# avert your eyes now, butt-ugly hack
 			if ( $os eq "MSDOS" ) {
@@ -303,7 +314,7 @@ sub do_copyfile
 			($debug >= 5) &&
 				print " dir copy w/o altdest: $destpath $destname $destsuffix\n";
 		} else {	# single file copy, no altdest
-			($destname, $destpath, $destsuffix) = fileparse("$destdir$PD$component$PD$line", '\..*?$');
+			($destname, $destpath, $destsuffix) = fileparse("$destpathcomp$PD$line", '\..*?$');
 			($debug >= 5) &&
 				print " file copy w/o altdest: $destpath $destname $destsuffix\n";
 		}
@@ -440,12 +451,14 @@ sub do_component
 		print "[$component]\n";
 	}
 	# create component directory
-	if ( -d "$destdir$PD$component" ) {
-		warn "Warning: component directory \"$component\" already exists in \"$destdir\".\n";
-	} else {
-		($debug >= 4) && print " mkdir $destdir$PD$component\n";
-		mkdir ("$destdir$PD$component", 0755) ||
-			die "Error: couldn't create component directory \"$component\": $!.  Exiting...\n";
+        if (!$flat) {
+	  if ( -d "$destdir$PD$component" ) {
+	    warn "Warning: component directory \"$component\" already exists in \"$destdir\".\n";
+	  } else {
+	    ($debug >= 4) && print " mkdir $destdir$PD$component\n";
+	    mkdir ("$destdir$PD$component", 0755) ||
+	      die "Error: couldn't create component directory \"$component\": $!.  Exiting...\n";
+	  }
 	}
 }
 
@@ -598,6 +611,11 @@ NOTE:	Source and destination directories must be absolute paths.
 		Can be used more than once for multiple components (e.g.
 		"-c browser -c mail" to copy mail and news only).
 		Optional.
+
+	-l, --flat
+                Suppresses creation of components dirs, but stuffes everything
+                directly into the package destination dir. This is useful
+                for creating tarballs.
 
 	-h, --help
 		Prints this information.
