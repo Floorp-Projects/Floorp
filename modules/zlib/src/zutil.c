@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 /* This file was modified since it was taken from the zlib distribution */
-/* $Id: zutil.c,v 3.5 2000/08/19 00:15:08 sgehani%netscape.com Exp $ */
+/* $Id: zutil.c,v 3.6 2000/08/19 18:50:07 sgehani%netscape.com Exp $ */
 
 #include <stdio.h>
 
@@ -42,7 +42,9 @@ PR_PUBLIC_API(const char *) zlibVersion()
 void z_error (m)
     char *m;
 {
+#ifndef XP_UNIX
     PR_ASSERT(0);	  	
+#endif
 }
 #endif
 
