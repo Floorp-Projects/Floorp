@@ -210,7 +210,7 @@ void nsWindow::CreateWindow(nsNativeWindow aNativeParent, nsIWidget *aWidgetPare
     frameParent = mainWindow;
   }
   else
-   frameParent = aNativeParent;
+   frameParent = (Widget)aNativeParent;
 
   frame = ::XtVaCreateManagedWidget("frame",
 				    xmDrawingAreaWidgetClass,
@@ -234,7 +234,8 @@ void nsWindow::CreateWindow(nsNativeWindow aNativeParent, nsIWidget *aWidgetPare
   mCursor = eCursor_select;
   SetCursor(eCursor_standard);
 
-/*  XtAddEventHandler(mWidget, 
+/* 
+  XtAddEventHandler(mWidget, 
 		    ExposureMask, 
 		    PR_FALSE, 
 		    nsXtWidget_ExposureMask_EventHandler,
@@ -465,6 +466,7 @@ void nsWindow::GetBounds(nsRect &aRect)
     aRect.height = attrs.height;
     
  } else {
+printf("Bad bounds computed for nsIWidget\n");
 
    // XXX If this code gets hit, one should question why and how
    // and fix it there.
@@ -584,8 +586,7 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
 
         case NS_NATIVE_WINDOW:
 	  {
-//            return (void*)XtWindow(mWidget);
-              return (void*)(mWidget);
+              return (void*)XtWindow(mWidget);
 	  }
 	break;
         case NS_NATIVE_DISPLAY:
