@@ -164,6 +164,7 @@
 
 #include "nscore.h"
 #include "nsIAllocator.h"
+#include <string.h>
 
 //----------------------------------------------------------------------------------------
 
@@ -176,8 +177,6 @@ enum  eCharSize {eOneByte=0,eTwoByte=1};
 const   PRInt32 kDefaultStringSize = 64;
 const   PRInt32 kNotFound = -1;
 
-
-class nsIMemoryAgent;
 
 //----------------------------------------------------------------------------------------
 
@@ -228,7 +227,7 @@ struct NS_COM nsStr {
   * @param  aString is the nsStr to be manipulated
   * @param  anAgent is the allocator to be used to the nsStr
   */
-  static void Destroy(nsStr& aDest,nsIMemoryAgent* anAgent=0); 
+  static void Destroy(nsStr& aDest); 
 
  /**
   * These methods are where memory allocation/reallocation occur. 
@@ -238,8 +237,8 @@ struct NS_COM nsStr {
   * @param  anAgent is the allocator to be used on the nsStr
   * @return  
   */
-  static PRBool EnsureCapacity(nsStr& aString,PRUint32 aNewLength,nsIMemoryAgent* anAgent=0);
-  static PRBool GrowCapacity(nsStr& aString,PRUint32 aNewLength,nsIMemoryAgent* anAgent=0);
+  static PRBool EnsureCapacity(nsStr& aString,PRUint32 aNewLength);
+  static PRBool GrowCapacity(nsStr& aString,PRUint32 aNewLength);
 
  /**
   * These methods are used to append content to the given nsStr
@@ -251,7 +250,7 @@ struct NS_COM nsStr {
   * @param  aCount tells us the (max) # of chars to copy
   * @param  anAgent is the allocator to be used for alloc/free operations
   */
-  static void Append(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount,nsIMemoryAgent* anAgent=0);
+  static void Append(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount);
 
  /**
   * These methods are used to assign contents of a source string to dest string
@@ -263,7 +262,7 @@ struct NS_COM nsStr {
   * @param  aCount tells us the (max) # of chars to copy
   * @param  anAgent is the allocator to be used for alloc/free operations
   */
-  static void Assign(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount,nsIMemoryAgent* anAgent=0);
+  static void Assign(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount);
 
  /**
   * These methods are used to insert content from source string to the dest nsStr
@@ -276,7 +275,7 @@ struct NS_COM nsStr {
   * @param  aCount tells us the (max) # of chars to insert
   * @param  anAgent is the allocator to be used for alloc/free operations
   */
-  static void Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount,nsIMemoryAgent* anAgent=0);
+  static void Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount);
 
  /**
   * This method deletes chars from the given str. 
@@ -288,7 +287,7 @@ struct NS_COM nsStr {
   * @param  aCount tells us the (max) # of chars to delete
   * @param  anAgent is the allocator to be used for alloc/free operations
   */
-  static void Delete(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount,nsIMemoryAgent* anAgent=0);
+  static void Delete(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount);
 
  /**
   * This method is used to truncate the given string.
@@ -301,7 +300,7 @@ struct NS_COM nsStr {
   * @param  aSrcOffset tells us where in source to start copying
   * @param  anAgent is the allocator to be used for alloc/free operations
   */
-  static void Truncate(nsStr& aDest,PRUint32 aDestOffset,nsIMemoryAgent* anAgent=0);
+  static void Truncate(nsStr& aDest,PRUint32 aDestOffset);
 
  /**
   * This method is used to perform a case conversion on the given string
@@ -388,6 +387,12 @@ struct NS_COM nsStr {
     char*         mStr;
     PRUnichar*    mUStr;
   };
+
+private:
+  static PRBool Alloc(nsStr& aString,PRUint32 aCount);
+  static PRBool Realloc(nsStr& aString,PRUint32 aCount);
+  static PRBool Free(nsStr& aString);
+
 };
 
 /**************************************************************
@@ -430,74 +435,6 @@ inline PRUnichar GetCharAt(const nsStr& aDest,PRUint32 anIndex){
   return 0;
 }
 
-//----------------------------------------------------------------------------------------
-
-class nsIMemoryAgent {
-public:
-  virtual PRBool Alloc(nsStr& aString,PRUint32 aCount)=0;
-  virtual PRBool Realloc(nsStr& aString,PRUint32 aCount)=0;
-  virtual PRBool Free(nsStr& aString)=0;
-};
-
-class nsMemoryAgent : public nsIMemoryAgent {
-public:
-
-  virtual PRBool Alloc(nsStr& aDest,PRUint32 aCount) {
-
-    static int mAllocCount=0;
-    mAllocCount++;
-
-    //we're given the acount value in charunits; now scale up to next multiple.
-  	PRUint32	theNewCapacity=kDefaultStringSize;
-    while(theNewCapacity<aCount){ 
-		  theNewCapacity<<=1;
-    }
-
-    aDest.mCapacity=theNewCapacity++;
-    PRUint32 theSize=(theNewCapacity<<aDest.mCharSize);
-    aDest.mStr = (char*)nsAllocator::Alloc(theSize);
-
-    PRBool result=PR_FALSE;
-    if(aDest.mStr) {
-      aDest.mOwnsBuffer=1;
-      result=PR_TRUE;
-    }
-    return result;
-  }
-
-  virtual PRBool Free(nsStr& aDest){
-    if(aDest.mStr){
-      if(aDest.mOwnsBuffer){
-        nsAllocator::Free(aDest.mStr);
-      }
-      aDest.mStr=0;
-      aDest.mOwnsBuffer=0;
-      return PR_TRUE;
-    }
-    return PR_FALSE;
-  }
-
-  virtual PRBool Realloc(nsStr& aDest,PRUint32 aCount){
-
-    Free(aDest);
-    return Alloc(aDest,aCount);
-
-#if 0
-    nsStr temp;
-    memcpy(&temp,&aDest,sizeof(aDest));
-
-    PRBool result=Alloc(temp,aCount);
-    if(result) {
-      Free(aDest);
-      aDest.mStr=temp.mStr;
-      aDest.mCapacity=temp.mCapacity;
-    }
-    return result;
-#endif
-  }
-};
-
-nsIMemoryAgent* GetDefaultAgent(void);
 
 #endif
 

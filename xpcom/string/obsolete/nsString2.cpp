@@ -38,7 +38,7 @@ static const char* kWhitespace="\b\t\r\n ";
 static void Subsume(nsStr& aDest,nsStr& aSource){
   if(aSource.mStr && aSource.mLength) {
     if(aSource.mOwnsBuffer){
-      nsStr::Destroy(aDest,0);
+      nsStr::Destroy(aDest);
       aDest.mStr=aSource.mStr;
       aDest.mLength=aSource.mLength;
       aDest.mCharSize=aSource.mCharSize;
@@ -48,17 +48,17 @@ static void Subsume(nsStr& aDest,nsStr& aSource){
       aSource.mStr=0;
     }
     else{
-      nsStr::Assign(aDest,aSource,0,aSource.mLength,0);
+      nsStr::Assign(aDest,aSource,0,aSource.mLength);
     }
   } 
-  else nsStr::Truncate(aDest,0,0);
+  else nsStr::Truncate(aDest,0);
 }
 
 
 /**
  * Default constructor. 
  */
-nsString::nsString(nsIMemoryAgent* anAgent) : mAgent(anAgent) {
+nsString::nsString() {
   nsStr::Initialize(*this,eTwoByte);
 }
 
@@ -68,7 +68,7 @@ nsString::nsString(nsIMemoryAgent* anAgent) : mAgent(anAgent) {
  * @param   aCString is a ptr to a 1-byte cstr
  * @param   aLength tells us how many chars to copy from given CString
  */
-nsString::nsString(const char* aCString,nsIMemoryAgent* anAgent) : mAgent(anAgent) {  
+nsString::nsString(const char* aCString){  
   nsStr::Initialize(*this,eTwoByte);
   Assign(aCString);
 }
@@ -79,7 +79,7 @@ nsString::nsString(const char* aCString,nsIMemoryAgent* anAgent) : mAgent(anAgen
  * @param   aString is a ptr to a unichar string
  * @param   aLength tells us how many chars to copy from given aString
  */
-nsString::nsString(const PRUnichar* aString,nsIMemoryAgent* anAgent) : mAgent(anAgent) {  
+nsString::nsString(const PRUnichar* aString) {  
   nsStr::Initialize(*this,eTwoByte);
   Assign(aString);
 }
@@ -89,9 +89,9 @@ nsString::nsString(const PRUnichar* aString,nsIMemoryAgent* anAgent) : mAgent(an
  * @update  gess 1/4/99
  * @param   reference to another nsCString
  */
-nsString::nsString(const nsStr &aString,nsIMemoryAgent* anAgent) : mAgent(anAgent) {
+nsString::nsString(const nsStr &aString)  {
   nsStr::Initialize(*this,eTwoByte);
-  nsStr::Assign(*this,aString,0,aString.mLength,mAgent);
+  nsStr::Assign(*this,aString,0,aString.mLength);
 }
 
 /**
@@ -99,9 +99,9 @@ nsString::nsString(const nsStr &aString,nsIMemoryAgent* anAgent) : mAgent(anAgen
  * @update  gess 1/4/99
  * @param   reference to another nsString
  */
-nsString::nsString(const nsString& aString) :mAgent(aString.mAgent) {
+nsString::nsString(const nsString& aString) {
   nsStr::Initialize(*this,eTwoByte);
-  nsStr::Assign(*this,aString,0,aString.mLength,mAgent);
+  nsStr::Assign(*this,aString,0,aString.mLength);
 }
 
 /**
@@ -109,7 +109,7 @@ nsString::nsString(const nsString& aString) :mAgent(aString.mAgent) {
  * @update  gess 1/4/99
  * @param   reference to a subsumeString
  */
-nsString::nsString(nsSubsumeStr& aSubsumeStr) :mAgent(0) {
+nsString::nsString(nsSubsumeStr& aSubsumeStr)  {
   nsStr::Initialize(*this,eTwoByte);
   Subsume(*this,aSubsumeStr);
 }
@@ -119,7 +119,7 @@ nsString::nsString(nsSubsumeStr& aSubsumeStr) :mAgent(0) {
  * Make sure we call nsStr::Destroy.
  */
 nsString::~nsString() {
-  nsStr::Destroy(*this,mAgent);
+  nsStr::Destroy(*this);
 }
 
 void nsString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
@@ -136,7 +136,7 @@ void nsString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
  * @return  nada
  */
 void nsString::Truncate(PRInt32 anIndex) {
-  nsStr::Truncate(*this,anIndex,mAgent);
+  nsStr::Truncate(*this,anIndex);
 }
 
 /**
@@ -173,7 +173,7 @@ PRBool nsString::IsOrdered(void) const {
  */
 void nsString::SetCapacity(PRUint32 aLength) {
   if(aLength>mCapacity) {
-    GrowCapacity(*this,aLength,mAgent);
+    GrowCapacity(*this,aLength);
   }
   AddNullTerminator(*this);
 }
@@ -270,7 +270,7 @@ PRBool nsString::SetCharAt(PRUnichar aChar,PRUint32 anIndex){
  */
 nsSubsumeStr nsString::operator+(const nsStr& aString){
   nsString temp(*this); //make a temp string the same size as this...
-  nsStr::Append(temp,aString,0,aString.mLength,mAgent);
+  nsStr::Append(temp,aString,0,aString.mLength);
   return nsSubsumeStr(temp);
 }
 
@@ -282,7 +282,7 @@ nsSubsumeStr nsString::operator+(const nsStr& aString){
  */
 nsSubsumeStr nsString::operator+(const nsString& aString){
   nsString temp(*this); //make a temp string the same size as this...
-  nsStr::Append(temp,aString,0,aString.mLength,mAgent);
+  nsStr::Append(temp,aString,0,aString.mLength);
   return nsSubsumeStr(temp);
 }
 
@@ -786,54 +786,55 @@ static PRInt32 _ToInteger(nsCString& aString,PRInt32* anErrorCode,PRUint32 aRadi
  * @return  non-zero error code if this string is non-numeric
  */
 static PRInt32 GetNumericSubstring(nsCString& aString,PRUint32& aRadix) {
+  static const char* validChars="0123456789abcdefABCDEF-+#";
 
-  aString.ToUpperCase();
+  const char* cp=aString.GetBuffer();
+  PRInt32 result=NS_ERROR_ILLEGAL_VALUE;
+  if(cp) {
 
-  PRInt32 decPt=nsStr::FindChar(aString,'.',PR_TRUE,0);
-  char*   cp = (kNotFound==decPt) ? aString.mStr + aString.mLength-1 : aString.mStr+decPt-1;
-  
-  aRadix=kRadixUnknown; //assume for starters...
+    //begin by skipping over leading chars that shouldn't be part of the number...
+    
+    char* to=(char*)cp;
+    const char* endcp=cp+aString.mLength;
+    int   len=strlen(validChars);
 
-  // Skip trailing non-numeric...
-  while (cp >= aString.mStr) {
-    if((*cp>='0') && (*cp<='9')){
-      if(kRadixUnknown==aRadix)
-        aRadix=kRadix10;
-      break;
+    while(cp<endcp){
+      const char* pos=(const char*)memchr(validChars,*cp,len);
+      if(!pos) {
+        cp++;
+      }
+      else break;
     }
-    else if((*cp>='A') && (*cp<='F')) {
-      aRadix=16;
-      break;
-    }  
-    cp--;
+
+    while(cp<endcp){
+      char theChar=toupper(*cp);
+
+      if((theChar>='0') && (theChar<='9')) {
+        *to++=theChar;
+      }
+      else if((theChar>='A') && (theChar<='F')) {
+        aRadix=16;
+        *to++=theChar;
+      }
+      else if('X'==theChar){
+        if('-'==aString.mStr[0])
+          to=&aString.mStr[1];
+        else to=aString.mStr;
+        aRadix=16;
+        //root=cp;
+      }
+      else if('-'==theChar) {
+        *to++=theChar;
+      }
+      else if(('#'==theChar) || ('+'==theChar)){
+        //just skip this char...
+      }
+      else break;
+      cp++;
+    }
+    aString.Truncate(to-aString.mStr);
+    result=(0==aString.mLength) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
   }
-  aString.Truncate(cp-aString.mStr+1);
-
-  //ok, now scan through chars until you find the start of this number...
-  //we delimit the number by the presence of: +,-,#,X
-
-  // Skip trailing non-numeric...
-  cp++;
-  while (--cp >= aString.mStr) {
-    if((*cp>='0') && (*cp<='9')){
-      continue;
-    }
-    else if((*cp>='A') && (*cp<='F')) {
-      continue;
-    }
-    else if((*cp=='-') || (*cp=='+')){
-      break;
-    }
-    else {
-      if(('#'==(*cp)) || ('X'==(*cp))) 
-        aRadix=kRadix16;
-      cp++; //move back by one
-      break;
-    }
-  }
-  if(cp>aString.mStr)
-    aString.Cut(0,cp-aString.mStr);
-  PRInt32 result=(0==aString.mLength) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
   return result;
 }
 
@@ -865,10 +866,10 @@ PRUint32 nsString::DetermineRadix(void) {
 PRInt32 nsString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
 
   //copy chars to local buffer -- step down from 2 bytes to 1 if necessary...
+  PRInt32   result=0;
   nsCAutoString theString(*this);
   PRUint32  theRadix=aRadix;
-  PRInt32   result=0;
-  
+
   *anErrorCode=GetNumericSubstring(theString,theRadix); //we actually don't use this radix; use given radix instead
   if(NS_OK==*anErrorCode){
     if(kAutoDetect==aRadix)
@@ -893,13 +894,13 @@ PRInt32 nsString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
  */
 nsString& nsString::Assign(const nsStr& aString,PRInt32 aCount) {
   if(this!=&aString){
-    nsStr::Truncate(*this,0,0);
+    nsStr::Truncate(*this,0);
 
     if(aCount<0)
       aCount=aString.mLength;
     else aCount=MinInt(aCount,aString.mLength);
 
-    nsStr::Assign(*this,aString,0,aCount,mAgent);
+    nsStr::Assign(*this,aString,0,aCount);
   }
   return *this;
 }
@@ -912,7 +913,7 @@ nsString& nsString::Assign(const nsStr& aString,PRInt32 aCount) {
  * @return  this
  */
 nsString& nsString::Assign(const char* aCString,PRInt32 aCount) {
-  nsStr::Truncate(*this,0,0);
+  nsStr::Truncate(*this,0);
   if(aCString){
     Append(aCString,aCount);
   }
@@ -926,7 +927,7 @@ nsString& nsString::Assign(const char* aCString,PRInt32 aCount) {
  * @return  this
  */
 nsString& nsString::Assign(const PRUnichar* aString,PRInt32 aCount) {
-  nsStr::Truncate(*this,0,0);
+  nsStr::Truncate(*this,0);
   if(aString){
     Append(aString,aCount);
   }
@@ -940,7 +941,7 @@ nsString& nsString::Assign(const PRUnichar* aString,PRInt32 aCount) {
  * @return  this
  */
 nsString& nsString::Assign(char aChar) {
-  nsStr::Truncate(*this,0,0);
+  nsStr::Truncate(*this,0);
   return Append(aChar);
 }
 
@@ -951,7 +952,7 @@ nsString& nsString::Assign(char aChar) {
  * @return  this
  */
 nsString& nsString::Assign(PRUnichar aChar) {
-  nsStr::Truncate(*this,0,0);
+  nsStr::Truncate(*this,0);
   return Append(aChar);
 }
 
@@ -988,7 +989,7 @@ nsString& nsString::Append(const nsStr& aString,PRInt32 aCount) {
   else aCount=MinInt(aCount,aString.mLength);
 
   if(0<aCount)
-    nsStr::Append(*this,aString,0,aCount,mAgent);
+    nsStr::Append(*this,aString,0,aCount);
   return *this;
 }
 
@@ -1005,7 +1006,7 @@ nsString& nsString::Append(const nsString& aString,PRInt32 aCount) {
     aCount=aString.mLength;
   else aCount=MinInt(aCount,aString.mLength);
   if(0<aCount)
-    nsStr::Append(*this,aString,0,aCount,mAgent);
+    nsStr::Append(*this,aString,0,aCount);
   return *this;
 }
 
@@ -1034,7 +1035,7 @@ nsString& nsString::Append(const char* aCString,PRInt32 aCount) {
     else aCount=temp.mLength=nsCRT::strlen(aCString);
       
     if(0<aCount)
-      nsStr::Append(*this,temp,0,aCount,mAgent);
+      nsStr::Append(*this,temp,0,aCount);
   }
   return *this;
 }
@@ -1064,7 +1065,7 @@ nsString& nsString::Append(const PRUnichar* aString,PRInt32 aCount) {
     else aCount=temp.mLength=nsCRT::strlen(aString);
       
     if(0<aCount)
-      nsStr::Append(*this,temp,0,aCount,mAgent);
+      nsStr::Append(*this,temp,0,aCount);
   }
   return *this;
 }
@@ -1083,7 +1084,7 @@ nsString& nsString::Append(char aChar) {
   Initialize(temp,eOneByte);
   temp.mStr=buf;
   temp.mLength=1;
-  nsStr::Append(*this,temp,0,1,mAgent);
+  nsStr::Append(*this,temp,0,1);
   return *this;
 }
 
@@ -1101,7 +1102,7 @@ nsString& nsString::Append(PRUnichar aChar) {
   Initialize(temp,eTwoByte);
   temp.mUStr=buf;
   temp.mLength=1;
-  nsStr::Append(*this,temp,0,1,mAgent);
+  nsStr::Append(*this,temp,0,1);
   return *this;
 }
 
@@ -1132,12 +1133,12 @@ nsString& nsString::Append(PRInt32 anInteger,PRInt32 aRadix) {
 
   PRBool isfirst=PR_TRUE;
   while(mask1>=1) {
-    PRInt32 div=theInt/mask1;
-    if((div) || (!isfirst)) {
-      buf[charpos++]="0123456789abcdef"[div];
+    PRInt32 theDiv=theInt/mask1;
+    if((theDiv) || (!isfirst)) {
+      buf[charpos++]="0123456789abcdef"[theDiv];
       isfirst=PR_FALSE;
     }
-    theInt-=div*mask1;
+    theInt-=theDiv*mask1;
     mask1/=aRadix;
   }
   return Append(buf);
@@ -1173,7 +1174,7 @@ PRUint32 nsString::Left(nsString& aDest,PRInt32 aCount) const{
   if(aCount<0)
     aCount=mLength;
   else aCount=MinInt(aCount,mLength);
-  nsStr::Assign(aDest,*this,0,aCount,mAgent);
+  nsStr::Assign(aDest,*this,0,aCount);
 
   return aDest.mLength;
 }
@@ -1191,7 +1192,7 @@ PRUint32 nsString::Mid(nsString& aDest,PRUint32 anOffset,PRInt32 aCount) const{
   if(aCount<0)
     aCount=mLength;
   else aCount=MinInt(aCount,mLength);
-  nsStr::Assign(aDest,*this,anOffset,aCount,mAgent);
+  nsStr::Assign(aDest,*this,anOffset,aCount);
 
   return aDest.mLength;
 }
@@ -1221,7 +1222,7 @@ PRUint32 nsString::Right(nsString& aDest,PRInt32 aCount) const{
  *  @return this
  */
 nsString& nsString::Insert(const nsString& aCopy,PRUint32 anOffset,PRInt32 aCount) {
-  nsStr::Insert(*this,anOffset,aCopy,0,aCount,mAgent);
+  nsStr::Insert(*this,anOffset,aCopy,0,aCount);
   return *this;
 }
 
@@ -1252,7 +1253,7 @@ nsString& nsString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCount
     else aCount=temp.mLength=nsCRT::strlen(aCString);
 
     if(0<aCount){
-      nsStr::Insert(*this,anOffset,temp,0,aCount,0);
+      nsStr::Insert(*this,anOffset,temp,0,aCount);
     }
   }
   return *this;  
@@ -1285,7 +1286,7 @@ nsString& nsString::Insert(const PRUnichar* aString,PRUint32 anOffset,PRInt32 aC
     else aCount=temp.mLength=nsCRT::strlen(aString);
 
     if(0<aCount){
-      nsStr::Insert(*this,anOffset,temp,0,aCount,0);
+      nsStr::Insert(*this,anOffset,temp,0,aCount);
     }
   }
   return *this;  
@@ -1308,7 +1309,7 @@ nsString& nsString::Insert(PRUnichar aChar,PRUint32 anOffset){
   nsStr::Initialize(temp,eTwoByte);
   temp.mUStr=theBuffer;
   temp.mLength=1;
-  nsStr::Insert(*this,anOffset,temp,0,1,0);
+  nsStr::Insert(*this,anOffset,temp,0,1);
   return *this;
 }
 
@@ -1323,7 +1324,7 @@ nsString& nsString::Insert(PRUnichar aChar,PRUint32 anOffset){
  */
 nsString& nsString::Cut(PRUint32 anOffset, PRInt32 aCount) {
   if(0<aCount) {
-    nsStr::Delete(*this,anOffset,aCount,mAgent);
+    nsStr::Delete(*this,anOffset,aCount);
   }
   return *this;
 }
@@ -1957,10 +1958,8 @@ PRBool nsString::IsDigit(PRUnichar aChar) {
 class nsStringDeallocator: public nsDequeFunctor{
 public:
   virtual void* operator()(void* anObject) {
-    static nsMemoryAgent theAgent;
     nsString* aString= (nsString*)anObject;
     if(aString){
-      aString->mAgent=&theAgent;
       delete aString;
     }
     return 0;
@@ -2116,7 +2115,6 @@ NS_COM int fputs(const nsString& aString, FILE* out)
  */
 nsAutoString::nsAutoString() : nsString() {
   nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
-  mAgent=0;
   AddNullTerminator(*this);
 }
 
@@ -2127,7 +2125,6 @@ nsAutoString::nsAutoString() : nsString() {
  */
 nsAutoString::nsAutoString(const char* aCString,PRInt32 aLength) : nsString() {
   nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
-  mAgent=0;
   AddNullTerminator(*this);
   Append(aCString,aLength);
 }
@@ -2138,7 +2135,6 @@ nsAutoString::nsAutoString(const char* aCString,PRInt32 aLength) : nsString() {
  * @param   aLength tells us how many chars to copy from aString
  */
 nsAutoString::nsAutoString(const PRUnichar* aString,PRInt32 aLength) : nsString() {
-  mAgent=0;
   nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
   AddNullTerminator(*this);
   Append(aString,aLength);
@@ -2149,7 +2145,6 @@ nsAutoString::nsAutoString(const PRUnichar* aString,PRInt32 aLength) : nsString(
  * @param   aBuffer describes the external buffer
  */
 nsAutoString::nsAutoString(const CBufDescriptor& aBuffer) : nsString() {
-  mAgent=0;
   if(!aBuffer.mBuffer) {
     nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
   }
@@ -2166,7 +2161,6 @@ nsAutoString::nsAutoString(const CBufDescriptor& aBuffer) : nsString() {
  * @param   
  */
 nsAutoString::nsAutoString(const nsStr& aString) : nsString() {
-  mAgent=0;
   nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
   AddNullTerminator(*this);
   Append(aString);
@@ -2176,7 +2170,6 @@ nsAutoString::nsAutoString(const nsStr& aString) : nsString() {
  * Default copy constructor
  */
 nsAutoString::nsAutoString(const nsAutoString& aString) : nsString() {
-  mAgent=0;
   nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
   AddNullTerminator(*this);
   Append(aString);
@@ -2188,7 +2181,6 @@ nsAutoString::nsAutoString(const nsAutoString& aString) : nsString() {
  * @param   
  */
 nsAutoString::nsAutoString(PRUnichar aChar) : nsString(){
-  mAgent=0;
   nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
   AddNullTerminator(*this);
   Append(aChar);
@@ -2201,12 +2193,10 @@ nsAutoString::nsAutoString(PRUnichar aChar) : nsString(){
  */
 #ifdef AIX
 nsAutoString::nsAutoString(const nsSubsumeStr& aSubsumeStr) :nsString() {
-  mAgent=0;
   nsSubsumeStr temp(aSubsumeStr);  // a temp is needed for the AIX compiler
   Subsume(*this,temp);
 #else
 nsAutoString::nsAutoString( nsSubsumeStr& aSubsumeStr) :nsString() {
-  mAgent=0;
   Subsume(*this,aSubsumeStr);
 #endif // AIX
 }

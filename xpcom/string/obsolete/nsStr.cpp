@@ -69,16 +69,6 @@ void nsStr::Initialize(nsStr& aDest,char* aCString,PRUint32 aCapacity,PRUint32 a
   aDest.mOwnsBuffer=aOwnsBuffer;
 }
 
-/**
- * 
- * @update	gess10/30/98
- * @param 
- * @return
- */
-nsIMemoryAgent* GetDefaultAgent(void){
-  static nsMemoryAgent gDefaultAgent;
-  return (nsIMemoryAgent*)&gDefaultAgent;
-}
 
 /**
  * This member destroys the memory buffer owned by an nsStr object (if it actually owns it)
@@ -86,17 +76,9 @@ nsIMemoryAgent* GetDefaultAgent(void){
  * @param 
  * @return
  */
-void nsStr::Destroy(nsStr& aDest,nsIMemoryAgent* anAgent) {
+void nsStr::Destroy(nsStr& aDest) {
   if((aDest.mStr) && (aDest.mStr!=(char*)gCommonEmptyBuffer)) {
-    if(!anAgent)
-      anAgent=GetDefaultAgent();
-    
-    if(anAgent) {
-      anAgent->Free(aDest);
-    }
-    else{
-      printf("%s\n","Leak occured in nsStr.");
-    }
+    Free(aDest);
   }
 }
 
@@ -108,11 +90,10 @@ void nsStr::Destroy(nsStr& aDest,nsIMemoryAgent* anAgent) {
  * @param   aNewLength -- new capacity of string in charSize units
  * @return  void
  */
-PRBool nsStr::EnsureCapacity(nsStr& aString,PRUint32 aNewLength,nsIMemoryAgent* anAgent) {
+PRBool nsStr::EnsureCapacity(nsStr& aString,PRUint32 aNewLength) {
   PRBool result=PR_TRUE;
   if(aNewLength>aString.mCapacity) {
-    nsIMemoryAgent* theAgent=(anAgent) ? anAgent : GetDefaultAgent();
-    result=theAgent->Realloc(aString,aNewLength);
+    result=Realloc(aString,aNewLength);
     if(aString.mStr)
       AddNullTerminator(aString);
   }
@@ -126,20 +107,18 @@ PRBool nsStr::EnsureCapacity(nsStr& aString,PRUint32 aNewLength,nsIMemoryAgent* 
  * @param   aNewLength -- new capacity of string in charSize units
  * @return  void
  */
-PRBool nsStr::GrowCapacity(nsStr& aDest,PRUint32 aNewLength,nsIMemoryAgent* anAgent) {
+PRBool nsStr::GrowCapacity(nsStr& aDest,PRUint32 aNewLength) {
   PRBool result=PR_TRUE;
   if(aNewLength>aDest.mCapacity) {
     nsStr theTempStr;
     nsStr::Initialize(theTempStr,aDest.mCharSize);
 
-    nsIMemoryAgent* theAgent=(anAgent) ? anAgent : GetDefaultAgent();
-
-    result=EnsureCapacity(theTempStr,aNewLength,theAgent);
+    result=EnsureCapacity(theTempStr,aNewLength);
     if(result) {
       if(aDest.mLength) {
-        Append(theTempStr,aDest,0,aDest.mLength,theAgent);        
+        Append(theTempStr,aDest,0,aDest.mLength);        
       } 
-      theAgent->Free(aDest);
+      Free(aDest);
       aDest.mStr = theTempStr.mStr;
       theTempStr.mStr=0; //make sure to null this out so that you don't lose the buffer you just stole...
       aDest.mLength=theTempStr.mLength;
@@ -157,10 +136,10 @@ PRBool nsStr::GrowCapacity(nsStr& aDest,PRUint32 aNewLength,nsIMemoryAgent* anAg
  * @param   aSource is where chars are copied from
  * @param   aCount is the number of chars copied from aSource
  */
-void nsStr::Assign(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount,nsIMemoryAgent* anAgent){
+void nsStr::Assign(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount){
   if(&aDest!=&aSource){
-    Truncate(aDest,0,anAgent);
-    Append(aDest,aSource,anOffset,aCount,anAgent);
+    Truncate(aDest,0);
+    Append(aDest,aSource,anOffset,aCount);
   }
 }
 
@@ -172,7 +151,7 @@ void nsStr::Assign(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 a
  * @param   aSource is where char are copied from
  * @aCount  is the number of bytes to be copied 
  */
-void nsStr::Append(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount,nsIMemoryAgent* anAgent){
+void nsStr::Append(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount){
   if(anOffset<aSource.mLength){
     PRUint32 theRealLen=(aCount<0) ? aSource.mLength : MinInt(aCount,aSource.mLength);
     PRUint32 theLength=(anOffset+theRealLen<aSource.mLength) ? theRealLen : (aSource.mLength-anOffset);
@@ -180,7 +159,7 @@ void nsStr::Append(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 a
       
       PRBool isBigEnough=PR_TRUE;
       if(aDest.mLength+theLength > aDest.mCapacity) {
-        isBigEnough=GrowCapacity(aDest,aDest.mLength+theLength,anAgent);
+        isBigEnough=GrowCapacity(aDest,aDest.mLength+theLength);
       }
 
       if(isBigEnough) {
@@ -204,7 +183,7 @@ void nsStr::Append(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 a
  * @param   aSrcOffset is where in aSource chars are copied from
  * @param   aCount is the number of chars from aSource to be inserted into aDest
  */
-void nsStr::Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount,nsIMemoryAgent* anAgent){
+void nsStr::Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount){
   //there are a few cases for insert:
   //  1. You're inserting chars into an empty string (assign)
   //  2. You're inserting onto the end of a string (append)
@@ -223,22 +202,21 @@ void nsStr::Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUin
             nsStr theTempStr;
             nsStr::Initialize(theTempStr,aDest.mCharSize);
 
-            nsIMemoryAgent* theAgent=(anAgent) ? anAgent : GetDefaultAgent();
-            PRBool isBigEnough=EnsureCapacity(theTempStr,aDest.mLength+theLength,theAgent);  //grow the temp buffer to the right size
+            PRBool isBigEnough=EnsureCapacity(theTempStr,aDest.mLength+theLength);  //grow the temp buffer to the right size
 
             if(isBigEnough) {
               if(aDestOffset) {
-                Append(theTempStr,aDest,0,aDestOffset,theAgent); //first copy leftmost data...
+                Append(theTempStr,aDest,0,aDestOffset); //first copy leftmost data...
               } 
               
-              Append(theTempStr,aSource,0,aSource.mLength,theAgent); //next copy inserted (new) data
+              Append(theTempStr,aSource,0,aSource.mLength); //next copy inserted (new) data
             
               PRUint32 theRemains=aDest.mLength-aDestOffset;
               if(theRemains) {
-                Append(theTempStr,aDest,aDestOffset,theRemains,theAgent); //next copy rightmost data
+                Append(theTempStr,aDest,aDestOffset,theRemains); //next copy rightmost data
               }
 
-              theAgent->Free(aDest);
+              Free(aDest);
               aDest.mStr = theTempStr.mStr;
               theTempStr.mStr=0; //make sure to null this out so that you don't lose the buffer you just stole...
               aDest.mCapacity=theTempStr.mCapacity;
@@ -262,9 +240,9 @@ void nsStr::Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUin
         }//if
         //else nothing to do!
       }
-      else Append(aDest,aSource,0,aCount,anAgent);
+      else Append(aDest,aSource,0,aCount);
     }
-    else Append(aDest,aSource,0,aCount,anAgent);
+    else Append(aDest,aSource,0,aCount);
   }
 }
 
@@ -276,7 +254,7 @@ void nsStr::Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUin
  * @param   aDestOffset is where in aDest deletion is to occur
  * @param   aCount is the number of chars to be deleted in aDest
  */
-void nsStr::Delete(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount,nsIMemoryAgent* anAgent){
+void nsStr::Delete(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount){
   if(aDestOffset<aDest.mLength){
 
     PRUint32 theDelta=aDest.mLength-aDestOffset;
@@ -290,7 +268,7 @@ void nsStr::Delete(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount,nsIMemoryAg
       aDest.mLength-=theLength;
       AddNullTerminator(aDest);
     }
-    else Truncate(aDest,aDestOffset,anAgent);
+    else Truncate(aDest,aDestOffset);
   }//if
 }
 
@@ -300,7 +278,7 @@ void nsStr::Delete(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount,nsIMemoryAg
  * @param   aDest is the nsStr to be truncated
  * @param   aDestOffset is where in aDest truncation is to occur
  */
-void nsStr::Truncate(nsStr& aDest,PRUint32 aDestOffset,nsIMemoryAgent* anAgent){
+void nsStr::Truncate(nsStr& aDest,PRUint32 aDestOffset){
   if(aDestOffset<aDest.mLength){
     aDest.mLength=aDestOffset;
     AddNullTerminator(aDest);
@@ -342,7 +320,7 @@ void nsStr::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool a
       }
       if(0<theIndex) {
         if(theIndex<theMax) {
-          Delete(aDest,0,theIndex,0);
+          Delete(aDest,0,theIndex);
         }
         else Truncate(aDest,0);
       }
@@ -515,7 +493,7 @@ PRInt32 nsStr::RFindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgno
 
       nsStr theCopy;
       nsStr::Initialize(theCopy,eOneByte);
-      nsStr::Assign(theCopy,aTarget,0,aTarget.mLength,0);
+      nsStr::Assign(theCopy,aTarget,0,aTarget.mLength);
       if(aIgnoreCase){
         nsStr::ChangeCase(theCopy,PR_FALSE); //force to lowercase
       }
@@ -538,7 +516,7 @@ PRInt32 nsStr::RFindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgno
         }
         index--;
       } //while
-      nsStr::Destroy(theCopy,0);
+      nsStr::Destroy(theCopy);
     }//if
   }//if
   return result;
@@ -625,6 +603,57 @@ PRInt32 nsStr::Compare(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PR
 
 //----------------------------------------------------------------------------------------
 
+PRBool nsStr::Alloc(nsStr& aDest,PRUint32 aCount) {
+
+  static int mAllocCount=0;
+  mAllocCount++;
+
+  //we're given the acount value in charunits; now scale up to next multiple.
+  PRUint32	theNewCapacity=kDefaultStringSize;
+  while(theNewCapacity<aCount){ 
+		theNewCapacity<<=1;
+  }
+
+  aDest.mCapacity=theNewCapacity++;
+  PRUint32 theSize=(theNewCapacity<<aDest.mCharSize);
+  aDest.mStr = (char*)nsAllocator::Alloc(theSize);
+
+  PRBool result=PR_FALSE;
+  if(aDest.mStr) {
+    aDest.mOwnsBuffer=1;
+    result=PR_TRUE;
+  }
+  return result;
+}
+
+PRBool nsStr::Free(nsStr& aDest){
+  if(aDest.mStr){
+    if(aDest.mOwnsBuffer){
+      nsAllocator::Free(aDest.mStr);
+    }
+    aDest.mStr=0;
+    aDest.mOwnsBuffer=0;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+PRBool nsStr::Realloc(nsStr& aDest,PRUint32 aCount){
+
+  nsStr temp;
+  memcpy(&temp,&aDest,sizeof(aDest));
+
+  PRBool result=Alloc(temp,aCount);
+  if(result) {
+    Free(aDest);
+    aDest.mStr=temp.mStr;
+    aDest.mCapacity=temp.mCapacity;
+  }
+  return result;
+}
+
+//----------------------------------------------------------------------------------------
+
 CBufDescriptor::CBufDescriptor(char* aString,PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength) { 
   mBuffer=aString;
   mCharSize=eOneByte;
@@ -683,3 +712,5 @@ CBufDescriptor::CBufDescriptor(const PRUnichar* aString,PRBool aStackBased,PRUin
 }
 
 //----------------------------------------------------------------------------------------
+
+
