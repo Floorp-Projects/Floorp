@@ -237,6 +237,9 @@ TH {
 CAPTION {
   text-align: center;
 }
+MULTICOL {
+  display: block;
+}
 
 // XXX Special rule to eliminate margin around for nav4 compatability
 // XXX This isn't good enough because we only want the margin eliminated
