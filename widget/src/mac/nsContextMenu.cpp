@@ -431,6 +431,11 @@ nsEventStatus nsContextMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 //-------------------------------------------------------------------------
 nsEventStatus nsContextMenu::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
+  // Remove the context menu from the menu list
+  ::DeleteMenu(mMacMenuID);    
+      
+  // Call MenuDestruct
+  MenuDestruct(aMenuEvent);
   return nsEventStatus_eIgnore;
 }
 
