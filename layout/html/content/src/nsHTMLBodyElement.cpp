@@ -44,11 +44,11 @@
 #include "nsIHTMLAttributes.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsISupportsArray.h"
+#include "nsIDocShell.h"
 
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIDOMHTMLBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 
@@ -336,14 +336,13 @@ BodyRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresCo
         if (nsnull != container) {
           nsCompatibility mode;
           aPresContext->GetCompatibilityMode(&mode);
-          nsIWebShell* webShell = nsnull;
-          container->QueryInterface(kIWebShellIID, (void**) &webShell);
-          if (nsnull != webShell) {
+          nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+          if (docShell) {
             nscoord pixel = NSIntPixelsToTwips(1, p2t);
             nscoord frameMarginWidth=-1;  // default value
             nscoord frameMarginHeight=-1; // default value
-            webShell->GetMarginWidth(&frameMarginWidth); // -1 indicates not set   
-            webShell->GetMarginHeight(&frameMarginHeight); 
+            docShell->GetMarginWidth(&frameMarginWidth); // -1 indicates not set   
+            docShell->GetMarginHeight(&frameMarginHeight); 
             if ((frameMarginWidth >= 0) && (0 > bodyMarginWidth)) { // set in <frame> & not in <body> 
               if (eCompatibility_NavQuirks == mode) {
                 if ((0 > bodyMarginHeight) && (0 > frameMarginHeight)) { // nav quirk 
@@ -370,7 +369,6 @@ BodyRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresCo
               styleSpacing->mMargin.SetTop(heightCoord);
               styleSpacing->mMargin.SetBottom(heightCoord);
             }
-            NS_RELEASE(webShell);
           }
           NS_RELEASE(container);
         }
