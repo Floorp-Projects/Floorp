@@ -1,0 +1,55 @@
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is Mozilla Communicator client code, released
+# March 31, 1998.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation. Portions created by Netscape are
+# Copyright (C) 1998-1999 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s):
+#   L. David Baron <dbaron@fas.harvard.edu>
+#
+
+
+DEPTH	= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+# let javac handle all the rest
+JSRCS   = \
+	bloatsoup.java \
+	leaksoup.java \
+	tracesoup.java \
+	$(NULL)
+
+JOBJS	= $(JSRCS:.java=.class)
+JSRCS	:= $(addprefix $(srcdir)/,$(JSRCS))
+
+include $(topsrcdir)/config/rules.mk
+
+%.class: %.java
+	javac -deprecation -d . -sourcepath $(srcdir) $^
+
+install:: $(JOBJS)
+	$(INSTALL) *.class $(DIST)/bin/leaksoup
+	$(INSTALL) $(srcdir)/leaksoup.sh $(DIST)/bin
+
+clean::
+	rm -f *.class
+
+# If someone wants to use jar instead, they need to create a manifest...
+#	jar cvf leaksoup.jar *.class
+#	$(INSTALL) leaksoup.jar $(DIST)/bin

@@ -127,6 +127,11 @@ MAKEFILES_extensions="
 extensions/Makefile
 "
 
+MAKEFILES_gc="
+gc/boehm/Makefile
+gc/boehm/leaksoup/Makefile
+"
+
 MAKEFILES_gfx="
 gfx/Makefile
 gfx/idl/Makefile
@@ -968,6 +973,7 @@ $MAKEFILES_editor
 $MAKEFILES_embedding
 $MAKEFILES_expat
 $MAKEFILES_extensions
+$MAKEFILES_gc
 $MAKEFILES_gfx
 $MAKEFILES_htmlparser
 $MAKEFILES_intl

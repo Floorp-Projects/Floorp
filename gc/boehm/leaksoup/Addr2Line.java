@@ -53,7 +53,7 @@ public class Addr2Line {
     private BufferedReader stderr;
 
     public Addr2Line(String library) throws IOException {
-	String[] args = { "/trees/binutils-2.10/binutils/addr2line", "-C", "-f", "-e", library };
+	String[] args = { "addr2line", "-C", "-f", "-e", library };
 	addr2line = Runtime.getRuntime().exec(args);
 	stdin = new BufferedWriter(new OutputStreamWriter(addr2line.getOutputStream()));
 	stdout = new BufferedReader(new InputStreamReader(addr2line.getInputStream()));
