@@ -250,7 +250,7 @@ void nsHashtable::Reset(nsHashtableEnumFunc destroyFunc, void* closure)
 
 nsStringKey::nsStringKey(const char* str)
 {
-	mStr.Assign(str);
+	mStr.AssignWithConversion(str);
 }
 
 nsStringKey::nsStringKey(const PRUnichar* str)
@@ -263,7 +263,7 @@ nsStringKey::nsStringKey(const nsString& str) {
 }
 
 nsStringKey::nsStringKey(const nsCString& str) {
-	mStr.Assign(str);
+	mStr.AssignWithConversion(str);
 }
 
 nsStringKey::~nsStringKey(void)

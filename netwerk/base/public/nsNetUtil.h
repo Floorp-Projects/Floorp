@@ -237,7 +237,7 @@ NS_MakeAbsoluteURI(nsString& result,
     nsAllocator::Free(specStr);
     if (NS_FAILED(rv)) return rv;
 
-    result = resultStr;
+    result.AssignWithConversion(resultStr);
     nsAllocator::Free(resultStr);
     return rv;
 }

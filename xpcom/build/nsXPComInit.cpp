@@ -574,7 +574,8 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
             rv = nsServiceManager::GetGlobalServiceManager(&mgr);
             if (NS_SUCCEEDED(rv))
             {
-                nsAutoString topic = NS_XPCOM_SHUTDOWN_OBSERVER_ID;
+                nsAutoString topic;
+                topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
                 (void) observerService->Notify(mgr, topic.GetUnicode(), nsnull);
             }
         }

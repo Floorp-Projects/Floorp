@@ -135,7 +135,8 @@ static PRIntn CompareKeys(const PRUnichar* k1, const PRUnichar* k2)
 
 NS_COM nsIAtom* NS_NewAtom(const char* isolatin1)
 {
-  nsAutoString tmp(isolatin1);
+  nsAutoString tmp;
+  tmp.AssignWithConversion(isolatin1);
   return NS_NewAtom(tmp.GetUnicode());
 }
 

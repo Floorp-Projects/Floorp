@@ -76,12 +76,13 @@ nsCertificatePrincipal::CanEnableCapability(const char *capability,
 NS_IMETHODIMP 
 nsCertificatePrincipal::ToString(char **result)
 {
+      // STRING USE WARNING: perhaps |str| should be an |nsCAutoString|? -- scc
     nsAutoString str;
-    str += "[Certificate ";
-    str += mIssuerName;
-    str += ' ';
-    str += mSerialNumber;
-    str += ']';
+    str.AppendWithConversion("[Certificate ");
+    str.AppendWithConversion(mIssuerName);
+    str.AppendWithConversion(' ');
+    str.AppendWithConversion(mSerialNumber);
+    str.AppendWithConversion(']');
     *result = str.ToNewCString();
     return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }

@@ -308,7 +308,7 @@ class StringImpl
                                             chars.Seek(PR_SEEK_SET, 0);
                                             PRUint32 newLength;
                                             chars.Available(&newLength);
-                                            mString.Assign(cstring, newLength);
+                                            mString.AssignWithConversion(cstring, newLength);
                                             // Set our const string also...
                                             delete [] (char*)mConstString;
                                             mConstString = cstring;

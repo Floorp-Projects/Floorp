@@ -243,7 +243,7 @@ AppendCapability(nsHashKey *aKey, void *aData, void *aStr)
     char value = (char)((unsigned int)aData) + '0';
     nsCString *capStr = (nsCString*) aStr;    
     capStr->Append(' ');
-    capStr->Append(((nsStringKey *) aKey)->GetString());
+    capStr->AppendWithConversion(((nsStringKey *) aKey)->GetString());
     capStr->Append('=');
     capStr->Append(value);
     return PR_TRUE;

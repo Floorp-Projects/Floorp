@@ -1146,7 +1146,7 @@ void nsFileSpec::GetFileSystemCharset(nsString & fileSystemCharset)
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "error getting platform charset");
 	  if (NS_FAILED(rv)) 
-		  aCharset.Assign("ISO-8859-1");
+		  aCharset.AssignWithConversion("ISO-8859-1");
   }
   fileSystemCharset = aCharset;
 }
@@ -1198,7 +1198,7 @@ void nsFileSpec::GetNativePathString(nsString &nativePathString)
 {
   const char *path = GetCString();
   if (nsnull == path) {
-    nativePathString.Assign("");
+    nativePathString.SetLength(0);
     return;
   }
   else {
@@ -1208,7 +1208,7 @@ void nsFileSpec::GetNativePathString(nsString &nativePathString)
       delete [] converted;
     }
     else
-      nativePathString.Assign(path);
+      nativePathString.AssignWithConversion(path);
   }
 }
  
@@ -1219,7 +1219,7 @@ void nsFileSpec::GetLeafName(nsString &nativePathString)
 {
   char * path = GetLeafName();
   if (nsnull == path) {
-    nativePathString.Assign("");
+    nativePathString.SetLength(0);
     return;
   } else {
     PRUnichar *converted = ConvertFromFileSystemCharset(path);
@@ -1228,7 +1228,7 @@ void nsFileSpec::GetLeafName(nsString &nativePathString)
       delete [] converted;
     }
     else
-      nativePathString.Assign(path);
+      nativePathString.AssignWithConversion(path);
 
     nsCRT::free(path);
   }

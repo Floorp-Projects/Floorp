@@ -938,7 +938,7 @@ nsLocalFile::InitWithPath(const char *filePath)
 
 	// Just save the specified file path since we can't actually do anything
 	// about turniung it into an FSSpec until the Create() method is called
-	mWorkingPath.SetString(filePath);
+	mWorkingPath.Assign(filePath);
 	
 	mInitType = eInitWithPath;
 	
@@ -2345,7 +2345,7 @@ NS_IMETHODIMP nsLocalFile::SetAppendedPath(const char *aPath)
 {
 	MakeDirty();
 	
-	mAppendedPath.SetString(aPath);
+	mAppendedPath.Assign(aPath);
 	
 	return NS_OK;
 }
