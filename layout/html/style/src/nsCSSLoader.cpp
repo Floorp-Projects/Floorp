@@ -25,6 +25,7 @@
 #include "nsIDOMNode.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIDocument.h"
+#include "nsINameSpaceManager.h"
 
 #include "nsIUnicharStreamLoader.h"
 #include "nsIUnicharInputStream.h"
@@ -134,10 +135,12 @@ public:
 
 struct SheetLoadData {
   SheetLoadData(CSSLoaderImpl* aLoader, nsIURL* aURL, 
-                const nsString& aTitle, const nsString& aMedia,
+                const nsString& aTitle, const nsString& aMedia, 
+                PRInt32 aDefaultNameSpaceID,
                 nsIContent* aOwner, PRInt32 aDocIndex, 
                 nsIParser* aParserToUnblock, PRBool aIsInline);
   SheetLoadData(CSSLoaderImpl* aLoader, nsIURL* aURL, const nsString& aMedia,
+                PRInt32 aDefaultNameSpaceID,
                 nsICSSStyleSheet* aParentSheet, PRInt32 aSheetIndex);
   SheetLoadData(CSSLoaderImpl* aLoader, nsIURL* aURL, nsCSSLoaderCallbackFunc aCallback,
                 void* aData);
@@ -147,6 +150,7 @@ struct SheetLoadData {
   nsIURL*         mURL;
   nsString        mTitle;
   nsString        mMedia;
+  PRInt32         mDefaultNameSpaceID;
   PRInt32         mSheetIndex;
 
   nsIContent*     mOwningElement;
@@ -212,6 +216,7 @@ public:
                              nsIUnicharInputStream* aIn, 
                              const nsString& aTitle, 
                              const nsString& aMedia, 
+                             PRInt32 aDefaultNameSpaceID,
                              PRInt32 aIndex,
                              nsIParser* aParserToUnblock,
                              PRBool& aCompleted);
@@ -220,6 +225,7 @@ public:
                            nsIURL* aURL, 
                            const nsString& aTitle, 
                            const nsString& aMedia, 
+                           PRInt32 aDefaultNameSpaceID,
                            PRInt32 aIndex,
                            nsIParser* aParserToUnblock,
                            PRBool& aCompleted);
@@ -227,6 +233,7 @@ public:
   NS_IMETHOD LoadChildSheet(nsICSSStyleSheet* aParentSheet,
                             nsIURL* aURL, 
                             const nsString& aMedia,
+                            PRInt32 aDefaultNameSpaceID,
                             PRInt32 aIndex);
 
   NS_IMETHOD LoadAgentSheet(nsIURL* aURL, 
@@ -285,12 +292,14 @@ public:
 
 SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURL* aURL, 
                              const nsString& aTitle, const nsString& aMedia,
+                             PRInt32 aDefaultNameSpaceID,
                              nsIContent* aOwner, PRInt32 aDocIndex, 
                              nsIParser* aParserToUnblock, PRBool aIsInline)
   : mLoader(aLoader),
     mURL(aURL),
     mTitle(aTitle),
     mMedia(aMedia),
+    mDefaultNameSpaceID(aDefaultNameSpaceID),
     mOwningElement(aOwner),
     mSheetIndex(aDocIndex),
     mParserToUnblock(aParserToUnblock),
@@ -311,12 +320,14 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURL* aURL,
 }
 
 SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURL* aURL, 
-                             const nsString& aMedia, nsICSSStyleSheet* aParentSheet, 
-                             PRInt32 aSheetIndex)
+                             const nsString& aMedia, 
+                             PRInt32 aDefaultNameSpaceID,
+                             nsICSSStyleSheet* aParentSheet, PRInt32 aSheetIndex)
   : mLoader(aLoader),
     mURL(aURL),
     mTitle(),
     mMedia(aMedia),
+    mDefaultNameSpaceID(aDefaultNameSpaceID),
     mSheetIndex(aSheetIndex),
     mOwningElement(nsnull),
     mParserToUnblock(nsnull),
@@ -416,6 +427,7 @@ static PRBool DeleteSheetMap(nsHashKey* aKey, void* aData, void* aClosure)
 
 CSSLoaderImpl::~CSSLoaderImpl(void)
 {
+  NS_ASSERTION(0 == mLoadingSheets.Count(), "destructing loader while sheets loading");
   NS_IF_RELEASE(mParsers);
   mLoadedSheets.Enumerate(ReleaseSheet);
   mLoadingSheets.Enumerate(DeleteHashLoadData);
@@ -682,6 +694,9 @@ CSSLoaderImpl::ParseSheet(nsIUnicharInputStream* aIn,
     result = GetParserFor(aSheet, &parser);
     if (NS_SUCCEEDED(result)) {
       mParsingData.AppendElement(aLoadData);
+      if (kNameSpaceID_Unknown != aLoadData->mDefaultNameSpaceID) {
+        aSheet->SetDefaultNameSpaceID(aLoadData->mDefaultNameSpaceID);
+      }
       result = parser->Parse(aIn, aLoadData->mURL, aSheet);  // this may result in re-entrant load child sheet calls
       mParsingData.RemoveElementAt(mParsingData.Count() - 1);
 
@@ -714,7 +729,7 @@ CSSLoaderImpl::DidLoadStyle(nsIUnicharStreamLoader* aLoader,
                             SheetLoadData* aLoadData,
                             nsresult aStatus)
 {
-  if (NS_SUCCEEDED(aStatus) && (0 < aStyleData.Length())) {
+  if (NS_SUCCEEDED(aStatus) && (0 < aStyleData.Length()) && (mDocument)) {
     nsresult result;
     nsIUnicharInputStream* uin = nsnull;
     // wrap the string with the CSS data up in a unicode input stream.
@@ -1029,6 +1044,7 @@ CSSLoaderImpl::LoadInlineStyle(nsIContent* aElement,
                                nsIUnicharInputStream* aIn, 
                                const nsString& aTitle, 
                                const nsString& aMedia, 
+                               PRInt32 aDefaultNameSpaceID,
                                PRInt32 aDocIndex,
                                nsIParser* aParserToUnblock,
                                PRBool& aCompleted)
@@ -1043,7 +1059,7 @@ CSSLoaderImpl::LoadInlineStyle(nsIContent* aElement,
   if (aIn) {
     nsIURL* docURL;
     mDocument->GetBaseURL(docURL);
-    SheetLoadData* data = new SheetLoadData(this, docURL, aTitle, aMedia,
+    SheetLoadData* data = new SheetLoadData(this, docURL, aTitle, aMedia, aDefaultNameSpaceID,
                                             aElement,
                                             aDocIndex, aParserToUnblock,
                                             PR_TRUE);
@@ -1064,6 +1080,7 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
                              nsIURL* aURL, 
                              const nsString& aTitle, 
                              const nsString& aMedia, 
+                             PRInt32 aDefaultNameSpaceID,
                              PRInt32 aDocIndex,
                              nsIParser* aParserToUnblock,
                              PRBool& aCompleted)
@@ -1100,7 +1117,7 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
       }
     }
     else {  // need to load it
-      SheetLoadData* data = new SheetLoadData(this, aURL, aTitle, aMedia,
+      SheetLoadData* data = new SheetLoadData(this, aURL, aTitle, aMedia, aDefaultNameSpaceID,
                                               aElement, aDocIndex, 
                                               aParserToUnblock, PR_FALSE);
       if (IsAlternate(aTitle) && mLoadingSheets.Count() &&
@@ -1125,6 +1142,7 @@ NS_IMETHODIMP
 CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
                               nsIURL* aURL, 
                               const nsString& aMedia,
+                              PRInt32 aDefaultNameSpaceID,
                               PRInt32 aIndex)
 {
   nsresult result = NS_ERROR_NULL_POINTER;
@@ -1147,7 +1165,7 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
       }
     }
     else {
-      SheetLoadData* data = new SheetLoadData(this, aURL, aMedia,
+      SheetLoadData* data = new SheetLoadData(this, aURL, aMedia, aDefaultNameSpaceID,
                                               aParentSheet, aIndex);
 
       PRInt32 count = mParsingData.Count();
