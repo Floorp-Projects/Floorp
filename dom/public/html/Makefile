@@ -36,6 +36,7 @@ EXPORTS =               \
 	nsIDOMHTMLDivElement.h \
 	nsIDOMHTMLDocument.h \
 	nsIDOMHTMLElement.h \
+	nsIDOMHTMLFieldSetElement.h \
 	nsIDOMHTMLFontElement.h \
 	nsIDOMHTMLFormElement.h \
 	nsIDOMNSHTMLFormElement.h \

@@ -40,6 +40,7 @@ CPPSRCS =			\
 	nsJSHTMLDivElement.cpp \
 	nsJSHTMLDocument.cpp \
 	nsJSHTMLElement.cpp \
+	nsJSHTMLFieldSetElement.cpp \
 	nsJSHTMLFontElement.cpp \
 	nsJSHTMLFormElement.cpp \
 	nsJSHTMLFrameElement.cpp \
@@ -102,6 +103,7 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsJSHTMLDivElement.obj \
 	.\$(OBJDIR)\nsJSHTMLDocument.obj \
 	.\$(OBJDIR)\nsJSHTMLElement.obj \
+	.\$(OBJDIR)\nsJSHTMLFieldSetElement.obj \
 	.\$(OBJDIR)\nsJSHTMLFontElement.obj \
 	.\$(OBJDIR)\nsJSHTMLFormElement.obj \
 	.\$(OBJDIR)\nsJSHTMLFrameElement.obj \
