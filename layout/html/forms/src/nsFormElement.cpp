@@ -26,7 +26,7 @@
 
 // this file is obsolete and will be removed
 
-static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
 
 enum FormElementType {
   eFormElementType_Submit,
@@ -86,10 +86,10 @@ void FormElementFrame::Paint(nsIPresContext& aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect& aDirtyRect)
 {
-  nsStyleMolecule* myMol =
-    (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
+  nsStyleBorder* myBorder =
+    (nsStyleBorder*)mStyleContext->GetData(kStyleBorderSID);
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                              aDirtyRect, mRect, *myMol, 0);
+                              aDirtyRect, mRect, *myBorder, 0);
 }
 
 void FormElementFrame::GetDesiredSize(nsIPresContext* aPresContext,
