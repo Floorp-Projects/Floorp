@@ -1812,7 +1812,7 @@ if test "$HAVE_DEV_ZERO"; then
   AC_DEFINE(HAVE_DEV_ZERO)
   AC_MSG_RESULT(yes)
 else
-if test -f /dev/zero; then
+if test -r /dev/zero; then
   AC_DEFINE(HAVE_DEV_ZERO)
   AC_MSG_RESULT(yes)
 else
