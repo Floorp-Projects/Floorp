@@ -573,6 +573,32 @@ nsMathMLContainerFrame::PropagatePresentationDataFor(nsIPresContext* aPresContex
   }
 }
 
+/* static */ void
+nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+                                                             nsIFrame*       aParentFrame,
+                                                             PRInt32         aFirstChildIndex,
+                                                             PRInt32         aLastChildIndex,
+                                                             PRInt32         aScriptLevelIncrement,
+                                                             PRUint32        aFlagsValues,
+                                                             PRUint32        aFlagsToUpdate)
+{
+  if (!aFlagsToUpdate && !aScriptLevelIncrement)
+    return;
+  PRInt32 index = 0;
+  nsIFrame* childFrame;
+  aParentFrame->FirstChild(aPresContext, nsnull, &childFrame);
+  while (childFrame) {
+    if ((index >= aFirstChildIndex) &&
+        ((aLastChildIndex <= 0) || ((aLastChildIndex > 0) &&
+         (index <= aLastChildIndex)))) {
+      PropagatePresentationDataFor(aPresContext, childFrame,
+        aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
+    }
+    index++;
+    childFrame->GetNextSibling(&childFrame);
+  }
+}
+
 // helper to let the scriptstyle re-resolution pass through
 // a subtree that may contain non-mathml container frames.
 // This function is *very* expensive. Unfortunately, there isn't much
