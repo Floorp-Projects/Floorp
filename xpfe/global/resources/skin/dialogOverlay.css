@@ -8,12 +8,13 @@
     margin                : 0px 5px 6px 5px;
   }
 
-.box-smallheader > .decorated 
+.box-smallheader > .toolbar-primary
   {
     padding               : 0px 0px 3px 0px;
+    min-height            : 0px;
   }
 
-.box-smallheader > .decorated > .box-smallheader-left 
+.box-smallheader > .toolbar-primary > .box-smallheader-left 
   {
     font-size             : larger;
     font-weight           : bold;
@@ -21,13 +22,13 @@
     padding-left          : 6px;
   }
 
-.box-smallheader > .decorated > .box-smallheader-right 
+.box-smallheader > .toolbar-primary > .box-smallheader-right 
   {
     color                 : #FFFFFF;
     padding-right         : 6px;
   }
 
-.box-smallheader > .decorated 
+.box-smallheader > .toolbar-primary 
   {
     border                : 1px solid #000000;
     vertical-align        : middle;

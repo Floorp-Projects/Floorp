@@ -40,6 +40,7 @@
     </content>
   </binding>
 
+
   <binding id="menu-menubar">
     <content excludes="template,observes,menupopup">
       <xul:text class="menubar-text" inherits="value,accesskey,crop" crop="right"/>
@@ -57,7 +58,7 @@
     <content autostretch="never" excludes="template,observes,menupopup">
       <xul:text class="menu-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
       <xul:text class="menu-accel" inherits="acceltext:value"/>
-      <xul:box orient="vertical" autostretch="never" class="menu-right" inherits="menuactive,disabled">
+      <xul:box autostretch="never" class="menu-right" inherits="menuactive,disabled">
         <xul:image/>
       </xul:box>
     </content>
@@ -109,41 +110,7 @@
     </interface>  
   </binding>
 
-
-  <binding id="menulist">
-    <content excludes="template,observes,menupopup">
-      <xul:image class="menu-icon" inherits="src"/>
-      <xul:text class="menu-text" flex="1" inherits="value,accesskey,crop" crop="right"/>
-      <xul:image class="menu-dropmarker"/>
-    </content>
-	  <handlers>
-      <handler type="command" capturer="true" value="this.selectedItem = event.target; this.data = this.selectedItem.data;"/>
-	  </handlers>
-    <interface>
-      <property name="data" onset="this.setAttribute('data',val); return val;"
-                            onget="return this.getAttribute('data');"/>
-    </interface>  
-  </binding>
-
-  <binding id="menubutton">
-    <content excludes="template,observes,menupopup">
-      <xul:button class="menu-button" allowevents="true" inherits="buttonaction:oncommand,src,value,crop,accesskey"/>
-      <xul:image class="menu-dropmarker"/>
-    </content>
-  </binding>
-
-  <binding id="menulist-editable">
-    <content excludes="template,observes,menupopup">
-      <xul:image class="menu-icon" inherits="src"/>
-	    <html:input type="text" flex="1" class="menu-text" allowevents="true" inherits="value,disabled"/>
-      <xul:image class="menu-dropmarker"/>
-    </content>
-	  <handlers>
-      <handler type="command" capturer="true" value="this.selectedItem = event.target"/>
-	  </handlers>
-  </binding>
-
-  <binding id="treecell-indented-folder">
+  <binding id="treecell-indent">
     <content autostretch="never">
       <xul:treeindentation/>
       <xul:image class="tree-cell-twisty" twisty="true" allowevents="true"/>
@@ -159,7 +126,7 @@
       <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
     </content>
   </binding>
-  
+
   <binding id="treecell-iconic">
     <content autostretch="never">
       <xul:image class="tree-cell-icon" inherits="src"/>
@@ -330,10 +297,21 @@
   <!-- XUL <button>s -->
   <binding id="buttonleft" extends="resource:/chrome/xulBindings.xml#basetext">
     <content excludes="observes,template">
-  	  <xul:box class="internal-box" inherits="orient" autostretch="never" flex="1">
-        <xul:image inherits="src"/>
-        <xul:box orient="vertical" class="text-container" autostretch="never" flex="1">
-          <xul:text inherits="value,accesskey,crop"/>
+  	  <xul:box class="button-internal-box" autostretch="never" flex="1">
+        <xul:image class="button-icon" inherits="src"/>
+        <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
+          <xul:text class="button-text" inherits="value,accesskey,crop"/>
+        </xul:box>
+      </xul:box>
+    </content>
+  </binding>
+
+  <binding id="buttontop" extends="resource:/chrome/xulBindings.xml#basetext">
+    <content excludes="observes,template">
+  	  <xul:box class="button-internal-box" orient="vertical" autostretch="never" flex="1">
+        <xul:image class="button-icon" inherits="src"/>
+        <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
+          <xul:text class="button-text" inherits="value,accesskey,crop"/>
         </xul:box>
       </xul:box>
     </content>
@@ -341,13 +319,24 @@
   
   <binding id="buttonright" extends="resource:/chrome/xulBindings.xml#basetext">
     <content excludes="observes,template">
-	    <xul:box autostretch="never" inherits="orient" class="internal-box" flex="1">
-        <xul:box orient="vertical" class="text-container" autostretch="never" flex="1">
-  	      <xul:text inherits="value,accesskey,crop"/>
+  	  <xul:box class="button-internal-box" inherits="orient" autostretch="never" flex="1">
+        <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
+          <xul:text class="button-text" inherits="value,accesskey,crop"/>
         </xul:box>
-        <xul:image inherits="src"/>
+        <xul:image class="button-icon" inherits="src"/>
       </xul:box>
-	  </content>
+    </content>
+  </binding>
+
+  <binding id="buttonbottom" extends="resource:/chrome/xulBindings.xml#basetext">
+    <content excludes="observes,template">
+  	  <xul:box class="button-internal-box" orient="vertical" autostretch="never" flex="1">
+        <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
+          <xul:text class="button-text" inherits="value,accesskey,crop"/>
+        </xul:box>
+        <xul:image class="button-icon" inherits="src"/>
+      </xul:box>
+    </content>
   </binding>
   
   <binding id="separator" extends="xul:spring"/>
@@ -355,9 +344,9 @@
   <!-- appending to the end so we don't make hyatt cry -->
   <binding id="progressmeter" extends="xul:box">
     <content excludes="observes,template">
-      <xul:box class="internal-box" flex="1">
-        <xul:stack flex="1">
-          <xul:progressbar inherits="value">
+      <xul:box class="progressmeter-internal-box" flex="1">
+        <xul:stack class="progressmeter-stack" flex="1">
+          <xul:progressbar class="progressmeter-progressbar" inherits="value">
             <xul:box class="progress-bar"/>
             <xul:box class="progress-remainder"/>
           </xul:progressbar>
@@ -379,8 +368,8 @@
 
   <binding id="textfield" extends="xul:box">
     <content excludes="observes,template">
-      <xul:box flex="1">
-        <html:input flex="1" inherits="value,type,maxlength,disabled,size,readonly"/>
+      <xul:box class="textfield-internal-box" flex="1">
+        <html:input class="textfield-input" flex="1" inherits="value,type,maxlength,disabled,size,readonly"/>
       </xul:box>
     </content>
     <interface>
@@ -405,8 +394,8 @@
 
   <binding id="textarea" extends="resource:/chrome/xulBindings.xml#textfield">
     <content excludes="observes,template">
-      <xul:box flex="1">
-        <html:textarea flex="1" inherits="value,disabled,rows,cols,readonly"/>
+      <xul:box class="textarea-internal-box" flex="1">
+        <html:textarea class="textfield-textarea" flex="1" inherits="value,disabled,rows,cols,readonly"/>
       </xul:box>
     </content>
   </binding>
@@ -598,7 +587,5 @@
     </content>
   </binding>
 
-  <binding id="data" extends="xul:spring"/>
-  
 </bindings>
 
