@@ -40,7 +40,8 @@
 #include "nsIXPCSecurityManager.idl"
 interface nsIURI;
 
-[scriptable, uuid(82bff35d-ebb7-4cb9-bb47-4f9ebdf11f77)]
+
+[scriptable, uuid(463eb1fa-9dac-4ca7-826f-1fc921971d3a)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -118,7 +119,7 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * Same as CheckLoadURI but takes string arguments for ease of use
      * by scripts
      */
-    void checkLoadURIStr(in string from, in string uri, 
+    void checkLoadURIStr(in AUTF8String from, in AUTF8String uri, 
                          in unsigned long flags);
 
     /**

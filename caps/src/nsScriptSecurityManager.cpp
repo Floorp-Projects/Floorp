@@ -1403,17 +1403,16 @@ nsScriptSecurityManager::ReportError(JSContext* cx, const nsAString& messageTag,
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::CheckLoadURIStr(const char* aSourceURIStr, const char* aTargetURIStr,
+nsScriptSecurityManager::CheckLoadURIStr(const nsACString& aSourceURIStr,
+                                         const nsACString& aTargetURIStr,
                                          PRUint32 aFlags)
 {
     nsCOMPtr<nsIURI> source;
-    nsresult rv = NS_NewURI(getter_AddRefs(source),
-                            nsDependentCString(aSourceURIStr),
+    nsresult rv = NS_NewURI(getter_AddRefs(source), aSourceURIStr,
                             nsnull, nsnull, sIOService);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIURI> target;
-    rv = NS_NewURI(getter_AddRefs(target),
-                   nsDependentCString(aTargetURIStr),
+    rv = NS_NewURI(getter_AddRefs(target), aTargetURIStr,
                    nsnull, nsnull, sIOService);
     NS_ENSURE_SUCCESS(rv, rv);
     return CheckLoadURI(source, target, aFlags);
