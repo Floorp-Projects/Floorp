@@ -165,7 +165,7 @@ EnsureLogModule(void)
  * Write a message to the log. You should use the TIMING_MSG() macro,
  * rather than calling this directly.
  */
-PUBLIC void
+PR_IMPLEMENT(void)
 TimingWriteMessage(const char* fmtstr, ...)
 {
     char line[256];
@@ -201,7 +201,7 @@ TimingWriteMessage(const char* fmtstr, ...)
 /**
  * Enable or disable the timing log.
  */
-PUBLIC void
+PR_IMPLEMENT(void)
 TimingSetEnabled(PRBool enabled)
 {
     if (! EnsureLogModule())
@@ -223,7 +223,7 @@ TimingSetEnabled(PRBool enabled)
 /**
  * Query whether the timing log is enabled.
  */
-PUBLIC PRBool
+PR_IMPLEMENT(PRBool)
 TimingIsEnabled(void)
 {
     if (! EnsureLogModule())
@@ -302,7 +302,7 @@ static PLHashTable *_timingClockTable = NULL;
 /**
  * Ensure that the clock table exists and is initialized.
  */
-PRIVATE PRBool
+static PRBool
 EnsureTimingTable()
 {
     if (! _timingClockTable) {
@@ -322,7 +322,7 @@ EnsureTimingTable()
 /**
  * Start a clock
  */
-PUBLIC void
+PR_IMPLEMENT(void)
 TimingStartClock(const char* clock)
 {
     char* key = NULL;
@@ -355,7 +355,7 @@ error:
 }
 
 
-PUBLIC PRBool
+PR_EXTERN(PRBool)
 TimingStopClock(PRTime* result, const char* clock)
 {
     PRTime* start;
@@ -379,7 +379,7 @@ TimingStopClock(PRTime* result, const char* clock)
 }
 
 
-PUBLIC PRBool
+PR_EXTERN(PRBool)
 TimingIsClockRunning(const char* clock)
 {
      if (! TimingIsEnabled())
@@ -396,7 +396,7 @@ TimingIsClockRunning(const char* clock)
 }
 
 
-PUBLIC char*
+PR_EXTERN(char*)
 TimingElapsedTimeToString(PRTime time, char* buffer, PRUint32 size)
 {
     PRTime tmUSec;

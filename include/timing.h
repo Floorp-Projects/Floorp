@@ -35,7 +35,7 @@ PR_BEGIN_EXTERN_C
  *
  * @fmtstr The <tt>printf()</tt>-style format string.
  */
-extern void
+PR_EXTERN(void)
 TimingWriteMessage(const char* fmtstr, ...);
 
 /**
@@ -43,7 +43,7 @@ TimingWriteMessage(const char* fmtstr, ...);
  *
  * @return <tt>PR_TRUE</tt> if the timing log is currently enabled.
  */
-extern PRBool
+PR_EXTERN(PRBool)
 TimingIsEnabled(void);
 
 /**
@@ -52,7 +52,7 @@ TimingIsEnabled(void);
  * @param enabled <tt>PR_TRUE</tt> to enable, <tt>PR_FALSE</tt> to
  * disable.
  */
-extern void
+PR_EXTERN(void)
 TimingSetEnabled(PRBool enabled);
 
 
@@ -62,7 +62,7 @@ TimingSetEnabled(PRBool enabled);
  *
  * @param clock A C-string name for the clock.
  */
-extern void
+PR_EXTERN(void)
 TimingStartClock(const char* clock);
 
 /**
@@ -78,14 +78,14 @@ TimingStartClock(const char* clock);
  * @return <tt>PR_TRUE</tt> if the clock exists, was running,
  * and was successfully stopped.
  */
-extern PRBool
+PR_EXTERN(PRBool)
 TimingStopClock(PRTime* result, const char* clock);
 
 /**
  * Return <tt>PR_TRUE</tt> if the clock with the specified
  * name exists and is running.
  */
-extern PRBool
+PR_EXTERN(PRBool)
 TimingIsClockRunning(const char* clock);
 
 /**
@@ -96,7 +96,7 @@ TimingIsClockRunning(const char* clock);
  * @param size The size of <tt>buffer</tt>.
  * @return A pointer to <tt>buffer</tt>.
  */
-extern char*
+PR_EXTERN(char*)
 TimingElapsedTimeToString(PRTime time, char* buffer, PRUint32 size);
 
 PR_END_EXTERN_C
