@@ -1128,17 +1128,19 @@ Wallet_Decrypt(nsAutoString crypt, nsAutoString& text) {
   }
 
   /* convert text from UTF8 to unichar */
-  PRUnichar c;
+  PRUnichar c1, c2, c3;
   text.SetLength(0);
   for (PRUint32 i=0; i<PL_strlen(UTF8textCString); ) {
-    c = (PRUnichar)UTF8textCString[i++];    
-    if ((c & 0x80) == 0x00) {
-      text += c;
-    } else if ((c & 0xE0) == 0xC0) {
-      text += (PRUnichar)(((c & 0x1F)<<6) + ((PRUnichar)UTF8textCString[i++] & 0x3F));
-    } else if ((c & 0xF0) == 0xE0) {
-      text.AppendInt(((c & 0x0F)<<12) + (((PRUnichar)UTF8textCString[i++] & 0x3F)<<6)
-                                + ((PRUnichar)UTF8textCString[i++] & 0x3F));
+    c1 = (PRUnichar)UTF8textCString[i++];    
+    if ((c1 & 0x80) == 0x00) {
+      text += c1;
+    } else if ((c1 & 0xE0) == 0xC0) {
+      c2 = (PRUnichar)UTF8textCString[i++];    
+      text += (PRUnichar)(((c1 & 0x1F)<<6) + (c2 & 0x3F));
+    } else if ((c1 & 0xF0) == 0xE0) {
+      c2 = (PRUnichar)UTF8textCString[i++];    
+      c3 = (PRUnichar)UTF8textCString[i++];    
+      text += (PRUnichar)(((c1 & 0x0F)<<12) + ((c2 & 0x3F)<<6) + (c3 & 0x3F));
     } else {
       Recycle(UTF8textCString);
       return NS_ERROR_FAILURE; /* this is an error, input was not utf8 */
