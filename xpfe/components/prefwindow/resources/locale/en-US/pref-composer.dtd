@@ -4,6 +4,7 @@
 
 <!--LOCALIZATION NOTE (title.label): DONT_TRANSLATE -->
 <!ENTITY  title.label "Composer">
+<!ENTITY  title2.label "Editing">
 <!ENTITY  lHeader "Composer">
 <!ENTITY  rHeader "Set preferences for authoring of new Web pages">
 <!ENTITY  rHeader2 "Set editing preferences for authoring of Web pages">
