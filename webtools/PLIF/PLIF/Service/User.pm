@@ -108,7 +108,6 @@ sub objectProvides {
 sub objectInit {
     my $self = shift;
     my($app, $userID, $mode, $password, $adminMessage, $newFieldID, $newFieldValue, $newFieldPassword, $fields, $groups, $rights) = @_;
-
     $self->{'_DIRTY'} = {}; # make sure propertySet is happy
     $self->SUPER::objectInit(@_);
     $self->userID($userID);
@@ -295,15 +294,25 @@ sub logout {
     }
 }
 
+sub loggedOut {
+    my $self = shift;
+    if ($self->mode == 1) {
+        $self->mode(0); # clear flag
+    }
+}
+
 sub checkLogin {
     my $self = shift;
-    # check to see if the account is disabled
-    my $enabled = $self->mode == 0;
-    # if user is logging out, clear flag
     if ($self->mode == 1) {
-        $self->mode(0);
+        # user is logging out
+        return '0E0'; # true but zero
+    } elsif ($self->mode == 0) {
+        # account is in normal state
+        return 1; # true
+    } else {
+        # account is disabled
+        return 0; # false
     }
-    return $enabled;
 }
 
 sub joinGroup {

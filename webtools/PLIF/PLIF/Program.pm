@@ -76,6 +76,12 @@ sub run {
         # reference to us and we wouldn't want a memory leak...
         $self->defaultOutput(undef);
     } while ($self->input->next());
+    # clear the objects hash here, so that objects are removed before
+    # us, otherwise they can't refer back to us during shutdown.
+    # don't need to do the same to services as services should never
+    # use the application object during shutdown. (They shouldn't be
+    # able to. If they can, there is a circular reference.)
+    $self->objects([]);
     $self->input(undef); # shutdown the input service instance
     $self->dump(5, 'PLIF application completed normally.');
 }
