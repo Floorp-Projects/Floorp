@@ -31,7 +31,7 @@ class ImgDCallbk : public nsIImgDCallbk
 public:
   NS_DECL_ISUPPORTS
   ImgDCallbk(il_container *aContainer) { NS_INIT_ISUPPORTS(); mContainer=aContainer; };
-  ~ImgDCallbk(){};
+  virtual ~ImgDCallbk(){};
 
 
   NS_IMETHOD ImgDCBFlushImage();

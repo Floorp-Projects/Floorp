@@ -65,7 +65,7 @@ class TestDynamicFactory: public nsIFactory {
     PR_AtomicIncrement(&g_FactoryCount);
   }
 
-  ~TestDynamicFactory() {
+  virtual ~TestDynamicFactory() {
     PR_AtomicDecrement(&g_FactoryCount);
   }
 
