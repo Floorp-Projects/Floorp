@@ -54,7 +54,7 @@ static PRLogModuleInfo *nsDeviceContextXpLM = PR_NewLogModule("nsDeviceContextXp
  *  See documentation in nsIDeviceContext.h
  */
 nsDeviceContextXp :: nsDeviceContextXp()
- : DeviceContextImpl()
+ : nsDeviceContextX()
 { 
   mPrintContext        = nsnull;
   mSpec                = nsnull; 

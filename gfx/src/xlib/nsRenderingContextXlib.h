@@ -55,10 +55,9 @@
 #include "nsRect.h"
 #ifdef USE_XPRINT
 #include "nsXPrintContext.h"
-#include "nsDeviceContextXP.h"
 #endif /* USE_XPRINT */
+#include "nsDeviceContext.h"
 #include "nsImageXlib.h"
-#include "nsDeviceContextXlib.h"
 #include "nsVoidArray.h"
 #include "nsDrawingSurfaceXlib.h"
 #include "nsRegionXlib.h"
@@ -69,6 +68,20 @@
 
 class GraphicsState;
 class nsFontXlib;
+
+class nsDeviceContextX : public DeviceContextImpl
+{
+public:
+  nsDeviceContextX()
+    :  DeviceContextImpl()
+  { 
+  }
+  
+  virtual ~nsDeviceContextX() {}
+
+
+  NS_IMETHOD GetXlibRgbHandle(XlibRgbHandle *&aHandle) = 0;
+};
 
 class nsRenderingContextXlib : public nsRenderingContextImpl
 {

@@ -219,7 +219,7 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsIWidget *aWindow)
   NS_ASSERTION(nsnull != mContext, "Device context is null.");
   
   nsIDeviceContext *dc = mContext;     
-  mXlibRgbHandle = NS_STATIC_CAST(nsDeviceContextXlib *,dc)->GetXlibRgbHandle();
+  NS_STATIC_CAST(nsDeviceContextX *, dc)->GetXlibRgbHandle(mXlibRgbHandle);
   mDisplay = xxlib_rgb_get_display(mXlibRgbHandle);
   mScreen  = xxlib_rgb_get_screen(mXlibRgbHandle);
   mVisual  = xxlib_rgb_get_visual(mXlibRgbHandle);
@@ -252,7 +252,7 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurfa
   NS_ASSERTION(nsnull != mContext, "Device context is null.");
   
   nsIDeviceContext *dc = mContext;     
-  mXlibRgbHandle = NS_STATIC_CAST(nsDeviceContextXlib *,dc)->GetXlibRgbHandle();
+  NS_STATIC_CAST(nsDeviceContextX *, dc)->GetXlibRgbHandle(mXlibRgbHandle);
   mDisplay = xxlib_rgb_get_display(mXlibRgbHandle);
   mScreen  = xxlib_rgb_get_screen(mXlibRgbHandle);
   mVisual  = xxlib_rgb_get_visual(mXlibRgbHandle);

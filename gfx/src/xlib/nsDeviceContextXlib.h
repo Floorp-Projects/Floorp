@@ -42,10 +42,10 @@
 #define nsDeviceContextXlib_h__
 
 #include "nsDeviceContext.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContextXlib.h"
 #include "xlibrgb.h"
 
-class nsDeviceContextXlib : public DeviceContextImpl
+class nsDeviceContextXlib : public nsDeviceContextX
 {
 public:
   nsDeviceContextXlib();
@@ -82,6 +82,8 @@ public:
 
   NS_IMETHOD CreateFontCache();
 
+  NS_IMETHOD GetXlibRgbHandle(XlibRgbHandle *&aHandle) 
+             { aHandle =  mXlibRgbHandle; return NS_OK; }
   XlibRgbHandle *GetXlibRgbHandle() { return mXlibRgbHandle; }
   NS_IMETHOD GetDepth( PRUint32 &depth ) { depth = (PRUint32)mDepth; return NS_OK; }
 

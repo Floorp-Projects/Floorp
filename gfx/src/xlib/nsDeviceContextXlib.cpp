@@ -78,7 +78,7 @@ static PRLogModuleInfo *DeviceContextXlibLM = PR_NewLogModule("DeviceContextXlib
 static XFontStruct *mDefaultFont = nsnull;
 
 nsDeviceContextXlib::nsDeviceContextXlib()
-  : DeviceContextImpl()
+  : nsDeviceContextX()
 {
   PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::nsDeviceContextXlib()\n"));
   mTwipsToPixels = 1.0;
