@@ -46,7 +46,18 @@ EXPORTS = \
 PRIVATE_EXPORTS = \
 	$(NULL)
 
+ifdef MOZILLA_BSAFE_BUILD
+CSRCS = \
+	fblstdlib.c \
+	sha_fast.c \
+	md2.c \
+	md5.c \
+	dh.c \
+	blapi_bsf.c \
+	$(NULL)
+else
 CSRCS = \
 	sha_fast.c \
 	$(NULL)
+endif
 
