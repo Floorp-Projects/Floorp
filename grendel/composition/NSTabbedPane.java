@@ -26,19 +26,17 @@ import javax.swing.JTabbedPane;
 import javax.swing.plaf.basic.BasicTabbedPaneUI;
 import javax.swing.*;
 import javax.swing.plaf.*;
+import javax.swing.plaf.metal.MetalTabbedPaneUI;
 
-//import netscape.orion.toolbars.*;
-//import pk.core.*;
 
 public class NSTabbedPane extends JTabbedPane {
-    protected JTabbedPane   fTabbedPane;
     protected Object        fID = null;
     protected String        fName = null;
     protected String        fFloatingTitle = "";
 
     public NSTabbedPane() {
-        fTabbedPane = new JTabbedPane();
-        fTabbedPane.setUI(new MyTabbedPaneUI());
+      super.setUI(new MyTabbedPaneUI());
+      setBorder(BorderFactory.createLoweredBevelBorder());
     }
 
     /**
@@ -71,14 +69,14 @@ public class NSTabbedPane extends JTabbedPane {
      * adds a new tab.
      */
     public void addTab(String aLabel, ImageIcon aIcon, Component mAddressList) {
-        fTabbedPane.addTab(aLabel, aIcon, mAddressList);
+      super.addTab(aLabel, aIcon, mAddressList);
     }
 
     /**
      * set tab selection
      */
     public void setSelectedIndex(int aIndex) {
-        fTabbedPane.setSelectedIndex (aIndex);
+      super.setSelectedIndex(aIndex);
     }
 
     /**
@@ -113,17 +111,17 @@ public class NSTabbedPane extends JTabbedPane {
     * gets the component associated with the toolbar
     */
     public Component getComponent() {
-        return fTabbedPane;
+      return this;
     }
 
     //***************************
-    public class MyTabbedPaneUI extends BasicTabbedPaneUI {
+    public class MyTabbedPaneUI extends MetalTabbedPaneUI {
         public Dimension getPreferredSize(JComponent container) {
             int widest = 0;
             int tallest = 0;
 
             //return the component with the largst preferred size.
-            Component[] comps = fTabbedPane.getComponents();
+            Component[] comps = container.getComponents();
             for (int i = 0; i < comps.length; i++) {
                 Dimension dim = comps[i].getPreferredSize();
 

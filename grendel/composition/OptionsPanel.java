@@ -27,7 +27,8 @@ import javax.swing.*;
 import javax.swing.border.*;
 
 public class OptionsPanel extends JPanel implements Serializable  {
-    private final int BOX_WIDTH = 300;
+  // private final int BOX_WIDTH = 300;
+    private final int BOX_WIDTH = 160;
     private final int BOX_HEIGHT = 30;
 
     public OptionsPanel () {
@@ -80,9 +81,12 @@ public class OptionsPanel extends JPanel implements Serializable  {
     class FixedSizedPanel extends JPanel {
         FixedSizedPanel (int aWidth, int aHeight, Component aComp) {
             setPreferredSize (new Dimension (aWidth, aHeight));
-            setLayout (new BorderLayout ());
+            setMaximumSize (getPreferredSize());
+            //    setLayout (new BorderLayout ());
+            setLayout (new GridLayout(1,1,5,5));
             setBorder (BorderFactory.createEmptyBorder (0, 5, 0, 0));
-            add ("West", aComp);
+            //   add ("West", aComp);
+            add (aComp);
         }
     }
 

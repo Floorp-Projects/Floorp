@@ -52,4 +52,5 @@ tar::
 		--exclude '*.bak'			\
 		--exclude '*~'				\
 		--exclude 'core'			\
+		--exclude '*.orig'			\
 	| gzip -v9 > $(TARFILE)

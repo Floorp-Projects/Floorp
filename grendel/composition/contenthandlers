@@ -1,2 +1,2 @@
-text/plain: com.sun.mail.handlers.text_plain
-multipart/mixed: com.sun.mail.handlers.multipart_mixed
+text/plain: javax.mail.internet.MimeMessage
+multipart/mixed: javax.mail.internet.MimeMultipart 

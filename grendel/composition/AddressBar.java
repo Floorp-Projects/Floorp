@@ -47,6 +47,13 @@ public class AddressBar extends NSTabbedPane {
         addTab("", attachmentsIcon,    mAttachmentsList);
         addTab("", optionsIcon,        mOptionsPanel);
         setSelectedIndex(0);
+
+        setBackgroundAt(0, Color.lightGray);
+        setBackgroundAt(1, Color.lightGray);
+        setBackgroundAt(2, Color.lightGray);
+
+        setTabPlacement(LEFT);
+       
     }
 
     public AddressList getAddressList() {

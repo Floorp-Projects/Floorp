@@ -30,6 +30,7 @@ import java.awt.Container;
 import java.awt.FileDialog;
 import java.awt.Font;
 import java.awt.Frame;
+import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
@@ -55,7 +56,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTextArea;
-import javax.swing.JToolBar;
 import javax.swing.border.BevelBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.EventListenerList;
@@ -77,6 +77,8 @@ import grendel.storage.MessageExtraFactory;
 import grendel.ui.ActionFactory;
 import grendel.ui.GeneralPanel;
 import grendel.ui.UIAction;
+import grendel.widgets.CollapsiblePanel;
+import grendel.widgets.GrendelToolBar;
 
 public class CompositionPanel extends GeneralPanel {
   private Hashtable       mCommands;
@@ -704,9 +706,10 @@ public class CompositionPanel extends GeneralPanel {
    * Create a Toolbar
    * @see addToolbarButton
    */
-  private JToolBar createToolbar() {
+  private GrendelToolBar createToolbar() {
 
-    JToolBar toolBar = new JToolBar();
+    GrendelToolBar toolBar = new GrendelToolBar();
+
     addToolbarButton(toolBar, new SendNow(),
                      "send",       "Send this message");
     addToolbarButton(toolBar, new QuoteOriginalText(),
@@ -736,7 +739,7 @@ public class CompositionPanel extends GeneralPanel {
    * @param aToolTip The buttons tool tip. like "Save the current file".
    * @see createToolbar
    */
-  public void addToolbarButton(JToolBar aToolBar,
+  public void addToolbarButton(GrendelToolBar aToolBar,
                                UIAction aActionListener,
                                String aImageName,
                                String aToolTip) {
@@ -744,6 +747,9 @@ public class CompositionPanel extends GeneralPanel {
 
     b.setHorizontalTextPosition(JButton.CENTER);
     b.setVerticalTextPosition(JButton.BOTTOM);
+    b.setRolloverEnabled(true);
+    b.setBorder(BorderFactory.createEmptyBorder());
+    b.setMargin(new Insets(5,5,5,5));
     b.setToolTipText(aToolTip);
 
     URL iconUrl = getClass().getResource("images/" + aImageName + ".gif");

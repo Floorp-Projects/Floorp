@@ -20,15 +20,20 @@
 package grendel.addressbook;
 
 import grendel.addressbook.addresscard.*;
+import grendel.widgets.CollapsiblePanel;
+import grendel.widgets.GrendelToolBar;
 
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.util.*;
+import java.util.Vector;
 
 import javax.swing.*;
 import javax.swing.text.*;
+import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
+import javax.swing.JPanel;
 import javax.swing.table.*;
 //import javax.swing.table.DefaultTableModel;
 import javax.swing.event.TableModelEvent;
@@ -45,7 +50,7 @@ public class AddressBook extends JFrame {
     private Hashtable       mMenuItems;
 
     private JMenuBar        mMenubar;
-    private NSToolbar       mTtoolbar;
+    private GrendelToolBar       mTtoolbar;
 //    private Component       mStatusbar;
     private JTable          mTable;
     private JButton         mSearchButton;
@@ -123,10 +128,10 @@ public class AddressBook extends JFrame {
 
         //create menubar (top)
         //merge both the editors commands with this applications commands.
-        mMenubar = NsMenuManager.createMenuBar("grendel.addressbook.Menus", "grendel.addressbook.MenuLabels", "mainMenubar", defaultActions);
+        //        mMenubar = NsMenuManager.createMenuBar("grendel.addressbook.Menus", "grendel.addressbook.MenuLabels", "mainMenubar", defaultActions);
 
             //collapsble panels holds toolbar.
-            CollapsibleToolbarPanel collapsePanel = new CollapsibleToolbarPanel(this);
+            CollapsiblePanel collapsePanel = new CollapsiblePanel(true);
             collapsePanel.setBorder (new EmptyBorder(5,5,5,5));
 
             //toolbar buttons
@@ -136,7 +141,7 @@ public class AddressBook extends JFrame {
                 collapsePanel.add(mTtoolbar);
 
         //create status bar (bottom)
-//        mStatusbar = createStatusbar();
+                //        mStatusbar = createStatusbar();
 
         JPanel panel1 = new JPanel();
         panel1.setLayout(new BorderLayout());
@@ -373,9 +378,9 @@ public class AddressBook extends JFrame {
      * Create a Toolbar
      * @see addToolbarButton
      */
-    private NSToolbar createToolbar() {
+    private GrendelToolBar createToolbar() {
 
-        NSToolbar toolBar = new NSToolbar();
+        GrendelToolBar toolBar = new GrendelToolBar();
         addToolbarButton(toolBar, null,     "images/newcard.gif",       "Create a new card");
         addToolbarButton(toolBar, null,     "images/newlist.gif",       "Create a new list");
         addToolbarButton(toolBar, null,     "images/properties.gif",    "Edit the selected card");
@@ -395,8 +400,8 @@ public class AddressBook extends JFrame {
      * @param aToolTip The buttons tool tip. like "Save the current file".
      * @see createToolbar
      */
-    public void addToolbarButton(NSToolbar aToolBar, AbstractAction aActionListener, String aImageName, String aToolTip) {
-        NSButton b = new NSButton();
+    public void addToolbarButton(GrendelToolBar aToolBar, AbstractAction aActionListener, String aImageName, String aToolTip) {
+        JButton b = new JButton();
 
         b.setHorizontalTextPosition(JButton.CENTER);
         b.setVerticalTextPosition(JButton.BOTTOM);
@@ -420,7 +425,7 @@ public class AddressBook extends JFrame {
 //      b.setPad(new Insets(3,3,3,3));
 //        b.addActionListener(aActionListener);
 
-        aToolBar.addItem(b);
+        aToolBar.add(b);
     }
 
     private String getFirstEnum (Enumeration enumVals) {

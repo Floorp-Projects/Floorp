@@ -24,6 +24,7 @@ package grendel.composition;
 import calypso.util.Assert;
 
 import java.awt.BorderLayout;
+import java.awt.GridBagConstraints;
 import java.util.Properties;
 import java.util.Vector;
 
@@ -36,6 +37,8 @@ import javax.swing.event.*;
 import grendel.storage.MessageExtra;
 import grendel.storage.MessageExtraFactory;
 import grendel.widgets.Animation;
+import grendel.widgets.CollapsiblePanel;
+import grendel.widgets.GrendelToolBar;
 import grendel.ui.GeneralFrame;
 import grendel.ui.StoreFactory;
 
@@ -69,6 +72,7 @@ public class Composition extends GeneralFrame {
     public Composition() {
         super("Composition", "mail.composition");
         fResourceBase = "grendel.composition";
+        Box mBox = Box.createVerticalBox();
 
         Session session = StoreFactory.Instance().getSession();
 
@@ -85,20 +89,37 @@ public class Composition extends GeneralFrame {
         getRootPane().setMenuBar(fMenu);
 
         fToolBar = mCompositionPanel.getToolBar();
+        fToolBar.add(fToolBar.makeNewSpring());
+
         //    fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(ToolBarLayout.CreateSpring(),
         //                                                  null));
 //    fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(fAnimation, null));
 
+
         mAddressBar = mCompositionPanel.getAddressBar();
 
         //top collapsible item
-        fToolBarPanel.add(fToolBar);
-        //bottom collapsible item
-        fToolBarPanel.add(mAddressBar);
-
+        fToolBarPanelConstraints.anchor = GridBagConstraints.WEST;
+        fToolBarPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
+        fToolBarPanelConstraints.weightx = 10.0;
+        fToolBarPanel.add(fToolBar, fToolBarPanelConstraints);
+        fToolBarPanelConstraints.anchor = GridBagConstraints.EAST;
+        fToolBarPanelConstraints.fill = GridBagConstraints.NONE;
+        fToolBarPanelConstraints.weightx = 1.0;
+        fToolBarPanelConstraints.gridwidth = GridBagConstraints.REMAINDER;
+        fToolBarPanel.add(fAnimation, fToolBarPanelConstraints);
+        mBox.add(fToolBarPanel);
+        //bottom item
+        //  fToolBarPanelConstraints.gridwidth = GridBagConstraints.RELATIVE;
+        //fToolBarPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
+        //fToolBarPanelConstraints.weightx = 5.0;
+        //fToolBarPanel.add(mAddressBar, fToolBarPanelConstraints);
+        mBox.add(mAddressBar);
+        fPanel.add(BorderLayout.NORTH, mBox);
         fStatusBar = buildStatusBar();
         fPanel.add(BorderLayout.SOUTH, fStatusBar);
-
+        
+        //mCompositionPanel.add(BorderLayout.NORTH, mAddressBar);
         fPanel.add(mCompositionPanel);
 
         restoreBounds();

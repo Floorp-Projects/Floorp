@@ -44,14 +44,16 @@ public class AddressList extends JScrollPane implements Serializable {
         super();
 
         //scroll panel
-        JViewport spViewPort = getViewport();
-
+        //   JViewport spViewPort = getViewport();
+        JViewport spViewPort = new JViewport();
+        // System.out.println(spViewPort.toString());
         //create addressList panel
         mAddressPanel = new AddressPanel ();
 
         //add address list panel to scroll panel.
         spViewPort.add(mAddressPanel);
-
+        spViewPort.setView(mAddressPanel);
+        setViewport(spViewPort);
         setBackground (Color.white);
     }
 
@@ -424,7 +426,7 @@ public class AddressList extends JScrollPane implements Serializable {
         private DeliveryButton      mDeliveryButton;
         private AddressTextField    mAddressTextField;
         private DragIcon            mDragIcon;
-//        private boolean             mShowDeliveryButton = true;
+        private boolean             mShowDeliveryButton = true;
 
         public AddressLine (Addressee aAddressee) {
             super();
@@ -706,7 +708,8 @@ public class AddressList extends JScrollPane implements Serializable {
                                             KeyListener {   //show popup menu when focus and spacebar pressed.
 
         private int         mDeliveryMode;
-        private Dimension   mPerfSize = null;
+      //       private Dimension   mPerfSize = null;
+        private Dimension   mPerfSize = new Dimension(50, 20);
         private Insets      mInsets = new Insets (4, 4, 4, 8);
         private PopupMenu   mPopup;
 

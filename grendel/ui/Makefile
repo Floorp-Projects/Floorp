@@ -48,6 +48,8 @@ SRCS=						\
 	SimpleAuthenticator.java		\
 	SimpleMessageHeader.java		\
 	StoreFactory.java			\
+	ToolBarLayout.java			\
+	UIAction.java				\
 	UIFactory.java				\
 	UnifiedMessageDisplayManager.java	\
 	Util.java				\
