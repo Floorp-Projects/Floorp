@@ -302,6 +302,12 @@ function BeginDragContentArea ( event )
 //    dump(domselection);
     htmlstring = domselection.toString("text/html", 128+256, 0);
     textstring = domselection.toString("text/plain", 0, 0);
+
+    // The following return disables the ability to drag & drop
+    // the current selection. This temporarily fixes bug #39821
+    // so that others are unblocked. Remove it when drag & drop and
+    // selection cooperate better.
+    return;
   }
   else 
   {
