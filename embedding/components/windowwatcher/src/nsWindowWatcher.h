@@ -29,11 +29,20 @@
 #define NS_WINDOWWATCHER_CONTRACTID \
  "@mozilla.org/embedcomp/window-watcher;1"
 
+#include "nsCOMPtr.h"
+#include "jspubtd.h"
+#include "nsIWindowCreator.h" // for stupid compilers
 #include "nsIWindowWatcher.h"
 #include "nsPIWindowWatcher.h"
 #include "nsVoidArray.h"
 
+class  nsIURI;
+class  nsIDocShellTreeItem;
+class  nsIDocShellTreeOwner;
+class  nsString;
 class  nsWindowEnumerator;
+struct JSContext;
+struct JSObject;
 struct WindowInfo;
 struct PRLock;
 
@@ -58,12 +67,47 @@ private:
   PRBool AddEnumerator(nsWindowEnumerator* inEnumerator);
   PRBool RemoveEnumerator(nsWindowEnumerator* inEnumerator);
 
-  NS_IMETHOD RemoveWindow(WindowInfo *inInfo);
+  nsresult RemoveWindow(WindowInfo *inInfo);
+
+  nsresult FindItemWithName(const PRUnichar *aName,
+                            nsIDocShellTreeItem **aFoundItem);
+
+  static JSContext *GetJSContext(nsIDOMWindow *aWindow);
+  static nsresult   URIfromURL(const PRUnichar *aURL,
+                               nsIDOMWindow *aParent,
+                               nsIURI **aURI);
+  static nsresult   Escape(const nsAReadableString& aStr,
+                           nsAWritableString& aReturn,
+                           nsIDOMWindow *aWindow);
+  static void       CheckWindowName(nsString& aName);
+  static PRUint32   CalculateChromeFlags(const char *aFeatures,
+                                         PRBool aFeaturesSpecified,
+                                         PRBool aDialog);
+  static PRInt32    WinHasOption(const char *aOptions, const char *aName,
+                                 PRInt32 aDefault, PRBool *aPresenceFlag);
+  static nsresult   ReadyOpenedDocShellItem(nsIDocShellTreeItem *aOpenedItem,
+                                            nsIDOMWindow *aParent,
+                                            nsIDOMWindow **aOpenedWindow);
+  static void       SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
+                                           nsIDOMWindow *aParent,
+                                           const char *aFeatures,
+                                           PRUint32 aChromeFlags);
+  static void       AttachArguments(nsIDOMWindow *aWindow,
+                                    PRUint32 argc, jsval *argv);
+  static void       GetWindowTreeItem(nsIDOMWindow *inWindow,
+                                      nsIDocShellTreeItem **outTreeItem);
+  static void       GetWindowTreeOwner(nsIDOMWindow *inWindow,
+                                       nsIDocShellTreeOwner **outTreeOwner);
+  static void       GetWindowScriptContextAndObject(nsIDOMWindow *inWindow,
+                                                    JSContext **cx,
+                                                    JSObject **outObject);
 
   nsVoidArray   mEnumeratorList;
   WindowInfo   *mOldestWindow;
   nsIDOMWindow *mActiveWindow;
   PRLock       *mListLock;
+
+  nsCOMPtr<nsIWindowCreator> mWindowCreator;
 };
 
 #endif

@@ -28,7 +28,8 @@ MODULE		= embedcomponents
 LIBRARY_NAME	= windowwatcher_s
 REQUIRES	= xpcom dom windowwatcher
 
-CPPSRCS		= nsWindowWatcher.cpp  \
+CPPSRCS		= nsWWJSUtils.cpp \
+                  nsWindowWatcher.cpp  \
                   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a

@@ -30,6 +30,7 @@ RESFILE         = $(MODULE).res
 OBJS =                           \
     .\$(OBJDIR)\winEmbed.obj     \
     .\$(OBJDIR)\WebBrowserChrome.obj   \
+    .\$(OBJDIR)\WindowCreator.obj \
     .\$(OBJDIR)\StdAfx.obj       \
     $(NULL)
 

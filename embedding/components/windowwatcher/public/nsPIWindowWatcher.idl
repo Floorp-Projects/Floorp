@@ -24,6 +24,8 @@
 interface nsIDOMWindow;
 interface nsISimpleEnumerator;
 
+[ptr] native jsvalptr(jsval);
+
 [uuid(d535806e-afaf-47d1-8d89-783ad088c62a)]
 
 interface nsPIWindowWatcher : nsISupports
@@ -37,6 +39,23 @@ interface nsPIWindowWatcher : nsISupports
       @param aWindow the window to remove
   */
   void removeWindow(in nsIDOMWindow aWindow);
+
+  /** Like the public interface's open(), but can deal with openDialog
+      style arguments. The exact definition of this method is temporary
+      pending the XPIDL rewrite of the DOM.
+      @param aParent parent window, if any. null if not.
+      @param aURL window URL from JS window.open
+      @param aName window name from JS window.open
+      @param aFeatures window features from JS window.open
+      @param aDialog use dialog defaults (see nsIDOMWindowInternal::openDialog)
+      @param argc count of argv arguments
+      @param argv extra JS arguments, if any
+                  (see nsIDOMWindowInternal::openDialog)
+      @return the new window
+  */
+  nsIDOMWindow openWindowJS(in nsIDOMWindow aParent, in wstring aUrl,
+               in wstring aName, in wstring aFeatures, in boolean aDialog,
+               in PRUint32 argc, in jsvalptr argv);
 
 };
 
