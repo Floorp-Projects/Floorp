@@ -119,22 +119,27 @@ sub bless {
 sub load {
     my $self = shift;
     my($package) = @_;
+
     if (defined $MODULES{$package}) {
         syntaxError "$package->create() called despite failing to load package" if $MODULES{$package} == 0;
         return;
     }
+
     $MODULES{$package} = -1;
     foreach (eval "\@$package\::ISA") {
-        $self->load($_) unless $_ eq __PACKAGE__;
+        $self->load($_) unless $_ eq __PACKAGE__ || $_ eq 'Exporter';
     }
+    $MODULES{$package} = 1;
+
+    # bail early if there is no __DATA__ section
+    return unless defined fileno("$package\::DATA");
+
     local $/ = undef;
     my $data = "package $package;use strict;" . eval "<$package\::DATA>";
-    evalString $data, "${package} on-demand section";
+    evalString $data, "${package} on-demand section" unless $@;
     if ($@) {
         $self->error(1, "Error while loading '$package': $@");
         $MODULES{$package} = 0;
-    } else {
-        $MODULES{$package} = 1;
     }
 }
 
