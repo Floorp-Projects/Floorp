@@ -99,8 +99,8 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
     rt = cx->runtime;
     trap = FindTrap(rt, script, pc);
     if (trap) {
-        /* Restore opcode at pc so it can be saved again. */
-        *pc = (jsbytecode)trap->op;
+        JS_ASSERT(trap->script == script && trap->pc == pc);
+        JS_ASSERT(*pc == JSOP_TRAP);
     } else {
         trap = (JSTrap *) JS_malloc(cx, sizeof *trap);
         if (!trap || !js_AddRoot(cx, &trap->closure, "trap->closure")) {
@@ -108,14 +108,14 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
                 JS_free(cx, trap);
             return JS_FALSE;
         }
+        JS_APPEND_LINK(&trap->links, &rt->trapList);
+        trap->script = script;
+        trap->pc = pc;
+        trap->op = (JSOp)*pc;
+        *pc = JSOP_TRAP;
     }
-    JS_APPEND_LINK(&trap->links, &rt->trapList);
-    trap->script = script;
-    trap->pc = pc;
-    trap->op = (JSOp)*pc;
     trap->handler = handler;
     trap->closure = closure;
-    *pc = JSOP_TRAP;
     return JS_TRUE;
 }
 
