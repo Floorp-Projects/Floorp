@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   David Bienvenu <bienvenu@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -1860,7 +1861,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
   {
     nsCOMPtr <nsIMsgDBHdr> newHdr;
     
-    nsresult msgErr = destMailDB->CopyHdrFromExistingHdr(newMsgPos, mailHdr, PR_TRUE, getter_AddRefs(newHdr));
+    nsresult msgErr = destMailDB->CopyHdrFromExistingHdr(newMsgPos, mailHdr, PR_FALSE, getter_AddRefs(newHdr));
     if (NS_SUCCEEDED(msgErr) && newHdr)
     {
       PRUint32 newFlags;
@@ -1868,6 +1869,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
       newHdr->SetMessageKey (newMsgPos); 
       newHdr->OrFlags(MSG_FLAG_NEW, &newFlags);
       destMailDB->AddToNewList(newMsgPos);
+      destMailDB->AddNewHdrToDB(newHdr, PR_TRUE);
     }
   }
   else
