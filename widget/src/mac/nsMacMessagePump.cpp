@@ -272,6 +272,7 @@ PRInt16				partcode;
 nsWindow			*thewindow;
 nsMouseEvent	mouseevent;
 nsSizeEvent 	event;
+nsEventStatus	eventStatus;
 nsRect				sizerect;
 Point					newPt;
 nsRefData			*theRefData;
@@ -403,7 +404,7 @@ nsRefData			*theRefData;
 			        event.windowSize = &sizerect;
 			        event.eventStructType = NS_SIZE_EVENT;
 			        event.widget = thewindow;
-			       	thewindow->DispatchEvent(&event);
+			       	thewindow->DispatchEvent(&event, eventStatus);
 
 							//thewindow->DoResizeWidgets(event);
 							//result = thewindow->OnResize(event);
@@ -736,6 +737,7 @@ PRInt16				thechar;
 WindowPtr			whichwindow;
 nsWindow			*thewidget;
 nsKeyEvent 		keyEvent;
+nsEventStatus	eventStatus;
 nsTextWidget	*widget;
 
 	ch = (char)(aTheEvent->message & charCodeMask);
@@ -765,7 +767,7 @@ nsTextWidget	*widget;
 			  
 			  thechar = aTheEvent->message&charCodeMask;
 			  
-			  if (!thewidget->DispatchEvent(&keyEvent))
+			  if (!thewidget->DispatchEvent(&keyEvent, eventStatus))
 			  	{
 			  	// if this is a nsTextWidget
 			  	//if (NS_OK == thewidget->QueryInterface(kITEXTWIDGETIID, (void**) &widget) )
@@ -791,6 +793,7 @@ nsMacMessagePump::DoMenu(EventRecord *aTheEvent, long menuResult)
 {
 WindowPtr 	whichwindow;
 nsMenuEvent theEvent;
+nsEventStatus eventStatus;
 nsWindow* 	raptorWindow = nsnull;
 nsRefData		*theRefData;
 
@@ -835,7 +838,7 @@ nsRefData		*theRefData;
 		theEvent.mCommand = menuResult;
 		theEvent.widget   = raptorWindow;
 		theEvent.nativeMsg = aTheEvent;
-		raptorWindow->DispatchEvent(&theEvent);
+		raptorWindow->DispatchEvent(&theEvent, eventStatus);
 	}
 	else
 	{
