@@ -27,6 +27,16 @@
 #include "CBrowseDlg.h"
 #include "TestScriptHelper.h"
 
+#define BEGIN_TESTSET() \
+    TestSet aTestSets[] = {
+#define DECL_SET(name, descr) \
+    { _T(#name), _T(descr), sizeof(a##name)/sizeof(a##name[0]), a##name, NULL },
+#define DECL_SET_DYNAMIC(name, descr, pop) \
+    { _T(#name), _T(descr), 0, NULL, pop },
+#define END_TESTSET() \
+    { NULL, NULL, 0, NULL } }; \
+    int nTestSets = sizeof(aTestSets) / sizeof(aTestSets[0]) - 1;
+
 ///////////////////////////////////////////////////////////////////////////////
 
 void BrowserInfo::OutputString(const TCHAR *szMessage, ...)
@@ -280,6 +290,29 @@ TestResult __cdecl tstDriller(BrowserInfo &cInfo)
 }
 
 
+TestResult __cdecl tstInnerHTML(BrowserInfo &cInfo)
+{
+	CIPtr(IHTMLDocument2) cpDocElement;
+	cInfo.GetDocument(&cpDocElement);
+	if (cpDocElement == NULL)
+	{
+		cInfo.OutputString(_T("Error: No document"));
+		return trFailed;
+	}
+	
+	CIPtr(IHTMLElement) cpBody;
+	HRESULT hr = cpDocElement->get_body( &cpBody );
+	if (hr == S_OK)
+	{
+        BSTR html = NULL;
+        cpBody->get_innerHTML(&html);
+        SysFreeString(html);
+	}
+
+	return trPassed;
+}
+
+
 TestResult __cdecl tstTesters(BrowserInfo &cInfo)
 {
 	cInfo.OutputString("Test architecture is reasonably sane!");
@@ -468,7 +501,8 @@ Test aDHTML[] =
 {
 	{ _T("IWebBrowser::get_Document"), _T("Test if browser has a top level element"), tstDocument },
 	{ _T("IHTMLElementCollection::get__newEnum"), _T("Test if element collections return enumerations"), tstCollectionEnum },
-	{ _T("Parse DOM"), _T("Parse the document DOM"), tstDriller }
+	{ _T("Parse DOM"), _T("Parse the document DOM"), tstDriller },
+    { _T("innerHTML"), _T("Dump the innerHTML for the BODY element"), tstInnerHTML }
 };
 
 
@@ -477,15 +511,11 @@ Test aOther[] =
 	{ _T("Print Page"), _T("Print the test URL page"), NULL }
 };
 
+BEGIN_TESTSET()
+    DECL_SET(Basic, "Basic sanity tests")
+    DECL_SET(Browsing, "Browsing and navigation tests")
+    DECL_SET(DHTML, "Test the DOM")
+    DECL_SET(Other, "Other tests")
+    DECL_SET_DYNAMIC(Scripts, "Script tests", ScriptSetPopulator)
+END_TESTSET()
 
-TestSet aTestSets[] =
-{
-	{ _T("Basic"), _T("Basic sanity tests"), 5, aBasic, NULL },
-	{ _T("Browsing"), _T("Browsing and navigation tests"), 1, aBrowsing , NULL},
-	{ _T("DHTML"), _T("Test the DOM"), 3, aDHTML, NULL },
-	{ _T("Other"), _T("Other tests"), 1, aOther, NULL },
-	{ _T("Scripts"), _T("Script tests"), 0, NULL, ScriptSetPopulator }
-};
-
-
-int nTestSets = sizeof(aTestSets) / sizeof(aTestSets[0]);
