@@ -178,13 +178,12 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     //--------------------------------------------------------------------
     nsCOMPtr<nsPIXPIStubHook>   hook = do_QueryInterface(gXPI);
     nsFileSpec                  dirSpec( aProgramDir );
-    nsCOMPtr<nsILocalFile>           iDirSpec;
-
-    //NS_NewFileSpecWithSpec( dirSpec, getter_AddRefs(iDirSpec) );    
+    nsCOMPtr<nsILocalFile>      iDirSpec;
+  
 #if XP_MAC
-	NS_NewLocalFile(nsnull, getter_AddRefs(iDirSpec));
-	nsCOMPtr<nsILocalFileMac> macfile = do_QueryInterface(iDirSpec);
-	macfile->InitWithFSSpec(&aProgramDir);
+	nsCOMPtr<nsILocalFileMac> iMacDirSpec;
+	NS_NewLocalFileWithFSSpec((FSSpec *)&aProgramDir, getter_AddRefs(iMacDirSpec));
+	iDirSpec = do_QueryInterface(iMacDirSpec);
 #else
 	NS_NewLocalFile(aProgramDir, getter_AddRefs(iDirSpec));
 #endif    
@@ -253,9 +252,9 @@ PR_PUBLIC_API(PRInt32) XPI_Install(
     gInstallStatus = -322; // unique stub error code
     
 #if XP_MAC
-	NS_NewLocalFile(nsnull, getter_AddRefs(iFile));
-	nsCOMPtr<nsILocalFileMac> macfile = do_QueryInterface(iFile);
-	macfile->InitWithFSSpec(&aFile);
+	nsCOMPtr<nsILocalFileMac> iMacFile;
+	NS_NewLocalFileWithFSSpec((FSSpec *)&aFile, getter_AddRefs(iMacFile));
+	iFile = do_QueryInterface(iMacFile);
 #else
 	NS_NewLocalFile(aFile, getter_AddRefs(iFile));
 #endif  
