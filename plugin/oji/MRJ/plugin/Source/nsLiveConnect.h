@@ -29,7 +29,7 @@ class MRJMonitor;
 
 class nsLiveconnect : public nsILiveconnect,
 					  public nsIPluginStreamListener,
-					  public SupportsMixin {
+					  private SupportsMixin {
 public:
 	DECL_SUPPORTS_MIXIN
 	
