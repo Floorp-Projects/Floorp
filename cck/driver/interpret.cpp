@@ -1471,6 +1471,24 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 				// the ShowInSection attribute are left alone.
 				ShowSection(curWidget);					
 			}
+			else if (strcmp(pcmd, "CheckHomePageURL") == 0)
+			{
+				CString str;
+
+				//check home page url settings
+				
+				str = GetGlobal("HomePageURL");
+
+				//if URL is set (and not the default string),
+				//uncheck the RecaptureHomepage checkbox
+
+				if (str.GetLength() && str.CompareNoCase("http://home.netscape.com") != 0)
+					SetGlobal("RecaptureHomepage", "FALSE");
+				else
+					SetGlobal("RecaptureHomepage", "TRUE");
+			}
+				
+				
 			else if (strcmp(pcmd, "OpenPrefTreeItem") == 0)
       {
         WIDGET *w = findWidget(parms);
