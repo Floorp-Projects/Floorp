@@ -74,6 +74,10 @@ LINE:
                     ($chtype, $date, $name, $repository, $dir, $file,
                      $version, $sticky, $branch, $addlines, $removelines) =
                           split(/\|/, $line);
+                    $addlines = 0 if (!defined($addlines) || 
+                                      $addlines =~ /^\s*$/);
+                    $removelines = 0 if (!defined($removelines) || 
+                                         $removelines =~ /^\s*$/);
                     $key = "$date|$branch|$repository|$dir|$name";
                     $group{$key} .= 
                          "$file|$version|$addlines|$removelines|$sticky\n";

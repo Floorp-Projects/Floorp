@@ -169,6 +169,20 @@ sub get_loginfo {
         if ($state == $STATE_LOG)     { push(@log_lines,     $_); }
     }
 
+    # If any of the filenames in the arrays below contain spaces,
+    # things get broken later on in the code.
+    # fix the filename array by using the get_filename sub.
+    @fixed_changed_files = @{&get_filename("C", @changed_files)};
+    @fixed_added_files   = @{&get_filename("A", @added_files)};
+    @fixed_removed_files = @{&get_filename("R", @removed_files)};
+
+    # now replace the old broken arrays with the new fixed arrays and
+    # carry on.
+
+    @changed_files = @fixed_changed_files;
+    @added_files   = @fixed_added_files;
+    @removed_files = @fixed_removed_files;
+    
     if ($flag_debug) {
         print STDERR "----------------------------------------------\n"
                      . "changed files: @changed_files\n"
@@ -177,6 +191,56 @@ sub get_loginfo {
         print STDERR "----------------------------------------------\n";
     }
 
+}
+
+sub get_filename {
+
+    my ($state, @files) = @_;
+    my @fixed_files;
+    my $FILE_EXIST = 0;
+    my $FILE_CHECKED = 0;
+    my $file;
+    my $partial_file;
+    my $path;
+    if ($flag_debug) {
+        print STDERR "\n-- get_filename ------------------------\n";
+    }
+    foreach my $scalar (@files) {
+        if ($FILE_CHECKED && ! $FILE_EXISTS) {
+            $file = "$partial_file $scalar";
+        } else{
+            $file = $scalar;
+        }
+        if ($state eq "R") {
+            $path = "$envcvsroot/$repository/Attic/$file";
+        } else {
+            $path = "$envcvsroot/$repository/$file";
+        }
+        if ($flag_debug) {
+            print STDERR "changed file: $file\n";
+            print STDERR "path: $path\n";
+        }
+        if (-r "$path,v") {
+            push(@fixed_files, $file);
+            $FILE_EXISTS = 1;
+            $FILE_CHECKED = 1;
+            if ($flag_debug){
+                print STDERR "file exists\n";
+            }
+        } else {
+            $partial_file = $file;
+            $FILE_EXISTS = 0;
+            $FILE_CHECKED = 1;
+            if ($flag_debug) {
+                print STDERR "file does not exist\n";
+            }
+        }
+    }
+    if ($flag_debug) {
+        print STDERR "\@fixed_files: @fixed_files\n";
+        print STDERR "-------------------------------------------\n\n";
+    }
+    return \@fixed_files;
 }
 
 sub process_cvs_info {
@@ -219,6 +283,11 @@ sub process_cvs_info {
     for $i (@removed_files) {
         push(@outlist,
              ("R|$time|$username|$cvsroot|$repository|$i|||$repository_tag\n"));
+    }
+
+    # make sure dolog has something to parse when it sends its load off
+    if (!scalar(@log_lines)) {
+        push @log_lines, "EMPTY LOG MESSAGE"; 
     }
 
     push(@outlist, "LOGCOMMENT\n");

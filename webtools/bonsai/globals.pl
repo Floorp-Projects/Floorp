@@ -446,8 +446,9 @@ sub AddToDatabase {
           $branch =~ s/^T//;
           $dir =~ s!/$!!;
           $dir =~ s!^\./!!;
-          $addlines = 0 if ($addlines =~ /^\s*$/);
-          $removelines = 0 if ($removelines =~ /^\s*$/);
+          $addlines = 0 if (!defined($addlines) || $addlines =~ /^\s*$/);
+          $removelines = 0 if (!defined($removelines) || 
+                               $removelines =~ /^\s*$/);
           $removelines = abs($removelines);
           $date = time2str("%Y/%m/%d %H:%M", $date)
                if ($date =~ /^[+-]?\d+$/);
