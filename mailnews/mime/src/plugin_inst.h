@@ -39,7 +39,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // from nsINetPluginInstance
-    NS_IMETHOD    Initialize(nsINetOStream* out_stream);
+    NS_IMETHOD    Initialize(nsINetOStream* out_stream, const char * streamName);
     NS_IMETHOD    GetMIMEOutput(const char* *result);
     NS_IMETHOD    Start(void);
     NS_IMETHOD    Stop(void);

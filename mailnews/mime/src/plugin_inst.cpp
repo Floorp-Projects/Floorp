@@ -91,7 +91,7 @@ MimePluginInstance::~MimePluginInstance(void)
 }
 
 NS_METHOD
-MimePluginInstance::Initialize(nsINetOStream* stream)
+MimePluginInstance::Initialize(nsINetOStream* stream, const char * aStreamName)
 {
     OutStream = stream;
     return NS_OK;
