@@ -285,6 +285,7 @@ function ConfirmWithTitle(title, message, okButtonText, cancelButtonText)
                             okButtonText, cancelButtonText, null, null, {value:0}, result);
     return (result.value == 0);      
   }
+  return false;
 }
 
 function GetString(name)
