@@ -1575,9 +1575,9 @@ var BookmarksUtils = {
     this.loadBookmarkBrowser(aEvent, aDS);
   },
 
-  loadBookmarkBrowser: function (aEvent, aDS)
+  loadBookmarkBrowser: function (aEvent, aTarget, aDS)
   {
-    var rSource   = RDF.GetResource(aEvent.originalTarget.id);
+    var rSource   = RDF.GetResource(aTarget.id);
     var selection = BookmarksUtils.getSelectionFromResource(rSource);
     var browserTarget = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
     BookmarksCommand.openBookmark(selection, browserTarget, aDS)
@@ -1818,7 +1818,7 @@ var BookmarkMenuTransactionListener =
       return;
     }
     var node, transactionNumber, transactionList, transactionLabel, action;
-    node = document.getElementById("cmd_bm_undo");
+    node = document.getElementById("cmd_undo");
     transactionNumber = aTxmgr.numberOfUndoItems;
     dump("N UNDO: "+transactionNumber+"\n")
     if (transactionNumber == 0) {
@@ -1832,7 +1832,7 @@ var BookmarkMenuTransactionListener =
     }
     node.setAttribute("label", transactionLabel);
       
-    node = document.getElementById("cmd_bm_redo");
+    node = document.getElementById("cmd_redo");
     transactionNumber = aTxmgr.numberOfRedoItems;
     dump("N REDO: "+transactionNumber+"\n")
     if (transactionNumber == 0) {

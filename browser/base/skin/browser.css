@@ -148,6 +148,15 @@ menuitem.bookmark-item {
   -moz-image-region: rect(16px 48px 32px 32px);
 }
 
+.groupmark-item {
+  width: 16px;
+  height: 16px;
+  margin: 0px 2px;
+  padding: 1px 3px 1px 2px;
+  list-style-image: url("chrome://browser/skin/bookmarks-icons.png") !important;
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+
 /* ::::: primary toolbar buttons ::::: */
 
 .toolbarbutton-1 {

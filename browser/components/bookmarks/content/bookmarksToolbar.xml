@@ -39,10 +39,8 @@
  *
 -->
 <!DOCTYPE window [
-  <!ENTITY % bookmarksDTD SYSTEM "chrome://communicator/locale/bookmarks/bookmarks.dtd" >
+  <!ENTITY % bookmarksDTD SYSTEM "chrome://browser/locale/bookmarks/bookmarks.dtd" >
   %bookmarksDTD;
-  <!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd">
-  %navigatorDTD;
 ]>
 
 <bindings xmlns="http://www.mozilla.org/xbl" 
@@ -488,7 +486,7 @@
                 datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
                 ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
                 rdf:type="http://home.netscape.com/NC-rdf#Folder"
-                oncommand="BookmarksUtils.loadBookmarkBrowser(event, this.database)"
+                oncommand="BookmarksUtils.loadBookmarkBrowser(event, event.originalTarget, this.database)"
                 onclick="BookmarksUtils.loadBookmarkBrowserMiddleClick(event, this.database)"
                 ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarDNDObserver)"
                 ondragdrop="nsDragAndDrop.drop(event, personalToolbarDNDObserver); event.preventBubble()"
@@ -580,6 +578,12 @@
               <xul:menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
                             label="rdf:http://home.netscape.com/NC-rdf#Name"
                             image="rdf:http://home.netscape.com/NC-rdf#Icon"/>
+              <xul:vbox>
+                <xul:menuseparator/>
+                <xul:menuitem class="menuitem-iconic groupmark-item"
+                              label="&openInTabs.label;" accesskey="&openInTabs.accesskey;"
+                              oncommand="BookmarksUtils.loadBookmarkBrowser(event, this.parentNode.parentNode.parentNode, this.database); event.preventBubble();"/>
+              </xul:vbox>
             </xul:menupopup>
           </xul:rule>
 
@@ -590,7 +594,7 @@
         <xul:toolbarbutton mousethrough="never" collapsed="true" type="menu" class="chevron"
               datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
               ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
-              oncommand="BookmarksUtils.loadBookmarkBrowser(event, this.database)"
+              oncommand="BookmarksUtils.loadBookmarkBrowser(event, event.originalTarget, this.database)"
               onclick="BookmarksUtils.loadBookmarkBrowserMiddleClick(event, this.database)"
               ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarDNDObserver)"
               ondragdrop="nsDragAndDrop.drop(event, personalToolbarDNDObserver); event.preventBubble()"
