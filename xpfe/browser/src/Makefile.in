@@ -53,7 +53,14 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/navigator-test1.xul \
 	$(srcdir)/raindrops_light.gif \
 	$(srcdir)/skindemo.xul \
-	$(srcdir)/NetSupportUserPassword.xul\
+	$(srcdir)/NetSupportUserPassword.xul \
+	$(srcdir)/NetSupportAlert.xul \
+	$(srcdir)/NetSupportConfirm.xul \
+	$(srcdir)/NetSupportConfirmCheck.xul \
+	$(srcdir)/alertl.gif \
+	$(srcdir)/errorI.gif \
+	$(srcdir)/messagel.gif \
+	$(srcdir)/questionl.gif \
 	$(NULL)
 
 install:: 
