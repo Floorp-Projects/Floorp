@@ -569,7 +569,7 @@ PBE_CreateContext(SECOidTag hashAlgorithm, PBEBitGenID bitGenPurpose,
 
     symKey = PK11_RawPBEKeyGen(PK11_GetInternalSlot(),mechanism,
 					&mechItem, pwitem, PR_FALSE, NULL);
-    if (symKey == NULL) {
+    if (symKey != NULL) {
 	if (bitGenPurpose == pbeBitGenCipherIV) {
 	    /* NOTE: this assumes that bitsNeeded is a multiple of 8! */
 	    SECItem ivItem;
