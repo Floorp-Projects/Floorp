@@ -973,13 +973,8 @@ nsresult nsAccessible::AppendStringWithSpaces(nsAString *aFlatString, const nsAS
 nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsAString *aFlatString)
 {
   nsAutoString textEquivalent;
-  nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(aContent));
-  if (xulElement) {
-    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aContent));
-    NS_ASSERTION(elt, "No DOM element for content node!");
-    elt->GetAttribute(NS_LITERAL_STRING("value"), textEquivalent); // Prefer value over tooltiptext
-    if (textEquivalent.IsEmpty())
-      elt->GetAttribute(NS_LITERAL_STRING("tooltiptext"), textEquivalent);
+  if (aContent->IsContentOfType(nsIContent::eXUL)) {
+    aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::tooltiptext, textEquivalent);
     textEquivalent.CompressWhitespace();
     return AppendStringWithSpaces(aFlatString, textEquivalent);
   }
@@ -1298,14 +1293,28 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree
     return NS_OK;
   }
 
-  if (!aCanAggregateSubtree) {
-    // Don't use AppendFlatStringFromSubtree for container widgets like menulist
-    // Still try the title as as fallback method in that case.
-    content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, aLabel);
+  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::tooltiptext, label);
+  label.CompressWhitespace();
+  if (!label.IsEmpty()) {
+    aLabel = label;
     return NS_OK;
   }
 
-  return AppendFlatStringFromSubtree(content, &aLabel);
+  // Can get text from title of <toolbaritem> if we're a child of a <toolbaritem>
+  nsIContent *bindingParent = content->GetBindingParent();
+  nsIContent *parent = bindingParent? bindingParent->GetParent() :
+                                      content->GetParent();
+  if (parent && parent->Tag() == nsAccessibilityAtoms::toolbaritem &&
+      NS_CONTENT_ATTR_HAS_VALUE == parent->GetAttr(kNameSpaceID_None,
+                                                   nsAccessibilityAtoms::title,
+                                                   label)) {
+    label.CompressWhitespace();
+    aLabel = label;
+    return NS_OK;
+  }
+
+  // Don't use AppendFlatStringFromSubtree for container widgets like menulist
+  return aCanAggregateSubtree? AppendFlatStringFromSubtree(content, &aLabel) : NS_OK;
 }
 
 NS_IMETHODIMP nsAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible *aTarget, void * aData)
@@ -1346,6 +1355,7 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"secret-text", ROLE_PASSWORD_TEXT, eTitleOnly, STATE_PROTECTED, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}, // XXX Use ext state STATE_SINGLE_LINE
   {"select", ROLE_LIST, eTitleOnly, 0, {"readonly", 0, STATE_READONLY},  {"multiselect", 0, STATE_EXTSELECTABLE | STATE_MULTISELECTABLE}, {0, 0, 0}},
   {"slider", ROLE_SLIDER, eTitleOnly, 0, {"readonly", 0, STATE_READONLY}, {0, 0, 0}, {0, 0, 0}},
+  {"spreadsheet", ROLE_TABLE, eTitleOnly, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE | STATE_FOCUSABLE, {"readonly", 0, STATE_READONLY}, {0, 0, 0}, {0, 0, 0}},
   {"submit", ROLE_PUSHBUTTON, eAggregateSubtree, STATE_DEFAULT, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
   {"textarea", ROLE_TEXT, eTitleOnly, 0, {"readonly", 0, STATE_READONLY}, {0, 0, 0}, {0, 0, 0}}, // XXX Use ext state STATE_MULTI_LINE
   {"textfield", ROLE_TEXT, eTitleOnly, 0, {"readonly", 0, STATE_READONLY}, {0, 0, 0}, {0, 0, 0}}, // XXX Use ext state STATE_SINGLE_LINE

@@ -78,6 +78,7 @@ ACCESSIBILITY_ATOM(optgroup, "optgroup")
 ACCESSIBILITY_ATOM(option, "option")
 ACCESSIBILITY_ATOM(q, "q")
 ACCESSIBILITY_ATOM(select, "select")
+ACCESSIBILITY_ATOM(toolbaritem, "toolbaritem")
 ACCESSIBILITY_ATOM(ul, "ul")
 
   // Alphabetical list of attributes
@@ -89,6 +90,7 @@ ACCESSIBILITY_ATOM(id, "id")
 ACCESSIBILITY_ATOM(name, "name")
 ACCESSIBILITY_ATOM(tabindex, "tabindex")
 ACCESSIBILITY_ATOM(title, "title")
+ACCESSIBILITY_ATOM(tooltiptext, "tooltiptext")
 
   // DHTML accessibility attributes
 ACCESSIBILITY_ATOM(valuenow, "valuenow")    // For DHTML widget values
