@@ -673,7 +673,7 @@
                  tooltiptext="&saveToolbarCmd.tooltip;"/>
   <toolbarbutton id="publishButton" class="toolbarbutton-1"
                  observes="cmd_publish"
-                 tooltiptext="&publishToolbarCmd.tooltip;"/>
+                 tooltiptext="&publishToolbarCmd.tooltip;" collapsed="true"/>
   <toolbarbutton id="previewButton" class="toolbarbutton-1"
                  label="&previewToolbarCmd.label;" observes="cmd_preview"
                  tooltiptext="&previewToolbarCmd.tooltip;"/>
