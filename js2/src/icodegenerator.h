@@ -35,35 +35,35 @@ namespace JavaScript {
                         //      Operand1                Operand2                Operand3
         NOP,
 
-        MOVE_TO,        // Source Register          Destination Register
+        MOVE_TO,        // Destination Register     Source Register          
 
-        LOAD_VAR,       // index of frame slot      Destination Register
+        LOAD_VAR,       // Destination Register     index of frame slot      
         SAVE_VAR,       // index of frame slot      Source Register
 
-        LOAD_IMMEDIATE, // immediate (double)       Destination Register
+        LOAD_IMMEDIATE, // Destination Register     immediate (double)       
 
-        LOAD_NAME,      // StringAtom &             Destination Register
+        LOAD_NAME,      // Destination Register     StringAtom &             
         SAVE_NAME,      // StringAtom &             Source Register
 
         NEW_OBJECT,     // Destination Register
 
-        GET_PROP,       // StringAtom &             Base Register               Destination Register
+        GET_PROP,       // Destination Register     StringAtom &                Base Register               
         SET_PROP,       // StringAtom &             Base Register               Source Register
 
-        ADD,            // Source Register 1        Source Register 2           Destination Register
+        ADD,            // Destination Register     Source Register 1           Source Register 2           
         SUBTRACT,
         MULTIPLY,
         DIVIDE,
         
         // maintain contiguity                     
-        COMPARE_LT,     // Source Register 1        Source Register 2           Destination Register
+        COMPARE_LT,     // Destination Register     Source Register 1           Source Register 2           
         COMPARE_LE,
         COMPARE_EQ,
         COMPARE_NE,
         COMPARE_GE,
         COMPARE_GT,
 
-        NOT,            // Source Register          Destination Register
+        NOT,            // Destination Register     Source Register          
 
         BRANCH,         // Target label
 
@@ -92,6 +92,27 @@ namespace JavaScript {
         ICodeOp opcode()        { return itsOp; }
     };
 
+    typedef std::vector<Instruction *> InstructionStream;
+    typedef InstructionStream::iterator InstructionIterator;
+
+   /****************************************************************/
+
+#define NotALabel (0xFFFFFFFF)
+
+    class Label {
+    public:
+        Label(InstructionStream *base) : itsBase(base), itsOffset(NotALabel) { }
+
+        InstructionStream *itsBase;
+        uint32 itsOffset;
+    };
+
+    typedef std::vector<Label *> LabelList;
+    typedef LabelList::iterator LabelIterator;
+
+    /****************************************************************/
+
+    
     template <typename Operand1>
         class Instruction_1 : public Instruction {
         public:
@@ -128,43 +149,43 @@ namespace JavaScript {
             Operand3& o3() { return itsOperand3; }
         };
 
-    typedef Instruction_3<StringAtom*, Register, Register> GetProp, SetProp;
-    typedef Instruction_2<StringAtom*, Register> LoadName, SaveName;
-    typedef Instruction_2<float64, Register> LoadImmediate;
-    typedef Instruction_2<uint32, Register> LoadVar, SaveVar;
-    typedef Instruction_1<int32> Branch;
-    typedef Instruction_2<int32, Register> BranchCond;
+    typedef Instruction_3<StringAtom*, Register, Register> SetProp;
+    typedef Instruction_3<Register, Register, StringAtom*> GetProp;
     typedef Instruction_3<Register, Register, Register> Arithmetic;
     typedef Instruction_3<Register, Register, Register> Compare;
+
+    typedef Instruction_2<Register, StringAtom*> LoadName;
+    typedef Instruction_2<StringAtom*, Register> SaveName;
+    typedef Instruction_2<float64, Register> LoadImmediate;
+    typedef Instruction_2<Register, uint32> LoadVar;
+    typedef Instruction_2<uint32, Register> SaveVar;
+    typedef Instruction_2<Label *, Register> BranchCond;
     typedef Instruction_2<Register, Register> Move;
+
+    typedef Instruction_1<Label *> Branch;
 
     class Return : public Instruction_1<Register> {
     public:
-        Return(Register source) : Instruction_1<Register>(RETURN, source) {}
+        Return(Register result) : Instruction_1<Register>(RETURN, result) { }
     };
 
     class NewObject : public Instruction_1<Register> {
     public:
-        NewObject(Register dest) : Instruction_1<Register>(NEW_OBJECT, dest) {}
+        NewObject(Register result) : Instruction_1<Register>(NEW_OBJECT, result) { }
     };
 
-    typedef std::vector<Instruction *> InstructionStream;
-    typedef InstructionStream::iterator InstructionIterator;
-
-    /****************************************************************/
-
-    class Label {
+    class ResolvedBranch : public Instruction_1<uint32> {
     public:
-        Label(InstructionStream *base, int32 offset) : itsBase(base), itsOffset(offset) { }
-
-        InstructionStream *itsBase;
-        int32 itsOffset;
+        ResolvedBranch(uint32 offset) : Instruction_1<Register>(BRANCH, offset) { }
     };
 
-    typedef std::vector<Label *> LabelList;
-    typedef LabelList::iterator LabelIterator;
+    class ResolvedBranchCond : public Instruction_2<uint32, Register> {
+    public:
+        ResolvedBranchCond(ICodeOp op, uint32 offset, Register condition)
+            : Instruction_2<uint32, Register>(op, offset, condition) { }
+    };
 
-    /****************************************************************/
+
     /****************************************************************/
 
     class ICodeGenerator;   // forward declaration
@@ -176,13 +197,13 @@ namespace JavaScript {
         ICodeState(StateKind kind, ICodeGenerator *icg);        // inline below
         virtual ~ICodeState()   { }
 
-        virtual int32 getBreakLabel(ICodeGenerator *)       { ASSERT(false); return 0;}
-        virtual int32 getContinueLabel(ICodeGenerator *)    { ASSERT(false); return 0;}
+        virtual Label *getBreakLabel(ICodeGenerator *)       { ASSERT(false); return NULL;}
+        virtual Label *getContinueLabel(ICodeGenerator *)    { ASSERT(false); return NULL;}
 
         StateKind stateKind;
         Register registerBase;
-        int32 breakLabel;
-        int32 continueLabel;
+        Label *breakLabel;
+        Label *continueLabel;
     };
 
     /****************************************************************/
@@ -206,13 +227,13 @@ namespace JavaScript {
         ICodeOp getBranchOp()       { ASSERT(!iCode->empty()); return iCode->back()->getBranchOp(); }
 
       public:
-        int32 getLabel();
+        Label *getLabel();
       private:
-        void setLabel(int32 label);
-        void setLabel(InstructionStream *stream, int32 label);
+        void setLabel(Label *label);
+        void setLabel(InstructionStream *stream, Label *label);
 
-        void branch(int32 label);
-        void branchConditional(int32 label, Register condition);
+        void branch(Label *label);
+        void branchConditional(Label *label, Register condition);
     
       public:
         ICodeGenerator() : topRegister(0) { iCode = new InstructionStream(); }
@@ -314,50 +335,50 @@ namespace JavaScript {
 
     class WhileCodeState : public ICodeState {
     public:
-        WhileCodeState(int32 conditionLabel, int32 bodyLabel, ICodeGenerator *icg);         // inline below
+        WhileCodeState(Label *conditionLabel, Label *bodyLabel, ICodeGenerator *icg);         // inline below
         InstructionStream *swapStream(InstructionStream *iCode) { InstructionStream *t = whileExpressionStream; whileExpressionStream = iCode; return t; }
 
-        virtual int32 getBreakLabel(ICodeGenerator *icg)    { if (breakLabel == -1) breakLabel = icg->getLabel(); return breakLabel; }
-        virtual int32 getContinueLabel(ICodeGenerator *)    { return whileCondition; }
+        virtual Label *getBreakLabel(ICodeGenerator *icg)    { if (breakLabel == NULL) breakLabel = icg->getLabel(); return breakLabel; }
+        virtual Label *getContinueLabel(ICodeGenerator *)    { return whileCondition; }
 
-        int32 whileCondition;
-        int32 whileBody;
+        Label *whileCondition;
+        Label *whileBody;
         InstructionStream *whileExpressionStream;
     };
 
     class ForCodeState : public ICodeState {
     public:
-        ForCodeState(int32 conditionLabel, int32 bodyLabel, ICodeGenerator *icg);        // inline below
+        ForCodeState(Label *conditionLabel, Label *bodyLabel, ICodeGenerator *icg);        // inline below
         InstructionStream *swapStream(InstructionStream *iCode) { InstructionStream *t = forConditionStream; forConditionStream = iCode; return t; }
         InstructionStream *swapStream2(InstructionStream *iCode) { InstructionStream *t = forIncrementStream; forIncrementStream = iCode; return t; }
         
-        virtual int32 getBreakLabel(ICodeGenerator *icg)    { if (breakLabel == -1) breakLabel = icg->getLabel(); return breakLabel; }
-        virtual int32 getContinueLabel(ICodeGenerator *icg) { icg; ASSERT(false); return 0; /*if (continueLabel == -1) continueLabel = icg->getLabel(); return whileCondition;*/ }
+        virtual Label *getBreakLabel(ICodeGenerator *icg)    { if (breakLabel == NULL) breakLabel = icg->getLabel(); return breakLabel; }
+        virtual Label *getContinueLabel(ICodeGenerator *)    { ASSERT(continueLabel); return continueLabel; }
 
-        int32 forCondition;
-        int32 forBody;
+        Label *forCondition;
+        Label *forBody;
         InstructionStream *forConditionStream;
         InstructionStream *forIncrementStream;
     };
 
     class IfCodeState : public ICodeState {
     public:
-        IfCodeState(int32 a, int32 b, ICodeGenerator *icg) 
+        IfCodeState(Label *a, Label *b, ICodeGenerator *icg) 
                     : ICodeState(If_state, icg), elseLabel(a), beyondElse(b) { }
-        int32 elseLabel;
-        int32 beyondElse;
+        Label *elseLabel;
+        Label *beyondElse;
     };
 
     class DoCodeState : public ICodeState {
     public:
-        DoCodeState(int32 bodyLabel, int32 conditionLabel, ICodeGenerator *icg) 
+        DoCodeState(Label *bodyLabel, Label *conditionLabel, ICodeGenerator *icg) 
                     : ICodeState(Do_state, icg), doBody(bodyLabel), doCondition(conditionLabel) { }
 
-        virtual int32 getBreakLabel(ICodeGenerator *icg)    { if (breakLabel == -1) breakLabel = icg->getLabel(); return breakLabel; }
-        virtual int32 getContinueLabel(ICodeGenerator *)    { return doCondition; }
+        virtual Label *getBreakLabel(ICodeGenerator *icg)    { if (breakLabel == NULL) breakLabel = icg->getLabel(); return breakLabel; }
+        virtual Label *getContinueLabel(ICodeGenerator *)    { return doCondition; }
 
-        int32 doBody;
-        int32 doCondition;
+        Label *doBody;
+        Label *doCondition;
     };
 
     class SwitchCodeState : public ICodeState {
@@ -365,24 +386,24 @@ namespace JavaScript {
         SwitchCodeState(Register control, ICodeGenerator *icg);        // inline below
         InstructionStream *swapStream(InstructionStream *iCode) { InstructionStream *t = caseStatementsStream; caseStatementsStream = iCode; return t; }
         
-        virtual int32 getBreakLabel(ICodeGenerator *icg)    { if (breakLabel == -1) breakLabel = icg->getLabel(); return breakLabel; }
+        virtual Label *getBreakLabel(ICodeGenerator *icg)    { if (breakLabel == NULL) breakLabel = icg->getLabel(); return breakLabel; }
 
         Register controlExpression;
         InstructionStream *caseStatementsStream;
-        int32 defaultLabel;
+        Label *defaultLabel;
     };
 
     inline ICodeState::ICodeState(StateKind kind, ICodeGenerator *icg) 
-                    : stateKind(kind), breakLabel(-1), continueLabel(-1), registerBase(icg->getRegisterBase()) { }
+                    : stateKind(kind), breakLabel(NULL), continueLabel(NULL), registerBase(icg->getRegisterBase()) { }
 
     inline SwitchCodeState::SwitchCodeState(Register control, ICodeGenerator *icg)
-                    : ICodeState(Switch_state, icg), controlExpression(control), defaultLabel(-1), caseStatementsStream(icg->get_iCode()) {}
+                    : ICodeState(Switch_state, icg), controlExpression(control), defaultLabel(NULL), caseStatementsStream(icg->get_iCode()) {}
 
-    inline WhileCodeState::WhileCodeState(int32 conditionLabel, int32 bodyLabel, ICodeGenerator *icg) 
+    inline WhileCodeState::WhileCodeState(Label *conditionLabel, Label *bodyLabel, ICodeGenerator *icg) 
                     : ICodeState(While_state, icg), whileCondition(conditionLabel), whileBody(bodyLabel),
                             whileExpressionStream(icg->get_iCode()) { }
 
-    inline ForCodeState::ForCodeState(int32 conditionLabel, int32 bodyLabel, ICodeGenerator *icg) 
+    inline ForCodeState::ForCodeState(Label *conditionLabel, Label *bodyLabel, ICodeGenerator *icg) 
                     : ICodeState(For_state, icg), forCondition(conditionLabel), forBody(bodyLabel), 
                             forConditionStream(icg->get_iCode()), forIncrementStream(icg->get_iCode()) { }
 }

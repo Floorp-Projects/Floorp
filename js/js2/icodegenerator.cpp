@@ -43,17 +43,24 @@ namespace JavaScript {
         ASSERT(stitcher.empty());
         for (LabelIterator i = labels.begin(); i != labels.end(); i++) {
             ASSERT((*i)->itsBase == iCode);
-            ASSERT((*i)->itsOffset >= 0);
             ASSERT((*i)->itsOffset < iCode->size());
         }
     #endif
 
         for (InstructionIterator ii = iCode->begin(); ii != iCode->end(); ii++) {            
-            if ((*ii)->itsOp == BRANCH)
-                static_cast<Branch *>(*ii)->itsOperand1 = labels[static_cast<Branch *>(*ii)->itsOperand1]->itsOffset;
+            if ((*ii)->itsOp == BRANCH) {
+                Instruction *t = *ii;
+                *ii = new ResolvedBranch(static_cast<Branch *>(*ii)->itsOperand1->itsOffset);
+                delete t;
+            }
             else 
-                if ((*ii)->itsOp >= BRANCH_LT && (*ii)->itsOp <= BRANCH_GT)
-                    static_cast<BranchCond *>(*ii)->itsOperand1 = labels[static_cast<BranchCond *>(*ii)->itsOperand1]->itsOffset;
+                if ((*ii)->itsOp >= BRANCH_LT && (*ii)->itsOp <= BRANCH_GT) {
+                    Instruction *t = *ii;
+                    *ii = new ResolvedBranchCond((*ii)->itsOp, 
+                                        static_cast<BranchCond *>(*ii)->itsOperand1->itsOffset,
+                                            static_cast<BranchCond *>(*ii)->itsOperand2);
+                    delete t;
+                }
         }
 
         return iCode;
@@ -64,7 +71,7 @@ namespace JavaScript {
     Register ICodeGenerator::loadVariable(uint32 frameIndex)
     {
         Register dest = getRegister();
-        LoadVar *instr = new LoadVar(LOAD_VAR, frameIndex, dest);
+        LoadVar *instr = new LoadVar(LOAD_VAR, dest, frameIndex);
         iCode->push_back(instr);
         return dest;
     }
@@ -72,7 +79,7 @@ namespace JavaScript {
     Register ICodeGenerator::loadImmediate(double value)
     {
         Register dest = getRegister();
-        LoadImmediate *instr = new LoadImmediate(LOAD_IMMEDIATE, value, dest);
+        LoadImmediate *instr = new LoadImmediate(LOAD_IMMEDIATE, dest, value);
         iCode->push_back(instr);
         return dest;
     }
@@ -88,7 +95,7 @@ namespace JavaScript {
     Register ICodeGenerator::loadName(StringAtom &name)
     {
         Register dest = getRegister();
-        LoadName *instr = new LoadName(LOAD_NAME, &name, dest);
+        LoadName *instr = new LoadName(LOAD_NAME, dest, &name);
         iCode->push_back(instr);
         return dest;
     }
@@ -102,7 +109,7 @@ namespace JavaScript {
     Register ICodeGenerator::getProperty(StringAtom &name, Register base)
     {
         Register dest = getRegister();
-        GetProp *instr = new GetProp(GET_PROP, &name, base, dest);
+        GetProp *instr = new GetProp(GET_PROP, dest, base, &name);
         iCode->push_back(instr);
         return dest;
     }
@@ -122,7 +129,7 @@ namespace JavaScript {
     Register ICodeGenerator::op(ICodeOp op, Register source)
     {
         Register dest = getRegister();
-        Move *instr = new Move(op, source, dest);
+        Move *instr = new Move(op, dest, source);
         iCode->push_back(instr);
         return dest;
     }
@@ -130,18 +137,18 @@ namespace JavaScript {
     Register ICodeGenerator::op(ICodeOp op, Register source1, Register source2)
     {
         Register dest = getRegister();
-        Arithmetic *instr = new Arithmetic(op, source1, source2, dest);
+        Arithmetic *instr = new Arithmetic(op, dest, source1, source2);
         iCode->push_back(instr);
         return dest;
     }
 
-    void ICodeGenerator::branch(int32 label)
+    void ICodeGenerator::branch(Label *label)
     {
         Branch *instr = new Branch(BRANCH, label);
         iCode->push_back(instr);
     }
 
-    void ICodeGenerator::branchConditional(int32 label, Register condition)
+    void ICodeGenerator::branchConditional(Label *label, Register condition)
     {
         ICodeOp branchOp = getBranchOp();
         if (branchOp == NOP) {
@@ -155,39 +162,20 @@ namespace JavaScript {
 
     /***********************************************************************************************/
 
-    int32 ICodeGenerator::getLabel()
+    Label *ICodeGenerator::getLabel()
     {
-        int32 result = static_cast<int32>(labels.size());
-        labels.push_back(new Label(NULL, -1));
-        return result;
+        labels.push_back(new Label(NULL));
+        return labels.back();
     }
 
-    void ICodeGenerator::setLabel(int32 label)
+    void ICodeGenerator::setLabel(Label *l)
     {
-        Label* l;
-    #ifdef __GNUC__
-        // libg++'s vector class doesn't have at():
-        if (label >= labels.size())
-            throw std::out_of_range("label out of range");
-        l = labels[label];
-    #else
-        l = labels.at(static_cast<uint32>(label));
-    #endif
         l->itsBase = iCode;
         l->itsOffset = static_cast<int32>(iCode->size());
     }
 
-    void ICodeGenerator::setLabel(InstructionStream *stream, int32 label)
+    void ICodeGenerator::setLabel(InstructionStream *stream, Label *l)
     {
-        Label* l;
-    #ifdef __GNUC__
-        // libg++'s vector class doesn't have at():
-        if (label >= labels.size())
-            throw std::out_of_range("label out of range");
-        l = labels[label];
-    #else
-        l = labels.at(static_cast<uint32>(label));
-    #endif
         l->itsBase = stream;
         l->itsOffset = static_cast<int32>(stream->size());
     }
@@ -220,8 +208,8 @@ namespace JavaScript {
   
         // insert a branch to the while condition, which we're 
         // moving to follow the while block
-        int32 whileConditionTop = getLabel();
-        int32 whileBlockStart = getLabel();
+        Label *whileConditionTop = getLabel();
+        Label *whileBlockStart = getLabel();
         branch(whileConditionTop);
     
         // save off the current stream while we gen code for the condition
@@ -256,7 +244,7 @@ namespace JavaScript {
         // and re-attach it to the main stream
         mergeStream(ics->whileExpressionStream);
 
-        if (ics->breakLabel != -1)
+        if (ics->breakLabel != NULL)
             setLabel(ics->breakLabel);
 
         delete ics;
@@ -268,7 +256,7 @@ namespace JavaScript {
 
     void ICodeGenerator::beginForStatement(uint32)
     {
-        int32 forCondition = getLabel();
+        Label *forCondition = getLabel();
 
         ForCodeState *ics = new ForCodeState(forCondition, getLabel(), this);
 
@@ -321,7 +309,7 @@ namespace JavaScript {
         mergeStream(ics->forIncrementStream);
         mergeStream(ics->forConditionStream);
 
-        if (ics->breakLabel != -1)
+        if (ics->breakLabel != NULL)
             setLabel(ics->breakLabel);
 
         delete ics;
@@ -335,8 +323,8 @@ namespace JavaScript {
   
         // mark the top of the loop body
         // and reserve a label for the condition
-        int32 doBlock = getLabel();
-        int32 doCondition = getLabel();
+        Label *doBlock = getLabel();
+        Label *doCondition = getLabel();
         setLabel(doBlock);
     
         stitcher.push_back(new DoCodeState(doBlock, doCondition, this));
@@ -351,7 +339,7 @@ namespace JavaScript {
 
         // mark the start of the do conditional
         setLabel(ics->doCondition);
-        if (ics->continueLabel != -1)
+        if (ics->continueLabel != NULL)
             setLabel(ics->continueLabel);
 
         resetTopRegister();
@@ -365,7 +353,7 @@ namespace JavaScript {
 
         // add branch to top of do block
         branchConditional(ics->doBody, condition);
-        if (ics->breakLabel != -1)
+        if (ics->breakLabel != NULL)
             setLabel(ics->breakLabel);
 
         delete ics;
@@ -394,7 +382,7 @@ namespace JavaScript {
         SwitchCodeState *ics = static_cast<SwitchCodeState *>(stitcher.back());
         ASSERT(ics->stateKind == Switch_state);
 
-        int32 caseLabel = getLabel();
+        Label *caseLabel = getLabel();
         Register r = op(COMPARE_EQ, expression, ics->controlExpression);
         branchConditional(caseLabel, r);
 
@@ -421,7 +409,7 @@ namespace JavaScript {
     {
         SwitchCodeState *ics = static_cast<SwitchCodeState *>(stitcher.back());
         ASSERT(ics->stateKind == Switch_state);
-        ASSERT(ics->defaultLabel == -1);
+        ASSERT(ics->defaultLabel == NULL);
         ics->defaultLabel = getLabel();
         setLabel(ics->caseStatementsStream, ics->defaultLabel);
         iCode = ics->swapStream(iCode);                    // switch to Case Statement stream
@@ -431,7 +419,7 @@ namespace JavaScript {
     {
         SwitchCodeState *ics = static_cast<SwitchCodeState *>(stitcher.back());
         ASSERT(ics->stateKind == Switch_state);
-        ASSERT(ics->defaultLabel != -1);            // do more to guarantee correct blocking?
+        ASSERT(ics->defaultLabel != NULL);          // do more to guarantee correct blocking?
         iCode = ics->swapStream(iCode);             // switch to Case Statement stream
         resetTopRegister();
     }
@@ -444,10 +432,10 @@ namespace JavaScript {
 
         // ground out the case chain at the default block or fall thru
         // to the break label
-        if (ics->defaultLabel != -1)       
+        if (ics->defaultLabel != NULL)       
             branch(ics->defaultLabel);
         else {
-            if (ics->breakLabel == -1)
+            if (ics->breakLabel == NULL)
                 ics->breakLabel = getLabel();
             branch(ics->breakLabel);
         }
@@ -455,7 +443,7 @@ namespace JavaScript {
         // dump all the case statements into the main stream
         mergeStream(ics->caseStatementsStream);
 
-        if (ics->breakLabel != -1)
+        if (ics->breakLabel != NULL)
             setLabel(ics->breakLabel);
 
         delete ics;
@@ -466,9 +454,9 @@ namespace JavaScript {
 
     void ICodeGenerator::beginIfStatement(uint32, Register condition)
     {
-        int32 elseLabel = getLabel();
+        Label *elseLabel = getLabel();
     
-        stitcher.push_back(new IfCodeState(elseLabel, -1, this));
+        stitcher.push_back(new IfCodeState(elseLabel, NULL, this));
 
         Register notCond = op(NOT, condition);
         branchConditional(elseLabel, notCond);
@@ -482,7 +470,7 @@ namespace JavaScript {
         ASSERT(ics->stateKind == If_state);
 
         if (hasElse) {
-            int32 beyondElse = getLabel();
+            Label *beyondElse = getLabel();
             ics->beyondElse = beyondElse;
             branch(beyondElse);
         }
@@ -496,7 +484,7 @@ namespace JavaScript {
         ASSERT(ics->stateKind == If_state);
         stitcher.pop_back();
 
-        if (ics->beyondElse != -1) {     // had an else
+        if (ics->beyondElse != NULL) {     // had an else
             setLabel(ics->beyondElse);   // the beyond else label
         }
     
@@ -509,7 +497,7 @@ namespace JavaScript {
     void ICodeGenerator::breakStatement()
     {
         for (std::vector<ICodeState *>::reverse_iterator p = stitcher.rbegin(); p != stitcher.rend(); p++) {
-            if ((*p)->breakLabel != -1) {
+            if ((*p)->breakLabel != NULL) {
                 branch((*p)->breakLabel);
                 return;
             }
@@ -528,7 +516,7 @@ namespace JavaScript {
     void ICodeGenerator::continueStatement()
     {
         for (std::vector<ICodeState *>::reverse_iterator p = stitcher.rbegin(); p != stitcher.rend(); p++) {
-            if ((*p)->continueLabel != -1) {
+            if ((*p)->continueLabel != NULL) {
                 branch((*p)->continueLabel);
                 return;
             }
@@ -607,9 +595,14 @@ namespace JavaScript {
             s  << "\t" << std::setiosflags( std::ostream::left ) << std::setw(16) << opcodeName[instr->itsOp];
             switch (instr->itsOp) {
                 case LOAD_NAME :
-                case SAVE_NAME :
                     {
                         LoadName *t = static_cast<LoadName * >(instr);
+                        s << "R" << t->itsOperand1 << ", \"" << *t->itsOperand2 <<  "\"";
+                    }
+                    break;
+                case SAVE_NAME :
+                    {
+                        SaveName *t = static_cast<SaveName * >(instr);
                         s << "\"" << *t->itsOperand1 <<  "\", R" << t->itsOperand2;
                     }
                     break;
@@ -620,19 +613,29 @@ namespace JavaScript {
                     }
                     break;
                 case GET_PROP :
-                case SET_PROP :
                     {
                         GetProp *t = static_cast<GetProp * >(instr);
+                        s << "R" << t->itsOperand1 << ", R" << t->itsOperand2 << ", \"" << *t->itsOperand3;
+                    }
+                    break;
+                case SET_PROP :
+                    {
+                        SetProp *t = static_cast<SetProp * >(instr);
                         s << "\"" << *t->itsOperand1 <<  "\", R" << t->itsOperand2 << ", R" << t->itsOperand3;
                     }
                     break;
                 case LOAD_IMMEDIATE :
                     {
                         LoadImmediate *t = static_cast<LoadImmediate * >(instr);
-                        s << t->itsOperand1 << ", R" << t->itsOperand2;
+                        s << "R" << t->itsOperand1 << ", " << t->itsOperand2;
                     }
                     break;
                 case LOAD_VAR :
+                    {
+                        LoadVar *t = static_cast<LoadVar * >(instr);
+                        s << "R" << t->itsOperand1 << ", Variable #" << t->itsOperand2;
+                    }
+                    break;
                 case SAVE_VAR :
                     {
                         LoadVar *t = static_cast<LoadVar * >(instr);
@@ -641,7 +644,7 @@ namespace JavaScript {
                     break;
                 case BRANCH :
                     {
-                        Branch *t = static_cast<Branch * >(instr);
+                        ResolvedBranch *t = static_cast<ResolvedBranch * >(instr);
                         s << "instr #" << t->itsOperand1;
                     }
                     break;
@@ -652,7 +655,7 @@ namespace JavaScript {
                 case BRANCH_GE :
                 case BRANCH_GT :
                     {
-                        BranchCond *t = static_cast<BranchCond * >(instr);
+                        ResolvedBranchCond *t = static_cast<ResolvedBranchCond * >(instr);
                         s << "instr #" << t->itsOperand1 << ", R" << t->itsOperand2;
                     }
                     break;
