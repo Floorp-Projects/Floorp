@@ -105,15 +105,3 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
 .down[disabled="true"] {
   list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
 }
-
-.sidebarTree {
-  border: none;
-  margin: 0px !important;
-}
-
-/* ::::: download manager ::::: */
-
-#downloadView > treechildren::-moz-tree-image(Name) {
-  margin-right: 2px;
-}
-
