@@ -3717,6 +3717,10 @@ nsXULElement::Click()
     PRInt32 numShells = doc->GetNumberOfShells();
     nsCOMPtr<nsIPresShell> shell; // Strong
     nsCOMPtr<nsIPresContext> context;
+    nsAutoString tagName;
+    GetTagName(tagName);
+    PRBool isButton = (tagName == "titledbutton");
+
     for (PRInt32 i=0; i<numShells; i++) {
       shell = getter_AddRefs(doc->GetShellAt(i));
       shell->GetPresContext(getter_AddRefs(context));
@@ -3732,6 +3736,14 @@ nsXULElement::Click()
       event.clickCount = 0;
       event.widget = nsnull;
       HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+
+      if (isButton) {
+        nsEventStatus stat = nsEventStatus_eIgnore;
+        nsMouseEvent evt;
+        evt.eventStructType = NS_EVENT;
+        evt.message = NS_MENU_ACTION;
+        HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+      }
     }
   }
   
