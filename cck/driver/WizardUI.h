@@ -74,6 +74,8 @@ public:
 	CFont* m_pFont;
 	CFont* m_pNavFont;
 	CFont* m_pCurFont;
+	CFont* m_pJapaneseFont;
+	CFont* m_pChineseSimpFont;
 
 	int m_pControlCount;
 	int m_pControlID;

@@ -44,6 +44,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#define JAPANESE_CODEPAGE 932
+#define CHINESE_CODEPAGE 936
+#define LATIN1_CODEPAGE 1252
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -588,6 +592,26 @@ void CWizardUI::CreateControls()
 					DEFAULT_QUALITY,
 					DEFAULT_PITCH|FF_DONTCARE,
 					"MS Sans Serif");
+	
+	// Japanese font
+	m_pJapaneseFont = new CFont; 
+	m_pJapaneseFont->CreateFont(12, 0, 0, 0, FW_NORMAL,
+					0, 0, 0, SHIFTJIS_CHARSET,
+					OUT_DEFAULT_PRECIS,
+					CLIP_DEFAULT_PRECIS,
+					DEFAULT_QUALITY,
+					DEFAULT_PITCH|FF_DONTCARE,
+					"MS UI Gothic");
+
+	// Simplified Chinese font
+	m_pChineseSimpFont = new CFont; 
+	m_pChineseSimpFont->CreateFont(12, 0, 0, 0, FW_NORMAL,
+					0, 0, 0, GB2312_CHARSET,
+					OUT_DEFAULT_PRECIS,
+					CLIP_DEFAULT_PRECIS,
+					DEFAULT_QUALITY,
+					DEFAULT_PITCH|FF_DONTCARE,
+					"Simsun");
 
 	//End Font Logic Start iniFile logic
 	containsImage = FALSE;
@@ -650,7 +674,8 @@ void CWizardUI::CreateControls()
 			{
 				//Set maximum number of characters allowed per line - limit set to 200
 				((CEdit*)curWidget->control)->SetLimitText(int(curWidget->fieldlen.length));
-				((CEdit*)curWidget->control)->SetWindowText(curWidget->value);
+				CString encodedValue = ConvertUTF8toANSI(curWidget->value);
+				((CEdit*)curWidget->control)->SetWindowText(encodedValue);
 				((CEdit*)curWidget->control)->SetModify(FALSE);
 			}
 		}
@@ -864,7 +889,16 @@ void CWizardUI::CreateControls()
 		{
 			curWidget->control->SetFont(m_pNavFont);
 		}
-
+		else if (((curWidget->type == "EditBox") 
+				|| (curWidget->type == "CheckListBox")) 
+				&& (GetACP() != LATIN1_CODEPAGE))
+		{
+			if (GetACP() == JAPANESE_CODEPAGE)
+				curWidget->control->SetFont(m_pJapaneseFont);
+			else if (GetACP() == CHINESE_CODEPAGE)
+				curWidget->control->SetFont(m_pChineseSimpFont);
+		}
+			
 		else if (curWidget->control && curWidget->control->m_hWnd)
 		{
 			curWidget->control->SetFont(m_pFont);
@@ -1149,7 +1183,8 @@ void CWizardUI::UpdateGlobals()
 	for (int i = 0; i < m_pControlCount; i++) 
 	{
 		curWidget = CurrentNode->pageWidgets[i];
-		curWidget->value = GetScreenValue(curWidget);
+		CString encodedValue = GetScreenValue(curWidget);
+		curWidget->value = ConvertANSItoUTF8(encodedValue);
 
     // Save the prefs tree in a file local to the config. This is 
     // what gets read next time the prefs tree control is created.

@@ -91,7 +91,7 @@ BOOL CSumDlg::OnInitDialog()
 			// Display only visible customizations in the Show 
 			// Configuration Information dialog
 			tmp1=GlobalWidgetArray[i].name;
-			tmp2=GlobalWidgetArray[i].value;
+			tmp2 = ConvertUTF8toANSI(GlobalWidgetArray[i].value);
 			str1 += tmp1;
 			str1 += "\t=";
 			str1 += tmp2;
