@@ -1126,7 +1126,7 @@ nsAppShellService::LaunchTask(const char *aParam, PRInt32 height, PRInt32 width,
     rv = handler->GetCommandLineArgument(getter_Copies(cmdLineArgument));
     if (NS_SUCCEEDED(rv)) {
       rv = cmdLine->GetCmdLineValue(cmdLineArgument, getter_Copies(args));
-      if (NS_SUCCEEDED(rv) && args.get()) {
+      if (NS_SUCCEEDED(rv) && args.get() && strcmp(args.get(), "1")) {
         nsAutoString cmdArgs; cmdArgs.AssignWithConversion(args);
         rv = OpenWindow(chromeUrlForTask, cmdArgs, height, width);
       }
