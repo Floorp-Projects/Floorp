@@ -85,7 +85,10 @@ function onOK()
     var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
     var replace = promptService.confirm(window, titleMsg, dialogMsg);
     if (!replace)
+    {
       window.close();
+      return;
+    }
   }
   
   
