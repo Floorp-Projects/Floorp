@@ -66,7 +66,6 @@ OBJS =../base/ArrayList.$(OBJ_SUFFIX) \
   ../xpath/BooleanFunctionCall.$(OBJ_SUFFIX) \
   ../xpath/BooleanResult.$(OBJ_SUFFIX) \
   ../xpath/ExprLexer.$(OBJ_SUFFIX) \
-  ../xpath/ExprLexerChars.$(OBJ_SUFFIX) \
   ../xpath/ExprParser.$(OBJ_SUFFIX) \
   ../xpath/FilterExpr.$(OBJ_SUFFIX) \
   ../xpath/FunctionCall.$(OBJ_SUFFIX) \

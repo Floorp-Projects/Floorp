@@ -39,15 +39,6 @@ public:
      *  Appends the value of the given node to aResult.
      */
     static void getNodeValue(Node* aNode, String& aResult);
-
-    /*
-     * Looks up the namespace URI associated with the given prefix.
-     *
-     * @return true if the namespace URI was found
-     */
-    static MBool getNamespaceURI(const String& aPrefix,
-                                 Element* aElement,
-                                 String& aResult);
 };
 
 #endif
