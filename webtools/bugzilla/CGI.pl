@@ -792,8 +792,8 @@ Content-type: text/html
         if (!defined $nexturl || $nexturl eq "") {
             # Sets nexturl to be argv0, stripping everything up to and
             # including the last slash (or backslash on Windows).
-            $0 =~ m:[^/\\]*$:;
-            $nexturl = $&;
+            $0 =~ m:([^/\\]*)$:;
+            $nexturl = $1;
         }
         my $method = "POST";
 # We always want to use POST here, because we're submitting a password and don't

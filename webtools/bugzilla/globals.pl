@@ -974,104 +974,104 @@ sub detaint_natural {
 # module by Gareth Rees <garethr@cre.canon.co.uk>.  It has been heavily hacked,
 # all that is really recognizable from the original is bits of the regular
 # expressions.
+# This has been rewritten to be faster, mainly by substituting 'as we go'.
+# If you want to modify this routine, read the comments carefully
 
 sub quoteUrls {
     my ($text) = (@_);
     return $text unless $text;
-    
-    my $base = Param('urlbase');
 
-    my $protocol = join '|',
-    qw(afs cid ftp gopher http https mid news nntp prospero telnet wais);
+    # We use /g for speed, but uris can have other things inside them
+    # (http://foo/bug#3 for example). Filtering that out filters valid
+    # bug refs out, so we have to do replacements.
+    # mailto can't contain space or #, so we don't have to bother for that
+    # Do this by escaping \0 to \1\0, and replacing matches with \0\0$count\0\0
+    # \0 is used because its unliklely to occur in the text, so the cost of
+    # doing this should be very small
+    # Also, \0 won't appear in the value_quote'd bug title, so we don't have
+    # to worry about bogus substitutions from there
 
-    my $count = 0;
+    # escape the 2nd escape char we're using
+    my $chr1 = chr(1);
+    $text =~ s/\0/$chr1\0/g;
 
-    # Now, quote any "#" characters so they won't confuse stuff later
-    $text =~ s/#/%#/g;
+    # However, note that adding the title (for buglinks) can affect things
+    # In particular, attachment matches go before bug titles, so that titles
+    # with 'attachment 1' don't double match.
+    # Dupe checks go afterwards, because that uses ^ and \Z, which won't occur
+    # if it was subsituted as a bug title (since that always involve leading
+    # and trailing text)
 
-    # Next, find anything that looks like a URL or an email address and
-    # pull them out the the text, replacing them with a "##<digits>##
-    # marker, and writing them into an array.  All this confusion is
-    # necessary so that we don't match on something we've already replaced,
-    # which can happen if you do multiple s///g operations.
+    # Because of entities, its easier (and quicker) to do this before escaping
 
     my @things;
-    while ($text =~ s%((mailto:)?([\w\.\-\+\=]+\@[\w\-]+(?:\.[\w\-]+)+)\b|
-                    (\b((?:$protocol):[^ \t\n<>"]+[\w/])))%"##$count##"%exo) {
-        my $item = $&;
+    my $count = 0;
+    my $tmp;
 
-        $item = value_quote($item);
+    # non-mailto protocols
+    my $protocol_re = qr/(afs|cid|ftp|gopher|http|https|mid|news|nntp|prospero|telnet|wais)/i;
 
-        if ($item !~ m/^$protocol:/o && $item !~ /^mailto:/) {
-            # We must have grabbed this one because it looks like an email
-            # address.
-            $item = qq{<A HREF="mailto:$item">$item</A>};
-        } else {
-            $item = qq{<A HREF="$item">$item</A>};
-        }
+    $text =~ s~\b(${protocol_re}:  # The protocol:
+                  [^\s<>\"]+       # Any non-whitespace
+                  [\w\/])          # so that we end in \w or /
+              ~($tmp = html_quote($1)) &&
+               ($things[$count++] = "<a href=\"$tmp\">$tmp</a>") &&
+               ("\0\0" . ($count-1) . "\0\0")
+              ~egox;
 
-        $things[$count++] = $item;
-    }
-    # Either a comment string or no comma and a compulsory #.
-    while ($text =~ s/\bbug(\s|%\#)*(\d+),?\s*comment\s*(\s|%\#)(\d+)/"##$count##"/ei) {
-        my $item = $&;
-        my $bugnum = $2;
-        my $comnum = $4;
-        $item = GetBugLink($bugnum, $item);
-        $item =~ s/(id=\d+)/$1#c$comnum/;
-        $things[$count++] = $item;
-    }
-    while ($text =~ s/\bcomment(\s|%\#)*(\d+)/"##$count##"/ei) {
-        my $item = $&;
-        my $num = $2;
-        $item = value_quote($item);
-        $item = qq{<A HREF="#c$num">$item</A>};
-        $things[$count++] = $item;
-    }
-    while ($text =~ s/\bbug(\s|%\#)*(\d+)/"##$count##"/ei) {
-        my $item = $&;
-        my $num = $2;
-        $item = GetBugLink($num, $item);
-        $things[$count++] = $item;
-    }
-    while ($text =~ s/\b(Created an )?attachment(\s|%\#)*(\(id=)?(\d+)\)?/"##$count##"/ei) {
-        my $item = $&;
-        my $num = $4;
-        $item = value_quote($item); # Not really necessary, since we know
-                                    # there's no special chars in it.
-        $item = qq{<a href="attachment.cgi?id=$num&amp;action=view">$item</a>};
-        $things[$count++] = $item;
-    }
-    while ($text =~ s/\*\*\* This bug has been marked as a duplicate of (\d+) \*\*\*/"##$count##"/ei) {
-        my $item = $&;
-        my $num = $1;
-        my $bug_link;
-        $bug_link = GetBugLink($num, $num);
-        $item =~ s@\d+@$bug_link@;
-        $things[$count++] = $item;
-    }
+    # We have to quote now, otherwise our html is itsself escaped
+    # THIS MEANS THAT A LITERAL ", <, >, ' MUST BE ESCAPED FOR A MATCH
 
-    $text = value_quote($text);
-    $text =~ s/\&#013;/\n/g;
+    $text = html_quote($text);
 
-    # Stuff everything back from the array.
-    for (my $i=0 ; $i<$count ; $i++) {
-        $text =~ s/##$i##/$things[$i]/e;
-    }
+    # mailto:
+    # Use |<nothing> so that $1 is defined regardless
+    $text =~ s~\b(mailto:|)?([\w\.\-\+\=]+\@[\w\-]+(?:\.[\w\-]+)+)\b
+              ~<a href=\"mailto:$2\">$1$2</a>~igx;
 
-    # And undo the quoting of "#" characters.
-    $text =~ s/%#/#/g;
+    # attachment links - handle both cases separatly for simplicity
+    $text =~ s~((?:^Created\ an\ |\b)attachment\s*\(id=(\d+)\))
+              ~<a href=\"attachment.cgi?id=$2&amp;action=view\">$1</a>~igx;
+
+    $text =~ s~\b(attachment\s*\#?\s*(\d+))
+              ~<a href=\"attachment.cgi?id=$2&amp;action=view\">$1</a>~igx;
+
+    # This handles bug a, comment b type stuff. Because we're using /g
+    # we have to do this in one pattern, and so this is semi-messy.
+    # Also, we can't use $bug_re?$comment_re? because that will match the
+    # empty string
+    my $bug_re = qr/bug\s*\#?\s*(\d+)/i;
+    my $comment_re = qr/comment\s*\#?\s*(\d+)/i;
+    $text =~ s~\b($bug_re(?:\s*,?\s*$comment_re)?|$comment_re)
+              ~ # We have several choices. $1 here is the link, and $2-4 are set
+                # depending on which part matched
+               (defined($2) ? GetBugLink($2,$1,$3) :
+                              "<a href=\"#c$4\">$1</a>")
+              ~egox;
+
+    # Duplicate markers
+    $text =~ s~(?<=^\*\*\*\ This\ bug\ has\ been\ marked\ as\ a\ duplicate\ of\ )
+               (\d+)
+               (?=\ \*\*\*\Z)
+              ~GetBugLink($1, $1)
+              ~egmx;
+
+    # Now remove the encoding hacks
+    $text =~ s/\0\0(\d+)\0\0/$things[$1]/eg;
+    $text =~ s/$chr1\0/\0/g;
 
     return $text;
 }
 
-# This is a new subroutine written 12/20/00 for the purpose of processing a
-# link to a bug.  It can be called using "GetBugLink (<BugNumber>, <LinkText>);"
-# Where <BugNumber> is the number of the bug and <LinkText> is what apprears
-# between '<a>' and '</a>'.
+# GetBugLink creates a link to a bug, including its title.
+# It takes either two or three paramaters:
+#  - The bug number
+#  - The link text, to place between the <a>..</a>
+#  - An optional comment number, for linking to a particular
+#    comment in the bug
 
 sub GetBugLink {
-    my ($bug_num, $link_text) = (@_);
+    my ($bug_num, $link_text, $comment_num) = @_;
     detaint_natural($bug_num) || die "GetBugLink() called with non-integer bug number";
 
     # If we've run GetBugLink() for this bug number before, %::buglink
@@ -1122,7 +1122,11 @@ sub GetBugLink {
     my ($pre, $title, $post) = @{$::buglink{$bug_num}};
     # $title will be undefined if the bug didn't exist in the database.
     if (defined $title) {
-        return qq{$pre<a href="show_bug.cgi?id=$bug_num" title="$title">$link_text</a>$post};
+        my $linkval = "show_bug.cgi?id=$bug_num";
+        if (defined $comment_num) {
+            $linkval .= "#c$comment_num";
+        }
+        return qq{$pre<a href="$linkval" title="$title">$link_text</a>$post};
     }
     else {
         return qq{$link_text};
