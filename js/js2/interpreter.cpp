@@ -415,14 +415,14 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     throw new JSException((*registers)[op1(thrw)]);
                 }
                 
-            case TRY:
+            case TRYIN:
                 {       // push the catch handler address onto the try stack
-                    Try* tri = static_cast<Try*>(instruction);
+                    Tryin* tri = static_cast<Tryin*>(instruction);
                     mActivation->catchStack.push_back(new Handler(op1(tri),
                                                                   op2(tri)));
                 }   
                 break;
-            case ENDTRY:
+            case TRYOUT:
                 {
                     Handler *h = mActivation->catchStack.back();
                     mActivation->catchStack.pop_back();
