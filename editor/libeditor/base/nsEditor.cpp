@@ -50,8 +50,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
 #include "nsIDocument.h"
-#include "nsIDiskDocument.h"
-#include "nsIServiceManager.h"
 #include "nsTransactionManagerCID.h"
 #include "nsITransactionManager.h"
 #include "nsIAbsorbingTransaction.h"
@@ -81,7 +79,6 @@
 #include "nsITextContent.h"
 
 #include "nsIContent.h"
-#include "nsIDocumentEncoder.h"
 #include "nsLayoutCID.h"
 #include "nsIServiceManagerUtils.h"
 
@@ -813,10 +810,9 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
   if (NS_SUCCEEDED(result) && selection)
   {
     nsCOMPtr<nsIDOMNodeList> nodeList;
-    nsAutoString bodyTag(NS_LITERAL_STRING("body"));
     nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
     if (!doc) return NS_ERROR_NOT_INITIALIZED;
-    result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+    result = doc->GetElementsByTagName(NS_LITERAL_STRING("body"), getter_AddRefs(nodeList));
     if ((NS_SUCCEEDED(result)) && nodeList)
     {
       PRUint32 count;
@@ -959,61 +955,6 @@ nsEditor::GetWrapWidth(PRInt32 *aWrapColumn)
     (void) prefs->GetIntPref("editor.htmlWrapColumn", aWrapColumn);
   return NS_OK;
 }
-
-NS_IMETHODIMP 
-nsEditor::SaveFile(nsIURI *aFileSpec, PRBool aReplaceExisting,
-                   PRBool aSaveCopy, const nsAReadableString& aFormat)
-{
-  if (!aFileSpec)
-    return NS_ERROR_NULL_POINTER;
-  
-  ForceCompositionEnd();
-
-  // get the document
-  nsCOMPtr<nsIDOMDocument> doc;
-  nsresult rv = GetDocument(getter_AddRefs(doc));
-  if (NS_FAILED(rv)) return rv;
-  if (!doc) return NS_ERROR_NULL_POINTER;
-  
-  nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(doc);
-  if (!diskDoc)
-    return NS_ERROR_NO_INTERFACE;
-
-  PRUint32 flags = nsIDocumentEncoder::OutputEncodeEntities;
-  if (aFormat == NS_LITERAL_STRING("text/plain"))
-  {
-    // When saving in "text/plain" format, always do formatting
-    flags |= nsIDocumentEncoder::OutputFormatted;
-  }
-  else
-  {
-    // Should we prettyprint? Check the pref
-    nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID, &rv));
-    if (NS_SUCCEEDED(rv) && prefService)
-    {
-      PRBool prettyprint = PR_FALSE;;
-      rv = prefService->GetBoolPref("editor.prettyprint", &prettyprint);
-      if (NS_SUCCEEDED(rv) && prettyprint)
-        flags |= nsIDocumentEncoder::OutputFormatted;
-    }
-  }
-
-  PRInt32 wrapColumn = 72;
-  GetWrapWidth(&wrapColumn);
-  if (wrapColumn > 0)
-    flags |= nsIDocumentEncoder::OutputWrap;
-  const nsPromiseFlatString &formatFlat = PromiseFlatString(aFormat);
-
-  rv = diskDoc->SaveFile(aFileSpec, aReplaceExisting, aSaveCopy, 
-                         formatFlat.get(), NS_LITERAL_STRING("").get(),
-                         flags, wrapColumn);
-  if (NS_SUCCEEDED(rv))
-    DoAfterDocumentSave();
-
-  return rv;
-}
-
-
 
 NS_IMETHODIMP
 nsEditor::Cut()
@@ -1803,10 +1744,9 @@ nsEditor::DebugDumpContent()
 #ifdef DEBUG
   nsCOMPtr<nsIContent>content;
   nsCOMPtr<nsIDOMNodeList>nodeList;
-  nsAutoString bodyTag(NS_LITERAL_STRING("body"));
   nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
   if (!doc) return NS_ERROR_NOT_INITIALIZED;
-  doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+  doc->GetElementsByTagName(NS_LITERAL_STRING("body"), getter_AddRefs(nodeList));
   if (nodeList)
   {
     PRUint32 count;
@@ -2109,12 +2049,11 @@ nsEditor::GetRootElement(nsIDOMElement **aBodyElement)
   if (!mDocWeak)
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsCOMPtr<nsIDOMNodeList>nodeList; 
-  nsAutoString bodyTag(NS_LITERAL_STRING("body")); 
-
   nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
   if (!doc) return NS_ERROR_NOT_INITIALIZED;
-  result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+
+  nsCOMPtr<nsIDOMNodeList>nodeList; 
+  result = doc->GetElementsByTagName(NS_LITERAL_STRING("body"), getter_AddRefs(nodeList));
 
   if (NS_FAILED(result))
     return result;
@@ -2493,7 +2432,8 @@ nsresult nsEditor::GetFirstEditableNode(nsIDOMNode *aRoot, nsCOMPtr<nsIDOMNode> 
   return rv;
 }
 
-
+#ifdef XXX_DEAD_CODE
+// jfrancis wants to keep this method around for reference
 nsresult nsEditor::GetLastEditableNode(nsIDOMNode *aRoot, nsCOMPtr<nsIDOMNode> *outLastNode)
 {
   if (!aRoot || !outLastNode) return NS_ERROR_NULL_POINTER;
@@ -2512,7 +2452,7 @@ nsresult nsEditor::GetLastEditableNode(nsIDOMNode *aRoot, nsCOMPtr<nsIDOMNode> *
 
   return rv;
 }
-
+#endif
 
 
 NS_IMETHODIMP
@@ -3799,96 +3739,6 @@ void nsEditor::HACKForceRedraw()
   // END HACK
 #endif
 }
-
-nsresult
-nsEditor::GetFirstNodeOfType(nsIDOMNode     *aStartNode, 
-                             const nsAReadableString &aTag, 
-                             nsIDOMNode    **aResult)
-{
-  nsresult result=NS_OK;
-
-  if (!aStartNode)
-    return NS_ERROR_NULL_POINTER;
-  if (!aResult)
-    return NS_ERROR_NULL_POINTER;
-
-  nsCOMPtr<nsIDOMElement> element;
-  *aResult = nsnull;
-  nsCOMPtr<nsIDOMNode> childNode;
-  result = aStartNode->GetFirstChild(getter_AddRefs(childNode));
-  while (childNode)
-  {
-    result = childNode->QueryInterface(NS_GET_IID(nsIDOMNode),getter_AddRefs(element));
-    if (NS_SUCCEEDED(result) && (element))
-    {    
-      nsAutoString tag, tagStr(aTag);
-      element->GetTagName(tag);
-      if (tagStr.EqualsIgnoreCase(tag))
-      {
-        return (childNode->QueryInterface(NS_GET_IID(nsIDOMNode),(void **) aResult)); // does the addref
-      }
-      else
-      {
-        result = GetFirstNodeOfType(childNode, aTag, aResult);
-        if (nsnull!=*aResult)
-          return result;
-      }
-    }
-    nsCOMPtr<nsIDOMNode> temp = childNode;
-    temp->GetNextSibling(getter_AddRefs(childNode));
-  }
-  return NS_ERROR_FAILURE;
-}
-
-nsresult
-nsEditor::GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
-{
-  if (!aNode || !aRetNode)
-  {
-    NS_NOTREACHED("GetFirstTextNode Failed");
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  PRUint16 mType;
-  PRBool mCNodes;
-
-  nsCOMPtr<nsIDOMNode> answer;
-  
-  aNode->GetNodeType(&mType);
-
-  if (nsIDOMNode::ELEMENT_NODE == mType) {
-    if (NS_SUCCEEDED(aNode->HasChildNodes(&mCNodes)) && PR_TRUE == mCNodes) 
-    {
-      nsCOMPtr<nsIDOMNode> node1;
-      nsCOMPtr<nsIDOMNode> node2;
-
-      if (NS_FAILED(aNode->GetFirstChild(getter_AddRefs(node1))))
-      {
-        NS_NOTREACHED("GetFirstTextNode Failed");
-      }
-      while(!answer && node1) 
-      {
-        GetFirstTextNode(node1, getter_AddRefs(answer));
-        node1->GetNextSibling(getter_AddRefs(node2));
-        node1 = node2;
-      }
-    }
-  }
-  else if (nsIDOMNode::TEXT_NODE == mType) {
-    answer = do_QueryInterface(aNode);
-  }
-
-    // OK, now return the answer, if any
-  *aRetNode = answer;
-  if (*aRetNode)
-    NS_IF_ADDREF(*aRetNode);
-  else
-    return NS_ERROR_FAILURE;
-
-  return NS_OK;
-}
-
-
 //END nsEditor Private methods
 
 
@@ -4666,14 +4516,6 @@ nsEditor::DoAfterRedoTransaction()
 }
 
 NS_IMETHODIMP 
-nsEditor::DoAfterDocumentSave()
-{
-  // the mod count is reset by nsIDiskDocument.
-  NotifyDocumentListeners(eDocumentStateChanged);
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
 nsEditor::CreateTxnForSetAttribute(nsIDOMElement *aElement, 
                                    const nsAReadableString& aAttribute, 
                                    const nsAReadableString& aValue,
@@ -5134,33 +4976,6 @@ nsEditor::CreateRange(nsIDOMNode *aStartParent, PRInt32 aStartOffset,
     *aRange = 0;
   }
   return result;
-}
-
-nsresult 
-nsEditor::GetFirstNodeInRange(nsIDOMRange *aRange, nsIDOMNode **aNode)
-{
-  // Note: this might return a node that is outside of the range.
-  // Use caqrefully.
-  if (!aRange || !aNode) return NS_ERROR_NULL_POINTER;
-
-  *aNode = nsnull;
-
-  nsCOMPtr<nsIDOMNode> startParent;
-  nsresult res = aRange->GetStartContainer(getter_AddRefs(startParent));
-  if (NS_FAILED(res)) return res;
-  if (!startParent) return NS_ERROR_FAILURE;
-
-  PRInt32 offset;
-  res = aRange->GetStartOffset(&offset);
-  if (NS_FAILED(res)) return res;
-
-  nsCOMPtr<nsIDOMNode> child = GetChildAt(startParent, offset);
-  if (!child) return NS_ERROR_FAILURE;
-
-  *aNode = child.get();
-  NS_ADDREF(*aNode);
-
-  return res;
 }
 
 nsresult 
