@@ -573,7 +573,8 @@ if test -d "$NSPR_DIR" ; then
 		, $NSPR_LIBS)
     LDFLAGS=$_SAVE_LDFLAGS
 else
-    NSPR_DIR=`pwd`/dist
+    NSPR_DIR='$(DIST)'
+    NSPR_LIBS='$(DIST)/lib/libplds21.a $(DIST)/lib/libplc21.a $(DIST)/lib/libnspr21.a';
 fi
 
 AC_SUBST(SYSTEM_JPEG)
