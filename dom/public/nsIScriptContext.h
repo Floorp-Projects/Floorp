@@ -309,6 +309,12 @@ public:
    */
   NS_IMETHOD SetTerminationFunction(nsScriptTerminationFunc aFunc,
                                     nsISupports* aRef) = 0;
+
+  /**
+   * Called to disable/enable script execution in this context.
+   */
+  NS_IMETHOD GetScriptsEnabled(PRBool *aEnabled) = 0;
+  NS_IMETHOD SetScriptsEnabled(PRBool aEnabled) = 0;
 };
 
 /**
