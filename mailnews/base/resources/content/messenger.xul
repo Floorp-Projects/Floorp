@@ -45,11 +45,8 @@ Rights Reserved.
 <!ENTITY saveAsTemplateCmd.label ".Template">  
 <!ENTITY getNewMsgCmd.label "Get New Messages">  
 <!ENTITY sendUnsentCmd.label "Send Unsent Messages">  
-<!ENTITY updateMsgCountCmd.label ".Update Message Count">  
 <!ENTITY subscribeCmd.label ".Subscribe">  
-<!ENTITY renameFolderCmd.label ".Rename Folder...">  
 <!ENTITY emptyTrashCmd.label ".Empty Trash">  
-<!ENTITY compactCmd.label ".Compact Folders">  
 <!ENTITY importCmd.label ".Import...">  
 <!ENTITY offlineMenu.label ".Offline"> 
 <!ENTITY workOfflineCmd.label ".Work Offline">  
@@ -60,7 +57,9 @@ Rights Reserved.
 <!ENTITY printPreviewCmd.label ".Print Preview">  
 <!ENTITY printCmd.label ".Print">  
 <!ENTITY closeCmd.label "Close">  
-<!ENTITY exitCmd.label "Exit">  
+<!ENTITY exitCmd.label "Exit">
+
+<!-- Edit Menu -->
 <!ENTITY editMenu.label "Edit"> 
 <!ENTITY undoCmd.label ".Undo">  
 <!ENTITY redoCmd.label ".Redo">  
@@ -73,17 +72,17 @@ Rights Reserved.
 <!ENTITY selectAllCmd.label ".All">  
 <!ENTITY selectThreadCmd.label ".Thread">  
 <!ENTITY selectFlaggedCmd.label ".Flagged MEssages">  
-<!ENTITY findCmd.label ".Find...">  
-<!ENTITY findAgainCmd.label ".Find Again">  
-<!ENTITY searchCmd.label ".Search Messages">  
+<!ENTITY spamFiltersCmd.label ".Junk Mail Filter">
 <!ENTITY filtersCmd.label ".Message Filters...">  
 <!ENTITY folderPropsCmd.label ".Folder Properties">  
-<!ENTITY prefsCmd.label "Preferences">
-<!ENTITY accountManagerCmd.label "Account Manager">
+<!ENTITY prefsCmd.label "Preferences...">
+<!ENTITY accountManagerCmd.label "Account Setup...">
+
+<!-- View Menu -->
 <!ENTITY viewMenu.label "View"> 
-<!ENTITY showMenu.label ".Show"> 
-<!ENTITY showMessageToolbarCmd.label ".Message Toolbar">  
-<!ENTITY showLocationToolbarCmd.label ".Location Toolbar">  
+<!ENTITY showToolbarMenu.label ".Toolbars">
+<!ENTITY showSidebarMenu.label ".SideBar">
+<!ENTITY showMessengerToolbarCmd.label ".Messenger Toolbar">  
 <!ENTITY showMessageCmd.label ".Message">  
 <!ENTITY showFoldersCmd.label ".Folders">  
 <!ENTITY sortMenu.label "Sort"> 
@@ -112,15 +111,15 @@ Rights Reserved.
 <!ENTITY headersBriefCmd.label ".Brief">  
 <!ENTITY viewAttachmentsInlineCmd.label ".View Attachments Inline">  
 <!ENTITY wrapLongLinesCmd.label ".Wrap Long Lines">  
-<!ENTITY increaseFontCmd.label ".Increase Font">  
-<!ENTITY decreaseFontCmd.label ".Decrease Font">  
+<!ENTITY increaseFontCmd.label ".Enlarge Text Size">
+<!ENTITY decreaseFontCmd.label ".Reduce Text Size">
 <!ENTITY reloadCmd.label ".Reload">  
 <!ENTITY showImagesCmd.label ".Show Images">  
-<!ENTITY refreshCmd.label ".Refresh">  
 <!ENTITY stopCmd.label ".Stop">  
 <!ENTITY pageSourceCmd.label ".Page Source">  
 <!ENTITY pageInfoCmd.label ".Page Info">  
 <!ENTITY charSetMenu.label "Character Set"> 
+<!ENTITY translateMenu.label ".Translate"> 
 <!ENTITY ISO_Latin_1Cmd.label "ISO Latin 1 (ISO-8859-1)">  
 <!ENTITY ISO_Latin_2Cmd.label "ISO Latin 2 (ISO-8859-2)">  
 <!ENTITY ISO_Latin_3Cmd.label "ISO Latin 3 (ISO-8859-3)">  
@@ -162,7 +161,23 @@ Rights Reserved.
 <!ENTITY Vietnamese_VISCIICmd.label "Vietnamese (VISCII)">  
 <!ENTITY Vietnamese_VPSCmd.label "Vietnamese (VPS)">  
 <!ENTITY ThaiCmd.label "Thai (TIS-620)">  
-<!ENTITY ArmenianCmd.label "Armenian (ARMSCII-8)">  
+<!ENTITY ArmenianCmd.label "Armenian (ARMSCII-8)">
+
+<!-- Search Menu -->
+<!ENTITY searchMenu.label "Search">
+<!ENTITY findCmd.label ".Find...">  
+<!ENTITY findAgainCmd.label ".Find Again">
+<!ENTITY searchCurrentCmd.label ".Search in &lt;current&gt;">
+<!ENTITY searchParentCmd.label ".Search in &lt;parent&gt;">
+<!ENTITY searchParentParentCmd.label ".Search in &lt;parent parent&gt;">
+<!ENTITY searchInternetCmd.label ".Search the Internet...">
+<!ENTITY searchMailCmd.label ".Search all Mail">
+<!ENTITY searchBookmarksCmd.label ".Search Bookmarks...">
+<!ENTITY searchPeopleCmd.label ".Search People...">
+<!ENTITY searchLocalCmd.label ".Search on this Computer...">
+
+<!-- Go Menu -->
+
 <!ENTITY goMenu.label ".Go"> 
 <!ENTITY firstUnreadMsgCmd.label ".First Unread Message">  
 <!ENTITY firstFlaggedMsgCmd.label ".First Flagged Message">  
@@ -214,7 +229,7 @@ Rights Reserved.
 <!ENTITY historyCmd.label ".History">  
 <!ENTITY securityInfoCmd.label ".Security Info">  
 <!ENTITY messageCenterCmd.label ".Message Center">  
-<!ENTITY importUtilCmd.label ".Import Utility">  
+<!ENTITY importUtilCmd.label ".Import...">  
 <!ENTITY javaConsoleCmd.label ".Java Console">  
 <!ENTITY serverToolsMenu.label ".Server Tools"> 
 <!ENTITY pageServiceMenu.label ".Page Service"> 
@@ -284,12 +299,8 @@ Rights Reserved.
       <separator/>
       <menuitem name="&getNewMsgCmd.label;" onclick="MsgGetMessage();"/>
       <menuitem name="&sendUnsentCmd.label;" onclick="MsgSendUnsentMsg();"/>
-      <menuitem name="&updateMsgCountCmd.label;" onclick="MsgUpdateMsgCount();"/>
-      <menuitem name="&subscribeCmd.label;" onclick="MsgSubscribe();"/>
-      <separator/>
-      <menuitem name="&renameFolderCmd.label;" onclick="MsgRenameFolder();"/>
       <menuitem name="&emptyTrashCmd.label;" onclick="MsgEmptyTrash();"/>
-      <menuitem name="&compactCmd.label;" onclick="MsgCompactFolders();"/>
+      <menuitem name="&subscribeCmd.label;" onclick="MsgSubscribe();"/>
       <separator/>
       <menuitem name="&importCmd.label;" onclick="MsgImport();"/>
       <separator/>
@@ -322,23 +333,16 @@ Rights Reserved.
       <menuitem name="&selectFlaggedCmd.label;" onclick="MsgSelectFlaggedMsg();"/>
       </menu>
       <separator/>
-      <menuitem name="&findCmd.label;" onclick="MsgFind();"/>
-      <menuitem name="&findAgainCmd.label;" onclick="MsgFindAgain();"/>
-      <separator/>
-      <menuitem name="&searchCmd.label;" onclick="MsgSearchMessages();"/>
-      <separator/>
+      <menuitem name="&spamFiltersCmd.label;"/>
       <menuitem name="&filtersCmd.label;" onclick="MsgFilters();"/>
       <menuitem name="&folderPropsCmd.label;" onclick="MsgFolderProperties();"/>
       <separator/>
-      <menuitem name="&prefsCmd.label;" onclick="MsgPreferences();"/>
       <menuitem name="&accountManagerCmd.label;" onclick="MsgAccountManager();"/>
+      <menuitem name="&prefsCmd.label;" onclick="MsgPreferences();"/>
     </menu>
     <menu name="&viewMenu.label;">
-      <menu name="&showMenu.label;">
-      <menuitem name="&showMessageToolbarCmd.label;" onclick="MsgShowMsgToolbar();"/>
-      <menuitem name="&showLocationToolbarCmd.label;" onclick="MsgShowLocationbar();"/>
-      <menuitem name="&showMessageCmd.label;" onclick="MsgShowMessage();"/>
-      <menuitem name="&showFoldersCmd.label;" onclick="MsgShowFolders();"/>
+      <menu name="&showToolbarMenu.label;">
+        <menuitem name="&showMessengerToolbarCmd.label;" onclick="MsgShowMsgToolbar();"/>
       </menu>
       <separator/>
       <menu name="&sortMenu.label;">
@@ -371,6 +375,7 @@ Rights Reserved.
         <menuitem name="&headersBriefCmd.label;" onclick="MsgViewBriefHeaders();"/>
       </menu>
       <separator/>
+      <menuitem name="&showMessageCmd.label;" onclick="MsgShowMessage();"/>
       <menuitem name="&viewAttachmentsInlineCmd.label;" onclick="MsgViewAttachInline();"/>
       <menuitem name="&wrapLongLinesCmd.label;" onclick="MsgWrapLongLines();"/>
       <separator/>
@@ -379,7 +384,6 @@ Rights Reserved.
       <separator/>
       <menuitem name="&reloadCmd.label;" onclick="MsgReload();"/>
       <menuitem name="&showImagesCmd.label;" onclick="MsgShowImages();"/>
-      <menuitem name="&refreshCmd.label;" onclick="MsgRefresh();"/>
       <menuitem name="&stopCmd.label;" onclick="MsgStop();"/>
       <separator/>
       <menuitem name="&pageSourceCmd.label;" onclick="MsgViewPageSource();"/>
@@ -436,6 +440,22 @@ Rights Reserved.
              <separator />
         <menuitem name="&ArmenianCmd.label;" onclick="MessengerSetDefaultCharacterSet('ARMSCII-8');"/>
       </menu>
+    </menu>
+    <menu name ="&searchMenu.label;">
+        <menuitem name="&findCmd.label;" onclick="MsgFind();"/>
+        <menuitem name="&findAgainCmd.label;" onclick="MsgFindAgain();"/>
+        <separator/>
+        <menuitem name="&searchCurrentCmd.label;" onclick="MsgSearchCurrent();"/>
+        <menuitem name="&searchParentCmd.label;" onclick="MsgSearchParent();"/>
+        <menuitem name="&searchParentParentCmd.label;" onclick="MsgSearchParentParent();"/>
+
+        <separator/>
+        <menuitem name="&searchInternetCmd.label;" onclick="MsgSearchInternet();"/>
+        <menuitem name="&searchMailCmd.label;" onclick="MsgSearchMessages();"/>
+        <menuitem name="&searchBookmarksCmd.label;" onclick="MsgSearchBookmarks();"/>
+        <menuitem name="&searchPeopleCmd.label;" onclick="MsgSearchPeople();"/>
+        <separator/>
+        <menuitem name="&searchLocalCmd.label;" onclick="MsgSearchLocal();"/>
     </menu>
     <menu name="&goMenu.label;">
       <menuitem name="&firstUnreadMsgCmd.label;" onclick="MsgFirstUnreadMessage();"/>
