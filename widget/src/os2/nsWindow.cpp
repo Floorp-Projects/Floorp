@@ -1433,7 +1433,17 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
          WinMapWindowPoints( mParent->mWnd, WinQueryWindow(mWnd, QW_PARENT), &ptl, 1);
       }
 
-      if( !SetWindowPos( 0, ptl.x, ptl.y, w, GetHeight(h), SWP_MOVE | SWP_SIZE))
+      PRInt32 height = GetHeight(h);
+      PRInt32 width = w;
+      if (mChromeHidden) {
+         height += WinQuerySysValue(HWND_DESKTOP, SV_CYTITLEBAR);
+         height += 2*WinQuerySysValue(HWND_DESKTOP, SV_CYBORDER);
+         ptl.y -= WinQuerySysValue(HWND_DESKTOP, SV_CYBORDER);
+         width += 2*WinQuerySysValue(HWND_DESKTOP, SV_CXBORDER);
+         ptl.x -= WinQuerySysValue(HWND_DESKTOP, SV_CXBORDER);
+      }
+
+      if( !SetWindowPos( 0, ptl.x, ptl.y, width, height, SWP_MOVE | SWP_SIZE))
          if( aRepaint)
             Invalidate(PR_FALSE);
 
@@ -1802,8 +1812,6 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
 {
   HWND hwndFrame = NULLHANDLE;
   HWND hwndTitleBar = NULLHANDLE;
-  HWND hwndSysMenu = NULLHANDLE;
-  HWND hwndMinMax = NULLHANDLE;
   HWND hwndParent;
   ULONG ulStyle;
   char className[19];
@@ -1829,12 +1837,6 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
   hwndTitleBar = (HWND)WinQueryProperty(hwndFrame, "hwndTitleBar");
   if (hwndTitleBar)
     WinSetParent(hwndTitleBar, hwndParent, TRUE);
-  hwndSysMenu = (HWND)WinQueryProperty(hwndFrame, "hwndSysMenu");
-  if (hwndSysMenu)
-    WinSetParent(hwndSysMenu, hwndParent, TRUE);
-  hwndMinMax = (HWND)WinQueryProperty(hwndFrame, "hwndMinMax");
-  if (hwndMinMax)
-    WinSetParent(hwndMinMax, hwndParent, TRUE);
   if (aShouldHide) {
     ulStyle = (ULONG)WinQueryWindowULong(hwndFrame, QWL_STYLE);
     WinSetWindowULong(hwndFrame, QWL_STYLE, ulStyle & ~FS_SIZEBORDER);
@@ -1843,7 +1845,7 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
   } else {
     ulStyle = (ULONG)WinQueryProperty(hwndFrame, "ulStyle");
     WinSetWindowULong(hwndFrame, QWL_STYLE, ulStyle);
-    WinSendMsg(hwndFrame, WM_UPDATEFRAME, MPFROMLONG(FCF_TITLEBAR | FCF_SYSMENU | FCF_MINMAX), 0);
+    WinSendMsg(hwndFrame, WM_UPDATEFRAME, MPFROMLONG(FCF_TITLEBAR), 0);
   }
 
   return NS_OK;
@@ -2584,6 +2586,8 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           break;
 
        case WM_ACTIVATE:
+          if (WinQueryWindowULong(mFrameWnd, QWL_STYLE) & WS_MINIMIZED)
+            break;
 #ifdef DEBUG_FOCUS
           printf("[%x] WM_ACTIVATE (%d)\n", this, mWindowIdentifier);
 #endif
