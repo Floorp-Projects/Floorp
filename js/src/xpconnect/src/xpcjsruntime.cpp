@@ -763,7 +763,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only
 #ifdef DEBUG
-    if(mJSRuntime)
+    if(mJSRuntime && !mJSRuntime->debuggerHandler)
         xpc_InstallJSDebuggerKeywordHandler(mJSRuntime);
 #endif
 }
