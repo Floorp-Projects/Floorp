@@ -251,30 +251,40 @@
 <h3>Web Site Certified by an Unknown Authority</h3>
 
 
-<p>Many web sites use certificates to identify themselves when you visit the site. If Certificate Manager doesn't recognize the <a href="glossary.html#certificate_authority_(CA)">certificate authority (CA)</a> that issued a web site's certificate, it displays an alert that allows you to examine the new web site certificate and decide what to do:
+<p>Many web sites use certificates to identify themselves when you visit the site. If Certificate Manager doesn't recognize the <a href="glossary.html#certificate_authority_(CA)">certificate authority (CA)</a> that issued a web site's certificate, it displays an alert that allows you to examine the new web site certificate and decide what to do.
 
 <ul>
-	<li><b>View Certificate:</b> Click this button to view the web site's certificate.
-	<li><b>Remember this certificate permanently.</b> If you're sure that the certificate is valid, select this option and then click Continue. Certificate Manager will recognize this certificate as legitimate identification until the certificate expires.
+	<li><b>Examine Certificate:</b> Click this button to view the web site's certificate.
 </ul>
 
-<p>To dismiss the alert and proceed with your work, click Continue or Cancel:
-
+<p>You can choose one of these options from this alert: 
 <ul>
 
-	<li>If you suspect that the web site is not what it claims to be, click Cancel. Certificate Manager will not connect with this web site this time and will display the same window again the next time you visit the web site.
+	<li><b>Accept this certificate permanently.</b> Select this option to accept the certificate (despite the apparent problem) and connect to the web site. Certificate Manager will recognize this certificate as legitimate identification until the certificate expires.
+<li><b>Accept this certificate temporarily for this session.</b> Select this option to accept the certificate temporarily and connect to the web site. Certificate Manager will recognize this certificate as legitimate identification only until the next time you launch the browser. You may see the same alert the next time you attempt to visit the web site.
+	<li><b>Do not accept this certificate and do not connect to this web site.</b> Select this option if you decide not to visit the web site at all. This option might be appropriate, for example, if you perform financial transactions at the web site. In this case you might want to report the problem to the bank or other organization that runs the site and confirm that the site's certificate is valid before you go any further.
 
-	<p>Canceling might be appropriate, for example, if you perform financial transactions at the web site. In this case you might want to report the problem to the bank or other organization that runs the site and confirm that the site's certificate is valid before you go any further.
-
-	<li>If you wish to view the web site despite the problem, click Continue.</li> 
-	<p>If you selected "Remember this certificate permanently," Certificate Manager will recognize this certificate as legitimate identification until the certificate expires. 
-	<p>If you did not select "Remember this certificate permanently," Certificate Manager will recognize this certificate as legitimate identification for this session only. You'll see the same alert the next time you visit the site.
 
 </ul>
 
-<p>Selecting "Remember this certificate permanently" solves the problem for this web site certificate, but you'll see the same alert for any other web site whose certificate was issued by the same CA. 
+<p>Click OK to confirm your choice. If you click Cancel, Certificate Manager will not recognize the certificate as legitimate identification and will not connect to the web site. 
 
-<p>To ensure that the Certificate Manager will trust all certificates issued by a given CA, you must edit the trust settings for the corresponding CA certificate. To do so, follow these steps:
+<p><b>Important note for server administrators:</b> This alert may be triggered by a server that is not configured correctly. To find out if this is the case, the server administrator or webmaster for the site you are attempting to visit should check the status of any required intermediate CAs and if necessary, install the missing certificate in the server. 
+
+<p>If you decide to contact the web site's webmaster about this issue, you can include the following information:
+
+<ul>
+<li>The server administrator can obtain more information about intermediate CAs from here: <br<br>
+
+<a href="http://kb.verisign.com/esupport/esupport/consumer/esupport.asp?id=vs2119" target="_blank">http://kb.verisign.com/esupport/esupport/consumer/esupport.asp?id=vs2119</a>
+
+<li>If the server is using a VeriSign ceritifcate, the server administrator can download the appropriate certificate from here: <br><br>
+
+<a href="http://www.verisign.com/support/install/index.html" target="_blank">http://www.verisign.com/support/install/index.html</a>
+
+</ul>
+
+<p><b>For advanced users:</b> To ensure that Certificate Manager trusts all certificates issued by a given CA, you can edit the trust settings for the corresponding CA certificate. To do so, follow these steps:
 
 <ol>
    <li>Open the Edit menu and choose Preferences.
@@ -351,7 +361,7 @@
 
 
 <hr>
-<p><i>18 June 2002</i></p>
+<p><i>7 October 2002</i></p>
 <p>Copyright &copy; 1994-2002 Netscape Communications Corporation.</p>
 
 </body>
