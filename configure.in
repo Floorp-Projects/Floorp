@@ -352,7 +352,6 @@ MOZ_ZLIB_LIBS='$(DIST)/lib/libzlib.$(LIB_SUFFIX)'
 MOZ_PNG_CFLAGS=
 MOZ_PNG_LIBS='$(DIST)/lib/libpng.$(LIB_SUFFIX)'
 
-MOZ_TIMER_LIBS='$(DIST)/lib/libtimer_s.$(LIB_SUFFIX)'
 MOZ_JS_LIBS='-lmozjs'
 XPCOM_LIBS='-L$(DIST)/bin -lxpcom'
 
@@ -544,7 +543,6 @@ case "$target" in
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
     DSO_LDOPTS='-nostart -Wl,-h -Wl,$@'
     TK_LIBS='-lbe -lroot'
-    MOZ_TIMER_LIBS='$(DIST)/lib/libtimer_beos.so'
     LIBS="$LIBS -lbe"
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wno-multichar"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-multichar -Wno-ctor-dtor-privacy"
@@ -782,7 +780,6 @@ case "$target" in
     MOZ_ZLIB_LIBS='$(DIST)/lib/zlib.$(LIB_SUFFIX)'
     MOZ_PNG_LIBS='$(DIST)/lib/png.$(LIB_SUFFIX)'
     MOZ_JS_LIBS='$(DIST)/lib/mozjs.lib'
-    MOZ_TIMER_LIBS='$(DIST)/lib/timer.lib'
 
     case "$target" in
     *-*-os2_emx)
@@ -866,7 +863,6 @@ alpha*-*-osf*)
     AC_DEFINE(TARGET_CARBON)
     AC_DEFINE(TARGET_API_MAC_CARBON)
     ENABLE_TESTS=
-    MOZ_TIMER_LIBS='$(DIST)/lib/libtimer_mac.dylib'
     MOZ_WIDGET_TOOLKIT='mac'
     TK_LIBS='/System/Library/Frameworks/Carbon.framework/Carbon'
     CFLAGS="$CFLAGS -traditional-cpp -fno-common -I/System/Library/Frameworks/Carbon.framework/Headers"

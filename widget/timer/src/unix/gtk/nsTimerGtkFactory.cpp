@@ -33,7 +33,7 @@ static nsModuleComponentInfo components[] =
 {
   { "GTK timer",
     NS_TIMER_GTK_CID,
-    "component://netscape/timer/unix/gtk", 
+    "component://netscape/timer", 
     nsTimerGtkConstructor }
 };
 

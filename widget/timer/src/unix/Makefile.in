@@ -32,12 +32,6 @@ ifdef MOZ_MONOLITHIC_TOOLKIT
 DIRS		= $(MOZ_WIDGET_TOOLKIT)
 else
 
-LIBRARY_NAME	= timer_s
-
-REQUIRES	= xpcom
-
-CPPSRCS		= nsNewTimer.cpp
-
 ifdef MOZ_ENABLE_GTK
 DIRS		+= gtk
 endif
@@ -58,11 +52,6 @@ ifdef MOZ_ENABLE_PHOTON
 DIRS		+= photon
 endif
 
-
-override NO_SHARED_LIB=1
-override NO_STATIC_LIB=
-
-endif
-
 include $(topsrcdir)/config/rules.mk
 
+endif
