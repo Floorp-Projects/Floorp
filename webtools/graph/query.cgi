@@ -272,6 +272,7 @@ sub show_graph {
   print "<input type=hidden name=\"units\" value=\"$UNITS\">";
   print "<input type=hidden name=\"ltype\" value=\"$LTYPE\">";
   print "<input type=hidden name=\"points\" value=\"$POINTS\">";
+  print "<input type=hidden name=\"avg\" value=\"$AVG\">";
 
   print "Graph size:";
   if($SIZE) {
