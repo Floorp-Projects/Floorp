@@ -265,6 +265,7 @@ EXPORTS
 	_ldap_count_messages=ldap_count_messages		@524
 	_ldap_create_virtuallist_control=ldap_create_virtuallist_control		@525
 	_ldap_parse_virtuallist_control=ldap_parse_virtuallist_control		@526
+	_ldap_create_proxyauth_control=ldap_create_proxyauth_control		@527
 	_ldap_memcache_init=ldap_memcache_init		@1000
 	_ldap_memcache_set=ldap_memcache_set		@1001
 	_ldap_memcache_get=ldap_memcache_get		@1002

@@ -178,7 +178,11 @@ ber_get_int( BerElement *ber, long *num )
 	if ( (tag = ber_skip_tag( ber, &len )) == LBER_DEFAULT )
 		return( LBER_DEFAULT );
 
-	if ( ber_getnint( ber, num, (int)len ) != len )
+	/*
+     * len is being demoted to a long here --  possible conversion error
+     */
+  
+	if ( ber_getnint( ber, num, (int)len ) != (long)len )
 		return( LBER_DEFAULT );
 	else
 		return( tag );
@@ -198,7 +202,11 @@ ber_get_stringb( BerElement *ber, char *buf, unsigned long *len )
 	if ( datalen > (*len - 1) )
 		return( LBER_DEFAULT );
 
-	if ( ber_read( ber, buf, datalen ) != datalen )
+	/*
+     * datalen is being demoted to a long here --  possible conversion error
+     */
+
+	if ( ber_read( ber, buf, datalen ) != (long) datalen )
 		return( LBER_DEFAULT );
 
 	buf[datalen] = '\0';
@@ -238,7 +246,10 @@ ber_get_stringa( BerElement *ber, char **buf )
 	if ( (*buf = (char *)NSLBERI_MALLOC( (size_t)datalen + 1 )) == NULL )
 		return( LBER_DEFAULT );
 
-	if ( ber_read( ber, *buf, datalen ) != datalen )
+	/*
+     * datalen is being demoted to a long here --  possible conversion error
+     */
+	if ( ber_read( ber, *buf, datalen ) != (long) datalen )
 		return( LBER_DEFAULT );
 	(*buf)[datalen] = '\0';
 
@@ -277,7 +288,10 @@ ber_get_stringal( BerElement *ber, struct berval **bv )
 		return( LBER_DEFAULT );
 	}
 
-	if ( ber_read( ber, (*bv)->bv_val, len ) != len )
+	/*
+     * len is being demoted to a long here --  possible conversion error
+     */
+	if ( ber_read( ber, (*bv)->bv_val, len ) != (int) len )
 		return( LBER_DEFAULT );
 	((*bv)->bv_val)[len] = '\0';
 	(*bv)->bv_len = len;
@@ -315,7 +329,10 @@ ber_get_bitstringa( BerElement *ber, char **buf, unsigned long *blen )
 	if ( ber_read( ber, (char *)&unusedbits, 1 ) != 1 )
 		return( LBER_DEFAULT );
 
-	if ( ber_read( ber, *buf, datalen ) != datalen )
+	/*
+     * datalen is being demoted to a long here --  possible conversion error
+     */
+	if ( ber_read( ber, *buf, datalen ) != (long) datalen )
 		return( LBER_DEFAULT );
 
 	*blen = datalen * 8 - unusedbits;
@@ -479,7 +496,7 @@ ber_scanf( BerElement *ber, char *fmt, ... )
 				    *sss = (char **)NSLBERI_MALLOC(16 * sizeof(char *) );
 				    array_size = 16;
 				} else {
-				    if ( (j+2) > array_size) {
+				    if ( (size_t)(j+2) > array_size) {
 					/* We'v overflowed our buffer */
 					*sss = (char **)NSLBERI_REALLOC( *sss, (array_size * 2) * sizeof(char *) );
 					array_size = array_size * 2;

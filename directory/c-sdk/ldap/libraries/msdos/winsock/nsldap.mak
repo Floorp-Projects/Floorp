@@ -468,6 +468,8 @@ win16suxrox : \
         $(LIBLDAP)\getoptio.c \
         $(LIBLDAP)\getvalue.c \
         $(LIBLDAP)\setoptio.c \
+        $(LIBLDAP)\vlistctr.c \
+        $(LIBLDAP)\proxyaut.c \
 
 $(LIBLDAP)\countval.c : $(LIBLDAP)\countvalues.c
         copy $(LIBLDAP)\countvalues.c $(LIBLDAP)\countval.c
@@ -489,6 +491,12 @@ $(LIBLDAP)\getvalue.c : $(LIBLDAP)\getvalues.c
 
 $(LIBLDAP)\setoptio.c : $(LIBLDAP)\setoption.c
         copy $(LIBLDAP)\setoption.c $(LIBLDAP)\setoptio.c
+
+$(LIBLDAP)\vlistctr.c : $(LIBLDAP)\vlistctrl.c
+        copy $(LIBLDAP)\vlistctrl.c $(LIBLDAP)\vlistctr.c
+
+$(LIBLDAP)\proxyaut.c : $(LIBLDAP)\proxyauthctrl.c
+        copy $(LIBLDAP)\proxyauthctrl.c $(LIBLDAP)\proxyaut.c
 !endif
 
 $(OUTDIR)\nsldap.dep: $(BUILDDIR)\\nsldap.mak
@@ -568,7 +576,13 @@ $(OUTDIR)\nsldap.dep: $(BUILDDIR)\\nsldap.mak
                 $(LIBLDAP)\unescape.c
                 $(LIBLDAP)\url.c
 		$(LIBLDAP)\utf8.c
+!if "$(MOZ_BITS)"=="32"
 		$(LIBLDAP)\vlistctrl.c
+                $(LIBLDAP)\proxyauthctrl.c
+!else
+		$(LIBLDAP)\vlistctr.c
+                $(LIBLDAP)\proxyaut.c
+!endif
 		
                 $(LIBLBER)\bprint.c
                 $(LIBLBER)\decode.c
@@ -768,6 +782,10 @@ $(STATICLIB) : "$(OUTDIR)" $(OBJ_FILES)
     $(LIBCMD) $(STATICLIB) \
      +$(OUTDIR)\UNBIND.obj \
      +$(OUTDIR)\URL.obj   \
+     +$(OUTDIR)\UTF8.obj   \
+     +$(OUTDIR)\VLISTCTR.obj   \
+     +$(OUTDIR)\PROXYAUT.obj,,,
+    $(LIBCMD) $(STATICLIB) \
      +$(OUTDIR)\BPRINT.obj   \
      +$(OUTDIR)\DECODE.obj,,
     $(LIBCMD) $(STATICLIB) \
@@ -825,6 +843,11 @@ $(STATICLIB) : "$(OUTDIR)" $(OBJ_FILES)
     $(OUTDIR)\UNBIND.obj +
     $(OUTDIR)\UNESCAPE.obj +
     $(OUTDIR)\URL.obj +
+    $(OUTDIR)\UTF8.OBJ +
+    $(OUTDIR)\VLISTCTRL.OBJ +
+    $(OUTDIR)\PROXYAUTHCTRL.OBJ +
+    $(OUTDIR)\VLISTC.obj +
+
     $(OUTDIR)\BPRINT.obj +
     $(OUTDIR)\DECODE.obj +
     $(OUTDIR)\ENCODE.obj +

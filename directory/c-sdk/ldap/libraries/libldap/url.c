@@ -196,16 +196,34 @@ nsldapi_url_parse( char *url, LDAPURLDesc **ludpp, int dn_required )
 		*ludp->lud_dn++ = '\0';
 	}
 
-	if (( p = strchr( url, ':' )) != NULL ) {
-		*p++ = '\0';
-		ludp->lud_port = atoi( p );
-	}
 
 	if ( *url == '\0' ) {
 		ludp->lud_host = NULL;
 	} else {
 		ludp->lud_host = url;
 		nsldapi_hex_unescape( ludp->lud_host );
+
+		/*
+		 * Locate and strip off optional port number (:#) in host
+		 * portion of URL.
+		 *
+		 * If more than one space-separated host is listed, we only
+		 * look for a port number within the right-most one since
+		 * ldap_init() will handle host parameters that look like
+		 * host:port anyway.
+		 */
+		if (( p = strrchr( ludp->lud_host, ' ' )) == NULL ) {
+			p = ludp->lud_host;
+		} else {
+			++p;
+		}
+		if (( p = strchr( p, ':' )) != NULL ) {
+			*p++ = '\0';
+			ludp->lud_port = atoi( p );
+			if ( *ludp->lud_host == '\0' ) {
+				ludp->lud_host = NULL;  /* no hostname */
+			}
+		}
 	}
 
 	/* scan for '?' that marks end of dn and beginning of attributes */

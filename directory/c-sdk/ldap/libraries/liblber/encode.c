@@ -239,8 +239,13 @@ ber_put_ostring( BerElement *ber, char *str, unsigned long len,
 	}
 #endif /* STR_TRANSLATION */
 
+    /*  
+     *  Note:  below is a spot where we limit ber_write 
+     *         to signed long (instead of unsigned long)
+     */
+
 	if ( (lenlen = ber_put_len( ber, len, 0 )) == -1 ||
-		ber_write( ber, str, len, 0 ) != len ) {
+		ber_write( ber, str, len, 0 ) != (long) len ) {
 		rc = -1;
 	} else {
 		/* return length of tag + length + contents */
@@ -278,7 +283,7 @@ ber_put_bitstring( BerElement *ber, char *str,
 		return( -1 );
 
 	len = ( blen + 7 ) / 8;
-	unusedbits = len * 8 - blen;
+	unusedbits = (unsigned char) (len * 8 - blen);
 	if ( (lenlen = ber_put_len( ber, len + 1, 0 )) == -1 )
 		return( -1 );
 
@@ -376,7 +381,9 @@ ber_start_seqorset( BerElement *ber, unsigned long tag )
 	new_sos->sos_clen = 0;
 
 	ber->ber_sos = new_sos;
-
+    if (ber->ber_sos->sos_ptr > ber->ber_end) {
+        nslberi_ber_realloc(ber, ber->ber_sos->sos_ptr - ber->ber_end);
+    }
 	return( 0 );
 }
 
@@ -419,7 +426,7 @@ ber_put_seqorset( BerElement *ber )
 
 	len = (*sos)->sos_clen;
 	netlen = LBER_HTONL( len );
-	if ( sizeof(long) > 4 && len > 0xFFFFFFFFL )
+	if ( sizeof(long) > 4 && len > 0xFFFFFFFFUL )
 		return( -1 );
 
 	if ( ber->ber_options & LBER_OPT_USE_DER ) {
@@ -472,7 +479,8 @@ ber_put_seqorset( BerElement *ber )
 		    sizeof(long) - taglen, taglen );
 
 		if ( ber->ber_options & LBER_OPT_USE_DER ) {
-			ltag = (lenlen == 1) ? len : 0x80 + (lenlen - 1);
+			ltag = (lenlen == 1) ? (unsigned char)len :  
+                (unsigned char) (0x80 + (lenlen - 1));
 		}
 
 		/* one byte of length length */

@@ -181,8 +181,8 @@ ber_read( BerElement *ber, char *buf, unsigned long len )
  * enlarge the ber buffer.
  * return 0 on success, -1 on error.
  */
-static int
-ber_realloc( BerElement *ber, unsigned long len )
+int
+nslberi_ber_realloc( BerElement *ber, unsigned long len )
 {
 	unsigned long	need, have, total;
 	size_t		have_bytes;
@@ -253,7 +253,7 @@ ber_write( BerElement *ber, char *buf, unsigned long len, int nosos )
 {
 	if ( nosos || ber->ber_sos == NULL ) {
 		if ( ber->ber_ptr + len > ber->ber_end ) {
-			if ( ber_realloc( ber, len ) != 0 )
+			if ( nslberi_ber_realloc( ber, len ) != 0 )
 				return( -1 );
 		}
 		SAFEMEMCPY( ber->ber_ptr, buf, (size_t)len );
@@ -261,7 +261,7 @@ ber_write( BerElement *ber, char *buf, unsigned long len, int nosos )
 		return( len );
 	} else {
 		if ( ber->ber_sos->sos_ptr + len > ber->ber_end ) {
-			if ( ber_realloc( ber, len ) != 0 )
+			if ( nslberi_ber_realloc( ber, len ) != 0 )
 				return( -1 );
 		}
 		SAFEMEMCPY( ber->ber_sos->sos_ptr, buf, (size_t)len );
@@ -1054,7 +1054,7 @@ ber_get_next_buffer( void *buffer, size_t buffer_size, unsigned long *len,
 #endif /* DOS && !_WIN32 */
 
 		if ( ber->ber_buf + *len > ber->ber_end ) {
-			if ( ber_realloc( ber, *len ) != 0 )
+			if ( nslberi_ber_realloc( ber, *len ) != 0 )
 				goto premature_exit;
 		}
 		ber->ber_ptr = ber->ber_buf;

@@ -196,6 +196,8 @@ void *nslberi_malloc( size_t size );
 void *nslberi_calloc( size_t nelem, size_t elsize );
 void *nslberi_realloc( void *ptr, size_t size );
 void nslberi_free( void *ptr );
+int nslberi_ber_realloc( BerElement *ber, unsigned long len );
+
 
 
 /* blame: dboreham 
