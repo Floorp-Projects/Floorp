@@ -74,10 +74,10 @@
 #ifndef _DB_H_
 #define	_DB_H_
 
-#ifndef HAVE_SYS_CDEFS_H
-#include "cdefs.h"
-#else
+#ifdef HAVE_SYS_CDEFS_H
 #include <sys/cdefs.h>
+#else
+#include "cdefs.h"
 #endif
 #include "prtypes.h"
 
