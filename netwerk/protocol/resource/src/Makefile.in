@@ -21,7 +21,7 @@ VPATH		= @srcdir@
 
 MODULE = netwerk
 
-LIBRARY_NAME = fileprotocol
+LIBRARY_NAME = resourceprotocol
 
 IS_COMPONENT = 1
 
@@ -35,6 +35,11 @@ CPPSRCS =			      \
 REQUIRES = xpcom netwerk 
 
 include $(topsrcdir)/config/config.mk
+
+# hack until necko lands
+ifndef NECKO
+PUBLIC = $(DEPTH)/netwerk/dist/include
+endif
 
 TARGET = $(LIBARY)
 
