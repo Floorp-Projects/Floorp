@@ -461,8 +461,9 @@ extern "C" NS_GFX_(nscolor) NS_DarkenColor(nscolor inColor)
 extern "C" NS_GFX_(void)
 NS_RGB2HSV(nscolor aColor,PRUint16 &aHue,PRUint16 &aSat,PRUint16 &aValue)
 {
-PRUint16  r,g,b,max,min,delta;
-float     hue;
+PRUint8  r,g,b;
+PRInt16  delta,min,max,r1,b1,g1;
+float    hue;
 
   r = NS_GET_R(aColor);
   g = NS_GET_G(aColor);
@@ -486,18 +487,20 @@ float     hue;
   // value or brightness will always be the max of all the colors(RGB)
   aValue = max;   
   delta = max-min;
-
   aSat = (max!=0)?((delta*255)/max):0;
+  r1 = r;
+  b1 = b;
+  g1 = g;
 
   if (aSat==0) {
     hue = 1000;
   } else {
     if(r==max){
-      hue=(float)(g-b)/(float)delta;
-    } else if (g==max) {
-      hue= 2.0f+(float)(b-r)/(float)delta;
-    } else {   // if (b==max)
-      hue = 4.0f+(float)(r-g)/(float)delta;
+      hue=(float)(g1-b1)/(float)delta;
+    } else if (g1==max) {
+      hue= 2.0f+(float)(b1-r1)/(float)delta;
+    } else { 
+      hue = 4.0f+(float)(r1-g1)/(float)delta;
     }
   }
 
@@ -510,7 +513,7 @@ float     hue;
     hue=0;
   }
 
-  aHue = (int)hue;
+  aHue = (PRUint16)hue;
 }
 
 // Function to convert HSV color space into the RGB colorspace
