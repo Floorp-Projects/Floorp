@@ -24,11 +24,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= embedcomponents
+MODULE		= find
 LIBRARY_NAME	= find_s
 REQUIRES	= string \
 		  xpcom \
-		  find \
 		  txtsvc \
 		  dom \
 		  docshell \
@@ -36,9 +35,14 @@ REQUIRES	= string \
 		  layout \
 		  content \
 		  widget \
+		  htmlparser \
+		  necko \
+		  pref \
+		  unicharutil \
 		  $(NULL)
 
 CPPSRCS		= nsWebBrowserFind.cpp \
+		  nsFind.cpp \
                   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a

@@ -30,6 +30,7 @@ MODULE		= find
 XPIDL_MODULE	= find
 
 XPIDLSRCS	= nsIWebBrowserFind.idl \
+		  nsIFind.idl \
                   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

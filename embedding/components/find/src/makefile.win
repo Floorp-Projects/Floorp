@@ -26,15 +26,20 @@ REQUIRES	= string \
 		  txtsvc \
 		  dom \
 		  docshell \
-		  layout \
 		  widget \
+		  layout \
 		  content \
 		  gfx \
+		  htmlparser \
+		  necko \
+		  pref \
+		  unicharutil \
 		  $(NULL)
 LIBRARY_NAME=find_s
 
 CPP_OBJS= \
 	.\$(OBJDIR)\nsWebBrowserFind.obj \
+	.\$(OBJDIR)\nsFind.obj \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
