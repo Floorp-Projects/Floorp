@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-serverwithnoidentities.dtd" >
 
@@ -12,11 +13,7 @@
 
   <script src="chrome://messenger/content/am-serverwithnoidentities.js"/>
 
-  <box class="header" align="horizontal">
-    <titledbutton class="left-header-text" value="&accountTitle.label;"/>
-    <spring class="header-spring" flex="1"/>
-    <titledbutton class="right-header-text" value=""/>
-  </box>
+  <box class="box-smallheader" title="&accountTitle.label;"/>
 
   <html class="secDesc">&accountSettingsDesc.label;</html>
   <grid>
@@ -26,7 +23,7 @@
     </columns>
     <rows>
       <row>
-        <text class="label" value="&accountName.label;"/>
+        <text class="label" value="&accountName.label;" for="server.prettyName"/>
         <html:input type="text" size="30" name="server.prettyName" id="server.prettyName"/>
       </row>
     </rows>

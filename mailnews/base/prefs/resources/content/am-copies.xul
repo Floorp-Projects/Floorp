@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
 
@@ -20,11 +21,7 @@
 <html:input type="hidden" name="identity.stationeryFolder" id="identity.stationeryFolder"/>
 <html:input type="hidden" name="identity.email" id="identity.email"/>
 
-    <box class="header" align="horizontal">  
-      <text class="left-header-text" value="&copyAndFolderTitle.label;"/>
-      <spring class="header-spring" flex="1"/>
-      <text class="right-header-text" value=""/>
-    </box>
+  <box class="box-smallheader" title="&copyAndFolderTitle.label;"/>
   <text class="label" value="&sendingPrefix.label;"/>
 
   <box>

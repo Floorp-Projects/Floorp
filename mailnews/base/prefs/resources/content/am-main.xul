@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-main.dtd" >
 
@@ -13,11 +14,7 @@
 
     <script src="chrome://global/content/strres.js"/>
     <script src="chrome://communicator/content/pref/prefutilities.js"/>
-    <box class="header" align="horizontal">  
-      <text class="left-header-text" value="&accountTitle.label;"/>
-      <spring class="header-spring" flex="1"/>
-      <text class="right-header-text" value=""/>
-    </box>
+    <box class="box-smallheader" title="&accountTitle.label;"/>
 
 	    <html class="secDesc">&accountSettingsDesc.label;</html>
 	    <html>&accountNameDesc.label;</html>
@@ -28,7 +25,7 @@
           </columns>
           <rows>
             <row>
-              <text class="label" value="&accountName.label;"/>
+              <text class="label" value="&accountName.label;" for="server.prettyName"/>
               <html:input type="text" size="30" name="server.prettyName" id="server.prettyName" flex="100%"/>
             </row>
           </rows>
@@ -44,20 +41,20 @@
     </columns>
     <rows>
       <row>
-        <text class="label" value="&name.label;"/>
-        <html:input name="identity.fullName" type="text" size="30"/>
+        <text class="label" value="&name.label;" for="identity.fullName"/>
+        <html:input name="identity.fullName" id="identity.fullName" type="text" size="30"/>
       </row>
       <row>
-        <text class="label" value="&email.label;"/>
-        <html:input name="identity.email" type="text" maxwidth="200" size="30"/>
+        <text class="label" value="&email.label;" for="identity.email"/>
+        <html:input id="identity.email" name="identity.email" type="text" maxwidth="200" size="30"/>
       </row>
       <row>
-        <text class="label" value="&replyTo.label;"/>
-        <html:input name="identity.replyTo" type="text" maxwidth="200" size="30"/>
+        <text class="label" value="&replyTo.label;" for="identity.replyTo"/>
+        <html:input id="identity.replyTo" name="identity.replyTo" type="text" maxwidth="200" size="30"/>
       </row>
       <row>
-        <text class="label" value="&organization.label;"/>
-        <html:input name="identity.organization" type="text" size="30"/>
+        <text class="label" value="&organization.label;" for="identity.organization"/>
+        <html:input id="identity.organization" name="identity.organization" type="text" size="30"/>
       </row>
     </rows>
     </grid>

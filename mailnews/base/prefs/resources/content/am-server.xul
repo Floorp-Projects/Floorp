@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-server-top.dtd" >
 
@@ -17,11 +18,7 @@
   <html:input type="hidden" name="server.hostName" id="server.hostName"/>
   <html:input type="hidden" name="server.username" id="server.username"/>
 
-  <box class="header" orient="horizontal">  
-    <text class="left-header-text" value="&serverSettings.label;"/>
-    <spring class="header-spring" flex="1"/>
-    <text class="right-header-text" value=""/>
-  </box>
+  <box class="box-smallheader" title="&serverSettings.label;"/>
 
   <grid>
     <columns>
@@ -136,13 +133,13 @@
   </box>
 
   <box orient="vertical">
-    <text value="&newsrcFilePath.label;"/>
-    <html:input type="text" size="60" name="nntp.newsrcFilePath" datatype="nsIFileSpec"/>
+    <text value="&newsrcFilePath.label;" for="nntp.newsrcFilePath"/>
+    <html:input type="text" size="60" id="nntp.newsrcFilePath" name="nntp.newsrcFilePath" datatype="nsIFileSpec"/>
   </box>
   </box>
   <spring flex="100%"/>
   <box orient="vertical">
-    <text value="&localPath.label;"/>
-    <html:input type="text" size="60" name="server.localPath" datatype="nsIFileSpec"/>
+    <text value="&localPath.label;" for="server.localPath"/>
+    <html:input type="text" size="60" id="server.localPath" name="server.localPath" datatype="nsIFileSpec"/>
   </box>
 </window>
