@@ -25,11 +25,8 @@
 #include "nsIFontMetrics.h"
 #include <gdk/gdkx.h>
 
-// BGR, not RGB
-#define NSCOLOR_TO_GDKCOLOR(g,n) \
-  g.red=NS_GET_B(n); \
-  g.green=NS_GET_G(n); \
-  g.blue=NS_GET_R(n);
+// Taken from nsRenderingContextGTK.cpp
+#define NS_TO_GDK_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -408,6 +405,18 @@ NS_METHOD nsWidget::SetFont(const nsFont &aFont)
 
   }
   NS_RELEASE(mFontMetrics);
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Set the background color
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsWidget::SetBackgroundColor(const nscolor &aColor)
+{
+  nsBaseWidget::SetBackgroundColor(aColor);
+
   return NS_OK;
 }
 
@@ -792,7 +801,6 @@ NS_METHOD nsWidget::Create(nsNativeWidget aParent,
 //-------------------------------------------------------------------------
 void nsWidget::InitCallbacks(char *aName)
 {
-
 #if 0
 /* basically we are keeping the parent from getting the childs signals by
  * doing this. */
@@ -1072,6 +1080,16 @@ nsWidget::InstallButtonReleaseSignal(GtkWidget * aWidget)
 				GTK_SIGNAL_FUNC(nsWidget::ButtonReleaseSignal));
 }
 //////////////////////////////////////////////////////////////////
+void 
+nsWidget::InstallRealizeSignal(GtkWidget * aWidget)
+{
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+  
+  InstallSignal(aWidget,
+				"realize",
+				GTK_SIGNAL_FUNC(nsWidget::RealizeSignal));
+}
+//////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////
 //
@@ -1266,6 +1284,12 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
   DispatchMouseEvent(event);
 
   Release();
+}
+//////////////////////////////////////////////////////////////////////
+/* virtual */ void
+nsWidget::OnRealize()
+{
+  printf("nsWidget::OnRealize(%p)\n",this);
 }
 //////////////////////////////////////////////////////////////////////
 
@@ -1499,3 +1523,40 @@ nsWidget::ButtonReleaseSignal(GtkWidget *      aWidget,
   return PR_TRUE;
 }
 //////////////////////////////////////////////////////////////////////
+/* static */ gint 
+nsWidget::RealizeSignal(GtkWidget *      aWidget,
+                        gpointer         aData)
+{
+  printf("nsWidget::RealizeSignal(%p)\n",aData);
+  
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+  
+  nsWidget * widget = (nsWidget *) aData;
+
+  NS_ASSERTION( nsnull != widget, "instance pointer is null");
+  
+  widget->OnRealize();
+
+  return PR_TRUE;
+}
+//////////////////////////////////////////////////////////////////////
+
+
+///////////////////////////////////////////////////////////////////////////
+//
+// Dispatch standard event
+//
+///////////////////////////////////////////////////////////////////////////
+/* virtual */ GdkWindow *
+nsWidget::GetWindowForSetBackground()
+{
+  GdkWindow * gdk_window = nsnull;
+
+  if (mWidget)
+  {
+	gdk_window = mWidget->window;
+  }
+
+  return gdk_window;
+}
+///////////////////////////////////////////////////////////////////////////

@@ -80,6 +80,8 @@ class nsWidget : public nsBaseWidget
     nsIFontMetrics *GetFont(void);
     NS_IMETHOD SetFont(const nsFont &aFont);
 
+    NS_IMETHOD SetBackgroundColor(const nscolor &aColor);
+
     NS_IMETHOD SetCursor(nsCursor aCursor);
 
     NS_IMETHOD SetColorMap(nsColorMap *aColorMap);
@@ -139,6 +141,9 @@ class nsWidget : public nsBaseWidget
 
     PRBool DispatchWindowEvent(nsGUIEvent* event);
 
+  // Return the Gdk window whose background should change
+  virtual GdkWindow * GetWindowForSetBackground();
+
   //////////////////////////////////////////////////////////////////
   //
   // GTK signal installers
@@ -154,6 +159,8 @@ class nsWidget : public nsBaseWidget
 
   void InstallButtonReleaseSignal(GtkWidget * aWidget);
 
+  void InstallRealizeSignal(GtkWidget * aWidget);
+
   void AddToEventMask(GtkWidget * aWidget,
                       gint        aEventMask);
 
@@ -167,6 +174,7 @@ class nsWidget : public nsBaseWidget
   virtual void OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent);
   virtual void OnButtonPressSignal(GdkEventButton * aGdkButtonEvent);
   virtual void OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent);
+  virtual void OnRealize();
 
 private:
 
@@ -195,6 +203,9 @@ private:
   static gint ButtonReleaseSignal(GtkWidget *      aWidget, 
                                   GdkEventButton * aGdkButtonEvent, 
                                   gpointer         aData);
+
+  static gint RealizeSignal(GtkWidget *      aWidget, 
+                            gpointer         aData);
 
   //////////////////////////////////////////////////////////////////
   //
