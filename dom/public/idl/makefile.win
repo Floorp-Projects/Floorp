@@ -18,7 +18,7 @@
 DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
-DIRS=coreDom html events css base
+DIRS=coreDom html events css base range
 
 include <$(DEPTH)\config\rules.mak>
 
