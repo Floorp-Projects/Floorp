@@ -138,7 +138,7 @@ public:
   /**
    * Get the state of a link to a given absolute URL
    */
-  NS_IMETHOD GetLinkState(const nsACString& aLinkURI, nsLinkState& aState) = 0;
+  NS_IMETHOD GetLinkState(nsIURI* aLinkURI, nsLinkState& aState) = 0;
 };
 
 #endif /* nsILinkHandler_h___ */

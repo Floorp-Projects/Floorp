@@ -57,7 +57,7 @@ public:
 
 protected:
   virtual void GetStyleSheetURL(PRBool* aIsInline,
-                                nsAString& aUrl) = 0;
+                                nsIURI** aURI) = 0;
   virtual void GetStyleSheetInfo(nsAString& aTitle,
                                  nsAString& aType,
                                  nsAString& aMedia,

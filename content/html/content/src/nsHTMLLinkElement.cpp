@@ -86,7 +86,7 @@ public:
   // nsILink
   NS_IMETHOD    GetLinkState(nsLinkState &aState);
   NS_IMETHOD    SetLinkState(nsLinkState aState);
-  NS_IMETHOD    GetHrefUTF8(char** aBuf);
+  NS_IMETHOD    GetHrefURI(nsIURI** aURI);
 
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers) {
@@ -186,7 +186,7 @@ public:
 
 protected:
   virtual void GetStyleSheetURL(PRBool* aIsInline,
-                                nsAString& aUrl);
+                                nsIURI** aURI);
   virtual void GetStyleSheetInfo(nsAString& aTitle,
                                  nsAString& aType,
                                  nsAString& aMedia,
@@ -226,12 +226,12 @@ NS_NewHTMLLinkElement(nsIHTMLContent** aInstancePtrResult,
 nsHTMLLinkElement::nsHTMLLinkElement()
   : mLinkState(eLinkState_Unknown)
 {
-  nsHTMLUtils::AddRef(); // for GetHrefUTF8
+  nsHTMLUtils::AddRef(); // for GetHrefURI
 }
 
 nsHTMLLinkElement::~nsHTMLLinkElement()
 {
-  nsHTMLUtils::Release(); // for GetHrefUTF8
+  nsHTMLUtils::Release(); // for GetHrefURI
 }
 
 
@@ -320,15 +320,14 @@ NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Type, type)
 NS_IMETHODIMP
 nsHTMLLinkElement::GetHref(nsAString& aValue)
 {
-  char *buf;
-  nsresult rv = GetHrefUTF8(&buf);
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = GetHrefURI(getter_AddRefs(uri));
   if (NS_FAILED(rv)) return rv;
-  if (buf) {
-    aValue.Assign(NS_ConvertUTF8toUCS2(buf));
-    nsCRT::free(buf);
+  if (uri) {
+    nsCAutoString spec;
+    uri->GetSpec(spec);
+    CopyUTF8toUTF16(spec, aValue);
   }
-
-  // NS_IMPL_STRING_ATTR does nothing where we have (buf == null)
 
   return NS_OK;
 }
@@ -375,17 +374,17 @@ nsHTMLLinkElement::SetLinkState(nsLinkState aState)
 }
 
 NS_IMETHODIMP
-nsHTMLLinkElement::GetHrefUTF8(char** aBuf)
+nsHTMLLinkElement::GetHrefURI(nsIURI** aURI)
 {
-  return GetHrefUTF8ForAnchors(aBuf);
+  return GetHrefURIForAnchors(aURI);
 }
 
 void
 nsHTMLLinkElement::GetStyleSheetURL(PRBool* aIsInline,
-                                    nsAString& aUrl)
+                                    nsIURI** aURI)
 {
   *aIsInline = PR_FALSE;
-  GetHref(aUrl);
+  GetHrefURIForAnchors(aURI);
   return;
 }
 

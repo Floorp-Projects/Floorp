@@ -71,7 +71,7 @@ public:
 
 protected:
   void GetStyleSheetURL(PRBool* aIsInline,
-                        nsAString& aUrl);
+                        nsIURI** aURI);
   void GetStyleSheetInfo(nsAString& aTitle,
                          nsAString& aType,
                          nsAString& aMedia,
@@ -157,10 +157,10 @@ nsXMLStylesheetPI::GetCharset(nsAString& aCharset)
 
 void
 nsXMLStylesheetPI::GetStyleSheetURL(PRBool* aIsInline,
-                                    nsAString& aUrl)
+                                    nsIURI** aURI)
 {
   *aIsInline = PR_FALSE;
-  aUrl.Truncate();
+  *aURI = nsnull;
 
   nsAutoString href;
   GetAttrValue(NS_LITERAL_STRING("href"), href);
@@ -169,10 +169,12 @@ nsXMLStylesheetPI::GetStyleSheetURL(PRBool* aIsInline,
   }
 
   nsCOMPtr<nsIURI> url, baseURL;
+  nsCAutoString charset;
   if (mDocument) {
     mDocument->GetBaseURL(getter_AddRefs(baseURL));
+    mDocument->GetDocumentCharacterSet(charset);
   }
-  NS_MakeAbsoluteURI(aUrl, href, baseURL);
+  NS_NewURI(aURI, href, charset.get(), baseURL);
 }
 
 void

@@ -757,86 +757,26 @@ nsWebShell::OnLeaveLink()
   return rv;
 }
 
-nsresult
-nsWebShell::NormalizeURI(nsACString& aURLSpec)
-{
-  nsIURI *uri = nsnull;
-  nsCAutoString scheme;
-  nsresult rv = mIOService->ExtractScheme(aURLSpec, scheme);
-  if (NS_FAILED(rv)) return rv;
-
-  // keep tempUri up here to keep it in scope
-  nsCOMPtr<nsIURI> tempUri;
-
-  // used to avoid extra work later
-  PRBool clearUri(PR_TRUE);
-  
-  if (scheme.Equals(NS_LITERAL_CSTRING("http"))) {
-    if (mCachedHttpUrl)
-      rv = mCachedHttpUrl->SetSpec(aURLSpec);
-    else
-      rv = NS_NewURI(getter_AddRefs(mCachedHttpUrl), aURLSpec);
-    
-    uri = mCachedHttpUrl;
-  }
-
-  else if (scheme.Equals(NS_LITERAL_CSTRING("https"))) {
-    if (mCachedHttpsUrl)
-      rv = mCachedHttpsUrl->SetSpec(aURLSpec);
-    else
-      rv = NS_NewURI(getter_AddRefs(mCachedHttpsUrl), aURLSpec);
-
-    uri = mCachedHttpsUrl;
-  }
-
-  else if (scheme.Equals(NS_LITERAL_CSTRING("ftp"))) {
-    if (mCachedFtpUrl)
-      rv = mCachedFtpUrl->SetSpec(aURLSpec);
-    else      
-      rv = NS_NewURI(getter_AddRefs(mCachedFtpUrl), aURLSpec);
-    
-    uri = mCachedFtpUrl;
-  } else {
-    rv = NS_NewURI(getter_AddRefs(tempUri), aURLSpec);
-    uri = tempUri;
-    clearUri = PR_FALSE;
-  }
-
-  // covers all above failures
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = uri->GetSpec(aURLSpec);
-
-  // clear out the old spec, for security reasons - old data should
-  // not be floating around in cached URIs!
-  // (but avoid doing extra work if we're just destroying the uri)
-  if (clearUri)
-    uri->SetSpec(NS_LITERAL_CSTRING(""));
-
-  return rv;
-}
-
 NS_IMETHODIMP
-nsWebShell::GetLinkState(const nsACString& aLinkURI, nsLinkState& aState)
+nsWebShell::GetLinkState(nsIURI* aLinkURI, nsLinkState& aState)
 {
+  if (!aLinkURI) {
+    // No uri means not a link
+    aState = eLinkState_NotLink;
+    return NS_OK;
+  }
+    
   aState = eLinkState_Unvisited;
 
   // no history, leave state unchanged
   if (!mGlobalHistory)
     return NS_OK;
-  
-  // default to the given URI
-  nsCAutoString resolvedPath(aLinkURI);
-  nsresult rv;
 
-  // get the cached IO service
-  if (!mIOService)
-    mIOService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
-        
-  NormalizeURI(resolvedPath);
+  nsCAutoString spec;
+  aLinkURI->GetSpec(spec);
 
   PRBool isVisited;
-  NS_ENSURE_SUCCESS(mGlobalHistory->IsVisited(resolvedPath.get(), &isVisited),
+  NS_ENSURE_SUCCESS(mGlobalHistory->IsVisited(spec.get(), &isVisited),
                     NS_ERROR_FAILURE);
   if (isVisited)
     aState = eLinkState_Visited;

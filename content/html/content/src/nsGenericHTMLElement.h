@@ -217,7 +217,7 @@ public:
 
   // Used by A, AREA, LINK, and STYLE.
   // Callers must hold a reference to nsHTMLUtils's global reference count.
-  nsresult GetHrefUTF8ForAnchors(char** aHref);
+  nsresult GetHrefURIForAnchors(nsIURI** aURI);
 
   // Implementation for nsIHTMLContent
   NS_IMETHOD SetHTMLAttribute(nsIAtom* aAttribute, const nsHTMLValue& aValue,

@@ -1467,17 +1467,12 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
     // nsILink interface to get a canonified URL that has been
     // correctly escaped and URL-encoded for the document's charset.
 
-    nsXPIDLCString hrefCStr;
-    GetHrefUTF8ForAnchors(getter_Copies(hrefCStr));
+    nsCOMPtr<nsIURI> hrefURI;
+    GetHrefURIForAnchors(getter_AddRefs(hrefURI));
 
     // Only bother to handle the mouse event if there was an href
     // specified.
-    if (hrefCStr) {
-      NS_ConvertUTF8toUCS2 href(hrefCStr);
-      // Strip off any unneeded CF/LF (for Bug 52119)
-      // It can't be done in the parser because of Bug 15204
-      href.StripChars("\r\n");
-
+    if (hrefURI) {
       switch (aEvent->message) {
       case NS_MOUSE_LEFT_BUTTON_DOWN:
         {
@@ -1527,7 +1522,7 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
             break;  // let the click go through so we can handle it in JS/XUL
           }
 
-          ret = TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, href,
+          ret = TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, hrefURI,
                             target, PR_TRUE);
 
           *aEventStatus = nsEventStatus_eConsumeDoDefault;
@@ -1577,8 +1572,8 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
         if (target.IsEmpty()) {
           GetBaseTarget(target);
         }
-        ret = TriggerLink(aPresContext, eLinkVerb_Replace,
-                          baseURL, href, target, PR_FALSE);
+        ret = TriggerLink(aPresContext, eLinkVerb_Replace, baseURL,
+                          hrefURI, target, PR_FALSE);
       }
       break;
 
@@ -1598,7 +1593,7 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsGenericHTMLElement::GetHrefUTF8ForAnchors(char** aHref)
+nsGenericHTMLElement::GetHrefURIForAnchors(nsIURI** aURI)
 {
   // This is used by the three nsILink implementations and
   // nsHTMLStyleElement.
@@ -1608,29 +1603,21 @@ nsGenericHTMLElement::GetHrefUTF8ForAnchors(char** aHref)
 
   if (NS_CONTENT_ATTR_HAS_VALUE ==
       GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, relURLSpec)) {
-    // Clean up any leading or trailing whitespace
-    relURLSpec.Trim(" \t\n\r");
-
     // Get base URL.
     nsCOMPtr<nsIURI> baseURL;
     GetBaseURL(getter_AddRefs(baseURL));
 
-    if (baseURL) {
-      // Get absolute URL.
-      nsCAutoString buf;
-      NS_MakeAbsoluteURIWithCharset(buf, relURLSpec, mDocument, baseURL,
-                                    nsHTMLUtils::IOService,
-                                    nsHTMLUtils::CharsetMgr);
-      *aHref = ToNewCString(buf);
-    }
-    else {
-      // Absolute URL is same as relative URL.
-      *aHref = ToNewUTF8String(relURLSpec);
+    // Get absolute URL.
+    nsCAutoString buf;
+    nsresult rv = NS_NewURIWithDocumentCharset(aURI, relURLSpec, mDocument,
+                                               baseURL);
+    if (NS_FAILED(rv)) {
+      *aURI = nsnull;
     }
   }
   else {
     // Absolute URL is null to say we have no HREF.
-    *aHref = nsnull;
+    *aURI = nsnull;
   }
 
   return NS_OK;

@@ -207,19 +207,20 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
     return NS_OK;
   }
 
-  nsAutoString url;
+  nsCOMPtr<nsIURI> uri;
   PRBool isInline;
+  GetStyleSheetURL(&isInline, getter_AddRefs(uri));
 
-  GetStyleSheetURL(&isInline, url);
+  if (mStyleSheet && !isInline && uri) {
+    nsCOMPtr<nsIURI> oldURI;
 
-  nsCOMPtr<nsIDOMStyleSheet> styleSheet(do_QueryInterface(mStyleSheet));
-
-  if (styleSheet && !isInline) {
-    nsAutoString oldHref;
-
-    styleSheet->GetHref(oldHref);
-    if (oldHref.Equals(url)) {
-      return NS_OK; // We already loaded this stylesheet
+    mStyleSheet->GetURL(*getter_AddRefs(oldURI));
+    if (oldURI) {
+      PRBool equal;
+      nsresult rv = oldURI->Equals(uri, &equal);
+      if (NS_SUCCEEDED(rv) && equal) {
+        return NS_OK; // We already loaded this stylesheet
+      }
     }
   }
 
@@ -228,7 +229,7 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
     mStyleSheet = nsnull;
   }
 
-  if (url.IsEmpty() && !isInline) {
+  if (!uri && !isInline) {
     return NS_OK; // If href is empty and this is not inline style then just bail
   }
 
@@ -239,17 +240,6 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
 
   if (!type.EqualsIgnoreCase("text/css")) {
     return NS_OK;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_OK;
-
-  if (!isInline) {
-    rv = NS_NewURI(getter_AddRefs(uri), url);
-
-    if (NS_FAILED(rv)) {
-      return NS_OK; // The URL is bad, move along, don't propagate the error (for now)
-    }
   }
 
   nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
@@ -286,6 +276,7 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
   }
 
   PRBool doneLoading;
+  nsresult rv = NS_OK;
   if (isInline) {
     PRInt32 count;
     thisContent->ChildCount(count);

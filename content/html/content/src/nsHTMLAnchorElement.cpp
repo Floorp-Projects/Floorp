@@ -106,7 +106,7 @@ public:
   // nsILink
   NS_IMETHOD GetLinkState(nsLinkState &aState);
   NS_IMETHOD SetLinkState(nsLinkState aState);
-  NS_IMETHOD GetHrefUTF8(char** aBuf);
+  NS_IMETHOD GetHrefURI(nsIURI** aURI);
 
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
@@ -164,12 +164,12 @@ NS_NewHTMLAnchorElement(nsIHTMLContent** aInstancePtrResult,
 
 nsHTMLAnchorElement::nsHTMLAnchorElement() : mLinkState(eLinkState_Unknown)
 {
-  nsHTMLUtils::AddRef(); // for GetHrefUTF8
+  nsHTMLUtils::AddRef(); // for GetHrefURI
 }
 
 nsHTMLAnchorElement::~nsHTMLAnchorElement()
 {
-  nsHTMLUtils::Release(); // for GetHrefUTF8
+  nsHTMLUtils::Release(); // for GetHrefURI
 }
 
 
@@ -357,13 +357,17 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsHTMLAnchorElement::GetHref(nsAString& aValue)
 {
-  nsXPIDLCString buf;
-  nsresult rv = GetHrefUTF8(getter_Copies(buf));
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = GetHrefURI(getter_AddRefs(uri));
+  if (NS_FAILED(rv))
+    return rv;
 
-  CopyUTF8toUTF16(buf, aValue);
+  nsCAutoString spec;
+  if (uri) {
+    uri->GetSpec(spec);
+  }
+  CopyUTF8toUTF16(spec, aValue);
 
-  // NS_IMPL_STRING_ATTR does nothing where we have (buf == null)
   return NS_OK;
 }
 
@@ -660,9 +664,9 @@ nsHTMLAnchorElement::SetLinkState(nsLinkState aState)
 }
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::GetHrefUTF8(char** aBuf)
+nsHTMLAnchorElement::GetHrefURI(nsIURI** aURI)
 {
-  return GetHrefUTF8ForAnchors(aBuf);
+  return GetHrefURIForAnchors(aURI);
 }
 
 NS_IMETHODIMP

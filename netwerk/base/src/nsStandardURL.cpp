@@ -2264,8 +2264,14 @@ nsStandardURL::Init(PRUint32 urlType,
     else
         mOriginCharset = charset;
 
-    // an empty charset implies UTF-8
-    if (mOriginCharset.EqualsIgnoreCase("UTF-8"))
+    // URI can't be encoded in UTF-16, UTF-16BE, UTF-16LE, UTF-32, UTF-32-LE,
+    // UTF-32LE, UTF-32BE (yet?). Truncate mOriginCharset if it starts with
+    // "utf" (since an empty mOriginCharset implies UTF-8, this is safe even if
+    // mOriginCharset is UTF-8).
+    if (mOriginCharset.Length() >= 3 &&
+        (mOriginCharset[0] == 'U' || mOriginCharset[0] == 'u') &&
+        (mOriginCharset[1] == 'T' || mOriginCharset[1] == 't') &&
+        (mOriginCharset[2] == 'F' || mOriginCharset[2] == 'f'))
         mOriginCharset.Truncate();
 
     if (baseURI) {

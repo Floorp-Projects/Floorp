@@ -53,19 +53,14 @@ class nsString;
 class nsACString;
 
 /**
- * A version of NS_MakeAbsoluteURI that's savvy to document character
- * set encodings, and will recode a relative spec in the specified
- * charset and URL-escape it before resolving.
- *
- * XXXdarin this should really return a nsIURI
+ * A version of NS_NewURI that's savvy to document character
+ * set encodings
  */
 nsresult
-NS_MakeAbsoluteURIWithCharset(nsACString &aResult,
-                              const nsString& aSpec,
-                              nsIDocument* aDocument,
-                              nsIURI* aBaseURI = nsnull,
-                              nsIIOService* aIOService = nsnull,
-                              nsICharsetConverterManager* aConvMgr = nsnull);
+NS_NewURIWithDocumentCharset(nsIURI** aResult,
+                             const nsString& aSpec,
+                             nsIDocument* aDocument,
+                             nsIURI* aBaseURI);
 
 
 class nsHTMLUtils {
