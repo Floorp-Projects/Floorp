@@ -87,6 +87,14 @@ HOST_CFLAGS="${HOST_CFLAGS=}"
 HOST_LDFLAGS="${HOST_LDFLAGS=}"
 
 dnl ========================================================
+dnl = Irix 6.x should use n32 ABI by default
+dnl ========================================================
+case "$target" in
+*-irix6*)
+	USE_N32=1 ;;
+esac
+
+dnl ========================================================
 dnl =
 dnl = Check options that may affect the compiler
 dnl =
@@ -125,9 +133,12 @@ AC_ARG_ENABLE(target,
     MOZ_TARGET=)
 
 AC_ARG_ENABLE(n32,
-    [  --enable-n32            Enable n32 support (IRIX only)],
+    [  --enable-n32            Enable n32 ABI support (IRIX only)],
     [ if test "$enableval" = "yes"; then
 	USE_N32=1
+      else if test "$enableval" = "no"; then
+	USE_N32=
+      fi
     fi ])
 
 AC_ARG_ENABLE(64bit,
@@ -502,8 +513,8 @@ case "$target" in
     AC_DEFINE(_SGI_MP_SOURCE)
     PR_MD_CSRCS=irix.c
     PR_MD_ASFILES=os_Irix.s
-    MKSHLIB='$(LD) $(SHLIB_LD_OPTS) -rdata_shared -shared -soname $(notdir $@) -o $@'
-    DSO_LDOPTS='-elf -shared -all'
+    MKSHLIB='$(LD) $(DSO_LDOPTS) -rdata_shared -shared -soname $(notdir $@) -o $@'
+    #DSO_LDOPTS='-elf -shared -all'
     if test -n "$USE_64"; then
         MDCPUCFG_H=_irix64.cfg
     else
@@ -514,7 +525,6 @@ case "$target" in
 	   USE_NSPR_THREADS=1
 	   ;;
     *)
-	   USE_N32=1
 	   USE_PTHREADS=1
 	   ;;
  	esac
@@ -523,7 +533,11 @@ case "$target" in
 	    CFLAGS="$CFLAGS -Wall -Wno-format"
 	    _OPTIMIZE_FLAGS="-O6"
     else
-	    AS="as -D_ASM $(INCLUDES) -n32"
+	    if test -n "$USE_N32"; then
+		AS='as -D_ASM $(INCLUDES) -n32'
+	    else
+		AS='as -D_ASM $(INCLUDES)'
+	    fi
 	    CFLAGS="$CFLAGS -fullwarn -xansi"
 	    if test "$USE_N32"; then
 	        _OPTIMIZE_FLAGS="-O -OPT:Olimit=4000"
@@ -536,14 +550,14 @@ case "$target" in
 	    case "$target}" in
 	    *-irix6.*)
 	        CFLAGS="$CFLAGS -multigot"
-	        SHLIB_LD_OPTS="-no_unresolved"
-	        if test "USE_N32"; then
+	        DSO_LDOPTS="-no_unresolved"
+	        if test "$USE_N32"; then
 		        CFLAGS="$CFLAGS -n32 -woff 1209"
 		        LDFLAGS="$LDFLAGS -n32"
-		        SHLIB_LD_OPTS="$SHLIB_LD_OPTS -n32"
+		        DSO_LDOPTS="$DSO_LDOPTS -n32"
 		        if test "${target_os}" = "irix6.2"; then
 		            LDFLAGS="$LDFLAGS -Wl,-woff,85"
-		            SHLIB_LD_OPTS="$SHLIB_LD_OPTS -woff 85"
+		            DSO_LDOPTS="$DSO_LDOPTS -woff 85"
 		        fi
 	        else
 		        if test "$USE_64"; then
