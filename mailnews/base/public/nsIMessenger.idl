@@ -60,10 +60,6 @@ interface nsIMessenger : nsISupports {
     readonly attribute nsITransactionManager transactionManager;
 
     void SetWindow(in nsIDOMWindowInternal ptr, in nsIMsgWindow msgWindow);
-    void DeleteMessages(in nsIRDFCompositeDataSource database,
-                        in nsIRDFResource srcFolderResource,
-                        in nsISupportsArray messages,
-                        in boolean reallyDelete);
 
     void DeleteFolders(in nsIRDFCompositeDataSource db,
                        in nsIRDFResource parentFolder,

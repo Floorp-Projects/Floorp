@@ -240,7 +240,7 @@ nsresult nsMsgThread::RerootThread(nsIMsgDBHdr *newParentOfOldRoot, nsIMsgDBHdr 
 }
 
 NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, PRBool threadInThread, 
-										nsIDBChangeAnnouncer *announcer)
+                                    nsIDBChangeAnnouncer *announcer)
 {
   nsresult ret = NS_OK;
   nsMsgHdr* hdr = NS_STATIC_CAST(nsMsgHdr*, child);          // closed system, cast ok
@@ -863,19 +863,6 @@ nsMsgThreadUnreadFilter(nsIMsgDBHdr* msg, void* closure)
     if (NS_FAILED(rv))
         return rv;
     return !wasRead ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsMsgThread::EnumerateUnreadMessages(nsMsgKey parentKey, nsISimpleEnumerator* *result)
-{
-    nsresult ret = NS_OK;
-    nsMsgThreadEnumerator* e = new nsMsgThreadEnumerator(this, parentKey, nsMsgThreadUnreadFilter, m_mdbDB);
-    if (e == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(e);
-    *result = e;
-    return NS_OK;
-
-    return ret;
 }
 
 NS_IMETHODIMP nsMsgThread::EnumerateMessages(nsMsgKey parentKey, nsISimpleEnumerator* *result)

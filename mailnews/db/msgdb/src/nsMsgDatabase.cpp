@@ -516,8 +516,8 @@ NS_IMETHODIMP nsMsgDatabase::NotifyKeyDeletedAll(nsMsgKey keyDeleted, nsMsgKey p
     return NS_OK;
   PRUint32 count;
   m_ChangeListeners->Count(&count);
-	for (PRUint32 i = 0; i < count; i++)
-	{
+  for (PRUint32 i = 0; i < count; i++)
+  {
     nsCOMPtr<nsIDBChangeListener> changeListener;
     m_ChangeListeners->QueryElementAt(i, NS_GET_IID(nsIDBChangeListener), (void **) getter_AddRefs(changeListener));
     nsresult rv = changeListener->OnKeyDeleted(keyDeleted, parentKey, flags, instigator); 
@@ -607,11 +607,11 @@ nsVoidArray *nsMsgDatabase::m_dbCache = NULL;
 nsVoidArray/*<nsMsgDatabase>*/*
 nsMsgDatabase::GetDBCache()
 {
-	if (!m_dbCache)
-		m_dbCache = new nsVoidArray();
-
-	return m_dbCache;
-	
+  if (!m_dbCache)
+    m_dbCache = new nsVoidArray();
+  
+  return m_dbCache;
+  
 }
 
 void
@@ -680,9 +680,7 @@ int nsMsgDatabase::FindInCache(nsMsgDatabase* pMessageDB)
   for (PRInt32 i = 0; i < GetDBCache()->Count(); i++)
   {
     if (GetDBCache()->ElementAt(i) == pMessageDB)
-    {
       return(i);
-    }
   }
   return(-1);
 }
@@ -699,9 +697,7 @@ void nsMsgDatabase::RemoveFromCache(nsMsgDatabase* pMessageDB)
 {
   int i = FindInCache(pMessageDB);
   if (i != -1)
-  {
     GetDBCache()->RemoveElementAt(i);
-  }
 }
 
 
@@ -774,6 +770,11 @@ nsMsgDatabase::~nsMsgDatabase()
     DumpCache();
   }
 #endif
+  // if the db folder info refers to the mdb db, we must clear it because
+  // the reference will be a dangling one soon.
+  if (m_dbFolderInfo) 
+    m_dbFolderInfo->ReleaseExternalReferences();
+
   NS_IF_RELEASE(m_dbFolderInfo);
   if (m_HeaderParser)
   {
@@ -803,11 +804,13 @@ nsMsgDatabase::~nsMsgDatabase()
     m_ChangeListeners = nsnull;
   }
   
-  if (m_newSet) {
+  if (m_newSet) 
+  {
 #ifdef DEBUG_MSGKEYSET
     char *str = nsnull;
     nsresult rv = m_newSet->Output(&str);
-    if (NS_SUCCEEDED(rv) && str) {
+    if (NS_SUCCEEDED(rv) && str) 
+    {
       printf("setStr = %s on destroy\n",str);
       nsMemory::Free(str);
       str = nsnull;
@@ -1300,6 +1303,33 @@ nsresult nsMsgDatabase::InitNewDB()
   return err;
 }
 
+nsresult nsMsgDatabase::GetTableCreateIfMissing(const char *scope, const char *kind, nsIMdbTable **table, 
+                                                mdb_token &scopeToken, mdb_token &kindToken)
+{
+  struct mdbOid tableOID;
+
+  mdb_err err	= GetStore()->StringToToken(GetEnv(), scope, &scopeToken); 
+  err = GetStore()->StringToToken(GetEnv(), kind, &kindToken); 
+  tableOID.mOid_Scope = scopeToken;
+  tableOID.mOid_Id = 1;
+  
+  nsresult rv = GetStore()->GetTable(GetEnv(), &tableOID, table);
+  if (rv != NS_OK)
+    rv = NS_ERROR_FAILURE;
+  
+  // create new all all offline ops table, if it doesn't exist.
+  if (NS_SUCCEEDED(rv) && !*table)
+  {
+    nsIMdbStore *store = GetStore();
+    err = (nsresult) store->NewTable(GetEnv(), scopeToken,kindToken, 
+                                    PR_FALSE, nsnull, table);
+    if (err != NS_OK || !*table)
+      rv = NS_ERROR_FAILURE;
+  }
+  NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't create offline ops table");
+  return rv;
+}
+
 nsresult nsMsgDatabase::InitExistingDB()
 {
   nsresult err = NS_OK;
@@ -1485,14 +1515,14 @@ NS_IMETHODIMP nsMsgDatabase::EndBatch()
 
 NS_IMETHODIMP nsMsgDatabase::DeleteMessage(nsMsgKey key, nsIDBChangeListener *instigator, PRBool commit)
 {
-	nsCOMPtr <nsIMsgDBHdr> msgHdr;
-
-	nsresult rv = GetMsgHdrForKey(key, getter_AddRefs(msgHdr));
-	if (!msgHdr)
-		return NS_MSG_MESSAGE_NOT_FOUND;
-
-	rv = DeleteHeader(msgHdr, instigator, commit, PR_TRUE);
-	return rv;
+  nsCOMPtr <nsIMsgDBHdr> msgHdr;
+  
+  nsresult rv = GetMsgHdrForKey(key, getter_AddRefs(msgHdr));
+  if (!msgHdr)
+    return NS_MSG_MESSAGE_NOT_FOUND;
+  
+  rv = DeleteHeader(msgHdr, instigator, commit, PR_TRUE);
+  return rv;
 }
 
 
@@ -1548,7 +1578,6 @@ NS_IMETHODIMP nsMsgDatabase::DeleteHeader(nsIMsgDBHdr *msg, nsIDBChangeListener 
   {
     PRBool isRead;
     m_dbFolderInfo->ChangeNumMessages(-1);
-    m_dbFolderInfo->ChangeNumVisibleMessages(-1);
     IsRead(key, &isRead);
     if (!isRead)
       m_dbFolderInfo->ChangeNumNewMessages(-1);
@@ -1920,14 +1949,11 @@ NS_IMETHODIMP nsMsgDatabase::SetLabel(nsMsgKey key, nsMsgLabelValue label)
 		
   rv = GetMsgHdrForKey(key, getter_AddRefs(msgHdr));
   if (NS_FAILED(rv) || !msgHdr) 
-    return NS_MSG_MESSAGE_NOT_FOUND; // XXX return rv?
+    return NS_MSG_MESSAGE_NOT_FOUND; 
 
   msgHdr->SetLabel(label);
   // set the flag in the x-mozilla-status2 line.
   return SetKeyFlag(key, PR_TRUE, label << 25, nsnull);
-  // ### dmb need to use persistent flags in x-mozilla-status2 for this.
-  // so that we don't lose the labels when we reparse the folder.
-  // return SetKeyFlag(key, offline, MSG_FLAG_OFFLINE, instigator);
 }
 
 NS_IMETHODIMP
@@ -2221,15 +2247,6 @@ NS_IMETHODIMP nsMsgDatabase::MarkReadByDate (PRTime startDate, PRTime endDate, n
   return rv;
 }
 
-NS_IMETHODIMP nsMsgDatabase::MarkLater(nsMsgKey key, PRTime until)
-{
-  PR_ASSERT(m_dbFolderInfo);
-  if (m_dbFolderInfo != NULL)
-  {
-    m_dbFolderInfo->AddLaterKey(key, until);
-  }
-  return NS_OK;
-}
 
 NS_IMETHODIMP nsMsgDatabase::AddToNewList(nsMsgKey key)
 {
@@ -2293,13 +2310,10 @@ NS_IMETHODIMP nsMsgDatabase::HasNew(PRBool *_retval)
 
 NS_IMETHODIMP nsMsgDatabase::GetFirstNew(nsMsgKey *result)
 {
-  // even though getLength is supposedly for debugging only, it's the only
-  // way I can tell if the set is empty (as opposed to having a member 0.
   PRBool hasnew;
   nsresult rv = HasNew(&hasnew);
   if (NS_FAILED(rv)) return rv;
-  if (hasnew)
-    *result = (hasnew) ? m_newSet->GetFirstMember() : nsMsgKey_None;
+  *result = (hasnew) ? m_newSet->GetFirstMember() : nsMsgKey_None;
   return NS_OK;
 }
 
@@ -2653,28 +2667,6 @@ nsMsgFlagSetFilter(nsIMsgDBHdr *msg, void *closure)
   return (msgFlags & desiredFlags) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-static nsresult
-nsMsgUnreadFilter(nsIMsgDBHdr* msg, void* closure)
-{
-    nsMsgDatabase* db = (nsMsgDatabase*)closure;
-    PRBool wasRead = PR_TRUE;
-    nsresult rv = db->IsHeaderRead(msg, &wasRead);
-    if (NS_FAILED(rv)) 
-		return rv;
-    return !wasRead ? NS_OK : NS_ERROR_FAILURE;
-}
-
-nsresult  
-nsMsgDatabase::EnumerateUnreadMessages(nsISimpleEnumerator* *result)
-{
-    nsMsgDBEnumerator* e = new nsMsgDBEnumerator(this, nsMsgUnreadFilter, this);
-    if (e == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(e);
-    *result = e;
-    return NS_OK;
-}
-
 nsresult  
 nsMsgDatabase::EnumerateMessagesWithFlag(nsISimpleEnumerator* *result, PRUint32 *pFlag)
 {
@@ -2695,19 +2687,6 @@ nsMsgReadFilter(nsIMsgDBHdr* msg, void* closure)
     if (NS_FAILED(rv))
         return rv;
     return wasRead ? NS_OK : NS_ERROR_FAILURE;
-}
-
-// note that we can't just use EnumerateMessagesWithFlag(MSG_FLAG_READ) because we need
-// to call IsHeaderRead.
-nsresult
-nsMsgDatabase::EnumerateReadMessages(nsISimpleEnumerator* *result)
-{
-    nsMsgDBEnumerator* e = new nsMsgDBEnumerator(this, nsMsgReadFilter, this);
-    if (e == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(e);
-    *result = e;
-    return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsIMsgDBHdr **pnewHdr)
@@ -2761,7 +2740,6 @@ NS_IMETHODIMP nsMsgDatabase::AddNewHdrToDB(nsIMsgDBHdr *newHdr, PRBool notify)
     if (m_dbFolderInfo != NULL)
     {
       m_dbFolderInfo->ChangeNumMessages(1);
-      m_dbFolderInfo->ChangeNumVisibleMessages(1);
       PRBool isRead = PR_TRUE;
       IsHeaderRead(newHdr, &isRead);
       if (!isRead) 
@@ -3739,6 +3717,12 @@ nsresult nsMsgDatabase::ListAllThreads(nsMsgKeyArray *threadIds)
     pThread = nsnull;
   }
   return rv;
+}
+
+NS_IMETHODIMP nsMsgDatabase::SetAttributesOnPendingHdr(nsIMsgDBHdr *pendingHdr, const char *property, 
+                                  const char *propertyVal, PRInt32 flags)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMsgDatabase::GetOfflineOpForKey(nsMsgKey msgKey, PRBool create, nsIMsgOfflineImapOperation **offlineOp)

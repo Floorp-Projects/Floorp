@@ -77,36 +77,37 @@ public:
   virtual nsresult CloseMDB(PRBool commit);
   virtual nsresult CreateMsgHdr(nsIMdbRow* hdrRow, nsMsgKey key, nsIMsgDBHdr **result);
   virtual nsresult GetThreadForMsgKey(nsMsgKey msgKey, nsIMsgThread **result);
-  virtual nsresult EnumerateUnreadMessages(nsISimpleEnumerator* *result);
-  virtual nsresult EnumerateReadMessages(nsISimpleEnumerator* *result);
   virtual nsresult EnumerateMessagesWithFlag(nsISimpleEnumerator* *result, PRUint32 *pFlag);
 
   // this might just be for debugging - we'll see.
   nsresult ListAllThreads(nsMsgKeyArray *threadIds);
   //////////////////////////////////////////////////////////////////////////////
   // nsMsgDatabase methods:
-	nsMsgDatabase();
-	virtual ~nsMsgDatabase();
+  nsMsgDatabase();
+  virtual ~nsMsgDatabase();
 
 
-	static nsIMdbFactory	*GetMDBFactory();
-	nsIMdbEnv				*GetEnv() {return m_mdbEnv;}
-	nsIMdbStore				*GetStore() {return m_mdbStore;}
-	virtual PRUint32		GetCurVersion();
-	nsIMsgHeaderParser		*GetHeaderParser();
-	nsresult				    GetCollationKeyGenerator();
-  nsIMimeConverter *  GetMimeConverter();
+  static nsIMdbFactory  *GetMDBFactory();
+  nsIMdbEnv             *GetEnv() {return m_mdbEnv;}
+  nsIMdbStore           *GetStore() {return m_mdbStore;}
+  virtual PRUint32      GetCurVersion();
+  nsIMsgHeaderParser    *GetHeaderParser();
+  nsresult              GetCollationKeyGenerator();
+  nsIMimeConverter *    GetMimeConverter();
 
-	static nsMsgDatabase* FindInCache(nsFileSpec &dbName);
+  nsresult GetTableCreateIfMissing(const char *scope, const char *kind, nsIMdbTable **table, 
+                                   mdb_token &scopeToken, mdb_token &kindToken);
 
-	//helper function to fill in nsStrings from hdr row cell contents.
-	nsresult RowCellColumnTonsString(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr);
-	nsresult RowCellColumnToUInt32(nsIMdbRow *row, mdb_token columnToken, PRUint32 *uint32Result, PRUint32 defaultValue = 0);
-	nsresult RowCellColumnToUInt32(nsIMdbRow *row, mdb_token columnToken, PRUint32 &uint32Result, PRUint32 defaultValue = 0);
-	nsresult RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_token columnToken, PRUnichar **);
-	nsresult RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token columnToken, PRUint8 **result, PRUint32 *len);
-	nsresult RowCellColumnToConstCharPtr(nsIMdbRow *row, mdb_token columnToken, const char **ptr);
-  nsresult        RowCellColumnToAddressCollationKey(nsIMdbRow *row, mdb_token colToken, PRUint8 **result, PRUint32 *len);
+  static nsMsgDatabase* FindInCache(nsFileSpec &dbName);
+
+  //helper function to fill in nsStrings from hdr row cell contents.
+  nsresult RowCellColumnTonsString(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr);
+  nsresult RowCellColumnToUInt32(nsIMdbRow *row, mdb_token columnToken, PRUint32 *uint32Result, PRUint32 defaultValue = 0);
+  nsresult RowCellColumnToUInt32(nsIMdbRow *row, mdb_token columnToken, PRUint32 &uint32Result, PRUint32 defaultValue = 0);
+  nsresult RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_token columnToken, PRUnichar **);
+  nsresult RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token columnToken, PRUint8 **result, PRUint32 *len);
+  nsresult RowCellColumnToConstCharPtr(nsIMdbRow *row, mdb_token columnToken, const char **ptr);
+  nsresult RowCellColumnToAddressCollationKey(nsIMdbRow *row, mdb_token colToken, PRUint8 **result, PRUint32 *len);
 
   // these methods take the property name as a string, not a token.
   // they should be used when the properties aren't accessed a lot
@@ -120,27 +121,27 @@ public:
   nsresult        SetNSStringPropertyWithToken(nsIMdbRow *row, mdb_token aProperty, nsString *propertyStr);
   
   // helper functions to put values in cells for the passed-in row
-  nsresult				UInt32ToRowCellColumn(nsIMdbRow *row, mdb_token columnToken, PRUint32 value);
-  nsresult				CharPtrToRowCellColumn(nsIMdbRow *row, mdb_token columnToken, const char *charPtr);
-  nsresult				RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnToken, char **result);
+  nsresult        UInt32ToRowCellColumn(nsIMdbRow *row, mdb_token columnToken, PRUint32 value);
+  nsresult        CharPtrToRowCellColumn(nsIMdbRow *row, mdb_token columnToken, const char *charPtr);
+  nsresult        RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnToken, char **result);
   
   
   // helper functions to copy an nsString to a yarn, int32 to yarn, and vice versa.
-  static	struct mdbYarn *nsStringToYarn(struct mdbYarn *yarn, nsString *str);
-  static	struct mdbYarn *UInt32ToYarn(struct mdbYarn *yarn, PRUint32 i);
-  static	void			YarnTonsString(struct mdbYarn *yarn, nsString *str);
-  static	void			YarnTonsCString(struct mdbYarn *yarn, nsCString *str);
-  static	void			YarnToUInt32(struct mdbYarn *yarn, PRUint32 *i);
+  static struct mdbYarn *nsStringToYarn(struct mdbYarn *yarn, nsString *str);
+  static struct mdbYarn *UInt32ToYarn(struct mdbYarn *yarn, PRUint32 i);
+  static void YarnTonsString(struct mdbYarn *yarn, nsString *str);
+  static void YarnTonsCString(struct mdbYarn *yarn, nsCString *str);
+  static void YarnToUInt32(struct mdbYarn *yarn, PRUint32 *i);
   
   
   // helper functions to convert a 64bits PRTime into a 32bits value (compatible time_t) and vice versa.
-  static void				PRTime2Seconds(PRTime prTime, PRUint32 *seconds);
-  static void				Seconds2PRTime(PRUint32 seconds, PRTime *prTime);
+  static void   PRTime2Seconds(PRTime prTime, PRUint32 *seconds);
+  static void   Seconds2PRTime(PRUint32 seconds, PRTime *prTime);
   
-  static void		CleanupCache();
+  static void   CleanupCache();
 #ifdef DEBUG
-  static int		GetNumInCache(void) {return(GetDBCache()->Count());}
-  static void		DumpCache();
+  static int    GetNumInCache(void) {return(GetDBCache()->Count());}
+  static void   DumpCache();
   virtual nsresult DumpContents();
   nsresult DumpThread(nsMsgKey threadId);
   nsresult DumpMsgChildren(nsIMsgDBHdr *msgHdr);
@@ -155,14 +156,14 @@ protected:
   nsresult GetBoolPref(const char *prefName, PRBool *result);
   nsresult GetIntPref(const char *prefName, PRInt32 *result);
     // retrieval methods
-    nsIMsgThread *	GetThreadForReference(nsCString &msgID, nsIMsgDBHdr **pMsgHdr);
-  nsIMsgThread *	GetThreadForSubject(nsCString &subject);
-  nsIMsgThread *	GetThreadForThreadId(nsMsgKey threadId);
-  nsMsgHdr	*	GetMsgHdrForReference(nsCString &reference);
-  nsIMsgDBHdr	*	GetMsgHdrForSubject(nsCString &msgID);
+  nsIMsgThread *  GetThreadForReference(nsCString &msgID, nsIMsgDBHdr **pMsgHdr);
+  nsIMsgThread *  GetThreadForSubject(nsCString &subject);
+  nsIMsgThread *  GetThreadForThreadId(nsMsgKey threadId);
+  nsMsgHdr     *  GetMsgHdrForReference(nsCString &reference);
+  nsIMsgDBHdr  *  GetMsgHdrForSubject(nsCString &msgID);
   // threading interfaces
   virtual nsresult CreateNewThread(nsMsgKey key, const char *subject, nsMsgThread **newThread);
-  virtual PRBool	ThreadBySubjectWithoutRe();
+  virtual PRBool  ThreadBySubjectWithoutRe();
   virtual nsresult ThreadNewHdr(nsMsgHdr* hdr, PRBool &newThread);
   virtual nsresult AddNewThread(nsMsgHdr *msgHdr);
   virtual nsresult AddToThread(nsMsgHdr *newHdr, nsIMsgThread *thread, nsIMsgDBHdr *pMsgHdr, PRBool threadInThread);
@@ -181,17 +182,17 @@ protected:
   
   // Flag handling routines
   virtual nsresult SetKeyFlag(nsMsgKey key, PRBool set, PRUint32 flag,
-    nsIDBChangeListener *instigator = NULL);
+                              nsIDBChangeListener *instigator = NULL);
   virtual nsresult SetMsgHdrFlag(nsIMsgDBHdr *msgHdr, PRBool set, PRUint32 flag, 
-    nsIDBChangeListener *instigator);
+                                 nsIDBChangeListener *instigator);
   
-  virtual PRBool	SetHdrFlag(nsIMsgDBHdr *, PRBool bSet, MsgFlags flag);
+  virtual PRBool  SetHdrFlag(nsIMsgDBHdr *, PRBool bSet, MsgFlags flag);
   virtual PRBool  SetHdrReadFlag(nsIMsgDBHdr *, PRBool pRead);
   virtual PRUint32 GetStatusFlags(nsIMsgDBHdr *msgHdr, PRUint32 origFlags);
   // helper function which doesn't involve thread object
   
-  virtual nsresult		RemoveHeaderFromDB(nsMsgHdr *msgHdr);
-  virtual nsresult    RemoveHeaderFromThread(nsMsgHdr *msgHdr);
+  virtual nsresult RemoveHeaderFromDB(nsMsgHdr *msgHdr);
+  virtual nsresult RemoveHeaderFromThread(nsMsgHdr *msgHdr);
   virtual nsresult AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr);
   
   
@@ -205,69 +206,69 @@ protected:
 
   nsresult PurgeMessagesOlderThan(PRUint32 daysToKeepHdrs, PRBool keepUnreadMessagesOnly);
   nsresult PurgeExcessMessages(PRUint32 numHeadersToKeep, PRBool keepUnreadMessagesOnly);
-
-	// mdb bookkeeping stuff
-	virtual nsresult			InitExistingDB();
-	virtual nsresult			InitNewDB();
-	virtual nsresult			InitMDBInfo();
-
+  
+  // mdb bookkeeping stuff
+  virtual nsresult			InitExistingDB();
+  virtual nsresult			InitNewDB();
+  virtual nsresult			InitMDBInfo();
+  
   nsCOMPtr <nsIMsgFolder> m_folder;
-	nsDBFolderInfo      *m_dbFolderInfo;
-	nsMsgKey            m_nextPseudoMsgKey;
-	nsIMdbEnv		    *m_mdbEnv;	// to be used in all the db calls.
-	nsIMdbStore	 	    *m_mdbStore;
-	nsIMdbTable		    *m_mdbAllMsgHeadersTable;
-        nsIMdbTable                 *m_mdbAllThreadsTable;
-	nsFileSpec		    m_dbName;
-	nsMsgKeySet		    *m_newSet;	// new messages since last open.
-	PRBool				m_mdbTokensInitialized;
+  nsDBFolderInfo      *m_dbFolderInfo;
+  nsMsgKey      m_nextPseudoMsgKey;
+  nsIMdbEnv     *m_mdbEnv;	// to be used in all the db calls.
+  nsIMdbStore   *m_mdbStore;
+  nsIMdbTable   *m_mdbAllMsgHeadersTable;
+  nsIMdbTable   *m_mdbAllThreadsTable;
+  nsFileSpec    m_dbName;
+  nsMsgKeySet   *m_newSet;	// new messages since last open.
+  PRBool        m_mdbTokensInitialized;
   nsCOMPtr <nsISupportsArray>  m_ChangeListeners;
-	mdb_token			m_hdrRowScopeToken;
-	mdb_token			m_threadRowScopeToken;
-	mdb_token			m_hdrTableKindToken;
-	mdb_token			m_threadTableKindToken;
-	mdb_token			m_allThreadsTableKindToken;
-	mdb_token			m_subjectColumnToken;
-	mdb_token			m_senderColumnToken;
-	mdb_token			m_messageIdColumnToken;
-	mdb_token			m_referencesColumnToken;
-	mdb_token			m_recipientsColumnToken;
-	mdb_token			m_dateColumnToken;
-	mdb_token			m_messageSizeColumnToken;
-	mdb_token			m_flagsColumnToken;
-	mdb_token			m_priorityColumnToken;
-	mdb_token			m_labelColumnToken;
-	mdb_token			m_statusOffsetColumnToken;
-	mdb_token			m_numLinesColumnToken;
-	mdb_token			m_ccListColumnToken;
-	mdb_token			m_threadFlagsColumnToken;
-	mdb_token			m_threadIdColumnToken;
-	mdb_token			m_threadChildrenColumnToken;
-	mdb_token			m_threadUnreadChildrenColumnToken;
-	mdb_token			m_messageThreadIdColumnToken;
-	mdb_token			m_threadSubjectColumnToken;
-	mdb_token			m_numReferencesColumnToken;
-	mdb_token			m_messageCharSetColumnToken;
-	mdb_token			m_threadParentColumnToken;
-	mdb_token			m_threadRootKeyColumnToken;
-	mdb_token			m_offlineMsgOffsetColumnToken;
-	mdb_token			m_offlineMessageSizeColumnToken;
-	nsIMsgHeaderParser	*m_HeaderParser;
-
-	// header caching stuff - MRU headers, keeps them around in memory
-	nsresult			GetHdrFromCache(nsMsgKey key, nsIMsgDBHdr* *result);
-	nsresult			AddHdrToCache(nsIMsgDBHdr *hdr, nsMsgKey key);
-	nsresult			ClearHdrCache(PRBool reInit);
-	nsresult			RemoveHdrFromCache(nsIMsgDBHdr *hdr, nsMsgKey key);
-	// all headers currently instantiated, doesn't hold refs
-	// these get added when msg hdrs get constructed, and removed when they get destroyed.
-	nsresult      GetHdrFromUseCache(nsMsgKey key, nsIMsgDBHdr* *result);
-	nsresult      AddHdrToUseCache(nsIMsgDBHdr *hdr, nsMsgKey key); 
-	nsresult      ClearUseHdrCache();
-	nsresult      RemoveHdrFromUseCache(nsIMsgDBHdr *hdr, nsMsgKey key);
-
-        void          ClearCachedObjects(PRBool dbGoingAway);
-	// all instantiated headers, but doesn't hold refs. 
+  mdb_token     m_hdrRowScopeToken;
+  mdb_token     m_threadRowScopeToken;
+  mdb_token     m_hdrTableKindToken;
+  mdb_token     m_threadTableKindToken;
+  mdb_token     m_allThreadsTableKindToken;
+  mdb_token     m_subjectColumnToken;
+  mdb_token     m_senderColumnToken;
+  mdb_token     m_messageIdColumnToken;
+  mdb_token     m_referencesColumnToken;
+  mdb_token     m_recipientsColumnToken;
+  mdb_token     m_dateColumnToken;
+  mdb_token     m_messageSizeColumnToken;
+  mdb_token     m_flagsColumnToken;
+  mdb_token     m_priorityColumnToken;
+  mdb_token     m_labelColumnToken;
+  mdb_token     m_statusOffsetColumnToken;
+  mdb_token     m_numLinesColumnToken;
+  mdb_token     m_ccListColumnToken;
+  mdb_token     m_threadFlagsColumnToken;
+  mdb_token     m_threadIdColumnToken;
+  mdb_token     m_threadChildrenColumnToken;
+  mdb_token     m_threadUnreadChildrenColumnToken;
+  mdb_token     m_messageThreadIdColumnToken;
+  mdb_token     m_threadSubjectColumnToken;
+  mdb_token     m_numReferencesColumnToken;
+  mdb_token     m_messageCharSetColumnToken;
+  mdb_token     m_threadParentColumnToken;
+  mdb_token     m_threadRootKeyColumnToken;
+  mdb_token     m_offlineMsgOffsetColumnToken;
+  mdb_token     m_offlineMessageSizeColumnToken;
+  nsIMsgHeaderParser	*m_HeaderParser;
+  
+  // header caching stuff - MRU headers, keeps them around in memory
+  nsresult      GetHdrFromCache(nsMsgKey key, nsIMsgDBHdr* *result);
+  nsresult      AddHdrToCache(nsIMsgDBHdr *hdr, nsMsgKey key);
+  nsresult      ClearHdrCache(PRBool reInit);
+  nsresult      RemoveHdrFromCache(nsIMsgDBHdr *hdr, nsMsgKey key);
+  // all headers currently instantiated, doesn't hold refs
+  // these get added when msg hdrs get constructed, and removed when they get destroyed.
+  nsresult      GetHdrFromUseCache(nsMsgKey key, nsIMsgDBHdr* *result);
+  nsresult      AddHdrToUseCache(nsIMsgDBHdr *hdr, nsMsgKey key); 
+  nsresult      ClearUseHdrCache();
+  nsresult      RemoveHdrFromUseCache(nsIMsgDBHdr *hdr, nsMsgKey key);
+  
+  void          ClearCachedObjects(PRBool dbGoingAway);
+  // all instantiated headers, but doesn't hold refs. 
   PLDHashTable  *m_headersInUse;
   static const void* PR_CALLBACK GetKey(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
   static PLDHashNumber PR_CALLBACK HashKey(PLDHashTable* aTable, const void* aKey);
@@ -322,9 +323,9 @@ public:
   NS_DECL_NSIMSGDOWNLOADSETTINGS
 protected:
   PRBool m_useServerDefaults;
-	PRBool m_downloadUnreadOnly;
-	PRBool m_downloadByDate;
-	PRInt32 m_ageLimitOfMsgsToDownload;
+  PRBool m_downloadUnreadOnly;
+  PRBool m_downloadByDate;
+  PRInt32 m_ageLimitOfMsgsToDownload;
 };
 
 #endif

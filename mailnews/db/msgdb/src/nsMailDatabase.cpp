@@ -67,8 +67,6 @@ nsMailDatabase::~nsMailDatabase()
 {
   if(m_folderSpec)
     delete m_folderSpec;
-  if (m_mdbAllOfflineOpsTable)
-    m_mdbAllOfflineOpsTable->Release();
 }
 
 NS_IMETHODIMP nsMailDatabase::SetFolderStream(nsIOFileStream *aFileStream)
@@ -203,11 +201,7 @@ NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, PRBo
 
 NS_IMETHODIMP nsMailDatabase::ForceClosed()
 {
-  if (m_mdbAllOfflineOpsTable)
-  {
-    m_mdbAllOfflineOpsTable->Release();
-    m_mdbAllOfflineOpsTable = nsnull;
-  }
+  m_mdbAllOfflineOpsTable = nsnull;
   return nsMsgDatabase::ForceClosed();
 }
 
@@ -217,40 +211,9 @@ nsresult nsMailDatabase::GetAllOfflineOpsTable()
 {
   nsresult rv = NS_OK;
   if (!m_mdbAllOfflineOpsTable)
-  {
-		mdb_err err	= GetStore()->StringToToken(GetEnv(), kOfflineOpsScope, &m_offlineOpsRowScopeToken); 
-    err = GetStore()->StringToToken(GetEnv(), kOfflineOpsTableKind, &m_offlineOpsTableKindToken); 
-		gAllOfflineOpsTableOID.mOid_Scope = m_offlineOpsRowScopeToken;
-		gAllOfflineOpsTableOID.mOid_Id = 1;
-
-    rv = GetStore()->GetTable(GetEnv(), &gAllOfflineOpsTableOID, &m_mdbAllOfflineOpsTable);
-    if (rv != NS_OK)
-      rv = NS_ERROR_FAILURE;
-
-    // create new all msg hdrs table, if it doesn't exist.
-    if (NS_SUCCEEDED(rv) && !m_mdbAllOfflineOpsTable)
-    {
-	    nsIMdbStore *store = GetStore();
-	    mdb_err mdberr = (nsresult) store->NewTable(GetEnv(), m_offlineOpsRowScopeToken, 
-		    m_offlineOpsTableKindToken, PR_FALSE, nsnull, &m_mdbAllOfflineOpsTable);
-      if (mdberr != NS_OK || !m_mdbAllOfflineOpsTable)
-        rv = NS_ERROR_FAILURE;
-    }
-    NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't create offline ops table");
-  }
+    rv = GetTableCreateIfMissing(kOfflineOpsScope, kOfflineOpsTableKind, getter_AddRefs(m_mdbAllOfflineOpsTable), 
+                                                m_offlineOpsRowScopeToken, m_offlineOpsTableKindToken) ;
   return rv;
-}
-
-/* static */ nsresult nsMailDatabase::CloneInvalidDBInfoIntoNewDB(nsFileSpec &pathName, nsMailDatabase** pMailDB)
-{
-	nsresult ret = NS_OK;
-	return ret;
-}
-
-nsresult nsMailDatabase::OnNewPath (nsFileSpec &newPath)
-{
-	nsresult ret = NS_OK;
-	return ret;
 }
 
 // cache m_folderStream to make updating mozilla status flags fast
@@ -624,22 +587,8 @@ NS_IMETHODIMP  nsMailDatabase::RemoveOfflineOp(nsIMsgOfflineImapOperation *op)
   return rv;
 }
 
-nsresult SetSourceMailbox(nsOfflineImapOperation *op, const char *mailbox, nsMsgKey key)
-{
-	nsresult ret = NS_OK;
-	return ret;
-}
-
-	
-nsresult nsMailDatabase::GetIdsWithNoBodies (nsMsgKeyArray &bodylessIds)
-{
-	nsresult ret = NS_OK;
-	return ret;
-}
-
 NS_IMETHODIMP nsMailDatabase::GetOfflineOpForKey(nsMsgKey msgKey, PRBool create, nsIMsgOfflineImapOperation **offlineOp)
 {
-  PRBool newOp = PR_FALSE;
   mdb_bool	hasOid;
   mdbOid		rowObjectId;
   mdb_err   err;
@@ -668,10 +617,7 @@ NS_IMETHODIMP nsMailDatabase::GetOfflineOpForKey(nsMsgKey msgKey, PRBool create,
         NS_ENSURE_SUCCESS(err, err);
       }
       if (offlineOpRow && !hasOid)
-      {
         m_mdbAllOfflineOpsTable->AddRow(GetEnv(), offlineOpRow);
-        newOp = PR_TRUE;
-      }
     }
     
     if (err == NS_OK && offlineOpRow)
@@ -854,7 +800,6 @@ nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec *folderName, int num, int
     
     pMessageDB->m_dbFolderInfo->SetFolderSize(folderName->GetFileSize());
     pMessageDB->m_dbFolderInfo->SetFolderDate(actualFolderTimeStamp);
-    pMessageDB->m_dbFolderInfo->ChangeNumVisibleMessages(num);
     pMessageDB->m_dbFolderInfo->ChangeNumNewMessages(numunread);
     pMessageDB->m_dbFolderInfo->ChangeNumMessages(num);
   }
@@ -877,7 +822,7 @@ nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec *folderName, int num, int
 // and needs to be regenerated.
 void nsMailDatabase::SetReparse(PRBool reparse)
 {
-	m_reparse = reparse;
+  m_reparse = reparse;
 }
 
 
@@ -886,7 +831,7 @@ void nsMailDatabase::SetReparse(PRBool reparse)
 PRBool	nsMailDatabase::ThreadBySubjectWithoutRe()
 {
   GetGlobalPrefs();
-	return gThreadWithoutRe;
+  return gThreadWithoutRe;
 }
 
 class nsMsgOfflineOpEnumerator : public nsISimpleEnumerator {

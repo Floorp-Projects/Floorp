@@ -66,6 +66,5 @@ interface nsIMsgThread : nsISupports {
   nsIMsgDBHdr GetFirstUnreadChild();
 
   nsISimpleEnumerator EnumerateMessages(in nsMsgKey parent);
-  nsISimpleEnumerator EnumerateUnreadMessages(in nsMsgKey parent);
 
 };

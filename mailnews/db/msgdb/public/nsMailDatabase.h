@@ -50,36 +50,28 @@ class nsOfflineImapOperation;
 class nsMailDatabase : public nsMsgDatabase
 {
 public:
-	nsMailDatabase();
-	virtual ~nsMailDatabase();
-	NS_IMETHOD  Open(nsIFileSpec *aFolderName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB);
-        NS_IMETHOD  ForceClosed();
-
-	static  nsresult		CloneInvalidDBInfoIntoNewDB(nsFileSpec &pathName, nsMailDatabase** pMailDB);
-
-	NS_IMETHOD OnNewPath(nsFileSpec &newPath);
-
-	NS_IMETHOD DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChangeListener *instigator);
+  nsMailDatabase();
+  virtual ~nsMailDatabase();
+  NS_IMETHOD  Open(nsIFileSpec *aFolderName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB);
+  NS_IMETHOD  ForceClosed();
+  NS_IMETHOD DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChangeListener *instigator);
 
   NS_IMETHOD StartBatch();
   NS_IMETHOD EndBatch();
 
-	static  nsresult		SetFolderInfoValid(nsFileSpec *folderSpec, int num, int numunread);
-	nsresult				GetFolderName(nsString &folderName);
-	virtual nsMailDatabase	*GetMailDB() {return this;}
+  static  nsresult        SetFolderInfoValid(nsFileSpec *folderSpec, int num, int numunread);
+  nsresult                GetFolderName(nsString &folderName);
+  virtual nsMailDatabase  *GetMailDB() {return this;}
 
-	virtual PRUint32		GetCurVersion() {return kMsgDBVersion;}
-	
-	NS_IMETHOD			GetOfflineOpForKey(nsMsgKey opKey, PRBool create, nsIMsgOfflineImapOperation **op);
-  NS_IMETHOD      RemoveOfflineOp(nsIMsgOfflineImapOperation *op);
+  virtual PRUint32  GetCurVersion() {return kMsgDBVersion;}
+  
+  NS_IMETHOD  GetOfflineOpForKey(nsMsgKey opKey, PRBool create, nsIMsgOfflineImapOperation **op);
+  NS_IMETHOD  RemoveOfflineOp(nsIMsgOfflineImapOperation *op);
 
-	nsresult				SetSourceMailbox(nsOfflineImapOperation *op, const char *mailbox, nsMsgKey key);
-	
   NS_IMETHOD  SetSummaryValid(PRBool valid);
   NS_IMETHOD  GetSummaryValid(PRBool *valid);
 	
   NS_IMETHOD    EnumerateOfflineOps(nsISimpleEnumerator **enumerator);
-	nsresult 				GetIdsWithNoBodies (nsMsgKeyArray &bodylessIds);
   NS_IMETHOD    ListAllOfflineOpIds(nsMsgKeyArray *offlineOpIds);
   NS_IMETHOD    ListAllOfflineDeletes(nsMsgKeyArray *offlineDeletes);
 
@@ -90,7 +82,7 @@ protected:
 
   nsresult        GetAllOfflineOpsTable(); // get this on demand
 
-  nsIMdbTable     *m_mdbAllOfflineOpsTable;
+  nsCOMPtr <nsIMdbTable>  m_mdbAllOfflineOpsTable;
   mdb_token       m_offlineOpsRowScopeToken;
   mdb_token       m_offlineOpsTableKindToken;
 

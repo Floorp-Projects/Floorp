@@ -525,26 +525,6 @@ NS_IMETHODIMP nsMsgWindow::GetPromptDialog(nsIPrompt **aPrompt)
       return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsMsgWindow::GetAuthPromptDialog(nsIAuthPrompt **aPrompt)
-{
-  nsresult rv = NS_OK;
-  NS_ENSURE_ARG_POINTER(aPrompt);
-  nsCOMPtr<nsIDocShell> rootShell(do_QueryReferent(mRootDocShellWeak));
-  if (rootShell)
-  {
-      nsCOMPtr<nsIAuthPrompt> dialog;
-      dialog = do_GetInterface(rootShell, &rv);
-      if (dialog)
-      {
-          *aPrompt = dialog;
-          NS_ADDREF(*aPrompt);
-      }
-      return rv;
-  }
-  else
-      return NS_ERROR_NULL_POINTER;
-}
-
 NS_IMETHODIMP 
 nsMsgWindow::DisplayHTMLInMessagePane(const PRUnichar *title, const PRUnichar *body)
 {

@@ -211,7 +211,6 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
 
   void UndoDelete(in nsIMsgDBHdr msgHdr);
 
-  void MarkLater(in nsMsgKey key, in PRTime until);
   void MarkMarked(in nsMsgKey key, in boolean mark,
                         in nsIDBChangeListener instigator);
   void MarkOffline(in nsMsgKey key, in boolean offline,
@@ -254,6 +253,9 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   [noscript] void ListAllOfflineOpIds(in nsMsgKeyArrayPtr offlineOpIds);
   [noscript] void ListAllOfflineDeletes(in nsMsgKeyArrayPtr offlineDeletes);
   [noscript] void ListAllOfflineMsgs(in nsMsgKeyArrayPtr offlineMsgs);
+
+  void setAttributesOnPendingHdr(in nsIMsgDBHdr pendingHdr, in string property, 
+                                  in string propertyVal, in long flags);
 
   readonly attribute nsMsgKey lowWaterArticleNum;
   readonly attribute nsMsgKey highWaterArticleNum;

@@ -60,103 +60,96 @@ class nsMsgDatabase;
 class nsDBFolderInfo : public nsIDBFolderInfo
 {
 public:
-	friend class nsMsgDatabase;
-
-	nsDBFolderInfo(nsMsgDatabase *mdb);
-	virtual ~nsDBFolderInfo();
-
-    NS_DECL_ISUPPORTS
-	// interface methods.
-	NS_DECL_NSIDBFOLDERINFO
-	// create the appropriate table and row in a new db.
-	nsresult			AddToNewMDB();
-	// accessor methods.
-
-	PRBool				AddLaterKey(nsMsgKey key, PRTime until);
-	PRInt32				GetNumLatered();
-	nsMsgKey			GetLateredAt(PRInt32 laterIndex, PRTime pUntil);
-	void				RemoveLateredAt(PRInt32 laterIndex);
-
-	PRBool				TestFlag(PRInt32 flags);
-	PRInt16				GetIMAPHierarchySeparator() ;
-	void				SetIMAPHierarchySeparator(PRInt16 hierarchySeparator) ;
-	void				ChangeImapTotalPendingMessages(PRInt32 delta);
-	void				ChangeImapUnreadPendingMessages(PRInt32 delta) ;
-	
-	nsresult			InitFromExistingDB();
-	// get and set arbitrary property, aka row cell value.
-	nsresult	SetPropertyWithToken(mdb_token aProperty, nsString *propertyStr);
-	nsresult	SetUint32PropertyWithToken(mdb_token aProperty, PRUint32 propertyValue);
-	nsresult	SetInt32PropertyWithToken(mdb_token aProperty, PRInt32 propertyValue);
-	nsresult	GetPropertyWithToken(mdb_token aProperty, nsString *resultProperty);
-	nsresult	GetUint32PropertyWithToken(mdb_token aProperty, PRUint32 &propertyValue, PRUint32 defaultValue = 0);
-	nsresult	GetInt32PropertyWithToken(mdb_token aProperty, PRInt32 &propertyValue, PRInt32 defaultValue = 0);
-        nsresult        GetConstCharPtrCharacterSet(const char**result);
-
-
-	nsMsgKeyArray m_lateredKeys;		// list of latered messages
-
+  friend class nsMsgDatabase;
+  
+  nsDBFolderInfo(nsMsgDatabase *mdb);
+  virtual ~nsDBFolderInfo();
+  
+  NS_DECL_ISUPPORTS
+    // interface methods.
+    NS_DECL_NSIDBFOLDERINFO
+    // create the appropriate table and row in a new db.
+    nsresult			AddToNewMDB();
+  // accessor methods.
+  
+  PRBool    TestFlag(PRInt32 flags);
+  PRInt16   GetIMAPHierarchySeparator() ;
+  void      SetIMAPHierarchySeparator(PRInt16 hierarchySeparator) ;
+  void      ChangeImapTotalPendingMessages(PRInt32 delta);
+  void      ChangeImapUnreadPendingMessages(PRInt32 delta) ;
+  
+  nsresult      InitFromExistingDB();
+  // get and set arbitrary property, aka row cell value.
+  nsresult	SetPropertyWithToken(mdb_token aProperty, nsString *propertyStr);
+  nsresult	SetUint32PropertyWithToken(mdb_token aProperty, PRUint32 propertyValue);
+  nsresult	SetInt32PropertyWithToken(mdb_token aProperty, PRInt32 propertyValue);
+  nsresult	GetPropertyWithToken(mdb_token aProperty, nsString *resultProperty);
+  nsresult	GetUint32PropertyWithToken(mdb_token aProperty, PRUint32 &propertyValue, PRUint32 defaultValue = 0);
+  nsresult	GetInt32PropertyWithToken(mdb_token aProperty, PRInt32 &propertyValue, PRInt32 defaultValue = 0);
+  nsresult      GetConstCharPtrCharacterSet(const char**result);
+  
+  
+  nsMsgKeyArray m_lateredKeys;		// list of latered messages
+  
 protected:
-	
-	// initialize from appropriate table and row in existing db.
-	nsresult InitMDBInfo();
-	nsresult LoadMemberVariables();
-
-        void ReleaseExternalReferences(); // let go of any references to other objects.
-
-	PRInt32		m_folderSize;
-	PRInt32		m_expungedBytes;	// sum of size of deleted messages in folder
-	PRUint32	m_folderDate;
-	nsMsgKey  m_highWaterMessageKey;	// largest news article number or imap uid whose header we've seen
-
-  // m_numVisibleMessages, m_numNewMessages and m_numMessages can never be negative. 0 means 'no msgs'.
-	PRInt32		m_numVisibleMessages;	// doesn't include expunged or ignored messages (but does include collapsed).
-	PRInt32		m_numNewMessages;
-	PRInt32		m_numMessages;		// includes expunged and ignored messages
-
-	PRInt32		m_flags;			// folder specific flags. This holds things like re-use thread pane,
-									// configured for off-line use, use default retrieval, purge article/header options
-
-	PRUint16	m_version;			// for upgrading...
-	PRInt16		m_IMAPHierarchySeparator;	// imap path separator
-
-	// mail only (for now)
-	
-	// IMAP only
-	PRInt32		m_ImapUidValidity;
-	PRInt32		m_totalPendingMessages;
-	PRInt32		m_unreadPendingMessages;
-
-	// news only (for now)
-	nsMsgKey	m_expiredMark;		// Highest invalid article number in group - for expiring
-// the db folder info will have to know what db and row it belongs to, since it is really
-// just a wrapper around the singleton folder info row in the mdb. 
-	nsMsgDatabase         *m_mdb;
-	nsIMdbTable           *m_mdbTable;	// singleton table in db
-	nsIMdbRow             *m_mdbRow;	// singleton row in table;
-
-        nsCString             m_charSet;
-        PRBool                m_charSetOverride;
-	PRBool                m_mdbTokensInitialized;
-
-	mdb_token			m_rowScopeToken;
-	mdb_token			m_tableKindToken;
-	// tokens for the pre-set columns - we cache these for speed, which may be silly
-	mdb_token			m_mailboxNameColumnToken;
-	mdb_token			m_numVisibleMessagesColumnToken;
-	mdb_token			m_numMessagesColumnToken;
-	mdb_token			m_numNewMessagesColumnToken;
-	mdb_token			m_flagsColumnToken;
-	mdb_token			m_folderSizeColumnToken;
-	mdb_token			m_expungedBytesColumnToken;
-	mdb_token			m_folderDateColumnToken;
-	mdb_token			m_highWaterMessageKeyColumnToken;
-
-	mdb_token			m_imapUidValidityColumnToken;
-	mdb_token			m_totalPendingMessagesColumnToken;
-	mdb_token			m_unreadPendingMessagesColumnToken;
-	mdb_token			m_expiredMarkColumnToken;
-	mdb_token			m_versionColumnToken;
+  
+  // initialize from appropriate table and row in existing db.
+  nsresult InitMDBInfo();
+  nsresult LoadMemberVariables();
+  
+  void ReleaseExternalReferences(); // let go of any references to other objects.
+  
+  PRInt32   m_folderSize;
+  PRInt32   m_expungedBytes;	// sum of size of deleted messages in folder
+  PRUint32  m_folderDate;
+  nsMsgKey  m_highWaterMessageKey;	// largest news article number or imap uid whose header we've seen
+  
+  //  m_numNewMessages and m_numMessages can never be negative. 0 means 'no msgs'.
+  PRInt32   m_numNewMessages;
+  PRInt32   m_numMessages;    // includes expunged and ignored messages
+  
+  PRInt32   m_flags;  // folder specific flags. This holds things like re-use thread pane,
+  // configured for off-line use, use default retrieval, purge article/header options
+  
+  PRUint16    m_version;                // for upgrading...
+  PRInt16     m_IMAPHierarchySeparator;	// imap path separator
+  
+  // mail only (for now)
+  
+  // IMAP only
+  PRInt32     m_ImapUidValidity;
+  PRInt32     m_totalPendingMessages;
+  PRInt32     m_unreadPendingMessages;
+  
+  // news only (for now)
+  nsMsgKey    m_expiredMark;		// Highest invalid article number in group - for expiring
+  // the db folder info will have to know what db and row it belongs to, since it is really
+  // just a wrapper around the singleton folder info row in the mdb. 
+  nsMsgDatabase *m_mdb;
+  nsIMdbTable   *m_mdbTable;	// singleton table in db
+  nsIMdbRow     *m_mdbRow;	// singleton row in table;
+  
+  nsCString     m_charSet;
+  PRBool        m_charSetOverride;
+  PRBool        m_mdbTokensInitialized;
+  
+  mdb_token     m_rowScopeToken;
+  mdb_token     m_tableKindToken;
+  // tokens for the pre-set columns - we cache these for speed, which may be silly
+  mdb_token     m_mailboxNameColumnToken;
+  mdb_token     m_numMessagesColumnToken;
+  mdb_token     m_numNewMessagesColumnToken;
+  mdb_token     m_flagsColumnToken;
+  mdb_token     m_folderSizeColumnToken;
+  mdb_token     m_expungedBytesColumnToken;
+  mdb_token     m_folderDateColumnToken;
+  mdb_token     m_highWaterMessageKeyColumnToken;
+  
+  mdb_token     m_imapUidValidityColumnToken;
+  mdb_token     m_totalPendingMessagesColumnToken;
+  mdb_token     m_unreadPendingMessagesColumnToken;
+  mdb_token     m_expiredMarkColumnToken;
+  mdb_token     m_versionColumnToken;
 };
 
 #endif

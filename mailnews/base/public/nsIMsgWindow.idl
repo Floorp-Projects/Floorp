@@ -63,19 +63,18 @@ interface nsIMsgMessagePaneController : nsISupports {
 [scriptable, uuid(BD85A416-5433-11d3-8AC5-0060B0FC04D2)]
 interface nsIMsgWindow : nsISupports {
 
-    attribute nsIMsgMessagePaneController messagePaneController;
+  attribute nsIMsgMessagePaneController messagePaneController;
 	attribute nsIMsgStatusFeedback statusFeedback;
 	attribute nsIMsgHeaderSink msgHeaderSink;
-    attribute nsITransactionManager transactionManager;
+  attribute nsITransactionManager transactionManager;
 	attribute nsIMsgFolder openFolder;
 	attribute nsIDocShell rootDocShell;
-    void displayHTMLInMessagePane(in wstring title, in wstring body);
+  void displayHTMLInMessagePane(in wstring title, in wstring body);
 
-    readonly attribute nsIPrompt promptDialog;
-    readonly attribute nsIAuthPrompt authPromptDialog;
-    attribute string mailCharacterSet;
-	// Remember the message's charaset was overridden, so it can be inherited (e.g for quoting). 
-    attribute boolean charsetOverride;
+  readonly attribute nsIPrompt promptDialog;
+  attribute string mailCharacterSet;
+  // Remember the message's charaset was overridden, so it can be inherited (e.g for quoting). 
+  attribute boolean charsetOverride;
 
   /* has a running url been stopped? If you care about checking 
       this flag, you need to clear it before you start your operation since 

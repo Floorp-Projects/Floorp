@@ -56,13 +56,11 @@ interface  nsIDBFolderInfo : nsISupports {
   void ChangeNumNewMessages(in long delta);
   void ChangeNumMessages(in long delta);
 
-  // ChangeNumVisibleMessages, NumNewMessages and NumMessages will never return negative numbers. 0 means 'no msgs'.
-  void ChangeNumVisibleMessages(in long delta);
+  // NumNewMessages and NumMessages will never return negative numbers. 0 means 'no msgs'.
   attribute long NumNewMessages;
   attribute long NumMessages;
 
   attribute long expungedBytes;
-  attribute long NumVisibleMessages;
   attribute long ImapUidValidity;
   attribute unsigned long Version;
   attribute long ImapTotalPendingMessages;

@@ -227,7 +227,6 @@ interface nsMsgNavigationType
   const nsMsgNavigationTypeValue nextUnreadFolder = 11;
   const nsMsgNavigationTypeValue nextFolder = 12;
   const nsMsgNavigationTypeValue readMore = 13;
-  const nsMsgNavigationTypeValue laterMessage = 14;
   /**
    * Go back to the previous visited message
    */
