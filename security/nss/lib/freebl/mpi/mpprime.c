@@ -38,6 +38,7 @@
  */
 
 #include "mpprime.h"
+#include "mplogic.h"
 #include <stdlib.h>
 
 #define SMALL_TABLE 0 /* determines size of hard-wired prime table */
@@ -261,6 +262,24 @@ mp_err  mpp_fermat(mp_int *a, mp_digit w)
 
 /* }}} */
 
+/*
+  Perform the fermat test on each of the primes in a list until
+  a) one of them shows a is not prime, or 
+  b) the list is exhausted.
+  Returns:  MP_YES if it passes tests.
+	    MP_NO  if fermat test reveals it is composite
+	    Some MP error code if some other error occurs.
+ */
+mp_err mpp_fermat_list(mp_int *a, const mp_digit *primes, unsigned int nPrimes)
+{
+  mp_err rv = MP_YES;
+
+  while (nPrimes-- > 0 && rv == MP_YES) {
+    rv = mpp_fermat(a, *primes++);
+  }
+  return rv;
+}
+
 /* {{{ mpp_pprime(a, nt) */
 
 /*
@@ -275,30 +294,37 @@ mp_err  mpp_fermat(mp_int *a, mp_digit w)
 mp_err  mpp_pprime(mp_int *a, int nt)
 {
   mp_err   res;
-  mp_int   x, amo, m, z;
+  mp_int   x, amo, m, z;	/* "amo" = "a minus one" */
   int      iter, jx, b;
 
   ARGCHK(a != NULL, MP_BADARG);
 
   /* Initialize temporaries... */
-  if((res = mp_init_copy(&amo, a)) != MP_OKAY)
+  if((res = mp_init(&amo)) != MP_OKAY)
     return res;
+  /* Compute amo = a - 1 for what follows...    */
+  if ((res = mp_sub_d(a, 1, &amo)) != MP_OKAY)
+    goto X;
+
+  /* How many times does 2 divide (a - 1)?    */
+  for (b = 0; (res = mpl_get_bit(&amo, b)) == 0; ++b) {
+    /* do nothing */
+  }
+  if (res < 0)
+    goto X;
+  if (!b) { /* a was even ? */
+    res = MP_NO;
+    goto X;
+  }
+
   if((res = mp_init_size(&x, USED(a))) != MP_OKAY)
     goto X;
   if((res = mp_init(&z)) != MP_OKAY)
     goto Z;
-
-  /* Compute m = a - 1 for what follows...    */
-  mp_sub_d(&amo, 1, &amo);
-  if((res = mp_init_copy(&m, &amo)) != MP_OKAY)
+  if ((res = mp_init(&m)) != MP_OKAY)
     goto M;
-
-  /* How many times does 2 divide (a - 1)?    */
-  b = 0;
-  while((DIGIT(&m, 0) & 1) == 0) {
-    mp_div_2(&m, &m);
-    ++b;
-  }
+  if ((res = mp_div_2d(&amo, b, &m, 0)) != MP_OKAY)
+    goto CLEANUP;
 
   /* Do the test nt times... */
   for(iter = 0; iter < nt; iter++) {
@@ -313,35 +339,25 @@ mp_err  mpp_pprime(mp_int *a, int nt)
     if((res = mp_exptmod(&x, &m, a, &z)) != MP_OKAY)
       goto CLEANUP;
     
-    jx = 0;
-    
     if(mp_cmp_d(&z, 1) == 0 || mp_cmp(&z, &amo) == 0) {
       res = MP_YES;
       continue;
     }
     
-    for(;;) {
-      if(jx > 0 && mp_cmp_d(&z, 1) == 0) {
+    for (jx = 1; jx < b; jx++) {
+      /* z = z^2 (mod a) */
+      if((res = mp_sqrmod(&z, a, &z)) != MP_OKAY)
+	goto CLEANUP;
+	
+      if(mp_cmp_d(&z, 1) == 0) {
 	res = MP_NO;
 	break;
       }
-      
-      ++jx;
-      
-      if(jx < b && mp_cmp(&z, &amo) != 0) {
-	/* z = z^2 (mod a) */
-	if((res = mp_sqrmod(&z, a, &z)) != MP_OKAY)
-	  goto CLEANUP;
-	
-      } else if(mp_cmp(&z, &amo) == 0) {
+      if(mp_cmp(&z, &amo) == 0) {
 	res = MP_YES;
 	break;
-	
-      } else if(jx == b && mp_cmp(&z, &amo) != 0) {
-	res = MP_NO;
-	break;
-	
-      }
+      } 
+      res = MP_NO;
     } /* end testing loop */
 
     /* If the test passes, we will continue iterating, but a failed
