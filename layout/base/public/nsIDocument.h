@@ -308,7 +308,7 @@ public:
                             nsEventStatus* aEventStatus) = 0;
 
 
-
+  NS_IMETHOD FlushPendingNotifications() = 0;
 
 };
 

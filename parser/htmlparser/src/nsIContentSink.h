@@ -163,6 +163,11 @@ public:
    */
   NS_IMETHOD NotifyError(const nsParserError* aError)=0;
 
+  /**
+   * Flush all pending notifications so that the content model
+   * is in sync with the state of the sink.
+   */
+  NS_IMETHOD FlushPendingNotifications()=0;
 };
 
 #endif /* nsIContentSink_h___ */

@@ -313,6 +313,7 @@ public:
   virtual void ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
   virtual void FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
 
+  NS_IMETHOD FlushPendingNotifications();
 
 public:
   

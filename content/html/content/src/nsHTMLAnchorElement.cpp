@@ -240,19 +240,19 @@ nsHTMLAnchorElement::SetFocus(nsIPresContext* aPresContext)
     if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
       stateManager->SetContentState(this, NS_EVENT_STATE_FOCUS);
 
+      // Make sure the presentation is up-to-date
+      if (mInner.mDocument) {
+        mInner.mDocument->FlushPendingNotifications();
+      }
+
       nsCOMPtr<nsIPresShell> presShell;
       aPresContext->GetShell(getter_AddRefs(presShell));
       if (presShell) {
-        nsCOMPtr<nsIFrameManager> frameManager;
-        presShell->GetFrameManager(getter_AddRefs(frameManager));
-        if (frameManager) {
-
-          nsIFrame* frame = nsnull;
-          frameManager->GetPrimaryFrameFor(this, &frame);
-          if (frame) {
-            presShell->ScrollFrameIntoView(frame,
-                           NS_PRESSHELL_SCROLL_ANYWHERE,NS_PRESSHELL_SCROLL_ANYWHERE);
-          }
+        nsIFrame* frame = nsnull;
+        presShell->GetPrimaryFrameFor(this, &frame);
+        if (frame) {
+          presShell->ScrollFrameIntoView(frame,
+                                         NS_PRESSHELL_SCROLL_ANYWHERE,NS_PRESSHELL_SCROLL_ANYWHERE);
         }
       }
 

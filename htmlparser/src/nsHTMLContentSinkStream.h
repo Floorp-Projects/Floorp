@@ -118,6 +118,7 @@ class nsHTMLContentSinkStream : public nsIHTMLContentSinkStream
   NS_IMETHOD AddComment(const nsIParserNode& aNode);  
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
   NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode=0);
+  NS_IMETHOD FlushPendingNotifications() { return NS_OK; }
 
   /*******************************************************************
    * The following methods are inherited from nsIHTMLContentSink.

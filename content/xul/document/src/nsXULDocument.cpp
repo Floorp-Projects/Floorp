@@ -1695,6 +1695,21 @@ nsXULDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsXULDocument::FlushPendingNotifications()
+{
+  PRInt32 i, count = mPresShells.Count();
+
+  for (i = 0; i < count; i++) {
+    nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
+    if (shell) {
+      shell->FlushPendingNotifications();
+    }
+  }
+
+  return NS_OK;
+}
+
 void
 nsXULDocument::BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 {

@@ -1939,6 +1939,11 @@ nsDocument::GetPixelDimensions(nsIPresShell* aShell,
   nsresult result = NS_OK;
   nsSize size;
   nsIFrame* frame;
+  
+  result = FlushPendingNotifications();
+  if (NS_FAILED(result)) {
+    return result;
+  }
 
   result = aShell->GetPrimaryFrameFor(mRootContent, &frame);
   if (NS_SUCCEEDED(result) && frame) {
@@ -2964,6 +2969,20 @@ nsDocument::GetFileSpec(nsFileSpec& aFileSpec)
   return NS_ERROR_NOT_INITIALIZED;
 }
 
+NS_IMETHODIMP 
+nsDocument::FlushPendingNotifications()
+{
+  PRInt32 i, count = mPresShells.Count();
+
+  for (i = 0; i < count; i++) {
+    nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
+    if (shell) {
+      shell->FlushPendingNotifications();
+    }
+  }
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsDocument::GetModCount(PRInt32 *outModCount)

@@ -46,6 +46,7 @@ public:
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
   NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode=0);
+  NS_IMETHOD FlushPendingNotifications() { return NS_OK; }
 
   // nsIHTMLContentSink
   NS_IMETHOD SetTitle(const nsString& aValue);

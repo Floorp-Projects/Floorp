@@ -241,6 +241,8 @@ public:
 
     NS_IMETHOD ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
 
+    NS_IMETHOD FlushPendingNotifications();
+
     virtual void BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
 
     virtual void ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);

@@ -1302,7 +1302,6 @@ nsHTMLContentSinkStream::NotifyError(const nsParserError* aError)
   return NS_OK;
 }
 
-
 /**
   * **** Pretty Printing Methods ******
   *

@@ -83,6 +83,7 @@ public:
   NS_IMETHOD WillInterrupt(void) { return NS_OK; }
   NS_IMETHOD WillResume(void) { return NS_OK; }
   NS_IMETHOD SetParser(nsIParser* aParser) { return NS_OK; }
+  NS_IMETHOD FlushPendingNotifications() { return NS_OK; }
 
   NS_IMETHOD DoFragment(PRBool aFlag);
   NS_IMETHOD BeginContext(PRInt32 aPosition){ return NS_OK; }
