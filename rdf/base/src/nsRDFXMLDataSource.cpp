@@ -437,6 +437,10 @@ public:
 
     PRBool
     IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource, nsIRDFResource* aType);
+
+protected:
+    nsresult
+    BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer);
 };
 
 PRInt32         RDFXMLDataSourceImpl::gRefCnt = 0;
@@ -597,8 +601,8 @@ NS_IMPL_ISUPPORTS6(RDFXMLDataSourceImpl,
                    nsIStreamListener);
 
 
-static nsresult
-rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
+nsresult
+RDFXMLDataSourceImpl::BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
 {
     nsresult rv;
 
@@ -626,6 +630,15 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
     if (! proxy)
         goto done;
 
+    // Notify load observers
+    PRInt32 i;
+    for (i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIRDFXMLSinkObserver* obs =
+            NS_STATIC_CAST(nsIRDFXMLSinkObserver*, mObservers[i]);
+
+        obs->OnBeginLoad(this);
+    }
+
     aConsumer->OnStartRequest(channel, nsnull);
     while (PR_TRUE) {
         char buf[1024];
@@ -646,6 +659,17 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
     }
 
     aConsumer->OnStopRequest(channel, nsnull, rv, nsnull);
+
+    // Notify load observers
+    for (i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIRDFXMLSinkObserver* obs =
+            NS_STATIC_CAST(nsIRDFXMLSinkObserver*, mObservers[i]);
+
+        if (NS_FAILED(rv))
+            obs->OnError(this, rv, nsnull);
+
+        obs->OnEndLoad(this);
+    }
 
 	// don't leak proxy!
 	proxy->Close();
@@ -953,7 +977,7 @@ RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
     if (NS_FAILED(rv)) return rv;
 
     if (aBlocking) {
-        rv = rdf_BlockingParse(mURL, this);
+        rv = BlockingParse(mURL, this);
 
         mParser = nsnull; // release the parser
 
@@ -979,7 +1003,9 @@ RDFXMLDataSourceImpl::BeginLoad(void)
 
     mLoadState = eLoadState_Loading;
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-        nsIRDFXMLSinkObserver* obs = (nsIRDFXMLSinkObserver*) mObservers[i];
+        nsIRDFXMLSinkObserver* obs =
+            NS_STATIC_CAST(nsIRDFXMLSinkObserver*, mObservers[i]);
+
         obs->OnBeginLoad(this);
     }
     return NS_OK;
@@ -992,7 +1018,9 @@ RDFXMLDataSourceImpl::Interrupt(void)
            ("rdfxml[%p] interrupt(%s)", this, mURLSpec));
 
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-        nsIRDFXMLSinkObserver* obs = (nsIRDFXMLSinkObserver*) mObservers[i];
+        nsIRDFXMLSinkObserver* obs =
+            NS_STATIC_CAST(nsIRDFXMLSinkObserver*, mObservers[i]);
+
         obs->OnInterrupt(this);
     }
     return NS_OK;
@@ -1005,7 +1033,9 @@ RDFXMLDataSourceImpl::Resume(void)
            ("rdfxml[%p] resume(%s)", this, mURLSpec));
 
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-        nsIRDFXMLSinkObserver* obs = (nsIRDFXMLSinkObserver*) mObservers[i];
+        nsIRDFXMLSinkObserver* obs =
+            NS_STATIC_CAST(nsIRDFXMLSinkObserver*, mObservers[i]);
+
         obs->OnResume(this);
     }
     return NS_OK;
@@ -1027,7 +1057,9 @@ RDFXMLDataSourceImpl::EndLoad(void)
 
     // Notify load observers
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-        nsIRDFXMLSinkObserver* obs = (nsIRDFXMLSinkObserver*) mObservers[i];
+        nsIRDFXMLSinkObserver* obs =
+            NS_STATIC_CAST(nsIRDFXMLSinkObserver*, mObservers[i]);
+
         obs->OnEndLoad(this);
     }
     return NS_OK;
@@ -1103,7 +1135,9 @@ RDFXMLDataSourceImpl::OnStopRequest(nsIChannel *channel,
 {
     if (NS_FAILED(status)) {
         for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-            nsIRDFXMLSinkObserver* obs = (nsIRDFXMLSinkObserver*) mObservers[i];
+            nsIRDFXMLSinkObserver* obs =
+                NS_STATIC_CAST(nsIRDFXMLSinkObserver*, mObservers[i]);
+
             (void) obs->OnError(this, status, errorMsg);
         }
     }
