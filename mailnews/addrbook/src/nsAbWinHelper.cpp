@@ -56,7 +56,7 @@ static PRLogModuleInfo* gAbWinHelperLog
     = PR_NewLogModule("nsAbWinHelperLog");
 #endif
 
-#define PRINTF(args) PR_LOG(nsAbWinHelperLog, PR_LOG_DEBUG, args)
+#define PRINTF(args) PR_LOG(gAbWinHelperLog, PR_LOG_DEBUG, args)
 
 // Small utility to ensure release of all MAPI interfaces
 template <class tInterface> struct nsMapiInterfaceWrapper

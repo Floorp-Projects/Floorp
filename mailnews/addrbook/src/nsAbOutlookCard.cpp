@@ -45,7 +45,7 @@ static PRLogModuleInfo* gAbOutlookCardLog
     = PR_NewLogModule("nsAbOutlookCardLog");
 #endif
 
-#define PRINTF(args) PR_LOG(nsAbOutlookCardLog, PR_LOG_DEBUG, args)
+#define PRINTF(args) PR_LOG(gAbOutlookCardLog, PR_LOG_DEBUG, args)
 
 extern const char *kOutlookDirectoryScheme ;
 extern const char *kOutlookCardScheme ;

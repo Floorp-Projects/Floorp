@@ -60,7 +60,7 @@ static PRLogModuleInfo* gAbOutlookDirectoryLog
     = PR_NewLogModule("nsAbOutlookDirectoryLog");
 #endif
 
-#define PRINTF(args) PR_LOG(nsAbOutlookDirectoryLog, PR_LOG_DEBUG, args)
+#define PRINTF(args) PR_LOG(gAbOutlookDirectoryLog, PR_LOG_DEBUG, args)
 
 
 // Class for the int key

@@ -45,7 +45,7 @@ static PRLogModuleInfo* gWabAddressBookLog
     = PR_NewLogModule("nsWabAddressBookLog");
 #endif
 
-#define PRINTF(args) PR_LOG(nsWabAddressBookLog, PR_LOG_DEBUG, args)
+#define PRINTF(args) PR_LOG(gWabAddressBookLog, PR_LOG_DEBUG, args)
 
 HMODULE nsWabAddressBook::mLibrary = NULL ;
 PRInt32 nsWabAddressBook::mLibUsage = 0 ;

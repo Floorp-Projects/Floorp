@@ -46,7 +46,7 @@ static PRLogModuleInfo* gMapiAddressBookLog
     = PR_NewLogModule("nsMapiAddressBookLog");
 #endif
 
-#define PRINTF(args) PR_LOG(nsMapiAddressBookLog, PR_LOG_DEBUG, args)
+#define PRINTF(args) PR_LOG(gMapiAddressBookLog, PR_LOG_DEBUG, args)
 
 
 HMODULE nsMapiAddressBook::mLibrary = NULL ;
