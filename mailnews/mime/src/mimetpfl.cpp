@@ -202,11 +202,15 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
 
   // Every line ends in a '\r' and a '\n' according to the rfc822 format.
   // The line is flowed if the the third to last char is a ' '
-  
-  NS_ASSERTION(length>1, "Line should be at least a \"\\r\\n\"");
-  NS_ASSERTION('\n' == line[length-1], "Corrupt line end (#1)");
-  NS_ASSERTION('\r' == line[length-2], "Corrupt line end (#2)");
-
+  //
+  // rhp: While the above statement is true for RFC822 messages, it is not
+  //      true to assume that every line you will be fed by the mime parser
+  //      will be terminated with a CRLF. The reason for this is you need to
+  //      have the ability to support a multipart related part that does NOT
+  //      end with CRLF. For this reason, I am removing these asserts.
+  // NS_ASSERTION(length>1, "Line should be at least a \"\\r\\n\"");
+  // NS_ASSERTION('\n' == line[length-1], "Corrupt line end (#1)");
+  // NS_ASSERTION('\r' == line[length-2], "Corrupt line end (#2)");
   
   int32 flowed = (length>=2 && (' ' == line[length-3]));
   
@@ -266,7 +270,9 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
   }
   
   // If we have been told not to mess with this text, then don't do this search!
-  PRBool skipScanning = (obj->options && obj->options->force_user_charset);
+  PRBool skipScanning = (obj->options && obj->options->force_user_charset) || 
+                        (obj->options && (obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting)) ||
+                        (obj->options && (obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting));
 
   if (!skipScanning)
   {

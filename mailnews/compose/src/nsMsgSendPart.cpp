@@ -463,6 +463,8 @@ divide_content_headers(const char *headers,
     return 0;
 }
 
+#define     SKIP_EMPTY_PART   1966
+
 int 
 nsMsgSendPart::Write()
 {
@@ -476,7 +478,14 @@ nsMsgSendPart::Write()
   } while (0)													\
 
 #define PUSH(str) PUSHLEN(str, PL_strlen(str))
-  
+
+  // rhp: Suppress the output of parts that are empty!
+  if ( (m_parent) &&
+       (m_numchildren == 0) &&
+       ( (!m_buffer) || (!*m_buffer) ) &&
+       (!m_filespec) )
+    return SKIP_EMPTY_PART;
+
   if (m_mainpart && m_type && PL_strcmp(m_type, TEXT_HTML) == 0) 
   {		  
     if (m_filespec) 
@@ -772,17 +781,27 @@ nsMsgSendPart::Write()
   //
   if (m_numchildren > 0) 
   {
+    PRBool  writeSeparator = PR_TRUE;
+
     for (int i = 0 ; i < m_numchildren ; i ++) 
     {
-      PUSH(CRLF);
-      PUSH("--");
+      if (writeSeparator)
+      {
+        PUSH(CRLF);
+        PUSH("--");
 
-			PUSH(separator);
-			PUSH(CRLF);
+			  PUSH(separator);
+			  PUSH(CRLF);
+      }
 
       status = m_children[i]->Write();
       if (status < 0)
         goto FAIL;
+
+      if (status == SKIP_EMPTY_PART)
+        writeSeparator = PR_FALSE;
+      else
+        writeSeparator = PR_TRUE;
     }
 
     PUSH(CRLF);

@@ -136,7 +136,9 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
   nsMimeURLUtils myUtil;
 
   // If we have been told not to mess with this text, then don't do this search!
-  PRBool skipScanning = (obj->options && obj->options->force_user_charset);
+  PRBool skipScanning = (obj->options && obj->options->force_user_charset) || 
+                        (obj->options && (obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting)) ||
+                        (obj->options && (obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting));
     
   if (!skipScanning)
     status = myUtil.ScanForURLs(line, length, obj->obuffer, obj->obuffer_size - 10,

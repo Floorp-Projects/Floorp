@@ -576,12 +576,12 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 	mainbody = new nsMsgSendPart(this, mCompFields->GetCharacterSet());
 	if (!mainbody)
 		goto FAILMEM;
-  
+
 	mainbody->SetMainPart(PR_TRUE);
 	mainbody->SetType(m_attachment1_type ? m_attachment1_type : TEXT_PLAIN);
 
 	NS_ASSERTION(mainbody->GetBuffer() == nsnull, "not-null buffer");
-	status = mainbody->SetBuffer(m_attachment1_body ? m_attachment1_body : " ");
+	status = mainbody->SetBuffer(m_attachment1_body ? m_attachment1_body : "");
 	if (status < 0)
 		goto FAIL;
 
@@ -777,6 +777,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 
 		if (status < 0)
 			goto FAIL;
+
 		status = toppart->AddChild(maincontainer);
 		if (status < 0)
 			goto FAIL;
@@ -929,8 +930,6 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 	}
 
 	// OK, now actually write the structure we've carefully built up.
-  // Pass in PR_TRUE if this is a multipart message WITH Attachments, 
-  // false if not
 	status = toppart->Write();
 	if (status < 0)
 		goto FAIL;

@@ -77,11 +77,9 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
-extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset);
+extern "C" char     *MIME_DecodeMimePartIIStr(const char *header, char *charset);
+extern "C" nsresult nsMimeNewURI(nsIURI** aInstancePtrResult, const char *aSpec);
 
-/* Interface between netlib and the top-level message/rfc822 parser:
-   MIME_MessageConverter()
- */
 static MimeHeadersState MIME_HeaderType;
 static PRBool MIME_NoInlineAttachments;
 static PRBool MIME_WrapLongLines;
@@ -96,10 +94,93 @@ nsCOMPtr<nsIStringBundle>   stringBundle = nsnull;
 //
 MimeObject    *mime_get_main_object(MimeObject* obj);
 
+nsresult
+ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
+{
+  nsMsgAttachmentData   *tmp;
+  PRInt32               n;
+  char                  *disp;
+
+  // Ok, this is the special case when somebody sends an "attachment" as the body
+  // of an RFC822 message...I really don't think this is the way this should be done.
+  // I belive this should really be a multipart/mixed message with an empty body part,
+  // but what can ya do...our friends to the North seem to do this.
+  //
+  MimeObject    *child = obj;
+
+  n = 1;
+  *data = (nsMsgAttachmentData *)PR_Malloc( (n + 1) * sizeof(MSG_AttachmentData));
+  if (!*data) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  tmp = *data;
+  nsCRT::memset(*data, 0, (n + 1) * sizeof(MSG_AttachmentData));
+  tmp->real_type = child->content_type ? nsCRT::strdup(child->content_type) : NULL;
+  tmp->real_encoding = child->encoding ? nsCRT::strdup(child->encoding) : NULL;
+  disp = MimeHeaders_get(child->headers, HEADER_CONTENT_DISPOSITION, PR_FALSE, PR_FALSE);
+  tmp->real_name = MimeHeaders_get_parameter(disp, "name", NULL, NULL);
+  if (tmp->real_name)
+  {
+    char *fname = NULL;
+    fname = mime_decode_filename(tmp->real_name);
+    if (fname && fname != tmp->real_name)
+    {
+      PR_Free(tmp->real_name);
+      tmp->real_name = fname;
+    }
+  }
+  else
+  {
+    tmp->real_name = MimeHeaders_get_name(child->headers);
+  }
+
+  char  *tmpURL = nsnull;
+  char  *id = nsnull;
+  char  *id_imap = nsnull;
+  PRBool all_headers_p = obj->options->headers == MimeHeadersAll;
+
+  id = mime_part_address (obj);
+  if (obj->options->missing_parts)
+    id_imap = mime_imap_part_address (obj);
+
+  if (! id)
+  {
+    PR_FREEIF(*data);
+    return MIME_OUT_OF_MEMORY;
+  }
+
+  if (obj->options && obj->options->url)
+  {
+    const char  *url = obj->options->url;
+    nsresult    rv;
+    if (id_imap && id)
+    {
+      // if this is an IMAP part. 
+      tmpURL = mime_set_url_imap_part(url, id_imap, id);
+      rv = nsMimeNewURI(&(tmp->url), tmpURL);
+    }
+    else
+    {
+      // This is just a normal MIME part as usual. 
+      tmpURL = mime_set_url_part(url, id, PR_TRUE);
+      rv = nsMimeNewURI(&(tmp->url), tmpURL);
+    }
+
+    if ( (!tmp->url) || (NS_FAILED(rv)) )
+    {
+      PR_FREEIF(*data);
+      PR_FREEIF(id);
+      return MIME_OUT_OF_MEMORY;
+    }
+  }
+
+  tmp->description = MimeHeaders_get(child->headers, HEADER_CONTENT_DESCRIPTION, PR_FALSE, PR_FALSE);
+  return NS_OK;
+}
+
 extern "C" nsresult
 MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachmentData **data)
 {
-  extern nsresult       nsMimeNewURI(nsIURI** aInstancePtrResult, const char *aSpec);
   MimeContainer         *cobj;
   nsMsgAttachmentData   *tmp;
   PRInt32               n;
@@ -114,7 +195,16 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
 
   obj = mime_get_main_object(tobj);
   if ( (obj) && (!mime_subclass_p(obj->clazz, (MimeObjectClass*) &mimeContainerClass)) )
-    return 0;
+  {
+    if (!PL_strcasecmp(obj->content_type, MESSAGE_RFC822))
+    {
+      return 0;
+    }
+    else
+    {
+      return ProcessBodyAsAttachment(obj, data);
+    }
+  }
 
   isMsgBody = MimeObjectChildIsMessageBody(obj, &isAlternativeOrRelated);
   if (isAlternativeOrRelated)
@@ -161,15 +251,15 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
       urlSpec = mime_set_url_part(aMessageURL, part, PR_TRUE);
     }
   
-	PR_Free(part);
-	PR_FREEIF(imappart);
+	  PR_FREEIF(part);
+  	PR_FREEIF(imappart);
 
     if (!urlSpec)
       return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv = nsMimeNewURI(&(tmp->url), urlSpec);
 
-	PR_Free(urlSpec);
+	  PR_FREEIF(urlSpec);
 
     if ( (NS_FAILED(rv)) || (!tmp->url) )
       return NS_ERROR_OUT_OF_MEMORY;
