@@ -459,18 +459,15 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
                     {
                         // No directory name provided. Get File Locator
                         NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-                        if (NS_FAILED(rv))
-                            return rv;
-                        if (!locator)
-                            return NS_ERROR_FAILURE;
+			if (NS_FAILED(rv) || !locator)
+				return NS_ERROR_FAILURE;
 				
                         // Get current profile, make the new one a sibling...
-                        nsIFileSpec* spec;
-                        rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &spec);
+                        nsCOMPtr <nsIFileSpec> spec;
+                        rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, getter_AddRefs(spec));
                         if (NS_FAILED(rv) || !spec)
                             return NS_ERROR_FAILURE;
                         spec->GetFileSpec(&currProfileDirSpec);
-                        NS_RELEASE(spec);
                         currProfileDirSpec.SetLeafName(currProfileName);
 
                         rv = locator->ForgetProfileDir();
@@ -625,13 +622,13 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
 							if (!tmpFileSpec.Exists()) {
 							    
 								// Get profile defaults folder..
-                              NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+                              					NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
 
 								if (NS_FAILED(rv) || !locator)
 									return NS_ERROR_FAILURE;
 
-								nsIFileSpec* profDefaultsDir;
-								rv = locator->GetFileLocation(nsSpecialFileSpec::App_ProfileDefaultsFolder50, &profDefaultsDir);
+								nsCOMPtr <nsIFileSpec> profDefaultsDir;
+								rv = locator->GetFileLocation(nsSpecialFileSpec::App_ProfileDefaultsFolder50, getter_AddRefs(profDefaultsDir));
         
 								if (NS_FAILED(rv) || !profDefaultsDir)
 									return NS_ERROR_FAILURE;
@@ -639,7 +636,6 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
 								nsFileSpec defaultsDirSpec;
 			
 								profDefaultsDir->GetFileSpec(&defaultsDirSpec);
-								NS_RELEASE(profDefaultsDir);
 
 								// Copy contents from defaults folder.
 								if (defaultsDirSpec.Exists())
@@ -1249,15 +1245,14 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(const char* charData)
     {
 		// They didn't type a directory path...
 		// Get current profile, make the new one a sibling...
-	    nsIFileSpec* horribleCOMDirSpecThing;
-        rv = locator->GetFileLocation(nsSpecialFileSpec::App_DefaultUserProfileRoot50, &horribleCOMDirSpecThing);
+	    nsCOMPtr <nsIFileSpec> horribleCOMDirSpecThing;
+        rv = locator->GetFileLocation(nsSpecialFileSpec::App_DefaultUserProfileRoot50, getter_AddRefs(horribleCOMDirSpecThing));
         
 		if (NS_FAILED(rv) || !horribleCOMDirSpecThing)
 			return NS_ERROR_FAILURE;
 
 		//Append profile name to form a directory name
 	    horribleCOMDirSpecThing->GetFileSpec(&dirSpec);
-		NS_RELEASE(horribleCOMDirSpecThing);
 		//dirSpec.SetLeafName(profileName);
 		//dirSpec += profileName;
 	}
@@ -1288,8 +1283,8 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(const char* charData)
 	}
 
     // Get profile defaults folder..
-    nsIFileSpec* profDefaultsDir;
-    rv = locator->GetFileLocation(nsSpecialFileSpec::App_ProfileDefaultsFolder50, &profDefaultsDir);
+    nsCOMPtr <nsIFileSpec> profDefaultsDir;
+    rv = locator->GetFileLocation(nsSpecialFileSpec::App_ProfileDefaultsFolder50, getter_AddRefs(profDefaultsDir));
         
 	if (NS_FAILED(rv) || !profDefaultsDir)
 	{
@@ -1300,7 +1295,6 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(const char* charData)
 	nsFileSpec defaultsDirSpec;
 
 	profDefaultsDir->GetFileSpec(&defaultsDirSpec);
-	NS_RELEASE(profDefaultsDir);
 
 	// Copy contents from defaults folder.
 	if (defaultsDirSpec.Exists())
@@ -1945,12 +1939,11 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 		Get the right registry file. Ideally from File Locations.
 		File Locations is yet to implement this service.
 	
-		nsIFileLocator* locator = nsnull;
+                NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+		if (NS_FAILED(rv) || !locator) return NS_ERROR_FAILURE;
+
 		nsFileSpec oldAppRegistry;
 	
-		rv = nsServiceManager::GetService(kFileLocatorCID, nsIFileLocator::GetIID(), (nsISupports**)&locator);
-		if (NS_FAILED(rv) || !locator)
-		      return NS_ERROR_FAILURE;
 		// Get current profile, make the new one a sibling...
 		rv = locator->GetFileLocation(nsSpecialFileSpec::App_Registry50, &oldAppRegistry);
 		nsServiceManager::ReleaseService(kFileLocatorCID, locator);
@@ -2222,23 +2215,15 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 	GetProfileDir(profileName, &oldProfDir);
 
 	// Create new profile dir path
-	nsIFileLocator* locator = nsnull;
+        NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+	if (NS_FAILED(rv) || !locator) return NS_ERROR_FAILURE;
 	
-	// Get the new directory path the migrated profile to reside.
-	rv = nsServiceManager::GetService(kFileLocatorCID, nsIFileLocator::GetIID(), (nsISupports**)&locator);
-	
-	if (NS_FAILED(rv) || !locator)
-	{
-	      return NS_ERROR_FAILURE;
-	}
-
     // Get current profile, make the new one a sibling...
-	nsIFileSpec* newSpec = NS_LocateFileOrDirectory(
-        nsSpecialFileSpec::App_DefaultUserProfileRoot50);
+	nsCOMPtr<nsIFileSpec> newSpec;
+       	rv = locator->GetFileLocation(nsSpecialFileSpec::App_DefaultUserProfileRoot50, getter_AddRefs(newSpec));
 	if (!newSpec)
 	     return NS_ERROR_FAILURE;
-    newSpec->GetFileSpec(&newProfDir);
-	NS_RELEASE(newSpec);
+    	newSpec->GetFileSpec(&newProfDir);
 	newProfDir += profileName;
 
 
@@ -2784,23 +2769,17 @@ NS_IMETHODIMP nsProfile::CloneProfile(const char* newProfile)
 
 	if (currProfileDir.Exists())
 	{
-		nsIFileLocator* locator = nsnull;
-		
-		rv = nsServiceManager::GetService(kFileLocatorCID, nsIFileLocator::GetIID(), (nsISupports**)&locator);
+		NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+		if (NS_FAILED(rv) || !locator) return NS_ERROR_FAILURE;
 
-		if (NS_FAILED(rv) || !locator)
-			return NS_ERROR_FAILURE;
-
-	    nsIFileSpec* dirSpec;
-        rv = locator->GetFileLocation(nsSpecialFileSpec::App_DefaultUserProfileRoot50, &dirSpec);
+	    	nsCOMPtr <nsIFileSpec> dirSpec;
+        	rv = locator->GetFileLocation(nsSpecialFileSpec::App_DefaultUserProfileRoot50, getter_AddRefs(dirSpec));
         
 		if (NS_FAILED(rv) || !dirSpec)
 			return NS_ERROR_FAILURE;
 
 		//Append profile name to form a directory name
-	    dirSpec->GetFileSpec(&newProfileDir);
-		NS_RELEASE(dirSpec);
-
+	    	dirSpec->GetFileSpec(&newProfileDir);
 		newProfileDir += newProfile;
 
 		currProfileDir.RecursiveCopy(newProfileDir);
