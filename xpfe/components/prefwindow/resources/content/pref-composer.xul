@@ -67,8 +67,8 @@ function InitColors()
 		</html:div>
 <!-- Take out Auto-Save; not supported at this time
 		<html:div>
-			<html:input name="autosave" type="checkbox" id="pref:0:int:editor.auto_save_delay" />
-			<html:label for="pref:0:int:editor.auto_save_delay" accesskey="a" tabindex="0">
+			<html:input name="autosave" type="checkbox" id="pref:0:int:editor.auto_save" />
+			<html:label for="pref:0:int:editor.auto_save" accesskey="a" tabindex="0">
 				&AutoSaveCheck.label;
 			</html:label>		
 			<html:input name="time" type="text" size="3" value="5" id="pref:5:int:editor.auto_save_delay" />
