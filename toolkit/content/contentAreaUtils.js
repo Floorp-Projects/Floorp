@@ -266,7 +266,7 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
     persist.persistFlags &= ~nsIWBP.PERSIST_FLAGS_NO_CONVERSION;
     
   // Create download and initiate it (below)
-  var dl = Components.classes["@mozilla.org/download;1"].createInstance(Components.interfaces.nsIDownload);
+  var tr = Components.classes["@mozilla.org/download;1"].createInstance(Components.interfaces.nsITransfer);
 
   if (isDocument && saveAsType != kSaveAsType_URL) {
     // Saving a Document, not a URI:
@@ -295,11 +295,11 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
     }
     
     const kWrapColumn = 80;
-    dl.init(aSniffer.uri, persistArgs.target, null, null, null, persist);
+    tr.init(aSniffer.uri, persistArgs.target, null, null, null, persist);
     persist.saveDocument(persistArgs.source, persistArgs.target, filesFolder, 
                          persistArgs.contentType, encodingFlags, kWrapColumn);
   } else {
-    dl.init(source, persistArgs.target, null, null, null, persist);
+    tr.init(source, persistArgs.target, null, null, null, persist);
     var referrer = aData.referrer || getReferrer(document)
     persist.saveURI(source, null, referrer, persistArgs.postData, null, persistArgs.target);
   }
