@@ -43,23 +43,20 @@ public:
   /**
    * Class constructor.
    */
-  nsHZToUnicode(){};
+  nsHZToUnicode();
 
 protected:
 
   //--------------------------------------------------------------------
   // Subclassing of nsDecoderSupport class [declaration]
-  NS_IMETHOD ConvertNoBuff(const char* aSrc,
-											   PRInt32 * aSrcLength,
-											   PRUnichar *aDest,
-										       PRInt32 * aDestLength);
-
+  NS_IMETHOD ConvertNoBuff(const char* aSrc, PRInt32 * aSrcLength, 
+                           PRUnichar *aDest, PRInt32 * aDestLength); 
   NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
+                           PRInt32 * aDestLength);
+  nsGBKConvUtil mUtil;
 
 private:
-  void HZToUnicode(DByte *pGBCode, PRUnichar * pUnicode);
-  void GBToUnicode(DByte *pGBCode, PRUnichar * pUnicode);
+  PRInt16 mHZState;
 
 };
 

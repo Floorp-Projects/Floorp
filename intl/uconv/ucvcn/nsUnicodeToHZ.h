@@ -65,9 +65,10 @@ protected:
   NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
       PRInt32 * aDestLength);
 
-private:
-  void UnicodeToHZ(PRUnichar SrcUnicode, DByte *pGBCode);
-  void UnicodeToGBK(PRUnichar SrcUnicode, DByte *pGBCode);
+  PRUint16 mHZState;
+protected:
+  nsGBKConvUtil mUtil;
+
 
 };
 

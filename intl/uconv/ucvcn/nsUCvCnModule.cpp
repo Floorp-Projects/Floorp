@@ -60,16 +60,6 @@ PRInt32 g_InstanceCount = 0;
 PRInt32 g_LockCount = 0;
 
 //----------------------------------------------------------------------------
-// shared data defined in gbku.h
-
-PRUnichar GBKToUnicodeTable[MAX_GBK_LENGTH] =
-{
-#include "cp936map.h"
-};
-
-DByte UnicodeToGBKTable[0x5200]; // 0xA000 - 0x4E00 = 0x5200
-PRBool gUnicodeToGBKTableInitialized = PR_FALSE;
-//----------------------------------------------------------------------------
 
 
 NS_IMPL_NSUCONVERTERREGSELF
@@ -84,6 +74,10 @@ NS_UCONV_REG_UNREG(nsUnicodeToGBKNoAscii, "Unicode", "x-gbk-noascii",  NS_UNICOD
 NS_UCONV_REG_UNREG(nsHZToUnicode, "HZ-GB-2312", "Unicode" , NS_HZTOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToHZ, "Unicode", "HZ-GB-2312",  NS_UNICODETOHZ_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToGB2312GL, "Unicode", "gb_2312-80",  NS_UNICODETOGB2312GL_CID);
+NS_UCONV_REG_UNREG(nsGB18030ToUnicode, "gb18030", "Unicode" , NS_GB18030TOUNICODE_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToGB18030, "Unicode", "gb18030",  NS_UNICODETOGB18030_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToGB18030Font0, "Unicode", "gb18030.2000-0",  NS_UNICODETOGB18030Font0_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToGB18030Font1, "Unicode", "gb18030.2000-1",  NS_UNICODETOGB18030Font1_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsGB2312ToUnicodeV2);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToGB2312V2);
@@ -95,6 +89,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToGBKNoAscii);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHZToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToHZ);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToGB2312GL);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsGB18030ToUnicode);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToGB18030);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToGB18030Font0);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToGB18030Font1);
 
 
 static nsModuleComponentInfo components[] = 
@@ -158,6 +156,30 @@ static nsModuleComponentInfo components[] =
     NS_UNICODEENCODER_CONTRACTID_BASE "gb_2312-80",
     nsUnicodeToGB2312GLConstructor, 
     nsUnicodeToGB2312GLRegSelf, nsUnicodeToGB2312GLUnRegSelf
+  },
+  { 
+    DECODER_NAME_BASE "gb18030" , NS_GB18030TOUNICODE_CID, 
+    NS_UNICODEDECODER_CONTRACTID_BASE "gb18030",
+    nsGB18030ToUnicodeConstructor ,
+    nsGB18030ToUnicodeRegSelf , nsGB18030ToUnicodeUnRegSelf 
+  },  
+  { 
+    ENCODER_NAME_BASE "gb18030.2000-0" , NS_UNICODETOGB18030Font0_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "gb18030.2000-0",
+    nsUnicodeToGB18030Font0Constructor, 
+    nsUnicodeToGB18030Font0RegSelf, nsUnicodeToGB18030Font0UnRegSelf
+  },  
+  { 
+    ENCODER_NAME_BASE "gb18030.2000-1" , NS_UNICODETOGB18030Font1_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "gb18030.2000-1",
+    nsUnicodeToGB18030Font1Constructor, 
+    nsUnicodeToGB18030Font1RegSelf, nsUnicodeToGB18030Font1UnRegSelf
+  },  
+  { 
+    ENCODER_NAME_BASE "gb18030" , NS_UNICODETOGB18030_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "gb18030",
+    nsUnicodeToGB18030Constructor, 
+    nsUnicodeToGB18030RegSelf, nsUnicodeToGB18030UnRegSelf
   }
 };
 

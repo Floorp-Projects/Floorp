@@ -56,17 +56,19 @@
 #ifndef _GBKU_H__
 #define _GBKU_H__
 
-#define GB_UNDEFINED 0xFFFF
-#define MAX_GBK_LENGTH	  24066   /* (0xfe-0x80)*(0xfe-0x3f) */
 
-typedef struct
-{
-  PRUint8 leftbyte;
-  PRUint8 rightbyte;
-} DByte;
+#define  UCS2_NO_MAPPING ((PRUnichar) 0xfffd)
+#define UINT8_IN_RANGE(a, b, c) \
+ (((PRUint8)(a) <= (PRUint8)(b))&&((PRUint8)(b) <= (PRUint8)(c)))
+#define UNICHAR_IN_RANGE(a, b, c) \
+ (((PRUnichar)(a) <= (PRUnichar)(b))&&((PRUnichar)(b) <= (PRUnichar)(c)))
+#define CAST_CHAR_TO_UNICHAR(a) ((PRUnichar)((unsigned char)(a)))
+#define CAST_UNICHAR_TO_CHAR(a) ((char)a)
 
-extern PRUnichar GBKToUnicodeTable[MAX_GBK_LENGTH];
-extern DByte UnicodeToGBKTable[0x5200]; // 0xA000 - 0x4E00 = 0x5200
-extern PRBool gUnicodeToGBKTableInitialized;
+#define IS_ASCII(a) (0==(0xff80 & (a)))
+#define IS_GBK_EURO(c) ((char)0x80 == (c))
+#define UCS2_EURO  ((PRUnichar) 0x20ac)
+
+#include "nsGBKConvUtil.h"
 
 #endif /* _GBKU_H__ */
