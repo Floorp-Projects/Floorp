@@ -42,7 +42,7 @@ my %map = (
   'embedcomponents',    'embedding/components/appstartup',
   'expat',              'expat',
   'exthandler',         'uriloader/exthandler',
-  'find',               'xpfe/componets/find',
+  'find',               'xpfe/components/find',
   'gfx',                'gfx',
   'gfx2',               'gfx2',
   'gtkxtbin',           'widget/src/gtkxtbin',
