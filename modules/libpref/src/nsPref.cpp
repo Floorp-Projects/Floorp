@@ -1341,16 +1341,18 @@ extern "C" JSBool pref_InitInitialObjects()
     if (!i || NS_FAILED(i->Init(componentsDir)))
     	return JS_FALSE;
 
-	// Get any old child of the components directory.
-	nsIFileSpec* specialChild;
-	if NS_FAILED(i->GetCurrentSpec(&specialChild))
-    	return JS_FALSE;
-	
-	if (NS_FAILED(specialChild->SetLeafName((char*)specialFiles[0])))
+	// Get any old child of the components directory. Warning: aliases get resolved, so
+	// SetLeafName will not work here.
+    nsIFileSpec* specialChild;
+    rv = locator->GetFileLocation(nsSpecialFileSpec::App_ComponentsDirectory, &specialChild);
+    if (NS_FAILED(rv))
+    	return JS_TRUE;
+	if NS_FAILED(specialChild->AppendRelativeUnixPath((char*)specialFiles[0]))
 	{
 		funcResult = JS_FALSE;
 		goto done;
 	}
+	
     worked = (JSBool)(pref_OpenFileSpec(
     	specialChild,
     	PR_FALSE,
@@ -1397,15 +1399,19 @@ extern "C" JSBool pref_InitInitialObjects()
 	// Finally, parse any other special files (platform-specific ones).
 	for (k = 1; k < sizeof(specialFiles) / sizeof(char*); k++)
 	{
-	    if (NS_FAILED(specialChild->SetLeafName((char*)specialFiles[k])))
+        nsIFileSpec* specialChild2;
+        if (NS_FAILED(locator->GetFileLocation(nsSpecialFileSpec::App_ComponentsDirectory, &specialChild2)))
+	    	continue;
+		if (NS_FAILED(specialChild2->AppendRelativeUnixPath((char*)specialFiles[k])))
 	    	continue;
 	    worked = (JSBool)(pref_OpenFileSpec(
-    		specialChild,
+    		specialChild2,
 	    	PR_FALSE,
 	    	PR_FALSE,
 	    	PR_FALSE,
 	    	PR_FALSE) == PREF_NOERROR);
 		NS_ASSERTION(worked, "<platform>.js was not parsed successfully");
+		NS_RELEASE(specialChild2);
 	}
 done:
 	NS_RELEASE(specialChild);
