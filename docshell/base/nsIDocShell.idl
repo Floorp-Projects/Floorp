@@ -190,6 +190,11 @@ interface nsIDocShell : nsISupports
   attribute boolean allowSubframes;
 
   /**
+   * Attribute stating whether or not images should be loaded.
+   */
+  attribute boolean allowImages;
+
+  /**
    * Get an enumerator over this docShell and its children.
    *
    * @param aItemType  - Only include docShells of this type, or if typeAll,

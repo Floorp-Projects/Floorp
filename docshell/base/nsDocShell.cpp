@@ -158,6 +158,7 @@ nsDocShell::nsDocShell():
     mAllowJavascript(PR_TRUE),
     mAllowMetaRedirects(PR_TRUE),
     mAllowSubframes(PR_TRUE),
+    mAllowImages(PR_TRUE),
     mAppType(nsIDocShell::APP_TYPE_UNKNOWN),
     mBusyFlags(BUSY_FLAGS_NONE),
     mEODForCurrentDocument(PR_FALSE),
@@ -1151,6 +1152,20 @@ NS_IMETHODIMP nsDocShell::GetAllowSubframes(PRBool * aAllowSubframes)
 NS_IMETHODIMP nsDocShell::SetAllowSubframes(PRBool aAllowSubframes)
 {
     mAllowSubframes = aAllowSubframes;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::GetAllowImages(PRBool * aAllowImages)
+{
+    NS_ENSURE_ARG_POINTER(aAllowImages);
+
+    *aAllowImages = mAllowImages;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::SetAllowImages(PRBool aAllowImages)
+{
+    mAllowImages = aAllowImages;
     return NS_OK;
 }
 

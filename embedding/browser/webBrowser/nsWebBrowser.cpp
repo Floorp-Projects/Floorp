@@ -656,6 +656,12 @@ NS_IMETHODIMP nsWebBrowser::SetProperty(PRUint32 aId, PRUint32 aValue)
            mDocShell->SetAllowSubframes(aValue);
         }
         break;
+    case nsIWebBrowserSetup::SETUP_ALLOW_IMAGES:
+        {
+           NS_ENSURE_STATE(mDocShell);
+           NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
+           mDocShell->SetAllowImages(aValue);
+        }
     case nsIWebBrowserSetup::SETUP_USE_GLOBAL_HISTORY:
         {
            NS_ENSURE_STATE(mDocShell);
