@@ -303,7 +303,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case LOAD_STRING:
                 {
                     LoadString* ls = static_cast<LoadString*>(instruction);
-                    (*registers)[dst(ls)] = JSValue(src1(ls));
+                    (*registers)[dst(ls)] = JSValue(new JSString(src1(ls)));
                 }
                 break;
             case BRANCH:
@@ -376,25 +376,27 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                 break;
             case ADD:
                 {
-                    // LEAKING like a sieve here because the toXXX are returning pointers
-                    // to possibly new JSValues.
-
                     // could get clever here with Functional forms.
                     Arithmetic* add = static_cast<Arithmetic*>(instruction);
-                    if ((*registers)[src1(add)].isString()
-                            || (*registers)[src2(add)].isString()) {
-                        JSValue *s = (*registers)[src1(add)].toString();
-                        *(s->string) += *((*registers)[src2(add)].toString()->string);
-                        (*registers)[dst(add)] = *s;
+                    JSValue& dest = (*registers)[dst(add)];
+                    JSValue& r1 = (*registers)[src1(add)];
+                    JSValue& r2 = (*registers)[src2(add)];
+                    if (r1.isString() || r2.isString()) {
+                        dest = r1.toString();
+                        JSString& str1(*dest.string);
+                        JSString& str2(*r2.toString().string);
+                        str1 += str2;
                     }
                     else {
-                        (*registers)[dst(add)] = (*registers)[src1(add)].toNumber()->f64
-                                                    + (*registers)[src2(add)].toNumber()->f64;
+                        JSValue num1(r1.toNumber());
+                        JSValue num2(r2.toNumber());
+                        dest = num1.f64 + num2.f64;
                     }
                 }
                 break;
             case SUBTRACT:
                 {
+                    // XXX should use toNumber().
                     Arithmetic* sub = static_cast<Arithmetic*>(instruction);
                     (*registers)[dst(sub)] = 
                         JSValue((*registers)[src1(sub)].f64 -
@@ -403,6 +405,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                 break;
             case MULTIPLY:
                 {
+                    // XXX should use toNumber().
                     Arithmetic* mul = static_cast<Arithmetic*>(instruction);
                     (*registers)[dst(mul)] =
                         JSValue((*registers)[src1(mul)].f64 *
@@ -411,6 +414,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                 break;
             case DIVIDE:
                 {
+                    // XXX should use toNumber().
                     Arithmetic* div = static_cast<Arithmetic*>(instruction);
                     (*registers)[dst(div)] = 
                         JSValue((*registers)[src1(div)].f64 /
@@ -435,13 +439,13 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case NEGATE:
                 {
                     Negate* neg = static_cast<Negate*>(instruction);
-                    (*registers)[dst(neg)] = JSValue(-(*registers)[src1(neg)].toNumber()->f64);
+                    (*registers)[dst(neg)] = JSValue(-(*registers)[src1(neg)].toNumber().f64);
                 }
                 break;
             case POSATE:
                 {
                     Posate* pos = static_cast<Posate*>(instruction);
-                    (*registers)[dst(pos)] = *(*registers)[src1(pos)].toNumber();
+                    (*registers)[dst(pos)] = (*registers)[src1(pos)].toNumber();
                 }
                 break;
             case NOT:
