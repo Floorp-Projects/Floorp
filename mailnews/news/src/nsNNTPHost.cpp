@@ -2012,17 +2012,17 @@ nsNNTPHost::FindGroup(const char* name, nsINNTPNewsgroup* *retval)
 	if (m_groups == NULL) return result;
 	int n = m_groups->Count();
 	for (int i=0 ; i<n ; i++) {
-        char *name = nsnull;
+        char *groupname = nsnull;
         nsresult rv = NS_OK;
         
 		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) (*m_groups)[i];
-        rv = info->GetName(&name);
+        rv = info->GetName(&groupname);
        
 #ifdef DEBUG_sspitzer
-		printf("%d = %s\n",i,name?name:"null");
+		printf("%d = %s\n",i,groupname?groupname:"null");
 #endif
 
-		if (NS_SUCCEEDED(rv) && (name != nsnull) && PL_strcmp(name, name) == 0) {
+		if (NS_SUCCEEDED(rv) && (name != nsnull) && PL_strcmp(name, groupname) == 0) {
 			*retval = info;
             result = NS_OK;
 		}

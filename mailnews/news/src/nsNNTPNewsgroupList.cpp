@@ -144,7 +144,8 @@ private:
 #endif
   void			SetGetOldMessages(PRBool getOldMessages) {m_getOldMessages = getOldMessages;}
   PRBool			GetGetOldMessages() {return m_getOldMessages;}
-  
+  nsresult			ParseLine(char *line, PRUint32 *message_number);
+
 protected:
 #ifdef HAVE_NEWSDB
   nsNewsDatabase	*m_newsDB;
@@ -547,18 +548,103 @@ nsNNTPNewsgroupList::InitXOVER(PRInt32 first_msg, PRInt32 last_msg)
 
 #define NEWS_ART_DISPLAY_FREQ		10
 
-#if 0
 nsresult
-nsNNTPNewsgroupList::ParseLine(const char *line, PRUint32 * message_number) {
-	*message_number = 500;
+nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number) 
+{
+	PRUint32 lines;
+	PRUint32 msgSize = 0;
+	char *next = line;
+
+#define GET_TOKEN()								\
+  line = next;									\
+  next = (line ? PL_strchr (line, '\t') : 0);	\
+  if (next) *next++ = 0
+
+	GET_TOKEN ();											/* message number */
+	printf("message number = %d\n", atol(line));
+	*message_number = atol(line);
+ 
+	if (atol(line) == 0)					/* bogus xover data */
+	return NS_ERROR_UNEXPECTED;
+
+	GET_TOKEN ();											/* subject */
+	if (line)
+	{
+		printf("subject = %s\n", line);
+#if 0
+		const char *key = line;  /* #### const evilness */
+
+		PRUint32 subjectLen = PR_strlen(line);
+
+
+		/* strip "Re: " */
+		if (msg_StripRE(&key, &subjectLen))
+		{
+			msgHdr->SetFlags(msgHdr->GetFlags() | kHasRe);
+		}
+
+		msgHdr->SetSubject(key, db);
+#endif /* 0 */
+	}
+
+  GET_TOKEN ();											/* sender */
+  if (line) {
+	printf("sender = %s\n", line);
+#if 0
+	msgHdr->SetAuthor(line, db);
+#endif /* 0 */
+  }
+
+  GET_TOKEN ();	
+  if (line) {
+	printf("date = %s, %d\n", line, 0);
+#if 0
+	msgHdr->SetDate(XP_ParseTimeString (line, FALSE));										/* date */
+#endif /* 0 */
+  }
+
+  GET_TOKEN ();											/* message id */
+  if (line) {
+	printf("message id = %s\n", line);
+#if 0
+	msgHdr->SetUnstrippedMessageId(line, db);
+#endif /* 0 */
+  }
+
+  GET_TOKEN ();											/* references */
+  if (line) {
+	printf("references = %s\n",line);
+#if 0
+	msgHdr->SetReferences(line, db);
+#endif
+  }
+
+  GET_TOKEN ();											/* bytes */
+  if (line) {
+	  printf("bytes = %s\n", line);
+
+//  msgSize = (line) ? atol (line) : 0;
+//  msgHdr->SetMessageSize(msgSize);
+  /* ignored */
+  }
+
+  GET_TOKEN ();											/* lines */
+  lines = line ? atol (line) : 0;
+  if (!msgSize) {
+	printf("lines = %d\n", lines);
+#if 0
+	msgHdr->SetMessageSize(lines);
+#endif
+  }
+
+	GET_TOKEN ();											/* xref */
+
 	return NS_OK;
 }
-#endif
 
 nsresult
 nsNNTPNewsgroupList::ProcessXOVERLINE(const char *line, PRUint32 *status)
 {
-	const char *next;
 	PRUint32 message_number=0;
 	//  PRInt32 lines;
 	PRBool read_p = PR_FALSE;
@@ -567,12 +653,14 @@ nsNNTPNewsgroupList::ProcessXOVERLINE(const char *line, PRUint32 *status)
 	PR_ASSERT (line);
 	if (!line)
       return NS_ERROR_NULL_POINTER;
-#if 0    
-	rv = ParseLine(line, &message_number);
+  
+	char *xoverline = PL_strdup(line);
+	rv = ParseLine(xoverline, &message_number);
+	PL_strfree(xoverline);
+
 	if (NS_FAILED(rv)) {
 		return rv;
 	}
-#endif
 
 #ifdef HAVE_DBVIEW
 	if (m_msgDBView != NULL)
@@ -600,9 +688,6 @@ nsNNTPNewsgroupList::ProcessXOVERLINE(const char *line, PRUint32 *status)
 	else
 		return NS_ERROR_NOT_INITIALIZED;
 #endif
-
-	next = line;
-
 
 	PR_ASSERT(message_number > m_lastProcessedNumber ||
 			message_number == 1);
