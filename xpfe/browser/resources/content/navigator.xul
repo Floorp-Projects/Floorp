@@ -339,37 +339,37 @@ Contributor(s): ______________________________________. -->
       <menubutton hidden="true" persist="hidden" class="button-toolbar bookmarkfolder" id="bookmarks-button"
         datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex"
         ref="NC:BookmarksRoot" container="true" value="&bookmarksButton.label;"        
-        flags="dont-test-empty">                                                
-        <template>                                                              
-          <rule iscontainer="true">                                             
-            <menupopup>                                                         
-              <menu class="menu-iconic bookmarkfolder" uri="rdf:*"              
-                value="rdf:http://home.netscape.com/NC-rdf#Name" >              
-                <menupopup/>                                                    
-              </menu>                                                           
-            </menupopup>                                                        
-           </rule>                                                               
-          <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">   
-            <menupopup>                                                         
-              <menuseparator uri="rdf:*"/>                                      
-            </menupopup>                                                        
-           </rule>                                                               
-         <rule>                                                                
-            <menupopup>                                                         
-              <menuitem class="menuitem-iconic bookmarkitem" uri="rdf:*"        
-                 value="rdf:http://home.netscape.com/NC-rdf#Name"                
+        flags="dont-test-empty">
+        <template>
+          <rule iscontainer="true">
+            <menupopup>
+              <menu class="menu-iconic bookmarkfolder" uri="rdf:*"
+                value="rdf:http://home.netscape.com/NC-rdf#Name" >
+                <menupopup/>
+              </menu>
+            </menupopup>
+           </rule>
+          <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+            <menupopup>
+              <menuseparator uri="rdf:*"/>
+            </menupopup>
+           </rule>
+         <rule>
+            <menupopup>
+              <menuitem class="menuitem-iconic bookmarkitem" uri="rdf:*"
+                 value="rdf:http://home.netscape.com/NC-rdf#Name"
                oncommand="OpenBookmarkURL(event.target,this.database)" />
-            </menupopup>                                                        
-           </rule>                                                               
-        </template>                                                             
-        <menupopup>                                                             
-          <menuitem accesskey="&addCurPageCmd.accesskey;"                       
-             key="addBookmarkKb" observes="Browser:AddBookmark"/>                
-           <menuitem accesskey="&manBookmarksCmd.accesskey;"                     
-             key="manBookmarkKb" observes="Browser:ManageBookmark"/>             
-          <menuseparator/>                                                      
-         </menupopup>                                                            
-       </menubutton>                                                             
+            </menupopup>
+           </rule>
+        </template>
+        <menupopup>
+          <menuitem accesskey="&addCurPageCmd.accesskey;"
+             key="addBookmarkKb" observes="Browser:AddBookmark"/>
+           <menuitem accesskey="&manBookmarksCmd.accesskey;"
+             key="manBookmarkKb" observes="Browser:ManageBookmark"/>
+          <menuseparator/>
+         </menupopup>
+       </menubutton>
  
       <!-- Personal toolbar items -->
       <box id="innermostBox" flex="1" style="min-width: 1px;" context="contextual"
