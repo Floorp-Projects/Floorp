@@ -35,7 +35,8 @@ nsLegacyCheck::nsLegacyCheck() :
 nsLegacyCheck::~nsLegacyCheck()
 {
 #ifdef DEBUG
-    printf("%s %d: Freeing %s\n", __FILE__, __LINE__, mFilename);
+    if (mFilename)
+        printf("%s %d: Freeing %s\n", __FILE__, __LINE__, mFilename);
 #endif
     XI_IF_FREE(mFilename);
     XI_IF_FREE(mMessage);

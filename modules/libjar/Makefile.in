@@ -27,8 +27,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# Linux installer needs standalone libjar
-ifeq ($(OS_ARCH),Linux)
+# Linux and Solaris installer needs standalone libjar
+ifeq (,$(filter Linux SunOS5,$(OS_ARCH)))
 DIRS		= standalone
 endif
 
