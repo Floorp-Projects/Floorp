@@ -48,9 +48,12 @@
 static NS_DEFINE_IID(kIRunaroundIID, NS_IRUNAROUND_IID);
 static NS_DEFINE_IID(kIFloaterContainerIID, NS_IFLOATERCONTAINER_IID);
 static NS_DEFINE_IID(kIAnchoredItemsIID, NS_IANCHOREDITEMS_IID);
-static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
-static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+
+static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
 static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
+static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
+static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
+static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 
 NS_DEF_PTR(nsIStyleContext);
 NS_DEF_PTR(nsIContent);
@@ -100,8 +103,7 @@ nsBlockReflowState::nsBlockReflowState()
 
 void nsBlockReflowState::Init(const nsSize& aMaxSize,
                               nsSize* aMaxElementSize,
-                              nsStyleFont* aFont,
-                              nsStyleMolecule* aMol,
+                              nsIStyleContext* aBlockSC,
                               nsISpaceManager* aSpaceManager)
 {
   firstLine = PR_TRUE;
@@ -114,8 +116,15 @@ void nsBlockReflowState::Init(const nsSize& aMaxSize,
 
   spaceManager = aSpaceManager;
   currentBand = new BlockBandData;
-  font = aFont;
-  mol = aMol;
+
+  styleContext = aBlockSC;
+  styleText = (nsStyleText*) aBlockSC->GetData(kStyleTextSID);
+  styleFont = (nsStyleFont*) aBlockSC->GetData(kStyleFontSID);
+  styleDisplay = (nsStyleDisplay*) aBlockSC->GetData(kStyleDisplaySID);
+
+  justifying = (NS_STYLE_TEXT_ALIGN_JUSTIFY == styleText->mTextAlign) &&
+    (NS_STYLE_WHITESPACE_PRE != styleText->mWhiteSpace);
+
   availSize.width = aMaxSize.width;
   availSize.height = aMaxSize.height;
   maxElementSize = aMaxElementSize;
@@ -155,8 +164,6 @@ void nsBlockReflowState::Init(const nsSize& aMaxSize,
   unconstrainedWidth = PRBool(aMaxSize.width == NS_UNCONSTRAINEDSIZE);
   unconstrainedHeight = PRBool(aMaxSize.height == NS_UNCONSTRAINEDSIZE);
 
-  justifying = (NS_STYLE_TEXT_ALIGN_JUSTIFY == mol->textAlign) &&
-    (NS_STYLE_WHITESPACE_PRE != mol->whiteSpace);
   reflowStatus = nsIFrame::frNotComplete;
 }
 
@@ -300,11 +307,11 @@ nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 // type and the display type of the previous child frame.
 //
 // Adjacent vertical margins between block-level elements are collapsed.
-nscoord nsBlockFrame::GetTopMarginFor(nsIPresContext*    aCX,
+nscoord nsBlockFrame::GetTopMarginFor(nsIPresContext*     aCX,
                                       nsBlockReflowState& aState,
-                                      nsIFrame* aKidFrame,
-                                      nsStyleMolecule*   aKidMol,
-                                      PRBool aIsInline)
+                                      nsIFrame*           aKidFrame,
+                                      nsIStyleContext*    aKidSC,
+                                      PRBool              aIsInline)
 {
   if (aIsInline) {
     // Just use whatever the previous bottom margin was
@@ -318,10 +325,11 @@ nscoord nsBlockFrame::GetTopMarginFor(nsIPresContext*    aCX,
     if (nsnull == kidPrevInFlow) {
       nscoord maxNegTopMargin = 0;
       nscoord maxPosTopMargin = 0;
-      if (aKidMol->margin.top < 0) {
-        maxNegTopMargin = -aKidMol->margin.top;
+      nsStyleSpacing* ss = (nsStyleSpacing*) aKidSC->GetData(kStyleSpacingSID);
+      if (ss->mMargin.top < 0) {
+        maxNegTopMargin = -ss->mMargin.top;
       } else {
-        maxPosTopMargin = aKidMol->margin.top;
+        maxPosTopMargin = ss->mMargin.top;
       }
     
       nscoord maxPos = PR_MAX(aState.prevMaxPosBottomMargin, maxPosTopMargin);
@@ -354,20 +362,22 @@ void nsBlockFrame::PlaceBelowCurrentLineFloaters(nsIPresContext* aCX,
     nsIStyleContextPtr  styleContext;
      
     floater->GetStyleContext(aCX, styleContext.AssignRef());
-    nsStyleMolecule*  mol = (nsStyleMolecule*)styleContext->GetData(kStyleMoleculeSID);
+    nsStyleDisplay* sd = (nsStyleDisplay*)
+      styleContext->GetData(kStyleDisplaySID);
   
     floater->GetRect(region);
     region.y = mCurrentState->currentBand->trapezoids[0].yTop;
 
-    if (NS_STYLE_FLOAT_LEFT == mol->floats) {
+    if (NS_STYLE_FLOAT_LEFT == sd->mFloats) {
       region.x = mCurrentState->currentBand->trapezoids[0].xTopLeft;
     } else {
-      NS_ASSERTION(NS_STYLE_FLOAT_RIGHT == mol->floats, "bad float type");
+      NS_ASSERTION(NS_STYLE_FLOAT_RIGHT == sd->mFloats, "bad float type");
       region.x = mCurrentState->currentBand->trapezoids[0].xTopRight - region.width;
     }
 
     // XXX Don't forget the floater's margins...
-    mCurrentState->spaceManager->Translate(mCurrentState->borderPadding.left, 0);
+    mCurrentState->spaceManager->Translate(mCurrentState->borderPadding.left,
+                                           0);
     mCurrentState->spaceManager->AddRectRegion(region, floater);
 
     // Set the origin of the floater in world coordinates
@@ -398,9 +408,13 @@ PRBool nsBlockFrame::AdvanceToNextLine(nsIPresContext* aCX,
   if (aState.isInline) {
     // Vertically align the children on this line, returning the height of
     // the line upon completion.
-    lineHeight = nsCSSLayout::VerticallyAlignChildren(aCX, this, aState.font, y,
-                                                      aState.lineStart, aState.lineLength,
-                                                      aState.ascents, aState.maxAscent);
+    lineHeight = nsCSSLayout::VerticallyAlignChildren(aCX, this,
+                                                      aState.styleFont,
+                                                      y,
+                                                      aState.lineStart,
+                                                      aState.lineLength,
+                                                      aState.ascents,
+                                                      aState.maxAscent);
 
     // Any below current line floaters to place?
     if (aState.floaterToDo.Count() > 0) {
@@ -445,7 +459,7 @@ PRBool nsBlockFrame::AdvanceToNextLine(nsIPresContext* aCX,
   // doing an unconstrained (in x) reflow. There's no point in doing
   // the work if we *know* we are going to reflowed again.
   if (!aState.unconstrainedWidth) {
-    nsCSSLayout::HorizontallyPlaceChildren(aCX, this, aState.mol,
+    nsCSSLayout::HorizontallyPlaceChildren(aCX, this, aState.styleText,
                                            aState.lineStart, aState.lineLength,
                                            aState.lineWidth,
                                            aState.availSize.width);
@@ -453,7 +467,7 @@ PRBool nsBlockFrame::AdvanceToNextLine(nsIPresContext* aCX,
     // Finally, now that the in-flow positions of the line's frames are
     // known we can apply relative positioning if any of them need it.
     if (!aState.justifying) { 
-      nsCSSLayout::RelativePositionChildren(aCX, this, aState.mol,
+      nsCSSLayout::RelativePositionChildren(aCX, this,
                                             aState.lineStart,
                                             aState.lineLength);
     }
@@ -499,17 +513,15 @@ void nsBlockFrame::AddInlineChildToLine(nsIPresContext* aCX,
                                         nsIFrame* aKidFrame,
                                         nsReflowMetrics& aKidSize,
                                         nsSize* aKidMaxElementSize,
-                                        nsStyleMolecule* aKidMol)
+                                        nsIStyleContext* aKidSC)
 {
   NS_PRECONDITION(nsnull != aState.lineStart, "bad line");
 
-  nsStylePosition* kidPosition;
-   
-  // Get the position style data
-  aKidFrame->GetStyleData(kStylePositionSID, (nsStyleStruct*&)kidPosition);
+  nsStyleDisplay* ds = (nsStyleDisplay*) aKidSC->GetData(kStyleDisplaySID);
+  nsStyleSpacing* ss = (nsStyleSpacing*) aKidSC->GetData(kStyleSpacingSID);
+  nsStylePosition* sp = (nsStylePosition*) aKidSC->GetData(kStylePositionSID);
 
-  PRIntn direction = aState.mol->direction;
-  if (NS_STYLE_POSITION_RELATIVE == kidPosition->mPosition) {
+  if (NS_STYLE_POSITION_RELATIVE == sp->mPosition) {
     aState.needRelativePos = PR_TRUE;
   }
 
@@ -519,15 +531,16 @@ void nsBlockFrame::AddInlineChildToLine(nsIPresContext* aCX,
   r.y = aState.y;
   r.width = aKidSize.width;
   r.height = aKidSize.height;
-  if (NS_STYLE_DIRECTION_LTR == aState.mol->direction) {
+  if (NS_STYLE_DIRECTION_LTR == aState.styleDisplay->mDirection) {
     // Left to right positioning.
-    r.x = aState.borderPadding.left + aState.x + aKidMol->margin.left;
-    aState.x += aKidSize.width + aKidMol->margin.left + aKidMol->margin.right;
+    r.x = aState.borderPadding.left + aState.x + ss->mMargin.left;
+    aState.x += aKidSize.width + ss->mMargin.left + ss->mMargin.right;
   } else {
     // Right to left positioning
     // XXX what should we do when aState.x goes negative???
-    r.x = aState.x - aState.borderPadding.right - aKidMol->margin.right - aKidSize.width;
-    aState.x -= aKidSize.width + aKidMol->margin.right + aKidMol->margin.left;
+    r.x = aState.x - aState.borderPadding.right - ss->mMargin.right -
+      aKidSize.width;
+    aState.x -= aKidSize.width + ss->mMargin.right + ss->mMargin.left;
   }
   aKidFrame->SetRect(r);
   aState.AddAscent(aKidSize.ascent);
@@ -551,7 +564,7 @@ void nsBlockFrame::AddInlineChildToLine(nsIPresContext* aCX,
 #if 0
     // XXX CSS2 spec says that top/bottom margin don't affect line height
     // calculation. We're waiting for clarification on this issue...
-    if ((margin = aKidMol->margin.top) < 0) {
+    if ((margin = ss->mMargin.top) < 0) {
       margin = -margin;
       if (margin > aState.maxNegTopMargin) {
         aState.maxNegTopMargin = margin;
@@ -562,7 +575,7 @@ void nsBlockFrame::AddInlineChildToLine(nsIPresContext* aCX,
       }
     }
 #endif
-    if ((margin = aKidMol->margin.bottom) < 0) {
+    if ((margin = ss->mMargin.bottom) < 0) {
       margin = -margin;
       if (margin > aState.maxNegBottomMargin) {
         aState.maxNegBottomMargin = margin;
@@ -593,20 +606,20 @@ void nsBlockFrame::AddBlockChild(nsIPresContext* aCX,
                                  nsIFrame* aKidFrame,
                                  nsRect& aKidRect,
                                  nsSize* aKidMaxElementSize,
-                                 nsStyleMolecule* aKidMol)
+                                 nsIStyleContext* aKidSC)
 {
   NS_PRECONDITION(nsnull != aState.lineStart, "bad line");
 
-  nsStylePosition* kidPosition;
-   
-  // Get the position style data
-  aKidFrame->GetStyleData(kStylePositionSID, (nsStyleStruct*&)kidPosition);
-  if (NS_STYLE_POSITION_RELATIVE == kidPosition->mPosition) {
+  nsStyleDisplay* ds = (nsStyleDisplay*) aKidSC->GetData(kStyleDisplaySID);
+  nsStyleSpacing* ss = (nsStyleSpacing*) aKidSC->GetData(kStyleSpacingSID);
+  nsStylePosition* sp = (nsStylePosition*) aKidSC->GetData(kStylePositionSID);
+
+  if (NS_STYLE_POSITION_RELATIVE == sp->mPosition) {
     aState.needRelativePos = PR_TRUE;
   }
 
   // Translate from the kid's coordinate space to our coordinate space
-  aKidRect.x += aState.borderPadding.left + aKidMol->margin.left;
+  aKidRect.x += aState.borderPadding.left + ss->mMargin.left;
   aKidRect.y += aState.y + aState.topMargin;
 
   // Place and size the child
@@ -616,7 +629,7 @@ void nsBlockFrame::AddBlockChild(nsIPresContext* aCX,
   aState.lineLength++;
 
   // Is this the widest child frame?
-  nscoord xMost = aKidRect.XMost() + aKidMol->margin.right;
+  nscoord xMost = aKidRect.XMost() + ss->mMargin.right;
   if (xMost > aState.kidXMost) {
     aState.kidXMost = xMost;
   }
@@ -633,17 +646,17 @@ void nsBlockFrame::AddBlockChild(nsIPresContext* aCX,
 
   // and the bottom line margin information which we'll use when placing
   // the next child
-  if (aKidMol->margin.bottom < 0) {
-    aState.maxNegBottomMargin = -aKidMol->margin.bottom;
+  if (ss->mMargin.bottom < 0) {
+    aState.maxNegBottomMargin = -ss->mMargin.bottom;
   } else {
-    aState.maxPosBottomMargin = aKidMol->margin.bottom;
+    aState.maxPosBottomMargin = ss->mMargin.bottom;
   }
 
   // Update the running y-offset
   aState.y += aKidRect.height + aState.topMargin;
 
   // Apply relative positioning if necessary
-  nsCSSLayout::RelativePositionChildren(aCX, this, aState.mol, aKidFrame, 1);
+  nsCSSLayout::RelativePositionChildren(aCX, this, aKidFrame, 1);
 
   // Advance to the next line
   aState.AdvanceToNextLine(aKidFrame, aKidRect.height);
@@ -656,19 +669,19 @@ void nsBlockFrame::AddBlockChild(nsIPresContext* aCX,
  */
 void nsBlockFrame::GetAvailSize(nsSize& aResult,
                                 nsBlockReflowState& aState,
-                                nsStyleMolecule* aKidMol,
+                                nsIStyleContext* aKidSC,
                                 PRBool aIsInline)
 {
   // Determine the maximum available reflow height for the child
   nscoord yb = aState.borderPadding.top + aState.availSize.height;
   aResult.height = aState.unconstrainedHeight ? NS_UNCONSTRAINEDSIZE :
-                                                yb - aState.y - aState.topMargin;
+    yb - aState.y - aState.topMargin;
 
   // Determine the maximum available reflow width for the child
   if (aState.unconstrainedWidth) {
     aResult.width = NS_UNCONSTRAINEDSIZE;
   } else if (aIsInline) {
-    if (NS_STYLE_DIRECTION_LTR == aState.mol->direction) {
+    if (NS_STYLE_DIRECTION_LTR == aState.styleDisplay->mDirection) {
       aResult.width = aState.currentBand->trapezoids[0].xTopRight - aState.x;
     } else {
       aResult.width = aState.x - aState.currentBand->trapezoids[0].xTopLeft;
@@ -830,13 +843,15 @@ getBand:
   }
 
   if (isLeftFloater) {
-    if ((aClear == NS_STYLE_CLEAR_LEFT) || (aClear == NS_STYLE_CLEAR_BOTH)) {
+    if ((aClear == NS_STYLE_CLEAR_LEFT) ||
+        (aClear == NS_STYLE_CLEAR_LEFT_AND_RIGHT)) {
       aState.y += aState.currentBand->trapezoids[0].GetHeight();
       goto getBand;
     }
   }
   if (isRightFloater) {
-    if ((aClear == NS_STYLE_CLEAR_RIGHT) || (aClear == NS_STYLE_CLEAR_BOTH)) {
+    if ((aClear == NS_STYLE_CLEAR_RIGHT) ||
+        (aClear == NS_STYLE_CLEAR_LEFT_AND_RIGHT)) {
       aState.y += aState.currentBand->trapezoids[0].GetHeight();
       goto getBand;
     }
@@ -853,7 +868,7 @@ PRIntn
 nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
                                   nsBlockReflowState& aState,
                                   nsIFrame* aKidFrame,
-                                  nsStyleMolecule* aKidMol)
+                                  nsIStyleContext* aKidSC)
 {
   nsSize kidMaxElementSize;
   nsSize* pKidMaxElementSize =
@@ -866,17 +881,12 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
   }
 
   // Get kid and its style
-  // XXX How is this any different than what was passed in to us as aKidMol?
-  nsIContentPtr kid;
-  nsIStyleContextPtr kidSC;
-   
-  aKidFrame->GetContent(kid.AssignRef());
-  aKidFrame->GetStyleContext(aCX, kidSC.AssignRef());
-  nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
+  nsStyleDisplay* styleDisplay = (nsStyleDisplay*)
+    aKidSC->GetData(kStyleDisplaySID);
 
   // Figure out if kid is a block element or not
   PRBool isInline = PR_TRUE;
-  PRIntn display = kidMol->display;
+  PRIntn display = styleDisplay->mDisplay;
   if (aState.firstChildIsInsideBullet && (mFirstChild == aKidFrame)) {
     // XXX Special hack for properly reflowing bullets that have the
     // inside value for list-style-position.
@@ -909,15 +919,20 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
     }
     aState.lineStart = aKidFrame;
 
-    // Get the style for the last child, and see if it wanted to clear floaters.
-    // This handles the BR tag, which is the only inline element for which clear
-    // applies
+    // Get the style for the last child, and see if it wanted to clear
+    // floaters.  This handles the BR tag, which is the only inline
+    // element for which clear applies
     nsIStyleContextPtr lastChildSC;
      
     lastFrame->GetStyleContext(aCX, lastChildSC.AssignRef());
-    nsStyleMolecule* lastChildMol = (nsStyleMolecule*)lastChildSC->GetData(kStyleMoleculeSID); 
-    if (lastChildMol->clear != NS_STYLE_CLEAR_NONE) {
-      ClearFloaters(aState, lastChildMol->clear);
+    nsStyleDisplay* lastChildDisplay = (nsStyleDisplay*)
+      lastChildSC->GetData(kStyleDisplaySID); 
+    switch (lastChildDisplay->mBreakType) {
+    case NS_STYLE_CLEAR_LEFT:
+    case NS_STYLE_CLEAR_RIGHT:
+    case NS_STYLE_CLEAR_LEFT_AND_RIGHT:
+      ClearFloaters(aState, lastChildDisplay->mBreakType);
+      break;
     }
   }
 
@@ -929,7 +944,8 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
   // should use
   if (aState.lineStart == aKidFrame) {
     // Compute the top margin to use for this line
-    aState.topMargin = GetTopMarginFor(aCX, aState, aKidFrame, kidMol, aState.isInline);
+    aState.topMargin = GetTopMarginFor(aCX, aState, aKidFrame, aKidSC,
+                                       aState.isInline);
 
     // If it's an inline element then get a band of available space
     //
@@ -943,7 +959,7 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
   // Compute the available space to reflow the child into and then
   // reflow it into that space.
   nsSize kidAvailSize;
-  GetAvailSize(kidAvailSize, aState, kidMol, aState.isInline);
+  GetAvailSize(kidAvailSize, aState, aKidSC, aState.isInline);
   if ((aState.currentLineNumber > 0) && (kidAvailSize.height <= 0)) {
     // No more room
     return 0;
@@ -990,7 +1006,7 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
             GetAvailableSpaceBand(aState, aState.y + aState.topMargin);
 
             // Reflow child now that it has the line to itself
-            GetAvailSize(kidAvailSize, aState, kidMol, PR_TRUE);
+            GetAvailSize(kidAvailSize, aState, aKidSC, PR_TRUE);
             status = ReflowChild(aKidFrame, aCX, kidSize, kidAvailSize,
                                  pKidMaxElementSize);
           }
@@ -1017,7 +1033,7 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
           if (isSplittable != frNotSplittable) {
             // Update size info now that we are on the next line. Then
             // reflow the child into the new available space.
-            GetAvailSize(kidAvailSize, aState, kidMol, PR_TRUE);
+            GetAvailSize(kidAvailSize, aState, aKidSC, PR_TRUE);
             status = ReflowChild(aKidFrame, aCX, kidSize, kidAvailSize,
                                  pKidMaxElementSize);
 
@@ -1044,21 +1060,27 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
     }
 
     // Add child to the line
-    AddInlineChildToLine(aCX, aState, aKidFrame, kidSize, pKidMaxElementSize, kidMol);
-  
+    AddInlineChildToLine(aCX, aState, aKidFrame, kidSize,
+                         pKidMaxElementSize, aKidSC);
   } else {
     nsRect  kidRect;
 
     // Does the block-level element want to clear any floaters that impact
     // it? Note that the clear property only applies to block-level elements
     // and the BR tag
-    if (aKidMol->clear != NS_STYLE_CLEAR_NONE) {
-      ClearFloaters(aState, aKidMol->clear);
-      GetAvailSize(kidAvailSize, aState, kidMol, PR_FALSE);
+    nsStyleDisplay* styleDisplay = (nsStyleDisplay*)
+      aKidSC->GetData(kStyleDisplaySID); 
+    switch (styleDisplay->mBreakType) {
+    case NS_STYLE_CLEAR_LEFT:
+    case NS_STYLE_CLEAR_RIGHT:
+    case NS_STYLE_CLEAR_LEFT_AND_RIGHT:
+      ClearFloaters(aState, styleDisplay->mBreakType);
+      GetAvailSize(kidAvailSize, aState, aKidSC, PR_FALSE);
       if ((aState.currentLineNumber > 0) && (kidAvailSize.height <= 0)) {
         // No more room
         return 0;
       }
+      break;
     }
 
     // Give the block its own local coordinate space.. Note: ReflowChild()
@@ -1066,8 +1088,8 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
     // current left/right edge
     aState.spaceManager->Translate(aState.borderPadding.left, 0);
     // Give the block-level element the opportunity to use the space manager
-    status = ReflowChild(aKidFrame, aCX, kidMol, aState.spaceManager, kidAvailSize,
-                         kidRect, pKidMaxElementSize);
+    status = ReflowChild(aKidFrame, aCX, aState.spaceManager,
+                         kidAvailSize, kidRect, pKidMaxElementSize);
     aState.spaceManager->Translate(-aState.borderPadding.left, 0);
 
     // For first children, we skip all the fit checks because we must
@@ -1087,7 +1109,7 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
     // calls AdvaneceToNextLine(). We need to restructure the flow of control,
     // and use a state machine...
     aState.lastContentIsComplete = PRBool(status == frComplete);
-    AddBlockChild(aCX, aState, aKidFrame, kidRect, pKidMaxElementSize, kidMol);
+    AddBlockChild(aCX, aState, aKidFrame, kidRect, pKidMaxElementSize, aKidSC);
   }
 
   // If we just reflowed our last child then update the
@@ -1147,7 +1169,6 @@ nsBlockFrame::ReflowMappedChildren(nsIPresContext* aCX,
      
     kidFrame->GetContent(kid.AssignRef());
     nsIStyleContextPtr kidSC = aCX->ResolveStyleContextFor(kid, this);
-    nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
 
     // Attempt to place and reflow the child
 
@@ -1155,7 +1176,7 @@ nsBlockFrame::ReflowMappedChildren(nsIPresContext* aCX,
     // it is, otherwise advance to the next line and place it there if
     // possible
 
-    PRIntn placeStatus = PlaceAndReflowChild(aCX, aState, kidFrame, kidMol);
+    PRIntn placeStatus = PlaceAndReflowChild(aCX, aState, kidFrame, kidSC);
     ReflowStatus status = aState.reflowStatus;
     if (0 == (placeStatus & PLACE_FIT)) {
       // The child doesn't fit. Push it and any remaining children.
@@ -1237,8 +1258,9 @@ PRBool nsBlockFrame::MoreToReflow(nsIPresContext* aCX)
     if (nsnull != kid) {
       // Resolve style for the kid
       nsIStyleContextPtr kidSC = aCX->ResolveStyleContextFor(kid, this);
-      nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
-      switch (kidMol->display) {
+      nsStyleDisplay* kidStyleDisplay = (nsStyleDisplay*)
+        kidSC->GetData(kStyleDisplaySID);
+      switch (kidStyleDisplay->mDisplay) {
       case NS_STYLE_DISPLAY_BLOCK:
       case NS_STYLE_DISPLAY_LIST_ITEM:
         // Block pseudo-frames do not contain other block elements
@@ -1303,21 +1325,23 @@ nsBlockFrame::ReflowAppendedChildren(nsIPresContext* aCX,
 
     // Resolve style for the kid
     nsIStyleContextPtr kidSC = aCX->ResolveStyleContextFor(kid, this);
-    nsStylePosition* kidPosition = (nsStylePosition*)kidSC->GetData(kStylePositionSID);
-    nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
+    nsStylePosition* kidPosition = (nsStylePosition*)
+      kidSC->GetData(kStylePositionSID);
+    nsStyleDisplay* kidDisplay = (nsStyleDisplay*)
+      kidSC->GetData(kStyleDisplaySID);
 
     // Check whether it wants to floated or absolutely positioned
     if (NS_STYLE_POSITION_ABSOLUTE == kidPosition->mPosition) {
       AbsoluteFrame::NewFrame(&kidFrame, kid, kidIndex, this);
       kidFrame->SetStyleContext(kidSC);
-    } else if (kidMol->floats != NS_STYLE_FLOAT_NONE) {
+    } else if (kidDisplay->mFloats != NS_STYLE_FLOAT_NONE) {
       PlaceholderFrame::NewFrame(&kidFrame, kid, kidIndex, this);
       kidFrame->SetStyleContext(kidSC);
     } else if (nsnull == kidPrevInFlow) {
       // Create initial frame for the child
       nsIContentDelegate* kidDel;
       nsresult fr;
-      switch (kidMol->display) {
+      switch (kidDisplay->mDisplay) {
       case NS_STYLE_DISPLAY_BLOCK:
       case NS_STYLE_DISPLAY_LIST_ITEM:
         // Pseudo block frames do not contain other block elements
@@ -1378,7 +1402,7 @@ nsBlockFrame::ReflowAppendedChildren(nsIPresContext* aCX,
     // complete.
     ReflowStatus status;
     do {
-      PRIntn placeStatus = PlaceAndReflowChild(aCX, aState, kidFrame, kidMol);
+      PRIntn placeStatus = PlaceAndReflowChild(aCX, aState, kidFrame, kidSC);
       status = aState.reflowStatus;
       if (0 == (placeStatus & PLACE_FIT)) {
         // We ran out of room.
@@ -1411,7 +1435,6 @@ nsBlockFrame::ReflowAppendedChildren(nsIPresContext* aCX,
 
         // Switch to new kid style
         kidFrame->GetStyleContext(aCX, kidSC.AssignRef());
-        kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
       }
 #ifdef NS_DEBUG
       nsIFrame* kidNextInFlow;
@@ -1493,11 +1516,10 @@ nsBlockFrame::PullUpChildren(nsIPresContext* aCX,
      
     kidFrame->GetContent(kid.AssignRef());
     nsIStyleContextPtr kidSC = aCX->ResolveStyleContextFor(kid, this);
-    nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
 
     ReflowStatus status;
     do {
-      PRIntn placeStatus = PlaceAndReflowChild(aCX, aState, kidFrame, kidMol);
+      PRIntn placeStatus = PlaceAndReflowChild(aCX, aState, kidFrame, kidSC);
       status = aState.reflowStatus;
       if (0 == (placeStatus & PLACE_FIT)) {
         // Push the kids that didn't fit back down to the next-in-flow
@@ -1534,7 +1556,6 @@ nsBlockFrame::PullUpChildren(nsIPresContext* aCX,
 
           // Switch to new kid style
           kidFrame->GetStyleContext(aCX, kidSC.AssignRef());
-          kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
         } else {
           // The child has a next-in-flow, but it's not one of ours.
           // It *must* be in one of our next-in-flows. Collect it
@@ -1597,20 +1618,19 @@ void nsBlockFrame::SetupState(nsIPresContext* aCX,
                               nsISpaceManager* aSpaceManager)
 {
   // Setup reflow state
-  nsStyleMolecule* mol =
-    (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
-  nsStyleFont* font =
-    (nsStyleFont*)mStyleContext->GetData(kStyleFontSID);
-  aState.Init(aMaxSize, aMaxElementSize, font, mol, aSpaceManager);
+  aState.Init(aMaxSize, aMaxElementSize, mStyleContext, aSpaceManager);
+
+  nsStyleSpacing* mySpacing = (nsStyleSpacing*)
+    mStyleContext->GetData(kStyleSpacingSID);
 
   // Apply border and padding adjustments for regular frames only
   if (PR_FALSE == IsPseudoFrame()) {
-    aState.borderPadding = mol->borderPadding;
-    aState.y = mol->borderPadding.top;
+    aState.borderPadding = mySpacing->mBorderPadding;
+    aState.y = mySpacing->mBorderPadding.top;
     aState.availSize.width -=
-      (mol->borderPadding.left + mol->borderPadding.right);
+      (mySpacing->mBorderPadding.left + mySpacing->mBorderPadding.right);
     aState.availSize.height -=
-      (mol->borderPadding.top + mol->borderPadding.bottom);
+      (mySpacing->mBorderPadding.top + mySpacing->mBorderPadding.bottom);
   } else {
     aState.borderPadding.SizeTo(0, 0, 0, 0);
   }
@@ -1830,8 +1850,7 @@ void nsBlockFrame::JustifyLines(nsIPresContext* aCX,
     
     // Finally, now that the in-flow positions of the line's frames are
     // known we can apply relative positioning if any of them need it.
-    nsCSSLayout::RelativePositionChildren(aCX, this, aState.mol,
-                                          lineStart, mLines[i]);
+    nsCSSLayout::RelativePositionChildren(aCX, this, lineStart, mLines[i]);
   }
 }
 
@@ -1952,7 +1971,8 @@ void nsBlockFrame::PlaceFloater(nsIPresContext* aCX,
     nsIStyleContextPtr  styleContext;
 
     aFloater->GetStyleContext(aCX, styleContext.AssignRef());
-    nsStyleMolecule*  mol = (nsStyleMolecule*)styleContext->GetData(kStyleMoleculeSID);
+    nsStyleDisplay* floaterDisplay = (nsStyleDisplay*)
+      styleContext->GetData(kStyleDisplaySID);
 
     if (!mCurrentState->isInline) {
       // Get the current band for this line
@@ -1965,10 +1985,10 @@ void nsBlockFrame::PlaceFloater(nsIPresContext* aCX,
     aFloater->GetRect(region);
     region.y = mCurrentState->currentBand->trapezoids[0].yTop;
 
-    if (NS_STYLE_FLOAT_LEFT == mol->floats) {
+    if (NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) {
       region.x = mCurrentState->currentBand->trapezoids[0].xTopLeft;
     } else {
-      NS_ASSERTION(NS_STYLE_FLOAT_RIGHT == mol->floats, "bad float type");
+      NS_ASSERTION(NS_STYLE_FLOAT_RIGHT == floaterDisplay->mFloats, "bad float type");
       region.x = mCurrentState->currentBand->trapezoids[0].xTopRight - region.width;
     }
 
@@ -1997,9 +2017,10 @@ NS_METHOD nsBlockFrame::ContentAppended(nsIPresShell* aShell,
 {
   // Get the last-in-flow
   nsBlockFrame* flow = (nsBlockFrame*)GetLastInFlow();
-
   PRInt32 kidIndex = flow->NextChildOffset();
   PRInt32 startIndex = kidIndex;
+
+#if 0
   nsIFrame* kidFrame = nsnull;
   nsIFrame* prevKidFrame;
    
@@ -2013,16 +2034,17 @@ NS_METHOD nsBlockFrame::ContentAppended(nsIPresShell* aShell,
 
     // Resolve style for the kid
     nsIStyleContextPtr  kidSC = aPresContext->ResolveStyleContextFor(kid, this);
-    nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
+    nsStyleDisplay* kidDisplay = (nsStyleDisplay*)
+      kidSC->GetData(kStyleDisplaySID);
 
     // Is it a floater?
-    if (kidMol->floats != NS_STYLE_FLOAT_NONE) {
+    if (kidDisplay->mFloats != NS_STYLE_FLOAT_NONE) {
       PlaceholderFrame::NewFrame(&kidFrame, kid, kidIndex, this);
     } else {
       // Create initial frame for the child
       nsIContentDelegate* kidDel;
       nsresult fr;
-      switch (kidMol->display) {
+      switch (kidDisplay->mDisplay) {
       case NS_STYLE_DISPLAY_BLOCK:
       case NS_STYLE_DISPLAY_LIST_ITEM:
         // Pseudo block frames do not contain other block elements
@@ -2073,6 +2095,7 @@ NS_METHOD nsBlockFrame::ContentAppended(nsIPresShell* aShell,
     mChildCount++;
   }
   SetLastContentOffset(prevKidFrame);
+#endif
 
   // If this is a pseudo-frame then our parent will generate the
   // reflow command. Otherwise, if the container is us then we should
@@ -2106,7 +2129,14 @@ nsHTMLFrameType nsBlockFrame::GetFrameType() const
 NS_METHOD nsBlockFrame::ListTag(FILE* out) const
 {
   if ((nsnull != mGeometricParent) && IsPseudoFrame()) {
-    fprintf(out, "*block(%d)@%p", mIndexInParent, this);
+    fprintf(out, "*block<");
+    nsIAtom* atom = mContent->GetTag();
+    if (nsnull != atom) {
+      nsAutoString tmp;
+      atom->ToString(tmp);
+      fputs(tmp, out);
+    }
+    fprintf(out, ">(%d)@%p", mIndexInParent, this);
   } else {
     nsHTMLContainerFrame::ListTag(out);
   }

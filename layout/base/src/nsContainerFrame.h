@@ -20,8 +20,6 @@
 
 #include "nsSplittableFrame.h"
 
-struct nsStyleMolecule;
-
 /**
  * Implementation of a container frame. Supports being used a pseudo-
  * frame (a frame that maps the same content as its parent).
@@ -239,7 +237,6 @@ protected:
    */
   ReflowStatus ReflowChild(nsIFrame*        aKidFrame,
                            nsIPresContext*  aPresContext,
-                           nsStyleMolecule* aKidMol,
                            nsISpaceManager* aSpaceManager,
                            const nsSize&    aMaxSize,
                            nsRect&          aDesiredRect,

@@ -35,6 +35,7 @@
 #undef NOISY
 #endif
 
+static NS_DEFINE_IID(kIStyleSpacingSID, NS_STYLESPACING_SID);
 static NS_DEFINE_IID(kIRunaroundIID, NS_IRUNAROUND_IID);
 
 nsContainerFrame::nsContainerFrame(nsIContent* aContent,
@@ -435,7 +436,6 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
 nsIFrame::ReflowStatus
 nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
                               nsIPresContext*  aPresContext,
-                              nsStyleMolecule* aKidMol,
                               nsISpaceManager* aSpaceManager,
                               const nsSize&    aMaxSize,
                               nsRect&          aDesiredRect,
@@ -487,6 +487,9 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
 
   // Get the bounding rect of the available trapezoid
   nsRect  rect;
+  nsIStyleContext* kidSC;
+  aKidFrame->GetStyleContext(aPresContext, kidSC);
+  nsStyleSpacing* spacing = (nsStyleSpacing*)kidSC->GetData(kIStyleSpacingSID);
 
   availSpace->GetRect(rect);
   if (aMaxSize.width != NS_UNCONSTRAINEDSIZE) {
@@ -496,13 +499,13 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
     }
   
     // Reduce the available width by the kid's left/right margin
-    availSize.width -= aKidMol->margin.left + aKidMol->margin.right;
+    availSize.width -= spacing->mMargin.left + spacing->mMargin.right;
   }
 
   // Does the child frame support interface nsIRunaround?
   if (NS_OK == aKidFrame->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround)) {
     // Yes, the child frame wants to interact directly with the space manager.
-    nscoord tx = rect.x + aKidMol->margin.left;
+    nscoord tx = rect.x + spacing->mMargin.left;
 
     // Translate the local coordinate space to the current left edge plus any
     // left margin the child wants
@@ -543,6 +546,8 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
       ((nsContainerFrame*)parent)->DeleteChildsNextInFlow(aKidFrame);
     }
   }
+
+  NS_RELEASE(kidSC);
   return status;
 }
 

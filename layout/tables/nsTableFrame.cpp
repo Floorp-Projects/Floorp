@@ -56,9 +56,10 @@ static const PRBool gsDebugMBP = PR_FALSE;
 #define max(x, y) ((x) > (y) ? (x) : (y))
 #endif
 
-static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
 static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
+static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
+static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 
 NS_DEF_PTR(nsIStyleContext);
 NS_DEF_PTR(nsIContent);
@@ -71,10 +72,11 @@ NS_DEF_PTR(nsTableCell);
 struct InnerTableReflowState {
 
   // The body's style molecule
-  nsStyleMolecule* mol;
 
   // The body's available size (computed from the body's parent)
   nsSize availSize;
+
+  nscoord leftInset, topInset;
 
   // Margin tracking information
   nscoord prevMaxPosBottomMargin;
@@ -98,16 +100,28 @@ struct InnerTableReflowState {
 
   InnerTableReflowState(nsIPresContext*  aPresContext,
                         const nsSize&    aMaxSize,
-                        nsStyleMolecule* aMol)
+                        nsStyleSpacing* aStyleSpacing)
   {
-    mol = aMol;
-    availSize.width = aMaxSize.width;
-    availSize.height = aMaxSize.height;
     prevMaxPosBottomMargin = 0;
     prevMaxNegBottomMargin = 0;
     y=0;  // border/padding/margin???
+
     unconstrainedWidth = PRBool(aMaxSize.width == NS_UNCONSTRAINEDSIZE);
+    availSize.width = aMaxSize.width;
+    if (!unconstrainedWidth) {
+      availSize.width -= aStyleSpacing->mBorderPadding.left +
+        aStyleSpacing->mBorderPadding.right;
+    }
+    leftInset = aStyleSpacing->mBorderPadding.left;
+
     unconstrainedHeight = PRBool(aMaxSize.height == NS_UNCONSTRAINEDSIZE);
+    availSize.height = aMaxSize.height;
+    if (!unconstrainedHeight) {
+      availSize.height -= aStyleSpacing->mBorderPadding.top +
+        aStyleSpacing->mBorderPadding.bottom;
+    }
+    topInset = aStyleSpacing->mBorderPadding.top;
+
     firstRowGroup = PR_TRUE;
     footerHeight = 0;
     footerList = nsnull;
@@ -483,37 +497,39 @@ NS_METHOD nsTableFrame::ResizeReflow(nsIPresContext* aPresContext,
 
   aStatus = frComplete;
 
-  PRIntervalTime startTime = PR_IntervalNow();
+  PRIntervalTime startTime;
+  if (gsTiming) {
+    startTime = PR_IntervalNow();
+  }
 
   if (PR_TRUE==gsDebug) 
     printf ("*** tableframe reflow\t\t%p\n", this);
 
   if (PR_TRUE==NeedsReflow(aMaxSize))
   {
-    nsStyleMolecule* tableStyleMol =
-        (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
-    NS_ASSERTION(nsnull != tableStyleMol, "null style molecule");
-    if (nsnull==tableStyleMol)
-      return frComplete;  // SEC:  this is an error!
-
     if (PR_FALSE==IsFirstPassValid())
     { // we treat the table as if we've never seen the layout data before
       mPass = kPASS_FIRST;
-      aStatus = ResizeReflowPass1(aPresContext, aDesiredSize, aMaxSize, aMaxElementSize, tableStyleMol);
+      aStatus = ResizeReflowPass1(aPresContext, aDesiredSize,
+                                  aMaxSize, aMaxElementSize);
       // check result
     }
     mPass = kPASS_SECOND;
 
     // assign column widths, and assign aMaxElementSize->width
-    BalanceColumnWidths(aPresContext, tableStyleMol, aMaxSize, aMaxElementSize);
+    BalanceColumnWidths(aPresContext, aMaxSize, aMaxElementSize);
 
     // assign table width
-    SetTableWidth(aPresContext, tableStyleMol);
+    SetTableWidth(aPresContext);
 
-    aStatus = ResizeReflowPass2(aPresContext, aDesiredSize, aMaxSize, aMaxElementSize, tableStyleMol, 0, 0);
+    aStatus = ResizeReflowPass2(aPresContext, aDesiredSize, aMaxSize,
+                                aMaxElementSize, 0, 0);
 
-    PRIntervalTime endTime = PR_IntervalNow();
-    if (gsTiming) printf("Table reflow took %ld ticks for frame %d\n", endTime-startTime, this);
+    if (gsTiming) {
+      PRIntervalTime endTime = PR_IntervalNow();
+      printf("Table reflow took %ld ticks for frame %d\n",
+             endTime-startTime, this);/* XXX need to use LL_* macros! */
+    }
 
     mPass = kPASS_UNDEFINED;
   }
@@ -540,11 +556,9 @@ NS_METHOD nsTableFrame::ResizeReflow(nsIPresContext* aPresContext,
 nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
                                                        nsReflowMetrics& aDesiredSize,
                                                        const nsSize& aMaxSize,
-                                                       nsSize* aMaxElementSize,
-                                                       nsStyleMolecule* aTableStyle)
+                                                       nsSize* aMaxElementSize)
 {
   NS_ASSERTION(nsnull!=aPresContext, "bad pres context param");
-  NS_ASSERTION(nsnull!=aTableStyle, "bad style param");
   NS_ASSERTION(nsnull==mPrevInFlow, "illegal call, cannot call pass 1 on a continuing frame.");
 
   if (gsDebug==PR_TRUE) printf("nsTableFrame::ResizeReflow Pass1: maxSize=%d,%d\n",
@@ -573,10 +587,12 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresCont
   nsIFrame* prevKidFrame = nsnull;/* XXX incremental reflow! */
 
   // Compute the insets (sum of border and padding)
-  nscoord topInset = aTableStyle->borderPadding.top;
-  nscoord rightInset = aTableStyle->borderPadding.right;
-  nscoord bottomInset =aTableStyle->borderPadding.bottom;
-  nscoord leftInset = aTableStyle->borderPadding.left;
+  nsStyleSpacing* spacing =
+    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+  nscoord topInset = spacing->mBorderPadding.top;
+  nscoord rightInset = spacing->mBorderPadding.right;
+  nscoord bottomInset =spacing->mBorderPadding.bottom;
+  nscoord leftInset = spacing->mBorderPadding.left;
 
   /* assumes that Table's children are in the following order:
    *  Captions
@@ -601,9 +617,6 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresCont
       nsIStyleContextPtr kidStyleContext =
         aPresContext->ResolveStyleContextFor(kid, this);
       NS_ASSERTION(nsnull != kidStyleContext, "null style context for kid");
-      nsStyleMolecule* kidStyle =
-        (nsStyleMolecule*)kidStyleContext->GetData(kStyleMoleculeSID);
-      NS_ASSERTION(nsnull != kidStyle, "null style molecule for kid");
 
       // SEC: TODO:  when content is appended or deleted, be sure to clear out the frame hierarchy!!!!
 
@@ -701,7 +714,6 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresCont
                                                        nsReflowMetrics& aDesiredSize,
                                                        const nsSize& aMaxSize,
                                                        nsSize* aMaxElementSize,
-                                                       nsStyleMolecule* aTableStyle,
                                                        PRInt32 aMinCaptionWidth,
                                                        PRInt32 mMaxCaptionWidth)
 {
@@ -737,9 +749,9 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresCont
   // Check for an overflow list
   MoveOverflowToChildList();
 
-  nsStyleMolecule* myMol =
-    (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
-  InnerTableReflowState state(aPresContext, aMaxSize, myMol);
+  nsStyleSpacing* mySpacing = (nsStyleSpacing*)
+    mStyleContext->GetData(kStyleSpacingSID);
+  InnerTableReflowState state(aPresContext, aMaxSize, mySpacing);
 
   // Reflow the existing frames
   if (nsnull != mFirstChild) {
@@ -795,13 +807,11 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresCont
   if (gsDebug==PR_TRUE) 
   {
     if (nsnull!=aMaxElementSize)
-      printf("Reflow complete, returning %s with aDesiredSize = %d,%d and aMaxElementSize=%d,%d\n",
-              status==frComplete ? "Complete" : "Not Complete",
+      printf("Reflow complete, returning aDesiredSize = %d,%d and aMaxElementSize=%d,%d\n",
               aDesiredSize.width, aDesiredSize.height, 
               aMaxElementSize->width, aMaxElementSize->height);
     else
-      printf("Reflow complete, returning %s with aDesiredSize = %d,%d and NSNULL aMaxElementSize\n",
-              status==frComplete ? "Complete" : "Not Complete",
+      printf("Reflow complete, returning aDesiredSize = %d,%d and NSNULL aMaxElementSize\n",
               aDesiredSize.width, aDesiredSize.height);
   }
 
@@ -820,12 +830,12 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresCont
 // Collapse child's top margin with previous bottom margin
 nscoord nsTableFrame::GetTopMarginFor(nsIPresContext*      aCX,
                                       InnerTableReflowState& aState,
-                                      nsStyleMolecule*     aKidMol)
+                                      nsStyleSpacing* aKidSpacing)
 {
   nscoord margin;
   nscoord maxNegTopMargin = 0;
   nscoord maxPosTopMargin = 0;
-  if ((margin = aKidMol->margin.top) < 0) {
+  if ((margin = aKidSpacing->mMargin.top) < 0) {
     maxNegTopMargin = -margin;
   } else {
     maxPosTopMargin = margin;
@@ -976,9 +986,10 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
       nsIStyleContextPtr kidSC;
 
       kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
-      nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
-      nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMol);
-      nscoord bottomMargin = kidMol->margin.bottom;
+      nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
+        kidSC->GetData(kStyleSpacingSID);
+      nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidSpacing);
+      nscoord bottomMargin = kidSpacing->mMargin.bottom;
 
       // Figure out the amount of available size for the child (subtract
       // off the top margin we are going to apply to it)
@@ -987,7 +998,8 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
       }
       // Subtract off for left and right margin
       if (PR_FALSE == aState.unconstrainedWidth) {
-        kidAvailSize.width -= kidMol->margin.left + kidMol->margin.right;
+        kidAvailSize.width -= kidSpacing->mMargin.left +
+          kidSpacing->mMargin.right;
       }
 
       // Reflow the child into the available space
@@ -1013,9 +1025,10 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
       // Place the child after taking into account it's margin
       aState.y += topMargin;
       nsRect kidRect (0, 0, desiredSize.width, desiredSize.height);
-      kidRect.x += kidMol->margin.left;
-      kidRect.y += aState.y;
-      PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize, kidMaxElementSize);
+      kidRect.x += aState.leftInset + kidSpacing->mMargin.left;
+      kidRect.y += aState.topInset + aState.y ;
+      PlaceChild(aPresContext, aState, kidFrame, kidRect,
+                 aMaxElementSize, kidMaxElementSize);
       if (bottomMargin < 0) {
         aState.prevMaxNegBottomMargin = -bottomMargin;
       } else {
@@ -1389,8 +1402,6 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
 
     // Figure out how we should treat the child
     nsIFrame*        kidFrame;
-    nsStyleMolecule* kidMol =
-      (nsStyleMolecule*)kidStyleContext->GetData(kStyleMoleculeSID);
 
     // Create a child frame
     if (nsnull == kidPrevInFlow) {
@@ -1427,7 +1438,6 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     // finish).
     //aState.y += topMargin;
     nsRect kidRect (0, 0, kidSize.width, kidSize.height);
-    //kidRect.x += kidMol->margin.left;
     kidRect.y += aState.y;
     PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize, *pKidMaxElementSize);
 
@@ -1474,7 +1484,6 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
   */
 // use the cell map to determine which cell is in which column.
 void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext, 
-                                       nsStyleMolecule* aTableStyle,
                                        const nsSize& aMaxSize, 
                                        nsSize* aMaxElementSize)
 {
@@ -1498,21 +1507,34 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
   PRInt32 maxTableWidth = 0;
   PRInt32 totalFixedWidth = 0;
 
+  nsStyleSpacing* spacing =
+    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+
   // need to figure out the overall table width constraint
-  PRInt32 maxWidth = aMaxSize.width;          // default case, get 100% of available space
-  if (-1!=aTableStyle->fixedWidth)         // if there is a fixed width attribute, use it
-  {
-    maxWidth = aTableStyle->fixedWidth;
+  // default case, get 100% of available space
+  PRInt32 maxWidth;
+  nsStylePosition* position =
+    (nsStylePosition*)mStyleContext->GetData(kStylePositionSID);
+  switch (position->mWidthFlags) {
+  case NS_STYLE_POSITION_VALUE_LENGTH:
+    maxWidth = position->mWidth;
+    break;
+  case NS_STYLE_POSITION_VALUE_PCT:
+  case NS_STYLE_POSITION_VALUE_PROPORTIONAL:
+    // XXX for now these fall through
+
+  default:
+  case NS_STYLE_POSITION_VALUE_AUTO:
+  case NS_STYLE_POSITION_VALUE_INHERIT:
+    maxWidth = aMaxSize.width;
+    break;
   }
-  else if ((NS_UNCONSTRAINEDSIZE!=maxWidth) && 
-           (-1!=aTableStyle->proportionalWidth  &&  0!=aTableStyle->proportionalWidth))
-  {
-    maxWidth = (maxWidth*aTableStyle->proportionalWidth)/100;
-  }
-  // now, if maxWidth is not NS_UNCONSTRAINED, subtract out my border and padding
+
+  // now, if maxWidth is not NS_UNCONSTRAINED, subtract out my border
+  // and padding
   if (NS_UNCONSTRAINEDSIZE!=maxWidth)
   {
-    maxWidth -= aTableStyle->borderPadding.left + aTableStyle->borderPadding.right;
+    maxWidth -= spacing->mBorderPadding.left + spacing->mBorderPadding.right;
     if (0>maxWidth)  // nonsense style specification
       maxWidth = 0;
   }
@@ -1520,7 +1542,7 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
   if (gsDebug) printf ("  maxWidth=%d from aMaxSize=%d,%d\n", maxWidth, aMaxSize.width, aMaxSize.height);
 
   // Step 1 - assign the width of all fixed-width columns
-  AssignFixedColumnWidths(aPresContext, maxWidth, numCols, aTableStyle,
+  AssignFixedColumnWidths(aPresContext, maxWidth, numCols,
                           totalFixedWidth, minTableWidth, maxTableWidth);
 
   if (nsnull!=aMaxElementSize)
@@ -1539,14 +1561,14 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
   if (TableIsAutoWidth())
   {
     if (gsDebug==PR_TRUE) printf ("  calling BalanceProportionalColumnsForAutoWidthTable\n");
-    BalanceProportionalColumnsForAutoWidthTable(aPresContext, aTableStyle, 
+    BalanceProportionalColumnsForAutoWidthTable(aPresContext,
                                                 availWidth, maxWidth,
                                                 minTableWidth, maxTableWidth);
   }
   else
   {
     if (gsDebug==PR_TRUE) printf ("  calling BalanceProportionalColumnsForSpecifiedWidthTable\n");
-    BalanceProportionalColumnsForSpecifiedWidthTable(aPresContext, aTableStyle,
+    BalanceProportionalColumnsForSpecifiedWidthTable(aPresContext,
                                                      availWidth, maxWidth,
                                                      minTableWidth, maxTableWidth);
   }
@@ -1590,11 +1612,13 @@ if there is space left over
 }
 
 // Step 1 - assign the width of all fixed-width columns, 
-  //          and calculate min/max table width
-PRBool nsTableFrame::AssignFixedColumnWidths(nsIPresContext* aPresContext, PRInt32 maxWidth, 
-                                             PRInt32 aNumCols, nsStyleMolecule* aTableStyleMol,
+//          and calculate min/max table width
+PRBool nsTableFrame::AssignFixedColumnWidths(nsIPresContext* aPresContext,
+                                             PRInt32 maxWidth, 
+                                             PRInt32 aNumCols,
                                              PRInt32 &aTotalFixedWidth,
-                                             PRInt32 &aMinTableWidth, PRInt32 &aMaxTableWidth)
+                                             PRInt32 &aMinTableWidth,
+                                             PRInt32 &aMaxTableWidth)
 {
   NS_ASSERTION(nsnull==mPrevInFlow, "never ever call me on a continuing frame!");
 
@@ -1606,15 +1630,44 @@ PRBool nsTableFrame::AssignFixedColumnWidths(nsIPresContext* aPresContext, PRInt
     NS_ASSERTION(nsnull != colData, "bad column data");
     nsTableColPtr col = colData->GetCol();    // col: ADDREF++
     NS_ASSERTION(nsnull != col, "bad col");
-    nsStyleMolecule* colStyle =
-      (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
-    NS_ASSERTION(nsnull != colStyle, "bad style for col.");
+
     // need to track min/max column width for setting min/max table widths
     PRInt32 minColWidth = 0;
     PRInt32 maxColWidth = 0;
     nsVoidArray *cells = colData->GetCells();
     PRInt32 numCells = cells->Count();
     if (gsDebug==PR_TRUE) printf ("  for column %d  numCells = %d\n", colIndex, numCells);
+
+#if XXX_need_access_to_column_frame_help
+    // Get the columns's style
+    nsIStyleContextPtr colSC;
+    colFrame->GetStyleContext(aPresContext, colSC.AssignRef());
+    nsStylePosition* colPosition = (nsStylePosition*)
+      colSC->GetData(kStylePositionSID);
+
+    // Get column width if it has one
+    PRBool haveColWidth = PR_FALSE;
+    nscoord colWidth;
+    switch (colPosition->mWidthFlags) {
+    default:
+    case NS_STYLE_POSITION_VALUE_AUTO:
+    case NS_STYLE_POSITION_VALUE_INHERIT:
+      break;
+
+    case NS_STYLE_POSITION_VALUE_LENGTH:
+      haveColWidth = PR_TRUE;
+      colWidth = colPosition->mWidth;
+      break;
+
+    case NS_STYLE_POSITION_VALUE_PCT:
+    case NS_STYLE_POSITION_VALUE_PROPORTIONAL:
+      //XXX haveColWidth = PR_TRUE;
+      //XXX colWidth = colPosition->mWidthPCT * something;
+      break;
+    }
+#endif
+
+    // Scan the column
     for (PRInt32 cellIndex = 0; cellIndex<numCells; cellIndex++)
     {
       nsCellLayoutData * data = (nsCellLayoutData *)(cells->ElementAt(cellIndex));
@@ -1625,62 +1678,112 @@ PRBool nsTableFrame::AssignFixedColumnWidths(nsIPresContext* aPresContext, PRInt
       if (gsDebug==PR_TRUE) 
         printf ("    for cell %d  min = %d,%d  and  des = %d,%d\n", cellIndex, cellMinSize->width, cellMinSize->height,
                 cellDesiredSize->width, cellDesiredSize->height);
-      /* the first cell in a column (in row 0) has special standing.
-       * if the first cell has a width specification, it overrides the COL width
+
+      PRBool haveCellWidth = PR_FALSE;
+      nscoord cellWidth;
+
+      /*
+       * The first cell in a column (in row 0) has special standing.
+       * if the first cell has a width specification, it overrides the
+       * COL width
        */
       if (0==cellIndex)
       {
-        // SEC: TODO -- when we have a style system, set the mol for the col
         nsCellLayoutData * data = (nsCellLayoutData *)(cells->ElementAt(0));
         nsTableCellFrame *cellFrame = data->GetCellFrame();
         nsTableCellPtr cell;
         cellFrame->GetContent((nsIContent*&)(cell.AssignRef()));          // cell: REFCNT++
-        nsStyleMolecule* cellStyle = (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
-        NS_ASSERTION(nsnull != cellStyle, "bad style for cell.");
-        // SEC: this is the code to replace
-        if (-1!=cellStyle->fixedWidth)
-          colStyle->proportionalWidth = cellStyle->proportionalWidth;
-        if (-1!=cellStyle->proportionalWidth)
-          colStyle->proportionalWidth = cellStyle->proportionalWidth;
-        // SEC: end code to replace
-      }
-      if (-1!=colStyle->fixedWidth)
-      { // this col has fixed width, so set the cell's width 
-        // to the larger of (specified width, largest max_element_size of the cells in the column)      
-        PRInt32 widthForThisCell = max(cellMinSize->width, colStyle->fixedWidth);
-        if (mColumnWidths[colIndex] < widthForThisCell)
-        {
-          if (gsDebug) printf ("    setting fixed width to %d\n",widthForThisCell);
-          mColumnWidths[colIndex] = widthForThisCell;
-          maxColWidth = widthForThisCell;
+
+        // Get the cell's style
+        nsIStyleContextPtr cellSC;
+        cellFrame->GetStyleContext(aPresContext, cellSC.AssignRef());
+        nsStylePosition* cellPosition = (nsStylePosition*)
+          cellSC->GetData(kStylePositionSID);
+        switch (cellPosition->mWidthFlags) {
+        case NS_STYLE_POSITION_VALUE_LENGTH:
+          haveCellWidth = PR_TRUE;
+          cellWidth = cellPosition->mWidth;
+          break;
+
+        case NS_STYLE_POSITION_VALUE_PCT:
+        case NS_STYLE_POSITION_VALUE_PROPORTIONAL:
+          // XXX write me when pct/proportional are supported
+          // XXX haveCellWidth = PR_TRUE;
+          // XXX cellWidth = cellPosition->mWidth;
+          break;
+
+        default:
+        case NS_STYLE_POSITION_VALUE_INHERIT:
+        case NS_STYLE_POSITION_VALUE_AUTO:
+          break;
         }
       }
-      // regardless of the width specification, keep track of the min/max column widths
-      /* TODO:  must distribute COLSPAN'd cell widths between columns, either here 
-       *        or in the subsequent Balance***ColumnWidth routines 
+
+#if XXX_need_access_to_column_frame_help
+      switch (colPosition->mWidthFlags) {
+      default:
+      case NS_STYLE_POSITION_VALUE_AUTO:
+      case NS_STYLE_POSITION_VALUE_INHERIT:
+        break;
+
+      case NS_STYLE_POSITION_VALUE_LENGTH:
+        {
+          // This col has a fixed width, so set the cell's width to the
+          // larger of (specified width, largest max_element_size of the
+          // cells in the column)
+          PRInt32 widthForThisCell = max(cellMinSize->width, colPosition->mWidth);
+          if (mColumnWidths[colIndex] < widthForThisCell)
+          {
+            if (gsDebug) printf ("    setting fixed width to %d\n",widthForThisCell);
+            mColumnWidths[colIndex] = widthForThisCell;
+            maxColWidth = widthForThisCell;
+          }
+        }
+        break;
+
+      case NS_STYLE_POSITION_VALUE_PCT:
+      case NS_STYLE_POSITION_VALUE_PROPORTIONAL:
+        // XXX write me when pct/proportional are supported
+        break;
+      }
+#endif
+
+      // regardless of the width specification, keep track of the
+      // min/max column widths
+      /* TODO: must distribute COLSPAN'd cell widths between columns,
+       *       either here or in the subsequent Balance***ColumnWidth
+       *       routines
        */
       if (minColWidth < cellMinSize->width)
         minColWidth = cellMinSize->width;
       if (maxColWidth < cellDesiredSize->width)
         maxColWidth = cellDesiredSize->width;
-      if (gsDebug==PR_TRUE) 
-        printf ("    after cell %d, minColWidth = %d and maxColWidth = %d\n", cellIndex, minColWidth, maxColWidth);
+      if (gsDebug) {
+        printf ("    after cell %d, minColWidth = %d and maxColWidth = %d\n",
+                cellIndex, minColWidth, maxColWidth);
+      }
       /* take colspan into account? */
       /*
       PRInt32 colSpan = col->GetColSpan();
       cellIndex += colSpan-1;
       */
     }
-    if (-1!=colStyle->fixedWidth)
-    {
-      // if the col is fixed-width, expand the col to the specified fixed width if necessary
-      if (colStyle->fixedWidth > mColumnWidths[colIndex])
-        mColumnWidths[colIndex] = colStyle->fixedWidth;
-      // keep a running total of the amount of space taken up by all fixed-width columns
-      aTotalFixedWidth += mColumnWidths[colIndex];
-      if (gsDebug) 
-        printf ("    after col %d, aTotalFixedWidth = %d\n", colIndex, aTotalFixedWidth);
+
+#if 0
+    // if the col is fixed-width, expand the col to the specified
+    // fixed width if necessary
+    if (colStyle->fixedWidth > mColumnWidths[colIndex])
+      mColumnWidths[colIndex] = colStyle->fixedWidth;
+
+    // keep a running total of the amount of space taken up by all
+    // fixed-width columns
+    aTotalFixedWidth += mColumnWidths[colIndex];
+    if (gsDebug) {
+      printf ("    after col %d, aTotalFixedWidth = %d\n",
+              colIndex, aTotalFixedWidth);
     }
+#endif
+
     // add col[i] metrics to the running totals for the table min/max width
     if (NS_UNCONSTRAINEDSIZE!=aMinTableWidth)
       aMinTableWidth += minColWidth;  // SEC: insets!
@@ -1698,7 +1801,6 @@ PRBool nsTableFrame::AssignFixedColumnWidths(nsIPresContext* aPresContext, PRInt
 }
 
 PRBool nsTableFrame::BalanceProportionalColumnsForSpecifiedWidthTable(nsIPresContext* aPresContext,
-                                                                      nsStyleMolecule* aTableStyleMol,
                                                                       PRInt32 aAvailWidth,
                                                                       PRInt32 aMaxWidth,
                                                                       PRInt32 aMinTableWidth, 
@@ -1711,7 +1813,7 @@ PRBool nsTableFrame::BalanceProportionalColumnsForSpecifiedWidthTable(nsIPresCon
   if (NS_UNCONSTRAINEDSIZE==aMaxWidth)
   { // the max width of the table fits comfortably in the available space
     if (gsDebug) printf ("  * table laying out in NS_UNCONSTRAINEDSIZE, calling BalanceColumnsTableFits\n");
-    result = BalanceColumnsTableFits(aPresContext, aTableStyleMol, aAvailWidth);
+    result = BalanceColumnsTableFits(aPresContext, aAvailWidth);
   }
   else if (aMinTableWidth > aMaxWidth)
   { // the table doesn't fit in the available space
@@ -1721,19 +1823,18 @@ PRBool nsTableFrame::BalanceProportionalColumnsForSpecifiedWidthTable(nsIPresCon
   else if (aMaxTableWidth <= aMaxWidth)
   { // the max width of the table fits comfortably in the available space
     if (gsDebug) printf ("  * table desired size fits, calling BalanceColumnsTableFits\n");
-    result = BalanceColumnsTableFits(aPresContext, aTableStyleMol, aAvailWidth);
+    result = BalanceColumnsTableFits(aPresContext, aAvailWidth);
   }
   else
   { // the table fits somewhere between its min and desired size
     if (gsDebug) printf ("  * table desired size does not fit, calling BalanceColumnsHTML4Constrained\n");
-    result = BalanceColumnsHTML4Constrained(aPresContext, aTableStyleMol, aAvailWidth,
+    result = BalanceColumnsHTML4Constrained(aPresContext, aAvailWidth,
                                             aMaxWidth, aMinTableWidth, aMaxTableWidth);
   }
   return result;
 }
 
 PRBool nsTableFrame::BalanceProportionalColumnsForAutoWidthTable( nsIPresContext* aPresContext,
-                                                                  nsStyleMolecule* aTableStyleMol,
                                                                   PRInt32 aAvailWidth,
                                                                   PRInt32 aMaxWidth,
                                                                   PRInt32 aMinTableWidth, 
@@ -1744,7 +1845,7 @@ PRBool nsTableFrame::BalanceProportionalColumnsForAutoWidthTable( nsIPresContext
   if (NS_UNCONSTRAINEDSIZE==aMaxWidth)
   { // the max width of the table fits comfortably in the available space
     if (gsDebug) printf ("  * table laying out in NS_UNCONSTRAINEDSIZE, calling BalanceColumnsTableFits\n");
-    result = BalanceColumnsTableFits(aPresContext, aTableStyleMol, aAvailWidth);
+    result = BalanceColumnsTableFits(aPresContext, aAvailWidth);
   }
   else if (aMinTableWidth > aMaxWidth)
   { // the table doesn't fit in the available space
@@ -1754,12 +1855,12 @@ PRBool nsTableFrame::BalanceProportionalColumnsForAutoWidthTable( nsIPresContext
   else if (aMaxTableWidth <= aMaxWidth)
   { // the max width of the table fits comfortably in the available space
     if (gsDebug) printf ("  * table desired size fits, calling BalanceColumnsTableFits\n");
-    result = BalanceColumnsTableFits(aPresContext, aTableStyleMol, aAvailWidth);
+    result = BalanceColumnsTableFits(aPresContext, aAvailWidth);
   }
   else
   { // the table fits somewhere between its min and desired size
     if (gsDebug) printf ("  * table desired size does not fit, calling BalanceColumnsHTML4Constrained\n");
-    result = BalanceColumnsHTML4Constrained(aPresContext, aTableStyleMol, aAvailWidth,
+    result = BalanceColumnsHTML4Constrained(aPresContext, aAvailWidth,
                                             aMaxWidth, aMinTableWidth, aMaxTableWidth);
   }
   return result;
@@ -1774,14 +1875,16 @@ PRBool nsTableFrame::SetColumnsToMinWidth(nsIPresContext* aPresContext)
   { 
     nsColLayoutData * colData = (nsColLayoutData *)(columnLayoutData->ElementAt(colIndex));
     nsTableColPtr col = colData->GetCol();  // col: ADDREF++
-    nsStyleMolecule* colStyle =
-      (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
     nsVoidArray *cells = colData->GetCells();
     PRInt32 minColWidth = 0;
     PRInt32 maxColWidth = 0;
     PRInt32 numCells = cells->Count();
     if (gsDebug==PR_TRUE) printf ("  for col %d\n", colIndex);
-    if (PR_TRUE==IsProportionalWidth(colStyle))
+
+    // XXX need column frame to ask this question
+    nsStylePosition* colPosition = nsnull;
+
+    if (PR_TRUE==IsProportionalWidth(colPosition))
     {
       for (PRInt32 cellIndex = 0; cellIndex<numCells; cellIndex++)
       { // this col has proportional width, so determine its width requirements
@@ -1804,10 +1907,13 @@ PRBool nsTableFrame::SetColumnsToMinWidth(nsIPresContext* aPresContext)
 
       if (gsDebug==PR_TRUE) 
       {
-        printf ("  for determining width of col %d %s:\n",colIndex, IsProportionalWidth(colStyle)? "(P)":"(A)");
+        printf ("  for determining width of col %d %s:\n",colIndex, IsProportionalWidth(colPosition)? "(P)":"(A)");
         printf ("    minColWidth = %d and maxColWidth = %d\n", minColWidth, maxColWidth);
       }
-      if (PR_TRUE==IsProportionalWidth(colStyle))
+
+      // XXX BUG: why are we asking this again? this if is already in a
+      // IsProportionalWidth == PR_TRUE case!
+      if (PR_TRUE==IsProportionalWidth(colPosition))
       { // this col has proportional width, so set its width based on the table width
         mColumnWidths[colIndex] = minColWidth;
         if (gsDebug==PR_TRUE) 
@@ -1819,7 +1925,6 @@ PRBool nsTableFrame::SetColumnsToMinWidth(nsIPresContext* aPresContext)
 }
 
 PRBool nsTableFrame::BalanceColumnsTableFits(nsIPresContext* aPresContext, 
-                                             nsStyleMolecule* aTableStyleMol, 
                                              PRInt32 aAvailWidth)
 {
   NS_ASSERTION(nsnull==mPrevInFlow, "never ever call me on a continuing frame!");
@@ -1831,8 +1936,6 @@ PRBool nsTableFrame::BalanceColumnsTableFits(nsIPresContext* aPresContext,
   { 
     nsColLayoutData * colData = (nsColLayoutData *)(columnLayoutData->ElementAt(colIndex));
     nsTableColPtr col = colData->GetCol();  // col: ADDREF++
-    nsStyleMolecule* colStyle =
-      (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
     nsVoidArray *cells = colData->GetCells();
     PRInt32 minColWidth = 0;
     PRInt32 maxColWidth = 0;
@@ -1841,7 +1944,11 @@ PRBool nsTableFrame::BalanceColumnsTableFits(nsIPresContext* aPresContext,
     /* TODO:  must distribute COLSPAN'd cell widths between columns, either here 
      *        or in the prior Balance***ColumnWidth routines 
      */
-    if (PR_TRUE==IsProportionalWidth(colStyle))
+
+    // XXX Need columnFrame to ask the style question
+    nsStylePosition* colPosition = nsnull;
+
+    if (PR_TRUE==IsProportionalWidth(colPosition))
     {
       for (PRInt32 cellIndex = 0; cellIndex<numCells; cellIndex++)
       { // this col has proportional width, so determine its width requirements
@@ -1862,12 +1969,16 @@ PRBool nsTableFrame::BalanceColumnsTableFits(nsIPresContext* aPresContext,
 
       if (gsDebug==PR_TRUE) 
       {
-        printf ("  for determining width of col %d %s:\n",colIndex, IsProportionalWidth(colStyle)? "(P)":"(A)");
+        printf ("  for determining width of col %d %s:\n",colIndex, IsProportionalWidth(colPosition)? "(P)":"(A)");
         printf ("    minColWidth = %d and maxColWidth = %d\n", minColWidth, maxColWidth);
         printf ("    aAvailWidth = %d\n", aAvailWidth);
       }
-      if (PR_TRUE==IsProportionalWidth(colStyle))
+
+      // XXX BUG: why are we asking this again? this if is already in a
+      // IsProportionalWidth == PR_TRUE case!
+      if (PR_TRUE==IsProportionalWidth(colPosition))
       { // this col has proportional width, so set its width based on the table width
+#if XXX_bug_kipp_about_this
         if (0==colStyle->proportionalWidth)
         { // col width is specified to be the minimum
           mColumnWidths[colIndex] = minColWidth;
@@ -1875,7 +1986,9 @@ PRBool nsTableFrame::BalanceColumnsTableFits(nsIPresContext* aPresContext,
             printf ("  3 (0): col %d set to min width = %d because style set proportionalWidth=0\n", 
                     colIndex, mColumnWidths[colIndex]);
         }
-        if (PR_TRUE==AutoColumnWidths(aTableStyleMol))
+        else // BUG? else? other code below has the else
+#endif
+        if (PR_TRUE==AutoColumnWidths())
         {  // give each remaining column it's desired width
            // if there is width left over, we'll factor that in after this loop is complete
           mColumnWidths[colIndex] = maxColWidth;
@@ -1892,8 +2005,10 @@ PRBool nsTableFrame::BalanceColumnsTableFits(nsIPresContext* aPresContext,
           }
           else
           {
+#if XXX_bug_kipp_about_this
             percentage = colStyle->proportionalWidth;
             if (-1==percentage)
+#endif
               percentage = 100/numCols;
             mColumnWidths[colIndex] = (percentage*aAvailWidth)/100;
             // if the column was computed to be too small, enlarge the column
@@ -1911,7 +2026,6 @@ PRBool nsTableFrame::BalanceColumnsTableFits(nsIPresContext* aPresContext,
 }
 
 PRBool nsTableFrame::BalanceColumnsHTML4Constrained(nsIPresContext* aPresContext,
-                                                    nsStyleMolecule* aTableStyleMol, 
                                                     PRInt32 aAvailWidth,
                                                     PRInt32 aMaxWidth,
                                                     PRInt32 aMinTableWidth, 
@@ -1927,14 +2041,22 @@ PRBool nsTableFrame::BalanceColumnsHTML4Constrained(nsIPresContext* aPresContext
   { 
     nsColLayoutData * colData = (nsColLayoutData *)(columnLayoutData->ElementAt(colIndex));
     nsTableColPtr col = colData->GetCol();  // col: ADDREF++
+
+#if XXX_bug_kipp_about_this
+    // XXX BUG: mStyleContext is for the table frame not for the column.
     nsStyleMolecule* colStyle =
       (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
+#else
+    nsStylePosition* colPosition = nsnull;
+#endif
+
     nsVoidArray *cells = colData->GetCells();
     PRInt32 minColWidth = 0;
     PRInt32 maxColWidth = 0;
     PRInt32 numCells = cells->Count();
     if (gsDebug==PR_TRUE) printf ("  for col %d\n", colIndex);
-    if (PR_TRUE==IsProportionalWidth(colStyle))
+
+    if (PR_TRUE==IsProportionalWidth(colPosition))
     {
       for (PRInt32 cellIndex = 0; cellIndex<numCells; cellIndex++)
       { // this col has proportional width, so determine its width requirements
@@ -1957,15 +2079,19 @@ PRBool nsTableFrame::BalanceColumnsHTML4Constrained(nsIPresContext* aPresContext
 
       if (gsDebug==PR_TRUE) 
       {
-        printf ("  for determining width of col %d %s:\n",colIndex, IsProportionalWidth(colStyle)? "(P)":"(A)");
+        printf ("  for determining width of col %d %s:\n",colIndex, IsProportionalWidth(colPosition)? "(P)":"(A)");
         printf ("    minTableWidth = %d and maxTableWidth = %d\n", aMinTableWidth, aMaxTableWidth);
         printf ("    minColWidth = %d and maxColWidth = %d\n", minColWidth, maxColWidth);
         printf ("    aAvailWidth = %d\n", aAvailWidth);
       }
-      if (PR_TRUE==IsProportionalWidth(colStyle))
+
+      // XXX BUG: why are we asking this again? this if is already in a
+      // IsProportionalWidth == PR_TRUE case!
+      if (PR_TRUE==IsProportionalWidth(colPosition))
       { // this col has proportional width, so set its width based on the table width
         // the table fits in the space somewhere between its min and max size
         // so dole out the available space appropriately
+#if XXX_bug_kipp_about_this
         if (0==colStyle->proportionalWidth)
         { // col width is specified to be the minimum
           mColumnWidths[colIndex] = minColWidth;
@@ -1973,7 +2099,9 @@ PRBool nsTableFrame::BalanceColumnsHTML4Constrained(nsIPresContext* aPresContext
             printf ("  4 (0): col %d set to min width = %d because style set proportionalWidth=0\n", 
                     colIndex, mColumnWidths[colIndex]);
         }
-        else if (AutoColumnWidths(aTableStyleMol))
+        else
+#endif
+          if (AutoColumnWidths())
         {
           PRInt32 W = aMaxWidth - aMinTableWidth;
           PRInt32 D = aMaxTableWidth - aMinTableWidth;
@@ -1985,9 +2113,11 @@ PRBool nsTableFrame::BalanceColumnsHTML4Constrained(nsIPresContext* aPresContext
         }
         else
         {  // give each remaining column an equal percentage of the remaining space
+#if XXX_bug_kipp_about_this
           PRInt32 percentage = colStyle->proportionalWidth;
           if (-1==percentage)
-            percentage = 100/numCols;
+#endif
+            PRInt32 percentage = 100/numCols;
           mColumnWidths[colIndex] = (percentage*aAvailWidth)/100;
           // if the column was computed to be too small, enlarge the column
           if (mColumnWidths[colIndex] <= minColWidth)
@@ -2012,7 +2142,7 @@ PRBool nsTableFrame::BalanceColumnsHTML4Constrained(nsIPresContext* aPresContext
 
   // if columns have equal width, and some column's content couldn't squeeze into the computed size, 
   // then expand every column to the min size of the column with the largest min size
-  if (!AutoColumnWidths(aTableStyleMol) && 0!=maxOfAllMinColWidths)
+  if (!AutoColumnWidths() && 0!=maxOfAllMinColWidths)
   {
     if (gsDebug==PR_TRUE) printf("  EqualColWidths specified, so setting all col widths to %d\n", maxOfAllMinColWidths);
     for (PRInt32 colIndex = 0; colIndex<numCols; colIndex++)
@@ -2028,8 +2158,7 @@ PRBool nsTableFrame::BalanceColumnsHTML4Constrained(nsIPresContext* aPresContext
   add in table insets
   set rect
   */
-void nsTableFrame::SetTableWidth(nsIPresContext* aPresContext, 
-                                 nsStyleMolecule *aTableStyle)
+void nsTableFrame::SetTableWidth(nsIPresContext* aPresContext)
 {
   NS_ASSERTION(nsnull==mPrevInFlow, "never ever call me on a continuing frame!");
 
@@ -2044,8 +2173,10 @@ void nsTableFrame::SetTableWidth(nsIPresContext* aPresContext,
   }
 
   // Compute the insets (sum of border and padding)
-  nscoord rightInset = aTableStyle->borderPadding.right;
-  nscoord leftInset = aTableStyle->borderPadding.left;
+  nsStyleSpacing* spacing =
+    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+  nscoord rightInset = spacing->mBorderPadding.right;
+  nscoord leftInset = spacing->mBorderPadding.left;
   tableWidth += (leftInset + rightInset);
   nsRect tableSize = mRect;
   tableSize.width = tableWidth;
@@ -2069,7 +2200,14 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
 #endif
   // iterate children, tell all row groups to ShrinkWrap
   PRBool atLeastOneRowSpanningCell = PR_FALSE;
+
   PRInt32 tableHeight = 0;
+
+  nsStyleSpacing* spacing = (nsStyleSpacing*)
+    mStyleContext->GetData(kStyleSpacingSID);
+  tableHeight +=
+    spacing->mBorderPadding.top + spacing->mBorderPadding.bottom;
+
   PRInt32 childCount = mChildCount;
   nsIFrame * kidFrame;
   for (PRInt32 i = 0; i < childCount; i++)
@@ -2277,12 +2415,31 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
 #endif
 }
 
-PRBool nsTableFrame::IsProportionalWidth(nsStyleMolecule* aMol)
+// XXX Kipp wonders: what does this really mean? Are you really asking
+// "Is it fixed width"? If so, then VALUE_PCT may be wrong and the
+// name of the method should be changed.
+
+PRBool nsTableFrame::IsProportionalWidth(nsStylePosition* aStylePosition)
 {
   PRBool result = PR_FALSE;
-  if ((-1!=aMol->proportionalWidth) ||
-      ((-1==aMol->proportionalWidth) && (-1==aMol->fixedWidth)))
+  if (nsnull == aStylePosition) {
+    // Assume NS_STYLE_POSITION_VALUE_AUTO when no style is available
     result = PR_TRUE;
+  }
+  else {
+    switch (aStylePosition->mWidthFlags) {
+    case NS_STYLE_POSITION_VALUE_LENGTH:
+    case NS_STYLE_POSITION_VALUE_PCT:
+      break;
+
+    default:
+    case NS_STYLE_POSITION_VALUE_AUTO:
+    case NS_STYLE_POSITION_VALUE_INHERIT:
+    case NS_STYLE_POSITION_VALUE_PROPORTIONAL:
+      result = PR_TRUE;
+      break;
+    }
+  }
   return result;
 }
 
@@ -2487,7 +2644,7 @@ PRBool nsTableFrame::TableIsAutoWidth()
   return isTableAutoWidth; 
 }
 
-PRBool nsTableFrame::AutoColumnWidths(nsStyleMolecule* aTableStyleMol)
+PRBool nsTableFrame::AutoColumnWidths()
 { // ZZZ: TOTAL HACK
   return isAutoColumnWidths;
 }
@@ -2525,8 +2682,6 @@ NS_METHOD nsTableFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
       // Resolve style for the child
       nsIStyleContext* kidStyleContext =
         aPresContext->ResolveStyleContextFor(content, cf);               // kidStyleContext: REFCNT++
-      nsStyleMolecule* kidMol =
-        (nsStyleMolecule*)kidStyleContext->GetData(kStyleMoleculeSID);
       nsIContentDelegate* kidDel = nsnull;
       kidDel = content->GetDelegate(aPresContext);                       // kidDel: REFCNT++
       nsIFrame * duplicateFrame = kidDel->CreateFrame(aPresContext, content, index, cf);
@@ -2577,6 +2732,12 @@ PRInt32 nsTableFrame::GetColumnWidth(PRInt32 aColIndex)
 
   //printf("GET_COL_WIDTH: %p, FIF=%p getting col %d and returning %d\n", this, firstInFlow, aColIndex, result);
 
+  // XXX hack
+#if 0
+  if (result <= 0) {
+    result = 100;
+  }
+#endif
   return result;
 }
 

@@ -23,6 +23,7 @@
 
 struct nsBodyReflowState;
 class SpaceManager;
+struct nsStyleSpacing;
 
 class nsBodyFrame : public nsHTMLContainerFrame, public nsIAnchoredItems {
 public:
@@ -74,9 +75,9 @@ private:
   SpaceManager* mSpaceManager;
 
   void CreateColumnFrame(nsIPresContext* aPresContext);
-  nsSize GetColumnAvailSpace(nsIPresContext*  aPresContext,
-                             nsStyleMolecule* aStyleMolecule,
-                             const nsSize&    aMaxSize);
+  nsSize GetColumnAvailSpace(nsIPresContext* aPresContext,
+                             nsStyleSpacing* aSpacing,
+                             const nsSize&   aMaxSize);
 };
 
 #endif /* nsBodyFrame_h___ */

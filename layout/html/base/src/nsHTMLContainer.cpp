@@ -34,11 +34,11 @@
 #include "nsIURL.h"
 #include "prprf.h"
 
+static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
 static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 static NS_DEFINE_IID(kStyleListSID, NS_STYLELIST_SID);
-
-static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
 
 nsresult
 NS_NewHTMLContainer(nsIHTMLContent** aInstancePtrResult,
@@ -189,13 +189,13 @@ nsIFrame* nsHTMLContainer::CreateFrame(nsIPresContext* aPresContext,
   // Resolve style for the piece of content
   nsIStyleContext* styleContext =
     aPresContext->ResolveStyleContextFor(this, aParentFrame);
-  nsStyleMolecule* mol =
-    (nsStyleMolecule*)styleContext->GetData(kStyleMoleculeSID);
+  nsStyleDisplay* styleDisplay =
+    (nsStyleDisplay*)styleContext->GetData(kStyleDisplaySID);
 
   // Use style to choose what kind of frame to create
   nsIFrame* rv;
   nsresult fr;
-  switch (mol->display) {
+  switch (styleDisplay->mDisplay) {
   case NS_STYLE_DISPLAY_BLOCK:
     fr = nsBlockFrame::NewFrame(&rv, this, aIndexInParent, aParentFrame);
     break;
@@ -459,7 +459,8 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
       // align: enum
       GetAttribute(nsHTMLAtoms::align, value);
       if (value.GetUnit() == eHTMLUnit_Enumerated) {
-        // XXX set align from enum
+        nsStyleText* text = (nsStyleText*)aContext->GetData(kStyleTextSID);
+        text->mTextAlign = value.GetIntValue();
       }
     }
     else if (mTag == nsHTMLAtoms::a) {

@@ -23,7 +23,7 @@
 #include "nsIAtom.h"
 
 struct RowGroupReflowState;
-struct nsStyleMolecule;
+struct nsStyleSpacing;
 
 /**
  * nsTableRowGroupFrame is the frame that maps row groups 
@@ -114,7 +114,7 @@ protected:
 
   nscoord GetTopMarginFor(nsIPresContext*      aCX,
                           RowGroupReflowState& aState,
-                          nsStyleMolecule*     aKidMol);
+                          nsStyleSpacing* aKidSpacing);
 
   void          PlaceChild( nsIPresContext*      aPresContext,
                             RowGroupReflowState& aState,
