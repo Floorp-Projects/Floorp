@@ -75,13 +75,16 @@ var PrintUtils = {
 
   printPreview: function (aEnterPPCallback, aExitPPCallback)
   {
-    this._onEnterPP = aEnterPPCallback;
-    this._onExitPP  = aExitPPCallback;
-    var webBrowserPrint = this.getWebBrowserPrint();
-    var printSettings   = this.getPrintSettings();
+    // if we're in PP mode, don't copy the callbacks.
+    if (!document.getElementById("print-preview-toolbar")) {
+      this._onEnterPP = aEnterPPCallback;
+      this._onExitPP  = aExitPPCallback;
+    }
     this._webProgressPP = {};
     var ppParams        = {};
     var notifyOnOpen    = {};
+    var webBrowserPrint = this.getWebBrowserPrint();
+    var printSettings   = this.getPrintSettings();
     // Here we get the PrintingPromptService so we can display the PP Progress from script
     // For the browser implemented via XUL with the PP toolbar we cannot let it be
     // automatically opened from the print engine because the XUL scrollbars in the PP window
@@ -189,8 +192,8 @@ var PrintUtils = {
 
     var printPreviewTB = document.getElementById("print-preview-toolbar");
     if (printPreviewTB) {
-      printPreviewTB.updateSettings();
-      return
+      printPreviewTB.updateToolbar();
+      return;
     }
 
     // show the toolbar after we go into print preview mode so
