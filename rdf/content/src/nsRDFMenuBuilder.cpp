@@ -53,16 +53,6 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Columns);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Column);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Folder);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Title);
-
-DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, child);
-
-////////////////////////////////////////////////////////////////////////
-
 static NS_DEFINE_IID(kIContentIID,                NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDocumentIID,               NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kINameSpaceManagerIID,       NS_INAMESPACEMANAGER_IID);

@@ -1013,13 +1013,13 @@ RDFTreeBuilderImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
     // If we get here, then they're trying to manipulate the DOM in
     // some way that doesn't translate into a sensible update to the RDF
     // graph. So, just whack the change into the content model
-    PRInt32 index;
-    rv = parent->IndexOf(child, index);
+    PRInt32 i;
+    rv = parent->IndexOf(child, i);
     if (NS_FAILED(rv)) return rv;
 
-    NS_ASSERTION(index >= 0, "child was already removed");
-    if (index >= 0) {
-        rv = parent->RemoveChildAt(index, PR_TRUE);
+    NS_ASSERTION(i >= 0, "child was already removed");
+    if (i >= 0) {
+        rv = parent->RemoveChildAt(i, PR_TRUE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "error removing child from parent");
         if (NS_FAILED(rv)) return rv;
     }
