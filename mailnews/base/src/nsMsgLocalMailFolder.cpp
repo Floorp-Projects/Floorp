@@ -56,16 +56,6 @@ nsMsgLocalMailFolder::QueryInterface(REFNSIID iid, void** result)
 	return nsMsgFolder::QueryInterface(iid, result);
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::GetType(FolderType *type)
-{
-	if(!type)
-		return NS_ERROR_NULL_POINTER;
-
-	*type = FOLDER_MAIL;
-
-	return NS_OK;
-}
-
 NS_IMETHODIMP nsMsgLocalMailFolder::BuildFolderURL(char **url)
 {
 	const char *urlScheme = "mailbox:";
@@ -195,35 +185,33 @@ NS_IMETHODIMP nsMsgLocalMailFolder::RemoveSubFolder (const nsIMsgFolder *which)
 NS_IMETHODIMP nsMsgLocalMailFolder::Delete ()
 {
 #ifdef HAVE_PORT
-	    nsMsgDatabase   *db;
-    // remove the summary file
-    MsgERR status = CloseDatabase (m_pathName, &db);
-    if (0 == status)
-    {
-        if (db != NULL)
-            db->Close();    // decrement ref count, so it will leave cache
-        XP_FileRemove (m_pathName, xpMailFolderSummary);
-    }
+  nsMsgDatabase   *db;
+  // remove the summary file
+  MsgERR status = CloseDatabase (m_pathName, &db);
+  if (0 == status)
+  {
+    if (db != NULL)
+      db->Close();    // decrement ref count, so it will leave cache
+    XP_FileRemove (m_pathName, xpMailFolderSummary);
+  }
 
-    if ((0 == status) && (GetType() == FOLDER_MAIL))
-	{
-        // remove the mail folder file
-        status = XP_FileRemove (m_pathName, xpMailFolder);
+  if (0 == status) {
+    // remove the mail folder file
+    status = XP_FileRemove (m_pathName, xpMailFolder);
 
 		// if the delete seems to have failed, but the file doesn't
 		// exist, that's not really an error condition, is it now?
-		if (status)
-		{
+		if (status) {
 			XP_StatStruct fileStat;
-	        if (0 == XP_Stat(m_pathName, &fileStat, xpMailFolder))
+      if (0 == XP_Stat(m_pathName, &fileStat, xpMailFolder))
 				status = 0;
 		}
 	}
 
 
-    if (0 != status)
-        status = MK_UNABLE_TO_DELETE_FILE;
-    return status;  
+  if (0 != status)
+    status = MK_UNABLE_TO_DELETE_FILE;
+  return status;  
 #endif
 	return NS_OK;
 }
@@ -359,6 +347,41 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Adopt(const nsIMsgFolder *srcFolder, PRUint3
 	return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsMsgLocalMailFolder::FindChildNamed(const char *name, nsIMsgFolder ** aChild)
+{
+  NS_ASSERTION(aChild, "NULL child");
+
+	// will return nsnull if we can't find it
+	*aChild = nsnull;
+
+  nsIMsgFolder *folder = nsnull;
+
+	PRUint32 count = mSubFolders->Count();
+
+  for (PRUint32 i = 0; i < count; i++)
+  {
+		nsISupports *supports;
+    supports = mSubFolders->ElementAt(i);
+		if(folder)
+			NS_RELEASE(folder);
+		if(NS_SUCCEEDED(supports->QueryInterface(kISupportsIID, (void**)&folder)))
+		{
+			char *folderName;
+
+			folder->GetName(&folderName);
+      // case-insensitive compare is probably LCD across OS filesystems
+      if (!PL_strcasecmp(folderName, name))
+      {
+        *aChild = folder;
+        return NS_OK;
+			}
+		}
+		NS_RELEASE(supports);
+  }
+	return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgLocalMailFolder::GetName(char** name)
 {
 	if(!name)
@@ -385,54 +408,13 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetName(char** name)
 NS_IMETHODIMP nsMsgLocalMailFolder::GetPrettyName(char ** prettyName)
 {
 	if (mDepth == 1) {
-	// Depth == 1 means we are on the mail server level
-	// override the name here to say "Local Mail"
-		FolderType type;
-		GetType(&type);
-		if (type == FOLDER_MAIL)
-			*prettyName = PL_strdup("Local Mail");
-		else
-			return nsMsgFolder::GetPrettyName(prettyName);
+    // Depth == 1 means we are on the mail server level
+    // override the name here to say "Local Mail"
+    *prettyName = PL_strdup("Local Mail");
 	}
 	else
 		return nsMsgFolder::GetPrettyName(prettyName);
 
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgLocalMailFolder::GenerateUniqueSubfolderName(const char *prefix, 
-																													 const nsIMsgFolder *otherFolder,
-																													 char** name)
-{
-	if(!name)
-		return NS_ERROR_NULL_POINTER;
-
-	/* only try 256 times */
-	for (int count = 0; (count < 256); count++)
-	{
-		PRUint32 prefixSize = PL_strlen(prefix);
-
-		//allocate string big enough for prefix, 256, and '\0'
-		char *uniqueName = (char*)PR_MALLOC(prefixSize + 4);
-		PR_snprintf(uniqueName, prefixSize + 4, "%s%d",prefix,count);
-		PRBool containsChild;
-		PRBool otherContainsChild = PR_FALSE;
-
-		ContainsChildNamed(uniqueName, &containsChild);
-		if(otherFolder)
-		{
-			((nsIMsgFolder*)otherFolder)->ContainsChildNamed(uniqueName, &otherContainsChild);
-		}
-
-		if (!containsChild && !otherContainsChild)
-		{
-			*name = uniqueName;
-			return NS_OK;
-		}
-		else
-			PR_FREEIF(uniqueName);
-	}
-	*name = nsnull;
 	return NS_OK;
 }
 

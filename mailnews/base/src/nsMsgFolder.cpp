@@ -100,16 +100,6 @@ nsMsgFolder::QueryInterface(REFNSIID iid, void** result)
 	return nsRDFResource::QueryInterface(iid, result);
 }
 
-NS_IMETHODIMP nsMsgFolder::GetType(FolderType *type)
-{
-	if(!type)
-		return NS_ERROR_NULL_POINTER;
-
-	*type = FOLDER_UNKNOWN;
-
-	return NS_OK;
-}
-
 NS_IMETHODIMP nsMsgFolder::BuildFolderURL(char **url)
 {
 	if(*url)
@@ -123,7 +113,7 @@ NS_IMETHODIMP nsMsgFolder::BuildFolderURL(char **url)
 
 #ifdef HAVE_DB
 // this class doesn't have a url
-NS_IMETHODIMP nsMsgFolder::BuildUrl (nsMsgDatabase *db, MessageKey key, char ** url)
+NS_IMETHODIMP nsMsgFolder::BuildUrl(nsMsgDatabase *db, MessageKey key, char ** url)
 {
 	if(*url)
 	{
@@ -144,7 +134,7 @@ NS_IMETHODIMP nsMsgFolder::SetMaster(MSG_Master *master)
 #endif
 
 #ifdef DOES_FOLDEROPERATIONS
-NS_IMETHODIMP nsMsgFolder::StartAsyncCopyMessagesInto (MSG_FolderInfo *dstFolder,
+NS_IMETHODIMP nsMsgFolder::StartAsyncCopyMessagesInto(MSG_FolderInfo *dstFolder,
                                              MSG_Pane* sourcePane, 
 											 nsMsgDatabase *sourceDB,
                                              nsMsgKeyArray *srcArray,
@@ -708,67 +698,6 @@ NS_IMETHODIMP nsMsgFolder::ContainsChildNamed (const char *name, PRBool* contain
 		return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsMsgFolder::FindChildNamed (const char *name, nsIMsgFolder ** aChild)
-{
-	if(!aChild)
-		return NS_ERROR_NULL_POINTER;
-
-	// will return nsnull if we can't find it
-	*aChild = nsnull;
-
-    nsIMsgFolder *folder = nsnull;
-
-	PRUint32 count = mSubFolders->Count();
-
-    for (PRUint32 i = 0; i < count; i++)
-    {
-		nsISupports *supports;
-        supports = mSubFolders->ElementAt(i);
-		if(folder)
-			NS_RELEASE(folder);
-		if(NS_SUCCEEDED(supports->QueryInterface(kISupportsIID, (void**)&folder)))
-		{
-			FolderType type;
-			char *folderName;
-
-
-			GetType(&type);
-			folder->GetName(&folderName);
-			if (type == FOLDER_IMAPMAIL ||
-				type == FOLDER_IMAPSERVERCONTAINER)
-			{
-				// IMAP INBOX is case insensitive
-				if (type == FOLDER_IMAPSERVERCONTAINER &&
-					!PL_strcasecmp(folderName, "INBOX"))
-				{
-					NS_RELEASE(supports);
-					continue;
-				}
-
-				// For IMAP, folder names are case sensitive
-				if (!PL_strcmp(folderName, name))
-				{
-					*aChild = folder;
-					return NS_OK;
-				}
-			}
-			else
-			{
-				// case-insensitive compare is probably LCD across OS filesystems
-				if (!PL_strcasecmp(folderName, name))
-				{
-					*aChild = folder;
-					return NS_OK;
-				}
-			}
-		}
-		NS_RELEASE(supports);
-    }
-
-	return NS_OK;
-
-}
-
 NS_IMETHODIMP nsMsgFolder::FindParentOf (const nsIMsgFolder * aFolder, nsIMsgFolder ** aParent)
 {
 	if(!aParent)
@@ -844,17 +773,39 @@ NS_IMETHODIMP nsMsgFolder::IsParentOf (const nsIMsgFolder *child, PRBool deep, P
 
 
 NS_IMETHODIMP nsMsgFolder::GenerateUniqueSubfolderName(const char *prefix, const nsIMsgFolder *otherFolder,
-													char **name)
+                                                       char **name)
 {
 	if(!name)
 		return NS_ERROR_NULL_POINTER;
 
-	//we don't support this.
+	/* only try 256 times */
+	for (int count = 0; (count < 256); count++)
+	{
+		PRUint32 prefixSize = PL_strlen(prefix);
+
+		//allocate string big enough for prefix, 256, and '\0'
+		char *uniqueName = (char*)PR_MALLOC(prefixSize + 4);
+		PR_snprintf(uniqueName, prefixSize + 4, "%s%d",prefix,count);
+		PRBool containsChild;
+		PRBool otherContainsChild = PR_FALSE;
+
+		ContainsChildNamed(uniqueName, &containsChild);
+		if(otherFolder)
+		{
+			((nsIMsgFolder*)otherFolder)->ContainsChildNamed(uniqueName, &otherContainsChild);
+		}
+
+		if (!containsChild && !otherContainsChild)
+		{
+			*name = uniqueName;
+			return NS_OK;
+		}
+		else
+			PR_FREEIF(uniqueName);
+	}
 	*name = nsnull;
 	return NS_OK;
-
 }
-
 
 NS_IMETHODIMP nsMsgFolder::GetDepth(PRUint32 *depth)
 {

@@ -22,24 +22,21 @@
  
 *********************************************************************************************************/
 
-#ifndef nsMsgLocalMailFolder_h__
-#define nsMsgLocalMailFolder_h__
+#ifndef nsMsgImapMailFolder_h__
+#define nsMsgImapMailFolder_h__
 
 #include "nsMsgFolder.h" /* include the interface we are going to support */
 
-class nsMsgLocalMailFolder : public nsMsgFolder, public nsIMsgLocalMailFolder
+class nsMsgImapMailFolder : public nsMsgFolder, public nsIMsgImapMailFolder
 {
 public:
-	nsMsgLocalMailFolder(const char* uri);
-	~nsMsgLocalMailFolder();
+	nsMsgImapMailFolder(const char* uri);
+	~nsMsgImapMailFolder();
 
-	NS_IMETHOD QueryInterface(REFNSIID aIID,
-							void** aInstancePtr);
-	NS_IMETHOD_(nsrefcnt) AddRef(void);
-	NS_IMETHOD_(nsrefcnt) Release(void);
+  NS_DECL_ISUPPORTS
 
 #ifdef HAVE_DB	
-	virtual MsgERR BeginCopyingMessages (MSG_FolderInfo *dstFolder, 
+	virtual MsgERR BeginCopyingMessages(MSG_FolderInfo *dstFolder, 
 																				MessageDB *sourceDB,
 																				IDArray *srcArray, 
 																				MSG_UrlQueue *urlQueue,
@@ -47,7 +44,7 @@ public:
 																				MessageCopyInfo *copyInfo);
 
 
-	virtual int FinishCopyingMessages (MWContext *context,
+	virtual int FinishCopyingMessages(MWContext *context,
 																			MSG_FolderInfo * srcFolder, 
 																			MSG_FolderInfo *dstFolder, 
 																			MessageDB *sourceDB,
@@ -58,29 +55,28 @@ public:
 
 	NS_IMETHOD CreateSubfolder(const char *leafNameFromUser, nsIMsgFolder **outFolder, PRUint32 *outPos);
 
-	NS_IMETHOD RemoveSubFolder (const nsIMsgFolder *which);
-	NS_IMETHOD Delete ();
-	NS_IMETHOD Rename (const char *newName);
+	NS_IMETHOD RemoveSubFolder(const nsIMsgFolder *which);
+	NS_IMETHOD Delete();
+	NS_IMETHOD Rename(const char *newName);
 	NS_IMETHOD Adopt(const nsIMsgFolder *srcFolder, PRUint32 *outPos);
 
   NS_IMETHOD FindChildNamed(const char *name, nsIMsgFolder ** aChild);
 
   // this override pulls the value from the db
-	NS_IMETHOD GetName(char** name);   // Name of this folder (as presented to user).
-	NS_IMETHOD GetPrettyName(char ** prettyName);	// Override of the base, for top-level mail folder
+	NS_IMETHOD GetName(char** name);   // Name of this folder(as presented to user).
 
   NS_IMETHOD BuildFolderURL(char **url);
 
 	NS_IMETHOD UpdateSummaryTotals() ;
 
 	NS_IMETHOD GetExpungedBytesCount(PRUint32 *count);
-	NS_IMETHOD GetDeletable (PRBool *deletable); 
-	NS_IMETHOD GetCanCreateChildren (PRBool *canCreateChildren) ;
-	NS_IMETHOD GetCanBeRenamed (PRBool *canBeRenamed);
+	NS_IMETHOD GetDeletable(PRBool *deletable); 
+	NS_IMETHOD GetCanCreateChildren(PRBool *canCreateChildren) ;
+	NS_IMETHOD GetCanBeRenamed(PRBool *canBeRenamed);
 	NS_IMETHOD GetRequiresCleanup(PRBool *requiresCleanup);
 
 
-	NS_IMETHOD GetRelativePathName (char **pathName);
+	NS_IMETHOD GetRelativePathName(char **pathName);
 
 
 	NS_IMETHOD GetSizeOnDisk(PRUint32 size);
@@ -102,4 +98,4 @@ protected:
 	PRBool		mGettingMail;
 };
 
-#endif // nsMsgLocalMailFolder_h__
+#endif // nsMsgImapMailFolder_h__

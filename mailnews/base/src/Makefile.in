@@ -39,6 +39,7 @@ CPPSRCS = \
 	nsMsgRFC822Parser.cpp \
 	nsMsgFolder.cpp \
 	nsMsgLocalMailFolder.cpp \
+	nsMsgImapMailFolder.cpp \
 	nsNewsSet.cpp \
 	nsMsg.cpp \
 	nsLocalFolderSummarySpec.cpp	\
