@@ -296,7 +296,9 @@ public:
                           nsIFrame*        aPrevSibling);
   nsresult FrameInsertedReflow(nsBlockReflowState& aState);
 
-  nsresult FrameDeletedReflow(nsBlockReflowState& aState);
+  nsresult FrameRemovedReflow(nsBlockReflowState& aState);
+
+  nsresult StyleChangedReflow(nsBlockReflowState& aState);
 
   nsresult FindTextRuns(nsBlockReflowState& aState);
 
@@ -1735,12 +1737,18 @@ nsBlockFrame::ReflowAround(nsIPresContext& aPresContext,
         rv = FrameInsertedReflow(state);
         break;
 
-      case nsIReflowCommand::FrameDeleted:
-        rv = FrameDeletedReflow(state);
+      case nsIReflowCommand::FrameRemoved:
+        rv = FrameRemovedReflow(state);
+        break;
+
+      case nsIReflowCommand::StyleChanged:
+        rv = StyleChangedReflow(state);
         break;
 
       default:
-        NS_NOTYETIMPLEMENTED("XXX");
+        // Map any other incremental operations into full reflows
+        rv = ResizeReflow(state);
+        break;
       }
     }
     else {
@@ -2321,7 +2329,7 @@ nsBlockFrame::FrameInsertedReflow(nsBlockReflowState& aState)
 }
 
 nsresult
-nsBlockFrame::FrameDeletedReflow(nsBlockReflowState& aState)
+nsBlockFrame::FrameRemovedReflow(nsBlockReflowState& aState)
 {
   if (nsnull == mLines) {
     return NS_OK;
@@ -2457,6 +2465,15 @@ nsBlockFrame::ChildIncrementalReflow(nsBlockReflowState& aState)
     return rv;
   }
 
+  // XXX temporary
+  aState.GetAvailableSpace();
+  aState.mPrevLine = nsnull;
+  return ReflowLinesAt(aState, mLines);
+}
+
+nsresult
+nsBlockFrame::StyleChangedReflow(nsBlockReflowState& aState)
+{
   // XXX temporary
   aState.GetAvailableSpace();
   aState.mPrevLine = nsnull;
