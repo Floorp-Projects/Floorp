@@ -33,7 +33,6 @@ var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
 
 var gFolderDatasource;
 var gFolderPicker;
-var gThreadTree;
 var gStatusBar = null;
 var gStatusFeedback = new nsMsgStatusFeedback;
 var gNumOfSearchHits = 0;
