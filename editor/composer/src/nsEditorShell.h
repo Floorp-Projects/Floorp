@@ -239,7 +239,7 @@ class nsEditorShell :   public nsIEditorShell,
     NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURI *aUrl, PRInt32 aStatus,
 								  nsIDocumentLoaderObserver * aObserver);
 #else
-    NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus,
+    NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus,
                                   nsIDocumentLoaderObserver * aObserver);
 #endif // NECKO
 
@@ -268,7 +268,7 @@ class nsEditorShell :   public nsIEditorShell,
 #ifndef NECKO
     NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, PRInt32 aStatus);
 #else
-    NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus);
+    NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus);
 #endif // NECKO
 
 #ifndef NECKO

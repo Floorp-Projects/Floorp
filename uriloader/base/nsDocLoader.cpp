@@ -269,7 +269,7 @@ public:
                                  nsIURI* aURL, 
                                  const char* aCommand);
     void FireOnEndDocumentLoad(nsIDocumentLoader* aLoadInitiator,
-                               PRInt32 aStatus);
+                               nsresult aStatus);
 							   
 
     void FireOnStartURLLoad(nsIDocumentLoader* aLoadInitiator,
@@ -300,7 +300,7 @@ public:
 
 #ifdef NECKO
     void FireOnEndURLLoad(nsIDocumentLoader* aLoadInitiator,
-                          nsIChannel* channel, PRInt32 aStatus);
+                          nsIChannel* channel, nsresult aStatus);
 #else
     void FireOnEndURLLoad(nsIDocumentLoader* aLoadInitiator,
                           nsIURI* aURL, PRInt32 aStatus);
@@ -308,7 +308,7 @@ public:
 
 #ifdef NECKO
     nsresult LoadURLComplete(nsIChannel* channel, nsISupports* ctxt,
-                             nsISupports* aLoader, PRInt32 aStatus,
+                             nsISupports* aLoader, nsresult aStatus,
                              const PRUnichar* aMsg);
 #else
     nsresult LoadURLComplete(nsIURI* aURL, nsISupports* aLoader, PRInt32 aStatus);
@@ -346,7 +346,7 @@ protected:
 
     void ChildDocLoaderFiredEndDocumentLoad(nsDocLoaderImpl* aChild,
                                             nsIDocumentLoader* aLoadInitiator,
-                                            PRInt32 aStatus);
+                                            nsresult aStatus);
 
 #ifndef NECKO
 private:
@@ -1084,7 +1084,7 @@ void nsDocLoaderImpl::FireOnStartDocumentLoad(nsIDocumentLoader* aLoadInitiator,
 }
 
 void nsDocLoaderImpl::FireOnEndDocumentLoad(nsIDocumentLoader* aLoadInitiator,
-                                            PRInt32 aStatus)
+                                            nsresult aStatus)
 									
 {
     PRInt32 count = mDocObservers.Count();
@@ -1134,7 +1134,7 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(nsIDocumentLoader* aLoadInitiator,
 void
 nsDocLoaderImpl::ChildDocLoaderFiredEndDocumentLoad(nsDocLoaderImpl* aChild,
                                                     nsIDocumentLoader* aLoadInitiator,
-                                                    PRInt32 aStatus)
+                                                    nsresult aStatus)
 {
     PRBool busy;
     IsBusy(busy);
@@ -1255,7 +1255,7 @@ void nsDocLoaderImpl::FireOnStatusURLLoad(nsIDocumentLoader* aLoadInitiator,
 
 #ifdef NECKO
 void nsDocLoaderImpl::FireOnEndURLLoad(nsIDocumentLoader* aLoadInitiator,
-                                       nsIChannel* channel, PRInt32 aStatus)
+                                       nsIChannel* channel, nsresult aStatus)
 #else
 void nsDocLoaderImpl::FireOnEndURLLoad(nsIDocumentLoader* aLoadInitiator,
                                        nsIURI* aURL, PRInt32 aStatus)
@@ -1292,7 +1292,7 @@ void nsDocLoaderImpl::FireOnEndURLLoad(nsIDocumentLoader* aLoadInitiator,
 
 #ifdef NECKO
 nsresult nsDocLoaderImpl::LoadURLComplete(nsIChannel* channel, nsISupports* ctxt,
-                                          nsISupports* aBindInfo, PRInt32 aStatus,
+                                          nsISupports* aBindInfo, nsresult aStatus,
                                           const PRUnichar* aMsg)
 #else
 nsresult nsDocLoaderImpl::LoadURLComplete(nsIURI* aURL, nsISupports* aBindInfo, PRInt32 aStatus)
@@ -2073,7 +2073,7 @@ done:
 NS_METHOD nsDocumentBindInfo::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
                                             nsresult aStatus, const PRUnichar *aMsg)
 #else
-NS_METHOD nsDocumentBindInfo::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_METHOD nsDocumentBindInfo::OnStopRequest(nsIURI* aURL, PRInt32 aStatus, const PRUnichar* aMsg)
 #endif
 {
     nsresult rv = NS_OK;
@@ -2161,59 +2161,6 @@ NS_METHOD nsDocumentBindInfo::OnStopRequest(nsIURI* aURL, nsresult aStatus, cons
     rv = m_DocLoader->LoadURLComplete(aURL, (nsIStreamListener *)this, aStatus);
 #endif
     NS_IF_RELEASE(m_NextStream);
-
-#ifdef NECKO
-    if (aStatus == NS_ERROR_UNKNOWN_HOST) {
-        // We need to check for a dns failure in aStatus, but dns failure codes
-        // aren't proliferated yet. This checks for failure for a host lacking
-        // "www." and/or ".com" and munges the url acordingly, then fires off
-        // a new request.
-        //
-        // XXX This code may or may not have mem leaks depending on the version
-        // XXX stdurl that is in the tree at a given point in time. This needs to
-        // XXX be fixed once we have a solid version of std url in.
-        char *host = nsnull;
-        nsString2 hostStr;
-        rv = aURL->GetHost(&host);
-        if (NS_FAILED(rv)) return rv;
-
-        hostStr.SetString(host);
-        PRInt32 dotLoc = -1;
-        dotLoc = hostStr.Find('.');
-        PRBool retry = PR_FALSE;
-        if (-1 == dotLoc) {
-            hostStr.Insert("www.", 0, 4);
-            hostStr.Append(".com");
-            retry = PR_TRUE;
-        } else if ( (hostStr.Length() - dotLoc) == 3) {
-            hostStr.Insert("www.", 0, 4);
-            retry = PR_TRUE;
-        }
-
-        if (retry) {
-            char *modHost = hostStr.ToNewCString();
-            if (!modHost)
-                return NS_ERROR_OUT_OF_MEMORY;
-            rv = aURL->SetHost(modHost);
-            delete [] modHost;
-            modHost = nsnull;
-            if (NS_FAILED(rv)) return rv;
-            char *aSpec = nsnull;
-            rv = aURL->GetSpec(&aSpec);
-            if (NS_FAILED(rv)) return rv;
-            nsString2 newURL(aSpec);
-
-            return m_DocLoader->LoadDocument(newURL, 
-                                             m_Command,
-                                             m_Container,
-                                             nsnull, // XXX need to pass post data along
-                                             m_ExtraInfo,
-                                             m_Observer,
-                                             nsIChannel::LOAD_NORMAL,
-                                             0);
-        }
-    }
-#endif // NECKO
 
     return rv;
 }

@@ -551,7 +551,7 @@ nsWebShellWindow::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
 
 NS_IMETHODIMP 
 nsWebShellWindow::EndLoadURL(nsIWebShell* aWebShell, const PRUnichar* aURL,
-                             PRInt32 aStatus)
+                             nsresult aStatus)
 {
   return NS_OK;
 }
@@ -1779,7 +1779,7 @@ nsWebShellWindow::OnStartDocumentLoad(nsIDocumentLoader* loader,
 NS_IMETHODIMP
 #ifdef NECKO
 nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader, 
-                                    nsIChannel* channel, PRInt32 aStatus,
+                                    nsIChannel* channel, nsresult aStatus,
                                     nsIDocumentLoaderObserver * aDocObserver)
 #else
 nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader, 
@@ -1917,7 +1917,7 @@ nsWebShellWindow::OnStatusURLLoad(nsIDocumentLoader* loader,
 NS_IMETHODIMP
 #ifdef NECKO
 nsWebShellWindow::OnEndURLLoad(nsIDocumentLoader* loader, 
-                               nsIChannel* channel, PRInt32 aStatus)
+                               nsIChannel* channel, nsresult aStatus)
 #else
 nsWebShellWindow::OnEndURLLoad(nsIDocumentLoader* loader, 
                                nsIURI* aURL, PRInt32 aStatus)

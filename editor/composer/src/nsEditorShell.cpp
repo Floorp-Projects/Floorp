@@ -2897,7 +2897,7 @@ NS_IMETHODIMP
 nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURI *aUrl, PRInt32 aStatus,
 								 nsIDocumentLoaderObserver * aObserver)
 #else
-nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus,
+nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus,
 								 nsIDocumentLoaderObserver * aObserver)
 #endif // NECKO
 {
@@ -2955,7 +2955,7 @@ nsEditorShell::OnEndURLLoad(nsIDocumentLoader* loader,
                                nsIURI* aURL, PRInt32 aStatus)
 #else
 nsEditorShell::OnEndURLLoad(nsIDocumentLoader* loader,
-                               nsIChannel* channel, PRInt32 aStatus)
+                               nsIChannel* channel, nsresult aStatus)
 #endif // NECKO
 {
    return NS_OK;
