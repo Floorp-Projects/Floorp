@@ -189,6 +189,7 @@ function updateMapi()
   var sfpProgramMozMapi32File;
   var sfpMainExePath;
   var winsysMapi32File;
+  var mapiProxyFile;
 
   winreg = getWinRegistry();
   if(winreg != null) 
@@ -243,6 +244,11 @@ function updateMapi()
       winreg.setValueString("SOFTWARE\\Clients\\Mail\\$ProductName$\\shell\\open\\command",
                             "",
                             sfpMainExePath + " -mail");
+
+    // Register MapiProxy.dll
+    mapiProxyFile = getFolder("Program", "MapiProxy.dll");
+    err = File.windowsRegisterServer(mapiProxyFile);
+    logComment("File.windowsRegisterServer(" + mapiProxyFile + ") returned: " + err);
   }
 }
 
