@@ -28,3 +28,10 @@ navigator-test1.xul
 raindrops_light.gif
 skindemo.xul
 NetSupportUserPassword.xul
+NetSupportAlert.xul
+NetSupportConfirm.xul
+NetSupportConfirmCheck.xul
+alertl.gif
+errorI.gif
+messagel.gif
+questionl.gif
