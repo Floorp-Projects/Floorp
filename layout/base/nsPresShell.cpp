@@ -1292,6 +1292,7 @@ protected:
 
   nsresult WillCauseReflow();
   nsresult DidCauseReflow();
+  void     DidDoReflow();
   nsresult ProcessReflowCommands(PRBool aInterruptible);
   nsresult ClearReflowEventStatus();  
   void     PostReflowEvent();
@@ -2847,10 +2848,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   }
 
   DidCauseReflow();
-
-  HandlePostedDOMEvents();
-  HandlePostedAttributeChanges();
-  HandlePostedReflowCallbacks();
+  DidDoReflow();
 
   if (mViewManager && mCaret && !mViewEventListener) {
     nsIScrollableView* scrollingView = nsnull;
@@ -2996,9 +2994,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   }
 #endif
   
-  HandlePostedDOMEvents();
-  HandlePostedAttributeChanges();
-  HandlePostedReflowCallbacks();
+  DidDoReflow();
 
   if (!firstReflow) {
     //Set resize event timer
@@ -3514,10 +3510,7 @@ PresShell::StyleChangeReflow()
   }
 
   DidCauseReflow();
-
-  HandlePostedDOMEvents();
-  HandlePostedAttributeChanges();
-  HandlePostedReflowCallbacks();
+  DidDoReflow();
 
   return NS_OK; //XXX this needs to be real. MMP
 }
@@ -4879,6 +4872,8 @@ PresShell::UnsuppressAndInvalidate()
 
   if (focusController) // Unsuppress now that we've shown the new window and focused it.
     focusController->SetSuppressFocus(PR_FALSE, "PresShell suppression on Web page loads");
+
+  mViewManager->SynthesizeMouseMove(PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -6090,7 +6085,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
                                  aStatus, aView);
 
     // 2. Give event to the DOM for third party and JS use.
-    if ((GetCurrentEventFrame()) && NS_SUCCEEDED (rv)) {
+    if ((GetCurrentEventFrame()) && NS_SUCCEEDED(rv)) {
       if (mCurrentEventContent) {
         rv = mCurrentEventContent->HandleDOMEvent(mPresContext, aEvent, nsnull,
                                                   aFlags, aStatus);
@@ -6334,6 +6329,16 @@ PresShell::DidCauseReflow()
   return NS_OK;
 }
 
+void
+PresShell::DidDoReflow()
+{
+  HandlePostedDOMEvents();
+  HandlePostedAttributeChanges();
+  HandlePostedReflowCallbacks();
+  if (!mPaintingSuppressed)
+    mViewManager->SynthesizeMouseMove(PR_FALSE);
+}
+
 nsresult
 PresShell::ProcessReflowCommands(PRBool aInterruptible)
 {
@@ -6468,14 +6473,12 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
     // If there are no more reflow commands in the queue, we'll want
     // to remove the ``dummy request''.
     DoneRemovingReflowCommands();
+
+    DidDoReflow();
   }
   
   MOZ_TIMER_DEBUGLOG(("Stop: Reflow: PresShell::ProcessReflowCommands(), this=%p\n", this));
   MOZ_TIMER_STOP(mReflowWatch);  
-
-  HandlePostedDOMEvents();
-  HandlePostedAttributeChanges();
-  HandlePostedReflowCallbacks();
 
   if (mShouldUnsuppressPainting && mReflowCommands.Count() == 0) {
     // We only unlock if we're out of reflows.  It's pointless

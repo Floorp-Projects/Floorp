@@ -61,6 +61,7 @@ class nsISupportsArray;
 struct DisplayListElement2;
 struct DisplayZTreeNode;
 class BlendingBuffers;
+struct nsViewManagerEvent;
 
 //Uncomment the following line to enable generation of viewmanager performance data.
 #ifdef MOZ_PERF_METRICS
@@ -213,7 +214,7 @@ public:
   NS_IMETHOD SetDefaultBackgroundColor(nscolor aColor);
   NS_IMETHOD GetDefaultBackgroundColor(nscolor* aColor);
   NS_IMETHOD GetLastUserEventTime(PRUint32& aTime);
-  nsresult ProcessInvalidateEvent();
+  void ProcessInvalidateEvent();
   static PRInt32 GetViewManagerCount();
   static const nsVoidArray* GetViewManagerArray();
   static PRUint32 gLastUserEventTime;
@@ -231,6 +232,9 @@ public:
   NS_IMETHOD GetRectVisibility(nsIView *aView, const nsRect &aRect, 
                                PRUint16 aMinTwips, 
                                nsRectVisibility *aRectVisibility);
+
+  NS_IMETHOD SynthesizeMouseMove(PRBool aFromScroll);
+  void ProcessSynthMouseMoveEvent(PRBool aFromScroll);
 
 protected:
   virtual ~nsViewManager();
@@ -389,6 +393,7 @@ private:
   nsIScrollableView *mRootScrollable;
   PRInt32           mCachingWidgetChanges;
   nscolor           mDefaultBackgroundColor;
+  nsPoint           mMouseLocation; // device units, relative to mRootView
 
   nsHashtable       mMapPlaceholderViewToZTreeNode;
 
@@ -415,6 +420,7 @@ protected:
   PRBool            mHasPendingInvalidates;
   nsCOMPtr<nsIEventQueueService>  mEventQueueService;
   nsCOMPtr<nsIEventQueue>         mInvalidateEventQueue;
+  nsCOMPtr<nsIEventQueue>         mSynthMouseMoveEventQueue;
   void PostInvalidateEvent();
 
 #ifdef NS_VM_PERF_METRICS

@@ -317,59 +317,48 @@ static void PrintZTreeNode(DisplayZTreeNode* aNode, PRInt32 aIndent)
 
 //-------------- Begin Invalidate Event Definition ------------------------
 
-struct nsInvalidateEvent : public PLEvent {
-  nsInvalidateEvent(nsViewManager* aViewManager);
-  ~nsInvalidateEvent() { }
+struct nsViewManagerEvent : public PLEvent {
+  nsViewManagerEvent(nsViewManager* aViewManager);
+  ~nsViewManagerEvent() { }
 
-  void HandleEvent() {  
-    NS_ASSERTION(nsnull != mViewManager,"ViewManager is null");
-    // Search for valid view manager before trying to access it
-    // This is just a safety check. We should never have a circumstance
-    // where the view manager has been destroyed and the invalidate event
-    // which it owns is still around. The invalidate event should be destroyed
-    // by the RevokeEvent in the viewmanager's destructor.
-    PRBool found = PR_FALSE;
-    PRInt32 index;
-    PRInt32 count = nsViewManager::GetViewManagerCount();
-    const nsVoidArray* viewManagers = nsViewManager::GetViewManagerArray();
-    for (index = 0; index < count; index++) {
-      nsViewManager* vm = (nsViewManager*)viewManagers->ElementAt(index);
-      if (vm == mViewManager) {
-        found = PR_TRUE;
-      }
-    }
+  virtual void HandleEvent() = 0;
 
-    if (found) {
-      mViewManager->ProcessInvalidateEvent();
-    } else {
-      NS_ASSERTION(PR_FALSE, "bad view manager asked to process invalidate event");
-    }
-  };
- 
-  nsViewManager* mViewManager; // Weak Reference. The viewmanager will destroy any pending
-  // invalidate events in it's destructor.
+  nsViewManager* ViewManager() {
+    // |owner| is a weak pointer, but the view manager will destroy any
+    // pending invalidate events in it's destructor.
+    return NS_STATIC_CAST(nsViewManager*, owner);
+  }
 };
 
-static void PR_CALLBACK HandlePLEvent(nsInvalidateEvent* aEvent)
+static void* PR_CALLBACK HandlePLEvent(PLEvent* aEvent)
 {
   NS_ASSERTION(nsnull != aEvent,"Event is null");
-  aEvent->HandleEvent();
+  nsViewManagerEvent *event = NS_STATIC_CAST(nsViewManagerEvent*, aEvent);
+  event->HandleEvent();
+  return nsnull;
 }
 
-static void PR_CALLBACK DestroyPLEvent(nsInvalidateEvent* aEvent)
+static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent)
 {
   NS_ASSERTION(nsnull != aEvent,"Event is null");
-  delete aEvent;
+  nsViewManagerEvent *event = NS_STATIC_CAST(nsViewManagerEvent*, aEvent);
+  delete event;
 }
 
-nsInvalidateEvent::nsInvalidateEvent(nsViewManager* aViewManager)
+nsViewManagerEvent::nsViewManagerEvent(nsViewManager* aViewManager)
 {
   NS_ASSERTION(aViewManager, "null parameter");  
-  mViewManager = aViewManager; // Assign weak reference
-  PL_InitEvent(this, aViewManager,
-               (PLHandleEventProc) ::HandlePLEvent,
-               (PLDestroyEventProc) ::DestroyPLEvent);  
+  PL_InitEvent(this, aViewManager, ::HandlePLEvent, ::DestroyPLEvent);  
 }
+
+struct nsInvalidateEvent : public nsViewManagerEvent {
+  nsInvalidateEvent(nsViewManager *aViewManager)
+    : nsViewManagerEvent(aViewManager) { }
+
+  virtual void HandleEvent() {
+    ViewManager()->ProcessInvalidateEvent();
+  }
+};
 
 //-------------- End Invalidate Event Definition ---------------------------
 
@@ -398,9 +387,8 @@ void
 nsViewManager::PostInvalidateEvent()
 {
   nsCOMPtr<nsIEventQueue> eventQueue;
-  mEventQueueService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
-                                           getter_AddRefs(eventQueue));
-  
+  mEventQueueService->GetSpecialEventQueue(
+    nsIEventQueueService::UI_THREAD_EVENT_QUEUE, getter_AddRefs(eventQueue));
   NS_ASSERTION(nsnull != eventQueue, "Event queue is null");
 
   if (eventQueue != mInvalidateEventQueue) {
@@ -417,7 +405,10 @@ nsIRenderingContext* nsViewManager::gCleanupContext = nsnull;
 nsVoidArray* nsViewManager::gViewManagers = nsnull;
 PRUint32 nsViewManager::gLastUserEventTime = 0;
 
+#define NOT_IN_WINDOW PR_INT32_MIN
+
 nsViewManager::nsViewManager()
+  : mMouseLocation(NOT_IN_WINDOW, NOT_IN_WINDOW)
 {
   if (gViewManagers == nsnull) {
     NS_ASSERTION(mVMCount == 0, "View Manager count is incorrect");
@@ -460,6 +451,7 @@ nsViewManager::~nsViewManager()
   NS_ASSERTION(nsnull != eventQueue, "Event queue is null"); 
   eventQueue->RevokeEvents(this);
   mInvalidateEventQueue = nsnull;  
+  mSynthMouseMoveEventQueue = nsnull;  
 
   NS_IF_RELEASE(mRootWindow);
 
@@ -468,7 +460,10 @@ nsViewManager::~nsViewManager()
   NS_ASSERTION((mVMCount > 0), "underflow of viewmanagers");
   --mVMCount;
 
-  PRBool removed = gViewManagers->RemoveElement(this);
+#ifdef DEBUG
+  PRBool removed =
+#endif
+    gViewManagers->RemoveElement(this);
   NS_ASSERTION(removed, "Viewmanager instance not was not in the global list of viewmanagers");
 
   if (0 == mVMCount) {
@@ -1968,26 +1963,32 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
         }
 
         if (nsnull != view) {
+          float t2p;
+          mContext->GetAppUnitsToDevUnits(t2p);
+          float p2t;
+          mContext->GetDevUnitsToAppUnits(p2t);
+
           //Calculate the proper offset for the view we're going to
           offset.x = offset.y = 0;
-          if (baseView != view) {
-            //Get offset from root of baseView
-            nsView *parent;
 
-            parent = baseView;
-            while (mRootView != parent) {
-              parent->ConvertToParentCoords(&offset.x, &offset.y);
-              parent = parent->GetParent();
-            }
+          //Get offset from root of baseView
+          for (nsView *parent = baseView; parent != mRootView;
+               parent = parent->GetParent())
+            parent->ConvertToParentCoords(&offset.x, &offset.y);
 
-            //Subtract back offset from root of view
-            parent = view;
-            while (mRootView != parent) {
-              parent->ConvertFromParentCoords(&offset.x, &offset.y);
-              parent = parent->GetParent();
-            }
-      
+          if (aEvent->message == NS_MOUSE_MOVE) {
+            mMouseLocation.MoveTo(NSTwipsToIntPixels(offset.x, t2p) +
+                                    aEvent->point.x,
+                                  NSTwipsToIntPixels(offset.y, t2p) +
+                                    aEvent->point.y);
+          } else if (aEvent->message == NS_MOUSE_EXIT && view == mRootView) {
+            mMouseLocation.MoveTo(NOT_IN_WINDOW, NOT_IN_WINDOW);
           }
+
+          //Subtract back offset from root of view
+          for (nsView *parent = view; parent != mRootView;
+               parent = parent->GetParent())
+            parent->ConvertFromParentCoords(&offset.x, &offset.y);
 
           //Dispatch the event
           //Before we start mucking with coords, make sure we know our baseline
@@ -1999,11 +2000,6 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             baseView->GetDimensions(baseViewDimensions);
           }
 
-          float t2p;
-          mContext->GetAppUnitsToDevUnits(t2p);
-          float p2t;
-          mContext->GetDevUnitsToAppUnits(p2t);
-
           aEvent->point.x = baseViewDimensions.x + NSIntPixelsToTwips(aEvent->point.x, p2t);
           aEvent->point.y = baseViewDimensions.y + NSIntPixelsToTwips(aEvent->point.y, p2t);
 
@@ -2011,8 +2007,6 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           aEvent->point.y += offset.y;
 
           *aStatus = HandleEvent(view, aEvent, capturedEvent);
-
-          // From here on out, "this" could have been deleted!!!
 
           // From here on out, "this" could have been deleted!!!
 
@@ -4024,11 +4018,11 @@ nsViewManager::FlushPendingInvalidates()
   return NS_OK;
 }
 
-nsresult
-nsViewManager::ProcessInvalidateEvent() {
+void
+nsViewManager::ProcessInvalidateEvent()
+{
   FlushPendingInvalidates();
   mInvalidateEventQueue = nsnull;
-  return NS_OK;
 }
 
 nsresult
@@ -4076,3 +4070,64 @@ nsViewManager::GetLastUserEventTime(PRUint32& aTime)
   aTime = gLastUserEventTime;
   return NS_OK;
 }
+
+struct nsSynthMouseMoveEvent : public nsViewManagerEvent {
+  nsSynthMouseMoveEvent(nsViewManager *aViewManager, PRBool aFromScroll)
+    : nsViewManagerEvent(aViewManager),
+      mFromScroll(aFromScroll)
+  {
+  }
+
+  virtual void HandleEvent() {
+    ViewManager()->ProcessSynthMouseMoveEvent(mFromScroll);
+  }
+
+  PRBool mFromScroll;
+};
+
+NS_IMETHODIMP
+nsViewManager::SynthesizeMouseMove(PRBool aFromScroll)
+{
+  if (mMouseLocation == nsPoint(NOT_IN_WINDOW, NOT_IN_WINDOW))
+    return NS_OK;
+
+  nsCOMPtr<nsIEventQueue> eventQueue;
+  mEventQueueService->GetSpecialEventQueue(
+    nsIEventQueueService::UI_THREAD_EVENT_QUEUE, getter_AddRefs(eventQueue));
+  NS_ASSERTION(nsnull != eventQueue, "Event queue is null");
+
+  if (eventQueue != mSynthMouseMoveEventQueue) {
+    nsSynthMouseMoveEvent *ev = new nsSynthMouseMoveEvent(this, aFromScroll);
+    eventQueue->PostEvent(ev);
+    mSynthMouseMoveEventQueue = eventQueue;
+  }
+
+  return NS_OK;
+}
+
+void
+nsViewManager::ProcessSynthMouseMoveEvent(PRBool aFromScroll)
+{
+  // allow new event to be posted while handling this one only if the
+  // source of the event is a scroll (to prevent infinite reflow loops)
+  if (aFromScroll)
+    mSynthMouseMoveEventQueue = nsnull;
+
+  if (mMouseLocation == nsPoint(NOT_IN_WINDOW, NOT_IN_WINDOW)) {
+    mSynthMouseMoveEventQueue = nsnull;
+    return;
+  }
+
+  nsMouseEvent event(NS_MOUSE_MOVE, mRootView->GetWidget(),
+                     nsMouseEvent::eSynthesized);
+  event.point = mMouseLocation;
+  event.time = PR_IntervalNow();
+  // XXX set event.isShift, event.isControl, event.isAlt, event.isMeta ?
+
+  nsEventStatus status;
+  DispatchEvent(&event, &status);
+
+  if (!aFromScroll)
+    mSynthMouseMoveEventQueue = nsnull;
+}
+
