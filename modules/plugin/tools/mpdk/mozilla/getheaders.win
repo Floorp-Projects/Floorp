@@ -94,8 +94,8 @@ getheaders:
   cvs co mozilla/nsprpub/pr/include/prlong.h
   cvs co mozilla/nsprpub/pr/include/prtime.h
   cvs co mozilla/nsprpub/pr/include/prtypes.h
-  cp mozilla/nsprpub/pr/include/*.h ../windows/debug/include
-  cp mozilla/nsprpub/pr/include/*.h ../windows/release/include
+  cp mozilla/nsprpub/pr/include/*.h ../windows/include
+  cp mozilla/nsprpub/pr/include/*.h ../windows/include
 
   cvs co mozilla/nsprpub/lib/ds/plhash.h
   mv mozilla/nsprpub/lib/ds/*.h ../windows/include
