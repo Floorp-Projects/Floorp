@@ -153,6 +153,12 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
       // floating frame then fall through into the main reflow pathway
       // after clearing out our incremental reflow status. This forces
       // our child to adjust to the new size of the floater.
+      //
+      // XXXX We shouldn't be here at all for floating frames, just for absolutely
+      // positioned frames. What's happening is that if a child of the body is
+      // floated then the reflow state path isn't getting set up correctly. The
+      // body's block pseudo-frame isn't getting included in the reflow path like
+      // it shoudld and that's why we end up here
       const nsStyleDisplay* display;
       nextFrame->GetStyleData(eStyleStruct_Display,
                               (const nsStyleStruct*&) display);
