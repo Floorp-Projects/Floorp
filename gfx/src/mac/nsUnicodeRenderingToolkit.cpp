@@ -754,9 +754,12 @@ void nsUnicodeRenderingToolkit :: DrawScriptText(
 	PRInt32 y, 
 	short& oWidth)
 {
- 	oWidth = ::TextWidth(buf, 0, aLen);
-    ::MoveTo(x, y);
+	::MoveTo(x, y);
 	::DrawText(buf,0,aLen);
+	
+	Point		penLoc;
+	::GetPen(&penLoc);
+	oWidth = penLoc.h - x;
 }
 //------------------------------------------------------------------------
 
@@ -1143,17 +1146,16 @@ NS_IMETHODIMP nsUnicodeRenderingToolkit :: DrawString(const PRUnichar *aString, 
     	{
     		nextFont = fontmap->GetFontID(uch);
     		if (thisFont != nextFont) 
-        {  // start new font run...
-         
-
+        {
+          // start new font run...
           PRInt32 transformedX = currentX, ignoreY = 0;
-           mGS->mTMatrix.TransformCoord(&transformedX, &ignoreY);
+          mGS->mTMatrix.TransformCoord(&transformedX, &ignoreY);
           
           res = DrawTextSegment(aString + start, i - start, thisFont, scriptFallbackFonts, transformedX, transformedY, thisWidth);
     	  	if (NS_FAILED(res))
     	 		  return res;
     	 		
-    		  currentX += thisWidth;
+    		  currentX += NSToCoordRound(float(thisWidth) * mP2T);
     		  start = i;
     		  thisFont = nextFont;
     		}
