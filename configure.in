@@ -3225,9 +3225,10 @@ MOZ_ARG_ENABLE_BOOL(boehm,
 
 dnl This will enable logging of addref, release, ctor, dtor.
 MOZ_ARG_ENABLE_BOOL(logrefcnt,
-[  --enable-logrefcnt      Enable Logging of refcounts (default=no) ],
-  MOZ_LOG_REFCNT=1
-  AC_DEFINE(MOZ_LOG_REFCNT))
+[  --enable-logrefcnt      Enable Logging of refcounts (default=debug) ],
+	AC_DEFINE(FORCE_BUILD_REFCNT_LOGGING),
+	AC_DEFINE(NO_BUILD_REFCNT_LOGGING))
+
 
 dnl mozilla/tools/leaky not part of default build.
 MOZ_ARG_ENABLE_BOOL(leaky,
