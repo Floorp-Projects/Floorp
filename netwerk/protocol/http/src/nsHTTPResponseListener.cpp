@@ -109,7 +109,12 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
             rv = m_pConsumer->OnDataAvailable(m_pConnection, i_pStream, 0, i_Length);
         }
         return rv;
+    } 
+/*
+    else if (!m_bFirstLineParsed) {
+      rv = ParseStatusLine(i_pStream);
     }
+*/
     //Search for the end of the headers mark
     //Rick- Is this max correct? or should it be the same as transport's max? 
     char buffer[kMAX_BUFFER_SIZE];
@@ -396,4 +401,99 @@ nsresult nsHTTPResponseListener::FireOnHeadersAvailable()
     }
 
     return rv;
+}
+
+char *nsHTTPResponseListener::EatWhiteSpace(char *aBuffer)
+{
+  while ((*aBuffer == ' ') || (*aBuffer == '\t')) aBuffer++;
+  return aBuffer;
+}
+
+nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* aStream)
+{
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIBuffer> pBuffer;
+  char statusLineBuffer[255];
+  char *start, *end;
+
+  PRBool bFoundString = PR_FALSE;
+  PRUint32 offset, bytesRead;
+  PRInt32 statusCode;
+
+  rv = aStream->GetBuffer(getter_AddRefs(pBuffer));
+  if (NS_FAILED(rv)) return rv;
+
+  // Look for the CRLF which ends the Status-Line.
+  // If found, then offset will mark the beginning of the CRLF...
+  rv = pBuffer->Search("\r\n", PR_FALSE, &bFoundString, &offset);
+  if (NS_FAILED(rv)) return rv;
+
+  //
+  // The Status Line has the following: format:
+  //    HTTP-Version SP Status-Code SP Reason-Phrase CRLF
+  //
+  if (bFoundString) {
+    //
+    // Make sure the statusLineBuffer does not overflow.  This would only
+    // happen if the Reason-Phrase returned from the server was large...
+    //
+    // If the Status-Line is too large, then limit it to the size of the 
+    // buffer.  This will truncate the Reason-Phrase, but who really cares?
+    //
+    NS_ASSERTION(offset < sizeof(statusLineBuffer), "Status Line is too long!");
+    if (offset >= sizeof(statusLineBuffer)) {
+      offset = sizeof(statusLineBuffer);
+    }
+
+    // Read the Status-Line out of the stream...
+    rv = aStream->Read(statusLineBuffer, offset, &bytesRead);
+    if (NS_FAILED(rv)) return rv;
+
+    // Null terminate the buffer...
+    statusLineBuffer[bytesRead] = '\0';
+
+    //
+    // Parse the HTTP-Version -> "HTTP" "/" 1*DIGIT "." 1*DIGIT
+    //
+    start = EatWhiteSpace(statusLineBuffer); // Consume any leading whitespace
+    // Find the next space character...
+    for (end=start; (*end && (*end != ' ') && (*end != '\t')); end++) {};
+    if (! *end) {
+      // The status line is bogus...
+      return NS_ERROR_FAILURE;
+    }
+    *end = '\0';  // Replace the first space character with NULL...
+    m_pResponse->SetServerVersion(start);
+
+    //
+    // Parse the Status-Code -> 3DIGIT
+    //
+    start = EatWhiteSpace(end+1); // Consume any leading whitespace
+    end   = start+4;
+
+    // Verify that the character after the 3 digits is whitespace...
+    if ((bytesRead < (PRUint32)(end - statusLineBuffer)) || 
+        ((*end != ' ') && (*end != '\t'))) {
+      // The status line is bogus...
+      return NS_ERROR_FAILURE;
+    }
+    *end = '\0';  // Replace the first space character with NULL...
+    statusCode = atoi(start);
+    m_pResponse->SetStatus(statusCode);
+
+    //
+    // Parse the Reason-Phrase -> *<TEXT excluding CR,LF>
+    //
+    start = EatWhiteSpace(end+1); // Consume any leading whitespace
+    statusLineBuffer[offset] = '\0';
+    m_pResponse->SetStatusString(start);
+
+    m_bFirstLineParsed = PR_TRUE;
+  }
+  else {
+    // XXX: What do we do if only a partial status line is received?
+    rv = NS_ERROR_FAILURE;
+  }
+  return rv;
 }

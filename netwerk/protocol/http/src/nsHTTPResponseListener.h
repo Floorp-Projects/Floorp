@@ -69,6 +69,11 @@ protected:
     // nsHTTPResponseListener methods...
     nsresult FireOnHeadersAvailable();
 
+    nsresult ParseStatusLine(nsIBufferInputStream* aStream);
+
+    
+    static char *   EatWhiteSpace(char* aBuffer);
+
 
 protected:
     PRBool              m_bHeadersDone;
