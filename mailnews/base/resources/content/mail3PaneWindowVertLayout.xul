@@ -143,11 +143,13 @@ Rights Reserved.
           <grippy/>
         </splitter>
 
-        <box id="threadpaneBox" flex="2" persist="width">
-          <outliner id="threadOutliner" flex="2" persist="width" style="width:0px" context="threadPaneContext" class="window-focusborder" focusring="false"/>
-        </box>
-        <box id="accountCentralBox" flex="2" persist="width"> 
-          <iframe name="accountCentralPane" style="width:0px;" flex="1" src="about:blank"/>
+        <box id="mail3PaneVertLayoutBox" persist="collapsed width" flex="2">
+          <box id="threadpaneBox" flex="1" persist="width">
+            <outliner id="threadOutliner" flex="1" persist="width" style="width:0px" context="threadPaneContext" class="window-focusborder" focusring="false"/>
+          </box>
+          <box id="accountCentralBox" flex="1" persist="width"> 
+            <iframe name="accountCentralPane" style="width:0px;" flex="1" src="about:blank"/>
+          </box>
         </box>
       </box>
       <!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
