@@ -86,62 +86,43 @@ struct nsTreeRange
   };
 
   nsresult RemoveRange(PRInt32 aStart, PRInt32 aEnd) {
-    // Do the start and end encompass us?
-    nsresult rv = NS_OK;
-    if (mMin >= aStart && mMax <= aEnd) {
-      // They do.  We should simply be excised from the list.
+    // This should so be a loop... sigh...
+    // We start past the range to remove, so no more to remove
+    if (aEnd < mMin)
+      return NS_OK;
+    // We are the last range to be affected
+    if (aEnd < mMax) {
+      if (aStart <= mMin) {
+        // Just chop the start of the range off
+        mMin = aEnd + 1;
+      } else {
+        // We need to split the range
+        nsTreeRange* range = new nsTreeRange(mSelection, aEnd + 1, mMax);
+        if (!range)
+          return NS_ERROR_OUT_OF_MEMORY;
+
+        mMax = aStart - 1;
+        range->Connect(this, mNext);
+      }
+      return NS_OK;
+    }
+    nsTreeRange* next = mNext;
+    if (aStart <= mMin) {
+      // The remove includes us, remove ourselves from the list
       if (mPrev)
-        mPrev->mNext = mNext;
+        mPrev->mNext = next;
       else
-        mSelection->mFirstRange = mNext;
-        
-      nsTreeRange* next = mNext;
+        mSelection->mFirstRange = next;
+
       if (next)
         next->mPrev = mPrev;
       mPrev = mNext = nsnull;
       delete this;
-      if (next)
-        rv = next->RemoveRange(aStart, aEnd);
-      return rv;
+    } else if (aStart <= mMax) {
+      // Just chop the end of the range off
+      mMax = aStart - 1;
     }
-    // See if this range overlaps.
-    else if (aStart >= mMin && aStart <= mMax) {
-      // We start within this range.
-      // Do we also end within this range?
-      if (aEnd >= mMin && aEnd <= mMax) {
-        // We do.  This range should be split into
-        // two new ranges.
-        PRInt32 aNewStart = aEnd+1;
-        PRInt32 aNewEnd = mMax;
-        nsTreeRange* range = new nsTreeRange(mSelection, aNewStart, aNewEnd);
-        if (!range)
-          return NS_ERROR_OUT_OF_MEMORY;
-
-        mMax = aStart-1;
-        range->Connect(this, mNext);
-        return NS_OK; // We're done, since we were entirely contained within this range.
-      }
-      else {
-        // The end goes outside our range.  We should
-        // move our max down to before the start.
-        if (mNext)
-          return mNext->RemoveRange(aStart, aEnd);
-
-        mMax = aStart-1;
-      }
-    }
-    else if (aEnd >= mMin && aEnd <= mMax) {
-      // The start precedes our range, but the end is contained
-      // within us.  Pull the range up past the end.
-      mMin = aEnd+1;
-      return NS_OK; // We're done, since we contained the end.
-    }
-    else {
-      // Neither the start nor the end was contained inside us, move on.
-      if (mNext)
-        rv = mNext->RemoveRange(aStart, aEnd);
-    }
-    return rv;
+    return next ? next->RemoveRange(aStart, aEnd) : NS_OK;
   };
 
   nsresult Remove(PRInt32 aIndex) {
