@@ -536,6 +536,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   }
 
   mMinLineHeight = nsHTMLReflowState::CalcLineHeight(*mPresContext,
+                                                     aReflowState.rendContext,
                                                      aReflowState.frame);
 }
 
@@ -1406,14 +1407,16 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
 static PRBool
 HaveAutoWidth(const nsHTMLReflowState& aReflowState)
 {
-  if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
+  const nsHTMLReflowState* rs = &aReflowState;
+  if (NS_UNCONSTRAINEDSIZE == rs->mComputedWidth) {
     return PR_TRUE;
   }
-  const nsStylePosition* pos = aReflowState.mStylePosition;
-  if (!pos) {
-    return PR_TRUE;
-  }
+  const nsStylePosition* pos = rs->mStylePosition;
+
   for (;;) {
+    if (!pos) {
+      return PR_TRUE;
+    }
     nsStyleUnit widthUnit = pos->mWidth.GetUnit();
     if (eStyleUnit_Auto == widthUnit) {
       return PR_TRUE;
@@ -1422,15 +1425,14 @@ HaveAutoWidth(const nsHTMLReflowState& aReflowState)
       break;
     }
     const nsHTMLReflowState* prs = (const nsHTMLReflowState*)
-      aReflowState.parentReflowState;
+      rs->parentReflowState;
     if (!prs) {
       return PR_TRUE;
     }
+    rs = prs;
     pos = prs->mStylePosition;
-    if (!pos) {
-      return PR_TRUE;
-    }
   }
+
   return PR_FALSE;
 }
         
