@@ -79,7 +79,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsIDOMHTMLFrameSetElement.h"
 #include "nsIFrameManager.h"
-
+#include "nsIPrintContext.h"
 
 #include "nsIChromeRegistry.h"
 
@@ -935,7 +935,7 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
   // print any child documents
   // like frameset frames or iframes
   parentAsNode->GetChildCount(&count);
-  if(count> 0) { 
+  if(count< 0) {                        // DC EXPERIMENT
     for(i=0;i<count;i++) {
       nsCOMPtr<nsIDocShellTreeItem> child;
       parentAsNode->GetChildAt(i, getter_AddRefs(child));
@@ -951,14 +951,21 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
   
   // now complete printing the rest of the document
   // if it doesn't contain any framesets
+  doesContainFrameSet = PR_FALSE;                   // DC EXPERIMENT
   if (!doesContainFrameSet) {
     NS_ENSURE_SUCCESS( aDContext->BeginDocument(), NS_ERROR_FAILURE );
     aDContext->GetDeviceSurfaceDimensions(width, height);
 
     nsCOMPtr<nsIPresContext> cx;
-    rv = NS_NewPrintContext(getter_AddRefs(cx));
+    nsCOMPtr<nsIPrintContext> printcon;
+    rv = NS_NewPrintContext(getter_AddRefs(printcon));
     if (NS_FAILED(rv)) {
       return rv;
+    } else {
+      rv = printcon->QueryInterface(NS_GET_IID(nsIPresContext), getter_AddRefs(cx));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
     }
 
     cx->Init(aDContext);
@@ -1569,10 +1576,17 @@ PRInt32                               width,height;
         webContainer = do_QueryInterface(mContainer);
         if(webContainer) {
           // load the document and do the initial reflow on the entire document
-          rv = NS_NewPrintContext(&mPrintPC);
-          if(NS_FAILED(rv)){
+          nsCOMPtr<nsIPrintContext> printcon;
+          rv = NS_NewPrintContext(getter_AddRefs(printcon));
+          if (NS_FAILED(rv)) {
             return rv;
+          } else {
+            rv = printcon->QueryInterface(NS_GET_IID(nsIPresContext), (void**)&mPrintPC);
+            if (NS_FAILED(rv)) {
+              return rv;
+            }
           }
+          
 
           mPrintDC->GetDeviceSurfaceDimensions(width,height);
           mPrintPC->Init(mPrintDC);

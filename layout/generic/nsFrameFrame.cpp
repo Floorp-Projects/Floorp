@@ -63,6 +63,7 @@
 #include "nsXPIDLString.h"
 #include "nsIScrollable.h"
 #include "nsINameSpaceManager.h"
+#include "nsIPrintContext.h"
 
 #ifdef INCLUDE_XUL
 #include "nsIDOMXULElement.h"
@@ -1010,6 +1011,15 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
   nsresult rv = NS_OK;
 
   // use the max size set in aReflowState by the nsHTMLFrameOuterFrame as our size
+
+  // determine if we are a printcontext
+
+  nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
+  if  (thePrinterContext) {
+    // we are printing
+  }
+
+  
   if (!mCreatingViewer) {
     // create the web shell
     // we do this even if the size is not positive (bug 11762)

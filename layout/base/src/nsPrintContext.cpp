@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 #include "nsPresContext.h"
+#include "nsIPrintContext.h"
 #include "nsIDeviceContext.h"
 #include "nsUnitConversion.h"
 #include "nsIView.h"
@@ -28,8 +29,16 @@
 #include "nsLayoutAtoms.h"
 
 
-class PrintContext : public nsPresContext {
+class PrintContext : public nsPresContext , nsIPrintContext{
 public:
+  //NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRINTCONTEXT_IID)
+
+//Interfaces for addref and release and queryinterface
+//NOTE macro used is for classes that inherit from 
+// another class. Only the base class should use NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
+
+
   PrintContext();
   ~PrintContext();
 
@@ -46,6 +55,27 @@ PrintContext::PrintContext()
 PrintContext::~PrintContext()
 {
 }
+
+NS_IMPL_ADDREF_INHERITED(PrintContext,nsPresContext)
+
+
+NS_IMPL_RELEASE_INHERITED(PrintContext,nsPresContext)
+
+//---------------------------------------------------------
+NS_IMETHODIMP
+PrintContext::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+ 
+  if (aIID.Equals(NS_GET_IID(nsIPrintContext))) {
+    *aInstancePtr = (void *)((nsIPrintContext*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  return nsPresContext::QueryInterface(aIID, aInstancePtr);
+}
+
+
 
 NS_IMETHODIMP
 PrintContext::GetMedium(nsIAtom** aResult)
@@ -105,8 +135,9 @@ PRInt32 width,height;
 }
 
 NS_LAYOUT nsresult
-NS_NewPrintContext(nsIPresContext** aInstancePtrResult)
+NS_NewPrintContext(nsIPrintContext** aInstancePtrResult)
 {
+
   if (aInstancePtrResult == nsnull) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -117,5 +148,5 @@ NS_NewPrintContext(nsIPresContext** aInstancePtrResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(NS_GET_IID(nsIPresContext), (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIPrintContext), (void **) aInstancePtrResult);
 }
