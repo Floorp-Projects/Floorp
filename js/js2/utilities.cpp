@@ -2459,6 +2459,20 @@ void JS::PrettyPrinter::requiredBreak()
 }
 
 
+// If required is true, write a required line break; otherwise write a linear line break
+// of the given width.
+//
+// If this method throws an exception, it may have emitted partial output but
+// leaves the PrettyPrinter in a consistent state.
+void JS::PrettyPrinter::linearBreak(uint32 nSpaces, bool required)
+{
+	if (required)
+		requiredBreak();
+	else
+		linearBreak(nSpaces);
+}
+
+
 // Flush any saved output in the PrettyPrinter to the output.  Call this just before
 // destroying the PrettyPrinter.  All Indent and Block objects must have been exited already.
 //
