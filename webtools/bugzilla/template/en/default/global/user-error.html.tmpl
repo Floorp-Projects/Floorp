@@ -734,4 +734,26 @@
   Please press <b>Back</b> and try again.
 </p>
 
+[%# If a saved search fails, people want the ability to edit or delete it. 
+  # This is the best way of getting information about that possible saved
+  # search from any error call location. %]
+  
+[% USE Bugzilla %]
+[% namedcmd = Bugzilla.cgi.param("namedcmd") %]
+[% IF namedcmd %]
+  <p>  
+    Alternatively, you can    
+    <a href="buglist.cgi?cmdtype=dorem&amp;remaction=forget&amp;namedcmd=
+                  [% namedcmd FILTER html %]">forget</a>
+                  
+    [% FOREACH q = Bugzilla.user.queries %]
+      [% IF q.name == namedcmd %]
+        or <a href="query.cgi?[% q.query FILTER html %]">edit</a>
+      [% END %]
+    [% END %]
+    
+    this saved search: '[% namedcmd FILTER html %]'.
+  </p>
+[% END %]            
+
 [% PROCESS global/footer.html.tmpl %]
