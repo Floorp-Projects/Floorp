@@ -371,6 +371,7 @@ PR_IMPLEMENT(PrefResult) PREF_ReadUserJSFile(const char *filename)
 PR_IMPLEMENT(PRBool) PREF_Init(const char *filename)
 {
     PRBool ok = PR_TRUE;
+    extern JSRuntime* PREF_GetJSRuntime(void);
 
     /* --ML hash test */
     if (!gHashTable)
@@ -389,7 +390,7 @@ PR_IMPLEMENT(PRBool) PREF_Init(const char *filename)
 #endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
 
     if (!gMochaTaskState)
-        gMochaTaskState = JS_Init((PRUint32) 0xffffffffL);
+        gMochaTaskState = PREF_GetJSRuntime();
 
     if (!gMochaContext)
     {
@@ -521,14 +522,20 @@ PR_IMPLEMENT(void) PREF_Cleanup()
 /* Frees up all the objects except the callback list. */
 PR_IMPLEMENT(void) PREF_CleanupPrefs()
 {
-	if (gMochaContext)
-		JS_DestroyContext(gMochaContext);
-	gMochaContext = NULL;
+    gMochaTaskState = NULL; // We -don't- destroy this.
 
-	if (gMochaTaskState)
-		JS_Finish(gMochaTaskState);                      
-	gMochaTaskState = NULL;
-	
+    if (gMochaContext) {
+        gMochaPrefObject = NULL;
+
+        if (gGlobalConfigObject) {
+            JS_SetGlobalObject(gMochaContext, NULL);
+            gGlobalConfigObject = NULL;
+        }
+
+        JS_DestroyContext(gMochaContext);
+        gMochaContext = NULL;
+    }
+
 	if (gHashTable)
 		PR_HashTableDestroy(gHashTable);
 	gHashTable = NULL;
