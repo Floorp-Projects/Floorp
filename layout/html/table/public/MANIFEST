@@ -3,3 +3,4 @@
 #
 
 nsITableCellLayout.h
+nsITableLayout.h
