@@ -336,10 +336,12 @@ XFE_SpellHandler::initSpellChecker()
 
         if (m_spellCheckerLib == NULL)
         {
-#ifdef DEBUG_akkana
-            printf("Couldn't find library NSSpellChecker\n");
+#ifdef DEBUG
+            printf("Couldn't find library %s\n", libname);
 #endif
+#ifdef NETSCAPE_COMMERCIAL
             FE_Alert(m_context, XP_GetString(NO_SPELL_SHLIB_FOUND));
+#endif
             m_active = 0;
             return;
         }
