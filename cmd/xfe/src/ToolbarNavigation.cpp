@@ -113,6 +113,7 @@ XFE_ToolbarNavigation::createBaseWidget(Widget			parent,
 	navigation = XtVaCreateWidget(name,
 								  xfeCascadeWidgetClass,
 								  parent,
+                                  XmNinstancePointer,	this,
 								  NULL);
 	return navigation;
 }
