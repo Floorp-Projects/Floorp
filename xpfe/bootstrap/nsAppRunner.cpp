@@ -121,7 +121,7 @@ nsresult PR_CALLBACK
 apprunner_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 #endif
 
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_BEOS)
   extern void InstallUnixSignalHandlers(const char *ProgramName);
 #endif
 
@@ -1514,7 +1514,7 @@ static PRBool GetWantSplashScreen(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_BEOS)
   InstallUnixSignalHandlers(argv[0]);
 #endif
 
