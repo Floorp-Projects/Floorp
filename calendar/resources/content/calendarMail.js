@@ -173,7 +173,8 @@ function sendEvent()
 	CalendarDataFilePath = getCalendarDataFilePath();
 	if (! CalendarDataFilePath)
 	{
-		return;
+		alert( "No calendarDataFilePath in calendarMail.js" );
+      return;
 	}
 	/* Want output like
 	 * When: Thursday, November 09, 2000 11:00 PM-11:30 PM (GMT-08:00) Pacific Time
@@ -249,6 +250,7 @@ function sendEvent()
    }
    catch(ex)
    {
+      alert( ex );
       mdebug("failed to get composer window\nex: " + ex);
    }
 }
@@ -392,7 +394,7 @@ function sendEmail(Subject, Body, To, Cc, Bcc, Attachment, Priority)
     }
    catch(e)
    {
-      dump( "\n------------------\nThere is no default account, and I caught an exception in penemail.js on line 45. "+e +"\n--------------------------------\n" );
+      alert( "\n------------------\nThere is no default account, and I caught an exception in penemail.js on line 45. "+e +"\n--------------------------------\n" );
 	   AccountExists = accountSetupError();
    }
 	
