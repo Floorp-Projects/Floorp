@@ -303,7 +303,7 @@
       <menuitem accesskey="&filesave.accesskey;"       key="savekb"         observes="cmd_save"/>
       <menuitem accesskey="&filesaveas.accesskey;"                          observes="cmd_saveAs"/>
       <menuitem accesskey="&filesaveascharset.accesskey;"                   observes="cmd_saveAsCharset"/>
-      <menuitem accesskey="&fileexporttotext.accesskey;"                    observes="cmd_exportToText"/>
+      <menuitem accesskey="&fileexporttotext.accesskey;"                    observes="cmd_exportToText" id="fileExportToText"/>
       <menuitem accesskey="&filerevert.accesskey;" observes="cmd_revert"/>
       <menuseparator/>
       <menuitem label="&previewCmd.label;"  accesskey="&filepreview.accesskey;" observes="cmd_preview"/>
@@ -374,6 +374,13 @@
     </menupopup>
   </menu>
     
+  <!-- Insert menu for PlainText editor -->
+  <menu id="insertMenuPlainText" label="&insertMenu.label;" accesskey="&insertmenu.accesskey;">
+    <menupopup>
+      <menuitem accesskey="&insertchars.accesskey;" observes="cmd_insertChars" />
+    </menupopup>
+  </menu>
+
   <!-- Format Menu -->
   <menupopup id="formatMenuPopup" oncreate="EditorInitFormatMenu()">
     <!-- Font face submenu -->

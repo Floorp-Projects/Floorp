@@ -24,10 +24,13 @@
   -->
 
 <?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?> 
+<?xul-overlay href="chrome://editor/content/editorOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
-<?xul-overlay href="chrome://editor/content/editorOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editor.dtd"> 
 
@@ -36,39 +39,52 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="TextEditorOnLoad()"
         onunload="EditorShutdown()"
-        title="Plaintext Editor"
+        onclose="return EditorCanClose()"
+        onfocus="EditorOnFocus()"
+        contenttitlesettting="true"
+        title=""
         titlemodifier="&textEditorWindow.titlemodifier;"
         titlemenuseparator="&editorWindow.titlemodifiermenuseparator;"
         windowtype="composer:text"
         align="vertical"
         width="640" height="480"
         screenX="10" screenY="10"
-        persist="screenX screenY width height"
+        persist="screenX screenY width height sizemode"
         >
 
   <script type="application/x-javascript" src="chrome://editor/content/editor.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/ComposerCommands.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EditorCommandsDebug.js"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
+<!--
+editor.xul has these - do we need them?
+  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+-->
 
   <commands id="commands">
     <commandset id="globalEditMenuItems"/>
     <commandset id="selectEditMenuItems"/>
     <commandset id="undoEditMenuItems"/>
-  <commandset id="clipboardEditMenuItems"/>
-
+    <commandset id="clipboardEditMenuItems"/>
     <commandset id="commonEditorMenuItems"/>
     <commandset id="composerEditMenuItems"/>
     <commandset id="composerSaveMenuItems"/>    
+    <commandset id="composerMenuItems"/>
   </commands>
 
   <broadcaster id="args" value="chrome://editor/content/EditorInitPagePlain.html"/>
   <broadcaster id="canPrint"/>
   
-  <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
+<!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs
   <broadcaster id="dialog.start" ready="false"/>
   <observes element="dialog.start" attribute="ready" onbroadcast="EditorStartup('text')"/>
-    
+ -->
+   
   <!-- broadcaster nodes are appended here from the overlays -->
   <broadcasterset id="broadcasterset">
     <broadcaster id="Editor:Throbber" busy="false"/>
@@ -77,54 +93,66 @@
   <!-- keys are appended from the overlay -->
   <keyset id="keyset"/>
 
-  <menubar id="main-menubar" class="chromeclass-menubar">
-    <menu id="fileMenu"/>
-    <menu id="editMenu"/>
+  <toolbox id="EditorToolbox">
+    <menubar id="main-menubar" class="chromeclass-menubar">
+      <menu id="fileMenu"/>
+      <menu id="editMenu"/>
 
-    <menu label="&viewMenu.label;" accesskey="&viewmenu.accesskey;">
-    <!-- id pulls in "Show Sidebar" item from sidebarOverlay -->
-    <menupopup id="menu_View_Popup">
-      <menu id="viewToolbar"/>
-      <menuseparator/>
-      <menuitem id="viewSourceMenuitem"/>
-      <menuseparator />
-      <menu id = "composerCharsetMenu" />
-    </menupopup>
-    </menu>
- 
-    <menu id="insertMenu"/>
+      <menu label="&viewMenu.label;" accesskey="&viewmenu.accesskey;">
+        <!-- id pulls in "Show Sidebar" item from sidebarOverlay -->
+        <menupopup id="menu_View_Popup">
+          <menu id="viewToolbar"/>
+          <menuseparator/>
+          <menu id = "composerCharsetMenu" />
+        </menupopup>
+      </menu>
 
-    <!-- tasks menu filled from tasksOverlay -->
-    <menu accesskey="t" id="tasksMenu"/>
+      <menu id="insertMenuPlainText"/>
 
-    <!-- DEBUG only -->
-    <menu id="debugMenu" />
-    <!-- end DEBUG only -->
-  
-    <!-- help menu filled from globalOverlay -->
-    <menu accesskey="h" id="menu_Help"/>
+      <!-- tasks menu filled from tasksOverlay -->
+      <menu accesskey="t" id="tasksMenu"/>
 
-  <spring flex="1"/>
-</menubar>
+      <!-- DEBUG only -->
+      <menu id="debugMenu" />
+      <!-- end DEBUG only -->
 
-<toolbox id="EditorToolbox">
-   <!-- toolbar filled out from editorOverlay -->
-  <toolbar class="toolbar-primary chromeclass-toolbar" id="EditToolbar" persist="collapsed">
+      <!-- help menu filled from globalOverlay -->
+      <menu accesskey="h" id="menu_Help"/>
+
+      <spring flex="1"/>
+    </menubar>
+
+     <!-- toolbar filled out from editorOverlay -->
+    <toolbar class="toolbar-primary" id="EditToolbar" persist="collapsed">
       <button id="newButton"/>
       <button id="openButton"/>
       <button id="saveButton"/>
       <spring class="separator_small"/>
       <button id="printButton"/>
-      <button id="findButton"/>
       <button id="spellingButton"/>
-
       <spring flex="1"/>
-  </toolbar>    
-</toolbox>
+    </toolbar>    
+  </toolbox>
 
-    <editor type="content-primary" id="content-frame" src="about:blank" flex="1"/>
+  <box id="sidebar-parent" flex="1">
+    <!-- From sidebarOverlay.xul -->
+    <box id="sidebar-box" class="chromeclass-extrachrome" hidden="true"/>
+    <splitter id="sidebar-splitter" class="chromeclass-extrachrome" hidden="true"/>
+    <box id="appcontent" orient="vertical" flex="1">
 
-    <!-- status bar, from editorOverlay.xul -->
-    <toolbar id="taskbar" class="chromeclass-extrachrome" />
+      <editor type="content-primary" id="content-frame" src="about:blank" flex="1"/>
+
+      <statusbar id="status-bar">
+        <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
+        <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0">
+            <observes element="Editor:Throbber" attribute="busy"/>
+        </progressmeter>
+        <statusbarpanel id="statusText" label="&statusText.label;" flex="1" crop="right"/>
+      </statusbar>
+
+    </box> <!-- appcontent -->
+  </box><!-- sidebar-parent -->
+
+  <box id="taskbar" class="toolbox-bottom"/>
 
 </window>

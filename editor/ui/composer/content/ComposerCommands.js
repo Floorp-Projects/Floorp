@@ -190,9 +190,7 @@ function GetEditorController()
       if (!interfaceRequestor) continue;
     
       commandManager = interfaceRequestor.getInterface(Components.interfaces.nsIControllerCommandManager);
-    } catch(ex) {
-      dump("failed to get command manager number "+i+"\n");
-    }
+    } catch(ex) {}
 
     if (commandManager)
       return commandManager;
@@ -296,7 +294,9 @@ var nsSaveCommand =
     {
       FinishHTMLSource(); // In editor.js
       var doSaveAs = window.editorShell.editorDocument.location == "about:blank";
-      return window.editorShell.saveDocument(doSaveAs, false, "text/html");
+      var result = window.editorShell.saveDocument(doSaveAs, false, window.gDefaultSaveMimeType);
+      window._content.focus();
+      return result;
     }
     return false;
   }
@@ -314,7 +314,9 @@ var nsSaveAsCommand =
     if (window.editorShell)
     {
       FinishHTMLSource();
-      return window.editorShell.saveDocument(true, false, "text/html");
+      var result = window.editorShell.saveDocument(true, false, window.gDefaultSaveMimeType);
+      window._content.focus();
+      return result;
     }
     return false;
   }
@@ -332,7 +334,9 @@ var nsExportToTextCommand =
     if (window.editorShell)
     {
       FinishHTMLSource();
-      return window.editorShell.saveDocument(true, true, "text/plain");
+      var result = window.editorShell.saveDocument(true, true, "text/plain");
+      window._content.focus();
+      return result;
     }
     return false;
   }
@@ -351,7 +355,7 @@ var nsSaveAsCharsetCommand =
     window.openDialog("chrome://editor/content/EditorSaveAsCharset.xul","_blank", "chrome,close,titlebar,modal")
     if (window.ok)
     {
-      window.ok = window.editorShell.saveDocument(true, false, "text/html");
+      window.ok = window.editorShell.saveDocument(true, false, window.gDefaultSaveMimeType);
     }
     window._content.focus();
     return window.ok;
@@ -800,6 +804,7 @@ var nsPagePropertiesCommand =
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdPageProps.xul","_blank", "chrome,close,titlebar,modal", "");
+    window._content.focus();
   }
 };
 

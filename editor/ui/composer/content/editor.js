@@ -69,6 +69,7 @@ var gColorObj = new Object();
 var gPrefs;
 var gDefaultTextColor = "";
 var gDefaultBackgroundColor = "";
+var gDefaultSaveMimeType = "text/html";
 
 // These must be kept in synch with the XUL <options> lists
 var gFontSizeNames = new Array("xx-small","x-small","small","medium","large","x-large","xx-large");
@@ -114,8 +115,8 @@ var DocumentStateListener =
 {
   NotifyDocumentCreated: function()
   {
-    // Call EditorSetDefaultPrefs first so it gets the default author before initing toolbars
-    EditorSetDefaultPrefs();
+    // Call EditorSetDefaultPrefsAndDoctype first so it gets the default author before initing toolbars
+    EditorSetDefaultPrefsAndDoctype();
     EditorInitToolbars();
     BuildRecentMenu(true);      // Build the recent files menu and save to prefs
 
@@ -201,17 +202,21 @@ function EditorSharedStartup()
   // set up JS-implemented commands for Text or HTML editing
   switch (editorShell.editorType)
   {
-    case "html":
-    case "htmlmail":
-      SetupHTMLEditorCommands();
-      break;
-    default:
-      dump("INVALID EDITOR TYPE: "+editorShell.editorType+"\n");
-      // Fall throught to implement just text?
-    case "text":
-    case "textmail":
-      SetupTextEditorCommands();
-      break;
+      case "html":
+      case "htmlmail":
+        SetupHTMLEditorCommands();
+        window.gDefaultSaveMimeType = "text/html";
+        break;
+      case "text":
+      case "textmail":
+        SetupTextEditorCommands();
+        window.gDefaultSaveMimeType = "text/plain";
+        break;
+      default:
+        dump("INVALID EDITOR TYPE: "+editorShell.editorType+"\n");
+        SetupTextEditorCommands();
+        window.gDefaultSaveMimeType = "text/plain";
+        break;
   }
 
   // Just for convenience
@@ -413,7 +418,7 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
    if (result.value == 0)
    {
      // Save
-     var success = window.editorShell.saveDocument(false, false, "text/html");
+     var success = window.editorShell.saveDocument(false, false, window.gDefaultSaveMimeType);
      return success;
    }
 
@@ -513,10 +518,11 @@ function EditorSetTextProperty(property, attribute, value)
 
 function onParagraphFormatChange(paraMenuList, commandID)
 {
+  if (!paraMenuList)
+    return;
+
   var commandNode = document.getElementById(commandID);
   var state = commandNode.getAttribute("state");
-  var menuList = document.getElementById("ParagraphSelect");
-  if (!menuList) return;
 
   // force match with "normal"
   if (state == "body")
@@ -906,26 +912,35 @@ function EditorSelectColor(colorType, mouseEvent)
       //  we can let user select cell or table
       gColorObj.Type = "TableOrCell";
     }
+
+    if (useLastColor && gColorObj.LastBackgroundColor )
+      gColorObj.BackgroundColor = gColorObj.LastBackgroundColor;
+    else
+      useLastColor = false;
   }
   // Save the type we are really requesting
   colorType = gColorObj.Type;
 
-  // Avoid the JS warning
-  gColorObj.NoDefault = false;
+  if (!useLastColor)
+  {
+    // Avoid the JS warning
+    gColorObj.NoDefault = false;
 
-  // Launch the ColorPicker dialog
-  // TODO: Figure out how to position this under the color buttons on the toolbar
-  window.openDialog("chrome://editor/content/EdColorPicker.xul", "_blank", "chrome,close,titlebar,modal", "", gColorObj);
+    // Launch the ColorPicker dialog
+    // TODO: Figure out how to position this under the color buttons on the toolbar
+    window.openDialog("chrome://editor/content/EdColorPicker.xul", "_blank", "chrome,close,titlebar,modal", "", gColorObj);
 
-  // User canceled the dialog
-  if (gColorObj.Cancel)
-    return;
+    // User canceled the dialog
+    if (gColorObj.Cancel)
+      return;
+  }
 
   if (colorType == "Text")
   {
     if (currentColor != gColorObj.TextColor)
+    {
       window.editorShell.SetTextProperty("font", "color", gColorObj.TextColor);
-
+    }
     // Update the command state (this will trigger color button update)
     goUpdateCommand("cmd_fontColor");
   }
@@ -1627,31 +1642,33 @@ function EditorInitToolbars()
   // Nothing to do now, but we might want some state updating here
 }
 
-function EditorSetDefaultPrefs()
+function EditorSetDefaultPrefsAndDoctype()
 {
-  /* only set defaults for new documents */
-  if ( window.editorShell.editorDocument.location != "about:blank" )
-    return;
-
-  var element;
   var domdoc;
   try { domdoc = window.editorShell.editorDocument; } catch (e) { dump( e + "\n"); }
   if ( !domdoc )
   {
-    dump("EditorSetDefaultPrefs: EDITOR DOCUMENT NOT FOUND\n");
+    dump("EditorSetDefaultPrefsAndDoctype: EDITOR DOCUMENT NOT FOUND\n");
     return;
   }
 
-  // doctype
-  var newdoctype = domdoc.implementation.createDocumentType("html", "-//W3C//DTD HTML 4.01 Transitional//EN","");
-  if (!domdoc.doctype)
+  var newDoc = window.editorShell.editorDocument.location == "about:blank";
+
+  // Insert a doctype element for a new doc or 
+  // if it is missing from existing doc
+  var needDoctype = newDoc ? true : !domdoc.doctype;
+
+  if ( needDoctype )
   {
+    var newdoctype = domdoc.implementation.createDocumentType("html", "-//W3C//DTD HTML 4.01 Transitional//EN","");
     domdoc.insertBefore(newdoctype, domdoc.firstChild);
   }
-  else
-  {
-    domdoc.replaceChild(newdoctype, domdoc.doctype);
-  }
+  
+  /* only set default prefs for new documents */
+  if ( !newDoc  )
+    return;
+
+  var element;
 
   // search for head; we'll need this for meta tag additions
   var headelement = 0;
@@ -1981,7 +1998,6 @@ function getColorAndSetColorWell(ColorPickerID, ColorWellID)
       colorWell.setAttribute("style", "background-color: " + color);
     }
   }
-  //TODO: Trigger UI update to get color from the current caret/selection
   return color;
 }
 
@@ -2025,38 +2041,47 @@ function RemoveInapplicableUIElements()
    // if no find, remove find ui
   if (!IsFindInstalled())
   {
-    var findMenuItem = document.getElementById("menu_find");
-    if (findMenuItem)
-      findMenuItem.setAttribute("hidden", "true");
-
-    findMenuItem = document.getElementById("menu_findnext");
-    if (findMenuItem)
-      findMenuItem.setAttribute("hidden", "true");
-
-    var replaceMenuItem = document.getElementById("menu_replace");
-    if (replaceMenuItem)
-      replaceMenuItem.setAttribute("hidden", "true");
-
-    var findSepItem  = document.getElementById("sep_find");
-    if (findSepItem)
-      findSepItem.parentNode.removeChild(findSepItem);
+    HideItem("menu_find");
+    HideItem("menu_findnext");
+    HideItem("menu_replace");
+    HideItem("menu_find");
+    RemoveItem("sep_find");
   }
 
    // if no spell checker, remove spell checker ui
   if (!IsSpellCheckerInstalled())
   {
-    var spellingButton = document.getElementById("spellingButton");
-    if (spellingButton)
-      spellingButton.setAttribute("hidden", "true");
-
-    var spellingMenuItem = document.getElementById("menu_checkspelling");
-    if (spellingMenuItem)
-      spellingMenuItem.setAttribute("hidden", "true");
-
-    var spellingSepItem  = document.getElementById("sep_checkspelling");
-    if (spellingSepItem)
-      spellingSepItem.parentNode.removeChild(spellingSepItem);
+    HideItem("spellingButton");
+    HideItem("menu_checkspelling");
+    RemoveItem("sep_checkspelling");
   }
+
+  // Remove menu items (from overlay shared with HTML editor) in PlainText editor
+  if (editorShell.editorType == "text")
+  {
+    HideItem("insertAnchor");
+    HideItem("insertImage");
+    HideItem("insertHline");
+    HideItem("insertTable");
+    HideItem("insertHTML");
+    HideItem("fileExportToText");
+    HideItem("viewFormatToolbar");
+    HideItem("viewEditModeToolbar");
+  }
+}
+
+function HideItem(id)
+{
+  var item = document.getElementById(id);
+  if (item)
+    item.setAttribute("hidden", "true");
+}
+
+function RemoveItem(id)
+{
+  var item = document.getElementById(id);
+  if (item)
+    item.parentNode.removeChild(item);
 }
 
 function GetPrefsService()
@@ -2173,7 +2198,8 @@ function goUpdateTableMenuItems(commandset)
       else if (commandID == "cmd_DeleteTable" ||
                commandID == "cmd_NormalizeTable" ||
                commandID == "cmd_editTable" ||
-               commandID == "cmd_TableOrCellColor")
+               commandID == "cmd_TableOrCellColor" ||
+               commandID == "cmd_SelectTable")
       {
         goSetCommandEnabled(commandID, enabledIfTable);
       } else {
@@ -2341,16 +2367,18 @@ function SwitchInsertCharToAnotherEditorOrClose()
     while ( enumerator.hasMoreElements()  )
     {
       var  tempWindow = enumerator.getNext();
-      if (tempWindow != window && tempWindow.editorShell &&
-          tempWindow.gIsHTMLEditor || tempWindow.editorShell.editorType == "htmlmail")
-//          tempWindow.editorShell.editorDocument.commandDispatcher.getControllerForCommand("cmd_InsertChars"))
+      if (tempWindow != window && ("editorShell" in tempWindow) && tempWindow.editorShell)
       {
-        tempWindow.InsertCharWindow = window.InsertCharWindow;
-        window.InsertCharWindow = null;
+        var type = tempWindow.editorShell.editorType;
+        if (type == "html" || type == "text" || type == "htmlmail")
+	      {
+          tempWindow.InsertCharWindow = window.InsertCharWindow;
+          window.InsertCharWindow = null;
 
-        tempWindow.InsertCharWindow.editorShell = tempWindow.editorShell;
-        tempWindow.InsertCharWindow.opener = tempWindow;
-        return;
+          tempWindow.InsertCharWindow.editorShell = tempWindow.editorShell;
+          tempWindow.InsertCharWindow.opener = tempWindow;
+          return;
+	      }
       }
     }
     // Didn't find another editor - close the dialog
