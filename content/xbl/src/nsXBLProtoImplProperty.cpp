@@ -218,12 +218,12 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
   nsAutoString getter(mGetterText);
   nsMemory::Free(mGetterText);
   mGetterText = nsnull;
+  nsCAutoString functionUri;
   if (!getter.IsEmpty() && aClassObject) {
-    nsCAutoString functionUri;
-    functionUri.Assign(aClassStr);
-    functionUri += ".";
-    functionUri.AppendWithConversion(mName);
-    functionUri += " (getter)";
+    functionUri = aClassStr;
+    functionUri += NS_LITERAL_CSTRING(".");
+    functionUri += NS_ConvertUCS2toUTF8(mName);
+    functionUri += NS_LITERAL_CSTRING(" (getter)");
     rv = aContext->CompileFunction(aClassObject,
                                    nsCAutoString("onget"),
                                    0,
@@ -233,27 +233,32 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
                                    0,
                                    PR_FALSE,
                                    (void **) &mJSGetterObject);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    mJSAttributes |= JSPROP_GETTER | JSPROP_SHARED;
-    if (mJSGetterObject) {
+    if (mJSGetterObject && NS_SUCCEEDED(rv)) {
+      mJSAttributes |= JSPROP_GETTER | JSPROP_SHARED;
       // Root the compiled prototype script object.
       JSContext* cx = NS_REINTERPRET_CAST(JSContext*,
                                           aContext->GetNativeContext());
-      if (!cx) return NS_ERROR_UNEXPECTED;
-      rv = AddJSGCRoot(&mJSGetterObject, "nsXBLProtoImplProperty::mJSGetterObject");
-      if (NS_FAILED(rv)) return rv;
+      rv = (cx)
+            ? AddJSGCRoot(&mJSGetterObject, "nsXBLProtoImplProperty::mJSGetterObject")
+            : NS_ERROR_UNEXPECTED;
+    }
+    if (NS_FAILED(rv)) {
+      mJSGetterObject = nsnull;
+      mJSAttributes &= ~JSPROP_GETTER;
+      /*chaining to return failure*/
     }
   } // if getter is not empty
+  nsresult rvG=rv;
 
   // Do we have a setter?
   nsAutoString setter(mSetterText);
   nsMemory::Free(mSetterText);
   mSetterText = nsnull;
   if (!setter.IsEmpty() && aClassObject) {
-    nsCAutoString functionUri (aClassStr);
-    functionUri += ".";
-    functionUri.AppendWithConversion(mName);
-    functionUri += " (setter)";
+    functionUri = aClassStr;
+    functionUri += NS_LITERAL_CSTRING(".");
+    functionUri += NS_ConvertUCS2toUTF8(mName);
+    functionUri += NS_LITERAL_CSTRING(" (setter)");
     rv = aContext->CompileFunction(aClassObject,
                                    nsCAutoString("onset"),
                                    1,
@@ -263,17 +268,21 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
                                    0,
                                    PR_FALSE,
                                    (void **) &mJSSetterObject);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    mJSAttributes |= JSPROP_SETTER | JSPROP_SHARED;
-    if (mJSSetterObject) {
+    if (mJSSetterObject && NS_SUCCEEDED(rv)) {
+      mJSAttributes |= JSPROP_SETTER | JSPROP_SHARED;
       // Root the compiled prototype script object.
       JSContext* cx = NS_REINTERPRET_CAST(JSContext*,
                                           aContext->GetNativeContext());
-      if (!cx) return NS_ERROR_UNEXPECTED;
-      rv = AddJSGCRoot(&mJSSetterObject, "nsXBLProtoImplProperty::mJSSetterObject");
-      if (NS_FAILED(rv)) return rv;
+      rv = (cx)
+            ? AddJSGCRoot(&mJSSetterObject, "nsXBLProtoImplProperty::mJSSetterObject")
+            : NS_ERROR_UNEXPECTED;
+    }
+    if (NS_FAILED(rv)) {
+      mJSSetterObject = nsnull;
+      mJSAttributes &= ~JSPROP_SETTER;
+      /*chaining to return failure*/
     }
   } // if setter wasn't empty....
 
-  return rv;
+  return NS_SUCCEEDED(rv) ? rvG : rv;
 }

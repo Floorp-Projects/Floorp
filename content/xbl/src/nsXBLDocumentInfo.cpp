@@ -104,6 +104,31 @@ nsXBLDocGlobalObject::~nsXBLDocGlobalObject()
 
 NS_IMPL_ISUPPORTS2(nsXBLDocGlobalObject, nsIScriptGlobalObject, nsIScriptObjectPrincipal)
 
+void JS_DLL_CALLBACK
+XBL_ProtoErrorReporter(JSContext *cx,
+                       const char *message,
+                       JSErrorReport *report)
+{
+  // Make an nsIScriptError and populate it with information from
+  // this error.
+  nsCOMPtr<nsIScriptError>
+    errorObject(do_CreateInstance("@mozilla.org/scripterror;1"));
+  nsCOMPtr<nsIConsoleService>
+    consoleService(do_GetService("@mozilla.org/consoleservice;1"));
+
+  if (errorObject && consoleService) {
+    PRUint32 column = report->uctokenptr - report->uclinebuf;
+
+    errorObject->Init
+         (report->ucmessage, NS_ConvertUTF8toUCS2(report->filename).get(),
+          NS_REINTERPRET_CAST(const PRUnichar*, report->uclinebuf),
+          report->lineno, column, report->flags,
+          "xbl javascript"
+          );
+    consoleService->LogMessage(errorObject);
+  }
+}
+
 //----------------------------------------------------------------------
 //
 // nsIScriptGlobalObject methods
@@ -113,6 +138,10 @@ NS_IMETHODIMP
 nsXBLDocGlobalObject::SetContext(nsIScriptContext *aContext)
 {
   mScriptContext = aContext;
+  if (mScriptContext) {
+    JSContext* cx = (JSContext *)mScriptContext->GetNativeContext();
+    JS_SetErrorReporter(cx, XBL_ProtoErrorReporter);
+  }
   return NS_OK;
 }
 
@@ -132,6 +161,7 @@ nsXBLDocGlobalObject::GetContext(nsIScriptContext **aContext)
 
     JSContext *cx = (JSContext *)mScriptContext->GetNativeContext();
 
+    JS_SetErrorReporter(cx, XBL_ProtoErrorReporter);
     mJSObject = ::JS_NewObject(cx, &gSharedGlobalClass, nsnull, nsnull);
     if (!mJSObject)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -413,3 +443,4 @@ nsresult NS_NewXBLDocumentInfo(nsIDocument* aDocument, nsIXBLDocumentInfo** aRes
   NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
+
