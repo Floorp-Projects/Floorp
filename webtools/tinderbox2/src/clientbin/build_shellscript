@@ -1,7 +1,8 @@
-#!#perl# #perlflags# --
+#!#perl# --
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
+# This script does not need to run under taint perl.
 
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -24,8 +25,8 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-# $Revision: 1.1 $
-# $Date: 2001/02/27 15:43:04 $
+# $Revision: 1.2 $
+# $Date: 2001/03/02 17:19:59 $
 # $Author: kestes%tradinglinx.com $
 # $Name:  $
 
