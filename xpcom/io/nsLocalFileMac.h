@@ -71,6 +71,9 @@ public:
 	NS_IMETHOD GetFileTypeAndCreator(OSType *type, OSType *creator);
 	NS_IMETHOD SetFileTypeAndCreator(OSType type, OSType creator);
 
+	NS_IMETHOD SetFileTypeFromSuffix(const char *suffix);
+	NS_IMETHOD SetFileTypeFromMIMEType(const char *mimetype);
+
 	NS_IMETHOD GetFileSizeWithResFork(PRInt64 *aFileSize);
 
 	NS_IMETHOD LaunchAppWithDoc(nsILocalFile* aDocToLoad, PRBool aLaunchInBackground);
@@ -91,7 +94,13 @@ protected:
 		nsresult	TestFinderFlag(PRUint16 flagMask, PRBool *outFlagSet, PRBool testTargetSpec = PR_TRUE);
 
     OSErr			GetTargetSpecCatInfo(CInfoPBRec& outInfo);
-		nsresult MoveCopy( nsIFile* newParentDir, const char* newName, PRBool isCopy );		
+	nsresult MoveCopy( nsIFile* newParentDir, const char* newName, PRBool isCopy );
+		
+	// Passing nsnull for the extension uses leaf name
+	nsresult SetOSTypeFromExtension(const char* extension = nsnull);
+	
+	static nsresult DetermineCurrentProcessCreator(); 
+					
 private:
 
     // It's important we keep track of how we were initialized
@@ -128,7 +137,9 @@ private:
     CInfoPBRec  	mTargetFileInfoRec;			// cached file info, for the mTargetSpec
     
     OSType			mType, mCreator;
-    
+
+    static OSType   mgCurrentProcessSignature;
+        
 };
 
 #endif
