@@ -177,7 +177,7 @@ foreach $dir (sort @dirlist) {
 
 my $status = 0;
 if (scalar(@uniquedirs)) {
-  print "Updating tree..\n";
+  print "Updating tree..($#uniquedirs directories)\n";
   my $i=0;
   my $dirlist = "";
   foreach $dir (sort @uniquedirs) {
