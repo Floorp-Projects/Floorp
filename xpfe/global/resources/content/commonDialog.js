@@ -166,7 +166,7 @@ function commonDialogOnLoad()
 				}
 //		 	 	dump("hiding loginEditField");
 		 		var element = document.getElementById("loginEditField");
-				element.setAttribute("style","display: none;" );
+				element.setAttribute("style","visibility: collapse;" );
 				var element = document.getElementById("dialog.password1");
 				element.focus();
 			 }
@@ -181,7 +181,7 @@ function commonDialogOnLoad()
 				}
 //		 	 	dump("hiding password1EditField");
 		 		var element = document.getElementById("password1EditField");
-				element.setAttribute("style","display: none;" );
+				element.setAttribute("style","visibility: collapse;" );
 				var element = document.getElementById("dialog.loginname");
 				element.focus();
 			 }
@@ -199,12 +199,12 @@ function commonDialogOnLoad()
 //				}
 				// Now hide the meaningless text
 				var element = document.getElementById("password1.text");
-				element.setAttribute("style", "display:none;"  );
+				element.setAttribute("style", "visibility: collapse;"  );
 //		 	 	dump("hiding loginEditField and password2EditField");
 		 		var element = document.getElementById("loginEditField");
-				element.setAttribute("style","display: none;" );
+				element.setAttribute("style","visibility: collapse;" );
 		 		var element = document.getElementById("password2EditField");
-				element.setAttribute("style","display: none;" );
+				element.setAttribute("style","visibility: collapse;" );
 				var element = document.getElementById("dialog.password1");
 //				dump("give keyboard focus to password edit field \n");
 				element.focus();
@@ -220,12 +220,12 @@ function commonDialogOnLoad()
 				}
 				// Now hide the meaningless text
 				var element = document.getElementById("login.text");
-				element.setAttribute("style", "display:none;"  );
+				element.setAttribute("style", "visibility: collapse;"  );
 //		 		dump("hiding password1EditField and password2EditField");
 		 		var element = document.getElementById("password1EditField");
-				element.setAttribute("style","display: none;" );
+				element.setAttribute("style","visibility: collapse;" );
 		 		var element = document.getElementById("password2EditField");
-				element.setAttribute("style","display: none;" );
+				element.setAttribute("style","visibility: collapse;" );
 				var element = document.getElementById("dialog.loginname");
 //				dump("give keyboard focus to password edit field \n");
 				element.focus();
@@ -234,7 +234,7 @@ function commonDialogOnLoad()
 	 	case 0:
 //	 		dump("hiding all editfields \n");
 			var element = document.getElementById("editFields");
-			element.setAttribute("style","display: none;" );
+			element.setAttribute("style","visibility: collapse;" );
 			break;
 	}
 	
