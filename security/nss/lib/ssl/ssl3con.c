@@ -38,7 +38,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.63 2004/01/08 01:37:46 jpierre%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.64 2004/03/03 03:18:56 jpierre%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -2776,6 +2776,10 @@ ssl3_ComputeHandshakeHashes(sslSocket *     ss,
     PORT_Assert( ssl_HaveSSL3HandshakeLock(ss) );
 
     isTLS = (PRBool)(spec->version > SSL_LIBRARY_VERSION_3_0);
+    if (!spec->master_secret) {
+    	PORT_SetError(SSL_ERROR_RX_UNEXPECTED_HANDSHAKE);
+	return SECFailure;
+    }
 
     md5StateBuf = PK11_SaveContextAlloc(ssl3->hs.md5, md5StackBuf,
                                         sizeof md5StackBuf, &md5StateLen);
