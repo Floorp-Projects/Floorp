@@ -884,7 +884,8 @@ XFE_URLBar::doPopup(XEvent *event)
 		
   if (!m_popup)
     {
-      m_popup = new XFE_PopupMenu("popup",(XFE_Frame*)m_toplevel, widget, NULL);
+      m_popup = new XFE_PopupMenu("popup",(XFE_Frame*)m_toplevel, 
+                                  widget, (MenuSpec *)NULL);
       m_popup->addMenuSpec(ccp_popup_spec);
     }
   m_popup->position(event);
