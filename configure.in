@@ -2311,10 +2311,11 @@ dnl The new mail app is "smart-mail"
 dnl MOZ_ARG_ENABLE_BOOL(smart-mail,
 dnl [  --enable-smart-mail     Enable HTML/RDF-based client-side mail (untested)],
 dnl  MOZ_SMART_MAIL=1)
+NO_STATIC_LIB=1
 
-MOZ_ARG_DISABLE_BOOL(static,
-[  --disable-static        Disable building of internal static libs],
-  NO_STATIC_LIB=1)
+MOZ_ARG_ENABLE_BOOL(static,
+[  --enable-static        Enable building of internal static libs],
+  NO_STATIC_LIB=)
 
 case "$target" in
     *-*-aix*)
