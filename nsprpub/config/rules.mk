@@ -144,14 +144,6 @@ ifeq ($(OS_TARGET), WIN16)
 	W16DEF = $(notdir $(basename $(SHARED_LIBRARY))).DEF
 endif
 
-ifdef RES
-OBJS += $(RES)
-endif
-
-ifdef RESOBJ
-#OBJS += $(RESOBJ)
-endif
-
 ifeq ($(OS_ARCH), WINNT)
 ifneq ($(OS_TARGET), WIN16)
 ifneq ($(OS_TARGET), OS2)
@@ -351,9 +343,6 @@ endif	# OpenVMS
 endif	# WINNT
 endif	# AIX 4.1
 endif   # USE_AUTOCONF
-
-$(RESOBJ): $(RESNAME)
-	$(RC) -F$(OBJ_SUFFIX) $< $@
 
 ifeq ($(OS_ARCH), WINNT)
 $(RES): $(RESNAME)
