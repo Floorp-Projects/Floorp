@@ -623,7 +623,9 @@ NS_IMETHODIMP nsDeviceContextOS2 :: CheckFontExistence(const nsString& aFontName
   }
 
   char fontName[FACESIZE];
-  aFontName.ToCString( fontName, FACESIZE);
+
+  WideCharToMultiByte(0, aFontName.GetUnicode(), aFontName.Length() + 1,
+    fontName, sizeof(fontName));
 
   long lWant = 0;
   long lFonts = GpiQueryFonts( hps, QF_PUBLIC | QF_PRIVATE,
