@@ -54,6 +54,13 @@
   margin: 0px 5px 0px 0px !important;
 }
 
+#uninstallButton .button-icon, 
+#updateButton .button-icon,
+#optionsButton .button-icon,
+#useThemeButton .button-icon {
+  margin: 0px 5px 0px 0px !important;
+}
+
 .commandBarSeparator {
   margin-left: 5px;
 }
