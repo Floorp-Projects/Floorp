@@ -30,6 +30,7 @@ import org.mozilla.webclient.CurrentPage2;
 import org.mozilla.webclient.Selection;
 import org.mozilla.webclient.WindowControl;
 import org.mozilla.webclient.impl.WrapperFactory;
+import org.mozilla.webclient.impl.DOMTreeDumper;
 
 import java.util.Properties;
 import java.io.*;
@@ -63,6 +64,8 @@ private static boolean domInitialized = false;
 
 // Relationship Instance Variables
 
+    private DOMTreeDumper domDumper = null;
+
 //
 // Constructors and Initializers
 //
@@ -75,6 +78,7 @@ public CurrentPageImpl(WrapperFactory yourFactory,
     if (!domInitialized) {
         DOMAccessor.initialize();
     }
+    domDumper = new DOMTreeDumper();
 }
 
 //
@@ -221,63 +225,25 @@ public Properties getPageInfo()
 public String getSource()
 {
     getWrapperFactory().verifyInitialized();
-    String HTMLContent = new String();
-    String currURL = getCurrentURL();
-    System.out.println("\nThe Current URL is -- " + currURL);
-    try {
-        URL aURL = new URL(currURL);
-        URLConnection connection = aURL.openConnection();
-        connection.connect();
-        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-        boolean more = true;
-        while (more)
-            {
-                String line = in.readLine();
-                if (line == null) more = false;
-                else
-                    {
-                        HTMLContent = HTMLContent + line;
-                    }
-            }
+    Document doc = getDOM();
+    String HTMLContent = null;
+
+    if (null != doc) {
+	HTMLContent = domDumper.dump(doc);
     }
-    catch (Throwable e)
-        {
-            System.out.println("Error occurred while establishing connection -- \n ERROR - " + e);
-        }
 
     return HTMLContent;
 }
 
 public byte [] getSourceBytes()
 {
-    byte [] result = null;
     getWrapperFactory().verifyInitialized();
+    byte [] result = null;
 
-
-    String HTMLContent = new String();
-    String currURL = getCurrentURL();
-    System.out.println("\nThe Current URL is -- " + currURL);
-    try {
-        URL aURL = new URL(currURL);
-        URLConnection connection = aURL.openConnection();
-        connection.connect();
-        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-        boolean more = true;
-        while (more)
-            {
-                String line = in.readLine();
-                if (line == null) more = false;
-                else
-                    {
-                        HTMLContent = HTMLContent + line;
-                    }
-            }
+    String HTMLContent = getSource();
+    if (null != HTMLContent) {
+	result = HTMLContent.getBytes();
     }
-    catch (Throwable e)
-    {
-        System.out.println("Error occurred while establishing connection -- \n ERROR - " + e);
-    }
-    result = HTMLContent.getBytes();
     return result;
 }
 

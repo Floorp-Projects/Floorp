@@ -1,5 +1,5 @@
 /*
- * $Id: CurrentPageTest.java,v 1.9 2005/02/14 02:37:51 edburns%acm.org Exp $
+ * $Id: CurrentPageTest.java,v 1.10 2005/03/22 15:58:51 edburns%acm.org Exp $
  */
 
 /* 
@@ -493,6 +493,59 @@ public class CurrentPageTest extends WebclientTestCase implements ClipboardOwner
 	currentPage.printPreview(false);
 	
 	
+	frame.setVisible(false);
+	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
+    }
+
+    public void testGetSource() throws Exception {
+	BrowserControl firstBrowserControl = null;
+	DocumentLoadListenerImpl listener = null;
+	Selection selection = null;
+	firstBrowserControl = BrowserControlFactory.newBrowserControl();
+	assertNotNull(firstBrowserControl);
+	BrowserControlCanvas canvas = (BrowserControlCanvas)
+	    firstBrowserControl.queryInterface(BrowserControl.BROWSER_CONTROL_CANVAS_NAME);
+	eventRegistration = (EventRegistration2)
+	    firstBrowserControl.queryInterface(BrowserControl.EVENT_REGISTRATION_NAME);
+
+	assertNotNull(canvas);
+	Frame frame = new Frame();
+	frame.setUndecorated(true);
+	frame.setBounds(0, 0, 640, 480);
+	frame.add(canvas, BorderLayout.CENTER);
+	frame.setVisible(true);
+	canvas.setVisible(true);
+	
+	Navigation2 nav = (Navigation2) 
+	    firstBrowserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
+	assertNotNull(nav);
+	currentPage = (CurrentPage2) 
+	  firstBrowserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
+	
+	assertNotNull(currentPage);
+
+	eventRegistration.addDocumentLoadListener(listener = new DocumentLoadListenerImpl() {
+		public void doEndCheck() {
+		    CurrentPageTest.keepWaiting = false;
+		}
+	    });
+	
+	Thread.currentThread().sleep(3000);
+	
+
+	CurrentPageTest.keepWaiting = true;
+
+	nav.loadURL("http://localhost:5243/ViewSourceTest.html");
+	
+	// keep waiting until the previous load completes
+	while (CurrentPageTest.keepWaiting) {
+	    Thread.currentThread().sleep(1000);
+	}
+
+	String source = currentPage.getSource();
+	assertTrue(-1 != source.indexOf("<HTML>"));
+	assertTrue(-1 != source.indexOf("</HTML>"));
+		   
 	frame.setVisible(false);
 	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
     }

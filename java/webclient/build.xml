@@ -101,7 +101,7 @@
       <include name="org/mozilla/webclient/*"/>
       <include name="org/mozilla/webclient/impl/wrapper_native/*"/>
       <include name="org/mozilla/webclient/impl/*"/>
-      <include name="org/mozilla/webclient/test/*"/>
+      <exclude name="org/mozilla/webclient/test/**/*.*"/>
     </javac>
 
     <mkdir dir="${build.home}/META-INF/services"/>
