@@ -40,6 +40,7 @@
 #include "nsMimeTypes.h"
 #include "nsIEntityConverter.h"
 #include "nsISaveAsCharset.h"
+#include "nsHankakuToZenkakuCID.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
@@ -390,8 +391,12 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset, co
   NS_ASSERTION(contentType, "null ptr- contentType");
   NS_ASSERTION(charset, "null ptr- charset");
   NS_ASSERTION(outString, "null ptr- outString");
-  if(!contentType || !charset || !outString)
+  if(!contentType || !charset || !inString || !outString)
     return NS_ERROR_NULL_POINTER;
+  if (0 == *inString) {
+    *outString = nsCRT::strdup("");
+    return (NULL != *outString) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  }
   *outString = NULL;
 
   PRBool bTEXT_HTML = PR_FALSE;
@@ -437,6 +442,32 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset, co
                         nsIEntityConverter::transliterate);
     }
     if (NS_SUCCEEDED(res)) {
+      // Mapping characters in a certain range (required for Japanese only)
+      if (!nsCRT::strcasecmp("ISO-2022-JP", charset)) {
+        NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
+        if (nsnull != prefs && NS_SUCCEEDED(res)) {
+          PRBool return_val;
+
+          if (NS_FAILED(prefs->GetBoolPref("mailnews.send_hankaku_kana", &return_val)))
+            return_val = PR_FALSE;  // no pref means need the mapping
+
+          if (!return_val) {
+            nsCOMPtr <nsITextTransform> textTransform;
+            res = nsComponentManager::CreateInstance(NS_HANKAKUTOZENKAKU_PROGID, nsnull, 
+                                                     NS_GET_IID(nsITextTransform), getter_AddRefs(textTransform));
+            if (NS_SUCCEEDED(res)) {
+              nsAutoString aText(inString);
+              nsAutoString aResult;
+              res = textTransform->Change(aText, aResult);
+              if (NS_SUCCEEDED(res)) {
+                return aConv->Convert(aResult.GetUnicode(), outString);
+              }
+            }
+          }
+        }
+      }
+
+      // Convert to charset
       res = aConv->Convert(inString, outString);
     }
   }
