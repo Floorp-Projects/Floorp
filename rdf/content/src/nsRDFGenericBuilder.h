@@ -63,8 +63,8 @@ public:
     NS_IMETHOD CreateContents(nsIContent* aElement);
 
     NS_IMETHOD SetAllAttributesOnElement(nsIContent *aNode, nsIRDFResource *res);
-    NS_IMETHOD FindTemplateForElement(nsIContent *aNode, nsIContent **theTemplate);
-    NS_IMETHOD IsTemplateRuleMatch(nsIContent *aNode, nsIContent *aRule, PRBool *matchingRuleFound);
+    NS_IMETHOD FindTemplateForResource(nsIRDFResource *aNode, nsIContent **theTemplate);
+    NS_IMETHOD IsTemplateRuleMatch(nsIRDFResource *aNode, nsIContent *aRule, PRBool *matchingRuleFound);
     NS_IMETHOD PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIContent *aTemplate,
                     nsIContent *treeCell, nsIContent* aElement, nsIRDFResource* aProperty,
                     nsIRDFResource* aValue, PRInt32 aNaturalOrderPos);
@@ -198,7 +198,6 @@ protected:
     static nsIAtom* kSubcontainmentAtom;
     static nsIAtom* kTreeTemplateAtom;
     static nsIAtom* kRuleAtom;
-    static nsIAtom* kTempAtom;
     static nsIAtom* kTreeContentsGeneratedAtom;
     static nsIAtom* kTextAtom;
     static nsIAtom* kPropertyAtom;

@@ -70,6 +70,8 @@
 
 #include "nsRDFGenericBuilder.h"
 
+#define	XUL_TEMPLATES	1
+
 ////////////////////////////////////////////////////////////////////////
 
 static NS_DEFINE_IID(kIContentIID,                NS_ICONTENT_IID);
@@ -106,7 +108,6 @@ nsIAtom* RDFGenericBuilderImpl::kIgnoreAtom;
 nsIAtom* RDFGenericBuilderImpl::kSubcontainmentAtom;
 nsIAtom* RDFGenericBuilderImpl::kTreeTemplateAtom;
 nsIAtom* RDFGenericBuilderImpl::kRuleAtom;
-nsIAtom* RDFGenericBuilderImpl::kTempAtom;
 nsIAtom* RDFGenericBuilderImpl::kTreeContentsGeneratedAtom;
 nsIAtom* RDFGenericBuilderImpl::kTextAtom;
 nsIAtom* RDFGenericBuilderImpl::kPropertyAtom;
@@ -152,7 +153,6 @@ RDFGenericBuilderImpl::RDFGenericBuilderImpl(void)
         kSubcontainmentAtom  = NS_NewAtom("subcontainment");
         kTreeTemplateAtom    = NS_NewAtom("template");
         kRuleAtom            = NS_NewAtom("rule");
-        kTempAtom            = NS_NewAtom("temp");
 
         kTextAtom            = NS_NewAtom("text");
         kPropertyAtom        = NS_NewAtom("property");
@@ -235,7 +235,6 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
         NS_RELEASE(kSubcontainmentAtom);
         NS_RELEASE(kTreeTemplateAtom);
         NS_RELEASE(kRuleAtom);
-        NS_RELEASE(kTempAtom);
         NS_RELEASE(kTreeContentsGeneratedAtom);
         NS_RELEASE(kTextAtom);
         NS_RELEASE(kPropertyAtom);
@@ -580,7 +579,7 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
             for (loop=0; loop<numElements; loop+=2)
             {
 #ifdef XUL_TEMPLATES
-				rv = CreateWidgetItem(aElement, flatArray[loop+1], flatArray[loop], loop+1);
+		rv = CreateWidgetItem(aElement, flatArray[loop+1], flatArray[loop], loop+1);
 #else
                 rv = AddWidgetItem(aElement, flatArray[loop+1], flatArray[loop], loop+1);
 #endif
@@ -631,8 +630,11 @@ RDFGenericBuilderImpl::SetAllAttributesOnElement(nsIContent *aNode, nsIRDFResour
 				continue;
 			}
 
-            if (IsIgnoredProperty(aNode, property))
-                continue;
+			// Ignore any properties set in ignore attribute
+			if (IsIgnoredProperty(aNode, property))
+			{
+				continue;
+			}
 
 			PRInt32			nameSpaceID;
 			nsCOMPtr<nsIAtom>	tag;
@@ -678,7 +680,7 @@ RDFGenericBuilderImpl::SetAllAttributesOnElement(nsIContent *aNode, nsIRDFResour
 
 
 NS_IMETHODIMP
-RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIContent *aNode, nsIContent *aRule, PRBool *matchingRuleFound)
+RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIRDFResource *aNode, nsIContent *aRule, PRBool *matchingRuleFound)
 {
 	nsresult		rv = NS_OK;
 	PRInt32			count;
@@ -695,25 +697,54 @@ RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIContent *aNode, nsIContent *aRule,
 		if (NS_FAILED(rv = aRule->GetAttribute(attribNameSpaceID, attribAtom, attribValue)))
 			continue;
 
-		if ((attribNameSpaceID == kNameSpaceID_XUL) && (attribAtom.get() == kContainerAtom))
+		// Note: some attributes must be skipped on XUL template rule subtree
+
+		// never copy rdf:container attribute
+		if ((attribAtom.get() == kContainerAtom) && (attribNameSpaceID == kNameSpaceID_RDF))
+			continue;
+		// never copy rdf:property attribute
+		else if ((attribAtom.get() == kPropertyAtom) && (attribNameSpaceID == kNameSpaceID_RDF))
+			continue;
+		// never copy rdf:instanceOf attribute
+		else if ((attribAtom.get() == kInstanceOfAtom) && (attribNameSpaceID == kNameSpaceID_RDF))
+			continue;
+		// never copy {}:ID attribute
+		else if ((attribAtom.get() == kIdAtom) && (attribNameSpaceID == kNameSpaceID_None))
+			continue;
+		// never copy {}:itemcontentsgenerated attribute (bogus)
+		else if ((attribAtom.get() == kItemContentsGeneratedAtom) && (attribNameSpaceID == kNameSpaceID_None))
+			continue;
+		// never copy {}:treecontentsgenerated attribute (bogus)
+		else if ((attribAtom.get() == kTreeContentsGeneratedAtom) && (attribNameSpaceID == kNameSpaceID_None))
+			continue;
+
+		else if ((attribNameSpaceID == kNameSpaceID_XUL) && (attribAtom.get() == kContainerAtom))
 		{
 			// check and see if aNode is a container
-			nsAutoString	nodeValue;
-			if (NS_SUCCEEDED(aNode->GetAttribute(kNameSpaceID_RDF, kContainerAtom, nodeValue)))
-			{
-				if (nodeValue.EqualsIgnoreCase(attribValue))
-				{
-					*matchingRuleFound = PR_TRUE;
-					break;
-				}
-			}
+			PRBool	containerFlag = IsContainer(aRule, aNode);
+			if (containerFlag && (!attribValue.EqualsIgnoreCase("true")))		break;
+			else if (!containerFlag && (!attribValue.EqualsIgnoreCase("false")))	break;
+		}
+		else
+		{
+			nsCOMPtr<nsIRDFResource>	attribAtomResource;
+			if (NS_FAILED(rv = GetResource(attribNameSpaceID, attribAtom, getter_AddRefs(attribAtomResource))))
+				break;
+			nsCOMPtr<nsIRDFNode>	aResult;
+			if (NS_FAILED(rv = mDB->GetTarget(aNode, attribAtomResource, PR_TRUE, getter_AddRefs(aResult))))
+				break;
+			nsCOMPtr<nsIRDFLiteral>		aLiteral = do_QueryInterface(aResult);
+			if (!aLiteral)	break;
+			PRUnichar	*val = nsnull;
+			if (NS_FAILED(aLiteral->GetValue(&val)))	break;
+			if (!attribValue.Equals(val))	break;
 		}
 	}
 	return(rv);
 }
 
 NS_IMETHODIMP
-RDFGenericBuilderImpl::FindTemplateForElement(nsIContent *aNode, nsIContent **theTemplate)
+RDFGenericBuilderImpl::FindTemplateForResource(nsIRDFResource *aNode, nsIContent **theTemplate)
 {
 	nsresult		rv;
 	PRInt32			count;
@@ -1023,16 +1054,10 @@ NS_IMETHODIMP
 RDFGenericBuilderImpl::CreateWidgetItem(nsIContent *aElement, nsIRDFResource *aProperty,
 					nsIRDFResource *aValue, PRInt32 aNaturalOrderPos)
 {
-	nsCOMPtr<nsIContent>	aTemplate, tempNode;
+	nsCOMPtr<nsIContent>	aTemplate;
 	nsresult		rv;
 
-	if (NS_FAILED(rv = CreateResourceElement(kNameSpaceID_XUL, kTempAtom,
-		aValue, getter_AddRefs(tempNode))))
-		return(rv);
-	if (NS_FAILED(rv = SetAllAttributesOnElement(tempNode, aValue)))
-		return(rv);
-
-	if (NS_SUCCEEDED(rv = FindTemplateForElement(tempNode, getter_AddRefs(aTemplate))) &&
+	if (NS_SUCCEEDED(rv = FindTemplateForResource(aValue, getter_AddRefs(aTemplate))) &&
 		(aTemplate))
 	{
 		nsCOMPtr<nsIContent>	children = do_QueryInterface(aElement);
