@@ -19,18 +19,10 @@
     </content>
   </binding>
 
-  <binding id="menubar" extends="xul:menubar">
-    <content>
-      <xul:box class="menubar-container" flex="1">
-	  	<children/>
-	  </xul:box>
-    </content>
-  </binding>
-  
   <binding id="toolbar-primary" extends="chrome://global/content/toolbarBindings.xml#toolbar">
   	<content>
 		<xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar"
-					onclick="this.grippyClicked();" tbattr="toolbar-grippy" class="toolbar-primary-grippy"/>
+					tbattr="toolbar-grippy" class="toolbar-primary-grippy"/>
 		<xul:spring class="toolbar-primary-image-left"/> 
 		<xul:box flex="1" class="toolbar-primary-image-middle toolbar-holder" 
 			inherits="collapsed,last-toolbar,orient=tborient,autostretch=tbautostretch" autostretch="never">
@@ -40,6 +32,19 @@
 	</content>
   </binding>
 	  
+  <binding id="toolbargrippy" extends="chrome://global/content/toolbarBindings.xml#toolbargrippy">
+    <content orient="vertical">
+      <xul:box class="toolbargrippy-twisty" flex="1"/>
+    </content>
+  </binding>
+
+  <binding id="toolbargrippy-collapsed" extends="chrome://global/content/toolbarBindings.xml#toolbargrippy">
+    <content>
+      <xul:box class="toolbargrippy-twisty-collapsed" flex="1"/>
+    </content>
+  </binding>
+
+  
   <binding id="nav-bar-inner" extends="xul:box">
     <content>
     	<xul:image class="navbar-inner-groove-image-left"/>
@@ -228,6 +233,7 @@
       	<xul:spring class="textfield-right-bottom"/>
       </xul:box>
     </content>
+    <!--
     <implementation>
       <property name="value"      onset="document.getAnonymousNodes(this)[1].childNodes[1].firstChild.value = val; return val;"
                                   onget="return document.getAnonymousNodes(this)[1].childNodes[1].firstChild.value;"/>
@@ -279,6 +285,7 @@
       <handler event="focus" phase="capturing" action="this.setAttribute('focused','true');"/>
       <handler event="blur" phase="capturing" action="this.removeAttribute('focused');"/>
     </handlers>    
+-->
   </binding>
 
 </bindings>
