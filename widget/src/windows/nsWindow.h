@@ -59,12 +59,14 @@ public:
                                      const nsRect &aRect,
                                      EVENT_CALLBACK aHandleEventFunction,
                                      nsIDeviceContext *aContext,
+                                     nsIAppShell *aAppShell = nsnull,
                                      nsIToolkit *aToolkit = nsnull,
                                      nsWidgetInitData *aInitData = nsnull);
     virtual void            Create(nsNativeWidget aParent,
                                      const nsRect &aRect,
                                      EVENT_CALLBACK aHandleEventFunction,
                                      nsIDeviceContext *aContext,
+                                     nsIAppShell *aAppShell = nsnull,
                                      nsIToolkit *aToolkit = nsnull,
                                      nsWidgetInitData *aInitData = nsnull);
     virtual void            Destroy();
@@ -98,6 +100,7 @@ public:
     virtual nsIRenderingContext* GetRenderingContext();
     virtual void            SetColorMap(nsColorMap *aColorMap);
     virtual nsIDeviceContext* GetDeviceContext();
+    virtual nsIAppShell *   GetAppShell();
     virtual void            Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
     virtual nsIToolkit*     GetToolkit();  
     virtual void            SetBorderStyle(nsBorderStyle aBorderStyle); 
@@ -171,6 +174,7 @@ protected:
     EVENT_CALLBACK mEventCallback;
     nsIDeviceContext *mContext;
     nsIFontMetrics *mFontMetrics;
+    nsIAppShell *mAppShell;
     nsToolkit   *mToolkit;
 
     nsIMouseListener * mMouseListener;
@@ -252,10 +256,11 @@ protected:
                     const nsRect &aRect, \
                     EVENT_CALLBACK aHandleEventFunction, \
                     nsIDeviceContext *aContext, \
+                    nsIAppShell *aAppShell = nsnull, \
                     nsIToolkit *aToolkit = nsnull, \
                     nsWidgetInitData *aInitData = nsnull) \
     { \
-        nsWindow::Create(aParent, aRect, aHandleEventFunction, aContext, aToolkit, aInitData); \
+        nsWindow::Create(aParent, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData); \
     } \
 
 #define BASE_WINDOWS_METHODS \
@@ -263,10 +268,11 @@ protected:
                  const nsRect &aRect, \
                  EVENT_CALLBACK aHandleEventFunction, \
                  nsIDeviceContext *aContext, \
+                 nsIAppShell *aAppShell = nsnull, \
                  nsIToolkit *aToolkit = nsnull, \
                  nsWidgetInitData *aInitData = nsnull) \
     { \
-        nsWindow::Create(aParent, aRect, aHandleEventFunction, aContext, aToolkit, aInitData); \
+        nsWindow::Create(aParent, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData); \
     } \
     void Destroy(void) \
     { \
@@ -365,6 +371,10 @@ protected:
     nsIDeviceContext* GetDeviceContext() \
     { \
         return nsWindow::GetDeviceContext(); \
+    } \
+    nsIAppShell* GetAppShell() \
+    { \
+        return nsWindow::GetAppShell(); \
     } \
     void Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect) \
     { \

@@ -21,6 +21,7 @@
 
 #include "nsIButton.h"
 #include "nsICheckButton.h"
+#include "nsILookAndFeel.h"
 #include "nsIRadioButton.h"
 #include "nsITextWidget.h"
 #include "nsIScrollbar.h"
@@ -61,6 +62,7 @@ static NS_DEFINE_IID(kIScrollbarIID, NS_ISCROLLBAR_IID);
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
+static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 
 //
@@ -83,7 +85,8 @@ nsEventStatus PR_CALLBACK HandleEventMain(nsGUIEvent *aEvent)
                 if (next) {
                     nsIWidget *widget;
                     if (NS_OK == next->QueryInterface(kIWidgetIID, (void**)&widget)) {
-                        widget->Resize(0, 0, 200, ((nsSizeEvent*)aEvent)->windowSize->height - 26, PR_TRUE);
+                        widget->Resize(0, 0, 200, 
+                          ((nsSizeEvent*)aEvent)->windowSize->height, PR_TRUE);
                         NS_RELEASE(widget);
                     }
                 }
@@ -93,10 +96,10 @@ nsEventStatus PR_CALLBACK HandleEventMain(nsGUIEvent *aEvent)
             }
 
             scribbleData.drawPane->Resize(200, 
-                                          0, 
-                                          ((nsSizeEvent*)aEvent)->windowSize->width - 206,
-                                          ((nsSizeEvent*)aEvent)->windowSize->height - 26,
-                                          PR_TRUE);
+                               0, 
+                               ((nsSizeEvent*)aEvent)->windowSize->width - 200,
+                               ((nsSizeEvent*)aEvent)->windowSize->height,
+                               PR_TRUE);
 
             break;
         }
@@ -421,6 +424,7 @@ nsresult CreateApplication(int * argc, char ** argv)
     static NS_DEFINE_IID(kCVertScrollbarCID, NS_VERTSCROLLBAR_CID);
     static NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
     static NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
+    static NS_DEFINE_IID(kCLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
     NSRepository::RegisterFactory(kCAppShellCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCWindowCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -435,7 +439,8 @@ nsresult CreateApplication(int * argc, char ** argv)
     NSRepository::RegisterFactory(kCVertScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCTextAreaCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCTextFieldCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-
+    NSRepository::RegisterFactory(kCLookAndFeelCID, WIDGET_DLL, PR_FALSE, PR_FALSE)
+;
     //NS_InitToolkit(PR_GetCurrentThread());
 
     nsresult  res;
@@ -451,36 +456,37 @@ nsresult CreateApplication(int * argc, char ** argv)
 
      // Create an application shell
     nsIAppShell *appShell;
-    NSRepository::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID, (void**)&appShell);
+    NSRepository::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID,
+                                 (void**)&appShell);
     appShell->Create(argc, argv);
    
+
+    nsILookAndFeel *laf;
+    NSRepository::CreateInstance(kCLookAndFeelCID, nsnull, kILookAndFeelIID,
+                                 (void**)&laf);
     //
     // create the main window
     //
-    NSRepository::CreateInstance(kCWindowCID, nsnull, kIWidgetIID, (void **)&(scribbleData.mainWindow));
-    //nsRect rect(100, 100, 600, 600);
-    //scribbleData.mainWindow->Create((nsIWidget*)NULL, rect, HandleEventMain, NULL);
-#ifdef XP_PC
+    NSRepository::CreateInstance(kCWindowCID, nsnull, kIWidgetIID, 
+                                 (void **)&(scribbleData.mainWindow));
     nsRect rect(100, 100, 600, 700);
-    scribbleData.mainWindow->Create((nsIWidget*)NULL, rect, HandleEventMain, NULL);
-#endif
-#ifdef XP_UNIX
-    nsRect rect(100, 100, 400, 580);
-    scribbleData.mainWindow->Create((nsNativeWidget)NULL, rect, HandleEventMain,
-                   (nsIDeviceContext *)nsnull,
-                   (nsIToolkit *)nsnull,
-                   (nsWidgetInitData*)appShell->GetNativeData(NS_NATIVE_SHELL));
-#endif
-    scribbleData.mainWindow->SetBackgroundColor(NS_RGB(255, 255, 255));
+    scribbleData.mainWindow->Create((nsIWidget*)NULL, 
+                                    rect, 
+                                    HandleEventMain, 
+                                    NULL,
+                                    appShell);
+    scribbleData.mainWindow->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
+    scribbleData.mainWindow->SetTitle("Scribble");
 
     //
     // create the control pane
     //
     nsIWidget *controlPane;
-    rect.SetRect(0, 0, 200, 580);  
+    rect.SetRect(0, 0, 200, 700);  
     NSRepository::CreateInstance(kCChildCID, nsnull, kIWidgetIID, (void **)&controlPane);
     controlPane->Create(scribbleData.mainWindow, rect, HandleEventControlPane, NULL);
-    controlPane->SetBackgroundColor(NS_RGB(255, 255, 255));
+    controlPane->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
+    controlPane->Show(PR_TRUE);
 
     //
     // Add the scribble/lines section
@@ -494,7 +500,7 @@ nsresult CreateApplication(int * argc, char ** argv)
     nsString cbLabel("Scribble");
     scribbleData.scribble->SetLabel(cbLabel);
     scribbleData.scribble->SetState(PR_FALSE);
-    //scribbleData.scribble->SetBackgroundColor(NS_RGB(255, 255, 255));
+    scribbleData.scribble->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
     scribbleData.scribble->Show(PR_TRUE);
 
     // create the "Lines" check button
@@ -505,7 +511,7 @@ nsresult CreateApplication(int * argc, char ** argv)
     nsString cbLabel1("Lines");
     scribbleData.lines->SetLabel(cbLabel1);
     scribbleData.lines->SetState(PR_TRUE);
-    //scribbleData.lines->SetBackgroundColor(NS_RGB(255, 255, 255));
+    scribbleData.lines->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
     scribbleData.lines->Show(PR_TRUE);
     //
     // Add the circle/rectangle section
@@ -519,7 +525,7 @@ nsresult CreateApplication(int * argc, char ** argv)
     checkButton->Create(controlPane, rect, HandleEventCheck, NULL);
     nsString cbLabel2("Circles");
     checkButton->SetLabel(cbLabel2);
-    checkButton->SetBackgroundColor(NS_RGB(255, 255, 255));
+    checkButton->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
     checkButton->Show(PR_TRUE);
     NS_RELEASE(checkButton);
 
@@ -530,7 +536,7 @@ nsresult CreateApplication(int * argc, char ** argv)
     checkButton->Create(controlPane, rect, HandleEventCheck, NULL);
     nsString cbLabel3("Rectangles");
     checkButton->SetLabel(cbLabel3);
-    checkButton->SetBackgroundColor(NS_RGB(255, 255, 255));
+    checkButton->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
     checkButton->Show(PR_TRUE);
     NS_RELEASE(checkButton);
 
@@ -587,15 +593,18 @@ nsresult CreateApplication(int * argc, char ** argv)
     //
     // create the draw pane
     //
-    rect.SetRect(200, 0, 400, 580);  
+    rect.SetRect(200, 0, 400, 700);  
     NSRepository::CreateInstance(kCChildCID, nsnull, kIWidgetIID, (void **)&scribbleData.drawPane);
     scribbleData.drawPane->Create(scribbleData.mainWindow, rect, HandleEventGraphicPane, NULL);
-    scribbleData.drawPane->SetBackgroundColor(NS_RGB(255, 255, 255));
+    scribbleData.drawPane->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
+    scribbleData.drawPane->Show(PR_TRUE);
 
     //
     // show. We are in business...
     //
     scribbleData.mainWindow->Show(PR_TRUE);
+
+    laf->Release();
 
     return(appShell->Run());
 }

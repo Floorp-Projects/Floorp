@@ -157,6 +157,7 @@ void   nsFileWidget:: Create(nsIWidget *aParent,
                                  nsString& aTitle,
                                  nsMode aMode,
                                  nsIDeviceContext *aContext,
+                                 nsIAppShell *aAppShell,
                                  nsIToolkit *aToolkit,
                                  void *aInitData)
 {

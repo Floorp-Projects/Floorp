@@ -28,6 +28,7 @@
 #include "nsGUIEvent.h"
 
 // forward declarations
+class   nsIAppShell;
 class   nsIToolkit;
 class   nsIFontMetrics;
 class   nsIToolkit;
@@ -129,6 +130,10 @@ class nsIWidget : public nsISupports {
      * @param     parent or null if it's a top level window
      * @param     aRect     the widget dimension
      * @param     aHandleEventFunction the event handler callback function
+     * @param     aContext
+     * @param     aAppShell the parent application shell. If nsnull,
+     *                      the parent window's application shell will be used.
+     * @param     aToolkit
      * @param     aInitData data that is used for widget initialization
      *
      */
@@ -136,6 +141,7 @@ class nsIWidget : public nsISupports {
                         const nsRect     &aRect,
                         EVENT_CALLBACK   aHandleEventFunction,
                         nsIDeviceContext *aContext,
+                        nsIAppShell      *aAppShell = nsnull,
                         nsIToolkit       *aToolkit = nsnull,
                         nsWidgetInitData *aInitData = nsnull) = 0;
 
@@ -159,10 +165,11 @@ class nsIWidget : public nsISupports {
      * @param     aHandleEventFunction the event handler callback function
      */
     virtual void Create(nsNativeWidget aParent,
-                        const nsRect &aRect,
-                        EVENT_CALLBACK aHandleEventFunction,
+                        const nsRect     &aRect,
+                        EVENT_CALLBACK   aHandleEventFunction,
                         nsIDeviceContext *aContext,
-                        nsIToolkit *aToolkit = nsnull,
+                        nsIAppShell      *aAppShell = nsnull,
+                        nsIToolkit       *aToolkit = nsnull,
                         nsWidgetInitData *aInitData = nsnull) = 0;
 
     /**
@@ -380,6 +387,7 @@ class nsIWidget : public nsISupports {
     virtual void* GetNativeData(PRUint32 aDataType) = 0;
     virtual nsIRenderingContext* GetRenderingContext() = 0;
     virtual nsIDeviceContext* GetDeviceContext() = 0;
+    virtual nsIAppShell *GetAppShell() = 0;
     //@}
 
     /**

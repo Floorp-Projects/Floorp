@@ -17,6 +17,7 @@
  */
 
 #include "nsWindow.h"
+#include "nsIAppShell.h"
 #include "nsIFontMetrics.h"
 #include "nsIFontCache.h"
 #include "nsGUIEvent.h"
@@ -354,6 +355,7 @@ nsWindow::nsWindow(nsISupports *aOuter) : nsObject(aOuter)
     mChildren      = NULL;
     mEventCallback = NULL;
     mToolkit       = NULL;
+    mAppShell      = NULL;
     mMouseListener = NULL;
     mEventListener = NULL;
     mBackground    = ::GetSysColor(COLOR_BTNFACE);
@@ -418,6 +420,7 @@ void nsWindow::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
@@ -440,6 +443,9 @@ void nsWindow::Create(nsIWidget *aParent,
         }
 
     }
+
+    mAppShell = aAppShell;
+    NS_IF_ADDREF(mAppShell);
 
     //
     // Switch to the "main gui thread" if necessary... This method must
@@ -521,6 +527,7 @@ void nsWindow::Create(nsNativeWidget aParent,
                          const nsRect &aRect,
                          EVENT_CALLBACK aHandleEventFunction,
                          nsIDeviceContext *aContext,
+                         nsIAppShell *aAppShell,
                          nsIToolkit *aToolkit,
                          nsWidgetInitData *aInitData)
 {
@@ -537,6 +544,9 @@ void nsWindow::Create(nsNativeWidget aParent,
         }
 
     }
+
+    mAppShell = aAppShell;
+    NS_IF_ADDREF(aAppShell);
 
     //
     // Switch to the "main gui thread" if necessary... This method must
@@ -637,6 +647,7 @@ void nsWindow::Destroy()
     if (mTooltip) {
       VERIFY(::DestroyWindow(mTooltip));
     }
+    NS_IF_RELEASE(mAppShell);
 }
 
 
@@ -1197,6 +1208,17 @@ nsIDeviceContext* nsWindow::GetDeviceContext()
     return mContext; 
 }
 
+//-------------------------------------------------------------------------
+//
+// Return the App Shell
+//
+//-------------------------------------------------------------------------
+
+nsIAppShell *nsWindow::GetAppShell()
+{
+    NS_IF_ADDREF(mAppShell);
+    return mAppShell;
+}
 
 //-------------------------------------------------------------------------
 //
@@ -1233,23 +1255,25 @@ BOOL nsWindow::CallMethod(MethodInfo *info)
 
     switch (info->methodId) {
         case nsWindow::CREATE:
-            NS_ASSERTION(info->nArgs == 6, "Wrong number of arguments to CallMethod");
+            NS_ASSERTION(info->nArgs == 7, "Wrong number of arguments to CallMethod");
             Create((nsIWidget*)(info->args[0]), 
                         (nsRect&)*(nsRect*)(info->args[1]), 
                         (EVENT_CALLBACK)(info->args[2]), 
                         (nsIDeviceContext*)(info->args[3]),
-                        (nsIToolkit*)(info->args[4]),
-                        (nsWidgetInitData*)(info->args[5]));
+                        (nsIAppShell *)(info->args[4]),
+                        (nsIToolkit*)(info->args[5]),
+                        (nsWidgetInitData*)(info->args[6]));
             break;
 
         case nsWindow::CREATE_NATIVE:
-            NS_ASSERTION(info->nArgs == 6, "Wrong number of arguments to CallMethod");
+            NS_ASSERTION(info->nArgs == 7, "Wrong number of arguments to CallMethod");
             Create((nsNativeWidget)(info->args[0]), 
                         (nsRect&)*(nsRect*)(info->args[1]), 
                         (EVENT_CALLBACK)(info->args[2]), 
                         (nsIDeviceContext*)(info->args[3]),
-                        (nsIToolkit*)(info->args[4]),
-                        (nsWidgetInitData*)(info->args[5]));
+                        (nsIAppShell *)(info->args[4]),
+                        (nsIToolkit*)(info->args[5]),
+                        (nsWidgetInitData*)(info->args[6]));
             return TRUE;
 
         case nsWindow::DESTROY:

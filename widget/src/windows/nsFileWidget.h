@@ -46,6 +46,7 @@ class nsFileWidget : public nsIFileWidget, public nsObject
                                     nsString& aTitle,
                                     nsMode aMode,
                                     nsIDeviceContext *aContext = nsnull,
+                                    nsIAppShell *aAppShell = nsnull,
                                     nsIToolkit *aToolkit = nsnull,
                                     void *aInitData = nsnull);
 
