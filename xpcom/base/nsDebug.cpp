@@ -167,7 +167,7 @@ NS_COM void nsDebug::Assertion(const char* aStr, const char* aExpr,
       PR_snprintf(msg, sizeof(msg),
                 "%s\n\nClick Abort to exit the Application.\n"
                 "Click Retry to Debug the Application..\n"
-                "Click Ignore to continue running th Application.", buf); 
+                "Click Ignore to continue running the Application.", buf); 
       int code = ::MessageBox(NULL, msg, "nsDebug::Assertion",
                      MB_ICONSTOP | MB_ABORTRETRYIGNORE);
       switch(code)
