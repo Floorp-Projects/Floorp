@@ -4010,8 +4010,9 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
 #ifdef INCLUDE_XUL
         // Need to (for XUL only) do a special check for the treeitem tag
 				PRInt32 nameSpaceID;
-				if (NS_SUCCEEDED(aContainer->GetNameSpaceID(nameSpaceID)) &&
-								nameSpaceID == nsXULAtoms::nameSpaceID) {
+				if (aContainer &&
+            NS_SUCCEEDED(aContainer->GetNameSpaceID(nameSpaceID)) &&
+						nameSpaceID == nsXULAtoms::nameSpaceID) {
 					// See if we're the treeitem tag.  This tag is treated differently,
 					// since the children of the content node are actually SIBLING frames.
 					// We've only removed the parent frame.  Now we have to remove all of
@@ -4279,7 +4280,7 @@ nsCSSFrameConstructor::ContentStateChanged(nsIPresContext* aPresContext,
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
   nsIFrame*     primaryFrame;
-   
+
   shell->GetPrimaryFrameFor(aContent, &primaryFrame);
 
   // XXX need to add mechanism to detect what state changes need even be considered
