@@ -1091,6 +1091,10 @@ void
 ClearDLProgControls(void)
 {
     Rect teRect;
+    GrafPtr oldPort;
+    
+    GetPort(&oldPort);
+    SetPort(gWPtr);
         
     for (int i = 0; i < kNumDLFields; ++i)
     {
@@ -1112,6 +1116,8 @@ ClearDLProgControls(void)
         DisposeControl(gControls->tw->dlProgressBar);
         gControls->tw->dlProgressBar = NULL;
     }
+    
+    SetPort(oldPort);
 }
 
 void
