@@ -10,3 +10,4 @@ nsFileSpec.h
 nsRepeater.h
 nsIProperties.h
 nsCaretProperties.h
+nsSpecialSystemDirectory.h
