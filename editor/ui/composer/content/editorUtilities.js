@@ -226,12 +226,12 @@ function GetCurrentEditorElement()
   var tmpWindow = window;
   
   do {
-    // We want the equivalent of document.commandDispatcher.focusedWindow.frameElementInternal
-    // or even document.FindContentForSubDocument(document.commandDispatcher.focusedWindow.document)
-    // but those aren't scriptable, so hardcode in the id for now
-    var editor = tmpWindow.document.getElementById("content-frame");
-    if (editor)
-      return editor;
+    // Get the <editor> element(s)
+    var editorList = tmpWindow.document.getElementsByTagName("editor");
+
+    // This will change if we support > 1 editor element
+    if (editorList && editorList.length > 0)
+      return editorList[0];
 
     tmpWindow = tmpWindow.opener;
   } 
