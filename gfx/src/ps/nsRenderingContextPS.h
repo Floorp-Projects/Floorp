@@ -196,28 +196,17 @@ public:
                                nsTextDimensions& aLastWordDimensions,
                                PRInt32*          aFontID = nsnull);
 
-  
-  /** ---------------------------------------------------
-   *  Draw an image
-   *    @param aImage     The image to draw
-   *           aSrcRect   The portion of the image to draw. [x,y] denotes
-   *                      the top left corner of the region.
-   *           aDestPoint The location of the image on the page. [x,y] denotes
-   *                      the top left corner.
-   */
-  NS_IMETHOD DrawImage(imgIContainer *aImage,
-    const nsRect * aSrcRect, const nsPoint * aDestPoint);
-
   /** ---------------------------------------------------
    *  Draw an image, scaling it to fit a specified rectangle.
    *    @param aImage     The image to draw
    *           aSrcRect   The portion of the image to draw. [x,y] denotes
    *                      the top left corner of the region.
-   *           aDestPoint The region of the page that the image should
+   *           aDestRect  The region of the page that the image should
    *                      occupy. [x,y] denotes the top left corner.
+   *                      [height,width] denotes the image size.
    */
-  NS_IMETHOD DrawScaledImage(imgIContainer *aImage,
-    const nsRect * aSrcRect, const nsRect * aDestRect);
+  NS_IMETHOD DrawImage(imgIContainer *aImage,
+    const nsRect & aSrcRect, const nsRect & aDestRect);
 
   NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);

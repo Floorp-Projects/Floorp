@@ -151,39 +151,9 @@ nsRenderingContextXp::CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurf
   return NS_OK;
 }
 
-/* [noscript] void drawImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsPoint aDestPoint); */
-NS_IMETHODIMP nsRenderingContextXp::DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint)
+NS_IMETHODIMP nsRenderingContextXp::DrawImage(imgIContainer *aImage, const nsRect & aSrcRect, const nsRect & aDestRect)
 {
   PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawImage()\n"));
-  nsPoint pt;
-  nsRect  sr;
-
-  pt = *aDestPoint;
-  mTranMatrix->TransformCoord(&pt.x, &pt.y);
-
-  sr = *aSrcRect;
-  mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
-
-  nsCOMPtr<gfxIImageFrame> iframe;
-  aImage->GetCurrentFrame(getter_AddRefs(iframe));
-  if (!iframe)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIImage> img(do_GetInterface(iframe));
-  if (!img) 
-    return NS_ERROR_FAILURE;
-
-  UpdateGC();
-  // doesn't it seem like we should use more of the params here?
-  // img->Draw(*this, surface, sr.x, sr.y, sr.width, sr.height,
-  //           pt.x + sr.x, pt.y + sr.y, sr.width, sr.height);
-  return mPrintContext->DrawImage(mGC, img, pt.x, pt.y, sr.width, sr.height);
-}
-
-/* [noscript] void drawScaledImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsRect aDestRect); */
-NS_IMETHODIMP nsRenderingContextXp::DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect)
-{
-  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawScaledImage()\n"));
   nsRect dr;
 
   dr = *aDestRect;

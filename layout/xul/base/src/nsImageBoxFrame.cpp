@@ -502,7 +502,7 @@ nsImageBoxFrame::PaintImage(nsIRenderingContext& aRenderingContext,
                        mImageSize.width == rect.width && mImageSize.height == rect.height;
 
     if (sizeMatch) {
-      nsPoint p(rect.x, rect.y);
+      nsRect dest(rect);
         
       if (hasSubRect)
         rect = mSubRect;
@@ -513,13 +513,13 @@ nsImageBoxFrame::PaintImage(nsIRenderingContext& aRenderingContext,
 
       // XXXdwh do dirty rect intersection like the HTML image frame does,
       // so that we don't always repaint the entire image!
-      aRenderingContext.DrawImage(imgCon, &rect, &p);
+      aRenderingContext.DrawImage(imgCon, rect, dest);
     }
     else {
       nsRect src(0, 0, mImageSize.width, mImageSize.height);
       if (hasSubRect)
         src = mSubRect;
-      aRenderingContext.DrawScaledImage(imgCon, &src, &rect);
+      aRenderingContext.DrawImage(imgCon, src, rect);
     }
   }
 }

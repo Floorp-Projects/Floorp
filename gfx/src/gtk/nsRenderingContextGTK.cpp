@@ -1458,16 +1458,10 @@ nsRenderingContextGTK::GetBoundingMetrics(const PRUnichar*   aString,
 
 #endif /* MOZ_MATHML */
 
-NS_IMETHODIMP nsRenderingContextGTK::DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint)
+NS_IMETHODIMP nsRenderingContextGTK::DrawImage(imgIContainer *aImage, const nsRect & aSrcRect, const nsRect & aDestRect)
 {
   UpdateGC();
-  return nsRenderingContextImpl::DrawImage(aImage, aSrcRect, aDestPoint);
-}
-
-NS_IMETHODIMP nsRenderingContextGTK::DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect)
-{
-  UpdateGC();
-  return nsRenderingContextImpl::DrawScaledImage(aImage, aSrcRect, aDestRect);
+  return nsRenderingContextImpl::DrawImage(aImage, aSrcRect, aDestRect);
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsDrawingSurface &aBackbuffer)

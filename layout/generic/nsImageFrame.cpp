@@ -1136,9 +1136,9 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext*      aPresContext,
       }
       if (imgCon) {
         // draw it
-        nsPoint p(inner.x, inner.y);
-        nsRect r(0,0,size,size);
-        aRenderingContext.DrawImage(imgCon, &r, &p);
+        nsRect source(0,0,size,size);
+        nsRect dest(inner.x,inner.y,size,size);
+        aRenderingContext.DrawImage(imgCon, source, dest);
         iconUsed = PR_TRUE;
       }
     }
@@ -1261,16 +1261,13 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
             // Find the actual rect to be painted to in the rendering context
             paintArea.IntersectRect(paintArea, aDirtyRect);
 
-            // Point to paint to
-            nsPoint p(paintArea.x, paintArea.y);
-          
             // Rect in the image to paint
             nsRect r(paintArea.x - inner.x,
                      paintArea.y - inner.y + offsetY,
                      paintArea.width,
                      paintArea.height);
           
-            aRenderingContext.DrawImage(imgCon, &r, &p);
+            aRenderingContext.DrawImage(imgCon, r, paintArea);
           } else {
             // The computed size is the total size of all the continuations,
             // including ourselves.  Note that we're basically inverting
@@ -1295,11 +1292,7 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
             // Transform that to image coords
             trans.TransformCoord(&r.x, &r.y, &r.width, &r.height);
           
-            // dest rect in our coords
-            nsRect d(paintArea.x, paintArea.y,
-                     paintArea.width, paintArea.height);
-          
-            aRenderingContext.DrawScaledImage(imgCon, &r, &d);
+            aRenderingContext.DrawImage(imgCon, r, paintArea);
           }
           paintOutline = PR_TRUE;
         }

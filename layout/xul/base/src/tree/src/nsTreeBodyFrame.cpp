@@ -2617,15 +2617,15 @@ nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
       PRBool useImageRegion = PR_TRUE;
       GetImage(aRowIndex, aColumn, PR_TRUE, twistyContext, useImageRegion, getter_AddRefs(image));
       if (image) {
-        nsPoint p(twistyRect.x, twistyRect.y);
+        nsRect r(twistyRect.x, twistyRect.y, imageSize.width, imageSize.height);
 
         // Center the image. XXX Obey vertical-align style prop?
         if (imageSize.height < twistyRect.height) {
-          p.y += (twistyRect.height - imageSize.height)/2;
+          r.y += (twistyRect.height - imageSize.height)/2;
         }
           
         // Paint the image.
-        aRenderingContext.DrawImage(image, &imageSize, &p);
+        aRenderingContext.DrawImage(image, imageSize, r);
       }
     }        
   }
@@ -2686,21 +2686,21 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
     imageRect.Deflate(bp);
     imageSize.Deflate(bp);
  
-    nsPoint p(imageRect.x, imageRect.y);
+    nsRect r(imageRect.x, imageRect.y, imageSize.width, imageSize.height);
       
     // Center the image. XXX Obey vertical-align style prop?
 
     if (imageSize.height < imageRect.height) {
-      p.y += (imageRect.height - imageSize.height)/2;
+      r.y += (imageRect.height - imageSize.height)/2;
     }
 
     // For cyclers, we also want to center the image in the column.
     if (aColumn->IsCycler() && imageSize.width < imageRect.width) {
-      p.x += (imageRect.width - imageSize.width)/2;
+      r.x += (imageRect.width - imageSize.width)/2;
     }
 
     // Paint the image.
-    aRenderingContext.DrawImage(image, &imageSize, &p);
+    aRenderingContext.DrawImage(image, imageSize, r);
   }
 }
 
@@ -2957,18 +2957,18 @@ nsTreeBodyFrame::PaintCheckbox(PRInt32              aRowIndex,
   PRBool useImageRegion = PR_TRUE;
   GetImage(aRowIndex, aColumn, PR_TRUE, checkboxContext, useImageRegion, getter_AddRefs(image));
   if (image) {
-    nsPoint p(checkboxRect.x, checkboxRect.y);
+    nsRect r(checkboxRect.x, checkboxRect.y, imageSize.width, imageSize.height);
           
     if (imageSize.height < checkboxRect.height) {
-      p.y += (checkboxRect.height - imageSize.height)/2;
+      r.y += (checkboxRect.height - imageSize.height)/2;
     }
 
     if (imageSize.width < checkboxRect.width) {
-      p.x += (checkboxRect.width - imageSize.width)/2;
+      r.x += (checkboxRect.width - imageSize.width)/2;
     }
 
     // Paint the image.
-    aRenderingContext.DrawImage(image, &imageSize, &p);
+    aRenderingContext.DrawImage(image, imageSize, r);
   }
 }
 

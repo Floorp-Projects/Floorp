@@ -2533,19 +2533,11 @@ nsRenderingContextXlib::GetBoundingMetrics(const PRUnichar*   aString,
 #endif /* MOZ_MATHML */
 
 NS_IMETHODIMP
-nsRenderingContextXlib::DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint)
+nsRenderingContextXlib::DrawImage(imgIContainer *aImage, const nsRect & aSrcRect, const nsRect & aDestRect)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawImage()\n"));
   UpdateGC();
-  return nsRenderingContextImpl::DrawImage(aImage, aSrcRect, aDestPoint);
-}
-
-NS_IMETHODIMP
-nsRenderingContextXlib::DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect)
-{
-  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawScaledImage()\n"));
-  UpdateGC();
-  return nsRenderingContextImpl::DrawScaledImage(aImage, aSrcRect, aDestRect);
+  return nsRenderingContextImpl::DrawImage(aImage, aSrcRect, aDestRect);
 }
 
 NS_IMETHODIMP
