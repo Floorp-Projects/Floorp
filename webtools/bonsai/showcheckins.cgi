@@ -138,8 +138,12 @@ INFO:
                              ($file =~ /\.bmp$/) ||
                              ($sticky =~ /-kb/));
 
-               $$info{added} += $addlines;
-               $$info{removed} += $removelines;
+               if ($addlines) {
+                   $$info{added} += $addlines;
+               }
+               if ($removelines) {
+                   $$info{removed} += $removelines;
+               }
           }
      }
 
