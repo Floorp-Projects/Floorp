@@ -591,7 +591,7 @@ BugCheck("bugs WHERE bug_status IN ('NEW', 'ASSIGNED', 'REOPENED') AND everconfi
 Status("Checking votes/everconfirmed");
 
 BugCheck("bugs, products WHERE " .
-         "bugs.product = products.product AND " .
+         "bugs.product_id = products.id AND " .
          "everconfirmed = 0 AND " .
          "votestoconfirm <= votes",
          "Bugs that have enough votes to be confirmed but haven't been");
