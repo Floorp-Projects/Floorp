@@ -1,49 +1,26 @@
-// here's our event, ics-style
+// create an event
+var item = createItem();
 
-const icsEvent = "BEGIN:VCALENDAR
-PRODID:-//ORACLE//NONSGML CSDK 9.0.5 - CalDAVServlet 9.0.5//EN
-VERSION:2.0
-BEGIN:VEVENT
-UID:uuid:1103314036911
-ORGANIZER;X-ORACLE-GUID=E93594067928763EE0305794071A39A4;CN=Dan Mosedale:
- mailto:dan.mosedale@oracle.com
-SEQUENCE:0
-DTSTAMP:20041223T032127Z
-CREATED:20041217T200716Z
-DTSTART:20041215T160000Z
-DTEND:20041215T170000Z
-X-ORACLE-EVENTINSTANCE-GUID:I1+1093+1+1+440626036
-X-ORACLE-EVENT-GUID:E1+1093+1+440626036
-X-ORACLE-EVENTTYPE:APPOINTMENT
-TRANSP:OPAQUE
-SUMMARY:monkey
-STATUS:CONFIRMED
-PRIORITY:0
-CLASS:PUBLIC
-ATTENDEE;X-ORACLE-PERSONAL-COMMENT-ISDIRTY=TRUE;X-ORACLE-SHOWASFREE=BUSY;
- X-ORACLE-GUID=E93594067928763EE0305794071A39A4;CUTYPE=INDIVIDUAL;RSVP=FA
- LSE;CN=Dan Mosedale;PARTSTAT=ACCEPTED:mailto:dan.mosedale@oracle.com
-BEGIN:VALARM
-TRIGGER:-P0DT0H10M0S
-ACTION:DISPLAY
-DESCRIPTION:monkey
-END:VALARM
-BEGIN:VALARM
-TRIGGER:-P0DT0H10M0S
-ACTION:AUDIO
-END:VALARM
-END:VEVENT
-END:VCALENDAR
-";
+item.title = "Test Event";
 
+// add it to the calendar
+var newItem = addItem(item);
+dump("newItem = " + newItem + "\n");
 
-var cal = createInstance("@mozilla.org/calendar/calendar;1?type=caldav", 
-			 CI.calICalendar);
-cal.uri = URLFromSpec(calendarUri);
+// XXX what should happen to untyped item?
 
-var listener = new calOpListener();
+// XXX compare newItem to item
 
-cal.getItem("20041119T052348Z-100040d-1-248609e9-Oracle", listener);
+// get it from the calendar
+var gottenItem = getItem(newItem.id);
+dump("gottenItem = " + gottenItem + "\n");
 
-if (!done)
-  runEventPump();
+// XXX compare gottenItem to item
+
+// delete it from the calendar
+var deletedItem = deleteItem(gottenItem);
+dump("deletedItem = " + deletedItem + "\n");
+
+// XXX compare deletedItem to gottenItem
+
+// XXX make sure getting and deleting again both fail

@@ -1,4 +1,6 @@
-calendarType = "memory";
+// init file for each test in this directory.  executed in the xpcshell before
+// starting each test
 
-calendarUri = "http://this/doesn't/matter/on/memory/calendar/";
+// create a memory calendar
+createCal("memory");
 
