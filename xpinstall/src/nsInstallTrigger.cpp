@@ -128,7 +128,7 @@ nsInstallTrigger::StartSoftwareUpdate(const nsString& aURL, PRInt32* aReturn)
 {
     nsString location = "C:\\temp\\test.jar";
     
-    *aReturn = su_DownloadJar(aURL, location);
+    *aReturn = DownloadJar(aURL, location);
     return NS_OK;
 }
 

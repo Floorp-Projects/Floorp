@@ -233,26 +233,26 @@ nsInstallVersion::CompareTo(PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PR
             if ( release == aRelease ) 
             {
                 if ( build == aBuild )
-                    diff = SU_EQUAL;
+                    diff = EQUAL;
                 else if ( build > aBuild )
-                    diff = SU_BLD_DIFF;
+                    diff = BLD_DIFF;
                 else
-                    diff = SU_BLD_DIFF_MINUS;
+                    diff = BLD_DIFF_MINUS;
             }
             else if ( release > aRelease )
-                diff = SU_REL_DIFF;
+                diff = REL_DIFF;
             else
-                diff = SU_REL_DIFF_MINUS;
+                diff = REL_DIFF_MINUS;
         }
         else if (  minor > aMinor )
-            diff = SU_MINOR_DIFF;
+            diff = MINOR_DIFF;
         else
-            diff = SU_MINOR_DIFF_MINUS;
+            diff = MINOR_DIFF_MINUS;
     }
     else if ( major > aMajor )
-        diff = SU_MAJOR_DIFF;
+        diff = MAJOR_DIFF;
     else
-        diff = SU_MAJOR_DIFF_MINUS;
+        diff = MAJOR_DIFF_MINUS;
 
     *aReturn = diff;
 

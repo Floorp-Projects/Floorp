@@ -482,32 +482,32 @@ nsresult NS_InitInstallVersionClass(nsIScriptContext *aContext, void **aPrototyp
     if ((PR_TRUE == JS_LookupProperty(jscontext, global, "InstallVersion", &vp)) &&
         JSVAL_IS_OBJECT(vp) &&
         ((constructor = JSVAL_TO_OBJECT(vp)) != nsnull)) {
-      vp = INT_TO_JSVAL(nsIDOMInstallVersion::SU_EQUAL);
-      JS_SetProperty(jscontext, constructor, "SU_EQUAL", &vp);
+      vp = INT_TO_JSVAL(nsIDOMInstallVersion::EQUAL);
+      JS_SetProperty(jscontext, constructor, "EQUAL", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMInstallVersion::SU_BLD_DIFF);
-      JS_SetProperty(jscontext, constructor, "SU_BLD_DIFF", &vp);
+      vp = INT_TO_JSVAL(nsIDOMInstallVersion::BLD_DIFF);
+      JS_SetProperty(jscontext, constructor, "BLD_DIFF", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMInstallVersion::SU_BLD_DIFF_MINUS);
-      JS_SetProperty(jscontext, constructor, "SU_BLD_DIFF_MINUS", &vp);
+      vp = INT_TO_JSVAL(nsIDOMInstallVersion::BLD_DIFF_MINUS);
+      JS_SetProperty(jscontext, constructor, "BLD_DIFF_MINUS", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMInstallVersion::SU_REL_DIFF);
-      JS_SetProperty(jscontext, constructor, "SU_REL_DIFF", &vp);
+      vp = INT_TO_JSVAL(nsIDOMInstallVersion::REL_DIFF);
+      JS_SetProperty(jscontext, constructor, "REL_DIFF", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMInstallVersion::SU_REL_DIFF_MINUS);
-      JS_SetProperty(jscontext, constructor, "SU_REL_DIFF_MINUS", &vp);
+      vp = INT_TO_JSVAL(nsIDOMInstallVersion::REL_DIFF_MINUS);
+      JS_SetProperty(jscontext, constructor, "REL_DIFF_MINUS", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMInstallVersion::SU_MINOR_DIFF);
-      JS_SetProperty(jscontext, constructor, "SU_MINOR_DIFF", &vp);
+      vp = INT_TO_JSVAL(nsIDOMInstallVersion::MINOR_DIFF);
+      JS_SetProperty(jscontext, constructor, "MINOR_DIFF", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMInstallVersion::SU_MINOR_DIFF_MINUS);
-      JS_SetProperty(jscontext, constructor, "SU_MINOR_DIFF_MINUS", &vp);
+      vp = INT_TO_JSVAL(nsIDOMInstallVersion::MINOR_DIFF_MINUS);
+      JS_SetProperty(jscontext, constructor, "MINOR_DIFF_MINUS", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMInstallVersion::SU_MAJOR_DIFF);
-      JS_SetProperty(jscontext, constructor, "SU_MAJOR_DIFF", &vp);
+      vp = INT_TO_JSVAL(nsIDOMInstallVersion::MAJOR_DIFF);
+      JS_SetProperty(jscontext, constructor, "MAJOR_DIFF", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMInstallVersion::SU_MAJOR_DIFF_MINUS);
-      JS_SetProperty(jscontext, constructor, "SU_MAJOR_DIFF_MINUS", &vp);
+      vp = INT_TO_JSVAL(nsIDOMInstallVersion::MAJOR_DIFF_MINUS);
+      JS_SetProperty(jscontext, constructor, "MAJOR_DIFF_MINUS", &vp);
 
     }
 
