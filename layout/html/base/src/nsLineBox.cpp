@@ -793,6 +793,9 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
     return NS_OK;
   }
 
+  if (!line->mBounds.width)
+    return NS_ERROR_FAILURE;
+
   if (aX < line->mBounds.x) {
     nsIFrame* frame;
     if (mRightToLeft) {
