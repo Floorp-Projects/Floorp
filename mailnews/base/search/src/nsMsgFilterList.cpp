@@ -87,15 +87,15 @@ NS_IMETHODIMP nsMsgFilterList::SetLoggingEnabled(PRBool enable)
 NS_IMETHODIMP nsMsgFilterList::GetFolder(nsIMsgFolder **aFolder)
 {
   NS_ENSURE_ARG(aFolder);
-	*aFolder = m_folder;
+  *aFolder = m_folder;
   NS_IF_ADDREF(*aFolder);
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilterList::SetFolder(nsIMsgFolder *aFolder)
 {
   m_folder = aFolder;
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilterList::GetLoggingEnabled(PRBool *aResult)
@@ -473,11 +473,19 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
 				break;
 			}
 			filter->SetFilterList(NS_STATIC_CAST(nsIMsgFilterList*,this));
-
-            PRUnichar *unicodeString =
+            if (m_fileVersion == k45Version)
+            {
+              nsAutoString unicodeStr;
+              unicodeStr.AssignWithConversion(value.get());
+              filter->SetFilterName(unicodeStr.get());
+            }
+            else
+            {  
+              PRUnichar *unicodeString =
                 nsTextFormatter::smprintf(unicodeFormatter, value.get());
-			filter->SetFilterName(unicodeString);
-            nsTextFormatter::smprintf_free(unicodeString);
+			  filter->SetFilterName(unicodeString);
+              nsTextFormatter::smprintf_free(unicodeString);
+            }
 			m_curFilter = filter;
 			m_filters->AppendElement(NS_STATIC_CAST(nsISupports*,filter));
 		}
@@ -525,7 +533,17 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
             break;
 		case nsIMsgFilterList::attribCondition:
             if (m_curFilter)
+            {
+              if ( m_fileVersion == k45Version)
+              {
+                nsAutoString unicodeStr;
+                unicodeStr.AssignWithConversion(value.get());
+                char *utf8 = unicodeStr.ToNewUTF8String();
+                value.Assign(utf8);
+                nsMemory::Free(utf8);
+              }
               err = ParseCondition(value);
+            }
             break;
 		}
 	} while (attrib != nsIMsgFilterList::attribNone);
