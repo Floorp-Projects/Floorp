@@ -161,6 +161,10 @@ SOURCE=..\vmtypes.cpp
 
 SOURCE=..\world.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=..\xmlparser.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -224,6 +228,10 @@ SOURCE=..\vmtypes.h
 # Begin Source File
 
 SOURCE=..\world.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\xmlparser.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
