@@ -107,6 +107,7 @@ pref("mail.default_cc",                     "");
 pref("mail.default_fcc",                    ""); // maibox:URL or Imap://Host/OnLineFolderName
 pref("mail.check_new_mail",                 false);
 pref("mail.pop3_gets_new_mail",             false);
+pref("mail.pop3_response_timeout",          45); // in seconds
 pref("mail.check_time",                     10);
 pref("mail.pop_name",                       "");
 pref("mail.remember_password",              false);

@@ -51,6 +51,7 @@
 #include "nsIMsgStatusFeedback.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 #include "nsIAuthModule.h"
+#include "nsITimer.h"
 
 #include "prerror.h"
 #include "plhash.h"
@@ -297,6 +298,7 @@ public:
 
   nsresult GetPassword(char ** aPassword, PRBool *okayValue);
 
+  NS_IMETHOD OnTransportStatus(nsITransport *transport, nsresult status, PRUint32 progress, PRUint32 progressMax);
   NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports * aContext, nsresult aStatus);
   NS_IMETHOD Cancel(nsresult status);
   // for nsMsgLineBuffer
@@ -356,6 +358,12 @@ private:
   void RestoreAuthFlags();
   PRInt32 m_origAuthFlags;
   PRInt32 m_listpos;
+
+  // Response timer to drop hung connections
+  nsCOMPtr<nsITimer> m_responseTimer;
+  PRInt32 m_responseTimeout; // in seconds
+  void SetResponseTimer();
+  void CancelResponseTimer();
 
   //////////////////////////////////////////////////////////////////////////////////////////
       // Begin Pop3 protocol state handlers
