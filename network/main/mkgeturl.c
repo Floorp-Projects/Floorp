@@ -3439,7 +3439,18 @@ PUBLIC int NET_ProcessNet (PRFileDesc *ready_fd,  int fd_type)
 						tmpEntry->window_id,
 						tmpEntry->exit_routine));
 				}
-				else if(tmpEntry->status < 0
+#ifdef NU_CACHE
+                else if(tmpEntry->status < 0
+							&& !tmpEntry->URL_s->use_local_copy
+							HG42469
+						&& (tmpEntry->status == MK_CONNECTION_REFUSED
+			    			|| tmpEntry->status == MK_CONNECTION_TIMED_OUT
+			    			|| tmpEntry->status == MK_UNABLE_TO_CREATE_SOCKET
+			    			|| tmpEntry->status == MK_UNABLE_TO_LOCATE_HOST
+			    			|| tmpEntry->status == MK_UNABLE_TO_CONNECT)
+							&& NET_IsURLInCache(tmpEntry->URL_s))
+#else
+                else if(tmpEntry->status < 0
 							&& !tmpEntry->URL_s->use_local_copy
 							HG42469
 						&& (tmpEntry->status == MK_CONNECTION_REFUSED
@@ -3449,7 +3460,8 @@ PUBLIC int NET_ProcessNet (PRFileDesc *ready_fd,  int fd_type)
 			    			|| tmpEntry->status == MK_UNABLE_TO_CONNECT)
 						&& (NET_IsURLInDiskCache(tmpEntry->URL_s)
 							|| NET_IsURLInMemCache(tmpEntry->URL_s)))
-				{
+#endif
+                {
 					/* if the status is negative something went wrong
 					 * with the load.  If last_modified is set
 					 * then we probably have a cache file,
