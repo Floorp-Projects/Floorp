@@ -97,6 +97,8 @@ class nsIAtom;
 - (id)copyWithZone:(NSZone *)aZone;
 @end
 
+class nsIDOMHTMLDocument;
+
 class BookmarksService
 {
 public:
@@ -125,6 +127,8 @@ public:
   
   static void EnsureToolbarRoot();
 
+  static void ImportBookmarks(nsIDOMHTMLDocument* aHTMLDoc);
+  
   static void GetTitleAndHrefForBrowserView(id aBrowserView, nsString& aTitle, nsString& aHref);
   static void OpenBookmarkGroup(id aTabView, nsIDOMElement* aFolder);
   

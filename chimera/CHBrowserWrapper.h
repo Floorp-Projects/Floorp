@@ -57,6 +57,8 @@
   BOOL mOffline;
   BOOL mListenersAttached; // We hook up our click and context menu listeners lazily.
                            // If we never become the primary view, we don't bother creating the listeners.
+  BOOL mIsBookmarksImport; // This view was created for the purpose of importing bookmarks.  Upon
+                           // completion, we need to do the import and then destroy ourselves.
 }
 
 - (IBAction)load:(id)sender;
@@ -74,8 +76,8 @@
 -(void)setTab: (NSTabViewItem*)tab;
 
 -(NSWindow*)getNativeWindow;
-
 -(NSMenu*)getContextMenu;
+-(void)setIsBookmarksImport:(BOOL)aIsImport;
 
 -(id)initWithTab:(id)aTab andWindow:(NSWindow*)aWindow;
 

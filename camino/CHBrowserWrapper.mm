@@ -37,12 +37,16 @@
 
 #import "CHBrowserWrapper.h"
 #import "BrowserWindowController.h"
+#import "BookmarksService.h"
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsIIOService.h"
 #include "ContentClickListener.h"
 #include "nsIDOMWindow.h"
+#include "nsIWebBrowser.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMHTMLDocument.h"
 #include "nsIChromeEventHandler.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMEventReceiver.h"
@@ -98,6 +102,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
   mTab = aTab;
   mWindow = aWindow;
+  mIsBookmarksImport = NO;
   return [self initWithFrame: NSZeroRect];
 }
 
@@ -219,9 +224,6 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   
   if (mWindowController)
     [mWindowController updateToolbarItems];
-  else {
-    printf("background load.\n");
-  }
 }
 
 - (void)onLoadingCompleted:(BOOL)succeeded
@@ -239,7 +241,22 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   }
 
   mIsBusy = NO;
-  
+
+  if (mIsBookmarksImport) {
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    nsCOMPtr<nsIWebBrowser> webBrowser = getter_AddRefs([mBrowserView getWebBrowser]);
+    webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+    if (domWindow) {
+      nsCOMPtr<nsIDOMDocument> domDocument;
+      domWindow->GetDocument(getter_AddRefs(domDocument));
+      nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(domDocument));
+      if (htmlDoc)
+        BookmarksService::ImportBookmarks(htmlDoc);
+    }
+    [self windowClosed];
+    [self removeFromSuperview];
+  }
+
   if (mWindowController)
     [mWindowController updateToolbarItems];
 }
@@ -344,6 +361,11 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     return mWindow;
   
   return nil;
+}
+
+-(void)setIsBookmarksImport:(BOOL)aIsImport
+{
+  mIsBookmarksImport = aIsImport;
 }
 
 - (void)offlineModeChanged: (NSNotification*)aNotification

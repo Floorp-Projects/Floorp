@@ -130,7 +130,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 -(IBAction) openFile:(id)aSender
 {
-    NSOpenPanel* openPanel = [[NSOpenPanel alloc] init];
+    NSOpenPanel* openPanel = [[[NSOpenPanel alloc] init] autorelease];
     [openPanel setCanChooseFiles: YES];
     [openPanel setCanChooseDirectories: NO];
     [openPanel setAllowsMultipleSelection: NO];
@@ -293,7 +293,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   // IE favorites: ~/Library/Preferences/Explorer/Favorites.html
   // Omniweb favorites: ~/Library/Application Support/Omniweb/Bookmarks.html
   // For now, open the panel to IE's favorites.
-  NSOpenPanel* openPanel = [[NSOpenPanel alloc] init];
+  NSOpenPanel* openPanel = [[[NSOpenPanel alloc] init] autorelease];
   [openPanel setCanChooseFiles: YES];
   [openPanel setCanChooseDirectories: NO];
   [openPanel setAllowsMultipleSelection: NO];
@@ -306,6 +306,14 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     if ([urlArray count] == 0)
       return;
     NSURL* url = [urlArray objectAtIndex: 0];
+
+    NSWindow* window = [mApplication mainWindow];
+    if (!window) {
+      [self newWindow: self];
+      window = [mApplication mainWindow];
+    }
+    
+    [[window windowController] importBookmarks: url];
   }
 }
 

@@ -980,6 +980,12 @@ BookmarksService::OpenMenuBookmark(BrowserWindowController* aController, id aMen
 }
 
 void
+BookmarksService::ImportBookmarks(nsIDOMHTMLDocument* aHTMLDoc)
+{
+  
+}
+
+void
 BookmarksService::OpenBookmarkGroup(id aTabView, nsIDOMElement* aFolder)
 {
   // We might conceivably have to make new tabs in order to load all

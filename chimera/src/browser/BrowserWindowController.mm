@@ -472,6 +472,19 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
   [mSidebarTabView selectFirstTabViewItem:self];
 }
 
+- (void)importBookmarks: (NSURL*)aURL
+{
+  // Open the bookmarks sidebar.
+  [self manageBookmarks: self];
+
+  // Now do the importing.
+  CHBrowserWrapper* newView = [[[CHBrowserWrapper alloc] initWithTab: nil andWindow: [self window]] autorelease];
+  [newView setFrame: NSZeroRect];
+  [newView setIsBookmarksImport: YES];
+  [[[self window] contentView] addSubview: newView];
+  [[newView getBrowserView] loadURI:aURL flags:NSLoadFlagsNone];
+}
+
 - (IBAction)goToLocationFromToolbarURLField:(id)sender
 {
     [self loadURL:[NSURL URLWithString:[sender stringValue]]];
