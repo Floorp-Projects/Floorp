@@ -51,7 +51,7 @@
 #include "prmem.h"
 #include "nsTextFormatter.h"
 
-static const PRUint32 kNotInDoctype = PRUint32(-1);
+static const char* kWhitespace = " \r\n\t"; // Optimized for typical cases
 static const char* kDTDDirectory = "res/dtd/";
 
 /***************************** EXPAT CALL BACKS *******************************/
@@ -300,12 +300,11 @@ NS_NewExpatDriver(nsIDTD** aResult) {
 nsExpatDriver::nsExpatDriver()
   :mExpatParser(0), 
    mSink(0), 
-   mBuffer(0),
-   mInCData(0), 
+   mInCData(0),
+   mInDoctype(0),
    mBytesParsed(0),
    mBytePosition(0),
    mInternalState(NS_OK),
-   mDoctypePos(-1),
    mCatalogData(nsnull)
 {
   NS_INIT_REFCNT();
@@ -372,7 +371,10 @@ nsExpatDriver::HandleComment(const PRUnichar *aValue)
 {
   NS_ASSERTION(mSink, "content sink not found!");
 
-  if (mSink && mDoctypePos == kNotInDoctype){
+  if (mInDoctype) {
+    mDoctypeText.Append(aValue);
+  }
+  else if (mSink){
     mInternalState = mSink->HandleComment(aValue);
   }
   
@@ -402,7 +404,10 @@ nsExpatDriver::HandleDefault(const PRUnichar *aValue,
 {
   NS_ASSERTION(mSink, "content sink not found!");
 
-  if (mSink && mDoctypePos == kNotInDoctype) {
+  if (mInDoctype) {
+    mDoctypeText.Append(aValue, aLength);
+  }
+  else if (mSink) {
     static const PRUnichar newline[] = {'\n','\0'};
     for (PRUint32 i = 0; i < aLength && NS_SUCCEEDED(mInternalState); i++) {
       if (aValue[i] == '\n' || aValue[i] == '\r') {
@@ -435,10 +440,42 @@ nsExpatDriver::HandleEndCdataSection()
   return NS_OK;
 }
 
+/**
+ * DOCTYPE declaration is covered with very strict rules, which
+ * makes our life here simpler because the XML parser has already
+ * detected errors. The only slightly problematic case is whitespace
+ * between the tokens. There MUST be whitespace between the tokens
+ * EXCEPT right before > and [.
+ */
+static void
+GetDocTypeToken(nsString& aStr,
+                nsString& aToken,
+                PRBool aQuotedString)
+{
+  aStr.Trim(kWhitespace,PR_TRUE,PR_FALSE); // If we don't do this we must look ahead
+                                           // before Cut() and adjust the cut amount.
+  if (aQuotedString) {    
+    PRInt32 endQuote = aStr.FindChar(aStr[0],1);
+    aStr.Mid(aToken,1,endQuote-1);
+    aStr.Cut(0,endQuote+1);
+  } else {    
+    static const char* kDelimiter = " >[\r\n\t"; // Optimized for typical cases
+    PRInt32 tokenEnd = aStr.FindCharInSet(kDelimiter);
+    if (tokenEnd > 0) {
+      aStr.Left(aToken, tokenEnd);
+      aStr.Cut(0, tokenEnd);
+    }
+  }
+}
+
 nsresult 
 nsExpatDriver::HandleStartDoctypeDecl()
 {
-  mDoctypePos = XML_GetCurrentByteIndex(mExpatParser);
+  mInDoctype = PR_TRUE;
+  // Consuming a huge DOCTYPE translates to numerous
+  // allocations. In an effort to avoid too many allocations
+  // setting mDoctypeText's capacity to be 20K ( just a guesstimate! ).
+  mDoctypeText.SetCapacity(20480);
   return NS_OK;
 }
 
@@ -446,10 +483,9 @@ nsresult
 nsExpatDriver::HandleEndDoctypeDecl() 
 {
   NS_ASSERTION(mSink, "content sink not found!");
-
-  const PRUnichar* doctypeStart = mBuffer + ( mDoctypePos - mBytesParsed ) / 2;
-  const PRUnichar* doctypeEnd   = mBuffer + ( XML_GetCurrentByteIndex(mExpatParser) - mBytesParsed ) / 2;
  
+  mInDoctype = PR_FALSE;
+
   if(mSink) {
     // let the sink know any additional knowledge that we have about the document
     // (currently, from bug 124570, we only expect to pass additional agent sheets
@@ -458,11 +494,32 @@ nsExpatDriver::HandleEndDoctypeDecl()
     if (mCatalogData && mCatalogData->mAgentSheet) {
       NS_NewURI(&data, mCatalogData->mAgentSheet);
     }
-    mInternalState = mSink->HandleDoctypeDecl(doctypeStart, doctypeEnd - doctypeStart, data);
+  
+    nsAutoString name;
+    GetDocTypeToken(mDoctypeText, name, PR_FALSE);
+
+    nsAutoString token, publicId, systemId;
+    GetDocTypeToken(mDoctypeText, token, PR_FALSE);
+    if (token.Equals(NS_LITERAL_STRING("PUBLIC"))) {
+      GetDocTypeToken(mDoctypeText, publicId, PR_TRUE);
+      GetDocTypeToken(mDoctypeText, systemId, PR_TRUE);
+    }
+    else if (token.Equals(NS_LITERAL_STRING("SYSTEM"))) {
+      GetDocTypeToken(mDoctypeText, systemId, PR_TRUE);
+    }
+
+    // The rest is the internal subset (minus whitespace)
+    mDoctypeText.Trim(kWhitespace);
+
+    mInternalState = mSink->HandleDoctypeDecl(mDoctypeText, 
+                                              name, 
+                                              systemId, 
+                                              publicId, 
+                                              data);
     NS_IF_RELEASE(data);
   }
-  
-  mDoctypePos = kNotInDoctype;
+
+  mDoctypeText.SetCapacity(0);
 
   return NS_OK;
 }
@@ -767,9 +824,8 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner,
   
   while (start != end) {
     PRUint32 fragLength = PRUint32(start.size_forward());
-    mBuffer = start.get();
     
-    mInternalState = ParseBuffer((const char *)mBuffer, 
+    mInternalState = ParseBuffer((const char *)start.get(), 
                                  fragLength * sizeof(PRUnichar), 
                                  aFlushTokens);
     

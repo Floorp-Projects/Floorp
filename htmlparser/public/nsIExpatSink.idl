@@ -54,8 +54,10 @@ interface nsIExpatSink : nsISupports
   void HandleCDataSection(in wstring aData, 
                           in unsigned long aLength);
 
-  void HandleDoctypeDecl(in wstring aDoctype,
-                         in unsigned long aLength,
+  void HandleDoctypeDecl(in AString aSubset,
+                         in AString aName,
+                         in AString aSystemId,
+                         in AString aPublicId,
                          in nsISupports aCatalogData);
 
   void HandleCharacterData(in wstring aData, 

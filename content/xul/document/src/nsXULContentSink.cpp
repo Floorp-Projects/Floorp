@@ -1001,7 +1001,10 @@ XULContentSinkImpl::HandleCDataSection(const PRUnichar *aData, PRUint32 aLength)
 }
 
 NS_IMETHODIMP 
-XULContentSinkImpl::HandleDoctypeDecl(const PRUnichar *aDoctype, PRUint32 aLength,
+XULContentSinkImpl::HandleDoctypeDecl(const nsAString & aSubset, 
+                                      const nsAString & aName, 
+                                      const nsAString & aSystemId, 
+                                      const nsAString & aPublicId,
                                       nsISupports* aCatalogData)
 {
     return NS_OK;
