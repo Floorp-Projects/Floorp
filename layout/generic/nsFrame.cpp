@@ -88,8 +88,7 @@
 #include "nsIPercentHeightObserver.h"
 
 // For triple-click pref
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
+#include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsISelectionImageService.h"
 #include "imgIContainer.h"
@@ -99,6 +98,7 @@
 #include "nsWidgetsCID.h"     // for NS_LOOKANDFEEL_CID
 #include "nsLayoutErrors.h"
 
+static NS_DEFINE_CID(kPrefCID,     NS_PREF_CID);//for triple click pref
 static NS_DEFINE_CID(kSelectionImageService, NS_SELECTIONIMAGESERVICE_CID);
 static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 
@@ -1527,9 +1527,9 @@ nsFrame::HandleMultiplePress(nsIPresContext* aPresContext,
     selectPara = PR_TRUE;
   else if (me->clickCount == 3)
   {
-    nsCOMPtr<nsIPrefBranch> prefBranch( do_GetService(NS_PREFSERVICE_CONTRACTID) );
-    if (prefBranch)
-      prefBranch->GetBoolPref("browser.triple_click_selects_paragraph", &selectPara);
+    nsCOMPtr<nsIPref> prefsService( do_GetService(kPrefCID, &rv) );
+    if (NS_SUCCEEDED(rv) && prefsService)
+      prefsService->GetBoolPref("browser.triple_click_selects_paragraph", &selectPara);
   }
   else
     return NS_OK;

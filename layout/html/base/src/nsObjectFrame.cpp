@@ -114,8 +114,7 @@
 #include "jsapi.h"
 
 // XXX temporary for Mac double buffering pref
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
+#include "nsIPref.h"
 
 // XXX For temporary paint code
 #include "nsIStyleContext.h"
@@ -139,6 +138,9 @@
 
 #include "nsContentCID.h"
 static NS_DEFINE_CID(kRangeCID,     NS_RANGE_CID);
+
+// XXX temporary for Mac double buffering pref
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 /* X headers suck */
 #ifdef KeyPress
@@ -795,12 +797,10 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
     // Turn off double buffering on the Mac. This depends on bug 49743 and partially
     // fixes 32327, 19931 amd 51787
 #if defined(XP_MAC) || defined(XP_MACOSX)
-    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
     PRBool doubleBuffer = PR_FALSE;
-    if (prefBranch) {
-      prefBranch->GetBoolPref("plugin.enable_double_buffer", &doubleBuffer);
-    }
-
+    prefs ? prefs->GetBoolPref("plugin.enable_double_buffer", &doubleBuffer) : 0;
+    
     viewMan->AllowDoubleBuffering(doubleBuffer);
 #endif
 

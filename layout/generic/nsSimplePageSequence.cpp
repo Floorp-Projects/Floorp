@@ -54,9 +54,7 @@
 #include "nsRegion.h"
 #include "nsLayoutAtoms.h"
 
-// for header/footer gap & ExtraMargin for Print Preview
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
+#include "nsIPref.h" // for header/footer gap & ExtraMargin for Print Preview
 
 // DateTime Includes
 #include "nsDateTimeFormatCID.h"
@@ -218,30 +216,23 @@ nsSimplePageSequenceFrame::CreateContinuingPageFrame(nsIPresContext* aPresContex
   return rv;
 }
 
-void
-nsSimplePageSequenceFrame::GetEdgePaperMarginCoord(char* aPrefName,
-                                                   nscoord& aCoord)
+void nsSimplePageSequenceFrame::GetEdgePaperMarginCoord(nsIPref* aPref, char* aPrefName, nscoord& aCoord)
 {
-  nsresult rv = mPageData->mPrintOptions->
-    GetPrinterPrefInt(mPageData->mPrintSettings, 
-                      NS_ConvertASCIItoUCS2(aPrefName).get(),
-                      &aCoord);
-
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(mPageData->mPrintOptions->GetPrinterPrefInt(mPageData->mPrintSettings, 
+                                                               NS_ConvertASCIItoUCS2(aPrefName).get(), &aCoord))) {
     nscoord inchInTwips = NS_INCHES_TO_TWIPS(1.0);
     aCoord = PR_MAX(NS_INCHES_TO_TWIPS(float(aCoord)/100.0f), 0);
     aCoord = PR_MIN(aCoord, inchInTwips); // an inch is still probably excessive
   }
 }
 
-void
-nsSimplePageSequenceFrame::GetEdgePaperMargin(nsMargin& aMargin)
+void nsSimplePageSequenceFrame::GetEdgePaperMargin(nsIPref* aPref, nsMargin& aMargin)
 {
   aMargin.SizeTo(0,0,0,0);
-  GetEdgePaperMarginCoord("print_edge_top",    aMargin.top);
-  GetEdgePaperMarginCoord("print_edge_left",   aMargin.left);
-  GetEdgePaperMarginCoord("print_edge_bottom", aMargin.bottom);
-  GetEdgePaperMarginCoord("print_edge_right",  aMargin.right);
+  GetEdgePaperMarginCoord(aPref, "print_edge_top",    aMargin.top);
+  GetEdgePaperMarginCoord(aPref, "print_edge_left",   aMargin.left);
+  GetEdgePaperMarginCoord(aPref, "print_edge_bottom", aMargin.bottom);
+  GetEdgePaperMarginCoord(aPref, "print_edge_right",  aMargin.right);
 }
 
 NS_IMETHODIMP
@@ -318,12 +309,12 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
   aPresContext->GetPageDim(&pageSize, &adjSize);
 
   nscoord extraGap = 0;
-  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefBranch) {
-    GetEdgePaperMargin(mPageData->mEdgePaperMargin);
+  nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID);
+  if (pref) {
+    GetEdgePaperMargin(pref, mPageData->mEdgePaperMargin);
     nscoord extraThreshold = PR_MAX(pageSize.width, pageSize.height)/10;
     PRInt32 gapInTwips;
-    if (NS_SUCCEEDED(prefBranch->GetIntPref("print.print_extra_margin", &gapInTwips))) {
+    if (NS_SUCCEEDED(pref->GetIntPref("print.print_extra_margin", &gapInTwips))) {
       gapInTwips = PR_MAX(gapInTwips, 0);
       gapInTwips = PR_MIN(gapInTwips, extraThreshold); // clamp to 1/10 of the largest dim of the page
       extraGap   = nscoord(gapInTwips);

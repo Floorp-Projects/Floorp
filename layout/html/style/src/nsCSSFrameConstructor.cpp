@@ -93,8 +93,7 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsIFrameManager.h"
 #include "nsIAttributeContent.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
+#include "nsIPref.h"
 #include "nsLegendFrame.h"
 #include "nsIContentIterator.h"
 #include "nsBoxLayoutState.h"
@@ -4232,10 +4231,10 @@ nsCSSFrameConstructor::HasGfxScrollbars()
 #endif
   // Get the Prefs
   if (!mGotGfxPrefs) {
-    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (prefBranch) {
+    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
+    if (pref) {
       PRBool hasGfxScroll = PR_FALSE; // use a temp since we have a PRPackedBool
-      prefBranch->GetBoolPref("nglayout.widget.gfxscrollbars", &hasGfxScroll);
+      pref->GetBoolPref("nglayout.widget.gfxscrollbars", &hasGfxScroll);
       mHasGfxScrollbars = hasGfxScroll;
       mGotGfxPrefs = PR_TRUE;
     } else {
@@ -4252,10 +4251,10 @@ PRBool
 nsCSSFrameConstructor::UseXBLForms()
 {
   if (!mGotXBLFormPrefs) {
-    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (prefBranch) {
+    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
+    if (pref) {
       PRBool useXBLForms = PR_FALSE; // use a temp since we have a PRPackedBool
-      prefBranch->GetBoolPref("nglayout.debug.enable_xbl_forms", &useXBLForms);
+      pref->GetBoolPref("nglayout.debug.enable_xbl_forms", &useXBLForms);
       mUseXBLForms = useXBLForms;
       mGotXBLFormPrefs = PR_TRUE;
     }

@@ -60,6 +60,7 @@ class nsIFrame;
 class nsIImage;
 class nsILinkHandler;
 class nsIPresShell;
+class nsIPref;
 class nsIStyleContext;
 class nsIAtom;
 class nsString;

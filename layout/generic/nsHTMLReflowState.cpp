@@ -48,10 +48,7 @@
 #include "nsBlockFrame.h"
 #include "nsLineBox.h"
 #include "nsImageFrame.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
-#include "nsIObserver.h"
+#include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsIPercentHeightObserver.h"
 #ifdef IBMBIDI
@@ -1628,81 +1625,44 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(nsIPresContext*          aPre
   }
 }
 
-class BlinkPrefObserver : public nsIObserver
+// Prefs callback to pick up changes
+static int PR_CALLBACK PrefsChanged(const char *aPrefName, void *instance)
 {
-public:
-  BlinkPrefObserver();
-  virtual ~BlinkPrefObserver();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-};
-
-BlinkPrefObserver::BlinkPrefObserver()
-{
-  NS_INIT_ISUPPORTS();
-}
-
-BlinkPrefObserver::~BlinkPrefObserver()
-{
-}
-
-NS_IMPL_ISUPPORTS1(BlinkPrefObserver, nsIObserver)
-
-NS_IMETHODIMP
-BlinkPrefObserver::Observe(nsISupports *aSubject, const char *aTopic,
-                           const PRUnichar *aData)
-{
-  NS_ASSERTION(!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID),
-               "We only handle pref changes");
-  NS_ASSERTION(nsDependentString(aData) ==
-                   NS_LITERAL_STRING("browser.blink_allowed"),
-               "We only handle the blink pref");
-
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_QueryInterface(aSubject));
-  PRBool boolPrefValue = PR_TRUE;
-  prefBranch->GetBoolPref("browser.blink_allowed", &boolPrefValue);
-  sBlinkIsAllowed = boolPrefValue;
-
-  return NS_OK;
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+  if (prefs) {
+    PRBool boolPref;
+    if (NS_SUCCEEDED(prefs->GetBoolPref("browser.blink_allowed", &boolPref)))
+      sBlinkIsAllowed = boolPref;
+  }
+  return 0; /* PREF_OK */
 }
 
 // Check to see if |text-decoration: blink| is allowed.  The first time
-// called, register the observer and then force-load the pref.  After that,
+// called, register the callback and then force-load the pref.  After that,
 // just use the cached value.
-static
-PRBool BlinkIsAllowed()
+static PRBool BlinkIsAllowed(void)
 {
   if (!sPrefIsLoaded) {
-    // Set up an observer and check the initial value
-    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefBranch) {
-      PRBool boolPrefValue = PR_TRUE;
-      prefBranch->GetBoolPref("browser.blink_allowed", &boolPrefValue);
-      sBlinkIsAllowed = boolPrefValue;
-
-      nsCOMPtr<nsIObserver> observer = new BlinkPrefObserver();
-      if (observer) {
-        nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch);
-        if (pbi) {
-          pbi->AddObserver("browser.blink_allowed", observer, PR_FALSE);
-        }
-      }
+    // Set up a listener and check the initial value
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+    if (prefs) {
+      prefs->RegisterCallback("browser.blink_allowed", PrefsChanged, 
+                              nsnull);
     }
+    PrefsChanged(nsnull, nsnull);
     sPrefIsLoaded = PR_TRUE;
   }
-
   return sBlinkIsAllowed;
 }
 
 static eNormalLineHeightControl GetNormalLineHeightCalcControl(void)
 {
   if (sNormalLineHeightControl == eUninitialized) {
-    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
     PRInt32 intPref;
     // browser.display.normal_lineheight_calc_control is not user changable, so 
     // no need to register callback for it.
-    if (prefBranch && NS_SUCCEEDED(prefBranch->GetIntPref(
+    if (prefs && NS_SUCCEEDED(prefs->GetIntPref(
                  "browser.display.normal_lineheight_calc_control", &intPref)))
       sNormalLineHeightControl = NS_STATIC_CAST(eNormalLineHeightControl, intPref);
     else

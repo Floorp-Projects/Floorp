@@ -49,8 +49,7 @@
 #include "nsUnicharUtils.h"
 #include "nsICaseConversion.h"
 #include "prenv.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
+#include "nsIPref.h"
 #ifdef IBMBIDI
 #include "nsLayoutAtoms.h"
 #endif
@@ -115,11 +114,10 @@ nsTextTransformer::Initialize()
   
   // read in our global word selection prefs
   if ( !sWordSelectPrefInited ) {
-    nsCOMPtr<nsIPrefBranch> prefBranch =
-        do_GetService( NS_PREFSERVICE_CONTRACTID );
-    if ( prefBranch ) {
+    nsCOMPtr<nsIPref> prefService ( do_GetService(NS_PREF_CONTRACTID) );
+    if ( prefService ) {
       PRBool temp = PR_FALSE;
-      prefBranch->GetBoolPref("layout.word_select.stop_at_punctuation", &temp);
+      prefService->GetBoolPref("layout.word_select.stop_at_punctuation", &temp);
       sWordSelectStopAtPunctuation = temp;
     }
     sWordSelectPrefInited = PR_TRUE;

@@ -75,6 +75,7 @@
 #ifdef IBMBIDI
 //-------------------------------IBM BIDI--------------------------------------
 // Mamdouh : Modifiaction of the caret to work with Bidi in the LTR and RTL
+#include "nsIPref.h"
 #include "nsLayoutAtoms.h"
 //------------------------------END OF IBM BIDI--------------------------------
 #endif //IBMBIDI

@@ -57,8 +57,7 @@
 #include "prinrval.h"
 #include "nsVoidArray.h"
 #include "nsHashtable.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
+#include "nsIPref.h"
 #include "nsIViewObserver.h"
 #include "nsContainerFrame.h"
 #include "nsIDeviceContext.h"
@@ -198,6 +197,7 @@ static nsresult CtlStyleWatch(PRUint32 aCtlValue, nsIStyleSet *aStyleSet);
 static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kViewCID, NS_VIEW_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 #undef NOISY
 
@@ -1694,11 +1694,10 @@ PresShell::Init(nsIDocument* aDocument,
     gAsyncReflowDuringDocLoad = PR_TRUE;
 
     // Get the prefs service
-    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (prefBranch) {
-      prefBranch->GetIntPref("layout.reflow.timeslice", &gMaxRCProcessingTime);
-      prefBranch->GetBoolPref("layout.reflow.async.duringDocLoad",
-                              &gAsyncReflowDuringDocLoad);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &result));
+    if (NS_SUCCEEDED(result)) {
+      prefs->GetIntPref("layout.reflow.timeslice", &gMaxRCProcessingTime);
+      prefs->GetBoolPref("layout.reflow.async.duringDocLoad", &gAsyncReflowDuringDocLoad);
     }
   }
 
@@ -1717,19 +1716,16 @@ PresShell::Init(nsIDocument* aDocument,
 #endif
 
 #ifdef MOZ_REFLOW_PERF
-    if (mReflowCountMgr) {
-      // Get the prefs service
-      nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-      if (prefBranch) {
+    // Get the prefs service
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &result));
+    if (NS_SUCCEEDED(result)) {
+      if (mReflowCountMgr != nsnull) {
         PRBool paintFrameCounts       = PR_FALSE;
         PRBool dumpFrameCounts        = PR_FALSE;
         PRBool dumpFrameByFrameCounts = PR_FALSE;
-        prefBranch->GetBoolPref("layout.reflow.showframecounts",
-                                &paintFrameCounts);
-        prefBranch->GetBoolPref("layout.reflow.dumpframecounts",
-                                &dumpFrameCounts);
-        prefBranch->GetBoolPref("layout.reflow.dumpframebyframecounts",
-                                &dumpFrameByFrameCounts);
+        prefs->GetBoolPref("layout.reflow.showframecounts", &paintFrameCounts);
+        prefs->GetBoolPref("layout.reflow.dumpframecounts", &dumpFrameCounts);
+        prefs->GetBoolPref("layout.reflow.dumpframebyframecounts", &dumpFrameByFrameCounts);
 
         mReflowCountMgr->SetDumpFrameCounts(dumpFrameCounts);
         mReflowCountMgr->SetDumpFrameByFrameCounts(dumpFrameByFrameCounts);
@@ -2858,9 +2854,9 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     else {
       // Initialize the timer.
       PRInt32 delay = PAINTLOCK_EVENT_DELAY; // Use this value if we fail to get the pref value.
-      nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-      if (prefBranch)
-        prefBranch->GetIntPref("nglayout.initialpaint.delay", &delay);
+      nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+      if (prefs)
+        prefs->GetIntPref("nglayout.initialpaint.delay", &delay);
 
       nsCOMPtr<nsITimerInternal> ti = do_QueryInterface(mPaintSuppressionTimer);
       ti->SetIdle(PR_FALSE);
@@ -4008,9 +4004,9 @@ PresShell::GoToAnchor(const nsAString& aAnchorName)
         // Should we select the target?
         // This action is controlled by a preference: the default is to not select.
         PRBool selectAnchor = PR_FALSE;
-        nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-        if (prefBranch) {
-          prefBranch->GetBoolPref("layout.selectanchor", &selectAnchor);
+        nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID,&rv));
+        if (NS_SUCCEEDED(rv) && prefs) {
+          prefs->GetBoolPref("layout.selectanchor",&selectAnchor);
         }
         // Even if select anchor pref is false, we must still move the caret there.
         // That way tabbing will start from the new location
