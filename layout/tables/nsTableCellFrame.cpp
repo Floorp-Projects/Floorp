@@ -684,6 +684,15 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState);
 #endif
 
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(&p2t);
+
+  // work around pixel rounding errors, round down to ensure we don't exceed the avail height in
+  nscoord availHeight = aReflowState.availableHeight;
+  if (NS_UNCONSTRAINEDSIZE != availHeight) {
+    availHeight = nsTableFrame::RoundToPixel(availHeight, p2t, eAlwaysRoundDown);
+  }
+
   nsresult rv = NS_OK;
   // this should probably be cached somewhere
   nsCompatibility compatMode;
@@ -696,7 +705,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   aStatus = NS_FRAME_COMPLETE;
-  nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
+  nsSize availSize(aReflowState.availableWidth, availHeight);
   nsSize maxElementSize;
   nsSize* pMaxElementSize = aDesiredSize.maxElementSize;
   if (NS_UNCONSTRAINEDSIZE==aReflowState.availableWidth)
@@ -825,8 +834,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)pos));
 
   // calculate the min cell width
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t); 
   nscoord smallestMinWidth = 0;
   if (eCompatibility_NavQuirks == compatMode) {
@@ -884,8 +891,10 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
 
   if (NS_UNCONSTRAINEDSIZE != cellHeight) {
     cellHeight += topInset + bottomInset;
+    // work around block rounding errors, round down to ensure we don't exceed the avail height in
+    nsPixelRound roundMethod = (NS_UNCONSTRAINEDSIZE == availHeight) ? eAlwaysRoundUp : eAlwaysRoundDown;
+    cellHeight = nsTableFrame::RoundToPixel(cellHeight, p2t, roundMethod); 
   }
-  cellHeight = nsTableFrame::RoundToPixel(cellHeight, p2t); // work around block rounding errors
 
   // if the table allocated extra vertical space to row groups, rows, cells in pagination mode
   // then use that height as the desired height unless the cell needs to split.

@@ -2079,9 +2079,10 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
     // If we're supposed to update our maximum width, then we'll also need to
     // reflow this line if it's line wrapped and any of the continuing lines
-    // are dirty
-    if (!line->IsDirty() &&
-        (aState.GetFlag(BRS_COMPUTEMAXWIDTH) &&
+    // are dirty. If we are printing (constrained height), always reflow the line
+    if ((NS_UNCONSTRAINEDSIZE != aState.mReflowState.availableHeight) ||
+        (!line->IsDirty() &&
+         aState.GetFlag(BRS_COMPUTEMAXWIDTH) &&
          ::WrappedLinesAreDirty(line, line_end))) {
       line->MarkDirty();
     }

@@ -353,9 +353,9 @@ nsTableFrame::InterruptNotification(nsIPresContext* aPresContext,
 }
 
 nscoord 
-nsTableFrame::RoundToPixel(nscoord aValue,
-                           float   aPixelToTwips,
-                           PRBool  aRoundUp)
+nsTableFrame::RoundToPixel(nscoord       aValue,
+                           float         aPixelToTwips,
+                           nsPixelRound  aRound)
 {
   nscoord halfPixel = NSToCoordRound(aPixelToTwips / 2.0f);
   nscoord fullPixel = NSToCoordRound(aPixelToTwips);
@@ -364,11 +364,15 @@ nsTableFrame::RoundToPixel(nscoord aValue,
     return aValue;
   }
   else {
-    if ((excess > halfPixel) || aRoundUp) {
-      return aValue + (fullPixel - excess);
-    }
-    else {
+    switch(aRound) {
+    case eRoundUpIfHalfOrMore:
+      if (excess >= halfPixel) { // eRoundUpIfHalfOrMore
+        return aValue + (fullPixel - excess);
+      }
+    case eAlwaysRoundDown:
       return aValue - excess;
+    default: // eAlwaysRoundUp
+      return aValue + (fullPixel - excess);
     }
   }
 }
@@ -3301,7 +3305,7 @@ nsTableFrame::DistributeSpaceToRows(nsIPresContext*          aPresContext,
       nsRect rowRect;
       rowFrame->GetRect(rowRect);
       float percent = ((float)(rowRect.height)) / (float)aSumOfRowHeights;
-      nscoord excessForRow = RoundToPixel(NSToCoordRound((float)aExcess * percent), p2t, PR_TRUE);
+      nscoord excessForRow = RoundToPixel(NSToCoordRound((float)aExcess * percent), p2t);
       excessForRow = PR_MIN(excessForRow, aExcess - aExcessAllocated);
 
       nsRect newRowRect(rowRect.x, y, rowRect.width, excessForRow + rowRect.height);
