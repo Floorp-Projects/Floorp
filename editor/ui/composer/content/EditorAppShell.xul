@@ -271,213 +271,245 @@
     
   <menubar>
     <menu value="&fileMenu.label;">
-      <menuitem value="&newCmd.label;" onaction="EditorNew()"/>
-      <menuitem value="&openCmd.label;" onaction="EditorOpen()"/>
-      <menuseparator />
-      <menuitem value="&saveCmd.label;" onaction="EditorSave()"/>
-      <menuitem value="&saveAsCmd.label;" onaction="EditorSaveAs()"/>
-      <menuseparator />
-      <menuitem value="&printSetupCmd.label;" onaction=""/>
-      <menuitem value="&printPreviewCmd.label;" onaction="EditorPrintPreview()"/>
-      <menuitem value="&printCmd.label;" onaction="EditorPrint()"/>
-      <menuseparator />
-      <menuitem value="&closeCmd.label;" onaction="EditorClose()"/>
-      <menuitem value="&quitCmd.label;" onaction="EditorExit()"/>
+	  <menupopup>
+		  <menuitem value="&newCmd.label;" onaction="EditorNew()"/>
+		  <menuitem value="&openCmd.label;" onaction="EditorOpen()"/>
+		  <menuseparator />
+		  <menuitem value="&saveCmd.label;" onaction="EditorSave()"/>
+		  <menuitem value="&saveAsCmd.label;" onaction="EditorSaveAs()"/>
+		  <menuseparator />
+		  <menuitem value="&printSetupCmd.label;" onaction=""/>
+		  <menuitem value="&printPreviewCmd.label;" onaction="EditorPrintPreview()"/>
+		  <menuitem value="&printCmd.label;" onaction="EditorPrint()"/>
+		  <menuseparator />
+		  <menuitem value="&closeCmd.label;" onaction="EditorClose()"/>
+		  <menuitem value="&quitCmd.label;" onaction="EditorExit()"/>
+	  </menupopup>
     </menu>
 
     <menu value="&editMenu.label;">
-      <menuitem value="&undoCmd.label;" onaction="EditorUndo()"/>
-      <menuitem value="&redoCmd.label;" onaction="EditorRedo()"/>
-      <menuseparator />
-      <menuitem value="&cutCmd.label;" onaction="EditorCut()"/>
-      <menuitem value="&copyCmd.label;" onaction="EditorCopy()"/>
-      <menuitem value="&pasteCmd.label;" onaction="EditorPaste()"/>
-      <menuitem value="&pasteAsQuotationCmd.label;" onaction="EditorPasteAsQuotation()"/>
-      <menuitem value="&clearCmd.label;" onaction=""/>
-      <menuseparator />
-      <menuitem value="&selectAllCmd.label;" onaction="EditorSelectAll()"/>
-      <menuseparator />
-      <menuitem value="&findCmd.label;" onaction="EditorFind()"/>
-      <menuitem value="&findAgainCmd.label;" onaction="EditorFindNext()"/>
+	  <menupopup>
+		  <menuitem value="&undoCmd.label;" onaction="EditorUndo()"/>
+		  <menuitem value="&redoCmd.label;" onaction="EditorRedo()"/>
+		  <menuseparator />
+		  <menuitem value="&cutCmd.label;" onaction="EditorCut()"/>
+		  <menuitem value="&copyCmd.label;" onaction="EditorCopy()"/>
+		  <menuitem value="&pasteCmd.label;" onaction="EditorPaste()"/>
+		  <menuitem value="&pasteAsQuotationCmd.label;" onaction="EditorPasteAsQuotation()"/>
+		  <menuitem value="&clearCmd.label;" onaction=""/>
+		  <menuseparator />
+		  <menuitem value="&selectAllCmd.label;" onaction="EditorSelectAll()"/>
+		  <menuseparator />
+		  <menuitem value="&findCmd.label;" onaction="EditorFind()"/>
+		  <menuitem value="&findAgainCmd.label;" onaction="EditorFindNext()"/>
+	  </menupopup>
     </menu>
 
     <menu value="&viewMenu.label;">
-      <menuitem value="&hideCompositionToolbarCmd.label;" onaction=""/>
-      <menuitem value="&hideFormattingToolbarCmd.label;" onaction="" />
-	    <menuseparator />
-      <menu value="&dcharMenu.label;">
-	         <menuitem value="&dcharIso1Cmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-1');"/>
-	         <menuitem value="&dcharIso2Cmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-2');"/>
-	         <menuitem value="&dcharIso3Cmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-3');"/>
-	         <menuitem value="&dcharIso4Cmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-4');"/>
-	         <menuitem value="&dcharIso9Cmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-9');"/>
-	         <menuitem value="&dcharIso10Cmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-10');"/>
-           <menuitem value="&dcharIso13Cmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-13');"/>
-	         <menuitem value="&dcharIso14Cmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-14');"/>
-	         <menuitem value="&dcharIso15Cmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-15');"/>
-	         <menuitem value="&dcharWinLat2Cmd.label;" onaction="EditorSetDocumentCharacterSet('windows-1250');"/>
-	         <menuitem value="&dcharWinLat1Cmd.label;" onaction="EditorSetDocumentCharacterSet('windows-1252');"/>
-	         <menuitem value="&dcharWinLat5Cmd.label;" onaction="EditorSetDocumentCharacterSet('windows-1254');"/>
-	         <menuitem value="&dcharWinBalRimCmd.label;" onaction="EditorSetDocumentCharacterSet('windows-1257');"/>
-	         <menuitem value="&dcharMacRomCmd.label;" onaction="EditorSetDocumentCharacterSet('x-mac-roman');"/>
-	         <menuitem value="&dcharMacCenEuroCmd.label;" onaction="EditorSetDocumentCharacterSet('x-mac-ce');"/>
-	         <menuitem value="&dcharMacTurCmd.label;" onaction="EditorSetDocumentCharacterSet('x-mac-turkish');"/>
-	         <menuitem value="&dcharMacCroaCmd.label;" onaction="EditorSetDocumentCharacterSet('x-mac-croatian');"/>
-	         <menuitem value="&dcharMacRomanianCmd.label;" onaction="EditorSetDocumentCharacterSet('x-mac-romanian');"/>
-	         <menuitem value="&dcharMacIceCmd.label;" onaction="EditorSetDocumentCharacterSet('x-mac-icelandic');"/>
-                 <menuseparator />
-	         <menuitem value="&dcharJapanCmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-2022-JP');"/>
-	         <menuitem value="&dcharJapanShiftjsCmd.label;" onaction="EditorSetDocumentCharacterSet('Shift_JIS');"/>
-	         <menuitem value="&dcharJapanEucCmd.label;" onaction="EditorSetDocumentCharacterSet('EUC-JP');"/>
-                 <menuseparator />
-	         <menuitem value="&dcharTradChiBigCmd.label;" onaction="EditorSetDocumentCharacterSet('Big5');"/>
-	         <menuitem value="&dcharTriChiEucCmd.label;" onaction="EditorSetDocumentCharacterSet('x-euc-tw');"/>
-	         <menuitem value="&dcharSimpChiGbCmd.label;" onaction="EditorSetDocumentCharacterSet('GB2312');"/>
-                 <menuseparator />
- 	         <menuitem value="&dcharKoreanCmd.label;" onaction="EditorSetDocumentCharacterSet('EUC-KR');"/>
-                 <menuseparator />
-	         <menuitem value="&dcharUtf7Cmd.label;" onaction="EditorSetDocumentCharacterSet('UTF-7');"/>
-	         <menuitem value="&dcharUtf8Cmd.label;" onaction="EditorSetDocumentCharacterSet('UTF-8');"/>
-                 <menuseparator />
-	         <menuitem value="&dcharIsoCyrCmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-5');"/>
-	         <menuitem value="&dcharEcmaCyrCmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-IR-111');"/>
-	         <menuitem value="&dcharWinCyrCmd.label;" onaction="EditorSetDocumentCharacterSet('windows-1251');"/>
-	         <menuitem value="&dcharDosCyrCmd.label;" onaction="EditorSetDocumentCharacterSet('IBM866');"/>
-	         <menuitem value="&dcharMacCyrCmd.label;" onaction="EditorSetDocumentCharacterSet('x-mac-cyrillic');"/>
-	         <menuitem value="&dcharMacUkrCmd.label;" onaction="EditorSetDocumentCharacterSet('x-mac-ukrainian');"/>
-	         <menuitem value="&dcharRusCmd.label;" onaction="EditorSetDocumentCharacterSet('KOI8-R');"/>
-	         <menuitem value="&dcharUkrCmd.label;" onaction="EditorSetDocumentCharacterSet('KOI8-U');"/>
-                 <menuseparator />
-	         <menuitem value="&dcharIsoGreekCmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-7');"/>
-	         <menuitem value="&dcharWinGreekCmd.label;" onaction="EditorSetDocumentCharacterSet('windows-1253');"/>
-	         <menuitem value="&dcharMacGreekCmd.label;" onaction="EditorSetDocumentCharacterSet('x-mac-greek');"/>
-                 <menuseparator />
-	         <menuitem value="&dcharWinVietCmd.label;" onaction="EditorSetDocumentCharacterSet('windows-1258');"/>
-	         <menuitem value="&dcharVietTcnCmd.label;" onaction="EditorSetDocumentCharacterSet('x-viet-tcvn5712');"/>
-	         <menuitem value="&dcharVietViCmd.label;" onaction="EditorSetDocumentCharacterSet('VISCII');"/>
-	         <menuitem value="&dcharVieVpCmd.label;" onaction="EditorSetDocumentCharacterSet('x-viet-vps');"/>
-                 <menuseparator />
-	         <menuitem value="&dcharThaiCmd.label;" onaction="EditorSetDocumentCharacterSet('TIS-620');"/>
-                 <menuseparator />
-	         <menuitem value="&dcharArmCmd.label;" onaction="EditorSetDocumentCharacterSet('ARMSCII-8');"/>
-                 <menuseparator />
-	         <menuitem value="&dcharIso6Cmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-6');"/>
-	         <menuitem value="&dcharCp1256Cmd.label;" onaction="EditorSetDocumentCharacterSet('windows-1256');"/>
-                 <menuseparator />
-	         <menuitem value="&dcharIso8Cmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-8');"/>
-	         <menuitem value="&dcharCp1255Cmd.label;" onaction="EditorSetDocumentCharacterSet('windows-1255');"/>
-	   </menu>
+	  <menupopup>
+		  <menuitem value="&hideCompositionToolbarCmd.label;" onaction=""/>
+		  <menuitem value="&hideFormattingToolbarCmd.label;" onaction="" />
+		  <menuseparator />
+		  <menu value="&dcharMenu.label;">
+		    <menupopup>
+				 <menuitem value="&dcharIso1Cmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-1');"/>
+				 <menuitem value="&dcharIso2Cmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-2');"/>
+				 <menuitem value="&dcharIso3Cmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-3');"/>
+				 <menuitem value="&dcharIso4Cmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-4');"/>
+				 <menuitem value="&dcharIso9Cmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-9');"/>
+				 <menuitem value="&dcharIso10Cmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-10');"/>
+			     <menuitem value="&dcharIso13Cmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-13');"/>
+				 <menuitem value="&dcharIso14Cmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-14');"/>
+				 <menuitem value="&dcharIso15Cmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-15');"/>
+				 <menuitem value="&dcharWinLat2Cmd.label;" onaction="EditorSetDocumentCharacterSet('windows-1250');"/>
+				 <menuitem value="&dcharWinLat1Cmd.label;" onaction="EditorSetDocumentCharacterSet('windows-1252');"/>
+				 <menuitem value="&dcharWinLat5Cmd.label;" onaction="EditorSetDocumentCharacterSet('windows-1254');"/>
+				 <menuitem value="&dcharWinBalRimCmd.label;" onaction="EditorSetDocumentCharacterSet('windows-1257');"/>
+				 <menuitem value="&dcharMacRomCmd.label;" onaction="EditorSetDocumentCharacterSet('x-mac-roman');"/>
+				 <menuitem value="&dcharMacCenEuroCmd.label;" onaction="EditorSetDocumentCharacterSet('x-mac-ce');"/>
+				 <menuitem value="&dcharMacTurCmd.label;" onaction="EditorSetDocumentCharacterSet('x-mac-turkish');"/>
+				 <menuitem value="&dcharMacCroaCmd.label;" onaction="EditorSetDocumentCharacterSet('x-mac-croatian');"/>
+				 <menuitem value="&dcharMacRomanianCmd.label;" onaction="EditorSetDocumentCharacterSet('x-mac-romanian');"/>
+				 <menuitem value="&dcharMacIceCmd.label;" onaction="EditorSetDocumentCharacterSet('x-mac-icelandic');"/>
+					 <menuseparator />
+				 <menuitem value="&dcharJapanCmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-2022-JP');"/>
+				 <menuitem value="&dcharJapanShiftjsCmd.label;" onaction="EditorSetDocumentCharacterSet('Shift_JIS');"/>
+				 <menuitem value="&dcharJapanEucCmd.label;" onaction="EditorSetDocumentCharacterSet('EUC-JP');"/>
+					 <menuseparator />
+				 <menuitem value="&dcharTradChiBigCmd.label;" onaction="EditorSetDocumentCharacterSet('Big5');"/>
+				 <menuitem value="&dcharTriChiEucCmd.label;" onaction="EditorSetDocumentCharacterSet('x-euc-tw');"/>
+				 <menuitem value="&dcharSimpChiGbCmd.label;" onaction="EditorSetDocumentCharacterSet('GB2312');"/>
+					 <menuseparator />
+ 				 <menuitem value="&dcharKoreanCmd.label;" onaction="EditorSetDocumentCharacterSet('EUC-KR');"/>
+					 <menuseparator />
+				 <menuitem value="&dcharUtf7Cmd.label;" onaction="EditorSetDocumentCharacterSet('UTF-7');"/>
+				 <menuitem value="&dcharUtf8Cmd.label;" onaction="EditorSetDocumentCharacterSet('UTF-8');"/>
+					 <menuseparator />
+				 <menuitem value="&dcharIsoCyrCmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-5');"/>
+				 <menuitem value="&dcharEcmaCyrCmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-IR-111');"/>
+				 <menuitem value="&dcharWinCyrCmd.label;" onaction="EditorSetDocumentCharacterSet('windows-1251');"/>
+				 <menuitem value="&dcharDosCyrCmd.label;" onaction="EditorSetDocumentCharacterSet('IBM866');"/>
+				 <menuitem value="&dcharMacCyrCmd.label;" onaction="EditorSetDocumentCharacterSet('x-mac-cyrillic');"/>
+				 <menuitem value="&dcharMacUkrCmd.label;" onaction="EditorSetDocumentCharacterSet('x-mac-ukrainian');"/>
+				 <menuitem value="&dcharRusCmd.label;" onaction="EditorSetDocumentCharacterSet('KOI8-R');"/>
+				 <menuitem value="&dcharUkrCmd.label;" onaction="EditorSetDocumentCharacterSet('KOI8-U');"/>
+					 <menuseparator />
+				 <menuitem value="&dcharIsoGreekCmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-7');"/>
+				 <menuitem value="&dcharWinGreekCmd.label;" onaction="EditorSetDocumentCharacterSet('windows-1253');"/>
+				 <menuitem value="&dcharMacGreekCmd.label;" onaction="EditorSetDocumentCharacterSet('x-mac-greek');"/>
+					 <menuseparator />
+				 <menuitem value="&dcharWinVietCmd.label;" onaction="EditorSetDocumentCharacterSet('windows-1258');"/>
+				 <menuitem value="&dcharVietTcnCmd.label;" onaction="EditorSetDocumentCharacterSet('x-viet-tcvn5712');"/>
+				 <menuitem value="&dcharVietViCmd.label;" onaction="EditorSetDocumentCharacterSet('VISCII');"/>
+				 <menuitem value="&dcharVieVpCmd.label;" onaction="EditorSetDocumentCharacterSet('x-viet-vps');"/>
+					 <menuseparator />
+				 <menuitem value="&dcharThaiCmd.label;" onaction="EditorSetDocumentCharacterSet('TIS-620');"/>
+					 <menuseparator />
+				 <menuitem value="&dcharArmCmd.label;" onaction="EditorSetDocumentCharacterSet('ARMSCII-8');"/>
+					 <menuseparator />
+				 <menuitem value="&dcharIso6Cmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-6');"/>
+				 <menuitem value="&dcharCp1256Cmd.label;" onaction="EditorSetDocumentCharacterSet('windows-1256');"/>
+					 <menuseparator />
+				 <menuitem value="&dcharIso8Cmd.label;" onaction="EditorSetDocumentCharacterSet('ISO-8859-8');"/>
+				 <menuitem value="&dcharCp1255Cmd.label;" onaction="EditorSetDocumentCharacterSet('windows-1255');"/>
+		     </menupopup>
+		   </menu>
+		</menupopup>
     </menu>
  
     <menu value="&insertMenu.label;">
-      <menuitem value="&insertLinkCmd.label;" onaction="EditorInsertLink()"/>
-      <menuitem value="&insertTargetCmd.label;" onaction=""/>
-      <menuitem value="&insertImageCmd.label;" onaction="EditorInsertImage()"/>
-      <menuitem value="&insertHLineCmd.label;" onaction="EditorInsertHLine()"/>
-      <menuitem value="&insertTableCmd.label;" onaction="EditorInsertTable()"/>
-      <menuitem value="&insertHTMLSourceCmd.label;" onaction="EditorInsertHTML()"/>
-      <menuseparator />
-      <menuitem value="&insertLineBreakCmd.label;" onaction=""/>
-      <menuitem value="&insertBreakBelowImagesCmd.label;" onaction=""/>
+	  <menupopup>
+		  <menuitem value="&insertLinkCmd.label;" onaction="EditorInsertLink()"/>
+		  <menuitem value="&insertTargetCmd.label;" onaction=""/>
+		  <menuitem value="&insertImageCmd.label;" onaction="EditorInsertImage()"/>
+		  <menuitem value="&insertHLineCmd.label;" onaction="EditorInsertHLine()"/>
+		  <menuitem value="&insertTableCmd.label;" onaction="EditorInsertTable()"/>
+		  <menuitem value="&insertHTMLSourceCmd.label;" onaction="EditorInsertHTML()"/>
+		  <menuseparator />
+		  <menuitem value="&insertLineBreakCmd.label;" onaction=""/>
+		  <menuitem value="&insertBreakBelowImagesCmd.label;" onaction=""/>
+	  </menupopup>
     </menu>
+
     <menu value="&formatMenu.label;">
-      <menu value="&fontfaceMenu.label;">
-        <menuitem value="&defaultVariableWidthCmd.label;" onaction="EditorSetFontFace('')"/>
-        <menuitem value="&defaultFixedWidthCmd.label;" onaction="EditorSetFontFace('tt')"/>
-        <menuseparator/>
-        <menuitem value="&arialHelveticaFont.label;" onaction="EditorSetFontFace('Arial, Helvetica, sans-serif')"/>
-        <menuitem value="&timesFont.label;" onaction="EditorSetFontFace('Times New Roman, Times, serif')"/>
-        <menuitem value="&courierFont.label;" onaction="EditorSetFontFace('Courier New, Courier, mono')"/>
-      </menu>
-      <menu value="&fontsizeMenu.label;">
-        <menuitem value="&sizeMinusTwoCmd.label;" onaction="EditorSetFontSize('-2')"/>
-        <menuitem value="&sizeMinusOneCmd.label;" onaction="EditorSetFontSize('-1')"/>
-        <menuitem value="&sizeNormalCmd.label;" onaction="EditorSetFontSize('0')"/>
-        <menuitem value="&sizePlusOneCmd.label;" onaction="EditorSetFontSize('+1')"/>
-        <menuitem value="&sizePlusTwoCmd.label;" onaction="EditorSetFontSize('+2')"/>
-        <menuitem value="&sizePlusThreeCmd.label;" onaction="EditorSetFontSize('+3')"/>
-        <menuitem value="&sizePlusFourCmd.label;" onaction="EditorSetFontSize('+4')"/>
-      </menu>
-      <menu value="&fontStyleMenu.label;">
-        <menuitem value="&styleBoldCmd.label;" onaction="EditorApplyStyle('b')"/>
-        <menuitem value="&styleItalicCmd.label;" onaction="EditorApplyStyle('i')"/>
-        <menuitem value="&styleUnderlineCmd.label;" onaction="EditorApplyStyle('u')"/>
-        <menuitem value="&styleStrikeThruCmd.label;" onaction="EditorApplyStyle('strike')"/>
-        <menuitem value="&styleSuperscriptCmd.label;" onaction="EditorApplyStyle('sup')"/>
-        <menuitem value="&styleSubscriptCmd.label;" onaction="EditorApplyStyle('sub')"/>
-        <menuitem value="&styleBlinkCmd.label;" onaction="EditorApplyStyle('blink')"/>
-        <menuitem value="&styleNonbreakingCmd.label;" onaction="EditorApplyStyle('nobr')"/>
-      </menu>
-      <menu value="&fontColorMenu.label;">
-        <menuitem value="&colorBlackCmd.label;" onaction="EditorSetFontColor('black')"/>
-        <menuitem value="&colorGrayCmd.label;" onaction="EditorSetFontColor('gray')"/>
-        <menuitem value="&colorSilverCmd.label;" onaction="EditorSetFontColor('silver')"/>
-        <menuitem value="&colorWhiteCmd.label;" onaction="EditorSetFontColor('white')"/>
-        <menuitem value="&colorRedCmd.label;" onaction="EditorSetFontColor('red')"/>
-        <menuitem value="&colorBlueCmd.label;" onaction="EditorSetFontColor('blue')"/>
-        <menuitem value="&colorGreenCmd.label;" onaction="EditorSetFontColor('green')"/>
-        <menuitem value="&colorCyanCmd.label;" onaction="EditorSetFontColor('cyan')"/>
-        <menuitem value="&colorYellowCmd.label;" onaction="EditorSetFontColor('yellow')"/>
-        <menuitem value="&colorMagentaCmd.label;" onaction="EditorSetFontColor('magenta')"/>
-      </menu>
-      <menu value="&backgroundColorMenu.label;">
-        <menuitem value="&colorBlackCmd.label;" onaction="EditorSetBackgroundColor('black')"/>
-        <menuitem value="&colorGrayCmd.label;" onaction="EditorSetBackgroundColor('gray')"/>
-        <menuitem value="&colorSilverCmd.label;" onaction="EditorSetBackgroundColor('silver')"/>
-        <menuitem value="&colorWhiteCmd.label;" onaction="EditorSetBackgroundColor('white')"/>
-        <menuitem value="&colorRedCmd.label;" onaction="EditorSetBackgroundColor('red')"/>
-        <menuitem value="&colorBlueCmd.label;" onaction="EditorSetBackgroundColor('blue')"/>
-        <menuitem value="&colorGreenCmd.label;" onaction="EditorSetBackgroundColor('green')"/>
-        <menuitem value="&colorCyanCmd.label;" onaction="EditorSetBackgroundColor('cyan')"/>
-        <menuitem value="&colorYellowCmd.label;" onaction="EditorSetBackgroundColor('yellow')"/>
-        <menuitem value="&colorMagentaCmd.label;" onaction="EditorSetBackgroundColor('magenta')"/>
-      </menu>
-      <menuitem value="&removeAllStylesCmd.label;" onaction="EditorRemoveStyle('all')"/>
-      <menuitem value="&removeLinksCmd.label;" onaction="EditorRemoveLinks()"/>
-      <menuseparator />
-      <menu value="&headingMenu.label;">
-        <menuitem value="&headingNormalCmd.label;"    onaction="EditorSetParagraphFormat('normal')"/>
-        <menuitem value="&headingOneCmd.label;" onaction="EditorSetParagraphFormat('h1')"/>
-        <menuitem value="&headingTwoCmd.label;" onaction="EditorSetParagraphFormat('h2')"/>
-        <menuitem value="&headingThreeCmd.label;" onaction="EditorSetParagraphFormat('h3')"/>
-        <menuitem value="&headingFourCmd.label;" onaction="EditorSetParagraphFormat('h4')"/>
-        <menuitem value="&headingFiveCmd.label;" onaction="EditorSetParagraphFormat('h5')"/>
-        <menuitem value="&headingSixCmd.label;" onaction="EditorSetParagraphFormat('h6')"/>
-      </menu>
-      <menu value="&paragraphMenu.label;">
-        <menuitem value="&paragraphNormalCmd.label;"      onaction="EditorSetParagraphFormat('normal')"/>
-        <menuitem value="&paragraphBlockquoteCmd.label;"  onaction="EditorSetParagraphFormat('blockquote')"/>
-        <menuitem value="&paragraphAddressCmd.label;"     onaction="EditorSetParagraphFormat('address')"/>
-        <menuitem value="&paragraphPreformatCmd.label;"   onaction="EditorSetParagraphFormat('pre')"/>
-        <menuitem value="&paragraphListCmd.label;"        onaction="EditorSetParagraphFormat('li')"/>
-        <menuitem value="&paragraphDfnTermCmd.label;"     onaction="EditorSetParagraphFormat('dt')"/>
-        <menuitem value="&paragraphDfnDescCmd.label;"     onaction="EditorSetParagraphFormat('dd')"/>
-      </menu>
-      <menuseparator />
-      <menu value="&stylesheetMenu.label;">
-        <menuitem value="EditorContent Sheet"     onaction="EditorApplyStyleSheet('chrome://editor/content/EditorContent.css')"/>
-        <menuitem value="EditorContent Sheet"     onaction="EditorApplyStyleSheet('resource:/res/ua.css')"/>
-        <menuseparator />
-        <menuitem value="&stylesheetEditorOneCmd.label;"     onaction="EditorApplyStyleSheet('chrome://editor/content/EditorStyles1.css')"/>
-        <menuseparator />
-        <menuitem value="&stylesheetOldstyleCmd.label;"      onaction="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Oldstyle')"/>
-        <menuitem value="&stylesheetModernistCmd.label;"     onaction="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Modernist')"/>
-        <menuitem value="&stylesheetMidnightCmd.label;"      onaction="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Midnight')"/>
-        <menuitem value="&stylesheetUltramarineCmd.label;"   onaction="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Ultramarine')"/>
-        <menuitem value="&stylesheetChocolateCmd.label;"     onaction="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Chocolate')"/>
-        <menuitem value="&stylesheetSteelyCmd.label;"        onaction="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Steely')"/>
-      </menu>
-      
+	  <menupopup>
+		  <menu value="&fontfaceMenu.label;">
+		   <menupopup>
+			<menuitem value="&defaultVariableWidthCmd.label;" onaction="EditorSetFontFace('')"/>
+			<menuitem value="&defaultFixedWidthCmd.label;" onaction="EditorSetFontFace('tt')"/>
+			<menuseparator/>
+			<menuitem value="&arialHelveticaFont.label;" onaction="EditorSetFontFace('Arial, Helvetica, sans-serif')"/>
+			<menuitem value="&timesFont.label;" onaction="EditorSetFontFace('Times New Roman, Times, serif')"/>
+			<menuitem value="&courierFont.label;" onaction="EditorSetFontFace('Courier New, Courier, mono')"/>
+		   </menupopup>
+		  </menu>
+		  <menu value="&fontsizeMenu.label;">
+		   <menupopup>
+			<menuitem value="&sizeMinusTwoCmd.label;" onaction="EditorSetFontSize('-2')"/>
+			<menuitem value="&sizeMinusOneCmd.label;" onaction="EditorSetFontSize('-1')"/>
+			<menuitem value="&sizeNormalCmd.label;" onaction="EditorSetFontSize('0')"/>
+			<menuitem value="&sizePlusOneCmd.label;" onaction="EditorSetFontSize('+1')"/>
+			<menuitem value="&sizePlusTwoCmd.label;" onaction="EditorSetFontSize('+2')"/>
+			<menuitem value="&sizePlusThreeCmd.label;" onaction="EditorSetFontSize('+3')"/>
+			<menuitem value="&sizePlusFourCmd.label;" onaction="EditorSetFontSize('+4')"/>
+		   </menupopup>
+		  </menu>
+		  <menu value="&fontStyleMenu.label;">
+			<menupopup>
+			<menuitem value="&styleBoldCmd.label;" onaction="EditorApplyStyle('b')"/>
+			<menuitem value="&styleItalicCmd.label;" onaction="EditorApplyStyle('i')"/>
+			<menuitem value="&styleUnderlineCmd.label;" onaction="EditorApplyStyle('u')"/>
+			<menuitem value="&styleStrikeThruCmd.label;" onaction="EditorApplyStyle('strike')"/>
+			<menuitem value="&styleSuperscriptCmd.label;" onaction="EditorApplyStyle('sup')"/>
+			<menuitem value="&styleSubscriptCmd.label;" onaction="EditorApplyStyle('sub')"/>
+			<menuitem value="&styleBlinkCmd.label;" onaction="EditorApplyStyle('blink')"/>
+			<menuitem value="&styleNonbreakingCmd.label;" onaction="EditorApplyStyle('nobr')"/>
+			</menupopup>
+		  </menu>
+		  <menu value="&fontColorMenu.label;">
+			<menupopup>
+			<menuitem value="&colorBlackCmd.label;" onaction="EditorSetFontColor('black')"/>
+			<menuitem value="&colorGrayCmd.label;" onaction="EditorSetFontColor('gray')"/>
+			<menuitem value="&colorSilverCmd.label;" onaction="EditorSetFontColor('silver')"/>
+			<menuitem value="&colorWhiteCmd.label;" onaction="EditorSetFontColor('white')"/>
+			<menuitem value="&colorRedCmd.label;" onaction="EditorSetFontColor('red')"/>
+			<menuitem value="&colorBlueCmd.label;" onaction="EditorSetFontColor('blue')"/>
+			<menuitem value="&colorGreenCmd.label;" onaction="EditorSetFontColor('green')"/>
+			<menuitem value="&colorCyanCmd.label;" onaction="EditorSetFontColor('cyan')"/>
+			<menuitem value="&colorYellowCmd.label;" onaction="EditorSetFontColor('yellow')"/>
+			<menuitem value="&colorMagentaCmd.label;" onaction="EditorSetFontColor('magenta')"/>
+			</menupopup>
+		  </menu>
+		  <menu value="&backgroundColorMenu.label;">
+			<menupopup>
+			<menuitem value="&colorBlackCmd.label;" onaction="EditorSetBackgroundColor('black')"/>
+			<menuitem value="&colorGrayCmd.label;" onaction="EditorSetBackgroundColor('gray')"/>
+			<menuitem value="&colorSilverCmd.label;" onaction="EditorSetBackgroundColor('silver')"/>
+			<menuitem value="&colorWhiteCmd.label;" onaction="EditorSetBackgroundColor('white')"/>
+			<menuitem value="&colorRedCmd.label;" onaction="EditorSetBackgroundColor('red')"/>
+			<menuitem value="&colorBlueCmd.label;" onaction="EditorSetBackgroundColor('blue')"/>
+			<menuitem value="&colorGreenCmd.label;" onaction="EditorSetBackgroundColor('green')"/>
+			<menuitem value="&colorCyanCmd.label;" onaction="EditorSetBackgroundColor('cyan')"/>
+			<menuitem value="&colorYellowCmd.label;" onaction="EditorSetBackgroundColor('yellow')"/>
+			<menuitem value="&colorMagentaCmd.label;" onaction="EditorSetBackgroundColor('magenta')"/>
+			</menupopup>
+		  </menu>
+		  <menuitem value="&removeAllStylesCmd.label;" onaction="EditorRemoveStyle('all')"/>
+		  <menuitem value="&removeLinksCmd.label;" onaction="EditorRemoveLinks()"/>
+		  <menuseparator />
+		  <menu value="&headingMenu.label;">
+			<menupopup>
+			<menuitem value="&headingNormalCmd.label;"    onaction="EditorSetParagraphFormat('normal')"/>
+			<menuitem value="&headingOneCmd.label;" onaction="EditorSetParagraphFormat('h1')"/>
+			<menuitem value="&headingTwoCmd.label;" onaction="EditorSetParagraphFormat('h2')"/>
+			<menuitem value="&headingThreeCmd.label;" onaction="EditorSetParagraphFormat('h3')"/>
+			<menuitem value="&headingFourCmd.label;" onaction="EditorSetParagraphFormat('h4')"/>
+			<menuitem value="&headingFiveCmd.label;" onaction="EditorSetParagraphFormat('h5')"/>
+			<menuitem value="&headingSixCmd.label;" onaction="EditorSetParagraphFormat('h6')"/>
+			</menupopup>
+		  </menu>
+		  <menu value="&paragraphMenu.label;">
+			<menupopup>
+			<menuitem value="&paragraphNormalCmd.label;"      onaction="EditorSetParagraphFormat('normal')"/>
+			<menuitem value="&paragraphBlockquoteCmd.label;"  onaction="EditorSetParagraphFormat('blockquote')"/>
+			<menuitem value="&paragraphAddressCmd.label;"     onaction="EditorSetParagraphFormat('address')"/>
+			<menuitem value="&paragraphPreformatCmd.label;"   onaction="EditorSetParagraphFormat('pre')"/>
+			<menuitem value="&paragraphListCmd.label;"        onaction="EditorSetParagraphFormat('li')"/>
+			<menuitem value="&paragraphDfnTermCmd.label;"     onaction="EditorSetParagraphFormat('dt')"/>
+			<menuitem value="&paragraphDfnDescCmd.label;"     onaction="EditorSetParagraphFormat('dd')"/>
+			</menupopup>
+		  </menu>
+		  <menuseparator />
+		  <menu value="&stylesheetMenu.label;">
+			<menupopup>
+			<menuitem value="EditorContent Sheet"     onaction="EditorApplyStyleSheet('chrome://editor/content/EditorContent.css')"/>
+			<menuitem value="EditorContent Sheet"     onaction="EditorApplyStyleSheet('resource:/res/ua.css')"/>
+			<menuseparator />
+			<menuitem value="&stylesheetEditorOneCmd.label;"     onaction="EditorApplyStyleSheet('chrome://editor/content/EditorStyles1.css')"/>
+			<menuseparator />
+			<menuitem value="&stylesheetOldstyleCmd.label;"      onaction="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Oldstyle')"/>
+			<menuitem value="&stylesheetModernistCmd.label;"     onaction="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Modernist')"/>
+			<menuitem value="&stylesheetMidnightCmd.label;"      onaction="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Midnight')"/>
+			<menuitem value="&stylesheetUltramarineCmd.label;"   onaction="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Ultramarine')"/>
+			<menuitem value="&stylesheetChocolateCmd.label;"     onaction="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Chocolate')"/>
+			<menuitem value="&stylesheetSteelyCmd.label;"        onaction="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Steely')"/>
+			</menupopup>
+		  </menu>
+		</menupopup>
     </menu>
+
     <menu value="&toolsMenu.label;">
-      <menuitem value="&newBrowserCmd.label;" onaction="EditorNewBrowser()"/>
+      <menupopup>
+	  <menuitem value="&newBrowserCmd.label;" onaction="EditorNewBrowser()"/>
       <menuitem value="&newPlaintextEditorCmd.label;" onaction="EditorNewPlaintext()"/>
       <menuseparator />
       <menuitem value="&checkSpellingCmd.label;" onaction="CheckSpelling()"/>
       <menuitem value="&setFocusCmd.label;" onaction="window.focus()"/>
-    </menu>
+	  </menupopup>
+	</menu>
     <menu value="&debugMenu.label;">
-      <menuitem value="&outputTextCmd.label;" onaction="EditorGetText()"/>
+      <menupopup>
+	  <menuitem value="&outputTextCmd.label;" onaction="EditorGetText()"/>
       <menuitem value="&outputHTMLCmd.label;" onaction="EditorGetHTML()"/>
       <menuitem value="&outputXIFCmd.label;" onaction="EditorGetXIF()"/>
       <menuseparator />
@@ -492,9 +524,12 @@
       <menuitem value="&startLogCmd.label;" onaction="EditorStartLog()"/>
       <menuitem value="&stopLogCmd.label;" onaction="EditorStopLog()"/>
       <menuitem value="&runLogCmd.label;" onaction="EditorRunLog()"/>
+	  </menupopup>
     </menu>
     <menu value="&helpMenu.label;">
+	  <menupopup>
       <menuitem value="&aboutCmd.label;" onaction=""/>
+	  </menupopup>
     </menu>
   </menubar>
   
@@ -509,24 +544,24 @@
 
     <toolbox id="EditorToolbars">
       <toolbar id="EditToolbar">
-	      <titledbutton src="&newEditorIcon.url;" align="bottom" value="&newToolbarCmd.label;" class="popup" onclick="EditorNew()"/>
-	      <titledbutton src="&openEditorIcon.url;" align="bottom" value="&openToolbarCmd.label;" class="popup" onclick="EditorOpen()"/>
+	      <titledbutton src="&newEditorIcon.url;" align="top" value="&newToolbarCmd.label;" class="popup" onclick="EditorNew()"/>
+	      <titledbutton src="&openEditorIcon.url;" align="top" value="&openToolbarCmd.label;" class="popup" onclick="EditorOpen()"/>
 
-	      <titledbutton id="SaveButton" src="&saveIcon.url;" align="bottom" value="&saveCmd.label;" class="popup" onclick="EditorSave()">
+	      <titledbutton id="SaveButton" src="&saveIcon.url;" align="top" value="&saveCmd.label;" class="popup" onclick="EditorSave()">
 	        <observes element="Editor:Document:Dirty" attribute="dirty" onchange="onDirtyChange()"/>
 	      </titledbutton>
 <!-- Not supporting publishing (yet?) -->
-<!--      <titledbutton src="&publishIcon.url;" align="bottom" value="&publishToolbarCmd.label;" class="popup"/> -->
-	      <titledbutton src="&printIcon.url;" align="bottom" value="&printToolbarCmd.label;" class="popup"/>
-	      <titledbutton src="&findIcon.url;" align="bottom" value="&findToolbarCmd.label;" onclick="EditorFind()"/>
-	      <titledbutton src="&linkIcon.url;" align="bottom" value="&linkToolbarCmd.label;" onclick="EditorInsertLink()"/>
-	      <titledbutton src="&imageIcon.url;" align="bottom" value="&imageToolbarCmd.label;" onclick="EditorInsertImage()"/>
-	      <titledbutton src="&targetIcon.url;" align="bottom" value="&anchorToolbarCmd.label;" onclick="EditorInsertNamedAnchor()"/>
-	      <titledbutton src="&hlineIcon.url;" align="bottom" value="&hruleToolbarCmd.label;" onclick="EditorInsertHLine()"/>
-	      <titledbutton src="&tableIcon.url;" align="bottom" value="&tableToolbarCmd.label;" onclick="EditorInsertTable()"/>
-	      <titledbutton src="&spellingIcon.url;" align="bottom" value="&spellToolbarCmd.label;" onclick="CheckSpelling()"/>
+<!--      <titledbutton src="&publishIcon.url;" align="top" value="&publishToolbarCmd.label;" class="popup"/> -->
+	      <titledbutton src="&printIcon.url;" align="top" value="&printToolbarCmd.label;" class="popup"/>
+	      <titledbutton src="&findIcon.url;" align="top" value="&findToolbarCmd.label;" onclick="EditorFind()"/>
+	      <titledbutton src="&linkIcon.url;" align="top" value="&linkToolbarCmd.label;" onclick="EditorInsertLink()"/>
+	      <titledbutton src="&imageIcon.url;" align="top" value="&imageToolbarCmd.label;" onclick="EditorInsertImage()"/>
+	      <titledbutton src="&targetIcon.url;" align="top" value="&anchorToolbarCmd.label;" onclick="EditorInsertNamedAnchor()"/>
+	      <titledbutton src="&hlineIcon.url;" align="top" value="&hruleToolbarCmd.label;" onclick="EditorInsertHLine()"/>
+	      <titledbutton src="&tableIcon.url;" align="top" value="&tableToolbarCmd.label;" onclick="EditorInsertTable()"/>
+	      <titledbutton src="&spellingIcon.url;" align="top" value="&spellToolbarCmd.label;" onclick="CheckSpelling()"/>
   		  <spring flex="100%"/>
-	      <titledbutton id="DisplayStyleButton" src="&previewIcon.url;" align="bottom" value="&previewToolbarCmd.label;" class="popup" onclick="EditorToggleDisplayStyle()"/>
+	      <titledbutton id="DisplayStyleButton" src="&previewIcon.url;" align="top" value="&previewToolbarCmd.label;" class="popup" onclick="EditorToggleDisplayStyle()"/>
 	  </toolbar>
       <toolbar id="FormatToolbar">
 		    <titledbutton id="ParagraphPopup" value="&paragraphToolbarMenu.label;" class="popup" align="left" popup="ParagraphMenu" popupanchor="bottomleft">
