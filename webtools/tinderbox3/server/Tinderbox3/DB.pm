@@ -11,8 +11,11 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw(get_dbh);
 
+our $dbname = "tbox";
+our $username = "";
+our $password = "";
 sub get_dbh {
-  my $dbh = DBI->connect("dbi:Pg:dbname=tbox", "", "", { RaiseError => 1, AutoCommit => 0 });
+  my $dbh = DBI->connect("dbi:Pg:dbname=$dbname", $username, $password, { RaiseError => 1, AutoCommit => 0 });
   return $dbh;
 }
 
