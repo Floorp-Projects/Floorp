@@ -37,6 +37,8 @@
 #if HAVE_GNU_LIBC_VERSION_H
 #include <gnu/libc-version.h>
 #endif
+#undef HAVE_NL_LANGINFO
+#define HAVE_NL_LANGINFO 0
 #if HAVE_NL_LANGINFO
 #include <langinfo.h>
 #endif
