@@ -76,16 +76,13 @@ private:
 
 friend	NS_IMETHODIMP	NS_NewLocalSearchService(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
+protected:
+
 	NS_METHOD	getFindResults(nsIRDFResource *source, nsISimpleEnumerator** aResult);
-
 	NS_METHOD	getFindName(nsIRDFResource *source, nsIRDFLiteral** aResult);
-
-	NS_METHOD	parseResourceIntoFindTokens(nsIRDFResource *u,
-				findTokenPtr tokens);
-	NS_METHOD	doMatch(nsIRDFLiteral *literal, char *matchMethod,
-				char *matchText);
-	NS_METHOD	parseFindURL(nsIRDFResource *u,
-				nsISupportsArray *array);
+	NS_METHOD	parseResourceIntoFindTokens(nsIRDFResource *u, findTokenPtr tokens);
+	NS_METHOD	doMatch(nsIRDFLiteral *literal, char *matchMethod, char *matchText);
+	NS_METHOD	parseFindURL(nsIRDFResource *u, nsISupportsArray *array);
 
 public:
 
@@ -93,8 +90,9 @@ public:
 
 			LocalSearchDataSource(void);
 	virtual		~LocalSearchDataSource(void);
-
 	nsresult	Init();
+
+	NS_DECL_NSILOCALSEARCHSERVICE
 
 	// nsIRDFDataSource methods
 
