@@ -224,8 +224,8 @@
             datasources="rdf:chrome" 
             ref="urn:mozilla:locale:root" 
             sortResource="http://www.mozilla.org/rdf/chrome#name"
-            sortDirection="ascending" 
-            >
+            sortDirection="ascending"
+            oncommand="selectLocale(event)">
        <menupopup>
           <menuitem value="&downloadMore.label;" 
                     accesskey="&downloadMore.accesskey;" 
@@ -238,7 +238,7 @@
               <menuitem class="standard" uri="rdf:*" 
                         value="rdf:http://www.mozilla.org/rdf/chrome#displayName"
                         data="rdf:http://www.mozilla.org/rdf/chrome#name" 
-                        oncommand="selectLocale(event)" />
+                        />
             </menupopup>
           </rule>
          </template>
@@ -249,13 +249,13 @@
       <menuseparator/>
       <menu id="menu_Themes" value="&applyTheme.label;"
                          accesskey="&applyTheme.accesskey;">
-                            <menupopup id="applyThemePopup" datasources="rdf:chrome" ref="urn:mozilla:skin:root">                                
+                            <menupopup id="applyThemePopup" datasources="rdf:chrome" ref="urn:mozilla:skin:root" oncommand="applyTheme(event.target)">                                
  <menuitem id="themePrefs"
 oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/pref-themes.xul')" value="&themePreferencesCmd.label;" accesskey="&themePreferencesCmd.accesskey;"/>
 <menuitem id="getNewThemes" oncommand="getNewThemes();" value="&getNewThemesCmd.label;" accesskey="&getNewThemesCmd.accesskey;"/>
 <menuseparator/>
 <template>
-<menuitem uri="..." value="rdf:http://www.mozilla.org/rdf/chrome#displayName" name="rdf:http://www.mozilla.org/rdf/chrome#name" oncommand="applyTheme(event.target)"/>
+<menuitem uri="..." value="rdf:http://www.mozilla.org/rdf/chrome#displayName" name="rdf:http://www.mozilla.org/rdf/chrome#name"/>
 </template>
                            </menupopup>
               </menu>
@@ -289,7 +289,7 @@ oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/p
   </menu>       
 
       <menu accesskey="&bookmarksMenu.accesskey;" value="&bookmarksMenu.label;"
-                           datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" id="BookmarksMenu" ref="NC:BookmarksRoot" flags="dont-test-empty">
+                           datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" id="BookmarksMenu" ref="NC:BookmarksRoot" flags="dont-test-empty" oncommand="OpenBookmarkURL(event.target, document.getElementById('BookmarksMenu').database)">
 		<template>
 			<rule iscontainer="true">
 			  <menupopup>
@@ -305,7 +305,7 @@ oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/p
 			</rule>
 			<rule>
 			  <menupopup>
-				<menuitem class="menuitem-iconic bookmark-item" uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="OpenBookmarkURL(event.target, document.getElementById('BookmarksMenu').database)" />
+				<menuitem class="menuitem-iconic bookmark-item" uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name"  />
 			  </menupopup>
 			</rule>
 		</template>
