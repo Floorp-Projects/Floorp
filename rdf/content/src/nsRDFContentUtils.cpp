@@ -294,7 +294,7 @@ nsRDFContentUtils::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
 			      nsIDateTimeFormat::GetIID(), getter_AddRefs(aDateTimeFormat));
 		if (NS_SUCCEEDED(rv) && aDateTimeFormat)
 		{
-			rv = aDateTimeFormat->FormatPRTime(nsnull /* nsILocale* locale */, kDateFormatLong, kTimeFormatSeconds, (PRTime)theDate, aResult);
+			rv = aDateTimeFormat->FormatPRTime(nsnull /* nsILocale* locale */, kDateFormatShort, kTimeFormatSeconds, (PRTime)theDate, aResult);
 			if (NS_FAILED(rv)) {
 				aResult.Truncate();
 			}
