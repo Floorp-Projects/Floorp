@@ -60,20 +60,13 @@
 #include "prmem.h"
 #include "prlog.h"	// PR_ASSERT
 
-#ifdef XP_OS2
+#if defined(XP_OS2)
     #define WIDGET_DLL      "WDGTOS2"
     #define GFXWIN_DLL      "GFX_OS2"
     #define VIEW_DLL        "NGVIEW"
     #define WEB_DLL         "WEBSHELL"
-    #define PLUGIN_DLL      "NGPLUGIN"
-    #define PREF_DLL        "PREF"
-    #define PARSER_DLL      "HTMLPARS"
     #define DOM_DLL         "JSDOM"
-    #define LAYOUT_DLL      "NGLAYOUT"
-    #define NETLIB_DLL      "NECKO"
-    #define EDITOR_DLL      "ENDER"
-    #define APPSHELL_DLL    "APPSHELL"
-    #define APPCORES_DLL    "APPCORES"
+    #define PLUGIN_DLL      "NGPLUGIN"
     #define CAPS_DLL        "CAPS"
     #define LIVECONNECT_DLL "JSJ"
     #define OJI_DLL         "OJI"
