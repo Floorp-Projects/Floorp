@@ -20,7 +20,7 @@
 # Contributor(s): Stephen Lamm <slamm@netscape.com>
 # 
 
-# Version: $Id: cvs.py,v 1.3 2000/01/28 18:26:09 slamm%netscape.com Exp $
+# Version: $Id: cvs.py,v 1.4 2000/01/28 23:17:43 slamm%netscape.com Exp $
 
 # module cvs -- Add multithreading to the cvs client.
 
@@ -43,11 +43,12 @@ any more threads than that will probably not help.
 """
 
 import os
+import Queue
+import re
 import string
 import sys
 import threading
 import time
-import Queue
 
 
 class CVS:
@@ -74,7 +75,6 @@ class CVS:
             return self.params[attr]
       
     def parse_module_file(self):
-        import re
         mod_pat = re.compile(r'\s+-a\s+')
         spc_pat = re.compile(r'\s+')
         module  = ''
@@ -89,12 +89,13 @@ class CVS:
             else:
                 space_split = re.split(spc_pat, line)[1:]
                 members[module].extend(space_split)
-         
         members = self._flatten_module(members, self.module)
-        members.sort()
-        members = self._get_checkout_groups(members)
 
-        return members
+	def compare(x, y, self=self):
+	    return ( cmp(self._get_dir_part(x), self._get_dir_part(y)) or
+		     self._is_file(y) - self._is_file(x) )
+        members.sort(compare)
+        return self._get_checkout_groups(members)
 
     def _flatten_module(self, members, module):
         result = []
@@ -114,6 +115,7 @@ class CVS:
         exclude = []
         checkout_groups = []
         seen = {}
+	last_was_file = 0
         for member in members:
             if member[0] == "!":
                 seen[member[1:]] = 'excluded'
@@ -122,12 +124,22 @@ class CVS:
                 if self._is_covered(seen, member):
                     continue
                 seen[member] = 'included'
-                group = [member]
-                for file in exclude:
-                    if file[1:len(member)+1] == member:
-                        group.append(file)
-                  #exclude.remove(file)
-                checkout_groups.append(group)
+		group = [member]
+		if self._is_file(member):
+		    if last_was_file: 
+			# Push it onto the last group. Otherwise, cvs might try
+			# to access the same directory via multiple threads.
+			checkout_groups[-1].append(member)
+			continue
+		    last_was_file = 1
+		else:
+		    last_was_file = 0
+		    # Add any matching excludes to this group
+		    for file in exclude:
+			if file[1:len(member)+1] == member:
+			    group.append(file)
+			    exclude.remove(file)
+		checkout_groups.append(group)
         return checkout_groups
 
     def _is_covered(self, seen, member):
@@ -136,7 +148,8 @@ class CVS:
         If the parent has been seen, do not include this member.
         Otherwise this directory will be pulled twice.
         """
-        components = string.split(member,'/')
+	dir = self._get_dir_part(member)
+	components = string.split(dir, '/')
         subdir = components[0]
         subdirs = [subdir]
         for dir in components[1:]:
@@ -148,6 +161,23 @@ class CVS:
                 return seen[subdir] == 'included'
         return 0
 
+    def _get_dir_part(self, file):
+	"""Return the directory part of a file."""
+	if self._is_file(file):
+	    return file[:string.rindex(file, '/')]
+	else:
+	    return file
+
+    def _is_file(self, file):
+	"""Check if a directory is a file.
+
+	This should do something smart such as stat'ing the file, but
+	for now a file is a file if it has '.' or is in allcaps.
+	"""
+	if not self.file_pat:
+	    self.file_pat = re.compile(r'/(?:[^/]*\.[^/]*)|(?:[-_A-Z0-9]+)$')
+	return self.file_pat.search(file) != None
+    
 
 class ModuleFileQueue(Queue.Queue):
     """Use a thread-safe Queue for listing module files and directories."""
@@ -158,7 +188,6 @@ class ModuleFileQueue(Queue.Queue):
         Queue.Queue.__init__(self, queue_size)
         for file in mozcvs.module_files:
             self.put(file)
-
 
 class XArgsThread(threading.Thread):
     """An individual thread for the XArgs class"""
