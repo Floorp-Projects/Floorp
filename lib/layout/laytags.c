@@ -858,7 +858,7 @@ lo_ProcessCenterElement(MWContext *context, lo_DocState **state, LO_CenterStruct
 	}
 
 	lo_SetLineBreakState(context, *state, LO_LINEFEED_BREAK_SOFT,
-						 LO_CLEAR_NONE, 1, !in_relayout);
+						 LO_CLEAR_NONE, 1, in_relayout);
 
 	if (center->is_end == FALSE)
 	{

@@ -1138,7 +1138,7 @@ LO_Element * lo_rl_FitCell( lo_RelayoutState *relay_state, LO_Element *lo_ele )
 	   the line_array.  This code should ensure that anything left on the line_list gets flushed
 	   to the line_array. */
 	if (relay_state->doc_state->line_list != NULL)
-		lo_AppendLineListToLineArray( relay_state->context, relay_state->doc_state, NULL);
+		lo_AppendLineListToLineArray( relay_state->context, relay_state->doc_state, lo_GetLastElementInList(relay_state->doc_state->line_list) );
 
 	/* Restore relay state to original state */
 	lo_rl_CopyStateToCell( relay_state->doc_state, cell );
@@ -1693,7 +1693,7 @@ void lo_rl_ReflowCell( MWContext *context, lo_DocState *state, LO_CellStruct *ce
 	   the line_array.  This code should ensure that anything left on the line_list gets flushed
 	   to the line_array. */
 	if (state->line_list != NULL)
-		lo_AppendLineListToLineArray( context, state, NULL);
+		lo_AppendLineListToLineArray( context, state, lo_GetLastElementInList(state->line_list) );
 
 	/* Restore cell line list and float list */
 	lo_rl_CopyStateToCell( relay_state->doc_state, cell );
@@ -1725,9 +1725,9 @@ void lo_rl_ReflowDocState( MWContext *context, lo_DocState *state )
 
 	/* Dummy Floating elements on a new line at the end of a document were not getting put into
 	   the line_array.  This code should ensure that anything left on the line_list gets flushed
-	   to the line_array. */
+	   to the line_array. */	
 	if (state->line_list != NULL)
-		lo_AppendLineListToLineArray( context, state, NULL);
+		lo_AppendLineListToLineArray( context, state, lo_GetLastElementInList(state->line_list) );
 
 	/* Done with relayout.  Destroy relayout state. */
 	lo_rl_DestroyRelayoutState( relay_state );

@@ -3192,7 +3192,7 @@ lo_CloseOutLayout(MWContext *context, lo_DocState *state)
 	   the line_array.  This code should ensure that anything left on the line_list gets flushed
 	   to the line_array. */
 	if (state->line_list != NULL)
-		lo_AppendLineListToLineArray( context, state, NULL);
+		lo_AppendLineListToLineArray( context, state, lo_GetLastElementInList(state->line_list) );
 }
 
 /* Relayout version of lo_CloseOutLayout() */
@@ -7887,6 +7887,7 @@ void lo_AppendLineListToLineArray( MWContext *context, lo_DocState *state, LO_El
 		state->end_last_line->lo_any.next = state->line_list;
 		state->line_list->lo_any.prev = state->end_last_line;
 	}
+
 	state->end_last_line = lastElementOnLineList;
 
 	state->line_list = NULL;
