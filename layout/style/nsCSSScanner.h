@@ -40,6 +40,7 @@
 #define nsCSSScanner_h___
 
 #include "nsString.h"
+#include "nsCOMPtr.h"
 class nsIUnicharInputStream;
 
 // XXX turn this off for minimo builds
@@ -125,6 +126,7 @@ class nsCSSScanner {
   // |aLineNumber == 1| is the beginning of a file, use |aLineNumber == 0|
   // when the line number is unknown.
   void Init(nsIUnicharInputStream* aInput, nsIURI* aURI, PRUint32 aLineNumber);
+  void Close();
 
   static PRBool InitGlobals();
   static void ReleaseGlobals();
@@ -181,7 +183,6 @@ class nsCSSScanner {
   }
   
 protected:
-  void Close();
   PRInt32 Read(nsresult& aErrorCode);
   PRInt32 Peek(nsresult& aErrorCode);
   void Unread();
@@ -207,7 +208,7 @@ protected:
                       nsString& aString);
   PRBool GatherIdent(nsresult& aErrorCode, PRInt32 aChar, nsString& aIdent);
 
-  nsIUnicharInputStream* mInput;
+  nsCOMPtr<nsIUnicharInputStream> mInput;
   PRUnichar* mBuffer;
   PRInt32 mOffset;
   PRInt32 mCount;
@@ -220,6 +221,7 @@ protected:
   PRUint32 mLineNumber;
 #ifdef CSS_REPORT_PARSE_ERRORS
   nsXPIDLCString mFileName;
+  nsCOMPtr<nsIURI> mURI;  // Cached so we know to not refetch mFileName
   PRUint32 mErrorLineNumber, mColNumber, mErrorColNumber;
   nsFixedString mError;
   PRUnichar mErrorBuf[200];

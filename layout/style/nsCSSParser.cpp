@@ -316,8 +316,8 @@ protected:
   // Current token. The value is valid after calling GetToken
   nsCSSToken mToken;
 
-  // Our scanner.  We own this and are responsible for deallocating it.
-  nsCSSScanner* mScanner;
+  // Our scanner.
+  nsCSSScanner mScanner;
 
   // The URI to be used as a base for relative URIs.
   nsCOMPtr<nsIURI> mBaseURL;
@@ -372,6 +372,10 @@ protected:
 
   // All data from successfully parsed properties are placed into |mData|.
   nsCSSExpandedDataBlock mData;
+
+#ifdef DEBUG
+  PRPackedBool mScannerInited;
+#endif
 };
 
 PR_STATIC_CALLBACK(void) AppendRuleToArray(nsICSSRule* aRule, void* aArray)
@@ -401,27 +405,27 @@ NS_NewCSSParser(nsICSSParser** aInstancePtrResult)
 #ifdef CSS_REPORT_PARSE_ERRORS
 
 #define REPORT_UNEXPECTED(msg_) \
-  mScanner->ReportUnexpected(#msg_)
+  mScanner.ReportUnexpected(#msg_)
 
 #define REPORT_UNEXPECTED_P(msg_, params_) \
-  mScanner->ReportUnexpectedParams(#msg_, params_, NS_ARRAY_LENGTH(params_))
+  mScanner.ReportUnexpectedParams(#msg_, params_, NS_ARRAY_LENGTH(params_))
 
 #define REPORT_UNEXPECTED_EOF(lf_) \
-  mScanner->ReportUnexpectedEOF(#lf_)
+  mScanner.ReportUnexpectedEOF(#lf_)
 
 #define REPORT_UNEXPECTED_TOKEN(msg_) \
-  mScanner->ReportUnexpectedToken(mToken, #msg_)
+  mScanner.ReportUnexpectedToken(mToken, #msg_)
 
 #define REPORT_UNEXPECTED_TOKEN_P(msg_, params_) \
-  mScanner->ReportUnexpectedTokenParams(mToken, #msg_, \
-                                        params_, NS_ARRAY_LENGTH(params_))
+  mScanner.ReportUnexpectedTokenParams(mToken, #msg_, \
+                                       params_, NS_ARRAY_LENGTH(params_))
 
 
 #define OUTPUT_ERROR() \
-  mScanner->OutputError()
+  mScanner.OutputError()
 
 #define CLEAR_ERROR() \
-  mScanner->ClearError()
+  mScanner.ClearError()
 
 #else
 
@@ -437,7 +441,7 @@ NS_NewCSSParser(nsICSSParser** aInstancePtrResult)
 
 CSSParserImpl::CSSParserImpl()
   : mToken(),
-    mScanner(nsnull),
+    mScanner(),
     mChildLoader(nsnull),
     mSection(eCSSSection_Charset),
     mHavePushBack(PR_FALSE),
@@ -447,6 +451,9 @@ CSSParserImpl::CSSParserImpl()
 #endif
     mCaseSensitive(PR_FALSE),
     mParsingCompoundProperty(PR_FALSE)
+#ifdef DEBUG
+    , mScannerInited(PR_FALSE)
+#endif
 {
 }
 
@@ -510,13 +517,9 @@ nsresult
 CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
                            PRUint32 aLineNumber, nsIURI* aBaseURI)
 {
-  NS_ASSERTION(! mScanner, "already have scanner");
+  NS_ASSERTION(! mScannerInited, "already have scanner");
 
-  mScanner = new nsCSSScanner();
-  if (! mScanner) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  mScanner->Init(aInput, aSheetURI, aLineNumber);
+  mScanner.Init(aInput, aSheetURI, aLineNumber);
   mBaseURL = aBaseURI;
 
   mHavePushBack = PR_FALSE;
@@ -527,10 +530,10 @@ CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
 nsresult
 CSSParserImpl::ReleaseScanner(void)
 {
-  if (mScanner) {
-    delete mScanner;
-    mScanner = nsnull;
-  }
+  mScanner.Close();
+#ifdef DEBUG
+  mScannerInited = PR_FALSE;
+#endif
   mBaseURL = nsnull;
   return NS_OK;
 }
@@ -881,7 +884,7 @@ PRBool CSSParserImpl::GetToken(nsresult& aErrorCode, PRBool aSkipWS)
 {
   for (;;) {
     if (!mHavePushBack) {
-      if (!mScanner->Next(aErrorCode, mToken)) {
+      if (!mScanner.Next(aErrorCode, mToken)) {
         break;
       }
     }
@@ -898,7 +901,7 @@ PRBool CSSParserImpl::GetURLToken(nsresult& aErrorCode, PRBool aSkipWS)
 {
   for (;;) {
     if (! mHavePushBack) {
-      if (! mScanner->NextURL(aErrorCode, mToken)) {
+      if (! mScanner.NextURL(aErrorCode, mToken)) {
         break;
       }
     }
@@ -1536,7 +1539,7 @@ PRBool CSSParserImpl::ParseRuleSet(nsresult& aErrorCode, RuleAppendFunc aAppendF
 {
   // First get the list of selectors for the rule
   nsCSSSelectorList* slist = nsnull;
-  PRUint32 linenum = mScanner->GetLineNumber();
+  PRUint32 linenum = mScanner.GetLineNumber();
   if (! ParseSelectorList(aErrorCode, slist)) {
     REPORT_UNEXPECTED(PEBadSelectorRSIgnored);
     OUTPUT_ERROR();
