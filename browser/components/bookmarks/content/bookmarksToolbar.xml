@@ -484,9 +484,9 @@
     </implementation>
 
     <content>
-      <xul:stack flex="1">
+      <xul:stack flex="1" style="min-width:0px; width:0px;">
       <xul:hbox id="bookmarks-ptf" anonid="bookmarks-ptf" contextmenu="_child"
-                flex="1" style="min-width:0px; margin-left: 3px;" 
+                flex="1" style="min-width:0px; width:0px;margin-left: 3px;" 
                 datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
                 ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
                 rdf:type="http://home.netscape.com/NC-rdf#Folder"
