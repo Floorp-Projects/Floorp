@@ -181,6 +181,7 @@ public:
                                          nsILayoutHistoryState* aFrameState);
 
   nsIFrame* GetInitialContainingBlock() { return mInitialContainingBlock; }
+  nsIFrame* GetPageSequenceFrame() { return mPageSequenceFrame; }
 
 private:
 
@@ -984,6 +985,7 @@ private:
   nsIFrame*           mFixedContainingBlock;
   nsIFrame*           mDocElementContainingBlock;
   nsIFrame*           mGfxScrollFrame;
+  nsIFrame*           mPageSequenceFrame;
   nsQuoteList         mQuoteList;
   nsCounterManager    mCounterManager;
   PRUint16            mUpdateCount;

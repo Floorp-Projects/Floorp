@@ -1883,6 +1883,7 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
   , mFixedContainingBlock(nsnull)
   , mDocElementContainingBlock(nsnull)
   , mGfxScrollFrame(nsnull)
+  , mPageSequenceFrame(nsnull)
   , mUpdateCount(0)
   , mQuotesDirty(PR_FALSE)
   , mCountersDirty(PR_FALSE)
@@ -4420,9 +4421,6 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
   
   // how the root frame hierarchy should look
 
-  // XXXbz if you change this method, change
-  // PresShell::GetPageSequenceFrame accordingly!
-
     /*
 
 ---------------No Scrollbars------
@@ -4525,6 +4523,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
     } else {
         // Create a page sequence frame
         NS_NewSimplePageSequenceFrame(mPresShell, &rootFrame);
+        mPageSequenceFrame = rootFrame;
         rootPseudo = nsCSSAnonBoxes::pageSequence;
     }
 
