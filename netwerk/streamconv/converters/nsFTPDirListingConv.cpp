@@ -62,8 +62,6 @@
 #define IS_SPERM(c) (PL_strchr("sSx-",c) != 0)
 #define IS_TPERM(c) (PL_strchr("tTx-",c) != 0)
 
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 static NS_DEFINE_CID(kDateTimeCID, NS_DATETIMEFORMAT_CID);
 
