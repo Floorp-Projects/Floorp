@@ -2933,6 +2933,23 @@ fi
 AC_SUBST(MOZ_CALENDAR)
 
 dnl ========================================================
+dnl = FreeType2
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(freetype2,
+[  --disable-freetype2     Disable FreeType2 support ],
+    _NO_FREETYPE2=1 )
+
+if test "$no_x" = "yes"; then
+    _NO_FREETYPE2=1
+fi
+
+if test -z "$_NO_FREETYPE2"; then
+    AC_CHECK_FT2(7.0.1, [MOZ_ENABLE_FREETYPE2=1], [MOZ_ENABLE_FREETYPE2=])
+fi
+
+AC_SUBST(MOZ_ENABLE_FREETYPE2)
+
+dnl ========================================================
 dnl = Xprint
 dnl ========================================================
 if test "$no_x" != "yes"
