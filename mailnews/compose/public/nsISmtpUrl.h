@@ -23,7 +23,6 @@
 #include "nsFileSpec.h"
 
 #include "nsIURL.h"
-#include "nsIMsgMailNewsUrl.h"
 
 #include "nsISupports.h"
 
@@ -53,7 +52,7 @@
 // we'll just bring up the  compose window.
 // mscott --> we could break this down into two SMTP url classes....
 //////////////////////////////////////////////////////////////////////////////////////
-class nsISmtpUrl : public nsIMsgMailNewsUrl
+class nsISmtpUrl : public nsISupports
 {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_ISMTPURL_IID; return iid; }
