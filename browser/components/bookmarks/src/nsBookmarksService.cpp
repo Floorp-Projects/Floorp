@@ -2515,7 +2515,7 @@ nsBookmarksService::GetURLFromResource(nsIRDFResource* aResource,
 
 NS_IMETHODIMP
 nsBookmarksService::CreateBookmark(const PRUnichar* aName,
-                                   const char* aURL, 
+                                   const PRUnichar* aURL, 
                                    const PRUnichar* aShortcutURL,
                                    const PRUnichar* aDescription,
                                    const PRUnichar* aDocCharSet, 
@@ -2552,7 +2552,7 @@ nsBookmarksService::CreateBookmark(const PRUnichar* aName,
 
     // Resource: URL
     nsAutoString url;
-    url.AssignWithConversion(aURL);
+    url.Assign(aURL);
     nsCOMPtr<nsIRDFLiteral> urlLiteral;
     rv = gRDF->GetLiteral(url.get(), getter_AddRefs(urlLiteral));
     if (NS_FAILED(rv)) 
@@ -2614,7 +2614,7 @@ nsBookmarksService::CreateBookmark(const PRUnichar* aName,
 
 NS_IMETHODIMP
 nsBookmarksService::CreateBookmarkInContainer(const PRUnichar* aName,
-                                              const char* aURL, 
+                                              const PRUnichar* aURL, 
                                               const PRUnichar* aShortcutURL, 
                                               const PRUnichar* aDescription, 
                                               const PRUnichar* aDocCharSet, 
@@ -2782,7 +2782,7 @@ nsBookmarksService::GetParentChain(nsIRDFResource* aSource, nsIArray** aParents)
 //to be removed RSN
 
 NS_IMETHODIMP
-nsBookmarksService::AddBookmarkImmediately(const char *aURI,
+nsBookmarksService::AddBookmarkImmediately(const PRUnichar *aURI,
                                            const PRUnichar *aTitle, 
                                            PRInt32 aBookmarkType, 
                                            const PRUnichar *aCharset)
