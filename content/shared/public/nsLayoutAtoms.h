@@ -30,61 +30,19 @@
 class nsLayoutAtoms {
 public:
 
-  static void AddrefAtoms();
+  static void AddRefAtoms();
   static void ReleaseAtoms();
 
-  // Alphabetical list of media type atoms
-  static nsIAtom* all;
-  static nsIAtom* aural;
-  static nsIAtom* braille;
-  static nsIAtom* embossed;
-  static nsIAtom* handheld;
-  static nsIAtom* print;
-  static nsIAtom* projection;
-  static nsIAtom* screen;
-  static nsIAtom* tty;
-  static nsIAtom* tv;
+  /* Declare all atoms
 
-  // Alphabetical list of standard name space prefixes
-  static nsIAtom* htmlNameSpace;
-  static nsIAtom* xmlNameSpace;
-  static nsIAtom* xmlnsNameSpace;
+     The atom names and values are stored in nsLayoutAtomList.h and
+     are brought to you by the magic of C preprocessing
 
-  // Alphabetical list of frame additional child list names
-  static nsIAtom* absoluteList;
-  static nsIAtom* bulletList;
-  static nsIAtom* colGroupList;
-  static nsIAtom* fixedList;
-  static nsIAtom* floaterList;
-  static nsIAtom* popupList;
-
-  // Alphabetical list of pseudo tag names for non-element content
-  static nsIAtom* commentTagName;
-  static nsIAtom* textTagName;
-  static nsIAtom* processingInstructionTagName;
-  static nsIAtom* viewportPseudo;
-  static nsIAtom* pagePseudo;
-
-  // Alphabetical list of frame types
-  static nsIAtom* areaFrame;
-  static nsIAtom* blockFrame;
-  static nsIAtom* htmlFrameOuterFrame;
-  static nsIAtom* htmlFrameInnerFrame;
-  static nsIAtom* inlineFrame;
-  static nsIAtom* letterFrame;
-  static nsIAtom* lineFrame;
-  static nsIAtom* pageFrame;
-  static nsIAtom* placeholderFrame;
-  static nsIAtom* positionedInlineFrame;
-  static nsIAtom* rootFrame;
-  static nsIAtom* scrollFrame;
-  static nsIAtom* tableOuterFrame;
-  static nsIAtom* tableFrame;
-  static nsIAtom* tableRowGroupFrame;
-  static nsIAtom* tableRowFrame;
-  static nsIAtom* tableCellFrame;
-  static nsIAtom* textFrame;
-  static nsIAtom* viewportFrame;
+     Add new atoms to nsLayoutAtomList and all support logic will be auto-generated
+   */
+#define LAYOUT_ATOM(_name, _value) static nsIAtom* _name;
+#include "nsLayoutAtomList.h"
+#undef LAYOUT_ATOM
 };
 
 #endif /* nsLayoutAtoms_h___ */
