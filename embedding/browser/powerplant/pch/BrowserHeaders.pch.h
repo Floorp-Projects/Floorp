@@ -34,11 +34,11 @@
 			#include <PP_ClassHeaders.cp>
 		#endif
 
-
+        // include mozilla prefix file
 		#if wantDebugging
-			#define DEBUG 1
+		    #include "MacPrefix_debug.h"
 		#else
-			#undef DEBUG
+		    #include "MacPrefix.h"
 		#endif
 
 		#if wantProfiles
@@ -46,10 +46,7 @@
 		#else
 		    #define USE_PROFILES 1
         #endif
-		
-		#include "DefinesMac.h"
-		#include "DefinesMozilla.h"
-		        	
+				        	
 		//	Support for automatically naming the precompiled header file ...
 		#if __POWERPC__
 			#if wantDebugging

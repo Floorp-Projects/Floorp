@@ -42,7 +42,6 @@
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "nsIProfileChangeStatus.h"
-#include "nsINetDataCacheManager.h"
 
 // Local header files
 #include "winEmbed.h"
@@ -243,11 +242,6 @@ NS_IMETHODIMP ProfileChangeObserver::Observe(nsISupports *aSubject, const PRUnic
 
 		// Prevent WM_QUIT by incrementing the dialog count
 		gDialogCount++;
-
-        // TODO why must this be done in the client???
-        NS_WITH_SERVICE(nsINetDataCacheManager, cacheMgr, NS_NETWORK_CACHE_MANAGER_CONTRACTID, &rv);
-        if (NS_SUCCEEDED(rv))
-          cacheMgr->Clear(nsINetDataCacheManager::MEM_CACHE);
     }
     else if (nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-after-change").get()) == 0)
     {
