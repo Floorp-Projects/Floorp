@@ -171,6 +171,13 @@ HAVE_PURIFY		= 1
 MUST_BOOTLEG_ALLOCA	= 1
 BUILD_UNIX_PLUGINS	= 1
 
+# Turn on FULLCIRCLE crash reporting for 2.5.1 & up.
+ifndef NO_MOZ_FULLCIRCLE
+MOZ_FULLCIRCLE	= 1
+FC_PLATFORM		= SolarisSparc
+FC_PLATFORM_DIR	= SunOS5_sparc
+endif
+
 MKSHLIB			= $(LD) $(DSO_LDOPTS)
 
 DSO_LDOPTS		= -G -L$(MOTIF)/lib -L/usr/openwin/lib
