@@ -38,6 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: emulate.c,v 1.7 2004/04/27 23:04:39 gerv%gerv.net Exp $ */
 
 #include "nspr.h"
 

@@ -34,6 +34,7 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
+# $Id: rules.mk,v 1.4 2004/04/27 23:04:35 gerv%gerv.net Exp $
 
 install::
 	$(INSTALL) -m 755 $(SCRIPTS) $(SOURCE_BIN_DIR)

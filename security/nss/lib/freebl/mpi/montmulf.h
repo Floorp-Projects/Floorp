@@ -34,6 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: montmulf.h,v 1.4 2004/04/27 23:04:36 gerv%gerv.net Exp $ */
 
 /*  The functions that are to be called from outside of the .s file have the
  *  following interfaces and array size requirements:

@@ -34,6 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: montmulf.c,v 1.7 2004/04/27 23:04:36 gerv%gerv.net Exp $ */
 
 #ifdef SOLARIS
 #define RF_INLINE_MACROS 1

@@ -36,6 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: secdigt.h,v 1.3 2004/04/27 23:04:40 gerv%gerv.net Exp $ */
 
 #ifndef _SECDIGT_H_
 #define _SECDIGT_H_

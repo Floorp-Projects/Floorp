@@ -35,6 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: prng_fips1861.c,v 1.17 2004/04/27 23:04:36 gerv%gerv.net Exp $ */
 
 #include "prerr.h"
 #include "secerr.h"

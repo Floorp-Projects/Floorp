@@ -34,6 +34,7 @@
 ! the terms of any one of the MPL, the GPL or the LGPL.
 !
 ! ***** END LICENSE BLOCK *****
+! $Id: vis_32.il,v 1.3 2004/04/27 23:04:36 gerv%gerv.net Exp $
 
 ! The interface to the VIS instructions as declared below (and in the VIS
 ! User's Manual) will not change, but the macro implementation might change

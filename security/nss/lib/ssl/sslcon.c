@@ -37,6 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: sslcon.c,v 1.23 2004/04/27 23:04:39 gerv%gerv.net Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"

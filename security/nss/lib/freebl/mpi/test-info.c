@@ -38,6 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: test-info.c,v 1.3 2004/04/27 23:04:36 gerv%gerv.net Exp $ */
 
 /* Table mapping test suite names to index numbers */
 const int   g_count = 42;

@@ -38,6 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: mplogic.c,v 1.15 2004/04/27 23:04:36 gerv%gerv.net Exp $ */
 
 #include "mpi-priv.h"
 #include "mplogic.h"

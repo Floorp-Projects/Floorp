@@ -33,6 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: rijndael.c,v 1.18 2004/04/27 23:04:36 gerv%gerv.net Exp $ */
 
 #include "prinit.h"
 #include "prerr.h"

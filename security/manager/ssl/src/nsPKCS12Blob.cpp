@@ -34,6 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: nsPKCS12Blob.cpp,v 1.40 2004/04/27 23:04:34 gerv%gerv.net Exp $ */
 
 #include "prmem.h"
 #include "prprf.h"

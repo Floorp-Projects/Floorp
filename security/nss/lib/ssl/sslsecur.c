@@ -37,6 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: sslsecur.c,v 1.25 2004/04/27 23:04:39 gerv%gerv.net Exp $ */
 #include "cert.h"
 #include "secitem.h"
 #include "keyhi.h"

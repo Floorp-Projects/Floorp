@@ -34,6 +34,7 @@
 ! the terms of any one of the MPL, the GPL or the LGPL.
 !
 ! ***** END LICENSE BLOCK *****
+! $Id: vis_64.il,v 1.3 2004/04/27 23:04:36 gerv%gerv.net Exp $
 
 ! This file is to be used in place of vis.il in 64-bit builds.
 

@@ -3,7 +3,7 @@
  *
  * Modular exponentiation timing test
  *
- * $Id: metime.c,v 1.4 2004/04/25 15:03:11 gerv%gerv.net Exp $
+ * $Id: metime.c,v 1.5 2004/04/27 23:04:37 gerv%gerv.net Exp $
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -41,6 +41,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: metime.c,v 1.5 2004/04/27 23:04:37 gerv%gerv.net Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
