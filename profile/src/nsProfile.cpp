@@ -886,7 +886,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 		NS_ASSERTION(NS_SUCCEEDED(rv),"failed to determine if we should force migration");
 	}
 
-#ifndef MOZ_PHOENIX // The phoenix doesn't use old profiles.
+#ifndef MOZ_XUL_APP // The phoenix/thunderbird doesn't use old profiles.
 
     // Start Migaration activity
     rv = cmdLineArgs->GetCmdLineValue(INSTALLER_CMD_LINE_ARG, getter_Copies(cmdResult));
@@ -928,7 +928,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
         }
     }
 
-#endif // MOZ_PHOENIX
+#endif // MOZ_XUL_APP
 
 #ifdef DEBUG_profile_verbose
     printf("Profile Manager : Command Line Options : End\n");
