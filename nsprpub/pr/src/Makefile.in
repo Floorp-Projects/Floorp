@@ -100,7 +100,7 @@ endif
 
 ifeq ($(OS_ARCH),OSF1)
 ifeq ($(USE_PTHREADS), 1)
-OS_LIBS 	= -lpthread -lrt
+OS_LIBS 	= -lpthread
 endif
 ifneq ($(OS_RELEASE),V2.0)
 OS_LIBS		+= -lc_r
@@ -124,7 +124,7 @@ OS_LIBS 	= -lpthread
 endif
 endif
 ifeq ($(PTHREADS_USER), 1)
-OS_LIBS 	= -lpthread -lrt
+OS_LIBS 	= -lpthread
 endif
 ifeq ($(basename $(OS_RELEASE)),A.09)
 OS_LIBS		+= -ldld -L/lib/pa1.1 -lm
@@ -304,6 +304,7 @@ OBJS +=	md/windows/$(OBJDIR)/w95io.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/win32_errors.$(OBJ_SUFFIX) \
         md/windows/$(OBJDIR)/w32ipcsem.$(OBJ_SUFFIX)    \
 	md/windows/$(OBJDIR)/w32poll.$(OBJ_SUFFIX)	\
+        md/windows/$(OBJDIR)/w32rng.$(OBJ_SUFFIX)       \
         md/windows/$(OBJDIR)/w32shm.$(OBJ_SUFFIX)       \
 	md/windows/$(OBJDIR)/w95dllmain.$(OBJ_SUFFIX)
 else
@@ -328,6 +329,7 @@ OBJS +=	md/windows/$(OBJDIR)/ntdllmn.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/ntsem.$(OBJ_SUFFIX)	\
 	md/windows/$(OBJDIR)/win32_errors.$(OBJ_SUFFIX) \
         md/windows/$(OBJDIR)/w32ipcsem.$(OBJ_SUFFIX) \
+        md/windows/$(OBJDIR)/w32rng.$(OBJ_SUFFIX)       \
         md/windows/$(OBJDIR)/w32shm.$(OBJ_SUFFIX)       \
 	md/windows/$(OBJDIR)/w32poll.$(OBJ_SUFFIX)
 endif
@@ -379,6 +381,8 @@ else
 	SUF = LL
 endif
 
+DEFINES		+= -D_NSPR_BUILD_
+
 $(TINC):
 	@$(MAKE_OBJDIR)
 	@$(ECHO) '#define _BUILD_STRING "$(SH_DATE)"' > $(TINC)
@@ -390,7 +394,7 @@ $(TINC):
 	@$(ECHO) '#define _PRODUCTION "$(PROD)"' >> $(TINC)
 
 
-$(OBJDIR)/prvrsion.$(OBJ_SUFFIX): $(srcdir)/prvrsion.c $(TINC)
+$(OBJDIR)/prvrsion.$(OBJ_SUFFIX): prvrsion.c $(TINC)
 ifeq ($(OS_ARCH), WINNT)
 ifdef XP_OS2_EMX
 	$(CC) -o $@ -c $(CFLAGS) -I$(OBJDIR) $<
