@@ -113,7 +113,6 @@ static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kParseMailMsgStateCID, NS_PARSEMAILMSGSTATE_CID);
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
-static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID);
 
 nsIAtom* nsImapMailFolder::mImapHdrDownloadedAtom=nsnull;
 
@@ -6408,13 +6407,8 @@ nsImapMailFolder::CopyStreamMessage(nsIMsgDBHdr* message,
     nsresult rv = NS_ERROR_NULL_POINTER;
     if (!m_copyState) return rv;
 
-    nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener;
-
-    rv = nsComponentManager::CreateInstance(kCopyMessageStreamListenerCID,
-               nsnull, NS_GET_IID(nsICopyMessageStreamListener),
-         getter_AddRefs(copyStreamListener)); 
-  if(NS_FAILED(rv))
-    return rv;
+    nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener = do_CreateInstance(NS_COPYMESSAGESTREAMLISTENER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
 
     nsCOMPtr<nsICopyMessageListener>
         copyListener(do_QueryInterface(dstFolder, &rv));
@@ -7116,13 +7110,13 @@ nsImapMailFolder::SpamFilterClassifyMessage(const char *aURI, nsIMsgWindow *aMsg
 
 
 NS_IMETHODIMP
-nsImapMailFolder::OnMessageClassified(const char *aMsgURL, nsMsgJunkStatus aClassification)
+nsImapMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus aClassification)
 {
   nsCOMPtr<nsIMsgIncomingServer> server;
   nsresult rv = GetServer(getter_AddRefs(server));
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr <nsIMsgDBHdr> msgHdr;
-  rv = GetMsgDBHdrFromURI(aMsgURL, getter_AddRefs(msgHdr));
+  rv = GetMsgDBHdrFromURI(aMsgURI, getter_AddRefs(msgHdr));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsMsgKey msgKey;

@@ -68,6 +68,8 @@ public:
   NS_IMETHOD GetFolderForViewIndex(nsMsgViewIndex index, nsIMsgFolder **folder);
 
   virtual nsresult GetFolders(nsISupportsArray **aFolders);
+  virtual nsresult GetFolderFromMsgURI(const char *aMsgURI, nsIMsgFolder **aFolder);
+
 protected:
   nsresult FetchLocation(PRInt32 aRow, PRUnichar ** aLocationString);
   virtual nsresult GetDBForViewIndex(nsMsgViewIndex index, nsIMsgDatabase **db);

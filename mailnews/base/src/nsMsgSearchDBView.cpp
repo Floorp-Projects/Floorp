@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -45,20 +46,16 @@
 #include "nsMsgBaseCID.h"
 #include "nsIMsgCopyService.h"
 #include "nsICopyMsgStreamListener.h"
-
-static NS_DEFINE_CID(kMsgCopyServiceCID,    NS_MSGCOPYSERVICE_CID);
-static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID);
+#include "nsMsgUtils.h"
 
 nsMsgSearchDBView::nsMsgSearchDBView()
 {
-  /* member initializers and constructor code */
   // don't try to display messages for the search pane.
   mSuppressMsgDisplay = PR_TRUE;
 }
 
 nsMsgSearchDBView::~nsMsgSearchDBView()
 {	
- /* destructor code */
 }
 
 NS_IMPL_ISUPPORTS_INHERITED3(nsMsgSearchDBView, nsMsgDBView, nsIMsgDBView, nsIMsgCopyServiceListener, nsIMsgSearchNotify)
@@ -224,11 +221,9 @@ nsMsgSearchDBView::OnNewSearch()
 
 nsresult nsMsgSearchDBView::GetFolders(nsISupportsArray **aFolders)
 {
-	NS_ENSURE_ARG_POINTER(aFolders);
-	*aFolders = m_folders;
-	NS_IF_ADDREF(*aFolders);
-	
-	return NS_OK;
+  NS_ENSURE_ARG_POINTER(aFolders);
+  NS_IF_ADDREF(*aFolders = m_folders);
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -483,3 +478,18 @@ nsMsgSearchDBView::GetHdrForFirstSelectedMessage(nsIMsgDBHdr **hdr)
   NS_ENSURE_SUCCESS(rv,rv);
   return NS_OK;
 }
+
+nsresult
+nsMsgSearchDBView::GetFolderFromMsgURI(const char *aMsgURI, nsIMsgFolder **aFolder)
+{
+  nsCOMPtr <nsIMsgMessageService> msgMessageService;
+  nsresult rv = GetMessageServiceFromURI(aMsgURI, getter_AddRefs(msgMessageService));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  nsCOMPtr <nsIMsgDBHdr> msgHdr;
+  rv = msgMessageService->MessageURIToMsgHdr(aMsgURI, getter_AddRefs(msgHdr));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  return msgHdr->GetFolder(aFolder);
+}
+

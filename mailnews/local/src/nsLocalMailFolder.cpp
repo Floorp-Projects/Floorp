@@ -101,8 +101,6 @@
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
-static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID);
-static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 
 extern char* ReadPopData(const char *hostname, const char* username, nsIFileSpec* mailDirectory);
@@ -1586,7 +1584,7 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
       if (NS_SUCCEEDED(rv))
       {
           nsCOMPtr<nsIMsgCopyService> copyService = 
-                   do_GetService(kMsgCopyServiceCID, &rv);
+                   do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &rv);
           if (NS_SUCCEEDED(rv))
           {
             return copyService->CopyMessages(this, messages, trashFolder,
@@ -2789,12 +2787,11 @@ nsresult nsMsgLocalMailFolder::CopyMessagesTo(nsISupportsArray *messages,
                                              PRBool isMove)
 {
   if (!mCopyState) return NS_ERROR_OUT_OF_MEMORY;
-  nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener; 
-  nsresult rv = nsComponentManager::CreateInstance(kCopyMessageStreamListenerCID, NULL,
-    NS_GET_IID(nsICopyMessageStreamListener),
-    getter_AddRefs(copyStreamListener)); 
-  if(NS_FAILED(rv))
-    return rv;
+   
+  nsresult rv;
+
+  nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener = do_CreateInstance(NS_COPYMESSAGESTREAMLISTENER_CONTRACTID);
+  NS_ENSURE_SUCCESS(rv,rv);
   
   nsCOMPtr<nsICopyMessageListener> copyListener(do_QueryInterface(dstFolder));
   if(!copyListener)
@@ -2876,12 +2873,8 @@ nsresult nsMsgLocalMailFolder::CopyMessageTo(nsISupports *message,
   nsXPIDLCString uri;
   srcFolder->GetUriForMsg(msgHdr, getter_Copies(uri));
 
-  nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener; 
-  rv = nsComponentManager::CreateInstance(kCopyMessageStreamListenerCID, NULL,
-    NS_GET_IID(nsICopyMessageStreamListener),
-    getter_AddRefs(copyStreamListener)); 
-  if(NS_FAILED(rv))
-    return rv;
+  nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener = do_CreateInstance(NS_COPYMESSAGESTREAMLISTENER_CONTRACTID);
+  NS_ENSURE_SUCCESS(rv,rv);
   
   nsCOMPtr<nsICopyMessageListener> copyListener(do_QueryInterface(dstFolder));
   if(!copyListener)
@@ -3380,13 +3373,13 @@ nsMsgLocalMailFolder::SpamFilterClassifyMessage(const char *aURI, nsIMsgWindow *
 
 
 NS_IMETHODIMP
-nsMsgLocalMailFolder::OnMessageClassified(const char *aMsgURL, nsMsgJunkStatus aClassification)
+nsMsgLocalMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus aClassification)
 {
   nsCOMPtr<nsIMsgIncomingServer> server;
   nsresult rv = GetServer(getter_AddRefs(server));
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr <nsIMsgDBHdr> msgHdr;
-  rv = GetMsgDBHdrFromURI(aMsgURL, getter_AddRefs(msgHdr));
+  rv = GetMsgDBHdrFromURI(aMsgURI, getter_AddRefs(msgHdr));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsMsgKey msgKey;

@@ -64,7 +64,6 @@
 #include "nsArray.h"
 
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 
 nsIRDFResource* nsMsgFolderDataSource::kNC_Child = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Folder= nsnull;
@@ -2009,17 +2008,14 @@ nsresult nsMsgFolderDataSource::DoCopyToFolder(nsIMsgFolder *dstFolder, nsISuppo
 		}
 
 	}
+
 	//Call copyservice with dstFolder, srcFolder, messages, isMove, and txnManager
 	nsCOMPtr<nsIMsgCopyService> copyService = 
-	         do_GetService(kMsgCopyServiceCID, &rv); 
-	if(NS_SUCCEEDED(rv))
-	{
-		rv = copyService->CopyMessages(srcFolder, messageArray, dstFolder, isMove, 
-                              nsnull, msgWindow, PR_TRUE/* allowUndo */);
+	         do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &rv);
+	NS_ENSURE_SUCCESS(rv,rv);
 
-	}
-	return rv;
-	//return NS_OK;
+	return copyService->CopyMessages(srcFolder, messageArray, dstFolder, isMove, 
+                              nsnull, msgWindow, PR_TRUE/* allowUndo */);
 }
 
 nsresult nsMsgFolderDataSource::DoFolderCopyToFolder(nsIMsgFolder *dstFolder, nsISupportsArray *arguments,
@@ -2037,7 +2033,7 @@ nsresult nsMsgFolderDataSource::DoFolderCopyToFolder(nsIMsgFolder *dstFolder, ns
 	if (!isMoveFolder)   // copy folder not on the same server
 	{
 	    //Call copyservice with dstFolder, srcFolder, folders and isMoveFolder
-	    nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(kMsgCopyServiceCID, &rv); 
+	    nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &rv); 
 	    if(NS_SUCCEEDED(rv))
 		{
 		     rv = copyService->CopyFolders(arguments, dstFolder, isMoveFolder, 

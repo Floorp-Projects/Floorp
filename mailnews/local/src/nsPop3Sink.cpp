@@ -362,10 +362,9 @@ nsPop3Sink::GetPopServer(nsIPop3IncomingServer* *server)
 
 nsresult nsPop3Sink::GetFolder(nsIMsgFolder * *folder)
 {
-	if(!folder) return NS_ERROR_NULL_POINTER;
-	*folder = m_folder;
-	NS_IF_ADDREF(*folder);
-	return NS_OK;
+  NS_ENSURE_ARG_POINTER(folder);
+  NS_IF_ADDREF(*folder = m_folder);
+  return NS_OK;
 }
 
 nsresult nsPop3Sink::SetFolder(nsIMsgFolder * folder)
@@ -375,7 +374,6 @@ nsresult nsPop3Sink::SetFolder(nsIMsgFolder * folder)
   NS_IF_ADDREF(m_folder);
   
   return NS_OK;
-
 }
 
 nsresult

@@ -447,7 +447,7 @@ function getJunkmailComponent()
 function analyze(aMsgHdr, aNextFunction)
 {
     var listener = {
-        onMessageClassified: function(aMsgURL, aClassification)
+        onMessageClassified: function(aMsgURI, aClassification)
         {
             dump(aMsgURL + ' is ' 
                  + (aClassification == nsIJunkMailPlugin.JUNK

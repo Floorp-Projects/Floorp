@@ -78,7 +78,7 @@ interface nsIMsgFilterPlugin : nsISupports
 [scriptable, uuid(0243f3d6-d583-11d6-898a-00039310a47a)]
 interface nsIJunkMailClassificationListener : nsISupports
 {
-    void onMessageClassified(in string aMsgURL, in nsMsgJunkStatus aClassification);
+    void onMessageClassified(in string aMsgURI, in nsMsgJunkStatus aClassification);
 };
 
 [scriptable, uuid(caf3d467-d57c-11d6-96a9-00039310a47a)]
@@ -92,7 +92,7 @@ interface nsIJunkMailPlugin : nsIMsgFilterPlugin
     const nsMsgJunkStatus JUNK = 2;
 
     /**
-     * Given a message URL, determine what its current classification is
+     * Given a message URI, determine what its current classification is
      * according to the current training set.
      */
     void classifyMessage(in string aMsgURI, in nsIMsgWindow aMsgWindow,

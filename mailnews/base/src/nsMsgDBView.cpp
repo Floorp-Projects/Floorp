@@ -1405,15 +1405,13 @@ nsresult nsMsgDBView::GetMsgHdrForViewIndex(nsMsgViewIndex index, nsIMsgDBHdr **
 
 nsresult nsMsgDBView::GetFolderForViewIndex(nsMsgViewIndex index, nsIMsgFolder **aFolder)
 {
-  *aFolder = m_folder;
-  NS_IF_ADDREF(*aFolder);
+  NS_IF_ADDREF(*aFolder = m_folder);
   return NS_OK;
 }
 
 nsresult nsMsgDBView::GetDBForViewIndex(nsMsgViewIndex index, nsIMsgDatabase **db)
 {
-  *db = m_db;
-  NS_IF_ADDREF(*db);
+  NS_IF_ADDREF(*db = m_db);
   return NS_OK;
 }
 
@@ -2140,7 +2138,7 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
         // all items will have the same folder).
         //
         nsCOMPtr<nsIMsgFolder> folder;
-        rv = GetFolderForViewIndex(GetAt(indices[0]), getter_AddRefs(folder));
+        rv = GetFolderForViewIndex(indices[0], getter_AddRefs(folder));
         NS_ENSURE_SUCCESS(rv, rv);
 
         nsCOMPtr<nsIMsgIncomingServer> server;
@@ -2550,18 +2548,30 @@ nsresult nsMsgDBView::SetJunkScoreByIndex(nsIJunkMailPlugin *aJunkPlugin,
     return NS_OK;
 }
 
+nsresult
+nsMsgDBView::GetFolderFromMsgURI(const char *aMsgURI, nsIMsgFolder **aFolder)
+{
+  NS_IF_ADDREF(*aFolder = m_folder);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
-nsMsgDBView::OnMessageClassified(const char *aMsgUrl,
+nsMsgDBView::OnMessageClassified(const char *aMsgURI,
                                  nsMsgJunkStatus aClassification)
 {
     // is this the last url in the batch?
     //
-    if ( mLastJunkUriInBatch.Equals(aMsgUrl) )  {
-
-        // XXX are we allowed to assume m_folder exists here?
+    if ( mLastJunkUriInBatch.Equals(aMsgURI) )  {
+        // we can't just use m_folder
+        // as this might be from a cross folder search
+        // see bug #180477
         //
+        nsCOMPtr <nsIMsgFolder> folder;
+        nsresult rv = GetFolderFromMsgURI(aMsgURI, getter_AddRefs(folder));
+        NS_ENSURE_SUCCESS(rv,rv);
+
         nsCOMPtr<nsIMsgIncomingServer> server;
-        nsresult rv = m_folder->GetServer(getter_AddRefs(server));
+        rv = folder->GetServer(getter_AddRefs(server));
         NS_ENSURE_SUCCESS(rv, rv);
 
         // get the filter, and QI to the interface we want
@@ -3031,10 +3041,9 @@ nsMsgDBView::GetCollationKey(nsIMsgHdr *msgHdr, nsMsgViewSortTypeValue sortType,
 nsresult 
 nsMsgDBView::GetLocationCollationKey(nsIMsgHdr *msgHdr, PRUint8 **result, PRUint32 *len)
 {
-    nsresult rv;
     nsCOMPtr <nsIMsgFolder> folder;
 
-    rv = msgHdr->GetFolder(getter_AddRefs(folder));
+    nsresult rv = msgHdr->GetFolder(getter_AddRefs(folder));
     NS_ENSURE_SUCCESS(rv,rv);
 
     if (!folder)
@@ -5156,8 +5165,7 @@ nsresult nsMsgDBView::SetThreadWatched(nsIMsgThread *thread, nsMsgViewIndex inde
 NS_IMETHODIMP nsMsgDBView::GetMsgFolder(nsIMsgFolder **aMsgFolder)
 {
   NS_ENSURE_ARG_POINTER(aMsgFolder);
-  *aMsgFolder = m_folder;
-  NS_IF_ADDREF(*aMsgFolder);
+  NS_IF_ADDREF(*aMsgFolder = m_folder);
   return NS_OK;
 }
 

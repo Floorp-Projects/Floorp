@@ -222,6 +222,7 @@ protected:
 	virtual nsMsgViewIndex	FindKey(nsMsgKey key, PRBool expand);
 	virtual nsresult GetDBForViewIndex(nsMsgViewIndex index, nsIMsgDatabase **db);
   virtual nsresult GetFolders(nsISupportsArray **folders);
+  virtual nsresult GetFolderFromMsgURI(const char *aMsgURI, nsIMsgFolder **aFolder);
 
   nsresult ListIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex viewIndex, PRUint32 *pNumListed);
   nsresult ListUnreadIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex startOfThreadViewIndex, PRUint32 *pNumListed);
