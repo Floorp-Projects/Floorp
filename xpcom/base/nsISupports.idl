@@ -19,8 +19,10 @@
 %{C++
 #include "nsDebug.h"
 #include "nsTraceRefcnt.h"
-#include "nsID.h"
 #include "nsIID.h"
+%}
+#include "nsID.idl"
+%{C++
 #include "nsError.h"
 
 #include "nsISupportsUtils.h"
