@@ -43,7 +43,6 @@ endif
 DIRS		+= \
 		netwerk \
 		modules/libutil \
-		lib/xp \
 		intl \
 		js \
 		modules/security/freenav \
