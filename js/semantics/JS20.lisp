@@ -41,6 +41,7 @@
        (production :identifier (method) identifier-method)
        (production :identifier (getter) identifier-getter)
        (production :identifier (setter) identifier-setter)
+       (production :identifier (traditional) identifier-traditional)
        (production :identifier (constructor) identifier-constructor)
        
        (production :qualified-identifier (:identifier) qualified-identifier-identifier)
@@ -53,12 +54,13 @@
        (production (:primary-expression normal) (:function-expression) primary-expression-function-expression)
        (production (:primary-expression normal) (:object-literal) primary-expression-object-literal)
        
-       (production :simple-expression (this) simple-expression-this)
        (production :simple-expression (null) simple-expression-null)
        (production :simple-expression (true) simple-expression-true)
        (production :simple-expression (false) simple-expression-false)
        (production :simple-expression ($number) simple-expression-number)
        (production :simple-expression ($string) simple-expression-string)
+       (production :simple-expression (this) simple-expression-this)
+       (production :simple-expression (super) simple-expression-super)
        (production :simple-expression (:qualified-identifier) simple-expression-qualified-identifier)
        (production :simple-expression ($regular-expression) simple-expression-regular-expression)
        (production :simple-expression (:parenthesized-expression) simple-expression-parenthesized-expression)
@@ -116,16 +118,17 @@
        (production :short-new-subexpression (:full-new-subexpression) short-new-subexpression-new-full)
        (production :short-new-subexpression (:short-new-expression) short-new-subexpression-new-short)
        
-       (production :member-operator ([ ]) member-operator-array-declaration)
-       (production :member-operator ([ (:expression normal allow-in) ]) member-operator-array)
+       (production :member-operator ([ :argument-list ]) member-operator-array)
        (production :member-operator (\. :qualified-identifier) member-operator-property)
        (production :member-operator (\. :parenthesized-expression) member-operator-indirect-property)
        
-       (production :arguments (\( \)) arguments-empty)
-       (production :arguments (\( :argument-list \)) arguments-list)
+       (production :arguments (\( :argument-list \)) arguments-argument-list)
        
-       (production :argument-list ((:assignment-expression normal allow-in)) argument-list-one)
-       (production :argument-list (:argument-list \, (:assignment-expression normal allow-in)) argument-list-more)
+       (production :argument-list () argument-list-none)
+       (production :argument-list (:argument-list-prefix) argument-list-some)
+       
+       (production :argument-list-prefix ((:assignment-expression normal allow-in)) argument-list-prefix-one)
+       (production :argument-list-prefix (:argument-list-prefix \, (:assignment-expression normal allow-in)) argument-list-prefix-more)
        
        
        (%subsection "Prefix Unary Operators")
@@ -501,6 +504,7 @@
        (production :function-definition (:named-function) function-definition-named-function)
        (production :function-definition (getter :named-function) function-definition-getter-function)
        (production :function-definition (setter :named-function) function-definition-setter-function)
+       (production :function-definition (:traditional-function) function-definition-traditional-function)
        
        (production :anonymous-function (function :function-signature (:block block)) anonymous-function-signature-and-body)
        
@@ -534,6 +538,14 @@
        
        (production :result-signature () result-signature-none)
        (production :result-signature ((:type-expression initial allow-in)) result-signature-type-expression)
+       
+       (production :traditional-function (traditional function :identifier \( :traditional-parameter-list \) (:block block)) traditional-function-signature-and-body)
+       
+       (production :traditional-parameter-list () traditional-parameter-list-none)
+       (production :traditional-parameter-list (:traditional-parameter-list-prefix) traditional-parameter-list-some)
+       
+       (production :traditional-parameter-list-prefix (:identifier) traditional-parameter-list-prefix-one)
+       (production :traditional-parameter-list-prefix (:traditional-parameter-list-prefix \, :identifier) traditional-parameter-list-prefix-more)
        
        
        (%subsection "Class Member Definitions")
