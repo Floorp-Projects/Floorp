@@ -37,6 +37,7 @@ install::
 	$(MAKE_INSTALL) check.gif		$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) dot.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) subscribe.css		$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folderHasMail.gif	$(DIST)\bin\chrome\messenger\skin\default
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\skin\default\messenger.css
@@ -56,4 +57,6 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\skin\default\check.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\dot.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\subscribe.css
+	rm -f $(DIST)\chrome\messenger\skin\default\folderHasMail.gif
+
 

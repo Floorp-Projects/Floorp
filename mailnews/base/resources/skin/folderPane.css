@@ -85,7 +85,7 @@ treeitem[SpecialFolder="Inbox"] > treecell > titledbutton {
  vertical-align: bottom;
  height: 16px;
  width: 16px;
- list-style-image: url("chrome://messenger/skin/closedInbox.gif");
+ list-style-image: url("chrome:/messenger/skin/closedInbox.gif");
 }
 
 treeitem[SpecialFolder="Trash"] > treecell > titledbutton {
@@ -102,3 +102,9 @@ treeitem[SpecialFolder="Unsent Messages"] > treecell > titledbutton {
  list-style-image: url("chrome://messenger/skin/closedOutbox.gif");
 }
 
+treeitem[BiffState="NewMail"] > treecell > titledbutton {
+ vertical-align: bottom;
+ height: 16px;
+ width: 16px;
+ list-style-image: url("chrome://messenger/skin/folderHasMail.gif");
+}
