@@ -48,6 +48,9 @@ function onLoad()
 
   var wdth = window.innerWidth; // THIS IS NEEDED,
   window.sizeToContent();
+
+  var windowReference= document.getElementById('escrowWarnDialog');
+
   windowReference.setAttribute("width",window.innerWidth + 30);
   var hght = window.innerHeight; // THIS IS NEEDED,
   window.sizeToContent();
