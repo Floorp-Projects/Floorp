@@ -247,8 +247,8 @@ if ($official eq "1") {
 }
 
 my $copyright = "License: MPL 1.1/GPL 2.0/LGPL 2.1";
-my $company = "Mozilla, Netscape";
-my $trademarks = "Mozilla, Netscape";
+my $company = "Mozilla Foundation";
+my $trademarks = "Mozilla";
 my $productname = "Mozilla";
 
 

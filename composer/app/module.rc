@@ -146,12 +146,12 @@ BEGIN
         BEGIN
             VALUE "Comments", ""
             VALUE "LegalCopyright", "License: MPL 1.1/GPL 2.0/LGPL 2.1"
-            VALUE "CompanyName", "Mozilla, Netscape"
+            VALUE "CompanyName", "Mozilla Foundation"
             VALUE "FileDescription", "Composer"
             VALUE "FileVersion", "Personal Debug"
             VALUE "ProductVersion", "Personal Debug"
             VALUE "InternalName", ""
-            VALUE "LegalTrademarks", "Mozilla, Netscape"
+            VALUE "LegalTrademarks", "Mozilla"
             VALUE "OriginalFilename", "composer.exe"
 
             VALUE "PrivateBuild", ""
