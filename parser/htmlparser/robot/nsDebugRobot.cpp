@@ -22,6 +22,7 @@
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsIURL.h"
+#include "nsIStreamListener.h"
 
 static NS_DEFINE_IID(kIRobotSinkObserverIID, NS_IROBOTSINKOBSERVER_IID);
 
@@ -38,7 +39,6 @@ public:
 
   NS_IMETHOD ProcessLink(const nsString& aURLSpec);
   NS_IMETHOD VerifyDirectory (const char * verify_dir);
-  NS_IMETHOD ReadyForNextUrl(void);
     
 };
 
@@ -56,16 +56,26 @@ NS_IMETHODIMP RobotSinkObserver::VerifyDirectory(const char * verify_dir)
    return NS_OK;
 }
 
-NS_IMETHODIMP RobotSinkObserver::ReadyForNextUrl(void)
-{
-   g_bReadyForNextUrl = PR_TRUE;
-   return NS_OK;
-}
-
 NS_IMETHODIMP RobotSinkObserver::ProcessLink(const nsString& aURLSpec)
 {
   if (!g_bHitTop) {
      
+     nsAutoString str;
+     // Geez this is ugly. temporary hack to not process html files
+     str.Truncate();
+     nsString(aURLSpec).Right(str,1);
+     if (!str.Equals("/"))
+     {
+        str.Truncate();
+        nsString(aURLSpec).Right(str,4);
+        if (!str.Equals("html"))
+        {
+           str.Truncate();
+           nsString(aURLSpec).Right(str,3);
+           if (!str.Equals("htm"))
+              return NS_OK;
+        }
+     }
      PRInt32 nCount = g_duplicateList->Count();
      if (nCount > 0)
      {
@@ -81,7 +91,6 @@ NS_IMETHODIMP RobotSinkObserver::ProcessLink(const nsString& aURLSpec)
         }
      }
      g_duplicateList->AppendElement(new nsString(aURLSpec));
-     nsAutoString str;
      str.Truncate();
      nsString(aURLSpec).Left(str,5);
      if (str.Equals("http:")) {
@@ -108,6 +117,40 @@ NS_IMETHODIMP RobotSinkObserver::ProcessLink(const nsString& aURLSpec)
 
 extern "C" NS_EXPORT void SetVerificationDirectory(char * verify_dir);
 
+class CStreamListener:  public nsIStreamListener 
+{
+public:
+  CStreamListener() {
+    NS_INIT_REFCNT();
+  }
+
+  ~CStreamListener() {
+  }
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD GetBindInfo(void) { return NS_OK; }
+  NS_IMETHOD OnProgress(PRInt32 Progress, PRInt32 ProgressMax, const char *msg) { return NS_OK; }
+  NS_IMETHOD OnStartBinding(void) { return NS_OK; }
+  NS_IMETHOD OnDataAvailable(nsIInputStream *pIStream, PRInt32 length)   { return NS_OK; }
+  NS_IMETHOD OnStopBinding(PRInt32 status, const char *msg);
+};
+
+NS_IMETHODIMP CStreamListener::OnStopBinding(PRInt32 status, const char *msg)
+{
+   printf("CStreamListener: stream complete: %s\n", msg);
+   g_bReadyForNextUrl = PR_TRUE;
+   return NS_OK;
+}
+
+nsresult CStreamListener::QueryInterface(const nsIID& aIID, void** aInstancePtr)  
+{                                                                        
+  return NS_OK;                                                        
+}
+
+NS_IMPL_ADDREF(CStreamListener)
+NS_IMPL_RELEASE(CStreamListener)
+
 //----------------------------------------------------------------------
 extern "C" NS_EXPORT int DebugRobot(
    nsVoidArray * workList, 
@@ -117,6 +160,8 @@ extern "C" NS_EXPORT int DebugRobot(
    void (*yieldProc )(const char *)
    )
 {
+  CStreamListener * pl = new CStreamListener; 
+  NS_ADDREF(pl);
   if (nsnull==workList)
      return -1;
   g_iMaxProcess = iMaxLoads;
@@ -165,19 +210,26 @@ extern "C" NS_EXPORT int DebugRobot(
 
     parser->SetContentSink(sink);
     g_bReadyForNextUrl = PR_FALSE;
-    parser->Parse(url, nsnull);/* XXX hook up stream listener here! */
+    parser->Parse(url, pl);/* XXX hook up stream listener here! */
     while (!g_bReadyForNextUrl) {
        if (yieldProc != NULL)
           (*yieldProc)(url->GetSpec());
     }
-    if (ww)
-      ww->LoadURL(url->GetSpec(), nsnull);/* XXX hook up stream listener here! */
+    g_bReadyForNextUrl = PR_FALSE;
+    if (ww) {
+      ww->LoadURL(url->GetSpec(), pl);/* XXX hook up stream listener here! */
+      while (!g_bReadyForNextUrl) {
+         if (yieldProc != NULL)
+            (*yieldProc)(url->GetSpec());
+      }
+    }  
 
     NS_RELEASE(sink);
     NS_RELEASE(parser);
     NS_RELEASE(url);
   }
 
+  NS_RELEASE(pl);
   NS_RELEASE(myObserver);
 
   return 0;
