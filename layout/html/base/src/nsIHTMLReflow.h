@@ -108,7 +108,10 @@ enum nsCSSFrameType {
   eCSSFrameType_Absolute,
 
   // absolutely positioned, replaced elements
-  eCSSFrameType_AbsoluteReplaced
+  eCSSFrameType_AbsoluteReplaced,
+
+  // internal table element (row group frame, row frame, table cell, ...)
+  eCSSFrameType_InternalTable
 };
 
 // XXX Get rid of the enum
