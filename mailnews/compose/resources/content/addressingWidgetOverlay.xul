@@ -73,7 +73,7 @@ Rights Reserved.
 											autocomplete="true"
 											timeout="300"
 											searchSessionType="addrbook"
-											displayMenu="true"
+											displayMenu="false"
 										    />
 							</treecell>
 						</treerow>
