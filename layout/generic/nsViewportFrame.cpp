@@ -326,6 +326,11 @@ ViewportFrame::CalculateFixedContainingBlockSize(nsIPresContext*          aPresC
   }
 }
 
+/**
+ * NOTE: nsAbsoluteContainingBlock::ReflowAbsoluteFrame is rather
+ * similar to this function, so changes made here may also need to be
+ * made there.
+ */
 nsresult
 ViewportFrame::ReflowFixedFrame(nsIPresContext*          aPresContext,
                                 const nsHTMLReflowState& aReflowState,
@@ -358,6 +363,23 @@ ViewportFrame::ReflowFixedFrame(nsIPresContext*          aPresContext,
 
   // Do the reflow
   rv = aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
+
+  if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.left)
+    kidReflowState.mComputedOffsets.left = aReflowState.mComputedWidth -
+        kidReflowState.mComputedOffsets.right -
+        kidReflowState.mComputedMargin.right -
+        kidReflowState.mComputedBorderPadding.right -
+        kidDesiredSize.width -
+        kidReflowState.mComputedBorderPadding.left -
+        kidReflowState.mComputedMargin.left;
+  if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.top)
+    kidReflowState.mComputedOffsets.top = aReflowState.mComputedHeight -
+        kidReflowState.mComputedOffsets.bottom -
+        kidReflowState.mComputedMargin.bottom -
+        kidReflowState.mComputedBorderPadding.bottom -
+        kidDesiredSize.height -
+        kidReflowState.mComputedBorderPadding.top -
+        kidReflowState.mComputedMargin.top;
 
   // XXX If the child had a fixed height, then make sure it respected it...
   if (NS_AUTOHEIGHT != kidReflowState.mComputedHeight) {
