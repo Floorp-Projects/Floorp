@@ -300,6 +300,12 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         tee ${LOGFILE}
 
     KILL="kill"
+    if  [ "${OS_ARCH}" = "Linux" ]; then
+#on linux the selfserv needs up to 30 seconds to fully die and free
+#the socket
+        SLEEP="sleep 30" # taking the chance and trying on the tinderboxes
+    fi
+
     if [ `uname -s` = "SunOS" ]; then
         PS="/usr/5bin/ps"
     else
@@ -384,7 +390,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
 
     export PATH LD_LIBRARY_PATH SHLIB_PATH LIBPATH
     export DOMSUF HOSTADDR
-    export KILL PS
+    export KILL SLEEP PS
     export MOZILLA_ROOT SECURITY_ROOT DIST TESTDIR OBJDIR HOSTDIR QADIR
     export LOGFILE SCRIPTNAME
 
