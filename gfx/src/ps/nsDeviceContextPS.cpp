@@ -159,7 +159,7 @@ nsDeviceContextPS::InitDeviceContextPS(nsIDeviceContext *aCreatingDeviceContext,
 
   NS_ENSURE_ARG_POINTER(aParentContext);
 
-  mDepth = 1;     // just for arguments sake
+  mDepth = 24; /* Our PostScript module code expects images and other stuff in 24bit RGB-format (8bits per gun)*/
 
   mTwipsToPixels = (float)72.0/(float)NSIntPointsToTwips(72);
   mPixelsToTwips = 1.0f / mTwipsToPixels;
@@ -253,10 +253,9 @@ NS_IMETHODIMP nsDeviceContextPS::GetDrawingSurface(nsIRenderingContext &aContext
  */
 NS_IMETHODIMP nsDeviceContextPS::GetDepth(PRUint32& aDepth)
 {
-  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::GetDepth(mDepth=%d)\n", 24));
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::GetDepth(mDepth=%d)\n", mDepth));
 
-  /* PostScript module uses 24bit RGB images */
-  return(24);
+  return mDepth;
 }
 
 /** ---------------------------------------------------
