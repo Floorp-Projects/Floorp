@@ -28,6 +28,8 @@
 #include "nsIDOMWindow.h"
 #include "nsTransactionManagerCID.h"
 #include "nsIComponentManager.h"
+#include "nsIDocumentLoader.h"
+#include "nsILoadGroup.h"
 
 static NS_DEFINE_CID(kTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
@@ -190,7 +192,18 @@ NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindow *aWindow)
 NS_IMETHODIMP nsMsgWindow::StopUrls()
 {
 	if (mRootWebShell)
-		return mRootWebShell->Stop();
+	{
+		nsCOMPtr <nsIDocumentLoader> docLoader;
+		nsCOMPtr <nsILoadGroup> loadGroup;
+		mRootWebShell->GetDocumentLoader(*getter_AddRefs(docLoader));
+		if (docLoader)
+		{
+			docLoader->GetLoadGroup(getter_AddRefs(loadGroup));
+			if (loadGroup)
+				loadGroup->Cancel();
+		}
+		return NS_OK;
+	}
 	return NS_ERROR_NULL_POINTER;
 }
 

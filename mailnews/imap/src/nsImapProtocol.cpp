@@ -6381,7 +6381,8 @@ NS_IMETHODIMP nsImapMockChannel::AsyncWrite(nsIInputStream *fromStream, PRUint32
 
 NS_IMETHODIMP nsImapMockChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    *aLoadAttributes = nsIChannel::LOAD_NORMAL;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMockChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
