@@ -19,9 +19,6 @@ comm.jar:
         content/navigator/metadata.xul                 (resources/content/metadata.xul)
         content/navigator/metadata.js                  (resources/content/metadata.js)
 	content/navigator/personalToolbar.js           (resources/content/personalToolbar.js)
-	content/navigator/fastnav.xul		       (resources/content/fastnav.xul)
-	content/navigator/fastnav.js		       (resources/content/fastnav.js)
-
 en-US.jar:
         locale/en-US/navigator/contents.rdf                 (resources/locale/en-US/contents.rdf)
         locale/en-US/navigator/viewSource.dtd               (resources/locale/en-US/viewSource.dtd)
