@@ -29,7 +29,20 @@ TODO List for XPCOM</h1></center>
 
 <tr NOSAVE>
 <td NOSAVE>Move xpcom from using NR_*() functions (modules/libreg) to nsIRegistry
-(xpcom/src/nsRegistry.cpp)</td>
+(xpcom/src/nsRegistry.cpp)
+<ul>
+<li>
+Mainly you want to change all the Platform*()&nbsp;functions in nsComponentManager.cpp</li>
+
+<li>
+Now we open/close the registry all the time. I&nbsp;want to keep the registry
+open all the time. That would get performance up.</li>
+
+<li>
+Platform*()&nbsp;functions use the NR_*Raw() functions in some places.
+I wonder if the nsRegistry has a equivalent. If not we need to create them.</li>
+</ul>
+Mostly, there is equivalence between NR_*() calls and nsRegistry calls.&nbsp;</td>
 
 <td>P1</td>
 
