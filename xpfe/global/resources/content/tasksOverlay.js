@@ -40,7 +40,7 @@ function toOpenWindowByType( inType, uri )
 	if ( topWindow )
 		topWindow.focus();
 	else
-		window.open(uri, "_New", "chrome");
+		window.open(uri, "_New", "chrome,menubar");
 }
 
 function CycleWindow( inType, inChromeURL )
@@ -65,7 +65,7 @@ function CycleWindow( inType, inChromeURL )
 	if ( topWindowOfType == null )
 	{
 		dump( " no windows of this type so create a new one \n");
-		window.open( inChromeURL, "","chrome" );
+		window.open( inChromeURL, "","chrome,menubar" );
 	}
 	var enumerator = windowManagerInterface.GetEnumerator( inType );
 	firstWindow = windowManagerInterface.ConvertISupportsToDOMWindow ( enumerator.GetNext() );
@@ -99,7 +99,7 @@ function CycleWindow( inType, inChromeURL )
 	else
 	{
 		dump("open window \n");
-		window.open( inChromeURL, "","chrome" );
+		window.open( inChromeURL, "","chrome,menubar" );
 	}
 }
 
