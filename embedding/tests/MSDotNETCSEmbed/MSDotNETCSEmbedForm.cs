@@ -71,7 +71,7 @@ namespace MSDotNETCSEmbed
 			//
 			// TODO: Add any constructor code after InitializeComponent call
 			//
-			myGecko = new Gecko();
+			myGecko = new Gecko(this);
 		}
 
 		/// <summary>
@@ -116,9 +116,6 @@ namespace MSDotNETCSEmbed
 		[STAThread]
 		static void Main() 
 		{
-			// initialize gecko
-			Gecko.InitEmbedding();
-
 			Application.Run(new MSDotNETCSEmbedForm());
 
 			// terminate gecko
@@ -128,14 +125,14 @@ namespace MSDotNETCSEmbed
 		private void MSDotNETCSEmbedForm_Load(object sender, System.EventArgs e)
 		{
 			myURL = "www.mozilla.org";
-			myGecko.OpenURL(this.Handle, myURL);
+			myGecko.OpenURL(myURL);
 			this.Text = "MSDotNETCSEmbed [UNSUPPORTED] - " + myURL;
 			myURL = "";
 		}
 
 		private void MSDotNETCSEmbedForm_Resize(object sender, System.EventArgs e)
 		{
-			myGecko.Resize(this.Handle);		
+			myGecko.Resize();		
 		}
 
 		private void MSDotNETCSEmbedForm_KeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e)
@@ -143,7 +140,7 @@ namespace MSDotNETCSEmbed
 			switch (e.KeyChar)
 			{
 				case '\r':
-					myGecko.OpenURL(this.Handle, myURL);
+					myGecko.OpenURL(myURL);
 					myURL = "";
 					break;
 

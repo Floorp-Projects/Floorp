@@ -37,7 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#using <mscorlib.dll>
 #include <vcclr.h>
 #include "nsCOMPtr.h"
 #include "nsIWebBrowser.h"
@@ -51,9 +50,6 @@
 
 #include "DotNETEmbed.h"
 #include "umWebChrome.h"
-
-using namespace System;
-using namespace System::Runtime::InteropServices;
 
 using namespace Mozilla::Embedding;
 
@@ -111,26 +107,23 @@ Mozilla::Embedding::ThrowIfFailed(nsresult rv)
 #define NS_WEBBROWSER_CONTRACTID "@mozilla.org/embedding/browser/nsWebBrowser;1"
 
 bool ResizeEmbedding(HWND hWnd, nsIWebBrowserChrome* chrome);
-bool OpenWebPage(HWND hWnd, const wchar_t* url);
 nsresult CreateBrowserWindow(HWND hWnd, PRUint32 aChromeFlags,
                              nsIWebBrowserChrome *aParent,
                              nsIWebBrowserChrome **aNewWindow);
 nsCOMPtr<nsIWebBrowserChrome> chrome;
 
-bool
+void
 InitializeEmbedding()
 {
   nsresult rv = NS_InitEmbedding(nsnull, nsnull);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Could not Initialize Gecko Engine");
-  return (NS_OK == rv) ? true : false;
+  ThrowIfFailed(rv);
 }
 
-bool
+void
 TerminateEmbedding()
 {
   nsresult rv = NS_TermEmbedding();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Could not Terminate Gecko Engine");
-  return (NS_OK == rv) ? true : false;
+  ThrowIfFailed(rv);
 }
 
 nsresult
@@ -168,34 +161,26 @@ CreateBrowserWindow(HWND hWnd, PRUint32 aChromeFlags,
   return NS_OK;
 }
 
-bool
+nsresult
 OpenWebPage(HWND hWnd, const wchar_t *url)
 {
-  nsresult  rv;
-
   if (!chrome)
   {
-    CreateBrowserWindow(hWnd, nsIWebBrowserChrome::CHROME_ALL,
-                        nsnull, getter_AddRefs(chrome));
+    nsresult rv = CreateBrowserWindow(hWnd, nsIWebBrowserChrome::CHROME_ALL,
+                                      nsnull, getter_AddRefs(chrome));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (chrome)
-  {
-    SetWindowLong(hWnd, GWL_USERDATA,
-                  (LONG)NS_STATIC_CAST(nsIWebBrowserChrome*, chrome));
+  SetWindowLong(hWnd, GWL_USERDATA,
+                (LONG)NS_STATIC_CAST(nsIWebBrowserChrome*, chrome));
 
-    // Start loading a page
-    nsCOMPtr<nsIWebBrowser> newBrowser;
-    chrome->GetWebBrowser(getter_AddRefs(newBrowser));
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(newBrowser));
+  // Start loading a page
+  nsCOMPtr<nsIWebBrowser> newBrowser;
+  chrome->GetWebBrowser(getter_AddRefs(newBrowser));
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(newBrowser));
 
-    rv = webNav->LoadURI(url, nsIWebNavigation::LOAD_FLAGS_NONE, nsnull,
+  return webNav->LoadURI(url, nsIWebNavigation::LOAD_FLAGS_NONE, nsnull,
                          nsnull, nsnull);
-
-    return NS_SUCCEEDED(rv);
-  }
-
-  return false;
 }
 
 bool
@@ -433,28 +418,41 @@ WebBrowserChrome::CreateBrowser(HWND hWnd, PRInt32 aX, PRInt32 aY, PRInt32 aCX,
 }
 
 #pragma managed
-bool
-Gecko::InitEmbedding()
+
+Gecko::Gecko(Form *aForm)
+  : mForm(aForm)
 {
-  return InitializeEmbedding();
+  if (!sIsInitialized) {
+    InitializeEmbedding();
+
+    sIsInitialized = true;
+  }
 }
 
-bool
+void
 Gecko::TermEmbedding()
 {
-  return TerminateEmbedding();
+  if (!sIsInitialized) {
+    return;
+  }
+
+  sIsInitialized = false;
+
+  TerminateEmbedding();
 }
 
-bool
-Gecko::OpenURL(IntPtr hWnd, String *url)
+void
+Gecko::OpenURL(String *url)
 {
   const wchar_t __pin * pURL = PtrToStringChars(url);
-  return OpenWebPage((HWND)hWnd.ToInt32(), pURL);
+
+  nsresult rv = OpenWebPage((HWND)mForm->Handle.ToInt32(), pURL);
+  ThrowIfFailed(rv);
 }
 
-bool
-Gecko::Resize(IntPtr hWnd)
+void
+Gecko::Resize()
 {
-  return ResizeEmbedding((HWND)hWnd.ToInt32(), NULL);
+  ResizeEmbedding((HWND)mForm->Handle.ToInt32(), NULL);
 }
 
