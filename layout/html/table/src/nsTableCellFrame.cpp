@@ -805,6 +805,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   if (nsDebugTable::gRflArea) nsTableFrame::DebugReflow("Area::Rfl en", firstKid, &kidReflowState, nsnull);
   ReflowChild(firstKid, aPresContext, kidSize, kidReflowState,
               kidOrigin.x, kidOrigin.y, 0, aStatus);
+  if (isStyleChanged) {
+    Invalidate(aPresContext, mRect);
+  }
   if (nsDebugTable::gRflArea) nsTableFrame::DebugReflow("Area::Rfl ex", firstKid, nsnull, &kidSize, aStatus);
 
 #ifdef NS_DEBUG
