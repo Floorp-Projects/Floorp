@@ -1965,6 +1965,7 @@ nsImapService::DiscoverChildren(nsIEventQueue* aClientEventQueue,
             uriDelimiter != hierarchySeparator)
           aImapUrl->SetOnlineSubDirSeparator((char)hierarchySeparator);
 
+
                 if (NS_SUCCEEDED(rv))
                     rv = GetImapConnectionAndLoadUrl(aClientEventQueue,
                                                      aImapUrl,
@@ -3325,12 +3326,14 @@ NS_IMETHODIMP nsImapService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 
     // XXX this mock channel stuff is wrong -- the channel really should be owning the URL
     // and the originalURL, not the other way around
+    rv = imapUrl->InitializeURIforMockChannel();
     rv = imapUrl->GetMockChannel(getter_AddRefs(mockChannel));
     if (NS_FAILED(rv) || !mockChannel) 
     {
       // this is a funky condition...it means we've already run the url once
       // and someone is trying to get us to run it again...
       imapUrl->Initialize(); // force a new mock channel to get created.
+      rv = imapUrl->InitializeURIforMockChannel();
       rv = imapUrl->GetMockChannel(getter_AddRefs(mockChannel));
       if (!mockChannel) return NS_ERROR_FAILURE;
     }

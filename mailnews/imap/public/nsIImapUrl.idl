@@ -67,6 +67,7 @@ interface nsIImapUrl : nsISupports
 {
 	// Initialization method used to initialize the url...
   void Initialize();
+  void initializeURIforMockChannel();
 
 	/////////////////////////////////////////////////////////////////////////////// 
 	// Getters and Setters for the imap specific event sinks to bind to to your url
