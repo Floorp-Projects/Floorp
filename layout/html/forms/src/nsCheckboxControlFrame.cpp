@@ -34,6 +34,7 @@
 #include "nsStyleUtil.h"
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsCSSRendering.h"
 
 
 #define NS_DESIRED_CHECKBOX_SIZE 12
@@ -89,7 +90,8 @@ public:
 
   virtual void PaintCheckBox(nsIPresContext& aPresContext,
                              nsIRenderingContext& aRenderingContext,
-                             const nsRect& aDirtyRect);
+                             const nsRect& aDirtyRect,
+                             nsFramePaintLayer aWhichLayer);
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -153,14 +155,23 @@ nsCheckboxControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
 {
   float p2t;
   aPresContext->GetScaledPixelsToTwips(p2t);
-#ifdef XP_PC
+#ifndef NS_GFX_RENDER_FORM_ELEMENTS
+#ifdef XP_PC 
    aDesiredWidgetSize.width  = NSIntPixelsToTwips(NS_DESIRED_CHECKBOX_SIZE, p2t);
    aDesiredWidgetSize.height = NSIntPixelsToTwips(NS_DESIRED_CHECKBOX_SIZE, p2t);
 #endif
-  aDesiredLayoutSize.width  = aDesiredWidgetSize.width;
-  aDesiredLayoutSize.height = aDesiredWidgetSize.height;
-  aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
-  aDesiredLayoutSize.descent = 0;
+#endif
+
+
+#ifdef NS_GFX_RENDER_FORM_ELEMENTS
+   nsFormControlFrame::GetDesiredSize(aPresContext, aReflowState, 
+     aDesiredLayoutSize, aDesiredWidgetSize);
+#else
+    aDesiredLayoutSize.width  = aDesiredWidgetSize.width;
+    aDesiredLayoutSize.height = aDesiredWidgetSize.height;
+    aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
+    aDesiredLayoutSize.descent = 0;
+#endif
 }
 
 
@@ -279,54 +290,35 @@ nsCheckboxControlFrame::Reset()
 void
 nsCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
                   nsIRenderingContext& aRenderingContext,
-                  const nsRect& aDirtyRect)
+                  const nsRect& aDirtyRect,
+                  nsFramePaintLayer aWhichLayer)
 {
-  //XXX: Resolution of styles should be cached. This is very
-  // inefficient to do this each time the checkbox is cliced on.
-  /**
-   * Resolve style for a pseudo frame within the given aParentContent & aParentContext.
-   * The tag should be uppercase and inclue the colon.
-   * ie: NS_NewAtom(":FIRST-LINE");
-   */
-  nsIStyleContext* style = nsnull;
-  if (PR_TRUE == mMouseDownOnCheckbox) {
-    nsIAtom * sbAtom = NS_NewAtom(":CHECKBOX-LOOK");
-    style = aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext);
-    NS_RELEASE(sbAtom);
-  }
-  else {
-    nsIAtom * sbAtom = NS_NewAtom(":CHECKBOX-SELECT-LOOK");
-    style = aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext);
-    NS_RELEASE(sbAtom);
-  }
-
-  const nsStyleColor* color = (const nsStyleColor*)style->GetStyleData(eStyleStruct_Color);
-
   aRenderingContext.PushState();
- 
+
+
   float p2t;
   aPresContext.GetScaledPixelsToTwips(p2t);
- 
-    //Offset fixed size checkbox in to the middle of the area reserved for the checkbox
-  const int printOffsetX = (NS_DESIRED_CHECKBOX_SIZE - NS_ABSOLUTE_CHECKBOX_SIZE);
-  const int printOffsetY = (NS_DESIRED_CHECKBOX_SIZE - NS_ABSOLUTE_CHECKBOX_SIZE);
-  aRenderingContext.Translate(NSIntPixelsToTwips(printOffsetX, p2t), 
-                              NSIntPixelsToTwips(printOffsetY, p2t));
 
-    // Draw's background + border
-  nsFormControlHelper::PaintFixedSizeCheckMarkBorder(aRenderingContext, p2t, *color);
- 
-  PRBool checked = PR_TRUE;
+  PRBool checked = PR_FALSE;
 
-    // Get current checked state from content model
+    // Get current checked state through content model.
+    // XXX: This is very inefficient, but it is necessary in the case of printing.
+    // During printing the Paint is called but the actual state of the checkbox
+    // is in a frame in presentation shell 0.
   nsresult result = GetCurrentCheckState(&checked);
   if (PR_TRUE == checked) {
-    nsFormControlHelper::PaintFixedSizeCheckMark(aRenderingContext, p2t);
+      // Draw check mark
+ //XXX: TODO Use fixed size checkmark when size matches default 
+ //This will make the checkmark look better -->PaintFixedSizeCheckMark(aRenderingContext, p2t);
+    const nsStyleColor* color = (const nsStyleColor*)
+      mStyleContext->GetStyleData(eStyleStruct_Color);
+    aRenderingContext.SetColor(color->mColor);
+    nsFormControlHelper::PaintScaledCheckMark(aRenderingContext,
+                         p2t, mRect.width, mRect.height);
 
   }
   PRBool clip;
   aRenderingContext.PopState(clip);
-  NS_IF_RELEASE(style);
 }
 
 
@@ -336,8 +328,11 @@ nsCheckboxControlFrame::Paint(nsIPresContext& aPresContext,
                               const nsRect& aDirtyRect,
                               nsFramePaintLayer aWhichLayer)
 {
+    // Paint the background
+  nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   if (eFramePaintLayer_Content == aWhichLayer) {
-    PaintCheckBox(aPresContext, aRenderingContext, aDirtyRect);
+      // Paint the checkmark 
+    PaintCheckBox(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   }
   return NS_OK;
 }
@@ -358,7 +353,6 @@ NS_METHOD nsCheckboxControlFrame::HandleEvent(nsIPresContext& aPresContext,
       case NS_MOUSE_LEFT_BUTTON_DOWN:
         mMouseDownOnCheckbox = PR_TRUE;
     //XXX: TODO render gray rectangle on mouse down  
-     
       break;
 
       case NS_MOUSE_EXIT:

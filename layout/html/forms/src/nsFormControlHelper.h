@@ -270,6 +270,18 @@ public:
 
   static void PaintFixedSizeCheckMark(nsIRenderingContext& aRenderingContext, 
                                      float aPixelsToTwips);
+                       
+  /**
+    * Paint a scaled checkmark
+	  * 
+    * @param aRenderingContext the rendering context
+	  * @param aPixelsToTwips scale factor for convering pixels to twips.
+    * @param aWidth width in twips
+    * @param aHeight height in twips
+    */
+
+  static void PaintScaledCheckMark(nsIRenderingContext& aRenderingContext,
+                         float aPixelsToTwips, PRUint32 aWidth, PRUint32 aHeight);
 
    /**
     * Paint a fixed size checkmark border

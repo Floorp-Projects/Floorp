@@ -23,7 +23,10 @@
 
 class nsButtonControlFrame : public nsFormControlFrame {
 public:
-   // nsIFormControLFrame
+   // nsFormControlFrame overrides
+  nsresult RequiresWidget(PRBool &aHasWidget);
+
+   // nsIFormControlFrame
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
 
