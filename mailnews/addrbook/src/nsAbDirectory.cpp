@@ -449,7 +449,7 @@ nsresult nsAbDirectory::RemoveCardFromAddressList(const nsIAbCard* card)
 				rv = pAddressLists->Count(&total);
 				for (j = total - 1; j >= 0; j--)
 				{
-					nsCOMPtr<nsISupports> pSupport = getter_AddRefs(pAddressLists->ElementAt(i));
+					nsCOMPtr<nsISupports> pSupport = getter_AddRefs(pAddressLists->ElementAt(j));
 					nsCOMPtr<nsIAbCard> cardInList(do_QueryInterface(pSupport, &rv));
 					if (card == cardInList.get())
 						pAddressLists->RemoveElementAt(j);
