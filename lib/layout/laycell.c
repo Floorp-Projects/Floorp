@@ -827,6 +827,8 @@ lo_SmallSquishSubDocToCell(MWContext *context, lo_DocState *state,
 }
 
 
+/* This is only called when creating a LO_CELL layout element for a 
+   <CAPTION>. */
 LO_CellStruct *
 lo_SquishSubDocToCell(MWContext *context, lo_DocState *state,
 	LO_SubDocStruct *subdoc, Bool free_subdoc)
@@ -838,6 +840,16 @@ lo_SquishSubDocToCell(MWContext *context, lo_DocState *state,
 	dy = 0;
 	
 	cell = lo_SmallSquishSubDocToCell(context, state, subdoc, &dx, &dy);
+    
+	/* Fix for bug# 301664.  Need to initialize the LO_CELL element's pointers
+	   to table state to NULL becase this LO_CELL element is being used for
+	   holding the contents of a <CAPTION> tag and does not have a peer lo_TableCell
+	   structure to point to.  If we don't do this, then during freeing of this table,
+	   the dangling pointers to table state will be dereferenced in an attempt to free
+	   the peer lo_TableCell structure.  */
+	cell->table_cell = NULL;
+	cell->table_row = NULL;
+	cell->table = NULL;
 
 	if (cell == NULL)
 	{
