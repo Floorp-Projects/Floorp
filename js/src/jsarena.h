@@ -115,17 +115,26 @@ struct JSArenaPool {
 #define JS_ARENA_ALLOCATE_TYPE(p, type, pool)                                 \
     JS_ARENA_ALLOCATE_CAST(p, type *, pool, sizeof(type))
 
+/*
+ *
+ * NB: In JS_ARENA_ALLOCATE_CAST and JS_ARENA_GROW_CAST, always subtract _nb
+ * from a->limit rather than adding _nb to _p, to avoid overflowing a 32-bit
+ * address space (possible when running a 32-bit program on a 64-bit system
+ * where the kernel maps the heap up against the top of the 32-bit address
+ * space).
+ *
+ * Thanks to Juergen Kreileder <jk@blackdown.de>, who brought this up in
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=279273.
+ */
 #define JS_ARENA_ALLOCATE_CAST(p, type, pool, nb)                             \
     JS_BEGIN_MACRO                                                            \
         JSArena *_a = (pool)->current;                                        \
         size_t _nb = JS_ARENA_ALIGN(pool, nb);                                \
         jsuword _p = _a->avail;                                               \
-        jsuword _q = _p + _nb;                                                \
-        JS_ASSERT(_q >= _p);                                                  \
-        if (_q > _a->limit)                                                   \
+        if (_p > _a->limit - _nb)                                             \
             _p = (jsuword)JS_ArenaAllocate(pool, _nb);                        \
         else                                                                  \
-            _a->avail = _q;                                                   \
+            _a->avail = _p + _nb;                                             \
         p = (type) _p;                                                        \
         JS_ArenaCountAllocation(pool, nb);                                    \
     JS_END_MACRO
@@ -138,9 +147,9 @@ struct JSArenaPool {
         JSArena *_a = (pool)->current;                                        \
         if (_a->avail == (jsuword)(p) + JS_ARENA_ALIGN(pool, size)) {         \
             size_t _nb = (size) + (incr);                                     \
-            jsuword _q = (jsuword)(p) + JS_ARENA_ALIGN(pool, _nb);            \
-            if (_q <= _a->limit) {                                            \
-                _a->avail = _q;                                               \
+            _nb = JS_ARENA_ALIGN(pool, _nb);                                  \
+            if ((jsuword)(p) <= _a->limit - _nb) {                            \
+                _a->avail = (jsuword)(p) + _nb;                               \
                 JS_ArenaCountInplaceGrowth(pool, size, incr);                 \
             } else if ((jsuword)(p) == _a->base) {                            \
                 p = (type) JS_ArenaRealloc(pool, p, size, incr);              \

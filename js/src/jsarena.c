@@ -159,9 +159,19 @@ JS_ArenaAllocate(JSArenaPool *pool, size_t nb)
     jsuword extra, hdrsz, gross, sz;
     void *p;
 
-    /* Search pool from current forward till we find or make enough space. */
+    /*
+     * Search pool from current forward till we find or make enough space.
+     *
+     * NB: subtract nb from a->limit in the loop condition, instead of adding
+     * nb to a->avail, to avoid overflowing a 32-bit address space (possible
+     * when running a 32-bit program on a 64-bit system where the kernel maps
+     * the heap up against the top of the 32-bit address space).
+     *
+     * Thanks to Juergen Kreileder <jk@blackdown.de>, who brought this up in
+     * https://bugzilla.mozilla.org/show_bug.cgi?id=279273.
+     */
     JS_ASSERT((nb & pool->mask) == 0);
-    for (a = pool->current; a->avail + nb > a->limit; pool->current = a) {
+    for (a = pool->current; a->avail > a->limit - nb; pool->current = a) {
         ap = &a->next;
         if (!*ap) {
             /* Not enough space in pool -- try to reclaim a free arena. */
