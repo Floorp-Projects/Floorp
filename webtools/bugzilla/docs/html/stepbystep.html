@@ -79,7 +79,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN509">3.2.1. Introduction</H2
+NAME="AEN441">3.2.1. Introduction</H2
 ><P
 >&#13;	Installation of bugzilla is pretty straightforward, particularly if your
 	machine already has MySQL and the MySQL-related perl packages installed.
@@ -108,7 +108,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN515">3.2.2. Installing the Prerequisites</H2
+NAME="AEN447">3.2.2. Installing the Prerequisites</H2
 ><DIV
 CLASS="note"
 ><P
@@ -604,7 +604,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN602">3.2.5. DBI Perl Module</H2
+NAME="AEN534">3.2.5. DBI Perl Module</H2
 ><P
 >&#13;	The DBI module is a generic Perl module used by other database related
 	Perl modules.  For our purposes it's required by the MySQL-related
@@ -631,7 +631,7 @@ HREF="downloadlinks.html"
 	<DIV
 CLASS="informalexample"
 ><A
-NAME="AEN609"><P
+NAME="AEN541"><P
 ></P
 ><P
 >&#13;	    <TT
@@ -683,7 +683,7 @@ VALIGN="TOP"
 	<DIV
 CLASS="informalexample"
 ><A
-NAME="AEN616"><P
+NAME="AEN548"><P
 ></P
 ><P
 >&#13;	    Untar the module tarball -- it should create its own directory
@@ -774,7 +774,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN640">3.2.6. Data::Dumper Perl Module</H2
+NAME="AEN572">3.2.6. Data::Dumper Perl Module</H2
 ><P
 >&#13;	The Data::Dumper module provides data structure persistence for Perl
 	(similar to Java's serialization).  It comes with later sub-releases of
@@ -797,7 +797,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN645">3.2.7. MySQL related Perl Module Collection</H2
+NAME="AEN577">3.2.7. MySQL related Perl Module Collection</H2
 ><P
 >&#13;	The Perl/MySQL interface requires a few mutually-dependent perl
 	modules.  These modules are grouped together into the the
@@ -841,7 +841,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN654">3.2.8. TimeDate Perl Module Collection</H2
+NAME="AEN586">3.2.8. TimeDate Perl Module Collection</H2
 ><P
 >&#13;	  Many of the more common date/time/calendar related Perl
 	modules have been grouped into a bundle similar to the MySQL
@@ -861,7 +861,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN658">3.2.9. GD Perl Module (1.8.3)</H2
+NAME="AEN590">3.2.9. GD Perl Module (1.8.3)</H2
 ><P
 >&#13;	  The GD library was written by Thomas Boutell a long while
 	ago to programatically generate images in C.  Since then it's
@@ -925,7 +925,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN667">3.2.10. Chart::Base Perl Module (0.99c)</H2
+NAME="AEN599">3.2.10. Chart::Base Perl Module (0.99c)</H2
 ><P
 >&#13;	  The Chart module provides bugzilla with on-the-fly charting
 	abilities.  It can be installed in the usual fashion after it
@@ -944,7 +944,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN671">3.2.11. DB_File Perl Module</H2
+NAME="AEN603">3.2.11. DB_File Perl Module</H2
 ><P
 >&#13;	  DB_File is a module which allows Perl programs to make use
 	of the facilities provided by  Berkeley DB version 1.x. This
@@ -958,7 +958,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN674">3.2.12. HTTP Server</H2
+NAME="AEN606">3.2.12. HTTP Server</H2
 ><P
 >&#13;	  You have a freedom of choice here - Apache, Netscape or any
 	other server on UNIX would do.  You can easily run the web
@@ -1133,7 +1133,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN693">3.2.13. Installing the Bugzilla Files</H2
+NAME="AEN625">3.2.13. Installing the Bugzilla Files</H2
 ><P
 >&#13;	  You should untar the Bugzilla files into a directory that
 	you're willing to make writable by the default web server user
@@ -1222,7 +1222,7 @@ HREF="patches.html"
 	<DIV
 CLASS="example"
 ><A
-NAME="AEN709"><P
+NAME="AEN641"><P
 ><B
 >Example 3-1. Setting up bonsaitools symlink</B
 ></P
@@ -1277,7 +1277,8 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->&#13;perl -pi -e 's@#!/usr/bonsaitools/bin/perl@#!/usr/bin/perl@' *cgi *pl Bug.pm processmail syncshadowdb
+>&#13;perl -pi -e 's@#\!/usr/bonsaitools/bin/perl@#\!/usr/bin/perl@' *cgi *pl Bug.pm
+processmail syncshadowdb
 	    </PRE
 ></FONT
 ></TD
@@ -1331,7 +1332,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN722">3.2.14. Setting Up the MySQL Database</H2
+NAME="AEN654">3.2.14. Setting Up the MySQL Database</H2
 ><P
 >&#13;	  After you've gotten all the software installed and working you're ready
 	  to start preparing the database for its life as a the back end to a high
@@ -1567,7 +1568,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN769">3.2.15. Tweaking <TT
+NAME="AEN701">3.2.15. Tweaking <TT
 CLASS="filename"
 >localconfig</TT
 ></H2
@@ -1691,7 +1692,7 @@ CLASS="QUOTE"
 	    <DIV
 CLASS="example"
 ><A
-NAME="AEN800"><P
+NAME="AEN732"><P
 ><B
 >Example 3-2. Running checksetup.pl as the web user</B
 ></P
@@ -1769,7 +1770,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN807">3.2.16. Setting Up Maintainers Manually (Optional)</H2
+NAME="AEN739">3.2.16. Setting Up Maintainers Manually (Optional)</H2
 ><P
 >&#13;	If you want to add someone else to every group by hand, you
 	can do it by typing the appropriate MySQL commands.  Run
@@ -1817,7 +1818,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN818">3.2.17. The Whining Cron (Optional)</H2
+NAME="AEN750">3.2.17. The Whining Cron (Optional)</H2
 ><P
 >&#13;	By now you have a fully functional bugzilla, but what good
 	are bugs if they're not annoying?  To help make those bugs
@@ -1901,7 +1902,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN828">3.2.18. Bug Graphs (Optional)</H2
+NAME="AEN760">3.2.18. Bug Graphs (Optional)</H2
 ><P
 >&#13;	As long as you installed the GD and Graph::Base Perl modules
 	you might as well turn on the nifty bugzilla bug reporting
@@ -1956,7 +1957,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN840">3.2.19. Securing MySQL</H2
+NAME="AEN772">3.2.19. Securing MySQL</H2
 ><P
 >&#13;	If you followed the installation instructions for setting up
 	your "bugs" and "root" user in MySQL, much of this should not

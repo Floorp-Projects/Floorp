@@ -23,25 +23,25 @@
         <row>
           <entry>Warnings</entry>
           <entry><caution>
-              <para>Warnings.</para>
+              <para>Don't run with scissors!</para>
             </caution></entry>
         </row>
         <row>
           <entry>Hint</entry>
           <entry><tip>
-              <para>Hint.</para>
+              <para>Warm jar lids under the hot tap to loosen them.</para>
             </tip></entry>
         </row>
         <row>
           <entry>Notes</entry>
           <entry><note>
-              <para>Note.</para>
+              <para>Dear John...</para>
             </note></entry>
         </row>
         <row>
           <entry>Information requiring special attention</entry>
           <entry><warning>
-              <para>Warning.</para>
+              <para>Read this or the cat gets it.</para>
             </warning></entry>
         </row>
         <row>

@@ -1373,12 +1373,14 @@ Group3, since he isn't in Group4.
         make certain files world readable and/or writable. <emphasis>THIS IS
         INSECURE!</emphasis>. This means that anyone who can get access to
         your system can do whatever they want to your Bugzilla installation.
-        <note>
+      </para>
+      <note>
+        <para>
           This also means that if your webserver runs all cgi scripts as the
           same user/group, anyone on the system who can run cgi scripts will
           be able to take control of your Bugzilla installation.
-        </note>
-      </para>
+        </para>
+      </note>
 	  <para>
 	    On Apache, you can use .htaccess files to protect access
 	    to these directories, as outlined in <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=57161">Bug 57161</ulink> for the localconfig file, and <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=65572"> Bug 65572</ulink> for adequate protection in your data/ and shadow/ directories.

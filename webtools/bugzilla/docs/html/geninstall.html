@@ -79,7 +79,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN942">3.5.1. Modifying Your Running System</H2
+NAME="AEN874">3.5.1. Modifying Your Running System</H2
 ><P
 >&#13;	Bugzilla optimizes database lookups by storing all relatively static
 	information in the versioncache file, located in the data/ subdirectory
@@ -110,13 +110,26 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN949">3.5.2. Upgrading From Previous Versions</H2
+NAME="AEN881">3.5.2. Upgrading From Previous Versions</H2
 ><P
->&#13;	The developers of Bugzilla are constantly adding new tables, columns and
-	fields.  You'll get SQL errors if you just update the code.  The strategy
-	to update is to simply always run the checksetup.pl script whenever
-	you upgrade your installation of Bugzilla.  If you want to see what has
-	changed, you can read the comments in that file, starting from the end.
+>&#13;  A plain Bugzilla is fairly easy to upgrade from one version to a newer one.
+  However, things get a bit more complicated if you've made changes to 
+  Bugzilla's code. In this case, you may have to re-make or reapply those
+  changes.
+  It is recommended that you take a backup of your database and your entire
+  Bugzilla installation before attempting an upgrade. You can upgrade a 'clean'
+  installation by untarring a new tarball over the old installation. If you
+  are upgrading from 2.12 or later, you can type <TT
+CLASS="filename"
+>cvs -z3 
+  update</TT
+>, and resolve conflicts if there are any.   
+      </P
+><P
+>&#13;	Because the developers of Bugzilla are constantly adding new tables, columns
+  and fields, you'll probably get SQL errors if you just update the code and
+  attempt to use Bugzilla. Always run the checksetup.pl script whenever
+	you upgrade your installation. 
       </P
 ><P
 >&#13;	If you are running Bugzilla version 2.8 or lower, and wish to upgrade to
@@ -148,7 +161,9 @@ CLASS="filename"
 	generate the <TT
 CLASS="filename"
 >.htaccess</TT
-> files.
+> files. These .htaccess files
+  will not work with Apache 1.2.x - but this has security holes, so you
+  shouldn't be using it anyway.
 	
 	<DIV
 CLASS="note"

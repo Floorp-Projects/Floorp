@@ -323,6 +323,45 @@ TARGET="_top"
 ></TABLE
 ></DIV
 ><P
+>&#13;        When you run checksetup.pl, the script will attempt to modify various
+        permissions on files which Bugzilla uses. If you do not have a
+        webservergroup set in the localconfig file, then Bugzilla will have to
+        make certain files world readable and/or writable. <EM
+>THIS IS
+        INSECURE!</EM
+>. This means that anyone who can get access to
+        your system can do whatever they want to your Bugzilla installation.
+      </P
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>&#13;          This also means that if your webserver runs all cgi scripts as the
+          same user/group, anyone on the system who can run cgi scripts will
+          be able to take control of your Bugzilla installation.
+        </P
+></TD
+></TR
+></TABLE
+></DIV
+><P
 >&#13;	    On Apache, you can use .htaccess files to protect access
 	    to these directories, as outlined in <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=57161"

@@ -46,166 +46,33 @@ NAME="AEN2">The Bugzilla Guide</H1
 ><H3
 CLASS="author"
 ><A
-NAME="AEN27">Matthew P. Barnson</H3
+NAME="AEN5">Matthew P. Barnson</H3
 ><DIV
 CLASS="affiliation"
 ><DIV
 CLASS="address"
 ><P
 CLASS="address"
->barnboy@trilobyte.net</P
+>mbarnson@sisna.com</P
 ></DIV
-></DIV
-><SPAN
-CLASS="collab"
-><SPAN
-CLASS="collabname"
->Zach Lipton</SPAN
-><DIV
-CLASS="affiliation"
-><DIV
-CLASS="address"
-><P
-CLASS="address"
->zach AT zachlipton DOT com</P
-></DIV
-></DIV
-><BR></SPAN
-><P
-CLASS="pubdate"
->2001-04-25<BR></P
-><DIV
-CLASS="revhistory"
-><TABLE
-WIDTH="100%"
-BORDER="0"
-><TR
-><TH
-ALIGN="LEFT"
-VALIGN="TOP"
-COLSPAN="3"
-><B
->Revision History</B
-></TH
-></TR
-><TR
-><TD
-ALIGN="LEFT"
->Revision v2.11</TD
-><TD
-ALIGN="LEFT"
->20 December 2000</TD
-><TD
-ALIGN="LEFT"
->Revised by: MPB</TD
-></TR
-><TR
-><TD
-ALIGN="LEFT"
-COLSPAN="3"
->Converted the README, FAQ, and DATABASE information into
-	  SGML docbook format.</TD
-></TR
-><TR
-><TD
-ALIGN="LEFT"
->Revision 2.11.1</TD
-><TD
-ALIGN="LEFT"
->06 March 2001</TD
-><TD
-ALIGN="LEFT"
->Revised by: MPB</TD
-></TR
-><TR
-><TD
-ALIGN="LEFT"
-COLSPAN="3"
->Took way too long to revise this for 2.12 release. Updated
-	  FAQ to use qandaset tags instead of literallayout, cleaned
-	  up administration section, added User Guide section,
-	  miscellaneous FAQ updates and third-party integration
-	  information. From this point on all new tags are lowercase
-	  in preparation for the 2.13 release of the Guide in XML
-	  format instead of SGML.</TD
-></TR
-><TR
-><TD
-ALIGN="LEFT"
->Revision 2.12.0</TD
-><TD
-ALIGN="LEFT"
->24 April 2001</TD
-><TD
-ALIGN="LEFT"
->Revised by: MPB</TD
-></TR
-><TR
-><TD
-ALIGN="LEFT"
-COLSPAN="3"
->Things fixed this release: Elaborated on queryhelp
-	  interface, added FAQ regarding moving bugs from one keyword
-	  to another, clarified possible problems with the Landfill
-	  tutorial, fixed a boatload of typos and unclear sentence
-	  structures.  Incorporated the README into the UNIX
-	  installation section, and changed the README to indicate the
-	  deprecated status.  Things I know need work:  Used
-	  "simplelist" a lot, where I should have used "procedure" to
-	  tag things.  Need to lowercase all tags to be XML compliant.</TD
-></TR
-><TR
-><TD
-ALIGN="LEFT"
->Revision 2.14.0</TD
-><TD
-ALIGN="LEFT"
->07 August 2001</TD
-><TD
-ALIGN="LEFT"
->Revised by: MPB</TD
-></TR
-><TR
-><TD
-ALIGN="LEFT"
-COLSPAN="3"
->Attempted to integrate relevant portions of the UNIX and
-	  Windows installation instructions, moved some data from FAQ
-	  to Install, removed references to README from text, added
-	  Mac OS X install instructions, fixed a bunch
-	  of tpyos (Mark Harig), linked text that referenced other
-	  parts of the Guide, and nuked the old MySQL permissions
-	  section.</TD
-></TR
-></TABLE
 ></DIV
 ><DIV
 ><DIV
 CLASS="abstract"
 ><A
-NAME="AEN39"><P
+NAME="AEN12"><P
 ></P
 ><P
->&#13;	This is the documentation for Bugzilla, the Mozilla
+>&#13;	This is the documentation for Bugzilla, the mozilla.org
 	bug-tracking system.
-      </P
-><P
->&#13;	Bugzilla is an enterprise-class set of software utilities
-	that, when used together, power issue-tracking for hundreds of
+	Bugzilla is an enterprise-class piece of software
+	that powers issue-tracking for hundreds of
 	organizations around the world, tracking millions of bugs.
-	While it is easy to use and quite flexible, it is
-	difficult for a novice to install and maintain.  Although we
-	have provided step-by-step directions, Bugzilla is not always
-	easy to get working.  Please be sure the person responsible
-	for installing and maintaining this software is a qualified
-	professional for the operating system upon which you install
-	Bugzilla.
       </P
 ><P
->&#13;	THIS DOCUMENTATION IS MAINTAINED IN DOCBOOK 4.1.2 XML FORMAT.
-	IF YOU WISH TO MAKE CORRECTIONS, PLEASE MAKE THEM IN PLAIN
-	TEXT OR SGML DIFFS AGAINST THE SOURCE.  I CANNOT ACCEPT
-	ADDITIONS TO THE GUIDE WRITTEN IN HTML!
+>&#13;	This documentation is maintained in DocBook 4.1.2 XML format.
+  Changes are best submitted as plain text or SGML diffs, attached
+  to a Bugzilla bug.
       </P
 ><P
 ></P
@@ -253,21 +120,11 @@ HREF="credits.html"
 ></DT
 ><DT
 >1.6. <A
-HREF="contributors.html"
->Contributors</A
-></DT
-><DT
->1.7. <A
-HREF="feedback.html"
->Feedback</A
-></DT
-><DT
->1.8. <A
 HREF="translations.html"
 >Translations</A
 ></DT
 ><DT
->1.9. <A
+>1.7. <A
 HREF="conventions.html"
 >Document Conventions</A
 ></DT
@@ -407,43 +264,38 @@ HREF="tinderbox.html"
 ></DD
 ><DT
 >6. <A
-HREF="future.html"
->The Future of Bugzilla</A
-></DT
-><DT
->7. <A
 HREF="variants.html"
 >Bugzilla Variants and Competitors</A
 ></DT
 ><DD
 ><DL
 ><DT
->7.1. <A
+>6.1. <A
 HREF="rhbugzilla.html"
 >Red Hat Bugzilla</A
 ></DT
 ><DT
->7.2. <A
+>6.2. <A
 HREF="variant-fenris.html"
 >Loki Bugzilla (Fenris)</A
 ></DT
 ><DT
->7.3. <A
+>6.3. <A
 HREF="variant-issuezilla.html"
 >Issuezilla</A
 ></DT
 ><DT
->7.4. <A
+>6.4. <A
 HREF="variant-scarab.html"
 >Scarab</A
 ></DT
 ><DT
->7.5. <A
+>6.5. <A
 HREF="variant-perforce.html"
 >Perforce SCM</A
 ></DT
 ><DT
->7.6. <A
+>6.6. <A
 HREF="variant-sourceforge.html"
 >SourceForge</A
 ></DT
@@ -605,85 +457,75 @@ CLASS="LOT"
 >List of Examples</B
 ></DT
 ><DT
->2-1. <A
-HREF="how.html#AEN307"
->Some Famous Software Versions</A
-></DT
-><DT
->2-2. <A
-HREF="how.html#AEN317"
->Mozilla's Bugzilla Components</A
-></DT
-><DT
 >3-1. <A
-HREF="stepbystep.html#AEN709"
+HREF="stepbystep.html#AEN641"
 >Setting up bonsaitools symlink</A
 ></DT
 ><DT
 >3-2. <A
-HREF="stepbystep.html#AEN800"
+HREF="stepbystep.html#AEN732"
 >Running checksetup.pl as the web user</A
 ></DT
 ><DT
 >3-3. <A
-HREF="win32.html#AEN1051"
+HREF="win32.html#AEN985"
 >Installing ActivePerl ppd Modules on Microsoft Windows</A
 ></DT
 ><DT
 >3-4. <A
-HREF="win32.html#AEN1064"
+HREF="win32.html#AEN998"
 >Installing OpenInteract ppd Modules manually on Microsoft
               Windows</A
 ></DT
 ><DT
 >3-5. <A
-HREF="win32.html#AEN1246"
+HREF="win32.html#AEN1180"
 >Removing encrypt() for Windows NT Bugzilla version
 	      2.12 or earlier</A
 ></DT
 ><DT
 >4-1. <A
-HREF="programadmin.html#AEN1483"
+HREF="programadmin.html#AEN1405"
 >Creating some Components</A
 ></DT
 ><DT
 >4-2. <A
-HREF="programadmin.html#AEN1512"
+HREF="programadmin.html#AEN1434"
 >Common Use of Versions</A
 ></DT
 ><DT
 >4-3. <A
-HREF="programadmin.html#AEN1516"
+HREF="programadmin.html#AEN1438"
 >A Different Use of Versions</A
 ></DT
 ><DT
 >4-4. <A
-HREF="programadmin.html#AEN1544"
+HREF="programadmin.html#AEN1466"
 >Using SortKey with Target Milestone</A
 ></DT
 ><DT
 >4-5. <A
-HREF="programadmin.html#AEN1580"
+HREF="programadmin.html#AEN1502"
 >When to Use Group Security</A
 ></DT
 ><DT
 >4-6. <A
-HREF="programadmin.html#AEN1597"
+HREF="programadmin.html#AEN1519"
 >Creating a New Group</A
 ></DT
 ><DT
 >4-7. <A
-HREF="programadmin.html#AEN1614"
+HREF="programadmin.html#AEN1536"
 >Bugzilla Groups</A
 ></DT
 ><DT
 >D-1. <A
-HREF="setperl.html#AEN2461"
+HREF="setperl.html#AEN2380"
 >Using Setperl to set your perl path</A
 ></DT
 ><DT
 >1. <A
-HREF="glossary.html#AEN2782"
+HREF="glossary.html#AEN2701"
 >A Sample Product</A
 ></DT
 ></DL
