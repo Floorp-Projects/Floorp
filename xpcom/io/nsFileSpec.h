@@ -714,11 +714,14 @@ class NS_COM nsDirectoryIterator
 
 	    nsFileSpec              mCurrent;
 	    PRBool                  mExists;
-            PRBool                  mResoveSymLinks;
-	      
+        PRBool                  mResoveSymLinks;
+
+#if defined(XP_UNIX) || defined(XP_BEOS) || defined (XP_PC)
+	    nsFileSpec		        mStarting;
+#endif
+        
 #if defined(XP_UNIX) || defined(XP_BEOS)
-	nsFileSpec		mStarting;
-        DIR*                    mDir;
+	    DIR*                    mDir;
 #elif defined(XP_PC)
         PRDir*                  mDir; // XXX why not use PRDir for Unix too?
 #elif defined(XP_MAC)
