@@ -27,12 +27,21 @@
 nsresult
 nsGetInterface::operator()( const nsIID& aIID, void** aInstancePtr ) const
 	{
-		nsCOMPtr<nsIInterfaceRequestor> factoryP = do_QueryInterface(mSource);
-		NS_ASSERTION(factoryP, "Did you know you were calling |do_GetInterface()| on an object that doesn't support the |nsIInterfaceRequestor| interface?");
+		nsresult status;
 
-		nsresult status = factoryP ? factoryP->GetInterface(aIID, aInstancePtr) : NS_ERROR_NO_INTERFACE;
-		if ( !NS_SUCCEEDED(status) )
-			*aInstancePtr = 0;
+		if ( mSource )
+			{
+				nsCOMPtr<nsIInterfaceRequestor> factoryPtr = do_QueryInterface(mSource, &status);
+				NS_ASSERTION(factoryPtr, "Did you know you were calling |do_GetInterface()| on an object that doesn't support the |nsIInterfaceRequestor| interface?");
+
+				if ( factoryPtr )
+					status = factoryPtr->GetInterface(aIID, aInstancePtr);
+
+				if ( !NS_SUCCEEDED(status) )
+					*aInstancePtr = 0;
+			}
+		else
+			status = NS_ERROR_NULL_POINTER;
 
 		if ( mErrorPtr )
 			*mErrorPtr = status;
