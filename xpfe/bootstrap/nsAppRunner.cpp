@@ -56,6 +56,7 @@
 #include "nsICategoryManager.h"
 #include "nsXPIDLString.h"
 #include "nsIXULWindow.h"
+#include "nsIChromeRegistry.h"
 #include "nsIContentHandler.h"
 #include "nsIBrowserInstance.h"
 
@@ -114,6 +115,8 @@ static NS_DEFINE_CID(kBrowserContentHandlerCID, NS_BROWSERCONTENTHANDLER_CID);
 
 #include "macstdlibextras.h"
 #include <TextServices.h>
+
+static nsresult CheckForNewChrome(void);
 
 // Set up the toolbox and (if DEBUG) the console.  Do this in a static initializer,
 // to make it as unlikely as possible that somebody calls printf() before we get initialized.
@@ -337,9 +340,9 @@ nsresult LaunchApplication(const char *progID, PRInt32 height, PRInt32 width)
 
   nsCOMPtr <nsICmdLineHandler> handler = do_GetService(progID, &rv);
   if (NS_FAILED(rv)) return rv;
-        
+
   if (!handler) return NS_ERROR_FAILURE;
-          
+
   nsXPIDLCString chromeUrlForTask;
   rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
   if (NS_FAILED(rv)) return rv;
@@ -637,6 +640,16 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
 	return rv;
 }
 
+nsresult CheckForNewChrome(void) {
+
+  nsCOMPtr <nsIChromeRegistry> chromeReg = do_GetService("component://netscape/chrome/chrome-registry");
+  NS_ASSERTION(chromeReg, "chrome check couldn't get the chrome registry");
+
+  if (chromeReg)
+    return chromeReg->CheckForNewChrome();
+  return NS_ERROR_FAILURE;
+}
+
 #ifdef DEBUG_warren
 #ifdef XP_PC
 #define _CRTDBG_MAP_ALLOC
@@ -721,6 +734,8 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
     PrintUsage();
     return rv;
   }
+
+  CheckForNewChrome();
 
   // Create the Application Shell instance...
   NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
