@@ -128,6 +128,9 @@
 
 #include "nsPluginSafety.h"
 
+#include "nsICharsetConverterManager.h"
+#include "nsIPlatformCharset.h"
+
 #ifdef XP_WIN
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
@@ -3848,6 +3851,49 @@ nsPluginHostImpl::IsPluginEnabledForExtension(const char* aExtension,
 
 
 ////////////////////////////////////////////////////////////////////////
+// Utility functions for a charset convertor 
+// which converts platform charset to unicode.
+
+static nsresult CreateUnicodeDecoder(nsIUnicodeDecoder **aUnicodeDecoder)
+{
+  nsresult rv;
+  // get the charset
+  nsAutoString platformCharset;
+  nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = platformCharsetService->GetCharset(kPlatformCharsetSel_FileName, platformCharset);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // get the decoder
+  nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = ccm->GetUnicodeDecoder(&platformCharset, aUnicodeDecoder);
+
+  return rv;
+}
+
+static nsresult DoCharsetConversion(nsIUnicodeDecoder *aUnicodeDecoder, 
+                                     const char* aANSIString, nsAWritableString& aUnicodeString)
+{
+  NS_ENSURE_TRUE(aUnicodeDecoder, NS_ERROR_FAILURE);
+  nsresult rv;
+
+  PRInt32 numberOfBytes = nsCRT::strlen(aANSIString);
+  PRInt32 outUnicodeLen;
+  nsAutoString buffer;
+  rv = aUnicodeDecoder->GetMaxLength(aANSIString, numberOfBytes, &outUnicodeLen);
+  NS_ENSURE_SUCCESS(rv, rv);
+  buffer.SetCapacity(outUnicodeLen);
+  rv = aUnicodeDecoder->Convert(aANSIString, &numberOfBytes, (PRUnichar*) buffer.get(), &outUnicodeLen);
+  NS_ENSURE_SUCCESS(rv, rv);
+  buffer.SetLength(outUnicodeLen);
+  aUnicodeString = buffer;
+
+  return rv;
+}
+
+////////////////////////////////////////////////////////////////////////
+
 class DOMMimeTypeImpl : public nsIDOMMimeType {
 public:
   NS_DECL_ISUPPORTS
@@ -3855,9 +3901,11 @@ public:
   DOMMimeTypeImpl(nsPluginTag* aPluginTag, PRUint32 aMimeTypeIndex)
   {
     NS_INIT_ISUPPORTS();
+    (void) CreateUnicodeDecoder(getter_AddRefs(mUnicodeDecoder));
     if (aPluginTag) {
       if (aPluginTag->mMimeDescriptionArray)
-        mDescription.AssignWithConversion(aPluginTag->mMimeDescriptionArray[aMimeTypeIndex]);
+        (void) DoCharsetConversion(mUnicodeDecoder,
+                                   aPluginTag->mMimeDescriptionArray[aMimeTypeIndex], mDescription);
       if (aPluginTag->mExtensionsArray)
         mSuffixes.AssignWithConversion(aPluginTag->mExtensionsArray[aMimeTypeIndex]);
       if (aPluginTag->mMimeTypeArray)
@@ -3897,6 +3945,7 @@ private:
   nsString mDescription;
   nsString mSuffixes;
   nsString mType;
+  nsCOMPtr<nsIUnicodeDecoder> mUnicodeDecoder;
 };
 
 
@@ -3910,6 +3959,8 @@ public:
   DOMPluginImpl(nsPluginTag* aPluginTag) : mPluginTag(aPluginTag)
   {
     NS_INIT_ISUPPORTS();
+
+    (void) CreateUnicodeDecoder(getter_AddRefs(mUnicodeDecoder));
   }
   
   virtual ~DOMPluginImpl() {
@@ -3917,20 +3968,17 @@ public:
 
   NS_METHOD GetDescription(nsAWritableString& aDescription)
   {
-    aDescription.Assign(NS_ConvertASCIItoUCS2(mPluginTag.mDescription));
-    return NS_OK;
+    return DoCharsetConversion(mUnicodeDecoder, mPluginTag.mDescription, aDescription);
   }
 
   NS_METHOD GetFilename(nsAWritableString& aFilename)
   {
-    aFilename.Assign(NS_ConvertASCIItoUCS2(mPluginTag.mFileName));
-    return NS_OK;
+    return DoCharsetConversion(mUnicodeDecoder, mPluginTag.mFileName, aFilename);
   }
 
   NS_METHOD GetName(nsAWritableString& aName)
   {
-    aName.Assign(NS_ConvertASCIItoUCS2(mPluginTag.mName));
-    return NS_OK;
+    return DoCharsetConversion(mUnicodeDecoder, mPluginTag.mName, aName);
   }
 
   NS_METHOD GetLength(PRUint32* aLength)
@@ -3958,6 +4006,7 @@ public:
 
 private:
   nsPluginTag mPluginTag;
+  nsCOMPtr<nsIUnicodeDecoder> mUnicodeDecoder;
 };
 
 ////////////////////////////////////////////////////////////////////////
