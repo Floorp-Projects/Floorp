@@ -70,20 +70,21 @@ PRBool nsGBKConvUtil::UnicodeToGBKChar(
     {
       *aOutByte1 = item >> 8;
       *aOutByte2 = item & 0x00FF;
-      return PR_TRUE;
+      found = PR_TRUE;
     } else {
       return PR_FALSE;
     }
-  }
-  // ugly linear search
-  for( PRInt32 i = 0; i < MAX_GBK_LENGTH; i++ )
-  {
-    if( aChar == gGBKToUnicodeTable[i])
+  } else {
+    // ugly linear search
+    for( PRInt32 i = 0; i < MAX_GBK_LENGTH; i++ )
     {
-      *aOutByte1 = (i /  0x00BF + 0x0081) ;
-      *aOutByte2 = (i %  0x00BF + 0x0040) ;
-      found = PR_TRUE;
-      break;
+      if( aChar == gGBKToUnicodeTable[i])
+      {
+        *aOutByte1 = (i /  0x00BF + 0x0081) ;
+        *aOutByte2 = (i %  0x00BF + 0x0040) ;
+        found = PR_TRUE;
+        break;
+      }
     }
   }
   if(! found)
