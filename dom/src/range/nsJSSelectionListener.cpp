@@ -156,6 +156,7 @@ SelectionListenerNotifySelectionChanged(JSContext *cx, JSObject *obj, uintN argc
   nsresult result = NS_OK;
   nsCOMPtr<nsIDOMDocument> b0;
   nsCOMPtr<nsIDOMSelection> b1;
+  PRInt32 b2;
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -170,7 +171,7 @@ SelectionListenerNotifySelectionChanged(JSContext *cx, JSObject *obj, uintN argc
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (argc < 2) {
+    if (argc < 3) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
@@ -188,8 +189,11 @@ SelectionListenerNotifySelectionChanged(JSContext *cx, JSObject *obj, uintN argc
                                            argv[1])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
+    if (!JS_ValueToInt32(cx, argv[2], (int32 *)&b2)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
+    }
 
-    result = nativeThis->NotifySelectionChanged(b0, b1);
+    result = nativeThis->NotifySelectionChanged(b0, b1, b2);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -235,7 +239,7 @@ static JSPropertySpec SelectionListenerProperties[] =
 //
 static JSFunctionSpec SelectionListenerMethods[] = 
 {
-  {"notifySelectionChanged",          SelectionListenerNotifySelectionChanged,     2},
+  {"notifySelectionChanged",          SelectionListenerNotifySelectionChanged,     3},
   {0}
 };
 
