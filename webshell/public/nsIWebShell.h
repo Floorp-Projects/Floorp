@@ -27,6 +27,7 @@
 class nsIFactory;
 class nsIPostData;
 class nsIStreamObserver;
+class nsIDocumentLoader;
 class nsIWebShell;
 class nsIWebShellContainer;
 
@@ -103,6 +104,8 @@ public:
 
   NS_IMETHOD SetObserver(nsIStreamObserver* anObserver) = 0;
   NS_IMETHOD GetObserver(nsIStreamObserver*& aResult) = 0;
+
+  NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult) = 0;
 
   NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult) = 0;
   NS_IMETHOD SetParent(nsIWebShell* aParent) = 0;
