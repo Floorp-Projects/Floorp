@@ -987,13 +987,16 @@ nsStdURL::SetFile(nsIFile * aFile)
         char* s = ePath;
 	    while (*s)
 	    {
+#ifndef XP_OS2
                     // We need to call IsDBCSLeadByte because
                     // Japanese windows can have 0x5C in the sencond byte 
                     // of a Japanese character, for example 0x8F 0x5C is
                     // one Japanese character
                     if(::IsDBCSLeadByte(*s) && *(s+1) != nsnull) {
                         s++;
-		    } else if (*s == '\\')
+		    } else 
+#endif
+                        if (*s == '\\')
 			    *s = '/';
 		    s++;
 	    }
