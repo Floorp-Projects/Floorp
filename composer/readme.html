@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta http-equiv="content-type"
+ content="text/html; charset=ISO-8859-1">
+  <title>Building Standalone Composer</title>
+</head>
+<body>
+<h2 style="border-bottom: thin solid black;">Getting the source and
+building Standalone Composer</h2>
+<h4
+ style="border: thick solid green; margin: 0px 20%; padding: 1em; color: red;">WARNING:
+the changes
+to the build system needed to build Standalone Composer are not checked
+in yet. This implies the above does not work yet... Be patient ;-)<br>
+</h4>
+<h3>UNIX, Windows (gmake)</h3>
+<ol>
+  <li>Create a .mozconfig file in your home directory, or in the
+mozilla directory, containing the following:<br>
+    <br>
+    <code>ac_add_options --enable-crypto<br>
+ac_add_options --disable-debug<br>
+ac_add_options --enable-optimize=-O2<br>
+ac_add_options --disable-ldap<br>
+ac_add_options --disable-mailnews<br>
+ac_add_options --disable-mathml<br>
+ac_add_options --disable-installer<br>
+ac_add_options --disable-activex<br>
+ac_add_options --disable-activex-scripting<br>
+ac_add_options --disable-tests<br>
+ac_add_options --disable-oji<br>
+ac_add_options --disable-necko-disk-cache<br>
+ac_add_options --disable-profilesharing<br>
+ac_add_options
+--enable-extensions=cookie,xml-rpc,xmlextras,pref,universalchardet,webservices<br>
+    <br>
+# Note: Only include icon for mac, windows and os2<br>
+ac_add_options --enable-image-decoders=icon,png,gif,jpeg<br>
+    <br>
+    <br>
+export MOZ_STANDALONE_COMPOSER=1<br>
+mk_add_options MOZ_STANDALONE_COMPOSER=1<br>
+    <br>
+    </code><span style="font-weight: bold;">Warning</span>: DO NOT USE <code>--enable-optimize=-O2</code>
+on Windows. There are bugs. Simply use <code>--enable-optimize</code>.
+  </li>
+  <li>Pull from CVS and build as described in the <a
+ href="http://www.mozilla.org/build/unix.html">Mozilla build
+instructions</a>. </li>
+  <li>Run the <code>composer </code>executable that is left in
+dist/bin</li>
+</ol>
+<br>
+<br>
+</body>
+</html>
