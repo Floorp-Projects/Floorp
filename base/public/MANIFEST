@@ -8,3 +8,4 @@ nsFileStream.h
 nsFileSpec.h
 nsRepeater.h
 nsIProperties.h
+nsCaretProperties.h
