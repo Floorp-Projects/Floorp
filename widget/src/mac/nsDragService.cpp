@@ -223,22 +223,26 @@ printf("**** created drag ref %ld\n", theDragRef);
   // we have to synthesize the native event because we may be called from JavaScript
   // through XPConnect. In that case, we only have a DOM event and no way to
   // get to the native event. As a consequence, we just always fake it.
-  Point globalMouseLoc;
-  ::GetMouse(&globalMouseLoc);
-  ::LocalToGlobal(&globalMouseLoc);
-  WindowPtr theWindow = nsnull;
-  if ( ::FindWindow(globalMouseLoc, &theWindow) != inContent ) {
-    // debugging sanity check
-    #ifdef NS_DEBUG
-    DebugStr("\pAbout to start drag, but FindWindow() != inContent; g");
-    #endif
-  }  
   EventRecord theEvent;
   theEvent.what = mouseDown;
-  theEvent.message = reinterpret_cast<UInt32>(theWindow);
-  theEvent.when = 0;
-  theEvent.where = globalMouseLoc;
-  theEvent.modifiers = 0;
+  theEvent.message = 0L;
+  theEvent.when = 0L;
+  if ( useRectFromFrame ) {
+    // since we don't have the original mouseDown location, just assume the drag
+    // started in the middle of the frame. This prevents us from having the mouse
+    // and the region we're dragging separated by a big gap (which could happen if
+    // we used the current mouse position). I know this isn't exactly right, and you can
+    // see it if you're paying attention, but who pays such close attention?
+    theEvent.where.v = round(frameRect.top + (frameRect.bottom - frameRect.top) / 2);
+    theEvent.where.h = round(frameRect.left + (frameRect.right - frameRect.left) / 2);
+  }
+  else {
+    Point globalMouseLoc;
+    ::GetMouse(&globalMouseLoc);
+    ::LocalToGlobal(&globalMouseLoc);
+    theEvent.where = globalMouseLoc;
+  }
+  theEvent.modifiers = 0L;
   
   RgnHandle theDragRgn = ::NewRgn();
   ::RectRgn(theDragRgn, &frameRect);		// rjc: set rect
@@ -252,7 +256,7 @@ printf("**** created drag ref %ld\n", theDragRef);
     ::SetDragImage (theDragRef, nsnull, theDragRgn, imgOffsetPt, kDragDarkerTranslucency);
   }
   else
-    BuildDragRegion ( aDragRgn, globalMouseLoc, theDragRgn );
+    BuildDragRegion ( aDragRgn, theEvent.where, theDragRgn );
 
   // register drag send proc which will call us back when asked for the actual
   // flavor data (instead of placing it all into the drag manager)
