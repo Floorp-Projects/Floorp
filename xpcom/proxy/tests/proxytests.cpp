@@ -376,8 +376,9 @@ static void PR_CALLBACK EventLoop( void *arg )
     proxyObject->Test(1, 2, &a);
     proxyObject->Test2();
 
-    delete foo;
+    
     NS_RELEASE(proxyObject);
+    delete foo;
 
     printf("End of Verification calling Proxy on eventQ thread.\n");
 
