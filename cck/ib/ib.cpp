@@ -95,7 +95,7 @@ int ReplaceXPIFiles()
 		xpiArcDest = xpiDstPath + "\\" + xpiList[i].xpiname; //xpiDstPath=CCKTool\Configs\ configName\Output\Core
 		if (!CopyFile(xpiArchive, xpiArcDest, TRUE))
 			DWORD e = GetLastError();
-		if ((strcmp(xpiList[i].filename,"bin/defaults/isp/Us") == 0) || (strcmp(xpiList[i].filename,"bin/defaults/isp") == 0))
+		if ((strcmp(xpiList[i].filename,"bin/defaults/isp/US") == 0) || (strcmp(xpiList[i].filename,"bin/defaults/isp") == 0))
 			command = quotes + rootPath + "zip.exe" + quotes + "-m " + spaces + quotes +xpiArcDest + quotes + spaces + quotes + xpiList[i].filename + "/*.*" + quotes;
 		else
 			command = quotes + rootPath + "zip.exe" + quotes + "-m " + spaces + quotes +xpiArcDest + quotes + spaces + quotes + xpiList[i].filename + quotes;
@@ -536,12 +536,11 @@ int interpret(char *cmd)
 		}
 		// nscpxpipath = \CCKTool\NSCPXPI
 		CString xpiArchive = nscpxpiPath + "\\" + xpiname;
-		// decompress the XPI file
-		command = quotes +rootPath + "unzip.exe"+ quotes + "-o" + spaces + quotes + xpiArchive + quotes;
+		// decompressing the directory path within the XPI file
+		command = quotes +rootPath + "unzip.exe"+ quotes + "-o" + spaces + quotes + xpiArchive  + quotes + spaces + quotes + xpifile + "/*.*" + quotes;
 		ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
 
 		CString xpifile1 = xpifile;
-		//CString newxpifile = xpifile1 + "/mailaccount.rdf";
 		CString tempval=value2;
 		
 		CString newxpifile = xpifile1 + "/" + tempval;
