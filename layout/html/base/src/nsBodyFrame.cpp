@@ -41,6 +41,8 @@
 
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
+nsIAtom* nsBodyFrame::gAbsoluteAtom;
+
 nsresult
 NS_NewBodyFrame(nsIContent* aContent, nsIFrame* aParent, nsIFrame*& aResult,
                 PRUint32 aFlags)
@@ -55,10 +57,14 @@ NS_NewBodyFrame(nsIContent* aContent, nsIFrame* aParent, nsIFrame*& aResult,
 }
 
 nsBodyFrame::nsBodyFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsHTMLContainerFrame(aContent, aParentFrame)
+  : nsBlockFrame(aContent, aParentFrame)
 {
   mSpaceManager = new nsSpaceManager(this);
   NS_ADDREF(mSpaceManager);
+  // XXX for now this is a memory leak
+  if (nsnull == gAbsoluteAtom) {
+    gAbsoluteAtom = NS_NewAtom("Absolute-list");
+  }
 }
 
 nsBodyFrame::~nsBodyFrame()
@@ -88,42 +94,37 @@ nsBodyFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 // nsIFrame
 
 NS_IMETHODIMP
-nsBodyFrame::SetInitialChildList(nsIPresContext& aPresContext,
-                                 nsIAtom*        aListName,
-                                 nsIFrame*       aChildList)
+nsBodyFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
-  if (nsnull == mPrevInFlow) {
-    // Create a block frame and set its style context
-    nsresult rv = NS_NewBlockFrame(mContent, this, mFirstChild, mFlags);
-    if (NS_OK != rv) {
-      return rv;
-    }
-    mChildCount = 1;
-    nsIStyleContext* pseudoStyleContext =
-     aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::columnPseudo, mStyleContext);
-    mFirstChild->SetStyleContext(&aPresContext, pseudoStyleContext);
-    NS_RELEASE(pseudoStyleContext);
-  
-    // Set the geometric and content parent for each of the child frames
-    for (nsIFrame* frame = aChildList; nsnull != frame; frame->GetNextSibling(frame)) {
-      frame->SetGeometricParent(mFirstChild);
-      frame->SetContentParent(mFirstChild);
-    }
-  
-    // Queue up the frames for the block frame
-    return mFirstChild->SetInitialChildList(aPresContext, nsnull, aChildList);
+  DeleteFrameList(aPresContext, &mAbsoluteFrames);
+  return nsBlockFrame::DeleteFrame(aPresContext);
+}
 
-  } else {
-    // We have a prev-in-flow, so create a continuing block frame
-    nsBodyFrame*     prevBodyFrame = (nsBodyFrame*)mPrevInFlow;
-    nsIStyleContext* blockStyleContext;
-
-    prevBodyFrame->mFirstChild->GetStyleContext(blockStyleContext);
-    prevBodyFrame->mFirstChild->CreateContinuingFrame(aPresContext, this,
-                                                      blockStyleContext, mFirstChild);
-    NS_RELEASE(blockStyleContext);
-    return mFirstChild->SetInitialChildList(aPresContext, nsnull, nsnull);
+NS_IMETHODIMP
+nsBodyFrame::GetAdditionalChildListName(PRInt32   aIndex,
+                                        nsIAtom*& aListName) const
+{
+  if (aIndex < 0) {
+    return NS_ERROR_INVALID_ARG;
   }
+  nsIAtom* atom = nsnull;
+  if (0 == aIndex) {
+    atom = gAbsoluteAtom;
+    NS_ADDREF(atom);
+  }
+  aListName = atom;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBodyFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
+{
+  if (aListName == gAbsoluteAtom) {
+    aFirstChild = mAbsoluteFrames;
+    return NS_OK;
+  }
+
+  return nsBlockFrame::FirstChild(aListName, aFirstChild);
 }
 
 #ifdef NS_DEBUG
@@ -191,15 +192,17 @@ nsBodyFrame::BandData::ComputeAvailSpaceRect()
 }
 #endif
 
+#ifdef NS_DEBUG
 NS_IMETHODIMP
 nsBodyFrame::Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect)
 {
-  nsresult rv = nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext,
-                                            aDirtyRect);
+  // Note: all absolutely positioned elements have views so we don't
+  // need to worry about painting them
+  nsresult rv = nsBlockFrame::Paint(aPresContext, aRenderingContext,
+                                    aDirtyRect);
 
-#ifdef NS_DEBUG
   if (nsIFrame::GetShowFrameBorders()) {
     // Render the bands in the spacemanager
     BandData band;
@@ -237,10 +240,10 @@ nsBodyFrame::Paint(nsIPresContext&      aPresContext,
       y = band.availSpace.YMost();
     }
   }
-#endif
 
   return rv;
 }
+#endif
 
 NS_IMETHODIMP
 nsBodyFrame::Reflow(nsIPresContext&          aPresContext,
@@ -254,229 +257,94 @@ nsBodyFrame::Reflow(nsIPresContext&          aPresContext,
                   aReflowState.maxSize.height,
                   aReflowState.reason));
 
-  const nsHTMLReflowState* rsp = &aReflowState;
-  nsHTMLReflowState resizeReflowState(aReflowState);
-  resizeReflowState.spaceManager = mSpaceManager;
+  // Make a copy of the reflow state so we can set the space manager
+  nsHTMLReflowState reflowState(aReflowState);
+  reflowState.spaceManager = mSpaceManager;
 
-  aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
-
-#if 0
-  else {
-    NS_ASSERTION(eReflowReason_Initial != aReflowState.reason, "bad reason");
+  if (eReflowReason_Resize == reflowState.reason) {
+    // Clear any regions that are marked as unavailable
+    // XXX Temporary hack until everything is incremental...
+    mSpaceManager->ClearRegions();
   }
-#endif
 
-  nsIFrame*                    reflowCmdTarget;
-  nsIReflowCommand::ReflowType reflowCmdType;
+  // XXX We need to peek at incremental reflow commands and see if the next
+  // frame is one of the absolutely positioned frames...
+  nsresult  rv = nsBlockFrame::Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
 
-  if (eReflowReason_Incremental == aReflowState.reason) {
-    NS_ASSERTION(nsnull != aReflowState.reflowCommand, "null reflow command");
+  // Reflow any absolutely positioned frames that need reflowing
+  // XXX We shouldn't really be doing this for all incremental reflow commands
+  ReflowAbsoluteItems(aPresContext, reflowState);
 
-    // Get the target and the type of reflow command
-    aReflowState.reflowCommand->GetTarget(reflowCmdTarget);
-    aReflowState.reflowCommand->GetType(reflowCmdType);
+  // Compute our desired size. Take into account any floaters when computing the
+  // height
+  if (mSpaceManager->YMost() > aDesiredSize.height) {
+    aDesiredSize.height = mSpaceManager->YMost();
+  }
 
-    if (this == reflowCmdTarget) {
-      NS_ASSERTION(nsIReflowCommand::FrameAppended == reflowCmdType,
-                   "unexpected reflow command");
+  // Also take into account absolutely positioned elements
+  const nsStyleDisplay* display= (const nsStyleDisplay*)
+    mStyleContext->GetStyleData(eStyleStruct_Display);
 
-      // Append reflow commands will be targeted at us. Reset the target and
-      // send the reflow command.
-      // XXX Would it be better to have the frame generate the reflow command
-      // that way it could correctly set the target?
-      reflowCmdTarget = mFirstChild;
-      aReflowState.reflowCommand->SetTarget(mFirstChild);
-
-      // Reset the geometric and content parent for each of the child frames
-      nsIFrame* childList;
-      aReflowState.reflowCommand->GetChildFrame(childList);
-      for (nsIFrame* frame = childList; nsnull != frame; frame->GetNextSibling(frame)) {
-        frame->SetGeometricParent(mFirstChild);
-        frame->SetContentParent(mFirstChild);
+  if (NS_STYLE_OVERFLOW_HIDDEN != display->mOverflow) {
+    for (PRInt32 i = 0; i < mAbsoluteItems.Count(); i++) {
+      // Get the anchor frame
+      nsAbsoluteFrame*  anchorFrame = (nsAbsoluteFrame*)mAbsoluteItems[i];
+      nsIFrame*         absoluteFrame = anchorFrame->GetAbsoluteFrame();
+      nsRect            rect;
+  
+      absoluteFrame->GetRect(rect);
+      nscoord xmost = rect.XMost();
+      nscoord ymost = rect.YMost();
+      if (xmost > aDesiredSize.width) {
+        aDesiredSize.width = xmost;
       }
-    }
-
-    // The reflow command should never be target for us
-#ifdef NS_DEBUG
-    NS_ASSERTION(this != reflowCmdTarget, "bad reflow command target");
-#endif
-
-    // Is the next frame in the reflow chain the pseudo block-frame or an
-    // absolutely positioned frame?
-    //
-    // If the next frame is the pseudo block-frame then fall thru to the main
-    // code below. The only thing that should be handled below is absolutely
-    // positioned elements...
-    nsIFrame* nextFrame;
-    aReflowState.reflowCommand->GetNext(nextFrame);
-    if ((nsnull != nextFrame) && (mFirstChild != nextFrame)) {
-      NS_ASSERTION(this != nextFrame, "huh?");
-      NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                     ("nsBodyFrame::Reflow: reflowing frame=%p",
-                      nextFrame));
-      // It's an absolutely positioned frame that's the target.
-      // XXX FIX ME. For an absolutely positioned item we need to properly
-      // compute the available space and compute the origin...
-      nsIHTMLReflow*  reflow;
-      if (NS_OK == nextFrame->QueryInterface(kIHTMLReflowIID, (void**)&reflow)) {
-        nsHTMLReflowState reflowState(aPresContext, nextFrame, aReflowState,
-                                      aReflowState.maxSize);
-        reflowState.spaceManager = mSpaceManager;
-        reflow->WillReflow(aPresContext);
-        nsresult rv = reflow->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
-        if (NS_OK != rv) {
-          return rv;
-        }
-        nextFrame->SizeTo(aDesiredSize.width, aDesiredSize.height);
+      if (ymost > aDesiredSize.height) {
+        aDesiredSize.height = ymost;
       }
-
-      // XXX Commented this out because the absolute positioning code
-      // above doesn't check if it needs to position the absolute frame.
-#if 0
-      // XXX Temporary code: if the frame we just reflowed is a
-      // floating frame then fall through into the main reflow pathway
-      // after clearing out our incremental reflow status. This forces
-      // our child to adjust to the new size of the floater.
-      //
-      // XXXX We shouldn't be here at all for floating frames, just for absolutely
-      // positioned frames. What's happening is that if a child of the body is
-      // floated then the reflow state path isn't getting set up correctly. The
-      // body's block pseudo-frame isn't getting included in the reflow path like
-      // it shoudld and that's why we end up here
-      const nsStyleDisplay* display;
-      nextFrame->GetStyleData(eStyleStruct_Display,
-                              (const nsStyleStruct*&) display);
-      if (NS_STYLE_FLOAT_NONE == display->mFloats) {
-        return NS_OK;
-      }
-#endif
-
-      // Switch over to a reflow-state that is called resize instead
-      // of an incremental reflow state like we were passed in.
-      resizeReflowState.reason = eReflowReason_Resize;
-      resizeReflowState.reflowCommand = nsnull;
-      rsp = &resizeReflowState;
-
-      // XXX End temporary code
     }
   }
 
-  // The area that needs to be repainted. Depends on the reflow type.
+  // XXX This code is really temporary; the lower level frame
+  // classes need to contribute to the area that needs damage
+  // repair. This class should only worry about damage repairing
+  // it's border+padding area.
   nsRect  damageArea(0, 0, 0, 0);
 
-  // Reflow the child frame
-  if (nsnull != mFirstChild) {
-    // Get our border/padding info
-    const nsStyleSpacing* mySpacing =
-      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-    nsMargin  borderPadding;
-    mySpacing->CalcBorderPaddingFor(this, borderPadding);
-  
-    // Compute the child frame's max size
-    nsSize  kidMaxSize = GetColumnAvailSpace(aPresContext, borderPadding,
-                                             *rsp);
-    mSpaceManager->Translate(borderPadding.left, borderPadding.top);
-  
-    if (eReflowReason_Resize == rsp->reason) {
-      // Clear any regions that are marked as unavailable
-      // XXX Temporary hack until everything is incremental...
-      mSpaceManager->ClearRegions();
-    }
+  // Decide how much to repaint based on the reflow type.
+  // Note: we don't have to handle the initial reflow case and the
+  // resize reflow case, because they're handled by the scroll frame
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    nsIReflowCommand::ReflowType  reflowType;
+    aReflowState.reflowCommand->GetType(reflowType);
 
-    // Get the child's current rect
-    nsRect  kidOldRect;
-    mFirstChild->GetRect(kidOldRect);
-
-    // Get the column's desired size
-    nsHTMLReflowState reflowState(aPresContext, mFirstChild, *rsp, kidMaxSize);
-    reflowState.spaceManager = mSpaceManager;
-    nsIHTMLReflow*    htmlReflow;
-
-    if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-      htmlReflow->WillReflow(aPresContext);
-      htmlReflow->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
-    }
-
-    // If the frame is complete, then check whether there's a next-in-flow that
-    // needs to be deleted
-    if (NS_FRAME_IS_COMPLETE(aStatus)) {
-      nsIFrame* kidNextInFlow;
-       
-      mFirstChild->GetNextInFlow(kidNextInFlow);
-      if (nsnull != kidNextInFlow) {
-        // Remove all of the childs next-in-flows
-        DeleteChildsNextInFlow(aPresContext, mFirstChild);
-      }
-    }
-
-    mSpaceManager->Translate(-borderPadding.left, -borderPadding.top);
-  
-    // Place and size the frame
-    nsRect  desiredRect(borderPadding.left, borderPadding.top,
-                        aDesiredSize.width, aDesiredSize.height);
-    mFirstChild->SetRect(desiredRect);
-  
-    // Reflow any absolutely positioned frames that need reflowing
-    ReflowAbsoluteItems(aPresContext, *rsp);
-
-    // Return our desired size
-    ComputeDesiredSize(aPresContext, aReflowState, desiredRect,
-                       rsp->maxSize, borderPadding, aDesiredSize);
-
-    // XXX This code is really temporary; the lower level frame
-    // classes need to contribute to the area that needs damage
-    // repair. This class should only worry about damage repairing
-    // it's border+padding area.
-
-    // Decide how much to repaint based on the reflow type.
-    // Note: we don't have to handle the initial reflow case and the
-    // resize reflow case, because they're handled by the root content
-    // frame
-    if (eReflowReason_Incremental == rsp->reason) {
-      // For append reflow commands that target the body just repaint the newly
-      // added part of the frame.
-      if ((nsIReflowCommand::FrameAppended == reflowCmdType) &&
-          (reflowCmdTarget == mFirstChild)) {
-        // It's an append reflow command targeted at us
-        damageArea.y = kidOldRect.YMost();
-        damageArea.width = aDesiredSize.width;
-        damageArea.height = aDesiredSize.height - kidOldRect.height;
-        if (desiredRect.height == kidOldRect.height) {
-          // Since we don't know what changed, assume it all changed.
-          damageArea.y = 0;
-          damageArea.height = aDesiredSize.height;
-        }
-      } else {
-        // Ideally the frame that is the target of the reflow command
-        // (or its parent frame) would generate a damage rect, but
-        // since none of the frame classes know how to do this then
-        // for the time being just repaint the entire frame
-        damageArea.width = aDesiredSize.width;
+    // For append reflow commands that target the flowed frames just
+    // repaint the newly added part of the frame.
+    if (nsIReflowCommand::FrameAppended == reflowType) {
+      // It's an append reflow command
+      damageArea.y = mRect.YMost();
+      damageArea.width = aDesiredSize.width;
+      damageArea.height = aDesiredSize.height - mRect.height;
+      if (aDesiredSize.height == mRect.height) {
+        // Since we don't know what changed, assume it all changed.
+        damageArea.y = 0;
         damageArea.height = aDesiredSize.height;
       }
-    }
-
-  }
-  else {
-    aDesiredSize.width = 0;
-    aDesiredSize.height = 0;
-    aDesiredSize.ascent = 0;
-    aDesiredSize.descent = 0;
-    if (nsnull != aDesiredSize.maxElementSize) {
-      aDesiredSize.maxElementSize->width = 0;
-      aDesiredSize.maxElementSize->height = 0;
+    } else {
+      // Ideally the frame that is the target of the reflow command
+      // (or its parent frame) would generate a damage rect, but
+      // since none of the frame classes know how to do this then
+      // for the time being just repaint the entire frame
+      damageArea.width = aDesiredSize.width;
+      damageArea.height = aDesiredSize.height;
     }
   }
 
-  // If this is really The Body, we force a repaint of the damage area
+  // If this is really the body, force a repaint of the damage area
   if ((NS_BODY_THE_BODY & mFlags) && !damageArea.IsEmpty()) {
     Invalidate(damageArea);
   }
-  
-  NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
-                     ("exit nsBodyFrame::Reflow: status=%d width=%d height=%d",
-                      aStatus, aDesiredSize.width, aDesiredSize.height));
-  return NS_OK;
+
+  return rv;
 }
 
 NS_METHOD
@@ -490,7 +358,6 @@ nsBodyFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   PrepareContinuingFrame(aPresContext, aParent, aStyleContext, cf);
-  cf->SetInitialChildList(aPresContext, nsnull, nsnull);
   aContinuingFrame = cf;
   return NS_OK;
 }
@@ -609,115 +476,18 @@ nsBodyFrame::DidSetStyleContext(nsIPresContext* aPresContext)
 /////////////////////////////////////////////////////////////////////////////
 // Helper functions
 
-nsSize
-nsBodyFrame::GetColumnAvailSpace(nsIPresContext& aPresContext,
-                                 const nsMargin& aBorderPadding,
-                                 const nsHTMLReflowState& aReflowState)
-{
-  nsSize  result(aReflowState.maxSize);
-
-  // If we are being used as a top-level frame then make adjustments
-  // for border/padding and a vertical scrollbar
-  if (NS_BODY_THE_BODY & mFlags) {
-    // If our width is constrained then subtract for the border/padding
-    if (aReflowState.maxSize.width != NS_UNCONSTRAINEDSIZE) {
-      result.width -= aBorderPadding.left + aBorderPadding.right;
-    }
-    // If our height is constrained then subtract for the border/padding
-    if (aReflowState.maxSize.height != NS_UNCONSTRAINEDSIZE) {
-      result.height -= aBorderPadding.top + aBorderPadding.bottom;
-    }
-  }
-  else {
-    if (aReflowState.HaveFixedContentWidth()) {
-      result.width = aReflowState.minWidth +
-        aBorderPadding.left + aBorderPadding.right;
-    }
-    if (aReflowState.HaveFixedContentHeight()) {
-      result.height -= aBorderPadding.top + aBorderPadding.bottom;
-    }
-  }
-
-  NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
-                     (": nsBodyFrame: columnAvailSpace=%d,%d [%s,%s]\n",
-                      result.width, result.height,
-                      eHTMLFrameConstraint_Unconstrained == aReflowState.widthConstraint
-                      ? "not-constrained" : "constrained",
-                      eHTMLFrameConstraint_Unconstrained == aReflowState.heightConstraint
-                      ? "not-constrained" : "constrained"));
-  return result;
-}
-
-void
-nsBodyFrame::ComputeDesiredSize(nsIPresContext& aPresContext,
-                                const nsHTMLReflowState& aReflowState,
-                                const nsRect& aDesiredRect,
-                                const nsSize& aMaxSize,
-                                const nsMargin& aBorderPadding,
-                                nsHTMLReflowMetrics& aMetrics)
-{
-  // Note: Body used as a pseudo-frame shrink wraps (unless of course
-  // style says otherwise)
-  nscoord height = PR_MAX(aDesiredRect.YMost(), mSpaceManager->YMost());
-  nscoord width = aDesiredRect.XMost();
-
-  // Take into account absolutely positioned elements when computing the
-  // desired size
-  for (PRInt32 i = 0; i < mAbsoluteItems.Count(); i++) {
-    // Get the anchor frame
-    nsAbsoluteFrame*  anchorFrame = (nsAbsoluteFrame*)mAbsoluteItems[i];
-    nsIFrame*         absoluteFrame = anchorFrame->GetAbsoluteFrame();
-    nsRect            rect;
-
-    absoluteFrame->GetRect(rect);
-    nscoord xmost = rect.XMost();
-    nscoord ymost = rect.YMost();
-    if (xmost > width) {
-      width = xmost;
-    }
-    if (ymost > height) {
-      height = ymost;
-    }
-  }
-
-  // Apply style size if present; XXX note the inner value (style-size -
-  // border+padding) should be given to the child as a max-size
-  if (aReflowState.HaveFixedContentWidth()) {
-    width = aReflowState.minWidth + aBorderPadding.left + aBorderPadding.right;
-  }
-  else {
-    if ((0 == (NS_BODY_SHRINK_WRAP & mFlags)) &&
-        (NS_UNCONSTRAINEDSIZE != aMaxSize.width)) {
-      // Make sure we're at least as wide as our available width
-      if (aMaxSize.width > width) {
-        width = aMaxSize.width;
-      }
-    }
-  }
-  if (aReflowState.HaveFixedContentHeight()) {
-    height = aReflowState.minHeight +
-      aBorderPadding.top + aBorderPadding.bottom;
-  }
-  else {
-    // aBorderPadding.top is already reflected in the
-    // aDesiredRect.YMost() value.
-    height += aBorderPadding.bottom;
-  }
-
-  aMetrics.width = width;
-  aMetrics.height = height;
-  aMetrics.ascent = height;
-  aMetrics.descent = 0;
-}
-
 // Add the frame to the end of the child list
 void nsBodyFrame::AddAbsoluteFrame(nsIFrame* aFrame)
 {
-  nsIFrame* lastChild = LastFrame(mFirstChild);
-
-  lastChild->SetNextSibling(aFrame);
-  aFrame->SetNextSibling(nsnull);
-  mChildCount++;
+  if (nsnull == mAbsoluteFrames) {
+    mAbsoluteFrames = aFrame;
+  } else {
+    nsIFrame* lastChild = LastFrame(mAbsoluteFrames);
+  
+    lastChild->SetNextSibling(aFrame);
+    aFrame->SetNextSibling(nsnull);
+    // XXX Eliminate mChildCount...
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -728,33 +498,7 @@ nsBodyFrame::HandleEvent(nsIPresContext& aPresContext,
                          nsGUIEvent*     aEvent,
                          nsEventStatus&  aEventStatus)
 {
-  aEventStatus = nsEventStatus_eIgnore;
-
-  // Pass event down to our children. Give it to the children after
-  // our first-child first (children after the first-child are either
-  // absolute positioned frames or are floating frames, both of which
-  // are on top (in the z order) of the first-child).
-  
-  /*XXX Commenting event dispatch to BodyFrame's absolutely positioned 
-   * children.  They already get the event through the view hierarchy.
-   */
-  /*PRInt32 n = mChildCount;*/
-  nsIFrame* kid = mFirstChild;
-  /*kid->GetNextSibling(kid);
-  while (--n >= 0) {
-    if (nsnull == kid) {
-      kid = mFirstChild;
-    }*/
-    nsRect kidRect;
-    kid->GetRect(kidRect);
-    if (kidRect.Contains(aEvent->point)) {
-      aEvent->point.MoveBy(-kidRect.x, -kidRect.y);
-      kid->HandleEvent(aPresContext, aEvent, aEventStatus);
-      aEvent->point.MoveBy(kidRect.x, kidRect.y);
-      /*break;*/
-    }
-    /*kid->GetNextSibling(kid);
-  }*/
+  nsBlockFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 
   // XXX Hack mouse enter/exit and cursor code. THIS DOESN'T BELONG HERE!
 #if 1
@@ -857,36 +601,6 @@ nsBodyFrame::HandleEvent(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsBodyFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
-                                   const nsPoint&  aPoint,
-                                   nsIFrame**      aFrame,
-                                   nsIContent**    aContent,
-                                   PRInt32&        aCursor)
-{
-  aCursor = NS_STYLE_CURSOR_INHERIT;
-  *aContent = mContent;
-
-  nsPoint tmp;
-  PRInt32 n = mChildCount;
-  nsIFrame* kid = mFirstChild;
-  kid->GetNextSibling(kid);
-  while (--n >= 0) {
-    if (nsnull == kid) {
-      kid = mFirstChild;
-    }
-    nsRect kidRect;
-    kid->GetRect(kidRect);
-    if (kidRect.Contains(aPoint)) {
-      tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
-      kid->GetCursorAndContentAt(aPresContext, tmp, aFrame, aContent, aCursor);
-      break;
-    }
-    kid->GetNextSibling(kid);
-  }
-  return NS_OK;
-}
-
 /////////////////////////////////////////////////////////////////////////////
 // nsIAbsoluteItems
 
@@ -896,6 +610,19 @@ NS_METHOD nsBodyFrame::AddAbsoluteItem(nsAbsoluteFrame* aAnchorFrame)
   // items.
   mAbsoluteItems.AppendElement(aAnchorFrame);
   return NS_OK;
+}
+
+PRBool
+nsBodyFrame::IsAbsoluteFrame(nsIFrame* aFrame)
+{
+  // Check whether the frame is in our list of absolutely positioned frames
+  for (nsIFrame* f = mAbsoluteFrames; nsnull != f; f->GetNextSibling(f)) {
+    if (f == aFrame) {
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
 }
 
 NS_METHOD nsBodyFrame::RemoveAbsoluteItem(nsAbsoluteFrame* aAnchorFrame)
@@ -926,9 +653,7 @@ nsBodyFrame::ReflowAbsoluteItems(nsIPresContext& aPresContext,
     absoluteFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)position);
 
     // See whether the frame is a newly added frame
-    nsIFrame* parent;
-    absoluteFrame->GetGeometricParent(parent);
-    if (parent != this) {
+    if (!IsAbsoluteFrame(absoluteFrame)) {
       // The absolutely position item hasn't yet been added to our child list
       absoluteFrame->SetGeometricParent(this);
 
@@ -1228,22 +953,6 @@ void nsBodyFrame::ComputeAbsoluteFrameBounds(nsIFrame*                aAnchorFra
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// nsHTMLContainerFrame
-
-// XXX use same logic as block frame?
-PRIntn nsBodyFrame::GetSkipSides() const
-{
-  PRIntn skip = 0;
-  if (nsnull != mPrevInFlow) {
-    skip |= 1 << NS_SIDE_TOP;
-  }
-  if (nsnull != mNextInFlow) {
-    skip |= 1 << NS_SIDE_BOTTOM;
-  }
-  return skip;
-}
-
-/////////////////////////////////////////////////////////////////////////////
 // Diagnostics
 
 NS_IMETHODIMP
@@ -1261,6 +970,27 @@ nsBodyFrame::ListTag(FILE* out) const
   }
   fprintf(out, ">(%d)@%p", ContentIndexInContainer(this), this);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBodyFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter* aFilter) const
+{
+  nsresult  rv = nsBlockFrame::List(out, aIndent, aFilter);
+
+  // Output absolutely positioned frames
+  if (nsnull != mAbsoluteFrames) {
+    for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
+    fprintf(out, "absolute-items <\n");
+  }
+  nsIFrame* f = mAbsoluteFrames;
+  while (nsnull != f) {
+    f->List(out, aIndent+1, aFilter);
+    f->GetNextSibling(f);
+  }
+  for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
+  fputs(">\n", out);
+
+  return rv;
 }
 
 NS_METHOD nsBodyFrame::VerifyTree() const
