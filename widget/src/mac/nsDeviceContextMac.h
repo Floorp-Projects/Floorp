@@ -19,7 +19,7 @@
 #ifndef nsDeviceContextMac_h___
 #define nsDeviceContextMac_h___
 
-#include "nsIDeviceContext.h"
+#include "nsDeviceContext.h"
 #include "nsUnitConversion.h"
 #include "nsIFontCache.h"
 #include "nsIWidget.h"
@@ -35,102 +35,35 @@ struct nsDrawingSurfaceMac {
   PRUint32 depth ; */
 };
 
-class nsDeviceContextMac : public nsIDeviceContext
+class nsDeviceContextMac : public DeviceContextImpl
 {
 public:
   nsDeviceContextMac();
 
-  NS_DECL_ISUPPORTS
+	NS_DECL_ISUPPORTS
 
   virtual nsresult Init(nsNativeWidget aNativeWidget);
-
-  virtual nsIRenderingContext * CreateRenderingContext(nsIView *aView);
-  virtual nsresult InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWidget);
-
-  virtual float GetTwipsToDevUnits() const;
-  virtual float GetDevUnitsToTwips() const;
-
-  virtual void SetAppUnitsToDevUnits(float aAppUnits);
-  virtual void SetDevUnitsToAppUnits(float aDevUnits);
-
-  virtual float GetAppUnitsToDevUnits() const;
-  virtual float GetDevUnitsToAppUnits() const;
 
   virtual float GetScrollBarWidth() const;
   virtual float GetScrollBarHeight() const;
 
-  virtual nsIFontCache * GetFontCache();
-  virtual void FlushFontCache();
-
-  virtual nsIFontMetrics* GetMetricsFor(const nsFont& aFont);
-
-  virtual void SetZoom(float aZoom);
-  virtual float GetZoom() const;
-
   virtual nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext);
 
-  //functions for handling gamma correction of output device
-  virtual float GetGamma(void);
-  virtual void SetGamma(float aGamma);
 
-  //XXX the return from this really needs to be ref counted somehow. MMP
-  virtual PRUint8 * GetGammaTable(void);
-
-  virtual nsNativeWidget GetNativeWidget(void);
-
-  virtual PRUint32 ConvertPixel(nscolor aColor);
-
-  NS_IMETHOD LoadIconImage(PRInt32 aId, nsIImage*& aImage);
   NS_IMETHOD CheckFontExistence(const nsString& aFontName);
   NS_IMETHOD CreateILColorSpace(IL_ColorSpace*& aColorSpace);
   NS_IMETHOD GetDepth(PRUint32& aDepth);
-  NS_IMETHOD FirstExistingFont(const nsFont& aFont, nsString& aFaceName);
-  NS_IMETHOD GetLocalFontName(const nsString& aFaceName, nsString& aLocalName,
-                              PRBool& aAliased);
-  
-  NS_IMETHOD GetILColorSpace(IL_ColorSpace*& aColorSpace);
 
 
 protected:
-  ~nsDeviceContextMac();
+  virtual ~nsDeviceContextMac();
   nsresult CreateFontCache();
 
-  //nsIFontCache      *mFontCache;
-  //nsDrawingSurfaceMac * mSurface ;
+  nsIFontCache      *mFontCache;
+  nsDrawingSurfaceMac * mSurface ;
 
-  /*PRUint32 mDepth;
-  Visual * mVisual;
-  PRBool   mWriteable;
-  PRUint32 mNumCells;
-  Colormap mColormap;*/
-  // XXX There should be a nsIColormap interface
+  PRUint32 mDepth;
 
-  /*float             mTwipsToPixels;
-  float             mPixelsToTwips;
-  float             mAppUnitsToDevUnits;
-  float             mDevUnitsToAppUnits;
-  float             mZoom;
-  float             mGammaValue;
-  PRUint8           *mGammaTable;*/
-
-public:
-  void InstallColormap(void);
-  void SetDrawingSurface(nsDrawingSurfaceMac * aSurface);
-  void SetGammaTable(PRUint8 * aTable, float aCurrentGamma, float aNewGamma);
-  nsDrawingSurface GetDrawingSurface();
-
-//private:
-  /*PRUint32 mRedMask;
-  PRUint32 mGreenMask;
-  PRUint32 mBlueMask;
-  PRUint32 mRedBits;
-  PRUint32 mGreenBits;
-  PRUint32 mBlueBits;
-  PRUint32 mRedOffset;
-  PRUint32 mGreenOffset;
-  PRUint32 mBlueOffset;
-
-  nsNativeWidget mNativeWidget;*/
 };
 
 #endif /* nsDeviceContextMac_h___ */
