@@ -36,7 +36,6 @@ CPPSRCS = \
 	nsNNTPNewsgroupListStub.cpp \
 	nsNNTPNewsgroupStub.cpp \
 	nsNNTPCategoryContainerStub.cpp \
-	newsParserTest.cpp		\
 	$(NULL)
 
 EXTRA_DSO_LDOPTS = 	\
