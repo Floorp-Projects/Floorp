@@ -47,15 +47,15 @@
 + (id)stringWithPRUnichars:(const PRUnichar*)inString
 {
   if (inString)
-    return [NSString stringWithCharacters:inString length:nsCRT::strlen(inString)];
+    return [self stringWithCharacters:inString length:nsCRT::strlen(inString)];
   else
-    return [NSString string];
+    return [self string];
 }
 
 + (id)stringWith_nsAString:(const nsAString&)inString
 {
   nsPromiseFlatString flatString = PromiseFlatString(inString);
-  return [NSString stringWithCharacters:flatString.get() length:flatString.Length()];
+  return [self stringWithCharacters:flatString.get() length:flatString.Length()];
 }
 
 #define ASSIGN_STACK_BUFFER_CHARACTERS	256
