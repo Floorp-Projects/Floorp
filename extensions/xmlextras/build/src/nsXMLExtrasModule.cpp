@@ -63,6 +63,7 @@
 #include "nsSchemaPrivate.h"
 #include "nsWSDLLoader.h"
 #include "nsWSDLPrivate.h"
+#include "wspprivate.h"
 #endif
 
 #include "nsString.h"
@@ -131,6 +132,8 @@ NS_DECL_CLASSINFO(nsSOAPPortBinding)
 NS_DECL_CLASSINFO(nsSOAPOperationBinding)
 NS_DECL_CLASSINFO(nsSOAPMessageBinding)
 NS_DECL_CLASSINFO(nsSOAPPartBinding)
+
+NS_DECL_CLASSINFO(WSPCallContext)
 #endif
 
 class nsXMLExtrasNameset : public nsISupports

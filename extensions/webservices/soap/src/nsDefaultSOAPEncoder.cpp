@@ -105,15 +105,16 @@ class ns##name##Encoder : \
 {\
 public:\
   ns##name##Encoder();\
-  ns##name##Encoder(PRUint16 aVersion);\
+  ns##name##Encoder(PRUint16 aSOAPVersion, PRUint16 aSchemaVersion);\
   virtual ~ns##name##Encoder();\
-  PRUint16 mVersion;\
+  PRUint16 mSOAPVersion;\
+  PRUint16 mSchemaVersion;\
   NS_DECL_ISUPPORTS\
   NS_DECL_NSISOAPENCODER\
   NS_DECL_NSISOAPDECODER\
 };\
 NS_IMPL_ISUPPORTS2(ns##name##Encoder,nsISOAPEncoder,nsISOAPDecoder) \
-ns##name##Encoder::ns##name##Encoder(PRUint16 aVersion) {NS_INIT_ISUPPORTS();mVersion=aVersion;}\
+ns##name##Encoder::ns##name##Encoder(PRUint16 aSOAPVersion,PRUint16 aSchemaVersion) {NS_INIT_ISUPPORTS();mSOAPVersion=aSOAPVersion;mSchemaVersion=aSchemaVersion;}\
 ns##name##Encoder::~ns##name##Encoder() {}
 
 // All encoders must be first declared and then registered.
@@ -134,11 +135,20 @@ DECLARE_ENCODER(UnsignedInt)
 DECLARE_ENCODER(UnsignedShort)
 DECLARE_ENCODER(UnsignedByte)
 
+/**
+ * This now separates the version with respect to the SOAP specification from the version
+ * with respect to the schema version (using the same constants for both).  This permits
+ * a user of a SOAP 1.1 or 1.2 encoding to choose which encoding to encode to.
+ */
 #define REGISTER_ENCODER(name) \
 {\
-  ns##name##Encoder *handler = new ns##name##Encoder(version);\
+  ns##name##Encoder *handler = new ns##name##Encoder(version,nsISOAPMessage::VERSION_1_1);\
   nsAutoString encodingKey;\
-  SOAPEncodingKey(*nsSOAPUtils::kXSURI[version], k##name##SchemaType, encodingKey);\
+  SOAPEncodingKey(*nsSOAPUtils::kXSURI[nsISOAPMessage::VERSION_1_1], k##name##SchemaType, encodingKey);\
+  SetEncoder(encodingKey, handler); \
+  SetDecoder(encodingKey, handler); \
+  handler = new ns##name##Encoder(version,nsISOAPMessage::VERSION_1_2);\
+  SOAPEncodingKey(*nsSOAPUtils::kXSURI[nsISOAPMessage::VERSION_1_2], k##name##SchemaType, encodingKey);\
   SetEncoder(encodingKey, handler); \
   SetDecoder(encodingKey, handler); \
 }
@@ -146,15 +156,15 @@ DECLARE_ENCODER(UnsignedByte)
 nsDefaultSOAPEncoder_1_1::nsDefaultSOAPEncoder_1_1(): nsSOAPEncoding(*nsSOAPUtils::kSOAPEncURI[nsISOAPMessage::VERSION_1_1], nsnull, nsnull) 
 {
   PRUint16 version  =  nsISOAPMessage::VERSION_1_1;
-  {
-    nsDefaultEncoder *handler = new nsDefaultEncoder(version);
+  { //  Schema type defaults to default for SOAP level
+    nsDefaultEncoder *handler = new nsDefaultEncoder(version,version);
     SetDefaultEncoder(handler);
     SetDefaultDecoder(handler);
   }
   REGISTER_ENCODER(AnyType)
   REGISTER_ENCODER(AnySimpleType)
-  {
-    nsArrayEncoder *handler = new nsArrayEncoder(version);
+  { //  There is no ability to preserve non-standard schema choice under single array type.
+    nsArrayEncoder *handler = new nsArrayEncoder(version,version);
     nsAutoString encodingKey;
     SOAPEncodingKey(*nsSOAPUtils::kSOAPEncURI[version], kArraySOAPType, encodingKey);
     SetEncoder(encodingKey, handler); 
@@ -177,15 +187,15 @@ nsDefaultSOAPEncoder_1_1::nsDefaultSOAPEncoder_1_1(): nsSOAPEncoding(*nsSOAPUtil
 nsDefaultSOAPEncoder_1_2::nsDefaultSOAPEncoder_1_2(): nsSOAPEncoding(*nsSOAPUtils::kSOAPEncURI[nsISOAPMessage::VERSION_1_2], nsnull, nsnull) 
 {
   PRUint16 version  =  nsISOAPMessage::VERSION_1_2;
-  {
-    nsDefaultEncoder *handler = new nsDefaultEncoder(version);
+  { //  Schema type defaults to default for SOAP level
+    nsDefaultEncoder *handler = new nsDefaultEncoder(version,version);
     SetDefaultEncoder(handler);
     SetDefaultDecoder(handler);
   }
   REGISTER_ENCODER(AnyType)
   REGISTER_ENCODER(AnySimpleType)
-  {
-    nsArrayEncoder *handler = new nsArrayEncoder(version);
+  { //  There is no ability to preserve non-standard schema choice under single array type.
+    nsArrayEncoder *handler = new nsArrayEncoder(version,version);
     nsAutoString encodingKey;
     SOAPEncodingKey(*nsSOAPUtils::kSOAPEncURI[version], kArraySOAPType, encodingKey);
     SetEncoder(encodingKey, handler); 
@@ -281,10 +291,10 @@ NS_IMETHODIMP nsDefaultEncoder::Encode(nsISOAPEncoding* aEncoding,
     }
     nsAutoString encodingKey;
     if (typevalue == nsISchemaType::SCHEMA_TYPE_COMPLEX) {
-      SOAPEncodingKey(*nsSOAPUtils::kXSURI[mVersion], kAnyTypeSchemaType, encodingKey);
+      SOAPEncodingKey(*nsSOAPUtils::kXSURI[mSchemaVersion], kAnyTypeSchemaType, encodingKey);
     }
     else {
-      SOAPEncodingKey(*nsSOAPUtils::kXSURI[mVersion], kAnySimpleTypeSchemaType, encodingKey);
+      SOAPEncodingKey(*nsSOAPUtils::kXSURI[mSchemaVersion], kAnySimpleTypeSchemaType, encodingKey);
     }
     nsresult rc = aEncoding->GetEncoder(encodingKey, getter_AddRefs(encoder));
     if (NS_FAILED(rc)) return rc;
@@ -321,7 +331,7 @@ NS_IMETHODIMP nsAnyTypeEncoder::Encode(nsISOAPEncoding* aEncoding,
     }
   }
   PRUint16 typevalue;
-  nativeSchemaURI.Assign(*nsSOAPUtils::kXSURI[mVersion]);
+  nativeSchemaURI.Assign(*nsSOAPUtils::kXSURI[mSchemaVersion]);
   aSource->GetDataType(&typevalue);
   switch(typevalue) {
     case nsIDataType::VTYPE_INT8:
@@ -371,7 +381,7 @@ NS_IMETHODIMP nsAnyTypeEncoder::Encode(nsISOAPEncoding* aEncoding,
     case nsIDataType::VTYPE_ARRAY:
       if (mustBeSimple) return NS_ERROR_ILLEGAL_VALUE;
       nativeSchemaType.Assign(kArraySOAPType);
-      nativeSchemaURI.Assign(*nsSOAPUtils::kSOAPEncURI[mVersion]);
+      nativeSchemaURI.Assign(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion]);
       break;
 #if 0
       {
@@ -421,11 +431,11 @@ NS_IMETHODIMP nsAnyTypeEncoder::Encode(nsISOAPEncoding* aEncoding,
         && !aSchemaType
         && !aName.IsEmpty()) {
         nsAutoString type;
-        rc = nsSOAPUtils::MakeNamespacePrefixFixed(*aReturnValue, nativeSchemaURI, mVersion, type);
+        rc = nsSOAPUtils::MakeNamespacePrefix(*aReturnValue, nativeSchemaURI, type);
         if (NS_FAILED(rc)) return rc;
         type.Append(nsSOAPUtils::kQualifiedSeparator);
         type.Append(nativeSchemaType);
-        rc = (*aReturnValue)->SetAttributeNS(*nsSOAPUtils::kXSIURI[mVersion], nsSOAPUtils::kXSITypeAttribute, type);
+        rc = (*aReturnValue)->SetAttributeNS(*nsSOAPUtils::kXSIURI[mSchemaVersion], nsSOAPUtils::kXSITypeAttribute, type);
       }
       return rc;
     }
@@ -452,7 +462,7 @@ NS_IMETHODIMP nsAnySimpleTypeEncoder::Encode(nsISOAPEncoding* aEncoding,
   if (NS_FAILED(rc)) return rc;
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(value,
-		       *nsSOAPUtils::kSOAPEncURI[mVersion],
+		       *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
 		       kAnySimpleTypeSchemaType,
 		       aDestination,
 		       aReturnValue);
@@ -483,7 +493,7 @@ NS_IMETHODIMP nsArrayEncoder::Encode(nsISOAPEncoding* aEncoding,
   if (NS_FAILED(rc)) return rc;
   if (aName.IsEmpty()) {  //  Now create the element to hold the array
     rc = EncodeSimpleValue(kEmpty,
-		       *nsSOAPUtils::kSOAPEncURI[mVersion],
+		       *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
 		       kArraySOAPType,
 		       aDestination,
 		       aReturnValue);
@@ -506,11 +516,11 @@ NS_IMETHODIMP nsArrayEncoder::Encode(nsISOAPEncoding* aEncoding,
 #define DO_SIMPLE_ARRAY(XPType, SOAPType, Format, Source) \
       {\
         nsAutoString value;\
-        rc = nsSOAPUtils::MakeNamespacePrefixFixed(*aReturnValue, *nsSOAPUtils::kXSURI[mVersion], mVersion, value);\
+        rc = nsSOAPUtils::MakeNamespacePrefix(*aReturnValue, *nsSOAPUtils::kXSURI[mSchemaVersion], value);\
         if (NS_FAILED(rc)) return rc;\
         value.Append(nsSOAPUtils::kQualifiedSeparator);\
         value.Append(k##SOAPType##SchemaType);\
-        rc = (*aReturnValue)->SetAttributeNS(*nsSOAPUtils::kSOAPEncURI[mVersion], kSOAPArrayTypeAttribute, value);\
+        rc = (*aReturnValue)->SetAttributeNS(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion], kSOAPArrayTypeAttribute, value);\
         if (NS_FAILED(rc)) return rc;\
 	XPType* values = NS_STATIC_CAST(XPType*, array);\
 	nsCOMPtr<nsIDOMElement> dummy;\
@@ -521,7 +531,7 @@ NS_IMETHODIMP nsArrayEncoder::Encode(nsISOAPEncoding* aEncoding,
           value.Assign(NS_ConvertUTF8toUCS2(nsDependentCString(ptr)).get());\
           PR_smprintf_free(ptr);\
           rc = EncodeSimpleValue(value,\
-		       *nsSOAPUtils::kSOAPEncURI[mVersion],\
+		       *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],\
 		       k##SOAPType##SchemaType,\
 		       *aReturnValue,\
 		       getter_AddRefs(dummy));\
@@ -589,7 +599,7 @@ NS_IMETHODIMP nsStringEncoder::Encode(nsISOAPEncoding* aEncoding,
   if (NS_FAILED(rc)) return rc;
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(value,
-		       *nsSOAPUtils::kSOAPEncURI[mVersion],
+		       *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
 		       kStringSchemaType,
 		       aDestination,
 		       aReturnValue);
@@ -618,7 +628,7 @@ NS_IMETHODIMP nsBooleanEncoder::Encode(nsISOAPEncoding* aEncoding,
   if (NS_FAILED(rc)) return rc;
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(b ? nsSOAPUtils::kTrueA : nsSOAPUtils::kFalseA,
-		       *nsSOAPUtils::kSOAPEncURI[mVersion],
+		       *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
 		       kBooleanSchemaType,
 		       aDestination,
 		       aReturnValue);
@@ -652,7 +662,7 @@ NS_IMETHODIMP nsDoubleEncoder::Encode(nsISOAPEncoding* aEncoding,
   PR_smprintf_free(ptr);
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(value,
-		       *nsSOAPUtils::kSOAPEncURI[mVersion],
+		       *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
 		       kDoubleSchemaType,
 		       aDestination,
 		       aReturnValue);
@@ -686,7 +696,7 @@ NS_IMETHODIMP nsFloatEncoder::Encode(nsISOAPEncoding* aEncoding,
   PR_smprintf_free(ptr);
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(value,
-		       *nsSOAPUtils::kSOAPEncURI[mVersion],
+		       *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
 		       kFloatSchemaType,
 		       aDestination,
 		       aReturnValue);
@@ -720,7 +730,7 @@ NS_IMETHODIMP nsLongEncoder::Encode(nsISOAPEncoding* aEncoding,
   PR_smprintf_free(ptr);
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(value,
-		       *nsSOAPUtils::kSOAPEncURI[mVersion],
+		       *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
 		       kLongSchemaType,
 		       aDestination,
 		       aReturnValue);
@@ -754,7 +764,7 @@ NS_IMETHODIMP nsIntEncoder::Encode(nsISOAPEncoding* aEncoding,
   PR_smprintf_free(ptr);
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(value,
-		       *nsSOAPUtils::kSOAPEncURI[mVersion],
+		       *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
 		       kIntSchemaType,
 		       aDestination,
 		       aReturnValue);
@@ -788,7 +798,7 @@ NS_IMETHODIMP nsShortEncoder::Encode(nsISOAPEncoding* aEncoding,
   PR_smprintf_free(ptr);
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(value,
-		       *nsSOAPUtils::kSOAPEncURI[mVersion],
+		       *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
 		       kShortSchemaType,
 		       aDestination,
 		       aReturnValue);
@@ -822,7 +832,7 @@ NS_IMETHODIMP nsByteEncoder::Encode(nsISOAPEncoding* aEncoding,
   PR_smprintf_free(ptr);
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(value,
-		       *nsSOAPUtils::kSOAPEncURI[mVersion],
+		       *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
 		       kByteSchemaType,
 		       aDestination,
 		       aReturnValue);
@@ -856,7 +866,7 @@ NS_IMETHODIMP nsUnsignedLongEncoder::Encode(nsISOAPEncoding* aEncoding,
   PR_smprintf_free(ptr);
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(value,
-		       *nsSOAPUtils::kSOAPEncURI[mVersion],
+		       *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
 		       kLongSchemaType,
 		       aDestination,
 		       aReturnValue);
@@ -890,7 +900,7 @@ NS_IMETHODIMP nsUnsignedIntEncoder::Encode(nsISOAPEncoding* aEncoding,
   PR_smprintf_free(ptr);
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(value,
-		       *nsSOAPUtils::kSOAPEncURI[mVersion],
+		       *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
 		       kIntSchemaType,
 		       aDestination,
 		       aReturnValue);
@@ -924,7 +934,7 @@ NS_IMETHODIMP nsUnsignedShortEncoder::Encode(nsISOAPEncoding* aEncoding,
   PR_smprintf_free(ptr);
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(value,
-		       *nsSOAPUtils::kSOAPEncURI[mVersion],
+		       *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
 		       kShortSchemaType,
 		       aDestination,
 		       aReturnValue);
@@ -958,7 +968,7 @@ NS_IMETHODIMP nsUnsignedByteEncoder::Encode(nsISOAPEncoding* aEncoding,
   PR_smprintf_free(ptr);
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(value,
-		       *nsSOAPUtils::kSOAPEncURI[mVersion],
+		       *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
 		       kByteSchemaType,
 		       aDestination,
 		       aReturnValue);
@@ -981,7 +991,7 @@ NS_IMETHODIMP nsDefaultEncoder::Decode(nsISOAPEncoding* aEncoding,
 
   {
     nsCOMPtr<nsIDOMAttr> enc;
-    nsresult rv = aSource->GetAttributeNodeNS(*nsSOAPUtils::kSOAPEncURI[mVersion], nsSOAPUtils::kEncodingStyleAttribute, getter_AddRefs(enc));
+    nsresult rv = aSource->GetAttributeNodeNS(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion], nsSOAPUtils::kEncodingStyleAttribute, getter_AddRefs(enc));
     if (NS_FAILED(rv)) return rv;
     if (enc) {
       nsAutoString style;
@@ -1002,7 +1012,7 @@ NS_IMETHODIMP nsDefaultEncoder::Decode(nsISOAPEncoding* aEncoding,
     nsresult rc = aEncoding->GetSchemaCollection(getter_AddRefs(collection));
     if (NS_FAILED(rc)) return rc;
     nsAutoString explicittype;
-    rc = aSource->GetAttributeNS(*nsSOAPUtils::kXSIURI[mVersion], nsSOAPUtils::kXSITypeAttribute, explicittype);
+    rc = aSource->GetAttributeNS(*nsSOAPUtils::kXSIURI[mSchemaVersion], nsSOAPUtils::kXSITypeAttribute, explicittype);
     if (NS_FAILED(rc)) return rc;
     nsAutoString ns;
     nsAutoString name;
@@ -1026,12 +1036,12 @@ NS_IMETHODIMP nsDefaultEncoder::Decode(nsISOAPEncoding* aEncoding,
         rc = element->GetType(getter_AddRefs(type));
         if (NS_FAILED(rc)) return rc;
       } 
-      else if (ns.Equals(*nsSOAPUtils::kSOAPEncURI[mVersion])) {  	//  Last-ditch hack to get undeclared types from SOAP namespace
+      else if (ns.Equals(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion])) {  	//  Last-ditch hack to get undeclared types from SOAP namespace
 	if (name.Equals(kArraySOAPType)) {			//  This should not be needed if schema has these declarations
           rc = collection->GetType(name, ns, getter_AddRefs(type));
 	}
 	else {
-          rc = collection->GetType(name, *nsSOAPUtils::kXSURI[mVersion], getter_AddRefs(type));
+          rc = collection->GetType(name, *nsSOAPUtils::kXSURI[mSchemaVersion], getter_AddRefs(type));
 	}
 //        if (NS_FAILED(rc)) return rc;
       }
@@ -1057,7 +1067,7 @@ NS_IMETHODIMP nsDefaultEncoder::Decode(nsISOAPEncoding* aEncoding,
         rc = simpleType->GetSimpleType(&simpleTypeValue);
         if (NS_FAILED(rc)) return rc;
         if (simpleTypeValue == nsISchemaSimpleType::SIMPLE_TYPE_BUILTIN) {
-          schemaURI.Assign(*nsSOAPUtils::kXSURI[mVersion]);
+          schemaURI.Assign(*nsSOAPUtils::kXSURI[mSchemaVersion]);
         }
       }
       nsAutoString encodingKey;
@@ -1085,10 +1095,10 @@ NS_IMETHODIMP nsDefaultEncoder::Decode(nsISOAPEncoding* aEncoding,
     }
     nsAutoString encodingKey;
     if (typevalue == nsISchemaType::SCHEMA_TYPE_COMPLEX) {
-      SOAPEncodingKey(*nsSOAPUtils::kXSURI[mVersion], kAnyTypeSchemaType, encodingKey);
+      SOAPEncodingKey(*nsSOAPUtils::kXSURI[mSchemaVersion], kAnyTypeSchemaType, encodingKey);
     }
     else {
-      SOAPEncodingKey(*nsSOAPUtils::kXSURI[mVersion], kAnySimpleTypeSchemaType, encodingKey);
+      SOAPEncodingKey(*nsSOAPUtils::kXSURI[mSchemaVersion], kAnySimpleTypeSchemaType, encodingKey);
     }
     nsresult rc = aEncoding->GetDecoder(encodingKey, getter_AddRefs(decoder));
     if (NS_FAILED(rc)) return rc;
@@ -1171,7 +1181,7 @@ NS_IMETHODIMP nsArrayEncoder::Decode(nsISOAPEncoding* aEncoding,
   nsAutoString name;
   nsCOMPtr<nsISchemaType>subtype;
   nsAutoString value;
-  nsresult rc = aSource->GetAttributeNS(*nsSOAPUtils::kSOAPEncURI[mVersion], kSOAPArrayTypeAttribute, value);
+  nsresult rc = aSource->GetAttributeNS(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion], kSOAPArrayTypeAttribute, value);
   if (!value.IsEmpty()) {  //  Need to truncate []
     nsCOMPtr<nsISchemaCollection> collection;
     rc = aEncoding->GetSchemaCollection(getter_AddRefs(collection));
@@ -1187,7 +1197,7 @@ NS_IMETHODIMP nsArrayEncoder::Decode(nsISOAPEncoding* aEncoding,
       if (NS_FAILED(rc)) return rc;
     }
   }
-  if (ns.Equals(*nsSOAPUtils::kXSURI[mVersion])) {
+  if (ns.Equals(*nsSOAPUtils::kXSURI[mSchemaVersion])) {
     if (name.Equals(kStringSchemaType)) {
     }
     else if (name.Equals(kBooleanSchemaType)) {
@@ -1214,7 +1224,7 @@ NS_IMETHODIMP nsArrayEncoder::Decode(nsISOAPEncoding* aEncoding,
     }
     else return NS_ERROR_ILLEGAL_VALUE;
   }
-  else if (ns.Equals(*nsSOAPUtils::kSOAPEncURI[mVersion]))
+  else if (ns.Equals(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion]))
   {
     if (name.Equals(kArraySOAPType)) {
       return NS_ERROR_ILLEGAL_VALUE;  //  Fix nested arrays later

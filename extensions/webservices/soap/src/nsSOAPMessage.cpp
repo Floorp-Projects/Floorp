@@ -362,7 +362,7 @@ NS_IMETHODIMP nsSOAPMessage::Encode(PRUint16 aVersion, const nsAString & aMethod
     if (NS_FAILED(rv)) return rv;
     body = call;
     nsAutoString prefix;
-    rv = nsSOAPUtils::MakeNamespacePrefixFixed(body, aTargetObjectURI, aVersion, prefix);
+    rv = nsSOAPUtils::MakeNamespacePrefix(body, aTargetObjectURI, prefix);
     if (NS_FAILED(rv)) return rv;
     if (!prefix.IsEmpty()) {
       rv = body->SetPrefix(prefix);

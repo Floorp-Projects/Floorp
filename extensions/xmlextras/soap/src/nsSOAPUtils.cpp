@@ -385,8 +385,7 @@ nsSOAPUtils::MakeNamespacePrefix(nsIDOMElement* aScope,
               if (NS_FAILED(rc)) return rc;
 	      if (hasDecl)
 	        break;
-              current->GetParentNode(getter_AddRefs(temp));
-	      current = temp;
+              echeck->GetParentNode(getter_AddRefs(check));
 	    }
           }
           if (check == current) {
@@ -451,30 +450,6 @@ nsSOAPUtils::MakeNamespacePrefix(nsIDOMElement* aScope,
   *i2 = 's';
   i2--;
   *i2 = 'n';
-  return NS_OK;
-}
-/**
- * This code optimizes  the cases of known prefixes, which
- * it is assumed are not overridden.  The specified version
- * number is also assumed to be  correct.
- */
-nsresult 
-nsSOAPUtils::MakeNamespacePrefixFixed(nsIDOMElement* aScope,
-		                      const nsAString & aURI,
-				      PRUint16 aVersion,
-				      nsAString & aPrefix)
-{
-  if (aURI.Equals(*kSOAPEncURI[aVersion]))
-    aPrefix = kSOAPEncPrefix;
-  else if (aURI.Equals(*kSOAPEnvURI[aVersion]))
-    aPrefix = kSOAPEnvPrefix;
-  else if (aURI.Equals(*kXSIURI[aVersion]))
-    aPrefix = kXSIPrefix;
-  else if (aURI.Equals(*kXSURI[aVersion]))
-    aPrefix = kXSPrefix;
-  else
-    return MakeNamespacePrefix(aScope, aURI, aPrefix);
-
   return NS_OK;
 }
 

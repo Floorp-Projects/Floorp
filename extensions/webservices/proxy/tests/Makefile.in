@@ -26,6 +26,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE          = wsproxytests
+XPIDL_MODULE	= wsproxytests
+
 REQUIRES = xpcom \
 	   string \
 	   xmlextras \
@@ -44,7 +47,7 @@ CPPSRCS		= \
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
-include $(topsrcdir)/config/config.mk
+#include $(topsrcdir)/config/config.mk
 
 LIBS		= \
 		$(DIST)/lib/libxmlextrasproxy_s.$(LIB_SUFFIX) \
