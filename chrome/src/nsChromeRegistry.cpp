@@ -1729,7 +1729,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
 {
   // XXX don't allow local chrome overrides of install chrome!
 #ifdef DEBUG
-  printf("*** Chrome Registration of %s: Checking for contents.rdf (or obsolete manifest.rdf) at %s\n", (const char*)aProviderType, (const char*)aBaseURL);
+  printf("*** Chrome Registration of %s: Checking for contents.rdf at %s\n", (const char*)aProviderType, (const char*)aBaseURL);
 #endif
 
   // Load the data source found at the base URL.
@@ -1766,7 +1766,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
     if (NS_FAILED(rv)) return rv;
     appendPackage = PR_TRUE;
     appendProvider = PR_TRUE;
-    NS_WARNING("Using old-style manifest.rdf.  Please update to contents.rdf.");
+    NS_WARNING("Trying old-style manifest.rdf. Please update to contents.rdf.");
   }
   else { 
     if ((skinCount > 1 && aProviderType.Equals("skin")) ||
