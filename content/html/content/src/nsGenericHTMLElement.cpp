@@ -2180,7 +2180,14 @@ nsGenericHTMLElement::GetBaseURL(nsIURI*& aBaseURL) const
   if (mAttributes) {
     mAttributes->GetAttribute(nsHTMLAtoms::_baseHref, baseHref);
   }
-  return GetBaseURL(baseHref, mDocument, &aBaseURL);
+
+  nsCOMPtr<nsIDocument> doc(mDocument);
+
+  if (!doc) {
+    mNodeInfo->GetDocument(*getter_AddRefs(doc));
+  }
+
+  return GetBaseURL(baseHref, doc, &aBaseURL);
 }
 
 nsresult
@@ -2191,9 +2198,11 @@ nsGenericHTMLElement::GetBaseURL(const nsHTMLValue& aBaseHref,
   nsresult result = NS_OK;
 
   nsIURI* docBaseURL = nsnull;
-  if (nsnull != aDocument) {
+
+  if (aDocument) {
     result = aDocument->GetBaseURL(docBaseURL);
   }
+
   *aBaseURL = docBaseURL;
 
   if (eHTMLUnit_String == aBaseHref.GetUnit()) {
