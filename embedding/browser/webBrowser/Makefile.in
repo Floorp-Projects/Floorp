@@ -23,6 +23,8 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+include $(DEPTH)/config/autoconf.mk
+
 MODULE		= webbrwsr
 XPIDL_MODULE	= webBrowser_core
 LIBRARY_NAME	= nsWebBrowser_s
@@ -52,8 +54,6 @@ REQUIRES	= xpcom \
 ifdef MOZ_PHOENIX
 REQUIRES	+= history toolkitcomps
 endif
-
-include $(DEPTH)/config/autoconf.mk
 
 EXPORTS         = \
                 nsCTooltipTextProvider.h \
