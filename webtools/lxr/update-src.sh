@@ -29,7 +29,7 @@ cd $src_dir
 cd ..
 
 # jwz: let's check out "mozilla" instead of merely "MozillaSource".
-time cvs -Q -d $CVSROOT checkout mozilla
+time cvs -Q -d $CVSROOT checkout -P mozilla
 
 date
 
