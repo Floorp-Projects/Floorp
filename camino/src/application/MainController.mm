@@ -43,6 +43,7 @@
 
 #import "ChimeraUIConstants.h"
 #import "MainController.h"
+#import "BrowserWindow.h"
 #import "BrowserWindowController.h"
 #import "BookmarkMenu.h"
 #import "Bookmark.h"
@@ -355,6 +356,91 @@ const int kReuseWindowOnAE = 2;
   }
 }
 
+// a central place for bookmark opening logic.
+- (void)loadBookmark:(BookmarkItem*)item withWindowController:(BrowserWindowController*)browserWindowController openBehavior:(EBookmarkOpenBehavior)behavior
+{
+  if (!browserWindowController)
+    browserWindowController = [self getMainWindowBrowserController];
+  
+  BOOL openInNewWindow = (browserWindowController == nil);
+  BOOL openInNewTab = NO;
+  BOOL newTabInBackground = NO;
+  
+  BOOL loadNewTabsInBackgroundPref = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
+  
+  NSWindow* behindWindow = nil;
+
+  switch (behavior)
+  {
+    case eBookmarkOpenBehaviorDefault:
+      {
+        BOOL cmdKeyDown = (GetCurrentKeyModifiers() & cmdKey) != 0;
+        if (cmdKeyDown)
+          if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL])
+          {
+            openInNewTab = YES;
+            newTabInBackground = loadNewTabsInBackgroundPref;
+          }
+          else
+          {
+            openInNewWindow = YES;
+            if (loadNewTabsInBackgroundPref)
+              behindWindow = [browserWindowController window];
+          }
+      }
+      break;
+
+    case eBookmarkOpenBehaviorNewTabDefault:
+      openInNewTab = YES;
+      newTabInBackground = browserWindowController && loadNewTabsInBackgroundPref;
+      break;
+
+    case eBookmarkOpenBehaviorNewTabForeground:
+      openInNewTab = YES;
+      break;
+
+    case eBookmarkOpenBehaviorNewTabBackground:
+      openInNewTab = YES;
+      newTabInBackground = YES;
+      break;
+
+    case eBookmarkOpenBehaviorNewWindowDefault:
+      openInNewWindow = YES;
+      if (loadNewTabsInBackgroundPref)
+        behindWindow = [browserWindowController window];
+      break;
+
+    case eBookmarkOpenBehaviorNewWindowForeground:
+      openInNewWindow = YES;
+      break;
+
+    case eBookmarkOpenBehaviorNewWindowBackground:
+      openInNewWindow = YES;
+      behindWindow = [browserWindowController window];
+      break;
+  }
+  
+  if ([item isKindOfClass:[Bookmark class]])
+  {
+    if (openInNewWindow)
+      [self openBrowserWindowWithURL:[(Bookmark *)item url] andReferrer:nil behind:behindWindow];
+    else if (openInNewTab)
+      [browserWindowController openNewTabWithURL:[(Bookmark *)item url] referrer:nil loadInBackground:newTabInBackground];
+    else
+      [browserWindowController loadURL:[(Bookmark *)item url] referrer:nil activate:YES];
+  }
+  else if ([item isKindOfClass:[BookmarkFolder class]] && [(BookmarkFolder *)item isGroup])
+  {
+    if (openInNewWindow)
+      [self openBrowserWindowWithURLs:[(BookmarkFolder *)item childURLs] behind:behindWindow];
+    else if (openInNewTab)
+      [browserWindowController openTabGroup:[(BookmarkFolder *)item childURLs] replaceExistingTabs:NO];
+    else
+      [browserWindowController openTabGroup:[(BookmarkFolder *)item childURLs] replaceExistingTabs:YES];
+  }
+}
+
+
 +(BOOL) isBlankURL:(NSString*)inURL
 {
   BOOL isBlank = NO;
@@ -373,7 +459,7 @@ const int kReuseWindowOnAE = 2;
 
   // Now open the new window.
   NSString* homePage = mStartURL ? mStartURL : [[PreferenceManager sharedInstance] homePage:YES];
-  BrowserWindowController* controller = [self openBrowserWindowWithURL:homePage andReferrer:nil];
+  BrowserWindowController* controller = [self openBrowserWindowWithURL:homePage andReferrer:nil behind:nil];
 
   if ([MainController isBlankURL:homePage])
     [controller focusURLBar];
@@ -439,7 +525,7 @@ const int kReuseWindowOnAE = 2;
         if (browserController)
           [browserController loadURL:[url absoluteString] referrer:nil activate:YES];
         else
-          [self openBrowserWindowWithURL:[url absoluteString] andReferrer:nil];
+          [self openBrowserWindowWithURL:[url absoluteString] andReferrer:nil behind:nil];
     }
 }
 
@@ -447,10 +533,10 @@ const int kReuseWindowOnAE = 2;
 {
     NSWindow* browserWindow = [self getFrontmostBrowserWindow];
     if (!browserWindow) {
-      [self openBrowserWindowWithURL: @"about:blank" andReferrer:nil];
+      [self openBrowserWindowWithURL: @"about:blank" andReferrer:nil behind:nil];
       browserWindow = [mApplication mainWindow];
     }
-    else if (![browserWindow isMainWindow]) {
+    else if (![browserWindow isMainWindow] || ![browserWindow isKeyWindow]) {
       [browserWindow makeKeyAndOrderFront:self];
     }
     
@@ -703,10 +789,21 @@ const int kReuseWindowOnAE = 2;
   return foundWindow;
 }
 
-// open a new URL. This method always makes a new browser window
--(BrowserWindowController*)openBrowserWindowWithURL: (NSString*)aURL andReferrer: (NSString*)aReferrer
+- (BrowserWindowController*)openBrowserWindowWithURL:(NSString*)aURL andReferrer:(NSString*)aReferrer behind:(NSWindow*)window
 {
   BrowserWindowController* browser = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];
+
+  if (window)
+  {
+    BrowserWindow* browserWin = [browser window];
+    [browserWin setSuppressMakeKeyFront:YES];	// prevent gecko focus bringing the window to the front
+    [browserWin orderWindow: NSWindowBelow relativeTo: [window windowNumber]];
+    [browserWin setSuppressMakeKeyFront:NO];
+  }
+  else
+  {
+    [browser showWindow: self];
+  }
 
   // The process of creating a new tab in this brand new window loads about:blank for us as a 
   // side effect of calling GetDocument(). We don't need to do it again.
@@ -714,7 +811,27 @@ const int kReuseWindowOnAE = 2;
     [browser disableLoadPage];
   else
     [browser loadURL: aURL referrer:aReferrer activate:YES];
-  [browser showWindow: self];
+
+  return browser;
+}
+
+- (BrowserWindowController*)openBrowserWindowWithURLs:(NSArray*)urlArray behind:(NSWindow*)window
+{
+  BrowserWindowController* browser = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];
+
+  if (window)
+  {
+    BrowserWindow* browserWin = [browser window];
+    [browserWin setSuppressMakeKeyFront:YES];	// prevent gecko focus bringing the window to the front
+    [browserWin orderWindow: NSWindowBelow relativeTo: [window windowNumber]];
+    [browserWin setSuppressMakeKeyFront:NO];
+  }
+  else
+  {
+    [browser showWindow: self];
+  }
+
+  [browser openTabGroup:urlArray replaceExistingTabs:YES];
   return browser;
 }
 
@@ -746,7 +863,7 @@ const int kReuseWindowOnAE = 2;
       if ([controller newTabsAllowed])
         [controller openNewTabWithURL:inURLString referrer:aReferrer loadInBackground:loadInBackground];
       else
-        controller = [self openBrowserWindowWithURL: inURLString andReferrer:aReferrer];
+        controller = [self openBrowserWindowWithURL: inURLString andReferrer:aReferrer behind:nil];
     }
     else
       [controller loadURL: inURLString referrer:nil activate:YES];
@@ -754,7 +871,7 @@ const int kReuseWindowOnAE = 2;
   else {
     // should use BrowserWindowController openNewWindowWithURL, but that method
     // really needs to be on the MainController
-    controller = [self openBrowserWindowWithURL: inURLString andReferrer:aReferrer];
+    controller = [self openBrowserWindowWithURL: inURLString andReferrer:aReferrer behind:nil];
   }
   
   [[[controller getBrowserWrapper] getBrowserView] setActive: YES];
@@ -825,29 +942,7 @@ const int kReuseWindowOnAE = 2;
     return;		// 10.1. Don't do anything.
 
   BookmarkItem*  item = [aSender representedObject];
-  BrowserWindowController* browserController;
-  if ([item isKindOfClass:[Bookmark class]]) {
-    browserController = [self getMainWindowBrowserController];
-    if (browserController)
-      [browserController loadURL:[(Bookmark *)item url] referrer:nil activate:YES];
-    else
-      [self openBrowserWindowWithURL:[(Bookmark *)item url] andReferrer:nil];
-  } else { // item is a group, no doubt. 
-    NSWindow* browserWindow = [self getFrontmostBrowserWindow];
-    if (browserWindow)
-    {
-      if (![browserWindow isMainWindow])
-        [browserWindow makeKeyAndOrderFront:self];
-    }
-    else
-    {
-      [self newWindow:self];
-      browserWindow = [self getFrontmostBrowserWindow];
-    }
-    browserController = (BrowserWindowController*)[browserWindow delegate];
-    [browserController openTabGroup:[(BookmarkFolder *)item childURLs] replaceExistingTabs:YES];
-  }
-
+  [self loadBookmark:item withWindowController:[self getMainWindowBrowserController] openBehavior:eBookmarkOpenBehaviorDefault];
 }
 
 //
@@ -909,7 +1004,7 @@ const int kReuseWindowOnAE = 2;
     [[[mApplication mainWindow] windowController] loadURL:[[NSURL fileURLWithPath:filename] absoluteString]];
   }
   else {
-    [self openBrowserWindowWithURL:[[NSURL fileURLWithPath:filename] absoluteString]];
+    [self openBrowserWindowWithURL:[[NSURL fileURLWithPath:filename] absoluteString behind:nil]];
   }
 */
   [self openNewWindowOrTabWithURL:[[NSURL fileURLWithPath:filename] absoluteString] andReferrer:nil];

@@ -39,6 +39,7 @@
 #import <Cocoa/Cocoa.h>
 
 @class BookmarkMenu;
+@class BookmarkItem;
 @class BookmarkManager;
 @class KeychainService;
 @class BrowserWindowController;
@@ -46,6 +47,18 @@
 @class PreferenceManager;
 @class FindDlgController;
 @class MVPreferencesController;
+
+
+typedef enum EBookmarkOpenBehavior
+{
+  eBookmarkOpenBehaviorDefault,     // follow the prefs
+  eBookmarkOpenBehaviorNewTabDefault,
+  eBookmarkOpenBehaviorNewTabForeground,
+  eBookmarkOpenBehaviorNewTabBackground,
+  eBookmarkOpenBehaviorNewWindowDefault,
+  eBookmarkOpenBehaviorNewWindowForeground,
+  eBookmarkOpenBehaviorNewWindowBackground
+};
 
 @interface MainController : NSObject 
 {
@@ -148,7 +161,9 @@
 -(IBAction) tipsTricksLink:(id)aSender;
 -(IBAction) searchCustomizeLink:(id)aSender;
 
--(BrowserWindowController*)openBrowserWindowWithURL: (NSString*)aURL andReferrer: (NSString*)aReferrer;
+- (BrowserWindowController*)openBrowserWindowWithURL:(NSString*)aURL andReferrer:(NSString*)aReferrer behind:(NSWindow*)window;
+- (BrowserWindowController*)openBrowserWindowWithURLs:(NSArray*)urlArray behind:(NSWindow*)window;
+
 - (void)openNewWindowOrTabWithURL:(NSString*)inURLString andReferrer:(NSString*)aReferrer;
 
 - (void)adjustCloseWindowMenuItemKeyEquivalent:(BOOL)inHaveTabs;
@@ -161,6 +176,8 @@
 - (NSWindow*)getFrontmostBrowserWindow;
 
 - (void)setupBookmarkMenus:(BookmarkManager *)BookmarkManager;
+- (void)loadBookmark:(BookmarkItem*)item withWindowController:(BrowserWindowController*)browserWindowController openBehavior:(EBookmarkOpenBehavior)behavior;
+
 - (MVPreferencesController *)preferencesController;
 - (void)displayPreferencesWindow:sender;
 - (BOOL)isMainWindowABrowserWindow;

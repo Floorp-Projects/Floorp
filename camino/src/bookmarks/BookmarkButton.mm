@@ -123,48 +123,25 @@
 -(IBAction)openBookmark:(id)aSender
 {
   BrowserWindowController* brController = [[self window] windowController];
-  // See if we're a group.
   BookmarkItem *item = [self BookmarkItem];
-  if ([item isKindOfClass:[BookmarkFolder class]]) {
-    if ([(BookmarkFolder *)item isGroup]) {
-      [brController openTabGroup:[(BookmarkFolder *)item childURLs] replaceExistingTabs:YES];
-      return;
-    }
-  }
-  // if the command key is down, follow the command-click pref
-  if (([[NSApp currentEvent] modifierFlags] & NSCommandKeyMask) &&
-      [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL])
-  {
-    [self openBookmarkInNewTab:aSender];
-    return;
-  }
-  [brController loadURL:[(Bookmark *)item url] referrer:nil activate:YES];
+
+  [[NSApp delegate] loadBookmark:item withWindowController:brController openBehavior:eBookmarkOpenBehaviorDefault];
 }
 
 -(IBAction)openBookmarkInNewTab:(id)aSender
 {
-  BookmarkItem *item = [self BookmarkItem];
   BrowserWindowController* brController = [[self window] windowController];
-  if ([item isKindOfClass:[Bookmark class]]) {
-    NSString* hrefStr = [(Bookmark *)item url];
-    BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
-    [brController openNewTabWithURL: hrefStr referrer:nil loadInBackground: loadInBackground];
-  } else if ([item isKindOfClass:[BookmarkFolder class]]) {
-    [brController openTabGroup:[(BookmarkFolder *)item childURLs] replaceExistingTabs:YES];
-  }
+  BookmarkItem *item = [self BookmarkItem];
+
+  [[NSApp delegate] loadBookmark:item withWindowController:brController openBehavior:eBookmarkOpenBehaviorNewTabDefault];
 }
 
 -(IBAction)openBookmarkInNewWindow:(id)aSender
 {
-  BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
   BrowserWindowController* brController = [[self window] windowController];
-  // See if we're a bookmark.
   BookmarkItem *item = [self BookmarkItem];
-  if ([item isKindOfClass:[Bookmark class]])
-    [brController openNewWindowWithURL:[(Bookmark *)item url] referrer: nil loadInBackground: loadInBackground];
-  else if ([item isKindOfClass:[BookmarkFolder class]])
-    [brController openNewWindowWithGroupURLs:[(BookmarkFolder *)item childURLs] loadInBackground: loadInBackground];
-  return; 
+
+  [[NSApp delegate] loadBookmark:item withWindowController:brController openBehavior:eBookmarkOpenBehaviorNewWindowDefault];
 }
 
 -(IBAction)showBookmarkInfo:(id)aSender

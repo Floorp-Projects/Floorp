@@ -503,24 +503,21 @@ const long kMinSearchPaneHeight = 80;
     return;
   }
 
-  if ([item isKindOfClass:[Bookmark class]]) {
-    // if the command key is down, follow the command-click pref
-    if (([[NSApp currentEvent] modifierFlags] & NSCommandKeyMask) &&
-        [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL])
+  // handling toggling of folders
+  if ([item isKindOfClass:[BookmarkFolder class]])
+  {
+    if (![item isGroup])
     {
-      BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
-      [mBrowserWindowController openNewTabWithURL:[item url] referrer:nil loadInBackground: loadInBackground];
+      if ([mItemPane isItemExpanded:item])
+        [mItemPane collapseItem: item];
+      else
+        [mItemPane expandItem: item];
+      return;
     }
-    else
-      [[mBrowserWindowController getBrowserWrapper] loadURI:[(Bookmark *)item url] referrer:nil flags:NSLoadFlagsNone activate:YES];
-  } else if ([item isKindOfClass:[BookmarkFolder class]]) {
-    if ([item isGroup])
-      [mBrowserWindowController openTabGroup:[item childURLs] replaceExistingTabs:YES];
-    else if ([mItemPane isItemExpanded:item])
-      [mItemPane collapseItem: item];
-    else
-      [mItemPane expandItem: item];
   }
+
+  // otherwise follow the standard bookmark opening behavior
+  [[NSApp delegate] loadBookmark:item withWindowController:mBrowserWindowController openBehavior:eBookmarkOpenBehaviorDefault];
 }
 
 -(IBAction)openBookmarkInNewTab:(id)aSender
@@ -545,12 +542,9 @@ const long kMinSearchPaneHeight = 80;
       mOpenActionFlag = kOpenInNewTabAction;
       return;
   }    
-  if ([item isKindOfClass:[Bookmark class]]) {
-    BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
-    [mBrowserWindowController openNewTabWithURL:[item url] referrer:nil loadInBackground: loadInBackground];
-  } else if ([item isKindOfClass:[BookmarkFolder class]]) {
-    [mBrowserWindowController openTabGroup:[item childURLs] replaceExistingTabs:YES];
-  }
+
+  // otherwise follow the standard bookmark opening behavior
+  [[NSApp delegate] loadBookmark:item withWindowController:mBrowserWindowController openBehavior:eBookmarkOpenBehaviorNewTabDefault];
 }
 
 -(IBAction)openBookmarkInNewWindow:(id)aSender
@@ -574,12 +568,9 @@ const long kMinSearchPaneHeight = 80;
     mOpenActionFlag = kOpenInNewWindowAction;
     return;
   }
-  BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
-  if ([item isKindOfClass:[Bookmark class]])
-    [mBrowserWindowController openNewWindowWithURL:[item url] referrer: nil loadInBackground: loadInBackground];
-  else if ([item isKindOfClass:[BookmarkFolder class]]) {
-      [mBrowserWindowController openNewWindowWithGroupURLs:[item childURLs] loadInBackground:loadInBackground];
-  }
+
+  // otherwise follow the standard bookmark opening behavior
+  [[NSApp delegate] loadBookmark:item withWindowController:mBrowserWindowController openBehavior:eBookmarkOpenBehaviorNewWindowDefault];
 }
 
 -(IBAction)showBookmarkInfo:(id)aSender
