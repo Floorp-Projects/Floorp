@@ -169,9 +169,9 @@ var DirPaneController =
           if ((selectedDir.indexOf(ldapUrlPrefix, 0)) == 0)
           {
             var prefName = selectedDir.substr(ldapUrlPrefix.length, selectedDir.length);
-			var disable = false;
-	        try {
-	          disable = gPrefs.getBoolPref(prefName + ".disable_delete");
+            var disable = false;
+            try {
+	            disable = gPrefs.getBoolPref(prefName + ".disable_delete");
 	        }
 	        catch(ex){
 	          // if this preference is not set its ok.
@@ -187,8 +187,9 @@ var DirPaneController =
         selectedDir = GetSelectedDirectory();
         if (selectedDir) {
           var directory = GetDirectoryFromURI(selectedDir);
+          var properties = directory.directoryProperties;
           if ((directory.isMailList) || 
-              (!(directory.operations & directory.opWrite)))
+              (properties.dirType == kLDAPDirectory || properties.dirType == kPABDirectory))
              return true;
         }
         return false;
@@ -234,22 +235,35 @@ function SendCommandToResultsPane(command)
 function AbEditSelectedDirectory()
 {
   if (dirTree.treeBoxObject.selection.count == 1) {
-    var mailingListUri = GetSelectedDirectory();
-    var directory = GetDirectoryFromURI(mailingListUri);
+    var selecteduri = GetSelectedDirectory();
+    var directory = GetDirectoryFromURI(selecteduri);
     if (directory.isMailList) {
-      var dirUri = GetParentDirectoryFromMailingListURI(mailingListUri);
-      goEditListDialog(dirUri, null, mailingListUri, UpdateCardView);
+      var dirUri = GetParentDirectoryFromMailingListURI(selecteduri);
+      goEditListDialog(dirUri, null, selecteduri, UpdateCardView);
     }
-    else if (!(directory.operations & directory.opWrite))
-    {
-      var ldapUrlPrefix = "moz-abldapdirectory://";
-      if ((mailingListUri.indexOf(ldapUrlPrefix, 0)) == 0)
-      {
+    else {
+      var properties = directory.directoryProperties;
+      if (properties.dirType == kLDAPDirectory) {
+        var ldapUrlPrefix = "moz-abldapdirectory://";
         var args = { selectedDirectory: directory.dirName,
                      selectedDirectoryString: null};
-        args.selectedDirectoryString = mailingListUri.substr(ldapUrlPrefix.length, mailingListUri.length);
+        args.selectedDirectoryString = selecteduri.substr(ldapUrlPrefix.length, selecteduri.length);
         window.openDialog("chrome://messenger/content/addressbook/pref-directory-add.xul",
                       "editDirectory", "chrome,modal=yes,resizable=no,centerscreen", args);
+      }
+      else {
+        // Some addrbooks can't be renamed.
+        if ((selecteduri != kCollectedAddressbookURI) &&
+            (selecteduri != kPersonalAddressbookURI)) {
+          AbRenameAddressBook();
+        }
+        else {
+          var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+          promptService.alert(window,
+              gAddressBookBundle.getString("cannotRenameTitle"), 
+              gAddressBookBundle.getString("cannotRenameMessage"));
+          return;
+        }
       }
     }
   }

@@ -27,7 +27,6 @@ Rights Reserved.
 
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	title="&title.label;"
         class="dialog"
         onload="abNameOnLoad()"
         style="padding:10px"> 

@@ -56,6 +56,7 @@ var gCardViewBoxEmail1;
 const kDisplayName = 0;
 const kLastNameFirst = 1;
 const kFirstNameFirst = 2;
+const kLDAPDirectory = 0; // defined in nsDirPrefs.h
 const kPABDirectory = 2; // defined in nsDirPrefs.h
 
 var gAddressBookAbListener = {
@@ -278,21 +279,46 @@ function AbNewLDAPDirectory()
 
 function AbNewAddressBook()
 {
+  var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].
+      getService(Components.interfaces.nsIStringBundleService);
+  var bundle = strBundleService.createBundle("chrome://messenger/locale/addressbook/addressBook.properties");
+  var dialogTitle = bundle.GetStringFromName('newAddressBookTitle');
+
   var dialog = window.openDialog(
     "chrome://messenger/content/addressbook/abAddressBookNameDialog.xul", 
-     "", "chrome,modal=yes,resizable=no,centerscreen", {okCallback:AbCreateNewAddressBook});
+     "", "chrome,modal=yes,resizable=no,centerscreen", {title: dialogTitle, okCallback:AbOnCreateNewAddressBook});
 }
 
-function AbCreateNewAddressBook(name)
+function AbRenameAddressBook()
+{
+  var selectedABURI = GetSelectedDirectory();
+ 
+  // the rdf service
+  var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+
+  // the RDF resource URI for LDAPDirectory will be like: "moz-abmdbdirectory://abook-3.mab"
+  var selectedABDirectory = RDF.GetResource(selectedABURI).QueryInterface(Components.interfaces.nsIAbDirectory);
+
+  var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].
+      getService(Components.interfaces.nsIStringBundleService);
+  var bundle = strBundleService.createBundle("chrome://messenger/locale/addressbook/addressBook.properties");
+  var dialogTitle = bundle.GetStringFromName('renameAddressBookTitle');
+
+  var dialog = window.openDialog(
+    "chrome://messenger/content/addressbook/abAddressBookNameDialog.xul", 
+     "", "chrome,modal=yes,resizable=no,centerscreen", {title: dialogTitle, name: selectedABDirectory.directoryProperties.description,
+      okCallback:AbOnRenameAddressBook});
+}
+
+function AbOnCreateNewAddressBook(aName)
 {
   var properties = Components.classes["@mozilla.org/addressbook/properties;1"].createInstance(Components.interfaces.nsIAbDirectoryProperties);
-  properties.description = name;
+  properties.description = aName;
   properties.dirType = kPABDirectory;
   top.addressbook.newAddressBook(properties);
 }
 
-// not used yet.  just here for when we fix bug #17230
-function AbRenameAddressBook()
+function AbOnRenameAddressBook(aName)
 {
   // When the UI code for renaming addrbooks (bug #17230) is ready, just 
   // change 'properties.description' setting below and it should just work.
@@ -320,8 +346,7 @@ function AbRenameAddressBook()
   properties.dirType = oldProperties.dirType;
   properties.categoryId = oldProperties.categoryId;
   properties.syncTimeStamp = oldProperties.syncTimeStamp;
-  // XXX TODO: set description to whatever users enter. hard coded for now.
-  properties.description = "Foo bar";
+  properties.description = aName;
 
   // Now do the modification.
   addressbook.modifyAddressBook(addressbookDS, parentDir, selectedABDirectory, properties);
