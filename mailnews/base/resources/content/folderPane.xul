@@ -28,10 +28,16 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <html:div flex="100%">
-<tree style="height: 100%" rdf:datasources="rdf:mailnewsfolders rdf:msgaccountmanager" id="folderTree" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild" onclick="return top.ChangeFolderByDOMNode(event.target.parentNode.parentNode)">
+<tree style="height: 100%"
+      rdf:datasources="rdf:mailnewsfolders rdf:msgaccountmanager"
+      id="folderTree"
+      rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
+      onclick="return top.ChangeFolderByDOMNode(event.target.parentNode.parentNode)"
+      ref="msgaccounts:/">
+
   <template>
   	<rule>
-          <treechildren>
+      <treechildren>
 		<treeitem uri="..." 
 		  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
 		  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState">
@@ -67,11 +73,6 @@
       <treecell>&totalColumn.label;</treecell>
     </treerow>
   </treehead>
-
-  <treechildren rdf:containment="http://home.netscape.com/NC-rdf#child" >
-	<treeitem ref="msgaccounts:/" open="true"/>
-  </treechildren>
-
 
 </tree>
 </html:div>
