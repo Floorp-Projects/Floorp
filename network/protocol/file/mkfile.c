@@ -29,6 +29,7 @@
 #endif
 
 #include "xp.h"
+#include "net_xp_file.h"
 #include "plstr.h"
 #include "prmem.h"
 #include "netutils.h"
@@ -170,7 +171,7 @@ net_check_file_type (ActiveEntry * cur_entry)
 	TRACEMSG(("Looking for file: %s", con_data->filename));
 
 	/* larubbio added xpSARCache check */
-    if(-1 == XP_Stat (con_data->filename, 
+    if(-1 == NET_XP_Stat (con_data->filename, 
 				&stat_entry, 
 				con_data->is_cache_file ? 
 					(cur_entry->URL_s->ext_cache_file ? 
@@ -308,7 +309,7 @@ net_delete_file (ActiveEntry * ce)
 	  }
 	else
 	  {
-		if(0 != XP_FileRemove(cd->filename, xpURL))
+		if(0 != NET_XP_FileRemove(cd->filename, xpURL))
 	  	  {
 			/* error */
 			ce->URL_s->error_msg = NET_ExplainErrorDetails(
@@ -372,7 +373,7 @@ net_put_file (ActiveEntry * ce)
 	XP_File fp;
 	int status;
 
-	if(!(fp = XP_FileOpen(cd->filename, xpURL, XP_FILE_WRITE_BIN)))
+	if(!(fp = NET_XP_FileOpen(cd->filename, xpURL, XP_FILE_WRITE_BIN)))
 	  {
 		/* error */
 		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_UNABLE_TO_OPEN_FILE, 
@@ -383,9 +384,9 @@ net_put_file (ActiveEntry * ce)
 	PR_ASSERT(ce->URL_s->post_data);
 	PR_ASSERT(!ce->URL_s->post_data_is_file);
 
-	status = XP_FileWrite(ce->URL_s->post_data, ce->URL_s->post_data_size, fp);
+	status = NET_XP_FileWrite(ce->URL_s->post_data, ce->URL_s->post_data_size, fp);
 
-	XP_FileClose(fp);
+	NET_XP_FileClose(fp);
 
 	if(status < ce->URL_s->post_data_size)
 	  {
@@ -479,7 +480,7 @@ net_open_file (ActiveEntry * cur_entry)
 
     TRACEMSG(("MKFILE: Trying to open: %s\n",con_data->filename));
 
-    if((con_data->file_ptr = XP_FileOpen(con_data->filename, 
+    if((con_data->file_ptr = NET_XP_FileOpen(con_data->filename, 
 								   (con_data->is_cache_file ? 
 									 (cur_entry->URL_s->ext_cache_file ? 
 									   (cur_entry->URL_s->SARCache ? xpSARCache : xpExtCache) : xpCache) : xpURL),
@@ -509,7 +510,7 @@ net_open_file (ActiveEntry * cur_entry)
     /* CE_SOCK = XP_Fileno(con_data->file_ptr); */
 	CE_SOCK = NULL;
     cur_entry->local_file = TRUE;
-    NET_SetFileReadSelect(CE_WINDOW_ID, XP_Fileno(con_data->file_ptr)); 
+    NET_SetFileReadSelect(CE_WINDOW_ID, NET_XP_Fileno(con_data->file_ptr)); 
 
 	/* @@@ now that we have determined that it is a local file
 	 * set URL_s->cache_file so that the streams think
@@ -553,13 +554,13 @@ net_setup_file_stream (ActiveEntry * cur_entry)
 		
 	    /* read the first chunk of the file
 	     */
-        count = XP_FileRead(NET_Socket_Buffer, NET_Socket_Buffer_Size, con_data->file_ptr);
+        count = NET_XP_FileRead(NET_Socket_Buffer, NET_Socket_Buffer_Size, con_data->file_ptr);
     
         if(!count)
           {
-            NET_ClearFileReadSelect(CE_WINDOW_ID, XP_Fileno(con_data->file_ptr));
+            NET_ClearFileReadSelect(CE_WINDOW_ID, NET_XP_Fileno(con_data->file_ptr));
             NET_Progress(CE_WINDOW_ID, XP_GetString(XP_PROGRESS_FILEZEROLENGTH));
-            XP_FileClose(con_data->file_ptr);
+            NET_XP_FileClose(con_data->file_ptr);
 			CE_SOCK = NULL;
             con_data->file_ptr = 0;
             con_data->next_state = NET_FILE_ERROR_DONE;
@@ -777,7 +778,7 @@ net_setup_file_stream (ActiveEntry * cur_entry)
 	 * this also seeks to the beginning of the range that we
 	 * are going to send
  	 */
-	XP_FileSeek(con_data->file_ptr, cur_entry->URL_s->low_range, SEEK_SET);
+	NET_XP_FileSeek(con_data->file_ptr, cur_entry->URL_s->low_range, SEEK_SET);
 
 	con_data->next_state = NET_READ_FILE_CHUNK;
     con_data->pause_for_read = TRUE;
@@ -858,7 +859,7 @@ net_read_file_chunk(ActiveEntry * cur_entry)
 	if(CD_RANGE_LENGTH)
 		read_size = MIN(read_size, CD_RANGE_LENGTH-CE_BYTES_RECEIVED);
 	
-    count = XP_FileRead(NET_Socket_Buffer, read_size, con_data->file_ptr);
+    count = NET_XP_FileRead(NET_Socket_Buffer, read_size, con_data->file_ptr);
 
     if(count < 1 || (CD_RANGE_LENGTH && CE_BYTES_RECEIVED >= CD_RANGE_LENGTH))
       {
@@ -871,10 +872,10 @@ net_read_file_chunk(ActiveEntry * cur_entry)
 			 */
 			cur_entry->save_stream = con_data->stream;
 			con_data->stream = NULL;
-			NET_ClearFileReadSelect(CE_WINDOW_ID, XP_Fileno(con_data->file_ptr));
+			NET_ClearFileReadSelect(CE_WINDOW_ID, NET_XP_Fileno(con_data->file_ptr));
             if (!cur_entry->URL_s->load_background)
                 NET_Progress(CE_WINDOW_ID, XP_GetString(XP_PROGRESS_FILEDONE));
-        	XP_FileClose(con_data->file_ptr);
+        	NET_XP_FileClose(con_data->file_ptr);
 			CE_SOCK = NULL;
         	con_data->file_ptr = 0;
         	con_data->next_state = NET_FILE_FREE;
@@ -890,10 +891,10 @@ net_read_file_chunk(ActiveEntry * cur_entry)
 			return(0);
 		  }
 
-		NET_ClearFileReadSelect(CE_WINDOW_ID, XP_Fileno(con_data->file_ptr));
+		NET_ClearFileReadSelect(CE_WINDOW_ID, NET_XP_Fileno(con_data->file_ptr));
         if (!cur_entry->URL_s->load_background)
             NET_Progress(CE_WINDOW_ID, XP_GetString(XP_PROGRESS_FILEDONE));
-        XP_FileClose(con_data->file_ptr);
+        NET_XP_FileClose(con_data->file_ptr);
 		CE_SOCK = NULL;
         con_data->file_ptr = 0;
         con_data->next_state = NET_FILE_DONE;
@@ -1080,7 +1081,7 @@ net_return_local_file_part_from_url(char *address)
 		 * the local file system can
 		 * have url's of the form \\prydain\dist
 		 */
-		if(-1 != XP_Stat(address+5, &stat_entry, xpURL))
+		if(-1 != NET_XP_Stat(address+5, &stat_entry, xpURL))
 		  {
 			PR_Free(host);
 			/* skip "file:" */
@@ -1310,8 +1311,8 @@ net_ProcessFile (ActiveEntry * cur_entry)
                 if(con_data->file_ptr)
 				  {
 					CE_SOCK = NULL;
-					NET_ClearFileReadSelect(CE_WINDOW_ID, XP_Fileno(con_data->file_ptr));
-                    XP_FileClose(con_data->file_ptr);
+					NET_ClearFileReadSelect(CE_WINDOW_ID, NET_XP_Fileno(con_data->file_ptr));
+                    NET_XP_FileClose(con_data->file_ptr);
 				  }
                 con_data->next_state = NET_FILE_FREE;
                 break;
@@ -1748,7 +1749,7 @@ net_CloneWysiwygLocalFile(MWContext *window_id, URL_Struct *URL_s,
 	filename = net_return_local_file_part_from_url(URL_s->address);
 	if (!filename)
 		return NULL;
-	fromfp = XP_FileOpen(filename, xpURL, XP_FILE_READ_BIN);
+	fromfp = NET_XP_FileOpen(filename, xpURL, XP_FILE_READ_BIN);
 	PR_Free(filename);
 	if (!fromfp)
 		return NULL;
@@ -1756,7 +1757,7 @@ net_CloneWysiwygLocalFile(MWContext *window_id, URL_Struct *URL_s,
 					  base_href);
 	if (!stream)
 	  {
-		XP_FileClose(fromfp);
+		NET_XP_FileClose(fromfp);
 		return 0;
 	  }
 	buflen = stream->is_write_ready(stream);
@@ -1765,7 +1766,7 @@ net_CloneWysiwygLocalFile(MWContext *window_id, URL_Struct *URL_s,
 	buf = (char *)PR_Malloc(buflen * sizeof(char));
 	if (!buf)
 	  {
-		XP_FileClose(fromfp);
+		NET_XP_FileClose(fromfp);
 		return 0;
 	  }
 	while (nbytes != 0)
@@ -1773,7 +1774,7 @@ net_CloneWysiwygLocalFile(MWContext *window_id, URL_Struct *URL_s,
 		len = buflen;
 		if ((uint32)len > nbytes)
 			len = (int32)nbytes;
-		len = XP_FileRead(buf, len, fromfp);
+		len = NET_XP_FileRead(buf, len, fromfp);
 		if (len <= 0)
 			break;
 		if (stream->put_block(stream, buf, len) < 0)
@@ -1781,7 +1782,7 @@ net_CloneWysiwygLocalFile(MWContext *window_id, URL_Struct *URL_s,
 		nbytes -= len;
 	  }
 	PR_Free(buf);
-	XP_FileClose(fromfp);
+	NET_XP_FileClose(fromfp);
 	if (nbytes != 0)
 	  {
 		/* NB: Our caller must clear top_state->mocha_write_stream. */

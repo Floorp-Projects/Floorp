@@ -42,6 +42,7 @@
 #include "prclist.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "net_xp_file.h"
 
 #include "mkextcac.h"
 #include "fileurl.h"
@@ -56,7 +57,7 @@
 /*serious hack to put cache cleanup on another thread...*/
 extern int XP_LazyFileRemove(const char * name, XP_FileType type);
 #else
-#define XP_LazyFileRemove  XP_FileRemove
+#define XP_LazyFileRemove  NET_XP_FileRemove
 #endif
 
 /* For Mac */
@@ -258,11 +259,11 @@ net_OpenCacheFatDB(void)
 
 			/* if the file is zero length remove it
 			 */
-         	if(XP_Stat("", &stat_entry, xpCacheFAT) != -1)
+         	if(NET_XP_Stat("", &stat_entry, xpCacheFAT) != -1)
 			  {
            		if(stat_entry.st_size <= 0)
 				  {
-					XP_FileRemove("", xpCacheFAT);
+					NET_XP_FileRemove("", xpCacheFAT);
 				  }
                 else
                   {
@@ -274,17 +275,17 @@ net_OpenCacheFatDB(void)
                      * the old magic cookie.  If it's
                      * there delete the file
                      */
-                    fp = XP_FileOpen("", xpCacheFAT, XP_FILE_READ);
+                    fp = NET_XP_FileOpen("", xpCacheFAT, XP_FILE_READ);
 
                     if(fp)
                       {
-                        XP_FileReadLine(buffer, BUFF_SIZE, fp);
+                        NET_XP_FileReadLine(buffer, BUFF_SIZE, fp);
 
-                        XP_FileClose(fp);
+                        NET_XP_FileClose(fp);
 
                         if(PL_strstr(buffer, 
 								     "Cache-file-allocation-table-format"))
-                          XP_FileRemove("", xpCacheFAT);
+                          NET_XP_FileRemove("", xpCacheFAT);
 
                       }
 				  }
@@ -328,7 +329,7 @@ net_OpenCacheFatDB(void)
 		  {
             XP_StatStruct stat_entry;
 
-            if(XP_Stat("", &stat_entry, xpCacheFAT) != -1)
+            if(NET_XP_Stat("", &stat_entry, xpCacheFAT) != -1)
             	net_cache_file_block_size = stat_entry.st_blksize;
 		  }
 #endif
@@ -492,7 +493,7 @@ net_CacheStore(net_CacheObject * obj,
 #ifdef XP_OS2
 		XP_LazyFileRemove(obj->filename, fileType);
 #else
-		XP_FileRemove(obj->filename, fileType);
+		NET_XP_FileRemove(obj->filename, fileType);
 #endif
 		
 		return FALSE;
@@ -522,11 +523,11 @@ net_CacheStore(net_CacheObject * obj,
 #ifdef XP_OS2
 		    XP_LazyFileRemove(obj->filename, fileType);
 #else
-		    XP_FileRemove(obj->filename, fileType);
+		    NET_XP_FileRemove(obj->filename, fileType);
 #endif
 		    return FALSE;
           }
-        else if(XP_Stat(obj->filename, &stat_entry,  fileType) != -1)
+        else if(NET_XP_Stat(obj->filename, &stat_entry,  fileType) != -1)
           {
 		    if(stat_entry.st_size == 0)
 		      {
@@ -535,7 +536,7 @@ net_CacheStore(net_CacheObject * obj,
 #ifdef XP_OS2
 				XP_LazyFileRemove(obj->filename, fileType);
 #else
-			    XP_FileRemove(obj->filename, fileType);
+			    NET_XP_FileRemove(obj->filename, fileType);
 #endif
 			    return FALSE;
 		      }
@@ -594,7 +595,7 @@ net_CacheStore(net_CacheObject * obj,
 #ifdef XP_OS2
 			XP_LazyFileRemove(obj->filename, fileType);
 #else
-		    XP_FileRemove(obj->filename, fileType);
+		    NET_XP_FileRemove(obj->filename, fileType);
 #endif
 		    return FALSE;
 	      }
@@ -638,7 +639,7 @@ net_CacheStore(net_CacheObject * obj,
 #ifdef XP_OS2
 		XP_LazyFileRemove(obj->filename, fileType);
 #else
-		XP_FileRemove(obj->filename, fileType);
+		NET_XP_FileRemove(obj->filename, fileType);
 #endif
 		return FALSE;
 	  }
@@ -678,7 +679,7 @@ net_CacheStore(net_CacheObject * obj,
 #ifdef XP_OS2
 				XP_LazyFileRemove(filename, fileType);
 #else
-            	XP_FileRemove(filename, fileType);
+            	NET_XP_FileRemove(filename, fileType);
 #endif
             	PR_Free(filename);
            	  }
@@ -719,7 +720,7 @@ net_CacheStore(net_CacheObject * obj,
 #ifdef XP_OS2
 			XP_LazyFileRemove(filename, fileType);
 #else
-           	XP_FileRemove(filename, fileType);
+           	NET_XP_FileRemove(filename, fileType);
 #endif
            	PR_Free(filename);
       	  }
@@ -782,7 +783,7 @@ net_CacheStore(net_CacheObject * obj,
 			    TRACEMSG(("MaxSize exceeded!!!"));
 			    /* delete the file since we wont remember it
 			     */
-			    XP_FileRemove(obj->filename, fileType);
+			    NET_XP_FileRemove(obj->filename, fileType);
 
 			    URL_s->SARCache->DiskCacheSize -= net_calc_real_file_size(obj->content_length);
 			    URL_s->SARCache->NumberInDiskCache--;
@@ -1062,7 +1063,7 @@ NET_RemoveDiskCacheObjects(uint32 remove_num)
 #ifdef XP_OS2
 					XP_LazyFileRemove(filename, xpCache);
 #else
-					XP_FileRemove(filename, xpCache);
+					NET_XP_FileRemove(filename, xpCache);
 #endif
 					PR_Free(filename);	
 	  		  	  }
@@ -1300,7 +1301,7 @@ net_RemoveAllDiskCacheObjects(void)
 #ifdef XP_OS2
 	    XP_LazyFileRemove(filename, xpCache);
 #else
-            XP_FileRemove(filename, xpCache);                 
+            NET_XP_FileRemove(filename, xpCache);                 
 #endif
             PR_Free(filename);                                    
           }                                                     
@@ -1322,7 +1323,7 @@ net_RemoveAllDiskCacheObjects(void)
 	cache_database = 0;
 
 	/* remove the database */
-	XP_FileRemove("", xpCacheFAT);
+	NET_XP_FileRemove("", xpCacheFAT);
 }
 
 /* returns the number of bytes currently in use by the Disk cache
@@ -1360,14 +1361,14 @@ PRIVATE int net_CacheWrite (NET_StreamClass *stream, CONST char* buffer, int32 l
 	  {
 		/* increase the global cache size counter
 		 */
-        if(XP_FileWrite((char *) buffer, len, obj->fp) < (uint32)len)
+        if(NET_XP_FileWrite((char *) buffer, len, obj->fp) < (uint32)len)
 		  {
 			TRACEMSG(("Error writing to cache file"));
-			XP_FileClose(obj->fp);
+			NET_XP_FileClose(obj->fp);
 #ifdef XP_OS2
 			XP_LazyFileRemove(obj->cache_object->filename, xpCache);
 #else
-			XP_FileRemove(obj->cache_object->filename, xpCache);
+			NET_XP_FileRemove(obj->cache_object->filename, xpCache);
 #endif
 			if(obj->URL_s)
 				obj->URL_s->dont_cache = TRUE;
@@ -1401,7 +1402,7 @@ PRIVATE void net_CacheComplete (NET_StreamClass *stream)
 	/* close the cache file 
 	 */
     if(obj->fp)
-        XP_FileClose(obj->fp);
+        NET_XP_FileClose(obj->fp);
 
 	assert(obj->cache_object);
 
@@ -1454,7 +1455,7 @@ PRIVATE void net_CacheAbort (NET_StreamClass *stream, int status)
 	/* fp might be null if we had a file write error */
     if(obj->fp)
       {
-        XP_FileClose(obj->fp);
+        NET_XP_FileClose(obj->fp);
 
 		/* do this test in here since the file must be
 		 * alright for us to use this
@@ -1499,7 +1500,7 @@ PRIVATE void net_CacheAbort (NET_StreamClass *stream, int status)
 #ifdef XP_OS2
 		    XP_LazyFileRemove(obj->cache_object->filename, xpCache);
 #else
-		    XP_FileRemove(obj->cache_object->filename, xpCache);
+		    NET_XP_FileRemove(obj->cache_object->filename, xpCache);
 #endif
 	 	  }
       }
@@ -1830,9 +1831,9 @@ NET_CacheConverter (FO_Present_Types format_out,
 		{
 			/* larubbio added 197 SAR cache checks */
 			if ( URL_s->SARCache == NULL )
-       			fp = XP_FileOpen(new_filename, xpCache, XP_FILE_WRITE_BIN);
+       			fp = NET_XP_FileOpen(new_filename, xpCache, XP_FILE_WRITE_BIN);
 			else
-       			fp = XP_FileOpen(new_filename, xpSARCache, XP_FILE_WRITE_BIN);
+       			fp = NET_XP_FileOpen(new_filename, xpSARCache, XP_FILE_WRITE_BIN);
 		}
    
 		if(!fp)
@@ -1879,14 +1880,14 @@ NET_CacheConverter (FO_Present_Types format_out,
         data_object = PR_NEW(CacheDataObject);
         if (!data_object)
           {
-			XP_FileClose(fp);
+			NET_XP_FileClose(fp);
             return(NULL);
           }
 
         stream = PR_NEW(NET_StreamClass);
         if(!stream)
 		  {
-			XP_FileClose(fp);
+			NET_XP_FileClose(fp);
 			PR_Free(data_object);
             return(NULL);
 		  }
@@ -2220,7 +2221,7 @@ NET_RemoveURLFromCache(URL_Struct *URL_s)
 #ifdef XP_OS2
 			XP_LazyFileRemove(filename, fileType);
 #else
-			XP_FileRemove(filename, fileType);
+			NET_XP_FileRemove(filename, fileType);
 #endif
 			PR_Free(filename);
 		  }
@@ -2398,7 +2399,7 @@ NET_FindURLInCache(URL_Struct * URL_s, MWContext *ctxt)
 
 		/* remove the object from the cache
 		 */
-		XP_FileRemove(found_cache_obj->filename, xpCache);
+		NET_XP_FileRemove(found_cache_obj->filename, xpCache);
 
 		if(cache_database)
 			status = (*cache_database->del)(cache_database, key, 0);
@@ -2448,7 +2449,7 @@ NET_FindURLInCache(URL_Struct * URL_s, MWContext *ctxt)
 
 	/* make sure the file still exists
 	 */
-	if(XP_Stat(found_cache_obj->filename, &stat_entry, xpCache) == -1)
+	if(NET_XP_Stat(found_cache_obj->filename, &stat_entry, xpCache) == -1)
 	  {
 		/* file does not exist!!
 		 * remove the entry 
@@ -2540,7 +2541,7 @@ NET_FindURLInCache(URL_Struct * URL_s, MWContext *ctxt)
 #ifdef XP_OS2
 			    XP_LazyFileRemove(found_cache_obj->filename, xpCache);
 #else
-			    XP_FileRemove(found_cache_obj->filename, xpCache);
+			    NET_XP_FileRemove(found_cache_obj->filename, xpCache);
 #endif
 			    /* remove the size of that file from the running total */
         	    net_DiskCacheSize -= net_calc_real_file_size(
@@ -2977,7 +2978,7 @@ NET_CleanupCacheDirectory(char * dir_name, const char * prefix)
 #ifdef XP_OS2
 					XP_LazyFileRemove(filename, xpCache);
 #else
-					XP_FileRemove(filename, xpCache);
+					NET_XP_FileRemove(filename, xpCache);
 #endif
 					TRACEMSG(("Unknown cache file %s found! -- deleteing...", 
 														filename));
@@ -3038,7 +3039,7 @@ NET_DestroyCacheDirectory(char * dir_name, char * prefix)
 	net_DiskCacheSize=0;
 	net_NumberInDiskCache=0;
 	
-    return XP_FileRemove("", xpCacheFAT);
+    return NET_XP_FileRemove("", xpCacheFAT);
 }
 
 /* create an HTML stream and push a bunch of HTML about
@@ -3388,14 +3389,14 @@ NET_CloneWysiwygCacheFile(MWContext *window_id, URL_Struct *URL_s,
 	  }
 
 found:
-	fromfp = XP_FileOpen(filename, mode, XP_FILE_READ_BIN);
+	fromfp = NET_XP_FileOpen(filename, mode, XP_FILE_READ_BIN);
 	if (!fromfp)
 		return NULL;
 	stream = LM_WysiwygCacheConverter(window_id, URL_s, wysiwyg_url, 
 					  base_href);
 	if (!stream)
 	  {
-		XP_FileClose(fromfp);
+		NET_XP_FileClose(fromfp);
 		return 0;
 	  }
 	buflen = stream->is_write_ready(stream);
@@ -3404,7 +3405,7 @@ found:
 	buf = (char *)PR_Malloc(buflen * sizeof(char));
 	if (!buf)
 	  {
-		XP_FileClose(fromfp);
+		NET_XP_FileClose(fromfp);
 		return 0;
 	  }
 	while (nbytes != 0)
@@ -3412,7 +3413,7 @@ found:
 		len = buflen;
 		if ((uint32)len > nbytes)
 			len = (int32)nbytes;
-		len = XP_FileRead(buf, len, fromfp);
+		len = NET_XP_FileRead(buf, len, fromfp);
 		if (len <= 0)
 			break;
 		if (stream->put_block(stream, buf, len) < 0)
@@ -3420,7 +3421,7 @@ found:
 		nbytes -= len;
 	  }
 	PR_Free(buf);
-	XP_FileClose(fromfp);
+	NET_XP_FileClose(fromfp);
 	if (nbytes != 0)
 	  {
 		/* NB: Our caller must clear top_state->mocha_write_stream. */

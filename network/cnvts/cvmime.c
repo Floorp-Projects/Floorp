@@ -24,6 +24,7 @@
 #include "mkgeturl.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "net_xp_file.h"
 
 #ifdef MOZILLA_CLIENT
 
@@ -944,7 +945,7 @@ net_PrintRawToDiskWrite (NET_StreamClass *stream, CONST char *str, int32 len)
   }
 
 /*  int32 rv = fwrite ((char *) str, 1, len, obj->fp);*/
-  rv = XP_FileWrite(str, len, obj->fp);
+  rv = NET_XP_FileWrite((const)str, len, obj->fp);
 
   if (newStr)
 	  PR_Free(newStr);
@@ -978,7 +979,7 @@ net_PrintRawToDiskComplete (NET_StreamClass *stream)
 	obj->conv = NULL;
   }
 
-  /* XP_FileClose(obj->fp); DONT DO THIS the FE's do this */
+  /* NET_XP_FileClose(obj->fp); DONT DO THIS the FE's do this */
 }
 
 PRIVATE void
@@ -991,7 +992,7 @@ net_PrintRawToDiskAbort (NET_StreamClass *stream, int status)
 	obj->conv = NULL;
   }
 
-  /* XP_FileClose(obj->fp); DONT DO THIS the FE's do this */
+  /* NET_XP_FileClose(obj->fp); DONT DO THIS the FE's do this */
 }
 
 /* this converter uses the
@@ -1021,7 +1022,7 @@ NET_PrintRawToDisk(int format_out,
 	}
 
 #ifdef NOT /* file ptr should already be open in context->prSetup->out */
-  if(!(obj->fp = XP_FileOpen(context->prSetup->filename, 
+  if(!(obj->fp = NET_XP_FileOpen(context->prSetup->filename, 
 						xpTemporary, 
 						XP_FILE_WRITE_BIN)))
 	{

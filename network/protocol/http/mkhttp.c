@@ -35,6 +35,7 @@
 #include "mktcp.h"
 #include "mkpadpac.h"
 #include "prerror.h"
+#include "net_xp_file.h"
 
 #include "merrors.h"
 
@@ -796,13 +797,13 @@ net_get_size_with_crlf( char *filename, XP_FileType file_type, XP_Bool add_crlf 
        return the size. */
     
     XP_StatStruct stat_entry;
-    if(-1 == XP_Stat(filename, &stat_entry, file_type))
+    if(-1 == NET_XP_Stat(filename, &stat_entry, file_type))
       return -1;
     else
       return stat_entry.st_size;
   }
   
-  xpfileptr = XP_FileOpen( filename, file_type, XP_FILE_READ );
+  xpfileptr = NET_XP_FileOpen( filename, file_type, XP_FILE_READ );
   if (!xpfileptr)
     return -1;
   
@@ -811,7 +812,7 @@ net_get_size_with_crlf( char *filename, XP_FileType file_type, XP_Bool add_crlf 
     return -1;
   
   do {
-    line = XP_FileReadLine(buffer, POST_DATA_BUFFER_SIZE-5, xpfileptr);
+    line = NET_XP_FileReadLine(buffer, POST_DATA_BUFFER_SIZE-5, xpfileptr);
     if (!line)
     break;
 
@@ -2862,7 +2863,7 @@ net_http_push_partial_cache_file(ActiveEntry *ce)
 
   write_ready = MIN(write_ready, NET_Socket_Buffer_Size);
 
-  status = XP_FileRead(NET_Socket_Buffer, write_ready, cd->partial_cache_fp);
+  status = NET_XP_FileRead(NET_Socket_Buffer, write_ready, cd->partial_cache_fp);
 
   if(status < 0)
     {
@@ -2877,7 +2878,7 @@ net_http_push_partial_cache_file(ActiveEntry *ce)
     /* all done with reading this file
      */
     NET_ClearFileReadSelect(ce->window_id, XP_Fileno(cd->partial_cache_fp));
-    XP_FileClose(cd->partial_cache_fp);
+    NET_XP_FileClose(cd->partial_cache_fp);
     cd->partial_cache_fp = NULL;
 
     /* set these back in preperation for
@@ -2946,7 +2947,7 @@ net_http_begin_push_partial_cache_file(ActiveEntry *ce)
   XP_File fp;
 
   if(!cache_file 
-     || NULL == (fp = XP_FileOpen(cache_file, xpCache, XP_FILE_READ_BIN)))
+     || NULL == (fp = NET_XP_FileOpen(cache_file, xpCache, XP_FILE_READ_BIN)))
     {
     ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_UNABLE_TO_OPEN_FILE, 
                              cache_file);
@@ -3155,7 +3156,7 @@ net_HTTPLoad (ActiveEntry * ce)
      * gather the total size
      */
     for(i=0; ce->URL_s->files_to_post[i]; i++)
-      if(-1 != XP_Stat(ce->URL_s->files_to_post[i], 
+      if(-1 != NET_XP_Stat(ce->URL_s->files_to_post[i], 
                &stat_entry,
                xpFileToPost))
         cd->total_size_of_files_to_post += stat_entry.st_size;
@@ -3454,7 +3455,7 @@ HG51096
 
             if(cd->partial_cache_fp) {
                 NET_ClearFileReadSelect(ce->window_id, XP_Fileno(cd->partial_cache_fp));
-                XP_FileClose(cd->partial_cache_fp);
+                NET_XP_FileClose(cd->partial_cache_fp);
                 cd->partial_cache_fp = 0;
             }
 

@@ -27,6 +27,7 @@
 #include "mkutils.h"
 #include "mkformat.h"
 #include "netutils.h"
+#include "net_xp_file.h"
 
 #ifdef MODULAR_NETLIB
 static char *net_default_types [] = {
@@ -307,14 +308,14 @@ net_cinfo_merge(char *fn, Bool is_local)
   int ret;
 
   TRACEMSG(("\n\nnet_cinfo_merge: called with %s\n\n\n", fn));
-  if(!(fp = XP_FileOpen(fn ? fn : "mime.types", xpMimeTypes, XP_FILE_READ))) {
+  if(!(fp = NET_XP_FileOpen(fn ? fn : "mime.types", xpMimeTypes, XP_FILE_READ))) {
 	TRACEMSG(("cinfo.c: File open failed"));
 	return -1;
   }
 
   TRACEMSG(("Reading mime.types file"));
 
-  if(!(XP_FileReadLine(t, CINFO_MAX_LEN, fp))) {
+  if(!(NET_XP_FileReadLine(t, CINFO_MAX_LEN, fp))) {
 	TRACEMSG(("cinfo.c: Mime types file is empty"));
 	return -1;
 
@@ -329,7 +330,7 @@ net_cinfo_merge(char *fn, Bool is_local)
 	ret = _cinfo_parse_mimetypes(fp, t, is_local);
   }
 
-  XP_FileClose(fp);
+  NET_XP_FileClose(fp);
   return ret;
 }
 
@@ -642,7 +643,7 @@ _cinfo_parse_mimetypes(XP_File fp, char *t, Bool is_local)
 		src_string = 0;
 	  }
 	}
-	if(!(XP_FileReadLine(t, CINFO_MAX_LEN, fp)))
+	if(!(NET_XP_FileReadLine(t, CINFO_MAX_LEN, fp)))
 	  break;
   }
   return 0;
@@ -833,7 +834,7 @@ _cinfo_parse_mcc(XP_File fp, char *line, Bool is_local)
   while(1) {
 	cinfo_parse_mcc_line(line, TRUE, is_local, &src_string);
 
-	if(!(XP_FileReadLine(line, CINFO_MAX_LEN, fp)))
+	if(!(NET_XP_FileReadLine(line, CINFO_MAX_LEN, fp)))
 	  break;
 
 	if ( !src_string )
@@ -852,7 +853,7 @@ _cinfo_parse_mcc(XP_File fp, char *line, Bool is_local)
         *end = ' ';
 		end++;
 
-		if(!(XP_FileReadLine(end, CINFO_MAX_LEN-(end-line), fp)))
+		if(!(NET_XP_FileReadLine(end, CINFO_MAX_LEN-(end-line), fp)))
 		  break;
 
 		if ( !src_string )
@@ -1028,7 +1029,7 @@ net_Real_CleanupFileFormat(char *filename, Bool file_not_open)
 		  /* open file
 		   * if it doesn't open we won't try again
 		   */
-		  fp = XP_FileOpen(filename? filename : "mime.types",
+		  fp = NET_XP_FileOpen(filename? filename : "mime.types",
 						   xpMimeTypes, XP_FILE_WRITE);
 		  TRACEMSG(("Writing mime types file..."));
 		  file_not_open = FALSE;
@@ -1038,7 +1039,7 @@ net_Real_CleanupFileFormat(char *filename, Bool file_not_open)
 			  PR_snprintf(buffer, sizeof(buffer), "#\
 --Netscape Communications Corporation MIME Information\n#\
 Do not delete the above line. It is used to identify the file type.\n#\n");
-			  len = XP_FileWrite(buffer, strlen(buffer), fp);
+			  len = NET_XP_FileWrite(buffer, strlen(buffer), fp);
 			  if (len != (int) strlen(buffer))
 				failed = TRUE;
 			}
@@ -1053,7 +1054,7 @@ Do not delete the above line. It is used to identify the file type.\n#\n");
 			{
 			  PR_snprintf(buffer, sizeof(buffer), "type=%.500s	",
 						  cdata->ci.type);
-			  len = XP_FileWrite(buffer, strlen(buffer), fp);
+			  len = NET_XP_FileWrite(buffer, strlen(buffer), fp);
 			  if (len != (int) strlen(buffer))
 				failed = TRUE;
 			}
@@ -1062,7 +1063,7 @@ Do not delete the above line. It is used to identify the file type.\n#\n");
 			{
 			  PR_snprintf(buffer, sizeof(buffer), "enc=%.500s	",
 						  cdata->ci.encoding);
-			  len = XP_FileWrite(buffer, strlen(buffer), fp);
+			  len = NET_XP_FileWrite(buffer, strlen(buffer), fp);
 			  if (len != (int) strlen(buffer))
 				failed = TRUE;
 			}
@@ -1071,7 +1072,7 @@ Do not delete the above line. It is used to identify the file type.\n#\n");
 			{
 			  PR_snprintf(buffer, sizeof(buffer), "exts=%.500s",
 						  cdata->exts[0]);
-			  len = XP_FileWrite(buffer, strlen(buffer), fp);
+			  len = NET_XP_FileWrite(buffer, strlen(buffer), fp);
 			  if (len != (int) strlen(buffer))
 				failed = TRUE;
 
@@ -1079,13 +1080,13 @@ Do not delete the above line. It is used to identify the file type.\n#\n");
 				{
 				  PR_snprintf(buffer, sizeof(buffer), ",%.500s",
 							  cdata->exts[i]);
-				  len = XP_FileWrite(buffer, strlen(buffer), fp);
+				  len = NET_XP_FileWrite(buffer, strlen(buffer), fp);
 				  if (len != (int) strlen(buffer))
 					failed = TRUE;
 				}
 
 			  PR_snprintf(buffer, sizeof(buffer), "	");
-			  len = XP_FileWrite(buffer, strlen(buffer), fp);
+			  len = NET_XP_FileWrite(buffer, strlen(buffer), fp);
 			  if (len != (int) strlen(buffer))
 				failed = TRUE;
 			}
@@ -1094,7 +1095,7 @@ Do not delete the above line. It is used to identify the file type.\n#\n");
 			{
 			  PR_snprintf(buffer, sizeof(buffer), "icon=\"%.500s\"	",
 						  cdata->ci.icon);
-			  len = XP_FileWrite(buffer, strlen(buffer), fp);
+			  len = NET_XP_FileWrite(buffer, strlen(buffer), fp);
 			  if (len != (int) strlen(buffer))
 				failed = TRUE;
 			}
@@ -1103,7 +1104,7 @@ Do not delete the above line. It is used to identify the file type.\n#\n");
 			{
 			  PR_snprintf(buffer, sizeof(buffer), "desc=\"%.500s\"	",
 						  cdata->ci.desc);
-			  len = XP_FileWrite(buffer, strlen(buffer), fp);
+			  len = NET_XP_FileWrite(buffer, strlen(buffer), fp);
 			  if (len != (int) strlen(buffer))
 				failed = TRUE;
 			}
@@ -1112,13 +1113,13 @@ Do not delete the above line. It is used to identify the file type.\n#\n");
 			{
 			  PR_snprintf(buffer, sizeof(buffer), "alt=\"%.500s\"	",
 						  cdata->ci.alt_text);
-			  len = XP_FileWrite(buffer, strlen(buffer), fp);
+			  len = NET_XP_FileWrite(buffer, strlen(buffer), fp);
 			  if (len != (int) strlen(buffer))
 				failed = TRUE;
 			}
 
 		  PR_snprintf(buffer, sizeof(buffer), "%c", LF);
-		  len = XP_FileWrite(buffer, strlen(buffer), fp);
+		  len = NET_XP_FileWrite(buffer, strlen(buffer), fp);
 		  if (len != (int) strlen(buffer))
 			failed = TRUE;
 		}
@@ -1132,7 +1133,7 @@ Do not delete the above line. It is used to identify the file type.\n#\n");
   NET_ciMasterList = 0;
 
   if(!file_not_open && fp)
-	XP_FileClose(fp);
+	NET_XP_FileClose(fp);
   /* This function should really return a return code, and handle any errors */
 
 }
@@ -1155,7 +1156,7 @@ NET_CleanupFileFormat(char *filename)
 
 	if ( filename )
 	{
-		fp = XP_FileOpen(filename, xpMimeTypes, XP_FILE_WRITE);
+		fp = NET_XP_FileOpen(filename, xpMimeTypes, XP_FILE_WRITE);
 		/* Need to remove from the end so that the next time
 		around, the file will be loaded up into a list in
 		the consistent way */
@@ -1182,18 +1183,18 @@ NET_CleanupFileFormat(char *filename)
 							"#\
 --Netscape Communications Corporation MIME Information\n#\
 Do not delete the above line. It is used to identify the file type.\n#\n");
-							len = XP_FileWrite(buffer, strlen(buffer), fp);
+							len = NET_XP_FileWrite(buffer, strlen(buffer), fp);
 							if (len != (int) strlen(buffer))
 								failed = TRUE;
 						}
 					}
 					if (!failed && cdata->src_string && *cdata->src_string )
 					{
-						len = XP_FileWrite(cdata->src_string,
+						len = NET_XP_FileWrite(cdata->src_string,
 							strlen(cdata->src_string), fp);
 
 						if (cdata->src_string[strlen(cdata->src_string)-1] != '\n')
-							len = XP_FileWrite("\n", strlen("\n"), fp);
+							len = NET_XP_FileWrite("\n", strlen("\n"), fp);
 					}
 					NET_cdataFree(cdata);
 
@@ -1222,7 +1223,7 @@ Do not delete the above line. It is used to identify the file type.\n#\n");
 						"#\
 --Netscape Communications Corporation MIME Information\n#\
 Do not delete the above line. It is used to identify the file type.\n#\n");
-						len = XP_FileWrite(buffer, strlen(buffer), fp);
+						len = NET_XP_FileWrite(buffer, strlen(buffer), fp);
 						if (len != (int) strlen(buffer))
 							failed = TRUE;
 
@@ -1231,13 +1232,13 @@ Do not delete the above line. It is used to identify the file type.\n#\n");
 
 				if (!failed && cdata->src_string && *cdata->src_string )
 				{
-					len = XP_FileWrite(cdata->src_string,
+					len = NET_XP_FileWrite(cdata->src_string,
 						strlen(cdata->src_string), fp);
 					if (len != (int) strlen(cdata->src_string))
 						failed = TRUE;
 					if ( cdata->src_string[strlen(cdata->src_string)-1] != '\n')
 					{
-						len = XP_FileWrite("\n", strlen("\n"), fp);
+						len = NET_XP_FileWrite("\n", strlen("\n"), fp);
 						if (len != (int) strlen("\n"))
 							failed = TRUE;
 					}
@@ -1245,7 +1246,7 @@ Do not delete the above line. It is used to identify the file type.\n#\n");
 
 				NET_cdataFree(cdata);
 			}
-			XP_FileClose(fp);
+			NET_XP_FileClose(fp);
 		}
 	}
 	else /* Clean up each node before deleting the root node */

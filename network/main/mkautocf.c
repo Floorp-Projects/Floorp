@@ -26,6 +26,7 @@
 #include "netutils.h"
 #include "prsystem.h"
 #include "mkpadpac.h"
+#include "net_xp_file.h"
 #include <time.h>
 #include "mkautocf.h"
 #include "xp_mem.h"     /* PR_NEWZAP() */
@@ -694,11 +695,11 @@ PRIVATE int pacf_save_config(void) {
     if (!pacf_do_failover || !pacf_src_buf || !*pacf_src_buf || pacf_src_len <= 0)
 	return -1;
 
-    if(!(fp = XP_FileOpen("", xpProxyConfig, XP_FILE_WRITE)))
+    if(!(fp = NET_XP_FileOpen("", xpProxyConfig, XP_FILE_WRITE)))
 	return -1;
 
-    len = XP_FileWrite(pacf_src_buf, pacf_src_len, fp);
-    XP_FileClose(fp);
+    len = NET_XP_FileWrite(pacf_src_buf, pacf_src_len, fp);
+    NET_XP_FileClose(fp);
 	if (len != pacf_src_len)
 		return -1;
 
@@ -713,21 +714,21 @@ PRIVATE int pacf_read_config(void) {
     XP_StatStruct st;
     XP_File fp;
 
-    if (XP_Stat("", &st, xpProxyConfig) == -1)
+    if (NET_XP_Stat("", &st, xpProxyConfig) == -1)
 	return -1;
 
-    if (!(fp = XP_FileOpen("", xpProxyConfig, XP_FILE_READ)))
+    if (!(fp = NET_XP_FileOpen("", xpProxyConfig, XP_FILE_READ)))
 	return -1;
 
     pacf_src_len = st.st_size;
     pacf_src_buf = (char *)PR_Malloc(pacf_src_len + 1);
     if (!pacf_src_buf) {
-	XP_FileClose(fp);
+	NET_XP_FileClose(fp);
 	pacf_src_len = 0;
 	return -1;
     }
 
-    if ((pacf_src_len = XP_FileRead(pacf_src_buf, pacf_src_len, fp)) > 0)
+    if ((pacf_src_len = NET_XP_FileRead(pacf_src_buf, pacf_src_len, fp)) > 0)
       {
 	  pacf_src_buf[pacf_src_len] = '\0';
       }
@@ -738,7 +739,7 @@ PRIVATE int pacf_read_config(void) {
 	  pacf_src_len = 0;
       }
 
-    XP_FileClose(fp);
+    NET_XP_FileClose(fp);
 
     return 0;
 }
@@ -828,7 +829,7 @@ retry:
 	  /* Don't failover to using no proxies */
 	     FE_Alert(obj->context, XP_GetString(XP_NO_CONFIG_RECEIVED_NO_FAILOVER));
 	}
-	else if (obj->flag != 2 && (XP_Stat("", &st, xpProxyConfig) == -1) && !NET_UsingPadPac())
+	else if (obj->flag != 2 && (NET_XP_Stat("", &st, xpProxyConfig) == -1) && !NET_UsingPadPac())
 	  {
 			FE_Alert(obj->context, XP_GetString(XP_NO_CONFIG_RECIEVED));
 	  }
@@ -862,7 +863,7 @@ retry:
 		}
 		if (obj->flag) {
 				FE_Alert(obj->context, XP_GetString(XP_EVEN_SAVED_IS_BAD));
-		} else if (XP_Stat("", &st, xpProxyConfig) == -1) {
+		} else if (NET_XP_Stat("", &st, xpProxyConfig) == -1) {
 				alert2(obj->context, XP_GetString(XP_BAD_CONFIG_IGNORED), pacf_url);
 		} else if (confirm2(obj->context, XP_GetString(XP_BAD_CONFIG_USE_PREV), pacf_url)) {
 			  PR_Free(pacf_src_buf);
@@ -966,7 +967,7 @@ static void pacf_restart_queued(URL_Struct *URL_s, int status,
 	  /* Don't failover to using no proxies */
 	     FE_Alert(window_id, XP_GetString(XP_CONF_LOAD_FAILED_NO_FAILOVER));
 	}
-	else if (XP_Stat("", &st, xpProxyConfig) == -1)
+	else if (NET_XP_Stat("", &st, xpProxyConfig) == -1)
 	  {
 	      if (status < 0)
 		  FE_Alert(window_id, XP_GetString(XP_CONF_LOAD_FAILED_IGNORED));
