@@ -80,3 +80,8 @@ input[type="text"] {
   padding-left:   0px;
   padding-right:  0px;
 } 
+
+/* text input */
+textarea {
+  font-family:-moz-fixed;
+}
