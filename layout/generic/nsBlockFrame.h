@@ -163,6 +163,12 @@ public:
   nsLineBox* FindLineFor(nsIFrame* aFrame, nsLineBox** aPrevLineResult,
                          PRBool* aIsFloaterResult);
 
+#ifdef MOZ_MATHML
+  // return our ascent (i.e., ascent of our first line)
+  // to support 'vertical-align: baseline' in table-cells
+  nscoord GetAscent() const;
+#endif
+
 protected:
   nsBlockFrame();
   virtual ~nsBlockFrame();
@@ -422,6 +428,11 @@ protected:
   void VerifyLines(PRBool aFinalCheckOK);
   void VerifyOverflowSituation(nsIPresContext* aPresContext);
   PRInt32 GetDepth() const;
+#endif
+
+#ifdef MOZ_MATHML
+  // Ascent of our first line to support 'vertical-align: baseline' in table-cells
+  nscoord mAscent;
 #endif
 
   nsLineBox* mLines;
