@@ -611,45 +611,6 @@ nsXIEngine::MakeUniqueTmpDir()
 }
 
 int
-nsXIEngine::ParseURL(char *aURL, char **aHost, char **aDir)
-{
-    int err = OK;
-    char *host = NULL;
-    char *hostTerminator = NULL;
-    char *dirTerminator = NULL;
-
-    if (!aURL || !aHost || !aDir)
-        return E_PARAM;
-
-    if (0 != strncmp(aURL, "ftp://", 6)) return E_BAD_FTP_URL;
-
-    host = aURL + 6;
-    if (!host) return E_BAD_FTP_URL;
-    hostTerminator = strchr(host, '/'); 
-    if (!hostTerminator) return E_BAD_FTP_URL;
-    
-    *aHost = (char *) calloc(hostTerminator - host + 1, 1);
-    strncpy(*aHost, host, hostTerminator - host);
-
-    dirTerminator = strrchr(hostTerminator + 1, '/');
-    if (!dirTerminator)
-    {
-        // no dir == root dir
-        *aDir = (char *) malloc(2);
-        sprintf(*aDir, "/");
-    }
-    else
-    {
-        *aDir = (char *) malloc(sizeof(char) * 
-                         (dirTerminator - hostTerminator + 2));
-        memset(*aDir, 0, (dirTerminator - hostTerminator + 2));
-        strncpy(*aDir, hostTerminator, dirTerminator - hostTerminator + 1);
-    }
-    
-    return err;
-}
-
-int
 nsXIEngine::LoadXPIStub(xpistub_t *aStub, char *aDestination)
 {
     int err = OK;
